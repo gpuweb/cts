@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+
+// Ditto comment as to what this does
+
 require('../src/tools/setup-ts-in-node.js');
 const fs = require('fs');
 
@@ -15,6 +18,9 @@ fs.writeFileSync(
 export const version = '${version}';
 `
 );
+
+
+// What does this do??
 try {
   fs.unlinkSync('./out/framework/version.js.map');
 } catch (ex) {}

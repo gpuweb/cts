@@ -1,5 +1,8 @@
 /* tslint:disable:max-line-length */
 
+// Why is this needed again?
+// Also needs updating to match the latest version of the spec, but maybe we can remove the need for a dumnmy implementation (we should still keep mImpl as a Promise for the future)
+
 const kNoExtensions: GPUExtensions = {
   anisotropicFiltering: false,
 };

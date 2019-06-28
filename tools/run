@@ -1,3 +1,6 @@
 #!/usr/bin/env node
+
+// Ditto comment as to what this does, does it just run the CTS outside of the browser?
+
 require('../src/tools/setup-ts-in-node.js');
 require('../src/tools/run');

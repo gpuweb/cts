@@ -1,5 +1,7 @@
 import { CaseRecorder } from './logger.js';
 
+// Do we have a test for this? It seems very browser specific and could break easily?
+// Also comment as to what this does (but this applies to pretty much everything)
 export function getStackTrace(e: Error): string {
   if (!e.stack) {
     return '';
@@ -33,12 +35,14 @@ export function getStackTrace(e: Error): string {
 }
 
 // tslint:disable-next-line no-var-requires
+// What is perf_hooks? Is it node specific?
 const perf = typeof performance !== 'undefined' ? performance : require('perf_hooks').performance;
 
 export function now(): number {
   return perf.now();
 }
 
+// Ew JS
 export function objectEquals(x: unknown, y: unknown): boolean {
   if (typeof x !== 'object' || typeof y !== 'object') return x === y;
   if (x === null || y === null) return x === y;

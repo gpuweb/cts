@@ -1,7 +1,11 @@
+// Here and in every files we need copyright statements. BSD3 clause license like the WebGPU stuff in the group
+
 import { GroupRecorder } from './logger.js';
 import { IParamsAny, paramsEquals, paramsSupersets } from './params/index.js';
 import { allowedTestNameCharacters, ITestGroup, RunCase, ICaseID } from './test_group.js';
 
+// These data types seem super core so please add more comments
+// Should most members in there be readonly?
 export interface IGroupDesc {
   path: string;
   description: string;
@@ -20,6 +24,7 @@ export interface ITestNode {
 
 export interface IEntry {
   suite: string;
+  // What is this path? a path to a test module or a path to a test in that module?
   path: string;
 }
 
@@ -27,6 +32,7 @@ interface IPendingEntry extends IEntry {
   node: Promise<ITestNode>;
 }
 
+// This is a generator of IPendingEntries? Or a generator of IterableIterator<IPendingEntry>?
 function* concat(lists: IPendingEntry[][]): IterableIterator<IPendingEntry> {
   for (const nodes of lists) {
     for (const node of nodes) {
@@ -38,6 +44,7 @@ function* concat(lists: IPendingEntry[][]): IterableIterator<IPendingEntry> {
 type TestGroupFilter = (testcase: ICaseID) => boolean;
 function filterTestGroup(group: ITestGroup, filter: TestGroupFilter) {
   return {
+    // What does this syntax mean?
     *iterate(log: GroupRecorder): Iterable<RunCase> {
       for (const rc of group.iterate(log)) {
         if (filter(rc.testcase)) {

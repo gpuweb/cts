@@ -1,8 +1,10 @@
 <html>
   <head>
     <title></title>
+    <!-- Not for now, but for the TODO list: use something more in today's hype like vue / React ?? -->
     <script src="third_party/jquery/jquery-3.3.1.min.js"></script>
     <style>
+      /* Not for now, but for the TODO list: prettier CSS and runner page, right now it is fugly */
       #info {
         font-family: monospace;
       }
@@ -100,6 +102,7 @@
 
       const resultsJSON = document.getElementById('resultsJSON');
       const resultsVis = document.getElementById('resultsVis');
+      // nit: makeTest
       function mkTest(path, description) {
         const test = $('<div>')
           .addClass('test')
@@ -198,6 +201,7 @@
         const entries = await Promise.all(
           Array.from(listing, ({ suite, path, node }) => node.then(node => ({ suite, path, node })))
         );
+        // Show the list of suites in index.html? Right now it is empty and it isn't clear that you need to add stuff to the URL.
         // TODO: convert listing to tree so it can be displayed as a tree?
 
         let info = `?runnow=${runnow ? '1' : '0'}`;

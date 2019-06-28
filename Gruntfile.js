@@ -93,6 +93,7 @@ module.exports = function(grunt) {
   ]);
   publishTask('test', 'Run unittests', ['run:test']);
   publishTask('serve', 'Serve out/ on 127.0.0.1:8080', ['http-server:.']);
+  // Why isn't this one using publishTask?
   publishedTasks.push({ name: 'clean', desc: 'Clean out/' });
 
   grunt.registerTask('default', '', () => {
@@ -103,5 +104,6 @@ module.exports = function(grunt) {
     }
   });
 
+  // nit: move this before the default
   publishTask('pre', 'Run all presubmit checks', ['ts:check', 'build', 'test', 'run:gts-check']);
 };

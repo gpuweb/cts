@@ -31,6 +31,7 @@ class Test<F extends Fixture> {
     this.cases = cases;
   }
 
+  // What does this syntax mean??
   *[Symbol.iterator](): IterableIterator<ICase> {
     const fixture = this.fixture;
     const fn = this.fn;

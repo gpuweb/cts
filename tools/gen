@@ -1,3 +1,6 @@
 #!/usr/bin/env node
+
+// Comment as to what this does.
+
 require('../src/tools/setup-ts-in-node.js');
 require('../src/tools/gen');

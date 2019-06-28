@@ -8,7 +8,9 @@ yarn global add grunt-cli  # install grunt globally
 grunt  # show available grunt commands
 
 grunt build
-tools/run.js cts
+
+# .js was not there, and I'm not sure what this is supposed to do, it just fails with some complaining about EvenTarget
+tools/run cts
 
 grunt serve
 # Then open:
