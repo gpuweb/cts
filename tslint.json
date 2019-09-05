@@ -1,6 +1,7 @@
 {
   "extends": "gts/tslint.json",
   "rules": {
+    "ban-ts-ignore": false,
     "no-console": [true],
     "ordered-imports": [
       true,
