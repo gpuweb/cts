@@ -19,7 +19,10 @@
 
     /* Module Options */
     "moduleResolution": "node",
-    "esModuleInterop": true
+    "esModuleInterop": true,
   },
-  "include": ["src/**/*.ts", "tools/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "tools/**/*.ts"
+  ]
 }
