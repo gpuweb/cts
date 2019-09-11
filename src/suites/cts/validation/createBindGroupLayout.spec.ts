@@ -86,3 +86,43 @@ g.test('Visibility of bindings cannot be None', async t => {
     t.device.createBindGroupLayout(badDescriptor);
   });
 });
+
+g.test('number of dynamic buffers exceeds the maximum value', async t => {
+  const { type, maxDynamicBufferCount } = t.params;
+
+  const maxDynamicBufferBindings: GPUBindGroupLayoutBinding[] = [];
+  for (let i = 0; i < maxDynamicBufferCount; i++) {
+    maxDynamicBufferBindings.push({
+      binding: i,
+      visibility: GPUShaderStage.COMPUTE,
+      type,
+      dynamic: true,
+    });
+  }
+
+  const goodDescriptor: GPUBindGroupLayoutDescriptor = {
+    bindings: [
+      ...maxDynamicBufferBindings,
+      {
+        binding: maxDynamicBufferBindings.length,
+        visibility: GPUShaderStage.COMPUTE,
+        type,
+        dynamic: false,
+      },
+    ],
+  };
+
+  const badDescriptor = clone(goodDescriptor);
+  badDescriptor.bindings![maxDynamicBufferCount].dynamic = true;
+
+  // Control case
+  t.device.createBindGroupLayout(goodDescriptor);
+
+  // Dynamic buffers exceed maximum in a bind group layout.
+  await t.expectValidationError(() => {
+    t.device.createBindGroupLayout(badDescriptor);
+  });
+}).params([
+  { type: 'storage-buffer', maxDynamicBufferCount: 4 },
+  { type: 'uniform-buffer', maxDynamicBufferCount: 8 },
+]);
