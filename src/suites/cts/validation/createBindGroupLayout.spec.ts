@@ -1,5 +1,5 @@
 export const description = `
-Create bind group layout validation tests.
+createBindGroupLayout validation tests.
 `;
 
 import { TestGroup } from '../../../framework/index.js';
@@ -63,6 +63,7 @@ g.test('some binding index exceeds the maximum value', async t => {
   });
 });
 
+// TODO: Update once https://github.com/gpuweb/gpuweb/issues/405 is decided.
 g.test('Visibility of bindings cannot be None', async t => {
   const goodDescriptor: GPUBindGroupLayoutDescriptor = {
     bindings: [
