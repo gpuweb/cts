@@ -6,6 +6,16 @@ export class ValidationTest extends GPUTest {
     this.device.pushErrorScope('validation');
   }
 
+  async getErrorBuffer(): Promise<GPUBuffer> {
+    this.device.pushErrorScope('validation');
+    const errorBuffer = this.device.createBuffer({
+      size: 1024,
+      usage: 0xffff, // Invalid GPUBufferUsage
+    });
+    await this.device.popErrorScope();
+    return errorBuffer;
+  }
+
   async expectValidationError(fn: Function): Promise<void> {
     return this.asyncExpectation(async () => {
       this.device.pushErrorScope('validation');

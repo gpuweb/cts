@@ -28,11 +28,11 @@ g.test('some binding index was specified more than once', async t => {
     ],
   };
 
-  const badDescriptor = clone(goodDescriptor);
-  badDescriptor.bindings![1].binding = 0;
-
   // Control case
   t.device.createBindGroupLayout(goodDescriptor);
+
+  const badDescriptor = clone(goodDescriptor);
+  badDescriptor.bindings![1].binding = 0;
 
   // Binding index 0 can't be specified twice.
   await t.expectValidationError(() => {
@@ -51,13 +51,13 @@ g.test('some binding index exceeds the maximum value', async t => {
     ],
   };
 
-  const badDescriptor = clone(goodDescriptor);
-  badDescriptor.bindings![0].binding = 16;
-
   // Control case
   t.device.createBindGroupLayout(goodDescriptor);
 
   // Binding index 16 can't be specified.
+  const badDescriptor = clone(goodDescriptor);
+  badDescriptor.bindings![0].binding = 16;
+
   await t.expectValidationError(() => {
     t.device.createBindGroupLayout(badDescriptor);
   });
@@ -75,13 +75,13 @@ g.test('Visibility of bindings cannot be None', async t => {
     ],
   };
 
-  const badDescriptor = clone(goodDescriptor);
-  badDescriptor.bindings![0].visibility = GPUShaderStage.NONE;
-
   // Control case
   t.device.createBindGroupLayout(goodDescriptor);
 
   // Binding visibility set to None can't be specified.
+  const badDescriptor = clone(goodDescriptor);
+  badDescriptor.bindings![0].visibility = GPUShaderStage.NONE;
+
   await t.expectValidationError(() => {
     t.device.createBindGroupLayout(badDescriptor);
   });
@@ -112,13 +112,13 @@ g.test('number of dynamic buffers exceeds the maximum value', async t => {
     ],
   };
 
-  const badDescriptor = clone(goodDescriptor);
-  badDescriptor.bindings![maxDynamicBufferCount].dynamic = true;
-
   // Control case
   t.device.createBindGroupLayout(goodDescriptor);
 
   // Dynamic buffers exceed maximum in a bind group layout.
+  const badDescriptor = clone(goodDescriptor);
+  badDescriptor.bindings![maxDynamicBufferCount].dynamic = true;
+
   await t.expectValidationError(() => {
     t.device.createBindGroupLayout(badDescriptor);
   });

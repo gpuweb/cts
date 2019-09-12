@@ -47,6 +47,10 @@ g.test('number of dynamic buffers exceeds the maximum value', async t => {
     ],
   };
 
+  // Control case
+  t.device.createPipelineLayout(goodPipelineLayoutDescriptor);
+
+  // Check dynamic buffers exceed maximum in pipeline layout.
   const badDescriptor = clone(goodDescriptor);
   badDescriptor.bindings![0].dynamic = true;
 
@@ -57,10 +61,6 @@ g.test('number of dynamic buffers exceeds the maximum value', async t => {
     ],
   };
 
-  // Control case
-  t.device.createPipelineLayout(goodPipelineLayoutDescriptor);
-
-  // Check dynamic buffers exceed maximum in pipeline layout.
   await t.expectValidationError(() => {
     t.device.createPipelineLayout(badPipelineLayoutDescriptor);
   });
