@@ -126,3 +126,35 @@ g.test('number of dynamic buffers exceeds the maximum value', async t => {
   { type: 'storage-buffer', maxDynamicBufferCount: 4 },
   { type: 'uniform-buffer', maxDynamicBufferCount: 8 },
 ]);
+
+g.test('dynamic set to true is allowed only for buffers', async t => {
+  const { type, success } = t.params;
+
+  const descriptor = {
+    bindings: [
+      {
+        binding: 0,
+        visibility: GPUShaderStage.FRAGMENT,
+        type,
+        dynamic: true,
+      },
+    ],
+  };
+
+  if (success) {
+    // Control case
+    t.device.createBindGroupLayout(descriptor);
+  } else {
+    // Dynamic set to true is not allowed in some cases.
+    await t.expectValidationError(() => {
+      t.device.createBindGroupLayout(descriptor);
+    });
+  }
+}).params([
+  { type: 'uniform-buffer', success: true },
+  { type: 'storage-buffer', success: true },
+  { type: 'readonly-storage-buffer', success: true },
+  { type: 'sampler', success: false },
+  { type: 'sampled-texture', success: false },
+  { type: 'storage-texture', success: false },
+]);

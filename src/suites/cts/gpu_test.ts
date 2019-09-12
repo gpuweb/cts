@@ -27,7 +27,7 @@ export class GPUTest extends Fixture {
     } catch (error) {
       // Fail only if there were error scopes to pop.
       if (error.name !== 'OperationError') {
-        this.fail('Unexpected error occured in popErrorScope()');
+        this.fail(`Unexpected error occured in popErrorScope(): ${error}`);
       }
     }
   }
