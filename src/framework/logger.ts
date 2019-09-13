@@ -105,7 +105,7 @@ export class TestCaseRecorder {
   threw(e: Error): void {
     this.failed = true;
     let m = 'EXCEPTION';
-    m += ' ' + getStackTrace(e);
+    m += ' ' + e.name + ' ' + e.message + ' ' + getStackTrace(e);
     this.log(m);
   }
 }
