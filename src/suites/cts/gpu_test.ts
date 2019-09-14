@@ -12,23 +12,19 @@ export class GPUTest extends Fixture {
     const adapter = await gpu.requestAdapter();
     this.device = await adapter.requestDevice({});
     this.queue = this.device.getQueue();
+
+    this.device.pushErrorScope('validation');
   }
 
   async finalize(): Promise<void> {
     super.finalize();
-    try {
-      const gpuError = await this.device.popErrorScope();
-      if (gpuError instanceof GPUValidationError) {
-        this.fail(`Unexpected validation error occured: ${gpuError.message}`);
-      }
-      if (gpuError instanceof GPUOutOfMemoryError) {
-        this.fail('Unexpected out-of-memory error occured');
-      }
-    } catch (error) {
-      // Fail only if there were error scopes to pop.
-      if (error.name !== 'OperationError') {
-        this.fail(`Unexpected error occured in popErrorScope(): ${error}`);
-      }
+    const gpuError = await this.device.popErrorScope();
+    if (gpuError instanceof GPUValidationError) {
+      this.fail(`Unexpected validation error occurred: ${gpuError.message}`);
+    } else if (gpuError instanceof GPUOutOfMemoryError) {
+      this.fail('Unexpected out-of-memory error occurred');
+    } else {
+      this.fail('Incorrect error type occurred');
     }
   }
 

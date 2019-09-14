@@ -1,11 +1,6 @@
 import { GPUTest } from '../gpu_test.js';
 
 export class ValidationTest extends GPUTest {
-  async init(): Promise<void> {
-    await super.init();
-    this.device.pushErrorScope('validation');
-  }
-
   async getErrorBuffer(): Promise<GPUBuffer> {
     this.device.pushErrorScope('validation');
     const errorBuffer = this.device.createBuffer({
@@ -16,7 +11,12 @@ export class ValidationTest extends GPUTest {
     return errorBuffer;
   }
 
-  async expectValidationError(fn: Function): Promise<void> {
+  async expectValidationError(fn: Function, shouldError: boolean = true): Promise<void> {
+    // If no error is expected, we let the scope surrounding the test catch it.
+    if (shouldError === false) {
+      fn();
+      return;
+    }
     return this.asyncExpectation(async () => {
       this.device.pushErrorScope('validation');
 

@@ -2,7 +2,7 @@ export const description = `
 createBindGroup validation tests.
 `;
 
-import { TestGroup } from '../../../framework/index.js';
+import { TestGroup, poptions } from '../../../framework/index.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -10,7 +10,7 @@ function clone(descriptor: GPUTextureDescriptor): GPUTextureDescriptor {
   return JSON.parse(JSON.stringify(descriptor));
 }
 
-export class F extends ValidationTest {
+class F extends ValidationTest {
   getStorageBuffer(): GPUBuffer {
     return this.device.createBuffer({
       size: 1024,
@@ -217,14 +217,16 @@ g.test('buffer binding must contain exactly one buffer of its type', async t => 
       t.device.createBindGroup(mismatchedDescriptor);
     });
   }
-}).params([
-  { type: 'uniform-buffer' },
-  { type: 'storage-buffer' },
-  { type: 'readonly-storage-buffer' },
-  { type: 'sampler' },
-  { type: 'sampled-texture' },
-  { type: 'storage-texture' },
-]);
+}).params(
+  poptions('type', [
+    'uniform-buffer',
+    'storage-buffer',
+    'readonly-storage-buffer',
+    'sampler',
+    'sampled-texture',
+    'storage-texture',
+  ])
+);
 
 g.test('texture binding must have correct usage', async t => {
   const { type } = t.params;
@@ -295,10 +297,7 @@ g.test('texture binding must have correct usage', async t => {
       });
     });
   }
-}).params([
-  { type: 'sampled-texture' }, // (blank comment to enforce newlines on autoformat)
-  { type: 'storage-texture' },
-]);
+}).params(poptions('type', ['sampled-texture', 'storage-texture']));
 
 g.test('texture must have correct component type', async t => {
   const { textureComponentType } = t.params;
@@ -372,11 +371,7 @@ g.test('texture must have correct component type', async t => {
       });
     });
   }
-}).params([
-  { textureComponentType: 'float' },
-  { textureComponentType: 'sint' },
-  { textureComponentType: 'uint' },
-]);
+}).params(poptions('textureComponentType', ['float', 'sint', 'uint']));
 
 // TODO: Write test for all dimensions.
 g.test('texture must have correct dimension', async t => {

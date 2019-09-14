@@ -40,11 +40,11 @@ g.test('some binding index was specified more than once', async t => {
   });
 });
 
-g.test('some binding index exceeds the maximum value', async t => {
+g.test('negative binding index', async t => {
   const goodDescriptor: GPUBindGroupLayoutDescriptor = {
     bindings: [
       {
-        binding: 15,
+        binding: 0,
         visibility: GPUShaderStage.COMPUTE,
         type: 'storage-buffer',
       },
@@ -56,7 +56,7 @@ g.test('some binding index exceeds the maximum value', async t => {
 
   // Binding index 16 can't be specified.
   const badDescriptor = clone(goodDescriptor);
-  badDescriptor.bindings![0].binding = 16;
+  badDescriptor.bindings![0].binding = -1;
 
   await t.expectValidationError(() => {
     t.device.createBindGroupLayout(badDescriptor);
