@@ -2,7 +2,7 @@ export const description = `
 createBindGroup validation tests.
 `;
 
-import { TestGroup, poptions } from '../../../framework/index.js';
+import { TestGroup, pcombine, poptions } from '../../../framework/index.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -144,87 +144,62 @@ g.test('binding must be present in layout', async t => {
 });
 
 g.test('buffer binding must contain exactly one buffer of its type', async t => {
-  const { type } = t.params;
+  const { bindingType, resourceType } = t.params;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
     bindings: [
       {
         binding: 0,
         visibility: GPUShaderStage.COMPUTE,
-        type,
+        type: bindingType,
       },
     ],
   });
 
-  let matchedResource: GPUBindingResource;
-  if (type === 'uniform-buffer') {
-    matchedResource = { buffer: t.getUniformBuffer() };
-  } else if (type === 'storage-buffer' || type === 'readonly-storage-buffer') {
-    matchedResource = { buffer: t.getStorageBuffer() };
-  } else if (type === 'sampler') {
-    matchedResource = t.getSampler();
-  } else if (type === 'sampled-texture') {
-    matchedResource = t.getSampledTexture().createView();
-  } else if (type === 'storage-texture') {
-    matchedResource = t.getStorageTexture();
-  } else {
-    throw new Error('Unexpected binding type');
+  let resource: GPUBindingResource;
+  if (resourceType === 'error') {
+    resource = { buffer: await t.getErrorBuffer() };
+  } else if (resourceType === 'uniform-buffer') {
+    resource = { buffer: t.getUniformBuffer() };
+  } else if (resourceType === 'storage-buffer') {
+    resource = { buffer: t.getStorageBuffer() };
+  } else if (resourceType === 'sampler') {
+    resource = t.getSampler();
+  } else if (resourceType === 'sampled-texture') {
+    resource = t.getSampledTexture().createView();
+  } else if (resourceType === 'storage-texture') {
+    resource = t.getStorageTexture().createView();
+  } else throw new Error();
+
+  let shouldError = bindingType !== resourceType;
+  if (bindingType === 'readonly-storage-buffer' && resourceType === 'storage-buffer') {
+    shouldError = false;
   }
 
-  // Control case
-  t.device.createBindGroup({
-    bindings: [
-      {
-        binding: 0,
-        resource: matchedResource,
-      },
-    ],
-    layout: bindGroupLayout,
-  });
-
-  async function* mismatchedResources(): AsyncIterable<GPUBindingResource> {
-    const errorBuffer = await t.getErrorBuffer();
-    yield { buffer: errorBuffer };
-    if (type !== 'uniform-buffer') {
-      yield { buffer: t.getUniformBuffer() };
-    }
-    if (type !== 'storage-buffer' && type !== 'readonly-storage-buffer') {
-      yield { buffer: t.getStorageBuffer() };
-    }
-    if (type !== 'sampler') {
-      yield t.getSampler();
-    }
-    if (type !== 'sampled-texture') {
-      yield t.getSampledTexture().createView();
-    }
-    if (type !== 'storage-texture') {
-      yield t.getStorageTexture().createView();
-    }
-  }
-
-  // Mismatched resources are not valid.
-  for await (const mismatchedResource of mismatchedResources()) {
-    const mismatchedDescriptor: GPUBindGroupDescriptor = {
-      bindings: [
-        {
-          binding: 0,
-          resource: mismatchedResource,
-        },
-      ],
+  await t.expectValidationError(() => {
+    t.device.createBindGroup({
+      bindings: [{ binding: 0, resource }],
       layout: bindGroupLayout,
-    };
-    await t.expectValidationError(() => {
-      t.device.createBindGroup(mismatchedDescriptor);
     });
-  }
+  }, shouldError);
 }).params(
-  poptions('type', [
-    'uniform-buffer',
-    'storage-buffer',
-    'readonly-storage-buffer',
-    'sampler',
-    'sampled-texture',
-    'storage-texture',
+  pcombine([
+    poptions('bindingType', [
+      'uniform-buffer',
+      'storage-buffer',
+      'readonly-storage-buffer',
+      'sampler',
+      'sampled-texture',
+      'storage-texture',
+    ]),
+    poptions('resourceType', [
+      'error',
+      'uniform-buffer',
+      'storage-buffer',
+      'sampler',
+      'sampled-texture',
+      'storage-texture',
+    ]),
   ])
 );
 

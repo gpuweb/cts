@@ -68,3 +68,5 @@ g.test('number of dynamic buffers exceeds the maximum value', async t => {
   { type: 'storage-buffer', maxDynamicBufferCount: 4 },
   { type: 'uniform-buffer', maxDynamicBufferCount: 8 },
 ]);
+
+// TODO: test max BGLs (4 works, 5 doesn't)

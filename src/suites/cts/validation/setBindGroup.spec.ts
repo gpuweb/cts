@@ -8,6 +8,14 @@ import GLSL from '../../../tools/glsl.macro.js';
 import { ValidationTest } from './validation_test.js';
 
 export class F extends ValidationTest {
+  makeAttachmentTexture(): GPUTexture {
+    return this.device.createTexture({
+      format: 'rgba8unorm',
+      size: { width: 16, height: 16, depth: 1 },
+      usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
+    });
+  }
+
   testComputePass(
     bindGroup: GPUBindGroup,
     pipelineLayout: GPUPipelineLayout,
@@ -95,17 +103,11 @@ export class F extends ValidationTest {
     pipelineLayout: GPUPipelineLayout,
     dynamicOffsets: number[]
   ): void {
-    const attachmentTexture = this.device.createTexture({
-      format: 'rgba8unorm',
-      size: { width: 16, height: 16, depth: 1 },
-      usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
-    });
-
     const encoder = this.device.createCommandEncoder();
     const renderPass = encoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment: attachmentTexture.createView(),
+          attachment: this.makeAttachmentTexture().createView(),
           loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
         },
       ],
@@ -121,7 +123,7 @@ export class F extends ValidationTest {
     dynamicOffsets: number[]
   ): void {
     const encoder = this.device.createRenderBundleEncoder({
-      colorFormats: [],
+      colorFormats: ['rgba8unorm'],
     });
     this.testRender(bindGroup, pipelineLayout, dynamicOffsets, encoder);
     encoder.finish();
@@ -132,32 +134,42 @@ export const g = new TestGroup(F);
 
 g.test('dynamic offsets passed but not expected/compute pass', async t => {
   const bindGroupLayout = t.device.createBindGroupLayout({ bindings: [] });
-  const pipelineLayout = t.device.createPipelineLayout({ bindGroupLayouts: [bindGroupLayout] });
   const bindGroup = t.device.createBindGroup({ layout: bindGroupLayout, bindings: [] });
 
-  const { type, dynamicOffsets, success } = t.params;
+  const { type } = t.params;
+  const dynamicOffsets = [0];
 
   await t.expectValidationError(() => {
     if (type === 'compute') {
-      t.testComputePass(bindGroup, pipelineLayout, dynamicOffsets);
+      const encoder = t.device.createCommandEncoder();
+      const computePass = encoder.beginComputePass();
+      computePass.setBindGroup(0, bindGroup, dynamicOffsets);
+      computePass.endPass();
+      encoder.finish();
     } else if (type === 'renderpass') {
-      t.testRenderPass(bindGroup, pipelineLayout, dynamicOffsets);
+      const encoder = t.device.createCommandEncoder();
+      const renderPass = encoder.beginRenderPass({
+        colorAttachments: [
+          {
+            attachment: t.makeAttachmentTexture().createView(),
+            loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          },
+        ],
+      });
+      renderPass.setBindGroup(0, bindGroup, dynamicOffsets);
+      renderPass.endPass();
+      encoder.finish();
     } else if (type === 'renderbundle') {
-      t.testRenderBundle(bindGroup, pipelineLayout, dynamicOffsets);
+      const encoder = t.device.createRenderBundleEncoder({
+        colorFormats: ['rgba8unorm'],
+      });
+      encoder.setBindGroup(0, bindGroup, dynamicOffsets);
+      encoder.finish();
     } else {
       t.fail();
     }
-  }, !success);
-}).params(
-  pcombine([
-    poptions('type', ['compute', 'renderpass', 'renderbundle']),
-    [
-      { dynamicOffsets: undefined, success: true },
-      { dynamicOffsets: [], success: true },
-      { dynamicOffsets: [0], success: false },
-    ],
-  ])
-);
+  });
+}).params(poptions('type', ['compute', 'renderpass', 'renderbundle']));
 
 g.test('dynamic offsets match expectations in pass encoder', async t => {
   // Dynamic buffer offsets require offset to be divisible by 256
