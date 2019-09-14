@@ -436,17 +436,20 @@ g.test('buffer offset and size for bind groups match', async t => {
 }).params([
   { offset: 0, size: 512, success: true }, // offset 0 is valid
   { offset: 256, size: 256, success: true }, // offset 256 (aligned) is valid
-  { offset: 1, size: 256, success: false }, // unaligned buffer offset is invalid
-  { offset: 128, size: 256, success: false }, // unaligned buffer offset is invalid
-  { offset: 255, size: 256, success: false }, // unaligned buffer offset is invalid
+
+  // unaligned buffer offset is invalid
+  { offset: 1, size: 256, success: false },
+  { offset: 1, size: undefined, success: false },
+  { offset: 128, size: 256, success: false },
+  { offset: 255, size: 256, success: false },
+
   { offset: 0, size: 256, success: true }, // touching the start of the buffer works
   { offset: 256 * 3, size: 256, success: true }, // touching the end of the buffer works
-  { offset: 1024, size: 0, success: true }, // touching the start of the buffer works
+  { offset: 1024, size: 0, success: true }, // touching the end of the buffer works
   { offset: 0, size: 1024, success: true }, // touching the full buffer works
-  { offset: 0, success: true }, // touching the full buffer works
+  { offset: 0, size: undefined, success: true }, // touching the full buffer works
   { offset: 256 * 5, size: 0, success: false }, // offset is OOB
   { offset: 0, size: 256 * 5, success: false }, // size is OOB
   { offset: 1024, size: 1, success: false }, // offset+size is OOB
-  { offset: 1, success: false }, // offset+size is OOB
   { offset: 256, size: -256, success: false }, // offset+size overflows to be 0
 ]);

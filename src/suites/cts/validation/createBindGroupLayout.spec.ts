@@ -54,7 +54,7 @@ g.test('negative binding index', async t => {
   // Control case
   t.device.createBindGroupLayout(goodDescriptor);
 
-  // Binding index 16 can't be specified.
+  // Negative binding index can't be specified.
   const badDescriptor = clone(goodDescriptor);
   badDescriptor.bindings![0].binding = -1;
 
