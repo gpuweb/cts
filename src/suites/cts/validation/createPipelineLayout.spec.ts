@@ -82,7 +82,7 @@ g.test('number of bind group layouts exceeds the maximum value', async t => {
     ],
   };
 
-  // 4 is the maximum number of bing group layouts.
+  // 4 is the maximum number of bind group layouts.
   const maxBindGroupLayouts = [1, 2, 3, 4].map(() =>
     t.device.createBindGroupLayout(bindGroupLayoutDescriptor)
   );
