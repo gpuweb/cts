@@ -2,11 +2,11 @@ export const description = `
 commandBuffer validation tests.
 `;
 
-import { TestGroup } from '../../../framework/index.js';
+import { TestGroup, poptions } from '../../../framework/index.js';
 
 import { ValidationTest } from './validation_test.js';
 
-export class F extends ValidationTest {
+class F extends ValidationTest {
   beginPass(
     type: string,
     commandEncoder: GPUCommandEncoder
@@ -49,40 +49,40 @@ g.test('basic', async t => {
   commandEncoder.finish();
 });
 
+g.test('command buffer can be ended after pass ends', async t => {
+  const { type } = t.params;
+
+  const commandEncoder = t.device.createCommandEncoder();
+  const pass = t.beginPass(type, commandEncoder);
+  pass.endPass();
+  commandEncoder.finish();
+}).params(poptions('type', ['render', 'compute']));
+
 g.test('command buffer cannot be ended mid pass', async t => {
   const { type } = t.params;
 
-  {
-    // Control case
-    const commandEncoder = t.device.createCommandEncoder();
-    const pass = t.beginPass(type, commandEncoder);
-    pass.endPass();
-    commandEncoder.finish();
-  }
-  {
-    // Command buffer ended mid-pass.
-    await t.expectValidationError(() => {
-      const commandEncoder = t.device.createCommandEncoder();
-      t.beginPass(type, commandEncoder);
-      commandEncoder.finish();
-    });
-  }
-  {
-    // Trying to use encoder pass after finish() should fail too
-    await t.expectValidationError(async () => {
-      const commandEncoder = t.device.createCommandEncoder();
-      const pass = t.beginPass(type, commandEncoder);
-      commandEncoder.finish();
+  const commandEncoder = t.device.createCommandEncoder();
+  t.beginPass(type, commandEncoder);
 
-      await t.expectValidationError(() => {
-        pass.endPass();
-      });
-    });
-  }
-}).params([
-  { type: 'render' }, // (blank comment to enforce newlines on autoformat)
-  { type: 'compute' },
-]);
+  await t.expectValidationError(() => {
+    commandEncoder.finish();
+  });
+}).params(poptions('type', ['render', 'compute']));
+
+g.test('pass cannot be used after command buffer ends', async t => {
+  const { type } = t.params;
+
+  const commandEncoder = t.device.createCommandEncoder();
+  const pass = t.beginPass(type, commandEncoder);
+
+  await t.expectValidationError(() => {
+    commandEncoder.finish();
+  });
+
+  await t.expectValidationError(() => {
+    pass.endPass();
+  });
+}).params(poptions('type', ['render', 'compute']));
 
 g.test('pass cannot be ended twice', async t => {
   const { type } = t.params;
@@ -104,10 +104,7 @@ g.test('pass cannot be ended twice', async t => {
       commandEncoder.finish();
     });
   }
-}).params([
-  { type: 'render' }, // (blank comment to enforce newlines on autoformat)
-  { type: 'compute' },
-]);
+}).params(poptions('type', ['render', 'compute']));
 
 g.test('beginning a pass before ending a previous pass causes an error', async t => {
   const { type } = t.params;
@@ -137,10 +134,7 @@ g.test('beginning a pass before ending a previous pass causes an error', async t
       commandEncoder.finish();
     });
   }
-}).params([
-  { type: 'render' }, // (blank comment to enforce newlines on autoformat)
-  { type: 'compute' },
-]);
+}).params(poptions('type', ['render', 'compute']));
 
 g.test('encoding command after a successful finish produces an error', async t => {
   const copyBuffer = t.device.createBuffer({
@@ -169,12 +163,12 @@ g.test('encoding command after a failed finish produces an error', async t => {
   const commandEncoder = t.device.createCommandEncoder();
   commandEncoder.copyBufferToBuffer(errorBuffer, 0, errorBuffer, 0, 16);
 
-  await t.expectValidationError(async () => {
+  await t.expectValidationError(() => {
     commandEncoder.finish();
+  });
 
-    await t.expectValidationError(() => {
-      commandEncoder.copyBufferToBuffer(copyBuffer, 0, copyBuffer, 0, 16);
-    });
+  await t.expectValidationError(() => {
+    commandEncoder.copyBufferToBuffer(copyBuffer, 0, copyBuffer, 0, 16);
   });
 });
 
