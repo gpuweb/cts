@@ -6,7 +6,7 @@ import { TestGroup } from '../../../framework/index.js';
 
 import { ValidationTest } from './validation_test.js';
 
-// TODO: Move beginRenderPass to a Fixture class.
+// TODO: Move this fixture class to a common file.
 export class F extends ValidationTest {
   beginRenderPass(commandEncoder: GPUCommandEncoder): GPURenderPassEncoder {
     const attachmentTexture = this.device.createTexture({

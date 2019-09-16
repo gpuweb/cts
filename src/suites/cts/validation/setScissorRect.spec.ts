@@ -6,7 +6,7 @@ import { TestGroup } from '../../../framework/index.js';
 
 import { ValidationTest } from './validation_test.js';
 
-// TODO: Move beginRenderPass to a Fixture class.
+// TODO: Move this fixture class to a common file.
 export class F extends ValidationTest {
   textureWidth: number = 16;
   textureHeight: number = 16;
@@ -39,44 +39,41 @@ g.test('basic use of setScissorRect', t => {
   commandEncoder.finish();
 });
 
-g.test('an empty scissor is not allowed', async t => {
-  {
-    // Width of scissor rect is zero
-    const commandEncoder = t.device.createCommandEncoder();
-    const renderPass = t.beginRenderPass(commandEncoder);
-    const width = 0;
-    renderPass.setScissorRect(0, 0, width, 1);
-    renderPass.endPass();
+g.test('a scissor rect width of zero is not allowed', async t => {
+  const commandEncoder = t.device.createCommandEncoder();
+  const renderPass = t.beginRenderPass(commandEncoder);
+  const width = 0;
+  renderPass.setScissorRect(0, 0, width, 1);
+  renderPass.endPass();
 
-    await t.expectValidationError(() => {
-      commandEncoder.finish();
-    });
-  }
-  {
-    // Height of scissor rect is zero
-    const commandEncoder = t.device.createCommandEncoder();
-    const renderPass = t.beginRenderPass(commandEncoder);
-    const height = 0;
-    renderPass.setScissorRect(0, 0, 0, height);
-    renderPass.endPass();
+  await t.expectValidationError(() => {
+    commandEncoder.finish();
+  });
+});
 
-    await t.expectValidationError(() => {
-      commandEncoder.finish();
-    });
-  }
-  {
-    // Both width and height of scissor rect are zero
-    const commandEncoder = t.device.createCommandEncoder();
-    const renderPass = t.beginRenderPass(commandEncoder);
-    const width = 0;
-    const height = 0;
-    renderPass.setScissorRect(0, 0, width, height);
-    renderPass.endPass();
+g.test('a scissor rect height of zero is not allowed', async t => {
+  const commandEncoder = t.device.createCommandEncoder();
+  const renderPass = t.beginRenderPass(commandEncoder);
+  const height = 0;
+  renderPass.setScissorRect(0, 0, 0, height);
+  renderPass.endPass();
 
-    await t.expectValidationError(() => {
-      commandEncoder.finish();
-    });
-  }
+  await t.expectValidationError(() => {
+    commandEncoder.finish();
+  });
+});
+
+g.test('both scissor rect width and height of zero are not allowed', async t => {
+  const commandEncoder = t.device.createCommandEncoder();
+  const renderPass = t.beginRenderPass(commandEncoder);
+  const width = 0;
+  const height = 0;
+  renderPass.setScissorRect(0, 0, width, height);
+  renderPass.endPass();
+
+  await t.expectValidationError(() => {
+    commandEncoder.finish();
+  });
 });
 
 g.test('scissor larger than the framebuffer is allowed', t => {
