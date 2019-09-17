@@ -63,7 +63,7 @@ g.test('increasing fence value by more than 1 succeeds', async t => {
   await fence.onCompletion(6);
 });
 
-g.test('signal a fence on a different queue than it was created on is invalid', async t => {
+g.test('signal a fence on a different device than it was created on is invalid', async t => {
   const fence = t.queue.createFence();
 
   const anotherDevice = await t.device.adapter.requestDevice();
@@ -74,7 +74,7 @@ g.test('signal a fence on a different queue than it was created on is invalid', 
   });
 });
 
-g.test('signal a fence on a wrong queue does not update fence signaled value', async t => {
+g.test('signal a fence on a different device does not update fence signaled value', async t => {
   const fence = t.queue.createFence();
 
   const anotherDevice = await t.device.adapter.requestDevice();
