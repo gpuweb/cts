@@ -2,12 +2,12 @@ export const description = `
 setStencilReference validation tests.
 `;
 
-import { TestGroup } from '../../../framework/index.js';
+import { TestGroup, poptions } from '../../../framework/index.js';
 
 import { ValidationTest } from './validation_test.js';
 
 // TODO: Move this fixture class to a common file.
-export class F extends ValidationTest {
+class F extends ValidationTest {
   beginRenderPass(commandEncoder: GPUCommandEncoder): GPURenderPassEncoder {
     const attachmentTexture = this.device.createTexture({
       format: 'rgba8unorm',
@@ -28,18 +28,12 @@ export class F extends ValidationTest {
 
 export const g = new TestGroup(F);
 
-g.test('basic use of setStencilReference', t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  renderPass.setStencilReference(0);
-  renderPass.endPass();
-  commandEncoder.finish();
-});
+g.test('use of setStencilReference', t => {
+  const { reference } = t.params;
 
-g.test('setStencilReference allows any bit to be set', t => {
   const commandEncoder = t.device.createCommandEncoder();
   const renderPass = t.beginRenderPass(commandEncoder);
-  renderPass.setStencilReference(0xffffffff);
+  renderPass.setStencilReference(reference);
   renderPass.endPass();
   commandEncoder.finish();
-});
+}).params(poptions('reference', [0, 0xffffffff]));

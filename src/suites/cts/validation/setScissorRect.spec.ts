@@ -6,15 +6,15 @@ import { TestGroup } from '../../../framework/index.js';
 
 import { ValidationTest } from './validation_test.js';
 
-// TODO: Move this fixture class to a common file.
-export class F extends ValidationTest {
-  textureWidth: number = 16;
-  textureHeight: number = 16;
+const TEXTURE_WIDTH: number = 16;
+const TEXTURE_HEIGHT: number = 16;
 
+// TODO: Move this fixture class to a common file.
+class F extends ValidationTest {
   beginRenderPass(commandEncoder: GPUCommandEncoder): GPURenderPassEncoder {
     const attachmentTexture = this.device.createTexture({
       format: 'rgba8unorm',
-      size: { width: this.textureWidth, height: this.textureHeight, depth: 1 },
+      size: { width: TEXTURE_WIDTH, height: TEXTURE_HEIGHT, depth: 1 },
       usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
     });
 
@@ -31,57 +31,21 @@ export class F extends ValidationTest {
 
 export const g = new TestGroup(F);
 
-g.test('basic use of setScissorRect', t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  renderPass.setScissorRect(0, 0, 1, 1);
-  renderPass.endPass();
-  commandEncoder.finish();
-});
+g.test('use of setScissorRect', async t => {
+  const { x, y, width, height, success } = t.params;
 
-g.test('a scissor rect width of zero is not allowed', async t => {
   const commandEncoder = t.device.createCommandEncoder();
   const renderPass = t.beginRenderPass(commandEncoder);
-  const width = 0;
-  renderPass.setScissorRect(0, 0, width, 1);
+  renderPass.setScissorRect(x, y, width, height);
   renderPass.endPass();
 
   await t.expectValidationError(() => {
     commandEncoder.finish();
-  });
-});
-
-g.test('a scissor rect height of zero is not allowed', async t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  const height = 0;
-  renderPass.setScissorRect(0, 0, 0, height);
-  renderPass.endPass();
-
-  await t.expectValidationError(() => {
-    commandEncoder.finish();
-  });
-});
-
-g.test('both scissor rect width and height of zero are not allowed', async t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  const width = 0;
-  const height = 0;
-  renderPass.setScissorRect(0, 0, width, height);
-  renderPass.endPass();
-
-  await t.expectValidationError(() => {
-    commandEncoder.finish();
-  });
-});
-
-g.test('scissor larger than the framebuffer is allowed', t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  const width = t.textureWidth + 1;
-  const height = t.textureHeight + 1;
-  renderPass.setScissorRect(0, 0, width, height);
-  renderPass.endPass();
-  commandEncoder.finish();
-});
+  }, !success);
+}).params([
+  { x: 0, y: 0, width: 1, height: 1, success: true }, // Basic use
+  { x: 0, y: 0, width: 0, height: 1, success: false }, // Width of zero is not allowed
+  { x: 0, y: 0, width: 1, height: 0, success: false }, // Height of zero is not allowed
+  { x: 0, y: 0, width: 0, height: 0, success: false }, // Both width and height of zero are not allowed
+  { x: 0, y: 0, width: TEXTURE_WIDTH + 1, height: TEXTURE_HEIGHT + 1, success: true }, // Scissor larger than the framebuffer is allowed
+]);

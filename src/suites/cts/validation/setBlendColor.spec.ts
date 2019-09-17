@@ -7,7 +7,7 @@ import { TestGroup } from '../../../framework/index.js';
 import { ValidationTest } from './validation_test.js';
 
 // TODO: Move beginRenderPass to a Fixture class.
-export class F extends ValidationTest {
+class F extends ValidationTest {
   beginRenderPass(commandEncoder: GPUCommandEncoder): GPURenderPassEncoder {
     const attachmentTexture = this.device.createTexture({
       format: 'rgba8unorm',
@@ -37,9 +37,12 @@ g.test('basic use of setBlendColor', t => {
 });
 
 g.test('setBlendColor allows any number value', t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  renderPass.setBlendColor({ r: -1, g: 42, b: -0, a: 0 });
-  renderPass.endPass();
-  commandEncoder.finish();
+  const values = [Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER];
+  for (const value of values) {
+    const commandEncoder = t.device.createCommandEncoder();
+    const renderPass = t.beginRenderPass(commandEncoder);
+    renderPass.setBlendColor({ r: value, g: value, b: value, a: value });
+    renderPass.endPass();
+    commandEncoder.finish();
+  }
 });

@@ -6,15 +6,15 @@ import { TestGroup } from '../../../framework/index.js';
 
 import { ValidationTest } from './validation_test.js';
 
-// TODO: Move this fixture class to a common file.
-export class F extends ValidationTest {
-  textureWidth: number = 16;
-  textureHeight: number = 16;
+const TEXTURE_WIDTH: number = 16;
+const TEXTURE_HEIGHT: number = 16;
 
+// TODO: Move this fixture class to a common file.
+class F extends ValidationTest {
   beginRenderPass(commandEncoder: GPUCommandEncoder): GPURenderPassEncoder {
     const attachmentTexture = this.device.createTexture({
       format: 'rgba8unorm',
-      size: { width: this.textureWidth, height: this.textureHeight, depth: 1 },
+      size: { width: TEXTURE_WIDTH, height: TEXTURE_HEIGHT, depth: 1 },
       usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
     });
 
@@ -31,167 +31,39 @@ export class F extends ValidationTest {
 
 export const g = new TestGroup(F);
 
-g.test('basic use of setViewport', t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  renderPass.setViewport(0, 0, 1, 1, 0, 1);
-  renderPass.endPass();
-  commandEncoder.finish();
-});
+g.test('use of setViewport', async t => {
+  const { x, y, width, height, minDepth, maxDepth, success } = t.params;
 
-g.test('a viewport width of zero is not allowed', async t => {
   const commandEncoder = t.device.createCommandEncoder();
   const renderPass = t.beginRenderPass(commandEncoder);
-  const width = 0;
-  renderPass.setViewport(0, 0, width, 1, 0, 1);
+  renderPass.setViewport(x, y, width, height, minDepth, maxDepth);
   renderPass.endPass();
 
   await t.expectValidationError(() => {
     commandEncoder.finish();
-  });
-});
-
-g.test('a viewport height of zero is not allowed', async t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  const height = 0;
-  renderPass.setViewport(0, 0, 0, height, 0, 1);
-  renderPass.endPass();
-
-  await t.expectValidationError(() => {
-    commandEncoder.finish();
-  });
-});
-
-g.test('both viewport width and height of zero are not allowed', async t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  const width = 0;
-  const height = 0;
-  renderPass.setViewport(0, 0, width, height, 0, 1);
-  renderPass.endPass();
-
-  await t.expectValidationError(() => {
-    commandEncoder.finish();
-  });
-});
-
-g.test('viewport larger than the framebuffer is allowed', t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  const width = t.textureWidth + 1;
-  const height = t.textureHeight + 1;
-  renderPass.setViewport(0, 0, width, height, 0, 1);
-  renderPass.endPass();
-  commandEncoder.finish();
-});
-
-g.test('negative x in viewport is not allowed', t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  const x = -1;
-  renderPass.setViewport(x, 0, 1, 1, 0, 1);
-  renderPass.endPass();
-  commandEncoder.finish();
-});
-
-g.test('negative y in viewport is not allowed', t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  const y = -1;
-  renderPass.setViewport(0, y, 1, 1, 0, 1);
-  renderPass.endPass();
-  commandEncoder.finish();
-});
-
-g.test('negative width in viewport is not allowed', async t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  const width = -1;
-  renderPass.setViewport(0, 0, width, 1, 0, 1);
-  renderPass.endPass();
-
-  await t.expectValidationError(() => {
-    commandEncoder.finish();
-  });
-});
-
-g.test('negative height in viewport is not allowed', async t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  const height = -1;
-  renderPass.setViewport(0, 0, 1, height, 0, 1);
-  renderPass.endPass();
-
-  await t.expectValidationError(() => {
-    commandEncoder.finish();
-  });
-});
-
-g.test('negative minDepth in viewport is not allowed', async t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  const minDepth = -1;
-  renderPass.setViewport(0, 0, 1, 1, minDepth, 1);
-  renderPass.endPass();
-
-  await t.expectValidationError(() => {
-    commandEncoder.finish();
-  });
-});
-
-g.test('minDepth greater than 1 in viewport is not allowed', async t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  const minDepth = 2;
-  renderPass.setViewport(0, 0, 1, 1, minDepth, 1);
-  renderPass.endPass();
-
-  await t.expectValidationError(() => {
-    commandEncoder.finish();
-  });
-});
-
-g.test('maxDepth between 0 and 1 is required', async t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  const maxDepth = -1;
-  renderPass.setViewport(0, 0, 1, 1, 0, maxDepth);
-  renderPass.endPass();
-
-  await t.expectValidationError(() => {
-    commandEncoder.finish();
-  });
-});
-
-g.test('maxDepth greater than 1 in viewport is not allowed', async t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  const maxDepth = 2;
-  renderPass.setViewport(0, 0, 1, 1, 0, maxDepth);
-  renderPass.endPass();
-
-  await t.expectValidationError(() => {
-    commandEncoder.finish();
-  });
-});
-
-g.test('minDepth equal to maxDepth is allowed', t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  const minDepth = 0.5;
-  const maxDepth = 0.5;
-  renderPass.setViewport(0, 0, 1, 1, minDepth, maxDepth);
-  renderPass.endPass();
-  commandEncoder.finish();
-});
-
-g.test('minDepth greater than maxDepth is allowed', t => {
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  const minDepth = 0.8;
-  const maxDepth = 0.5;
-  renderPass.setViewport(0, 0, 1, 1, minDepth, maxDepth);
-  renderPass.endPass();
-  commandEncoder.finish();
-});
+  }, !success);
+}).params([
+  { x: 0, y: 0, width: 1, height: 1, minDepth: 0, maxDepth: 1, success: true }, // Basic use
+  { x: 0, y: 0, width: 0, height: 1, minDepth: 0, maxDepth: 1, success: false }, // Width of zero is not allowed
+  { x: 0, y: 0, width: 1, height: 0, minDepth: 0, maxDepth: 1, success: false }, // Height of zero is not allowed
+  { x: 0, y: 0, width: 0, height: 0, minDepth: 0, maxDepth: 1, success: false }, // Both width and height of zero are not allowed
+  { x: -1, y: 0, width: 1, height: 1, minDepth: 0, maxDepth: 1, success: true }, // Negative x is allowed
+  { x: 0, y: -1, width: 1, height: 1, minDepth: 0, maxDepth: 1, success: true }, // Negative y is allowed
+  { x: 0, y: 0, width: -1, height: 1, minDepth: 0, maxDepth: 1, success: false }, // Negative width is not allowed
+  { x: 0, y: 0, width: 1, height: -1, minDepth: 0, maxDepth: 1, success: false }, // Negative height is not allowed
+  { x: 0, y: 0, width: 1, height: 1, minDepth: -1, maxDepth: 1, success: false }, // Negative minDepth is not allowed
+  { x: 0, y: 0, width: 1, height: 1, minDepth: 0, maxDepth: -1, success: false }, // Negative maxDepth is not allowed
+  { x: 0, y: 0, width: 1, height: 1, minDepth: 10, maxDepth: 1, success: false }, // minDepth greater than 1 is not allowed
+  { x: 0, y: 0, width: 1, height: 1, minDepth: 0, maxDepth: 10, success: false }, // maxDepth greater than 1 is not allowed
+  { x: 0, y: 0, width: 1, height: 1, minDepth: 0.5, maxDepth: 0.5, success: true }, // minDepth equal to maxDepth is allowed
+  { x: 0, y: 0, width: 1, height: 1, minDepth: 0.8, maxDepth: 0.5, success: true }, // minDepth greater than maxDepth is allowed
+  {
+    x: 0,
+    y: 0,
+    width: TEXTURE_WIDTH + 1,
+    height: TEXTURE_HEIGHT + 1,
+    minDepth: 0,
+    maxDepth: 1,
+    success: true,
+  }, // Viewport larger than the framebuffer is allowed
+]);
