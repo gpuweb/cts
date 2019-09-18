@@ -20,17 +20,35 @@ class F extends Fixture {
       size: 1024,
       usage: 0xffff, // Invalid GPUBufferUsage
     });
+    // TODO: Remove when chrome does it automatically.
+    this.device.getQueue().submit([]);
   }
 
   async expectUncapturedError(fn: Function): Promise<void> {
+    // TODO: Make arbitrary timeout value a test runner variable
+    const TIMEOUT_IN_MS = 1000;
+
     return this.asyncExpectation(async () => {
-      const promise = new Promise(resolve => {
-        this.device.addEventListener('uncapturederror', resolve, { once: true });
-      });
+      try {
+        const promise = new Promise((resolve, reject) => {
+          const timeoutId = window.setTimeout(() => {
+            reject(new Error('Uncaptured error timeout occured'));
+          }, TIMEOUT_IN_MS);
 
-      fn();
+          const onUncapturedError = () => {
+            window.clearTimeout(timeoutId);
+            resolve();
+          };
 
-      await promise;
+          this.device.addEventListener('uncapturederror', onUncapturedError, { once: true });
+        });
+
+        fn();
+
+        await promise;
+      } catch (error) {
+        this.fail(error.message);
+      }
     });
   }
 }
@@ -63,7 +81,7 @@ g.test('errors bubble to the parent scope if not handled by the current scope', 
 });
 
 g.test('if an error scope matches an error it does not bubble to the parent scope', async t => {
-  t.device.pushErrorScope('out-of-memory');
+  t.device.pushErrorScope('validation');
   t.device.pushErrorScope('validation');
 
   t.createErrorBuffer();
@@ -81,7 +99,7 @@ g.test('if an error scope matches an error it does not bubble to the parent scop
 g.test('if no error scope handles an error it fires an uncapturederror event', async t => {
   t.device.pushErrorScope('out-of-memory');
 
-  t.expectUncapturedError(() => {
+  await t.expectUncapturedError(() => {
     t.createErrorBuffer();
   });
 
@@ -94,11 +112,15 @@ g.test('push/popping error scopes must be balanced', async t => {
     const promise = t.device.popErrorScope();
     await t.shouldReject('OperationError', promise);
   }
-  t.device.pushErrorScope('validation');
-  {
-    const error = await t.device.popErrorScope();
-    t.expect(error === null);
+
+  const promises = [];
+  for (let i = 0; i < 1000; i++) {
+    t.device.pushErrorScope('validation');
+    promises.push(t.device.popErrorScope());
   }
+  const errors = await Promise.all(promises);
+  t.expect(errors.every(e => e === null));
+
   {
     const promise = t.device.popErrorScope();
     await t.shouldReject('OperationError', promise);
