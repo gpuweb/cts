@@ -5,6 +5,14 @@ error scope validation tests.
 import { getGPU } from '../../../framework/gpu/implementation.js';
 import { Fixture, TestGroup } from '../../../framework/index.js';
 
+function rejectTimeout(ms: number, msg: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      reject(new Error(msg));
+    }, ms);
+  });
+}
+
 class F extends Fixture {
   device: GPUDevice = undefined!;
 
@@ -30,22 +38,16 @@ class F extends Fixture {
 
     return this.asyncExpectation(async () => {
       try {
-        const promise = new Promise((resolve, reject) => {
-          const timeoutId = window.setTimeout(() => {
-            reject(new Error('Uncaptured error timeout occured'));
-          }, TIMEOUT_IN_MS);
-
-          const onUncapturedError = () => {
-            window.clearTimeout(timeoutId);
-            resolve();
-          };
-
-          this.device.addEventListener('uncapturederror', onUncapturedError, { once: true });
+        const promise = new Promise(resolve => {
+          this.device.addEventListener('uncapturederror', resolve, { once: true });
         });
 
         fn();
 
-        await promise;
+        await Promise.race([
+          promise,
+          rejectTimeout(TIMEOUT_IN_MS, 'Uncaptured error timeout occurred'),
+        ]);
       } catch (error) {
         this.fail(error.message);
       }
@@ -107,7 +109,7 @@ g.test('if no error scope handles an error it fires an uncapturederror event', a
   t.expect(error === null);
 });
 
-g.test('push/popping error scopes must be balanced', async t => {
+g.test('push/popping sibling error scopes must be balanced', async t => {
   {
     const promise = t.device.popErrorScope();
     await t.shouldReject('OperationError', promise);
@@ -116,6 +118,28 @@ g.test('push/popping error scopes must be balanced', async t => {
   const promises = [];
   for (let i = 0; i < 1000; i++) {
     t.device.pushErrorScope('validation');
+    promises.push(t.device.popErrorScope());
+  }
+  const errors = await Promise.all(promises);
+  t.expect(errors.every(e => e === null));
+
+  {
+    const promise = t.device.popErrorScope();
+    await t.shouldReject('OperationError', promise);
+  }
+});
+
+g.test('push/popping nested error scopes must be balanced', async t => {
+  {
+    const promise = t.device.popErrorScope();
+    await t.shouldReject('OperationError', promise);
+  }
+
+  const promises = [];
+  for (let i = 0; i < 1000; i++) {
+    t.device.pushErrorScope('validation');
+  }
+  for (let i = 0; i < 1000; i++) {
     promises.push(t.device.popErrorScope());
   }
   const errors = await Promise.all(promises);
