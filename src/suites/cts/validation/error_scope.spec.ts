@@ -32,14 +32,20 @@ class F extends Fixture {
     this.device.getQueue().submit([]);
   }
 
-  async expectUncapturedError(fn: Function): Promise<void> {
+  async expectUncapturedError(fn: Function, callback: Function): Promise<void> {
     // TODO: Make arbitrary timeout value a test runner variable
     const TIMEOUT_IN_MS = 1000;
 
     return this.asyncExpectation(async () => {
       try {
         const promise = new Promise(resolve => {
-          this.device.addEventListener('uncapturederror', resolve, { once: true });
+          const eventListener = ((event: GPUUncapturedErrorEvent) => {
+            this.debug(`Got uncaptured error event with ${event.error}`);
+            callback(event);
+            resolve();
+          }) as EventListener;
+
+          this.device.addEventListener('uncapturederror', eventListener, { once: true });
         });
 
         fn();
@@ -101,9 +107,14 @@ g.test('if an error scope matches an error it does not bubble to the parent scop
 g.test('if no error scope handles an error it fires an uncapturederror event', async t => {
   t.device.pushErrorScope('out-of-memory');
 
-  await t.expectUncapturedError(() => {
-    t.createErrorBuffer();
-  });
+  await t.expectUncapturedError(
+    () => {
+      t.createErrorBuffer();
+    },
+    (uncapturedErrorEvent: GPUUncapturedErrorEvent) => {
+      t.expect(uncapturedErrorEvent.error instanceof GPUValidationError);
+    }
+  );
 
   const error = await t.device.popErrorScope();
   t.expect(error === null);
