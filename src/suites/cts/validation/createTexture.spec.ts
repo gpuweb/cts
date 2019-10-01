@@ -48,11 +48,15 @@ g.test('validation of sampleCount', async t => {
     t.device.createTexture(descriptor);
   }, !success);
 }).params([
+  { sampleCount: 0, success: false }, // sampleCount of 0 is not allowed
   { sampleCount: 1, success: true }, // sampleCount of 1 is allowed
-  { sampleCount: 4, success: true }, // sampleCount of 4 is allowed
+  { sampleCount: 2, success: false }, // sampleCount of 2 is not allowed
   { sampleCount: 3, success: false }, // sampleCount of 3 is not allowed
-  { sampleCount: 4, mipLevelCount: 2, success: false }, // it is an error to create a multisampled texture with mipLevelCount > 1.
-  { sampleCount: 4, arrayLayerCount: 2, success: false }, // TODO: Remove when Chrome supports multisampled 2D array textures.
+  { sampleCount: 4, success: true }, // sampleCount of 4 is allowed
+  { sampleCount: 8, success: false }, // sampleCount of 8 is not allowed
+  { sampleCount: 16, success: false }, // sampleCount of 16 is not allowed
+  { sampleCount: 4, mipLevelCount: 2, success: false }, // it is an error to create a multisampled texture with mipLevelCount > 1
+  { sampleCount: 4, arrayLayerCount: 2, success: true }, // multisampled 2D array texture is not supported
 ]);
 
 g.test('validation of mipLevelCount', async t => {
@@ -86,13 +90,16 @@ g.test('it is valid to destroy a destroyed texture', t => {
   texture.destroy();
 });
 
-g.test('it is invalid to submit a destroyed texture before encode', async t => {
+g.test('it is invalid to submit a destroyed texture before and after encode', async t => {
+  const { destroyBeforeEncode, destroyAfterEncode, success } = t.params;
+
   const descriptor = t.getDescriptor();
   const texture = t.device.createTexture(descriptor);
   const textureView = texture.createView();
 
-  // Destroy texture
-  texture.destroy();
+  if (destroyBeforeEncode) {
+    texture.destroy();
+  }
 
   const commandEncoder = t.device.createCommandEncoder();
   const renderPass = commandEncoder.beginRenderPass({
@@ -106,35 +113,18 @@ g.test('it is invalid to submit a destroyed texture before encode', async t => {
   renderPass.endPass();
   const commandBuffer = commandEncoder.finish();
 
-  await t.expectValidationError(() => {
-    t.queue.submit([commandBuffer]);
-  });
-});
-
-g.test('it is invalid to submit a destroyed texture after encode', async t => {
-  const descriptor = t.getDescriptor();
-  const texture = t.device.createTexture(descriptor);
-  const textureView = texture.createView();
-
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = commandEncoder.beginRenderPass({
-    colorAttachments: [
-      {
-        attachment: textureView,
-        loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
-      },
-    ],
-  });
-  renderPass.endPass();
-  const commandBuffer = commandEncoder.finish();
-
-  // Destroy texture
-  texture.destroy();
+  if (destroyAfterEncode) {
+    texture.destroy();
+  }
 
   await t.expectValidationError(() => {
     t.queue.submit([commandBuffer]);
-  });
-});
+  }, !success);
+}).params([
+  { destroyBeforeEncode: false, destroyAfterEncode: false, success: true },
+  { destroyBeforeEncode: true, destroyAfterEncode: false, success: false },
+  { destroyBeforeEncode: false, destroyAfterEncode: true, success: false },
+]);
 
 g.test('it is invalid to have an output attachment texture with non renderable format', async t => {
   const { format, success } = t.params;
@@ -145,11 +135,47 @@ g.test('it is invalid to have an output attachment texture with non renderable f
     t.device.createTexture(descriptor);
   }, !success);
 }).params([
-  { format: 'rgba8unorm', success: true }, // rgba8unorm is renderable
-  { format: 'rg11b10float', success: false }, // rg11b10float is not renderable
-  { format: 'rg8snorm', success: false }, // rg8snorm is not renderable
-  { format: 'r8snorm', success: false }, // r8snorm is not renderable
-  { format: 'rgba8snorm', success: false }, // rgba8snorm is not renderable
+  // 8-bit formats
+  { format: 'r8unorm', success: true },
+  { format: 'r8snorm', success: false },
+  { format: 'r8uint', success: true },
+  { format: 'r8sint', success: true },
+  // 16-bit formats
+  { format: 'r16uint', success: true },
+  { format: 'r16sint', success: true },
+  { format: 'r16float', success: true },
+  { format: 'rg8unorm', success: true },
+  { format: 'rg8snorm', success: false },
+  { format: 'rg8uint', success: true },
+  { format: 'rg8sint', success: true },
+  // 32-bit formats
+  { format: 'r32uint', success: true },
+  { format: 'r32sint', success: true },
+  { format: 'r32float', success: true },
+  { format: 'rg16uint', success: true },
+  { format: 'rg16sint', success: true },
+  { format: 'rg16float', success: true },
+  { format: 'rgba8unorm', success: true },
+  { format: 'rgba8unorm-srgb', success: true },
+  { format: 'rgba8snorm', success: false },
+  { format: 'rgba8uint', success: true },
+  { format: 'rgba8sint', success: true },
+  { format: 'bgra8unorm', success: true },
+  { format: 'bgra8unorm-srgb', success: true },
+  // Packed 32-bit formats
+  { format: 'rgb10a2unorm', success: true },
+  { format: 'rg11b10float', success: false },
+  // 64-bit formats
+  { format: 'rg32uint', success: true },
+  { format: 'rg32sint', success: true },
+  { format: 'rg32float', success: true },
+  { format: 'rgba16uint', success: true },
+  { format: 'rgba16sint', success: true },
+  { format: 'rgba16float', success: true },
+  // 128-bit formats
+  { format: 'rgba32uint', success: true },
+  { format: 'rgba32sint', success: true },
+  { format: 'rgba32float', success: true },
 ]);
 
 // TODO: Add tests for compressed texture formats
