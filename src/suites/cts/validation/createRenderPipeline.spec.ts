@@ -230,22 +230,7 @@ g.test('sample count must be equal to the one of every attachment in the render 
   const pipelineWithDepthStencilOnly = t.device.createRenderPipeline(
     t.getDescriptor({
       colorStates: [],
-      depthStencilState: {
-        format: 'depth24plus-stencil8',
-        // TODO: Remove stencilBack and stencilFront when not required anymore.
-        stencilBack: {
-          compare: 'always',
-          failOp: 'keep',
-          depthFailOp: 'keep',
-          passOp: 'keep',
-        },
-        stencilFront: {
-          compare: 'always',
-          failOp: 'keep',
-          depthFailOp: 'keep',
-          passOp: 'keep',
-        },
-      },
+      depthStencilState: { format: 'depth24plus-stencil8' },
       sampleCount: pipelineSamples,
     })
   );
