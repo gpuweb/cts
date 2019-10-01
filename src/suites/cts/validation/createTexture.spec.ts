@@ -56,7 +56,7 @@ g.test('validation of sampleCount', async t => {
   { sampleCount: 8, success: false }, // sampleCount of 8 is not allowed
   { sampleCount: 16, success: false }, // sampleCount of 16 is not allowed
   { sampleCount: 4, mipLevelCount: 2, success: false }, // it is an error to create a multisampled texture with mipLevelCount > 1
-  { sampleCount: 4, arrayLayerCount: 2, success: true }, // multisampled 2D array texture is not supported
+  { sampleCount: 4, arrayLayerCount: 2, success: true }, // multisampled 2D array texture is supported
 ]);
 
 g.test('validation of mipLevelCount', async t => {
