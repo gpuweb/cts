@@ -2,7 +2,7 @@ export const description = `
 setVertexBuffers validation tests.
 `;
 
-import { TestGroup } from '../../../framework/index.js';
+import { TestGroup, range } from '../../../framework/index.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -29,29 +29,21 @@ class F extends ValidationTest {
         vertexBuffers: [
           {
             stride: 3 * 4,
-            attributeSet: [],
+            attributeSet: range(bufferCount, i => ({
+              format: 'float3',
+              shaderLocation: i,
+            })),
           },
         ],
       },
     };
-    for (let i = 0; i < bufferCount; i++) {
-      descriptor.vertexInput!.vertexBuffers![0].attributeSet.push({
-        format: 'float3',
-        shaderLocation: i,
-      });
-    }
     return this.device.createRenderPipeline(descriptor);
   }
 
   getVertexStage(bufferCount: number): GPUProgrammableStageDescriptor {
     const code = `
       #version 450
-      ${[...new Array(bufferCount)]
-        .map(
-          (_, i) => `
-      layout(location = ${i}) in vec3 a_position${i};`
-        )
-        .join('')}
+      ${range(bufferCount, i => `\nlayout(location = ${i}) in vec3 a_position${i};`).join('')}
       void main() {
         gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
        }
@@ -134,7 +126,7 @@ g.test('vertex buffers inherit from previous pipeline', async t => {
   }
 });
 
-g.test('vertex buffers inherit between render passes', async t => {
+g.test('vertex buffers do not inherit between render passes', async t => {
   const pipeline1 = t.createRenderPipeline(1);
   const pipeline2 = t.createRenderPipeline(2);
 
