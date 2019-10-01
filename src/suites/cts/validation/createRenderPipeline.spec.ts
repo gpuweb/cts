@@ -111,52 +111,97 @@ g.test('at least one color state is required', async t => {
 });
 
 g.test('color formats must be renderable', async t => {
-  const goodDescriptor = t.getDescriptor({
-    colorStates: [{ format: 'rgba8unorm' }],
-  });
+  const { format, success } = t.params;
 
-  // Control case
-  t.device.createRenderPipeline(goodDescriptor);
+  const descriptor = t.getDescriptor({ colorStates: [{ format }] });
 
-  // Fails because RG11B10Float is non-renderable
-  const badDescriptor = t.getDescriptor({
-    colorStates: [{ format: 'rg11b10float' }],
-  });
-
-  await t.expectValidationError(() => {
-    t.device.createRenderPipeline(badDescriptor);
-  });
-});
+  if (success) {
+    // Succeeds when format is renderable
+    t.device.createRenderPipeline(descriptor);
+  } else {
+    // Fails because when format is non-renderable
+    await t.expectValidationError(() => {
+      t.device.createRenderPipeline(descriptor);
+    });
+  }
+}).params([
+  // 8-bit formats
+  { format: 'r8unorm', success: true },
+  { format: 'r8snorm', success: false },
+  { format: 'r8uint', success: true },
+  { format: 'r8sint', success: true },
+  // 16-bit formats
+  { format: 'r16uint', success: true },
+  { format: 'r16sint', success: true },
+  { format: 'r16float', success: true },
+  { format: 'rg8unorm', success: true },
+  { format: 'rg8snorm', success: false },
+  { format: 'rg8uint', success: true },
+  { format: 'rg8sint', success: true },
+  // 32-bit formats
+  { format: 'r32uint', success: true },
+  { format: 'r32sint', success: true },
+  { format: 'r32float', success: true },
+  { format: 'rg16uint', success: true },
+  { format: 'rg16sint', success: true },
+  { format: 'rg16float', success: true },
+  { format: 'rgba8unorm', success: true },
+  { format: 'rgba8unorm-srgb', success: true },
+  { format: 'rgba8snorm', success: false },
+  { format: 'rgba8uint', success: true },
+  { format: 'rgba8sint', success: true },
+  { format: 'bgra8unorm', success: true },
+  { format: 'bgra8unorm-srgb', success: true },
+  // Packed 32-bit formats
+  { format: 'rgb10a2unorm', success: true },
+  { format: 'rg11b10float', success: false },
+  // 64-bit formats
+  { format: 'rg32uint', success: true },
+  { format: 'rg32sint', success: true },
+  { format: 'rg32float', success: true },
+  { format: 'rgba16uint', success: true },
+  { format: 'rgba16sint', success: true },
+  { format: 'rgba16float', success: true },
+  // 128-bit formats
+  { format: 'rgba32uint', success: true },
+  { format: 'rgba32sint', success: true },
+  { format: 'rgba32float', success: true },
+]);
 
 g.test('sample count must be valid', async t => {
-  const goodDescriptor = t.getDescriptor({
-    sampleCount: 4,
-  });
+  const { sampleCount, success } = t.params;
 
-  // Control case
-  t.device.createRenderPipeline(goodDescriptor);
+  const descriptor = t.getDescriptor({ sampleCount });
 
-  // Fails because 3 is not a power of 2.
-  const badDescriptor = t.getDescriptor({
-    sampleCount: 3,
-  });
-
-  await t.expectValidationError(() => {
-    t.device.createRenderPipeline(badDescriptor);
-  });
-});
+  if (success) {
+    // Succeeds when sample count is valid
+    t.device.createRenderPipeline(descriptor);
+  } else {
+    // Fails when sample count is not 4 or 1
+    await t.expectValidationError(() => {
+      t.device.createRenderPipeline(descriptor);
+    });
+  }
+}).params([
+  { sampleCount: 0, success: false },
+  { sampleCount: 1, success: true },
+  { sampleCount: 2, success: false },
+  { sampleCount: 3, success: false },
+  { sampleCount: 4, success: true },
+  { sampleCount: 8, success: false },
+  { sampleCount: 16, success: false },
+]);
 
 g.test('sample count must be equal to the one of every attachment in the render pass', async t => {
-  const { multisampledPass, multisampledPipeline, success } = t.params;
+  const { attachmentSamples, pipelineSamples, success } = t.params;
 
-  const sampleCountForTexture = multisampledPass ? 4 : 1;
   const colorTexture = t.createTexture({
     format: 'rgba8unorm',
-    sampleCount: sampleCountForTexture,
+    sampleCount: attachmentSamples,
   });
   const depthStencilTexture = t.createTexture({
     format: 'depth24plus-stencil8',
-    sampleCount: sampleCountForTexture,
+    sampleCount: attachmentSamples,
   });
   const renderPassDescriptorWithoutDepthStencil = {
     colorAttachments: [
@@ -177,34 +222,32 @@ g.test('sample count must be equal to the one of every attachment in the render 
     },
   };
 
-  const sampleCountForPipeline = multisampledPipeline ? 4 : 1;
-  const pipelineWithoutDepthStencilDescriptor = t.getDescriptor({
-    sampleCount: sampleCountForPipeline,
-  });
   const pipelineWithoutDepthStencil = t.device.createRenderPipeline(
-    pipelineWithoutDepthStencilDescriptor
+    t.getDescriptor({
+      sampleCount: pipelineSamples,
+    })
   );
-  const pipelineWithDepthStencilOnlyDescriptor = t.getDescriptor({
-    colorStates: [],
-    depthStencilState: {
-      format: 'depth24plus-stencil8',
-      stencilBack: {
-        compare: 'always',
-        failOp: 'keep',
-        depthFailOp: 'keep',
-        passOp: 'keep',
-      },
-      stencilFront: {
-        compare: 'always',
-        failOp: 'keep',
-        depthFailOp: 'keep',
-        passOp: 'keep',
-      },
-    },
-    sampleCount: sampleCountForPipeline,
-  });
   const pipelineWithDepthStencilOnly = t.device.createRenderPipeline(
-    pipelineWithDepthStencilOnlyDescriptor
+    t.getDescriptor({
+      colorStates: [],
+      depthStencilState: {
+        format: 'depth24plus-stencil8',
+        // TODO: Remove stencilBack and stencilFront when not required anymore.
+        stencilBack: {
+          compare: 'always',
+          failOp: 'keep',
+          depthFailOp: 'keep',
+          passOp: 'keep',
+        },
+        stencilFront: {
+          compare: 'always',
+          failOp: 'keep',
+          depthFailOp: 'keep',
+          passOp: 'keep',
+        },
+      },
+      sampleCount: pipelineSamples,
+    })
   );
 
   for (const { renderPassDescriptor, pipeline } of [
@@ -227,7 +270,7 @@ g.test('sample count must be equal to the one of every attachment in the render 
     }, !success);
   }
 }).params([
-  { multisampledPass: true, multisampledPipeline: true, success: true }, // It is allowed to use multisampled render pass and multisampled render pipeline.
-  { multisampledPass: true, multisampledPipeline: false, success: false }, // It is not allowed to use multisampled render pass and non-multisampled render pipeline.
-  { multisampledPass: false, multisampledPipeline: true, success: false }, // It is not allowed to use non-multisampled render pass and multisampled render pipeline.
+  { attachmentSamples: 4, pipelineSamples: 4, success: true }, // It is allowed to use multisampled render pass and multisampled render pipeline.
+  { attachmentSamples: 4, pipelineSamples: 1, success: false }, // It is not allowed to use multisampled render pass and non-multisampled render pipeline.
+  { attachmentSamples: 1, pipelineSamples: 4, success: false }, // It is not allowed to use non-multisampled render pass and multisampled render pipeline.
 ]);
