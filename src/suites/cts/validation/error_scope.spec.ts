@@ -5,7 +5,7 @@ error scope validation tests.
 import { getGPU } from '../../../framework/gpu/implementation.js';
 import { Fixture, TestGroup } from '../../../framework/index.js';
 
-function rejectTimeout(ms: number, msg: string): Promise<void> {
+function rejectTimeout(ms: number, msg: string): Promise<GPUUncapturedErrorEvent> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       reject(new Error(msg));
@@ -32,32 +32,25 @@ class F extends Fixture {
     this.device.getQueue().submit([]);
   }
 
-  async expectUncapturedError(fn: Function, callback: Function): Promise<void> {
+  async expectUncapturedError(fn: Function): Promise<GPUUncapturedErrorEvent> {
     // TODO: Make arbitrary timeout value a test runner variable
     const TIMEOUT_IN_MS = 1000;
 
-    return this.asyncExpectation(async () => {
-      try {
-        const promise = new Promise(resolve => {
-          const eventListener = ((event: GPUUncapturedErrorEvent) => {
-            this.debug(`Got uncaptured error event with ${event.error}`);
-            callback(event);
-            resolve();
-          }) as EventListener;
+    const promise: Promise<GPUUncapturedErrorEvent> = new Promise(resolve => {
+      const eventListener = ((event: GPUUncapturedErrorEvent) => {
+        this.debug(`Got uncaptured error event with ${event.error}`);
+        resolve(event);
+      }) as EventListener;
 
-          this.device.addEventListener('uncapturederror', eventListener, { once: true });
-        });
-
-        fn();
-
-        await Promise.race([
-          promise,
-          rejectTimeout(TIMEOUT_IN_MS, 'Uncaptured error timeout occurred'),
-        ]);
-      } catch (error) {
-        this.fail(error.message);
-      }
+      this.device.addEventListener('uncapturederror', eventListener, { once: true });
     });
+
+    fn();
+
+    return Promise.race([
+      promise,
+      rejectTimeout(TIMEOUT_IN_MS, 'Uncaptured error timeout occurred'),
+    ]);
   }
 }
 
@@ -107,14 +100,10 @@ g.test('if an error scope matches an error it does not bubble to the parent scop
 g.test('if no error scope handles an error it fires an uncapturederror event', async t => {
   t.device.pushErrorScope('out-of-memory');
 
-  await t.expectUncapturedError(
-    () => {
-      t.createErrorBuffer();
-    },
-    (uncapturedErrorEvent: GPUUncapturedErrorEvent) => {
-      t.expect(uncapturedErrorEvent.error instanceof GPUValidationError);
-    }
-  );
+  const uncapturedErrorEvent = await t.expectUncapturedError(() => {
+    t.createErrorBuffer();
+  });
+  t.expect(uncapturedErrorEvent.error instanceof GPUValidationError);
 
   const error = await t.device.popErrorScope();
   t.expect(error === null);
