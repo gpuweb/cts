@@ -86,9 +86,13 @@ g.test('creating texture view on a 2D non array texture', async t => {
     texture.createView(descriptor);
   }, !success);
 }).params([
+  { success: true }, // default view works
   { arrayLayerCount: 1, success: true }, // it is OK to create a 2D texture view on a 2D texture
   { arrayLayerCount: 2, success: false }, // it is an error to view a layer past the end of the texture
   { dimension: '2d-array', arrayLayerCount: 1, success: true }, // it is OK to create a 1-layer 2D array texture view on a 2D texture
+  // mip level is in range
+  { mipLevelCount: 1, baseMipLevel: MIP_LEVEL_COUNT - 1, success: true },
+  { mipLevelCount: 2, baseMipLevel: MIP_LEVEL_COUNT - 2, success: true },
   // baseMipLevel == k && mipLevelCount == 0 means to use levels k..end
   { mipLevelCount: 0, baseMipLevel: 0, success: true },
   { mipLevelCount: 0, baseMipLevel: 1, success: true },
@@ -116,6 +120,7 @@ g.test('creating texture view on a 2D array texture', async t => {
     texture.createView(descriptor);
   }, !success);
 }).params([
+  { success: true }, // default view works
   { dimension: '2d', arrayLayerCount: 1, success: true }, // it is OK to create a 2D texture view on a 2D array texture
   { arrayLayerCount: ARRAY_LAYER_COUNT_2D, success: true }, // it is OK to create a 2D array texture view on a 2D array texture
   // baseArrayLayer == k && arrayLayerCount == 0 means to use layers k..end.
@@ -131,7 +136,7 @@ g.test('creating texture view on a 2D array texture', async t => {
 ]);
 
 g.test(
-  'default values validates the same as specifying values for more than 1 array layer',
+  'Using defaults validates the same as setting values for more than 1 array layer',
   async t => {
     const { format, dimension, arrayLayerCount, mipLevelCount, success } = t.params;
 
@@ -159,7 +164,7 @@ g.test(
   },
 ]);
 
-g.test('default values validates the same as specifying values for only 1 array layer', async t => {
+g.test('Using defaults validates the same as setting values for only 1 array layer', async t => {
   const { format, dimension, arrayLayerCount, mipLevelCount, success } = t.params;
 
   const texture = t.createTexture({ arrayLayerCount: 1 });
@@ -201,6 +206,7 @@ g.test('creating cube map texture view', async t => {
   { dimension: 'cube', arrayLayerCount: 3, success: false },
   { dimension: 'cube', arrayLayerCount: 7, success: false },
   { dimension: 'cube', arrayLayerCount: 12, success: false },
+  { dimension: 'cube', success: false },
   { dimension: 'cube-array', arrayLayerCount: 12, success: true }, // it is OK to create a cube map array texture view with arrayLayerCount % 6 == 0
   // it is an error to create a cube map array texture view with arrayLayerCount % 6 != 0
   { dimension: 'cube-array', arrayLayerCount: 11, success: false },
