@@ -6,10 +6,6 @@ import { TestGroup } from '../../../framework/index.js';
 
 import { ValidationTest } from './validation_test.js';
 
-function clone(descriptor: GPUTextureViewDescriptor): GPUTextureViewDescriptor {
-  return JSON.parse(JSON.stringify(descriptor));
-}
-
 class F extends ValidationTest {
   createTexture(
     options: {
@@ -82,24 +78,23 @@ class F extends ValidationTest {
 
 export const g = new TestGroup(F);
 
-g.test('a render pass with only one color or one depth attachment is ok', async t => {
-  {
-    const colorTexture = t.createTexture({ format: 'rgba8unorm' });
-    const descriptor = {
-      colorAttachments: [t.getColorAttachment(colorTexture)],
-    };
+g.test('a render pass with only one color is ok', t => {
+  const colorTexture = t.createTexture({ format: 'rgba8unorm' });
+  const descriptor = {
+    colorAttachments: [t.getColorAttachment(colorTexture)],
+  };
 
-    t.tryRenderPass(true, descriptor);
-  }
-  {
-    const depthStencilTexture = t.createTexture({ format: 'depth24plus-stencil8' });
-    const descriptor = {
-      colorAttachments: [],
-      depthStencilAttachment: t.getDepthStencilAttachment(depthStencilTexture),
-    };
+  t.tryRenderPass(true, descriptor);
+});
 
-    t.tryRenderPass(true, descriptor);
-  }
+g.test('a render pass with only one depth attachment is ok', t => {
+  const depthStencilTexture = t.createTexture({ format: 'depth24plus-stencil8' });
+  const descriptor = {
+    colorAttachments: [],
+    depthStencilAttachment: t.getDepthStencilAttachment(depthStencilTexture),
+  };
+
+  t.tryRenderPass(true, descriptor);
 });
 
 g.test('OOB color attachment indices are handled', async t => {
@@ -225,8 +220,10 @@ g.test('check layer count for color or depth stencil', async t => {
 
   {
     // Check 2D array texture view for color
-    const textureViewDescriptor: GPUTextureViewDescriptor = clone(baseTextureViewDescriptor);
-    textureViewDescriptor.format = COLOR_FORMAT;
+    const textureViewDescriptor: GPUTextureViewDescriptor = {
+      ...baseTextureViewDescriptor,
+      format: COLOR_FORMAT,
+    };
 
     const descriptor: GPURenderPassDescriptor = {
       colorAttachments: [t.getColorAttachment(colorTexture, textureViewDescriptor)],
@@ -236,8 +233,10 @@ g.test('check layer count for color or depth stencil', async t => {
   }
   {
     // Check 2D array texture view for depth stencil
-    const textureViewDescriptor: GPUTextureViewDescriptor = clone(baseTextureViewDescriptor);
-    textureViewDescriptor.format = DEPTH_STENCIL_FORMAT;
+    const textureViewDescriptor: GPUTextureViewDescriptor = {
+      ...baseTextureViewDescriptor,
+      format: DEPTH_STENCIL_FORMAT,
+    };
 
     const descriptor: GPURenderPassDescriptor = {
       colorAttachments: [],
@@ -255,7 +254,7 @@ g.test('check layer count for color or depth stencil', async t => {
   { arrayLayerCount: 1, baseArrayLayer: 9, success: true }, // using 2D array texture view that covers the last layer is OK for depth stencil
 ]);
 
-g.test('check level count for color or depth stencil', async t => {
+g.test('check mip level count for color or depth stencil', async t => {
   const { mipLevelCount, baseMipLevel, success } = t.params;
 
   const ARRAY_LAYER_COUNT = 1;
@@ -288,8 +287,10 @@ g.test('check level count for color or depth stencil', async t => {
 
   {
     // Check 2D texture view for color
-    const textureViewDescriptor: GPUTextureViewDescriptor = clone(baseTextureViewDescriptor);
-    textureViewDescriptor.format = COLOR_FORMAT;
+    const textureViewDescriptor: GPUTextureViewDescriptor = {
+      ...baseTextureViewDescriptor,
+      format: COLOR_FORMAT,
+    };
 
     const descriptor: GPURenderPassDescriptor = {
       colorAttachments: [t.getColorAttachment(colorTexture, textureViewDescriptor)],
@@ -299,8 +300,10 @@ g.test('check level count for color or depth stencil', async t => {
   }
   {
     // Check 2D texture view for depth stencil
-    const textureViewDescriptor: GPUTextureViewDescriptor = clone(baseTextureViewDescriptor);
-    textureViewDescriptor.format = DEPTH_STENCIL_FORMAT;
+    const textureViewDescriptor: GPUTextureViewDescriptor = {
+      ...baseTextureViewDescriptor,
+      format: DEPTH_STENCIL_FORMAT,
+    };
 
     const descriptor: GPURenderPassDescriptor = {
       colorAttachments: [],
@@ -477,7 +480,10 @@ g.test('size of the resolve target must be the same as the color attachment', as
   });
 
   {
-    const resolveTargetTextureView = resolveTargetTexture.createView({ baseMipLevel: 0 });
+    const resolveTargetTextureView = resolveTargetTexture.createView({
+      baseMipLevel: 0,
+      mipLevelCount: 1,
+    });
 
     const colorAttachment = t.getColorAttachment(multisampledColorTexture);
     colorAttachment.resolveTarget = resolveTargetTextureView;
@@ -515,9 +521,10 @@ g.test('check depth stencil attachment sample counts mismatch', async t => {
       sampleCount: 1,
       format: 'depth24plus-stencil8',
     });
+    const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
     const descriptor: GPURenderPassDescriptor = {
-      colorAttachments: [t.getColorAttachment(depthStencilTexture)],
-      depthStencilAttachment: t.getDepthStencilAttachment(multisampledDepthStencilTexture),
+      colorAttachments: [t.getColorAttachment(multisampledColorTexture)],
+      depthStencilAttachment: t.getDepthStencilAttachment(depthStencilTexture),
     };
 
     await t.tryRenderPass(false, descriptor);
