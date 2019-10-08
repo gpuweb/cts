@@ -63,6 +63,29 @@ g.test('negative binding index', async t => {
   });
 });
 
+g.test('Visibility of bindings cannot be 0', async t => {
+  const goodDescriptor: GPUBindGroupLayoutDescriptor = {
+    bindings: [
+      {
+        binding: 0,
+        visibility: GPUShaderStage.COMPUTE,
+        type: 'storage-buffer',
+      },
+    ],
+  };
+
+  // Control case
+  t.device.createBindGroupLayout(goodDescriptor);
+
+  // Binding visibility set to 0 can't be specified.
+  const badDescriptor = clone(goodDescriptor);
+  badDescriptor.bindings![0].visibility = 0;
+
+  await t.expectValidationError(() => {
+    t.device.createBindGroupLayout(badDescriptor);
+  });
+});
+
 g.test('number of dynamic buffers exceeds the maximum value', async t => {
   const { type, maxDynamicBufferCount } = t.params;
 
