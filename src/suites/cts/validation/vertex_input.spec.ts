@@ -412,21 +412,17 @@ g.test('check out of bounds on number of vertex attributes on a single vertex bu
 });
 
 g.test('check out of bounds on number of vertex attributes across vertex buffers', async t => {
-  function getVertexBuffer(shaderLocation: number): GPUVertexBufferDescriptor {
-    return {
+  const vertexBuffers: GPUVertexBufferDescriptor[] = [];
+  for (let i = 0; i < MAX_VERTEX_ATTRIBUTES; i++) {
+    vertexBuffers.push({
       stride: 0,
       attributeSet: [
         {
-          shaderLocation,
+          shaderLocation: i,
           format: 'float',
         },
       ],
-    };
-  }
-
-  const vertexBuffers: GPUVertexBufferDescriptor[] = [];
-  for (let i = 0; i < MAX_VERTEX_ATTRIBUTES; i++) {
-    vertexBuffers.push(getVertexBuffer(i));
+    });
   }
 
   {
@@ -437,7 +433,10 @@ g.test('check out of bounds on number of vertex attributes across vertex buffers
   }
   {
     // Test vertex attribute number exceed the limit
-    vertexBuffers.push(getVertexBuffer(MAX_VERTEX_ATTRIBUTES));
+    vertexBuffers[MAX_VERTEX_ATTRIBUTES - 1].attributeSet.push({
+      shaderLocation: MAX_VERTEX_ATTRIBUTES,
+      format: 'float',
+    });
     const vertexInput: GPUVertexInputDescriptor = { vertexBuffers };
     const descriptor = t.getDescriptor(vertexInput, VERTEX_SHADER_CODE_WITH_NO_INPUT);
 
@@ -639,28 +638,28 @@ g.test('check attribute offset out of bounds', async t => {
         stride: 0,
         attributeSet: [
           {
-            offset: MAX_VERTEX_BUFFER_END - Float32Array.BYTES_PER_ELEMENT,
+            offset: MAX_VERTEX_BUFFER_END - 2 * Float32Array.BYTES_PER_ELEMENT,
             shaderLocation: 0,
-            format: 'float',
+            format: 'float2',
           },
         ],
       },
     ],
   };
   {
-    // Control case, setting max attribute offset for Float32 vertex format
+    // Control case, setting max attribute offset to MAX_VERTEX_BUFFER_END - 8
     const descriptor = t.getDescriptor(vertexInput, VERTEX_SHADER_CODE_WITH_NO_INPUT);
     t.device.createRenderPipeline(descriptor);
   }
   {
-    // Control case, setting attribute offset to 4
-    vertexInput.vertexBuffers![0].attributeSet![0].offset = 4;
+    // Control case, setting attribute offset to 8
+    vertexInput.vertexBuffers![0].attributeSet![0].offset = 8;
     const descriptor = t.getDescriptor(vertexInput, VERTEX_SHADER_CODE_WITH_NO_INPUT);
     t.device.createRenderPipeline(descriptor);
   }
   {
     // Test attribute offset out of bounds
-    vertexInput.vertexBuffers![0].attributeSet![0].offset = MAX_VERTEX_BUFFER_END - 3;
+    vertexInput.vertexBuffers![0].attributeSet![0].offset = MAX_VERTEX_BUFFER_END - 4;
     const descriptor = t.getDescriptor(vertexInput, VERTEX_SHADER_CODE_WITH_NO_INPUT);
 
     await t.expectValidationError(() => {
@@ -690,8 +689,16 @@ g.test('check multiple of 4 bytes constraint on offset', async t => {
     t.device.createRenderPipeline(descriptor);
   }
   {
-    // Test offset not multiple of 4 bytes
+    // Control case, setting offset 2 bytes with uchar2 format
     vertexInput.vertexBuffers![0].attributeSet![0].offset = 2;
+    vertexInput.vertexBuffers![0].attributeSet![0].format = 'uchar2';
+    const descriptor = t.getDescriptor(vertexInput, VERTEX_SHADER_CODE_WITH_NO_INPUT);
+    t.device.createRenderPipeline(descriptor);
+  }
+  {
+    // Test offset of 2 bytes with float format
+    vertexInput.vertexBuffers![0].attributeSet![0].offset = 2;
+    vertexInput.vertexBuffers![0].attributeSet![0].format = 'float';
     const descriptor = t.getDescriptor(vertexInput, VERTEX_SHADER_CODE_WITH_NO_INPUT);
 
     await t.expectValidationError(() => {
