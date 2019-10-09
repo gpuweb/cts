@@ -48,7 +48,6 @@ class F extends ValidationTest {
         gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
        }
     `;
-    console.log(code);
     return {
       module: this.makeShaderModule('vertex', code),
       entryPoint: 'main',
