@@ -689,11 +689,13 @@ g.test('check multiple of 4 bytes constraint on offset', async t => {
     t.device.createRenderPipeline(descriptor);
   }
   {
-    // Control case, setting offset 2 bytes with uchar2 format
+    // Test offset of 2 bytes with uchar2 format
     vertexInput.vertexBuffers![0].attributeSet![0].offset = 2;
     vertexInput.vertexBuffers![0].attributeSet![0].format = 'uchar2';
     const descriptor = t.getDescriptor(vertexInput, VERTEX_SHADER_CODE_WITH_NO_INPUT);
-    t.device.createRenderPipeline(descriptor);
+    await t.expectValidationError(() => {
+      t.device.createRenderPipeline(descriptor);
+    });
   }
   {
     // Test offset of 2 bytes with float format
