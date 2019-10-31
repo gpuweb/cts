@@ -56,16 +56,15 @@ export class TestSpecRecorder {
 }
 
 enum PassState {
-  Pass = 0,
-  Skip = 1,
-  Warn = 2,
-  Fail = 3,
+  pass = 0,
+  skip = 1,
+  warn = 2,
+  fail = 3,
 }
-const stateName: Status[] = ['pass', 'skip', 'warn', 'fail'];
 
 export class TestCaseRecorder {
   private result: LiveTestCaseResult;
-  private state = PassState.Pass;
+  private state = PassState.pass;
   private startTime = -1;
   private logs: string[] = [];
   private debugging = false;
@@ -77,7 +76,7 @@ export class TestCaseRecorder {
   start(debug: boolean = false): void {
     this.startTime = now();
     this.logs = [];
-    this.state = PassState.Pass;
+    this.state = PassState.pass;
     this.debugging = debug;
   }
 
@@ -88,7 +87,7 @@ export class TestCaseRecorder {
     const endTime = now();
     // Round to next microsecond to avoid storing useless .xxxx00000000000002 in results.
     this.result.timems = Math.ceil((endTime - this.startTime) * 1000) / 1000;
-    this.result.status = stateName[this.state];
+    this.result.status = PassState[this.state] as Status;
 
     this.result.logs = this.logs;
     this.debugging = false;
@@ -106,7 +105,7 @@ export class TestCaseRecorder {
   }
 
   warn(msg?: string): void {
-    this.state = Math.max(this.state, PassState.Warn);
+    this.setState(PassState.warn);
     let m = 'WARN';
     if (msg) {
       m += ': ' + msg;
@@ -116,7 +115,7 @@ export class TestCaseRecorder {
   }
 
   fail(msg?: string): void {
-    this.state = Math.max(this.state, PassState.Fail);
+    this.setState(PassState.fail);
     let m = 'FAIL';
     if (msg) {
       m += ': ' + msg;
@@ -126,7 +125,7 @@ export class TestCaseRecorder {
   }
 
   skipped(ex: SkipTestCase): void {
-    this.state = Math.max(this.state, PassState.Skip);
+    this.setState(PassState.skip);
     const m = 'SKIPPED: ' + getStackTrace(ex);
     this.log(m);
   }
@@ -136,7 +135,11 @@ export class TestCaseRecorder {
       this.skipped(ex);
       return;
     }
-    this.state = Math.max(this.state, PassState.Fail);
+    this.setState(PassState.fail);
     this.log('EXCEPTION: ' + ex.name + ': ' + ex.message + '\n' + getStackTrace(ex));
+  }
+
+  private setState(state: PassState): void {
+    this.state = Math.max(this.state, state);
   }
 }

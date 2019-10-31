@@ -24,9 +24,7 @@ function clone(descriptor: GPUVertexInputDescriptor): GPUVertexInputDescriptor {
 
 class F extends ValidationTest {
   async init(): Promise<void> {
-    // Give initGLSL the opportunity to throw SkipTestCase before super.init() pushes error scopes.
-    await this.initGLSL();
-    await super.init();
+    await Promise.all([super.init(), this.initGLSL()]);
   }
 
   getDescriptor(

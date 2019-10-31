@@ -11,6 +11,7 @@ let glslangInstance: Glslang | undefined;
 export class GPUTest extends Fixture {
   device: GPUDevice = undefined!;
   queue: GPUQueue = undefined!;
+  initialized = false;
 
   async init(): Promise<void> {
     super.init();
@@ -26,21 +27,25 @@ export class GPUTest extends Fixture {
 
     this.device.pushErrorScope('out-of-memory');
     this.device.pushErrorScope('validation');
+
+    this.initialized = true;
   }
 
   async finalize(): Promise<void> {
     super.finalize();
 
-    const gpuValidationError = await this.device.popErrorScope();
-    if (gpuValidationError !== null) {
-      if (!(gpuValidationError instanceof GPUValidationError)) throw new Error();
-      this.fail(`Unexpected validation error occurred: ${gpuValidationError.message}`);
-    }
+    if (this.initialized) {
+      const gpuValidationError = await this.device.popErrorScope();
+      if (gpuValidationError !== null) {
+        if (!(gpuValidationError instanceof GPUValidationError)) throw new Error();
+        this.fail(`Unexpected validation error occurred: ${gpuValidationError.message}`);
+      }
 
-    const gpuOutOfMemoryError = await this.device.popErrorScope();
-    if (gpuOutOfMemoryError !== null) {
-      if (!(gpuOutOfMemoryError instanceof GPUOutOfMemoryError)) throw new Error();
-      this.fail('Unexpected out-of-memory error occurred');
+      const gpuOutOfMemoryError = await this.device.popErrorScope();
+      if (gpuOutOfMemoryError !== null) {
+        if (!(gpuOutOfMemoryError instanceof GPUOutOfMemoryError)) throw new Error();
+        this.fail('Unexpected out-of-memory error occurred');
+      }
     }
   }
 
