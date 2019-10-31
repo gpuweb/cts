@@ -10,7 +10,9 @@ import { ValidationTest } from './validation_test.js';
 
 class F extends ValidationTest {
   async init(): Promise<void> {
-    await Promise.all([super.init(), this.initGLSL()]);
+    // Give initGLSL the opportunity to throw SkipTestCase before super.init() pushes error scopes.
+    await this.initGLSL();
+    await super.init();
   }
 
   getDescriptor(

@@ -1,3 +1,4 @@
+import { SkipTestCase } from './fixture.js';
 import { TestSpecID } from './id.js';
 import { ParamSpec } from './params/index.js';
 import { makeQueryString } from './url_query.js';
@@ -5,7 +6,7 @@ import { extractPublicParams } from './url_query.js';
 import { getStackTrace, now } from './util/index.js';
 import { version } from './version.js';
 
-type Status = 'running' | 'pass' | 'warn' | 'fail';
+type Status = 'running' | 'pass' | 'skip' | 'warn' | 'fail';
 export interface LiveTestSpecResult {
   readonly spec: string;
   readonly cases: LiveTestCaseResult[];
@@ -54,10 +55,17 @@ export class TestSpecRecorder {
   }
 }
 
+enum PassState {
+  Pass = 0,
+  Skip = 1,
+  Warn = 2,
+  Fail = 3,
+}
+const stateName: Status[] = ['pass', 'skip', 'warn', 'fail'];
+
 export class TestCaseRecorder {
   private result: LiveTestCaseResult;
-  private failed = false;
-  private warned = false;
+  private state = PassState.Pass;
   private startTime = -1;
   private logs: string[] = [];
   private debugging = false;
@@ -69,8 +77,7 @@ export class TestCaseRecorder {
   start(debug: boolean = false): void {
     this.startTime = now();
     this.logs = [];
-    this.failed = false;
-    this.warned = false;
+    this.state = PassState.Pass;
     this.debugging = debug;
   }
 
@@ -81,7 +88,7 @@ export class TestCaseRecorder {
     const endTime = now();
     // Round to next microsecond to avoid storing useless .xxxx00000000000002 in results.
     this.result.timems = Math.ceil((endTime - this.startTime) * 1000) / 1000;
-    this.result.status = this.failed ? 'fail' : this.warned ? 'warn' : 'pass';
+    this.result.status = stateName[this.state];
 
     this.result.logs = this.logs;
     this.debugging = false;
@@ -99,7 +106,7 @@ export class TestCaseRecorder {
   }
 
   warn(msg?: string): void {
-    this.warned = true;
+    this.state = Math.max(this.state, PassState.Warn);
     let m = 'WARN';
     if (msg) {
       m += ': ' + msg;
@@ -109,7 +116,7 @@ export class TestCaseRecorder {
   }
 
   fail(msg?: string): void {
-    this.failed = true;
+    this.state = Math.max(this.state, PassState.Fail);
     let m = 'FAIL';
     if (msg) {
       m += ': ' + msg;
@@ -118,8 +125,18 @@ export class TestCaseRecorder {
     this.log(m);
   }
 
-  threw(e: Error): void {
-    this.failed = true;
-    this.log('EXCEPTION: ' + e.name + ': ' + e.message + '\n' + getStackTrace(e));
+  skipped(ex: SkipTestCase): void {
+    this.state = Math.max(this.state, PassState.Skip);
+    const m = 'SKIPPED: ' + getStackTrace(ex);
+    this.log(m);
+  }
+
+  threw(ex: Error): void {
+    if (ex instanceof SkipTestCase) {
+      this.skipped(ex);
+      return;
+    }
+    this.state = Math.max(this.state, PassState.Fail);
+    this.log('EXCEPTION: ' + ex.name + ': ' + ex.message + '\n' + getStackTrace(ex));
   }
 }

@@ -19,6 +19,11 @@ export class GPUTest extends Fixture {
     this.device = await adapter.requestDevice();
     this.queue = this.device.getQueue();
 
+    try {
+      await this.device.popErrorScope();
+      throw new Error('There was an error scope on the stack at the beginning of the test');
+    } catch (ex) {}
+
     this.device.pushErrorScope('out-of-memory');
     this.device.pushErrorScope('validation');
   }
@@ -42,7 +47,12 @@ export class GPUTest extends Fixture {
   async initGLSL(): Promise<void> {
     if (!glslangInstance) {
       const glslangPath = '../../glslang.js';
-      const glslangModule = ((await import(glslangPath)) as glslang).default;
+      let glslangModule: () => Promise<Glslang>;
+      try {
+        glslangModule = ((await import(glslangPath)) as glslang).default;
+      } catch (ex) {
+        this.skip('glslang is not available');
+      }
       await new Promise(resolve => {
         glslangModule().then((glslang: Glslang) => {
           glslangInstance = glslang;

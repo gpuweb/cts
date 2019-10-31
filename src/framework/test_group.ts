@@ -138,13 +138,16 @@ class RunCaseSpecific<F extends Fixture> implements RunCase {
 
     try {
       const inst = new this.fixture(rec, this.params || {});
+      // Note: init() may throw SkipTestCase, in which case finalize() is not run.
       await inst.init();
+
       try {
         await this.fn(inst);
       } catch (ex) {
         // There was an exception from the test itself.
         rec.threw(ex);
       }
+
       // Runs as long as constructor and init succeeded, even if the test rejected.
       await inst.finalize();
     } catch (ex) {
