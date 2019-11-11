@@ -5,12 +5,10 @@ import { ParamSpec } from '../params/index.js';
 import { FilterByGroup } from './filter_by_group.js';
 import { FilterByParamsExact, FilterByParamsMatch, FilterByTestMatch } from './filter_one_file.js';
 import { TestFilterResult } from './index.js';
+import { TestFilter } from './internal.js';
 
 // Each filter is of one of the forms below (urlencoded).
-export async function loadFilter(
-  loader: TestFileLoader,
-  filter: string
-): Promise<TestFilterResult[]> {
+export function makeFilter(filter: string): TestFilter {
   const i1 = filter.indexOf(':');
   if (i1 === -1) {
     throw new Error('Test queries must fully specify their suite name (e.g. "cts:")');
@@ -24,7 +22,7 @@ export async function loadFilter(
     // - cts:buffers/
     // - cts:buffers/map
     const groupPrefix = filter.substring(i1 + 1);
-    return new FilterByGroup(suite, groupPrefix).iterate(loader);
+    return new FilterByGroup(suite, groupPrefix);
   }
 
   const path = filter.substring(i1 + 1, i2);
@@ -34,7 +32,7 @@ export async function loadFilter(
     // - cts:buffers/mapWriteAsync:
     // - cts:buffers/mapWriteAsync:b
     const testPrefix = filter.substring(i2 + 1);
-    return new FilterByTestMatch({ suite, path }, testPrefix).iterate(loader);
+    return new FilterByTestMatch({ suite, path }, testPrefix);
   }
 
   const i3 = i2 + 1 + i3sub;
@@ -50,13 +48,17 @@ export async function loadFilter(
     // - cts:buffers/mapWriteAsync:basic~
     // - cts:buffers/mapWriteAsync:basic~{}
     // - cts:buffers/mapWriteAsync:basic~{filter:"params"}
-    return new FilterByParamsMatch({ suite, path }, test, params).iterate(loader);
+    return new FilterByParamsMatch({ suite, path }, test, params);
   } else if (token === '=') {
     // - cts:buffers/mapWriteAsync:basic=
     // - cts:buffers/mapWriteAsync:basic={}
     // - cts:buffers/mapWriteAsync:basic={exact:"params"}
-    return new FilterByParamsExact({ suite, path }, test, params).iterate(loader);
+    return new FilterByParamsExact({ suite, path }, test, params);
   } else {
     throw new Error("invalid character after test name; must be '~' or '='");
   }
+}
+
+export function loadFilter(loader: TestFileLoader, filter: string): Promise<TestFilterResult[]> {
+  return makeFilter(filter).iterate(loader);
 }
