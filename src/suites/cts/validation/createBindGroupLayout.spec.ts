@@ -148,3 +148,91 @@ g.test('dynamic set to true is allowed only for buffers', async t => {
   { type: 'sampled-texture', _success: false },
   { type: 'storage-texture', _success: false },
 ]);
+
+g.test('number of resources per stage exceeds maximum value for resource type', async t => {
+  const { type, maximumCount } = t.params;
+
+  const maxResourceBindings: GPUBindGroupLayoutBinding[] = [];
+  for (let i = 0; i < maximumCount; i++) {
+    maxResourceBindings.push({
+      binding: i,
+      visibility: GPUShaderStage.FRAGMENT,
+      type
+    });
+  }
+
+  const goodDescriptor: GPUBindGroupLayoutDescriptor = { bindings: maxResourceBindings };
+
+  // Control
+  t.device.createBindGroupLayout(goodDescriptor);
+
+  const badDescriptor = clone(goodDescriptor);
+  badDescriptor.bindings.push({
+    binding: maximumCount,
+    visibility: GPUShaderStage.FRAGMENT,
+    type
+  });
+
+  t.expectValidationError(() => {
+    t.device.createBindGroupLayout(badDescriptor);
+  });
+}).params([
+  { type: 'uniform-buffer', maximumCount: 12 },
+  { type: 'storage-buffer', maximumCount: 4 },
+  { type: 'readonly-storage-buffer', maximumCount: 4 },
+  { type: 'sampler', maximumCount: 16 },
+  { type: 'sampled-texture', maximumCount: 16 },
+  { type: 'storage-texture', maximumCount: 4 },
+]);
+
+// storage-buffer and readonly-storage-buffer types share the same limit.
+g.test('number of normal and readonly storage-buffers exceeds maximum value', async t => {
+  const normalCount = Math.trunc(t.params.maximumCount / 2);
+
+  const maxResourceBindings: GPUBindGroupLayoutBinding[] = [];
+  let i = 0;
+  for (; i < normalCount; ++i) {
+    maxResourceBindings.push({
+      binding: i,
+      visibility: GPUShaderStage.FRAGMENT,
+      type: 'storage-buffer'
+    });
+  }
+
+  for (; i < t.params.maximumCount; ++i) {
+    maxResourceBindings.push({
+      binding: i,
+      visibility: GPUShaderStage.FRAGMENT,
+      type: 'readonly-storage-buffer'
+    });
+  }
+
+  const goodDescriptor: GPUBindGroupLayoutDescriptor = { bindings: maxResourceBindings };
+
+  // Control
+  t.device.createBindGroupLayout(goodDescriptor);
+
+  const tooManyStorageBuffersDescriptor = clone(goodDescriptor);
+  tooManyStorageBuffersDescriptor.bindings.push({
+    binding: t.params.maximumCount,
+    visibility: GPUShaderStage.FRAGMENT,
+    type: 'storage-buffer'
+  });
+
+  t.expectValidationError(() => {
+    t.device.createBindGroupLayout(tooManyStorageBuffersDescriptor);
+  });
+
+  const tooManyReadonlyStorageBuffersDescriptor = clone(goodDescriptor);
+  tooManyReadonlyStorageBuffersDescriptor.bindings.push({
+    binding: t.params.maximumCount,
+    visibility: GPUShaderStage.FRAGMENT,
+    type: 'readonly-storage-buffer'
+  });
+
+  t.expectValidationError(() => {
+    t.device.createBindGroupLayout(tooManyReadonlyStorageBuffersDescriptor);
+  });
+}).params([
+  { maximumCount: 4 }
+]);
