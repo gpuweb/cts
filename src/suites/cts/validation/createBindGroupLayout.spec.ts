@@ -6,6 +6,9 @@ import { TestGroup, pcombine, poptions } from '../../../framework/index.js';
 
 import { ValidationTest } from './validation_test.js';
 
+// TODO: Move this somewhere central?
+const kMaxBindingsPerBindGroup = 16;
+
 function clone(descriptor: GPUBindGroupLayoutDescriptor): GPUBindGroupLayoutDescriptor {
   return JSON.parse(JSON.stringify(descriptor));
 }
@@ -149,15 +152,18 @@ g.test('dynamic set to true is allowed only for buffers', async t => {
   { type: 'storage-texture', _success: false },
 ]);
 
-g.test('number of resources per stage exceeds maximum value for resource type', async t => {
-  const { type, maximumCount, visibility } = t.params;
+// One bind group layout can have a maximum number of each type of binding (which is different
+// for each type). Test that works, then add one more binding of *the same or different* type.
+// The first type has visibility ALL, and the extra type has only a single visibility.
+g.test('max number of resources of one type plus one of any type', async t => {
+  const { maxedType, maxedCount, extraType, visibility } = t.params;
 
   const maxResourceBindings: GPUBindGroupLayoutBinding[] = [];
-  for (let i = 0; i < maximumCount; i++) {
+  for (let i = 0; i < maxedCount; i++) {
     maxResourceBindings.push({
       binding: i,
       visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
-      type,
+      type: maxedType,
     });
   }
 
@@ -166,24 +172,44 @@ g.test('number of resources per stage exceeds maximum value for resource type', 
   // Control
   t.device.createBindGroupLayout(goodDescriptor);
 
-  const badDescriptor = clone(goodDescriptor);
-  badDescriptor.bindings!.push({
-    binding: maximumCount,
-    visibility: GPUShaderStage[visibility as keyof typeof GPUShaderStage],
-    type,
+  const vis = visibility === 0 ? 0 : GPUShaderStage[visibility as keyof typeof GPUShaderStage];
+  const newDescriptor = clone(goodDescriptor);
+  newDescriptor.bindings!.push({
+    binding: maxedCount,
+    visibility: vis,
+    type: maxedType,
   });
 
+  const shouldError =
+    maxedCount >= kMaxBindingsPerBindGroup ||
+    maxedType === extraType ||
+    (maxedType === 'storage-buffer' && extraType === 'readonly-storage-buffer') ||
+    (maxedType === 'readonly-storage-buffer' && extraType === 'storage-buffer');
+
   t.expectValidationError(() => {
-    t.device.createBindGroupLayout(badDescriptor);
-  });
-}).params([
-  { type: 'uniform-buffer', maximumCount: 12 },
-  { type: 'storage-buffer', maximumCount: 4 },
-  { type: 'readonly-storage-buffer', maximumCount: 4 },
-  { type: 'sampler', maximumCount: 16 },
-  { type: 'sampled-texture', maximumCount: 16 },
-  { type: 'storage-texture', maximumCount: 4 },
-]);
+    t.device.createBindGroupLayout(newDescriptor);
+  }, shouldError);
+}).params(
+  pcombine(
+    [
+      { maxedType: 'uniform-buffer', maxedCount: 12 },
+      { maxedType: 'storage-buffer', maxedCount: 4 },
+      { maxedType: 'readonly-storage-buffer', maxedCount: 4 },
+      { maxedType: 'sampler', maxedCount: 16 },
+      { maxedType: 'sampled-texture', maxedCount: 16 },
+      { maxedType: 'storage-texture', maxedCount: 4 },
+    ],
+    poptions('extraType', [
+      'uniform-buffer',
+      'storage-buffer',
+      'readonly-storage-buffer',
+      'sampler',
+      'sampled-texture',
+      'storage-texture',
+    ]),
+    poptions('visibility', [0, 'VERTEX', 'FRAGMENT', 'COMPUTE'])
+  )
+);
 
 // storage-buffer and readonly-storage-buffer types share the same limit.
 g.test('number of normal and readonly storage buffers exceeds maximum value', async t => {
@@ -233,9 +259,4 @@ g.test('number of normal and readonly storage buffers exceeds maximum value', as
   t.expectValidationError(() => {
     t.device.createBindGroupLayout(tooManyReadonlyStorageBuffersDescriptor);
   });
-}).params(
-  pcombine(
-    poptions('visibility', ['VERTEX', 'FRAGMENT', 'COMPUTE']), //
-    [{ maximumCount: 4 }]
-  )
-);
+}).params([{ maximumCount: 4 }]);
