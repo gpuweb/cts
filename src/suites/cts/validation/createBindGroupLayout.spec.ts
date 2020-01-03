@@ -2,7 +2,7 @@ export const description = `
 createBindGroupLayout validation tests.
 `;
 
-import { TestGroup } from '../../../framework/index.js';
+import { TestGroup, pcombine, poptions } from '../../../framework/index.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -150,14 +150,14 @@ g.test('dynamic set to true is allowed only for buffers', async t => {
 ]);
 
 g.test('number of resources per stage exceeds maximum value for resource type', async t => {
-  const { type, maximumCount } = t.params;
+  const { type, maximumCount, visibility } = t.params;
 
   const maxResourceBindings: GPUBindGroupLayoutBinding[] = [];
   for (let i = 0; i < maximumCount; i++) {
     maxResourceBindings.push({
       binding: i,
-      visibility: GPUShaderStage.FRAGMENT,
-      type
+      visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
+      type,
     });
   }
 
@@ -167,10 +167,10 @@ g.test('number of resources per stage exceeds maximum value for resource type', 
   t.device.createBindGroupLayout(goodDescriptor);
 
   const badDescriptor = clone(goodDescriptor);
-  badDescriptor.bindings.push({
+  badDescriptor.bindings!.push({
     binding: maximumCount,
-    visibility: GPUShaderStage.FRAGMENT,
-    type
+    visibility: GPUShaderStage[visibility as keyof typeof GPUShaderStage],
+    type,
   });
 
   t.expectValidationError(() => {
@@ -186,7 +186,7 @@ g.test('number of resources per stage exceeds maximum value for resource type', 
 ]);
 
 // storage-buffer and readonly-storage-buffer types share the same limit.
-g.test('number of normal and readonly storage-buffers exceeds maximum value', async t => {
+g.test('number of normal and readonly storage buffers exceeds maximum value', async t => {
   const normalCount = Math.trunc(t.params.maximumCount / 2);
 
   const maxResourceBindings: GPUBindGroupLayoutBinding[] = [];
@@ -195,7 +195,7 @@ g.test('number of normal and readonly storage-buffers exceeds maximum value', as
     maxResourceBindings.push({
       binding: i,
       visibility: GPUShaderStage.FRAGMENT,
-      type: 'storage-buffer'
+      type: 'storage-buffer',
     });
   }
 
@@ -203,7 +203,7 @@ g.test('number of normal and readonly storage-buffers exceeds maximum value', as
     maxResourceBindings.push({
       binding: i,
       visibility: GPUShaderStage.FRAGMENT,
-      type: 'readonly-storage-buffer'
+      type: 'readonly-storage-buffer',
     });
   }
 
@@ -213,10 +213,10 @@ g.test('number of normal and readonly storage-buffers exceeds maximum value', as
   t.device.createBindGroupLayout(goodDescriptor);
 
   const tooManyStorageBuffersDescriptor = clone(goodDescriptor);
-  tooManyStorageBuffersDescriptor.bindings.push({
+  tooManyStorageBuffersDescriptor.bindings!.push({
     binding: t.params.maximumCount,
     visibility: GPUShaderStage.FRAGMENT,
-    type: 'storage-buffer'
+    type: 'storage-buffer',
   });
 
   t.expectValidationError(() => {
@@ -224,15 +224,18 @@ g.test('number of normal and readonly storage-buffers exceeds maximum value', as
   });
 
   const tooManyReadonlyStorageBuffersDescriptor = clone(goodDescriptor);
-  tooManyReadonlyStorageBuffersDescriptor.bindings.push({
+  tooManyReadonlyStorageBuffersDescriptor.bindings!.push({
     binding: t.params.maximumCount,
     visibility: GPUShaderStage.FRAGMENT,
-    type: 'readonly-storage-buffer'
+    type: 'readonly-storage-buffer',
   });
 
   t.expectValidationError(() => {
     t.device.createBindGroupLayout(tooManyReadonlyStorageBuffersDescriptor);
   });
-}).params([
-  { maximumCount: 4 }
-]);
+}).params(
+  pcombine(
+    poptions('visibility', ['VERTEX', 'FRAGMENT', 'COMPUTE']), //
+    [{ maximumCount: 4 }]
+  )
+);
