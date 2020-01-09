@@ -2,72 +2,24 @@ export const description = `
 createBindGroup validation tests.
 `;
 
-import { TestGroup, pcombine, poptions } from '../../../framework/index.js';
+import { C, TestGroup, pbool, pcombine, poptions, unreachable } from '../../../framework/index.js';
+import { bindingTypes } from '../format_info.js';
 
-import { ValidationTest } from './validation_test.js';
+import { BindingResourceType, ValidationTest } from './validation_test.js';
 
 function clone(descriptor: GPUTextureDescriptor): GPUTextureDescriptor {
   return JSON.parse(JSON.stringify(descriptor));
 }
 
-class F extends ValidationTest {
-  getStorageBuffer(): GPUBuffer {
-    return this.device.createBuffer({
-      size: 1024,
-      usage: GPUBufferUsage.STORAGE,
-    });
-  }
-
-  getUniformBuffer(): GPUBuffer {
-    return this.device.createBuffer({
-      size: 1024,
-      usage: GPUBufferUsage.UNIFORM,
-    });
-  }
-
-  getSampler(): GPUSampler {
-    return this.device.createSampler();
-  }
-
-  getSampledTexture(): GPUTexture {
-    return this.device.createTexture({
-      size: { width: 16, height: 16, depth: 1 },
-      format: 'rgba8unorm',
-      usage: GPUTextureUsage.SAMPLED,
-    });
-  }
-
-  getStorageTexture(): GPUTexture {
-    return this.device.createTexture({
-      size: { width: 16, height: 16, depth: 1 },
-      format: 'rgba8unorm',
-      usage: GPUTextureUsage.STORAGE,
-    });
-  }
-}
-
-export const g = new TestGroup(F);
+export const g = new TestGroup(ValidationTest);
 
 g.test('binding count mismatch', async t => {
   const bindGroupLayout = t.device.createBindGroupLayout({
-    bindings: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.COMPUTE,
-        type: 'storage-buffer',
-      },
-    ],
+    bindings: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, type: 'storage-buffer' }],
   });
 
-  const goodDescriptor: GPUBindGroupDescriptor = {
-    bindings: [
-      {
-        binding: 0,
-        resource: {
-          buffer: t.getStorageBuffer(),
-        },
-      },
-    ],
+  const goodDescriptor = {
+    bindings: [{ binding: 0, resource: { buffer: t.getStorageBuffer() } }],
     layout: bindGroupLayout,
   };
 
@@ -75,21 +27,11 @@ g.test('binding count mismatch', async t => {
   t.device.createBindGroup(goodDescriptor);
 
   // Another binding is not expected.
-  const badDescriptor: GPUBindGroupDescriptor = {
+  const badDescriptor = {
     bindings: [
-      {
-        binding: 0,
-        resource: {
-          buffer: t.getStorageBuffer(),
-        },
-      },
+      { binding: 0, resource: { buffer: t.getStorageBuffer() } },
       // Another binding is added.
-      {
-        binding: 1,
-        resource: {
-          buffer: t.getStorageBuffer(),
-        },
-      },
+      { binding: 1, resource: { buffer: t.getStorageBuffer() } },
     ],
     layout: bindGroupLayout,
   };
@@ -101,24 +43,11 @@ g.test('binding count mismatch', async t => {
 
 g.test('binding must be present in layout', async t => {
   const bindGroupLayout = t.device.createBindGroupLayout({
-    bindings: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.COMPUTE,
-        type: 'storage-buffer',
-      },
-    ],
+    bindings: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, type: 'storage-buffer' }],
   });
 
-  const goodDescriptor: GPUBindGroupDescriptor = {
-    bindings: [
-      {
-        binding: 0,
-        resource: {
-          buffer: t.getStorageBuffer(),
-        },
-      },
-    ],
+  const goodDescriptor = {
+    bindings: [{ binding: 0, resource: { buffer: t.getStorageBuffer() } }],
     layout: bindGroupLayout,
   };
 
@@ -126,15 +55,8 @@ g.test('binding must be present in layout', async t => {
   t.device.createBindGroup(goodDescriptor);
 
   // Binding index 0 must be present.
-  const badDescriptor: GPUBindGroupDescriptor = {
-    bindings: [
-      {
-        binding: 1, // binding index becomes 1.
-        resource: {
-          buffer: t.getStorageBuffer(),
-        },
-      },
-    ],
+  const badDescriptor = {
+    bindings: [{ binding: 1, resource: { buffer: t.getStorageBuffer() } }],
     layout: bindGroupLayout,
   };
 
@@ -143,63 +65,31 @@ g.test('binding must be present in layout', async t => {
   });
 });
 
-g.test('buffer binding must contain exactly one buffer of its type', async t => {
-  const { bindingType, resourceType } = t.params;
+g.test('buffer binding must contain exactly one buffer of its type', t => {
+  const { bindingType, resourceType, resourceIsError } = t.params;
 
-  const bindGroupLayout = t.device.createBindGroupLayout({
-    bindings: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.COMPUTE,
-        type: bindingType,
-      },
-    ],
+  const layout = t.device.createBindGroupLayout({
+    bindings: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, type: bindingType }],
   });
 
-  let resource: GPUBindingResource;
-  if (resourceType === 'error') {
-    resource = { buffer: await t.getErrorBuffer() };
-  } else if (resourceType === 'uniform-buffer') {
-    resource = { buffer: t.getUniformBuffer() };
-  } else if (resourceType === 'storage-buffer') {
-    resource = { buffer: t.getStorageBuffer() };
-  } else if (resourceType === 'sampler') {
-    resource = t.getSampler();
-  } else if (resourceType === 'sampled-texture') {
-    resource = t.getSampledTexture().createView();
-  } else if (resourceType === 'storage-texture') {
-    resource = t.getStorageTexture().createView();
-  } else throw new Error();
+  const resource = t.getBindingResource(resourceType, resourceIsError);
 
   let shouldError = bindingType !== resourceType;
   if (bindingType === 'readonly-storage-buffer' && resourceType === 'storage-buffer') {
     shouldError = false;
   }
+  if (resourceIsError) {
+    shouldError = true;
+  }
 
   t.expectValidationError(() => {
-    t.device.createBindGroup({
-      bindings: [{ binding: 0, resource }],
-      layout: bindGroupLayout,
-    });
+    t.device.createBindGroup({ layout, bindings: [{ binding: 0, resource }] });
   }, shouldError);
 }).params(
   pcombine(
-    poptions('bindingType', [
-      'uniform-buffer',
-      'storage-buffer',
-      'readonly-storage-buffer',
-      'sampler',
-      'sampled-texture',
-      'storage-texture',
-    ]),
-    poptions('resourceType', [
-      'error',
-      'uniform-buffer',
-      'storage-buffer',
-      'sampler',
-      'sampled-texture',
-      'storage-texture',
-    ])
+    poptions('bindingType', bindingTypes),
+    poptions('resourceType', Object.keys(BindingResourceType)),
+    pbool('resourceIsError')
   )
 );
 
@@ -207,42 +97,31 @@ g.test('texture binding must have correct usage', async t => {
   const { type } = t.params;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
-    bindings: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.FRAGMENT,
-        type,
-      },
-    ],
+    bindings: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, type }],
   });
 
-  let usage: GPUTextureUsage;
+  let usage: GPUTextureUsageFlags;
   if (type === 'sampled-texture') {
     usage = GPUTextureUsage.SAMPLED;
   } else if (type === 'storage-texture') {
     usage = GPUTextureUsage.STORAGE;
   } else {
-    throw new Error('Unexpected binding type');
+    unreachable('Unexpected binding type');
   }
 
-  const goodDescriptor: GPUTextureDescriptor = {
+  const goodDescriptor = {
     size: { width: 16, height: 16, depth: 1 },
-    format: 'r8unorm',
+    format: C.TextureFormat.R8Unorm,
     usage,
   };
 
   // Control case
   t.device.createBindGroup({
-    bindings: [
-      {
-        binding: 0,
-        resource: t.device.createTexture(goodDescriptor).createView(),
-      },
-    ],
+    bindings: [{ binding: 0, resource: t.device.createTexture(goodDescriptor).createView() }],
     layout: bindGroupLayout,
   });
 
-  function* mismatchedTextureUsages(): Iterable<GPUTextureUsage> {
+  function* mismatchedTextureUsages(): Iterable<GPUTextureUsageFlags> {
     yield GPUTextureUsage.COPY_SRC;
     yield GPUTextureUsage.COPY_DST;
     if (type !== 'sampled-texture') {
@@ -261,12 +140,7 @@ g.test('texture binding must have correct usage', async t => {
 
     t.expectValidationError(() => {
       t.device.createBindGroup({
-        bindings: [
-          {
-            binding: 0,
-            resource: t.device.createTexture(badDescriptor).createView(),
-          },
-        ],
+        bindings: [{ binding: 0, resource: t.device.createTexture(badDescriptor).createView() }],
         layout: bindGroupLayout,
       });
     });
@@ -296,10 +170,10 @@ g.test('texture must have correct component type', async t => {
   } else if (textureComponentType === 'uint') {
     format = 'r8uint';
   } else {
-    throw new Error('Unexpected texture component type');
+    unreachable('Unexpected texture component type');
   }
 
-  const goodDescriptor: GPUTextureDescriptor = {
+  const goodDescriptor = {
     size: { width: 16, height: 16, depth: 1 },
     format,
     usage: GPUTextureUsage.SAMPLED,
@@ -335,12 +209,7 @@ g.test('texture must have correct component type', async t => {
 
     t.expectValidationError(() => {
       t.device.createBindGroup({
-        bindings: [
-          {
-            binding: 0,
-            resource: t.device.createTexture(badDescriptor).createView(),
-          },
-        ],
+        bindings: [{ binding: 0, resource: t.device.createTexture(badDescriptor).createView() }],
         layout: bindGroupLayout,
       });
     });
@@ -360,21 +229,16 @@ g.test('texture must have correct dimension', async t => {
     ],
   });
 
-  const goodDescriptor: GPUTextureDescriptor = {
+  const goodDescriptor = {
     size: { width: 16, height: 16, depth: 1 },
     arrayLayerCount: 1,
-    format: 'rgba8unorm',
+    format: C.TextureFormat.RGBA8Unorm,
     usage: GPUTextureUsage.SAMPLED,
   };
 
   // Control case
   t.device.createBindGroup({
-    bindings: [
-      {
-        binding: 0,
-        resource: t.device.createTexture(goodDescriptor).createView(),
-      },
-    ],
+    bindings: [{ binding: 0, resource: t.device.createTexture(goodDescriptor).createView() }],
     layout: bindGroupLayout,
   });
 
@@ -384,12 +248,7 @@ g.test('texture must have correct dimension', async t => {
 
   t.expectValidationError(() => {
     t.device.createBindGroup({
-      bindings: [
-        {
-          binding: 0,
-          resource: t.device.createTexture(badDescriptor).createView(),
-        },
-      ],
+      bindings: [{ binding: 0, resource: t.device.createTexture(badDescriptor).createView() }],
       layout: bindGroupLayout,
     });
   });
@@ -399,13 +258,7 @@ g.test('buffer offset and size for bind groups match', async t => {
   const { offset, size, _success } = t.params;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
-    bindings: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.COMPUTE,
-        type: 'storage-buffer',
-      },
-    ],
+    bindings: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, type: 'storage-buffer' }],
   });
 
   const buffer = t.device.createBuffer({
@@ -413,7 +266,7 @@ g.test('buffer offset and size for bind groups match', async t => {
     usage: GPUBufferUsage.STORAGE,
   });
 
-  const descriptor: GPUBindGroupDescriptor = {
+  const descriptor = {
     bindings: [
       {
         binding: 0,
