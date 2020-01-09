@@ -2,8 +2,9 @@ export const description = `
 createBindGroupLayout validation tests.
 `;
 
-import { C, TestGroup, pcombine, poptions } from '../../../framework/index.js';
-import { bindingTypeInfo, bindingTypes } from '../format_info.js';
+import { C, TestGroup, poptions } from '../../../framework/index.js';
+import { ParamSpec } from '../../../framework/params/index.js';
+import { bindingTypeInfo, bindingTypes, shaderStages } from '../format_info.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -19,16 +20,8 @@ export const g = new TestGroup(ValidationTest);
 g.test('some binding index was specified more than once', async t => {
   const goodDescriptor = {
     bindings: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.COMPUTE,
-        type: C.BindingType.StorageBuffer,
-      },
-      {
-        binding: 1,
-        visibility: GPUShaderStage.COMPUTE,
-        type: C.BindingType.StorageBuffer,
-      },
+      { binding: 0, visibility: GPUShaderStage.COMPUTE, type: C.BindingType.StorageBuffer },
+      { binding: 1, visibility: GPUShaderStage.COMPUTE, type: C.BindingType.StorageBuffer },
     ],
   };
 
@@ -114,14 +107,7 @@ g.test('dynamic set to true is allowed only for buffers', async t => {
   const success = bindingTypeInfo[type].type === 'buffer';
 
   const descriptor = {
-    bindings: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.FRAGMENT,
-        type,
-        hasDynamicOffset: true,
-      },
-    ],
+    bindings: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, type, hasDynamicOffset: true }],
   };
 
   t.expectValidationError(() => {
@@ -129,111 +115,113 @@ g.test('dynamic set to true is allowed only for buffers', async t => {
   }, !success);
 }).params(poptions('type', bindingTypes));
 
-// One bind group layout can have a maximum number of each type of binding (which is different
-// for each type). Test that works, then add one more binding of *the same or different* type.
-// The first type has visibility ALL, and the extra type has only a single visibility.
-g.test('max number of resources of one type plus one of any type', async t => {
-  const { maxedType, maxedCount, extraType, visibility } = t.params;
-
-  const maxResourceBindings: GPUBindGroupLayoutBinding[] = [];
-  for (let i = 0; i < maxedCount; i++) {
-    maxResourceBindings.push({
-      binding: i,
-      visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
-      type: maxedType,
-    });
+{
+  function pickExtraBindingTypes(type: GPUBindingType, extraTypeSame: boolean): GPUBindingType[] {
+    if (extraTypeSame) {
+      switch (type) {
+        case 'storage-buffer':
+        case 'readonly-storage-buffer':
+          return ['storage-buffer', 'readonly-storage-buffer'];
+        default:
+          return [type];
+      }
+    } else {
+      return type === 'sampler' ? ['sampled-texture'] : ['sampler'];
+    }
   }
 
-  const goodDescriptor: GPUBindGroupLayoutDescriptor = { bindings: maxResourceBindings };
+  const kCasesForMaxResourcesPerStageTests: ParamSpec[] = [];
+  for (const maxedType of bindingTypes) {
+    for (const maxedVisibility of shaderStages) {
+      const maxedVisibilityVertex = (maxedVisibility & C.ShaderStage.Vertex) !== 0;
+      if (bindingTypeInfo[maxedType].isStorageBuffer && maxedVisibilityVertex) continue;
 
-  // Control
-  t.device.createBindGroupLayout(goodDescriptor);
+      for (const extraTypeSame of [false, true]) {
+        for (const extraType of pickExtraBindingTypes(maxedType, extraTypeSame)) {
+          for (const extraVisibility of shaderStages) {
+            const extraVisibilityVertex = (extraVisibility & C.ShaderStage.Vertex) !== 0;
+            if (bindingTypeInfo[extraType].isStorageBuffer && extraVisibilityVertex) continue;
 
-  const vis = visibility === 0 ? 0 : GPUShaderStage[visibility as keyof typeof GPUShaderStage];
-  const newDescriptor = clone(goodDescriptor);
-  newDescriptor.bindings!.push({
-    binding: maxedCount,
-    visibility: vis,
-    type: maxedType,
-  });
-
-  const shouldError =
-    maxedCount >= kMaxBindingsPerBindGroup ||
-    maxedType === extraType ||
-    (maxedType === 'storage-buffer' && extraType === 'readonly-storage-buffer') ||
-    (maxedType === 'readonly-storage-buffer' && extraType === 'storage-buffer');
-
-  t.expectValidationError(() => {
-    t.device.createBindGroupLayout(newDescriptor);
-  }, shouldError);
-}).params(
-  pcombine(
-    [
-      { maxedType: 'uniform-buffer', maxedCount: 12 },
-      { maxedType: 'storage-buffer', maxedCount: 4 },
-      { maxedType: 'readonly-storage-buffer', maxedCount: 4 },
-      { maxedType: 'sampler', maxedCount: 16 },
-      { maxedType: 'sampled-texture', maxedCount: 16 },
-      { maxedType: 'storage-texture', maxedCount: 4 },
-    ],
-    poptions('extraType', [
-      'uniform-buffer',
-      'storage-buffer',
-      'readonly-storage-buffer',
-      'sampler',
-      'sampled-texture',
-      'storage-texture',
-    ]),
-    poptions('visibility', [0, 'VERTEX', 'FRAGMENT', 'COMPUTE'])
-  )
-);
-
-// storage-buffer and readonly-storage-buffer types share the same limit.
-g.test('number of normal and readonly storage buffers exceeds maximum value', async t => {
-  const normalCount = Math.trunc(t.params.maximumCount / 2);
-
-  const maxResourceBindings: GPUBindGroupLayoutBinding[] = [];
-  let i = 0;
-  for (; i < normalCount; ++i) {
-    maxResourceBindings.push({
-      binding: i,
-      visibility: GPUShaderStage.FRAGMENT,
-      type: 'storage-buffer',
-    });
+            kCasesForMaxResourcesPerStageTests.push({
+              maxedType,
+              maxedVisibility,
+              extraType,
+              extraVisibility,
+            });
+          }
+        }
+      }
+    }
   }
 
-  for (; i < t.params.maximumCount; ++i) {
-    maxResourceBindings.push({
-      binding: i,
-      visibility: GPUShaderStage.FRAGMENT,
-      type: 'readonly-storage-buffer',
+  // Should never fail unless kMaxBindingsPerBindGroup is exceeded, because the validation for
+  // resources-of-type-per-stage is in pipeline layout creation.
+  g.test('max resources per stage/in bind group layout', async t => {
+    const maxedType: GPUBindingType = t.params.maxedType;
+    const extraType: GPUBindingType = t.params.extraType;
+    const { maxedVisibility, extraVisibility } = t.params;
+    const maxedCount = bindingTypeInfo[maxedType].maxPerShaderStage;
+
+    const maxResourceBindings: GPUBindGroupLayoutBinding[] = [];
+    for (let i = 0; i < maxedCount; i++) {
+      maxResourceBindings.push({
+        binding: i,
+        visibility: maxedVisibility,
+        type: maxedType,
+      });
+    }
+
+    const goodDescriptor = { bindings: maxResourceBindings };
+
+    // Control
+    t.device.createBindGroupLayout(goodDescriptor);
+
+    const newDescriptor = clone(goodDescriptor);
+    newDescriptor.bindings.push({
+      binding: maxedCount,
+      visibility: extraVisibility,
+      type: extraType,
     });
-  }
 
-  const goodDescriptor: GPUBindGroupLayoutDescriptor = { bindings: maxResourceBindings };
+    const shouldError = maxedCount >= kMaxBindingsPerBindGroup;
 
-  // Control
-  t.device.createBindGroupLayout(goodDescriptor);
+    t.expectValidationError(() => {
+      t.device.createBindGroupLayout(newDescriptor);
+    }, shouldError);
+  }).params(kCasesForMaxResourcesPerStageTests);
 
-  const tooManyStorageBuffersDescriptor = clone(goodDescriptor);
-  tooManyStorageBuffersDescriptor.bindings!.push({
-    binding: t.params.maximumCount,
-    visibility: GPUShaderStage.FRAGMENT,
-    type: 'storage-buffer',
-  });
+  // One pipeline layout can have a maximum number of each type of binding *per stage* (which is
+  // different for each type). Test that the max works, then add one more binding of same-or-different
+  // type and same-or-different visibility.
+  g.test('max resources per stage/in pipeline layout', async t => {
+    const maxedType: GPUBindingType = t.params.maxedType;
+    const extraType: GPUBindingType = t.params.extraType;
+    const { maxedVisibility, extraVisibility } = t.params;
+    const maxedCount = bindingTypeInfo[maxedType].maxPerShaderStage;
 
-  t.expectValidationError(() => {
-    t.device.createBindGroupLayout(tooManyStorageBuffersDescriptor);
-  });
+    const maxResourceBindings: GPUBindGroupLayoutBinding[] = [];
+    for (let i = 0; i < maxedCount; i++) {
+      maxResourceBindings.push({
+        binding: i,
+        visibility: maxedVisibility,
+        type: maxedType,
+      });
+    }
 
-  const tooManyReadonlyStorageBuffersDescriptor = clone(goodDescriptor);
-  tooManyReadonlyStorageBuffersDescriptor.bindings!.push({
-    binding: t.params.maximumCount,
-    visibility: GPUShaderStage.FRAGMENT,
-    type: 'readonly-storage-buffer',
-  });
+    const goodLayout = t.device.createBindGroupLayout({ bindings: maxResourceBindings });
 
-  t.expectValidationError(() => {
-    t.device.createBindGroupLayout(tooManyReadonlyStorageBuffersDescriptor);
-  });
-}).params([{ maximumCount: 4 }]);
+    // Control
+    t.device.createPipelineLayout({ bindGroupLayouts: [goodLayout] });
+
+    const extraLayout = t.device.createBindGroupLayout({
+      bindings: [{ binding: 0, visibility: extraVisibility, type: extraType }],
+    });
+
+    const hasCollision =
+      (maxedVisibility & extraVisibility) !== 0 &&
+      bindingTypeInfo[maxedType].isStorageBuffer === bindingTypeInfo[extraType].isStorageBuffer;
+    t.expectValidationError(() => {
+      t.device.createPipelineLayout({ bindGroupLayouts: [goodLayout, extraLayout] });
+    }, hasCollision);
+  }).params(kCasesForMaxResourcesPerStageTests);
+}

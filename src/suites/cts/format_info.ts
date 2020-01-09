@@ -59,16 +59,18 @@ export const textureFormats = Object.keys(textureFormatInfo) as GPUTextureFormat
 export const bindingTypeInfo: {
   [k in GPUBindingType]: {
     type: 'buffer' | 'texture' | 'sampler';
+    isStorageBuffer: boolean;
+    maxPerShaderStage: number;
     maxDynamicCount: number;
     // Add fields as needed
   };
 } = /* prettier-ignore */ {
-  'uniform-buffer':          { type: 'buffer',  maxDynamicCount: 8 },
-  'storage-buffer':          { type: 'buffer',  maxDynamicCount: 4 },
-  'readonly-storage-buffer': { type: 'buffer',  maxDynamicCount: 4 },
-  'sampler':                 { type: 'sampler', maxDynamicCount: 0 },
-  'sampled-texture':         { type: 'texture', maxDynamicCount: 0 },
-  'storage-texture':         { type: 'texture', maxDynamicCount: 0 },
+  'uniform-buffer':          { type: 'buffer',  isStorageBuffer: false, maxPerShaderStage: 12, maxDynamicCount: 8 },
+  'storage-buffer':          { type: 'buffer',  isStorageBuffer: true,  maxPerShaderStage:  4, maxDynamicCount: 4 },
+  'readonly-storage-buffer': { type: 'buffer',  isStorageBuffer: true,  maxPerShaderStage:  4, maxDynamicCount: 4 },
+  'sampler':                 { type: 'sampler', isStorageBuffer: false, maxPerShaderStage: 16, maxDynamicCount: 0 },
+  'sampled-texture':         { type: 'texture', isStorageBuffer: false, maxPerShaderStage: 16, maxDynamicCount: 0 },
+  'storage-texture':         { type: 'texture', isStorageBuffer: false, maxPerShaderStage:  4, maxDynamicCount: 0 },
 };
 export const bindingTypes = Object.keys(bindingTypeInfo) as GPUBindingType[];
 
