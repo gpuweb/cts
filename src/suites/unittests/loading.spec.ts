@@ -9,7 +9,7 @@ import { TestFileLoader, TestLoader, TestSpecOrReadme } from '../../framework/lo
 import { Logger } from '../../framework/logger.js';
 import { TestFilterResult } from '../../framework/test_filter/index.js';
 import { makeQueryString } from '../../framework/url_query.js';
-import { objectEquals } from '../../framework/util/index.js';
+import { assert, objectEquals } from '../../framework/util/index.js';
 
 import { UnitTest } from './unit_test.js';
 
@@ -22,7 +22,7 @@ const listingData: { [k: string]: TestSuiteListingEntry[] } = {
     { path: 'baz', description: 'desc 1e' },
   ],
   suite2: [
-    { path: '', description: 'desc 2a' }, //
+    { path: '', description: 'desc 2a' },
     { path: 'foof', description: 'desc 2b' },
   ],
 };
@@ -96,9 +96,7 @@ class FakeTestFileLoader implements TestFileLoader {
   }
 
   async import(path: string): Promise<TestSpecOrReadme> {
-    if (!specsData.hasOwnProperty(path)) {
-      throw new Error('[test] mock file ' + path + ' does not exist');
-    }
+    assert(specsData.hasOwnProperty(path), '[test] mock file ' + path + ' does not exist');
     return specsData[path];
   }
 }
@@ -113,13 +111,9 @@ class LoadingTest extends UnitTest {
   async singleGroup(query: string): Promise<RunCase[]> {
     const [rec] = new Logger().record({ suite: '', path: '' });
     const a = await this.load([query]);
-    if (a.length !== 1) {
-      throw new Error('more than one group');
-    }
+    assert(a.length === 1, 'more than one group');
     const spec = a[0].spec;
-    if (!('g' in spec)) {
-      throw new Error('group undefined');
-    }
+    assert('g' in spec, 'group undefined');
     return Array.from(spec.g.iterate(rec));
   }
 }
@@ -153,9 +147,7 @@ g.test('whole group', async t => {
     const foo = (await t.load(['suite1:foo:']))[0];
     t.expect(foo.id.suite === 'suite1');
     t.expect(foo.id.path === 'foo');
-    if (!('g' in foo.spec)) {
-      throw new Error('foo group');
-    }
+    assert('g' in foo.spec, 'foo group');
     const [rec] = new Logger().record({ suite: '', path: '' });
     t.expect(Array.from(foo.spec.g.iterate(rec)).length === 3);
   }
@@ -200,24 +192,18 @@ g.test('partial test/match', async t => {
 
 g.test('end2end', async t => {
   const l = await t.load(['suite2:foof']);
-  if (l.length !== 1) {
-    throw new Error('listing length');
-  }
+  assert(l.length === 1, 'listing length');
 
   t.expect(l[0].id.suite === 'suite2');
   t.expect(l[0].id.path === 'foof');
   t.expect(l[0].spec.description === 'desc 2b');
-  if (!('g' in l[0].spec)) {
-    throw new Error();
-  }
+  assert('g' in l[0].spec);
   t.expect(l[0].spec.g.iterate instanceof Function);
 
   const log = new Logger();
   const [rec, res] = log.record(l[0].id);
   const rcs = Array.from(l[0].spec.g.iterate(rec));
-  if (rcs.length !== 3) {
-    throw new Error('iterate length');
-  }
+  assert(rcs.length === 3, 'iterate length');
 
   t.expect(rcs[0].id.test === 'blah');
   t.expect(rcs[0].id.params === null);
@@ -232,17 +218,13 @@ g.test('end2end', async t => {
   {
     const cases = res.cases;
     const res0 = await rcs[0].run(true);
-    if (cases.length !== 1) {
-      throw new Error('results cases length');
-    }
+    assert(cases.length === 1, 'results cases length');
     t.expect(res.cases[0] === res0);
     t.expect(res0.test === 'blah');
     t.expect(res0.params === null);
     t.expect(res0.status === 'pass');
     t.expect(res0.timems >= 0);
-    if (res0.logs === undefined) {
-      throw new Error('results case logs');
-    }
+    assert(res0.logs !== undefined, 'results case logs');
     t.expect(objectEquals(JSON.stringify(res0.logs), '["OK"]'));
   }
   {
@@ -251,17 +233,13 @@ g.test('end2end', async t => {
     // above and here.
     const cases = res.cases;
     const res1 = await rcs[1].run(true);
-    if (cases.length !== 2) {
-      throw new Error('results cases length');
-    }
+    assert(cases.length === 2, 'results cases length');
     t.expect(res.cases[1] === res1);
     t.expect(res1.test === 'bleh');
     t.expect(paramsEquals(res1.params, {}));
     t.expect(res1.status === 'pass');
     t.expect(res1.timems >= 0);
-    if (res1.logs === undefined) {
-      throw new Error('results case logs');
-    }
+    assert(res1.logs !== undefined, 'results case logs');
     t.expect(objectEquals(JSON.stringify(res1.logs), '["OK","OK"]'));
   }
   {
@@ -270,17 +248,13 @@ g.test('end2end', async t => {
     // above and here.
     const cases = res.cases;
     const res2 = await rcs[2].run(true);
-    if (cases.length !== 3) {
-      throw new Error('results cases length');
-    }
+    assert(cases.length === 3, 'results cases length');
     t.expect(res.cases[2] === res2);
     t.expect(res2.test === 'bluh');
     t.expect(res2.params === null);
     t.expect(res2.status === 'fail');
     t.expect(res2.timems >= 0);
-    if (res2.logs === undefined) {
-      throw new Error('results case logs');
-    }
+    assert(res2.logs !== undefined, 'results case logs');
     t.expect(res2.logs.length === 1);
     const l = res2.logs[0].toJSON();
     t.expect(l.startsWith('FAIL: bye\n'));

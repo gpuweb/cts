@@ -1,6 +1,7 @@
 import { allowedTestNameCharacters } from '../allowed_characters.js';
 import { TestFileLoader } from '../loader.js';
 import { ParamSpec } from '../params/index.js';
+import { assert, unreachable } from '../util/index.js';
 
 import { FilterByGroup } from './filter_by_group.js';
 import { FilterByParamsExact, FilterByParamsMatch, FilterByTestMatch } from './filter_one_file.js';
@@ -10,9 +11,7 @@ import { TestFilter } from './internal.js';
 // Each filter is of one of the forms below (urlencoded).
 export function makeFilter(filter: string): TestFilter {
   const i1 = filter.indexOf(':');
-  if (i1 === -1) {
-    throw new Error('Test queries must fully specify their suite name (e.g. "cts:")');
-  }
+  assert(i1 !== -1, 'Test queries must fully specify their suite name (e.g. "cts:")');
 
   const suite = filter.substring(0, i1);
   const i2 = filter.indexOf(':', i1 + 1);
@@ -55,7 +54,7 @@ export function makeFilter(filter: string): TestFilter {
     // - cts:buffers/mapWriteAsync:basic={exact:"params"}
     return new FilterByParamsExact({ suite, path }, test, params);
   } else {
-    throw new Error("invalid character after test name; must be '~' or '='");
+    unreachable("invalid character after test name; must be '~' or '='");
   }
 }
 
