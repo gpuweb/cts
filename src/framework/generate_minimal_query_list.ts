@@ -1,6 +1,5 @@
 import { TestSpecOrTestOrCaseID } from './id.js';
 import { Logger } from './logger.js';
-import { FilterByGroup } from './test_filter/filter_by_group.js';
 import { TestFilterResult, makeFilter } from './test_filter/index.js';
 import { FilterResultTreeNode, treeFromFilterResults } from './tree.js';
 
@@ -32,14 +31,15 @@ function makeQuerySplitterTree(
   }
 
   const convertToQuerySplitterTree = (
-    children: Map<string, FilterResultTreeNode> | undefined,
+    tree: FilterResultTreeNode,
     name?: string
   ): QuerySplitterTreeNode => {
+    const children = tree.children;
     let needsSplit = true;
 
     if (name !== undefined) {
       const filter = makeFilter(name);
-      const moreThanOneFile = filter instanceof FilterByGroup;
+      const moreThanOneFile = !filter.definitelyOneFile();
       const matchingExpectations = expectations.map(e => {
         const matches = filter.matches(e.id);
         if (matches) e.seen = true;
@@ -52,7 +52,7 @@ function makeQuerySplitterTree(
     if (children) {
       queryNode.children = new Map();
       for (const [k, v] of children) {
-        const subtree = convertToQuerySplitterTree(v.children, k);
+        const subtree = convertToQuerySplitterTree(v, k);
         queryNode.children.set(k, subtree);
       }
     }
@@ -61,7 +61,7 @@ function makeQuerySplitterTree(
 
   const log = new Logger();
   const tree = treeFromFilterResults(log, caselist.values());
-  const queryTree = convertToQuerySplitterTree(tree.children)!;
+  const queryTree = convertToQuerySplitterTree(tree)!;
 
   for (const e of expectations) {
     if (!e.seen) throw new Error('expectation had no effect: ' + e.line);

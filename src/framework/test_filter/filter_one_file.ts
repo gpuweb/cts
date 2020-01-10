@@ -31,6 +31,10 @@ abstract class FilterOneFile implements TestFilter {
     ];
   }
 
+  definitelyOneFile(): true {
+    return true;
+  }
+
   abstract idIfSingle(): TestSpecOrTestOrCaseID | undefined;
   abstract matches(id: TestSpecOrTestOrCaseID): boolean;
 }

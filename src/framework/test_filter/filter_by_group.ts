@@ -35,6 +35,12 @@ export class FilterByGroup implements TestFilter {
     return entries;
   }
 
+  definitelyOneFile(): boolean {
+    // FilterByGroup could always possibly match multiple files, because it represents a prefix,
+    // e.g. "a:b" not "a:b:".
+    return false;
+  }
+
   idIfSingle(): undefined {
     // FilterByGroup could be one whole suite, but we only want whole files, tests, or cases.
     return undefined;

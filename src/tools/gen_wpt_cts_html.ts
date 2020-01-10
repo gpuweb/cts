@@ -7,10 +7,10 @@ import { TestSuiteListingEntry } from '../framework/listing.js';
 import { TestLoader } from '../framework/loader.js';
 import { listing } from '../suites/cts/index.js';
 
-function usage(rc: number): void {
+function printUsageAndExit(rc: number): void {
   console.error(`\
 Usage:
-  tools/gen_wpt_cts_html TEMPLATE_FILE OUTPUT_FILE [ARGUMENTS_PREFIXES_FILE EXPECTATIONS_FILE EXPECTATIONS_PREFIX SUITE]
+  tools/gen_wpt_cts_html OUTPUT_FILE TEMPLATE_FILE [ARGUMENTS_PREFIXES_FILE EXPECTATIONS_FILE EXPECTATIONS_PREFIX SUITE]
   tools/gen_wpt_cts_html out-wpt/cts.html templates/cts.html
   tools/gen_wpt_cts_html my/path/to/cts.html templates/cts.html arguments.txt myexpectations.txt 'path/to/cts.html' cts
 
@@ -32,10 +32,19 @@ and myexpectations.txt is a file containing a list of WPT paths to suppress, e.g
 }
 
 if (process.argv.length !== 4 && process.argv.length !== 8) {
-  usage(0);
+  printUsageAndExit(0);
 }
-const outFile = process.argv[2];
-const templateFile = process.argv[3];
+
+const [
+  ,
+  ,
+  outFile,
+  templateFile,
+  argsPrefixesFile,
+  expectationsFile,
+  expectationsPrefix,
+  suite,
+] = process.argv;
 
 (async () => {
   if (process.argv.length === 4) {
@@ -46,11 +55,6 @@ const templateFile = process.argv[3];
       .map(l => l.path);
     await generateFile(lines);
   } else {
-    const argsPrefixesFile = process.argv[4];
-    const expectationsFile = process.argv[5];
-    const expectationsPrefix = process.argv[6];
-    const suite = process.argv[7];
-
     // Prefixes sorted from longest to shortest
     const argsPrefixes = (await fs.readFile(argsPrefixesFile, 'utf8'))
       .split('\n')
