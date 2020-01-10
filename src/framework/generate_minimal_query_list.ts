@@ -102,7 +102,9 @@ export async function generateMinimalQueryList(
 
   for (const exp of expectationStrings) {
     if (!unsplitNodes.some(name => name === exp)) {
-      throw new Error('Something went wrong: all expectation strings should always appear exactly');
+      throw new Error(
+        'Something went wrong: all expectation strings should always appear exactly: ' + exp
+      );
     }
   }
   return unsplitNodes;
