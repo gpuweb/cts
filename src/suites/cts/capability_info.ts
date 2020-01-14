@@ -1,4 +1,4 @@
-export const textureFormatInfo: {
+export const kTextureFormatInfo: {
   [k in GPUTextureFormat]: {
     renderable: boolean;
     color: boolean;
@@ -54,25 +54,41 @@ export const textureFormatInfo: {
   'depth24plus':            { renderable:  true, color: false },
   'depth24plus-stencil8':   { renderable:  true, color: false },
 };
-export const textureFormats = Object.keys(textureFormatInfo) as GPUTextureFormat[];
+export const kTextureFormats = Object.keys(kTextureFormatInfo) as GPUTextureFormat[];
 
-export const bindingTypeInfo: {
+export type PerStageBindingLimitType =
+  | 'uniform-buffer'
+  | 'storage-buffer'
+  | 'sampler'
+  | 'sampled-texture'
+  | 'storage-texture';
+export const kPerStageBindingLimits: {
+  [k in PerStageBindingLimitType]: number;
+} = /* prettier-ignore */ {
+  'uniform-buffer':  12,
+  'storage-buffer':  4,
+  'sampler':         16,
+  'sampled-texture': 16,
+  'storage-texture': 4,
+};
+
+export const kBindingTypeInfo: {
   [k in GPUBindingType]: {
     type: 'buffer' | 'texture' | 'sampler';
-    isStorageBuffer: boolean;
-    maxPerShaderStage: number;
+    validStages: GPUShaderStageFlags;
+    perStageLimitType: PerStageBindingLimitType;
     maxDynamicCount: number;
     // Add fields as needed
   };
 } = /* prettier-ignore */ {
-  'uniform-buffer':          { type: 'buffer',  isStorageBuffer: false, maxPerShaderStage: 12, maxDynamicCount: 8 },
-  'storage-buffer':          { type: 'buffer',  isStorageBuffer: true,  maxPerShaderStage:  4, maxDynamicCount: 4 },
-  'readonly-storage-buffer': { type: 'buffer',  isStorageBuffer: true,  maxPerShaderStage:  4, maxDynamicCount: 4 },
-  'sampler':                 { type: 'sampler', isStorageBuffer: false, maxPerShaderStage: 16, maxDynamicCount: 0 },
-  'sampled-texture':         { type: 'texture', isStorageBuffer: false, maxPerShaderStage: 16, maxDynamicCount: 0 },
-  'storage-texture':         { type: 'texture', isStorageBuffer: false, maxPerShaderStage:  4, maxDynamicCount: 0 },
+  'uniform-buffer':          { type: 'buffer',  validStages: 7, perStageLimitType: 'uniform-buffer',  maxDynamicCount: 8 },
+  'storage-buffer':          { type: 'buffer',  validStages: 6, perStageLimitType: 'storage-buffer',  maxDynamicCount: 4 },
+  'readonly-storage-buffer': { type: 'buffer',  validStages: 6, perStageLimitType: 'storage-buffer',  maxDynamicCount: 4 },
+  'sampler':                 { type: 'sampler', validStages: 7, perStageLimitType: 'sampler',         maxDynamicCount: 0 },
+  'sampled-texture':         { type: 'texture', validStages: 7, perStageLimitType: 'sampled-texture', maxDynamicCount: 0 },
+  'storage-texture':         { type: 'texture', validStages: 7, perStageLimitType: 'storage-texture', maxDynamicCount: 0 },
 };
-export const bindingTypes = Object.keys(bindingTypeInfo) as GPUBindingType[];
+export const kBindingTypes = Object.keys(kBindingTypeInfo) as GPUBindingType[];
 
-export const shaderStages: GPUShaderStageFlags[] = [1, 2, 4];
-export const shaderStageCombinations: GPUShaderStageFlags[] = [0, 1, 2, 3, 4, 5, 6, 7];
+export const kShaderStages: GPUShaderStageFlags[] = [1, 2, 4];
+export const kShaderStageCombinations: GPUShaderStageFlags[] = [0, 1, 2, 3, 4, 5, 6, 7];
