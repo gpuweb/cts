@@ -7,14 +7,12 @@ import { ParamSpec } from '../../../framework/params/index.js';
 import {
   kBindingTypeInfo,
   kBindingTypes,
+  kMaxBindingsPerBindGroup,
   kPerStageBindingLimits,
   kShaderStages,
 } from '../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
-
-// TODO: Move this somewhere central?
-const kMaxBindingsPerBindGroup = 16;
 
 function clone<T extends GPUBindGroupLayoutDescriptor>(descriptor: T): T {
   return JSON.parse(JSON.stringify(descriptor));
