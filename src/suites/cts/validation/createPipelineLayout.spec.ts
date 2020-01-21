@@ -94,10 +94,8 @@ g.test('visibility and dynamic offsets', t => {
 );
 
 g.test('number of bind group layouts exceeds the maximum value', async t => {
-  const visibility: GPUShaderStageFlags = t.params.visibility;
-
   const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
-    bindings: [{ binding: 0, visibility, type: 'uniform-buffer' }],
+    bindings: [],
   };
 
   // 4 is the maximum number of bind group layouts.
@@ -123,4 +121,4 @@ g.test('number of bind group layouts exceeds the maximum value', async t => {
   t.expectValidationError(() => {
     t.device.createPipelineLayout(badPipelineLayoutDescriptor);
   });
-}).params(poptions('visibility', kShaderStages));
+});
