@@ -2,8 +2,13 @@ export const description = `
 createPipelineLayout validation tests.
 `;
 
-import { C, TestGroup, pbool, pcombine, poptions } from '../../../framework/index.js';
-import { kBindingTypeInfo, kBindingTypes, kShaderStageCombinations } from '../capability_info.js';
+import { TestGroup, pbool, pcombine, poptions } from '../../../framework/index.js';
+import {
+  kBindingTypeInfo,
+  kBindingTypes,
+  kShaderStageCombinations,
+  kShaderStages,
+} from '../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -89,10 +94,10 @@ g.test('visibility and dynamic offsets', t => {
 );
 
 g.test('number of bind group layouts exceeds the maximum value', async t => {
-  const type: GPUBindingType = t.params.type;
+  const visibility: GPUShaderStageFlags = t.params.visibility;
 
   const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
-    bindings: [{ binding: 0, visibility: C.ShaderStage.Fragment, type }],
+    bindings: [{ binding: 0, visibility, type: 'uniform-buffer' }],
   };
 
   // 4 is the maximum number of bind group layouts.
@@ -118,4 +123,4 @@ g.test('number of bind group layouts exceeds the maximum value', async t => {
   t.expectValidationError(() => {
     t.device.createPipelineLayout(badPipelineLayoutDescriptor);
   });
-}).params(poptions('type', kBindingTypes));
+}).params(poptions('visibility', kShaderStages));
