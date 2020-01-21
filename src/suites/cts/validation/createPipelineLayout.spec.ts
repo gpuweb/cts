@@ -3,12 +3,7 @@ createPipelineLayout validation tests.
 `;
 
 import { TestGroup, pbool, pcombine, poptions } from '../../../framework/index.js';
-import {
-  kBindingTypeInfo,
-  kBindingTypes,
-  kShaderStageCombinations,
-  kShaderStages,
-} from '../capability_info.js';
+import { kBindingTypeInfo, kBindingTypes, kShaderStageCombinations } from '../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
 
