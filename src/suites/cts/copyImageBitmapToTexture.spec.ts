@@ -72,6 +72,46 @@ class F extends GPUTest {
     }
     return failedPixels > 0 ? lines.join('\n') : undefined;
   }
+
+  DoTestAndCheckResult(
+    imageBitmapCopyView: GPUImageBitmapCopyView,
+    dstTextureCopyView: GPUTextureCopyView,
+    copySize: GPUExtent3D,
+    bytesPerPixel: number,
+    expectedData: Uint8ClampedArray
+  ): void {
+    this.device.defaultQueue.copyImageBitmapToTexture(
+      imageBitmapCopyView,
+      dstTextureCopyView,
+      copySize
+    );
+
+    const imageBitmap = imageBitmapCopyView.imageBitmap;
+    const dstTexture = dstTextureCopyView.texture;
+
+    const rowPitchValue = calculateRowPitch(imageBitmap.width, bytesPerPixel);
+    const testBuffer = this.device.createBuffer({
+      size: rowPitchValue * imageBitmap.height,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    });
+
+    const encoder = this.device.createCommandEncoder();
+
+    encoder.copyTextureToBuffer(
+      { texture: dstTexture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+      { buffer: testBuffer, rowPitch: rowPitchValue, imageHeight: 0 },
+      { width: imageBitmap.width, height: imageBitmap.height, depth: 1 }
+    );
+    this.device.defaultQueue.submit([encoder.finish()]);
+
+    this.checkCopyImageBitmapResult(
+      testBuffer,
+      expectedData,
+      imageBitmap.width,
+      imageBitmap.height,
+      bytesPerPixel
+    );
+  }
 }
 
 export const g = new TestGroup(F);
@@ -96,11 +136,10 @@ g.test('from ImageData', async t => {
       height: imageBitmap.height,
       depth: 1,
     },
-    format: 'rgba8uint',
+    format: 'rgba8unorm',
     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
   });
-
-  t.device.defaultQueue.copyImageBitmapToTexture(
+  t.DoTestAndCheckResult(
     {
       imageBitmap,
       origin: {
@@ -115,34 +154,88 @@ g.test('from ImageData', async t => {
       width: imageBitmap.width,
       height: imageBitmap.height,
       depth: 1,
-    }
-  );
-
-  const rowPitchValue = calculateRowPitch(imageBitmap.width, bytesPerPixel);
-  const testBuffer = t.device.createBuffer({
-    size: rowPitchValue * imageBitmap.height,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-  });
-
-  const encoder = t.device.createCommandEncoder();
-
-  encoder.copyTextureToBuffer(
-    { texture: dst, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-    { buffer: testBuffer, rowPitch: rowPitchValue, imageHeight: 0 },
-    { width: imageBitmap.width, height: imageBitmap.height, depth: 1 }
-  );
-  t.device.defaultQueue.submit([encoder.finish()]);
-
-  t.checkCopyImageBitmapResult(
-    testBuffer,
-    imagePixels,
-    imageBitmap.width,
-    imageBitmap.height,
-    bytesPerPixel
+    },
+    bytesPerPixel,
+    imagePixels
   );
 }).params(
   pcombine(
     poptions('width', [1, 2, 4, 15, 255, 256]), //
     poptions('height', [1, 2, 4, 15, 255, 256])
   )
+);
+
+g.test('from canvas', async t => {
+  const { width, height } = t.params;
+
+  // The texture format is rgba8uint, so the bytes per pixel is 4.
+  const bytesPerPixel = 4;
+
+  // Generate original data.
+  const imagePixels = new Uint8ClampedArray(bytesPerPixel * width * height);
+  for (let i = 0; i < width * height * bytesPerPixel; ++i) {
+    imagePixels[i] = i % 256;
+  }
+
+  const imageData = new ImageData(imagePixels, width, height);
+
+  // CTS works on worker threads sometimes where document
+  // is not available. In such situations, offscreenCanvas
+  // can be the candidate. But not all browsers support creating
+  // 2d context on offscreenCanvas. In this situation, the case will
+  // be skipped.
+  let imageCanvas;
+  if (document) {
+    imageCanvas = document.createElement('canvas');
+    imageCanvas.width = width;
+    imageCanvas.height = height;
+  } else if (typeof OffscreenCanvas === 'undefined') {
+    t.skip('OffscreenCanvas not support');
+    return;
+  } else {
+    imageCanvas = new OffscreenCanvas(width, height);
+  }
+  const imageCanvasContext = imageCanvas.getContext('2d');
+  if (imageCanvasContext === null) {
+    t.skip('OffscreenCanvas "2d" context not available');
+    return;
+  }
+  imageCanvasContext.putImageData(imageData, 0, 0);
+
+  const imageBitmap = await createImageBitmap(imageCanvas);
+
+  const dst = t.device.createTexture({
+    size: {
+      width: imageBitmap.width,
+      height: imageBitmap.height,
+      depth: 1,
+    },
+    format: 'rgba8unorm',
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
+  });
+
+  const expectedData = imageCanvasContext.getImageData(0, 0, imageBitmap.width, imageBitmap.height)
+    .data;
+
+  t.DoTestAndCheckResult(
+    {
+      imageBitmap,
+      origin: {
+        x: 0,
+        y: 0,
+      },
+    },
+    {
+      texture: dst,
+    },
+    {
+      width: imageBitmap.width,
+      height: imageBitmap.height,
+      depth: 1,
+    },
+    bytesPerPixel,
+    expectedData
+  );
+}).params(
+  pcombine(poptions('width', [1, 2, 4, 15, 255, 256]), poptions('height', [1, 2, 4, 15, 255, 256]))
 );
