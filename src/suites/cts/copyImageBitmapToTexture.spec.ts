@@ -73,7 +73,7 @@ class F extends GPUTest {
     return failedPixels > 0 ? lines.join('\n') : undefined;
   }
 
-  DoTestAndCheckResult(
+  doTestAndCheckResult(
     imageBitmapCopyView: GPUImageBitmapCopyView,
     dstTextureCopyView: GPUTextureCopyView,
     copySize: GPUExtent3D,
@@ -139,22 +139,11 @@ g.test('from ImageData', async t => {
     format: 'rgba8unorm',
     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
   });
-  t.DoTestAndCheckResult(
-    {
-      imageBitmap,
-      origin: {
-        x: 0,
-        y: 0,
-      },
-    },
-    {
-      texture: dst,
-    },
-    {
-      width: imageBitmap.width,
-      height: imageBitmap.height,
-      depth: 1,
-    },
+
+  t.doTestAndCheckResult(
+    { imageBitmap, origin: { x: 0, y: 0 } },
+    { texture: dst },
+    { width: imageBitmap.width, height: imageBitmap.height, depth: 1 },
     bytesPerPixel,
     imagePixels
   );
@@ -168,6 +157,28 @@ g.test('from ImageData', async t => {
 g.test('from canvas', async t => {
   const { width, height } = t.params;
 
+  // CTS sometimes runs on worker threads, where document is not available.
+  // In this case, OffscreenCanvas can be used instead of <canvas>.
+  // But some browsers don't support OffscreenCanvas, and some don't
+  // support '2d' contexts on OffscreenCanvas.
+  // In this situation, the case will be skipped.
+  let imageCanvas;
+  if (document) {
+    imageCanvas = document.createElement('canvas');
+    imageCanvas.width = width;
+    imageCanvas.height = height;
+  } else if (typeof OffscreenCanvas === 'undefined') {
+    t.skip('OffscreenCanvas is not supported');
+    return;
+  } else {
+    imageCanvas = new OffscreenCanvas(width, height);
+  }
+  const imageCanvasContext = imageCanvas.getContext('2d');
+  if (imageCanvasContext === null) {
+    t.skip('OffscreenCanvas "2d" context not available');
+    return;
+  }
+
   // The texture format is rgba8uint, so the bytes per pixel is 4.
   const bytesPerPixel = 4;
 
@@ -178,28 +189,6 @@ g.test('from canvas', async t => {
   }
 
   const imageData = new ImageData(imagePixels, width, height);
-
-  // CTS works on worker threads sometimes where document
-  // is not available. In such situations, offscreenCanvas
-  // can be the candidate. But not all browsers support creating
-  // 2d context on offscreenCanvas. In this situation, the case will
-  // be skipped.
-  let imageCanvas;
-  if (document) {
-    imageCanvas = document.createElement('canvas');
-    imageCanvas.width = width;
-    imageCanvas.height = height;
-  } else if (typeof OffscreenCanvas === 'undefined') {
-    t.skip('OffscreenCanvas not support');
-    return;
-  } else {
-    imageCanvas = new OffscreenCanvas(width, height);
-  }
-  const imageCanvasContext = imageCanvas.getContext('2d');
-  if (imageCanvasContext === null) {
-    t.skip('OffscreenCanvas "2d" context not available');
-    return;
-  }
   imageCanvasContext.putImageData(imageData, 0, 0);
 
   const imageBitmap = await createImageBitmap(imageCanvas);
@@ -217,25 +206,16 @@ g.test('from canvas', async t => {
   const expectedData = imageCanvasContext.getImageData(0, 0, imageBitmap.width, imageBitmap.height)
     .data;
 
-  t.DoTestAndCheckResult(
-    {
-      imageBitmap,
-      origin: {
-        x: 0,
-        y: 0,
-      },
-    },
-    {
-      texture: dst,
-    },
-    {
-      width: imageBitmap.width,
-      height: imageBitmap.height,
-      depth: 1,
-    },
+  t.doTestAndCheckResult(
+    { imageBitmap, origin: { x: 0, y: 0 } },
+    { texture: dst },
+    { width: imageBitmap.width, height: imageBitmap.height, depth: 1 },
     bytesPerPixel,
     expectedData
   );
 }).params(
-  pcombine(poptions('width', [1, 2, 4, 15, 255, 256]), poptions('height', [1, 2, 4, 15, 255, 256]))
+  pcombine(
+    poptions('width', [1, 2, 4, 15, 255, 256]), //
+    poptions('height', [1, 2, 4, 15, 255, 256])
+  )
 );
