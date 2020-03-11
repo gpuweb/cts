@@ -38,7 +38,7 @@ class DevicePool {
 
   release(device: GPUDevice): void {
     assert(this.state === 'acquired');
-    assert(device === this.device, 'Released device was the wrong device')
+    assert(device === this.device, 'Released device was the wrong device');
     this.state = 'free';
   }
 }
