@@ -1,11 +1,8 @@
+import { compileGLSL } from '../../framework/glslang.js';
 import { getGPU } from '../../framework/gpu/implementation.js';
 import { Fixture, assert, unreachable } from '../../framework/index.js';
 
-type glslang = typeof import('@webgpu/glslang/dist/web-devel/glslang');
-type Glslang = import('@webgpu/glslang/dist/web-devel/glslang').Glslang;
 type ShaderStage = import('@webgpu/glslang/dist/web-devel/glslang').ShaderStage;
-
-let glslangInstance: Glslang | undefined;
 
 class DevicePool {
   device: GPUDevice | undefined = undefined;
@@ -106,38 +103,15 @@ export class GPUTest extends Fixture {
     }
   }
 
-  async initGLSL(): Promise<void> {
-    if (!glslangInstance) {
-      const glslangPath = '../../glslang.js';
-      let glslangModule: () => Promise<Glslang>;
-      try {
-        glslangModule = ((await import(glslangPath)) as glslang).default;
-      } catch (ex) {
-        this.skip('glslang is not available');
-      }
-      await new Promise(resolve => {
-        glslangModule().then((glslang: Glslang) => {
-          glslangInstance = glslang;
-          resolve();
-        });
-      });
-    }
-  }
-
   createShaderModule(desc: GPUShaderModuleDescriptor): GPUShaderModule {
     if (!this.supportsSPIRV) {
-      this.skip('SPIR-V not available');
+      this.skip('SPIR-V not available in this browser');
     }
     return this.device.createShaderModule(desc);
   }
 
   makeShaderModuleFromGLSL(stage: ShaderStage, glsl: string): GPUShaderModule {
-    assert(
-      glslangInstance !== undefined,
-      'GLSL compiler is not instantiated. Run `await t.initGLSL()` first'
-    );
-
-    const code = glslangInstance.compileGLSL(glsl, stage, false);
+    const code = compileGLSL(glsl, stage, false);
     return this.device.createShaderModule({ code });
   }
 

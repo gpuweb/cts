@@ -2,6 +2,7 @@ export const description = `
 vertexState validation tests.
 `;
 
+import { initGLSL } from '../../../framework/glslang.js';
 import { C, TestGroup } from '../../../framework/index.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -27,7 +28,7 @@ function clone<T extends GPUVertexStateDescriptor>(descriptor: T): T {
 class F extends ValidationTest {
   async init(): Promise<void> {
     await super.init();
-    await this.initGLSL();
+    await initGLSL();
   }
 
   getDescriptor(

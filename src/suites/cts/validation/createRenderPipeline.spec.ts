@@ -2,6 +2,7 @@ export const description = `
 createRenderPipeline validation tests.
 `;
 
+import { initGLSL } from '../../../framework/glslang.js';
 import { TestGroup, poptions } from '../../../framework/index.js';
 import GLSL from '../../../tools/glsl.macro.js';
 import { kTextureFormatInfo, kTextureFormats } from '../capability_info.js';
@@ -11,7 +12,7 @@ import { ValidationTest } from './validation_test.js';
 class F extends ValidationTest {
   async init(): Promise<void> {
     await super.init();
-    await this.initGLSL();
+    await initGLSL();
   }
 
   getDescriptor(
