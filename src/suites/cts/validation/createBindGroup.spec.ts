@@ -212,7 +212,7 @@ g.test('texture must have correct dimension', async t => {
         binding: 0,
         visibility: GPUShaderStage.FRAGMENT,
         type: 'sampled-texture',
-        textureDimension: '2d',
+        viewDimension: '2d',
       },
     ],
   });
