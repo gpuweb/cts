@@ -22,7 +22,7 @@ class F extends GPUTest {
   ): void {
     const exp = new Uint8Array(expected.buffer, expected.byteOffset, expected.byteLength);
     const rowPitch = calculateRowPitch(width, bytesPerPixel);
-    const dst = this.createCopyForMapRead(src, rowPitch * height);
+    const dst = this.createCopyForMapRead(src, 0, rowPitch * height);
 
     this.eventualAsyncExpectation(async niceStack => {
       const actual = new Uint8Array(await dst.mapReadAsync());
