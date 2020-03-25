@@ -1,75 +1,219 @@
-export const description = `
-computePass test that sampled texture is cleared`;
+export const description = `Test uninitialized textures are initialized to zero when sampled.`;
 
-import { TestGroup } from '../../../../common/framework/index.js';
-import GLSL from '../../../../common/tools/glsl.macro.js';
-import { GPUTest } from '../../../gpu_test.js';
+import { C, TestGroup, assert } from '../../../../common/framework/index.js';
+import { SubresourceRange } from '../../../util/texture/subresource.js';
+import { getTexelDataRepresentation } from '../../../util/texture/texelData.js';
 
-export const g = new TestGroup(GPUTest);
+import {
+  InitializedState,
+  ReadMethod,
+  TextureZeroInitTest,
+  initializedStateAsFloat,
+  initializedStateAsSint,
+  initializedStateAsUint,
+} from './texture_zero_init_test.js';
 
-g.test('compute pass test that sampled texture is cleared', async t => {
-  const texture = t.device.createTexture({
-    size: { width: 256, height: 256, depth: 1 },
-    format: 'r8unorm',
-    usage: GPUTextureUsage.SAMPLED,
-  });
+class SampledTextureClearTest extends TextureZeroInitTest {
+  private samplingPipelineCache: Map<string, GPUComputePipeline> = new Map();
+  private getSamplingReadbackPipeline(
+    prefix: string,
+    sampleCount: number,
+    dimension: GPUTextureDimension
+  ): GPUComputePipeline {
+    const MS = sampleCount > 1 ? 'MS' : '';
+    const XD = dimension.toUpperCase();
+    const componentOrder = getTexelDataRepresentation(this.params.format).componentOrder;
+    const key = [prefix, sampleCount, dimension, componentOrder].join('_');
+    if (this.samplingPipelineCache.has(key)) {
+      return this.samplingPipelineCache.get(key)!;
+    }
 
-  const bufferTex = t.device.createBuffer({
-    size: 4 * 256 * 256,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-  });
+    const componentCount = componentOrder.length;
+    const indexExpression =
+      componentCount === 1
+        ? componentOrder[0].toLowerCase()
+        : componentOrder.map(c => c.toLowerCase()).join('') + '[i]';
 
-  const sampler = t.device.createSampler();
+    const shader = `#version 310 es
+      precision highp float;
+      precision highp ${prefix}texture${XD}${MS};
+      precision highp sampler;
 
-  const bindGroupLayout = t.device.createBindGroupLayout({
-    entries: [
-      { binding: 0, visibility: GPUShaderStage.COMPUTE, type: 'sampled-texture' },
-      { binding: 1, visibility: GPUShaderStage.COMPUTE, type: 'storage-buffer' },
-      { binding: 2, visibility: GPUShaderStage.COMPUTE, type: 'sampler' },
-    ],
-  });
+      layout(set = 0, binding = 0, std140) uniform Constants {
+        int level;
+      };
 
-  // create compute pipeline
-  const computeModule = t.device.createShaderModule({
-    code: GLSL(
-      'compute',
-      `#version 450
-      layout(binding = 0) uniform texture2D sampleTex;
-      layout(std430, binding = 1) buffer BufferTex {
-         vec4 result;
-      } bufferTex;
-      layout(binding = 2) uniform sampler sampler0;
+      layout(set = 0, binding = 1) uniform ${prefix}texture${XD}${MS} myTexture;
+      layout(set = 0, binding = 2) uniform sampler mySampler;
+      layout(set = 0, binding = 3, std430) writeonly buffer Result {
+        uint result[];
+      };
+
+      void writeResult(uint flatIndex, uvec4 texel) {
+        for (uint i = flatIndex; i < flatIndex + ${componentCount}u; ++i) {
+          result[i] = texel.${indexExpression};
+        }
+      }
+
+      void writeResult(uint flatIndex, ivec4 texel) {
+        for (uint i = flatIndex; i < flatIndex + ${componentCount}u; ++i) {
+          result[i] = uint(texel.${indexExpression});
+        }
+      }
+
+      void writeResult(uint flatIndex, vec4 texel) {
+        for (uint i = flatIndex; i < flatIndex + ${componentCount}u; ++i) {
+          result[i] = floatBitsToUint(texel.${indexExpression});
+        }
+      }
+
       void main() {
-         bufferTex.result =
-               texelFetch(sampler2D(sampleTex, sampler0), ivec2(0,0), 0);
-      }`
-    ),
-  });
-  const pipelineLayout = t.device.createPipelineLayout({ bindGroupLayouts: [bindGroupLayout] });
-  const computePipeline = t.device.createComputePipeline({
-    computeStage: { module: computeModule, entryPoint: 'main' },
-    layout: pipelineLayout,
-  });
+        uint flatIndex = gl_NumWorkGroups.x * gl_GlobalInvocationID.y + gl_GlobalInvocationID.x;
+        flatIndex = flatIndex * ${componentCount}u;
 
-  // create bindgroup
-  const bindGroup = t.device.createBindGroup({
-    layout: bindGroupLayout,
-    entries: [
-      { binding: 0, resource: texture.createView() },
-      { binding: 1, resource: { buffer: bufferTex, offset: 0, size: 4 * 256 * 256 } },
-      { binding: 2, resource: sampler },
-    ],
-  });
+        writeResult(flatIndex, texelFetch(
+          ${prefix}sampler${XD}${MS}(myTexture, mySampler),
+          ivec2(gl_GlobalInvocationID.xy), level));
+      }
+      `;
 
-  // encode the pass and submit
-  const encoder = t.device.createCommandEncoder();
-  const pass = encoder.beginComputePass();
-  pass.setPipeline(computePipeline);
-  pass.setBindGroup(0, bindGroup);
-  pass.dispatch(256, 256, 1);
-  pass.endPass();
-  const commands = encoder.finish();
-  t.device.defaultQueue.submit([commands]);
+    this.samplingPipelineCache.set(
+      key,
+      this.device.createComputePipeline({
+        // @ts-ignore
+        layout: undefined,
+        computeStage: {
+          entryPoint: 'main',
+          module: this.makeShaderModuleFromGLSL('compute', shader),
+        },
+      })
+    );
+    return this.samplingPipelineCache.get(key)!;
+  }
 
-  await t.expectContents(bufferTex, new Uint32Array([0]));
-});
+  checkContents(
+    texture: GPUTexture,
+    state: InitializedState,
+    subresourceRange: SubresourceRange
+  ): void {
+    assert(this.params.dimension === '2d');
+
+    const sampler = this.device.createSampler();
+
+    for (const { level, slices } of subresourceRange.mipLevels()) {
+      const width = this.textureWidth >> level;
+      const height = this.textureHeight >> level;
+
+      let readbackTypedArray:
+        | Float32ArrayConstructor
+        | Int32ArrayConstructor
+        | Uint32ArrayConstructor = Float32Array;
+      let prefix = '';
+      let expectedShaderValue = initializedStateAsFloat(state);
+      if (this.params.format.indexOf('sint') !== -1) {
+        prefix = 'i';
+        expectedShaderValue = initializedStateAsSint(state);
+        readbackTypedArray = Int32Array;
+      } else if (this.params.format.indexOf('uint') !== -1) {
+        prefix = 'u';
+        expectedShaderValue = initializedStateAsUint(state);
+        readbackTypedArray = Uint32Array;
+      }
+
+      const computePipeline = this.getSamplingReadbackPipeline(
+        prefix,
+        this.params.sampleCount,
+        this.params.dimension
+      );
+
+      for (const slice of slices) {
+        const [ubo, uboMapping] = this.device.createBufferMapped({
+          size: 4,
+          usage: C.BufferUsage.Uniform | C.BufferUsage.CopyDst,
+        });
+        new Int32Array(uboMapping, 0, 1)[0] = level;
+        ubo.unmap();
+
+        const byteLength =
+          width *
+          height *
+          Uint32Array.BYTES_PER_ELEMENT *
+          getTexelDataRepresentation(this.params.format).componentOrder.length;
+        const resultBuffer = this.device.createBuffer({
+          size: byteLength,
+          usage: C.BufferUsage.Storage | C.BufferUsage.CopySrc,
+        });
+
+        const bindGroup = this.device.createBindGroup({
+          // @ts-ignore
+          layout: computePipeline.getBindGroupLayout(0),
+          // @ts-ignore
+          bindings: [
+            {
+              binding: 0,
+              resource: { buffer: ubo },
+            },
+            {
+              binding: 1,
+              resource: texture.createView({
+                baseMipLevel: 0,
+                mipLevelCount: this.params.mipLevelCount,
+                baseArrayLayer: slice,
+                arrayLayerCount: 1,
+              }),
+            },
+            { binding: 2, resource: sampler },
+            {
+              binding: 3,
+              resource: {
+                buffer: resultBuffer,
+              },
+            },
+          ],
+        });
+
+        const commandEncoder = this.device.createCommandEncoder();
+        const pass = commandEncoder.beginComputePass();
+        pass.setPipeline(computePipeline);
+        pass.setBindGroup(0, bindGroup);
+        pass.dispatch(width, height);
+        pass.endPass();
+        this.queue.submit([commandEncoder.finish()]);
+        ubo.destroy();
+
+        const mappedResultBuffer = this.createCopyForMapRead(resultBuffer, byteLength);
+        resultBuffer.destroy();
+
+        this.eventualAsyncExpectation(async niceStack => {
+          const actual = await mappedResultBuffer.mapReadAsync();
+          const expected = new readbackTypedArray(new ArrayBuffer(actual.byteLength));
+          expected.fill(expectedShaderValue);
+
+          // TODO: Have a better way to determine approximately equal, maybe in ULPs.
+          let tolerance;
+          if (this.params.format === 'rgb10a2unorm') {
+            tolerance = (i: number) => {
+              // The alpha component is only two bits. Use a generous tolerance.
+              return (i + 1) / 4 === Math.floor((i + 1) / 4) ? 0.18 : 0.01;
+            };
+          } else {
+            tolerance = 0.01;
+          }
+
+          const check = this.checkBuffer(new readbackTypedArray(actual), expected, tolerance);
+          if (check !== undefined) {
+            niceStack.message = check;
+            this.rec.fail(niceStack);
+          }
+          mappedResultBuffer.destroy();
+        });
+      }
+    }
+  }
+}
+
+export const g = new TestGroup(SampledTextureClearTest);
+
+g.test('uninitialized texture is zero', t => {
+  t.run();
+}).params(TextureZeroInitTest.generateParams([ReadMethod.Sample]));

@@ -6,6 +6,10 @@ export const kTextureFormatInfo: {
   [k in GPUTextureFormat]: {
     renderable: boolean;
     color: boolean;
+    depth: boolean;
+    stencil: boolean;
+    storage: boolean;
+    bytes: number;
     // Add fields as needed
   };
 } = /* prettier-ignore */ {
@@ -13,52 +17,74 @@ export const kTextureFormatInfo: {
   // (Note: this list should always match the one in the spec.)
 
   // 8-bit formats
-  'r8unorm':                { renderable:  true, color: true  },
-  'r8snorm':                { renderable: false, color: true  },
-  'r8uint':                 { renderable:  true, color: true  },
-  'r8sint':                 { renderable:  true, color: true  },
+  'r8unorm':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, bytes:  1 },
+  'r8snorm':                { renderable: false, color:  true, depth: false, stencil: false, storage: false, bytes:  1 },
+  'r8uint':                 { renderable:  true, color:  true, depth: false, stencil: false, storage: false, bytes:  1 },
+  'r8sint':                 { renderable:  true, color:  true, depth: false, stencil: false, storage: false, bytes:  1 },
   // 16-bit formats
-  'r16uint':                { renderable:  true, color: true  },
-  'r16sint':                { renderable:  true, color: true  },
-  'r16float':               { renderable:  true, color: true  },
-  'rg8unorm':               { renderable:  true, color: true  },
-  'rg8snorm':               { renderable: false, color: true  },
-  'rg8uint':                { renderable:  true, color: true  },
-  'rg8sint':                { renderable:  true, color: true  },
+  'r16uint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, bytes:  2 },
+  'r16sint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, bytes:  2 },
+  'r16float':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, bytes:  2 },
+  'rg8unorm':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, bytes:  2 },
+  'rg8snorm':               { renderable: false, color:  true, depth: false, stencil: false, storage: false, bytes:  2 },
+  'rg8uint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, bytes:  2 },
+  'rg8sint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, bytes:  2 },
   // 32-bit formats
-  'r32uint':                { renderable:  true, color: true  },
-  'r32sint':                { renderable:  true, color: true  },
-  'r32float':               { renderable:  true, color: true  },
-  'rg16uint':               { renderable:  true, color: true  },
-  'rg16sint':               { renderable:  true, color: true  },
-  'rg16float':              { renderable:  true, color: true  },
-  'rgba8unorm':             { renderable:  true, color: true  },
-  'rgba8unorm-srgb':        { renderable:  true, color: true  },
-  'rgba8snorm':             { renderable: false, color: true  },
-  'rgba8uint':              { renderable:  true, color: true  },
-  'rgba8sint':              { renderable:  true, color: true  },
-  'bgra8unorm':             { renderable:  true, color: true  },
-  'bgra8unorm-srgb':        { renderable:  true, color: true  },
+  'r32uint':                { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, bytes:  4 },
+  'r32sint':                { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, bytes:  4 },
+  'r32float':               { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, bytes:  4 },
+  'rg16uint':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, bytes:  4 },
+  'rg16sint':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, bytes:  4 },
+  'rg16float':              { renderable:  true, color:  true, depth: false, stencil: false, storage: false, bytes:  4 },
+  'rgba8unorm':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, bytes:  4 },
+  'rgba8unorm-srgb':        { renderable:  true, color:  true, depth: false, stencil: false, storage: false, bytes:  4 },
+  'rgba8snorm':             { renderable: false, color:  true, depth: false, stencil: false, storage:  true, bytes:  4 },
+  'rgba8uint':              { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, bytes:  4 },
+  'rgba8sint':              { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, bytes:  4 },
+  'bgra8unorm':             { renderable:  true, color:  true, depth: false, stencil: false, storage: false, bytes:  4 },
+  'bgra8unorm-srgb':        { renderable:  true, color:  true, depth: false, stencil: false, storage: false, bytes:  4 },
   // Packed 32-bit formats
-  'rgb10a2unorm':           { renderable:  true, color: true  },
-  'rg11b10float':           { renderable: false, color: true  },
+  'rgb10a2unorm':           { renderable:  true, color:  true, depth: false, stencil: false, storage: false, bytes:  4 },
+  'rg11b10float':           { renderable: false, color:  true, depth: false, stencil: false, storage: false, bytes:  4 },
   // 64-bit formats
-  'rg32uint':               { renderable:  true, color: true  },
-  'rg32sint':               { renderable:  true, color: true  },
-  'rg32float':              { renderable:  true, color: true  },
-  'rgba16uint':             { renderable:  true, color: true  },
-  'rgba16sint':             { renderable:  true, color: true  },
-  'rgba16float':            { renderable:  true, color: true  },
+  'rg32uint':               { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, bytes:  8 },
+  'rg32sint':               { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, bytes:  8 },
+  'rg32float':              { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, bytes:  8 },
+  'rgba16uint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, bytes:  8 },
+  'rgba16sint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, bytes:  8 },
+  'rgba16float':            { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, bytes:  8 },
   // 128-bit formats
-  'rgba32uint':             { renderable:  true, color: true  },
-  'rgba32sint':             { renderable:  true, color: true  },
-  'rgba32float':            { renderable:  true, color: true  },
+  'rgba32uint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, bytes: 16 },
+  'rgba32sint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, bytes: 16 },
+  'rgba32float':            { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, bytes: 16 },
   // Depth/stencil formats
-  'depth32float':           { renderable:  true, color: false },
-  'depth24plus':            { renderable:  true, color: false },
-  'depth24plus-stencil8':   { renderable:  true, color: false },
+  'depth32float':           { renderable:  true, color: false, depth:  true, stencil: false, storage: false, bytes:  4 },
+  'depth24plus':            { renderable:  true, color: false, depth:  true, stencil: false, storage: false, bytes:  4 },
+  'depth24plus-stencil8':   { renderable:  true, color: false, depth:  true, stencil:  true, storage: false, bytes:  4 },
 };
 export const kTextureFormats = Object.keys(kTextureFormatInfo) as GPUTextureFormat[];
+
+export function isPackedFormat(format: GPUTextureFormat): boolean {
+  return format === 'depth24plus' || format === 'depth24plus-stencil8';
+}
+
+export const kTextureDimensions = (() => {
+  const kTextureDimensionsObject: { [k in GPUTextureDimension]: GPUTextureDimension } = {
+    [C.TextureDimension.E1d]: C.TextureDimension.E1d,
+    [C.TextureDimension.E2d]: C.TextureDimension.E2d,
+    [C.TextureDimension.E3d]: C.TextureDimension.E3d,
+  };
+  return Object.values(kTextureDimensionsObject);
+})();
+
+export const kTextureAspects = (() => {
+  const kTextureAspectsObject: { [k in GPUTextureAspect]: GPUTextureAspect } = {
+    [C.TextureAspect.All]: C.TextureAspect.All,
+    [C.TextureAspect.DepthOnly]: C.TextureAspect.DepthOnly,
+    [C.TextureAspect.StencilOnly]: C.TextureAspect.StencilOnly,
+  };
+  return Object.values(kTextureAspectsObject);
+})();
 
 // Bindings
 
