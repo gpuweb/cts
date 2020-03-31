@@ -2,8 +2,8 @@ export const description = `
 Basic command buffer rendering tests.
 `;
 
-import { TestGroup } from '../../../../common/framework/index.js';
-import { GPUTest } from '../../../gpu_test.js';
+import { TestGroup } from '../../../../../common/framework/index.js';
+import { GPUTest } from '../../../../gpu_test.js';
 
 export const g = new TestGroup(GPUTest);
 

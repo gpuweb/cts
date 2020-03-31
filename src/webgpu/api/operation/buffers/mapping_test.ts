@@ -1,4 +1,4 @@
-import { GPUTest } from '../../gpu_test.js';
+import { GPUTest } from '../../../gpu_test.js';
 
 export class MappingTest extends GPUTest {
   checkMapWrite(buffer: GPUBuffer, mappedContents: ArrayBuffer, size: number): void {

@@ -2,9 +2,9 @@ export const description = `
 Basic command buffer compute tests.
 `;
 
-import { TestGroup } from '../../../../common/framework/index.js';
-import GLSL from '../../../../common/tools/glsl.macro.js';
-import { GPUTest } from '../../../gpu_test.js';
+import { TestGroup } from '../../../../../common/framework/index.js';
+import GLSL from '../../../../../common/tools/glsl.macro.js';
+import { GPUTest } from '../../../../gpu_test.js';
 
 export const g = new TestGroup(GPUTest);
 

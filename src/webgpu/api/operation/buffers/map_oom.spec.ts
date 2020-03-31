@@ -1,7 +1,7 @@
 export const description = ``;
 
-import { TestGroup } from '../../../common/framework/index.js';
-import { GPUTest } from '../../gpu_test.js';
+import { TestGroup } from '../../../../common/framework/index.js';
+import { GPUTest } from '../../../gpu_test.js';
 
 function getBufferDesc(): GPUBufferDescriptor {
   return {
