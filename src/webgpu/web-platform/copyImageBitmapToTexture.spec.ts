@@ -2,7 +2,9 @@ export const description = `
 copy imageBitmap To texture tests.
 `;
 
-import { TestGroup, pcombine, poptions } from '../../common/framework/index.js';
+import { pcombine } from '../../common/framework/params.js';
+import { poptions } from '../../common/framework/params.js';
+import { TestGroup } from '../../common/framework/test_group.js';
 import { GPUTest } from '../gpu_test.js';
 
 function calculateRowPitch(width: number, bytesPerPixel: number): number {

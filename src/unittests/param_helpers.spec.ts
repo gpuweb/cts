@@ -2,16 +2,11 @@ export const description = `
 Unit tests for parameterization helpers.
 `;
 
-import {
-  ParamSpec,
-  ParamSpecIterable,
-  TestGroup,
-  paramsEquals,
-  pcombine,
-  pexclude,
-  pfilter,
-  poptions,
-} from '../common/framework/index.js';
+import { pcombine, poptions } from '../common/framework/params.js';
+import { pexclude } from '../common/framework/params.js';
+import { pfilter } from '../common/framework/params.js';
+import { ParamSpec, ParamSpecIterable, paramsEquals } from '../common/framework/params_utils.js';
+import { TestGroup } from '../common/framework/test_group.js';
 
 import { UnitTest } from './unit_test.js';
 
