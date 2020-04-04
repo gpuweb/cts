@@ -69,13 +69,13 @@ g.test('basic/async').fn(async t => {
 // - webgpu:examples:basic/params={"x":2,"y":4}    runs with t.params = {x: 2, y: 5, _result: 6}.
 // - webgpu:examples:basic/params={"x":-10,"y":18} runs with t.params = {x: -10, y: 18, _result: 8}.
 g.test('basic/params')
-  .fn(t => {
-    t.expect(t.params.x + t.params.y === t.params._result);
-  })
   .params([
     { x: 2, y: 4, _result: 6 }, //
     { x: -10, y: 18, _result: 8 },
-  ]);
+  ])
+  .fn(t => {
+    t.expect(t.params.x + t.params.y === t.params._result);
+  });
 // (note the blank comment above to enforce newlines on autoformat)
 
 g.test('gpu/async').fn(async t => {

@@ -117,6 +117,12 @@ class F extends GPUTest {
 export const g = new TestGroup(F);
 
 g.test('from ImageData')
+  .params(
+    pcombine(
+      poptions('width', [1, 2, 4, 15, 255, 256]), //
+      poptions('height', [1, 2, 4, 15, 255, 256])
+    )
+  )
   .fn(async t => {
     const { width, height } = t.params;
 
@@ -148,15 +154,15 @@ g.test('from ImageData')
       bytesPerPixel,
       imagePixels
     );
-  })
+  });
+
+g.test('from canvas')
   .params(
     pcombine(
       poptions('width', [1, 2, 4, 15, 255, 256]), //
       poptions('height', [1, 2, 4, 15, 255, 256])
     )
-  );
-
-g.test('from canvas')
+  )
   .fn(async t => {
     const { width, height } = t.params;
 
@@ -220,10 +226,4 @@ g.test('from canvas')
       bytesPerPixel,
       expectedData
     );
-  })
-  .params(
-    pcombine(
-      poptions('width', [1, 2, 4, 15, 255, 256]), //
-      poptions('height', [1, 2, 4, 15, 255, 256])
-    )
-  );
+  });

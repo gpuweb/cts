@@ -62,17 +62,17 @@ const specsData: { [k: string]: TestSpecOrReadme } = {
     g: (() => {
       const g = new TestGroup(UnitTest);
       g.test('wye')
-        .fn(() => {})
         .params([
           {}, //
           { x: 1 },
-        ]);
+        ])
+        .fn(() => {});
       g.test('zed')
-        .fn(() => {})
         .params([
           { a: 1, b: 2, _c: 0 }, //
           { a: 1, b: 3, _c: 0 },
-        ]);
+        ])
+        .fn(() => {});
       return g;
     })(),
   },
@@ -84,11 +84,11 @@ const specsData: { [k: string]: TestSpecOrReadme } = {
         t.debug('OK');
       });
       g.test('bleh')
+        .params([{}])
         .fn(t => {
           t.debug('OK');
           t.debug('OK');
-        })
-        .params([{}]);
+        });
       g.test('bluh').fn(t => {
         t.fail('bye');
       });

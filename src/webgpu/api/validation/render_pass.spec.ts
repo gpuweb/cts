@@ -76,6 +76,12 @@ class F extends ValidationTest {
 export const g = new TestGroup(F);
 
 g.test('it is invalid to draw in a render pass with missing bind groups')
+  .params([
+    { setBindGroup1: true, setBindGroup2: true, _success: true },
+    { setBindGroup1: true, setBindGroup2: false, _success: false },
+    { setBindGroup1: false, setBindGroup2: true, _success: false },
+    { setBindGroup1: false, setBindGroup2: false, _success: false },
+  ])
   .fn(async t => {
     const { setBindGroup1, setBindGroup2, _success } = t.params;
 
@@ -145,10 +151,4 @@ g.test('it is invalid to draw in a render pass with missing bind groups')
     t.expectValidationError(() => {
       commandEncoder.finish();
     }, !_success);
-  })
-  .params([
-    { setBindGroup1: true, setBindGroup2: true, _success: true },
-    { setBindGroup1: true, setBindGroup2: false, _success: false },
-    { setBindGroup1: false, setBindGroup2: true, _success: false },
-    { setBindGroup1: false, setBindGroup2: false, _success: false },
-  ]);
+  });

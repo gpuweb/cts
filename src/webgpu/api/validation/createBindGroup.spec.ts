@@ -69,6 +69,12 @@ g.test('binding must be present in layout').fn(async t => {
 });
 
 g.test('buffer binding must contain exactly one buffer of its type')
+  .params(
+    pcombine(
+      poptions('bindingType', kBindingTypes),
+      poptions('resourceType', Object.keys(BindingResourceType))
+    )
+  )
   .fn(t => {
     const bindingType: GPUBindingType = t.params.bindingType;
     const resourceType: BindingResourceType = t.params.resourceType;
@@ -83,15 +89,13 @@ g.test('buffer binding must contain exactly one buffer of its type')
     t.expectValidationError(() => {
       t.device.createBindGroup({ layout, entries: [{ binding: 0, resource }] });
     }, shouldError);
-  })
-  .params(
-    pcombine(
-      poptions('bindingType', kBindingTypes),
-      poptions('resourceType', Object.keys(BindingResourceType))
-    )
-  );
+  });
 
 g.test('texture binding must have correct usage')
+  .params([
+    { type: 'sampled-texture', _usage: C.TextureUsage.Sampled },
+    { type: 'storage-texture', _usage: C.TextureUsage.Storage },
+  ])
   .fn(async t => {
     const type: GPUBindingType = t.params.type;
     const usage: GPUTextureUsageFlags = t.params._usage;
@@ -136,13 +140,10 @@ g.test('texture binding must have correct usage')
         });
       });
     }
-  })
-  .params([
-    { type: 'sampled-texture', _usage: C.TextureUsage.Sampled },
-    { type: 'storage-texture', _usage: C.TextureUsage.Storage },
-  ]);
+  });
 
 g.test('texture must have correct component type')
+  .params(poptions('textureComponentType', ['float', 'sint', 'uint']))
   .fn(async t => {
     const { textureComponentType } = t.params;
 
@@ -210,8 +211,7 @@ g.test('texture must have correct component type')
         });
       });
     }
-  })
-  .params(poptions('textureComponentType', ['float', 'sint', 'uint']));
+  });
 
 // TODO: Write test for all dimensions.
 g.test('texture must have correct dimension').fn(async t => {
@@ -251,6 +251,25 @@ g.test('texture must have correct dimension').fn(async t => {
 });
 
 g.test('buffer offset and size for bind groups match')
+  .params([
+    { offset: 0, size: 512, _success: true }, // offset 0 is valid
+    { offset: 256, size: 256, _success: true }, // offset 256 (aligned) is valid
+
+    // unaligned buffer offset is invalid
+    { offset: 1, size: 256, _success: false },
+    { offset: 1, size: undefined, _success: false },
+    { offset: 128, size: 256, _success: false },
+    { offset: 255, size: 256, _success: false },
+
+    { offset: 0, size: 256, _success: true }, // touching the start of the buffer works
+    { offset: 256 * 3, size: 256, _success: true }, // touching the end of the buffer works
+    { offset: 1024, size: 0, _success: true }, // touching the end of the buffer works
+    { offset: 0, size: 1024, _success: true }, // touching the full buffer works
+    { offset: 0, size: undefined, _success: true }, // touching the full buffer works
+    { offset: 256 * 5, size: 0, _success: false }, // offset is OOB
+    { offset: 0, size: 256 * 5, _success: false }, // size is OOB
+    { offset: 1024, size: 1, _success: false }, // offset+size is OOB
+  ])
   .fn(async t => {
     const { offset, size, _success } = t.params;
 
@@ -282,23 +301,4 @@ g.test('buffer offset and size for bind groups match')
         t.device.createBindGroup(descriptor);
       });
     }
-  })
-  .params([
-    { offset: 0, size: 512, _success: true }, // offset 0 is valid
-    { offset: 256, size: 256, _success: true }, // offset 256 (aligned) is valid
-
-    // unaligned buffer offset is invalid
-    { offset: 1, size: 256, _success: false },
-    { offset: 1, size: undefined, _success: false },
-    { offset: 128, size: 256, _success: false },
-    { offset: 255, size: 256, _success: false },
-
-    { offset: 0, size: 256, _success: true }, // touching the start of the buffer works
-    { offset: 256 * 3, size: 256, _success: true }, // touching the end of the buffer works
-    { offset: 1024, size: 0, _success: true }, // touching the end of the buffer works
-    { offset: 0, size: 1024, _success: true }, // touching the full buffer works
-    { offset: 0, size: undefined, _success: true }, // touching the full buffer works
-    { offset: 256 * 5, size: 0, _success: false }, // offset is OOB
-    { offset: 0, size: 256 * 5, _success: false }, // size is OOB
-    { offset: 1024, size: 1, _success: false }, // offset+size is OOB
-  ]);
+  });

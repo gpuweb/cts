@@ -10,21 +10,6 @@ import { UnitTest } from './unit_test.js';
 export const g = new TestGroup(UnitTest);
 
 g.test('stacks')
-  .fn(t => {
-    const lines: number = t.params._expectedLines;
-
-    const ex = new Error();
-    ex.stack = t.params._stack;
-    t.expect(ex.stack === t.params._stack);
-    const stringified = getStackTrace(ex);
-    const parts = stringified.split('\n');
-
-    t.expect(parts.length === lines);
-    const fst = parts[0];
-    const lst = parts[parts.length - 1];
-    t.expect(fst.indexOf('/unittests/') !== -1 || fst.indexOf('\\unittests\\') !== -1);
-    t.expect(lst.indexOf('/unittests/') !== -1 || lst.indexOf('\\unittests\\') !== -1);
-  })
   .params([
     {
       case: 'node_fail',
@@ -139,4 +124,19 @@ promiseReactionJob@[native code]`,
     at async runCase (http://localhost:8080/out/common/runtime/standalone.js:37:17)
     at async http://localhost:8080/out/common/runtime/standalone.js:102:7`,
     },
-  ]);
+  ])
+  .fn(t => {
+    const lines: number = t.params._expectedLines;
+
+    const ex = new Error();
+    ex.stack = t.params._stack;
+    t.expect(ex.stack === t.params._stack);
+    const stringified = getStackTrace(ex);
+    const parts = stringified.split('\n');
+
+    t.expect(parts.length === lines);
+    const fst = parts[0];
+    const lst = parts[parts.length - 1];
+    t.expect(fst.indexOf('/unittests/') !== -1 || fst.indexOf('\\unittests\\') !== -1);
+    t.expect(lst.indexOf('/unittests/') !== -1 || lst.indexOf('\\unittests\\') !== -1);
+  });

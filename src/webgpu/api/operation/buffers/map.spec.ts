@@ -8,6 +8,7 @@ import { MappingTest } from './mapping_test.js';
 export const g = new TestGroup(MappingTest);
 
 g.test('mapWriteAsync')
+  .params(poptions('size', [12, 512 * 1024]))
   .fn(async t => {
     const size = t.params.size;
     const buffer = t.device.createBuffer({
@@ -17,10 +18,10 @@ g.test('mapWriteAsync')
 
     const arrayBuffer = await buffer.mapWriteAsync();
     t.checkMapWrite(buffer, arrayBuffer, size);
-  })
-  .params(poptions('size', [12, 512 * 1024]));
+  });
 
 g.test('mapReadAsync')
+  .params(poptions('size', [12, 512 * 1024]))
   .fn(async t => {
     const size = t.params.size;
 
@@ -38,10 +39,15 @@ g.test('mapReadAsync')
 
     const actual = new Uint8Array(await buffer.mapReadAsync());
     t.expectBuffer(actual, new Uint8Array(expected.buffer));
-  })
-  .params(poptions('size', [12, 512 * 1024]));
+  });
 
 g.test('createBufferMapped')
+  .params(
+    pcombine(
+      poptions('size', [12, 512 * 1024]), //
+      pbool('mappable')
+    )
+  )
   .fn(async t => {
     const size = t.params.size;
     const [buffer, arrayBuffer] = t.device.createBufferMapped({
@@ -49,10 +55,4 @@ g.test('createBufferMapped')
       usage: GPUBufferUsage.COPY_SRC | (t.params.mappable ? GPUBufferUsage.MAP_WRITE : 0),
     });
     t.checkMapWrite(buffer, arrayBuffer, size);
-  })
-  .params(
-    pcombine(
-      poptions('size', [12, 512 * 1024]), //
-      pbool('mappable')
-    )
-  );
+  });

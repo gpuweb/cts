@@ -19,6 +19,12 @@ function clone<T extends GPUBindGroupLayoutDescriptor>(descriptor: T): T {
 export const g = new TestGroup(ValidationTest);
 
 g.test('number of dynamic buffers exceeds the maximum value')
+  .params(
+    pcombine(
+      poptions('visibility', [0, 2, 4, 6]), //
+      poptions('type', ['uniform-buffer', 'storage-buffer', 'readonly-storage-buffer'])
+    )
+  )
   .fn(async t => {
     const { type, visibility } = t.params;
     const maxDynamicCount = kBindingTypeInfo[type as GPUBindingType].maxDynamicCount;
@@ -60,15 +66,16 @@ g.test('number of dynamic buffers exceeds the maximum value')
     t.expectValidationError(() => {
       t.device.createPipelineLayout(badPipelineLayoutDescriptor);
     });
-  })
-  .params(
-    pcombine(
-      poptions('visibility', [0, 2, 4, 6]), //
-      poptions('type', ['uniform-buffer', 'storage-buffer', 'readonly-storage-buffer'])
-    )
-  );
+  });
 
 g.test('visibility and dynamic offsets')
+  .params(
+    pcombine(
+      poptions('type', kBindingTypes), //
+      pbool('hasDynamicOffset'),
+      poptions('visibility', kShaderStageCombinations)
+    )
+  )
   .fn(t => {
     const hasDynamicOffset: boolean = t.params.hasDynamicOffset;
     const type: GPUBindingType = t.params.type;
@@ -88,14 +95,7 @@ g.test('visibility and dynamic offsets')
         bindGroupLayouts: [t.device.createBindGroupLayout(descriptor)],
       });
     }, !success);
-  })
-  .params(
-    pcombine(
-      poptions('type', kBindingTypes), //
-      pbool('hasDynamicOffset'),
-      poptions('visibility', kShaderStageCombinations)
-    )
-  );
+  });
 
 g.test('number of bind group layouts exceeds the maximum value').fn(async t => {
   const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {

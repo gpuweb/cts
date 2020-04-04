@@ -12,21 +12,18 @@ import { UnitTest } from './unit_test.js';
 export const g = new TestGroup(TestGroupTest);
 
 g.test('none')
+  .params([])
   .fn(t => {
     t.fail("this test shouldn't run");
-  })
-  .params([]);
+  });
 
 g.test('combine none')
+  .params(pcombine([]))
   .fn(t => {
     t.fail("this test shouldn't run");
-  })
-  .params(pcombine([]));
+  });
 
 g.test('filter')
-  .fn(t => {
-    t.expect(t.params.a);
-  })
   .params(
     pfilter(
       [
@@ -35,12 +32,12 @@ g.test('filter')
       ],
       p => p.a
     )
-  );
-
-g.test('exclude')
+  )
   .fn(t => {
     t.expect(t.params.a);
-  })
+  });
+
+g.test('exclude')
   .params(
     pexclude(
       [
@@ -52,7 +49,10 @@ g.test('exclude')
         { a: false, y: 2 },
       ]
     )
-  );
+  )
+  .fn(t => {
+    t.expect(t.params.a);
+  });
 
 g.test('generator').fn(t0 => {
   const g = new TestGroup(UnitTest);
@@ -60,9 +60,6 @@ g.test('generator').fn(t0 => {
   const ran: ParamSpec[] = [];
 
   g.test('generator')
-    .fn(t => {
-      ran.push(t.params);
-    })
     .params(
       (function*(): IterableIterator<ParamSpec> {
         for (let x = 0; x < 3; ++x) {
@@ -71,7 +68,10 @@ g.test('generator').fn(t0 => {
           }
         }
       })()
-    );
+    )
+    .fn(t => {
+      ran.push(t.params);
+    });
 
   t0.expectCases(g, [
     { test: 'generator', params: { x: 0, y: 0 } },

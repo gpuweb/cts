@@ -51,6 +51,7 @@ class F extends ValidationTest {
 export const g = new TestGroup(F);
 
 g.test('dynamic offsets passed but not expected/compute pass')
+  .params(poptions('type', ['compute', 'renderpass', 'renderbundle']))
   .fn(async t => {
     const bindGroupLayout = t.device.createBindGroupLayout({ entries: [] });
     const bindGroup = t.device.createBindGroup({ layout: bindGroupLayout, entries: [] });
@@ -88,10 +89,30 @@ g.test('dynamic offsets passed but not expected/compute pass')
         t.fail();
       }
     });
-  })
-  .params(poptions('type', ['compute', 'renderpass', 'renderbundle']));
+  });
 
 g.test('dynamic offsets match expectations in pass encoder')
+  .params(
+    pcombine(poptions('type', ['compute', 'renderpass', 'renderbundle']), [
+      { dynamicOffsets: [256, 0], _success: true }, // Dynamic offsets aligned
+      { dynamicOffsets: [1, 2], _success: false }, // Dynamic offsets not aligned
+
+      // Wrong number of dynamic offsets
+      { dynamicOffsets: [256, 0, 0], _success: false },
+      { dynamicOffsets: [256], _success: false },
+      { dynamicOffsets: [], _success: false },
+
+      // Dynamic uniform buffer out of bounds because of binding size
+      { dynamicOffsets: [512, 0], _success: false },
+      { dynamicOffsets: [1024, 0], _success: false },
+      { dynamicOffsets: [Number.MAX_SAFE_INTEGER, 0], _success: false },
+
+      // Dynamic storage buffer out of bounds because of binding size
+      { dynamicOffsets: [0, 512], _success: false },
+      { dynamicOffsets: [0, 1024], _success: false },
+      { dynamicOffsets: [0, Number.MAX_SAFE_INTEGER], _success: false },
+    ])
+  )
   .fn(async t => {
     // Dynamic buffer offsets require offset to be divisible by 256
     const MIN_DYNAMIC_BUFFER_OFFSET_ALIGNMENT = 256;
@@ -158,27 +179,6 @@ g.test('dynamic offsets match expectations in pass encoder')
       }
       t.testComputePass(bindGroup, dynamicOffsets);
     }, !_success);
-  })
-  .params(
-    pcombine(poptions('type', ['compute', 'renderpass', 'renderbundle']), [
-      { dynamicOffsets: [256, 0], _success: true }, // Dynamic offsets aligned
-      { dynamicOffsets: [1, 2], _success: false }, // Dynamic offsets not aligned
-
-      // Wrong number of dynamic offsets
-      { dynamicOffsets: [256, 0, 0], _success: false },
-      { dynamicOffsets: [256], _success: false },
-      { dynamicOffsets: [], _success: false },
-
-      // Dynamic uniform buffer out of bounds because of binding size
-      { dynamicOffsets: [512, 0], _success: false },
-      { dynamicOffsets: [1024, 0], _success: false },
-      { dynamicOffsets: [Number.MAX_SAFE_INTEGER, 0], _success: false },
-
-      // Dynamic storage buffer out of bounds because of binding size
-      { dynamicOffsets: [0, 512], _success: false },
-      { dynamicOffsets: [0, 1024], _success: false },
-      { dynamicOffsets: [0, Number.MAX_SAFE_INTEGER], _success: false },
-    ])
-  );
+  });
 
 // TODO: test error bind group

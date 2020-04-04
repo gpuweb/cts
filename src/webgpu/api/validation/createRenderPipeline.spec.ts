@@ -127,6 +127,7 @@ g.test('at least one color state is required').fn(async t => {
 });
 
 g.test('color formats must be renderable')
+  .params(poptions('format', kTextureFormats))
   .fn(async t => {
     const format: GPUTextureFormat = t.params.format;
     const info = kTextureFormatInfo[format];
@@ -142,10 +143,18 @@ g.test('color formats must be renderable')
         t.device.createRenderPipeline(descriptor);
       });
     }
-  })
-  .params(poptions('format', kTextureFormats));
+  });
 
 g.test('sample count must be valid')
+  .params([
+    { sampleCount: 0, _success: false },
+    { sampleCount: 1, _success: true },
+    { sampleCount: 2, _success: false },
+    { sampleCount: 3, _success: false },
+    { sampleCount: 4, _success: true },
+    { sampleCount: 8, _success: false },
+    { sampleCount: 16, _success: false },
+  ])
   .fn(async t => {
     const { sampleCount, _success } = t.params;
 
@@ -160,18 +169,14 @@ g.test('sample count must be valid')
         t.device.createRenderPipeline(descriptor);
       });
     }
-  })
-  .params([
-    { sampleCount: 0, _success: false },
-    { sampleCount: 1, _success: true },
-    { sampleCount: 2, _success: false },
-    { sampleCount: 3, _success: false },
-    { sampleCount: 4, _success: true },
-    { sampleCount: 8, _success: false },
-    { sampleCount: 16, _success: false },
-  ]);
+  });
 
 g.test('sample count must be equal to the one of every attachment in the render pass')
+  .params([
+    { attachmentSamples: 4, pipelineSamples: 4, _success: true }, // It is allowed to use multisampled render pass and multisampled render pipeline.
+    { attachmentSamples: 4, pipelineSamples: 1, _success: false }, // It is not allowed to use multisampled render pass and non-multisampled render pipeline.
+    { attachmentSamples: 1, pipelineSamples: 4, _success: false }, // It is not allowed to use non-multisampled render pass and multisampled render pipeline.
+  ])
   .fn(async t => {
     const { attachmentSamples, pipelineSamples, _success } = t.params;
 
@@ -234,9 +239,4 @@ g.test('sample count must be equal to the one of every attachment in the render 
         commandEncoder.finish();
       }, !_success);
     }
-  })
-  .params([
-    { attachmentSamples: 4, pipelineSamples: 4, _success: true }, // It is allowed to use multisampled render pass and multisampled render pipeline.
-    { attachmentSamples: 4, pipelineSamples: 1, _success: false }, // It is not allowed to use multisampled render pass and non-multisampled render pipeline.
-    { attachmentSamples: 1, pipelineSamples: 4, _success: false }, // It is not allowed to use non-multisampled render pass and multisampled render pipeline.
-  ]);
+  });

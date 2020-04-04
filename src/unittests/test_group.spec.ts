@@ -22,8 +22,8 @@ g.test('UnitTest fixture').fn(async t0 => {
 
   g.test('test').fn(count);
   g.test('testp')
-    .fn(count)
-    .params([{ a: 1 }]);
+    .params([{ a: 1 }])
+    .fn(count);
 
   await t0.run(g);
   t0.expect(seen === 2);
@@ -43,10 +43,10 @@ g.test('custom fixture').fn(async t0 => {
     t.count();
   });
   g.test('testp')
+    .params([{ a: 1 }])
     .fn(t => {
       t.count();
-    })
-    .params([{ a: 1 }]);
+    });
 
   await t0.run(g);
   t0.expect(seen === 2);
@@ -97,13 +97,13 @@ g.test('duplicate test params').fn(t => {
 
   t.shouldThrow('Error', () => {
     g.test('abc')
-      .fn(() => {
-        //
-      })
       .params([
         { a: 1 }, //
         { a: 1 },
-      ]);
+      ])
+      .fn(() => {
+        //
+      });
   });
 });
 
@@ -112,26 +112,26 @@ g.test('duplicate test params/with different private params').fn(t => {
 
   t.shouldThrow('Error', () => {
     g.test('abc')
-      .fn(() => {
-        //
-      })
       .params([
         { a: 1, _b: 1 }, //
         { a: 1, _b: 2 },
-      ]);
+      ])
+      .fn(() => {
+        //
+      });
   });
 });
 
 const badChars = Array.from('"`~@#$+=\\|!^&*[]<>{}-\'.,');
 g.test('invalid test name')
+  .params(poptions('char', badChars))
   .fn(t => {
     const g = new TestGroup(UnitTest);
 
     t.shouldThrow('Error', () => {
       g.test('a' + t.params.char + 'b').fn(() => {});
     });
-  })
-  .params(poptions('char', badChars));
+  });
 
 g.test('throws').fn(async t0 => {
   const g = new TestGroup(UnitTest);

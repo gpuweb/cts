@@ -125,6 +125,10 @@ g.test('fail').fn(t => {
 });
 
 g.test('debug')
+  .params([
+    { debug: true, _logsCount: 1 }, //
+    { debug: false, _logsCount: 0 },
+  ])
   .fn(t => {
     const { debug, _logsCount } = t.params;
 
@@ -138,8 +142,4 @@ g.test('debug')
     t.expect(res.status === 'pass');
     t.expect(res.timems >= 0);
     t.expect(res.logs!.length === _logsCount);
-  })
-  .params([
-    { debug: true, _logsCount: 1 }, //
-    { debug: false, _logsCount: 0 },
-  ]);
+  });

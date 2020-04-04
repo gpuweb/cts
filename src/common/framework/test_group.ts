@@ -63,16 +63,16 @@ export class TestGroup<F extends Fixture> implements RunCaseIterable {
   }
 }
 
-interface TestBuilderWithName<F extends Fixture> {
-  fn(fn: TestFn<F>): TestBuilderWithFn;
+interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F> {
+  params(specs: ParamSpecIterable): TestBuilderWithParams<F>;
 }
 
-interface TestBuilderWithFn {
-  params(specs: ParamSpecIterable): void;
+interface TestBuilderWithParams<F extends Fixture> {
+  fn(fn: TestFn<F>): void;
 }
 
 // This test is created when it's inserted, but may be parameterized afterward (.params()).
-class TestBuilder<F extends Fixture> implements TestBuilderWithName<F>, TestBuilderWithFn {
+class TestBuilder<F extends Fixture> {
   private readonly name: string;
   private readonly fixture: FixtureClass<F>;
   private testFn: TestFn<F> | undefined;
@@ -83,12 +83,11 @@ class TestBuilder<F extends Fixture> implements TestBuilderWithName<F>, TestBuil
     this.fixture = fixture;
   }
 
-  fn(fn: TestFn<F>): TestBuilderWithFn {
+  fn(fn: TestFn<F>): void {
     this.testFn = fn;
-    return this;
   }
 
-  params(specs: ParamSpecIterable): void {
+  params(specs: ParamSpecIterable): TestBuilderWithParams<F> {
     assert(this.cases === null, 'test case is already parameterized');
     const cases = Array.from(specs);
     const seen: ParamSpec[] = [];
@@ -106,6 +105,8 @@ class TestBuilder<F extends Fixture> implements TestBuilderWithName<F>, TestBuil
       seen.push(publicParams);
     }
     this.cases = cases;
+
+    return this;
   }
 
   *iterate(rec: TestSpecRecorder): IterableIterator<RunCase> {

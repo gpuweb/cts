@@ -32,18 +32,6 @@ class F extends ValidationTest {
 export const g = new TestGroup(F);
 
 g.test('use of setViewport')
-  .fn(async t => {
-    const { x, y, width, height, minDepth, maxDepth, _success } = t.params;
-
-    const commandEncoder = t.device.createCommandEncoder();
-    const renderPass = t.beginRenderPass(commandEncoder);
-    renderPass.setViewport(x, y, width, height, minDepth, maxDepth);
-    renderPass.endPass();
-
-    t.expectValidationError(() => {
-      commandEncoder.finish();
-    }, !_success);
-  })
   .params([
     { x: 0, y: 0, width: 1, height: 1, minDepth: 0, maxDepth: 1, _success: true }, // Basic use
     { x: 0, y: 0, width: 0, height: 1, minDepth: 0, maxDepth: 1, _success: false }, // Width of zero is not allowed
@@ -68,4 +56,16 @@ g.test('use of setViewport')
       maxDepth: 1,
       _success: true,
     }, // Viewport larger than the framebuffer is allowed
-  ]);
+  ])
+  .fn(async t => {
+    const { x, y, width, height, minDepth, maxDepth, _success } = t.params;
+
+    const commandEncoder = t.device.createCommandEncoder();
+    const renderPass = t.beginRenderPass(commandEncoder);
+    renderPass.setViewport(x, y, width, height, minDepth, maxDepth);
+    renderPass.endPass();
+
+    t.expectValidationError(() => {
+      commandEncoder.finish();
+    }, !_success);
+  });

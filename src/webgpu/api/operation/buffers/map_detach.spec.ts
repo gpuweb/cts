@@ -20,30 +20,35 @@ class F extends GPUTest {
 export const g = new TestGroup(F);
 
 g.test('mapWriteAsync')
+  .params([
+    { unmap: true, destroy: false }, //
+    { unmap: false, destroy: true },
+    { unmap: true, destroy: true },
+  ])
   .fn(async t => {
     const buffer = t.device.createBuffer({ size: 4, usage: GPUBufferUsage.MAP_WRITE });
     const arrayBuffer = await buffer.mapWriteAsync();
     t.checkDetach(buffer, arrayBuffer, t.params.unmap, t.params.destroy);
-  })
+  });
+
+g.test('mapReadAsync')
   .params([
     { unmap: true, destroy: false }, //
     { unmap: false, destroy: true },
     { unmap: true, destroy: true },
-  ]);
-
-g.test('mapReadAsync')
+  ])
   .fn(async t => {
     const buffer = t.device.createBuffer({ size: 4, usage: GPUBufferUsage.MAP_READ });
     const arrayBuffer = await buffer.mapReadAsync();
     t.checkDetach(buffer, arrayBuffer, t.params.unmap, t.params.destroy);
-  })
-  .params([
-    { unmap: true, destroy: false }, //
-    { unmap: false, destroy: true },
-    { unmap: true, destroy: true },
-  ]);
+  });
 
 g.test('create mapped')
+  .params([
+    { unmap: true, destroy: false },
+    { unmap: false, destroy: true },
+    { unmap: true, destroy: true },
+  ])
   .fn(async t => {
     const desc = {
       size: 4,
@@ -59,9 +64,4 @@ g.test('create mapped')
     if (t.params.destroy) buffer.destroy();
     t.expect(arrayBuffer.byteLength === 0, 'ArrayBuffer should be detached');
     t.expect(view.byteLength === 0, 'ArrayBufferView should be detached');
-  })
-  .params([
-    { unmap: true, destroy: false },
-    { unmap: false, destroy: true },
-    { unmap: true, destroy: true },
-  ]);
+  });

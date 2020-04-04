@@ -30,6 +30,7 @@ class F extends ValidationTest {
 export const g = new TestGroup(F);
 
 g.test('use of setStencilReference')
+  .params(poptions('reference', [0, 0xffffffff]))
   .fn(t => {
     const { reference } = t.params;
 
@@ -38,5 +39,4 @@ g.test('use of setStencilReference')
     renderPass.setStencilReference(reference);
     renderPass.endPass();
     commandEncoder.finish();
-  })
-  .params(poptions('reference', [0, 0xffffffff]));
+  });

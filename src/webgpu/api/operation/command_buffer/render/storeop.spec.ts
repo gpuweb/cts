@@ -8,6 +8,10 @@ import { GPUTest } from '../../../../gpu_test.js';
 export const g = new TestGroup(GPUTest);
 
 g.test('storeOp controls whether 1x1 drawn quad is stored')
+  .params([
+    { storeOp: 'store', _expected: 255 }, //
+    { storeOp: 'clear', _expected: 0 },
+  ])
   .fn(async t => {
     const renderTexture = t.device.createTexture({
       size: { width: 1, height: 1, depth: 1 },
@@ -77,8 +81,4 @@ g.test('storeOp controls whether 1x1 drawn quad is stored')
     // expect the buffer to be clear
     const expectedContent = new Uint32Array([t.params._expected]);
     t.expectContents(dstBuffer, expectedContent);
-  })
-  .params([
-    { storeOp: 'store', _expected: 255 }, //
-    { storeOp: 'clear', _expected: 0 },
-  ]);
+  });

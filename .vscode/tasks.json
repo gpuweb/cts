@@ -14,6 +14,13 @@
       "type": "grunt",
       "task": "pre",
       "problemMatcher": []
+    },
+    {
+      "type": "grunt",
+      "task": "check",
+      "problemMatcher": [
+        "$tsc"
+      ]
     }
   ]
 }
