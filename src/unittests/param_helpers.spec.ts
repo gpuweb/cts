@@ -17,22 +17,22 @@ class ParamsTest extends UnitTest {
 
 export const g = new TestGroup(ParamsTest);
 
-g.test('options', t => {
+g.test('options').fn(t => {
   t.expectSpecEqual(poptions('hello', [1, 2, 3]), [{ hello: 1 }, { hello: 2 }, { hello: 3 }]);
 });
 
-g.test('combine/none', t => {
+g.test('combine/none').fn(t => {
   t.expectSpecEqual(pcombine(), []);
 });
 
-g.test('combine/zeroes and ones', t => {
+g.test('combine/zeroes and ones').fn(t => {
   t.expectSpecEqual(pcombine([], []), []);
   t.expectSpecEqual(pcombine([], [{}]), []);
   t.expectSpecEqual(pcombine([{}], []), []);
   t.expectSpecEqual(pcombine([{}], [{}]), [{}]);
 });
 
-g.test('combine/mixed', t => {
+g.test('combine/mixed').fn(t => {
   t.expectSpecEqual(
     pcombine(poptions('x', [1, 2]), poptions('y', ['a', 'b']), [{ p: 4 }, { q: 5 }], [{}]),
     [
@@ -48,7 +48,7 @@ g.test('combine/mixed', t => {
   );
 });
 
-g.test('filter', t => {
+g.test('filter').fn(t => {
   t.expectSpecEqual(
     pfilter(
       [
@@ -61,7 +61,7 @@ g.test('filter', t => {
   );
 });
 
-g.test('exclude', t => {
+g.test('exclude').fn(t => {
   t.expectSpecEqual(
     pexclude(
       [
@@ -74,11 +74,11 @@ g.test('exclude', t => {
   );
 });
 
-g.test('undefined', t => {
+g.test('undefined').fn(t => {
   t.expectSpecEqual([{ a: undefined }], [{}]);
   t.expectSpecEqual([{}], [{ a: undefined }]);
 });
 
-g.test('arrays', t => {
+g.test('arrays').fn(t => {
   t.expectSpecEqual([{ a: [1, 2] }], [{ a: [1, 2] }]);
 });

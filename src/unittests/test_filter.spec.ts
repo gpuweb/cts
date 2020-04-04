@@ -14,7 +14,7 @@ import { UnitTest } from './unit_test.js';
 
 export const g = new TestGroup(UnitTest);
 
-g.test('FilterByGroup/matches', t => {
+g.test('FilterByGroup/matches').fn(t => {
   {
     const f = new FilterByGroup('ab', 'de/f');
     t.expect(f.matches({ spec: { suite: 'ab', path: 'de/fg' } }));
@@ -37,7 +37,7 @@ g.test('FilterByGroup/matches', t => {
   }
 });
 
-g.test('FilterByTestMatch/matches', t => {
+g.test('FilterByTestMatch/matches').fn(t => {
   const f = new FilterByTestMatch({ suite: 'ab', path: 'de/f' }, 'xy');
   t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy' }));
   t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy', params: null }));
@@ -49,7 +49,7 @@ g.test('FilterByTestMatch/matches', t => {
   t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/fg' }, test: 'xyz', params: null }));
 });
 
-g.test('FilterByParamsMatch/matches', t => {
+g.test('FilterByParamsMatch/matches').fn(t => {
   {
     const f = new FilterByParamsMatch({ suite: 'ab', path: 'de/f' }, 'xy', null);
     t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy', params: null }));
@@ -70,7 +70,7 @@ g.test('FilterByParamsMatch/matches', t => {
   }
 });
 
-g.test('FilterByParamsExact', t => {
+g.test('FilterByParamsExact').fn(t => {
   const f = new FilterByParamsExact({ suite: 'ab', path: 'de/f' }, 'xy', {});
   t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy', params: null }));
   t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy', params: {} }));

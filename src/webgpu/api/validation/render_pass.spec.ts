@@ -75,78 +75,80 @@ class F extends ValidationTest {
 
 export const g = new TestGroup(F);
 
-g.test('it is invalid to draw in a render pass with missing bind groups', async t => {
-  const { setBindGroup1, setBindGroup2, _success } = t.params;
+g.test('it is invalid to draw in a render pass with missing bind groups')
+  .fn(async t => {
+    const { setBindGroup1, setBindGroup2, _success } = t.params;
 
-  const uniformBuffer = t.getUniformBuffer();
+    const uniformBuffer = t.getUniformBuffer();
 
-  const bindGroupLayout1 = t.device.createBindGroupLayout({
-    entries: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.VERTEX,
-        type: 'uniform-buffer',
-      },
-    ],
-  });
-
-  const bindGroup1 = t.device.createBindGroup({
-    entries: [
-      {
-        binding: 0,
-        resource: {
-          buffer: uniformBuffer,
+    const bindGroupLayout1 = t.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.VERTEX,
+          type: 'uniform-buffer',
         },
-      },
-    ],
-    layout: bindGroupLayout1,
-  });
+      ],
+    });
 
-  const bindGroupLayout2 = t.device.createBindGroupLayout({
-    entries: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.FRAGMENT,
-        type: 'uniform-buffer',
-      },
-    ],
-  });
-
-  const bindGroup2 = t.device.createBindGroup({
-    entries: [
-      {
-        binding: 0,
-        resource: {
-          buffer: uniformBuffer,
+    const bindGroup1 = t.device.createBindGroup({
+      entries: [
+        {
+          binding: 0,
+          resource: {
+            buffer: uniformBuffer,
+          },
         },
-      },
-    ],
-    layout: bindGroupLayout2,
-  });
+      ],
+      layout: bindGroupLayout1,
+    });
 
-  const pipelineLayout = t.device.createPipelineLayout({
-    bindGroupLayouts: [bindGroupLayout1, bindGroupLayout2],
-  });
+    const bindGroupLayout2 = t.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.FRAGMENT,
+          type: 'uniform-buffer',
+        },
+      ],
+    });
 
-  const pipeline = t.createRenderPipeline(pipelineLayout);
+    const bindGroup2 = t.device.createBindGroup({
+      entries: [
+        {
+          binding: 0,
+          resource: {
+            buffer: uniformBuffer,
+          },
+        },
+      ],
+      layout: bindGroupLayout2,
+    });
 
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = t.beginRenderPass(commandEncoder);
-  renderPass.setPipeline(pipeline);
-  if (setBindGroup1) {
-    renderPass.setBindGroup(0, bindGroup1);
-  }
-  if (setBindGroup2) {
-    renderPass.setBindGroup(1, bindGroup2);
-  }
-  renderPass.draw(3, 1, 0, 0);
-  renderPass.endPass();
-  t.expectValidationError(() => {
-    commandEncoder.finish();
-  }, !_success);
-}).params([
-  { setBindGroup1: true, setBindGroup2: true, _success: true },
-  { setBindGroup1: true, setBindGroup2: false, _success: false },
-  { setBindGroup1: false, setBindGroup2: true, _success: false },
-  { setBindGroup1: false, setBindGroup2: false, _success: false },
-]);
+    const pipelineLayout = t.device.createPipelineLayout({
+      bindGroupLayouts: [bindGroupLayout1, bindGroupLayout2],
+    });
+
+    const pipeline = t.createRenderPipeline(pipelineLayout);
+
+    const commandEncoder = t.device.createCommandEncoder();
+    const renderPass = t.beginRenderPass(commandEncoder);
+    renderPass.setPipeline(pipeline);
+    if (setBindGroup1) {
+      renderPass.setBindGroup(0, bindGroup1);
+    }
+    if (setBindGroup2) {
+      renderPass.setBindGroup(1, bindGroup2);
+    }
+    renderPass.draw(3, 1, 0, 0);
+    renderPass.endPass();
+    t.expectValidationError(() => {
+      commandEncoder.finish();
+    }, !_success);
+  })
+  .params([
+    { setBindGroup1: true, setBindGroup2: true, _success: true },
+    { setBindGroup1: true, setBindGroup2: false, _success: false },
+    { setBindGroup1: false, setBindGroup2: true, _success: false },
+    { setBindGroup1: false, setBindGroup2: false, _success: false },
+  ]);

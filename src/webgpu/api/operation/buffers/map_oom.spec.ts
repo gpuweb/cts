@@ -12,17 +12,17 @@ function getBufferDesc(): GPUBufferDescriptor {
 
 export const g = new TestGroup(GPUTest);
 
-g.test('mapWriteAsync', async t => {
+g.test('mapWriteAsync').fn(async t => {
   const buffer = t.device.createBuffer(getBufferDesc());
   t.shouldReject('RangeError', buffer.mapWriteAsync());
 });
 
-g.test('mapReadAsync', async t => {
+g.test('mapReadAsync').fn(async t => {
   const buffer = t.device.createBuffer(getBufferDesc());
   t.shouldReject('RangeError', buffer.mapReadAsync());
 });
 
-g.test('createBufferMapped', async t => {
+g.test('createBufferMapped').fn(async t => {
   t.shouldThrow('RangeError', () => {
     t.device.createBufferMapped(getBufferDesc());
   });

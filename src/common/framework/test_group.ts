@@ -24,7 +24,7 @@ const validNames = new RegExp('^[' + allowedTestNameCharacters + ']+$');
 export class TestGroup<F extends Fixture> implements RunCaseIterable {
   private fixture: FixtureClass<F>;
   private seen: Set<string> = new Set();
-  private tests: Array<Test<F>> = [];
+  private tests: Array<TestBuilder<F>> = [];
 
   constructor(fixture: FixtureClass<F>) {
     this.fixture = fixture;
@@ -50,30 +50,42 @@ export class TestGroup<F extends Fixture> implements RunCaseIterable {
   }
 
   // TODO: This could take a fixture, too, to override the one for the group.
-  test(name: string, fn: TestFn<F>): Test<F> {
+  test(name: string): TestBuilderWithName<F> {
     // Replace spaces with underscores for readability.
     assert(name.indexOf('_') === -1, 'Invalid test name ${name}: contains underscore (use space)');
     name = name.replace(/ /g, '_');
 
     this.checkName(name);
 
-    const test = new Test<F>(name, this.fixture, fn);
+    const test = new TestBuilder<F>(name, this.fixture);
     this.tests.push(test);
     return test;
   }
 }
 
+interface TestBuilderWithName<F extends Fixture> {
+  fn(fn: TestFn<F>): TestBuilderWithFn;
+}
+
+interface TestBuilderWithFn {
+  params(specs: ParamSpecIterable): void;
+}
+
 // This test is created when it's inserted, but may be parameterized afterward (.params()).
-class Test<F extends Fixture> {
-  readonly name: string;
-  readonly fixture: FixtureClass<F>;
-  readonly fn: TestFn<F>;
+class TestBuilder<F extends Fixture> implements TestBuilderWithName<F>, TestBuilderWithFn {
+  private readonly name: string;
+  private readonly fixture: FixtureClass<F>;
+  private testFn: TestFn<F> | undefined;
   private cases: ParamSpecIterable | null = null;
 
-  constructor(name: string, fixture: FixtureClass<F>, fn: TestFn<F>) {
+  constructor(name: string, fixture: FixtureClass<F>) {
     this.name = name;
     this.fixture = fixture;
-    this.fn = fn;
+  }
+
+  fn(fn: TestFn<F>): TestBuilderWithFn {
+    this.testFn = fn;
+    return this;
   }
 
   params(specs: ParamSpecIterable): void {
@@ -97,8 +109,9 @@ class Test<F extends Fixture> {
   }
 
   *iterate(rec: TestSpecRecorder): IterableIterator<RunCase> {
+    assert(this.testFn !== undefined, 'internal error');
     for (const params of this.cases || [null]) {
-      yield new RunCaseSpecific(rec, this.name, params, this.fixture, this.fn);
+      yield new RunCaseSpecific(rec, this.name, params, this.fixture, this.testFn);
     }
   }
 }

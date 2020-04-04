@@ -34,9 +34,9 @@ const specsData: { [k: string]: TestSpecOrReadme } = {
     description: 'desc 1b',
     g: (() => {
       const g = new TestGroup(UnitTest);
-      g.test('hello', () => {});
-      g.test('bonjour', () => {});
-      g.test('hola', () => {});
+      g.test('hello').fn(() => {});
+      g.test('bonjour').fn(() => {});
+      g.test('hola').fn(() => {});
       return g;
     })(),
   },
@@ -53,7 +53,7 @@ const specsData: { [k: string]: TestSpecOrReadme } = {
     description: 'desc 1d',
     g: (() => {
       const g = new TestGroup(UnitTest);
-      g.test('zap', () => {});
+      g.test('zap').fn(() => {});
       return g;
     })(),
   },
@@ -61,14 +61,18 @@ const specsData: { [k: string]: TestSpecOrReadme } = {
     description: 'desc 1e',
     g: (() => {
       const g = new TestGroup(UnitTest);
-      g.test('wye', () => {}).params([
-        {}, //
-        { x: 1 },
-      ]);
-      g.test('zed', () => {}).params([
-        { a: 1, b: 2, _c: 0 }, //
-        { a: 1, b: 3, _c: 0 },
-      ]);
+      g.test('wye')
+        .fn(() => {})
+        .params([
+          {}, //
+          { x: 1 },
+        ]);
+      g.test('zed')
+        .fn(() => {})
+        .params([
+          { a: 1, b: 2, _c: 0 }, //
+          { a: 1, b: 3, _c: 0 },
+        ]);
       return g;
     })(),
   },
@@ -76,14 +80,16 @@ const specsData: { [k: string]: TestSpecOrReadme } = {
     description: 'desc 2b',
     g: (() => {
       const g = new TestGroup(UnitTest);
-      g.test('blah', t => {
+      g.test('blah').fn(t => {
         t.debug('OK');
       });
-      g.test('bleh', t => {
-        t.debug('OK');
-        t.debug('OK');
-      }).params([{}]);
-      g.test('bluh', t => {
+      g.test('bleh')
+        .fn(t => {
+          t.debug('OK');
+          t.debug('OK');
+        })
+        .params([{}]);
+      g.test('bluh').fn(t => {
         t.fail('bye');
       });
       return g;
@@ -121,12 +127,12 @@ class LoadingTest extends UnitTest {
 
 export const g = new TestGroup(LoadingTest);
 
-g.test('whole suite', async t => {
+g.test('whole suite').fn(async t => {
   t.shouldReject('Error', t.load(['suite1']));
   t.expect((await t.load(['suite1:'])).length === 5);
 });
 
-g.test('partial suite', async t => {
+g.test('partial suite').fn(async t => {
   t.expect((await t.load(['suite1:f'])).length === 1);
   t.expect((await t.load(['suite1:fo'])).length === 1);
   t.expect((await t.load(['suite1:foo'])).length === 1);
@@ -137,7 +143,7 @@ g.test('partial suite', async t => {
   t.expect((await t.load(['suite1:bar/b'])).length === 1);
 });
 
-g.test('whole group', async t => {
+g.test('whole group').fn(async t => {
   t.shouldReject('Error', t.load(['suite1::']));
   t.shouldReject('Error', t.load(['suite1:bar:']));
   t.shouldReject('Error', t.load(['suite1:bar/:']));
@@ -154,14 +160,14 @@ g.test('whole group', async t => {
   }
 });
 
-g.test('partial group', async t => {
+g.test('partial group').fn(async t => {
   t.expect((await t.singleGroup('suite1:foo:h')).length === 2);
   t.expect((await t.singleGroup('suite1:foo:he')).length === 1);
   t.expect((await t.singleGroup('suite1:foo:hello')).length === 1);
   t.expect((await t.singleGroup('suite1:baz:zed')).length === 2);
 });
 
-g.test('partial test/exact', async t => {
+g.test('partial test/exact').fn(async t => {
   t.expect((await t.singleGroup('suite1:foo:hello=')).length === 1);
   t.expect((await t.singleGroup('suite1:baz:zed=')).length === 0);
   t.expect((await t.singleGroup('suite1:baz:zed=')).length === 0);
@@ -171,7 +177,7 @@ g.test('partial test/exact', async t => {
   t.expect((await t.singleGroup('suite1:baz:zed={"a":1,"b":2,"_c":0}')).length === 0);
 });
 
-g.test('partial test/makeQueryString', async t => {
+g.test('partial test/makeQueryString').fn(async t => {
   const s = makeQueryString(
     { suite: 'suite1', path: 'baz' },
     { test: 'zed', params: { a: 1, b: 2 } }
@@ -179,7 +185,7 @@ g.test('partial test/makeQueryString', async t => {
   t.expect((await t.singleGroup(s)).length === 1);
 });
 
-g.test('partial test/match', async t => {
+g.test('partial test/match').fn(async t => {
   t.expect((await t.singleGroup('suite1:baz:zed~')).length === 2);
   t.expect((await t.singleGroup('suite1:baz:zed~{}')).length === 2);
   t.expect((await t.singleGroup('suite1:baz:zed~{"a":1}')).length === 2);
@@ -191,7 +197,7 @@ g.test('partial test/match', async t => {
   t.expect((await t.singleGroup('suite1:baz:zed~{"_c":0}')).length === 0);
 });
 
-g.test('end2end', async t => {
+g.test('end2end').fn(async t => {
   const l = await t.load(['suite2:foof']);
   assert(l.length === 1, 'listing length');
 
@@ -273,7 +279,7 @@ const testGenerateMinimalQueryList = async (
   t.expect(objectEquals(queries, result));
 };
 
-g.test('generateMinimalQueryList/errors', async t => {
+g.test('generateMinimalQueryList/errors').fn(async t => {
   t.shouldReject('Error', testGenerateMinimalQueryList(t, ['garbage'], []));
   t.shouldReject('Error', testGenerateMinimalQueryList(t, ['suite1:'], []));
   t.shouldReject('Error', testGenerateMinimalQueryList(t, ['suite1:foo'], []));
@@ -281,7 +287,7 @@ g.test('generateMinimalQueryList/errors', async t => {
   t.shouldReject('Error', testGenerateMinimalQueryList(t, ['suite2:foo:'], []));
 });
 
-g.test('generateMinimalQueryList', async t => {
+g.test('generateMinimalQueryList').fn(async t => {
   await testGenerateMinimalQueryList(
     t, //
     [],

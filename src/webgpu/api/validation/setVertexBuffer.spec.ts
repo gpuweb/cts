@@ -95,7 +95,7 @@ class F extends ValidationTest {
 
 export const g = new TestGroup(F);
 
-g.test('vertex buffers inherit from previous pipeline', async t => {
+g.test('vertex buffers inherit from previous pipeline').fn(async t => {
   const pipeline1 = t.createRenderPipeline(1);
   const pipeline2 = t.createRenderPipeline(2);
 
@@ -130,7 +130,7 @@ g.test('vertex buffers inherit from previous pipeline', async t => {
   }
 });
 
-g.test('vertex buffers do not inherit between render passes', async t => {
+g.test('vertex buffers do not inherit between render passes').fn(async t => {
   const pipeline1 = t.createRenderPipeline(1);
   const pipeline2 = t.createRenderPipeline(2);
 

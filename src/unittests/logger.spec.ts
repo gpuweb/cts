@@ -13,7 +13,7 @@ import { UnitTest } from './unit_test.js';
 
 export const g = new TestGroup(UnitTest);
 
-g.test('construct', t => {
+g.test('construct').fn(t => {
   const mylog = new Logger();
   const [testrec, testres] = mylog.record({ suite: 'a', path: 'foo/bar' });
   const [, res1] = testrec.record('baz', null);
@@ -36,7 +36,7 @@ g.test('construct', t => {
   t.expect(res2.timems < 0);
 });
 
-g.test('private params', t => {
+g.test('private params').fn(t => {
   const mylog = new Logger();
   const [testrec] = mylog.record({ suite: 'a', path: 'foo/bar' });
   const [, res] = testrec.record('baz', { a: 1, _b: 2 });
@@ -44,7 +44,7 @@ g.test('private params', t => {
   t.expect(paramsEquals(res.params, { a: 1 }));
 });
 
-g.test('empty', t => {
+g.test('empty').fn(t => {
   const mylog = new Logger();
   const [testrec] = mylog.record({ suite: '', path: '' });
   const [rec, res] = testrec.record('baz', null);
@@ -56,7 +56,7 @@ g.test('empty', t => {
   t.expect(res.timems >= 0);
 });
 
-g.test('pass', t => {
+g.test('pass').fn(t => {
   const mylog = new Logger();
   const [testrec] = mylog.record({ suite: '', path: '' });
   const [rec, res] = testrec.record('baz', null);
@@ -69,7 +69,7 @@ g.test('pass', t => {
   t.expect(res.timems >= 0);
 });
 
-g.test('skip', t => {
+g.test('skip').fn(t => {
   const mylog = new Logger();
   const [testrec] = mylog.record({ suite: '', path: '' });
   const [rec, res] = testrec.record('baz', null);
@@ -87,7 +87,7 @@ g.test('skip', t => {
   t.expect(res.timems >= 0);
 });
 
-g.test('warn', t => {
+g.test('warn').fn(t => {
   const mylog = new Logger();
   const [testrec] = mylog.record({ suite: '', path: '' });
   const [rec, res] = testrec.record('baz', null);
@@ -105,7 +105,7 @@ g.test('warn', t => {
   t.expect(res.timems >= 0);
 });
 
-g.test('fail', t => {
+g.test('fail').fn(t => {
   const mylog = new Logger();
   const [testrec] = mylog.record({ suite: '', path: '' });
   const [rec, res] = testrec.record('baz', null);
@@ -124,20 +124,22 @@ g.test('fail', t => {
   t.expect(res.timems >= 0);
 });
 
-g.test('debug', t => {
-  const { debug, _logsCount } = t.params;
+g.test('debug')
+  .fn(t => {
+    const { debug, _logsCount } = t.params;
 
-  const mylog = new Logger();
-  const [testrec] = mylog.record({ suite: '', path: '' });
-  const [rec, res] = testrec.record('baz', null);
+    const mylog = new Logger();
+    const [testrec] = mylog.record({ suite: '', path: '' });
+    const [rec, res] = testrec.record('baz', null);
 
-  rec.start(debug);
-  rec.debug(new Error('hello'));
-  rec.finish();
-  t.expect(res.status === 'pass');
-  t.expect(res.timems >= 0);
-  t.expect(res.logs!.length === _logsCount);
-}).params([
-  { debug: true, _logsCount: 1 }, //
-  { debug: false, _logsCount: 0 },
-]);
+    rec.start(debug);
+    rec.debug(new Error('hello'));
+    rec.finish();
+    t.expect(res.status === 'pass');
+    t.expect(res.timems >= 0);
+    t.expect(res.logs!.length === _logsCount);
+  })
+  .params([
+    { debug: true, _logsCount: 1 }, //
+    { debug: false, _logsCount: 0 },
+  ]);

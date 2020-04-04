@@ -7,7 +7,7 @@ import { GPUTest } from '../../../../gpu_test.js';
 
 export const g = new TestGroup(GPUTest);
 
-g.test('clear', async t => {
+g.test('clear').fn(async t => {
   const dst = t.device.createBuffer({
     size: 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
