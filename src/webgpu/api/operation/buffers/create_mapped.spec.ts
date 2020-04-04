@@ -1,7 +1,6 @@
 export const description = ``;
 
-import { pcombine } from '../../../../common/framework/params.js';
-import { pbool, poptions } from '../../../../common/framework/params.js';
+import { pbool, pcombine, poptions } from '../../../../common/framework/params.js';
 import { TestGroup } from '../../../../common/framework/test_group.js';
 
 import { MappingTest } from './mapping_test.js';

@@ -2,9 +2,7 @@ export const description = `
 Unit tests for parameterization.
 `;
 
-import { pcombine } from '../common/framework/params.js';
-import { pexclude } from '../common/framework/params.js';
-import { pfilter } from '../common/framework/params.js';
+import { pcombine, pexclude, pfilter } from '../common/framework/params.js';
 import { ParamSpec } from '../common/framework/params_utils.js';
 import { TestGroup } from '../common/framework/test_group.js';
 

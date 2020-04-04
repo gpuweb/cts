@@ -2,8 +2,7 @@ export const description = `
 copy imageBitmap To texture tests.
 `;
 
-import { pcombine } from '../../common/framework/params.js';
-import { poptions } from '../../common/framework/params.js';
+import { pcombine, poptions } from '../../common/framework/params.js';
 import { TestGroup } from '../../common/framework/test_group.js';
 import { GPUTest } from '../gpu_test.js';
 

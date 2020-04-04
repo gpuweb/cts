@@ -3,8 +3,7 @@ createBindGroup validation tests.
 `;
 
 import * as C from '../../../common/constants.js';
-import { pcombine } from '../../../common/framework/params.js';
-import { poptions } from '../../../common/framework/params.js';
+import { pcombine, poptions } from '../../../common/framework/params.js';
 import { TestGroup } from '../../../common/framework/test_group.js';
 import { unreachable } from '../../../common/framework/util/util.js';
 import { kBindingTypes } from '../../capability_info.js';

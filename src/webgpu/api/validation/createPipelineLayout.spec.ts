@@ -2,8 +2,7 @@ export const description = `
 createPipelineLayout validation tests.
 `;
 
-import { pcombine } from '../../../common/framework/params.js';
-import { pbool, poptions } from '../../../common/framework/params.js';
+import { pbool, pcombine, poptions } from '../../../common/framework/params.js';
 import { TestGroup } from '../../../common/framework/test_group.js';
 import {
   kBindingTypeInfo,

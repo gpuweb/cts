@@ -2,8 +2,7 @@ export const description = `
 setBindGroup validation tests.
 `;
 
-import { pcombine } from '../../../common/framework/params.js';
-import { poptions } from '../../../common/framework/params.js';
+import { pcombine, poptions } from '../../../common/framework/params.js';
 import { TestGroup } from '../../../common/framework/test_group.js';
 
 import { ValidationTest } from './validation_test.js';
