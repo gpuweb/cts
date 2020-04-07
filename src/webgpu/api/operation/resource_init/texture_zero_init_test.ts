@@ -21,8 +21,8 @@ export enum ReadMethod {
   Sample = 'Sample', // The texture is sampled from
   CopyToBuffer = 'CopyToBuffer', // The texture is copied to a buffer
   CopyToTexture = 'CopyToTexture', // The texture is copied to another texture
-  DepthTest = 'DepthTest', // TODO: The texture is read as a depth buffer
-  StencilTest = 'StencilTest', // TODO: The texture is read as a stencil buffer
+  DepthTest = 'DepthTest', // The texture is read as a depth buffer
+  StencilTest = 'StencilTest', // The texture is read as a stencil buffer
   ColorBlending = 'ColorBlending', // TODO: Read the texture by blending as a color attachment
   Storage = 'Storage', // TODO: Read the texture as a storage texture
 }
