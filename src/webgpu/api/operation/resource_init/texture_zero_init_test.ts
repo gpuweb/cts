@@ -19,8 +19,8 @@ const kUninitializeMethods = Object.keys(UninitializeMethod) as UninitializeMeth
 
 export enum ReadMethod {
   Sample = 'Sample', // The texture is sampled from
-  CopyToBuffer = 'CopyToBuffer', // TODO: The texture is copied to a buffer
-  CopyToTexture = 'CopyToTexture', // TODO: The texture is copied to another texture
+  CopyToBuffer = 'CopyToBuffer', // The texture is copied to a buffer
+  CopyToTexture = 'CopyToTexture', // The texture is copied to another texture
   DepthTest = 'DepthTest', // TODO: The texture is read as a depth buffer
   StencilTest = 'StencilTest', // TODO: The texture is read as a stencil buffer
   ColorBlending = 'ColorBlending', // TODO: Read the texture by blending as a color attachment
