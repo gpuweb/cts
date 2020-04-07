@@ -7,6 +7,38 @@ import {
 } from './params_utils.js';
 import { assert } from './util/util.js';
 
+export function params(): ParamsBuilder {
+  return new ParamsBuilder();
+}
+
+export class ParamsBuilder {
+  private params: ParamSpecIterable = [{}];
+
+  getParams(): ParamSpecIterable {
+    return this.params;
+  }
+
+  combine(p: ParamSpecIterable): ParamsBuilder {
+    this.params = pcombine(this.params, p);
+    return this;
+  }
+
+  filter(pred: Predicate): ParamsBuilder {
+    this.params = pfilter(this.params, pred);
+    return this;
+  }
+
+  unless(pred: Predicate): ParamsBuilder {
+    this.params = pfilter(this.params, x => !pred(x));
+    return this;
+  }
+
+  exclude(exclude: ParamSpecIterable): ParamsBuilder {
+    this.params = pexclude(this.params, exclude);
+    return this;
+  }
+}
+
 export function poptions(name: string, values: ParamArgument[]): POptions {
   return new POptions(name, values);
 }
