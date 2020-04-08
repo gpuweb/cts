@@ -2,7 +2,7 @@
 
 ## >>> [**Contribution Guidelines**](https://github.com/gpuweb/gpuweb/wiki/WebGPU-CTS-guidelines) <<<
 
-## **NOTE**: If you are contributing tests that tentatively use GLSL, develop on the [glsl-dependent](https://github.com/gpuweb/cts/tree/glsl-dependent) branch.
+## **NOTE**: If you are contributing tests that tentatively use GLSL instead of WGSL, develop on the [glsl-dependent](https://github.com/gpuweb/cts/tree/glsl-dependent) branch.
 
 ## Docs
 
