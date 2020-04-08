@@ -4,7 +4,7 @@
 
 ## Run these tests live: [gpuweb.github.io/cts/standalone/](https://gpuweb.github.io/cts/standalone/)
 
-## **NOTE**: If you are contributing tests that tentatively use GLSL instead of WGSL, develop on the [glsl-dependent](https://github.com/gpuweb/cts/tree/glsl-dependent) branch (live on [gpuweb-cts-glsl.github.io/standalone/](http://gpuweb-cts-glsl.github.io/standalone/))
+## **NOTE**: If you are contributing tests that tentatively use GLSL instead of WGSL, develop on the [glsl-dependent](https://github.com/gpuweb/cts/tree/glsl-dependent) branch (run live at [gpuweb-cts-glsl.github.io/standalone/](http://gpuweb-cts-glsl.github.io/standalone/))
 
 ## Docs
 
