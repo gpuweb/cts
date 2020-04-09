@@ -2,18 +2,12 @@ export const description = `
 setVertexBuffer validation tests.
 `;
 
-import { initGLSL } from '../../../common/framework/glsl.js';
 import { TestGroup } from '../../../common/framework/test_group.js';
 import { range } from '../../../common/framework/util/util.js';
 
 import { ValidationTest } from './validation_test.js';
 
 class F extends ValidationTest {
-  async init(): Promise<void> {
-    await super.init();
-    await initGLSL();
-  }
-
   getVertexBuffer(): GPUBuffer {
     return this.device.createBuffer({
       size: 256,

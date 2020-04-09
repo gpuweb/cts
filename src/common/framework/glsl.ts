@@ -37,5 +37,5 @@ export function compileGLSL(
     glslangInstance !== undefined,
     'GLSL compiler is not instantiated. Run `await initGLSL()` first'
   );
-  return glslangInstance.compileGLSL(glsl, shaderType, genDebug, spirvVersion);
+  return glslangInstance.compileGLSL(glsl.trimLeft(), shaderType, genDebug, spirvVersion);
 }

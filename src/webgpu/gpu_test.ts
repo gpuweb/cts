@@ -1,5 +1,5 @@
 import { Fixture } from '../common/framework/fixture.js';
-import { compileGLSL } from '../common/framework/glsl.js';
+import { compileGLSL, initGLSL } from '../common/framework/glsl.js';
 import { getGPU } from '../common/framework/gpu/implementation.js';
 import { assert, unreachable } from '../common/framework/util/util.js';
 
@@ -59,6 +59,7 @@ export class GPUTest extends Fixture {
 
   async init(): Promise<void> {
     await super.init();
+    await initGLSL();
 
     const device = await devicePool.acquire();
     const queue = device.defaultQueue;

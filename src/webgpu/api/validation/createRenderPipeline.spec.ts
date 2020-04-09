@@ -2,7 +2,6 @@ export const description = `
 createRenderPipeline validation tests.
 `;
 
-import { initGLSL } from '../../../common/framework/glsl.js';
 import { poptions } from '../../../common/framework/params.js';
 import { TestGroup } from '../../../common/framework/test_group.js';
 import { kTextureFormatInfo, kTextureFormats } from '../../capability_info.js';
@@ -10,11 +9,6 @@ import { kTextureFormatInfo, kTextureFormats } from '../../capability_info.js';
 import { ValidationTest } from './validation_test.js';
 
 class F extends ValidationTest {
-  async init(): Promise<void> {
-    await super.init();
-    await initGLSL();
-  }
-
   getDescriptor(
     options: {
       primitiveTopology?: GPUPrimitiveTopology;
