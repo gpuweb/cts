@@ -1,7 +1,7 @@
 import { Fixture } from '../common/framework/fixture.js';
+import { compileGLSL } from '../common/framework/glsl.js';
 import { getGPU } from '../common/framework/gpu/implementation.js';
 import { assert, unreachable } from '../common/framework/util/util.js';
-import { compileGLSL } from '../common/glslang.js';
 
 type ShaderStage = import('@webgpu/glslang/dist/web-devel/glslang').ShaderStage;
 

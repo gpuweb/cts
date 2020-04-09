@@ -2,9 +2,9 @@ export const description = `
 setVertexBuffer validation tests.
 `;
 
+import { initGLSL } from '../../../common/framework/glsl.js';
 import { TestGroup } from '../../../common/framework/test_group.js';
 import { range } from '../../../common/framework/util/util.js';
-import { initGLSL } from '../../../common/glslang.js';
 
 import { ValidationTest } from './validation_test.js';
 

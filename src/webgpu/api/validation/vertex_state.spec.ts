@@ -3,8 +3,8 @@ vertexState validation tests.
 `;
 
 import * as C from '../../../common/constants.js';
+import { initGLSL } from '../../../common/framework/glsl.js';
 import { TestGroup } from '../../../common/framework/test_group.js';
-import { initGLSL } from '../../../common/glslang.js';
 
 import { ValidationTest } from './validation_test.js';
 
