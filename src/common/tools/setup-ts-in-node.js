@@ -4,7 +4,7 @@ require('ts-node').register({
     module: 'commonjs',
   },
   transpileOnly: true,
-})
+});
 
 // Redirect imports of .js files to .ts files
 const Module = require('module');

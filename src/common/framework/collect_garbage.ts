@@ -1,8 +1,8 @@
-// tslint:disable-next-line: no-any
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 declare const Components: any;
 
 export function attemptGarbageCollection(): void {
-  // tslint:disable-next-line: no-any
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   const w: any = self;
   if (w.GCController) {
     w.GCController.collect();
@@ -34,7 +34,7 @@ export function attemptGarbageCollection(): void {
   let i: number;
   function gcRec(n: number): void {
     if (n < 1) return;
-    // tslint:disable-next-line: no-any
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     let temp: any = { i: 'ab' + i + i / 100000 };
     temp = temp + 'foo';
     gcRec(n - 1);

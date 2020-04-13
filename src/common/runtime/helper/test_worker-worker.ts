@@ -2,8 +2,8 @@ import { TestLoader } from '../../framework/loader.js';
 import { Logger } from '../../framework/logger.js';
 import { assert } from '../../framework/util/util.js';
 
-// tslint:disable-next-line: no-any
-declare var self: any; // should be DedicatedWorkerGlobalScope
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+declare const self: any; // should be DedicatedWorkerGlobalScope
 
 const log = new Logger();
 const loader = new TestLoader();

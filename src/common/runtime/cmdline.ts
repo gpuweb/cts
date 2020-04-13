@@ -1,4 +1,5 @@
-// tslint:disable: no-console
+/* eslint no-console: "off" */
+/* eslint no-process-exit: "off" */
 
 import * as fs from 'fs';
 import * as process from 'process';

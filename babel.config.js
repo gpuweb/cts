@@ -15,6 +15,6 @@ module.exports = function (api) {
       ],
     ],
     compact: false,
-    shouldPrintComment: val => !/tslint:/.test(val),
+    shouldPrintComment: val => !/eslint/.test(val),
   };
 };
