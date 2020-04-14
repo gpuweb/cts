@@ -75,15 +75,20 @@ if (filterArgs.length === 0) {
         }
 
         total++;
-        if (res.status === 'pass') {
-        } else if (res.status === 'fail') {
-          failed.push([f.id, res]);
-        } else if (res.status === 'warn') {
-          warned.push([f.id, res]);
-        } else if (res.status === 'skip') {
-          skipped.push([f.id, res]);
-        } else {
-          unreachable('unrecognized status');
+        switch (res.status) {
+          case 'pass':
+            break;
+          case 'fail':
+            failed.push([f.id, res]);
+            break;
+          case 'warn':
+            warned.push([f.id, res]);
+            break;
+          case 'skip':
+            skipped.push([f.id, res]);
+            break;
+          default:
+            unreachable('unrecognized status');
         }
       }
     }
@@ -112,13 +117,11 @@ if (filterArgs.length === 0) {
     }
 
     const passed = total - warned.length - failed.length - skipped.length;
-    function pct(x: number): string {
-      return ((100 * x) / total).toFixed(2);
-    }
-    function rpt(x: number): string {
+    const pct = (x: number) => ((100 * x) / total).toFixed(2);
+    const rpt = (x: number) => {
       const xs = x.toString().padStart(1 + Math.log10(total), ' ');
       return `${xs} / ${total} = ${pct(x).padStart(6, ' ')}%`;
-    }
+    };
     console.log('');
     console.log(`** Summary **
 Passed  w/o warnings = ${rpt(passed)}
