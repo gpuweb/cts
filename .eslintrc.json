@@ -15,6 +15,7 @@
     ],
     "linebreak-style": ["error", "unix"],
     "no-console": "error",
+    "sort-imports": "error",
     "@typescript-eslint/typedef": [
       "error",
       {
@@ -22,13 +23,7 @@
         "memberVariableDeclaration": false
       }
     ],
-    "@typescript-eslint/no-inferrable-types": "off",
-
-    "sort-imports": "warn",
-    "no-useless-escape": "warn",
-    "no-empty": "warn",
-    "@typescript-eslint/no-unused-vars": "warn",
-    "no-inner-declarations": "warn"
+    "@typescript-eslint/no-inferrable-types": "off"
   },
   "globals": {
     // FIXME: Why aren't these picked up from type files ?
