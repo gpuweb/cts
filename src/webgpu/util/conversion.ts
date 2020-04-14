@@ -1,15 +1,10 @@
-import { assert } from '../../common/framework/index.js';
+import { assert } from '../../common/framework/util/util.js';
 
 export function floatAsNormalizedInteger(float: number, bits: number, signed: boolean): number {
   if (signed) {
     assert(float >= -1 && float <= 1);
-    const min = -Math.pow(2, bits - 1);
     const max = Math.pow(2, bits - 1) - 1;
-    if (float >= 0) {
-      return Math.round(float * max);
-    } else {
-      return Math.round(Math.abs(float) * min);
-    }
+    return Math.round(float * max);
   } else {
     assert(float >= 0 && float <= 1);
     const max = Math.pow(2, bits) - 1;
@@ -47,15 +42,16 @@ export function float32ToFloatBits(
   // 0 or 1
   const sign = (bits >> 31) & signBits;
 
-  // >> to remove fraction, & to remove sign.
-  const exp = (bits >> 23) & 0xff;
+  // >> to remove fraction, & to remove sign, - 127 to remove bias.
+  const exp = ((bits >> 23) & 0xff) - 127;
 
   // Convert to the new biased exponent.
-  const newExp = exp - (127 - bias);
+  const newBiasedExp = bias + exp;
+  assert(newBiasedExp >= 0 && newBiasedExp < 1 << exponentBits);
 
   // Mask only the fraction, and discard the lower bits.
   const newFraction = (bits & 0x7fffff) >> fractionBitsToDiscard;
-  return (sign << (exponentBits + fractionBits)) | (newExp << fractionBits) | newFraction;
+  return (sign << (exponentBits + fractionBits)) | (newBiasedExp << fractionBits) | newFraction;
 }
 
 export function assertInIntegerRange(n: number, bits: number, signed: boolean): void {

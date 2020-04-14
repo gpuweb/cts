@@ -1,11 +1,8 @@
-import { C, ParamSpec, assert, unreachable } from '../../../../common/framework/index.js';
+import * as C from '../../../../common/constants.js';
 import { TestCaseRecorder } from '../../../../common/framework/logger.js';
-import {
-  isPackedFormat,
-  kTextureAspects,
-  kTextureFormatInfo,
-  kTextureFormats,
-} from '../../../capability_info.js';
+import { ParamSpec } from '../../../../common/framework/params_utils.js';
+import { assert, unreachable } from '../../../../common/framework/util/util.js';
+import { kTextureAspects, kTextureFormatInfo, kTextureFormats } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { createTextureUploadBuffer } from '../../../util/texture/layout.js';
 import { BeginEndRange, SubresourceRange } from '../../../util/texture/subresource.js';
@@ -23,8 +20,8 @@ export enum ReadMethod {
   CopyToTexture = 'CopyToTexture', // The texture is copied to another texture
   DepthTest = 'DepthTest', // The texture is read as a depth buffer
   StencilTest = 'StencilTest', // The texture is read as a stencil buffer
-  ColorBlending = 'ColorBlending', // TODO: Read the texture by blending as a color attachment
-  Storage = 'Storage', // TODO: Read the texture as a storage texture
+  ColorBlending = 'ColorBlending', // Read the texture by blending as a color attachment
+  Storage = 'Storage', // Read the texture as a storage texture
 }
 
 // Test with these mip level counts
@@ -62,11 +59,11 @@ const kCreationSizes: Array<{
   dimension: GPUTextureDimension;
   sliceCount: SliceCounts;
 }> = [
-    // { dimension: '1d', sliceCount: 7 }, // TODO: 1d textures
-    { dimension: '2d', sliceCount: 1 }, // 2d textures
-    { dimension: '2d', sliceCount: 7 }, // 2d array textures
-    // { dimension: '3d', sliceCount: 7 }, // TODO: 3d textures
-  ];
+  // { dimension: '1d', sliceCount: 7 }, // TODO: 1d textures
+  { dimension: '2d', sliceCount: 1 }, // 2d textures
+  { dimension: '2d', sliceCount: 7 }, // 2d array textures
+  // { dimension: '3d', sliceCount: 7 }, // TODO: 3d textures
+];
 
 // Enums to abstract over color / depth / stencil values in textures. Depending on the texture format,
 // the data for each value may have a different representation. These enums are converted to a
@@ -214,9 +211,10 @@ function getRequiredTextureUsage(
     usage |= C.TextureUsage.OutputAttachment;
   }
 
-  if (isPackedFormat(format)) {
-    // Copies to packed formats are not possible. We need OutputAttachment to initialize
+  if (!kTextureFormatInfo[format].copyable) {
+    // Copies are not possible. We need OutputAttachment to initialize
     // canary data.
+    assert(kTextureFormatInfo[format].renderable);
     usage |= C.TextureUsage.OutputAttachment;
   }
 
@@ -250,11 +248,6 @@ export abstract class TextureZeroInitTest extends GPUTest {
       [InitializedState.Invalid]: stateToTexelComponents(InitializedState.Invalid),
       [InitializedState.Canary]: stateToTexelComponents(InitializedState.Canary),
     };
-  }
-
-  async init(): Promise<void> {
-    await super.init();
-    await this.initGLSL();
   }
 
   get params(): TestParams {
@@ -390,15 +383,14 @@ export abstract class TextureZeroInitTest extends GPUTest {
     const largestWidth = this.textureWidth >> firstSubresource.level;
     const largestHeight = this.textureHeight >> firstSubresource.level;
 
-    const largestMipSize = { width: largestWidth, height: largestHeight, depth: 1 };
-
     const texelData = new Uint8Array(
       getTexelDataRepresentation(this.params.format).getBytes(this.stateToTexelComponents[state])
     );
     const { buffer, bytesPerRow, rowsPerImage } = createTextureUploadBuffer(
       this.device,
       this.params.format,
-      largestMipSize,
+      this.params.dimension,
+      [largestWidth, largestHeight, 1],
       texelData
     );
 
@@ -413,9 +405,6 @@ export abstract class TextureZeroInitTest extends GPUTest {
           buffer,
           bytesPerRow,
           rowsPerImage,
-          // @ts-ignore
-          rowPitch: bytesPerRow,
-          imageHeight: rowsPerImage,
         },
         { texture, mipLevel: level, arrayLayer: slice },
         { width, height, depth: 1 }
@@ -430,7 +419,7 @@ export abstract class TextureZeroInitTest extends GPUTest {
     state: InitializedState,
     subresourceRange: SubresourceRange
   ): void {
-    if (this.params.sampleCount > 1 || isPackedFormat(this.params.format)) {
+    if (this.params.sampleCount > 1 || !kTextureFormatInfo[this.params.format].copyable) {
       // Copies to multisampled textures not yet specified.
       // Use a storeOp for now.
       assert(kTextureFormatInfo[this.params.format].renderable);
@@ -641,17 +630,12 @@ export abstract class TextureZeroInitTest extends GPUTest {
 
     const usage = getRequiredTextureUsage(format, sampleCount, uninitializeMethod, readMethod);
 
-    const depth = dimension === '2d' ? 1 : sliceCount;
-    const arrayLayerCount = dimension === '2d' ? sliceCount : 1;
-
     const texture = this.device.createTexture({
-      size: [this.textureWidth, this.textureHeight, depth],
+      size: [this.textureWidth, this.textureHeight, sliceCount],
       format,
       dimension,
       usage,
       mipLevelCount,
-      // @ts-ignore
-      arrayLayerCount,
       sampleCount,
     });
 

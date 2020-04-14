@@ -1,7 +1,12 @@
 export const description = `Test uninitialized textures are initialized to zero when copied.`;
 
-import { C, TestGroup, assert, unreachable } from '../../../../common/framework/index.js';
-import { fillTextureDataRows, getTextureCopyLayout } from '../../../util/texture/layout.js';
+import * as C from '../../../../common/constants.js';
+import { TestGroup } from '../../../../common/framework/test_group.js';
+import { assert, unreachable } from '../../../../common/framework/util/util.js';
+import {
+  fillTextureDataWithTexelValue,
+  getTextureCopyLayout,
+} from '../../../util/texture/layout.js';
 import { SubresourceRange } from '../../../util/texture/subresource.js';
 import { getTexelDataRepresentation } from '../../../util/texture/texelData.js';
 
@@ -16,11 +21,11 @@ class CopiedTextureClearTest extends TextureZeroInitTest {
     level: number,
     layer: number
   ): void {
-    const { byteLength, bytesPerRow, bytesPerTexel } = getTextureCopyLayout(this.params.format, {
-      width,
-      height,
-      depth: 1,
-    });
+    const { byteLength, bytesPerRow, bytesPerBlock, rowsPerImage } = getTextureCopyLayout(
+      this.params.format,
+      this.params.dimension,
+      [width, height, 1]
+    );
 
     const buffer = this.device.createBuffer({
       size: byteLength,
@@ -33,22 +38,19 @@ class CopiedTextureClearTest extends TextureZeroInitTest {
       {
         buffer,
         bytesPerRow,
-        rowsPerImage: height,
-        // @ts-ignore
-        rowPitch: bytesPerRow,
-        imageHeight: height,
+        rowsPerImage,
       },
-      { width, height, depth: 1 }
+      [width, height, 1]
     );
     this.queue.submit([commandEncoder.finish()]);
 
     const expectedTexelData = new Uint8Array(
       getTexelDataRepresentation(this.params.format).getBytes(this.stateToTexelComponents[state])
     );
-    assert(expectedTexelData.byteLength === bytesPerTexel);
+    assert(expectedTexelData.byteLength === bytesPerBlock);
 
     const arrayBuffer = new ArrayBuffer(byteLength);
-    fillTextureDataRows(arrayBuffer, [width, height, 1], expectedTexelData);
+    fillTextureDataWithTexelValue(arrayBuffer, [width, height, 1], expectedTexelData);
 
     this.expectContents(buffer, new Uint8Array(arrayBuffer));
   }

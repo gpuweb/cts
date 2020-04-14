@@ -1,4 +1,5 @@
-import { C, assert, unreachable } from '../../../common/framework/index.js';
+import * as C from '../../../common/constants.js';
+import { assert, unreachable } from '../../../common/framework/util/util.js';
 import { kTextureFormatInfo } from '../../capability_info.js';
 import {
   assertInIntegerRange,
@@ -30,9 +31,8 @@ const enum TexelWriteType {
 //  - floats to half floats, interpreted as uint16 bits
 type TexelWriteFn = (value: number) => { value: number; type: TexelWriteType };
 
-type TexelComponentInfo = PerTexelComponent<{
-  write?: TexelWriteFn; // |write| may be omitted if data is not writable. This is the case
-  // for packed depth formats.
+type TexelComponentInfo = PerTexelComponent<null | {
+  write: TexelWriteFn;
   bitLength: number;
 }>;
 
@@ -117,9 +117,7 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
 
       case C.TextureFormat.Depth24Plus: {
         return new TexelDataRepresentationImpl(format, [TexelComponent.Depth], {
-          Depth: {
-            bitLength: 32,
-          },
+          Depth: null,
         });
       }
 
@@ -128,16 +126,8 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
           format,
           [TexelComponent.Depth, TexelComponent.Stencil],
           {
-            Depth: {
-              bitLength: 24,
-            },
-            Stencil: {
-              bitLength: 8,
-              write: (n: number) => ({
-                value: (assertInIntegerRange(n, 8, false), n),
-                type: TexelWriteType.Uint,
-              }),
-            },
+            Depth: null,
+            Stencil: null,
           }
         );
       }
@@ -241,15 +231,15 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
     const componentIndex = this.componentOrder.indexOf(component);
     assert(componentIndex !== -1);
     const bitOffset = this.componentOrder.slice(0, componentIndex).reduce((acc, curr) => {
-      return acc + this.componentInfo[curr]!.bitLength;
+      const componentInfo = this.componentInfo[curr];
+      assert(!!componentInfo);
+      return acc + componentInfo.bitLength;
     }, 0);
-    const bitLength = this.componentInfo[component]!.bitLength;
 
-    const write = this.componentInfo[component]!.write;
-    if (write === undefined) {
-      // Ignore components that are not writable (packed depth).
-      return;
-    }
+    const componentInfo = this.componentInfo[component];
+    assert(!!componentInfo);
+    const { write, bitLength } = componentInfo;
+
     assert(n !== undefined);
     const { value, type } = write(n);
     switch (type) {
@@ -304,14 +294,18 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
           }
         } else {
           // Packed representations are all 32-bit and use Uint as the data type.
+          // ex.) rg10b11float, rgb10a2unorm
           switch (this.totalBitLength()) {
             case 32: {
               const view = new DataView(data);
               const currentValue = view.getUint32(0, true);
 
               let mask = 0xffffffff;
-              mask = (mask >> bitOffset) << bitOffset;
-              mask = (mask << (32 - (bitLength + bitOffset))) >> (32 - (bitLength + bitOffset));
+              const bitsToClearRight = bitOffset;
+              const bitsToClearLeft = 32 - (bitLength + bitOffset);
+
+              mask = (mask >>> bitsToClearRight) << bitsToClearRight;
+              mask = (mask << bitsToClearLeft) >>> bitsToClearLeft;
 
               const newValue = (currentValue & ~mask) | (value << bitOffset);
 
@@ -342,7 +336,10 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
       ];
     }
 
-    const data = new ArrayBuffer(kTextureFormatInfo[this.format].bytes);
+    const bytesPerBlock = kTextureFormatInfo[this.format].bytesPerBlock;
+    assert(!!bytesPerBlock);
+
+    const data = new ArrayBuffer(bytesPerBlock);
     for (const c of this.componentOrder) {
       this.setComponent(data, c, components[c]);
     }
