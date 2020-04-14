@@ -3,8 +3,9 @@ Tests for getStackTrace.
 `;
 
 import { TestGroup } from '../common/framework/test_group.js';
-import { UnitTest } from './unit_test.js';
 import { getStackTrace } from '../common/framework/util/stack.js';
+
+import { UnitTest } from './unit_test.js';
 
 export const g = new TestGroup(UnitTest);
 

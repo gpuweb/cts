@@ -2,9 +2,10 @@ export const description = `
 setStencilReference validation tests.
 `;
 
-import { TestGroup } from '../../../common/framework/test_group.js';
-import { ValidationTest } from './validation_test.js';
 import { poptions } from '../../../common/framework/params.js';
+import { TestGroup } from '../../../common/framework/test_group.js';
+
+import { ValidationTest } from './validation_test.js';
 
 // TODO: Move this fixture class to a common file.
 class F extends ValidationTest {

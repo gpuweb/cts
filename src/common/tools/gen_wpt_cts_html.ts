@@ -1,9 +1,9 @@
-import { TestLoader } from '../framework/loader.js';
-import { TestSuiteListingEntry } from '../framework/listing.js';
-
 import { promises as fs } from 'fs';
-import { generateMinimalQueryList } from '../framework/generate_minimal_query_list.js';
+
 import { listing } from '../../webgpu/listing.js';
+import { generateMinimalQueryList } from '../framework/generate_minimal_query_list.js';
+import { TestSuiteListingEntry } from '../framework/listing.js';
+import { TestLoader } from '../framework/loader.js';
 
 function printUsageAndExit(rc: number): void {
   console.error(`\

@@ -2,8 +2,8 @@ export const description = `
 Basic tests.
 `;
 
-import { GPUTest } from '../../../gpu_test.js';
 import { TestGroup } from '../../../../common/framework/test_group.js';
+import { GPUTest } from '../../../gpu_test.js';
 
 export const g = new TestGroup(GPUTest);
 

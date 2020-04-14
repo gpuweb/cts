@@ -1,6 +1,6 @@
-import { assert, unreachable } from '../common/framework/util/util.js';
 import { Fixture } from '../common/framework/fixture.js';
 import { getGPU } from '../common/framework/gpu/implementation.js';
+import { assert, unreachable } from '../common/framework/util/util.js';
 
 class DevicePool {
   device: GPUDevice | undefined = undefined;

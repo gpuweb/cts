@@ -4,8 +4,9 @@ Examples of writing CTS tests with various features.
 Start here when looking for examples of basic framework usage.
 `;
 
-import { GPUTest } from './gpu_test.js';
 import { TestGroup } from '../common/framework/test_group.js';
+
+import { GPUTest } from './gpu_test.js';
 
 // To run these tests in the standalone runner, run `grunt build` or `grunt pre` then open:
 // - http://localhost:8080/?runnow=1&q=webgpu:examples:

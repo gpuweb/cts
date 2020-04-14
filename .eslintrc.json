@@ -4,7 +4,7 @@
     "browser": true,
     "node": true
   },
-  "plugins": ["node", "ban"],
+  "plugins": ["node", "ban", "import"],
   "rules": {
     "ban/ban": [
       "error",
@@ -15,7 +15,6 @@
     ],
     "linebreak-style": ["error", "unix"],
     "no-console": "error",
-    "sort-imports": "error",
     "@typescript-eslint/typedef": [
       "error",
       {
@@ -23,7 +22,17 @@
         "memberVariableDeclaration": false
       }
     ],
-    "@typescript-eslint/no-inferrable-types": "off"
+    "@typescript-eslint/no-inferrable-types": "off",
+    "import/order": [
+      "error",
+      {
+        "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
+        "newlines-between": "always",
+        "alphabetize": { "order": "asc", "caseInsensitive": false }
+      }
+    ],
+    "import/newline-after-import": ["error", { "count": 1 }],
+    "import/no-duplicates": "error"
   },
   "globals": {
     // FIXME: Why aren't these picked up from type files ?

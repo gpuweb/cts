@@ -1,13 +1,13 @@
 // Implements the standalone test runner (see also: /standalone/index.html).
 
-import { FilterResultTreeNode, treeFromFilterResults } from '../framework/tree.js';
+import { TestLoader } from '../framework/loader.js';
 import { LiveTestCaseResult, Logger } from '../framework/logger.js';
 import { RunCase } from '../framework/test_group.js';
-import { TestLoader } from '../framework/loader.js';
-import { TestWorker } from './helper/test_worker.js';
-
+import { FilterResultTreeNode, treeFromFilterResults } from '../framework/tree.js';
 import { encodeSelectively } from '../framework/url_query.js';
+
 import { optionEnabled } from './helper/options.js';
+import { TestWorker } from './helper/test_worker.js';
 
 window.onbeforeunload = () => {
   // Prompt user before reloading if there are any results

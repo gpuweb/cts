@@ -1,5 +1,5 @@
-import { GPUTest } from '../../gpu_test.js';
 import { unreachable } from '../../../common/framework/util/util.js';
+import { GPUTest } from '../../gpu_test.js';
 
 export enum BindingResourceType {
   'error-buffer' = 'error-buffer',

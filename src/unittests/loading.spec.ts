@@ -2,19 +2,17 @@ export const description = `
 Tests for queries/filtering, loading, and running.
 `;
 
-import { RunCase, TestGroup } from '../common/framework/test_group.js';
-import { TestFileLoader, TestLoader, TestSpecOrReadme } from '../common/framework/loader.js';
+import { generateMinimalQueryList } from '../common/framework/generate_minimal_query_list.js';
 import { TestSuiteListing, TestSuiteListingEntry } from '../common/framework/listing.js';
-
+import { TestFileLoader, TestLoader, TestSpecOrReadme } from '../common/framework/loader.js';
+import { Logger } from '../common/framework/logger.js';
+import { paramsEquals } from '../common/framework/params_utils.js';
+import { TestFilterResult } from '../common/framework/test_filter/test_filter_result.js';
+import { RunCase, TestGroup } from '../common/framework/test_group.js';
+import { makeQueryString } from '../common/framework/url_query.js';
 import { assert, objectEquals } from '../common/framework/util/util.js';
 
-import { Logger } from '../common/framework/logger.js';
-import { TestFilterResult } from '../common/framework/test_filter/test_filter_result.js';
 import { UnitTest } from './unit_test.js';
-
-import { generateMinimalQueryList } from '../common/framework/generate_minimal_query_list.js';
-import { makeQueryString } from '../common/framework/url_query.js';
-import { paramsEquals } from '../common/framework/params_utils.js';
 
 const listingData: { [k: string]: TestSuiteListingEntry[] } = {
   suite1: [

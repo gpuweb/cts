@@ -1,7 +1,7 @@
 export const description = '';
 
-import { GPUTest } from '../../../gpu_test.js';
 import { TestGroup } from '../../../../common/framework/test_group.js';
+import { GPUTest } from '../../../gpu_test.js';
 
 class F extends GPUTest {
   checkDetach(buffer: GPUBuffer, arrayBuffer: ArrayBuffer, unmap: boolean, destroy: boolean): void {

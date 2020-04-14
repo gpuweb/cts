@@ -3,8 +3,9 @@ Unit tests for URL queries.
 `;
 
 import { TestGroup } from '../common/framework/test_group.js';
-import { UnitTest } from './unit_test.js';
 import { makeQueryString } from '../common/framework/url_query.js';
+
+import { UnitTest } from './unit_test.js';
 
 export const g = new TestGroup(UnitTest);
 

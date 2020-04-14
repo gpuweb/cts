@@ -1,7 +1,8 @@
+import { TestSpecOrTestOrCaseID } from '../id.js';
 import { ReadmeFile, TestFileLoader, TestSpec } from '../loader.js';
+
 import { TestFilter } from './internal.js';
 import { TestFilterResult } from './test_filter_result.js';
-import { TestSpecOrTestOrCaseID } from '../id.js';
 
 export class FilterByGroup implements TestFilter {
   private readonly suite: string;

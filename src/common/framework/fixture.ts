@@ -1,5 +1,5 @@
-import { ParamSpec } from './params_utils.js';
 import { TestCaseRecorder } from './logger.js';
+import { ParamSpec } from './params_utils.js';
 import { assert } from './util/util.js';
 
 export class SkipTestCase extends Error {}

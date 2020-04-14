@@ -1,11 +1,10 @@
-import { LiveTestSpecResult, Logger } from '../common/framework/logger.js';
 import { Fixture } from '../common/framework/fixture.js';
 import { TestCaseID } from '../common/framework/id.js';
+import { LiveTestSpecResult, Logger } from '../common/framework/logger.js';
+import { paramsEquals } from '../common/framework/params_utils.js';
 import { TestGroup } from '../common/framework/test_group.js';
 
 import { UnitTest } from './unit_test.js';
-
-import { paramsEquals } from '../common/framework/params_utils.js';
 
 export class TestGroupTest extends UnitTest {
   async run<F extends Fixture>(g: TestGroup<F>): Promise<LiveTestSpecResult> {

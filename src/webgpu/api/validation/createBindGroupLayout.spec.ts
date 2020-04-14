@@ -3,6 +3,9 @@ createBindGroupLayout validation tests.
 `;
 
 import * as C from '../../../common/constants.js';
+import { poptions } from '../../../common/framework/params.js';
+import { ParamSpec } from '../../../common/framework/params_utils.js';
+import { TestGroup } from '../../../common/framework/test_group.js';
 import {
   kBindingTypeInfo,
   kBindingTypes,
@@ -10,10 +13,8 @@ import {
   kPerStageBindingLimits,
   kShaderStages,
 } from '../../capability_info.js';
-import { ParamSpec } from '../../../common/framework/params_utils.js';
-import { TestGroup } from '../../../common/framework/test_group.js';
+
 import { ValidationTest } from './validation_test.js';
-import { poptions } from '../../../common/framework/params.js';
 
 function clone<T extends GPUBindGroupLayoutDescriptor>(descriptor: T): T {
   return JSON.parse(JSON.stringify(descriptor));

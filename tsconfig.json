@@ -16,5 +16,5 @@
     "moduleResolution": "node",
     "esModuleInterop": false
   },
-  "include": ["src/**/*.ts", "node_modules/@webgpu/types"]
+  "include": ["src/**/*.ts"]
 }
