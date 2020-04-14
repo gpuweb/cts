@@ -35,7 +35,7 @@ export function attemptGarbageCollection(): void {
   let i: number;
   function gcRec(n: number): void {
     if (n < 1) return;
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
     let temp: any = { i: 'ab' + i + i / 100000 };
     temp = temp + 'foo';
     gcRec(n - 1);
