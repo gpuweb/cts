@@ -68,33 +68,43 @@ export function getTextureCopyLayout(
 }
 
 export function fillTextureDataWithTexelValue(
+  format: GPUTextureFormat,
   outputBuffer: ArrayBuffer,
   size: [number, number, number],
   texelValue: ArrayBuffer,
   bytesPerRow?: number,
   rowsPerImage?: number
 ): void {
-  const minBytesPerRow = texelValue.byteLength * size[0];
-  const alignedMinBytesPerRow =
-    Math.ceil(minBytesPerRow / kBytesPerRowAlignment) * kBytesPerRowAlignment;
-  if (bytesPerRow === undefined) {
-    bytesPerRow = alignedMinBytesPerRow;
-  } else {
+  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
+  assert(!!bytesPerBlock && !!blockWidth && !!blockHeight);
+  assert(bytesPerBlock === texelValue.byteLength);
+
+  const minBytesPerRow = (size[0] / blockWidth) * bytesPerBlock;
+  const alignedMinBytesPerRow = align(minBytesPerRow, kBytesPerRowAlignment);
+  if (bytesPerRow !== undefined) {
     assert(bytesPerRow >= alignedMinBytesPerRow);
     assert(isAligned(bytesPerRow, kBytesPerRowAlignment));
+  } else {
+    bytesPerRow = alignedMinBytesPerRow;
   }
 
-  if (rowsPerImage === undefined) {
-    rowsPerImage = size[1];
-  } else {
+  if (rowsPerImage !== undefined) {
     assert(rowsPerImage >= size[1]);
+  } else {
+    rowsPerImage = size[1];
   }
+
+  const bytesPerSlice = (bytesPerRow * rowsPerImage) / blockWidth;
+  const sliceSize =
+    bytesPerRow * (size[1] / blockHeight - 1) + bytesPerBlock * (size[0] / blockWidth);
+  const outputByteLength = bytesPerSlice * (size[2] - 1) + sliceSize;
+  assert(outputByteLength <= outputBuffer.byteLength);
 
   const texelValueBytes = new Uint8Array(texelValue);
   const outputTexelValueBytes = new Uint8Array(outputBuffer);
   for (let slice = 0; slice < size[2]; ++slice) {
-    for (let row = 0; row < size[1]; ++row) {
-      for (let col = 0; col < size[0]; ++col) {
+    for (let row = 0; row < size[1]; row += blockHeight) {
+      for (let col = 0; col < size[0]; col += blockWidth) {
         const byteOffset =
           slice * rowsPerImage * bytesPerRow + row * bytesPerRow + col * texelValue.byteLength;
         outputTexelValueBytes.set(texelValueBytes, byteOffset);
@@ -132,7 +142,7 @@ export function createTextureUploadBuffer(
   });
 
   assert(texelValue.byteLength === bytesPerBlock);
-  fillTextureDataWithTexelValue(mapping, size, texelValue, bytesPerRow, rowsPerImage);
+  fillTextureDataWithTexelValue(format, mapping, size, texelValue, bytesPerRow, rowsPerImage);
   buffer.unmap();
 
   return {
@@ -171,7 +181,14 @@ export function createTextureReadbackBuffer(
 
   const cpuData = new ArrayBuffer(byteLength);
   assert(expectedTexelData.byteLength === bytesPerBlock);
-  fillTextureDataWithTexelValue(cpuData, size, expectedTexelData, bytesPerRow, rowsPerImage);
+  fillTextureDataWithTexelValue(
+    format,
+    cpuData,
+    size,
+    expectedTexelData,
+    bytesPerRow,
+    rowsPerImage
+  );
 
   return { buffer, cpuData };
 }

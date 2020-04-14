@@ -50,7 +50,12 @@ class CopiedTextureClearTest extends TextureZeroInitTest {
     assert(expectedTexelData.byteLength === bytesPerBlock);
 
     const arrayBuffer = new ArrayBuffer(byteLength);
-    fillTextureDataWithTexelValue(arrayBuffer, [width, height, 1], expectedTexelData);
+    fillTextureDataWithTexelValue(
+      this.params.format,
+      arrayBuffer,
+      [width, height, 1],
+      expectedTexelData
+    );
 
     this.expectContents(buffer, new Uint8Array(arrayBuffer));
   }
