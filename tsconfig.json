@@ -5,7 +5,6 @@
     "module": "esnext",
     /* Output options */
     "noEmit": true,
-    "allowUmdGlobalAccess": true,
     /* Strict type-checking options */
     "allowJs": false,
     "strict": true,
