@@ -1,9 +1,9 @@
+import { ParamSpec, extractPublicParams } from './params_utils.js';
+import { assert, now } from './util/util.js';
 import { SkipTestCase } from './fixture.js';
 import { TestSpecID } from './id.js';
-import { ParamSpec, extractPublicParams } from './params_utils.js';
-import { makeQueryString } from './url_query.js';
 import { getStackTrace } from './util/stack.js';
-import { assert, now } from './util/util.js';
+import { makeQueryString } from './url_query.js';
 import { version } from './version.js';
 
 type Status = 'running' | 'pass' | 'skip' | 'warn' | 'fail';

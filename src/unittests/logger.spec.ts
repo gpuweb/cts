@@ -4,12 +4,11 @@ Unit tests for namespaced logging system.
 Also serves as a larger test of async test functions, and of the logging system.
 `;
 
-import { SkipTestCase } from '../common/framework/fixture.js';
 import { Logger } from '../common/framework/logger.js';
-import { paramsEquals } from '../common/framework/params_utils.js';
+import { SkipTestCase } from '../common/framework/fixture.js';
 import { TestGroup } from '../common/framework/test_group.js';
-
 import { UnitTest } from './unit_test.js';
+import { paramsEquals } from '../common/framework/params_utils.js';
 
 export const g = new TestGroup(UnitTest);
 

@@ -1,5 +1,5 @@
-import { TestLoader } from '../../framework/loader.js';
 import { Logger } from '../../framework/logger.js';
+import { TestLoader } from '../../framework/loader.js';
 import { assert } from '../../framework/util/util.js';
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */

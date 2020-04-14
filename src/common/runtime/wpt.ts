@@ -1,10 +1,10 @@
-import { TestLoader } from '../framework/loader.js';
 import { LiveTestCaseResult, Logger } from '../framework/logger.js';
-import { makeQueryString } from '../framework/url_query.js';
 import { AsyncMutex } from '../framework/util/async_mutex.js';
-
-import { optionEnabled } from './helper/options.js';
+import { TestLoader } from '../framework/loader.js';
 import { TestWorker } from './helper/test_worker.js';
+
+import { makeQueryString } from '../framework/url_query.js';
+import { optionEnabled } from './helper/options.js';
 
 declare interface WptTestObject {
   step(f: () => void): void;

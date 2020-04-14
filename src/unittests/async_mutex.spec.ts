@@ -2,11 +2,11 @@ export const description = `
 Tests for AsyncMutex.
 `;
 
-import { TestGroup } from '../common/framework/test_group.js';
 import { AsyncMutex } from '../common/framework/util/async_mutex.js';
-import { objectEquals } from '../common/framework/util/util.js';
-
+import { TestGroup } from '../common/framework/test_group.js';
 import { UnitTest } from './unit_test.js';
+
+import { objectEquals } from '../common/framework/util/util.js';
 
 export const g = new TestGroup(UnitTest);
 

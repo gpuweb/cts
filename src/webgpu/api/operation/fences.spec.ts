@@ -1,9 +1,9 @@
 export const description = '';
 
-import { attemptGarbageCollection } from '../../../common/framework/collect_garbage.js';
-import { TestGroup } from '../../../common/framework/test_group.js';
-import { raceWithRejectOnTimeout } from '../../../common/framework/util/util.js';
 import { GPUTest } from '../../gpu_test.js';
+import { TestGroup } from '../../../common/framework/test_group.js';
+import { attemptGarbageCollection } from '../../../common/framework/collect_garbage.js';
+import { raceWithRejectOnTimeout } from '../../../common/framework/util/util.js';
 
 export const g = new TestGroup(GPUTest);
 

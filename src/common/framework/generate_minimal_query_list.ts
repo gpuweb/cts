@@ -1,8 +1,8 @@
-import { TestSpecOrTestOrCaseID } from './id.js';
-import { Logger } from './logger.js';
-import { makeFilter } from './test_filter/load_filter.js';
-import { TestFilterResult } from './test_filter/test_filter_result.js';
 import { FilterResultTreeNode, treeFromFilterResults } from './tree.js';
+import { Logger } from './logger.js';
+import { TestFilterResult } from './test_filter/test_filter_result.js';
+import { TestSpecOrTestOrCaseID } from './id.js';
+import { makeFilter } from './test_filter/load_filter.js';
 
 interface QuerySplitterTreeNode {
   needsSplit: boolean;

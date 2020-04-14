@@ -3,8 +3,8 @@ copy imageBitmap To texture tests.
 `;
 
 import { pcombine, poptions } from '../../common/framework/params.js';
-import { TestGroup } from '../../common/framework/test_group.js';
 import { GPUTest } from '../gpu_test.js';
+import { TestGroup } from '../../common/framework/test_group.js';
 
 function calculateRowPitch(width: number, bytesPerPixel: number): number {
   const bytesPerRow = width * bytesPerPixel;

@@ -2,10 +2,10 @@ export const description = `
 error scope validation tests.
 `;
 
-import { Fixture } from '../../../common/framework/fixture.js';
-import { getGPU } from '../../../common/framework/gpu/implementation.js';
-import { TestGroup } from '../../../common/framework/test_group.js';
 import { assert, raceWithRejectOnTimeout } from '../../../common/framework/util/util.js';
+import { Fixture } from '../../../common/framework/fixture.js';
+import { TestGroup } from '../../../common/framework/test_group.js';
+import { getGPU } from '../../../common/framework/gpu/implementation.js';
 
 class F extends Fixture {
   _device: GPUDevice | undefined = undefined;
