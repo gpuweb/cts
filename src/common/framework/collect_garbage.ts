@@ -19,6 +19,7 @@ export function attemptGarbageCollection(): void {
       .getInterface(Components.interfaces.nsIDOMWindowUtils)
       .garbageCollect();
     return;
+    /* eslint-disable-next-line no-empty */
   } catch (e) {}
 
   if (w.gc) {

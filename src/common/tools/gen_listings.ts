@@ -36,6 +36,7 @@ export const listing = ${JSON.stringify(listing, undefined, 2)};
     );
     try {
       fs.unlinkSync(outFile + '.map');
+      /* eslint-disable-next-line no-empty */
     } catch (ex) {}
   }
 })();
