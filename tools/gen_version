@@ -3,7 +3,7 @@
 // Get the current git hash, and save (overwrite) it into out/framework/version.js
 // so it can be read when running inside the browser.
 
-// tslint:disable: no-console
+/* eslint-disable no-console */
 
 require('../src/common/tools/setup-ts-in-node.js');
 const fs = require('fs');

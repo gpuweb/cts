@@ -97,7 +97,7 @@ class FakeTestFileLoader implements TestFileLoader {
   }
 
   async import(path: string): Promise<TestSpecOrReadme> {
-    assert(specsData.hasOwnProperty(path), '[test] mock file ' + path + ' does not exist');
+    assert(path in specsData, '[test] mock file ' + path + ' does not exist');
     return specsData[path];
   }
 }

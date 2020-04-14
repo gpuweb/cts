@@ -57,35 +57,25 @@ function makeCaseHTML(name: string, t: RunCase): [HTMLElement, RunSubtree] {
     if (res.logs) {
       caselogs.empty();
       for (const l of res.logs) {
-        const caselog = $('<div>')
-          .addClass('testcaselog')
-          .appendTo(caselogs);
+        const caselog = $('<div>').addClass('testcaselog').appendTo(caselogs);
         $('<button>')
           .addClass('testcaselogbtn')
           .attr('alt', 'Log stack to console')
           .attr('title', 'Log stack to console')
           .appendTo(caselog)
           .on('click', () => {
-            // tslint:disable-next-line: no-console
+            /* eslint-disable-next-line no-console */
             console.log(l);
           });
-        $('<pre>')
-          .addClass('testcaselogtext')
-          .appendTo(caselog)
-          .text(l.toJSON());
+        $('<pre>').addClass('testcaselogtext').appendTo(caselog).text(l.toJSON());
       }
     }
   };
 
   const casehead = makeTreeNodeHeaderHTML(name, undefined, runSubtree);
   div.append(casehead);
-  const casetime = $('<div>')
-    .addClass('testcasetime')
-    .html('ms')
-    .appendTo(casehead);
-  const caselogs = $('<div>')
-    .addClass('testcaselogs')
-    .appendTo(div);
+  const casetime = $('<div>').addClass('testcasetime').html('ms').appendTo(casehead);
+  const caselogs = $('<div>').addClass('testcaselogs').appendTo(div);
 
   return [div[0], runSubtree];
 }
@@ -98,9 +88,7 @@ function makeSubtreeHTML(name: string, subtree: FilterResultTreeNode): [HTMLElem
   });
   div.append(header);
 
-  const subtreeHTML = $('<div>')
-    .addClass('subtreechildren')
-    .appendTo(div);
+  const subtreeHTML = $('<div>').addClass('subtreechildren').appendTo(div);
   const runSubtree = makeSubtreeChildrenHTML(subtreeHTML[0], subtree.children!);
 
   return [div[0], runSubtree];
@@ -156,13 +144,8 @@ function makeTreeNodeHeaderHTML(
     .attr('alt', 'Open')
     .attr('title', 'Open')
     .appendTo(div);
-  const nodetitle = $('<div>')
-    .addClass('nodetitle')
-    .appendTo(div);
-  $('<span>')
-    .addClass('nodename')
-    .html(nameHTML)
-    .appendTo(nodetitle);
+  const nodetitle = $('<div>').addClass('nodetitle').appendTo(div);
+  $('<span>').addClass('nodename').html(nameHTML).appendTo(nodetitle);
   if (description) {
     $('<div>')
       .addClass('nodedescription')
