@@ -19,22 +19,22 @@ export class ParamsBuilder {
   }
 
   combine(p: ParamSpecIterable): ParamsBuilder {
-    this.params = pcombine(this.params, p);
+    this.params = new PCombine([this.params, p]);
     return this;
   }
 
   filter(pred: Predicate): ParamsBuilder {
-    this.params = pfilter(this.params, pred);
+    this.params = new PFilter(this.params, pred);
     return this;
   }
 
   unless(pred: Predicate): ParamsBuilder {
-    this.params = pfilter(this.params, x => !pred(x));
+    this.params = new PFilter(this.params, x => !pred(x));
     return this;
   }
 
   exclude(exclude: ParamSpecIterable): ParamsBuilder {
-    this.params = pexclude(this.params, exclude);
+    this.params = new PExclude(this.params, exclude);
     return this;
   }
 }
