@@ -11,11 +11,11 @@ export function params(): ParamsBuilder {
   return new ParamsBuilder();
 }
 
-export class ParamsBuilder {
+export class ParamsBuilder implements ParamSpecIterable {
   private params: ParamSpecIterable = [{}];
 
-  getParams(): ParamSpecIterable {
-    return this.params;
+  [Symbol.iterator](): Iterator<ParamSpec> {
+    return this.params[Symbol.iterator]();
   }
 
   combine(p: ParamSpecIterable): ParamsBuilder {
@@ -50,9 +50,6 @@ export function pexclude(params: ParamSpecIterable, exclude: ParamSpecIterable):
 }
 export function pfilter(cases: ParamSpecIterable, pred: Predicate): PFilter {
   return new PFilter(cases, pred);
-}
-export function pcombine(...params: ParamSpecIterable[]): ParamSpecIterable {
-  return new PCombine(params);
 }
 
 class POptions implements ParamSpecIterable {

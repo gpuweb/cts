@@ -1,6 +1,6 @@
 export const description = '';
 
-import { pbool, pcombine, poptions } from '../../../../common/framework/params.js';
+import { pbool, poptions, params } from '../../../../common/framework/params.js';
 import { TestGroup } from '../../../../common/framework/test_group.js';
 
 import { MappingTest } from './mapping_test.js';
@@ -43,10 +43,9 @@ g.test('mapReadAsync')
 
 g.test('createBufferMapped')
   .params(
-    pcombine(
-      poptions('size', [12, 512 * 1024]), //
-      pbool('mappable')
-    )
+    params()
+      .combine(poptions('size', [12, 512 * 1024]))
+      .combine(pbool('mappable'))
   )
   .fn(async t => {
     const size = t.params.size;

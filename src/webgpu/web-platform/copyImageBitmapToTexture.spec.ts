@@ -2,7 +2,7 @@ export const description = `
 copy imageBitmap To texture tests.
 `;
 
-import { pcombine, poptions } from '../../common/framework/params.js';
+import { poptions, params } from '../../common/framework/params.js';
 import { TestGroup } from '../../common/framework/test_group.js';
 import { GPUTest } from '../gpu_test.js';
 
@@ -118,10 +118,9 @@ export const g = new TestGroup(F);
 
 g.test('from ImageData')
   .params(
-    pcombine(
-      poptions('width', [1, 2, 4, 15, 255, 256]), //
-      poptions('height', [1, 2, 4, 15, 255, 256])
-    )
+    params()
+      .combine(poptions('width', [1, 2, 4, 15, 255, 256]))
+      .combine(poptions('height', [1, 2, 4, 15, 255, 256]))
   )
   .fn(async t => {
     const { width, height } = t.params;
@@ -158,10 +157,9 @@ g.test('from ImageData')
 
 g.test('from canvas')
   .params(
-    pcombine(
-      poptions('width', [1, 2, 4, 15, 255, 256]), //
-      poptions('height', [1, 2, 4, 15, 255, 256])
-    )
+    params()
+      .combine(poptions('width', [1, 2, 4, 15, 255, 256]))
+      .combine(poptions('height', [1, 2, 4, 15, 255, 256]))
   )
   .fn(async t => {
     const { width, height } = t.params;

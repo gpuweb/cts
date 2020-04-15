@@ -2,7 +2,7 @@ export const description = `
 Unit tests for parameterization helpers.
 `;
 
-import { pcombine, pexclude, pfilter, poptions } from '../common/framework/params.js';
+import { pexclude, pfilter, poptions, params } from '../common/framework/params.js';
 import { ParamSpec, ParamSpecIterable, paramsEquals } from '../common/framework/params_utils.js';
 import { TestGroup } from '../common/framework/test_group.js';
 
@@ -21,20 +21,25 @@ g.test('options').fn(t => {
   t.expectSpecEqual(poptions('hello', [1, 2, 3]), [{ hello: 1 }, { hello: 2 }, { hello: 3 }]);
 });
 
-g.test('combine/none').fn(t => {
-  t.expectSpecEqual(pcombine(), []);
+g.test('params').fn(t => {
+  t.expectSpecEqual(params(), [{}]);
 });
 
 g.test('combine/zeroes and ones').fn(t => {
-  t.expectSpecEqual(pcombine([], []), []);
-  t.expectSpecEqual(pcombine([], [{}]), []);
-  t.expectSpecEqual(pcombine([{}], []), []);
-  t.expectSpecEqual(pcombine([{}], [{}]), [{}]);
+  t.expectSpecEqual(params().combine([]).combine([]), []);
+  t.expectSpecEqual(params().combine([]).combine([{}]), []);
+  t.expectSpecEqual(params().combine([{}]).combine([]), []);
+  t.expectSpecEqual(params().combine([{}]).combine([{}]), [{}]);
 });
 
 g.test('combine/mixed').fn(t => {
   t.expectSpecEqual(
-    pcombine(poptions('x', [1, 2]), poptions('y', ['a', 'b']), [{ p: 4 }, { q: 5 }], [{}]),
+    params()
+      .combine(poptions('x', [1, 2]))
+      .combine(poptions('y', ['a', 'b']))
+      .combine([{ p: 4 }, { q: 5 }])
+      .combine([{}])
+      .getParams(),
     [
       { x: 1, y: 'a', p: 4 },
       { x: 1, y: 'a', q: 5 },

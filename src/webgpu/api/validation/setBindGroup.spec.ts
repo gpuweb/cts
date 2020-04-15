@@ -2,7 +2,7 @@ export const description = `
 setBindGroup validation tests.
 `;
 
-import { pcombine, poptions } from '../../../common/framework/params.js';
+import { poptions, params } from '../../../common/framework/params.js';
 import { TestGroup } from '../../../common/framework/test_group.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -93,25 +93,27 @@ g.test('dynamic offsets passed but not expected/compute pass')
 
 g.test('dynamic offsets match expectations in pass encoder')
   .params(
-    pcombine(poptions('type', ['compute', 'renderpass', 'renderbundle']), [
-      { dynamicOffsets: [256, 0], _success: true }, // Dynamic offsets aligned
-      { dynamicOffsets: [1, 2], _success: false }, // Dynamic offsets not aligned
+    params()
+      .combine(poptions('type', ['compute', 'renderpass', 'renderbundle']))
+      .combine([
+        { dynamicOffsets: [256, 0], _success: true }, // Dynamic offsets aligned
+        { dynamicOffsets: [1, 2], _success: false }, // Dynamic offsets not aligned
 
-      // Wrong number of dynamic offsets
-      { dynamicOffsets: [256, 0, 0], _success: false },
-      { dynamicOffsets: [256], _success: false },
-      { dynamicOffsets: [], _success: false },
+        // Wrong number of dynamic offsets
+        { dynamicOffsets: [256, 0, 0], _success: false },
+        { dynamicOffsets: [256], _success: false },
+        { dynamicOffsets: [], _success: false },
 
-      // Dynamic uniform buffer out of bounds because of binding size
-      { dynamicOffsets: [512, 0], _success: false },
-      { dynamicOffsets: [1024, 0], _success: false },
-      { dynamicOffsets: [Number.MAX_SAFE_INTEGER, 0], _success: false },
+        // Dynamic uniform buffer out of bounds because of binding size
+        { dynamicOffsets: [512, 0], _success: false },
+        { dynamicOffsets: [1024, 0], _success: false },
+        { dynamicOffsets: [Number.MAX_SAFE_INTEGER, 0], _success: false },
 
-      // Dynamic storage buffer out of bounds because of binding size
-      { dynamicOffsets: [0, 512], _success: false },
-      { dynamicOffsets: [0, 1024], _success: false },
-      { dynamicOffsets: [0, Number.MAX_SAFE_INTEGER], _success: false },
-    ])
+        // Dynamic storage buffer out of bounds because of binding size
+        { dynamicOffsets: [0, 512], _success: false },
+        { dynamicOffsets: [0, 1024], _success: false },
+        { dynamicOffsets: [0, Number.MAX_SAFE_INTEGER], _success: false },
+      ])
   )
   .fn(async t => {
     // Dynamic buffer offsets require offset to be divisible by 256

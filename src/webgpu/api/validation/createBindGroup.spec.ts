@@ -3,7 +3,7 @@ createBindGroup validation tests.
 `;
 
 import * as C from '../../../common/constants.js';
-import { pcombine, poptions } from '../../../common/framework/params.js';
+import { poptions, params } from '../../../common/framework/params.js';
 import { TestGroup } from '../../../common/framework/test_group.js';
 import { unreachable } from '../../../common/framework/util/util.js';
 import { kBindingTypes } from '../../capability_info.js';
@@ -70,10 +70,9 @@ g.test('binding must be present in layout').fn(async t => {
 
 g.test('buffer binding must contain exactly one buffer of its type')
   .params(
-    pcombine(
-      poptions('bindingType', kBindingTypes),
-      poptions('resourceType', Object.keys(BindingResourceType))
-    )
+    params()
+      .combine(poptions('bindingType', kBindingTypes))
+      .combine(poptions('resourceType', Object.keys(BindingResourceType)))
   )
   .fn(t => {
     const bindingType: GPUBindingType = t.params.bindingType;

@@ -2,7 +2,7 @@ export const description = `
 Unit tests for parameterization.
 `;
 
-import { pcombine, pexclude, pfilter } from '../common/framework/params.js';
+import { pexclude, pfilter, params } from '../common/framework/params.js';
 import { ParamSpec } from '../common/framework/params_utils.js';
 import { TestGroup } from '../common/framework/test_group.js';
 
@@ -18,7 +18,7 @@ g.test('none')
   });
 
 g.test('combine none')
-  .params(pcombine([]))
+  .params(params().combine([]))
   .fn(t => {
     t.fail("this test shouldn't run");
   });

@@ -2,7 +2,7 @@ export const description = `
 createPipelineLayout validation tests.
 `;
 
-import { pbool, pcombine, poptions } from '../../../common/framework/params.js';
+import { pbool, poptions, params } from '../../../common/framework/params.js';
 import { TestGroup } from '../../../common/framework/test_group.js';
 import {
   kBindingTypeInfo,
@@ -20,10 +20,9 @@ export const g = new TestGroup(ValidationTest);
 
 g.test('number of dynamic buffers exceeds the maximum value')
   .params(
-    pcombine(
-      poptions('visibility', [0, 2, 4, 6]), //
-      poptions('type', ['uniform-buffer', 'storage-buffer', 'readonly-storage-buffer'])
-    )
+    params()
+      .combine(poptions('visibility', [0, 2, 4, 6]))
+      .combine(poptions('type', ['uniform-buffer', 'storage-buffer', 'readonly-storage-buffer']))
   )
   .fn(async t => {
     const { type, visibility } = t.params;
@@ -70,11 +69,10 @@ g.test('number of dynamic buffers exceeds the maximum value')
 
 g.test('visibility and dynamic offsets')
   .params(
-    pcombine(
-      poptions('type', kBindingTypes), //
-      pbool('hasDynamicOffset'),
-      poptions('visibility', kShaderStageCombinations)
-    )
+    params()
+      .combine(poptions('type', kBindingTypes))
+      .combine(pbool('hasDynamicOffset'))
+      .combine(poptions('visibility', kShaderStageCombinations))
   )
   .fn(t => {
     const hasDynamicOffset: boolean = t.params.hasDynamicOffset;
