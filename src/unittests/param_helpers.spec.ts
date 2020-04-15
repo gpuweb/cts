@@ -54,14 +54,25 @@ g.test('combine/mixed').fn(t => {
 
 g.test('filter').fn(t => {
   t.expectSpecEqual(
-    pfilter(
-      [
+    params()
+      .combine([
         { a: true, x: 1 },
         { a: false, y: 2 },
-      ],
-      p => p.a
-    ),
+      ])
+      .filter(p => p.a),
     [{ a: true, x: 1 }]
+  );
+});
+
+g.test('unless').fn(t => {
+  t.expectSpecEqual(
+    params()
+      .combine([
+        { a: true, x: 1 },
+        { a: false, y: 2 },
+      ])
+      .unless(p => p.a),
+    [{ a: false, y: 2 }]
   );
 });
 
@@ -75,6 +86,39 @@ g.test('exclude').fn(t => {
       .exclude([{ a: true }, { a: false, y: 2 }]),
     [{ a: true, x: 1 }]
   );
+});
+
+g.test('expand').fn(t => {
+  t.expectSpecEqual(
+    params()
+      .combine([
+        { a: true, x: 1 },
+        { a: false, y: 2 },
+      ])
+      .expand(function* (p) {
+        if (p.a) {
+          yield* poptions('z', [3, 4]);
+        } else {
+          yield { w: 5 };
+        }
+      }),
+    [
+      { a: true, x: 1, z: 3 },
+      { a: true, x: 1, z: 4 },
+      { a: false, y: 2, w: 5 },
+    ]
+  );
+});
+
+g.test('expand/invalid').fn(t => {
+  const p = params()
+    .combine([{ x: 1 }])
+    .expand(function* (p) {
+      yield p; // causes key 'x' to be duplicated
+    });
+  t.shouldThrow('Error', () => {
+    Array.from(p);
+  });
 });
 
 g.test('undefined').fn(t => {

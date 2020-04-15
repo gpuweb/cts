@@ -2,7 +2,6 @@ import { allowedTestNameCharacters } from './allowed_characters.js';
 import { Fixture } from './fixture.js';
 import { TestCaseID } from './id.js';
 import { LiveTestCaseResult, TestCaseRecorder, TestSpecRecorder } from './logger.js';
-import { ParamsBuilder } from './params.js';
 import { ParamSpec, ParamSpecIterable, extractPublicParams, paramsEquals } from './params_utils.js';
 import { checkPublicParamType } from './url_query.js';
 import { assert } from './util/util.js';
@@ -65,7 +64,7 @@ export class TestGroup<F extends Fixture> implements RunCaseIterable {
 }
 
 interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F> {
-  params(specs: ParamSpecIterable | ParamsBuilder): TestBuilderWithParams<F>;
+  params(specs: ParamSpecIterable): TestBuilderWithParams<F>;
 }
 
 interface TestBuilderWithParams<F extends Fixture> {
@@ -87,11 +86,7 @@ class TestBuilder<F extends Fixture> {
     this.testFn = fn;
   }
 
-  params(specs: ParamSpecIterable | ParamsBuilder): TestBuilderWithParams<F> {
-    if (specs instanceof ParamsBuilder) {
-      specs = specs.getParams();
-    }
-
+  params(specs: ParamSpecIterable): TestBuilderWithParams<F> {
     assert(this.cases === null, 'test case is already parameterized');
     const cases = Array.from(specs);
     const seen: ParamSpec[] = [];

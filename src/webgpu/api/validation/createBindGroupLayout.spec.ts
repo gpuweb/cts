@@ -3,8 +3,7 @@ createBindGroupLayout validation tests.
 `;
 
 import * as C from '../../../common/constants.js';
-import { poptions } from '../../../common/framework/params.js';
-import { ParamSpec } from '../../../common/framework/params_utils.js';
+import { poptions, params } from '../../../common/framework/params.js';
 import { TestGroup } from '../../../common/framework/test_group.js';
 import {
   kBindingTypeInfo,
@@ -105,55 +104,44 @@ g.test('dynamic set to true is allowed only for buffers')
     }, !success);
   });
 
-let kCasesForMaxResourcesPerStageTests: ParamSpec[];
-{
-  // One bind group layout will be filled with kPerStageBindingLimit[...] of the type |type|.
-  // For each item in the array returned here, a case will be generated which tests a pipeline
-  // layout with one extra bind group layout with one extra binding. That extra binding will have:
-  //
-  //   - If extraTypeSame, any of the binding types which counts toward the same limit as |type|.
-  //     (i.e. 'storage-buffer' <-> 'readonly-storage-buffer').
-  //   - Otherwise, an arbitrary other type.
-  function* pickExtraBindingTypes(
-    bindingType: GPUBindingType,
-    extraTypeSame: boolean
-  ): IterableIterator<GPUBindingType> {
-    const info = kBindingTypeInfo[bindingType];
-    if (extraTypeSame) {
-      for (const extraBindingType of kBindingTypes) {
-        if (info.perStageLimitType === kBindingTypeInfo[extraBindingType].perStageLimitType) {
-          yield extraBindingType;
-        }
-      }
-    } else {
-      yield info.perStageLimitType === 'sampler' ? 'sampled-texture' : 'sampler';
-    }
-  }
-
-  kCasesForMaxResourcesPerStageTests = [];
-  for (const maxedType of kBindingTypes) {
-    for (const maxedVisibility of kShaderStages) {
-      // Don't generate a case where maxedType isn't valid in maxedVisibility.
-      if (!(kBindingTypeInfo[maxedType].validStages & maxedVisibility)) continue;
-
-      for (const extraTypeSame of [true, false]) {
-        for (const extraType of pickExtraBindingTypes(maxedType, extraTypeSame)) {
-          for (const extraVisibility of kShaderStages) {
-            // Don't generate a case where extraType isn't valid in extraVisibility.
-            if (!(kBindingTypeInfo[extraType].validStages & extraVisibility)) continue;
-
-            kCasesForMaxResourcesPerStageTests.push({
-              maxedType,
-              maxedVisibility,
-              extraType,
-              extraVisibility,
-            });
-          }
-        }
+// One bind group layout will be filled with kPerStageBindingLimit[...] of the type |type|.
+// For each item in the array returned here, a case will be generated which tests a pipeline
+// layout with one extra bind group layout with one extra binding. That extra binding will have:
+//
+//   - If extraTypeSame, any of the binding types which counts toward the same limit as |type|.
+//     (i.e. 'storage-buffer' <-> 'readonly-storage-buffer').
+//   - Otherwise, an arbitrary other type.
+function* pickExtraBindingTypes(
+  bindingType: GPUBindingType,
+  extraTypeSame: boolean
+): IterableIterator<GPUBindingType> {
+  const info = kBindingTypeInfo[bindingType];
+  if (extraTypeSame) {
+    for (const extraBindingType of kBindingTypes) {
+      if (info.perStageLimitType === kBindingTypeInfo[extraBindingType].perStageLimitType) {
+        yield extraBindingType;
       }
     }
+  } else {
+    yield info.perStageLimitType === 'sampler' ? 'sampled-texture' : 'sampler';
   }
 }
+
+const kCasesForMaxResourcesPerStageTests = params()
+  .combine(poptions('maxedType', kBindingTypes))
+  .combine(poptions('maxedVisibility', kShaderStages))
+  .filter(
+    p => (kBindingTypeInfo[p.maxedType as GPUBindingType].validStages & p.maxedVisibility) !== 0
+  )
+  .expand(function* (p) {
+    for (const extraTypeSame of [true, false]) {
+      yield* poptions('extraType', pickExtraBindingTypes(p.maxedType, extraTypeSame));
+    }
+  })
+  .combine(poptions('extraVisibility', kShaderStages))
+  .filter(
+    p => (kBindingTypeInfo[p.extraType as GPUBindingType].validStages & p.extraVisibility) !== 0
+  );
 
 // Should never fail unless kMaxBindingsPerBindGroup is exceeded, because the validation for
 // resources-of-type-per-stage is in pipeline layout creation.
