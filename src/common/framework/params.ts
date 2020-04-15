@@ -45,12 +45,6 @@ export function poptions(name: string, values: ParamArgument[]): POptions {
 export function pbool(name: string): POptions {
   return new POptions(name, [false, true]);
 }
-export function pexclude(params: ParamSpecIterable, exclude: ParamSpecIterable): PExclude {
-  return new PExclude(params, exclude);
-}
-export function pfilter(cases: ParamSpecIterable, pred: Predicate): PFilter {
-  return new PFilter(cases, pred);
-}
 
 class POptions implements ParamSpecIterable {
   private name: string;

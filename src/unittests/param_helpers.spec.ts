@@ -2,7 +2,7 @@ export const description = `
 Unit tests for parameterization helpers.
 `;
 
-import { pexclude, pfilter, poptions, params } from '../common/framework/params.js';
+import { poptions, params } from '../common/framework/params.js';
 import { ParamSpec, ParamSpecIterable, paramsEquals } from '../common/framework/params_utils.js';
 import { TestGroup } from '../common/framework/test_group.js';
 
@@ -38,8 +38,7 @@ g.test('combine/mixed').fn(t => {
       .combine(poptions('x', [1, 2]))
       .combine(poptions('y', ['a', 'b']))
       .combine([{ p: 4 }, { q: 5 }])
-      .combine([{}])
-      .getParams(),
+      .combine([{}]),
     [
       { x: 1, y: 'a', p: 4 },
       { x: 1, y: 'a', q: 5 },
@@ -68,13 +67,12 @@ g.test('filter').fn(t => {
 
 g.test('exclude').fn(t => {
   t.expectSpecEqual(
-    pexclude(
-      [
+    params()
+      .combine([
         { a: true, x: 1 },
         { a: false, y: 2 },
-      ],
-      [{ a: true }, { a: false, y: 2 }]
-    ),
+      ])
+      .exclude([{ a: true }, { a: false, y: 2 }]),
     [{ a: true, x: 1 }]
   );
 });

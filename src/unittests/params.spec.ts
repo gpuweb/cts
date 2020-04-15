@@ -2,7 +2,7 @@ export const description = `
 Unit tests for parameterization.
 `;
 
-import { pexclude, pfilter, params } from '../common/framework/params.js';
+import { params } from '../common/framework/params.js';
 import { ParamSpec } from '../common/framework/params_utils.js';
 import { TestGroup } from '../common/framework/test_group.js';
 
@@ -25,30 +25,41 @@ g.test('combine none')
 
 g.test('filter')
   .params(
-    pfilter(
-      [
+    params()
+      .combine([
         { a: true, x: 1 }, //
         { a: false, y: 2 },
-      ],
-      p => p.a
-    )
+      ])
+      .filter(p => p.a)
   )
   .fn(t => {
     t.expect(t.params.a);
   });
 
-g.test('exclude')
+g.test('unless')
   .params(
-    pexclude(
-      [
+    params()
+      .combine([
         { a: true, x: 1 }, //
         { a: false, y: 2 },
-      ],
-      [
+      ])
+      .unless(p => p.a)
+  )
+  .fn(t => {
+    t.expect(!t.params.a);
+  });
+
+g.test('exclude')
+  .params(
+    params()
+      .combine([
+        { a: true, x: 1 },
+        { a: false, y: 2 },
+      ])
+      .exclude([
         { a: true }, //
         { a: false, y: 2 },
-      ]
-    )
+      ])
   )
   .fn(t => {
     t.expect(t.params.a);
