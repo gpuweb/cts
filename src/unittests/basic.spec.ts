@@ -8,8 +8,10 @@ import { UnitTest } from './unit_test.js';
 
 export const g = new TestGroup(UnitTest);
 
+/* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
 g.test('test/sync').fn(t => {});
 
+/* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
 g.test('test/async').fn(async t => {});
 
 g.test('testp/sync')

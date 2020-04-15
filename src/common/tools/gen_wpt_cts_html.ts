@@ -1,5 +1,3 @@
-// tslint:disable: no-console
-
 import { promises as fs } from 'fs';
 
 import { listing } from '../../webgpu/listing.js';

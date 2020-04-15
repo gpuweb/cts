@@ -1,4 +1,4 @@
-export const description = ``;
+export const description = '';
 
 import { Fixture } from '../../../common/framework/fixture.js';
 import { TestGroup } from '../../../common/framework/test_group.js';
@@ -16,8 +16,8 @@ g.test('canvas element getContext returns GPUCanvasContext').fn(async t => {
   canvas.height = 10;
 
   // TODO: fix types so these aren't necessary
-  // tslint:disable-next-line: no-any
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   const ctx: any = canvas.getContext('gpupresent');
-  // tslint:disable-next-line: no-any
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   t.expect(ctx instanceof (window as any).GPUCanvasContext);
 });

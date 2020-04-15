@@ -61,7 +61,7 @@ g.test('generator').fn(t0 => {
 
   g.test('generator')
     .params(
-      (function*(): IterableIterator<ParamSpec> {
+      (function* (): IterableIterator<ParamSpec> {
         for (let x = 0; x < 3; ++x) {
           for (let y = 0; y < 2; ++y) {
             yield { x, y };

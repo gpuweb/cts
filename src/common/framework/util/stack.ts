@@ -11,7 +11,7 @@ export function getStackTrace(e: Error): string {
   const stack = [];
   const moreStack = [];
   let found = false;
-  const commonRegex = /[\/\\](webgpu|unittests)[\/\\]/;
+  const commonRegex = /[/\\](webgpu|unittests)[/\\]/;
   for (let i = 0; i < parts.length; ++i) {
     const part = parts[i].trim();
     const isSuites = commonRegex.test(part); // approximate

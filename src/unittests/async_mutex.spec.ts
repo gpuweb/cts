@@ -10,11 +10,13 @@ import { UnitTest } from './unit_test.js';
 
 export const g = new TestGroup(UnitTest);
 
+/* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
 g.test('basic').fn(async t => {
   const mutex = new AsyncMutex();
   await mutex.with(async () => {});
 });
 
+/* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
 g.test('serial').fn(async t => {
   const mutex = new AsyncMutex();
   await mutex.with(async () => {});
@@ -22,6 +24,7 @@ g.test('serial').fn(async t => {
   await mutex.with(async () => {});
 });
 
+/* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
 g.test('parallel').fn(async t => {
   const mutex = new AsyncMutex();
   await Promise.all([

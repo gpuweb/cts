@@ -121,7 +121,7 @@ class PCombine implements ParamSpecIterable {
 
   static merge(a: ParamSpec, b: ParamSpec): ParamSpec {
     for (const key of Object.keys(a)) {
-      assert(!b.hasOwnProperty(key), 'Duplicate key: ' + key);
+      assert(!(key in b), 'Duplicate key: ' + key);
     }
     return { ...a, ...b };
   }

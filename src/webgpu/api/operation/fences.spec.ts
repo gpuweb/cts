@@ -1,4 +1,4 @@
-export const description = ``;
+export const description = '';
 
 import { attemptGarbageCollection } from '../../../common/framework/collect_garbage.js';
 import { TestGroup } from '../../../common/framework/test_group.js';

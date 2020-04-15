@@ -1,4 +1,4 @@
-export const description = ``;
+export const description = '';
 
 import { pbool, pcombine, poptions } from '../../../../common/framework/params.js';
 import { TestGroup } from '../../../../common/framework/test_group.js';

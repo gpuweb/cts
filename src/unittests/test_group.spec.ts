@@ -14,6 +14,7 @@ export const g = new TestGroup(TestGroupTest);
 
 g.test('UnitTest fixture').fn(async t0 => {
   let seen = 0;
+  /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
   function count(t: Fixture): void {
     seen++;
   }
@@ -64,16 +65,18 @@ g.test('stack').fn(async t0 => {
   g.test('fail').fn(t => {
     t.fail();
   });
+  /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
   g.test('throw').fn(t => {
     throw new Error('hello');
   });
+  /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
   g.test('throw nested').fn(t => {
     doNestedThrow2();
   });
 
   const res = await t0.run(g);
 
-  const search = /unittests[\/\\]test_group\.spec\.[tj]s|suites[\/\\]unittests[\/\\]unit_test\.[tj]s/;
+  const search = /unittests[/\\]test_group\.spec\.[tj]s|suites[/\\]unittests[/\\]unit_test\.[tj]s/;
   for (const { logs } of res.cases) {
     assert(logs !== undefined, 'expected logs');
     const l = logs[0].toJSON();
@@ -136,6 +139,7 @@ g.test('invalid test name')
 g.test('throws').fn(async t0 => {
   const g = new TestGroup(UnitTest);
 
+  /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
   g.test('a').fn(t => {
     throw new Error();
   });

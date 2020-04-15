@@ -1,4 +1,4 @@
-export const description = ``;
+export const description = '';
 
 import { TestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
