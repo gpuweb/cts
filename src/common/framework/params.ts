@@ -2,24 +2,25 @@ import { ParamSpec, ParamSpecIterable, paramsEquals } from './params_utils.js';
 import { assert } from './util/util.js';
 
 // https://stackoverflow.com/a/56375136
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
   ? I
   : never;
 type CheckForUnion<T, TErr, TOk> = [T] extends [UnionToIntersection<T>] ? TOk : TErr;
 
-type CheckForStringLiteralType<T, TOk> = string extends T
-  ? unknown
-  : CheckForUnion<T, unknown, TOk>;
+type CheckForStringLiteralType<T, TOk> = string extends T ? void : CheckForUnion<T, void, TOk>;
 
 export function poptions<Name extends string, V>(
   name: Name,
   values: Iterable<V>
 ): CheckForStringLiteralType<Name, Iterable<{ [name in Name]: V }>> {
-  return makeReusableIterable(function* () {
+  const iter = makeReusableIterable(function* () {
     for (const value of values) {
       yield { [name]: value };
     }
-  }) as any;
+  });
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  return iter as any;
 }
 
 export function pbool<Name extends string>(
@@ -61,6 +62,7 @@ class ParamsBuilder<A extends {}> implements ParamSpecIterable {
         }
       }
     });
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     return this as any;
   }
 
@@ -85,6 +87,7 @@ class ParamsBuilder<A extends {}> implements ParamSpecIterable {
         }
       }
     });
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     return this as any;
   }
 
@@ -138,5 +141,6 @@ function mergeParams<A extends {}, B extends {}>(a: A, b: B): Merged<A, B> {
   for (const key of Object.keys(a)) {
     assert(!(key in b), 'Duplicate key: ' + key);
   }
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   return { ...a, ...b } as any;
 }

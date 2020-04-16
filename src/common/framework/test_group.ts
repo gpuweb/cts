@@ -146,6 +146,7 @@ class RunCaseSpecific<F extends Fixture> implements RunCase {
 
       try {
         await inst.init();
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         await this.fn(inst as any);
       } finally {
         // Runs as long as constructor succeeded, even if initialization or the test failed.
