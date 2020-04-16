@@ -14,10 +14,10 @@ g.test('createBufferMapped')
       .combine(pbool('mappable'))
   )
   .fn(t => {
-    const size = t.params.size;
+    const { size, mappable } = t.params;
     const [buffer, arrayBuffer] = t.device.createBufferMapped({
       size,
-      usage: GPUBufferUsage.COPY_SRC | (t.params.mappable ? GPUBufferUsage.MAP_WRITE : 0),
+      usage: GPUBufferUsage.COPY_SRC | (mappable ? GPUBufferUsage.MAP_WRITE : 0),
     });
     t.checkMapWrite(buffer, arrayBuffer, size);
   });

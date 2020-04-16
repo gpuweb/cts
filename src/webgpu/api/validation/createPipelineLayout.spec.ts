@@ -2,6 +2,7 @@ export const description = `
 createPipelineLayout validation tests.
 `;
 
+import * as C from '../../../common/constants.js';
 import { pbool, poptions, params } from '../../../common/framework/params.js';
 import { TestGroup } from '../../../common/framework/test_group.js';
 import {
@@ -22,7 +23,13 @@ g.test('number of dynamic buffers exceeds the maximum value')
   .params(
     params()
       .combine(poptions('visibility', [0, 2, 4, 6]))
-      .combine(poptions('type', ['uniform-buffer', 'storage-buffer', 'readonly-storage-buffer']))
+      .combine(
+        poptions('type', [
+          C.BindingType.UniformBuffer,
+          C.BindingType.StorageBuffer,
+          C.BindingType.ReadonlyStorageBuffer,
+        ])
+      )
   )
   .fn(async t => {
     const { type, visibility } = t.params;
@@ -75,9 +82,7 @@ g.test('visibility and dynamic offsets')
       .combine(poptions('visibility', kShaderStageCombinations))
   )
   .fn(t => {
-    const hasDynamicOffset: boolean = t.params.hasDynamicOffset;
-    const type: GPUBindingType = t.params.type;
-    const visibility: GPUShaderStageFlags = t.params.visibility;
+    const { type, hasDynamicOffset, visibility } = t.params;
     const info = kBindingTypeInfo[type as GPUBindingType];
 
     const descriptor = {

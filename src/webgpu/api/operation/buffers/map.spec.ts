@@ -10,7 +10,7 @@ export const g = new TestGroup(MappingTest);
 g.test('mapWriteAsync')
   .params(poptions('size', [12, 512 * 1024]))
   .fn(async t => {
-    const size = t.params.size;
+    const { size } = t.params;
     const buffer = t.device.createBuffer({
       size,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE,
@@ -23,7 +23,7 @@ g.test('mapWriteAsync')
 g.test('mapReadAsync')
   .params(poptions('size', [12, 512 * 1024]))
   .fn(async t => {
-    const size = t.params.size;
+    const { size } = t.params;
 
     const [buffer, init] = t.device.createBufferMapped({
       size,
@@ -48,10 +48,10 @@ g.test('createBufferMapped')
       .combine(pbool('mappable'))
   )
   .fn(async t => {
-    const size = t.params.size;
+    const { size, mappable } = t.params;
     const [buffer, arrayBuffer] = t.device.createBufferMapped({
       size,
-      usage: GPUBufferUsage.COPY_SRC | (t.params.mappable ? GPUBufferUsage.MAP_WRITE : 0),
+      usage: GPUBufferUsage.COPY_SRC | (mappable ? GPUBufferUsage.MAP_WRITE : 0),
     });
     t.checkMapWrite(buffer, arrayBuffer, size);
   });

@@ -11,6 +11,7 @@ export enum BindingResourceType {
   'sampled-textureview' = 'sampled-textureview',
   'storage-textureview' = 'storage-textureview',
 }
+export const kBindingResourceTypes = Object.keys(BindingResourceType) as BindingResourceType[];
 
 export function resourceBindingMatches(b: GPUBindingType, r: BindingResourceType): boolean {
   switch (b) {

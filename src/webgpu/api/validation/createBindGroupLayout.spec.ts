@@ -92,7 +92,7 @@ g.test('number of dynamic buffers exceeds the maximum value')
 g.test('dynamic set to true is allowed only for buffers')
   .params(poptions('type', kBindingTypes))
   .fn(async t => {
-    const type: GPUBindingType = t.params.type;
+    const { type } = t.params;
     const success = kBindingTypeInfo[type].type === 'buffer';
 
     const descriptor = {
@@ -148,9 +148,7 @@ const kCasesForMaxResourcesPerStageTests = params()
 g.test('max resources per stage/in bind group layout')
   .params(kCasesForMaxResourcesPerStageTests)
   .fn(async t => {
-    const maxedType: GPUBindingType = t.params.maxedType;
-    const extraType: GPUBindingType = t.params.extraType;
-    const { maxedVisibility, extraVisibility } = t.params;
+    const { maxedType, extraType, maxedVisibility, extraVisibility } = t.params;
     const maxedCount = kPerStageBindingLimits[kBindingTypeInfo[maxedType].perStageLimitType];
 
     const maxResourceBindings: GPUBindGroupLayoutEntry[] = [];
@@ -187,9 +185,7 @@ g.test('max resources per stage/in bind group layout')
 g.test('max resources per stage/in pipeline layout')
   .params(kCasesForMaxResourcesPerStageTests)
   .fn(async t => {
-    const maxedType: GPUBindingType = t.params.maxedType;
-    const extraType: GPUBindingType = t.params.extraType;
-    const { maxedVisibility, extraVisibility } = t.params;
+    const { maxedType, extraType, maxedVisibility, extraVisibility } = t.params;
     const maxedCount = kPerStageBindingLimits[kBindingTypeInfo[maxedType].perStageLimitType];
 
     const maxResourceBindings: GPUBindGroupLayoutEntry[] = [];

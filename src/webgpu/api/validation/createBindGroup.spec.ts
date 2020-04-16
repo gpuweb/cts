@@ -6,9 +6,13 @@ import * as C from '../../../common/constants.js';
 import { poptions, params } from '../../../common/framework/params.js';
 import { TestGroup } from '../../../common/framework/test_group.js';
 import { unreachable } from '../../../common/framework/util/util.js';
-import { kBindingTypes } from '../../capability_info.js';
+import { kBindingTypes, kBindingTypeInfo } from '../../capability_info.js';
 
-import { BindingResourceType, ValidationTest, resourceBindingMatches } from './validation_test.js';
+import {
+  ValidationTest,
+  resourceBindingMatches,
+  kBindingResourceTypes,
+} from './validation_test.js';
 
 function clone<T extends GPUTextureDescriptor>(descriptor: T): T {
   return JSON.parse(JSON.stringify(descriptor));
@@ -72,11 +76,10 @@ g.test('buffer binding must contain exactly one buffer of its type')
   .params(
     params()
       .combine(poptions('bindingType', kBindingTypes))
-      .combine(poptions('resourceType', Object.keys(BindingResourceType)))
+      .combine(poptions('resourceType', kBindingResourceTypes))
   )
   .fn(t => {
-    const bindingType: GPUBindingType = t.params.bindingType;
-    const resourceType: BindingResourceType = t.params.resourceType;
+    const { bindingType, resourceType } = t.params;
 
     const layout = t.device.createBindGroupLayout({
       entries: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, type: bindingType }],
@@ -92,12 +95,12 @@ g.test('buffer binding must contain exactly one buffer of its type')
 
 g.test('texture binding must have correct usage')
   .params([
-    { type: 'sampled-texture', _usage: C.TextureUsage.Sampled },
-    { type: 'storage-texture', _usage: C.TextureUsage.Storage },
+    { type: C.BindingType.SampledTexture, _usage: C.TextureUsage.Sampled },
+    { type: C.BindingType.ReadonlyStorageTexture, _usage: C.TextureUsage.Storage },
+    { type: C.BindingType.WriteonlyStorageTexture, _usage: C.TextureUsage.Storage },
   ])
   .fn(async t => {
-    const type: GPUBindingType = t.params.type;
-    const usage: GPUTextureUsageFlags = t.params._usage;
+    const { type, _usage: usage } = t.params;
 
     const bindGroupLayout = t.device.createBindGroupLayout({
       entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, type }],
@@ -115,13 +118,14 @@ g.test('texture binding must have correct usage')
       layout: bindGroupLayout,
     });
 
+    const info = kBindingTypeInfo[type];
     function* mismatchedTextureUsages(): Iterable<GPUTextureUsageFlags> {
       yield GPUTextureUsage.COPY_SRC;
       yield GPUTextureUsage.COPY_DST;
-      if (type !== 'sampled-texture') {
+      if (info.perStageLimitType === 'sampled-texture') {
         yield GPUTextureUsage.SAMPLED;
       }
-      if (type !== 'readonly-storage-texture' && type !== 'writeonly-storage-texture') {
+      if (info.perStageLimitType === 'storage-texture') {
         yield GPUTextureUsage.STORAGE;
       }
       yield GPUTextureUsage.OUTPUT_ATTACHMENT;
@@ -142,7 +146,13 @@ g.test('texture binding must have correct usage')
   });
 
 g.test('texture must have correct component type')
-  .params(poptions('textureComponentType', ['float', 'sint', 'uint']))
+  .params(
+    poptions('textureComponentType', [
+      C.TextureComponentType.Float,
+      C.TextureComponentType.Sint,
+      C.TextureComponentType.Uint,
+    ])
+  )
   .fn(async t => {
     const { textureComponentType } = t.params;
 

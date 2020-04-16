@@ -17,14 +17,14 @@ export interface RunCaseIterable {
 }
 
 type FixtureClass<F extends Fixture> = new (log: TestCaseRecorder, params: ParamSpec) => F;
-type TestFn<F extends Fixture> = (t: F) => Promise<void> | void;
+type TestFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
 
 const validNames = new RegExp('^[' + allowedTestNameCharacters + ']+$');
 
 export class TestGroup<F extends Fixture> implements RunCaseIterable {
   private fixture: FixtureClass<F>;
   private seen: Set<string> = new Set();
-  private tests: Array<TestBuilder<F>> = [];
+  private tests: Array<TestBuilder<F, never>> = [];
 
   constructor(fixture: FixtureClass<F>) {
     this.fixture = fixture;
@@ -50,31 +50,31 @@ export class TestGroup<F extends Fixture> implements RunCaseIterable {
   }
 
   // TODO: This could take a fixture, too, to override the one for the group.
-  test(name: string): TestBuilderWithName<F> {
+  test(name: string): TestBuilderWithName<F, never> {
     // Replace spaces with underscores for readability.
     assert(name.indexOf('_') === -1, 'Invalid test name ${name}: contains underscore (use space)');
     name = name.replace(/ /g, '_');
 
     this.checkName(name);
 
-    const test = new TestBuilder<F>(name, this.fixture);
+    const test = new TestBuilder<F, never>(name, this.fixture);
     this.tests.push(test);
     return test;
   }
 }
 
-interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F> {
-  params(specs: ParamSpecIterable): TestBuilderWithParams<F>;
+interface TestBuilderWithName<F extends Fixture, P extends {}> extends TestBuilderWithParams<F, P> {
+  params<NewP extends {}>(specs: Iterable<NewP>): TestBuilderWithParams<F, NewP>;
 }
 
-interface TestBuilderWithParams<F extends Fixture> {
-  fn(fn: TestFn<F>): void;
+interface TestBuilderWithParams<F extends Fixture, P extends {}> {
+  fn(fn: TestFn<F, P>): void;
 }
 
-class TestBuilder<F extends Fixture> {
+class TestBuilder<F extends Fixture, P extends {}> {
   private readonly name: string;
   private readonly fixture: FixtureClass<F>;
-  private testFn: TestFn<F> | undefined;
+  private testFn: TestFn<F, P> | undefined;
   private cases: ParamSpecIterable | null = null;
 
   constructor(name: string, fixture: FixtureClass<F>) {
@@ -82,11 +82,11 @@ class TestBuilder<F extends Fixture> {
     this.fixture = fixture;
   }
 
-  fn(fn: TestFn<F>): void {
+  fn(fn: TestFn<F, P>): void {
     this.testFn = fn;
   }
 
-  params(specs: ParamSpecIterable): TestBuilderWithParams<F> {
+  params<NewP extends {}>(specs: Iterable<NewP>): TestBuilderWithParams<F, NewP> {
     assert(this.cases === null, 'test case is already parameterized');
     const cases = Array.from(specs);
     const seen: ParamSpec[] = [];
@@ -105,7 +105,7 @@ class TestBuilder<F extends Fixture> {
     }
     this.cases = cases;
 
-    return this;
+    return (this as unknown) as TestBuilderWithParams<F, NewP>;
   }
 
   *iterate(rec: TestSpecRecorder): IterableIterator<RunCase> {
@@ -121,14 +121,14 @@ class RunCaseSpecific<F extends Fixture> implements RunCase {
   private readonly params: ParamSpec | null;
   private readonly recorder: TestSpecRecorder;
   private readonly fixture: FixtureClass<F>;
-  private readonly fn: TestFn<F>;
+  private readonly fn: TestFn<F, never>;
 
   constructor(
     recorder: TestSpecRecorder,
     test: string,
     params: ParamSpec | null,
     fixture: FixtureClass<F>,
-    fn: TestFn<F>
+    fn: TestFn<F, never>
   ) {
     this.id = { test, params: params ? extractPublicParams(params) : null };
     this.params = params;
@@ -146,7 +146,7 @@ class RunCaseSpecific<F extends Fixture> implements RunCase {
 
       try {
         await inst.init();
-        await this.fn(inst);
+        await this.fn(inst as any);
       } finally {
         // Runs as long as constructor succeeded, even if initialization or the test failed.
         await inst.finalize();

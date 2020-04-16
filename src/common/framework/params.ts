@@ -22,7 +22,7 @@ export function params(): ParamsBuilder<{}> {
   return new ParamsBuilder();
 }
 
-class ParamsBuilder<A extends object> implements ParamSpecIterable {
+class ParamsBuilder<A extends {}> implements ParamSpecIterable {
   private paramSpecs: ParamSpecIterable = [{}];
 
   [Symbol.iterator](): Iterator<A> {
@@ -30,7 +30,7 @@ class ParamsBuilder<A extends object> implements ParamSpecIterable {
     return iter as Iterator<A>;
   }
 
-  combine<B extends object>(
+  combine<B extends {}>(
     newParams: Iterable<B>
   ): ParamsBuilder<
     {
@@ -54,7 +54,7 @@ class ParamsBuilder<A extends object> implements ParamSpecIterable {
     return this as any;
   }
 
-  expand<B extends object>(
+  expand<B extends {}>(
     expander: (_: A) => Iterable<B>
   ): ParamsBuilder<
     {
@@ -112,7 +112,7 @@ function reusableGenerator<P>(generatorFn: () => Generator<P>): Iterable<P> {
   return { [Symbol.iterator]: generatorFn };
 }
 
-function mergeParams<A extends object, B extends object>(
+function mergeParams<A extends {}, B extends {}>(
   a: A,
   b: B
 ): {
