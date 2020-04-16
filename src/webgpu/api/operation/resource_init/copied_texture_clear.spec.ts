@@ -1,4 +1,4 @@
-export const description = `Test uninitialized textures are initialized to zero when copied.`;
+export const description = 'Test uninitialized textures are initialized to zero when copied.';
 
 import * as C from '../../../../common/constants.js';
 import { TestGroup } from '../../../../common/framework/test_group.js';
@@ -51,10 +51,11 @@ class CopiedTextureClearTest extends TextureZeroInitTest {
 
     const arrayBuffer = new ArrayBuffer(byteLength);
     fillTextureDataWithTexelValue(
+      expectedTexelData,
       this.params.format,
+      this.params.dimension,
       arrayBuffer,
-      [width, height, 1],
-      expectedTexelData
+      [width, height, 1]
     );
 
     this.expectContents(buffer, new Uint8Array(arrayBuffer));

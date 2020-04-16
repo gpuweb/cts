@@ -194,7 +194,7 @@ function getRequiredTextureUsage(
       usage |= C.TextureUsage.Sampled;
       break;
     case ReadMethod.Storage:
-      usage |= C.TextureUsage.Sampled;
+      usage |= C.TextureUsage.Storage;
       break;
     case ReadMethod.DepthTest:
     case ReadMethod.StencilTest:
@@ -383,11 +383,11 @@ export abstract class TextureZeroInitTest extends GPUTest {
       getTexelDataRepresentation(this.params.format).getBytes(this.stateToTexelComponents[state])
     );
     const { buffer, bytesPerRow, rowsPerImage } = createTextureUploadBuffer(
+      texelData,
       this.device,
       this.params.format,
       this.params.dimension,
-      [largestWidth, largestHeight, 1],
-      texelData
+      [largestWidth, largestHeight, 1]
     );
 
     const commandEncoder = this.device.createCommandEncoder();
@@ -423,9 +423,6 @@ export abstract class TextureZeroInitTest extends GPUTest {
     } else {
       this.initializeWithCopy(texture, state, subresourceRange);
     }
-
-    // Make sure it actually initialized the subresources.
-    this.checkContents(texture, state, subresourceRange);
   }
 
   discardTexture(texture: GPUTexture, subresourceRange: SubresourceRange): void {
@@ -540,15 +537,8 @@ export abstract class TextureZeroInitTest extends GPUTest {
                     // It doesn't make sense to copy from a packed depth format.
                     // This is not specified yet, but it will probably be disallowed as the bits may
                     // be vendor-specific.
-                    if (format === 'depth24plus') {
-                      continue;
-                    }
-                    if (format === 'depth24plus-stencil8' && aspect === 'depth-only') {
-                      continue;
-                    }
-
-                    // Copies to multisampled textures currently not yet specified
-                    if (sampleCount > 1) {
+                    if (format === 'depth24plus' || format === 'depth24plus-stencil8') {
+                      // TODO: Test copying out of the stencil aspect.
                       continue;
                     }
                   }
@@ -571,26 +561,10 @@ export abstract class TextureZeroInitTest extends GPUTest {
                     continue;
                   }
 
-                  if (kTextureFormatInfo[format].depth || kTextureFormatInfo[format].stencil) {
+                  if (kTextureFormatInfo[format].depth) {
                     if (readMethod === ReadMethod.Sample) {
                       // TODO: Test with depth sampling
                       continue;
-                    }
-
-                    if (
-                      readMethod === ReadMethod.CopyToBuffer ||
-                      readMethod === ReadMethod.CopyToTexture
-                    ) {
-                      switch (format) {
-                        case 'depth32float':
-                          break;
-                        case 'depth24plus':
-                        case 'depth24plus-stencil8':
-                          // Copies with packed depth/stencil formats currently not yet specified.
-                          continue;
-                        default:
-                          unreachable();
-                      }
                     }
                   }
 

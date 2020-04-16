@@ -6,13 +6,37 @@ import { align, isAligned } from '../math.js';
 export const kBytesPerRowAlignment = 256;
 export const kBufferCopyAlignment = 4;
 
+type LayoutOptions = {
+  mipLevel: number;
+  bytesPerRow?: number;
+  rowsPerImage?: number;
+};
+
+const kDefaultLayoutOptions = { mipLevel: 0, bytesPerRow: undefined, rowsPerImage: undefined };
+
+export function getMipSizePassthroughLayers(
+  dimension: GPUTextureDimension,
+  size: [number, number, number],
+  mipLevel: number
+): [number, number, number] {
+  switch (dimension) {
+    case '1d':
+      assert(size[2] === 1);
+      return [size[0] >> mipLevel, size[1], size[2]];
+    case '2d':
+      return [size[0] >> mipLevel, size[1] >> mipLevel, size[2]];
+    case '3d':
+      return [size[0] >> mipLevel, size[1] >> mipLevel, size[2] >> mipLevel];
+    default:
+      unreachable();
+  }
+}
+
 export function getTextureCopyLayout(
   format: GPUTextureFormat,
   dimension: GPUTextureDimension,
   size: [number, number, number],
-  mipLevel: number = 0,
-  bytesPerRow?: number,
-  rowsPerImage?: number
+  options: LayoutOptions = kDefaultLayoutOptions
 ): {
   bytesPerBlock: number;
   byteLength: number;
@@ -20,24 +44,15 @@ export function getTextureCopyLayout(
   bytesPerRow: number;
   rowsPerImage: number;
 } {
-  let mipSize: [number, number, number];
-  switch (dimension) {
-    case '1d':
-      mipSize = [size[0] >> mipLevel, size[1], size[2]];
-      break;
-    case '2d':
-      mipSize = [size[0] >> mipLevel, size[1] >> mipLevel, size[2]];
-      break;
-    case '3d':
-      mipSize = [size[0] >> mipLevel, size[1] >> mipLevel, size[2] >> mipLevel];
-      break;
-    default:
-      unreachable();
-  }
+  const { mipLevel } = options;
+  let { bytesPerRow, rowsPerImage } = options;
+
+  const mipSize = getMipSizePassthroughLayers(dimension, size, mipLevel);
 
   const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
   assert(!!bytesPerBlock && !!blockWidth && !!blockHeight);
 
+  assert(isAligned(mipSize[0], blockWidth));
   const minBytesPerRow = (mipSize[0] / blockWidth) * bytesPerBlock;
   const alignedMinBytesPerRow = align(minBytesPerRow, kBytesPerRowAlignment);
   if (bytesPerRow !== undefined) {
@@ -48,15 +63,16 @@ export function getTextureCopyLayout(
   }
 
   if (rowsPerImage !== undefined) {
-    assert(rowsPerImage >= size[1]);
+    assert(rowsPerImage >= mipSize[1]);
   } else {
-    rowsPerImage = size[1];
+    rowsPerImage = mipSize[1];
   }
 
-  const bytesPerSlice = (bytesPerRow * rowsPerImage) / blockWidth;
+  assert(isAligned(rowsPerImage, blockHeight));
+  const bytesPerSlice = bytesPerRow * (rowsPerImage / blockHeight);
   const sliceSize =
-    bytesPerRow * (size[1] / blockHeight - 1) + bytesPerBlock * (size[0] / blockWidth);
-  const byteLength = bytesPerSlice * (size[2] - 1) + sliceSize;
+    bytesPerRow * (mipSize[1] / blockHeight - 1) + bytesPerBlock * (mipSize[0] / blockWidth);
+  const byteLength = bytesPerSlice * (mipSize[2] - 1) + sliceSize;
 
   return {
     bytesPerBlock,
@@ -68,43 +84,33 @@ export function getTextureCopyLayout(
 }
 
 export function fillTextureDataWithTexelValue(
+  texelValue: ArrayBuffer,
   format: GPUTextureFormat,
+  dimension: GPUTextureDimension,
   outputBuffer: ArrayBuffer,
   size: [number, number, number],
-  texelValue: ArrayBuffer,
-  bytesPerRow?: number,
-  rowsPerImage?: number
+  options: LayoutOptions = kDefaultLayoutOptions
 ): void {
   const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
   assert(!!bytesPerBlock && !!blockWidth && !!blockHeight);
   assert(bytesPerBlock === texelValue.byteLength);
 
-  const minBytesPerRow = (size[0] / blockWidth) * bytesPerBlock;
-  const alignedMinBytesPerRow = align(minBytesPerRow, kBytesPerRowAlignment);
-  if (bytesPerRow !== undefined) {
-    assert(bytesPerRow >= alignedMinBytesPerRow);
-    assert(isAligned(bytesPerRow, kBytesPerRowAlignment));
-  } else {
-    bytesPerRow = alignedMinBytesPerRow;
-  }
+  const { byteLength, rowsPerImage, bytesPerRow } = getTextureCopyLayout(
+    format,
+    dimension,
+    size,
+    options
+  );
 
-  if (rowsPerImage !== undefined) {
-    assert(rowsPerImage >= size[1]);
-  } else {
-    rowsPerImage = size[1];
-  }
+  assert(byteLength <= outputBuffer.byteLength);
 
-  const bytesPerSlice = (bytesPerRow * rowsPerImage) / blockWidth;
-  const sliceSize =
-    bytesPerRow * (size[1] / blockHeight - 1) + bytesPerBlock * (size[0] / blockWidth);
-  const outputByteLength = bytesPerSlice * (size[2] - 1) + sliceSize;
-  assert(outputByteLength <= outputBuffer.byteLength);
+  const mipSize = getMipSizePassthroughLayers(dimension, size, options.mipLevel);
 
   const texelValueBytes = new Uint8Array(texelValue);
   const outputTexelValueBytes = new Uint8Array(outputBuffer);
-  for (let slice = 0; slice < size[2]; ++slice) {
-    for (let row = 0; row < size[1]; row += blockHeight) {
-      for (let col = 0; col < size[0]; col += blockWidth) {
+  for (let slice = 0; slice < mipSize[2]; ++slice) {
+    for (let row = 0; row < mipSize[1]; row += blockHeight) {
+      for (let col = 0; col < mipSize[0]; col += blockWidth) {
         const byteOffset =
           slice * rowsPerImage * bytesPerRow + row * bytesPerRow + col * texelValue.byteLength;
         outputTexelValueBytes.set(texelValueBytes, byteOffset);
@@ -114,14 +120,12 @@ export function fillTextureDataWithTexelValue(
 }
 
 export function createTextureUploadBuffer(
+  texelValue: ArrayBuffer,
   device: GPUDevice,
   format: GPUTextureFormat,
   dimension: GPUTextureDimension,
   size: [number, number, number],
-  texelValue: ArrayBuffer,
-  mipLevel: number = 0,
-  bytesPerRowIn?: number,
-  rowsPerImageIn?: number
+  options: LayoutOptions = kDefaultLayoutOptions
 ): {
   buffer: GPUBuffer;
   bytesPerRow: number;
@@ -131,9 +135,7 @@ export function createTextureUploadBuffer(
     format,
     dimension,
     size,
-    mipLevel,
-    bytesPerRowIn,
-    rowsPerImageIn
+    options
   );
 
   const [buffer, mapping] = device.createBufferMapped({
@@ -142,7 +144,7 @@ export function createTextureUploadBuffer(
   });
 
   assert(texelValue.byteLength === bytesPerBlock);
-  fillTextureDataWithTexelValue(format, mapping, size, texelValue, bytesPerRow, rowsPerImage);
+  fillTextureDataWithTexelValue(texelValue, format, dimension, mapping, size, options);
   buffer.unmap();
 
   return {
@@ -150,45 +152,4 @@ export function createTextureUploadBuffer(
     bytesPerRow,
     rowsPerImage,
   };
-}
-
-export function createTextureReadbackBuffer(
-  device: GPUDevice,
-  format: GPUTextureFormat,
-  dimension: GPUTextureDimension,
-  size: [number, number, number],
-  expectedTexelData: ArrayBuffer,
-  mipLevel: number = 0,
-  bytesPerRowIn?: number,
-  rowsPerImageIn?: number
-): {
-  buffer: GPUBuffer;
-  cpuData: ArrayBuffer;
-} {
-  const { bytesPerRow, byteLength, rowsPerImage, bytesPerBlock } = getTextureCopyLayout(
-    format,
-    dimension,
-    size,
-    mipLevel,
-    bytesPerRowIn,
-    rowsPerImageIn
-  );
-
-  const buffer = device.createBuffer({
-    size: byteLength,
-    usage: C.BufferUsage.CopySrc | C.BufferUsage.CopyDst,
-  });
-
-  const cpuData = new ArrayBuffer(byteLength);
-  assert(expectedTexelData.byteLength === bytesPerBlock);
-  fillTextureDataWithTexelValue(
-    format,
-    cpuData,
-    size,
-    expectedTexelData,
-    bytesPerRow,
-    rowsPerImage
-  );
-
-  return { buffer, cpuData };
 }
