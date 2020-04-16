@@ -130,18 +130,14 @@ function* pickExtraBindingTypes(
 const kCasesForMaxResourcesPerStageTests = params()
   .combine(poptions('maxedType', kBindingTypes))
   .combine(poptions('maxedVisibility', kShaderStages))
-  .filter(
-    p => (kBindingTypeInfo[p.maxedType as GPUBindingType].validStages & p.maxedVisibility) !== 0
-  )
+  .filter(p => (kBindingTypeInfo[p.maxedType].validStages & p.maxedVisibility) !== 0)
   .expand(function* (p) {
     for (const extraTypeSame of [true, false]) {
       yield* poptions('extraType', pickExtraBindingTypes(p.maxedType, extraTypeSame));
     }
   })
   .combine(poptions('extraVisibility', kShaderStages))
-  .filter(
-    p => (kBindingTypeInfo[p.extraType as GPUBindingType].validStages & p.extraVisibility) !== 0
-  );
+  .filter(p => (kBindingTypeInfo[p.extraType].validStages & p.extraVisibility) !== 0);
 
 // Should never fail unless kMaxBindingsPerBindGroup is exceeded, because the validation for
 // resources-of-type-per-stage is in pipeline layout creation.

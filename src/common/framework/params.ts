@@ -1,11 +1,21 @@
 import { ParamSpec, ParamSpecIterable, paramsEquals } from './params_utils.js';
 import { assert } from './util/util.js';
 
+// https://stackoverflow.com/a/56375136
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
+  ? I
+  : never;
+type CheckForUnion<T, TErr, TOk> = [T] extends [UnionToIntersection<T>] ? TOk : TErr;
+
+type CheckForStringLiteralType<T, TOk> = string extends T
+  ? unknown
+  : CheckForUnion<T, unknown, TOk>;
+
 export function poptions<Name extends string, V>(
   name: Name,
   values: Iterable<V>
-): string extends Name ? never : Iterable<{ [name in Name]: V }> {
-  return reusableGenerator(function* () {
+): CheckForStringLiteralType<Name, Iterable<{ [name in Name]: V }>> {
+  return makeReusableIterable(function* () {
     for (const value of values) {
       yield { [name]: value };
     }
@@ -14,7 +24,7 @@ export function poptions<Name extends string, V>(
 
 export function pbool<Name extends string>(
   name: Name
-): string extends Name ? never : Iterable<{ [name in Name]: boolean }> {
+): CheckForStringLiteralType<Name, Iterable<{ [name in Name]: boolean }>> {
   return poptions(name, [false, true]);
 }
 
@@ -43,8 +53,8 @@ class ParamsBuilder<A extends {}> implements ParamSpecIterable {
         : never;
     }
   > {
-    const paramSpecs = this.paramSpecs;
-    this.paramSpecs = reusableGenerator(function* () {
+    const paramSpecs = this.paramSpecs as Iterable<A>;
+    this.paramSpecs = makeReusableIterable(function* () {
       for (const a of paramSpecs) {
         for (const b of newParams) {
           yield mergeParams(a, b);
@@ -67,9 +77,9 @@ class ParamsBuilder<A extends {}> implements ParamSpecIterable {
         : never;
     }
   > {
-    const paramSpecs = this.paramSpecs;
-    this.paramSpecs = reusableGenerator(function* () {
-      for (const a of paramSpecs as Iterable<A>) {
+    const paramSpecs = this.paramSpecs as Iterable<A>;
+    this.paramSpecs = makeReusableIterable(function* () {
+      for (const a of paramSpecs) {
         for (const b of expander(a)) {
           yield mergeParams(a, b);
         }
@@ -78,9 +88,9 @@ class ParamsBuilder<A extends {}> implements ParamSpecIterable {
     return this as any;
   }
 
-  filter(pred: (_: ParamSpec) => boolean): ParamsBuilder<A> {
-    const paramSpecs = this.paramSpecs;
-    this.paramSpecs = reusableGenerator(function* () {
+  filter(pred: (_: A) => boolean): ParamsBuilder<A> {
+    const paramSpecs = this.paramSpecs as Iterable<A>;
+    this.paramSpecs = makeReusableIterable(function* () {
       for (const p of paramSpecs) {
         if (pred(p)) {
           yield p;
@@ -90,14 +100,14 @@ class ParamsBuilder<A extends {}> implements ParamSpecIterable {
     return this;
   }
 
-  unless(pred: (_: ParamSpec) => boolean): ParamsBuilder<A> {
+  unless(pred: (_: A) => boolean): ParamsBuilder<A> {
     return this.filter(x => !pred(x));
   }
 
   exclude(exclude: ParamSpecIterable): ParamsBuilder<A> {
     const excludeArray = Array.from(exclude);
     const paramSpecs = this.paramSpecs;
-    this.paramSpecs = reusableGenerator(function* () {
+    this.paramSpecs = makeReusableIterable(function* () {
       for (const p of paramSpecs) {
         if (excludeArray.every(e => !paramsEquals(p, e))) {
           yield p;
@@ -108,14 +118,13 @@ class ParamsBuilder<A extends {}> implements ParamSpecIterable {
   }
 }
 
-function reusableGenerator<P>(generatorFn: () => Generator<P>): Iterable<P> {
+// If you create an Iterable by calling a generator function (e.g. in IIFE), it is exhausted after
+// one use. This just wraps a generator function in an object so it be iterated multiple times.
+function makeReusableIterable<P>(generatorFn: () => Generator<P>): Iterable<P> {
   return { [Symbol.iterator]: generatorFn };
 }
 
-function mergeParams<A extends {}, B extends {}>(
-  a: A,
-  b: B
-): {
+type Merged<A, B> = {
   [K in keyof A | keyof B]: K extends keyof A
     ? K extends keyof B
       ? never
@@ -123,7 +132,9 @@ function mergeParams<A extends {}, B extends {}>(
     : K extends keyof B
     ? B[K]
     : never;
-} {
+};
+
+function mergeParams<A extends {}, B extends {}>(a: A, b: B): Merged<A, B> {
   for (const key of Object.keys(a)) {
     assert(!(key in b), 'Duplicate key: ' + key);
   }
