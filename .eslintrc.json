@@ -15,13 +15,6 @@
     ],
     "linebreak-style": ["error", "unix"],
     "no-console": "error",
-    "@typescript-eslint/typedef": [
-      "error",
-      {
-        "arrowParameter": false,
-        "memberVariableDeclaration": false
-      }
-    ],
     "@typescript-eslint/no-inferrable-types": "off",
     "import/order": [
       "error",

@@ -22,9 +22,9 @@ export const g = new TestGroup(GPUTest);
 
 // Note: spaces in test names are replaced with underscores: webgpu:examples:test_name=
 /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
-g.test('test name', t => {});
+g.test('test name').fn(t => {});
 
-g.test('basic', t => {
+g.test('basic').fn(t => {
   t.expect(true);
   t.expect(true, 'true should be true');
 
@@ -40,7 +40,7 @@ g.test('basic', t => {
   );
 });
 
-g.test('basic/async', async t => {
+g.test('basic/async').fn(async t => {
   // shouldReject must be awaited to ensure it can wait for the promise before the test ends.
   t.shouldReject(
     // The expected '.name' of the thrown error.
@@ -69,22 +69,24 @@ g.test('basic/async', async t => {
 //
 // - webgpu:examples:basic/params={"x":2,"y":4}    runs with t.params = {x: 2, y: 5, _result: 6}.
 // - webgpu:examples:basic/params={"x":-10,"y":18} runs with t.params = {x: -10, y: 18, _result: 8}.
-g.test('basic/params', t => {
-  t.expect(t.params.x + t.params.y === t.params._result);
-}).params([
-  { x: 2, y: 4, _result: 6 }, //
-  { x: -10, y: 18, _result: 8 },
-]);
+g.test('basic/params')
+  .params([
+    { x: 2, y: 4, _result: 6 }, //
+    { x: -10, y: 18, _result: 8 },
+  ])
+  .fn(t => {
+    t.expect(t.params.x + t.params.y === t.params._result);
+  });
 // (note the blank comment above to enforce newlines on autoformat)
 
-g.test('gpu/async', async t => {
+g.test('gpu/async').fn(async t => {
   const fence = t.queue.createFence();
   t.queue.signal(fence, 2);
   await fence.onCompletion(1);
   t.expect(fence.getCompletedValue() === 2);
 });
 
-g.test('gpu/buffers', async t => {
+g.test('gpu/buffers').fn(async t => {
   const data = new Uint32Array([0, 1234, 0]);
   const [src, map] = t.device.createBufferMapped({
     size: 12,

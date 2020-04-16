@@ -8,7 +8,7 @@ export class SkipTestCase extends Error {}
 // A new instance of the Fixture is created for every single test case
 // (i.e. every time the test function is run).
 export class Fixture {
-  params: ParamSpec;
+  params: unknown;
   protected rec: TestCaseRecorder;
   private eventualExpectations: Array<Promise<unknown>> = [];
   private numOutstandingAsyncExpectations = 0;
