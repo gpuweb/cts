@@ -165,6 +165,7 @@ interface TestParams {
   sampleCount: SampleCounts;
   uninitializeMethod: UninitializeMethod;
   readMethod: ReadMethod;
+  nonPowerOfTwo: boolean;
 }
 
 function getRequiredTextureUsage(
@@ -251,11 +252,19 @@ export abstract class TextureZeroInitTest extends GPUTest {
   }
 
   get textureWidth(): number {
-    return 1 << this.params.mipLevelCount;
+    let width = 1 << this.params.mipLevelCount;
+    if (this.params.nonPowerOfTwo) {
+      width = 2 * width - 1;
+    }
+    return width;
   }
 
   get textureHeight(): number {
-    return 1 << this.params.mipLevelCount;
+    let height = 1 << this.params.mipLevelCount;
+    if (this.params.nonPowerOfTwo) {
+      height = 2 * height - 1;
+    }
+    return height;
   }
 
   // Used to iterate subresources and check that their uninitialized contents are zero when accessed
@@ -568,7 +577,7 @@ export abstract class TextureZeroInitTest extends GPUTest {
                     }
                   }
 
-                  yield {
+                  const params = {
                     format,
                     aspect,
                     dimension,
@@ -577,6 +586,16 @@ export abstract class TextureZeroInitTest extends GPUTest {
                     sampleCount,
                     uninitializeMethod,
                     readMethod,
+                  };
+
+                  yield {
+                    ...params,
+                    nonPowerOfTwo: false,
+                  };
+
+                  yield {
+                    ...params,
+                    nonPowerOfTwo: true,
                   };
                 }
               }

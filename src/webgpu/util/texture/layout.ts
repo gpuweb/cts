@@ -19,14 +19,15 @@ export function getMipSizePassthroughLayers(
   size: [number, number, number],
   mipLevel: number
 ): [number, number, number] {
+  const shiftMinOne = (n: number) => Math.max(1, n >> mipLevel);
   switch (dimension) {
     case '1d':
       assert(size[2] === 1);
-      return [size[0] >> mipLevel, size[1], size[2]];
+      return [shiftMinOne(size[0]), size[1], size[2]];
     case '2d':
-      return [size[0] >> mipLevel, size[1] >> mipLevel, size[2]];
+      return [shiftMinOne(size[0]), shiftMinOne(size[1]), size[2]];
     case '3d':
-      return [size[0] >> mipLevel, size[1] >> mipLevel, size[2] >> mipLevel];
+      return [shiftMinOne(size[0]), shiftMinOne(size[1]), shiftMinOne(size[2])];
     default:
       unreachable();
   }
