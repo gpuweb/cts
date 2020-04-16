@@ -70,9 +70,7 @@ const kCreationSizes: Array<{
 // representation such that their values can be compared. ex.) An integer is needed to upload to an
 // unsigned normalized format, but its value is read as a float in the shader.
 export const enum InitializedState {
-  Canary, // Set on initialized subresources. It should stay the same.
-  Invalid, // Set on a subresource before discarding the contents. After a discard, we shouldn't be
-  // able to observe this state.
+  Canary, // Set on initialized subresources. It should stay the same. On discarded resources, we should observe zero.
   Zero, // We check that uninitialized subresources are in this state when read back.
 }
 
@@ -82,8 +80,6 @@ export function initializedStateAsFloat(state: InitializedState): number {
       return 0;
     case InitializedState.Canary:
       return 1;
-    case InitializedState.Invalid:
-      return Math.fround(0.5);
     default:
       unreachable();
   }
@@ -95,8 +91,6 @@ export function initializedStateAsUint(state: InitializedState): number {
       return 0;
     case InitializedState.Canary:
       return 255;
-    case InitializedState.Invalid:
-      return 127;
     default:
       unreachable();
   }
@@ -108,8 +102,6 @@ export function initializedStateAsSint(state: InitializedState): number {
       return 0;
     case InitializedState.Canary:
       return -1;
-    case InitializedState.Invalid:
-      return 127;
     default:
       unreachable();
   }
@@ -136,8 +128,6 @@ export function initializedStateAsDepth(state: InitializedState): number {
       return 0;
     case InitializedState.Canary:
       return 1;
-    case InitializedState.Invalid:
-      return 0.5;
     default:
       unreachable();
   }
@@ -149,8 +139,6 @@ export function initializedStateAsStencil(state: InitializedState): number {
       return 0;
     case InitializedState.Canary:
       return 42;
-    case InitializedState.Invalid:
-      return 17;
     default:
       unreachable();
   }
@@ -242,7 +230,6 @@ export abstract class TextureZeroInitTest extends GPUTest {
 
     this.stateToTexelComponents = {
       [InitializedState.Zero]: stateToTexelComponents(InitializedState.Zero),
-      [InitializedState.Invalid]: stateToTexelComponents(InitializedState.Invalid),
       [InitializedState.Canary]: stateToTexelComponents(InitializedState.Canary),
     };
   }
@@ -639,7 +626,7 @@ export abstract class TextureZeroInitTest extends GPUTest {
       case UninitializeMethod.StoreOpClear:
         // Initialize the rest of the resources.
         for (const subresourceRange of this.iterateUninitializedSubresources()) {
-          this.initializeTexture(texture, InitializedState.Invalid, subresourceRange);
+          this.initializeTexture(texture, InitializedState.Canary, subresourceRange);
         }
         // Then use a store op to discard their contents.
         for (const subresourceRange of this.iterateUninitializedSubresources()) {
