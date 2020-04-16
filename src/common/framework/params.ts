@@ -41,19 +41,7 @@ class ParamsBuilder<A extends {}> implements ParamSpecIterable {
     return iter as Iterator<A>;
   }
 
-  combine<B extends {}>(
-    newParams: Iterable<B>
-  ): ParamsBuilder<
-    {
-      [K in keyof A | keyof B]: K extends keyof A
-        ? K extends keyof B
-          ? never
-          : A[K]
-        : K extends keyof B
-        ? B[K]
-        : never;
-    }
-  > {
+  combine<B extends {}>(newParams: Iterable<B>): ParamsBuilder<Merged<A, B>> {
     const paramSpecs = this.paramSpecs as Iterable<A>;
     this.paramSpecs = makeReusableIterable(function* () {
       for (const a of paramSpecs) {
@@ -66,19 +54,7 @@ class ParamsBuilder<A extends {}> implements ParamSpecIterable {
     return this as any;
   }
 
-  expand<B extends {}>(
-    expander: (_: A) => Iterable<B>
-  ): ParamsBuilder<
-    {
-      [K in keyof A | keyof B]: K extends keyof A
-        ? K extends keyof B
-          ? never
-          : A[K]
-        : K extends keyof B
-        ? B[K]
-        : never;
-    }
-  > {
+  expand<B extends {}>(expander: (_: A) => Iterable<B>): ParamsBuilder<Merged<A, B>> {
     const paramSpecs = this.paramSpecs as Iterable<A>;
     this.paramSpecs = makeReusableIterable(function* () {
       for (const a of paramSpecs) {
@@ -127,20 +103,25 @@ function makeReusableIterable<P>(generatorFn: () => Generator<P>): Iterable<P> {
   return { [Symbol.iterator]: generatorFn };
 }
 
-type Merged<A, B> = {
-  [K in keyof A | keyof B]: K extends keyof A
-    ? K extends keyof B
-      ? never
-      : A[K]
-    : K extends keyof B
-    ? B[K]
-    : never;
-};
+type ValueTypeForKeyOfMergedType<A, B, Key extends keyof A | keyof B> = Key extends keyof A
+  ? Key extends keyof B
+    ? void // Key is in both types
+    : A[Key] // Key is only in A
+  : Key extends keyof B
+  ? B[Key] // Key is only in B
+  : void; // Key is in neither type (not possible)
+
+type Merged<A, B> = keyof A & keyof B extends never
+  ? string extends keyof A | keyof B
+    ? never // (keyof A | keyof B) == string, which is too broad
+    : {
+        [Key in keyof A | keyof B]: ValueTypeForKeyOfMergedType<A, B, Key>;
+      }
+  : never; // (keyof A & keyof B) is not empty, so they overlapped
 
 function mergeParams<A extends {}, B extends {}>(a: A, b: B): Merged<A, B> {
   for (const key of Object.keys(a)) {
     assert(!(key in b), 'Duplicate key: ' + key);
   }
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  return { ...a, ...b } as any;
+  return { ...a, ...b } as Merged<A, B>;
 }
