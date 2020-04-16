@@ -1,4 +1,3 @@
-import * as C from '../../../common/constants.js';
 import { assert, unreachable } from '../../../common/framework/util/util.js';
 import { kTextureFormatInfo } from '../../capability_info.js';
 import {
@@ -31,195 +30,168 @@ const enum TexelWriteType {
 //  - floats to half floats, interpreted as uint16 bits
 type TexelWriteFn = (value: number) => { value: number; type: TexelWriteType };
 
-type TexelComponentInfo = PerTexelComponent<null | {
+type SingleComponentInfo = {
   write: TexelWriteFn;
   bitLength: number;
-}>;
+};
 
-const kComponentOrderR = [TexelComponent.R];
-const kComponentOrderRG = [TexelComponent.R, TexelComponent.G];
-const kComponentOrderRGB = [TexelComponent.R, TexelComponent.G, TexelComponent.B];
-const kComponentOrderRGBA = [
-  TexelComponent.R,
-  TexelComponent.G,
-  TexelComponent.B,
-  TexelComponent.A,
-];
-const kComponentOrderBGRA = [
-  TexelComponent.B,
-  TexelComponent.G,
-  TexelComponent.R,
-  TexelComponent.A,
-];
+type TexelComponentInfo = PerTexelComponent<null | SingleComponentInfo>;
+
+const kR = [TexelComponent.R];
+const kRG = [TexelComponent.R, TexelComponent.G];
+const kRGB = [TexelComponent.R, TexelComponent.G, TexelComponent.B];
+const kRGBA = [TexelComponent.R, TexelComponent.G, TexelComponent.B, TexelComponent.A];
+const kBGRA = [TexelComponent.B, TexelComponent.G, TexelComponent.R, TexelComponent.A];
+
+const unorm = (n: number, bitLength: number) => ({
+  value: floatAsNormalizedInteger(n, bitLength, false),
+  type: TexelWriteType.Uint,
+});
+
+const snorm = (n: number, bitLength: number) => ({
+  value: floatAsNormalizedInteger(n, bitLength, true),
+  type: TexelWriteType.Sint,
+});
+
+const uint = (n: number, bitLength: number) => ({
+  value: (assertInIntegerRange(n, bitLength, false), n),
+  type: TexelWriteType.Uint,
+});
+
+const sint = (n: number, bitLength: number) => ({
+  value: (assertInIntegerRange(n, bitLength, true), n),
+  type: TexelWriteType.Sint,
+});
+
+const unorm2 = { write: (n: number) => unorm(n, 2), bitLength: 2 };
+const unorm8 = { write: (n: number) => unorm(n, 8), bitLength: 8 };
+const unorm10 = { write: (n: number) => unorm(n, 10), bitLength: 10 };
+
+const snorm8 = { write: (n: number) => snorm(n, 8), bitLength: 8 };
+
+const uint8 = { write: (n: number) => uint(n, 8), bitLength: 8 };
+const uint16 = { write: (n: number) => uint(n, 16), bitLength: 16 };
+const uint32 = { write: (n: number) => uint(n, 32), bitLength: 32 };
+
+const sint8 = { write: (n: number) => sint(n, 8), bitLength: 8 };
+const sint16 = { write: (n: number) => sint(n, 16), bitLength: 16 };
+const sint32 = { write: (n: number) => sint(n, 32), bitLength: 32 };
+
+const float10 = {
+  write: (n: number) => ({
+    value: float32ToFloatBits(n, 0, 5, 5, 15),
+    type: TexelWriteType.Uint,
+  }),
+  bitLength: 10,
+};
+
+const float11 = {
+  write: (n: number) => ({
+    value: float32ToFloatBits(n, 0, 5, 6, 15),
+    type: TexelWriteType.Uint,
+  }),
+  bitLength: 11,
+};
+
+const float16 = {
+  write: (n: number) => ({
+    value: float32ToFloatBits(n, 1, 5, 10, 15),
+    type: TexelWriteType.Uint,
+  }),
+  bitLength: 16,
+};
+
+const float32 = {
+  write: (n: number) => ({
+    value: Math.fround(n),
+    type: TexelWriteType.Float,
+  }),
+  bitLength: 32,
+};
+
+const repeatComponents = (
+  componentOrder: TexelComponent[],
+  perComponentInfo: SingleComponentInfo
+) => {
+  const componentInfo = componentOrder.reduce((acc, curr) => {
+    return Object.assign(acc, {
+      [curr]: perComponentInfo,
+    });
+  }, {});
+
+  return {
+    componentOrder,
+    componentInfo,
+  };
+};
+
+const kRepresentationInfo: {
+  [k in GPUTextureFormat]: {
+    componentOrder: TexelComponent[];
+    componentInfo: TexelComponentInfo;
+    sRGB: boolean;
+    // Add fields as needed
+  };
+} = /* prettier-ignore */ {
+  'r8unorm':                { ...repeatComponents(   kR,  unorm8), sRGB: false },
+  'r8snorm':                { ...repeatComponents(   kR,  snorm8), sRGB: false },
+  'r8uint':                 { ...repeatComponents(   kR,   uint8), sRGB: false },
+  'r8sint':                 { ...repeatComponents(   kR,   sint8), sRGB: false },
+  'r16uint':                { ...repeatComponents(   kR,  uint16), sRGB: false },
+  'r16sint':                { ...repeatComponents(   kR,  sint16), sRGB: false },
+  'r16float':               { ...repeatComponents(   kR, float16), sRGB: false },
+  'rg8unorm':               { ...repeatComponents(  kRG,  unorm8), sRGB: false },
+  'rg8snorm':               { ...repeatComponents(  kRG,  snorm8), sRGB: false },
+  'rg8uint':                { ...repeatComponents(  kRG,   uint8), sRGB: false },
+  'rg8sint':                { ...repeatComponents(  kRG,   sint8), sRGB: false },
+  'r32uint':                { ...repeatComponents(   kR,  uint32), sRGB: false },
+  'r32sint':                { ...repeatComponents(   kR,  sint32), sRGB: false },
+  'r32float':               { ...repeatComponents(   kR, float32), sRGB: false },
+  'rg16uint':               { ...repeatComponents(  kRG,  uint16), sRGB: false },
+  'rg16sint':               { ...repeatComponents(  kRG,  sint16), sRGB: false },
+  'rg16float':              { ...repeatComponents(  kRG, float16), sRGB: false },
+
+  'rgba8unorm':             { ...repeatComponents(kRGBA,  unorm8), sRGB: false },
+  'rgba8unorm-srgb':        { ...repeatComponents(kRGBA,  unorm8), sRGB:  true },
+  'rgba8snorm':             { ...repeatComponents(kRGBA,  snorm8), sRGB: false },
+  'rgba8uint':              { ...repeatComponents(kRGBA,   uint8), sRGB: false },
+  'rgba8sint':              { ...repeatComponents(kRGBA,   sint8), sRGB: false },
+  'bgra8unorm':             { ...repeatComponents(kBGRA,  unorm8), sRGB: false },
+  'bgra8unorm-srgb':        { ...repeatComponents(kBGRA,  unorm8), sRGB:  true },
+  'rg32uint':               { ...repeatComponents(  kRG,  uint32), sRGB: false },
+  'rg32sint':               { ...repeatComponents(  kRG,  sint32), sRGB: false },
+  'rg32float':              { ...repeatComponents(  kRG, float32), sRGB: false },
+  'rgba16uint':             { ...repeatComponents(kRGBA,  uint16), sRGB: false },
+  'rgba16sint':             { ...repeatComponents(kRGBA,  sint16), sRGB: false },
+  'rgba16float':            { ...repeatComponents(kRGBA, float16), sRGB: false },
+  'rgba32uint':             { ...repeatComponents(kRGBA,  uint32), sRGB: false },
+  'rgba32sint':             { ...repeatComponents(kRGBA,  sint32), sRGB: false },
+  'rgba32float':            { ...repeatComponents(kRGBA, float32), sRGB: false },
+
+  'rgb10a2unorm':           { componentOrder: kRGBA, componentInfo: { R: unorm10, G: unorm10, B: unorm10, A: unorm2 }, sRGB: false },
+  'rg11b10float':           { componentOrder: kRGB, componentInfo: { R: float11, G: float11, B: float10 }, sRGB: false },
+
+  'depth32float':           { componentOrder: [TexelComponent.Depth], componentInfo: { Depth: float32 }, sRGB: false },
+  'depth24plus':            { componentOrder: [TexelComponent.Depth], componentInfo: { Depth: null }, sRGB: false },
+  'depth24plus-stencil8':   { componentOrder: [TexelComponent.Depth, TexelComponent.Stencil], componentInfo: { Depth: null, Stencil: null }, sRGB: false },
+};
 
 export interface TexelDataRepresentation {
-  componentOrder: TexelComponent[];
-  componentInfo: TexelComponentInfo;
+  readonly componentOrder: TexelComponent[];
+  readonly componentInfo: TexelComponentInfo;
   getBytes(components: { [c in TexelComponent]?: number }): ArrayBuffer;
 }
 
 class TexelDataRepresentationImpl implements TexelDataRepresentation {
-  private constructor(
+  // TODO: Determine endianess of the GPU data?
+  private isGPULittleEndian = true;
+
+  constructor(
     private readonly format: GPUTextureFormat,
     readonly componentOrder: TexelComponent[],
     readonly componentInfo: TexelComponentInfo,
-    private readonly sRGB: boolean = false
+    private readonly sRGB: boolean
   ) {}
-
-  static Create(format: GPUTextureFormat): TexelDataRepresentationImpl {
-    switch (format) {
-      case C.TextureFormat.RGB10A2Unorm: {
-        const write10 = (n: number) => ({
-          value: floatAsNormalizedInteger(n, 10, false),
-          type: TexelWriteType.Uint,
-        });
-        const write2 = (n: number) => ({
-          value: floatAsNormalizedInteger(n, 2, false),
-          type: TexelWriteType.Uint,
-        });
-
-        return new TexelDataRepresentationImpl(format, kComponentOrderRGBA, {
-          R: { bitLength: 10, write: write10 },
-          G: { bitLength: 10, write: write10 },
-          B: { bitLength: 10, write: write10 },
-          A: { bitLength: 2, write: write2 },
-        });
-      }
-
-      case C.TextureFormat.RGB11B10Float: {
-        const write11 = (n: number) => ({
-          value: float32ToFloatBits(n, 0, 5, 6, 15),
-          type: TexelWriteType.Uint,
-        });
-        const write10 = (n: number) => ({
-          value: float32ToFloatBits(n, 0, 5, 5, 15),
-          type: TexelWriteType.Uint,
-        });
-
-        return new TexelDataRepresentationImpl(format, kComponentOrderRGB, {
-          R: { bitLength: 11, write: write11 },
-          G: { bitLength: 11, write: write11 },
-          B: { bitLength: 10, write: write10 },
-        });
-      }
-
-      case C.TextureFormat.Depth32Float: {
-        return new TexelDataRepresentationImpl(format, [TexelComponent.Depth], {
-          Depth: {
-            bitLength: 32,
-            write: (n: number) => ({
-              value: n,
-              type: TexelWriteType.Float,
-            }),
-          },
-        });
-      }
-
-      case C.TextureFormat.Depth24Plus: {
-        return new TexelDataRepresentationImpl(format, [TexelComponent.Depth], {
-          Depth: null,
-        });
-      }
-
-      case C.TextureFormat.Depth24PlusStencil8: {
-        return new TexelDataRepresentationImpl(
-          format,
-          [TexelComponent.Depth, TexelComponent.Stencil],
-          {
-            Depth: null,
-            Stencil: null,
-          }
-        );
-      }
-
-      default:
-        break;
-    }
-
-    const m = format.match(/([rgba]+)(\d+)(snorm|unorm|uint|sint|float)(-srgb)?/);
-    assert(m !== null);
-
-    const bitLength = parseInt(m[2], 10);
-    const componentType = m[3];
-    const sRGB = m[4] !== undefined;
-
-    let componentOrder: TexelComponent[];
-    switch (m[1]) {
-      case 'r':
-        componentOrder = kComponentOrderR;
-        break;
-      case 'rg':
-        componentOrder = kComponentOrderRG;
-        break;
-      case 'rgb':
-        componentOrder = kComponentOrderRGB;
-        break;
-      case 'rgba':
-        componentOrder = kComponentOrderRGBA;
-        break;
-      case 'bgra':
-        componentOrder = kComponentOrderBGRA;
-        break;
-      default:
-        unreachable();
-    }
-
-    let texelWriteType: TexelWriteType;
-    let convert: (n: number) => number;
-    switch (componentType) {
-      case 'sint': {
-        texelWriteType = TexelWriteType.Sint;
-        convert = (n: number) => (assertInIntegerRange(n, bitLength, true), n);
-        break;
-      }
-      case 'uint': {
-        texelWriteType = TexelWriteType.Uint;
-        convert = (n: number) => (assertInIntegerRange(n, bitLength, false), n);
-        break;
-      }
-      case 'snorm': {
-        texelWriteType = TexelWriteType.Sint;
-        convert = (n: number) => floatAsNormalizedInteger(n, bitLength, true);
-        break;
-      }
-      case 'unorm': {
-        texelWriteType = TexelWriteType.Uint;
-        convert = (n: number) => floatAsNormalizedInteger(n, bitLength, false);
-        break;
-      }
-      case 'float': {
-        switch (bitLength) {
-          case 16:
-            texelWriteType = TexelWriteType.Uint;
-            convert = (n: number) => float32ToFloatBits(n, 1, 5, 10, 15);
-            break;
-          case 32:
-            texelWriteType = TexelWriteType.Float;
-            convert = (n: number) => Math.fround(n);
-            break;
-          default:
-            unreachable();
-        }
-        break;
-      }
-      default:
-        unreachable();
-    }
-
-    const write = (n: number) => ({
-      value: convert(n),
-      type: texelWriteType,
-    });
-
-    const componentInfo = {
-      R: { bitLength, write },
-      G: { bitLength, write },
-      B: { bitLength, write },
-      A: { bitLength, write },
-    };
-
-    return new TexelDataRepresentationImpl(format, componentOrder, componentInfo, sRGB);
-  }
 
   private totalBitLength(): number {
     return this.componentOrder.reduce((acc, curr) => {
@@ -227,7 +199,7 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
     }, 0);
   }
 
-  private setComponent(data: ArrayBuffer, component: TexelComponent, n?: number): void {
+  private setComponent(data: ArrayBuffer, component: TexelComponent, n: number): void {
     const componentIndex = this.componentOrder.indexOf(component);
     assert(componentIndex !== -1);
     const bitOffset = this.componentOrder.slice(0, componentIndex).reduce((acc, curr) => {
@@ -240,7 +212,6 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
     assert(!!componentInfo);
     const { write, bitLength } = componentInfo;
 
-    assert(n !== undefined);
     const { value, type } = write(n);
     switch (type) {
       case TexelWriteType.Float: {
@@ -249,7 +220,7 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
         assert(byteOffset === bitOffset / 8 && byteLength === bitLength / 8);
         switch (byteLength) {
           case 4:
-            new DataView(data, byteOffset, byteLength).setFloat32(0, value, true);
+            new DataView(data, byteOffset, byteLength).setFloat32(0, value, this.isGPULittleEndian);
             break;
           default:
             unreachable();
@@ -265,10 +236,10 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
             new DataView(data, byteOffset, byteLength).setInt8(0, value);
             break;
           case 2:
-            new DataView(data, byteOffset, byteLength).setInt16(0, value, true);
+            new DataView(data, byteOffset, byteLength).setInt16(0, value, this.isGPULittleEndian);
             break;
           case 4:
-            new DataView(data, byteOffset, byteLength).setInt32(0, value, true);
+            new DataView(data, byteOffset, byteLength).setInt32(0, value, this.isGPULittleEndian);
             break;
           default:
             unreachable();
@@ -284,10 +255,18 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
               new DataView(data, byteOffset, byteLength).setUint8(0, value);
               break;
             case 2:
-              new DataView(data, byteOffset, byteLength).setUint16(0, value, true);
+              new DataView(data, byteOffset, byteLength).setUint16(
+                0,
+                value,
+                this.isGPULittleEndian
+              );
               break;
             case 4:
-              new DataView(data, byteOffset, byteLength).setUint32(0, value, true);
+              new DataView(data, byteOffset, byteLength).setUint32(
+                0,
+                value,
+                this.isGPULittleEndian
+              );
               break;
             default:
               unreachable();
@@ -298,7 +277,7 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
           switch (this.totalBitLength()) {
             case 32: {
               const view = new DataView(data);
-              const currentValue = view.getUint32(0, true);
+              const currentValue = view.getUint32(0, this.isGPULittleEndian);
 
               let mask = 0xffffffff;
               const bitsToClearRight = bitOffset;
@@ -309,7 +288,7 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
 
               const newValue = (currentValue & ~mask) | (value << bitOffset);
 
-              view.setUint32(0, newValue, true);
+              view.setUint32(0, newValue, this.isGPULittleEndian);
               break;
             }
             default:
@@ -323,7 +302,7 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
     }
   }
 
-  getBytes(components: { [c in TexelComponent]?: number }): ArrayBuffer {
+  getBytes(components: PerTexelComponent<number>): ArrayBuffer {
     if (this.sRGB) {
       components = Object.assign({}, components);
       assert(components.R !== undefined);
@@ -341,7 +320,9 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
 
     const data = new ArrayBuffer(bytesPerBlock);
     for (const c of this.componentOrder) {
-      this.setComponent(data, c, components[c]);
+      const componentValue = components[c];
+      assert(componentValue !== undefined);
+      this.setComponent(data, c, componentValue);
     }
     return data;
   }
@@ -350,7 +331,11 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
 const kRepresentationCache: Map<GPUTextureFormat, TexelDataRepresentationImpl> = new Map();
 export function getTexelDataRepresentation(format: GPUTextureFormat): TexelDataRepresentation {
   if (!kRepresentationCache.has(format)) {
-    kRepresentationCache.set(format, TexelDataRepresentationImpl.Create(format));
+    const { componentOrder, componentInfo, sRGB } = kRepresentationInfo[format];
+    kRepresentationCache.set(
+      format,
+      new TexelDataRepresentationImpl(format, componentOrder, componentInfo, sRGB)
+    );
   }
   return kRepresentationCache.get(format)!;
 }

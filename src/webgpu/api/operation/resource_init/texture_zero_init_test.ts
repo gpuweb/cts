@@ -6,7 +6,7 @@ import { kTextureAspects, kTextureFormatInfo, kTextureFormats } from '../../../c
 import { GPUTest } from '../../../gpu_test.js';
 import { createTextureUploadBuffer } from '../../../util/texture/layout.js';
 import { BeginEndRange, SubresourceRange } from '../../../util/texture/subresource.js';
-import { TexelComponent, getTexelDataRepresentation } from '../../../util/texture/texelData.js';
+import { PerTexelComponent, getTexelDataRepresentation } from '../../../util/texture/texelData.js';
 
 enum UninitializeMethod {
   Creation = 'Creation', // The texture was just created. It is uninitialized.
@@ -222,7 +222,7 @@ function getRequiredTextureUsage(
 }
 
 export abstract class TextureZeroInitTest extends GPUTest {
-  protected stateToTexelComponents: { [k in InitializedState]: { [c in TexelComponent]?: number } };
+  protected stateToTexelComponents: { [k in InitializedState]: PerTexelComponent<number> };
 
   constructor(rec: TestCaseRecorder, params: ParamSpec) {
     super(rec, params);
@@ -234,12 +234,8 @@ export abstract class TextureZeroInitTest extends GPUTest {
         G,
         B,
         A,
-        Stencil: kTextureFormatInfo[this.params.format].stencil
-          ? initializedStateAsStencil(state)
-          : undefined,
-        Depth: kTextureFormatInfo[this.params.format].depth
-          ? initializedStateAsDepth(state)
-          : undefined,
+        Depth: initializedStateAsDepth(state),
+        Stencil: initializedStateAsStencil(state),
       };
     };
 
