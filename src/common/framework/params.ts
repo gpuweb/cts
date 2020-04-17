@@ -33,7 +33,7 @@ export function params(): ParamsBuilder<{}> {
   return new ParamsBuilder();
 }
 
-class ParamsBuilder<A extends {}> implements ParamSpecIterable {
+export class ParamsBuilder<A extends {}> implements ParamSpecIterable {
   private paramSpecs: ParamSpecIterable = [{}];
 
   [Symbol.iterator](): Iterator<A> {
