@@ -30,10 +30,10 @@ const enum TexelWriteType {
 //  - floats to half floats, interpreted as uint16 bits
 type TexelWriteFn = (value: number) => { value: number; type: TexelWriteType };
 
-type SingleComponentInfo = {
+interface SingleComponentInfo {
   write: TexelWriteFn;
   bitLength: number;
-};
+}
 
 type TexelComponentInfo = PerTexelComponent<null | SingleComponentInfo>;
 
@@ -75,7 +75,7 @@ const uint32 = { write: uint(32), bitLength: 32 };
 
 const sint8 = { write: sint(8), bitLength: 8 };
 const sint16 = { write: sint(16), bitLength: 16 };
-const sint32 = { write: sint(32), bitLength: 32 }
+const sint32 = { write: sint(32), bitLength: 32 };
 
 const float10 = {
   write: (n: number) => ({
