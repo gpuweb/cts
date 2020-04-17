@@ -43,39 +43,39 @@ const kRGB = [TexelComponent.R, TexelComponent.G, TexelComponent.B];
 const kRGBA = [TexelComponent.R, TexelComponent.G, TexelComponent.B, TexelComponent.A];
 const kBGRA = [TexelComponent.B, TexelComponent.G, TexelComponent.R, TexelComponent.A];
 
-const unorm = (n: number, bitLength: number) => ({
+const unorm = (bitLength: number) => (n: number) => ({
   value: floatAsNormalizedInteger(n, bitLength, false),
   type: TexelWriteType.Uint,
 });
 
-const snorm = (n: number, bitLength: number) => ({
+const snorm = (bitLength: number) => (n: number) => ({
   value: floatAsNormalizedInteger(n, bitLength, true),
   type: TexelWriteType.Sint,
 });
 
-const uint = (n: number, bitLength: number) => ({
+const uint = (bitLength: number) => (n: number) => ({
   value: (assertInIntegerRange(n, bitLength, false), n),
   type: TexelWriteType.Uint,
 });
 
-const sint = (n: number, bitLength: number) => ({
+const sint = (bitLength: number) => (n: number) => ({
   value: (assertInIntegerRange(n, bitLength, true), n),
   type: TexelWriteType.Sint,
 });
 
-const unorm2 = { write: (n: number) => unorm(n, 2), bitLength: 2 };
-const unorm8 = { write: (n: number) => unorm(n, 8), bitLength: 8 };
-const unorm10 = { write: (n: number) => unorm(n, 10), bitLength: 10 };
+const unorm2 = { write: unorm(2), bitLength: 2 };
+const unorm8 = { write: unorm(8), bitLength: 8 };
+const unorm10 = { write: unorm(10), bitLength: 10 };
 
-const snorm8 = { write: (n: number) => snorm(n, 8), bitLength: 8 };
+const snorm8 = { write: snorm(8), bitLength: 8 };
 
-const uint8 = { write: (n: number) => uint(n, 8), bitLength: 8 };
-const uint16 = { write: (n: number) => uint(n, 16), bitLength: 16 };
-const uint32 = { write: (n: number) => uint(n, 32), bitLength: 32 };
+const uint8 = { write: uint(8), bitLength: 8 };
+const uint16 = { write: uint(16), bitLength: 16 };
+const uint32 = { write: uint(32), bitLength: 32 };
 
-const sint8 = { write: (n: number) => sint(n, 8), bitLength: 8 };
-const sint16 = { write: (n: number) => sint(n, 16), bitLength: 16 };
-const sint32 = { write: (n: number) => sint(n, 32), bitLength: 32 };
+const sint8 = { write: sint(8), bitLength: 8 };
+const sint16 = { write: sint(16), bitLength: 16 };
+const sint32 = { write: sint(32), bitLength: 32 }
 
 const float10 = {
   write: (n: number) => ({
