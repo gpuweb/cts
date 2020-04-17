@@ -127,6 +127,8 @@ class CopiedTextureClearTest extends TextureZeroInitTest {
 
 export const g = new TestGroup(CopiedTextureClearTest);
 
-g.test('uninitialized texture is zero', t => {
-  t.run();
-}).params(TextureZeroInitTest.generateParams([ReadMethod.CopyToBuffer, ReadMethod.CopyToTexture]));
+g.test('uninitialized texture is zero')
+  .params(TextureZeroInitTest.generateParams([ReadMethod.CopyToBuffer, ReadMethod.CopyToTexture]))
+  .fn(t => {
+    t.run();
+  });
