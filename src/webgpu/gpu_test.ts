@@ -2,6 +2,26 @@ import { Fixture } from '../common/framework/fixture.js';
 import { getGPU } from '../common/framework/gpu/implementation.js';
 import { assert, unreachable } from '../common/framework/util/util.js';
 
+type TypedArrayBufferView =
+  | Uint8Array
+  | Uint16Array
+  | Uint32Array
+  | Int8Array
+  | Int16Array
+  | Int32Array
+  | Float32Array
+  | Float64Array;
+
+type TypedArrayBufferViewConstructor =
+  | Uint8ArrayConstructor
+  | Uint16ArrayConstructor
+  | Uint32ArrayConstructor
+  | Int8ArrayConstructor
+  | Int16ArrayConstructor
+  | Int32ArrayConstructor
+  | Float32ArrayConstructor
+  | Float64ArrayConstructor;
+
 class DevicePool {
   device: GPUDevice | undefined = undefined;
   state: 'free' | 'acquired' | 'uninitialized' | 'failed' = 'uninitialized';
@@ -112,13 +132,13 @@ export class GPUTest extends Fixture {
 
   // TODO: add an expectContents for textures, which logs data: uris on failure
 
-  expectContents(src: GPUBuffer, expected: ArrayBufferView): void {
-    const exp = new Uint8Array(expected.buffer, expected.byteOffset, expected.byteLength);
+  expectContents(src: GPUBuffer, expected: TypedArrayBufferView): void {
     const dst = this.createCopyForMapRead(src, expected.buffer.byteLength);
 
     this.eventualAsyncExpectation(async niceStack => {
-      const actual = new Uint8Array(await dst.mapReadAsync());
-      const check = this.checkBuffer(actual, exp);
+      const constructor = expected.constructor as TypedArrayBufferViewConstructor;
+      const actual = new constructor(await dst.mapReadAsync());
+      const check = this.checkBuffer(actual, expected);
       if (check !== undefined) {
         niceStack.message = check;
         this.rec.fail(niceStack);
@@ -134,7 +154,13 @@ export class GPUTest extends Fixture {
     }
   }
 
-  checkBuffer(actual: Uint8Array, exp: Uint8Array): string | undefined {
+  checkBuffer(
+    actual: TypedArrayBufferView,
+    exp: TypedArrayBufferView,
+    tolerance: number | ((i: number) => number) = 0
+  ): string | undefined {
+    assert(actual.constructor === exp.constructor);
+
     const size = exp.byteLength;
     if (actual.byteLength !== size) {
       return 'size mismatch';
@@ -142,7 +168,8 @@ export class GPUTest extends Fixture {
     const lines = [];
     let failedPixels = 0;
     for (let i = 0; i < size; ++i) {
-      if (actual[i] !== exp[i]) {
+      const tol = typeof tolerance === 'function' ? tolerance(i) : tolerance;
+      if (Math.abs(actual[i] - exp[i]) > tol) {
         if (failedPixels > 4) {
           lines.push('... and more');
           break;
@@ -168,14 +195,16 @@ export class GPUTest extends Fixture {
     // and we should remove them. More important will be logging of texture data in a visual format.
 
     if (size <= 256 && failedPixels > 0) {
-      const expHex = Array.from(exp)
+      const expHex = Array.from(new Uint8Array(exp.buffer, exp.byteOffset, exp.byteLength))
         .map(x => x.toString(16).padStart(2, '0'))
         .join('');
-      const actHex = Array.from(actual)
+      const actHex = Array.from(new Uint8Array(actual.buffer, actual.byteOffset, actual.byteLength))
         .map(x => x.toString(16).padStart(2, '0'))
         .join('');
-      lines.push('EXPECT: ' + expHex);
-      lines.push('ACTUAL: ' + actHex);
+      lines.push('EXPECT:\t  ' + exp.join(' '));
+      lines.push('\t0x' + expHex);
+      lines.push('ACTUAL:\t  ' + actual.join(' '));
+      lines.push('\t0x' + actHex);
     }
     if (failedPixels) {
       return lines.join('\n');
