@@ -60,7 +60,7 @@ class F extends Fixture {
 
 export const g = new TestGroup(F);
 
-g.test('simple case where the error scope catches an error', async t => {
+g.test('simple case where the error scope catches an error').fn(async t => {
   t.device.pushErrorScope('validation');
 
   t.createErrorBuffer();
@@ -69,7 +69,7 @@ g.test('simple case where the error scope catches an error', async t => {
   t.expect(error instanceof GPUValidationError);
 });
 
-g.test('errors bubble to the parent scope if not handled by the current scope', async t => {
+g.test('errors bubble to the parent scope if not handled by the current scope').fn(async t => {
   t.device.pushErrorScope('validation');
   t.device.pushErrorScope('out-of-memory');
 
@@ -85,7 +85,7 @@ g.test('errors bubble to the parent scope if not handled by the current scope', 
   }
 });
 
-g.test('if an error scope matches an error it does not bubble to the parent scope', async t => {
+g.test('if an error scope matches an error it does not bubble to the parent scope').fn(async t => {
   t.device.pushErrorScope('validation');
   t.device.pushErrorScope('validation');
 
@@ -101,7 +101,7 @@ g.test('if an error scope matches an error it does not bubble to the parent scop
   }
 });
 
-g.test('if no error scope handles an error it fires an uncapturederror event', async t => {
+g.test('if no error scope handles an error it fires an uncapturederror event').fn(async t => {
   t.device.pushErrorScope('out-of-memory');
 
   const uncapturedErrorEvent = await t.expectUncapturedError(() => {
@@ -113,7 +113,7 @@ g.test('if no error scope handles an error it fires an uncapturederror event', a
   t.expect(error === null);
 });
 
-g.test('push/popping sibling error scopes must be balanced', async t => {
+g.test('push/popping sibling error scopes must be balanced').fn(async t => {
   {
     const promise = t.device.popErrorScope();
     t.shouldReject('OperationError', promise);
@@ -133,7 +133,7 @@ g.test('push/popping sibling error scopes must be balanced', async t => {
   }
 });
 
-g.test('push/popping nested error scopes must be balanced', async t => {
+g.test('push/popping nested error scopes must be balanced').fn(async t => {
   {
     const promise = t.device.popErrorScope();
     t.shouldReject('OperationError', promise);

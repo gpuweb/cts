@@ -11,7 +11,6 @@ export function unreachable(msg?: string): never {
 }
 
 // performance.now() is available in all browsers, but not in scope by default in Node.
-// tslint:disable-next-line no-var-requires
 const perf = typeof performance !== 'undefined' ? performance : require('perf_hooks').performance;
 
 export function now(): number {

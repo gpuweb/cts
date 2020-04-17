@@ -84,6 +84,7 @@ export class GPUTest extends Fixture {
     try {
       await device.popErrorScope();
       unreachable('There was an error scope on the stack at the beginning of the test');
+      /* eslint-disable-next-line no-empty */
     } catch (ex) {}
 
     device.pushErrorScope('out-of-memory');

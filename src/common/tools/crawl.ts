@@ -2,16 +2,14 @@
 // This crawls the file tree under src/suites/${suite} to generate a (non-hierarchical) static
 // listing file that can then be used in the browser to load the modules containing the tests.
 
-// tslint:disable: no-console
-
 import * as fs from 'fs';
 import * as path from 'path';
-
-const fg = require('fast-glob');
 
 import { TestSuiteListingEntry } from '../framework/listing.js';
 import { TestSpec } from '../framework/loader.js';
 import { assert } from '../framework/util/util.js';
+
+const fg = require('fast-glob');
 
 const specSuffix = '.spec.ts';
 

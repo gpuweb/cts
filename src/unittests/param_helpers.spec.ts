@@ -2,7 +2,7 @@ export const description = `
 Unit tests for parameterization helpers.
 `;
 
-import { pcombine, pexclude, pfilter, poptions } from '../common/framework/params.js';
+import { poptions, params } from '../common/framework/params.js';
 import { ParamSpec, ParamSpecIterable, paramsEquals } from '../common/framework/params_utils.js';
 import { TestGroup } from '../common/framework/test_group.js';
 
@@ -17,24 +17,28 @@ class ParamsTest extends UnitTest {
 
 export const g = new TestGroup(ParamsTest);
 
-g.test('options', t => {
+g.test('options').fn(t => {
   t.expectSpecEqual(poptions('hello', [1, 2, 3]), [{ hello: 1 }, { hello: 2 }, { hello: 3 }]);
 });
 
-g.test('combine/none', t => {
-  t.expectSpecEqual(pcombine(), []);
+g.test('params').fn(t => {
+  t.expectSpecEqual(params(), [{}]);
 });
 
-g.test('combine/zeroes and ones', t => {
-  t.expectSpecEqual(pcombine([], []), []);
-  t.expectSpecEqual(pcombine([], [{}]), []);
-  t.expectSpecEqual(pcombine([{}], []), []);
-  t.expectSpecEqual(pcombine([{}], [{}]), [{}]);
+g.test('combine/zeroes and ones').fn(t => {
+  t.expectSpecEqual(params().combine([]).combine([]), []);
+  t.expectSpecEqual(params().combine([]).combine([{}]), []);
+  t.expectSpecEqual(params().combine([{}]).combine([]), []);
+  t.expectSpecEqual(params().combine([{}]).combine([{}]), [{}]);
 });
 
-g.test('combine/mixed', t => {
+g.test('combine/mixed').fn(t => {
   t.expectSpecEqual(
-    pcombine(poptions('x', [1, 2]), poptions('y', ['a', 'b']), [{ p: 4 }, { q: 5 }], [{}]),
+    params()
+      .combine(poptions('x', [1, 2]))
+      .combine(poptions('y', ['a', 'b']))
+      .combine([{ p: 4 }, { q: 5 }])
+      .combine([{}]),
     [
       { x: 1, y: 'a', p: 4 },
       { x: 1, y: 'a', q: 5 },
@@ -48,37 +52,80 @@ g.test('combine/mixed', t => {
   );
 });
 
-g.test('filter', t => {
+g.test('filter').fn(t => {
   t.expectSpecEqual(
-    pfilter(
-      [
+    params()
+      .combine([
         { a: true, x: 1 },
         { a: false, y: 2 },
-      ],
-      p => p.a
-    ),
+      ])
+      .filter(p => p.a),
     [{ a: true, x: 1 }]
   );
 });
 
-g.test('exclude', t => {
+g.test('unless').fn(t => {
   t.expectSpecEqual(
-    pexclude(
-      [
+    params()
+      .combine([
         { a: true, x: 1 },
         { a: false, y: 2 },
-      ],
-      [{ a: true }, { a: false, y: 2 }]
-    ),
+      ])
+      .unless(p => p.a),
+    [{ a: false, y: 2 }]
+  );
+});
+
+g.test('exclude').fn(t => {
+  t.expectSpecEqual(
+    params()
+      .combine([
+        { a: true, x: 1 },
+        { a: false, y: 2 },
+      ])
+      .exclude([{ a: true }, { a: false, y: 2 }]),
     [{ a: true, x: 1 }]
   );
 });
 
-g.test('undefined', t => {
+g.test('expand').fn(t => {
+  t.expectSpecEqual(
+    params()
+      .combine([
+        { a: true, x: 1 },
+        { a: false, y: 2 },
+      ])
+      .expand(function* (p) {
+        if (p.a) {
+          yield* poptions('z', [3, 4]);
+        } else {
+          yield { w: 5 };
+        }
+      }),
+    [
+      { a: true, x: 1, z: 3 },
+      { a: true, x: 1, z: 4 },
+      { a: false, y: 2, w: 5 },
+    ]
+  );
+});
+
+g.test('expand/invalid').fn(t => {
+  const p = params()
+    .combine([{ x: 1 }])
+    .expand(function* (p) {
+      yield p; // causes key 'x' to be duplicated
+    });
+  t.shouldThrow('Error', () => {
+    Array.from(p);
+  });
+});
+
+g.test('undefined').fn(t => {
   t.expectSpecEqual([{ a: undefined }], [{}]);
   t.expectSpecEqual([{}], [{ a: undefined }]);
 });
 
-g.test('arrays', t => {
+g.test('arrays').fn(t => {
   t.expectSpecEqual([{ a: [1, 2] }], [{ a: [1, 2] }]);
 });

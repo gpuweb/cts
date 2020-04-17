@@ -1,0 +1,39 @@
+{
+  "extends": "./node_modules/gts",
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "plugins": ["node", "ban", "import"],
+  "rules": {
+    "ban/ban": [
+      "error",
+      {
+        "name": "setTimeout",
+        "message": "WPT (Web Platform Tests) doesn't allow setTimeout."
+      }
+    ],
+    "linebreak-style": ["error", "unix"],
+    "no-console": "error",
+    "@typescript-eslint/no-inferrable-types": "off",
+    "import/order": [
+      "error",
+      {
+        "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
+        "newlines-between": "always",
+        "alphabetize": { "order": "asc", "caseInsensitive": false }
+      }
+    ],
+    "import/newline-after-import": ["error", { "count": 1 }],
+    "import/no-duplicates": "error"
+  },
+  "globals": {
+    // FIXME: Why aren't these picked up from type files ?
+    "$": "readonly",
+    "GPUValidationError": "readonly",
+    "GPUOutOfMemoryError": "readonly",
+    "GPUBufferUsage": "readonly",
+    "GPUTextureUsage": "readonly",
+    "GPUShaderStage": "readonly"
+  }
+}

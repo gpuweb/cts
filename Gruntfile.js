@@ -43,14 +43,24 @@ module.exports = function (grunt) {
           'src/',
         ],
       },
-      'gts-check': {
+      lint: {
         cmd: 'node',
-        args: ['node_modules/gts/build/src/cli', 'check'],
+        args: ['node_modules/eslint/bin/eslint', 'src/**/*.ts'],
       },
-      'gts-fix': {
+      fix: {
         cmd: 'node',
-        args: ['node_modules/gts/build/src/cli', 'fix'],
+        args: ['node_modules/eslint/bin/eslint', 'src/**/*.ts', '--fix'],
       },
+    },
+
+    watch: {
+      src: {
+        files: ['src/**/*'],
+        tasks: ['run:build-out', 'run:lint'],
+        options: {
+          spawn: false,
+        }
+      }
     },
 
     copy: {
@@ -83,6 +93,19 @@ module.exports = function (grunt) {
         host: '127.0.0.1',
         cache: -1,
       },
+      'background': {
+        root: '.',
+        port: 8080,
+        host: '127.0.0.1',
+        cache: -1,
+        runInBackground: true,
+        logFn: function (req, res, error) {
+          // Only log errors to not spam the console.
+          if (error) {
+            console.error(error);
+          }
+        },
+      },
     },
 
     ts: {
@@ -101,6 +124,17 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-mkdir');
   grunt.loadNpmTasks('grunt-run');
   grunt.loadNpmTasks('grunt-ts');
+  grunt.loadNpmTasks('grunt-contrib-watch');
+
+  grunt.event.on('watch', function (action, filepath) {
+    const buildArgs = grunt.config(['run', 'build-out', 'args']);
+    buildArgs[buildArgs.length - 1] = filepath;
+    grunt.config(['run', 'build-out', 'args'], buildArgs);
+
+    const lintArgs = grunt.config(['run', 'lint', 'args']);
+    lintArgs[lintArgs.length - 1] = filepath;
+    grunt.config(['run', 'lint', 'args'], lintArgs);
+  });
 
   const helpMessageTasks = [];
   function registerTaskAndAddToHelp(name, desc, deps) {
@@ -137,7 +171,7 @@ module.exports = function (grunt) {
   registerTaskAndAddToHelp('pre', 'Run all presubmit checks: build+typecheck+test+lint', [
     'set-quiet-mode',
     'wpt',
-    'run:gts-check',
+    'run:lint',
   ]);
   registerTaskAndAddToHelp('test', 'Quick development build: build+typecheck+test', [
     'set-quiet-mode',
@@ -160,11 +194,15 @@ module.exports = function (grunt) {
     'set-quiet-mode',
     'copy:webgpu-constants',
     'ts:check',
-    'run:gts-check',
+    'run:lint',
+  ]);
+  registerTaskAndAddToHelp('dev', 'Start the dev server, and watch for changes', [
+    'http-server:background',
+    'watch',
   ]);
 
   registerTaskAndAddToHelp('serve', 'Serve out/ on 127.0.0.1:8080', ['http-server:.']);
-  registerTaskAndAddToHelp('fix', 'Fix lint and formatting', ['run:gts-fix']);
+  registerTaskAndAddToHelp('fix', 'Fix lint and formatting', ['run:fix']);
 
   grunt.registerTask('default', '', () => {
     console.error('\nAvailable tasks (see grunt --help for info):');

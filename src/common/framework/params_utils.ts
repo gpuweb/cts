@@ -1,6 +1,6 @@
 import { objectEquals } from './util/util.js';
 
-// tslint:disable-next-line: no-any
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 export type ParamArgument = any;
 export interface ParamSpec {
   [k: string]: ParamArgument;
@@ -37,7 +37,7 @@ export function paramsEquals(x: ParamSpec | null, y: ParamSpec | null): boolean 
   }
 
   for (const xk of Object.keys(x)) {
-    if (x[xk] !== undefined && !y.hasOwnProperty(xk)) {
+    if (x[xk] !== undefined && !(xk in y)) {
       return false;
     }
     if (!objectEquals(x[xk], y[xk])) {
@@ -46,7 +46,7 @@ export function paramsEquals(x: ParamSpec | null, y: ParamSpec | null): boolean 
   }
 
   for (const yk of Object.keys(y)) {
-    if (y[yk] !== undefined && !x.hasOwnProperty(yk)) {
+    if (y[yk] !== undefined && !(yk in x)) {
       return false;
     }
   }
@@ -61,7 +61,7 @@ export function paramsSupersets(sup: ParamSpec | null, sub: ParamSpec | null): b
     sup = {};
   }
   for (const k of Object.keys(sub)) {
-    if (!sup.hasOwnProperty(k) || sup[k] !== sub[k]) {
+    if (!(k in sup) || sup[k] !== sub[k]) {
       return false;
     }
   }
