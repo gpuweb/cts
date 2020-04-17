@@ -12,22 +12,25 @@ import { UnitTest } from './unit_test.js';
 
 export const g = new TestGroup(TestGroupTest);
 
-g.test('UnitTest fixture', async t0 => {
+g.test('UnitTest fixture').fn(async t0 => {
   let seen = 0;
+  /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
   function count(t: Fixture): void {
     seen++;
   }
 
   const g = new TestGroup(UnitTest);
 
-  g.test('test', count);
-  g.test('testp', count).params([{ a: 1 }]);
+  g.test('test').fn(count);
+  g.test('testp')
+    .params([{ a: 1 }])
+    .fn(count);
 
   await t0.run(g);
   t0.expect(seen === 2);
 });
 
-g.test('custom fixture', async t0 => {
+g.test('custom fixture').fn(async t0 => {
   let seen = 0;
   class Counter extends UnitTest {
     count(): void {
@@ -37,18 +40,20 @@ g.test('custom fixture', async t0 => {
 
   const g = new TestGroup(Counter);
 
-  g.test('test', t => {
+  g.test('test').fn(t => {
     t.count();
   });
-  g.test('testp', t => {
-    t.count();
-  }).params([{ a: 1 }]);
+  g.test('testp')
+    .params([{ a: 1 }])
+    .fn(t => {
+      t.count();
+    });
 
   await t0.run(g);
   t0.expect(seen === 2);
 });
 
-g.test('stack', async t0 => {
+g.test('stack').fn(async t0 => {
   const g = new TestGroup(UnitTest);
 
   const doNestedThrow1 = () => {
@@ -57,19 +62,21 @@ g.test('stack', async t0 => {
 
   const doNestedThrow2 = () => doNestedThrow1();
 
-  g.test('fail', t => {
+  g.test('fail').fn(t => {
     t.fail();
   });
-  g.test('throw', t => {
+  /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
+  g.test('throw').fn(t => {
     throw new Error('hello');
   });
-  g.test('throw nested', t => {
+  /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
+  g.test('throw nested').fn(t => {
     doNestedThrow2();
   });
 
   const res = await t0.run(g);
 
-  const search = /unittests[\/\\]test_group\.spec\.[tj]s|suites[\/\\]unittests[\/\\]unit_test\.[tj]s/;
+  const search = /unittests[/\\]test_group\.spec\.[tj]s|suites[/\\]unittests[/\\]unit_test\.[tj]s/;
   for (const { logs } of res.cases) {
     assert(logs !== undefined, 'expected logs');
     const l = logs[0].toJSON();
@@ -79,54 +86,61 @@ g.test('stack', async t0 => {
   }
 });
 
-g.test('duplicate test name', t => {
+g.test('duplicate test name').fn(t => {
   const g = new TestGroup(UnitTest);
-  g.test('abc', () => {});
+  g.test('abc').fn(() => {});
 
   t.shouldThrow('Error', () => {
-    g.test('abc', () => {});
+    g.test('abc').fn(() => {});
   });
 });
 
-g.test('duplicate test params', t => {
+g.test('duplicate test params').fn(t => {
   const g = new TestGroup(UnitTest);
 
   t.shouldThrow('Error', () => {
-    g.test('abc', () => {
-      //
-    }).params([
-      { a: 1 }, //
-      { a: 1 },
-    ]);
+    g.test('abc')
+      .params([
+        { a: 1 }, //
+        { a: 1 },
+      ])
+      .fn(() => {
+        //
+      });
   });
 });
 
-g.test('duplicate test params/with different private params', t => {
+g.test('duplicate test params/with different private params').fn(t => {
   const g = new TestGroup(UnitTest);
 
   t.shouldThrow('Error', () => {
-    g.test('abc', () => {
-      //
-    }).params([
-      { a: 1, _b: 1 }, //
-      { a: 1, _b: 2 },
-    ]);
+    g.test('abc')
+      .params([
+        { a: 1, _b: 1 }, //
+        { a: 1, _b: 2 },
+      ])
+      .fn(() => {
+        //
+      });
   });
 });
 
 const badChars = Array.from('"`~@#$+=\\|!^&*[]<>{}-\'.,');
-g.test('invalid test name', t => {
-  const g = new TestGroup(UnitTest);
+g.test('invalid test name')
+  .params(poptions('char', badChars))
+  .fn(t => {
+    const g = new TestGroup(UnitTest);
 
-  t.shouldThrow('Error', () => {
-    g.test('a' + t.params.char + 'b', () => {});
+    t.shouldThrow('Error', () => {
+      g.test('a' + t.params.char + 'b').fn(() => {});
+    });
   });
-}).params(poptions('char', badChars));
 
-g.test('throws', async t0 => {
+g.test('throws').fn(async t0 => {
   const g = new TestGroup(UnitTest);
 
-  g.test('a', t => {
+  /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
+  g.test('a').fn(t => {
     throw new Error();
   });
 
@@ -134,14 +148,14 @@ g.test('throws', async t0 => {
   t0.expect(result.cases[0].status === 'fail');
 });
 
-g.test('shouldThrow', async t0 => {
+g.test('shouldThrow').fn(async t0 => {
   t0.shouldThrow('TypeError', () => {
     throw new TypeError();
   });
 
   const g = new TestGroup(UnitTest);
 
-  g.test('a', t => {
+  g.test('a').fn(t => {
     t.shouldThrow('Error', () => {
       throw new TypeError();
     });
@@ -151,7 +165,7 @@ g.test('shouldThrow', async t0 => {
   t0.expect(result.cases[0].status === 'fail');
 });
 
-g.test('shouldReject', async t0 => {
+g.test('shouldReject').fn(async t0 => {
   t0.shouldReject(
     'TypeError',
     (async () => {
@@ -161,7 +175,7 @@ g.test('shouldReject', async t0 => {
 
   const g = new TestGroup(UnitTest);
 
-  g.test('a', async t => {
+  g.test('a').fn(async t => {
     t.shouldReject(
       'Error',
       (async () => {

@@ -7,7 +7,7 @@ import { GPUTest } from '../../../gpu_test.js';
 
 export const g = new TestGroup(GPUTest);
 
-g.test('b2b', async t => {
+g.test('b2b').fn(async t => {
   const data = new Uint32Array([0x01020304]);
 
   const [src, map] = t.device.createBufferMapped({
@@ -29,7 +29,7 @@ g.test('b2b', async t => {
   t.expectContents(dst, data);
 });
 
-g.test('b2t2b', async t => {
+g.test('b2t2b').fn(async t => {
   const data = new Uint32Array([0x01020304]);
 
   const [src, map] = t.device.createBufferMapped({
@@ -66,7 +66,7 @@ g.test('b2t2b', async t => {
   t.expectContents(dst, data);
 });
 
-g.test('b2t2t2b', async t => {
+g.test('b2t2t2b').fn(async t => {
   const data = new Uint32Array([0x01020304]);
 
   const [src, map] = t.device.createBufferMapped({

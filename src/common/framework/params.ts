@@ -1,112 +1,127 @@
-import {
-  ParamArgument,
-  ParamSpec,
-  ParamSpecIterable,
-  ParamSpecIterator,
-  paramsEquals,
-} from './params_utils.js';
+import { ParamSpec, ParamSpecIterable, paramsEquals } from './params_utils.js';
 import { assert } from './util/util.js';
 
-export function poptions(name: string, values: ParamArgument[]): POptions {
-  return new POptions(name, values);
-}
-export function pbool(name: string): POptions {
-  return new POptions(name, [false, true]);
-}
-export function pexclude(params: ParamSpecIterable, exclude: ParamSpecIterable): PExclude {
-  return new PExclude(params, exclude);
-}
-export function pfilter(cases: ParamSpecIterable, pred: Predicate): PFilter {
-  return new PFilter(cases, pred);
-}
-export function pcombine(...params: ParamSpecIterable[]): ParamSpecIterable {
-  return new PCombine(params);
-}
+// https://stackoverflow.com/a/56375136
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void
+  ? I
+  : never;
+type CheckForUnion<T, TErr, TOk> = [T] extends [UnionToIntersection<T>] ? TOk : TErr;
 
-class POptions implements ParamSpecIterable {
-  private name: string;
-  private values: ParamArgument[];
+type CheckForStringLiteralType<T, TOk> = string extends T ? void : CheckForUnion<T, void, TOk>;
 
-  constructor(name: string, values: ParamArgument[]) {
-    this.name = name;
-    this.values = values;
-  }
-
-  *[Symbol.iterator](): ParamSpecIterator {
-    for (const value of this.values) {
-      yield { [this.name]: value };
+export function poptions<Name extends string, V>(
+  name: Name,
+  values: Iterable<V>
+): CheckForStringLiteralType<Name, Iterable<{ [name in Name]: V }>> {
+  const iter = makeReusableIterable(function* () {
+    for (const value of values) {
+      yield { [name]: value };
     }
-  }
+  });
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  return iter as any;
 }
 
-class PExclude implements ParamSpecIterable {
-  private cases: ParamSpecIterable;
-  private exclude: ParamSpec[];
+export function pbool<Name extends string>(
+  name: Name
+): CheckForStringLiteralType<Name, Iterable<{ [name in Name]: boolean }>> {
+  return poptions(name, [false, true]);
+}
 
-  constructor(cases: ParamSpecIterable, exclude: ParamSpecIterable) {
-    this.cases = cases;
-    this.exclude = Array.from(exclude);
+export function params(): ParamsBuilder<{}> {
+  return new ParamsBuilder();
+}
+
+class ParamsBuilder<A extends {}> implements ParamSpecIterable {
+  private paramSpecs: ParamSpecIterable = [{}];
+
+  [Symbol.iterator](): Iterator<A> {
+    const iter: Iterator<ParamSpec> = this.paramSpecs[Symbol.iterator]();
+    return iter as Iterator<A>;
   }
 
-  *[Symbol.iterator](): ParamSpecIterator {
-    for (const p of this.cases) {
-      if (this.exclude.every(e => !paramsEquals(p, e))) {
-        yield p;
+  combine<B extends {}>(newParams: Iterable<B>): ParamsBuilder<Merged<A, B>> {
+    const paramSpecs = this.paramSpecs as Iterable<A>;
+    this.paramSpecs = makeReusableIterable(function* () {
+      for (const a of paramSpecs) {
+        for (const b of newParams) {
+          yield mergeParams(a, b);
+        }
       }
-    }
+    });
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    return this as any;
+  }
+
+  expand<B extends {}>(expander: (_: A) => Iterable<B>): ParamsBuilder<Merged<A, B>> {
+    const paramSpecs = this.paramSpecs as Iterable<A>;
+    this.paramSpecs = makeReusableIterable(function* () {
+      for (const a of paramSpecs) {
+        for (const b of expander(a)) {
+          yield mergeParams(a, b);
+        }
+      }
+    });
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    return this as any;
+  }
+
+  filter(pred: (_: A) => boolean): ParamsBuilder<A> {
+    const paramSpecs = this.paramSpecs as Iterable<A>;
+    this.paramSpecs = makeReusableIterable(function* () {
+      for (const p of paramSpecs) {
+        if (pred(p)) {
+          yield p;
+        }
+      }
+    });
+    return this;
+  }
+
+  unless(pred: (_: A) => boolean): ParamsBuilder<A> {
+    return this.filter(x => !pred(x));
+  }
+
+  exclude(exclude: ParamSpecIterable): ParamsBuilder<A> {
+    const excludeArray = Array.from(exclude);
+    const paramSpecs = this.paramSpecs;
+    this.paramSpecs = makeReusableIterable(function* () {
+      for (const p of paramSpecs) {
+        if (excludeArray.every(e => !paramsEquals(p, e))) {
+          yield p;
+        }
+      }
+    });
+    return this;
   }
 }
 
-type Predicate = (o: ParamSpec) => boolean;
-class PFilter implements ParamSpecIterable {
-  private cases: ParamSpecIterable;
-  private pred: Predicate;
-
-  constructor(cases: ParamSpecIterable, pred: Predicate) {
-    this.cases = cases;
-    this.pred = pred;
-  }
-
-  *[Symbol.iterator](): ParamSpecIterator {
-    for (const p of this.cases) {
-      if (this.pred(p)) {
-        yield p;
-      }
-    }
-  }
+// If you create an Iterable by calling a generator function (e.g. in IIFE), it is exhausted after
+// one use. This just wraps a generator function in an object so it be iterated multiple times.
+function makeReusableIterable<P>(generatorFn: () => Generator<P>): Iterable<P> {
+  return { [Symbol.iterator]: generatorFn };
 }
 
-class PCombine implements ParamSpecIterable {
-  private params: ParamSpecIterable[];
+type ValueTypeForKeyOfMergedType<A, B, Key extends keyof A | keyof B> = Key extends keyof A
+  ? Key extends keyof B
+    ? void // Key is in both types
+    : A[Key] // Key is only in A
+  : Key extends keyof B
+  ? B[Key] // Key is only in B
+  : void; // Key is in neither type (not possible)
 
-  constructor(params: ParamSpecIterable[]) {
-    this.params = params;
-  }
-
-  [Symbol.iterator](): ParamSpecIterator {
-    return PCombine.cartesian(this.params);
-  }
-
-  static merge(a: ParamSpec, b: ParamSpec): ParamSpec {
-    for (const key of Object.keys(a)) {
-      assert(!b.hasOwnProperty(key), 'Duplicate key: ' + key);
-    }
-    return { ...a, ...b };
-  }
-
-  static *cartesian(iters: ParamSpecIterable[]): ParamSpecIterator {
-    if (iters.length === 0) {
-      return;
-    }
-    if (iters.length === 1) {
-      yield* iters[0];
-      return;
-    }
-    const [as, ...rest] = iters;
-    for (const a of as) {
-      for (const b of PCombine.cartesian(rest)) {
-        yield PCombine.merge(a, b);
+type Merged<A, B> = keyof A & keyof B extends never
+  ? string extends keyof A | keyof B
+    ? never // (keyof A | keyof B) == string, which is too broad
+    : {
+        [Key in keyof A | keyof B]: ValueTypeForKeyOfMergedType<A, B, Key>;
       }
-    }
+  : never; // (keyof A & keyof B) is not empty, so they overlapped
+
+function mergeParams<A extends {}, B extends {}>(a: A, b: B): Merged<A, B> {
+  for (const key of Object.keys(a)) {
+    assert(!(key in b), 'Duplicate key: ' + key);
   }
+  return { ...a, ...b } as Merged<A, B>;
 }

@@ -34,7 +34,7 @@ declare function async_test(f: (this: WptTestObject) => Promise<void>, name: str
       const name = makeQueryString(f.id, t.id);
 
       // Note: apparently, async_tests must ALL be added within the same task.
-      async_test(function(this: WptTestObject): Promise<void> {
+      async_test(function (this: WptTestObject): Promise<void> {
         const p = mutex.with(async () => {
           let r: LiveTestCaseResult;
           if (worker) {

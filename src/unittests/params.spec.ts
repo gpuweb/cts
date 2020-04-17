@@ -2,7 +2,7 @@ export const description = `
 Unit tests for parameterization.
 `;
 
-import { pcombine, pexclude, pfilter } from '../common/framework/params.js';
+import { params } from '../common/framework/params.js';
 import { ParamSpec } from '../common/framework/params_utils.js';
 import { TestGroup } from '../common/framework/test_group.js';
 
@@ -11,57 +11,78 @@ import { UnitTest } from './unit_test.js';
 
 export const g = new TestGroup(TestGroupTest);
 
-g.test('none', t => {
-  t.fail("this test shouldn't run");
-}).params([]);
+g.test('none')
+  .params([])
+  .fn(t => {
+    t.fail("this test shouldn't run");
+  });
 
-g.test('combine none', t => {
-  t.fail("this test shouldn't run");
-}).params(pcombine([]));
+g.test('combine none')
+  .params(params().combine([]))
+  .fn(t => {
+    t.fail("this test shouldn't run");
+  });
 
-g.test('filter', t => {
-  t.expect(t.params.a);
-}).params(
-  pfilter(
-    [
-      { a: true, x: 1 }, //
-      { a: false, y: 2 },
-    ],
-    p => p.a
+g.test('filter')
+  .params(
+    params()
+      .combine([
+        { a: true, x: 1 }, //
+        { a: false, y: 2 },
+      ])
+      .filter(p => p.a)
   )
-);
+  .fn(t => {
+    t.expect(t.params.a);
+  });
 
-g.test('exclude', t => {
-  t.expect(t.params.a);
-}).params(
-  pexclude(
-    [
-      { a: true, x: 1 }, //
-      { a: false, y: 2 },
-    ],
-    [
-      { a: true }, //
-      { a: false, y: 2 },
-    ]
+g.test('unless')
+  .params(
+    params()
+      .combine([
+        { a: true, x: 1 }, //
+        { a: false, y: 2 },
+      ])
+      .unless(p => p.a)
   )
-);
+  .fn(t => {
+    t.expect(!t.params.a);
+  });
 
-g.test('generator', t0 => {
+g.test('exclude')
+  .params(
+    params()
+      .combine([
+        { a: true, x: 1 },
+        { a: false, y: 2 },
+      ])
+      .exclude([
+        { a: true }, //
+        { a: false, y: 2 },
+      ])
+  )
+  .fn(t => {
+    t.expect(t.params.a);
+  });
+
+g.test('generator').fn(t0 => {
   const g = new TestGroup(UnitTest);
 
   const ran: ParamSpec[] = [];
 
-  g.test('generator', t => {
-    ran.push(t.params);
-  }).params(
-    (function*(): IterableIterator<ParamSpec> {
-      for (let x = 0; x < 3; ++x) {
-        for (let y = 0; y < 2; ++y) {
-          yield { x, y };
+  g.test('generator')
+    .params(
+      (function* (): IterableIterator<ParamSpec> {
+        for (let x = 0; x < 3; ++x) {
+          for (let y = 0; y < 2; ++y) {
+            yield { x, y };
+          }
         }
-      }
-    })()
-  );
+      })()
+    )
+    .fn(t => {
+      ran.push(t.params);
+    });
 
   t0.expectCases(g, [
     { test: 'generator', params: { x: 0, y: 0 } },
