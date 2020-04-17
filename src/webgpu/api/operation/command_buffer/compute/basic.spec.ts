@@ -7,7 +7,7 @@ import { GPUTest } from '../../../../gpu_test.js';
 
 export const g = new TestGroup(GPUTest);
 
-g.test('memcpy', async t => {
+g.test('memcpy').fn(async t => {
   const data = new Uint32Array([0x01020304]);
 
   const [src, srcData] = t.device.createBufferMapped({

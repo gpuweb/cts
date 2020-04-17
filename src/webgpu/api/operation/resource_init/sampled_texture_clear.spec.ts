@@ -6,7 +6,7 @@ import { GPUTest } from '../../../gpu_test.js';
 
 export const g = new TestGroup(GPUTest);
 
-g.test('compute pass test that sampled texture is cleared', async t => {
+g.test('compute pass test that sampled texture is cleared').fn(async t => {
   const texture = t.device.createTexture({
     size: { width: 256, height: 256, depth: 1 },
     format: 'r8unorm',

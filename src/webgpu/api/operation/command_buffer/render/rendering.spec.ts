@@ -1,11 +1,11 @@
-export const description = ``;
+export const description = '';
 
 import { TestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 
 export const g = new TestGroup(GPUTest);
 
-g.test('fullscreen quad', async t => {
+g.test('fullscreen quad').fn(async t => {
   const dst = t.device.createBuffer({
     size: 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
