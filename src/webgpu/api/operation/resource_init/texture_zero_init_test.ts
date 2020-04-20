@@ -498,11 +498,7 @@ export abstract class TextureZeroInitTest extends GPUTest {
             sampleCount > 1 &&
             (readMethod === ReadMethod.CopyToBuffer || readMethod === ReadMethod.CopyToTexture)
         )
-        .expand(function* () {
-          for (const { dimension, sliceCount } of kCreationSizes) {
-            yield { dimension, sliceCount };
-          }
-        })
+        .combine(kCreationSizes)
         // Multisampled 3D / 2D array textures not supported.
         .unless(({ sampleCount, sliceCount }) => sampleCount > 1 && sliceCount > 1)
         .filter(({ format, sampleCount, uninitializeMethod, readMethod }) => {
