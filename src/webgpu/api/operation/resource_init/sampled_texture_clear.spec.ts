@@ -26,8 +26,9 @@ class SampledTextureClearTest extends TextureZeroInitTest {
     const XD = dimension.toUpperCase();
     const componentOrder = getTexelDataRepresentation(this.params.format).componentOrder;
     const key = [prefix, sampleCount, dimension, componentOrder].join('_');
-    if (this.samplingPipelineCache.has(key)) {
-      return this.samplingPipelineCache.get(key)!;
+    let pipeline = this.samplingPipelineCache.get(key);
+    if (pipeline) {
+      return pipeline;
     }
 
     const componentCount = componentOrder.length;
