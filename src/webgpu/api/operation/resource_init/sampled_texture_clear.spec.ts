@@ -195,7 +195,7 @@ class SampledTextureClearTest extends TextureZeroInitTest {
           if (this.params.format === 'rgb10a2unorm') {
             tolerance = (i: number) => {
               // The alpha component is only two bits. Use a generous tolerance.
-              return (i + 1) / 4 === Math.floor((i + 1) / 4) ? 0.18 : 0.01;
+              return i % 4 === 3 ? 0.18 : 0.01;
             };
           } else {
             tolerance = 0.01;
