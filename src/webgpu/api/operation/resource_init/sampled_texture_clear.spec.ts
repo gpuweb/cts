@@ -22,8 +22,6 @@ class SampledTextureClearTest extends TextureZeroInitTest {
     sampleCount: number,
     dimension: GPUTextureDimension
   ): GPUComputePipeline {
-    const MS = sampleCount > 1 ? 'MS' : '';
-    const XD = dimension.toUpperCase();
     const componentOrder = getTexelDataRepresentation(this.params.format).componentOrder;
     const key = [prefix, sampleCount, dimension, componentOrder].join('_');
     let pipeline = this.samplingPipelineCache.get(key);
@@ -31,6 +29,8 @@ class SampledTextureClearTest extends TextureZeroInitTest {
       return pipeline;
     }
 
+    const MS = sampleCount > 1 ? 'MS' : '';
+    const XD = dimension.toUpperCase();
     const componentCount = componentOrder.length;
     const indexExpression =
       componentCount === 1
@@ -145,7 +145,6 @@ class SampledTextureClearTest extends TextureZeroInitTest {
         });
 
         const bindGroup = this.device.createBindGroup({
-          // @ts-ignore
           layout: computePipeline.getBindGroupLayout(0),
           entries: [
             {
