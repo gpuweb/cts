@@ -1,5 +1,6 @@
 import * as C from '../../../../common/constants.js';
 import { TestCaseRecorder } from '../../../../common/framework/logger.js';
+import { params, poptions, pbool } from '../../../../common/framework/params.js';
 import { ParamSpec } from '../../../../common/framework/params_utils.js';
 import { assert, unreachable } from '../../../../common/framework/util/util.js';
 import { kTextureAspects, kTextureFormatInfo, kTextureFormats } from '../../../capability_info.js';
@@ -458,139 +459,68 @@ export abstract class TextureZeroInitTest extends GPUTest {
     this.queue.submit([commandEncoder.finish()]);
   }
 
-  static *generateParams(readMethods: ReadMethod[]): Generator<TestParams> {
-    for (const format of kTextureFormats) {
-      for (const aspect of kTextureAspects) {
-        switch (aspect) {
-          case 'all':
-            break;
-          case 'depth-only':
-            if (!kTextureFormatInfo[format].depth) {
-              continue;
-            }
-            break;
-          case 'stencil-only':
-            if (!kTextureFormatInfo[format].stencil) {
-              continue;
-            }
-            break;
-          default:
-            unreachable();
-        }
+  static generateParams(readMethods: ReadMethod[]) {
+    return (
+      params()
+        .combine(poptions('format', kTextureFormats))
+        .combine(poptions('aspect', kTextureAspects))
+        .unless(
+          ({ format, aspect }) =>
+            (aspect === 'depth-only' && !kTextureFormatInfo[format].depth) ||
+            (aspect === 'stencil-only' && !kTextureFormatInfo[format].stencil)
+        )
+        .combine(poptions('mipLevelCount', kMipLevelCounts))
+        .combine(poptions('sampleCount', kSampleCounts))
+        // Multisampled textures may only have one mip
+        .unless(({ sampleCount, mipLevelCount }) => sampleCount > 1 && mipLevelCount > 1)
+        .combine(poptions('uninitializeMethod', kUninitializeMethods))
+        .combine(poptions('readMethod', readMethods))
+        .unless(
+          ({ readMethod, format }) =>
+            // It doesn't make sense to copy from a packed depth format.
+            // This is not specified yet, but it will probably be disallowed as the bits may
+            // be vendor-specific.
+            // TODO: Test copying out of the stencil aspect.
+            (readMethod === ReadMethod.CopyToBuffer || readMethod === ReadMethod.CopyToTexture) &&
+            (format === 'depth24plus' || format === 'depth24plus-stencil8')
+        )
+        .unless(
+          ({ readMethod, format }) =>
+            (readMethod === ReadMethod.DepthTest && !kTextureFormatInfo[format].depth) ||
+            (readMethod === ReadMethod.StencilTest && !kTextureFormatInfo[format].stencil) ||
+            (readMethod === ReadMethod.ColorBlending && !kTextureFormatInfo[format].color) ||
+            // TODO: Test with depth sampling
+            (readMethod === ReadMethod.Sample && kTextureFormatInfo[format].depth)
+        )
+        .unless(
+          ({ readMethod, sampleCount }) =>
+            // We can only read from multisampled textures by sampling.
+            sampleCount > 1 &&
+            (readMethod === ReadMethod.CopyToBuffer || readMethod === ReadMethod.CopyToTexture)
+        )
+        .combine(kCreationSizes)
+        // Multisampled 3D / 2D array textures not supported.
+        .unless(({ sampleCount, sliceCount }) => sampleCount > 1 && sliceCount > 1)
+        .filter(({ format, sampleCount, uninitializeMethod, readMethod }) => {
+          const usage = getRequiredTextureUsage(
+            format,
+            sampleCount,
+            uninitializeMethod,
+            readMethod
+          );
 
-        for (const { dimension, sliceCount } of kCreationSizes) {
-          for (const mipLevelCount of kMipLevelCounts) {
-            for (const sampleCount of kSampleCounts) {
-              if (sampleCount > 1 && mipLevelCount > 1) {
-                // Multisampled textures may only have one mip
-                continue;
-              }
-
-              for (const uninitializeMethod of kUninitializeMethods) {
-                for (const readMethod of readMethods) {
-                  const usage = getRequiredTextureUsage(
-                    format,
-                    sampleCount,
-                    uninitializeMethod,
-                    readMethod
-                  );
-
-                  if (
-                    usage & C.TextureUsage.OutputAttachment &&
-                    !kTextureFormatInfo[format].renderable
-                  ) {
-                    continue;
-                  }
-
-                  if (usage & C.TextureUsage.Storage && !kTextureFormatInfo[format].storage) {
-                    continue;
-                  }
-
-                  if (sampleCount > 1) {
-                    if (usage & C.TextureUsage.Storage) {
-                      // Storage textures can't be multisampled
-                      continue;
-                    }
-
-                    if (
-                      readMethod === ReadMethod.CopyToBuffer ||
-                      readMethod === ReadMethod.CopyToTexture
-                    ) {
-                      // We can only read from multisampled textures by sampling.
-                      continue;
-                    }
-
-                    if (sliceCount > 1) {
-                      // Multisampled 3D / 2D array textures not supported.
-                      continue;
-                    }
-                  }
-
-                  if (
-                    readMethod === ReadMethod.CopyToBuffer ||
-                    readMethod === ReadMethod.CopyToTexture
-                  ) {
-                    // It doesn't make sense to copy from a packed depth format.
-                    // This is not specified yet, but it will probably be disallowed as the bits may
-                    // be vendor-specific.
-                    if (format === 'depth24plus' || format === 'depth24plus-stencil8') {
-                      // TODO: Test copying out of the stencil aspect.
-                      continue;
-                    }
-                  }
-
-                  if (readMethod === ReadMethod.DepthTest && !kTextureFormatInfo[format].depth) {
-                    continue;
-                  }
-
-                  if (
-                    readMethod === ReadMethod.StencilTest &&
-                    !kTextureFormatInfo[format].stencil
-                  ) {
-                    continue;
-                  }
-
-                  if (
-                    readMethod === ReadMethod.ColorBlending &&
-                    !kTextureFormatInfo[format].color
-                  ) {
-                    continue;
-                  }
-
-                  if (kTextureFormatInfo[format].depth) {
-                    if (readMethod === ReadMethod.Sample) {
-                      // TODO: Test with depth sampling
-                      continue;
-                    }
-                  }
-
-                  const params = {
-                    format,
-                    aspect,
-                    dimension,
-                    sliceCount,
-                    mipLevelCount,
-                    sampleCount,
-                    uninitializeMethod,
-                    readMethod,
-                  };
-
-                  yield {
-                    ...params,
-                    nonPowerOfTwo: false,
-                  };
-
-                  yield {
-                    ...params,
-                    nonPowerOfTwo: true,
-                  };
-                }
-              }
-            }
+          if (usage & C.TextureUsage.OutputAttachment && !kTextureFormatInfo[format].renderable) {
+            return false;
           }
-        }
-      }
-    }
+
+          if (usage & C.TextureUsage.Storage && !kTextureFormatInfo[format].storage) {
+            return false;
+          }
+
+          return true;
+        })
+        .combine(pbool('nonPowerOfTwo'))
+    );
   }
 
   run(): void {
