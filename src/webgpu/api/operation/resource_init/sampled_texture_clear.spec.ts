@@ -80,18 +80,15 @@ class SampledTextureClearTest extends TextureZeroInitTest {
       }
       `;
 
-    this.samplingPipelineCache.set(
-      key,
-      this.device.createComputePipeline({
-        // @ts-ignore
-        layout: undefined,
-        computeStage: {
-          entryPoint: 'main',
-          module: this.makeShaderModule('compute', { glsl }),
-        },
-      })
-    );
-    return this.samplingPipelineCache.get(key)!;
+    pipeline = this.device.createComputePipeline({
+      layout: undefined,
+      computeStage: {
+        entryPoint: 'main',
+        module: this.makeShaderModule('compute', { glsl }),
+      },
+    });
+    this.samplingPipelineCache.set(key, pipeline);
+    return pipeline;
   }
 
   checkContents(
