@@ -1,18 +1,22 @@
 import * as C from '../common/constants.js';
 
+function keysOf<T extends string>(obj: { [k in T]: unknown }): readonly T[] {
+  return (Object.keys(obj) as readonly unknown[]) as readonly T[];
+}
+
 // Textures
 
 export const kTextureFormatInfo: {
-  [k in GPUTextureFormat]: {
-    renderable: boolean;
-    color: boolean;
-    depth: boolean;
-    stencil: boolean;
-    storage: boolean;
-    copyable: boolean;
-    bytesPerBlock?: number;
-    blockWidth?: number;
-    blockHeight?: number;
+  readonly [k in GPUTextureFormat]: {
+    readonly renderable: boolean;
+    readonly color: boolean;
+    readonly depth: boolean;
+    readonly stencil: boolean;
+    readonly storage: boolean;
+    readonly copyable: boolean;
+    readonly bytesPerBlock?: number;
+    readonly blockWidth?: number;
+    readonly blockHeight?: number;
     // Add fields as needed
   };
 } = /* prettier-ignore */ {
@@ -65,10 +69,10 @@ export const kTextureFormatInfo: {
   'depth24plus':            { renderable:  true, color: false, depth:  true, stencil: false, storage: false, copyable: false,                                                  },
   'depth24plus-stencil8':   { renderable:  true, color: false, depth:  true, stencil:  true, storage: false, copyable: false,                                                  },
 };
-export const kTextureFormats = Object.keys(kTextureFormatInfo) as GPUTextureFormat[];
+export const kTextureFormats = keysOf(kTextureFormatInfo);
 
 export const kTextureDimensionInfo: {
-  [k in GPUTextureDimension]: {
+  readonly [k in GPUTextureDimension]: {
     // Add fields as needed
   };
 } = /* prettier-ignore */ {
@@ -76,10 +80,10 @@ export const kTextureDimensionInfo: {
   '2d': {},
   '3d': {},
 };
-export const kTextureDimensions = Object.keys(kTextureDimensionInfo) as GPUTextureDimension[];
+export const kTextureDimensions = keysOf(kTextureDimensionInfo);
 
 export const kTextureAspectInfo: {
-  [k in GPUTextureAspect]: {
+  readonly [k in GPUTextureAspect]: {
     // Add fields as needed
   };
 } = /* prettier-ignore */ {
@@ -87,7 +91,7 @@ export const kTextureAspectInfo: {
   'depth-only': {},
   'stencil-only': {},
 };
-export const kTextureAspects = Object.keys(kTextureAspectInfo) as GPUTextureAspect[];
+export const kTextureAspects = keysOf(kTextureAspectInfo);
 
 // Bindings
 
@@ -100,8 +104,8 @@ export type PerStageBindingLimitType =
   | 'sampled-texture'
   | 'storage-texture';
 export const kPerStageBindingLimits: {
-  [k in PerStageBindingLimitType]: {
-    max: number;
+  readonly [k in PerStageBindingLimitType]: {
+    readonly max: number;
   };
 } = /* prettier-ignore */ {
   'uniform-buffer':  { max: 12, },
@@ -113,8 +117,8 @@ export const kPerStageBindingLimits: {
 
 export type PerPipelineBindingLimitType = PerStageBindingLimitType;
 export const kPerPipelineBindingLimits: {
-  [k in PerPipelineBindingLimitType]: {
-    maxDynamic: number;
+  readonly [k in PerPipelineBindingLimitType]: {
+    readonly maxDynamic: number;
   };
 } = /* prettier-ignore */ {
   'uniform-buffer':  { maxDynamic: 8, },
@@ -135,7 +139,7 @@ export type BindableResource =
   | 'sampled-textureview'
   | 'storage-textureview';
 const kBindableResource: {
-  [k in BindableResource]: {};
+  readonly [k in BindableResource]: {};
 } = /* prettier-ignore */ {
   'error-buffer':        {},
   'error-sampler':       {},
@@ -147,7 +151,7 @@ const kBindableResource: {
   'sampled-textureview': {},
   'storage-textureview': {},
 };
-export const kBindableResources = Object.keys(kBindableResource) as BindableResource[];
+export const kBindableResources = keysOf(kBindableResource);
 
 type ValidBindableResource =
   | 'uniform-buffer'
@@ -157,9 +161,9 @@ type ValidBindableResource =
   | 'sampled-textureview'
   | 'storage-textureview';
 interface ValidBinding {
-  resource: ValidBindableResource;
-  perStageBindingLimitType: PerStageBindingLimitType;
-  perPipelineBindingLimitType: PerPipelineBindingLimitType;
+  readonly resource: ValidBindableResource;
+  readonly perStageBindingLimitType: PerStageBindingLimitType;
+  readonly perPipelineBindingLimitType: PerPipelineBindingLimitType;
 }
 const kKind: {
   [s: string]: ValidBinding;
@@ -177,7 +181,7 @@ const kValidStagesAll = {
 };
 const kValidStagesCompute = { validStages: C.ShaderStage.Compute };
 export const kBindingTypeInfo: {
-  [k in GPUBindingType]: {
+  readonly [k in GPUBindingType]: {
     readonly resource: ValidBindableResource;
     readonly validStages: GPUShaderStageFlags;
     readonly perStageBindingLimitType: PerStageBindingLimitType;
@@ -195,11 +199,11 @@ export const kBindingTypeInfo: {
   'writeonly-storage-texture': { ...kKind.storageTex, ...kValidStagesCompute, },
   'readonly-storage-texture':  { ...kKind.storageTex, ...kValidStagesAll,     },
 };
-export const kBindingTypes = Object.keys(kBindingTypeInfo) as GPUBindingType[];
+export const kBindingTypes = keysOf(kBindingTypeInfo);
 
-export const kShaderStages: GPUShaderStageFlags[] = [
+export const kShaderStages: readonly GPUShaderStageFlags[] = [
   C.ShaderStage.Vertex,
   C.ShaderStage.Fragment,
   C.ShaderStage.Compute,
 ];
-export const kShaderStageCombinations: GPUShaderStageFlags[] = [0, 1, 2, 3, 4, 5, 6, 7];
+export const kShaderStageCombinations: readonly GPUShaderStageFlags[] = [0, 1, 2, 3, 4, 5, 6, 7];
