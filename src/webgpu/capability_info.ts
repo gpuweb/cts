@@ -186,7 +186,6 @@ export const kBindingTypeInfo: {
     readonly perPipelineBindingLimitType: PerPipelineBindingLimitType;
     // Add fields as needed
   };
-  // TODO: maxDynamicCount should be kPerPipelineLayoutBindingLimits instead
 } = /* prettier-ignore */ {
   'uniform-buffer':            { ...kBindingKind.uniformBuf,  ...kValidStagesAll,     },
   'storage-buffer':            { ...kBindingKind.storageBuf,  ...kValidStagesCompute, },
