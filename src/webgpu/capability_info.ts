@@ -160,20 +160,18 @@ type ValidBindableResource =
   | 'comparison-sampler'
   | 'sampled-textureview'
   | 'storage-textureview';
-interface ValidBinding {
+interface BindingKind {
   readonly resource: ValidBindableResource;
   readonly perStageBindingLimitType: PerStageBindingLimitType;
   readonly perPipelineBindingLimitType: PerPipelineBindingLimitType;
 }
-const kKind: {
-  [s: string]: ValidBinding;
-} = /* prettier-ignore */ {
-  uniformBuf: { resource: 'uniform-buffer',      perStageBindingLimitType: 'uniform-buffer',  perPipelineBindingLimitType: 'uniform-buffer',  },
-  storageBuf: { resource: 'storage-buffer',      perStageBindingLimitType: 'storage-buffer',  perPipelineBindingLimitType: 'storage-buffer',  },
-  regSampler: { resource: 'sampler',             perStageBindingLimitType: 'sampler',         perPipelineBindingLimitType: 'sampler',         },
-  cmpSampler: { resource: 'comparison-sampler',  perStageBindingLimitType: 'sampler',         perPipelineBindingLimitType: 'sampler',         },
-  sampledTex: { resource: 'sampled-textureview', perStageBindingLimitType: 'sampled-texture', perPipelineBindingLimitType: 'sampled-texture', },
-  storageTex: { resource: 'storage-textureview', perStageBindingLimitType: 'storage-texture', perPipelineBindingLimitType: 'storage-texture', },
+const kBindingKind = /* prettier-ignore */ {
+  uniformBuf:  { resource: 'uniform-buffer',      perStageBindingLimitType: 'uniform-buffer',  perPipelineBindingLimitType: 'uniform-buffer',  } as BindingKind,
+  storageBuf:  { resource: 'storage-buffer',      perStageBindingLimitType: 'storage-buffer',  perPipelineBindingLimitType: 'storage-buffer',  } as BindingKind,
+  plainSamp:   { resource: 'sampler',             perStageBindingLimitType: 'sampler',         perPipelineBindingLimitType: 'sampler',         } as BindingKind,
+  compareSamp: { resource: 'comparison-sampler',  perStageBindingLimitType: 'sampler',         perPipelineBindingLimitType: 'sampler',         } as BindingKind,
+  sampledTex:  { resource: 'sampled-textureview', perStageBindingLimitType: 'sampled-texture', perPipelineBindingLimitType: 'sampled-texture', } as BindingKind,
+  storageTex:  { resource: 'storage-textureview', perStageBindingLimitType: 'storage-texture', perPipelineBindingLimitType: 'storage-texture', } as BindingKind,
 };
 
 const kValidStagesAll = {
@@ -190,14 +188,14 @@ export const kBindingTypeInfo: {
   };
   // TODO: maxDynamicCount should be kPerPipelineLayoutBindingLimits instead
 } = /* prettier-ignore */ {
-  'uniform-buffer':            { ...kKind.uniformBuf, ...kValidStagesAll,     },
-  'storage-buffer':            { ...kKind.storageBuf, ...kValidStagesCompute, },
-  'readonly-storage-buffer':   { ...kKind.storageBuf, ...kValidStagesAll,     },
-  'sampler':                   { ...kKind.regSampler, ...kValidStagesAll,     },
-  'comparison-sampler':        { ...kKind.cmpSampler, ...kValidStagesAll,     },
-  'sampled-texture':           { ...kKind.sampledTex, ...kValidStagesAll,     },
-  'writeonly-storage-texture': { ...kKind.storageTex, ...kValidStagesCompute, },
-  'readonly-storage-texture':  { ...kKind.storageTex, ...kValidStagesAll,     },
+  'uniform-buffer':            { ...kBindingKind.uniformBuf,  ...kValidStagesAll,     },
+  'storage-buffer':            { ...kBindingKind.storageBuf,  ...kValidStagesCompute, },
+  'readonly-storage-buffer':   { ...kBindingKind.storageBuf,  ...kValidStagesAll,     },
+  'sampler':                   { ...kBindingKind.plainSamp,   ...kValidStagesAll,     },
+  'comparison-sampler':        { ...kBindingKind.compareSamp, ...kValidStagesAll,     },
+  'sampled-texture':           { ...kBindingKind.sampledTex,  ...kValidStagesAll,     },
+  'writeonly-storage-texture': { ...kBindingKind.storageTex,  ...kValidStagesCompute, },
+  'readonly-storage-texture':  { ...kBindingKind.storageTex,  ...kValidStagesAll,     },
 };
 export const kBindingTypes = keysOf(kBindingTypeInfo);
 
