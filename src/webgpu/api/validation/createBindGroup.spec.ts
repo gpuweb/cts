@@ -80,9 +80,13 @@ g.test('buffer binding must contain exactly one buffer of its type')
   )
   .fn(t => {
     const { bindingType, resourceType } = t.params;
+    const info = kBindingTypeInfo[bindingType];
 
+    const storageTextureFormat = info.kind === 'storage-texture' ? 'rgba8unorm' : undefined;
     const layout = t.device.createBindGroupLayout({
-      entries: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, type: bindingType }],
+      entries: [
+        { binding: 0, visibility: GPUShaderStage.COMPUTE, type: bindingType, storageTextureFormat },
+      ],
     });
 
     const resource = t.getBindingResource(resourceType);
@@ -101,14 +105,16 @@ g.test('texture binding must have correct usage')
   ])
   .fn(async t => {
     const { type, _usage: usage } = t.params;
+    const info = kBindingTypeInfo[type];
 
+    const storageTextureFormat = info.kind === 'storage-texture' ? 'rgba8unorm' : undefined;
     const bindGroupLayout = t.device.createBindGroupLayout({
-      entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, type }],
+      entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, type, storageTextureFormat }],
     });
 
     const goodDescriptor = {
       size: { width: 16, height: 16, depth: 1 },
-      format: C.TextureFormat.R8Unorm,
+      format: C.TextureFormat.RGBA8Unorm,
       usage,
     };
 
@@ -118,7 +124,6 @@ g.test('texture binding must have correct usage')
       layout: bindGroupLayout,
     });
 
-    const info = kBindingTypeInfo[type];
     function* mismatchedTextureUsages(): Iterable<GPUTextureUsageFlags> {
       yield GPUTextureUsage.COPY_SRC;
       yield GPUTextureUsage.COPY_DST;
