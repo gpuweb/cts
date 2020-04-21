@@ -6,7 +6,14 @@ import * as C from '../../../common/constants.js';
 import { poptions, params } from '../../../common/framework/params.js';
 import { TestGroup } from '../../../common/framework/test_group.js';
 import { unreachable } from '../../../common/framework/util/util.js';
-import { kBindingTypes, kBindingTypeInfo, kBindableResources } from '../../capability_info.js';
+import {
+  kBindingTypes,
+  kBindingTypeInfo,
+  kBindableResources,
+  kTextureUsages,
+  kTextureBindingTypes,
+  kTextureBindingTypeInfo,
+} from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -94,57 +101,33 @@ g.test('buffer binding must contain exactly one buffer of its type')
   });
 
 g.test('texture binding must have correct usage')
-  .params([
-    { type: C.BindingType.SampledTexture, _usage: C.TextureUsage.Sampled },
-    { type: C.BindingType.ReadonlyStorageTexture, _usage: C.TextureUsage.Storage },
-    { type: C.BindingType.WriteonlyStorageTexture, _usage: C.TextureUsage.Storage },
-  ])
+  .params(
+    params()
+      .combine(poptions('type', kTextureBindingTypes))
+      .combine(poptions('usage', kTextureUsages))
+  )
   .fn(async t => {
-    const { type, _usage: usage } = t.params;
-    const info = kBindingTypeInfo[type];
+    const { type, usage } = t.params;
+    const info = kTextureBindingTypeInfo[type];
 
     const storageTextureFormat = info.resource === 'storageTex' ? 'rgba8unorm' : undefined;
     const bindGroupLayout = t.device.createBindGroupLayout({
       entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, type, storageTextureFormat }],
     });
 
-    const goodDescriptor = {
+    const descriptor = {
       size: { width: 16, height: 16, depth: 1 },
       format: C.TextureFormat.RGBA8Unorm,
       usage,
     };
 
-    // Control case
-    t.device.createBindGroup({
-      entries: [{ binding: 0, resource: t.device.createTexture(goodDescriptor).createView() }],
-      layout: bindGroupLayout,
-    });
-
-    function* mismatchedTextureUsages(): Iterable<GPUTextureUsageFlags> {
-      yield GPUTextureUsage.COPY_SRC;
-      yield GPUTextureUsage.COPY_DST;
-      // TODO(kainino0x): This looks wrong. Refactor this whole test to be parameterized over usage.
-      if (info.perStageLimitClass.class === 'sampledTex') {
-        yield GPUTextureUsage.SAMPLED;
-      }
-      if (info.perStageLimitClass.class === 'storageTex') {
-        yield GPUTextureUsage.STORAGE;
-      }
-      yield GPUTextureUsage.OUTPUT_ATTACHMENT;
-    }
-
-    // Mismatched texture binding usages are not valid.
-    for (const mismatchedTextureUsage of mismatchedTextureUsages()) {
-      const badDescriptor = clone(goodDescriptor);
-      badDescriptor.usage = mismatchedTextureUsage;
-
-      t.expectValidationError(() => {
-        t.device.createBindGroup({
-          entries: [{ binding: 0, resource: t.device.createTexture(badDescriptor).createView() }],
-          layout: bindGroupLayout,
-        });
+    const shouldError = usage !== info.usage;
+    t.expectValidationError(() => {
+      t.device.createBindGroup({
+        entries: [{ binding: 0, resource: t.device.createTexture(descriptor).createView() }],
+        layout: bindGroupLayout,
       });
-    }
+    }, shouldError);
   });
 
 g.test('texture must have correct component type')
