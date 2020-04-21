@@ -9,6 +9,7 @@ import {
   kBindingTypeInfo,
   kBindingTypes,
   kShaderStageCombinations,
+  kPerPipelineBindingLimits,
 } from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -33,10 +34,12 @@ g.test('number of dynamic buffers exceeds the maximum value')
   )
   .fn(async t => {
     const { type, visibility } = t.params;
-    const maxDynamicCount = kBindingTypeInfo[type as GPUBindingType].maxDynamicCount;
+    const { maxDynamic } = kPerPipelineBindingLimits[
+      kBindingTypeInfo[type].perPipelineBindingLimitType
+    ];
 
     const maxDynamicBufferBindings: GPUBindGroupLayoutEntry[] = [];
-    for (let binding = 0; binding < maxDynamicCount; binding++) {
+    for (let binding = 0; binding < maxDynamic; binding++) {
       maxDynamicBufferBindings.push({ binding, visibility, type, hasDynamicOffset: true });
     }
 
@@ -89,8 +92,10 @@ g.test('visibility and dynamic offsets')
       entries: [{ binding: 0, visibility, type, hasDynamicOffset }],
     };
 
+    const supportsDynamicOffset =
+      kPerPipelineBindingLimits[kBindingTypeInfo[type].perPipelineBindingLimitType].maxDynamic > 0;
     let success = true;
-    if (info.type !== 'buffer' && hasDynamicOffset) success = false;
+    if (!supportsDynamicOffset && hasDynamicOffset) success = false;
     if ((visibility & ~info.validStages) !== 0) success = false;
 
     t.expectValidationError(() => {
