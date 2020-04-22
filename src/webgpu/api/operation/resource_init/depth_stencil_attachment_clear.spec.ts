@@ -20,18 +20,16 @@ import {
 } from './texture_zero_init_test.js';
 
 class DepthStencilAttachmentClearTest extends TextureZeroInitTest {
-  private depthTestPipelineCache: Map<string, GPURenderPipeline> = new Map();
+  // Construct a pipeline which will render a single triangle with depth
+  // equal to |initializeStateAsDepth(state)|. The depth compare function
+  // is set to "equal" so the fragment shader will only write 1.0 to the
+  // R8Unorm output if the depth buffer contains exactly the expected value.
   private getDepthTestReadbackPipeline(
     state: InitializedState,
     format: GPUTextureFormat,
     sampleCount: number
   ): GPURenderPipeline {
-    const key = [state, format, sampleCount].join('_');
-    if (this.depthTestPipelineCache.has(key)) {
-      return this.depthTestPipelineCache.get(key)!;
-    }
-
-    const pipeline = this.device.createRenderPipeline({
+    return this.device.createRenderPipeline({
       vertexStage: {
         entryPoint: 'main',
         module: this.makeShaderModule('vertex', {
@@ -70,21 +68,17 @@ class DepthStencilAttachmentClearTest extends TextureZeroInitTest {
       primitiveTopology: 'triangle-list',
       sampleCount,
     });
-    this.depthTestPipelineCache.set(key, pipeline);
-    return pipeline;
   }
 
-  private stencilTestPipelineCache: Map<string, GPURenderPipeline> = new Map();
+  // Construct a pipeline which will render a single triangle.
+  // The stencil compare function is set to "equal" so the fragment shader
+  // will only write 1.0 to the R8Unorm output if the stencil buffer contains
+  // exactly the stencil reference value.
   private getStencilTestReadbackPipeline(
     format: GPUTextureFormat,
     sampleCount: number
   ): GPURenderPipeline {
-    const key = [format, sampleCount].join('_');
-    if (this.stencilTestPipelineCache.has(key)) {
-      return this.stencilTestPipelineCache.get(key)!;
-    }
-
-    const pipeline = this.device.createRenderPipeline({
+    return this.device.createRenderPipeline({
       vertexStage: {
         entryPoint: 'main',
         module: this.makeShaderModule('vertex', {
@@ -127,10 +121,13 @@ class DepthStencilAttachmentClearTest extends TextureZeroInitTest {
       primitiveTopology: 'triangle-list',
       sampleCount,
     });
-    this.stencilTestPipelineCache.set(key, pipeline);
-    return pipeline;
   }
 
+  // Check the contents by running either a depth or stencil test. The test will
+  // render 1.0 to an R8Unorm texture if the depth/stencil buffer is equal to the expected
+  // value. This is done by using a depth compare function and explicitly setting the depth
+  // value with gl_FragDepth in the shader, or by using a stencil compare function and
+  // setting the stencil reference value in the render pass.
   checkContents(
     texture: GPUTexture,
     state: InitializedState,
@@ -191,6 +188,9 @@ class DepthStencilAttachmentClearTest extends TextureZeroInitTest {
           pass.setPipeline(
             this.getStencilTestReadbackPipeline(this.params.format, this.params.sampleCount)
           );
+          // Set the stencil reference. The rendering pipeline uses stencil compare function "equal"
+          // so this pass will write 1.0 to the output only if the stencil buffer is equal to this
+          // reference value.
           pass.setStencilReference(initializedStateAsStencil(state));
           break;
 
