@@ -8,14 +8,6 @@ module.exports = function (grunt) {
       out: ['out/', 'out-wpt'],
     },
 
-    mkdir: {
-      out: {
-        options: {
-          create: ['out'],
-        },
-      },
-    },
-
     run: {
       'generate-version': {
         cmd: 'node',
@@ -89,9 +81,10 @@ module.exports = function (grunt) {
           { expand: true, cwd: '.', src: 'LICENSE.txt', dest: 'out-wpt/' },
           { expand: true, cwd: 'out', src: 'common/constants.js', dest: 'out-wpt/' },
           { expand: true, cwd: 'out', src: 'common/framework/**/*.js', dest: 'out-wpt/' },
-          { expand: true, cwd: 'out', src: 'webgpu/**/*.js', dest: 'out-wpt/' },
           { expand: true, cwd: 'out', src: 'common/runtime/wpt.js', dest: 'out-wpt/' },
           { expand: true, cwd: 'out', src: 'common/runtime/helper/**/*.js', dest: 'out-wpt/' },
+          { expand: true, cwd: 'out', src: 'webgpu/**/*.js', dest: 'out-wpt/' },
+          { expand: true, cwd: 'src', src: 'webgpu/**/*.html', dest: 'out-wpt/' },
         ],
       },
     },
@@ -131,7 +124,6 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-http-server');
-  grunt.loadNpmTasks('grunt-mkdir');
   grunt.loadNpmTasks('grunt-run');
   grunt.loadNpmTasks('grunt-ts');
   grunt.loadNpmTasks('grunt-contrib-watch');
@@ -162,7 +154,6 @@ module.exports = function (grunt) {
 
   grunt.registerTask('prebuild', 'Pre-build tasks (clean and re-copy)', [
     'clean',
-    'mkdir:out',
     'copy:webgpu-constants',
     'copy:glslang',
   ]);
