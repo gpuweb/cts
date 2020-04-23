@@ -8,6 +8,7 @@ export enum BindingResourceType {
   'uniform-buffer' = 'uniform-buffer',
   'storage-buffer' = 'storage-buffer',
   'sampler' = 'sampler',
+  'comparison-sampler' = 'comparison-sampler',
   'sampled-textureview' = 'sampled-textureview',
   'storage-textureview' = 'storage-textureview',
 }
@@ -22,6 +23,8 @@ export function resourceBindingMatches(b: GPUBindingType, r: BindingResourceType
       return r === 'sampled-textureview';
     case 'sampler':
       return r === 'sampler';
+    case 'comparison-sampler':
+      return r === 'comparison-sampler';
     case 'readonly-storage-texture':
     case 'writeonly-storage-texture':
       return r === 'storage-textureview';
@@ -53,6 +56,10 @@ export class ValidationTest extends GPUTest {
 
   getSampler(): GPUSampler {
     return this.device.createSampler();
+  }
+
+  getComparisonSampler(): GPUSampler {
+    return this.device.createSampler({ compare: 'never' });
   }
 
   getErrorSampler(): GPUSampler {
@@ -105,6 +112,8 @@ export class ValidationTest extends GPUTest {
         return { buffer: this.getStorageBuffer() };
       case 'sampler':
         return this.getSampler();
+      case 'comparison-sampler':
+        return this.getComparisonSampler();
       case 'sampled-textureview':
         return this.getSampledTexture().createView();
       case 'storage-textureview':

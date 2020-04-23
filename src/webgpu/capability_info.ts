@@ -109,11 +109,20 @@ export const kPerStageBindingLimits: {
   'storage-texture': 4,
 };
 
+type BindingKind =
+  | 'uniform-buffer'
+  | 'storage-buffer'
+  | 'sampler'
+  | 'comparison-sampler'
+  | 'sampled-texture'
+  | 'storage-texture';
+
 const kStagesAll = C.ShaderStage.Vertex | C.ShaderStage.Fragment | C.ShaderStage.Compute;
 const kStagesCompute = C.ShaderStage.Compute;
 export const kBindingTypeInfo: {
   [k in GPUBindingType]: {
     type: 'buffer' | 'texture' | 'sampler';
+    kind: BindingKind;
     validStages: GPUShaderStageFlags;
     perStageLimitType: PerStageBindingLimitType;
     maxDynamicCount: number;
@@ -121,14 +130,14 @@ export const kBindingTypeInfo: {
   };
   // TODO: maxDynamicCount should be kPerPipelineLayoutBindingLimits instead
 } = /* prettier-ignore */ {
-  'uniform-buffer':            { type: 'buffer',  validStages: kStagesAll,     perStageLimitType: 'uniform-buffer',  maxDynamicCount: 8 },
-  'storage-buffer':            { type: 'buffer',  validStages: kStagesCompute, perStageLimitType: 'storage-buffer',  maxDynamicCount: 4 },
-  'readonly-storage-buffer':   { type: 'buffer',  validStages: kStagesAll,     perStageLimitType: 'storage-buffer',  maxDynamicCount: 4 },
-  'sampler':                   { type: 'sampler', validStages: kStagesAll,     perStageLimitType: 'sampler',         maxDynamicCount: 0 },
-  'comparison-sampler':        { type: 'sampler', validStages: kStagesAll,     perStageLimitType: 'sampler',         maxDynamicCount: 0 },
-  'sampled-texture':           { type: 'texture', validStages: kStagesAll,     perStageLimitType: 'sampled-texture', maxDynamicCount: 0 },
-  'writeonly-storage-texture': { type: 'texture', validStages: kStagesCompute, perStageLimitType: 'storage-texture', maxDynamicCount: 0 },
-  'readonly-storage-texture':  { type: 'texture', validStages: kStagesAll,     perStageLimitType: 'storage-texture', maxDynamicCount: 0 },
+  'uniform-buffer':            { type: 'buffer',  kind: 'uniform-buffer',     validStages: kStagesAll,     perStageLimitType: 'uniform-buffer',  maxDynamicCount: 8 },
+  'storage-buffer':            { type: 'buffer',  kind: 'storage-buffer',     validStages: kStagesCompute, perStageLimitType: 'storage-buffer',  maxDynamicCount: 4 },
+  'readonly-storage-buffer':   { type: 'buffer',  kind: 'storage-buffer',     validStages: kStagesAll,     perStageLimitType: 'storage-buffer',  maxDynamicCount: 4 },
+  'sampler':                   { type: 'sampler', kind: 'sampler',            validStages: kStagesAll,     perStageLimitType: 'sampler',         maxDynamicCount: 0 },
+  'comparison-sampler':        { type: 'sampler', kind: 'comparison-sampler', validStages: kStagesAll,     perStageLimitType: 'sampler',         maxDynamicCount: 0 },
+  'sampled-texture':           { type: 'texture', kind: 'sampled-texture',    validStages: kStagesAll,     perStageLimitType: 'sampled-texture', maxDynamicCount: 0 },
+  'writeonly-storage-texture': { type: 'texture', kind: 'storage-texture',    validStages: kStagesCompute, perStageLimitType: 'storage-texture', maxDynamicCount: 0 },
+  'readonly-storage-texture':  { type: 'texture', kind: 'storage-texture',    validStages: kStagesAll,     perStageLimitType: 'storage-texture', maxDynamicCount: 0 },
 };
 export const kBindingTypes = Object.keys(kBindingTypeInfo) as GPUBindingType[];
 
