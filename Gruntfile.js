@@ -8,14 +8,6 @@ module.exports = function (grunt) {
       out: ['out/', 'out-wpt'],
     },
 
-    mkdir: {
-      out: {
-        options: {
-          create: ['out'],
-        },
-      },
-    },
-
     run: {
       'generate-version': {
         cmd: 'node',
@@ -121,7 +113,6 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-http-server');
-  grunt.loadNpmTasks('grunt-mkdir');
   grunt.loadNpmTasks('grunt-run');
   grunt.loadNpmTasks('grunt-ts');
   grunt.loadNpmTasks('grunt-contrib-watch');
@@ -152,7 +143,6 @@ module.exports = function (grunt) {
 
   grunt.registerTask('prebuild', 'Pre-build tasks (clean and re-copy)', [
     'clean',
-    'mkdir:out',
     'copy:webgpu-constants',
   ]);
   grunt.registerTask('compile', 'Compile and generate (no checks, no WPT)', [
