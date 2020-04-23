@@ -1948,11 +1948,6 @@ grunt-legacy-util@~1.1.1:
     underscore.string "~3.3.4"
     which "~1.3.0"
 
-grunt-mkdir@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/grunt-mkdir/-/grunt-mkdir-1.0.0.tgz#73e1a26ac24a08596363f4dd954b0d32485e58e9"
-  integrity sha1-c+GiasJKCFljY/TdlUsNMkheWOk=
-
 grunt-run@^0.8.1:
   version "0.8.1"
   resolved "https://registry.yarnpkg.com/grunt-run/-/grunt-run-0.8.1.tgz#502f988947a59f9ad567e2dcb5eeedec712980ec"
