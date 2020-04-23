@@ -6,7 +6,7 @@ runRefTest(async t => {
   const ctx = (canvas.getContext('gpupresent') as unknown) as GPUCanvasContext;
   const swapChain = ctx.configureSwapChain({
     device: t.device,
-    format: 'rgba8unorm',
+    format: 'bgra8unorm',
   });
 
   const colorAttachment = swapChain.getCurrentTexture();
