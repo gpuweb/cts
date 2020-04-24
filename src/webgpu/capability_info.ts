@@ -194,6 +194,16 @@ const kValidStagesAll = {
 };
 const kValidStagesCompute = { validStages: C.ShaderStage.Compute };
 
+// Binding types
+
+interface BindingTypeInfo {
+  readonly resource: ValidBindableResource;
+  readonly validStages: GPUShaderStageFlags;
+  readonly perStageBindingLimitType: PerStageBindingLimitType;
+  readonly perPipelineBindingLimitType: PerPipelineBindingLimitType;
+  // Add fields as needed
+}
+
 // Buffer bindings
 
 type BufferBindingType = 'uniform-buffer' | 'storage-buffer' | 'readonly-storage-buffer';
@@ -240,13 +250,6 @@ export const kTextureBindingTypes = keysOf(kTextureBindingTypeInfo);
 
 // All binding types (merged from above)
 
-interface BindingTypeInfo {
-  readonly resource: ValidBindableResource;
-  readonly validStages: GPUShaderStageFlags;
-  readonly perStageBindingLimitType: PerStageBindingLimitType;
-  readonly perPipelineBindingLimitType: PerPipelineBindingLimitType;
-  // Add fields as needed
-}
 export const kBindingTypeInfo: {
   readonly [k in GPUBindingType]: BindingTypeInfo;
 } = {
