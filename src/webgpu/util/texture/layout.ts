@@ -6,7 +6,7 @@ import { align, isAligned } from '../math.js';
 export const kBytesPerRowAlignment = 256;
 export const kBufferCopyAlignment = 4;
 
-interface LayoutOptions {
+export interface LayoutOptions {
   mipLevel: number;
   bytesPerRow?: number;
   rowsPerImage?: number;
