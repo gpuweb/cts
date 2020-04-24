@@ -16,19 +16,12 @@ import {
 } from './texture_zero_init_test.js';
 
 class SampledTextureClearTest extends TextureZeroInitTest {
-  private samplingPipelineCache: Map<string, GPUComputePipeline> = new Map();
   private getSamplingReadbackPipeline(
     prefix: string,
     sampleCount: number,
     dimension: GPUTextureDimension
   ): GPUComputePipeline {
     const componentOrder = getTexelDataRepresentation(this.params.format).componentOrder;
-    const key = [prefix, sampleCount, dimension, componentOrder].join('_');
-    let pipeline = this.samplingPipelineCache.get(key);
-    if (pipeline) {
-      return pipeline;
-    }
-
     const MS = sampleCount > 1 ? 'MS' : '';
     const XD = dimension.toUpperCase();
     const componentCount = componentOrder.length;
@@ -80,15 +73,13 @@ class SampledTextureClearTest extends TextureZeroInitTest {
       }
       `;
 
-    pipeline = this.device.createComputePipeline({
+    return this.device.createComputePipeline({
       layout: undefined,
       computeStage: {
         entryPoint: 'main',
         module: this.makeShaderModule('compute', { glsl }),
       },
     });
-    this.samplingPipelineCache.set(key, pipeline);
-    return pipeline;
   }
 
   checkContents(
