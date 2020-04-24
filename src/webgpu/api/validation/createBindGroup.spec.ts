@@ -78,7 +78,7 @@ g.test('buffer binding must contain exactly one buffer of its type')
     const { bindingType, resourceType } = t.params;
     const info = kBindingTypeInfo[bindingType];
 
-    const storageTextureFormat = info.resource === 'storage-textureview' ? 'rgba8unorm' : undefined;
+    const storageTextureFormat = info.resource === 'storageTex' ? 'rgba8unorm' : undefined;
     const layout = t.device.createBindGroupLayout({
       entries: [
         { binding: 0, visibility: GPUShaderStage.COMPUTE, type: bindingType, storageTextureFormat },
@@ -103,7 +103,7 @@ g.test('texture binding must have correct usage')
     const { type, _usage: usage } = t.params;
     const info = kBindingTypeInfo[type];
 
-    const storageTextureFormat = info.resource === 'storage-textureview' ? 'rgba8unorm' : undefined;
+    const storageTextureFormat = info.resource === 'storageTex' ? 'rgba8unorm' : undefined;
     const bindGroupLayout = t.device.createBindGroupLayout({
       entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, type, storageTextureFormat }],
     });
@@ -123,10 +123,11 @@ g.test('texture binding must have correct usage')
     function* mismatchedTextureUsages(): Iterable<GPUTextureUsageFlags> {
       yield GPUTextureUsage.COPY_SRC;
       yield GPUTextureUsage.COPY_DST;
-      if (info.perStageBindingLimitType === 'sampled-texture') {
+      // TODO(kainino0x): This looks wrong. Refactor this whole test to be parameterized over usage.
+      if (info.perStageBindingLimitType === 'sampledTex') {
         yield GPUTextureUsage.SAMPLED;
       }
-      if (info.perStageBindingLimitType === 'storage-texture') {
+      if (info.perStageBindingLimitType === 'storageTex') {
         yield GPUTextureUsage.STORAGE;
       }
       yield GPUTextureUsage.OUTPUT_ATTACHMENT;

@@ -160,8 +160,7 @@ g.test('max resources per stage/in bind group layout')
         binding: i,
         visibility: maxedVisibility,
         type: maxedType,
-        storageTextureFormat:
-          maxedTypeInfo.resource === 'storage-textureview' ? 'rgba8unorm' : undefined,
+        storageTextureFormat: maxedTypeInfo.resource === 'storageTex' ? 'rgba8unorm' : undefined,
       });
     }
 
@@ -175,8 +174,7 @@ g.test('max resources per stage/in bind group layout')
       binding: maxedCount,
       visibility: extraVisibility,
       type: extraType,
-      storageTextureFormat:
-        extraTypeInfo.resource === 'storage-textureview' ? 'rgba8unorm' : undefined,
+      storageTextureFormat: extraTypeInfo.resource === 'storageTex' ? 'rgba8unorm' : undefined,
     });
 
     const shouldError = maxedCount >= kMaxBindingsPerBindGroup;
@@ -203,8 +201,7 @@ g.test('max resources per stage/in pipeline layout')
         binding: i,
         visibility: maxedVisibility,
         type: maxedType,
-        storageTextureFormat:
-          maxedTypeInfo.resource === 'storage-textureview' ? 'rgba8unorm' : undefined,
+        storageTextureFormat: maxedTypeInfo.resource === 'storageTex' ? 'rgba8unorm' : undefined,
       });
     }
 
@@ -219,8 +216,7 @@ g.test('max resources per stage/in pipeline layout')
           binding: 0,
           visibility: extraVisibility,
           type: extraType,
-          storageTextureFormat:
-            extraTypeInfo.resource === 'storage-textureview' ? 'rgba8unorm' : undefined,
+          storageTextureFormat: extraTypeInfo.resource === 'storageTex' ? 'rgba8unorm' : undefined,
         },
       ],
     });

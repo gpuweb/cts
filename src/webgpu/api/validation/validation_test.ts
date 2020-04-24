@@ -67,23 +67,23 @@ export class ValidationTest extends GPUTest {
 
   getBindingResource(bindingType: BindableResource): GPUBindingResource {
     switch (bindingType) {
-      case 'error-buffer':
+      case 'errorBuf':
         return { buffer: this.getErrorBuffer() };
-      case 'error-sampler':
+      case 'errorSamp':
         return this.getErrorSampler();
-      case 'error-textureview':
+      case 'errorTex':
         return this.getErrorTextureView();
-      case 'uniform-buffer':
+      case 'uniformBuf':
         return { buffer: this.getUniformBuffer() };
-      case 'storage-buffer':
+      case 'storageBuf':
         return { buffer: this.getStorageBuffer() };
-      case 'sampler':
+      case 'plainSamp':
         return this.getSampler();
-      case 'comparison-sampler':
+      case 'compareSamp':
         return this.getComparisonSampler();
-      case 'sampled-textureview':
+      case 'sampledTex':
         return this.getSampledTexture().createView();
-      case 'storage-textureview':
+      case 'storageTex':
         return this.getStorageTexture().createView();
       default:
         unreachable('unknown binding resource type');
