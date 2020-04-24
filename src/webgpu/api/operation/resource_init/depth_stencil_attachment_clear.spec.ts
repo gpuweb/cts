@@ -4,12 +4,7 @@ export const description =
 import * as C from '../../../../common/constants.js';
 import { TestGroup } from '../../../../common/framework/test_group.js';
 import { unreachable } from '../../../../common/framework/util/util.js';
-import {
-  fillTextureDataWithTexelValue,
-  getTextureCopyLayout,
-} from '../../../util/texture/layout.js';
 import { SubresourceRange } from '../../../util/texture/subresource.js';
-import { getTexelDataRepresentation } from '../../../util/texture/texelData.js';
 
 import {
   InitializedState,
@@ -200,37 +195,12 @@ class DepthStencilAttachmentClearTest extends TextureZeroInitTest {
       pass.draw(3, 1, 0, 0);
       pass.endPass();
 
-      const { bytesPerRow, byteLength, rowsPerImage } = getTextureCopyLayout('r8unorm', '2d', [
-        width,
-        height,
-        1,
-      ]);
-      const expectedTexelData = getTexelDataRepresentation('r8unorm').getBytes({ R: 1 });
-
-      const buffer = this.device.createBuffer({
-        size: byteLength,
-        usage: C.BufferUsage.CopySrc | C.BufferUsage.CopyDst,
-      });
-
-      commandEncoder.copyTextureToBuffer(
-        { texture: resolveTexture || renderTexture },
-        {
-          buffer,
-          bytesPerRow,
-          rowsPerImage,
-        },
-        [width, height, 1]
-      );
-
       this.queue.submit([commandEncoder.finish()]);
 
-      const arrayBuffer = new ArrayBuffer(byteLength);
-      fillTextureDataWithTexelValue(expectedTexelData, 'r8unorm', '2d', arrayBuffer, [
-        width,
-        height,
-        1,
-      ]);
-      this.expectContents(buffer, new Uint8Array(arrayBuffer));
+      this.expectSingleColor(resolveTexture || renderTexture, 'r8unorm', {
+        size: [width, height, 1],
+        exp: { R: 1 },
+      });
     }
   }
 }

@@ -9,7 +9,7 @@ export const g = new TestGroup(GPUTest);
 
 g.test('storeOp controls whether 1x1 drawn quad is stored')
   .params([
-    { storeOp: C.StoreOp.Store, _expected: 255 }, //
+    { storeOp: C.StoreOp.Store, _expected: 1 }, //
     { storeOp: C.StoreOp.Clear, _expected: 0 },
   ])
   .fn(async t => {
@@ -65,18 +65,11 @@ g.test('storeOp controls whether 1x1 drawn quad is stored')
     pass.setPipeline(renderPipeline);
     pass.draw(3, 1, 0, 0);
     pass.endPass();
-    const dstBuffer = t.device.createBuffer({
-      size: 4,
-      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
-    });
-    encoder.copyTextureToBuffer(
-      { texture: renderTexture },
-      { buffer: dstBuffer, bytesPerRow: 256 },
-      { width: 1, height: 1, depth: 1 }
-    );
     t.device.defaultQueue.submit([encoder.finish()]);
 
     // expect the buffer to be clear
-    const expectedContent = new Uint32Array([t.params._expected]);
-    t.expectContents(dstBuffer, expectedContent);
+    t.expectSingleColor(renderTexture, 'r8unorm', {
+      size: [1, 1, 1],
+      exp: { R: t.params._expected },
+    });
   });
