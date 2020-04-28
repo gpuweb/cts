@@ -124,10 +124,10 @@ g.test('texture binding must have correct usage')
       yield GPUTextureUsage.COPY_SRC;
       yield GPUTextureUsage.COPY_DST;
       // TODO(kainino0x): This looks wrong. Refactor this whole test to be parameterized over usage.
-      if (info.perStageBindingLimitType === 'sampledTex') {
+      if (info.perStagePerLimitClass.class === 'sampledTex') {
         yield GPUTextureUsage.SAMPLED;
       }
-      if (info.perStageBindingLimitType === 'storageTex') {
+      if (info.perStagePerLimitClass.class === 'storageTex') {
         yield GPUTextureUsage.STORAGE;
       }
       yield GPUTextureUsage.OUTPUT_ATTACHMENT;
