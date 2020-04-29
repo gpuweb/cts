@@ -1,39 +1,6 @@
 import { unreachable } from '../../../common/framework/util/util.js';
+import { BindableResource } from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
-
-export enum BindingResourceType {
-  'error-buffer' = 'error-buffer',
-  'error-sampler' = 'error-sampler',
-  'error-textureview' = 'error-textureview',
-  'uniform-buffer' = 'uniform-buffer',
-  'storage-buffer' = 'storage-buffer',
-  'sampler' = 'sampler',
-  'comparison-sampler' = 'comparison-sampler',
-  'sampled-textureview' = 'sampled-textureview',
-  'storage-textureview' = 'storage-textureview',
-}
-export const kBindingResourceTypes = Object.keys(BindingResourceType) as BindingResourceType[];
-
-export function resourceBindingMatches(b: GPUBindingType, r: BindingResourceType): boolean {
-  switch (b) {
-    case 'storage-buffer':
-    case 'readonly-storage-buffer':
-      return r === 'storage-buffer';
-    case 'sampled-texture':
-      return r === 'sampled-textureview';
-    case 'sampler':
-      return r === 'sampler';
-    case 'comparison-sampler':
-      return r === 'comparison-sampler';
-    case 'readonly-storage-texture':
-    case 'writeonly-storage-texture':
-      return r === 'storage-textureview';
-    case 'uniform-buffer':
-      return r === 'uniform-buffer';
-    default:
-      unreachable('unknown GPUBindingType');
-  }
-}
 
 export class ValidationTest extends GPUTest {
   getStorageBuffer(): GPUBuffer {
@@ -98,25 +65,25 @@ export class ValidationTest extends GPUTest {
     return view;
   }
 
-  getBindingResource(bindingType: BindingResourceType): GPUBindingResource {
+  getBindingResource(bindingType: BindableResource): GPUBindingResource {
     switch (bindingType) {
-      case 'error-buffer':
+      case 'errorBuf':
         return { buffer: this.getErrorBuffer() };
-      case 'error-sampler':
+      case 'errorSamp':
         return this.getErrorSampler();
-      case 'error-textureview':
+      case 'errorTex':
         return this.getErrorTextureView();
-      case 'uniform-buffer':
+      case 'uniformBuf':
         return { buffer: this.getUniformBuffer() };
-      case 'storage-buffer':
+      case 'storageBuf':
         return { buffer: this.getStorageBuffer() };
-      case 'sampler':
+      case 'plainSamp':
         return this.getSampler();
-      case 'comparison-sampler':
+      case 'compareSamp':
         return this.getComparisonSampler();
-      case 'sampled-textureview':
+      case 'sampledTex':
         return this.getSampledTexture().createView();
-      case 'storage-textureview':
+      case 'storageTex':
         return this.getStorageTexture().createView();
       default:
         unreachable('unknown binding resource type');

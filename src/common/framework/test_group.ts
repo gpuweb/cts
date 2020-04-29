@@ -100,7 +100,10 @@ class TestBuilder<F extends Fixture, P extends {}> {
         checkPublicParamType(v);
       }
 
-      assert(!seen.some(x => paramsEquals(x, publicParams)), 'Duplicate test case params');
+      assert(
+        !seen.some(x => paramsEquals(x, publicParams)),
+        'Duplicate test case params: ' + JSON.stringify(publicParams)
+      );
       seen.push(publicParams);
     }
     this.cases = cases;
