@@ -33,10 +33,10 @@ g.test('number of dynamic buffers exceeds the maximum value')
   )
   .fn(async t => {
     const { type, visibility } = t.params;
-    const maxDynamicCount = kBindingTypeInfo[type as GPUBindingType].maxDynamicCount;
+    const { maxDynamic } = kBindingTypeInfo[type].perPipelineLimitClass;
 
     const maxDynamicBufferBindings: GPUBindGroupLayoutEntry[] = [];
-    for (let binding = 0; binding < maxDynamicCount; binding++) {
+    for (let binding = 0; binding < maxDynamic; binding++) {
       maxDynamicBufferBindings.push({ binding, visibility, type, hasDynamicOffset: true });
     }
 
@@ -89,8 +89,9 @@ g.test('visibility and dynamic offsets')
       entries: [{ binding: 0, visibility, type, hasDynamicOffset }],
     };
 
+    const supportsDynamicOffset = kBindingTypeInfo[type].perPipelineLimitClass.maxDynamic > 0;
     let success = true;
-    if (info.type !== 'buffer' && hasDynamicOffset) success = false;
+    if (!supportsDynamicOffset && hasDynamicOffset) success = false;
     if ((visibility & ~info.validStages) !== 0) success = false;
 
     t.expectValidationError(() => {
