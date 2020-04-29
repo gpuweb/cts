@@ -92,7 +92,7 @@ g.test('dynamic set to true is allowed only for buffers')
   .params(poptions('type', kBindingTypes))
   .fn(async t => {
     const { type } = t.params;
-    const success = kBindingTypeInfo[type].perPipelinePerLimitClass.maxDynamic > 0;
+    const success = kBindingTypeInfo[type].perPipelineLimitClass.maxDynamic > 0;
 
     const descriptor = {
       entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, type, hasDynamicOffset: true }],
@@ -118,14 +118,14 @@ function* pickExtraBindingTypes(
   if (extraTypeSame) {
     for (const extraBindingType of kBindingTypes) {
       if (
-        info.perStagePerLimitClass.class ===
-        kBindingTypeInfo[extraBindingType].perStagePerLimitClass.class
+        info.perStageLimitClass.class ===
+        kBindingTypeInfo[extraBindingType].perStageLimitClass.class
       ) {
         yield extraBindingType;
       }
     }
   } else {
-    yield info.perStagePerLimitClass.class === 'sampler' ? 'sampled-texture' : 'sampler';
+    yield info.perStageLimitClass.class === 'sampler' ? 'sampled-texture' : 'sampler';
   }
 }
 
@@ -148,7 +148,7 @@ g.test('max resources per stage/in bind group layout')
   .fn(async t => {
     const { maxedType, extraType, maxedVisibility, extraVisibility } = t.params;
     const maxedTypeInfo = kBindingTypeInfo[maxedType];
-    const maxedCount = maxedTypeInfo.perStagePerLimitClass.max;
+    const maxedCount = maxedTypeInfo.perStageLimitClass.max;
     const extraTypeInfo = kBindingTypeInfo[extraType];
 
     const maxResourceBindings: GPUBindGroupLayoutEntry[] = [];
@@ -189,7 +189,7 @@ g.test('max resources per stage/in pipeline layout')
   .fn(async t => {
     const { maxedType, extraType, maxedVisibility, extraVisibility } = t.params;
     const maxedTypeInfo = kBindingTypeInfo[maxedType];
-    const maxedCount = maxedTypeInfo.perStagePerLimitClass.max;
+    const maxedCount = maxedTypeInfo.perStageLimitClass.max;
     const extraTypeInfo = kBindingTypeInfo[extraType];
 
     const maxResourceBindings: GPUBindGroupLayoutEntry[] = [];
@@ -221,8 +221,8 @@ g.test('max resources per stage/in pipeline layout')
     // Some binding types use the same limit, e.g. 'storage-buffer' and 'readonly-storage-buffer'.
     const newBindingCountsTowardSamePerStageLimit =
       (maxedVisibility & extraVisibility) !== 0 &&
-      kBindingTypeInfo[maxedType].perStagePerLimitClass.class ===
-        kBindingTypeInfo[extraType].perStagePerLimitClass.class;
+      kBindingTypeInfo[maxedType].perStageLimitClass.class ===
+        kBindingTypeInfo[extraType].perStageLimitClass.class;
     const layoutExceedsPerStageLimit = newBindingCountsTowardSamePerStageLimit;
 
     t.expectValidationError(() => {

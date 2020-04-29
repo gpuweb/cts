@@ -175,29 +175,28 @@ const kBindableResource: {
 };
 export const kBindableResources = keysOf(kBindableResource);
 
+interface BindingKindInfo {
+  readonly resource: ValidBindableResource;
+  readonly perStageLimitClass: typeof kPerStageBindingLimits[PerStageBindingLimitClass];
+  readonly perPipelineLimitClass: typeof kPerPipelineBindingLimits[PerPipelineBindingLimitClass];
+  // Add fields as needed
+}
+
 const kBindingKind: {
-  readonly [k in ValidBindableResource]: {
-    readonly resource: k;
-    readonly perStagePerLimitClass: typeof kPerStageBindingLimits[PerStageBindingLimitClass];
-    readonly perPipelinePerLimitClass: typeof kPerPipelineBindingLimits[PerPipelineBindingLimitClass];
-    // Add fields as needed
-  };
+  readonly [k in ValidBindableResource]: BindingKindInfo;
 } = /* prettier-ignore */ {
-  uniformBuf:  { resource: 'uniformBuf',  perStagePerLimitClass: kPerStageBindingLimits.uniformBuf, perPipelinePerLimitClass: kPerPipelineBindingLimits.uniformBuf, },
-  storageBuf:  { resource: 'storageBuf',  perStagePerLimitClass: kPerStageBindingLimits.storageBuf, perPipelinePerLimitClass: kPerPipelineBindingLimits.storageBuf, },
-  plainSamp:   { resource: 'plainSamp',   perStagePerLimitClass: kPerStageBindingLimits.sampler,    perPipelinePerLimitClass: kPerPipelineBindingLimits.sampler,    },
-  compareSamp: { resource: 'compareSamp', perStagePerLimitClass: kPerStageBindingLimits.sampler,    perPipelinePerLimitClass: kPerPipelineBindingLimits.sampler,    },
-  sampledTex:  { resource: 'sampledTex',  perStagePerLimitClass: kPerStageBindingLimits.sampledTex, perPipelinePerLimitClass: kPerPipelineBindingLimits.sampledTex, },
-  storageTex:  { resource: 'storageTex',  perStagePerLimitClass: kPerStageBindingLimits.storageTex, perPipelinePerLimitClass: kPerPipelineBindingLimits.storageTex, },
+  uniformBuf:  { resource: 'uniformBuf',  perStageLimitClass: kPerStageBindingLimits.uniformBuf, perPipelineLimitClass: kPerPipelineBindingLimits.uniformBuf, },
+  storageBuf:  { resource: 'storageBuf',  perStageLimitClass: kPerStageBindingLimits.storageBuf, perPipelineLimitClass: kPerPipelineBindingLimits.storageBuf, },
+  plainSamp:   { resource: 'plainSamp',   perStageLimitClass: kPerStageBindingLimits.sampler,    perPipelineLimitClass: kPerPipelineBindingLimits.sampler,    },
+  compareSamp: { resource: 'compareSamp', perStageLimitClass: kPerStageBindingLimits.sampler,    perPipelineLimitClass: kPerPipelineBindingLimits.sampler,    },
+  sampledTex:  { resource: 'sampledTex',  perStageLimitClass: kPerStageBindingLimits.sampledTex, perPipelineLimitClass: kPerPipelineBindingLimits.sampledTex, },
+  storageTex:  { resource: 'storageTex',  perStageLimitClass: kPerStageBindingLimits.storageTex, perPipelineLimitClass: kPerPipelineBindingLimits.storageTex, },
 };
 
 // Binding type info
 
-interface BindingTypeInfo {
-  readonly resource: ValidBindableResource;
+interface BindingTypeInfo extends BindingKindInfo {
   readonly validStages: GPUShaderStageFlags;
-  readonly perStagePerLimitClass: typeof kPerStageBindingLimits[PerStageBindingLimitClass];
-  readonly perPipelinePerLimitClass: typeof kPerPipelineBindingLimits[PerPipelineBindingLimitClass];
   // Add fields as needed
 }
 const kValidStagesAll = {
