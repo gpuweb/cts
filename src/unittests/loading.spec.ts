@@ -133,22 +133,26 @@ g.test('whole suite').fn(async t => {
 });
 
 g.test('partial suite').fn(async t => {
-  t.expect((await t.load(['suite1:f'])).length === 1);
-  t.expect((await t.load(['suite1:fo'])).length === 1);
-  t.expect((await t.load(['suite1:foo'])).length === 1);
-  t.expect((await t.load(['suite1:foof'])).length === 0);
-  t.expect((await t.load(['suite1:ba'])).length === 3);
-  t.expect((await t.load(['suite1:bar'])).length === 2);
-  t.expect((await t.load(['suite1:bar/'])).length === 2);
-  t.expect((await t.load(['suite1:bar/b'])).length === 1);
+  t.expect((await t.load(['suite1:f*'])).length === 1);
+  t.expect((await t.load(['suite1:fo*'])).length === 1);
+  t.expect((await t.load(['suite1:foo*'])).length === 1);
+  t.expect((await t.load(['suite1:foof*'])).length === 0);
+  t.expect((await t.load(['suite1:ba*'])).length === 3);
+  t.expect((await t.load(['suite1:bar*'])).length === 2);
+  t.expect((await t.load(['suite1:bar/*'])).length === 2);
+  t.expect((await t.load(['suite1:bar/b*'])).length === 1);
 });
 
 g.test('whole group').fn(async t => {
   t.shouldReject('Error', t.load(['suite1::']));
+  t.shouldReject('Error', t.load(['suite1::*']));
   t.shouldReject('Error', t.load(['suite1:bar:']));
+  t.shouldReject('Error', t.load(['suite1:bar:*']));
   t.shouldReject('Error', t.load(['suite1:bar/:']));
-  t.expect((await t.singleGroup('suite1:bar/buzz:')).length === 1);
-  t.expect((await t.singleGroup('suite1:baz:')).length === 4);
+  t.shouldReject('Error', t.load(['suite1:bar/:*']));
+  t.expect((await t.singleGroup('suite1:bar/buzz:*')).length === 1);
+  t.expect((await t.singleGroup('suite1:baz:')).length === 0);
+  t.expect((await t.singleGroup('suite1:baz:*')).length === 4);
 
   {
     const foo = (await t.load(['suite1:foo:']))[0];
@@ -161,20 +165,20 @@ g.test('whole group').fn(async t => {
 });
 
 g.test('partial group').fn(async t => {
-  t.expect((await t.singleGroup('suite1:foo:h')).length === 2);
-  t.expect((await t.singleGroup('suite1:foo:he')).length === 1);
-  t.expect((await t.singleGroup('suite1:foo:hello')).length === 1);
-  t.expect((await t.singleGroup('suite1:baz:zed')).length === 2);
+  t.expect((await t.singleGroup('suite1:foo:h*')).length === 2);
+  t.expect((await t.singleGroup('suite1:foo:he*')).length === 1);
+  t.expect((await t.singleGroup('suite1:foo:hello*')).length === 1);
+  t.expect((await t.singleGroup('suite1:baz:zed*')).length === 2);
 });
 
 g.test('partial test/exact').fn(async t => {
-  t.expect((await t.singleGroup('suite1:foo:hello=')).length === 1);
-  t.expect((await t.singleGroup('suite1:baz:zed=')).length === 0);
-  t.expect((await t.singleGroup('suite1:baz:zed=')).length === 0);
-  t.expect((await t.singleGroup('suite1:baz:zed={}')).length === 0);
-  t.expect((await t.singleGroup('suite1:baz:zed={"a":1,"b":2}')).length === 1);
-  t.expect((await t.singleGroup('suite1:baz:zed={"b":2,"a":1}')).length === 1);
-  t.expect((await t.singleGroup('suite1:baz:zed={"a":1,"b":2,"_c":0}')).length === 0);
+  t.expect((await t.singleGroup('suite1:foo:hello:')).length === 1);
+  t.expect((await t.singleGroup('suite1:baz:zed:')).length === 0);
+  t.expect((await t.singleGroup('suite1:baz:zed:a=1;b=2')).length === 1);
+  t.expect((await t.singleGroup('suite1:baz:zed:a=1;b=2*')).length === 1);
+  t.expect((await t.singleGroup('suite1:baz:zed:a=1;b=2;*')).length === 0);
+  t.expect((await t.singleGroup('suite1:baz:zed:b=2;a=1')).length === 1);
+  t.expect((await t.singleGroup('suite1:baz:zed:a=1;b=2;_c=0')).length === 0);
 });
 
 g.test('partial test/makeQueryString').fn(async t => {
@@ -186,15 +190,15 @@ g.test('partial test/makeQueryString').fn(async t => {
 });
 
 g.test('partial test/match').fn(async t => {
-  t.expect((await t.singleGroup('suite1:baz:zed~')).length === 2);
-  t.expect((await t.singleGroup('suite1:baz:zed~{}')).length === 2);
-  t.expect((await t.singleGroup('suite1:baz:zed~{"a":1}')).length === 2);
-  t.expect((await t.singleGroup('suite1:baz:zed~{"a":1,"b":2}')).length === 1);
-  t.expect((await t.singleGroup('suite1:baz:zed~{"b":2,"a":1}')).length === 1);
-  t.expect((await t.singleGroup('suite1:baz:zed~{"b":2}')).length === 1);
-  t.expect((await t.singleGroup('suite1:baz:zed~{"a":2}')).length === 0);
-  t.expect((await t.singleGroup('suite1:baz:zed~{"c":0}')).length === 0);
-  t.expect((await t.singleGroup('suite1:baz:zed~{"_c":0}')).length === 0);
+  t.expect((await t.singleGroup('suite1:baz:zed:*')).length === 2);
+  t.expect((await t.singleGroup('suite1:baz:zed:*')).length === 2);
+  t.expect((await t.singleGroup('suite1:baz:zed:a=1;*')).length === 2);
+  t.expect((await t.singleGroup('suite1:baz:zed:a=1;b=2;*')).length === 0);
+  t.expect((await t.singleGroup('suite1:baz:zed:a=1;b=2;')).length === 0);
+  t.expect((await t.singleGroup('suite1:baz:zed:a=1;b=2')).length === 1);
+  t.expect((await t.singleGroup('suite1:baz:zed:b=2;a=1')).length === 0);
+  t.expect((await t.singleGroup('suite1:baz:zed:b=2;*')).length === 1);
+  t.expect((await t.singleGroup('suite1:baz:zed:a=2*')).length === 0);
 });
 
 g.test('end2end').fn(async t => {
@@ -281,74 +285,109 @@ const testGenerateMinimalQueryList = async (
 
 g.test('generateMinimalQueryList/errors').fn(async t => {
   t.shouldReject('Error', testGenerateMinimalQueryList(t, ['garbage'], []));
-  t.shouldReject('Error', testGenerateMinimalQueryList(t, ['suite1:'], []));
-  t.shouldReject('Error', testGenerateMinimalQueryList(t, ['suite1:foo'], []));
-  t.shouldReject('Error', testGenerateMinimalQueryList(t, ['suite1:foo:ba'], []));
-  t.shouldReject('Error', testGenerateMinimalQueryList(t, ['suite2:foo:'], []));
+  t.shouldReject('Error', testGenerateMinimalQueryList(t, ['garbage*'], []));
+  t.shouldReject('Error', testGenerateMinimalQueryList(t, ['garbage:*'], []));
+  t.shouldReject('Error', testGenerateMinimalQueryList(t, ['suite1:*'], []));
+  t.shouldReject('Error', testGenerateMinimalQueryList(t, ['suite1:foo*'], []));
+  t.shouldReject('Error', testGenerateMinimalQueryList(t, ['suite1:foo:ba*'], []));
+  t.shouldReject('Error', testGenerateMinimalQueryList(t, ['suite2:foo:*'], []));
 });
 
 g.test('generateMinimalQueryList').fn(async t => {
   await testGenerateMinimalQueryList(
     t, //
     [],
-    ['suite1:foo:', 'suite1:bar/buzz:', 'suite1:baz:']
-  );
-  await testGenerateMinimalQueryList(
-    t, //
-    ['suite1:foo:'],
-    ['suite1:foo:', 'suite1:bar/buzz:', 'suite1:baz:']
-  );
-  await testGenerateMinimalQueryList(
-    t, //
-    ['suite1:bar/buzz:'],
-    ['suite1:foo:', 'suite1:bar/buzz:', 'suite1:baz:']
-  );
-  await testGenerateMinimalQueryList(
-    t, //
-    ['suite1:baz:wye~'],
-    ['suite1:foo:', 'suite1:bar/buzz:', 'suite1:baz:wye~', 'suite1:baz:zed~']
-  );
-  await testGenerateMinimalQueryList(
-    t, //
-    ['suite1:baz:zed~'],
-    ['suite1:foo:', 'suite1:bar/buzz:', 'suite1:baz:wye~', 'suite1:baz:zed~']
-  );
-  await testGenerateMinimalQueryList(
-    t, //
-    ['suite1:baz:wye~', 'suite1:baz:zed~'],
-    ['suite1:foo:', 'suite1:bar/buzz:', 'suite1:baz:wye~', 'suite1:baz:zed~']
-  );
-  await testGenerateMinimalQueryList(
-    t, //
-    ['suite1:baz:wye='],
     [
-      'suite1:foo:',
-      'suite1:bar/buzz:',
-      'suite1:baz:wye=',
-      'suite1:baz:wye={"x":1}',
-      'suite1:baz:zed~',
+      'suite1:foo:*', //
+      'suite1:bar/buzz:*',
+      'suite1:baz:*',
     ]
   );
   await testGenerateMinimalQueryList(
     t, //
-    ['suite1:baz:wye={"x":1}'],
+    ['suite1:foo:*'],
     [
-      'suite1:foo:',
-      'suite1:bar/buzz:',
-      'suite1:baz:wye=',
-      'suite1:baz:wye={"x":1}',
-      'suite1:baz:zed~',
+      'suite1:foo:*', //
+      'suite1:bar/buzz:*',
+      'suite1:baz:*',
     ]
   );
   await testGenerateMinimalQueryList(
     t, //
-    ['suite1:foo:', 'suite1:baz:wye='],
+    ['suite1:bar/buzz:*'],
     [
-      'suite1:foo:',
-      'suite1:bar/buzz:',
-      'suite1:baz:wye=',
-      'suite1:baz:wye={"x":1}',
-      'suite1:baz:zed~',
+      'suite1:foo:*', //
+      'suite1:bar/buzz:*',
+      'suite1:baz:*',
+    ]
+  );
+  await testGenerateMinimalQueryList(
+    t, //
+    ['suite1:baz:wye:*'],
+    [
+      'suite1:foo:*', //
+      'suite1:bar/buzz:*',
+      'suite1:baz:wye:*',
+      'suite1:baz:zed:*',
+    ]
+  );
+  await testGenerateMinimalQueryList(
+    t, //
+    ['suite1:baz:zed:*'],
+    [
+      'suite1:foo:*', //
+      'suite1:bar/buzz:*',
+      'suite1:baz:wye:*',
+      'suite1:baz:zed:*',
+    ]
+  );
+  await testGenerateMinimalQueryList(
+    t, //
+    [
+      'suite1:baz:wye:*', //
+      'suite1:baz:zed:*',
+    ],
+    [
+      'suite1:foo:*', //
+      'suite1:bar/buzz:*',
+      'suite1:baz:wye:*',
+      'suite1:baz:zed:*',
+    ]
+  );
+  await testGenerateMinimalQueryList(
+    t, //
+    ['suite1:baz:wye:'],
+    [
+      'suite1:foo:*',
+      'suite1:bar/buzz:*',
+      'suite1:baz:wye:',
+      'suite1:baz:wye:x=1',
+      'suite1:baz:zed:*',
+    ]
+  );
+  await testGenerateMinimalQueryList(
+    t, //
+    ['suite1:baz:wye:x=1'],
+    [
+      'suite1:foo:*',
+      'suite1:bar/buzz:*',
+      'suite1:baz:wye:',
+      'suite1:baz:wye:x=1',
+      'suite1:baz:zed:*',
+    ]
+  );
+  await testGenerateMinimalQueryList(
+    t, //
+    [
+      'suite1:foo:*', //
+      'suite1:baz:wye:',
+    ],
+    [
+      'suite1:foo:*',
+      'suite1:bar/buzz:*',
+      'suite1:baz:wye:',
+      'suite1:baz:wye:x=1',
+      'suite1:baz:zed:*',
     ]
   );
 });

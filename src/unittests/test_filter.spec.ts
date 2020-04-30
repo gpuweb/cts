@@ -16,7 +16,7 @@ export const g = new TestGroup(UnitTest);
 
 g.test('FilterByGroup/matches').fn(t => {
   {
-    const f = new FilterByGroup('ab', 'de/f');
+    const f = new FilterByGroup('ab', 'de/f*');
     t.expect(f.matches({ spec: { suite: 'ab', path: 'de/fg' } }));
     t.expect(f.matches({ spec: { suite: 'ab', path: 'de/fg' }, test: 'x' }));
     t.expect(f.matches({ spec: { suite: 'ab', path: 'de/fg' }, test: 'x', params: null }));
@@ -26,7 +26,7 @@ g.test('FilterByGroup/matches').fn(t => {
     t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f/g/' }, test: 'x', params: null }));
   }
   {
-    const f = new FilterByGroup('ab', 'de/f/');
+    const f = new FilterByGroup('ab', 'de/f/*');
     t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/fg' } }));
     t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/fg' }, test: 'x' }));
     t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/fg' }, test: 'x', params: null }));
@@ -38,7 +38,7 @@ g.test('FilterByGroup/matches').fn(t => {
 });
 
 g.test('FilterByTestMatch/matches').fn(t => {
-  const f = new FilterByTestMatch({ suite: 'ab', path: 'de/f' }, 'xy');
+  const f = new FilterByTestMatch({ suite: 'ab', path: 'de/f' }, 'xy*');
   t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy' }));
   t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy', params: null }));
   t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xyz', params: null }));
