@@ -61,18 +61,19 @@ class DevicePool {
     } else {
       assert(!this.holder.acquired, 'Device was in use on DevicePool.acquire');
     }
+    this.holder.acquired = true;
 
     this.beginErrorScopes();
-
     return this.holder.device;
   }
 
   // When a test is done using a device, it's released back into the pool.
   // This waits for error scopes, checks their results, and checks for various error conditions.
   async release(device: GPUDevice): Promise<void> {
-    assert(this.holder !== undefined, 'trying to release a device while pool is uninitialized');
-    assert(this.holder.acquired, 'trying to release a device while already released');
-    assert(device === this.holder.device, 'Released device was the wrong device');
+    const holder = this.holder;
+    assert(holder !== undefined, 'trying to release a device while pool is uninitialized');
+    assert(holder.acquired, 'trying to release a device while already released');
+    assert(device === holder.device, 'Released device was the wrong device');
 
     try {
       // Time out if popErrorScope never completes. This could happen due to a browser bug - e.g.,
@@ -82,12 +83,11 @@ class DevicePool {
         kPopErrorScopeTimeoutMS,
         'finalization popErrorScope timed out'
       );
-      this.holder.acquired = false;
 
       // (Hopefully if the device was lost, it has been reported by the time endErrorScopes()
       // has finished (or timed out). If not, it could cause a finite number of extra test
       // failures following this one (but should recover eventually).)
-      const lostReason = this.holder.lostReason;
+      const lostReason = holder.lostReason;
       if (lostReason !== undefined) {
         // Fail the current test.
         unreachable(`Device was lost: ${lostReason}`);
@@ -99,6 +99,10 @@ class DevicePool {
         this.holder = undefined;
       }
       throw ex;
+    } finally {
+      // Mark the holder as free. (This only has an effect if the pool still has the holder.)
+      // This could be done at the top but is done here to guard againt async-races during release.
+      holder.acquired = false;
     }
   }
 
