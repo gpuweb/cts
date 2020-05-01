@@ -7,45 +7,45 @@ import * as path from 'path';
 
 import { TestSuiteListingEntry } from '../framework/listing.js';
 import { TestSpec } from '../framework/loader.js';
-import { assert } from '../framework/util/util.js';
+import { assert, unreachable } from '../framework/util/util.js';
 
 const fg = require('fast-glob');
 
-const specSuffix = '.spec.ts';
+const specFileSuffix = '.spec.ts';
 
 export async function crawl(suite: string): Promise<TestSuiteListingEntry[]> {
-  const specDir = 'src/' + suite;
-  if (!fs.existsSync(specDir)) {
-    console.error(`Could not find ${specDir}`);
+  const suiteDir = 'src/' + suite;
+  if (!fs.existsSync(suiteDir)) {
+    console.error(`Could not find ${suiteDir}`);
     process.exit(1);
   }
 
-  const specFiles = await fg(`${specDir}/**/{README.txt,*${specSuffix}}`, { onlyFiles: true });
+  const glob = `${suiteDir}/**/{README.txt,*${specFileSuffix}}`;
+  const specFiles: string[] = await fg(glob, { onlyFiles: true });
   specFiles.sort();
 
   const groups: TestSuiteListingEntry[] = [];
   for (const file of specFiles) {
-    const f = file.substring((specDir + '/').length);
-    if (f.endsWith(specSuffix)) {
-      const testPath = f.substring(0, f.length - specSuffix.length);
-      const filename = `../../../${specDir}/${testPath}.spec.js`;
+    const f = file.substring((suiteDir + '/').length);
+    if (f.endsWith(specFileSuffix)) {
+      const testPath = f.substring(0, f.length - specFileSuffix.length);
+      const filename = `../../../${suiteDir}/${testPath}.spec.js`;
+
       const mod = (await import(filename)) as TestSpec;
       assert(mod.description !== undefined, 'Test spec file missing description: ' + filename);
       assert(mod.g !== undefined, 'Test spec file missing TestGroup definition: ' + filename);
-      groups.push({
-        path: testPath,
-        description: mod.description.trim(),
-      });
+
+      const path = testPath.split('/');
+      groups.push({ path, description: mod.description.trim() });
     } else if (path.basename(file) === 'README.txt') {
       const group = f.substring(0, f.length - 'README.txt'.length);
-      const description = fs.readFileSync(file, 'utf8').trim();
-      groups.push({
-        path: group,
-        description,
-      });
+      const readme = fs.readFileSync(file, 'utf8').trim();
+
+      const path = group.split('/');
+      assert(path[path.length - 1] === '');
+      groups.push({ path, readme });
     } else {
-      console.error('Unrecognized file: ' + file);
-      process.exit(1);
+      unreachable(`glob ${glob} matched an unrecognized filename ${file}`);
     }
   }
 

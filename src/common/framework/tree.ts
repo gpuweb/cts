@@ -1,82 +1,140 @@
 import { Logger } from './logger.js';
-import { stringifyPublicParams } from './params_utils.js';
+import { stringifySingleParam } from './params_utils.js';
 import { TestFilterResult } from './test_filter/test_filter_result.js';
 import { RunCase } from './test_group.js';
 
-export interface FilterResultTreeNode {
+interface FilterResultSubtree {
   description?: string;
-  runCase?: RunCase;
-  children?: Map<string, FilterResultTreeNode>;
+  children: Map<string, FilterResultTreeNode>;
 }
 
-// e.g. iteratePath('a/b/c/d', ':') yields ['a/', 'a/b/', 'a/b/c/', 'a/b/c/d:']
-function* iteratePath(path: string, terminator: string): IterableIterator<string> {
-  const parts = path.split('/');
-  if (parts.length > 1) {
-    let partial = parts[0] + '/';
-    yield partial;
-    for (let i = 1; i < parts.length - 1; ++i) {
-      partial += parts[i] + '/';
-      yield partial;
-    }
-    // Path ends in '/' (so is a README).
-    if (parts[parts.length - 1] === '') {
-      return;
-    }
-  }
-  yield path + terminator;
+interface FilterResultTreeLeaf {
+  runCase: RunCase;
 }
+
+export type FilterResultTreeNode = FilterResultSubtree | FilterResultTreeLeaf;
 
 export function treeFromFilterResults(
   log: Logger,
   listing: IterableIterator<TestFilterResult>
-): FilterResultTreeNode {
-  function getOrInsert(n: FilterResultTreeNode, k: string): FilterResultTreeNode {
-    const children = n.children!;
-    if (children.has(k)) {
-      return children.get(k)!;
-    }
-    const v = { children: new Map() };
-    children.set(k, v);
-    return v;
-  }
-
-  const tree = { children: new Map() };
+): FilterResultSubtree {
+  const root: FilterResultSubtree = { children: new Map() };
   for (const f of listing) {
-    const files = getOrInsert(tree, f.id.suite + ':');
-    if (f.id.path === '') {
+    // Suite tree
+    const [suiteSubtree, suitePath] = subtreeForSuite(root, f);
+    if (f.id.group.length === 0) {
       // This is a suite README.
-      files.description = f.spec.description.trim();
+      suiteSubtree.description = f.spec.description.trim();
       continue;
     }
 
-    let tests = files;
-    for (const path of iteratePath(f.id.path, ':')) {
-      tests = getOrInsert(tests, f.id.suite + ':' + path);
-    }
-    if (f.spec.description) {
-      // This is a directory README or spec file.
-      tests.description = f.spec.description.trim();
-    }
-
+    // Group trees
+    const [groupSubtree, groupPath] = subtreeForGroup(suitePath, suiteSubtree, f);
     if (!('g' in f.spec)) {
       // This is a directory README.
       continue;
     }
 
     const [tRec] = log.record(f.id);
-    const fId = f.id.suite + ':' + f.id.path;
     for (const t of f.spec.g.iterate(tRec)) {
-      let cases = tests;
-      for (const path of iteratePath(t.id.test, '~')) {
-        cases = getOrInsert(cases, fId + ':' + path);
-      }
+      // Test trees
+      const [testSubtree, testPath] = subtreeForTest(groupPath, groupSubtree, t);
 
-      const p = stringifyPublicParams(t.id.params);
-      cases.children!.set(fId + ':' + t.id.test + '=' + p, {
-        runCase: t,
-      });
+      // Case trees
+      subtreeForCaseLeaf(testPath, testSubtree, t);
     }
   }
-  return tree;
+  return root;
+}
+
+function subtreeForSuite(
+  root: FilterResultSubtree,
+  f: TestFilterResult
+): [FilterResultSubtree, string] {
+  const path = f.id.suite + ':';
+  const subtree = getOrInsertSubtree(root, path + '*');
+  return [subtree, path];
+}
+
+function subtreeForGroup(
+  path: string,
+  tree: FilterResultSubtree,
+  f: TestFilterResult
+): [FilterResultSubtree, string] {
+  for (const part of pathPartsWithSeparators(f.id.group)) {
+    path += part;
+    tree = getOrInsertSubtree(tree, path + '*');
+  }
+  if (f.spec.description) {
+    // This is a directory README or spec file.
+    tree.description = f.spec.description.trim();
+  }
+  return [tree, path];
+}
+
+function subtreeForTest(
+  path: string,
+  tree: FilterResultSubtree,
+  t: RunCase
+): [FilterResultSubtree, string] {
+  for (const part of pathPartsWithSeparators(t.id.test)) {
+    path += part;
+    tree = getOrInsertSubtree(tree, path + '*');
+  }
+  return [tree, path];
+}
+
+function subtreeForCaseExceptLeaf(
+  path: string,
+  tree: FilterResultSubtree,
+  paramsParts: string[]
+): [FilterResultSubtree, string] {
+  for (const part of nonLastPathPartsWithSeparators(paramsParts)) {
+    path += part;
+    tree = getOrInsertSubtree(tree, path + '*');
+  }
+  return [tree, path];
+}
+
+function subtreeForCaseLeaf(path: string, tree: FilterResultSubtree, t: RunCase): void {
+  const paramsParts = Object.entries(t.id.params).map(([k, v]) => stringifySingleParam(k, v));
+  const [caseBranch, caseBranchPath] = subtreeForCaseExceptLeaf(path, tree, paramsParts);
+
+  // Single case
+  const lastPart = paramsParts[paramsParts.length - 1];
+  caseBranch.children.set(caseBranchPath + lastPart, { runCase: t });
+}
+
+function getOrInsertSubtree(n: FilterResultSubtree, k: string): FilterResultSubtree {
+  const children = n.children;
+  const child = children.get(k);
+  if (child !== undefined) {
+    return child as FilterResultSubtree;
+  }
+  const v = { children: new Map() };
+  children.set(k, v);
+  return v;
+}
+
+function* nonLastPathPartsWithSeparators(path: string[]): IterableIterator<string> {
+  for (let i = 0; i < path.length - 1; ++i) {
+    yield path[i] + ';';
+  }
+}
+
+function* pathPartsWithSeparators(path: string[]): IterableIterator<string> {
+  yield* nonLastPathPartsWithSeparators(path);
+  yield path[path.length - 1] + ':';
+}
+
+// For debugging
+export function printFilterResultTree(tree: FilterResultTreeNode, indent: string = ''): void {
+  if (!('children' in tree)) {
+    return;
+  }
+  for (const [name, child] of tree.children) {
+    // eslint-disable-next-line no-console
+    console.log(indent + name);
+    printFilterResultTree(child, indent + ' ');
+  }
 }

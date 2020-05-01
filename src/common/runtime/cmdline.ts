@@ -4,7 +4,7 @@
 import * as fs from 'fs';
 import * as process from 'process';
 
-import { TestSpecID } from '../framework/id.js';
+import { TestGroupID } from '../framework/id.js';
 import { TestLoader } from '../framework/loader.js';
 import { LiveTestCaseResult, Logger } from '../framework/logger.js';
 import { makeQueryString } from '../framework/url_query.js';
@@ -57,9 +57,9 @@ if (filterArgs.length === 0) {
 
     const log = new Logger();
 
-    const failed: Array<[TestSpecID, LiveTestCaseResult]> = [];
-    const warned: Array<[TestSpecID, LiveTestCaseResult]> = [];
-    const skipped: Array<[TestSpecID, LiveTestCaseResult]> = [];
+    const failed: Array<[TestGroupID, LiveTestCaseResult]> = [];
+    const warned: Array<[TestGroupID, LiveTestCaseResult]> = [];
+    const skipped: Array<[TestGroupID, LiveTestCaseResult]> = [];
 
     let total = 0;
     for (const f of files) {
@@ -138,7 +138,7 @@ Failed               = ${rpt(failed.length)}`);
   }
 })();
 
-function printResults(results: Array<[TestSpecID, LiveTestCaseResult]>): void {
+function printResults(results: Array<[TestGroupID, LiveTestCaseResult]>): void {
   for (const [id, r] of results) {
     console.log(`[${r.status}] ${makeQueryString(id, r)} (${r.timems}ms). Log:`);
     if (r.logs) {

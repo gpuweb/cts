@@ -1,8 +1,8 @@
-import { allowedTestNameCharacters } from './allowed_characters.js';
 import { Fixture } from './fixture.js';
 import { TestCaseID } from './id.js';
 import { LiveTestCaseResult, TestCaseRecorder, TestSpecRecorder } from './logger.js';
 import { ParamSpec, ParamSpecIterable, extractPublicParams, paramsEquals } from './params_utils.js';
+import { validQueryPart } from './query/query.js';
 import { checkPublicParamType } from './url_query.js';
 import { assert } from './util/util.js';
 
@@ -18,8 +18,6 @@ export interface RunCaseIterable {
 
 type FixtureClass<F extends Fixture> = new (log: TestCaseRecorder, params: ParamSpec) => F;
 type TestFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
-
-const validNames = new RegExp('^[' + allowedTestNameCharacters + ']+$');
 
 export class TestGroup<F extends Fixture> implements RunCaseIterable {
   private fixture: FixtureClass<F>;
@@ -37,7 +35,6 @@ export class TestGroup<F extends Fixture> implements RunCaseIterable {
   }
 
   private checkName(name: string): void {
-    assert(validNames.test(name), `Invalid test name ${name}; must match [${validNames}]+`);
     assert(
       // Shouldn't happen due to the rule above. Just makes sure that treated
       // unencoded strings as encoded strings is OK.
@@ -50,12 +47,14 @@ export class TestGroup<F extends Fixture> implements RunCaseIterable {
   }
 
   // TODO: This could take a fixture, too, to override the one for the group.
-  test(name: string): TestBuilderWithName<F, never> {
-    // Replace spaces with underscores for readability.
-    assert(name.indexOf('_') === -1, 'Invalid test name ${name}: contains underscore (use space)');
-    name = name.replace(/ /g, '_');
+  test(...name: string[]): TestBuilderWithName<F, never> {
+    // TODO: hard-apply these replacements to all tests
+    name = name.map(n => n.replace(/ /g, '_'));
 
-    this.checkName(name);
+    for (const n of name) {
+      assert(validQueryPart.test(n), `Invalid test name part ${n}; must match ${validQueryPart}`);
+    }
+    this.checkName(name.join(';'));
 
     const test = new TestBuilder<F, never>(name, this.fixture);
     this.tests.push(test);
@@ -72,12 +71,12 @@ interface TestBuilderWithParams<F extends Fixture, P extends {}> {
 }
 
 class TestBuilder<F extends Fixture, P extends {}> {
-  private readonly name: string;
+  private readonly name: string[];
   private readonly fixture: FixtureClass<F>;
   private testFn: TestFn<F, P> | undefined;
   private cases: ParamSpecIterable | null = null;
 
-  constructor(name: string, fixture: FixtureClass<F>) {
+  constructor(name: string[], fixture: FixtureClass<F>) {
     this.name = name;
     this.fixture = fixture;
   }
@@ -113,7 +112,7 @@ class TestBuilder<F extends Fixture, P extends {}> {
 
   *iterate(rec: TestSpecRecorder): IterableIterator<RunCase> {
     assert(this.testFn !== undefined, 'internal error');
-    for (const params of this.cases || [null]) {
+    for (const params of this.cases || [{}]) {
       yield new RunCaseSpecific(rec, this.name, params, this.fixture, this.testFn);
     }
   }
@@ -128,7 +127,8 @@ class RunCaseSpecific<F extends Fixture> implements RunCase {
 
   constructor(
     recorder: TestSpecRecorder,
-    test: string,
+    test: string[],
+    // TODO: remove null
     params: ParamSpec | null,
     fixture: FixtureClass<F>,
     fn: TestFn<F, never>

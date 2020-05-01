@@ -2,81 +2,81 @@ export const description = `
 Unit tests for test_filter .matches() methods.
 `;
 
-import { FilterByGroup } from '../common/framework/test_filter/filter_by_group.js';
 import {
-  FilterByParamsExact,
-  FilterByParamsMatch,
-  FilterByTestMatch,
-} from '../common/framework/test_filter/filter_one_file.js';
+  SimpleFilterGroup,
+  SimpleFilterCase,
+} from '../common/framework/test_filter/simple_filter.js';
 import { TestGroup } from '../common/framework/test_group.js';
 
 import { UnitTest } from './unit_test.js';
 
 export const g = new TestGroup(UnitTest);
 
-g.test('FilterByGroup/matches').fn(t => {
+g.test('by group/match').fn(t => {
+  t.shouldThrow('Error', () => {
+    new SimpleFilterGroup('ab', 'de;f*');
+  });
   {
-    const f = new FilterByGroup('ab', 'de/f*');
-    t.expect(f.matches({ spec: { suite: 'ab', path: 'de/fg' } }));
-    t.expect(f.matches({ spec: { suite: 'ab', path: 'de/fg' }, test: 'x' }));
-    t.expect(f.matches({ spec: { suite: 'ab', path: 'de/fg' }, test: 'x', params: null }));
-    t.expect(f.matches({ spec: { suite: 'ab', path: 'de/fg' }, test: 'x', params: {} }));
-    t.expect(f.matches({ spec: { suite: 'ab', path: 'de/fg/' }, test: 'x', params: null }));
-    t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f/g' }, test: 'x', params: null }));
-    t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f/g/' }, test: 'x', params: null }));
-  }
-  {
-    const f = new FilterByGroup('ab', 'de/f/*');
-    t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/fg' } }));
-    t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/fg' }, test: 'x' }));
-    t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/fg' }, test: 'x', params: null }));
-    t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/fg' }, test: 'x', params: {} }));
-    t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/fg/' }, test: 'x', params: null }));
-    t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f/g' }, test: 'x', params: null }));
-    t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f/g/' }, test: 'x', params: null }));
+    const f = new SimpleFilterGroup('ab', 'de;f;*');
+    t.expect(!f.matches('ab:de;fg:'));
+    t.expect(!f.matches('ab:de;fg:*'));
+    t.expect(!f.matches('ab:de;fg:x:*'));
+    t.expect(!f.matches('ab:de;fg:x:'));
+    t.expect(!f.matches('ab:de;fg;:x:*'));
+    t.expect(f.matches('ab:de;f;g:x:*'));
   }
 });
 
-g.test('FilterByTestMatch/matches').fn(t => {
-  const f = new FilterByTestMatch({ suite: 'ab', path: 'de/f' }, 'xy*');
-  t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy' }));
-  t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy', params: null }));
-  t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xyz', params: null }));
-  t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xyz', params: {} }));
-  t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xyz', params: { z: 1 } }));
-  t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/f' } }));
-  t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/f/' }, test: 'xyz', params: null }));
-  t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/fg' }, test: 'xyz', params: null }));
+g.test('by group/exact').fn(t => {
+  const f = new SimpleFilterGroup('ab', 'de;fg');
+  t.expect(f.matches('ab:de;fg:*'));
+  t.expect(f.matches('ab:de;fg:x:*'));
 });
 
-g.test('FilterByParamsMatch/matches').fn(t => {
-  {
-    const f = new FilterByParamsMatch({ suite: 'ab', path: 'de/f' }, 'xy', null);
-    t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy', params: null }));
-    t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy', params: {} }));
-    t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy', params: { z: 1 } }));
-    t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/f' } }));
-    t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy' }));
-    t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy', params: undefined }));
-    t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xyz', params: {} }));
-    t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/f/' }, test: 'xy', params: {} }));
-  }
-  {
-    const f = new FilterByParamsMatch({ suite: 'ab', path: 'de/f' }, 'xy', {});
-    t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy', params: null }));
-    t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy', params: {} }));
-    t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/f' } }));
-    t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy' }));
-  }
+g.test('by test/match').fn(t => {
+  const f = new SimpleFilterCase('ab', 'de;f', 'xy*');
+  t.expect(f.matches('ab:de;f:xy:*'));
+  t.expect(f.matches('ab:de;f:xyz:'));
+  t.expect(f.matches('ab:de;f:xyz:z=1'));
+  t.expect(!f.matches('ab:de;f:'));
+  t.expect(!f.matches('ab:de;f:zyx'));
+  t.expect(!f.matches('ab:de;f;:xyz:'));
+  t.expect(!f.matches('ab:de;f;:xyz:*'));
+  t.expect(!f.matches('ab:de;fg:xyz:'));
+  t.expect(!f.matches('ab:de;fg:xyz:*'));
 });
 
-g.test('FilterByParamsExact').fn(t => {
-  const f = new FilterByParamsExact({ suite: 'ab', path: 'de/f' }, 'xy', {});
-  t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy', params: null }));
-  t.expect(f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy', params: {} }));
-  t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy', params: { z: 1 } }));
-  t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xyz', params: {} }));
-  t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/f/' }, test: 'xy', params: {} }));
-  t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/f' } }));
-  t.expect(!f.matches({ spec: { suite: 'ab', path: 'de/f' }, test: 'xy' }));
+g.test('by test/exact').fn(t => {
+  const f = new SimpleFilterCase('ab', 'de;f', 'xy');
+  t.expect(!f.matches('ab:de;f:xy:*'));
+  t.expect(f.matches('ab:de;f:xy:'));
+});
+
+g.test('by params/match').fn(t => {
+  const f = new SimpleFilterCase('ab', 'de;f', 'xy:*');
+  t.expect(f.matches('ab:de;f:xy:'));
+  t.expect(f.matches('ab:de;f:xy:*'));
+  t.expect(f.matches('ab:de;f:xy:z=1'));
+  t.expect(f.matches('ab:de;f:xy:z=1;*'));
+  t.expect(!f.matches('ab:de;f:'));
+  t.expect(!f.matches('ab:de;f:*'));
+  t.expect(!f.matches('ab:de;f:xyz:'));
+  t.expect(!f.matches('ab:de;f:xyz:*'));
+  t.expect(!f.matches('ab:de;f;:xy:'));
+  t.expect(!f.matches('ab:de;f;:xy:*'));
+});
+
+g.test('by params/exact').fn(t => {
+  const f = new SimpleFilterCase('ab', 'de;f', 'xy:');
+  t.expect(!f.matches('ab:*'));
+  t.expect(!f.matches('ab:de;*'));
+  t.expect(!f.matches('ab:de;f:*'));
+  t.expect(!f.matches('ab:de;f:'));
+  t.expect(!f.matches('ab:de;f:xy;*'));
+  t.expect(f.matches('ab:de;f:xy:'));
+  t.expect(!f.matches('ab:de;f:xy:*'));
+  t.expect(!f.matches('ab:de;f:xy:z=1'));
+  t.expect(!f.matches('ab:de;f:xy:z=1;*'));
+  t.expect(!f.matches('ab:de;f:xyz:'));
+  t.expect(!f.matches('ab:de;f;:xy:'));
 });

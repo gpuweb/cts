@@ -1,25 +1,32 @@
 import { ParamSpec } from './params_utils.js';
+import { objectEquals } from './util/util.js';
 
 // Identifies a test spec file.
-export interface TestSpecID {
+export interface TestGroupID {
   // The spec's suite name, e.g. 'webgpu'.
   readonly suite: string;
-  // The spec's path within the suite, e.g. 'command_buffer/compute/basic'.
-  readonly path: string;
+  // The spec's path within the suite, e.g. ['command_buffer', 'compute', 'basic'].
+  readonly group: string[];
 }
 
-export function testSpecEquals(x: TestSpecID, y: TestSpecID): boolean {
-  return x.suite === y.suite && x.path === y.path;
+export function testSpecEquals(x: TestGroupID, y: TestGroupID): boolean {
+  return objectEquals(x, y);
 }
 
 // Identifies a test case (a specific parameterization of a test), within its spec file.
 export interface TestCaseID {
-  readonly test: string;
-  readonly params: ParamSpec | null;
+  readonly test: string[];
+  readonly params: ParamSpec;
 }
 
-export interface TestSpecOrTestOrCaseID {
-  readonly spec: TestSpecID;
-  readonly test?: string;
-  readonly params?: ParamSpec | null;
+// TODO: delete these
+interface TIDGroup {
+  readonly group: TestGroupID;
 }
+interface TIDTest extends TIDGroup {
+  readonly test: string;
+}
+interface TIDCase extends TIDTest {
+  readonly params: ParamSpec | null;
+}
+export type TIDGroupOrTestOrCase = TIDGroup | TIDTest | TIDCase;

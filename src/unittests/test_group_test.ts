@@ -8,14 +8,14 @@ import { UnitTest } from './unit_test.js';
 
 export class TestGroupTest extends UnitTest {
   async run<F extends Fixture>(g: TestGroup<F>): Promise<LiveTestSpecResult> {
-    const [rec, res] = new Logger().record({ suite: '', path: '' });
+    const [rec, res] = new Logger().record({ suite: '', group: '' });
     await Promise.all(Array.from(g.iterate(rec)).map(test => test.run()));
     return res;
   }
 
   enumerate<F extends Fixture>(g: TestGroup<F>): TestCaseID[] {
     const cases = [];
-    const [rec] = new Logger().record({ suite: '', path: '' });
+    const [rec] = new Logger().record({ suite: '', group: '' });
     for (const test of g.iterate(rec)) {
       cases.push(test.id);
     }

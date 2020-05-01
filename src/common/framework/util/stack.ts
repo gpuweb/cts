@@ -5,29 +5,7 @@ export function getStackTrace(e: Error): string {
   if (!e.stack) {
     return '';
   }
-
-  const parts = e.stack.split('\n');
-
-  const stack = [];
-  const moreStack = [];
-  let found = false;
-  const commonRegex = /[/\\](webgpu|unittests)[/\\]/;
-  for (let i = 0; i < parts.length; ++i) {
-    const part = parts[i].trim();
-    const isSuites = commonRegex.test(part); // approximate
-    if (found && !isSuites) {
-      moreStack.push(part);
-    }
-    if (isSuites) {
-      if (moreStack.length) {
-        stack.push(...moreStack);
-        moreStack.length = 0;
-      }
-      stack.push(part);
-      found = true;
-    }
-  }
-  return stack.join('\n');
+  return e.stack;
 }
 
 // *** Examples ***

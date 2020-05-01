@@ -2,6 +2,7 @@ import { TestSuiteListing } from './listing.js';
 import { loadFilter } from './test_filter/load_filter.js';
 import { TestFilterResult } from './test_filter/test_filter_result.js';
 import { RunCaseIterable } from './test_group.js';
+import { assert } from './util/util.js';
 
 // One of the following:
 // - An actual .spec.ts file, as imported.
@@ -25,12 +26,15 @@ function* concat(lists: TestFilterResult[][]): TestFilterResultIterator {
   }
 }
 
-export interface TestFileLoader {
-  listing(suite: string): Promise<TestSuiteListing>;
-  import(path: string): Promise<TestSpecOrReadme>;
+export abstract class TestFileLoader {
+  abstract listing(suite: string): Promise<TestSuiteListing>;
+  abstract import(path: string): Promise<TestSpecOrReadme>;
+  importSpecFile(suite: string, path: string[]): Promise<TestSpec> {
+    return this.import(suite + path.join('/') + '.spec.js') as Promise<TestSpec>;
+  }
 }
 
-class DefaultTestFileLoader implements TestFileLoader {
+class DefaultTestFileLoader extends TestFileLoader {
   async listing(suite: string): Promise<TestSuiteListing> {
     return (await import(`../../${suite}/listing.js`)).listing;
   }
@@ -59,6 +63,13 @@ export class TestLoader {
   }
 
   async loadTests(filters: string[]): Promise<TestFilterResultIterator> {
+    for (const filter of filters) {
+      const firstColonIndex = filter.indexOf(':');
+      assert(
+        firstColonIndex !== filter.length - 1,
+        'empty path in query (`webgpu:` is now `webgpu:*`)'
+      );
+    }
     const loads = filters.map(f => loadFilter(this.fileLoader, f));
     return concat(await Promise.all(loads));
   }

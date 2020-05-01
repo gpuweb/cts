@@ -1,4 +1,4 @@
-import { objectEquals } from './util/util.js';
+import { objectEquals, assert } from './util/util.js';
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 export type ParamArgument = any;
@@ -18,11 +18,51 @@ export function extractPublicParams(params: ParamSpec): ParamSpec {
   return publicParams;
 }
 
+// TODO: remove null here
 export function stringifyPublicParams(p: ParamSpec | null): string {
   if (p === null || paramsEquals(p, {})) {
     return '';
   }
-  return JSON.stringify(extractPublicParams(p));
+  const pub = extractPublicParams(p);
+  return Object.entries(pub)
+    .map(([k, v]) => stringifySingleParam(k, v))
+    .join(';');
+}
+
+export function stringifySingleParam(k: string, v: ParamArgument) {
+  return `${k}=${stringifySingleParamValue(v)}`;
+}
+
+export function stringifySingleParamValue(v: ParamArgument): string {
+  const s = v === undefined ? 'undefined' : JSON.stringify(v);
+  assert(!/[;:=]/.test(s), 'JSON.stringified param value must not have [;:=]');
+  return s;
+}
+
+// TODO: possibly delete
+export function parseParamsString(paramsString: string): ParamSpec {
+  if (paramsString === '') {
+    return {};
+  }
+
+  const params: ParamSpec = {};
+  for (const paramSubstring of paramsString.split(';')) {
+    const [k, v] = parseSingleParam(paramSubstring);
+    params[k] = v;
+  }
+  return params;
+}
+
+export function parseSingleParam(paramSubstring: string): [string, ParamArgument] {
+  const i = paramSubstring.indexOf('=');
+  assert(i !== -1, 'Should only be one = in a param in a query');
+  const k = paramSubstring.substring(0, i);
+  const v = paramSubstring.substring(i + 1);
+  return [k, parseSingleParamValue(v)];
+}
+
+export function parseSingleParamValue(s: string): ParamArgument {
+  return s === 'undefined' ? undefined : JSON.parse(s);
 }
 
 export function paramsEquals(x: ParamSpec | null, y: ParamSpec | null): boolean {

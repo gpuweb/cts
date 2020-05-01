@@ -1,4 +1,4 @@
-import { TestSpecOrTestOrCaseID } from './id.js';
+import { TIDGroupOrTestOrCase } from './id.js';
 import { Logger } from './logger.js';
 import { makeFilter } from './test_filter/load_filter.js';
 import { TestFilterResult } from './test_filter/test_filter_result.js';
@@ -6,11 +6,12 @@ import { FilterResultTreeNode, treeFromFilterResults } from './tree.js';
 
 interface QuerySplitterTreeNode {
   needsSplit: boolean;
+  parentNeedsSplit: boolean; // for debugging
   children?: Map<string, QuerySplitterTreeNode>;
 }
 
 interface Expectation {
-  id: TestSpecOrTestOrCaseID;
+  id: TIDGroupOrTestOrCase;
   line: string;
   seen: boolean;
 }
@@ -22,10 +23,10 @@ function makeQuerySplitterTree(
   const expectations: Expectation[] = [];
   for (const e of expectationStrings) {
     const filter = makeFilter(e);
-    const id = filter.idIfSingle();
+    const id = filter.idIfWholeSubtree();
     if (!id) {
       throw new Error(
-        'Can only handle expectations which cover one file, one test, or one case. ' + e
+        'Expectation must cover an entire subtree (i.e. end in `;*` or `:*` or `:`). ' + e
       );
     }
     expectations.push({ id, line: e, seen: false });
@@ -34,38 +35,42 @@ function makeQuerySplitterTree(
   const convertToQuerySplitterTree = (
     tree: FilterResultTreeNode,
     name?: string
-  ): QuerySplitterTreeNode => {
-    const children = tree.children;
+  ): [QuerySplitterTreeNode, boolean] => {
     let needsSplit = true;
+    let parentNeedsSplit = false;
 
     if (name !== undefined) {
       const filter = makeFilter(name);
-      const moreThanOneFile = !filter.definitelyOneFile();
-      const matchingExpectations = expectations.map(e => {
-        const matches = filter.matches(e.id);
+      needsSplit = !filter.definitelyWholeSubtree();
+
+      const subtreeHasExpectation = expectations.some(e => {
+        const matches = filter.matches(e.line); // there's still an expectation inside this subtree
         if (matches) e.seen = true;
         return matches;
       });
-      needsSplit = matchingExpectations.some(m => m) || moreThanOneFile;
+      parentNeedsSplit = subtreeHasExpectation;
     }
 
-    const queryNode: QuerySplitterTreeNode = { needsSplit };
-    if (children) {
+    const queryNode: QuerySplitterTreeNode = { needsSplit, parentNeedsSplit };
+    if ('children' in tree) {
       queryNode.children = new Map();
-      for (const [k, v] of children) {
-        const subtree = convertToQuerySplitterTree(v, k);
+      for (const [k, v] of tree.children) {
+        const [subtree, childNeedsParentSplit] = convertToQuerySplitterTree(v, k);
+        queryNode.needsSplit = queryNode.needsSplit || childNeedsParentSplit;
         queryNode.children.set(k, subtree);
       }
     }
-    return queryNode;
+    return [queryNode, parentNeedsSplit];
   };
 
   const log = new Logger();
   const tree = treeFromFilterResults(log, caselist.values());
-  const queryTree = convertToQuerySplitterTree(tree)!;
+  const [queryTree] = convertToQuerySplitterTree(tree)!;
 
   for (const e of expectations) {
-    if (!e.seen) throw new Error('expectation had no effect: ' + e.line);
+    if (!e.seen) {
+      throw new Error('expectation had no effect: ' + e.line);
+    }
   }
 
   return queryTree;
@@ -103,10 +108,32 @@ export async function generateMinimalQueryList(
 
   for (const exp of expectationStrings) {
     if (!unsplitNodes.some(name => name === exp)) {
+      // eslint-disable-next-line no-console
+      console.log('====', exp);
+      // eslint-disable-next-line no-console
+      console.log(unsplitNodes);
+      printQuerySplitterTree(queryTree);
       throw new Error(
         'Something went wrong: all expectation strings should always appear exactly: ' + exp
       );
     }
   }
   return unsplitNodes;
+}
+
+// For debugging
+export function printQuerySplitterTree(tree: QuerySplitterTreeNode, indent: string = ''): void {
+  if (tree.children === undefined) {
+    return;
+  }
+  for (const [name, child] of tree.children) {
+    // eslint-disable-next-line no-console
+    console.log(
+      child.needsSplit ? 'S' : '_',
+      child.parentNeedsSplit ? 'P' : '_',
+      makeFilter(name).definitelyWholeSubtree() ? '1' : '_',
+      indent + name
+    );
+    printQuerySplitterTree(child, indent + ' ');
+  }
 }
