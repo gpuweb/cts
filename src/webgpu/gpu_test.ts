@@ -5,7 +5,6 @@ import {
   unreachable,
   raceWithRejectOnTimeout,
   assertReject,
-  PromiseTimeoutError,
 } from '../common/framework/util/util.js';
 
 import {
@@ -36,65 +35,100 @@ type TypedArrayBufferViewConstructor =
   | Float64ArrayConstructor;
 
 interface DeviceHolder {
+  acquired: boolean; // whether the device is currently in use by a test
   device: GPUDevice;
-  lostReason?: string;
+  lostReason?: string; // initially undefined; becomes set when the device is lost
 }
+
+class TestFailedButDeviceReusable extends Error {}
 
 const kPopErrorScopeTimeoutMS = 5000;
 
 class DevicePool {
-  holder?: DeviceHolder = undefined; // undefined means "uninitialized"
-  state: 'free' | 'acquired' | 'failed' = 'free';
-
-  private async initialize(): Promise<void> {
-    if (this.holder !== undefined) {
-      return;
-    }
-    try {
-      const gpu = getGPU();
-      const adapter = await gpu.requestAdapter();
-      const holder: DeviceHolder = {
-        device: await adapter.requestDevice(),
-        lostReason: undefined,
-      };
-
-      holder.device.lost.then(ev => {
-        holder.lostReason = ev.message;
-      });
-
-      this.holder = holder;
-      this.state = 'free';
-    } catch (ex) {
-      this.state = 'failed';
-      throw ex;
-    }
-  }
+  failed: boolean = false; // if device init failed once, never try again
+  holder?: DeviceHolder = undefined; // undefined if "uninitialized" (not yet initialized, or lost)
 
   async acquire(): Promise<GPUDevice> {
-    assert(this.state !== 'acquired', 'Device was in use');
-    assert(this.state !== 'failed', 'WebGPU device previously failed to initialize');
+    assert(!this.failed, 'WebGPU device previously failed to initialize; not retrying');
 
-    await this.initialize();
-    this.state = 'acquired';
+    if (this.holder === undefined) {
+      try {
+        this.holder = await DevicePool.makeHolder();
+      } catch (ex) {
+        this.failed = true;
+        throw ex;
+      }
+    } else {
+      assert(!this.holder.acquired, 'Device was in use on DevicePool.acquire');
+    }
 
-    assert(this.holder !== undefined);
-
-    await assertReject(
-      this.holder.device.popErrorScope(),
-      'There was an error scope on the stack before a test'
-    );
     this.beginErrorScopes();
 
     return this.holder.device;
   }
 
-  beginErrorScopes(): void {
+  // When a test is done using a device, it's released back into the pool.
+  // This waits for error scopes, checks their results, and checks for various error conditions.
+  async release(device: GPUDevice): Promise<void> {
+    assert(this.holder !== undefined, 'trying to release a device while pool is uninitialized');
+    assert(this.holder.acquired, 'trying to release a device while already released');
+    assert(device === this.holder.device, 'Released device was the wrong device');
+
+    try {
+      // Time out if popErrorScope never completes. This could happen due to a browser bug - e.g.,
+      // as of this writing, on Chrome GPU process crash, popErrorScope just hangs.
+      await raceWithRejectOnTimeout(
+        this.endErrorScopes(),
+        kPopErrorScopeTimeoutMS,
+        'finalization popErrorScope timed out'
+      );
+      this.holder.acquired = false;
+
+      // (Hopefully if the device was lost, it has been reported by the time endErrorScopes()
+      // has finished (or timed out). If not, it could cause a finite number of extra test
+      // failures following this one (but should recover eventually).)
+      const lostReason = this.holder.lostReason;
+      if (lostReason !== undefined) {
+        // Fail the current test.
+        unreachable(`Device was lost: ${lostReason}`);
+      }
+    } catch (ex) {
+      // Any error that isn't explicitly TestFailedButDeviceReusable forces a new device to be
+      // created for the next test.
+      if (!(ex instanceof TestFailedButDeviceReusable)) {
+        this.holder = undefined;
+      }
+      throw ex;
+    }
+  }
+
+  // Gets a device and creates a DeviceHolder.
+  // If the device is lost, DeviceHolder.lostReason gets set.
+  private static async makeHolder(): Promise<DeviceHolder> {
+    const gpu = getGPU();
+    const adapter = await gpu.requestAdapter();
+
+    const holder: DeviceHolder = {
+      acquired: true,
+      device: await adapter.requestDevice(),
+      lostReason: undefined,
+    };
+    holder.device.lost.then(ev => {
+      holder.lostReason = ev.message;
+    });
+    return holder;
+  }
+
+  // Create error scopes that wrap the entire test.
+  private beginErrorScopes(): void {
     assert(this.holder !== undefined);
     this.holder.device.pushErrorScope('out-of-memory');
     this.holder.device.pushErrorScope('validation');
   }
 
-  async endErrorScopes(): Promise<void> {
+  // End the whole-test error scopes. Check that there are no extra error scopes, and that no
+  // otherwise-uncaptured errors occurred during the test.
+  private async endErrorScopes(): Promise<void> {
     assert(this.holder !== undefined);
     let gpuValidationError: GPUValidationError | GPUOutOfMemoryError | null;
     let gpuOutOfMemoryError: GPUValidationError | GPUOutOfMemoryError | null;
@@ -106,52 +140,25 @@ class DevicePool {
     } catch (ex) {
       assert(
         this.holder.lostReason !== undefined,
-        'popErrorScope failed, but device not (yet) lost'
+        "popErrorScope failed, but device.lost hasn't fired (yet)"
       );
       throw ex;
     }
+
+    await assertReject(
+      this.holder.device.popErrorScope(),
+      'There was an extra error scope on the stack after a test'
+    );
 
     if (gpuValidationError !== null) {
       assert(gpuValidationError instanceof GPUValidationError);
-      unreachable(`Unexpected validation error occurred: ${gpuValidationError.message}`);
+      throw new TestFailedButDeviceReusable(
+        `Unexpected validation error occurred: ${gpuValidationError.message}`
+      );
     }
     if (gpuOutOfMemoryError !== null) {
       assert(gpuOutOfMemoryError instanceof GPUOutOfMemoryError);
-      unreachable('Unexpected out-of-memory error occurred');
-    }
-  }
-
-  async release(device: GPUDevice): Promise<void> {
-    assert(this.state === 'acquired');
-    assert(this.holder !== undefined);
-    assert(device === this.holder.device, 'Released device was the wrong device');
-
-    try {
-      // A timeout probably isn't supposed to happen, but could due to a browser bug
-      // (e.g. as of this writing, on Chrome GPU process crash, popErrorScope just hangs).
-      await raceWithRejectOnTimeout(
-        this.endErrorScopes(),
-        kPopErrorScopeTimeoutMS,
-        'finalization popErrorScope timed out'
-      );
-    } catch (ex) {
-      if (ex instanceof PromiseTimeoutError) {
-        this.holder = undefined;
-      }
-      throw ex;
-    } finally {
-      this.state = 'free';
-
-      // Hopefully if the device was lost, it has been reported by the time endErrorScopes()
-      // has finished (or timed out). If not, it could cause a finite number of extra test
-      // failures following this one (but should recover eventually).
-      if (this.holder) {
-        const lostReason = this.holder.lostReason;
-        if (lostReason !== undefined) {
-          this.holder = undefined;
-          unreachable(`Device was lost: ${lostReason}`);
-        }
-      }
+      throw new TestFailedButDeviceReusable('Unexpected out-of-memory error occurred');
     }
   }
 }
