@@ -58,9 +58,8 @@ class DevicePool {
         this.failed = true;
         throw ex;
       }
-    } else {
-      assert(!this.holder.acquired, 'Device was in use on DevicePool.acquire');
     }
+    assert(!this.holder.acquired, 'Device was in use on DevicePool.acquire');
     this.holder.acquired = true;
 
     this.beginErrorScopes();
@@ -113,7 +112,7 @@ class DevicePool {
     const adapter = await gpu.requestAdapter();
 
     const holder: DeviceHolder = {
-      acquired: true,
+      acquired: false,
       device: await adapter.requestDevice(),
       lostReason: undefined,
     };
@@ -156,13 +155,15 @@ class DevicePool {
 
     if (gpuValidationError !== null) {
       assert(gpuValidationError instanceof GPUValidationError);
+      // Allow the device to be reused.
       throw new TestFailedButDeviceReusable(
         `Unexpected validation error occurred: ${gpuValidationError.message}`
       );
     }
     if (gpuOutOfMemoryError !== null) {
       assert(gpuOutOfMemoryError instanceof GPUOutOfMemoryError);
-      throw new TestFailedButDeviceReusable('Unexpected out-of-memory error occurred');
+      // Don't allow the device to be reused; unexpected OOM could break the device.
+      unreachable('Unexpected out-of-memory error occurred');
     }
   }
 }
