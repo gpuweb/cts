@@ -26,6 +26,14 @@ export function now(): number {
   return perf.now();
 }
 
+export function resolveOnTimeout(ms: number): Promise<void> {
+  return new Promise(resolve => {
+    timeout(() => {
+      resolve();
+    }, ms);
+  });
+}
+
 export class PromiseTimeoutError extends Error {}
 
 export function rejectOnTimeout(ms: number, msg: string): Promise<never> {

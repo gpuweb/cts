@@ -1,3 +1,4 @@
+import { attemptGarbageCollection } from '../common/framework/collect_garbage.js';
 import { Fixture } from '../common/framework/fixture.js';
 import { getGPU } from '../common/framework/gpu/implementation.js';
 import {
@@ -162,6 +163,10 @@ class DevicePool {
     }
     if (gpuOutOfMemoryError !== null) {
       assert(gpuOutOfMemoryError instanceof GPUOutOfMemoryError);
+
+      // Try to clean up, in case there are stray GPU resources in need of collection.
+      await attemptGarbageCollection();
+
       // Don't allow the device to be reused; unexpected OOM could break the device.
       unreachable('Unexpected out-of-memory error occurred');
     }

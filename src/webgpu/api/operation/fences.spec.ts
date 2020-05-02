@@ -122,13 +122,13 @@ g.test('wait/resolves within timeout').fn(t => {
 });
 
 // Test dropping references to the fence and onCompletion promise does not crash.
-g.test('drop/fence and promise').fn(t => {
+g.test('drop/fence and promise').fn(async t => {
   {
     const fence = t.queue.createFence();
     t.queue.signal(fence, 2);
     fence.onCompletion(2);
   }
-  attemptGarbageCollection();
+  await attemptGarbageCollection();
 });
 
 // Test dropping references to the fence and holding the promise does not crash.
@@ -139,6 +139,6 @@ g.test('drop/promise').fn(async t => {
     t.queue.signal(fence, 2);
     promise = fence.onCompletion(2);
   }
-  attemptGarbageCollection();
+  await attemptGarbageCollection();
   await promise;
 });
