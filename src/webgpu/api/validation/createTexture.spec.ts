@@ -42,6 +42,7 @@ export const g = new TestGroup(F);
 
 g.test('validation of sampleCount')
   .params([
+    // TODO: Consider making a list of "valid"+"invalid" texture descriptors in capability_info.
     { sampleCount: 0, _success: false }, // sampleCount of 0 is not allowed
     { sampleCount: 1, _success: true }, // sampleCount of 1 is allowed
     { sampleCount: 2, _success: false }, // sampleCount of 2 is not allowed
@@ -49,8 +50,8 @@ g.test('validation of sampleCount')
     { sampleCount: 4, _success: true }, // sampleCount of 4 is allowed
     { sampleCount: 8, _success: false }, // sampleCount of 8 is not allowed
     { sampleCount: 16, _success: false }, // sampleCount of 16 is not allowed
-    { sampleCount: 4, mipLevelCount: 2, _success: false }, // it is an error to create a multisampled texture with mipLevelCount > 1
-    { sampleCount: 4, arrayLayerCount: 2, _success: true }, // multisampled 2D array texture is supported
+    { sampleCount: 4, mipLevelCount: 2, _success: false }, // multisampled multi-level not allowed
+    { sampleCount: 4, arrayLayerCount: 2, _success: false }, // multisampled multi-layer is not allowed
   ])
   .fn(async t => {
     const { sampleCount, mipLevelCount, arrayLayerCount, _success } = t.params;

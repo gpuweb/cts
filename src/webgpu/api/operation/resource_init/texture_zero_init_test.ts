@@ -461,6 +461,7 @@ export abstract class TextureZeroInitTest extends GPUTest {
 
   static generateParams(readMethods: ReadMethod[]) {
     return (
+      // TODO: Consider making a list of "valid" texture descriptors in capability_info.
       params()
         .combine(poptions('format', kTextureFormats))
         .combine(poptions('aspect', kTextureAspects))
