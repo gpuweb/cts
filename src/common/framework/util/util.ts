@@ -6,6 +6,15 @@ export function assert(condition: boolean, msg?: string): asserts condition {
   }
 }
 
+export async function assertReject(p: Promise<unknown>, msg?: string): Promise<void> {
+  try {
+    await p;
+    unreachable(msg);
+  } catch (ex) {
+    // Assertion OK
+  }
+}
+
 export function unreachable(msg?: string): never {
   throw new Error(msg);
 }
@@ -17,10 +26,12 @@ export function now(): number {
   return perf.now();
 }
 
+export class PromiseTimeoutError extends Error {}
+
 export function rejectOnTimeout(ms: number, msg: string): Promise<never> {
-  return new Promise((resolve, reject) => {
+  return new Promise((_resolve, reject) => {
     timeout(() => {
-      reject(new Error(msg));
+      reject(new PromiseTimeoutError(msg));
     }, ms);
   });
 }

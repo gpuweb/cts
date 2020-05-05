@@ -170,7 +170,7 @@ class SampledTextureClearTest extends TextureZeroInitTest {
         this.queue.submit([commandEncoder.finish()]);
         ubo.destroy();
 
-        const mappedResultBuffer = this.createCopyForMapRead(resultBuffer, byteLength);
+        const mappedResultBuffer = this.createCopyForMapRead(resultBuffer, 0, byteLength);
         resultBuffer.destroy();
 
         this.eventualAsyncExpectation(async niceStack => {

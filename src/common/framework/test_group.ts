@@ -158,7 +158,8 @@ class RunCaseSpecific<F extends Fixture> implements RunCase {
     } catch (ex) {
       // There was an exception from constructor, init, test, or finalize.
       // An error from init or test may have been a SkipTestCase.
-      // An error from finalize may have been an eventualAsyncExpectation failure.
+      // An error from finalize may have been an eventualAsyncExpectation failure
+      // or unexpected validation/OOM error from the GPUDevice.
       rec.threw(ex);
     }
 
