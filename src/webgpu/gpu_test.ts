@@ -42,6 +42,7 @@ interface DeviceHolder {
 }
 
 class TestFailedButDeviceReusable extends Error {}
+class TestOOMedShouldAttemptGC extends Error {}
 
 const kPopErrorScopeTimeoutMS = 5000;
 
@@ -163,12 +164,8 @@ class DevicePool {
     }
     if (gpuOutOfMemoryError !== null) {
       assert(gpuOutOfMemoryError instanceof GPUOutOfMemoryError);
-
-      // Try to clean up, in case there are stray GPU resources in need of collection.
-      await attemptGarbageCollection();
-
       // Don't allow the device to be reused; unexpected OOM could break the device.
-      unreachable('Unexpected out-of-memory error occurred');
+      throw new TestOOMedShouldAttemptGC('Unexpected out-of-memory error occurred');
     }
   }
 }
@@ -202,7 +199,25 @@ export class GPUTest extends Fixture {
     await super.finalize();
 
     if (this.objects) {
-      await devicePool.release(this.objects.device);
+      let threw: undefined | Error;
+      {
+        const objects = this.objects;
+        this.objects = undefined;
+        try {
+          await devicePool.release(objects.device);
+        } catch (ex) {
+          threw = ex;
+        }
+      }
+      // The GPUDevice and GPUQueue should now have no outstanding references.
+
+      if (threw) {
+        if (threw instanceof TestOOMedShouldAttemptGC) {
+          // Try to clean up, in case there are stray GPU resources in need of collection.
+          await attemptGarbageCollection();
+        }
+        throw threw;
+      }
     }
   }
 
