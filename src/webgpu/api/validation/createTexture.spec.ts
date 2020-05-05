@@ -42,6 +42,7 @@ export const g = new TestGroup(F);
 
 g.test('validation of sampleCount')
   .params([
+    // TODO: Consider making a list of "valid"+"invalid" texture descriptors in capability_info.
     { sampleCount: 0, _success: false }, // sampleCount of 0 is not allowed
     { sampleCount: 1, _success: true }, // sampleCount of 1 is allowed
     { sampleCount: 2, _success: false }, // sampleCount of 2 is not allowed
