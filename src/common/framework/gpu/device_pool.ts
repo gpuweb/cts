@@ -68,6 +68,8 @@ export class DevicePool {
       }
       throw ex;
     } finally {
+      // TODO: device.destroy()
+
       // Mark the holder as free. (This only has an effect if the pool still has the holder.)
       // This could be done at the top but is done here to guard againt async-races during release.
       holder.acquired = false;
