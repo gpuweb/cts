@@ -1,7 +1,9 @@
+import { resolveOnTimeout } from './util/util.js';
+
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 declare const Components: any;
 
-export function attemptGarbageCollection(): void {
+export async function attemptGarbageCollection(): Promise<void> {
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   const w: any = self;
   if (w.GCController) {
@@ -43,4 +45,6 @@ export function attemptGarbageCollection(): void {
   for (i = 0; i < 1000; i++) {
     gcRec(10);
   }
+
+  return resolveOnTimeout(35); // Let the event loop run a few frames in case it helps.
 }
