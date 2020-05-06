@@ -2,6 +2,7 @@ import { TestLoader } from '../framework/loader.js';
 import { LiveTestCaseResult, Logger } from '../framework/logger.js';
 import { makeQueryString } from '../framework/url_query.js';
 import { AsyncMutex } from '../framework/util/async_mutex.js';
+import { assert } from '../framework/util/util.js';
 
 import { optionEnabled } from './helper/options.js';
 import { TestWorker } from './helper/test_worker.js';
@@ -16,7 +17,9 @@ declare function async_test(f: (this: WptTestObject) => Promise<void>, name: str
 
 (async () => {
   const loader = new TestLoader();
-  const files = await loader.loadTestsFromQuery(window.location.search);
+  const qs = new URLSearchParams(window.location.search).getAll('q');
+  assert(qs.length === 1, 'currently, there must be exactly one ?q=');
+  const files = await loader.loadTests(qs[0]);
 
   const worker = optionEnabled('worker') ? new TestWorker() : undefined;
 

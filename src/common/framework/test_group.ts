@@ -13,7 +13,7 @@ export interface RunCase {
 }
 
 export interface RunCaseIterable {
-  iterate(rec: TestSpecRecorder): Iterable<RunCase>;
+  iterate(rec?: TestSpecRecorder): Iterable<RunCase>;
 }
 
 type FixtureClass<F extends Fixture> = new (log: TestCaseRecorder, params: ParamSpec) => F;
@@ -128,12 +128,11 @@ class RunCaseSpecific<F extends Fixture> implements RunCase {
   constructor(
     recorder: TestSpecRecorder,
     test: string[],
-    // TODO: remove null
-    params: ParamSpec | null,
+    params: ParamSpec,
     fixture: FixtureClass<F>,
     fn: TestFn<F, never>
   ) {
-    this.id = { test, params: params ? extractPublicParams(params) : null };
+    this.id = { test, params: extractPublicParams(params) };
     this.params = params;
     this.recorder = recorder;
     this.fixture = fixture;

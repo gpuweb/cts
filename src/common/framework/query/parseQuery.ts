@@ -2,27 +2,38 @@ import { ParamSpec, parseSingleParam } from '../params_utils.js';
 import { assert } from '../util/util.js';
 
 import { TestQuery, validQueryPart } from './query.js';
+import { kBigSeparator, kWildcard, kSmallSeparator } from './separators.js';
 
 export function parseQuery(s: string): TestQuery {
-  const bigparts = s.split(':', 4); // suite, group, test, params
-  assert(bigparts.length >= 2, 'filter string must have at least one :');
-  const suite = bigparts[0];
+  const bigParts = s.split(kBigSeparator, 4); // suite, group, test, params
+  assert(bigParts.length >= 2, `filter string must have at least one ${kBigSeparator}`);
+  const suite = bigParts[0];
 
-  const { parts: group, endsWithWildcard: groupHasWildcard } = parseBigPart(bigparts[1]);
+  const { parts: group, endsWithWildcard: groupHasWildcard } = parseBigPart(bigParts[1]);
 
-  if (bigparts.length <= 2) {
-    return { suite, group, endsWithWildcard: groupHasWildcard };
+  if (bigParts.length === 2) {
+    assert(
+      groupHasWildcard,
+      `Group-level query without wildcard ${kWildcard}; did you want a test-level query? \
+(Append ${kBigSeparator}${kWildcard})`
+    );
+    return { suite, group, endsWithWildcard: true };
   }
-  assert(!groupHasWildcard, 'Wildcard * must be at the end of the query string');
+  assert(!groupHasWildcard, `Wildcard ${kWildcard} must be at the end of the query string`);
 
-  const { parts: test, endsWithWildcard: testHasWildcard } = parseBigPart(bigparts[2]);
+  const { parts: test, endsWithWildcard: testHasWildcard } = parseBigPart(bigParts[2]);
 
-  if (bigparts.length <= 3) {
-    return { suite, group, test, endsWithWildcard: testHasWildcard };
+  if (bigParts.length === 3) {
+    assert(
+      testHasWildcard,
+      `Test-level query without wildcard ${kWildcard}; did you want a case-level query? \
+(Append ${kBigSeparator}${kWildcard})`
+    );
+    return { suite, group, test, endsWithWildcard: true };
   }
-  assert(!testHasWildcard, 'Wildcard * must be at the end of the query string');
+  assert(!testHasWildcard, `Wildcard ${kWildcard} must be at the end of the query string`);
 
-  const { parts: paramsParts, endsWithWildcard: paramsHasWildcard } = parseBigPart(bigparts[3]);
+  const { parts: paramsParts, endsWithWildcard: paramsHasWildcard } = parseBigPart(bigParts[3]);
 
   const params: ParamSpec = {};
   for (const paramPart of paramsParts) {
@@ -33,15 +44,24 @@ export function parseQuery(s: string): TestQuery {
   return { suite, group, test, params, endsWithWildcard: paramsHasWildcard };
 }
 
+// webgpu:a,b,*
+// webgpu:a,b,c:*
+const kExampleQuery = `\
+webgpu${kBigSeparator}a${kSmallSeparator}b${kSmallSeparator}${kWildcard} or \
+webgpu${kBigSeparator}a${kSmallSeparator}b${kSmallSeparator}c${kBigSeparator}${kWildcard}`;
+
 function parseBigPart(s: string): { parts: string[]; endsWithWildcard: boolean } {
   const parts = s.split(';');
+  let endsWithWildcard = false;
   for (let i = 0; i < parts.length; ++i) {
     const part = parts[i];
-    if (part === '*') {
-      assert(i === parts.length - 1, 'Wildcard * must the last part of a path (e.g. `a;b;*`)');
-    } else {
-      assert(part.indexOf('*') === -1, 'Wildcard * must be an entire path part (e.g. `a;b;*`)');
+    if (i === parts.length - 1) {
+      endsWithWildcard = part === kWildcard;
     }
+    assert(
+      part.indexOf(kWildcard) === -1 || endsWithWildcard,
+      `Wildcard ${kWildcard} must be complete last part of a path (e.g. ${kExampleQuery})`
+    );
   }
-  throw 0;
+  return { parts, endsWithWildcard };
 }

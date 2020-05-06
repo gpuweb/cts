@@ -1,8 +1,17 @@
 import { TIDGroupOrTestOrCase } from './id.js';
+import { TestFileLoader } from './loader.js';
 import { Logger } from './logger.js';
-import { makeFilter } from './test_filter/load_filter.js';
-import { TestFilterResult } from './test_filter/test_filter_result.js';
-import { FilterResultTreeNode, treeFromFilterResults } from './tree.js';
+import { parseQuery } from './query/parseQuery.js';
+import { kBigSeparator } from './query/separators.js';
+import {
+  loadTreeForQuery,
+  FilterResultTree,
+  FilterResultTreeNode,
+  FilterResultSubtree,
+  FilterResultTreeLeaf,
+} from './tree.js';
+import { assert } from './util/util.js';
+import { TestQuery } from './query/query.js';
 
 interface QuerySplitterTreeNode {
   needsSplit: boolean;
@@ -119,6 +128,59 @@ export async function generateMinimalQueryList(
     }
   }
   return unsplitNodes;
+}
+
+interface QuerySplitterSubtree extends FilterResultSubtree {
+  needsSplit: boolean;
+}
+
+type QuerySplitterTreeNode2 = QuerySplitterSubtree | 'leaf';
+
+class QuerySplitterTree {
+  private readonly root: QuerySplitterSubtree;
+
+  constructor(tree: FilterResultTree) {
+    this.root = makeQuerySplitterSubtree(tree.root) as QuerySplitterSubtree;
+  }
+
+  split(query: TestQuery) {
+    throw 0;
+  }
+
+  iterate(): IterableIterator<string> {
+    throw 0;
+  }
+}
+
+function makeQuerySplitterSubtree(subtree: FilterResultTreeNode): QuerySplitterTreeNode2 {
+  if ('children' in subtree) {
+    const children = new Map();
+    for (const [k, v] of subtree.children) {
+      children.set(k, makeQuerySplitterSubtree(v));
+    }
+    return { children, needsSplit: false };
+  } else {
+    return 'leaf';
+  }
+}
+
+export async function generateMinimalQueryList2(
+  suite: string,
+  loader: TestFileLoader,
+  expectationStrings: string[]
+): Promise<IterableIterator<string>> {
+  const tree = await loadTreeForQuery(loader, { suite, group: [], endsWithWildcard: true });
+  const splitterTree = new QuerySplitterTree(tree);
+
+  for (const expectationString of expectationStrings) {
+    assert(
+      expectationString.startsWith(suite + kBigSeparator),
+      `Expectation must start with ${suite}${kBigSeparator}: ${expectationString}`
+    );
+    const expectation = parseQuery(expectationString);
+    splitterTree.split(expectation);
+  }
+  return splitterTree.iterate();
 }
 
 // For debugging

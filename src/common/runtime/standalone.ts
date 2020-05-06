@@ -3,8 +3,9 @@
 import { TestLoader } from '../framework/loader.js';
 import { LiveTestCaseResult, Logger } from '../framework/logger.js';
 import { RunCase } from '../framework/test_group.js';
-import { FilterResultTreeNode, treeFromFilterResults } from '../framework/tree.js';
+import { FilterResultTreeNode } from '../framework/tree.js';
 import { encodeSelectively } from '../framework/url_query.js';
+import { assert } from '../framework/util/util.js';
 
 import { optionEnabled } from './helper/options.js';
 import { TestWorker } from './helper/test_worker.js';
@@ -162,9 +163,10 @@ function updateJSON(): void {
 (async () => {
   const loader = new TestLoader();
 
-  // TODO: everything after this point is very similar across the three runtimes.
   // TODO: start populating page before waiting for everything to load?
-  const files = await loader.loadTestsFromQuery(window.location.search);
+  const qs = new URLSearchParams(window.location.search).getAll('q');
+  assert(qs.length === 1, 'currently, there must be exactly one ?q=');
+  const files = await loader.loadTests(qs[0]);
   const tree = treeFromFilterResults(log, files);
 
   const runSubtree = makeSubtreeChildrenHTML(resultsVis, tree.children!);

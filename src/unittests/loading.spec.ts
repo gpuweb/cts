@@ -280,9 +280,7 @@ const testGenerateMinimalQueryList = async (
   result: string[]
 ) => {
   const l = await t.load(['suite1:*']);
-  console.log(expectations);
   const queries = await generateMinimalQueryList(l, expectations);
-  console.log(queries, result);
   t.expect(objectEquals(queries, result));
 };
 

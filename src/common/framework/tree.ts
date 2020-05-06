@@ -1,85 +1,147 @@
-import { Logger } from './logger.js';
+import { TestFileLoader } from './loader.js';
 import { stringifySingleParam } from './params_utils.js';
-import { TestFilterResult } from './test_filter/test_filter_result.js';
+import { comparePaths, Ordering, compareParams } from './query/compare_paths.js';
+import { TestQuery } from './query/query.js';
+import { kSmallSeparator, kBigSeparator, kWildcard } from './query/separators.js';
 import { RunCase } from './test_group.js';
+import { stringifyQuery } from './query/stringifyQuery.js';
 
-interface FilterResultSubtree {
+export interface FilterResultSubtree {
+  readonly query: TestQuery;
   description?: string;
-  children: Map<string, FilterResultTreeNode>;
+  readonly children: Map<string, FilterResultTreeNode>;
 }
 
-interface FilterResultTreeLeaf {
-  runCase: RunCase;
+export interface FilterResultTreeLeaf {
+  readonly query: TestQuery;
+  readonly runCase: RunCase;
+}
+
+export interface FilterResult {
+  readonly name: string;
+  readonly runCase: RunCase;
 }
 
 export type FilterResultTreeNode = FilterResultSubtree | FilterResultTreeLeaf;
 
-export function treeFromFilterResults(
-  log: Logger,
-  listing: IterableIterator<TestFilterResult>
-): FilterResultSubtree {
-  const root: FilterResultSubtree = { children: new Map() };
-  for (const f of listing) {
-    // Suite tree
-    const [suiteSubtree, suitePath] = subtreeForSuite(root, f);
-    if (f.id.group.length === 0) {
-      // This is a suite README.
-      suiteSubtree.description = f.spec.description.trim();
-      continue;
+export class FilterResultTree {
+  readonly root: FilterResultSubtree;
+
+  constructor(root: FilterResultSubtree) {
+    this.root = root;
+  }
+
+  iterate(): IterableIterator<FilterResult> {
+    return iterateSubtree(this.root);
+  }
+
+  // For debugging
+  print(tree: FilterResultTreeNode = this.root, indent: string = ''): void {
+    if (!('children' in tree)) {
+      return;
     }
-
-    // Group trees
-    const [groupSubtree, groupPath] = subtreeForGroup(suitePath, suiteSubtree, f);
-    if (!('g' in f.spec)) {
-      // This is a directory README.
-      continue;
-    }
-
-    const [tRec] = log.record(f.id);
-    for (const t of f.spec.g.iterate(tRec)) {
-      // Test trees
-      const [testSubtree, testPath] = subtreeForTest(groupPath, groupSubtree, t);
-
-      // Case trees
-      subtreeForCaseLeaf(testPath, testSubtree, t);
+    for (const [name, child] of tree.children) {
+      // eslint-disable-next-line no-console
+      console.log(indent + name);
+      this.print(child, indent + ' ');
     }
   }
-  return root;
 }
 
-function subtreeForSuite(
-  root: FilterResultSubtree,
-  f: TestFilterResult
-): [FilterResultSubtree, string] {
-  const path = f.id.suite + ':';
-  const subtree = getOrInsertSubtree(root, path + '*');
-  return [subtree, path];
+function* iterateSubtree(subtree: FilterResultSubtree): IterableIterator<FilterResult> {
+  for (const [name, child] of subtree.children) {
+    if ('children' in child) {
+      yield* iterateSubtree(child);
+    } else {
+      yield { name, runCase: child.runCase };
+    }
+  }
 }
 
-function subtreeForGroup(
+export async function loadTreeForQuery(
+  loader: TestFileLoader,
+  query: TestQuery
+): Promise<FilterResultTree> {
+  const suite = query.suite;
+  const specs = await loader.listing(suite);
+
+  const [suiteSubtree, suitePath] = makeTreeForSuite(suite);
+  for (const entry of specs) {
+    const group = entry.path;
+
+    const ordering1 = comparePaths(group, query.group);
+    // TODO: skipping on Superset means that parent dirs don't get their description set to README
+    if (ordering1 === Ordering.Unordered || ordering1 === Ordering.Superset) {
+      // Group path is not matched by this filter.
+      continue;
+    }
+
+    // Subtree for suite of this entry
+    // Subtree for group path of this entry
+    const [groupSubtree, groupPath] = subtreeForGroupPath(suitePath, suiteSubtree, group);
+
+    if ('readme' in entry) {
+      // Entry is a readme file.
+      groupSubtree.description = entry.readme.trim();
+      continue;
+    }
+
+    // Entry is a spec file.
+    const spec = await loader.importSpecFile(query.suite, group);
+
+    for (const t of spec.g.iterate()) {
+      const ordering2 = 'test' in query ? comparePaths(t.id.test, query.test) : Ordering.Subset;
+      if (ordering2 === Ordering.Unordered || ordering2 === Ordering.Superset) {
+        // Test path is not matched by this filter.
+        continue;
+      }
+
+      // Subtree for test path
+      const [testSubtree, testPath] = subtreeForTestPath(groupPath, groupSubtree, t);
+
+      const ordering3 =
+        'params' in query ? compareParams(t.id.params, query.params) : Ordering.Subset;
+      if (ordering3 === Ordering.Unordered || ordering3 === Ordering.Superset) {
+        // Case is not matched by this filter.
+        continue;
+      }
+
+      // Subtree for case
+      subtreeForCase(testPath, testSubtree, t);
+    }
+  }
+  return new FilterResultTree(suiteSubtree);
+}
+
+function makeTreeForSuite(suite: string): [FilterResultSubtree, string] {
+  const path = suite + kBigSeparator;
+  const tree: FilterResultSubtree = {
+    query: { suite, group: [], endsWithWildcard: true },
+    children: new Map(),
+  };
+  return [tree, path];
+}
+
+function subtreeForGroupPath(
   path: string,
   tree: FilterResultSubtree,
-  f: TestFilterResult
+  group: string[]
 ): [FilterResultSubtree, string] {
-  for (const part of pathPartsWithSeparators(f.id.group)) {
+  for (const part of pathPartsWithSeparators(group)) {
     path += part;
-    tree = getOrInsertSubtree(tree, path + '*');
-  }
-  if (f.spec.description) {
-    // This is a directory README or spec file.
-    tree.description = f.spec.description.trim();
+    tree = getOrInsertSubtree(tree, path + kWildcard);
   }
   return [tree, path];
 }
 
-function subtreeForTest(
+function subtreeForTestPath(
   path: string,
   tree: FilterResultSubtree,
   t: RunCase
 ): [FilterResultSubtree, string] {
   for (const part of pathPartsWithSeparators(t.id.test)) {
     path += part;
-    tree = getOrInsertSubtree(tree, path + '*');
+    tree = getOrInsertSubtree(tree, path + kWildcard);
   }
   return [tree, path];
 }
@@ -91,12 +153,12 @@ function subtreeForCaseExceptLeaf(
 ): [FilterResultSubtree, string] {
   for (const part of nonLastPathPartsWithSeparators(paramsParts)) {
     path += part;
-    tree = getOrInsertSubtree(tree, path + '*');
+    tree = getOrInsertSubtree(tree, path + kWildcard);
   }
   return [tree, path];
 }
 
-function subtreeForCaseLeaf(path: string, tree: FilterResultSubtree, t: RunCase): void {
+function subtreeForCase(path: string, tree: FilterResultSubtree, t: RunCase): void {
   const paramsParts = Object.entries(t.id.params).map(([k, v]) => stringifySingleParam(k, v));
   const [caseBranch, caseBranchPath] = subtreeForCaseExceptLeaf(path, tree, paramsParts);
 
@@ -105,36 +167,27 @@ function subtreeForCaseLeaf(path: string, tree: FilterResultSubtree, t: RunCase)
   caseBranch.children.set(caseBranchPath + lastPart, { runCase: t });
 }
 
-function getOrInsertSubtree(n: FilterResultSubtree, k: string): FilterResultSubtree {
+function getOrInsertSubtree(n: FilterResultSubtree, query: TestQuery): FilterResultSubtree {
+  const k = stringifyQuery(query);
+
   const children = n.children;
   const child = children.get(k);
   if (child !== undefined) {
     return child as FilterResultSubtree;
   }
-  const v = { children: new Map() };
+
+  const v = { query, children: new Map() };
   children.set(k, v);
   return v;
 }
 
 function* nonLastPathPartsWithSeparators(path: string[]): IterableIterator<string> {
   for (let i = 0; i < path.length - 1; ++i) {
-    yield path[i] + ';';
+    yield path[i] + kSmallSeparator;
   }
 }
 
 function* pathPartsWithSeparators(path: string[]): IterableIterator<string> {
   yield* nonLastPathPartsWithSeparators(path);
-  yield path[path.length - 1] + ':';
-}
-
-// For debugging
-export function printFilterResultTree(tree: FilterResultTreeNode, indent: string = ''): void {
-  if (!('children' in tree)) {
-    return;
-  }
-  for (const [name, child] of tree.children) {
-    // eslint-disable-next-line no-console
-    console.log(indent + name);
-    printFilterResultTree(child, indent + ' ');
-  }
+  yield path[path.length - 1] + kBigSeparator;
 }
