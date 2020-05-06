@@ -1,6 +1,6 @@
 import { TestFileLoader } from './loader.js';
 import { ParamSpec } from './params_utils.js';
-import { comparePaths, Ordering, compareParams } from './query/compare_paths.js';
+import { comparePaths, Ordering, compareParamsPaths } from './query/compare_paths.js';
 import {
   TestQuery,
   TestQueryMultiCase,
@@ -11,6 +11,7 @@ import {
 import { kSmallSeparator, kBigSeparator } from './query/separators.js';
 import { stringifyQuery } from './query/stringifyQuery.js';
 import { RunCase } from './test_group.js';
+import { assert } from './util/util.js';
 
 export interface FilterResultSubtree {
   readonly query: TestQuery;
@@ -71,31 +72,32 @@ export async function loadTreeForQuery(
   const suite = query.suite;
   const specs = await loader.listing(suite);
 
+  let foundCase = false;
   const [suiteSubtree, suitePath] = makeTreeForSuite(suite);
   for (const entry of specs) {
-    const ordering1 = comparePaths(entry.path, query.group);
-    // TODO: skipping on Superset means that parent dirs don't get their description set to README
-    if (ordering1 === Ordering.Unordered || ordering1 === Ordering.Superset) {
+    const groupOrdering = comparePaths(entry.path, query.group);
+    if (groupOrdering === Ordering.Unordered) {
       // Group path is not matched by this filter.
       continue;
     }
 
-    // Subtree for suite of this entry
-    // Subtree for group path of this entry
-    const [groupSubtree, groupPath] = subtreeForGroupPath(suitePath, suiteSubtree, entry.path);
-
     if ('readme' in entry) {
-      // Entry is a readme file.
-      groupSubtree.description = entry.readme.trim();
+      // Entry is a readme that is an ancestor or descendant of the query.
+      const [readmeSubtree] = subtreeForGroupPath(suitePath, suiteSubtree, entry.path);
+      readmeSubtree.description = entry.readme.trim();
       continue;
     }
-
     // Entry is a spec file.
+
+    // No spec file's group path should be a superset of the query's group path.
+    assert(groupOrdering !== Ordering.Superset, 'Query does not match any tests');
+
+    const [groupSubtree, groupPath] = subtreeForGroupPath(suitePath, suiteSubtree, entry.path);
     const spec = await loader.importSpecFile(query.suite, entry.path);
 
     for (const t of spec.g.iterate()) {
-      const ordering2 = 'test' in query ? comparePaths(t.id.test, query.test) : Ordering.Subset;
-      if (ordering2 === Ordering.Unordered || ordering2 === Ordering.Superset) {
+      const testOrdering = 'test' in query ? comparePaths(t.id.test, query.test) : Ordering.Subset;
+      if (testOrdering === Ordering.Unordered || testOrdering === Ordering.Superset) {
         // Test path is not matched by this filter.
         continue;
       }
@@ -103,17 +105,19 @@ export async function loadTreeForQuery(
       // Subtree for test path
       const [testSubtree, testPath] = subtreeForTestPath(groupPath, groupSubtree, t);
 
-      const ordering3 =
-        'params' in query ? compareParams(t.id.params, query.params) : Ordering.Subset;
-      if (ordering3 === Ordering.Unordered || ordering3 === Ordering.Superset) {
+      const caseOrdering =
+        'params' in query ? compareParamsPaths(t.id.params, query.params) : Ordering.Subset;
+      if (caseOrdering === Ordering.Unordered || caseOrdering === Ordering.Superset) {
         // Case is not matched by this filter.
         continue;
       }
 
       // Subtree for case
       subtreeForCase(testPath, testSubtree, t);
+      foundCase = true;
     }
   }
+  assert(foundCase, 'Query does not match any cases');
   return new FilterResultTree(suiteSubtree);
 }
 
