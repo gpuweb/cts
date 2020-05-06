@@ -29,7 +29,7 @@ export function comparePaths(a: readonly string[], b: readonly string[]): Orderi
 //   [{a: 1}, {b: 2, c: 3}, {d: 4}]
 // Not sure if this will conflict badly with actual param generation.
 // Alternatively, tree.ts could just detect when a param subtree has only one child.
-export function compareParams(p1: ParamSpec, p2: ParamSpec): Ordering {
+export function compareParamsPaths(p1: ParamSpec, p2: ParamSpec): Ordering {
   const a: Array<[string, ParamArgument]> = Object.entries(extractPublicParams(p1));
   const b: Array<[string, ParamArgument]> = Object.entries(extractPublicParams(p2));
   const shorter = Math.min(a.length, b.length);

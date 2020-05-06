@@ -1,5 +1,5 @@
 import { TestFileLoader } from './loader.js';
-import { ParamSpec } from './params_utils.js';
+import { ParamSpec, stringifySingleParam } from './params_utils.js';
 import { comparePaths, Ordering, compareParamsPaths } from './query/compare_paths.js';
 import {
   TestQuery,
@@ -49,7 +49,7 @@ export class FilterResultTree {
     }
     for (const [name, child] of tree.children) {
       // eslint-disable-next-line no-console
-      console.log(indent + name);
+      console.log(indent + `[${name}] = ${stringifyQuery(child.query)}`);
       this.print(child, indent + ' ');
     }
   }
@@ -137,7 +137,7 @@ function subtreeForGroupPath(
   const subquery = { ...query, group: [] as string[] };
   for (const part of pathPartsWithSeparators(group)) {
     subquery.group.push(part);
-    tree = getOrInsertSubtree(tree, subquery);
+    tree = getOrInsertSubtree(part, tree, subquery);
   }
   return [tree, { ...subquery, test: [] }];
 }
@@ -150,7 +150,7 @@ function subtreeForTestPath(
   const subquery = { ...query, test: [] as string[] };
   for (const part of pathPartsWithSeparators(t.id.test)) {
     subquery.test.push(part);
-    tree = getOrInsertSubtree(tree, subquery);
+    tree = getOrInsertSubtree(part, tree, subquery);
   }
   return [tree, { ...subquery, params: {} }];
 }
@@ -163,14 +163,16 @@ function subtreeForCase(
   const subquery = { ...query, params: {} as ParamSpec };
   for (const [k, v] of Object.entries(t.id.params)) {
     subquery.params[k] = v;
-    tree = getOrInsertSubtree(tree, subquery);
+    tree = getOrInsertSubtree(stringifySingleParam(k, v), tree, subquery);
   }
   return [tree, { ...subquery, endsWithWildcard: false }];
 }
 
-function getOrInsertSubtree(n: FilterResultSubtree, query: TestQuery): FilterResultSubtree {
-  const k = stringifyQuery(query);
-
+function getOrInsertSubtree(
+  k: string,
+  n: FilterResultSubtree,
+  query: TestQuery
+): FilterResultSubtree {
   const children = n.children;
   const child = children.get(k);
   if (child !== undefined) {
