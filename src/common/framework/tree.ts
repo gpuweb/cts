@@ -1,10 +1,16 @@
 import { TestFileLoader } from './loader.js';
-import { stringifySingleParam } from './params_utils.js';
+import { ParamSpec } from './params_utils.js';
 import { comparePaths, Ordering, compareParams } from './query/compare_paths.js';
-import { TestQuery } from './query/query.js';
-import { kSmallSeparator, kBigSeparator, kWildcard } from './query/separators.js';
-import { RunCase } from './test_group.js';
+import {
+  TestQuery,
+  TestQueryMultiCase,
+  TestQueryMultiTest,
+  TestQueryMultiGroup,
+  TestQuerySingleCase,
+} from './query/query.js';
+import { kSmallSeparator, kBigSeparator } from './query/separators.js';
 import { stringifyQuery } from './query/stringifyQuery.js';
+import { RunCase } from './test_group.js';
 
 export interface FilterResultSubtree {
   readonly query: TestQuery;
@@ -67,9 +73,7 @@ export async function loadTreeForQuery(
 
   const [suiteSubtree, suitePath] = makeTreeForSuite(suite);
   for (const entry of specs) {
-    const group = entry.path;
-
-    const ordering1 = comparePaths(group, query.group);
+    const ordering1 = comparePaths(entry.path, query.group);
     // TODO: skipping on Superset means that parent dirs don't get their description set to README
     if (ordering1 === Ordering.Unordered || ordering1 === Ordering.Superset) {
       // Group path is not matched by this filter.
@@ -78,7 +82,7 @@ export async function loadTreeForQuery(
 
     // Subtree for suite of this entry
     // Subtree for group path of this entry
-    const [groupSubtree, groupPath] = subtreeForGroupPath(suitePath, suiteSubtree, group);
+    const [groupSubtree, groupPath] = subtreeForGroupPath(suitePath, suiteSubtree, entry.path);
 
     if ('readme' in entry) {
       // Entry is a readme file.
@@ -87,7 +91,7 @@ export async function loadTreeForQuery(
     }
 
     // Entry is a spec file.
-    const spec = await loader.importSpecFile(query.suite, group);
+    const spec = await loader.importSpecFile(query.suite, entry.path);
 
     for (const t of spec.g.iterate()) {
       const ordering2 = 'test' in query ? comparePaths(t.id.test, query.test) : Ordering.Subset;
@@ -113,58 +117,51 @@ export async function loadTreeForQuery(
   return new FilterResultTree(suiteSubtree);
 }
 
-function makeTreeForSuite(suite: string): [FilterResultSubtree, string] {
-  const path = suite + kBigSeparator;
+function makeTreeForSuite(suite: string): [FilterResultSubtree, TestQueryMultiGroup] {
   const tree: FilterResultSubtree = {
     query: { suite, group: [], endsWithWildcard: true },
     children: new Map(),
   };
-  return [tree, path];
+  return [tree, { suite, group: [], endsWithWildcard: true }];
 }
 
 function subtreeForGroupPath(
-  path: string,
+  query: TestQueryMultiGroup,
   tree: FilterResultSubtree,
   group: string[]
-): [FilterResultSubtree, string] {
+): [FilterResultSubtree, TestQueryMultiTest] {
+  const subquery = { ...query, group: [] as string[] };
   for (const part of pathPartsWithSeparators(group)) {
-    path += part;
-    tree = getOrInsertSubtree(tree, path + kWildcard);
+    subquery.group.push(part);
+    tree = getOrInsertSubtree(tree, subquery);
   }
-  return [tree, path];
+  return [tree, { ...subquery, test: [] }];
 }
 
 function subtreeForTestPath(
-  path: string,
+  query: TestQueryMultiTest,
   tree: FilterResultSubtree,
   t: RunCase
-): [FilterResultSubtree, string] {
+): [FilterResultSubtree, TestQueryMultiCase] {
+  const subquery = { ...query, test: [] as string[] };
   for (const part of pathPartsWithSeparators(t.id.test)) {
-    path += part;
-    tree = getOrInsertSubtree(tree, path + kWildcard);
+    subquery.test.push(part);
+    tree = getOrInsertSubtree(tree, subquery);
   }
-  return [tree, path];
+  return [tree, { ...subquery, params: {} }];
 }
 
-function subtreeForCaseExceptLeaf(
-  path: string,
+function subtreeForCase(
+  query: TestQueryMultiCase,
   tree: FilterResultSubtree,
-  paramsParts: string[]
-): [FilterResultSubtree, string] {
-  for (const part of nonLastPathPartsWithSeparators(paramsParts)) {
-    path += part;
-    tree = getOrInsertSubtree(tree, path + kWildcard);
+  t: RunCase
+): [FilterResultSubtree, TestQuerySingleCase] {
+  const subquery = { ...query, params: {} as ParamSpec };
+  for (const [k, v] of Object.entries(t.id.params)) {
+    subquery.params[k] = v;
+    tree = getOrInsertSubtree(tree, subquery);
   }
-  return [tree, path];
-}
-
-function subtreeForCase(path: string, tree: FilterResultSubtree, t: RunCase): void {
-  const paramsParts = Object.entries(t.id.params).map(([k, v]) => stringifySingleParam(k, v));
-  const [caseBranch, caseBranchPath] = subtreeForCaseExceptLeaf(path, tree, paramsParts);
-
-  // Single case
-  const lastPart = paramsParts[paramsParts.length - 1];
-  caseBranch.children.set(caseBranchPath + lastPart, { runCase: t });
+  return [tree, { ...subquery, endsWithWildcard: false }];
 }
 
 function getOrInsertSubtree(n: FilterResultSubtree, query: TestQuery): FilterResultSubtree {

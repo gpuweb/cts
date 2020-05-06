@@ -8,7 +8,7 @@ export enum Ordering {
   Subset,
 }
 
-export function comparePaths(a: string[], b: string[]): Ordering {
+export function comparePaths(a: readonly string[], b: readonly string[]): Ordering {
   const shorter = Math.min(a.length, b.length);
 
   for (let i = 0; i < shorter; ++i) {

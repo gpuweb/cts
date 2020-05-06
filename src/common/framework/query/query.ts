@@ -1,34 +1,34 @@
 import { ParamSpec } from '../params_utils.js';
 
 interface TestPathBase {
-  suite: string;
-  group: string[];
+  readonly suite: string;
+  readonly group: readonly string[];
 }
 
 export interface TestPath extends TestPathBase {
-  test?: string[];
-  params?: ParamSpec;
+  readonly test?: readonly string[];
+  readonly params?: ParamSpec;
 }
 
 export interface TestQuerySingleCase extends TestPathBase {
-  test: string[];
-  params: ParamSpec;
-  endsWithWildcard: false;
+  readonly test: readonly string[];
+  readonly params: ParamSpec;
+  readonly endsWithWildcard: false;
 }
 
 export interface TestQueryMultiCase extends TestPathBase {
-  test: string[];
-  params: ParamSpec;
-  endsWithWildcard: true;
+  readonly test: readonly string[];
+  readonly params: ParamSpec;
+  readonly endsWithWildcard: true;
 }
 
 export interface TestQueryMultiTest extends TestPathBase {
-  test: string[];
-  endsWithWildcard: true;
+  readonly test: readonly string[];
+  readonly endsWithWildcard: true;
 }
 
 export interface TestQueryMultiGroup extends TestPathBase {
-  endsWithWildcard: true;
+  readonly endsWithWildcard: true;
 }
 
 export type TestQuery =
