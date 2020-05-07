@@ -1,6 +1,12 @@
 import { TestFileLoader } from './loader.js';
 import { ParamSpec, stringifySingleParam } from './params_utils.js';
-import { comparePaths, Ordering, compareParamsPaths } from './query/compare_paths.js';
+import {
+  comparePaths,
+  Ordering,
+  compareParamsPaths,
+  querySubsetOfQuery,
+  IsSubset,
+} from './query/compare.js';
 import {
   TestQuery,
   TestQueryMultiCase,
@@ -17,6 +23,7 @@ export interface FilterResultSubtree {
   readonly query: TestQuery;
   description?: string;
   readonly children: Map<string, FilterResultTreeNode>;
+  readonly collapsible: boolean;
 }
 
 export interface FilterResultTreeLeaf {
@@ -67,64 +74,69 @@ function* iterateSubtree(subtree: FilterResultSubtree): IterableIterator<FilterR
 
 export async function loadTreeForQuery(
   loader: TestFileLoader,
-  query: TestQuery
+  query: TestQuery,
+  subqueriesToExpand: TestQuery[] = []
 ): Promise<FilterResultTree> {
   const suite = query.suite;
   const specs = await loader.listing(suite);
 
   let foundCase = false;
-  const [suiteSubtree, suitePath] = makeTreeForSuite(suite);
+  // L0 = suite, L1 = group, L2 = test, L3 = case
+  const [subtreeL0, queryL0] = makeTreeForSuite(suite);
   for (const entry of specs) {
-    const groupOrdering = comparePaths(entry.path, query.group);
-    if (groupOrdering === Ordering.Unordered) {
+    const orderingL1 = comparePaths(entry.path, query.group);
+    if (orderingL1 === Ordering.Unordered) {
       // Group path is not matched by this filter.
       continue;
     }
 
     if ('readme' in entry) {
       // Entry is a readme that is an ancestor or descendant of the query.
-      const [readmeSubtree] = subtreeForGroupPath(suitePath, suiteSubtree, entry.path);
+      const [readmeSubtree] = subtreeForGroupPath(queryL0, subtreeL0, entry.path);
       readmeSubtree.description = entry.readme.trim();
       continue;
     }
     // Entry is a spec file.
 
     // No spec file's group path should be a superset of the query's group path.
-    assert(groupOrdering !== Ordering.Superset, 'Query does not match any tests');
+    assert(orderingL1 !== Ordering.Superset, 'Query does not match any tests');
 
-    const [groupSubtree, groupPath] = subtreeForGroupPath(suitePath, suiteSubtree, entry.path);
+    const [subtreeL1, queryL1] = subtreeForGroupPath(queryL0, subtreeL0, entry.path);
     const spec = await loader.importSpecFile(query.suite, entry.path);
 
     for (const t of spec.g.iterate()) {
-      const testOrdering = 'test' in query ? comparePaths(t.id.test, query.test) : Ordering.Subset;
-      if (testOrdering === Ordering.Unordered || testOrdering === Ordering.Superset) {
-        // Test path is not matched by this filter.
-        continue;
+      if ('test' in query) {
+        const orderingL2 = comparePaths(t.id.test, query.test);
+        if (orderingL2 === Ordering.Unordered || orderingL2 === Ordering.Superset) {
+          // Test path is not matched by this filter.
+          continue;
+        }
       }
 
-      // Subtree for test path
-      const [testSubtree, testPath] = subtreeForTestPath(groupPath, groupSubtree, t);
+      const [subtreeL2, queryL2] = subtreeForTestPath(queryL1, subtreeL1, t, subqueriesToExpand);
 
-      const caseOrdering =
-        'params' in query ? compareParamsPaths(t.id.params, query.params) : Ordering.Subset;
-      if (caseOrdering === Ordering.Unordered || caseOrdering === Ordering.Superset) {
-        // Case is not matched by this filter.
-        continue;
+      if ('params' in query) {
+        const orderingL3 = compareParamsPaths(t.id.params, query.params);
+        if (orderingL3 === Ordering.Unordered || orderingL3 === Ordering.Superset) {
+          // Case is not matched by this filter.
+          continue;
+        }
       }
 
       // Subtree for case
-      subtreeForCase(testPath, testSubtree, t);
+      subtreeForCase(queryL2, subtreeL2, t, subqueriesToExpand);
       foundCase = true;
     }
   }
   assert(foundCase, 'Query does not match any cases');
-  return new FilterResultTree(suiteSubtree);
+  return new FilterResultTree(subtreeL0);
 }
 
 function makeTreeForSuite(suite: string): [FilterResultSubtree, TestQueryMultiGroup] {
   const tree: FilterResultSubtree = {
     query: { suite, group: [], endsWithWildcard: true },
     children: new Map(),
+    collapsible: false,
   };
   return [tree, { suite, group: [], endsWithWildcard: true }];
 }
@@ -137,7 +149,7 @@ function subtreeForGroupPath(
   const subquery = { ...query, group: [] as string[] };
   for (const part of pathPartsWithSeparators(group)) {
     subquery.group.push(part);
-    tree = getOrInsertSubtree(part, tree, subquery);
+    tree = getOrInsertSubtree(part, tree, subquery, false);
   }
   return [tree, { ...subquery, test: [] }];
 }
@@ -145,12 +157,16 @@ function subtreeForGroupPath(
 function subtreeForTestPath(
   query: TestQueryMultiTest,
   tree: FilterResultSubtree,
-  t: RunCase
+  t: RunCase,
+  subqueriesToExpand: TestQuery[]
 ): [FilterResultSubtree, TestQueryMultiCase] {
   const subquery = { ...query, test: [] as string[] };
   for (const part of pathPartsWithSeparators(t.id.test)) {
     subquery.test.push(part);
-    tree = getOrInsertSubtree(part, tree, subquery);
+    const collapsible = subqueriesToExpand.every(
+      s => querySubsetOfQuery(s, subquery) !== IsSubset.YesStrict
+    );
+    tree = getOrInsertSubtree(part, tree, subquery, collapsible);
   }
   return [tree, { ...subquery, params: {} }];
 }
@@ -158,12 +174,16 @@ function subtreeForTestPath(
 function subtreeForCase(
   query: TestQueryMultiCase,
   tree: FilterResultSubtree,
-  t: RunCase
+  t: RunCase,
+  subqueriesToExpand: TestQuery[]
 ): [FilterResultSubtree, TestQuerySingleCase] {
   const subquery = { ...query, params: {} as ParamSpec };
   for (const [k, v] of Object.entries(t.id.params)) {
     subquery.params[k] = v;
-    tree = getOrInsertSubtree(stringifySingleParam(k, v), tree, subquery);
+    const collapsible = subqueriesToExpand.every(
+      s => querySubsetOfQuery(s, subquery) !== IsSubset.YesStrict
+    );
+    tree = getOrInsertSubtree(stringifySingleParam(k, v), tree, subquery, collapsible);
   }
   return [tree, { ...subquery, endsWithWildcard: false }];
 }
@@ -171,7 +191,8 @@ function subtreeForCase(
 function getOrInsertSubtree(
   k: string,
   n: FilterResultSubtree,
-  query: TestQuery
+  query: TestQuery,
+  collapsible: boolean
 ): FilterResultSubtree {
   const children = n.children;
   const child = children.get(k);
@@ -179,7 +200,7 @@ function getOrInsertSubtree(
     return child as FilterResultSubtree;
   }
 
-  const v = { query, children: new Map() };
+  const v = { query, children: new Map(), collapsible };
   children.set(k, v);
   return v;
 }
