@@ -1,5 +1,5 @@
-import { objectEquals, assert } from './util/util.js';
 import { kSmallSeparator } from './query/separators.js';
+import { objectEquals, assert } from './util/util.js';
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 export type ParamArgument = any;

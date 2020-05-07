@@ -2,8 +2,13 @@
 
 import { TestLoader } from '../framework/loader.js';
 import { Logger } from '../framework/logging/logger.js';
-import { RunCase } from '../framework/test_group.js';
-import { FilterResultTreeNode } from '../framework/tree.js';
+import { stringifyQuery } from '../framework/query/stringifyQuery.js';
+import {
+  FilterResultTreeNode,
+  FilterResultSubtree,
+  FilterResultTreeLeaf,
+  loadTreeForQuery,
+} from '../framework/tree.js';
 import { encodeSelectively } from '../framework/url_query.js';
 import { assert } from '../framework/util/util.js';
 
@@ -31,23 +36,26 @@ type RunSubtree = () => Promise<void>;
 
 // DOM generation
 
-function makeTreeNodeHTML(name: string, tree: FilterResultTreeNode): [HTMLElement, RunSubtree] {
+function makeTreeNodeHTML(tree: FilterResultTreeNode): [HTMLElement, RunSubtree] {
   if ('children' in tree) {
-    return makeSubtreeHTML(name, tree);
+    return makeSubtreeHTML(tree);
   } else {
-    return makeCaseHTML(name, tree.runCase!);
+    return makeCaseHTML(tree);
   }
 }
 
-function makeCaseHTML(name: string, t: RunCase): [HTMLElement, RunSubtree] {
+function makeCaseHTML(t: FilterResultTreeLeaf): [HTMLElement, RunSubtree] {
   const div = $('<div>').addClass('testcase');
 
+  const name = stringifyQuery(t.query);
   const runSubtree = async () => {
     haveSomeResults = true;
     const [rec, res] = logger.record(name);
     if (worker) {
+      rec.start(debug);
       const workerResult = await worker.run(name, debug);
       Object.assign(res, workerResult);
+      rec.finish();
     } else {
       await t.run(rec);
     }
@@ -82,16 +90,16 @@ function makeCaseHTML(name: string, t: RunCase): [HTMLElement, RunSubtree] {
   return [div[0], runSubtree];
 }
 
-function makeSubtreeHTML(name: string, subtree: FilterResultTreeNode): [HTMLElement, RunSubtree] {
+function makeSubtreeHTML(t: FilterResultSubtree): [HTMLElement, RunSubtree] {
   const div = $('<div>').addClass('subtree');
 
-  const header = makeTreeNodeHeaderHTML(name, subtree.description, () => {
+  const header = makeTreeNodeHeaderHTML(stringifyQuery(t.query), t.description, () => {
     return runSubtree();
   });
   div.append(header);
 
   const subtreeHTML = $('<div>').addClass('subtreechildren').appendTo(div);
-  const runSubtree = makeSubtreeChildrenHTML(subtreeHTML[0], subtree.children!);
+  const runSubtree = makeSubtreeChildrenHTML(subtreeHTML[0], t.children!);
 
   return [div[0], runSubtree];
 }
@@ -101,8 +109,8 @@ function makeSubtreeChildrenHTML(
   children: Map<string, FilterResultTreeNode>
 ): RunSubtree {
   const runSubtreeFns: RunSubtree[] = [];
-  for (const [name, subtree] of children) {
-    const [subtreeHTML, runSubtree] = makeTreeNodeHTML(name, subtree);
+  for (const [, subtree] of children) {
+    const [subtreeHTML, runSubtree] = makeTreeNodeHTML(subtree);
     div.append(subtreeHTML);
     runSubtreeFns.push(runSubtree);
   }
@@ -167,10 +175,9 @@ function updateJSON(): void {
   // TODO: start populating page before waiting for everything to load?
   const qs = new URLSearchParams(window.location.search).getAll('q');
   assert(qs.length === 1, 'currently, there must be exactly one ?q=');
-  const files = await loader.loadTests(qs[0]);
-  const tree = treeFromFilterResults(logger, files);
+  const tree = await loader.loadTree(qs[0]);
 
-  const runSubtree = makeSubtreeChildrenHTML(resultsVis, tree.children!);
+  const runSubtree = makeSubtreeChildrenHTML(resultsVis, tree.root.children);
 
   if (runnow) {
     runSubtree();

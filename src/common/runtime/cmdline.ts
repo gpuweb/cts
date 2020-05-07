@@ -7,6 +7,7 @@ import * as process from 'process';
 import { TestLoader } from '../framework/loader.js';
 import { Logger } from '../framework/logging/logger.js';
 import { LiveTestCaseResult } from '../framework/logging/result.js';
+import { stringifyQuery } from '../framework/query/stringifyQuery.js';
 import { assert, unreachable } from '../framework/util/util.js';
 
 function usage(rc: number): never {
@@ -64,11 +65,12 @@ if (filterArgs.length === 0) {
     let total = 0;
 
     for (const testcase of testcases) {
-      const [rec, res] = log.record(testcase.name);
-      await testcase.runCase.run(rec);
+      const name = stringifyQuery(testcase.query);
+      const [rec, res] = log.record(name);
+      await testcase.run(rec);
 
       if (verbose) {
-        printResults([[testcase.name, res]]);
+        printResults([[name, res]]);
       }
 
       total++;

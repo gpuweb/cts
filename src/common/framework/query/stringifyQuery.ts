@@ -4,44 +4,59 @@ import { assert } from '../util/util.js';
 import { TestQuery, validQueryPart } from './query.js';
 import { kBigSeparator, kSmallSeparator, kWildcard } from './separators.js';
 
-export function stringifyQuery(f: TestQuery): string {
+export function stringifyQuery(query: TestQuery): string {
+  const q = bakeInWildcard(query);
+  let s = q.suite;
+
+  s += kBigSeparator + q.group.join(kSmallSeparator);
+  if (!('test' in q)) {
+    return s;
+  }
+
+  s += kBigSeparator + q.test.join(kSmallSeparator);
+  if (!('params' in q)) {
+    return s;
+  }
+
+  s += kBigSeparator + q.params.join(kSmallSeparator);
+  return s;
+}
+
+interface TestQueryL1WithBakedWildcard {
+  readonly suite: string;
+  readonly group: readonly string[];
+}
+interface TestQueryL2WithBakedWildcard extends TestQueryL1WithBakedWildcard {
+  readonly test: readonly string[];
+}
+interface TestQueryL3WithBakedWildcard extends TestQueryL2WithBakedWildcard {
+  readonly params: readonly string[];
+}
+type TestQueryWithBakedWildcard =
+  | TestQueryL1WithBakedWildcard
+  | TestQueryL2WithBakedWildcard
+  | TestQueryL3WithBakedWildcard;
+
+function bakeInWildcard(f: TestQuery): TestQueryWithBakedWildcard {
   assert(validQueryPart.test(f.suite), 'suite must match ' + validQueryPart);
-  let s = f.suite;
 
-  // One or more group
-  s += kBigSeparator;
-  for (const part of f.group) {
-    assert(
-      validQueryPart.test(part),
-      `group path part must match ${validQueryPart} - in ${JSON.stringify(f.group)}`
-    );
-  }
-
+  assert(
+    f.group.every(part => validQueryPart.test(part)),
+    `group path part must match ${validQueryPart} - in ${JSON.stringify(f.group)}`
+  );
   if (!('test' in f)) {
-    return s + [...f.group, kWildcard].join(kSmallSeparator);
+    return { ...f, group: [...f.group, kWildcard] };
   }
-  s += f.group.join(kSmallSeparator);
 
-  // Single group; one or more test
-  s += kBigSeparator;
   assert(
     f.test.every(part => validQueryPart.test(part)),
-    'test path parts must match ' + validQueryPart
+    `test path part must match ${validQueryPart} - in ${JSON.stringify(f.test)}`
   );
-
   if (!('params' in f)) {
-    return s + [...f.test, kWildcard].join(kSmallSeparator);
+    return { ...f, test: [...f.test, kWildcard] };
   }
-  s += f.test.join(kSmallSeparator);
 
-  // Single test; one or more case
-  s += kBigSeparator;
   const params = stringifyPublicParams(f.params);
-  if (f.endsWithWildcard) {
-    return s + [...params, kWildcard].join(kSmallSeparator);
-  }
-
-  // Single case
-  s += params.join(kSmallSeparator);
-  return s;
+  if (f.endsWithWildcard) params.push(kWildcard);
+  return { ...f, params };
 }

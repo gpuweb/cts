@@ -15,18 +15,6 @@ export function testSpecEquals(x: TestGroupID, y: TestGroupID): boolean {
 
 // Identifies a test case (a specific parameterization of a test), within its spec file.
 export interface TestCaseID {
-  readonly test: string[];
+  readonly test: readonly string[];
   readonly params: ParamSpec;
 }
-
-// TODO: delete these
-interface TIDGroup {
-  readonly group: TestGroupID;
-}
-interface TIDTest extends TIDGroup {
-  readonly test: string;
-}
-interface TIDCase extends TIDTest {
-  readonly params: ParamSpec | null;
-}
-export type TIDGroupOrTestOrCase = TIDGroup | TIDTest | TIDCase;

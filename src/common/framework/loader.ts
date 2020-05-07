@@ -1,7 +1,7 @@
 import { TestSuiteListing } from './listing.js';
 import { parseQuery } from './query/parseQuery.js';
 import { RunCaseIterable } from './test_group.js';
-import { loadTreeForQuery, FilterResult, FilterResultTree } from './tree.js';
+import { loadTreeForQuery, FilterResultTree, FilterResultTreeLeaf } from './tree.js';
 
 // One of the following:
 // - An actual .spec.ts file, as imported.
@@ -53,7 +53,7 @@ export class TestLoader {
   }
 
   // TODO: Test this
-  async loadTests(query: string): Promise<IterableIterator<FilterResult>> {
+  async loadTests(query: string): Promise<IterableIterator<FilterResultTreeLeaf>> {
     return (await this.loadTree(query)).iterate();
   }
 }

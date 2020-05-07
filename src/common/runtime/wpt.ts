@@ -1,6 +1,6 @@
 import { TestLoader } from '../framework/loader.js';
-import { LiveTestCaseResult, Logger } from '../framework/logging/logger.js';
-import { makeQueryString } from '../framework/url_query.js';
+import { Logger } from '../framework/logging/logger.js';
+import { stringifyQuery } from '../framework/query/stringifyQuery.js';
 import { AsyncMutex } from '../framework/util/async_mutex.js';
 import { assert } from '../framework/util/util.js';
 
@@ -19,47 +19,43 @@ declare function async_test(f: (this: WptTestObject) => Promise<void>, name: str
   const loader = new TestLoader();
   const qs = new URLSearchParams(window.location.search).getAll('q');
   assert(qs.length === 1, 'currently, there must be exactly one ?q=');
-  const files = await loader.loadTests(qs[0]);
+  const testcases = await loader.loadTests(qs[0]);
 
   const worker = optionEnabled('worker') ? new TestWorker() : undefined;
 
-  const log = new Logger();
+  const log = new Logger(false);
   const mutex = new AsyncMutex();
   const running: Array<Promise<void>> = [];
 
-  for (const f of files) {
-    if (!('g' in f.spec)) {
-      continue;
-    }
+  for (const testcase of testcases) {
+    const name = stringifyQuery(testcase.query);
+    const wpt_fn = function (this: WptTestObject): Promise<void> {
+      const p = mutex.with(async () => {
+        const [rec, res] = log.record(name);
+        if (worker) {
+          rec.start(false);
+          const workerResult = await worker.run(name);
+          Object.assign(res, workerResult);
+          rec.finish();
+        } else {
+          await testcase.run(rec);
+        }
 
-    const [rec] = log.record(f.id);
-    for (const t of f.spec.g.iterate(rec)) {
-      const name = makeQueryString(f.id, t.id);
-
-      // Note: apparently, async_tests must ALL be added within the same task.
-      async_test(function (this: WptTestObject): Promise<void> {
-        const p = mutex.with(async () => {
-          let r: LiveTestCaseResult;
-          if (worker) {
-            r = await worker.run(name);
-            t.injectResult(r);
-          } else {
-            r = await t.run();
+        this.step(() => {
+          // Unfortunately, it seems not possible to surface any logs for warn/skip.
+          if (res.status === 'fail') {
+            throw (res.logs || []).map(s => s.toJSON()).join('\n\n');
           }
-
-          this.step(() => {
-            // Unfortunately, it seems not possible to surface any logs for warn/skip.
-            if (r.status === 'fail') {
-              throw (r.logs || []).map(s => s.toJSON()).join('\n\n');
-            }
-          });
-          this.done();
         });
+        this.done();
+      });
 
-        running.push(p);
-        return p;
-      }, name);
-    }
+      running.push(p);
+      return p;
+    };
+
+    // Note: apparently, async_tests must ALL be added within the same task.
+    async_test(wpt_fn, name);
   }
 
   await Promise.all(running);

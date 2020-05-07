@@ -6,23 +6,27 @@ import { TestSuiteListing, TestSuiteListingEntry } from '../common/framework/lis
 import { TestFileLoader, TestLoader, TestSpecOrReadme } from '../common/framework/loader.js';
 import { Logger } from '../common/framework/logging/logger.js';
 import { paramsEquals } from '../common/framework/params_utils.js';
-import { RunCase, TestGroup } from '../common/framework/test_group.js';
-import { makeQueryString } from '../common/framework/url_query.js';
+import { stringifyQuery } from '../common/framework/query/stringifyQuery.js';
+import { TestGroup } from '../common/framework/test_group.js';
+import { FilterResultTreeLeaf } from '../common/framework/tree.js';
 import { assert, objectEquals } from '../common/framework/util/util.js';
 
 import { UnitTest } from './unit_test.js';
+import { kBigSeparator } from '../common/framework/query/separators.js';
+import { TestQuery } from '../common/framework/query/query.js';
+import { Status } from '../common/framework/logging/result.js';
 
 const listingData: { [k: string]: TestSuiteListingEntry[] } = {
   suite1: [
-    { path: '', description: 'desc 1a' },
-    { path: 'foo', description: 'desc 1b' },
-    { path: 'bar;', description: 'desc 1c' },
-    { path: 'bar;buzz', description: 'desc 1d' },
-    { path: 'baz', description: 'desc 1e' },
+    { path: [''], description: 'desc 1a' },
+    { path: ['foo'], description: 'desc 1b' },
+    { path: ['bar', ''], description: 'desc 1c' },
+    { path: ['bar', 'buzz'], description: 'desc 1d' },
+    { path: ['baz'], description: 'desc 1e' },
   ],
   suite2: [
-    { path: '', description: 'desc 2a' },
-    { path: 'foof', description: 'desc 2b' },
+    { path: [''], description: 'desc 2a' },
+    { path: ['foof'], description: 'desc 2b' },
   ],
 };
 
@@ -82,12 +86,12 @@ const specsData: { [k: string]: TestSpecOrReadme } = {
         t.debug('OK');
       });
       g.test('bleh')
-        .params([{}])
+        .params([{ a: 1 }])
         .fn(t => {
           t.debug('OK');
           t.debug('OK');
         });
-      g.test('bluh').fn(t => {
+      g.test('bluh', 'a').fn(t => {
         t.fail('bye');
       });
       return g;
@@ -109,167 +113,121 @@ class FakeTestFileLoader extends TestFileLoader {
 class LoadingTest extends UnitTest {
   static readonly loader: TestLoader = new TestLoader(new FakeTestFileLoader());
 
-  async load(filters: string[]): Promise<TestFilterResult[]> {
-    return Array.from(await LoadingTest.loader.loadTestsFromCmdLine(filters));
+  async load(filter: string): Promise<FilterResultTreeLeaf[]> {
+    return Array.from(await LoadingTest.loader.loadTests(filter));
   }
 
-  async loadAndIterate(query: string): Promise<RunCase[]> {
-    const [rec] = new Logger().record({ suite: '', group: '' });
-    const results = await this.load([query]);
-    const cases = [];
-    for (const result of results) {
-      const spec = result.spec;
-      assert('g' in spec, 'group undefined');
-      cases.push(...spec.g.iterate(rec));
-    }
-    return cases;
+  async loadNames(filter: string): Promise<string[]> {
+    return (await this.load(filter)).map(c => stringifyQuery(c.query));
   }
 }
 
 export const g = new TestGroup(LoadingTest);
 
 g.test('whole suite').fn(async t => {
-  t.shouldReject('Error', t.load(['suite1']));
-  t.shouldReject('Error', t.load(['suite1:']));
-  t.expect((await t.load(['suite1:*'])).length === 5);
+  t.shouldReject('Error', t.load('suite1'));
+  t.shouldReject('Error', t.load('suite1:'));
+  t.expect((await t.load('suite1:*')).length === 5);
 });
 
 g.test('partial suite').fn(async t => {
-  t.shouldReject('Error', t.load(['suite1:f*']));
-  t.expect((await t.load(['suite1:foo:*'])).length === 1);
-  t.shouldReject('Error', t.load(['suite1:ba*']));
-  t.expect((await t.load(['suite1:bar;*'])).length === 2);
+  t.shouldReject('Error', t.load('suite1:f*'));
+  t.expect((await t.load('suite1:foo:*')).length === 1);
+  t.shouldReject('Error', t.load('suite1:ba*'));
+  t.expect((await t.load('suite1:bar;*')).length === 2);
 });
 
 g.test('whole group').fn(async t => {
-  t.expect((await t.load(['suite1::'])).length === 0);
-  t.expect((await t.load(['suite1:bar:'])).length === 0);
-  t.expect((await t.load(['suite1:bar:*'])).length === 0);
-  t.expect((await t.load(['suite1:bar/:'])).length === 0);
-  t.expect((await t.load(['suite1:bar/:*'])).length === 0);
-  t.expect((await t.loadAndIterate('suite1::*')).length === 0);
-  t.expect((await t.loadAndIterate('suite1:bar/buzz:*')).length === 1);
-  t.expect((await t.loadAndIterate('suite1:baz:')).length === 0);
-  t.expect((await t.loadAndIterate('suite1:baz:*')).length === 4);
-
-  {
-    const foo = (await t.load(['suite1:foo:*']))[0];
-    t.expect(foo.id.suite === 'suite1');
-    t.expect(foo.id.group === 'foo');
-    assert('g' in foo.spec, 'foo group');
-    const [rec] = new Logger().record({ suite: '', group: '' });
-    t.expect(Array.from(foo.spec.g.iterate(rec)).length === 3);
-  }
+  t.expect((await t.load('suite1::')).length === 0);
+  t.expect((await t.load('suite1:bar:')).length === 0);
+  t.expect((await t.load('suite1:bar:*')).length === 0);
+  t.expect((await t.load('suite1:bar/:')).length === 0);
+  t.expect((await t.load('suite1:bar/:*')).length === 0);
+  t.expect((await t.load('suite1::*')).length === 0);
+  t.expect((await t.load('suite1:bar/buzz:*')).length === 1);
+  t.expect((await t.load('suite1:baz:')).length === 0);
+  t.expect((await t.load('suite1:baz:*')).length === 4);
+  t.expect((await t.load('suite1:foo:*')).length === 3);
 });
 
 g.test('partial group').fn(async t => {
-  t.expect((await t.loadAndIterate('suite1:foo:h*')).length === 2);
-  t.expect((await t.loadAndIterate('suite1:foo:he*')).length === 1);
-  t.expect((await t.loadAndIterate('suite1:foo:hello*')).length === 1);
-  t.expect((await t.loadAndIterate('suite1:baz:zed*')).length === 2);
+  t.expect((await t.load('suite1:foo:h*')).length === 2);
+  t.expect((await t.load('suite1:foo:he*')).length === 1);
+  t.expect((await t.load('suite1:foo:hello*')).length === 1);
+  t.expect((await t.load('suite1:baz:zed*')).length === 2);
 });
 
 g.test('partial test', 'exact').fn(async t => {
-  t.expect((await t.loadAndIterate('suite1:foo:hello:')).length === 1);
-  t.expect((await t.loadAndIterate('suite1:baz:zed:')).length === 0);
-  t.expect((await t.loadAndIterate('suite1:baz:zed:a=1;b=2')).length === 1);
-  t.expect((await t.loadAndIterate('suite1:baz:zed:a=1;b=2*')).length === 1);
-  t.expect((await t.loadAndIterate('suite1:baz:zed:a=1;b=2;*')).length === 0);
-  t.expect((await t.loadAndIterate('suite1:baz:zed:b=2;a=1')).length === 0);
-  t.expect((await t.loadAndIterate('suite1:baz:zed:b=3;a=1')).length === 1);
-  t.expect((await t.loadAndIterate('suite1:baz:zed:a=1;b=2;_c=0')).length === 0);
+  t.expect((await t.load('suite1:foo:hello:')).length === 1);
+  t.expect((await t.load('suite1:baz:zed:')).length === 0);
+  t.expect((await t.load('suite1:baz:zed:a=1;b=2')).length === 1);
+  t.expect((await t.load('suite1:baz:zed:a=1;b=2*')).length === 1);
+  t.expect((await t.load('suite1:baz:zed:a=1;b=2;*')).length === 0);
+  t.expect((await t.load('suite1:baz:zed:b=2;a=1')).length === 0);
+  t.expect((await t.load('suite1:baz:zed:b=3;a=1')).length === 1);
+  t.expect((await t.load('suite1:baz:zed:a=1;b=2;_c=0')).length === 0);
 });
 
 g.test('partial test', 'makeQueryString').fn(async t => {
-  const s = makeQueryString(
-    { suite: 'suite1', group: 'baz' },
-    { test: 'zed', params: { a: 1, b: 2 } }
-  );
-  t.expect((await t.loadAndIterate(s)).length === 1);
+  const s = stringifyQuery({
+    suite: 'suite1',
+    group: ['baz'],
+    test: ['zed'],
+    params: { a: 1, b: 2 },
+    endsWithWildcard: false,
+  });
+  t.expect((await t.load(s)).length === 1);
 });
 
 g.test('partial test', 'match').fn(async t => {
-  t.expect((await t.loadAndIterate('suite1:baz:zed:*')).length === 2);
-  t.expect((await t.loadAndIterate('suite1:baz:zed:*')).length === 2);
-  t.expect((await t.loadAndIterate('suite1:baz:zed:a=1;*')).length === 1);
-  t.expect((await t.loadAndIterate('suite1:baz:zed:a=1;b=2;*')).length === 0);
-  t.expect((await t.loadAndIterate('suite1:baz:zed:a=1;b=2;')).length === 0);
-  t.expect((await t.loadAndIterate('suite1:baz:zed:a=1;b=2')).length === 1);
-  t.expect((await t.loadAndIterate('suite1:baz:zed:b=2;a=1')).length === 0);
-  t.expect((await t.loadAndIterate('suite1:baz:zed:b=2;*')).length === 0);
-  t.expect((await t.loadAndIterate('suite1:baz:zed:a=2*')).length === 0);
+  t.expect((await t.load('suite1:baz:zed:*')).length === 2);
+  t.expect((await t.load('suite1:baz:zed:*')).length === 2);
+  t.expect((await t.load('suite1:baz:zed:a=1;*')).length === 1);
+  t.expect((await t.load('suite1:baz:zed:a=1;b=2;*')).length === 0);
+  t.expect((await t.load('suite1:baz:zed:a=1;b=2;')).length === 0);
+  t.expect((await t.load('suite1:baz:zed:a=1;b=2')).length === 1);
+  t.expect((await t.load('suite1:baz:zed:b=2;a=1')).length === 0);
+  t.expect((await t.load('suite1:baz:zed:b=2;*')).length === 0);
+  t.expect((await t.load('suite1:baz:zed:a=2*')).length === 0);
 });
 
 g.test('end2end').fn(async t => {
-  const l = await t.load(['suite2:foof']);
-  assert(l.length === 1, 'listing length');
+  const l = await t.load('suite2:foof:*');
+  assert(l.length === 3, 'listing length');
 
-  t.expect(l[0].id.suite === 'suite2');
-  t.expect(l[0].id.group === 'foof');
-  t.expect(l[0].spec.description === 'desc 2b');
-  assert('g' in l[0].spec);
-  t.expect(l[0].spec.g.iterate instanceof Function);
+  const log = new Logger(true);
 
-  const log = new Logger();
-  const [rec, res] = log.record(l[0].id);
-  const rcs = Array.from(l[0].spec.g.iterate(rec));
-  assert(rcs.length === 3, 'iterate length');
+  const exp = (i: number, query: TestQuery, status: Status, logs: (s: string) => boolean) => {
+    t.expect(objectEquals(l[i].query, query));
+    t.expect(l[i].run instanceof Function);
+    const name = stringifyQuery(l[i].query);
+    const [rec, res] = log.record(name);
+    l[i].run(rec);
 
-  t.expect(rcs[0].id.test === 'blah');
-  t.expect(rcs[0].id.params === null);
+    t.expect(log.results.get(name) === res);
+    t.expect(res.status === status);
+    t.expect(res.timems > 0);
+    t.expect(logs(JSON.stringify(res.logs)));
+  };
 
-  t.expect(rcs[1].id.test === 'bleh');
-  t.expect(paramsEquals(rcs[1].id.params, {}));
-
-  t.expect(log.results[0] === res);
-  t.expect(res.spec === 'suite2:foof:');
-  t.expect(res.cases.length === 0);
-
-  {
-    const cases = res.cases;
-    const res0 = await rcs[0].run(true);
-    assert(cases.length === 1, 'results cases length');
-    t.expect(res.cases[0] === res0);
-    t.expect(res0.test === 'blah');
-    t.expect(res0.params === null);
-    t.expect(res0.status === 'pass');
-    t.expect(res0.timems >= 0);
-    assert(res0.logs !== undefined, 'results case logs');
-    t.expect(objectEquals(JSON.stringify(res0.logs), '["DEBUG: OK"]'));
-  }
-  {
-    // Store cases off to a separate variable due to a typescript bug
-    // where it can't detect that res.cases.length might change between
-    // above and here.
-    const cases = res.cases;
-    const res1 = await rcs[1].run(true);
-    assert(cases.length === 2, 'results cases length');
-    t.expect(res.cases[1] === res1);
-    t.expect(res1.test === 'bleh');
-    t.expect(paramsEquals(res1.params, {}));
-    t.expect(res1.status === 'pass');
-    t.expect(res1.timems >= 0);
-    assert(res1.logs !== undefined, 'results case logs');
-    t.expect(objectEquals(JSON.stringify(res1.logs), '["DEBUG: OK","DEBUG: OK"]'));
-  }
-  {
-    // Store cases off to a separate variable due to a typescript bug
-    // where it can't detect that res.cases.length might change between
-    // above and here.
-    const cases = res.cases;
-    const res2 = await rcs[2].run(true);
-    assert(cases.length === 3, 'results cases length');
-    t.expect(res.cases[2] === res2);
-    t.expect(res2.test === 'bluh');
-    t.expect(res2.params === null);
-    t.expect(res2.status === 'fail');
-    t.expect(res2.timems >= 0);
-    assert(res2.logs !== undefined, 'results case logs');
-    t.expect(res2.logs.length === 1);
-    const l = res2.logs[0].toJSON();
-    t.expect(l.startsWith('FAIL: bye\n'));
-    t.expect(l.indexOf('loading.spec.') !== -1);
-  }
+  exp(
+    0,
+    { suite: 'suite2', group: ['foof'], test: ['blah'], params: {}, endsWithWildcard: false },
+    'pass',
+    s => s === '["DEBUG: OK"]'
+  );
+  exp(
+    1,
+    { suite: 'suite2', group: ['foof'], test: ['bleh'], params: { a: 1 }, endsWithWildcard: false },
+    'pass',
+    s => s === '["DEBUG: OK","DEBUG: OK"]'
+  );
+  exp(
+    2,
+    { suite: 'suite2', group: ['foof'], test: ['bluh', 'a'], params: {}, endsWithWildcard: false },
+    'pass',
+    s => s.startsWith('FAIL: bye\n') && s.indexOf('loading.spec.') !== -1
+  );
 });
 
 const testGenerateMinimalQueryList = async (
@@ -277,7 +235,7 @@ const testGenerateMinimalQueryList = async (
   expectations: string[],
   result: string[]
 ) => {
-  const l = await t.load(['suite1:*']);
+  const l = await t.load('suite1:*');
   const queries = await generateMinimalQueryList(l, expectations);
   t.expect(objectEquals(queries, result));
 };

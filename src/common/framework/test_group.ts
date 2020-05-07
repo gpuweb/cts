@@ -1,15 +1,16 @@
 import { Fixture } from './fixture.js';
 import { TestCaseID } from './id.js';
-import { LiveTestCaseResult } from './logging/result.js';
 import { TestCaseRecorder } from './logging/test_case_recorder.js';
 import { ParamSpec, ParamSpecIterable, extractPublicParams, paramsEquals } from './params_utils.js';
 import { validQueryPart } from './query/query.js';
 import { checkPublicParamType } from './url_query.js';
 import { assert } from './util/util.js';
 
+export type RunFn = (rec: TestCaseRecorder) => Promise<void>;
+
 export interface RunCase {
   readonly id: TestCaseID;
-  run(rec: TestCaseRecorder): Promise<LiveTestCaseResult>;
+  run: RunFn;
 }
 
 export interface RunCaseIterable {

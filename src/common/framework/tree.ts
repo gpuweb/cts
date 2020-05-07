@@ -1,4 +1,5 @@
 import { TestFileLoader } from './loader.js';
+import { TestCaseRecorder } from './logging/test_case_recorder.js';
 import { ParamSpec, stringifySingleParam } from './params_utils.js';
 import {
   comparePaths,
@@ -9,7 +10,7 @@ import {
 } from './query/compare.js';
 import { TestQuery } from './query/query.js';
 import { stringifyQuery } from './query/stringifyQuery.js';
-import { RunCase } from './test_group.js';
+import { RunCase, RunFn } from './test_group.js';
 import { assert } from './util/util.js';
 
 export interface FilterResultSubtree {
@@ -21,12 +22,7 @@ export interface FilterResultSubtree {
 
 export interface FilterResultTreeLeaf {
   readonly query: TestQuery;
-  readonly runCase: RunCase;
-}
-
-export interface FilterResult {
-  readonly name: string;
-  readonly runCase: RunCase;
+  readonly run: RunFn;
 }
 
 export type FilterResultTreeNode = FilterResultSubtree | FilterResultTreeLeaf;
@@ -42,7 +38,7 @@ export class FilterResultTree {
     return iterateCollapsedSubtree(this.root);
   }
 
-  iterate(): IterableIterator<FilterResult> {
+  iterate(): IterableIterator<FilterResultTreeLeaf> {
     return iterateSubtree(this.root);
   }
 
@@ -52,30 +48,28 @@ export class FilterResultTree {
   }
 
   printHelper(name: string, tree: FilterResultTreeNode, indent: string = ''): void {
+    const collapsible = 'collapsible' in tree && tree.collapsible ? '+' : '-';
     // eslint-disable-next-line no-console
-    console.log(
-      indent + `${name} => ${stringifyQuery(tree.query)} (${JSON.stringify(tree.query)})`
-    );
-    if ('description' in tree) {
-      // eslint-disable-next-line no-console
-      console.log(indent + '  | ' + JSON.stringify(tree.description));
-    }
+    console.log(indent + `${collapsible} ${name} => ${stringifyQuery(tree.query)}`);
+    if ('children' in tree) {
+      if (tree.description !== undefined) {
+        // eslint-disable-next-line no-console
+        console.log(indent + '    | ' + JSON.stringify(tree.description));
+      }
 
-    if (!('children' in tree)) {
-      return;
-    }
-    for (const [name, child] of tree.children) {
-      this.printHelper(name, child, indent + '  ');
+      for (const [name, child] of tree.children) {
+        this.printHelper(name, child, indent + '  ');
+      }
     }
   }
 }
 
-function* iterateSubtree(subtree: FilterResultSubtree): IterableIterator<FilterResult> {
-  for (const [name, child] of subtree.children) {
+function* iterateSubtree(subtree: FilterResultSubtree): IterableIterator<FilterResultTreeLeaf> {
+  for (const [, child] of subtree.children) {
     if ('children' in child) {
       yield* iterateSubtree(child);
     } else {
-      yield { name, runCase: child.runCase };
+      yield child;
     }
   }
 }
@@ -124,6 +118,7 @@ export async function loadTreeForQuery(
     subtreeL1.description = spec.description.trim();
 
     // TODO: this is taking a tree, flattening it, and then unflattening it. Possibly redundant.
+    // (This has a convenient property, though: single-child trees don't get generated!)
     for (const t of spec.g.iterate()) {
       if ('test' in query) {
         const orderingL2 = comparePaths(t.id.test, query.test);
@@ -144,12 +139,12 @@ export async function loadTreeForQuery(
       }
 
       // Subtree for case
-      subtreeForCase(subtreeL2, t, subqueriesToExpand);
+      subtreeForCaseExceptLeaf(subtreeL2, t, subqueriesToExpand);
+
       foundCase = true;
     }
   }
   const tree = new FilterResultTree(subtreeL0);
-  tree.print(); // XXX
 
   assert(foundCase, 'Query does not match any cases');
   return tree;
@@ -195,23 +190,37 @@ function subtreeForTestPath(
   return tree;
 }
 
-function subtreeForCase(
+function subtreeForCaseExceptLeaf(
   tree: FilterResultSubtree,
   t: RunCase,
   subqueriesToExpand: TestQuery[]
-): FilterResultSubtree {
+): FilterResultTreeLeaf {
   assert('test' in tree.query);
   const subquery = { ...tree.query, params: {} as ParamSpec };
-  for (const [k, v] of Object.entries(t.id.params)) {
+  const entries = Object.entries(t.id.params);
+  let name: string = 'xxx'; // XXX
+  for (let i = 0; i < entries.length; ++i) {
+    const [k, v] = entries[i];
+
     subquery.params[k] = v;
     const collapsible = subqueriesToExpand.every(
       s => querySubsetOfQuery(s, subquery) !== IsSubset.YesStrict
     );
-    const subqueryCopy = { ...subquery, params: { ...subquery.params } };
-    tree = getOrInsertSubtree(stringifySingleParam(k, v), tree, subqueryCopy, collapsible);
+    name = stringifySingleParam(k, v);
+
+    if (i < entries.length - 1) {
+      const subqueryCopy = { ...subquery, params: { ...subquery.params } };
+      tree = getOrInsertSubtree(name, tree, subqueryCopy, collapsible);
+    }
   }
-  tree.query = { ...subquery, endsWithWildcard: false };
-  return tree;
+
+  const subqueryCopy = { ...subquery, params: { ...subquery.params }, endsWithWildcard: false };
+  const leaf = {
+    query: subqueryCopy,
+    run: (rec: TestCaseRecorder) => t.run(rec),
+  };
+  tree.children.set(name, leaf);
+  return leaf;
 }
 
 function getOrInsertSubtree(
