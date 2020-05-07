@@ -125,16 +125,16 @@ g.test('duplicate test params', 'with different private params').fn(t => {
   });
 });
 
-const badChars = Array.from(''); //'"`~@#$+=\\|!^&*[]<>{}-\'.,');
-g.test('invalid test name')
-  .params(poptions('char', badChars))
-  .fn(t => {
-    const g = new TestGroup(UnitTest);
+g.test('invalid test name').fn(t => {
+  const g = new TestGroup(UnitTest);
 
+  const badChars = Array.from('"`~@#$+=\\|!^&*[]<>{}-\'.,');
+  for (const char of badChars) {
     t.shouldThrow('Error', () => {
-      g.test('a' + t.params.char + 'b').fn(() => {});
+      g.test('a' + char + 'b').fn(() => {});
     });
-  });
+  }
+});
 
 g.test('throws').fn(async t0 => {
   const g = new TestGroup(UnitTest);

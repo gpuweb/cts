@@ -2,33 +2,46 @@ import { stringifyPublicParams } from '../params_utils.js';
 import { assert } from '../util/util.js';
 
 import { TestQuery, validQueryPart } from './query.js';
-import { kBigSeparator, kSmallSeparator } from './separators.js';
+import { kBigSeparator, kSmallSeparator, kWildcard } from './separators.js';
 
 export function stringifyQuery(f: TestQuery): string {
   assert(validQueryPart.test(f.suite), 'suite must match ' + validQueryPart);
-  let s = f.suite + kBigSeparator;
+  let s = f.suite;
 
-  for (const [i, part] of f.group.entries()) {
-    let valid = validQueryPart.test(part);
-    if (i < f.group.length - 1) {
-      assert(valid, `non-final group path part must match ${validQueryPart} - was ${part}`);
-    } else {
-      valid = valid || part === '';
-      assert(valid, `final group part must be '' or match ${validQueryPart} - was ${part}`);
-    }
-  }
-  s += f.group.join(kSmallSeparator) + kBigSeparator;
-
-  if ('test' in f) {
+  // One or more group
+  s += kBigSeparator;
+  for (const part of f.group) {
     assert(
-      f.test.every(part => validQueryPart.test(part)),
-      'test path parts must match ' + validQueryPart
+      validQueryPart.test(part),
+      `group path part must match ${validQueryPart} - in ${JSON.stringify(f.group)}`
     );
-    s += f.test.join(kSmallSeparator) + kBigSeparator;
-
-    if ('params' in f) {
-      s += stringifyPublicParams(f.params);
-    }
   }
+
+  if (!('test' in f)) {
+    return s + [...f.group, kWildcard].join(kSmallSeparator);
+  }
+  s += f.group.join(kSmallSeparator);
+
+  // Single group; one or more test
+  s += kBigSeparator;
+  assert(
+    f.test.every(part => validQueryPart.test(part)),
+    'test path parts must match ' + validQueryPart
+  );
+
+  if (!('params' in f)) {
+    return s + [...f.test, kWildcard].join(kSmallSeparator);
+  }
+  s += f.test.join(kSmallSeparator);
+
+  // Single test; one or more case
+  s += kBigSeparator;
+  const params = stringifyPublicParams(f.params);
+  if (f.endsWithWildcard) {
+    return s + [...params, kWildcard].join(kSmallSeparator);
+  }
+
+  // Single case
+  s += params.join(kSmallSeparator);
   return s;
 }

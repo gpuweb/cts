@@ -51,7 +51,7 @@ webgpu${kBigSeparator}a${kSmallSeparator}b${kSmallSeparator}${kWildcard} or \
 webgpu${kBigSeparator}a${kSmallSeparator}b${kSmallSeparator}c${kBigSeparator}${kWildcard}`;
 
 function parseBigPart(s: string): { parts: string[]; endsWithWildcard: boolean } {
-  const parts = s.split(';');
+  const parts = s.split(kSmallSeparator);
   let endsWithWildcard = false;
   for (const [i, part] of parts.entries()) {
     if (i === parts.length - 1) {

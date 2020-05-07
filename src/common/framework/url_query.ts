@@ -1,5 +1,4 @@
-import { TestCaseID, TestGroupID, TIDGroupOrTestOrCase } from './id.js';
-import { ParamArgument, stringifyPublicParams } from './params_utils.js';
+import { ParamArgument } from './params_utils.js';
 import { unreachable } from './util/util.js';
 
 export function encodeSelectively(s: string): string {
@@ -28,28 +27,4 @@ export function checkPublicParamType(v: ParamArgument): void {
     return;
   }
   unreachable('Invalid type for test case params ' + v);
-}
-
-export function makeQueryString(spec: TestGroupID, testcase?: TestCaseID): string {
-  return makeQueryString2({ group: spec, ...testcase });
-}
-
-// TODO: delete
-export function makeTestCaseString(id: TIDGroupOrTestOrCase): string {
-  let s = '';
-  if ('test' in id) {
-    s += id.test + ':';
-    if ('params' in id) {
-      s += stringifyPublicParams(id.params);
-    }
-  }
-  return s;
-}
-
-// TODO: delete
-export function makeQueryString2(id: TIDGroupOrTestOrCase): string {
-  let s = id.group.suite + ':';
-  s += id.group.group + ':';
-  s += makeTestCaseString(id);
-  return encodeSelectively(s);
 }

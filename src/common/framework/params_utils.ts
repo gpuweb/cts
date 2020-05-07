@@ -1,4 +1,5 @@
 import { objectEquals, assert } from './util/util.js';
+import { kSmallSeparator } from './query/separators.js';
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 export type ParamArgument = any;
@@ -18,15 +19,9 @@ export function extractPublicParams(params: ParamSpec): ParamSpec {
   return publicParams;
 }
 
-// TODO: remove null here
-export function stringifyPublicParams(p: ParamSpec | null): string {
-  if (p === null || paramsEquals(p, {})) {
-    return '';
-  }
+export function stringifyPublicParams(p: ParamSpec): string[] {
   const pub = extractPublicParams(p);
-  return Object.entries(pub)
-    .map(([k, v]) => stringifySingleParam(k, v))
-    .join(';');
+  return Object.entries(pub).map(([k, v]) => stringifySingleParam(k, v));
 }
 
 export function stringifySingleParam(k: string, v: ParamArgument) {
@@ -46,7 +41,7 @@ export function parseParamsString(paramsString: string): ParamSpec {
   }
 
   const params: ParamSpec = {};
-  for (const paramSubstring of paramsString.split(';')) {
+  for (const paramSubstring of paramsString.split(kSmallSeparator)) {
     const [k, v] = parseSingleParam(paramSubstring);
     params[k] = v;
   }

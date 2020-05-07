@@ -43,6 +43,7 @@ export async function crawl(suite: string): Promise<TestSuiteListingEntry[]> {
 
       const path = group.split('/');
       assert(path[path.length - 1] === '');
+      path.length = path.length - 1;
       groups.push({ path, readme });
     } else {
       unreachable(`glob ${glob} matched an unrecognized filename ${file}`);

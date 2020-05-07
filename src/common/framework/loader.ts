@@ -2,7 +2,6 @@ import { TestSuiteListing } from './listing.js';
 import { parseQuery } from './query/parseQuery.js';
 import { RunCaseIterable } from './test_group.js';
 import { loadTreeForQuery, FilterResult, FilterResultTree } from './tree.js';
-import { assert } from './util/util.js';
 
 // One of the following:
 // - An actual .spec.ts file, as imported.
@@ -25,7 +24,6 @@ export abstract class TestFileLoader {
 
   importSpecFile(suite: string, path: string[]): Promise<TestSpec> {
     return this.import(`${suite}/${path.join('/')}.spec.js`) as Promise<TestSpec>;
-    return this.import(suite + '/' + path.join('/') + '.spec.js') as Promise<TestSpec>;
   }
 }
 
