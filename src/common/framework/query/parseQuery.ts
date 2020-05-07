@@ -29,11 +29,14 @@ export function parseQuery(s: string): TestQuery {
       `Test-level query without wildcard ${kWildcard}; did you want a case-level query? \
 (Append ${kBigSeparator}${kWildcard})`
     );
+    assert(group.length > 0, 'Group part of test-level query was empty (::)');
     return { suite, group, test, endsWithWildcard: true };
   }
   assert(!testHasWildcard, `Wildcard ${kWildcard} must be at the end of the query string`);
 
   const { parts: paramsParts, endsWithWildcard: paramsHasWildcard } = parseBigPart(bigParts[3]);
+
+  assert(test.length > 0, 'Test part of case-level query was empty (::)');
 
   const params: ParamSpec = {};
   for (const paramPart of paramsParts) {
@@ -51,7 +54,11 @@ webgpu${kBigSeparator}a${kSmallSeparator}b${kSmallSeparator}${kWildcard} or \
 webgpu${kBigSeparator}a${kSmallSeparator}b${kSmallSeparator}c${kBigSeparator}${kWildcard}`;
 
 function parseBigPart(s: string): { parts: string[]; endsWithWildcard: boolean } {
+  if (s === '') {
+    return { parts: [], endsWithWildcard: false };
+  }
   const parts = s.split(kSmallSeparator);
+
   let endsWithWildcard = false;
   for (const [i, part] of parts.entries()) {
     if (i === parts.length - 1) {

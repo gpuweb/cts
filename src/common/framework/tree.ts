@@ -50,7 +50,10 @@ export class FilterResultTree {
   printHelper(name: string, tree: FilterResultTreeNode, indent: string = ''): void {
     const collapsible = 'collapsible' in tree && tree.collapsible ? '+' : '-';
     // eslint-disable-next-line no-console
-    console.log(indent + `${collapsible} ${name} => ${stringifyQuery(tree.query)}`);
+    console.log(
+      indent +
+        `${collapsible} ${name} => ${stringifyQuery(tree.query)}     ${JSON.stringify(tree.query)}`
+    );
     if ('children' in tree) {
       if (tree.description !== undefined) {
         // eslint-disable-next-line no-console
@@ -134,6 +137,10 @@ export async function loadTreeForQuery(
         const orderingL3 = compareParamsPaths(t.id.params, query.params);
         if (orderingL3 === Ordering.Unordered || orderingL3 === Ordering.Superset) {
           // Case is not matched by this filter.
+          continue;
+        }
+        if (orderingL3 !== Ordering.Equal && !query.endsWithWildcard) {
+          // Query is exact, but params is not equal.
           continue;
         }
       }

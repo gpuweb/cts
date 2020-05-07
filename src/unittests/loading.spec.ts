@@ -5,27 +5,25 @@ Tests for queries/filtering, loading, and running.
 import { TestSuiteListing, TestSuiteListingEntry } from '../common/framework/listing.js';
 import { TestFileLoader, TestLoader, TestSpecOrReadme } from '../common/framework/loader.js';
 import { Logger } from '../common/framework/logging/logger.js';
-import { paramsEquals } from '../common/framework/params_utils.js';
+import { Status } from '../common/framework/logging/result.js';
+import { TestQuery } from '../common/framework/query/query.js';
 import { stringifyQuery } from '../common/framework/query/stringifyQuery.js';
 import { TestGroup } from '../common/framework/test_group.js';
 import { FilterResultTreeLeaf } from '../common/framework/tree.js';
 import { assert, objectEquals } from '../common/framework/util/util.js';
 
 import { UnitTest } from './unit_test.js';
-import { kBigSeparator } from '../common/framework/query/separators.js';
-import { TestQuery } from '../common/framework/query/query.js';
-import { Status } from '../common/framework/logging/result.js';
 
 const listingData: { [k: string]: TestSuiteListingEntry[] } = {
   suite1: [
-    { path: [''], description: 'desc 1a' },
+    { path: [], readme: 'desc 1a' },
     { path: ['foo'], description: 'desc 1b' },
-    { path: ['bar', ''], description: 'desc 1c' },
+    { path: ['bar'], readme: 'desc 1c' },
     { path: ['bar', 'buzz'], description: 'desc 1d' },
     { path: ['baz'], description: 'desc 1e' },
   ],
   suite2: [
-    { path: [''], description: 'desc 2a' },
+    { path: [], readme: 'desc 2a' },
     { path: ['foof'], description: 'desc 2b' },
   ],
 };
@@ -124,48 +122,62 @@ class LoadingTest extends UnitTest {
 
 export const g = new TestGroup(LoadingTest);
 
-g.test('whole suite').fn(async t => {
+g.test('suite').fn(async t => {
   t.shouldReject('Error', t.load('suite1'));
   t.shouldReject('Error', t.load('suite1:'));
-  t.expect((await t.load('suite1:*')).length === 5);
 });
 
-g.test('partial suite').fn(async t => {
+g.test('group').fn(async t => {
+  t.expect((await t.load('suite1:*')).length === 8);
+  t.expect((await t.load('suite1:foo,*')).length === 3); // x:foo,* matches x:foo:
+  t.expect((await t.load('suite1:bar,*')).length === 1);
+  t.expect((await t.load('suite1:bar,buzz,*')).length === 1);
+
   t.shouldReject('Error', t.load('suite1:f*'));
-  t.expect((await t.load('suite1:foo:*')).length === 1);
-  t.shouldReject('Error', t.load('suite1:ba*'));
-  t.expect((await t.load('suite1:bar;*')).length === 2);
 });
 
-g.test('whole group').fn(async t => {
-  t.expect((await t.load('suite1::')).length === 0);
-  t.expect((await t.load('suite1:bar:')).length === 0);
-  t.expect((await t.load('suite1:bar:*')).length === 0);
-  t.expect((await t.load('suite1:bar/:')).length === 0);
-  t.expect((await t.load('suite1:bar/:*')).length === 0);
-  t.expect((await t.load('suite1::*')).length === 0);
-  t.expect((await t.load('suite1:bar/buzz:*')).length === 1);
-  t.expect((await t.load('suite1:baz:')).length === 0);
+g.test('test').fn(async t => {
+  t.shouldReject('Error', t.load('suite1::'));
+  t.shouldReject('Error', t.load('suite1:bar:'));
+  t.shouldReject('Error', t.load('suite1:bar,:'));
+
+  t.shouldReject('Error', t.load('suite1::*'));
+  t.shouldReject('Error', t.load('suite1:bar,:*'));
+  t.shouldReject('Error', t.load('suite1:bar:*'));
+
+  t.expect((await t.load('suite1:foo:*')).length === 3);
+  t.expect((await t.load('suite1:bar,buzz:*')).length === 1);
   t.expect((await t.load('suite1:baz:*')).length === 4);
   t.expect((await t.load('suite1:foo:*')).length === 3);
+
+  t.expect((await t.load('suite2:foof:bluh,*')).length === 1);
+  t.expect((await t.load('suite2:foof:bluh,a,*')).length === 1);
 });
 
-g.test('partial group').fn(async t => {
-  t.expect((await t.load('suite1:foo:h*')).length === 2);
-  t.expect((await t.load('suite1:foo:he*')).length === 1);
-  t.expect((await t.load('suite1:foo:hello*')).length === 1);
-  t.expect((await t.load('suite1:baz:zed*')).length === 2);
-});
+g.test('case').fn(async t => {
+  t.shouldReject('Error', t.load('suite1:foo::'));
+  t.shouldReject('Error', t.load('suite1:bar:zed,:'));
 
-g.test('partial test', 'exact').fn(async t => {
+  t.shouldReject('Error', t.load('suite1:foo:h*'));
+
+  t.shouldReject('Error', t.load('suite1:foo::*'));
+  t.shouldReject('Error', t.load('suite1:baz::*'));
+  t.shouldReject('Error', t.load('suite1:baz:zed,:*'));
+
+  t.shouldReject('Error', t.load('suite1:baz:zed:'));
+  t.shouldReject('Error', t.load('suite1:baz:zed:a=1,b=2*'));
+  t.shouldReject('Error', t.load('suite1:baz:zed:a=1,b=2,'));
+  t.shouldReject('Error', t.load('suite1:baz:zed:b=2*'));
+  t.shouldReject('Error', t.load('suite1:baz:zed:b=2,*'));
+  t.shouldReject('Error', t.load('suite1:baz:zed:b=2,a=1'));
+  t.shouldReject('Error', t.load('suite1:baz:zed:b=2,a=1,_c=0'));
+
+  t.expect((await t.load('suite1:baz:zed:*')).length === 2);
+  t.expect((await t.load('suite1:baz:zed:a=1,*')).length === 1);
+  t.expect((await t.load('suite1:baz:zed:a=1,b=2')).length === 1);
+  t.expect((await t.load('suite1:baz:zed:a=1,b=2,*')).length === 1);
+  t.expect((await t.load('suite1:baz:zed:b=3,a=1')).length === 1);
   t.expect((await t.load('suite1:foo:hello:')).length === 1);
-  t.expect((await t.load('suite1:baz:zed:')).length === 0);
-  t.expect((await t.load('suite1:baz:zed:a=1;b=2')).length === 1);
-  t.expect((await t.load('suite1:baz:zed:a=1;b=2*')).length === 1);
-  t.expect((await t.load('suite1:baz:zed:a=1;b=2;*')).length === 0);
-  t.expect((await t.load('suite1:baz:zed:b=2;a=1')).length === 0);
-  t.expect((await t.load('suite1:baz:zed:b=3;a=1')).length === 1);
-  t.expect((await t.load('suite1:baz:zed:a=1;b=2;_c=0')).length === 0);
 });
 
 g.test('partial test', 'makeQueryString').fn(async t => {
@@ -179,17 +191,7 @@ g.test('partial test', 'makeQueryString').fn(async t => {
   t.expect((await t.load(s)).length === 1);
 });
 
-g.test('partial test', 'match').fn(async t => {
-  t.expect((await t.load('suite1:baz:zed:*')).length === 2);
-  t.expect((await t.load('suite1:baz:zed:*')).length === 2);
-  t.expect((await t.load('suite1:baz:zed:a=1;*')).length === 1);
-  t.expect((await t.load('suite1:baz:zed:a=1;b=2;*')).length === 0);
-  t.expect((await t.load('suite1:baz:zed:a=1;b=2;')).length === 0);
-  t.expect((await t.load('suite1:baz:zed:a=1;b=2')).length === 1);
-  t.expect((await t.load('suite1:baz:zed:b=2;a=1')).length === 0);
-  t.expect((await t.load('suite1:baz:zed:b=2;*')).length === 0);
-  t.expect((await t.load('suite1:baz:zed:a=2*')).length === 0);
-});
+g.test('partial test', 'match').fn(async t => {});
 
 g.test('end2end').fn(async t => {
   const l = await t.load('suite2:foof:*');
@@ -197,12 +199,12 @@ g.test('end2end').fn(async t => {
 
   const log = new Logger(true);
 
-  const exp = (i: number, query: TestQuery, status: Status, logs: (s: string) => boolean) => {
+  const exp = async (i: number, query: TestQuery, status: Status, logs: (s: string) => boolean) => {
     t.expect(objectEquals(l[i].query, query));
     t.expect(l[i].run instanceof Function);
     const name = stringifyQuery(l[i].query);
     const [rec, res] = log.record(name);
-    l[i].run(rec);
+    await l[i].run(rec);
 
     t.expect(log.results.get(name) === res);
     t.expect(res.status === status);
@@ -210,19 +212,19 @@ g.test('end2end').fn(async t => {
     t.expect(logs(JSON.stringify(res.logs)));
   };
 
-  exp(
+  await exp(
     0,
     { suite: 'suite2', group: ['foof'], test: ['blah'], params: {}, endsWithWildcard: false },
     'pass',
     s => s === '["DEBUG: OK"]'
   );
-  exp(
+  await exp(
     1,
     { suite: 'suite2', group: ['foof'], test: ['bleh'], params: { a: 1 }, endsWithWildcard: false },
     'pass',
     s => s === '["DEBUG: OK","DEBUG: OK"]'
   );
-  exp(
+  await exp(
     2,
     { suite: 'suite2', group: ['foof'], test: ['bluh', 'a'], params: {}, endsWithWildcard: false },
     'pass',
@@ -230,28 +232,29 @@ g.test('end2end').fn(async t => {
   );
 });
 
-const testGenerateMinimalQueryList = async (
+async function testIterateCollapsed(
   t: LoadingTest,
   expectations: string[],
-  result: string[]
-) => {
-  const l = await t.load('suite1:*');
-  const queries = await generateMinimalQueryList(l, expectations);
-  t.expect(objectEquals(queries, result));
-};
+  expectedResult: string[]
+) {
+  const tree = await LoadingTest.loader.loadTree('suite1:*', expectations);
+  tree.print();
+  const actual = Array.from(tree.iterateCollapsed(), q => stringifyQuery(q));
+  console.log(actual, expectedResult);
+  t.expect(objectEquals(actual, expectedResult));
+  assert(objectEquals(actual, expectedResult));
+}
 
-g.test('generateMinimalQueryList', 'errors').fn(async t => {
-  t.shouldReject('Error', testGenerateMinimalQueryList(t, ['garbage'], []));
-  t.shouldReject('Error', testGenerateMinimalQueryList(t, ['garbage*'], []));
-  t.shouldReject('Error', testGenerateMinimalQueryList(t, ['garbage:*'], []));
-  t.shouldReject('Error', testGenerateMinimalQueryList(t, ['suite1:*'], []));
-  t.shouldReject('Error', testGenerateMinimalQueryList(t, ['suite1:foo*'], []));
-  t.shouldReject('Error', testGenerateMinimalQueryList(t, ['suite1:foo:ba*'], []));
-  t.shouldReject('Error', testGenerateMinimalQueryList(t, ['suite2:foo:*'], []));
-});
+g.test('iterateCollapsed').fn(async t => {
+  t.shouldReject('Error', testIterateCollapsed(t, ['garbage'], []));
+  t.shouldReject('Error', testIterateCollapsed(t, ['garbage*'], []));
+  t.shouldReject('Error', testIterateCollapsed(t, ['garbage:*'], []));
+  t.shouldReject('Error', testIterateCollapsed(t, ['suite1:*'], []));
+  t.shouldReject('Error', testIterateCollapsed(t, ['suite1:foo*'], []));
+  t.shouldReject('Error', testIterateCollapsed(t, ['suite1:foo:ba*'], []));
+  t.shouldReject('Error', testIterateCollapsed(t, ['suite2:foo:*'], []));
 
-g.test('generateMinimalQueryList').fn(async t => {
-  await testGenerateMinimalQueryList(
+  await testIterateCollapsed(
     t, //
     [],
     [
@@ -260,7 +263,7 @@ g.test('generateMinimalQueryList').fn(async t => {
       'suite1:baz:*',
     ]
   );
-  await testGenerateMinimalQueryList(
+  await testIterateCollapsed(
     t, //
     ['suite1:foo:*'],
     [
@@ -269,7 +272,7 @@ g.test('generateMinimalQueryList').fn(async t => {
       'suite1:baz:*',
     ]
   );
-  await testGenerateMinimalQueryList(
+  await testIterateCollapsed(
     t, //
     ['suite1:bar/buzz:*'],
     [
@@ -278,7 +281,7 @@ g.test('generateMinimalQueryList').fn(async t => {
       'suite1:baz:*',
     ]
   );
-  await testGenerateMinimalQueryList(
+  await testIterateCollapsed(
     t, //
     ['suite1:baz:wye:*'],
     [
@@ -288,7 +291,7 @@ g.test('generateMinimalQueryList').fn(async t => {
       'suite1:baz:zed:*',
     ]
   );
-  await testGenerateMinimalQueryList(
+  await testIterateCollapsed(
     t, //
     ['suite1:baz:zed:*'],
     [
@@ -298,7 +301,7 @@ g.test('generateMinimalQueryList').fn(async t => {
       'suite1:baz:zed:*',
     ]
   );
-  await testGenerateMinimalQueryList(
+  await testIterateCollapsed(
     t, //
     [
       'suite1:baz:wye:*', //
@@ -311,7 +314,7 @@ g.test('generateMinimalQueryList').fn(async t => {
       'suite1:baz:zed:*',
     ]
   );
-  await testGenerateMinimalQueryList(
+  await testIterateCollapsed(
     t, //
     ['suite1:baz:wye:'],
     [
@@ -322,7 +325,7 @@ g.test('generateMinimalQueryList').fn(async t => {
       'suite1:baz:zed:*',
     ]
   );
-  await testGenerateMinimalQueryList(
+  await testIterateCollapsed(
     t, //
     ['suite1:baz:wye:x=1'],
     [
@@ -333,7 +336,7 @@ g.test('generateMinimalQueryList').fn(async t => {
       'suite1:baz:zed:*',
     ]
   );
-  await testGenerateMinimalQueryList(
+  await testIterateCollapsed(
     t, //
     [
       'suite1:foo:*', //

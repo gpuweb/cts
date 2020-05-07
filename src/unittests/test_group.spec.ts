@@ -3,7 +3,6 @@ Unit tests for TestGroup.
 `;
 
 import { Fixture } from '../common/framework/fixture.js';
-import { poptions } from '../common/framework/params.js';
 import { TestGroup } from '../common/framework/test_group.js';
 import { assert } from '../common/framework/util/util.js';
 
@@ -76,13 +75,13 @@ g.test('stack').fn(async t0 => {
 
   const res = await t0.run(g);
 
-  const search = /unittests[/\\]test_group\.spec\.[tj]s|suites[/\\]unittests[/\\]unit_test\.[tj]s/;
-  for (const { logs } of res.cases) {
+  const search = /unittests[/\\]test_group\.spec\.[tj]s/;
+  t0.expect(res.size > 0);
+  for (const { logs } of res.values()) {
     assert(logs !== undefined, 'expected logs');
-    const l = logs[0].toJSON();
-    t0.expect(search.test(l));
-    const st = l.split('\n');
-    t0.expect(search.test(st[st.length - 1]));
+    const logsString = JSON.stringify(logs);
+    t0.expect(logs.some(l => search.test(l.toJSON())));
+    t0.expect(search.test(logs[logs.length - 1].toJSON()));
   }
 });
 
@@ -145,7 +144,9 @@ g.test('throws').fn(async t0 => {
   });
 
   const result = await t0.run(g);
-  t0.expect(result.cases[0].status === 'fail');
+  const values = Array.from(result.values());
+  t0.expect(values.length === 1);
+  t0.expect(values[0].status === 'fail');
 });
 
 g.test('shouldThrow').fn(async t0 => {
@@ -162,7 +163,9 @@ g.test('shouldThrow').fn(async t0 => {
   });
 
   const result = await t0.run(g);
-  t0.expect(result.cases[0].status === 'fail');
+  const values = Array.from(result.values());
+  t0.expect(values.length === 1);
+  t0.expect(values[0].status === 'fail');
 });
 
 g.test('shouldReject').fn(async t0 => {
@@ -186,5 +189,7 @@ g.test('shouldReject').fn(async t0 => {
 
   const result = await t0.run(g);
   // Fails even though shouldReject doesn't fail until after the test function ends
-  t0.expect(result.cases[0].status === 'fail');
+  const values = Array.from(result.values());
+  t0.expect(values.length === 1);
+  t0.expect(values[0].status === 'fail');
 });

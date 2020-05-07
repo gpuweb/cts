@@ -48,6 +48,7 @@ export class TestGroup<F extends Fixture> implements RunCaseIterable {
   }
 
   // TODO: This could take a fixture, too, to override the one for the group.
+  // XXX: change this back to a single string split by commas, for ctrl-f'ability.
   test(...name: string[]): TestBuilderWithName<F, never> {
     // TODO: hard-apply these replacements to all tests
     name = name.map(n => n.replace(/ /g, '_'));

@@ -30,7 +30,7 @@ export function stringifySingleParam(k: string, v: ParamArgument) {
 
 export function stringifySingleParamValue(v: ParamArgument): string {
   const s = v === undefined ? 'undefined' : JSON.stringify(v);
-  assert(!/[;:=]/.test(s), 'JSON.stringified param value must not have [;:=] - was ' + s);
+  assert(!/[,:=]/.test(s), 'JSON.stringified param value must not have [,:=] - was ' + s);
   return s;
 }
 
@@ -49,14 +49,16 @@ export function parseParamsString(paramsString: string): ParamSpec {
 }
 
 export function parseSingleParam(paramSubstring: string): [string, ParamArgument] {
+  assert(paramSubstring !== '', 'Param in a query must not be blank (is there a trailing comma?)');
   const i = paramSubstring.indexOf('=');
-  assert(i !== -1, 'Should only be one = in a param in a query');
+  assert(i !== -1, 'Param in a query must be of form key=value');
   const k = paramSubstring.substring(0, i);
   const v = paramSubstring.substring(i + 1);
   return [k, parseSingleParamValue(v)];
 }
 
 export function parseSingleParamValue(s: string): ParamArgument {
+  assert(!/[,:=]/.test(s), 'param value must not have [;:=] - was ' + s);
   return s === 'undefined' ? undefined : JSON.parse(s);
 }
 

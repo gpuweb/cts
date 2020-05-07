@@ -1,24 +1,26 @@
 import { Fixture } from '../common/framework/fixture.js';
 import { TestCaseID } from '../common/framework/id.js';
+import { Logger, LogResults } from '../common/framework/logging/logger.js';
 import { paramsEquals } from '../common/framework/params_utils.js';
 import { TestGroup } from '../common/framework/test_group.js';
 
 import { UnitTest } from './unit_test.js';
+import { stringifyQuery } from '../common/framework/query/stringifyQuery.js';
 
 export class TestGroupTest extends UnitTest {
-  async run<F extends Fixture>(g: TestGroup<F>): Promise<LiveTestSpecResult> {
-    const [rec, res] = new Logger().record({ suite: '', group: '' });
-    await Promise.all(Array.from(g.iterate(rec)).map(test => test.run()));
-    return res;
+  async run<F extends Fixture>(g: TestGroup<F>): Promise<LogResults> {
+    const logger = new Logger(true);
+    for (const rc of await Promise.all(g.iterate())) {
+      const [rec] = logger.record(
+        stringifyQuery({ suite: 'xx', group: ['yy'], ...rc.id, endsWithWildcard: false })
+      );
+      await rc.run(rec);
+    }
+    return logger.results;
   }
 
   enumerate<F extends Fixture>(g: TestGroup<F>): TestCaseID[] {
-    const cases = [];
-    const [rec] = new Logger().record({ suite: '', group: '' });
-    for (const test of g.iterate(rec)) {
-      cases.push(test.id);
-    }
-    return cases;
+    return Array.from(g.iterate()).map(rc => rc.id);
   }
 
   expectCases<F extends Fixture>(g: TestGroup<F>, cases: TestCaseID[]): void {

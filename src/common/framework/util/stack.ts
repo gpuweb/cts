@@ -5,20 +5,12 @@ export function getStackTrace(e: Error): string {
   if (!e.stack) {
     return '';
   }
-  let specFound = false;
   const lines = e.stack.split('\n');
-  const ret = [];
   for (let i = lines.length - 1; i >= 0; --i) {
     const line = lines[i];
-    if (!specFound && line.indexOf('.spec.') !== -1) {
-      specFound = true;
+    if (line.indexOf('.spec.') !== -1) {
+      return lines.slice(0, i + 1).join('\n');
     }
-    if (specFound) {
-      ret.unshift(line);
-    }
-  }
-  if (ret) {
-    return ret.join('\n');
   }
   return e.stack;
 }

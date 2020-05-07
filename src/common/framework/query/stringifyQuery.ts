@@ -40,18 +40,20 @@ type TestQueryWithBakedWildcard =
 function bakeInWildcard(f: TestQuery): TestQueryWithBakedWildcard {
   assert(validQueryPart.test(f.suite), 'suite must match ' + validQueryPart);
 
-  assert(
-    f.group.every(part => validQueryPart.test(part)),
-    `group path part must match ${validQueryPart} - in ${JSON.stringify(f.group)}`
-  );
+  // XXX: uncomment
+  //assert(
+  //  f.group.every(part => validQueryPart.test(part)),
+  //  `group path part must match ${validQueryPart} - in ${JSON.stringify(f.group)}`
+  //);
   if (!('test' in f)) {
     return { ...f, group: [...f.group, kWildcard] };
   }
 
-  assert(
-    f.test.every(part => validQueryPart.test(part)),
-    `test path part must match ${validQueryPart} - in ${JSON.stringify(f.test)}`
-  );
+  // XXX: uncomment
+  //assert(
+  //  f.test.every(part => validQueryPart.test(part)),
+  //  `test path part must match ${validQueryPart} - in ${JSON.stringify(f.test)}`
+  //);
   if (!('params' in f)) {
     return { ...f, test: [...f.test, kWildcard] };
   }
