@@ -35,7 +35,7 @@ export function stringifySingleParam(k: string, v: ParamArgument) {
 
 export function stringifySingleParamValue(v: ParamArgument): string {
   const s = v === undefined ? 'undefined' : JSON.stringify(v);
-  assert(!/[;:=]/.test(s), 'JSON.stringified param value must not have [;:=]');
+  assert(!/[;:=]/.test(s), 'JSON.stringified param value must not have [;:=] - was ' + s);
   return s;
 }
 

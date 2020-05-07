@@ -2,12 +2,10 @@ export const description = `
 Tests for queries/filtering, loading, and running.
 `;
 
-import { generateMinimalQueryList } from '../common/framework/generate_minimal_query_list.js';
 import { TestSuiteListing, TestSuiteListingEntry } from '../common/framework/listing.js';
 import { TestFileLoader, TestLoader, TestSpecOrReadme } from '../common/framework/loader.js';
-import { Logger } from '../common/framework/logger.js';
+import { Logger } from '../common/framework/logging/logger.js';
 import { paramsEquals } from '../common/framework/params_utils.js';
-import { TestFilterResult } from '../common/framework/test_filter/test_filter_result.js';
 import { RunCase, TestGroup } from '../common/framework/test_group.js';
 import { makeQueryString } from '../common/framework/url_query.js';
 import { assert, objectEquals } from '../common/framework/util/util.js';
@@ -171,7 +169,7 @@ g.test('partial group').fn(async t => {
   t.expect((await t.loadAndIterate('suite1:baz:zed*')).length === 2);
 });
 
-g.test('partial test/exact').fn(async t => {
+g.test('partial test', 'exact').fn(async t => {
   t.expect((await t.loadAndIterate('suite1:foo:hello:')).length === 1);
   t.expect((await t.loadAndIterate('suite1:baz:zed:')).length === 0);
   t.expect((await t.loadAndIterate('suite1:baz:zed:a=1;b=2')).length === 1);
@@ -182,7 +180,7 @@ g.test('partial test/exact').fn(async t => {
   t.expect((await t.loadAndIterate('suite1:baz:zed:a=1;b=2;_c=0')).length === 0);
 });
 
-g.test('partial test/makeQueryString').fn(async t => {
+g.test('partial test', 'makeQueryString').fn(async t => {
   const s = makeQueryString(
     { suite: 'suite1', group: 'baz' },
     { test: 'zed', params: { a: 1, b: 2 } }
@@ -190,7 +188,7 @@ g.test('partial test/makeQueryString').fn(async t => {
   t.expect((await t.loadAndIterate(s)).length === 1);
 });
 
-g.test('partial test/match').fn(async t => {
+g.test('partial test', 'match').fn(async t => {
   t.expect((await t.loadAndIterate('suite1:baz:zed:*')).length === 2);
   t.expect((await t.loadAndIterate('suite1:baz:zed:*')).length === 2);
   t.expect((await t.loadAndIterate('suite1:baz:zed:a=1;*')).length === 1);
@@ -284,7 +282,7 @@ const testGenerateMinimalQueryList = async (
   t.expect(objectEquals(queries, result));
 };
 
-g.test('generateMinimalQueryList/errors').fn(async t => {
+g.test('generateMinimalQueryList', 'errors').fn(async t => {
   t.shouldReject('Error', testGenerateMinimalQueryList(t, ['garbage'], []));
   t.shouldReject('Error', testGenerateMinimalQueryList(t, ['garbage*'], []));
   t.shouldReject('Error', testGenerateMinimalQueryList(t, ['garbage:*'], []));

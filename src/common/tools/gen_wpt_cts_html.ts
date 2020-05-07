@@ -1,9 +1,10 @@
 import { promises as fs } from 'fs';
 
 import { listing } from '../../webgpu/listing.js';
-import { generateMinimalQueryList } from '../framework/generate_minimal_query_list.js';
 import { TestSuiteListingEntry } from '../framework/listing.js';
 import { TestLoader } from '../framework/loader.js';
+import { kBigSeparator } from '../framework/query/separators.js';
+import { stringifyQuery } from '../framework/query/stringifyQuery.js';
 
 function printUsageAndExit(rc: number): void {
   console.error(`\
@@ -49,7 +50,7 @@ const [
     const entries = (await listing) as TestSuiteListingEntry[];
     const lines = entries
       // Exclude READMEs.
-      .filter(l => l.path.length !== 0 && !l.path.endsWith('/'))
+      .filter(l => l.path.length !== 0 && l.path[l.path.length - 1] !== '')
       .map(l => '?q=webgpu:' + l.path);
     await generateFile(lines);
   } else {
@@ -80,13 +81,13 @@ const [
     }
 
     const loader = new TestLoader();
-    const files = Array.from(await loader.loadTestsFromCmdLine([suite + ':']));
-
-    const lines = [];
+    const lines: Array<string | undefined> = [];
     for (const prefix of argsPrefixes) {
-      lines.push(undefined);
-      for (const q of await generateMinimalQueryList(files, expectations.get(prefix)!)) {
-        lines.push(prefix + q);
+      const tree = await loader.loadTree(suite + kBigSeparator, expectations.get(prefix)!);
+
+      lines.push(undefined); // output blank line between prefixes
+      for (const q of tree.iterateCollapsed()) {
+        lines.push(prefix + stringifyQuery(q));
       }
     }
     await generateFile(lines);

@@ -4,10 +4,9 @@
 import * as fs from 'fs';
 import * as process from 'process';
 
-import { TestGroupID } from '../framework/id.js';
 import { TestLoader } from '../framework/loader.js';
-import { LiveTestCaseResult, Logger } from '../framework/logger.js';
-import { makeQueryString } from '../framework/url_query.js';
+import { Logger } from '../framework/logging/logger.js';
+import { LiveTestCaseResult } from '../framework/logging/result.js';
 import { assert, unreachable } from '../framework/util/util.js';
 
 function usage(rc: number): never {
@@ -29,7 +28,7 @@ if (!fs.existsSync('src/common/runtime/cmdline.ts')) {
 let verbose = false;
 let debug = false;
 let printJSON = false;
-const filterArgs = [];
+const filterArgs: string[] = [];
 for (const a of process.argv.slice(2)) {
   if (a.startsWith('-')) {
     if (a === '--verbose') {
@@ -53,43 +52,40 @@ if (filterArgs.length === 0) {
 (async () => {
   try {
     const loader = new TestLoader();
-    const files = await loader.loadTestsFromCmdLine(filterArgs);
+    assert(filterArgs.length === 1, 'currently, there must be exactly one query on the cmd line');
+    const testcases = await loader.loadTests(filterArgs[0]);
 
-    const log = new Logger();
+    const log = new Logger(debug);
 
-    const failed: Array<[TestGroupID, LiveTestCaseResult]> = [];
-    const warned: Array<[TestGroupID, LiveTestCaseResult]> = [];
-    const skipped: Array<[TestGroupID, LiveTestCaseResult]> = [];
+    const failed: Array<[string, LiveTestCaseResult]> = [];
+    const warned: Array<[string, LiveTestCaseResult]> = [];
+    const skipped: Array<[string, LiveTestCaseResult]> = [];
 
     let total = 0;
-    for (const f of files) {
-      if (!('g' in f.spec)) {
-        continue;
+
+    for (const testcase of testcases) {
+      const [rec, res] = log.record(testcase.name);
+      await testcase.runCase.run(rec);
+
+      if (verbose) {
+        printResults([[testcase.name, res]]);
       }
 
-      const [rec] = log.record(f.id);
-      for (const t of f.spec.g.iterate(rec)) {
-        const res = await t.run(debug);
-        if (verbose) {
-          printResults([[f.id, res]]);
-        }
-
-        total++;
-        switch (res.status) {
-          case 'pass':
-            break;
-          case 'fail':
-            failed.push([f.id, res]);
-            break;
-          case 'warn':
-            warned.push([f.id, res]);
-            break;
-          case 'skip':
-            skipped.push([f.id, res]);
-            break;
-          default:
-            unreachable('unrecognized status');
-        }
+      total++;
+      switch (res.status) {
+        case 'pass':
+          break;
+        case 'fail':
+          failed.push([name, res]);
+          break;
+        case 'warn':
+          warned.push([name, res]);
+          break;
+        case 'skip':
+          skipped.push([name, res]);
+          break;
+        default:
+          unreachable('unrecognized status');
       }
     }
 
@@ -138,9 +134,9 @@ Failed               = ${rpt(failed.length)}`);
   }
 })();
 
-function printResults(results: Array<[TestGroupID, LiveTestCaseResult]>): void {
-  for (const [id, r] of results) {
-    console.log(`[${r.status}] ${makeQueryString(id, r)} (${r.timems}ms). Log:`);
+function printResults(results: Array<[string, LiveTestCaseResult]>): void {
+  for (const [name, r] of results) {
+    console.log(`[${r.status}] ${name} (${r.timems}ms). Log:`);
     if (r.logs) {
       for (const l of r.logs) {
         console.log('  - ' + l.toJSON().replace(/\n/g, '\n    '));

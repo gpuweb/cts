@@ -1,7 +1,8 @@
 import { TestSuiteListing } from './listing.js';
 import { parseQuery } from './query/parseQuery.js';
 import { RunCaseIterable } from './test_group.js';
-import { loadTreeForQuery, FilterResult } from './tree.js';
+import { loadTreeForQuery, FilterResult, FilterResultTree } from './tree.js';
+import { assert } from './util/util.js';
 
 // One of the following:
 // - An actual .spec.ts file, as imported.
@@ -20,9 +21,11 @@ export type TestSpecOrReadme = TestSpec | ReadmeFile;
 
 export abstract class TestFileLoader {
   abstract listing(suite: string): Promise<TestSuiteListing>;
-  abstract import(path: string): Promise<TestSpecOrReadme>;
+  protected abstract import(path: string): Promise<TestSpecOrReadme>;
+
   importSpecFile(suite: string, path: string[]): Promise<TestSpec> {
-    return this.import(suite + path.join('/') + '.spec.js') as Promise<TestSpec>;
+    return this.import(`${suite}/${path.join('/')}.spec.js`) as Promise<TestSpec>;
+    return this.import(suite + '/' + path.join('/') + '.spec.js') as Promise<TestSpec>;
   }
 }
 
@@ -43,8 +46,16 @@ export class TestLoader {
     this.fileLoader = fileLoader;
   }
 
-  // TODO: Test
+  loadTree(query: string, subqueriesToExpand: string[] = []): Promise<FilterResultTree> {
+    return loadTreeForQuery(
+      this.fileLoader,
+      parseQuery(query),
+      subqueriesToExpand.map(q => parseQuery(q))
+    );
+  }
+
+  // TODO: Test this
   async loadTests(query: string): Promise<IterableIterator<FilterResult>> {
-    return (await loadTreeForQuery(this.fileLoader, parseQuery(query))).iterate();
+    return (await this.loadTree(query)).iterate();
   }
 }

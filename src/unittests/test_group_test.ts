@@ -1,6 +1,5 @@
 import { Fixture } from '../common/framework/fixture.js';
 import { TestCaseID } from '../common/framework/id.js';
-import { LiveTestSpecResult, Logger } from '../common/framework/logger.js';
 import { paramsEquals } from '../common/framework/params_utils.js';
 import { TestGroup } from '../common/framework/test_group.js';
 

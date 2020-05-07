@@ -53,8 +53,7 @@ webgpu${kBigSeparator}a${kSmallSeparator}b${kSmallSeparator}c${kBigSeparator}${k
 function parseBigPart(s: string): { parts: string[]; endsWithWildcard: boolean } {
   const parts = s.split(';');
   let endsWithWildcard = false;
-  for (let i = 0; i < parts.length; ++i) {
-    const part = parts[i];
+  for (const [i, part] of parts.entries()) {
     if (i === parts.length - 1) {
       endsWithWildcard = part === kWildcard;
     }
@@ -62,6 +61,9 @@ function parseBigPart(s: string): { parts: string[]; endsWithWildcard: boolean }
       part.indexOf(kWildcard) === -1 || endsWithWildcard,
       `Wildcard ${kWildcard} must be complete last part of a path (e.g. ${kExampleQuery})`
     );
+  }
+  if (endsWithWildcard) {
+    parts.length = parts.length - 1;
   }
   return { parts, endsWithWildcard };
 }

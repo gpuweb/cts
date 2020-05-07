@@ -1,4 +1,4 @@
-import { TestCaseRecorder } from './logger.js';
+import { TestCaseRecorder } from './logging/test_case_recorder.js';
 import { ParamSpec } from './params_utils.js';
 import { assert } from './util/util.js';
 

@@ -1,7 +1,7 @@
 // Implements the standalone test runner (see also: /standalone/index.html).
 
 import { TestLoader } from '../framework/loader.js';
-import { LiveTestCaseResult, Logger } from '../framework/logger.js';
+import { Logger } from '../framework/logging/logger.js';
 import { RunCase } from '../framework/test_group.js';
 import { FilterResultTreeNode } from '../framework/tree.js';
 import { encodeSelectively } from '../framework/url_query.js';
@@ -16,10 +16,11 @@ window.onbeforeunload = () => {
 };
 
 let haveSomeResults = false;
-const log = new Logger();
 
 const runnow = optionEnabled('runnow');
 const debug = optionEnabled('debug');
+
+const logger = new Logger(debug);
 
 const worker = optionEnabled('worker') ? new TestWorker() : undefined;
 
@@ -31,7 +32,7 @@ type RunSubtree = () => Promise<void>;
 // DOM generation
 
 function makeTreeNodeHTML(name: string, tree: FilterResultTreeNode): [HTMLElement, RunSubtree] {
-  if (tree.children) {
+  if ('children' in tree) {
     return makeSubtreeHTML(name, tree);
   } else {
     return makeCaseHTML(name, tree.runCase!);
@@ -43,12 +44,12 @@ function makeCaseHTML(name: string, t: RunCase): [HTMLElement, RunSubtree] {
 
   const runSubtree = async () => {
     haveSomeResults = true;
-    let res: LiveTestCaseResult;
+    const [rec, res] = logger.record(name);
     if (worker) {
-      res = await worker.run(name, debug);
-      t.injectResult(res);
+      const workerResult = await worker.run(name, debug);
+      Object.assign(res, workerResult);
     } else {
-      res = await t.run(debug);
+      await t.run(rec);
     }
 
     casetime.text(res.timems.toFixed(4) + ' ms');
@@ -157,7 +158,7 @@ function makeTreeNodeHeaderHTML(
 }
 
 function updateJSON(): void {
-  resultsJSON.textContent = log.asJSON(2);
+  resultsJSON.textContent = logger.asJSON(2);
 }
 
 (async () => {
@@ -167,7 +168,7 @@ function updateJSON(): void {
   const qs = new URLSearchParams(window.location.search).getAll('q');
   assert(qs.length === 1, 'currently, there must be exactly one ?q=');
   const files = await loader.loadTests(qs[0]);
-  const tree = treeFromFilterResults(log, files);
+  const tree = treeFromFilterResults(logger, files);
 
   const runSubtree = makeSubtreeChildrenHTML(resultsVis, tree.children!);
 

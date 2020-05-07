@@ -45,6 +45,10 @@ export class FilterResultTree {
     this.root = root;
   }
 
+  iterateCollapsed(): IterableIterator<TestQuery> {
+    return iterateCollapsedSubtree(this.root);
+  }
+
   iterate(): IterableIterator<FilterResult> {
     return iterateSubtree(this.root);
   }
@@ -56,8 +60,8 @@ export class FilterResultTree {
     }
     for (const [name, child] of tree.children) {
       // eslint-disable-next-line no-console
-      console.log(indent + `[${name}] = ${stringifyQuery(child.query)}`);
-      this.print(child, indent + ' ');
+      console.log(indent + `${JSON.stringify(name)} => ${stringifyQuery(child.query)}`);
+      this.print(child, indent + '  ');
     }
   }
 }
@@ -72,10 +76,20 @@ function* iterateSubtree(subtree: FilterResultSubtree): IterableIterator<FilterR
   }
 }
 
+function* iterateCollapsedSubtree(subtree: FilterResultSubtree): IterableIterator<TestQuery> {
+  for (const [, child] of subtree.children) {
+    if ('children' in child && !child.collapsible) {
+      yield* iterateCollapsedSubtree(child);
+    } else {
+      yield child.query;
+    }
+  }
+}
+
 export async function loadTreeForQuery(
   loader: TestFileLoader,
   query: TestQuery,
-  subqueriesToExpand: TestQuery[] = []
+  subqueriesToExpand: TestQuery[]
 ): Promise<FilterResultTree> {
   const suite = query.suite;
   const specs = await loader.listing(suite);
@@ -102,8 +116,10 @@ export async function loadTreeForQuery(
     assert(orderingL1 !== Ordering.Superset, 'Query does not match any tests');
 
     const [subtreeL1, queryL1] = subtreeForGroupPath(queryL0, subtreeL0, entry.path);
+    console.log(queryL1);
     const spec = await loader.importSpecFile(query.suite, entry.path);
 
+    // TODO: this is taking a tree, flattening it, and then unflattening it. Possibly redundant.
     for (const t of spec.g.iterate()) {
       if ('test' in query) {
         const orderingL2 = comparePaths(t.id.test, query.test);
@@ -128,8 +144,11 @@ export async function loadTreeForQuery(
       foundCase = true;
     }
   }
+  const tree = new FilterResultTree(subtreeL0);
+  tree.print(); // XXX
+
   assert(foundCase, 'Query does not match any cases');
-  return new FilterResultTree(subtreeL0);
+  return tree;
 }
 
 function makeTreeForSuite(suite: string): [FilterResultSubtree, TestQueryMultiGroup] {
@@ -147,7 +166,7 @@ function subtreeForGroupPath(
   group: string[]
 ): [FilterResultSubtree, TestQueryMultiTest] {
   const subquery = { ...query, group: [] as string[] };
-  for (const part of pathPartsWithSeparators(group)) {
+  for (const part of group) {
     subquery.group.push(part);
     tree = getOrInsertSubtree(part, tree, subquery, false);
   }
@@ -161,7 +180,7 @@ function subtreeForTestPath(
   subqueriesToExpand: TestQuery[]
 ): [FilterResultSubtree, TestQueryMultiCase] {
   const subquery = { ...query, test: [] as string[] };
-  for (const part of pathPartsWithSeparators(t.id.test)) {
+  for (const part of t.id.test) {
     subquery.test.push(part);
     const collapsible = subqueriesToExpand.every(
       s => querySubsetOfQuery(s, subquery) !== IsSubset.YesStrict
@@ -203,15 +222,4 @@ function getOrInsertSubtree(
   const v = { query, children: new Map(), collapsible };
   children.set(k, v);
   return v;
-}
-
-function* nonLastPathPartsWithSeparators(path: string[]): IterableIterator<string> {
-  for (let i = 0; i < path.length - 1; ++i) {
-    yield path[i] + kSmallSeparator;
-  }
-}
-
-function* pathPartsWithSeparators(path: string[]): IterableIterator<string> {
-  yield* nonLastPathPartsWithSeparators(path);
-  yield path[path.length - 1] + kBigSeparator;
 }

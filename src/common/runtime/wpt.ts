@@ -1,5 +1,5 @@
 import { TestLoader } from '../framework/loader.js';
-import { LiveTestCaseResult, Logger } from '../framework/logger.js';
+import { LiveTestCaseResult, Logger } from '../framework/logging/logger.js';
 import { makeQueryString } from '../framework/url_query.js';
 import { AsyncMutex } from '../framework/util/async_mutex.js';
 import { assert } from '../framework/util/util.js';

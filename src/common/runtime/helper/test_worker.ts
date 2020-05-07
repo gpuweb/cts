@@ -2,7 +2,7 @@ import {
   LiveTestCaseResult,
   LogMessageWithStack,
   TransferredTestCaseResult,
-} from '../../framework/logger.js';
+} from '../../framework/logging/logger.js';
 
 export class TestWorker {
   private worker: Worker;

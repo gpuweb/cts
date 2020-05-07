@@ -1,6 +1,7 @@
 import { Fixture } from './fixture.js';
 import { TestCaseID } from './id.js';
-import { LiveTestCaseResult, TestCaseRecorder, TestSpecRecorder } from './logger.js';
+import { LiveTestCaseResult } from './logging/result.js';
+import { TestCaseRecorder } from './logging/test_case_recorder.js';
 import { ParamSpec, ParamSpecIterable, extractPublicParams, paramsEquals } from './params_utils.js';
 import { validQueryPart } from './query/query.js';
 import { checkPublicParamType } from './url_query.js';
@@ -8,12 +9,11 @@ import { assert } from './util/util.js';
 
 export interface RunCase {
   readonly id: TestCaseID;
-  run(debug?: boolean): Promise<LiveTestCaseResult>;
-  injectResult(result: LiveTestCaseResult): void;
+  run(rec: TestCaseRecorder): Promise<LiveTestCaseResult>;
 }
 
 export interface RunCaseIterable {
-  iterate(rec?: TestSpecRecorder): Iterable<RunCase>;
+  iterate(): Iterable<RunCase>;
 }
 
 type FixtureClass<F extends Fixture> = new (log: TestCaseRecorder, params: ParamSpec) => F;
@@ -28,9 +28,9 @@ export class TestGroup<F extends Fixture> implements RunCaseIterable {
     this.fixture = fixture;
   }
 
-  *iterate(log: TestSpecRecorder): Iterable<RunCase> {
+  *iterate(): Iterable<RunCase> {
     for (const test of this.tests) {
-      yield* test.iterate(log);
+      yield* test.iterate();
     }
   }
 
@@ -71,13 +71,13 @@ interface TestBuilderWithParams<F extends Fixture, P extends {}> {
 }
 
 class TestBuilder<F extends Fixture, P extends {}> {
-  private readonly name: string[];
+  private readonly testPath: string[];
   private readonly fixture: FixtureClass<F>;
   private testFn: TestFn<F, P> | undefined;
-  private cases: ParamSpecIterable | null = null;
+  private cases?: ParamSpecIterable = undefined;
 
-  constructor(name: string[], fixture: FixtureClass<F>) {
-    this.name = name;
+  constructor(testPath: string[], fixture: FixtureClass<F>) {
+    this.testPath = testPath;
     this.fixture = fixture;
   }
 
@@ -86,7 +86,7 @@ class TestBuilder<F extends Fixture, P extends {}> {
   }
 
   params<NewP extends {}>(specs: Iterable<NewP>): TestBuilderWithParams<F, NewP> {
-    assert(this.cases === null, 'test case is already parameterized');
+    assert(this.cases === undefined, 'test case is already parameterized');
     const cases = Array.from(specs);
     const seen: ParamSpec[] = [];
     // This is n^2.
@@ -110,38 +110,35 @@ class TestBuilder<F extends Fixture, P extends {}> {
     return (this as unknown) as TestBuilderWithParams<F, NewP>;
   }
 
-  *iterate(rec: TestSpecRecorder): IterableIterator<RunCase> {
+  *iterate(): IterableIterator<RunCase> {
     assert(this.testFn !== undefined, 'internal error');
     for (const params of this.cases || [{}]) {
-      yield new RunCaseSpecific(rec, this.name, params, this.fixture, this.testFn);
+      yield new RunCaseSpecific(this.testPath, params, this.fixture, this.testFn);
     }
   }
 }
 
 class RunCaseSpecific<F extends Fixture> implements RunCase {
   readonly id: TestCaseID;
+
   private readonly params: ParamSpec | null;
-  private readonly recorder: TestSpecRecorder;
   private readonly fixture: FixtureClass<F>;
   private readonly fn: TestFn<F, never>;
 
   constructor(
-    recorder: TestSpecRecorder,
-    test: string[],
+    testPath: string[],
     params: ParamSpec,
     fixture: FixtureClass<F>,
     fn: TestFn<F, never>
   ) {
-    this.id = { test, params: extractPublicParams(params) };
+    this.id = { test: testPath, params: extractPublicParams(params) };
     this.params = params;
-    this.recorder = recorder;
     this.fixture = fixture;
     this.fn = fn;
   }
 
-  async run(debug: boolean): Promise<LiveTestCaseResult> {
-    const [rec, res] = this.recorder.record(this.id.test, this.id.params);
-    rec.start(debug);
+  async run(rec: TestCaseRecorder): Promise<void> {
+    rec.start();
 
     try {
       const inst = new this.fixture(rec, this.params || {});
@@ -163,11 +160,5 @@ class RunCaseSpecific<F extends Fixture> implements RunCase {
     }
 
     rec.finish();
-    return res;
-  }
-
-  injectResult(result: LiveTestCaseResult): void {
-    const [, res] = this.recorder.record(this.id.test, this.id.params);
-    Object.assign(res, result);
   }
 }

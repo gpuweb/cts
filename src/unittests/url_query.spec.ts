@@ -17,12 +17,12 @@ g.test('makeQueryString').fn(t => {
   t.expect(s === 'a:b;c:d;e:f="g";h=3');
 });
 
-g.test('makeQueryString/private').fn(t => {
+g.test('makeQueryString', 'private').fn(t => {
   const s = makeQueryString({ suite: 'a', group: 'b' }, { test: 'c', params: { pub: 2, _pri: 3 } });
   t.expect(s === 'a:b:c:pub=2');
 });
 
-g.test('makeQueryString/undefined').fn(t => {
+g.test('makeQueryString', 'undefined').fn(t => {
   const s = makeQueryString(
     { suite: 'a', group: 'b' },
     { test: 'c', params: { f: undefined, h: 3 } }
