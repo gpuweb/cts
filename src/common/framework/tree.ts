@@ -260,11 +260,7 @@ function subtreeForCaseExceptLeaf(
   checkCollapsible(subquery); // mark seenSubqueriesToExpand
   const leaf = {
     query: subquery,
-    run: (rec: TestCaseRecorder) => {
-      rec.start(false);
-      t.run(rec);
-      rec.finish();
-    },
+    run: (rec: TestCaseRecorder) => t.run(rec),
   };
   tree.children.set(name, leaf);
   return leaf;

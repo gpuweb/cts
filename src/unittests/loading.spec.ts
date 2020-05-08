@@ -78,7 +78,6 @@ const specsData: { [k: string]: TestSpecOrReadme } = {
     g: (() => {
       const g = new TestGroup(UnitTest);
       g.test('blah').fn(t => {
-        console.log('congratulations');
         t.debug('OK');
       });
       g.test('bleh')
@@ -189,7 +188,7 @@ g.test('partial test', 'makeQueryString').fn(async t => {
   t.expect((await t.load(s)).length === 1);
 });
 
-g.test('partial test', 'match').fn(async t => {});
+g.test('partial test', 'match').fn(async () => {});
 
 g.test('end2end').fn(async t => {
   const l = await t.load('suite2:foof:*');
@@ -201,14 +200,12 @@ g.test('end2end').fn(async t => {
     i: number,
     query: TestQuery,
     status: Status,
-    logs: (s: string[] | undefined) => boolean
+    logs: (s: string[]) => boolean
   ) => {
     t.expect(objectEquals(l[i].query, query));
     const name = stringifyQuery(l[i].query);
     const [rec, res] = log.record(name);
-    rec.start(true);
     await l[i].run(rec);
-    rec.finish();
 
     t.expect(log.results.get(name) === res);
     t.expect(res.status === status);
@@ -257,7 +254,7 @@ async function testIterateCollapsed(
   }
 }
 
-g.test('print').fn(async t => {
+g.test('print').fn(async () => {
   const tree = await LoadingTest.loader.loadTree('suite1:*');
   tree.toString();
 });

@@ -1,12 +1,11 @@
 import { Fixture } from '../common/framework/fixture.js';
 import { TestCaseID } from '../common/framework/id.js';
 import { Logger, LogResults } from '../common/framework/logging/logger.js';
-import { paramsEquals } from '../common/framework/params_utils.js';
 import { stringifyQuery } from '../common/framework/query/stringifyQuery.js';
 import { TestGroup } from '../common/framework/test_group.js';
+import { objectEquals } from '../common/framework/util/util.js';
 
 import { UnitTest } from './unit_test.js';
-import { objectEquals } from '../common/framework/util/util.js';
 
 export class TestGroupTest extends UnitTest {
   async run<F extends Fixture>(g: TestGroup<F>): Promise<LogResults> {
@@ -15,9 +14,7 @@ export class TestGroupTest extends UnitTest {
       const [rec] = logger.record(
         stringifyQuery({ suite: 'xx', group: ['yy'], ...rc.id, endsWithWildcard: false })
       );
-      rec.start(true);
       await rc.run(rec);
-      rec.finish();
     }
     return logger.results;
   }

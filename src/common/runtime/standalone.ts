@@ -7,7 +7,6 @@ import {
   FilterResultTreeNode,
   FilterResultSubtree,
   FilterResultTreeLeaf,
-  loadTreeForQuery,
 } from '../framework/tree.js';
 import { encodeSelectively } from '../framework/url_query.js';
 import { assert } from '../framework/util/util.js';
@@ -51,14 +50,14 @@ function makeCaseHTML(t: FilterResultTreeLeaf): [HTMLElement, RunSubtree] {
   const runSubtree = async () => {
     haveSomeResults = true;
     const [rec, res] = logger.record(name);
-    rec.start(debug);
     if (worker) {
+      rec.start();
       const workerResult = await worker.run(name, debug);
       Object.assign(res, workerResult);
+      rec.finish();
     } else {
       await t.run(rec);
     }
-    rec.finish();
 
     casetime.text(res.timems.toFixed(4) + ' ms');
 

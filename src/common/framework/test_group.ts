@@ -140,6 +140,7 @@ class RunCaseSpecific<F extends Fixture> implements RunCase {
   }
 
   async run(rec: TestCaseRecorder): Promise<void> {
+    rec.start();
     try {
       const inst = new this.fixture(rec, this.params || {});
 
@@ -158,5 +159,6 @@ class RunCaseSpecific<F extends Fixture> implements RunCase {
       // or unexpected validation/OOM error from the GPUDevice.
       rec.threw(ex);
     }
+    rec.finish();
   }
 }

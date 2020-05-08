@@ -1,8 +1,5 @@
-import {
-  LiveTestCaseResult,
-  LogMessageWithStack,
-  TransferredTestCaseResult,
-} from '../../framework/logging/logger.js';
+import { LogMessageWithStack } from '../../framework/logging/log_message';
+import { TransferredTestCaseResult, LiveTestCaseResult } from '../../framework/logging/result';
 
 export class TestWorker {
   private worker: Worker;

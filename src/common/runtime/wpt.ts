@@ -32,14 +32,14 @@ declare function async_test(f: (this: WptTestObject) => Promise<void>, name: str
     const wpt_fn = function (this: WptTestObject): Promise<void> {
       const p = mutex.with(async () => {
         const [rec, res] = log.record(name);
-        rec.start(false);
         if (worker) {
+          rec.start();
           const workerResult = await worker.run(name);
           Object.assign(res, workerResult);
+          rec.finish();
         } else {
           await testcase.run(rec);
         }
-        rec.finish();
 
         this.step(() => {
           // Unfortunately, it seems not possible to surface any logs for warn/skip.

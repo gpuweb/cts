@@ -16,7 +16,7 @@ export class Logger {
   record(name: string): [TestCaseRecorder, LiveTestCaseResult] {
     const result: LiveTestCaseResult = { status: 'running', timems: -1 };
     this.results.set(name, result);
-    return [new TestCaseRecorder(result), result];
+    return [new TestCaseRecorder(result, this.debug), result];
   }
 
   asJSON(space?: number): string {

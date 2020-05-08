@@ -18,15 +18,15 @@ export class TestCaseRecorder {
   private logs: LogMessageWithStack[] = [];
   private debugging = false;
 
-  constructor(result: LiveTestCaseResult) {
+  constructor(result: LiveTestCaseResult, debugging: boolean) {
     this.result = result;
+    this.debugging = debugging;
   }
 
-  start(debug: boolean): void {
+  start(): void {
     this.startTime = now();
     this.logs = [];
     this.state = PassState.pass;
-    this.debugging = debug;
   }
 
   finish(): void {

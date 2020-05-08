@@ -1,5 +1,5 @@
 import * as C from '../../../../common/constants.js';
-import { TestCaseRecorder } from '../../../../common/framework/logging/logger.js';
+import { TestCaseRecorder } from '../../../../common/framework/logging/test_case_recorder.js';
 import { params, poptions, pbool } from '../../../../common/framework/params.js';
 import { ParamSpec } from '../../../../common/framework/params_utils.js';
 import { assert, unreachable } from '../../../../common/framework/util/util.js';

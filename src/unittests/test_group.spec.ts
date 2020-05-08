@@ -79,7 +79,6 @@ g.test('stack').fn(async t0 => {
   t0.expect(res.size > 0);
   for (const { logs } of res.values()) {
     assert(logs !== undefined, 'expected logs');
-    const logsString = JSON.stringify(logs);
     t0.expect(logs.some(l => search.test(l.toJSON())));
     t0.expect(search.test(logs[logs.length - 1].toJSON()));
   }
