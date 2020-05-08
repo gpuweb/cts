@@ -19,7 +19,7 @@ const listingData: { [k: string]: TestSuiteListingEntry[] } = {
     { path: [], readme: 'desc 1a' },
     { path: ['foo'], description: 'desc 1b' },
     { path: ['bar'], readme: 'desc 1c' },
-    { path: ['bar', 'buzz'], description: 'desc 1d' },
+    { path: ['bar', 'buzz', 'buzz'], description: 'desc 1d' },
     { path: ['baz'], description: 'desc 1e' },
   ],
   suite2: [
@@ -49,7 +49,7 @@ const specsData: { [k: string]: TestSpecOrReadme } = {
     description: 'desc 1g',
     g: new TestGroup(UnitTest),
   },
-  'suite1/bar/buzz.spec.js': {
+  'suite1/bar/buzz/buzz.spec.js': {
     description: 'desc 1d',
     g: (() => {
       const g = new TestGroup(UnitTest);
@@ -131,7 +131,7 @@ g.test('group').fn(async t => {
   t.expect((await t.load('suite1:*')).length === 8);
   t.expect((await t.load('suite1:foo,*')).length === 3); // x:foo,* matches x:foo:
   t.expect((await t.load('suite1:bar,*')).length === 1);
-  t.expect((await t.load('suite1:bar,buzz,*')).length === 1);
+  t.expect((await t.load('suite1:bar,buzz,buzz,*')).length === 1);
 
   t.shouldReject('Error', t.load('suite1:f*'));
 });
@@ -146,7 +146,7 @@ g.test('test').fn(async t => {
   t.shouldReject('Error', t.load('suite1:bar:*'));
 
   t.expect((await t.load('suite1:foo:*')).length === 3);
-  t.expect((await t.load('suite1:bar,buzz:*')).length === 1);
+  t.expect((await t.load('suite1:bar,buzz,buzz:*')).length === 1);
   t.expect((await t.load('suite1:baz:*')).length === 4);
   t.expect((await t.load('suite1:foo:*')).length === 3);
 
@@ -240,26 +240,23 @@ async function testIterateCollapsed(
   const tree = await LoadingTest.loader.loadTree('suite1:*', expectations);
   tree.print();
   const actual = Array.from(tree.iterateCollapsed(), q => stringifyQuery(q));
-  console.log(actual, expectedResult);
+  console.log(expectations, '->', actual, expectedResult);
   t.expect(objectEquals(actual, expectedResult));
   assert(objectEquals(actual, expectedResult));
 }
 
-g.test('iterateCollapsed').fn(async t => {
-  t.shouldReject('Error', testIterateCollapsed(t, ['garbage'], []));
-  t.shouldReject('Error', testIterateCollapsed(t, ['garbage*'], []));
-  t.shouldReject('Error', testIterateCollapsed(t, ['garbage:*'], []));
-  t.shouldReject('Error', testIterateCollapsed(t, ['suite1:*'], []));
-  t.shouldReject('Error', testIterateCollapsed(t, ['suite1:foo*'], []));
-  t.shouldReject('Error', testIterateCollapsed(t, ['suite1:foo:ba*'], []));
-  t.shouldReject('Error', testIterateCollapsed(t, ['suite2:foo:*'], []));
+g.test('print').fn(async t => {
+  const tree = await LoadingTest.loader.loadTree('suite1:*');
+  tree.print();
+});
 
+g.test('iterateCollapsed').fn(async t => {
   await testIterateCollapsed(
     t, //
     [],
     [
       'suite1:foo:*', //
-      'suite1:bar/buzz:*',
+      'suite1:bar,buzz,buzz:*',
       'suite1:baz:*',
     ]
   );
@@ -268,16 +265,16 @@ g.test('iterateCollapsed').fn(async t => {
     ['suite1:foo:*'],
     [
       'suite1:foo:*', //
-      'suite1:bar/buzz:*',
+      'suite1:bar,buzz,buzz:*',
       'suite1:baz:*',
     ]
   );
   await testIterateCollapsed(
     t, //
-    ['suite1:bar/buzz:*'],
+    ['suite1:bar,buzz,buzz:*'],
     [
       'suite1:foo:*', //
-      'suite1:bar/buzz:*',
+      'suite1:bar,buzz,buzz:*',
       'suite1:baz:*',
     ]
   );
@@ -286,9 +283,9 @@ g.test('iterateCollapsed').fn(async t => {
     ['suite1:baz:wye:*'],
     [
       'suite1:foo:*', //
-      'suite1:bar/buzz:*',
+      'suite1:bar,buzz,buzz:*',
       'suite1:baz:wye:*',
-      'suite1:baz:zed:*',
+      'suite1:baz:zed,*',
     ]
   );
   await testIterateCollapsed(
@@ -296,8 +293,8 @@ g.test('iterateCollapsed').fn(async t => {
     ['suite1:baz:zed:*'],
     [
       'suite1:foo:*', //
-      'suite1:bar/buzz:*',
-      'suite1:baz:wye:*',
+      'suite1:bar,buzz,buzz:*',
+      'suite1:baz:wye,*',
       'suite1:baz:zed:*',
     ]
   );
@@ -309,7 +306,7 @@ g.test('iterateCollapsed').fn(async t => {
     ],
     [
       'suite1:foo:*', //
-      'suite1:bar/buzz:*',
+      'suite1:bar,buzz,buzz:*',
       'suite1:baz:wye:*',
       'suite1:baz:zed:*',
     ]
@@ -319,10 +316,10 @@ g.test('iterateCollapsed').fn(async t => {
     ['suite1:baz:wye:'],
     [
       'suite1:foo:*',
-      'suite1:bar/buzz:*',
+      'suite1:bar,buzz,buzz:*',
       'suite1:baz:wye:',
       'suite1:baz:wye:x=1',
-      'suite1:baz:zed:*',
+      'suite1:baz:zed,*',
     ]
   );
   await testIterateCollapsed(
@@ -330,7 +327,7 @@ g.test('iterateCollapsed').fn(async t => {
     ['suite1:baz:wye:x=1'],
     [
       'suite1:foo:*',
-      'suite1:bar/buzz:*',
+      'suite1:bar,buzz,buzz:*',
       'suite1:baz:wye:',
       'suite1:baz:wye:x=1',
       'suite1:baz:zed:*',
@@ -344,10 +341,18 @@ g.test('iterateCollapsed').fn(async t => {
     ],
     [
       'suite1:foo:*',
-      'suite1:bar/buzz:*',
+      'suite1:bar,buzz,buzz:*',
       'suite1:baz:wye:',
       'suite1:baz:wye:x=1',
       'suite1:baz:zed:*',
     ]
   );
+
+  t.shouldReject('Error', testIterateCollapsed(t, ['garbage'], []));
+  t.shouldReject('Error', testIterateCollapsed(t, ['garbage*'], []));
+  t.shouldReject('Error', testIterateCollapsed(t, ['garbage:*'], []));
+  t.shouldReject('Error', testIterateCollapsed(t, ['suite1:*'], []));
+  t.shouldReject('Error', testIterateCollapsed(t, ['suite1:foo*'], []));
+  t.shouldReject('Error', testIterateCollapsed(t, ['suite1:foo:ba*'], []));
+  t.shouldReject('Error', testIterateCollapsed(t, ['suite2:foo:*'], []));
 });
