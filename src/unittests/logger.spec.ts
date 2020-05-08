@@ -7,6 +7,7 @@ Also serves as a larger test of async test functions, and of the logging system.
 import { SkipTestCase } from '../common/framework/fixture.js';
 import { Logger } from '../common/framework/logging/logger.js';
 import { TestGroup } from '../common/framework/test_group.js';
+import { assert } from '../common/framework/util/util.js';
 
 import { UnitTest } from './unit_test.js';
 
@@ -74,7 +75,7 @@ g.test('warn').fn(t => {
   rec.skipped(new SkipTestCase());
   rec.finish();
 
-  t.expect(res.status === 'skip');
+  t.expect(res.status === 'warn');
   t.expect(res.timems >= 0);
 });
 
@@ -88,14 +89,14 @@ g.test('fail').fn(t => {
   rec.skipped(new SkipTestCase());
   rec.finish();
 
-  t.expect(res.status === 'skip');
+  t.expect(res.status === 'fail');
   t.expect(res.timems >= 0);
 });
 
 g.test('debug')
   .params([
-    { debug: true, _logsCount: 1 }, //
-    { debug: false, _logsCount: 0 },
+    { debug: true, _logsCount: 5 }, //
+    { debug: false, _logsCount: 3 },
   ])
   .fn(t => {
     const { debug, _logsCount } = t.params;
@@ -104,12 +105,15 @@ g.test('debug')
     const [rec, res] = mylog.record('one');
 
     rec.start();
+    rec.debug(new Error('hello'));
     rec.fail(new Error('bye'));
     rec.warn(new Error());
     rec.skipped(new SkipTestCase());
+    rec.debug(new Error('foo'));
     rec.finish();
 
-    t.expect(res.status === 'skip');
+    t.expect(res.status === 'fail');
     t.expect(res.timems >= 0);
-    t.expect(res.logs!.length === _logsCount);
+    assert(res.logs !== undefined);
+    t.expect(res.logs.length === _logsCount);
   });

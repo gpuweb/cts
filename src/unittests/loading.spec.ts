@@ -218,13 +218,13 @@ g.test('end2end').fn(async t => {
     0,
     { suite: 'suite2', group: ['foof'], test: ['blah'], params: {}, endsWithWildcard: false },
     'pass',
-    logs => objectEquals(logs, ['DEBUG: OK'])
+    logs => objectEquals(logs, ['"DEBUG: OK"'])
   );
   await exp(
     1,
     { suite: 'suite2', group: ['foof'], test: ['bleh'], params: { a: 1 }, endsWithWildcard: false },
     'pass',
-    logs => objectEquals(logs, ['DEBUG: OK', 'DEBUG: OK'])
+    logs => objectEquals(logs, ['"DEBUG: OK"', '"DEBUG: OK"'])
   );
   await exp(
     2,
