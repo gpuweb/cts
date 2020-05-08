@@ -67,7 +67,9 @@ if (filterArgs.length === 0) {
     for (const testcase of testcases) {
       const name = stringifyQuery(testcase.query);
       const [rec, res] = log.record(name);
+      rec.start(debug);
       await testcase.run(rec);
+      rec.finish();
 
       if (verbose) {
         printResults([[name, res]]);

@@ -9,12 +9,12 @@ export class LogMessageWithStack extends Error {
   }
 
   toJSON(): string {
-    let m = this.name;
-    if (this.message) {
-      m += ': ' + this.message;
-    }
+    let m = this.name + ': ';
     if (this.stack) {
-      m += '\n' + getStackTrace(this);
+      // this.message is already included in this.stack
+      m += getStackTrace(this);
+    } else {
+      m += this.message;
     }
     return m;
   }

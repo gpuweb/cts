@@ -44,7 +44,7 @@ export class TestLoader {
     this.fileLoader = fileLoader;
   }
 
-  loadTree(query: string, subqueriesToExpand: string[] = []): Promise<FilterResultTree> {
+  async loadTree(query: string, subqueriesToExpand: string[] = []): Promise<FilterResultTree> {
     return loadTreeForQuery(
       this.fileLoader,
       parseQuery(query),

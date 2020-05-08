@@ -22,7 +22,7 @@ export class TestCaseRecorder {
     this.result = result;
   }
 
-  start(debug: boolean = false): void {
+  start(debug: boolean): void {
     this.startTime = now();
     this.logs = [];
     this.state = PassState.pass;

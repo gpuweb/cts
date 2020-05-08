@@ -2,18 +2,24 @@ import { ParamSpec, ParamArgument, extractPublicParams } from '../params_utils.j
 
 import { TestQuery } from './query.js';
 
-export enum Ordering {
+export const enum Ordering {
   Unordered,
   Superset,
   Equal,
   Subset,
 }
 
-export enum IsSubset {
+export const enum IsSubset {
   No = 0,
   YesEqual,
   YesStrict,
 }
+
+//
+//
+// XXX  suite1:baz:wye:  and  suite1:baz:wye:*  compare as equal but are not
+//
+//
 
 export function querySubsetOfQuery(sub: TestQuery, sup: TestQuery): IsSubset {
   if (sub.suite !== sup.suite) {
@@ -58,7 +64,10 @@ export function querySubsetOfQuery(sub: TestQuery, sup: TestQuery): IsSubset {
   if (paramsOrdering === Ordering.Unordered || paramsOrdering === Ordering.Superset) {
     return IsSubset.No;
   } else if (paramsOrdering === Ordering.Equal) {
-    return IsSubset.YesEqual;
+    if (sup.endsWithWildcard === sub.endsWithWildcard) {
+      return IsSubset.YesEqual;
+    }
+    return sup.endsWithWildcard ? IsSubset.YesStrict : IsSubset.No;
   } else {
     return IsSubset.YesStrict;
   }

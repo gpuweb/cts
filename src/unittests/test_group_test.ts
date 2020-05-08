@@ -14,7 +14,9 @@ export class TestGroupTest extends UnitTest {
       const [rec] = logger.record(
         stringifyQuery({ suite: 'xx', group: ['yy'], ...rc.id, endsWithWildcard: false })
       );
+      rec.start(true);
       await rc.run(rec);
+      rec.finish();
     }
     return logger.results;
   }

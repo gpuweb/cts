@@ -43,28 +43,26 @@ export class FilterResultTree {
   }
 
   // For debugging
-  print(): void {
-    FilterResultTree.printHelper('(root)', this.root);
+  toString(): string {
+    return FilterResultTree.printHelper('(root)', this.root);
   }
 
-  static printHelper(name: string, tree: FilterResultTreeNode, indent: string = ''): void {
+  static printHelper(name: string, tree: FilterResultTreeNode, indent: string = ''): string {
     const collapsible = 'run' in tree ? '>' : tree.collapsible ? '+' : '-';
-    // eslint-disable-next-line no-console
-    console.log(
+    let s =
       indent +
-        `${collapsible} ${JSON.stringify(name)} => ` +
-        `${stringifyQuery(tree.query)}        ${JSON.stringify(tree.query)}`
-    );
+      `${collapsible} ${JSON.stringify(name)} => ` +
+      `${stringifyQuery(tree.query)}        ${JSON.stringify(tree.query)}`;
     if ('children' in tree) {
       if (tree.description !== undefined) {
-        // eslint-disable-next-line no-console
-        console.log(indent + '    | ' + JSON.stringify(tree.description));
+        s += indent + `\n    | ${JSON.stringify(tree.description)}`;
       }
 
       for (const [name, child] of tree.children) {
-        FilterResultTree.printHelper(name, child, indent + '  ');
+        s += '\n' + FilterResultTree.printHelper(name, child, indent + '  ');
       }
     }
+    return s;
   }
 }
 
@@ -97,13 +95,30 @@ export async function loadTreeForQuery(
   const suite = query.suite;
   const specs = await loader.listing(suite);
 
+  const subqueriesToExpandEntries = Array.from(subqueriesToExpand.entries());
+  const seenSubqueriesToExpand: boolean[] = new Array(subqueriesToExpand.length);
+  seenSubqueriesToExpand.fill(false);
+
+  const checkCollapsible = (subquery: TestQuery) =>
+    subqueriesToExpandEntries.every(([i, toExpand]) => {
+      const isSubset = querySubsetOfQuery(toExpand, subquery);
+
+      // If toExpand == subquery, no expansion is needed (but it's still "seen").
+      if (isSubset === IsSubset.YesEqual) seenSubqueriesToExpand[i] = true;
+      return isSubset !== IsSubset.YesStrict;
+    });
+
   let foundCase = false;
   // L0 = suite, L1 = group, L2 = test, L3 = case
   // subtreeL0   is suite1:*
   // subtreeL1   is suite1:foo:*
   // subtreeL2   is suite1:foo:hello:*
+  // subtreeL3   is suite1:foo:hello:
   const subtreeL0 = makeTreeForSuite(suite);
+  checkCollapsible(subtreeL0.query); // mark seenSubqueriesToExpand
   for (const entry of specs) {
+    // XXX: use compareQueries instead of comparePaths
+
     const orderingL1 = comparePaths(entry.path, query.group);
     if (orderingL1 === Ordering.Unordered) {
       // Group path is not matched by this filter.
@@ -128,18 +143,17 @@ export async function loadTreeForQuery(
 
     // No spec file's group path should be a superset of the query's group path.
     assert(orderingL1 !== Ordering.Superset, 'Query does not match any tests');
+    if (orderingL1 === Ordering.Subset) {
+      // suite1:bar,* is not a subset of suite1:bar:*
+      assert(!('test' in query), 'Query does not match any tests');
+    }
 
     const spec = await loader.importSpecFile(query.suite, entry.path);
     // Here, we know subtreeL1 will have only one child.
     // Modify subtreeL1 so it's now suite1:foo:* instead of suite1:foo,*
     subtreeL1.query = { ...subtreeL1.query, test: [] };
     subtreeL1.description = spec.description.trim();
-    const collapsible = (sq: TestQuery) =>
-      subqueriesToExpand.every(s => {
-        console.log(stringifyQuery(s), stringifyQuery(sq), querySubsetOfQuery(s, sq));
-        return querySubsetOfQuery(s, sq) !== IsSubset.YesStrict;
-      });
-    subtreeL1.collapsible = collapsible(subtreeL1.query);
+    subtreeL1.collapsible = checkCollapsible(subtreeL1.query);
 
     // TODO: this is taking a tree, flattening it, and then unflattening it. Possibly redundant?
     for (const t of spec.g.iterate()) {
@@ -152,11 +166,16 @@ export async function loadTreeForQuery(
       }
 
       // subtreeL2a is suite1:foo:hello,*
-      const subtreeL2a = subtreeForTestPath(subtreeL1, t.id.test, collapsible);
+      const subtreeL2a = subtreeForTestPath(subtreeL1, t.id.test, checkCollapsible);
 
       const subqueryL2b = { ...cloneQuery(subtreeL2a.query), params: {} as ParamSpec };
       // subtreeL2b is suite1:foo:hello:*
-      const subtreeL2b = getOrInsertSubtree('', subtreeL2a, subqueryL2b, collapsible(subqueryL2b));
+      const subtreeL2b = getOrInsertSubtree(
+        '',
+        subtreeL2a,
+        subqueryL2b,
+        checkCollapsible(subqueryL2b)
+      );
 
       if ('params' in query) {
         const orderingL3 = compareParamsPaths(t.id.params, query.params);
@@ -171,13 +190,17 @@ export async function loadTreeForQuery(
       }
 
       // Subtree for case
-      subtreeForCaseExceptLeaf(subtreeL2b, t, subqueriesToExpand);
+      subtreeForCaseExceptLeaf(subtreeL2b, t, checkCollapsible);
 
       foundCase = true;
     }
   }
   const tree = new FilterResultTree(subtreeL0);
 
+  for (const [i, sq] of subqueriesToExpandEntries) {
+    const seen = seenSubqueriesToExpand[i];
+    assert(seen, 'subqueriesToExpand entry did not match anything: ' + stringifyQuery(sq));
+  }
   assert(foundCase, 'Query does not match any cases');
   return tree;
 }
@@ -203,12 +226,12 @@ function subtreeForGroupPath(tree: FilterResultSubtree, group: string[]): Filter
 function subtreeForTestPath(
   tree: FilterResultSubtree,
   test: readonly string[],
-  collapsible: (sq: TestQuery) => boolean
+  checkCollapsible: (sq: TestQuery) => boolean
 ): FilterResultSubtree {
   const subquery = { ...cloneQuery(tree.query), test: [] as string[] };
   for (const part of test) {
     subquery.test.push(part);
-    tree = getOrInsertSubtree(part, tree, subquery, collapsible(subquery));
+    tree = getOrInsertSubtree(part, tree, subquery, checkCollapsible(subquery));
   }
   return tree;
 }
@@ -216,7 +239,7 @@ function subtreeForTestPath(
 function subtreeForCaseExceptLeaf(
   tree: FilterResultSubtree,
   t: RunCase,
-  subqueriesToExpand: TestQuery[]
+  checkCollapsible: (sq: TestQuery) => boolean
 ): FilterResultTreeLeaf {
   assert('test' in tree.query);
   const subquery = { ...cloneQuery(tree.query), params: {} as ParamSpec };
@@ -229,17 +252,19 @@ function subtreeForCaseExceptLeaf(
     name = stringifySingleParam(k, v);
 
     if (i < entries.length - 1) {
-      const collapsible = subqueriesToExpand.every(
-        s => querySubsetOfQuery(s, subquery) !== IsSubset.YesStrict
-      );
-      tree = getOrInsertSubtree(name, tree, subquery, collapsible);
+      tree = getOrInsertSubtree(name, tree, subquery, checkCollapsible(subquery));
     }
   }
 
   subquery.endsWithWildcard = false;
+  checkCollapsible(subquery); // mark seenSubqueriesToExpand
   const leaf = {
     query: subquery,
-    run: (rec: TestCaseRecorder) => t.run(rec),
+    run: (rec: TestCaseRecorder) => {
+      rec.start(false);
+      t.run(rec);
+      rec.finish();
+    },
   };
   tree.children.set(name, leaf);
   return leaf;
