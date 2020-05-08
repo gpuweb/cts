@@ -54,6 +54,7 @@ export class TestLoader {
 
   // TODO: Test this
   async loadTests(query: string): Promise<IterableIterator<FilterResultTreeLeaf>> {
-    return (await this.loadTree(query)).iterate();
+    const tree = await this.loadTree(query);
+    return tree.iterate();
   }
 }
