@@ -145,7 +145,6 @@ g.test('test').fn(async t => {
   t.expect((await t.load('suite1:foo:*')).length === 3);
   t.expect((await t.load('suite1:bar,buzz,buzz:*')).length === 1);
   t.expect((await t.load('suite1:baz:*')).length === 4);
-  t.expect((await t.load('suite1:foo:*')).length === 3);
 
   t.expect((await t.load('suite2:foof:bluh,*')).length === 1);
   t.expect((await t.load('suite2:foof:bluh,a,*')).length === 1);

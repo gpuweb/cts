@@ -1,13 +1,7 @@
 import { TestFileLoader } from './loader.js';
 import { TestCaseRecorder } from './logging/test_case_recorder.js';
 import { ParamSpec, stringifySingleParam } from './params_utils.js';
-import {
-  comparePaths,
-  Ordering,
-  compareParamsPaths,
-  querySubsetOfQuery,
-  IsSubset,
-} from './query/compare.js';
+import { querySubsetOfQuery, IsSubset, compareQueries, Ordering } from './query/compare.js';
 import { TestQuery } from './query/query.js';
 import { stringifyQuery } from './query/stringifyQuery.js';
 import { RunCase, RunFn } from './test_group.js';
@@ -86,7 +80,7 @@ function* iterateCollapsedSubtree(subtree: FilterResultSubtree): IterableIterato
   }
 }
 
-// TODO: Consider having subqueriesToExpand actually impact the order of params in the tree.
+// TODO: Consider having subqueriesToExpand actually impact the depth-order of params in the tree.
 export async function loadTreeForQuery(
   loader: TestFileLoader,
   query: TestQuery,
@@ -116,18 +110,26 @@ export async function loadTreeForQuery(
   // subtreeL3   is suite1:foo:hello:
   const subtreeL0 = makeTreeForSuite(suite);
   checkCollapsible(subtreeL0.query); // mark seenSubqueriesToExpand
+  console.log(suite, stringifyQuery(query));
   for (const entry of specs) {
-    // XXX: use compareQueries instead of comparePaths
-
-    const orderingL1 = comparePaths(entry.path, query.group);
-    if (orderingL1 === Ordering.Unordered) {
-      // Group path is not matched by this filter.
-      continue;
-    }
-
     if (entry.path.length === 0 && 'readme' in entry) {
       // Suite-level readme.
       subtreeL0.description = entry.readme.trim();
+      continue;
+    }
+
+    const orderingL1 = compareQueries(
+      { suite, group: entry.path, test: [], endsWithWildcard: true },
+      query
+    );
+    console.log(
+      'orderingL1',
+      orderingL1,
+      stringifyQuery({ suite, group: entry.path, test: [], endsWithWildcard: true }),
+      stringifyQuery(query)
+    );
+    if (orderingL1 === Ordering.Unordered) {
+      // Group path is not matched by this filter.
       continue;
     }
 
@@ -141,8 +143,6 @@ export async function loadTreeForQuery(
     }
     // Entry is a spec file.
 
-    // No spec file's group path should be a superset of the query's group path.
-    assert(orderingL1 !== Ordering.Superset, 'Query does not match any tests');
     if (orderingL1 === Ordering.Subset) {
       // suite1:bar,* is not a subset of suite1:bar:*
       assert(!('test' in query), 'Query does not match any tests');
@@ -157,12 +157,25 @@ export async function loadTreeForQuery(
 
     // TODO: this is taking a tree, flattening it, and then unflattening it. Possibly redundant?
     for (const t of spec.g.iterate()) {
-      if ('test' in query) {
-        const orderingL2 = comparePaths(t.id.test, query.test);
-        if (orderingL2 === Ordering.Unordered || orderingL2 === Ordering.Superset) {
-          // Test path is not matched by this filter.
-          continue;
-        }
+      const orderingL2 = compareQueries(
+        { suite, group: entry.path, test: t.id.test, params: {}, endsWithWildcard: true },
+        query
+      );
+      console.log(
+        'orderingL2',
+        orderingL2,
+        stringifyQuery({
+          suite,
+          group: entry.path,
+          test: t.id.test,
+          params: {},
+          endsWithWildcard: true,
+        }),
+        stringifyQuery(query)
+      );
+      if (orderingL2 === Ordering.Unordered || orderingL2 === Ordering.Superset) {
+        // Test path is not matched by this filter.
+        continue;
       }
 
       // subtreeL2a is suite1:foo:hello,*
@@ -177,16 +190,31 @@ export async function loadTreeForQuery(
         checkCollapsible(subqueryL2b)
       );
 
-      if ('params' in query) {
-        const orderingL3 = compareParamsPaths(t.id.params, query.params);
-        if (orderingL3 === Ordering.Unordered || orderingL3 === Ordering.Superset) {
-          // Case is not matched by this filter.
-          continue;
-        }
-        if (orderingL3 !== Ordering.Equal && !query.endsWithWildcard) {
-          // Query is exact, but params is not equal.
-          continue;
-        }
+      const orderingL3 = compareQueries(
+        {
+          suite,
+          group: entry.path,
+          test: t.id.test,
+          params: t.id.params,
+          endsWithWildcard: false,
+        },
+        query
+      );
+      console.log(
+        'orderingL3',
+        orderingL3,
+        stringifyQuery({
+          suite,
+          group: entry.path,
+          test: t.id.test,
+          params: t.id.params,
+          endsWithWildcard: false,
+        }),
+        stringifyQuery(query)
+      );
+      if (orderingL3 === Ordering.Unordered || orderingL3 === Ordering.Superset) {
+        // Case is not matched by this filter.
+        continue;
       }
 
       // Subtree for case

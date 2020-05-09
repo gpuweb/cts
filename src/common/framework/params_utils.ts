@@ -4,6 +4,7 @@ import { objectEquals, assert } from './util/util.js';
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 export type ParamArgument = any;
 export interface ParamSpec {
+  // TODO: make readonly
   [k: string]: ParamArgument;
 }
 export type ParamSpecIterable = Iterable<ParamSpec>;

@@ -80,7 +80,7 @@ export class Fixture {
       const m = msg ? ': ' + msg : '';
       try {
         await p;
-        niceStack.message = 'DID NOT THROW' + m;
+        niceStack.message = 'DID NOT REJECT' + m;
         this.rec.fail(niceStack);
       } catch (ex) {
         niceStack.message = m;
