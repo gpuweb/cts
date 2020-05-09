@@ -246,6 +246,7 @@ function subtreeForCaseExceptLeaf(
     query: subquery,
     run: (rec: TestCaseRecorder) => t.run(rec),
   };
+  assert('children' in tree);
   tree.children.set(name, leaf);
   return leaf;
 }

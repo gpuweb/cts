@@ -5,7 +5,10 @@
       "type": "grunt",
       "task": "test",
       "problemMatcher": [],
-      "group": "build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
       "label": "grunt: test"
     },
     {
@@ -20,10 +23,7 @@
         "$tsc"
       ],
       "label": "grunt: check",
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      }
+      "group": "build"
     }
   ]
 }

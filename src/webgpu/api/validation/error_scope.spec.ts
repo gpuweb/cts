@@ -113,7 +113,7 @@ g.test('if no error scope handles an error it fires an uncapturederror event').f
   t.expect(error === null);
 });
 
-g.test('push/popping sibling error scopes must be balanced').fn(async t => {
+g.test('push', 'popping sibling error scopes must be balanced').fn(async t => {
   {
     const promise = t.device.popErrorScope();
     t.shouldReject('OperationError', promise);
@@ -133,7 +133,7 @@ g.test('push/popping sibling error scopes must be balanced').fn(async t => {
   }
 });
 
-g.test('push/popping nested error scopes must be balanced').fn(async t => {
+g.test('push', 'popping nested error scopes must be balanced').fn(async t => {
   {
     const promise = t.device.popErrorScope();
     t.shouldReject('OperationError', promise);
