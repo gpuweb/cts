@@ -2,7 +2,6 @@ import { ParamSpec, ParamArgument, extractPublicParams } from '../params_utils.j
 import { assert } from '../util/util.js';
 
 import { TestQuery } from './query.js';
-import { stringifyQuery } from './stringifyQuery.js';
 
 export const enum Ordering {
   Unordered,
@@ -30,35 +29,17 @@ export function querySubsetOfQuery(sub: TestQuery, sup: TestQuery): IsSubset {
 }
 
 export function compareQueries(a: TestQuery, b: TestQuery): Ordering {
-  //console.log('');
-  //console.log(stringifyQuery(a), stringifyQuery(b));
   if (a.suite !== b.suite) {
     return Ordering.Unordered;
   }
 
   const groupOrdering = cmpLevel(comparePaths(a.group, b.group), !('test' in a), !('test' in b));
-  //console.log(
-  //  'groupOrdering:',
-  //  comparePaths(a.group, b.group),
-  //  !('test' in a),
-  //  !('test' in b),
-  //  '->',
-  //  groupOrdering
-  //);
   if (groupOrdering !== undefined) {
     return groupOrdering;
   }
   assert('test' in a && 'test' in b);
 
   const testOrdering = cmpLevel(comparePaths(a.test, b.test), !('params' in a), !('params' in b));
-  //console.log(
-  //  'testOrdering:',
-  //  comparePaths(a.test, b.test),
-  //  !('params' in a),
-  //  !('params' in b),
-  //  '->',
-  //  testOrdering
-  //);
   if (testOrdering !== undefined) {
     return testOrdering;
   }

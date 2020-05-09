@@ -110,7 +110,6 @@ export async function loadTreeForQuery(
   // subtreeL3   is suite1:foo:hello:
   const subtreeL0 = makeTreeForSuite(suite);
   checkCollapsible(subtreeL0.query); // mark seenSubqueriesToExpand
-  console.log(suite, stringifyQuery(query));
   for (const entry of specs) {
     if (entry.path.length === 0 && 'readme' in entry) {
       // Suite-level readme.
@@ -122,74 +121,31 @@ export async function loadTreeForQuery(
       { suite, group: entry.path, test: [], endsWithWildcard: true },
       query
     );
-    console.log(
-      'orderingL1',
-      orderingL1,
-      stringifyQuery({ suite, group: entry.path, test: [], endsWithWildcard: true }),
-      stringifyQuery(query)
-    );
     if (orderingL1 === Ordering.Unordered) {
       // Group path is not matched by this filter.
       continue;
     }
 
-    // subtreeL1 is suite1:foo,* (for now)
-    const subtreeL1 = subtreeForGroupPath(subtreeL0, entry.path);
-
     if ('readme' in entry) {
       // Entry is a readme that is an ancestor or descendant of the query.
+
+      // subtreeL1 is suite1:foo,*
+      const subtreeL1 = subtreeForGroupPath(subtreeL0, entry.path);
       subtreeL1.description = entry.readme.trim();
       continue;
     }
     // Entry is a spec file.
 
-    if (orderingL1 === Ordering.Subset) {
-      // suite1:bar,* is not a subset of suite1:bar:*
-      assert(!('test' in query), 'Query does not match any tests');
-    }
-
     const spec = await loader.importSpecFile(query.suite, entry.path);
     // Here, we know subtreeL1 will have only one child.
-    // Modify subtreeL1 so it's now suite1:foo:* instead of suite1:foo,*
+    // Set subtreeL1 to suite1:foo:* (instead of suite1:foo,*)
+    const subtreeL1 = subtreeForGroupPath(subtreeL0, entry.path);
     subtreeL1.query = { ...subtreeL1.query, test: [] };
     subtreeL1.description = spec.description.trim();
     subtreeL1.collapsible = checkCollapsible(subtreeL1.query);
 
     // TODO: this is taking a tree, flattening it, and then unflattening it. Possibly redundant?
     for (const t of spec.g.iterate()) {
-      const orderingL2 = compareQueries(
-        { suite, group: entry.path, test: t.id.test, params: {}, endsWithWildcard: true },
-        query
-      );
-      console.log(
-        'orderingL2',
-        orderingL2,
-        stringifyQuery({
-          suite,
-          group: entry.path,
-          test: t.id.test,
-          params: {},
-          endsWithWildcard: true,
-        }),
-        stringifyQuery(query)
-      );
-      if (orderingL2 === Ordering.Unordered || orderingL2 === Ordering.Superset) {
-        // Test path is not matched by this filter.
-        continue;
-      }
-
-      // subtreeL2a is suite1:foo:hello,*
-      const subtreeL2a = subtreeForTestPath(subtreeL1, t.id.test, checkCollapsible);
-
-      const subqueryL2b = { ...cloneQuery(subtreeL2a.query), params: {} as ParamSpec };
-      // subtreeL2b is suite1:foo:hello:*
-      const subtreeL2b = getOrInsertSubtree(
-        '',
-        subtreeL2a,
-        subqueryL2b,
-        checkCollapsible(subqueryL2b)
-      );
-
       const orderingL3 = compareQueries(
         {
           suite,
@@ -200,22 +156,22 @@ export async function loadTreeForQuery(
         },
         query
       );
-      console.log(
-        'orderingL3',
-        orderingL3,
-        stringifyQuery({
-          suite,
-          group: entry.path,
-          test: t.id.test,
-          params: t.id.params,
-          endsWithWildcard: false,
-        }),
-        stringifyQuery(query)
-      );
       if (orderingL3 === Ordering.Unordered || orderingL3 === Ordering.Superset) {
         // Case is not matched by this filter.
         continue;
       }
+
+      // subtreeL2a is suite1:foo:hello,*
+      const subtreeL2a = subtreeForTestPath(subtreeL1, t.id.test, checkCollapsible);
+
+      // subtreeL2b is suite1:foo:hello:*
+      const subqueryL2b = { ...cloneQuery(subtreeL2a.query), params: {} as ParamSpec };
+      const subtreeL2b = getOrInsertSubtree(
+        '',
+        subtreeL2a,
+        subqueryL2b,
+        checkCollapsible(subqueryL2b)
+      );
 
       // Subtree for case
       subtreeForCaseExceptLeaf(subtreeL2b, t, checkCollapsible);

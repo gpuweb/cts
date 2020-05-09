@@ -14,6 +14,5 @@ g.test('one').fn(t => {
   const q1 = parseQuery('suite1:bar,buzz,buzz:zap:');
   const q2 = parseQuery('suite1:bar:*');
 
-  console.log('one:', compareQueries(q1, q2), Ordering.Unordered);
   t.expect(compareQueries(q1, q2) === Ordering.Unordered);
 });
