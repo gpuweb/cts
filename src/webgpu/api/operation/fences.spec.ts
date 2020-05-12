@@ -7,23 +7,23 @@ import { GPUTest } from '../../gpu_test.js';
 
 export const g = new TestGroup(GPUTest);
 
-g.test('initial,no descriptor').fn(t => {
+g.test('initial,no_descriptor').fn(t => {
   const fence = t.queue.createFence();
   t.expect(fence.getCompletedValue() === 0);
 });
 
-g.test('initial,empty descriptor').fn(t => {
+g.test('initial,empty_descriptor').fn(t => {
   const fence = t.queue.createFence({});
   t.expect(fence.getCompletedValue() === 0);
 });
 
-g.test('initial,descriptor with initialValue').fn(t => {
+g.test('initial,descriptor_with_initialValue').fn(t => {
   const fence = t.queue.createFence({ initialValue: 2 });
   t.expect(fence.getCompletedValue() === 2);
 });
 
 // Promise resolves when onCompletion value is less than signal value.
-g.test('wait,less than signaled').fn(async t => {
+g.test('wait,less_than_signaled').fn(async t => {
   const fence = t.queue.createFence();
   t.queue.signal(fence, 2);
   await fence.onCompletion(1);
@@ -31,7 +31,7 @@ g.test('wait,less than signaled').fn(async t => {
 });
 
 // Promise resolves when onCompletion value is equal to signal value.
-g.test('wait,equal to signaled').fn(async t => {
+g.test('wait,equal_to_signaled').fn(async t => {
   const fence = t.queue.createFence();
   t.queue.signal(fence, 2);
   await fence.onCompletion(2);
@@ -39,7 +39,7 @@ g.test('wait,equal to signaled').fn(async t => {
 });
 
 // All promises resolve when signal is called once.
-g.test('wait,signaled once').fn(async t => {
+g.test('wait,signaled_once').fn(async t => {
   const fence = t.queue.createFence();
   t.queue.signal(fence, 20);
   const promises = [];
@@ -54,7 +54,7 @@ g.test('wait,signaled once').fn(async t => {
 });
 
 // Promise resolves when signal is called multiple times.
-g.test('wait,signaled multiple times').fn(async t => {
+g.test('wait,signaled_multiple_times').fn(async t => {
   const fence = t.queue.createFence();
   t.queue.signal(fence, 1);
   t.queue.signal(fence, 2);
@@ -63,7 +63,7 @@ g.test('wait,signaled multiple times').fn(async t => {
 });
 
 // Promise resolves if fence has already completed.
-g.test('wait,already completed').fn(async t => {
+g.test('wait,already_completed').fn(async t => {
   const fence = t.queue.createFence();
   t.queue.signal(fence, 2);
 
@@ -107,7 +107,7 @@ g.test('wait,many,parallel').fn(async t => {
 });
 
 // Test onCompletion promise resolves within a time limit.
-g.test('wait,resolves within timeout').fn(t => {
+g.test('wait,resolves_within_timeout').fn(t => {
   const fence = t.queue.createFence();
   t.queue.signal(fence, 2);
 
@@ -122,7 +122,7 @@ g.test('wait,resolves within timeout').fn(t => {
 });
 
 // Test dropping references to the fence and onCompletion promise does not crash.
-g.test('drop,fence and promise').fn(t => {
+g.test('drop,fence_and_promise').fn(t => {
   {
     const fence = t.queue.createFence();
     t.queue.signal(fence, 2);

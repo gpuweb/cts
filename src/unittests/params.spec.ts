@@ -17,7 +17,7 @@ g.test('none')
     t.fail("this test shouldn't run");
   });
 
-g.test('combine none')
+g.test('combine_none')
   .params(params().combine([]))
   .fn(t => {
     t.fail("this test shouldn't run");

@@ -22,7 +22,7 @@ export const g = new TestGroup(GPUTest);
 
 // Note: spaces in test names are replaced with underscores: webgpu:examples:test_name=
 /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
-g.test('test name').fn(t => {});
+g.test('test_name').fn(t => {});
 
 g.test('basic').fn(t => {
   t.expect(true);

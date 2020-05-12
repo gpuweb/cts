@@ -43,7 +43,7 @@ g.test('mapReadAsync')
     t.checkDetach(buffer, arrayBuffer, t.params.unmap, t.params.destroy);
   });
 
-g.test('create mapped')
+g.test('create_mapped')
   .params([
     { unmap: true, destroy: false },
     { unmap: false, destroy: true },

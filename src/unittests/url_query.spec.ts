@@ -17,7 +17,7 @@ class T extends UnitTest {
 
 export const g = new TestGroup(T);
 
-g.test('stringifyQuery,single case').fn(t => {
+g.test('stringifyQuery,single_case').fn(t => {
   t.expectQueryString(
     {
       suite: 'a',
@@ -30,7 +30,7 @@ g.test('stringifyQuery,single case').fn(t => {
   );
 });
 
-g.test('stringifyQuery,multi case').fn(t => {
+g.test('stringifyQuery,multi_case').fn(t => {
   t.expectQueryString(
     {
       suite: 'a',
@@ -54,7 +54,7 @@ g.test('stringifyQuery,multi case').fn(t => {
   );
 });
 
-g.test('stringifyQuery,multi test').fn(t => {
+g.test('stringifyQuery,multi_test').fn(t => {
   t.expectQueryString(
     {
       suite: 'a',
@@ -76,7 +76,7 @@ g.test('stringifyQuery,multi test').fn(t => {
   );
 });
 
-g.test('stringifyQuery,multi group').fn(t => {
+g.test('stringifyQuery,multi_group').fn(t => {
   t.expectQueryString(
     {
       suite: 'a',

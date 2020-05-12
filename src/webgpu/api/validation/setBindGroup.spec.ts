@@ -50,7 +50,7 @@ class F extends ValidationTest {
 
 export const g = new TestGroup(F);
 
-g.test('dynamic offsets passed but not expected,compute pass')
+g.test('dynamic_offsets_passed_but_not_expected,compute_pass')
   .params(poptions('type', ['compute', 'renderpass', 'renderbundle']))
   .fn(async t => {
     const bindGroupLayout = t.device.createBindGroupLayout({ entries: [] });
@@ -91,7 +91,7 @@ g.test('dynamic offsets passed but not expected,compute pass')
     });
   });
 
-g.test('dynamic offsets match expectations in pass encoder')
+g.test('dynamic_offsets_match_expectations_in_pass_encoder')
   .params(
     params()
       .combine(poptions('type', ['compute', 'renderpass', 'renderbundle']))

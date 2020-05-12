@@ -11,7 +11,7 @@ import { UnitTest } from './unit_test.js';
 
 export const g = new TestGroup(TestGroupTest);
 
-g.test('UnitTest fixture').fn(async t0 => {
+g.test('UnitTest_fixture').fn(async t0 => {
   let seen = 0;
   /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
   function count(t: Fixture): void {
@@ -29,7 +29,7 @@ g.test('UnitTest fixture').fn(async t0 => {
   t0.expect(seen === 2);
 });
 
-g.test('custom fixture').fn(async t0 => {
+g.test('custom_fixture').fn(async t0 => {
   let seen = 0;
   class Counter extends UnitTest {
     count(): void {
@@ -69,7 +69,7 @@ g.test('stack').fn(async t0 => {
     throw new Error('hello');
   });
   /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
-  g.test('throw nested').fn(t => {
+  g.test('throw_nested').fn(t => {
     doNestedThrow2();
   });
 
@@ -84,7 +84,7 @@ g.test('stack').fn(async t0 => {
   }
 });
 
-g.test('duplicate test name').fn(t => {
+g.test('duplicate_test_name').fn(t => {
   const g = new TestGroup(UnitTest);
   g.test('abc').fn(() => {});
 
@@ -93,7 +93,7 @@ g.test('duplicate test name').fn(t => {
   });
 });
 
-g.test('duplicate test params').fn(t => {
+g.test('duplicate_test_params').fn(t => {
   const g = new TestGroup(UnitTest);
 
   t.shouldThrow('Error', () => {
@@ -108,7 +108,7 @@ g.test('duplicate test params').fn(t => {
   });
 });
 
-g.test('duplicate test params,with different private params').fn(t => {
+g.test('duplicate_test_params,with_different_private_params').fn(t => {
   const g = new TestGroup(UnitTest);
 
   t.shouldThrow('Error', () => {
@@ -123,7 +123,7 @@ g.test('duplicate test params,with different private params').fn(t => {
   });
 });
 
-g.test('invalid test name').fn(t => {
+g.test('invalid_test_name').fn(t => {
   const g = new TestGroup(UnitTest);
 
   const badChars = Array.from('"`~@#$+=\\|!^&*[]<>{}-\'. ');

@@ -116,7 +116,7 @@ class F extends GPUTest {
 
 export const g = new TestGroup(F);
 
-g.test('from ImageData')
+g.test('from_ImageData')
   .params(
     params()
       .combine(poptions('width', [1, 2, 4, 15, 255, 256]))
@@ -155,7 +155,7 @@ g.test('from ImageData')
     );
   });
 
-g.test('from canvas')
+g.test('from_canvas')
   .params(
     params()
       .combine(poptions('width', [1, 2, 4, 15, 255, 256]))

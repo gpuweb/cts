@@ -25,7 +25,7 @@ g.test('params').fn(t => {
   t.expectSpecEqual(params(), [{}]);
 });
 
-g.test('combine,zeroes and ones').fn(t => {
+g.test('combine,zeroes_and_ones').fn(t => {
   t.expectSpecEqual(params().combine([]).combine([]), []);
   t.expectSpecEqual(params().combine([]).combine([{}]), []);
   t.expectSpecEqual(params().combine([{}]).combine([]), []);

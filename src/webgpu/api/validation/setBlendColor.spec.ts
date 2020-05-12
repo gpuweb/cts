@@ -28,7 +28,7 @@ class F extends ValidationTest {
 
 export const g = new TestGroup(F);
 
-g.test('basic use of setBlendColor').fn(t => {
+g.test('basic_use_of_setBlendColor').fn(t => {
   const commandEncoder = t.device.createCommandEncoder();
   const renderPass = t.beginRenderPass(commandEncoder);
   renderPass.setBlendColor({ r: 0, g: 0, b: 0, a: 0 });
@@ -36,7 +36,7 @@ g.test('basic use of setBlendColor').fn(t => {
   commandEncoder.finish();
 });
 
-g.test('setBlendColor allows any number value').fn(t => {
+g.test('setBlendColor_allows_any_number_value').fn(t => {
   const values = [Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER];
   for (const value of values) {
     const commandEncoder = t.device.createCommandEncoder();

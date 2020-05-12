@@ -19,7 +19,7 @@ function clone<T extends GPUBindGroupLayoutDescriptor>(descriptor: T): T {
 
 export const g = new TestGroup(ValidationTest);
 
-g.test('number of dynamic buffers exceeds the maximum value')
+g.test('number_of_dynamic_buffers_exceeds_the_maximum_value')
   .params(
     params()
       .combine(poptions('visibility', [0, 2, 4, 6]))
@@ -74,7 +74,7 @@ g.test('number of dynamic buffers exceeds the maximum value')
     });
   });
 
-g.test('visibility and dynamic offsets')
+g.test('visibility_and_dynamic_offsets')
   .params(
     params()
       .combine(poptions('type', kBindingTypes))
@@ -101,7 +101,7 @@ g.test('visibility and dynamic offsets')
     }, !success);
   });
 
-g.test('number of bind group layouts exceeds the maximum value').fn(async t => {
+g.test('number_of_bind_group_layouts_exceeds_the_maximum_value').fn(async t => {
   const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
     entries: [],
   };

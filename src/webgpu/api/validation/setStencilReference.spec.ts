@@ -29,7 +29,7 @@ class F extends ValidationTest {
 
 export const g = new TestGroup(F);
 
-g.test('use of setStencilReference')
+g.test('use_of_setStencilReference')
   .params(poptions('reference', [0, 0xffffffff]))
   .fn(t => {
     const { reference } = t.params;

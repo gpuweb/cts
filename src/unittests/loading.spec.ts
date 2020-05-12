@@ -176,7 +176,7 @@ g.test('case').fn(async t => {
   t.expect((await t.load('suite1:foo:hello:')).length === 1);
 });
 
-g.test('partial test,makeQueryString').fn(async t => {
+g.test('partial_test,makeQueryString').fn(async t => {
   const s = stringifyQuery({
     suite: 'suite1',
     group: ['baz'],
@@ -187,7 +187,7 @@ g.test('partial test,makeQueryString').fn(async t => {
   t.expect((await t.load(s)).length === 1);
 });
 
-g.test('partial test,match').fn(async () => {});
+g.test('partial_test,match').fn(async () => {});
 
 g.test('end2end').fn(async t => {
   const l = await t.load('suite2:foof:*');

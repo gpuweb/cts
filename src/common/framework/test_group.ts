@@ -49,14 +49,12 @@ export class TestGroup<F extends Fixture> implements RunCaseIterable {
 
   // TODO: This could take a fixture, too, to override the one for the group.
   test(name: string): TestBuilderWithName<F, never> {
-    // TODO: hard-apply these replacements to all tests
-    name = name.replace(/ /g, '_');
+    this.checkName(name);
 
     const parts = name.split(',');
     for (const p of parts) {
       assert(validQueryPart.test(p), `Invalid test name part ${p}; must match ${validQueryPart}`);
     }
-    this.checkName(name);
 
     const test = new TestBuilder<F, never>(parts, this.fixture);
     this.tests.push(test);
