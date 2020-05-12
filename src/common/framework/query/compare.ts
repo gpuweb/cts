@@ -33,7 +33,7 @@ export function compareQueries(a: TestQuery, b: TestQuery): Ordering {
     return Ordering.Unordered;
   }
 
-  const groupOrdering = cmpLevel(comparePaths(a.group, b.group), !('test' in a), !('test' in b));
+  const groupOrdering = cmpLevel(comparePaths(a.file, b.file), !('test' in a), !('test' in b));
   if (groupOrdering !== undefined) {
     return groupOrdering;
   }

@@ -21,7 +21,7 @@ g.test('stringifyQuery,single_case').fn(t => {
   t.expectQueryString(
     {
       suite: 'a',
-      group: ['b_1', '2_c'],
+      file: ['b_1', '2_c'],
       test: ['d_3', '4_e'],
       params: { f: 'g', _pri1: 0, h: 3, _pri2: 1 },
       endsWithWildcard: false,
@@ -34,7 +34,7 @@ g.test('stringifyQuery,multi_case').fn(t => {
   t.expectQueryString(
     {
       suite: 'a',
-      group: ['b_1', '2_c'],
+      file: ['b_1', '2_c'],
       test: ['d_3', '4_e'],
       params: { f: 'g', _pri1: 0, h: 3, _pri2: 1 },
       endsWithWildcard: true,
@@ -45,7 +45,7 @@ g.test('stringifyQuery,multi_case').fn(t => {
   t.expectQueryString(
     {
       suite: 'a',
-      group: ['b_1', '2_c'],
+      file: ['b_1', '2_c'],
       test: ['d_3', '4_e'],
       params: {},
       endsWithWildcard: true,
@@ -58,9 +58,8 @@ g.test('stringifyQuery,multi_test').fn(t => {
   t.expectQueryString(
     {
       suite: 'a',
-      group: ['b_1', '2_c'],
+      file: ['b_1', '2_c'],
       test: ['d_3', '4_e'],
-      endsWithWildcard: true,
     },
     'a:b_1,2_c:d_3,4_e,*'
   );
@@ -68,9 +67,8 @@ g.test('stringifyQuery,multi_test').fn(t => {
   t.expectQueryString(
     {
       suite: 'a',
-      group: ['b_1', '2_c'],
+      file: ['b_1', '2_c'],
       test: [],
-      endsWithWildcard: true,
     },
     'a:b_1,2_c:*'
   );
@@ -80,8 +78,7 @@ g.test('stringifyQuery,multi_group').fn(t => {
   t.expectQueryString(
     {
       suite: 'a',
-      group: ['b_1', '2_c'],
-      endsWithWildcard: true,
+      file: ['b_1', '2_c'],
     },
     'a:b_1,2_c,*'
   );
@@ -89,8 +86,7 @@ g.test('stringifyQuery,multi_group').fn(t => {
   t.expectQueryString(
     {
       suite: 'a',
-      group: [],
-      endsWithWildcard: true,
+      file: [],
     },
     'a:*'
   );

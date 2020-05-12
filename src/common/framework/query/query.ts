@@ -1,41 +1,25 @@
-import { ParamSpec } from '../params_utils.js';
+import { TestGroupID, TestCaseID } from '../id.js';
 
-interface TestPathBase {
-  readonly suite: string;
-  readonly group: readonly string[];
-}
+type TestPathBase = TestGroupID;
 
-export interface TestPath extends TestPathBase {
-  readonly test?: readonly string[];
-  readonly params?: ParamSpec;
-}
-
-export interface TestQuerySingleCase extends TestPathBase {
-  readonly test: readonly string[];
-  readonly params: ParamSpec;
-  readonly endsWithWildcard: false;
-}
-
-export interface TestQueryMultiCase extends TestPathBase {
-  readonly test: readonly string[];
-  readonly params: ParamSpec;
-  readonly endsWithWildcard: true;
-}
+export type TestQueryMultiFile = TestPathBase;
 
 export interface TestQueryMultiTest extends TestPathBase {
   readonly test: readonly string[];
+}
+
+export interface TestQueryMultiCase extends TestPathBase, TestCaseID {
   readonly endsWithWildcard: true;
 }
 
-export interface TestQueryMultiGroup extends TestPathBase {
-  readonly endsWithWildcard: true;
+export interface TestQuerySingleCase extends TestPathBase, TestCaseID {
+  readonly endsWithWildcard: false;
 }
 
+// TODO?: Change TestQuery to classes, so toString and endsWithWildcard can be implicit.
+// Also cloneQuery.
 export type TestQuery =
   | TestQuerySingleCase
   | TestQueryMultiCase
   | TestQueryMultiTest
-  | TestQueryMultiGroup;
-
-// Applies to group parts, test parts, params keys.
-export const validQueryPart = /^[a-zA-Z0-9_]+$/;
+  | TestQueryMultiFile;

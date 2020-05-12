@@ -6,7 +6,7 @@ export interface TestGroupID {
   // The spec's suite name, e.g. 'webgpu'.
   readonly suite: string;
   // The spec's path within the suite, e.g. ['command_buffer', 'compute', 'basic'].
-  readonly group: string[];
+  readonly file: string[];
 }
 
 export function testSpecEquals(x: TestGroupID, y: TestGroupID): boolean {

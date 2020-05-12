@@ -21,36 +21,34 @@ export async function crawl(suite: string): Promise<TestSuiteListingEntry[]> {
   }
 
   const glob = `${suiteDir}/**/{README.txt,*${specFileSuffix}}`;
-  const specFiles: string[] = await fg(glob, { onlyFiles: true });
-  specFiles.sort();
+  const filesToEnumerate: string[] = await fg(glob, { onlyFiles: true });
+  filesToEnumerate.sort();
 
-  const groups: TestSuiteListingEntry[] = [];
-  for (const file of specFiles) {
+  const entries: TestSuiteListingEntry[] = [];
+  for (const file of filesToEnumerate) {
     const f = file.substring((suiteDir + '/').length);
     if (f.endsWith(specFileSuffix)) {
-      const testPath = f.substring(0, f.length - specFileSuffix.length);
-      const filename = `../../../${suiteDir}/${testPath}.spec.js`;
+      const filepathWithoutExtension = f.substring(0, f.length - specFileSuffix.length);
+      const filename = `../../../${suiteDir}/${filepathWithoutExtension}.spec.js`;
 
       const mod = (await import(filename)) as TestSpec;
       assert(mod.description !== undefined, 'Test spec file missing description: ' + filename);
       assert(mod.g !== undefined, 'Test spec file missing TestGroup definition: ' + filename);
 
-      const path = testPath.split('/');
-      groups.push({ path, description: mod.description.trim() });
+      const path = filepathWithoutExtension.split('/');
+      entries.push({ file: path, description: mod.description.trim() });
     } else if (path.basename(file) === 'README.txt') {
-      const group = f.substring(0, f.length - 'README.txt'.length);
+      const filepathWithoutExtension = f.substring(0, f.length - '/README.txt'.length);
       const readme = fs.readFileSync(file, 'utf8').trim();
 
-      const path = group.split('/');
-      assert(path[path.length - 1] === '');
-      path.length = path.length - 1;
-      groups.push({ path, readme });
+      const path = filepathWithoutExtension.split('/');
+      entries.push({ file: path, readme });
     } else {
       unreachable(`glob ${glob} matched an unrecognized filename ${file}`);
     }
   }
 
-  return groups;
+  return entries;
 }
 
 export function makeListing(filename: string): Promise<TestSuiteListingEntry[]> {

@@ -50,8 +50,8 @@ const [
     const entries = (await listing) as TestSuiteListingEntry[];
     const lines = entries
       // Exclude READMEs.
-      .filter(l => l.path.length !== 0 && l.path[l.path.length - 1] !== '')
-      .map(l => '?q=webgpu:' + l.path);
+      .filter(l => l.file.length !== 0 && l.file[l.file.length - 1] !== '')
+      .map(l => '?q=webgpu:' + l.file);
     await generateFile(lines);
   } else {
     // Prefixes sorted from longest to shortest

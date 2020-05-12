@@ -2,7 +2,7 @@ import { Fixture } from './fixture.js';
 import { TestCaseID } from './id.js';
 import { TestCaseRecorder } from './logging/test_case_recorder.js';
 import { ParamSpec, ParamSpecIterable, extractPublicParams, paramsEquals } from './params_utils.js';
-import { validQueryPart } from './query/query.js';
+import { validQueryPart } from './query/validQueryPart.js';
 import { checkPublicParamType } from './url_query.js';
 import { assert } from './util/util.js';
 

@@ -4,8 +4,7 @@
 export type TestSuiteListing = Iterable<TestSuiteListingEntry>;
 
 interface TestSuiteListingEntryBase {
-  // TODO: rename to group or something
-  readonly path: string[];
+  readonly file: string[];
 }
 interface TestSuiteListingEntrySpec extends TestSuiteListingEntryBase {
   readonly description: string;

@@ -12,7 +12,7 @@ export class TestGroupTest extends UnitTest {
     const logger = new Logger(true);
     for (const rc of await Promise.all(g.iterate())) {
       const [rec] = logger.record(
-        stringifyQuery({ suite: 'xx', group: ['yy'], ...rc.id, endsWithWildcard: false })
+        stringifyQuery({ suite: 'xx', file: ['yy'], ...rc.id, endsWithWildcard: false })
       );
       await rc.run(rec);
     }

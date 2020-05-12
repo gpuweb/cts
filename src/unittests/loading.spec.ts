@@ -16,15 +16,15 @@ import { UnitTest } from './unit_test.js';
 
 const listingData: { [k: string]: TestSuiteListingEntry[] } = {
   suite1: [
-    { path: [], readme: 'desc 1a' },
-    { path: ['foo'], description: 'desc 1b' },
-    { path: ['bar'], readme: 'desc 1c' },
-    { path: ['bar', 'buzz', 'buzz'], description: 'desc 1d' },
-    { path: ['baz'], description: 'desc 1e' },
+    { file: [], readme: 'desc 1a' },
+    { file: ['foo'], description: 'desc 1b' },
+    { file: ['bar'], readme: 'desc 1c' },
+    { file: ['bar', 'buzz', 'buzz'], description: 'desc 1d' },
+    { file: ['baz'], description: 'desc 1e' },
   ],
   suite2: [
-    { path: [], readme: 'desc 2a' },
-    { path: ['foof'], description: 'desc 2b' },
+    { file: [], readme: 'desc 2a' },
+    { file: ['foof'], description: 'desc 2b' },
   ],
 };
 
@@ -179,7 +179,7 @@ g.test('case').fn(async t => {
 g.test('partial_test,makeQueryString').fn(async t => {
   const s = stringifyQuery({
     suite: 'suite1',
-    group: ['baz'],
+    file: ['baz'],
     test: ['zed'],
     params: { a: 1, b: 2 },
     endsWithWildcard: false,
@@ -215,19 +215,31 @@ g.test('end2end').fn(async t => {
 
   await exp(
     0,
-    { suite: 'suite2', group: ['foof'], test: ['blah'], params: {}, endsWithWildcard: false },
+    { suite: 'suite2', file: ['foof'], test: ['blah'], params: {}, endsWithWildcard: false },
     'pass',
     logs => objectEquals(logs, ['"DEBUG: OK"'])
   );
   await exp(
     1,
-    { suite: 'suite2', group: ['foof'], test: ['bleh'], params: { a: 1 }, endsWithWildcard: false },
+    {
+      suite: 'suite2',
+      file: ['foof'],
+      test: ['bleh'],
+      params: { a: 1 },
+      endsWithWildcard: false,
+    },
     'pass',
     logs => objectEquals(logs, ['"DEBUG: OK"', '"DEBUG: OK"'])
   );
   await exp(
     2,
-    { suite: 'suite2', group: ['foof'], test: ['bluh', 'a'], params: {}, endsWithWildcard: false },
+    {
+      suite: 'suite2',
+      file: ['foof'],
+      test: ['bluh', 'a'],
+      params: {},
+      endsWithWildcard: false,
+    },
     'fail',
     logs =>
       logs.length === 1 &&
@@ -249,7 +261,7 @@ async function testIterateCollapsed(
   const tree = await treePromise;
   const actual = Array.from(tree.iterateCollapsed(), q => stringifyQuery(q));
   if (!objectEquals(actual, expectedResult)) {
-    t.fail(`iterateCollapse failed:\n  got ${actual}\n  exp ${expectedResult}\n${tree.toString()}`);
+    t.fail(`iterateCollapsed failed:\n got ${actual}\n exp ${expectedResult}\n${tree.toString()}`);
   }
 }
 
