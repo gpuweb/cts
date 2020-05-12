@@ -143,7 +143,7 @@ const kCasesForMaxResourcesPerStageTests = params()
 
 // Should never fail unless kMaxBindingsPerBindGroup is exceeded, because the validation for
 // resources-of-type-per-stage is in pipeline layout creation.
-g.test('max resources per stage', 'in bind group layout')
+g.test('max resources per stage,in bind group layout')
   .params(kCasesForMaxResourcesPerStageTests)
   .fn(async t => {
     const { maxedType, extraType, maxedVisibility, extraVisibility } = t.params;
@@ -184,7 +184,7 @@ g.test('max resources per stage', 'in bind group layout')
 // One pipeline layout can have a maximum number of each type of binding *per stage* (which is
 // different for each type). Test that the max works, then add one more binding of same-or-different
 // type and same-or-different visibility.
-g.test('max resources per stage', 'in pipeline layout')
+g.test('max resources per stage,in pipeline layout')
   .params(kCasesForMaxResourcesPerStageTests)
   .fn(async t => {
     const { maxedType, extraType, maxedVisibility, extraVisibility } = t.params;

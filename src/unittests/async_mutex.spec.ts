@@ -34,7 +34,7 @@ g.test('parallel').fn(async t => {
   ]);
 });
 
-g.test('parallel', 'many').fn(async t => {
+g.test('parallel,many').fn(async t => {
   const mutex = new AsyncMutex();
   const actual: number[] = [];
   const expected = [];
@@ -54,7 +54,7 @@ g.test('return').fn(async t => {
   t.expect(ret === 123);
 });
 
-g.test('return', 'parallel').fn(async t => {
+g.test('return,parallel').fn(async t => {
   const mutex = new AsyncMutex();
   const ret = await Promise.all([
     mutex.with(async () => 1),

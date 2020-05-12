@@ -25,14 +25,14 @@ g.test('params').fn(t => {
   t.expectSpecEqual(params(), [{}]);
 });
 
-g.test('combine', 'zeroes and ones').fn(t => {
+g.test('combine,zeroes and ones').fn(t => {
   t.expectSpecEqual(params().combine([]).combine([]), []);
   t.expectSpecEqual(params().combine([]).combine([{}]), []);
   t.expectSpecEqual(params().combine([{}]).combine([]), []);
   t.expectSpecEqual(params().combine([{}]).combine([{}]), [{}]);
 });
 
-g.test('combine', 'mixed').fn(t => {
+g.test('combine,mixed').fn(t => {
   t.expectSpecEqual(
     params()
       .combine(poptions('x', [1, 2]))
@@ -110,7 +110,7 @@ g.test('expand').fn(t => {
   );
 });
 
-g.test('expand', 'invalid').fn(t => {
+g.test('expand,invalid').fn(t => {
   const p = params()
     .combine([{ x: 1 }])
     .expand(function* (p) {

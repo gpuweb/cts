@@ -50,7 +50,7 @@ class F extends ValidationTest {
 
 export const g = new TestGroup(F);
 
-g.test('dynamic offsets passed but not expected', 'compute pass')
+g.test('dynamic offsets passed but not expected,compute pass')
   .params(poptions('type', ['compute', 'renderpass', 'renderbundle']))
   .fn(async t => {
     const bindGroupLayout = t.device.createBindGroupLayout({ entries: [] });

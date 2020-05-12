@@ -108,7 +108,7 @@ g.test('duplicate test params').fn(t => {
   });
 });
 
-g.test('duplicate test params', 'with different private params').fn(t => {
+g.test('duplicate test params,with different private params').fn(t => {
   const g = new TestGroup(UnitTest);
 
   t.shouldThrow('Error', () => {
@@ -126,11 +126,16 @@ g.test('duplicate test params', 'with different private params').fn(t => {
 g.test('invalid test name').fn(t => {
   const g = new TestGroup(UnitTest);
 
-  const badChars = Array.from('"`~@#$+=\\|!^&*[]<>{}-\'.,');
+  const badChars = Array.from('"`~@#$+=\\|!^&*[]<>{}-\'. ');
   for (const char of badChars) {
-    t.shouldThrow('Error', () => {
-      g.test('a' + char + 'b').fn(() => {});
-    });
+    const name = 'a' + char + 'b';
+    t.shouldThrow(
+      'Error',
+      () => {
+        g.test(name).fn(() => {});
+      },
+      name
+    );
   }
 });
 

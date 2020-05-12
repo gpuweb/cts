@@ -40,7 +40,7 @@ g.test('basic').fn(t => {
   );
 });
 
-g.test('basic', 'async').fn(async t => {
+g.test('basic,async').fn(async t => {
   // shouldReject must be awaited to ensure it can wait for the promise before the test ends.
   t.shouldReject(
     // The expected '.name' of the thrown error.
@@ -69,7 +69,7 @@ g.test('basic', 'async').fn(async t => {
 //
 // - webgpu:examples:basic/params={"x":2,"y":4}    runs with t.params = {x: 2, y: 5, _result: 6}.
 // - webgpu:examples:basic/params={"x":-10,"y":18} runs with t.params = {x: -10, y: 18, _result: 8}.
-g.test('basic', 'params')
+g.test('basic,params')
   .params([
     { x: 2, y: 4, _result: 6 }, //
     { x: -10, y: 18, _result: 8 },
@@ -79,14 +79,14 @@ g.test('basic', 'params')
   });
 // (note the blank comment above to enforce newlines on autoformat)
 
-g.test('gpu', 'async').fn(async t => {
+g.test('gpu,async').fn(async t => {
   const fence = t.queue.createFence();
   t.queue.signal(fence, 2);
   await fence.onCompletion(1);
   t.expect(fence.getCompletedValue() === 2);
 });
 
-g.test('gpu', 'buffers').fn(async t => {
+g.test('gpu,buffers').fn(async t => {
   const data = new Uint32Array([0, 1234, 0]);
   const [src, map] = t.device.createBufferMapped({
     size: 12,
