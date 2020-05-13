@@ -12,7 +12,7 @@ import { kBigSeparator, kWildcard, kPathSeparator, kParamSeparator } from './sep
 import { validQueryPart } from './validQueryPart.js';
 
 export function parseQuery(s: string): TestQuery {
-  // Inverse of encodeURLSelectively:
+  // Undo encodeURIComponentSelectively
   s = decodeURIComponent(s);
 
   const bigParts = s.split(kBigSeparator, 4); // suite, group, test, params

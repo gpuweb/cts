@@ -85,7 +85,7 @@ const [
       const tree = await loader.loadTree(suite + kBigSeparator, expectations.get(prefix)!);
 
       lines.push(undefined); // output blank line between prefixes
-      for (const q of tree.iterateCollapsed()) {
+      for (const q of tree.iterateCollapsedQueries()) {
         lines.push(prefix + q.toString());
       }
     }

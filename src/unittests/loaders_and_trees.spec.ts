@@ -234,7 +234,7 @@ async function testIterateCollapsed(
     return;
   }
   const tree = await treePromise;
-  const actual = Array.from(tree.iterateCollapsed(), q => q.toString());
+  const actual = Array.from(tree.iterateCollapsedQueries(), q => q.toString());
   if (!objectEquals(actual, expectedResult)) {
     t.fail(
       `iterateCollapsed failed:

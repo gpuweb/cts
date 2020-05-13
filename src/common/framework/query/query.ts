@@ -5,7 +5,14 @@ import { encodeURIComponentSelectively } from './encode_selectively.js';
 import { kBigSeparator, kPathSeparator, kWildcard, kParamSeparator } from './separators.js';
 import { stringifyPublicParams } from './stringify_params.js';
 
+export type TestQuery =
+  | TestQuerySingleCase
+  | TestQueryMultiCase
+  | TestQueryMultiTest
+  | TestQueryMultiFile;
+
 export class TestQueryMultiFile {
+  readonly isMultiFile: boolean = true;
   readonly suite: string;
   readonly file: readonly string[];
 
@@ -25,17 +32,16 @@ export class TestQueryMultiFile {
   protected toStringHelper(): string[] {
     return [this.suite, [...this.file, kWildcard].join(kPathSeparator)];
   }
-
-  // Prevents object literals from coercing to these class types.
-  protected readonly _: void;
 }
 
 export class TestQueryMultiTest extends TestQueryMultiFile {
+  readonly isMultiFile: false = false;
+  readonly isMultiTest: boolean = true;
   readonly test: readonly string[];
 
   constructor(suite: string, file: readonly string[], test: readonly string[]) {
-    assert(file.length > 0, 'multi-test (or finer) query must have file-path');
     super(suite, file);
+    assert(file.length > 0, 'multi-test (or finer) query must have file-path');
     this.test = [...test];
   }
 
@@ -49,17 +55,14 @@ export class TestQueryMultiTest extends TestQueryMultiFile {
 }
 
 export class TestQueryMultiCase extends TestQueryMultiTest {
+  readonly isMultiTest: false = false;
+  readonly isMultiCase: boolean = true;
   readonly params: CaseParams;
 
   constructor(suite: string, file: readonly string[], test: readonly string[], params: CaseParams) {
-    assert(test.length > 0, 'multi-case (or finer) query must have test-path');
     super(suite, file, test);
+    assert(test.length > 0, 'multi-case (or finer) query must have test-path');
     this.params = { ...params };
-  }
-
-  // maybe rename
-  get endsWithWildcard(): boolean {
-    return true;
   }
 
   protected toStringHelper(): string[] {
@@ -74,9 +77,7 @@ export class TestQueryMultiCase extends TestQueryMultiTest {
 }
 
 export class TestQuerySingleCase extends TestQueryMultiCase {
-  get endsWithWildcard(): boolean {
-    return false;
-  }
+  readonly isMultiCase: false = false;
 
   protected toStringHelper(): string[] {
     const paramsParts = stringifyPublicParams(this.params);
@@ -88,11 +89,3 @@ export class TestQuerySingleCase extends TestQueryMultiCase {
     ];
   }
 }
-
-// TODO?: Change TestQuery to classes, so toString and endsWithWildcard can be implicit.
-// Also cloneQuery.
-export type TestQuery =
-  | TestQuerySingleCase
-  | TestQueryMultiCase
-  | TestQueryMultiTest
-  | TestQueryMultiFile;

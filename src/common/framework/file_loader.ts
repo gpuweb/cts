@@ -27,7 +27,7 @@ export abstract class TestFileLoader {
 
   async loadTests(query: string): Promise<IterableIterator<FilterResultTreeLeaf>> {
     const tree = await this.loadTree(query);
-    return tree.iterate();
+    return tree.iterateLeaves();
   }
 }
 

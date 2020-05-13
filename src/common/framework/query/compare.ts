@@ -17,22 +17,22 @@ export function compareQueries(a: TestQuery, b: TestQuery): Ordering {
     return Ordering.Unordered;
   }
 
-  const groupOrdering = cmpLevel(comparePaths(a.file, b.file), !('test' in a), !('test' in b));
-  if (groupOrdering !== undefined) {
-    return groupOrdering;
+  const fileOrdering = compareOneLevel(comparePaths(a.file, b.file), a.isMultiFile, b.isMultiFile);
+  if (fileOrdering !== undefined) {
+    return fileOrdering;
   }
   assert('test' in a && 'test' in b);
 
-  const testOrdering = cmpLevel(comparePaths(a.test, b.test), !('params' in a), !('params' in b));
+  const testOrdering = compareOneLevel(comparePaths(a.test, b.test), a.isMultiTest, b.isMultiTest);
   if (testOrdering !== undefined) {
     return testOrdering;
   }
   assert('params' in a && 'params' in b);
 
-  const paramsOrdering = cmpLevel(
+  const paramsOrdering = compareOneLevel(
     compareParamsPaths(a.params, b.params),
-    a.endsWithWildcard,
-    b.endsWithWildcard
+    a.isMultiCase,
+    b.isMultiCase
   );
   if (paramsOrdering !== undefined) {
     return paramsOrdering;
@@ -44,7 +44,11 @@ export function compareQueries(a: TestQuery, b: TestQuery): Ordering {
 // "IsBig" means the query is big relative to the level, e.g. for test-level:
 //   anything >= suite:a,* is big
 //   anything <= suite:a:* is small
-function cmpLevel(ordering: Ordering, aIsBig: boolean, bIsBig: boolean): Ordering | undefined {
+function compareOneLevel(
+  ordering: Ordering,
+  aIsBig: boolean,
+  bIsBig: boolean
+): Ordering | undefined {
   if (!aIsBig && !bIsBig) {
     return ordering === Ordering.Equal ? undefined : Ordering.Unordered;
   }
