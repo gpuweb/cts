@@ -80,7 +80,7 @@ function makeCaseHTML(t: FilterResultTreeLeaf): [HTMLElement, RunSubtree] {
     }
   };
 
-  const casehead = makeTreeNodeHeaderHTML(name, undefined, runSubtree);
+  const casehead = makeTreeNodeHeaderHTML(name, undefined, runSubtree, true);
   div.append(casehead);
   const casetime = $('<div>').addClass('testcasetime').html('ms').appendTo(casehead);
   const caselogs = $('<div>').addClass('testcaselogs').appendTo(div);
@@ -91,9 +91,14 @@ function makeCaseHTML(t: FilterResultTreeLeaf): [HTMLElement, RunSubtree] {
 function makeSubtreeHTML(t: FilterResultSubtree): [HTMLElement, RunSubtree] {
   const div = $('<div>').addClass('subtree');
 
-  const header = makeTreeNodeHeaderHTML(t.query.toString(), t.description, () => {
-    return runSubtree();
-  });
+  const header = makeTreeNodeHeaderHTML(
+    t.query.toString(),
+    t.description,
+    () => {
+      return runSubtree();
+    },
+    false
+  );
   div.append(header);
 
   const subtreeHTML = $('<div>').addClass('subtreechildren').appendTo(div);
@@ -123,7 +128,8 @@ function makeSubtreeChildrenHTML(
 function makeTreeNodeHeaderHTML(
   name: string,
   description: string | undefined,
-  runSubtree: RunSubtree
+  runSubtree: RunSubtree,
+  isLeaf: boolean
 ): HTMLElement {
   const div = $('<div>').addClass('nodeheader');
 
@@ -138,7 +144,7 @@ function makeTreeNodeHeaderHTML(
 
   const href = `?${worker ? 'worker&' : ''}${debug ? 'debug&' : ''}q=${nameEncoded}`;
   $('<button>')
-    .addClass('noderun')
+    .addClass(isLeaf ? 'leafrun' : 'noderun')
     .attr('alt', 'Run subtree')
     .attr('title', 'Run subtree')
     .on('click', async () => {
