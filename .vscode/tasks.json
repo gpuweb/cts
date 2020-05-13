@@ -5,14 +5,6 @@
       "type": "grunt",
       "task": "test",
       "problemMatcher": [],
-      "group": "build",
-      "label": "grunt: test"
-    },
-    {
-      "type": "grunt",
-      "task": "pre",
-      "problemMatcher": [],
-      "label": "grunt: pre",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -20,12 +12,15 @@
     },
     {
       "type": "grunt",
+      "task": "pre",
+      "problemMatcher": []
+    },
+    {
+      "type": "grunt",
       "task": "check",
       "problemMatcher": [
         "$tsc"
-      ],
-      "label": "grunt: check",
-      "group": "build"
+      ]
     }
   ]
 }
