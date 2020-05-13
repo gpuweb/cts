@@ -2,8 +2,8 @@ import { promises as fs } from 'fs';
 
 import { listing } from '../../webgpu/listing.js';
 import { DefaultTestFileLoader } from '../framework/file_loader.js';
-import { TestSuiteListingEntry } from '../framework/listing.js';
 import { kBigSeparator } from '../framework/query/separators.js';
+import { TestSuiteListingEntry } from '../framework/test_suite_listing.js';
 
 function printUsageAndExit(rc: number): void {
   console.error(`\

@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { SpecFile } from '../framework/file_loader.js';
-import { TestSuiteListingEntry } from '../framework/listing.js';
+import { TestSuiteListingEntry } from '../framework/test_suite_listing.js';
 import { assert, unreachable } from '../framework/util/util.js';
 
 const fg = require('fast-glob');

@@ -1,6 +1,6 @@
-import { TestSuiteListing } from './listing.js';
 import { parseQuery } from './query/parseQuery.js';
 import { RunCaseIterable } from './test_group.js';
+import { TestSuiteListing } from './test_suite_listing.js';
 import { loadTreeForQuery, FilterResultTree, FilterResultTreeLeaf } from './tree.js';
 
 // A .spec.ts file, as imported.

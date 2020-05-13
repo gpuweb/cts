@@ -3,11 +3,11 @@ Tests for queries/filtering, loading, and running.
 `;
 
 import { TestFileLoader, SpecFile } from '../common/framework/file_loader.js';
-import { TestSuiteListing, TestSuiteListingEntry } from '../common/framework/listing.js';
 import { Logger } from '../common/framework/logging/logger.js';
 import { Status } from '../common/framework/logging/result.js';
 import { TestQuery, TestQuerySingleCase } from '../common/framework/query/query.js';
 import { makeTestGroup, makeTestGroupForUnitTesting } from '../common/framework/test_group.js';
+import { TestSuiteListing, TestSuiteListingEntry } from '../common/framework/test_suite_listing.js';
 import { FilterResultTreeLeaf } from '../common/framework/tree.js';
 import { assert, objectEquals } from '../common/framework/util/util.js';
 

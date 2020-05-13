@@ -3,14 +3,14 @@
 // 'out/{cts,unittests}/listing.js' files (see tools/gen_listings).
 export type TestSuiteListing = Iterable<TestSuiteListingEntry>;
 
-interface TestSuiteListingEntryBase {
+export type TestSuiteListingEntry = TestSuiteListingEntrySpec | TestSuiteListingEntryReadme;
+
+interface TestSuiteListingEntrySpec {
   readonly file: string[];
-}
-interface TestSuiteListingEntrySpec extends TestSuiteListingEntryBase {
   readonly description: string;
 }
-interface TestSuiteListingEntryReadme extends TestSuiteListingEntryBase {
+
+interface TestSuiteListingEntryReadme {
+  readonly file: string[];
   readonly readme: string;
 }
-
-export type TestSuiteListingEntry = TestSuiteListingEntrySpec | TestSuiteListingEntryReadme;
