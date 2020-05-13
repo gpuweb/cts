@@ -4,7 +4,7 @@ createBindGroup validation tests.
 
 import * as C from '../../../common/constants.js';
 import { poptions, params } from '../../../common/framework/params_builder.js';
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { unreachable } from '../../../common/framework/util/util.js';
 import {
   kBindingTypes,
@@ -21,7 +21,7 @@ function clone<T extends GPUTextureDescriptor>(descriptor: T): T {
   return JSON.parse(JSON.stringify(descriptor));
 }
 
-export const g = new TestGroup(ValidationTest);
+export const g = makeTestGroup(ValidationTest);
 
 g.test('binding_count_mismatch').fn(async t => {
   const bindGroupLayout = t.device.createBindGroupLayout({

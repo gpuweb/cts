@@ -4,7 +4,7 @@ Examples of writing CTS tests with various features.
 Start here when looking for examples of basic framework usage.
 `;
 
-import { TestGroup } from '../common/framework/test_group.js';
+import { makeTestGroup } from '../common/framework/test_group.js';
 
 import { GPUTest } from './gpu_test.js';
 
@@ -18,7 +18,7 @@ import { GPUTest } from './gpu_test.js';
 // - ?q=webgpu:examples:basic/
 // - ?q=webgpu:examples:
 
-export const g = new TestGroup(GPUTest);
+export const g = makeTestGroup(GPUTest);
 
 // Note: spaces in test names are replaced with underscores: webgpu:examples:test_name=
 /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */

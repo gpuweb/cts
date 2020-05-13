@@ -8,7 +8,7 @@ import {
   TestQuerySingleCase,
   TestQuery,
 } from '../common/framework/query/query.js';
-import { TestGroup } from '../common/framework/test_group.js';
+import { makeTestGroup } from '../common/framework/test_group.js';
 
 import { UnitTest } from './unit_test.js';
 
@@ -18,7 +18,7 @@ class F extends UnitTest {
   }
 }
 
-export const g = new TestGroup(F);
+export const g = makeTestGroup(F);
 
 g.test('constructor').fn(t => {
   t.shouldThrow('Error', () => new TestQueryMultiTest('suite', [], []));

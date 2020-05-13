@@ -4,7 +4,7 @@ error scope validation tests.
 
 import { Fixture } from '../../../common/framework/fixture.js';
 import { getGPU } from '../../../common/framework/gpu/implementation.js';
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert, raceWithRejectOnTimeout } from '../../../common/framework/util/util.js';
 
 class F extends Fixture {
@@ -58,7 +58,7 @@ class F extends Fixture {
   }
 }
 
-export const g = new TestGroup(F);
+export const g = makeTestGroup(F);
 
 g.test('simple_case_where_the_error_scope_catches_an_error').fn(async t => {
   t.device.pushErrorScope('validation');

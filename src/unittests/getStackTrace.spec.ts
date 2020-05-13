@@ -2,12 +2,12 @@ export const description = `
 Tests for getStackTrace.
 `;
 
-import { TestGroup } from '../common/framework/test_group.js';
+import { makeTestGroup } from '../common/framework/test_group.js';
 import { getStackTrace } from '../common/framework/util/stack.js';
 
 import { UnitTest } from './unit_test.js';
 
-export const g = new TestGroup(UnitTest);
+export const g = makeTestGroup(UnitTest);
 
 g.test('stacks')
   .params([

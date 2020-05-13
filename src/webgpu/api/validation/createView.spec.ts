@@ -3,7 +3,7 @@ createView validation tests.
 `;
 
 import * as C from '../../../common/constants.js';
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -68,7 +68,7 @@ class F extends ValidationTest {
   }
 }
 
-export const g = new TestGroup(F);
+export const g = makeTestGroup(F);
 
 g.test('creating_texture_view_on_a_2D_non_array_texture')
   .params([

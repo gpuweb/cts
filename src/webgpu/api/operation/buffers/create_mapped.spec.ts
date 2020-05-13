@@ -1,11 +1,11 @@
 export const description = '';
 
 import { params, pbool, poptions } from '../../../../common/framework/params_builder.js';
-import { TestGroup } from '../../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
 
 import { MappingTest } from './mapping_test.js';
 
-export const g = new TestGroup(MappingTest);
+export const g = makeTestGroup(MappingTest);
 
 g.test('createBufferMapped')
   .params(

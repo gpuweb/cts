@@ -2,11 +2,11 @@ export const description = `
 Basic unit tests for test framework.
 `;
 
-import { TestGroup } from '../common/framework/test_group.js';
+import { makeTestGroup } from '../common/framework/test_group.js';
 
 import { UnitTest } from './unit_test.js';
 
-export const g = new TestGroup(UnitTest);
+export const g = makeTestGroup(UnitTest);
 
 /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
 g.test('test,sync').fn(t => {});

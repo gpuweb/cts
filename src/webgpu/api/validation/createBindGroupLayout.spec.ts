@@ -4,7 +4,7 @@ createBindGroupLayout validation tests.
 
 import * as C from '../../../common/constants.js';
 import { poptions, params } from '../../../common/framework/params_builder.js';
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 import {
   kBindingTypeInfo,
   kBindingTypes,
@@ -18,7 +18,7 @@ function clone<T extends GPUBindGroupLayoutDescriptor>(descriptor: T): T {
   return JSON.parse(JSON.stringify(descriptor));
 }
 
-export const g = new TestGroup(ValidationTest);
+export const g = makeTestGroup(ValidationTest);
 
 g.test('some_binding_index_was_specified_more_than_once').fn(async t => {
   const goodDescriptor = {

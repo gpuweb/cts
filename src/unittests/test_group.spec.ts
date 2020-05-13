@@ -3,13 +3,13 @@ Unit tests for TestGroup.
 `;
 
 import { Fixture } from '../common/framework/fixture.js';
-import { TestGroup } from '../common/framework/test_group.js';
+import { makeTestGroup, makeTestGroupForUnitTesting } from '../common/framework/test_group.js';
 import { assert } from '../common/framework/util/util.js';
 
 import { TestGroupTest } from './test_group_test.js';
 import { UnitTest } from './unit_test.js';
 
-export const g = new TestGroup(TestGroupTest);
+export const g = makeTestGroup(TestGroupTest);
 
 g.test('UnitTest_fixture').fn(async t0 => {
   let seen = 0;
@@ -18,7 +18,7 @@ g.test('UnitTest_fixture').fn(async t0 => {
     seen++;
   }
 
-  const g = new TestGroup(UnitTest);
+  const g = makeTestGroupForUnitTesting(UnitTest);
 
   g.test('test').fn(count);
   g.test('testp')
@@ -37,7 +37,7 @@ g.test('custom_fixture').fn(async t0 => {
     }
   }
 
-  const g = new TestGroup(Counter);
+  const g = makeTestGroupForUnitTesting(Counter);
 
   g.test('test').fn(t => {
     t.count();
@@ -53,7 +53,7 @@ g.test('custom_fixture').fn(async t0 => {
 });
 
 g.test('stack').fn(async t0 => {
-  const g = new TestGroup(UnitTest);
+  const g = makeTestGroupForUnitTesting(UnitTest);
 
   const doNestedThrow1 = () => {
     throw new Error('goodbye');
@@ -85,7 +85,7 @@ g.test('stack').fn(async t0 => {
 });
 
 g.test('duplicate_test_name').fn(t => {
-  const g = new TestGroup(UnitTest);
+  const g = makeTestGroupForUnitTesting(UnitTest);
   g.test('abc').fn(() => {});
 
   t.shouldThrow('Error', () => {
@@ -94,7 +94,7 @@ g.test('duplicate_test_name').fn(t => {
 });
 
 g.test('duplicate_test_params').fn(t => {
-  const g = new TestGroup(UnitTest);
+  const g = makeTestGroupForUnitTesting(UnitTest);
 
   t.shouldThrow('Error', () => {
     g.test('abc')
@@ -109,7 +109,7 @@ g.test('duplicate_test_params').fn(t => {
 });
 
 g.test('duplicate_test_params,with_different_private_params').fn(t => {
-  const g = new TestGroup(UnitTest);
+  const g = makeTestGroupForUnitTesting(UnitTest);
 
   t.shouldThrow('Error', () => {
     g.test('abc')
@@ -124,7 +124,7 @@ g.test('duplicate_test_params,with_different_private_params').fn(t => {
 });
 
 g.test('invalid_test_name').fn(t => {
-  const g = new TestGroup(UnitTest);
+  const g = makeTestGroupForUnitTesting(UnitTest);
 
   const badChars = Array.from('"`~@#$+=\\|!^&*[]<>{}-\'. ');
   for (const char of badChars) {
@@ -140,12 +140,12 @@ g.test('invalid_test_name').fn(t => {
 });
 
 g.test('valid_param_value').fn(() => {
-  const g = new TestGroup(UnitTest);
+  const g = makeTestGroup(UnitTest);
   g.test('a').params([{ x: JSON.stringify({ a: 1, b: 2 }) }]);
 });
 
 g.test('throws').fn(async t0 => {
-  const g = new TestGroup(UnitTest);
+  const g = makeTestGroupForUnitTesting(UnitTest);
 
   /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
   g.test('a').fn(t => {
@@ -163,7 +163,7 @@ g.test('shouldThrow').fn(async t0 => {
     throw new TypeError();
   });
 
-  const g = new TestGroup(UnitTest);
+  const g = makeTestGroupForUnitTesting(UnitTest);
 
   g.test('a').fn(t => {
     t.shouldThrow('Error', () => {
@@ -185,7 +185,7 @@ g.test('shouldReject').fn(async t0 => {
     })()
   );
 
-  const g = new TestGroup(UnitTest);
+  const g = makeTestGroupForUnitTesting(UnitTest);
 
   g.test('a').fn(async t => {
     t.shouldReject(

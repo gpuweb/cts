@@ -2,13 +2,13 @@ export const description = `
 Tests for AsyncMutex.
 `;
 
-import { TestGroup } from '../common/framework/test_group.js';
+import { makeTestGroup } from '../common/framework/test_group.js';
 import { AsyncMutex } from '../common/framework/util/async_mutex.js';
 import { objectEquals } from '../common/framework/util/util.js';
 
 import { UnitTest } from './unit_test.js';
 
-export const g = new TestGroup(UnitTest);
+export const g = makeTestGroup(UnitTest);
 
 /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
 g.test('basic').fn(async t => {

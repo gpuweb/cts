@@ -3,7 +3,7 @@ createTexture validation tests.
 `;
 
 import { poptions } from '../../../common/framework/params_builder.js';
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { kTextureFormatInfo, kTextureFormats } from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -38,7 +38,7 @@ class F extends ValidationTest {
   }
 }
 
-export const g = new TestGroup(F);
+export const g = makeTestGroup(F);
 
 g.test('validation_of_sampleCount')
   .params([

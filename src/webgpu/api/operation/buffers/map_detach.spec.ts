@@ -1,6 +1,6 @@
 export const description = '';
 
-import { TestGroup } from '../../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
 
 class F extends GPUTest {
@@ -17,7 +17,7 @@ class F extends GPUTest {
   }
 }
 
-export const g = new TestGroup(F);
+export const g = makeTestGroup(F);
 
 g.test('mapWriteAsync')
   .params([

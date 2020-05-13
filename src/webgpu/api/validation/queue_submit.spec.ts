@@ -2,11 +2,11 @@ export const description = `
 queue submit validation tests.
 `;
 
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 
 import { ValidationTest } from './validation_test.js';
 
-export const g = new TestGroup(ValidationTest);
+export const g = makeTestGroup(ValidationTest);
 
 g.test('submitting_with_a_mapped_buffer_is_disallowed').fn(async t => {
   const buffer = t.device.createBuffer({

@@ -3,7 +3,7 @@ copy imageBitmap To texture tests.
 `;
 
 import { poptions, params } from '../../common/framework/params_builder.js';
-import { TestGroup } from '../../common/framework/test_group.js';
+import { makeTestGroup } from '../../common/framework/test_group.js';
 import { GPUTest } from '../gpu_test.js';
 
 function calculateRowPitch(width: number, bytesPerPixel: number): number {
@@ -114,7 +114,7 @@ class F extends GPUTest {
   }
 }
 
-export const g = new TestGroup(F);
+export const g = makeTestGroup(F);
 
 g.test('from_ImageData')
   .params(

@@ -9,7 +9,7 @@ import {
   TestQueryMultiTest,
   TestQueryMultiFile,
 } from '../common/framework/query/query.js';
-import { TestGroup } from '../common/framework/test_group.js';
+import { makeTestGroup } from '../common/framework/test_group.js';
 
 import { UnitTest } from './unit_test.js';
 
@@ -20,7 +20,7 @@ class T extends UnitTest {
   }
 }
 
-export const g = new TestGroup(T);
+export const g = makeTestGroup(T);
 
 g.test('stringifyQuery,single_case').fn(t => {
   t.expectQueryString(

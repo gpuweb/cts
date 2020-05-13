@@ -19,14 +19,28 @@ export interface RunCase {
   run: RunFn;
 }
 
+// Interface for defining tests
+export interface TestGroupBuilder<F extends Fixture> {
+  test(name: string): TestBuilderWithName<F, never>;
+}
+export function makeTestGroup<F extends Fixture>(fixture: FixtureClass<F>): TestGroupBuilder<F> {
+  return new TestGroup(fixture);
+}
+
+// Interface for running tests
 export interface RunCaseIterable {
   iterate(): Iterable<RunCase>;
+}
+export function makeTestGroupForUnitTesting<F extends Fixture>(
+  fixture: FixtureClass<F>
+): TestGroup<F> {
+  return new TestGroup(fixture);
 }
 
 type FixtureClass<F extends Fixture> = new (log: TestCaseRecorder, params: CaseParams) => F;
 type TestFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
 
-export class TestGroup<F extends Fixture> implements RunCaseIterable {
+class TestGroup<F extends Fixture> implements RunCaseIterable, TestGroupBuilder<F> {
   private fixture: FixtureClass<F>;
   private seen: Set<string> = new Set();
   private tests: Array<TestBuilder<F, never>> = [];

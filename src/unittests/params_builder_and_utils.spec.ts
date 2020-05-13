@@ -4,7 +4,7 @@ Unit tests for parameterization helpers.
 
 import { poptions, params } from '../common/framework/params_builder.js';
 import { CaseParams, CaseParamsIterable, paramsEquals } from '../common/framework/params_utils.js';
-import { TestGroup } from '../common/framework/test_group.js';
+import { makeTestGroup } from '../common/framework/test_group.js';
 
 import { UnitTest } from './unit_test.js';
 
@@ -15,7 +15,7 @@ class ParamsTest extends UnitTest {
   }
 }
 
-export const g = new TestGroup(ParamsTest);
+export const g = makeTestGroup(ParamsTest);
 
 g.test('options').fn(t => {
   t.expectSpecEqual(poptions('hello', [1, 2, 3]), [{ hello: 1 }, { hello: 2 }, { hello: 3 }]);

@@ -4,7 +4,7 @@ createPipelineLayout validation tests.
 
 import * as C from '../../../common/constants.js';
 import { pbool, poptions, params } from '../../../common/framework/params_builder.js';
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 import {
   kBindingTypeInfo,
   kBindingTypes,
@@ -17,7 +17,7 @@ function clone<T extends GPUBindGroupLayoutDescriptor>(descriptor: T): T {
   return JSON.parse(JSON.stringify(descriptor));
 }
 
-export const g = new TestGroup(ValidationTest);
+export const g = makeTestGroup(ValidationTest);
 
 g.test('number_of_dynamic_buffers_exceeds_the_maximum_value')
   .params(

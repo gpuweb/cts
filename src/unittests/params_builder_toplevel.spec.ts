@@ -4,12 +4,12 @@ Unit tests for parameterization.
 
 import { params } from '../common/framework/params_builder.js';
 import { CaseParams } from '../common/framework/params_utils.js';
-import { TestGroup } from '../common/framework/test_group.js';
+import { makeTestGroup, makeTestGroupForUnitTesting } from '../common/framework/test_group.js';
 
 import { TestGroupTest } from './test_group_test.js';
 import { UnitTest } from './unit_test.js';
 
-export const g = new TestGroup(TestGroupTest);
+export const g = makeTestGroup(TestGroupTest);
 
 g.test('none')
   .params([])
@@ -66,7 +66,7 @@ g.test('exclude')
   });
 
 g.test('generator').fn(t0 => {
-  const g = new TestGroup(UnitTest);
+  const g = makeTestGroupForUnitTesting(UnitTest);
 
   const ran: CaseParams[] = [];
 

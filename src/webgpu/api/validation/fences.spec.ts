@@ -2,11 +2,11 @@ export const description = `
 fences validation tests.
 `;
 
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 
 import { ValidationTest } from './validation_test.js';
 
-export const g = new TestGroup(ValidationTest);
+export const g = makeTestGroup(ValidationTest);
 
 // TODO: Remove if https://github.com/gpuweb/gpuweb/issues/377 is decided
 g.test('wait_on_a_fence_without_signaling_the_value_is_invalid').fn(async t => {

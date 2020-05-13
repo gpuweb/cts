@@ -1,9 +1,9 @@
 export const description = '';
 
 import { Fixture } from '../../../common/framework/fixture.js';
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 
-export const g = new TestGroup(Fixture);
+export const g = makeTestGroup(Fixture);
 
 g.test('canvas_element_getContext_returns_GPUCanvasContext').fn(async t => {
   if (typeof document === 'undefined') {

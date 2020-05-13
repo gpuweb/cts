@@ -7,7 +7,7 @@ import { TestSuiteListing, TestSuiteListingEntry } from '../common/framework/lis
 import { Logger } from '../common/framework/logging/logger.js';
 import { Status } from '../common/framework/logging/result.js';
 import { TestQuery, TestQuerySingleCase } from '../common/framework/query/query.js';
-import { TestGroup } from '../common/framework/test_group.js';
+import { makeTestGroup, makeTestGroupForUnitTesting } from '../common/framework/test_group.js';
 import { FilterResultTreeLeaf } from '../common/framework/tree.js';
 import { assert, objectEquals } from '../common/framework/util/util.js';
 
@@ -32,7 +32,7 @@ const specsData: { [k: string]: TestSpecOrReadme } = {
   'suite1/foo.spec.js': {
     description: 'desc 1b',
     g: (() => {
-      const g = new TestGroup(UnitTest);
+      const g = makeTestGroupForUnitTesting(UnitTest);
       g.test('hello').fn(() => {});
       g.test('bonjour').fn(() => {});
       g.test('hola').fn(() => {});
@@ -42,16 +42,16 @@ const specsData: { [k: string]: TestSpecOrReadme } = {
   'suite1/bar/README.txt': { description: 'desc 1c' },
   'suite1/bar/biz.spec.js': {
     description: 'desc 1f',
-    g: new TestGroup(UnitTest),
+    g: makeTestGroupForUnitTesting(UnitTest),
   },
   'suite1/bar/bez.spec.js': {
     description: 'desc 1g',
-    g: new TestGroup(UnitTest),
+    g: makeTestGroupForUnitTesting(UnitTest),
   },
   'suite1/bar/buzz/buzz.spec.js': {
     description: 'desc 1d',
     g: (() => {
-      const g = new TestGroup(UnitTest);
+      const g = makeTestGroupForUnitTesting(UnitTest);
       g.test('zap').fn(() => {});
       return g;
     })(),
@@ -59,7 +59,7 @@ const specsData: { [k: string]: TestSpecOrReadme } = {
   'suite1/baz.spec.js': {
     description: 'desc 1e',
     g: (() => {
-      const g = new TestGroup(UnitTest);
+      const g = makeTestGroupForUnitTesting(UnitTest);
       g.test('wye')
         .params([{}, { x: 1 }])
         .fn(() => {});
@@ -75,7 +75,7 @@ const specsData: { [k: string]: TestSpecOrReadme } = {
   'suite2/foof.spec.js': {
     description: 'desc 2b',
     g: (() => {
-      const g = new TestGroup(UnitTest);
+      const g = makeTestGroupForUnitTesting(UnitTest);
       g.test('blah').fn(t => {
         t.debug('OK');
       });
@@ -116,7 +116,7 @@ class LoadingTest extends UnitTest {
   }
 }
 
-export const g = new TestGroup(LoadingTest);
+export const g = makeTestGroup(LoadingTest);
 
 g.test('suite').fn(async t => {
   t.shouldReject('Error', t.load('suite1'));
