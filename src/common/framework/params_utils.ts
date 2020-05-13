@@ -1,17 +1,19 @@
 import { kSmallSeparator } from './query/separators.js';
 import { objectEquals, assert } from './util/util.js';
 
-/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-export type ParamArgument = any;
+// Consider adding more types here if needed
+export type ParamArgument = void | undefined | number | string | boolean | number[];
 export interface ParamSpec {
-  // TODO: make readonly
+  readonly [k: string]: ParamArgument;
+}
+export interface ParamSpecRW {
   [k: string]: ParamArgument;
 }
 export type ParamSpecIterable = Iterable<ParamSpec>;
 export type ParamSpecIterator = IterableIterator<ParamSpec>;
 
 export function extractPublicParams(params: ParamSpec): ParamSpec {
-  const publicParams: ParamSpec = {};
+  const publicParams: ParamSpecRW = {};
   for (const k of Object.keys(params)) {
     if (!k.startsWith('_')) {
       publicParams[k] = params[k];
@@ -41,7 +43,7 @@ export function parseParamsString(paramsString: string): ParamSpec {
     return {};
   }
 
-  const params: ParamSpec = {};
+  const params: ParamSpecRW = {};
   for (const paramSubstring of paramsString.split(kSmallSeparator)) {
     const [k, v] = parseSingleParam(paramSubstring);
     params[k] = v;

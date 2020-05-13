@@ -1,6 +1,6 @@
 import { TestFileLoader } from './file_loader.js';
 import { TestCaseRecorder } from './logging/test_case_recorder.js';
-import { ParamSpec, stringifySingleParam } from './params_utils.js';
+import { stringifySingleParam, ParamSpecRW } from './params_utils.js';
 import { compareQueries, Ordering } from './query/compare.js';
 import {
   TestQuery,
@@ -229,7 +229,7 @@ function leafForCase(
 
   // Subtree except for the leaf
   const entries = Object.entries(t.id.params);
-  const subqueryParams: ParamSpec = {};
+  const subqueryParams: ParamSpecRW = {};
   for (const [i, [k, v]] of entries.entries()) {
     name = stringifySingleParam(k, v);
     subqueryParams[k] = v;

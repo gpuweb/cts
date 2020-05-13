@@ -49,7 +49,7 @@ class ParamsBuilder<A extends {}> implements ParamSpecIterable {
           yield mergeParams(a, b);
         }
       }
-    });
+    }) as ParamSpecIterable;
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     return this as any;
   }
@@ -62,7 +62,7 @@ class ParamsBuilder<A extends {}> implements ParamSpecIterable {
           yield mergeParams(a, b);
         }
       }
-    });
+    }) as ParamSpecIterable;
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     return this as any;
   }
