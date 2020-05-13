@@ -162,6 +162,25 @@ function updateJSON(): void {
 
   // TODO: start populating page before waiting for everything to load?
   const qs = new URLSearchParams(window.location.search).getAll('q');
+  if (qs.length === 0) {
+    qs.push('webgpu:*');
+  }
+
+  // Update the URL bar to match the exact current options.
+  {
+    let url = window.location.protocol + '//' + window.location.host + window.location.pathname;
+    url +=
+      '?' +
+      new URLSearchParams([
+        ['runnow', runnow ? '1' : '0'],
+        ['worker', worker ? '1' : '0'],
+        ['debug', debug ? '1' : '0'],
+      ]).toString() +
+      '&' +
+      qs.map(q => 'q=' + q).join('&');
+    window.history.replaceState(null, '', url);
+  }
+
   assert(qs.length === 1, 'currently, there must be exactly one ?q=');
   const tree = await loader.loadTree(qs[0]);
 
