@@ -1,7 +1,7 @@
 import { CaseParams } from '../params_utils.js';
 import { assert } from '../util/util.js';
 
-import { encodeURLSelectively } from './encodeURLSelectively.js';
+import { encodeURIComponentSelectively } from './encode_selectively.js';
 import { kBigSeparator, kPathSeparator, kWildcard, kParamSeparator } from './separators.js';
 import { stringifyPublicParams } from './stringify_params.js';
 
@@ -15,7 +15,7 @@ export class TestQueryMultiFile {
   }
 
   toString(): string {
-    return encodeURLSelectively(this.toStringHelper().join(kBigSeparator));
+    return encodeURIComponentSelectively(this.toStringHelper().join(kBigSeparator));
   }
 
   toHTML(): string {

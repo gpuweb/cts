@@ -1,4 +1,4 @@
-export function encodeURLSelectively(s: string): string {
+export function encodeURIComponentSelectively(s: string): string {
   let ret = encodeURIComponent(s);
   ret = ret.replace(/%22/g, '"'); // for JSON strings
   ret = ret.replace(/%2C/g, ','); // for path separator, and JSON arrays
