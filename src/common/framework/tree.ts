@@ -122,7 +122,7 @@ export async function loadTreeForQuery(
       continue;
     }
 
-    const queryL1 = new TestQueryMultiTest(suite, entry.file, []);
+    const queryL1 = new TestQueryMultiFile(suite, entry.file);
     const orderingL1 = compareQueries(queryL1, queryToLoad);
     if (orderingL1 === Ordering.Unordered) {
       // File path is not matched by this filter.
