@@ -1,6 +1,6 @@
 import { TestFileLoader } from './file_loader.js';
 import { TestCaseRecorder } from './logging/test_case_recorder.js';
-import { stringifySingleParam, CaseParamsRW } from './params_utils.js';
+import { CaseParamsRW } from './params_utils.js';
 import { compareQueries, Ordering } from './query/compare.js';
 import {
   TestQuery,
@@ -9,6 +9,7 @@ import {
   TestQueryMultiFile,
   TestQueryMultiTest,
 } from './query/query.js';
+import { stringifySingleParam } from './query/stringify_params.js';
 import { RunCase, RunFn } from './test_group.js';
 import { assert } from './util/util.js';
 

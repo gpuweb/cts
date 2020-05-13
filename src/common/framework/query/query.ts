@@ -1,8 +1,9 @@
-import { CaseParams, stringifyPublicParams } from '../params_utils.js';
+import { CaseParams } from '../params_utils.js';
 import { assert } from '../util/util.js';
 
 import { encodeURLSelectively } from './encodeURLSelectively.js';
 import { kBigSeparator, kPathSeparator, kWildcard, kParamSeparator } from './separators.js';
+import { stringifyPublicParams } from './stringify_params.js';
 
 export class TestQueryMultiFile {
   readonly suite: string;

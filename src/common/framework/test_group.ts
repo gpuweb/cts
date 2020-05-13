@@ -5,9 +5,8 @@ import {
   CaseParamsIterable,
   extractPublicParams,
   paramsEquals,
-  stringifySingleParam,
-  checkPublicParamType,
 } from './params_utils.js';
+import { stringifySingleParam } from './query/stringify_params.js';
 import { validQueryPart } from './query/validQueryPart.js';
 import { assert } from './util/util.js';
 
@@ -121,7 +120,6 @@ class TestBuilder<F extends Fixture, P extends {}> {
       // number, string, boolean, undefined, number[]
       for (const [k, v] of Object.entries(publicParams)) {
         stringifySingleParam(k, v); // To check for invalid params values
-        checkPublicParamType(v);
       }
 
       assert(
