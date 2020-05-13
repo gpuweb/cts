@@ -3,22 +3,15 @@ import { parseQuery } from './query/parseQuery.js';
 import { RunCaseIterable } from './test_group.js';
 import { loadTreeForQuery, FilterResultTree, FilterResultTreeLeaf } from './tree.js';
 
-// An actual .spec.ts file, as imported.
+// A .spec.ts file, as imported.
 export interface SpecFile {
   readonly description: string;
   readonly g: RunCaseIterable;
 }
 
-// A shell object describing a directory (from its README.txt).
-export interface ReadmeFile {
-  readonly description: string;
-}
-
-export type TestSpecOrReadme = SpecFile | ReadmeFile;
-
 export abstract class TestFileLoader {
   abstract listing(suite: string): Promise<TestSuiteListing>;
-  protected abstract import(path: string): Promise<TestSpecOrReadme>;
+  protected abstract import(path: string): Promise<SpecFile>;
 
   importSpecFile(suite: string, path: string[]): Promise<SpecFile> {
     return this.import(`${suite}/${path.join('/')}.spec.js`) as Promise<SpecFile>;

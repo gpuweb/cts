@@ -2,7 +2,7 @@ export const description = `
 Tests for queries/filtering, loading, and running.
 `;
 
-import { TestFileLoader, TestSpecOrReadme } from '../common/framework/file_loader.js';
+import { TestFileLoader, SpecFile } from '../common/framework/file_loader.js';
 import { TestSuiteListing, TestSuiteListingEntry } from '../common/framework/listing.js';
 import { Logger } from '../common/framework/logging/logger.js';
 import { Status } from '../common/framework/logging/result.js';
@@ -27,8 +27,7 @@ const listingData: { [k: string]: TestSuiteListingEntry[] } = {
   ],
 };
 
-const specsData: { [k: string]: TestSpecOrReadme } = {
-  'suite1/README.txt': { description: 'desc 1a' },
+const specsData: { [k: string]: SpecFile } = {
   'suite1/foo.spec.js': {
     description: 'desc 1b',
     g: (() => {
@@ -39,7 +38,6 @@ const specsData: { [k: string]: TestSpecOrReadme } = {
       return g;
     })(),
   },
-  'suite1/bar/README.txt': { description: 'desc 1c' },
   'suite1/bar/biz.spec.js': {
     description: 'desc 1f',
     g: makeTestGroupForUnitTesting(UnitTest),
@@ -98,7 +96,7 @@ class FakeTestFileLoader extends TestFileLoader {
     return listingData[suite];
   }
 
-  async import(path: string): Promise<TestSpecOrReadme> {
+  async import(path: string): Promise<SpecFile> {
     assert(path in specsData, '[test] mock file ' + path + ' does not exist');
     return specsData[path];
   }
