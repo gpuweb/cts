@@ -3,17 +3,16 @@ import { objectEquals, assert } from './util/util.js';
 
 // Consider adding more types here if needed
 export type ParamArgument = void | undefined | number | string | boolean | number[];
-export interface ParamSpec {
+export interface CaseParams {
   readonly [k: string]: ParamArgument;
 }
-export interface ParamSpecRW {
+export interface CaseParamsRW {
   [k: string]: ParamArgument;
 }
-export type ParamSpecIterable = Iterable<ParamSpec>;
-export type ParamSpecIterator = IterableIterator<ParamSpec>;
+export type CaseParamsIterable = Iterable<CaseParams>;
 
-export function extractPublicParams(params: ParamSpec): ParamSpec {
-  const publicParams: ParamSpecRW = {};
+export function extractPublicParams(params: CaseParams): CaseParams {
+  const publicParams: CaseParamsRW = {};
   for (const k of Object.keys(params)) {
     if (!k.startsWith('_')) {
       publicParams[k] = params[k];
@@ -22,7 +21,7 @@ export function extractPublicParams(params: ParamSpec): ParamSpec {
   return publicParams;
 }
 
-export function stringifyPublicParams(p: ParamSpec): string[] {
+export function stringifyPublicParams(p: CaseParams): string[] {
   const pub = extractPublicParams(p);
   return Object.entries(pub).map(([k, v]) => stringifySingleParam(k, v));
 }
@@ -38,12 +37,12 @@ export function stringifySingleParamValue(v: ParamArgument): string {
 }
 
 // TODO: possibly delete
-export function parseParamsString(paramsString: string): ParamSpec {
+export function parseParamsString(paramsString: string): CaseParams {
   if (paramsString === '') {
     return {};
   }
 
-  const params: ParamSpecRW = {};
+  const params: CaseParamsRW = {};
   for (const paramSubstring of paramsString.split(kSmallSeparator)) {
     const [k, v] = parseSingleParam(paramSubstring);
     params[k] = v;
@@ -65,7 +64,7 @@ export function parseSingleParamValue(s: string): ParamArgument {
   return s === 'undefined' ? undefined : JSON.parse(s);
 }
 
-export function paramsEquals(x: ParamSpec | null, y: ParamSpec | null): boolean {
+export function paramsEquals(x: CaseParams | null, y: CaseParams | null): boolean {
   if (x === y) {
     return true;
   }
@@ -93,7 +92,7 @@ export function paramsEquals(x: ParamSpec | null, y: ParamSpec | null): boolean 
   return true;
 }
 
-export function paramsSupersets(sup: ParamSpec | null, sub: ParamSpec | null): boolean {
+export function paramsSupersets(sup: CaseParams | null, sub: CaseParams | null): boolean {
   if (sub === null) {
     return true;
   }

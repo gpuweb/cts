@@ -1,4 +1,4 @@
-import { ParamSpec, ParamSpecIterable, paramsEquals } from './params_utils.js';
+import { CaseParams, CaseParamsIterable, paramsEquals } from './params_utils.js';
 import { assert } from './util/util.js';
 
 // https://stackoverflow.com/a/56375136
@@ -33,11 +33,11 @@ export function params(): ParamsBuilder<{}> {
   return new ParamsBuilder();
 }
 
-class ParamsBuilder<A extends {}> implements ParamSpecIterable {
-  private paramSpecs: ParamSpecIterable = [{}];
+class ParamsBuilder<A extends {}> implements CaseParamsIterable {
+  private paramSpecs: CaseParamsIterable = [{}];
 
   [Symbol.iterator](): Iterator<A> {
-    const iter: Iterator<ParamSpec> = this.paramSpecs[Symbol.iterator]();
+    const iter: Iterator<CaseParams> = this.paramSpecs[Symbol.iterator]();
     return iter as Iterator<A>;
   }
 
@@ -49,7 +49,7 @@ class ParamsBuilder<A extends {}> implements ParamSpecIterable {
           yield mergeParams(a, b);
         }
       }
-    }) as ParamSpecIterable;
+    }) as CaseParamsIterable;
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     return this as any;
   }
@@ -62,7 +62,7 @@ class ParamsBuilder<A extends {}> implements ParamSpecIterable {
           yield mergeParams(a, b);
         }
       }
-    }) as ParamSpecIterable;
+    }) as CaseParamsIterable;
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     return this as any;
   }
@@ -83,7 +83,7 @@ class ParamsBuilder<A extends {}> implements ParamSpecIterable {
     return this.filter(x => !pred(x));
   }
 
-  exclude(exclude: ParamSpecIterable): ParamsBuilder<A> {
+  exclude(exclude: CaseParamsIterable): ParamsBuilder<A> {
     const excludeArray = Array.from(exclude);
     const paramSpecs = this.paramSpecs;
     this.paramSpecs = makeReusableIterable(function* () {

@@ -1,4 +1,4 @@
-import { parseSingleParam, ParamSpecRW } from '../params_utils.js';
+import { parseSingleParam, CaseParamsRW } from '../params_utils.js';
 import { assert } from '../util/util.js';
 
 import {
@@ -49,7 +49,7 @@ export function parseQuery(s: string): TestQuery {
 
   assert(test.length > 0, 'Test part of case-level query was empty (::)');
 
-  const params: ParamSpecRW = {};
+  const params: CaseParamsRW = {};
   for (const paramPart of paramsParts) {
     const [k, v] = parseSingleParam(paramPart);
     assert(validQueryPart.test(k), 'param key names must match ' + validQueryPart);

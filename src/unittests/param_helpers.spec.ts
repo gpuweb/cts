@@ -3,13 +3,13 @@ Unit tests for parameterization helpers.
 `;
 
 import { poptions, params } from '../common/framework/params.js';
-import { ParamSpec, ParamSpecIterable, paramsEquals } from '../common/framework/params_utils.js';
+import { CaseParams, CaseParamsIterable, paramsEquals } from '../common/framework/params_utils.js';
 import { TestGroup } from '../common/framework/test_group.js';
 
 import { UnitTest } from './unit_test.js';
 
 class ParamsTest extends UnitTest {
-  expectSpecEqual(act: ParamSpecIterable, exp: ParamSpec[]): void {
+  expectSpecEqual(act: CaseParamsIterable, exp: CaseParams[]): void {
     const a = Array.from(act);
     this.expect(a.length === exp.length && a.every((x, i) => paramsEquals(x, exp[i])));
   }

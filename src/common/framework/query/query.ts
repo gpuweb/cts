@@ -1,5 +1,5 @@
 import { TestGroupID, TestCaseID } from '../id.js';
-import { ParamSpec, stringifyPublicParams } from '../params_utils.js';
+import { CaseParams, stringifyPublicParams } from '../params_utils.js';
 
 import { kBigSeparator, kSmallSeparator, kWildcard } from './separators.js';
 
@@ -41,9 +41,9 @@ export class TestQueryMultiTest extends TestQueryMultiFile {
 }
 
 export class TestQueryMultiCase extends TestQueryMultiTest implements TestCaseID {
-  readonly params: ParamSpec;
+  readonly params: CaseParams;
 
-  constructor(suite: string, file: readonly string[], test: readonly string[], params: ParamSpec) {
+  constructor(suite: string, file: readonly string[], test: readonly string[], params: CaseParams) {
     super(suite, file, test);
     this.params = { ...params };
   }

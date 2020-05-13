@@ -1,7 +1,12 @@
 import { Fixture } from './fixture.js';
 import { TestCaseID } from './id.js';
 import { TestCaseRecorder } from './logging/test_case_recorder.js';
-import { ParamSpec, ParamSpecIterable, extractPublicParams, paramsEquals } from './params_utils.js';
+import {
+  CaseParams,
+  CaseParamsIterable,
+  extractPublicParams,
+  paramsEquals,
+} from './params_utils.js';
 import { validQueryPart } from './query/validQueryPart.js';
 import { checkPublicParamType } from './url_query.js';
 import { assert } from './util/util.js';
@@ -17,7 +22,7 @@ export interface RunCaseIterable {
   iterate(): Iterable<RunCase>;
 }
 
-type FixtureClass<F extends Fixture> = new (log: TestCaseRecorder, params: ParamSpec) => F;
+type FixtureClass<F extends Fixture> = new (log: TestCaseRecorder, params: CaseParams) => F;
 type TestFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
 
 export class TestGroup<F extends Fixture> implements RunCaseIterable {
@@ -74,7 +79,7 @@ class TestBuilder<F extends Fixture, P extends {}> {
   private readonly testPath: string[];
   private readonly fixture: FixtureClass<F>;
   private testFn: TestFn<F, P> | undefined;
-  private cases?: ParamSpecIterable = undefined;
+  private cases?: CaseParamsIterable = undefined;
 
   constructor(testPath: string[], fixture: FixtureClass<F>) {
     this.testPath = testPath;
@@ -88,7 +93,7 @@ class TestBuilder<F extends Fixture, P extends {}> {
   params<NewP extends {}>(specs: Iterable<NewP>): TestBuilderWithParams<F, NewP> {
     assert(this.cases === undefined, 'test case is already parameterized');
     const cases = Array.from(specs);
-    const seen: ParamSpec[] = [];
+    const seen: CaseParams[] = [];
     // This is n^2.
     for (const spec of cases) {
       const publicParams = extractPublicParams(spec);
@@ -121,13 +126,13 @@ class TestBuilder<F extends Fixture, P extends {}> {
 class RunCaseSpecific<F extends Fixture> implements RunCase {
   readonly id: TestCaseID;
 
-  private readonly params: ParamSpec | null;
+  private readonly params: CaseParams | null;
   private readonly fixture: FixtureClass<F>;
   private readonly fn: TestFn<F, never>;
 
   constructor(
     testPath: string[],
-    params: ParamSpec,
+    params: CaseParams,
     fixture: FixtureClass<F>,
     fn: TestFn<F, never>
   ) {

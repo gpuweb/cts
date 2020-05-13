@@ -1,4 +1,4 @@
-import { ParamSpec, ParamArgument, extractPublicParams } from '../params_utils.js';
+import { CaseParams, ParamArgument, extractPublicParams } from '../params_utils.js';
 import { assert } from '../util/util.js';
 
 import { TestQuery } from './query.js';
@@ -77,7 +77,7 @@ function comparePaths(a: readonly string[], b: readonly string[]): Ordering {
 //   [{a: 1}, {b: 2, c: 3}, {d: 4}]
 // Not sure if this will conflict badly with actual param generation.
 // Alternatively, tree.ts could just detect when a param subtree has only one child.
-function compareParamsPaths(p1: ParamSpec, p2: ParamSpec): Ordering {
+function compareParamsPaths(p1: CaseParams, p2: CaseParams): Ordering {
   const a: Array<[string, ParamArgument]> = Object.entries(extractPublicParams(p1));
   const b: Array<[string, ParamArgument]> = Object.entries(extractPublicParams(p2));
   const shorter = Math.min(a.length, b.length);
