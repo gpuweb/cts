@@ -19,34 +19,34 @@ export function parseQuery(s: string): TestQuery {
   assert(bigParts.length >= 2, `filter string must have at least one ${kBigSeparator}`);
   const suite = bigParts[0];
 
-  const { parts: file, wildcard: groupHasWildcard } = parseBigPart(bigParts[1], kPathSeparator);
+  const { parts: file, wildcard: filePathHasWildcard } = parseBigPart(bigParts[1], kPathSeparator);
 
   if (bigParts.length === 2) {
     // Query is file-level
     assert(
-      groupHasWildcard,
-      `File-level query without wildcard ${kWildcard}; did you want a test-level query? \
-(Append ${kBigSeparator}${kWildcard})`
+      filePathHasWildcard,
+      `File-level query without wildcard ${kWildcard}. Did you want a file-level query \
+(append ${kPathSeparator}${kWildcard}) or test-level query (append ${kBigSeparator}${kWildcard})?`
     );
     return new TestQueryMultiFile(suite, file);
   }
-  assert(!groupHasWildcard, `Wildcard ${kWildcard} must be at the end of the query string`);
+  assert(!filePathHasWildcard, `Wildcard ${kWildcard} must be at the end of the query string`);
 
-  const { parts: test, wildcard: testHasWildcard } = parseBigPart(bigParts[2], kPathSeparator);
+  const { parts: test, wildcard: testPathHasWildcard } = parseBigPart(bigParts[2], kPathSeparator);
 
   if (bigParts.length === 3) {
     // Query is test-level
     assert(
-      testHasWildcard,
-      `Test-level query without wildcard ${kWildcard}; did you want a case-level query? \
-(Append ${kBigSeparator}${kWildcard})`
+      testPathHasWildcard,
+      `Test-level query without wildcard ${kWildcard}; did you want a test-level query \
+(append ${kPathSeparator}${kWildcard}) or case-level query (append ${kBigSeparator}${kWildcard})?`
     );
     assert(file.length > 0, 'File part of test-level query was empty (::)');
     return new TestQueryMultiTest(suite, file, test);
   }
 
   // Query is case-level
-  assert(!testHasWildcard, `Wildcard ${kWildcard} must be at the end of the query string`);
+  assert(!testPathHasWildcard, `Wildcard ${kWildcard} must be at the end of the query string`);
 
   const { parts: paramsParts, wildcard: paramsHasWildcard } = parseBigPart(
     bigParts[3],

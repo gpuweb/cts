@@ -1,5 +1,6 @@
 import { DefaultTestFileLoader } from '../framework/file_loader.js';
 import { Logger } from '../framework/logging/logger.js';
+import { FilterResultTreeLeaf } from '../framework/tree.js';
 import { AsyncMutex } from '../framework/util/async_mutex.js';
 import { assert } from '../framework/util/util.js';
 
@@ -20,6 +21,14 @@ declare function async_test(f: (this: WptTestObject) => Promise<void>, name: str
   assert(qs.length === 1, 'currently, there must be exactly one ?q=');
   const testcases = await loader.loadTests(qs[0]);
 
+  const log = await addWPTTests(testcases);
+
+  const resultsElem = document.getElementById('results') as HTMLElement;
+  resultsElem.textContent = log.asJSON(2);
+})();
+
+// Note: async_tests must ALL be added within the same task. This function *must not* be async.
+function addWPTTests(testcases: IterableIterator<FilterResultTreeLeaf>): Promise<Logger> {
   const worker = optionEnabled('worker') ? new TestWorker() : undefined;
 
   const log = new Logger(false);
@@ -53,11 +62,8 @@ declare function async_test(f: (this: WptTestObject) => Promise<void>, name: str
       return p;
     };
 
-    // Note: apparently, async_tests must ALL be added within the same task.
     async_test(wpt_fn, name);
   }
 
-  await Promise.all(running);
-  const resultsElem = document.getElementById('results') as HTMLElement;
-  resultsElem.textContent = log.asJSON(2);
-})();
+  return Promise.all(running).then(() => log);
+}

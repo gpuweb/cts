@@ -91,14 +91,7 @@ function makeCaseHTML(t: FilterResultTreeLeaf): [HTMLElement, RunSubtree] {
 function makeSubtreeHTML(t: FilterResultSubtree): [HTMLElement, RunSubtree] {
   const div = $('<div>').addClass('subtree');
 
-  const header = makeTreeNodeHeaderHTML(
-    t.query,
-    t.description,
-    () => {
-      return runSubtree();
-    },
-    false
-  );
+  const header = makeTreeNodeHeaderHTML(t.query, t.description, () => runSubtree(), false);
   div.append(header);
 
   const subtreeHTML = $('<div>').addClass('subtreechildren').appendTo(div);

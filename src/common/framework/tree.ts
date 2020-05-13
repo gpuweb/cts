@@ -176,7 +176,7 @@ export async function loadTreeForQuery(
         checkCollapsible
       );
 
-      // Subtree for case is suite:a,b:c,d:x=1;y=2
+      // Leaf for case is suite:a,b:c,d:x=1;y=2
       makeLeafForCase(subtreeL2, t, checkCollapsible);
 
       foundCase = true;

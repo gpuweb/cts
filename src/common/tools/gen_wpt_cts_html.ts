@@ -2,7 +2,8 @@ import { promises as fs } from 'fs';
 
 import { listing } from '../../webgpu/listing.js';
 import { DefaultTestFileLoader } from '../framework/file_loader.js';
-import { kBigSeparator } from '../framework/query/separators.js';
+import { TestQueryMultiTest } from '../framework/query/query.js';
+import { kBigSeparator, kWildcard } from '../framework/query/separators.js';
 import { TestSuiteListingEntry } from '../framework/test_suite_listing.js';
 
 function printUsageAndExit(rc: number): void {
@@ -49,8 +50,8 @@ const [
     const entries = (await listing) as TestSuiteListingEntry[];
     const lines = entries
       // Exclude READMEs.
-      .filter(l => l.file.length !== 0 && l.file[l.file.length - 1] !== '')
-      .map(l => '?q=webgpu:' + l.file);
+      .filter(l => 'description' in l)
+      .map(l => '?q=' + new TestQueryMultiTest('webgpu', l.file, []).toString());
     await generateFile(lines);
   } else {
     // Prefixes sorted from longest to shortest
@@ -82,7 +83,10 @@ const [
     const loader = new DefaultTestFileLoader();
     const lines: Array<string | undefined> = [];
     for (const prefix of argsPrefixes) {
-      const tree = await loader.loadTree(suite + kBigSeparator, expectations.get(prefix)!);
+      const tree = await loader.loadTree(
+        suite + kBigSeparator + kWildcard,
+        expectations.get(prefix)!
+      );
 
       lines.push(undefined); // output blank line between prefixes
       for (const q of tree.iterateCollapsedQueries()) {
