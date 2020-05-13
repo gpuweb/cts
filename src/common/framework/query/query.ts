@@ -1,5 +1,6 @@
 import { TestGroupID, TestCaseID } from '../id.js';
 import { CaseParams, stringifyPublicParams } from '../params_utils.js';
+import { assert } from '../util/util.js';
 
 import { kBigSeparator, kPathSeparator, kWildcard, kParamSeparator } from './separators.js';
 
@@ -28,6 +29,7 @@ export class TestQueryMultiTest extends TestQueryMultiFile {
   readonly test: readonly string[];
 
   constructor(suite: string, file: readonly string[], test: readonly string[]) {
+    assert(file.length > 0, 'multi-test (or finer) query must have file-path');
     super(suite, file);
     this.test = [...test];
   }
@@ -44,6 +46,7 @@ export class TestQueryMultiCase extends TestQueryMultiTest implements TestCaseID
   readonly params: CaseParams;
 
   constructor(suite: string, file: readonly string[], test: readonly string[], params: CaseParams) {
+    assert(test.length > 0, 'multi-case (or finer) query must have test-path');
     super(suite, file, test);
     this.params = { ...params };
   }

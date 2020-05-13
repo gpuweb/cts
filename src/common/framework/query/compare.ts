@@ -10,6 +10,8 @@ export const enum Ordering {
   StrictSubset,
 }
 
+// Compares two queries for their ordering (which is used to build the tree).
+// See src/unittests/query_compare.spec.ts for examples.
 export function compareQueries(a: TestQuery, b: TestQuery): Ordering {
   if (a.suite !== b.suite) {
     return Ordering.Unordered;
@@ -38,21 +40,25 @@ export function compareQueries(a: TestQuery, b: TestQuery): Ordering {
   return Ordering.Equal;
 }
 
-function cmpLevel(ordering: Ordering, aBig: boolean, bBig: boolean): Ordering | undefined {
-  if (!aBig && !bBig) {
+// Compares a single level of a query.
+// "IsBig" means the query is big relative to the level, e.g. for test-level:
+//   anything >= suite:a,* is big
+//   anything <= suite:a:* is small
+function cmpLevel(ordering: Ordering, aIsBig: boolean, bIsBig: boolean): Ordering | undefined {
+  if (!aIsBig && !bIsBig) {
     return ordering === Ordering.Equal ? undefined : Ordering.Unordered;
   }
   switch (ordering) {
     case Ordering.Unordered:
       return Ordering.Unordered;
     case Ordering.StrictSuperset:
-      return aBig || !bBig ? Ordering.StrictSuperset : Ordering.Unordered;
+      return aIsBig || !bIsBig ? Ordering.StrictSuperset : Ordering.Unordered;
     case Ordering.StrictSubset:
-      return !aBig || bBig ? Ordering.StrictSubset : Ordering.Unordered;
+      return !aIsBig || bIsBig ? Ordering.StrictSubset : Ordering.Unordered;
   }
-  if (aBig && bBig) return Ordering.Equal;
-  if (aBig) return Ordering.StrictSuperset;
-  if (bBig) return Ordering.StrictSubset;
+  if (aIsBig && bIsBig) return Ordering.Equal;
+  if (aIsBig) return Ordering.StrictSuperset;
+  if (bIsBig) return Ordering.StrictSubset;
   return undefined;
 }
 
@@ -73,10 +79,6 @@ function comparePaths(a: readonly string[], b: readonly string[]): Ordering {
   }
 }
 
-// TODO: eventually, perhaps params should be grouped for hierarchy, like:
-//   [{a: 1}, {b: 2, c: 3}, {d: 4}]
-// Not sure if this will conflict badly with actual param generation.
-// Alternatively, tree.ts could just detect when a param subtree has only one child.
 function compareParamsPaths(p1: CaseParams, p2: CaseParams): Ordering {
   const a: Array<[string, ParamArgument]> = Object.entries(extractPublicParams(p1));
   const b: Array<[string, ParamArgument]> = Object.entries(extractPublicParams(p2));

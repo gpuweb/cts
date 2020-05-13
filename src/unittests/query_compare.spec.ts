@@ -3,16 +3,125 @@ Tests for TestQuery comparison
 `;
 
 import { compareQueries, Ordering } from '../common/framework/query/compare.js';
-import { parseQuery } from '../common/framework/query/parseQuery.js';
+import {
+  TestQuery,
+  TestQuerySingleCase,
+  TestQueryMultiFile,
+  TestQueryMultiTest,
+  TestQueryMultiCase,
+} from '../common/framework/query/query.js';
 import { TestGroup } from '../common/framework/test_group.js';
 
 import { UnitTest } from './unit_test.js';
 
-export const g = new TestGroup(UnitTest);
+class F extends UnitTest {
+  expectQ(a: TestQuery, exp: '<' | '=' | '>' | '!', b: TestQuery) {
+    const [ordering, inverseOrdering] =
+      exp === '<'
+        ? [Ordering.StrictSubset, Ordering.StrictSuperset]
+        : exp === '='
+        ? [Ordering.Equal, Ordering.Equal]
+        : exp === '>'
+        ? [Ordering.StrictSuperset, Ordering.StrictSubset]
+        : [Ordering.Unordered, Ordering.Unordered];
+    this.expect(compareQueries(a, b) === ordering);
+    this.expect(compareQueries(b, a) === inverseOrdering);
+  }
 
-g.test('one').fn(t => {
-  const q1 = parseQuery('suite1:bar,buzz,buzz:zap:');
-  const q2 = parseQuery('suite1:bar:*');
+  expectWellOrdered(...qs: TestQuery[]) {
+    for (let i = 0; i < qs.length; ++i) {
+      this.expectQ(qs[i], '=', qs[i]);
+      for (let j = i + 1; j < qs.length; ++j) {
+        this.expectQ(qs[i], '>', qs[j]);
+      }
+    }
+  }
 
-  t.expect(compareQueries(q1, q2) === Ordering.Unordered);
+  expectUnordered(...qs: TestQuery[]) {
+    for (let i = 0; i < qs.length; ++i) {
+      this.expectQ(qs[i], '=', qs[i]);
+      for (let j = i + 1; j < qs.length; ++j) {
+        this.expectQ(qs[i], '!', qs[j]);
+      }
+    }
+  }
+}
+
+export const g = new TestGroup(F);
+
+// suite:*  >  suite:a,*  >  suite:a,b,*   >  suite:a,b:*
+// suite:a,b:*  >  suite:a,b:c,*  >  suite:a,b:c,d,*  >  suite:a,b:c,d:*
+// suite:a,b:c,d:*  >  suite:a,b:c,d:x=1;*  >  suite:a,b:c,d:x=1;y=2;*  >  suite:a,b:c,d:x=1;y=2
+// suite:a;* (unordered) suite:b;*
+g.test('well_ordered').fn(t => {
+  t.expectWellOrdered(
+    new TestQueryMultiFile('suite', []),
+    new TestQueryMultiFile('suite', ['a']),
+    new TestQueryMultiFile('suite', ['a', 'b']),
+    new TestQueryMultiTest('suite', ['a', 'b'], []),
+    new TestQueryMultiTest('suite', ['a', 'b'], ['c']),
+    new TestQueryMultiTest('suite', ['a', 'b'], ['c', 'd']),
+    new TestQueryMultiCase('suite', ['a', 'b'], ['c', 'd'], {}),
+    new TestQueryMultiCase('suite', ['a', 'b'], ['c', 'd'], { x: 1 }),
+    new TestQueryMultiCase('suite', ['a', 'b'], ['c', 'd'], { x: 1, y: 2 }),
+    new TestQuerySingleCase('suite', ['a', 'b'], ['c', 'd'], { x: 1, y: 2 })
+  );
+  t.expectWellOrdered(
+    new TestQueryMultiFile('suite', []),
+    new TestQueryMultiFile('suite', ['a']),
+    new TestQueryMultiFile('suite', ['a', 'b']),
+    new TestQueryMultiTest('suite', ['a', 'b'], []),
+    new TestQueryMultiTest('suite', ['a', 'b'], ['c']),
+    new TestQueryMultiTest('suite', ['a', 'b'], ['c', 'd']),
+    new TestQueryMultiCase('suite', ['a', 'b'], ['c', 'd'], {}),
+    new TestQuerySingleCase('suite', ['a', 'b'], ['c', 'd'], {})
+  );
+});
+
+g.test('unordered').fn(t => {
+  t.expectUnordered(
+    new TestQueryMultiFile('suite', ['a']), //
+    new TestQueryMultiFile('suite', ['x'])
+  );
+  t.expectUnordered(
+    new TestQueryMultiFile('suite', ['a', 'b']),
+    new TestQueryMultiFile('suite', ['a', 'x'])
+  );
+  t.expectUnordered(
+    new TestQueryMultiTest('suite', ['a', 'b'], ['c']),
+    new TestQueryMultiTest('suite', ['a', 'b'], ['x']),
+    new TestQueryMultiTest('suite', ['a'], []),
+    new TestQueryMultiTest('suite', ['a', 'x'], [])
+  );
+  t.expectUnordered(
+    new TestQueryMultiTest('suite', ['a', 'b'], ['c', 'd']),
+    new TestQueryMultiTest('suite', ['a', 'b'], ['c', 'x']),
+    new TestQueryMultiTest('suite', ['a'], []),
+    new TestQueryMultiTest('suite', ['a', 'x'], [])
+  );
+  t.expectUnordered(
+    new TestQueryMultiTest('suite', ['a', 'b'], ['c', 'd']),
+    new TestQueryMultiTest('suite', ['a', 'b'], ['c', 'x']),
+    new TestQueryMultiTest('suite', ['a'], []),
+    new TestQueryMultiTest('suite', ['a', 'x'], ['c'])
+  );
+  t.expectUnordered(
+    new TestQueryMultiCase('suite', ['a', 'b'], ['c', 'd'], { x: 1 }),
+    new TestQueryMultiCase('suite', ['a', 'b'], ['c', 'd'], { x: 9 }),
+    new TestQueryMultiCase('suite', ['a', 'b'], ['c'], { x: 9 })
+  );
+  t.expectUnordered(
+    new TestQueryMultiCase('suite', ['a', 'b'], ['c', 'd'], { x: 1, y: 2 }),
+    new TestQueryMultiCase('suite', ['a', 'b'], ['c', 'd'], { x: 1, y: 8 }),
+    new TestQueryMultiCase('suite', ['a', 'b'], ['c'], { x: 1, y: 8 })
+  );
+  t.expectUnordered(
+    new TestQuerySingleCase('suite', ['a', 'b'], ['c', 'd'], { x: 1, y: 2 }),
+    new TestQuerySingleCase('suite', ['a', 'b'], ['c', 'd'], { x: 1, y: 8 }),
+    new TestQuerySingleCase('suite', ['a', 'b'], ['c'], { x: 1, y: 8 })
+  );
+  t.expectUnordered(
+    new TestQuerySingleCase('suite1', ['bar', 'buzz', 'buzz'], ['zap'], {}),
+    new TestQueryMultiTest('suite1', ['bar'], [])
+  );
 });

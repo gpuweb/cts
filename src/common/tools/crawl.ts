@@ -38,7 +38,6 @@ export async function crawl(suite: string): Promise<TestSuiteListingEntry[]> {
       const path = filepathWithoutExtension.split('/');
       entries.push({ file: path, description: mod.description.trim() });
     } else if (path.basename(file) === 'README.txt') {
-      console.log(f);
       const filepathWithoutExtension = f.substring(0, f.length - '/README.txt'.length);
       const readme = fs.readFileSync(file, 'utf8').trim();
 
