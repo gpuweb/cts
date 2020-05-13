@@ -7,9 +7,9 @@ import {
   extractPublicParams,
   paramsEquals,
   stringifySingleParam,
+  checkPublicParamType,
 } from './params_utils.js';
 import { validQueryPart } from './query/validQueryPart.js';
-import { checkPublicParamType } from './url_query.js';
 import { assert } from './util/util.js';
 
 export type RunFn = (rec: TestCaseRecorder) => Promise<void>;

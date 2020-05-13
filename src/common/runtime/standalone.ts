@@ -2,12 +2,12 @@
 
 import { DefaultTestFileLoader } from '../framework/file_loader.js';
 import { Logger } from '../framework/logging/logger.js';
+import { TestQuery } from '../framework/query/query.js';
 import {
   FilterResultTreeNode,
   FilterResultSubtree,
   FilterResultTreeLeaf,
 } from '../framework/tree.js';
-import { encodeSelectively } from '../framework/url_query.js';
 import { assert } from '../framework/util/util.js';
 
 import { optionEnabled } from './helper/options.js';
@@ -80,7 +80,7 @@ function makeCaseHTML(t: FilterResultTreeLeaf): [HTMLElement, RunSubtree] {
     }
   };
 
-  const casehead = makeTreeNodeHeaderHTML(name, undefined, runSubtree, true);
+  const casehead = makeTreeNodeHeaderHTML(t.query, undefined, runSubtree, true);
   div.append(casehead);
   const casetime = $('<div>').addClass('testcasetime').html('ms').appendTo(casehead);
   const caselogs = $('<div>').addClass('testcaselogs').appendTo(div);
@@ -92,7 +92,7 @@ function makeSubtreeHTML(t: FilterResultSubtree): [HTMLElement, RunSubtree] {
   const div = $('<div>').addClass('subtree');
 
   const header = makeTreeNodeHeaderHTML(
-    t.query.toString(),
+    t.query,
     t.description,
     () => {
       return runSubtree();
@@ -126,23 +126,14 @@ function makeSubtreeChildrenHTML(
 }
 
 function makeTreeNodeHeaderHTML(
-  name: string,
+  query: TestQuery,
   description: string | undefined,
   runSubtree: RunSubtree,
   isLeaf: boolean
 ): HTMLElement {
   const div = $('<div>').addClass('nodeheader');
 
-  const nameEncoded = encodeSelectively(name);
-  let nameHTML;
-  {
-    const i = nameEncoded.indexOf('{');
-    const n1 = i === -1 ? nameEncoded : nameEncoded.slice(0, i + 1);
-    const n2 = i === -1 ? '' : nameEncoded.slice(i + 1);
-    nameHTML = n1.replace(/:/g, ':<wbr>') + '<wbr>' + n2.replace(/,/g, ',<wbr>');
-  }
-
-  const href = `?${worker ? 'worker&' : ''}${debug ? 'debug&' : ''}q=${nameEncoded}`;
+  const href = `?${worker ? 'worker&' : ''}${debug ? 'debug&' : ''}q=${query.toString()}`;
   $('<button>')
     .addClass(isLeaf ? 'leafrun' : 'noderun')
     .attr('alt', 'Run subtree')
@@ -159,7 +150,7 @@ function makeTreeNodeHeaderHTML(
     .attr('title', 'Open')
     .appendTo(div);
   const nodetitle = $('<div>').addClass('nodetitle').appendTo(div);
-  $('<span>').addClass('nodename').html(nameHTML).appendTo(nodetitle);
+  $('<span>').addClass('nodename').html(query.toHTML()).appendTo(nodetitle);
   if (description) {
     $('<div>')
       .addClass('nodedescription')

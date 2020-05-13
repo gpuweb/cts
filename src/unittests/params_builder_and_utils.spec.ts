@@ -122,8 +122,8 @@ g.test('expand,invalid').fn(t => {
 });
 
 g.test('undefined').fn(t => {
-  t.expectSpecEqual([{ a: undefined }], [{}]);
-  t.expectSpecEqual([{}], [{ a: undefined }]);
+  t.expect(!paramsEquals({ a: undefined }, {}));
+  t.expect(!paramsEquals({}, { a: undefined }));
 });
 
 g.test('arrays').fn(t => {

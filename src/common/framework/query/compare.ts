@@ -1,5 +1,5 @@
 import { CaseParams, ParamArgument, extractPublicParams } from '../params_utils.js';
-import { assert } from '../util/util.js';
+import { assert, objectEquals } from '../util/util.js';
 
 import { TestQuery } from './query.js';
 
@@ -79,7 +79,7 @@ function comparePaths(a: readonly string[], b: readonly string[]): Ordering {
   }
 }
 
-function compareParamsPaths(p1: CaseParams, p2: CaseParams): Ordering {
+export function compareParamsPaths(p1: CaseParams, p2: CaseParams): Ordering {
   const a: Array<[string, ParamArgument]> = Object.entries(extractPublicParams(p1));
   const b: Array<[string, ParamArgument]> = Object.entries(extractPublicParams(p2));
   const shorter = Math.min(a.length, b.length);
@@ -87,7 +87,7 @@ function compareParamsPaths(p1: CaseParams, p2: CaseParams): Ordering {
   for (let i = 0; i < shorter; ++i) {
     const [ak, av] = a[i];
     const [bk, bv] = b[i];
-    if (ak !== bk || av !== bv) {
+    if (ak !== bk || !objectEquals(av, bv)) {
       return Ordering.Unordered;
     }
   }

@@ -1,5 +1,6 @@
+import { compareParamsPaths, Ordering } from './query/compare.js';
 import { kWildcard, kParamSeparator } from './query/separators.js';
-import { objectEquals, assert } from './util/util.js';
+import { assert, unreachable } from './util/util.js';
 
 // Consider adding more types here if needed
 export type ParamArgument = void | undefined | number | string | boolean | number[];
@@ -40,45 +41,21 @@ function stringifySingleParamValue(v: ParamArgument): string {
   return s;
 }
 
-export function paramsEquals(x: CaseParams | null, y: CaseParams | null): boolean {
-  if (x === y) {
-    return true;
-  }
-  if (x === null) {
-    x = {};
-  }
-  if (y === null) {
-    y = {};
-  }
-
-  for (const xk of Object.keys(x)) {
-    if (x[xk] !== undefined && !(xk in y)) {
-      return false;
-    }
-    if (!objectEquals(x[xk], y[xk])) {
-      return false;
-    }
-  }
-
-  for (const yk of Object.keys(y)) {
-    if (y[yk] !== undefined && !(yk in x)) {
-      return false;
-    }
-  }
-  return true;
+export function paramsEquals(x: CaseParams, y: CaseParams): boolean {
+  return compareParamsPaths(x, y) === Ordering.Equal;
 }
 
-export function paramsSupersets(sup: CaseParams | null, sub: CaseParams | null): boolean {
-  if (sub === null) {
-    return true;
+export function checkPublicParamType(v: ParamArgument): void {
+  if (typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean' || v === undefined) {
+    return;
   }
-  if (sup === null) {
-    sup = {};
-  }
-  for (const k of Object.keys(sub)) {
-    if (!(k in sup) || sup[k] !== sub[k]) {
-      return false;
+  if (v instanceof Array) {
+    for (const x of v) {
+      if (typeof x !== 'number') {
+        break;
+      }
     }
+    return;
   }
-  return true;
+  unreachable('Invalid type for test case params ' + v);
 }

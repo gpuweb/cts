@@ -2,9 +2,8 @@ import { TestGroupID, TestCaseID } from '../id.js';
 import { CaseParams, stringifyPublicParams } from '../params_utils.js';
 import { assert } from '../util/util.js';
 
+import { encodeURLSelectively } from './encodeURLSelectively.js';
 import { kBigSeparator, kPathSeparator, kWildcard, kParamSeparator } from './separators.js';
-
-// XXX: method returning enum for level?
 
 export class TestQueryMultiFile implements TestGroupID {
   readonly suite: string;
@@ -16,9 +15,15 @@ export class TestQueryMultiFile implements TestGroupID {
   }
 
   toString(): string {
-    let s = this.suite;
-    s += kBigSeparator + [...this.file, kWildcard].join(kPathSeparator);
-    return s;
+    return encodeURLSelectively(this.toStringHelper().join(kBigSeparator));
+  }
+
+  toHTML(): string {
+    return this.toStringHelper().join(kBigSeparator + '<wbr>');
+  }
+
+  protected toStringHelper(): string[] {
+    return [this.suite, [...this.file, kWildcard].join(kPathSeparator)];
   }
 
   // Prevents object literals from coercing to these class types.
@@ -34,11 +39,12 @@ export class TestQueryMultiTest extends TestQueryMultiFile {
     this.test = [...test];
   }
 
-  toString(): string {
-    let s = this.suite;
-    s += kBigSeparator + this.file.join(kPathSeparator);
-    s += kBigSeparator + [...this.test, kWildcard].join(kPathSeparator);
-    return s;
+  protected toStringHelper(): string[] {
+    return [
+      this.suite,
+      this.file.join(kPathSeparator),
+      [...this.test, kWildcard].join(kPathSeparator),
+    ];
   }
 }
 
@@ -56,13 +62,14 @@ export class TestQueryMultiCase extends TestQueryMultiTest implements TestCaseID
     return true;
   }
 
-  toString(): string {
+  protected toStringHelper(): string[] {
     const paramsParts = stringifyPublicParams(this.params);
-    let s = this.suite;
-    s += kBigSeparator + this.file.join(kPathSeparator);
-    s += kBigSeparator + this.test.join(kPathSeparator);
-    s += kBigSeparator + [...paramsParts, kWildcard].join(kParamSeparator);
-    return s;
+    return [
+      this.suite,
+      this.file.join(kPathSeparator),
+      this.test.join(kPathSeparator),
+      [...paramsParts, kWildcard].join(kParamSeparator),
+    ];
   }
 }
 
@@ -71,13 +78,14 @@ export class TestQuerySingleCase extends TestQueryMultiCase {
     return false;
   }
 
-  toString(): string {
+  protected toStringHelper(): string[] {
     const paramsParts = stringifyPublicParams(this.params);
-    let s = this.suite;
-    s += kBigSeparator + this.file.join(kPathSeparator);
-    s += kBigSeparator + this.test.join(kPathSeparator);
-    s += kBigSeparator + paramsParts.join(kParamSeparator);
-    return s;
+    return [
+      this.suite,
+      this.file.join(kPathSeparator),
+      this.test.join(kPathSeparator),
+      paramsParts.join(kParamSeparator),
+    ];
   }
 }
 

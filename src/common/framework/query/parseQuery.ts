@@ -12,6 +12,9 @@ import { kBigSeparator, kWildcard, kPathSeparator, kParamSeparator } from './sep
 import { validQueryPart } from './validQueryPart.js';
 
 export function parseQuery(s: string): TestQuery {
+  // Inverse of encodeURLSelectively:
+  s = decodeURIComponent(s);
+
   const bigParts = s.split(kBigSeparator, 4); // suite, group, test, params
   assert(bigParts.length >= 2, `filter string must have at least one ${kBigSeparator}`);
   const suite = bigParts[0];
