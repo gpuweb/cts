@@ -1,4 +1,4 @@
-import { TestFileLoader } from './loader.js';
+import { TestFileLoader } from './file_loader.js';
 import { TestCaseRecorder } from './logging/test_case_recorder.js';
 import { ParamSpec, stringifySingleParam } from './params_utils.js';
 import { compareQueries, Ordering } from './query/compare.js';

@@ -3,10 +3,8 @@ import { parseQuery } from './query/parseQuery.js';
 import { RunCaseIterable } from './test_group.js';
 import { loadTreeForQuery, FilterResultTree, FilterResultTreeLeaf } from './tree.js';
 
-// One of the following:
-// - An actual .spec.ts file, as imported.
-// - A *filtered* list of cases from a single .spec.ts file.
-export interface TestSpec {
+// An actual .spec.ts file, as imported.
+export interface SpecFile {
   readonly description: string;
   readonly g: RunCaseIterable;
 }
@@ -16,45 +14,36 @@ export interface ReadmeFile {
   readonly description: string;
 }
 
-export type TestSpecOrReadme = TestSpec | ReadmeFile;
+export type TestSpecOrReadme = SpecFile | ReadmeFile;
 
 export abstract class TestFileLoader {
   abstract listing(suite: string): Promise<TestSuiteListing>;
   protected abstract import(path: string): Promise<TestSpecOrReadme>;
 
-  importSpecFile(suite: string, path: string[]): Promise<TestSpec> {
-    return this.import(`${suite}/${path.join('/')}.spec.js`) as Promise<TestSpec>;
-  }
-}
-
-class DefaultTestFileLoader extends TestFileLoader {
-  async listing(suite: string): Promise<TestSuiteListing> {
-    return (await import(`../../${suite}/listing.js`)).listing;
-  }
-
-  import(path: string): Promise<TestSpec> {
-    return import('../../' + path);
-  }
-}
-
-export class TestLoader {
-  private fileLoader: TestFileLoader;
-
-  constructor(fileLoader: TestFileLoader = new DefaultTestFileLoader()) {
-    this.fileLoader = fileLoader;
+  importSpecFile(suite: string, path: string[]): Promise<SpecFile> {
+    return this.import(`${suite}/${path.join('/')}.spec.js`) as Promise<SpecFile>;
   }
 
   async loadTree(query: string, subqueriesToExpand: string[] = []): Promise<FilterResultTree> {
     return loadTreeForQuery(
-      this.fileLoader,
+      this,
       parseQuery(query),
       subqueriesToExpand.map(q => parseQuery(q))
     );
   }
 
-  // TODO: Test this
   async loadTests(query: string): Promise<IterableIterator<FilterResultTreeLeaf>> {
     const tree = await this.loadTree(query);
     return tree.iterate();
+  }
+}
+
+export class DefaultTestFileLoader extends TestFileLoader {
+  async listing(suite: string): Promise<TestSuiteListing> {
+    return (await import(`../../${suite}/listing.js`)).listing;
+  }
+
+  import(path: string): Promise<SpecFile> {
+    return import('../../' + path);
   }
 }

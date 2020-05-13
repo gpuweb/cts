@@ -1,6 +1,6 @@
 // Implements the standalone test runner (see also: /standalone/index.html).
 
-import { TestLoader } from '../framework/loader.js';
+import { DefaultTestFileLoader } from '../framework/file_loader.js';
 import { Logger } from '../framework/logging/logger.js';
 import {
   FilterResultTreeNode,
@@ -168,7 +168,7 @@ function updateJSON(): void {
 }
 
 (async () => {
-  const loader = new TestLoader();
+  const loader = new DefaultTestFileLoader();
 
   // TODO: start populating page before waiting for everything to load?
   const qs = new URLSearchParams(window.location.search).getAll('q');

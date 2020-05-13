@@ -1,4 +1,4 @@
-import { TestLoader } from '../framework/loader.js';
+import { DefaultTestFileLoader } from '../framework/file_loader.js';
 import { Logger } from '../framework/logging/logger.js';
 import { AsyncMutex } from '../framework/util/async_mutex.js';
 import { assert } from '../framework/util/util.js';
@@ -15,7 +15,7 @@ declare interface WptTestObject {
 declare function async_test(f: (this: WptTestObject) => Promise<void>, name: string): void;
 
 (async () => {
-  const loader = new TestLoader();
+  const loader = new DefaultTestFileLoader();
   const qs = new URLSearchParams(window.location.search).getAll('q');
   assert(qs.length === 1, 'currently, there must be exactly one ?q=');
   const testcases = await loader.loadTests(qs[0]);

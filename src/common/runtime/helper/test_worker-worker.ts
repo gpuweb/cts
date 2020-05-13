@@ -1,11 +1,11 @@
-import { TestLoader } from '../../framework/loader.js';
+import { DefaultTestFileLoader } from '../../framework/file_loader.js';
 import { Logger } from '../../framework/logging/logger.js';
 import { assert } from '../../framework/util/util.js';
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 declare const self: any; // should be DedicatedWorkerGlobalScope
 
-const loader = new TestLoader();
+const loader = new DefaultTestFileLoader();
 
 self.onmessage = async (ev: MessageEvent) => {
   const { query, debug } = ev.data;

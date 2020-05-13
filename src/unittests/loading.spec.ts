@@ -2,8 +2,8 @@ export const description = `
 Tests for queries/filtering, loading, and running.
 `;
 
+import { TestFileLoader, TestSpecOrReadme } from '../common/framework/file_loader.js';
 import { TestSuiteListing, TestSuiteListingEntry } from '../common/framework/listing.js';
-import { TestFileLoader, TestLoader, TestSpecOrReadme } from '../common/framework/loader.js';
 import { Logger } from '../common/framework/logging/logger.js';
 import { Status } from '../common/framework/logging/result.js';
 import { TestQuery, TestQuerySingleCase } from '../common/framework/query/query.js';
@@ -105,7 +105,7 @@ class FakeTestFileLoader extends TestFileLoader {
 }
 
 class LoadingTest extends UnitTest {
-  static readonly loader: TestLoader = new TestLoader(new FakeTestFileLoader());
+  static readonly loader = new FakeTestFileLoader();
 
   async load(filter: string): Promise<FilterResultTreeLeaf[]> {
     return Array.from(await LoadingTest.loader.loadTests(filter));

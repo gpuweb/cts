@@ -1,8 +1,8 @@
 import { promises as fs } from 'fs';
 
 import { listing } from '../../webgpu/listing.js';
+import { DefaultTestFileLoader } from '../framework/file_loader.js';
 import { TestSuiteListingEntry } from '../framework/listing.js';
-import { TestLoader } from '../framework/loader.js';
 import { kBigSeparator } from '../framework/query/separators.js';
 
 function printUsageAndExit(rc: number): void {
@@ -79,7 +79,7 @@ const [
       throw new Error('All input lines must start with one of the prefixes. ' + exp);
     }
 
-    const loader = new TestLoader();
+    const loader = new DefaultTestFileLoader();
     const lines: Array<string | undefined> = [];
     for (const prefix of argsPrefixes) {
       const tree = await loader.loadTree(suite + kBigSeparator, expectations.get(prefix)!);

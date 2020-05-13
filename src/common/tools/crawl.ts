@@ -5,8 +5,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { SpecFile } from '../framework/file_loader.js';
 import { TestSuiteListingEntry } from '../framework/listing.js';
-import { TestSpec } from '../framework/loader.js';
 import { assert, unreachable } from '../framework/util/util.js';
 
 const fg = require('fast-glob');
@@ -31,7 +31,7 @@ export async function crawl(suite: string): Promise<TestSuiteListingEntry[]> {
       const filepathWithoutExtension = f.substring(0, f.length - specFileSuffix.length);
       const filename = `../../../${suiteDir}/${filepathWithoutExtension}.spec.js`;
 
-      const mod = (await import(filename)) as TestSpec;
+      const mod = (await import(filename)) as SpecFile;
       assert(mod.description !== undefined, 'Test spec file missing description: ' + filename);
       assert(mod.g !== undefined, 'Test spec file missing TestGroup definition: ' + filename);
 

@@ -4,7 +4,7 @@
 import * as fs from 'fs';
 import * as process from 'process';
 
-import { TestLoader } from '../framework/loader.js';
+import { DefaultTestFileLoader } from '../framework/file_loader.js';
 import { Logger } from '../framework/logging/logger.js';
 import { LiveTestCaseResult } from '../framework/logging/result.js';
 import { assert, unreachable } from '../framework/util/util.js';
@@ -51,7 +51,7 @@ if (filterArgs.length === 0) {
 
 (async () => {
   try {
-    const loader = new TestLoader();
+    const loader = new DefaultTestFileLoader();
     assert(filterArgs.length === 1, 'currently, there must be exactly one query on the cmd line');
     const testcases = await loader.loadTests(filterArgs[0]);
 
