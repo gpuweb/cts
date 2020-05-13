@@ -1,4 +1,4 @@
-import { kSmallSeparator } from './query/separators.js';
+import { kWildcard, kParamSeparator } from './query/separators.js';
 import { objectEquals, assert } from './util/util.js';
 
 // Consider adding more types here if needed
@@ -30,9 +30,13 @@ export function stringifySingleParam(k: string, v: ParamArgument) {
   return `${k}=${stringifySingleParamValue(v)}`;
 }
 
+const badParamValueChars = new RegExp('[=' + kParamSeparator + kWildcard + ']');
 export function stringifySingleParamValue(v: ParamArgument): string {
   const s = v === undefined ? 'undefined' : JSON.stringify(v);
-  assert(!/[,:=]/.test(s), 'JSON.stringified param value must not have [,:=] - was ' + s);
+  assert(
+    !badParamValueChars.test(s),
+    `JSON.stringified param value must not match ${badParamValueChars} - was ${s}`
+  );
   return s;
 }
 
@@ -43,7 +47,7 @@ export function parseParamsString(paramsString: string): CaseParams {
   }
 
   const params: CaseParamsRW = {};
-  for (const paramSubstring of paramsString.split(kSmallSeparator)) {
+  for (const paramSubstring of paramsString.split(kParamSeparator)) {
     const [k, v] = parseSingleParam(paramSubstring);
     params[k] = v;
   }
@@ -60,7 +64,10 @@ export function parseSingleParam(paramSubstring: string): [string, ParamArgument
 }
 
 export function parseSingleParamValue(s: string): ParamArgument {
-  assert(!/[,:=]/.test(s), 'param value must not have [;:=] - was ' + s);
+  assert(
+    !badParamValueChars.test(s),
+    `param value must not match ${badParamValueChars} - was ${s}`
+  );
   return s === 'undefined' ? undefined : JSON.parse(s);
 }
 

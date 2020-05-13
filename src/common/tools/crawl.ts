@@ -26,7 +26,7 @@ export async function crawl(suite: string): Promise<TestSuiteListingEntry[]> {
 
   const entries: TestSuiteListingEntry[] = [];
   for (const file of filesToEnumerate) {
-    const f = file.substring((suiteDir + '/').length);
+    const f = file.substring((suiteDir + '/').length); // Suite-relative file path
     if (f.endsWith(specFileSuffix)) {
       const filepathWithoutExtension = f.substring(0, f.length - specFileSuffix.length);
       const filename = `../../../${suiteDir}/${filepathWithoutExtension}.spec.js`;
@@ -38,10 +38,11 @@ export async function crawl(suite: string): Promise<TestSuiteListingEntry[]> {
       const path = filepathWithoutExtension.split('/');
       entries.push({ file: path, description: mod.description.trim() });
     } else if (path.basename(file) === 'README.txt') {
+      console.log(f);
       const filepathWithoutExtension = f.substring(0, f.length - '/README.txt'.length);
       const readme = fs.readFileSync(file, 'utf8').trim();
 
-      const path = filepathWithoutExtension.split('/');
+      const path = filepathWithoutExtension ? filepathWithoutExtension.split('/') : [];
       entries.push({ file: path, readme });
     } else {
       unreachable(`glob ${glob} matched an unrecognized filename ${file}`);

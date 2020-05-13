@@ -139,6 +139,11 @@ g.test('invalid_test_name').fn(t => {
   }
 });
 
+g.test('valid_param_value').fn(() => {
+  const g = new TestGroup(UnitTest);
+  g.test('a').params([{ x: JSON.stringify({ a: 1, b: 2 }) }]);
+});
+
 g.test('throws').fn(async t0 => {
   const g = new TestGroup(UnitTest);
 

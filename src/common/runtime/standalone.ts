@@ -97,17 +97,17 @@ function makeSubtreeHTML(t: FilterResultSubtree): [HTMLElement, RunSubtree] {
   div.append(header);
 
   const subtreeHTML = $('<div>').addClass('subtreechildren').appendTo(div);
-  const runSubtree = makeSubtreeChildrenHTML(subtreeHTML[0], t.children!);
+  const runSubtree = makeSubtreeChildrenHTML(subtreeHTML[0], t.children.values());
 
   return [div[0], runSubtree];
 }
 
 function makeSubtreeChildrenHTML(
   div: HTMLElement,
-  children: Map<string, FilterResultTreeNode>
+  children: Iterable<FilterResultTreeNode>
 ): RunSubtree {
   const runSubtreeFns: RunSubtree[] = [];
-  for (const [, subtree] of children) {
+  for (const subtree of children) {
     const [subtreeHTML, runSubtree] = makeTreeNodeHTML(subtree);
     div.append(subtreeHTML);
     runSubtreeFns.push(runSubtree);
@@ -175,7 +175,8 @@ function updateJSON(): void {
   assert(qs.length === 1, 'currently, there must be exactly one ?q=');
   const tree = await loader.loadTree(qs[0]);
 
-  const runSubtree = makeSubtreeChildrenHTML(resultsVis, tree.root.children);
+  const [el, runSubtree] = makeSubtreeHTML(tree.root);
+  resultsVis.append(el);
 
   if (runnow) {
     runSubtree();

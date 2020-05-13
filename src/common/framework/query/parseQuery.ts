@@ -8,7 +8,7 @@ import {
   TestQueryMultiCase,
   TestQuerySingleCase,
 } from './query.js';
-import { kBigSeparator, kWildcard, kSmallSeparator } from './separators.js';
+import { kBigSeparator, kWildcard, kPathSeparator, kParamSeparator } from './separators.js';
 import { validQueryPart } from './validQueryPart.js';
 
 export function parseQuery(s: string): TestQuery {
@@ -16,7 +16,7 @@ export function parseQuery(s: string): TestQuery {
   assert(bigParts.length >= 2, `filter string must have at least one ${kBigSeparator}`);
   const suite = bigParts[0];
 
-  const { parts: file, endsWithWildcard: groupHasWildcard } = parseBigPart(bigParts[1]);
+  const { parts: file, wildcard: groupHasWildcard } = parseBigPart(bigParts[1], kPathSeparator);
 
   if (bigParts.length === 2) {
     // Query is file-level
@@ -29,7 +29,7 @@ export function parseQuery(s: string): TestQuery {
   }
   assert(!groupHasWildcard, `Wildcard ${kWildcard} must be at the end of the query string`);
 
-  const { parts: test, endsWithWildcard: testHasWildcard } = parseBigPart(bigParts[2]);
+  const { parts: test, wildcard: testHasWildcard } = parseBigPart(bigParts[2], kPathSeparator);
 
   if (bigParts.length === 3) {
     // Query is test-level
@@ -45,7 +45,10 @@ export function parseQuery(s: string): TestQuery {
   // Query is case-level
   assert(!testHasWildcard, `Wildcard ${kWildcard} must be at the end of the query string`);
 
-  const { parts: paramsParts, endsWithWildcard: paramsHasWildcard } = parseBigPart(bigParts[3]);
+  const { parts: paramsParts, wildcard: paramsHasWildcard } = parseBigPart(
+    bigParts[3],
+    kParamSeparator
+  );
 
   assert(test.length > 0, 'Test part of case-level query was empty (::)');
 
@@ -62,17 +65,19 @@ export function parseQuery(s: string): TestQuery {
   }
 }
 
-// webgpu:a,b,*
-// webgpu:a,b,c:*
+// webgpu:a,b,* or webgpu:a,b,c:*
 const kExampleQueries = `\
-webgpu${kBigSeparator}a${kSmallSeparator}b${kSmallSeparator}${kWildcard} or \
-webgpu${kBigSeparator}a${kSmallSeparator}b${kSmallSeparator}c${kBigSeparator}${kWildcard}`;
+webgpu${kBigSeparator}a${kPathSeparator}b${kPathSeparator}${kWildcard} or \
+webgpu${kBigSeparator}a${kPathSeparator}b${kPathSeparator}c${kBigSeparator}${kWildcard}`;
 
-function parseBigPart(s: string): { parts: string[]; endsWithWildcard: boolean } {
+function parseBigPart(
+  s: string,
+  separator: typeof kParamSeparator | typeof kPathSeparator
+): { parts: string[]; wildcard: boolean } {
   if (s === '') {
-    return { parts: [], endsWithWildcard: false };
+    return { parts: [], wildcard: false };
   }
-  const parts = s.split(kSmallSeparator);
+  const parts = s.split(separator);
 
   let endsWithWildcard = false;
   for (const [i, part] of parts.entries()) {
@@ -87,5 +92,5 @@ function parseBigPart(s: string): { parts: string[]; endsWithWildcard: boolean }
   if (endsWithWildcard) {
     parts.length = parts.length - 1;
   }
-  return { parts, endsWithWildcard };
+  return { parts, wildcard: endsWithWildcard };
 }

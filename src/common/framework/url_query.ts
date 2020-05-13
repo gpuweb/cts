@@ -6,6 +6,7 @@ export function encodeSelectively(s: string): string {
   ret = ret.replace(/%22/g, '"');
   ret = ret.replace(/%2C/g, ',');
   ret = ret.replace(/%3A/g, ':');
+  ret = ret.replace(/%3B/g, ';');
   ret = ret.replace(/%3D/g, '=');
   ret = ret.replace(/%5B/g, '[');
   ret = ret.replace(/%5D/g, ']');

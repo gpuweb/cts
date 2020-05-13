@@ -160,18 +160,20 @@ g.test('case').fn(async t => {
   t.shouldReject('Error', t.load('suite1:baz:zed,:*'));
 
   t.shouldReject('Error', t.load('suite1:baz:zed:'));
-  t.shouldReject('Error', t.load('suite1:baz:zed:a=1,b=2*'));
-  t.shouldReject('Error', t.load('suite1:baz:zed:a=1,b=2,'));
+  t.shouldReject('Error', t.load('suite1:baz:zed:a=1;b=2*'));
+  t.shouldReject('Error', t.load('suite1:baz:zed:a=1;b=2;'));
+  t.shouldReject('SyntaxError', t.load('suite1:baz:zed:a=1;b=2,')); // tries to parse '2,' as JSON
   t.shouldReject('Error', t.load('suite1:baz:zed:b=2*'));
-  t.shouldReject('Error', t.load('suite1:baz:zed:b=2,*'));
-  t.shouldReject('Error', t.load('suite1:baz:zed:b=2,a=1'));
-  t.shouldReject('Error', t.load('suite1:baz:zed:b=2,a=1,_c=0'));
+  t.shouldReject('Error', t.load('suite1:baz:zed:b=2;*'));
+  t.shouldReject('Error', t.load('suite1:baz:zed:b=2;a=1'));
+  t.shouldReject('Error', t.load('suite1:baz:zed:b=2;a=1;_c=0'));
+  t.shouldReject('Error', t.load('suite1:baz:zed:a=1,*'));
 
   t.expect((await t.load('suite1:baz:zed:*')).length === 2);
-  t.expect((await t.load('suite1:baz:zed:a=1,*')).length === 1);
-  t.expect((await t.load('suite1:baz:zed:a=1,b=2')).length === 1);
-  t.expect((await t.load('suite1:baz:zed:a=1,b=2,*')).length === 1);
-  t.expect((await t.load('suite1:baz:zed:b=3,a=1')).length === 1);
+  t.expect((await t.load('suite1:baz:zed:a=1;*')).length === 1);
+  t.expect((await t.load('suite1:baz:zed:a=1;b=2')).length === 1);
+  t.expect((await t.load('suite1:baz:zed:a=1;b=2;*')).length === 1);
+  t.expect((await t.load('suite1:baz:zed:b=3;a=1')).length === 1);
   t.expect((await t.load('suite1:foo:hello:')).length === 1);
 });
 
@@ -236,7 +238,12 @@ async function testIterateCollapsed(
   const tree = await treePromise;
   const actual = Array.from(tree.iterateCollapsed(), q => q.toString());
   if (!objectEquals(actual, expectedResult)) {
-    t.fail(`iterateCollapsed failed:\n got ${actual}\n exp ${expectedResult}\n${tree.toString()}`);
+    t.fail(
+      `iterateCollapsed failed:
+  got [${actual.join(', ')}]
+  exp [${expectedResult.join(', ')}]
+${tree.toString()}`
+    );
   }
 }
 
@@ -287,7 +294,7 @@ g.test('iterateCollapsed').fn(async t => {
       'suite1:foo:*',
       'suite1:bar,buzz,buzz:*',
       'suite1:baz:wye:',
-      'suite1:baz:wye:x=1',
+      'suite1:baz:wye:x=1;*',
       'suite1:baz:zed,*',
     ]
   );
@@ -309,7 +316,7 @@ g.test('iterateCollapsed').fn(async t => {
       'suite1:foo:*',
       'suite1:bar,buzz,buzz:*',
       'suite1:baz:wye:',
-      'suite1:baz:wye:x=1',
+      'suite1:baz:wye:x=1;*',
       'suite1:baz:zed,*',
     ]
   );

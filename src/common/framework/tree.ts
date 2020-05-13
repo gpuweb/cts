@@ -171,6 +171,8 @@ export async function loadTreeForQuery(
     assert(seen, `subqueriesToExpand entry did not match anything: ${sq.toString()}`);
   }
   assert(foundCase, 'Query does not match any cases');
+
+  // TODO: Contains lots of single-child subtrees. Consider cleaning those up.
   return tree;
 }
 
@@ -228,21 +230,18 @@ function leafForCase(
   let tree = getOrInsertSubtree(name, parent, rootSubquery, checkCollapsible(rootSubquery));
 
   // Subtree except for the leaf
-  const entries = Object.entries(t.id.params);
   const subqueryParams: CaseParamsRW = {};
-  for (const [i, [k, v]] of entries.entries()) {
+  for (const [k, v] of Object.entries(t.id.params)) {
     name = stringifySingleParam(k, v);
     subqueryParams[k] = v;
 
-    if (i < entries.length - 1) {
-      const subquery = new TestQueryMultiCase(
-        parent.query.suite,
-        parent.query.file,
-        parent.query.test,
-        subqueryParams
-      );
-      tree = getOrInsertSubtree(name, tree, subquery, checkCollapsible(subquery));
-    }
+    const subquery = new TestQueryMultiCase(
+      parent.query.suite,
+      parent.query.file,
+      parent.query.test,
+      subqueryParams
+    );
+    tree = getOrInsertSubtree(name, tree, subquery, checkCollapsible(subquery));
   }
 
   // Attach the leaf

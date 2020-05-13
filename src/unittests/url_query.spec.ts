@@ -30,7 +30,7 @@ g.test('stringifyQuery,single_case').fn(t => {
       a: 3,
       _pri2: 1,
     }),
-    'a:b_1,2_c:d_3,4_e:f="g",a=3'
+    'a:b_1,2_c:d_3,4_e:f="g";a=3'
   );
 });
 
@@ -42,7 +42,7 @@ g.test('stringifyQuery,multi_case').fn(t => {
       a: 3,
       _pri2: 1,
     }),
-    'a:b_1,2_c:d_3,4_e:f="g",a=3,*'
+    'a:b_1,2_c:d_3,4_e:f="g";a=3;*'
   );
 
   t.expectQueryString(

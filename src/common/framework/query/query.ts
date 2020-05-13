@@ -1,7 +1,7 @@
 import { TestGroupID, TestCaseID } from '../id.js';
 import { CaseParams, stringifyPublicParams } from '../params_utils.js';
 
-import { kBigSeparator, kSmallSeparator, kWildcard } from './separators.js';
+import { kBigSeparator, kPathSeparator, kWildcard, kParamSeparator } from './separators.js';
 
 // XXX: method returning enum for level?
 
@@ -16,7 +16,7 @@ export class TestQueryMultiFile implements TestGroupID {
 
   toString(): string {
     let s = this.suite;
-    s += kBigSeparator + [...this.file, kWildcard].join(kSmallSeparator);
+    s += kBigSeparator + [...this.file, kWildcard].join(kPathSeparator);
     return s;
   }
 
@@ -34,8 +34,8 @@ export class TestQueryMultiTest extends TestQueryMultiFile {
 
   toString(): string {
     let s = this.suite;
-    s += kBigSeparator + this.file.join(kSmallSeparator);
-    s += kBigSeparator + [...this.test, kWildcard].join(kSmallSeparator);
+    s += kBigSeparator + this.file.join(kPathSeparator);
+    s += kBigSeparator + [...this.test, kWildcard].join(kPathSeparator);
     return s;
   }
 }
@@ -56,9 +56,9 @@ export class TestQueryMultiCase extends TestQueryMultiTest implements TestCaseID
   toString(): string {
     const paramsParts = stringifyPublicParams(this.params);
     let s = this.suite;
-    s += kBigSeparator + this.file.join(kSmallSeparator);
-    s += kBigSeparator + this.test.join(kSmallSeparator);
-    s += kBigSeparator + [...paramsParts, kWildcard].join(kSmallSeparator);
+    s += kBigSeparator + this.file.join(kPathSeparator);
+    s += kBigSeparator + this.test.join(kPathSeparator);
+    s += kBigSeparator + [...paramsParts, kWildcard].join(kParamSeparator);
     return s;
   }
 }
@@ -71,9 +71,9 @@ export class TestQuerySingleCase extends TestQueryMultiCase {
   toString(): string {
     const paramsParts = stringifyPublicParams(this.params);
     let s = this.suite;
-    s += kBigSeparator + this.file.join(kSmallSeparator);
-    s += kBigSeparator + this.test.join(kSmallSeparator);
-    s += kBigSeparator + paramsParts.join(kSmallSeparator);
+    s += kBigSeparator + this.file.join(kPathSeparator);
+    s += kBigSeparator + this.test.join(kPathSeparator);
+    s += kBigSeparator + paramsParts.join(kParamSeparator);
     return s;
   }
 }

@@ -5,16 +5,18 @@
       "type": "grunt",
       "task": "test",
       "problemMatcher": [],
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
+      "group": "build",
       "label": "grunt: test"
     },
     {
       "type": "grunt",
       "task": "pre",
-      "problemMatcher": []
+      "problemMatcher": [],
+      "label": "grunt: pre",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
     },
     {
       "type": "grunt",

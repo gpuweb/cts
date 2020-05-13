@@ -61,16 +61,16 @@ export class Fixture {
 
   private expectErrorValue(expectedName: string, ex: unknown, niceStack: Error): void {
     if (!(ex instanceof Error)) {
-      niceStack.message = 'THREW non-error value, of type ' + typeof ex + niceStack.message;
+      niceStack.message = `THREW non-error value, of type ${typeof ex}: ${ex}`;
       this.rec.fail(niceStack);
       return;
     }
     const actualName = ex.name;
     if (actualName !== expectedName) {
-      niceStack.message = `THREW ${actualName}, instead of ${expectedName}` + niceStack.message;
+      niceStack.message = `THREW ${actualName}, instead of ${expectedName}: ${ex}`;
       this.rec.fail(niceStack);
     } else {
-      niceStack.message = 'OK: threw ' + actualName + niceStack.message;
+      niceStack.message = 'OK: threw ' + actualName + ex.message;
       this.rec.debug(niceStack);
     }
   }

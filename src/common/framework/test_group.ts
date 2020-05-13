@@ -6,6 +6,7 @@ import {
   CaseParamsIterable,
   extractPublicParams,
   paramsEquals,
+  stringifySingleParam,
 } from './params_utils.js';
 import { validQueryPart } from './query/validQueryPart.js';
 import { checkPublicParamType } from './url_query.js';
@@ -90,9 +91,9 @@ class TestBuilder<F extends Fixture, P extends {}> {
     this.testFn = fn;
   }
 
-  params<NewP extends {}>(specs: Iterable<NewP>): TestBuilderWithParams<F, NewP> {
+  params<NewP extends {}>(casesIterable: Iterable<NewP>): TestBuilderWithParams<F, NewP> {
     assert(this.cases === undefined, 'test case is already parameterized');
-    const cases = Array.from(specs);
+    const cases = Array.from(casesIterable);
     const seen: CaseParams[] = [];
     // This is n^2.
     for (const spec of cases) {
@@ -100,7 +101,8 @@ class TestBuilder<F extends Fixture, P extends {}> {
 
       // Check type of public params: can only be (currently):
       // number, string, boolean, undefined, number[]
-      for (const v of Object.values(publicParams)) {
+      for (const [k, v] of Object.entries(publicParams)) {
+        stringifySingleParam(k, v); // To check for invalid params values
         checkPublicParamType(v);
       }
 
