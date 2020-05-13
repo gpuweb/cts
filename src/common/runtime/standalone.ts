@@ -128,7 +128,7 @@ function makeTreeNodeHeaderHTML(
 
   const href = `?${worker ? 'worker&' : ''}${debug ? 'debug&' : ''}q=${query.toString()}`;
   $('<button>')
-    .addClass(isLeaf ? 'leafrun' : 'noderun')
+    .addClass(isLeaf ? 'leafrun' : 'subtreerun')
     .attr('alt', 'Run subtree')
     .attr('title', 'Run subtree')
     .on('click', async () => {
