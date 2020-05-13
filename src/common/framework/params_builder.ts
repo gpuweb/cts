@@ -33,7 +33,7 @@ export function params(): ParamsBuilder<{}> {
   return new ParamsBuilder();
 }
 
-class ParamsBuilder<A extends {}> implements CaseParamsIterable {
+export class ParamsBuilder<A extends {}> implements CaseParamsIterable {
   private paramSpecs: CaseParamsIterable = [{}];
 
   [Symbol.iterator](): Iterator<A> {

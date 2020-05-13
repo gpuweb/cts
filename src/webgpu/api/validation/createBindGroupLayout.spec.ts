@@ -3,7 +3,7 @@ createBindGroupLayout validation tests.
 `;
 
 import * as C from '../../../common/constants.js';
-import { poptions, params } from '../../../common/framework/params.js';
+import { poptions, params } from '../../../common/framework/params_builder.js';
 import { TestGroup } from '../../../common/framework/test_group.js';
 import {
   kBindingTypeInfo,

@@ -2,7 +2,7 @@ export const description = `
 Unit tests for parameterization.
 `;
 
-import { params } from '../common/framework/params.js';
+import { params } from '../common/framework/params_builder.js';
 import { CaseParams } from '../common/framework/params_utils.js';
 import { TestGroup } from '../common/framework/test_group.js';
 

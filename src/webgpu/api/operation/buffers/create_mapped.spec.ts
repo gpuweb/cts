@@ -1,6 +1,6 @@
 export const description = '';
 
-import { params, pbool, poptions } from '../../../../common/framework/params.js';
+import { params, pbool, poptions } from '../../../../common/framework/params_builder.js';
 import { TestGroup } from '../../../../common/framework/test_group.js';
 
 import { MappingTest } from './mapping_test.js';

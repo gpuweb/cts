@@ -2,7 +2,7 @@ export const description = `
 setStencilReference validation tests.
 `;
 
-import { poptions } from '../../../common/framework/params.js';
+import { poptions } from '../../../common/framework/params_builder.js';
 import { TestGroup } from '../../../common/framework/test_group.js';
 
 import { ValidationTest } from './validation_test.js';

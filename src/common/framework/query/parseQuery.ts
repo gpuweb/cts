@@ -1,4 +1,4 @@
-import { parseSingleParam, CaseParamsRW } from '../params_utils.js';
+import { CaseParamsRW, ParamArgument, badParamValueChars } from '../params_utils.js';
 import { assert } from '../util/util.js';
 
 import {
@@ -93,4 +93,21 @@ function parseBigPart(
     parts.length = parts.length - 1;
   }
   return { parts, wildcard: endsWithWildcard };
+}
+
+function parseSingleParam(paramSubstring: string): [string, ParamArgument] {
+  assert(paramSubstring !== '', 'Param in a query must not be blank (is there a trailing comma?)');
+  const i = paramSubstring.indexOf('=');
+  assert(i !== -1, 'Param in a query must be of form key=value');
+  const k = paramSubstring.substring(0, i);
+  const v = paramSubstring.substring(i + 1);
+  return [k, parseSingleParamValue(v)];
+}
+
+function parseSingleParamValue(s: string): ParamArgument {
+  assert(
+    !badParamValueChars.test(s),
+    `param value must not match ${badParamValueChars} - was ${s}`
+  );
+  return s === 'undefined' ? undefined : JSON.parse(s);
 }

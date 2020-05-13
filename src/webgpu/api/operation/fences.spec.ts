@@ -1,7 +1,7 @@
 export const description = '';
 
-import { attemptGarbageCollection } from '../../../common/framework/collect_garbage.js';
 import { TestGroup } from '../../../common/framework/test_group.js';
+import { attemptGarbageCollection } from '../../../common/framework/util/collect_garbage.js';
 import { raceWithRejectOnTimeout } from '../../../common/framework/util/util.js';
 import { GPUTest } from '../../gpu_test.js';
 

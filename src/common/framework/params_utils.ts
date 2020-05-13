@@ -30,45 +30,14 @@ export function stringifySingleParam(k: string, v: ParamArgument) {
   return `${k}=${stringifySingleParamValue(v)}`;
 }
 
-const badParamValueChars = new RegExp('[=' + kParamSeparator + kWildcard + ']');
-export function stringifySingleParamValue(v: ParamArgument): string {
+export const badParamValueChars = new RegExp('[=' + kParamSeparator + kWildcard + ']');
+function stringifySingleParamValue(v: ParamArgument): string {
   const s = v === undefined ? 'undefined' : JSON.stringify(v);
   assert(
     !badParamValueChars.test(s),
     `JSON.stringified param value must not match ${badParamValueChars} - was ${s}`
   );
   return s;
-}
-
-// TODO: possibly delete
-export function parseParamsString(paramsString: string): CaseParams {
-  if (paramsString === '') {
-    return {};
-  }
-
-  const params: CaseParamsRW = {};
-  for (const paramSubstring of paramsString.split(kParamSeparator)) {
-    const [k, v] = parseSingleParam(paramSubstring);
-    params[k] = v;
-  }
-  return params;
-}
-
-export function parseSingleParam(paramSubstring: string): [string, ParamArgument] {
-  assert(paramSubstring !== '', 'Param in a query must not be blank (is there a trailing comma?)');
-  const i = paramSubstring.indexOf('=');
-  assert(i !== -1, 'Param in a query must be of form key=value');
-  const k = paramSubstring.substring(0, i);
-  const v = paramSubstring.substring(i + 1);
-  return [k, parseSingleParamValue(v)];
-}
-
-export function parseSingleParamValue(s: string): ParamArgument {
-  assert(
-    !badParamValueChars.test(s),
-    `param value must not match ${badParamValueChars} - was ${s}`
-  );
-  return s === 'undefined' ? undefined : JSON.parse(s);
 }
 
 export function paramsEquals(x: CaseParams | null, y: CaseParams | null): boolean {
