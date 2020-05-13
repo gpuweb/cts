@@ -1,11 +1,10 @@
-import { TestGroupID, TestCaseID } from '../id.js';
 import { CaseParams, stringifyPublicParams } from '../params_utils.js';
 import { assert } from '../util/util.js';
 
 import { encodeURLSelectively } from './encodeURLSelectively.js';
 import { kBigSeparator, kPathSeparator, kWildcard, kParamSeparator } from './separators.js';
 
-export class TestQueryMultiFile implements TestGroupID {
+export class TestQueryMultiFile {
   readonly suite: string;
   readonly file: readonly string[];
 
@@ -48,7 +47,7 @@ export class TestQueryMultiTest extends TestQueryMultiFile {
   }
 }
 
-export class TestQueryMultiCase extends TestQueryMultiTest implements TestCaseID {
+export class TestQueryMultiCase extends TestQueryMultiTest {
   readonly params: CaseParams;
 
   constructor(suite: string, file: readonly string[], test: readonly string[], params: CaseParams) {

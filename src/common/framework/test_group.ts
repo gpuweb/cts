@@ -1,5 +1,4 @@
 import { Fixture } from './fixture.js';
-import { TestCaseID } from './id.js';
 import { TestCaseRecorder } from './logging/test_case_recorder.js';
 import {
   CaseParams,
@@ -13,6 +12,11 @@ import { validQueryPart } from './query/validQueryPart.js';
 import { assert } from './util/util.js';
 
 export type RunFn = (rec: TestCaseRecorder) => Promise<void>;
+
+export interface TestCaseID {
+  readonly test: readonly string[];
+  readonly params: CaseParams;
+}
 
 export interface RunCase {
   readonly id: TestCaseID;

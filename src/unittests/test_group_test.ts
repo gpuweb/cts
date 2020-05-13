@@ -1,7 +1,6 @@
-import { TestCaseID } from '../common/framework/id.js';
 import { Logger, LogResults } from '../common/framework/logging/logger.js';
 import { TestQuerySingleCase } from '../common/framework/query/query.js';
-import { RunCaseIterable } from '../common/framework/test_group.js';
+import { RunCaseIterable, TestCaseID } from '../common/framework/test_group.js';
 import { objectEquals } from '../common/framework/util/util.js';
 
 import { UnitTest } from './unit_test.js';
