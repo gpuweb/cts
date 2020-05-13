@@ -1,7 +1,7 @@
 import { TestFileLoader } from './loader.js';
 import { TestCaseRecorder } from './logging/test_case_recorder.js';
 import { ParamSpec, stringifySingleParam } from './params_utils.js';
-import { querySubsetOfQuery, IsSubset, compareQueries, Ordering } from './query/compare.js';
+import { compareQueries, Ordering } from './query/compare.js';
 import {
   TestQuery,
   TestQueryMultiCase,
@@ -9,19 +9,19 @@ import {
   TestQueryMultiFile,
   TestQueryMultiTest,
 } from './query/query.js';
-import { stringifyQuery } from './query/stringifyQuery.js';
 import { RunCase, RunFn } from './test_group.js';
 import { assert } from './util/util.js';
 
+// XXX: split into three types
 export interface FilterResultSubtree {
-  query: TestQuery;
+  query: TestQueryMultiFile | TestQueryMultiTest | TestQueryMultiCase;
   description?: string;
   readonly children: Map<string, FilterResultTreeNode>;
   collapsible: boolean;
 }
 
 export interface FilterResultTreeLeaf {
-  readonly query: TestQuery;
+  readonly query: TestQuerySingleCase;
   readonly run: RunFn;
 }
 
@@ -52,7 +52,7 @@ export class FilterResultTree {
     let s =
       indent +
       `${collapsible} ${JSON.stringify(name)} => ` +
-      `${stringifyQuery(tree.query)}        ${JSON.stringify(tree.query)}`;
+      `${tree.query}        ${JSON.stringify(tree.query)}`;
     if ('children' in tree) {
       if (tree.description !== undefined) {
         s += indent + `\n    | ${JSON.stringify(tree.description)}`;
@@ -89,10 +89,10 @@ function* iterateCollapsedSubtree(subtree: FilterResultSubtree): IterableIterato
 // TODO: Consider having subqueriesToExpand actually impact the depth-order of params in the tree.
 export async function loadTreeForQuery(
   loader: TestFileLoader,
-  query: TestQuery,
+  queryToLoad: TestQuery,
   subqueriesToExpand: TestQuery[]
 ): Promise<FilterResultTree> {
-  const suite = query.suite;
+  const suite = queryToLoad.suite;
   const specs = await loader.listing(suite);
 
   const subqueriesToExpandEntries = Array.from(subqueriesToExpand.entries());
@@ -101,11 +101,13 @@ export async function loadTreeForQuery(
 
   const checkCollapsible = (subquery: TestQuery) =>
     subqueriesToExpandEntries.every(([i, toExpand]) => {
-      const isSubset = querySubsetOfQuery(toExpand, subquery);
+      const ordering = compareQueries(toExpand, subquery);
+
+      console.log(toExpand.toString(), subquery.toString(), ordering);
 
       // If toExpand == subquery, no expansion is needed (but it's still "seen").
-      if (isSubset === IsSubset.YesEqual) seenSubqueriesToExpand[i] = true;
-      return isSubset !== IsSubset.YesStrict;
+      if (ordering === Ordering.Equal) seenSubqueriesToExpand[i] = true;
+      return ordering !== Ordering.StrictSubset;
     });
 
   let foundCase = false;
@@ -122,7 +124,8 @@ export async function loadTreeForQuery(
       continue;
     }
 
-    const orderingL1 = compareQueries({ suite, file: entry.file, test: [] }, query);
+    const queryL1 = new TestQueryMultiTest(suite, entry.file, []);
+    const orderingL1 = compareQueries(queryL1, queryToLoad);
     if (orderingL1 === Ordering.Unordered) {
       // File path is not matched by this filter.
       continue;
@@ -138,49 +141,28 @@ export async function loadTreeForQuery(
     }
     // Entry is a spec file.
 
-    const spec = await loader.importSpecFile(query.suite, entry.file);
+    const spec = await loader.importSpecFile(queryToLoad.suite, entry.file);
     // Here, we know subtreeL1 will have only one child.
     // Set subtreeL1 to suite1:foo:* (instead of suite1:foo,*)
     const subtreeL1 = subtreeForFilePath(subtreeL0, entry.file);
-    subtreeL1.query = { ...subtreeL1.query, test: [] };
+    subtreeL1.query = queryL1;
     subtreeL1.description = spec.description.trim();
     subtreeL1.collapsible = checkCollapsible(subtreeL1.query);
 
     // TODO: this is taking a tree, flattening it, and then unflattening it. Possibly redundant?
     for (const t of spec.g.iterate()) {
-      const orderingL3 = compareQueries(
-        {
-          suite,
-          file: entry.file,
-          test: t.id.test,
-          params: t.id.params,
-          endsWithWildcard: false,
-        },
-        query
-      );
-      if (orderingL3 === Ordering.Unordered || orderingL3 === Ordering.Superset) {
+      const queryL3 = new TestQuerySingleCase(suite, entry.file, t.id.test, t.id.params);
+      const orderingL3 = compareQueries(queryL3, queryToLoad);
+      if (orderingL3 === Ordering.Unordered || orderingL3 === Ordering.StrictSuperset) {
         // Case is not matched by this filter.
         continue;
       }
 
       // subtreeL2a is suite1:foo:hello,*
-      const subtreeL2a = subtreeForTestPath(subtreeL1, t.id.test, checkCollapsible);
-
-      // subtreeL2b is suite1:foo:hello:*
-      const subqueryL2b = {
-        ...cloneQuery(subtreeL2a.query),
-        params: {} as ParamSpec,
-        endsWithWildcard: true,
-      };
-      const subtreeL2b = getOrInsertSubtree(
-        '',
-        subtreeL2a,
-        subqueryL2b,
-        checkCollapsible(subqueryL2b)
-      );
+      const subtreeL2 = subtreeForTestPath(subtreeL1, t.id.test, checkCollapsible);
 
       // Subtree for case
-      subtreeForCaseExceptLeaf(subtreeL2b, t, checkCollapsible);
+      leafForCase(subtreeL2, t, checkCollapsible);
 
       foundCase = true;
     }
@@ -189,7 +171,7 @@ export async function loadTreeForQuery(
 
   for (const [i, sq] of subqueriesToExpandEntries) {
     const seen = seenSubqueriesToExpand[i];
-    assert(seen, 'subqueriesToExpand entry did not match anything: ' + stringifyQuery(sq));
+    assert(seen, `subqueriesToExpand entry did not match anything: ${sq.toString()}`);
   }
   assert(foundCase, 'Query does not match any cases');
   return tree;
@@ -197,7 +179,7 @@ export async function loadTreeForQuery(
 
 function makeTreeForSuite(suite: string): FilterResultSubtree {
   const tree: FilterResultSubtree = {
-    query: { suite, file: [] },
+    query: new TestQueryMultiFile(suite, []),
     children: new Map(),
     collapsible: false,
   };
@@ -205,9 +187,10 @@ function makeTreeForSuite(suite: string): FilterResultSubtree {
 }
 
 function subtreeForFilePath(tree: FilterResultSubtree, file: string[]): FilterResultSubtree {
-  const subquery = { ...cloneQuery(tree.query), file: [] as string[] };
+  const subqueryFile = [];
   for (const part of file) {
-    subquery.file.push(part);
+    subqueryFile.push(part);
+    const subquery = new TestQueryMultiFile(tree.query.suite, subqueryFile);
     tree = getOrInsertSubtree(part, tree, subquery, false);
   }
   return tree;
@@ -218,44 +201,51 @@ function subtreeForTestPath(
   test: readonly string[],
   checkCollapsible: (sq: TestQuery) => boolean
 ): FilterResultSubtree {
-  const subquery = { ...cloneQuery(tree.query), test: [] as string[] };
+  const subqueryTest = [];
   for (const part of test) {
-    subquery.test.push(part);
+    subqueryTest.push(part);
+    const subquery = new TestQueryMultiTest(tree.query.suite, tree.query.file, subqueryTest);
     tree = getOrInsertSubtree(part, tree, subquery, checkCollapsible(subquery));
   }
   return tree;
 }
 
-function subtreeForCaseExceptLeaf(
+function leafForCase(
   tree: FilterResultSubtree,
   t: RunCase,
   checkCollapsible: (sq: TestQuery) => boolean
 ): FilterResultTreeLeaf {
-  assert('test' in tree.query);
-  const subquery: TestQueryMultiCase = {
-    ...cloneQuery(tree.query),
-    params: {} as ParamSpec,
-    endsWithWildcard: true,
-  };
-  const entries = Object.entries(t.id.params);
+  const treeQ = tree.query;
+  assert(treeQ instanceof TestQueryMultiTest);
   let name: string = '';
-  for (let i = 0; i < entries.length; ++i) {
-    const [k, v] = entries[i];
 
-    subquery.params[k] = v;
+  // Subtree for suite1:foo:hello:*
+  {
+    const subquery = new TestQueryMultiCase(treeQ.suite, treeQ.file, treeQ.test, {});
+    tree = getOrInsertSubtree(name, tree, subquery, checkCollapsible(subquery));
+  }
+
+  // Subtree except for the leaf
+  const entries = Object.entries(t.id.params);
+  const subqueryParams: ParamSpec = {};
+  for (const [i, [k, v]] of entries.entries()) {
     name = stringifySingleParam(k, v);
+    subqueryParams[k] = v;
 
     if (i < entries.length - 1) {
+      const subquery = new TestQueryMultiCase(treeQ.suite, treeQ.file, treeQ.test, subqueryParams);
       tree = getOrInsertSubtree(name, tree, subquery, checkCollapsible(subquery));
     }
   }
 
-  const caseQuery: TestQuerySingleCase = { ...subquery, endsWithWildcard: false };
-  checkCollapsible(caseQuery); // mark seenSubqueriesToExpand
+  // Attach the leaf
+  const subquery = new TestQuerySingleCase(treeQ.suite, treeQ.file, treeQ.test, subqueryParams);
+  checkCollapsible(subquery); // mark seenSubqueriesToExpand
   const leaf = {
-    query: caseQuery,
+    query: subquery,
     run: (rec: TestCaseRecorder) => t.run(rec),
   };
+  //console.log(Object.entries(t.id.params), tree);
   assert('children' in tree);
   tree.children.set(name, leaf);
   return leaf;
@@ -267,40 +257,14 @@ function getOrInsertSubtree(
   query: TestQuery,
   collapsible: boolean
 ): FilterResultSubtree {
-  const children = n.children;
-
   let v: FilterResultSubtree;
-
-  const child = children.get(k);
+  const child = n.children.get(k);
   if (child !== undefined) {
     v = child as FilterResultSubtree;
     v.collapsible = collapsible;
   } else {
-    v = { query: cloneQuery(query), children: new Map(), collapsible };
-    children.set(k, v);
+    v = { query, children: new Map(), collapsible };
+    n.children.set(k, v);
   }
   return v;
-}
-
-function cloneQuery(q: TestQuerySingleCase): TestQuerySingleCase;
-function cloneQuery(q: TestQueryMultiCase): TestQueryMultiCase;
-function cloneQuery(q: TestQueryMultiTest): TestQueryMultiTest;
-function cloneQuery(q: TestQueryMultiFile): TestQueryMultiFile;
-function cloneQuery(q: TestQuery): TestQuery {
-  const q2 = {
-    suite: q.suite,
-    file: [...q.file],
-  };
-  if ('params' in q) {
-    return {
-      ...q2,
-      test: [...q.test],
-      params: { ...q.params },
-      endsWithWildcard: q.endsWithWildcard,
-    };
-  }
-  if ('test' in q) {
-    return { ...q2, test: [...q.test] };
-  }
-  return q2;
 }

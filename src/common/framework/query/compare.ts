@@ -5,27 +5,9 @@ import { TestQuery } from './query.js';
 
 export const enum Ordering {
   Unordered,
-  Superset,
+  StrictSuperset,
   Equal,
-  Subset,
-}
-
-export const enum IsSubset {
-  No = 0,
-  YesEqual,
-  YesStrict,
-}
-
-export function querySubsetOfQuery(sub: TestQuery, sup: TestQuery): IsSubset {
-  switch (compareQueries(sub, sup)) {
-    case Ordering.Unordered:
-    case Ordering.Superset:
-      return IsSubset.No;
-    case Ordering.Equal:
-      return IsSubset.YesEqual;
-    case Ordering.Subset:
-      return IsSubset.YesStrict;
-  }
+  StrictSubset,
 }
 
 export function compareQueries(a: TestQuery, b: TestQuery): Ordering {
@@ -63,14 +45,14 @@ function cmpLevel(ordering: Ordering, aBig: boolean, bBig: boolean): Ordering | 
   switch (ordering) {
     case Ordering.Unordered:
       return Ordering.Unordered;
-    case Ordering.Superset:
-      return aBig || !bBig ? Ordering.Superset : Ordering.Unordered;
-    case Ordering.Subset:
-      return !aBig || bBig ? Ordering.Subset : Ordering.Unordered;
+    case Ordering.StrictSuperset:
+      return aBig || !bBig ? Ordering.StrictSuperset : Ordering.Unordered;
+    case Ordering.StrictSubset:
+      return !aBig || bBig ? Ordering.StrictSubset : Ordering.Unordered;
   }
   if (aBig && bBig) return Ordering.Equal;
-  if (aBig) return Ordering.Superset;
-  if (bBig) return Ordering.Subset;
+  if (aBig) return Ordering.StrictSuperset;
+  if (bBig) return Ordering.StrictSubset;
   return undefined;
 }
 
@@ -85,9 +67,9 @@ function comparePaths(a: readonly string[], b: readonly string[]): Ordering {
   if (a.length === b.length) {
     return Ordering.Equal;
   } else if (a.length < b.length) {
-    return Ordering.Superset;
+    return Ordering.StrictSuperset;
   } else {
-    return Ordering.Subset;
+    return Ordering.StrictSubset;
   }
 }
 
@@ -110,8 +92,8 @@ function compareParamsPaths(p1: ParamSpec, p2: ParamSpec): Ordering {
   if (a.length === b.length) {
     return Ordering.Equal;
   } else if (a.length < b.length) {
-    return Ordering.Superset;
+    return Ordering.StrictSuperset;
   } else {
-    return Ordering.Subset;
+    return Ordering.StrictSubset;
   }
 }

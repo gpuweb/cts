@@ -6,8 +6,7 @@ import { TestSuiteListing, TestSuiteListingEntry } from '../common/framework/lis
 import { TestFileLoader, TestLoader, TestSpecOrReadme } from '../common/framework/loader.js';
 import { Logger } from '../common/framework/logging/logger.js';
 import { Status } from '../common/framework/logging/result.js';
-import { TestQuery } from '../common/framework/query/query.js';
-import { stringifyQuery } from '../common/framework/query/stringifyQuery.js';
+import { TestQuery, TestQuerySingleCase } from '../common/framework/query/query.js';
 import { TestGroup } from '../common/framework/test_group.js';
 import { FilterResultTreeLeaf } from '../common/framework/tree.js';
 import { assert, objectEquals } from '../common/framework/util/util.js';
@@ -113,7 +112,7 @@ class LoadingTest extends UnitTest {
   }
 
   async loadNames(filter: string): Promise<string[]> {
-    return (await this.load(filter)).map(c => stringifyQuery(c.query));
+    return (await this.load(filter)).map(c => c.query.toString());
   }
 }
 
@@ -177,13 +176,7 @@ g.test('case').fn(async t => {
 });
 
 g.test('partial_test,makeQueryString').fn(async t => {
-  const s = stringifyQuery({
-    suite: 'suite1',
-    file: ['baz'],
-    test: ['zed'],
-    params: { a: 1, b: 2 },
-    endsWithWildcard: false,
-  });
+  const s = new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }).toString();
   t.expect((await t.load(s)).length === 1);
 });
 
@@ -202,7 +195,7 @@ g.test('end2end').fn(async t => {
     logs: (s: string[]) => boolean
   ) => {
     t.expect(objectEquals(l[i].query, query));
-    const name = stringifyQuery(l[i].query);
+    const name = l[i].query.toString();
     const [rec, res] = log.record(name);
     await l[i].run(rec);
 
@@ -213,33 +206,15 @@ g.test('end2end').fn(async t => {
     t.expect(logs(res.logs.map(l => JSON.stringify(l))));
   };
 
-  await exp(
-    0,
-    { suite: 'suite2', file: ['foof'], test: ['blah'], params: {}, endsWithWildcard: false },
-    'pass',
-    logs => objectEquals(logs, ['"DEBUG: OK"'])
+  await exp(0, new TestQuerySingleCase('suite2', ['foof'], ['blah'], {}), 'pass', logs =>
+    objectEquals(logs, ['"DEBUG: OK"'])
   );
-  await exp(
-    1,
-    {
-      suite: 'suite2',
-      file: ['foof'],
-      test: ['bleh'],
-      params: { a: 1 },
-      endsWithWildcard: false,
-    },
-    'pass',
-    logs => objectEquals(logs, ['"DEBUG: OK"', '"DEBUG: OK"'])
+  await exp(1, new TestQuerySingleCase('suite2', ['foof'], ['bleh'], { a: 1 }), 'pass', logs =>
+    objectEquals(logs, ['"DEBUG: OK"', '"DEBUG: OK"'])
   );
   await exp(
     2,
-    {
-      suite: 'suite2',
-      file: ['foof'],
-      test: ['bluh', 'a'],
-      params: {},
-      endsWithWildcard: false,
-    },
+    new TestQuerySingleCase('suite2', ['foof'], ['bluh', 'a'], {}),
     'fail',
     logs =>
       logs.length === 1 &&
@@ -259,7 +234,7 @@ async function testIterateCollapsed(
     return;
   }
   const tree = await treePromise;
-  const actual = Array.from(tree.iterateCollapsed(), q => stringifyQuery(q));
+  const actual = Array.from(tree.iterateCollapsed(), q => q.toString());
   if (!objectEquals(actual, expectedResult)) {
     t.fail(`iterateCollapsed failed:\n got ${actual}\n exp ${expectedResult}\n${tree.toString()}`);
   }

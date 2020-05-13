@@ -1,6 +1,5 @@
 import { TestLoader } from '../framework/loader.js';
 import { Logger } from '../framework/logging/logger.js';
-import { stringifyQuery } from '../framework/query/stringifyQuery.js';
 import { AsyncMutex } from '../framework/util/async_mutex.js';
 import { assert } from '../framework/util/util.js';
 
@@ -28,7 +27,7 @@ declare function async_test(f: (this: WptTestObject) => Promise<void>, name: str
   const running: Array<Promise<void>> = [];
 
   for (const testcase of testcases) {
-    const name = stringifyQuery(testcase.query);
+    const name = testcase.query.toString();
     const wpt_fn = function (this: WptTestObject): Promise<void> {
       const p = mutex.with(async () => {
         const [rec, res] = log.record(name);

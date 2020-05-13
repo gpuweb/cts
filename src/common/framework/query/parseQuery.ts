@@ -1,7 +1,13 @@
 import { ParamSpec, parseSingleParam } from '../params_utils.js';
 import { assert } from '../util/util.js';
 
-import { TestQuery } from './query.js';
+import {
+  TestQuery,
+  TestQueryMultiFile,
+  TestQueryMultiTest,
+  TestQueryMultiCase,
+  TestQuerySingleCase,
+} from './query.js';
 import { kBigSeparator, kWildcard, kSmallSeparator } from './separators.js';
 import { validQueryPart } from './validQueryPart.js';
 
@@ -19,7 +25,7 @@ export function parseQuery(s: string): TestQuery {
       `File-level query without wildcard ${kWildcard}; did you want a test-level query? \
 (Append ${kBigSeparator}${kWildcard})`
     );
-    return { suite, file };
+    return new TestQueryMultiFile(suite, file);
   }
   assert(!groupHasWildcard, `Wildcard ${kWildcard} must be at the end of the query string`);
 
@@ -33,7 +39,7 @@ export function parseQuery(s: string): TestQuery {
 (Append ${kBigSeparator}${kWildcard})`
     );
     assert(file.length > 0, 'File part of test-level query was empty (::)');
-    return { suite, file, test };
+    return new TestQueryMultiTest(suite, file, test);
   }
 
   // Query is case-level
@@ -49,12 +55,16 @@ export function parseQuery(s: string): TestQuery {
     assert(validQueryPart.test(k), 'param key names must match ' + validQueryPart);
     params[k] = v;
   }
-  return { suite, file, test, params, endsWithWildcard: paramsHasWildcard };
+  if (paramsHasWildcard) {
+    return new TestQueryMultiCase(suite, file, test, params);
+  } else {
+    return new TestQuerySingleCase(suite, file, test, params);
+  }
 }
 
 // webgpu:a,b,*
 // webgpu:a,b,c:*
-const kExampleQuery = `\
+const kExampleQueries = `\
 webgpu${kBigSeparator}a${kSmallSeparator}b${kSmallSeparator}${kWildcard} or \
 webgpu${kBigSeparator}a${kSmallSeparator}b${kSmallSeparator}c${kBigSeparator}${kWildcard}`;
 
@@ -71,7 +81,7 @@ function parseBigPart(s: string): { parts: string[]; endsWithWildcard: boolean }
     }
     assert(
       part.indexOf(kWildcard) === -1 || endsWithWildcard,
-      `Wildcard ${kWildcard} must be complete last part of a path (e.g. ${kExampleQuery})`
+      `Wildcard ${kWildcard} must be complete last part of a path (e.g. ${kExampleQueries})`
     );
   }
   if (endsWithWildcard) {

@@ -1,19 +1,81 @@
 import { TestGroupID, TestCaseID } from '../id.js';
+import { ParamSpec, stringifyPublicParams } from '../params_utils.js';
 
-type TestPathBase = TestGroupID;
+import { kBigSeparator, kSmallSeparator, kWildcard } from './separators.js';
 
-export type TestQueryMultiFile = TestPathBase;
+// XXX: method returning enum for level?
 
-export interface TestQueryMultiTest extends TestPathBase {
+export class TestQueryMultiFile implements TestGroupID {
+  readonly suite: string;
+  readonly file: readonly string[];
+
+  constructor(suite: string, file: readonly string[]) {
+    this.suite = suite;
+    this.file = [...file];
+  }
+
+  toString(): string {
+    let s = this.suite;
+    s += kBigSeparator + [...this.file, kWildcard].join(kSmallSeparator);
+    return s;
+  }
+
+  // Prevents object literals from coercing to these class types.
+  protected readonly _: void;
+}
+
+export class TestQueryMultiTest extends TestQueryMultiFile {
   readonly test: readonly string[];
+
+  constructor(suite: string, file: readonly string[], test: readonly string[]) {
+    super(suite, file);
+    this.test = [...test];
+  }
+
+  toString(): string {
+    let s = this.suite;
+    s += kBigSeparator + this.file.join(kSmallSeparator);
+    s += kBigSeparator + [...this.test, kWildcard].join(kSmallSeparator);
+    return s;
+  }
 }
 
-export interface TestQueryMultiCase extends TestPathBase, TestCaseID {
-  readonly endsWithWildcard: true;
+export class TestQueryMultiCase extends TestQueryMultiTest implements TestCaseID {
+  readonly params: ParamSpec;
+
+  constructor(suite: string, file: readonly string[], test: readonly string[], params: ParamSpec) {
+    super(suite, file, test);
+    this.params = { ...params };
+  }
+
+  // maybe rename
+  get endsWithWildcard(): boolean {
+    return true;
+  }
+
+  toString(): string {
+    const paramsParts = stringifyPublicParams(this.params);
+    let s = this.suite;
+    s += kBigSeparator + this.file.join(kSmallSeparator);
+    s += kBigSeparator + this.test.join(kSmallSeparator);
+    s += kBigSeparator + [...paramsParts, kWildcard].join(kSmallSeparator);
+    return s;
+  }
 }
 
-export interface TestQuerySingleCase extends TestPathBase, TestCaseID {
-  readonly endsWithWildcard: false;
+export class TestQuerySingleCase extends TestQueryMultiCase {
+  get endsWithWildcard(): boolean {
+    return false;
+  }
+
+  toString(): string {
+    const paramsParts = stringifyPublicParams(this.params);
+    let s = this.suite;
+    s += kBigSeparator + this.file.join(kSmallSeparator);
+    s += kBigSeparator + this.test.join(kSmallSeparator);
+    s += kBigSeparator + paramsParts.join(kSmallSeparator);
+    return s;
+  }
 }
 
 // TODO?: Change TestQuery to classes, so toString and endsWithWildcard can be implicit.

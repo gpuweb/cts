@@ -2,7 +2,6 @@
 
 import { TestLoader } from '../framework/loader.js';
 import { Logger } from '../framework/logging/logger.js';
-import { stringifyQuery } from '../framework/query/stringifyQuery.js';
 import {
   FilterResultTreeNode,
   FilterResultSubtree,
@@ -46,7 +45,7 @@ function makeTreeNodeHTML(tree: FilterResultTreeNode): [HTMLElement, RunSubtree]
 function makeCaseHTML(t: FilterResultTreeLeaf): [HTMLElement, RunSubtree] {
   const div = $('<div>').addClass('testcase');
 
-  const name = stringifyQuery(t.query);
+  const name = t.query.toString();
   const runSubtree = async () => {
     haveSomeResults = true;
     const [rec, res] = logger.record(name);
@@ -92,7 +91,7 @@ function makeCaseHTML(t: FilterResultTreeLeaf): [HTMLElement, RunSubtree] {
 function makeSubtreeHTML(t: FilterResultSubtree): [HTMLElement, RunSubtree] {
   const div = $('<div>').addClass('subtree');
 
-  const header = makeTreeNodeHeaderHTML(stringifyQuery(t.query), t.description, () => {
+  const header = makeTreeNodeHeaderHTML(t.query.toString(), t.description, () => {
     return runSubtree();
   });
   div.append(header);

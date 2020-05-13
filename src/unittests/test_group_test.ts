@@ -1,7 +1,7 @@
 import { Fixture } from '../common/framework/fixture.js';
 import { TestCaseID } from '../common/framework/id.js';
 import { Logger, LogResults } from '../common/framework/logging/logger.js';
-import { stringifyQuery } from '../common/framework/query/stringifyQuery.js';
+import { TestQuerySingleCase } from '../common/framework/query/query.js';
 import { TestGroup } from '../common/framework/test_group.js';
 import { objectEquals } from '../common/framework/util/util.js';
 
@@ -11,9 +11,8 @@ export class TestGroupTest extends UnitTest {
   async run<F extends Fixture>(g: TestGroup<F>): Promise<LogResults> {
     const logger = new Logger(true);
     for (const rc of await Promise.all(g.iterate())) {
-      const [rec] = logger.record(
-        stringifyQuery({ suite: 'xx', file: ['yy'], ...rc.id, endsWithWildcard: false })
-      );
+      const query = new TestQuerySingleCase('xx', ['yy'], rc.id.test, rc.id.params);
+      const [rec] = logger.record(query.toString());
       await rc.run(rec);
     }
     return logger.results;

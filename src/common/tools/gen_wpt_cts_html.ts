@@ -4,7 +4,6 @@ import { listing } from '../../webgpu/listing.js';
 import { TestSuiteListingEntry } from '../framework/listing.js';
 import { TestLoader } from '../framework/loader.js';
 import { kBigSeparator } from '../framework/query/separators.js';
-import { stringifyQuery } from '../framework/query/stringifyQuery.js';
 
 function printUsageAndExit(rc: number): void {
   console.error(`\
@@ -87,7 +86,7 @@ const [
 
       lines.push(undefined); // output blank line between prefixes
       for (const q of tree.iterateCollapsed()) {
-        lines.push(prefix + stringifyQuery(q));
+        lines.push(prefix + q.toString());
       }
     }
     await generateFile(lines);
