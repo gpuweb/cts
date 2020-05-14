@@ -40,7 +40,7 @@ g.test('some_binding_index_was_specified_more_than_once').fn(async t => {
   });
 });
 
-g.test('Visibility_of_bindings_can_be_0').fn(async t => {
+g.test('visibility_of_bindings_can_be_0').fn(async t => {
   t.device.createBindGroupLayout({
     entries: [{ binding: 0, visibility: 0, type: 'storage-buffer' }],
   });

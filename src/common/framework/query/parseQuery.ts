@@ -12,6 +12,15 @@ import { kBigSeparator, kWildcard, kPathSeparator, kParamSeparator } from './sep
 import { validQueryPart } from './validQueryPart.js';
 
 export function parseQuery(s: string): TestQuery {
+  try {
+    return parseQueryImpl(s);
+  } catch (ex) {
+    ex.message += '\n  on:' + s;
+    throw ex;
+  }
+}
+
+function parseQueryImpl(s: string): TestQuery {
   // Undo encodeURIComponentSelectively
   s = decodeURIComponent(s);
 

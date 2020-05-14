@@ -43,8 +43,8 @@ function addWPTTests(testcases: IterableIterator<FilterResultTreeLeaf>): Promise
         if (worker) {
           rec.start();
           const workerResult = await worker.run(name);
-          Object.assign(res, workerResult);
           rec.finish();
+          Object.assign(res, workerResult);
         } else {
           await testcase.run(rec);
         }

@@ -183,7 +183,7 @@ export interface TexelDataRepresentation {
 }
 
 class TexelDataRepresentationImpl implements TexelDataRepresentation {
-  // TODO: Determine endianess of the GPU data?
+  // TODO: Determine endianness of the GPU data?
   private isGPULittleEndian = true;
 
   constructor(

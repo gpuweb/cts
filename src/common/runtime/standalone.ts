@@ -52,8 +52,8 @@ function makeCaseHTML(t: FilterResultTreeLeaf): [HTMLElement, RunSubtree] {
     if (worker) {
       rec.start();
       const workerResult = await worker.run(name, debug);
-      Object.assign(res, workerResult);
       rec.finish();
+      Object.assign(res, workerResult);
     } else {
       await t.run(rec);
     }
