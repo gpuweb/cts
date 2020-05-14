@@ -5,6 +5,7 @@ import {
   CaseParamsIterable,
   extractPublicParams,
   publicParamsEquals,
+  paramKeyIsPublic,
 } from './params_utils.js';
 import { kPathSeparator } from './query/separators.js';
 import { stringifySingleParam } from './query/stringify_params.js';
@@ -34,6 +35,7 @@ export function makeTestGroup<F extends Fixture>(fixture: FixtureClass<F>): Test
 // Interface for running tests
 export interface RunCaseIterable {
   iterate(): Iterable<RunCase>;
+  checkForDuplicateCases(): void;
 }
 export function makeTestGroupForUnitTesting<F extends Fixture>(
   fixture: FixtureClass<F>
@@ -84,6 +86,12 @@ class TestGroup<F extends Fixture> implements RunCaseIterable, TestGroupBuilder<
     this.tests.push(test);
     return test;
   }
+
+  checkForDuplicateCases(): void {
+    for (const test of this.tests) {
+      test.checkForDuplicateCases();
+    }
+  }
 }
 
 interface TestBuilderWithName<F extends Fixture, P extends {}> extends TestBuilderWithParams<F, P> {
@@ -109,27 +117,31 @@ class TestBuilder<F extends Fixture, P extends {}> {
     this.testFn = fn;
   }
 
-  params<NewP extends {}>(casesIterable: Iterable<NewP>): TestBuilderWithParams<F, NewP> {
-    assert(this.cases === undefined, 'test case is already parameterized');
-    const cases = Array.from(casesIterable);
-    const seen: CaseParams[] = [];
-    // This is n^2.
-    for (const spec of cases) {
-      const publicParams = extractPublicParams(spec);
+  checkForDuplicateCases(): void {
+    if (this.cases === undefined) {
+      return;
+    }
 
-      // Check type of public params: can only be (currently):
-      // number, string, boolean, undefined, number[]
-      for (const [k, v] of Object.entries(publicParams)) {
-        stringifySingleParam(k, v); // To check for invalid params values
+    // This is n^2.
+    const seen: CaseParams[] = [];
+    for (const testcase of this.cases) {
+      for (const [k, v] of Object.entries(testcase as CaseParams)) {
+        if (paramKeyIsPublic(k)) {
+          stringifySingleParam(k, v); // To check for invalid params values
+        }
       }
 
       assert(
-        !seen.some(x => publicParamsEquals(x, publicParams)),
-        'Duplicate test case params: ' + JSON.stringify(publicParams)
+        !seen.some(x => publicParamsEquals(x, testcase)),
+        () => 'Duplicate public test case params: ' + JSON.stringify(testcase)
       );
-      seen.push(publicParams);
+      seen.push(testcase);
     }
-    this.cases = cases;
+  }
+
+  params<NewP extends {}>(casesIterable: Iterable<NewP>): TestBuilderWithParams<F, NewP> {
+    assert(this.cases === undefined, 'test case is already parameterized');
+    this.cases = Array.from(casesIterable);
 
     return (this as unknown) as TestBuilderWithParams<F, NewP>;
   }

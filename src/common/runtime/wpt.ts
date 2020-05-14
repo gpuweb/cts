@@ -21,10 +21,7 @@ declare function async_test(f: (this: WptTestObject) => Promise<void>, name: str
   assert(qs.length === 1, 'currently, there must be exactly one ?q=');
   const testcases = await loader.loadTests(qs[0]);
 
-  const log = await addWPTTests(testcases);
-
-  const resultsElem = document.getElementById('results') as HTMLElement;
-  resultsElem.textContent = log.asJSON(2);
+  await addWPTTests(testcases);
 })();
 
 // Note: async_tests must ALL be added within the same task. This function *must not* be async.

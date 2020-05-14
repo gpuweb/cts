@@ -96,30 +96,32 @@ g.test('duplicate_test_name').fn(t => {
 g.test('duplicate_test_params').fn(t => {
   const g = makeTestGroupForUnitTesting(UnitTest);
 
+  g.test('abc')
+    .params([
+      { a: 1 }, //
+      { a: 1 },
+    ])
+    .fn(() => {
+      //
+    });
   t.shouldThrow('Error', () => {
-    g.test('abc')
-      .params([
-        { a: 1 }, //
-        { a: 1 },
-      ])
-      .fn(() => {
-        //
-      });
+    g.checkForDuplicateCases();
   });
 });
 
 g.test('duplicate_test_params,with_different_private_params').fn(t => {
   const g = makeTestGroupForUnitTesting(UnitTest);
 
+  g.test('abc')
+    .params([
+      { a: 1, _b: 1 }, //
+      { a: 1, _b: 2 },
+    ])
+    .fn(() => {
+      //
+    });
   t.shouldThrow('Error', () => {
-    g.test('abc')
-      .params([
-        { a: 1, _b: 1 }, //
-        { a: 1, _b: 2 },
-      ])
-      .fn(() => {
-        //
-      });
+    g.checkForDuplicateCases();
   });
 });
 
