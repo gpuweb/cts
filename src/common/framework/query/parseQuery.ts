@@ -24,8 +24,10 @@ function parseQueryImpl(s: string): TestQuery {
   // Undo encodeURIComponentSelectively
   s = decodeURIComponent(s);
 
-  const bigParts = s.split(kBigSeparator, 4); // suite, group, test, params
+  // bigParts are: suite, group, test, params (note kBigSeparator could appear in params)
+  const bigParts = s.split(kBigSeparator, 4);
   assert(bigParts.length >= 2, `filter string must have at least one ${kBigSeparator}`);
+  assert(bigParts.length <= 4);
   const suite = bigParts[0];
 
   const { parts: file, wildcard: filePathHasWildcard } = parseBigPart(bigParts[1], kPathSeparator);
@@ -102,6 +104,7 @@ function parseBigPart(
     );
   }
   if (endsWithWildcard) {
+    // Remove the last element of the array (which is just the wildcard).
     parts.length = parts.length - 1;
   }
   return { parts, wildcard: endsWithWildcard };

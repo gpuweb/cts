@@ -13,11 +13,11 @@ import { stringifySingleParam } from './query/stringify_params.js';
 import { RunCase, RunFn } from './test_group.js';
 import { assert } from './util/util.js';
 
-export interface TestSubtree<Q extends TestQuery = TestQuery> {
-  query: Q;
-  description?: string;
+export interface TestSubtree<T extends TestQuery = TestQuery> {
+  readonly query: T;
   readonly children: Map<string, TestTreeNode>;
-  collapsible: boolean;
+  readonly collapsible: boolean;
+  description?: string;
 }
 
 export interface TestTreeLeaf {
@@ -98,7 +98,7 @@ export async function loadTreeForQuery(
   const seenSubqueriesToExpand: boolean[] = new Array(subqueriesToExpand.length);
   seenSubqueriesToExpand.fill(false);
 
-  const checkCollapsible = (subquery: TestQuery) =>
+  const isCollapsible = (subquery: TestQuery) =>
     subqueriesToExpandEntries.every(([i, toExpand]) => {
       const ordering = compareQueries(toExpand, subquery);
 
@@ -114,10 +114,11 @@ export async function loadTreeForQuery(
   let foundCase = false;
   // L0 is suite:*
   const subtreeL0 = makeTreeForSuite(suite);
-  checkCollapsible(subtreeL0.query); // mark seenSubqueriesToExpand
+  isCollapsible(subtreeL0.query); // mark seenSubqueriesToExpand
   for (const entry of specs) {
     if (entry.file.length === 0 && 'readme' in entry) {
       // Suite-level readme.
+      assert(subtreeL0.description === undefined);
       subtreeL0.description = entry.readme.trim();
       continue;
     }
@@ -132,13 +133,17 @@ export async function loadTreeForQuery(
     }
 
     if ('readme' in entry) {
-      // Entry is a readme that is an ancestor or descendant of the query.
+      // Entry is a README that is an ancestor or descendant of the query.
+      // (It's included for display in the standalone runner.)
 
       // readmeSubtree is suite:a,b,*
-      const readmeSubtree: TestSubtree<TestQueryMultiFile> = makeSubtreeForDirPath(
+      // (This is always going to dedup with a file path, if there are any test spec files under
+      // the directory that has the README).
+      const readmeSubtree: TestSubtree<TestQueryMultiFile> = addSubtreeForDirPath(
         subtreeL0,
         entry.file
       );
+      assert(readmeSubtree.description === undefined);
       readmeSubtree.description = entry.readme.trim();
       continue;
     }
@@ -147,14 +152,16 @@ export async function loadTreeForQuery(
     const spec = await loader.importSpecFile(queryToLoad.suite, entry.file);
     const description = spec.description.trim();
     // subtreeL1 is suite:a,b:*
-    const subtreeL1: TestSubtree<TestQueryMultiTest> = makeSubtreeForFilePath(
+    const subtreeL1: TestSubtree<TestQueryMultiTest> = addSubtreeForFilePath(
       subtreeL0,
       entry.file,
       description,
-      checkCollapsible
+      isCollapsible
     );
 
-    // TODO: this is taking a tree, flattening it, and then unflattening it. Possibly redundant?
+    // TODO: If tree generation gets too slow, avoid actually iterating the cases in a file
+    // if there's no need to (based on the subqueriesToExpand).
+    // TODO: This is taking a tree, flattening it, and then unflattening it. Possibly redundant?
     for (const t of spec.g.iterate()) {
       {
         const queryL3 = new TestQuerySingleCase(suite, entry.file, t.id.test, t.id.params);
@@ -166,14 +173,14 @@ export async function loadTreeForQuery(
       }
 
       // subtreeL2 is suite:a,b:c,d:*
-      const subtreeL2: TestSubtree<TestQueryMultiCase> = makeSubtreeForTestPath(
+      const subtreeL2: TestSubtree<TestQueryMultiCase> = addSubtreeForTestPath(
         subtreeL1,
         t.id.test,
-        checkCollapsible
+        isCollapsible
       );
 
       // Leaf for case is suite:a,b:c,d:x=1;y=2
-      makeLeafForCase(subtreeL2, t, checkCollapsible);
+      addLeafForCase(subtreeL2, t, isCollapsible);
 
       foundCase = true;
     }
@@ -198,22 +205,24 @@ function makeTreeForSuite(suite: string): TestSubtree<TestQueryMultiFile> {
   };
 }
 
-function makeSubtreeForDirPath(
+function addSubtreeForDirPath(
   tree: TestSubtree<TestQueryMultiFile>,
   file: string[]
 ): TestSubtree<TestQueryMultiFile> {
-  const subqueryFile = [];
+  const subqueryFile: string[] = [];
   // To start, tree is suite:*
   // This loop goes from that -> suite:a,* -> suite:a,b,*
   for (const part of file) {
     subqueryFile.push(part);
-    const subquery = new TestQueryMultiFile(tree.query.suite, subqueryFile);
-    tree = getOrInsertSubtree(part, tree, subquery, false);
+    tree = getOrInsertSubtree(part, tree, () => {
+      const query = new TestQueryMultiFile(tree.query.suite, subqueryFile);
+      return { query, collapsible: false };
+    });
   }
   return tree;
 }
 
-function makeSubtreeForFilePath(
+function addSubtreeForFilePath(
   tree: TestSubtree<TestQueryMultiFile>,
   file: string[],
   description: string,
@@ -221,33 +230,38 @@ function makeSubtreeForFilePath(
 ): TestSubtree<TestQueryMultiTest> {
   // To start, tree is suite:*
   // This goes from that -> suite:a,* -> suite:a,b,*
-  tree = makeSubtreeForDirPath(tree, file);
+  tree = addSubtreeForDirPath(tree, file);
   // This goes from that -> suite:a,b:*
-  const subquery = new TestQueryMultiTest(tree.query.suite, tree.query.file, []);
-  const subtree = getOrInsertSubtree('', tree, subquery, checkCollapsible(subquery));
-  subtree.description = description;
+  const subtree = getOrInsertSubtree('', tree, () => {
+    const query = new TestQueryMultiTest(tree.query.suite, tree.query.file, []);
+    return { query, description, collapsible: checkCollapsible(query) };
+  });
   return subtree;
 }
 
-function makeSubtreeForTestPath(
+function addSubtreeForTestPath(
   tree: TestSubtree<TestQueryMultiTest>,
   test: readonly string[],
-  checkCollapsible: (sq: TestQuery) => boolean
+  isCollapsible: (sq: TestQuery) => boolean
 ): TestSubtree<TestQueryMultiCase> {
-  const subqueryTest = [];
+  const subqueryTest: string[] = [];
   // To start, tree is suite:a,b:*
   // This loop goes from that -> suite:a,b:c,* -> suite:a,b:c,d,*
   for (const part of test) {
     subqueryTest.push(part);
-    const subquery = new TestQueryMultiTest(tree.query.suite, tree.query.file, subqueryTest);
-    tree = getOrInsertSubtree(part, tree, subquery, checkCollapsible(subquery));
+    tree = getOrInsertSubtree(part, tree, () => {
+      const query = new TestQueryMultiTest(tree.query.suite, tree.query.file, subqueryTest);
+      return { query, collapsible: isCollapsible(query) };
+    });
   }
   // This goes from that -> suite:a,b:c,d:*
-  const subquery = new TestQueryMultiCase(tree.query.suite, tree.query.file, subqueryTest, {});
-  return getOrInsertSubtree('', tree, subquery, checkCollapsible(subquery));
+  return getOrInsertSubtree('', tree, () => {
+    const query = new TestQueryMultiCase(tree.query.suite, tree.query.file, subqueryTest, {});
+    return { query, collapsible: isCollapsible(query) };
+  });
 }
 
-function makeLeafForCase(
+function addLeafForCase(
   tree: TestSubtree<TestQueryMultiTest>,
   t: RunCase,
   checkCollapsible: (sq: TestQuery) => boolean
@@ -262,8 +276,10 @@ function makeLeafForCase(
     name = stringifySingleParam(k, v);
     subqueryParams[k] = v;
 
-    const subquery = new TestQueryMultiCase(query.suite, query.file, query.test, subqueryParams);
-    tree = getOrInsertSubtree(name, tree, subquery, checkCollapsible(subquery));
+    tree = getOrInsertSubtree(name, tree, () => {
+      const subquery = new TestQueryMultiCase(query.suite, query.file, query.test, subqueryParams);
+      return { query: subquery, collapsible: checkCollapsible(subquery) };
+    });
   }
 
   // This goes from that -> suite:a,b:c,d:x=1;y=2
@@ -275,17 +291,15 @@ function makeLeafForCase(
 function getOrInsertSubtree<T extends TestQuery>(
   key: string,
   parent: TestSubtree,
-  query: T,
-  collapsible: boolean
+  createSubtree: () => Omit<TestSubtree<T>, 'children'>
 ): TestSubtree<T> {
   let v: TestSubtree<T>;
   const child = parent.children.get(key);
   if (child !== undefined) {
     assert('children' in child); // Make sure cached subtree is not actually a leaf
     v = child as TestSubtree<T>;
-    v.collapsible = collapsible;
   } else {
-    v = { query, children: new Map(), collapsible };
+    v = { ...createSubtree(), children: new Map() };
     parent.children.set(key, v);
   }
   return v;
