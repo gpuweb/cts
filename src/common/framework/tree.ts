@@ -161,7 +161,6 @@ export async function loadTreeForQuery(
 
     // TODO: If tree generation gets too slow, avoid actually iterating the cases in a file
     // if there's no need to (based on the subqueriesToExpand).
-    // TODO: This is taking a tree, flattening it, and then unflattening it. Possibly redundant?
     for (const t of spec.g.iterate()) {
       {
         const queryL3 = new TestQuerySingleCase(suite, entry.file, t.id.test, t.id.params);
