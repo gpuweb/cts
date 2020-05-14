@@ -11,10 +11,14 @@ export interface CaseParamsRW {
 }
 export type CaseParamsIterable = Iterable<CaseParams>;
 
+export function paramKeyIsPublic(key: string): boolean {
+  return !key.startsWith('_');
+}
+
 export function extractPublicParams(params: CaseParams): CaseParams {
   const publicParams: CaseParamsRW = {};
   for (const k of Object.keys(params)) {
-    if (!k.startsWith('_')) {
+    if (paramKeyIsPublic(k)) {
       publicParams[k] = params[k];
     }
   }

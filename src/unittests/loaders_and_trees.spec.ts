@@ -161,17 +161,20 @@ g.test('case').fn(async t => {
   t.shouldReject('Error', t.load('suite1:baz:zed:a=1;b=2*'));
   t.shouldReject('Error', t.load('suite1:baz:zed:a=1;b=2;'));
   t.shouldReject('SyntaxError', t.load('suite1:baz:zed:a=1;b=2,')); // tries to parse '2,' as JSON
+  t.shouldReject('Error', t.load('suite1:baz:zed:a=1,b=2')); // '=' not allowed in value
   t.shouldReject('Error', t.load('suite1:baz:zed:b=2*'));
-  t.shouldReject('Error', t.load('suite1:baz:zed:b=2;*'));
-  t.shouldReject('Error', t.load('suite1:baz:zed:b=2;a=1'));
   t.shouldReject('Error', t.load('suite1:baz:zed:b=2;a=1;_c=0'));
   t.shouldReject('Error', t.load('suite1:baz:zed:a=1,*'));
 
   t.expect((await t.load('suite1:baz:zed:*')).length === 2);
-  t.expect((await t.load('suite1:baz:zed:a=1;*')).length === 1);
+  t.expect((await t.load('suite1:baz:zed:a=1;*')).length === 2);
   t.expect((await t.load('suite1:baz:zed:a=1;b=2')).length === 1);
   t.expect((await t.load('suite1:baz:zed:a=1;b=2;*')).length === 1);
+  t.expect((await t.load('suite1:baz:zed:b=2;*')).length === 1);
+  t.expect((await t.load('suite1:baz:zed:b=2;a=1')).length === 1);
+  t.expect((await t.load('suite1:baz:zed:b=2;a=1;*')).length === 1);
   t.expect((await t.load('suite1:baz:zed:b=3;a=1')).length === 1);
+  t.expect((await t.load('suite1:baz:zed:a=1;b=3')).length === 1);
   t.expect((await t.load('suite1:foo:hello:')).length === 1);
 });
 

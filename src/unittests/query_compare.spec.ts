@@ -16,7 +16,7 @@ import { UnitTest } from './unit_test.js';
 
 class F extends UnitTest {
   expectQ(a: TestQuery, exp: '<' | '=' | '>' | '!', b: TestQuery) {
-    const [ordering, inverseOrdering] =
+    const [expOrdering, expInvOrdering] =
       exp === '<'
         ? [Ordering.StrictSubset, Ordering.StrictSuperset]
         : exp === '='
@@ -24,8 +24,14 @@ class F extends UnitTest {
         : exp === '>'
         ? [Ordering.StrictSuperset, Ordering.StrictSubset]
         : [Ordering.Unordered, Ordering.Unordered];
-    this.expect(compareQueries(a, b) === ordering);
-    this.expect(compareQueries(b, a) === inverseOrdering);
+    {
+      const act = compareQueries(a, b);
+      this.expect(act === expOrdering, `${a} ${b}  got ${act}, exp ${expOrdering}`);
+    }
+    {
+      const act = compareQueries(a, b);
+      this.expect(act === expOrdering, `${b} ${a}  got ${act}, exp ${expInvOrdering}`);
+    }
   }
 
   expectWellOrdered(...qs: TestQuery[]) {

@@ -1,4 +1,9 @@
-import { CaseParamsRW, ParamArgument, badParamValueChars } from '../params_utils.js';
+import {
+  CaseParamsRW,
+  ParamArgument,
+  badParamValueChars,
+  paramKeyIsPublic,
+} from '../params_utils.js';
 import { assert } from '../util/util.js';
 
 import {
@@ -15,7 +20,7 @@ export function parseQuery(s: string): TestQuery {
   try {
     return parseQueryImpl(s);
   } catch (ex) {
-    ex.message += '\n  on:' + s;
+    ex.message += '\n  on: ' + s;
     throw ex;
   }
 }
@@ -115,6 +120,7 @@ function parseSingleParam(paramSubstring: string): [string, ParamArgument] {
   const i = paramSubstring.indexOf('=');
   assert(i !== -1, 'Param in a query must be of form key=value');
   const k = paramSubstring.substring(0, i);
+  assert(paramKeyIsPublic(k), 'Param in a query must not be private (start with _)');
   const v = paramSubstring.substring(i + 1);
   return [k, parseSingleParamValue(v)];
 }

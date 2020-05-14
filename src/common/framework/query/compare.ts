@@ -1,4 +1,4 @@
-import { CaseParams, ParamArgument, extractPublicParams } from '../params_utils.js';
+import { CaseParams, extractPublicParams } from '../params_utils.js';
 import { assert, objectEquals } from '../util/util.js';
 
 import { TestQuery } from './query.js';
@@ -83,23 +83,22 @@ function comparePaths(a: readonly string[], b: readonly string[]): Ordering {
   }
 }
 
-export function comparePublicParamsPaths(p1: CaseParams, p2: CaseParams): Ordering {
-  const a: Array<[string, ParamArgument]> = Object.entries(extractPublicParams(p1));
-  const b: Array<[string, ParamArgument]> = Object.entries(extractPublicParams(p2));
-  const shorter = Math.min(a.length, b.length);
+export function comparePublicParamsPaths(a0: CaseParams, b0: CaseParams): Ordering {
+  const a = extractPublicParams(a0);
+  const b = extractPublicParams(b0);
+  const aKeys = Object.keys(a);
+  const commonKeys = new Set(aKeys.filter(k => k in b));
 
-  for (let i = 0; i < shorter; ++i) {
-    const [ak, av] = a[i];
-    const [bk, bv] = b[i];
-    if (ak !== bk || !objectEquals(av, bv)) {
+  for (const k of commonKeys) {
+    if (!objectEquals(a[k], b[k])) {
       return Ordering.Unordered;
     }
   }
-  if (a.length === b.length) {
-    return Ordering.Equal;
-  } else if (a.length < b.length) {
-    return Ordering.StrictSuperset;
-  } else {
-    return Ordering.StrictSubset;
-  }
+  const bKeys = Object.keys(b);
+  const aRemainingKeys = aKeys.length - commonKeys.size;
+  const bRemainingKeys = bKeys.length - commonKeys.size;
+  if (aRemainingKeys === 0 && bRemainingKeys === 0) return Ordering.Equal;
+  if (aRemainingKeys === 0) return Ordering.StrictSuperset;
+  if (bRemainingKeys === 0) return Ordering.StrictSubset;
+  return Ordering.Unordered;
 }
