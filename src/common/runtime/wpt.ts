@@ -1,5 +1,6 @@
 import { DefaultTestFileLoader } from '../framework/file_loader.js';
 import { Logger } from '../framework/logging/logger.js';
+import { parseQuery } from '../framework/query/parseQuery.js';
 import { TestTreeLeaf } from '../framework/tree.js';
 import { AsyncMutex } from '../framework/util/async_mutex.js';
 import { assert } from '../framework/util/util.js';
@@ -19,7 +20,7 @@ declare function async_test(f: (this: WptTestObject) => Promise<void>, name: str
   const loader = new DefaultTestFileLoader();
   const qs = new URLSearchParams(window.location.search).getAll('q');
   assert(qs.length === 1, 'currently, there must be exactly one ?q=');
-  const testcases = await loader.loadTests(qs[0]);
+  const testcases = await loader.loadCases(parseQuery(qs[0]));
 
   await addWPTTests(testcases);
 })();

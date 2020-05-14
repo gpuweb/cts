@@ -9,6 +9,7 @@ import {
   TestQueryMultiFile,
   TestQueryMultiTest,
 } from './query/query.js';
+import { kBigSeparator, kWildcard, kPathSeparator, kParamSeparator } from './query/separators.js';
 import { stringifySingleParam } from './query/stringify_params.js';
 import { RunCase, RunFn } from './test_group.js';
 import { assert } from './util/util.js';
@@ -38,6 +39,8 @@ import { assert } from './util/util.js';
 //     about expectation granularity.
 
 export interface TestSubtree<T extends TestQuery = TestQuery> {
+  /** For display in standalone runner. */
+  readonly relativeName: string;
   readonly query: T;
   readonly children: Map<string, TestTreeNode>;
   readonly collapsible: boolean;
@@ -92,13 +95,10 @@ export class TestTree {
 
   static subtreeToString(name: string, tree: TestTreeNode, indent: string): string {
     const collapsible = 'run' in tree ? '>' : tree.collapsible ? '+' : '-';
-    let s =
-      indent +
-      `${collapsible} ${JSON.stringify(name)} => ` +
-      `${tree.query}        ${JSON.stringify(tree.query)}`;
+    let s = indent + `${collapsible} ${JSON.stringify(name)} => ${tree.query}`;
     if ('children' in tree) {
       if (tree.description !== undefined) {
-        s += indent + `\n    | ${JSON.stringify(tree.description)}`;
+        s += `\n${indent}  | ${JSON.stringify(tree.description)}`;
       }
 
       for (const [name, child] of tree.children) {
@@ -208,7 +208,6 @@ export async function loadTreeForQuery(
       foundCase = true;
     }
   }
-  const tree = new TestTree(subtreeL0);
 
   for (const [i, sq] of subqueriesToExpandEntries) {
     const seen = seenSubqueriesToExpand[i];
@@ -220,12 +219,12 @@ export async function loadTreeForQuery(
   }
   assert(foundCase, 'Query does not match any cases');
 
-  // TODO: Contains lots of single-child subtrees. Consider cleaning those up (as postprocess?).
-  return tree;
+  return new TestTree(subtreeL0);
 }
 
 function makeTreeForSuite(suite: string): TestSubtree<TestQueryMultiFile> {
   return {
+    relativeName: suite + kBigSeparator,
     query: new TestQueryMultiFile(suite, []),
     children: new Map(),
     collapsible: false,
@@ -243,7 +242,7 @@ function addSubtreeForDirPath(
     subqueryFile.push(part);
     tree = getOrInsertSubtree(part, tree, () => {
       const query = new TestQueryMultiFile(tree.query.suite, subqueryFile);
-      return { query, collapsible: false };
+      return { relativeName: part + kPathSeparator + kWildcard, query, collapsible: false };
     });
   }
   return tree;
@@ -261,7 +260,12 @@ function addSubtreeForFilePath(
   // This goes from that -> suite:a,b:*
   const subtree = getOrInsertSubtree('', tree, () => {
     const query = new TestQueryMultiTest(tree.query.suite, tree.query.filePathParts, []);
-    return { query, description, collapsible: checkCollapsible(query) };
+    return {
+      relativeName: file[file.length - 1] + kBigSeparator + kWildcard,
+      query,
+      description,
+      collapsible: checkCollapsible(query),
+    };
   });
   return subtree;
 }
@@ -282,7 +286,11 @@ function addSubtreeForTestPath(
         tree.query.filePathParts,
         subqueryTest
       );
-      return { query, collapsible: isCollapsible(query) };
+      return {
+        relativeName: part + kPathSeparator + kWildcard,
+        query,
+        collapsible: isCollapsible(query),
+      };
     });
   }
   // This goes from that -> suite:a,b:c,d:*
@@ -293,7 +301,12 @@ function addSubtreeForTestPath(
       subqueryTest,
       {}
     );
-    return { query, collapsible: isCollapsible(query) };
+    return {
+      relativeName: subqueryTest[subqueryTest.length - 1] + kBigSeparator + kWildcard,
+      kWildcard,
+      query,
+      collapsible: isCollapsible(query),
+    };
   });
 }
 
@@ -319,7 +332,11 @@ function addLeafForCase(
         query.testPathParts,
         subqueryParams
       );
-      return { query: subquery, collapsible: checkCollapsible(subquery) };
+      return {
+        relativeName: name + kParamSeparator + kWildcard,
+        query: subquery,
+        collapsible: checkCollapsible(subquery),
+      };
     });
   }
 
