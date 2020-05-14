@@ -42,21 +42,13 @@ export function compareQueries(a: TestQuery, b: TestQuery): Ordering {
 //   anything <= suite:a:* is small
 function compareOneLevel(ordering: Ordering, aIsBig: boolean, bIsBig: boolean): Ordering {
   assert(ordering !== Ordering.Equal || aIsBig || bIsBig);
-  if (!aIsBig && !bIsBig) {
-    return Ordering.Unordered;
-  }
-  switch (ordering) {
-    case Ordering.Unordered:
-      return Ordering.Unordered;
-    case Ordering.StrictSuperset:
-      return aIsBig || !bIsBig ? Ordering.StrictSuperset : Ordering.Unordered;
-    case Ordering.StrictSubset:
-      return !aIsBig || bIsBig ? Ordering.StrictSubset : Ordering.Unordered;
-  }
-  if (aIsBig && bIsBig) return Ordering.Equal;
-  if (aIsBig) return Ordering.StrictSuperset;
-  if (bIsBig) return Ordering.StrictSubset;
-  unreachable();
+  if (ordering === Ordering.Unordered) return Ordering.Unordered;
+  if (aIsBig && bIsBig) return ordering;
+  if (!aIsBig && !bIsBig) return Ordering.Unordered; // Equal case is already handled
+  // Exactly one of (a, b) is big.
+  if (aIsBig && ordering !== Ordering.StrictSubset) return Ordering.StrictSuperset;
+  if (bIsBig && ordering !== Ordering.StrictSuperset) return Ordering.StrictSubset;
+  return Ordering.Unordered;
 }
 
 function comparePaths(a: readonly string[], b: readonly string[]): Ordering {
