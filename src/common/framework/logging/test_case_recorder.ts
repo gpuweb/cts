@@ -11,6 +11,7 @@ enum PassState {
   fail = 3,
 }
 
+// Holds onto a LiveTestCaseResult owned by the Logger, and writes the results into it.
 export class TestCaseRecorder {
   private result: LiveTestCaseResult;
   private state = PassState.pass;
@@ -24,21 +25,23 @@ export class TestCaseRecorder {
   }
 
   start(): void {
+    assert(this.startTime < 0, 'TestCaseRecorder cannot be reused');
     this.startTime = now();
-    this.logs = [];
-    this.state = PassState.pass;
   }
 
   finish(): void {
     assert(this.startTime >= 0, 'finish() before start()');
 
-    const endTime = now();
+    const timeMilliseconds = now() - this.startTime;
     // Round to next microsecond to avoid storing useless .xxxx00000000000002 in results.
-    this.result.timems = Math.ceil((endTime - this.startTime) * 1000) / 1000;
-    this.result.status = PassState[this.state] as Status;
+    this.result.timems = Math.ceil(timeMilliseconds * 1000) / 1000;
+    this.result.status = PassState[this.state] as Status; // Convert numeric enum back to string
 
     this.result.logs = this.logs;
-    this.debugging = false;
+  }
+
+  injectResult(injectedResult: LiveTestCaseResult): void {
+    Object.assign(this.result, injectedResult);
   }
 
   debug(ex: Error): void {

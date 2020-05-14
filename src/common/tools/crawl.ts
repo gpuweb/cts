@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { SpecFile } from '../framework/file_loader.js';
-import { TestSuiteListingEntry } from '../framework/test_suite_listing.js';
+import { TestSuiteListingEntry, TestSuiteListing } from '../framework/test_suite_listing.js';
 import { assert, unreachable } from '../framework/util/util.js';
 
 const fg = require('fast-glob');
@@ -51,7 +51,7 @@ export async function crawl(suite: string): Promise<TestSuiteListingEntry[]> {
   return entries;
 }
 
-export function makeListing(filename: string): Promise<TestSuiteListingEntry[]> {
+export function makeListing(filename: string): Promise<TestSuiteListing> {
   const suite = path.basename(path.dirname(filename));
   return crawl(suite);
 }

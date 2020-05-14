@@ -13,64 +13,60 @@ import { stringifySingleParam } from './query/stringify_params.js';
 import { RunCase, RunFn } from './test_group.js';
 import { assert } from './util/util.js';
 
-export interface FilterResultSubtree<Q extends TestQuery = TestQuery> {
+export interface TestSubtree<Q extends TestQuery = TestQuery> {
   query: Q;
   description?: string;
-  readonly children: Map<string, FilterResultTreeNode>;
+  readonly children: Map<string, TestTreeNode>;
   collapsible: boolean;
 }
 
-export interface FilterResultTreeLeaf {
+export interface TestTreeLeaf {
   readonly query: TestQuerySingleCase;
   readonly run: RunFn;
 }
 
-export type FilterResultTreeNode = FilterResultSubtree | FilterResultTreeLeaf;
+export type TestTreeNode = TestSubtree | TestTreeLeaf;
 
-export class FilterResultTree {
-  readonly root: FilterResultSubtree;
+export class TestTree {
+  readonly root: TestSubtree;
 
-  constructor(root: FilterResultSubtree) {
+  constructor(root: TestSubtree) {
     this.root = root;
   }
 
   iterateCollapsedQueries(): IterableIterator<TestQuery> {
-    return FilterResultTree.iterateSubtreeCollapsedQueries(this.root);
+    return TestTree.iterateSubtreeCollapsedQueries(this.root);
   }
 
-  iterateLeaves(): IterableIterator<FilterResultTreeLeaf> {
-    return FilterResultTree.iterateSubtreeLeaves(this.root);
+  iterateLeaves(): IterableIterator<TestTreeLeaf> {
+    return TestTree.iterateSubtreeLeaves(this.root);
   }
 
   toString(): string {
-    return FilterResultTree.subtreeToString('(root)', this.root, '');
+    return TestTree.subtreeToString('(root)', this.root, '');
   }
 
-  static *iterateSubtreeCollapsedQueries(
-    subtree: FilterResultSubtree
-  ): IterableIterator<TestQuery> {
+  static *iterateSubtreeCollapsedQueries(subtree: TestSubtree): IterableIterator<TestQuery> {
     for (const [, child] of subtree.children) {
       if ('children' in child && !child.collapsible) {
-        yield* FilterResultTree.iterateSubtreeCollapsedQueries(child);
+        yield* TestTree.iterateSubtreeCollapsedQueries(child);
       } else {
         yield child.query;
       }
     }
   }
 
-  static *iterateSubtreeLeaves(
-    subtree: FilterResultSubtree
-  ): IterableIterator<FilterResultTreeLeaf> {
+  static *iterateSubtreeLeaves(subtree: TestSubtree): IterableIterator<TestTreeLeaf> {
     for (const [, child] of subtree.children) {
       if ('children' in child) {
-        yield* FilterResultTree.iterateSubtreeLeaves(child);
+        yield* TestTree.iterateSubtreeLeaves(child);
       } else {
         yield child;
       }
     }
   }
 
-  static subtreeToString(name: string, tree: FilterResultTreeNode, indent: string): string {
+  static subtreeToString(name: string, tree: TestTreeNode, indent: string): string {
     const collapsible = 'run' in tree ? '>' : tree.collapsible ? '+' : '-';
     let s =
       indent +
@@ -82,7 +78,7 @@ export class FilterResultTree {
       }
 
       for (const [name, child] of tree.children) {
-        s += '\n' + FilterResultTree.subtreeToString(name, child, indent + '  ');
+        s += '\n' + TestTree.subtreeToString(name, child, indent + '  ');
       }
     }
     return s;
@@ -94,7 +90,7 @@ export async function loadTreeForQuery(
   loader: TestFileLoader,
   queryToLoad: TestQuery,
   subqueriesToExpand: TestQuery[]
-): Promise<FilterResultTree> {
+): Promise<TestTree> {
   const suite = queryToLoad.suite;
   const specs = await loader.listing(suite);
 
@@ -130,7 +126,7 @@ export async function loadTreeForQuery(
       const queryL1 = new TestQueryMultiFile(suite, entry.file);
       const orderingL1 = compareQueries(queryL1, queryToLoad);
       if (orderingL1 === Ordering.Unordered) {
-        // File path is not matched by this filter.
+        // File path is not matched by this query.
         continue;
       }
     }
@@ -139,7 +135,7 @@ export async function loadTreeForQuery(
       // Entry is a readme that is an ancestor or descendant of the query.
 
       // readmeSubtree is suite:a,b,*
-      const readmeSubtree: FilterResultSubtree<TestQueryMultiFile> = makeSubtreeForDirPath(
+      const readmeSubtree: TestSubtree<TestQueryMultiFile> = makeSubtreeForDirPath(
         subtreeL0,
         entry.file
       );
@@ -151,7 +147,7 @@ export async function loadTreeForQuery(
     const spec = await loader.importSpecFile(queryToLoad.suite, entry.file);
     const description = spec.description.trim();
     // subtreeL1 is suite:a,b:*
-    const subtreeL1: FilterResultSubtree<TestQueryMultiTest> = makeSubtreeForFilePath(
+    const subtreeL1: TestSubtree<TestQueryMultiTest> = makeSubtreeForFilePath(
       subtreeL0,
       entry.file,
       description,
@@ -164,13 +160,13 @@ export async function loadTreeForQuery(
         const queryL3 = new TestQuerySingleCase(suite, entry.file, t.id.test, t.id.params);
         const orderingL3 = compareQueries(queryL3, queryToLoad);
         if (orderingL3 === Ordering.Unordered || orderingL3 === Ordering.StrictSuperset) {
-          // Case is not matched by this filter.
+          // Case is not matched by this query.
           continue;
         }
       }
 
       // subtreeL2 is suite:a,b:c,d:*
-      const subtreeL2: FilterResultSubtree<TestQueryMultiCase> = makeSubtreeForTestPath(
+      const subtreeL2: TestSubtree<TestQueryMultiCase> = makeSubtreeForTestPath(
         subtreeL1,
         t.id.test,
         checkCollapsible
@@ -182,7 +178,7 @@ export async function loadTreeForQuery(
       foundCase = true;
     }
   }
-  const tree = new FilterResultTree(subtreeL0);
+  const tree = new TestTree(subtreeL0);
 
   for (const [i, sq] of subqueriesToExpandEntries) {
     const seen = seenSubqueriesToExpand[i];
@@ -194,7 +190,7 @@ export async function loadTreeForQuery(
   return tree;
 }
 
-function makeTreeForSuite(suite: string): FilterResultSubtree<TestQueryMultiFile> {
+function makeTreeForSuite(suite: string): TestSubtree<TestQueryMultiFile> {
   return {
     query: new TestQueryMultiFile(suite, []),
     children: new Map(),
@@ -203,9 +199,9 @@ function makeTreeForSuite(suite: string): FilterResultSubtree<TestQueryMultiFile
 }
 
 function makeSubtreeForDirPath(
-  tree: FilterResultSubtree<TestQueryMultiFile>,
+  tree: TestSubtree<TestQueryMultiFile>,
   file: string[]
-): FilterResultSubtree<TestQueryMultiFile> {
+): TestSubtree<TestQueryMultiFile> {
   const subqueryFile = [];
   // To start, tree is suite:*
   // This loop goes from that -> suite:a,* -> suite:a,b,*
@@ -218,11 +214,11 @@ function makeSubtreeForDirPath(
 }
 
 function makeSubtreeForFilePath(
-  tree: FilterResultSubtree<TestQueryMultiFile>,
+  tree: TestSubtree<TestQueryMultiFile>,
   file: string[],
   description: string,
   checkCollapsible: (sq: TestQuery) => boolean
-): FilterResultSubtree<TestQueryMultiTest> {
+): TestSubtree<TestQueryMultiTest> {
   // To start, tree is suite:*
   // This goes from that -> suite:a,* -> suite:a,b,*
   tree = makeSubtreeForDirPath(tree, file);
@@ -234,10 +230,10 @@ function makeSubtreeForFilePath(
 }
 
 function makeSubtreeForTestPath(
-  tree: FilterResultSubtree<TestQueryMultiTest>,
+  tree: TestSubtree<TestQueryMultiTest>,
   test: readonly string[],
   checkCollapsible: (sq: TestQuery) => boolean
-): FilterResultSubtree<TestQueryMultiCase> {
+): TestSubtree<TestQueryMultiCase> {
   const subqueryTest = [];
   // To start, tree is suite:a,b:*
   // This loop goes from that -> suite:a,b:c,* -> suite:a,b:c,d,*
@@ -252,7 +248,7 @@ function makeSubtreeForTestPath(
 }
 
 function makeLeafForCase(
-  tree: FilterResultSubtree<TestQueryMultiTest>,
+  tree: TestSubtree<TestQueryMultiTest>,
   t: RunCase,
   checkCollapsible: (sq: TestQuery) => boolean
 ): void {
@@ -278,15 +274,15 @@ function makeLeafForCase(
 
 function getOrInsertSubtree<T extends TestQuery>(
   key: string,
-  parent: FilterResultSubtree,
+  parent: TestSubtree,
   query: T,
   collapsible: boolean
-): FilterResultSubtree<T> {
-  let v: FilterResultSubtree<T>;
+): TestSubtree<T> {
+  let v: TestSubtree<T>;
   const child = parent.children.get(key);
   if (child !== undefined) {
     assert('children' in child); // Make sure cached subtree is not actually a leaf
-    v = child as FilterResultSubtree<T>;
+    v = child as TestSubtree<T>;
     v.collapsible = collapsible;
   } else {
     v = { query, children: new Map(), collapsible };
@@ -295,9 +291,9 @@ function getOrInsertSubtree<T extends TestQuery>(
   return v;
 }
 
-function insertLeaf(parent: FilterResultSubtree, query: TestQuerySingleCase, t: RunCase) {
+function insertLeaf(parent: TestSubtree, query: TestQuerySingleCase, t: RunCase) {
   const key = '';
-  const leaf: FilterResultTreeLeaf = {
+  const leaf: TestTreeLeaf = {
     query,
     run: (rec: TestCaseRecorder) => t.run(rec),
   };

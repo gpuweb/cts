@@ -3,11 +3,7 @@
 import { DefaultTestFileLoader } from '../framework/file_loader.js';
 import { Logger } from '../framework/logging/logger.js';
 import { TestQuery } from '../framework/query/query.js';
-import {
-  FilterResultTreeNode,
-  FilterResultSubtree,
-  FilterResultTreeLeaf,
-} from '../framework/tree.js';
+import { TestTreeNode, TestSubtree, TestTreeLeaf } from '../framework/tree.js';
 import { assert } from '../framework/util/util.js';
 
 import { optionEnabled } from './helper/options.js';
@@ -34,7 +30,7 @@ type RunSubtree = () => Promise<void>;
 
 // DOM generation
 
-function makeTreeNodeHTML(tree: FilterResultTreeNode): [HTMLElement, RunSubtree] {
+function makeTreeNodeHTML(tree: TestTreeNode): [HTMLElement, RunSubtree] {
   if ('children' in tree) {
     return makeSubtreeHTML(tree);
   } else {
@@ -42,7 +38,7 @@ function makeTreeNodeHTML(tree: FilterResultTreeNode): [HTMLElement, RunSubtree]
   }
 }
 
-function makeCaseHTML(t: FilterResultTreeLeaf): [HTMLElement, RunSubtree] {
+function makeCaseHTML(t: TestTreeLeaf): [HTMLElement, RunSubtree] {
   const div = $('<div>').addClass('testcase');
 
   const name = t.query.toString();
@@ -50,10 +46,7 @@ function makeCaseHTML(t: FilterResultTreeLeaf): [HTMLElement, RunSubtree] {
     haveSomeResults = true;
     const [rec, res] = logger.record(name);
     if (worker) {
-      rec.start();
-      const workerResult = await worker.run(name, debug);
-      rec.finish();
-      Object.assign(res, workerResult);
+      rec.injectResult(await worker.run(name, debug));
     } else {
       await t.run(rec);
     }
@@ -88,7 +81,7 @@ function makeCaseHTML(t: FilterResultTreeLeaf): [HTMLElement, RunSubtree] {
   return [div[0], runSubtree];
 }
 
-function makeSubtreeHTML(t: FilterResultSubtree): [HTMLElement, RunSubtree] {
+function makeSubtreeHTML(t: TestSubtree): [HTMLElement, RunSubtree] {
   const div = $('<div>').addClass('subtree');
 
   const header = makeTreeNodeHeaderHTML(t.query, t.description, () => runSubtree(), false);
@@ -100,10 +93,7 @@ function makeSubtreeHTML(t: FilterResultSubtree): [HTMLElement, RunSubtree] {
   return [div[0], runSubtree];
 }
 
-function makeSubtreeChildrenHTML(
-  div: HTMLElement,
-  children: Iterable<FilterResultTreeNode>
-): RunSubtree {
+function makeSubtreeChildrenHTML(div: HTMLElement, children: Iterable<TestTreeNode>): RunSubtree {
   const runSubtreeFns: RunSubtree[] = [];
   for (const subtree of children) {
     const [subtreeHTML, runSubtree] = makeTreeNodeHTML(subtree);

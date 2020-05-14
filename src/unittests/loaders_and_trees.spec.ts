@@ -8,7 +8,7 @@ import { Status } from '../common/framework/logging/result.js';
 import { TestQuery, TestQuerySingleCase } from '../common/framework/query/query.js';
 import { makeTestGroup, makeTestGroupForUnitTesting } from '../common/framework/test_group.js';
 import { TestSuiteListing, TestSuiteListingEntry } from '../common/framework/test_suite_listing.js';
-import { FilterResultTreeLeaf } from '../common/framework/tree.js';
+import { TestTreeLeaf } from '../common/framework/tree.js';
 import { assert, objectEquals } from '../common/framework/util/util.js';
 
 import { UnitTest } from './unit_test.js';
@@ -105,7 +105,7 @@ class FakeTestFileLoader extends TestFileLoader {
 class LoadingTest extends UnitTest {
   static readonly loader = new FakeTestFileLoader();
 
-  async load(filter: string): Promise<FilterResultTreeLeaf[]> {
+  async load(filter: string): Promise<TestTreeLeaf[]> {
     return Array.from(await LoadingTest.loader.loadTests(filter));
   }
 

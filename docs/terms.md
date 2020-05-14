@@ -1,6 +1,6 @@
 # Writing Tests
 
-The test suites are organized as a tree, both in the filesystem and further, within each file.
+Each test suite is organized as a tree, both in the filesystem and further within each file.
 
 - _Suites_, e.g. `src/webgpu/`.
   - _READMEs_, e.g. `src/webgpu/README.txt`.
@@ -9,11 +9,28 @@ The test suites are organized as a tree, both in the filesystem and further, wit
     Each test spec file provides a description and a _Test Group_.
     A _Test Group_ defines a test fixture, and contains multiple:
     - _Tests_.
-      Identified by a series of strings (e.g. `basic,async`).
+      Identified by a comma-separated list of parts (e.g. `basic,async`)
+      which define a path through a filesystem-like tree (analogy: `basic/async.txt`).
       Defines a _test function_ and contains multiple:
       - _Test Cases_.
-        Identified by a series of _Parameters_ (e.g. `x=1;y=2`).
+        Identified by a list of _Parameters_ (e.g. `x` = `1`, `y` = `2`).
         Each Test Case has the same test function but different Parameters.
+
+## Test Tree
+
+A _Test Tree_ is a tree whose leaves are individual Test Cases.
+
+A Test Tree can be thought of as follows:
+
+- Suite, which is the root of a tree with "leaves" which are:
+  - Test Spec Files, each of which is a tree with "leaves" which are:
+    - Tests, each of which is a tree with leaves which are:
+      - Test Cases.
+
+(In the implementation, this conceptual tree of trees is decomposed into one big tree
+whose leaves are Test Cases.)
+
+**Type:** `TestTree`
 
 ## Suite
 
@@ -36,14 +53,16 @@ READMEs are only processed at build time, when generating the _Listing_ for a su
 
 ## Queries
 
-A _Query_ is a structured object (which can be represented as a string).
+A _Query_ is a structured object which specifies a subset of cases in exactly one Suite.
+A Query can be represented uniquely as a string.
 Queries are used to:
 
-- Identify the subtree of the full test tree, rooted an any arbitrary node.
-- Identify individual cases (rooted at a leaf).
+- Identify a subtree of a suite (by identifying the root node of that subtree).
+- Identify individual cases.
 - Represent the list of tests that a test runner (standalone, wpt, or cmdline) should run.
 - Identify subtrees which should not be "collapsed" during WPT `cts.html` generation,
-  so that they can be individually suppressed.
+  so that that cts.html "variants" can have individual test expectations
+  (i.e. marked as "expected to fail", "skip", etc.).
 
 There are four types of `TestQuery`:
 
@@ -62,9 +81,11 @@ There are four types of `TestQuery`:
 - `TestQuerySingleCase` represents as single case:
   - `suite:path,to,file:path,to,test:my=0;params="here"`
 
-Test Queries are a **weakly ordered set**: any query is _Unordered_, _Equal_, _StrictSuperset_, or _StrictSubset_ relative to any other.
+Test Queries are a **weakly ordered set**: any query is
+_Unordered_, _Equal_, _StrictSuperset_, or _StrictSubset_ relative to any other.
 This property is used to construct the complete tree of test cases.
-In the examples above, every example query is a StrictSubset of the previous one.
+In the examples above, every example query is a StrictSubset of the previous one
+(note: even `:inhitfa subset of`,\*`).
 
 In the WPT and standalone harnesses, the query is stored in the URL, e.g.
 `index.html?q=q:u,e:r,y:*`.
@@ -80,23 +101,35 @@ A listing of the **test spec files** in a suite.
 
 This can be generated only in Node, which has filesystem access (see `src/tools/crawl.ts`).
 As part of the build step, a _listing file_ is generated (see `src/tools/gen.ts`) so that the
-test files can be discovered by the web runner (since it does not have filesystem access).
+Test Spec Files can be discovered by the web runner (since it does not have filesystem access).
 
 **Type:** `TestSuiteListing`
 
 ### Listing File
 
+Each Suite has one Listing File (`suite/listing.[tj]s`), containing a list of the files
+in the suite.
+
+In `src/suite/listing.ts`, this is computed dynamically.
+In `out/suite/listing.js`, the listing has been pre-baked (by `tools/gen_listings`).
+
+**Type:** Once `import`ed, `ListingFile`
+
 **Example:** `out/webgpu/listing.js`
 
 ## Test Spec File
 
-**Type:** `SpecFile`
+A Test Spec File has a `description` and a Test Group (under which tests and cases are defined).
+
+**Type:** Once `import`ed, `SpecFile`
 
 **Example:** `src/webgpu/**/*.spec.ts`
 
 ## Test Group
 
-A subtree of test cases. There is one Test Group per Test Spec File.
+A subtree of tests. There is one Test Group per Test Spec File.
+
+The Test Fixture used for tests is defined at TestGroup creation.
 
 **Type:** `TestGroup`
 
@@ -112,8 +145,8 @@ Then, `TestBuilder.fn()` provides the Test Function.
 
 ### Test Function
 
-When a test case is run, the Test Function receives an instance of the appropriate
-_test fixture_, producing test results.
+When a test case is run, the Test Function receives an instance of the
+Test Fixture provided to the Test Group, producing test results.
 
 **Type:** `TestFn`
 
@@ -127,7 +160,7 @@ A single case of a test. It is identified by a `TestCaseID`: a test name, and it
 
 ## Test Fixture / Fixture
 
-Test fixtures provide helpers for tests to use.
+_Test Fixtures_ provide helpers for tests to use.
 A new instance of the fixture is created for every run of every test case.
 
 There is always one fixture class for a whole test group (though this may change).
@@ -146,37 +179,6 @@ Provides basic fixture utilities most useful in the `unittests` suite.
 ### `GPUTest` Fixture
 
 Provides utilities useful in WebGPU CTS tests.
-
-# Running Tests
-
-- _Queries_ contain multiple:
-  - _Filters_ (positive or negative).
-
-### Filter
-
-A filter matches a set of cases in a suite.
-
-Each filter may match one of:
-
-- `S:s` In one suite `S`, all specs whose paths start with `s` (which may be empty).
-- `S:s:t` In one spec `S:s`, all tests whose names start with `t` (which may be empty).
-- `S:s:t~c` In one test `S:s:t`, all cases whose params are a superset of `c`.
-- `S:s:t=c` In one test `S:s:t`, the single case whose params equal `c` (empty string = `{}`).
-
-**Type:** `TestFilter`
-
-### Using filters to split expectations
-
-A set of cases can be split using negative filters. For example, imagine you have one WPT test variant:
-
-- `webgpu/cts.html?q=unittests:param_helpers:`
-
-But one of the cases is failing. To be able to suppress the failing test without losing test coverage, the WPT test variant can be split into two variants:
-
-- `webgpu/cts.html?q=unittests:param_helpers:&not=unittests:param_helpers:combine/mixed:`
-- `webgpu/cts.html?q=unittests:param_helpers:combine/mixed:`
-
-This runs the same set of cases, but in two separate page loads.
 
 # Test Results
 

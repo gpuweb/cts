@@ -1,4 +1,4 @@
-import { CaseParams, CaseParamsIterable, paramsEquals } from './params_utils.js';
+import { CaseParams, CaseParamsIterable, publicParamsEquals } from './params_utils.js';
 import { assert } from './util/util.js';
 
 // https://stackoverflow.com/a/56375136
@@ -88,7 +88,7 @@ export class ParamsBuilder<A extends {}> implements CaseParamsIterable {
     const paramSpecs = this.paramSpecs;
     this.paramSpecs = makeReusableIterable(function* () {
       for (const p of paramSpecs) {
-        if (excludeArray.every(e => !paramsEquals(p, e))) {
+        if (excludeArray.every(e => !publicParamsEquals(p, e))) {
           yield p;
         }
       }

@@ -1,7 +1,14 @@
 import { parseQuery } from './query/parseQuery.js';
 import { RunCaseIterable } from './test_group.js';
 import { TestSuiteListing } from './test_suite_listing.js';
-import { loadTreeForQuery, FilterResultTree, FilterResultTreeLeaf } from './tree.js';
+import { loadTreeForQuery, TestTree, TestTreeLeaf } from './tree.js';
+
+// A listing file, e.g. either of:
+// - `src/webgpu/listing.ts` (which is dynamically computed, has a Promise<TestSuiteListing>)
+// - `out/webgpu/listing.js` (which is pre-baked, has a TestSuiteListing)
+interface ListingFile {
+  listing: Promise<TestSuiteListing> | TestSuiteListing;
+}
 
 // A .spec.ts file, as imported.
 export interface SpecFile {
@@ -9,15 +16,16 @@ export interface SpecFile {
   readonly g: RunCaseIterable;
 }
 
+// Base class for DefaultTestFileLoader and FakeTestFileLoader.
 export abstract class TestFileLoader {
   abstract listing(suite: string): Promise<TestSuiteListing>;
   protected abstract import(path: string): Promise<SpecFile>;
 
   importSpecFile(suite: string, path: string[]): Promise<SpecFile> {
-    return this.import(`${suite}/${path.join('/')}.spec.js`) as Promise<SpecFile>;
+    return this.import(`${suite}/${path.join('/')}.spec.js`);
   }
 
-  async loadTree(query: string, subqueriesToExpand: string[] = []): Promise<FilterResultTree> {
+  async loadTree(query: string, subqueriesToExpand: string[] = []): Promise<TestTree> {
     return loadTreeForQuery(
       this,
       parseQuery(query),
@@ -25,7 +33,7 @@ export abstract class TestFileLoader {
     );
   }
 
-  async loadTests(query: string): Promise<IterableIterator<FilterResultTreeLeaf>> {
+  async loadTests(query: string): Promise<IterableIterator<TestTreeLeaf>> {
     const tree = await this.loadTree(query);
     return tree.iterateLeaves();
   }
@@ -33,7 +41,7 @@ export abstract class TestFileLoader {
 
 export class DefaultTestFileLoader extends TestFileLoader {
   async listing(suite: string): Promise<TestSuiteListing> {
-    return (await import(`../../${suite}/listing.js`)).listing;
+    return ((await import(`../../${suite}/listing.js`)) as ListingFile).listing;
   }
 
   import(path: string): Promise<SpecFile> {

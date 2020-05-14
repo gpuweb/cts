@@ -30,7 +30,7 @@ export function compareQueries(a: TestQuery, b: TestQuery): Ordering {
   assert('params' in a && 'params' in b);
 
   const paramsOrdering = compareOneLevel(
-    compareParamsPaths(a.params, b.params),
+    comparePublicParamsPaths(a.params, b.params),
     a.isMultiCase,
     b.isMultiCase
   );
@@ -83,7 +83,7 @@ function comparePaths(a: readonly string[], b: readonly string[]): Ordering {
   }
 }
 
-export function compareParamsPaths(p1: CaseParams, p2: CaseParams): Ordering {
+export function comparePublicParamsPaths(p1: CaseParams, p2: CaseParams): Ordering {
   const a: Array<[string, ParamArgument]> = Object.entries(extractPublicParams(p1));
   const b: Array<[string, ParamArgument]> = Object.entries(extractPublicParams(p2));
   const shorter = Math.min(a.length, b.length);

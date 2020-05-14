@@ -1,6 +1,6 @@
 import { DefaultTestFileLoader } from '../framework/file_loader.js';
 import { Logger } from '../framework/logging/logger.js';
-import { FilterResultTreeLeaf } from '../framework/tree.js';
+import { TestTreeLeaf } from '../framework/tree.js';
 import { AsyncMutex } from '../framework/util/async_mutex.js';
 import { assert } from '../framework/util/util.js';
 
@@ -28,7 +28,7 @@ declare function async_test(f: (this: WptTestObject) => Promise<void>, name: str
 })();
 
 // Note: async_tests must ALL be added within the same task. This function *must not* be async.
-function addWPTTests(testcases: IterableIterator<FilterResultTreeLeaf>): Promise<Logger> {
+function addWPTTests(testcases: IterableIterator<TestTreeLeaf>): Promise<Logger> {
   const worker = optionEnabled('worker') ? new TestWorker() : undefined;
 
   const log = new Logger(false);
@@ -41,10 +41,7 @@ function addWPTTests(testcases: IterableIterator<FilterResultTreeLeaf>): Promise
       const p = mutex.with(async () => {
         const [rec, res] = log.record(name);
         if (worker) {
-          rec.start();
-          const workerResult = await worker.run(name);
-          rec.finish();
-          Object.assign(res, workerResult);
+          rec.injectResult(await worker.run(name));
         } else {
           await testcase.run(rec);
         }

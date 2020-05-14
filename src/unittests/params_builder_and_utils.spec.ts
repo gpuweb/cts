@@ -3,7 +3,11 @@ Unit tests for parameterization helpers.
 `;
 
 import { poptions, params } from '../common/framework/params_builder.js';
-import { CaseParams, CaseParamsIterable, paramsEquals } from '../common/framework/params_utils.js';
+import {
+  CaseParams,
+  CaseParamsIterable,
+  publicParamsEquals,
+} from '../common/framework/params_utils.js';
 import { makeTestGroup } from '../common/framework/test_group.js';
 
 import { UnitTest } from './unit_test.js';
@@ -11,7 +15,7 @@ import { UnitTest } from './unit_test.js';
 class ParamsTest extends UnitTest {
   expectSpecEqual(act: CaseParamsIterable, exp: CaseParams[]): void {
     const a = Array.from(act);
-    this.expect(a.length === exp.length && a.every((x, i) => paramsEquals(x, exp[i])));
+    this.expect(a.length === exp.length && a.every((x, i) => publicParamsEquals(x, exp[i])));
   }
 }
 
@@ -122,8 +126,13 @@ g.test('expand,invalid').fn(t => {
 });
 
 g.test('undefined').fn(t => {
-  t.expect(!paramsEquals({ a: undefined }, {}));
-  t.expect(!paramsEquals({}, { a: undefined }));
+  t.expect(!publicParamsEquals({ a: undefined }, {}));
+  t.expect(!publicParamsEquals({}, { a: undefined }));
+});
+
+g.test('private').fn(t => {
+  t.expect(publicParamsEquals({ _a: 0 }, {}));
+  t.expect(publicParamsEquals({}, { _a: 0 }));
 });
 
 g.test('arrays').fn(t => {

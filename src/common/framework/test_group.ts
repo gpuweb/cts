@@ -4,7 +4,7 @@ import {
   CaseParams,
   CaseParamsIterable,
   extractPublicParams,
-  paramsEquals,
+  publicParamsEquals,
 } from './params_utils.js';
 import { stringifySingleParam } from './query/stringify_params.js';
 import { validQueryPart } from './query/validQueryPart.js';
@@ -123,7 +123,7 @@ class TestBuilder<F extends Fixture, P extends {}> {
       }
 
       assert(
-        !seen.some(x => paramsEquals(x, publicParams)),
+        !seen.some(x => publicParamsEquals(x, publicParams)),
         'Duplicate test case params: ' + JSON.stringify(publicParams)
       );
       seen.push(publicParams);
