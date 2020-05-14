@@ -1,5 +1,5 @@
 import { CaseParams, extractPublicParams } from '../params_utils.js';
-import { assert, objectEquals } from '../util/util.js';
+import { assert, objectEquals, unreachable } from '../util/util.js';
 
 import { TestQuery } from './query.js';
 
@@ -17,25 +17,21 @@ export function compareQueries(a: TestQuery, b: TestQuery): Ordering {
     return Ordering.Unordered;
   }
 
-  const fileOrdering = compareOneLevel(comparePaths(a.file, b.file), a.isMultiFile, b.isMultiFile);
-  if (fileOrdering !== undefined) {
-    return fileOrdering;
+  const filePathOrdering = comparePaths(a.file, b.file);
+  if (filePathOrdering !== Ordering.Equal || a.isMultiFile || b.isMultiFile) {
+    return compareOneLevel(filePathOrdering, a.isMultiFile, b.isMultiFile);
   }
   assert('test' in a && 'test' in b);
 
-  const testOrdering = compareOneLevel(comparePaths(a.test, b.test), a.isMultiTest, b.isMultiTest);
-  if (testOrdering !== undefined) {
-    return testOrdering;
+  const testPathOrdering = comparePaths(a.test, b.test);
+  if (testPathOrdering !== Ordering.Equal || a.isMultiTest || b.isMultiTest) {
+    return compareOneLevel(testPathOrdering, a.isMultiTest, b.isMultiTest);
   }
   assert('params' in a && 'params' in b);
 
-  const paramsOrdering = compareOneLevel(
-    comparePublicParamsPaths(a.params, b.params),
-    a.isMultiCase,
-    b.isMultiCase
-  );
-  if (paramsOrdering !== undefined) {
-    return paramsOrdering;
+  const paramsPathOrdering = comparePublicParamsPaths(a.params, b.params);
+  if (paramsPathOrdering !== Ordering.Equal || a.isMultiCase || b.isMultiCase) {
+    return compareOneLevel(paramsPathOrdering, a.isMultiCase, b.isMultiCase);
   }
   return Ordering.Equal;
 }
@@ -44,13 +40,10 @@ export function compareQueries(a: TestQuery, b: TestQuery): Ordering {
 // "IsBig" means the query is big relative to the level, e.g. for test-level:
 //   anything >= suite:a,* is big
 //   anything <= suite:a:* is small
-function compareOneLevel(
-  ordering: Ordering,
-  aIsBig: boolean,
-  bIsBig: boolean
-): Ordering | undefined {
+function compareOneLevel(ordering: Ordering, aIsBig: boolean, bIsBig: boolean): Ordering {
+  assert(ordering !== Ordering.Equal || aIsBig || bIsBig);
   if (!aIsBig && !bIsBig) {
-    return ordering === Ordering.Equal ? undefined : Ordering.Unordered;
+    return Ordering.Unordered;
   }
   switch (ordering) {
     case Ordering.Unordered:
@@ -63,7 +56,7 @@ function compareOneLevel(
   if (aIsBig && bIsBig) return Ordering.Equal;
   if (aIsBig) return Ordering.StrictSuperset;
   if (bIsBig) return Ordering.StrictSubset;
-  return undefined;
+  unreachable();
 }
 
 function comparePaths(a: readonly string[], b: readonly string[]): Ordering {
