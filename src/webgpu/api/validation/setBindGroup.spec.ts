@@ -107,12 +107,12 @@ g.test('dynamic_offsets_match_expectations_in_pass_encoder')
         // Dynamic uniform buffer out of bounds because of binding size
         { dynamicOffsets: [512, 0], _success: false },
         { dynamicOffsets: [1024, 0], _success: false },
-        { dynamicOffsets: [Number.MAX_SAFE_INTEGER, 0], _success: false },
+        { dynamicOffsets: [0xffffffff, 0], _success: false },
 
         // Dynamic storage buffer out of bounds because of binding size
         { dynamicOffsets: [0, 512], _success: false },
         { dynamicOffsets: [0, 1024], _success: false },
-        { dynamicOffsets: [0, Number.MAX_SAFE_INTEGER], _success: false },
+        { dynamicOffsets: [0, 0xffffffff], _success: false },
       ])
   )
   .fn(async t => {
