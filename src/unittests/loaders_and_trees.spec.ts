@@ -5,7 +5,13 @@ Tests for queries/filtering, loading, and running.
 import { TestFileLoader, SpecFile } from '../common/framework/file_loader.js';
 import { Logger } from '../common/framework/logging/logger.js';
 import { Status } from '../common/framework/logging/result.js';
-import { TestQuery, TestQuerySingleCase } from '../common/framework/query/query.js';
+import {
+  TestQuery,
+  TestQuerySingleCase,
+  TestQueryMultiCase,
+  TestQueryMultiTest,
+  TestQueryMultiFile,
+} from '../common/framework/query/query.js';
 import { makeTestGroup, makeTestGroupForUnitTesting } from '../common/framework/test_group.js';
 import { TestSuiteListing, TestSuiteListingEntry } from '../common/framework/test_suite_listing.js';
 import { TestTreeLeaf } from '../common/framework/tree.js';
@@ -128,6 +134,11 @@ g.test('group').fn(async t => {
   t.expect((await t.load('suite1:bar,buzz,buzz,*')).length === 1);
 
   t.shouldReject('Error', t.load('suite1:f*'));
+
+  {
+    const s = new TestQueryMultiFile('suite1', ['bar', 'buzz']).toString();
+    t.expect((await t.load(s)).length === 1);
+  }
 });
 
 g.test('test').fn(async t => {
@@ -145,6 +156,11 @@ g.test('test').fn(async t => {
 
   t.expect((await t.load('suite2:foof:bluh,*')).length === 1);
   t.expect((await t.load('suite2:foof:bluh,a,*')).length === 1);
+
+  {
+    const s = new TestQueryMultiTest('suite2', ['foof'], ['bluh']).toString();
+    t.expect((await t.load(s)).length === 1);
+  }
 });
 
 g.test('case').fn(async t => {
@@ -161,7 +177,7 @@ g.test('case').fn(async t => {
   t.shouldReject('Error', t.load('suite1:baz:zed:a=1;b=2*'));
   t.shouldReject('Error', t.load('suite1:baz:zed:a=1;b=2;'));
   t.shouldReject('SyntaxError', t.load('suite1:baz:zed:a=1;b=2,')); // tries to parse '2,' as JSON
-  t.shouldReject('Error', t.load('suite1:baz:zed:a=1,b=2')); // '=' not allowed in value
+  t.shouldReject('Error', t.load('suite1:baz:zed:a=1,b=2')); // '=' not allowed in value '1,b=2'
   t.shouldReject('Error', t.load('suite1:baz:zed:b=2*'));
   t.shouldReject('Error', t.load('suite1:baz:zed:b=2;a=1;_c=0'));
   t.shouldReject('Error', t.load('suite1:baz:zed:a=1,*'));
@@ -176,14 +192,16 @@ g.test('case').fn(async t => {
   t.expect((await t.load('suite1:baz:zed:b=3;a=1')).length === 1);
   t.expect((await t.load('suite1:baz:zed:a=1;b=3')).length === 1);
   t.expect((await t.load('suite1:foo:hello:')).length === 1);
-});
 
-g.test('partial_test,makeQueryString').fn(async t => {
-  const s = new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }).toString();
-  t.expect((await t.load(s)).length === 1);
+  {
+    const s = new TestQueryMultiCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }).toString();
+    t.expect((await t.load(s)).length === 1);
+  }
+  {
+    const s = new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }).toString();
+    t.expect((await t.load(s)).length === 1);
+  }
 });
-
-g.test('partial_test,match').fn(async () => {});
 
 g.test('end2end').fn(async t => {
   const l = await t.load('suite2:foof:*');

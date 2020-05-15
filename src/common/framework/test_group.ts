@@ -9,6 +9,7 @@ import {
 import { stringifySingleParam } from './query/stringify_params.js';
 import { validQueryPart } from './query/validQueryPart.js';
 import { assert } from './util/util.js';
+import { kPathSeparator } from './query/separators.js';
 
 export type RunFn = (rec: TestCaseRecorder) => Promise<void>;
 
@@ -74,7 +75,7 @@ class TestGroup<F extends Fixture> implements RunCaseIterable, TestGroupBuilder<
   test(name: string): TestBuilderWithName<F, never> {
     this.checkName(name);
 
-    const parts = name.split(',');
+    const parts = name.split(kPathSeparator);
     for (const p of parts) {
       assert(validQueryPart.test(p), `Invalid test name part ${p}; must match ${validQueryPart}`);
     }

@@ -13,6 +13,30 @@ import { stringifySingleParam } from './query/stringify_params.js';
 import { RunCase, RunFn } from './test_group.js';
 import { assert } from './util/util.js';
 
+// `loadTreeForQuery()` loads a TestTree for a given queryToLoad.
+// The resulting tree is a linked-list all the way from `suite:*` to queryToLoad,
+// and under queryToLoad is a tree containing every case matched by queryToLoad.
+//
+// `subqueriesToExpand` influences the `collapsible` flag on nodes in the resulting tree.
+// A node is considered "collapsible" if none of the subqueriesToExpand is a StrictSubset
+// of that node.
+//
+// In WebKit/Blink-style web_tests, an expectation file marks individual cts.html "variants" as
+// "Failure", "Crash", etc.
+// By passing in the list of expectations as the subqueriesToExpand, we can programmatically
+// subdivide the cts.html "variants" list to be able to implement arbitrarily-fine suppressions
+// (instead of having to suppress entire test files, which would lose a lot of coverage).
+//
+// `iterateCollapsedQueries()` produces the list of queries for the variants list.
+//
+// Though somewhat complicated, this system has important benefits:
+//   - Avoids having to suppress entire test files, which would cause large test coverage loss.
+//   - Minimizes the number of page loads needed for fine-grained suppressions.
+//     (In the naive case, we could do one page load per test case - but the test suite would
+//     take impossibly long to run.)
+//   - Enables developers to put any number of tests in one file as appropriate, without worrying
+//     about expectation granuality.
+
 export interface TestSubtree<T extends TestQuery = TestQuery> {
   readonly query: T;
   readonly children: Map<string, TestTreeNode>;
@@ -188,7 +212,11 @@ export async function loadTreeForQuery(
 
   for (const [i, sq] of subqueriesToExpandEntries) {
     const seen = seenSubqueriesToExpand[i];
-    assert(seen, `subqueriesToExpand entry did not match anything: ${sq.toString()}`);
+    assert(
+      seen,
+      `subqueriesToExpand entry did not match anything \
+(can happen due to overlap with another subquery): ${sq.toString()}`
+    );
   }
   assert(foundCase, 'Query does not match any cases');
 

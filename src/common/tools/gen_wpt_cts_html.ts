@@ -50,7 +50,7 @@ const [
     const entries = (await listing) as TestSuiteListingEntry[];
     const lines = entries
       // Exclude READMEs.
-      .filter(l => 'description' in l)
+      .filter(l => !('readme' in l))
       .map(l => '?q=' + new TestQueryMultiTest('webgpu', l.file, []).toString());
     await generateFile(lines);
   } else {
