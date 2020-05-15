@@ -19,9 +19,6 @@
     "url": "https://github.com/gpuweb/cts/issues"
   },
   "homepage": "https://github.com/gpuweb/cts#readme",
-  "dependencies": {
-    "fast-glob": "^3.1.1"
-  },
   "devDependencies": {
     "@babel/cli": "^7.7.7",
     "@babel/core": "^7.7.7",
@@ -39,6 +36,7 @@
     "eslint": "^6.8.0",
     "eslint-plugin-ban": "^1.4.0",
     "eslint-plugin-import": "^2.20.2",
+    "fast-glob": "^3.1.1",
     "grunt": "^1.0.4",
     "grunt-contrib-clean": "^2.0.0",
     "grunt-contrib-copy": "^1.0.0",
