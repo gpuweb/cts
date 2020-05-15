@@ -21,7 +21,7 @@ const debug = optionEnabled('debug');
 
 const logger = new Logger(debug);
 
-const worker = optionEnabled('worker') ? new TestWorker() : undefined;
+const worker = optionEnabled('worker') ? new TestWorker(debug) : undefined;
 
 const resultsVis = document.getElementById('resultsVis')!;
 const resultsJSON = document.getElementById('resultsJSON')!;
@@ -46,7 +46,7 @@ function makeCaseHTML(t: TestTreeLeaf): [HTMLElement, RunSubtree] {
     haveSomeResults = true;
     const [rec, res] = logger.record(name);
     if (worker) {
-      rec.injectResult(await worker.run(name, debug));
+      await worker.run(rec, name);
     } else {
       await t.run(rec);
     }

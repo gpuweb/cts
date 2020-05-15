@@ -29,7 +29,7 @@ declare function async_test(f: (this: WptTestObject) => Promise<void>, name: str
 
 // Note: async_tests must ALL be added within the same task. This function *must not* be async.
 function addWPTTests(testcases: IterableIterator<TestTreeLeaf>): Promise<Logger> {
-  const worker = optionEnabled('worker') ? new TestWorker() : undefined;
+  const worker = optionEnabled('worker') ? new TestWorker(false) : undefined;
 
   const log = new Logger(false);
   const mutex = new AsyncMutex();
@@ -41,7 +41,7 @@ function addWPTTests(testcases: IterableIterator<TestTreeLeaf>): Promise<Logger>
       const p = mutex.with(async () => {
         const [rec, res] = log.record(name);
         if (worker) {
-          rec.injectResult(await worker.run(name));
+          await worker.run(rec, name);
         } else {
           await testcase.run(rec);
         }

@@ -8,7 +8,9 @@ declare const self: any; // should be DedicatedWorkerGlobalScope
 const loader = new DefaultTestFileLoader();
 
 self.onmessage = async (ev: MessageEvent) => {
-  const { query, debug } = ev.data;
+  const query: string = ev.data.query;
+  const debug: boolean = ev.data.debug;
+
   const log = new Logger(debug);
 
   const testcases = Array.from(await loader.loadTests(query));
