@@ -50,27 +50,33 @@ class F extends GPUTest {
     rowPitch: number,
     bytesPerPixel: number
   ): string | undefined {
-    const lines = [];
-    let failedPixels = 0;
-    for (let i = 0; i < height; ++i) {
+    const failedByteIndices: string[] = [];
+    const failedByteExpectedValues: string[] = [];
+    const failedByteActualValues: string[] = [];
+    iLoop: for (let i = 0; i < height; ++i) {
       const bytesPerRow = width * bytesPerPixel;
       for (let j = 0; j < bytesPerRow; ++j) {
         const indexExp = j + i * bytesPerRow;
         const indexActual = j + rowPitch * i;
         if (actual[indexActual] !== exp[indexExp]) {
-          if (failedPixels > 4) {
-            break;
+          if (failedByteIndices.length >= 4) {
+            failedByteIndices.push('...');
+            failedByteExpectedValues.push('...');
+            failedByteActualValues.push('...');
+            break iLoop;
           }
-          failedPixels++;
-          lines.push(`index [${indexExp}]: expected ${exp[indexExp]}, got ${actual[indexActual]}`);
+          failedByteIndices.push(`(${i},${j})`);
+          failedByteExpectedValues.push(exp[indexExp].toString());
+          failedByteActualValues.push(actual[indexActual].toString());
         }
       }
-      if (failedPixels > 4) {
-        lines.push('... and more');
-        break;
-      }
     }
-    return failedPixels > 0 ? lines.join('\n') : undefined;
+    if (failedByteIndices.length > 0) {
+      return `at [${failedByteIndices.join(', ')}], \
+expected [${failedByteExpectedValues.join(', ')}], \
+got [${failedByteActualValues.join(', ')}]`;
+    }
+    return undefined;
   }
 
   doTestAndCheckResult(
