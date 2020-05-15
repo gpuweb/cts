@@ -1,5 +1,5 @@
 import { CaseParams, extractPublicParams } from '../params_utils.js';
-import { assert, objectEquals, unreachable } from '../util/util.js';
+import { assert, objectEquals } from '../util/util.js';
 
 import { TestQuery } from './query.js';
 
@@ -17,13 +17,13 @@ export function compareQueries(a: TestQuery, b: TestQuery): Ordering {
     return Ordering.Unordered;
   }
 
-  const filePathOrdering = comparePaths(a.file, b.file);
+  const filePathOrdering = comparePaths(a.filePathParts, b.filePathParts);
   if (filePathOrdering !== Ordering.Equal || a.isMultiFile || b.isMultiFile) {
     return compareOneLevel(filePathOrdering, a.isMultiFile, b.isMultiFile);
   }
-  assert('test' in a && 'test' in b);
+  assert('testPathParts' in a && 'testPathParts' in b);
 
-  const testPathOrdering = comparePaths(a.test, b.test);
+  const testPathOrdering = comparePaths(a.testPathParts, b.testPathParts);
   if (testPathOrdering !== Ordering.Equal || a.isMultiTest || b.isMultiTest) {
     return compareOneLevel(testPathOrdering, a.isMultiTest, b.isMultiTest);
   }

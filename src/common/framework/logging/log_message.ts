@@ -1,4 +1,4 @@
-import { getStackTrace } from '../util/stack.js';
+import { extractImportantStackTrace } from '../util/stack.js';
 
 export class LogMessageWithStack extends Error {
   constructor(name: string, ex: Error, includeStack: boolean = true) {
@@ -12,7 +12,7 @@ export class LogMessageWithStack extends Error {
     let m = this.name + ': ';
     if (this.stack) {
       // this.message is already included in this.stack
-      m += getStackTrace(this);
+      m += extractImportantStackTrace(this);
     } else {
       m += this.message;
     }

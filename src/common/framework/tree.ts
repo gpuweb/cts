@@ -232,7 +232,7 @@ function addSubtreeForFilePath(
   tree = addSubtreeForDirPath(tree, file);
   // This goes from that -> suite:a,b:*
   const subtree = getOrInsertSubtree('', tree, () => {
-    const query = new TestQueryMultiTest(tree.query.suite, tree.query.file, []);
+    const query = new TestQueryMultiTest(tree.query.suite, tree.query.filePathParts, []);
     return { query, description, collapsible: checkCollapsible(query) };
   });
   return subtree;
@@ -249,13 +249,22 @@ function addSubtreeForTestPath(
   for (const part of test) {
     subqueryTest.push(part);
     tree = getOrInsertSubtree(part, tree, () => {
-      const query = new TestQueryMultiTest(tree.query.suite, tree.query.file, subqueryTest);
+      const query = new TestQueryMultiTest(
+        tree.query.suite,
+        tree.query.filePathParts,
+        subqueryTest
+      );
       return { query, collapsible: isCollapsible(query) };
     });
   }
   // This goes from that -> suite:a,b:c,d:*
   return getOrInsertSubtree('', tree, () => {
-    const query = new TestQueryMultiCase(tree.query.suite, tree.query.file, subqueryTest, {});
+    const query = new TestQueryMultiCase(
+      tree.query.suite,
+      tree.query.filePathParts,
+      subqueryTest,
+      {}
+    );
     return { query, collapsible: isCollapsible(query) };
   });
 }
@@ -276,13 +285,23 @@ function addLeafForCase(
     subqueryParams[k] = v;
 
     tree = getOrInsertSubtree(name, tree, () => {
-      const subquery = new TestQueryMultiCase(query.suite, query.file, query.test, subqueryParams);
+      const subquery = new TestQueryMultiCase(
+        query.suite,
+        query.filePathParts,
+        query.testPathParts,
+        subqueryParams
+      );
       return { query: subquery, collapsible: checkCollapsible(subquery) };
     });
   }
 
   // This goes from that -> suite:a,b:c,d:x=1;y=2
-  const subquery = new TestQuerySingleCase(query.suite, query.file, query.test, subqueryParams);
+  const subquery = new TestQuerySingleCase(
+    query.suite,
+    query.filePathParts,
+    query.testPathParts,
+    subqueryParams
+  );
   checkCollapsible(subquery); // mark seenSubqueriesToExpand
   insertLeaf(tree, subquery, t);
 }

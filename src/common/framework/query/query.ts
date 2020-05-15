@@ -14,11 +14,11 @@ export type TestQuery =
 export class TestQueryMultiFile {
   readonly isMultiFile: boolean = true;
   readonly suite: string;
-  readonly file: readonly string[];
+  readonly filePathParts: readonly string[];
 
   constructor(suite: string, file: readonly string[]) {
     this.suite = suite;
-    this.file = [...file];
+    this.filePathParts = [...file];
   }
 
   toString(): string {
@@ -30,26 +30,26 @@ export class TestQueryMultiFile {
   }
 
   protected toStringHelper(): string[] {
-    return [this.suite, [...this.file, kWildcard].join(kPathSeparator)];
+    return [this.suite, [...this.filePathParts, kWildcard].join(kPathSeparator)];
   }
 }
 
 export class TestQueryMultiTest extends TestQueryMultiFile {
   readonly isMultiFile: false = false;
   readonly isMultiTest: boolean = true;
-  readonly test: readonly string[];
+  readonly testPathParts: readonly string[];
 
   constructor(suite: string, file: readonly string[], test: readonly string[]) {
     super(suite, file);
     assert(file.length > 0, 'multi-test (or finer) query must have file-path');
-    this.test = [...test];
+    this.testPathParts = [...test];
   }
 
   protected toStringHelper(): string[] {
     return [
       this.suite,
-      this.file.join(kPathSeparator),
-      [...this.test, kWildcard].join(kPathSeparator),
+      this.filePathParts.join(kPathSeparator),
+      [...this.testPathParts, kWildcard].join(kPathSeparator),
     ];
   }
 }
@@ -69,8 +69,8 @@ export class TestQueryMultiCase extends TestQueryMultiTest {
     const paramsParts = stringifyPublicParams(this.params);
     return [
       this.suite,
-      this.file.join(kPathSeparator),
-      this.test.join(kPathSeparator),
+      this.filePathParts.join(kPathSeparator),
+      this.testPathParts.join(kPathSeparator),
       [...paramsParts, kWildcard].join(kParamSeparator),
     ];
   }
@@ -83,8 +83,8 @@ export class TestQuerySingleCase extends TestQueryMultiCase {
     const paramsParts = stringifyPublicParams(this.params);
     return [
       this.suite,
-      this.file.join(kPathSeparator),
-      this.test.join(kPathSeparator),
+      this.filePathParts.join(kPathSeparator),
+      this.testPathParts.join(kPathSeparator),
       paramsParts.join(kParamSeparator),
     ];
   }

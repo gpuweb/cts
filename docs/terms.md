@@ -13,8 +13,8 @@ Each test suite is organized as a tree, both in the filesystem and further withi
       which define a path through a filesystem-like tree (analogy: `basic/async.txt`).
       Defines a _test function_ and contains multiple:
       - _Test Cases_.
-        Identified by a list of _Parameters_ (e.g. `x` = `1`, `y` = `2`).
-        Each Test Case has the same test function but different Parameters.
+        Identified by a list of _Public Parameters_ (e.g. `x` = `1`, `y` = `2`).
+        Each Test Case has the same test function but different Public Parameters.
 
 ## Test Tree
 
@@ -85,7 +85,7 @@ Test Queries are a **weakly ordered set**: any query is
 _Unordered_, _Equal_, _StrictSuperset_, or _StrictSubset_ relative to any other.
 This property is used to construct the complete tree of test cases.
 In the examples above, every example query is a StrictSubset of the previous one
-(note: even `:inhitfa subset of`,\*`).
+(note: even `:*` is a subset of `,*`).
 
 In the WPT and standalone harnesses, the query is stored in the URL, e.g.
 `index.html?q=q:u,e:r,y:*`.
@@ -137,7 +137,8 @@ The Test Fixture used for tests is defined at TestGroup creation.
 
 One test. It has a single _test function_.
 
-It may represent multiple _test cases_, each of which runs the same Test Function with different **parameters**.
+It may represent multiple _test cases_, each of which runs the same Test Function with different
+Parameters.
 
 A test is named using `TestGroup.test()`, which returns a `TestBuilder`.
 `TestBuilder.params()` can optionally be used to parameterize the test.
@@ -157,6 +158,17 @@ A single case of a test. It is identified by a `TestCaseID`: a test name, and it
 **Type:** During test run time, a case is encapsulated as a `RunCase`.
 
 ## Parameters / Params
+
+Each Test Case has a (possibly empty) set of Parameters.
+The parameters are available to the Test Function `f(t)` via `t.params`.
+
+A set of Public Parameters identifies a Test Case within a Test.
+
+There are also Private Paremeters: any parameter name beginning with an underscore (`_`).
+These parameters are not part of the Test Case identification, but are still passed into
+the Test Function. They can be used to manually specify expected results.
+
+**Type:** `CaseParams`
 
 ## Test Fixture / Fixture
 

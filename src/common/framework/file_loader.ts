@@ -45,6 +45,6 @@ export class DefaultTestFileLoader extends TestFileLoader {
   }
 
   import(path: string): Promise<SpecFile> {
-    return import('../../' + path);
+    return import(`../../${path}`);
   }
 }

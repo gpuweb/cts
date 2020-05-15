@@ -30,14 +30,12 @@ function parseQueryImpl(s: string): TestQuery {
   s = decodeURIComponent(s);
 
   // bigParts are: suite, group, test, params (note kBigSeparator could appear in params)
-  const bigParts = s.split(kBigSeparator, 4);
-  assert(bigParts.length >= 2, `filter string must have at least one ${kBigSeparator}`);
-  assert(bigParts.length <= 4);
-  const suite = bigParts[0];
+  const [suite, fileString, testString, paramsString] = s.split(kBigSeparator, 4);
+  assert(fileString !== undefined, `filter string must have at least one ${kBigSeparator}`);
 
-  const { parts: file, wildcard: filePathHasWildcard } = parseBigPart(bigParts[1], kPathSeparator);
+  const { parts: file, wildcard: filePathHasWildcard } = parseBigPart(fileString, kPathSeparator);
 
-  if (bigParts.length === 2) {
+  if (testString === undefined) {
     // Query is file-level
     assert(
       filePathHasWildcard,
@@ -48,9 +46,9 @@ function parseQueryImpl(s: string): TestQuery {
   }
   assert(!filePathHasWildcard, `Wildcard ${kWildcard} must be at the end of the query string`);
 
-  const { parts: test, wildcard: testPathHasWildcard } = parseBigPart(bigParts[2], kPathSeparator);
+  const { parts: test, wildcard: testPathHasWildcard } = parseBigPart(testString, kPathSeparator);
 
-  if (bigParts.length === 3) {
+  if (paramsString === undefined) {
     // Query is test-level
     assert(
       testPathHasWildcard,
@@ -65,7 +63,7 @@ function parseQueryImpl(s: string): TestQuery {
   assert(!testPathHasWildcard, `Wildcard ${kWildcard} must be at the end of the query string`);
 
   const { parts: paramsParts, wildcard: paramsHasWildcard } = parseBigPart(
-    bigParts[3],
+    paramsString,
     kParamSeparator
   );
 

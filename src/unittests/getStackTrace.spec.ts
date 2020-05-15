@@ -3,7 +3,7 @@ Tests for getStackTrace.
 `;
 
 import { makeTestGroup } from '../common/framework/test_group.js';
-import { getStackTrace } from '../common/framework/util/stack.js';
+import { extractImportantStackTrace } from '../common/framework/util/stack.js';
 
 import { UnitTest } from './unit_test.js';
 
@@ -129,7 +129,7 @@ promiseReactionJob@[native code]`,
     const ex = new Error();
     ex.stack = t.params._stack;
     t.expect(ex.stack === t.params._stack);
-    const stringified = getStackTrace(ex);
+    const stringified = extractImportantStackTrace(ex);
     const parts = stringified.split('\n');
 
     t.expect(parts.length === t.params._expectedLines);
