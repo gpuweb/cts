@@ -106,7 +106,7 @@ export class GPUTest extends Fixture {
       const check = this.checkBuffer(actual, expected);
       if (check !== undefined) {
         niceStack.message = check;
-        this.rec.fail(niceStack);
+        this.rec.expectationFailed(niceStack);
       }
       dst.destroy();
     });
@@ -115,7 +115,7 @@ export class GPUTest extends Fixture {
   expectBuffer(actual: Uint8Array, exp: Uint8Array): void {
     const check = this.checkBuffer(actual, exp);
     if (check !== undefined) {
-      this.rec.fail(new Error(check));
+      this.rec.expectationFailed(new Error(check));
     }
   }
 
@@ -140,7 +140,7 @@ export class GPUTest extends Fixture {
           break;
         }
         failedPixels++;
-        lines.push(`at [${i}], expected ${exp[i]}, got ${actual[i]}`);
+        lines.push(`index [${i}]: expected ${exp[i]}, got ${actual[i]}`);
       }
     }
 

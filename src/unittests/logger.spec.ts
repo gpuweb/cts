@@ -79,12 +79,40 @@ g.test('warn').fn(t => {
   t.expect(res.timems >= 0);
 });
 
-g.test('fail').fn(t => {
+g.test('fail,expectationFailed').fn(t => {
   const mylog = new Logger(true);
   const [rec, res] = mylog.record('one');
 
   rec.start();
-  rec.fail(new Error('bye'));
+  rec.expectationFailed(new Error('bye'));
+  rec.warn(new Error());
+  rec.skipped(new SkipTestCase());
+  rec.finish();
+
+  t.expect(res.status === 'fail');
+  t.expect(res.timems >= 0);
+});
+
+g.test('fail,validationFailed').fn(t => {
+  const mylog = new Logger(true);
+  const [rec, res] = mylog.record('one');
+
+  rec.start();
+  rec.validationFailed(new Error('bye'));
+  rec.warn(new Error());
+  rec.skipped(new SkipTestCase());
+  rec.finish();
+
+  t.expect(res.status === 'fail');
+  t.expect(res.timems >= 0);
+});
+
+g.test('fail,threw').fn(t => {
+  const mylog = new Logger(true);
+  const [rec, res] = mylog.record('one');
+
+  rec.start();
+  rec.threw(new Error('bye'));
   rec.warn(new Error());
   rec.skipped(new SkipTestCase());
   rec.finish();
@@ -106,7 +134,7 @@ g.test('debug')
 
     rec.start();
     rec.debug(new Error('hello'));
-    rec.fail(new Error('bye'));
+    rec.expectationFailed(new Error('bye'));
     rec.warn(new Error());
     rec.skipped(new SkipTestCase());
     rec.debug(new Error('foo'));

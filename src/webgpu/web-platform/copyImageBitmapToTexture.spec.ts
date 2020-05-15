@@ -36,7 +36,7 @@ class F extends GPUTest {
       );
       if (check !== undefined) {
         niceStack.message = check;
-        this.rec.fail(niceStack);
+        this.rec.expectationFailed(niceStack);
       }
       dst.destroy();
     });
@@ -62,7 +62,7 @@ class F extends GPUTest {
             break;
           }
           failedPixels++;
-          lines.push(`at [${indexExp}], expected ${exp[indexExp]}, got ${actual[indexActual]}`);
+          lines.push(`index [${indexExp}]: expected ${exp[indexExp]}, got ${actual[indexActual]}`);
         }
       }
       if (failedPixels > 4) {
