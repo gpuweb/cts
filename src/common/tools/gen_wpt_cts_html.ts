@@ -60,9 +60,9 @@ const [
       .split('\n')
       .filter(a => a.length)
       .sort((a, b) => b.length - a.length);
-    const expectationLines = (await fs.readFile(expectationsFile, 'utf8'))
-      .split('\n')
-      .filter(l => l.length);
+    const expectationLines = new Set(
+      (await fs.readFile(expectationsFile, 'utf8')).split('\n').filter(l => l.length)
+    );
 
     const expectations: Map<string, string[]> = new Map();
     for (const prefix of argsPrefixes) {
@@ -78,7 +78,7 @@ const [
           continue expLoop;
         }
       }
-      throw new Error('All input lines must start with one of the prefixes. ' + exp);
+      console.log('note: ignored expectation: ' + exp);
     }
 
     const loader = new DefaultTestFileLoader();
