@@ -35,7 +35,7 @@ import { assert } from './util/util.js';
 //     (In the naive case, we could do one page load per test case - but the test suite would
 //     take impossibly long to run.)
 //   - Enables developers to put any number of tests in one file as appropriate, without worrying
-//     about expectation granuality.
+//     about expectation granularity.
 
 export interface TestSubtree<T extends TestQuery = TestQuery> {
   readonly query: T;
