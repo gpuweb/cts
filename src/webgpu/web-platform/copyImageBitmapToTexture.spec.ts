@@ -121,20 +121,34 @@ g.test('from_ImageData')
     params()
       .combine(poptions('width', [1, 2, 4, 15, 255, 256]))
       .combine(poptions('height', [1, 2, 4, 15, 255, 256]))
+      .combine(poptions('alpha', ['none', 'premultiply']))
+      .combine(poptions('orientation', ['none', 'flipY']))
   )
   .fn(async t => {
-    const { width, height } = t.params;
+    const { width, height, alpha, orientation } = t.params;
 
     // The texture format is rgba8unorm, so the bytes per pixel is 4.
     const bytesPerPixel = 4;
 
     const imagePixels = new Uint8ClampedArray(bytesPerPixel * width * height);
-    for (let i = 0; i < width * height * bytesPerPixel; ++i) {
-      imagePixels[i] = i % 4 === 3 ? 255 : i % 256;
+    if (alpha === 'premultiply') {
+      // Make expected value simple to construct:
+      // Input is (255, 255, 255, a), which will be stored into the ImageBitmap
+      // as (a, a, a, a).
+      for (let i = 0; i < width * height * bytesPerPixel; ++i) {
+        imagePixels[i] = i % 4 !== 3 ? 255 : i % 256;
+      }
+    } else {
+      for (let i = 0; i < width * height * bytesPerPixel; ++i) {
+        imagePixels[i] = i % 4 === 3 ? 255 : i % 256;
+      }
     }
 
     const imageData = new ImageData(imagePixels, width, height);
-    const imageBitmap = await createImageBitmap(imageData);
+    const imageBitmap = await (createImageBitmap as any)(imageData, {
+      premultiplyAlpha: alpha,
+      imageOrientation: orientation,
+    });
 
     const dst = t.device.createTexture({
       size: {
@@ -146,12 +160,38 @@ g.test('from_ImageData')
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
     });
 
+    // Construct expected value
+    const expectedPixels = new Uint8ClampedArray(bytesPerPixel * width * height);
+    for (let i = 0; i < width * height * bytesPerPixel; ++i) {
+      expectedPixels[i] = imagePixels[i];
+    }
+
+    if (orientation === 'flipY') {
+      for (let i = 0; i < height; ++i) {
+        for (let j = 0; j < width * bytesPerPixel; ++j) {
+          const pos_image_pixel = (height - i - 1) * width * bytesPerPixel + j;
+          const pos_expected_value = i * width * bytesPerPixel + j;
+          expectedPixels[pos_expected_value] = imagePixels[pos_image_pixel];
+        }
+      }
+    }
+
+    if (alpha === 'premultiply') {
+      for (let i = 0; i < width * height * bytesPerPixel; ++i) {
+        const alpha_value_position = 3 - (i % 4) + i;
+        if (i % 4 !== 3) {
+          // Expected value is (a, a, a, a)
+          expectedPixels[i] = expectedPixels[alpha_value_position];
+        }
+      }
+    }
+
     t.doTestAndCheckResult(
       { imageBitmap, origin: { x: 0, y: 0 } },
       { texture: dst },
       { width: imageBitmap.width, height: imageBitmap.height, depth: 1 },
       bytesPerPixel,
-      imagePixels
+      expectedPixels
     );
   });
 
@@ -192,7 +232,7 @@ g.test('from_canvas')
     // Generate original data.
     const imagePixels = new Uint8ClampedArray(bytesPerPixel * width * height);
     for (let i = 0; i < width * height * bytesPerPixel; ++i) {
-      imagePixels[i] = i % 256;
+      imagePixels[i] = i % 4 === 3 ? 255 : i % 256;
     }
 
     const imageData = new ImageData(imagePixels, width, height);
@@ -210,6 +250,7 @@ g.test('from_canvas')
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
     });
 
+    // This will get origin data and even it has premultiplied-alpha
     const expectedData = imageCanvasContext.getImageData(
       0,
       0,

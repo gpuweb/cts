@@ -6,10 +6,10 @@ import {
   extractPublicParams,
   publicParamsEquals,
 } from './params_utils.js';
+import { kPathSeparator } from './query/separators.js';
 import { stringifySingleParam } from './query/stringify_params.js';
 import { validQueryPart } from './query/validQueryPart.js';
 import { assert } from './util/util.js';
-import { kPathSeparator } from './query/separators.js';
 
 export type RunFn = (rec: TestCaseRecorder) => Promise<void>;
 
