@@ -23,6 +23,7 @@ export class TestCaseRecorder {
   private logs: LogMessageWithStack[] = [];
   private logLinesAtCurrentSeverity = 0;
   private debugging = false;
+  private seenStacks = new Map<string, LogMessageWithStack>();
 
   constructor(result: LiveTestCaseResult, debugging: boolean) {
     this.result = result;
@@ -92,6 +93,17 @@ export class TestCaseRecorder {
   }
 
   private logImpl(level: LogSeverity, logMessage: LogMessageWithStack): void {
+    // Deduplicate errors with the exact same stack
+    if (logMessage.stack) {
+      const seen = this.seenStacks.get(logMessage.stack);
+      if (seen) {
+        seen.timesSeen++;
+        return;
+      }
+      this.seenStacks.set(logMessage.stack, logMessage);
+    }
+
+    // Mark printStack=false for all logs except 2 at the highest severity
     if (level > this.maxLogSeverity) {
       this.logLinesAtCurrentSeverity = 0;
       this.maxLogSeverity = level;

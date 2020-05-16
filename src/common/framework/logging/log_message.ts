@@ -2,6 +2,7 @@ import { extractImportantStackTrace } from '../util/stack.js';
 
 export class LogMessageWithStack extends Error {
   printStack: boolean = true;
+  timesSeen: number = 1;
 
   constructor(name: string, ex: Error) {
     super(ex.message);
@@ -17,6 +18,9 @@ export class LogMessageWithStack extends Error {
       m += extractImportantStackTrace(this);
     } else {
       m += this.message;
+    }
+    if (this.timesSeen > 1) {
+      m += `\n(seen ${this.timesSeen} times with identical stack)`;
     }
     return m;
   }
