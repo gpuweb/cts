@@ -120,7 +120,7 @@ class TestBuilder<F extends Fixture, P extends {}> {
     for (const testcase of this.cases) {
       // stringifyPublicParams also checks for invalid params values
       const testcaseString = stringifyPublicParams(testcase).join(kParamSeparator);
-      assert(!seen.has(testcaseString));
+      assert(!seen.has(testcaseString), `Duplicate public test case params: ${testcaseString}`);
       seen.add(testcaseString);
     }
   }
