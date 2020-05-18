@@ -99,13 +99,13 @@ g.test('duplicate_test_params,none').fn(t => {
     g.test('abc')
       .params([])
       .fn(() => {});
-    g.checkForDuplicateCases();
+    g.checkCaseNamesAndDuplicates();
   }
 
   {
     const g = makeTestGroupForUnitTesting(UnitTest);
     g.test('abc').fn(() => {});
-    g.checkForDuplicateCases();
+    g.checkCaseNamesAndDuplicates();
   }
 
   {
@@ -115,7 +115,7 @@ g.test('duplicate_test_params,none').fn(t => {
         { a: 1 }, //
       ])
       .fn(() => {});
-    g.checkForDuplicateCases();
+    g.checkCaseNamesAndDuplicates();
   }
 });
 
@@ -129,7 +129,7 @@ g.test('duplicate_test_params,basic').fn(t => {
       ])
       .fn(() => {});
     t.shouldThrow('Error', () => {
-      g.checkForDuplicateCases();
+      g.checkCaseNamesAndDuplicates();
     });
   }
   {
@@ -141,7 +141,7 @@ g.test('duplicate_test_params,basic').fn(t => {
       ])
       .fn(() => {});
     t.shouldThrow('Error', () => {
-      g.checkForDuplicateCases();
+      g.checkCaseNamesAndDuplicates();
     });
   }
 });
@@ -155,7 +155,7 @@ g.test('duplicate_test_params,with_different_private_params').fn(t => {
     ])
     .fn(() => {});
   t.shouldThrow('Error', () => {
-    g.checkForDuplicateCases();
+    g.checkCaseNamesAndDuplicates();
   });
 });
 
@@ -175,9 +175,19 @@ g.test('invalid_test_name').fn(t => {
   }
 });
 
-g.test('valid_param_value').fn(() => {
+g.test('param_value,valid').fn(() => {
   const g = makeTestGroup(UnitTest);
   g.test('a').params([{ x: JSON.stringify({ a: 1, b: 2 }) }]);
+});
+
+g.test('param_value,invalid').fn(t => {
+  for (const badChar of ';=*') {
+    const g = makeTestGroupForUnitTesting(UnitTest);
+    g.test('a').params([{ badChar }]);
+    t.shouldThrow('Error', () => {
+      g.checkCaseNamesAndDuplicates();
+    });
+  }
 });
 
 g.test('throws').fn(async t0 => {

@@ -34,7 +34,7 @@ export function makeTestGroup<F extends Fixture>(fixture: FixtureClass<F>): Test
 // Interface for running tests
 export interface RunCaseIterable {
   iterate(): Iterable<RunCase>;
-  checkForDuplicateCases(): void;
+  checkCaseNamesAndDuplicates(): void;
 }
 export function makeTestGroupForUnitTesting<F extends Fixture>(
   fixture: FixtureClass<F>
@@ -86,9 +86,9 @@ class TestGroup<F extends Fixture> implements RunCaseIterable, TestGroupBuilder<
     return test;
   }
 
-  checkForDuplicateCases(): void {
+  checkCaseNamesAndDuplicates(): void {
     for (const test of this.tests) {
-      test.checkForDuplicateCases();
+      test.checkCaseNamesAndDuplicates();
     }
   }
 }
@@ -116,7 +116,7 @@ class TestBuilder<F extends Fixture, P extends {}> {
     this.testFn = fn;
   }
 
-  checkForDuplicateCases(): void {
+  checkCaseNamesAndDuplicates(): void {
     if (this.cases === undefined) {
       return;
     }
