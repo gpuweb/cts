@@ -1,14 +1,8 @@
 import { Fixture } from './fixture.js';
 import { TestCaseRecorder } from './logging/test_case_recorder.js';
-import {
-  CaseParams,
-  CaseParamsIterable,
-  extractPublicParams,
-  publicParamsEquals,
-  paramKeyIsPublic,
-} from './params_utils.js';
-import { kPathSeparator } from './query/separators.js';
-import { stringifySingleParam } from './query/stringify_params.js';
+import { CaseParams, CaseParamsIterable, extractPublicParams } from './params_utils.js';
+import { kPathSeparator, kParamSeparator } from './query/separators.js';
+import { stringifyPublicParams } from './query/stringify_params.js';
 import { validQueryPart } from './query/validQueryPart.js';
 import { assert } from './util/util.js';
 
@@ -122,20 +116,12 @@ class TestBuilder<F extends Fixture, P extends {}> {
       return;
     }
 
-    // This is n^2.
-    const seen: CaseParams[] = [];
+    const seen = new Set<string>();
     for (const testcase of this.cases) {
-      for (const [k, v] of Object.entries(testcase as CaseParams)) {
-        if (paramKeyIsPublic(k)) {
-          stringifySingleParam(k, v); // To check for invalid params values
-        }
-      }
-
-      assert(
-        !seen.some(x => publicParamsEquals(x, testcase)),
-        () => 'Duplicate public test case params: ' + JSON.stringify(testcase)
-      );
-      seen.push(testcase);
+      // stringifyPublicParams also checks for invalid params values
+      const testcaseString = stringifyPublicParams(testcase).join(kParamSeparator);
+      assert(!seen.has(testcaseString));
+      seen.add(testcaseString);
     }
   }
 
