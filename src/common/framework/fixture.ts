@@ -1,5 +1,5 @@
-import { TestCaseRecorder } from './logger.js';
-import { ParamSpec } from './params_utils.js';
+import { TestCaseRecorder } from './logging/test_case_recorder.js';
+import { CaseParams } from './params_utils.js';
 import { assert } from './util/util.js';
 
 export class SkipTestCase extends Error {}
@@ -13,7 +13,7 @@ export class Fixture {
   private eventualExpectations: Array<Promise<unknown>> = [];
   private numOutstandingAsyncExpectations = 0;
 
-  constructor(rec: TestCaseRecorder, params: ParamSpec) {
+  constructor(rec: TestCaseRecorder, params: CaseParams) {
     this.rec = rec;
     this.params = params;
   }
@@ -61,16 +61,16 @@ export class Fixture {
 
   private expectErrorValue(expectedName: string, ex: unknown, niceStack: Error): void {
     if (!(ex instanceof Error)) {
-      niceStack.message = 'THREW non-error value, of type ' + typeof ex + niceStack.message;
+      niceStack.message = `THREW non-error value, of type ${typeof ex}: ${ex}`;
       this.rec.fail(niceStack);
       return;
     }
     const actualName = ex.name;
     if (actualName !== expectedName) {
-      niceStack.message = `THREW ${actualName}, instead of ${expectedName}` + niceStack.message;
+      niceStack.message = `THREW ${actualName}, instead of ${expectedName}: ${ex}`;
       this.rec.fail(niceStack);
     } else {
-      niceStack.message = 'OK: threw ' + actualName + niceStack.message;
+      niceStack.message = `OK: threw ${actualName}${ex.message}`;
       this.rec.debug(niceStack);
     }
   }
@@ -80,7 +80,7 @@ export class Fixture {
       const m = msg ? ': ' + msg : '';
       try {
         await p;
-        niceStack.message = 'DID NOT THROW' + m;
+        niceStack.message = 'DID NOT REJECT' + m;
         this.rec.fail(niceStack);
       } catch (ex) {
         niceStack.message = m;

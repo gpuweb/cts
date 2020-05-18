@@ -2,8 +2,8 @@ export const description = `
 createRenderPipeline validation tests.
 `;
 
-import { poptions } from '../../../common/framework/params.js';
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { poptions } from '../../../common/framework/params_builder.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { kTextureFormatInfo, kTextureFormats } from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -92,15 +92,15 @@ class F extends ValidationTest {
   }
 }
 
-export const g = new TestGroup(F);
+export const g = makeTestGroup(F);
 
-g.test('basic use of createRenderPipeline').fn(t => {
+g.test('basic_use_of_createRenderPipeline').fn(t => {
   const descriptor = t.getDescriptor();
 
   t.device.createRenderPipeline(descriptor);
 });
 
-g.test('at least one color state is required').fn(async t => {
+g.test('at_least_one_color_state_is_required').fn(async t => {
   const goodDescriptor = t.getDescriptor({
     colorStates: [{ format: 'rgba8unorm' }],
   });
@@ -118,7 +118,7 @@ g.test('at least one color state is required').fn(async t => {
   });
 });
 
-g.test('color formats must be renderable')
+g.test('color_formats_must_be_renderable')
   .params(poptions('format', kTextureFormats))
   .fn(async t => {
     const format: GPUTextureFormat = t.params.format;
@@ -137,7 +137,7 @@ g.test('color formats must be renderable')
     }
   });
 
-g.test('sample count must be valid')
+g.test('sample_count_must_be_valid')
   .params([
     { sampleCount: 0, _success: false },
     { sampleCount: 1, _success: true },
@@ -163,7 +163,7 @@ g.test('sample count must be valid')
     }
   });
 
-g.test('sample count must be equal to the one of every attachment in the render pass')
+g.test('sample_count_must_be_equal_to_the_one_of_every_attachment_in_the_render_pass')
   .params([
     { attachmentSamples: 4, pipelineSamples: 4, _success: true }, // It is allowed to use multisampled render pass and multisampled render pipeline.
     { attachmentSamples: 4, pipelineSamples: 1, _success: false }, // It is not allowed to use multisampled render pass and non-multisampled render pipeline.

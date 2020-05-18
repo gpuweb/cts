@@ -3,7 +3,7 @@ vertexState validation tests.
 `;
 
 import * as C from '../../../common/constants.js';
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -56,15 +56,15 @@ class F extends ValidationTest {
   }
 }
 
-export const g = new TestGroup(F);
+export const g = makeTestGroup(F);
 
-g.test('an empty vertex input is valid').fn(t => {
+g.test('an_empty_vertex_input_is_valid').fn(t => {
   const vertexState: GPUVertexStateDescriptor = {};
   const descriptor = t.getDescriptor(vertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
   t.device.createRenderPipeline(descriptor);
 });
 
-g.test('a null buffer is valid').fn(t => {
+g.test('a_null_buffer_is_valid').fn(t => {
   {
     // One null buffer is OK
     const vertexState: GPUVertexStateDescriptor = {
@@ -136,7 +136,7 @@ g.test('a null buffer is valid').fn(t => {
   }
 });
 
-g.test('pipeline vertex buffers are backed by attributes in vertex input').fn(async t => {
+g.test('pipeline_vertex_buffers_are_backed_by_attributes_in_vertex_input').fn(async t => {
   const vertexState: GPUVertexStateDescriptor = {
     vertexBuffers: [
       {
@@ -198,7 +198,7 @@ g.test('pipeline vertex buffers are backed by attributes in vertex input').fn(as
   }
 });
 
-g.test('an arrayStride of 0 is valid').fn(t => {
+g.test('an_arrayStride_of_0_is_valid').fn(t => {
   const vertexState = {
     vertexBuffers: [
       {
@@ -226,7 +226,7 @@ g.test('an arrayStride of 0 is valid').fn(t => {
   }
 });
 
-g.test('offset should be within vertex buffer arrayStride if arrayStride is not zero').fn(
+g.test('offset_should_be_within_vertex_buffer_arrayStride_if_arrayStride_is_not_zero').fn(
   async t => {
     const vertexState = {
       vertexBuffers: [
@@ -282,7 +282,7 @@ g.test('offset should be within vertex buffer arrayStride if arrayStride is not 
   }
 );
 
-g.test('check two attributes overlapping').fn(async t => {
+g.test('check_two_attributes_overlapping').fn(async t => {
   const vertexState = {
     vertexBuffers: [
       {
@@ -319,7 +319,7 @@ g.test('check two attributes overlapping').fn(async t => {
   }
 });
 
-g.test('check out of bounds condition on total number of vertex buffers').fn(async t => {
+g.test('check_out_of_bounds_condition_on_total_number_of_vertex_buffers').fn(async t => {
   const vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [];
 
   for (let i = 0; i < MAX_VERTEX_BUFFERS; i++) {
@@ -365,7 +365,7 @@ g.test('check out of bounds condition on total number of vertex buffers').fn(asy
   }
 });
 
-g.test('check out of bounds on number of vertex attributes on a single vertex buffer').fn(
+g.test('check_out_of_bounds_on_number_of_vertex_attributes_on_a_single_vertex_buffer').fn(
   async t => {
     const vertexAttributes: GPUVertexAttributeDescriptor[] = [];
 
@@ -415,7 +415,7 @@ g.test('check out of bounds on number of vertex attributes on a single vertex bu
   }
 );
 
-g.test('check out of bounds on number of vertex attributes across vertex buffers').fn(async t => {
+g.test('check_out_of_bounds_on_number_of_vertex_attributes_across_vertex_buffers').fn(async t => {
   const vertexBuffers = [];
   for (let i = 0; i < MAX_VERTEX_ATTRIBUTES; i++) {
     vertexBuffers.push({
@@ -446,7 +446,7 @@ g.test('check out of bounds on number of vertex attributes across vertex buffers
   }
 });
 
-g.test('check out of bounds condition on input strides').fn(async t => {
+g.test('check_out_of_bounds_condition_on_input_strides').fn(async t => {
   const vertexState = {
     vertexBuffers: [{ arrayStride: MAX_VERTEX_BUFFER_ARRAY_STRIDE, attributes: [] }],
   };
@@ -466,7 +466,7 @@ g.test('check out of bounds condition on input strides').fn(async t => {
   }
 });
 
-g.test('check multiple of 4 bytes constraint on input arrayStride').fn(async t => {
+g.test('check_multiple_of_4_bytes_constraint_on_input_arrayStride').fn(async t => {
   const vertexState = {
     vertexBuffers: [
       {
@@ -491,7 +491,7 @@ g.test('check multiple of 4 bytes constraint on input arrayStride').fn(async t =
   }
 });
 
-g.test('identical duplicate attributes are invalid').fn(async t => {
+g.test('identical_duplicate_attributes_are_invalid').fn(async t => {
   const vertexState = {
     vertexBuffers: [
       {
@@ -520,7 +520,7 @@ g.test('identical duplicate attributes are invalid').fn(async t => {
   }
 });
 
-g.test('we cannot set same shader location').fn(async t => {
+g.test('we_cannot_set_same_shader_location').fn(async t => {
   {
     const vertexState = {
       vertexBuffers: [
@@ -582,7 +582,7 @@ g.test('we cannot set same shader location').fn(async t => {
   }
 });
 
-g.test('check out of bounds condition on attribute shader location').fn(async t => {
+g.test('check_out_of_bounds_condition_on_attribute_shader_location').fn(async t => {
   const vertexState = {
     vertexBuffers: [
       {
@@ -609,7 +609,7 @@ g.test('check out of bounds condition on attribute shader location').fn(async t 
   }
 });
 
-g.test('check attribute offset out of bounds').fn(async t => {
+g.test('check_attribute_offset_out_of_bounds').fn(async t => {
   const vertexState = {
     vertexBuffers: [
       {
@@ -646,7 +646,7 @@ g.test('check attribute offset out of bounds').fn(async t => {
   }
 });
 
-g.test('check multiple of 4 bytes constraint on offset').fn(async t => {
+g.test('check_multiple_of_4_bytes_constraint_on_offset').fn(async t => {
   const vertexState = {
     vertexBuffers: [
       {
@@ -681,7 +681,7 @@ g.test('check multiple of 4 bytes constraint on offset').fn(async t => {
   }
 });
 
-g.test('check attribute offset overflow').fn(async t => {
+g.test('check_attribute_offset_overflow').fn(async t => {
   const vertexState: GPUVertexStateDescriptor = {
     vertexBuffers: [
       {

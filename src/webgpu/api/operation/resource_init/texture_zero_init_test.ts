@@ -1,7 +1,7 @@
 import * as C from '../../../../common/constants.js';
-import { TestCaseRecorder } from '../../../../common/framework/logger.js';
-import { params, poptions, pbool } from '../../../../common/framework/params.js';
-import { ParamSpec } from '../../../../common/framework/params_utils.js';
+import { TestCaseRecorder } from '../../../../common/framework/logging/test_case_recorder.js';
+import { params, poptions, pbool } from '../../../../common/framework/params_builder.js';
+import { CaseParams } from '../../../../common/framework/params_utils.js';
 import { assert, unreachable } from '../../../../common/framework/util/util.js';
 import { kTextureAspects, kTextureFormatInfo, kTextureFormats } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
@@ -214,7 +214,7 @@ function getRequiredTextureUsage(
 export abstract class TextureZeroInitTest extends GPUTest {
   protected stateToTexelComponents: { [k in InitializedState]: PerTexelComponent<number> };
 
-  constructor(rec: TestCaseRecorder, params: ParamSpec) {
+  constructor(rec: TestCaseRecorder, params: CaseParams) {
     super(rec, params);
 
     const stateToTexelComponents = (state: InitializedState) => {
@@ -461,6 +461,7 @@ export abstract class TextureZeroInitTest extends GPUTest {
 
   static generateParams(readMethods: ReadMethod[]) {
     return (
+      // TODO: Consider making a list of "valid" texture descriptors in capability_info.
       params()
         .combine(poptions('format', kTextureFormats))
         .combine(poptions('aspect', kTextureAspects))

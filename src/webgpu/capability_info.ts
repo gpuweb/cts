@@ -202,7 +202,7 @@ interface BindingTypeInfo extends BindingKindInfo {
 const kValidStagesAll = {
   validStages: C.ShaderStage.Vertex | C.ShaderStage.Fragment | C.ShaderStage.Compute,
 };
-const kValidStagesCompute = { validStages: C.ShaderStage.Compute };
+const kValidStagesStorageWrite = { validStages: C.ShaderStage.Fragment | C.ShaderStage.Compute };
 
 export const kBufferBindingTypeInfo: {
   readonly [k in BufferBindingType]: {
@@ -210,9 +210,9 @@ export const kBufferBindingTypeInfo: {
     // Add fields as needed
   } & BindingTypeInfo;
 } = /* prettier-ignore */ {
-  'uniform-buffer':          { usage: C.BufferUsage.Uniform, ...kBindingKind.uniformBuf,  ...kValidStagesAll,     },
-  'storage-buffer':          { usage: C.BufferUsage.Storage, ...kBindingKind.storageBuf,  ...kValidStagesCompute, },
-  'readonly-storage-buffer': { usage: C.BufferUsage.Storage, ...kBindingKind.storageBuf,  ...kValidStagesAll,     },
+  'uniform-buffer':          { usage: C.BufferUsage.Uniform, ...kBindingKind.uniformBuf,  ...kValidStagesAll,          },
+  'storage-buffer':          { usage: C.BufferUsage.Storage, ...kBindingKind.storageBuf,  ...kValidStagesStorageWrite, },
+  'readonly-storage-buffer': { usage: C.BufferUsage.Storage, ...kBindingKind.storageBuf,  ...kValidStagesAll,          },
 };
 export const kBufferBindingTypes = keysOf(kBufferBindingTypeInfo);
 
@@ -232,9 +232,9 @@ export const kTextureBindingTypeInfo: {
     // Add fields as needed
   } & BindingTypeInfo;
 } = /* prettier-ignore */ {
-  'sampled-texture':           { usage: C.TextureUsage.Sampled, ...kBindingKind.sampledTex,  ...kValidStagesAll,     },
-  'writeonly-storage-texture': { usage: C.TextureUsage.Storage, ...kBindingKind.storageTex,  ...kValidStagesCompute, },
-  'readonly-storage-texture':  { usage: C.TextureUsage.Storage, ...kBindingKind.storageTex,  ...kValidStagesAll,     },
+  'sampled-texture':           { usage: C.TextureUsage.Sampled, ...kBindingKind.sampledTex,  ...kValidStagesAll,          },
+  'writeonly-storage-texture': { usage: C.TextureUsage.Storage, ...kBindingKind.storageTex,  ...kValidStagesStorageWrite, },
+  'readonly-storage-texture':  { usage: C.TextureUsage.Storage, ...kBindingKind.storageTex,  ...kValidStagesAll,          },
 };
 export const kTextureBindingTypes = keysOf(kTextureBindingTypeInfo);
 

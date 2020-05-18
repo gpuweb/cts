@@ -6,7 +6,7 @@ License Agreement (CLA)](http://www.w3.org/community/about/agreements/cla/). To
 make substantive contributions, you must join the CG.
 
 Contributions to the source code repository are subject to the terms of the
-[3-Clause BSD License](https://github.com/gpuweb/admin/blob/SourceCodeLicense/LICENSE.txt).
+[3-Clause BSD License](./LICENSE.txt).
 
 If you are not the sole contributor to a contribution (pull request), please identify all 
 contributors in the pull request comment.

@@ -2,7 +2,7 @@ export const description =
   'Test uninitialized textures are initialized to zero when used as a depth/stencil attachment.';
 
 import * as C from '../../../../common/constants.js';
-import { TestGroup } from '../../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { unreachable } from '../../../../common/framework/util/util.js';
 import { SubresourceRange } from '../../../util/texture/subresource.js';
 
@@ -205,8 +205,8 @@ class DepthStencilAttachmentClearTest extends TextureZeroInitTest {
   }
 }
 
-export const g = new TestGroup(DepthStencilAttachmentClearTest);
+export const g = makeTestGroup(DepthStencilAttachmentClearTest);
 
-g.test('uninitialized texture is zero')
+g.test('uninitialized_texture_is_zero')
   .params(TextureZeroInitTest.generateParams([ReadMethod.DepthTest, ReadMethod.StencilTest]))
   .fn(t => t.run());

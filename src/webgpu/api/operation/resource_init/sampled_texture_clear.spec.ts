@@ -1,7 +1,7 @@
 export const description = 'Test uninitialized textures are initialized to zero when sampled.';
 
 import * as C from '../../../../common/constants.js';
-import { TestGroup } from '../../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/framework/util/util.js';
 import { SubresourceRange } from '../../../util/texture/subresource.js';
 import { getTexelDataRepresentation } from '../../../util/texture/texelData.js';
@@ -201,8 +201,8 @@ class SampledTextureClearTest extends TextureZeroInitTest {
   }
 }
 
-export const g = new TestGroup(SampledTextureClearTest);
+export const g = makeTestGroup(SampledTextureClearTest);
 
-g.test('uninitialized texture is zero')
+g.test('uninitialized_texture_is_zero')
   .params(TextureZeroInitTest.generateParams([ReadMethod.Sample]))
   .fn(t => t.run());

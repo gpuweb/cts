@@ -1,9 +1,10 @@
 import { promises as fs } from 'fs';
 
 import { listing } from '../../webgpu/listing.js';
-import { generateMinimalQueryList } from '../framework/generate_minimal_query_list.js';
-import { TestSuiteListingEntry } from '../framework/listing.js';
-import { TestLoader } from '../framework/loader.js';
+import { DefaultTestFileLoader } from '../framework/file_loader.js';
+import { TestQueryMultiTest } from '../framework/query/query.js';
+import { kBigSeparator, kWildcard } from '../framework/query/separators.js';
+import { TestSuiteListingEntry } from '../framework/test_suite_listing.js';
 
 function printUsageAndExit(rc: number): void {
   console.error(`\
@@ -49,8 +50,8 @@ const [
     const entries = (await listing) as TestSuiteListingEntry[];
     const lines = entries
       // Exclude READMEs.
-      .filter(l => l.path.length !== 0 && !l.path.endsWith('/'))
-      .map(l => '?q=webgpu:' + l.path);
+      .filter(l => !('readme' in l))
+      .map(l => '?q=' + new TestQueryMultiTest('webgpu', l.file, []).toString());
     await generateFile(lines);
   } else {
     // Prefixes sorted from longest to shortest
@@ -79,14 +80,17 @@ const [
       throw new Error('All input lines must start with one of the prefixes. ' + exp);
     }
 
-    const loader = new TestLoader();
-    const files = Array.from(await loader.loadTestsFromCmdLine([suite + ':']));
-
-    const lines = [];
+    const loader = new DefaultTestFileLoader();
+    const lines: Array<string | undefined> = [];
     for (const prefix of argsPrefixes) {
-      lines.push(undefined);
-      for (const q of await generateMinimalQueryList(files, expectations.get(prefix)!)) {
-        lines.push(prefix + q);
+      const tree = await loader.loadTree(
+        suite + kBigSeparator + kWildcard,
+        expectations.get(prefix)!
+      );
+
+      lines.push(undefined); // output blank line between prefixes
+      for (const q of tree.iterateCollapsedQueries()) {
+        lines.push(prefix + q.toString());
       }
     }
     await generateFile(lines);

@@ -2,12 +2,12 @@ export const description = `
 Tests to check array clamping in shaders is correctly implemented including vector / matrix indexing
 `;
 
-import { params, poptions } from '../../../common/framework/params.js';
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { params, poptions } from '../../../common/framework/params_builder.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert } from '../../../common/framework/util/util.js';
 import { GPUTest } from '../../gpu_test.js';
 
-export const g = new TestGroup(GPUTest);
+export const g = makeTestGroup(GPUTest);
 
 // Utilities that should probably live in some shared place.
 function copyArrayBuffer(src: ArrayBuffer): ArrayBuffer {

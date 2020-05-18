@@ -2,13 +2,13 @@ export const description = `
 Tests for AsyncMutex.
 `;
 
-import { TestGroup } from '../common/framework/test_group.js';
+import { makeTestGroup } from '../common/framework/test_group.js';
 import { AsyncMutex } from '../common/framework/util/async_mutex.js';
 import { objectEquals } from '../common/framework/util/util.js';
 
 import { UnitTest } from './unit_test.js';
 
-export const g = new TestGroup(UnitTest);
+export const g = makeTestGroup(UnitTest);
 
 /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
 g.test('basic').fn(async t => {
@@ -34,7 +34,7 @@ g.test('parallel').fn(async t => {
   ]);
 });
 
-g.test('parallel/many').fn(async t => {
+g.test('parallel,many').fn(async t => {
   const mutex = new AsyncMutex();
   const actual: number[] = [];
   const expected = [];
@@ -54,7 +54,7 @@ g.test('return').fn(async t => {
   t.expect(ret === 123);
 });
 
-g.test('return/parallel').fn(async t => {
+g.test('return,parallel').fn(async t => {
   const mutex = new AsyncMutex();
   const ret = await Promise.all([
     mutex.with(async () => 1),

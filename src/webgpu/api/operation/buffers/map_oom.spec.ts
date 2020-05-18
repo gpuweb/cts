@@ -1,6 +1,6 @@
 export const description = '';
 
-import { TestGroup } from '../../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
 
 function getBufferDesc(): GPUBufferDescriptor {
@@ -10,7 +10,7 @@ function getBufferDesc(): GPUBufferDescriptor {
   };
 }
 
-export const g = new TestGroup(GPUTest);
+export const g = makeTestGroup(GPUTest);
 
 g.test('mapWriteAsync').fn(async t => {
   const buffer = t.device.createBuffer(getBufferDesc());

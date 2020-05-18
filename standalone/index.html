@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title></title>
+    <title>WebGPU CTS</title>
     <link
       id="favicon"
       rel="shortcut icon"
@@ -41,7 +41,8 @@
         width: 100%;
         padding: 1px 2px 1px 1px;
       }
-      .noderun,
+      .subtreerun,
+      .leafrun,
       .nodelink,
       .testcaselogbtn {
         display: inline-block;
@@ -54,7 +55,8 @@
         border: 1px solid #888;
       }
       @media (pointer: fine) {
-        .noderun,
+        .subtreerun,
+        .leafrun,
         .nodelink,
         .testcaselogbtn {
           flex-basis: 24px;
@@ -64,7 +66,8 @@
         }
       }
       @media (pointer: coarse) {
-        .noderun,
+        .subtreerun,
+        .leafrun,
         .nodelink,
         .testcaselogbtn {
           flex-basis: 36px;
@@ -73,8 +76,11 @@
           height: 36px;
         }
       }
-      .noderun {
+      .subtreerun {
         background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAYAAADgkQYQAAAANklEQVQoU2NkYGD4zwABjFAagwJJwBTBJDEUY1OEoRifIrhiYhSBHYvuJnSHM5LtJry+wxlOAGPTCQmAB/WwAAAAAElFTkSuQmCC);
+      }
+      .leafrun {
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJAQMAAADaX5RTAAAABlBMVEUAAAAAAAClZ7nPAAAAAXRSTlMAQObYZgAAAB5JREFUCNdjOMDAsIGBoYeBoZmBoaEBRPaARQ4wAABTfwX/l/WQvgAAAABJRU5ErkJggg==);
       }
       .nodelink {
         background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMAQMAAABsu86kAAAABlBMVEUAAAAAAAClZ7nPAAAAAXRSTlMAQObYZgAAACRJREFUCNdjYGBg+P+BoUGAYesFhj4BhvsFDPYNDHwMCMTAAACqJwbp3VgbrAAAAABJRU5ErkJggg==);
@@ -83,7 +89,6 @@
         flex: 10 0 4em;
       }
       .nodename {
-        user-select: all;
         word-break: break-word;
       }
       @media only screen and (max-width: 600px) {
@@ -174,11 +179,6 @@
         }
       }
     </style>
-    <script>
-      if (!window.location.search) {
-        window.location += '?runnow=0&worker=0&debug=0&q=webgpu:';
-      }
-    </script>
   </head>
   <body>
     <h1>WebGPU Conformance Test Suite</h1>

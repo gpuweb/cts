@@ -1,11 +1,11 @@
 export const description = '';
 
-import { pbool, poptions, params } from '../../../../common/framework/params.js';
-import { TestGroup } from '../../../../common/framework/test_group.js';
+import { pbool, poptions, params } from '../../../../common/framework/params_builder.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
 
 import { MappingTest } from './mapping_test.js';
 
-export const g = new TestGroup(MappingTest);
+export const g = makeTestGroup(MappingTest);
 
 g.test('mapWriteAsync')
   .params(poptions('size', [12, 512 * 1024]))

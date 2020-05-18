@@ -2,10 +2,10 @@ export const description = `
 Basic tests.
 `;
 
-import { TestGroup } from '../../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
 
-export const g = new TestGroup(GPUTest);
+export const g = makeTestGroup(GPUTest);
 
 g.test('empty').fn(async t => {
   const encoder = t.device.createCommandEncoder();
