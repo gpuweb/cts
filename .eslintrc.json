@@ -14,7 +14,9 @@
       }
     ],
     "linebreak-style": ["error", "unix"],
+    "object-shorthand": "error",
     "no-console": "error",
+    "no-useless-rename": "error",
     "@typescript-eslint/no-inferrable-types": "off",
     "import/order": [
       "error",

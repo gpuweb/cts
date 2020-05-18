@@ -2,7 +2,7 @@ export const description = `
 render pass descriptor validation tests.
 `;
 
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -75,9 +75,9 @@ class F extends ValidationTest {
   }
 }
 
-export const g = new TestGroup(F);
+export const g = makeTestGroup(F);
 
-g.test('a render pass with only one color is ok').fn(t => {
+g.test('a_render_pass_with_only_one_color_is_ok').fn(t => {
   const colorTexture = t.createTexture({ format: 'rgba8unorm' });
   const descriptor = {
     colorAttachments: [t.getColorAttachment(colorTexture)],
@@ -86,7 +86,7 @@ g.test('a render pass with only one color is ok').fn(t => {
   t.tryRenderPass(true, descriptor);
 });
 
-g.test('a render pass with only one depth attachment is ok').fn(t => {
+g.test('a_render_pass_with_only_one_depth_attachment_is_ok').fn(t => {
   const depthStencilTexture = t.createTexture({ format: 'depth24plus-stencil8' });
   const descriptor = {
     colorAttachments: [],
@@ -96,7 +96,7 @@ g.test('a render pass with only one depth attachment is ok').fn(t => {
   t.tryRenderPass(true, descriptor);
 });
 
-g.test('OOB color attachment indices are handled')
+g.test('OOB_color_attachment_indices_are_handled')
   .params([
     { colorAttachmentsCount: 4, _success: true }, // Control case
     { colorAttachmentsCount: 5, _success: false }, // Out of bounds
@@ -113,7 +113,7 @@ g.test('OOB color attachment indices are handled')
     await t.tryRenderPass(_success, { colorAttachments });
   });
 
-g.test('attachments must have the same size').fn(async t => {
+g.test('attachments_must_have_the_same_size').fn(async t => {
   const colorTexture1x1A = t.createTexture({ width: 1, height: 1, format: 'rgba8unorm' });
   const colorTexture1x1B = t.createTexture({ width: 1, height: 1, format: 'rgba8unorm' });
   const colorTexture2x2 = t.createTexture({ width: 2, height: 2, format: 'rgba8unorm' });
@@ -165,7 +165,7 @@ g.test('attachments must have the same size').fn(async t => {
   }
 });
 
-g.test('attachments must match whether they are used for color or depth stencil').fn(async t => {
+g.test('attachments_must_match_whether_they_are_used_for_color_or_depth_stencil').fn(async t => {
   const colorTexture = t.createTexture({ format: 'rgba8unorm' });
   const depthStencilTexture = t.createTexture({ format: 'depth24plus-stencil8' });
 
@@ -188,7 +188,7 @@ g.test('attachments must match whether they are used for color or depth stencil'
   }
 });
 
-g.test('check layer count for color or depth stencil')
+g.test('check_layer_count_for_color_or_depth_stencil')
   .params([
     { arrayLayerCount: 5, baseArrayLayer: 0, _success: false }, // using 2D array texture view with arrayLayerCount > 1 is not allowed
     { arrayLayerCount: 1, baseArrayLayer: 0, _success: true }, // using 2D array texture view that covers the first layer of the texture is OK
@@ -257,7 +257,7 @@ g.test('check layer count for color or depth stencil')
     }
   });
 
-g.test('check mip level count for color or depth stencil')
+g.test('check_mip_level_count_for_color_or_depth_stencil')
   .params([
     { mipLevelCount: 2, baseMipLevel: 0, _success: false }, // using 2D texture view with mipLevelCount > 1 is not allowed
     { mipLevelCount: 1, baseMipLevel: 0, _success: true }, // using 2D texture view that covers the first level of the texture is OK
@@ -326,7 +326,7 @@ g.test('check mip level count for color or depth stencil')
     }
   });
 
-g.test('it is invalid to set resolve target if color attachment is non multisampled').fn(
+g.test('it_is_invalid_to_set_resolve_target_if_color_attachment_is_non_multisampled').fn(
   async t => {
     const colorTexture = t.createTexture({ sampleCount: 1 });
     const resolveTargetTexture = t.createTexture({ sampleCount: 1 });
@@ -345,7 +345,7 @@ g.test('it is invalid to set resolve target if color attachment is non multisamp
   }
 );
 
-g.test('check the use of multisampled textures as color attachments').fn(async t => {
+g.test('check_the_use_of_multisampled_textures_as_color_attachments').fn(async t => {
   const colorTexture = t.createTexture({ sampleCount: 1 });
   const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
 
@@ -369,7 +369,7 @@ g.test('check the use of multisampled textures as color attachments').fn(async t
   }
 });
 
-g.test('it is invalid to use a multisampled resolve target').fn(async t => {
+g.test('it_is_invalid_to_use_a_multisampled_resolve_target').fn(async t => {
   const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
   const multisampledResolveTargetTexture = t.createTexture({ sampleCount: 4 });
 
@@ -383,7 +383,7 @@ g.test('it is invalid to use a multisampled resolve target').fn(async t => {
   await t.tryRenderPass(false, descriptor);
 });
 
-g.test('it is invalid to use a resolve target with array layer count greater than 1').fn(
+g.test('it_is_invalid_to_use_a_resolve_target_with_array_layer_count_greater_than_1').fn(
   async t => {
     const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
     const resolveTargetTexture = t.createTexture({ arrayLayerCount: 2 });
@@ -399,7 +399,7 @@ g.test('it is invalid to use a resolve target with array layer count greater tha
   }
 );
 
-g.test('it is invalid to use a resolve target with mipmap level count greater than 1').fn(
+g.test('it_is_invalid_to_use_a_resolve_target_with_mipmap_level_count_greater_than_1').fn(
   async t => {
     const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
     const resolveTargetTexture = t.createTexture({ mipLevelCount: 2 });
@@ -415,7 +415,7 @@ g.test('it is invalid to use a resolve target with mipmap level count greater th
   }
 );
 
-g.test('it is invalid to use a resolve target whose usage is not output attachment').fn(async t => {
+g.test('it_is_invalid_to_use_a_resolve_target_whose_usage_is_not_output_attachment').fn(async t => {
   const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
   const resolveTargetTexture = t.createTexture({
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
@@ -431,7 +431,7 @@ g.test('it is invalid to use a resolve target whose usage is not output attachme
   await t.tryRenderPass(false, descriptor);
 });
 
-g.test('it is invalid to use a resolve target in error state').fn(async t => {
+g.test('it_is_invalid_to_use_a_resolve_target_in_error_state').fn(async t => {
   const ARRAY_LAYER_COUNT = 1;
 
   const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
@@ -453,7 +453,7 @@ g.test('it is invalid to use a resolve target in error state').fn(async t => {
   await t.tryRenderPass(false, descriptor);
 });
 
-g.test('use of multisampled attachment and non multisampled resolve target is allowed').fn(
+g.test('use_of_multisampled_attachment_and_non_multisampled_resolve_target_is_allowed').fn(
   async t => {
     const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
     const resolveTargetTexture = t.createTexture({ sampleCount: 1 });
@@ -469,7 +469,7 @@ g.test('use of multisampled attachment and non multisampled resolve target is al
   }
 );
 
-g.test('use a resolve target in a format different than the attachment is not allowed').fn(
+g.test('use_a_resolve_target_in_a_format_different_than_the_attachment_is_not_allowed').fn(
   async t => {
     const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
     const resolveTargetTexture = t.createTexture({ format: 'bgra8unorm' });
@@ -485,7 +485,7 @@ g.test('use a resolve target in a format different than the attachment is not al
   }
 );
 
-g.test('size of the resolve target must be the same as the color attachment').fn(async t => {
+g.test('size_of_the_resolve_target_must_be_the_same_as_the_color_attachment').fn(async t => {
   const size = 16;
   const multisampledColorTexture = t.createTexture({ width: size, height: size, sampleCount: 4 });
   const resolveTargetTexture = t.createTexture({
@@ -523,7 +523,7 @@ g.test('size of the resolve target must be the same as the color attachment').fn
   }
 });
 
-g.test('check depth stencil attachment sample counts mismatch').fn(async t => {
+g.test('check_depth_stencil_attachment_sample_counts_mismatch').fn(async t => {
   const multisampledDepthStencilTexture = t.createTexture({
     sampleCount: 4,
     format: 'depth24plus-stencil8',

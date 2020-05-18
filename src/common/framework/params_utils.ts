@@ -1,69 +1,32 @@
-import { objectEquals } from './util/util.js';
+import { comparePublicParamsPaths, Ordering } from './query/compare.js';
+import { kWildcard, kParamSeparator } from './query/separators.js';
 
-/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-export type ParamArgument = any;
-export interface ParamSpec {
+// Consider adding more types here if needed
+export type ParamArgument = void | undefined | number | string | boolean | number[];
+export interface CaseParams {
+  readonly [k: string]: ParamArgument;
+}
+export interface CaseParamsRW {
   [k: string]: ParamArgument;
 }
-export type ParamSpecIterable = Iterable<ParamSpec>;
-export type ParamSpecIterator = IterableIterator<ParamSpec>;
+export type CaseParamsIterable = Iterable<CaseParams>;
 
-export function extractPublicParams(params: ParamSpec): ParamSpec {
-  const publicParams: ParamSpec = {};
+export function paramKeyIsPublic(key: string): boolean {
+  return !key.startsWith('_');
+}
+
+export function extractPublicParams(params: CaseParams): CaseParams {
+  const publicParams: CaseParamsRW = {};
   for (const k of Object.keys(params)) {
-    if (!k.startsWith('_')) {
+    if (paramKeyIsPublic(k)) {
       publicParams[k] = params[k];
     }
   }
   return publicParams;
 }
 
-export function stringifyPublicParams(p: ParamSpec | null): string {
-  if (p === null || paramsEquals(p, {})) {
-    return '';
-  }
-  return JSON.stringify(extractPublicParams(p));
-}
+export const badParamValueChars = new RegExp('[=' + kParamSeparator + kWildcard + ']');
 
-export function paramsEquals(x: ParamSpec | null, y: ParamSpec | null): boolean {
-  if (x === y) {
-    return true;
-  }
-  if (x === null) {
-    x = {};
-  }
-  if (y === null) {
-    y = {};
-  }
-
-  for (const xk of Object.keys(x)) {
-    if (x[xk] !== undefined && !(xk in y)) {
-      return false;
-    }
-    if (!objectEquals(x[xk], y[xk])) {
-      return false;
-    }
-  }
-
-  for (const yk of Object.keys(y)) {
-    if (y[yk] !== undefined && !(yk in x)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-export function paramsSupersets(sup: ParamSpec | null, sub: ParamSpec | null): boolean {
-  if (sub === null) {
-    return true;
-  }
-  if (sup === null) {
-    sup = {};
-  }
-  for (const k of Object.keys(sub)) {
-    if (!(k in sup) || sup[k] !== sub[k]) {
-      return false;
-    }
-  }
-  return true;
+export function publicParamsEquals(x: CaseParams, y: CaseParams): boolean {
+  return comparePublicParamsPaths(x, y) === Ordering.Equal;
 }

@@ -2,8 +2,8 @@ export const description = `
 copy imageBitmap To texture tests.
 `;
 
-import { poptions, params } from '../../common/framework/params.js';
-import { TestGroup } from '../../common/framework/test_group.js';
+import { poptions, params } from '../../common/framework/params_builder.js';
+import { makeTestGroup } from '../../common/framework/test_group.js';
 import { GPUTest } from '../gpu_test.js';
 
 function calculateRowPitch(width: number, bytesPerPixel: number): number {
@@ -114,9 +114,9 @@ class F extends GPUTest {
   }
 }
 
-export const g = new TestGroup(F);
+export const g = makeTestGroup(F);
 
-g.test('from ImageData')
+g.test('from_ImageData')
   .params(
     params()
       .combine(poptions('width', [1, 2, 4, 15, 255, 256]))
@@ -195,7 +195,7 @@ g.test('from ImageData')
     );
   });
 
-g.test('from canvas')
+g.test('from_canvas')
   .params(
     params()
       .combine(poptions('width', [1, 2, 4, 15, 255, 256]))

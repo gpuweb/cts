@@ -2,7 +2,7 @@ export const description = `
 setViewport validation tests.
 `;
 
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -29,9 +29,9 @@ class F extends ValidationTest {
   }
 }
 
-export const g = new TestGroup(F);
+export const g = makeTestGroup(F);
 
-g.test('use of setViewport')
+g.test('use_of_setViewport')
   .params([
     { x: 0, y: 0, width: 1, height: 1, minDepth: 0, maxDepth: 1, _success: true }, // Basic use
     { x: 0, y: 0, width: 0, height: 1, minDepth: 0, maxDepth: 1, _success: false }, // Width of zero is not allowed

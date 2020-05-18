@@ -1,7 +1,7 @@
 export const description = 'Test uninitialized textures are initialized to zero when copied.';
 
 import * as C from '../../../../common/constants.js';
-import { TestGroup } from '../../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, unreachable } from '../../../../common/framework/util/util.js';
 import { SubresourceRange } from '../../../util/texture/subresource.js';
 
@@ -78,9 +78,9 @@ class CopiedTextureClearTest extends TextureZeroInitTest {
   }
 }
 
-export const g = new TestGroup(CopiedTextureClearTest);
+export const g = makeTestGroup(CopiedTextureClearTest);
 
-g.test('uninitialized texture is zero')
+g.test('uninitialized_texture_is_zero')
   .params(TextureZeroInitTest.generateParams([ReadMethod.CopyToBuffer, ReadMethod.CopyToTexture]))
   .fn(t => {
     t.run();

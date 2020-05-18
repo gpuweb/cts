@@ -1,10 +1,10 @@
 // Implements the standalone test runner (see also: /standalone/index.html).
 
-import { TestLoader } from '../framework/loader.js';
-import { LiveTestCaseResult, Logger } from '../framework/logger.js';
-import { RunCase } from '../framework/test_group.js';
-import { FilterResultTreeNode, treeFromFilterResults } from '../framework/tree.js';
-import { encodeSelectively } from '../framework/url_query.js';
+import { DefaultTestFileLoader } from '../framework/file_loader.js';
+import { Logger } from '../framework/logging/logger.js';
+import { TestQuery } from '../framework/query/query.js';
+import { TestTreeNode, TestSubtree, TestTreeLeaf } from '../framework/tree.js';
+import { assert } from '../framework/util/util.js';
 
 import { optionEnabled } from './helper/options.js';
 import { TestWorker } from './helper/test_worker.js';
@@ -15,12 +15,13 @@ window.onbeforeunload = () => {
 };
 
 let haveSomeResults = false;
-const log = new Logger();
 
 const runnow = optionEnabled('runnow');
 const debug = optionEnabled('debug');
 
-const worker = optionEnabled('worker') ? new TestWorker() : undefined;
+const logger = new Logger(debug);
+
+const worker = optionEnabled('worker') ? new TestWorker(debug) : undefined;
 
 const resultsVis = document.getElementById('resultsVis')!;
 const resultsJSON = document.getElementById('resultsJSON')!;
@@ -29,25 +30,25 @@ type RunSubtree = () => Promise<void>;
 
 // DOM generation
 
-function makeTreeNodeHTML(name: string, tree: FilterResultTreeNode): [HTMLElement, RunSubtree] {
-  if (tree.children) {
-    return makeSubtreeHTML(name, tree);
+function makeTreeNodeHTML(tree: TestTreeNode): [HTMLElement, RunSubtree] {
+  if ('children' in tree) {
+    return makeSubtreeHTML(tree);
   } else {
-    return makeCaseHTML(name, tree.runCase!);
+    return makeCaseHTML(tree);
   }
 }
 
-function makeCaseHTML(name: string, t: RunCase): [HTMLElement, RunSubtree] {
+function makeCaseHTML(t: TestTreeLeaf): [HTMLElement, RunSubtree] {
   const div = $('<div>').addClass('testcase');
 
+  const name = t.query.toString();
   const runSubtree = async () => {
     haveSomeResults = true;
-    let res: LiveTestCaseResult;
+    const [rec, res] = logger.record(name);
     if (worker) {
-      res = await worker.run(name, debug);
-      t.injectResult(res);
+      await worker.run(rec, name);
     } else {
-      res = await t.run(debug);
+      await t.run(rec);
     }
 
     casetime.text(res.timems.toFixed(4) + ' ms');
@@ -72,7 +73,7 @@ function makeCaseHTML(name: string, t: RunCase): [HTMLElement, RunSubtree] {
     }
   };
 
-  const casehead = makeTreeNodeHeaderHTML(name, undefined, runSubtree);
+  const casehead = makeTreeNodeHeaderHTML(t.query, undefined, runSubtree, true);
   div.append(casehead);
   const casetime = $('<div>').addClass('testcasetime').html('ms').appendTo(casehead);
   const caselogs = $('<div>').addClass('testcaselogs').appendTo(div);
@@ -80,27 +81,22 @@ function makeCaseHTML(name: string, t: RunCase): [HTMLElement, RunSubtree] {
   return [div[0], runSubtree];
 }
 
-function makeSubtreeHTML(name: string, subtree: FilterResultTreeNode): [HTMLElement, RunSubtree] {
+function makeSubtreeHTML(t: TestSubtree): [HTMLElement, RunSubtree] {
   const div = $('<div>').addClass('subtree');
 
-  const header = makeTreeNodeHeaderHTML(name, subtree.description, () => {
-    return runSubtree();
-  });
+  const header = makeTreeNodeHeaderHTML(t.query, t.description, () => runSubtree(), false);
   div.append(header);
 
   const subtreeHTML = $('<div>').addClass('subtreechildren').appendTo(div);
-  const runSubtree = makeSubtreeChildrenHTML(subtreeHTML[0], subtree.children!);
+  const runSubtree = makeSubtreeChildrenHTML(subtreeHTML[0], t.children.values());
 
   return [div[0], runSubtree];
 }
 
-function makeSubtreeChildrenHTML(
-  div: HTMLElement,
-  children: Map<string, FilterResultTreeNode>
-): RunSubtree {
+function makeSubtreeChildrenHTML(div: HTMLElement, children: Iterable<TestTreeNode>): RunSubtree {
   const runSubtreeFns: RunSubtree[] = [];
-  for (const [name, subtree] of children) {
-    const [subtreeHTML, runSubtree] = makeTreeNodeHTML(name, subtree);
+  for (const subtree of children) {
+    const [subtreeHTML, runSubtree] = makeTreeNodeHTML(subtree);
     div.append(subtreeHTML);
     runSubtreeFns.push(runSubtree);
   }
@@ -113,24 +109,16 @@ function makeSubtreeChildrenHTML(
 }
 
 function makeTreeNodeHeaderHTML(
-  name: string,
+  query: TestQuery,
   description: string | undefined,
-  runSubtree: RunSubtree
+  runSubtree: RunSubtree,
+  isLeaf: boolean
 ): HTMLElement {
   const div = $('<div>').addClass('nodeheader');
 
-  const nameEncoded = encodeSelectively(name);
-  let nameHTML;
-  {
-    const i = nameEncoded.indexOf('{');
-    const n1 = i === -1 ? nameEncoded : nameEncoded.slice(0, i + 1);
-    const n2 = i === -1 ? '' : nameEncoded.slice(i + 1);
-    nameHTML = n1.replace(/:/g, ':<wbr>') + '<wbr>' + n2.replace(/,/g, ',<wbr>');
-  }
-
-  const href = `?${worker ? 'worker&' : ''}${debug ? 'debug&' : ''}q=${nameEncoded}`;
+  const href = `?${worker ? 'worker&' : ''}${debug ? 'debug&' : ''}q=${query.toString()}`;
   $('<button>')
-    .addClass('noderun')
+    .addClass(isLeaf ? 'leafrun' : 'subtreerun')
     .attr('alt', 'Run subtree')
     .attr('title', 'Run subtree')
     .on('click', async () => {
@@ -145,7 +133,7 @@ function makeTreeNodeHeaderHTML(
     .attr('title', 'Open')
     .appendTo(div);
   const nodetitle = $('<div>').addClass('nodetitle').appendTo(div);
-  $('<span>').addClass('nodename').html(nameHTML).appendTo(nodetitle);
+  $('<span>').addClass('nodename').html(query.toHTML()).appendTo(nodetitle);
   if (description) {
     $('<div>')
       .addClass('nodedescription')
@@ -156,18 +144,38 @@ function makeTreeNodeHeaderHTML(
 }
 
 function updateJSON(): void {
-  resultsJSON.textContent = log.asJSON(2);
+  resultsJSON.textContent = logger.asJSON(2);
 }
 
 (async () => {
-  const loader = new TestLoader();
+  const loader = new DefaultTestFileLoader();
 
-  // TODO: everything after this point is very similar across the three runtimes.
   // TODO: start populating page before waiting for everything to load?
-  const files = await loader.loadTestsFromQuery(window.location.search);
-  const tree = treeFromFilterResults(log, files);
+  const qs = new URLSearchParams(window.location.search).getAll('q');
+  if (qs.length === 0) {
+    qs.push('webgpu:*');
+  }
 
-  const runSubtree = makeSubtreeChildrenHTML(resultsVis, tree.children!);
+  // Update the URL bar to match the exact current options.
+  {
+    let url = window.location.protocol + '//' + window.location.host + window.location.pathname;
+    url +=
+      '?' +
+      new URLSearchParams([
+        ['runnow', runnow ? '1' : '0'],
+        ['worker', worker ? '1' : '0'],
+        ['debug', debug ? '1' : '0'],
+      ]).toString() +
+      '&' +
+      qs.map(q => 'q=' + q).join('&');
+    window.history.replaceState(null, '', url);
+  }
+
+  assert(qs.length === 1, 'currently, there must be exactly one ?q=');
+  const tree = await loader.loadTree(qs[0]);
+
+  const [el, runSubtree] = makeSubtreeHTML(tree.root);
+  resultsVis.append(el);
 
   if (runnow) {
     runSubtree();

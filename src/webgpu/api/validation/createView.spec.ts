@@ -3,7 +3,7 @@ createView validation tests.
 `;
 
 import * as C from '../../../common/constants.js';
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -68,9 +68,9 @@ class F extends ValidationTest {
   }
 }
 
-export const g = new TestGroup(F);
+export const g = makeTestGroup(F);
 
-g.test('creating texture view on a 2D non array texture')
+g.test('creating_texture_view_on_a_2D_non_array_texture')
   .params([
     { _success: true }, // default view works
     { arrayLayerCount: 1, _success: true }, // it is OK to create a 2D texture view on a 2D texture
@@ -107,7 +107,7 @@ g.test('creating texture view on a 2D non array texture')
     }, !_success);
   });
 
-g.test('creating texture view on a 2D array texture')
+g.test('creating_texture_view_on_a_2D_array_texture')
   .params([
     { _success: true }, // default view works
     { dimension: C.TextureViewDimension.E2d, arrayLayerCount: 1, _success: true }, // it is OK to create a 2D texture view on a 2D array texture
@@ -139,7 +139,7 @@ g.test('creating texture view on a 2D array texture')
     }, !_success);
   });
 
-g.test('Using defaults validates the same as setting values for more than 1 array layer')
+g.test('Using_defaults_validates_the_same_as_setting_values_for_more_than_1_array_layer')
   .params([
     { _success: true },
     { format: C.TextureFormat.RGBA8Unorm, _success: true },
@@ -171,7 +171,7 @@ g.test('Using defaults validates the same as setting values for more than 1 arra
     }, !_success);
   });
 
-g.test('Using defaults validates the same as setting values for only 1 array layer')
+g.test('Using_defaults_validates_the_same_as_setting_values_for_only_1_array_layer')
   .params([
     { _success: true },
     { format: C.TextureFormat.RGBA8Unorm, _success: true },
@@ -196,7 +196,7 @@ g.test('Using defaults validates the same as setting values for only 1 array lay
     }, !_success);
   });
 
-g.test('creating cube map texture view')
+g.test('creating_cube_map_texture_view')
   .params([
     { dimension: C.TextureViewDimension.Cube, arrayLayerCount: 6, _success: true }, // it is OK to create a cube map texture view with arrayLayerCount == 6
     // it is an error to create a cube map texture view with arrayLayerCount != 6
@@ -224,7 +224,7 @@ g.test('creating cube map texture view')
     }, !_success);
   });
 
-g.test('creating cube map texture view with a non square texture')
+g.test('creating_cube_map_texture_view_with_a_non_square_texture')
   .params([
     { dimension: C.TextureViewDimension.Cube, arrayLayerCount: 6 }, // it is an error to create a cube map texture view with width != height.
     { dimension: C.TextureViewDimension.CubeArray, arrayLayerCount: 12 }, // it is an error to create a cube map array texture view with width != height.
@@ -250,7 +250,7 @@ g.test('creating cube map texture view with a non square texture')
   });
 
 // TODO: add more tests when rules are fully implemented.
-g.test('test the format compatibility rules when creating a texture view').fn(async t => {
+g.test('test_the_format_compatibility_rules_when_creating_a_texture_view').fn(async t => {
   const texture = t.createTexture({ arrayLayerCount: 1 });
 
   const descriptor = t.getDescriptor({
@@ -263,7 +263,7 @@ g.test('test the format compatibility rules when creating a texture view').fn(as
   });
 });
 
-g.test('it is invalid to use a texture view created from a destroyed texture').fn(async t => {
+g.test('it_is_invalid_to_use_a_texture_view_created_from_a_destroyed_texture').fn(async t => {
   const texture = t.createTexture({ arrayLayerCount: 1 });
 
   const commandEncoder = t.device.createCommandEncoder();

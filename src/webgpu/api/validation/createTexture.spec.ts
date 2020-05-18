@@ -2,8 +2,8 @@ export const description = `
 createTexture validation tests.
 `;
 
-import { poptions } from '../../../common/framework/params.js';
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { poptions } from '../../../common/framework/params_builder.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { kTextureFormatInfo, kTextureFormats } from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -38,9 +38,9 @@ class F extends ValidationTest {
   }
 }
 
-export const g = new TestGroup(F);
+export const g = makeTestGroup(F);
 
-g.test('validation of sampleCount')
+g.test('validation_of_sampleCount')
   .params([
     // TODO: Consider making a list of "valid"+"invalid" texture descriptors in capability_info.
     { sampleCount: 0, _success: false }, // sampleCount of 0 is not allowed
@@ -63,7 +63,7 @@ g.test('validation of sampleCount')
     }, !_success);
   });
 
-g.test('validation of mipLevelCount')
+g.test('validation_of_mipLevelCount')
   .params([
     { width: 32, height: 32, mipLevelCount: 1, _success: true }, // mipLevelCount of 1 is allowed
     { width: 32, height: 32, mipLevelCount: 0, _success: false }, // mipLevelCount of 0 is not allowed
@@ -85,20 +85,20 @@ g.test('validation of mipLevelCount')
     }, !_success);
   });
 
-g.test('it is valid to destroy a texture').fn(t => {
+g.test('it_is_valid_to_destroy_a_texture').fn(t => {
   const descriptor = t.getDescriptor();
   const texture = t.device.createTexture(descriptor);
   texture.destroy();
 });
 
-g.test('it is valid to destroy a destroyed texture').fn(t => {
+g.test('it_is_valid_to_destroy_a_destroyed_texture').fn(t => {
   const descriptor = t.getDescriptor();
   const texture = t.device.createTexture(descriptor);
   texture.destroy();
   texture.destroy();
 });
 
-g.test('it is invalid to submit a destroyed texture before and after encode')
+g.test('it_is_invalid_to_submit_a_destroyed_texture_before_and_after_encode')
   .params([
     { destroyBeforeEncode: false, destroyAfterEncode: false, _success: true },
     { destroyBeforeEncode: true, destroyAfterEncode: false, _success: false },
@@ -136,7 +136,7 @@ g.test('it is invalid to submit a destroyed texture before and after encode')
     }, !_success);
   });
 
-g.test('it is invalid to have an output attachment texture with non renderable format')
+g.test('it_is_invalid_to_have_an_output_attachment_texture_with_non_renderable_format')
   .params(poptions('format', kTextureFormats))
   .fn(async t => {
     const format: GPUTextureFormat = t.params.format;

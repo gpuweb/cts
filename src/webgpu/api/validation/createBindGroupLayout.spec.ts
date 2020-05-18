@@ -3,8 +3,8 @@ createBindGroupLayout validation tests.
 `;
 
 import * as C from '../../../common/constants.js';
-import { poptions, params } from '../../../common/framework/params.js';
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { poptions, params } from '../../../common/framework/params_builder.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 import {
   kBindingTypeInfo,
   kBindingTypes,
@@ -18,9 +18,9 @@ function clone<T extends GPUBindGroupLayoutDescriptor>(descriptor: T): T {
   return JSON.parse(JSON.stringify(descriptor));
 }
 
-export const g = new TestGroup(ValidationTest);
+export const g = makeTestGroup(ValidationTest);
 
-g.test('some binding index was specified more than once').fn(async t => {
+g.test('some_binding_index_was_specified_more_than_once').fn(async t => {
   const goodDescriptor = {
     entries: [
       { binding: 0, visibility: GPUShaderStage.COMPUTE, type: C.BindingType.StorageBuffer },
@@ -40,13 +40,13 @@ g.test('some binding index was specified more than once').fn(async t => {
   });
 });
 
-g.test('Visibility of bindings can be 0').fn(async t => {
+g.test('visibility_of_bindings_can_be_0').fn(async t => {
   t.device.createBindGroupLayout({
     entries: [{ binding: 0, visibility: 0, type: 'storage-buffer' }],
   });
 });
 
-g.test('number of dynamic buffers exceeds the maximum value')
+g.test('number_of_dynamic_buffers_exceeds_the_maximum_value')
   .params([
     { type: C.BindingType.StorageBuffer, maxDynamicBufferCount: 4 },
     { type: C.BindingType.UniformBuffer, maxDynamicBufferCount: 8 },
@@ -88,7 +88,7 @@ g.test('number of dynamic buffers exceeds the maximum value')
     });
   });
 
-g.test('dynamic set to true is allowed only for buffers')
+g.test('dynamic_set_to_true_is_allowed_only_for_buffers')
   .params(poptions('type', kBindingTypes))
   .fn(async t => {
     const { type } = t.params;
@@ -143,7 +143,7 @@ const kCasesForMaxResourcesPerStageTests = params()
 
 // Should never fail unless kMaxBindingsPerBindGroup is exceeded, because the validation for
 // resources-of-type-per-stage is in pipeline layout creation.
-g.test('max resources per stage/in bind group layout')
+g.test('max_resources_per_stage,in_bind_group_layout')
   .params(kCasesForMaxResourcesPerStageTests)
   .fn(async t => {
     const { maxedType, extraType, maxedVisibility, extraVisibility } = t.params;
@@ -184,7 +184,7 @@ g.test('max resources per stage/in bind group layout')
 // One pipeline layout can have a maximum number of each type of binding *per stage* (which is
 // different for each type). Test that the max works, then add one more binding of same-or-different
 // type and same-or-different visibility.
-g.test('max resources per stage/in pipeline layout')
+g.test('max_resources_per_stage,in_pipeline_layout')
   .params(kCasesForMaxResourcesPerStageTests)
   .fn(async t => {
     const { maxedType, extraType, maxedVisibility, extraVisibility } = t.params;

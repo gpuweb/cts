@@ -3,8 +3,8 @@ createBindGroup validation tests.
 `;
 
 import * as C from '../../../common/constants.js';
-import { poptions, params } from '../../../common/framework/params.js';
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { poptions, params } from '../../../common/framework/params_builder.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { unreachable } from '../../../common/framework/util/util.js';
 import {
   kBindingTypes,
@@ -21,9 +21,9 @@ function clone<T extends GPUTextureDescriptor>(descriptor: T): T {
   return JSON.parse(JSON.stringify(descriptor));
 }
 
-export const g = new TestGroup(ValidationTest);
+export const g = makeTestGroup(ValidationTest);
 
-g.test('binding count mismatch').fn(async t => {
+g.test('binding_count_mismatch').fn(async t => {
   const bindGroupLayout = t.device.createBindGroupLayout({
     entries: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, type: 'storage-buffer' }],
   });
@@ -51,7 +51,7 @@ g.test('binding count mismatch').fn(async t => {
   });
 });
 
-g.test('binding must be present in layout').fn(async t => {
+g.test('binding_must_be_present_in_layout').fn(async t => {
   const bindGroupLayout = t.device.createBindGroupLayout({
     entries: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, type: 'storage-buffer' }],
   });
@@ -75,7 +75,7 @@ g.test('binding must be present in layout').fn(async t => {
   });
 });
 
-g.test('buffer binding must contain exactly one buffer of its type')
+g.test('buffer_binding_must_contain_exactly_one_buffer_of_its_type')
   .params(
     params()
       .combine(poptions('bindingType', kBindingTypes))
@@ -100,7 +100,7 @@ g.test('buffer binding must contain exactly one buffer of its type')
     }, !resourceBindingMatches);
   });
 
-g.test('texture binding must have correct usage')
+g.test('texture_binding_must_have_correct_usage')
   .params(
     params()
       .combine(poptions('type', kTextureBindingTypes))
@@ -130,7 +130,7 @@ g.test('texture binding must have correct usage')
     }, shouldError);
   });
 
-g.test('texture must have correct component type')
+g.test('texture_must_have_correct_component_type')
   .params(
     poptions('textureComponentType', [
       C.TextureComponentType.Float,
@@ -208,7 +208,7 @@ g.test('texture must have correct component type')
   });
 
 // TODO: Write test for all dimensions.
-g.test('texture must have correct dimension').fn(async t => {
+g.test('texture_must_have_correct_dimension').fn(async t => {
   const bindGroupLayout = t.device.createBindGroupLayout({
     entries: [
       {
@@ -244,7 +244,7 @@ g.test('texture must have correct dimension').fn(async t => {
   });
 });
 
-g.test('buffer offset and size for bind groups match')
+g.test('buffer_offset_and_size_for_bind_groups_match')
   .params([
     { offset: 0, size: 512, _success: true }, // offset 0 is valid
     { offset: 256, size: 256, _success: true }, // offset 256 (aligned) is valid

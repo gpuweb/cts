@@ -2,20 +2,24 @@ export const description = `
 Unit tests for parameterization helpers.
 `;
 
-import { poptions, params } from '../common/framework/params.js';
-import { ParamSpec, ParamSpecIterable, paramsEquals } from '../common/framework/params_utils.js';
-import { TestGroup } from '../common/framework/test_group.js';
+import { poptions, params } from '../common/framework/params_builder.js';
+import {
+  CaseParams,
+  CaseParamsIterable,
+  publicParamsEquals,
+} from '../common/framework/params_utils.js';
+import { makeTestGroup } from '../common/framework/test_group.js';
 
 import { UnitTest } from './unit_test.js';
 
 class ParamsTest extends UnitTest {
-  expectSpecEqual(act: ParamSpecIterable, exp: ParamSpec[]): void {
+  expectSpecEqual(act: CaseParamsIterable, exp: CaseParams[]): void {
     const a = Array.from(act);
-    this.expect(a.length === exp.length && a.every((x, i) => paramsEquals(x, exp[i])));
+    this.expect(a.length === exp.length && a.every((x, i) => publicParamsEquals(x, exp[i])));
   }
 }
 
-export const g = new TestGroup(ParamsTest);
+export const g = makeTestGroup(ParamsTest);
 
 g.test('options').fn(t => {
   t.expectSpecEqual(poptions('hello', [1, 2, 3]), [{ hello: 1 }, { hello: 2 }, { hello: 3 }]);
@@ -25,14 +29,14 @@ g.test('params').fn(t => {
   t.expectSpecEqual(params(), [{}]);
 });
 
-g.test('combine/zeroes and ones').fn(t => {
+g.test('combine,zeroes_and_ones').fn(t => {
   t.expectSpecEqual(params().combine([]).combine([]), []);
   t.expectSpecEqual(params().combine([]).combine([{}]), []);
   t.expectSpecEqual(params().combine([{}]).combine([]), []);
   t.expectSpecEqual(params().combine([{}]).combine([{}]), [{}]);
 });
 
-g.test('combine/mixed').fn(t => {
+g.test('combine,mixed').fn(t => {
   t.expectSpecEqual(
     params()
       .combine(poptions('x', [1, 2]))
@@ -110,7 +114,7 @@ g.test('expand').fn(t => {
   );
 });
 
-g.test('expand/invalid').fn(t => {
+g.test('expand,invalid').fn(t => {
   const p = params()
     .combine([{ x: 1 }])
     .expand(function* (p) {
@@ -122,8 +126,13 @@ g.test('expand/invalid').fn(t => {
 });
 
 g.test('undefined').fn(t => {
-  t.expectSpecEqual([{ a: undefined }], [{}]);
-  t.expectSpecEqual([{}], [{ a: undefined }]);
+  t.expect(!publicParamsEquals({ a: undefined }, {}));
+  t.expect(!publicParamsEquals({}, { a: undefined }));
+});
+
+g.test('private').fn(t => {
+  t.expect(publicParamsEquals({ _a: 0 }, {}));
+  t.expect(publicParamsEquals({}, { _a: 0 }));
 });
 
 g.test('arrays').fn(t => {

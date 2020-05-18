@@ -1,6 +1,6 @@
-import { attemptGarbageCollection } from '../common/framework/collect_garbage.js';
 import { Fixture } from '../common/framework/fixture.js';
 import { DevicePool, TestOOMedShouldAttemptGC } from '../common/framework/gpu/device_pool.js';
+import { attemptGarbageCollection } from '../common/framework/util/collect_garbage.js';
 import { assert } from '../common/framework/util/util.js';
 
 import {

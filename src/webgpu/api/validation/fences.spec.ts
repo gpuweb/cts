@@ -2,14 +2,14 @@ export const description = `
 fences validation tests.
 `;
 
-import { TestGroup } from '../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 
 import { ValidationTest } from './validation_test.js';
 
-export const g = new TestGroup(ValidationTest);
+export const g = makeTestGroup(ValidationTest);
 
 // TODO: Remove if https://github.com/gpuweb/gpuweb/issues/377 is decided
-g.test('wait on a fence without signaling the value is invalid').fn(async t => {
+g.test('wait_on_a_fence_without_signaling_the_value_is_invalid').fn(async t => {
   const fence = t.queue.createFence();
 
   t.expectValidationError(() => {
@@ -19,7 +19,7 @@ g.test('wait on a fence without signaling the value is invalid').fn(async t => {
 });
 
 // TODO: Remove if https://github.com/gpuweb/gpuweb/issues/377 is decided
-g.test('wait on a fence with a value greater than signaled value is invalid').fn(async t => {
+g.test('wait_on_a_fence_with_a_value_greater_than_signaled_value_is_invalid').fn(async t => {
   const fence = t.queue.createFence();
   t.queue.signal(fence, 2);
 
@@ -29,7 +29,7 @@ g.test('wait on a fence with a value greater than signaled value is invalid').fn
   });
 });
 
-g.test('signal a value lower than signaled value is invalid').fn(async t => {
+g.test('signal_a_value_lower_than_signaled_value_is_invalid').fn(async t => {
   const fence = t.queue.createFence({ initialValue: 1 });
 
   t.expectValidationError(() => {
@@ -37,7 +37,7 @@ g.test('signal a value lower than signaled value is invalid').fn(async t => {
   });
 });
 
-g.test('signal a value equal to signaled value is invalid').fn(async t => {
+g.test('signal_a_value_equal_to_signaled_value_is_invalid').fn(async t => {
   const fence = t.queue.createFence({ initialValue: 1 });
 
   t.expectValidationError(() => {
@@ -45,7 +45,7 @@ g.test('signal a value equal to signaled value is invalid').fn(async t => {
   });
 });
 
-g.test('increasing fence value by more than 1 succeeds').fn(async t => {
+g.test('increasing_fence_value_by_more_than_1_succeeds').fn(async t => {
   const fence = t.queue.createFence();
 
   t.queue.signal(fence, 2);
@@ -55,7 +55,7 @@ g.test('increasing fence value by more than 1 succeeds').fn(async t => {
   await fence.onCompletion(6);
 });
 
-g.test('signal a fence on a different device than it was created on is invalid').fn(async t => {
+g.test('signal_a_fence_on_a_different_device_than_it_was_created_on_is_invalid').fn(async t => {
   const fence = t.queue.createFence();
 
   const anotherDevice = await t.device.adapter.requestDevice();
@@ -66,7 +66,7 @@ g.test('signal a fence on a different device than it was created on is invalid')
   });
 });
 
-g.test('signal a fence on a different device does not update fence signaled value').fn(async t => {
+g.test('signal_a_fence_on_a_different_device_does_not_update_fence_signaled_value').fn(async t => {
   const fence = t.queue.createFence({ initialValue: 1 });
 
   const anotherDevice = await t.device.adapter.requestDevice();
