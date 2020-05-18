@@ -386,6 +386,11 @@
     semver "^6.3.0"
     tsutils "^3.17.1"
 
+"@webgpu/glslang@0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@webgpu/glslang/-/glslang-0.0.15.tgz#f5ccaf6015241e6175f4b90906b053f88483d1f2"
+  integrity sha512-niT+Prh3Aff8Uf1MVBVUsaNjFj9rJAKDXuoHIKiQbB+6IUP/3J3JIhBNyZ7lDhytvXxw6ppgnwKZdDJ08UMj4Q==
+
 "@webgpu/types@0.0.24":
   version "0.0.24"
   resolved "https://registry.yarnpkg.com/@webgpu/types/-/types-0.0.24.tgz#c1952a0f09416b90df10b7abea069a00e4be4452"
