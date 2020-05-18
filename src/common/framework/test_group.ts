@@ -1,7 +1,12 @@
 import { Fixture } from './fixture.js';
 import { TestCaseRecorder } from './logging/test_case_recorder.js';
-import { CaseParams, CaseParamsIterable, extractPublicParams } from './params_utils.js';
-import { kPathSeparator, kParamSeparator } from './query/separators.js';
+import {
+  CaseParams,
+  CaseParamsIterable,
+  extractPublicParams,
+  publicParamsEquals,
+} from './params_utils.js';
+import { kPathSeparator } from './query/separators.js';
 import { stringifyPublicParams } from './query/stringify_params.js';
 import { validQueryPart } from './query/validQueryPart.js';
 import { assert } from './util/util.js';
@@ -116,12 +121,16 @@ class TestBuilder<F extends Fixture, P extends {}> {
       return;
     }
 
-    const seen = new Set<string>();
+    // This is n^2.
+    const seen: CaseParams[] = [];
     for (const testcase of this.cases) {
       // stringifyPublicParams also checks for invalid params values
-      const testcaseString = stringifyPublicParams(testcase).join(kParamSeparator);
-      assert(!seen.has(testcaseString), `Duplicate public test case params: ${testcaseString}`);
-      seen.add(testcaseString);
+      const testcaseString = stringifyPublicParams(testcase);
+      assert(
+        !seen.some(x => publicParamsEquals(x, testcase)),
+        `Duplicate public test case params: ${testcaseString}`
+      );
+      seen.push(testcase);
     }
   }
 
