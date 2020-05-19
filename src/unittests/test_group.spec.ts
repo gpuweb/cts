@@ -93,33 +93,69 @@ g.test('duplicate_test_name').fn(t => {
   });
 });
 
-g.test('duplicate_test_params').fn(t => {
-  const g = makeTestGroupForUnitTesting(UnitTest);
+g.test('duplicate_test_params,none').fn(t => {
+  {
+    const g = makeTestGroupForUnitTesting(UnitTest);
+    g.test('abc')
+      .params([])
+      .fn(() => {});
+    g.checkCaseNamesAndDuplicates();
+  }
 
-  t.shouldThrow('Error', () => {
+  {
+    const g = makeTestGroupForUnitTesting(UnitTest);
+    g.test('abc').fn(() => {});
+    g.checkCaseNamesAndDuplicates();
+  }
+
+  {
+    const g = makeTestGroupForUnitTesting(UnitTest);
+    g.test('abc')
+      .params([
+        { a: 1 }, //
+      ])
+      .fn(() => {});
+    g.checkCaseNamesAndDuplicates();
+  }
+});
+
+g.test('duplicate_test_params,basic').fn(t => {
+  {
+    const g = makeTestGroupForUnitTesting(UnitTest);
     g.test('abc')
       .params([
         { a: 1 }, //
         { a: 1 },
       ])
-      .fn(() => {
-        //
-      });
-  });
+      .fn(() => {});
+    t.shouldThrow('Error', () => {
+      g.checkCaseNamesAndDuplicates();
+    });
+  }
+  {
+    const g = makeTestGroupForUnitTesting(UnitTest);
+    g.test('abc')
+      .params([
+        { a: 1, b: 3 }, //
+        { b: 3, a: 1 },
+      ])
+      .fn(() => {});
+    t.shouldThrow('Error', () => {
+      g.checkCaseNamesAndDuplicates();
+    });
+  }
 });
 
 g.test('duplicate_test_params,with_different_private_params').fn(t => {
   const g = makeTestGroupForUnitTesting(UnitTest);
-
+  g.test('abc')
+    .params([
+      { a: 1, _b: 1 }, //
+      { a: 1, _b: 2 },
+    ])
+    .fn(() => {});
   t.shouldThrow('Error', () => {
-    g.test('abc')
-      .params([
-        { a: 1, _b: 1 }, //
-        { a: 1, _b: 2 },
-      ])
-      .fn(() => {
-        //
-      });
+    g.checkCaseNamesAndDuplicates();
   });
 });
 
@@ -139,9 +175,19 @@ g.test('invalid_test_name').fn(t => {
   }
 });
 
-g.test('valid_param_value').fn(() => {
+g.test('param_value,valid').fn(() => {
   const g = makeTestGroup(UnitTest);
   g.test('a').params([{ x: JSON.stringify({ a: 1, b: 2 }) }]);
+});
+
+g.test('param_value,invalid').fn(t => {
+  for (const badChar of ';=*') {
+    const g = makeTestGroupForUnitTesting(UnitTest);
+    g.test('a').params([{ badChar }]);
+    t.shouldThrow('Error', () => {
+      g.checkCaseNamesAndDuplicates();
+    });
+  }
 });
 
 g.test('throws').fn(async t0 => {

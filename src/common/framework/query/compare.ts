@@ -1,4 +1,4 @@
-import { CaseParams, extractPublicParams } from '../params_utils.js';
+import { CaseParams, paramKeyIsPublic } from '../params_utils.js';
 import { assert, objectEquals } from '../util/util.js';
 
 import { TestQuery } from './query.js';
@@ -68,10 +68,8 @@ function comparePaths(a: readonly string[], b: readonly string[]): Ordering {
   }
 }
 
-export function comparePublicParamsPaths(a0: CaseParams, b0: CaseParams): Ordering {
-  const a = extractPublicParams(a0);
-  const b = extractPublicParams(b0);
-  const aKeys = Object.keys(a);
+export function comparePublicParamsPaths(a: CaseParams, b: CaseParams): Ordering {
+  const aKeys = Object.keys(a).filter(k => paramKeyIsPublic(k));
   const commonKeys = new Set(aKeys.filter(k => k in b));
 
   for (const k of commonKeys) {
@@ -79,7 +77,7 @@ export function comparePublicParamsPaths(a0: CaseParams, b0: CaseParams): Orderi
       return Ordering.Unordered;
     }
   }
-  const bKeys = Object.keys(b);
+  const bKeys = Object.keys(b).filter(k => paramKeyIsPublic(k));
   const aRemainingKeys = aKeys.length - commonKeys.size;
   const bRemainingKeys = bKeys.length - commonKeys.size;
   if (aRemainingKeys === 0 && bRemainingKeys === 0) return Ordering.Equal;

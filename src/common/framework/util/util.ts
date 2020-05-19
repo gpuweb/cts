@@ -1,8 +1,8 @@
 import { timeout } from './timeout.js';
 
-export function assert(condition: boolean, msg?: string): asserts condition {
+export function assert(condition: boolean, msg?: string | (() => string)): asserts condition {
   if (!condition) {
-    throw new Error(msg);
+    throw new Error(msg && (typeof msg === 'string' ? msg : msg()));
   }
 }
 

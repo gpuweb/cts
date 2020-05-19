@@ -1,5 +1,5 @@
 import { comparePublicParamsPaths, Ordering } from './query/compare.js';
-import { kWildcard, kParamSeparator } from './query/separators.js';
+import { kWildcard, kParamSeparator, kParamKVSeparator } from './query/separators.js';
 
 // Consider adding more types here if needed
 export type ParamArgument = void | undefined | number | string | boolean | number[];
@@ -25,7 +25,9 @@ export function extractPublicParams(params: CaseParams): CaseParams {
   return publicParams;
 }
 
-export const badParamValueChars = new RegExp('[=' + kParamSeparator + kWildcard + ']');
+export const badParamValueChars = new RegExp(
+  '[' + kParamKVSeparator + kParamSeparator + kWildcard + ']'
+);
 
 export function publicParamsEquals(x: CaseParams, y: CaseParams): boolean {
   return comparePublicParamsPaths(x, y) === Ordering.Equal;

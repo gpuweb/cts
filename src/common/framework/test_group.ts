@@ -7,7 +7,7 @@ import {
   publicParamsEquals,
 } from './params_utils.js';
 import { kPathSeparator } from './query/separators.js';
-import { stringifySingleParam } from './query/stringify_params.js';
+import { stringifyPublicParams } from './query/stringify_params.js';
 import { validQueryPart } from './query/validQueryPart.js';
 import { assert } from './util/util.js';
 
@@ -34,6 +34,7 @@ export function makeTestGroup<F extends Fixture>(fixture: FixtureClass<F>): Test
 // Interface for running tests
 export interface RunCaseIterable {
   iterate(): Iterable<RunCase>;
+  checkCaseNamesAndDuplicates(): void;
 }
 export function makeTestGroupForUnitTesting<F extends Fixture>(
   fixture: FixtureClass<F>
@@ -84,6 +85,12 @@ class TestGroup<F extends Fixture> implements RunCaseIterable, TestGroupBuilder<
     this.tests.push(test);
     return test;
   }
+
+  checkCaseNamesAndDuplicates(): void {
+    for (const test of this.tests) {
+      test.checkCaseNamesAndDuplicates();
+    }
+  }
 }
 
 interface TestBuilderWithName<F extends Fixture, P extends {}> extends TestBuilderWithParams<F, P> {
@@ -109,27 +116,27 @@ class TestBuilder<F extends Fixture, P extends {}> {
     this.testFn = fn;
   }
 
+  checkCaseNamesAndDuplicates(): void {
+    if (this.cases === undefined) {
+      return;
+    }
+
+    // This is n^2.
+    const seen: CaseParams[] = [];
+    for (const testcase of this.cases) {
+      // stringifyPublicParams also checks for invalid params values
+      const testcaseString = stringifyPublicParams(testcase);
+      assert(
+        !seen.some(x => publicParamsEquals(x, testcase)),
+        `Duplicate public test case params: ${testcaseString}`
+      );
+      seen.push(testcase);
+    }
+  }
+
   params<NewP extends {}>(casesIterable: Iterable<NewP>): TestBuilderWithParams<F, NewP> {
     assert(this.cases === undefined, 'test case is already parameterized');
-    const cases = Array.from(casesIterable);
-    const seen: CaseParams[] = [];
-    // This is n^2.
-    for (const spec of cases) {
-      const publicParams = extractPublicParams(spec);
-
-      // Check type of public params: can only be (currently):
-      // number, string, boolean, undefined, number[]
-      for (const [k, v] of Object.entries(publicParams)) {
-        stringifySingleParam(k, v); // To check for invalid params values
-      }
-
-      assert(
-        !seen.some(x => publicParamsEquals(x, publicParams)),
-        'Duplicate test case params: ' + JSON.stringify(publicParams)
-      );
-      seen.push(publicParams);
-    }
-    this.cases = cases;
+    this.cases = Array.from(casesIterable);
 
     return (this as unknown) as TestBuilderWithParams<F, NewP>;
   }
