@@ -5,6 +5,7 @@ import { DefaultTestFileLoader } from '../framework/file_loader.js';
 import { TestQueryMultiTest } from '../framework/query/query.js';
 import { kBigSeparator, kWildcard } from '../framework/query/separators.js';
 import { TestSuiteListingEntry } from '../framework/test_suite_listing.js';
+import { assert } from '../framework/util/util.js';
 
 function printUsageAndExit(rc: number): void {
   console.error(`\
@@ -59,9 +60,9 @@ const [
       .split('\n')
       .filter(a => a.length)
       .sort((a, b) => b.length - a.length);
-    const expectationLines = (await fs.readFile(expectationsFile, 'utf8'))
-      .split('\n')
-      .filter(l => l.length);
+    const expectationLines = new Set(
+      (await fs.readFile(expectationsFile, 'utf8')).split('\n').filter(l => l.length)
+    );
 
     const expectations: Map<string, string[]> = new Map();
     for (const prefix of argsPrefixes) {
@@ -77,7 +78,7 @@ const [
           continue expLoop;
         }
       }
-      throw new Error('All input lines must start with one of the prefixes. ' + exp);
+      console.log('note: ignored expectation: ' + exp);
     }
 
     const loader = new DefaultTestFileLoader();
@@ -90,7 +91,17 @@ const [
 
       lines.push(undefined); // output blank line between prefixes
       for (const q of tree.iterateCollapsedQueries()) {
-        lines.push(prefix + q.toString());
+        const urlQueryString = prefix + q.toString(); // "?worker=0&q=..."
+        // Check for a safe-ish path length limit. Filename must be <= 255, and on Windows the whole
+        // path must be <= 259. Leave room for e.g.:
+        // 'c:\b\s\w\xxxxxxxx\layout-test-results\external\wpt\webgpu\cts_worker=0_q=...-actual.txt'
+        assert(
+          urlQueryString.length < 185,
+          'Generated test variant would produce too-long -actual.txt filename. \
+Try broadening suppressions to avoid long test variant names. ' +
+            urlQueryString
+        );
+        lines.push(urlQueryString);
       }
     }
     await generateFile(lines);
