@@ -1,8 +1,8 @@
 import { extractImportantStackTrace } from '../util/stack.js';
 
 export class LogMessageWithStack extends Error {
-  printStack: boolean = true;
-  timesSeen: number = 1;
+  private stackHidden: boolean = false;
+  private timesSeen: number = 1;
 
   constructor(name: string, ex: Error) {
     super(ex.message);
@@ -11,9 +11,19 @@ export class LogMessageWithStack extends Error {
     this.stack = ex.stack;
   }
 
+  /** Set a flag so the stack is not printed in toJSON(). */
+  setStackHidden() {
+    this.stackHidden = false;
+  }
+
+  /** Increment the "seen x times" counter. */
+  incrementTimesSeen() {
+    this.timesSeen++;
+  }
+
   toJSON(): string {
     let m = this.name + ': ';
-    if (this.printStack && this.stack) {
+    if (this.stackHidden && this.stack) {
       // this.message is already included in this.stack
       m += extractImportantStackTrace(this);
     } else {

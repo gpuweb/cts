@@ -15,7 +15,7 @@ enum LogSeverity {
 
 const kMaxLogStacks = 2;
 
-// Holds onto a LiveTestCaseResult owned by the Logger, and writes the results into it.
+/** Holds onto a LiveTestCaseResult owned by the Logger, and writes the results into it. */
 export class TestCaseRecorder {
   private result: LiveTestCaseResult;
   private maxLogSeverity = LogSeverity.Pass;
@@ -23,7 +23,8 @@ export class TestCaseRecorder {
   private logs: LogMessageWithStack[] = [];
   private logLinesAtCurrentSeverity = 0;
   private debugging = false;
-  private seenStacks = new Map<string, LogMessageWithStack>();
+  /** Used to dedup log messages which have identical stacks. */
+  private messagesForPreviouslySeenStacks = new Map<string, LogMessageWithStack>();
 
   constructor(result: LiveTestCaseResult, debugging: boolean) {
     this.result = result;
@@ -64,7 +65,7 @@ export class TestCaseRecorder {
       return;
     }
     const logMessage = new LogMessageWithStack('DEBUG', ex);
-    logMessage.printStack = false;
+    logMessage.setStackHidden();
     this.logImpl(LogSeverity.Pass, logMessage);
   }
 
@@ -95,12 +96,12 @@ export class TestCaseRecorder {
   private logImpl(level: LogSeverity, logMessage: LogMessageWithStack): void {
     // Deduplicate errors with the exact same stack
     if (logMessage.stack) {
-      const seen = this.seenStacks.get(logMessage.stack);
+      const seen = this.messagesForPreviouslySeenStacks.get(logMessage.stack);
       if (seen) {
-        seen.timesSeen++;
+        seen.incrementTimesSeen();
         return;
       }
-      this.seenStacks.set(logMessage.stack, logMessage);
+      this.messagesForPreviouslySeenStacks.set(logMessage.stack, logMessage);
     }
 
     // Mark printStack=false for all logs except 2 at the highest severity
@@ -110,13 +111,13 @@ export class TestCaseRecorder {
       if (!this.debugging) {
         // Go back and turn off printStack for everything of a lower log level
         for (const log of this.logs) {
-          log.printStack = false;
+          log.setStackHidden();
         }
       }
     }
     if (level < this.maxLogSeverity || this.logLinesAtCurrentSeverity >= kMaxLogStacks) {
       if (!this.debugging) {
-        logMessage.printStack = false;
+        logMessage.setStackHidden();
       }
     }
     this.logs.push(logMessage);
