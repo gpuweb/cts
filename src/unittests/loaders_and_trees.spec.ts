@@ -239,7 +239,7 @@ g.test('end2end').fn(async t => {
     'fail',
     logs =>
       logs.length === 1 &&
-      logs[0].startsWith('"FAIL: Error: bye\\n') &&
+      logs[0].startsWith('"EXPECTATION FAILED: Error: bye\\n') &&
       logs[0].indexOf('loaders_and_trees.spec.') !== -1
   );
 });

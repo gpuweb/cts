@@ -2,22 +2,29 @@ import { SkipTestCase } from '../fixture.js';
 import { now, assert } from '../util/util.js';
 
 import { LogMessageWithStack } from './log_message.js';
-import { LiveTestCaseResult, Status } from './result.js';
+import { LiveTestCaseResult } from './result.js';
 
-enum PassState {
-  pass = 0,
-  skip = 1,
-  warn = 2,
-  fail = 3,
+enum LogSeverity {
+  Pass = 0,
+  Skip = 1,
+  Warn = 2,
+  ExpectFailed = 3,
+  ValidationFailed = 4,
+  ThrewException = 5,
 }
 
-// Holds onto a LiveTestCaseResult owned by the Logger, and writes the results into it.
+const kMaxLogStacks = 2;
+
+/** Holds onto a LiveTestCaseResult owned by the Logger, and writes the results into it. */
 export class TestCaseRecorder {
   private result: LiveTestCaseResult;
-  private state = PassState.pass;
+  private maxLogSeverity = LogSeverity.Pass;
   private startTime = -1;
   private logs: LogMessageWithStack[] = [];
+  private logLinesAtCurrentSeverity = 0;
   private debugging = false;
+  /** Used to dedup log messages which have identical stacks. */
+  private messagesForPreviouslySeenStacks = new Map<string, LogMessageWithStack>();
 
   constructor(result: LiveTestCaseResult, debugging: boolean) {
     this.result = result;
@@ -35,7 +42,16 @@ export class TestCaseRecorder {
     const timeMilliseconds = now() - this.startTime;
     // Round to next microsecond to avoid storing useless .xxxx00000000000002 in results.
     this.result.timems = Math.ceil(timeMilliseconds * 1000) / 1000;
-    this.result.status = PassState[this.state] as Status; // Convert numeric enum back to string
+
+    // Convert numeric enum back to string (but expose 'exception' as 'fail')
+    this.result.status =
+      this.maxLogSeverity === LogSeverity.Pass
+        ? 'pass'
+        : this.maxLogSeverity === LogSeverity.Skip
+        ? 'skip'
+        : this.maxLogSeverity === LogSeverity.Warn
+        ? 'warn'
+        : 'fail'; // Everything else is an error
 
     this.result.logs = this.logs;
   }
@@ -48,22 +64,25 @@ export class TestCaseRecorder {
     if (!this.debugging) {
       return;
     }
-    this.logs.push(new LogMessageWithStack('DEBUG', ex, false));
-  }
-
-  warn(ex: Error): void {
-    this.setState(PassState.warn);
-    this.logs.push(new LogMessageWithStack('WARN', ex));
-  }
-
-  fail(ex: Error): void {
-    this.setState(PassState.fail);
-    this.logs.push(new LogMessageWithStack('FAIL', ex));
+    const logMessage = new LogMessageWithStack('DEBUG', ex);
+    logMessage.setStackHidden();
+    this.logImpl(LogSeverity.Pass, logMessage);
   }
 
   skipped(ex: SkipTestCase): void {
-    this.setState(PassState.skip);
-    this.logs.push(new LogMessageWithStack('SKIP', ex));
+    this.logImpl(LogSeverity.Skip, new LogMessageWithStack('SKIP', ex));
+  }
+
+  warn(ex: Error): void {
+    this.logImpl(LogSeverity.Warn, new LogMessageWithStack('WARN', ex));
+  }
+
+  expectationFailed(ex: Error): void {
+    this.logImpl(LogSeverity.ExpectFailed, new LogMessageWithStack('EXPECTATION FAILED', ex));
+  }
+
+  validationFailed(ex: Error): void {
+    this.logImpl(LogSeverity.ValidationFailed, new LogMessageWithStack('VALIDATION FAILED', ex));
   }
 
   threw(ex: Error): void {
@@ -71,12 +90,37 @@ export class TestCaseRecorder {
       this.skipped(ex);
       return;
     }
-
-    this.setState(PassState.fail);
-    this.logs.push(new LogMessageWithStack('EXCEPTION', ex));
+    this.logImpl(LogSeverity.ThrewException, new LogMessageWithStack('EXCEPTION', ex));
   }
 
-  private setState(state: PassState): void {
-    this.state = Math.max(this.state, state);
+  private logImpl(level: LogSeverity, logMessage: LogMessageWithStack): void {
+    // Deduplicate errors with the exact same stack
+    if (logMessage.stack) {
+      const seen = this.messagesForPreviouslySeenStacks.get(logMessage.stack);
+      if (seen) {
+        seen.incrementTimesSeen();
+        return;
+      }
+      this.messagesForPreviouslySeenStacks.set(logMessage.stack, logMessage);
+    }
+
+    // Mark printStack=false for all logs except 2 at the highest severity
+    if (level > this.maxLogSeverity) {
+      this.logLinesAtCurrentSeverity = 0;
+      this.maxLogSeverity = level;
+      if (!this.debugging) {
+        // Go back and turn off printStack for everything of a lower log level
+        for (const log of this.logs) {
+          log.setStackHidden();
+        }
+      }
+    }
+    if (level < this.maxLogSeverity || this.logLinesAtCurrentSeverity >= kMaxLogStacks) {
+      if (!this.debugging) {
+        logMessage.setStackHidden();
+      }
+    }
+    this.logs.push(logMessage);
+    this.logLinesAtCurrentSeverity++;
   }
 }
