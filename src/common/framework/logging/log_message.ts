@@ -13,7 +13,7 @@ export class LogMessageWithStack extends Error {
 
   /** Set a flag so the stack is not printed in toJSON(). */
   setStackHidden() {
-    this.stackHidden = false;
+    this.stackHidden = true;
   }
 
   /** Increment the "seen x times" counter. */
@@ -23,7 +23,7 @@ export class LogMessageWithStack extends Error {
 
   toJSON(): string {
     let m = this.name + ': ';
-    if (this.stackHidden && this.stack) {
+    if (!this.stackHidden && this.stack) {
       // this.message is already included in this.stack
       m += extractImportantStackTrace(this);
     } else {
