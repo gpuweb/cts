@@ -192,7 +192,7 @@ class SampledTextureClearTest extends TextureZeroInitTest {
           const check = this.checkBuffer(new readbackTypedArray(actual), expected, tolerance);
           if (check !== undefined) {
             niceStack.message = check;
-            this.rec.fail(niceStack);
+            this.rec.expectationFailed(niceStack);
           }
           mappedResultBuffer.destroy();
         });

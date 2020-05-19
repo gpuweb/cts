@@ -43,7 +43,7 @@ export class Fixture {
   }
 
   fail(msg?: string): void {
-    this.rec.fail(new Error(msg));
+    this.rec.expectationFailed(new Error(msg));
   }
 
   protected async immediateAsyncExpectation<T>(fn: () => Promise<T>): Promise<T> {
@@ -62,13 +62,13 @@ export class Fixture {
   private expectErrorValue(expectedName: string, ex: unknown, niceStack: Error): void {
     if (!(ex instanceof Error)) {
       niceStack.message = `THREW non-error value, of type ${typeof ex}: ${ex}`;
-      this.rec.fail(niceStack);
+      this.rec.expectationFailed(niceStack);
       return;
     }
     const actualName = ex.name;
     if (actualName !== expectedName) {
       niceStack.message = `THREW ${actualName}, instead of ${expectedName}: ${ex}`;
-      this.rec.fail(niceStack);
+      this.rec.expectationFailed(niceStack);
     } else {
       niceStack.message = `OK: threw ${actualName}${ex.message}`;
       this.rec.debug(niceStack);
@@ -81,7 +81,7 @@ export class Fixture {
       try {
         await p;
         niceStack.message = 'DID NOT REJECT' + m;
-        this.rec.fail(niceStack);
+        this.rec.expectationFailed(niceStack);
       } catch (ex) {
         niceStack.message = m;
         this.expectErrorValue(expectedName, ex, niceStack);
@@ -93,7 +93,7 @@ export class Fixture {
     const m = msg ? ': ' + msg : '';
     try {
       fn();
-      this.rec.fail(new Error('DID NOT THROW' + m));
+      this.rec.expectationFailed(new Error('DID NOT THROW' + m));
     } catch (ex) {
       this.expectErrorValue(expectedName, ex, new Error(m));
     }
@@ -104,7 +104,7 @@ export class Fixture {
       const m = msg ? ': ' + msg : '';
       this.rec.debug(new Error('expect OK' + m));
     } else {
-      this.rec.fail(new Error(msg));
+      this.rec.expectationFailed(new Error(msg));
     }
     return cond;
   }

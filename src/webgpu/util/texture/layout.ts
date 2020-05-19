@@ -44,6 +44,7 @@ export function getTextureCopyLayout(
   minBytesPerRow: number;
   bytesPerRow: number;
   rowsPerImage: number;
+  mipSize: [number, number, number];
 } {
   const { mipLevel } = options;
   let { bytesPerRow, rowsPerImage } = options;
@@ -81,6 +82,7 @@ export function getTextureCopyLayout(
     minBytesPerRow,
     bytesPerRow,
     rowsPerImage,
+    mipSize,
   };
 }
 

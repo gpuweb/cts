@@ -124,7 +124,7 @@ export class GPUTest extends Fixture {
       const check = this.checkBuffer(actual, expected);
       if (check !== undefined) {
         niceStack.message = check;
-        this.rec.fail(niceStack);
+        this.rec.expectationFailed(niceStack);
       }
       dst.destroy();
     });
@@ -133,7 +133,7 @@ export class GPUTest extends Fixture {
   expectBuffer(actual: Uint8Array, exp: Uint8Array): void {
     const check = this.checkBuffer(actual, exp);
     if (check !== undefined) {
-      this.rec.fail(new Error(check));
+      this.rec.expectationFailed(new Error(check));
     }
   }
 
@@ -148,19 +148,27 @@ export class GPUTest extends Fixture {
     if (actual.byteLength !== size) {
       return 'size mismatch';
     }
-    const lines = [];
-    let failedPixels = 0;
+    const failedByteIndices: string[] = [];
+    const failedByteExpectedValues: string[] = [];
+    const failedByteActualValues: string[] = [];
     for (let i = 0; i < size; ++i) {
       const tol = typeof tolerance === 'function' ? tolerance(i) : tolerance;
       if (Math.abs(actual[i] - exp[i]) > tol) {
-        if (failedPixels > 4) {
-          lines.push('... and more');
+        if (failedByteIndices.length >= 4) {
+          failedByteIndices.push('...');
+          failedByteExpectedValues.push('...');
+          failedByteActualValues.push('...');
           break;
         }
-        failedPixels++;
-        lines.push(`at [${i}], expected ${exp[i]}, got ${actual[i]}`);
+        failedByteIndices.push(i.toString());
+        failedByteExpectedValues.push(exp[i].toString());
+        failedByteActualValues.push(actual[i].toString());
       }
     }
+    const summary = `at [${failedByteIndices.join(', ')}], \
+expected [${failedByteExpectedValues.join(', ')}], \
+got [${failedByteActualValues.join(', ')}]`;
+    const lines = [summary];
 
     // TODO: Could make a more convenient message, which could look like e.g.:
     //
@@ -177,7 +185,7 @@ export class GPUTest extends Fixture {
     // Or, maybe these diffs aren't actually very useful (given we have the prints just above here),
     // and we should remove them. More important will be logging of texture data in a visual format.
 
-    if (size <= 256 && failedPixels > 0) {
+    if (size <= 256 && failedByteIndices.length > 0) {
       const expHex = Array.from(new Uint8Array(exp.buffer, exp.byteOffset, exp.byteLength))
         .map(x => x.toString(16).padStart(2, '0'))
         .join('');
@@ -189,7 +197,7 @@ export class GPUTest extends Fixture {
       lines.push('ACTUAL:\t  ' + actual.join(' '));
       lines.push('\t0x' + actHex);
     }
-    if (failedPixels) {
+    if (failedByteIndices.length) {
       return lines.join('\n');
     }
     return undefined;
@@ -212,7 +220,7 @@ export class GPUTest extends Fixture {
       layout?: TextureLayoutOptions;
     }
   ): void {
-    const { byteLength, bytesPerRow, rowsPerImage } = getTextureCopyLayout(
+    const { byteLength, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
       format,
       dimension,
       size,
@@ -229,7 +237,7 @@ export class GPUTest extends Fixture {
     commandEncoder.copyTextureToBuffer(
       { texture: src, mipLevel: layout?.mipLevel, arrayLayer: slice },
       { buffer, bytesPerRow, rowsPerImage },
-      size
+      mipSize
     );
     this.queue.submit([commandEncoder.finish()]);
     const arrayBuffer = new ArrayBuffer(byteLength);
