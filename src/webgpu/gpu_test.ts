@@ -194,7 +194,7 @@ export class GPUTest extends Fixture {
       layout?: TextureLayoutOptions;
     }
   ): void {
-    const { byteLength, bytesPerRow, rowsPerImage } = getTextureCopyLayout(
+    const { byteLength, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
       format,
       dimension,
       size,
@@ -211,7 +211,7 @@ export class GPUTest extends Fixture {
     commandEncoder.copyTextureToBuffer(
       { texture: src, mipLevel: layout?.mipLevel, arrayLayer: slice },
       { buffer, bytesPerRow, rowsPerImage },
-      size
+      mipSize
     );
     this.queue.submit([commandEncoder.finish()]);
     const arrayBuffer = new ArrayBuffer(byteLength);
