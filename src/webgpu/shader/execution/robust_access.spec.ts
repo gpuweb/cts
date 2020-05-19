@@ -363,6 +363,6 @@ g.test('bufferMemory')
   });
 
 // TODO: also check other shader stages.
-// TODO: also check global, function loacal, and shared variables.
+// TODO: also check global, function local, and shared variables.
 // TODO: also check interface variables.
 // TODO: also check storage texture access.
