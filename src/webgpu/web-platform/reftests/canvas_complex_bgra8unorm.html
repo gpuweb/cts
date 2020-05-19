@@ -1,5 +1,5 @@
 <html class="reftest-wait">
-  <title>WebGPU canvas_complex</title>
+  <title>WebGPU canvas_complex_bgra8unorm</title>
   <meta charset="utf-8" />
   <link rel="help" href="https://gpuweb.github.io/gpuweb/" />
   <meta
@@ -8,10 +8,11 @@
   />
   <link rel="match" href="./ref/canvas_complex-ref.html" />
 
-  <meta name="variant" content="?format=bgra8unorm" />
-  <!-- TODO: add rgba16float variant -->
-
   <canvas id="cvs" width="2" height="2" style="width: 20px; height: 20px;"></canvas>
   <script src="/common/reftest-wait.js"></script>
-  <script type="module" src="canvas_complex.js"></script>
+  <script type="module">
+    import { run } from './canvas_complex.js';
+    run('bgra8unorm');
+    // TODO: make a copy of this test for rgba16float
+  </script>
 </html>

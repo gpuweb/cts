@@ -1,16 +1,17 @@
 import {
   CaseParams,
-  extractPublicParams,
   ParamArgument,
   badParamValueChars,
+  paramKeyIsPublic,
 } from '../params_utils.js';
 import { assert } from '../util/util.js';
 
 import { kParamKVSeparator } from './separators.js';
 
 export function stringifyPublicParams(p: CaseParams): string[] {
-  const pub = extractPublicParams(p);
-  return Object.entries(pub).map(([k, v]) => stringifySingleParam(k, v));
+  return Object.keys(p)
+    .filter(k => paramKeyIsPublic(k))
+    .map(k => stringifySingleParam(k, p[k]));
 }
 
 export function stringifySingleParam(k: string, v: ParamArgument) {
