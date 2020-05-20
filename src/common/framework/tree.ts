@@ -39,8 +39,12 @@ import { assert } from './util/util.js';
 //     about expectation granularity.
 
 export interface TestSubtree<T extends TestQuery = TestQuery> {
-  /** For display in standalone runner. */
-  readonly relativeName: string;
+  /**
+   * Readable "relative" name for display in standalone runner.
+   * Not always the exact relative name, because sometimes there isn't
+   * one (e.g. s:f:* relative to s:f,*), but something that is readable.
+   */
+  readonly readableRelativeName: string;
   readonly query: T;
   readonly children: Map<string, TestTreeNode>;
   readonly collapsible: boolean;
@@ -48,6 +52,10 @@ export interface TestSubtree<T extends TestQuery = TestQuery> {
 }
 
 export interface TestTreeLeaf {
+  /**
+   * Readable "relative" name for display in standalone runner.
+   */
+  readableRelativeName?: string;
   readonly query: TestQuerySingleCase;
   readonly run: RunFn;
 }
@@ -67,6 +75,19 @@ export class TestTree {
 
   iterateLeaves(): IterableIterator<TestTreeLeaf> {
     return TestTree.iterateSubtreeLeaves(this.root);
+  }
+
+  /**
+   * If a parent and its child are at different levels, then
+   * generally the parent has only one child, i.e.:
+   *   a,* { a,b,* { a,b:* { ... } } }
+   * Collapse that down into:
+   *   a,* { a,b:* { ... } }
+   * which is less needlessly verbose when displaying the tree in the standalone runner.
+   */
+  dissolveLevelBoundaries(): void {
+    const newRoot = dissolveLevelBoundaries(this.root);
+    assert(newRoot === this.root);
   }
 
   toString(): string {
@@ -224,7 +245,7 @@ export async function loadTreeForQuery(
 
 function makeTreeForSuite(suite: string): TestSubtree<TestQueryMultiFile> {
   return {
-    relativeName: suite + kBigSeparator,
+    readableRelativeName: suite + kBigSeparator,
     query: new TestQueryMultiFile(suite, []),
     children: new Map(),
     collapsible: false,
@@ -242,7 +263,7 @@ function addSubtreeForDirPath(
     subqueryFile.push(part);
     tree = getOrInsertSubtree(part, tree, () => {
       const query = new TestQueryMultiFile(tree.query.suite, subqueryFile);
-      return { relativeName: part + kPathSeparator + kWildcard, query, collapsible: false };
+      return { readableRelativeName: part + kPathSeparator + kWildcard, query, collapsible: false };
     });
   }
   return tree;
@@ -262,7 +283,7 @@ function addSubtreeForFilePath(
     const query = new TestQueryMultiTest(tree.query.suite, tree.query.filePathParts, []);
     assert(file.length > 0, 'file path is empty');
     return {
-      relativeName: file[file.length - 1] + kBigSeparator + kWildcard,
+      readableRelativeName: file[file.length - 1] + kBigSeparator + kWildcard,
       query,
       description,
       collapsible: checkCollapsible(query),
@@ -288,7 +309,7 @@ function addSubtreeForTestPath(
         subqueryTest
       );
       return {
-        relativeName: part + kPathSeparator + kWildcard,
+        readableRelativeName: part + kPathSeparator + kWildcard,
         query,
         collapsible: isCollapsible(query),
       };
@@ -304,7 +325,7 @@ function addSubtreeForTestPath(
     );
     assert(subqueryTest.length > 0, 'subqueryTest is empty');
     return {
-      relativeName: subqueryTest[subqueryTest.length - 1] + kBigSeparator + kWildcard,
+      readableRelativeName: subqueryTest[subqueryTest.length - 1] + kBigSeparator + kWildcard,
       kWildcard,
       query,
       collapsible: isCollapsible(query),
@@ -335,7 +356,7 @@ function addLeafForCase(
         subqueryParams
       );
       return {
-        relativeName: name + kParamSeparator + kWildcard,
+        readableRelativeName: name + kParamSeparator + kWildcard,
         query: subquery,
         collapsible: checkCollapsible(subquery),
       };
@@ -378,4 +399,45 @@ function insertLeaf(parent: TestSubtree, query: TestQuerySingleCase, t: RunCase)
   };
   assert(!parent.children.has(key));
   parent.children.set(key, leaf);
+}
+
+function dissolveLevelBoundaries(tree: TestTreeNode): TestTreeNode {
+  if ('children' in tree) {
+    if (tree.children.size === 1 && tree.description === undefined) {
+      // Loops exactly once
+      for (const [, child] of tree.children) {
+        if (child.query.level > tree.query.level) {
+          const newtree = dissolveLevelBoundaries(child);
+
+          // If newtree is a leaf (case), make sure it has a readable name.
+          if ('run' in newtree) {
+            newtree.readableRelativeName = readableNameForCase(newtree.query);
+          }
+
+          return newtree;
+        }
+      }
+    }
+
+    for (const [k, child] of tree.children) {
+      const newChild = dissolveLevelBoundaries(child);
+      if (newChild !== child) {
+        tree.children.set(k, newChild);
+      }
+    }
+  }
+  return tree;
+}
+
+/** Generate a readable relative name for a case (used in standalone). */
+function readableNameForCase(query: TestQuerySingleCase): string {
+  let name: string;
+  const paramsKeys = Object.keys(query.params);
+  if (paramsKeys.length === 0) {
+    name = query.testPathParts[query.testPathParts.length - 1] + kBigSeparator;
+  } else {
+    const lastKey = paramsKeys[paramsKeys.length - 1];
+    name = stringifySingleParam(lastKey, query.params[lastKey]);
+  }
+  return name;
 }

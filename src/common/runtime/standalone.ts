@@ -170,8 +170,8 @@ function makeTreeNodeHeaderHTML(
     .attr('title', 'Open')
     .appendTo(div);
   const nodetitle = $('<div>').addClass('nodetitle').appendTo(div);
-  if ('relativeName' in n) {
-    $('<span>').addClass('nodename').text(n.relativeName).appendTo(nodetitle);
+  if (n.readableRelativeName) {
+    $('<span>').addClass('nodename').text(n.readableRelativeName).appendTo(nodetitle);
   }
   $('<input>')
     .attr('type', 'text')
@@ -222,6 +222,8 @@ let rootQueryLevel: TestQueryLevel = 1;
   const rootQuery = parseQuery(qs[0]);
   rootQueryLevel = rootQuery.level;
   const tree = await loader.loadTree(rootQuery);
+
+  tree.dissolveLevelBoundaries();
 
   const [el, runSubtree] = makeSubtreeHTML(tree.root, 1);
   resultsVis.append(el);
