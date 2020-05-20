@@ -42,7 +42,7 @@
         padding: 0px 2px 0px 1px;
       }
       .nodeheader:hover {
-        background: #eee;
+        background: rgba(0, 0, 0, 0.1);
       }
       .subtreerun,
       .leafrun,
@@ -83,10 +83,10 @@
         }
       }
       .subtreerun {
-        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAYAAADgkQYQAAAANklEQVQoU2NkYGD4zwABjFAagwJJwBTBJDEUY1OEoRifIrhiYhSBHYvuJnSHM5LtJry+wxlOAGPTCQmAB/WwAAAAAElFTkSuQmCC);
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJAQMAAADaX5RTAAAABlBMVEUAAAAAAAClZ7nPAAAAAXRSTlMAQObYZgAAAB5JREFUCNdjOMDAsIGBoYeBoZmBoaEBRPaARQ4wAABTfwX/l/WQvgAAAABJRU5ErkJggg==);
       }
       .leafrun {
-        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJAQMAAADaX5RTAAAABlBMVEUAAAAAAAClZ7nPAAAAAXRSTlMAQObYZgAAAB5JREFUCNdjOMDAsIGBoYeBoZmBoaEBRPaARQ4wAABTfwX/l/WQvgAAAABJRU5ErkJggg==);
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAYAAADgkQYQAAAANklEQVQoU2NkYGD4zwABjFAagwJJwBTBJDEUY1OEoRifIrhiYhSBHYvuJnSHM5LtJry+wxlOAGPTCQmAB/WwAAAAAElFTkSuQmCC);
       }
       .nodelink {
         background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMAQMAAABsu86kAAAABlBMVEUAAAAAAAClZ7nPAAAAAXRSTlMAQObYZgAAACRJREFUCNdjYGBg+P+BoUGAYesFhj4BhvsFDPYNDHwMCMTAAACqJwbp3VgbrAAAAABJRU5ErkJggg==);
@@ -95,15 +95,19 @@
         flex: 10 0 4em;
       }
       .nodename {
-        background: transparent;
-        border: none;
         margin: 0 0.5em;
+        padding: 2px;
+      }
+      .leafname {
+        background: black;
+        color: white;
       }
       .nodequery {
         background: transparent;
         border: none;
+        padding: 2px;
         margin: 0 0.5em;
-        color: #ccc;
+        color: #999;
         width: 50%;
         max-width: 50%;
       }
@@ -146,7 +150,7 @@
         background: white;
       }
       .testcase[data-status='fail'] {
-        background: #fcc;
+        background: #fdd;
       }
       .testcase[data-status='warn'] {
         background: #ffb;
@@ -155,7 +159,7 @@
         background: #cfc;
       }
       .testcase[data-status='skip'] {
-        background: #ccc;
+        background: #eee;
       }
       .testcasetime {
         white-space: nowrap;
