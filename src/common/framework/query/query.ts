@@ -11,7 +11,14 @@ export type TestQuery =
   | TestQueryMultiTest
   | TestQueryMultiFile;
 
+export type TestQueryLevel =
+  | 1 // MultiFile
+  | 2 // MultiTest
+  | 3 // MultiCase
+  | 4; // SingleCase
+
 export class TestQueryMultiFile {
+  readonly level: TestQueryLevel = 1;
   readonly isMultiFile: boolean = true;
   readonly suite: string;
   readonly filePathParts: readonly string[];
@@ -25,16 +32,13 @@ export class TestQueryMultiFile {
     return encodeURIComponentSelectively(this.toStringHelper().join(kBigSeparator));
   }
 
-  toHTML(): string {
-    return this.toStringHelper().join(kBigSeparator + '<wbr>');
-  }
-
   protected toStringHelper(): string[] {
     return [this.suite, [...this.filePathParts, kWildcard].join(kPathSeparator)];
   }
 }
 
 export class TestQueryMultiTest extends TestQueryMultiFile {
+  readonly level: TestQueryLevel = 2;
   readonly isMultiFile: false = false;
   readonly isMultiTest: boolean = true;
   readonly testPathParts: readonly string[];
@@ -55,6 +59,7 @@ export class TestQueryMultiTest extends TestQueryMultiFile {
 }
 
 export class TestQueryMultiCase extends TestQueryMultiTest {
+  readonly level: TestQueryLevel = 3;
   readonly isMultiTest: false = false;
   readonly isMultiCase: boolean = true;
   readonly params: CaseParams;
@@ -77,6 +82,7 @@ export class TestQueryMultiCase extends TestQueryMultiTest {
 }
 
 export class TestQuerySingleCase extends TestQueryMultiCase {
+  readonly level: TestQueryLevel = 4;
   readonly isMultiCase: false = false;
 
   protected toStringHelper(): string[] {

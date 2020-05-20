@@ -5,6 +5,7 @@ Tests for queries/filtering, loading, and running.
 import { TestFileLoader, SpecFile } from '../common/framework/file_loader.js';
 import { Logger } from '../common/framework/logging/logger.js';
 import { Status } from '../common/framework/logging/result.js';
+import { parseQuery } from '../common/framework/query/parseQuery.js';
 import {
   TestQuery,
   TestQuerySingleCase,
@@ -111,12 +112,12 @@ class FakeTestFileLoader extends TestFileLoader {
 class LoadingTest extends UnitTest {
   static readonly loader = new FakeTestFileLoader();
 
-  async load(filter: string): Promise<TestTreeLeaf[]> {
-    return Array.from(await LoadingTest.loader.loadTests(filter));
+  async load(query: string): Promise<TestTreeLeaf[]> {
+    return Array.from(await LoadingTest.loader.loadCases(parseQuery(query)));
   }
 
-  async loadNames(filter: string): Promise<string[]> {
-    return (await this.load(filter)).map(c => c.query.toString());
+  async loadNames(query: string): Promise<string[]> {
+    return (await this.load(query)).map(c => c.query.toString());
   }
 }
 
@@ -249,7 +250,10 @@ async function testIterateCollapsed(
   expectations: string[],
   expectedResult: 'throws' | string[]
 ) {
-  const treePromise = LoadingTest.loader.loadTree('suite1:*', expectations);
+  const treePromise = LoadingTest.loader.loadTree(
+    new TestQueryMultiFile('suite1', []),
+    expectations
+  );
   if (expectedResult === 'throws') {
     t.shouldReject('Error', treePromise, 'loadTree should have thrown Error');
     return;
@@ -267,12 +271,12 @@ ${tree.toString()}`
 }
 
 g.test('print').fn(async () => {
-  const tree = await LoadingTest.loader.loadTree('suite1:*');
+  const tree = await LoadingTest.loader.loadTree(new TestQueryMultiFile('suite1', []));
   tree.toString();
 });
 
 g.test('iterateCollapsed').fn(async t => {
-  // No effect
+  // Expectations have no effect
   await testIterateCollapsed(t, [], ['suite1:foo:*', 'suite1:bar,buzz,buzz:*', 'suite1:baz:*']);
   await testIterateCollapsed(
     t,
@@ -290,7 +294,7 @@ g.test('iterateCollapsed').fn(async t => {
     ['suite1:foo:*', 'suite1:bar,buzz,buzz:*', 'suite1:baz:*']
   );
 
-  // Some effect
+  // Expectations have some effect
   await testIterateCollapsed(
     t,
     ['suite1:baz:wye:*'],
