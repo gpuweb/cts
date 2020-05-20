@@ -260,6 +260,7 @@ function addSubtreeForFilePath(
   // This goes from that -> suite:a,b:*
   const subtree = getOrInsertSubtree('', tree, () => {
     const query = new TestQueryMultiTest(tree.query.suite, tree.query.filePathParts, []);
+    assert(file.length > 0, 'file path is empty');
     return {
       relativeName: file[file.length - 1] + kBigSeparator + kWildcard,
       query,
@@ -301,6 +302,7 @@ function addSubtreeForTestPath(
       subqueryTest,
       {}
     );
+    assert(subqueryTest.length > 0, 'subqueryTest is empty');
     return {
       relativeName: subqueryTest[subqueryTest.length - 1] + kBigSeparator + kWildcard,
       kWildcard,
