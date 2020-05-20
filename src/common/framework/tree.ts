@@ -55,7 +55,7 @@ export interface TestTreeLeaf {
   /**
    * Readable "relative" name for display in standalone runner.
    */
-  readableRelativeName?: string;
+  readonly readableRelativeName: string;
   readonly query: TestQuerySingleCase;
   readonly run: RunFn;
 }
@@ -394,6 +394,7 @@ function getOrInsertSubtree<T extends TestQuery>(
 function insertLeaf(parent: TestSubtree, query: TestQuerySingleCase, t: RunCase) {
   const key = '';
   const leaf: TestTreeLeaf = {
+    readableRelativeName: readableNameForCase(query),
     query,
     run: (rec: TestCaseRecorder) => t.run(rec),
   };
@@ -408,11 +409,6 @@ function dissolveLevelBoundaries(tree: TestTreeNode): TestTreeNode {
       for (const [, child] of tree.children) {
         if (child.query.level > tree.query.level) {
           const newtree = dissolveLevelBoundaries(child);
-
-          // If newtree is a leaf (case), make sure it has a readable name.
-          if ('run' in newtree) {
-            newtree.readableRelativeName = readableNameForCase(newtree.query);
-          }
 
           return newtree;
         }
@@ -431,13 +427,11 @@ function dissolveLevelBoundaries(tree: TestTreeNode): TestTreeNode {
 
 /** Generate a readable relative name for a case (used in standalone). */
 function readableNameForCase(query: TestQuerySingleCase): string {
-  let name: string;
   const paramsKeys = Object.keys(query.params);
   if (paramsKeys.length === 0) {
-    name = query.testPathParts[query.testPathParts.length - 1] + kBigSeparator;
+    return query.testPathParts[query.testPathParts.length - 1] + kBigSeparator;
   } else {
     const lastKey = paramsKeys[paramsKeys.length - 1];
-    name = stringifySingleParam(lastKey, query.params[lastKey]);
+    return stringifySingleParam(lastKey, query.params[lastKey]);
   }
-  return name;
 }

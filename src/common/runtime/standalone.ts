@@ -170,8 +170,12 @@ function makeTreeNodeHeaderHTML(
     .attr('title', 'Open')
     .appendTo(div);
   const nodetitle = $('<div>').addClass('nodetitle').appendTo(div);
-  if (n.readableRelativeName) {
-    $('<span>').addClass('nodename').text(n.readableRelativeName).appendTo(nodetitle);
+  const nodename = $('<span>')
+    .addClass('nodename')
+    .text(n.readableRelativeName)
+    .appendTo(nodetitle);
+  if ('run' in n) {
+    nodename.addClass('leafname');
   }
   $('<input>')
     .attr('type', 'text')
