@@ -1,5 +1,6 @@
 import { DefaultTestFileLoader } from '../../framework/file_loader.js';
 import { Logger } from '../../framework/logging/logger.js';
+import { parseQuery } from '../../framework/query/parseQuery.js';
 import { assert } from '../../framework/util/util.js';
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -13,7 +14,7 @@ self.onmessage = async (ev: MessageEvent) => {
 
   const log = new Logger(debug);
 
-  const testcases = Array.from(await loader.loadTests(query));
+  const testcases = Array.from(await loader.loadCases(parseQuery(query)));
   assert(testcases.length === 1, 'worker query resulted in != 1 cases');
 
   const testcase = testcases[0];

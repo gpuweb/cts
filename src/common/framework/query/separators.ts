@@ -1,5 +1,14 @@
-export const kBigSeparator = ':'; // Separator between big parts: suite:file:test:case
-export const kPathSeparator = ','; // Separator between path,to,file or path,to,test
-export const kParamSeparator = ';'; // Separator between k=v;k=v
-export const kParamKVSeparator = '='; // Separator between key and value in k=v
-export const kWildcard = '*'; // Final wildcard, if query is not single-case
+/** Separator between big parts: suite:file:test:case */
+export const kBigSeparator = ':';
+
+/** Separator between path,to,file or path,to,test */
+export const kPathSeparator = ',';
+
+/** Separator between k=v;k=v */
+export const kParamSeparator = ';';
+
+/** Separator between key and value in k=v */
+export const kParamKVSeparator = '=';
+
+/** Final wildcard, if query is not single-case */
+export const kWildcard = '*';

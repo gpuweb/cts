@@ -39,11 +39,15 @@
       .nodeheader {
         display: flex;
         width: 100%;
-        padding: 1px 2px 1px 1px;
+        padding: 0px 2px 0px 1px;
+      }
+      .nodeheader:hover {
+        background: rgba(0, 0, 0, 0.1);
       }
       .subtreerun,
       .leafrun,
       .nodelink,
+      .collapsebtn,
       .testcaselogbtn {
         display: inline-block;
         flex-shrink: 0;
@@ -58,17 +62,19 @@
         .subtreerun,
         .leafrun,
         .nodelink,
+        .collapsebtn,
         .testcaselogbtn {
           flex-basis: 24px;
           border-radius: 4px;
           width: 24px;
-          height: 24px;
+          height: 18px;
         }
       }
       @media (pointer: coarse) {
         .subtreerun,
         .leafrun,
         .nodelink,
+        .collapsebtn,
         .testcaselogbtn {
           flex-basis: 36px;
           border-radius: 6px;
@@ -77,10 +83,10 @@
         }
       }
       .subtreerun {
-        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAYAAADgkQYQAAAANklEQVQoU2NkYGD4zwABjFAagwJJwBTBJDEUY1OEoRifIrhiYhSBHYvuJnSHM5LtJry+wxlOAGPTCQmAB/WwAAAAAElFTkSuQmCC);
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJAQMAAADaX5RTAAAABlBMVEUAAAAAAAClZ7nPAAAAAXRSTlMAQObYZgAAAB5JREFUCNdjOMDAsIGBoYeBoZmBoaEBRPaARQ4wAABTfwX/l/WQvgAAAABJRU5ErkJggg==);
       }
       .leafrun {
-        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJAQMAAADaX5RTAAAABlBMVEUAAAAAAAClZ7nPAAAAAXRSTlMAQObYZgAAAB5JREFUCNdjOMDAsIGBoYeBoZmBoaEBRPaARQ4wAABTfwX/l/WQvgAAAABJRU5ErkJggg==);
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAYAAADgkQYQAAAANklEQVQoU2NkYGD4zwABjFAagwJJwBTBJDEUY1OEoRifIrhiYhSBHYvuJnSHM5LtJry+wxlOAGPTCQmAB/WwAAAAAElFTkSuQmCC);
       }
       .nodelink {
         background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMAQMAAABsu86kAAAABlBMVEUAAAAAAAClZ7nPAAAAAXRSTlMAQObYZgAAACRJREFUCNdjYGBg+P+BoUGAYesFhj4BhvsFDPYNDHwMCMTAAACqJwbp3VgbrAAAAABJRU5ErkJggg==);
@@ -89,11 +95,21 @@
         flex: 10 0 4em;
       }
       .nodename {
-        word-break: break-word;
+        margin: 0 0.5em;
+        padding: 2px;
       }
-      @media only screen and (max-width: 600px) {
-        /* TODO: make the uninteresting part of the name be really small or something, such that it gets
-         * auto selected but doesn't take space. */
+      .leafname {
+        background: black;
+        color: white;
+      }
+      .nodequery {
+        background: transparent;
+        border: none;
+        padding: 2px;
+        margin: 0 0.5em;
+        color: #999;
+        width: 50%;
+        max-width: 50%;
       }
       .nodedescription {
         margin: 0;
@@ -106,7 +122,20 @@
         margin: 0px;
         border-width: 1px 0 0 1px;
         border-style: solid;
-        border-color: gray;
+        border-color: #ddd;
+      }
+      .subtree:hover {
+        border-left-color: #000;
+      }
+      .subtree.multifile > .subtreechildren > .subtree.multitest,
+      .subtree.multifile > .subtreechildren > .subtree.multicase {
+        border-width: 2px 0 0 1px;
+        border-color: #55f;
+      }
+      .subtree.multitest > .subtreechildren > .subtree.multicase,
+      .subtree.multitest > .subtreechildren > .testcase {
+        border-width: 2px 0 0 1px;
+        border-color: #bbf;
       }
       .subtreechildren {
         margin-left: 6px;
@@ -121,7 +150,7 @@
         background: white;
       }
       .testcase[data-status='fail'] {
-        background: #fcc;
+        background: #fdd;
       }
       .testcase[data-status='warn'] {
         background: #ffb;
@@ -130,7 +159,7 @@
         background: #cfc;
       }
       .testcase[data-status='skip'] {
-        background: #ccc;
+        background: #eee;
       }
       .testcasetime {
         white-space: nowrap;
@@ -182,10 +211,11 @@
   </head>
   <body>
     <h1>WebGPU Conformance Test Suite</h1>
+    <input type="checkbox" id="expandall" /><label for="expandall">Expand All</label>
 
     <div id="info"></div>
     <div id="resultsVis"></div>
-    <textarea id="resultsJSON"></textarea>
+    <textarea id="resultsJSON" spellcheck="false"></textarea>
 
     <script type="module" src="../out/common/runtime/standalone.js"></script>
   </body>

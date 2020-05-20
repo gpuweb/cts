@@ -10,8 +10,11 @@ export const enum Ordering {
   StrictSubset,
 }
 
-// Compares two queries for their ordering (which is used to build the tree).
-// See src/unittests/query_compare.spec.ts for examples.
+/**
+ * Compares two queries for their ordering (which is used to build the tree).
+ *
+ * See src/unittests/query_compare.spec.ts for examples.
+ */
 export function compareQueries(a: TestQuery, b: TestQuery): Ordering {
   if (a.suite !== b.suite) {
     return Ordering.Unordered;
@@ -36,10 +39,13 @@ export function compareQueries(a: TestQuery, b: TestQuery): Ordering {
   return Ordering.Equal;
 }
 
-// Compares a single level of a query.
-// "IsBig" means the query is big relative to the level, e.g. for test-level:
-//   anything >= suite:a,* is big
-//   anything <= suite:a:* is small
+/**
+ * Compares a single level of a query.
+ *
+ * "IsBig" means the query is big relative to the level, e.g. for test-level:
+ *   - Anything >= `suite:a,*` is big
+ *   - Anything <= `suite:a:*` is small
+ */
 function compareOneLevel(ordering: Ordering, aIsBig: boolean, bIsBig: boolean): Ordering {
   assert(ordering !== Ordering.Equal || aIsBig || bIsBig);
   if (ordering === Ordering.Unordered) return Ordering.Unordered;

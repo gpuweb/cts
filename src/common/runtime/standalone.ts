@@ -2,7 +2,8 @@
 
 import { DefaultTestFileLoader } from '../framework/file_loader.js';
 import { Logger } from '../framework/logging/logger.js';
-import { TestQuery } from '../framework/query/query.js';
+import { parseQuery } from '../framework/query/parseQuery.js';
+import { TestQueryLevel } from '../framework/query/query.js';
 import { TestTreeNode, TestSubtree, TestTreeLeaf } from '../framework/tree.js';
 import { assert } from '../framework/util/util.js';
 
@@ -30,9 +31,12 @@ type RunSubtree = () => Promise<void>;
 
 // DOM generation
 
-function makeTreeNodeHTML(tree: TestTreeNode): [HTMLElement, RunSubtree] {
+function makeTreeNodeHTML(
+  tree: TestTreeNode,
+  parentLevel: TestQueryLevel
+): [HTMLElement, RunSubtree] {
   if ('children' in tree) {
-    return makeSubtreeHTML(tree);
+    return makeSubtreeHTML(tree, parentLevel);
   } else {
     return makeCaseHTML(tree);
   }
@@ -73,30 +77,43 @@ function makeCaseHTML(t: TestTreeLeaf): [HTMLElement, RunSubtree] {
     }
   };
 
-  const casehead = makeTreeNodeHeaderHTML(t.query, undefined, runSubtree, true);
+  const caselogs = $('<div>').addClass('testcaselogs');
+  const casehead = makeTreeNodeHeaderHTML(t, runSubtree, 2, checked => {
+    checked ? caselogs.show() : caselogs.hide();
+  });
   div.append(casehead);
   const casetime = $('<div>').addClass('testcasetime').html('ms').appendTo(casehead);
-  const caselogs = $('<div>').addClass('testcaselogs').appendTo(div);
+  caselogs.appendTo(div);
 
   return [div[0], runSubtree];
 }
 
-function makeSubtreeHTML(t: TestSubtree): [HTMLElement, RunSubtree] {
+function makeSubtreeHTML(n: TestSubtree, parentLevel: TestQueryLevel): [HTMLElement, RunSubtree] {
   const div = $('<div>').addClass('subtree');
 
-  const header = makeTreeNodeHeaderHTML(t.query, t.description, () => runSubtree(), false);
-  div.append(header);
+  const subtreeHTML = $('<div>').addClass('subtreechildren');
+  const runSubtree = makeSubtreeChildrenHTML(subtreeHTML[0], n.children.values(), n.query.level);
 
-  const subtreeHTML = $('<div>').addClass('subtreechildren').appendTo(div);
-  const runSubtree = makeSubtreeChildrenHTML(subtreeHTML[0], t.children.values());
+  const header = makeTreeNodeHeaderHTML(n, runSubtree, parentLevel, checked => {
+    checked ? subtreeHTML.show() : subtreeHTML.hide();
+  });
+
+  div.append(header);
+  div.append(subtreeHTML);
+
+  div[0].classList.add(['', 'multifile', 'multitest', 'multicase'][n.query.level]);
 
   return [div[0], runSubtree];
 }
 
-function makeSubtreeChildrenHTML(div: HTMLElement, children: Iterable<TestTreeNode>): RunSubtree {
+function makeSubtreeChildrenHTML(
+  div: HTMLElement,
+  children: Iterable<TestTreeNode>,
+  parentLevel: TestQueryLevel
+): RunSubtree {
   const runSubtreeFns: RunSubtree[] = [];
   for (const subtree of children) {
-    const [subtreeHTML, runSubtree] = makeTreeNodeHTML(subtree);
+    const [subtreeHTML, runSubtree] = makeTreeNodeHTML(subtree, parentLevel);
     div.append(subtreeHTML);
     runSubtreeFns.push(runSubtree);
   }
@@ -109,18 +126,38 @@ function makeSubtreeChildrenHTML(div: HTMLElement, children: Iterable<TestTreeNo
 }
 
 function makeTreeNodeHeaderHTML(
-  query: TestQuery,
-  description: string | undefined,
+  n: TestTreeNode,
   runSubtree: RunSubtree,
-  isLeaf: boolean
+  parentLevel: TestQueryLevel,
+  onChange: (checked: boolean) => void
 ): HTMLElement {
+  const isLeaf = 'run' in n;
   const div = $('<div>').addClass('nodeheader');
 
-  const href = `?${worker ? 'worker&' : ''}${debug ? 'debug&' : ''}q=${query.toString()}`;
+  const href = `?${worker ? 'worker&' : ''}${debug ? 'debug&' : ''}q=${n.query.toString()}`;
+  if (onChange) {
+    const checkbox = $('<input>')
+      .attr('type', 'checkbox')
+      .addClass('collapsebtn')
+      .change(function (this) {
+        onChange((this as HTMLInputElement).checked);
+      })
+      .attr('alt', 'Expand')
+      .attr('title', 'Expand')
+      .appendTo(div);
+
+    // Collapse s:f:* or s:f:t:* or s:f:t:c by default.
+    if (n.query.level > rootQueryLevel && n.query.level > parentLevel) {
+      onChange(false);
+    } else {
+      checkbox.prop('checked', true); // (does not fire onChange)
+    }
+  }
+  const runtext = isLeaf ? 'Run case' : 'Run subtree';
   $('<button>')
     .addClass(isLeaf ? 'leafrun' : 'subtreerun')
-    .attr('alt', 'Run subtree')
-    .attr('title', 'Run subtree')
+    .attr('alt', runtext)
+    .attr('title', runtext)
     .on('click', async () => {
       await runSubtree();
       updateJSON();
@@ -133,11 +170,23 @@ function makeTreeNodeHeaderHTML(
     .attr('title', 'Open')
     .appendTo(div);
   const nodetitle = $('<div>').addClass('nodetitle').appendTo(div);
-  $('<span>').addClass('nodename').html(query.toHTML()).appendTo(nodetitle);
-  if (description) {
+  const nodename = $('<span>')
+    .addClass('nodename')
+    .text(n.readableRelativeName)
+    .appendTo(nodetitle);
+  if ('run' in n) {
+    nodename.addClass('leafname');
+  }
+  $('<input>')
+    .attr('type', 'text')
+    .prop('readonly', true)
+    .addClass('nodequery')
+    .val(n.query.toString())
+    .appendTo(nodetitle);
+  if ('description' in n && n.description) {
     $('<div>')
       .addClass('nodedescription')
-      .html(description.replace(/\n/g, '<br>'))
+      .html(n.description.replace(/\n\n/g, '<br><br>'))
       .appendTo(nodetitle);
   }
   return div[0];
@@ -146,6 +195,8 @@ function makeTreeNodeHeaderHTML(
 function updateJSON(): void {
   resultsJSON.textContent = logger.asJSON(2);
 }
+
+let rootQueryLevel: TestQueryLevel = 1;
 
 (async () => {
   const loader = new DefaultTestFileLoader();
@@ -172,10 +223,19 @@ function updateJSON(): void {
   }
 
   assert(qs.length === 1, 'currently, there must be exactly one ?q=');
-  const tree = await loader.loadTree(qs[0]);
+  const rootQuery = parseQuery(qs[0]);
+  rootQueryLevel = rootQuery.level;
+  const tree = await loader.loadTree(rootQuery);
 
-  const [el, runSubtree] = makeSubtreeHTML(tree.root);
+  tree.dissolveLevelBoundaries();
+
+  const [el, runSubtree] = makeSubtreeHTML(tree.root, 1);
   resultsVis.append(el);
+
+  $('#expandall').change(function (this) {
+    const checked = (this as HTMLInputElement).checked;
+    $('.collapsebtn').prop('checked', checked).trigger('change');
+  });
 
   if (runnow) {
     runSubtree();

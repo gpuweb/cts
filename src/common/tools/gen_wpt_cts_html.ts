@@ -2,8 +2,7 @@ import { promises as fs } from 'fs';
 
 import { listing } from '../../webgpu/listing.js';
 import { DefaultTestFileLoader } from '../framework/file_loader.js';
-import { TestQueryMultiTest } from '../framework/query/query.js';
-import { kBigSeparator, kWildcard } from '../framework/query/separators.js';
+import { TestQueryMultiTest, TestQueryMultiFile } from '../framework/query/query.js';
 import { TestSuiteListingEntry } from '../framework/test_suite_listing.js';
 import { assert } from '../framework/util/util.js';
 
@@ -84,10 +83,8 @@ const [
     const loader = new DefaultTestFileLoader();
     const lines: Array<string | undefined> = [];
     for (const prefix of argsPrefixes) {
-      const tree = await loader.loadTree(
-        suite + kBigSeparator + kWildcard,
-        expectations.get(prefix)!
-      );
+      const rootQuery = new TestQueryMultiFile(suite, []);
+      const tree = await loader.loadTree(rootQuery, expectations.get(prefix)!);
 
       lines.push(undefined); // output blank line between prefixes
       for (const q of tree.iterateCollapsedQueries()) {

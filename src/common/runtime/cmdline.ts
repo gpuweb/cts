@@ -7,6 +7,7 @@ import * as process from 'process';
 import { DefaultTestFileLoader } from '../framework/file_loader.js';
 import { Logger } from '../framework/logging/logger.js';
 import { LiveTestCaseResult } from '../framework/logging/result.js';
+import { parseQuery } from '../framework/query/parseQuery.js';
 import { assert, unreachable } from '../framework/util/util.js';
 
 function usage(rc: number): never {
@@ -28,7 +29,7 @@ if (!fs.existsSync('src/common/runtime/cmdline.ts')) {
 let verbose = false;
 let debug = false;
 let printJSON = false;
-const filterArgs: string[] = [];
+const queries: string[] = [];
 for (const a of process.argv.slice(2)) {
   if (a.startsWith('-')) {
     if (a === '--verbose') {
@@ -41,19 +42,19 @@ for (const a of process.argv.slice(2)) {
       usage(1);
     }
   } else {
-    filterArgs.push(a);
+    queries.push(a);
   }
 }
 
-if (filterArgs.length === 0) {
+if (queries.length === 0) {
   usage(0);
 }
 
 (async () => {
   try {
     const loader = new DefaultTestFileLoader();
-    assert(filterArgs.length === 1, 'currently, there must be exactly one query on the cmd line');
-    const testcases = await loader.loadTests(filterArgs[0]);
+    assert(queries.length === 1, 'currently, there must be exactly one query on the cmd line');
+    const testcases = await loader.loadCases(parseQuery(queries[0]));
 
     const log = new Logger(debug);
 
