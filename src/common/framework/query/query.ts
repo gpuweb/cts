@@ -5,6 +5,11 @@ import { encodeURIComponentSelectively } from './encode_selectively.js';
 import { kBigSeparator, kPathSeparator, kWildcard, kParamSeparator } from './separators.js';
 import { stringifyPublicParams } from './stringify_params.js';
 
+/**
+ * Represents a test query of some level.
+ *
+ * TestQuery types are immutable.
+ */
 export type TestQuery =
   | TestQuerySingleCase
   | TestQueryMultiCase
@@ -17,6 +22,11 @@ export type TestQueryLevel =
   | 3 // MultiCase
   | 4; // SingleCase
 
+/**
+ * A multi-file test query, like `s:*` or `s:a,b,*`.
+ *
+ * Immutable (makes copies of constructor args).
+ */
 export class TestQueryMultiFile {
   readonly level: TestQueryLevel = 1;
   readonly isMultiFile: boolean = true;
@@ -37,6 +47,11 @@ export class TestQueryMultiFile {
   }
 }
 
+/**
+ * A multi-test test query, like `s:f:*` or `s:f:a,b,*`.
+ *
+ * Immutable (makes copies of constructor args).
+ */
 export class TestQueryMultiTest extends TestQueryMultiFile {
   readonly level: TestQueryLevel = 2;
   readonly isMultiFile: false = false;
@@ -58,6 +73,12 @@ export class TestQueryMultiTest extends TestQueryMultiFile {
   }
 }
 
+/**
+ * A multi-case test query, like `s:f:t:*` or `s:f:t:a,b,*`.
+ *
+ * Immutable (makes copies of constructor args), except for param values
+ * (which aren't normally supposed to change; they're marked readonly in CaseParams).
+ */
 export class TestQueryMultiCase extends TestQueryMultiTest {
   readonly level: TestQueryLevel = 3;
   readonly isMultiTest: false = false;
@@ -81,6 +102,11 @@ export class TestQueryMultiCase extends TestQueryMultiTest {
   }
 }
 
+/**
+ * A multi-case test query, like `s:f:t:` or `s:f:t:a=1,b=1`.
+ *
+ * Immutable (makes copies of constructor args).
+ */
 export class TestQuerySingleCase extends TestQueryMultiCase {
   readonly level: TestQueryLevel = 4;
   readonly isMultiCase: false = false;
