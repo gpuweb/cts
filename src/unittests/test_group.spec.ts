@@ -93,7 +93,7 @@ g.test('duplicate_test_name').fn(t => {
   });
 });
 
-g.test('duplicate_test_params,none').fn(t => {
+g.test('duplicate_test_params,none').fn(() => {
   {
     const g = makeTestGroupForUnitTesting(UnitTest);
     g.test('abc')
