@@ -1,6 +1,5 @@
 export const description = 'Test uninitialized textures are initialized to zero when copied.';
 
-import * as C from '../../../../common/constants.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, unreachable } from '../../../../common/framework/util/util.js';
 import { SubresourceRange } from '../../../util/texture/subresource.js';
@@ -40,7 +39,7 @@ class CopiedTextureClearTest extends TextureZeroInitTest {
       const dst = this.device.createTexture({
         size: [width, height, 1],
         format: this.params.format,
-        usage: C.TextureUsage.CopyDst | C.TextureUsage.CopySrc,
+        usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
       });
 
       const commandEncoder = this.device.createCommandEncoder();
