@@ -16,6 +16,7 @@
     "linebreak-style": ["error", "unix"],
     "object-shorthand": "error",
     "no-console": "error",
+    "no-undef": "off",
     "no-useless-rename": "error",
     "@typescript-eslint/no-inferrable-types": "off",
     "import/order": [
@@ -28,15 +29,5 @@
     ],
     "import/newline-after-import": ["error", { "count": 1 }],
     "import/no-duplicates": "error"
-  },
-  "globals": {
-    // FIXME: Why aren't these picked up from type files ?
-    "$": "readonly",
-    "GPUValidationError": "readonly",
-    "GPUOutOfMemoryError": "readonly",
-    "GPUBufferUsage": "readonly",
-    "GPUTextureUsage": "readonly",
-    "GPUColorWrite": "readonly",
-    "GPUShaderStage": "readonly"
   }
 }
