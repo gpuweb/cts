@@ -36,6 +36,7 @@
     "GPUOutOfMemoryError": "readonly",
     "GPUBufferUsage": "readonly",
     "GPUTextureUsage": "readonly",
+    "GPUColorWrite": "readonly",
     "GPUShaderStage": "readonly"
   }
 }
