@@ -1,7 +1,6 @@
 export const description = `
 renderPass store op test that drawn quad is either stored or cleared based on storeop`;
 
-import * as C from '../../../../../common/constants.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 
@@ -9,9 +8,9 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('storeOp_controls_whether_1x1_drawn_quad_is_stored')
   .params([
-    { storeOp: C.StoreOp.Store, _expected: 1 }, //
-    { storeOp: C.StoreOp.Clear, _expected: 0 },
-  ])
+    { storeOp: 'store', _expected: 1 }, //
+    { storeOp: 'clear', _expected: 0 },
+  ] as const)
   .fn(async t => {
     const renderTexture = t.device.createTexture({
       size: { width: 1, height: 1, depth: 1 },
