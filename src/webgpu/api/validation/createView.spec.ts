@@ -2,7 +2,6 @@ export const description = `
 createView validation tests.
 `;
 
-import * as C from '../../../common/constants.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -75,7 +74,7 @@ g.test('creating_texture_view_on_a_2D_non_array_texture')
     { _success: true }, // default view works
     { arrayLayerCount: 1, _success: true }, // it is OK to create a 2D texture view on a 2D texture
     { arrayLayerCount: 2, _success: false }, // it is an error to view a layer past the end of the texture
-    { dimension: C.TextureViewDimension.E2dArray, arrayLayerCount: 1, _success: true }, // it is OK to create a 1-layer 2D array texture view on a 2D texture
+    { dimension: '2d-array' as const, arrayLayerCount: 1, _success: true }, // it is OK to create a 1-layer 2D array texture view on a 2D texture
     // mip level is in range
     { mipLevelCount: 1, baseMipLevel: MIP_LEVEL_COUNT - 1, _success: true },
     { mipLevelCount: 2, baseMipLevel: MIP_LEVEL_COUNT - 2, _success: true },
@@ -110,7 +109,7 @@ g.test('creating_texture_view_on_a_2D_non_array_texture')
 g.test('creating_texture_view_on_a_2D_array_texture')
   .params([
     { _success: true }, // default view works
-    { dimension: C.TextureViewDimension.E2d, arrayLayerCount: 1, _success: true }, // it is OK to create a 2D texture view on a 2D array texture
+    { dimension: '2d' as const, arrayLayerCount: 1, _success: true }, // it is OK to create a 2D texture view on a 2D array texture
     { arrayLayerCount: ARRAY_LAYER_COUNT_2D, _success: true }, // it is OK to create a 2D array texture view on a 2D array texture
     // baseArrayLayer == k && arrayLayerCount == 0 means to use layers k..end.
     { arrayLayerCount: 0, baseArrayLayer: 0, _success: true },
@@ -142,23 +141,19 @@ g.test('creating_texture_view_on_a_2D_array_texture')
 g.test('Using_defaults_validates_the_same_as_setting_values_for_more_than_1_array_layer')
   .params([
     { _success: true },
-    { format: C.TextureFormat.RGBA8Unorm, _success: true },
-    { format: C.TextureFormat.R8Unorm, _success: false },
-    { dimension: C.TextureViewDimension.E2dArray, _success: true },
-    { dimension: C.TextureViewDimension.E2d, _success: false },
+    { format: 'rgba8unorm', _success: true },
+    { format: 'r8unorm', _success: false },
+    { dimension: '2d-array', _success: true },
+    { dimension: '2d', _success: false },
     { arrayLayerCount: ARRAY_LAYER_COUNT_2D, _success: false }, // setting array layers to non-0 means the dimensionality will default to 2D so by itself it causes an error.
+    { arrayLayerCount: ARRAY_LAYER_COUNT_2D, dimension: '2d-array', _success: true },
     {
       arrayLayerCount: ARRAY_LAYER_COUNT_2D,
-      dimension: C.TextureViewDimension.E2dArray,
-      _success: true,
-    },
-    {
-      arrayLayerCount: ARRAY_LAYER_COUNT_2D,
-      dimension: C.TextureViewDimension.E2dArray,
+      dimension: '2d-array',
       mipLevelCount: MIP_LEVEL_COUNT,
       _success: true,
     },
-  ])
+  ] as const)
   .fn(async t => {
     const { format, dimension, arrayLayerCount, mipLevelCount, _success } = t.params;
 
@@ -174,16 +169,16 @@ g.test('Using_defaults_validates_the_same_as_setting_values_for_more_than_1_arra
 g.test('Using_defaults_validates_the_same_as_setting_values_for_only_1_array_layer')
   .params([
     { _success: true },
-    { format: C.TextureFormat.RGBA8Unorm, _success: true },
-    { format: C.TextureFormat.R8Unorm, _success: false },
-    { dimension: C.TextureViewDimension.E2dArray, _success: true },
-    { dimension: C.TextureViewDimension.E2d, _success: true },
+    { format: 'rgba8unorm', _success: true },
+    { format: 'r8unorm', _success: false },
+    { dimension: '2d-array', _success: true },
+    { dimension: '2d', _success: true },
     { arrayLayerCount: 0, _success: true },
     { arrayLayerCount: 1, _success: true },
     { arrayLayerCount: 2, _success: false },
     { mipLevelCount: MIP_LEVEL_COUNT, _success: true },
     { mipLevelCount: 1, _success: true },
-  ])
+  ] as const)
   .fn(async t => {
     const { format, dimension, arrayLayerCount, mipLevelCount, _success } = t.params;
 
@@ -198,17 +193,17 @@ g.test('Using_defaults_validates_the_same_as_setting_values_for_only_1_array_lay
 
 g.test('creating_cube_map_texture_view')
   .params([
-    { dimension: C.TextureViewDimension.Cube, arrayLayerCount: 6, _success: true }, // it is OK to create a cube map texture view with arrayLayerCount == 6
+    { dimension: 'cube', arrayLayerCount: 6, _success: true }, // it is OK to create a cube map texture view with arrayLayerCount == 6
     // it is an error to create a cube map texture view with arrayLayerCount != 6
-    { dimension: C.TextureViewDimension.Cube, arrayLayerCount: 3, _success: false },
-    { dimension: C.TextureViewDimension.Cube, arrayLayerCount: 7, _success: false },
-    { dimension: C.TextureViewDimension.Cube, arrayLayerCount: 12, _success: false },
-    { dimension: C.TextureViewDimension.Cube, _success: false },
-    { dimension: C.TextureViewDimension.CubeArray, arrayLayerCount: 12, _success: true }, // it is OK to create a cube map array texture view with arrayLayerCount % 6 == 0
+    { dimension: 'cube', arrayLayerCount: 3, _success: false },
+    { dimension: 'cube', arrayLayerCount: 7, _success: false },
+    { dimension: 'cube', arrayLayerCount: 12, _success: false },
+    { dimension: 'cube', _success: false },
+    { dimension: 'cube-array', arrayLayerCount: 12, _success: true }, // it is OK to create a cube map array texture view with arrayLayerCount % 6 == 0
     // it is an error to create a cube map array texture view with arrayLayerCount % 6 != 0
-    { dimension: C.TextureViewDimension.CubeArray, arrayLayerCount: 11, _success: false },
-    { dimension: C.TextureViewDimension.CubeArray, arrayLayerCount: 13, _success: false },
-  ])
+    { dimension: 'cube-array', arrayLayerCount: 11, _success: false },
+    { dimension: 'cube-array', arrayLayerCount: 13, _success: false },
+  ] as const)
   .fn(async t => {
     const { dimension = '2d-array', arrayLayerCount, _success } = t.params;
 
@@ -226,9 +221,9 @@ g.test('creating_cube_map_texture_view')
 
 g.test('creating_cube_map_texture_view_with_a_non_square_texture')
   .params([
-    { dimension: C.TextureViewDimension.Cube, arrayLayerCount: 6 }, // it is an error to create a cube map texture view with width != height.
-    { dimension: C.TextureViewDimension.CubeArray, arrayLayerCount: 12 }, // it is an error to create a cube map array texture view with width != height.
-  ])
+    { dimension: 'cube', arrayLayerCount: 6 }, // it is an error to create a cube map texture view with width != height.
+    { dimension: 'cube-array', arrayLayerCount: 12 }, // it is an error to create a cube map array texture view with width != height.
+  ] as const)
   .fn(async t => {
     const { dimension, arrayLayerCount } = t.params;
 

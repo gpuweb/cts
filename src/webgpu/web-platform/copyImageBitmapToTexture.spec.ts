@@ -151,6 +151,7 @@ g.test('from_ImageData')
     }
 
     const imageData = new ImageData(imagePixels, width, height);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const imageBitmap = await (createImageBitmap as any)(imageData, {
       premultiplyAlpha: alpha,
       imageOrientation: orientation,
