@@ -2,7 +2,6 @@ export const description = `
 createBindGroupLayout validation tests.
 `;
 
-import * as C from '../../../common/constants.js';
 import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import {
@@ -23,8 +22,8 @@ export const g = makeTestGroup(ValidationTest);
 g.test('some_binding_index_was_specified_more_than_once').fn(async t => {
   const goodDescriptor = {
     entries: [
-      { binding: 0, visibility: GPUShaderStage.COMPUTE, type: C.BindingType.StorageBuffer },
-      { binding: 1, visibility: GPUShaderStage.COMPUTE, type: C.BindingType.StorageBuffer },
+      { binding: 0, visibility: GPUShaderStage.COMPUTE, type: 'storage-buffer' as const },
+      { binding: 1, visibility: GPUShaderStage.COMPUTE, type: 'storage-buffer' as const },
     ],
   };
 
@@ -48,8 +47,8 @@ g.test('visibility_of_bindings_can_be_0').fn(async t => {
 
 g.test('number_of_dynamic_buffers_exceeds_the_maximum_value')
   .params([
-    { type: C.BindingType.StorageBuffer, maxDynamicBufferCount: 4 },
-    { type: C.BindingType.UniformBuffer, maxDynamicBufferCount: 8 },
+    { type: 'storage-buffer' as const, maxDynamicBufferCount: 4 },
+    { type: 'uniform-buffer' as const, maxDynamicBufferCount: 8 },
   ])
   .fn(async t => {
     const { type, maxDynamicBufferCount } = t.params;

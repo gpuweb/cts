@@ -37,7 +37,7 @@ module.exports = function (grunt) {
       },
       lint: {
         cmd: 'node',
-        args: ['node_modules/eslint/bin/eslint', 'src/**/*.ts'],
+        args: ['node_modules/eslint/bin/eslint', 'src/**/*.ts', '--max-warnings=0'],
       },
       fix: {
         cmd: 'node',

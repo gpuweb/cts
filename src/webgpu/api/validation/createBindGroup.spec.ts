@@ -2,7 +2,6 @@ export const description = `
 createBindGroup validation tests.
 `;
 
-import * as C from '../../../common/constants.js';
 import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { unreachable } from '../../../common/framework/util/util.js';
@@ -117,7 +116,7 @@ g.test('texture_binding_must_have_correct_usage')
 
     const descriptor = {
       size: { width: 16, height: 16, depth: 1 },
-      format: C.TextureFormat.RGBA8Unorm,
+      format: 'rgba8unorm' as const,
       usage,
     };
 
@@ -131,13 +130,7 @@ g.test('texture_binding_must_have_correct_usage')
   });
 
 g.test('texture_must_have_correct_component_type')
-  .params(
-    poptions('textureComponentType', [
-      C.TextureComponentType.Float,
-      C.TextureComponentType.Sint,
-      C.TextureComponentType.Uint,
-    ])
-  )
+  .params(poptions('textureComponentType', ['float', 'sint', 'uint'] as const))
   .fn(async t => {
     const { textureComponentType } = t.params;
 
@@ -222,7 +215,7 @@ g.test('texture_must_have_correct_dimension').fn(async t => {
 
   const goodDescriptor = {
     size: { width: 16, height: 16, depth: 1 },
-    format: C.TextureFormat.RGBA8Unorm,
+    format: 'rgba8unorm' as const,
     usage: GPUTextureUsage.SAMPLED,
   };
 

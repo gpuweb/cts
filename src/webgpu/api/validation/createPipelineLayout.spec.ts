@@ -2,7 +2,6 @@ export const description = `
 createPipelineLayout validation tests.
 `;
 
-import * as C from '../../../common/constants.js';
 import { pbool, poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import {
@@ -24,11 +23,7 @@ g.test('number_of_dynamic_buffers_exceeds_the_maximum_value')
     params()
       .combine(poptions('visibility', [0, 2, 4, 6]))
       .combine(
-        poptions('type', [
-          C.BindingType.UniformBuffer,
-          C.BindingType.StorageBuffer,
-          C.BindingType.ReadonlyStorageBuffer,
-        ])
+        poptions('type', ['uniform-buffer', 'storage-buffer', 'readonly-storage-buffer'] as const)
       )
   )
   .fn(async t => {
