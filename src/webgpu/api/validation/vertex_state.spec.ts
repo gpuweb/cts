@@ -5,7 +5,6 @@ vertexState validation tests.
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 
 import { ValidationTest } from './validation_test.js';
-import { VertexFormat } from '../../../common/constants.js';
 
 const MAX_VERTEX_ATTRIBUTES: number = 16;
 const MAX_VERTEX_BUFFER_END: number = 2048;
@@ -234,12 +233,12 @@ g.test('offset_should_be_within_vertex_buffer_arrayStride_if_arrayStride_is_not_
           arrayStride: 2 * SIZEOF_FLOAT,
           attributes: [
             {
-              format: VertexFormat.Float,
+              format: 'float' as GPUVertexFormat,
               offset: 0,
               shaderLocation: 0,
             },
             {
-              format: VertexFormat.Float,
+              format: 'float' as GPUVertexFormat,
               offset: SIZEOF_FLOAT,
               shaderLocation: 1,
             },
@@ -255,7 +254,7 @@ g.test('offset_should_be_within_vertex_buffer_arrayStride_if_arrayStride_is_not_
     {
       // Test vertex attribute offset exceed vertex buffer arrayStride range
       const badVertexState = clone(vertexState);
-      badVertexState.vertexBuffers[0].attributes[1].format = VertexFormat.Float2;
+      badVertexState.vertexBuffers[0].attributes[1].format = 'float2';
       const descriptor = t.getDescriptor(badVertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
 
       t.expectValidationError(() => {
@@ -289,12 +288,12 @@ g.test('check_two_attributes_overlapping').fn(async t => {
         arrayStride: 2 * SIZEOF_FLOAT,
         attributes: [
           {
-            format: VertexFormat.Float,
+            format: 'float' as GPUVertexFormat,
             offset: 0,
             shaderLocation: 0,
           },
           {
-            format: VertexFormat.Float,
+            format: 'float' as GPUVertexFormat,
             offset: SIZEOF_FLOAT,
             shaderLocation: 1,
           },
@@ -310,7 +309,7 @@ g.test('check_two_attributes_overlapping').fn(async t => {
   {
     // Test two attributes overlapping
     const badVertexState = clone(vertexState);
-    badVertexState.vertexBuffers[0].attributes[0].format = VertexFormat.Int2;
+    badVertexState.vertexBuffers[0].attributes[0].format = 'int2';
     const descriptor = t.getDescriptor(badVertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
 
     t.expectValidationError(() => {
@@ -651,7 +650,9 @@ g.test('check_multiple_of_4_bytes_constraint_on_offset').fn(async t => {
     vertexBuffers: [
       {
         arrayStride: 0,
-        attributes: [{ format: VertexFormat.Float, offset: SIZEOF_FLOAT, shaderLocation: 0 }],
+        attributes: [
+          { format: 'float' as GPUVertexFormat, offset: SIZEOF_FLOAT, shaderLocation: 0 },
+        ],
       },
     ],
   };
@@ -663,7 +664,7 @@ g.test('check_multiple_of_4_bytes_constraint_on_offset').fn(async t => {
   {
     // Test offset of 2 bytes with uchar2 format
     vertexState.vertexBuffers[0].attributes[0].offset = 2;
-    vertexState.vertexBuffers[0].attributes[0].format = VertexFormat.Uchar2;
+    vertexState.vertexBuffers[0].attributes[0].format = 'uchar2';
     const descriptor = t.getDescriptor(vertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
     t.expectValidationError(() => {
       t.device.createRenderPipeline(descriptor);
@@ -672,7 +673,7 @@ g.test('check_multiple_of_4_bytes_constraint_on_offset').fn(async t => {
   {
     // Test offset of 2 bytes with float format
     vertexState.vertexBuffers[0].attributes[0].offset = 2;
-    vertexState.vertexBuffers[0].attributes[0].format = VertexFormat.Float;
+    vertexState.vertexBuffers[0].attributes[0].format = 'float';
     const descriptor = t.getDescriptor(vertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
 
     t.expectValidationError(() => {
