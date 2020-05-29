@@ -1,7 +1,6 @@
 export const description =
   'Test uninitialized textures are initialized to zero when used as a depth/stencil attachment.';
 
-import * as C from '../../../../common/constants.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { unreachable } from '../../../../common/framework/util/util.js';
 import { SubresourceRange } from '../../../util/texture/subresource.js';
@@ -138,7 +137,7 @@ class DepthStencilAttachmentClearTest extends TextureZeroInitTest {
       const renderTexture = this.device.createTexture({
         size: [width, height, 1],
         format: 'r8unorm',
-        usage: C.TextureUsage.OutputAttachment | C.TextureUsage.CopySrc,
+        usage: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.COPY_SRC,
         sampleCount: this.params.sampleCount,
       });
 
@@ -148,7 +147,7 @@ class DepthStencilAttachmentClearTest extends TextureZeroInitTest {
         resolveTexture = this.device.createTexture({
           size: [width, height, 1],
           format: 'r8unorm',
-          usage: C.TextureUsage.OutputAttachment | C.TextureUsage.CopySrc,
+          usage: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.COPY_SRC,
         });
         resolveTarget = resolveTexture.createView();
       }
