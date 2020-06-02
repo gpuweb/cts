@@ -80,8 +80,9 @@ g.test('visibility_and_dynamic_offsets')
     const { type, hasDynamicOffset, visibility } = t.params;
     const info = kBindingTypeInfo[type as GPUBindingType];
 
+    const storageTextureFormat = info.resource === 'storageTex' ? ('r32uint' as const) : undefined;
     const descriptor = {
-      entries: [{ binding: 0, visibility, type, hasDynamicOffset }],
+      entries: [{ binding: 0, visibility, type, hasDynamicOffset, storageTextureFormat }],
     };
 
     const supportsDynamicOffset = kBindingTypeInfo[type].perPipelineLimitClass.maxDynamic > 0;
