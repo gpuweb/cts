@@ -85,10 +85,7 @@ g.test('visibility_and_dynamic_offsets')
     const { type, hasDynamicOffset, visibility } = t.params;
     const info = kBindingTypeInfo[type as GPUBindingType];
 
-    const storageTextureFormat =
-      type === 'readonly-storage-texture' || type === 'writeonly-storage-texture'
-        ? ('r32uint' as const)
-        : undefined;
+    const storageTextureFormat = info.resource === 'storageTex' ? ('r32uint' as const) : undefined;
     const descriptor = {
       entries: [{ binding: 0, visibility, type, hasDynamicOffset, storageTextureFormat }],
     };
