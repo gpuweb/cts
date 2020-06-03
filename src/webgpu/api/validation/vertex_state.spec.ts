@@ -281,6 +281,7 @@ g.test('offset_should_be_within_vertex_buffer_arrayStride_if_arrayStride_is_not_
   }
 );
 
+// TODO: This should be made into an operation test.
 g.test('check_two_attributes_overlapping').fn(async t => {
   const vertexState = {
     vertexBuffers: [
@@ -308,13 +309,10 @@ g.test('check_two_attributes_overlapping').fn(async t => {
   }
   {
     // Test two attributes overlapping
-    const badVertexState = clone(vertexState);
-    badVertexState.vertexBuffers[0].attributes[0].format = 'int2';
-    const descriptor = t.getDescriptor(badVertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
-
-    t.expectValidationError(() => {
-      t.device.createRenderPipeline(descriptor);
-    });
+    const overlappingVertexState = clone(vertexState);
+    overlappingVertexState.vertexBuffers[0].attributes[0].format = 'int2';
+    const descriptor = t.getDescriptor(overlappingVertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
+    t.device.createRenderPipeline(descriptor);
   }
 });
 
