@@ -227,7 +227,7 @@ got [${failedByteActualValues.join(', ')}]`;
     this.expectContents(buffer, new Uint8Array(arrayBuffer));
   }
 
-  expectError<R>(filter: GPUErrorFilter, fn: () => R): R {
+  expectGPUError<R>(filter: GPUErrorFilter, fn: () => R): R {
     this.device.pushErrorScope(filter);
     const returnValue = fn();
     const promise = this.device.popErrorScope();

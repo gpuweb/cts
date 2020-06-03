@@ -13,17 +13,17 @@ function getBufferDesc(usage: GPUBufferUsageFlags): GPUBufferDescriptor {
 export const g = makeTestGroup(GPUTest);
 
 g.test('mapWriteAsync').fn(async t => {
-  const buffer = t.expectError('out-of-memory', () => {
+  const buffer = t.expectGPUError('out-of-memory', () => {
     return t.device.createBuffer(getBufferDesc(GPUBufferUsage.MAP_WRITE));
   });
-  t.shouldReject('RangeError', buffer.mapWriteAsync());
+  t.shouldReject('OperationError', buffer.mapWriteAsync());
 });
 
 g.test('mapReadAsync').fn(async t => {
-  const buffer = t.expectError('out-of-memory', () => {
+  const buffer = t.expectGPUError('out-of-memory', () => {
     return t.device.createBuffer(getBufferDesc(GPUBufferUsage.MAP_READ));
   });
-  t.shouldReject('RangeError', buffer.mapReadAsync());
+  t.shouldReject('OperationError', buffer.mapReadAsync());
 });
 
 g.test('createBufferMapped').fn(async t => {
