@@ -1,11 +1,11 @@
+import { Fixture } from '../../common/framework/fixture.js';
 import { assert } from '../../common/framework/util/util.js';
-import { UnitTest } from '../../unittests/unit_test.js';
 
 interface UnknownObject {
   [k: string]: unknown;
 }
 
-export class IDLTest extends UnitTest {
+export class IDLTest extends Fixture {
   /**
    * Asserts that an IDL interface has the expected members.
    */
