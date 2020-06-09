@@ -1,5 +1,10 @@
 {
-  "extends": "./node_modules/gts",
+  "extends": [
+    "./node_modules/gts",
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:import/typescript"
+  ],
   "env": {
     "browser": true,
     "node": true
@@ -7,27 +12,62 @@
   "plugins": ["node", "ban", "import"],
   "rules": {
     "ban/ban": [
-      "error",
+      "warn",
       {
         "name": "setTimeout",
-        "message": "WPT (Web Platform Tests) doesn't allow setTimeout."
+        "message": "WPT disallows setTimeout; use `framework/util/timeout.js`."
       }
     ],
-    "linebreak-style": ["error", "unix"],
-    "object-shorthand": "error",
-    "no-console": "error",
+    "linebreak-style": ["warn", "unix"],
+    "object-shorthand": "warn",
+    "no-console": "warn",
     "no-undef": "off",
-    "no-useless-rename": "error",
+    "no-useless-rename": "warn",
     "@typescript-eslint/no-inferrable-types": "off",
     "import/order": [
-      "error",
+      "warn",
       {
         "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
         "newlines-between": "always",
         "alphabetize": { "order": "asc", "caseInsensitive": false }
       }
     ],
-    "import/newline-after-import": ["error", { "count": 1 }],
-    "import/no-duplicates": "error"
+    "import/newline-after-import": ["warn", { "count": 1 }],
+    "import/no-duplicates": "warn",
+    "import/no-restricted-paths": [
+      "error",
+      {
+        "zones": [
+          {
+            "target": "./src/webgpu",
+            "from": "./src/common",
+            "except": ["./framework", "./tools/crawl.ts", "./constants.ts"],
+            "message": "Non-framework common/ code imported from webgpu/ suite"
+          },
+          {
+            "target": "./src/unittests",
+            "from": "./src/common",
+            "except": ["./framework", "./tools/crawl.ts", "./constants.ts"],
+            "message": "Non-framework common/ code imported from unittests/ suite"
+          },
+          {
+            "target": "./src/webgpu",
+            "from": "./src/unittests",
+            "message": "unittests/ suite imported from webgpu/ suite"
+          },
+          {
+            "target": "./src/common",
+            "from": "./src",
+            "except": ["./common"],
+            "message": "Non common/ code imported from common/"
+          }
+        ]
+      }
+    ]
+  },
+  "settings": {
+    "import/resolver": {
+      "./.eslint-resolver": {}
+    }
   }
 }

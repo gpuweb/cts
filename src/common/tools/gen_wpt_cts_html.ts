@@ -1,9 +1,7 @@
 import { promises as fs } from 'fs';
 
-import { listing } from '../../webgpu/listing.js';
 import { DefaultTestFileLoader } from '../framework/file_loader.js';
 import { TestQueryMultiTest, TestQueryMultiFile } from '../framework/query/query.js';
-import { TestSuiteListingEntry } from '../framework/test_suite_listing.js';
 import { assert } from '../framework/util/util.js';
 
 function printUsageAndExit(rc: number): void {
@@ -47,7 +45,7 @@ const [
 
 (async () => {
   if (process.argv.length === 4) {
-    const entries = (await listing) as TestSuiteListingEntry[];
+    const entries = await (await import('../../webgpu/listing.js')).listing;
     const lines = entries
       // Exclude READMEs.
       .filter(l => !('readme' in l))
