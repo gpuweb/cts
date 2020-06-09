@@ -4,7 +4,6 @@ module.exports = function (grunt) {
     pkg: grunt.file.readJSON('package.json'),
 
     clean: {
-      constants: ['src/constants.ts', 'src/common/constants.ts'],
       out: ['out/', 'out-wpt'],
     },
 
@@ -56,20 +55,9 @@ module.exports = function (grunt) {
     },
 
     copy: {
-      'webgpu-constants': {
-        files: [
-          {
-            expand: true,
-            cwd: 'node_modules/@webgpu/types/src',
-            src: 'constants.ts',
-            dest: 'src/common/',
-          },
-        ],
-      },
       'out-wpt': {
         files: [
           { expand: true, cwd: '.', src: 'LICENSE.txt', dest: 'out-wpt/' },
-          { expand: true, cwd: 'out', src: 'common/constants.js', dest: 'out-wpt/' },
           { expand: true, cwd: 'out', src: 'common/framework/**/*.js', dest: 'out-wpt/' },
           { expand: true, cwd: 'out', src: 'common/runtime/wpt.js', dest: 'out-wpt/' },
           { expand: true, cwd: 'out', src: 'common/runtime/helper/**/*.js', dest: 'out-wpt/' },
@@ -144,7 +132,6 @@ module.exports = function (grunt) {
 
   grunt.registerTask('prebuild', 'Pre-build tasks (clean and re-copy)', [
     'clean',
-    'copy:webgpu-constants',
   ]);
   grunt.registerTask('compile', 'Compile and generate (no checks, no WPT)', [
     'run:build-out',
@@ -183,7 +170,6 @@ module.exports = function (grunt) {
   ]);
   registerTaskAndAddToHelp('check', 'Typecheck and lint', [
     'set-quiet-mode',
-    'copy:webgpu-constants',
     'ts:check',
     'run:lint',
   ]);

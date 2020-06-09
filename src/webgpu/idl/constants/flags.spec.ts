@@ -2,7 +2,6 @@ export const description = `
 Test the values of flags interfaces (e.g. GPUTextureUsage).
 `;
 
-import { BufferUsage, TextureUsage, ColorWrite, ShaderStage } from '../../../common/constants.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { IDLTest } from '../idl_test.js';
 
@@ -10,46 +9,46 @@ export const g = makeTestGroup(IDLTest);
 
 g.test('BufferUsage').fn(t => {
   const expected = {
-    MAP_READ: BufferUsage.MapRead,
-    MAP_WRITE: BufferUsage.MapWrite,
-    COPY_SRC: BufferUsage.CopySrc,
-    COPY_DST: BufferUsage.CopyDst,
-    INDEX: BufferUsage.Index,
-    VERTEX: BufferUsage.Vertex,
-    UNIFORM: BufferUsage.Uniform,
-    STORAGE: BufferUsage.Storage,
-    INDIRECT: BufferUsage.Indirect,
+    MAP_READ: 0x0001,
+    MAP_WRITE: 0x0002,
+    COPY_SRC: 0x0004,
+    COPY_DST: 0x0008,
+    INDEX: 0x0010,
+    VERTEX: 0x0020,
+    UNIFORM: 0x0040,
+    STORAGE: 0x0080,
+    INDIRECT: 0x0100,
   };
   t.assertMembers(GPUBufferUsage, expected);
 });
 
 g.test('TextureUsage').fn(t => {
   const expected = {
-    COPY_SRC: TextureUsage.CopySrc,
-    COPY_DST: TextureUsage.CopyDst,
-    SAMPLED: TextureUsage.Sampled,
-    STORAGE: TextureUsage.Storage,
-    OUTPUT_ATTACHMENT: TextureUsage.OutputAttachment,
+    COPY_SRC: 0x01,
+    COPY_DST: 0x02,
+    SAMPLED: 0x04,
+    STORAGE: 0x08,
+    OUTPUT_ATTACHMENT: 0x10,
   };
   t.assertMembers(GPUTextureUsage, expected);
 });
 
 g.test('ColorWrite').fn(t => {
   const expected = {
-    RED: ColorWrite.Red,
-    GREEN: ColorWrite.Green,
-    BLUE: ColorWrite.Blue,
-    ALPHA: ColorWrite.Alpha,
-    ALL: ColorWrite.All,
+    RED: 0x1,
+    GREEN: 0x2,
+    BLUE: 0x4,
+    ALPHA: 0x8,
+    ALL: 0xf,
   };
   t.assertMembers(GPUColorWrite, expected);
 });
 
 g.test('ShaderStage').fn(t => {
   const expected = {
-    VERTEX: ShaderStage.Vertex,
-    FRAGMENT: ShaderStage.Fragment,
-    COMPUTE: ShaderStage.Compute,
+    VERTEX: 0x1,
+    FRAGMENT: 0x2,
+    COMPUTE: 0x4,
   };
   t.assertMembers(GPUShaderStage, expected);
 });
