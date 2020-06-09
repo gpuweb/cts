@@ -1,13 +1,14 @@
 const path = require('path');
 const resolve = require('resolve')
 
+// Implements the following resolver spec:
+// https://github.com/benmosher/eslint-plugin-import/blob/master/resolvers/README.md
 exports.interfaceVersion = 2
 
-const dotJS = /\.js$/;
 exports.resolve = function (source, file, config) {
   if (resolve.isCore(source)) return { found: true, path: null }
 
-  source = source.replace(dotJS, '.ts');
+  source = source.replace(/\.js$/, '.ts');
   try {
     return {
       found: true, path: resolve.sync(source, {
