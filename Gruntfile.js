@@ -1,10 +1,14 @@
+/* eslint-disable node/no-unpublished-require */
+/* eslint-disable prettier/prettier */
+/* eslint-disable no-console */
+
 module.exports = function (grunt) {
   // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
 
     clean: {
-      out: ['out/', 'out-wpt'],
+      out: ['out/', 'out-wpt/'],
     },
 
     run: {
@@ -20,7 +24,7 @@ module.exports = function (grunt) {
         cmd: 'node',
         args: ['tools/gen_wpt_cts_html', 'out-wpt/cts.html', 'src/common/templates/cts.html'],
       },
-      test: {
+      unittest: {
         cmd: 'node',
         args: ['tools/run', 'unittests:*'],
       },
@@ -31,6 +35,24 @@ module.exports = function (grunt) {
           '--source-maps=true',
           '--extensions=.ts',
           '--out-dir=out/',
+          'src/',
+        ],
+      },
+      'build-out-wpt': {
+        cmd: 'node',
+        args: [
+          'node_modules/@babel/cli/bin/babel',
+          '--source-maps=false',
+          '--extensions=.ts',
+          '--delete-dir-on-start',
+          '--out-dir=out-wpt/',
+          '--only=src/common/framework/',
+          '--only=src/common/runtime/helper/',
+          '--only=src/common/runtime/wpt.ts',
+          '--only=src/webgpu/',
+          '--ignore=src/*/listing.ts',
+          '--ignore=src/common/framework/version.ts',
+          '--ignore=**/*.js',
           'src/',
         ],
       },
@@ -47,7 +69,7 @@ module.exports = function (grunt) {
     watch: {
       src: {
         files: ['src/**/*'],
-        tasks: ['run:build-out', 'run:lint'],
+        tasks: ['build-standalone', 'ts:check', 'run:lint'],
         options: {
           spawn: false,
         }
@@ -55,12 +77,14 @@ module.exports = function (grunt) {
     },
 
     copy: {
-      'out-wpt': {
+      'out-wpt-generated': {
         files: [
-          { expand: true, cwd: 'out', src: 'common/framework/**/*.js', dest: 'out-wpt/' },
-          { expand: true, cwd: 'out', src: 'common/runtime/wpt.js', dest: 'out-wpt/' },
-          { expand: true, cwd: 'out', src: 'common/runtime/helper/**/*.js', dest: 'out-wpt/' },
-          { expand: true, cwd: 'out', src: 'webgpu/**/*.js', dest: 'out-wpt/' },
+          { expand: true, cwd: 'out', src: 'common/framework/version.js', dest: 'out-wpt/' },
+          { expand: true, cwd: 'out', src: 'webgpu/listing.js', dest: 'out-wpt/' },
+        ],
+      },
+      'out-wpt-htmlfiles': {
+        files: [
           { expand: true, cwd: 'src', src: 'webgpu/**/*.html', dest: 'out-wpt/' },
         ],
       },
@@ -79,7 +103,7 @@ module.exports = function (grunt) {
         host: '127.0.0.1',
         cache: -1,
         runInBackground: true,
-        logFn: function (req, res, error) {
+        logFn(req, res, error) {
           // Only log errors to not spam the console.
           if (error) {
             console.error(error);
@@ -105,7 +129,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-ts');
   grunt.loadNpmTasks('grunt-contrib-watch');
 
-  grunt.event.on('watch', function (action, filepath) {
+  grunt.event.on('watch', (action, filepath) => {
     const buildArgs = grunt.config(['run', 'build-out', 'args']);
     buildArgs[buildArgs.length - 1] = filepath;
     grunt.config(['run', 'build-out', 'args'], buildArgs);
@@ -125,60 +149,67 @@ module.exports = function (grunt) {
   }
 
   grunt.registerTask('set-quiet-mode', () => {
-    grunt.log.write('Running other tasks');
+    grunt.log.write('Running tasks');
     require('quiet-grunt');
   });
 
-  grunt.registerTask('prebuild', 'Pre-build tasks (clean and re-copy)', [
-    'clean',
-  ]);
-  grunt.registerTask('compile', 'Compile and generate (no checks, no WPT)', [
+  grunt.registerTask('build-standalone', 'Build out/ (no checks, no WPT)', [
     'run:build-out',
     'run:generate-version',
     'run:generate-listings',
   ]);
-  grunt.registerTask('generate-wpt', 'Generate out-wpt/', [
-    'copy:out-wpt',
+  grunt.registerTask('build-wpt', 'Build out/ (no checks)', [
+    'run:build-out-wpt',
+    'run:generate-version',
+    'run:generate-listings',
+    'copy:out-wpt-generated',
+    'copy:out-wpt-htmlfiles',
     'run:generate-wpt-cts-html',
   ]);
-  grunt.registerTask('compile-done-message', () => {
+  grunt.registerTask('build-done-message', () => {
     process.stderr.write('\nBuild completed! Running checks/tests');
   });
 
-  registerTaskAndAddToHelp('pre', 'Run all presubmit checks: build+typecheck+test+lint', [
+  registerTaskAndAddToHelp('pre', 'Run all presubmit checks: standalone+wpt+typecheck+unittest+lint', [
     'set-quiet-mode',
-    'wpt',
+    'clean',
+    'build-standalone',
+    'build-wpt',
+    'build-done-message',
+    'ts:check',
+    'run:unittest',
     'run:lint',
   ]);
-  registerTaskAndAddToHelp('test', 'Quick development build: build+typecheck+test', [
+  registerTaskAndAddToHelp('test', 'Quick development build: standalone+typecheck+unittest', [
     'set-quiet-mode',
-    'prebuild',
-    'compile',
-    'compile-done-message',
+    'build-standalone',
+    'build-done-message',
     'ts:check',
-    'run:test',
+    'run:unittest',
   ]);
-  registerTaskAndAddToHelp('wpt', 'Build for WPT: build+typecheck+test+wpt', [
+  registerTaskAndAddToHelp('wpt', 'Build for WPT: wpt+typecheck+unittest', [
     'set-quiet-mode',
-    'prebuild',
-    'compile',
-    'generate-wpt',
-    'compile-done-message',
+    'build-wpt',
+    'build-done-message',
     'ts:check',
-    'run:test',
+    'run:unittest',
   ]);
   registerTaskAndAddToHelp('check', 'Typecheck and lint', [
     'set-quiet-mode',
     'ts:check',
     'run:lint',
   ]);
+
   registerTaskAndAddToHelp('dev', 'Start the dev server, and watch for changes', [
+    'build-standalone',
     'http-server:background',
     'watch',
   ]);
 
   registerTaskAndAddToHelp('serve', 'Serve out/ on 127.0.0.1:8080', ['http-server:.']);
   registerTaskAndAddToHelp('fix', 'Fix lint and formatting', ['run:fix']);
+
+  addExistingTaskToHelp('clean', 'Clean out/ and out-wpt/');
 
   grunt.registerTask('default', '', () => {
     console.error('\nAvailable tasks (see grunt --help for info):');
