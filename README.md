@@ -19,12 +19,11 @@ The WebGPU CTS is written in TypeScript, and builds into two directories:
 
 ### Setup
 
-After checking out the repository and installing Yarn, run these commands to
-set up dependencies:
+After checking out the repository and installing node/npm, run these commands
+in the checkout:
 
 ```sh
-cd webgpu/
-yarn install
+npm install
 
 npx grunt  # show available grunt commands
 ```

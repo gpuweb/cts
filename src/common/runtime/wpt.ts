@@ -25,7 +25,7 @@ declare function async_test(f: (this: WptTestObject) => Promise<void>, name: str
   await addWPTTests(testcases);
 })();
 
-// Note: async_tests must ALL be added within the same task. This function *must not* be async.
+// Note: `async_test`s must ALL be added within the same task. This function *must not* be async.
 function addWPTTests(testcases: IterableIterator<TestTreeLeaf>): Promise<Logger> {
   const worker = optionEnabled('worker') ? new TestWorker(false) : undefined;
 
