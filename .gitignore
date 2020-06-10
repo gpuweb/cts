@@ -1,9 +1,5 @@
-out/
-out-wpt/
-# Copied from @webgpu/types during build (as a hack to avoid having any "real"
-# dependencies, which makes it easier to get the output in the out/ directory
-# to be self-contained).
-/src/common/constants.ts
+/out/
+/out-wpt/
 
 *.code-workspace
 

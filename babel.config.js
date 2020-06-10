@@ -13,6 +13,7 @@ module.exports = function (api) {
       ],
     ],
     compact: false,
-    shouldPrintComment: val => !/eslint/.test(val),
+    retainLines: true, // Keeps code *and comments* on ~the same line as in the source
+    shouldPrintComment: val => !/eslint|prettier-ignore/.test(val),
   };
 };
