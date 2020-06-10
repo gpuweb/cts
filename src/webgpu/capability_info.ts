@@ -1,4 +1,6 @@
-import * as C from '../common/constants.js';
+type valueof<K> = K[keyof K];
+type GPUTextureUsage = valueof<typeof GPUTextureUsage>;
+type GPUBufferUsage = valueof<typeof GPUBufferUsage>;
 
 function keysOf<T extends string>(obj: { [k in T]: unknown }): readonly T[] {
   return (Object.keys(obj) as unknown[]) as T[];
@@ -98,15 +100,15 @@ export const kTextureAspectInfo: {
 export const kTextureAspects = keysOf(kTextureAspectInfo);
 
 export const kTextureUsageInfo: {
-  readonly [k in C.TextureUsage]: {};
+  readonly [k in GPUTextureUsage]: {};
 } = {
-  [C.TextureUsage.CopySrc]: {},
-  [C.TextureUsage.CopyDst]: {},
-  [C.TextureUsage.Sampled]: {},
-  [C.TextureUsage.Storage]: {},
-  [C.TextureUsage.OutputAttachment]: {},
+  [GPUTextureUsage.COPY_SRC]: {},
+  [GPUTextureUsage.COPY_DST]: {},
+  [GPUTextureUsage.SAMPLED]: {},
+  [GPUTextureUsage.STORAGE]: {},
+  [GPUTextureUsage.OUTPUT_ATTACHMENT]: {},
 };
-export const kTextureUsages = numericKeysOf<C.TextureUsage>(kTextureUsageInfo);
+export const kTextureUsages = numericKeysOf<GPUTextureUsage>(kTextureUsageInfo);
 
 // Typedefs for bindings
 
@@ -200,19 +202,19 @@ interface BindingTypeInfo extends BindingKindInfo {
   // Add fields as needed
 }
 const kValidStagesAll = {
-  validStages: C.ShaderStage.Vertex | C.ShaderStage.Fragment | C.ShaderStage.Compute,
+  validStages: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
 };
-const kValidStagesStorageWrite = { validStages: C.ShaderStage.Fragment | C.ShaderStage.Compute };
+const kValidStagesStorageWrite = { validStages: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE };
 
 export const kBufferBindingTypeInfo: {
   readonly [k in BufferBindingType]: {
-    readonly usage: C.BufferUsage;
+    readonly usage: GPUBufferUsage;
     // Add fields as needed
   } & BindingTypeInfo;
 } = /* prettier-ignore */ {
-  'uniform-buffer':          { usage: C.BufferUsage.Uniform, ...kBindingKind.uniformBuf,  ...kValidStagesAll,          },
-  'storage-buffer':          { usage: C.BufferUsage.Storage, ...kBindingKind.storageBuf,  ...kValidStagesStorageWrite, },
-  'readonly-storage-buffer': { usage: C.BufferUsage.Storage, ...kBindingKind.storageBuf,  ...kValidStagesAll,          },
+  'uniform-buffer':          { usage: GPUBufferUsage.UNIFORM, ...kBindingKind.uniformBuf,  ...kValidStagesAll,          },
+  'storage-buffer':          { usage: GPUBufferUsage.STORAGE, ...kBindingKind.storageBuf,  ...kValidStagesStorageWrite, },
+  'readonly-storage-buffer': { usage: GPUBufferUsage.STORAGE, ...kBindingKind.storageBuf,  ...kValidStagesAll,          },
 };
 export const kBufferBindingTypes = keysOf(kBufferBindingTypeInfo);
 
@@ -228,13 +230,13 @@ export const kSamplerBindingTypes = keysOf(kSamplerBindingTypeInfo);
 
 export const kTextureBindingTypeInfo: {
   readonly [k in TextureBindingType]: {
-    readonly usage: C.TextureUsage;
+    readonly usage: GPUTextureUsage;
     // Add fields as needed
   } & BindingTypeInfo;
 } = /* prettier-ignore */ {
-  'sampled-texture':           { usage: C.TextureUsage.Sampled, ...kBindingKind.sampledTex,  ...kValidStagesAll,          },
-  'writeonly-storage-texture': { usage: C.TextureUsage.Storage, ...kBindingKind.storageTex,  ...kValidStagesStorageWrite, },
-  'readonly-storage-texture':  { usage: C.TextureUsage.Storage, ...kBindingKind.storageTex,  ...kValidStagesAll,          },
+  'sampled-texture':           { usage: GPUTextureUsage.SAMPLED, ...kBindingKind.sampledTex,  ...kValidStagesAll,          },
+  'writeonly-storage-texture': { usage: GPUTextureUsage.STORAGE, ...kBindingKind.storageTex,  ...kValidStagesStorageWrite, },
+  'readonly-storage-texture':  { usage: GPUTextureUsage.STORAGE, ...kBindingKind.storageTex,  ...kValidStagesAll,          },
 };
 export const kTextureBindingTypes = keysOf(kTextureBindingTypeInfo);
 
@@ -250,8 +252,8 @@ export const kBindingTypeInfo: {
 export const kBindingTypes = keysOf(kBindingTypeInfo);
 
 export const kShaderStages: readonly GPUShaderStageFlags[] = [
-  C.ShaderStage.Vertex,
-  C.ShaderStage.Fragment,
-  C.ShaderStage.Compute,
+  GPUShaderStage.VERTEX,
+  GPUShaderStage.FRAGMENT,
+  GPUShaderStage.COMPUTE,
 ];
 export const kShaderStageCombinations: readonly GPUShaderStageFlags[] = [0, 1, 2, 3, 4, 5, 6, 7];

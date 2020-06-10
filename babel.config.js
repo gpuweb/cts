@@ -4,8 +4,6 @@ module.exports = function (api) {
     presets: ['@babel/preset-typescript'],
     plugins: [
       '@babel/plugin-proposal-class-properties',
-      '@babel/plugin-syntax-dynamic-import',
-      '@babel/plugin-syntax-import-meta',
       'const-enum',
       [
         'add-header-comment',
@@ -15,6 +13,10 @@ module.exports = function (api) {
       ],
     ],
     compact: false,
-    shouldPrintComment: val => !/eslint/.test(val),
+    // Keeps comments from getting hoisted to the end of the previous line of code.
+    // (Also keeps lines close to their original line numbers - but for WPT we
+    // reformat with prettier anyway.)
+    retainLines: true,
+    shouldPrintComment: val => !/eslint|prettier-ignore/.test(val),
   };
 };

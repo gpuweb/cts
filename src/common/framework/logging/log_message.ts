@@ -22,12 +22,10 @@ export class LogMessageWithStack extends Error {
   }
 
   toJSON(): string {
-    let m = this.name + ': ';
+    let m = this.name;
+    if (this.message) m += ': ' + this.message;
     if (!this.stackHidden && this.stack) {
-      // this.message is already included in this.stack
-      m += extractImportantStackTrace(this);
-    } else {
-      m += this.message;
+      m += '\n' + extractImportantStackTrace(this);
     }
     if (this.timesSeen > 1) {
       m += `\n(seen ${this.timesSeen} times with identical stack)`;
