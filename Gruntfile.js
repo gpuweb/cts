@@ -42,18 +42,18 @@ module.exports = function (grunt) {
         cmd: 'node',
         args: [
           'node_modules/@babel/cli/bin/babel',
-          '--source-maps=false',
+          '--source-maps=inline',
           '--extensions=.ts',
           '--delete-dir-on-start',
           '--out-dir=out-wpt/',
+          'src/',
           '--only=src/common/framework/',
           '--only=src/common/runtime/helper/',
           '--only=src/common/runtime/wpt.ts',
           '--only=src/webgpu/',
-          '--ignore=src/*/listing.ts',
+          // These files will be generated, instead of compiled from TypeScript.
           '--ignore=src/common/framework/version.ts',
-          '--ignore=**/*.js',
-          'src/',
+          '--ignore=src/webgpu/listing.ts',
         ],
       },
       lint: {
