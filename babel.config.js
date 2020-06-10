@@ -13,7 +13,10 @@ module.exports = function (api) {
       ],
     ],
     compact: false,
-    retainLines: true, // Keeps code *and comments* on ~the same line as in the source
+    // Keeps comments from getting hoisted to the end of the previous line of code.
+    // (Also keeps lines close to their original line numbers - but for WPT we
+    // reformat with prettier anyway.)
+    retainLines: true,
     shouldPrintComment: val => !/eslint|prettier-ignore/.test(val),
   };
 };
