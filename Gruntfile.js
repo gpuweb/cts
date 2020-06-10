@@ -64,6 +64,10 @@ module.exports = function (grunt) {
         cmd: 'node',
         args: ['node_modules/eslint/bin/eslint', 'src/**/*.ts', '--fix'],
       },
+      'autoformat-out-wpt': {
+        cmd: 'node',
+        args: ['node_modules/.bin/prettier', '--write', 'out-wpt/**/*.js'],
+      }
     },
 
     watch: {
@@ -160,6 +164,7 @@ module.exports = function (grunt) {
   ]);
   grunt.registerTask('build-wpt', 'Build out/ (no checks)', [
     'run:build-out-wpt',
+    'run:autoformat-out-wpt',
     'run:generate-version',
     'run:generate-listings',
     'copy:out-wpt-generated',
