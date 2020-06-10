@@ -91,7 +91,7 @@ const specsData: { [k: string]: SpecFile } = {
           t.debug('OK');
         });
       g.test('bluh,a').fn(t => {
-        t.fail('bye');
+        t.fail('goodbye');
       });
       return g;
     })(),
@@ -223,7 +223,7 @@ g.test('end2end').fn(async t => {
 
     t.expect(log.results.get(name) === res);
     t.expect(res.status === status);
-    t.expect(res.timems > 0);
+    t.expect(res.timems >= 0);
     assert(res.logs !== undefined); // only undefined while pending
     t.expect(logs(res.logs.map(l => JSON.stringify(l))));
   };
@@ -240,7 +240,7 @@ g.test('end2end').fn(async t => {
     'fail',
     logs =>
       logs.length === 1 &&
-      logs[0].startsWith('"EXPECTATION FAILED: Error: bye\\n') &&
+      logs[0].startsWith('"EXPECTATION FAILED: goodbye\\n') &&
       logs[0].indexOf('loaders_and_trees.spec.') !== -1
   );
 });
