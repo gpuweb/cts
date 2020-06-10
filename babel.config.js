@@ -4,8 +4,6 @@ module.exports = function (api) {
     presets: ['@babel/preset-typescript'],
     plugins: [
       '@babel/plugin-proposal-class-properties',
-      '@babel/plugin-syntax-dynamic-import',
-      '@babel/plugin-syntax-import-meta',
       'const-enum',
       [
         'add-header-comment',

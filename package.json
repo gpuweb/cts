@@ -23,8 +23,6 @@
     "@babel/cli": "^7.10.1",
     "@babel/core": "^7.10.2",
     "@babel/plugin-proposal-class-properties": "^7.10.1",
-    "@babel/plugin-syntax-dynamic-import": "^7.8.3",
-    "@babel/plugin-syntax-import-meta": "^7.10.1",
     "@babel/preset-typescript": "^7.10.1",
     "@types/jquery": "^3.3.38",
     "@types/node": "^14.0.12",
