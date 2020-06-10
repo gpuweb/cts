@@ -26,6 +26,7 @@ if (!fs.existsSync(myself)) {
     const listing = await crawl(suite);
 
     const outFile = path.normalize(`out/${suite}/listing.js`);
+    fs.mkdirSync(`out/${suite}`, { recursive: true });
     fs.writeFileSync(
       outFile,
       `\

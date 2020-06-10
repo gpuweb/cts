@@ -32,8 +32,8 @@ module.exports = function (grunt) {
         cmd: 'node',
         args: [
           'node_modules/@babel/cli/bin/babel',
-          '--source-maps=true',
           '--extensions=.ts',
+          '--source-maps=true',
           '--out-dir=out/',
           'src/',
         ],
@@ -42,8 +42,8 @@ module.exports = function (grunt) {
         cmd: 'node',
         args: [
           'node_modules/@babel/cli/bin/babel',
-          '--source-maps=inline',
           '--extensions=.ts',
+          '--source-maps=false',
           '--delete-dir-on-start',
           '--out-dir=out-wpt/',
           'src/',
