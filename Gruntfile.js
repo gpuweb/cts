@@ -66,7 +66,7 @@ module.exports = function (grunt) {
       },
       'autoformat-out-wpt': {
         cmd: 'node',
-        args: ['node_modules/.bin/prettier', '--loglevel=warn', '--write', 'out-wpt/**/*.js'],
+        args: ['node_modules/prettier/bin-prettier', '--loglevel=warn', '--write', 'out-wpt/**/*.js'],
       }
     },
 
