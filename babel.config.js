@@ -4,6 +4,9 @@ module.exports = function (api) {
     presets: ['@babel/preset-typescript'],
     plugins: [
       '@babel/plugin-proposal-class-properties',
+      // Transforms optional chaining operator to equivalent ternary operator syntax.
+      // We need this to run tests on browsers that don't support optional chaining yet.
+      '@babel/plugin-proposal-optional-chaining',
       'const-enum',
       [
         'add-header-comment',
