@@ -235,7 +235,11 @@ got [${failedByteActualValues.join(', ')}]`;
 
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyTextureToBuffer(
-      { texture: src, mipLevel: layout?.mipLevel, arrayLayer: slice },
+      {
+        texture: src,
+        mipLevel: layout === null || layout === undefined ? undefined : layout.mipLevel,
+        arrayLayer: slice,
+      },
       { buffer, bytesPerRow, rowsPerImage },
       mipSize
     );
