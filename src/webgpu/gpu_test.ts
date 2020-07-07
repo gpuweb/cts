@@ -245,6 +245,44 @@ got [${failedByteActualValues.join(', ')}]`;
     this.expectContents(buffer, new Uint8Array(arrayBuffer));
   }
 
+  // TODO: Add check for values of depth/stencil, probably through sampling of shader
+  // TODO(natashalee): Can refactor this and expectSingleColor to use a similar base expect
+  expectSinglePixelIn2DTexture(
+    src: GPUTexture,
+    format: GPUTextureFormat,
+    { x, y }: { x: number; y: number },
+    {
+      exp,
+      slice = 0,
+      layout,
+    }: {
+      exp: Uint8Array;
+      slice?: number;
+      layout?: TextureLayoutOptions;
+    }
+  ): void {
+    const { byteLength, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
+      format,
+      '2d',
+      [1, 1, 1],
+      layout
+    );
+    const buffer = this.device.createBuffer({
+      size: byteLength,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    });
+
+    const commandEncoder = this.device.createCommandEncoder();
+    commandEncoder.copyTextureToBuffer(
+      { texture: src, mipLevel: layout?.mipLevel, arrayLayer: slice, origin: { x, y, z: 0 } },
+      { buffer, bytesPerRow, rowsPerImage },
+      mipSize
+    );
+    this.queue.submit([commandEncoder.finish()]);
+
+    this.expectContents(buffer, exp);
+  }
+
   expectGPUError<R>(filter: GPUErrorFilter, fn: () => R): R {
     this.device.pushErrorScope(filter);
     const returnValue = fn();
