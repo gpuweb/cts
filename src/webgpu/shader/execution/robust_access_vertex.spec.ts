@@ -29,9 +29,20 @@ instanceCount / firstInstance are tested.
 
 The tests will include multiple attributes per vertex buffer.
 
+The vertex buffers will be filled by repeating a few chosen values until the end of the buffer.
+
 The test will run a render pipeline which verifies the following:
-1) All vertex attribute values are in-bounds or zero (buffers filled with a few random values)
-2) All gl_VertexIndex values are within the index buffer or 0`;
+1) All vertex attribute values occur in the buffer or are zero
+2) All gl_VertexIndex values are within the index buffer or 0
+
+TODO:
+
+A suppression may be needed for d3d12 on tests that have non-zero baseVertex, since d3d12 counts
+from 0 instead of from baseVertex (will fail check for gl_VertexIndex).
+
+Vertex buffer contents could be randomized to prevent the case where a previous test creates
+a similar buffer to ours and the OOB-read seems valid. This should be deterministic, which adds
+more complexity that we may not need.`;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { GPUTest } from '../../gpu_test.js';
