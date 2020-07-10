@@ -106,21 +106,6 @@ g.test('number_of_dynamic_buffers_exceeds_the_maximum_value')
     });
   });
 
-g.test('dynamic_set_to_true_is_allowed_only_for_buffers')
-  .params(poptions('type', kBindingTypes))
-  .fn(async t => {
-    const { type } = t.params;
-    const success = kBindingTypeInfo[type].perPipelineLimitClass.maxDynamic > 0;
-
-    const descriptor = {
-      entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, type, hasDynamicOffset: true }],
-    };
-
-    t.expectValidationError(() => {
-      t.device.createBindGroupLayout(descriptor);
-    }, !success);
-  });
-
 // One bind group layout will be filled with kPerStageBindingLimit[...] of the type |type|.
 // For each item in the array returned here, a case will be generated which tests a pipeline
 // layout with one extra bind group layout with one extra binding. That extra binding will have:
