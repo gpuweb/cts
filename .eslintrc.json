@@ -20,7 +20,7 @@
     ],
     "linebreak-style": ["warn", "unix"],
     "object-shorthand": "warn",
-    "no-console": "warn",
+    "no-console": "off",
     "no-undef": "off",
     "no-useless-rename": "warn",
     "@typescript-eslint/no-inferrable-types": "off",

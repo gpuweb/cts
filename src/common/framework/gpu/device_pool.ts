@@ -1,6 +1,6 @@
 import { assert, raceWithRejectOnTimeout, unreachable, assertReject } from '../util/util.js';
 
-import { getGPU } from './implementation.js';
+import { getGPU, WebGPUWindow } from './implementation.js';
 
 interface DeviceHolder {
   acquired: boolean; // whether the device is currently in use by a test
@@ -79,14 +79,21 @@ export class DevicePool {
   // Gets a device and creates a DeviceHolder.
   // If the device is lost, DeviceHolder.lostReason gets set.
   private static async makeHolder(): Promise<DeviceHolder> {
-    const gpu = getGPU();
-    const adapter = await gpu.requestAdapter();
+    const gpu = await getGPU();
+    const window = new WebGPUWindow({
+      width: 640,
+      height: 480,
+      title: 'WebGPU',
+    });
+
+    const adapter = await gpu.requestAdapter({ window });
 
     const holder: DeviceHolder = {
       acquired: false,
       device: await adapter.requestDevice(),
       lostReason: undefined,
     };
+
     holder.device.lost.then(ev => {
       holder.lostReason = ev.message;
     });
