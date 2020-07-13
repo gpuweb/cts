@@ -40,10 +40,8 @@ export function getGPU(): Promise<GPU> {
     {
       const { GPUAdapter } = module.exports;
       GPUAdapter.prototype.requestDevice = function (): Promise<GPUDevice> {
-        console.log('req adapter');
         return new Promise(resolve => {
           this._requestDevice().then((device: GPUDevice) => {
-            console.log('req device');
             resolve(device);
           });
         });
