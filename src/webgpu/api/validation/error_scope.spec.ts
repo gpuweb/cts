@@ -3,7 +3,7 @@ error scope validation tests.
 `;
 
 import { Fixture } from '../../../common/framework/fixture.js';
-import { getGPU, WebGPUWindow } from '../../../common/framework/gpu/implementation.js';
+import { getDefaultAdapter } from '../../../common/framework/gpu/implementation.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert, raceWithRejectOnTimeout } from '../../../common/framework/util/util.js';
 
@@ -17,13 +17,7 @@ class F extends Fixture {
 
   async init(): Promise<void> {
     super.init();
-    const gpu = await getGPU();
-    const window = new WebGPUWindow({
-      width: 640,
-      height: 480,
-      title: 'WebGPU',
-    });
-    const adapter = await gpu.requestAdapter({ window });
+    const adapter = await getDefaultAdapter();
     this._device = await adapter.requestDevice();
   }
 
