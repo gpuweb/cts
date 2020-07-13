@@ -398,7 +398,7 @@ export abstract class TextureZeroInitTest extends GPUTest {
           bytesPerRow,
           rowsPerImage,
         },
-        { texture, mipLevel: level, arrayLayer: slice },
+        { texture, mipLevel: level, origin: { x: 0, y: 0, z: slice } },
         { width, height, depth: 1 }
       );
     }
