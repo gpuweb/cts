@@ -314,7 +314,7 @@ g.test('vertexAccess')
       for (let i = 0; i < bufferContents.length; i++) {
         vertexBuffers.push({
           arrayStride: slotsPerBuffer * typeInfo.size,
-          stepMode: i == 0 ? 'instance' : 'vertex',
+          stepMode: i === 0 ? 'instance' : 'vertex',
           attributes: Array(slotsPerBuffer)
             .fill(0)
             .map((_, i) => ({
@@ -328,7 +328,7 @@ g.test('vertexAccess')
 
     // Offset the range checks for gl_VertexIndex in the shader if we use BaseVertex
     let vertexIndexOffset = 0;
-    if (p.drawCallTestParameter == DrawCallParameter.BaseVertex) {
+    if (p.drawCallTestParameter === DrawCallParameter.BaseVertex) {
       vertexIndexOffset += p.errorScale;
     }
 
