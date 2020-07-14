@@ -94,17 +94,21 @@ export class DevicePool {
       lostReason: undefined,
     };
 
-    holder.device.lost.then(ev => {
-      holder.lostReason = ev.message;
-    });
+    if (holder.device.lost) {
+      holder.device.lost.then(ev => {
+        holder.lostReason = ev.message;
+      });
+    }
     return holder;
   }
 
   // Create error scopes that wrap the entire test.
   private beginErrorScopes(): void {
     assert(this.holder !== undefined);
-    this.holder.device.pushErrorScope('out-of-memory');
-    this.holder.device.pushErrorScope('validation');
+    if (this.holder.device.pushErrorScope !== undefined) {
+      this.holder.device.pushErrorScope('out-of-memory');
+      this.holder.device.pushErrorScope('validation');
+    }
   }
 
   // End the whole-test error scopes. Check that there are no extra error scopes, and that no
@@ -116,8 +120,13 @@ export class DevicePool {
 
     try {
       // May reject if the device was lost.
-      gpuValidationError = await this.holder.device.popErrorScope();
-      gpuOutOfMemoryError = await this.holder.device.popErrorScope();
+      if (this.holder.device.pushErrorScope !== undefined) {
+        gpuValidationError = await this.holder.device.popErrorScope();
+        gpuOutOfMemoryError = await this.holder.device.popErrorScope();
+      } else {
+        gpuValidationError = null;
+        gpuOutOfMemoryError = null;
+      }
     } catch (ex) {
       assert(
         this.holder.lostReason !== undefined,
