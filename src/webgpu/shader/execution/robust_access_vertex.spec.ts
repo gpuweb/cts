@@ -50,6 +50,7 @@ import { GPUTest } from '../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
+// Arguments for a regular draw call
 enum NonIndexedDrawCallParameter {
   VertexCount = 'VertexCount',
   FirstVertex = 'FirstVertex',
@@ -57,6 +58,7 @@ enum NonIndexedDrawCallParameter {
   FirstInstance = 'FirstInstance',
 }
 
+// Arguments for an indexed draw call
 enum IndexedDrawCallParameter {
   IndexCount = 'IndexCount',
   FirstIndex = 'FirstIndex',
@@ -65,7 +67,7 @@ enum IndexedDrawCallParameter {
   FirstInstance = 'FirstInstance',
 }
 
-// Combins both sets of parameters so we can pass one parameter 'to-be-tested' in the test suite
+// Combins both sets of parameters so we can pass one parameter 'to-be-tested'
 const DrawCallParameter = { ...NonIndexedDrawCallParameter, ...IndexedDrawCallParameter };
 type DrawCallParameter = typeof DrawCallParameter;
 const kDrawCallParameters = Object.keys(DrawCallParameter);
@@ -106,6 +108,7 @@ class DrawCall {
     }
     this.indexBuffer = this.GenerateIndexBuffer(indexArray);
 
+    // Default arguments (valid call)
     this.vertexCount = vertexCount;
     this.firstVertex = 0;
     this.indexCount = vertexCount;
@@ -115,11 +118,13 @@ class DrawCall {
     this.firstInstance = 0;
   }
 
+  // Insert a draw call into |pass|
   public Draw(pass: GPURenderPassEncoder) {
     this.BindVertexBuffers(pass);
     pass.draw(this.vertexCount, this.instanceCount, this.firstVertex, this.firstInstance);
   }
 
+  // Insert an indexed draw call into |pass|
   public DrawIndexed(pass: GPURenderPassEncoder) {
     this.BindVertexBuffers(pass);
     pass.setIndexBuffer(this.indexBuffer);
@@ -132,17 +137,20 @@ class DrawCall {
     );
   }
 
+  // Insert an indirect draw call into |pass|
   public DrawIndirect(pass: GPURenderPassEncoder) {
     this.BindVertexBuffers(pass);
     pass.drawIndirect(this.GenerateIndirectBuffer(), 0);
   }
 
+  // Insert an indexed indirect draw call into |pass|
   public DrawIndexedIndirect(pass: GPURenderPassEncoder) {
     this.BindVertexBuffers(pass);
     pass.setIndexBuffer(this.indexBuffer);
     pass.drawIndexedIndirect(this.GenerateIndexedIndirectBuffer(), 0);
   }
 
+  // Bind all vertex buffers generated
   private BindVertexBuffers(pass: GPURenderPassEncoder) {
     let currSlot = 0;
     for (let i = 0; i < this.vertexBuffers.length; i++) {
@@ -152,6 +160,7 @@ class DrawCall {
     }
   }
 
+  // Create a vertex buffer from |vertexArray|
   private GenerateVertexBuffer(vertexArray: Float32Array): GPUBuffer {
     const [vertexBuffer, vertexMapping] = this.device.createBufferMapped({
       size: vertexArray.byteLength,
@@ -162,6 +171,7 @@ class DrawCall {
     return vertexBuffer;
   }
 
+  // Create an index buffer from |indexArray|
   private GenerateIndexBuffer(indexArray: Uint16Array): GPUBuffer {
     const [indexBuffer, indexMapping] = this.device.createBufferMapped({
       size: indexArray.byteLength,
@@ -172,8 +182,9 @@ class DrawCall {
     return indexBuffer;
   }
 
+  // Create an indirect buffer containing draw call values
   private GenerateIndirectBuffer(): GPUBuffer {
-    let indirectArray = new Int32Array([
+    const indirectArray = new Int32Array([
       this.vertexCount,
       this.instanceCount,
       this.firstVertex,
@@ -188,8 +199,9 @@ class DrawCall {
     return indirectBuffer;
   }
 
+  // Create an indirect buffer containing indexed draw call values
   private GenerateIndexedIndirectBuffer(): GPUBuffer {
-    let indirectArray = new Int32Array([
+    const indirectArray = new Int32Array([
       this.indexCount,
       this.instanceCount,
       this.firstVertex,
@@ -206,6 +218,7 @@ class DrawCall {
   }
 }
 
+// Parameterize different sized types
 interface Type {
   format: GPUVertexFormat;
   size: number;
@@ -231,11 +244,12 @@ const typeInfoMap: { [k: string]: Type } = {
   vec4: {
     format: 'float4',
     size: 16,
-    validationFunc: 'return valid(v.x) && valid(v.y) && valid(v.z) && valid(v.w);',
+    validationFunc: `return valid(v.x) && valid(v.y) && valid(v.z) && valid(v.w) ||
+                            v.x == 0 && v.y == 0 && v.z == 0 && (v.w == 0.0 || v.w == 1.0);`,
   },
 };
 
-g.test('vertex')
+g.test('vertexAccess')
   .params(
     params()
       .combine(pbool('indexed'))
@@ -251,27 +265,35 @@ g.test('vertex')
       .combine(poptions('errorScale', [1, 4, 10 ** 2, 10 ** 4, 10 ** 6]))
   )
   .fn(async t => {
-    let p = t.params;
-    let typeInfo = typeInfoMap[p.type];
+    const p = t.params;
+    const typeInfo = typeInfoMap[p.type];
 
-    let numVertices = 3;
-    let slotsPerBuffer = 2;
+    // Number of vertices to draw
+    const numVertices = 3;
+    // Each buffer will be bound to this many slots (2 would mean 2 attributes per buffer)
+    const slotsPerBuffer = 2;
+    // Make an array big enough for the vertices, slots, and size of each element
     let vertexArray = new Float32Array(numVertices * slotsPerBuffer * typeInfo.size);
-    let values = [759, 329, 908];
-    for (let i = 0; i < vertexArray.length; ++i) {
-      vertexArray[i] = values[i % values.length];
-    }
-    let validValues = [0, ...values];
 
-    // Instanced step mode buffer, vertex step mode buffer
+    // Sufficiently unusual values to fill our buffer with to avoid collisions with other tests
+    const arbitraryValues = [759, 329, 908];
+    for (let i = 0; i < vertexArray.length; ++i) {
+      vertexArray[i] = arbitraryValues[i % arbitraryValues.length];
+    }
+    // A valid value is 0 or one in the buffer
+    const validValues = [0, ...arbitraryValues];
+
+    // Instance step mode buffer, vertex step mode buffer
     let bufferContents = [vertexArray, vertexArray];
-    // Additional buffers
+    // Additional buffers (vertex step mode)
     for (let i = 0; i < p.additionalBuffers; i++) {
       bufferContents.push(vertexArray);
     }
 
+    // Mutable draw call
     let draw = new DrawCall(t.device, bufferContents, numVertices, slotsPerBuffer);
 
+    // Create attributes listing
     let layoutStr = '';
     let attributeNames = [];
     {
@@ -285,6 +307,7 @@ g.test('vertex')
       }
     }
 
+    // Vertex buffer descriptors
     let vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [];
     {
       let currSlot = 0;
@@ -303,11 +326,13 @@ g.test('vertex')
       }
     }
 
+    // Offset the range checks for gl_VertexIndex in the shader if we use BaseVertex
     let vertexIndexOffset = 0;
     if (p.drawCallTestParameter == DrawCallParameter.BaseVertex) {
       vertexIndexOffset += p.errorScale;
     }
 
+    // Construct pipeline that outputs a green fragment, only if we notice any invalid values
     const vertexModule = t.makeShaderModule('vertex', {
       glsl: `
       #version 450
@@ -327,14 +352,17 @@ g.test('vertex')
           gl_VertexIndex < ${vertexIndexOffset + numVertices});
 
         if (attributesInBounds && (${!p.indexed} || indexInBounds)) {
+          // Success case, move the vertex out of the screen
           gl_Position = vec4(-1.0, 0.0, 0.0, 1.0);
         }
         else {
+          // Failure case, move the vertex inside the screen
           gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
         }
       }
     `,
     });
+
     const fragmentModule = t.makeShaderModule('fragment', {
       glsl: `
       #version 450
@@ -348,11 +376,7 @@ g.test('vertex')
     `,
     });
 
-    const dst = t.device.createBuffer({
-      size: 4,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-    });
-
+    // Pipeline setup, texture setup
     const colorAttachment = t.device.createTexture({
       format: 'rgba8unorm',
       size: { width: 1, height: 1, depth: 1 },
@@ -376,18 +400,7 @@ g.test('vertex')
       },
     });
 
-    const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          attachment: colorAttachmentView,
-          storeOp: 'store',
-          loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
-        },
-      ],
-    });
-    pass.setPipeline(pipeline);
-
+    // Offset the draw call parameter we are testing by |errorScale|
     switch (p.drawCallTestParameter) {
       case DrawCallParameter.VertexCount: {
         draw.vertexCount += p.errorScale;
@@ -419,17 +432,37 @@ g.test('vertex')
       }
     }
 
-    // drawFunc[indexed][indirect]
-    let drawFunc: { [k: string]: Function } = {
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          attachment: colorAttachmentView,
+          storeOp: 'store',
+          loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+        },
+      ],
+    });
+    pass.setPipeline(pipeline);
+
+    // Draw function lookup |drawFunc[indexed][indirect]|
+    const drawFunc: { [k: string]: Function } = {
       'false,false': draw.Draw,
       'false,true': draw.DrawIndirect,
       'true,false': draw.DrawIndexed,
       'true,true': draw.DrawIndexedIndirect,
     };
 
+    // Run the draw variant
     drawFunc[`${p.indexed},${p.indirect}`].call(draw, pass);
 
     pass.endPass();
+
+    // Validate we see red instead of green, meaning no fragment ended up on-screen
+    const dst = t.device.createBuffer({
+      size: 4,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    });
+
     encoder.copyTextureToBuffer(
       { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
       { buffer: dst, bytesPerRow: 256 },
