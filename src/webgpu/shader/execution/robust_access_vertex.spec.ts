@@ -354,8 +354,7 @@ g.test('vertexAccess')
         if (attributesInBounds && (${!p.indexed} || indexInBounds)) {
           // Success case, move the vertex out of the screen
           gl_Position = vec4(-1.0, 0.0, 0.0, 1.0);
-        }
-        else {
+        } else {
           // Failure case, move the vertex inside the screen
           gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
         }
