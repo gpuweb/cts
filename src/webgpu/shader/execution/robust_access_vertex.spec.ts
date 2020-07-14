@@ -102,7 +102,7 @@ class DrawCall {
     this.slotsPerBuffer = slotsPerBuffer;
     this.vertexBuffers = vertexArrays.map(v => this.GenerateVertexBuffer(v));
 
-    let indexArray = new Uint16Array(vertexCount);
+    const indexArray = new Uint16Array(vertexCount);
     for (let i = 0; i < vertexCount; i++) {
       indexArray[i] = i;
     }
@@ -273,7 +273,7 @@ g.test('vertexAccess')
     // Each buffer will be bound to this many slots (2 would mean 2 attributes per buffer)
     const slotsPerBuffer = 2;
     // Make an array big enough for the vertices, slots, and size of each element
-    let vertexArray = new Float32Array(numVertices * slotsPerBuffer * typeInfo.size);
+    const vertexArray = new Float32Array(numVertices * slotsPerBuffer * typeInfo.size);
 
     // Sufficiently unusual values to fill our buffer with to avoid collisions with other tests
     const arbitraryValues = [759, 329, 908];
@@ -284,18 +284,18 @@ g.test('vertexAccess')
     const validValues = [0, ...arbitraryValues];
 
     // Instance step mode buffer, vertex step mode buffer
-    let bufferContents = [vertexArray, vertexArray];
+    const bufferContents = [vertexArray, vertexArray];
     // Additional buffers (vertex step mode)
     for (let i = 0; i < p.additionalBuffers; i++) {
       bufferContents.push(vertexArray);
     }
 
     // Mutable draw call
-    let draw = new DrawCall(t.device, bufferContents, numVertices, slotsPerBuffer);
+    const draw = new DrawCall(t.device, bufferContents, numVertices, slotsPerBuffer);
 
     // Create attributes listing
     let layoutStr = '';
-    let attributeNames = [];
+    const attributeNames = [];
     {
       let currSlot = 0;
       for (let i = 0; i < bufferContents.length; i++) {
@@ -308,7 +308,7 @@ g.test('vertexAccess')
     }
 
     // Vertex buffer descriptors
-    let vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [];
+    const vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [];
     {
       let currSlot = 0;
       for (let i = 0; i < bufferContents.length; i++) {
@@ -395,7 +395,7 @@ g.test('vertexAccess')
       colorStates: [{ format: 'rgba8unorm', alphaBlend: {}, colorBlend: {} }],
       vertexState: {
         indexFormat: 'uint16',
-        vertexBuffers: vertexBuffers,
+        vertexBuffers,
       },
     });
 
