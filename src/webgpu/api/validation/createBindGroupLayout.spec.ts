@@ -7,6 +7,7 @@ import { makeTestGroup } from '../../../common/framework/test_group.js';
 import {
   kBindingTypeInfo,
   kBindingTypes,
+  kBufferBindingTypeInfo,
   kMaxBindingsPerBindGroup,
   kShaderStages,
   kShaderStageCombinations,
@@ -60,6 +61,29 @@ g.test('visibility_and_dynamic_offsets')
     t.expectValidationError(() => {
       t.device.createBindGroupLayout({
         entries: [{ binding: 0, visibility, type, hasDynamicOffset }],
+      });
+    }, !success);
+  });
+
+g.test('mininum_buffer_binding_size')
+  .params(
+    params()
+      .combine(poptions('type', kBindingTypes))
+      .combine(poptions('minBufferBindingSize', [undefined, 0, 4]))
+  )
+  .fn(async t => {
+    const { type, minBufferBindingSize } = t.params;
+
+    let success = false;
+    if (minBufferBindingSize !== undefined && minBufferBindingSize !== 0) {
+      if (type in kBufferBindingTypeInfo) {
+        success = true;
+      }
+    }
+
+    t.expectValidationError(() => {
+      t.device.createBindGroupLayout({
+        entries: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, type, minBufferBindingSize }],
       });
     }, !success);
   });
