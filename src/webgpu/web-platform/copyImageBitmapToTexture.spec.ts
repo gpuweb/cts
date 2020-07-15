@@ -268,9 +268,9 @@ g.test('from_ImageData')
     if (orientation === 'flipY') {
       for (let i = 0; i < height; ++i) {
         for (let j = 0; j < width * dstBytesPerPixel; ++j) {
-          const pos_image_pixel = (height - i - 1) * width * dstBytesPerPixel + j;
-          const pos_expected_value = i * width * dstBytesPerPixel + j;
-          expectedPixels[pos_expected_value] = dstPixels[pos_image_pixel];
+          const posImagePixel = (height - i - 1) * width * dstBytesPerPixel + j;
+          const posExpectedValue = i * width * dstBytesPerPixel + j;
+          expectedPixels[posExpectedValue] = dstPixels[posImagePixel];
         }
       }
     } else {
