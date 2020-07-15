@@ -100,12 +100,15 @@ async function tryInitDawn(): Promise<GPU> {
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   (dawn.GPUDevice as any).prototype.createBufferMapped = function (
     descriptor: GPUBufferDescriptor
-  ): Promise<GPUBuffer> {
-    return new Promise(resolve => {
-      setImmediate(() => {
-        this._createBufferMapped(descriptor, resolve);
-      });
-    });
+  ): GPUBuffer {
+    /* eslint-disable-next-line no-console */
+    console.log('PROTO: createBufferMapped');
+    //return new Promise(resolve => {
+    //  setImmediate(() => {
+    //    this._createBufferMapped(descriptor, resolve);
+    //  });
+    //});
+    return this._createBufferMapped(descriptor);
   };
 
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
