@@ -1,6 +1,6 @@
 import { assert, raceWithRejectOnTimeout, unreachable, assertReject } from '../util/util.js';
 
-import { getGPU, WebGPUWindow } from './implementation.js';
+import { getDefaultAdapter } from './implementation.js';
 
 interface DeviceHolder {
   acquired: boolean; // whether the device is currently in use by a test
@@ -79,14 +79,7 @@ export class DevicePool {
   // Gets a device and creates a DeviceHolder.
   // If the device is lost, DeviceHolder.lostReason gets set.
   private static async makeHolder(): Promise<DeviceHolder> {
-    const gpu = await getGPU();
-    const window = new WebGPUWindow({
-      width: 640,
-      height: 480,
-      title: 'WebGPU',
-    });
-
-    const adapter = await gpu.requestAdapter({ window });
+    const adapter = await getDefaultAdapter();
 
     const holder: DeviceHolder = {
       acquired: false,
@@ -94,17 +87,21 @@ export class DevicePool {
       lostReason: undefined,
     };
 
-    holder.device.lost.then(ev => {
-      holder.lostReason = ev.message;
-    });
+    if (holder.device.lost) {
+      holder.device.lost.then(ev => {
+        holder.lostReason = ev.message;
+      });
+    }
     return holder;
   }
 
   // Create error scopes that wrap the entire test.
   private beginErrorScopes(): void {
     assert(this.holder !== undefined);
-    this.holder.device.pushErrorScope('out-of-memory');
-    this.holder.device.pushErrorScope('validation');
+    if (this.holder.device.pushErrorScope !== undefined) {
+      this.holder.device.pushErrorScope('out-of-memory');
+      this.holder.device.pushErrorScope('validation');
+    }
   }
 
   // End the whole-test error scopes. Check that there are no extra error scopes, and that no
@@ -116,8 +113,13 @@ export class DevicePool {
 
     try {
       // May reject if the device was lost.
-      gpuValidationError = await this.holder.device.popErrorScope();
-      gpuOutOfMemoryError = await this.holder.device.popErrorScope();
+      if (this.holder.device.pushErrorScope !== undefined) {
+        gpuValidationError = await this.holder.device.popErrorScope();
+        gpuOutOfMemoryError = await this.holder.device.popErrorScope();
+      } else {
+        gpuValidationError = null;
+        gpuOutOfMemoryError = null;
+      }
     } catch (ex) {
       assert(
         this.holder.lostReason !== undefined,

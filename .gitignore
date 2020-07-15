@@ -6,6 +6,8 @@
 .tscache/
 *.tmp.txt
 
+/.project
+
 # Created by https://www.gitignore.io/api/linux,macos,windows,node
 # Edit at https://www.gitignore.io/?templates=linux,macos,windows,node
 
@@ -185,4 +187,3 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.gitignore.io/api/linux,macos,windows,node
-/.project
