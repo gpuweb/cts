@@ -12,6 +12,7 @@ export async function getDefaultAdapter(): Promise<GPUAdapter> {
       title: 'WebGPU',
     });
 
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     return gpu.requestAdapter({ window } as any);
   } else {
     return gpu.requestAdapter();
@@ -45,9 +46,9 @@ async function locateGPUInterface(): Promise<GPU> {
   unreachable('WebGPU not available');
 }
 
-let dawn: typeof import('../../../../standalone/third_party/dawn/linux/index.node') | undefined;
+let dawn: typeof import('../../../../third_party/dawn/linux/index.node') | undefined;
 async function tryInitDawn(): Promise<GPU> {
-  dawn = await import('../../../../standalone/third_party/dawn/linux/index.node');
+  dawn = await import('../../../../third_party/dawn/linux/index.node');
   dawn.GPU.$setPlatform(process.platform);
 
   Object.assign(global, dawn);
@@ -85,6 +86,7 @@ async function tryInitDawn(): Promise<GPU> {
     });
   };
 
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   (dawn.GPUDevice as any).prototype.createBufferMappedAsync = function (
     descriptor: GPUBufferDescriptor
   ): Promise<GPUBuffer> {
@@ -95,6 +97,7 @@ async function tryInitDawn(): Promise<GPU> {
     });
   };
 
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   (dawn.GPUDevice as any).prototype.createBufferMapped = function (
     descriptor: GPUBufferDescriptor
   ): Promise<GPUBuffer> {
@@ -105,5 +108,6 @@ async function tryInitDawn(): Promise<GPU> {
     });
   };
 
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   return (dawn.GPU as any) as GPU;
 }
