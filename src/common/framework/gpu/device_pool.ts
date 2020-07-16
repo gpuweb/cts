@@ -28,11 +28,27 @@ export class DevicePool {
         throw ex;
       }
     }
+
     assert(!this.holder.acquired, 'Device was in use on DevicePool.acquire');
     this.holder.acquired = true;
+    process.nextTick(this.deviceTick);
 
     this.beginErrorScopes();
     return this.holder.device;
+  }
+
+  private deviceTick(): void {
+    const holder = this.holder;
+    assert(holder !== undefined, 'trying to release a device while pool is uninitialized');
+
+    //If device is released, no further ticks until reacquisition.
+    assert(holder !== undefined, 'trying to release a device while pool is uninitialized');
+    assert(holder.acquired, 'Device not acquired');
+
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    (holder.device as any).tick();
+
+    process.nextTick(this.deviceTick);
   }
 
   // When a test is done using a device, it's released back into the pool.
