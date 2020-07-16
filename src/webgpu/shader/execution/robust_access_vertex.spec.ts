@@ -294,7 +294,7 @@ g.test('vertexAccess')
     // Each buffer will be bound to this many attributes (2 would mean 2 attributes per buffer)
     const attributesPerBuffer = 2;
     // Make an array big enough for the vertices, attributes, and size of each element
-    let vertexArray = new Float32Array(numVertices * attributesPerBuffer * (typeInfo.size / 4));
+    const vertexArray = new Float32Array(numVertices * attributesPerBuffer * (typeInfo.size / 4));
 
     // Sufficiently unusual values to fill our buffer with to avoid collisions with other tests
     const arbitraryValues = [759, 329, 908];
