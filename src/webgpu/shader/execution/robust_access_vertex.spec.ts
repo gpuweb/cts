@@ -65,6 +65,9 @@ class DrawCall {
   private vertexBuffers: GPUBuffer[];
   private indexBuffer: GPUBuffer;
 
+  // Add a float offset when binding vertex buffer
+  private offsetVertexBuffer: boolean;
+
   // Draw
   public vertexCount: number;
   public firstVertex: number;
@@ -78,9 +81,15 @@ class DrawCall {
   public instanceCount: number;
   public firstInstance: number;
 
-  constructor(device: GPUDevice, vertexArrays: Float32Array[], vertexCount: number) {
+  constructor(
+    device: GPUDevice,
+    vertexArrays: Float32Array[],
+    vertexCount: number,
+    partialLastNumber: boolean,
+    offsetVertexBuffer: boolean
+  ) {
     this.device = device;
-    this.vertexBuffers = vertexArrays.map(v => this.generateVertexBuffer(v));
+    this.vertexBuffers = vertexArrays.map(v => this.generateVertexBuffer(v, partialLastNumber));
 
     const indexArray = new Uint16Array(vertexCount).fill(0).map((_, i) => i);
     this.indexBuffer = this.generateIndexBuffer(indexArray);
@@ -93,6 +102,8 @@ class DrawCall {
     this.baseVertex = 0;
     this.instanceCount = vertexCount;
     this.firstInstance = 0;
+
+    this.offsetVertexBuffer = offsetVertexBuffer;
   }
 
   // Insert a draw call into |pass| with specified type
@@ -148,17 +159,26 @@ class DrawCall {
   private bindVertexBuffers(pass: GPURenderPassEncoder) {
     let currSlot = 0;
     for (let i = 0; i < this.vertexBuffers.length; i++) {
-      pass.setVertexBuffer(currSlot++, this.vertexBuffers[i]);
+      pass.setVertexBuffer(currSlot++, this.vertexBuffers[i], this.offsetVertexBuffer ? 4 : 0);
     }
   }
 
   // Create a vertex buffer from |vertexArray|
-  private generateVertexBuffer(vertexArray: Float32Array): GPUBuffer {
+  // If |partialLastNumber| is true, delete one byte off the end
+  private generateVertexBuffer(vertexArray: Float32Array, partialLastNumber: boolean): GPUBuffer {
+    let size = vertexArray.byteLength;
+    if (partialLastNumber) {
+      size -= 1;
+    }
     const [vertexBuffer, vertexMapping] = this.device.createBufferMapped({
-      size: vertexArray.byteLength,
+      size,
       usage: GPUBufferUsage.VERTEX,
     });
-    new Float32Array(vertexMapping).set(vertexArray);
+    if (!partialLastNumber) {
+      new Float32Array(vertexMapping).set(vertexArray);
+    } else {
+      new Uint8Array(vertexMapping).set(new Uint8Array(vertexArray.buffer).slice(0, size));
+    }
     vertexBuffer.unmap();
     return vertexBuffer;
   }
@@ -261,6 +281,8 @@ g.test('vertexAccess')
       )
       .combine(poptions('type', Object.keys(typeInfoMap)))
       .combine(poptions('additionalBuffers', [0, 4]))
+      .combine(pbool('partialLastNumber'))
+      .combine(pbool('offsetVertexBuffer'))
       .combine(poptions('errorScale', [1, 4, 10 ** 2, 10 ** 4, 10 ** 6]))
   )
   .fn(async t => {
@@ -272,7 +294,7 @@ g.test('vertexAccess')
     // Each buffer will be bound to this many attributes (2 would mean 2 attributes per buffer)
     const attributesPerBuffer = 2;
     // Make an array big enough for the vertices, attributes, and size of each element
-    const vertexArray = new Float32Array(numVertices * attributesPerBuffer * typeInfo.size);
+    let vertexArray = new Float32Array(numVertices * attributesPerBuffer * (typeInfo.size / 4));
 
     // Sufficiently unusual values to fill our buffer with to avoid collisions with other tests
     const arbitraryValues = [759, 329, 908];
@@ -290,7 +312,13 @@ g.test('vertexAccess')
     }
 
     // Mutable draw call
-    const draw = new DrawCall(t.device, bufferContents, numVertices);
+    const draw = new DrawCall(
+      t.device,
+      bufferContents,
+      numVertices,
+      p.partialLastNumber,
+      p.offsetVertexBuffer
+    );
 
     // Create attributes listing
     let layoutStr = '';
