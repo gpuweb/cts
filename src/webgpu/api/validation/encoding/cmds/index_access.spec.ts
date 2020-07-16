@@ -2,29 +2,14 @@ export const description = `
 indexed draws validation tests.
 `;
 
+import { params, poptions, pbool } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 
 import { ValidationTest } from './../../validation_test.js';
 
 class F extends ValidationTest {
-  createVertexAndIndexBuffer(): GPUBuffer[] {
-    /* prettier-ignore */
-    const vertexArray = new Float32Array([
-      // float4 position
-      1.0, 1.0, 0.0, 1.0,
-      1.0, -1.0, 0.0, 1.0,
-      -1.0, 1.0, 0.0, 1.0,
-      - 1.0, -1.0, 0.0, 1.0
-    ]);
-
+  createIndexBuffer(): GPUBuffer {
     const indexArray = new Uint32Array([0, 1, 2, 3, 1, 2]);
-
-    const [vertexBuffer, vetexMapping] = this.device.createBufferMapped({
-      size: vertexArray.byteLength,
-      usage: GPUBufferUsage.VERTEX,
-    });
-    new Float32Array(vetexMapping).set(vertexArray);
-    vertexBuffer.unmap();
 
     const [indexBuffer, indexMapping] = this.device.createBufferMapped({
       size: indexArray.byteLength,
@@ -33,24 +18,22 @@ class F extends ValidationTest {
     new Uint32Array(indexMapping).set(indexArray);
     indexBuffer.unmap();
 
-    return [vertexBuffer, indexBuffer];
+    return indexBuffer;
   }
 
   createRenderPipeline(): GPURenderPipeline {
     const vertexModule = this.makeShaderModule('vertex', {
       glsl: `
-        #version 310 es
-        layout(location = 0) in vec4 pos;
+        #version 450
         void main() {
-            gl_Position = pos;
+          gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
         }
       `,
     });
 
     const fragmentModule = this.makeShaderModule('fragment', {
       glsl: `
-        #version 310 es
-        precision mediump float;
+        #version 450
         layout(location = 0) out vec4 fragColor;
         void main() {
             fragColor = vec4(0.0, 1.0, 0.0, 1.0);
@@ -64,23 +47,14 @@ class F extends ValidationTest {
       fragmentStage: { module: fragmentModule, entryPoint: 'main' },
       primitiveTopology: 'triangle-strip',
       colorStates: [{ format: 'rgba8unorm' }],
-      vertexState: {
-        vertexBuffers: [
-          {
-            arrayStride: 4 * 4,
-            stepMode: 'vertex',
-            attributes: [{ format: 'float4', offset: 0, shaderLocation: 0 }],
-          },
-        ],
-      },
     });
   }
 
   beginRenderPass(encoder: GPUCommandEncoder) {
     const colorAttachment = this.device.createTexture({
       format: 'rgba8unorm',
-      size: { width: 100, height: 100, depth: 1 },
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.OUTPUT_ATTACHMENT,
+      size: { width: 1, height: 1, depth: 1 },
+      usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
     });
 
     return encoder.beginRenderPass({
@@ -101,14 +75,13 @@ class F extends ValidationTest {
     baseVertex: number,
     firstInstance: number
   ) {
-    const [vertexBuffer, indexBuffer] = this.createVertexAndIndexBuffer();
+    const indexBuffer = this.createIndexBuffer();
 
     const pipeline = this.createRenderPipeline();
 
     const encoder = this.device.createCommandEncoder();
     const pass = this.beginRenderPass(encoder);
     pass.setPipeline(pipeline);
-    pass.setVertexBuffer(0, vertexBuffer);
     pass.setIndexBuffer(indexBuffer);
     pass.drawIndexed(indexCount, instanceCount, firstIndex, baseVertex, firstInstance);
     pass.endPass();
@@ -124,14 +97,13 @@ class F extends ValidationTest {
     new Uint32Array(indirectMapping).set(bufferArray);
     indirectBuffer.unmap();
 
-    const [vertexBuffer, indexBuffer] = this.createVertexAndIndexBuffer();
+    const indexBuffer = this.createIndexBuffer();
 
     const pipeline = this.createRenderPipeline();
 
     const encoder = this.device.createCommandEncoder();
     const pass = this.beginRenderPass(encoder);
     pass.setPipeline(pipeline);
-    pass.setVertexBuffer(0, vertexBuffer);
     pass.setIndexBuffer(indexBuffer, 0);
     pass.drawIndexedIndirect(indirectBuffer, indirectOffset);
     pass.endPass();
@@ -142,26 +114,25 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
-g.test('draw_indexed_index_access_out_of_bounds').fn(t => {
-  // Works with the indexCount larger than the index buffer size
-  {
-    t.drawIndexed(7, 1, 0, 0, 0);
-  }
+g.test('out_of_bounds')
+  .params(
+    params()
+      .combine(pbool('indirect')) // indirect drawIndexed
+      .combine([
+        { indexCount: 6, firstIndex: 1 }, // indexCount + firstIndex out of bound
+        { indexCount: 6, firstIndex: 6 }, // only firstIndex out of bound
+        { indexCount: 6, firstIndex: 10000 }, // firstIndex much larger than the bound
+        { indexCount: 7, firstIndex: 0 }, // only indexCount out of bound
+        { indexCount: 10000, firstIndex: 0 }, // indexCount much larger than the bound
+      ] as const)
+      .combine(poptions('instanceCount', [1, 10000])) // normal and large instanceCount
+  )
+  .fn(t => {
+    const { indirect, indexCount, firstIndex, instanceCount } = t.params;
 
-  // Works with the firstIndex out of the index buffer range
-  {
-    t.drawIndexed(6, 1, 6, 0, 0);
-  }
-});
-
-g.test('draw_indexed_indirect_index_access_out_of_bounds').fn(t => {
-  // Works with the indexCount larger than the index buffer size
-  {
-    t.drawIndexedIndirect(new Uint32Array([7, 1, 0, 0, 0]), 0);
-  }
-
-  // Works with the firstIndex out of the index buffer range
-  {
-    t.drawIndexedIndirect(new Uint32Array([6, 1, 6, 0, 0]), 0);
-  }
-});
+    if (indirect) {
+      t.drawIndexedIndirect(new Uint32Array([indexCount, instanceCount, firstIndex, 0, 0]), 0);
+    } else {
+      t.drawIndexed(indexCount, instanceCount, firstIndex, 0, 0);
+    }
+  });
