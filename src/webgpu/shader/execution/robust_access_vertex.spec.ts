@@ -50,15 +50,6 @@ import { GPUTest } from '../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-type DrawCallParameter =
-  | 'vertexCount'
-  | 'firstVertex'
-  | 'indexCount'
-  | 'firstIndex'
-  | 'baseVertex'
-  | 'instanceCount'
-  | 'firstInstance';
-
 // Encapsulates a draw call (either indexed or non-indexed)
 class DrawCall {
   private device: GPUDevice;
@@ -269,14 +260,15 @@ g.test('vertexAccess')
       .expand(p =>
         poptions(
           'drawCallTestParameter',
-          (p.indexed
-            ? ['indexCount', 'instanceCount', 'firstIndex', 'baseVertex', 'firstInstance']
-            : [
-                'vertexCount',
+          p.indexed
+            ? ([
+                'indexCount',
                 'instanceCount',
-                'firstVertex',
+                'firstIndex',
+                'baseVertex',
                 'firstInstance',
-              ]) as DrawCallParameter[]
+              ] as const)
+            : (['vertexCount', 'instanceCount', 'firstVertex', 'firstInstance'] as const)
         )
       )
       .combine(poptions('type', Object.keys(typeInfoMap)))
