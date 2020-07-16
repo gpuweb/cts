@@ -7,7 +7,7 @@ deploy:
   skip_cleanup: true
   github_token: $GITHUB_TOKEN
   on:
-    branch: master
+    branch: main
 
 deploy:
   repo: gpuweb-cts-glsl/gpuweb-cts-glsl.github.io

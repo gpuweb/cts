@@ -110,6 +110,33 @@ export const kTextureUsageInfo: {
 };
 export const kTextureUsages = numericKeysOf<GPUTextureUsage>(kTextureUsageInfo);
 
+export const kTextureComponentTypeInfo: {
+  readonly [k in GPUTextureComponentType]: {
+    // Add fields as needed
+  };
+} = /* prettier-ignore */ {
+  'float': {},
+  'sint': {},
+  'uint': {},
+};
+export const kTextureComponentTypes = keysOf(kTextureComponentTypeInfo);
+
+// Texture View
+
+export const kTextureViewDimensionInfo: {
+  readonly [k in GPUTextureViewDimension]: {
+    // Add fields as needed
+  };
+} = /* prettier-ignore */ {
+  '1d': {},
+  '2d': {},
+  '2d-array': {},
+  'cube': {},
+  'cube-array': {},
+  '3d': {},
+};
+export const kTextureViewDimensions = keysOf(kTextureViewDimensionInfo);
+
 // Typedefs for bindings
 
 export type PerStageBindingLimitClass =
