@@ -1,6 +1,6 @@
 # WebGPU Conformance Test Suite
 
-## >>> [**Contribution Guidelines**](https://github.com/gpuweb/gpuweb/wiki/WebGPU-CTS-guidelines) <<<
+## &gt;&gt;&gt; [**Contribution Guidelines**](https://github.com/gpuweb/gpuweb/wiki/WebGPU-CTS-guidelines) &lt;&lt;&lt; | &gt;&gt;&gt; [**View/Edit Test Plan**](https://hackmd.io/@webgpu/H1MwoqqAU) &lt;&lt;&lt;
 
 ## Run these tests live: [gpuweb.github.io/cts/standalone/](https://gpuweb.github.io/cts/standalone/)
 
@@ -45,18 +45,18 @@ npx grunt test
 
 ### Run
 
-To test in a browser under the standalone harness, run `grunt serve`, then
+To test in a browser under the standalone harness, run `npx grunt serve`, then
 open:
 
-- http://localhost:8080/standalone/ (defaults to ?runnow=0&worker=0&debug=0&q=webgpu:)
-- http://localhost:8080/standalone/?runnow=1&q=unittests:
-- http://localhost:8080/standalone/?runnow=1&q=unittests:basic:&q=unittests:params:
+- http://localhost:8080/standalone/index.html (defaults to ?runnow=0&worker=0&debug=0&q=webgpu:)
+- http://localhost:8080/standalone/index.html?runnow=1&q=unittests:
+- http://localhost:8080/standalone/index.html?runnow=1&q=unittests:basic:&q=unittests:params:
 
 ### Debug
 
 To see debug logs in a browser, use the `debug=1` query string:
 
-- http://localhost:8080/standalone/?q=webgpu:validation&debug=1
+- http://localhost:8080/standalone/index.html?q=webgpu:validation&debug=1
 
 ### Making Changes
 

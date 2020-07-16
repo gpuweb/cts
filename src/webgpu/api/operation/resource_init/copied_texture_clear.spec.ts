@@ -44,8 +44,8 @@ class CopiedTextureClearTest extends TextureZeroInitTest {
 
       const commandEncoder = this.device.createCommandEncoder();
       commandEncoder.copyTextureToTexture(
-        { texture, mipLevel: level, arrayLayer: slice },
-        { texture: dst, mipLevel: 0, arrayLayer: 0 },
+        { texture, mipLevel: level, origin: { x: 0, y: 0, z: slice } },
+        { texture: dst, mipLevel: 0 },
         { width, height, depth: 1 }
       );
       this.queue.submit([commandEncoder.finish()]);

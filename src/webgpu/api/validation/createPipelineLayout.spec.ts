@@ -2,13 +2,9 @@ export const description = `
 createPipelineLayout validation tests.
 `;
 
-import { pbool, poptions, params } from '../../../common/framework/params_builder.js';
+import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import {
-  kBindingTypeInfo,
-  kBindingTypes,
-  kShaderStageCombinations,
-} from '../../capability_info.js';
+import { kBindingTypeInfo } from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -67,34 +63,6 @@ g.test('number_of_dynamic_buffers_exceeds_the_maximum_value')
     t.expectValidationError(() => {
       t.device.createPipelineLayout(badPipelineLayoutDescriptor);
     });
-  });
-
-g.test('visibility_and_dynamic_offsets')
-  .params(
-    params()
-      .combine(poptions('type', kBindingTypes))
-      .combine(pbool('hasDynamicOffset'))
-      .combine(poptions('visibility', kShaderStageCombinations))
-  )
-  .fn(t => {
-    const { type, hasDynamicOffset, visibility } = t.params;
-    const info = kBindingTypeInfo[type as GPUBindingType];
-
-    const storageTextureFormat = info.resource === 'storageTex' ? ('r32uint' as const) : undefined;
-    const descriptor = {
-      entries: [{ binding: 0, visibility, type, hasDynamicOffset, storageTextureFormat }],
-    };
-
-    const supportsDynamicOffset = kBindingTypeInfo[type].perPipelineLimitClass.maxDynamic > 0;
-    let success = true;
-    if (!supportsDynamicOffset && hasDynamicOffset) success = false;
-    if ((visibility & ~info.validStages) !== 0) success = false;
-
-    t.expectValidationError(() => {
-      t.device.createPipelineLayout({
-        bindGroupLayouts: [t.device.createBindGroupLayout(descriptor)],
-      });
-    }, !success);
   });
 
 g.test('number_of_bind_group_layouts_exceeds_the_maximum_value').fn(async t => {
