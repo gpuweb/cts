@@ -11,7 +11,7 @@ declare const dawn: {
 export = dawn;
 
 declare class WebGPUWindow {
-  constructor({ width, height, title }: { width?: number; height?: number; title?: string });
+  constructor({ width, height, title, visible }: { width?: number; height?: number; title?: string; visible?: boolean });
 }
 
 declare class DawnGPU {
