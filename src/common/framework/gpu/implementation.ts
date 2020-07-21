@@ -10,7 +10,6 @@ export async function getDefaultAdapter(): Promise<GPUAdapter> {
       width: 640,
       height: 480,
       title: 'WebGPU',
-      visible: false,
     });
 
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -21,7 +20,6 @@ export async function getDefaultAdapter(): Promise<GPUAdapter> {
 }
 
 let gpu: Promise<GPU> | 'failed' | undefined;
-
 function getGPU(): Promise<GPU> {
   if (gpu === undefined) {
     gpu = 'failed';
@@ -49,7 +47,6 @@ async function locateGPUInterface(): Promise<GPU> {
 }
 
 let dawn: typeof import('../../../../third_party/dawn/linux/index.node') | undefined;
-
 async function tryInitDawn(): Promise<GPU> {
   dawn = await import('../../../../third_party/dawn/linux/index.node');
   dawn.GPU.$setPlatform(process.platform);
@@ -59,8 +56,6 @@ async function tryInitDawn(): Promise<GPU> {
   dawn.GPUAdapter.prototype.requestDevice = function (): Promise<GPUDevice> {
     return new Promise(resolve => {
       this._requestDevice().then((device: GPUDevice) => {
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        (device as any).tick();
         resolve(device);
       });
     });
@@ -102,13 +97,18 @@ async function tryInitDawn(): Promise<GPU> {
     });
   };
 
-  dawn.GPUDevice.prototype.createBufferMapped = function (
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  (dawn.GPUDevice as any).prototype.createBufferMapped = function (
     descriptor: GPUBufferDescriptor
-  ): [GPUBuffer, ArrayBuffer] {
+  ): GPUBuffer {
     /* eslint-disable-next-line no-console */
-    console.log('ENTER: PROTO:createBufferMapped:' + descriptor);
-    return [{} as GPUBuffer, {} as ArrayBuffer];
-    //this._createBufferMapped(descriptor, resolve);
+    console.log('PROTO: createBufferMapped');
+    //return new Promise(resolve => {
+    //  setImmediate(() => {
+    //    this._createBufferMapped(descriptor, resolve);
+    //  });
+    //});
+    return this._createBufferMapped(descriptor);
   };
 
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
