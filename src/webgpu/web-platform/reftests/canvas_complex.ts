@@ -25,10 +25,12 @@ export function run(format: GPUTextureFormat) {
 
     const rows = 2;
     const bytesPerRow = 256;
-    const [buffer, mapping] = t.device.createBufferMapped({
+    const buffer = t.device.createBuffer({
+      mappedAtCreation: true,
       size: rows * bytesPerRow,
       usage: GPUBufferUsage.COPY_SRC,
     });
+    const mapping = buffer.getMappedRange();
     switch (format) {
       case 'bgra8unorm':
         {

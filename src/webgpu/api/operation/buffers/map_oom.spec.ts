@@ -2,32 +2,61 @@ export const description = '';
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
-
-function getBufferDesc(usage: GPUBufferUsageFlags): GPUBufferDescriptor {
-  return {
-    size: Number.MAX_SAFE_INTEGER,
-    usage,
-  };
-}
+import { poptions, params, pbool } from '../../../../common/framework/params_builder.js';
+import { kBufferUsages } from '../../../capability_info.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('mapWriteAsync').fn(async t => {
-  const buffer = t.expectGPUError('out-of-memory', () => {
-    return t.device.createBuffer(getBufferDesc(GPUBufferUsage.MAP_WRITE));
-  });
-  t.shouldReject('OperationError', buffer.mapWriteAsync());
-});
+g.test('mapAsync')
+  .params(
+    params()
+      .combine(pbool('oom')) //
+      .combine(pbool('write'))
+  )
+  .fn(async t => {
+    const { oom, write } = t.params;
 
-g.test('mapReadAsync').fn(async t => {
-  const buffer = t.expectGPUError('out-of-memory', () => {
-    return t.device.createBuffer(getBufferDesc(GPUBufferUsage.MAP_READ));
-  });
-  t.shouldReject('OperationError', buffer.mapReadAsync());
-});
+    const buffer = t.expectGPUError(
+      'out-of-memory',
+      () => {
+        return t.device.createBuffer({
+          size: oom ? Number.MAX_SAFE_INTEGER : 16,
+          usage: write ? GPUBufferUsage.MAP_WRITE : GPUBufferUsage.MAP_READ,
+        });
+      },
+      oom
+    );
+    const promise = buffer.mapAsync(write ? GPUMapMode.WRITE : GPUMapMode.READ);
 
-g.test('createBufferMapped').fn(async t => {
-  t.shouldThrow('RangeError', () => {
-    t.device.createBufferMapped(getBufferDesc(GPUBufferUsage.COPY_SRC));
+    if (oom) {
+      t.shouldReject('OperationError', promise);
+    } else {
+      t.shouldResolve(promise);
+    }
   });
-});
+
+g.test('mappedAtCreation')
+  .params(
+    params()
+      .combine(pbool('oom')) //
+      .combine(poptions('usage', kBufferUsages))
+  )
+  .fn(async t => {
+    const { oom, usage } = t.params;
+    const size = oom ? Number.MAX_SAFE_INTEGER - 3 : 16;
+
+    const buffer = t.expectGPUError(
+      'out-of-memory',
+      () => t.device.createBuffer({ mappedAtCreation: true, size, usage }),
+      oom
+    );
+
+    const f = () => {
+      buffer.getMappedRange(0, size);
+    };
+    if (oom) {
+      t.shouldThrow('RangeError', f);
+    } else {
+      f();
+    }
+  });

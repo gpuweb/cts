@@ -7,7 +7,7 @@ import { MappingTest } from './mapping_test.js';
 
 export const g = makeTestGroup(MappingTest);
 
-g.test('createBufferMapped')
+g.test('mappedAtCreation')
   .params(
     params()
       .combine(poptions('size', [12, 512 * 1024]))
@@ -15,9 +15,11 @@ g.test('createBufferMapped')
   )
   .fn(t => {
     const { size, mappable } = t.params;
-    const [buffer, arrayBuffer] = t.device.createBufferMapped({
+    const buffer = t.device.createBuffer({
+      mappedAtCreation: true,
       size,
       usage: GPUBufferUsage.COPY_SRC | (mappable ? GPUBufferUsage.MAP_WRITE : 0),
     });
+    const arrayBuffer = buffer.getMappedRange();
     t.checkMapWrite(buffer, arrayBuffer, size);
   });

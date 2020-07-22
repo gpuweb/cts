@@ -8,6 +8,7 @@ global.GPUBufferUsage = {
   UNIFORM: 0x0040,
   STORAGE: 0x0080,
   INDIRECT: 0x0100,
+  QUERY_RESOLVE: 0x0200,
 };
 
 global.GPUTextureUsage = {
@@ -30,4 +31,9 @@ global.GPUShaderStage = {
   VERTEX: 0x1,
   FRAGMENT: 0x2,
   COMPUTE: 0x4,
+};
+
+global.GPUMapMode = {
+  READ: 0x1,
+  WRITE: 0x2,
 };

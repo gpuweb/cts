@@ -102,7 +102,8 @@ export class GPUTest extends Fixture {
 
     this.eventualAsyncExpectation(async niceStack => {
       const constructor = expected.constructor as TypedArrayBufferViewConstructor;
-      const actual = new constructor(await dst.mapReadAsync());
+      await dst.mapAsync(GPUMapMode.READ);
+      const actual = new constructor(dst.getMappedRange());
       const check = this.checkBuffer(actual, expected);
       if (check !== undefined) {
         niceStack.message = check;
@@ -227,7 +228,12 @@ got [${failedByteActualValues.join(', ')}]`;
     this.expectContents(buffer, new Uint8Array(arrayBuffer));
   }
 
-  expectGPUError<R>(filter: GPUErrorFilter, fn: () => R): R {
+  expectGPUError<R>(filter: GPUErrorFilter, fn: () => R, shouldError: boolean = true): R {
+    // If no error is expected, we let the scope surrounding the test catch it.
+    if (shouldError === false) {
+      return fn();
+    }
+
     this.device.pushErrorScope(filter);
     const returnValue = fn();
     const promise = this.device.popErrorScope();

@@ -7,7 +7,7 @@ import { MappingTest } from './mapping_test.js';
 
 export const g = makeTestGroup(MappingTest);
 
-g.test('mapWriteAsync')
+g.test('mapAsync,write')
   .params(poptions('size', [12, 512 * 1024]))
   .fn(async t => {
     const { size } = t.params;
@@ -16,19 +16,22 @@ g.test('mapWriteAsync')
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE,
     });
 
-    const arrayBuffer = await buffer.mapWriteAsync();
+    await buffer.mapAsync(GPUMapMode.WRITE);
+    const arrayBuffer = buffer.getMappedRange();
     t.checkMapWrite(buffer, arrayBuffer, size);
   });
 
-g.test('mapReadAsync')
+g.test('mapAsync,read')
   .params(poptions('size', [12, 512 * 1024]))
   .fn(async t => {
     const { size } = t.params;
 
-    const [buffer, init] = t.device.createBufferMapped({
+    const buffer = t.device.createBuffer({
+      mappedAtCreation: true,
       size,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     });
+    const init = buffer.getMappedRange();
 
     const expected = new Uint32Array(new ArrayBuffer(size));
     const data = new Uint32Array(init);
@@ -37,11 +40,12 @@ g.test('mapReadAsync')
     }
     buffer.unmap();
 
-    const actual = new Uint8Array(await buffer.mapReadAsync());
+    await buffer.mapAsync(GPUMapMode.READ);
+    const actual = new Uint8Array(buffer.getMappedRange());
     t.expectBuffer(actual, new Uint8Array(expected.buffer));
   });
 
-g.test('createBufferMapped')
+g.test('mappedAtCreation')
   .params(
     params()
       .combine(poptions('size', [12, 512 * 1024]))
@@ -49,9 +53,11 @@ g.test('createBufferMapped')
   )
   .fn(async t => {
     const { size, mappable } = t.params;
-    const [buffer, arrayBuffer] = t.device.createBufferMapped({
+    const buffer = t.device.createBuffer({
+      mappedAtCreation: true,
       size,
       usage: GPUBufferUsage.COPY_SRC | (mappable ? GPUBufferUsage.MAP_WRITE : 0),
     });
+    const arrayBuffer = buffer.getMappedRange();
     t.checkMapWrite(buffer, arrayBuffer, size);
   });
