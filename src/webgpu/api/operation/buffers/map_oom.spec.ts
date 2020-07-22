@@ -75,3 +75,20 @@ g.test('mappedAtCreation')
       t.expect(mapping.byteLength == 0);
     }
   });
+
+g.test('mappedAtCreation,smaller_getMappedRange')
+  .params(poptions('usage', kBufferUsages))
+  .fn(async t => {
+    const { usage } = t.params;
+    const size = MAX_ALIGNED_SAFE_INTEGER;
+
+    const buffer = t.expectGPUError('out-of-memory', () =>
+      t.device.createBuffer({ mappedAtCreation: true, size, usage })
+    );
+
+    // Smaller range inside a too-big mapping
+    const mapping = buffer.getMappedRange(0, 16);
+    t.expect(mapping.byteLength == 16);
+    buffer.unmap();
+    t.expect(mapping.byteLength == 0);
+  });
