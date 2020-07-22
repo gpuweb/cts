@@ -20,12 +20,13 @@ g.test('mapAsync')
   )
   .fn(async t => {
     const { oom, write } = t.params;
+    const size = oom ? MAX_ALIGNED_SAFE_INTEGER : 16;
 
     const buffer = t.expectGPUError(
       'out-of-memory',
       () =>
         t.device.createBuffer({
-          size: oom ? MAX_ALIGNED_SAFE_INTEGER : 16,
+          size,
           usage: write ? GPUBufferUsage.MAP_WRITE : GPUBufferUsage.MAP_READ,
         }),
       oom
@@ -39,7 +40,11 @@ g.test('mapAsync')
     if (oom) {
       t.shouldReject('OperationError', promise);
     } else {
-      t.shouldResolve(promise);
+      await promise;
+      const arraybuffer = buffer.getMappedRange();
+      t.expect(arraybuffer.byteLength == size);
+      buffer.unmap();
+      t.expect(arraybuffer.byteLength == 0);
     }
   });
 
@@ -66,5 +71,7 @@ g.test('mappedAtCreation')
     } else {
       const mapping = f();
       t.expect(mapping.byteLength == size);
+      buffer.unmap();
+      t.expect(mapping.byteLength == 0);
     }
   });
