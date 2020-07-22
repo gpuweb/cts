@@ -5,6 +5,11 @@ import { GPUTest } from '../../../gpu_test.js';
 import { poptions, params, pbool } from '../../../../common/framework/params_builder.js';
 import { kBufferUsages } from '../../../capability_info.js';
 
+// A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).
+// (Note this is likely to exceed limitations other than just the system's
+// physical memory - so may test codepaths other than "true" OOM.)
+const MAX_ALIGNED_SAFE_INTEGER = Number.MAX_SAFE_INTEGER - 7;
+
 export const g = makeTestGroup(GPUTest);
 
 g.test('mapAsync')
@@ -18,15 +23,18 @@ g.test('mapAsync')
 
     const buffer = t.expectGPUError(
       'out-of-memory',
-      () => {
-        return t.device.createBuffer({
-          size: oom ? Number.MAX_SAFE_INTEGER : 16,
+      () =>
+        t.device.createBuffer({
+          size: oom ? MAX_ALIGNED_SAFE_INTEGER : 16,
           usage: write ? GPUBufferUsage.MAP_WRITE : GPUBufferUsage.MAP_READ,
-        });
-      },
+        }),
       oom
     );
-    const promise = buffer.mapAsync(write ? GPUMapMode.WRITE : GPUMapMode.READ);
+    const promise = t.expectGPUError(
+      'out-of-memory',
+      () => buffer.mapAsync(write ? GPUMapMode.WRITE : GPUMapMode.READ),
+      oom
+    );
 
     if (oom) {
       t.shouldReject('OperationError', promise);
@@ -43,7 +51,7 @@ g.test('mappedAtCreation')
   )
   .fn(async t => {
     const { oom, usage } = t.params;
-    const size = oom ? Number.MAX_SAFE_INTEGER - 3 : 16;
+    const size = oom ? MAX_ALIGNED_SAFE_INTEGER : 16;
 
     const buffer = t.expectGPUError(
       'out-of-memory',
@@ -51,12 +59,12 @@ g.test('mappedAtCreation')
       oom
     );
 
-    const f = () => {
-      buffer.getMappedRange(0, size);
-    };
+    const f = () => buffer.getMappedRange(0, size);
+
     if (oom) {
       t.shouldThrow('RangeError', f);
     } else {
-      f();
+      const mapping = f();
+      t.expect(mapping.byteLength == size);
     }
   });

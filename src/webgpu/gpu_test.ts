@@ -230,7 +230,7 @@ got [${failedByteActualValues.join(', ')}]`;
 
   expectGPUError<R>(filter: GPUErrorFilter, fn: () => R, shouldError: boolean = true): R {
     // If no error is expected, we let the scope surrounding the test catch it.
-    if (shouldError === false) {
+    if (!shouldError) {
       return fn();
     }
 
