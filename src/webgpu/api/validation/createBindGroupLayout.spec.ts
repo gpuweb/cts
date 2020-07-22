@@ -92,20 +92,26 @@ g.test('non_required_parameter_combined_with_type_separately')
       storageTextureFormat,
     } = t.params;
 
-    let success = false;
-    if (
-      (minBufferBindingSize === undefined ||
-        minBufferBindingSize === 0 ||
-        type in kBufferBindingTypeInfo) &&
-      (textureComponentType === undefined || kBindingTypeInfo[type].resource === 'sampledTex') &&
-      (multisampled === false || kBindingTypeInfo[type].resource === 'sampledTex') &&
-      (viewDimension === undefined || type in kTextureBindingTypeInfo) &&
-      (storageTextureFormat === undefined ||
-        (kBindingTypeInfo[type].resource === 'storageTex' &&
-          kTextureFormatInfo[storageTextureFormat].storage))
-    ) {
-      success = true;
-    }
+    const minBufferBindingSizeValid =
+      minBufferBindingSize === undefined ||
+      minBufferBindingSize === 0 ||
+      type in kBufferBindingTypeInfo;
+    const textureComponentTypeValid =
+      textureComponentType === undefined || kBindingTypeInfo[type].resource === 'sampledTex';
+    const multisampledValid =
+      multisampled === false || kBindingTypeInfo[type].resource === 'sampledTex';
+    const viewDimensionValid = viewDimension === undefined || type in kTextureBindingTypeInfo;
+    const storageTextureFormatValid =
+      storageTextureFormat === undefined ||
+      (kBindingTypeInfo[type].resource === 'storageTex' &&
+        kTextureFormatInfo[storageTextureFormat].storage);
+
+    const success =
+      minBufferBindingSizeValid &&
+      textureComponentTypeValid &&
+      multisampledValid &&
+      viewDimensionValid &&
+      storageTextureFormatValid;
 
     t.expectValidationError(() => {
       t.device.createBindGroupLayout({
@@ -125,7 +131,7 @@ g.test('non_required_parameter_combined_with_type_separately')
     }, !success);
   });
 
-g.test('multisample_requirs_2d_view_dimension')
+g.test('multisample_requires_2d_view_dimension')
   .params(
     params()
       .combine(poptions('multisampled', [undefined, false, true]))
