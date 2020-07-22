@@ -69,10 +69,7 @@ g.test('mappedAtCreation')
     if (oom) {
       t.shouldThrow('RangeError', f);
     } else {
-      const mapping = f();
-      t.expect(mapping.byteLength == size);
-      buffer.unmap();
-      t.expect(mapping.byteLength == 0);
+      f();
     }
   });
 
