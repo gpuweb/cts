@@ -15,6 +15,7 @@ import {
 } from './query.js';
 import { kBigSeparator, kWildcard, kPathSeparator, kParamSeparator } from './separators.js';
 import { validQueryPart } from './validQueryPart.js';
+import { parseParamValue } from './json_param_value.js';
 
 export function parseQuery(s: string): TestQuery {
   try {
@@ -128,5 +129,5 @@ function parseSingleParamValue(s: string): ParamArgument {
     !badParamValueChars.test(s),
     `param value must not match ${badParamValueChars} - was ${s}`
   );
-  return s === 'undefined' ? undefined : JSON.parse(s);
+  return parseParamValue(s);
 }
