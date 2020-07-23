@@ -71,7 +71,9 @@ which will be applied automatically.
 
 Before uploading, you should run pre-submit checks (`grunt pre`).
 
-Be sure to read [CONTRIBUTING.md](CONTRIBUTING.md).
+Be sure to read [CONTRIBUTING.md](CONTRIBUTING.md),
+
+and also visit the [#webgpu-cts:matrix.org room](https://app.element.io/#/room/#webgpu-cts:matrix.org).
 
 ### Export to WPT
 
