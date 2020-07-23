@@ -16,8 +16,7 @@
     "node_modules": true,
     "out": true,
     "out-wpt": true,
-    "yarn-error.log": true,
-    "yarn.lock": true
+    "package-lock.json": true
   },
   "typescript.preferences.importModuleSpecifier": "relative",
   "typescript.preferences.quoteStyle": "single"
