@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+// Run with V8 inspector and chrome dev tools
+// #!/bin/sh 
+// ":"//; exec /usr/bin/env node --inspect "$0" "$@"
+
 // Run test suites under node.
 
 require('../src/common/tools/setup-ts-in-node.js');

@@ -56,11 +56,23 @@ async function tryInitDawn(): Promise<GPU> {
 
   Object.assign(global, dawn);
 
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  let tickDevice: any = {};
+
+  function deviceTick(): void {
+    /* eslint-disable-next-line no-console */
+    console.log('ENTER: PROTO: deviceTick');
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    (tickDevice as any).tick();
+    setImmediate(deviceTick);
+  }
   dawn.GPUAdapter.prototype.requestDevice = function (): Promise<GPUDevice> {
     return new Promise(resolve => {
       this._requestDevice().then((device: GPUDevice) => {
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        (device as any).tick();
+        tickDevice = device;
+        setImmediate(deviceTick);
+
         resolve(device);
       });
     });
