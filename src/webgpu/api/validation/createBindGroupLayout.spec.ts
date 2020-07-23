@@ -70,7 +70,7 @@ g.test('visibility_and_dynamic_offsets')
     }, !success);
   });
 
-g.test('non_required_parameter_combined_with_type_separately')
+g.test('bindingTypeSpecific_optional_members')
   .params(
     params()
       .combine(poptions('type', kBindingTypes))
@@ -92,26 +92,24 @@ g.test('non_required_parameter_combined_with_type_separately')
       storageTextureFormat,
     } = t.params;
 
-    const minBufferBindingSizeValid =
-      minBufferBindingSize === undefined ||
-      minBufferBindingSize === 0 ||
-      type in kBufferBindingTypeInfo;
-    const textureComponentTypeValid =
-      textureComponentType === undefined || kBindingTypeInfo[type].resource === 'sampledTex';
-    const multisampledValid =
-      multisampled === false || kBindingTypeInfo[type].resource === 'sampledTex';
-    const viewDimensionValid = viewDimension === undefined || type in kTextureBindingTypeInfo;
-    const storageTextureFormatValid =
-      storageTextureFormat === undefined ||
-      (kBindingTypeInfo[type].resource === 'storageTex' &&
-        kTextureFormatInfo[storageTextureFormat].storage);
-
-    const success =
-      minBufferBindingSizeValid &&
-      textureComponentTypeValid &&
-      multisampledValid &&
-      viewDimensionValid &&
-      storageTextureFormatValid;
+    let success = true;
+    if (!(type in kBufferBindingTypeInfo)) {
+      if (minBufferBindingSize !== undefined) success = false;
+    }
+    if (!(type in kTextureBindingTypeInfo)) {
+      if (viewDimension !== undefined) success = false;
+    }
+    if (kBindingTypeInfo[type].resource !== 'sampledTex') {
+      if (textureComponentType !== undefined) success = false;
+      if (multisampled === true) success = false;
+    }
+    if (kBindingTypeInfo[type].resource !== 'storageTex') {
+      if (storageTextureFormat !== undefined) success = false;
+    } else {
+      if (storageTextureFormat !== undefined && !kTextureFormatInfo[storageTextureFormat].storage) {
+        success = false;
+      }
+    }
 
     t.expectValidationError(() => {
       t.device.createBindGroupLayout({
