@@ -6,6 +6,7 @@ import {
 } from '../params_utils.js';
 import { assert } from '../util/util.js';
 
+import { parseParamValue } from './json_param_value.js';
 import {
   TestQuery,
   TestQueryMultiFile,
@@ -15,7 +16,6 @@ import {
 } from './query.js';
 import { kBigSeparator, kWildcard, kPathSeparator, kParamSeparator } from './separators.js';
 import { validQueryPart } from './validQueryPart.js';
-import { parseParamValue } from './json_param_value.js';
 
 export function parseQuery(s: string): TestQuery {
   try {

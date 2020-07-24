@@ -2,9 +2,9 @@ export const description = '';
 
 import { pbool, params } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { assert } from '../../../../common/framework/util/util.js';
 
 import { MappingTest } from './mapping_test.js';
-import { assert } from '../../../../common/framework/util/util.js';
 
 export const g = makeTestGroup(MappingTest);
 

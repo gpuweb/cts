@@ -1,9 +1,9 @@
 export const description = '';
 
-import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { GPUTest } from '../../../gpu_test.js';
 import { poptions, params, pbool } from '../../../../common/framework/params_builder.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { kBufferUsages } from '../../../capability_info.js';
+import { GPUTest } from '../../../gpu_test.js';
 
 // A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).
 // (Note this is likely to exceed limitations other than just the system's
@@ -42,9 +42,9 @@ g.test('mapAsync')
     } else {
       await promise;
       const arraybuffer = buffer.getMappedRange();
-      t.expect(arraybuffer.byteLength == size);
+      t.expect(arraybuffer.byteLength === size);
       buffer.unmap();
-      t.expect(arraybuffer.byteLength == 0);
+      t.expect(arraybuffer.byteLength === 0);
     }
   });
 
@@ -85,7 +85,7 @@ g.test('mappedAtCreation,smaller_getMappedRange')
 
     // Smaller range inside a too-big mapping
     const mapping = buffer.getMappedRange(0, 16);
-    t.expect(mapping.byteLength == 16);
+    t.expect(mapping.byteLength === 16);
     buffer.unmap();
-    t.expect(mapping.byteLength == 0);
+    t.expect(mapping.byteLength === 0);
   });

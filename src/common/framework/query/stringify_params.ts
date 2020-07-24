@@ -6,8 +6,8 @@ import {
 } from '../params_utils.js';
 import { assert } from '../util/util.js';
 
-import { kParamKVSeparator } from './separators.js';
 import { stringifyParamValue } from './json_param_value.js';
+import { kParamKVSeparator } from './separators.js';
 
 export function stringifyPublicParams(p: CaseParams): string[] {
   return Object.keys(p)
