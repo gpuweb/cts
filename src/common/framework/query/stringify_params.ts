@@ -6,6 +6,7 @@ import {
 } from '../params_utils.js';
 import { assert } from '../util/util.js';
 
+import { stringifyParamValue } from './json_param_value.js';
 import { kParamKVSeparator } from './separators.js';
 
 export function stringifyPublicParams(p: CaseParams): string[] {
@@ -19,7 +20,7 @@ export function stringifySingleParam(k: string, v: ParamArgument) {
 }
 
 function stringifySingleParamValue(v: ParamArgument): string {
-  const s = v === undefined ? 'undefined' : JSON.stringify(v);
+  const s = stringifyParamValue(v);
   assert(
     !badParamValueChars.test(s),
     `JSON.stringified param value must not match ${badParamValueChars} - was ${s}`
