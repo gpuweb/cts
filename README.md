@@ -52,6 +52,12 @@ open:
 - http://localhost:8080/standalone/index.html?runnow=1&q=unittests:
 - http://localhost:8080/standalone/index.html?runnow=1&q=unittests:basic:&q=unittests:params:
 
+To test a native WebGPU NAPI addon (currently linux only):
+- Build WebGPU NAPI addon by running the build.sh script in [webgpu-napi](https://github.com/Kings-Distributed-Systems/webgpu-napi)
+- This will also build dawn (once - it is a fixed checkout).
+- Copy the addon to third_party/dawn/linux/index.node
+- The build script will set LD\_LIBRARY\_PATH to the dawn shared libraries
+
 ### Debug
 
 To see debug logs in a browser, use the `debug=1` query string:

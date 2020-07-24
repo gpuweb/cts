@@ -60,8 +60,6 @@ async function tryInitDawn(): Promise<GPU> {
   let tickDevice: any = {};
 
   function deviceTick(): void {
-    /* eslint-disable-next-line no-console */
-    console.log('ENTER: PROTO: deviceTick');
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     (tickDevice as any).tick();
     setImmediate(deviceTick);
@@ -69,6 +67,8 @@ async function tryInitDawn(): Promise<GPU> {
   dawn.GPUAdapter.prototype.requestDevice = function (): Promise<GPUDevice> {
     return new Promise(resolve => {
       this._requestDevice().then((device: GPUDevice) => {
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        device.defaultQueue = (device as any).getQueue();
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         tickDevice = device;
         setImmediate(deviceTick);
@@ -106,21 +106,12 @@ async function tryInitDawn(): Promise<GPU> {
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   (dawn.GPUDevice as any).prototype.createBufferMappedAsync = function (
     descriptor: GPUBufferDescriptor
-  ): Promise<GPUBuffer> {
+  ): Promise<[GPUBuffer, ArrayBuffer]> {
     return new Promise(resolve => {
       setImmediate(() => {
         this._createBufferMappedAsync(descriptor, resolve);
       });
     });
-  };
-
-  dawn.GPUDevice.prototype.createBufferMapped = function (
-    descriptor: GPUBufferDescriptor
-  ): [GPUBuffer, ArrayBuffer] {
-    /* eslint-disable-next-line no-console */
-    console.log('ENTER: PROTO:createBufferMapped:' + descriptor);
-    return [{} as GPUBuffer, {} as ArrayBuffer];
-    //this._createBufferMapped(descriptor, resolve);
   };
 
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
