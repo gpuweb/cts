@@ -38,6 +38,7 @@ g.test('mapAsync')
     );
 
     if (oom) {
+      // Should also reject in addition to the validation error.
       t.shouldReject('OperationError', promise);
     } else {
       await promise;
