@@ -13,6 +13,8 @@ import {
   kShaderStageCombinations,
   kTextureBindingTypeInfo,
   kTextureComponentTypes,
+  kTextureFormats,
+  kTextureFormatInfo,
   kTextureViewDimensions,
 } from '../../capability_info.js';
 
@@ -68,101 +70,93 @@ g.test('visibility_and_dynamic_offsets')
     }, !success);
   });
 
-g.test('min_buffer_binding_size')
+g.test('bindingTypeSpecific_optional_members')
   .params(
     params()
       .combine(poptions('type', kBindingTypes))
-      .combine(poptions('minBufferBindingSize', [undefined, 0, 4]))
+      .combine([
+        // Case with every member set to `undefined`.
+        {
+          // Workaround for TS inferring the type of [ {}, ...x ] overly conservatively, as {}[].
+          _: 0,
+        },
+        // Cases with one member set.
+        ...poptions('minBufferBindingSize', [0, 4]),
+        ...poptions('textureComponentType', kTextureComponentTypes),
+        ...pbool('multisampled'),
+        ...poptions('viewDimension', kTextureViewDimensions),
+        ...poptions('storageTextureFormat', kTextureFormats),
+      ])
   )
-  .fn(async t => {
-    const { type, minBufferBindingSize } = t.params;
+  .fn(t => {
+    const {
+      type,
+      minBufferBindingSize,
+      textureComponentType,
+      multisampled,
+      viewDimension,
+      storageTextureFormat,
+    } = t.params;
 
-    let success = false;
-    if (
-      minBufferBindingSize === undefined ||
-      minBufferBindingSize === 0 ||
-      type in kBufferBindingTypeInfo
-    ) {
-      success = true;
+    let success = true;
+    if (!(type in kBufferBindingTypeInfo)) {
+      if (minBufferBindingSize !== undefined) success = false;
+    }
+    if (!(type in kTextureBindingTypeInfo)) {
+      if (viewDimension !== undefined) success = false;
+    }
+    if (kBindingTypeInfo[type].resource !== 'sampledTex') {
+      if (textureComponentType !== undefined) success = false;
+      if (multisampled === true) success = false;
+    }
+    if (kBindingTypeInfo[type].resource !== 'storageTex') {
+      if (storageTextureFormat !== undefined) success = false;
+    } else {
+      if (storageTextureFormat !== undefined && !kTextureFormatInfo[storageTextureFormat].storage) {
+        success = false;
+      }
     }
 
     t.expectValidationError(() => {
       t.device.createBindGroupLayout({
-        entries: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, type, minBufferBindingSize }],
+        entries: [
+          {
+            binding: 0,
+            visibility: GPUShaderStage.COMPUTE,
+            type,
+            minBufferBindingSize,
+            textureComponentType,
+            multisampled,
+            viewDimension,
+            storageTextureFormat,
+          },
+        ],
       });
     }, !success);
   });
 
-g.test('view_dimension')
+g.test('multisample_requires_2d_view_dimension')
   .params(
     params()
-      .combine(poptions('type', kBindingTypes))
+      .combine(poptions('multisampled', [undefined, false, true]))
       .combine(poptions('viewDimension', [undefined, ...kTextureViewDimensions]))
   )
   .fn(async t => {
-    const { type, viewDimension } = t.params;
+    const { multisampled, viewDimension } = t.params;
 
-    const success = viewDimension === undefined || type in kTextureBindingTypeInfo;
-
-    t.expectValidationError(() => {
-      t.device.createBindGroupLayout({
-        entries: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, type, viewDimension }],
-      });
-    }, !success);
-  });
-
-g.test('texture_component_type')
-  .params(
-    params()
-      .combine(poptions('type', kBindingTypes))
-      .combine(poptions('textureComponentType', [undefined, ...kTextureComponentTypes]))
-  )
-  .fn(async t => {
-    const { type, textureComponentType } = t.params;
-
-    const success =
-      textureComponentType === undefined || kBindingTypeInfo[type].resource === 'sampledTex';
+    const success = multisampled !== true || viewDimension === '2d' || viewDimension === undefined;
 
     t.expectValidationError(() => {
       t.device.createBindGroupLayout({
-        entries: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, type, textureComponentType }],
-      });
-    }, !success);
-  });
-
-g.test('multisampled')
-  .params(
-    params()
-      .combine(poptions('type', kBindingTypes))
-      .combine(poptions('multisampled', [undefined, false, true]))
-  )
-  .fn(async t => {
-    const { type, multisampled } = t.params;
-
-    const success = multisampled === false || kBindingTypeInfo[type].resource === 'sampledTex';
-
-    t.expectValidationError(() => {
-      t.device.createBindGroupLayout({
-        entries: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, type, multisampled }],
-      });
-    }, !success);
-  });
-
-g.test('storage_texture_format')
-  .params(
-    params()
-      .combine(poptions('type', kBindingTypes))
-      .combine(poptions('storageTextureFormat', [undefined, 'rgba8unorm'] as const))
-  )
-  .fn(async t => {
-    const { type, storageTextureFormat } = t.params;
-
-    const success =
-      storageTextureFormat === undefined || kBindingTypeInfo[type].resource === 'storageTex';
-
-    t.expectValidationError(() => {
-      t.device.createBindGroupLayout({
-        entries: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, type, storageTextureFormat }],
+        entries: [
+          {
+            binding: 0,
+            visibility: GPUShaderStage.COMPUTE,
+            type: 'sampled-texture',
+            multisampled,
+            viewDimension,
+          },
+        ],
       });
     }, !success);
   });
