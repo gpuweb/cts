@@ -22,14 +22,24 @@ const kCases = [
   { size: 12, range: [0, undefined] },
   { size: 12, range: [0, 12] },
   { size: 12, range: [0, 0] },
+  { size: 12, range: [8] },
+  { size: 12, range: [8, undefined] },
+  { size: 12, range: [8, 4] },
+  { size: 28, range: [8, 8] },
+  { size: 28, range: [8, 12] },
   { size: 512 * 1024, range: [] },
 ];
+
+function reifyMapRange(bufferSize: number, range: (number | undefined)[]): [number, number] {
+  const offset = range[0] ?? 0;
+  return [offset, range[1] ?? bufferSize - offset];
+}
 
 g.test('mapAsync,write')
   .params(kCases)
   .fn(async t => {
     const { size, range } = t.params;
-    const rangeSize = range[1] !== undefined ? range[1] : size;
+    const [rangeOffset, rangeSize] = reifyMapRange(size, range);
 
     const buffer = t.device.createBuffer({
       size,
@@ -38,14 +48,14 @@ g.test('mapAsync,write')
 
     await buffer.mapAsync(GPUMapMode.WRITE);
     const arrayBuffer = buffer.getMappedRange(...range);
-    t.checkMapWrite(buffer, range[0] ?? 0, arrayBuffer, rangeSize);
+    t.checkMapWrite(buffer, rangeOffset, arrayBuffer, rangeSize);
   });
 
 g.test('mapAsync,read')
   .params(kCases)
   .fn(async t => {
     const { size, range } = t.params;
-    const rangeSize = range[1] !== undefined ? range[1] : size;
+    const [, rangeSize] = reifyMapRange(size, range);
 
     const buffer = t.device.createBuffer({
       mappedAtCreation: true,
@@ -75,7 +85,7 @@ g.test('mappedAtCreation')
   )
   .fn(async t => {
     const { size, range, mappable } = t.params;
-    const rangeSize = range[1] !== undefined ? range[1] : size;
+    const [, rangeSize] = reifyMapRange(size, range);
 
     const buffer = t.device.createBuffer({
       mappedAtCreation: true,

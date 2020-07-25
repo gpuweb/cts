@@ -32,7 +32,7 @@ g.test('mapAsync')
       oom
     );
     const promise = t.expectGPUError(
-      'out-of-memory',
+      'validation', // Should be a validation error since the buffer is invalid.
       () => buffer.mapAsync(write ? GPUMapMode.WRITE : GPUMapMode.READ),
       oom
     );
