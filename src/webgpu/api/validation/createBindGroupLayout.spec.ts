@@ -75,11 +75,17 @@ g.test('bindingTypeSpecific_optional_members')
     params()
       .combine(poptions('type', kBindingTypes))
       .combine([
-        ...poptions('minBufferBindingSize', [undefined, 0, 4]),
-        ...poptions('textureComponentType', [undefined, ...kTextureComponentTypes]),
-        ...poptions('multisampled', [undefined, false, true]),
-        ...poptions('viewDimension', [undefined, ...kTextureViewDimensions]),
-        ...poptions('storageTextureFormat', [undefined, ...kTextureFormats]),
+        // Case with every member set to `undefined`.
+        {
+          // Workaround for TS inferring the type of [ {}, ...x ] overly conservatively, as {}[].
+          _: 0,
+        },
+        // Cases with one member set.
+        ...poptions('minBufferBindingSize', [0, 4]),
+        ...poptions('textureComponentType', kTextureComponentTypes),
+        ...pbool('multisampled'),
+        ...poptions('viewDimension', kTextureViewDimensions),
+        ...poptions('storageTextureFormat', kTextureFormats),
       ])
   )
   .fn(t => {
