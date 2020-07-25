@@ -48,6 +48,11 @@ type FlattenUnionOfInterfaces<T> = {
   >;
 };
 
+/**
+ * Extracts the element type of an array or tuple.
+ */
+type ElementOf<T> = T extends readonly (infer E)[] ? E : void;
+
 function typeAssert<T extends 'pass'>() {}
 {
   type Test<T, U> = [T] extends [U]
@@ -125,6 +130,29 @@ export class ParamsBuilder<A extends {}> implements CaseParamsIterable {
   }
 
   combine<B extends {}>(newParams: Iterable<B>): ParamsBuilder<Merged<A, B>> {
+    const paramSpecs = this.paramSpecs as Iterable<A>;
+    this.paramSpecs = makeReusableIterable(function* () {
+      for (const a of paramSpecs) {
+        for (const b of newParams) {
+          yield mergeParams(a, b);
+        }
+      }
+    }) as CaseParamsIterable;
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    return this as any;
+  }
+
+  /**
+   * Like .combine([ ... ]), but without the [ ].
+   *
+   * This is necessary because TypeScript incorrectly infers the type of arrays constructed in
+   * certain ways, for example:
+   * ```
+   * const x = [{ a: 0 }];  // Type is { a: number }[]
+   * const y = [{}, ...x];  // Type is {}[]
+   * ```
+   */
+  combineArgs<B extends readonly {}[]>(...newParams: B): ParamsBuilder<Merged<A, ElementOf<B>>> {
     const paramSpecs = this.paramSpecs as Iterable<A>;
     this.paramSpecs = makeReusableIterable(function* () {
       for (const a of paramSpecs) {
