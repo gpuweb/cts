@@ -140,10 +140,12 @@ export function createTextureUploadBuffer(
     options
   );
 
-  const [buffer, mapping] = device.createBufferMapped({
+  const buffer = device.createBuffer({
+    mappedAtCreation: true,
     size: byteLength,
     usage: GPUBufferUsage.COPY_SRC,
   });
+  const mapping = buffer.getMappedRange();
 
   assert(texelValue.byteLength === bytesPerBlock);
   fillTextureDataWithTexelValue(texelValue, format, dimension, mapping, size, options);

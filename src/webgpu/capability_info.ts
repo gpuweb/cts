@@ -10,6 +10,24 @@ function numericKeysOf<T>(obj: object): readonly T[] {
   return (Object.keys(obj).map(n => Number(n)) as unknown[]) as T[];
 }
 
+// Buffers
+
+export const kBufferUsageInfo: {
+  readonly [k in GPUBufferUsage]: {};
+} = /* prettier-ignore */ {
+  [GPUBufferUsage.MAP_READ]:      {},
+  [GPUBufferUsage.MAP_WRITE]:     {},
+  [GPUBufferUsage.COPY_SRC]:      {},
+  [GPUBufferUsage.COPY_DST]:      {},
+  [GPUBufferUsage.INDEX]:         {},
+  [GPUBufferUsage.VERTEX]:        {},
+  [GPUBufferUsage.UNIFORM]:       {},
+  [GPUBufferUsage.STORAGE]:       {},
+  [GPUBufferUsage.INDIRECT]:      {},
+  [GPUBufferUsage.QUERY_RESOLVE]: {},
+};
+export const kBufferUsages = numericKeysOf<GPUBufferUsage>(kBufferUsageInfo);
+
 // Textures
 
 export const kTextureFormatInfo: {

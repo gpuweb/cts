@@ -10,11 +10,12 @@ export const g = makeTestGroup(GPUTest);
 g.test('b2b').fn(async t => {
   const data = new Uint32Array([0x01020304]);
 
-  const [src, map] = t.device.createBufferMapped({
+  const src = t.device.createBuffer({
+    mappedAtCreation: true,
     size: 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
   });
-  new Uint32Array(map).set(data);
+  new Uint32Array(src.getMappedRange()).set(data);
   src.unmap();
 
   const dst = t.device.createBuffer({
@@ -32,11 +33,12 @@ g.test('b2b').fn(async t => {
 g.test('b2t2b').fn(async t => {
   const data = new Uint32Array([0x01020304]);
 
-  const [src, map] = t.device.createBufferMapped({
+  const src = t.device.createBuffer({
+    mappedAtCreation: true,
     size: 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
   });
-  new Uint32Array(map).set(data);
+  new Uint32Array(src.getMappedRange()).set(data);
   src.unmap();
 
   const dst = t.device.createBuffer({
@@ -69,11 +71,12 @@ g.test('b2t2b').fn(async t => {
 g.test('b2t2t2b').fn(async t => {
   const data = new Uint32Array([0x01020304]);
 
-  const [src, map] = t.device.createBufferMapped({
+  const src = t.device.createBuffer({
+    mappedAtCreation: true,
     size: 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
   });
-  new Uint32Array(map).set(data);
+  new Uint32Array(src.getMappedRange()).set(data);
   src.unmap();
 
   const dst = t.device.createBuffer({
