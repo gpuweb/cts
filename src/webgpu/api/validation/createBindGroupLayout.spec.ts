@@ -16,6 +16,7 @@ import {
   kTextureFormats,
   kTextureFormatInfo,
   kTextureViewDimensions,
+  kTextureViewDimensionInfo,
 } from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -101,12 +102,6 @@ g.test('bindingTypeSpecific_optional_members')
     }
     if (!(type in kTextureBindingTypeInfo)) {
       if (viewDimension !== undefined) success = false;
-      if (
-        kBindingTypeInfo[type].resource === 'storageTex' &&
-        (viewDimension === 'cube' || viewDimension === 'cube-array')
-      ) {
-        success = false;
-      }
     }
     if (kBindingTypeInfo[type].resource !== 'sampledTex') {
       if (textureComponentType !== undefined) success = false;
@@ -115,6 +110,9 @@ g.test('bindingTypeSpecific_optional_members')
     if (kBindingTypeInfo[type].resource !== 'storageTex') {
       if (storageTextureFormat !== undefined) success = false;
     } else {
+      if (viewDimension !== undefined && !kTextureViewDimensionInfo[viewDimension].storage) {
+        success = false;
+      }
       if (storageTextureFormat !== undefined && !kTextureFormatInfo[storageTextureFormat].storage) {
         success = false;
       }
