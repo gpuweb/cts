@@ -143,15 +143,16 @@ export const kTextureComponentTypes = keysOf(kTextureComponentTypeInfo);
 
 export const kTextureViewDimensionInfo: {
   readonly [k in GPUTextureViewDimension]: {
+    readonly storage: boolean;
     // Add fields as needed
   };
 } = /* prettier-ignore */ {
-  '1d': {},
-  '2d': {},
-  '2d-array': {},
-  'cube': {},
-  'cube-array': {},
-  '3d': {},
+  '1d':         { storage: true  },
+  '2d':         { storage: true  },
+  '2d-array':   { storage: true  },
+  'cube':       { storage: false },
+  'cube-array': { storage: false },
+  '3d':         { storage: true  },
 };
 export const kTextureViewDimensions = keysOf(kTextureViewDimensionInfo);
 

@@ -16,6 +16,7 @@ import {
   kTextureFormats,
   kTextureFormatInfo,
   kTextureViewDimensions,
+  kTextureViewDimensionInfo,
 } from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -46,26 +47,20 @@ g.test('some_binding_index_was_specified_more_than_once').fn(async t => {
   });
 });
 
-g.test('visibility_and_dynamic_offsets')
+g.test('visibility')
   .params(
     params()
       .combine(poptions('type', kBindingTypes))
-      .combine(pbool('hasDynamicOffset'))
       .combine(poptions('visibility', kShaderStageCombinations))
   )
   .fn(async t => {
-    const { type, hasDynamicOffset, visibility } = t.params;
-    const info = kBindingTypeInfo[type as GPUBindingType];
+    const { type, visibility } = t.params;
 
-    const supportsDynamicOffset = kBindingTypeInfo[type].perPipelineLimitClass.maxDynamic > 0;
-    let success = true;
-    if (!supportsDynamicOffset && hasDynamicOffset) success = false;
-    if ((visibility & ~info.validStages) !== 0) success = false;
+    const success = (visibility & ~kBindingTypeInfo[type].validStages) === 0;
 
-    // When hasDynamicOffset is false, it actually tests visibility.
     t.expectValidationError(() => {
       t.device.createBindGroupLayout({
-        entries: [{ binding: 0, visibility, type, hasDynamicOffset }],
+        entries: [{ binding: 0, visibility, type }],
       });
     }, !success);
   });
@@ -81,6 +76,7 @@ g.test('bindingTypeSpecific_optional_members')
           _: 0,
         },
         // Cases with one member set.
+        ...pbool('hasDynamicOffset'),
         ...poptions('minBufferBindingSize', [0, 4]),
         ...poptions('textureComponentType', kTextureComponentTypes),
         ...pbool('multisampled'),
@@ -91,6 +87,7 @@ g.test('bindingTypeSpecific_optional_members')
   .fn(t => {
     const {
       type,
+      hasDynamicOffset,
       minBufferBindingSize,
       textureComponentType,
       multisampled,
@@ -100,6 +97,7 @@ g.test('bindingTypeSpecific_optional_members')
 
     let success = true;
     if (!(type in kBufferBindingTypeInfo)) {
+      if (hasDynamicOffset !== undefined) success = false;
       if (minBufferBindingSize !== undefined) success = false;
     }
     if (!(type in kTextureBindingTypeInfo)) {
@@ -107,11 +105,14 @@ g.test('bindingTypeSpecific_optional_members')
     }
     if (kBindingTypeInfo[type].resource !== 'sampledTex') {
       if (textureComponentType !== undefined) success = false;
-      if (multisampled === true) success = false;
+      if (multisampled !== undefined) success = false;
     }
     if (kBindingTypeInfo[type].resource !== 'storageTex') {
       if (storageTextureFormat !== undefined) success = false;
     } else {
+      if (viewDimension !== undefined && !kTextureViewDimensionInfo[viewDimension].storage) {
+        success = false;
+      }
       if (storageTextureFormat !== undefined && !kTextureFormatInfo[storageTextureFormat].storage) {
         success = false;
       }
@@ -124,6 +125,7 @@ g.test('bindingTypeSpecific_optional_members')
             binding: 0,
             visibility: GPUShaderStage.COMPUTE,
             type,
+            hasDynamicOffset,
             minBufferBindingSize,
             textureComponentType,
             multisampled,
