@@ -104,16 +104,5 @@ async function tryInitDawn(): Promise<GPU> {
   };
 
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  (dawn.GPUDevice as any).prototype.createBufferMappedAsync = function (
-    descriptor: GPUBufferDescriptor
-  ): Promise<[GPUBuffer, ArrayBuffer]> {
-    return new Promise(resolve => {
-      setImmediate(() => {
-        this._createBufferMappedAsync(descriptor, resolve);
-      });
-    });
-  };
-
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   return (dawn.GPU as any) as GPU;
 }

@@ -28,7 +28,6 @@ declare class Device extends GPUDevice {
     descriptor: GPUBufferDescriptor,
     callback: (buffer: GPUBuffer) => void
   ): void;
-  _createBufferMapped(descriptor: GPUBufferDescriptor, callback: (buffer: GPUBuffer) => void): void;
 }
 
 declare class Fence extends GPUFence {

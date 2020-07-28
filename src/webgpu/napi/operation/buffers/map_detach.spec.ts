@@ -54,7 +54,8 @@ g.test('create_mapped')
       size: 4,
       usage: GPUBufferUsage.MAP_WRITE,
     };
-    const [buffer, arrayBuffer] = t.device.createBufferMapped(desc);
+
+    const [buffer, arrayBuffer] = t.device.createBufferMapped({size: 4, usage: GPUBufferUsage.MAP_READ});
 
     const view = new Uint8Array(arrayBuffer);
     t.expect(arrayBuffer.byteLength === 4);
