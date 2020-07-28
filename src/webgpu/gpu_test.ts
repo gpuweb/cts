@@ -50,7 +50,7 @@ export class GPUTest extends Fixture {
     await super.init();
 
     const device = await devicePool.acquire();
-    const queue = device.defaultQueue;
+    const queue = (device as any).getQueue();
     this.objects = { device, queue };
   }
 
@@ -87,7 +87,7 @@ export class GPUTest extends Fixture {
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     });
 
-    const c = this.device.createCommandEncoder();
+    const c = this.device.createCommandEncoder({});
     c.copyBufferToBuffer(src, 0, dst, 0, size);
 
     this.queue.submit([c.finish()]);
@@ -98,8 +98,9 @@ export class GPUTest extends Fixture {
   // TODO: add an expectContents for textures, which logs data: uris on failure
 
   expectContents(src: GPUBuffer, expected: TypedArrayBufferView): void {
+	
     const dst = this.createCopyForMapRead(src, expected.buffer.byteLength);
-
+     
     this.eventualAsyncExpectation(async niceStack => {
       const constructor = expected.constructor as TypedArrayBufferViewConstructor;
       const actual = new constructor(await dst.mapReadAsync());
