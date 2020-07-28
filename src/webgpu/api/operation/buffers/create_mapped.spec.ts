@@ -15,13 +15,9 @@ g.test('createBufferMapped')
   )
   .fn(t => {
     const { size, mappable } = t.params;
-    /* eslint-disable-next-line no-console */
-    console.log('ENTER: POLYFILL:createBufferMapped');
     const [buffer, arrayBuffer] = t.device.createBufferMapped({
       size,
       usage: GPUBufferUsage.COPY_SRC | (mappable ? GPUBufferUsage.MAP_WRITE : 0),
     });
-    /* eslint-disable-next-line no-console */
-    console.log('EXIT: POLYFILL:createBufferMapped');
     t.checkMapWrite(buffer, arrayBuffer, size);
   });
