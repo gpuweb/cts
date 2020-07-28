@@ -50,6 +50,8 @@ export class GPUTest extends Fixture {
     await super.init();
 
     const device = await devicePool.acquire();
+
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     const queue = (device as any).getQueue();
     this.objects = { device, queue };
   }
@@ -98,9 +100,8 @@ export class GPUTest extends Fixture {
   // TODO: add an expectContents for textures, which logs data: uris on failure
 
   expectContents(src: GPUBuffer, expected: TypedArrayBufferView): void {
-	
     const dst = this.createCopyForMapRead(src, expected.buffer.byteLength);
-     
+
     this.eventualAsyncExpectation(async niceStack => {
       const constructor = expected.constructor as TypedArrayBufferViewConstructor;
       const actual = new constructor(await dst.mapReadAsync());

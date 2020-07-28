@@ -5,8 +5,6 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 
 import { MappingTest } from './mapping_test.js';
 
-
-
 export const g = makeTestGroup(MappingTest);
 
 g.test('createBufferMapped')
@@ -20,7 +18,7 @@ g.test('createBufferMapped')
 
     const desc = {
       size,
-      usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
+      usage: GPUBufferUsage.COPY_SRC | (mappable ? GPUBufferUsage.MAP_WRITE : 0),
     };
 
     const [buffer, arrayBuffer] = t.device.createBufferMapped(desc);
