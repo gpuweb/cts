@@ -9,13 +9,12 @@ Test Coverage:
      generated. Otherwise, no error should be generated.
 `;
 
+import { poptions, params } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { kTextureFormatInfo } from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
-const READ_BASE_LEVEL = 3;
-const READ_BASE_LAYER = 0;
-
-class F extends ValidationTest {
+class TextureUsageTracking extends ValidationTest {
   createTexture(
     options: {
       width?: number;
@@ -44,101 +43,53 @@ class F extends ValidationTest {
       usage: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.SAMPLED,
     });
   }
-
-  getDescriptor(
-    options: {
-      format?: GPUTextureFormat;
-      dimension?: GPUTextureViewDimension;
-      aspect?: GPUTextureAspect;
-      baseMipLevel?: number;
-      mipLevelCount?: number;
-      baseArrayLayer?: number;
-      arrayLayerCount?: number;
-    } = {}
-  ): GPUTextureViewDescriptor {
-    const {
-      format = 'rgba8unorm',
-      dimension = '2d',
-      aspect = 'all',
-      baseMipLevel = 0,
-      mipLevelCount = 1,
-      baseArrayLayer = 0,
-      arrayLayerCount = 1,
-    } = options;
-    return {
-      format,
-      dimension,
-      aspect,
-      baseMipLevel,
-      mipLevelCount,
-      baseArrayLayer,
-      arrayLayerCount,
-    };
-  }
 }
 
-export const g = makeTestGroup(F);
+export const g = makeTestGroup(TextureUsageTracking);
 
-g.test('readwrite_on_different_types_of_subresources')
+const READ_BASE_LEVEL = 3;
+const READ_BASE_LAYER = 0;
+
+g.test('readwrite_upon_subresources')
   .params([
     // read and write usages are binding to the same texture subresource.
     {
-      format: 'rgba8unorm' as const,
       writeBaseLevel: READ_BASE_LEVEL,
       writeBaseLayer: READ_BASE_LAYER,
-      writeAspect: 'all' as const,
-      success: false,
+      _success: false,
     },
 
     // read and write usages are binding to different mip levels of the same texture.
     {
-      format: 'rgba8unorm' as const,
       writeBaseLevel: READ_BASE_LEVEL + 1,
       writeBaseLayer: READ_BASE_LAYER,
-      writeAspect: 'all' as const,
-      success: true,
+      _success: true,
     },
 
     // read and write usages are binding to different array layers of the same texture.
     {
-      format: 'rgba8unorm' as const,
       writeBaseLevel: READ_BASE_LEVEL,
       writeBaseLayer: READ_BASE_LAYER + 1,
-      writeAspect: 'all' as const,
-      success: true,
-    },
-
-    // read and write usages are binding to different aspects of the same texture.
-    {
-      format: 'depth24plus-stencil8' as const,
-      writeBaseLevel: READ_BASE_LEVEL,
-      writeBaseLayer: READ_BASE_LAYER,
-      writeAspect: 'stencil-only' as const,
-      success: true,
+      _success: true,
     },
   ])
   .fn(async t => {
-    const { format, writeBaseLevel, writeBaseLayer, writeAspect, success } = t.params;
+    const { writeBaseLevel, writeBaseLayer, _success } = t.params;
 
-    const texture = t.createTexture({ arrayLayerCount: 2, mipLevelCount: 6, format });
-    const readAspect = format === 'depth24plus-stencil8' ? 'depth-only' : 'all';
+    const texture = t.createTexture({ arrayLayerCount: 2, mipLevelCount: 6 });
 
-    const sampleView = texture.createView(
-      t.getDescriptor({
-        format,
-        aspect: readAspect,
-        baseMipLevel: READ_BASE_LEVEL,
-        baseArrayLayer: READ_BASE_LAYER,
-      })
-    );
-    const renderView = texture.createView(
-      t.getDescriptor({
-        format,
-        aspect: writeAspect,
-        baseMipLevel: writeBaseLevel,
-        baseArrayLayer: writeBaseLayer,
-      })
-    );
+    const sampleView = texture.createView({
+      baseMipLevel: READ_BASE_LEVEL,
+      mipLevelCount: 1,
+      baseArrayLayer: READ_BASE_LAYER,
+      arrayLayerCount: 1,
+    });
+    const renderView = texture.createView({
+      baseMipLevel: writeBaseLevel,
+      mipLevelCount: 1,
+      baseArrayLayer: writeBaseLayer,
+      arrayLayerCount: 1,
+    });
 
     const bindGroupLayout = t.device.createBindGroupLayout({
       entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, type: 'sampled-texture' }],
@@ -153,22 +104,67 @@ g.test('readwrite_on_different_types_of_subresources')
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment:
-            format !== 'depth24plus-stencil8' ? renderView : t.createTexture().createView(),
+          attachment: renderView,
           loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
           storeOp: 'store',
         },
       ],
-      depthStencilAttachment:
-        format !== 'depth24plus-stencil8'
-          ? undefined
-          : {
-              attachment: renderView,
-              depthStoreOp: 'clear',
-              depthLoadValue: 'load',
-              stencilStoreOp: 'clear',
-              stencilLoadValue: 'load',
-            },
+    });
+    pass.setBindGroup(0, bindGroup);
+    pass.endPass();
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, !_success);
+  });
+
+g.test('readwrite_upon_aspects')
+  .params(
+    params()
+      .combine(poptions('format', ['depth32float', 'depth24plus', 'depth24plus-stencil8'] as const))
+      .combine(poptions('readAspect', ['all', 'depth-only', 'stencil-only'] as const))
+      .combine(poptions('writeAspect', ['all', 'depth-only', 'stencil-only'] as const))
+      .unless(
+        ({ format, readAspect, writeAspect }) =>
+          // TODO: Exclude depth-only aspect once WebGPU supports stencil-only texture format(s).
+          (readAspect === 'stencil-only' && !kTextureFormatInfo[format].stencil) ||
+          (writeAspect === 'stencil-only' && !kTextureFormatInfo[format].stencil)
+      )
+  )
+  .fn(async t => {
+    const { format, readAspect, writeAspect } = t.params;
+
+    const view = t.createTexture({ format }).createView();
+
+    const bindGroupLayout = t.device.createBindGroupLayout({
+      entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, type: 'sampled-texture' }],
+    });
+
+    const bindGroup = t.device.createBindGroup({
+      entries: [{ binding: 0, resource: view }],
+      layout: bindGroupLayout,
+    });
+
+    const success =
+      (readAspect === 'depth-only' && writeAspect === 'stencil-only') ||
+      (readAspect === 'stencil-only' && writeAspect === 'depth-only');
+
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          attachment: t.createTexture().createView(),
+          loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+          storeOp: 'store',
+        },
+      ],
+      depthStencilAttachment: {
+        attachment: view,
+        depthStoreOp: 'clear',
+        depthLoadValue: 'load',
+        stencilStoreOp: 'clear',
+        stencilLoadValue: 'load',
+      },
     });
     pass.setBindGroup(0, bindGroup);
     pass.endPass();
