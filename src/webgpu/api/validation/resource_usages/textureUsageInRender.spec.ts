@@ -232,3 +232,94 @@ g.test('shader_stages_and_visibility')
       encoder.finish();
     });
   });
+
+g.test('binding_types_combination')
+  .params([
+    { type0: 'sampled-texture' as const, type1: 'sampled-texture' as const, _success: true },
+    {
+      type0: 'sampled-texture' as const,
+      type1: 'readonly-storage-texture' as const,
+      _success: true,
+    },
+    {
+      type0: 'sampled-texture' as const,
+      type1: 'writeonly-storage-texture' as const,
+      _success: false,
+    },
+    { type0: 'sampled-texture' as const, type1: 'render-target' as const, _success: false },
+    {
+      type0: 'readonly-storage-texture' as const,
+      type1: 'readonly-storage-texture' as const,
+      _success: true,
+    },
+    {
+      type0: 'readonly-storage-texture' as const,
+      type1: 'writeonly-storage-texture' as const,
+      _success: false,
+    },
+    {
+      type0: 'readonly-storage-texture' as const,
+      type1: 'render-target' as const,
+      _success: false,
+    },
+    {
+      type0: 'writeonly-storage-texture' as const,
+      type1: 'writeonly-storage-texture' as const,
+      _success: true,
+    },
+    {
+      type0: 'writeonly-storage-texture' as const,
+      type1: 'render-target' as const,
+      _success: false,
+    },
+  ])
+  .fn(async t => {
+    const { type0, type1, _success } = t.params;
+
+    const view = t
+      .createTexture({
+        usage:
+          GPUTextureUsage.SAMPLED | GPUTextureUsage.STORAGE | GPUTextureUsage.OUTPUT_ATTACHMENT,
+      })
+      .createView();
+
+    const bglEntries: GPUBindGroupLayoutEntry[] = [
+      {
+        binding: 0,
+        visibility: GPUShaderStage.FRAGMENT,
+        type: type0,
+        storageTextureFormat: type0 === 'sampled-texture' ? undefined : 'rgba8unorm',
+      },
+    ];
+    const bgEntries: GPUBindGroupEntry[] = [{ binding: 0, resource: view }];
+    if (type1 !== 'render-target') {
+      bglEntries.push({
+        binding: 1,
+        visibility: GPUShaderStage.FRAGMENT,
+        type: type1,
+        storageTextureFormat: type1 === 'sampled-texture' ? undefined : 'rgba8unorm',
+      });
+      bgEntries.push({ binding: 1, resource: view });
+    }
+    const bindGroup = t.device.createBindGroup({
+      entries: bgEntries,
+      layout: t.device.createBindGroupLayout({ entries: bglEntries }),
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          attachment: type1 === 'render-target' ? view : t.createTexture().createView(),
+          loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+          storeOp: 'store',
+        },
+      ],
+    });
+    pass.setBindGroup(0, bindGroup);
+    pass.endPass();
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, !_success);
+  });
