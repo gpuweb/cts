@@ -5,7 +5,14 @@ declare const Components: any;
 
 export async function attemptGarbageCollection(): Promise<void> {
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  const w: any = this;
+  let w: any;
+
+  if (typeof self !== 'undefined') {
+    w = self;
+  } else {
+    w = global;
+  }
+
   if (w.GCController) {
     w.GCController.collect();
     return;
