@@ -288,6 +288,9 @@ g.test('binding_types_combination')
         binding: 0,
         visibility: GPUShaderStage.FRAGMENT,
         type: type0,
+        // Currently setting two 'render-target' usages in the same render pass is impossible.
+        // We don't need to test that. So type0 is either 'sampled-texture' or storage usages.
+        // It can't be 'render-target'.
         storageTextureFormat: type0 === 'sampled-texture' ? undefined : 'rgba8unorm',
       },
     ];
