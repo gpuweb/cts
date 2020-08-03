@@ -192,7 +192,7 @@ g.test('shader_stages_and_visibility')
     // writeonly-storage-texture binding type is not supported in vertex stage. So, this test
     // uses writeonly-storage-texture binding as writable binding upon the same subresource if
     // vertex stage is not included. Otherwise, it uses output attachment instead.
-    const writeHasVertexStage = writeVisibility & GPUShaderStage.VERTEX;
+    const writeHasVertexStage = Boolean(writeVisibility & GPUShaderStage.VERTEX);
     const texUsage = writeHasVertexStage
       ? GPUTextureUsage.SAMPLED | GPUTextureUsage.OUTPUT_ATTACHMENT
       : GPUTextureUsage.SAMPLED | GPUTextureUsage.STORAGE;
@@ -230,7 +230,8 @@ g.test('shader_stages_and_visibility')
     pass.setBindGroup(0, bindGroup);
     pass.endPass();
 
-    // Texture usages in bindings with invisible shader stages should be tracked.
+    // Texture usages in bindings with invisible shader stages should be tracked. Invisible shader
+    // stages include shader stage with visibility none and compute shader stage in render pass.
     t.expectValidationError(() => {
       encoder.finish();
     });
