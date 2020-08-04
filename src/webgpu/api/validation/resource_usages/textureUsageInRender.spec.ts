@@ -11,7 +11,7 @@ Test Coverage:
 
 import { poptions, params } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { kTextureFormatInfo } from '../../../capability_info.js';
+import { kTextureFormatInfo, kShaderStages } from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
 class TextureUsageTracking extends ValidationTest {
@@ -23,6 +23,7 @@ class TextureUsageTracking extends ValidationTest {
       mipLevelCount?: number;
       sampleCount?: number;
       format?: GPUTextureFormat;
+      usage?: GPUTextureUsageFlags;
     } = {}
   ): GPUTexture {
     const {
@@ -32,6 +33,7 @@ class TextureUsageTracking extends ValidationTest {
       mipLevelCount = 1,
       sampleCount = 1,
       format = 'rgba8unorm',
+      usage = GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.SAMPLED,
     } = options;
 
     return this.device.createTexture({
@@ -40,7 +42,7 @@ class TextureUsageTracking extends ValidationTest {
       sampleCount,
       dimension: '2d',
       format,
-      usage: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.SAMPLED,
+      usage,
     });
   }
 }
@@ -172,4 +174,61 @@ g.test('readwrite_upon_aspects')
     t.expectValidationError(() => {
       encoder.finish();
     }, !success);
+  });
+
+g.test('shader_stages_and_visibility')
+  .params(
+    params()
+      .combine(poptions('readVisibility', [0, ...kShaderStages]))
+      .combine(poptions('writeVisibility', [0, ...kShaderStages]))
+  )
+  .fn(async t => {
+    const { readVisibility, writeVisibility } = t.params;
+
+    // writeonly-storage-texture binding type is not supported in vertex stage. So, this test
+    // uses writeonly-storage-texture binding as writable binding upon the same subresource if
+    // vertex stage is not included. Otherwise, it uses output attachment instead.
+    const writeHasVertexStage = Boolean(writeVisibility & GPUShaderStage.VERTEX);
+    const texUsage = writeHasVertexStage
+      ? GPUTextureUsage.SAMPLED | GPUTextureUsage.OUTPUT_ATTACHMENT
+      : GPUTextureUsage.SAMPLED | GPUTextureUsage.STORAGE;
+
+    const texture = t.createTexture({ usage: texUsage });
+    const view = texture.createView();
+    const bglEntries: GPUBindGroupLayoutEntry[] = [
+      { binding: 0, visibility: readVisibility, type: 'sampled-texture' },
+    ];
+    const bgEntries: GPUBindGroupEntry[] = [{ binding: 0, resource: view }];
+    if (!writeHasVertexStage) {
+      bglEntries.push({
+        binding: 1,
+        visibility: writeVisibility,
+        type: 'writeonly-storage-texture',
+        storageTextureFormat: 'rgba8unorm',
+      });
+      bgEntries.push({ binding: 1, resource: view });
+    }
+    const bindGroup = t.device.createBindGroup({
+      entries: bgEntries,
+      layout: t.device.createBindGroupLayout({ entries: bglEntries }),
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          attachment: writeHasVertexStage ? view : t.createTexture().createView(),
+          loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+          storeOp: 'store',
+        },
+      ],
+    });
+    pass.setBindGroup(0, bindGroup);
+    pass.endPass();
+
+    // Texture usages in bindings with invisible shader stages should be tracked. Invisible shader
+    // stages include shader stage with visibility none and compute shader stage in render pass.
+    t.expectValidationError(() => {
+      encoder.finish();
+    });
   });
