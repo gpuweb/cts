@@ -11,11 +11,7 @@ Test Coverage:
 
 import { poptions, params } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import {
-  kTextureFormatInfo,
-  kShaderStages,
-  kShaderStageCombinations,
-} from '../../../capability_info.js';
+import { kTextureFormatInfo, kShaderStages } from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
 class TextureUsageTracking extends ValidationTest {
@@ -183,7 +179,7 @@ g.test('readwrite_upon_aspects')
 g.test('shader_stages_and_visibility')
   .params(
     params()
-      .combine(poptions('readVisibility', kShaderStageCombinations))
+      .combine(poptions('readVisibility', [0, ...kShaderStages]))
       .combine(poptions('writeVisibility', [0, ...kShaderStages]))
   )
   .fn(async t => {
