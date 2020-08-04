@@ -6,7 +6,10 @@ import { params, poptions, pbool } from '../../../common/framework/params_builde
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { kTextureFormats, kTextureFormatInfo } from '../../capability_info.js';
 
-import { CopyBetweenLinearDataAndTextureTest, TestMethod } from './copyBetweenLinearDataAndTexture.js';
+import {
+  CopyBetweenLinearDataAndTextureTest,
+  TestMethod,
+} from './copyBetweenLinearDataAndTexture.js';
 
 export const g = makeTestGroup(CopyBetweenLinearDataAndTextureTest);
 
@@ -30,12 +33,19 @@ g.test('bound_on_bytes_per_row')
       .unless(({ format }) => !kTextureFormatInfo[format].copyable)
   )
   .fn(async t => {
-    const { blocksPerRow, additionalBytesPerRow, copyWidthInBlocks, copyHeightInBlocks, copyDepth, format } = t.params;
+    const {
+      blocksPerRow,
+      additionalBytesPerRow,
+      copyWidthInBlocks,
+      copyHeightInBlocks,
+      copyDepth,
+      format,
+    } = t.params;
 
     const copyWidth = copyWidthInBlocks * kTextureFormatInfo[format].blockWidth;
     const copyHeight = copyHeightInBlocks * kTextureFormatInfo[format].blockHeight;
-    const bytesPerRow = blocksPerRow * kTextureFormatInfo[format].bytesPerBlock
-                        + additionalBytesPerRow;
+    const bytesPerRow =
+      blocksPerRow * kTextureFormatInfo[format].bytesPerBlock + additionalBytesPerRow;
     const size = { width: copyWidth, height: copyHeight, depth: copyDepth };
 
     const texture = t.createAlignedTexture(format, size);
@@ -46,10 +56,10 @@ g.test('bound_on_bytes_per_row')
     }
 
     t.testRun(
-      { texture: texture, origin: { x: 0, y: 0, z: 0 } },
-      { bytesPerRow: bytesPerRow, rowsPerImage: copyHeight },
+      { texture, origin: { x: 0, y: 0, z: 0 } },
+      { bytesPerRow, rowsPerImage: copyHeight },
       size,
-      { dataSize: 1024, method: TestMethod.WriteTexture, success: success },
+      { dataSize: 1024, method: TestMethod.WriteTexture, success }
     );
   });
 
@@ -92,25 +102,27 @@ g.test('required_bytes_in_copy')
     const copyWidth = copyWidthInBlocks * kTextureFormatInfo[format].blockWidth;
     const copyHeight = copyHeightInBlocks * kTextureFormatInfo[format].blockHeight;
     const offset = offsetInBlocks * kTextureFormatInfo[format].bytesPerBlock;
-    const rowsPerImage = copyHeight + rowsPerImagePaddingInBlocks * kTextureFormatInfo[format].blockHeight;
+    const rowsPerImage =
+      copyHeight + rowsPerImagePaddingInBlocks * kTextureFormatInfo[format].blockHeight;
     const bytesPerRow = t.bytesInACompleteRow(copyWidth, format) + bytesPerRowPadding;
     const size = { width: copyWidth, height: copyHeight, depth: copyDepth };
 
-    const minDataSize = offset + t.requiredBytesInCopy({ offset: offset, bytesPerRow: bytesPerRow, rowsPerImage: rowsPerImage }, format, size);
+    const minDataSize =
+      offset + t.requiredBytesInCopy({ offset, bytesPerRow, rowsPerImage }, format, size);
 
     // We can't run a failing test with minDataSize = 0.
-    if (minDataSize == 0 && !success) {
+    if (minDataSize === 0 && !success) {
       return;
     }
 
-    let dataSize = success ? minDataSize : minDataSize - 1;
+    const dataSize = success ? minDataSize : minDataSize - 1;
 
     const texture = t.createAlignedTexture(format, size);
 
     t.testRun(
-      { texture: texture, origin: { x: 0, y: 0, z: 0 } },
-      { offset: offset, bytesPerRow: bytesPerRow, rowsPerImage: rowsPerImage },
+      { texture, origin: { x: 0, y: 0, z: 0 } },
+      { offset, bytesPerRow, rowsPerImage },
       size,
-      { dataSize: dataSize, method: TestMethod.WriteTexture, success: success },
+      { dataSize, method: TestMethod.WriteTexture, success }
     );
   });

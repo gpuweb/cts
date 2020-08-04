@@ -8,22 +8,33 @@ export enum TestMethod {
   CopyTextureToBuffer = 'CopyTextureToBuffer',
 }
 
-export const kAllTestMethods = [TestMethod.WriteTexture, TestMethod.CopyBufferToTexture, TestMethod.CopyTextureToBuffer];
+export const kAllTestMethods = [
+  TestMethod.WriteTexture,
+  TestMethod.CopyBufferToTexture,
+  TestMethod.CopyTextureToBuffer,
+];
 
 export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
   bytesInACompleteRow(copyWidth: number, format: GPUTextureFormat): number {
-    return kTextureFormatInfo[format].bytesPerBlock * copyWidth / kTextureFormatInfo[format].blockWidth;
+    return (
+      (kTextureFormatInfo[format].bytesPerBlock * copyWidth) / kTextureFormatInfo[format].blockWidth
+    );
   }
 
-  requiredBytesInCopy(layout: GPUTextureDataLayout, format: GPUTextureFormat, copyExtent: GPUExtent3DDict): number {
-    if (copyExtent.width == 0 || copyExtent.height == 0 || copyExtent.depth == 0) {
+  requiredBytesInCopy(
+    layout: GPUTextureDataLayout,
+    format: GPUTextureFormat,
+    copyExtent: GPUExtent3DDict
+  ): number {
+    if (copyExtent.width === 0 || copyExtent.height === 0 || copyExtent.depth === 0) {
       return 0;
     } else {
       const texelBlockRowsPerImage = layout.rowsPerImage / kTextureFormatInfo[format].blockHeight;
       const bytesPerImage = layout.bytesPerRow * texelBlockRowsPerImage;
       const bytesInLastSlice =
         layout.bytesPerRow * (copyExtent.height / kTextureFormatInfo[format].blockHeight - 1) +
-        (copyExtent.width / kTextureFormatInfo[format].blockWidth * kTextureFormatInfo[format].bytesPerBlock);
+        (copyExtent.width / kTextureFormatInfo[format].blockWidth) *
+          kTextureFormatInfo[format].bytesPerBlock;
       return bytesPerImage * (copyExtent.depth - 1) + bytesInLastSlice;
     }
   }
@@ -32,16 +43,14 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
     textureCopyView: GPUTextureCopyView,
     textureDataLayout: GPUTextureDataLayout,
     size: GPUExtent3D,
-    { dataSize, method, success }: { dataSize: number, method: TestMethod, success: Boolean }
+    { dataSize, method, success }: { dataSize: number; method: TestMethod; success: boolean }
   ): void {
-     switch (method) {
+    switch (method) {
       case TestMethod.WriteTexture: {
         const data = new Uint8Array(dataSize);
-        
+
         this.expectValidationError(() => {
-          this.device.defaultQueue.writeTexture(
-            textureCopyView, data, textureDataLayout, size
-          );
+          this.device.defaultQueue.writeTexture(textureCopyView, data, textureDataLayout, size);
         }, !success);
 
         break;
@@ -54,11 +63,7 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
         });
 
         const encoder = this.device.createCommandEncoder();
-        encoder.copyBufferToTexture(
-          { buffer: buffer, offset: textureDataLayout.offset, bytesPerRow: textureDataLayout.bytesPerRow, rowsPerImage: textureDataLayout.rowsPerImage },
-          textureCopyView,
-          size
-        );
+        encoder.copyBufferToTexture({ buffer, ...textureDataLayout }, textureCopyView, size);
 
         this.expectValidationError(() => {
           this.device.defaultQueue.submit([encoder.finish()]);
@@ -76,7 +81,12 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
         const encoder = this.device.createCommandEncoder();
         encoder.copyTextureToBuffer(
           textureCopyView,
-          { buffer: buffer, offset: textureDataLayout.offset, bytesPerRow: textureDataLayout.bytesPerRow, rowsPerImage: textureDataLayout.rowsPerImage },
+          {
+            buffer,
+            offset: textureDataLayout.offset,
+            bytesPerRow: textureDataLayout.bytesPerRow,
+            rowsPerImage: textureDataLayout.rowsPerImage,
+          },
           size
         );
 
@@ -91,14 +101,17 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
 
   // This is a helper function used for creating a texture when we don't have to be very
   // precise about its size as long as it's big enough and properly aligned.
-  createAlignedTexture(format: GPUTextureFormat, copySize: GPUExtent3DDict = { width: 1, height: 1, depth: 1 }): GPUTexture {
+  createAlignedTexture(
+    format: GPUTextureFormat,
+    copySize: GPUExtent3DDict = { width: 1, height: 1, depth: 1 }
+  ): GPUTexture {
     return this.device.createTexture({
-      size: { 
+      size: {
         width: Math.max(1, copySize.width) * kTextureFormatInfo[format].blockWidth,
         height: Math.max(1, copySize.height) * kTextureFormatInfo[format].blockHeight,
         depth: Math.max(1, copySize.depth),
       },
-      format: format,
+      format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
   }
@@ -106,7 +119,7 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
 
 // For testing divisibility by a number we test all the values returned by this function:
 export function valuesToTestDivisibilityBy(number: number): number[] {
-  let values = [];
+  const values = [];
   for (let i = 0; i <= 2 * number; ++i) {
     values.push(i);
   }

@@ -6,7 +6,11 @@ import { params, poptions } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { kTextureFormats, kTextureFormatInfo } from '../../capability_info.js';
 
-import { CopyBetweenLinearDataAndTextureTest, kAllTestMethods, valuesToTestDivisibilityBy } from './copyBetweenLinearDataAndTexture.js';
+import {
+  CopyBetweenLinearDataAndTextureTest,
+  kAllTestMethods,
+  valuesToTestDivisibilityBy,
+} from './copyBetweenLinearDataAndTexture.js';
 
 export const g = makeTestGroup(CopyBetweenLinearDataAndTextureTest);
 
@@ -16,9 +20,12 @@ g.test('texel_block_alignment_on_offset')
       .combine(poptions('method', kAllTestMethods))
       .combine(poptions('format', kTextureFormats))
       .unless(({ format }) => !kTextureFormatInfo[format].copyable)
-      .expand(function* (p) { 
-         yield* poptions('offset', valuesToTestDivisibilityBy(kTextureFormatInfo[p.format].bytesPerBlock));
-       })
+      .expand(function* (p) {
+        yield* poptions(
+          'offset',
+          valuesToTestDivisibilityBy(kTextureFormatInfo[p.format].bytesPerBlock)
+        );
+      })
   )
   .fn(async t => {
     const { format, offset, method } = t.params;
@@ -26,13 +33,13 @@ g.test('texel_block_alignment_on_offset')
 
     const texture = t.createAlignedTexture(format, size);
 
-    let success = offset % kTextureFormatInfo[format].bytesPerBlock === 0;
+    const success = offset % kTextureFormatInfo[format].bytesPerBlock === 0;
 
     t.testRun(
-      { texture: texture, origin: { x: 0, y: 0, z: 0 } },
-      { offset: offset, bytesPerRow: 0, rowsPerImage: 0 },
+      { texture, origin: { x: 0, y: 0, z: 0 } },
+      { offset, bytesPerRow: 0, rowsPerImage: 0 },
       size,
-      { dataSize: offset, method: method, success: success },
+      { dataSize: offset, method, success }
     );
   });
 
@@ -42,9 +49,12 @@ g.test('texel_block_alignment_on_rows_per_image')
       .combine(poptions('method', kAllTestMethods))
       .combine(poptions('format', kTextureFormats))
       .unless(({ format }) => !kTextureFormatInfo[format].copyable)
-      .expand(function* (p) { 
-         yield* poptions('rowsPerImage', valuesToTestDivisibilityBy(kTextureFormatInfo[p.format].blockHeight));
-       })
+      .expand(function* (p) {
+        yield* poptions(
+          'rowsPerImage',
+          valuesToTestDivisibilityBy(kTextureFormatInfo[p.format].blockHeight)
+        );
+      })
   )
   .fn(async t => {
     const { rowsPerImage, format, method } = t.params;
@@ -52,14 +62,13 @@ g.test('texel_block_alignment_on_rows_per_image')
 
     const texture = t.createAlignedTexture(format, size);
 
-    let success = rowsPerImage % kTextureFormatInfo[format].blockHeight === 0;
+    const success = rowsPerImage % kTextureFormatInfo[format].blockHeight === 0;
 
-    t.testRun(
-      { texture: texture, origin: { x: 0, y: 0, z: 0 } },
-      { bytesPerRow: 0, rowsPerImage: rowsPerImage },
-      size,
-      { dataSize: 1, method: method, success: success },
-    );
+    t.testRun({ texture, origin: { x: 0, y: 0, z: 0 } }, { bytesPerRow: 0, rowsPerImage }, size, {
+      dataSize: 1,
+      method,
+      success,
+    });
   });
 
 g.test('bound_on_rows_per_image')
@@ -79,7 +88,7 @@ g.test('bound_on_rows_per_image')
 
     const texture = t.device.createTexture({
       size: { width: 4, height: 4, depth: 3 },
-      format: format,
+      format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
 
@@ -88,7 +97,7 @@ g.test('bound_on_rows_per_image')
     // If copyExtent.depth is greater than 1: layout.rowsPerImage must be greater than or equal to copyExtent.height.
 
     let success = true;
-    if (rowsPerImage != 0 && rowsPerImage < copyHeight) {
+    if (rowsPerImage !== 0 && rowsPerImage < copyHeight) {
       success = false;
     }
     if (copyDepth > 1 && rowsPerImage < copyHeight) {
@@ -96,10 +105,10 @@ g.test('bound_on_rows_per_image')
     }
 
     t.testRun(
-      { texture: texture, origin: { x: 0, y: 0, z: 0 } },
-      { bytesPerRow: 1024, rowsPerImage: rowsPerImage },
+      { texture, origin: { x: 0, y: 0, z: 0 } },
+      { bytesPerRow: 1024, rowsPerImage },
       { width: 0, height: copyHeight, depth: copyDepth },
-      { dataSize: 1, method: method, success: success },
+      { dataSize: 1, method, success }
     );
   });
 
@@ -119,16 +128,16 @@ g.test('bound_on_offset')
 
     const texture = t.device.createTexture({
       size: { width: 4, height: 4, depth: 1 },
-      format: format,
+      format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
 
-    let success = offset <= dataSize;
+    const success = offset <= dataSize;
 
     t.testRun(
-      { texture: texture, origin: { x: 0, y: 0, z: 0 } },
-      { offset: offset, bytesPerRow: 0, rowsPerImage: 0 },
+      { texture, origin: { x: 0, y: 0, z: 0 } },
+      { offset, bytesPerRow: 0, rowsPerImage: 0 },
       { width: 0, height: 0, depth: 0 },
-      { dataSize: dataSize, method: method, success: success },
+      { dataSize, method, success }
     );
   });
