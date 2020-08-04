@@ -32,39 +32,21 @@ class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
     }
   }
 
-  testRun(options: {
-    texture: GPUTexture;
-    origin: GPUOrigin3D;
-    size: GPUExtent3D;
-    mipLevel?: number;
-    offset?: number;
-    bytesPerRow: number;
-    rowsPerImage: number;
-    dataSize: number;
-    method: TestMethod;
-  }): void {
-    const {
-      texture,
-      origin,
-      size,
-      mipLevel = 0,
-      offset = 0,
-      bytesPerRow,
-      rowsPerImage,
-      dataSize,
-      method,
-    } = options;
-
-    switch (method) {
+  testRun(
+    textureCopyView: GPUTextureCopyView,
+    textureDataLayout: GPUTextureDataLayout,
+    size: GPUExtent3D,
+    { dataSize, method, success }: { dataSize: number, method: TestMethod, success: Boolean }
+  ): void {
+     switch (method) {
       case TestMethod.WriteTexture: {
         const data = new Uint8Array(dataSize);
-
-        this.device.defaultQueue.writeTexture(
-          { texture: texture, mipLevel: mipLevel, origin: origin },
-          data,
-          { offset: offset, bytesPerRow: bytesPerRow, rowsPerImage: rowsPerImage },
-          size
-        );
+        
+        this.expectValidationError(() => {
+          this.device.defaultQueue.writeTexture(
+            textureCopyView, data, textureDataLayout, size
+          );
+        }, !success);
 
         break;
       }
@@ -77,11 +59,14 @@ class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
 
         const encoder = this.device.createCommandEncoder();
         encoder.copyBufferToTexture(
-          { buffer: buffer, offset: offset, bytesPerRow: bytesPerRow, rowsPerImage: rowsPerImage },
-          { texture: texture, mipLevel: mipLevel, origin: origin },
+          { buffer: buffer, offset: textureDataLayout.offset, bytesPerRow: textureDataLayout.bytesPerRow, rowsPerImage: textureDataLayout.rowsPerImage },
+          textureCopyView,
           size
         );
-        this.device.defaultQueue.submit([encoder.finish()]);
+
+        this.expectValidationError(() => {
+          this.device.defaultQueue.submit([encoder.finish()]);
+        }, !success);
 
         break;
       }
@@ -94,11 +79,14 @@ class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
 
         const encoder = this.device.createCommandEncoder();
         encoder.copyTextureToBuffer(
-          { texture: texture, mipLevel: mipLevel, origin: origin },
-          { buffer: buffer, offset: offset, bytesPerRow: bytesPerRow, rowsPerImage: rowsPerImage },
+          textureCopyView,
+          { buffer: buffer, offset: textureDataLayout.offset, bytesPerRow: textureDataLayout.bytesPerRow, rowsPerImage: textureDataLayout.rowsPerImage },
           size
         );
-        this.device.defaultQueue.submit([encoder.finish()]);
+
+        this.expectValidationError(() => {
+          this.device.defaultQueue.submit([encoder.finish()]);
+        }, !success);
 
         break;
       }
@@ -114,12 +102,13 @@ g.test('texture_must_be_valid')
   .params(
     params()
       .combine(poptions('method', [TestMethod.WriteTexture, TestMethod.CopyBufferToTexture, TestMethod.CopyTextureToBuffer]))
-      .combine(pbool('success'))
+      .combine(poptions('texture_state', ['valid', 'destroyed', 'error']))
   )
   .fn(async t => {
-    const { method, success } = t.params;
+    const { method, texture_state } = t.params;
 
-    const texture = t.device.createTexture({
+    // A valid texture.
+    let texture = t.device.createTexture({
       size: { width: 4, height: 4, depth: 1 },
       mipLevelCount: 1,
       sampleCount: 1,
@@ -127,22 +116,32 @@ g.test('texture_must_be_valid')
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
 
-    if (!success) {
-      // The texture becomes invalid.
+    if (texture_state === 'destroyed') {
+      // Texture becomes destroyed.
       texture.destroy();
     }
 
-    t.expectValidationError(() => {
-      t.testRun({
-        texture: texture,
-        origin: { x: 0, y: 0, z: 0 },
+    if (texture_state === 'error') {
+      // An error texture.
+      t.device.pushErrorScope('validation');
+      texture = t.device.createTexture({
         size: { width: 0, height: 0, depth: 0 },
-        bytesPerRow: 256,
-        rowsPerImage: 16,
-        dataSize: 1,
-        method: method,
+        mipLevelCount: 1,
+        sampleCount: 1,
+        format: 'rgba8unorm',
+        usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
       });
-    }, !success);
+      t.device.popErrorScope();
+    }
+
+    let success = texture_state === 'valid';
+
+    t.testRun(
+      { texture: texture, origin: { x: 0, y: 0, z: 0 } },
+      { bytesPerRow: 256, rowsPerImage: 16 },
+      { width: 0, height: 0, depth: 0 },
+      { dataSize: 1, method: method, success: success },
+    );
   });
 
 g.test('texture_usage_must_be_valid')
@@ -166,17 +165,12 @@ g.test('texture_usage_must_be_valid')
                       ? usage == GPUTextureUsage.COPY_SRC
                       : usage == GPUTextureUsage.COPY_DST);
 
-    t.expectValidationError(() => {
-      t.testRun({
-        texture: texture,
-        origin: { x: 0, y: 0, z: 0 },
-        size: { width: 0, height: 0, depth: 0 },
-        bytesPerRow: 256,
-        rowsPerImage: 16,
-        dataSize: 1,
-        method: method,
-      });
-    }, !success);
+    t.testRun(
+      { texture: texture, origin: { x: 0, y: 0, z: 0 } },
+      { bytesPerRow: 256, rowsPerImage: 16 },
+      { width: 0, height: 0, depth: 0 },
+      { dataSize: 1, method: method, success: success },
+    );
   });
 
 g.test('sample_count_must_be_1')
@@ -196,19 +190,14 @@ g.test('sample_count_must_be_1')
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED,
     });
 
-    const _success = sampleCount === 1;
+    const success = sampleCount === 1;
 
-    t.expectValidationError(() => {
-      t.testRun({
-        texture: texture,
-        origin: { x: 0, y: 0, z: 0 },
-        size: { width: 0, height: 0, depth: 0 },
-        bytesPerRow: 256,
-        rowsPerImage: 16,
-        dataSize: 1,
-        method: method,
-      });
-    }, !_success);
+    t.testRun(
+      { texture: texture, origin: { x: 0, y: 0, z: 0 } },
+      { bytesPerRow: 256, rowsPerImage: 16 },
+      { width: 0, height: 0, depth: 0 },
+      { dataSize: 1, method: method, success: success },
+    );
   });
 
 g.test('mip_level_must_be_in_range')
@@ -228,32 +217,31 @@ g.test('mip_level_must_be_in_range')
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
 
-    const _success = mipLevel < mipLevelCount;
+    const success = mipLevel < mipLevelCount;
 
-    t.expectValidationError(() => {
-      t.testRun({
-        texture: texture,
-        origin: { x: 0, y: 0, z: 0 },
-        size: { width: 0, height: 0, depth: 0 },
-        mipLevel: mipLevel,
-        bytesPerRow: 256,
-        rowsPerImage: 16,
-        dataSize: 1,
-        method: method,
-      });
-    }, !_success);
+    t.testRun(
+      { texture: texture, origin: { x: 0, y: 0, z: 0 }, mipLevel: mipLevel },
+      { bytesPerRow: 256, rowsPerImage: 16 },
+      { width: 0, height: 0, depth: 0 },
+      { dataSize: 1, method: method, success: success },
+    );
   });
 
 g.test('1d_texture')
   .params(
     params()
       .combine(poptions('method', [TestMethod.WriteTexture, TestMethod.CopyBufferToTexture, TestMethod.CopyTextureToBuffer]))
-      .combine(poptions('copyWidth', [0, 1]))
-      .combine(poptions('copyHeight', [0, 1]))
-      .combine(poptions('copyDepth', [0, 1]))
+      .combine(poptions('size', [
+        { width: 1, height: 0, depth: 0},
+        { width: 0, height: 0, depth: 0},
+        { width: 0, height: 0, depth: 1},
+        { width: 0, height: 1, depth: 0},
+        { width: 0, height: 0, depth: 2},
+        { width: 0, height: 2, depth: 0},
+      ]))
   )
   .fn(async t => {
-    const { copyWidth, copyHeight, copyDepth, method } = t.params;
+    const { size, method } = t.params;
 
     const texture = t.device.createTexture({
       size: { width: 2, height: 1, depth: 1 },
@@ -265,38 +253,24 @@ g.test('1d_texture')
 
     // For 1d textures we require copyHeight and copyDepth to be 1,
     // copyHeight or copyDepth being 0 should cause a validation error.
-    const _success = copyHeight == 1 && copyDepth == 1;
+    const success = size.height == 1 && size.depth == 1;
 
-    t.expectValidationError(() => {
-      t.testRun({
-        texture: texture,
-        origin: { x: 0, y: 0, z: 0 },
-        size: { width: copyWidth, height: copyHeight, depth: copyDepth },
-        mipLevel: 0,
-        bytesPerRow: 256,
-        rowsPerImage: 16,
-        dataSize: 16,
-        method: method,
-      });
-    }, !_success);
+    t.testRun(
+      { texture: texture, origin: { x: 0, y: 0, z: 0 } },
+      { bytesPerRow: 256, rowsPerImage: 16 },
+      size,
+      { dataSize: 16, method: method, success: success },
+    );
   });
-
-enum Coord {
-  x = 'x',
-  y = 'y',
-  z = 'z',
-}
-
-const kCoords = [Coord.x, Coord.y, Coord.z];
 
 const kTestValuesForDivisibilityBy4 = [1, 2, 3, 4, 6, 8, 12];
 
-g.test('texel_block_alignemnts_on_origin')
+g.test('texel_block_alignments_on_origin')
   .params(
     params()
       .combine(poptions('method', [TestMethod.WriteTexture, TestMethod.CopyBufferToTexture, TestMethod.CopyTextureToBuffer]))
       .combine(poptions('value', kTestValuesForDivisibilityBy4))
-      .combine(poptions('coordinate_to_test', kCoords))
+      .combine(poptions('coordinate_to_test', ['x', 'y', 'z'] as const))
       .combine(poptions('format', kTextureFormats))
       .unless(({ format }) => !kTextureFormatInfo[format].copyable)
   )
@@ -314,42 +288,32 @@ g.test('texel_block_alignemnts_on_origin')
     let size = { width: 0, height: 0, depth: 0 };
     let success = true;
 
+    origin[coordinate_to_test] = value;
     switch (coordinate_to_test) {
-      case Coord.x: {
-       origin.x = value;
+      case 'x': {
        success = origin.x % kTextureFormatInfo[format].blockWidth === 0;
        break;
       }
-      case Coord.y: {
-       origin.y = value;
+      case 'y': {
        success = origin.y % kTextureFormatInfo[format].blockHeight === 0;
-       break;
-      }
-      case Coord.z: {
-       origin.z = value;
        break;
       }
     }
 
-    t.expectValidationError(() => {
-      t.testRun({
-        texture: texture,
-        origin: origin,
-        size: size,
-        bytesPerRow: 1024,
-        rowsPerImage: 16,
-        dataSize: 1,
-        method: method,
-      });
-    }, !success);
+    t.testRun(
+      { texture: texture, origin: origin },
+      { bytesPerRow: 1024, rowsPerImage: 16 },
+      size,
+      { dataSize: 1, method: method, success: success },
+    );
   });
 
-g.test('texel_block_alignemnts_on_size')
+g.test('texel_block_alignments_on_size')
   .params(
     params()
       .combine(poptions('method', [TestMethod.WriteTexture, TestMethod.CopyBufferToTexture, TestMethod.CopyTextureToBuffer]))
       .combine(poptions('value', kTestValuesForDivisibilityBy4))
-      .combine(poptions('coordinate_to_test', kCoords))
+      .combine(poptions('coordinate_to_test', ['width', 'height', 'depth'] as const))
       .combine(poptions('format', kTextureFormats))
       .unless(({ format }) => !kTextureFormatInfo[format].copyable)
   )
@@ -367,34 +331,24 @@ g.test('texel_block_alignemnts_on_size')
     let size = { width: 0, height: 0, depth: 0 };
     let success = true;
 
+    size[coordinate_to_test] = value;
     switch (coordinate_to_test) {
-      case Coord.x: {
-        size.width = value;
+      case 'width': {
         success = size.width % kTextureFormatInfo[format].blockWidth === 0;
         break;
       }
-      case Coord.y: {
-        size.height = value;
+      case 'height': {
         success = size.height % kTextureFormatInfo[format].blockHeight === 0;
-        break;
-      }
-      case Coord.z: {
-        size.depth= value;
         break;
       }
     }
 
-    t.expectValidationError(() => {
-      t.testRun({
-        texture: texture,
-        origin: origin,
-        size: size,
-        bytesPerRow: 1024,
-        rowsPerImage: 16,
-        dataSize: 1,
-        method: method,
-      });
-    }, !success);
+    t.testRun(
+      { texture: texture, origin: origin },
+      { bytesPerRow: 1024, rowsPerImage: 16 },
+      size,
+      { dataSize: 1, method: method, success: success },
+    );
   });
 
 // TODO: might need dimensions.
@@ -406,38 +360,32 @@ g.test('texture_range_conditions')
       .combine(poptions('copy_size_value', [7, 8]))
       .combine(poptions('texture_size_value', [14, 15]))
       .combine(poptions('mipLevel', [0, 2]))
-      .combine(poptions('coordinate_to_test', kCoords))
+      .combine(poptions('coordinate_to_test', [0, 1, 2] as const))
   )
   .fn(async t => {
     const { origin_value, copy_size_value, texture_size_value, mipLevel, coordinate_to_test, method } = t.params;
 
-    let origin = { x: 0, y: 0, z: 0 };
-    let copy_size = { width: 0, height: 0, depth: 0 };
+    let origin: GPUOrigin3D = [0, 0, 0];
+    let copy_size: GPUExtent3D = [0, 0, 0];
     let texture_size = { width: 16 << mipLevel, height: 16 << mipLevel, depth: 16 };
     const success = origin_value + copy_size_value <= texture_size_value;
 
+    origin[coordinate_to_test] = origin_value;
+    copy_size[coordinate_to_test] = copy_size_value;
     switch (coordinate_to_test) {
-      case Coord.x: {
-        origin.x = origin_value;
-        copy_size.width = copy_size_value;
+      case 0: {
         texture_size.width = texture_size_value << mipLevel;
         break;
       }
-      case Coord.y: {
-        origin.y = origin_value;
-        copy_size.height = copy_size_value;
+      case 1: {
         texture_size.height = texture_size_value << mipLevel;
         break;
       }
-      case Coord.z: {
-        origin.z = origin_value;
-        copy_size.depth = copy_size_value;
+      case 2: {
         texture_size.depth = texture_size_value;
         break;
       }
     }
-
-    console.log(origin.z, copy_size.depth, texture_size.depth);
 
     const texture = t.device.createTexture({
       size: texture_size,
@@ -446,18 +394,12 @@ g.test('texture_range_conditions')
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
 
-    t.expectValidationError(() => {
-      t.testRun({
-        texture: texture,
-        origin: origin,
-        size: copy_size,
-        mipLevel: mipLevel,
-        bytesPerRow: 1024,
-        rowsPerImage: 32,
-        dataSize: 1,
-        method: method,
-      });
-    }, !success);
+    t.testRun(
+      { texture: texture, origin: origin, mipLevel: mipLevel },
+      { bytesPerRow: 1024, rowsPerImage: 32 },
+      copy_size,
+      { dataSize: 1, method: method, success: success },
+    );
   });
 
 /*** Data-related validation: ***/
@@ -466,21 +408,14 @@ g.test('texel_block_alignment_on_offset')
   .params(
     params()
       .combine(poptions('method', [TestMethod.WriteTexture, TestMethod.CopyBufferToTexture, TestMethod.CopyTextureToBuffer]))
-      .combine([
-        { mul: 0, div: 1 }, // test 0
-        { mul: 1, div: 2 }, // test bytesPerBlock / 2
-        { mul: 1, div: 1 }, // test bytesPerBlock
-        { mul: 2, div: 1 }, // test 2 * bytesPerBlock
-        { mul: 3, div: 2 }, // test 3 * bytesPerBlock / 2
-        { mul: 3, div: 1 }, // test 3 * bytesPerBlock
-      ])
+      .combine(poptions('halfBlocks', [0, 1, 2, 3, 4, 6]))
       .combine(poptions('format', kTextureFormats))
       .unless(({ format }) => !kTextureFormatInfo[format].copyable)
   )
   .fn(async t => {
-    const { mul, div, format, method } = t.params;
+    const { halfBlocks, format, method } = t.params;
 
-    const offset = Math.floor(kTextureFormatInfo[format].bytesPerBlock * mul / div);
+    const offset = Math.floor(halfBlocks * kTextureFormatInfo[format].bytesPerBlock / 2);
 
     const texture = t.device.createTexture({
       size: { width: 12, height: 12, depth: 12 },
@@ -491,21 +426,15 @@ g.test('texel_block_alignment_on_offset')
 
     let success = offset % kTextureFormatInfo[format].bytesPerBlock === 0;
 
-    t.expectValidationError(() => {
-      t.testRun({
-        texture: texture,
-        origin: { x: 0, y: 0, z: 0 },
-        size: { width: 0, height: 0, depth: 0 },
-        offset: offset,
-        bytesPerRow: 1024,
-        rowsPerImage: 16,
-        dataSize: offset + 1,
-        method: method,
-      });
-    }, !success);
+    t.testRun(
+      { texture: texture, origin: { x: 0, y: 0, z: 0 } },
+      { offset: offset, bytesPerRow: 1024, rowsPerImage: 16 },
+      { width: 0, height: 0, depth: 0 },
+      { dataSize: offset + 1, method: method, success: success },
+    );
   });
 
-g.test('texel_block_alignemnt_on_rows_per_image')
+g.test('texel_block_alignment_on_rows_per_image')
   .params(
     params()
       .combine(poptions('method', [TestMethod.WriteTexture, TestMethod.CopyBufferToTexture, TestMethod.CopyTextureToBuffer]))
@@ -525,34 +454,28 @@ g.test('texel_block_alignemnt_on_rows_per_image')
 
     let success = rowsPerImage % kTextureFormatInfo[format].blockHeight === 0;
 
-    t.expectValidationError(() => {
-      t.testRun({
-        texture: texture,
-        origin: { x: 0, y: 0, z: 0 },
-        size: { width: 0, height: 0, depth: 0 },
-        offset: 0,
-        bytesPerRow: 1024,
-        rowsPerImage: rowsPerImage,
-        dataSize: 1,
-        method: method,
-      });
-    }, !success);
+    t.testRun(
+      { texture: texture, origin: { x: 0, y: 0, z: 0 } },
+      { bytesPerRow: 1024, rowsPerImage: rowsPerImage },
+      { width: 0, height: 0, depth: 0 },
+      { dataSize: 1, method: method, success: success },
+    );
   });
 
 g.test('bound_on_rows_per_image')
   .params(
     params()
       .combine(poptions('method', [TestMethod.WriteTexture, TestMethod.CopyBufferToTexture, TestMethod.CopyTextureToBuffer]))
-      .combine(poptions('rowsPerImageInBlock', [0, 1, 2]))
-      .combine(poptions('copyHeightInBlock', [0, 1, 2]))
+      .combine(poptions('rowsPerImageInBlocks', [0, 1, 2]))
+      .combine(poptions('copyHeightInBlocks', [0, 1, 2]))
       .combine(poptions('copyDepth', [1, 3]))
   )
   .fn(async t => {
-    const { rowsPerImageInBlock, copyHeightInBlock, copyDepth, method } = t.params;
+    const { rowsPerImageInBlocks, copyHeightInBlocks, copyDepth, method } = t.params;
 
     const format = 'rgba8unorm';
-    const rowsPerImage = rowsPerImageInBlock * kTextureFormatInfo[format].blockHeight;
-    const copyHeight = copyHeightInBlock * kTextureFormatInfo[format].blockHeight;
+    const rowsPerImage = rowsPerImageInBlocks * kTextureFormatInfo[format].blockHeight;
+    const copyHeight = copyHeightInBlocks * kTextureFormatInfo[format].blockHeight;
 
     const texture = t.device.createTexture({
       size: { width: 4, height: 4, depth: 3 },
@@ -569,33 +492,27 @@ g.test('bound_on_rows_per_image')
       success = false;
     }
 
-    t.expectValidationError(() => {
-      t.testRun({
-        texture: texture,
-        origin: { x: 0, y: 0, z: 0 },
-        size: { width: 0, height: copyHeight, depth: copyDepth },
-        offset: 0,
-        bytesPerRow: 1024,
-        rowsPerImage: rowsPerImage,
-        dataSize: 1,
-        method: method,
-      });
-    }, !success);
+    t.testRun(
+      { texture: texture, origin: { x: 0, y: 0, z: 0 } },
+      { bytesPerRow: 1024, rowsPerImage: rowsPerImage },
+      { width: 0, height: copyHeight, depth: copyDepth },
+      { dataSize: 1, method: method, success: success },
+    );
   });
 
 g.test('bound_on_offset')
   .params(
     params()
       .combine(poptions('method', [TestMethod.WriteTexture, TestMethod.CopyBufferToTexture, TestMethod.CopyTextureToBuffer]))
-      .combine(poptions('offsetInBlock', [0, 1, 2]))
-      .combine(poptions('dataSizeInBlock', [0, 1, 2]))
+      .combine(poptions('offsetInBlocks', [0, 1, 2]))
+      .combine(poptions('dataSizeInBlocks', [0, 1, 2]))
   )
   .fn(async t => {
-    const { offsetInBlock, dataSizeInBlock, method } = t.params;
+    const { offsetInBlocks, dataSizeInBlocks, method } = t.params;
 
     const format = 'rgba8unorm';
-    const offset = offsetInBlock * kTextureFormatInfo[format].bytesPerBlock;
-    const dataSize = dataSizeInBlock * kTextureFormatInfo[format].bytesPerBlock;
+    const offset = offsetInBlocks * kTextureFormatInfo[format].bytesPerBlock;
+    const dataSize = dataSizeInBlocks * kTextureFormatInfo[format].bytesPerBlock;
 
     const texture = t.device.createTexture({
       size: { width: 4, height: 4, depth: 1 },
@@ -606,18 +523,12 @@ g.test('bound_on_offset')
 
     let success = offset <= dataSize;
 
-    t.expectValidationError(() => {
-      t.testRun({
-        texture: texture,
-        origin: { x: 0, y: 0, z: 0 },
-        size: { width: 0, height: 0, depth: 0 },
-        offset: offset,
-        bytesPerRow: 512,
-        rowsPerImage: 4,
-        dataSize: dataSize,
-        method: method,
-      });
-    }, !success);
+    t.testRun(
+      { texture: texture, origin: { x: 0, y: 0, z: 0 } },
+      { offset: offset, bytesPerRow: 512, rowsPerImage: 4 },
+      { width: 0, height: 0, depth: 0 },
+      { dataSize: dataSize, method: method, success: success },
+    );
   });
 
 /*** WriteTexture-specific tests ***/
@@ -627,27 +538,27 @@ g.test('bound_on_bytes_per_row')
     params()
       .combine(poptions('method', [TestMethod.WriteTexture]))
       .combine([
-        { blocksPerRow: 2, additionalBytesPerRow: 0, copyWidthInBlock: 2 }, // always success
-        { blocksPerRow: 2, additionalBytesPerRow: 3, copyWidthInBlock: 3 }, // success if bytesPerBlock <= 3
-        { blocksPerRow: 2, additionalBytesPerRow: 5, copyWidthInBlock: 3 }, // success if bytesPerBlock <= 5
-        { blocksPerRow: 1, additionalBytesPerRow: 0, copyWidthInBlock: 0 }, // always failure
-        { blocksPerRow: 2, additionalBytesPerRow: 1, copyWidthInBlock: 2 }, // always failure
-        { blocksPerRow: 0, additionalBytesPerRow: 1, copyWidthInBlock: 1 }, // success if copyHeight and copyDepth = 1
-        { blocksPerRow: 0, additionalBytesPerRow: 0, copyWidthInBlock: 1 }, // success if copyHeight and copyDepth = 1
+        { blocksPerRow: 2, additionalBytesPerRow: 0, copyWidthInBlocks: 2 }, // always success
+        { blocksPerRow: 2, additionalBytesPerRow: 3, copyWidthInBlocks: 3 }, // success if bytesPerBlock <= 3
+        { blocksPerRow: 2, additionalBytesPerRow: 5, copyWidthInBlocks: 3 }, // success if bytesPerBlock <= 5
+        { blocksPerRow: 1, additionalBytesPerRow: 0, copyWidthInBlocks: 0 }, // always failure
+        { blocksPerRow: 2, additionalBytesPerRow: 1, copyWidthInBlocks: 2 }, // always failure
+        { blocksPerRow: 0, additionalBytesPerRow: 1, copyWidthInBlocks: 1 }, // success if copyHeight and copyDepth = 1
+        { blocksPerRow: 0, additionalBytesPerRow: 0, copyWidthInBlocks: 1 }, // success if copyHeight and copyDepth = 1
       ])
       .combine([
-        { copyHeightInBlock: 1, copyDepth: 1 },
-        { copyHeightInBlock: 2, copyDepth: 1 },
-        { copyHeightInBlock: 0, copyDepth: 2 },
+        { copyHeightInBlocks: 0, copyDepth: 1 }, // we don't have to check the bound
+        { copyHeightInBlocks: 2, copyDepth: 1 }, // we have to check the bound
+        { copyHeightInBlocks: 0, copyDepth: 2 }, // we have to check the bound
       ])
       .combine(poptions('format', kTextureFormats))
       .unless(({ format }) => !kTextureFormatInfo[format].copyable)
   )
   .fn(async t => {
-    const { blocksPerRow, additionalBytesPerRow, copyWidthInBlock, copyHeightInBlock, copyDepth, format, method } = t.params;
+    const { blocksPerRow, additionalBytesPerRow, copyWidthInBlocks, copyHeightInBlocks, copyDepth, format, method } = t.params;
 
-    const copyWidth = copyWidthInBlock * kTextureFormatInfo[format].blockWidth;
-    const copyHeight = copyHeightInBlock * kTextureFormatInfo[format].blockHeight;
+    const copyWidth = copyWidthInBlocks * kTextureFormatInfo[format].blockWidth;
+    const copyHeight = copyHeightInBlocks * kTextureFormatInfo[format].blockHeight;
     const bytesPerRow = blocksPerRow * kTextureFormatInfo[format].bytesPerBlock
                         + additionalBytesPerRow;
 
@@ -663,18 +574,12 @@ g.test('bound_on_bytes_per_row')
       success = bytesPerRow >= t.bytesInACompleteRow(copyWidth, format);
     }
 
-    t.expectValidationError(() => {
-      t.testRun({
-        texture: texture,
-        origin: { x: 0, y: 0, z: 0 },
-        size: { width: copyWidth, height: copyHeight, depth: copyDepth },
-        offset: 0,
-        bytesPerRow: bytesPerRow,
-        rowsPerImage: 4,
-        dataSize: 1024,
-        method: method,
-      });
-    }, !success);
+    t.testRun(
+      { texture: texture, origin: { x: 0, y: 0, z: 0 } },
+      { bytesPerRow: bytesPerRow, rowsPerImage: 4 },
+      { width: copyWidth, height: copyHeight, depth: copyDepth },
+      { dataSize: 1024, method: method, success: success },
+    );
   });
 
 // Testing that the minimal data size condition is checked correctly.
@@ -684,11 +589,11 @@ g.test('required_bytes_in_copy')
   .params(
     params()
       .combine(poptions('method', [TestMethod.WriteTexture]))
-      .combine(poptions('offsetInBlock', [0, 1]))
+      .combine(poptions('offsetInBlocks', [0, 1]))
       .combine(poptions('bytesPerRowPadding', [0, 1]))
-      .combine(poptions('rowsPerImagePaddingInBlock', [0]))
-      .combine(poptions('copyWidthInBlock', [0]))
-      .combine(poptions('copyHeightInBlock', [0]))
+      .combine(poptions('rowsPerImagePaddingInBlocks', [0]))
+      .combine(poptions('copyWidthInBlocks', [0]))
+      .combine(poptions('copyHeightInBlocks', [0]))
       .combine(poptions('copyDepth', [0]))
       .combine(poptions('format', kTextureFormats))
       .unless(({ format }) => !kTextureFormatInfo[format].copyable)
@@ -696,21 +601,21 @@ g.test('required_bytes_in_copy')
   )
   .fn(async t => {
     const {
-      offsetInBlock,
+      offsetInBlocks,
       bytesPerRowPadding,
-      rowsPerImagePaddingInBlock,
-      copyWidthInBlock,
-      copyHeightInBlock,
+      rowsPerImagePaddingInBlocks,
+      copyWidthInBlocks,
+      copyHeightInBlocks,
       copyDepth,
       format,
       success,
       method
     } = t.params;
 
-    const copyWidth = copyWidthInBlock * kTextureFormatInfo[format].blockWidth;
-    const copyHeight = copyHeightInBlock * kTextureFormatInfo[format].blockHeight;
-    const offset = offsetInBlock * kTextureFormatInfo[format].bytesPerBlock;
-    const rowsPerImage = copyHeight + rowsPerImagePaddingInBlock * kTextureFormatInfo[format].blockHeight;
+    const copyWidth = copyWidthInBlocks * kTextureFormatInfo[format].blockWidth;
+    const copyHeight = copyHeightInBlocks * kTextureFormatInfo[format].blockHeight;
+    const offset = offsetInBlocks * kTextureFormatInfo[format].bytesPerBlock;
+    const rowsPerImage = copyHeight + rowsPerImagePaddingInBlocks * kTextureFormatInfo[format].blockHeight;
     const bytesPerRow = t.bytesInACompleteRow(copyWidth, format) + bytesPerRowPadding;
     const size = { width: copyWidth, height: copyHeight, depth: copyDepth };
 
@@ -730,16 +635,10 @@ g.test('required_bytes_in_copy')
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
 
-    t.expectValidationError(() => {
-      t.testRun({
-        texture: texture,
-        origin: { x: 0, y: 0, z: 0 },
-        size: size,
-        offset: offset,
-        bytesPerRow: bytesPerRow,
-        rowsPerImage: rowsPerImage,
-        dataSize: dataSize,
-        method: method,
-      });
-    }, !success);
+    t.testRun(
+      { texture: texture, origin: { x: 0, y: 0, z: 0 } },
+      { offset: offset, bytesPerRow: bytesPerRow, rowsPerImage: rowsPerImage },
+      size,
+      { dataSize: dataSize, method: method, success: success },
+    );
   });
