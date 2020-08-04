@@ -1,69 +1,63 @@
 export const description = `
-writeTexture validation tests.
+writeTexture + copyBufferToTexture + copyTextureToBuffer validation tests on data
 `;
 
 import { params, poptions } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { kTextureFormats, kTextureFormatInfo } from '../../capability_info.js';
 
-import { CopyBetweenLinearDataAndTextureTest, TestMethod, kTestValuesForDivisibilityBy4 } from './copyBetweenLinearDataAndTexture.js';
+import { CopyBetweenLinearDataAndTextureTest, kAllTestMethods, valuesToTestDivisibilityBy } from './copyBetweenLinearDataAndTexture.js';
 
 export const g = makeTestGroup(CopyBetweenLinearDataAndTextureTest);
 
 g.test('texel_block_alignment_on_offset')
   .params(
     params()
-      .combine(poptions('method', [TestMethod.WriteTexture, TestMethod.CopyBufferToTexture, TestMethod.CopyTextureToBuffer]))
-      .combine(poptions('halfBlocks', [0, 1, 2, 3, 4, 6]))
+      .combine(poptions('method', kAllTestMethods))
       .combine(poptions('format', kTextureFormats))
       .unless(({ format }) => !kTextureFormatInfo[format].copyable)
+      .expand(function* (p) { 
+         yield* poptions('offset', valuesToTestDivisibilityBy(kTextureFormatInfo[p.format].bytesPerBlock));
+       })
   )
   .fn(async t => {
-    const { halfBlocks, format, method } = t.params;
+    const { format, offset, method } = t.params;
+    const size = { width: 0, height: 0, depth: 0 };
 
-    const offset = Math.floor(halfBlocks * kTextureFormatInfo[format].bytesPerBlock / 2);
-
-    const texture = t.device.createTexture({
-      size: { width: 12, height: 12, depth: 12 },
-      mipLevelCount: 1,
-      format: format,
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
-    });
+    const texture = t.createAlignedTexture(format, size);
 
     let success = offset % kTextureFormatInfo[format].bytesPerBlock === 0;
 
     t.testRun(
       { texture: texture, origin: { x: 0, y: 0, z: 0 } },
-      { offset: offset, bytesPerRow: 1024, rowsPerImage: 16 },
-      { width: 0, height: 0, depth: 0 },
-      { dataSize: offset + 1, method: method, success: success },
+      { offset: offset, bytesPerRow: 0, rowsPerImage: 0 },
+      size,
+      { dataSize: offset, method: method, success: success },
     );
   });
 
 g.test('texel_block_alignment_on_rows_per_image')
   .params(
     params()
-      .combine(poptions('method', [TestMethod.WriteTexture, TestMethod.CopyBufferToTexture, TestMethod.CopyTextureToBuffer]))
-      .combine(poptions('rowsPerImage', kTestValuesForDivisibilityBy4))
+      .combine(poptions('method', kAllTestMethods))
       .combine(poptions('format', kTextureFormats))
       .unless(({ format }) => !kTextureFormatInfo[format].copyable)
+      .expand(function* (p) { 
+         yield* poptions('rowsPerImage', valuesToTestDivisibilityBy(kTextureFormatInfo[p.format].blockHeight));
+       })
   )
   .fn(async t => {
     const { rowsPerImage, format, method } = t.params;
+    const size = { width: 0, height: 0, depth: 0 };
 
-    const texture = t.device.createTexture({
-      size: { width: 12, height: 12, depth: 12 },
-      mipLevelCount: 1,
-      format: format,
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
-    });
+    const texture = t.createAlignedTexture(format, size);
 
     let success = rowsPerImage % kTextureFormatInfo[format].blockHeight === 0;
 
     t.testRun(
       { texture: texture, origin: { x: 0, y: 0, z: 0 } },
-      { bytesPerRow: 1024, rowsPerImage: rowsPerImage },
-      { width: 0, height: 0, depth: 0 },
+      { bytesPerRow: 0, rowsPerImage: rowsPerImage },
+      size,
       { dataSize: 1, method: method, success: success },
     );
   });
@@ -71,7 +65,7 @@ g.test('texel_block_alignment_on_rows_per_image')
 g.test('bound_on_rows_per_image')
   .params(
     params()
-      .combine(poptions('method', [TestMethod.WriteTexture, TestMethod.CopyBufferToTexture, TestMethod.CopyTextureToBuffer]))
+      .combine(poptions('method', kAllTestMethods))
       .combine(poptions('rowsPerImageInBlocks', [0, 1, 2]))
       .combine(poptions('copyHeightInBlocks', [0, 1, 2]))
       .combine(poptions('copyDepth', [1, 3]))
@@ -85,10 +79,13 @@ g.test('bound_on_rows_per_image')
 
     const texture = t.device.createTexture({
       size: { width: 4, height: 4, depth: 3 },
-      mipLevelCount: 1,
       format: format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
+
+    // The WebGPU spec:
+    // If layout.rowsPerImage is not 0, it must be greater than or equal to copyExtent.height.
+    // If copyExtent.depth is greater than 1: layout.rowsPerImage must be greater than or equal to copyExtent.height.
 
     let success = true;
     if (rowsPerImage != 0 && rowsPerImage < copyHeight) {
@@ -109,7 +106,7 @@ g.test('bound_on_rows_per_image')
 g.test('bound_on_offset')
   .params(
     params()
-      .combine(poptions('method', [TestMethod.WriteTexture, TestMethod.CopyBufferToTexture, TestMethod.CopyTextureToBuffer]))
+      .combine(poptions('method', kAllTestMethods))
       .combine(poptions('offsetInBlocks', [0, 1, 2]))
       .combine(poptions('dataSizeInBlocks', [0, 1, 2]))
   )
@@ -122,7 +119,6 @@ g.test('bound_on_offset')
 
     const texture = t.device.createTexture({
       size: { width: 4, height: 4, depth: 1 },
-      mipLevelCount: 1,
       format: format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
@@ -131,7 +127,7 @@ g.test('bound_on_offset')
 
     t.testRun(
       { texture: texture, origin: { x: 0, y: 0, z: 0 } },
-      { offset: offset, bytesPerRow: 512, rowsPerImage: 4 },
+      { offset: offset, bytesPerRow: 0, rowsPerImage: 0 },
       { width: 0, height: 0, depth: 0 },
       { dataSize: dataSize, method: method, success: success },
     );

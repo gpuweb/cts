@@ -52,15 +52,21 @@ export class ValidationTest extends GPUTest {
     });
   }
 
-  getErrorTextureView(): GPUTextureView {
+  getErrorTexture(): GPUTexture {
     this.device.pushErrorScope('validation');
-    const view = this.device
+    const texture = this.device
       .createTexture({
         size: { width: 0, height: 0, depth: 0 },
         format: 'rgba8unorm',
         usage: GPUTextureUsage.SAMPLED,
       })
-      .createView();
+    this.device.popErrorScope();
+    return texture;
+  }
+
+  getErrorTextureView(): GPUTextureView {
+    this.device.pushErrorScope('validation');
+    const view = this.getErrorTexture().createView();
     this.device.popErrorScope();
     return view;
   }

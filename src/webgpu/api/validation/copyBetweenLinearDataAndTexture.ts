@@ -1,7 +1,3 @@
-export const description = `
-writeTexture validation tests.
-`;
-
 import { kTextureFormatInfo } from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -11,6 +7,8 @@ export enum TestMethod {
   CopyBufferToTexture = 'CopyBufferToTexture',
   CopyTextureToBuffer = 'CopyTextureToBuffer',
 }
+
+export const kAllTestMethods = [TestMethod.WriteTexture, TestMethod.CopyBufferToTexture, TestMethod.CopyTextureToBuffer];
 
 export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
   bytesInACompleteRow(copyWidth: number, format: GPUTextureFormat): number {
@@ -90,6 +88,28 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
       }
     }
   }
+
+  // This is a helper function used for creating a texture when we don't have to be very
+  // precise about its size as long as it's big enough and properly aligned.
+  createAlignedTexture(format: GPUTextureFormat, copySize: GPUExtent3DDict = { width: 1, height: 1, depth: 1 }): GPUTexture {
+    return this.device.createTexture({
+      size: { 
+        width: Math.max(1, copySize.width) * kTextureFormatInfo[format].blockWidth,
+        height: Math.max(1, copySize.height) * kTextureFormatInfo[format].blockHeight,
+        depth: Math.max(1, copySize.depth),
+      },
+      format: format,
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+    });
+  }
 }
 
-export const kTestValuesForDivisibilityBy4 = [1, 2, 3, 4, 6, 8, 12];
+// For testing divisibility by a number we test all the values returned by this function:
+export function valuesToTestDivisibilityBy(number: number): number[] {
+  let values = [];
+  for (let i = 0; i <= 2 * number; ++i) {
+    values.push(i);
+  }
+  values.push(3 * number);
+  return values;
+}

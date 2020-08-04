@@ -1,5 +1,5 @@
 export const description = `
-writeTexture validation tests.
+additional writeTexture validation tests.
 `;
 
 import { params, poptions, pbool } from '../../../common/framework/params_builder.js';
@@ -17,10 +17,9 @@ g.test('bound_on_bytes_per_row')
         { blocksPerRow: 2, additionalBytesPerRow: 0, copyWidthInBlocks: 2 }, // always success
         { blocksPerRow: 2, additionalBytesPerRow: 3, copyWidthInBlocks: 3 }, // success if bytesPerBlock <= 3
         { blocksPerRow: 2, additionalBytesPerRow: 5, copyWidthInBlocks: 3 }, // success if bytesPerBlock <= 5
-        { blocksPerRow: 1, additionalBytesPerRow: 0, copyWidthInBlocks: 0 }, // always failure
-        { blocksPerRow: 2, additionalBytesPerRow: 1, copyWidthInBlocks: 2 }, // always failure
-        { blocksPerRow: 0, additionalBytesPerRow: 1, copyWidthInBlocks: 1 }, // success if copyHeight and copyDepth = 1
-        { blocksPerRow: 0, additionalBytesPerRow: 0, copyWidthInBlocks: 1 }, // success if copyHeight and copyDepth = 1
+        { blocksPerRow: 1, additionalBytesPerRow: 1, copyWidthInBlocks: 2 }, // success if bytesPerBlock <= 1
+        { blocksPerRow: 1, additionalBytesPerRow: 0, copyWidthInBlocks: 2 }, // always failure
+        { blocksPerRow: 0, additionalBytesPerRow: 0, copyWidthInBlocks: 1 }, // always failure
       ])
       .combine([
         { copyHeightInBlocks: 0, copyDepth: 1 }, // we don't have to check the bound
@@ -37,13 +36,9 @@ g.test('bound_on_bytes_per_row')
     const copyHeight = copyHeightInBlocks * kTextureFormatInfo[format].blockHeight;
     const bytesPerRow = blocksPerRow * kTextureFormatInfo[format].bytesPerBlock
                         + additionalBytesPerRow;
+    const size = { width: copyWidth, height: copyHeight, depth: copyDepth };
 
-    const texture = t.device.createTexture({
-      size: { width: 12, height: 12, depth: 12 },
-      mipLevelCount: 1,
-      format: format,
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
-    });
+    const texture = t.createAlignedTexture(format, size);
 
     let success = true;
     if (copyHeight > 1 || copyDepth > 1) {
@@ -52,8 +47,8 @@ g.test('bound_on_bytes_per_row')
 
     t.testRun(
       { texture: texture, origin: { x: 0, y: 0, z: 0 } },
-      { bytesPerRow: bytesPerRow, rowsPerImage: 4 },
-      { width: copyWidth, height: copyHeight, depth: copyDepth },
+      { bytesPerRow: bytesPerRow, rowsPerImage: copyHeight },
+      size,
       { dataSize: 1024, method: TestMethod.WriteTexture, success: success },
     );
   });
@@ -110,12 +105,7 @@ g.test('required_bytes_in_copy')
 
     let dataSize = success ? minDataSize : minDataSize - 1;
 
-    const texture = t.device.createTexture({
-      size: { width: Math.max(copyWidth, 1), height: Math.max(copyHeight, 1), depth: Math.max(copyDepth, 1) },
-      mipLevelCount: 1,
-      format: format,
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
-    });
+    const texture = t.createAlignedTexture(format, size);
 
     t.testRun(
       { texture: texture, origin: { x: 0, y: 0, z: 0 } },

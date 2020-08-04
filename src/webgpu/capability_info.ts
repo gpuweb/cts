@@ -38,9 +38,9 @@ export const kTextureFormatInfo: {
     readonly stencil: boolean;
     readonly storage: boolean;
     readonly copyable: boolean;
-    readonly bytesPerBlock?: number;
-    readonly blockWidth?: number;
-    readonly blockHeight?: number;
+    readonly bytesPerBlock: number;
+    readonly blockWidth: number;
+    readonly blockHeight: number;
     // Add fields as needed
   };
 } = /* prettier-ignore */ {
@@ -89,9 +89,10 @@ export const kTextureFormatInfo: {
   'rgba32sint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copyable:  true, bytesPerBlock: 16, blockWidth: 1, blockHeight: 1 },
   'rgba32float':            { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copyable:  true, bytesPerBlock: 16, blockWidth: 1, blockHeight: 1 },
   // Depth/stencil formats
-  'depth32float':           { renderable:  true, color: false, depth:  true, stencil: false, storage: false, copyable:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
-  'depth24plus':            { renderable:  true, color: false, depth:  true, stencil: false, storage: false, copyable: false,                                                  },
-  'depth24plus-stencil8':   { renderable:  true, color: false, depth:  true, stencil:  true, storage: false, copyable: false,                                                  },
+  // bytesPerBlock are undefined for depth24plus and depth24plus-stencil8
+  'depth32float':           { renderable:  true, color: false, depth:  true, stencil: false, storage: false, copyable: false, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'depth24plus':            { renderable:  true, color: false, depth:  true, stencil: false, storage: false, copyable: false, bytesPerBlock:  0, blockWidth: 1, blockHeight: 1 },
+  'depth24plus-stencil8':   { renderable:  true, color: false, depth:  true, stencil:  true, storage: false, copyable: false, bytesPerBlock:  0, blockWidth: 1, blockHeight: 1 },
 };
 export const kTextureFormats = keysOf(kTextureFormatInfo);
 
