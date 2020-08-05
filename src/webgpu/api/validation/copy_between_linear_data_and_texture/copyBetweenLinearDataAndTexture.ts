@@ -1,23 +1,17 @@
-import { kTextureFormatInfo } from '../../capability_info.js';
-
-import { ValidationTest } from './validation_test.js';
-
-export enum TestMethod {
-  WriteTexture = 'WriteTexture',
-  CopyBufferToTexture = 'CopyBufferToTexture',
-  CopyTextureToBuffer = 'CopyTextureToBuffer',
-}
+import { kTextureFormatInfo } from '../../../capability_info.js';
+import { ValidationTest } from '../validation_test.js';
 
 export const kAllTestMethods = [
-  TestMethod.WriteTexture,
-  TestMethod.CopyBufferToTexture,
-  TestMethod.CopyTextureToBuffer,
-];
+  'WriteTexture',
+  'CopyBufferToTexture',
+  'CopyTextureToBuffer',
+] as const;
 
 export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
   bytesInACompleteRow(copyWidth: number, format: GPUTextureFormat): number {
     return (
-      (kTextureFormatInfo[format].bytesPerBlock * copyWidth) / kTextureFormatInfo[format].blockWidth
+      (kTextureFormatInfo[format].bytesPerBlock! * copyWidth) /
+      kTextureFormatInfo[format].blockWidth!
     );
   }
 
@@ -29,12 +23,12 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
     if (copyExtent.width === 0 || copyExtent.height === 0 || copyExtent.depth === 0) {
       return 0;
     } else {
-      const texelBlockRowsPerImage = layout.rowsPerImage / kTextureFormatInfo[format].blockHeight;
+      const texelBlockRowsPerImage = layout.rowsPerImage! / kTextureFormatInfo[format].blockHeight!;
       const bytesPerImage = layout.bytesPerRow * texelBlockRowsPerImage;
       const bytesInLastSlice =
-        layout.bytesPerRow * (copyExtent.height / kTextureFormatInfo[format].blockHeight - 1) +
-        (copyExtent.width / kTextureFormatInfo[format].blockWidth) *
-          kTextureFormatInfo[format].bytesPerBlock;
+        layout.bytesPerRow * (copyExtent.height / kTextureFormatInfo[format].blockHeight! - 1) +
+        (copyExtent.width / kTextureFormatInfo[format].blockWidth!) *
+          kTextureFormatInfo[format].bytesPerBlock!;
       return bytesPerImage * (copyExtent.depth - 1) + bytesInLastSlice;
     }
   }
@@ -43,10 +37,15 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
     textureCopyView: GPUTextureCopyView,
     textureDataLayout: GPUTextureDataLayout,
     size: GPUExtent3D,
-    { dataSize, method, success }: { dataSize: number; method: TestMethod; success: boolean }
+    {
+      dataSize,
+      method,
+      success,
+      submit,
+    }: { dataSize: number; method: string; success: boolean; submit?: boolean }
   ): void {
     switch (method) {
-      case TestMethod.WriteTexture: {
+      case 'WriteTexture': {
         const data = new Uint8Array(dataSize);
 
         this.expectValidationError(() => {
@@ -55,7 +54,7 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
 
         break;
       }
-      case TestMethod.CopyBufferToTexture: {
+      case 'CopyBufferToTexture': {
         const buffer = this.device.createBuffer({
           mappedAtCreation: false,
           size: dataSize,
@@ -65,13 +64,19 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
         const encoder = this.device.createCommandEncoder();
         encoder.copyBufferToTexture({ buffer, ...textureDataLayout }, textureCopyView, size);
 
-        this.expectValidationError(() => {
-          this.device.defaultQueue.submit([encoder.finish()]);
-        }, !success);
+        if (submit === true) {
+          this.expectValidationError(() => {
+            this.device.defaultQueue.submit([encoder.finish()]);
+          }, !success);
+        } else {
+          this.expectValidationError(() => {
+            encoder.finish();
+          }, !success);
+        }
 
         break;
       }
-      case TestMethod.CopyTextureToBuffer: {
+      case 'CopyTextureToBuffer': {
         const buffer = this.device.createBuffer({
           mappedAtCreation: false,
           size: dataSize,
@@ -79,20 +84,17 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
         });
 
         const encoder = this.device.createCommandEncoder();
-        encoder.copyTextureToBuffer(
-          textureCopyView,
-          {
-            buffer,
-            offset: textureDataLayout.offset,
-            bytesPerRow: textureDataLayout.bytesPerRow,
-            rowsPerImage: textureDataLayout.rowsPerImage,
-          },
-          size
-        );
+        encoder.copyTextureToBuffer(textureCopyView, { buffer, ...textureDataLayout }, size);
 
-        this.expectValidationError(() => {
-          this.device.defaultQueue.submit([encoder.finish()]);
-        }, !success);
+        if (submit === true) {
+          this.expectValidationError(() => {
+            this.device.defaultQueue.submit([encoder.finish()]);
+          }, !success);
+        } else {
+          this.expectValidationError(() => {
+            encoder.finish();
+          }, !success);
+        }
 
         break;
       }
@@ -103,13 +105,14 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
   // precise about its size as long as it's big enough and properly aligned.
   createAlignedTexture(
     format: GPUTextureFormat,
-    copySize: GPUExtent3DDict = { width: 1, height: 1, depth: 1 }
+    copySize: GPUExtent3DDict = { width: 1, height: 1, depth: 1 },
+    origin: GPUOrigin3DDict = { x: 0, y: 0, z: 0 }
   ): GPUTexture {
     return this.device.createTexture({
       size: {
-        width: Math.max(1, copySize.width) * kTextureFormatInfo[format].blockWidth,
-        height: Math.max(1, copySize.height) * kTextureFormatInfo[format].blockHeight,
-        depth: Math.max(1, copySize.depth),
+        width: Math.max(1, copySize.width + origin.x!) * kTextureFormatInfo[format].blockWidth!,
+        height: Math.max(1, copySize.height + origin.y!) * kTextureFormatInfo[format].blockHeight!,
+        depth: Math.max(1, copySize.depth + origin.z!),
       },
       format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
@@ -125,4 +128,8 @@ export function valuesToTestDivisibilityBy(number: number): number[] {
   }
   values.push(3 * number);
   return values;
+}
+
+export function Align(num: number, alignment: number): number {
+  return Math.floor((num + alignment - 1) / alignment) * alignment;
 }
