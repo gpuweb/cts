@@ -269,3 +269,28 @@ g.test('required_bytes_in_copy')
       success,
     });
   });
+
+// Test with offset which almost overflows GPUSize64,
+// offset + requiredBytesIsCopy does overflow.
+g.test('offset_plus_required_bytes_in_copy_overflow')
+  .params(params().combine(poptions('method', kAllTestMethods)))
+  .fn(async t => {
+    const { method } = t.params;
+
+    const texture = t.device.createTexture({
+      size: [3, 3, 3],
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+    });
+
+    t.testRun(
+      { texture },
+      { offset: ((1 << 64) - 10), bytesPerRow: 256, rowsPerImage: 4 },
+      { width: 3, height: 3, depth: 3 },
+      {
+        dataSize: 10000,
+        method,
+        success: false,
+      }
+    );
+  });

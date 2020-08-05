@@ -12,7 +12,7 @@ Test coverage:
 
 * linear texture data:
 	- bound_on_rows_per_image: for various combinations of copyDepth (1, >1), copyHeight, rowsPerImage.
-	- TODO: required_bytes_in_copy_overflow
+	- offset_plus_required_bytes_in_copy_overflow
 	- required_bytes_in_copy: testing minimal data size and data size too small for various combinations of bytesPerRow, rowsPerImage, copyExtent and offset. for the copy method, bytesPerRow is computed as bytesInACompleteRow aligned to be a multiple of 256 + 256 * bytesPerRowPadding.
 	- texel_block_alignment_on_rows_per_image: for all formats.
 	- texel_block_alignment_on_offset: for all formats.
