@@ -133,7 +133,14 @@ g.test('2x4X4x2').fn(async t => {
   t.device.defaultQueue.submit([commandEncoder.finish()]);
 
   const returnedBuffer = new Float32Array(await gpuReadBuffer.mapReadAsync());
-  const expectedBuffer = new Float32Array([2.0 /* rows */, 2.0 /* columns */, 50.0, 60.0, 114.0, 140.0]);
+  const expectedBuffer = new Float32Array([
+    2.0 /* rows */,
+    2.0 /* columns */,
+    50.0,
+    60.0,
+    114.0,
+    140.0,
+  ]);
 
   t.checkBuffer(expectedBuffer, returnedBuffer);
 });
