@@ -3,67 +3,16 @@ export const description = '';
 import { params, poptions, pbool } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { kTextureFormats, kTextureFormatInfo } from '../../../capability_info.js';
+import { align } from '../../../util/math.js';
 
 import {
   CopyBetweenLinearDataAndTextureTest,
   kAllTestMethods,
-  valuesToTestDivisibilityBy,
-  Align,
+  texelBlockAlignmentTestExpanderForOffset,
+  texelBlockAlignmentTestExpanderForRowsPerImage,
 } from './copyBetweenLinearDataAndTexture.js';
 
 export const g = makeTestGroup(CopyBetweenLinearDataAndTextureTest);
-
-g.test('texel_block_alignment_on_offset')
-  .params(
-    params()
-      .combine(poptions('method', kAllTestMethods))
-      .combine(poptions('format', kTextureFormats))
-      .unless(({ format }) => !kTextureFormatInfo[format].copyable)
-      .expand(function* (p) {
-        yield* poptions(
-          'offset',
-          valuesToTestDivisibilityBy(kTextureFormatInfo[p.format].bytesPerBlock!)
-        );
-      })
-  )
-  .fn(async t => {
-    const { format, offset, method } = t.params;
-    const size = { width: 0, height: 0, depth: 0 };
-
-    const texture = t.createAlignedTexture(format, size);
-
-    const success = offset % kTextureFormatInfo[format].bytesPerBlock! === 0;
-
-    t.testRun({ texture }, { offset, bytesPerRow: 0 }, size, { dataSize: offset, method, success });
-  });
-
-g.test('texel_block_alignment_on_rows_per_image')
-  .params(
-    params()
-      .combine(poptions('method', kAllTestMethods))
-      .combine(poptions('format', kTextureFormats))
-      .unless(({ format }) => !kTextureFormatInfo[format].copyable)
-      .expand(function* (p) {
-        yield* poptions(
-          'rowsPerImage',
-          valuesToTestDivisibilityBy(kTextureFormatInfo[p.format].blockHeight!)
-        );
-      })
-  )
-  .fn(async t => {
-    const { rowsPerImage, format, method } = t.params;
-    const size = { width: 0, height: 0, depth: 0 };
-
-    const texture = t.createAlignedTexture(format, size);
-
-    const success = rowsPerImage % kTextureFormatInfo[format].blockHeight! === 0;
-
-    t.testRun({ texture }, { bytesPerRow: 0, rowsPerImage }, size, {
-      dataSize: 1,
-      method,
-      success,
-    });
-  });
 
 g.test('bound_on_rows_per_image')
   .params(
@@ -106,93 +55,29 @@ g.test('bound_on_rows_per_image')
     );
   });
 
-g.test('bound_on_offset')
-  .params(
-    params()
-      .combine(poptions('method', kAllTestMethods))
-      .combine(poptions('offsetInBlocks', [0, 1, 2]))
-      .combine(poptions('dataSizeInBlocks', [0, 1, 2]))
-  )
+// Test with offset which almost overflows GPUSize64,
+// offset + requiredBytesIsCopy does overflow.
+g.test('offset_plus_required_bytes_in_copy_overflow')
+  .params(params().combine(poptions('method', kAllTestMethods)))
   .fn(async t => {
-    const { offsetInBlocks, dataSizeInBlocks, method } = t.params;
-
-    const format = 'rgba8unorm';
-    const offset = offsetInBlocks * kTextureFormatInfo[format].bytesPerBlock!;
-    const dataSize = dataSizeInBlocks * kTextureFormatInfo[format].bytesPerBlock!;
+    const { method } = t.params;
 
     const texture = t.device.createTexture({
-      size: { width: 4, height: 4, depth: 1 },
-      format,
+      size: [3, 3, 3],
+      format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
 
-    const success = offset <= dataSize;
-
     t.testRun(
       { texture },
-      { offset, bytesPerRow: 0 },
-      { width: 0, height: 0, depth: 0 },
-      { dataSize, method, success }
+      { offset: (1 << 64) - 10, bytesPerRow: 256, rowsPerImage: 4 },
+      { width: 3, height: 3, depth: 3 },
+      {
+        dataSize: 10000,
+        method,
+        success: false,
+      }
     );
-  });
-
-g.test('bound_on_bytes_per_row')
-  .params(
-    params()
-      .combine(poptions('method', kAllTestMethods))
-      .combine([
-        { blocksPerRow: 2, additionalBytesPerRow: 0, copyWidthInBlocks: 2 }, // success
-        { blocksPerRow: 2, additionalBytesPerRow: 5, copyWidthInBlocks: 3 }, // success if bytesPerBlock <= 5
-        { blocksPerRow: 1, additionalBytesPerRow: 0, copyWidthInBlocks: 2 }, // failure
-        { blocksPerRow: 0, additionalBytesPerRow: 0, copyWidthInBlocks: 1 }, // failure
-      ])
-      .combine([
-        { copyHeightInBlocks: 0, copyDepth: 1 }, // we don't have to check the bound
-        { copyHeightInBlocks: 2, copyDepth: 1 }, // we have to check the bound
-        { copyHeightInBlocks: 0, copyDepth: 2 }, // we have to check the bound
-      ])
-      .combine(poptions('format', kTextureFormats))
-      .unless(({ format }) => !kTextureFormatInfo[format].copyable)
-  )
-  .fn(async t => {
-    const {
-      blocksPerRow,
-      additionalBytesPerRow,
-      copyWidthInBlocks,
-      copyHeightInBlocks,
-      copyDepth,
-      format,
-      method,
-    } = t.params;
-
-    // In the CopyB2T and CopyT2B cases we need to have bytesPerRow 256-aligned,
-    // to make this happen we multiply copyWidth and bytesPerRow by 256, so that
-    // the appropriate inequalities still hold.
-    const bytesPerRowAlignment = method === 'WriteTexture' ? 1 : 256;
-
-    const copyWidth =
-      copyWidthInBlocks * kTextureFormatInfo[format].blockWidth! * bytesPerRowAlignment;
-    const copyHeight = copyHeightInBlocks * kTextureFormatInfo[format].blockHeight!;
-    const bytesPerRow =
-      (blocksPerRow *
-        kTextureFormatInfo[format].blockWidth! *
-        kTextureFormatInfo[format].bytesPerBlock! +
-        additionalBytesPerRow) *
-      bytesPerRowAlignment;
-    const size = { width: copyWidth, height: copyHeight, depth: copyDepth };
-
-    const texture = t.createAlignedTexture(format, size);
-
-    let success = true;
-    if (copyHeight > 1 || copyDepth > 1) {
-      success = bytesPerRow >= t.bytesInACompleteRow(copyWidth, format);
-    }
-
-    t.testRun({ texture }, { bytesPerRow, rowsPerImage: copyHeight }, size, {
-      dataSize: 1024,
-      method,
-      success,
-    });
   });
 
 // Testing that the minimal data size condition is checked correctly.
@@ -218,6 +103,7 @@ g.test('required_bytes_in_copy')
         { copyWidthInBlocks: 1, copyHeightInBlocks: 4, copyDepth: 5, offsetInBlocks: 0 }, // copyWidth = 1
         { copyWidthInBlocks: 3, copyHeightInBlocks: 1, copyDepth: 5, offsetInBlocks: 15 }, // copyHeight = 1, offset > 0
         { copyWidthInBlocks: 5, copyHeightInBlocks: 4, copyDepth: 1, offsetInBlocks: 0 }, // copyDepth = 1
+        { copyWidthInBlocks: 7, copyHeightInBlocks: 1, copyDepth: 1, offsetInBlocks: 0 }, // copyHeight = 1 and copyDepth = 1
       ])
       .combine(poptions('format', kTextureFormats))
       .unless(({ format }) => !kTextureFormatInfo[format].copyable)
@@ -247,7 +133,7 @@ g.test('required_bytes_in_copy')
     const rowsPerImage =
       copyHeight + rowsPerImagePaddingInBlocks * kTextureFormatInfo[format].blockHeight!;
     const bytesPerRow =
-      Align(t.bytesInACompleteRow(copyWidth, format), bytesPerRowAlignment) +
+      align(t.bytesInACompleteRow(copyWidth, format), bytesPerRowAlignment) +
       bytesPerRowPadding * bytesPerRowAlignment;
     const size = { width: copyWidth, height: copyHeight, depth: copyDepth };
 
@@ -270,27 +156,130 @@ g.test('required_bytes_in_copy')
     });
   });
 
-// Test with offset which almost overflows GPUSize64,
-// offset + requiredBytesIsCopy does overflow.
-g.test('offset_plus_required_bytes_in_copy_overflow')
-  .params(params().combine(poptions('method', kAllTestMethods)))
+g.test('texel_block_alignment_on_rows_per_image')
+  .params(
+    params()
+      .combine(poptions('method', kAllTestMethods))
+      .combine(poptions('format', kTextureFormats))
+      .unless(({ format }) => !kTextureFormatInfo[format].copyable)
+      .expand(texelBlockAlignmentTestExpanderForRowsPerImage())
+  )
   .fn(async t => {
-    const { method } = t.params;
+    const { rowsPerImage, format, method } = t.params;
+    const size = { width: 0, height: 0, depth: 0 };
+
+    const texture = t.createAlignedTexture(format, size);
+
+    const success = rowsPerImage % kTextureFormatInfo[format].blockHeight! === 0;
+
+    t.testRun({ texture }, { bytesPerRow: 0, rowsPerImage }, size, {
+      dataSize: 1,
+      method,
+      success,
+    });
+  });
+
+g.test('texel_block_alignment_on_offset')
+  .params(
+    params()
+      .combine(poptions('method', kAllTestMethods))
+      .combine(poptions('format', kTextureFormats))
+      .unless(({ format }) => !kTextureFormatInfo[format].copyable)
+      .expand(texelBlockAlignmentTestExpanderForOffset())
+  )
+  .fn(async t => {
+    const { format, offset, method } = t.params;
+    const size = { width: 0, height: 0, depth: 0 };
+
+    const texture = t.createAlignedTexture(format, size);
+
+    const success = offset % kTextureFormatInfo[format].bytesPerBlock! === 0;
+
+    t.testRun({ texture }, { offset, bytesPerRow: 0 }, size, { dataSize: offset, method, success });
+  });
+
+g.test('bound_on_bytes_per_row')
+  .params(
+    params()
+      .combine(poptions('method', kAllTestMethods))
+      .combine([
+        { blocksPerRow: 2, additionalBytesPerRow: 0, copyWidthInBlocks: 2 }, // success
+        { blocksPerRow: 2, additionalBytesPerRow: 5, copyWidthInBlocks: 3 }, // success if bytesPerBlock <= 5
+        { blocksPerRow: 1, additionalBytesPerRow: 0, copyWidthInBlocks: 2 }, // failure, bytesPerRow > 0
+        { blocksPerRow: 0, additionalBytesPerRow: 0, copyWidthInBlocks: 1 }, // failure, bytesPerRow = 0
+      ])
+      .combine([
+        { copyHeightInBlocks: 0, copyDepth: 1 }, // we don't have to check the bound
+        { copyHeightInBlocks: 2, copyDepth: 1 }, // we have to check the bound
+        { copyHeightInBlocks: 0, copyDepth: 2 }, // we have to check the bound
+      ])
+      .combine(poptions('format', kTextureFormats))
+      .unless(({ format }) => !kTextureFormatInfo[format].copyable)
+  )
+  .fn(async t => {
+    const {
+      blocksPerRow,
+      additionalBytesPerRow,
+      copyWidthInBlocks,
+      copyHeightInBlocks,
+      copyDepth,
+      format,
+      method,
+    } = t.params;
+
+    // In the CopyB2T and CopyT2B cases we need to have bytesPerRow 256-aligned,
+    // to make this happen we multiply copyWidth and bytesPerRow by 256, so that
+    // the appropriate inequalities still hold.
+    const bytesPerRowAlignment = method === 'WriteTexture' ? 1 : 256;
+
+    const copyWidth =
+      copyWidthInBlocks * kTextureFormatInfo[format].blockWidth! * bytesPerRowAlignment;
+    const copyHeight = copyHeightInBlocks * kTextureFormatInfo[format].blockHeight!;
+    const bytesPerRow =
+      (blocksPerRow * kTextureFormatInfo[format].bytesPerBlock! + additionalBytesPerRow) *
+      bytesPerRowAlignment;
+    const size = { width: copyWidth, height: copyHeight, depth: copyDepth };
+
+    const texture = t.createAlignedTexture(format, size);
+
+    let success = true;
+    if (copyHeight > 1 || copyDepth > 1) {
+      success = bytesPerRow >= t.bytesInACompleteRow(copyWidth, format);
+    }
+
+    t.testRun({ texture }, { bytesPerRow, rowsPerImage: copyHeight }, size, {
+      dataSize: 1024,
+      method,
+      success,
+    });
+  });
+
+g.test('bound_on_offset')
+  .params(
+    params()
+      .combine(poptions('method', kAllTestMethods))
+      .combine(poptions('offsetInBlocks', [0, 1, 2]))
+      .combine(poptions('dataSizeInBlocks', [0, 1, 2]))
+  )
+  .fn(async t => {
+    const { offsetInBlocks, dataSizeInBlocks, method } = t.params;
+
+    const format = 'rgba8unorm';
+    const offset = offsetInBlocks * kTextureFormatInfo[format].bytesPerBlock!;
+    const dataSize = dataSizeInBlocks * kTextureFormatInfo[format].bytesPerBlock!;
 
     const texture = t.device.createTexture({
-      size: [3, 3, 3],
-      format: 'rgba8unorm',
+      size: { width: 4, height: 4, depth: 1 },
+      format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
 
+    const success = offset <= dataSize;
+
     t.testRun(
       { texture },
-      { offset: ((1 << 64) - 10), bytesPerRow: 256, rowsPerImage: 4 },
-      { width: 3, height: 3, depth: 3 },
-      {
-        dataSize: 10000,
-        method,
-        success: false,
-      }
+      { offset, bytesPerRow: 0 },
+      { width: 0, height: 0, depth: 0 },
+      { dataSize, method, success }
     );
   });

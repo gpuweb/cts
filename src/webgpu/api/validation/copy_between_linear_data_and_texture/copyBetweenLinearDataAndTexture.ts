@@ -1,3 +1,4 @@
+import { poptions } from '../../../../common/framework/params_builder.js';
 import { kTextureFormatInfo } from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
@@ -56,7 +57,6 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
       }
       case 'CopyBufferToTexture': {
         const buffer = this.device.createBuffer({
-          mappedAtCreation: false,
           size: dataSize,
           usage: GPUBufferUsage.COPY_SRC,
         });
@@ -78,7 +78,6 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
       }
       case 'CopyTextureToBuffer': {
         const buffer = this.device.createBuffer({
-          mappedAtCreation: false,
           size: dataSize,
           usage: GPUBufferUsage.COPY_DST,
         });
@@ -121,7 +120,7 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
 }
 
 // For testing divisibility by a number we test all the values returned by this function:
-export function valuesToTestDivisibilityBy(number: number): number[] {
+function valuesToTestDivisibilityBy(number: number): Iterable<number> {
   const values = [];
   for (let i = 0; i <= 2 * number; ++i) {
     values.push(i);
@@ -130,6 +129,60 @@ export function valuesToTestDivisibilityBy(number: number): number[] {
   return values;
 }
 
-export function Align(num: number, alignment: number): number {
-  return Math.floor((num + alignment - 1) / alignment) * alignment;
+interface WithFormat {
+  format: GPUTextureFormat;
+}
+
+interface WithFormatAndCoordinate extends WithFormat {
+  coordinateToTest: string;
+}
+
+// This is a helper function used for expanding test parameters for texel block alignment tests on offset
+export function texelBlockAlignmentTestExpanderForOffset<ParamsType extends WithFormat>() {
+  return function* (p: ParamsType) {
+    yield* poptions(
+      'offset',
+      valuesToTestDivisibilityBy(kTextureFormatInfo[p.format].bytesPerBlock!)
+    );
+  };
+}
+
+// This is a helper function used for expanding test parameters for texel block alignment tests on rowsPerImage
+export function texelBlockAlignmentTestExpanderForRowsPerImage<ParamsType extends WithFormat>() {
+  return function* (p: ParamsType) {
+    yield* poptions(
+      'rowsPerImage',
+      valuesToTestDivisibilityBy(kTextureFormatInfo[p.format].bytesPerBlock!)
+    );
+  };
+}
+
+// This is a helper function used for expanding test parameters for texel block alignment tests on origin and size
+export function texelBlockAlignmentTestExpanderForValueToCoordinate<
+  ParamsType extends WithFormatAndCoordinate
+>() {
+  return function* (p: ParamsType) {
+    switch (p.coordinateToTest) {
+      case 'x':
+      case 'width':
+        yield* poptions(
+          'valueToCoordinate',
+          valuesToTestDivisibilityBy(kTextureFormatInfo[p.format].blockWidth!)
+        );
+        break;
+
+      case 'y':
+      case 'height':
+        yield* poptions(
+          'valueToCoordinate',
+          valuesToTestDivisibilityBy(kTextureFormatInfo[p.format].blockHeight!)
+        );
+        break;
+
+      case 'z':
+      case 'depth':
+        yield* poptions('valueToCoordinate', valuesToTestDivisibilityBy(1));
+        break;
+    }
+  };
 }
