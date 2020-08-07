@@ -8,6 +8,7 @@ import {
   CopyBetweenLinearDataAndTextureTest,
   kAllTestMethods,
   texelBlockAlignmentTestExpanderForValueToCoordinate,
+  formatCopyableWithMethod,
 } from './copyBetweenLinearDataAndTexture.js';
 
 export const g = makeTestGroup(CopyBetweenLinearDataAndTextureTest);
@@ -137,7 +138,7 @@ g.test('texel_block_alignments_on_origin')
       .combine(poptions('method', kAllTestMethods))
       .combine(poptions('coordinateToTest', ['x', 'y', 'z'] as const))
       .combine(poptions('format', kTextureFormats))
-      .unless(({ format }) => !kTextureFormatInfo[format].copyable)
+      .filter(formatCopyableWithMethod)
       .expand(texelBlockAlignmentTestExpanderForValueToCoordinate())
   )
   .fn(async t => {
@@ -210,7 +211,7 @@ g.test('texel_block_alignments_on_size')
       .combine(poptions('method', kAllTestMethods))
       .combine(poptions('coordinateToTest', ['width', 'height', 'depth'] as const))
       .combine(poptions('format', kTextureFormats))
-      .unless(({ format }) => !kTextureFormatInfo[format].copyable)
+      .filter(formatCopyableWithMethod)
       .expand(texelBlockAlignmentTestExpanderForValueToCoordinate())
   )
   .fn(async t => {

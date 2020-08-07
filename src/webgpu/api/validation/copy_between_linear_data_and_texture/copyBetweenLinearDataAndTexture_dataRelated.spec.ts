@@ -10,6 +10,7 @@ import {
   kAllTestMethods,
   texelBlockAlignmentTestExpanderForOffset,
   texelBlockAlignmentTestExpanderForRowsPerImage,
+  formatCopyableWithMethod,
 } from './copyBetweenLinearDataAndTexture.js';
 
 export const g = makeTestGroup(CopyBetweenLinearDataAndTextureTest);
@@ -106,7 +107,7 @@ g.test('required_bytes_in_copy')
         { copyWidthInBlocks: 7, copyHeightInBlocks: 1, copyDepth: 1, offsetInBlocks: 0 }, // copyHeight = 1 and copyDepth = 1
       ])
       .combine(poptions('format', kTextureFormats))
-      .unless(({ format }) => !kTextureFormatInfo[format].copyable)
+      .filter(formatCopyableWithMethod)
       .combine(pbool('success'))
   )
   .fn(async t => {
@@ -161,7 +162,7 @@ g.test('texel_block_alignment_on_rows_per_image')
     params()
       .combine(poptions('method', kAllTestMethods))
       .combine(poptions('format', kTextureFormats))
-      .unless(({ format }) => !kTextureFormatInfo[format].copyable)
+      .filter(formatCopyableWithMethod)
       .expand(texelBlockAlignmentTestExpanderForRowsPerImage())
   )
   .fn(async t => {
@@ -184,7 +185,7 @@ g.test('texel_block_alignment_on_offset')
     params()
       .combine(poptions('method', kAllTestMethods))
       .combine(poptions('format', kTextureFormats))
-      .unless(({ format }) => !kTextureFormatInfo[format].copyable)
+      .filter(formatCopyableWithMethod)
       .expand(texelBlockAlignmentTestExpanderForOffset())
   )
   .fn(async t => {
@@ -214,7 +215,7 @@ g.test('bound_on_bytes_per_row')
         { copyHeightInBlocks: 0, copyDepth: 2 }, // we have to check the bound
       ])
       .combine(poptions('format', kTextureFormats))
-      .unless(({ format }) => !kTextureFormatInfo[format].copyable)
+      .filter(formatCopyableWithMethod)
   )
   .fn(async t => {
     const {

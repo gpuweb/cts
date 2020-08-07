@@ -137,6 +137,10 @@ interface WithFormatAndCoordinate extends WithFormat {
   coordinateToTest: string;
 }
 
+interface WithFormatAndMethod extends WithFormat {
+  method: string;
+}
+
 // This is a helper function used for expanding test parameters for texel block alignment tests on offset
 export function texelBlockAlignmentTestExpanderForOffset<ParamsType extends WithFormat>() {
   return function* (p: ParamsType) {
@@ -152,7 +156,7 @@ export function texelBlockAlignmentTestExpanderForRowsPerImage<ParamsType extend
   return function* (p: ParamsType) {
     yield* poptions(
       'rowsPerImage',
-      valuesToTestDivisibilityBy(kTextureFormatInfo[p.format].bytesPerBlock!)
+      valuesToTestDivisibilityBy(kTextureFormatInfo[p.format].blockHeight!)
     );
   };
 }
@@ -185,4 +189,16 @@ export function texelBlockAlignmentTestExpanderForValueToCoordinate<
         break;
     }
   };
+}
+
+// This is a helper function used for filtering test parameters
+export function formatCopyableWithMethod<ParamsType extends WithFormatAndMethod>(
+  p: ParamsType
+): boolean {
+  return (
+    // Format must be copyable
+    kTextureFormatInfo[p.format].copyable &&
+    // We can't copy to a depth texture, but we can copy from it
+    (p.method === 'CopyTextureToBuffer' || !kTextureFormatInfo[p.format].depth)
+  );
 }
