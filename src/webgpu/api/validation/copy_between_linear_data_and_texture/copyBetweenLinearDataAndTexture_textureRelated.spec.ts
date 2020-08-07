@@ -55,7 +55,13 @@ g.test('texture_usage_must_be_valid')
   .params(
     params()
       .combine(poptions('method', kAllTestMethods))
-      .combine(poptions('usage', [GPUTextureUsage.COPY_SRC, GPUTextureUsage.COPY_DST]))
+      .combine(
+        poptions('usage', [
+          GPUTextureUsage.COPY_SRC | GPUTextureUsage.SAMPLED,
+          GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED,
+          GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+        ])
+      )
   )
   .fn(async t => {
     const { usage, method } = t.params;
@@ -68,8 +74,8 @@ g.test('texture_usage_must_be_valid')
 
     const success =
       method === 'CopyTextureToBuffer'
-        ? usage === GPUTextureUsage.COPY_SRC
-        : usage === GPUTextureUsage.COPY_DST;
+        ? (usage & GPUTextureUsage.COPY_SRC) !== 0
+        : (usage & GPUTextureUsage.COPY_DST) !== 0;
 
     t.testRun(
       { texture },
