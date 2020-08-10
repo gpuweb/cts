@@ -145,7 +145,7 @@ g.test('texel_block_alignments_on_origin')
       .combine(poptions('coordinateToTest', ['x', 'y', 'z'] as const))
       .combine(poptions('format', kTextureFormats))
       .filter(formatCopyableWithMethod)
-      .expand(texelBlockAlignmentTestExpanderForValueToCoordinate())
+      .expand(texelBlockAlignmentTestExpanderForValueToCoordinate)
   )
   .fn(async t => {
     const { valueToCoordinate, coordinateToTest, format, method } = t.params;
@@ -218,7 +218,7 @@ g.test('texel_block_alignments_on_size')
       .combine(poptions('coordinateToTest', ['width', 'height', 'depth'] as const))
       .combine(poptions('format', kTextureFormats))
       .filter(formatCopyableWithMethod)
-      .expand(texelBlockAlignmentTestExpanderForValueToCoordinate())
+      .expand(texelBlockAlignmentTestExpanderForValueToCoordinate)
   )
   .fn(async t => {
     const { valueToCoordinate, coordinateToTest, format, method } = t.params;

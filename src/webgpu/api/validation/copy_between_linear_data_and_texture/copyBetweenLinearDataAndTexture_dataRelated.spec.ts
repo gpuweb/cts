@@ -1,6 +1,6 @@
 export const description = '';
 
-import { params, poptions, pbool } from '../../../../common/framework/params_builder.js';
+import { params, poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { kTextureFormats, kTextureFormatInfo } from '../../../capability_info.js';
 import { align } from '../../../util/math.js';
@@ -39,6 +39,7 @@ g.test('bound_on_rows_per_image')
     // The WebGPU spec:
     // If layout.rowsPerImage is not 0, it must be greater than or equal to copyExtent.height.
     // If copyExtent.depth is greater than 1: layout.rowsPerImage must be greater than or equal to copyExtent.height.
+    // TODO: Update this if https://github.com/gpuweb/gpuweb/issues/984 changes the spec.
 
     let success = true;
     if (rowsPerImage !== 0 && rowsPerImage < copyHeight) {
@@ -56,27 +57,33 @@ g.test('bound_on_rows_per_image')
     );
   });
 
-// Test with offset which almost overflows GPUSize64,
-// offset + requiredBytesIsCopy does overflow.
+// Test with offset + requiredBytesIsCopy overflowing GPUSize64.
 g.test('offset_plus_required_bytes_in_copy_overflow')
-  .params(params().combine(poptions('method', kAllTestMethods)))
+  .params(
+    params()
+      .combine(poptions('method', kAllTestMethods))
+      .combine([
+        { bytesPerRow: 2 ** 31, rowsPerImage: 2 ** 31, depth: 1, _success: true }, // success case
+        { bytesPerRow: 2 ** 31, rowsPerImage: 2 ** 31, depth: 16, _success: false }, // bytesPerRow * rowsPerImage * (depth - 1) overflows.
+      ])
+  )
   .fn(async t => {
-    const { method } = t.params;
+    const { method, bytesPerRow, rowsPerImage, depth, _success } = t.params;
 
     const texture = t.device.createTexture({
-      size: [3, 3, 3],
+      size: [1, 1, depth],
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
 
     t.testRun(
       { texture },
-      { offset: (1 << 64) - 10, bytesPerRow: 256, rowsPerImage: 4 },
-      { width: 3, height: 3, depth: 3 },
+      { bytesPerRow, rowsPerImage },
+      { width: 1, height: 1, depth },
       {
         dataSize: 10000,
         method,
-        success: false,
+        success: _success,
       }
     );
   });
@@ -108,7 +115,6 @@ g.test('required_bytes_in_copy')
       ])
       .combine(poptions('format', kTextureFormats))
       .filter(formatCopyableWithMethod)
-      .combine(pbool('success'))
   )
   .fn(async t => {
     const {
@@ -119,7 +125,6 @@ g.test('required_bytes_in_copy')
       copyHeightInBlocks,
       copyDepth,
       format,
-      success,
       method,
     } = t.params;
 
@@ -141,20 +146,21 @@ g.test('required_bytes_in_copy')
     const minDataSize =
       offset + t.requiredBytesInCopy({ offset, bytesPerRow, rowsPerImage }, format, size);
 
-    // We can't run a failing test with minDataSize = 0.
-    if (minDataSize === 0 && !success) {
-      return;
-    }
-
-    const dataSize = success ? minDataSize : minDataSize - 1;
-
     const texture = t.createAlignedTexture(format, size);
 
     t.testRun({ texture }, { offset, bytesPerRow, rowsPerImage }, size, {
-      dataSize,
+      dataSize: minDataSize,
       method,
-      success,
+      success: true,
     });
+
+    if (minDataSize > 0) {
+      t.testRun({ texture }, { offset, bytesPerRow, rowsPerImage }, size, {
+        dataSize: minDataSize - 1,
+        method,
+        success: false,
+      });
+    }
   });
 
 g.test('texel_block_alignment_on_rows_per_image')
@@ -163,7 +169,7 @@ g.test('texel_block_alignment_on_rows_per_image')
       .combine(poptions('method', kAllTestMethods))
       .combine(poptions('format', kTextureFormats))
       .filter(formatCopyableWithMethod)
-      .expand(texelBlockAlignmentTestExpanderForRowsPerImage())
+      .expand(texelBlockAlignmentTestExpanderForRowsPerImage)
   )
   .fn(async t => {
     const { rowsPerImage, format, method } = t.params;
@@ -180,13 +186,14 @@ g.test('texel_block_alignment_on_rows_per_image')
     });
   });
 
+// TODO: Update this if https://github.com/gpuweb/gpuweb/issues/985 changes the spec.
 g.test('texel_block_alignment_on_offset')
   .params(
     params()
       .combine(poptions('method', kAllTestMethods))
       .combine(poptions('format', kTextureFormats))
       .filter(formatCopyableWithMethod)
-      .expand(texelBlockAlignmentTestExpanderForOffset())
+      .expand(texelBlockAlignmentTestExpanderForOffset)
   )
   .fn(async t => {
     const { format, offset, method } = t.params;
@@ -204,13 +211,14 @@ g.test('bound_on_bytes_per_row')
     params()
       .combine(poptions('method', kAllTestMethods))
       .combine([
-        { blocksPerRow: 2, additionalBytesPerRow: 0, copyWidthInBlocks: 2 }, // success
-        { blocksPerRow: 2, additionalBytesPerRow: 5, copyWidthInBlocks: 3 }, // success if bytesPerBlock <= 5
-        { blocksPerRow: 1, additionalBytesPerRow: 0, copyWidthInBlocks: 2 }, // failure, bytesPerRow > 0
-        { blocksPerRow: 0, additionalBytesPerRow: 0, copyWidthInBlocks: 1 }, // failure, bytesPerRow = 0
+        { blocksPerRow: 2, additionalPaddingPerRow: 0, copyWidthInBlocks: 2 }, // success
+        { blocksPerRow: 2, additionalPaddingPerRow: 5, copyWidthInBlocks: 3 }, // success if bytesPerBlock <= 5
+        { blocksPerRow: 1, additionalPaddingPerRow: 0, copyWidthInBlocks: 2 }, // failure, bytesPerRow > 0
+        { blocksPerRow: 0, additionalPaddingPerRow: 0, copyWidthInBlocks: 1 }, // failure, bytesPerRow = 0
       ])
       .combine([
         { copyHeightInBlocks: 0, copyDepth: 1 }, // we don't have to check the bound
+        { copyHeightInBlocks: 1, copyDepth: 0 }, // we don't have to check the bound
         { copyHeightInBlocks: 2, copyDepth: 1 }, // we have to check the bound
         { copyHeightInBlocks: 0, copyDepth: 2 }, // we have to check the bound
       ])
@@ -220,7 +228,7 @@ g.test('bound_on_bytes_per_row')
   .fn(async t => {
     const {
       blocksPerRow,
-      additionalBytesPerRow,
+      additionalPaddingPerRow,
       copyWidthInBlocks,
       copyHeightInBlocks,
       copyDepth,
@@ -237,7 +245,7 @@ g.test('bound_on_bytes_per_row')
       copyWidthInBlocks * kTextureFormatInfo[format].blockWidth! * bytesPerRowAlignment;
     const copyHeight = copyHeightInBlocks * kTextureFormatInfo[format].blockHeight!;
     const bytesPerRow =
-      (blocksPerRow * kTextureFormatInfo[format].bytesPerBlock! + additionalBytesPerRow) *
+      (blocksPerRow * kTextureFormatInfo[format].bytesPerBlock! + additionalPaddingPerRow) *
       bytesPerRowAlignment;
     const size = { width: copyWidth, height: copyHeight, depth: copyDepth };
 
