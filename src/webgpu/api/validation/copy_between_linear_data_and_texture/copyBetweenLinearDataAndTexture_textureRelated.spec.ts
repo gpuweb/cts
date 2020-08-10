@@ -179,19 +179,18 @@ g.test('1d_texture')
   .params(
     params()
       .combine(poptions('method', kAllTestMethods))
-      .combine(
-        poptions('size', [
-          { width: 1, height: 0, depth: 0 },
-          { width: 0, height: 0, depth: 0 },
-          { width: 0, height: 0, depth: 1 },
-          { width: 0, height: 1, depth: 0 },
-          { width: 0, height: 0, depth: 2 },
-          { width: 0, height: 2, depth: 0 },
-        ])
-      )
+      .combine(poptions('width', [0, 1]))
+      .combine([
+        { height: 1, depth: 1 },
+        { height: 1, depth: 0 },
+        { height: 1, depth: 2 },
+        { height: 0, depth: 1 },
+        { height: 2, depth: 1 },
+      ])
   )
   .fn(async t => {
-    const { size, method } = t.params;
+    const { method, width, height, depth } = t.params;
+    const size = { width, height, depth };
 
     const texture = t.device.createTexture({
       size: { width: 2, height: 1, depth: 1 },
