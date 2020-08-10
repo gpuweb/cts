@@ -189,10 +189,9 @@ export function texelBlockAlignmentTestExpanderForValueToCoordinate({
 
 // This is a helper function used for filtering test parameters
 export function formatCopyableWithMethod({ format, method }: WithFormatAndMethod): boolean {
-  return (
-    // Format must be copyable
-    kTextureFormatInfo[format].copyable &&
-    // We can't copy to a depth texture, but we can copy from it
-    (method === 'CopyTextureToBuffer' || !kTextureFormatInfo[format].depth)
-  );
+  if (method === 'CopyTextureToBuffer') {
+    return kTextureFormatInfo[format].copySrc;
+  } else {
+    return kTextureFormatInfo[format].copyDst;
+  }
 }

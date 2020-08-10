@@ -200,7 +200,7 @@ function getRequiredTextureUsage(
     usage |= GPUTextureUsage.OUTPUT_ATTACHMENT;
   }
 
-  if (!kTextureFormatInfo[format].copyable) {
+  if (!kTextureFormatInfo[format].copyDst) {
     // Copies are not possible. We need OutputAttachment to initialize
     // canary data.
     assert(kTextureFormatInfo[format].renderable);
@@ -411,7 +411,7 @@ export abstract class TextureZeroInitTest extends GPUTest {
     state: InitializedState,
     subresourceRange: SubresourceRange
   ): void {
-    if (this.params.sampleCount > 1 || !kTextureFormatInfo[this.params.format].copyable) {
+    if (this.params.sampleCount > 1 || !kTextureFormatInfo[this.params.format].copyDst) {
       // Copies to multisampled textures not yet specified.
       // Use a storeOp for now.
       assert(kTextureFormatInfo[this.params.format].renderable);

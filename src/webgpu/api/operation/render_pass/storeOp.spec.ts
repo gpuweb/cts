@@ -269,7 +269,7 @@ g.test('render_pass_store_op,depth_stencil_attachment_only')
           (kTextureFormatInfo[depthStencilFormat].depth ||
             kTextureFormatInfo[depthStencilFormat].stencil) &&
           kTextureFormatInfo[depthStencilFormat].renderable &&
-          kTextureFormatInfo[depthStencilFormat].copyable
+          kTextureFormatInfo[depthStencilFormat].copyDst
       )
       .combine(poptions('storeOperation', kStoreOps))
       .combine(poptions('mipLevel', kMipLevel))
