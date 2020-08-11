@@ -24,9 +24,7 @@ Test Plan:
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-
 import { kMaxSafeMultipleOf8 } from '../../util/math.js';
-
 import { ValidationTest } from './validation_test.js';
 
 class F extends ValidationTest {
@@ -198,7 +196,11 @@ g.test('copy_overflow')
     { srcOffset: 0, dstOffset: kMaxSafeMultipleOf8, copySize: 16 },
     { srcOffset: kMaxSafeMultipleOf8, dstOffset: 0, copySize: kMaxSafeMultipleOf8 },
     { srcOffset: 0, dstOffset: kMaxSafeMultipleOf8, copySize: kMaxSafeMultipleOf8 },
-    { srcOffset: kMaxSafeMultipleOf8, dstOffset: kMaxSafeMultipleOf8, copySize: kMaxSafeMultipleOf8 },
+    {
+      srcOffset: kMaxSafeMultipleOf8,
+      dstOffset: kMaxSafeMultipleOf8,
+      copySize: kMaxSafeMultipleOf8
+    },
   ] as const)
   .fn(async t => {
     const { srcOffset, dstOffset, copySize } = t.params;
