@@ -1,12 +1,33 @@
 export const description = `
 copyBufferToBuffer tests.
+
+Test Plan:
+* Buffer is valid/invalid
+  - the source buffer is invalid
+  - the destination buffer is invalid
+* Buffer usages
+  - the source buffer is created without GPUBufferUsage::COPY_SRC
+  - the destination buffer is created without GPUBufferUsage::COPY_DEST
+* CopySize
+  - copySize is not a multiple of 4
+  - copySize is 0
+* copy offsets
+  - sourceOffset is not a multiple of 4
+  - destinationOffset is not a multiple of 4
+* Arthimetic overflow
+  - (sourceOffset + copySize) is overflow
+  - (destinationOffset + copySize) is overflow
+* Out of bounds
+  - (sourceOffset + copySize) > size of source buffer
+  - (destinationOffset + copySize) > size of destination buffer
+* Source buffer and destination buffer are the same buffer
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 
-import { ValidationTest } from './validation_test.js';
+import { kMaxSafeMultipleOf8 } from '../../util/math.js';
 
-const MAX_ALIGNED_SAFE_INTEGER = Number.MAX_SAFE_INTEGER - 7;
+import { ValidationTest } from './validation_test.js';
 
 class F extends ValidationTest {
   TestCopyBufferToBuffer(options: {
@@ -38,12 +59,7 @@ g.test('copy_with_invalid_buffer').fn(async t => {
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
   });
 
-  const errorBuffer = t.expectGPUError('validation', () =>
-    t.device.createBuffer({
-      size: bufferSize,
-      usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.MAP_READ,
-    })
-  );
+  const errorBuffer = t.getErrorBuffer();
 
   const srcOffset = 0;
   const dstOffset = 0;
@@ -70,12 +86,12 @@ g.test('copy_with_invalid_buffer').fn(async t => {
 
 g.test('buffer_usage')
   .params([
-    { srcUsage: GPUBufferUsage.COPY_SRC, dstUsage: GPUBufferUsage.COPY_DST, isSuccess: true },
-    { srcUsage: GPUBufferUsage.COPY_DST, dstUsage: GPUBufferUsage.COPY_SRC, isSuccess: false },
-    { srcUsage: GPUBufferUsage.COPY_SRC, dstUsage: GPUBufferUsage.COPY_SRC, isSuccess: false },
+    { srcUsage: GPUBufferUsage.COPY_SRC, dstUsage: GPUBufferUsage.COPY_DST, _isSuccess: true },
+    { srcUsage: GPUBufferUsage.COPY_DST, dstUsage: GPUBufferUsage.COPY_DST, _isSuccess: false },
+    { srcUsage: GPUBufferUsage.COPY_SRC, dstUsage: GPUBufferUsage.COPY_SRC, _isSuccess: false },
   ] as const)
   .fn(async t => {
-    const { srcUsage, dstUsage, isSuccess } = t.params;
+    const { srcUsage, dstUsage, _isSuccess: isSuccess } = t.params;
 
     const bufferSize = 16;
     const srcOffset = 0;
@@ -103,14 +119,14 @@ g.test('buffer_usage')
 
 g.test('copy_size')
   .params([
-    { copySize: 0, isSuccess: true },
-    { copySize: 2, isSuccess: false },
-    { copySize: 4, isSuccess: true },
-    { copySize: 5, isSuccess: false },
-    { copySize: 8, isSuccess: true },
+    { copySize: 0, _isSuccess: true },
+    { copySize: 2, _isSuccess: false },
+    { copySize: 4, _isSuccess: true },
+    { copySize: 5, _isSuccess: false },
+    { copySize: 8, _isSuccess: true },
   ] as const)
   .fn(async t => {
-    const { copySize, isSuccess } = t.params;
+    const { copySize, _isSuccess: isSuccess } = t.params;
 
     const bufferSize = 16;
     const srcOffset = 0;
@@ -137,19 +153,19 @@ g.test('copy_size')
 
 g.test('copy_offset')
   .params([
-    { srcOffset: 0, dstOffset: 0, isSuccess: true },
-    { srcOffset: 2, dstOffset: 0, isSuccess: false },
-    { srcOffset: 4, dstOffset: 0, isSuccess: true },
-    { srcOffset: 5, dstOffset: 0, isSuccess: false },
-    { srcOffset: 8, dstOffset: 0, isSuccess: true },
-    { srcOffset: 0, dstOffset: 2, isSuccess: false },
-    { srcOffset: 0, dstOffset: 4, isSuccess: true },
-    { srcOffset: 0, dstOffset: 5, isSuccess: false },
-    { srcOffset: 0, dstOffset: 8, isSuccess: true },
-    { srcOffset: 4, dstOffset: 8, isSuccess: true },
+    { srcOffset: 0, dstOffset: 0, _isSuccess: true },
+    { srcOffset: 2, dstOffset: 0, _isSuccess: false },
+    { srcOffset: 4, dstOffset: 0, _isSuccess: true },
+    { srcOffset: 5, dstOffset: 0, _isSuccess: false },
+    { srcOffset: 8, dstOffset: 0, _isSuccess: true },
+    { srcOffset: 0, dstOffset: 2, _isSuccess: false },
+    { srcOffset: 0, dstOffset: 4, _isSuccess: true },
+    { srcOffset: 0, dstOffset: 5, _isSuccess: false },
+    { srcOffset: 0, dstOffset: 8, _isSuccess: true },
+    { srcOffset: 4, dstOffset: 4, _isSuccess: true },
   ] as const)
   .fn(async t => {
-    const { srcOffset, dstOffset, isSuccess } = t.params;
+    const { srcOffset, dstOffset, _isSuccess: isSuccess } = t.params;
 
     const bufferSize = 16;
     const copySize = 8;
@@ -175,10 +191,14 @@ g.test('copy_offset')
 
 g.test('copy_overflow')
   .params([
-    { srcOffset: 16, dstOffset: 0, copySize: MAX_ALIGNED_SAFE_INTEGER },
-    { srcOffset: 0, dstOffset: 16, copySize: MAX_ALIGNED_SAFE_INTEGER },
-    { srcOffset: MAX_ALIGNED_SAFE_INTEGER, dstOffset: 0, copySize: 16 },
-    { srcOffset: 0, dstOffset: MAX_ALIGNED_SAFE_INTEGER, copySize: 16 },
+    { srcOffset: 0, dstOffset: 0, copySize: kMaxSafeMultipleOf8 },
+    { srcOffset: 16, dstOffset: 0, copySize: kMaxSafeMultipleOf8 },
+    { srcOffset: 0, dstOffset: 16, copySize: kMaxSafeMultipleOf8 },
+    { srcOffset: kMaxSafeMultipleOf8, dstOffset: 0, copySize: 16 },
+    { srcOffset: 0, dstOffset: kMaxSafeMultipleOf8, copySize: 16 },
+    { srcOffset: kMaxSafeMultipleOf8, dstOffset: 0, copySize: kMaxSafeMultipleOf8 },
+    { srcOffset: 0, dstOffset: kMaxSafeMultipleOf8, copySize: kMaxSafeMultipleOf8 },
+    { srcOffset: kMaxSafeMultipleOf8, dstOffset: kMaxSafeMultipleOf8, copySize: kMaxSafeMultipleOf8 },
   ] as const)
   .fn(async t => {
     const { srcOffset, dstOffset, copySize } = t.params;
@@ -205,6 +225,7 @@ g.test('copy_overflow')
 
 g.test('copy_out_of_bounds')
   .params([
+    { srcOffset: 0, dstOffset: 0, copySize: 32, _isSuccess: true },
     { srcOffset: 0, dstOffset: 0, copySize: 36 },
     { srcOffset: 36, dstOffset: 0, copySize: 4 },
     { srcOffset: 0, dstOffset: 36, copySize: 4 },
@@ -214,7 +235,7 @@ g.test('copy_out_of_bounds')
     { srcOffset: 0, dstOffset: 20, copySize: 16 },
   ] as const)
   .fn(async t => {
-    const { srcOffset, dstOffset, copySize } = t.params;
+    const { srcOffset, dstOffset, copySize, _isSuccess = false } = t.params;
 
     const bufferSize = 32;
     const srcBuffer = t.device.createBuffer({
@@ -232,7 +253,7 @@ g.test('copy_out_of_bounds')
       dstBuffer,
       dstOffset,
       copySize,
-      isSuccess: false,
+      isSuccess: _isSuccess,
     });
   });
 
