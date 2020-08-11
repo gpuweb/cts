@@ -24,7 +24,6 @@ Test Plan:
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-
 import { kMaxSafeMultipleOf8 } from '../../util/math.js';
 
 import { ValidationTest } from './validation_test.js';
