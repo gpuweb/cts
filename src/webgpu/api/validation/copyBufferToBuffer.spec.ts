@@ -53,10 +53,8 @@ class F extends ValidationTest {
 export const g = makeTestGroup(F);
 
 g.test('copy_with_invalid_buffer').fn(async t => {
-  const bufferSize = 16;
-
   const validBuffer = t.device.createBuffer({
-    size: bufferSize,
+    size: 16,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
   });
 
