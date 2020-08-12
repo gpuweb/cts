@@ -2,11 +2,17 @@ export const description = `
 Texture Usages Validation Tests in Render Pass.
 
 Test Coverage:
- - Tests that read and write usages upon the same texture subresource, or different subresources
-   of the same texture. Different subresources of the same texture includes different mip levels,
-   different array layers, and different aspects.
-   - When read and write usages are binding to the same texture subresource, an error should be
-     generated. Otherwise, no error should be generated.
+
+  - Test the combination of different pairs of usages upon the same texture subresource or different
+    subresources of the same texture. Different subresources of the same texture includes different
+    mip levels, different array layers, and different aspects.
+    - When read-write or write-write usages are binding to the same texture subresource, an error
+      should be generated. Otherwise, no error should be generated. One exception is race condition
+      upon two writeonly-storage-texture usages, which is valid.
+
+  - Test different shader stages.
+    - Texture usages in bindings with invisible shader stages should be tracked. Invisible shader
+      stages include shader stage with visibility none and compute shader stage in render pass.
 `;
 
 import { poptions, params } from '../../../../common/framework/params_builder.js';
@@ -230,7 +236,7 @@ g.test('subresources_and_binding_types_combination_for_color')
     }, !success);
   });
 
-g.test('readwrite_upon_aspects')
+g.test('subresources_and_binding_types_combination_for_aspect')
   .params(
     params()
       .combine(poptions('format', ['depth32float', 'depth24plus', 'depth24plus-stencil8'] as const))
