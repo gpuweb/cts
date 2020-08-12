@@ -186,14 +186,12 @@ g.test('subresources_and_binding_types_combination_for_color')
       arrayLayerCount: layerCount,
     });
 
+    // TODO: Add two 'render-target' usages for color attachments.
     const bglEntries: GPUBindGroupLayoutEntry[] = [
       {
         binding: 0,
         visibility: GPUShaderStage.FRAGMENT,
         type: type0,
-        // Currently setting two 'render-target' usages in the same render pass is impossible.
-        // We don't need to test that. So type0 is either 'sampled-texture' or storage usages.
-        // It can't be 'render-target'.
         storageTextureFormat: type0 === 'sampled-texture' ? undefined : 'rgba8unorm',
       },
     ];
@@ -236,32 +234,54 @@ g.test('readwrite_upon_aspects')
   .params(
     params()
       .combine(poptions('format', ['depth32float', 'depth24plus', 'depth24plus-stencil8'] as const))
-      .combine(poptions('readAspect', ['all', 'depth-only', 'stencil-only'] as const))
-      .combine(poptions('writeAspect', ['all', 'depth-only', 'stencil-only'] as const))
+      .combine(poptions('aspect0', ['all', 'depth-only', 'stencil-only'] as const))
+      .combine(poptions('aspect1', ['all', 'depth-only', 'stencil-only'] as const))
       .unless(
-        ({ format, readAspect, writeAspect }) =>
+        ({ format, aspect0, aspect1 }) =>
           // TODO: Exclude depth-only aspect once WebGPU supports stencil-only texture format(s).
-          (readAspect === 'stencil-only' && !kTextureFormatInfo[format].stencil) ||
-          (writeAspect === 'stencil-only' && !kTextureFormatInfo[format].stencil)
+          (aspect0 === 'stencil-only' && !kTextureFormatInfo[format].stencil) ||
+          (aspect1 === 'stencil-only' && !kTextureFormatInfo[format].stencil)
       )
+      .combine([
+        {
+          type0: 'sampled-texture',
+          type1: 'sampled-texture',
+          _usageSuccess: true,
+        },
+        {
+          type0: 'sampled-texture',
+          type1: 'render-target',
+          _usageSuccess: false,
+        },
+      ] as const)
   )
   .fn(async t => {
-    const { format, readAspect, writeAspect } = t.params;
+    const { format, aspect0, aspect1, type0, type1, _usageSuccess } = t.params;
 
-    const view = t.createTexture({ format }).createView();
+    const texture = t.createTexture({ format });
+    const view0 = texture.createView({ aspect: aspect0 });
+    const view1 = texture.createView({ aspect: aspect1 });
 
-    const bindGroupLayout = t.device.createBindGroupLayout({
-      entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, type: 'sampled-texture' }],
-    });
-
+    const bglEntries: GPUBindGroupLayoutEntry[] = [
+      {
+        binding: 0,
+        visibility: GPUShaderStage.FRAGMENT,
+        type: type0,
+      },
+    ];
+    const bgEntries: GPUBindGroupEntry[] = [{ binding: 0, resource: view0 }];
+    if (type1 !== 'render-target') {
+      bglEntries.push({
+        binding: 1,
+        visibility: GPUShaderStage.FRAGMENT,
+        type: type1,
+      });
+      bgEntries.push({ binding: 1, resource: view1 });
+    }
     const bindGroup = t.device.createBindGroup({
-      entries: [{ binding: 0, resource: view }],
-      layout: bindGroupLayout,
+      entries: bgEntries,
+      layout: t.device.createBindGroupLayout({ entries: bglEntries }),
     });
-
-    const success =
-      (readAspect === 'depth-only' && writeAspect === 'stencil-only') ||
-      (readAspect === 'stencil-only' && writeAspect === 'depth-only');
 
     const encoder = t.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
@@ -272,16 +292,24 @@ g.test('readwrite_upon_aspects')
           storeOp: 'store',
         },
       ],
-      depthStencilAttachment: {
-        attachment: view,
-        depthStoreOp: 'clear',
-        depthLoadValue: 'load',
-        stencilStoreOp: 'clear',
-        stencilLoadValue: 'load',
-      },
+      depthStencilAttachment:
+        type1 !== 'render-target'
+          ? undefined
+          : {
+              attachment: view1,
+              depthStoreOp: 'clear',
+              depthLoadValue: 'load',
+              stencilStoreOp: 'clear',
+              stencilLoadValue: 'load',
+            },
     });
     pass.setBindGroup(0, bindGroup);
     pass.endPass();
+
+    const resourceSuccess =
+      (aspect0 === 'depth-only' && aspect1 === 'stencil-only') ||
+      (aspect0 === 'stencil-only' && aspect1 === 'depth-only');
+    const success = resourceSuccess || _usageSuccess;
 
     t.expectValidationError(() => {
       encoder.finish();
