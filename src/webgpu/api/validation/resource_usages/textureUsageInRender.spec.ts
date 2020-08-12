@@ -49,64 +49,175 @@ class TextureUsageTracking extends ValidationTest {
 
 export const g = makeTestGroup(TextureUsageTracking);
 
-const READ_BASE_LEVEL = 3;
-const READ_BASE_LAYER = 0;
+const BASE_LEVEL = 3;
+const BASE_LAYER = 0;
+const TOTAL_LEVELS = 6;
+const TOTAL_LAYERS = 2;
 
-g.test('readwrite_upon_subresources')
-  .params([
-    // read and write usages are binding to the same texture subresource.
-    {
-      writeBaseLevel: READ_BASE_LEVEL,
-      writeBaseLayer: READ_BASE_LAYER,
-      _success: false,
-    },
+g.test('subresources_and_binding_types_combination_for_color')
+  .params(
+    params()
+      .combine([
+        // Two texture usages are binding to the same texture subresource.
+        {
+          baseLevel: BASE_LEVEL,
+          baseLayer: BASE_LAYER,
+          levelCount: 1,
+          layerCount: 1,
+          _resourceSuccess: false,
+        },
 
-    // read and write usages are binding to different mip levels of the same texture.
-    {
-      writeBaseLevel: READ_BASE_LEVEL + 1,
-      writeBaseLayer: READ_BASE_LAYER,
-      _success: true,
-    },
+        // Two texture usages are binding to different mip levels of the same texture.
+        {
+          baseLevel: BASE_LEVEL + 1,
+          baseLayer: BASE_LAYER,
+          levelCount: 1,
+          layerCount: 1,
+          _resourceSuccess: true,
+        },
 
-    // read and write usages are binding to different array layers of the same texture.
-    {
-      writeBaseLevel: READ_BASE_LEVEL,
-      writeBaseLayer: READ_BASE_LAYER + 1,
-      _success: true,
-    },
-  ])
+        // Two texture usages are binding to different array layers of the same texture.
+        {
+          baseLevel: BASE_LEVEL,
+          baseLayer: BASE_LAYER + 1,
+          levelCount: 1,
+          layerCount: 1,
+          _resourceSuccess: true,
+        },
+
+        // The second texture usage contains the whole mip chain where the first texture usage is using.
+        {
+          baseLevel: 0,
+          baseLayer: BASE_LAYER,
+          levelCount: TOTAL_LEVELS,
+          layerCount: 1,
+          _resourceSuccess: false,
+        },
+
+        // The second texture usage contains the all layers where the first texture usage is using.
+        {
+          baseLevel: BASE_LEVEL,
+          baseLayer: 0,
+          levelCount: 1,
+          layerCount: TOTAL_LAYERS,
+          _resourceSuccess: false,
+        },
+      ])
+      .combine([
+        {
+          type0: 'sampled-texture' as const,
+          type1: 'sampled-texture' as const,
+          _usageSuccess: true,
+        },
+        {
+          type0: 'sampled-texture' as const,
+          type1: 'readonly-storage-texture' as const,
+          _usageSuccess: true,
+        },
+        {
+          type0: 'sampled-texture' as const,
+          type1: 'writeonly-storage-texture' as const,
+          _usageSuccess: false,
+        },
+        {
+          type0: 'sampled-texture' as const,
+          type1: 'render-target' as const,
+          _usageSuccess: false,
+        },
+        {
+          type0: 'readonly-storage-texture' as const,
+          type1: 'readonly-storage-texture' as const,
+          _usageSuccess: true,
+        },
+        {
+          type0: 'readonly-storage-texture' as const,
+          type1: 'writeonly-storage-texture' as const,
+          _usageSuccess: false,
+        },
+        {
+          type0: 'readonly-storage-texture' as const,
+          type1: 'render-target' as const,
+          _usageSuccess: false,
+        },
+        // Race condition upon multiple writable storage texture is valid.
+        {
+          type0: 'writeonly-storage-texture' as const,
+          type1: 'writeonly-storage-texture' as const,
+          _usageSuccess: true,
+        },
+        {
+          type0: 'writeonly-storage-texture' as const,
+          type1: 'render-target' as const,
+          _usageSuccess: false,
+        },
+      ])
+  )
   .fn(async t => {
-    const { writeBaseLevel, writeBaseLayer, _success } = t.params;
+    const {
+      baseLevel,
+      baseLayer,
+      levelCount,
+      layerCount,
+      type0,
+      type1,
+      _usageSuccess,
+      _resourceSuccess,
+    } = t.params;
 
-    const texture = t.createTexture({ arrayLayerCount: 2, mipLevelCount: 6 });
+    const texture = t.createTexture({
+      arrayLayerCount: TOTAL_LAYERS,
+      mipLevelCount: TOTAL_LEVELS,
+      usage: GPUTextureUsage.SAMPLED | GPUTextureUsage.STORAGE | GPUTextureUsage.OUTPUT_ATTACHMENT,
+    });
 
-    const sampleView = texture.createView({
-      baseMipLevel: READ_BASE_LEVEL,
+    const view0 = texture.createView({
+      baseMipLevel: BASE_LEVEL,
       mipLevelCount: 1,
-      baseArrayLayer: READ_BASE_LAYER,
+      baseArrayLayer: BASE_LAYER,
       arrayLayerCount: 1,
     });
-    const renderView = texture.createView({
-      baseMipLevel: writeBaseLevel,
-      mipLevelCount: 1,
-      baseArrayLayer: writeBaseLayer,
-      arrayLayerCount: 1,
+
+    const view1Dimension = layerCount !== 1 ? '2d-array' : '2d';
+    const view1 = texture.createView({
+      dimension: view1Dimension,
+      baseMipLevel: baseLevel,
+      mipLevelCount: levelCount,
+      baseArrayLayer: baseLayer,
+      arrayLayerCount: layerCount,
     });
 
-    const bindGroupLayout = t.device.createBindGroupLayout({
-      entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, type: 'sampled-texture' }],
-    });
-
+    const bglEntries: GPUBindGroupLayoutEntry[] = [
+      {
+        binding: 0,
+        visibility: GPUShaderStage.FRAGMENT,
+        type: type0,
+        // Currently setting two 'render-target' usages in the same render pass is impossible.
+        // We don't need to test that. So type0 is either 'sampled-texture' or storage usages.
+        // It can't be 'render-target'.
+        storageTextureFormat: type0 === 'sampled-texture' ? undefined : 'rgba8unorm',
+      },
+    ];
+    const bgEntries: GPUBindGroupEntry[] = [{ binding: 0, resource: view0 }];
+    if (type1 !== 'render-target') {
+      bglEntries.push({
+        binding: 1,
+        visibility: GPUShaderStage.FRAGMENT,
+        type: type1,
+        viewDimension: view1Dimension,
+        storageTextureFormat: type1 === 'sampled-texture' ? undefined : 'rgba8unorm',
+      });
+      bgEntries.push({ binding: 1, resource: view1 });
+    }
     const bindGroup = t.device.createBindGroup({
-      entries: [{ binding: 0, resource: sampleView }],
-      layout: bindGroupLayout,
+      entries: bgEntries,
+      layout: t.device.createBindGroupLayout({ entries: bglEntries }),
     });
 
     const encoder = t.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment: renderView,
+          attachment: type1 === 'render-target' ? view1 : t.createTexture().createView(),
           loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
           storeOp: 'store',
         },
@@ -115,9 +226,10 @@ g.test('readwrite_upon_subresources')
     pass.setBindGroup(0, bindGroup);
     pass.endPass();
 
+    const success = _resourceSuccess || _usageSuccess;
     t.expectValidationError(() => {
       encoder.finish();
-    }, !_success);
+    }, !success);
   });
 
 g.test('readwrite_upon_aspects')
@@ -231,98 +343,4 @@ g.test('shader_stages_and_visibility')
     t.expectValidationError(() => {
       encoder.finish();
     });
-  });
-
-g.test('binding_types_combination')
-  .params([
-    { type0: 'sampled-texture' as const, type1: 'sampled-texture' as const, _success: true },
-    {
-      type0: 'sampled-texture' as const,
-      type1: 'readonly-storage-texture' as const,
-      _success: true,
-    },
-    {
-      type0: 'sampled-texture' as const,
-      type1: 'writeonly-storage-texture' as const,
-      _success: false,
-    },
-    { type0: 'sampled-texture' as const, type1: 'render-target' as const, _success: false },
-    {
-      type0: 'readonly-storage-texture' as const,
-      type1: 'readonly-storage-texture' as const,
-      _success: true,
-    },
-    {
-      type0: 'readonly-storage-texture' as const,
-      type1: 'writeonly-storage-texture' as const,
-      _success: false,
-    },
-    {
-      type0: 'readonly-storage-texture' as const,
-      type1: 'render-target' as const,
-      _success: false,
-    },
-    {
-      type0: 'writeonly-storage-texture' as const,
-      type1: 'writeonly-storage-texture' as const,
-      _success: true,
-    },
-    {
-      type0: 'writeonly-storage-texture' as const,
-      type1: 'render-target' as const,
-      _success: false,
-    },
-  ])
-  .fn(async t => {
-    const { type0, type1, _success } = t.params;
-
-    const view = t
-      .createTexture({
-        usage:
-          GPUTextureUsage.SAMPLED | GPUTextureUsage.STORAGE | GPUTextureUsage.OUTPUT_ATTACHMENT,
-      })
-      .createView();
-
-    const bglEntries: GPUBindGroupLayoutEntry[] = [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.FRAGMENT,
-        type: type0,
-        // Currently setting two 'render-target' usages in the same render pass is impossible.
-        // We don't need to test that. So type0 is either 'sampled-texture' or storage usages.
-        // It can't be 'render-target'.
-        storageTextureFormat: type0 === 'sampled-texture' ? undefined : 'rgba8unorm',
-      },
-    ];
-    const bgEntries: GPUBindGroupEntry[] = [{ binding: 0, resource: view }];
-    if (type1 !== 'render-target') {
-      bglEntries.push({
-        binding: 1,
-        visibility: GPUShaderStage.FRAGMENT,
-        type: type1,
-        storageTextureFormat: type1 === 'sampled-texture' ? undefined : 'rgba8unorm',
-      });
-      bgEntries.push({ binding: 1, resource: view });
-    }
-    const bindGroup = t.device.createBindGroup({
-      entries: bgEntries,
-      layout: t.device.createBindGroupLayout({ entries: bglEntries }),
-    });
-
-    const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          attachment: type1 === 'render-target' ? view : t.createTexture().createView(),
-          loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
-          storeOp: 'store',
-        },
-      ],
-    });
-    pass.setBindGroup(0, bindGroup);
-    pass.endPass();
-
-    t.expectValidationError(() => {
-      encoder.finish();
-    }, !_success);
   });
