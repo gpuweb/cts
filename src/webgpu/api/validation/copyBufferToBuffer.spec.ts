@@ -25,10 +25,8 @@ Test Plan:
 
 import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { kBufferUsages } from '../../capability_info.js';
 import { kMaxSafeMultipleOf8 } from '../../util/math.js';
-import {
-  kBufferUsages,
-} from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -84,9 +82,11 @@ g.test('copy_with_invalid_buffer').fn(async t => {
 });
 
 g.test('buffer_usage')
-  .params(params()
-    .combine(poptions('srcUsage', kBufferUsages))
-    .combine(poptions('dstUsage', kBufferUsages)))
+  .params(
+    params()
+      .combine(poptions('srcUsage', kBufferUsages))
+      .combine(poptions('dstUsage', kBufferUsages))
+  )
   .fn(async t => {
     const { srcUsage, dstUsage } = t.params;
 
@@ -99,7 +99,7 @@ g.test('buffer_usage')
       usage: dstUsage,
     });
 
-    const isSuccess = (srcUsage == GPUBufferUsage.COPY_SRC && dstUsage == GPUBufferUsage.COPY_DST);
+    const isSuccess = srcUsage === GPUBufferUsage.COPY_SRC && dstUsage === GPUBufferUsage.COPY_DST;
 
     t.TestCopyBufferToBuffer({
       srcBuffer,
