@@ -105,52 +105,52 @@ g.test('subresources_and_binding_types_combination_for_color')
       ])
       .combine([
         {
-          type0: 'sampled-texture' as const,
-          type1: 'sampled-texture' as const,
+          type0: 'sampled-texture',
+          type1: 'sampled-texture',
           _usageSuccess: true,
         },
         {
-          type0: 'sampled-texture' as const,
-          type1: 'readonly-storage-texture' as const,
+          type0: 'sampled-texture',
+          type1: 'readonly-storage-texture',
           _usageSuccess: true,
         },
         {
-          type0: 'sampled-texture' as const,
-          type1: 'writeonly-storage-texture' as const,
+          type0: 'sampled-texture',
+          type1: 'writeonly-storage-texture',
           _usageSuccess: false,
         },
         {
-          type0: 'sampled-texture' as const,
-          type1: 'render-target' as const,
+          type0: 'sampled-texture',
+          type1: 'render-target',
           _usageSuccess: false,
         },
         {
-          type0: 'readonly-storage-texture' as const,
-          type1: 'readonly-storage-texture' as const,
+          type0: 'readonly-storage-texture',
+          type1: 'readonly-storage-texture',
           _usageSuccess: true,
         },
         {
-          type0: 'readonly-storage-texture' as const,
-          type1: 'writeonly-storage-texture' as const,
+          type0: 'readonly-storage-texture',
+          type1: 'writeonly-storage-texture',
           _usageSuccess: false,
         },
         {
-          type0: 'readonly-storage-texture' as const,
-          type1: 'render-target' as const,
+          type0: 'readonly-storage-texture',
+          type1: 'render-target',
           _usageSuccess: false,
         },
         // Race condition upon multiple writable storage texture is valid.
         {
-          type0: 'writeonly-storage-texture' as const,
-          type1: 'writeonly-storage-texture' as const,
+          type0: 'writeonly-storage-texture',
+          type1: 'writeonly-storage-texture',
           _usageSuccess: true,
         },
         {
-          type0: 'writeonly-storage-texture' as const,
-          type1: 'render-target' as const,
+          type0: 'writeonly-storage-texture',
+          type1: 'render-target',
           _usageSuccess: false,
         },
-      ])
+      ] as const)
   )
   .fn(async t => {
     const {
