@@ -23,8 +23,12 @@ Test Plan:
 * Source buffer and destination buffer are the same buffer
 `;
 
+import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { kMaxSafeMultipleOf8 } from '../../util/math.js';
+import {
+  kBufferUsages,
+} from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -60,63 +64,54 @@ g.test('copy_with_invalid_buffer').fn(async t => {
 
   const errorBuffer = t.getErrorBuffer();
 
-  const srcOffset = 0;
-  const dstOffset = 0;
-  const copySize = 8;
-
   t.TestCopyBufferToBuffer({
     srcBuffer: errorBuffer,
-    srcOffset,
+    srcOffset: 0,
     dstBuffer: validBuffer,
-    dstOffset,
-    copySize,
+    dstOffset: 0,
+    copySize: 8,
     isSuccess: false,
   });
 
   t.TestCopyBufferToBuffer({
     srcBuffer: validBuffer,
-    srcOffset,
+    srcOffset: 0,
     dstBuffer: errorBuffer,
-    dstOffset,
-    copySize,
+    dstOffset: 0,
+    copySize: 8,
     isSuccess: false,
   });
 });
 
 g.test('buffer_usage')
-  .params([
-    { srcUsage: GPUBufferUsage.COPY_SRC, dstUsage: GPUBufferUsage.COPY_DST, _isSuccess: true },
-    { srcUsage: GPUBufferUsage.COPY_DST, dstUsage: GPUBufferUsage.COPY_DST, _isSuccess: false },
-    { srcUsage: GPUBufferUsage.COPY_SRC, dstUsage: GPUBufferUsage.COPY_SRC, _isSuccess: false },
-  ] as const)
+  .params(params()
+    .combine(poptions('srcUsage', kBufferUsages))
+    .combine(poptions('dstUsage', kBufferUsages)))
   .fn(async t => {
-    const { srcUsage, dstUsage, _isSuccess: isSuccess } = t.params;
-
-    const bufferSize = 16;
-    const srcOffset = 0;
-    const dstOffset = 0;
-    const copySize = 8;
+    const { srcUsage, dstUsage } = t.params;
 
     const srcBuffer = t.device.createBuffer({
-      size: bufferSize,
+      size: 16,
       usage: srcUsage,
     });
     const dstBuffer = t.device.createBuffer({
-      size: bufferSize,
+      size: 16,
       usage: dstUsage,
     });
 
+    const isSuccess = (srcUsage == GPUBufferUsage.COPY_SRC && dstUsage == GPUBufferUsage.COPY_DST);
+
     t.TestCopyBufferToBuffer({
       srcBuffer,
-      srcOffset,
+      srcOffset: 0,
       dstBuffer,
-      dstOffset,
-      copySize,
+      dstOffset: 0,
+      copySize: 8,
       isSuccess,
     });
   });
 
-g.test('copy_size')
+g.test('copy_size_alignment')
   .params([
     { copySize: 0, _isSuccess: true },
     { copySize: 2, _isSuccess: false },
@@ -127,30 +122,26 @@ g.test('copy_size')
   .fn(async t => {
     const { copySize, _isSuccess: isSuccess } = t.params;
 
-    const bufferSize = 16;
-    const srcOffset = 0;
-    const dstOffset = 0;
-
     const srcBuffer = t.device.createBuffer({
-      size: bufferSize,
+      size: 16,
       usage: GPUBufferUsage.COPY_SRC,
     });
     const dstBuffer = t.device.createBuffer({
-      size: bufferSize,
+      size: 16,
       usage: GPUBufferUsage.COPY_DST,
     });
 
     t.TestCopyBufferToBuffer({
       srcBuffer,
-      srcOffset,
+      srcOffset: 0,
       dstBuffer,
-      dstOffset,
+      dstOffset: 0,
       copySize,
       isSuccess,
     });
   });
 
-g.test('copy_offset')
+g.test('copy_offset_alignment')
   .params([
     { srcOffset: 0, dstOffset: 0, _isSuccess: true },
     { srcOffset: 2, dstOffset: 0, _isSuccess: false },
@@ -166,15 +157,12 @@ g.test('copy_offset')
   .fn(async t => {
     const { srcOffset, dstOffset, _isSuccess: isSuccess } = t.params;
 
-    const bufferSize = 16;
-    const copySize = 8;
-
     const srcBuffer = t.device.createBuffer({
-      size: bufferSize,
+      size: 16,
       usage: GPUBufferUsage.COPY_SRC,
     });
     const dstBuffer = t.device.createBuffer({
-      size: bufferSize,
+      size: 16,
       usage: GPUBufferUsage.COPY_DST,
     });
 
@@ -183,7 +171,7 @@ g.test('copy_offset')
       srcOffset,
       dstBuffer,
       dstOffset,
-      copySize,
+      copySize: 8,
       isSuccess,
     });
   });
@@ -206,13 +194,12 @@ g.test('copy_overflow')
   .fn(async t => {
     const { srcOffset, dstOffset, copySize } = t.params;
 
-    const bufferSize = 16;
     const srcBuffer = t.device.createBuffer({
-      size: bufferSize,
+      size: 16,
       usage: GPUBufferUsage.COPY_SRC,
     });
     const dstBuffer = t.device.createBuffer({
-      size: bufferSize,
+      size: 16,
       usage: GPUBufferUsage.COPY_DST,
     });
 
@@ -235,18 +222,19 @@ g.test('copy_out_of_bounds')
     { srcOffset: 36, dstOffset: 0, copySize: 0 },
     { srcOffset: 0, dstOffset: 36, copySize: 0 },
     { srcOffset: 20, dstOffset: 0, copySize: 16 },
+    { srcOffset: 20, dstOffset: 0, copySize: 12, _isSuccess: true },
     { srcOffset: 0, dstOffset: 20, copySize: 16 },
+    { srcOffset: 0, dstOffset: 20, copySize: 12, _isSuccess: true },
   ] as const)
   .fn(async t => {
     const { srcOffset, dstOffset, copySize, _isSuccess = false } = t.params;
 
-    const bufferSize = 32;
     const srcBuffer = t.device.createBuffer({
-      size: bufferSize,
+      size: 32,
       usage: GPUBufferUsage.COPY_SRC,
     });
     const dstBuffer = t.device.createBuffer({
-      size: bufferSize,
+      size: 32,
       usage: GPUBufferUsage.COPY_DST,
     });
 
@@ -270,9 +258,8 @@ g.test('copy_within_same_buffer')
   .fn(async t => {
     const { srcOffset, dstOffset, copySize } = t.params;
 
-    const bufferSize = 16;
     const buffer = t.device.createBuffer({
-      size: bufferSize,
+      size: 16,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
 
