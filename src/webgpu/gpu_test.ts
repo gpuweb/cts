@@ -89,7 +89,7 @@ export class GPUTest extends Fixture {
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     });
 
-    const c = this.device.createCommandEncoder({});
+    const c = this.device.createCommandEncoder();
     c.copyBufferToBuffer(src, 0, dst, 0, size);
 
     this.queue.submit([c.finish()]);

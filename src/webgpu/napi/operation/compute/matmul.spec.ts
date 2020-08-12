@@ -113,9 +113,9 @@ g.test('2x4X4x2').fn(async t => {
     ],
   });
 
-  const commandEncoder = t.device.createCommandEncoder({});
+  const commandEncoder = t.device.createCommandEncoder();
   {
-    const passEncoder = commandEncoder.beginComputePass({});
+    const passEncoder = commandEncoder.beginComputePass();
     passEncoder.setPipeline(computePipeline);
     passEncoder.setBindGroup(0, bindGroup);
     passEncoder.dispatch(firstMatrix[0] /* x */, secondMatrix[1] /* y */);
