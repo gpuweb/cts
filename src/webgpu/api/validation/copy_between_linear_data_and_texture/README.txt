@@ -25,3 +25,4 @@ Test coverage:
 	- texture_range_conditons: for all coordinate and various combinations of origin, copyExtent, textureSize and mipLevel.
 
 TODO: more test coverage for 1D and 3D textures.
+TODO: add tests for buffer usage and bufferCopyView
