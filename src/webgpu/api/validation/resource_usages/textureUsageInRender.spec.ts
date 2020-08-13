@@ -19,6 +19,13 @@ Test Coverage:
   - Test combinations of two shader stages:
     - Texture usages in bindings with invisible shader stages should be tracked. Invisible shader
       stages include shader stage with visibility none and compute shader stage in render pass.
+
+  - Tests replaced bindings:
+    - Texture usages via bindings replaced by another setBindGroup() upon the same bindGroup index
+      in current scope should be tracked.
+
+  - Test texture usages in bundle:
+    - Texture usages in bundle should be tracked if that bundle is executed in the current scope.
 `;
 
 import { poptions, params } from '../../../../common/framework/params_builder.js';
@@ -59,6 +66,27 @@ class TextureUsageTracking extends ValidationTest {
       dimension: '2d',
       format,
       usage,
+    });
+  }
+
+  createBindGroup(
+    index: number,
+    view: GPUTextureView,
+    bindingType: GPUBindingType,
+    bindingTexFormat: GPUTextureFormat | undefined
+  ): GPUBindGroup {
+    return this.device.createBindGroup({
+      entries: [{ binding: index, resource: view }],
+      layout: this.device.createBindGroupLayout({
+        entries: [
+          {
+            binding: index,
+            visibility: GPUShaderStage.FRAGMENT,
+            type: bindingType,
+            storageTextureFormat: bindingTexFormat,
+          },
+        ],
+      }),
     });
   }
 }
@@ -423,12 +451,7 @@ g.test('replaced_binding')
       layout: t.device.createBindGroupLayout({ entries: bglEntries0 }),
     });
 
-    const bindGroup1 = t.device.createBindGroup({
-      entries: [{ binding: 0, resource: view1 }],
-      layout: t.device.createBindGroupLayout({
-        entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, type: 'sampled-texture' }],
-      }),
-    });
+    const bindGroup1 = t.createBindGroup(0, view1, 'sampled-texture', undefined);
 
     const encoder = t.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
@@ -444,7 +467,7 @@ g.test('replaced_binding')
     pass.setBindGroup(0, bindGroup1);
     pass.endPass();
 
-    // We should track the texture usages in bindings which are replaced by another setBindGroupi()
+    // We should track the texture usages in bindings which are replaced by another setBindGroup()
     // call site upon the same index in the same render pass.
     const success = bindingType === 'writeonly-storage-texture' ? false : true;
     t.expectValidationError(() => {
@@ -463,6 +486,8 @@ g.test('binding_in_bundle')
     const info = kTextureBindingTypeInfo[typeInBundle];
     const bindingTexFormat = info.resource === 'storageTex' ? 'rgba8unorm' : undefined;
 
+    // Two bindings are attached to the same texture view. The first binding in bindGroup0 is set
+    // in bundle, the second binding is set in render pass via bindGroup1 or color attachment.
     const view = t
       .createTexture({
         usage:
@@ -470,19 +495,7 @@ g.test('binding_in_bundle')
       })
       .createView();
 
-    const bindGroup0 = t.device.createBindGroup({
-      entries: [{ binding: 0, resource: view }],
-      layout: t.device.createBindGroupLayout({
-        entries: [
-          {
-            binding: 0,
-            visibility: GPUShaderStage.FRAGMENT,
-            type: typeInBundle,
-            storageTextureFormat: bindingTexFormat,
-          },
-        ],
-      }),
-    });
+    const bindGroup0 = t.createBindGroup(0, view, typeInBundle, bindingTexFormat);
 
     const bundleEncoder = t.device.createRenderBundleEncoder({
       colorFormats: ['rgba8unorm'],
@@ -504,12 +517,7 @@ g.test('binding_in_bundle')
     let success = typeInBundle === 'writeonly-storage-texture' ? false : true;
 
     if (typeInPass === 'sampled-texture') {
-      const bindGroup1 = t.device.createBindGroup({
-        entries: [{ binding: 1, resource: view }],
-        layout: t.device.createBindGroupLayout({
-          entries: [{ binding: 1, visibility: GPUShaderStage.FRAGMENT, type: typeInPass }],
-        }),
-      });
+      const bindGroup1 = t.createBindGroup(1, view, typeInPass, undefined);
       pass.setBindGroup(1, bindGroup1);
     } else {
       success = false;
