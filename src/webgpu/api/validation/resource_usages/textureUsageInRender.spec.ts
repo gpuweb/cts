@@ -3,14 +3,20 @@ Texture Usages Validation Tests in Render Pass.
 
 Test Coverage:
 
-  - Test the combination of different pairs of usages upon the same texture subresource or different
-    subresources of the same texture. Different subresources of the same texture includes different
-    mip levels, different array layers, and different aspects.
-    - When read-write or write-write usages are binding to the same texture subresource, an error
-      should be generated. Otherwise, no error should be generated. One exception is race condition
-      upon two writeonly-storage-texture usages, which is valid.
+  - For each combination of two texture usages:
+    - For various subresource ranges (different mip levels or array layers) that overlap a given
+      subresources or not for color formats:
+      - Check that an error is generated when read-write or write-write usages are binding to the
+        same texture subresource. Otherwise, no error should be generated. One exception is race
+        condition upon two writeonly-storage-texture usages, which is valid.
 
-  - Test different shader stages.
+  - For each combination of two texture usages:
+    - For various aspects (all, depth-only, stencil-only) that overlap a given subresources or not
+      for depth/stencil formats:
+      - Check that an error is generated when read-write or write-write usages are binding to the
+        same aspect. Otherwise, no error should be generated.
+
+  - Test combinations of two shader stages:
     - Texture usages in bindings with invisible shader stages should be tracked. Invisible shader
       stages include shader stage with visibility none and compute shader stage in render pass.
 `;
@@ -312,10 +318,10 @@ g.test('subresources_and_binding_types_combination_for_aspect')
     pass.setBindGroup(0, bindGroup);
     pass.endPass();
 
-    const resourceSuccess =
+    const disjointAspects =
       (aspect0 === 'depth-only' && aspect1 === 'stencil-only') ||
       (aspect0 === 'stencil-only' && aspect1 === 'depth-only');
-    const success = resourceSuccess || _usageSuccess;
+    const success = disjointAspects || _usageSuccess;
 
     t.expectValidationError(() => {
       encoder.finish();
