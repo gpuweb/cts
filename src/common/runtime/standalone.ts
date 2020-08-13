@@ -184,9 +184,9 @@ function makeTreeNodeHeaderHTML(
     .val(n.query.toString())
     .appendTo(nodetitle);
   if ('description' in n && n.description) {
-    $('<div>')
+    $('<pre>') //
       .addClass('nodedescription')
-      .html(n.description.replace(/\n\n/g, '<br><br>'))
+      .text(n.description)
       .appendTo(nodetitle);
   }
   return div[0];

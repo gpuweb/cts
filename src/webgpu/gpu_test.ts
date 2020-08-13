@@ -95,14 +95,14 @@ export class GPUTest extends Fixture {
     }
   }
 
-  createCopyForMapRead(src: GPUBuffer, start: number, size: number): GPUBuffer {
+  createCopyForMapRead(src: GPUBuffer, srcOffset: number, size: number): GPUBuffer {
     const dst = this.device.createBuffer({
       size,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     });
 
     const c = this.device.createCommandEncoder();
-    c.copyBufferToBuffer(src, start, dst, 0, size);
+    c.copyBufferToBuffer(src, srcOffset, dst, 0, size);
 
     this.queue.submit([c.finish()]);
 
@@ -111,16 +111,17 @@ export class GPUTest extends Fixture {
 
   // TODO: add an expectContents for textures, which logs data: uris on failure
 
-  expectContents(src: GPUBuffer, expected: TypedArrayBufferView): void {
-    this.expectSubContents(src, 0, expected);
+  expectContents(src: GPUBuffer, expected: TypedArrayBufferView, srcOffset: number = 0): void {
+    this.expectSubContents(src, srcOffset, expected);
   }
 
-  expectSubContents(src: GPUBuffer, start: number, expected: TypedArrayBufferView): void {
-    const dst = this.createCopyForMapRead(src, start, expected.buffer.byteLength);
+  expectSubContents(src: GPUBuffer, srcOffset: number, expected: TypedArrayBufferView): void {
+    const dst = this.createCopyForMapRead(src, srcOffset, expected.buffer.byteLength);
 
     this.eventualAsyncExpectation(async niceStack => {
       const constructor = expected.constructor as TypedArrayBufferViewConstructor;
-      const actual = new constructor(await dst.mapReadAsync());
+      await dst.mapAsync(GPUMapMode.READ);
+      const actual = new constructor(dst.getMappedRange());
       const check = this.checkBuffer(actual, expected);
       if (check !== undefined) {
         niceStack.message = check;
@@ -283,7 +284,12 @@ got [${failedByteActualValues.join(', ')}]`;
     this.expectContents(buffer, exp);
   }
 
-  expectGPUError<R>(filter: GPUErrorFilter, fn: () => R): R {
+  expectGPUError<R>(filter: GPUErrorFilter, fn: () => R, shouldError: boolean = true): R {
+    // If no error is expected, we let the scope surrounding the test catch it.
+    if (!shouldError) {
+      return fn();
+    }
+
     this.device.pushErrorScope(filter);
     const returnValue = fn();
     const promise = this.device.popErrorScope();

@@ -6,6 +6,7 @@ import {
 } from '../params_utils.js';
 import { assert } from '../util/util.js';
 
+import { parseParamValue } from './json_param_value.js';
 import {
   TestQuery,
   TestQueryMultiFile,
@@ -128,5 +129,5 @@ function parseSingleParamValue(s: string): ParamArgument {
     !badParamValueChars.test(s),
     `param value must not match ${badParamValueChars} - was ${s}`
   );
-  return s === 'undefined' ? undefined : JSON.parse(s);
+  return parseParamValue(s);
 }

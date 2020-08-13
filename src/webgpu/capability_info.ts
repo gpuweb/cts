@@ -10,6 +10,24 @@ function numericKeysOf<T>(obj: object): readonly T[] {
   return (Object.keys(obj).map(n => Number(n)) as unknown[]) as T[];
 }
 
+// Buffers
+
+export const kBufferUsageInfo: {
+  readonly [k in GPUBufferUsage]: {};
+} = /* prettier-ignore */ {
+  [GPUBufferUsage.MAP_READ]:      {},
+  [GPUBufferUsage.MAP_WRITE]:     {},
+  [GPUBufferUsage.COPY_SRC]:      {},
+  [GPUBufferUsage.COPY_DST]:      {},
+  [GPUBufferUsage.INDEX]:         {},
+  [GPUBufferUsage.VERTEX]:        {},
+  [GPUBufferUsage.UNIFORM]:       {},
+  [GPUBufferUsage.STORAGE]:       {},
+  [GPUBufferUsage.INDIRECT]:      {},
+  [GPUBufferUsage.QUERY_RESOLVE]: {},
+};
+export const kBufferUsages = numericKeysOf<GPUBufferUsage>(kBufferUsageInfo);
+
 // Textures
 
 export const kTextureFormatInfo: {
@@ -19,7 +37,8 @@ export const kTextureFormatInfo: {
     readonly depth: boolean;
     readonly stencil: boolean;
     readonly storage: boolean;
-    readonly copyable: boolean;
+    readonly copySrc: boolean;
+    readonly copyDst: boolean;
     readonly bytesPerBlock?: number;
     readonly blockWidth?: number;
     readonly blockHeight?: number;
@@ -30,50 +49,50 @@ export const kTextureFormatInfo: {
   // (Note: this list should always match the one in the spec.)
 
   // 8-bit formats
-  'r8unorm':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1 },
-  'r8snorm':                { renderable: false, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1 },
-  'r8uint':                 { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1 },
-  'r8sint':                 { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1 },
+  'r8unorm':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1 },
+  'r8snorm':                { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1 },
+  'r8uint':                 { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1 },
+  'r8sint':                 { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1 },
   // 16-bit formats
-  'r16uint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
-  'r16sint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
-  'r16float':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
-  'rg8unorm':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
-  'rg8snorm':               { renderable: false, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
-  'rg8uint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
-  'rg8sint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
+  'r16uint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
+  'r16sint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
+  'r16float':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
+  'rg8unorm':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
+  'rg8snorm':               { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
+  'rg8uint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
+  'rg8sint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
   // 32-bit formats
-  'r32uint':                { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copyable:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
-  'r32sint':                { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copyable:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
-  'r32float':               { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copyable:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
-  'rg16uint':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
-  'rg16sint':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
-  'rg16float':              { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
-  'rgba8unorm':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copyable:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
-  'rgba8unorm-srgb':        { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
-  'rgba8snorm':             { renderable: false, color:  true, depth: false, stencil: false, storage:  true, copyable:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
-  'rgba8uint':              { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copyable:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
-  'rgba8sint':              { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copyable:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
-  'bgra8unorm':             { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
-  'bgra8unorm-srgb':        { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'r32uint':                { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'r32sint':                { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'r32float':               { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rg16uint':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rg16sint':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rg16float':              { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rgba8unorm':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rgba8unorm-srgb':        { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rgba8snorm':             { renderable: false, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rgba8uint':              { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rgba8sint':              { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'bgra8unorm':             { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'bgra8unorm-srgb':        { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
   // Packed 32-bit formats
-  'rgb10a2unorm':           { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
-  'rg11b10float':           { renderable: false, color:  true, depth: false, stencil: false, storage: false, copyable:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rgb10a2unorm':           { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rg11b10float':           { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
   // 64-bit formats
-  'rg32uint':               { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copyable:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1 },
-  'rg32sint':               { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copyable:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1 },
-  'rg32float':              { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copyable:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1 },
-  'rgba16uint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copyable:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1 },
-  'rgba16sint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copyable:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1 },
-  'rgba16float':            { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copyable:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1 },
+  'rg32uint':               { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1 },
+  'rg32sint':               { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1 },
+  'rg32float':              { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1 },
+  'rgba16uint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1 },
+  'rgba16sint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1 },
+  'rgba16float':            { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1 },
   // 128-bit formats
-  'rgba32uint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copyable:  true, bytesPerBlock: 16, blockWidth: 1, blockHeight: 1 },
-  'rgba32sint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copyable:  true, bytesPerBlock: 16, blockWidth: 1, blockHeight: 1 },
-  'rgba32float':            { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copyable:  true, bytesPerBlock: 16, blockWidth: 1, blockHeight: 1 },
+  'rgba32uint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 1, blockHeight: 1 },
+  'rgba32sint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 1, blockHeight: 1 },
+  'rgba32float':            { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 1, blockHeight: 1 },
   // Depth/stencil formats
-  'depth32float':           { renderable:  true, color: false, depth:  true, stencil: false, storage: false, copyable:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
-  'depth24plus':            { renderable:  true, color: false, depth:  true, stencil: false, storage: false, copyable: false,                                                  },
-  'depth24plus-stencil8':   { renderable:  true, color: false, depth:  true, stencil:  true, storage: false, copyable: false,                                                  },
+  'depth32float':           { renderable:  true, color: false, depth:  true, stencil: false, storage: false, copySrc:  true, copyDst: false, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'depth24plus':            { renderable:  true, color: false, depth:  true, stencil: false, storage: false, copySrc: false, copyDst: false,                                                  },
+  'depth24plus-stencil8':   { renderable:  true, color: false, depth:  true, stencil:  true, storage: false, copySrc: false, copyDst: false,                                                  },
 };
 export const kTextureFormats = keysOf(kTextureFormatInfo);
 
@@ -125,15 +144,16 @@ export const kTextureComponentTypes = keysOf(kTextureComponentTypeInfo);
 
 export const kTextureViewDimensionInfo: {
   readonly [k in GPUTextureViewDimension]: {
+    readonly storage: boolean;
     // Add fields as needed
   };
 } = /* prettier-ignore */ {
-  '1d': {},
-  '2d': {},
-  '2d-array': {},
-  'cube': {},
-  'cube-array': {},
-  '3d': {},
+  '1d':         { storage: true  },
+  '2d':         { storage: true  },
+  '2d-array':   { storage: true  },
+  'cube':       { storage: false },
+  'cube-array': { storage: false },
+  '3d':         { storage: true  },
 };
 export const kTextureViewDimensions = keysOf(kTextureViewDimensionInfo);
 
