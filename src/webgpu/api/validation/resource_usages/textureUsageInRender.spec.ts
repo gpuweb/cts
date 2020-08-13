@@ -392,3 +392,133 @@ g.test('shader_stages_and_visibility')
       encoder.finish();
     });
   });
+
+g.test('replaced_binding')
+  .params(poptions('bindingType', kTextureBindingTypes))
+  .fn(async t => {
+    const { bindingType } = t.params;
+    const info = kTextureBindingTypeInfo[bindingType];
+    const bindingTexFormat = info.resource === 'storageTex' ? 'rgba8unorm' : undefined;
+
+    const view0 = t.createTexture().createView();
+    const view1 = t
+      .createTexture({ usage: GPUTextureUsage.STORAGE | GPUTextureUsage.SAMPLED })
+      .createView();
+
+    const bglEntries0: GPUBindGroupLayoutEntry[] = [
+      { binding: 0, visibility: GPUShaderStage.FRAGMENT, type: 'sampled-texture' },
+      {
+        binding: 1,
+        visibility: GPUShaderStage.FRAGMENT,
+        type: bindingType,
+        storageTextureFormat: bindingTexFormat,
+      },
+    ];
+    const bgEntries0: GPUBindGroupEntry[] = [
+      { binding: 0, resource: view0 },
+      { binding: 1, resource: view1 },
+    ];
+    const bindGroup0 = t.device.createBindGroup({
+      entries: bgEntries0,
+      layout: t.device.createBindGroupLayout({ entries: bglEntries0 }),
+    });
+
+    const bindGroup1 = t.device.createBindGroup({
+      entries: [{ binding: 0, resource: view1 }],
+      layout: t.device.createBindGroupLayout({
+        entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, type: 'sampled-texture' }],
+      }),
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          attachment: t.createTexture().createView(),
+          loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+          storeOp: 'store',
+        },
+      ],
+    });
+    pass.setBindGroup(0, bindGroup0);
+    pass.setBindGroup(0, bindGroup1);
+    pass.endPass();
+
+    // We should track the texture usages in bindings which are replaced by another setBindGroupi()
+    // call site upon the same index in the same render pass.
+    const success = bindingType === 'writeonly-storage-texture' ? false : true;
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, !success);
+  });
+
+g.test('binding_in_bundle')
+  .params(
+    params()
+      .combine(poptions('typeInBundle', kTextureBindingTypes))
+      .combine(poptions('typeInPass', ['sampled-texture', 'render-target'] as const))
+  )
+  .fn(async t => {
+    const { typeInBundle, typeInPass } = t.params;
+    const info = kTextureBindingTypeInfo[typeInBundle];
+    const bindingTexFormat = info.resource === 'storageTex' ? 'rgba8unorm' : undefined;
+
+    const view = t
+      .createTexture({
+        usage:
+          GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.STORAGE | GPUTextureUsage.SAMPLED,
+      })
+      .createView();
+
+    const bindGroup0 = t.device.createBindGroup({
+      entries: [{ binding: 0, resource: view }],
+      layout: t.device.createBindGroupLayout({
+        entries: [
+          {
+            binding: 0,
+            visibility: GPUShaderStage.FRAGMENT,
+            type: typeInBundle,
+            storageTextureFormat: bindingTexFormat,
+          },
+        ],
+      }),
+    });
+
+    const bundleEncoder = t.device.createRenderBundleEncoder({
+      colorFormats: ['rgba8unorm'],
+    });
+    bundleEncoder.setBindGroup(0, bindGroup0);
+    const bundleInPass = bundleEncoder.finish();
+
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          attachment: typeInPass === 'render-target' ? view : t.createTexture().createView(),
+          loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+          storeOp: 'store',
+        },
+      ],
+    });
+
+    let success = typeInBundle === 'writeonly-storage-texture' ? false : true;
+
+    if (typeInPass === 'sampled-texture') {
+      const bindGroup1 = t.device.createBindGroup({
+        entries: [{ binding: 1, resource: view }],
+        layout: t.device.createBindGroupLayout({
+          entries: [{ binding: 1, visibility: GPUShaderStage.FRAGMENT, type: typeInPass }],
+        }),
+      });
+      pass.setBindGroup(1, bindGroup1);
+    } else {
+      success = false;
+    }
+
+    pass.executeBundles([bundleInPass]);
+    pass.endPass();
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, !success);
+  });
