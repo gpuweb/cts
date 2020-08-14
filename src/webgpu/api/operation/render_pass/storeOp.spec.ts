@@ -30,9 +30,9 @@ export const description = `API Operation Tests for RenderPass StoreOp.
 import { params, poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
-  kRegularTextureFormats,
-  kRegularTextureFormatInfo,
   kSizedDepthStencilFormats,
+  kCoreSizedTextureFormats,
+  kCoreSizedTextureFormatInfo,
 } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { PerTexelComponent } from '../../../util/texture/texelData.js';
@@ -142,17 +142,16 @@ g.test('render_pass_store_op,color_attachment_with_depth_stencil_attachment')
 g.test('render_pass_store_op,color_attachment_only')
   .params(
     params()
-      .combine(poptions('colorFormat', kRegularTextureFormats))
-      // Filter out any depth/stencil or non-renderable formats
-      .filter(({ colorFormat }) => kRegularTextureFormatInfo[colorFormat].renderable)
+      .combine(poptions('colorFormat', kCoreSizedTextureFormats))
+      // Filter out any non-renderable formats
+      .filter(({ colorFormat }) => kCoreSizedTextureFormatInfo[colorFormat].renderable)
       .combine(poptions('storeOperation', kStoreOps))
       .combine(poptions('mipLevel', kMipLevel))
       .combine(poptions('arrayLayer', kArrayLayers))
   )
   .fn(t => {
-    const kColorFormat: GPUTextureFormat = 'rgba8unorm';
     const colorAttachment = t.device.createTexture({
-      format: kColorFormat,
+      format: t.params.colorFormat,
       size: { width: kWidth, height: kHeight, depth: t.params.arrayLayer + 1 },
       mipLevelCount: kMipLevelCount,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.OUTPUT_ATTACHMENT,
@@ -192,7 +191,7 @@ g.test('render_pass_store_op,color_attachment_only')
       expectedValue = { R: 1.0, G: 0.0, B: 0.0, A: 1.0 };
     }
 
-    t.expectSingleColor(colorAttachment, kColorFormat, {
+    t.expectSingleColor(colorAttachment, t.params.colorFormat, {
       size: [kHeight, kWidth, 1],
       slice: t.params.arrayLayer,
       exp: expectedValue,

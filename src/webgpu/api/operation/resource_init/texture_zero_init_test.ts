@@ -209,7 +209,7 @@ function getRequiredTextureUsage(
   if (!kCoreTextureFormatInfo[format].copyDst) {
     // Copies are not possible. We need OutputAttachment to initialize
     // canary data.
-    assert(!!kCoreTextureFormatInfo[format].renderable);
+    assert(kCoreTextureFormatInfo[format].renderable);
     usage |= GPUTextureUsage.OUTPUT_ATTACHMENT;
   }
 
