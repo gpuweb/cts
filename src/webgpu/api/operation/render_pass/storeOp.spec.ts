@@ -30,9 +30,9 @@ export const description = `API Operation Tests for RenderPass StoreOp.
 import { params, poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
+  kEncodableTextureFormatInfo,
+  kEncodableTextureFormats,
   kSizedDepthStencilFormats,
-  kCoreSizedTextureFormats,
-  kCoreSizedTextureFormatInfo,
 } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { PerTexelComponent } from '../../../util/texture/texelData.js';
@@ -142,9 +142,9 @@ g.test('render_pass_store_op,color_attachment_with_depth_stencil_attachment')
 g.test('render_pass_store_op,color_attachment_only')
   .params(
     params()
-      .combine(poptions('colorFormat', kCoreSizedTextureFormats))
+      .combine(poptions('colorFormat', kEncodableTextureFormats))
       // Filter out any non-renderable formats
-      .filter(({ colorFormat }) => kCoreSizedTextureFormatInfo[colorFormat].renderable)
+      .filter(({ colorFormat }) => kEncodableTextureFormatInfo[colorFormat].renderable)
       .combine(poptions('storeOperation', kStoreOps))
       .combine(poptions('mipLevel', kMipLevel))
       .combine(poptions('arrayLayer', kArrayLayers))

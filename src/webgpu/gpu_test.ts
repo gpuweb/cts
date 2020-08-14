@@ -3,7 +3,7 @@ import { DevicePool, TestOOMedShouldAttemptGC } from '../common/framework/gpu/de
 import { attemptGarbageCollection } from '../common/framework/util/collect_garbage.js';
 import { assert } from '../common/framework/util/util.js';
 
-import { CoreSizedTextureFormat } from './capability_info.js';
+import { EncodableTextureFormat } from './capability_info.js';
 import {
   fillTextureDataWithTexelValue,
   getTextureCopyLayout,
@@ -189,7 +189,7 @@ got [${failedByteActualValues.join(', ')}]`;
 
   expectSingleColor(
     src: GPUTexture,
-    format: CoreSizedTextureFormat,
+    format: EncodableTextureFormat,
     {
       size,
       exp,

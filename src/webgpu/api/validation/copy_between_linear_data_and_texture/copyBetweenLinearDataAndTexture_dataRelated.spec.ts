@@ -3,7 +3,7 @@ export const description = '';
 import { params, poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
-  kCoreTextureFormatInfo,
+  kUncompressedTextureFormatInfo,
   kSizedTextureFormats,
   kSizedTextureFormatInfo,
 } from '../../../capability_info.js';
@@ -31,8 +31,8 @@ g.test('bound_on_rows_per_image')
     const { rowsPerImageInBlocks, copyHeightInBlocks, copyDepth, method } = t.params;
 
     const format = 'rgba8unorm';
-    const rowsPerImage = rowsPerImageInBlocks * kCoreTextureFormatInfo[format].blockHeight;
-    const copyHeight = copyHeightInBlocks * kCoreTextureFormatInfo[format].blockHeight;
+    const rowsPerImage = rowsPerImageInBlocks * kUncompressedTextureFormatInfo[format].blockHeight;
+    const copyHeight = copyHeightInBlocks * kUncompressedTextureFormatInfo[format].blockHeight;
 
     const texture = t.device.createTexture({
       size: { width: 4, height: 4, depth: 3 },
