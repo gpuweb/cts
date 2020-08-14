@@ -2,7 +2,11 @@ export const description = '';
 
 import { params, poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { kTextureFormats, kTextureFormatInfo } from '../../../capability_info.js';
+import {
+  kCoreTextureFormatInfo,
+  kSizedTextureFormats,
+  kSizedTextureFormatInfo,
+} from '../../../capability_info.js';
 import { align } from '../../../util/math.js';
 
 import {
@@ -27,8 +31,8 @@ g.test('bound_on_rows_per_image')
     const { rowsPerImageInBlocks, copyHeightInBlocks, copyDepth, method } = t.params;
 
     const format = 'rgba8unorm';
-    const rowsPerImage = rowsPerImageInBlocks * kTextureFormatInfo[format].blockHeight!;
-    const copyHeight = copyHeightInBlocks * kTextureFormatInfo[format].blockHeight!;
+    const rowsPerImage = rowsPerImageInBlocks * kCoreTextureFormatInfo[format].blockHeight;
+    const copyHeight = copyHeightInBlocks * kCoreTextureFormatInfo[format].blockHeight;
 
     const texture = t.device.createTexture({
       size: { width: 4, height: 4, depth: 3 },
@@ -113,7 +117,7 @@ g.test('required_bytes_in_copy')
         { copyWidthInBlocks: 5, copyHeightInBlocks: 4, copyDepth: 1, offsetInBlocks: 0 }, // copyDepth = 1
         { copyWidthInBlocks: 7, copyHeightInBlocks: 1, copyDepth: 1, offsetInBlocks: 0 }, // copyHeight = 1 and copyDepth = 1
       ])
-      .combine(poptions('format', kTextureFormats))
+      .combine(poptions('format', kSizedTextureFormats))
       .filter(formatCopyableWithMethod)
   )
   .fn(async t => {
@@ -133,11 +137,11 @@ g.test('required_bytes_in_copy')
     // bytesPerRowPadding by 256.
     const bytesPerRowAlignment = method === 'WriteTexture' ? 1 : 256;
 
-    const copyWidth = copyWidthInBlocks * kTextureFormatInfo[format].blockWidth!;
-    const copyHeight = copyHeightInBlocks * kTextureFormatInfo[format].blockHeight!;
-    const offset = offsetInBlocks * kTextureFormatInfo[format].bytesPerBlock!;
-    const rowsPerImage =
-      copyHeight + rowsPerImagePaddingInBlocks * kTextureFormatInfo[format].blockHeight!;
+    const info = kSizedTextureFormatInfo[format];
+    const copyWidth = copyWidthInBlocks * info.blockWidth;
+    const copyHeight = copyHeightInBlocks * info.blockHeight;
+    const offset = offsetInBlocks * info.bytesPerBlock;
+    const rowsPerImage = copyHeight + rowsPerImagePaddingInBlocks * info.blockHeight;
     const bytesPerRow =
       align(t.bytesInACompleteRow(copyWidth, format), bytesPerRowAlignment) +
       bytesPerRowPadding * bytesPerRowAlignment;
@@ -167,7 +171,7 @@ g.test('texel_block_alignment_on_rows_per_image')
   .params(
     params()
       .combine(poptions('method', kAllTestMethods))
-      .combine(poptions('format', kTextureFormats))
+      .combine(poptions('format', kSizedTextureFormats))
       .filter(formatCopyableWithMethod)
       .expand(texelBlockAlignmentTestExpanderForRowsPerImage)
   )
@@ -177,7 +181,7 @@ g.test('texel_block_alignment_on_rows_per_image')
 
     const texture = t.createAlignedTexture(format, size);
 
-    const success = rowsPerImage % kTextureFormatInfo[format].blockHeight! === 0;
+    const success = rowsPerImage % kSizedTextureFormatInfo[format].blockHeight! === 0;
 
     t.testRun({ texture }, { bytesPerRow: 0, rowsPerImage }, size, {
       dataSize: 1,
@@ -191,7 +195,7 @@ g.test('texel_block_alignment_on_offset')
   .params(
     params()
       .combine(poptions('method', kAllTestMethods))
-      .combine(poptions('format', kTextureFormats))
+      .combine(poptions('format', kSizedTextureFormats))
       .filter(formatCopyableWithMethod)
       .expand(texelBlockAlignmentTestExpanderForOffset)
   )
@@ -201,7 +205,7 @@ g.test('texel_block_alignment_on_offset')
 
     const texture = t.createAlignedTexture(format, size);
 
-    const success = offset % kTextureFormatInfo[format].bytesPerBlock! === 0;
+    const success = offset % kSizedTextureFormatInfo[format].bytesPerBlock! === 0;
 
     t.testRun({ texture }, { offset, bytesPerRow: 0 }, size, { dataSize: offset, method, success });
   });
@@ -222,7 +226,7 @@ g.test('bound_on_bytes_per_row')
         { copyHeightInBlocks: 2, copyDepth: 1 }, // we have to check the bound
         { copyHeightInBlocks: 0, copyDepth: 2 }, // we have to check the bound
       ])
-      .combine(poptions('format', kTextureFormats))
+      .combine(poptions('format', kSizedTextureFormats))
       .filter(formatCopyableWithMethod)
   )
   .fn(async t => {
@@ -241,12 +245,11 @@ g.test('bound_on_bytes_per_row')
     // the appropriate inequalities still hold.
     const bytesPerRowAlignment = method === 'WriteTexture' ? 1 : 256;
 
-    const copyWidth =
-      copyWidthInBlocks * kTextureFormatInfo[format].blockWidth! * bytesPerRowAlignment;
-    const copyHeight = copyHeightInBlocks * kTextureFormatInfo[format].blockHeight!;
+    const info = kSizedTextureFormatInfo[format];
+    const copyWidth = copyWidthInBlocks * info.blockWidth * bytesPerRowAlignment;
+    const copyHeight = copyHeightInBlocks * info.blockHeight;
     const bytesPerRow =
-      (blocksPerRow * kTextureFormatInfo[format].bytesPerBlock! + additionalPaddingPerRow) *
-      bytesPerRowAlignment;
+      (blocksPerRow * info.bytesPerBlock + additionalPaddingPerRow) * bytesPerRowAlignment;
     const size = { width: copyWidth, height: copyHeight, depth: copyDepth };
 
     const texture = t.createAlignedTexture(format, size);
@@ -274,8 +277,9 @@ g.test('bound_on_offset')
     const { offsetInBlocks, dataSizeInBlocks, method } = t.params;
 
     const format = 'rgba8unorm';
-    const offset = offsetInBlocks * kTextureFormatInfo[format].bytesPerBlock!;
-    const dataSize = dataSizeInBlocks * kTextureFormatInfo[format].bytesPerBlock!;
+    const info = kSizedTextureFormatInfo[format];
+    const offset = offsetInBlocks * info.bytesPerBlock!;
+    const dataSize = dataSizeInBlocks * info.bytesPerBlock!;
 
     const texture = t.device.createTexture({
       size: { width: 4, height: 4, depth: 1 },

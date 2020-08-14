@@ -1,5 +1,5 @@
 import { assert, unreachable } from '../../../common/framework/util/util.js';
-import { kTextureFormatInfo } from '../../capability_info.js';
+import { kCoreTextureFormatInfo, CoreTextureFormat } from '../../capability_info.js';
 import {
   assertInIntegerRange,
   float32ToFloatBits,
@@ -126,7 +126,7 @@ const repeatComponents = (
 };
 
 const kRepresentationInfo: {
-  [k in GPUTextureFormat]: {
+  [k in CoreTextureFormat]: {
     componentOrder: TexelComponent[];
     componentInfo: TexelComponentInfo;
     sRGB: boolean;
@@ -187,7 +187,7 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
   private isGPULittleEndian = true;
 
   constructor(
-    private readonly format: GPUTextureFormat,
+    private readonly format: CoreTextureFormat,
     readonly componentOrder: TexelComponent[],
     readonly componentInfo: TexelComponentInfo,
     private readonly sRGB: boolean
@@ -315,7 +315,7 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
       ];
     }
 
-    const bytesPerBlock = kTextureFormatInfo[this.format].bytesPerBlock;
+    const bytesPerBlock = kCoreTextureFormatInfo[this.format].bytesPerBlock;
     assert(!!bytesPerBlock);
 
     const data = new ArrayBuffer(bytesPerBlock);
@@ -328,8 +328,8 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
   }
 }
 
-const kRepresentationCache: Map<GPUTextureFormat, TexelDataRepresentationImpl> = new Map();
-export function getTexelDataRepresentation(format: GPUTextureFormat): TexelDataRepresentation {
+const kRepresentationCache: Map<CoreTextureFormat, TexelDataRepresentationImpl> = new Map();
+export function getTexelDataRepresentation(format: CoreTextureFormat): TexelDataRepresentation {
   if (!kRepresentationCache.has(format)) {
     const { componentOrder, componentInfo, sRGB } = kRepresentationInfo[format];
     kRepresentationCache.set(

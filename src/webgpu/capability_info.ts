@@ -30,24 +30,83 @@ export const kBufferUsages = numericKeysOf<GPUBufferUsage>(kBufferUsageInfo);
 
 // Textures
 
-export const kTextureFormatInfo: {
-  readonly [k in GPUTextureFormat]: {
-    readonly renderable: boolean;
-    readonly color: boolean;
-    readonly depth: boolean;
-    readonly stencil: boolean;
-    readonly storage: boolean;
-    readonly copySrc: boolean;
-    readonly copyDst: boolean;
-    readonly bytesPerBlock?: number;
-    readonly blockWidth?: number;
-    readonly blockHeight?: number;
-    // Add fields as needed
-  };
-} = /* prettier-ignore */ {
-  // Try to keep these manually-formatted in a readable grid.
-  // (Note: this list should always match the one in the spec.)
+export type RegularTextureFormat =
+  | 'r8unorm'
+  | 'r8snorm'
+  | 'r8uint'
+  | 'r8sint'
+  | 'r16uint'
+  | 'r16sint'
+  | 'r16float'
+  | 'rg8unorm'
+  | 'rg8snorm'
+  | 'rg8uint'
+  | 'rg8sint'
+  | 'r32uint'
+  | 'r32sint'
+  | 'r32float'
+  | 'rg16uint'
+  | 'rg16sint'
+  | 'rg16float'
+  | 'rgba8unorm'
+  | 'rgba8unorm-srgb'
+  | 'rgba8snorm'
+  | 'rgba8uint'
+  | 'rgba8sint'
+  | 'bgra8unorm'
+  | 'bgra8unorm-srgb'
+  | 'rgb10a2unorm'
+  | 'rg11b10float'
+  | 'rg32uint'
+  | 'rg32sint'
+  | 'rg32float'
+  | 'rgba16uint'
+  | 'rgba16sint'
+  | 'rgba16float'
+  | 'rgba32uint'
+  | 'rgba32sint'
+  | 'rgba32float';
+export type SizedDepthStencilFormat = 'depth32float';
+export type UnsizedDepthStencilFormat = 'depth24plus' | 'depth24plus-stencil8';
+export type CompressedTextureFormat =
+  | 'bc1-rgba-unorm'
+  | 'bc1-rgba-unorm-srgb'
+  | 'bc2-rgba-unorm'
+  | 'bc2-rgba-unorm-srgb'
+  | 'bc3-rgba-unorm'
+  | 'bc3-rgba-unorm-srgb'
+  | 'bc4-r-unorm'
+  | 'bc4-r-snorm'
+  | 'bc5-rg-unorm'
+  | 'bc5-rg-snorm'
+  | 'bc6h-rgb-ufloat'
+  | 'bc6h-rgb-sfloat'
+  | 'bc7-rgba-unorm'
+  | 'bc7-rgba-unorm-srgb';
 
+type TextureFormatInfo = {
+  readonly renderable: boolean;
+  readonly color: boolean;
+  readonly depth: boolean;
+  readonly stencil: boolean;
+  readonly storage: boolean;
+  readonly copySrc: boolean;
+  readonly copyDst: boolean;
+  readonly bytesPerBlock?: number;
+  readonly blockWidth: number;
+  readonly blockHeight: number;
+  readonly extension?: string;
+  // Add fields as needed
+};
+
+export const kRegularTextureFormatInfo: {
+  readonly [k in RegularTextureFormat]: {
+    color: true;
+    bytesPerBlock: number;
+    blockWidth: 1;
+    blockHeight: 1;
+  } & TextureFormatInfo;
+} = /* prettier-ignore */ {
   // 8-bit formats
   'r8unorm':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1 },
   'r8snorm':                { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1 },
@@ -89,12 +148,104 @@ export const kTextureFormatInfo: {
   'rgba32uint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 1, blockHeight: 1 },
   'rgba32sint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 1, blockHeight: 1 },
   'rgba32float':            { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 1, blockHeight: 1 },
-  // Depth/stencil formats
-  'depth32float':           { renderable:  true, color: false, depth:  true, stencil: false, storage: false, copySrc:  true, copyDst: false, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
-  'depth24plus':            { renderable:  true, color: false, depth:  true, stencil: false, storage: false, copySrc: false, copyDst: false,                                                  },
-  'depth24plus-stencil8':   { renderable:  true, color: false, depth:  true, stencil:  true, storage: false, copySrc: false, copyDst: false,                                                  },
+} as const;
+export const kRegularTextureFormats = keysOf(kRegularTextureFormatInfo);
+
+export const kSizedDepthStencilFormatInfo: {
+  readonly [k in SizedDepthStencilFormat]: {
+    renderable: true;
+    color: false;
+    bytesPerBlock: number;
+    blockWidth: 1;
+    blockHeight: 1;
+  } & TextureFormatInfo;
+} = /* prettier-ignore */ {
+  'depth32float': { renderable:  true, color: false, depth:  true, stencil: false, storage: false, copySrc:  true, copyDst: false, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
 };
-export const kTextureFormats = keysOf(kTextureFormatInfo);
+export const kSizedDepthStencilFormats = keysOf(kSizedDepthStencilFormatInfo);
+
+export const kUnsizedDepthStencilFormatInfo: {
+  readonly [k in UnsizedDepthStencilFormat]: {
+    renderable: true;
+    color: false;
+    blockWidth: 1;
+    blockHeight: 1;
+  } & TextureFormatInfo;
+} = /* prettier-ignore */ {
+  'depth24plus':          { renderable:  true, color: false, depth:  true, stencil: false, storage: false, copySrc: false, copyDst: false, blockWidth: 1, blockHeight: 1 },
+  'depth24plus-stencil8': { renderable:  true, color: false, depth:  true, stencil:  true, storage: false, copySrc: false, copyDst: false, blockWidth: 1, blockHeight: 1 },
+} as const;
+export const kUnsizedDepthStencilFormats = keysOf(kUnsizedDepthStencilFormatInfo);
+
+export const kCompressedTextureFormatInfo: {
+  readonly [k in CompressedTextureFormat]: {
+    renderable: false;
+    color: true;
+    bytesPerBlock: number;
+  } & TextureFormatInfo;
+} = /* prettier-ignore */ {
+  // BC formats
+  'bc1-rgba-unorm':      { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 4, blockHeight: 4, extension: 'texture-compression-bc' },
+  'bc1-rgba-unorm-srgb': { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 4, blockHeight: 4, extension: 'texture-compression-bc' },
+  'bc2-rgba-unorm':      { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 4, blockHeight: 4, extension: 'texture-compression-bc' },
+  'bc2-rgba-unorm-srgb': { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 4, blockHeight: 4, extension: 'texture-compression-bc' },
+  'bc3-rgba-unorm':      { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 4, blockHeight: 4, extension: 'texture-compression-bc' },
+  'bc3-rgba-unorm-srgb': { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 4, blockHeight: 4, extension: 'texture-compression-bc' },
+  'bc4-r-unorm':         { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 4, blockHeight: 4, extension: 'texture-compression-bc' },
+  'bc4-r-snorm':         { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 4, blockHeight: 4, extension: 'texture-compression-bc' },
+  'bc5-rg-unorm':        { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 4, blockHeight: 4, extension: 'texture-compression-bc' },
+  'bc5-rg-snorm':        { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 4, blockHeight: 4, extension: 'texture-compression-bc' },
+  'bc6h-rgb-ufloat':     { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 4, blockHeight: 4, extension: 'texture-compression-bc' },
+  'bc6h-rgb-sfloat':     { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 4, blockHeight: 4, extension: 'texture-compression-bc' },
+  'bc7-rgba-unorm':      { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 4, blockHeight: 4, extension: 'texture-compression-bc' },
+  'bc7-rgba-unorm-srgb': { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 4, blockHeight: 4, extension: 'texture-compression-bc' },
+} as const;
+export const kCompressedTextureFormats = keysOf(kCompressedTextureFormatInfo);
+
+export const kColorTextureFormatInfo = {
+  ...kRegularTextureFormatInfo,
+  ...kCompressedTextureFormatInfo,
+};
+export type ColorTextureFormat = keyof typeof kColorTextureFormatInfo;
+export const kColorTextureFormats = keysOf(kColorTextureFormatInfo);
+
+export const kCoreSizedTextureFormatInfo = {
+  ...kRegularTextureFormatInfo,
+  ...kSizedDepthStencilFormatInfo,
+};
+export type CoreSizedTextureFormat = keyof typeof kCoreSizedTextureFormatInfo;
+export const kCoreSizedTextureFormats = keysOf(kCoreSizedTextureFormatInfo);
+
+export const kSizedTextureFormatInfo = {
+  ...kRegularTextureFormatInfo,
+  ...kSizedDepthStencilFormatInfo,
+  ...kCompressedTextureFormatInfo,
+};
+export type SizedTextureFormat = keyof typeof kSizedTextureFormatInfo;
+export const kSizedTextureFormats = keysOf(kSizedTextureFormatInfo);
+
+export const kDepthStencilFormatInfo = {
+  ...kSizedDepthStencilFormatInfo,
+  ...kUnsizedDepthStencilFormatInfo,
+};
+export type DepthStencilFormat = keyof typeof kDepthStencilFormatInfo;
+export const kDepthStencilFormats = keysOf(kDepthStencilFormatInfo);
+
+export const kCoreTextureFormatInfo = {
+  ...kRegularTextureFormatInfo,
+  ...kSizedDepthStencilFormatInfo,
+  ...kUnsizedDepthStencilFormatInfo,
+};
+export type CoreTextureFormat = keyof typeof kCoreTextureFormatInfo;
+export const kCoreTextureFormats = keysOf(kCoreTextureFormatInfo);
+
+export const kAllTextureFormatInfo: {
+  readonly [k in GPUTextureFormat]: TextureFormatInfo;
+} = {
+  ...kCoreTextureFormatInfo,
+  ...kCompressedTextureFormatInfo,
+};
+export const kAllTextureFormats = keysOf(kAllTextureFormatInfo);
 
 export const kTextureDimensionInfo: {
   readonly [k in GPUTextureDimension]: {

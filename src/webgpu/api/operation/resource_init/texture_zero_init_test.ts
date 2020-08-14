@@ -2,7 +2,13 @@ import { TestCaseRecorder } from '../../../../common/framework/logging/test_case
 import { params, poptions, pbool } from '../../../../common/framework/params_builder.js';
 import { CaseParams } from '../../../../common/framework/params_utils.js';
 import { assert, unreachable } from '../../../../common/framework/util/util.js';
-import { kTextureAspects, kTextureFormatInfo, kTextureFormats } from '../../../capability_info.js';
+import {
+  kTextureAspects,
+  CoreTextureFormat,
+  kCoreTextureFormatInfo,
+  kCoreTextureFormats,
+  CoreSizedTextureFormat,
+} from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { createTextureUploadBuffer } from '../../../util/texture/layout.js';
 import { BeginEndRange, SubresourceRange } from '../../../util/texture/subresource.js';
@@ -145,7 +151,7 @@ export function initializedStateAsStencil(state: InitializedState): number {
 }
 
 interface TestParams {
-  format: GPUTextureFormat;
+  format: CoreSizedTextureFormat;
   aspect: GPUTextureAspect;
   dimension: GPUTextureDimension;
   sliceCount: SliceCounts;
@@ -157,7 +163,7 @@ interface TestParams {
 }
 
 function getRequiredTextureUsage(
-  format: GPUTextureFormat,
+  format: CoreTextureFormat,
   sampleCount: SampleCounts,
   uninitializeMethod: UninitializeMethod,
   readMethod: ReadMethod
@@ -200,10 +206,10 @@ function getRequiredTextureUsage(
     usage |= GPUTextureUsage.OUTPUT_ATTACHMENT;
   }
 
-  if (!kTextureFormatInfo[format].copyDst) {
+  if (!kCoreTextureFormatInfo[format].copyDst) {
     // Copies are not possible. We need OutputAttachment to initialize
     // canary data.
-    assert(kTextureFormatInfo[format].renderable);
+    assert(!!kCoreTextureFormatInfo[format].renderable);
     usage |= GPUTextureUsage.OUTPUT_ATTACHMENT;
   }
 
@@ -328,7 +334,7 @@ export abstract class TextureZeroInitTest extends GPUTest {
       this.params.aspect,
       subresourceRange
     )) {
-      if (kTextureFormatInfo[this.params.format].color) {
+      if (kCoreTextureFormatInfo[this.params.format].color) {
         commandEncoder
           .beginRenderPass({
             colorAttachments: [
@@ -411,10 +417,10 @@ export abstract class TextureZeroInitTest extends GPUTest {
     state: InitializedState,
     subresourceRange: SubresourceRange
   ): void {
-    if (this.params.sampleCount > 1 || !kTextureFormatInfo[this.params.format].copyDst) {
+    if (this.params.sampleCount > 1 || !kCoreTextureFormatInfo[this.params.format].copyDst) {
       // Copies to multisampled textures not yet specified.
       // Use a storeOp for now.
-      assert(kTextureFormatInfo[this.params.format].renderable);
+      assert(kCoreTextureFormatInfo[this.params.format].renderable);
       this.initializeWithStoreOp(state, texture, subresourceRange);
     } else {
       this.initializeWithCopy(texture, state, subresourceRange);
@@ -428,7 +434,7 @@ export abstract class TextureZeroInitTest extends GPUTest {
       this.params.aspect,
       subresourceRange
     )) {
-      if (kTextureFormatInfo[this.params.format].color) {
+      if (kCoreTextureFormatInfo[this.params.format].color) {
         commandEncoder
           .beginRenderPass({
             colorAttachments: [
@@ -462,12 +468,12 @@ export abstract class TextureZeroInitTest extends GPUTest {
     return (
       // TODO: Consider making a list of "valid" texture descriptors in capability_info.
       params()
-        .combine(poptions('format', kTextureFormats))
+        .combine(poptions('format', kCoreTextureFormats))
         .combine(poptions('aspect', kTextureAspects))
         .unless(
           ({ format, aspect }) =>
-            (aspect === 'depth-only' && !kTextureFormatInfo[format].depth) ||
-            (aspect === 'stencil-only' && !kTextureFormatInfo[format].stencil)
+            (aspect === 'depth-only' && !kCoreTextureFormatInfo[format].depth) ||
+            (aspect === 'stencil-only' && !kCoreTextureFormatInfo[format].stencil)
         )
         .combine(poptions('mipLevelCount', kMipLevelCounts))
         .combine(poptions('sampleCount', kSampleCounts))
@@ -484,14 +490,16 @@ export abstract class TextureZeroInitTest extends GPUTest {
             (readMethod === ReadMethod.CopyToBuffer || readMethod === ReadMethod.CopyToTexture) &&
             (format === 'depth24plus' || format === 'depth24plus-stencil8')
         )
-        .unless(
-          ({ readMethod, format }) =>
-            (readMethod === ReadMethod.DepthTest && !kTextureFormatInfo[format].depth) ||
-            (readMethod === ReadMethod.StencilTest && !kTextureFormatInfo[format].stencil) ||
-            (readMethod === ReadMethod.ColorBlending && !kTextureFormatInfo[format].color) ||
+        .unless(({ readMethod, format }) => {
+          const info = kCoreTextureFormatInfo[format];
+          return (
+            (readMethod === ReadMethod.DepthTest && !info.depth) ||
+            (readMethod === ReadMethod.StencilTest && !info.stencil) ||
+            (readMethod === ReadMethod.ColorBlending && !info.color) ||
             // TODO: Test with depth sampling
-            (readMethod === ReadMethod.Sample && kTextureFormatInfo[format].depth)
-        )
+            (readMethod === ReadMethod.Sample && info.depth)
+          );
+        })
         .unless(
           ({ readMethod, sampleCount }) =>
             // We can only read from multisampled textures by sampling.
@@ -508,12 +516,13 @@ export abstract class TextureZeroInitTest extends GPUTest {
             uninitializeMethod,
             readMethod
           );
+          const info = kCoreTextureFormatInfo[format];
 
-          if (usage & GPUTextureUsage.OUTPUT_ATTACHMENT && !kTextureFormatInfo[format].renderable) {
+          if (usage & GPUTextureUsage.OUTPUT_ATTACHMENT && !info.renderable) {
             return false;
           }
 
-          if (usage & GPUTextureUsage.STORAGE && !kTextureFormatInfo[format].storage) {
+          if (usage & GPUTextureUsage.STORAGE && !info.storage) {
             return false;
           }
 

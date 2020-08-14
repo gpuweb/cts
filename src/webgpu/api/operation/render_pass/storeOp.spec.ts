@@ -29,7 +29,11 @@ export const description = `API Operation Tests for RenderPass StoreOp.
 
 import { params, poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { kTextureFormatInfo, kTextureFormats } from '../../../capability_info.js';
+import {
+  kRegularTextureFormats,
+  kRegularTextureFormatInfo,
+  kSizedDepthStencilFormats,
+} from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { PerTexelComponent } from '../../../util/texture/texelData.js';
 
@@ -138,12 +142,9 @@ g.test('render_pass_store_op,color_attachment_with_depth_stencil_attachment')
 g.test('render_pass_store_op,color_attachment_only')
   .params(
     params()
-      .combine(poptions('colorFormat', kTextureFormats))
+      .combine(poptions('colorFormat', kRegularTextureFormats))
       // Filter out any depth/stencil or non-renderable formats
-      .filter(
-        ({ colorFormat }) =>
-          kTextureFormatInfo[colorFormat].color && kTextureFormatInfo[colorFormat].renderable
-      )
+      .filter(({ colorFormat }) => kRegularTextureFormatInfo[colorFormat].renderable)
       .combine(poptions('storeOperation', kStoreOps))
       .combine(poptions('mipLevel', kMipLevel))
       .combine(poptions('arrayLayer', kArrayLayers))
@@ -262,15 +263,8 @@ g.test('render_pass_store_op,multiple_color_attachments')
 g.test('render_pass_store_op,depth_stencil_attachment_only')
   .params(
     params()
-      .combine(poptions('depthStencilFormat', kTextureFormats))
-      // Filter out color and non-renderable formats.
-      .filter(
-        ({ depthStencilFormat }) =>
-          (kTextureFormatInfo[depthStencilFormat].depth ||
-            kTextureFormatInfo[depthStencilFormat].stencil) &&
-          kTextureFormatInfo[depthStencilFormat].renderable &&
-          kTextureFormatInfo[depthStencilFormat].copyDst
-      )
+      // TODO: Also test unsized depth/stencil formats
+      .combine(poptions('depthStencilFormat', kSizedDepthStencilFormats))
       .combine(poptions('storeOperation', kStoreOps))
       .combine(poptions('mipLevel', kMipLevel))
       .combine(poptions('arrayLayer', kArrayLayers))
