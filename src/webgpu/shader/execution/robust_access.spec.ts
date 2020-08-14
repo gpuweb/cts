@@ -33,12 +33,13 @@ function runShaderTest(
 ): void {
   assert(stage === GPUShaderStage.COMPUTE, 'Only know how to deal with compute for now');
 
-  const [constantsBuffer, constantsInit] = t.device.createBufferMapped({
+  const constantsBuffer = t.device.createBuffer({
+    mappedAtCreation: true,
     size: 4,
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM,
   });
 
-  const constantsData = new Uint32Array(constantsInit);
+  const constantsData = new Uint32Array(constantsBuffer.getMappedRange());
   constantsData[0] = 1;
   constantsBuffer.unmap();
 
@@ -339,7 +340,8 @@ g.test('bufferMemory')
     }`;
 
     // Create a buffer that contains zeroes in the allowed access area, and 42s everywhere else.
-    const [testBuffer, testInit] = t.device.createBufferMapped({
+    const testBuffer = t.device.createBuffer({
+      mappedAtCreation: true,
       size: 512,
       usage:
         GPUBufferUsage.COPY_SRC |
@@ -347,6 +349,7 @@ g.test('bufferMemory')
         GPUBufferUsage.STORAGE |
         GPUBufferUsage.COPY_DST,
     });
+    const testInit = testBuffer.getMappedRange();
     baseType.fillBuffer(testInit, 256, byteSize);
     const testInitCopy = copyArrayBuffer(testInit);
     testBuffer.unmap();

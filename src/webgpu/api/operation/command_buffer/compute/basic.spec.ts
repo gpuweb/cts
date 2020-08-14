@@ -10,11 +10,12 @@ export const g = makeTestGroup(GPUTest);
 g.test('memcpy').fn(async t => {
   const data = new Uint32Array([0x01020304]);
 
-  const [src, srcData] = t.device.createBufferMapped({
+  const src = t.device.createBuffer({
+    mappedAtCreation: true,
     size: 4,
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
   });
-  new Uint32Array(srcData).set(data);
+  new Uint32Array(src.getMappedRange()).set(data);
   src.unmap();
 
   const dst = t.device.createBuffer({
