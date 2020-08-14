@@ -1,5 +1,8 @@
 import { assert, unreachable } from '../../../common/framework/util/util.js';
-import { kTextureFormatInfo } from '../../capability_info.js';
+import {
+  kUncompressedTextureFormatInfo,
+  UncompressedTextureFormat,
+} from '../../capability_info.js';
 import {
   assertInIntegerRange,
   float32ToFloatBits,
@@ -126,7 +129,8 @@ const repeatComponents = (
 };
 
 const kRepresentationInfo: {
-  [k in GPUTextureFormat]: {
+  // TODO: Figure out if/how to extend this to more texture formats
+  [k in UncompressedTextureFormat]: {
     componentOrder: TexelComponent[];
     componentInfo: TexelComponentInfo;
     sRGB: boolean;
@@ -187,7 +191,7 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
   private isGPULittleEndian = true;
 
   constructor(
-    private readonly format: GPUTextureFormat,
+    private readonly format: UncompressedTextureFormat,
     readonly componentOrder: TexelComponent[],
     readonly componentInfo: TexelComponentInfo,
     private readonly sRGB: boolean
@@ -315,7 +319,7 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
       ];
     }
 
-    const bytesPerBlock = kTextureFormatInfo[this.format].bytesPerBlock;
+    const bytesPerBlock = kUncompressedTextureFormatInfo[this.format].bytesPerBlock;
     assert(!!bytesPerBlock);
 
     const data = new ArrayBuffer(bytesPerBlock);
@@ -328,8 +332,10 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
   }
 }
 
-const kRepresentationCache: Map<GPUTextureFormat, TexelDataRepresentationImpl> = new Map();
-export function getTexelDataRepresentation(format: GPUTextureFormat): TexelDataRepresentation {
+const kRepresentationCache: Map<UncompressedTextureFormat, TexelDataRepresentationImpl> = new Map();
+export function getTexelDataRepresentation(
+  format: UncompressedTextureFormat
+): TexelDataRepresentation {
   if (!kRepresentationCache.has(format)) {
     const { componentOrder, componentInfo, sRGB } = kRepresentationInfo[format];
     kRepresentationCache.set(

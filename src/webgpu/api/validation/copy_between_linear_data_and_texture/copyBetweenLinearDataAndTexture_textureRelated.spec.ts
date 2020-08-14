@@ -2,7 +2,7 @@ export const description = '';
 
 import { params, poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { kTextureFormats, kTextureFormatInfo } from '../../../capability_info.js';
+import { kSizedTextureFormats, kSizedTextureFormatInfo } from '../../../capability_info.js';
 
 import {
   CopyBetweenLinearDataAndTextureTest,
@@ -143,12 +143,13 @@ g.test('texel_block_alignments_on_origin')
     params()
       .combine(poptions('method', kAllTestMethods))
       .combine(poptions('coordinateToTest', ['x', 'y', 'z'] as const))
-      .combine(poptions('format', kTextureFormats))
+      .combine(poptions('format', kSizedTextureFormats))
       .filter(formatCopyableWithMethod)
       .expand(texelBlockAlignmentTestExpanderForValueToCoordinate)
   )
   .fn(async t => {
     const { valueToCoordinate, coordinateToTest, format, method } = t.params;
+    const info = kSizedTextureFormatInfo[format];
 
     const origin = { x: 0, y: 0, z: 0 };
     const size = { width: 0, height: 0, depth: 0 };
@@ -157,11 +158,11 @@ g.test('texel_block_alignments_on_origin')
     origin[coordinateToTest] = valueToCoordinate;
     switch (coordinateToTest) {
       case 'x': {
-        success = origin.x % kTextureFormatInfo[format].blockWidth! === 0;
+        success = origin.x % info.blockWidth === 0;
         break;
       }
       case 'y': {
-        success = origin.y % kTextureFormatInfo[format].blockHeight! === 0;
+        success = origin.y % info.blockHeight === 0;
         break;
       }
     }
@@ -215,12 +216,13 @@ g.test('texel_block_alignments_on_size')
     params()
       .combine(poptions('method', kAllTestMethods))
       .combine(poptions('coordinateToTest', ['width', 'height', 'depth'] as const))
-      .combine(poptions('format', kTextureFormats))
+      .combine(poptions('format', kSizedTextureFormats))
       .filter(formatCopyableWithMethod)
       .expand(texelBlockAlignmentTestExpanderForValueToCoordinate)
   )
   .fn(async t => {
     const { valueToCoordinate, coordinateToTest, format, method } = t.params;
+    const info = kSizedTextureFormatInfo[format];
 
     const origin = { x: 0, y: 0, z: 0 };
     const size = { width: 0, height: 0, depth: 0 };
@@ -229,11 +231,11 @@ g.test('texel_block_alignments_on_size')
     size[coordinateToTest] = valueToCoordinate;
     switch (coordinateToTest) {
       case 'width': {
-        success = size.width % kTextureFormatInfo[format].blockWidth! === 0;
+        success = size.width % info.blockWidth === 0;
         break;
       }
       case 'height': {
-        success = size.height % kTextureFormatInfo[format].blockHeight! === 0;
+        success = size.height % info.blockHeight === 0;
         break;
       }
     }

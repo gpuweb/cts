@@ -11,7 +11,11 @@ Test Coverage:
 
 import { poptions, params } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { kTextureFormatInfo, kShaderStages } from '../../../capability_info.js';
+import {
+  kShaderStages,
+  kDepthStencilFormats,
+  kDepthStencilFormatInfo,
+} from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
 class TextureUsageTracking extends ValidationTest {
@@ -123,14 +127,18 @@ g.test('readwrite_upon_subresources')
 g.test('readwrite_upon_aspects')
   .params(
     params()
-      .combine(poptions('format', ['depth32float', 'depth24plus', 'depth24plus-stencil8'] as const))
+      .combine(poptions('format', kDepthStencilFormats))
       .combine(poptions('readAspect', ['all', 'depth-only', 'stencil-only'] as const))
       .combine(poptions('writeAspect', ['all', 'depth-only', 'stencil-only'] as const))
       .unless(
         ({ format, readAspect, writeAspect }) =>
-          // TODO: Exclude depth-only aspect once WebGPU supports stencil-only texture format(s).
-          (readAspect === 'stencil-only' && !kTextureFormatInfo[format].stencil) ||
-          (writeAspect === 'stencil-only' && !kTextureFormatInfo[format].stencil)
+          (readAspect === 'stencil-only' && !kDepthStencilFormatInfo[format].stencil) ||
+          (writeAspect === 'stencil-only' && !kDepthStencilFormatInfo[format].stencil)
+      )
+      .unless(
+        ({ format, readAspect, writeAspect }) =>
+          (readAspect === 'depth-only' && !kDepthStencilFormatInfo[format].depth) ||
+          (writeAspect === 'depth-only' && !kDepthStencilFormatInfo[format].depth)
       )
   )
   .fn(async t => {
