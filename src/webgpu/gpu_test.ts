@@ -4,6 +4,7 @@ import { DevicePool, TestOOMedShouldAttemptGC } from '../common/framework/gpu/de
 import { attemptGarbageCollection } from '../common/framework/util/collect_garbage.js';
 import { assert } from '../common/framework/util/util.js';
 
+import { EncodableTextureFormat } from './capability_info.js';
 import {
   fillTextureDataWithTexelValue,
   getTextureCopyLayout,
@@ -206,7 +207,7 @@ got [${failedByteActualValues.join(', ')}]`;
 
   expectSingleColor(
     src: GPUTexture,
-    format: GPUTextureFormat,
+    format: EncodableTextureFormat,
     {
       size,
       exp,
@@ -299,9 +300,6 @@ got [${failedByteActualValues.join(', ')}]`;
 
       let failed = false;
       switch (filter) {
-        case 'none':
-          failed = error !== null;
-          break;
         case 'out-of-memory':
           failed = !(error instanceof GPUOutOfMemoryError);
           break;

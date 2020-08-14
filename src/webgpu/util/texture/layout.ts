@@ -1,5 +1,5 @@
 import { assert, unreachable } from '../../../common/framework/util/util.js';
-import { kTextureFormatInfo } from '../../capability_info.js';
+import { kSizedTextureFormatInfo, SizedTextureFormat } from '../../capability_info.js';
 import { align, isAligned } from '../math.js';
 
 export const kBytesPerRowAlignment = 256;
@@ -33,7 +33,7 @@ export function getMipSizePassthroughLayers(
 }
 
 export function getTextureCopyLayout(
-  format: GPUTextureFormat,
+  format: SizedTextureFormat,
   dimension: GPUTextureDimension,
   size: [number, number, number],
   options: LayoutOptions = kDefaultLayoutOptions
@@ -50,8 +50,7 @@ export function getTextureCopyLayout(
 
   const mipSize = getMipSizePassthroughLayers(dimension, size, mipLevel);
 
-  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
-  assert(!!bytesPerBlock && !!blockWidth && !!blockHeight);
+  const { blockWidth, blockHeight, bytesPerBlock } = kSizedTextureFormatInfo[format];
 
   assert(isAligned(mipSize[0], blockWidth));
   const minBytesPerRow = (mipSize[0] / blockWidth) * bytesPerBlock;
@@ -87,14 +86,13 @@ export function getTextureCopyLayout(
 
 export function fillTextureDataWithTexelValue(
   texelValue: ArrayBuffer,
-  format: GPUTextureFormat,
+  format: SizedTextureFormat,
   dimension: GPUTextureDimension,
   outputBuffer: ArrayBuffer,
   size: [number, number, number],
   options: LayoutOptions = kDefaultLayoutOptions
 ): void {
-  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
-  assert(!!bytesPerBlock && !!blockWidth && !!blockHeight);
+  const { blockWidth, blockHeight, bytesPerBlock } = kSizedTextureFormatInfo[format];
   assert(bytesPerBlock === texelValue.byteLength);
 
   const { byteLength, rowsPerImage, bytesPerRow } = getTextureCopyLayout(
@@ -124,7 +122,7 @@ export function fillTextureDataWithTexelValue(
 export function createTextureUploadBuffer(
   texelValue: ArrayBuffer,
   device: GPUDevice,
-  format: GPUTextureFormat,
+  format: SizedTextureFormat,
   dimension: GPUTextureDimension,
   size: [number, number, number],
   options: LayoutOptions = kDefaultLayoutOptions

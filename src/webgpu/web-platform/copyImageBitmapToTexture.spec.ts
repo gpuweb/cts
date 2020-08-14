@@ -5,7 +5,7 @@ copy imageBitmap To texture tests.
 import { poptions, params } from '../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../common/framework/test_group.js';
 import { unreachable } from '../../common/framework/util/util.js';
-import { kTextureFormatInfo } from '../capability_info.js';
+import { kUncompressedTextureFormatInfo, UncompressedTextureFormat } from '../capability_info.js';
 import { GPUTest } from '../gpu_test.js';
 import { getTexelDataRepresentation } from '../util/texture/texelData.js';
 
@@ -134,7 +134,7 @@ got [${failedByteActualValues.join(', ')}]`;
     );
   }
 
-  generatePixel(color: Color, format: GPUTextureFormat): Uint8Array {
+  generatePixel(color: Color, format: UncompressedTextureFormat): Uint8Array {
     if (!generatedPixelCache.get(format)) {
       generatedPixelCache.set(format, new Map());
     }
@@ -209,13 +209,14 @@ g.test('from_ImageData')
   .fn(async t => {
     const { width, height, alpha, orientation, dstColorFormat } = t.params;
 
-    const srcBytesPerPixel = kTextureFormatInfo['rgba8unorm'].bytesPerBlock!;
+    const format = 'rgba8unorm';
+    const srcBytesPerPixel = kUncompressedTextureFormatInfo[format].bytesPerBlock;
 
     // Generate input contents by iterating 'Color' enum
     const imagePixels = new Uint8ClampedArray(srcBytesPerPixel * width * height);
     const startPixel = Color.Red;
     for (let i = 0, currentPixel = startPixel; i < width * height; ++i) {
-      const pixels = t.generatePixel(currentPixel, 'rgba8unorm');
+      const pixels = t.generatePixel(currentPixel, format);
       if (currentPixel === Color.TransparentBlack) {
         currentPixel = Color.Red;
       } else {
@@ -245,7 +246,7 @@ g.test('from_ImageData')
     });
 
     // Construct expected value for different dst color format
-    const dstBytesPerPixel = kTextureFormatInfo[dstColorFormat].bytesPerBlock!;
+    const dstBytesPerPixel = kUncompressedTextureFormatInfo[dstColorFormat].bytesPerBlock!;
     const dstPixels = new Uint8ClampedArray(dstBytesPerPixel * width * height);
     let expectedPixels = new Uint8ClampedArray(dstBytesPerPixel * width * height);
     for (let i = 0, currentPixel = startPixel; i < width * height; ++i) {
