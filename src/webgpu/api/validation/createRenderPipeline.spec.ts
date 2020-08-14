@@ -4,7 +4,7 @@ createRenderPipeline validation tests.
 
 import { poptions } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { kTextureFormatInfo, kTextureFormats } from '../../capability_info.js';
+import { kAllTextureFormats, kAllTextureFormatInfo } from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -119,10 +119,10 @@ g.test('at_least_one_color_state_is_required').fn(async t => {
 });
 
 g.test('color_formats_must_be_renderable')
-  .params(poptions('format', kTextureFormats))
+  .params(poptions('format', kAllTextureFormats))
   .fn(async t => {
     const format: GPUTextureFormat = t.params.format;
-    const info = kTextureFormatInfo[format];
+    const info = kAllTextureFormatInfo[format];
 
     const descriptor = t.getDescriptor({ colorStates: [{ format }] });
 

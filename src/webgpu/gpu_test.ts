@@ -4,7 +4,7 @@ import { DevicePool, TestOOMedShouldAttemptGC } from '../common/framework/gpu/de
 import { attemptGarbageCollection } from '../common/framework/util/collect_garbage.js';
 import { assert } from '../common/framework/util/util.js';
 
-import { EncodableTextureFormat } from './capability_info.js';
+import { EncodableTextureFormat, SizedTextureFormat } from './capability_info.js';
 import {
   fillTextureDataWithTexelValue,
   getTextureCopyLayout,
@@ -251,7 +251,7 @@ got [${failedByteActualValues.join(', ')}]`;
   // TODO(natashalee): Can refactor this and expectSingleColor to use a similar base expect
   expectSinglePixelIn2DTexture(
     src: GPUTexture,
-    format: GPUTextureFormat,
+    format: SizedTextureFormat,
     { x, y }: { x: number; y: number },
     {
       exp,
