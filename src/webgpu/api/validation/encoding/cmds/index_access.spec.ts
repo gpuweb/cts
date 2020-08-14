@@ -11,11 +11,12 @@ class F extends ValidationTest {
   createIndexBuffer(): GPUBuffer {
     const indexArray = new Uint32Array([0, 1, 2, 3, 1, 2]);
 
-    const [indexBuffer, indexMapping] = this.device.createBufferMapped({
+    const indexBuffer = this.device.createBuffer({
+      mappedAtCreation: true,
       size: indexArray.byteLength,
       usage: GPUBufferUsage.INDEX,
     });
-    new Uint32Array(indexMapping).set(indexArray);
+    new Uint32Array(indexBuffer.getMappedRange()).set(indexArray);
     indexBuffer.unmap();
 
     return indexBuffer;
@@ -90,11 +91,12 @@ class F extends ValidationTest {
   }
 
   drawIndexedIndirect(bufferArray: Uint32Array, indirectOffset: number) {
-    const [indirectBuffer, indirectMapping] = this.device.createBufferMapped({
+    const indirectBuffer = this.device.createBuffer({
+      mappedAtCreation: true,
       size: bufferArray.byteLength,
       usage: GPUBufferUsage.INDIRECT,
     });
-    new Uint32Array(indirectMapping).set(bufferArray);
+    new Uint32Array(indirectBuffer.getMappedRange()).set(bufferArray);
     indirectBuffer.unmap();
 
     const indexBuffer = this.createIndexBuffer();

@@ -117,11 +117,12 @@ class SampledTextureClearTest extends TextureZeroInitTest {
       );
 
       for (const slice of slices) {
-        const [ubo, uboMapping] = this.device.createBufferMapped({
+        const ubo = this.device.createBuffer({
+          mappedAtCreation: true,
           size: 4,
           usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
         });
-        new Int32Array(uboMapping, 0, 1)[0] = level;
+        new Int32Array(ubo.getMappedRange(), 0, 1)[0] = level;
         ubo.unmap();
 
         const byteLength =
@@ -173,7 +174,8 @@ class SampledTextureClearTest extends TextureZeroInitTest {
         resultBuffer.destroy();
 
         this.eventualAsyncExpectation(async niceStack => {
-          const actual = await mappedResultBuffer.mapReadAsync();
+          await mappedResultBuffer.mapAsync(GPUMapMode.READ);
+          const actual = mappedResultBuffer.getMappedRange();
           const expected = new readbackTypedArray(new ArrayBuffer(actual.byteLength));
           expected.fill(expectedShaderValue);
 

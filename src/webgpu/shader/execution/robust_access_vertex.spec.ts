@@ -161,10 +161,12 @@ class DrawCall {
     if (partialLastNumber) {
       size -= 1;
     }
-    const [vertexBuffer, vertexMapping] = this.device.createBufferMapped({
+    const vertexBuffer = this.device.createBuffer({
+      mappedAtCreation: true,
       size,
       usage: GPUBufferUsage.VERTEX,
     });
+    const vertexMapping = vertexBuffer.getMappedRange();
     if (!partialLastNumber) {
       new Float32Array(vertexMapping).set(vertexArray);
     } else {
@@ -176,11 +178,11 @@ class DrawCall {
 
   // Create an index buffer from |indexArray|
   private generateIndexBuffer(indexArray: Uint16Array): GPUBuffer {
-    const [indexBuffer, indexMapping] = this.device.createBufferMapped({
+    const indexBuffer = this.device.createBuffer({
       size: indexArray.byteLength,
       usage: GPUBufferUsage.INDEX,
     });
-    new Uint16Array(indexMapping).set(indexArray);
+    new Uint16Array(indexBuffer.getMappedRange()).set(indexArray);
     indexBuffer.unmap();
     return indexBuffer;
   }
@@ -193,11 +195,12 @@ class DrawCall {
       this.firstVertex,
       this.firstInstance,
     ]);
-    const [indirectBuffer, indirectMapping] = this.device.createBufferMapped({
+    const indirectBuffer = this.device.createBuffer({
+      mappedAtCreation: true,
       size: indirectArray.byteLength,
       usage: GPUBufferUsage.INDIRECT,
     });
-    new Int32Array(indirectMapping).set(indirectArray);
+    new Int32Array(indirectBuffer.getMappedRange()).set(indirectArray);
     indirectBuffer.unmap();
     return indirectBuffer;
   }
@@ -211,11 +214,12 @@ class DrawCall {
       this.baseVertex,
       this.firstInstance,
     ]);
-    const [indirectBuffer, indirectMapping] = this.device.createBufferMapped({
+    const indirectBuffer = this.device.createBuffer({
+      mappedAtCreation: true,
       size: indirectArray.byteLength,
       usage: GPUBufferUsage.INDIRECT,
     });
-    new Int32Array(indirectMapping).set(indirectArray);
+    new Int32Array(indirectBuffer.getMappedRange()).set(indirectArray);
     indirectBuffer.unmap();
     return indirectBuffer;
   }
