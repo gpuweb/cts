@@ -81,10 +81,13 @@ export class DevicePool {
   private static async makeHolder(): Promise<DeviceHolder> {
     const gpu = getGPU();
     const adapter = await gpu.requestAdapter();
+    assert(adapter !== null);
+    const device = await adapter.requestDevice();
+    assert(device !== null);
 
     const holder: DeviceHolder = {
       acquired: false,
-      device: await adapter.requestDevice(),
+      device,
       lostReason: undefined,
     };
     holder.device.lost.then(ev => {

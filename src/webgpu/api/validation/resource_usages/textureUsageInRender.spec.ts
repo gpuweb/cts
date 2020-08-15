@@ -23,7 +23,11 @@ Test Coverage:
 
 import { poptions, params } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { kTextureFormatInfo, kShaderStages } from '../../../capability_info.js';
+import {
+  kShaderStages,
+  kDepthStencilFormats,
+  kDepthStencilFormatInfo,
+} from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
 class TextureUsageTracking extends ValidationTest {
@@ -245,14 +249,18 @@ g.test('subresources_and_binding_types_combination_for_color')
 g.test('subresources_and_binding_types_combination_for_aspect')
   .params(
     params()
-      .combine(poptions('format', ['depth32float', 'depth24plus', 'depth24plus-stencil8'] as const))
+      .combine(poptions('format', kDepthStencilFormats))
       .combine(poptions('aspect0', ['all', 'depth-only', 'stencil-only'] as const))
       .combine(poptions('aspect1', ['all', 'depth-only', 'stencil-only'] as const))
       .unless(
         ({ format, aspect0, aspect1 }) =>
-          // TODO: Exclude depth-only aspect once WebGPU supports stencil-only texture format(s).
-          (aspect0 === 'stencil-only' && !kTextureFormatInfo[format].stencil) ||
-          (aspect1 === 'stencil-only' && !kTextureFormatInfo[format].stencil)
+          (aspect0 === 'stencil-only' && !kDepthStencilFormatInfo[format].stencil) ||
+          (aspect1 === 'stencil-only' && !kDepthStencilFormatInfo[format].stencil)
+      )
+      .unless(
+        ({ format, aspect0, aspect1 }) =>
+          (aspect0 === 'depth-only' && !kDepthStencilFormatInfo[format].depth) ||
+          (aspect1 === 'depth-only' && !kDepthStencilFormatInfo[format].depth)
       )
       .combine([
         {

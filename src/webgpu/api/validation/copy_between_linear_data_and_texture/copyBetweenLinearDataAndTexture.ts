@@ -1,6 +1,6 @@
 import { poptions } from '../../../../common/framework/params_builder.js';
 import { assert } from '../../../../common/framework/util/util.js';
-import { kTextureFormatInfo } from '../../../capability_info.js';
+import { kSizedTextureFormatInfo, SizedTextureFormat } from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
 export const kAllTestMethods = [
@@ -10,31 +10,29 @@ export const kAllTestMethods = [
 ] as const;
 
 export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
-  bytesInACompleteRow(copyWidth: number, format: GPUTextureFormat): number {
-    assert(copyWidth % kTextureFormatInfo[format].blockWidth! === 0);
-    return (
-      (kTextureFormatInfo[format].bytesPerBlock! * copyWidth) /
-      kTextureFormatInfo[format].blockWidth!
-    );
+  bytesInACompleteRow(copyWidth: number, format: SizedTextureFormat): number {
+    const info = kSizedTextureFormatInfo[format];
+    assert(copyWidth % info.blockWidth === 0);
+    return (info.bytesPerBlock * copyWidth) / info.blockWidth;
   }
 
   requiredBytesInCopy(
-    layout: GPUTextureDataLayout,
-    format: GPUTextureFormat,
+    layout: Required<GPUTextureDataLayout>,
+    format: SizedTextureFormat,
     copyExtent: GPUExtent3DDict
   ): number {
-    assert(layout.rowsPerImage! % kTextureFormatInfo[format].blockHeight! === 0);
-    assert(copyExtent.height % kTextureFormatInfo[format].blockHeight! === 0);
-    assert(copyExtent.width % kTextureFormatInfo[format].blockWidth! === 0);
+    const info = kSizedTextureFormatInfo[format];
+    assert(layout.rowsPerImage % info.blockHeight === 0);
+    assert(copyExtent.height % info.blockHeight === 0);
+    assert(copyExtent.width % info.blockWidth === 0);
     if (copyExtent.width === 0 || copyExtent.height === 0 || copyExtent.depth === 0) {
       return 0;
     } else {
-      const texelBlockRowsPerImage = layout.rowsPerImage! / kTextureFormatInfo[format].blockHeight!;
+      const texelBlockRowsPerImage = layout.rowsPerImage / info.blockHeight;
       const bytesPerImage = layout.bytesPerRow * texelBlockRowsPerImage;
       const bytesInLastSlice =
-        layout.bytesPerRow * (copyExtent.height / kTextureFormatInfo[format].blockHeight! - 1) +
-        (copyExtent.width / kTextureFormatInfo[format].blockWidth!) *
-          kTextureFormatInfo[format].bytesPerBlock!;
+        layout.bytesPerRow * (copyExtent.height / info.blockHeight - 1) +
+        (copyExtent.width / info.blockWidth) * info.bytesPerBlock;
       return bytesPerImage * (copyExtent.depth - 1) + bytesInLastSlice;
     }
   }
@@ -110,14 +108,15 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
   // This is a helper function used for creating a texture when we don't have to be very
   // precise about its size as long as it's big enough and properly aligned.
   createAlignedTexture(
-    format: GPUTextureFormat,
+    format: SizedTextureFormat,
     copySize: GPUExtent3DDict = { width: 1, height: 1, depth: 1 },
     origin: Required<GPUOrigin3DDict> = { x: 0, y: 0, z: 0 }
   ): GPUTexture {
+    const info = kSizedTextureFormatInfo[format];
     return this.device.createTexture({
       size: {
-        width: Math.max(1, copySize.width + origin.x) * kTextureFormatInfo[format].blockWidth!,
-        height: Math.max(1, copySize.height + origin.y) * kTextureFormatInfo[format].blockHeight!,
+        width: Math.max(1, copySize.width + origin.x) * info.blockWidth,
+        height: Math.max(1, copySize.height + origin.y) * info.blockHeight,
         depth: Math.max(1, copySize.depth + origin.z),
       },
       format,
@@ -137,7 +136,7 @@ function valuesToTestDivisibilityBy(number: number): Iterable<number> {
 }
 
 interface WithFormat {
-  format: GPUTextureFormat;
+  format: SizedTextureFormat;
 }
 
 interface WithFormatAndCoordinate extends WithFormat {
@@ -150,14 +149,17 @@ interface WithFormatAndMethod extends WithFormat {
 
 // This is a helper function used for expanding test parameters for texel block alignment tests on offset
 export function texelBlockAlignmentTestExpanderForOffset({ format }: WithFormat) {
-  return poptions('offset', valuesToTestDivisibilityBy(kTextureFormatInfo[format].bytesPerBlock!));
+  return poptions(
+    'offset',
+    valuesToTestDivisibilityBy(kSizedTextureFormatInfo[format].bytesPerBlock)
+  );
 }
 
 // This is a helper function used for expanding test parameters for texel block alignment tests on rowsPerImage
 export function texelBlockAlignmentTestExpanderForRowsPerImage({ format }: WithFormat) {
   return poptions(
     'rowsPerImage',
-    valuesToTestDivisibilityBy(kTextureFormatInfo[format].blockHeight!)
+    valuesToTestDivisibilityBy(kSizedTextureFormatInfo[format].blockHeight)
   );
 }
 
@@ -171,14 +173,14 @@ export function texelBlockAlignmentTestExpanderForValueToCoordinate({
     case 'width':
       return poptions(
         'valueToCoordinate',
-        valuesToTestDivisibilityBy(kTextureFormatInfo[format].blockWidth!)
+        valuesToTestDivisibilityBy(kSizedTextureFormatInfo[format].blockWidth!)
       );
 
     case 'y':
     case 'height':
       return poptions(
         'valueToCoordinate',
-        valuesToTestDivisibilityBy(kTextureFormatInfo[format].blockHeight!)
+        valuesToTestDivisibilityBy(kSizedTextureFormatInfo[format].blockHeight!)
       );
 
     case 'z':
@@ -190,8 +192,8 @@ export function texelBlockAlignmentTestExpanderForValueToCoordinate({
 // This is a helper function used for filtering test parameters
 export function formatCopyableWithMethod({ format, method }: WithFormatAndMethod): boolean {
   if (method === 'CopyTextureToBuffer') {
-    return kTextureFormatInfo[format].copySrc;
+    return kSizedTextureFormatInfo[format].copySrc;
   } else {
-    return kTextureFormatInfo[format].copyDst;
+    return kSizedTextureFormatInfo[format].copyDst;
   }
 }
