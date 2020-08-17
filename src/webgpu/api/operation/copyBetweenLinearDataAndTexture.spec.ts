@@ -456,8 +456,8 @@ g.test('copy_with_various_offsets_and_data_sizes')
         { offsetInBlocks: 16, dataPaddingInBytes: 0 }, // offset = 16
         { offsetInBlocks: 242, dataPaddingInBytes: 0 }, // for rgba8unorm format: offset + bytesInCopyExtentPerRow = 242 + 12 = 256 = bytesPerRow
         { offsetInBlocks: 243, dataPaddingInBytes: 0 }, // for rgba8unorm format: offset + bytesInCopyExtentPerRow = 243 + 12 > 256 = bytesPerRow
-        { offsetInBlocks: 768, dataPaddingInBytes: 0 }, // for copyDepth = 1 and blockWidth = 1: offset = 768 = 3 * 256 = bytesInACompleteCopyImage
-        { offsetInBlocks: 769, dataPaddingInBytes: 0 }, // for copyDepth = 1 and blockWidth = 1: offset = 769 > 768 = bytesInACompleteCopyImage
+        { offsetInBlocks: 768, dataPaddingInBytes: 0 }, // for copyDepth = 1, blockWidth = 1 and bytesPerBlock = 1: offset = 768 = 3 * 256 = bytesInACompleteCopyImage
+        { offsetInBlocks: 769, dataPaddingInBytes: 0 }, // for copyDepth = 1, blockWidth = 1 and bytesPerBlock = 1: offset = 769 > 768 = bytesInACompleteCopyImage
         { offsetInBlocks: 0, dataPaddingInBytes: 1 }, // dataPaddingInBytes > 0
         { offsetInBlocks: 1, dataPaddingInBytes: 8 }, // offset > 0 and dataPaddingInBytes > 0
       ])
@@ -581,6 +581,8 @@ g.test('copy_with_various_origins_and_copy_extents')
     });
   });
 
+// Generates textureSizes which correspond to the same physicalSizeAtMipLevel
+// including virtual sizes at mip level different from the physical ones.
 function* textureSizeExpander({
   format,
   mipLevel,
@@ -621,6 +623,9 @@ function* textureSizeExpander({
 }
 
 // Test that copying various mip levels works.
+// Covers two special code paths:
+//    the physical size of the subresouce is not equal to the logical size
+//    bufferSize - offset < bytesPerImage * copyExtent.depth and copyExtent needs to be clamped for all BC formats
 g.test('copy_various_mip_levels')
   .params(
     params()
@@ -628,23 +633,41 @@ g.test('copy_various_mip_levels')
       .combine(poptions('checkMethod', kAllCheckMethods))
       .combine([
         {
-          copySizeInBlocks: { width: 2, height: 2, depth: 2 },
-          originInBlocks: { x: 3, y: 2, z: 1 },
-          texturePhysicalSizeAtMipLevelInBlocks: { width: 6, height: 5, depth: 4 },
+          copySizeInBlocks: { width: 5, height: 4, depth: 1 },
+          originInBlocks: { x: 3, y: 2, z: 0 },
+          texturePhysicalSizeAtMipLevelInBlocks: { width: 8, height: 6, depth: 1 },
           mipLevel: 1,
-        }, // copying on mipLevel 1
+        }, // origin + copySize = texturePhysicalSizeAtMipLevel for all coordinates, 2d texture
         {
-          copySizeInBlocks: { width: 5, height: 6, depth: 1 },
-          originInBlocks: { x: 1, y: 1, z: 0 },
-          texturePhysicalSizeAtMipLevelInBlocks: { width: 6, height: 7, depth: 1 },
-          mipLevel: 5,
-        }, // copying on mipLevel 5 of a 2d texture
+          copySizeInBlocks: { width: 5, height: 4, depth: 2 },
+          originInBlocks: { x: 3, y: 2, z: 1 },
+          texturePhysicalSizeAtMipLevelInBlocks: { width: 8, height: 6, depth: 3 },
+          mipLevel: 2,
+        }, // origin + copySize = texturePhysicalSizeAtMipLevel for all coordinates, 2d-array texture
         {
-          copySizeInBlocks: { width: 5, height: 6, depth: 2 },
-          originInBlocks: { x: 1, y: 1, z: 1 },
-          texturePhysicalSizeAtMipLevelInBlocks: { width: 6, height: 7, depth: 3 },
+          copySizeInBlocks: { width: 5, height: 4, depth: 2 },
+          originInBlocks: { x: 3, y: 2, z: 1 },
+          texturePhysicalSizeAtMipLevelInBlocks: { width: 8, height: 7, depth: 4 },
+          mipLevel: 3,
+        }, // origin.x + copySize.width = texturePhysicalSizeAtMipLevel.width
+        {
+          copySizeInBlocks: { width: 5, height: 4, depth: 2 },
+          originInBlocks: { x: 3, y: 2, z: 1 },
+          texturePhysicalSizeAtMipLevelInBlocks: { width: 9, height: 6, depth: 4 },
+          mipLevel: 4,
+        }, // origin.y + copySize.height = texturePhysicalSizeAtMipLevel.height
+        {
+          copySizeInBlocks: { width: 5, height: 4, depth: 2 },
+          originInBlocks: { x: 3, y: 2, z: 1 },
+          texturePhysicalSizeAtMipLevelInBlocks: { width: 9, height: 7, depth: 3 },
           mipLevel: 5,
-        }, // copying on mipLevel 5 of a 2d-array texture
+        }, // origin.z + copySize.depth = texturePhysicalSizeAtMipLevel.depth
+        {
+          copySizeInBlocks: { width: 5, height: 4, depth: 2 },
+          originInBlocks: { x: 3, y: 2, z: 1 },
+          texturePhysicalSizeAtMipLevelInBlocks: { width: 9, height: 7, depth: 4 },
+          mipLevel: 6,
+        }, // origin + copySize < texturePhysicalSizeAtMipLevel for all coordinates
       ])
       .combine(poptions('format', kSizedTextureFormats))
       .filter(formatCanBeTested)
@@ -674,7 +697,7 @@ g.test('copy_various_mip_levels')
       depth: copySizeInBlocks.depth,
     };
 
-    const rowsPerImage = copySize.height;
+    const rowsPerImage = copySize.height + info.blockHeight!;
     const bytesPerRow = align(copySize.width, 256);
     const dataSize = t.requiredBytesInCopy({ bytesPerRow, rowsPerImage }, format, copySize);
 
