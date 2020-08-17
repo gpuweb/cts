@@ -4,6 +4,7 @@ import { attemptGarbageCollection } from '../common/framework/util/collect_garba
 import { assert } from '../common/framework/util/util.js';
 
 import { EncodableTextureFormat } from './capability_info.js';
+import { align } from './util/math.js';
 import {
   fillTextureDataWithTexelValue,
   getTextureCopyLayout,
@@ -83,6 +84,9 @@ export class GPUTest extends Fixture {
   }
 
   createCopyForMapRead(src: GPUBuffer, srcOffset: number, size: number): GPUBuffer {
+    assert(srcOffset % 4 === 0);
+    assert(size % 4 === 0);
+
     const dst = this.device.createBuffer({
       size,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
@@ -98,14 +102,35 @@ export class GPUTest extends Fixture {
 
   // TODO: add an expectContents for textures, which logs data: uris on failure
 
+  // Offset and size passed to createCopyForMapRead must be divisible by 4. For that
+  // we might need to copy more bytes from the buffer than we want to map.
+  // begin and end values represent the part of the copied buffer that stores the contents
+  // we initially wanted to map.
+  // The copy might cause an OOB error if the buffer is not big enough.
+  createAlignedCopyForMapRead(
+    src: GPUBuffer,
+    size: number,
+    offset: number
+  ): { dst: GPUBuffer; begin: number; end: number } {
+    const alignedOffset = Math.floor(offset / 4) * 4;
+    const offsetDifference = offset - alignedOffset;
+    const alignedSize = align(size + offsetDifference, 4);
+    const dst = this.createCopyForMapRead(src, alignedOffset, alignedSize);
+    return { dst, begin: offsetDifference, end: offsetDifference + size };
+  }
+
   expectContents(src: GPUBuffer, expected: TypedArrayBufferView, srcOffset: number = 0): void {
-    const dst = this.createCopyForMapRead(src, srcOffset, expected.buffer.byteLength);
+    const { dst, begin, end } = this.createAlignedCopyForMapRead(
+      src,
+      expected.byteLength,
+      srcOffset
+    );
 
     this.eventualAsyncExpectation(async niceStack => {
       const constructor = expected.constructor as TypedArrayBufferViewConstructor;
       await dst.mapAsync(GPUMapMode.READ);
       const actual = new constructor(dst.getMappedRange());
-      const check = this.checkBuffer(actual, expected);
+      const check = this.checkBuffer(actual.slice(begin, end), expected);
       if (check !== undefined) {
         niceStack.message = check;
         this.rec.expectationFailed(niceStack);

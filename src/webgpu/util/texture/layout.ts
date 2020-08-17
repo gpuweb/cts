@@ -32,19 +32,21 @@ export function getMipSizePassthroughLayers(
   }
 }
 
-export function getTextureCopyLayout(
-  format: SizedTextureFormat,
-  dimension: GPUTextureDimension,
-  size: [number, number, number],
-  options: LayoutOptions = kDefaultLayoutOptions
-): {
+export interface TextureCopyLayout {
   bytesPerBlock: number;
   byteLength: number;
   minBytesPerRow: number;
   bytesPerRow: number;
   rowsPerImage: number;
   mipSize: [number, number, number];
-} {
+}
+
+export function getTextureCopyLayout(
+  format: SizedTextureFormat,
+  dimension: GPUTextureDimension,
+  size: [number, number, number],
+  options: LayoutOptions = kDefaultLayoutOptions
+): TextureCopyLayout {
   const { mipLevel } = options;
   let { bytesPerRow, rowsPerImage } = options;
 
