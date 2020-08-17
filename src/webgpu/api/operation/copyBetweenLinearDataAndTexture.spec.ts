@@ -1,14 +1,24 @@
 export const description = `writeTexture + copyBufferToTexture + copyTextureToBuffer operation tests.
 
-* TODO: add another initMethod which renders the texture
+* copy_with_various_rows_per_image_and_bytes_per_row: covers
+  - bufferSize - offset < bytesPerImage * copyExtent.depth
+  - when bytesPerRow is not a multiple of 512 and copyExtent.depth > 1: copyExtent.depth % 2 {==, >} 0
 
-* TODO: check that CopyT2B doesn't overwrite any other bytes
+* copy_with_various_offsets_and_data_sizes: covers
+  - offset + bytesInCopyExtentPerRow { ==, > } bytesPerRow
+  - offset > bytesInACompleteCopyImage
 
-* TODO: because of expectContests 4-bytes alignment we don't test CopyT2B with buffer size not divisible by 4
+* copy_with_various_origins_and_copy_extents
 
-* TODO: investigate float issues (rg11b10float format tests)
+* copy_various_mip_levels: covers
+  - the physical size of the subresouce is not equal to the logical size
+  - bufferSize - offset < bytesPerImage * copyExtent.depth and copyExtent needs to be clamped
 
-* TODO: investigate snorm issues (rgba8snorm format tests)
+* TODO: 
+  - add another initMethod which renders the texture
+  - check that CopyT2B doesn't overwrite any other bytes
+  - because of expectContests 4-bytes alignment we don't test CopyT2B with buffer size not divisible by 4
+  - add tests for 1d / 3d textures
 `;
 
 import { params, poptions } from '../../../common/framework/params_builder.js';
@@ -313,7 +323,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
           { texture, mipLevel, origin },
           textureDataLayout,
           copySize,
-          data.slice(0, dataSize),
+          data,
           initMethod
         );
 
@@ -360,8 +370,11 @@ function formatCanBeTested({ format }: { format: SizedTextureFormat }): boolean 
   return kSizedTextureFormatInfo[format].copyDst && kSizedTextureFormatInfo[format].copySrc;
 }
 
-const kAllInitMethods = ['WriteTexture', 'CopyB2T'] as const;
-const kAllCheckMethods = ['PartialCopyT2B', 'FullCopyT2B'] as const;
+const kMethodsToTest = [
+  { initMethod: 'WriteTexture', checkMethod: 'PartialCopyT2B' },
+  { initMethod: 'WriteTexture', checkMethod: 'FullCopyT2B' },
+  { initMethod: 'CopyB2T', checkMethod: 'FullCopyT2B' },
+] as const;
 
 export const g = makeTestGroup(CopyBetweenLinearDataAndTextureTest);
 
@@ -374,8 +387,7 @@ export const g = makeTestGroup(CopyBetweenLinearDataAndTextureTest);
 g.test('copy_with_various_rows_per_image_and_bytes_per_row')
   .params(
     params()
-      .combine(poptions('initMethod', kAllInitMethods))
-      .combine(poptions('checkMethod', kAllCheckMethods))
+      .combine(kMethodsToTest)
       .combine([
         { bytesPerRowPadding: 0, rowsPerImagePaddingInBlocks: 0 }, // no padding
         { bytesPerRowPadding: 0, rowsPerImagePaddingInBlocks: 6 }, // rowsPerImage padding
@@ -446,8 +458,7 @@ g.test('copy_with_various_rows_per_image_and_bytes_per_row')
 g.test('copy_with_various_offsets_and_data_sizes')
   .params(
     params()
-      .combine(poptions('initMethod', kAllInitMethods))
-      .combine(poptions('checkMethod', kAllCheckMethods))
+      .combine(kMethodsToTest)
       .combine([
         { offsetInBlocks: 0, dataPaddingInBytes: 0 }, // no offset and no padding
         { offsetInBlocks: 1, dataPaddingInBytes: 0 }, // offset = 1
@@ -509,8 +520,7 @@ g.test('copy_with_various_offsets_and_data_sizes')
 g.test('copy_with_various_origins_and_copy_extents')
   .params(
     params()
-      .combine(poptions('initMethod', kAllInitMethods))
-      .combine(poptions('checkMethod', kAllCheckMethods))
+      .combine(kMethodsToTest)
       .combine(poptions('originValueInBlocks', [0, 7, 8]))
       .combine(poptions('copySizeValueInBlocks', [0, 7, 8]))
       .combine(poptions('textureSizePaddingValueInBlocks', [0, 7, 8]))
@@ -629,8 +639,7 @@ function* textureSizeExpander({
 g.test('copy_various_mip_levels')
   .params(
     params()
-      .combine(poptions('initMethod', kAllInitMethods))
-      .combine(poptions('checkMethod', kAllCheckMethods))
+      .combine(kMethodsToTest)
       .combine([
         {
           copySizeInBlocks: { width: 5, height: 4, depth: 1 },
