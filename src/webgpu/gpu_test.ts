@@ -4,6 +4,7 @@ import { DevicePool, TestOOMedShouldAttemptGC } from '../common/framework/gpu/de
 import { attemptGarbageCollection } from '../common/framework/util/collect_garbage.js';
 import { assert } from '../common/framework/util/util.js';
 
+import { EncodableTextureFormat, SizedTextureFormat } from './capability_info.js';
 import {
   fillTextureDataWithTexelValue,
   getTextureCopyLayout,
@@ -206,7 +207,7 @@ got [${failedByteActualValues.join(', ')}]`;
 
   expectSingleColor(
     src: GPUTexture,
-    format: GPUTextureFormat,
+    format: EncodableTextureFormat,
     {
       size,
       exp,
@@ -250,7 +251,7 @@ got [${failedByteActualValues.join(', ')}]`;
   // TODO(natashalee): Can refactor this and expectSingleColor to use a similar base expect
   expectSinglePixelIn2DTexture(
     src: GPUTexture,
-    format: GPUTextureFormat,
+    format: SizedTextureFormat,
     { x, y }: { x: number; y: number },
     {
       exp,
@@ -299,9 +300,6 @@ got [${failedByteActualValues.join(', ')}]`;
 
       let failed = false;
       switch (filter) {
-        case 'none':
-          failed = error !== null;
-          break;
         case 'out-of-memory':
           failed = !(error instanceof GPUOutOfMemoryError);
           break;
@@ -323,5 +321,18 @@ got [${failedByteActualValues.join(', ')}]`;
     });
 
     return returnValue;
+  }
+
+  makeBufferWithContents(dataArray: TypedArrayBufferView, usage: GPUBufferUsageFlags): GPUBuffer {
+    const buffer = this.device.createBuffer({
+      mappedAtCreation: true,
+      size: dataArray.byteLength,
+      usage,
+    });
+    const mappedBuffer = buffer.getMappedRange();
+    const constructor = dataArray.constructor as TypedArrayBufferViewConstructor;
+    new constructor(mappedBuffer).set(dataArray);
+    buffer.unmap();
+    return buffer;
   }
 }

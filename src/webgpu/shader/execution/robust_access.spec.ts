@@ -43,12 +43,13 @@ function runShaderTest(
 ): void {
   assert(stage === GPUShaderStage.COMPUTE, 'Only know how to deal with compute for now');
 
-  const [constantsBuffer, constantsInit] = t.device.createBufferMapped({
+  const constantsBuffer = t.device.createBuffer({
+    mappedAtCreation: true,
     size: 4,
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM,
   });
 
-  const constantsData = new Uint32Array(constantsInit);
+  const constantsData = new Uint32Array(constantsBuffer.getMappedRange());
   constantsData[0] = 1;
   constantsBuffer.unmap();
 
