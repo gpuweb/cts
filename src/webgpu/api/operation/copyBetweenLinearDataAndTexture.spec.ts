@@ -3,6 +3,7 @@ export const description = `writeTexture + copyBufferToTexture + copyTextureToBu
 * copy_with_various_rows_per_image_and_bytes_per_row: covers
   - bufferSize - offset < bytesPerImage * copyExtent.depth
   - when bytesPerRow is not a multiple of 512 and copyExtent.depth > 1: copyExtent.depth % 2 {==, >} 0
+  - bytesPerRow == bytesInACompleteCopyImage
 
 * copy_with_various_offsets_and_data_sizes: covers
   - offset + bytesInCopyExtentPerRow { ==, > } bytesPerRow
@@ -384,6 +385,7 @@ export const g = makeTestGroup(CopyBetweenLinearDataAndTextureTest);
 //    bufferSize - offset < bytesPerImage * copyExtent.depth
 // Covers a special code path for D3D12:
 //    when bytesPerRow is not a multiple of 512 and copyExtent.depth > 1: copyExtent.depth % 2 {==, >} 0
+//    bytesPerRow == bytesInACompleteCopyImage
 g.test('copy_with_various_rows_per_image_and_bytes_per_row')
   .params(
     params()
@@ -401,8 +403,8 @@ g.test('copy_with_various_rows_per_image_and_bytes_per_row')
         { copyWidthInBlocks: 0, copyHeightInBlocks: 4, copyDepth: 5 }, // empty copy because of width
         { copyWidthInBlocks: 3, copyHeightInBlocks: 0, copyDepth: 5 }, // empty copy because of height
         { copyWidthInBlocks: 3, copyHeightInBlocks: 4, copyDepth: 0 }, // empty copy because of depth
-        { copyWidthInBlocks: 1, copyHeightInBlocks: 4, copyDepth: 5 }, // copyWidth = 1
-        { copyWidthInBlocks: 3, copyHeightInBlocks: 1, copyDepth: 5 }, // copyHeight = 1
+        { copyWidthInBlocks: 1, copyHeightInBlocks: 3, copyDepth: 5 }, // copyWidth = 1, covers bytesPerRow = 15 = 3 * 5 = bytesInACompleteCopyImage with r8unorm for WriteTexture
+        { copyWidthInBlocks: 32, copyHeightInBlocks: 1, copyDepth: 8 }, // copyHeight = 1, covers bytesPerRow = 256 = 4 * 8 * 32 = bytesInACompleteCopyImage with rgba8unorm for CopyB2T
         { copyWidthInBlocks: 5, copyHeightInBlocks: 4, copyDepth: 1 }, // copyDepth = 1
         { copyWidthInBlocks: 7, copyHeightInBlocks: 1, copyDepth: 1 }, // copyHeight = 1 and copyDepth = 1
       ])
@@ -443,7 +445,11 @@ g.test('copy_with_various_rows_per_image_and_bytes_per_row')
       textureDataLayout: { offset: 0, bytesPerRow, rowsPerImage },
       copySize,
       dataSize: minDataSize,
-      textureSize: [copyWidth, copyHeight, copyDepth],
+      textureSize: [
+        Math.max(copyWidth, info.blockWidth!),
+        Math.max(copyHeight, info.blockHeight!),
+        Math.max(copyDepth, 1),
+      ], // making sure the texture is non-empty
       format,
       initMethod,
       checkMethod,
@@ -611,23 +617,35 @@ function* textureSizeExpander({
   yield {
     textureSize: textureSize as [number, number, number],
   };
-  if (info.blockWidth! > 1 && mipLevel > 0) {
+
+  // We choose width and height of the texture so that the values are divisible by blockWidth and
+  // blockHeight respectively and so that the virtual size at mip level corresponds to the same
+  // physical size.
+  // Virtual size at mip level with modified width has width = (physical size width) - (blockWidth / 2).
+  // Virtual size at mip level with modified height has height = (physical size height) - (blockHeight / 2).
+  assert(mipLevel > 0);
+  assert(textureSize[0] > 0 && textureSize[1] > 0);
+  const modifiedWidth = textureSize[0] - (info.blockWidth! << (mipLevel - 1));
+  const modifiedHeight = textureSize[1] - (info.blockHeight! << (mipLevel - 1));
+
+  if (info.blockWidth! > 1 && modifiedWidth !== textureSize[0]) {
     yield {
-      textureSize: [textureSize[0] - (1 << mipLevel), textureSize[1], textureSize[2]],
+      textureSize: [modifiedWidth, textureSize[1], textureSize[2]],
     };
   }
-  if (info.blockHeight! > 1 && mipLevel > 0) {
+  if (info.blockHeight! > 1 && modifiedHeight !== textureSize[1]) {
     yield {
-      textureSize: [textureSize[0], textureSize[1] - (1 << mipLevel), textureSize[2]],
+      textureSize: [textureSize[0], modifiedHeight, textureSize[2]],
     };
   }
-  if (info.blockHeight! > 1 && info.blockWidth! > 1 && mipLevel > 0) {
+  if (
+    info.blockWidth! > 1 &&
+    info.blockHeight! > 1 &&
+    modifiedWidth !== textureSize[0] &&
+    modifiedHeight !== textureSize[1]
+  ) {
     yield {
-      textureSize: [
-        textureSize[0] - (1 << mipLevel),
-        textureSize[1] - (1 << mipLevel),
-        textureSize[2],
-      ],
+      textureSize: [modifiedWidth, modifiedHeight, textureSize[2]],
     };
   }
 }
