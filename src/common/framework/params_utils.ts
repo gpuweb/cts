@@ -2,10 +2,20 @@ import { comparePublicParamsPaths, Ordering } from './query/compare.js';
 import { kWildcard, kParamSeparator, kParamKVSeparator } from './query/separators.js';
 
 // Consider adding more types here if needed
-export type ParamArgument = void | undefined | number | string | boolean | number[];
-export interface CaseParams {
+//
+// TODO: This type isn't actually used to constrain what you're allowed to do in `.params()`, so
+// it's not really serving its purpose. Figure out how to fix that?
+export type ParamArgument =
+  | undefined
+  | null
+  | number
+  | string
+  | boolean
+  | number[]
+  | { readonly [k: string]: undefined | null | number | string | boolean };
+export type CaseParams = {
   readonly [k: string]: ParamArgument;
-}
+};
 export interface CaseParamsRW {
   [k: string]: ParamArgument;
 }

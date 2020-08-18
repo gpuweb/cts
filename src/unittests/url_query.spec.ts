@@ -27,10 +27,20 @@ g.test('stringifyQuery,single_case').fn(t => {
     new TestQuerySingleCase('a', ['b_1', '2_c'], ['d_3', '4_e'], {
       f: 'g',
       _pri1: 0,
-      a: 3,
+      x: 3,
       _pri2: 1,
     }),
-    'a:b_1,2_c:d_3,4_e:f="g";a=3'
+    'a:b_1,2_c:d_3,4_e:f="g";x=3'
+  );
+});
+
+g.test('stringifyQuery,single_case,json').fn(t => {
+  t.expectQueryString(
+    new TestQuerySingleCase('a', ['b_1', '2_c'], ['d_3', '4_e'], {
+      f: 'g',
+      x: { p: 2, q: 'Q' },
+    }),
+    'a:b_1,2_c:d_3,4_e:f="g";x={"p":2,"q":"Q"}'
   );
 });
 
