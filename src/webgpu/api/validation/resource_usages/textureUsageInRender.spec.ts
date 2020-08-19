@@ -28,12 +28,14 @@ Test Coverage:
     - Texture usages in bundle should be tracked if that bundle is executed in the current scope.
 `;
 
-import { poptions, params } from '../../../../common/framework/params_builder.js';
+import { pbool, poptions, params } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
-  kShaderStages,
   kDepthStencilFormats,
   kDepthStencilFormatInfo,
+  kTextureBindingTypes,
+  kTextureBindingTypeInfo,
+  kShaderStages,
 } from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
@@ -421,6 +423,8 @@ g.test('shader_stages_and_visibility')
     });
   });
 
+// We should track the texture usages in bindings which are replaced by another setBindGroup()
+// call site upon the same index in the same render pass.
 g.test('replaced_binding')
   .params(poptions('bindingType', kTextureBindingTypes))
   .fn(async t => {
@@ -428,11 +432,12 @@ g.test('replaced_binding')
     const info = kTextureBindingTypeInfo[bindingType];
     const bindingTexFormat = info.resource === 'storageTex' ? 'rgba8unorm' : undefined;
 
-    const view0 = t.createTexture().createView();
-    const view1 = t
+    const sampledView = t.createTexture().createView();
+    const sampledStorageView = t
       .createTexture({ usage: GPUTextureUsage.STORAGE | GPUTextureUsage.SAMPLED })
       .createView();
 
+    // Create bindGroup0. It has two bindings. These two bindings use different views/subresources.
     const bglEntries0: GPUBindGroupLayoutEntry[] = [
       { binding: 0, visibility: GPUShaderStage.FRAGMENT, type: 'sampled-texture' },
       {
@@ -443,15 +448,17 @@ g.test('replaced_binding')
       },
     ];
     const bgEntries0: GPUBindGroupEntry[] = [
-      { binding: 0, resource: view0 },
-      { binding: 1, resource: view1 },
+      { binding: 0, resource: sampledView },
+      { binding: 1, resource: sampledStorageView },
     ];
     const bindGroup0 = t.device.createBindGroup({
       entries: bgEntries0,
       layout: t.device.createBindGroupLayout({ entries: bglEntries0 }),
     });
 
-    const bindGroup1 = t.createBindGroup(0, view1, 'sampled-texture', undefined);
+    // Create bindGroup1. It has one binding, which use the same view/subresoure of a binding in
+    // bindGroup0. So it may or may not conflicts with that binding in bindGroup0.
+    const bindGroup1 = t.createBindGroup(0, sampledStorageView, 'sampled-texture', undefined);
 
     const encoder = t.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
@@ -463,31 +470,40 @@ g.test('replaced_binding')
         },
       ],
     });
+
+    // Set bindGroup0 and bindGroup1. bindGroup0 is replaced by bindGroup1 in the current pass.
+    // But bindings in bindGroup0 should be tracked too.
     pass.setBindGroup(0, bindGroup0);
     pass.setBindGroup(0, bindGroup1);
     pass.endPass();
 
-    // We should track the texture usages in bindings which are replaced by another setBindGroup()
-    // call site upon the same index in the same render pass.
     const success = bindingType === 'writeonly-storage-texture' ? false : true;
     t.expectValidationError(() => {
       encoder.finish();
     }, !success);
   });
 
-g.test('binding_in_bundle')
+g.test('bindings_in_bundle')
   .params(
     params()
-      .combine(poptions('typeInBundle', kTextureBindingTypes))
-      .combine(poptions('typeInPass', ['sampled-texture', 'render-target'] as const))
+      .combine(pbool('binding0InBundle'))
+      .combine(pbool('binding1InBundle'))
+      .combine(poptions('type0', ['render-target', ...kTextureBindingTypes] as const))
+      .combine(poptions('type1', ['render-target', ...kTextureBindingTypes] as const))
+      .unless(
+        ({ binding0InBundle, binding1InBundle, type0, type1 }) =>
+          // We can't set 'render-target' in bundle, so we need to exclude it from bundle.
+          // In addition, if both bindings are non-bundle, there is no need to test it because
+          // we have far more comprehensive test cases for that situation in this file.
+          (binding0InBundle && type0 === 'render-target') ||
+          (binding1InBundle && type1 === 'render-target') ||
+          (!binding0InBundle && !binding1InBundle)
+      )
   )
   .fn(async t => {
-    const { typeInBundle, typeInPass } = t.params;
-    const info = kTextureBindingTypeInfo[typeInBundle];
-    const bindingTexFormat = info.resource === 'storageTex' ? 'rgba8unorm' : undefined;
+    const { binding0InBundle, binding1InBundle, type0, type1 } = t.params;
 
-    // Two bindings are attached to the same texture view. The first binding in bindGroup0 is set
-    // in bundle, the second binding is set in render pass via bindGroup1 or color attachment.
+    // Two bindings are attached to the same texture view.
     const view = t
       .createTexture({
         usage:
@@ -495,37 +511,68 @@ g.test('binding_in_bundle')
       })
       .createView();
 
-    const bindGroup0 = t.createBindGroup(0, view, typeInBundle, bindingTexFormat);
-
-    const bundleEncoder = t.device.createRenderBundleEncoder({
-      colorFormats: ['rgba8unorm'],
-    });
-    bundleEncoder.setBindGroup(0, bindGroup0);
-    const bundleInPass = bundleEncoder.finish();
+    const bindGroups: GPUBindGroup[] = [];
+    if (type0 !== 'render-target') {
+      const binding0TexFormat = type0 === 'sampled-texture' ? undefined : 'rgba8unorm';
+      bindGroups[0] = t.createBindGroup(0, view, type0, binding0TexFormat);
+    }
+    if (type1 !== 'render-target') {
+      const binding1TexFormat = type1 === 'sampled-texture' ? undefined : 'rgba8unorm';
+      bindGroups[1] = t.createBindGroup(1, view, type1, binding1TexFormat);
+    }
 
     const encoder = t.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment: typeInPass === 'render-target' ? view : t.createTexture().createView(),
+          attachment:
+            // At least one binding is in bundle, which means that its type is not 'render-target'.
+            // As a result, only one binding's type is 'render-target' at most.
+            type0 === 'render-target' || type1 === 'render-target'
+              ? view
+              : t.createTexture().createView(),
           loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
           storeOp: 'store',
         },
       ],
     });
 
-    let success = typeInBundle === 'writeonly-storage-texture' ? false : true;
-
-    if (typeInPass === 'sampled-texture') {
-      const bindGroup1 = t.createBindGroup(1, view, typeInPass, undefined);
-      pass.setBindGroup(1, bindGroup1);
-    } else {
-      success = false;
+    const bindingsInBundle: boolean[] = [binding0InBundle, binding1InBundle];
+    const bundles: GPURenderBundle[] = [];
+    for (let i = 0; i < 2; i++) {
+      // Create a bundle for each bind group if its bindings is required to be in bundle on purpose.
+      // Otherwise, call setBindGroup directly in pass if needed (when its binding is not
+      // 'render-target').
+      if (bindingsInBundle[i]) {
+        const bundleEncoder = t.device.createRenderBundleEncoder({
+          colorFormats: ['rgba8unorm'],
+        });
+        bundleEncoder.setBindGroup(i, bindGroups[i]);
+        bundles.push(bundleEncoder.finish());
+      } else if (bindGroups[i] !== undefined) {
+        pass.setBindGroup(i, bindGroups[i]);
+      }
     }
 
-    pass.executeBundles([bundleInPass]);
+    // Execute bundle(s). Note that we have one bundle at least.
+    pass.executeBundles(bundles);
+
     pass.endPass();
 
+    let success = false;
+    if (
+      (type0 === 'sampled-texture' || type0 === 'readonly-storage-texture') &&
+      (type1 === 'sampled-texture' || type1 === 'readonly-storage-texture')
+    ) {
+      success = true;
+    }
+
+    if (type0 === 'writeonly-storage-texture' && type1 === 'writeonly-storage-texture') {
+      success = true;
+    }
+
+    // Resource usages in bundle should be tracked. And validation error should be reported
+    // if needed.
     t.expectValidationError(() => {
       encoder.finish();
     }, !success);
