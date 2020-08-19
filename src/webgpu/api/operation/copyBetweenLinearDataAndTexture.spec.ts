@@ -653,7 +653,7 @@ function* textureSizeExpander({
 // Test that copying various mip levels works.
 // Covers two special code paths:
 //    the physical size of the subresouce is not equal to the logical size
-//    bufferSize - offset < bytesPerImage * copyExtent.depth and copyExtent needs to be clamped for all BC formats
+//    bufferSize - offset < bytesPerImage * copyExtent.depth and copyExtent needs to be clamped for all block formats
 g.test('copy_various_mip_levels')
   .params(
     params()
