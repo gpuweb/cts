@@ -13,7 +13,8 @@ export const description = `writeTexture + copyBufferToTexture + copyTextureToBu
 
 * copy_with_various_origins_and_copy_extents: test that copying slices of a texture works with various origin (including { origin.x, origin.y, origin.z }\
  { ==, > } 0 and is/isn't power of 2) and copyExtent (including { copyExtent.x, copyExtent.y, copyExtent.z } { ==, > } 0 and is/isn't power of 2) values\
- (also including {origin._ + copyExtent._ { ==, < } the subresource size of textureCopyView) works for all formats.
+ (also including {origin._ + copyExtent._ { ==, < } the subresource size of textureCopyView) works for all formats. origin and copyExtent values are passed\
+ as [number, number, number] instead of GPUExtent3DDict.
 
 * copy_various_mip_levels: test that copying various mip levels works for all formats. Also covers special code paths:
   - the physical size of the subresouce is not equal to the logical size
@@ -27,7 +28,6 @@ export const description = `writeTexture + copyBufferToTexture + copyTextureToBu
   - check that CopyT2B doesn't overwrite any other bytes
   - because of expectContests 4-bytes alignment we don't test CopyT2B with buffer size not divisible by 4
   - add tests for 1d / 3d textures
-  - add tests for passing origin and copyExtent both as dictionaries and as arrays.
 `;
 
 import { params, poptions } from '../../../common/framework/params_builder.js';
@@ -50,6 +50,11 @@ interface TextureCopyViewWithRequiredOrigin {
 
 type InitMethod = 'WriteTexture' | 'CopyB2T';
 type CheckMethod = 'PartialCopyT2B' | 'FullCopyT2B';
+
+// This describes in what form the arguments will be passed to WriteTexture/CopyB2T/CopyT2B.
+// If undefined, then default values are passed as undefined instead of default values.
+// If arrays, then GPUOrigin3D and GPUExtent3D are passed as [number, number, number].
+type ChangeBeforePass = 'none' | 'undefined' | 'arrays';
 
 // Each combination of methods can assume that the ones before it were tested and work correctly.
 const kMethodsToTest = [
@@ -147,16 +152,16 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     return arr;
   }
 
-  // This is used for testing passing undefined members of TextureDataLayout instead of actual values
+  // This is used for testing passing undefined members of GPUTextureDataLayout instead of actual values
   // where possible. Passing arguments as values and not as objects so that they are passed by copy
   // and not by reference.
   appliedDataLayout(
     offset: number | undefined,
     rowsPerImage: number | undefined,
     bytesPerRow: number,
-    putUndefinedValues: boolean
+    changeBeforePass: ChangeBeforePass
   ): GPUTextureDataLayout {
-    if (putUndefinedValues) {
+    if (changeBeforePass === 'undefined') {
       if (offset === 0) {
         offset = undefined;
       }
@@ -167,20 +172,20 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     return { offset, bytesPerRow, rowsPerImage };
   }
 
-  // This is used for testing passing undefined members of TextureCopyView instead of actual values
-  // where possible. Passing arguments as values and not as objects so that they are passed by copy
-  // and not by reference.
+  // This is used for testing passing undefined members of GPUTextureCopyView instead of actual values
+  // where possible and also for testing passing the origin as [number, number, number].
+  // Passing arguments as values and not as objects so that they are passed by copy and not by reference.
   appliedCopyView(
     texture: GPUTexture,
     origin_x: number | undefined,
     origin_y: number | undefined,
     origin_z: number | undefined,
     mipLevel: number | undefined,
-    putUndefinedValues: boolean
+    changeBeforePass: ChangeBeforePass
   ): GPUTextureCopyView {
     let origin: GPUOrigin3D | undefined = { x: origin_x, y: origin_y, z: origin_z };
 
-    if (putUndefinedValues) {
+    if (changeBeforePass === 'undefined') {
       if (origin_x === 0 && origin_y === 0 && origin_z === 0) {
         origin = undefined;
       } else {
@@ -201,29 +206,50 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
       }
     }
 
+    if (changeBeforePass === 'arrays') {
+      origin = [origin_x!, origin_y!, origin_z!];
+    }
+
     return { texture, origin, mipLevel };
+  }
+
+  // This is used for testing passing GPUExtent3D as [number, number, number] instead of GPUExtent3DDict.
+  // Passing arguments as values and not as objects so that they are passed by copy and not by reference.
+  appliedCopySize(
+    width: number,
+    height: number,
+    depth: number,
+    changeBeforePass: ChangeBeforePass
+  ): GPUExtent3D {
+    if (changeBeforePass === 'arrays') {
+      return [width, height, depth];
+    } else {
+      return { width, height, depth };
+    }
   }
 
   // Put data into a part of the texture with an appropriate method.
   initTexture(
     textureCopyView: TextureCopyViewWithRequiredOrigin,
     textureDataLayout: GPUTextureDataLayout,
-    copySize: GPUExtent3D,
+    copySize: GPUExtent3DDict,
     partialData: Uint8Array,
     method: InitMethod,
-    putUndefineValues: boolean = false
+    changeBeforePass: ChangeBeforePass
   ): void {
     const { texture, mipLevel, origin } = textureCopyView;
     const { offset, rowsPerImage, bytesPerRow } = textureDataLayout;
     const { x, y, z } = origin;
+    const { width, height, depth } = copySize;
 
-    const appliedCopyView = this.appliedCopyView(texture, x, y, z, mipLevel, putUndefineValues);
+    const appliedCopyView = this.appliedCopyView(texture, x, y, z, mipLevel, changeBeforePass);
     const appliedDataLayout = this.appliedDataLayout(
       offset,
       rowsPerImage,
       bytesPerRow,
-      putUndefineValues
+      changeBeforePass
     );
+    const appliedCopySize = this.appliedCopySize(width, height, depth, changeBeforePass);
 
     switch (method) {
       case 'WriteTexture': {
@@ -231,7 +257,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
           appliedCopyView,
           partialData,
           appliedDataLayout,
-          copySize
+          appliedCopySize
         );
 
         break;
@@ -246,7 +272,11 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
         buffer.unmap();
 
         const encoder = this.device.createCommandEncoder();
-        encoder.copyBufferToTexture({ buffer, ...appliedDataLayout }, appliedCopyView, copySize);
+        encoder.copyBufferToTexture(
+          { buffer, ...appliedDataLayout },
+          appliedCopyView,
+          appliedCopySize
+        );
         this.device.defaultQueue.submit([encoder.finish()]);
 
         break;
@@ -265,7 +295,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     format: SizedTextureFormat,
     checkSize: GPUExtent3DDict,
     expected: Uint8Array,
-    putUndefinedValues: boolean = false
+    changeBeforePass: ChangeBeforePass = 'none'
   ): void {
     const buffer = this.device.createBuffer({
       size: align(expected.byteLength, 4), // this is necessary because we need to copy and map data from this buffer
@@ -274,17 +304,23 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
 
     const { offset, rowsPerImage, bytesPerRow } = textureDataLayout;
     const { x, y, z } = origin;
+    const { width, height, depth } = checkSize;
 
-    const appliedCopyView = this.appliedCopyView(texture, x, y, z, mipLevel, putUndefinedValues);
+    const appliedCopyView = this.appliedCopyView(texture, x, y, z, mipLevel, changeBeforePass);
     const appliedDataLayout = this.appliedDataLayout(
       offset,
       rowsPerImage,
       bytesPerRow,
-      putUndefinedValues
+      changeBeforePass
     );
+    const appliedCheckSize = this.appliedCopySize(width, height, depth, changeBeforePass);
 
     const encoder = this.device.createCommandEncoder();
-    encoder.copyTextureToBuffer(appliedCopyView, { buffer, ...appliedDataLayout }, checkSize);
+    encoder.copyTextureToBuffer(
+      appliedCopyView,
+      { buffer, ...appliedDataLayout },
+      appliedCheckSize
+    );
     this.device.defaultQueue.submit([encoder.finish()]);
 
     for (const texel of this.iterateBlockRows(checkSize, origin, format)) {
@@ -406,7 +442,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     dimension = '2d',
     initMethod,
     checkMethod,
-    putUndefinedValues = false,
+    changeBeforePass = 'none',
   }: {
     textureDataLayout: GPUTextureDataLayout;
     copySize: GPUExtent3DDict;
@@ -418,7 +454,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     dimension?: GPUTextureDimension;
     initMethod: InitMethod;
     checkMethod: CheckMethod;
-    putUndefinedValues?: boolean;
+    changeBeforePass?: ChangeBeforePass;
   }): void {
     const texture = this.device.createTexture({
       size: textureSize,
@@ -438,7 +474,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
           copySize,
           data,
           initMethod,
-          putUndefinedValues
+          changeBeforePass
         );
 
         this.checkData(
@@ -447,7 +483,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
           format,
           copySize,
           data,
-          putUndefinedValues
+          changeBeforePass
         );
 
         break;
@@ -465,7 +501,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
           copySize,
           data,
           initMethod,
-          putUndefinedValues
+          changeBeforePass
         );
 
         this.fullCheck(
@@ -642,7 +678,7 @@ g.test('copy_with_various_offsets_and_data_sizes')
   });
 
 // Test that copying slices of a texture works with various origin and copyExtent values
-// for all formats.
+// for all formats. We pass origin and copyExtent as [number, number, number].
 g.test('copy_with_various_origins_and_copy_extents')
   .params(
     params()
@@ -714,6 +750,7 @@ g.test('copy_with_various_origins_and_copy_extents')
       format,
       initMethod,
       checkMethod,
+      changeBeforePass: 'arrays',
     });
   });
 
@@ -921,6 +958,6 @@ g.test('copy_with_no_image_or_slice_padding_and_undefined_values')
       format: 'rgba8unorm',
       initMethod,
       checkMethod,
-      putUndefinedValues: true,
+      changeBeforePass: 'undefined',
     });
   });
