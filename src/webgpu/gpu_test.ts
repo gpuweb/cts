@@ -106,7 +106,7 @@ export class GPUTest extends Fixture {
   // we might need to copy more bytes from the buffer than we want to map.
   // begin and end values represent the part of the copied buffer that stores the contents
   // we initially wanted to map.
-  // The copy might cause an OOB error if the buffer is not big enough.
+  // The copy will not cause an OOB error because the buffer size must be 4-aligned.
   createAlignedCopyForMapRead(
     src: GPUBuffer,
     size: number,
