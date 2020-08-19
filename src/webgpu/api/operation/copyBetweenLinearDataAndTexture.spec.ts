@@ -530,11 +530,9 @@ g.test('copy_with_various_origins_and_copy_extents')
       .combine(poptions('originValueInBlocks', [0, 7, 8]))
       .combine(poptions('copySizeValueInBlocks', [0, 7, 8]))
       .combine(poptions('textureSizePaddingValueInBlocks', [0, 7, 8]))
-      .unless(p => {
-        return (
-          p.copySizeValueInBlocks + p.originValueInBlocks + p.textureSizePaddingValueInBlocks === 0
-        );
-      }) // we can't create an empty texture
+      .unless(p =>
+        // we can't create an empty texture
+        p.copySizeValueInBlocks + p.originValueInBlocks + p.textureSizePaddingValueInBlocks === 0)
       .combine(poptions('coordinateToTest', ['width', 'height', 'depth'] as const))
       .combine(poptions('format', kSizedTextureFormats))
       .filter(formatCanBeTested)
