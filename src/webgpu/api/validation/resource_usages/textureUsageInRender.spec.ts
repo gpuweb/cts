@@ -538,7 +538,6 @@ g.test('bindings_in_bundle')
     });
 
     const bindingsInBundle: boolean[] = [binding0InBundle, binding1InBundle];
-    const bundles: GPURenderBundle[] = [];
     for (let i = 0; i < 2; i++) {
       // Create a bundle for each bind group if its bindings is required to be in bundle on purpose.
       // Otherwise, call setBindGroup directly in pass if needed (when its binding is not
@@ -548,14 +547,12 @@ g.test('bindings_in_bundle')
           colorFormats: ['rgba8unorm'],
         });
         bundleEncoder.setBindGroup(i, bindGroups[i]);
-        bundles.push(bundleEncoder.finish());
+        const bundleInPass = bundleEncoder.finish();
+        pass.executeBundles([bundleInPass]);
       } else if (bindGroups[i] !== undefined) {
         pass.setBindGroup(i, bindGroups[i]);
       }
     }
-
-    // Execute bundle(s). Note that we have one bundle at least.
-    pass.executeBundles(bundles);
 
     pass.endPass();
 
