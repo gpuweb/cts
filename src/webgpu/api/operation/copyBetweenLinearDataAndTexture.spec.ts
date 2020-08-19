@@ -19,12 +19,15 @@ export const description = `writeTexture + copyBufferToTexture + copyTextureToBu
   - the physical size of the subresouce is not equal to the logical size
   - bufferSize - offset < bytesPerImage * copyExtent.depth and copyExtent needs to be clamped
 
+* copy_with_no_image_or_slice_padding_and_undefined_values: test that when copying a single row we can set any bytesPerRow value and when copying a single\
+ slice we can set rowsPerImage to 0. Also test setting offset, rowsPerImage, mipLevel, origin, origin.{x,y,z} to undefined.
+
 * TODO: 
   - add another initMethod which renders the texture
   - check that CopyT2B doesn't overwrite any other bytes
   - because of expectContests 4-bytes alignment we don't test CopyT2B with buffer size not divisible by 4
   - add tests for 1d / 3d textures
-  - add tests for incorrect values of bytesPerRow / rowsPerImage when no padding is necessary
+  - add tests for passing origin and copyExtent both as dictionaries and as arrays.
 `;
 
 import { params, poptions } from '../../../common/framework/params_builder.js';
@@ -144,20 +147,90 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     return arr;
   }
 
+  // This is used for testing passing undefined members of TextureDataLayout instead of actual values
+  // where possible. Passing arguments as values and not as objects so that they are passed by copy
+  // and not by reference.
+  appliedDataLayout(
+    offset: number | undefined,
+    rowsPerImage: number | undefined,
+    bytesPerRow: number,
+    putUndefinedValues: boolean
+  ): GPUTextureDataLayout {
+    if (putUndefinedValues) {
+      if (offset === 0) {
+        offset = undefined;
+      }
+      if (rowsPerImage === 0) {
+        rowsPerImage = undefined;
+      }
+    }
+    return { offset, bytesPerRow, rowsPerImage };
+  }
+
+  // This is used for testing passing undefined members of TextureCopyView instead of actual values
+  // where possible. Passing arguments as values and not as objects so that they are passed by copy
+  // and not by reference.
+  appliedCopyView(
+    texture: GPUTexture,
+    origin_x: number | undefined,
+    origin_y: number | undefined,
+    origin_z: number | undefined,
+    mipLevel: number | undefined,
+    putUndefinedValues: boolean
+  ): GPUTextureCopyView {
+    let origin: GPUOrigin3D | undefined = { x: origin_x, y: origin_y, z: origin_z };
+
+    if (putUndefinedValues) {
+      if (origin_x === 0 && origin_y === 0 && origin_z === 0) {
+        origin = undefined;
+      } else {
+        if (origin_x === 0) {
+          origin_x = undefined;
+        }
+        if (origin_y === 0) {
+          origin_y = undefined;
+        }
+        if (origin_z === 0) {
+          origin_z = undefined;
+        }
+        origin = { x: origin_x, y: origin_y, z: origin_z };
+      }
+
+      if (mipLevel === 0) {
+        mipLevel = undefined;
+      }
+    }
+
+    return { texture, origin, mipLevel };
+  }
+
   // Put data into a part of the texture with an appropriate method.
   initTexture(
-    textureCopyView: GPUTextureCopyView,
+    textureCopyView: TextureCopyViewWithRequiredOrigin,
     textureDataLayout: GPUTextureDataLayout,
     copySize: GPUExtent3D,
     partialData: Uint8Array,
-    method: InitMethod
+    method: InitMethod,
+    putUndefineValues: boolean = false
   ): void {
+    const { texture, mipLevel, origin } = textureCopyView;
+    const { offset, rowsPerImage, bytesPerRow } = textureDataLayout;
+    const { x, y, z } = origin;
+
+    const appliedCopyView = this.appliedCopyView(texture, x, y, z, mipLevel, putUndefineValues);
+    const appliedDataLayout = this.appliedDataLayout(
+      offset,
+      rowsPerImage,
+      bytesPerRow,
+      putUndefineValues
+    );
+
     switch (method) {
       case 'WriteTexture': {
         this.device.defaultQueue.writeTexture(
-          textureCopyView,
+          appliedCopyView,
           partialData,
-          textureDataLayout,
+          appliedDataLayout,
           copySize
         );
 
@@ -173,7 +246,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
         buffer.unmap();
 
         const encoder = this.device.createCommandEncoder();
-        encoder.copyBufferToTexture({ buffer, ...textureDataLayout }, textureCopyView, copySize);
+        encoder.copyBufferToTexture({ buffer, ...appliedDataLayout }, appliedCopyView, copySize);
         this.device.defaultQueue.submit([encoder.finish()]);
 
         break;
@@ -191,19 +264,27 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     textureDataLayout: GPUTextureDataLayout,
     format: SizedTextureFormat,
     checkSize: GPUExtent3DDict,
-    expected: Uint8Array
+    expected: Uint8Array,
+    putUndefinedValues: boolean = false
   ): void {
     const buffer = this.device.createBuffer({
       size: align(expected.byteLength, 4), // this is necessary because we need to copy and map data from this buffer
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
 
-    const encoder = this.device.createCommandEncoder();
-    encoder.copyTextureToBuffer(
-      { texture, mipLevel, origin },
-      { buffer, ...textureDataLayout },
-      checkSize
+    const { offset, rowsPerImage, bytesPerRow } = textureDataLayout;
+    const { x, y, z } = origin;
+
+    const appliedCopyView = this.appliedCopyView(texture, x, y, z, mipLevel, putUndefinedValues);
+    const appliedDataLayout = this.appliedDataLayout(
+      offset,
+      rowsPerImage,
+      bytesPerRow,
+      putUndefinedValues
     );
+
+    const encoder = this.device.createCommandEncoder();
+    encoder.copyTextureToBuffer(appliedCopyView, { buffer, ...appliedDataLayout }, checkSize);
     this.device.defaultQueue.submit([encoder.finish()]);
 
     for (const texel of this.iterateBlockRows(checkSize, origin, format)) {
@@ -325,6 +406,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     dimension = '2d',
     initMethod,
     checkMethod,
+    putUndefinedValues = false,
   }: {
     textureDataLayout: GPUTextureDataLayout;
     copySize: GPUExtent3DDict;
@@ -336,6 +418,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     dimension?: GPUTextureDimension;
     initMethod: InitMethod;
     checkMethod: CheckMethod;
+    putUndefinedValues?: boolean;
   }): void {
     const texture = this.device.createTexture({
       size: textureSize,
@@ -354,10 +437,18 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
           textureDataLayout,
           copySize,
           data,
-          initMethod
+          initMethod,
+          putUndefinedValues
         );
 
-        this.checkData({ texture, mipLevel, origin }, textureDataLayout, format, copySize, data);
+        this.checkData(
+          { texture, mipLevel, origin },
+          textureDataLayout,
+          format,
+          copySize,
+          data,
+          putUndefinedValues
+        );
 
         break;
       }
@@ -373,7 +464,8 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
           textureDataLayout,
           copySize,
           data,
-          initMethod
+          initMethod,
+          putUndefinedValues
         );
 
         this.fullCheck(
@@ -769,5 +861,66 @@ g.test('copy_various_mip_levels')
       format,
       initMethod,
       checkMethod,
+    });
+  });
+
+// Test that when copying a single row we can set any bytesPerRow value and when copying a single slice we can set rowsPerImage to 0.
+// Origin, offset, mipLevel and rowsPerImage values will be set to undefined when appropriate.
+g.test('copy_with_no_image_or_slice_padding_and_undefined_values')
+  .params(
+    params()
+      .combine(kMethodsToTest)
+      .combine([
+        {
+          bytesPerRow: 0,
+          rowsPerImage: 0,
+          copySize: { width: 3, height: 1, depth: 1 },
+          origin: { x: 0, y: 0, z: 0 },
+        }, // copying one row: bytesPerRow and rowsPerImage can be set to 0
+        {
+          bytesPerRow: 256,
+          rowsPerImage: 0,
+          copySize: { width: 100, height: 1, depth: 1 },
+          origin: { x: 0, y: 0, z: 0 },
+        }, // copying one row: bytesPerRow can be < bytesInACompleteRow = 400
+        {
+          bytesPerRow: 256,
+          rowsPerImage: 0,
+          copySize: { width: 3, height: 3, depth: 1 },
+          origin: { x: 0, y: 0, z: 0 },
+        }, // copying one slice: rowsPerImage = 0 will be set to undefined.
+        {
+          bytesPerRow: 0,
+          rowsPerImage: 0,
+          copySize: { width: 1, height: 1, depth: 1 },
+          origin: { x: 0, y: 1, z: 1 },
+        }, // origin.x = 0 will be set to undefined
+        {
+          bytesPerRow: 0,
+          rowsPerImage: 0,
+          copySize: { width: 1, height: 1, depth: 1 },
+          origin: { x: 1, y: 0, z: 1 },
+        }, // origin.y = 0 will be set to undefined
+        {
+          bytesPerRow: 0,
+          rowsPerImage: 0,
+          copySize: { width: 1, height: 1, depth: 1 },
+          origin: { x: 1, y: 1, z: 0 },
+        }, // origin.z = 0 will be set to undefined
+      ])
+  )
+  .fn(async t => {
+    const { bytesPerRow, rowsPerImage, copySize, origin, initMethod, checkMethod } = t.params;
+
+    t.testRun({
+      textureDataLayout: { offset: 0, bytesPerRow, rowsPerImage },
+      copySize,
+      dataSize: 100 * 3 * 4,
+      textureSize: [100, 3, 2],
+      origin,
+      format: 'rgba8unorm',
+      initMethod,
+      checkMethod,
+      putUndefinedValues: true,
     });
   });
