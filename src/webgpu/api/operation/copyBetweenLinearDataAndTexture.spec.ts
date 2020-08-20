@@ -164,7 +164,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
   /** This is used for testing passing undefined members of GPUTextureDataLayout instead of actual values
    * where possible. Passing arguments as values and not as objects so that they are passed by copy
    * and not by reference. */
-  appliedDataLayout(
+  undefDataLayoutIfNeeded(
     offset: number | undefined,
     rowsPerImage: number | undefined,
     bytesPerRow: number,
@@ -184,7 +184,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
   /**  This is used for testing passing undefined members of GPUTextureCopyView instead of actual values
    * where possible and also for testing passing the origin as [number, number, number].
    * Passing arguments as values and not as objects so that they are passed by copy and not by reference. */
-  appliedCopyView(
+  undefOrArrayCopyViewIfNeeded(
     texture: GPUTexture,
     origin_x: number | undefined,
     origin_y: number | undefined,
@@ -224,7 +224,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
 
   /**  This is used for testing passing GPUExtent3D as [number, number, number] instead of GPUExtent3DDict.
    * Passing arguments as values and not as objects so that they are passed by copy and not by reference. */
-  appliedCopySize(
+  arrayCopySizeIfNeeded(
     width: number,
     height: number,
     depth: number,
@@ -247,14 +247,21 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
   ): void {
     const { x, y, z } = origin;
 
-    const appliedCopyView = this.appliedCopyView(texture, x, y, z, mipLevel, changeBeforePass);
-    const appliedDataLayout = this.appliedDataLayout(
+    const appliedCopyView = this.undefOrArrayCopyViewIfNeeded(
+      texture,
+      x,
+      y,
+      z,
+      mipLevel,
+      changeBeforePass
+    );
+    const appliedDataLayout = this.undefDataLayoutIfNeeded(
       offset,
       rowsPerImage,
       bytesPerRow,
       changeBeforePass
     );
-    const appliedCheckSize = this.appliedCopySize(width, height, depth, changeBeforePass);
+    const appliedCheckSize = this.arrayCopySizeIfNeeded(width, height, depth, changeBeforePass);
 
     const encoder = this.device.createCommandEncoder();
     encoder.copyTextureToBuffer(
@@ -266,7 +273,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
   }
 
   /**  Put data into a part of the texture with an appropriate method. */
-  uploadLinearTextureDataToTextureSubpart(
+  uploadLinearTextureDataToTextureSubBox(
     textureCopyView: TextureCopyViewWithRequiredOrigin,
     textureDataLayout: GPUTextureDataLayout,
     copySize: GPUExtent3DDict,
@@ -279,14 +286,21 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     const { x, y, z } = origin;
     const { width, height, depth } = copySize;
 
-    const appliedCopyView = this.appliedCopyView(texture, x, y, z, mipLevel, changeBeforePass);
-    const appliedDataLayout = this.appliedDataLayout(
+    const appliedCopyView = this.undefOrArrayCopyViewIfNeeded(
+      texture,
+      x,
+      y,
+      z,
+      mipLevel,
+      changeBeforePass
+    );
+    const appliedDataLayout = this.undefDataLayoutIfNeeded(
       offset,
       rowsPerImage,
       bytesPerRow,
       changeBeforePass
     );
-    const appliedCopySize = this.appliedCopySize(width, height, depth, changeBeforePass);
+    const appliedCopySize = this.arrayCopySizeIfNeeded(width, height, depth, changeBeforePass);
 
     switch (method) {
       case 'WriteTexture': {
@@ -323,10 +337,6 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     }
   }
 
-  ensureBufferMatchesArray(buffer: GPUBuffer, array: Uint8Array, start: number, end: number): void {
-    this.expectContents(buffer, array.slice(start, end), start);
-  }
-
   /**  We check an appropriate part of the texture against the given data.
    * Used directly with PartialCopyT2B check method (for a subpart of the texture)
    * and by fullCheck function with FullCopyT2B check method (for the whole texture).
@@ -338,20 +348,19 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     format: SizedTextureFormat,
     expected: Uint8Array,
     expectedDataLayout: Required<GPUTextureDataLayout>,
-    changeBeforePass: ChangeBeforePass = 'none',
-    validateOtherBytesInBuffer: boolean = false
+    changeBeforePass: ChangeBeforePass = 'none'
   ): void {
     /** The alignment is necessary because we need to copy and map data from this buffer */
     const bufferSize = align(expected.byteLength, 4);
     /** The start value ensures generated data here doesn't match the expected data */
-    const originalBufferData = this.generateData(bufferSize, 17);
+    const bufferData = this.generateData(bufferSize, 17);
 
     const buffer = this.device.createBuffer({
       mappedAtCreation: true,
       size: bufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-    new Uint8Array(buffer.getMappedRange()).set(originalBufferData);
+    new Uint8Array(buffer.getMappedRange()).set(bufferData);
     buffer.unmap();
 
     this.copyTextureToBufferWithAppliedArguments(
@@ -362,55 +371,17 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
       changeBeforePass
     );
 
-    const { rowsPerImage, bytesPerRow } = expectedDataLayout;
-    const info = kSizedTextureFormatInfo[format];
-    const copyLength = this.requiredBytesInCopy(expectedDataLayout, format, checkSize);
-    const copyOffset = expectedDataLayout.offset;
+    this.updateLinearTextureDataSubBox(
+      expectedDataLayout,
+      expectedDataLayout,
+      checkSize,
+      origin,
+      format,
+      bufferData,
+      expected
+    );
 
-    for (const texel of this.iterateBlockRows(checkSize, origin, format)) {
-      const rowOffset = this.getTexelOffsetInBytes(expectedDataLayout, format, texel, origin);
-      const rowLength = this.bytesInACompleteRow(checkSize.width, format);
-      /** Ensure that the row data was copied correctly */
-      this.ensureBufferMatchesArray(buffer, expected, rowOffset, rowOffset + rowLength);
-      if (validateOtherBytesInBuffer) {
-        /** Ensure that the row padding wasn't overwritten */
-        this.ensureBufferMatchesArray(
-          buffer,
-          originalBufferData,
-          rowOffset + rowLength,
-          rowOffset + bytesPerRow
-        );
-      }
-    }
-
-    if (validateOtherBytesInBuffer) {
-      /** Ensure that bytes before the expected data weren't overwritten */
-      this.ensureBufferMatchesArray(buffer, originalBufferData, 0, copyOffset);
-
-      if (checkSize.width > 0 && checkSize.height > 0) {
-        for (let z = 0; z < checkSize.depth - 1; ++z) {
-          const imageLength = (checkSize.height / info.blockHeight) * bytesPerRow;
-          const imageStride = (rowsPerImage / info.blockHeight) * bytesPerRow;
-          const texel = { x: origin.x, y: origin.y, z: origin.z + z };
-          const imageOffset = this.getTexelOffsetInBytes(expectedDataLayout, format, texel, origin);
-          /** Ensure that the image padding wasn't overwrittem */
-          this.ensureBufferMatchesArray(
-            buffer,
-            originalBufferData,
-            imageOffset + imageLength,
-            imageOffset + imageStride
-          );
-        }
-      }
-
-      /** Ensure that bytes after the expected data weren't overwritten  */
-      this.ensureBufferMatchesArray(
-        buffer,
-        originalBufferData,
-        copyOffset + copyLength,
-        bufferSize
-      );
-    }
+    this.expectContents(buffer, bufferData);
   }
 
   /**  Used for fullCheck.
@@ -448,8 +419,8 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
 
   /** Takes the data returned by getFullData and updates it after a copy operation on the texture
    * by emulating the copy behaviour here directly. */
-  updateLinearTextureDataSubpart(
-    destinationDataLayout: TextureCopyLayout,
+  updateLinearTextureDataSubBox(
+    { bytesPerRow, rowsPerImage }: { bytesPerRow: number; rowsPerImage: number },
     sourceDataLayout: Required<GPUTextureDataLayout>,
     copySize: GPUExtent3DDict,
     origin: Required<GPUOrigin3DDict>,
@@ -460,11 +431,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     for (const texel of this.iterateBlockRows(copySize, origin, format)) {
       const sourceOffset = this.getTexelOffsetInBytes(sourceDataLayout, format, texel, origin);
       const destinationOffset = this.getTexelOffsetInBytes(
-        {
-          bytesPerRow: destinationDataLayout.bytesPerRow,
-          rowsPerImage: destinationDataLayout.rowsPerImage,
-          offset: 0,
-        },
+        { bytesPerRow, rowsPerImage, offset: 0 },
         format,
         texel
       );
@@ -494,7 +461,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     this.eventualAsyncExpectation(async () => {
       await dst.mapAsync(GPUMapMode.READ);
       const actual = new Uint8Array(dst.getMappedRange()).subarray(begin, end);
-      this.updateLinearTextureDataSubpart(
+      this.updateLinearTextureDataSubBox(
         fullTextureCopyLayout,
         texturePartialDataLayout,
         copySize,
@@ -553,7 +520,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
 
     switch (checkMethod) {
       case 'PartialCopyT2B': {
-        this.uploadLinearTextureDataToTextureSubpart(
+        this.uploadLinearTextureDataToTextureSubBox(
           { texture, mipLevel, origin },
           textureDataLayout,
           copySize,
@@ -568,8 +535,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
           format,
           data,
           textureDataLayout,
-          changeBeforePass,
-          true
+          changeBeforePass
         );
 
         break;
@@ -584,7 +550,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
           fullTextureCopyLayout
         );
 
-        this.uploadLinearTextureDataToTextureSubpart(
+        this.uploadLinearTextureDataToTextureSubBox(
           { texture, mipLevel, origin },
           textureDataLayout,
           copySize,
@@ -1039,6 +1005,12 @@ g.test('copy_with_no_image_or_slice_padding_and_undefined_values')
           copySize: { width: 3, height: 3, depth: 1 },
           origin: { x: 0, y: 0, z: 0 },
         } /** copying one slice: rowsPerImage = 0 will be set to undefined */,
+        {
+          bytesPerRow: 256,
+          rowsPerImage: 2,
+          copySize: { width: 3, height: 3, depth: 1 },
+          origin: { x: 0, y: 0, z: 0 },
+        } /** copying one slice: rowsPerImage = 2 is valid */,
         {
           bytesPerRow: 0,
           rowsPerImage: 0,
