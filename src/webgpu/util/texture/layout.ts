@@ -32,19 +32,21 @@ export function getMipSizePassthroughLayers(
   }
 }
 
-export function getTextureCopyLayout(
-  format: SizedTextureFormat,
-  dimension: GPUTextureDimension,
-  size: [number, number, number],
-  options: LayoutOptions = kDefaultLayoutOptions
-): {
+export interface TextureCopyLayout {
   bytesPerBlock: number;
   byteLength: number;
   minBytesPerRow: number;
   bytesPerRow: number;
   rowsPerImage: number;
   mipSize: [number, number, number];
-} {
+}
+
+export function getTextureCopyLayout(
+  format: SizedTextureFormat,
+  dimension: GPUTextureDimension,
+  size: [number, number, number],
+  options: LayoutOptions = kDefaultLayoutOptions
+): TextureCopyLayout {
   const { mipLevel } = options;
   let { bytesPerRow, rowsPerImage } = options;
 
@@ -52,7 +54,10 @@ export function getTextureCopyLayout(
 
   const { blockWidth, blockHeight, bytesPerBlock } = kSizedTextureFormatInfo[format];
 
-  assert(isAligned(mipSize[0], blockWidth));
+  // We align mipSize to be the physical size of the texture subresource.
+  mipSize[0] = align(mipSize[0], blockWidth);
+  mipSize[1] = align(mipSize[1], blockHeight);
+
   const minBytesPerRow = (mipSize[0] / blockWidth) * bytesPerBlock;
   const alignedMinBytesPerRow = align(minBytesPerRow, kBytesPerRowAlignment);
   if (bytesPerRow !== undefined) {
