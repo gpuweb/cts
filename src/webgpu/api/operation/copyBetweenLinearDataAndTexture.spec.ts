@@ -418,7 +418,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
      * other eventual async expectations to ensure it will be correct. */
     this.eventualAsyncExpectation(async () => {
       await dst.mapAsync(GPUMapMode.READ);
-      const actual = new Uint8Array(dst.getMappedRange()).slice(begin, end);
+      const actual = new Uint8Array(dst.getMappedRange()).subarray(begin, end);
       this.updateLinearTextureDataSubpart(
         fullTextureCopyLayout,
         texturePartialDataLayout,

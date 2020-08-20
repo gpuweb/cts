@@ -82,7 +82,7 @@ export class DevicePool {
     const gpu = getGPU();
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
-    const device = await adapter.requestDevice({ extensions: ['texture-compression-bc'] });
+    const device = await adapter.requestDevice();
     assert(device !== null);
 
     const holder: DeviceHolder = {

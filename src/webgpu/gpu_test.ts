@@ -130,7 +130,7 @@ export class GPUTest extends Fixture {
       const constructor = expected.constructor as TypedArrayBufferViewConstructor;
       await dst.mapAsync(GPUMapMode.READ);
       const actual = new constructor(dst.getMappedRange());
-      const check = this.checkBuffer(actual.slice(begin, end), expected);
+      const check = this.checkBuffer(actual.subarray(begin, end), expected);
       if (check !== undefined) {
         niceStack.message = check;
         this.rec.expectationFailed(niceStack);
