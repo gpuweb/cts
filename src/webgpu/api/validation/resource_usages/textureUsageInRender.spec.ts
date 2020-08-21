@@ -26,6 +26,9 @@ Test Coverage:
 
   - Test texture usages in bundle:
     - Texture usages in bundle should be tracked if that bundle is executed in the current scope.
+
+  - Test texture usages with unused bindings:
+    - Texture usages should be tracked even its bindings is not used in pipeline.
 `;
 
 import { pbool, poptions, params } from '../../../../common/framework/params_builder.js';
@@ -573,4 +576,65 @@ g.test('bindings_in_bundle')
     t.expectValidationError(() => {
       encoder.finish();
     }, !success);
+  });
+
+g.test('unused_bindings_in_pipeline')
+  .params(params().combine(pbool('useBindGroup0')).combine(pbool('useBindGroup1')))
+  .fn(async t => {
+    const { useBindGroup0, useBindGroup1 } = t.params;
+    const view = t.createTexture({ usage: GPUTextureUsage.STORAGE }).createView();
+    const bindGroup0 = t.createBindGroup(0, view, 'readonly-storage-texture', 'rgba8unorm');
+    const bindGroup1 = t.createBindGroup(0, view, 'writeonly-storage-texture', 'rgba8unorm');
+
+    const wgslVertex = `
+      fn main() -> void {
+      }
+      entry_point vertex = main;
+    `;
+    const binding0: string = useBindGroup0 ? '[[set 0, binding 0]] var<image> image0' : '';
+    const binding1: string = useBindGroup1 ? '[[set 1, binding 0]] var<image> image1' : '';
+    const wgslFragment =
+      binding0 +
+      binding1 +
+      `
+      fn main() -> void {
+      }
+      entry_point fragment = main;
+    `;
+    const pipeline = t.device.createRenderPipeline({
+      vertexStage: {
+        module: t.device.createShaderModule({
+          code: wgslVertex,
+        }),
+        entryPoint: 'main',
+      },
+      fragmentStage: {
+        module: t.device.createShaderModule({
+          code: wgslFragment,
+        }),
+        entryPoint: 'main',
+      },
+      primitiveTopology: 'triangle-list',
+      colorStates: [{ format: 'rgba8unorm' }],
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          attachment: t.createTexture().createView(),
+          loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+          storeOp: 'store',
+        },
+      ],
+    });
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bindGroup0);
+    pass.setBindGroup(1, bindGroup1);
+    pass.draw(3, 1, 0, 0);
+    pass.endPass();
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    });
   });
