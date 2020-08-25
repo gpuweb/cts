@@ -588,7 +588,9 @@ g.test('unused_bindings_in_pipeline')
 
     const wgslVertex = `
       fn main() -> void {
+      return;
       }
+
       entry_point vertex = main;
     `;
     const binding0: string = useBindGroup0 ? '[[set 0, binding 0]] var<image> image0' : '';
@@ -598,7 +600,9 @@ g.test('unused_bindings_in_pipeline')
       binding1 +
       `
       fn main() -> void {
+        return;
       }
+
       entry_point fragment = main;
     `;
     const pipeline = t.device.createRenderPipeline({
