@@ -3,11 +3,11 @@
 
 type goo = struct {
   b : f32;
-}
+};
 
 type foo = struct {
   a : f32;
-}
+};
 
 fn main() -> void {
   var f : foo;
