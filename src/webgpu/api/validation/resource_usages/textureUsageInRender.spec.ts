@@ -29,6 +29,7 @@ Test Coverage:
 
 import { pbool, poptions, params } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { assert } from '../../../../common/framework/util/util.js';
 import {
   kDepthStencilFormats,
   kDepthStencilFormatInfo,
@@ -302,13 +303,16 @@ g.test('subresources_and_binding_types_combination_for_color')
           _usageSuccess: false,
         },
       ] as const)
-      // Every color attachment can use only one single subresource. In addition, all color
-      // attachments' size should be the same.
+      // Every color attachment can use only one single subresource.
       .unless(
-        ({ type0, levelCount0, layerCount0, type1, levelCount1, layerCount1, baseLevel1 }) =>
+        ({ type0, levelCount0, layerCount0, type1, levelCount1, layerCount1 }) =>
           (type0 === 'render-target' && (levelCount0 !== 1 || layerCount0 !== 1)) ||
-          (type1 === 'render-target' && (levelCount1 !== 1 || layerCount1 !== 1)) ||
-          (type0 === 'render-target' && type1 === 'render-target' && baseLevel1 !== BASE_LEVEL)
+          (type1 === 'render-target' && (levelCount1 !== 1 || layerCount1 !== 1))
+      )
+      // All color attachments' size should be the same.
+      .unless(
+        ({ type0, type1, baseLevel1 }) =>
+          type0 === 'render-target' && type1 === 'render-target' && baseLevel1 !== BASE_LEVEL
       )
   )
   .fn(async t => {
@@ -352,6 +356,7 @@ g.test('subresources_and_binding_types_combination_for_color')
     const encoder = t.device.createCommandEncoder();
     if (type0 === 'render-target') {
       // Note that type1 is 'render-target' too. So we don't need to create bindings.
+      assert(type1 === 'render-target');
       const pass = encoder.beginRenderPass({
         colorAttachments: [
           {
@@ -511,8 +516,9 @@ g.test('subresources_and_binding_types_combination_for_aspect')
     });
 
     const encoder = t.device.createCommandEncoder();
-    // Color attachment's size should match depth/stencil attachment's size.
-    const size = type1 === 'render-target' ? SIZE >> baseLevel : SIZE;
+    // Color attachment's size should match depth/stencil attachment's size. Note that if
+    // type1 !== 'render-target' then there's no depthStencilAttachment to match anyway.
+    const size = SIZE >> baseLevel;
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
