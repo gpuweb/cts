@@ -2,7 +2,6 @@ export const description = `
 Texture Usages Validation Tests in Render Pass.
 
 Test Coverage:
-
   - For each combination of two texture usages:
     - For various subresource ranges (different mip levels or array layers) that overlap a given
       subresources or not for color formats:
@@ -30,6 +29,7 @@ Test Coverage:
 
 import { pbool, poptions, params } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { assert } from '../../../../common/framework/util/util.js';
 import {
   kDepthStencilFormats,
   kDepthStencilFormatInfo,
@@ -39,6 +39,7 @@ import {
 } from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
+const SIZE = 32;
 class TextureUsageTracking extends ValidationTest {
   createTexture(
     options: {
@@ -52,8 +53,8 @@ class TextureUsageTracking extends ValidationTest {
     } = {}
   ): GPUTexture {
     const {
-      width = 32,
-      height = 32,
+      width = SIZE,
+      height = SIZE,
       arrayLayerCount = 1,
       mipLevelCount = 1,
       sampleCount = 1,
@@ -91,14 +92,27 @@ class TextureUsageTracking extends ValidationTest {
       }),
     });
   }
+
+  beginSimpleRenderPass(encoder: GPUCommandEncoder, view: GPUTextureView): GPURenderPassEncoder {
+    return encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          attachment: view,
+          loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+          storeOp: 'store',
+        },
+      ],
+    });
+  }
 }
 
 export const g = makeTestGroup(TextureUsageTracking);
 
-const BASE_LEVEL = 3;
-const BASE_LAYER = 0;
+const BASE_LEVEL = 1;
 const TOTAL_LEVELS = 6;
-const TOTAL_LAYERS = 2;
+const BASE_LAYER = 1;
+const TOTAL_LAYERS = 6;
+const SLICE_COUNT = 2;
 
 g.test('subresources_and_binding_types_combination_for_color')
   .params(
@@ -106,46 +120,133 @@ g.test('subresources_and_binding_types_combination_for_color')
       .combine([
         // Two texture usages are binding to the same texture subresource.
         {
-          baseLevel: BASE_LEVEL,
-          baseLayer: BASE_LAYER,
-          levelCount: 1,
-          layerCount: 1,
+          levelCount0: 1,
+          layerCount0: 1,
+          baseLevel1: BASE_LEVEL,
+          levelCount1: 1,
+          baseLayer1: BASE_LAYER,
+          layerCount1: 1,
           _resourceSuccess: false,
         },
 
         // Two texture usages are binding to different mip levels of the same texture.
         {
-          baseLevel: BASE_LEVEL + 1,
-          baseLayer: BASE_LAYER,
-          levelCount: 1,
-          layerCount: 1,
+          levelCount0: 1,
+          layerCount0: 1,
+          baseLevel1: BASE_LEVEL + 1,
+          levelCount1: 1,
+          baseLayer1: BASE_LAYER,
+          layerCount1: 1,
           _resourceSuccess: true,
         },
 
         // Two texture usages are binding to different array layers of the same texture.
         {
-          baseLevel: BASE_LEVEL,
-          baseLayer: BASE_LAYER + 1,
-          levelCount: 1,
-          layerCount: 1,
+          levelCount0: 1,
+          layerCount0: 1,
+          baseLevel1: BASE_LEVEL,
+          levelCount1: 1,
+          baseLayer1: BASE_LAYER + 1,
+          layerCount1: 1,
           _resourceSuccess: true,
         },
 
         // The second texture usage contains the whole mip chain where the first texture usage is using.
         {
-          baseLevel: 0,
-          baseLayer: BASE_LAYER,
-          levelCount: TOTAL_LEVELS,
-          layerCount: 1,
+          levelCount0: 1,
+          layerCount0: 1,
+          baseLevel1: 0,
+          levelCount1: TOTAL_LEVELS,
+          baseLayer1: BASE_LAYER,
+          layerCount1: 1,
           _resourceSuccess: false,
         },
 
-        // The second texture usage contains the all layers where the first texture usage is using.
+        // The second texture usage contains all layers where the first texture usage is using.
         {
-          baseLevel: BASE_LEVEL,
-          baseLayer: 0,
-          levelCount: 1,
-          layerCount: TOTAL_LAYERS,
+          levelCount0: 1,
+          layerCount0: 1,
+          baseLevel1: BASE_LEVEL,
+          levelCount1: 1,
+          baseLayer1: 0,
+          layerCount1: TOTAL_LAYERS,
+          _resourceSuccess: false,
+        },
+
+        // The second texture usage contains all subresources where the first texture usage is using.
+        {
+          levelCount0: 1,
+          layerCount0: 1,
+          baseLevel1: 0,
+          levelCount1: TOTAL_LEVELS,
+          baseLayer1: 0,
+          layerCount1: TOTAL_LAYERS,
+          _resourceSuccess: false,
+        },
+
+        // Both of the two usages access a few mip levels on the same layer but they don't overlap.
+        {
+          levelCount0: SLICE_COUNT,
+          layerCount0: 1,
+          baseLevel1: BASE_LEVEL + SLICE_COUNT,
+          levelCount1: 3,
+          baseLayer1: BASE_LAYER,
+          layerCount1: 1,
+          _resourceSuccess: true,
+        },
+
+        // Both of the two usages access a few mip levels on the same layer and they overlap.
+        {
+          levelCount0: SLICE_COUNT,
+          layerCount0: 1,
+          baseLevel1: BASE_LEVEL + SLICE_COUNT - 1,
+          levelCount1: 3,
+          baseLayer1: BASE_LAYER,
+          layerCount1: 1,
+          _resourceSuccess: false,
+        },
+
+        // Both of the two usages access a few array layers on the same level but they don't overlap.
+        {
+          levelCount0: 1,
+          layerCount0: SLICE_COUNT,
+          baseLevel1: BASE_LEVEL,
+          levelCount1: 1,
+          baseLayer1: BASE_LAYER + SLICE_COUNT,
+          layerCount1: 3,
+          _resourceSuccess: true,
+        },
+
+        // Both of the two usages access a few array layers on the same level and they overlap.
+        {
+          levelCount0: 1,
+          layerCount0: SLICE_COUNT,
+          baseLevel1: BASE_LEVEL,
+          levelCount1: 1,
+          baseLayer1: BASE_LAYER + SLICE_COUNT - 1,
+          layerCount1: 3,
+          _resourceSuccess: false,
+        },
+
+        // Both of the two usages access a few array layers and mip levels but they don't overlap.
+        {
+          levelCount0: SLICE_COUNT,
+          layerCount0: SLICE_COUNT,
+          baseLevel1: BASE_LEVEL + SLICE_COUNT,
+          levelCount1: 3,
+          baseLayer1: BASE_LAYER + SLICE_COUNT,
+          layerCount1: 3,
+          _resourceSuccess: true,
+        },
+
+        // Both of the two usages access a few array layers and mip levels and they overlap.
+        {
+          levelCount0: SLICE_COUNT,
+          layerCount0: SLICE_COUNT,
+          baseLevel1: BASE_LEVEL + SLICE_COUNT - 1,
+          levelCount1: 3,
+          baseLayer1: BASE_LAYER + SLICE_COUNT - 1,
+          layerCount1: 3,
           _resourceSuccess: false,
         },
       ])
@@ -196,14 +297,32 @@ g.test('subresources_and_binding_types_combination_for_color')
           type1: 'render-target',
           _usageSuccess: false,
         },
+        {
+          type0: 'render-target',
+          type1: 'render-target',
+          _usageSuccess: false,
+        },
       ] as const)
+      // Every color attachment can use only one single subresource.
+      .unless(
+        ({ type0, levelCount0, layerCount0, type1, levelCount1, layerCount1 }) =>
+          (type0 === 'render-target' && (levelCount0 !== 1 || layerCount0 !== 1)) ||
+          (type1 === 'render-target' && (levelCount1 !== 1 || layerCount1 !== 1))
+      )
+      // All color attachments' size should be the same.
+      .unless(
+        ({ type0, type1, baseLevel1 }) =>
+          type0 === 'render-target' && type1 === 'render-target' && baseLevel1 !== BASE_LEVEL
+      )
   )
   .fn(async t => {
     const {
-      baseLevel,
-      baseLayer,
-      levelCount,
-      layerCount,
+      levelCount0,
+      layerCount0,
+      baseLevel1,
+      baseLayer1,
+      levelCount1,
+      layerCount1,
       type0,
       type1,
       _usageSuccess,
@@ -216,59 +335,77 @@ g.test('subresources_and_binding_types_combination_for_color')
       usage: GPUTextureUsage.SAMPLED | GPUTextureUsage.STORAGE | GPUTextureUsage.OUTPUT_ATTACHMENT,
     });
 
+    const view0Dimension = layerCount0 !== 1 ? '2d-array' : '2d';
     const view0 = texture.createView({
+      dimension: view0Dimension,
       baseMipLevel: BASE_LEVEL,
-      mipLevelCount: 1,
+      mipLevelCount: levelCount0,
       baseArrayLayer: BASE_LAYER,
-      arrayLayerCount: 1,
+      arrayLayerCount: layerCount0,
     });
 
-    const view1Dimension = layerCount !== 1 ? '2d-array' : '2d';
+    const view1Dimension = layerCount1 !== 1 ? '2d-array' : '2d';
     const view1 = texture.createView({
       dimension: view1Dimension,
-      baseMipLevel: baseLevel,
-      mipLevelCount: levelCount,
-      baseArrayLayer: baseLayer,
-      arrayLayerCount: layerCount,
-    });
-
-    // TODO: Add two 'render-target' usages for color attachments.
-    const bglEntries: GPUBindGroupLayoutEntry[] = [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.FRAGMENT,
-        type: type0,
-        storageTextureFormat: type0 === 'sampled-texture' ? undefined : 'rgba8unorm',
-      },
-    ];
-    const bgEntries: GPUBindGroupEntry[] = [{ binding: 0, resource: view0 }];
-    if (type1 !== 'render-target') {
-      bglEntries.push({
-        binding: 1,
-        visibility: GPUShaderStage.FRAGMENT,
-        type: type1,
-        viewDimension: view1Dimension,
-        storageTextureFormat: type1 === 'sampled-texture' ? undefined : 'rgba8unorm',
-      });
-      bgEntries.push({ binding: 1, resource: view1 });
-    }
-    const bindGroup = t.device.createBindGroup({
-      entries: bgEntries,
-      layout: t.device.createBindGroupLayout({ entries: bglEntries }),
+      baseMipLevel: baseLevel1,
+      mipLevelCount: levelCount1,
+      baseArrayLayer: baseLayer1,
+      arrayLayerCount: layerCount1,
     });
 
     const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [
+    if (type0 === 'render-target') {
+      // Note that type1 is 'render-target' too. So we don't need to create bindings.
+      assert(type1 === 'render-target');
+      const pass = encoder.beginRenderPass({
+        colorAttachments: [
+          {
+            attachment: view0,
+            loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+            storeOp: 'store',
+          },
+          {
+            attachment: view1,
+            loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+            storeOp: 'store',
+          },
+        ],
+      });
+      pass.endPass();
+    } else {
+      // Create bindings, bind group layouts, and bind groups.
+      const bglEntries: GPUBindGroupLayoutEntry[] = [
         {
-          attachment: type1 === 'render-target' ? view1 : t.createTexture().createView(),
-          loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
-          storeOp: 'store',
+          binding: 0,
+          visibility: GPUShaderStage.FRAGMENT,
+          type: type0,
+          viewDimension: view0Dimension,
+          storageTextureFormat: type0 === 'sampled-texture' ? undefined : 'rgba8unorm',
         },
-      ],
-    });
-    pass.setBindGroup(0, bindGroup);
-    pass.endPass();
+      ];
+      const bgEntries: GPUBindGroupEntry[] = [{ binding: 0, resource: view0 }];
+      if (type1 !== 'render-target') {
+        bglEntries.push({
+          binding: 1,
+          visibility: GPUShaderStage.FRAGMENT,
+          type: type1,
+          viewDimension: view1Dimension,
+          storageTextureFormat: type1 === 'sampled-texture' ? undefined : 'rgba8unorm',
+        });
+        bgEntries.push({ binding: 1, resource: view1 });
+      }
+      const bindGroup = t.device.createBindGroup({
+        entries: bgEntries,
+        layout: t.device.createBindGroupLayout({ entries: bglEntries }),
+      });
+
+      const pass = t.beginSimpleRenderPass(
+        encoder,
+        type1 === 'render-target' ? view1 : t.createTexture().createView()
+      );
+      pass.setBindGroup(0, bindGroup);
+      pass.endPass();
+    }
 
     const success = _resourceSuccess || _usageSuccess;
     t.expectValidationError(() => {
@@ -280,6 +417,23 @@ g.test('subresources_and_binding_types_combination_for_aspect')
   .params(
     params()
       .combine(poptions('format', kDepthStencilFormats))
+      .combine([
+        {
+          baseLevel: BASE_LEVEL,
+          baseLayer: BASE_LAYER,
+          _resourceSuccess: false,
+        },
+        {
+          baseLevel: BASE_LEVEL + 1,
+          baseLayer: BASE_LAYER,
+          _resourceSuccess: true,
+        },
+        {
+          baseLevel: BASE_LEVEL,
+          baseLayer: BASE_LAYER + 1,
+          _resourceSuccess: true,
+        },
+      ])
       .combine(poptions('aspect0', ['all', 'depth-only', 'stencil-only'] as const))
       .combine(poptions('aspect1', ['all', 'depth-only', 'stencil-only'] as const))
       .unless(
@@ -306,11 +460,39 @@ g.test('subresources_and_binding_types_combination_for_aspect')
       ] as const)
   )
   .fn(async t => {
-    const { format, aspect0, aspect1, type0, type1, _usageSuccess } = t.params;
+    const {
+      format,
+      baseLevel,
+      baseLayer,
+      aspect0,
+      aspect1,
+      type0,
+      type1,
+      _resourceSuccess,
+      _usageSuccess,
+    } = t.params;
 
-    const texture = t.createTexture({ format });
-    const view0 = texture.createView({ aspect: aspect0 });
-    const view1 = texture.createView({ aspect: aspect1 });
+    const texture = t.createTexture({
+      arrayLayerCount: TOTAL_LAYERS,
+      mipLevelCount: TOTAL_LEVELS,
+      format,
+    });
+
+    const view0 = texture.createView({
+      baseMipLevel: BASE_LEVEL,
+      mipLevelCount: 1,
+      baseArrayLayer: BASE_LAYER,
+      arrayLayerCount: 1,
+      aspect: aspect0,
+    });
+
+    const view1 = texture.createView({
+      baseMipLevel: baseLevel,
+      mipLevelCount: 1,
+      baseArrayLayer: baseLayer,
+      arrayLayerCount: 1,
+      aspect: aspect1,
+    });
 
     const bglEntries: GPUBindGroupLayoutEntry[] = [
       {
@@ -334,10 +516,13 @@ g.test('subresources_and_binding_types_combination_for_aspect')
     });
 
     const encoder = t.device.createCommandEncoder();
+    // Color attachment's size should match depth/stencil attachment's size. Note that if
+    // type1 !== 'render-target' then there's no depthStencilAttachment to match anyway.
+    const size = SIZE >> baseLevel;
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment: t.createTexture().createView(),
+          attachment: t.createTexture({ width: size, height: size }).createView(),
           loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
           storeOp: 'store',
         },
@@ -359,7 +544,10 @@ g.test('subresources_and_binding_types_combination_for_aspect')
     const disjointAspects =
       (aspect0 === 'depth-only' && aspect1 === 'stencil-only') ||
       (aspect0 === 'stencil-only' && aspect1 === 'depth-only');
-    const success = disjointAspects || _usageSuccess;
+
+    // If subresources' mip/array slices has no overlap, or their binding types don't conflict,
+    // it will definitely success no matter what aspects they are binding to.
+    const success = disjointAspects || _resourceSuccess || _usageSuccess;
 
     t.expectValidationError(() => {
       encoder.finish();
@@ -404,15 +592,10 @@ g.test('shader_stages_and_visibility')
     });
 
     const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          attachment: writeHasVertexStage ? view : t.createTexture().createView(),
-          loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
-          storeOp: 'store',
-        },
-      ],
-    });
+    const pass = t.beginSimpleRenderPass(
+      encoder,
+      writeHasVertexStage ? view : t.createTexture().createView()
+    );
     pass.setBindGroup(0, bindGroup);
     pass.endPass();
 
@@ -461,15 +644,7 @@ g.test('replaced_binding')
     const bindGroup1 = t.createBindGroup(0, sampledStorageView, 'sampled-texture', undefined);
 
     const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          attachment: t.createTexture().createView(),
-          loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
-          storeOp: 'store',
-        },
-      ],
-    });
+    const pass = t.beginSimpleRenderPass(encoder, t.createTexture().createView());
 
     // Set bindGroup0 and bindGroup1. bindGroup0 is replaced by bindGroup1 in the current pass.
     // But bindings in bindGroup0 should be tracked too.
@@ -522,20 +697,12 @@ g.test('bindings_in_bundle')
     }
 
     const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          attachment:
-            // At least one binding is in bundle, which means that its type is not 'render-target'.
-            // As a result, only one binding's type is 'render-target' at most.
-            type0 === 'render-target' || type1 === 'render-target'
-              ? view
-              : t.createTexture().createView(),
-          loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
-          storeOp: 'store',
-        },
-      ],
-    });
+    // At least one binding is in bundle, which means that its type is not 'render-target'.
+    // As a result, only one binding's type is 'render-target' at most.
+    const pass = t.beginSimpleRenderPass(
+      encoder,
+      type0 === 'render-target' || type1 === 'render-target' ? view : t.createTexture().createView()
+    );
 
     const bindingsInBundle: boolean[] = [binding0InBundle, binding1InBundle];
     for (let i = 0; i < 2; i++) {
