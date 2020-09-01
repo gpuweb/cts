@@ -579,26 +579,30 @@ g.test('bindings_in_bundle')
   });
 
 g.test('unused_bindings_in_pipeline')
-  .params(params().combine(pbool('useBindGroup0')).combine(pbool('useBindGroup1')))
+  .params(
+    params()
+      .combine(pbool('useBindGroup0'))
+      .combine(pbool('useBindGroup1'))
+      .combine(pbool('callSetPipeline'))
+      .combine(pbool('callDraw'))
+  )
   .fn(async t => {
-    const { useBindGroup0, useBindGroup1 } = t.params;
+    const { useBindGroup0, useBindGroup1, callSetPipeline, callDraw } = t.params;
     const view = t.createTexture({ usage: GPUTextureUsage.STORAGE }).createView();
     const bindGroup0 = t.createBindGroup(0, view, 'readonly-storage-texture', 'rgba8unorm');
     const bindGroup1 = t.createBindGroup(0, view, 'writeonly-storage-texture', 'rgba8unorm');
 
     const wgslVertex = `
       fn main() -> void {
-      return;
+        return;
       }
 
       entry_point vertex = main;
     `;
-    const binding0: string = useBindGroup0 ? '[[set 0, binding 0]] var<image> image0' : '';
-    const binding1: string = useBindGroup1 ? '[[set 1, binding 0]] var<image> image1' : '';
-    const wgslFragment =
-      binding0 +
-      binding1 +
-      `
+    // TODO: revisit the shader code once 'image' can be supported in wgsl.
+    const wgslFragment = `
+      ${useBindGroup0 ? '[[set 0, binding 0]] var<image> image0;' : ''}
+      ${useBindGroup1 ? '[[set 1, binding 0]] var<image> image1;' : ''}
       fn main() -> void {
         return;
       }
@@ -632,10 +636,10 @@ g.test('unused_bindings_in_pipeline')
         },
       ],
     });
-    pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup0);
     pass.setBindGroup(1, bindGroup1);
-    pass.draw(3, 1, 0, 0);
+    if (callSetPipeline) pass.setPipeline(pipeline);
+    if (callDraw) pass.draw(3, 1, 0, 0);
     pass.endPass();
 
     t.expectValidationError(() => {
