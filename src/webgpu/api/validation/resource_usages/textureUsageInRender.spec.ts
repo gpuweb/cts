@@ -583,11 +583,12 @@ g.test('unused_bindings_in_pipeline')
     params()
       .combine(pbool('useBindGroup0'))
       .combine(pbool('useBindGroup1'))
-      .combine(pbool('callSetPipeline'))
+      .combine(poptions('setBindGroupsOrder', ['common', 'reversed'] as const))
+      .combine(poptions('setPipeline', ['before', 'middle', 'after', 'none'] as const))
       .combine(pbool('callDraw'))
   )
   .fn(async t => {
-    const { useBindGroup0, useBindGroup1, callSetPipeline, callDraw } = t.params;
+    const { useBindGroup0, useBindGroup1, setBindGroupsOrder, setPipeline, callDraw } = t.params;
     const view = t.createTexture({ usage: GPUTextureUsage.STORAGE }).createView();
     const bindGroup0 = t.createBindGroup(0, view, 'readonly-storage-texture', 'rgba8unorm');
     const bindGroup1 = t.createBindGroup(0, view, 'writeonly-storage-texture', 'rgba8unorm');
@@ -636,9 +637,13 @@ g.test('unused_bindings_in_pipeline')
         },
       ],
     });
-    pass.setBindGroup(0, bindGroup0);
-    pass.setBindGroup(1, bindGroup1);
-    if (callSetPipeline) pass.setPipeline(pipeline);
+    const index0 = setBindGroupsOrder === 'common' ? 0 : 1;
+    const index1 = setBindGroupsOrder === 'common' ? 1 : 0;
+    if (setPipeline === 'before') pass.setPipeline(pipeline);
+    pass.setBindGroup(index0, bindGroup0);
+    if (setPipeline === 'middle') pass.setPipeline(pipeline);
+    pass.setBindGroup(index1, bindGroup1);
+    if (setPipeline === 'after') pass.setPipeline(pipeline);
     if (callDraw) pass.draw(3, 1, 0, 0);
     pass.endPass();
 
