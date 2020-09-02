@@ -120,6 +120,8 @@ const SLICE_COUNT = 2;
 g.test('subresources_and_binding_types_combination_for_color')
   .params(
     params()
+      .combine(pbool('binding0InBundle'))
+      .combine(pbool('binding1InBundle'))
       .combine([
         // Two texture usages are binding to the same texture subresource.
         {
@@ -316,6 +318,14 @@ g.test('subresources_and_binding_types_combination_for_color')
       .unless(
         ({ type0, type1, baseLevel1 }) =>
           type0 === 'render-target' && type1 === 'render-target' && baseLevel1 !== BASE_LEVEL
+      )
+      .unless(
+        ({ binding0InBundle, binding1InBundle, type0, type1 }) =>
+          // We can't set 'render-target' in bundle, so we need to exclude it from bundle.
+          // In addition, if both bindings are non-bundle, there is no need to test it because
+          // we have far more comprehensive test cases for that situation in this file.
+          (binding0InBundle && type0 === 'render-target') ||
+          (binding1InBundle && type1 === 'render-target')
       )
   )
   .fn(async t => {
