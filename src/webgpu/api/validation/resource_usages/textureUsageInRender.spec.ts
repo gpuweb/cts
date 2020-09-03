@@ -25,6 +25,9 @@ Test Coverage:
 
   - Test texture usages in bundle:
     - Texture usages in bundle should be tracked if that bundle is executed in the current scope.
+
+  - Test texture usages with unused bindings:
+    - Texture usages should be tracked even its bindings is not used in pipeline.
 `;
 
 import { pbool, poptions, params } from '../../../../common/framework/params_builder.js';
@@ -740,4 +743,78 @@ g.test('bindings_in_bundle')
     t.expectValidationError(() => {
       encoder.finish();
     }, !success);
+  });
+
+g.test('unused_bindings_in_pipeline')
+  .params(
+    params()
+      .combine(pbool('useBindGroup0'))
+      .combine(pbool('useBindGroup1'))
+      .combine(poptions('setBindGroupsOrder', ['common', 'reversed'] as const))
+      .combine(poptions('setPipeline', ['before', 'middle', 'after', 'none'] as const))
+      .combine(pbool('callDraw'))
+  )
+  .fn(async t => {
+    const { useBindGroup0, useBindGroup1, setBindGroupsOrder, setPipeline, callDraw } = t.params;
+    const view = t.createTexture({ usage: GPUTextureUsage.STORAGE }).createView();
+    const bindGroup0 = t.createBindGroup(0, view, 'readonly-storage-texture', 'rgba8unorm');
+    const bindGroup1 = t.createBindGroup(0, view, 'writeonly-storage-texture', 'rgba8unorm');
+
+    const wgslVertex = `
+      fn main() -> void {
+        return;
+      }
+
+      entry_point vertex = main;
+    `;
+    // TODO: revisit the shader code once 'image' can be supported in wgsl.
+    const wgslFragment = `
+      ${useBindGroup0 ? '[[set 0, binding 0]] var<image> image0;' : ''}
+      ${useBindGroup1 ? '[[set 1, binding 0]] var<image> image1;' : ''}
+      fn main() -> void {
+        return;
+      }
+
+      entry_point fragment = main;
+    `;
+    const pipeline = t.device.createRenderPipeline({
+      vertexStage: {
+        module: t.device.createShaderModule({
+          code: wgslVertex,
+        }),
+        entryPoint: 'main',
+      },
+      fragmentStage: {
+        module: t.device.createShaderModule({
+          code: wgslFragment,
+        }),
+        entryPoint: 'main',
+      },
+      primitiveTopology: 'triangle-list',
+      colorStates: [{ format: 'rgba8unorm' }],
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          attachment: t.createTexture().createView(),
+          loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+          storeOp: 'store',
+        },
+      ],
+    });
+    const index0 = setBindGroupsOrder === 'common' ? 0 : 1;
+    const index1 = setBindGroupsOrder === 'common' ? 1 : 0;
+    if (setPipeline === 'before') pass.setPipeline(pipeline);
+    pass.setBindGroup(index0, bindGroup0);
+    if (setPipeline === 'middle') pass.setPipeline(pipeline);
+    pass.setBindGroup(index1, bindGroup1);
+    if (setPipeline === 'after') pass.setPipeline(pipeline);
+    if (callDraw) pass.draw(3, 1, 0, 0);
+    pass.endPass();
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    });
   });
