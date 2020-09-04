@@ -27,8 +27,11 @@ export function pp(parts: TemplateStringsArray, ...predicates: readonly boolean[
         const match = matchDirective(line);
 
         if (match[2] === 'if' || match[2] === 'elif') {
-          assert(lineIndex === lines.length - 1);
-          assert(partIndex < predicates.length);
+          assert(
+            lineIndex === lines.length - 1,
+            `%${match[2]} must be immediately followed by \${...}`
+          );
+          assert(partIndex < predicates.length, `File ended while parsing %${match[2]}`);
           const predicate = predicates[partIndex];
 
           if (match[2] === 'if') {

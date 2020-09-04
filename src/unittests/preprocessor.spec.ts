@@ -169,7 +169,13 @@ g.test('errors,pass').fn(() => {
 
 g.test('errors,fail').fn(t => {
   const e = (fn: () => void) => t.shouldThrow('Error', fn);
+  e(() => pp`\n%if`);
+  e(() => pp`\n%if `);
   e(() => pp`\n%if true\n%endif`);
+  e(() => pp`\n%if true\n${true}\n%endif`);
+  e(() => pp`\n%if true\n%endif\n${true}`);
+  e(() => pp`\n%if \n${true}\n%endif`);
+  e(() => pp`\n%if \n%endif\n${true}`);
   e(() => pp`\n%if${true}`);
   e(() => pp`\n%if ${true}`);
   e(() => pp`\n%if ${true}\n%else`);
