@@ -5,9 +5,11 @@ Test Coverage:
   - For each combination of two texture usages:
     - For various subresource ranges (different mip levels or array layers) that overlap a given
       subresources or not for color formats:
-      - Check that an error is generated when read-write or write-write usages are binding to the
-        same texture subresource. Otherwise, no error should be generated. One exception is race
-        condition upon two writeonly-storage-texture usages, which is valid.
+      - For various places that resources are used, for example, used in bundle or used in render
+        pass directly.
+        - Check that an error is generated when read-write or write-write usages are binding to the
+          same texture subresource. Otherwise, no error should be generated. One exception is race
+          condition upon two writeonly-storage-texture usages, which is valid.
 
   - For each combination of two texture usages:
     - For various aspects (all, depth-only, stencil-only) that overlap a given subresources or not
@@ -79,6 +81,7 @@ class TextureUsageTracking extends ValidationTest {
     index: number,
     view: GPUTextureView,
     bindingType: GPUBindingType,
+    dimension: GPUTextureViewDimension,
     bindingTexFormat: GPUTextureFormat | undefined
   ): GPUBindGroup {
     return this.device.createBindGroup({
@@ -89,11 +92,21 @@ class TextureUsageTracking extends ValidationTest {
             binding: index,
             visibility: GPUShaderStage.FRAGMENT,
             type: bindingType,
+            viewDimension: dimension,
             storageTextureFormat: bindingTexFormat,
           },
         ],
       }),
     });
+  }
+
+  createAndExecuteBundle(index: number, bindGroup: GPUBindGroup, pass: GPURenderPassEncoder) {
+    const bundleEncoder = this.device.createRenderBundleEncoder({
+      colorFormats: ['rgba8unorm'],
+    });
+    bundleEncoder.setBindGroup(index, bindGroup);
+    const bundle = bundleEncoder.finish();
+    pass.executeBundles([bundle]);
   }
 
   beginSimpleRenderPass(encoder: GPUCommandEncoder, view: GPUTextureView): GPURenderPassEncoder {
@@ -322,14 +335,14 @@ g.test('subresources_and_binding_types_combination_for_color')
       .unless(
         ({ binding0InBundle, binding1InBundle, type0, type1 }) =>
           // We can't set 'render-target' in bundle, so we need to exclude it from bundle.
-          // In addition, if both bindings are non-bundle, there is no need to test it because
-          // we have far more comprehensive test cases for that situation in this file.
           (binding0InBundle && type0 === 'render-target') ||
           (binding1InBundle && type1 === 'render-target')
       )
   )
   .fn(async t => {
     const {
+      binding0InBundle,
+      binding1InBundle,
       levelCount0,
       layerCount0,
       baseLevel1,
@@ -348,18 +361,18 @@ g.test('subresources_and_binding_types_combination_for_color')
       usage: GPUTextureUsage.SAMPLED | GPUTextureUsage.STORAGE | GPUTextureUsage.OUTPUT_ATTACHMENT,
     });
 
-    const view0Dimension = layerCount0 !== 1 ? '2d-array' : '2d';
+    const dimension0 = layerCount0 !== 1 ? '2d-array' : '2d';
     const view0 = texture.createView({
-      dimension: view0Dimension,
+      dimension: dimension0,
       baseMipLevel: BASE_LEVEL,
       mipLevelCount: levelCount0,
       baseArrayLayer: BASE_LAYER,
       arrayLayerCount: layerCount0,
     });
 
-    const view1Dimension = layerCount1 !== 1 ? '2d-array' : '2d';
+    const dimension1 = layerCount1 !== 1 ? '2d-array' : '2d';
     const view1 = texture.createView({
-      dimension: view1Dimension,
+      dimension: dimension1,
       baseMipLevel: baseLevel1,
       mipLevelCount: levelCount1,
       baseArrayLayer: baseLayer1,
@@ -386,37 +399,28 @@ g.test('subresources_and_binding_types_combination_for_color')
       });
       pass.endPass();
     } else {
-      // Create bindings, bind group layouts, and bind groups.
-      const bglEntries: GPUBindGroupLayoutEntry[] = [
-        {
-          binding: 0,
-          visibility: GPUShaderStage.FRAGMENT,
-          type: type0,
-          viewDimension: view0Dimension,
-          storageTextureFormat: type0 === 'sampled-texture' ? undefined : 'rgba8unorm',
-        },
-      ];
-      const bgEntries: GPUBindGroupEntry[] = [{ binding: 0, resource: view0 }];
-      if (type1 !== 'render-target') {
-        bglEntries.push({
-          binding: 1,
-          visibility: GPUShaderStage.FRAGMENT,
-          type: type1,
-          viewDimension: view1Dimension,
-          storageTextureFormat: type1 === 'sampled-texture' ? undefined : 'rgba8unorm',
-        });
-        bgEntries.push({ binding: 1, resource: view1 });
-      }
-      const bindGroup = t.device.createBindGroup({
-        entries: bgEntries,
-        layout: t.device.createBindGroupLayout({ entries: bglEntries }),
-      });
-
       const pass = t.beginSimpleRenderPass(
         encoder,
         type1 === 'render-target' ? view1 : t.createTexture().createView()
       );
-      pass.setBindGroup(0, bindGroup);
+
+      // Create bind groups. Set bind groups in pass directly or set bind groups in bundle.
+      const storageTextureFormat0 = type0 === 'sampled-texture' ? undefined : 'rgba8unorm';
+      const bindGroup0 = t.createBindGroup(0, view0, type0, dimension0, storageTextureFormat0);
+      if (binding0InBundle) {
+        t.createAndExecuteBundle(0, bindGroup0, pass);
+      } else {
+        pass.setBindGroup(0, bindGroup0);
+      }
+      if (type1 !== 'render-target') {
+        const storageTextureFormat1 = type1 === 'sampled-texture' ? undefined : 'rgba8unorm';
+        const bindGroup1 = t.createBindGroup(1, view1, type1, dimension1, storageTextureFormat1);
+        if (binding1InBundle) {
+          t.createAndExecuteBundle(1, bindGroup1, pass);
+        } else {
+          pass.setBindGroup(1, bindGroup1);
+        }
+      }
       pass.endPass();
     }
 
@@ -429,6 +433,8 @@ g.test('subresources_and_binding_types_combination_for_color')
 g.test('subresources_and_binding_types_combination_for_aspect')
   .params(
     params()
+      .combine(pbool('binding0InBundle'))
+      .combine(pbool('binding1InBundle'))
       .combine(poptions('format', kDepthStencilFormats))
       .combine([
         {
@@ -471,9 +477,16 @@ g.test('subresources_and_binding_types_combination_for_aspect')
           _usageSuccess: false,
         },
       ] as const)
+      .unless(
+        ({ binding1InBundle, type1 }) =>
+          // We can't set 'render-target' in bundle, so we need to exclude it from bundle.
+          binding1InBundle && type1 === 'render-target'
+      )
   )
   .fn(async t => {
     const {
+      binding0InBundle,
+      binding1InBundle,
       format,
       baseLevel,
       baseLayer,
@@ -507,27 +520,6 @@ g.test('subresources_and_binding_types_combination_for_aspect')
       aspect: aspect1,
     });
 
-    const bglEntries: GPUBindGroupLayoutEntry[] = [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.FRAGMENT,
-        type: type0,
-      },
-    ];
-    const bgEntries: GPUBindGroupEntry[] = [{ binding: 0, resource: view0 }];
-    if (type1 !== 'render-target') {
-      bglEntries.push({
-        binding: 1,
-        visibility: GPUShaderStage.FRAGMENT,
-        type: type1,
-      });
-      bgEntries.push({ binding: 1, resource: view1 });
-    }
-    const bindGroup = t.device.createBindGroup({
-      entries: bgEntries,
-      layout: t.device.createBindGroupLayout({ entries: bglEntries }),
-    });
-
     const encoder = t.device.createCommandEncoder();
     // Color attachment's size should match depth/stencil attachment's size. Note that if
     // type1 !== 'render-target' then there's no depthStencilAttachment to match anyway.
@@ -551,7 +543,22 @@ g.test('subresources_and_binding_types_combination_for_aspect')
               stencilLoadValue: 'load',
             },
     });
-    pass.setBindGroup(0, bindGroup);
+
+    // Create bind groups. Set bind groups in pass directly or set bind groups in bundle.
+    const bindGroup0 = t.createBindGroup(0, view0, type0, '2d', undefined);
+    if (binding0InBundle) {
+      t.createAndExecuteBundle(0, bindGroup0, pass);
+    } else {
+      pass.setBindGroup(0, bindGroup0);
+    }
+    if (type1 !== 'render-target') {
+      const bindGroup1 = t.createBindGroup(1, view1, type1, '2d', undefined);
+      if (binding1InBundle) {
+        t.createAndExecuteBundle(1, bindGroup1, pass);
+      } else {
+        pass.setBindGroup(1, bindGroup1);
+      }
+    }
     pass.endPass();
 
     const disjointAspects =
@@ -654,7 +661,7 @@ g.test('replaced_binding')
 
     // Create bindGroup1. It has one binding, which use the same view/subresoure of a binding in
     // bindGroup0. So it may or may not conflicts with that binding in bindGroup0.
-    const bindGroup1 = t.createBindGroup(0, sampledStorageView, 'sampled-texture', undefined);
+    const bindGroup1 = t.createBindGroup(0, sampledStorageView, 'sampled-texture', '2d', undefined);
 
     const encoder = t.device.createCommandEncoder();
     const pass = t.beginSimpleRenderPass(encoder, t.createTexture().createView());
@@ -702,11 +709,11 @@ g.test('bindings_in_bundle')
     const bindGroups: GPUBindGroup[] = [];
     if (type0 !== 'render-target') {
       const binding0TexFormat = type0 === 'sampled-texture' ? undefined : 'rgba8unorm';
-      bindGroups[0] = t.createBindGroup(0, view, type0, binding0TexFormat);
+      bindGroups[0] = t.createBindGroup(0, view, type0, '2d', binding0TexFormat);
     }
     if (type1 !== 'render-target') {
       const binding1TexFormat = type1 === 'sampled-texture' ? undefined : 'rgba8unorm';
-      bindGroups[1] = t.createBindGroup(1, view, type1, binding1TexFormat);
+      bindGroups[1] = t.createBindGroup(1, view, type1, '2d', binding1TexFormat);
     }
 
     const encoder = t.device.createCommandEncoder();
@@ -767,8 +774,8 @@ g.test('unused_bindings_in_pipeline')
   .fn(async t => {
     const { useBindGroup0, useBindGroup1, setBindGroupsOrder, setPipeline, callDraw } = t.params;
     const view = t.createTexture({ usage: GPUTextureUsage.STORAGE }).createView();
-    const bindGroup0 = t.createBindGroup(0, view, 'readonly-storage-texture', 'rgba8unorm');
-    const bindGroup1 = t.createBindGroup(0, view, 'writeonly-storage-texture', 'rgba8unorm');
+    const bindGroup0 = t.createBindGroup(0, view, 'readonly-storage-texture', '2d', 'rgba8unorm');
+    const bindGroup1 = t.createBindGroup(0, view, 'writeonly-storage-texture', '2d', 'rgba8unorm');
 
     const wgslVertex = `
       fn main() -> void {
