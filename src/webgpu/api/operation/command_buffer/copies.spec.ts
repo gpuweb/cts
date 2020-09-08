@@ -43,7 +43,7 @@ g.test('b2b')
       for (let i = 0; i < srcBufferSize; ++i) {
         srcData[i] = i + 1;
       }
-  
+
       const src = t.device.createBuffer({
         mappedAtCreation: true,
         size: srcBufferSize,
@@ -57,16 +57,16 @@ g.test('b2b')
           size: dstBufferSize,
           usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
         });
-    
+
         const encoder = t.device.createCommandEncoder();
         encoder.copyBufferToBuffer(src, srcOffset, dst, dstOffset, copySize);
         t.device.defaultQueue.submit([encoder.finish()]);
-    
-        let expectedDstData = new Uint8Array(dstBufferSize);
+
+        const expectedDstData = new Uint8Array(dstBufferSize);
         for (let i = 0; i < copySize; ++i) {
-            expectedDstData[dstOffset + i] = srcData[srcOffset + i];
+          expectedDstData[dstOffset + i] = srcData[srcOffset + i];
         }
-    
+
         t.expectContents(dst, expectedDstData);
       }
     }
