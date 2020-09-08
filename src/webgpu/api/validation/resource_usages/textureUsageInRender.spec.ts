@@ -30,6 +30,9 @@ Test Coverage:
 
   - Test texture usages with unused bindings:
     - Texture usages should be tracked even its bindings is not used in pipeline.
+
+  - Test texture usages validation scope:
+    - Texture usages should be tracked per each render pass.
 `;
 
 import { pbool, poptions, params } from '../../../../common/framework/params_builder.js';
@@ -834,4 +837,77 @@ g.test('unused_bindings_in_pipeline')
     t.expectValidationError(() => {
       encoder.finish();
     });
+  });
+
+g.test('validation_scope')
+  .params(
+    poptions('scope', ['no-draw', 'same-draw', 'different-draws', 'different-passes'] as const)
+  )
+  .fn(async t => {
+    const { scope } = t.params;
+    const view = t
+      .createTexture({ usage: GPUTextureUsage.STORAGE | GPUTextureUsage.SAMPLED })
+      .createView();
+    const bindGroup0 = t.createBindGroup(0, view, 'sampled-texture', undefined);
+    const bindGroup1 = t.createBindGroup(0, view, 'writeonly-storage-texture', 'rgba8unorm');
+
+    // Create pipeline. Note that unused bindings should be tracked too.
+    const wgslVertex = `
+      fn main() -> void {
+        return;
+      }
+
+      entry_point vertex = main;
+    `;
+    const wgslFragment = `
+      fn main() -> void {
+        return;
+      }
+
+      entry_point fragment = main;
+    `;
+    const pipeline = t.device.createRenderPipeline({
+      vertexStage: {
+        module: t.device.createShaderModule({
+          code: wgslVertex,
+        }),
+        entryPoint: 'main',
+      },
+      fragmentStage: {
+        module: t.device.createShaderModule({
+          code: wgslFragment,
+        }),
+        entryPoint: 'main',
+      },
+      primitiveTopology: 'triangle-list',
+      colorStates: [{ format: 'rgba8unorm' }],
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    const pass = t.beginSimpleRenderPass(encoder, t.createTexture().createView());
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bindGroup0);
+
+    if (scope === 'different-draws') pass.draw(3, 1, 0, 0);
+
+    if (scope !== 'different-passes') {
+      pass.setBindGroup(1, bindGroup1);
+      if (scope === 'different-draws' || scope === 'same-draw') pass.draw(3, 1, 0, 0);
+      pass.endPass();
+    } else {
+      pass.endPass();
+      const pass1 = t.beginSimpleRenderPass(encoder, t.createTexture().createView());
+      pass1.setPipeline(pipeline);
+      pass1.setBindGroup(1, bindGroup1);
+      pass1.endPass();
+    }
+
+    // Texture usages should be validated per each render pass. Inside a pass, the conflict should
+    // be validated no matter the conflict exists without draw call, or inside one draw call, or
+    // between draw calls. But resource usage conflict between render passes is not a problem.
+    const success = scope === 'different-passes' ? true : false;
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, !success);
   });
