@@ -26,83 +26,84 @@ import { GPUTest } from '../../../gpu_test.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('b2b')
-.params(
-  params()
-  .combine(poptions('srcOffset', [0, 4, 8, 16]))
-  .combine(poptions('dstOffset', [0, 4, 8, 16]))
-  .combine(poptions('copySize', [0, 4, 8, 16]))
-).fn(async t => {
-  const { srcOffset, dstOffset, copySize } = t.params;
+  .params(
+    params()
+      .combine(poptions('srcOffset', [0, 4, 8, 16]))
+      .combine(poptions('dstOffset', [0, 4, 8, 16]))
+      .combine(poptions('copySize', [0, 4, 8, 16]))
+  )
+  .fn(async t => {
+    const { srcOffset, dstOffset, copySize } = t.params;
 
-  const kSrcBufferSizes = [srcOffset + copySize, srcOffset + copySize + 8];
-  const kDstBufferSizes = [dstOffset + copySize, dstOffset + copySize + 8];
+    const kSrcBufferSizes = [srcOffset + copySize, srcOffset + copySize + 8];
+    const kDstBufferSizes = [dstOffset + copySize, dstOffset + copySize + 8];
 
-  for (const srcBufferSize of kSrcBufferSizes) {
-    const srcData = new Uint8Array(srcBufferSize);
-    for (var i = 0; i < srcBufferSize; ++i) {
-      srcData[i] = i + 1;
-    }
-  
-    const src = t.device.createBuffer({
-      mappedAtCreation: true,
-      size: srcBufferSize,
-      usage: GPUBufferUsage.COPY_SRC,
-    });
-    new Uint8Array(src.getMappedRange()).set(srcData);
-    src.unmap();
-
-    for (const dstBufferSize of kDstBufferSizes) {
-      const dst = t.device.createBuffer({
-        size: dstBufferSize,
-        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-      });
-    
-      const encoder = t.device.createCommandEncoder();
-      encoder.copyBufferToBuffer(src, srcOffset, dst, dstOffset, copySize);
-      t.device.defaultQueue.submit([encoder.finish()]);
-    
-      var expectedDstData = new Uint8Array(dstBufferSize);
-      for (var i = 0; i < copySize; ++i) {
-          expectedDstData[dstOffset + i] = srcData[srcOffset + i];
+    for (const srcBufferSize of kSrcBufferSizes) {
+      const srcData = new Uint8Array(srcBufferSize);
+      for (let i = 0; i < srcBufferSize; ++i) {
+        srcData[i] = i + 1;
       }
+  
+      const src = t.device.createBuffer({
+        mappedAtCreation: true,
+        size: srcBufferSize,
+        usage: GPUBufferUsage.COPY_SRC,
+      });
+      new Uint8Array(src.getMappedRange()).set(srcData);
+      src.unmap();
+
+      for (const dstBufferSize of kDstBufferSizes) {
+        const dst = t.device.createBuffer({
+          size: dstBufferSize,
+          usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+        });
     
-      t.expectContents(dst, expectedDstData);
+        const encoder = t.device.createCommandEncoder();
+        encoder.copyBufferToBuffer(src, srcOffset, dst, dstOffset, copySize);
+        t.device.defaultQueue.submit([encoder.finish()]);
+    
+        let expectedDstData = new Uint8Array(dstBufferSize);
+        for (let i = 0; i < copySize; ++i) {
+            expectedDstData[dstOffset + i] = srcData[srcOffset + i];
+        }
+    
+        t.expectContents(dst, expectedDstData);
+      }
     }
-  }
-});
+  });
 
 g.test('b2b_CopyStateTransitions').fn(async t => {
-    const srcData = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
-    const dstData = new Uint8Array([10, 20, 30, 40, 50, 60, 70, 80]);
+  const srcData = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
+  const dstData = new Uint8Array([10, 20, 30, 40, 50, 60, 70, 80]);
 
-    const src = t.device.createBuffer({
-      mappedAtCreation: true,
-      size: srcData.length,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-    });
-    new Uint8Array(src.getMappedRange()).set(srcData);
-    src.unmap();
+  const src = t.device.createBuffer({
+    mappedAtCreation: true,
+    size: srcData.length,
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+  });
+  new Uint8Array(src.getMappedRange()).set(srcData);
+  src.unmap();
 
-    const dst = t.device.createBuffer({
-      mappedAtCreation: true,
-      size: dstData.length,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-    });
-    new Uint8Array(dst.getMappedRange()).set(dstData);
-    dst.unmap();
+  const dst = t.device.createBuffer({
+    mappedAtCreation: true,
+    size: dstData.length,
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+  });
+  new Uint8Array(dst.getMappedRange()).set(dstData);
+  dst.unmap();
 
-    const encoder = t.device.createCommandEncoder();
-    encoder.copyBufferToBuffer(src, 0, dst, 4, 4);
-    encoder.copyBufferToBuffer(dst, 0, src, 4, 4);
-    t.device.defaultQueue.submit([encoder.finish()]);
+  const encoder = t.device.createCommandEncoder();
+  encoder.copyBufferToBuffer(src, 0, dst, 4, 4);
+  encoder.copyBufferToBuffer(dst, 0, src, 4, 4);
+  t.device.defaultQueue.submit([encoder.finish()]);
 
-    const expectedSrcData = new Uint8Array([1, 2, 3, 4, 10, 20, 30, 40]);
-    const expectedDstData = new Uint8Array([10, 20, 30, 40, 1, 2, 3, 4]);
-    t.expectContents(src, expectedSrcData);
-    t.expectContents(dst, expectedDstData);
+  const expectedSrcData = new Uint8Array([1, 2, 3, 4, 10, 20, 30, 40]);
+  const expectedDstData = new Uint8Array([10, 20, 30, 40, 1, 2, 3, 4]);
+  t.expectContents(src, expectedSrcData);
+  t.expectContents(dst, expectedDstData);
 });
 
-g.test('b2b_CopyOrder').fn(async t=>{
+g.test('b2b_CopyOrder').fn(async t => {
   const srcData = new Uint32Array([1, 2, 3, 4, 5, 6, 7, 8]);
 
   const src = t.device.createBuffer({
@@ -124,7 +125,7 @@ g.test('b2b_CopyOrder').fn(async t=>{
   t.device.defaultQueue.submit([encoder.finish()]);
 
   const expectedDstData = new Uint32Array([1, 2, 5, 6, 7, 8, 0, 0]);
-  t.expectContents(dst, expectedDstData); 
+  t.expectContents(dst, expectedDstData);
 });
 
 g.test('b2t2b').fn(async t => {
