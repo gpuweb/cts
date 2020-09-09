@@ -31,45 +31,40 @@ g.test('b2b')
       .combine(poptions('srcOffset', [0, 4, 8, 16]))
       .combine(poptions('dstOffset', [0, 4, 8, 16]))
       .combine(poptions('copySize', [0, 4, 8, 16]))
+      .expand(p => poptions('srcBufferSize', [p.srcOffset + p.copySize, p.srcOffset + p.copySize + 8]))
+      .expand(p => poptions('dstBufferSize', [p.dstOffset + p.copySize, p.dstOffset + p.copySize + 8]))
   )
   .fn(async t => {
-    const { srcOffset, dstOffset, copySize } = t.params;
+    const { srcOffset, dstOffset, copySize, srcBufferSize, dstBufferSize } = t.params;
 
-    const kSrcBufferSizes = [srcOffset + copySize, srcOffset + copySize + 8];
-    const kDstBufferSizes = [dstOffset + copySize, dstOffset + copySize + 8];
-
-    for (const srcBufferSize of kSrcBufferSizes) {
-      const srcData = new Uint8Array(srcBufferSize);
-      for (let i = 0; i < srcBufferSize; ++i) {
-        srcData[i] = i + 1;
-      }
-
-      const src = t.device.createBuffer({
-        mappedAtCreation: true,
-        size: srcBufferSize,
-        usage: GPUBufferUsage.COPY_SRC,
-      });
-      new Uint8Array(src.getMappedRange()).set(srcData);
-      src.unmap();
-
-      for (const dstBufferSize of kDstBufferSizes) {
-        const dst = t.device.createBuffer({
-          size: dstBufferSize,
-          usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-        });
-
-        const encoder = t.device.createCommandEncoder();
-        encoder.copyBufferToBuffer(src, srcOffset, dst, dstOffset, copySize);
-        t.device.defaultQueue.submit([encoder.finish()]);
-
-        const expectedDstData = new Uint8Array(dstBufferSize);
-        for (let i = 0; i < copySize; ++i) {
-          expectedDstData[dstOffset + i] = srcData[srcOffset + i];
-        }
-
-        t.expectContents(dst, expectedDstData);
-      }
+    const srcData = new Uint8Array(srcBufferSize);
+    for (let i = 0; i < srcBufferSize; ++i) {
+      srcData[i] = i + 1;
     }
+
+    const src = t.device.createBuffer({
+      mappedAtCreation: true,
+      size: srcBufferSize,
+      usage: GPUBufferUsage.COPY_SRC,
+    });
+    new Uint8Array(src.getMappedRange()).set(srcData);
+    src.unmap();
+
+    const dst = t.device.createBuffer({
+      size: dstBufferSize,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    encoder.copyBufferToBuffer(src, srcOffset, dst, dstOffset, copySize);
+    t.device.defaultQueue.submit([encoder.finish()]);
+
+    const expectedDstData = new Uint8Array(dstBufferSize);
+    for (let i = 0; i < copySize; ++i) {
+      expectedDstData[dstOffset + i] = srcData[srcOffset + i];
+    }
+
+    t.expectContents(dst, expectedDstData);
   });
 
 g.test('b2b_CopyStateTransitions').fn(async t => {
