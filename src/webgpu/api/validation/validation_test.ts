@@ -95,6 +95,40 @@ export class ValidationTest extends GPUTest {
     }
   }
 
+  createNoOpRenderPipeline(): GPURenderPipeline {
+    const wgslVertex = `
+      fn main() -> void {
+        return;
+      }
+
+      entry_point vertex = main;
+    `;
+    const wgslFragment = `
+      fn main() -> void {
+        return;
+      }
+
+      entry_point fragment = main;
+    `;
+
+    return this.device.createRenderPipeline({
+      vertexStage: {
+        module: this.device.createShaderModule({
+          code: wgslVertex,
+        }),
+        entryPoint: 'main',
+      },
+      fragmentStage: {
+        module: this.device.createShaderModule({
+          code: wgslFragment,
+        }),
+        entryPoint: 'main',
+      },
+      primitiveTopology: 'triangle-list',
+      colorStates: [{ format: 'rgba8unorm' }],
+    });
+  }
+
   expectValidationError(fn: Function, shouldError: boolean = true): void {
     // If no error is expected, we let the scope surrounding the test catch it.
     if (shouldError === false) {

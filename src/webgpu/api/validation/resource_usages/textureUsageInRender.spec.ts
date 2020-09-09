@@ -845,49 +845,28 @@ g.test('validation_scope')
   )
   .fn(async t => {
     const { scope } = t.params;
+
+    // Create two bind groups. Resource usages conflict between these two bind groups. But resource
+    // usage inside each bind group doesn't conflict.
     const view = t
       .createTexture({ usage: GPUTextureUsage.STORAGE | GPUTextureUsage.SAMPLED })
       .createView();
     const bindGroup0 = t.createBindGroup(0, view, 'sampled-texture', undefined);
     const bindGroup1 = t.createBindGroup(0, view, 'writeonly-storage-texture', 'rgba8unorm');
 
-    // Create pipeline. Note that unused bindings should be tracked too.
-    const wgslVertex = `
-      fn main() -> void {
-        return;
-      }
-
-      entry_point vertex = main;
-    `;
-    const wgslFragment = `
-      fn main() -> void {
-        return;
-      }
-
-      entry_point fragment = main;
-    `;
-    const pipeline = t.device.createRenderPipeline({
-      vertexStage: {
-        module: t.device.createShaderModule({
-          code: wgslVertex,
-        }),
-        entryPoint: 'main',
-      },
-      fragmentStage: {
-        module: t.device.createShaderModule({
-          code: wgslFragment,
-        }),
-        entryPoint: 'main',
-      },
-      primitiveTopology: 'triangle-list',
-      colorStates: [{ format: 'rgba8unorm' }],
-    });
-
     const encoder = t.device.createCommandEncoder();
     const pass = t.beginSimpleRenderPass(encoder, t.createTexture().createView());
-    pass.setPipeline(pipeline);
-    pass.setBindGroup(0, bindGroup0);
 
+    // Create a pipeline. Note that bindings unused in pipeline should be validated too.
+    const pipeline = t.createNoOpRenderPipeline();
+    pass.setPipeline(pipeline);
+
+    // - No draw: One render pass only. And don't issue draw call at all in the pass.
+    // - Same draw: One render pass only. Issue one draw call after two bind groups are set.
+    // - Different draws: One render pass only. Each time a single bind group is set, issue a draw
+    //   call. There are two bind groups. As a result, two draw calls are issued in the pass.
+    // - Different passes: Two render passes. Begin a new pass for each bind group.
+    pass.setBindGroup(0, bindGroup0);
     if (scope === 'different-draws') pass.draw(3, 1, 0, 0);
 
     if (scope !== 'different-passes') {
