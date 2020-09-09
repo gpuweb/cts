@@ -31,8 +31,12 @@ g.test('b2b')
       .combine(poptions('srcOffset', [0, 4, 8, 16]))
       .combine(poptions('dstOffset', [0, 4, 8, 16]))
       .combine(poptions('copySize', [0, 4, 8, 16]))
-      .expand(p => poptions('srcBufferSize', [p.srcOffset + p.copySize, p.srcOffset + p.copySize + 8]))
-      .expand(p => poptions('dstBufferSize', [p.dstOffset + p.copySize, p.dstOffset + p.copySize + 8]))
+      .expand(p =>
+        poptions('srcBufferSize', [p.srcOffset + p.copySize, p.srcOffset + p.copySize + 8])
+      )
+      .expand(p =>
+        poptions('dstBufferSize', [p.dstOffset + p.copySize, p.dstOffset + p.copySize + 8])
+      )
   )
   .fn(async t => {
     const { srcOffset, dstOffset, copySize, srcBufferSize, dstBufferSize } = t.params;
