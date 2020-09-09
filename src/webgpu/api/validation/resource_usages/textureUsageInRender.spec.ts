@@ -851,8 +851,8 @@ g.test('validation_scope')
     const view = t
       .createTexture({ usage: GPUTextureUsage.STORAGE | GPUTextureUsage.SAMPLED })
       .createView();
-    const bindGroup0 = t.createBindGroup(0, view, 'sampled-texture', undefined);
-    const bindGroup1 = t.createBindGroup(0, view, 'writeonly-storage-texture', 'rgba8unorm');
+    const bindGroup0 = t.createBindGroup(0, view, 'sampled-texture', '2d', undefined);
+    const bindGroup1 = t.createBindGroup(0, view, 'writeonly-storage-texture', '2d', 'rgba8unorm');
 
     const encoder = t.device.createCommandEncoder();
     const pass = t.beginSimpleRenderPass(encoder, t.createTexture().createView());
