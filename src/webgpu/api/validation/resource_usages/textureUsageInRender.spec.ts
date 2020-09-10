@@ -123,6 +123,35 @@ class TextureUsageTracking extends ValidationTest {
       ],
     });
   }
+
+  testValidationScope(): {
+    bindGroup0: GPUBindGroup;
+    bindGroup1: GPUBindGroup;
+    encoder: GPUCommandEncoder;
+    pass: GPURenderPassEncoder;
+    pipeline: GPURenderPipeline;
+  } {
+    // Create two bind groups. Resource usages conflict between these two bind groups. But resource
+    // usage inside each bind group doesn't conflict.
+    const view = this.createTexture({
+      usage: GPUTextureUsage.STORAGE | GPUTextureUsage.SAMPLED,
+    }).createView();
+    const bindGroup0 = this.createBindGroup(0, view, 'sampled-texture', '2d', undefined);
+    const bindGroup1 = this.createBindGroup(
+      0,
+      view,
+      'writeonly-storage-texture',
+      '2d',
+      'rgba8unorm'
+    );
+
+    const encoder = this.device.createCommandEncoder();
+    const pass = this.beginSimpleRenderPass(encoder, this.createTexture().createView());
+
+    // Create a pipeline. Note that bindings unused in pipeline should be validated too.
+    const pipeline = this.createNoOpRenderPipeline();
+    return { bindGroup0, bindGroup1, encoder, pass, pipeline };
+  }
 }
 
 export const g = makeTestGroup(TextureUsageTracking);
@@ -839,54 +868,56 @@ g.test('unused_bindings_in_pipeline')
     });
   });
 
-g.test('validation_scope')
-  .params(
-    poptions('scope', ['no-draw', 'same-draw', 'different-draws', 'different-passes'] as const)
-  )
-  .fn(async t => {
-    const { scope } = t.params;
+g.test('validation_scope,no_draw').fn(async t => {
+  const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope();
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup0);
+  pass.setBindGroup(1, bindGroup1);
+  pass.endPass();
 
-    // Create two bind groups. Resource usages conflict between these two bind groups. But resource
-    // usage inside each bind group doesn't conflict.
-    const view = t
-      .createTexture({ usage: GPUTextureUsage.STORAGE | GPUTextureUsage.SAMPLED })
-      .createView();
-    const bindGroup0 = t.createBindGroup(0, view, 'sampled-texture', '2d', undefined);
-    const bindGroup1 = t.createBindGroup(0, view, 'writeonly-storage-texture', '2d', 'rgba8unorm');
-
-    const encoder = t.device.createCommandEncoder();
-    const pass = t.beginSimpleRenderPass(encoder, t.createTexture().createView());
-
-    // Create a pipeline. Note that bindings unused in pipeline should be validated too.
-    const pipeline = t.createNoOpRenderPipeline();
-    pass.setPipeline(pipeline);
-
-    // - No draw: One render pass only. And don't issue draw call at all in the pass.
-    // - Same draw: One render pass only. Issue one draw call after two bind groups are set.
-    // - Different draws: One render pass only. Each time a single bind group is set, issue a draw
-    //   call. There are two bind groups. As a result, two draw calls are issued in the pass.
-    // - Different passes: Two render passes. Begin a new pass for each bind group.
-    pass.setBindGroup(0, bindGroup0);
-    if (scope === 'different-draws') pass.draw(3, 1, 0, 0);
-
-    if (scope !== 'different-passes') {
-      pass.setBindGroup(1, bindGroup1);
-      if (scope === 'different-draws' || scope === 'same-draw') pass.draw(3, 1, 0, 0);
-      pass.endPass();
-    } else {
-      pass.endPass();
-      const pass1 = t.beginSimpleRenderPass(encoder, t.createTexture().createView());
-      pass1.setPipeline(pipeline);
-      pass1.setBindGroup(1, bindGroup1);
-      pass1.endPass();
-    }
-
-    // Texture usages should be validated per each render pass. Inside a pass, the conflict should
-    // be validated no matter the conflict exists without draw call, or inside one draw call, or
-    // between draw calls. But resource usage conflict between render passes is not a problem.
-    const success = scope === 'different-passes' ? true : false;
-
-    t.expectValidationError(() => {
-      encoder.finish();
-    }, !success);
+  t.expectValidationError(() => {
+    encoder.finish();
   });
+});
+
+g.test('validation_scope,same_draw').fn(async t => {
+  const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope();
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup0);
+  pass.setBindGroup(1, bindGroup1);
+  pass.draw(3, 1, 0, 0);
+  pass.endPass();
+
+  t.expectValidationError(() => {
+    encoder.finish();
+  });
+});
+
+g.test('validation_scope,different_draws').fn(async t => {
+  const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope();
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup0);
+  pass.draw(3, 1, 0, 0);
+  pass.setBindGroup(1, bindGroup1);
+  pass.draw(3, 1, 0, 0);
+  pass.endPass();
+
+  t.expectValidationError(() => {
+    encoder.finish();
+  });
+});
+
+g.test('validation_scope,different_passes').fn(async t => {
+  const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope();
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup0);
+  pass.endPass();
+
+  const pass1 = t.beginSimpleRenderPass(encoder, t.createTexture().createView());
+  pass1.setPipeline(pipeline);
+  pass1.setBindGroup(1, bindGroup1);
+  pass1.endPass();
+
+  // No validation error.
+  encoder.finish();
+});
