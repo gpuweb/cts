@@ -25,8 +25,8 @@ class F extends ValidationTest {
     source: GPUTextureCopyView,
     destination: GPUTextureCopyView,
     copySize: GPUExtent3D,
-    isSuccess: boolean): void {
-
+    isSuccess: boolean
+  ): void {
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyTextureToTexture(source, destination, copySize);
 
@@ -68,70 +68,70 @@ g.test('mipmap_level')
       dstMipLevelCount: 1,
       srcCopyMipLevel: 0,
       dstCopyMipLevel: 0,
-      _isSuccess: true
+      _isSuccess: true,
     },
     {
       srcMipLevelCount: 1,
       dstMipLevelCount: 1,
       srcCopyMipLevel: 1,
       dstCopyMipLevel: 0,
-      _isSuccess: false
+      _isSuccess: false,
     },
     {
       srcMipLevelCount: 1,
       dstMipLevelCount: 1,
       srcCopyMipLevel: 0,
       dstCopyMipLevel: 1,
-      _isSuccess: false
+      _isSuccess: false,
     },
     {
       srcMipLevelCount: 3,
       dstMipLevelCount: 3,
       srcCopyMipLevel: 0,
       dstCopyMipLevel: 0,
-      _isSuccess: true
+      _isSuccess: true,
     },
     {
       srcMipLevelCount: 3,
       dstMipLevelCount: 3,
       srcCopyMipLevel: 2,
       dstCopyMipLevel: 0,
-      _isSuccess: true
+      _isSuccess: true,
     },
     {
       srcMipLevelCount: 3,
       dstMipLevelCount: 3,
       srcCopyMipLevel: 3,
       dstCopyMipLevel: 0,
-      _isSuccess: false
+      _isSuccess: false,
     },
     {
       srcMipLevelCount: 3,
       dstMipLevelCount: 3,
       srcCopyMipLevel: 4,
       dstCopyMipLevel: 0,
-      _isSuccess: false
+      _isSuccess: false,
     },
     {
       srcMipLevelCount: 3,
       dstMipLevelCount: 3,
       srcCopyMipLevel: 0,
       dstCopyMipLevel: 2,
-      _isSuccess: true
+      _isSuccess: true,
     },
     {
       srcMipLevelCount: 3,
       dstMipLevelCount: 3,
       srcCopyMipLevel: 0,
       dstCopyMipLevel: 3,
-      _isSuccess: false
+      _isSuccess: false,
     },
     {
       srcMipLevelCount: 3,
       dstMipLevelCount: 3,
       srcCopyMipLevel: 0,
       dstCopyMipLevel: 4,
-      _isSuccess: false
+      _isSuccess: false,
     },
   ] as const)
   .fn(async t => {
@@ -163,7 +163,6 @@ g.test('mipmap_level')
       _isSuccess
     );
   });
-
 
 g.test('texture_usage')
   .params(
@@ -235,12 +234,17 @@ g.test('multisampled_copy_restrictions')
           { x: 0, y: 0, z: 0 },
           { x: 1, y: 0, z: 0 },
           { x: 0, y: 1, z: 0 },
-          { x: 1, y: 1, z: 0 }]))
-      .combine(poptions('dstCopyOrigin', [
-        { x: 0, y: 0, z: 0 },
-        { x: 1, y: 0, z: 0 },
-        { x: 0, y: 1, z: 0 },
-        { x: 1, y: 1, z: 0 }]))
+          { x: 1, y: 1, z: 0 },
+        ])
+      )
+      .combine(
+        poptions('dstCopyOrigin', [
+          { x: 0, y: 0, z: 0 },
+          { x: 1, y: 0, z: 0 },
+          { x: 0, y: 1, z: 0 },
+          { x: 1, y: 1, z: 0 },
+        ])
+      )
   )
   .fn(async t => {
     const { srcCopyOrigin, dstCopyOrigin } = t.params;
