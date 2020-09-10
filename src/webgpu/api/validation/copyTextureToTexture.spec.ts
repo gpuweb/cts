@@ -48,26 +48,100 @@ g.test('copy_with_invalid_texture').fn(async t => {
   const errorTexture = t.getErrorTexture();
 
   t.TestCopyTextureToTexture(
-    { texture: errorTexture }, { texture: validTexture }, { width: 1, height: 1, depth: 1 }, false);
+    { texture: errorTexture },
+    { texture: validTexture },
+    { width: 1, height: 1, depth: 1 },
+    false
+  );
   t.TestCopyTextureToTexture(
-    { texture: validTexture }, { texture: errorTexture }, { width: 1, height: 1, depth: 1 }, false);
+    { texture: validTexture },
+    { texture: errorTexture },
+    { width: 1, height: 1, depth: 1 },
+    false
+  );
 });
 
 g.test('mipmap_level')
   .params([
-    { srcMipLevelCount: 1, dstMipLevelCount: 1, srcCopyMipLevel: 0, dstCopyMipLevel: 0, _isSuccess: true },
-    { srcMipLevelCount: 1, dstMipLevelCount: 1, srcCopyMipLevel: 1, dstCopyMipLevel: 0, _isSuccess: false },
-    { srcMipLevelCount: 1, dstMipLevelCount: 1, srcCopyMipLevel: 0, dstCopyMipLevel: 1, _isSuccess: false },
-    { srcMipLevelCount: 3, dstMipLevelCount: 3, srcCopyMipLevel: 0, dstCopyMipLevel: 0, _isSuccess: true },
-    { srcMipLevelCount: 3, dstMipLevelCount: 3, srcCopyMipLevel: 2, dstCopyMipLevel: 0, _isSuccess: true },
-    { srcMipLevelCount: 3, dstMipLevelCount: 3, srcCopyMipLevel: 3, dstCopyMipLevel: 0, _isSuccess: false },
-    { srcMipLevelCount: 3, dstMipLevelCount: 3, srcCopyMipLevel: 4, dstCopyMipLevel: 0, _isSuccess: false },
-    { srcMipLevelCount: 3, dstMipLevelCount: 3, srcCopyMipLevel: 0, dstCopyMipLevel: 2, _isSuccess: true },
-    { srcMipLevelCount: 3, dstMipLevelCount: 3, srcCopyMipLevel: 0, dstCopyMipLevel: 3, _isSuccess: false },
-    { srcMipLevelCount: 3, dstMipLevelCount: 3, srcCopyMipLevel: 0, dstCopyMipLevel: 4, _isSuccess: false },
+    {
+      srcMipLevelCount: 1,
+      dstMipLevelCount: 1,
+      srcCopyMipLevel: 0,
+      dstCopyMipLevel: 0,
+      _isSuccess: true
+    },
+    {
+      srcMipLevelCount: 1,
+      dstMipLevelCount: 1,
+      srcCopyMipLevel: 1,
+      dstCopyMipLevel: 0,
+      _isSuccess: false
+    },
+    {
+      srcMipLevelCount: 1,
+      dstMipLevelCount: 1,
+      srcCopyMipLevel: 0,
+      dstCopyMipLevel: 1,
+      _isSuccess: false
+    },
+    {
+      srcMipLevelCount: 3,
+      dstMipLevelCount: 3,
+      srcCopyMipLevel: 0,
+      dstCopyMipLevel: 0,
+      _isSuccess: true
+    },
+    {
+      srcMipLevelCount: 3,
+      dstMipLevelCount: 3,
+      srcCopyMipLevel: 2,
+      dstCopyMipLevel: 0,
+      _isSuccess: true
+    },
+    {
+      srcMipLevelCount: 3,
+      dstMipLevelCount: 3,
+      srcCopyMipLevel: 3,
+      dstCopyMipLevel: 0,
+      _isSuccess: false
+    },
+    {
+      srcMipLevelCount: 3,
+      dstMipLevelCount: 3,
+      srcCopyMipLevel: 4,
+      dstCopyMipLevel: 0,
+      _isSuccess: false
+    },
+    {
+      srcMipLevelCount: 3,
+      dstMipLevelCount: 3,
+      srcCopyMipLevel: 0,
+      dstCopyMipLevel: 2,
+      _isSuccess: true
+    },
+    {
+      srcMipLevelCount: 3,
+      dstMipLevelCount: 3,
+      srcCopyMipLevel: 0,
+      dstCopyMipLevel: 3,
+      _isSuccess: false
+    },
+    {
+      srcMipLevelCount: 3,
+      dstMipLevelCount: 3,
+      srcCopyMipLevel: 0,
+      dstCopyMipLevel: 4,
+      _isSuccess: false
+    },
   ] as const)
   .fn(async t => {
-    const { srcMipLevelCount, dstMipLevelCount, srcCopyMipLevel, dstCopyMipLevel, _isSuccess } = t.params;
+    const {
+      srcMipLevelCount,
+      dstMipLevelCount,
+      srcCopyMipLevel,
+      dstCopyMipLevel,
+      _isSuccess
+    } = t.params;
 
     const srcTexture = t.device.createTexture({
       size: { width: 32, height: 32, depth: 1 },
@@ -82,7 +156,12 @@ g.test('mipmap_level')
       mipLevelCount: dstMipLevelCount,
     });
 
-    t.TestCopyTextureToTexture({ texture: srcTexture, mipLevel: srcCopyMipLevel }, { texture: dstTexture, mipLevel: dstCopyMipLevel }, { width: 1, height: 1, depth: 1 }, _isSuccess);
+    t.TestCopyTextureToTexture(
+      { texture: srcTexture, mipLevel: srcCopyMipLevel },
+      { texture: dstTexture, mipLevel: dstCopyMipLevel },
+      { width: 1, height: 1, depth: 1 },
+      _isSuccess
+    );
   });
 
 
@@ -106,9 +185,15 @@ g.test('texture_usage')
       usage: dstUsage,
     });
 
-    const isSuccess = srcUsage === GPUTextureUsage.COPY_SRC && dstUsage === GPUTextureUsage.COPY_DST;
+    const isSuccess =
+      srcUsage === GPUTextureUsage.COPY_SRC && dstUsage === GPUTextureUsage.COPY_DST;
 
-    t.TestCopyTextureToTexture({ texture: srcTexture }, { texture: dstTexture }, { width: 1, height: 1, depth: 1 }, isSuccess);
+    t.TestCopyTextureToTexture(
+      { texture: srcTexture },
+      { texture: dstTexture },
+      { width: 1, height: 1, depth: 1 },
+      isSuccess
+    );
   });
 
 g.test('sample_count')
@@ -134,14 +219,28 @@ g.test('sample_count')
       sampleCount: dstSampleCount,
     });
 
-    t.TestCopyTextureToTexture({ texture: srcTexture }, { texture: dstTexture }, { width: 4, height: 4, depth: 1 }, _isSuccess);
+    t.TestCopyTextureToTexture(
+      { texture: srcTexture },
+      { texture: dstTexture },
+      { width: 4, height: 4, depth: 1 },
+      _isSuccess
+    );
   });
 
 g.test('multisampled_copy_restrictions')
   .params(
     params()
-      .combine(poptions('srcCopyOrigin', [{ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }, { x: 0, y: 1, z: 0 }, { x: 1, y: 1, z: 0 }]))
-      .combine(poptions('dstCopyOrigin', [{ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }, { x: 0, y: 1, z: 0 }, { x: 1, y: 1, z: 0 }]))
+      .combine(
+        poptions('srcCopyOrigin', [
+          { x: 0, y: 0, z: 0 },
+          { x: 1, y: 0, z: 0 },
+          { x: 0, y: 1, z: 0 },
+          { x: 1, y: 1, z: 0 }]))
+      .combine(poptions('dstCopyOrigin', [
+        { x: 0, y: 0, z: 0 },
+        { x: 1, y: 0, z: 0 },
+        { x: 0, y: 1, z: 0 },
+        { x: 1, y: 1, z: 0 }]))
   )
   .fn(async t => {
     const { srcCopyOrigin, dstCopyOrigin } = t.params;
@@ -167,7 +266,12 @@ g.test('multisampled_copy_restrictions')
     const copyWidth = kWidth - Math.max(srcCopyOrigin.x, dstCopyOrigin.x);
     const copyHeight = kHeight - Math.max(srcCopyOrigin.y, dstCopyOrigin.y);
 
-    const isSuccess = (kWidth === copyWidth) && (kHeight === copyHeight);
+    const isSuccess = kWidth === copyWidth && kHeight === copyHeight;
 
-    t.TestCopyTextureToTexture({ texture: srcTexture, origin: srcCopyOrigin }, { texture: dstTexture, origin: dstCopyOrigin }, { width: copyWidth, height: copyHeight, depth: 1 }, isSuccess);
+    t.TestCopyTextureToTexture(
+      { texture: srcTexture, origin: srcCopyOrigin },
+      { texture: dstTexture, origin: dstCopyOrigin },
+      { width: copyWidth, height: copyHeight, depth: 1 },
+      isSuccess
+    );
   });
