@@ -30,6 +30,9 @@ Test Coverage:
 
   - Test texture usages with unused bindings:
     - Texture usages should be tracked even its bindings is not used in pipeline.
+
+  - Test texture usages validation scope:
+    - Texture usages should be tracked per each render pass.
 `;
 
 import { pbool, poptions, params } from '../../../../common/framework/params_builder.js';
@@ -119,6 +122,35 @@ class TextureUsageTracking extends ValidationTest {
         },
       ],
     });
+  }
+
+  testValidationScope(): {
+    bindGroup0: GPUBindGroup;
+    bindGroup1: GPUBindGroup;
+    encoder: GPUCommandEncoder;
+    pass: GPURenderPassEncoder;
+    pipeline: GPURenderPipeline;
+  } {
+    // Create two bind groups. Resource usages conflict between these two bind groups. But resource
+    // usage inside each bind group doesn't conflict.
+    const view = this.createTexture({
+      usage: GPUTextureUsage.STORAGE | GPUTextureUsage.SAMPLED,
+    }).createView();
+    const bindGroup0 = this.createBindGroup(0, view, 'sampled-texture', '2d', undefined);
+    const bindGroup1 = this.createBindGroup(
+      0,
+      view,
+      'writeonly-storage-texture',
+      '2d',
+      'rgba8unorm'
+    );
+
+    const encoder = this.device.createCommandEncoder();
+    const pass = this.beginSimpleRenderPass(encoder, this.createTexture().createView());
+
+    // Create a pipeline. Note that bindings unused in pipeline should be validated too.
+    const pipeline = this.createNoOpRenderPipeline();
+    return { bindGroup0, bindGroup1, encoder, pass, pipeline };
   }
 }
 
@@ -835,3 +867,57 @@ g.test('unused_bindings_in_pipeline')
       encoder.finish();
     });
   });
+
+g.test('validation_scope,no_draw').fn(async t => {
+  const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope();
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup0);
+  pass.setBindGroup(1, bindGroup1);
+  pass.endPass();
+
+  t.expectValidationError(() => {
+    encoder.finish();
+  });
+});
+
+g.test('validation_scope,same_draw').fn(async t => {
+  const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope();
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup0);
+  pass.setBindGroup(1, bindGroup1);
+  pass.draw(3, 1, 0, 0);
+  pass.endPass();
+
+  t.expectValidationError(() => {
+    encoder.finish();
+  });
+});
+
+g.test('validation_scope,different_draws').fn(async t => {
+  const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope();
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup0);
+  pass.draw(3, 1, 0, 0);
+  pass.setBindGroup(1, bindGroup1);
+  pass.draw(3, 1, 0, 0);
+  pass.endPass();
+
+  t.expectValidationError(() => {
+    encoder.finish();
+  });
+});
+
+g.test('validation_scope,different_passes').fn(async t => {
+  const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope();
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup0);
+  pass.endPass();
+
+  const pass1 = t.beginSimpleRenderPass(encoder, t.createTexture().createView());
+  pass1.setPipeline(pipeline);
+  pass1.setBindGroup(1, bindGroup1);
+  pass1.endPass();
+
+  // No validation error.
+  encoder.finish();
+});
