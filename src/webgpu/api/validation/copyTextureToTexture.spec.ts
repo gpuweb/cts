@@ -113,12 +113,7 @@ g.test('mipmap_level')
     },
   ] as const)
   .fn(async t => {
-    const {
-      srcMipLevelCount,
-      dstMipLevelCount,
-      srcCopyMipLevel,
-      dstCopyMipLevel,
-    } = t.params;
+    const { srcMipLevelCount, dstMipLevelCount, srcCopyMipLevel, dstCopyMipLevel } = t.params;
 
     const srcTexture = t.device.createTexture({
       size: { width: 32, height: 32, depth: 1 },
@@ -176,12 +171,8 @@ g.test('texture_usage')
 g.test('sample_count')
   .params(
     params()
-      .combine(
-        poptions('srcSampleCount', [1, 4])
-      )
-      .combine(
-        poptions('dstSampleCount', [1, 4])
-      )
+      .combine(poptions('srcSampleCount', [1, 4]))
+      .combine(poptions('dstSampleCount', [1, 4]))
   )
   .fn(async t => {
     const { srcSampleCount, dstSampleCount } = t.params;
@@ -227,12 +218,8 @@ g.test('multisampled_copy_restrictions')
           { x: 1, y: 1, z: 0 },
         ])
       )
-      .expand(p =>
-        poptions('copyWidth', [32 - Math.max(p.srcCopyOrigin.x, p.dstCopyOrigin.x), 16])
-      )
-      .expand(p =>
-        poptions('copyHeight', [16 - Math.max(p.srcCopyOrigin.y, p.dstCopyOrigin.y), 8])
-      )
+      .expand(p => poptions('copyWidth', [32 - Math.max(p.srcCopyOrigin.x, p.dstCopyOrigin.x), 16]))
+      .expand(p => poptions('copyHeight', [16 - Math.max(p.srcCopyOrigin.y, p.dstCopyOrigin.y), 8]))
   )
   .fn(async t => {
     const { srcCopyOrigin, dstCopyOrigin, copyWidth, copyHeight } = t.params;
@@ -255,7 +242,7 @@ g.test('multisampled_copy_restrictions')
       sampleCount: 4,
     });
 
-    const isSuccess = copyWidth == kWidth && copyHeight == kHeight;
+    const isSuccess = copyWidth === kWidth && copyHeight === kHeight;
     t.TestCopyTextureToTexture(
       { texture: srcTexture, origin: srcCopyOrigin },
       { texture: dstTexture, origin: dstCopyOrigin },
