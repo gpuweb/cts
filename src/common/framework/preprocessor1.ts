@@ -1,5 +1,8 @@
 import { assert } from './util/util.js';
 
+/**
+ * A simple template-based, line-by-line preprocessor.
+ */
 export function pp(
   strings: TemplateStringsArray,
   ...values: ReadonlyArray<boolean | string | number>

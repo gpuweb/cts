@@ -2,7 +2,7 @@ export const description = `
 Test for "pp" preprocessor.
 `;
 
-import { pp } from '../common/framework/preprocessor.js';
+import { pp } from '../common/framework/preprocessor1.js';
 import { makeTestGroup } from '../common/framework/test_group.js';
 
 import { UnitTest } from './unit_test.js';
