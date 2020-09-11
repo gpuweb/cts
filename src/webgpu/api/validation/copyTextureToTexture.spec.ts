@@ -63,75 +63,35 @@ g.test('copy_with_invalid_texture').fn(async t => {
 
 g.test('mipmap_level')
   .params([
-    {
-      srcMipLevelCount: 1,
-      dstMipLevelCount: 1,
-      srcCopyMipLevel: 0,
-      dstCopyMipLevel: 0,
-    },
-    {
-      srcMipLevelCount: 1,
-      dstMipLevelCount: 1,
-      srcCopyMipLevel: 1,
-      dstCopyMipLevel: 0,
-    },
-    {
-      srcMipLevelCount: 1,
-      dstMipLevelCount: 1,
-      srcCopyMipLevel: 0,
-      dstCopyMipLevel: 1,
-    },
-    {
-      srcMipLevelCount: 3,
-      dstMipLevelCount: 3,
-      srcCopyMipLevel: 0,
-      dstCopyMipLevel: 0,
-    },
-    {
-      srcMipLevelCount: 3,
-      dstMipLevelCount: 3,
-      srcCopyMipLevel: 2,
-      dstCopyMipLevel: 0,
-    },
-    {
-      srcMipLevelCount: 3,
-      dstMipLevelCount: 3,
-      srcCopyMipLevel: 3,
-      dstCopyMipLevel: 0,
-    },
-    {
-      srcMipLevelCount: 3,
-      dstMipLevelCount: 3,
-      srcCopyMipLevel: 0,
-      dstCopyMipLevel: 2,
-    },
-    {
-      srcMipLevelCount: 3,
-      dstMipLevelCount: 3,
-      srcCopyMipLevel: 0,
-      dstCopyMipLevel: 3,
-    },
+    { srcLevelCount: 1, dstLevelCount: 1, srcCopyLevel: 0, dstCopyLevel: 0 },
+    { srcLevelCount: 1, dstLevelCount: 1, srcCopyLevel: 1, dstCopyLevel: 0 },
+    { srcLevelCount: 1, dstLevelCount: 1, srcCopyLevel: 0, dstCopyLevel: 1 },
+    { srcLevelCount: 3, dstLevelCount: 3, srcCopyLevel: 0, dstCopyLevel: 0 },
+    { srcLevelCount: 3, dstLevelCount: 3, srcCopyLevel: 2, dstCopyLevel: 0 },
+    { srcLevelCount: 3, dstLevelCount: 3, srcCopyLevel: 3, dstCopyLevel: 0 },
+    { srcLevelCount: 3, dstLevelCount: 3, srcCopyLevel: 0, dstCopyLevel: 2 },
+    { srcLevelCount: 3, dstLevelCount: 3, srcCopyLevel: 0, dstCopyLevel: 3 },
   ] as const)
   .fn(async t => {
-    const { srcMipLevelCount, dstMipLevelCount, srcCopyMipLevel, dstCopyMipLevel } = t.params;
+    const { srcLevelCount, dstLevelCount, srcCopyLevel, dstCopyLevel } = t.params;
 
     const srcTexture = t.device.createTexture({
       size: { width: 32, height: 32, depth: 1 },
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC,
-      mipLevelCount: srcMipLevelCount,
+      mipLevelCount: srcLevelCount,
     });
     const dstTexture = t.device.createTexture({
       size: { width: 32, height: 32, depth: 1 },
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_DST,
-      mipLevelCount: dstMipLevelCount,
+      mipLevelCount: dstLevelCount,
     });
 
-    const isSuccess = srcCopyMipLevel < srcMipLevelCount && dstCopyMipLevel < dstMipLevelCount;
+    const isSuccess = srcCopyLevel < srcLevelCount && dstCopyLevel < dstLevelCount;
     t.TestCopyTextureToTexture(
-      { texture: srcTexture, mipLevel: srcCopyMipLevel },
-      { texture: dstTexture, mipLevel: dstCopyMipLevel },
+      { texture: srcTexture, mipLevel: srcCopyLevel },
+      { texture: dstTexture, mipLevel: dstCopyLevel },
       { width: 1, height: 1, depth: 1 },
       isSuccess
     );
