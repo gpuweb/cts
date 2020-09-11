@@ -68,70 +68,48 @@ g.test('mipmap_level')
       dstMipLevelCount: 1,
       srcCopyMipLevel: 0,
       dstCopyMipLevel: 0,
-      _isSuccess: true,
     },
     {
       srcMipLevelCount: 1,
       dstMipLevelCount: 1,
       srcCopyMipLevel: 1,
       dstCopyMipLevel: 0,
-      _isSuccess: false,
     },
     {
       srcMipLevelCount: 1,
       dstMipLevelCount: 1,
       srcCopyMipLevel: 0,
       dstCopyMipLevel: 1,
-      _isSuccess: false,
     },
     {
       srcMipLevelCount: 3,
       dstMipLevelCount: 3,
       srcCopyMipLevel: 0,
       dstCopyMipLevel: 0,
-      _isSuccess: true,
     },
     {
       srcMipLevelCount: 3,
       dstMipLevelCount: 3,
       srcCopyMipLevel: 2,
       dstCopyMipLevel: 0,
-      _isSuccess: true,
     },
     {
       srcMipLevelCount: 3,
       dstMipLevelCount: 3,
       srcCopyMipLevel: 3,
       dstCopyMipLevel: 0,
-      _isSuccess: false,
-    },
-    {
-      srcMipLevelCount: 3,
-      dstMipLevelCount: 3,
-      srcCopyMipLevel: 4,
-      dstCopyMipLevel: 0,
-      _isSuccess: false,
     },
     {
       srcMipLevelCount: 3,
       dstMipLevelCount: 3,
       srcCopyMipLevel: 0,
       dstCopyMipLevel: 2,
-      _isSuccess: true,
     },
     {
       srcMipLevelCount: 3,
       dstMipLevelCount: 3,
       srcCopyMipLevel: 0,
       dstCopyMipLevel: 3,
-      _isSuccess: false,
-    },
-    {
-      srcMipLevelCount: 3,
-      dstMipLevelCount: 3,
-      srcCopyMipLevel: 0,
-      dstCopyMipLevel: 4,
-      _isSuccess: false,
     },
   ] as const)
   .fn(async t => {
@@ -140,7 +118,6 @@ g.test('mipmap_level')
       dstMipLevelCount,
       srcCopyMipLevel,
       dstCopyMipLevel,
-      _isSuccess
     } = t.params;
 
     const srcTexture = t.device.createTexture({
@@ -156,11 +133,12 @@ g.test('mipmap_level')
       mipLevelCount: dstMipLevelCount,
     });
 
+    const isSuccess = srcCopyMipLevel < srcMipLevelCount && dstCopyMipLevel < dstMipLevelCount;
     t.TestCopyTextureToTexture(
       { texture: srcTexture, mipLevel: srcCopyMipLevel },
       { texture: dstTexture, mipLevel: dstCopyMipLevel },
       { width: 1, height: 1, depth: 1 },
-      _isSuccess
+      isSuccess
     );
   });
 
@@ -196,20 +174,23 @@ g.test('texture_usage')
   });
 
 g.test('sample_count')
-  .params([
-    { srcSamplecount: 1, dstSampleCount: 1, _isSuccess: true },
-    { srcSamplecount: 1, dstSampleCount: 4, _isSuccess: false },
-    { srcSamplecount: 4, dstSampleCount: 1, _isSuccess: false },
-    { srcSamplecount: 4, dstSampleCount: 4, _isSuccess: true },
-  ] as const)
+  .params(
+    params()
+      .combine(
+        poptions('srcSampleCount', [1, 4])
+      )
+      .combine(
+        poptions('dstSampleCount', [1, 4])
+      )
+  )
   .fn(async t => {
-    const { srcSamplecount, dstSampleCount, _isSuccess } = t.params;
+    const { srcSampleCount, dstSampleCount } = t.params;
 
     const srcTexture = t.device.createTexture({
       size: { width: 4, height: 4, depth: 1 },
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC,
-      sampleCount: srcSamplecount,
+      sampleCount: srcSampleCount,
     });
     const dstTexture = t.device.createTexture({
       size: { width: 4, height: 4, depth: 1 },
@@ -218,11 +199,12 @@ g.test('sample_count')
       sampleCount: dstSampleCount,
     });
 
+    const isSuccess = srcSampleCount === dstSampleCount;
     t.TestCopyTextureToTexture(
       { texture: srcTexture },
       { texture: dstTexture },
       { width: 4, height: 4, depth: 1 },
-      _isSuccess
+      isSuccess
     );
   });
 
@@ -245,9 +227,15 @@ g.test('multisampled_copy_restrictions')
           { x: 1, y: 1, z: 0 },
         ])
       )
+      .expand(p =>
+        poptions('copyWidth', [32 - Math.max(p.srcCopyOrigin.x, p.dstCopyOrigin.x), 16])
+      )
+      .expand(p =>
+        poptions('copyHeight', [16 - Math.max(p.srcCopyOrigin.y, p.dstCopyOrigin.y), 8])
+      )
   )
   .fn(async t => {
-    const { srcCopyOrigin, dstCopyOrigin } = t.params;
+    const { srcCopyOrigin, dstCopyOrigin, copyWidth, copyHeight } = t.params;
 
     const kWidth = 32;
     const kHeight = 16;
@@ -267,11 +255,7 @@ g.test('multisampled_copy_restrictions')
       sampleCount: 4,
     });
 
-    const copyWidth = kWidth - Math.max(srcCopyOrigin.x, dstCopyOrigin.x);
-    const copyHeight = kHeight - Math.max(srcCopyOrigin.y, dstCopyOrigin.y);
-
-    const isSuccess = kWidth === copyWidth && kHeight === copyHeight;
-
+    const isSuccess = copyWidth == kWidth && copyHeight == kHeight;
     t.TestCopyTextureToTexture(
       { texture: srcTexture, origin: srcCopyOrigin },
       { texture: dstTexture, origin: dstCopyOrigin },
