@@ -7,9 +7,8 @@ Test Coverage:
     - Test that all pushDebugGroup must have a corresponding popDebugGroup
       - Push and pop counts of 0, 1, and 2 will be used.
       - An error must be generated for non matching counts.
-    - Test calling pushDebugGroup with an empty string.
-    - Test inserting a debug marker with an empty string.
-    - Test inserting a debug marker with a non-empty string.
+    - Test calling pushDebugGroup with empty and non-empty strings.
+    - Test inserting a debug marker with empty and non-empty string.
 `;
 
 import { poptions, params } from '../../../../../common/framework/params_builder.js';
@@ -18,9 +17,9 @@ import { assert } from '../../../../../common/framework/util/util.js';
 
 import { ValidationTest } from './../../validation_test.js';
 
-type Encoders = GPUCommandEncoder | GPUProgrammablePassEncoder;
+type Encoder = GPUCommandEncoder | GPUProgrammablePassEncoder;
 const kEncoderTypes = ['non-pass', 'compute pass', 'render pass', 'render bundle'] as const;
-type EncoderTypes = typeof kEncoderTypes[number];
+type EncoderType = typeof kEncoderTypes[number];
 
 class F extends ValidationTest {
   #commandEncoder: GPUCommandEncoder | undefined = undefined;
@@ -33,7 +32,7 @@ class F extends ValidationTest {
     });
   }
 
-  createEncoder(encoderType: EncoderTypes): Encoders {
+  createEncoder(encoderType: EncoderType): Encoder {
     assert(this.#commandEncoder === undefined);
     switch (encoderType) {
       case 'non-pass':
@@ -56,7 +55,7 @@ class F extends ValidationTest {
     }
   }
 
-  finishEncoder(encoder: Encoders, encoderType: EncoderTypes) {
+  finishEncoder(encoder: Encoder, encoderType: EncoderType) {
     let commandBuffer: GPUCommandBuffer | undefined = undefined;
     switch (encoderType) {
       case 'non-pass': {
@@ -117,27 +116,27 @@ g.test('debug_group_balanced')
     }, shouldError);
   });
 
-g.test('debug_group_empty_string')
-  .params(poptions('encoderType', kEncoderTypes))
+g.test('debug_group')
+  .params(
+    params()
+      .combine(poptions('encoderType', kEncoderTypes))
+      .combine(poptions('label', ['', 'group']))
+  )
   .fn(t => {
     const encoder = t.createEncoder(t.params.encoderType);
-    encoder.pushDebugGroup('');
+    encoder.pushDebugGroup(t.params.label);
     encoder.popDebugGroup();
     t.finishEncoder(encoder, t.params.encoderType);
   });
 
-g.test('debug_marker_empty_string')
-  .params(poptions('encoderType', kEncoderTypes))
+g.test('debug_marker')
+  .params(
+    params()
+      .combine(poptions('encoderType', kEncoderTypes))
+      .combine(poptions('label', ['', 'marker']))
+  )
   .fn(t => {
     const encoder = t.createEncoder(t.params.encoderType);
-    encoder.insertDebugMarker('');
-    t.finishEncoder(encoder, t.params.encoderType);
-  });
-
-g.test('debug_marker_non_empty_string')
-  .params(poptions('encoderType', kEncoderTypes))
-  .fn(t => {
-    const encoder = t.createEncoder(t.params.encoderType);
-    encoder.insertDebugMarker('marker');
+    encoder.insertDebugMarker(t.params.label);
     t.finishEncoder(encoder, t.params.encoderType);
   });
