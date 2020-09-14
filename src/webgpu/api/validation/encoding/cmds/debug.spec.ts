@@ -8,7 +8,7 @@ Test Coverage:
       - Push and pop counts of 0, 1, and 2 will be used.
       - An error must be generated for non matching counts.
     - Test calling pushDebugGroup with empty and non-empty strings.
-    - Test inserting a debug marker with empty and non-empty string.
+    - Test inserting a debug marker with empty and non-empty strings.
 `;
 
 import { poptions, params } from '../../../../../common/framework/params_builder.js';
