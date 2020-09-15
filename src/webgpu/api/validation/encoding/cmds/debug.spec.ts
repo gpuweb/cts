@@ -22,7 +22,7 @@ const kEncoderTypes = ['non-pass', 'compute pass', 'render pass', 'render bundle
 type EncoderType = typeof kEncoderTypes[number];
 
 class F extends ValidationTest {
-  #commandEncoder: GPUCommandEncoder | undefined = undefined;
+  private commandEncoder: GPUCommandEncoder | undefined = undefined;
 
   makeAttachmentTexture(): GPUTexture {
     return this.device.createTexture({
@@ -33,18 +33,18 @@ class F extends ValidationTest {
   }
 
   createEncoder(encoderType: EncoderType): Encoder {
-    assert(this.#commandEncoder === undefined);
+    assert(this.commandEncoder === undefined);
     switch (encoderType) {
       case 'non-pass':
         return this.device.createCommandEncoder({});
       case 'render bundle':
         return this.device.createRenderBundleEncoder({ colorFormats: ['rgba8unorm'] });
       case 'compute pass':
-        this.#commandEncoder = this.device.createCommandEncoder({});
-        return this.#commandEncoder.beginComputePass({});
+        this.commandEncoder = this.device.createCommandEncoder({});
+        return this.commandEncoder.beginComputePass({});
       case 'render pass':
-        this.#commandEncoder = this.device.createCommandEncoder({});
-        return this.#commandEncoder.beginRenderPass({
+        this.commandEncoder = this.device.createCommandEncoder({});
+        return this.commandEncoder.beginRenderPass({
           colorAttachments: [
             {
               attachment: this.makeAttachmentTexture().createView(),
@@ -80,10 +80,10 @@ class F extends ValidationTest {
       }
       case 'compute pass':
       case 'render pass': {
-        assert(this.#commandEncoder !== undefined);
+        assert(this.commandEncoder !== undefined);
         (encoder as GPUComputePassEncoder | GPURenderPassEncoder).endPass();
-        commandBuffer = this.#commandEncoder?.finish();
-        this.#commandEncoder = undefined;
+        commandBuffer = this.commandEncoder?.finish();
+        this.commandEncoder = undefined;
         break;
       }
     }
@@ -104,14 +104,14 @@ g.test('debug_group_balanced')
   )
   .fn(t => {
     const encoder = t.createEncoder(t.params.encoderType);
+    for (let i = 0; i < t.params.pushCount; ++i) {
+      encoder.pushDebugGroup(`${i}`);
+    }
+    for (let i = 0; i < t.params.popCount; ++i) {
+      encoder.popDebugGroup();
+    }
     const shouldError = t.params.popCount !== t.params.pushCount;
     t.expectValidationError(() => {
-      for (let i = 0; i < t.params.pushCount; ++i) {
-        encoder.pushDebugGroup(`${i}`);
-      }
-      for (let i = 0; i < t.params.popCount; ++i) {
-        encoder.popDebugGroup();
-      }
       t.finishEncoder(encoder, t.params.encoderType);
     }, shouldError);
   });
