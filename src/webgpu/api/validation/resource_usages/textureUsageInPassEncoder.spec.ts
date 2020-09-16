@@ -18,19 +18,20 @@ Test Coverage:
         same aspect. Otherwise, no error should be generated.
 
   - Test combinations of two shader stages:
-    - Texture usages in bindings with invisible shader stages should be tracked. Invisible shader
+    - Texture usages in bindings with invisible shader stages should be validated. Invisible shader
       stages include shader stage with visibility none, compute shader stage in render pass, and
       vertex/fragment shader stage in compute pass.
 
   - Tests replaced bindings:
     - Texture usages via bindings replaced by another setBindGroup() upon the same bindGroup index
-      in current scope should be tracked.
+      in render pass should be validated. However, replaced bindings crorss dispatch calls should
+      not be validated.
 
   - Test texture usages in bundle:
-    - Texture usages in bundle should be tracked if that bundle is executed in the current scope.
+    - Texture usages in bundle should be validated if that bundle is executed in the current scope.
 
   - Test texture usages with unused bindings:
-    - Texture usages should be tracked even its bindings is not used in pipeline.
+    - Texture usages should be validated even its bindings is not used in pipeline.
 
   - Test texture usages validation scope:
     - Texture usages should be validated per each render pass. And they should be validated per each
@@ -721,7 +722,7 @@ g.test('shader_stages_and_visibility')
     pass.setBindGroup(0, bindGroup);
     pass.endPass();
 
-    // Texture usages in bindings with invisible shader stages should be tracked. Invisible shader
+    // Texture usages in bindings with invisible shader stages should be validated. Invisible shader
     // stages include shader stage with visibility none, compute shader stage in render pass, and
     // vertex/fragment shader stage in compute pass.
     t.expectValidationError(() => {
@@ -729,12 +730,18 @@ g.test('shader_stages_and_visibility')
     });
   });
 
-// We should track the texture usages in bindings which are replaced by another setBindGroup()
-// call site upon the same index in the same render pass.
+// We should validate the texture usages in bindings which are replaced by another setBindGroup()
+// call site upon the same index in the same render pass. However, replaced bindings across dispatch
+// calls should not be validated.
 g.test('replaced_binding')
-  .params(poptions('bindingType', kTextureBindingTypes))
+  .params(
+    params()
+      .combine(pbool('compute'))
+      .combine(pbool('callDrawOrDispatch'))
+      .combine(poptions('bindingType', kTextureBindingTypes))
+  )
   .fn(async t => {
-    const { bindingType } = t.params;
+    const { compute, callDrawOrDispatch, bindingType } = t.params;
     const info = kTextureBindingTypeInfo[bindingType];
     const bindingTexFormat = info.resource === 'storageTex' ? 'rgba8unorm' : undefined;
 
@@ -767,15 +774,25 @@ g.test('replaced_binding')
     const bindGroup1 = t.createBindGroup(0, sampledStorageView, 'sampled-texture', '2d', undefined);
 
     const encoder = t.device.createCommandEncoder();
-    const pass = t.beginSimpleRenderPass(encoder, t.createTexture().createView());
+    const pass = compute
+      ? encoder.beginComputePass()
+      : t.beginSimpleRenderPass(encoder, t.createTexture().createView());
 
     // Set bindGroup0 and bindGroup1. bindGroup0 is replaced by bindGroup1 in the current pass.
-    // But bindings in bindGroup0 should be tracked too.
+    // But bindings in bindGroup0 should be validated too.
     pass.setBindGroup(0, bindGroup0);
+    if (callDrawOrDispatch) {
+      const pipeline = compute ? t.createNoOpComputePipeline() : t.createNoOpRenderPipeline();
+      t.setPipeline(pass, pipeline, compute);
+      t.issueDrawOrDispatch(pass, compute);
+    }
     pass.setBindGroup(0, bindGroup1);
     pass.endPass();
 
-    const success = bindingType === 'writeonly-storage-texture' ? false : true;
+    let success = bindingType === 'writeonly-storage-texture' ? false : true;
+    // Replaced bindings across dispatch calls should not be validated in compute pass.
+    if (compute && callDrawOrDispatch) success = true;
+
     t.expectValidationError(() => {
       encoder.finish();
     }, !success);
@@ -858,8 +875,7 @@ g.test('bindings_in_bundle')
       success = true;
     }
 
-    // Resource usages in bundle should be tracked. And validation error should be reported
-    // if needed.
+    // Resource usages in bundle should be validated.
     t.expectValidationError(() => {
       encoder.finish();
     }, !success);
