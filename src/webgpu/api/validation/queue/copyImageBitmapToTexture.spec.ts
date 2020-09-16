@@ -23,8 +23,7 @@ Test Coverage:
       be generated.
 
 - For copySize:
-  - Check that an error is generated when copySize has 0 in width, height or depth. Otherwise,
-    no error should be generated.
+  - Noop copy shouldn't throw any exception or return any validation error.
   - Check that an error is generated when destination.texture.origin + copySize is too large.
     Otherwise, no error should be generated.
 
@@ -385,7 +384,8 @@ g.test('copy_size_has_zero_element')
       usage: GPUTextureUsage.COPY_DST,
     });
 
-    t.runTest({ imageBitmap }, { texture: dstTexture }, copySize, false, 'RangeError');
+    // Allow 0 dimension copySize.
+    t.runTest({ imageBitmap }, { texture: dstTexture }, copySize, true);
   });
 
 g.test('copy_size_OOB')
