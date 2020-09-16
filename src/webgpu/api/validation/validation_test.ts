@@ -129,6 +129,25 @@ export class ValidationTest extends GPUTest {
     });
   }
 
+  createNoOpComputePipeline(): GPUComputePipeline {
+    const wgslCompute = `
+      fn main() -> void {
+        return;
+      }
+
+      entry_point compute = main;
+    `;
+
+    return this.device.createComputePipeline({
+      computeStage: {
+        module: this.device.createShaderModule({
+          code: wgslCompute,
+        }),
+        entryPoint: 'main',
+      },
+    });
+  }
+
   expectValidationError(fn: Function, shouldError: boolean = true): void {
     // If no error is expected, we let the scope surrounding the test catch it.
     if (shouldError === false) {
