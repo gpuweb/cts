@@ -32,15 +32,14 @@ TODO: 1d and 3d texture
 
 import { poptions, params } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { unreachable } from '../../../../common/framework/util/util.js';
 import { kAllTextureFormats, kTextureUsages } from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
-const DEFAULT_BYTES_PER_PIXEL = 4;
-const DEFAULT_WIDTH = 4;
-const DEFAULT_HEIGHT = 4;
-const DEFAULT_DEPTH = 4;
-const DEFAULT_MIPLEVEL_COUNT = 1;
+const kDefaultBytesPerPixel = 4;
+const kDefaultWidth = 32;
+const kDefaultHeight = 32;
+const kDefaultDepth = 1;
+const kDefaultMipLevelCount = 6;
 
 const kValidTextureFormatsForCopyIB2T = [
   'rgba8unorm',
@@ -54,75 +53,81 @@ const kValidTextureFormatsForCopyIB2T = [
   'rg16float',
 ];
 
-interface WithDimension {
-  dimension: GPUTextureDimension;
+function getMipMapSize(width: number, height: number, mipLevel: number) {
+  return {
+    mipWidth: Math.max(width >> mipLevel, 1),
+    mipHeight: Math.max(height >> mipLevel, 1),
+  };
 }
 
-// Helper function to generate correct texture size.
-function copySizeTestForDstTextureSize({ dimension }: WithDimension) {
-  switch (dimension) {
-    case '1d':
-      return poptions('dstTextureSize', [
-        { width: DEFAULT_WIDTH, height: 1, depth: 1 },
-        { width: DEFAULT_WIDTH + 1, height: 1, depth: 1 },
-      ]);
-    case '2d':
-      return poptions('dstTextureSize', [
-        { width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT, depth: 1 },
-        { width: DEFAULT_WIDTH + 1, height: DEFAULT_HEIGHT + 1, depth: 1 },
-      ]);
-    case '3d':
-      return poptions('dstTextureSize', [
-        { width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT, depth: DEFAULT_DEPTH },
-        { width: DEFAULT_WIDTH + 1, height: DEFAULT_HEIGHT + 1, depth: DEFAULT_DEPTH + 1 },
-      ]);
-  }
+interface WithMipLevel {
+  mipLevel: number;
 }
 
-// Generate source origin value[valid, invalid] which are GPUOrigin2D type.
-function generateSrcOriginValue() {
-  const value = [];
-  // Values for each dimensions are valid or too large.
-  for (let i = 0; i <= DEFAULT_WIDTH; i += DEFAULT_WIDTH) {
-    for (let j = 0; j <= DEFAULT_HEIGHT; j += DEFAULT_HEIGHT) {
-      value.push({ x: i, y: j });
-    }
-  }
-
-  return value;
+interface WithMipLevelSizeAndOrigin extends WithMipLevel {
+  srcImageSize: GPUExtent3DDict;
+  dstTextureSize: GPUExtent3DDict;
+  srcOriginValue: GPUOrigin2DDict;
+  dstOriginValue: GPUOrigin3DDict;
 }
 
-// Generate dst origin value[valid, invalid] which are GPUOrigin3D type
-function generateDstOriginValue() {
-  const value = [];
-  // Values for each dimensions are valid or too large.
-  for (let i = 0; i <= DEFAULT_WIDTH; i += DEFAULT_WIDTH) {
-    for (let j = 0; j <= DEFAULT_HEIGHT; j += DEFAULT_HEIGHT) {
-      for (let k = 0; k <= DEFAULT_DEPTH; k += DEFAULT_DEPTH) {
-        value.push({ x: i, y: j, z: k });
-      }
-    }
-  }
+function generateDstOriginValue({ mipLevel }: WithMipLevel) {
+  const origin = getMipMapSize(kDefaultWidth, kDefaultHeight, mipLevel);
 
-  return value;
+  return poptions('dstOriginValue', [
+    { x: 0, y: 0, z: 0 },
+    { x: origin.mipWidth, y: 0, z: 0 },
+    { x: 0, y: origin.mipHeight, z: 0 },
+    { x: 0, y: 0, z: kDefaultDepth },
+  ]);
 }
 
-// Generate copySizes[valid, invalid], which are GPUExtent3D type
-function generateCopySizeValue() {
-  const value = [];
-  for (let i = 0; i <= DEFAULT_WIDTH; i += DEFAULT_WIDTH) {
-    for (let j = 0; j <= DEFAULT_HEIGHT; j += DEFAULT_HEIGHT) {
-      for (let k = 0; k <= DEFAULT_DEPTH; k += DEFAULT_DEPTH) {
-        value.push({ width: i, height: j, depth: k });
-      }
-    }
+function generateCopySize({
+  mipLevel,
+  srcImageSize,
+  dstTextureSize,
+  srcOriginValue,
+  dstOriginValue,
+}: WithMipLevelSizeAndOrigin) {
+  const dstMipMapSize = getMipMapSize(dstTextureSize.width, dstTextureSize.height, mipLevel);
+
+  const justFitCopySize = {
+    width:
+      dstMipMapSize.mipWidth < srcImageSize.width ? dstMipMapSize.mipWidth : srcImageSize.width,
+    height:
+      dstMipMapSize.mipHeight < srcImageSize.height ? dstMipMapSize.mipHeight : srcImageSize.height,
+    depth: kDefaultDepth,
+  };
+
+  const zeroSrcOrigin: GPUOrigin2DDict = { x: 0, y: 0 };
+  const zeroDstOrigin: GPUOrigin3DDict = { x: 0, y: 0, z: 0 };
+
+  if (srcOriginValue === zeroSrcOrigin && dstOriginValue === zeroDstOrigin) {
+    return poptions('copySize', [
+      {
+        width: justFitCopySize.width + 1,
+        height: justFitCopySize.height,
+        depth: justFitCopySize.depth,
+      },
+      {
+        width: justFitCopySize.width,
+        height: justFitCopySize.height + 1,
+        depth: justFitCopySize.depth,
+      },
+      {
+        width: justFitCopySize.width,
+        height: justFitCopySize.height,
+        depth: justFitCopySize.depth + 1,
+      },
+    ]);
   }
-  return value;
+
+  return poptions('copySize', [justFitCopySize]);
 }
 
 class CopyImageBitmapToTextureTest extends ValidationTest {
-  private getImageData(width: number, height: number): ImageData {
-    const pixelSize = DEFAULT_BYTES_PER_PIXEL * width * height;
+  getImageData(width: number, height: number): ImageData {
+    const pixelSize = kDefaultBytesPerPixel * width * height;
     const imagePixels = new Uint8ClampedArray(pixelSize);
     for (let i = 0; i < pixelSize; ++i) {
       imagePixels[i] = i;
@@ -130,109 +135,11 @@ class CopyImageBitmapToTextureTest extends ValidationTest {
     return new ImageData(imagePixels, width, height);
   }
 
-  async getImageBitmapCopyView(
-    width: number,
-    height: number,
-    origin: GPUOrigin2D,
-    closed: boolean
-  ): Promise<GPUImageBitmapCopyView> {
-    const imageBitmap = await createImageBitmap(this.getImageData(width, height));
-    if (closed) {
-      imageBitmap.close();
-    }
-    return { imageBitmap, origin };
-  }
-
-  // Get default source copy view with Default width, height and correct origin.
-  async getDefaultImageBitmapCopyView(): Promise<GPUImageBitmapCopyView> {
-    return this.getImageBitmapCopyView(DEFAULT_WIDTH, DEFAULT_HEIGHT, { x: 0, y: 0 }, false);
-  }
-
-  getTextureCopyView(
-    size: GPUExtent3D,
-    sampleCount: number,
-    dimension: GPUTextureDimension,
-    format: GPUTextureFormat,
-    usage: GPUTextureUsageFlags,
-    mipLevel: number,
-    origin: GPUOrigin3D,
-    destroyed: boolean
-  ): GPUTextureCopyView {
-    // In generated tests, there are some pairs will trigger validation errors here, eg. sampleCount
-    // 4 and BC formats. Filter these validation and let copyImageBitmapToTexture to catch them.
-    this.device.pushErrorScope('validation');
-    const dstTexture = this.device.createTexture({
-      size,
-      sampleCount,
-      dimension,
-      mipLevelCount: DEFAULT_MIPLEVEL_COUNT,
-      format,
-      usage,
-    });
-
-    if (destroyed) {
-      dstTexture.destroy();
-    }
-    this.device.popErrorScope();
-
-    return { texture: dstTexture, mipLevel, origin };
-  }
-
-  // Generate dst texture copy view with default width, height.
-  getTextureCopyViewWithDefaultSize(
-    sampleCount: number,
-    dimension: GPUTextureDimension,
-    format: GPUTextureFormat,
-    usage: GPUTextureUsageFlags,
-    mipLevel: number,
-    origin: GPUOrigin3D,
-    destroyed: boolean
-  ): GPUTextureCopyView {
-    let size: GPUExtent3D = { width: 0, height: 0, depth: 0 };
-    switch (dimension) {
-      case '1d':
-        size = { width: DEFAULT_WIDTH, height: 1, depth: 1 };
-        break;
-      case '2d':
-        size = { width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT, depth: 1 };
-        break;
-      case '3d':
-        size = { width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT, depth: DEFAULT_DEPTH };
-        break;
-      default:
-        unreachable('unknown texture dimension');
-    }
-
-    return this.getTextureCopyView(
-      size,
-      sampleCount,
-      dimension,
-      format,
-      usage,
-      mipLevel,
-      origin,
-      destroyed
-    );
-  }
-
-  // Generate dst texture copy view with default width, height and correct configs.
-  getDefaultTextureCopyView(dimension: GPUTextureDimension): GPUTextureCopyView {
-    return this.getTextureCopyViewWithDefaultSize(
-      1,
-      dimension,
-      'bgra8unorm',
-      GPUTextureUsage.COPY_DST,
-      0,
-      { x: 0, y: 0, z: 0 },
-      false
-    );
-  }
-
-  testRun(
+  runTest(
     imageBitmapCopyView: GPUImageBitmapCopyView,
     textureCopyView: GPUTextureCopyView,
     copySize: GPUExtent3D,
-    success: boolean,
+    validationScopeSuccess: boolean,
     exceptionName?: string
   ): void {
     // CopyImageBitmapToTexture will generate two types of errors. One is exceptions generated out
@@ -252,7 +159,7 @@ class CopyImageBitmapToTextureTest extends ValidationTest {
           textureCopyView,
           copySize
         );
-      }, !success);
+      }, !validationScopeSuccess);
     }
   }
 }
@@ -263,147 +170,302 @@ g.test('copyImageBitmapToTexture_source_imageBitmap_copy_view')
   .params(poptions('closed', [true, false]))
   .fn(async t => {
     const { closed } = t.params;
-    const src = await t.getImageBitmapCopyView(
-      DEFAULT_WIDTH,
-      DEFAULT_HEIGHT,
-      { x: 0, y: 0 },
-      closed
-    );
-    const dst = t.getDefaultTextureCopyView('2d');
-    const copySize = { width: 1, height: 1, depth: 1 };
-    const exceptionName = closed ? 'InvalidStateError' : '';
+    const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
+    const dstTexture = t.device.createTexture({
+      size: { width: 1, height: 1, depth: 1 },
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.COPY_DST,
+    });
 
-    t.testRun(src, dst, copySize, !closed, exceptionName);
+    if (closed) imageBitmap.close();
+
+    t.runTest(
+      { imageBitmap },
+      { texture: dstTexture },
+      { width: 1, height: 1, depth: 1 },
+      !closed,
+      closed ? 'InvalidStateError' : ''
+    );
   });
 
-g.test('copyImageBitmapToTexture_destination_texture_copy_view')
-  .params(
-    params()
-      .combine(poptions('destroyed', [true, false]))
-      .combine(poptions('dimension', ['2d'] as const))
-      .combine(poptions('usage', kTextureUsages))
-      .combine(poptions('sampleCount', [1, 4]))
-      .combine(poptions('mipLevel', [0, 2]))
-      .combine(poptions('format', kAllTextureFormats))
-  )
+g.test('copyImageBitmapToTexture_destination_texture_copy_view_texture_state')
+  .params(poptions('destroyed', [true, false]))
   .fn(async t => {
-    const { destroyed, dimension, usage, sampleCount, mipLevel, format } = t.params;
-    const src = await t.getDefaultImageBitmapCopyView();
-    const dst = t.getTextureCopyViewWithDefaultSize(
-      sampleCount,
-      dimension,
-      format,
-      usage,
-      mipLevel,
-      { x: 0, y: 0, z: 0 },
-      destroyed
+    const { destroyed } = t.params;
+    const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
+    const dstTexture = t.device.createTexture({
+      size: { width: 1, height: 1, depth: 1 },
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.COPY_DST,
+    });
+
+    if (destroyed) dstTexture.destroy();
+
+    t.runTest(
+      { imageBitmap },
+      { texture: dstTexture },
+      { width: 1, height: 1, depth: 1 },
+      !destroyed
     );
-    const copySize = { width: 1, height: 1, depth: 1 };
-
-    let success = true;
-    let exceptionName = '';
-
-    if (destroyed) {
-      success = false;
-    }
-
-    if (!(usage & GPUTextureUsage.COPY_DST)) {
-      // Usage must have GPUTextureUsage.COPY_DST
-      success = false;
-    }
-
-    if (sampleCount > 1) {
-      // Dst texture cannot be multisampled due to imageBitmap.
-      success = false;
-    }
-
-    if (mipLevel > 1) {
-      // MipLevel value cannot exceed dst texture max mipLevel, which is 1 in tests.
-      success = false;
-    }
-
-    if (!kValidTextureFormatsForCopyIB2T.includes(format)) {
-      // Dst texture format needs to be supported in copyImageBitmapToTexture.
-      success = false;
-      exceptionName = 'TypeError';
-    }
-
-    t.testRun(src, dst, copySize, success, exceptionName);
   });
 
-g.test('copyImageBitmapToTexture_copy_size')
+g.test('copyImageBitmapToTexture_error_destination_texture')
+  .params(poptions('isErrDstTexture', [true, false]))
+  .fn(async t => {
+    const { isErrDstTexture } = t.params;
+    const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
+    const correctTexture = t.device.createTexture({
+      size: { width: 1, height: 1, depth: 1 },
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.COPY_DST,
+    });
+
+    t.runTest(
+      { imageBitmap },
+      { texture: isErrDstTexture ? t.getErrorTexture() : correctTexture },
+      { width: 1, height: 1, depth: 1 },
+      !isErrDstTexture
+    );
+  });
+
+g.test('copyImageBitmapToTexture_destination_texture_copy_view_texture_usage')
+  .params(poptions('usage', kTextureUsages))
+  .fn(async t => {
+    const { usage } = t.params;
+    const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
+    const dstTexture = t.device.createTexture({
+      size: { width: 1, height: 1, depth: 1 },
+      format: 'rgba8unorm',
+      usage,
+    });
+
+    t.runTest(
+      { imageBitmap },
+      { texture: dstTexture },
+      { width: 1, height: 1, depth: 1 },
+      !!(usage & GPUTextureUsage.COPY_DST)
+    );
+  });
+
+g.test('copyImageBitmapToTexture_destination_texture_copy_view_sample_count')
+  .params(poptions('sampleCount', [1, 4]))
+  .fn(async t => {
+    const { sampleCount } = t.params;
+    const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
+    const dstTexture = t.device.createTexture({
+      size: { width: 1, height: 1, depth: 1 },
+      sampleCount,
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.COPY_DST,
+    });
+
+    t.runTest(
+      { imageBitmap },
+      { texture: dstTexture },
+      { width: 1, height: 1, depth: 1 },
+      sampleCount === 1
+    );
+  });
+
+g.test('copyImageBitmapToTexture_destination_texture_copy_view_mipLevel')
+  .params(poptions('mipLevel', [0, kDefaultMipLevelCount - 1, kDefaultMipLevelCount]))
+  .fn(async t => {
+    const { mipLevel } = t.params;
+    const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
+    const dstTexture = t.device.createTexture({
+      size: { width: kDefaultWidth, height: kDefaultHeight, depth: kDefaultDepth },
+      mipLevelCount: kDefaultMipLevelCount,
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.COPY_DST,
+    });
+
+    t.runTest(
+      { imageBitmap },
+      { texture: dstTexture, mipLevel },
+      { width: 1, height: 1, depth: 1 },
+      mipLevel < kDefaultMipLevelCount
+    );
+  });
+
+g.test('copyImageBitmapToTexture_desitnation_texture_copy_view_format')
+  .params(poptions('format', kAllTextureFormats))
+  .fn(async t => {
+    const { format } = t.params;
+    const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
+    t.device.pushErrorScope('validation');
+    const dstTexture = t.device.createTexture({
+      size: { width: 1, height: 1, depth: 1 },
+      format,
+      usage: GPUTextureUsage.COPY_DST,
+    });
+    t.device.popErrorScope();
+
+    const success = kValidTextureFormatsForCopyIB2T.includes(format);
+
+    t.runTest(
+      { imageBitmap },
+      { texture: dstTexture },
+      { width: 1, height: 1, depth: 1 },
+      success,
+      success ? '' : 'TypeError'
+    );
+  });
+
+g.test('copyImageBitmapToTexture_copy_view_origin')
   .params(
     params()
-      .combine(poptions('dimension', ['2d'] as const))
-      .expand(copySizeTestForDstTextureSize)
+      .combine(poptions('mipLevel', [0, 1, kDefaultMipLevelCount - 1]))
+      .expand(generateDstOriginValue)
       .combine(
-        poptions('srcImageBitmapSize', [
-          { width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT }, // case: src size <= dst size
-          { width: DEFAULT_WIDTH + 1, height: DEFAULT_HEIGHT + 1 }, // case: src size >= dst size
+        poptions('srcOriginValue', [
+          { x: 0, y: 0 },
+          { x: kDefaultWidth, y: 0 },
+          { x: 0, y: kDefaultHeight },
         ])
       )
-      .combine(poptions('srcOriginValue', generateSrcOriginValue()))
-      .combine(poptions('dstOriginValue', generateDstOriginValue()))
-      .combine(poptions('copySize', generateCopySizeValue()))
   )
   .fn(async t => {
-    const {
-      dimension,
-      dstTextureSize,
-      srcImageBitmapSize,
-      srcOriginValue,
-      dstOriginValue,
-      copySize,
-    } = t.params;
-
-    if (dimension !== '2d') {
-      t.skip('Skip test case for now because no 1d, 3d texture supported');
-    }
-
-    const src = await t.getImageBitmapCopyView(
-      srcImageBitmapSize.width,
-      srcImageBitmapSize.height,
-      srcOriginValue,
-      false
-    );
-
-    const dst = t.getTextureCopyView(
-      dstTextureSize,
-      1,
-      dimension,
-      'rgba8unorm',
-      GPUTextureUsage.COPY_DST,
-      0,
-      dstOriginValue,
-      false
-    );
+    const { mipLevel, dstOriginValue, srcOriginValue } = t.params;
+    const imageBitmap = await createImageBitmap(t.getImageData(kDefaultWidth, kDefaultHeight));
+    const dstTexture = t.device.createTexture({
+      size: { width: kDefaultWidth, height: kDefaultHeight, depth: kDefaultDepth },
+      mipLevelCount: kDefaultMipLevelCount,
+      format: 'bgra8unorm',
+      usage: GPUTextureUsage.COPY_DST,
+    });
 
     let success = true;
-    let exceptionName = '';
+    let exceptionName: string | undefined;
 
-    if (
-      srcImageBitmapSize.width <= srcOriginValue.x ||
-      srcImageBitmapSize.width - srcOriginValue.x < copySize.width ||
-      srcImageBitmapSize.height <= srcOriginValue.y ||
-      srcImageBitmapSize.height - srcOriginValue.y < copySize.height ||
-      copySize.width === 0 ||
-      copySize.height === 0 ||
-      copySize.depth === 0
-    ) {
+    const dstMipMapSize = getMipMapSize(kDefaultWidth, kDefaultHeight, mipLevel);
+
+    if (srcOriginValue.x >= kDefaultWidth || srcOriginValue.y >= kDefaultHeight) {
       success = false;
       exceptionName = 'RangeError';
     }
 
     if (
-      dstTextureSize.width <= dstOriginValue.x ||
-      dstTextureSize.width - dstOriginValue.x < copySize.width ||
-      dstTextureSize.height <= dstOriginValue.y ||
-      dstTextureSize.height - dstOriginValue.y < copySize.height ||
-      dstTextureSize.depth <= dstOriginValue.z ||
-      dstTextureSize.depth - dstOriginValue.z < copySize.depth
+      dstOriginValue.x >= dstMipMapSize.mipWidth ||
+      dstOriginValue.y >= dstMipMapSize.mipHeight ||
+      dstOriginValue.z >= kDefaultDepth
     ) {
       success = false;
     }
 
-    t.testRun(src, dst, copySize, success, exceptionName);
+    t.runTest(
+      { imageBitmap, origin: srcOriginValue },
+      { texture: dstTexture, origin: dstOriginValue, mipLevel },
+      { width: 1, height: 1, depth: 1 },
+      success,
+      exceptionName
+    );
+  });
+
+g.test('copyImageBitmapToTexture_copy_size_has_zero_element')
+  .params(
+    poptions('copySize', [
+      { width: 0, height: 1, depth: 1 },
+      { width: 1, height: 0, depth: 1 },
+      { width: 1, height: 1, depth: 0 },
+    ])
+  )
+  .fn(async t => {
+    const { copySize } = t.params;
+    const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
+    const dstTexture = t.device.createTexture({
+      size: { width: 1, height: 1, depth: 1 },
+      format: 'bgra8unorm',
+      usage: GPUTextureUsage.COPY_DST,
+    });
+
+    t.runTest({ imageBitmap }, { texture: dstTexture }, copySize, false, 'RangeError');
+  });
+
+g.test('copyImageBitmapToTexture_copy_size_OOB')
+  .params(
+    params()
+      .combine(poptions('mipLevel', [0, 1, kDefaultMipLevelCount - 2]))
+      .combine(
+        poptions('srcImageSize', [
+          { width: kDefaultWidth, height: kDefaultHeight, depth: 1 },
+          { width: 2 * kDefaultWidth, height: 2 * kDefaultHeight, depth: 1 },
+        ])
+      )
+      .combine(
+        poptions('dstTextureSize', [
+          { width: kDefaultWidth, height: kDefaultHeight, depth: kDefaultDepth },
+          { width: 2 * kDefaultWidth, height: 2 * kDefaultHeight, depth: kDefaultDepth },
+        ])
+      )
+      .combine(
+        poptions('srcOriginValue', [
+          { x: 0, y: 0 },
+          { x: 1, y: 1 },
+        ])
+      )
+      .combine(
+        poptions('dstOriginValue', [
+          { x: 0, y: 0, z: 0 },
+          { x: 1, y: 1, z: 0 },
+        ])
+      )
+      .expand(generateCopySize)
+  )
+  .fn(async t => {
+    const {
+      srcImageSize,
+      dstTextureSize,
+      mipLevel,
+      srcOriginValue,
+      dstOriginValue,
+      copySize,
+    } = t.params;
+
+    const imageBitmap = await createImageBitmap(
+      t.getImageData(srcImageSize.width, srcImageSize.height)
+    );
+    const dstTexture = t.device.createTexture({
+      size: {
+        width: dstTextureSize.width,
+        height: dstTextureSize.height,
+        depth: dstTextureSize.depth,
+      },
+      format: 'bgra8unorm',
+      mipLevelCount: kDefaultMipLevelCount,
+      usage: GPUTextureUsage.COPY_DST,
+    });
+
+    let success = true;
+    let exceptionName: string | undefined;
+
+    if (
+      srcOriginValue.x + copySize.width > srcImageSize.width ||
+      srcOriginValue.y + copySize.height > srcImageSize.height
+    ) {
+      success = false;
+      exceptionName = 'RangeError';
+    }
+
+    const dstMipMapSize = getMipMapSize(dstTextureSize.width, dstTextureSize.height, mipLevel);
+
+    if (
+      dstOriginValue.x + copySize.width > dstMipMapSize.mipWidth ||
+      dstOriginValue.y + copySize.height > dstMipMapSize.mipHeight ||
+      dstOriginValue.z >= dstTextureSize.depth ||
+      dstOriginValue.z + copySize.depth > dstTextureSize.depth
+    ) {
+      success = false;
+    }
+
+    t.runTest(
+      { imageBitmap, origin: { x: srcOriginValue.x, y: srcOriginValue.y } },
+      {
+        texture: dstTexture,
+        mipLevel,
+        origin: { x: dstOriginValue.x, y: dstOriginValue.y, z: dstOriginValue.z },
+      },
+      { width: copySize.width, height: copySize.height, depth: copySize.depth },
+      success,
+      exceptionName
+    );
   });
