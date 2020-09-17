@@ -356,7 +356,7 @@ g.test('src_OOB')
     const { srcOriginValue, copySize } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(kDefaultWidth, kDefaultHeight));
     const dstTexture = t.device.createTexture({
-      size: { width: 2 * kDefaultWidth, height: 2 * kDefaultHeight, depth: kDefaultDepth },
+      size: { width: kDefaultWidth + 1, height: kDefaultHeight + 1, depth: kDefaultDepth },
       mipLevelCount: kDefaultMipLevelCount,
       format: 'bgra8unorm',
       usage: GPUTextureUsage.COPY_DST,
