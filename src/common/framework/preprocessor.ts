@@ -2,20 +2,19 @@ import { assert } from './util/util.js';
 
 // The state of the preprocessor is a stack of States.
 type StateStack = { allowsFollowingElse: boolean; state: State }[];
+const enum State {
+  Seeking, // Still looking for a passing condition
+  Passing, // Currently inside a passing condition (the root is always in this state)
+  Skipping, // Have already seen a passing condition; now skipping the rest
+}
 
-// The transitions in the state space are:
+// The transitions in the state space are the following preprocessor directives:
 // - Sibling elif
 // - Sibling else
 // - Sibling endif
 // - Child if
-const enum State {
-  Seeking, // Still looking for a passing condition
-  Passing, // Currently inside a passing condition
-  Skipping, // Have already seen a passing condition; now skipping the rest
-}
-
 abstract class Directive {
-  private depth: number;
+  private readonly depth: number;
 
   constructor(depth: number) {
     this.depth = depth;
@@ -28,18 +27,18 @@ abstract class Directive {
     );
   }
 
-  abstract transition(stack: StateStack): void;
+  abstract applyTo(stack: StateStack): void;
 }
 
 class If extends Directive {
-  private predicate: boolean;
+  private readonly predicate: boolean;
 
   constructor(depth: number, predicate: boolean) {
     super(depth);
     this.predicate = predicate;
   }
 
-  transition(stack: StateStack) {
+  applyTo(stack: StateStack) {
     this.checkDepth(stack);
     const parentState = stack[stack.length - 1].state;
     stack.push({
@@ -55,20 +54,20 @@ class If extends Directive {
 }
 
 class ElseIf extends If {
-  transition(stack: StateStack) {
+  applyTo(stack: StateStack) {
     const { allowsFollowingElse, state: siblingState } = stack.pop()!;
     this.checkDepth(stack);
     assert(allowsFollowingElse, 'pp.elif after pp.else');
     if (siblingState !== State.Seeking) {
       stack.push({ allowsFollowingElse: true, state: State.Skipping });
     } else {
-      super.transition(stack);
+      super.applyTo(stack);
     }
   }
 }
 
 class Else extends Directive {
-  transition(stack: StateStack) {
+  applyTo(stack: StateStack) {
     const { allowsFollowingElse, state: siblingState } = stack.pop()!;
     this.checkDepth(stack);
     assert(allowsFollowingElse, 'pp.else after pp.else');
@@ -80,7 +79,7 @@ class Else extends Directive {
 }
 
 class EndIf extends Directive {
-  transition(stack: StateStack) {
+  applyTo(stack: StateStack) {
     stack.pop();
     this.checkDepth(stack);
   }
@@ -104,7 +103,7 @@ export function pp(
 
     const value = values[i];
     if (value instanceof Directive) {
-      value.transition(stateStack);
+      value.applyTo(stateStack);
     } else {
       if (passing) {
         result += value;
