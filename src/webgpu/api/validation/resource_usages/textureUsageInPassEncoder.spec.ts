@@ -133,10 +133,8 @@ class TextureUsageTracking extends ValidationTest {
     bindGroup0: GPUBindGroup;
     bindGroup1: GPUBindGroup;
     encoder: GPUCommandEncoder;
-    renderPass: GPURenderPassEncoder;
-    computePass: GPUComputePassEncoder;
-    renderPipeline: GPURenderPipeline;
-    computePipeline: GPUComputePipeline;
+    pass: GPURenderPassEncoder | GPUComputePassEncoder;
+    pipeline: GPURenderPipeline | GPUComputePipeline;
   } {
     // Create two bind groups. Resource usages conflict between these two bind groups. But resource
     // usage inside each bind group doesn't conflict.
@@ -154,46 +152,38 @@ class TextureUsageTracking extends ValidationTest {
     );
 
     const encoder = this.device.createCommandEncoder();
-    const renderPass = this.beginSimpleRenderPass(encoder, this.createTexture().createView());
-    const computePass = encoder.beginComputePass();
+    const pass = compute
+      ? encoder.beginComputePass()
+      : this.beginSimpleRenderPass(encoder, this.createTexture().createView());
 
     // Create pipeline. Note that bindings unused in pipeline should be validated too.
-    const renderPipeline = this.createNoOpRenderPipeline();
-    const computePipeline = this.createNoOpComputePipeline();
+    const pipeline = compute ? this.createNoOpComputePipeline() : this.createNoOpRenderPipeline();
     return {
       bindGroup0,
       bindGroup1,
       encoder,
-      renderPass,
-      computePass,
-      renderPipeline,
-      computePipeline,
+      pass,
+      pipeline,
     };
   }
 
   setPipeline(
-    renderPass: GPURenderPassEncoder,
-    computePass: GPUComputePassEncoder,
-    renderPipeline: GPURenderPipeline,
-    computePipeline: GPUComputePipeline,
+    pass: GPURenderPassEncoder | GPUComputePassEncoder,
+    pipeline: GPURenderPipeline | GPUComputePipeline,
     compute: boolean
   ) {
     if (compute) {
-      computePass.setPipeline(computePipeline);
+      (pass as GPUComputePassEncoder).setPipeline(pipeline as GPUComputePipeline);
     } else {
-      renderPass.setPipeline(renderPipeline);
+      (pass as GPURenderPassEncoder).setPipeline(pipeline as GPURenderPipeline);
     }
   }
 
-  issueDrawOrDispatch(
-    renderPass: GPURenderPassEncoder,
-    computePass: GPUComputePassEncoder,
-    compute: boolean
-  ) {
+  issueDrawOrDispatch(pass: GPURenderPassEncoder | GPUComputePassEncoder, compute: boolean) {
     if (compute) {
-      computePass.dispatch(1);
+      (pass as GPUComputePassEncoder).dispatch(1);
     } else {
-      renderPass.draw(3, 1, 0, 0);
+      (pass as GPURenderPassEncoder).draw(3, 1, 0, 0);
     }
   }
 }
@@ -401,29 +391,29 @@ g.test('subresources_and_binding_types_combination_for_color')
       ] as const)
       // Every color attachment can use only one single subresource.
       .unless(
-        ({ type0, levelCount0, layerCount0, type1, levelCount1, layerCount1 }) =>
-          (type0 === 'render-target' && (levelCount0 !== 1 || layerCount0 !== 1)) ||
-          (type1 === 'render-target' && (levelCount1 !== 1 || layerCount1 !== 1))
+        p =>
+          (p.type0 === 'render-target' && (p.levelCount0 !== 1 || p.layerCount0 !== 1)) ||
+          (p.type1 === 'render-target' && (p.levelCount1 !== 1 || p.layerCount1 !== 1))
       )
       // All color attachments' size should be the same.
       .unless(
-        ({ type0, type1, baseLevel1 }) =>
-          type0 === 'render-target' && type1 === 'render-target' && baseLevel1 !== BASE_LEVEL
+        p =>
+          p.type0 === 'render-target' && p.type1 === 'render-target' && p.baseLevel1 !== BASE_LEVEL
       )
       .unless(
-        ({ binding0InBundle, binding1InBundle, type0, type1 }) =>
+        p =>
           // We can't set 'render-target' in bundle, so we need to exclude it from bundle.
-          (binding0InBundle && type0 === 'render-target') ||
-          (binding1InBundle && type1 === 'render-target')
+          (p.binding0InBundle && p.type0 === 'render-target') ||
+          (p.binding1InBundle && p.type1 === 'render-target')
       )
       .unless(
-        ({ compute, binding0InBundle, binding1InBundle, type0, type1 }) =>
+        p =>
           // We can't set 'render-target' or bundle in compute.
-          compute &&
-          (binding0InBundle ||
-            binding1InBundle ||
-            type0 === 'render-target' ||
-            type1 === 'render-target')
+          p.compute &&
+          (p.binding0InBundle ||
+            p.binding1InBundle ||
+            p.type0 === 'render-target' ||
+            p.type1 === 'render-target')
       )
   )
   .fn(async t => {
@@ -487,12 +477,12 @@ g.test('subresources_and_binding_types_combination_for_color')
       });
       pass.endPass();
     } else {
-      const computePass = encoder.beginComputePass();
-      const renderPass = t.beginSimpleRenderPass(
-        encoder,
-        type1 === 'render-target' ? view1 : t.createTexture().createView()
-      );
-      const pass = compute ? computePass : renderPass;
+      const pass = compute
+        ? encoder.beginComputePass()
+        : t.beginSimpleRenderPass(
+            encoder,
+            type1 === 'render-target' ? view1 : t.createTexture().createView()
+          );
 
       // Create bind groups. Set bind groups in pass directly or set bind groups in bundle.
       const storageTextureFormat0 = type0 === 'sampled-texture' ? undefined : 'rgba8unorm';
@@ -505,7 +495,8 @@ g.test('subresources_and_binding_types_combination_for_color')
         compute
       );
       if (binding0InBundle) {
-        t.createAndExecuteBundle(0, bindGroup0, renderPass);
+        assert(pass instanceof GPURenderPassEncoder);
+        t.createAndExecuteBundle(0, bindGroup0, pass as GPURenderPassEncoder);
       } else {
         pass.setBindGroup(0, bindGroup0);
       }
@@ -520,7 +511,8 @@ g.test('subresources_and_binding_types_combination_for_color')
           compute
         );
         if (binding1InBundle) {
-          t.createAndExecuteBundle(1, bindGroup1, renderPass);
+          assert(pass instanceof GPURenderPassEncoder);
+          t.createAndExecuteBundle(1, bindGroup1, pass as GPURenderPassEncoder);
         } else {
           pass.setBindGroup(1, bindGroup1);
         }
@@ -562,14 +554,14 @@ g.test('subresources_and_binding_types_combination_for_aspect')
       .combine(poptions('aspect0', ['all', 'depth-only', 'stencil-only'] as const))
       .combine(poptions('aspect1', ['all', 'depth-only', 'stencil-only'] as const))
       .unless(
-        ({ format, aspect0, aspect1 }) =>
-          (aspect0 === 'stencil-only' && !kDepthStencilFormatInfo[format].stencil) ||
-          (aspect1 === 'stencil-only' && !kDepthStencilFormatInfo[format].stencil)
+        p =>
+          (p.aspect0 === 'stencil-only' && !kDepthStencilFormatInfo[p.format].stencil) ||
+          (p.aspect1 === 'stencil-only' && !kDepthStencilFormatInfo[p.format].stencil)
       )
       .unless(
-        ({ format, aspect0, aspect1 }) =>
-          (aspect0 === 'depth-only' && !kDepthStencilFormatInfo[format].depth) ||
-          (aspect1 === 'depth-only' && !kDepthStencilFormatInfo[format].depth)
+        p =>
+          (p.aspect0 === 'depth-only' && !kDepthStencilFormatInfo[p.format].depth) ||
+          (p.aspect1 === 'depth-only' && !kDepthStencilFormatInfo[p.format].depth)
       )
       .combine([
         {
@@ -584,15 +576,15 @@ g.test('subresources_and_binding_types_combination_for_aspect')
         },
       ] as const)
       .unless(
-        ({ binding1InBundle, type1 }) =>
+        p =>
           // We can't set 'render-target' in bundle, so we need to exclude it from bundle.
-          binding1InBundle && type1 === 'render-target'
+          p.binding1InBundle && p.type1 === 'render-target'
       )
       .unless(
-        ({ compute, binding0InBundle, binding1InBundle, type1 }) =>
+        p =>
           // We can't set 'render-target' or bundle in compute. Note that type0 is definitely not
           // 'render-target'
-          compute && (binding0InBundle || binding1InBundle || type1 === 'render-target')
+          p.compute && (p.binding0InBundle || p.binding1InBundle || p.type1 === 'render-target')
       )
   )
   .fn(async t => {
@@ -637,39 +629,41 @@ g.test('subresources_and_binding_types_combination_for_aspect')
     // Color attachment's size should match depth/stencil attachment's size. Note that if
     // type1 !== 'render-target' then there's no depthStencilAttachment to match anyway.
     const size = SIZE >> baseLevel;
-    const computePass = encoder.beginComputePass();
-    const renderPass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          attachment: t.createTexture({ width: size, height: size }).createView(),
-          loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
-          storeOp: 'store',
-        },
-      ],
-      depthStencilAttachment:
-        type1 !== 'render-target'
-          ? undefined
-          : {
-              attachment: view1,
-              depthStoreOp: 'clear',
-              depthLoadValue: 'load',
-              stencilStoreOp: 'clear',
-              stencilLoadValue: 'load',
+    const pass = compute
+      ? encoder.beginComputePass()
+      : encoder.beginRenderPass({
+          colorAttachments: [
+            {
+              attachment: t.createTexture({ width: size, height: size }).createView(),
+              loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+              storeOp: 'store',
             },
-    });
-    const pass = compute ? computePass : renderPass;
+          ],
+          depthStencilAttachment:
+            type1 !== 'render-target'
+              ? undefined
+              : {
+                  attachment: view1,
+                  depthStoreOp: 'clear',
+                  depthLoadValue: 'load',
+                  stencilStoreOp: 'clear',
+                  stencilLoadValue: 'load',
+                },
+        });
 
     // Create bind groups. Set bind groups in pass directly or set bind groups in bundle.
     const bindGroup0 = t.createBindGroup(0, view0, type0, '2d', undefined, compute);
     if (binding0InBundle) {
-      t.createAndExecuteBundle(0, bindGroup0, renderPass);
+      assert(pass instanceof GPURenderPassEncoder);
+      t.createAndExecuteBundle(0, bindGroup0, pass as GPURenderPassEncoder);
     } else {
       pass.setBindGroup(0, bindGroup0);
     }
     if (type1 !== 'render-target') {
       const bindGroup1 = t.createBindGroup(1, view1, type1, '2d', undefined, compute);
       if (binding1InBundle) {
-        t.createAndExecuteBundle(1, bindGroup1, renderPass);
+        assert(pass instanceof GPURenderPassEncoder);
+        t.createAndExecuteBundle(1, bindGroup1, pass as GPURenderPassEncoder);
       } else {
         pass.setBindGroup(1, bindGroup1);
       }
@@ -697,11 +691,11 @@ g.test('shader_stages_and_visibility')
       .combine(poptions('readVisibility', [0, ...kShaderStages]))
       .combine(poptions('writeVisibility', [0, ...kShaderStages]))
       .unless(
-        ({ compute, writeVisibility }) =>
+        p =>
           // Writeonly-storage-texture binding type is not supported in vertex stage. But it is the
           // only way to write into texture in compute. So there is no means to successfully create
           // a binding which attempt to write into stage(s) with vertex stage in compute pass.
-          compute && Boolean(writeVisibility & GPUShaderStage.VERTEX)
+          p.compute && Boolean(p.writeVisibility & GPUShaderStage.VERTEX)
       )
   )
   .fn(async t => {
@@ -820,13 +814,13 @@ g.test('bindings_in_bundle')
       .combine(poptions('type0', ['render-target', ...kTextureBindingTypes] as const))
       .combine(poptions('type1', ['render-target', ...kTextureBindingTypes] as const))
       .unless(
-        ({ binding0InBundle, binding1InBundle, type0, type1 }) =>
+        p =>
           // We can't set 'render-target' in bundle, so we need to exclude it from bundle.
           // In addition, if both bindings are non-bundle, there is no need to test it because
           // we have far more comprehensive test cases for that situation in this file.
-          (binding0InBundle && type0 === 'render-target') ||
-          (binding1InBundle && type1 === 'render-target') ||
-          (!binding0InBundle && !binding1InBundle)
+          (p.binding0InBundle && p.type0 === 'render-target') ||
+          (p.binding1InBundle && p.type1 === 'render-target') ||
+          (!p.binding0InBundle && !p.binding1InBundle)
       )
   )
   .fn(async t => {
@@ -923,7 +917,7 @@ g.test('unused_bindings_in_pipeline')
       'readonly-storage-texture',
       '2d',
       'rgba8unorm',
-      false
+      compute
     );
     const bindGroup1 = t.createBindGroup(
       0,
@@ -931,7 +925,7 @@ g.test('unused_bindings_in_pipeline')
       'writeonly-storage-texture',
       '2d',
       'rgba8unorm',
-      false
+      compute
     );
 
     const wgslVertex = `
@@ -963,54 +957,52 @@ g.test('unused_bindings_in_pipeline')
       entry_point compute = main;
     `;
 
-    const computePipeline = t.device.createComputePipeline({
-      computeStage: {
-        module: t.device.createShaderModule({
-          code: wgslCompute,
-        }),
-        entryPoint: 'main',
-      },
-    });
-    const renderPipeline = t.device.createRenderPipeline({
-      vertexStage: {
-        module: t.device.createShaderModule({
-          code: wgslVertex,
-        }),
-        entryPoint: 'main',
-      },
-      fragmentStage: {
-        module: t.device.createShaderModule({
-          code: wgslFragment,
-        }),
-        entryPoint: 'main',
-      },
-      primitiveTopology: 'triangle-list',
-      colorStates: [{ format: 'rgba8unorm' }],
-    });
+    const pipeline = compute
+      ? t.device.createComputePipeline({
+          computeStage: {
+            module: t.device.createShaderModule({
+              code: wgslCompute,
+            }),
+            entryPoint: 'main',
+          },
+        })
+      : t.device.createRenderPipeline({
+          vertexStage: {
+            module: t.device.createShaderModule({
+              code: wgslVertex,
+            }),
+            entryPoint: 'main',
+          },
+          fragmentStage: {
+            module: t.device.createShaderModule({
+              code: wgslFragment,
+            }),
+            entryPoint: 'main',
+          },
+          primitiveTopology: 'triangle-list',
+          colorStates: [{ format: 'rgba8unorm' }],
+        });
 
     const encoder = t.device.createCommandEncoder();
-    const computePass = encoder.beginComputePass();
-    const renderPass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          attachment: t.createTexture().createView(),
-          loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
-          storeOp: 'store',
-        },
-      ],
-    });
-    const pass = compute ? computePass : renderPass;
+    const pass = compute
+      ? encoder.beginComputePass()
+      : encoder.beginRenderPass({
+          colorAttachments: [
+            {
+              attachment: t.createTexture().createView(),
+              loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+              storeOp: 'store',
+            },
+          ],
+        });
     const index0 = setBindGroupsOrder === 'common' ? 0 : 1;
     const index1 = setBindGroupsOrder === 'common' ? 1 : 0;
-    if (setPipeline === 'before')
-      t.setPipeline(renderPass, computePass, renderPipeline, computePipeline, compute);
+    if (setPipeline === 'before') t.setPipeline(pass, pipeline, compute);
     pass.setBindGroup(index0, bindGroup0);
-    if (setPipeline === 'middle')
-      t.setPipeline(renderPass, computePass, renderPipeline, computePipeline, compute);
+    if (setPipeline === 'middle') t.setPipeline(pass, pipeline, compute);
     pass.setBindGroup(index1, bindGroup1);
-    if (setPipeline === 'after')
-      t.setPipeline(renderPass, computePass, renderPipeline, computePipeline, compute);
-    if (callDrawOrDispatch) t.issueDrawOrDispatch(renderPass, computePass, compute);
+    if (setPipeline === 'after') t.setPipeline(pass, pipeline, compute);
+    if (callDrawOrDispatch) t.issueDrawOrDispatch(pass, compute);
     pass.endPass();
 
     t.expectValidationError(() => {
@@ -1024,17 +1016,8 @@ g.test('validation_scope,no_draw_or_dispatch')
   .fn(async t => {
     const { compute } = t.params;
 
-    const {
-      bindGroup0,
-      bindGroup1,
-      encoder,
-      renderPass,
-      computePass,
-      renderPipeline,
-      computePipeline,
-    } = t.testValidationScope(compute);
-    const pass = compute ? computePass : renderPass;
-    t.setPipeline(renderPass, computePass, renderPipeline, computePipeline, compute);
+    const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope(compute);
+    t.setPipeline(pass, pipeline, compute);
     pass.setBindGroup(0, bindGroup0);
     pass.setBindGroup(1, bindGroup1);
     pass.endPass();
@@ -1050,20 +1033,11 @@ g.test('validation_scope,same_draw_or_dispatch')
   .fn(async t => {
     const { compute } = t.params;
 
-    const {
-      bindGroup0,
-      bindGroup1,
-      encoder,
-      renderPass,
-      computePass,
-      renderPipeline,
-      computePipeline,
-    } = t.testValidationScope(compute);
-    const pass = compute ? computePass : renderPass;
-    t.setPipeline(renderPass, computePass, renderPipeline, computePipeline, compute);
+    const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope(compute);
+    t.setPipeline(pass, pipeline, compute);
     pass.setBindGroup(0, bindGroup0);
     pass.setBindGroup(1, bindGroup1);
-    t.issueDrawOrDispatch(renderPass, computePass, compute);
+    t.issueDrawOrDispatch(pass, compute);
     pass.endPass();
 
     t.expectValidationError(() => {
@@ -1076,23 +1050,14 @@ g.test('validation_scope,different_draws_or_dispatches')
   .params(pbool('compute'))
   .fn(async t => {
     const { compute } = t.params;
-    const {
-      bindGroup0,
-      bindGroup1,
-      encoder,
-      renderPass,
-      computePass,
-      renderPipeline,
-      computePipeline,
-    } = t.testValidationScope(compute);
-    const pass = compute ? computePass : renderPass;
-    t.setPipeline(renderPass, computePass, renderPipeline, computePipeline, compute);
+    const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope(compute);
+    t.setPipeline(pass, pipeline, compute);
 
     pass.setBindGroup(0, bindGroup0);
-    t.issueDrawOrDispatch(renderPass, computePass, compute);
+    t.issueDrawOrDispatch(pass, compute);
 
     pass.setBindGroup(1, bindGroup1);
-    t.issueDrawOrDispatch(renderPass, computePass, compute);
+    t.issueDrawOrDispatch(pass, compute);
 
     pass.endPass();
 
@@ -1107,24 +1072,15 @@ g.test('validation_scope,different_passes')
   .params(pbool('compute'))
   .fn(async t => {
     const { compute } = t.params;
-    const {
-      bindGroup0,
-      bindGroup1,
-      encoder,
-      renderPass,
-      computePass,
-      renderPipeline,
-      computePipeline,
-    } = t.testValidationScope(compute);
-    const pass = compute ? computePass : renderPass;
-    t.setPipeline(renderPass, computePass, renderPipeline, computePipeline, compute);
+    const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope(compute);
+    t.setPipeline(pass, pipeline, compute);
     pass.setBindGroup(0, bindGroup0);
     pass.endPass();
 
-    const renderPass1 = t.beginSimpleRenderPass(encoder, t.createTexture().createView());
-    const computePass1 = encoder.beginComputePass();
-    const pass1 = compute ? computePass1 : renderPass1;
-    t.setPipeline(renderPass1, computePass1, renderPipeline, computePipeline, compute);
+    const pass1 = compute
+      ? encoder.beginComputePass()
+      : t.beginSimpleRenderPass(encoder, t.createTexture().createView());
+    t.setPipeline(pass1, pipeline, compute);
     pass1.setBindGroup(1, bindGroup1);
     pass1.endPass();
 
