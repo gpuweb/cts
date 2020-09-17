@@ -2,7 +2,7 @@ export const description = `
 Test for "pp" preprocessor.
 `;
 
-import { pp } from '../common/framework/preprocessor2.js';
+import { pp } from '../common/framework/preprocessor.js';
 import { makeTestGroup } from '../common/framework/test_group.js';
 
 import { UnitTest } from './unit_test.js';
@@ -22,10 +22,11 @@ g.test('empty').fn(t => {
 });
 
 g.test('plain').fn(t => {
+  t.test(pp`a`, 'a');
   t.test(pp`\na`, '\na');
   t.test(pp`\n\na`, '\n\na');
   t.test(pp`\na\n`, '\na\n');
-  t.test(pp`\na\n\n`, '\na\n\n');
+  t.test(pp`a\n\n`, 'a\n\n');
 });
 
 g.test('substitutions,1').fn(t => {
@@ -49,9 +50,9 @@ g.test('substitutions,3').fn(t => {
 g.test('substitutions,4').fn(t => {
   const act = pp`
 a
-${pp.if(false)}
+${pp.$if(false)}
 ${'x'}
-${pp.endif}
+${pp.$endif}
 b`;
   const exp = '\na\n\nb';
   t.test(act, exp);
@@ -60,7 +61,7 @@ b`;
 g.test('if,true').fn(t => {
   const act = pp`
 a
-${pp.if(true)}c${pp.endif}
+${pp.$if(true)}c${pp.$endif}
 d
 `;
   const exp = '\na\nc\nd\n';
@@ -70,7 +71,7 @@ d
 g.test('if,false').fn(t => {
   const act = pp`
 a
-${pp.if(false)}c${pp.endif}
+${pp.$if(false)}c${pp.$endif}
 d
 `;
   const exp = '\na\n\nd\n';
@@ -80,11 +81,11 @@ d
 g.test('else,1').fn(t => {
   const act = pp`
 a
-${pp.if(true)}
+${pp.$if(true)}
 b
-${pp.else}
+${pp.$else}
 c
-${pp.endif}
+${pp.$endif}
 d
 `;
   const exp = '\na\n\nb\n\nd\n';
@@ -94,27 +95,11 @@ d
 g.test('else,2').fn(t => {
   const act = pp`
 a
-${pp.if(false)}
+${pp.$if(false)}
 b
-${pp.else}
+${pp.$else}
 c
-${pp.endif}
-d
-`;
-  const exp = '\na\n\nc\n\nd\n';
-  t.test(act, exp);
-});
-
-g.test('else,3').fn(t => {
-  const act = pp`
-a
-${pp.if(false)}
-b
-${pp.else}
-c
-${pp.else}
-e
-${pp.endif}
+${pp.$endif}
 d
 `;
   const exp = '\na\n\nc\n\nd\n';
@@ -124,13 +109,13 @@ d
 g.test('elif,1').fn(t => {
   const act = pp`
 a
-${pp.if(false)}
+${pp.$if(false)}
 b
-${pp.elif(true)}
+${pp.$elif(true)}
 e
-${pp.else}
+${pp.$else}
 c
-${pp.endif}
+${pp.$endif}
 d
 `;
   const exp = '\na\n\ne\n\nd\n';
@@ -140,13 +125,13 @@ d
 g.test('elif,2').fn(t => {
   const act = pp`
 a
-${pp.if(true)}
+${pp.$if(true)}
 b
-${pp.elif(true)}
+${pp.$elif(true)}
 e
-${pp.else}
+${pp.$else}
 c
-${pp.endif}
+${pp.$endif}
 d
 `;
   const exp = '\na\n\nb\n\nd\n';
@@ -156,13 +141,13 @@ d
 g.test('nested,1').fn(t => {
   const act = pp`
 a
-${pp.if(false)}
+${pp.$if(false)}
 b
-${pp.if(true)}
+${pp.$$if(true)}
 e
-${pp.endif}
+${pp.$$endif}
 c
-${pp.endif}
+${pp.$endif}
 d
 `;
   const exp = '\na\n\nd\n';
@@ -172,19 +157,19 @@ d
 g.test('nested,2').fn(t => {
   const act = pp`
 a
-${pp.if(false)}
+${pp.$if(false)}
 b
-${pp.else}
+${pp.$else}
 h
-${pp.if(false)}
+${pp.$$if(false)}
 e
-${pp.elif(true)}
+${pp.$$elif(true)}
 f
-${pp.else}
+${pp.$$else}
 g
-${pp.endif}
+${pp.$$endif}
 c
-${pp.endif}
+${pp.$endif}
 d
 `;
   const exp = '\na\n\nh\n\nf\n\nc\n\nd\n';
@@ -192,20 +177,31 @@ d
 });
 
 g.test('errors,pass').fn(() => {
-  pp`${pp.if(true)}${pp.endif}`;
-  pp`${pp.if(true)}${pp.else}${pp.endif}`;
-  pp`${pp.if(true)}${pp.if(true)}${pp.endif}${pp.endif}`;
-  pp`${pp.if(true)}${pp.if(true)}${pp.else}${pp.else}${pp.endif}${pp.endif}`;
+  pp`${pp.$if(true)}${pp.$endif}`;
+  pp`${pp.$if(true)}${pp.$else}${pp.$endif}`;
+  pp`${pp.$if(true)}${pp.$$if(true)}${pp.$$endif}${pp.$endif}`;
 });
 
 g.test('errors,fail').fn(t => {
   const e = (fn: () => void) => t.shouldThrow('Error', fn);
-  e(() => pp`${pp.if(true)}`);
-  e(() => pp`${pp.elif(true)}`);
-  e(() => pp`${pp.else}`);
-  e(() => pp`${pp.endif}`);
-  e(() => pp`${pp.if(true)}${pp.elif(true)}`);
-  e(() => pp`${pp.if(true)}${pp.elif(true)}${pp.else}`);
-  e(() => pp`${pp.if(true)}${pp.else}`);
-  e(() => pp`${pp.else}${pp.endif}`);
+  e(() => pp`${pp.$if(true)}`);
+  e(() => pp`${pp.$elif(true)}`);
+  e(() => pp`${pp.$else}`);
+  e(() => pp`${pp.$endif}`);
+  e(() => pp`${pp.$$if(true)}`);
+  e(() => pp`${pp.$$elif(true)}`);
+  e(() => pp`${pp.$$else}`);
+  e(() => pp`${pp.$$endif}`);
+
+  e(() => pp`${pp.$if(true)}${pp.$elif(true)}`);
+  e(() => pp`${pp.$if(true)}${pp.$elif(true)}${pp.$else}`);
+  e(() => pp`${pp.$if(true)}${pp.$else}`);
+  e(() => pp`${pp.$else}${pp.$endif}`);
+
+  e(() => pp`${pp.$if(true)}${pp.$$endif}`);
+  e(() => pp`${pp.$$if(true)}${pp.$$endif}`);
+  e(() => pp`${pp.$$if(true)}${pp.$endif}`);
+
+  e(() => pp`${pp.$if(true)}${pp.$else}${pp.$else}${pp.$endif}`);
+  e(() => pp`${pp.$if(true)}${pp.$$if(true)}${pp.$$else}${pp.$$else}${pp.$$endif}${pp.$endif}`);
 });
