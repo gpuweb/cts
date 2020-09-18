@@ -1,13 +1,8 @@
 import { Fixture } from './fixture.js';
 import { TestCaseRecorder } from './logging/test_case_recorder.js';
-import {
-  CaseParams,
-  CaseParamsIterable,
-  extractPublicParams,
-  publicParamsEquals,
-} from './params_utils.js';
+import { CaseParams, CaseParamsIterable, extractPublicParams } from './params_utils.js';
 import { kPathSeparator } from './query/separators.js';
-import { stringifyPublicParams } from './query/stringify_params.js';
+import { stringifyPublicParams, stringifyPublicParamsUniquely } from './query/stringify_params.js';
 import { validQueryPart } from './query/validQueryPart.js';
 import { assert } from './util/util.js';
 
@@ -121,16 +116,18 @@ class TestBuilder<F extends Fixture, P extends {}> {
       return;
     }
 
-    // This is n^2.
-    const seen: CaseParams[] = [];
+    const seen = new Set<string>();
     for (const testcase of this.cases) {
       // stringifyPublicParams also checks for invalid params values
       const testcaseString = stringifyPublicParams(testcase);
+
+      // A (hopefully) unique representation of a params value.
+      const testcaseStringUnique = stringifyPublicParamsUniquely(testcase);
       assert(
-        !seen.some(x => publicParamsEquals(x, testcase)),
+        !seen.has(testcaseStringUnique),
         `Duplicate public test case params: ${testcaseString}`
       );
-      seen.push(testcase);
+      seen.add(testcaseStringUnique);
     }
   }
 
