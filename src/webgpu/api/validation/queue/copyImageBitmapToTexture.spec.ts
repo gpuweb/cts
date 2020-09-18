@@ -87,6 +87,7 @@ function generateCopySizeForSrcOOB({ srcOriginValue }: WithSrcOrigin) {
     justFitCopySize, // correct size, maybe noop copy.
     { width: justFitCopySize.width + 1, height: justFitCopySize.height, depth: 1 }, // OOB in width
     { width: justFitCopySize.width, height: justFitCopySize.height + 1, depth: 1 }, // OOB in height
+    { width: justFitCopySize.width, height: justFitCopySize.height, depth: 2 }, // OOB in depth
   ]);
 }
 
@@ -190,9 +191,13 @@ class CopyImageBitmapToTextureTest extends ValidationTest {
 export const g = makeTestGroup(CopyImageBitmapToTextureTest);
 
 g.test('source_imageBitmap_state')
-  .params(poptions('closed', [true, false]))
+  .params(
+    params()
+      .combine(poptions('closed', [true, false]))
+      .combine(poptions('noopCopy', [true, false]))
+  )
   .fn(async t => {
-    const { closed } = t.params;
+    const { closed, noopCopy } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
     const dstTexture = t.device.createTexture({
       size: { width: 1, height: 1, depth: 1 },
@@ -205,16 +210,20 @@ g.test('source_imageBitmap_state')
     t.runTest(
       { imageBitmap },
       { texture: dstTexture },
-      { width: 0, height: 0, depth: 0 },
+      noopCopy ? { width: 0, height: 0, depth: 0 } : { width: 1, height: 1, depth: 1 },
       !closed,
       closed ? 'InvalidStateError' : ''
     );
   });
 
 g.test('destination_texture_state')
-  .params(poptions('destroyed', [true, false]))
+  .params(
+    params()
+      .combine(poptions('destroyed', [true, false]))
+      .combine(poptions('noopCopy', [true, false]))
+  )
   .fn(async t => {
-    const { destroyed } = t.params;
+    const { destroyed, noopCopy } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
     const dstTexture = t.device.createTexture({
       size: { width: 1, height: 1, depth: 1 },
@@ -227,15 +236,19 @@ g.test('destination_texture_state')
     t.runTest(
       { imageBitmap },
       { texture: dstTexture },
-      { width: 0, height: 0, depth: 0 },
+      noopCopy ? { width: 0, height: 0, depth: 0 } : { width: 1, height: 1, depth: 1 },
       !destroyed
     );
   });
 
 g.test('error_destination_texture')
-  .params(poptions('isErrDstTexture', [true, false]))
+  .params(
+    params()
+      .combine(poptions('isErrDstTexture', [true, false]))
+      .combine(poptions('noopCopy', [true, false]))
+  )
   .fn(async t => {
-    const { isErrDstTexture } = t.params;
+    const { isErrDstTexture, noopCopy } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
     const correctTexture = t.device.createTexture({
       size: { width: 1, height: 1, depth: 1 },
@@ -246,15 +259,19 @@ g.test('error_destination_texture')
     t.runTest(
       { imageBitmap },
       { texture: isErrDstTexture ? t.getErrorTexture() : correctTexture },
-      { width: 0, height: 0, depth: 0 },
+      noopCopy ? { width: 0, height: 0, depth: 0 } : { width: 1, height: 1, depth: 1 },
       !isErrDstTexture
     );
   });
 
 g.test('destination_texture_usage')
-  .params(poptions('usage', kTextureUsages))
+  .params(
+    params()
+      .combine(poptions('usage', kTextureUsages))
+      .combine(poptions('noopCopy', [true, false]))
+  )
   .fn(async t => {
-    const { usage } = t.params;
+    const { usage, noopCopy } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
     const dstTexture = t.device.createTexture({
       size: { width: 1, height: 1, depth: 1 },
@@ -265,15 +282,19 @@ g.test('destination_texture_usage')
     t.runTest(
       { imageBitmap },
       { texture: dstTexture },
-      { width: 0, height: 0, depth: 0 },
+      noopCopy ? { width: 0, height: 0, depth: 0 } : { width: 1, height: 1, depth: 1 },
       !!(usage & GPUTextureUsage.COPY_DST)
     );
   });
 
 g.test('destination_texture_sample_count')
-  .params(poptions('sampleCount', [1, 4]))
+  .params(
+    params()
+      .combine(poptions('sampleCount', [1, 4]))
+      .combine(poptions('noopCopy', [true, false]))
+  )
   .fn(async t => {
-    const { sampleCount } = t.params;
+    const { sampleCount, noopCopy } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
     const dstTexture = t.device.createTexture({
       size: { width: 1, height: 1, depth: 1 },
@@ -285,15 +306,19 @@ g.test('destination_texture_sample_count')
     t.runTest(
       { imageBitmap },
       { texture: dstTexture },
-      { width: 0, height: 0, depth: 0 },
+      noopCopy ? { width: 0, height: 0, depth: 0 } : { width: 1, height: 1, depth: 1 },
       sampleCount === 1
     );
   });
 
 g.test('destination_texture_mipLevel')
-  .params(poptions('mipLevel', [0, kDefaultMipLevelCount - 1, kDefaultMipLevelCount]))
+  .params(
+    params()
+      .combine(poptions('mipLevel', [0, kDefaultMipLevelCount - 1, kDefaultMipLevelCount]))
+      .combine(poptions('noopCopy', [true, false]))
+  )
   .fn(async t => {
-    const { mipLevel } = t.params;
+    const { mipLevel, noopCopy } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
     const dstTexture = t.device.createTexture({
       size: { width: kDefaultWidth, height: kDefaultHeight, depth: kDefaultDepth },
@@ -305,15 +330,19 @@ g.test('destination_texture_mipLevel')
     t.runTest(
       { imageBitmap },
       { texture: dstTexture, mipLevel },
-      { width: 0, height: 0, depth: 0 },
+      noopCopy ? { width: 0, height: 0, depth: 0 } : { width: 1, height: 1, depth: 1 },
       mipLevel < kDefaultMipLevelCount
     );
   });
 
 g.test('desitnation_texture_format')
-  .params(poptions('format', kAllTextureFormats))
+  .params(
+    params()
+      .combine(poptions('format', kAllTextureFormats))
+      .combine(poptions('noopCopy', [true, false]))
+  )
   .fn(async t => {
-    const { format } = t.params;
+    const { format, noopCopy } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
 
     // createTexture with all possible texture format may have validation error when using
@@ -331,7 +360,7 @@ g.test('desitnation_texture_format')
     t.runTest(
       { imageBitmap },
       { texture: dstTexture },
-      { width: 0, height: 0, depth: 0 },
+      noopCopy ? { width: 0, height: 0, depth: 0 } : { width: 1, height: 1, depth: 1 },
       success,
       success ? '' : 'TypeError'
     );
@@ -367,7 +396,8 @@ g.test('src_OOB')
 
     if (
       srcOriginValue.x + copySize.width > kDefaultWidth ||
-      srcOriginValue.y + copySize.height > kDefaultHeight
+      srcOriginValue.y + copySize.height > kDefaultHeight ||
+      copySize.depth > 1
     ) {
       success = false;
       exceptionName = 'RangeError';
@@ -407,8 +437,14 @@ g.test('dst_OOB')
     });
 
     let success = true;
+    let exceptionName: string | undefined;
 
     const dstMipMapSize = computeMipMapSize(kDefaultWidth, kDefaultHeight, mipLevel);
+
+    if (copySize.depth > 1) {
+      success = false;
+      exceptionName = 'RangeError';
+    }
 
     if (
       dstOriginValue.x + copySize.width > dstMipMapSize.mipWidth ||
@@ -426,6 +462,7 @@ g.test('dst_OOB')
         origin: dstOriginValue,
       },
       copySize,
-      success
+      success,
+      exceptionName
     );
   });
