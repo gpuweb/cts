@@ -48,6 +48,14 @@ export function raceWithRejectOnTimeout<T>(p: Promise<T>, ms: number, msg: strin
   return Promise.race([p, rejectOnTimeout(ms, msg)]);
 }
 
+export function sortObjectByKey(v: { [k: string]: unknown }): { [k: string]: unknown } {
+  const sortedObject: { [k: string]: unknown } = {};
+  for (const k of Object.keys(v).sort()) {
+    sortedObject[k] = v[k];
+  }
+  return sortedObject;
+}
+
 export function objectEquals(x: unknown, y: unknown): boolean {
   if (typeof x !== 'object' || typeof y !== 'object') return x === y;
   if (x === null || y === null) return x === y;
