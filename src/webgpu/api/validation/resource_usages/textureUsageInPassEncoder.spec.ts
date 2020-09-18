@@ -196,10 +196,10 @@ const BASE_LAYER = 1;
 const TOTAL_LAYERS = 6;
 const SLICE_COUNT = 2;
 
+// For all tests below, we test compute pass if 'compute' is true, and test render pass otherwise.
 g.test('subresources_and_binding_types_combination_for_color')
   .params(
     params()
-      // Test compute pass if 'compute' is true. Test render pass otherwise.
       .combine(pbool('compute'))
       .combine(pbool('binding0InBundle'))
       .combine(pbool('binding1InBundle'))
@@ -529,7 +529,6 @@ g.test('subresources_and_binding_types_combination_for_color')
 g.test('subresources_and_binding_types_combination_for_aspect')
   .params(
     params()
-      // Test compute pass if 'compute' is true. Test render pass otherwise.
       .combine(pbool('compute'))
       .combine(pbool('binding0InBundle'))
       .combine(pbool('binding1InBundle'))
@@ -686,7 +685,6 @@ g.test('subresources_and_binding_types_combination_for_aspect')
 g.test('shader_stages_and_visibility')
   .params(
     params()
-      // Test compute pass if 'compute' is true. Test render pass otherwise.
       .combine(pbool('compute'))
       .combine(poptions('readVisibility', [0, ...kShaderStages]))
       .combine(poptions('writeVisibility', [0, ...kShaderStages]))
@@ -893,7 +891,6 @@ g.test('bindings_in_bundle')
 g.test('unused_bindings_in_pipeline')
   .params(
     params()
-      // Test compute pass if 'compute' is true. Test render pass otherwise.
       .combine(pbool('compute'))
       .combine(pbool('useBindGroup0'))
       .combine(pbool('useBindGroup1'))
@@ -1011,7 +1008,6 @@ g.test('unused_bindings_in_pipeline')
   });
 
 g.test('validation_scope,no_draw_or_dispatch')
-  // Test compute pass if 'compute' is true. Test render pass otherwise.
   .params(pbool('compute'))
   .fn(async t => {
     const { compute } = t.params;
@@ -1028,7 +1024,6 @@ g.test('validation_scope,no_draw_or_dispatch')
   });
 
 g.test('validation_scope,same_draw_or_dispatch')
-  // Test compute pass if 'compute' is true. Test render pass otherwise.
   .params(pbool('compute'))
   .fn(async t => {
     const { compute } = t.params;
@@ -1046,7 +1041,6 @@ g.test('validation_scope,same_draw_or_dispatch')
   });
 
 g.test('validation_scope,different_draws_or_dispatches')
-  // Test compute pass if 'compute' is true. Test render pass otherwise.
   .params(pbool('compute'))
   .fn(async t => {
     const { compute } = t.params;
@@ -1068,7 +1062,6 @@ g.test('validation_scope,different_draws_or_dispatches')
   });
 
 g.test('validation_scope,different_passes')
-  // Test compute pass if 'compute' is true. Test render pass otherwise.
   .params(pbool('compute'))
   .fn(async t => {
     const { compute } = t.params;
