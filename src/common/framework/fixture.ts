@@ -70,7 +70,7 @@ export class Fixture {
       niceStack.message = `THREW ${actualName}, instead of ${expectedName}: ${ex}`;
       this.rec.expectationFailed(niceStack);
     } else {
-      niceStack.message = `OK: threw ${actualName}${ex.message}`;
+      niceStack.message = `OK: threw ${actualName}: ${ex.message}`;
       this.rec.debug(niceStack);
     }
   }
