@@ -55,6 +55,7 @@ class If extends Directive {
 
 class ElseIf extends If {
   applyTo(stack: StateStack) {
+    assert(stack.length >= 1);
     const { allowsFollowingElse, state: siblingState } = stack.pop()!;
     this.checkDepth(stack);
     assert(allowsFollowingElse, 'pp.elif after pp.else');
@@ -68,6 +69,7 @@ class ElseIf extends If {
 
 class Else extends Directive {
   applyTo(stack: StateStack) {
+    assert(stack.length >= 1);
     const { allowsFollowingElse, state: siblingState } = stack.pop()!;
     this.checkDepth(stack);
     assert(allowsFollowingElse, 'pp.else after pp.else');
@@ -86,7 +88,22 @@ class EndIf extends Directive {
 }
 
 /**
- * A simple template-based, non-line-based preprocessor.
+ * A simple template-based, non-line-based preprocessor implementing if/elif/else/endif.
+ *
+ * @example
+ *     const shader = pp`
+ * ${pp._if(expr)}
+ *   const x: ${type} = ${value};
+ * ${pp._elif(expr)}
+ * ${pp.__if(expr)}
+ * ...
+ * ${pp.__else}
+ * ...
+ * ${pp.__endif}
+ * ${pp._endif}`;
+ *
+ * @param strings - The array of constant string chunks of the template string.
+ * @param ...values - The array of interpolated ${} values within the template string.
  */
 export function pp(
   strings: TemplateStringsArray,
@@ -115,16 +132,16 @@ export function pp(
 
   return result;
 }
-pp.$if = (predicate: boolean) => new If(1, predicate);
-pp.$elif = (predicate: boolean) => new ElseIf(1, predicate);
-pp.$else = new Else(1);
-pp.$endif = new EndIf(1);
-pp.$$if = (predicate: boolean) => new If(2, predicate);
-pp.$$elif = (predicate: boolean) => new ElseIf(2, predicate);
-pp.$$else = new Else(2);
-pp.$$endif = new EndIf(2);
-pp.$$$if = (predicate: boolean) => new If(3, predicate);
-pp.$$$elif = (predicate: boolean) => new ElseIf(3, predicate);
-pp.$$$else = new Else(3);
-pp.$$$endif = new EndIf(3);
-// Add more if really needed.
+pp._if = (predicate: boolean) => new If(1, predicate);
+pp._elif = (predicate: boolean) => new ElseIf(1, predicate);
+pp._else = new Else(1);
+pp._endif = new EndIf(1);
+pp.__if = (predicate: boolean) => new If(2, predicate);
+pp.__elif = (predicate: boolean) => new ElseIf(2, predicate);
+pp.__else = new Else(2);
+pp.__endif = new EndIf(2);
+pp.___if = (predicate: boolean) => new If(3, predicate);
+pp.___elif = (predicate: boolean) => new ElseIf(3, predicate);
+pp.___else = new Else(3);
+pp.___endif = new EndIf(3);
+// Add more if needed.
