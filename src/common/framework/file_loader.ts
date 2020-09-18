@@ -1,6 +1,6 @@
 import { parseQuery } from './query/parseQuery.js';
 import { TestQuery } from './query/query.js';
-import { RunCaseIterable } from './test_group.js';
+import { IterableTestGroup } from './test_group.js';
 import { TestSuiteListing } from './test_suite_listing.js';
 import { loadTreeForQuery, TestTree, TestTreeLeaf } from './tree.js';
 
@@ -14,7 +14,7 @@ interface ListingFile {
 // A .spec.ts file, as imported.
 export interface SpecFile {
   readonly description: string;
-  readonly g: RunCaseIterable;
+  readonly g: IterableTestGroup;
 }
 
 // Base class for DefaultTestFileLoader and FakeTestFileLoader.

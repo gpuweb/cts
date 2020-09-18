@@ -26,11 +26,17 @@ export function makeTestGroup<F extends Fixture>(fixture: FixtureClass<F>): Test
   return new TestGroup(fixture);
 }
 
-// Interface for running tests
-export interface RunCaseIterable {
-  iterate(): Iterable<RunCase>;
+// Interfaces for running tests
+export interface IterableTestGroup {
+  iterate(): Iterable<IterableTest>;
   checkCaseNamesAndDuplicates(): void;
 }
+export interface IterableTest {
+  testPath: string[];
+  description: string | undefined;
+  iterate(): Iterable<RunCase>;
+}
+
 export function makeTestGroupForUnitTesting<F extends Fixture>(
   fixture: FixtureClass<F>
 ): TestGroup<F> {
@@ -40,7 +46,7 @@ export function makeTestGroupForUnitTesting<F extends Fixture>(
 type FixtureClass<F extends Fixture> = new (log: TestCaseRecorder, params: CaseParams) => F;
 type TestFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
 
-class TestGroup<F extends Fixture> implements RunCaseIterable, TestGroupBuilder<F> {
+class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
   private fixture: FixtureClass<F>;
   private seen: Set<string> = new Set();
   private tests: Array<TestBuilder<F, never>> = [];
@@ -49,10 +55,8 @@ class TestGroup<F extends Fixture> implements RunCaseIterable, TestGroupBuilder<
     this.fixture = fixture;
   }
 
-  *iterate(): Iterable<RunCase> {
-    for (const test of this.tests) {
-      yield* test.iterate();
-    }
+  iterate(): Iterable<IterableTest> {
+    return this.tests;
   }
 
   private checkName(name: string): void {
@@ -89,6 +93,7 @@ class TestGroup<F extends Fixture> implements RunCaseIterable, TestGroupBuilder<
 }
 
 interface TestBuilderWithName<F extends Fixture, P extends {}> extends TestBuilderWithParams<F, P> {
+  desc(description: string): this;
   params<NewP extends {}>(specs: Iterable<NewP>): TestBuilderWithParams<F, NewP>;
 }
 
@@ -97,7 +102,9 @@ interface TestBuilderWithParams<F extends Fixture, P extends {}> {
 }
 
 class TestBuilder<F extends Fixture, P extends {}> {
-  private readonly testPath: string[];
+  readonly testPath: string[];
+  description: string | undefined;
+
   private readonly fixture: FixtureClass<F>;
   private testFn: TestFn<F, P> | undefined;
   private cases?: CaseParamsIterable = undefined;
@@ -105,6 +112,11 @@ class TestBuilder<F extends Fixture, P extends {}> {
   constructor(testPath: string[], fixture: FixtureClass<F>) {
     this.testPath = testPath;
     this.fixture = fixture;
+  }
+
+  desc(description: string): this {
+    this.description = description.trim();
+    return this;
   }
 
   fn(fn: TestFn<F, P>): void {
