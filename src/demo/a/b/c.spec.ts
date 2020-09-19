@@ -6,7 +6,13 @@ import { UnitTest } from '../../../unittests/unit_test.js';
 
 export const g = makeTestGroup(UnitTest);
 
-g.test('f').fn(() => {});
+g.test('f')
+  .desc(
+    `Test plan for f
+    - Test stuff
+    - Test some more stuff`
+  )
+  .fn(() => {});
 
 g.test('f,g').fn(() => {});
 

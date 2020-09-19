@@ -204,14 +204,12 @@ export async function loadTreeForQuery(
       isCollapsible
     );
 
-    // TODO: If tree generation gets too slow, avoid actually iterating the cases in a file
-    // if there's no need to (based on the subqueriesToExpand).
     for (const t of spec.g.iterate()) {
       {
-        const queryL3 = new TestQuerySingleCase(suite, entry.file, t.id.test, t.id.params);
-        const orderingL3 = compareQueries(queryL3, queryToLoad);
-        if (orderingL3 === Ordering.Unordered || orderingL3 === Ordering.StrictSuperset) {
-          // Case is not matched by this query.
+        const queryL2 = new TestQueryMultiCase(suite, entry.file, t.testPath, {});
+        const orderingL2 = compareQueries(queryL2, queryToLoad);
+        if (orderingL2 === Ordering.Unordered) {
+          // Test path is not matched by this query.
           continue;
         }
       }
@@ -219,14 +217,28 @@ export async function loadTreeForQuery(
       // subtreeL2 is suite:a,b:c,d:*
       const subtreeL2: TestSubtree<TestQueryMultiCase> = addSubtreeForTestPath(
         subtreeL1,
-        t.id.test,
+        t.testPath,
+        t.description,
         isCollapsible
       );
 
-      // Leaf for case is suite:a,b:c,d:x=1;y=2
-      addLeafForCase(subtreeL2, t, isCollapsible);
+      // TODO: If tree generation gets too slow, avoid actually iterating the cases in a file
+      // if there's no need to (based on the subqueriesToExpand).
+      for (const c of t.iterate()) {
+        {
+          const queryL3 = new TestQuerySingleCase(suite, entry.file, c.id.test, c.id.params);
+          const orderingL3 = compareQueries(queryL3, queryToLoad);
+          if (orderingL3 === Ordering.Unordered || orderingL3 === Ordering.StrictSuperset) {
+            // Case is not matched by this query.
+            continue;
+          }
+        }
 
-      foundCase = true;
+        // Leaf for case is suite:a,b:c,d:x=1;y=2
+        addLeafForCase(subtreeL2, c, isCollapsible);
+
+        foundCase = true;
+      }
     }
   }
 
@@ -295,6 +307,7 @@ function addSubtreeForFilePath(
 function addSubtreeForTestPath(
   tree: TestSubtree<TestQueryMultiTest>,
   test: readonly string[],
+  plan: string | undefined,
   isCollapsible: (sq: TestQuery) => boolean
 ): TestSubtree<TestQueryMultiCase> {
   const subqueryTest: string[] = [];
@@ -311,6 +324,7 @@ function addSubtreeForTestPath(
       return {
         readableRelativeName: part + kPathSeparator + kWildcard,
         query,
+        description: plan,
         collapsible: isCollapsible(query),
       };
     });
