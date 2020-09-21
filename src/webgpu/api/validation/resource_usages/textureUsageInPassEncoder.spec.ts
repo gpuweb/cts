@@ -487,7 +487,7 @@ g.test('subresources_and_binding_types_combination_for_color')
       const bindGroup0 = t.createBindGroup(0, view0, type0, dimension0, storageTextureFormat0);
       if (binding0InBundle) {
         assert(pass instanceof GPURenderPassEncoder);
-        t.createAndExecuteBundle(0, bindGroup0, pass as GPURenderPassEncoder);
+        t.createAndExecuteBundle(0, bindGroup0, pass);
       } else {
         pass.setBindGroup(0, bindGroup0);
       }
@@ -496,7 +496,7 @@ g.test('subresources_and_binding_types_combination_for_color')
         const bindGroup1 = t.createBindGroup(1, view1, type1, dimension1, storageTextureFormat1);
         if (binding1InBundle) {
           assert(pass instanceof GPURenderPassEncoder);
-          t.createAndExecuteBundle(1, bindGroup1, pass as GPURenderPassEncoder);
+          t.createAndExecuteBundle(1, bindGroup1, pass);
         } else {
           pass.setBindGroup(1, bindGroup1);
         }
