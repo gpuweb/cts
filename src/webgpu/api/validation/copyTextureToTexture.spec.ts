@@ -60,6 +60,13 @@ class F extends ValidationTest {
       commandEncoder.finish();
     }, !isSuccess);
   }
+
+  // TODO(jiawei.shao@intel.com): support compressed texture formats
+  GetPhysicalSubresourceSize(textureSize: GPUExtent3DDict, mipLevel: number): GPUExtent3DDict {
+    const widthAtLevel = Math.max(textureSize.width >> mipLevel, 1);
+    const heightAtLevel = Math.max(textureSize.height >> mipLevel, 1);
+    return { width: widthAtLevel, height: heightAtLevel, depth: textureSize.depth };
+  }
 }
 
 export const g = makeTestGroup(F);
@@ -274,7 +281,7 @@ g.test('depth_stencil_copy_restrictions')
     params()
       .combine(poptions('format', kDepthStencilFormats))
       .combine(
-        poptions('copyRectangleOffsets', [
+        poptions('copyBoxOffsets', [
           { x: 0, y: 0, width: 0, height: 0 },
           { x: 1, y: 0, width: 0, height: 0 },
           { x: 0, y: 1, width: 0, height: 0 },
@@ -284,16 +291,16 @@ g.test('depth_stencil_copy_restrictions')
       )
       .combine(
         poptions('srcTextureSize', [
-          { width: 64, height: 64 },
-          { width: 64, height: 32 },
-          { width: 32, height: 32 },
+          { width: 64, height: 64, depth: 1 },
+          { width: 64, height: 32, depth: 1 },
+          { width: 32, height: 32, depth: 1 },
         ])
       )
       .combine(
         poptions('dstTextureSize', [
-          { width: 64, height: 64 },
-          { width: 64, height: 32 },
-          { width: 32, height: 32 },
+          { width: 64, height: 64, depth: 1 },
+          { width: 64, height: 32, depth: 1 },
+          { width: 32, height: 32, depth: 1 },
         ])
       )
       .combine(poptions('srcCopyLevel', [1, 2]))
@@ -302,7 +309,7 @@ g.test('depth_stencil_copy_restrictions')
   .fn(async t => {
     const {
       format,
-      copyRectangleOffsets,
+      copyBoxOffsets,
       srcTextureSize,
       dstTextureSize,
       srcCopyLevel,
@@ -323,27 +330,21 @@ g.test('depth_stencil_copy_restrictions')
       usage: GPUTextureUsage.COPY_DST,
     });
 
-    const srcTextureWidthAtLevel = srcTextureSize.width >> srcCopyLevel;
-    const srcTextureHeightAtLevel = srcTextureSize.height >> srcCopyLevel;
-    const dstTextureWidthAtLevel = dstTextureSize.width >> dstCopyLevel;
-    const dstTextureHeightAtLevel = dstTextureSize.height >> dstCopyLevel;
+    const srcSizeAtLevel = t.GetPhysicalSubresourceSize(srcTextureSize, srcCopyLevel);
+    const dstSizeAtLevel = t.GetPhysicalSubresourceSize(dstTextureSize, dstCopyLevel);
 
-    const copyOrigin = { x: copyRectangleOffsets.x, y: copyRectangleOffsets.y, z: 0 };
+    const copyOrigin = { x: copyBoxOffsets.x, y: copyBoxOffsets.y, z: 0 };
 
     const copyWidth =
-      Math.min(srcTextureWidthAtLevel, dstTextureWidthAtLevel) +
-      copyRectangleOffsets.width -
-      copyOrigin.x;
+      Math.min(srcSizeAtLevel.width, dstSizeAtLevel.width) + copyBoxOffsets.width - copyOrigin.x;
     const copyHeight =
-      Math.min(srcTextureHeightAtLevel, dstTextureHeightAtLevel) +
-      copyRectangleOffsets.height -
-      copyOrigin.y;
+      Math.min(srcSizeAtLevel.height, dstSizeAtLevel.height) + copyBoxOffsets.height - copyOrigin.y;
 
     const isSuccess =
-      copyWidth === srcTextureWidthAtLevel &&
-      copyHeight === srcTextureHeightAtLevel &&
-      copyWidth === dstTextureWidthAtLevel &&
-      copyHeight === dstTextureHeightAtLevel;
+      copyWidth === srcSizeAtLevel.width &&
+      copyHeight === srcSizeAtLevel.height &&
+      copyWidth === dstSizeAtLevel.width &&
+      copyHeight === dstSizeAtLevel.height;
     t.TestCopyTextureToTexture(
       { texture: srcTexture, origin: { x: 0, y: 0, z: 0 }, mipLevel: srcCopyLevel },
       { texture: dstTexture, origin: copyOrigin, mipLevel: dstCopyLevel },
@@ -359,95 +360,229 @@ g.test('depth_stencil_copy_restrictions')
   });
 
 g.test('copy_ranges')
-  .params(
-    params()
-      .combine(
-        poptions('copyRectangleOffsets', [
-          { x: 0, y: 0, z: 0, width: 0, height: 0, depth: 1 },
-          { x: 4, y: 0, z: 0, width: 0, height: 0, depth: 1 },
-          { x: 8, y: 0, z: 0, width: 0, height: 0, depth: 1 },
-          { x: 0, y: 2, z: 0, width: 0, height: 0, depth: 1 },
-          { x: 0, y: 4, z: 0, width: 0, height: 0, depth: 1 },
-          { x: 0, y: 0, z: 0, width: -4, height: 0, depth: 1 },
-          { x: 0, y: 0, z: 0, width: -8, height: 0, depth: 1 },
-          { x: 0, y: 0, z: 0, width: 0, height: -2, depth: 1 },
-          { x: 0, y: 0, z: 0, width: 0, height: -4, depth: 1 },
-          { x: 0, y: 0, z: 0, width: 4, height: 0, depth: 1 },
-          { x: 0, y: 0, z: 0, width: 0, height: 2, depth: 1 },
-          { x: 0, y: 0, z: 1, width: 0, height: 0, depth: 1 },
-          { x: 0, y: 0, z: 2, width: 0, height: 0, depth: 1 },
-          { x: 0, y: 0, z: 0, width: 0, height: 0, depth: 2 },
-          { x: 0, y: 0, z: 1, width: 0, height: 0, depth: 2 },
-        ])
-      )
-      .combine(poptions('srcCopyLevel', [0, 1]))
-      .combine(poptions('dstCopyLevel', [0, 1]))
-  )
-  .fn(async t => {
-    const { copyRectangleOffsets, srcCopyLevel, dstCopyLevel } = t.params;
+  .params([
+    {
+      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 0, depth: -2 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 0,
+    },
+    {
+      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 0, depth: -2 },
+      srcCopyLevel: 1,
+      dstCopyLevel: 0,
+    },
+    {
+      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 0, depth: -2 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 1,
+    },
+    {
+      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 0, depth: -2 },
+      srcCopyLevel: 1,
+      dstCopyLevel: 1,
+    },
 
-    const kTextureWidth = 16;
-    const kTextureHeight = 8;
-    const kMipLevelCount = 2;
-    const kArrayLayerCount = 2;
+    {
+      copyBoxOffsets: { x: 1, y: 0, z: 0, width: 0, height: 0, depth: -2 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 0,
+    },
+    {
+      copyBoxOffsets: { x: 1, y: 0, z: 0, width: 0, height: 0, depth: -2 },
+      srcCopyLevel: 1,
+      dstCopyLevel: 0,
+    },
+    {
+      copyBoxOffsets: { x: 1, y: 0, z: 0, width: 0, height: 0, depth: -2 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 1,
+    },
+    {
+      copyBoxOffsets: { x: 1, y: 0, z: 0, width: 0, height: 0, depth: -2 },
+      srcCopyLevel: 1,
+      dstCopyLevel: 1,
+    },
+
+    {
+      copyBoxOffsets: { x: 1, y: 0, z: 0, width: -1, height: 0, depth: -2 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 0,
+    },
+    {
+      copyBoxOffsets: { x: 1, y: 0, z: 0, width: -1, height: 0, depth: -2 },
+      srcCopyLevel: 1,
+      dstCopyLevel: 0,
+    },
+    {
+      copyBoxOffsets: { x: 1, y: 0, z: 0, width: -1, height: 0, depth: -2 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 1,
+    },
+    {
+      copyBoxOffsets: { x: 1, y: 0, z: 0, width: -1, height: 0, depth: -2 },
+      srcCopyLevel: 1,
+      dstCopyLevel: 1,
+    },
+
+    {
+      copyBoxOffsets: { x: 0, y: 1, z: 0, width: 0, height: 0, depth: -2 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 0,
+    },
+    {
+      copyBoxOffsets: { x: 0, y: 1, z: 0, width: 0, height: 0, depth: -2 },
+      srcCopyLevel: 1,
+      dstCopyLevel: 0,
+    },
+    {
+      copyBoxOffsets: { x: 0, y: 1, z: 0, width: 0, height: 0, depth: -2 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 1,
+    },
+    {
+      copyBoxOffsets: { x: 0, y: 1, z: 0, width: 0, height: 0, depth: -2 },
+      srcCopyLevel: 1,
+      dstCopyLevel: 1,
+    },
+
+    {
+      copyBoxOffsets: { x: 0, y: 1, z: 0, width: 0, height: -1, depth: -2 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 0,
+    },
+    {
+      copyBoxOffsets: { x: 0, y: 1, z: 0, width: 0, height: -1, depth: -2 },
+      srcCopyLevel: 1,
+      dstCopyLevel: 0,
+    },
+    {
+      copyBoxOffsets: { x: 0, y: 1, z: 0, width: 0, height: -1, depth: -2 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 1,
+    },
+    {
+      copyBoxOffsets: { x: 0, y: 1, z: 0, width: 0, height: -1, depth: -2 },
+      srcCopyLevel: 1,
+      dstCopyLevel: 1,
+    },
+
+    {
+      copyBoxOffsets: { x: 0, y: 0, z: 1, width: 0, height: 1, depth: -2 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 0,
+    },
+    {
+      copyBoxOffsets: { x: 0, y: 0, z: 2, width: 0, height: 1, depth: 0 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 0,
+    },
+    {
+      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 1, height: 0, depth: -2 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 0,
+    },
+    {
+      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 1, depth: -2 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 0,
+    },
+    {
+      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 0, depth: 1 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 0,
+    },
+
+    {
+      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 0, depth: 0 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 0,
+    },
+    {
+      copyBoxOffsets: { x: 0, y: 0, z: 1, width: 0, height: 0, depth: -1 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 0,
+    },
+    {
+      copyBoxOffsets: { x: 0, y: 0, z: 2, width: 0, height: 0, depth: -1 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 0,
+    },
+
+    {
+      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 0, depth: -2 },
+      srcCopyLevel: 3,
+      dstCopyLevel: 3,
+    },
+    {
+      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 0, depth: -2 },
+      srcCopyLevel: 3,
+      dstCopyLevel: 0,
+    },
+    {
+      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 0, depth: -2 },
+      srcCopyLevel: 0,
+      dstCopyLevel: 3,
+    },
+  ] as const)
+  .fn(async t => {
+    const { copyBoxOffsets, srcCopyLevel, dstCopyLevel } = t.params;
+
+    const kTextureSize = { width: 16, height: 8, depth: 3 };
+    const kMipLevelCount = 4;
 
     const srcTexture = t.device.createTexture({
-      size: { width: kTextureWidth, height: kTextureHeight, depth: kArrayLayerCount },
+      size: kTextureSize,
       format: 'rgba8unorm',
       mipLevelCount: kMipLevelCount,
       usage: GPUTextureUsage.COPY_SRC,
     });
     const dstTexture = t.device.createTexture({
-      size: { width: kTextureWidth, height: kTextureHeight, depth: kArrayLayerCount },
+      size: kTextureSize,
       format: 'rgba8unorm',
       mipLevelCount: kMipLevelCount,
       usage: GPUTextureUsage.COPY_DST,
     });
 
-    const srcTextureWidthAtLevel = kTextureWidth >> srcCopyLevel;
-    const srcTextureHeightAtLevel = kTextureHeight >> srcCopyLevel;
-    const dstTextureWidthAtLevel = kTextureWidth >> dstCopyLevel;
-    const dstTextureHeightAtLevel = kTextureHeight >> dstCopyLevel;
+    const srcSizeAtLevel = t.GetPhysicalSubresourceSize(kTextureSize, srcCopyLevel);
+    const dstSizeAtLevel = t.GetPhysicalSubresourceSize(kTextureSize, dstCopyLevel);
 
-    const copyOrigin = { x: copyRectangleOffsets.x, y: copyRectangleOffsets.y, z: 0 };
+    const copyOrigin = { x: copyBoxOffsets.x, y: copyBoxOffsets.y, z: copyBoxOffsets.z };
 
     const copyWidth =
-      Math.min(srcTextureWidthAtLevel, dstTextureWidthAtLevel) +
-      copyRectangleOffsets.width -
-      copyOrigin.x;
+      Math.min(srcSizeAtLevel.width, dstSizeAtLevel.width) + copyBoxOffsets.width - copyOrigin.x;
     const copyHeight =
-      Math.min(srcTextureHeightAtLevel, dstTextureHeightAtLevel) +
-      copyRectangleOffsets.height -
-      copyOrigin.y;
+      Math.min(srcSizeAtLevel.height, dstSizeAtLevel.height) + copyBoxOffsets.height - copyOrigin.y;
+
+    const copyDepth = kTextureSize.depth + copyBoxOffsets.depth - copyOrigin.z;
 
     {
       const isSuccess =
-        copyWidth <= srcTextureWidthAtLevel &&
-        copyHeight <= srcTextureHeightAtLevel &&
-        copyOrigin.x + copyWidth <= dstTextureWidthAtLevel &&
-        copyOrigin.y + copyHeight <= dstTextureHeightAtLevel &&
-        copyOrigin.z + copyRectangleOffsets.depth <= kArrayLayerCount;
+        copyWidth <= srcSizeAtLevel.width &&
+        copyHeight <= srcSizeAtLevel.height &&
+        copyOrigin.x + copyWidth <= dstSizeAtLevel.width &&
+        copyOrigin.y + copyHeight <= dstSizeAtLevel.height &&
+        copyOrigin.z + copyDepth <= kTextureSize.depth;
 
       t.TestCopyTextureToTexture(
         { texture: srcTexture, origin: { x: 0, y: 0, z: 0 }, mipLevel: srcCopyLevel },
         { texture: dstTexture, origin: copyOrigin, mipLevel: dstCopyLevel },
-        { width: copyWidth, height: copyHeight, depth: copyRectangleOffsets.depth },
+        { width: copyWidth, height: copyHeight, depth: copyDepth },
         isSuccess
       );
     }
 
     {
       const isSuccess =
-        copyOrigin.x + copyWidth <= srcTextureWidthAtLevel &&
-        copyOrigin.y + copyHeight <= srcTextureHeightAtLevel &&
-        copyWidth <= dstTextureWidthAtLevel &&
-        copyHeight <= dstTextureHeightAtLevel &&
-        copyOrigin.z + copyRectangleOffsets.depth <= kArrayLayerCount;
+        copyOrigin.x + copyWidth <= srcSizeAtLevel.width &&
+        copyOrigin.y + copyHeight <= srcSizeAtLevel.height &&
+        copyWidth <= dstSizeAtLevel.width &&
+        copyHeight <= dstSizeAtLevel.height &&
+        copyOrigin.z + copyDepth <= kTextureSize.depth;
 
       t.TestCopyTextureToTexture(
         { texture: srcTexture, origin: copyOrigin, mipLevel: srcCopyLevel },
         { texture: dstTexture, origin: { x: 0, y: 0, z: 0 }, mipLevel: dstCopyLevel },
-        { width: copyWidth, height: copyHeight, depth: copyRectangleOffsets.depth },
+        { width: copyWidth, height: copyHeight, depth: copyDepth },
         isSuccess
       );
     }
