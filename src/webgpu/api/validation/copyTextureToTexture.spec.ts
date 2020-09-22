@@ -340,7 +340,10 @@ g.test('depth_stencil_copy_restrictions')
     const copyHeight =
       Math.min(srcSizeAtLevel.height, dstSizeAtLevel.height) + copyBoxOffsets.height - copyOrigin.y;
 
+    // Depth/stencil copies must copy whole subresources.
     const isSuccess =
+      copyOrigin.x === 0 &&
+      copyOrigin.y === 0 &&
       copyWidth === srcSizeAtLevel.width &&
       copyHeight === srcSizeAtLevel.height &&
       copyWidth === dstSizeAtLevel.width &&
@@ -360,170 +363,28 @@ g.test('depth_stencil_copy_restrictions')
   });
 
 g.test('copy_ranges')
-  .params([
-    {
-      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 0, depth: -2 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 0,
-    },
-    {
-      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 0, depth: -2 },
-      srcCopyLevel: 1,
-      dstCopyLevel: 0,
-    },
-    {
-      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 0, depth: -2 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 1,
-    },
-    {
-      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 0, depth: -2 },
-      srcCopyLevel: 1,
-      dstCopyLevel: 1,
-    },
-
-    {
-      copyBoxOffsets: { x: 1, y: 0, z: 0, width: 0, height: 0, depth: -2 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 0,
-    },
-    {
-      copyBoxOffsets: { x: 1, y: 0, z: 0, width: 0, height: 0, depth: -2 },
-      srcCopyLevel: 1,
-      dstCopyLevel: 0,
-    },
-    {
-      copyBoxOffsets: { x: 1, y: 0, z: 0, width: 0, height: 0, depth: -2 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 1,
-    },
-    {
-      copyBoxOffsets: { x: 1, y: 0, z: 0, width: 0, height: 0, depth: -2 },
-      srcCopyLevel: 1,
-      dstCopyLevel: 1,
-    },
-
-    {
-      copyBoxOffsets: { x: 1, y: 0, z: 0, width: -1, height: 0, depth: -2 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 0,
-    },
-    {
-      copyBoxOffsets: { x: 1, y: 0, z: 0, width: -1, height: 0, depth: -2 },
-      srcCopyLevel: 1,
-      dstCopyLevel: 0,
-    },
-    {
-      copyBoxOffsets: { x: 1, y: 0, z: 0, width: -1, height: 0, depth: -2 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 1,
-    },
-    {
-      copyBoxOffsets: { x: 1, y: 0, z: 0, width: -1, height: 0, depth: -2 },
-      srcCopyLevel: 1,
-      dstCopyLevel: 1,
-    },
-
-    {
-      copyBoxOffsets: { x: 0, y: 1, z: 0, width: 0, height: 0, depth: -2 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 0,
-    },
-    {
-      copyBoxOffsets: { x: 0, y: 1, z: 0, width: 0, height: 0, depth: -2 },
-      srcCopyLevel: 1,
-      dstCopyLevel: 0,
-    },
-    {
-      copyBoxOffsets: { x: 0, y: 1, z: 0, width: 0, height: 0, depth: -2 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 1,
-    },
-    {
-      copyBoxOffsets: { x: 0, y: 1, z: 0, width: 0, height: 0, depth: -2 },
-      srcCopyLevel: 1,
-      dstCopyLevel: 1,
-    },
-
-    {
-      copyBoxOffsets: { x: 0, y: 1, z: 0, width: 0, height: -1, depth: -2 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 0,
-    },
-    {
-      copyBoxOffsets: { x: 0, y: 1, z: 0, width: 0, height: -1, depth: -2 },
-      srcCopyLevel: 1,
-      dstCopyLevel: 0,
-    },
-    {
-      copyBoxOffsets: { x: 0, y: 1, z: 0, width: 0, height: -1, depth: -2 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 1,
-    },
-    {
-      copyBoxOffsets: { x: 0, y: 1, z: 0, width: 0, height: -1, depth: -2 },
-      srcCopyLevel: 1,
-      dstCopyLevel: 1,
-    },
-
-    {
-      copyBoxOffsets: { x: 0, y: 0, z: 1, width: 0, height: 1, depth: -2 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 0,
-    },
-    {
-      copyBoxOffsets: { x: 0, y: 0, z: 2, width: 0, height: 1, depth: 0 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 0,
-    },
-    {
-      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 1, height: 0, depth: -2 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 0,
-    },
-    {
-      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 1, depth: -2 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 0,
-    },
-    {
-      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 0, depth: 1 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 0,
-    },
-
-    {
-      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 0, depth: 0 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 0,
-    },
-    {
-      copyBoxOffsets: { x: 0, y: 0, z: 1, width: 0, height: 0, depth: -1 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 0,
-    },
-    {
-      copyBoxOffsets: { x: 0, y: 0, z: 2, width: 0, height: 0, depth: -1 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 0,
-    },
-
-    {
-      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 0, depth: -2 },
-      srcCopyLevel: 3,
-      dstCopyLevel: 3,
-    },
-    {
-      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 0, depth: -2 },
-      srcCopyLevel: 3,
-      dstCopyLevel: 0,
-    },
-    {
-      copyBoxOffsets: { x: 0, y: 0, z: 0, width: 0, height: 0, depth: -2 },
-      srcCopyLevel: 0,
-      dstCopyLevel: 3,
-    },
-  ] as const)
+  .params(
+    params()
+      .combine(
+        poptions('copyBoxOffsets', [
+          { x: 0, y: 0, z: 0, width: 0, height: 0, depth: -2 },
+          { x: 1, y: 0, z: 0, width: 0, height: 0, depth: -2 },
+          { x: 1, y: 0, z: 0, width: -1, height: 0, depth: -2 },
+          { x: 0, y: 1, z: 0, width: 0, height: 0, depth: -2 },
+          { x: 0, y: 1, z: 0, width: 0, height: -1, depth: -2 },
+          { x: 0, y: 0, z: 1, width: 0, height: 1, depth: -2 },
+          { x: 0, y: 0, z: 2, width: 0, height: 1, depth: 0 },
+          { x: 0, y: 0, z: 0, width: 1, height: 0, depth: -2 },
+          { x: 0, y: 0, z: 0, width: 0, height: 1, depth: -2 },
+          { x: 0, y: 0, z: 0, width: 0, height: 0, depth: 1 },
+          { x: 0, y: 0, z: 0, width: 0, height: 0, depth: 0 },
+          { x: 0, y: 0, z: 1, width: 0, height: 0, depth: -1 },
+          { x: 0, y: 0, z: 2, width: 0, height: 0, depth: -1 },
+        ])
+      )
+      .combine(poptions('srcCopyLevel', [0, 1, 3]))
+      .combine(poptions('dstCopyLevel', [0, 1, 3]))
+  )
   .fn(async t => {
     const { copyBoxOffsets, srcCopyLevel, dstCopyLevel } = t.params;
 
@@ -548,11 +409,14 @@ g.test('copy_ranges')
 
     const copyOrigin = { x: copyBoxOffsets.x, y: copyBoxOffsets.y, z: copyBoxOffsets.z };
 
-    const copyWidth =
-      Math.min(srcSizeAtLevel.width, dstSizeAtLevel.width) + copyBoxOffsets.width - copyOrigin.x;
-    const copyHeight =
-      Math.min(srcSizeAtLevel.height, dstSizeAtLevel.height) + copyBoxOffsets.height - copyOrigin.y;
-
+    const copyWidth = Math.max(
+      Math.min(srcSizeAtLevel.width, dstSizeAtLevel.width) + copyBoxOffsets.width - copyOrigin.x,
+      0
+    );
+    const copyHeight = Math.max(
+      Math.min(srcSizeAtLevel.height, dstSizeAtLevel.height) + copyBoxOffsets.height - copyOrigin.y,
+      0
+    );
     const copyDepth = kTextureSize.depth + copyBoxOffsets.depth - copyOrigin.z;
 
     {
