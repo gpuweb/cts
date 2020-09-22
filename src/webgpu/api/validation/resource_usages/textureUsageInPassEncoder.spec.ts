@@ -185,6 +185,10 @@ class TextureUsageTracking extends ValidationTest {
       (pass as GPURenderPassEncoder).draw(3, 1, 0, 0);
     }
   }
+
+  isWritableBinding(bindingType: GPUBindingType | 'render-target'): boolean {
+    return bindingType === 'writeonly-storage-texture' ? true : false;
+  }
 }
 
 export const g = makeTestGroup(TextureUsageTracking);
@@ -789,7 +793,7 @@ g.test('replaced_binding')
     pass.setBindGroup(0, bindGroup1);
     pass.endPass();
 
-    let success = bindingType === 'writeonly-storage-texture' ? false : true;
+    let success = !t.isWritableBinding(bindingType);
     // Replaced bindings across dispatch calls should not be validated in compute pass.
     if (compute && callDrawOrDispatch) success = true;
 
@@ -871,9 +875,7 @@ g.test('bindings_in_bundle')
       success = true;
     }
 
-    if (type0 === 'writeonly-storage-texture' && type1 === 'writeonly-storage-texture') {
-      success = true;
-    }
+    if (t.isWritableBinding(type0) && t.isWritableBinding(type1)) success = true;
 
     // Resource usages in bundle should be validated.
     t.expectValidationError(() => {
