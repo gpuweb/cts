@@ -22,7 +22,7 @@ Test Plan:
 TODO: 1d, 3d texture and 2d array textures.
 `;
 
-import { poptions, params } from '../../../../common/framework/params_builder.js';
+import { poptions, params, pbool } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { kAllTextureFormats, kTextureUsages } from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
@@ -57,29 +57,20 @@ interface WithMipLevel {
   mipLevel: number;
 }
 
-interface WithSrcOrigin {
-  srcOriginValue: GPUOrigin2DDict;
-}
-
 interface WithDstOriginMipLevel extends WithMipLevel {
-  dstOriginValue: GPUOrigin3DDict;
+  dstOrigin: Required<GPUOrigin3DDict>;
 }
 
 // Helper function to generate copySize for src OOB test
-function generateCopySizeForSrcOOB({ srcOriginValue }: WithSrcOrigin) {
-  const origin = {
-    x: srcOriginValue.x ? srcOriginValue.x : 0,
-    y: srcOriginValue.y ? srcOriginValue.y : 0,
-  };
-
+function generateCopySizeForSrcOOB({ srcOrigin }: { srcOrigin: Required<GPUOrigin2DDict> }) {
   // OOB origin fails even with noop copy.
-  if (origin.x > kDefaultWidth || origin.y > kDefaultHeight) {
+  if (srcOrigin.x > kDefaultWidth || srcOrigin.y > kDefaultHeight) {
     return poptions('copySize', [{ width: 0, height: 0, depth: 0 }]);
   }
 
   const justFitCopySize = {
-    width: kDefaultWidth - origin.x,
-    height: kDefaultHeight - origin.y,
+    width: kDefaultWidth - srcOrigin.x,
+    height: kDefaultHeight - srcOrigin.y,
     depth: 1,
   };
 
@@ -95,7 +86,7 @@ function generateCopySizeForSrcOOB({ srcOriginValue }: WithSrcOrigin) {
 function generateDstOriginValue({ mipLevel }: WithMipLevel) {
   const origin = computeMipMapSize(kDefaultWidth, kDefaultHeight, mipLevel);
 
-  return poptions('dstOriginValue', [
+  return poptions('dstOrigin', [
     { x: 0, y: 0, z: 0 },
     { x: origin.mipWidth - 1, y: 0, z: 0 },
     { x: 0, y: origin.mipHeight - 1, z: 0 },
@@ -109,27 +100,22 @@ function generateDstOriginValue({ mipLevel }: WithMipLevel) {
 }
 
 // Helper function to generate copySize for dst OOB test
-function generateCopySizeForDstOOB({ mipLevel, dstOriginValue }: WithDstOriginMipLevel) {
+function generateCopySizeForDstOOB({ mipLevel, dstOrigin }: WithDstOriginMipLevel) {
   const dstMipMapSize = computeMipMapSize(kDefaultWidth, kDefaultHeight, mipLevel);
-  const origin = {
-    x: dstOriginValue.x ? dstOriginValue.x : 0,
-    y: dstOriginValue.y ? dstOriginValue.y : 0,
-    z: dstOriginValue.z ? dstOriginValue.z : 0,
-  };
 
   // OOB origin fails even with noop copy.
   if (
-    origin.x > dstMipMapSize.mipWidth ||
-    origin.y > dstMipMapSize.mipHeight ||
-    origin.z > kDefaultDepth
+    dstOrigin.x > dstMipMapSize.mipWidth ||
+    dstOrigin.y > dstMipMapSize.mipHeight ||
+    dstOrigin.z > kDefaultDepth
   ) {
     return poptions('copySize', [{ width: 0, height: 0, depth: 0 }]);
   }
 
   const justFitCopySize = {
-    width: dstMipMapSize.mipWidth - origin.x,
-    height: dstMipMapSize.mipHeight - origin.y,
-    depth: kDefaultDepth - origin.z,
+    width: dstMipMapSize.mipWidth - dstOrigin.x,
+    height: dstMipMapSize.mipHeight - dstOrigin.y,
+    depth: kDefaultDepth - dstOrigin.z,
   };
 
   return poptions('copySize', [
@@ -190,14 +176,19 @@ class CopyImageBitmapToTextureTest extends ValidationTest {
 
 export const g = makeTestGroup(CopyImageBitmapToTextureTest);
 
-g.test('source_imageBitmap_state')
+g.test('source_imageBitmap,state')
   .params(
     params()
-      .combine(poptions('closed', [true, false]))
-      .combine(poptions('noopCopy', [true, false]))
+      .combine(pbool('closed'))
+      .combine(
+        poptions('copySize', [
+          { width: 0, height: 0, depth: 0 },
+          { width: 1, height: 1, depth: 1 },
+        ])
+      )
   )
   .fn(async t => {
-    const { closed, noopCopy } = t.params;
+    const { closed, copySize } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
     const dstTexture = t.device.createTexture({
       size: { width: 1, height: 1, depth: 1 },
@@ -210,68 +201,50 @@ g.test('source_imageBitmap_state')
     t.runTest(
       { imageBitmap },
       { texture: dstTexture },
-      noopCopy ? { width: 0, height: 0, depth: 0 } : { width: 1, height: 1, depth: 1 },
-      !closed,
+      copySize,
+      true, // No validation errors.
       closed ? 'InvalidStateError' : ''
     );
   });
 
-g.test('destination_texture_state')
+g.test('destination_texture,state')
   .params(
     params()
-      .combine(poptions('destroyed', [true, false]))
-      .combine(poptions('noopCopy', [true, false]))
+      .combine(poptions('state', ['valid', 'invalid', 'destroyed'] as const))
+      .combine(
+        poptions('copySize', [
+          { width: 0, height: 0, depth: 0 },
+          { width: 1, height: 1, depth: 1 },
+        ])
+      )
   )
   .fn(async t => {
-    const { destroyed, noopCopy } = t.params;
+    const { state, copySize } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
-    const dstTexture = t.device.createTexture({
-      size: { width: 1, height: 1, depth: 1 },
+    const descriptor: GPUTextureDescriptor = {
+      size:
+        state === 'invalid' ? { width: 0, height: 0, depth: 0 } : { width: 1, height: 1, depth: 1 },
       format: 'bgra8unorm',
       usage: GPUTextureUsage.COPY_DST,
-    });
+    };
+    const dstTexture = t.createTextureWithState(state, descriptor);
 
-    if (destroyed) dstTexture.destroy();
-
-    t.runTest(
-      { imageBitmap },
-      { texture: dstTexture },
-      noopCopy ? { width: 0, height: 0, depth: 0 } : { width: 1, height: 1, depth: 1 },
-      !destroyed
-    );
+    t.runTest({ imageBitmap }, { texture: dstTexture }, copySize, state === 'valid');
   });
 
-g.test('error_destination_texture')
-  .params(
-    params()
-      .combine(poptions('isErrDstTexture', [true, false]))
-      .combine(poptions('noopCopy', [true, false]))
-  )
-  .fn(async t => {
-    const { isErrDstTexture, noopCopy } = t.params;
-    const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
-    const correctTexture = t.device.createTexture({
-      size: { width: 1, height: 1, depth: 1 },
-      format: 'bgra8unorm',
-      usage: GPUTextureUsage.COPY_DST,
-    });
-
-    t.runTest(
-      { imageBitmap },
-      { texture: isErrDstTexture ? t.getErrorTexture() : correctTexture },
-      noopCopy ? { width: 0, height: 0, depth: 0 } : { width: 1, height: 1, depth: 1 },
-      !isErrDstTexture
-    );
-  });
-
-g.test('destination_texture_usage')
+g.test('destination_texture,usage')
   .params(
     params()
       .combine(poptions('usage', kTextureUsages))
-      .combine(poptions('noopCopy', [true, false]))
+      .combine(
+        poptions('copySize', [
+          { width: 0, height: 0, depth: 0 },
+          { width: 1, height: 1, depth: 1 },
+        ])
+      )
   )
   .fn(async t => {
-    const { usage, noopCopy } = t.params;
+    const { usage, copySize } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
     const dstTexture = t.device.createTexture({
       size: { width: 1, height: 1, depth: 1 },
@@ -282,19 +255,24 @@ g.test('destination_texture_usage')
     t.runTest(
       { imageBitmap },
       { texture: dstTexture },
-      noopCopy ? { width: 0, height: 0, depth: 0 } : { width: 1, height: 1, depth: 1 },
+      copySize,
       !!(usage & GPUTextureUsage.COPY_DST)
     );
   });
 
-g.test('destination_texture_sample_count')
+g.test('destination_texture,sample_count')
   .params(
     params()
       .combine(poptions('sampleCount', [1, 4]))
-      .combine(poptions('noopCopy', [true, false]))
+      .combine(
+        poptions('copySize', [
+          { width: 0, height: 0, depth: 0 },
+          { width: 1, height: 1, depth: 1 },
+        ])
+      )
   )
   .fn(async t => {
-    const { sampleCount, noopCopy } = t.params;
+    const { sampleCount, copySize } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
     const dstTexture = t.device.createTexture({
       size: { width: 1, height: 1, depth: 1 },
@@ -303,22 +281,22 @@ g.test('destination_texture_sample_count')
       usage: GPUTextureUsage.COPY_DST,
     });
 
-    t.runTest(
-      { imageBitmap },
-      { texture: dstTexture },
-      noopCopy ? { width: 0, height: 0, depth: 0 } : { width: 1, height: 1, depth: 1 },
-      sampleCount === 1
-    );
+    t.runTest({ imageBitmap }, { texture: dstTexture }, copySize, sampleCount === 1);
   });
 
-g.test('destination_texture_mipLevel')
+g.test('destination_texture,mipLevel')
   .params(
     params()
       .combine(poptions('mipLevel', [0, kDefaultMipLevelCount - 1, kDefaultMipLevelCount]))
-      .combine(poptions('noopCopy', [true, false]))
+      .combine(
+        poptions('copySize', [
+          { width: 0, height: 0, depth: 0 },
+          { width: 1, height: 1, depth: 1 },
+        ])
+      )
   )
   .fn(async t => {
-    const { mipLevel, noopCopy } = t.params;
+    const { mipLevel, copySize } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
     const dstTexture = t.device.createTexture({
       size: { width: kDefaultWidth, height: kDefaultHeight, depth: kDefaultDepth },
@@ -330,19 +308,24 @@ g.test('destination_texture_mipLevel')
     t.runTest(
       { imageBitmap },
       { texture: dstTexture, mipLevel },
-      noopCopy ? { width: 0, height: 0, depth: 0 } : { width: 1, height: 1, depth: 1 },
+      copySize,
       mipLevel < kDefaultMipLevelCount
     );
   });
 
-g.test('desitnation_texture_format')
+g.test('destination_texture,format')
   .params(
     params()
       .combine(poptions('format', kAllTextureFormats))
-      .combine(poptions('noopCopy', [true, false]))
+      .combine(
+        poptions('copySize', [
+          { width: 0, height: 0, depth: 0 },
+          { width: 1, height: 1, depth: 1 },
+        ])
+      )
   )
   .fn(async t => {
-    const { format, noopCopy } = t.params;
+    const { format, copySize } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
 
     // createTexture with all possible texture format may have validation error when using
@@ -360,17 +343,17 @@ g.test('desitnation_texture_format')
     t.runTest(
       { imageBitmap },
       { texture: dstTexture },
-      noopCopy ? { width: 0, height: 0, depth: 0 } : { width: 1, height: 1, depth: 1 },
-      success,
+      copySize,
+      true, // No validation errors.
       success ? '' : 'TypeError'
     );
   });
 
-g.test('src_OOB')
+g.test('OOB,source')
   .params(
     params()
       .combine(
-        poptions('srcOriginValue', [
+        poptions('srcOrigin', [
           { x: 0, y: 0 }, // origin is on top-left
           { x: kDefaultWidth - 1, y: 0 }, // x near the border
           { x: 0, y: kDefaultHeight - 1 }, // y is near the border
@@ -382,7 +365,7 @@ g.test('src_OOB')
       .expand(generateCopySizeForSrcOOB)
   )
   .fn(async t => {
-    const { srcOriginValue, copySize } = t.params;
+    const { srcOrigin, copySize } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(kDefaultWidth, kDefaultHeight));
     const dstTexture = t.device.createTexture({
       size: { width: kDefaultWidth + 1, height: kDefaultHeight + 1, depth: kDefaultDepth },
@@ -392,27 +375,19 @@ g.test('src_OOB')
     });
 
     let success = true;
-    let exceptionName: string | undefined;
 
     if (
-      srcOriginValue.x + copySize.width > kDefaultWidth ||
-      srcOriginValue.y + copySize.height > kDefaultHeight ||
+      srcOrigin.x + copySize.width > kDefaultWidth ||
+      srcOrigin.y + copySize.height > kDefaultHeight ||
       copySize.depth > 1
     ) {
       success = false;
-      exceptionName = 'RangeError';
     }
 
-    t.runTest(
-      { imageBitmap, origin: srcOriginValue },
-      { texture: dstTexture },
-      copySize,
-      success,
-      exceptionName
-    );
+    t.runTest({ imageBitmap, origin: srcOrigin }, { texture: dstTexture }, copySize, success);
   });
 
-g.test('dst_OOB')
+g.test('OOB,destination')
   .params(
     params()
       .combine(poptions('mipLevel', [0, 1, kDefaultMipLevelCount - 2]))
@@ -420,7 +395,7 @@ g.test('dst_OOB')
       .expand(generateCopySizeForDstOOB)
   )
   .fn(async t => {
-    const { mipLevel, dstOriginValue, copySize } = t.params;
+    const { mipLevel, dstOrigin, copySize } = t.params;
 
     const imageBitmap = await createImageBitmap(
       t.getImageData(kDefaultWidth + 1, kDefaultHeight + 1)
@@ -437,19 +412,13 @@ g.test('dst_OOB')
     });
 
     let success = true;
-    let exceptionName: string | undefined;
-
     const dstMipMapSize = computeMipMapSize(kDefaultWidth, kDefaultHeight, mipLevel);
 
-    if (copySize.depth > 1) {
-      success = false;
-      exceptionName = 'RangeError';
-    }
-
     if (
-      dstOriginValue.x + copySize.width > dstMipMapSize.mipWidth ||
-      dstOriginValue.y + copySize.height > dstMipMapSize.mipHeight ||
-      dstOriginValue.z + copySize.depth > kDefaultDepth
+      copySize.depth > 1 ||
+      dstOrigin.x + copySize.width > dstMipMapSize.mipWidth ||
+      dstOrigin.y + copySize.height > dstMipMapSize.mipHeight ||
+      dstOrigin.z + copySize.depth > kDefaultDepth
     ) {
       success = false;
     }
@@ -459,10 +428,9 @@ g.test('dst_OOB')
       {
         texture: dstTexture,
         mipLevel,
-        origin: dstOriginValue,
+        origin: dstOrigin,
       },
       copySize,
-      success,
-      exceptionName
+      success
     );
   });
