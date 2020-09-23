@@ -24,8 +24,8 @@ Test Coverage:
 
   - Tests replaced bindings:
     - Texture usages via bindings replaced by another setBindGroup() upon the same bindGroup index
-      in render pass should be validated. However, replaced bindings crorss dispatch calls should
-      not be validated.
+      in render pass should be validated. However, replaced bindings should not be validated in
+      compute pass.
 
   - Test texture usages in bundle:
     - Texture usages in bundle should be validated if that bundle is executed in the current scope.
@@ -735,8 +735,8 @@ g.test('shader_stages_and_visibility')
   });
 
 // We should validate the texture usages in bindings which are replaced by another setBindGroup()
-// call site upon the same index in the same render pass. However, replaced bindings across dispatch
-// calls should not be validated.
+// call site upon the same index in the same render pass. However, replaced bindings in compute
+// should not be validated.
 g.test('replaced_binding')
   .params(
     params()
@@ -794,8 +794,9 @@ g.test('replaced_binding')
     pass.endPass();
 
     let success = !t.isWritableBinding(bindingType);
-    // Replaced bindings across dispatch calls should not be validated in compute pass.
-    if (compute && callDrawOrDispatch) success = true;
+    // Replaced bindings should not be validated in compute pass, because validation only occurs
+    // inside dispatch() which only looks at the current resource usages.
+    if (compute) success = true;
 
     t.expectValidationError(() => {
       encoder.finish();
