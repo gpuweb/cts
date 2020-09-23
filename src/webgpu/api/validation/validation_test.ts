@@ -3,6 +3,39 @@ import { BindableResource } from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 
 export class ValidationTest extends GPUTest {
+  createTextureWithState(
+    state: 'valid' | 'invalid' | 'destroyed',
+    descriptor?: GPUTextureDescriptor
+  ): GPUTexture {
+    const defaultDescriptor: GPUTextureDescriptor = {
+      size: { width: 1, height: 1, depth: 1 },
+      format: 'rgba8unorm',
+      usage:
+        GPUTextureUsage.COPY_SRC |
+        GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.SAMPLED |
+        GPUTextureUsage.STORAGE |
+        GPUTextureUsage.OUTPUT_ATTACHMENT,
+    };
+
+    let texture: GPUTexture;
+    switch (state) {
+      case 'valid':
+        texture = this.device.createTexture(descriptor ? descriptor : defaultDescriptor);
+        break;
+      case 'invalid':
+        texture = this.getErrorTexture();
+        break;
+      case 'destroyed':
+        texture = this.device.createTexture(descriptor ? descriptor : defaultDescriptor);
+        texture.destroy();
+        break;
+      default:
+        unreachable();
+    }
+    return texture;
+  }
+
   getStorageBuffer(): GPUBuffer {
     return this.device.createBuffer({ size: 1024, usage: GPUBufferUsage.STORAGE });
   }
