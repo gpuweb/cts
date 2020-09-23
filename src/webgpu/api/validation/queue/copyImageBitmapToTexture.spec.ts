@@ -221,13 +221,7 @@ g.test('destination_texture,state')
   .fn(async t => {
     const { state, copySize } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
-    const descriptor: GPUTextureDescriptor = {
-      size:
-        state === 'invalid' ? { width: 0, height: 0, depth: 0 } : { width: 1, height: 1, depth: 1 },
-      format: 'bgra8unorm',
-      usage: GPUTextureUsage.COPY_DST,
-    };
-    const dstTexture = t.createTextureWithState(state, descriptor);
+    const dstTexture = t.createTextureWithState(state);
 
     t.runTest({ imageBitmap }, { texture: dstTexture }, copySize, state === 'valid');
   });
