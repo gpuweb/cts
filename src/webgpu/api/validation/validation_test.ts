@@ -148,16 +148,20 @@ export class ValidationTest extends GPUTest {
     });
   }
 
-  expectValidationError(fn: Function, shouldError: boolean = true): void {
+  expectValidationError(
+    fn: Function,
+    shouldError: boolean = true,
+    deviceToTest: GPUDevice = this.device
+  ): void {
     // If no error is expected, we let the scope surrounding the test catch it.
     if (shouldError === false) {
       fn();
       return;
     }
 
-    this.device.pushErrorScope('validation');
+    deviceToTest.pushErrorScope('validation');
     fn();
-    const promise = this.device.popErrorScope();
+    const promise = deviceToTest.popErrorScope();
 
     this.eventualAsyncExpectation(async niceStack => {
       const gpuValidationError = await promise;

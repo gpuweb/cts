@@ -35,6 +35,31 @@ export class DevicePool {
     return this.holder.device;
   }
 
+  async acquireWithDeviceDescriptor(
+    devicedescriptor: GPUDeviceDescriptor
+  ): Promise<GPUDevice | null> {
+    assert(!this.failed, 'WebGPU device previously failed to initialize; not retrying');
+
+    if (this.holder === undefined) {
+      try {
+        this.holder = await DevicePool.makeHolderWithDeviceDescriptor(devicedescriptor);
+      } catch (ex) {
+        this.failed = true;
+        throw ex;
+      }
+    }
+
+    if (this.holder !== undefined) {
+      assert(!this.holder.acquired, 'Device was in use on DevicePool.acquire');
+      this.holder.acquired = true;
+
+      this.beginErrorScopes();
+      return this.holder.device;
+    }
+
+    return null;
+  }
+
   // When a test is done using a device, it's released back into the pool.
   // This waits for error scopes, checks their results, and checks for various error conditions.
   async release(device: GPUDevice): Promise<void> {
@@ -84,6 +109,30 @@ export class DevicePool {
     assert(adapter !== null);
     const device = await adapter.requestDevice();
     assert(device !== null);
+
+    const holder: DeviceHolder = {
+      acquired: false,
+      device,
+      lostReason: undefined,
+    };
+    holder.device.lost.then(ev => {
+      holder.lostReason = ev.message;
+    });
+    return holder;
+  }
+
+  // Gets a device with DeviceDescriptor and creates a DeviceHolder.
+  // If the device is lost, DeviceHolder.lostReason gets set.
+  private static async makeHolderWithDeviceDescriptor(
+    deviceDescriptor: GPUDeviceDescriptor
+  ): Promise<DeviceHolder | undefined> {
+    const gpu = getGPU();
+    const adapter = await gpu.requestAdapter();
+    assert(adapter !== null);
+    const device = await adapter.requestDevice(deviceDescriptor);
+    if (device === null) {
+      return undefined;
+    }
 
     const holder: DeviceHolder = {
       acquired: false,

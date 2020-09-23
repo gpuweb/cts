@@ -36,29 +36,49 @@ Test Plan: (TODO(jiawei.shao@intel.com): add tests on compressed formats, aspect
     texture subresources.
 `;
 
+import { DevicePool } from '../../../common/framework/gpu/device_pool.js';
 import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import {
-  kDepthStencilFormats,
-  kTextureUsages,
-  kUncompressedTextureFormats,
-} from '../../capability_info.js';
+import { kAllTextureFormats, kDepthStencilFormats, kTextureUsages } from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
 
+const devicePoolWithBCFormats = new DevicePool();
+
 class F extends ValidationTest {
+  async init(): Promise<void> {
+    await super.init();
+
+    this.deviceWithBCFormats = await devicePoolWithBCFormats.acquireWithDeviceDescriptor({
+      extensions: ['texture-compression-bc'],
+    });
+  }
+
+  async finalize(): Promise<void> {
+    await super.finalize();
+
+    if (this.deviceWithBCFormats !== null) {
+      await devicePoolWithBCFormats.release(this.deviceWithBCFormats);
+    }
+  }
+
   TestCopyTextureToTexture(
     source: GPUTextureCopyView,
     destination: GPUTextureCopyView,
     copySize: GPUExtent3D,
-    isSuccess: boolean
+    isSuccess: boolean,
+    deviceToTest: GPUDevice = this.device
   ): void {
-    const commandEncoder = this.device.createCommandEncoder();
+    const commandEncoder = deviceToTest.createCommandEncoder();
     commandEncoder.copyTextureToTexture(source, destination, copySize);
 
-    this.expectValidationError(() => {
-      commandEncoder.finish();
-    }, !isSuccess);
+    this.expectValidationError(
+      () => {
+        commandEncoder.finish();
+      },
+      !isSuccess,
+      deviceToTest
+    );
   }
 
   // TODO(jiawei.shao@intel.com): support compressed texture formats
@@ -67,6 +87,25 @@ class F extends ValidationTest {
     const heightAtLevel = Math.max(textureSize.height >> mipLevel, 1);
     return { width: widthAtLevel, height: heightAtLevel, depth: textureSize.depth };
   }
+
+  deviceWithBCFormats: GPUDevice | null = null;
+
+  kBCFormats: GPUTextureFormat[] = [
+    'bc1-rgba-unorm',
+    'bc1-rgba-unorm-srgb',
+    'bc2-rgba-unorm',
+    'bc2-rgba-unorm-srgb',
+    'bc3-rgba-unorm',
+    'bc3-rgba-unorm-srgb',
+    'bc4-r-snorm',
+    'bc4-r-unorm',
+    'bc5-rg-snorm',
+    'bc5-rg-unorm',
+    'bc6h-rgb-sfloat',
+    'bc6h-rgb-ufloat',
+    'bc7-rgba-unorm',
+    'bc7-rgba-unorm-srgb',
+  ];
 }
 
 export const g = makeTestGroup(F);
@@ -244,24 +283,35 @@ g.test('multisampled_copy_restrictions')
     );
   });
 
-g.test('uncompressed_texture_format_equality')
+g.test('texture_format_equality')
   .params(
     params()
-      .combine(poptions('srcFormat', kUncompressedTextureFormats))
-      .combine(poptions('dstFormat', kUncompressedTextureFormats))
+      .combine(poptions('srcFormat', kAllTextureFormats))
+      .combine(poptions('dstFormat', kAllTextureFormats))
   )
   .fn(async t => {
     const { srcFormat, dstFormat } = t.params;
 
+    let deviceForTest: GPUDevice | null;
+    if (t.kBCFormats.includes(srcFormat) || t.kBCFormats.includes(dstFormat)) {
+      // Early return when "texture-compression-bc" is not supported.
+      if (t.deviceWithBCFormats === null) {
+        return;
+      }
+      deviceForTest = t.deviceWithBCFormats;
+    } else {
+      deviceForTest = t.device;
+    }
+
     const kTextureSize = { width: 16, height: 16, depth: 1 };
 
-    const srcTexture = t.device.createTexture({
+    const srcTexture = deviceForTest.createTexture({
       size: kTextureSize,
       format: srcFormat,
       usage: GPUTextureUsage.COPY_SRC,
     });
 
-    const dstTexture = t.device.createTexture({
+    const dstTexture = deviceForTest.createTexture({
       size: kTextureSize,
       format: dstFormat,
       usage: GPUTextureUsage.COPY_DST,
@@ -272,7 +322,8 @@ g.test('uncompressed_texture_format_equality')
       { texture: srcTexture },
       { texture: dstTexture },
       kTextureSize,
-      isSuccess
+      isSuccess,
+      deviceForTest
     );
   });
 
