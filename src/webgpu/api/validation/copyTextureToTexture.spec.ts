@@ -39,19 +39,24 @@ Test Plan: (TODO(jiawei.shao@intel.com): add tests on compressed formats, aspect
 import { DevicePool } from '../../../common/framework/gpu/device_pool.js';
 import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { kAllTextureFormats, kDepthStencilFormats, kTextureUsages } from '../../capability_info.js';
+import {
+  kAllTextureFormats,
+  kAllTextureFormatInfo,
+  kDepthStencilFormats,
+  kTextureUsages,
+} from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
 
-const devicePoolWithBCFormats = new DevicePool();
+const devicePoolWithBCFormats = new DevicePool({
+  extensions: ['texture-compression-bc'],
+});
 
 class F extends ValidationTest {
   async init(): Promise<void> {
     await super.init();
 
-    this.deviceWithBCFormats = await devicePoolWithBCFormats.acquireWithDeviceDescriptor({
-      extensions: ['texture-compression-bc'],
-    });
+    this.deviceWithBCFormats = await devicePoolWithBCFormats.acquire();
   }
 
   async finalize(): Promise<void> {
@@ -81,31 +86,21 @@ class F extends ValidationTest {
     );
   }
 
+  static IsBCFormat(format: GPUTextureFormat): boolean {
+    return kAllTextureFormatInfo[format].extension === 'texture-compression-bc';
+  }
+
   // TODO(jiawei.shao@intel.com): support compressed texture formats
-  GetPhysicalSubresourceSize(textureSize: GPUExtent3DDict, mipLevel: number): GPUExtent3DDict {
+  static GetPhysicalSubresourceSize(
+    textureSize: GPUExtent3DDict,
+    mipLevel: number
+  ): GPUExtent3DDict {
     const widthAtLevel = Math.max(textureSize.width >> mipLevel, 1);
     const heightAtLevel = Math.max(textureSize.height >> mipLevel, 1);
     return { width: widthAtLevel, height: heightAtLevel, depth: textureSize.depth };
   }
 
   deviceWithBCFormats: GPUDevice | null = null;
-
-  kBCFormats: GPUTextureFormat[] = [
-    'bc1-rgba-unorm',
-    'bc1-rgba-unorm-srgb',
-    'bc2-rgba-unorm',
-    'bc2-rgba-unorm-srgb',
-    'bc3-rgba-unorm',
-    'bc3-rgba-unorm-srgb',
-    'bc4-r-snorm',
-    'bc4-r-unorm',
-    'bc5-rg-snorm',
-    'bc5-rg-unorm',
-    'bc6h-rgb-sfloat',
-    'bc6h-rgb-ufloat',
-    'bc7-rgba-unorm',
-    'bc7-rgba-unorm-srgb',
-  ];
 }
 
 export const g = makeTestGroup(F);
@@ -293,7 +288,7 @@ g.test('texture_format_equality')
     const { srcFormat, dstFormat } = t.params;
 
     let deviceForTest: GPUDevice | null;
-    if (t.kBCFormats.includes(srcFormat) || t.kBCFormats.includes(dstFormat)) {
+    if (F.IsBCFormat(srcFormat) || F.IsBCFormat(dstFormat)) {
       // Early return when "texture-compression-bc" is not supported.
       if (t.deviceWithBCFormats === null) {
         return;
@@ -381,8 +376,8 @@ g.test('depth_stencil_copy_restrictions')
       usage: GPUTextureUsage.COPY_DST,
     });
 
-    const srcSizeAtLevel = t.GetPhysicalSubresourceSize(srcTextureSize, srcCopyLevel);
-    const dstSizeAtLevel = t.GetPhysicalSubresourceSize(dstTextureSize, dstCopyLevel);
+    const srcSizeAtLevel = F.GetPhysicalSubresourceSize(srcTextureSize, srcCopyLevel);
+    const dstSizeAtLevel = F.GetPhysicalSubresourceSize(dstTextureSize, dstCopyLevel);
 
     const copyOrigin = { x: copyBoxOffsets.x, y: copyBoxOffsets.y, z: 0 };
 
@@ -455,8 +450,8 @@ g.test('copy_ranges')
       usage: GPUTextureUsage.COPY_DST,
     });
 
-    const srcSizeAtLevel = t.GetPhysicalSubresourceSize(kTextureSize, srcCopyLevel);
-    const dstSizeAtLevel = t.GetPhysicalSubresourceSize(kTextureSize, dstCopyLevel);
+    const srcSizeAtLevel = F.GetPhysicalSubresourceSize(kTextureSize, srcCopyLevel);
+    const dstSizeAtLevel = F.GetPhysicalSubresourceSize(kTextureSize, dstCopyLevel);
 
     const copyOrigin = { x: copyBoxOffsets.x, y: copyBoxOffsets.y, z: copyBoxOffsets.z };
 

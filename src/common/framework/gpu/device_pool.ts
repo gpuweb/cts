@@ -17,32 +17,18 @@ export class DevicePool {
   failed: boolean = false; // if device init failed once, never try again
   holder?: DeviceHolder = undefined; // undefined if "uninitialized" (not yet initialized, or lost)
 
-  async acquire(): Promise<GPUDevice> {
-    assert(!this.failed, 'WebGPU device previously failed to initialize; not retrying');
+  deviceDescriptor?: GPUDeviceDescriptor = undefined;
 
-    if (this.holder === undefined) {
-      try {
-        this.holder = await DevicePool.makeHolder();
-      } catch (ex) {
-        this.failed = true;
-        throw ex;
-      }
-    }
-    assert(!this.holder.acquired, 'Device was in use on DevicePool.acquire');
-    this.holder.acquired = true;
-
-    this.beginErrorScopes();
-    return this.holder.device;
+  constructor(deviceDescriptor?: GPUDeviceDescriptor) {
+    this.deviceDescriptor = deviceDescriptor;
   }
 
-  async acquireWithDeviceDescriptor(
-    devicedescriptor: GPUDeviceDescriptor
-  ): Promise<GPUDevice | null> {
+  async acquire(): Promise<GPUDevice | null> {
     assert(!this.failed, 'WebGPU device previously failed to initialize; not retrying');
 
     if (this.holder === undefined) {
       try {
-        this.holder = await DevicePool.makeHolderWithDeviceDescriptor(devicedescriptor);
+        this.holder = await this.makeHolder();
       } catch (ex) {
         this.failed = true;
         throw ex;
@@ -101,35 +87,13 @@ export class DevicePool {
     }
   }
 
-  // Gets a device and creates a DeviceHolder.
-  // If the device is lost, DeviceHolder.lostReason gets set.
-  private static async makeHolder(): Promise<DeviceHolder> {
-    const gpu = getGPU();
-    const adapter = await gpu.requestAdapter();
-    assert(adapter !== null);
-    const device = await adapter.requestDevice();
-    assert(device !== null);
-
-    const holder: DeviceHolder = {
-      acquired: false,
-      device,
-      lostReason: undefined,
-    };
-    holder.device.lost.then(ev => {
-      holder.lostReason = ev.message;
-    });
-    return holder;
-  }
-
   // Gets a device with DeviceDescriptor and creates a DeviceHolder.
   // If the device is lost, DeviceHolder.lostReason gets set.
-  private static async makeHolderWithDeviceDescriptor(
-    deviceDescriptor: GPUDeviceDescriptor
-  ): Promise<DeviceHolder | undefined> {
+  private async makeHolder(): Promise<DeviceHolder | undefined> {
     const gpu = getGPU();
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
-    const device = await adapter.requestDevice(deviceDescriptor);
+    const device = await adapter.requestDevice(this.deviceDescriptor);
     if (device === null) {
       return undefined;
     }

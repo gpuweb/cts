@@ -52,6 +52,7 @@ export class GPUTest extends Fixture {
     await super.init();
 
     const device = await devicePool.acquire();
+    assert(device !== null);
     const queue = device.defaultQueue;
     this.objects = { device, queue };
   }
