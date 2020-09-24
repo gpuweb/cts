@@ -6,8 +6,9 @@ type Encoder = GPUCommandEncoder | GPUProgrammablePassEncoder | GPURenderBundleE
 export const kEncoderTypes = ['non-pass', 'compute pass', 'render pass', 'render bundle'] as const;
 type EncoderType = typeof kEncoderTypes[number];
 
-interface FinishableEncoder {
-  finishEncoder(): GPUCommandBuffer;
+interface CommandBufferMaker<E extends Encoder> {
+  readonly encoder: E;
+  finish(): GPUCommandBuffer;
 }
 
 export class ValidationTest extends GPUTest {
@@ -156,50 +157,55 @@ export class ValidationTest extends GPUTest {
     });
   }
 
-  createEncoder(encoderType: 'non-pass'): GPUCommandEncoder & FinishableEncoder;
-  createEncoder(encoderType: 'render pass'): GPURenderPassEncoder & FinishableEncoder;
-  createEncoder(encoderType: 'compute pass'): GPUComputePassEncoder & FinishableEncoder;
-  createEncoder(encoderType: 'render bundle'): GPURenderBundleEncoder & FinishableEncoder;
+  createEncoder(encoderType: 'non-pass'): CommandBufferMaker<GPUCommandEncoder>;
+  createEncoder(encoderType: 'render pass'): CommandBufferMaker<GPURenderPassEncoder>;
+  createEncoder(encoderType: 'compute pass'): CommandBufferMaker<GPUComputePassEncoder>;
+  createEncoder(encoderType: 'render bundle'): CommandBufferMaker<GPURenderBundleEncoder>;
   createEncoder(
     encoderType: 'render pass' | 'render bundle'
-  ): (GPURenderPassEncoder | GPURenderBundleEncoder) & FinishableEncoder;
+  ): CommandBufferMaker<GPURenderPassEncoder | GPURenderBundleEncoder>;
   createEncoder(
     encoderType: 'compute pass' | 'render pass' | 'render bundle'
-  ): GPUProgrammablePassEncoder & FinishableEncoder;
-  createEncoder(encoderType: EncoderType): Encoder & FinishableEncoder;
-  createEncoder(encoderType: EncoderType): Encoder & FinishableEncoder {
+  ): CommandBufferMaker<GPUProgrammablePassEncoder>;
+  createEncoder(encoderType: EncoderType): CommandBufferMaker<Encoder>;
+  createEncoder(encoderType: EncoderType): CommandBufferMaker<Encoder> {
     const colorFormat = 'rgba8unorm';
     switch (encoderType) {
       case 'non-pass': {
-        const encoder = (this.device.createCommandEncoder() as unknown) as GPUCommandEncoder &
-          FinishableEncoder;
-        encoder.finishEncoder = () => {
-          return encoder.finish();
+        const encoder = this.device.createCommandEncoder();
+        return {
+          encoder,
+
+          finish: () => {
+            return encoder.finish();
+          },
         };
-        return encoder;
       }
       case 'render bundle': {
         const device = this.device;
-        const encoder = (device.createRenderBundleEncoder({
+        const encoder = device.createRenderBundleEncoder({
           colorFormats: [colorFormat],
-        }) as unknown) as GPURenderBundleEncoder & FinishableEncoder;
+        });
         const pass = this.createEncoder('render pass');
-        encoder.finishEncoder = () => {
-          const bundle = encoder.finish();
-          pass.executeBundles([bundle]);
-          return pass.finishEncoder();
+        return {
+          encoder,
+          finish: () => {
+            const bundle = encoder.finish();
+            pass.encoder.executeBundles([bundle]);
+            return pass.finish();
+          },
         };
-        return encoder;
       }
       case 'compute pass': {
         const commandEncoder = this.device.createCommandEncoder();
-        const encoder = (commandEncoder.beginComputePass({}) as unknown) as GPUComputePassEncoder &
-          FinishableEncoder;
-        encoder.finishEncoder = () => {
-          encoder.endPass();
-          return commandEncoder.finish();
+        const encoder = commandEncoder.beginComputePass();
+        return {
+          encoder,
+          finish: () => {
+            encoder.endPass();
+            return commandEncoder.finish();
+          },
         };
-        return encoder;
       }
       case 'render pass': {
         const commandEncoder = this.device.createCommandEncoder();
@@ -210,19 +216,21 @@ export class ValidationTest extends GPUTest {
             usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
           })
           .createView();
-        const encoder = (commandEncoder.beginRenderPass({
+        const encoder = commandEncoder.beginRenderPass({
           colorAttachments: [
             {
               attachment,
               loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
             },
           ],
-        }) as unknown) as GPURenderPassEncoder & FinishableEncoder;
-        encoder.finishEncoder = () => {
-          encoder.endPass();
-          return commandEncoder.finish();
+        });
+        return {
+          encoder,
+          finish: () => {
+            encoder.endPass();
+            return commandEncoder.finish();
+          },
         };
-        return encoder;
       }
     }
   }

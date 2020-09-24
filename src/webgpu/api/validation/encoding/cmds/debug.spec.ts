@@ -26,7 +26,7 @@ g.test('debug_group_balanced')
       .combine(poptions('popCount', [0, 1, 2]))
   )
   .fn(t => {
-    const encoder = t.createEncoder(t.params.encoderType);
+    const { encoder, finish } = t.createEncoder(t.params.encoderType);
     for (let i = 0; i < t.params.pushCount; ++i) {
       encoder.pushDebugGroup(`${i}`);
     }
@@ -35,7 +35,7 @@ g.test('debug_group_balanced')
     }
     const shouldError = t.params.popCount !== t.params.pushCount;
     t.expectValidationError(() => {
-      const commandBuffer = encoder.finishEncoder();
+      const commandBuffer = finish();
       t.queue.submit([commandBuffer]);
     }, shouldError);
   });
@@ -47,10 +47,10 @@ g.test('debug_group')
       .combine(poptions('label', ['', 'group']))
   )
   .fn(t => {
-    const encoder = t.createEncoder(t.params.encoderType);
+    const { encoder, finish } = t.createEncoder(t.params.encoderType);
     encoder.pushDebugGroup(t.params.label);
     encoder.popDebugGroup();
-    const commandBuffer = encoder.finishEncoder();
+    const commandBuffer = finish();
     t.queue.submit([commandBuffer]);
   });
 
@@ -61,8 +61,8 @@ g.test('debug_marker')
       .combine(poptions('label', ['', 'marker']))
   )
   .fn(t => {
-    const encoder = t.createEncoder(t.params.encoderType);
-    encoder.insertDebugMarker(t.params.label);
-    const commandBuffer = encoder.finishEncoder();
+    const maker = t.createEncoder(t.params.encoderType);
+    maker.encoder.insertDebugMarker(t.params.label);
+    const commandBuffer = maker.finish();
     t.queue.submit([commandBuffer]);
   });
