@@ -1,11 +1,5 @@
 import { SkipTestCase } from '../fixture.js';
-import {
-  assert,
-  raceWithRejectOnTimeout,
-  unreachable,
-  assertReject,
-  objectEquals,
-} from '../util/util.js';
+import { assert, raceWithRejectOnTimeout, unreachable, assertReject } from '../util/util.js';
 
 import { getGPU } from './implementation.js';
 
@@ -85,24 +79,18 @@ export class DevicePool {
   }
 }
 
-interface DescriptorToDevice {
-  key: GPUDeviceDescriptor;
-  value: DeviceHolder;
-}
-
 /**
  * Map from GPUDeviceDescriptor to DeviceHolder.
  */
 class DescriptorToDeviceMap {
-  private unsupported: GPUDeviceDescriptor[] = [];
-  // TODO: Do something like stringifyPublicParamsUniquely if searching this array gets too slow.
-  private items: Set<DescriptorToDevice> = new Set();
+  private unsupported: Set<string> = new Set();
+  private items: Map<string, DeviceHolder> = new Map();
 
   /** Deletes an item from the map by GPUDevice value. */
   deleteByDevice(device: GPUDevice): void {
-    for (const item of this.items) {
-      if (item.value.device === device) {
-        this.items.delete(item);
+    for (const [k, v] of this.items) {
+      if (v.device === device) {
+        this.items.delete(k);
         return;
       }
     }
@@ -115,23 +103,25 @@ class DescriptorToDeviceMap {
    * Throws SkipTestCase if devices with this descriptor are unsupported.
    */
   async getOrInsert(
-    key: GPUDeviceDescriptor,
+    descriptor: GPUDeviceDescriptor,
     create: () => Promise<DeviceHolder>
   ): Promise<DeviceHolder> {
+    const key = makeKeyFromDescriptor(descriptor);
     // Never retry unsupported configurations.
-    for (const desc of this.unsupported) {
-      if (objectEquals(key, desc)) {
-        throw new SkipTestCase(`GPUDeviceDescriptor previously failed: ${JSON.stringify(key)}`);
-      }
+    if (this.unsupported.has(key)) {
+      throw new SkipTestCase(
+        `GPUDeviceDescriptor previously failed: ${JSON.stringify(descriptor)}`
+      );
     }
 
     // Search for an existing device with the same descriptor.
-    for (const item of this.items) {
-      if (objectEquals(key, item.key)) {
-        // Move the item to the end of the set (most recently used).
-        this.items.delete(item);
-        this.items.add(item);
-        return item.value;
+    {
+      const value = this.items.get(key);
+      if (value) {
+        // Move it to the end of the Map (most-recently-used).
+        this.items.delete(key);
+        this.items.set(key, value);
+        return value;
       }
     }
 
@@ -140,28 +130,52 @@ class DescriptorToDeviceMap {
     try {
       value = await create();
     } catch (ex) {
-      this.unsupported.push(key);
+      this.unsupported.add(key);
       throw new SkipTestCase(
-        `GPUDeviceDescriptor not supported: ${JSON.stringify(key)}\n${ex?.message ?? ''}`
+        `GPUDeviceDescriptor not supported: ${JSON.stringify(descriptor)}\n${ex?.message ?? ''}`
       );
     }
-    this.insertAndCleanUp({ key, value });
+    this.insertAndCleanUp(key, value);
     return value;
   }
 
   /** Insert an entry, then remove the least-recently-used items if there are too many. */
-  private insertAndCleanUp(kv: DescriptorToDevice) {
-    this.items.add(kv);
+  private insertAndCleanUp(key: string, value: DeviceHolder) {
+    this.items.set(key, value);
 
     const kMaxEntries = 5;
     if (this.items.size > kMaxEntries) {
       // Delete the first (least recently used) item in the set.
-      for (const item of this.items) {
-        this.items.delete(item);
+      for (const [key] of this.items) {
+        this.items.delete(key);
         return;
       }
     }
   }
+}
+
+/**
+ * Make a stringified map-key from a GPUDeviceDescriptor.
+ * Tries to make sure all defaults are resolved, first - but it's okay if some are missed
+ * (it just means some GPUDevice objects won't get deduplicated).
+ */
+function makeKeyFromDescriptor(desc: GPUDeviceDescriptor): string {
+  const extensions = desc.extensions ? Array.from(desc.extensions).sort() : [];
+  const limits: Required<GPULimits> = {
+    // Note: pre-populating all these fields also sets the order, so the object
+    // keys will have consistent ordering in JSON.
+    maxBindGroups: 4,
+    maxDynamicUniformBuffersPerPipelineLayout: 8,
+    maxDynamicStorageBuffersPerPipelineLayout: 4,
+    maxSampledTexturesPerShaderStage: 16,
+    maxSamplersPerShaderStage: 16,
+    maxStorageBuffersPerShaderStage: 4,
+    maxStorageTexturesPerShaderStage: 4,
+    maxUniformBuffersPerShaderStage: 12,
+    maxUniformBufferBindingSize: 16384,
+    ...desc.limits,
+  };
+  return JSON.stringify({ extensions, limits });
 }
 
 /**
