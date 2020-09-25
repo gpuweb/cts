@@ -1,5 +1,9 @@
 import { Fixture } from '../common/framework/fixture.js';
-import { DevicePool, TestOOMedShouldAttemptGC } from '../common/framework/gpu/device_pool.js';
+import {
+  DevicePool,
+  DeviceProvider,
+  TestOOMedShouldAttemptGC,
+} from '../common/framework/gpu/device_pool.js';
 import { attemptGarbageCollection } from '../common/framework/util/collect_garbage.js';
 import { assert } from '../common/framework/util/util.js';
 
@@ -35,38 +39,60 @@ type TypedArrayBufferViewConstructor =
 const devicePool = new DevicePool();
 
 export class GPUTest extends Fixture {
-  private objects: { device: GPUDevice; queue: GPUQueue } | undefined = undefined;
-  initialized = false;
+  private provider: DeviceProvider | undefined;
+  /** Must not be replaced once acquired. */
+  private acquiredDevice: GPUDevice | undefined;
 
   get device(): GPUDevice {
-    assert(this.objects !== undefined);
-    return this.objects.device;
+    assert(
+      this.provider !== undefined,
+      'No provider available yet; did you "await" on asyncReinitDeviceWithDescriptor?'
+    );
+    if (!this.acquiredDevice) {
+      this.acquiredDevice = this.provider.acquire();
+    }
+    return this.acquiredDevice;
   }
 
   get queue(): GPUQueue {
-    assert(this.objects !== undefined);
-    return this.objects.queue;
+    return this.device.defaultQueue;
   }
 
   async init(): Promise<void> {
     await super.init();
 
-    const device = await devicePool.acquire();
-    const queue = device.defaultQueue;
-    this.objects = { device, queue };
+    this.provider = await devicePool.reserve();
+  }
+
+  /**
+   * GPUTest instances always start with a reserved GPUDevice.
+   * However, some tests need particular extensions to be enabled.
+   * Call this function to re-reserve a GPUDevice with the appropriate extensions.
+   */
+  async asyncReinitDeviceWithDescriptor(descriptor: GPUDeviceDescriptor): Promise<void> {
+    assert(this.provider !== undefined);
+    // Make sure the device isn't replaced after it's been retrieved once.
+    assert(!this.acquiredDevice, 'asyncReinitDeviceWithDescriptor after the device has been used');
+
+    const oldProvider = this.provider;
+    this.provider = undefined;
+    await devicePool.release(oldProvider);
+
+    this.provider = await devicePool.reserve(descriptor);
+    this.acquiredDevice = this.provider.acquire();
   }
 
   // Note: finalize is called even if init was unsuccessful.
   async finalize(): Promise<void> {
     await super.finalize();
 
-    if (this.objects) {
+    if (this.provider) {
       let threw: undefined | Error;
       {
-        const objects = this.objects;
-        this.objects = undefined;
+        const provider = this.provider;
+        this.provider = undefined;
         try {
-          await devicePool.release(objects.device);
+          await devicePool.release(provider);
         } catch (ex) {
           threw = ex;
         }

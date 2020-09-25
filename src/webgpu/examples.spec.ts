@@ -4,6 +4,7 @@ Examples of writing CTS tests with various features.
 Start here when looking for examples of basic framework usage.
 `;
 
+import { pbool } from '../common/framework/params_builder.js';
 import { makeTestGroup } from '../common/framework/test_group.js';
 
 import { GPUTest } from './gpu_test.js';
@@ -100,3 +101,43 @@ g.test('gpu,buffers').fn(async t => {
   // Like shouldReject, it must be awaited.
   t.expectContents(src, data);
 });
+
+// One of the following two tests should be skipped on most platforms.
+
+g.test('gpu,with_texture_compression,bc')
+  .params(pbool('textureCompressionBC'))
+  .fn(async t => {
+    const { textureCompressionBC } = t.params;
+
+    if (textureCompressionBC) {
+      await t.asyncReinitDeviceWithDescriptor({ extensions: ['texture-compression-bc'] });
+    }
+
+    const shouldError = !textureCompressionBC;
+    t.expectGPUError(
+      'validation',
+      () => {
+        t.device.createTexture({
+          format: 'bc1-rgba-unorm',
+          size: [4, 4, 1],
+          usage: GPUTextureUsage.SAMPLED,
+        });
+      },
+      shouldError
+    );
+  });
+
+g.test('gpu,with_texture_compression,etc')
+  .params(pbool('textureCompressionETC'))
+  .fn(async t => {
+    const { textureCompressionETC } = t.params;
+
+    if (textureCompressionETC) {
+      await t.asyncReinitDeviceWithDescriptor({
+        extensions: ['texture-compression-etc' as GPUExtensionName],
+      });
+    }
+
+    t.device;
+    // TODO: Should actually test createTexture with an ETC format here.
+  });
