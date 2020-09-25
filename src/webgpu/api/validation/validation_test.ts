@@ -2,6 +2,15 @@ import { unreachable } from '../../../common/framework/util/util.js';
 import { BindableResource } from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 
+type Encoder = GPUCommandEncoder | GPUProgrammablePassEncoder | GPURenderBundleEncoder;
+export const kEncoderTypes = ['non-pass', 'compute pass', 'render pass', 'render bundle'] as const;
+type EncoderType = typeof kEncoderTypes[number];
+
+interface CommandBufferMaker<E extends Encoder> {
+  readonly encoder: E;
+  finish(): GPUCommandBuffer;
+}
+
 export class ValidationTest extends GPUTest {
   createTextureWithState(
     state: 'valid' | 'invalid' | 'destroyed',
@@ -179,6 +188,84 @@ export class ValidationTest extends GPUTest {
         entryPoint: 'main',
       },
     });
+  }
+
+  createEncoder(encoderType: 'non-pass'): CommandBufferMaker<GPUCommandEncoder>;
+  createEncoder(encoderType: 'render pass'): CommandBufferMaker<GPURenderPassEncoder>;
+  createEncoder(encoderType: 'compute pass'): CommandBufferMaker<GPUComputePassEncoder>;
+  createEncoder(encoderType: 'render bundle'): CommandBufferMaker<GPURenderBundleEncoder>;
+  createEncoder(
+    encoderType: 'render pass' | 'render bundle'
+  ): CommandBufferMaker<GPURenderPassEncoder | GPURenderBundleEncoder>;
+  createEncoder(
+    encoderType: 'compute pass' | 'render pass' | 'render bundle'
+  ): CommandBufferMaker<GPUProgrammablePassEncoder>;
+  createEncoder(encoderType: EncoderType): CommandBufferMaker<Encoder>;
+  createEncoder(encoderType: EncoderType): CommandBufferMaker<Encoder> {
+    const colorFormat = 'rgba8unorm';
+    switch (encoderType) {
+      case 'non-pass': {
+        const encoder = this.device.createCommandEncoder();
+        return {
+          encoder,
+
+          finish: () => {
+            return encoder.finish();
+          },
+        };
+      }
+      case 'render bundle': {
+        const device = this.device;
+        const encoder = device.createRenderBundleEncoder({
+          colorFormats: [colorFormat],
+        });
+        const pass = this.createEncoder('render pass');
+        return {
+          encoder,
+          finish: () => {
+            const bundle = encoder.finish();
+            pass.encoder.executeBundles([bundle]);
+            return pass.finish();
+          },
+        };
+      }
+      case 'compute pass': {
+        const commandEncoder = this.device.createCommandEncoder();
+        const encoder = commandEncoder.beginComputePass();
+        return {
+          encoder,
+          finish: () => {
+            encoder.endPass();
+            return commandEncoder.finish();
+          },
+        };
+      }
+      case 'render pass': {
+        const commandEncoder = this.device.createCommandEncoder();
+        const attachment = this.device
+          .createTexture({
+            format: colorFormat,
+            size: { width: 16, height: 16, depth: 1 },
+            usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
+          })
+          .createView();
+        const encoder = commandEncoder.beginRenderPass({
+          colorAttachments: [
+            {
+              attachment,
+              loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+            },
+          ],
+        });
+        return {
+          encoder,
+          finish: () => {
+            encoder.endPass();
+            return commandEncoder.finish();
+          },
+        };
+      }
+    }
   }
 
   expectValidationError(fn: Function, shouldError: boolean = true): void {
