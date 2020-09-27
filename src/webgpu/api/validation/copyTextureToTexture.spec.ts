@@ -1,7 +1,7 @@
 export const description = `
 copyTextureToTexture tests.
 
-Test Plan: (TODO(jiawei.shao@intel.com): add tests on compressed formats, aspects, 1D/3D textures)
+Test Plan: (TODO(jiawei.shao@intel.com): add tests on aspects and 1D/3D textures)
 * the source and destination texture
   - the {source, destination} texture is {invalid, valid}.
   - mipLevel {>, =, <} the mipmap level count of the {source, destination} texture.
@@ -38,11 +38,15 @@ Test Plan: (TODO(jiawei.shao@intel.com): add tests on compressed formats, aspect
 
 import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { assert } from '../../../common/framework/util/util.js';
 import {
+  kAllTextureFormatInfo,
+  kAllTextureFormats,
+  kCompressedTextureFormats,
   kDepthStencilFormats,
   kTextureUsages,
-  kUncompressedTextureFormats,
 } from '../../capability_info.js';
+import { align } from '../../util/math.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -61,11 +65,22 @@ class F extends ValidationTest {
     }, !isSuccess);
   }
 
-  // TODO(jiawei.shao@intel.com): support compressed texture formats
-  GetPhysicalSubresourceSize(textureSize: GPUExtent3DDict, mipLevel: number): GPUExtent3DDict {
-    const widthAtLevel = Math.max(textureSize.width >> mipLevel, 1);
-    const heightAtLevel = Math.max(textureSize.height >> mipLevel, 1);
-    return { width: widthAtLevel, height: heightAtLevel, depth: textureSize.depth };
+  GetPhysicalSubresourceSize(
+    textureSize: GPUExtent3DDict,
+    format: GPUTextureFormat,
+    mipLevel: number
+  ): GPUExtent3DDict {
+    const virtualWidthAtLevel = Math.max(textureSize.width >> mipLevel, 1);
+    const virtualHeightAtLevel = Math.max(textureSize.height >> mipLevel, 1);
+    const physicalWidthAtLevel = align(
+      virtualWidthAtLevel,
+      kAllTextureFormatInfo[format].blockWidth
+    );
+    const physicalHeightAtLevel = align(
+      virtualHeightAtLevel,
+      kAllTextureFormatInfo[format].blockHeight
+    );
+    return { width: physicalWidthAtLevel, height: physicalHeightAtLevel, depth: textureSize.depth };
   }
 }
 
@@ -244,14 +259,34 @@ g.test('multisampled_copy_restrictions')
     );
   });
 
-g.test('uncompressed_texture_format_equality')
+g.test('texture_format_equality')
   .params(
     params()
-      .combine(poptions('srcFormat', kUncompressedTextureFormats))
-      .combine(poptions('dstFormat', kUncompressedTextureFormats))
+      .combine(poptions('srcFormat', kAllTextureFormats))
+      .combine(poptions('dstFormat', kAllTextureFormats))
   )
   .fn(async t => {
     const { srcFormat, dstFormat } = t.params;
+    const extensions: Array<GPUExtensionName> = [];
+
+    const srcFormatExtension = kAllTextureFormatInfo[srcFormat].extension;
+    if (srcFormatExtension !== undefined) {
+      if (!(await t.IsExtensionSupported(srcFormatExtension))) {
+        return;
+      }
+      extensions.push(srcFormatExtension);
+    }
+    const dstFormatExtension = kAllTextureFormatInfo[dstFormat].extension;
+    if (dstFormatExtension !== undefined) {
+      if (!(await t.IsExtensionSupported(dstFormatExtension))) {
+        return;
+      }
+      extensions.push(dstFormatExtension);
+    }
+
+    if (extensions.length) {
+      await t.asyncReinitDeviceWithDescriptor({ extensions });
+    }
 
     const kTextureSize = { width: 16, height: 16, depth: 1 };
 
@@ -330,8 +365,8 @@ g.test('depth_stencil_copy_restrictions')
       usage: GPUTextureUsage.COPY_DST,
     });
 
-    const srcSizeAtLevel = t.GetPhysicalSubresourceSize(srcTextureSize, srcCopyLevel);
-    const dstSizeAtLevel = t.GetPhysicalSubresourceSize(dstTextureSize, dstCopyLevel);
+    const srcSizeAtLevel = t.GetPhysicalSubresourceSize(srcTextureSize, format, srcCopyLevel);
+    const dstSizeAtLevel = t.GetPhysicalSubresourceSize(dstTextureSize, format, dstCopyLevel);
 
     const copyOrigin = { x: copyBoxOffsets.x, y: copyBoxOffsets.y, z: 0 };
 
@@ -390,22 +425,23 @@ g.test('copy_ranges')
 
     const kTextureSize = { width: 16, height: 8, depth: 3 };
     const kMipLevelCount = 4;
+    const kFormat = 'rgba8unorm';
 
     const srcTexture = t.device.createTexture({
       size: kTextureSize,
-      format: 'rgba8unorm',
+      format: kFormat,
       mipLevelCount: kMipLevelCount,
       usage: GPUTextureUsage.COPY_SRC,
     });
     const dstTexture = t.device.createTexture({
       size: kTextureSize,
-      format: 'rgba8unorm',
+      format: kFormat,
       mipLevelCount: kMipLevelCount,
       usage: GPUTextureUsage.COPY_DST,
     });
 
-    const srcSizeAtLevel = t.GetPhysicalSubresourceSize(kTextureSize, srcCopyLevel);
-    const dstSizeAtLevel = t.GetPhysicalSubresourceSize(kTextureSize, dstCopyLevel);
+    const srcSizeAtLevel = t.GetPhysicalSubresourceSize(kTextureSize, kFormat, srcCopyLevel);
+    const dstSizeAtLevel = t.GetPhysicalSubresourceSize(kTextureSize, kFormat, dstCopyLevel);
 
     const copyOrigin = { x: copyBoxOffsets.x, y: copyBoxOffsets.y, z: copyBoxOffsets.z };
 
@@ -479,4 +515,112 @@ g.test('copy_within_same_texture')
       { width: 16, height: 16, depth: copyExtentDepth },
       isSuccess
     );
+  });
+
+g.test('copy_ranges_with_compressed_texture_formats')
+  .params(
+    params()
+      .combine(poptions('format', kCompressedTextureFormats))
+      .combine(
+        poptions('copyBoxOffsets', [
+          { x: 0, y: 0, z: 0, width: 0, height: 0, depth: -2 },
+          { x: 1, y: 0, z: 0, width: 0, height: 0, depth: -2 },
+          { x: 4, y: 0, z: 0, width: 0, height: 0, depth: -2 },
+          { x: 0, y: 0, z: 0, width: -1, height: 0, depth: -2 },
+          { x: 0, y: 0, z: 0, width: -4, height: 0, depth: -2 },
+          { x: 0, y: 1, z: 0, width: 0, height: 0, depth: -2 },
+          { x: 0, y: 4, z: 0, width: 0, height: 0, depth: -2 },
+          { x: 0, y: 0, z: 0, width: 0, height: -1, depth: -2 },
+          { x: 0, y: 0, z: 0, width: 0, height: -4, depth: -2 },
+          { x: 0, y: 0, z: 0, width: 0, height: 0, depth: 0 },
+          { x: 0, y: 0, z: 1, width: 0, height: 0, depth: -1 },
+        ])
+      )
+      .combine(poptions('srcCopyLevel', [0, 1, 2]))
+      .combine(poptions('dstCopyLevel', [0, 1, 2]))
+  )
+  .fn(async t => {
+    const { format, copyBoxOffsets, srcCopyLevel, dstCopyLevel } = t.params;
+
+    const extension: GPUExtensionName | undefined = kAllTextureFormatInfo[format].extension;
+    assert(extension !== undefined);
+    if (!(await t.IsExtensionSupported(extension))) {
+      return;
+    }
+
+    await t.asyncReinitDeviceWithDescriptor({ extensions: [extension] });
+
+    const kTextureSize = { width: 60, height: 48, depth: 3 };
+    const kMipLevelCount = 4;
+
+    const srcTexture = t.device.createTexture({
+      size: kTextureSize,
+      format,
+      mipLevelCount: kMipLevelCount,
+      usage: GPUTextureUsage.COPY_SRC,
+    });
+    const dstTexture = t.device.createTexture({
+      size: kTextureSize,
+      format,
+      mipLevelCount: kMipLevelCount,
+      usage: GPUTextureUsage.COPY_DST,
+    });
+
+    const srcSizeAtLevel = t.GetPhysicalSubresourceSize(kTextureSize, format, srcCopyLevel);
+    const dstSizeAtLevel = t.GetPhysicalSubresourceSize(kTextureSize, format, dstCopyLevel);
+
+    const copyOrigin = { x: copyBoxOffsets.x, y: copyBoxOffsets.y, z: copyBoxOffsets.z };
+
+    const copyWidth = Math.max(
+      Math.min(srcSizeAtLevel.width, dstSizeAtLevel.width) + copyBoxOffsets.width - copyOrigin.x,
+      0
+    );
+    const copyHeight = Math.max(
+      Math.min(srcSizeAtLevel.height, dstSizeAtLevel.height) + copyBoxOffsets.height - copyOrigin.y,
+      0
+    );
+    const copyDepth = kTextureSize.depth + copyBoxOffsets.depth - copyOrigin.z;
+
+    const texelBlockWidth = kAllTextureFormatInfo[format].blockWidth;
+    const texelBlockHeight = kAllTextureFormatInfo[format].blockHeight;
+
+    const isSuccessForCompressedFormats =
+      copyOrigin.x % texelBlockWidth === 0 &&
+      copyOrigin.y % texelBlockHeight === 0 &&
+      copyWidth % texelBlockWidth === 0 &&
+      copyHeight % texelBlockHeight === 0;
+
+    {
+      const isSuccess =
+        isSuccessForCompressedFormats &&
+        copyWidth <= srcSizeAtLevel.width &&
+        copyHeight <= srcSizeAtLevel.height &&
+        copyOrigin.x + copyWidth <= dstSizeAtLevel.width &&
+        copyOrigin.y + copyHeight <= dstSizeAtLevel.height &&
+        copyOrigin.z + copyDepth <= kTextureSize.depth;
+
+      t.TestCopyTextureToTexture(
+        { texture: srcTexture, origin: { x: 0, y: 0, z: 0 }, mipLevel: srcCopyLevel },
+        { texture: dstTexture, origin: copyOrigin, mipLevel: dstCopyLevel },
+        { width: copyWidth, height: copyHeight, depth: copyDepth },
+        isSuccess
+      );
+    }
+
+    {
+      const isSuccess =
+        isSuccessForCompressedFormats &&
+        copyOrigin.x + copyWidth <= srcSizeAtLevel.width &&
+        copyOrigin.y + copyHeight <= srcSizeAtLevel.height &&
+        copyWidth <= dstSizeAtLevel.width &&
+        copyHeight <= dstSizeAtLevel.height &&
+        copyOrigin.z + copyDepth <= kTextureSize.depth;
+
+      t.TestCopyTextureToTexture(
+        { texture: srcTexture, origin: copyOrigin, mipLevel: srcCopyLevel },
+        { texture: dstTexture, origin: { x: 0, y: 0, z: 0 }, mipLevel: dstCopyLevel },
+        { width: copyWidth, height: copyHeight, depth: copyDepth },
+        isSuccess
+      );
+    }
   });
