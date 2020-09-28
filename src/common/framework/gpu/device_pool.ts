@@ -14,14 +14,14 @@ export class DevicePool {
   /** Device with no descriptor. */
   private defaultHolder: DeviceHolder | 'uninitialized' | 'failed' = 'uninitialized';
   /** Devices with descriptors. */
-  private nonDefaultHolders = new DescriptorToDeviceMap();
+  private nonDefaultHolders = new DescriptorToHolderMap();
 
   /** Request a device from the pool. */
-  async reserve(desc?: GPUDeviceDescriptor): Promise<DeviceProvider> {
+  async reserve(descriptor?: GPUDeviceDescriptor): Promise<DeviceProvider> {
     // Always attempt to initialize default device, to see if it succeeds.
     if (this.defaultHolder === 'uninitialized') {
       try {
-        this.defaultHolder = await DeviceHolder.create();
+        this.defaultHolder = await DeviceHolder.create(undefined);
       } catch (ex) {
         this.defaultHolder = 'failed';
       }
@@ -29,10 +29,10 @@ export class DevicePool {
     assert(this.defaultHolder !== 'failed', 'WebGPU device failed to initialize; not retrying');
 
     let holder;
-    if (desc === undefined) {
+    if (descriptor === undefined) {
       holder = this.defaultHolder;
     } else {
-      holder = await this.nonDefaultHolders.getOrInsert(desc, () => DeviceHolder.create(desc));
+      holder = await this.nonDefaultHolders.getOrCreate(descriptor);
     }
 
     assert(holder.state === 'free', 'Device was in use on DevicePool.acquire');
@@ -82,7 +82,7 @@ export class DevicePool {
 /**
  * Map from GPUDeviceDescriptor to DeviceHolder.
  */
-class DescriptorToDeviceMap {
+class DescriptorToHolderMap {
   private unsupported: Set<string> = new Set();
   private items: Map<string, DeviceHolder> = new Map();
 
@@ -102,11 +102,8 @@ class DescriptorToDeviceMap {
    *
    * Throws SkipTestCase if devices with this descriptor are unsupported.
    */
-  async getOrInsert(
-    descriptor: GPUDeviceDescriptor,
-    create: () => Promise<DeviceHolder>
-  ): Promise<DeviceHolder> {
-    const key = makeKeyFromDescriptor(descriptor);
+  async getOrCreate(uncanonicalizedDescriptor: GPUDeviceDescriptor): Promise<DeviceHolder> {
+    const [descriptor, key] = canonicalizeDescriptor(uncanonicalizedDescriptor);
     // Never retry unsupported configurations.
     if (this.unsupported.has(key)) {
       throw new SkipTestCase(
@@ -128,7 +125,7 @@ class DescriptorToDeviceMap {
     // No existing item was found; add a new one.
     let value;
     try {
-      value = await create();
+      value = await DeviceHolder.create(descriptor);
     } catch (ex) {
       this.unsupported.add(key);
       throw new SkipTestCase(
@@ -154,28 +151,34 @@ class DescriptorToDeviceMap {
   }
 }
 
+type CanonicalLimits = Required<GPULimits>;
+type CanonicalDeviceDescriptor = Omit<Required<GPUDeviceDescriptor>, 'label'>;
 /**
  * Make a stringified map-key from a GPUDeviceDescriptor.
  * Tries to make sure all defaults are resolved, first - but it's okay if some are missed
  * (it just means some GPUDevice objects won't get deduplicated).
  */
-function makeKeyFromDescriptor(desc: GPUDeviceDescriptor): string {
-  const extensions = desc.extensions ? Array.from(desc.extensions).sort() : [];
-  const limits: Required<GPULimits> = {
-    // Note: pre-populating all these fields also sets the order, so the object
-    // keys will have consistent ordering in JSON.
-    maxBindGroups: 4,
-    maxDynamicUniformBuffersPerPipelineLayout: 8,
-    maxDynamicStorageBuffersPerPipelineLayout: 4,
-    maxSampledTexturesPerShaderStage: 16,
-    maxSamplersPerShaderStage: 16,
-    maxStorageBuffersPerShaderStage: 4,
-    maxStorageTexturesPerShaderStage: 4,
-    maxUniformBuffersPerShaderStage: 12,
-    maxUniformBufferBindingSize: 16384,
-    ...desc.limits,
+function canonicalizeDescriptor(desc: GPUDeviceDescriptor): [CanonicalDeviceDescriptor, string] {
+  const extensionsCanonicalized = desc.extensions ? Array.from(desc.extensions).sort() : [];
+  const lim: GPULimits = desc.limits ?? {};
+  // Type ensures every field is carried through.
+  const limitsCanonicalized: CanonicalLimits = {
+    maxBindGroups: lim.maxBindGroups ?? 4,
+    maxDynamicUniformBuffersPerPipelineLayout: lim.maxDynamicUniformBuffersPerPipelineLayout ?? 8,
+    maxDynamicStorageBuffersPerPipelineLayout: lim.maxDynamicStorageBuffersPerPipelineLayout ?? 4,
+    maxSampledTexturesPerShaderStage: lim.maxSampledTexturesPerShaderStage ?? 16,
+    maxSamplersPerShaderStage: lim.maxSamplersPerShaderStage ?? 16,
+    maxStorageBuffersPerShaderStage: lim.maxStorageBuffersPerShaderStage ?? 4,
+    maxStorageTexturesPerShaderStage: lim.maxStorageTexturesPerShaderStage ?? 4,
+    maxUniformBuffersPerShaderStage: lim.maxUniformBuffersPerShaderStage ?? 12,
+    maxUniformBufferBindingSize: lim.maxUniformBufferBindingSize ?? 16384,
   };
-  return JSON.stringify({ extensions, limits });
+  // Type ensures every field is carried through.
+  const descriptorCanonicalized: CanonicalDeviceDescriptor = {
+    extensions: extensionsCanonicalized,
+    limits: limitsCanonicalized,
+  };
+  return [descriptorCanonicalized, JSON.stringify(descriptorCanonicalized)];
 }
 
 /**
@@ -196,7 +199,7 @@ class DeviceHolder implements DeviceProvider {
 
   // Gets a device and creates a DeviceHolder.
   // If the device is lost, DeviceHolder.lostReason gets set.
-  static async create(descriptor?: GPUDeviceDescriptor): Promise<DeviceHolder> {
+  static async create(descriptor: CanonicalDeviceDescriptor | undefined): Promise<DeviceHolder> {
     const gpu = getGPU();
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null, 'requestAdapter returned null');
