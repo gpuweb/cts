@@ -1,8 +1,9 @@
+# VSCode - see .vscode/README.md
+.vscode/
+
+# Build files
 /out/
 /out-wpt/
-
-*.code-workspace
-
 .tscache/
 *.tmp.txt
 
@@ -183,8 +184,5 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
-
-# VSCode
-.vscode/
 
 # End of https://www.gitignore.io/api/linux,macos,windows,node
