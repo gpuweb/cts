@@ -279,7 +279,7 @@ g.test('texture_format_equality')
     }
 
     if (extensions.length) {
-      await t.asyncReinitDeviceWithDescriptor({ extensions });
+      await t.selectDeviceOrSkipTestCase({ extensions });
     }
 
     const kTextureSize = { width: 16, height: 16, depth: 1 };
@@ -538,7 +538,7 @@ g.test('copy_ranges_with_compressed_texture_formats')
 
     const extension: GPUExtensionName | undefined = kAllTextureFormatInfo[format].extension;
     assert(extension !== undefined);
-    await t.asyncReinitDeviceWithDescriptor({ extensions: [extension] });
+    await t.selectDeviceOrSkipTestCase({ extensions: [extension] });
 
     const kTextureSize = { width: 60, height: 48, depth: 3 };
     const kMipLevelCount = 4;
