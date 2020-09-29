@@ -110,7 +110,7 @@ g.test('gpu,with_texture_compression,bc')
     const { textureCompressionBC } = t.params;
 
     if (textureCompressionBC) {
-      await t.asyncReinitDeviceWithDescriptor({ extensions: ['texture-compression-bc'] });
+      await t.selectGPUDevice({ extensions: ['texture-compression-bc'] });
     }
 
     const shouldError = !textureCompressionBC;
@@ -133,7 +133,7 @@ g.test('gpu,with_texture_compression,etc')
     const { textureCompressionETC } = t.params;
 
     if (textureCompressionETC) {
-      await t.asyncReinitDeviceWithDescriptor({
+      await t.selectGPUDevice({
         extensions: ['texture-compression-etc' as GPUExtensionName],
       });
     }
