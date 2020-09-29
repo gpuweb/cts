@@ -4,7 +4,6 @@ import {
   DeviceProvider,
   TestOOMedShouldAttemptGC,
 } from '../common/framework/gpu/device_pool.js';
-import { getGPU } from '../common/framework/gpu/implementation.js';
 import { attemptGarbageCollection } from '../common/framework/util/collect_garbage.js';
 import { assert } from '../common/framework/util/util.js';
 
@@ -63,13 +62,6 @@ export class GPUTest extends Fixture {
     await super.init();
 
     this.provider = await devicePool.reserve();
-  }
-
-  async IsExtensionSupported(extension: GPUExtensionName): Promise<boolean> {
-    const gpu = getGPU();
-    const adapter = await gpu.requestAdapter();
-    assert(adapter !== null, 'requestAdapter returned null');
-    return adapter.extensions.includes(extension);
   }
 
   /**

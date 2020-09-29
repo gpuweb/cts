@@ -271,16 +271,10 @@ g.test('texture_format_equality')
 
     const srcFormatExtension = kAllTextureFormatInfo[srcFormat].extension;
     if (srcFormatExtension !== undefined) {
-      if (!(await t.IsExtensionSupported(srcFormatExtension))) {
-        return;
-      }
       extensions.push(srcFormatExtension);
     }
     const dstFormatExtension = kAllTextureFormatInfo[dstFormat].extension;
     if (dstFormatExtension !== undefined) {
-      if (!(await t.IsExtensionSupported(dstFormatExtension))) {
-        return;
-      }
       extensions.push(dstFormatExtension);
     }
 
@@ -544,10 +538,6 @@ g.test('copy_ranges_with_compressed_texture_formats')
 
     const extension: GPUExtensionName | undefined = kAllTextureFormatInfo[format].extension;
     assert(extension !== undefined);
-    if (!(await t.IsExtensionSupported(extension))) {
-      return;
-    }
-
     await t.asyncReinitDeviceWithDescriptor({ extensions: [extension] });
 
     const kTextureSize = { width: 60, height: 48, depth: 3 };
