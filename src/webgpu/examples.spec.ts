@@ -110,7 +110,7 @@ g.test('gpu,with_texture_compression,bc')
     const { textureCompressionBC } = t.params;
 
     if (textureCompressionBC) {
-      await t.selectGPUDevice({ extensions: ['texture-compression-bc'] });
+      await t.selectDeviceOrSkipTestCase({ extensions: ['texture-compression-bc'] });
     }
 
     const shouldError = !textureCompressionBC;
@@ -133,7 +133,7 @@ g.test('gpu,with_texture_compression,etc')
     const { textureCompressionETC } = t.params;
 
     if (textureCompressionETC) {
-      await t.selectGPUDevice({
+      await t.selectDeviceOrSkipTestCase({
         extensions: ['texture-compression-etc' as GPUExtensionName],
       });
     }

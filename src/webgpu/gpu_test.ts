@@ -46,7 +46,7 @@ export class GPUTest extends Fixture {
   get device(): GPUDevice {
     assert(
       this.provider !== undefined,
-      'No provider available right now; did you "await" selectGPUDevice?'
+      'No provider available right now; did you "await" selectDeviceOrSkipTestCase?'
     );
     if (!this.acquiredDevice) {
       this.acquiredDevice = this.provider.acquire();
@@ -69,11 +69,16 @@ export class GPUTest extends Fixture {
    * (descriptor = `undefined`) is provided by default.
    * However, some tests or cases need particular extensions to be enabled. Call this function with
    * a descriptor (or undefined) to select a GPUDevice matching that descriptor.
+   *
+   * If the request descriptor can't be supported, throws an exception to skip the entire test case.
    */
-  async selectGPUDevice(descriptor: GPUDeviceDescriptor | undefined): Promise<void> {
+  async selectDeviceOrSkipTestCase(descriptor: GPUDeviceDescriptor | undefined): Promise<void> {
     assert(this.provider !== undefined);
     // Make sure the device isn't replaced after it's been retrieved once.
-    assert(!this.acquiredDevice, "Can't selectGPUDevice() after the device has been used");
+    assert(
+      !this.acquiredDevice,
+      "Can't selectDeviceOrSkipTestCase() after the device has been used"
+    );
 
     const oldProvider = this.provider;
     this.provider = undefined;
