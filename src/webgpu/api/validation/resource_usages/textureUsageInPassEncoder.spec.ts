@@ -1017,7 +1017,7 @@ g.test('validation_scope,no_draw_or_dispatch')
     // we don't need to do resource usage validation and no validation error to be reported.
     t.expectValidationError(() => {
       encoder.finish();
-    }, compute);
+    }, !compute);
   });
 
 g.test('validation_scope,same_draw_or_dispatch')
