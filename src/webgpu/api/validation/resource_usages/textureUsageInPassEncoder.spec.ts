@@ -185,6 +185,12 @@ class TextureUsageTracking extends ValidationTest {
       (pass as GPURenderPassEncoder).draw(3, 1, 0, 0);
     }
   }
+
+  setComputePipelineAndCallDispatch(pass: GPUComputePassEncoder) {
+    const pipeline = this.createNoOpComputePipeline();
+    pass.setPipeline(pipeline);
+    pass.dispatch(1);
+  }
 }
 
 export const g = makeTestGroup(TextureUsageTracking);
@@ -502,6 +508,7 @@ g.test('subresources_and_binding_types_combination_for_color')
           pass.setBindGroup(1, bindGroup1);
         }
       }
+      if (compute) t.setComputePipelineAndCallDispatch(pass as GPUComputePassEncoder);
       pass.endPass();
     }
 
@@ -652,6 +659,7 @@ g.test('subresources_and_binding_types_combination_for_aspect')
         pass.setBindGroup(1, bindGroup1);
       }
     }
+    if (compute) t.setComputePipelineAndCallDispatch(pass as GPUComputePassEncoder);
     pass.endPass();
 
     const disjointAspects =
@@ -720,6 +728,7 @@ g.test('shader_stages_and_visibility')
           writeHasVertexStage ? view : t.createTexture().createView()
         );
     pass.setBindGroup(0, bindGroup);
+    if (compute) t.setComputePipelineAndCallDispatch(pass as GPUComputePassEncoder);
     pass.endPass();
 
     // Texture usages in bindings with invisible shader stages should be validated. Invisible shader
@@ -984,9 +993,13 @@ g.test('unused_bindings_in_pipeline')
     if (callDrawOrDispatch) t.issueDrawOrDispatch(pass, compute);
     pass.endPass();
 
+    // Resource usage validation scope is defined by dispatch calls. If dispatch is not called,
+    // we don't need to do resource usage validation and no validation error to be reported.
+    const success = compute && !callDrawOrDispatch;
+
     t.expectValidationError(() => {
       encoder.finish();
-    });
+    }, !success);
   });
 
 g.test('validation_scope,no_draw_or_dispatch')
@@ -1000,9 +1013,11 @@ g.test('validation_scope,no_draw_or_dispatch')
     pass.setBindGroup(1, bindGroup1);
     pass.endPass();
 
+    // Resource usage validation scope is defined by dispatch calls. If dispatch is not called,
+    // we don't need to do resource usage validation and no validation error to be reported.
     t.expectValidationError(() => {
       encoder.finish();
-    });
+    }, !compute);
   });
 
 g.test('validation_scope,same_draw_or_dispatch')
@@ -1050,6 +1065,7 @@ g.test('validation_scope,different_passes')
     const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope(compute);
     t.setPipeline(pass, pipeline, compute);
     pass.setBindGroup(0, bindGroup0);
+    if (compute) t.setComputePipelineAndCallDispatch(pass as GPUComputePassEncoder);
     pass.endPass();
 
     const pass1 = compute
@@ -1057,6 +1073,7 @@ g.test('validation_scope,different_passes')
       : t.beginSimpleRenderPass(encoder, t.createTexture().createView());
     t.setPipeline(pass1, pipeline, compute);
     pass1.setBindGroup(1, bindGroup1);
+    if (compute) t.setComputePipelineAndCallDispatch(pass as GPUComputePassEncoder);
     pass1.endPass();
 
     // No validation error.
