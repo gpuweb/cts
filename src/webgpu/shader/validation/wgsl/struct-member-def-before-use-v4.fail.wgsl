@@ -2,13 +2,13 @@
 # is used.
 
 type foo = struct {
-  [[offset 0]] b : f32;
-  [[offset 8]] a : array<f32>;
+  [[offset (0)]] b : f32;
+  [[offset (8)]] a : array<f32>;
 };
 
+[[stage(vertex)]]
 fn main() -> void {
   var f : foo;
   f.c = 2;
   return;
 }
-entry_point vertex = main;
