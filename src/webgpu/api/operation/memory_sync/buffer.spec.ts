@@ -44,11 +44,8 @@ class BufferSyncTest extends GPUTest {
     });
   }
 
-  // Create a compute pipeline and write data into storage buffer.
-  // If the pipeline is used in the first write, then write 1 into the buffer.
-  // Otherwise, write 2 into the buffer.
-  createComputePipeline(isFirstWrite: boolean): GPUComputePipeline {
-    const value: string = isFirstWrite ? '1' : '2';
+  // Create a compute pipeline and write given data into storage buffer.
+  createStorageWriteComputePipeline(value: number): GPUComputePipeline {
     const wgslCompute = `
       type Data = [[block]] struct {
         [[offset 0]] a : i32;
@@ -73,10 +70,8 @@ class BufferSyncTest extends GPUTest {
     });
   }
 
-  // Create a render pipeline and write data into storage buffer at fragment stage.
-  // If the pipeline is used in the first write, then write 1 into the buffer.
-  // Otherwise, write 2 into the buffer.
-  createRenderPipeline(isFirstWrite: boolean): GPURenderPipeline {
+  // Create a render pipeline and write given data into storage buffer at fragment stage.
+  createStorageWriteRenderPipeline(value: number): GPURenderPipeline {
     const wgslVertex = `
     [[builtin position]] var<out> Position : vec4<f32>;
       fn vert_main() -> void {
@@ -87,7 +82,6 @@ class BufferSyncTest extends GPUTest {
       entry_point vertex = vert_main;
     `;
 
-    const value: string = isFirstWrite ? '1' : '2';
     const wgslFragment = `
     [[location 0]] var<out> outColor : vec4<f32>;
       type Data = [[block]] struct {
@@ -135,61 +129,70 @@ class BufferSyncTest extends GPUTest {
         {
           attachment: view,
           loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
-          storeOp: 'store',
         },
       ],
     });
   }
 
-  // Create render pass or compute pass, set pipeline and bind groups and write data into storage
-  // buffer. If the pass is render pass, it may use bundle. Note that we write 1 into the buffer
-  // if the pass is used in the first write, and we write 2 into the buffer otherwise.
-  createPass(
-    buffer: GPUBuffer,
-    bundle: boolean,
-    isRenderPass: boolean,
-    encoder: GPUCommandEncoder,
-    isFirstWrite: boolean
-  ) {
-    assert(!bundle || isRenderPass);
-    if (isRenderPass) {
-      const pipeline = this.createRenderPipeline(isFirstWrite);
-      const bindGroup = this.createBindGroup(pipeline, buffer);
-      const pass = this.beginSimpleRenderPass(encoder);
-      if (bundle) {
-        const bundleEncoder = this.device.createRenderBundleEncoder({
-          colorFormats: ['rgba8unorm'],
-        });
-        bundleEncoder.setBindGroup(0, bindGroup);
-        bundleEncoder.setPipeline(pipeline);
-        bundleEncoder.draw(1, 1, 0, 0);
-        const bundle = bundleEncoder.finish();
-        pass.executeBundles([bundle]);
-      } else {
-        pass.setPipeline(pipeline);
-        pass.setBindGroup(0, bindGroup);
-        pass.draw(1, 1, 0, 0);
-      }
-      pass.endPass();
+  // Write storage buffer via draw call in render pass. Use bundle if needed.
+  writeByRenderPass(bundle: boolean, buffer: GPUBuffer, value: number, encoder: GPUCommandEncoder) {
+    const pipeline = this.createStorageWriteRenderPipeline(value);
+    const bindGroup = this.createBindGroup(pipeline, buffer);
+    const pass = this.beginSimpleRenderPass(encoder);
+    if (bundle) {
+      const bundleEncoder = this.device.createRenderBundleEncoder({
+        colorFormats: ['rgba8unorm'],
+      });
+      bundleEncoder.setBindGroup(0, bindGroup);
+      bundleEncoder.setPipeline(pipeline);
+      bundleEncoder.draw(1, 1, 0, 0);
+      const bundles = bundleEncoder.finish();
+      pass.executeBundles([bundles]);
     } else {
-      const pipeline = this.createComputePipeline(isFirstWrite);
-      const bindGroup = this.createBindGroup(pipeline, buffer);
-      const pass = encoder.beginComputePass();
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, bindGroup);
-      pass.dispatch(1);
-      pass.endPass();
+      pass.draw(1, 1, 0, 0);
+    }
+    pass.endPass();
+  }
+
+  // Write storage buffer via dispatch call in compute pass.
+  writeByComputePass(buffer: GPUBuffer, value: number, encoder: GPUCommandEncoder) {
+    const pipeline = this.createStorageWriteComputePipeline(value);
+    const bindGroup = this.createBindGroup(pipeline, buffer);
+    const pass = encoder.beginComputePass();
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bindGroup);
+    pass.dispatch(1);
+    pass.endPass();
+  }
+
+  // Issue write operation via render pass, compute pass, copy, etc.
+  issueWriteOp(
+    writeOp: string,
+    bundle: boolean,
+    buffer: GPUBuffer,
+    value: number,
+    encoder: GPUCommandEncoder
+  ) {
+    const isRenderPass = writeOp === 'render';
+    assert(!bundle || isRenderPass);
+    if (isRenderPass) {
+      this.writeByRenderPass(bundle, buffer, value, encoder);
+    } else {
+      assert(writeOp === 'compute');
+      this.writeByComputePass(buffer, value, encoder);
     }
   }
 
-  createCommandBuffer(
-    buffer: GPUBuffer,
+  createCommandBufferAndIssueWriteOp(
+    writeOp: string,
     bundle: boolean,
-    isRenderPass: boolean,
-    isFirstWrite: boolean
+    buffer: GPUBuffer,
+    value: number
   ): GPUCommandBuffer {
     const encoder = this.device.createCommandEncoder();
-    this.createPass(buffer, bundle, isRenderPass, encoder, isFirstWrite);
+    this.issueWriteOp(writeOp, bundle, buffer, value, encoder);
     return encoder.finish();
   }
 
@@ -202,10 +205,11 @@ class BufferSyncTest extends GPUTest {
 
 export const g = makeTestGroup(BufferSyncTest);
 
-// Test write-after-write between passes. The first write will write 1 into a storage buffer.
+// Test write-after-write operations. The first write will write 1 into a storage buffer.
 // The second write will write 2 into the same storage buffer. So, expected data in buffer is 2.
-// The two writes can be in render pass or compute pass, and it can be in the same command buffer,
-// or separate command buffers, or separate queues. If the pass is render pass, it may use bundle.
+// The two writes can be in the same command buffer, or separate command buffers, or separate
+// queues. Each write operation can be done via render, compute, or copy, etc. If the write
+// operation is done by a render pass, it may use bundle.
 g.test('write_after_write,passes')
   .params(
     params()
@@ -213,37 +217,37 @@ g.test('write_after_write,passes')
       // Then the pbool 'sameCommandBuffer' can be a poption which consits of 3 options:
       // same command buffer, separate command buffers, separate queues.
       .combine(pbool('sameCommandBuffer'))
+      .combine(poptions('firstWriteOp', ['render', 'compute'] as const))
+      .combine(poptions('secondWriteOp', ['render', 'compute'] as const))
       .combine(pbool('firstWriteInBundle'))
       .combine(pbool('secondWriteInBundle'))
-      .combine(poptions('firstWrite', ['render', 'compute'] as const))
-      .combine(poptions('secondWrite', ['render', 'compute'] as const))
       .unless(
         p =>
-          (p.firstWriteInBundle && p.firstWrite !== 'render') ||
-          (p.secondWriteInBundle && p.secondWrite !== 'render')
+          (p.firstWriteInBundle && p.firstWriteOp !== 'render') ||
+          (p.secondWriteInBundle && p.secondWriteOp !== 'render')
       )
   )
   .fn(async t => {
     const {
       sameCommandBuffer,
+      firstWriteOp,
+      secondWriteOp,
       firstWriteInBundle,
       secondWriteInBundle,
-      firstWrite,
-      secondWrite,
     } = t.params;
     const buffer = t.createBuffer();
     if (sameCommandBuffer) {
       const encoder = t.device.createCommandEncoder();
-      t.createPass(buffer, firstWriteInBundle, firstWrite === 'render', encoder, true);
-      t.createPass(buffer, secondWriteInBundle, secondWrite === 'render', encoder, false);
+      t.issueWriteOp(firstWriteOp, firstWriteInBundle, buffer, 1, encoder);
+      t.issueWriteOp(secondWriteOp, secondWriteInBundle, buffer, 2, encoder);
       t.device.defaultQueue.submit([encoder.finish()]);
     } else {
       const command_buffers: GPUCommandBuffer[] = [];
       command_buffers.push(
-        t.createCommandBuffer(buffer, firstWriteInBundle, firstWrite === 'render', true)
+        t.createCommandBufferAndIssueWriteOp(firstWriteOp, firstWriteInBundle, buffer, 1)
       );
       command_buffers.push(
-        t.createCommandBuffer(buffer, secondWriteInBundle, secondWrite === 'render', false)
+        t.createCommandBufferAndIssueWriteOp(secondWriteOp, secondWriteInBundle, buffer, 2)
       );
       t.device.defaultQueue.submit(command_buffers);
     }
@@ -251,7 +255,7 @@ g.test('write_after_write,passes')
   });
 
 // TODO (yunchao.he@intel.com):
-// g.test('write_after_write,draw_or_dispatch_in_same_pass')
-// g.test('write_after_write,copy_to_pass')
-// g.test('write_after_write,pass_to_copy')
-// g.test('write_after_write,copy_to_copy')
+// * Add other write operations like copy, writeBuffer, etc. for write-after-write tests.
+// * Add write-after-write tests for two-draws-or-dispatches in same pass. Note that the expected
+// value is not one single fixed value for two draws in render.
+// * Add read-before-write tests and read-after-write tests.
