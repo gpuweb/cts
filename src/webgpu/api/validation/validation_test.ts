@@ -16,7 +16,7 @@ export class ValidationTest extends GPUTest {
     state: 'valid' | 'invalid' | 'destroyed',
     descriptor?: GPUTextureDescriptor
   ): GPUTexture {
-    const defaultDescriptor: GPUTextureDescriptor = {
+    descriptor = descriptor ?? {
       size: { width: 1, height: 1, depth: 1 },
       format: 'rgba8unorm',
       usage:
@@ -27,22 +27,42 @@ export class ValidationTest extends GPUTest {
         GPUTextureUsage.OUTPUT_ATTACHMENT,
     };
 
-    let texture: GPUTexture;
     switch (state) {
       case 'valid':
-        texture = this.device.createTexture(descriptor ? descriptor : defaultDescriptor);
-        break;
+        return this.device.createTexture(descriptor);
       case 'invalid':
-        texture = this.getErrorTexture();
-        break;
-      case 'destroyed':
-        texture = this.device.createTexture(descriptor ? descriptor : defaultDescriptor);
+        return this.getErrorTexture();
+      case 'destroyed': {
+        const texture = this.device.createTexture(descriptor);
         texture.destroy();
-        break;
-      default:
-        unreachable();
+        return texture;
+      }
     }
-    return texture;
+  }
+
+  createBufferWithState(
+    state: 'valid' | 'invalid' | 'destroyed',
+    descriptor?: GPUBufferDescriptor
+  ): GPUBuffer {
+    descriptor = descriptor ?? {
+      size: 4,
+      usage: GPUBufferUsage.VERTEX,
+    };
+
+    switch (state) {
+      case 'valid':
+        return this.device.createBuffer(descriptor);
+      case 'invalid':
+        // Make the buffer invalid because of an invalid combination of usages but keep the
+        // descriptor passed as much as possible (for mappedAtCreation and friends).
+        descriptor.usage |= GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_SRC;
+        return this.device.createBuffer(descriptor);
+      case 'destroyed': {
+        const buffer = this.device.createBuffer(descriptor);
+        buffer.destroy();
+        return buffer;
+      }
+    }
   }
 
   getStorageBuffer(): GPUBuffer {
@@ -54,13 +74,7 @@ export class ValidationTest extends GPUTest {
   }
 
   getErrorBuffer(): GPUBuffer {
-    this.device.pushErrorScope('validation');
-    const errorBuffer = this.device.createBuffer({
-      size: 1024,
-      usage: 0xffff, // Invalid GPUBufferUsage
-    });
-    this.device.popErrorScope();
-    return errorBuffer;
+    return this.createBufferWithState('invalid');
   }
 
   getSampler(): GPUSampler {

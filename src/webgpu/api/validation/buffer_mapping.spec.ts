@@ -31,12 +31,7 @@ class F extends ValidationTest {
     }
   }
 
-  async testGetMappedRangeCall(
-    success: boolean,
-    buffer: GPUBuffer,
-    offset?: number,
-    size?: number
-  ) {
+  testGetMappedRangeCall(success: boolean, buffer: GPUBuffer, offset?: number, size?: number) {
     if (success) {
       const data = buffer.getMappedRange(offset, size);
       this.expect(data instanceof ArrayBuffer);
@@ -72,9 +67,9 @@ export const g = makeTestGroup(F);
 
 const kMapModeOptions = poptions('mapMode', [GPUMapMode.READ, GPUMapMode.WRITE]);
 const kOffsetAlignment = 8;
-const kSizeAlignement = 4;
+const kSizeAlignment = 4;
 
-g.test('mapAsync_usage')
+g.test('mapAsync,usage')
   .desc(
     `Test the usage validation for mapAsync.
 
@@ -105,7 +100,7 @@ g.test('mapAsync_usage')
     await t.testMapAsyncCall(success, 'OperationError', buffer, mapMode);
   });
 
-g.test('mapAsync_invalidBuffer')
+g.test('mapAsync,invalidBuffer')
   .desc('Test that mapAsync is an error when called on an invalid buffer.')
   .params(kMapModeOptions)
   .fn(async t => {
@@ -114,7 +109,7 @@ g.test('mapAsync_invalidBuffer')
     await t.testMapAsyncCall(false, 'OperationError', buffer, mapMode);
   });
 
-g.test('mapAsync_state_destroyed')
+g.test('mapAsync_,state,destroyed')
   .desc('Test that mapAsync is an error when called on a destroyed buffer.')
   .params(kMapModeOptions)
   .fn(async t => {
@@ -124,7 +119,7 @@ g.test('mapAsync_state_destroyed')
     await t.testMapAsyncCall(false, 'OperationError', buffer, mapMode);
   });
 
-g.test('mapAsync_state_mappedAtCreation')
+g.test('mapAsync,state,mappedAtCreation')
   .desc(
     `Test that mapAsync is an error when called on a buffer mapped at creation,
     but succeeds after unmapping it.`
@@ -147,7 +142,7 @@ g.test('mapAsync_state_mappedAtCreation')
     t.testMapAsyncCall(true, null, buffer, mapMode);
   });
 
-g.test('mapAsync_state_mapped')
+g.test('mapAsync,state,mapped')
   .desc(
     `Test that mapAsync is an error when called on a mapped buffer, but succeeds
     after unmapping it.`
@@ -164,7 +159,7 @@ g.test('mapAsync_state_mapped')
     await t.testMapAsyncCall(true, null, buffer, mapMode);
   });
 
-g.test('mapAsync_state_mappingPending')
+g.test('mapAsync,state,mappingPending')
   .desc(
     `Test that mapAsync is an error when called on a buffer that is being mapped,
     but succeeds after the previous mapping request is cancelled.`
@@ -176,7 +171,7 @@ g.test('mapAsync_state_mappingPending')
     const buffer = t.createMappableBuffer(mapMode, 16);
 
     // Start mapping the buffer, we are going to unmap it before it resolves so it will reject
-    // the mapping promise with an OperationError.
+    // the mapping promise with an AbortError.
     t.shouldReject('AbortError', buffer.mapAsync(mapMode));
 
     // Do the test of mapAsync while [[state]] is mapping pending. It has to be synchronous so
@@ -191,7 +186,7 @@ g.test('mapAsync_state_mappingPending')
     await t.testMapAsyncCall(true, null, buffer, mapMode);
   });
 
-g.test('mapAsync_sizeUnspecifiedOOB')
+g.test('mapAsync,sizeUnspecifiedOOB')
   .desc(
     `Test that mapAsync with size unspecified rejects if offset > buffer.[[size]],
     with various cases at the limits of the buffer size or with a misaligned offset.
@@ -203,7 +198,6 @@ g.test('mapAsync_sizeUnspecifiedOOB')
       .combine([
         // 0 size buffer.
         { bufferSize: 0, offset: 0 },
-        // Check that the defaulting of size is done before checking the alignment for offset.
         { bufferSize: 0, offset: 1 },
         { bufferSize: 0, offset: kOffsetAlignment },
 
@@ -223,7 +217,7 @@ g.test('mapAsync_sizeUnspecifiedOOB')
     await t.testMapAsyncCall(success, 'OperationError', buffer, mapMode, offset);
   });
 
-g.test('mapAsync_offsetAndSizeAlignment')
+g.test('mapAsync,offsetAndSizeAlignment')
   .desc("Test that mapAsync fails if the alignment of offset and size isn't correct.")
   .params(
     params()
@@ -231,24 +225,24 @@ g.test('mapAsync_offsetAndSizeAlignment')
       .combine([
         // Valid cases, 0 and required alignments values are valid.
         { offset: 0, size: 0 },
-        { offset: kOffsetAlignment, size: kSizeAlignement },
+        { offset: kOffsetAlignment, size: kSizeAlignment },
 
         // Invalid case, offset isn't aligned.
-        { offset: kOffsetAlignment / 2, size: kSizeAlignement },
+        { offset: kOffsetAlignment / 2, size: kSizeAlignment },
 
         // Invalid case, size isn't aligned.
-        { offset: kOffsetAlignment, size: kSizeAlignement / 2 },
+        { offset: kOffsetAlignment, size: kSizeAlignment / 2 },
       ])
   )
   .fn(async t => {
     const { mapMode, offset, size } = t.params;
     const buffer = t.createMappableBuffer(mapMode, 16);
 
-    const success = offset % kOffsetAlignment === 0 && size % kSizeAlignement === 0;
+    const success = offset % kOffsetAlignment === 0 && size % kSizeAlignment === 0;
     await t.testMapAsyncCall(success, 'OperationError', buffer, mapMode, offset, size);
   });
 
-g.test('mapAsync_offsetAndSizeOOB')
+g.test('mapAsync,offsetAndSizeOOB')
   .desc('Test that mapAsync fails if offset + size is larger than the buffer size.')
   .params(
     params()
@@ -264,22 +258,22 @@ g.test('mapAsync_offsetAndSizeOOB')
         { bufferSize: 16, offset: kOffsetAlignment, size: 16 },
 
         { bufferSize: 16, offset: 16, size: 0 },
-        { bufferSize: 16, offset: 16, size: kSizeAlignement },
+        { bufferSize: 16, offset: 16, size: kSizeAlignment },
 
         { bufferSize: 16, offset: 8, size: 0 },
         { bufferSize: 16, offset: 8, size: 8 },
-        { bufferSize: 16, offset: 8, size: 8 + kSizeAlignement },
+        { bufferSize: 16, offset: 8, size: 8 + kSizeAlignment },
 
         // For a larger buffer
         { bufferSize: 1024, offset: 0, size: 1024 },
         { bufferSize: 1024, offset: kOffsetAlignment, size: 1024 },
 
         { bufferSize: 1024, offset: 1024, size: 0 },
-        { bufferSize: 1024, offset: 1024, size: kSizeAlignement },
+        { bufferSize: 1024, offset: 1024, size: kSizeAlignment },
 
         { bufferSize: 1024, offset: 512, size: 0 },
         { bufferSize: 1024, offset: 512, size: 512 },
-        { bufferSize: 1024, offset: 512, size: 512 + kSizeAlignement },
+        { bufferSize: 1024, offset: 512, size: 512 + kSizeAlignment },
       ])
   )
   .fn(async t => {
@@ -290,7 +284,7 @@ g.test('mapAsync_offsetAndSizeOOB')
     await t.testMapAsyncCall(success, 'OperationError', buffer, mapMode, offset, size);
   });
 
-g.test('getMappedRange_state_mapped')
+g.test('getMappedRange,state,mapped')
   .desc('Test that it is valid to call getMappedRange in the mapped state')
   .params(kMapModeOptions)
   .fn(async t => {
@@ -301,7 +295,7 @@ g.test('getMappedRange_state_mapped')
     t.testGetMappedRangeCall(true, buffer);
   });
 
-g.test('getMappedRange_state_mappedAtCreation')
+g.test('getMappedRange,state,mappedAtCreation')
   .desc(
     'Test that it is valid to call getMappedRange in the mapped at creation state, for all buffer usages'
   )
@@ -317,7 +311,7 @@ g.test('getMappedRange_state_mappedAtCreation')
     t.testGetMappedRangeCall(true, buffer);
   });
 
-g.test('getMappedRange_state_unmapped')
+g.test('getMappedRange,state,unmapped')
   .desc(
     `Test that it is invalid to call getMappedRange in the unmapped state.
 Test for various cases of being unmapped: at creation, after a mapAsync call or after being created mapped.`
@@ -349,7 +343,7 @@ Test for various cases of being unmapped: at creation, after a mapAsync call or 
     }
   });
 
-g.test('getMappedRange_state_destroyed')
+g.test('getMappedRange,state,destroyed')
   .desc(
     `Test that it is invalid to call getMappedRange in the destroyed state.
 Test for various cases of being destroyed: at creation, after a mapAsync call or after being created mapped.`
@@ -382,7 +376,7 @@ Test for various cases of being destroyed: at creation, after a mapAsync call or
     }
   });
 
-g.test('getMappedRange_state_mappingPending')
+g.test('getMappedRange,state,mappingPending')
   .desc('Test that it is invalid to call getMappedRange in the mappingPending state.')
   .params(kMapModeOptions)
   .fn(t => {
@@ -393,7 +387,7 @@ g.test('getMappedRange_state_mappingPending')
     t.testGetMappedRangeCall(false, buffer);
   });
 
-g.test('getMappedRange_offsetAndSizeAlignment')
+g.test('getMappedRange,offsetAndSizeAlignment')
   .desc("Test that getMappedRange fails if the alignment of offset and size isn't correct.")
   .params(
     params()
@@ -401,13 +395,13 @@ g.test('getMappedRange_offsetAndSizeAlignment')
       .combine([
         // Valid cases, 0 and required alignments values are valid.
         { offset: 0, size: 0 },
-        { offset: kOffsetAlignment, size: kSizeAlignement },
+        { offset: kOffsetAlignment, size: kSizeAlignment },
 
         // Invalid case, offset isn't aligned.
-        { offset: kOffsetAlignment / 2, size: kSizeAlignement },
+        { offset: kOffsetAlignment / 2, size: kSizeAlignment },
 
         // Invalid case, size isn't aligned.
-        { offset: kOffsetAlignment, size: kSizeAlignement / 2 },
+        { offset: kOffsetAlignment, size: kSizeAlignment / 2 },
       ])
   )
   .fn(async t => {
@@ -415,11 +409,11 @@ g.test('getMappedRange_offsetAndSizeAlignment')
     const buffer = t.createMappableBuffer(mapMode, 16);
     await buffer.mapAsync(mapMode);
 
-    const success = offset % kOffsetAlignment === 0 && size % kSizeAlignement === 0;
+    const success = offset % kOffsetAlignment === 0 && size % kSizeAlignment === 0;
     await t.testGetMappedRangeCall(success, buffer, offset, size);
   });
 
-g.test('getMappedRange_sizeAndOffsetOOB_forMappedAtCreation')
+g.test('getMappedRange,sizeAndOffsetOOB,forMappedAtCreation')
   .desc(
     `Test that getMappedRange size + offset must be less than the buffer size for a
     buffer mapped at creation. (and offset has not constraints on its own)`
@@ -427,26 +421,32 @@ g.test('getMappedRange_sizeAndOffsetOOB_forMappedAtCreation')
   .params([
     // Tests for a zero-sized buffer, with and without a size defined.
     { bufferSize: 0, offset: undefined, size: undefined },
+    { bufferSize: 0, offset: undefined, size: 0 },
+    { bufferSize: 0, offset: undefined, size: kSizeAlignment },
     { bufferSize: 0, offset: 0, size: undefined },
     { bufferSize: 0, offset: 0, size: 0 },
     { bufferSize: 0, offset: kOffsetAlignment, size: undefined },
     { bufferSize: 0, offset: kOffsetAlignment, size: 0 },
 
+    // Tests for a non-empty buffer, with an undefined offset.
+    { bufferSize: 80, offset: undefined, size: 80 },
+    { bufferSize: 80, offset: undefined, size: 80 + kSizeAlignment },
+
     // Tests for a non-empty buffer, with an undefined size.
     { bufferSize: 80, offset: undefined, size: undefined },
     { bufferSize: 80, offset: 0, size: undefined },
-    { bufferSize: 80, offset: 4, size: undefined },
+    { bufferSize: 80, offset: kOffsetAlignment, size: undefined },
     { bufferSize: 80, offset: 80, size: undefined },
     { bufferSize: 80, offset: 80 + kOffsetAlignment, size: undefined },
 
     // Tests for a non-empty buffer with a size defined.
     { bufferSize: 80, offset: 0, size: 80 },
-    { bufferSize: 80, offset: 0, size: 80 + kSizeAlignement },
+    { bufferSize: 80, offset: 0, size: 80 + kSizeAlignment },
     { bufferSize: 80, offset: kOffsetAlignment, size: 80 },
 
     { bufferSize: 80, offset: 40, size: 40 },
     { bufferSize: 80, offset: 40 + kOffsetAlignment, size: 40 },
-    { bufferSize: 80, offset: 40, size: 40 + kSizeAlignement },
+    { bufferSize: 80, offset: 40, size: 40 + kSizeAlignment },
   ])
   .fn(t => {
     const { bufferSize, offset, size } = t.params;
@@ -456,17 +456,14 @@ g.test('getMappedRange_sizeAndOffsetOOB_forMappedAtCreation')
       mappedAtCreation: true,
     });
 
-    const actualOffset = offset ? offset : 0;
+    const actualOffset = offset ?? 0;
+    const actualSize = size ?? bufferSize - actualOffset;
 
-    let success = actualOffset <= bufferSize;
-    if (size !== undefined) {
-      success = success && actualOffset + size <= bufferSize;
-    }
-
+    const success = actualOffset <= bufferSize && actualOffset + actualSize <= bufferSize;
     t.testGetMappedRangeCall(success, buffer, offset, size);
   });
 
-g.test('getMappedRange_sizeAndOffsetOOB_forMapped')
+g.test('getMappedRange,sizeAndOffsetOOB,forMapped')
   .desc(
     `Test that getMappedRange size + offset must be less than the buffer size for a
     buffer mapped.`
@@ -477,6 +474,14 @@ g.test('getMappedRange_sizeAndOffsetOOB_forMapped')
       .combine([
         // Tests for an empty buffer, and implicit mapAsync size.
         { bufferSize: 0, mapOffset: 0, mapSize: undefined, offset: undefined, size: undefined },
+        { bufferSize: 0, mapOffset: 0, mapSize: undefined, offset: undefined, size: 0 },
+        {
+          bufferSize: 0,
+          mapOffset: 0,
+          mapSize: undefined,
+          offset: undefined,
+          size: kSizeAlignment,
+        },
         { bufferSize: 0, mapOffset: 0, mapSize: undefined, offset: 0, size: undefined },
         { bufferSize: 0, mapOffset: 0, mapSize: undefined, offset: 0, size: 0 },
         {
@@ -502,7 +507,7 @@ g.test('getMappedRange_sizeAndOffsetOOB_forMapped')
           mapOffset: undefined,
           mapSize: undefined,
           offset: 0,
-          size: 80 + kSizeAlignement,
+          size: 80 + kSizeAlignment,
         },
         {
           bufferSize: 80,
@@ -519,7 +524,7 @@ g.test('getMappedRange_sizeAndOffsetOOB_forMapped')
           mapOffset: 24,
           mapSize: undefined,
           offset: 0,
-          size: 80 - 24 + kSizeAlignement,
+          size: 80 - 24 + kSizeAlignment,
         },
         {
           bufferSize: 80,
@@ -532,24 +537,26 @@ g.test('getMappedRange_sizeAndOffsetOOB_forMapped')
         // Test for a non-empty buffer fully mapped.
         { bufferSize: 80, mapOffset: 0, mapSize: 80, offset: 0, size: 80 },
         { bufferSize: 80, mapOffset: 0, mapSize: 80, offset: kOffsetAlignment, size: 80 },
-        { bufferSize: 80, mapOffset: 0, mapSize: 80, offset: 0, size: 80 + kSizeAlignement },
+        { bufferSize: 80, mapOffset: 0, mapSize: 80, offset: 0, size: 80 + kSizeAlignment },
 
         { bufferSize: 80, mapOffset: 0, mapSize: 80, offset: 40, size: 40 },
         { bufferSize: 80, mapOffset: 0, mapSize: 80, offset: 40 + kOffsetAlignment, size: 40 },
-        { bufferSize: 80, mapOffset: 0, mapSize: 80, offset: 40, size: 40 + kSizeAlignement },
+        { bufferSize: 80, mapOffset: 0, mapSize: 80, offset: 40, size: 40 + kSizeAlignment },
 
         // Test for a buffer partially mapped.
         { bufferSize: 80, mapOffset: 24, mapSize: 40, offset: 24, size: 40 },
         { bufferSize: 80, mapOffset: 24, mapSize: 40, offset: 24 - kOffsetAlignment, size: 40 },
         { bufferSize: 80, mapOffset: 24, mapSize: 40, offset: 24 + kOffsetAlignment, size: 40 },
-        { bufferSize: 80, mapOffset: 24, mapSize: 40, offset: 24, size: 40 + kSizeAlignement },
+        { bufferSize: 80, mapOffset: 24, mapSize: 40, offset: 24, size: 40 + kSizeAlignment },
 
         // Test for a partially mapped buffer with implicit size and offset for getMappedRange.
         // - Buffer partially mapped in the middle
         { bufferSize: 80, mapOffset: 24, mapSize: 40, offset: undefined, size: undefined },
+        { bufferSize: 80, mapOffset: 24, mapSize: 40, offset: 0, size: undefined },
         { bufferSize: 80, mapOffset: 24, mapSize: 40, offset: 24, size: undefined },
         // - Buffer partially mapped to the end
         { bufferSize: 80, mapOffset: 24, mapSize: undefined, offset: 24, size: undefined },
+        { bufferSize: 80, mapOffset: 24, mapSize: undefined, offset: 80, size: undefined },
         // - Buffer partially mapped from the start
         { bufferSize: 80, mapOffset: 0, mapSize: 64, offset: undefined, size: undefined },
         { bufferSize: 80, mapOffset: 0, mapSize: 64, offset: undefined, size: 64 },
@@ -560,20 +567,20 @@ g.test('getMappedRange_sizeAndOffsetOOB_forMapped')
     const buffer = t.createMappableBuffer(mapMode, bufferSize);
     await buffer.mapAsync(mapMode, mapOffset, mapSize);
 
-    const actualMapOffset = mapOffset ? mapOffset : 0;
-    const actualMapSize = mapSize ? mapSize : bufferSize - actualMapOffset;
+    const actualMapOffset = mapOffset ?? 0;
+    const actualMapSize = mapSize ?? bufferSize - actualMapOffset;
 
-    const actualOffset = offset ? offset : 0;
+    const actualOffset = offset ?? 0;
+    const actualSize = size ?? bufferSize - actualOffset;
 
-    let success = actualOffset >= actualMapOffset && actualOffset <= bufferSize;
-    if (size !== undefined) {
-      success = success && actualOffset + size <= actualMapOffset + actualMapSize;
-    }
-
+    const success =
+      actualOffset >= actualMapOffset &&
+      actualOffset <= bufferSize &&
+      actualOffset + actualSize <= actualMapOffset + actualMapSize;
     t.testGetMappedRangeCall(success, buffer, offset, size);
   });
 
-g.test('getMappedRange_disjointRanges')
+g.test('getMappedRange,disjointRanges')
   .desc('Test that the ranges asked through getMappedRange must be disjoint.')
   .params(
     params()
@@ -626,7 +633,7 @@ g.test('getMappedRange_disjointRanges')
     t.testGetMappedRangeCall(success, buffer, offset2, size2);
   });
 
-g.test('getMappedRange_disjoinRanges_many')
+g.test('getMappedRange,disjoinRanges_many')
   .desc('Test getting a lot of small ranges, and that the disjoint check checks them all.')
   .fn(async t => {
     const kStride = 256;
@@ -638,7 +645,7 @@ g.test('getMappedRange_disjoinRanges_many')
     });
     await buffer.mapAsync(GPUMapMode.READ);
 
-    // Get the a lot of smalle mapped ranges.
+    // Get a lot of small mapped ranges.
     for (let stride = 0; stride < kNumStrides; stride++) {
       t.testGetMappedRangeCall(true, buffer, stride * kStride, 8);
     }
@@ -651,7 +658,7 @@ g.test('getMappedRange_disjoinRanges_many')
     }
   });
 
-g.test('unmap_state_unmapped')
+g.test('unmap,state,unmapped')
   .desc(
     `Test it is invalid to call unmap on a buffer that is unmapped (at creation, or after
     mappedAtCreation or mapAsync)`
@@ -689,7 +696,7 @@ g.test('unmap_state_unmapped')
     }
   });
 
-g.test('unmap_state_destroyed')
+g.test('unmap,state,destroyed')
   .desc(
     `Test it is invalid to call unmap on a buffer that is destroyed (at creation, or after
     mappedAtCreation or mapAsync)`
@@ -728,7 +735,7 @@ g.test('unmap_state_destroyed')
     }
   });
 
-g.test('unmap_state_mappedAtCreation')
+g.test('unmap,state,mappedAtCreation')
   .desc('Test it is valid to call unmap on a buffer mapped at creation, for various usages')
   .params(poptions('bufferUsage', kBufferUsages))
   .fn(t => {
@@ -738,7 +745,7 @@ g.test('unmap_state_mappedAtCreation')
     buffer.unmap();
   });
 
-g.test('unmap_state_mapped')
+g.test('unmap,state,mapped')
   .desc("Test it is valid to call unmap on a buffer that's mapped")
   .params(kMapModeOptions)
   .fn(async t => {
@@ -749,7 +756,7 @@ g.test('unmap_state_mapped')
     buffer.unmap();
   });
 
-g.test('unmap_state_mappingPending')
+g.test('unmap,state,mappingPending')
   .desc("Test it is valid to call unmap on a buffer that's being mapped")
   .params(kMapModeOptions)
   .fn(t => {
