@@ -12,9 +12,9 @@ type foo = struct {
   x : goo;
 };
 
+[[stage(vertex)]]
 fn main() -> void {
   var f : foo;
   f.x.y.t = 2.0;
   return;
 }
-entry_point vertex = main;

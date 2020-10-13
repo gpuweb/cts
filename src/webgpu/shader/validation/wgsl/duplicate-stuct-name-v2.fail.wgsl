@@ -9,9 +9,9 @@ fn Foo() ->void {
   return;
 }
 
+[[stage(vertex)]]
 fn main() -> void {
   var Foo : f32;
   var f : Foo;
   return;
 }
-entry_point fragment = main;
