@@ -4,11 +4,11 @@ Memory Synchronization Tests for Buffer.
 - Test write-after-write on a single buffer. Create one single buffer and initiate it to 0.
 Write a number (say 1) into the buffer via render pass, compute pass, or copy. Write another
 number (say 2) into the same buffer via render pass, compute pass, or copy.
-  - x= 1st write type: {storage buffer in {render, compute}, T2B, B2B}
-  - x= 2nd write type: {storage buffer in {render, compute}, T2B, B2B}
+  - x= 1st write type: {storage buffer in {render, compute}, T2B, B2B, WriteBuffer, MapWrite}
+  - x= 2nd write type: {storage buffer in {render, compute}, T2B, B2B, WriteBuffer, MapWrite}
   - for each write, if render, x= {bundle, non-bundle}
   - if pass type is the same, x= {single pass, separate passes} (note: render has loose guarantees)
-  - if not single pass, x= writes in {same cmdbuf, separate cmdbufs, separate queues}
+  - if not single pass, x= writes in {same cmdbuf, separate cmdbufs, separate submits, separate queues}
 `;
 
 import { pbool, poptions, params } from '../../../../common/framework/params_builder.js';
@@ -18,11 +18,11 @@ import { GPUTest } from '../../../gpu_test.js';
 
 const SIZE = 4;
 class BufferSyncTest extends GPUTest {
-  // Create a buffer, and initiate it to zero.
-  createBuffer(): GPUBuffer {
+  // Create a buffer, and initiate it to a specified value for all elements.
+  createBufferWithValue(initValue: number): GPUBuffer {
     const data = new Uint32Array(SIZE / 4);
     for (let i = 0; i < SIZE / 4; ++i) {
-      data[i] = 0;
+      data[i] = initValue;
     }
     const buffer = this.device.createBuffer({
       mappedAtCreation: true,
@@ -48,16 +48,14 @@ class BufferSyncTest extends GPUTest {
   createStorageWriteComputePipeline(value: number): GPUComputePipeline {
     const wgslCompute = `
       type Data = [[block]] struct {
-        [[offset 0]] a : i32;
+        [[offset(0)]] a : i32;
       };
 
-      [[binding 0, set 0]] var<storage_buffer> data : Data;
-      fn main() -> void {
-	data.a = ${value};
+      [[binding(0), set(0)]] var<storage_buffer> data : Data;
+      [[stage(compute)]] fn main() -> void {
+        data.a = ${value};
         return;
       }
-
-      entry_point compute = main;
     `;
 
     return this.device.createComputePipeline({
@@ -73,29 +71,25 @@ class BufferSyncTest extends GPUTest {
   // Create a render pipeline and write given data into storage buffer at fragment stage.
   createStorageWriteRenderPipeline(value: number): GPURenderPipeline {
     const wgslVertex = `
-    [[builtin position]] var<out> Position : vec4<f32>;
-      fn vert_main() -> void {
+      [[builtin(position)]] var<out> Position : vec4<f32>;
+      [[stage(vertex)]] fn vert_main() -> void {
         Position = vec4<f32>(0.5, 0.5, 0.0, 1.0);
         return;
       }
-
-      entry_point vertex = vert_main;
     `;
 
     const wgslFragment = `
-    [[location 0]] var<out> outColor : vec4<f32>;
+      [[location(0)]] var<out> outColor : vec4<f32>;
       type Data = [[block]] struct {
-        [[offset 0]] a : i32;
+        [[offset(0)]] a : i32;
       };
 
-      [[binding 0, set 0]] var<storage_buffer> data : Data;
-      fn frag_main() -> void {
-	data.a = ${value};
-	outColor = vec4<f32>(1.0, 0.0, 0.0, 1.0);
+      [[binding(0), set(0)]] var<storage_buffer> data : Data;
+      [[stage(fragment)]] fn frag_main() -> void {
+        data.a = ${value};
+        outColor = vec4<f32>(1.0, 0.0, 0.0, 1.0);
         return;
       }
-
-      entry_point fragment = frag_main;
     `;
 
     return this.device.createRenderPipeline({
@@ -134,29 +128,24 @@ class BufferSyncTest extends GPUTest {
     });
   }
 
-  // Write storage buffer via draw call in render pass. Use bundle if needed.
+  // Write buffer via draw call in render pass. Use bundle if needed.
   writeByRenderPass(bundle: boolean, buffer: GPUBuffer, value: number, encoder: GPUCommandEncoder) {
     const pipeline = this.createStorageWriteRenderPipeline(value);
     const bindGroup = this.createBindGroup(pipeline, buffer);
+
     const pass = this.beginSimpleRenderPass(encoder);
-    if (bundle) {
-      const bundleEncoder = this.device.createRenderBundleEncoder({
-        colorFormats: ['rgba8unorm'],
-      });
-      bundleEncoder.setBindGroup(0, bindGroup);
-      bundleEncoder.setPipeline(pipeline);
-      bundleEncoder.draw(1, 1, 0, 0);
-      const bundles = bundleEncoder.finish();
-      pass.executeBundles([bundles]);
-    } else {
-      pass.setPipeline(pipeline);
-      pass.setBindGroup(0, bindGroup);
-      pass.draw(1, 1, 0, 0);
-    }
+    const renderer = bundle
+      ? this.device.createRenderBundleEncoder({ colorFormats: ['rgba8unorm'] })
+      : pass;
+    renderer.setBindGroup(0, bindGroup);
+    renderer.setPipeline(pipeline);
+    renderer.draw(1, 1, 0, 0);
+
+    if (bundle) pass.executeBundles([(renderer as GPURenderBundleEncoder).finish()]);
     pass.endPass();
   }
 
-  // Write storage buffer via dispatch call in compute pass.
+  // Write buffer via dispatch call in compute pass.
   writeByComputePass(buffer: GPUBuffer, value: number, encoder: GPUCommandEncoder) {
     const pipeline = this.createStorageWriteComputePipeline(value);
     const bindGroup = this.createBindGroup(pipeline, buffer);
@@ -167,6 +156,54 @@ class BufferSyncTest extends GPUTest {
     pass.endPass();
   }
 
+  // Write bufer via BuferToBuffer copy.
+  writeByB2BCopy(buffer: GPUBuffer, value: number, encoder: GPUCommandEncoder) {
+    const tmpBuffer = this.createBufferWithValue(value);
+    encoder.copyBufferToBuffer(tmpBuffer, 0, buffer, 0, SIZE);
+  }
+
+  // Write buffer via TextureToBuffer copy.
+  writeByT2BCopy(buffer: GPUBuffer, value: number, encoder: GPUCommandEncoder) {
+    const tmpBuffer = this.createBufferWithValue(value);
+    const tmpTexture = this.device.createTexture({
+      size: { width: 1, height: 1, depth: 1 },
+      format: 'rgba8uint',
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+    });
+    encoder.copyBufferToTexture(
+      { buffer: tmpBuffer, bytesPerRow: 256 },
+      { texture: tmpTexture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+      { width: 1, height: 1, depth: 1 }
+    );
+    encoder.copyTextureToBuffer(
+      { texture: tmpTexture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+      { buffer, bytesPerRow: 256 },
+      { width: 1, height: 1, depth: 1 }
+    );
+  }
+
+  // Write buffer via writeBuffer API on queue
+  writeByWriteBuffer(buffer: GPUBuffer, value: number) {
+    const data = new Uint32Array(SIZE / 4);
+    for (let i = 0; i < SIZE / 4; ++i) {
+      data[i] = value;
+    }
+
+    this.device.defaultQueue.writeBuffer(buffer, 0, data);
+  }
+
+  // Write buffer via mapping and writing
+  writeByMapWrite(buffer: GPUBuffer, value: number) {
+    const data = new Uint32Array(SIZE / 4);
+    for (let i = 0; i < SIZE / 4; ++i) {
+      data[i] = value;
+    }
+
+    buffer.mapAsync(GPUMapMode.WRITE);
+    new Uint8Array(buffer.getMappedRange()).set(data);
+    buffer.unmap();
+  }
+
   // Issue write operation via render pass, compute pass, copy, etc.
   issueWriteOp(
     writeOp: string,
@@ -175,13 +212,23 @@ class BufferSyncTest extends GPUTest {
     value: number,
     encoder: GPUCommandEncoder
   ) {
-    const isRenderPass = writeOp === 'render';
-    assert(!bundle || isRenderPass);
-    if (isRenderPass) {
-      this.writeByRenderPass(bundle, buffer, value, encoder);
-    } else {
-      assert(writeOp === 'compute');
-      this.writeByComputePass(buffer, value, encoder);
+    assert(!bundle || writeOp === 'render');
+    switch (writeOp) {
+      case 'render':
+        this.writeByRenderPass(bundle, buffer, value, encoder);
+        break;
+      case 'compute':
+        this.writeByComputePass(buffer, value, encoder);
+        break;
+      case 'b2bCopy':
+        this.writeByB2BCopy(buffer, value, encoder);
+        break;
+      case 't2bCopy':
+        this.writeByT2BCopy(buffer, value, encoder);
+        break;
+      default:
+        assert(true);
+        break;
     }
   }
 
@@ -196,6 +243,23 @@ class BufferSyncTest extends GPUTest {
     return encoder.finish();
   }
 
+  createQueueSubmitsAndIssueWriteOp(
+    writeOp: string,
+    bundle: boolean,
+    buffer: GPUBuffer,
+    value: number
+  ) {
+    if (writeOp === 'writeBuffer') {
+      this.writeByWriteBuffer(buffer, value);
+    } else if (writeOp === 'mapWrite') {
+      this.writeByMapWrite(buffer, value);
+    } else {
+      const encoder = this.device.createCommandEncoder();
+      this.issueWriteOp(writeOp, bundle, buffer, value, encoder);
+      this.device.defaultQueue.submit([encoder.finish()]);
+    }
+  }
+
   verifyData(buffer: GPUBuffer, expectedValue: number) {
     const bufferData = new Uint32Array(1);
     bufferData[0] = expectedValue;
@@ -205,57 +269,99 @@ class BufferSyncTest extends GPUTest {
 
 export const g = makeTestGroup(BufferSyncTest);
 
-// Test write-after-write operations. The first write will write 1 into a storage buffer.
-// The second write will write 2 into the same storage buffer. So, expected data in buffer is 2.
-// The two writes can be in the same command buffer, or separate command buffers, or separate
-// queues. Each write operation can be done via render, compute, or copy, etc. If the write
-// operation is done by a render pass, it may use bundle.
-g.test('write_after_write,passes')
+g.test('write_after_write')
+  .desc(
+    `Test write-after-write operations. The first write will write 1 into a storage buffer.
+    The second write will write 2 into the same storage buffer. So, expected data in buffer is 2.
+    The two writes can be in the same command buffer, or separate command buffers, or separate
+    submits, or separate queues. Each write operation can be done via render, compute, copy,
+    writeBuffer, map write, etc. If the write operation is done by a render pass, it may use bundle.`
+  )
   .params(
     params()
       // TODO (yunchao.he@intel.com): add multi-queue.
-      // Then the pbool 'sameCommandBuffer' can be a poption which consits of 3 options:
-      // same command buffer, separate command buffers, separate queues.
-      .combine(pbool('sameCommandBuffer'))
-      .combine(poptions('firstWriteOp', ['render', 'compute'] as const))
-      .combine(poptions('secondWriteOp', ['render', 'compute'] as const))
+      .combine(
+        poptions('writeScopes', ['sameCmdbuf', 'separateCmdbufs', 'separateSubmits'] as const)
+      )
+      .combine(
+        poptions('firstWriteOp', [
+          'render',
+          'compute',
+          'b2bCopy',
+          't2bCopy',
+          'writeBuffer',
+          'mapWrite',
+        ] as const)
+      )
+      .combine(
+        poptions('secondWriteOp', [
+          'render',
+          'compute',
+          'b2bCopy',
+          't2bCopy',
+          'writeBuffer',
+          'mapWrite',
+        ] as const)
+      )
       .combine(pbool('firstWriteInBundle'))
       .combine(pbool('secondWriteInBundle'))
       .unless(
         p =>
           (p.firstWriteInBundle && p.firstWriteOp !== 'render') ||
-          (p.secondWriteInBundle && p.secondWriteOp !== 'render')
+          (p.secondWriteInBundle && p.secondWriteOp !== 'render') ||
+          ((p.firstWriteOp === 'writeBuffer' || p.secondWriteOp === 'writeBuffer') &&
+            p.writeScopes !== 'separateSubmits') ||
+          ((p.firstWriteOp === 'mapWrite' || p.secondWriteOp === 'mapWrite') &&
+            p.writeScopes !== 'separateSubmits')
       )
   )
   .fn(async t => {
     const {
-      sameCommandBuffer,
+      writeScopes,
       firstWriteOp,
       secondWriteOp,
       firstWriteInBundle,
       secondWriteInBundle,
     } = t.params;
-    const buffer = t.createBuffer();
-    if (sameCommandBuffer) {
-      const encoder = t.device.createCommandEncoder();
-      t.issueWriteOp(firstWriteOp, firstWriteInBundle, buffer, 1, encoder);
-      t.issueWriteOp(secondWriteOp, secondWriteInBundle, buffer, 2, encoder);
-      t.device.defaultQueue.submit([encoder.finish()]);
-    } else {
-      const command_buffers: GPUCommandBuffer[] = [];
-      command_buffers.push(
-        t.createCommandBufferAndIssueWriteOp(firstWriteOp, firstWriteInBundle, buffer, 1)
-      );
-      command_buffers.push(
-        t.createCommandBufferAndIssueWriteOp(secondWriteOp, secondWriteInBundle, buffer, 2)
-      );
-      t.device.defaultQueue.submit(command_buffers);
+
+    const buffer = t.createBufferWithValue(0);
+
+    const writeInBundle = [firstWriteInBundle, secondWriteInBundle];
+    const writeOp = [firstWriteOp, secondWriteOp];
+    switch (writeScopes) {
+      case 'sameCmdbuf': {
+        const encoder = t.device.createCommandEncoder();
+        for (let i = 0; i < 2; i++) {
+          t.issueWriteOp(writeOp[i], writeInBundle[i], buffer, i + 1, encoder);
+        }
+        t.device.defaultQueue.submit([encoder.finish()]);
+        break;
+      }
+      case 'separateCmdbufs': {
+        const command_buffers: GPUCommandBuffer[] = [];
+        for (let i = 0; i < 2; i++) {
+          command_buffers.push(
+            t.createCommandBufferAndIssueWriteOp(writeOp[i], writeInBundle[i], buffer, i + 1)
+          );
+        }
+        t.device.defaultQueue.submit(command_buffers);
+        break;
+      }
+      case 'separateSubmits': {
+        for (let i = 0; i < 2; i++) {
+          t.createQueueSubmitsAndIssueWriteOp(writeOp[i], writeInBundle[i], buffer, i + 1);
+        }
+        break;
+      }
+      default:
+        assert(true);
+        break;
     }
+
     t.verifyData(buffer, 2);
   });
 
 // TODO (yunchao.he@intel.com):
-// * Add other write operations like copy, writeBuffer, etc. for write-after-write tests.
 // * Add write-after-write tests for two-draws-or-dispatches in same pass. Note that the expected
 // value is not one single fixed value for two draws in render.
 // * Add read-before-write tests and read-after-write tests.
