@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+      "noEmit": false,
+      "declaration": false,
+      "lib": ["WebWorker", "ES2016"],
+  },
+  "files": ["./index.ts"],
+  "include": ["typescript"]
+}
