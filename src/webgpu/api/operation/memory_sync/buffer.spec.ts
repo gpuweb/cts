@@ -193,13 +193,13 @@ class BufferSyncTest extends GPUTest {
   }
 
   // Write buffer via mapping and writing
-  writeByMapWrite(buffer: GPUBuffer, value: number) {
+  async writeByMapWrite(buffer: GPUBuffer, value: number) {
     const data = new Uint32Array(SIZE / 4);
     for (let i = 0; i < SIZE / 4; ++i) {
       data[i] = value;
     }
 
-    buffer.mapAsync(GPUMapMode.WRITE);
+    await buffer.mapAsync(GPUMapMode.WRITE);
     new Uint8Array(buffer.getMappedRange()).set(data);
     buffer.unmap();
   }
@@ -243,7 +243,7 @@ class BufferSyncTest extends GPUTest {
     return encoder.finish();
   }
 
-  createQueueSubmitsAndIssueWriteOp(
+  async createQueueSubmitsAndIssueWriteOp(
     writeOp: string,
     bundle: boolean,
     buffer: GPUBuffer,
