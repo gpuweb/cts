@@ -14,7 +14,7 @@ interface CommandBufferMaker<E extends Encoder> {
 export class ValidationTest extends GPUTest {
   createTextureWithState(
     state: 'valid' | 'invalid' | 'destroyed',
-    descriptor?: GPUTextureDescriptor
+    descriptor?: Readonly<GPUTextureDescriptor>
   ): GPUTexture {
     descriptor = descriptor ?? {
       size: { width: 1, height: 1, depth: 1 },
@@ -42,7 +42,7 @@ export class ValidationTest extends GPUTest {
 
   createBufferWithState(
     state: 'valid' | 'invalid' | 'destroyed',
-    descriptor?: GPUBufferDescriptor
+    descriptor?: Readonly<GPUBufferDescriptor>
   ): GPUBuffer {
     descriptor = descriptor ?? {
       size: 4,
@@ -55,8 +55,10 @@ export class ValidationTest extends GPUTest {
       case 'invalid':
         // Make the buffer invalid because of an invalid combination of usages but keep the
         // descriptor passed as much as possible (for mappedAtCreation and friends).
-        descriptor.usage |= GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_SRC;
-        return this.device.createBuffer(descriptor);
+        return this.device.createBuffer({
+          ...descriptor,
+          usage: descriptor.usage | GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_SRC,
+        });
       case 'destroyed': {
         const buffer = this.device.createBuffer(descriptor);
         buffer.destroy();
