@@ -8,14 +8,18 @@ export class SkipTestCase extends Error {}
 // A new instance of the Fixture is created for every single test case
 // (i.e. every time the test function is run).
 export class Fixture {
-  params: unknown;
+  private _params: unknown;
   protected rec: TestCaseRecorder;
   private eventualExpectations: Array<Promise<unknown>> = [];
   private numOutstandingAsyncExpectations = 0;
 
   constructor(rec: TestCaseRecorder, params: CaseParams) {
     this.rec = rec;
-    this.params = params;
+    this._params = params;
+  }
+
+  get params(): unknown {
+    return this._params;
   }
 
   // This has to be a member function instead of an async `createFixture` function, because
