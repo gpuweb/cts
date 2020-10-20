@@ -1,7 +1,7 @@
 # v-0006 -  This fails because `fn Foo()` returns `struct goo`, which does not
 # have a member `s.z`.
 
-type goo = struct {
+struct goo {
   s : vec2<i32>;
 };
 
