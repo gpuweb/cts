@@ -68,7 +68,7 @@ g.test('mappedAtCreation')
     const f = () => buffer.getMappedRange(0, size);
 
     if (oom) {
-      t.shouldThrow('RangeError', f);
+      t.shouldThrow('OperationError', f);
     } else {
       f();
     }
