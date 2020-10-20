@@ -5,7 +5,11 @@ module.exports = function (api) {
     plugins: [
       // Must come before @babel/plugin-transform-modules-amd
       '@babel/plugin-proposal-dynamic-import',
-      '@babel/plugin-transform-modules-amd',
+      ['@babel/plugin-transform-modules-amd', {
+        // Omit __esModule
+        strict: true,
+        noInterop: true,
+      }],
 
       '@babel/plugin-proposal-class-properties',
       '@babel/plugin-proposal-logical-assignment-operators',

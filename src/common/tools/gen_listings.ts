@@ -32,9 +32,8 @@ if (!fs.existsSync(myself)) {
       `\
 // AUTO-GENERATED - DO NOT EDIT. See ${myself}.
 
-define(["exports"], _exports => {
-  Object.defineProperty(_exports, "__esModule", { value: true });
-  _exports.listing = ${JSON.stringify(listing, undefined, 2)};
+define(["exports"], function(exports) {
+  exports.listing = ${JSON.stringify(listing, undefined, 2)};
 });
 `
     );
