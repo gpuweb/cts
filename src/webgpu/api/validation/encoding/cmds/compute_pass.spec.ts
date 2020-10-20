@@ -1,21 +1,5 @@
 export const description = `
 API validation test for compute pass
-
-Test Coverage:
-  - Tests using compute pipelines
-    - An error should be generated when using an 'invalid' pipeline
-  - For both 'direct' and 'indirect' dispatch
-    - Tests using the following workgroup sizes: {[0, 0, 0], [1, 1, 1], [very large x, very large y, very large z]}
-    - An error should occur when the number exceeds <fill number here>
-  - For 'indirect' dispatch
-    - Tests that indirect buffers:
-      - 'invalid', 'destroyed' generate an error
-      - 'valid' buffers do not generate an error
-    - Tests that, for a buffer with 6 elements, indirect offsets:
-      - 0, 'sizeof(uint32)', and '3 * sizeof(uint32)' do not generate an error
-      - An error should be generate by the following:
-        - 1: non-multiple of 4
-        - '4 * sizeof(uint32): z-components outside of buffer
 `;
 
 import { params, poptions } from '../../../../../common/framework/params_builder.js';
@@ -29,18 +13,7 @@ class F extends ValidationTest {
       return this.createNoOpComputePipeline();
     }
 
-    this.device.pushErrorScope('validation');
-    const pipeline = this.device.createComputePipeline({
-      computeStage: {
-        module: this.device.createShaderModule({
-          code: '',
-        }),
-        entryPoint: '',
-      },
-    });
-    this.device.popErrorScope();
-
-    return pipeline;
+    return this.createErrorComputePipeline();
   }
 
   createIndirectBuffer(state: 'valid' | 'invalid' | 'destroyed', data: Uint32Array): GPUBuffer {
@@ -72,6 +45,10 @@ class F extends ValidationTest {
 export const g = makeTestGroup(F);
 
 g.test('set_pipeline')
+  .desc(
+    `- Tests using compute pipelines
+  - An error should be generated when using an 'invalid' pipeline`
+  )
   .params(poptions('state', ['valid', 'invalid'] as const))
   .fn(t => {
     const pipeline = t.createComputePipeline(t.params.state);
@@ -83,6 +60,11 @@ g.test('set_pipeline')
   });
 
 g.test('dispatch_sizes')
+  .desc(
+    `- For both 'direct' and 'indirect' dispatch
+  - Tests using the following workgroup sizes: {[0, 0, 0], [1, 1, 1]}
+  - An error should occur when the number exceeds <fill number here>`
+  )
   .params(
     params()
       .combine(poptions('dispatchType', ['direct', 'indirect'] as const))
@@ -90,7 +72,7 @@ g.test('dispatch_sizes')
         poptions('workSizes', [
           [0, 0, 0],
           [1, 1, 1],
-          // TODO: Add a test for a large workSize when the upper limit has been decided.
+          // TODO: Add tests for workSizes right under and above upper limit once the limit has been decided.
         ] as [number, number, number][])
       )
   )
@@ -108,7 +90,18 @@ g.test('dispatch_sizes')
   });
 
 const kBufferData = new Uint32Array(6).fill(1);
-g.test('indirect_dipatch_buffer')
+g.test('indirect_dispatch_buffer')
+  .desc(
+    `- For 'indirect' dispatch
+  - Tests that indirect buffers:
+    - 'invalid', 'destroyed' generate an error
+    - 'valid' buffers do not generate an error
+  - Tests that, for a buffer with 6 elements, indirect offsets:
+    - 0, 'sizeof(uint32)', and '3 * sizeof(uint32)' do not generate an error
+    - An error should be generate by the following:
+      - 1: non-multiple of 4
+      - '4 * sizeof(uint32): z-components outside of buffer`
+  )
   .params(
     params()
       .combine(poptions('state', ['valid', 'invalid', 'destroyed'] as const))
