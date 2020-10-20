@@ -7,13 +7,10 @@ export class TestWorker {
   private readonly worker: Worker;
   private readonly resolvers = new Map<string, (result: LiveTestCaseResult) => void>();
 
-  constructor(debug: boolean) {
+  constructor(workerPath: string, debug: boolean) {
     this.debug = debug;
 
-    const selfPath = import.meta.url;
-    const selfPathDir = selfPath.substring(0, selfPath.lastIndexOf('/'));
-    const workerPath = selfPathDir + '/test_worker-worker.js';
-    this.worker = new Worker(workerPath, { type: 'module' });
+    this.worker = new Worker(workerPath);
     this.worker.onmessage = ev => {
       const query: string = ev.data.query;
       const result: TransferredTestCaseResult = ev.data.result;

@@ -23,7 +23,10 @@ fs.writeFileSync(
   `\
 // AUTO-GENERATED - DO NOT EDIT. See ${myself}.
 
-export const version = '${version}';
+define(["exports"], _exports => {
+  Object.defineProperty(_exports, "__esModule", { value: true });
+  _exports.version = '${version}';
+});
 `
 );
 

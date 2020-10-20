@@ -10,6 +10,7 @@
     <meta name="viewport" content="width=device-width" />
     <link rel="stylesheet" href="third_party/normalize.min.css" />
     <script src="third_party/jquery/jquery-3.3.1.min.js"></script>
+    <script src="third_party/require.js"></script>
     <style>
       html {
         overflow-x: hidden;
@@ -218,6 +219,8 @@
     <div id="resultsVis"></div>
     <textarea id="resultsJSON" spellcheck="false"></textarea>
 
-    <script type="module" src="../out/common/runtime/standalone.js"></script>
+    <script>
+      require(['../out/common/runtime/standalone.js']);
+    </script>
   </body>
 </html>

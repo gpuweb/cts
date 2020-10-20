@@ -85,6 +85,7 @@ module.exports = function (grunt) {
         files: [
           { expand: true, cwd: 'out', src: 'common/framework/version.js', dest: 'out-wpt/' },
           { expand: true, cwd: 'out', src: 'webgpu/listing.js', dest: 'out-wpt/' },
+          { src: 'wpt/worker.js', dest: 'out-wpt/worker.js' },
         ],
       },
       'out-wpt-htmlfiles': {

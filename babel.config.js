@@ -3,6 +3,10 @@ module.exports = function (api) {
   return {
     presets: ['@babel/preset-typescript'],
     plugins: [
+      // Must come before @babel/plugin-transform-modules-amd
+      '@babel/plugin-proposal-dynamic-import',
+      '@babel/plugin-transform-modules-amd',
+
       '@babel/plugin-proposal-class-properties',
       '@babel/plugin-proposal-logical-assignment-operators',
       '@babel/plugin-proposal-nullish-coalescing-operator',

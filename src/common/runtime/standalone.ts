@@ -22,7 +22,7 @@ const debug = optionEnabled('debug');
 
 const logger = new Logger(debug);
 
-const worker = optionEnabled('worker') ? new TestWorker(debug) : undefined;
+const worker = optionEnabled('worker') ? new TestWorker('./worker.js', debug) : undefined;
 
 const resultsVis = document.getElementById('resultsVis')!;
 const resultsJSON = document.getElementById('resultsJSON')!;
