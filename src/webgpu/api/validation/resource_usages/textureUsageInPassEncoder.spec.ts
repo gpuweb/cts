@@ -800,10 +800,10 @@ g.test('replaced_binding')
 
     // TODO: If the Compatible Usage List (https://gpuweb.github.io/gpuweb/#compatible-usage-list)
     // gets programmatically defined in capability_info, use it here, instead of this logic, for clarity.
-    let success = bindingType === 'writeonly-storage-texture' ? false : true;
+    let success = bindingType !== 'writeonly-storage-texture';
     // Replaced bindings should not be validated in compute pass, because validation only occurs
     // inside dispatch() which only looks at the current resource usages.
-    if (compute) success = true;
+    success ||= compute;
 
     t.expectValidationError(() => {
       encoder.finish();
