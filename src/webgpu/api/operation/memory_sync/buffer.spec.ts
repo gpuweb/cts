@@ -4,8 +4,8 @@ Memory Synchronization Tests for Buffer.
 - Test write-after-write on a single buffer. Create one single buffer and initiate it to 0.
 Write a number (say 1) into the buffer via render pass, compute pass, or copy. Write another
 number (say 2) into the same buffer via render pass, compute pass, or copy.
-  - x= 1st write type: {storage buffer in {render, compute}, T2B, B2B, WriteBuffer, MapWrite}
-  - x= 2nd write type: {storage buffer in {render, compute}, T2B, B2B, WriteBuffer, MapWrite}
+  - x= 1st write type: {storage buffer in {render, compute}, T2B, B2B, WriteBuffer}
+  - x= 2nd write type: {storage buffer in {render, compute}, T2B, B2B, WriteBuffer}
   - for each write, if render, x= {bundle, non-bundle}
   - if pass type is the same, x= {single pass, separate passes} (note: render has loose guarantees)
   - if not single pass, x= writes in {same cmdbuf, separate cmdbufs, separate submits, separate queues}
@@ -192,18 +192,6 @@ class BufferSyncTest extends GPUTest {
     this.device.defaultQueue.writeBuffer(buffer, 0, data);
   }
 
-  // Write buffer via mapping and writing
-  async writeByMapWrite(buffer: GPUBuffer, value: number) {
-    const data = new Uint32Array(SIZE / 4);
-    for (let i = 0; i < SIZE / 4; ++i) {
-      data[i] = value;
-    }
-
-    await buffer.mapAsync(GPUMapMode.WRITE);
-    new Uint8Array(buffer.getMappedRange()).set(data);
-    buffer.unmap();
-  }
-
   // Issue write operation via render pass, compute pass, copy, etc.
   issueWriteOp(
     writeOp: string,
@@ -243,7 +231,7 @@ class BufferSyncTest extends GPUTest {
     return encoder.finish();
   }
 
-  async createQueueSubmitsAndIssueWriteOp(
+  createQueueSubmitsAndIssueWriteOp(
     writeOp: string,
     bundle: boolean,
     buffer: GPUBuffer,
@@ -251,8 +239,6 @@ class BufferSyncTest extends GPUTest {
   ) {
     if (writeOp === 'writeBuffer') {
       this.writeByWriteBuffer(buffer, value);
-    } else if (writeOp === 'mapWrite') {
-      this.writeByMapWrite(buffer, value);
     } else {
       const encoder = this.device.createCommandEncoder();
       this.issueWriteOp(writeOp, bundle, buffer, value, encoder);
@@ -290,7 +276,6 @@ g.test('write_after_write')
           'b2bCopy',
           't2bCopy',
           'writeBuffer',
-          'mapWrite',
         ] as const)
       )
       .combine(
@@ -300,7 +285,6 @@ g.test('write_after_write')
           'b2bCopy',
           't2bCopy',
           'writeBuffer',
-          'mapWrite',
         ] as const)
       )
       .combine(pbool('firstWriteInBundle'))
@@ -310,8 +294,6 @@ g.test('write_after_write')
           (p.firstWriteInBundle && p.firstWriteOp !== 'render') ||
           (p.secondWriteInBundle && p.secondWriteOp !== 'render') ||
           ((p.firstWriteOp === 'writeBuffer' || p.secondWriteOp === 'writeBuffer') &&
-            p.writeScopes !== 'separateSubmits') ||
-          ((p.firstWriteOp === 'mapWrite' || p.secondWriteOp === 'mapWrite') &&
             p.writeScopes !== 'separateSubmits')
       )
   )
