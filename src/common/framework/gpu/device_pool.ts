@@ -84,13 +84,13 @@ export class DevicePool {
  */
 class DescriptorToHolderMap {
   private unsupported: Set<string> = new Set();
-  private items: Map<string, DeviceHolder> = new Map();
+  private holders: Map<string, DeviceHolder> = new Map();
 
   /** Deletes an item from the map by GPUDevice value. */
   deleteByDevice(device: GPUDevice): void {
-    for (const [k, v] of this.items) {
+    for (const [k, v] of this.holders) {
       if (v.device === device) {
-        this.items.delete(k);
+        this.holders.delete(k);
         return;
       }
     }
@@ -113,11 +113,11 @@ class DescriptorToHolderMap {
 
     // Search for an existing device with the same descriptor.
     {
-      const value = this.items.get(key);
+      const value = this.holders.get(key);
       if (value) {
         // Move it to the end of the Map (most-recently-used).
-        this.items.delete(key);
-        this.items.set(key, value);
+        this.holders.delete(key);
+        this.holders.set(key, value);
         return value;
       }
     }
@@ -138,13 +138,13 @@ class DescriptorToHolderMap {
 
   /** Insert an entry, then remove the least-recently-used items if there are too many. */
   private insertAndCleanUp(key: string, value: DeviceHolder) {
-    this.items.set(key, value);
+    this.holders.set(key, value);
 
     const kMaxEntries = 5;
-    if (this.items.size > kMaxEntries) {
+    if (this.holders.size > kMaxEntries) {
       // Delete the first (least recently used) item in the set.
-      for (const [key] of this.items) {
-        this.items.delete(key);
+      for (const [key] of this.holders) {
+        this.holders.delete(key);
         return;
       }
     }
