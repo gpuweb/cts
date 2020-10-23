@@ -2,12 +2,21 @@ import { unreachable } from '../../../common/framework/util/util.js';
 import { BindableResource } from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 
+type Encoder = GPUCommandEncoder | GPUProgrammablePassEncoder | GPURenderBundleEncoder;
+export const kEncoderTypes = ['non-pass', 'compute pass', 'render pass', 'render bundle'] as const;
+type EncoderType = typeof kEncoderTypes[number];
+
+interface CommandBufferMaker<E extends Encoder> {
+  readonly encoder: E;
+  finish(): GPUCommandBuffer;
+}
+
 export class ValidationTest extends GPUTest {
   createTextureWithState(
     state: 'valid' | 'invalid' | 'destroyed',
-    descriptor?: GPUTextureDescriptor
+    descriptor?: Readonly<GPUTextureDescriptor>
   ): GPUTexture {
-    const defaultDescriptor: GPUTextureDescriptor = {
+    descriptor = descriptor ?? {
       size: { width: 1, height: 1, depth: 1 },
       format: 'rgba8unorm',
       usage:
@@ -18,22 +27,44 @@ export class ValidationTest extends GPUTest {
         GPUTextureUsage.OUTPUT_ATTACHMENT,
     };
 
-    let texture: GPUTexture;
     switch (state) {
       case 'valid':
-        texture = this.device.createTexture(descriptor ? descriptor : defaultDescriptor);
-        break;
+        return this.device.createTexture(descriptor);
       case 'invalid':
-        texture = this.getErrorTexture();
-        break;
-      case 'destroyed':
-        texture = this.device.createTexture(descriptor ? descriptor : defaultDescriptor);
+        return this.getErrorTexture();
+      case 'destroyed': {
+        const texture = this.device.createTexture(descriptor);
         texture.destroy();
-        break;
-      default:
-        unreachable();
+        return texture;
+      }
     }
-    return texture;
+  }
+
+  createBufferWithState(
+    state: 'valid' | 'invalid' | 'destroyed',
+    descriptor?: Readonly<GPUBufferDescriptor>
+  ): GPUBuffer {
+    descriptor = descriptor ?? {
+      size: 4,
+      usage: GPUBufferUsage.VERTEX,
+    };
+
+    switch (state) {
+      case 'valid':
+        return this.device.createBuffer(descriptor);
+      case 'invalid':
+        // Make the buffer invalid because of an invalid combination of usages but keep the
+        // descriptor passed as much as possible (for mappedAtCreation and friends).
+        return this.device.createBuffer({
+          ...descriptor,
+          usage: descriptor.usage | GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_SRC,
+        });
+      case 'destroyed': {
+        const buffer = this.device.createBuffer(descriptor);
+        buffer.destroy();
+        return buffer;
+      }
+    }
   }
 
   getStorageBuffer(): GPUBuffer {
@@ -45,13 +76,7 @@ export class ValidationTest extends GPUTest {
   }
 
   getErrorBuffer(): GPUBuffer {
-    this.device.pushErrorScope('validation');
-    const errorBuffer = this.device.createBuffer({
-      size: 1024,
-      usage: 0xffff, // Invalid GPUBufferUsage
-    });
-    this.device.popErrorScope();
-    return errorBuffer;
+    return this.createBufferWithState('invalid');
   }
 
   getSampler(): GPUSampler {
@@ -179,6 +204,84 @@ export class ValidationTest extends GPUTest {
         entryPoint: 'main',
       },
     });
+  }
+
+  createEncoder(encoderType: 'non-pass'): CommandBufferMaker<GPUCommandEncoder>;
+  createEncoder(encoderType: 'render pass'): CommandBufferMaker<GPURenderPassEncoder>;
+  createEncoder(encoderType: 'compute pass'): CommandBufferMaker<GPUComputePassEncoder>;
+  createEncoder(encoderType: 'render bundle'): CommandBufferMaker<GPURenderBundleEncoder>;
+  createEncoder(
+    encoderType: 'render pass' | 'render bundle'
+  ): CommandBufferMaker<GPURenderPassEncoder | GPURenderBundleEncoder>;
+  createEncoder(
+    encoderType: 'compute pass' | 'render pass' | 'render bundle'
+  ): CommandBufferMaker<GPUProgrammablePassEncoder>;
+  createEncoder(encoderType: EncoderType): CommandBufferMaker<Encoder>;
+  createEncoder(encoderType: EncoderType): CommandBufferMaker<Encoder> {
+    const colorFormat = 'rgba8unorm';
+    switch (encoderType) {
+      case 'non-pass': {
+        const encoder = this.device.createCommandEncoder();
+        return {
+          encoder,
+
+          finish: () => {
+            return encoder.finish();
+          },
+        };
+      }
+      case 'render bundle': {
+        const device = this.device;
+        const encoder = device.createRenderBundleEncoder({
+          colorFormats: [colorFormat],
+        });
+        const pass = this.createEncoder('render pass');
+        return {
+          encoder,
+          finish: () => {
+            const bundle = encoder.finish();
+            pass.encoder.executeBundles([bundle]);
+            return pass.finish();
+          },
+        };
+      }
+      case 'compute pass': {
+        const commandEncoder = this.device.createCommandEncoder();
+        const encoder = commandEncoder.beginComputePass();
+        return {
+          encoder,
+          finish: () => {
+            encoder.endPass();
+            return commandEncoder.finish();
+          },
+        };
+      }
+      case 'render pass': {
+        const commandEncoder = this.device.createCommandEncoder();
+        const attachment = this.device
+          .createTexture({
+            format: colorFormat,
+            size: { width: 16, height: 16, depth: 1 },
+            usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
+          })
+          .createView();
+        const encoder = commandEncoder.beginRenderPass({
+          colorAttachments: [
+            {
+              attachment,
+              loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+            },
+          ],
+        });
+        return {
+          encoder,
+          finish: () => {
+            encoder.endPass();
+            return commandEncoder.finish();
+          },
+        };
+      }
+    }
   }
 
   expectValidationError(fn: Function, shouldError: boolean = true): void {

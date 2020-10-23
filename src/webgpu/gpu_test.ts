@@ -46,7 +46,7 @@ export class GPUTest extends Fixture {
   get device(): GPUDevice {
     assert(
       this.provider !== undefined,
-      'No provider available yet; did you "await" on asyncReinitDeviceWithDescriptor?'
+      'No provider available right now; did you "await" selectDeviceOrSkipTestCase?'
     );
     if (!this.acquiredDevice) {
       this.acquiredDevice = this.provider.acquire();
@@ -65,14 +65,20 @@ export class GPUTest extends Fixture {
   }
 
   /**
-   * GPUTest instances always start with a reserved GPUDevice.
-   * However, some tests need particular extensions to be enabled.
-   * Call this function to re-reserve a GPUDevice with the appropriate extensions.
+   * When a GPUTest test accesses `.device` for the first time, a "default" GPUDevice
+   * (descriptor = `undefined`) is provided by default.
+   * However, some tests or cases need particular extensions to be enabled. Call this function with
+   * a descriptor (or undefined) to select a GPUDevice matching that descriptor.
+   *
+   * If the request descriptor can't be supported, throws an exception to skip the entire test case.
    */
-  async asyncReinitDeviceWithDescriptor(descriptor: GPUDeviceDescriptor): Promise<void> {
+  async selectDeviceOrSkipTestCase(descriptor: GPUDeviceDescriptor | undefined): Promise<void> {
     assert(this.provider !== undefined);
     // Make sure the device isn't replaced after it's been retrieved once.
-    assert(!this.acquiredDevice, 'asyncReinitDeviceWithDescriptor after the device has been used');
+    assert(
+      !this.acquiredDevice,
+      "Can't selectDeviceOrSkipTestCase() after the device has been used"
+    );
 
     const oldProvider = this.provider;
     this.provider = undefined;

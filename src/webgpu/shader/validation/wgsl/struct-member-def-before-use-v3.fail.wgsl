@@ -1,7 +1,7 @@
 # v-0006 -  This fails because `fn Foo()` returns `struct goo`, which does not
 # have a member `s.z`.
 
-type goo = struct {
+struct goo {
   s : vec2<i32>;
 };
 
@@ -12,8 +12,8 @@ fn Foo() -> goo {
   return a;
 }
 
+[[stage(vertex)]]
 fn main() -> void {
   var r : i32 = Foo().s.z;
   return;
 }
-entry_point fragment = main;

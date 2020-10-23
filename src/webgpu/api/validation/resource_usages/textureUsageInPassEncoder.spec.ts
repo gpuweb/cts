@@ -18,19 +18,20 @@ Test Coverage:
         same aspect. Otherwise, no error should be generated.
 
   - Test combinations of two shader stages:
-    - Texture usages in bindings with invisible shader stages should be tracked. Invisible shader
+    - Texture usages in bindings with invisible shader stages should be validated. Invisible shader
       stages include shader stage with visibility none, compute shader stage in render pass, and
       vertex/fragment shader stage in compute pass.
 
   - Tests replaced bindings:
     - Texture usages via bindings replaced by another setBindGroup() upon the same bindGroup index
-      in current scope should be tracked.
+      in render pass should be validated. However, replaced bindings should not be validated in
+      compute pass.
 
   - Test texture usages in bundle:
-    - Texture usages in bundle should be tracked if that bundle is executed in the current scope.
+    - Texture usages in bundle should be validated if that bundle is executed in the current scope.
 
   - Test texture usages with unused bindings:
-    - Texture usages should be tracked even its bindings is not used in pipeline.
+    - Texture usages should be validated even its bindings is not used in pipeline.
 
   - Test texture usages validation scope:
     - Texture usages should be validated per each render pass. And they should be validated per each
@@ -47,6 +48,7 @@ import {
   kTextureBindingTypeInfo,
   kShaderStages,
 } from '../../../capability_info.js';
+import { GPUConst } from '../../../constants.js';
 import { ValidationTest } from '../validation_test.js';
 
 const SIZE = 32;
@@ -183,6 +185,12 @@ class TextureUsageTracking extends ValidationTest {
     } else {
       (pass as GPURenderPassEncoder).draw(3, 1, 0, 0);
     }
+  }
+
+  setComputePipelineAndCallDispatch(pass: GPUComputePassEncoder) {
+    const pipeline = this.createNoOpComputePipeline();
+    pass.setPipeline(pipeline);
+    pass.dispatch(1);
   }
 }
 
@@ -501,6 +509,7 @@ g.test('subresources_and_binding_types_combination_for_color')
           pass.setBindGroup(1, bindGroup1);
         }
       }
+      if (compute) t.setComputePipelineAndCallDispatch(pass as GPUComputePassEncoder);
       pass.endPass();
     }
 
@@ -651,6 +660,7 @@ g.test('subresources_and_binding_types_combination_for_aspect')
         pass.setBindGroup(1, bindGroup1);
       }
     }
+    if (compute) t.setComputePipelineAndCallDispatch(pass as GPUComputePassEncoder);
     pass.endPass();
 
     const disjointAspects =
@@ -677,7 +687,7 @@ g.test('shader_stages_and_visibility')
           // Writeonly-storage-texture binding type is not supported in vertex stage. But it is the
           // only way to write into texture in compute. So there is no means to successfully create
           // a binding which attempt to write into stage(s) with vertex stage in compute pass.
-          p.compute && Boolean(p.writeVisibility & GPUShaderStage.VERTEX)
+          p.compute && Boolean(p.writeVisibility & GPUConst.ShaderStage.VERTEX)
       )
   )
   .fn(async t => {
@@ -719,9 +729,10 @@ g.test('shader_stages_and_visibility')
           writeHasVertexStage ? view : t.createTexture().createView()
         );
     pass.setBindGroup(0, bindGroup);
+    if (compute) t.setComputePipelineAndCallDispatch(pass as GPUComputePassEncoder);
     pass.endPass();
 
-    // Texture usages in bindings with invisible shader stages should be tracked. Invisible shader
+    // Texture usages in bindings with invisible shader stages should be validated. Invisible shader
     // stages include shader stage with visibility none, compute shader stage in render pass, and
     // vertex/fragment shader stage in compute pass.
     t.expectValidationError(() => {
@@ -729,12 +740,18 @@ g.test('shader_stages_and_visibility')
     });
   });
 
-// We should track the texture usages in bindings which are replaced by another setBindGroup()
-// call site upon the same index in the same render pass.
+// We should validate the texture usages in bindings which are replaced by another setBindGroup()
+// call site upon the same index in the same render pass. However, replaced bindings in compute
+// should not be validated.
 g.test('replaced_binding')
-  .params(poptions('bindingType', kTextureBindingTypes))
+  .params(
+    params()
+      .combine(pbool('compute'))
+      .combine(pbool('callDrawOrDispatch'))
+      .combine(poptions('bindingType', kTextureBindingTypes))
+  )
   .fn(async t => {
-    const { bindingType } = t.params;
+    const { compute, callDrawOrDispatch, bindingType } = t.params;
     const info = kTextureBindingTypeInfo[bindingType];
     const bindingTexFormat = info.resource === 'storageTex' ? 'rgba8unorm' : undefined;
 
@@ -767,15 +784,28 @@ g.test('replaced_binding')
     const bindGroup1 = t.createBindGroup(0, sampledStorageView, 'sampled-texture', '2d', undefined);
 
     const encoder = t.device.createCommandEncoder();
-    const pass = t.beginSimpleRenderPass(encoder, t.createTexture().createView());
+    const pass = compute
+      ? encoder.beginComputePass()
+      : t.beginSimpleRenderPass(encoder, t.createTexture().createView());
 
     // Set bindGroup0 and bindGroup1. bindGroup0 is replaced by bindGroup1 in the current pass.
-    // But bindings in bindGroup0 should be tracked too.
+    // But bindings in bindGroup0 should be validated too.
     pass.setBindGroup(0, bindGroup0);
+    if (callDrawOrDispatch) {
+      const pipeline = compute ? t.createNoOpComputePipeline() : t.createNoOpRenderPipeline();
+      t.setPipeline(pass, pipeline, compute);
+      t.issueDrawOrDispatch(pass, compute);
+    }
     pass.setBindGroup(0, bindGroup1);
     pass.endPass();
 
-    const success = bindingType === 'writeonly-storage-texture' ? false : true;
+    // TODO: If the Compatible Usage List (https://gpuweb.github.io/gpuweb/#compatible-usage-list)
+    // gets programmatically defined in capability_info, use it here, instead of this logic, for clarity.
+    let success = bindingType !== 'writeonly-storage-texture';
+    // Replaced bindings should not be validated in compute pass, because validation only occurs
+    // inside dispatch() which only looks at the current resource usages.
+    success ||= compute;
+
     t.expectValidationError(() => {
       encoder.finish();
     }, !success);
@@ -858,8 +888,7 @@ g.test('bindings_in_bundle')
       success = true;
     }
 
-    // Resource usages in bundle should be tracked. And validation error should be reported
-    // if needed.
+    // Resource usages in bundle should be validated.
     t.expectValidationError(() => {
       encoder.finish();
     }, !success);
@@ -965,9 +994,13 @@ g.test('unused_bindings_in_pipeline')
     if (callDrawOrDispatch) t.issueDrawOrDispatch(pass, compute);
     pass.endPass();
 
+    // Resource usage validation scope is defined by dispatch calls. If dispatch is not called,
+    // we don't need to do resource usage validation and no validation error to be reported.
+    const success = compute && !callDrawOrDispatch;
+
     t.expectValidationError(() => {
       encoder.finish();
-    });
+    }, !success);
   });
 
 g.test('validation_scope,no_draw_or_dispatch')
@@ -981,9 +1014,11 @@ g.test('validation_scope,no_draw_or_dispatch')
     pass.setBindGroup(1, bindGroup1);
     pass.endPass();
 
+    // Resource usage validation scope is defined by dispatch calls. If dispatch is not called,
+    // we don't need to do resource usage validation and no validation error to be reported.
     t.expectValidationError(() => {
       encoder.finish();
-    });
+    }, !compute);
   });
 
 g.test('validation_scope,same_draw_or_dispatch')
@@ -1031,6 +1066,7 @@ g.test('validation_scope,different_passes')
     const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope(compute);
     t.setPipeline(pass, pipeline, compute);
     pass.setBindGroup(0, bindGroup0);
+    if (compute) t.setComputePipelineAndCallDispatch(pass as GPUComputePassEncoder);
     pass.endPass();
 
     const pass1 = compute
@@ -1038,6 +1074,7 @@ g.test('validation_scope,different_passes')
       : t.beginSimpleRenderPass(encoder, t.createTexture().createView());
     t.setPipeline(pass1, pipeline, compute);
     pass1.setBindGroup(1, bindGroup1);
+    if (compute) t.setComputePipelineAndCallDispatch(pass as GPUComputePassEncoder);
     pass1.endPass();
 
     // No validation error.
