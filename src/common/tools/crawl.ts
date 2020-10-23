@@ -35,7 +35,7 @@ export async function crawl(suite: string): Promise<TestSuiteListingEntry[]> {
       assert(mod.description !== undefined, 'Test spec file missing description: ' + filename);
       assert(mod.g !== undefined, 'Test spec file missing TestGroup definition: ' + filename);
 
-      mod.g.checkCaseNamesAndDuplicates();
+      mod.g.validate();
 
       const path = filepathWithoutExtension.split('/');
       entries.push({ file: path, description: mod.description.trim() });
