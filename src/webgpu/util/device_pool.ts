@@ -1,7 +1,13 @@
-import { SkipTestCase } from '../fixture.js';
-import { assert, raceWithRejectOnTimeout, unreachable, assertReject } from '../util/util.js';
+import { SkipTestCase } from '../../common/framework/fixture.js';
+import {
+  assert,
+  raceWithRejectOnTimeout,
+  unreachable,
+  assertReject,
+} from '../../common/framework/util/util.js';
+import { DefaultLimits } from '../constants.js';
 
-import { getGPU } from './implementation.js';
+import { getGPU } from './navigator_gpu.js';
 
 export interface DeviceProvider {
   acquire(): GPUDevice;
@@ -151,7 +157,6 @@ class DescriptorToHolderMap {
   }
 }
 
-type CanonicalLimits = Required<GPULimits>;
 type CanonicalDeviceDescriptor = Omit<Required<GPUDeviceDescriptor>, 'label'>;
 /**
  * Make a stringified map-key from a GPUDeviceDescriptor.
@@ -160,19 +165,15 @@ type CanonicalDeviceDescriptor = Omit<Required<GPUDeviceDescriptor>, 'label'>;
  */
 function canonicalizeDescriptor(desc: GPUDeviceDescriptor): [CanonicalDeviceDescriptor, string] {
   const extensionsCanonicalized = desc.extensions ? Array.from(desc.extensions).sort() : [];
-  const lim: GPULimits = desc.limits ?? {};
-  // Type ensures every field is carried through.
-  const limitsCanonicalized: CanonicalLimits = {
-    maxBindGroups: lim.maxBindGroups ?? 4,
-    maxDynamicUniformBuffersPerPipelineLayout: lim.maxDynamicUniformBuffersPerPipelineLayout ?? 8,
-    maxDynamicStorageBuffersPerPipelineLayout: lim.maxDynamicStorageBuffersPerPipelineLayout ?? 4,
-    maxSampledTexturesPerShaderStage: lim.maxSampledTexturesPerShaderStage ?? 16,
-    maxSamplersPerShaderStage: lim.maxSamplersPerShaderStage ?? 16,
-    maxStorageBuffersPerShaderStage: lim.maxStorageBuffersPerShaderStage ?? 4,
-    maxStorageTexturesPerShaderStage: lim.maxStorageTexturesPerShaderStage ?? 4,
-    maxUniformBuffersPerShaderStage: lim.maxUniformBuffersPerShaderStage ?? 12,
-    maxUniformBufferBindingSize: lim.maxUniformBufferBindingSize ?? 16384,
-  };
+  const limits: GPULimits = { ...desc.limits };
+
+  const limitsCanonicalized: GPULimits = { ...DefaultLimits };
+  for (const k of Object.keys(limits) as (keyof GPULimits)[]) {
+    if (limits[k] !== undefined) {
+      limitsCanonicalized[k] = limits[k];
+    }
+  }
+
   // Type ensures every field is carried through.
   const descriptorCanonicalized: CanonicalDeviceDescriptor = {
     extensions: extensionsCanonicalized,

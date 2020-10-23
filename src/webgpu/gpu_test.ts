@@ -1,13 +1,9 @@
 import { Fixture } from '../common/framework/fixture.js';
-import {
-  DevicePool,
-  DeviceProvider,
-  TestOOMedShouldAttemptGC,
-} from '../common/framework/gpu/device_pool.js';
 import { attemptGarbageCollection } from '../common/framework/util/collect_garbage.js';
 import { assert } from '../common/framework/util/util.js';
 
 import { EncodableTextureFormat } from './capability_info.js';
+import { DevicePool, DeviceProvider, TestOOMedShouldAttemptGC } from './util/device_pool.js';
 import { align } from './util/math.js';
 import {
   fillTextureDataWithTexelValue,

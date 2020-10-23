@@ -1,3 +1,5 @@
+import { ResolveType } from '../common/framework/params_builder.js';
+
 export const GPUConst = {
   BufferUsage: {
     MAP_READ: 0x0001,
@@ -39,3 +41,16 @@ export const GPUConst = {
     WRITE: 0x2,
   },
 } as const;
+
+// Type ensures every field is specified.
+export const DefaultLimits: ResolveType<Required<Readonly<GPULimits>>> = {
+  maxBindGroups: 4,
+  maxDynamicUniformBuffersPerPipelineLayout: 8,
+  maxDynamicStorageBuffersPerPipelineLayout: 4,
+  maxSampledTexturesPerShaderStage: 16,
+  maxSamplersPerShaderStage: 16,
+  maxStorageBuffersPerShaderStage: 4,
+  maxStorageTexturesPerShaderStage: 4,
+  maxUniformBuffersPerShaderStage: 12,
+  maxUniformBufferBindingSize: 16384,
+};
