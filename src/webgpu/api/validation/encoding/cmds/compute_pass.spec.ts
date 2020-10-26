@@ -48,7 +48,8 @@ g.test('set_pipeline')
   .desc(
     `
 setPipeline should generate an error iff using an 'invalid' pipeline.
-`)
+`
+  )
   .params(poptions('state', ['valid', 'invalid'] as const))
   .fn(t => {
     const pipeline = t.createComputePipeline(t.params.state);
