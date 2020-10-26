@@ -46,9 +46,9 @@ export const g = makeTestGroup(F);
 
 g.test('set_pipeline')
   .desc(
-    `- Tests using compute pipelines
-  - An error should be generated when using an 'invalid' pipeline`
-  )
+    `
+setPipeline should generate an error iff using an 'invalid' pipeline.
+`)
   .params(poptions('state', ['valid', 'invalid'] as const))
   .fn(t => {
     const pipeline = t.createComputePipeline(t.params.state);
@@ -61,9 +61,12 @@ g.test('set_pipeline')
 
 g.test('dispatch_sizes')
   .desc(
-    `- For both 'direct' and 'indirect' dispatch
-  - Tests using the following workgroup sizes: {[0, 0, 0], [1, 1, 1]}
-  - An error should occur when the number exceeds <fill number here>`
+    `
+Test 'direct' and 'indirect' dispatch with various sizes.
+  - workgroup sizes:
+    - valid, {[0, 0, 0], [1, 1, 1]}
+    - invalid,  <fill number here>
+`
   )
   .params(
     params()
@@ -72,8 +75,9 @@ g.test('dispatch_sizes')
         poptions('workSizes', [
           [0, 0, 0],
           [1, 1, 1],
-          // TODO: Add tests for workSizes right under and above upper limit once the limit has been decided.
-        ] as [number, number, number][])
+          // TODO: Add tests for workSizes right under and above upper limit once the limit has
+          //  been decided.
+        ] as const)
       )
   )
   .fn(t => {
@@ -92,15 +96,15 @@ g.test('dispatch_sizes')
 const kBufferData = new Uint32Array(6).fill(1);
 g.test('indirect_dispatch_buffer')
   .desc(
-    `- For 'indirect' dispatch
-  - Tests that indirect buffers:
-    - 'invalid', 'destroyed' generate an error
-    - 'valid' buffers do not generate an error
-  - Tests that, for a buffer with 6 elements, indirect offsets:
-    - 0, 'sizeof(uint32)', and '3 * sizeof(uint32)' do not generate an error
-    - An error should be generate by the following:
-      - 1: non-multiple of 4
-      - '4 * sizeof(uint32): z-components outside of buffer`
+    `
+Test dispatchIndirect validation by submitting various dispatches with a no-op pipeline and an
+indirectBuffer with 6 elements.
+- indirectBuffer: {'valid', 'invalid', 'destroyed'}
+- indirectOffset:
+  - valid, within the buffer: {beginning, middle, end} of the buffer
+  - invalid, non-multiple of 4
+  - invalid, the last element is outside the buffer
+`
   )
   .params(
     params()
@@ -111,7 +115,8 @@ g.test('indirect_dispatch_buffer')
           Uint32Array.BYTES_PER_ELEMENT, // valid for 'valid' buffers
           kBufferData.byteLength - 3 * Uint32Array.BYTES_PER_ELEMENT, // valid for 'valid' buffers
           1, // invalid, non-multiple of 4 offset
-          kBufferData.byteLength - Uint32Array.BYTES_PER_ELEMENT, // invalid, last element outside buffer
+          // invalid, last element outside buffer
+          kBufferData.byteLength - Uint32Array.BYTES_PER_ELEMENT,
         ])
       )
   )
