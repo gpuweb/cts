@@ -144,7 +144,7 @@ function makeTreeNodeHeaderHTML(
     const checkbox = $('<input>')
       .attr('type', 'checkbox')
       .addClass('collapsebtn')
-      .change(function (this) {
+      .on('change', function (this) {
         onChange((this as HTMLInputElement).checked);
       })
       .attr('alt', 'Expand')
