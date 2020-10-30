@@ -31,6 +31,16 @@ type RunSubtree = () => Promise<void>;
 
 // DOM generation
 
+function memoize<T>(fn: () => T): () => T {
+  let value: T | undefined;
+  return () => {
+    if (value === undefined) {
+      value = fn();
+    }
+    return value;
+  };
+}
+
 function makeTreeNodeHTML(
   tree: TestTreeNode,
   parentElement: HTMLElement,
@@ -98,10 +108,23 @@ function makeSubtreeHTML(
   $(div).addClass('subtree');
 
   const subtreeHTML = $('<div>').addClass('subtreechildren');
-  const runSubtree = makeSubtreeChildrenHTML(subtreeHTML[0], n.children.values(), n.query.level);
+  const generateSubtree = makeSubtreeChildrenHTML(
+    subtreeHTML[0],
+    n.children.values(),
+    n.query.level
+  );
+  const runSubtree = () => generateSubtree()();
 
+  // Hide subtree - it's not generated yet.
+  subtreeHTML.hide();
   const header = makeTreeNodeHeaderHTML(n, runSubtree, parentLevel, checked => {
-    checked ? subtreeHTML.show() : subtreeHTML.hide();
+    if (checked) {
+      // Make sure the subtree is generated and then show it.
+      generateSubtree();
+      subtreeHTML.show();
+    } else {
+      subtreeHTML.hide();
+    }
   });
 
   div.append(header);
@@ -116,18 +139,19 @@ function makeSubtreeChildrenHTML(
   div: HTMLElement,
   children: Iterable<TestTreeNode>,
   parentLevel: TestQueryLevel
-): RunSubtree {
-  const runSubtreeFns: RunSubtree[] = [];
-  for (const subtree of children) {
-    const runSubtree = makeTreeNodeHTML(subtree, div, parentLevel);
-    runSubtreeFns.push(runSubtree);
-  }
-
-  return async () => {
-    for (const runSubtree of runSubtreeFns) {
-      await runSubtree();
+): () => RunSubtree {
+  return memoize(() => {
+    const runSubtreeFns: RunSubtree[] = [];
+    for (const subtree of children) {
+      const runSubtree = makeTreeNodeHTML(subtree, div, parentLevel);
+      runSubtreeFns.push(runSubtree);
     }
-  };
+    return async () => {
+      for (const runSubtree of runSubtreeFns) {
+        await runSubtree();
+      }
+    };
+  });
 }
 
 function makeTreeNodeHeaderHTML(
@@ -151,11 +175,12 @@ function makeTreeNodeHeaderHTML(
       .attr('title', 'Expand')
       .appendTo(div);
 
-    // Collapse deeper parts of the tree at load.
-    if (n.query.level > lastQueryLevelToExpand && n.query.level > parentLevel) {
-      onChange(false);
-    } else {
+    // Expand the shallower parts of the tree at load.
+    // Also expand completely within subtrees that are at the same query level
+    // (e.g. s:f:t,* and s:f:t,t,*).
+    if (n.query.level <= lastQueryLevelToExpand || n.query.level === parentLevel) {
       checkbox.prop('checked', true); // (does not fire onChange)
+      onChange(true);
     }
   }
   const runtext = isLeaf ? 'Run case' : 'Run subtree';
