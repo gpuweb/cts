@@ -151,8 +151,8 @@ function makeTreeNodeHeaderHTML(
       .attr('title', 'Expand')
       .appendTo(div);
 
-    // Collapse s:f:* or s:f:t:* or s:f:t:c by default.
-    if (n.query.level > rootQueryLevel && n.query.level > parentLevel) {
+    // Collapse deeper parts of the tree at load.
+    if (n.query.level > lastQueryLevelToExpand && n.query.level > parentLevel) {
       onChange(false);
     } else {
       checkbox.prop('checked', true); // (does not fire onChange)
@@ -201,7 +201,8 @@ function updateJSON(): void {
   resultsJSON.textContent = logger.asJSON(2);
 }
 
-let rootQueryLevel: TestQueryLevel = 1;
+// Collapse s:f:t:* or s:f:t:c by default.
+let lastQueryLevelToExpand: TestQueryLevel = 2;
 
 (async () => {
   const loader = new DefaultTestFileLoader();
@@ -229,7 +230,9 @@ let rootQueryLevel: TestQueryLevel = 1;
 
   assert(qs.length === 1, 'currently, there must be exactly one ?q=');
   const rootQuery = parseQuery(qs[0]);
-  rootQueryLevel = rootQuery.level;
+  if (rootQuery.level > lastQueryLevelToExpand) {
+    lastQueryLevelToExpand = rootQuery.level;
+  }
   const tree = await loader.loadTree(rootQuery);
 
   tree.dissolveLevelBoundaries();
