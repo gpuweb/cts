@@ -33,17 +33,19 @@ type RunSubtree = () => Promise<void>;
 
 function makeTreeNodeHTML(
   tree: TestTreeNode,
+  parentElement: HTMLElement,
   parentLevel: TestQueryLevel
-): [HTMLElement, RunSubtree] {
+): RunSubtree {
+  const div = $('<div>').appendTo(parentElement)[0];
   if ('children' in tree) {
-    return makeSubtreeHTML(tree, parentLevel);
+    return makeSubtreeHTML(tree, div, parentLevel);
   } else {
-    return makeCaseHTML(tree);
+    return makeCaseHTML(tree, div);
   }
 }
 
-function makeCaseHTML(t: TestTreeLeaf): [HTMLElement, RunSubtree] {
-  const div = $('<div>').addClass('testcase');
+function makeCaseHTML(t: TestTreeLeaf, div: HTMLElement): RunSubtree {
+  div.classList.add('testcase');
 
   const name = t.query.toString();
   const runSubtree = async () => {
@@ -57,7 +59,7 @@ function makeCaseHTML(t: TestTreeLeaf): [HTMLElement, RunSubtree] {
 
     casetime.text(res.timems.toFixed(4) + ' ms');
 
-    div.attr('data-status', res.status);
+    div.setAttribute('data-status', res.status);
 
     if (res.logs) {
       caselogs.empty();
@@ -85,11 +87,15 @@ function makeCaseHTML(t: TestTreeLeaf): [HTMLElement, RunSubtree] {
   const casetime = $('<div>').addClass('testcasetime').html('ms').appendTo(casehead);
   caselogs.appendTo(div);
 
-  return [div[0], runSubtree];
+  return runSubtree;
 }
 
-function makeSubtreeHTML(n: TestSubtree, parentLevel: TestQueryLevel): [HTMLElement, RunSubtree] {
-  const div = $('<div>').addClass('subtree');
+function makeSubtreeHTML(
+  n: TestSubtree,
+  div: HTMLElement,
+  parentLevel: TestQueryLevel
+): RunSubtree {
+  $(div).addClass('subtree');
 
   const subtreeHTML = $('<div>').addClass('subtreechildren');
   const runSubtree = makeSubtreeChildrenHTML(subtreeHTML[0], n.children.values(), n.query.level);
@@ -99,11 +105,11 @@ function makeSubtreeHTML(n: TestSubtree, parentLevel: TestQueryLevel): [HTMLElem
   });
 
   div.append(header);
-  div.append(subtreeHTML);
+  div.append(subtreeHTML[0]);
 
-  div[0].classList.add(['', 'multifile', 'multitest', 'multicase'][n.query.level]);
+  div.classList.add(['', 'multifile', 'multitest', 'multicase'][n.query.level]);
 
-  return [div[0], runSubtree];
+  return runSubtree;
 }
 
 function makeSubtreeChildrenHTML(
@@ -113,8 +119,7 @@ function makeSubtreeChildrenHTML(
 ): RunSubtree {
   const runSubtreeFns: RunSubtree[] = [];
   for (const subtree of children) {
-    const [subtreeHTML, runSubtree] = makeTreeNodeHTML(subtree, parentLevel);
-    div.append(subtreeHTML);
+    const runSubtree = makeTreeNodeHTML(subtree, div, parentLevel);
     runSubtreeFns.push(runSubtree);
   }
 
@@ -229,8 +234,7 @@ let rootQueryLevel: TestQueryLevel = 1;
 
   tree.dissolveLevelBoundaries();
 
-  const [el, runSubtree] = makeSubtreeHTML(tree.root, 1);
-  resultsVis.append(el);
+  const runSubtree = makeSubtreeHTML(tree.root, resultsVis, 1);
 
   $('#expandall').change(function (this) {
     const checked = (this as HTMLInputElement).checked;
