@@ -25,9 +25,12 @@ const logger = new Logger(debug);
 const worker = optionEnabled('worker') ? new TestWorker(debug) : undefined;
 
 const resultsVis = document.getElementById('resultsVis')!;
-const resultsJSON = document.getElementById('resultsJSON')!;
 
 type RunSubtree = () => Promise<void>;
+
+document.getElementById('copyResultsJSON')!.addEventListener('click', () => {
+  navigator.clipboard.writeText(logger.asJSON(2));
+});
 
 // DOM generation
 
@@ -190,7 +193,6 @@ function makeTreeNodeHeaderHTML(
     .attr('title', runtext)
     .on('click', async () => {
       await runSubtree();
-      updateJSON();
     })
     .appendTo(div);
   $('<a>')
@@ -220,10 +222,6 @@ function makeTreeNodeHeaderHTML(
       .appendTo(nodetitle);
   }
   return div[0];
-}
-
-function updateJSON(): void {
-  resultsJSON.textContent = logger.asJSON(2);
 }
 
 // Collapse s:f:t:* or s:f:t:c by default.

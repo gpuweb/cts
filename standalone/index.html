@@ -212,11 +212,16 @@
   </head>
   <body>
     <h1>WebGPU Conformance Test Suite</h1>
-    <input type="checkbox" id="expandall" /><label for="expandall">Expand All</label>
+    <p>
+      <input type="checkbox" id="expandall" /><label for="expandall">Expand All (slow!)</label>
+    </p>
 
     <div id="info"></div>
     <div id="resultsVis"></div>
-    <textarea id="resultsJSON" spellcheck="false"></textarea>
+
+    <p>
+      <input type=button id=copyResultsJSON value="Copy results as JSON">
+    </p>
 
     <script type="module" src="../out/common/runtime/standalone.js"></script>
   </body>
