@@ -28,10 +28,6 @@ const resultsVis = document.getElementById('resultsVis')!;
 
 type RunSubtree = () => Promise<void>;
 
-document.getElementById('copyResultsJSON')!.addEventListener('click', () => {
-  navigator.clipboard.writeText(logger.asJSON(2));
-});
-
 // DOM generation
 
 function memoize<T>(fn: () => T): () => T {
@@ -265,6 +261,10 @@ let lastQueryLevelToExpand: TestQueryLevel = 2;
   $('#expandall').change(function (this) {
     const checked = (this as HTMLInputElement).checked;
     $('.collapsebtn').prop('checked', checked).trigger('change');
+  });
+
+  document.getElementById('copyResultsJSON')!.addEventListener('click', () => {
+    navigator.clipboard.writeText(logger.asJSON(2));
   });
 
   if (runnow) {
