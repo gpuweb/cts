@@ -28,129 +28,124 @@ const worker = optionEnabled('worker') ? new TestWorker(debug) : undefined;
 const resultsVis = document.getElementById('resultsVis')!;
 const resultsJSON = document.getElementById('resultsJSON')!;
 
-type GenerateSubtreeHTML = (parent: HTMLElement) => void;
+type SetCheckedRecursively = () => void;
+type GenerateSubtreeHTML = (parent: HTMLElement) => SetCheckedRecursively;
 type RunSubtree = () => Promise<void>;
+
+interface VisualizedSubtree {
+  generateSubtreeHTML: GenerateSubtreeHTML;
+  runSubtree: RunSubtree;
+}
 
 // DOM generation
 
 function memoize<T>(fn: () => T): () => T {
   let value: T | undefined;
-  const memoized = () => {
+  return () => {
     if (value === undefined) {
       value = fn();
     }
     return value;
   };
-  return memoized;
 }
 
-function makeTreeNodeHTML(
-  tree: TestTreeNode,
-  parentLevel: TestQueryLevel
-): [RunSubtree, GenerateSubtreeHTML] {
-  let runSubtree: RunSubtree;
-  let generateSubtreeHTML: GenerateSubtreeHTML;
+function makeTreeNodeHTML(tree: TestTreeNode, parentLevel: TestQueryLevel): VisualizedSubtree {
+  let subtree: VisualizedSubtree;
 
   if ('children' in tree) {
-    [runSubtree, generateSubtreeHTML] = makeSubtreeHTML(tree, parentLevel);
+    subtree = makeSubtreeHTML(tree, parentLevel);
   } else {
-    [runSubtree, generateSubtreeHTML] = makeCaseHTML(tree);
+    subtree = makeCaseHTML(tree);
   }
 
   const generateMyHTML = (parentElement: HTMLElement) => {
     const div = $('<div>').appendTo(parentElement)[0];
-    generateSubtreeHTML(div);
+    return subtree.generateSubtreeHTML(div);
   };
-  return [runSubtree, generateMyHTML];
+  return { runSubtree: subtree.runSubtree, generateSubtreeHTML: generateMyHTML };
 }
 
-function makeCaseHTML(t: TestTreeLeaf): [RunSubtree, GenerateSubtreeHTML] {
-  const generateResultHTML = memoize(() => {
-    const caselogs = $('<div>').addClass('testcaselogs');
-    const casehead = makeTreeNodeHeaderHTML(t, runSubtree, 2, checked => {
-      checked ? caselogs.show() : caselogs.hide();
-    });
-    const casetime = $('<div>').addClass('testcasetime').html('ms').appendTo(casehead);
-    return [casehead, casetime, caselogs] as const;
-  });
+function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
+  // Becomes set once the case has been run once.
+  let caseResult: LiveTestCaseResult | undefined;
 
-  let result: LiveTestCaseResult | undefined;
-  const renderResult = (parent: HTMLElement) => {
-    const [casehead, casetime, caselogs] = generateResultHTML();
-
-    if (result) {
-      parent.setAttribute('data-status', result.status);
-
-      casetime.text(result.timems.toFixed(4) + ' ms');
-
-      if (result.logs) {
-        caselogs.empty();
-        for (const l of result.logs) {
-          const caselog = $('<div>').addClass('testcaselog').appendTo(caselogs);
-          $('<button>')
-            .addClass('testcaselogbtn')
-            .attr('alt', 'Log stack to console')
-            .attr('title', 'Log stack to console')
-            .appendTo(caselog)
-            .on('click', () => {
-              /* eslint-disable-next-line no-console */
-              console.log(l);
-            });
-          $('<pre>').addClass('testcaselogtext').appendTo(caselog).text(l.toJSON());
-        }
-      }
-    }
-    return [casehead, caselogs[0]] as const;
-  };
-
-  let parent: HTMLElement | undefined;
+  // Becomes set once the DOM for this case exists.
+  let updateRenderedResult: (() => void) | undefined;
 
   const name = t.query.toString();
   const runSubtree = async () => {
     haveSomeResults = true;
     const [rec, res] = logger.record(name);
-    result = res;
+    caseResult = res;
     if (worker) {
       await worker.run(rec, name);
     } else {
       await t.run(rec);
     }
 
-    if (parent) renderResult(parent);
+    if (updateRenderedResult) updateRenderedResult();
   };
 
   const generateSubtreeHTML = (div: HTMLElement) => {
-    parent = div;
-
     div.classList.add('testcase');
 
-    const [casehead, caselogs] = renderResult(parent);
-    div.append(casehead);
-    div.append(caselogs);
+    const caselogs = $('<div>').addClass('testcaselogs');
+    const [casehead, setChecked] = makeTreeNodeHeaderHTML(t, runSubtree, 2, checked => {
+      checked ? caselogs.show() : caselogs.hide();
+    });
+    const casetime = $('<div>').addClass('testcasetime').html('ms').appendTo(casehead);
+    div.appendChild(casehead);
+    div.appendChild(caselogs[0]);
+
+    updateRenderedResult = () => {
+      if (caseResult) {
+        div.setAttribute('data-status', caseResult.status);
+
+        casetime.text(caseResult.timems.toFixed(4) + ' ms');
+
+        if (caseResult.logs) {
+          caselogs.empty();
+          for (const l of caseResult.logs) {
+            const caselog = $('<div>').addClass('testcaselog').appendTo(caselogs);
+            $('<button>')
+              .addClass('testcaselogbtn')
+              .attr('alt', 'Log stack to console')
+              .attr('title', 'Log stack to console')
+              .appendTo(caselog)
+              .on('click', () => {
+                /* eslint-disable-next-line no-console */
+                console.log(l);
+              });
+            $('<pre>').addClass('testcaselogtext').appendTo(caselog).text(l.toJSON());
+          }
+        }
+      }
+    };
+
+    updateRenderedResult();
+
+    return setChecked;
   };
 
-  return [runSubtree, generateSubtreeHTML];
+  return { runSubtree, generateSubtreeHTML };
 }
 
-function makeSubtreeHTML(
-  n: TestSubtree,
-  parentLevel: TestQueryLevel
-): [RunSubtree, GenerateSubtreeHTML] {
-  const [runSubtree, generateSubtreeHTML] = makeSubtreeChildrenHTML(
+function makeSubtreeHTML(n: TestSubtree, parentLevel: TestQueryLevel): VisualizedSubtree {
+  const { runSubtree, generateSubtreeHTML } = makeSubtreeChildrenHTML(
     n.children.values(),
     n.query.level
   );
 
   const generateMyHTML = (div: HTMLElement) => {
     const subtreeHTML = $('<div>').addClass('subtreechildren');
-    const generateHTML = memoize(() => generateSubtreeHTML(subtreeHTML[0]));
+    const generateSubtree = memoize(() => generateSubtreeHTML(subtreeHTML[0]));
 
     // Hide subtree - it's not generated yet.
     subtreeHTML.hide();
-    const header = makeTreeNodeHeaderHTML(n, runSubtree, parentLevel, checked => {
+    const [header, setChecked] = makeTreeNodeHeaderHTML(n, runSubtree, parentLevel, checked => {
       if (checked) {
         // Make sure the subtree is generated and then show it.
-        generateHTML();
+        generateSubtree();
         subtreeHTML.show();
       } else {
         subtreeHTML.hide();
@@ -159,31 +154,44 @@ function makeSubtreeHTML(
 
     div.classList.add('subtree');
     div.classList.add(['', 'multifile', 'multitest', 'multicase'][n.query.level]);
-    div.append(header);
-    div.append(subtreeHTML[0]);
+    div.appendChild(header);
+    div.appendChild(subtreeHTML[0]);
+
+    return () => {
+      setChecked();
+      const setChildrenChecked = generateSubtree();
+      setChildrenChecked();
+    };
   };
 
-  return [runSubtree, generateMyHTML];
+  return { runSubtree, generateSubtreeHTML: generateMyHTML };
 }
 
 function makeSubtreeChildrenHTML(
   children: Iterable<TestTreeNode>,
   parentLevel: TestQueryLevel
-): [RunSubtree, GenerateSubtreeHTML] {
+): VisualizedSubtree {
   const childFns = Array.from(children, subtree => makeTreeNodeHTML(subtree, parentLevel));
 
   const runMySubtree = async () => {
-    for (const [runSubtree] of childFns) {
+    for (const { runSubtree } of childFns) {
       await runSubtree();
     }
   };
   const generateMyHTML = (div: HTMLElement) => {
-    for (const [, generateSubtreeHTML] of childFns) {
-      generateSubtreeHTML(div);
+    const setChildrenChecked: SetCheckedRecursively[] = [];
+    for (const { generateSubtreeHTML } of childFns) {
+      setChildrenChecked.push(generateSubtreeHTML(div));
     }
+
+    return () => {
+      for (const setChildChecked of setChildrenChecked) {
+        setChildChecked();
+      }
+    };
   };
 
-  return [runMySubtree, generateMyHTML];
+  return { runSubtree: runMySubtree, generateSubtreeHTML: generateMyHTML };
 }
 
 function makeTreeNodeHeaderHTML(
@@ -191,13 +199,21 @@ function makeTreeNodeHeaderHTML(
   runSubtree: RunSubtree,
   parentLevel: TestQueryLevel,
   onChange: (checked: boolean) => void
-): HTMLElement {
+): [HTMLElement, SetCheckedRecursively] {
   const isLeaf = 'run' in n;
   const div = $('<div>').addClass('nodeheader');
 
+  const setChecked = () => {
+    if (checkbox) {
+      checkbox.prop('checked', true); // (does not fire onChange)
+      onChange(true);
+    }
+  };
+
+  let checkbox: JQuery<HTMLElement> | undefined;
   const href = `?${worker ? 'worker&' : ''}${debug ? 'debug&' : ''}q=${n.query.toString()}`;
   if (onChange) {
-    const checkbox = $('<input>')
+    checkbox = $('<input>')
       .attr('type', 'checkbox')
       .addClass('collapsebtn')
       .on('change', function (this) {
@@ -211,8 +227,7 @@ function makeTreeNodeHeaderHTML(
     // Also expand completely within subtrees that are at the same query level
     // (e.g. s:f:t,* and s:f:t,t,*).
     if (n.query.level <= lastQueryLevelToExpand || n.query.level === parentLevel) {
-      checkbox.prop('checked', true); // (does not fire onChange)
-      onChange(true);
+      setChecked();
     }
   }
   const runtext = isLeaf ? 'Run case' : 'Run subtree';
@@ -251,7 +266,7 @@ function makeTreeNodeHeaderHTML(
       .text(n.description)
       .appendTo(nodetitle);
   }
-  return div[0];
+  return [div[0], setChecked];
 }
 
 function updateJSON(): void {
@@ -294,12 +309,11 @@ let lastQueryLevelToExpand: TestQueryLevel = 2;
 
   tree.dissolveLevelBoundaries();
 
-  const [runSubtree, generateSubtreeHTML] = makeSubtreeHTML(tree.root, 1);
-  generateSubtreeHTML(resultsVis);
+  const { runSubtree, generateSubtreeHTML } = makeSubtreeHTML(tree.root, 1);
+  const setTreeCheckedRecursively = generateSubtreeHTML(resultsVis);
 
-  $('#expandall').change(function (this) {
-    const checked = (this as HTMLInputElement).checked;
-    $('.collapsebtn').prop('checked', checked).trigger('change');
+  document.getElementById('expandall')!.addEventListener('click', () => {
+    setTreeCheckedRecursively();
   });
 
   if (runnow) {
