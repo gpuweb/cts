@@ -89,7 +89,7 @@ function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
   const generateSubtreeHTML = (div: HTMLElement) => {
     div.classList.add('testcase');
 
-    const caselogs = $('<div>').addClass('testcaselogs');
+    const caselogs = $('<div>').addClass('testcaselogs').hide();
     const [casehead, setChecked] = makeTreeNodeHeaderHTML(t, runSubtree, 2, checked => {
       checked ? caselogs.show() : caselogs.hide();
     });
