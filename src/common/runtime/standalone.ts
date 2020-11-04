@@ -179,10 +179,9 @@ function makeSubtreeChildrenHTML(
     }
   };
   const generateMyHTML = (div: HTMLElement) => {
-    const setChildrenChecked: SetCheckedRecursively[] = [];
-    for (const { generateSubtreeHTML } of childFns) {
-      setChildrenChecked.push(generateSubtreeHTML(div));
-    }
+    const setChildrenChecked = Array.from(childFns, ({ generateSubtreeHTML }) =>
+      generateSubtreeHTML(div)
+    );
 
     return () => {
       for (const setChildChecked of setChildrenChecked) {
