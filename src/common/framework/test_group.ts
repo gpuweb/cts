@@ -73,6 +73,8 @@ class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
 
   // TODO: This could take a fixture, too, to override the one for the group.
   test(name: string): TestBuilderWithName<F, never> {
+    const testCreationStack = new Error(`Test created: ${name}`);
+
     this.checkName(name);
 
     const parts = name.split(kPathSeparator);
@@ -80,7 +82,7 @@ class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
       assert(validQueryPart.test(p), `Invalid test name part ${p}; must match ${validQueryPart}`);
     }
 
-    const test = new TestBuilder<F, never>(parts, this.fixture);
+    const test = new TestBuilder<F, never>(parts, this.fixture, testCreationStack);
     this.tests.push(test);
     return test;
   }
@@ -109,12 +111,12 @@ class TestBuilder<F extends Fixture, P extends {}> {
   private readonly fixture: FixtureClass<F>;
   private testFn: TestFn<F, P> | undefined;
   private cases?: CaseParamsIterable = undefined;
-  private testConstructorStack: Error;
+  private testCreationStack: Error;
 
-  constructor(testPath: string[], fixture: FixtureClass<F>) {
+  constructor(testPath: string[], fixture: FixtureClass<F>, testCreationStack: Error) {
     this.testPath = testPath;
     this.fixture = fixture;
-    this.testConstructorStack = new Error();
+    this.testCreationStack = testCreationStack;
   }
 
   desc(description: string): this {
@@ -138,8 +140,8 @@ class TestBuilder<F extends Fixture, P extends {}> {
     const testPathString = this.testPath.join(kPathSeparator);
     assert(this.testFn !== undefined, () => {
       let s = `Test is missing .fn(): ${testPathString}`;
-      if (this.testConstructorStack.stack) {
-        s += `\n-> test created at:\n${this.testConstructorStack.stack}`;
+      if (this.testCreationStack.stack) {
+        s += `\n-> test created at:\n${this.testCreationStack.stack}`;
       }
       return s;
     });
