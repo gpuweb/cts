@@ -198,13 +198,6 @@ function makeTreeNodeHeaderHTML(
     .attr('title', 'Open')
     .appendTo(div);
   const nodetitle = $('<div>').addClass('nodetitle').appendTo(div);
-  const nodename = $('<span>')
-    .addClass('nodename')
-    .text(n.readableRelativeName)
-    .appendTo(nodetitle);
-  if ('run' in n) {
-    nodename.addClass('leafname');
-  }
   $('<input>')
     .attr('type', 'text')
     .prop('readonly', true)
@@ -212,6 +205,7 @@ function makeTreeNodeHeaderHTML(
     .val(n.query.toString())
     .appendTo(nodetitle);
   if ('description' in n && n.description) {
+    nodetitle.append('&nbsp;');
     $('<pre>') //
       .addClass('nodedescription')
       .text(n.description)
