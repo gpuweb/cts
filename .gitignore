@@ -1,8 +1,9 @@
+# VSCode - see .vscode/README.md
+.vscode/
+
+# Build files
 /out/
 /out-wpt/
-
-*.code-workspace
-
 .tscache/
 *.tmp.txt
 

@@ -13,7 +13,7 @@ import { assert, unreachable } from '../framework/util/util.js';
 function usage(rc: number): never {
   console.log('Usage:');
   console.log('  tools/run [OPTIONS...] QUERIES...');
-  console.log('  tools/run unittests: webgpu:buffers/');
+  console.log("  tools/run 'unittests:*' 'webgpu:buffers,*'");
   console.log('Options:');
   console.log('  --verbose     Print result/log of every test as it runs.');
   console.log('  --debug       Include debug messages in logging.');

@@ -1,10 +1,10 @@
 import { Fixture } from '../common/framework/fixture.js';
 import { compileGLSL, initGLSL } from '../common/framework/glsl.js';
-import { DevicePool, TestOOMedShouldAttemptGC } from '../common/framework/gpu/device_pool.js';
 import { attemptGarbageCollection } from '../common/framework/util/collect_garbage.js';
 import { assert } from '../common/framework/util/util.js';
 
 import { EncodableTextureFormat, SizedTextureFormat } from './capability_info.js';
+import { DevicePool, DeviceProvider, TestOOMedShouldAttemptGC } from './util/device_pool.js';
 import { align } from './util/math.js';
 import {
   fillTextureDataWithTexelValue,
@@ -38,39 +38,67 @@ type TypedArrayBufferViewConstructor =
 const devicePool = new DevicePool();
 
 export class GPUTest extends Fixture {
-  private objects: { device: GPUDevice; queue: GPUQueue } | undefined = undefined;
-  initialized = false;
+  private provider: DeviceProvider | undefined;
+  /** Must not be replaced once acquired. */
+  private acquiredDevice: GPUDevice | undefined;
 
   get device(): GPUDevice {
-    assert(this.objects !== undefined);
-    return this.objects.device;
+    assert(
+      this.provider !== undefined,
+      'No provider available right now; did you "await" selectDeviceOrSkipTestCase?'
+    );
+    if (!this.acquiredDevice) {
+      this.acquiredDevice = this.provider.acquire();
+    }
+    return this.acquiredDevice;
   }
 
   get queue(): GPUQueue {
-    assert(this.objects !== undefined);
-    return this.objects.queue;
+    return this.device.defaultQueue;
   }
 
   async init(): Promise<void> {
     await super.init();
     await initGLSL();
 
-    const device = await devicePool.acquire();
-    const queue = device.defaultQueue;
-    this.objects = { device, queue };
+    this.provider = await devicePool.reserve();
+  }
+
+  /**
+   * When a GPUTest test accesses `.device` for the first time, a "default" GPUDevice
+   * (descriptor = `undefined`) is provided by default.
+   * However, some tests or cases need particular extensions to be enabled. Call this function with
+   * a descriptor (or undefined) to select a GPUDevice matching that descriptor.
+   *
+   * If the request descriptor can't be supported, throws an exception to skip the entire test case.
+   */
+  async selectDeviceOrSkipTestCase(descriptor: GPUDeviceDescriptor | undefined): Promise<void> {
+    assert(this.provider !== undefined);
+    // Make sure the device isn't replaced after it's been retrieved once.
+    assert(
+      !this.acquiredDevice,
+      "Can't selectDeviceOrSkipTestCase() after the device has been used"
+    );
+
+    const oldProvider = this.provider;
+    this.provider = undefined;
+    await devicePool.release(oldProvider);
+
+    this.provider = await devicePool.reserve(descriptor);
+    this.acquiredDevice = this.provider.acquire();
   }
 
   // Note: finalize is called even if init was unsuccessful.
   async finalize(): Promise<void> {
     await super.finalize();
 
-    if (this.objects) {
+    if (this.provider) {
       let threw: undefined | Error;
       {
-        const objects = this.objects;
-        this.objects = undefined;
+        const provider = this.provider;
+        this.provider = undefined;
         try {
-          await devicePool.release(objects.device);
+          await devicePool.release(provider);
         } catch (ex) {
           threw = ex;
         }

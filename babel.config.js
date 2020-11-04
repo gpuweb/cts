@@ -3,12 +3,9 @@ module.exports = function (api) {
   return {
     presets: ['@babel/preset-typescript'],
     plugins: [
-      '@babel/plugin-proposal-class-properties',
-      // Transform optional chaining/null coalescing operator to equivalent ternary operator syntax.
-      // For browsers that don't support optional chaining yet.
-      '@babel/plugin-proposal-optional-chaining',
-      // For browsers that don't support nullish coalescing yet.
+      '@babel/plugin-proposal-logical-assignment-operators',
       '@babel/plugin-proposal-nullish-coalescing-operator',
+      '@babel/plugin-proposal-optional-chaining',
       'const-enum',
       [
         'add-header-comment',

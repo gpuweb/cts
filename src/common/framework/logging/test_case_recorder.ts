@@ -70,7 +70,11 @@ export class TestCaseRecorder {
   }
 
   skipped(ex: SkipTestCase): void {
-    this.logImpl(LogSeverity.Skip, new LogMessageWithStack('SKIP', ex));
+    const message = new LogMessageWithStack('SKIP', ex);
+    if (!this.debugging) {
+      message.setStackHidden();
+    }
+    this.logImpl(LogSeverity.Skip, message);
   }
 
   warn(ex: Error): void {
