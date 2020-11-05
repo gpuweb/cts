@@ -5,6 +5,7 @@ require('ts-node').register({
   },
   transpileOnly: true,
 });
+require('./webgpu_global_constants.js');
 const Module = require('module');
 
 // Redirect imports of .js files to .ts files

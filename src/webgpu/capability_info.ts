@@ -1,5 +1,3 @@
-import { GPUConst } from './constants.js';
-
 type valueof<K> = K[keyof K];
 type GPUTextureUsage = valueof<typeof GPUTextureUsage>;
 type GPUBufferUsage = valueof<typeof GPUBufferUsage>;
@@ -17,16 +15,16 @@ function numericKeysOf<T>(obj: object): readonly T[] {
 export const kBufferUsageInfo: {
   readonly [k in GPUBufferUsage]: {};
 } = /* prettier-ignore */ {
-  [GPUConst.BufferUsage.MAP_READ]:      {},
-  [GPUConst.BufferUsage.MAP_WRITE]:     {},
-  [GPUConst.BufferUsage.COPY_SRC]:      {},
-  [GPUConst.BufferUsage.COPY_DST]:      {},
-  [GPUConst.BufferUsage.INDEX]:         {},
-  [GPUConst.BufferUsage.VERTEX]:        {},
-  [GPUConst.BufferUsage.UNIFORM]:       {},
-  [GPUConst.BufferUsage.STORAGE]:       {},
-  [GPUConst.BufferUsage.INDIRECT]:      {},
-  [GPUConst.BufferUsage.QUERY_RESOLVE]: {},
+  [GPUBufferUsage.MAP_READ]:      {},
+  [GPUBufferUsage.MAP_WRITE]:     {},
+  [GPUBufferUsage.COPY_SRC]:      {},
+  [GPUBufferUsage.COPY_DST]:      {},
+  [GPUBufferUsage.INDEX]:         {},
+  [GPUBufferUsage.VERTEX]:        {},
+  [GPUBufferUsage.UNIFORM]:       {},
+  [GPUBufferUsage.STORAGE]:       {},
+  [GPUBufferUsage.INDIRECT]:      {},
+  [GPUBufferUsage.QUERY_RESOLVE]: {},
 };
 export const kBufferUsages = numericKeysOf<GPUBufferUsage>(kBufferUsageInfo);
 
@@ -275,11 +273,11 @@ export const kTextureAspects = keysOf(kTextureAspectInfo);
 export const kTextureUsageInfo: {
   readonly [k in GPUTextureUsage]: {};
 } = {
-  [GPUConst.TextureUsage.COPY_SRC]: {},
-  [GPUConst.TextureUsage.COPY_DST]: {},
-  [GPUConst.TextureUsage.SAMPLED]: {},
-  [GPUConst.TextureUsage.STORAGE]: {},
-  [GPUConst.TextureUsage.OUTPUT_ATTACHMENT]: {},
+  [GPUTextureUsage.COPY_SRC]: {},
+  [GPUTextureUsage.COPY_DST]: {},
+  [GPUTextureUsage.SAMPLED]: {},
+  [GPUTextureUsage.STORAGE]: {},
+  [GPUTextureUsage.OUTPUT_ATTACHMENT]: {},
 };
 export const kTextureUsages = numericKeysOf<GPUTextureUsage>(kTextureUsageInfo);
 
@@ -403,12 +401,9 @@ interface BindingTypeInfo extends BindingKindInfo {
   // Add fields as needed
 }
 const kValidStagesAll = {
-  validStages:
-    GPUConst.ShaderStage.VERTEX | GPUConst.ShaderStage.FRAGMENT | GPUConst.ShaderStage.COMPUTE,
+  validStages: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
 };
-const kValidStagesStorageWrite = {
-  validStages: GPUConst.ShaderStage.FRAGMENT | GPUConst.ShaderStage.COMPUTE,
-};
+const kValidStagesStorageWrite = { validStages: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE };
 
 export const kBufferBindingTypeInfo: {
   readonly [k in BufferBindingType]: {
@@ -416,9 +411,9 @@ export const kBufferBindingTypeInfo: {
     // Add fields as needed
   } & BindingTypeInfo;
 } = /* prettier-ignore */ {
-  'uniform-buffer':          { usage: GPUConst.BufferUsage.UNIFORM, ...kBindingKind.uniformBuf,  ...kValidStagesAll,          },
-  'storage-buffer':          { usage: GPUConst.BufferUsage.STORAGE, ...kBindingKind.storageBuf,  ...kValidStagesStorageWrite, },
-  'readonly-storage-buffer': { usage: GPUConst.BufferUsage.STORAGE, ...kBindingKind.storageBuf,  ...kValidStagesAll,          },
+  'uniform-buffer':          { usage: GPUBufferUsage.UNIFORM, ...kBindingKind.uniformBuf,  ...kValidStagesAll,          },
+  'storage-buffer':          { usage: GPUBufferUsage.STORAGE, ...kBindingKind.storageBuf,  ...kValidStagesStorageWrite, },
+  'readonly-storage-buffer': { usage: GPUBufferUsage.STORAGE, ...kBindingKind.storageBuf,  ...kValidStagesAll,          },
 };
 export const kBufferBindingTypes = keysOf(kBufferBindingTypeInfo);
 
@@ -438,9 +433,9 @@ export const kTextureBindingTypeInfo: {
     // Add fields as needed
   } & BindingTypeInfo;
 } = /* prettier-ignore */ {
-  'sampled-texture':           { usage: GPUConst.TextureUsage.SAMPLED, ...kBindingKind.sampledTex,  ...kValidStagesAll,          },
-  'writeonly-storage-texture': { usage: GPUConst.TextureUsage.STORAGE, ...kBindingKind.storageTex,  ...kValidStagesStorageWrite, },
-  'readonly-storage-texture':  { usage: GPUConst.TextureUsage.STORAGE, ...kBindingKind.storageTex,  ...kValidStagesAll,          },
+  'sampled-texture':           { usage: GPUTextureUsage.SAMPLED, ...kBindingKind.sampledTex,  ...kValidStagesAll,          },
+  'writeonly-storage-texture': { usage: GPUTextureUsage.STORAGE, ...kBindingKind.storageTex,  ...kValidStagesStorageWrite, },
+  'readonly-storage-texture':  { usage: GPUTextureUsage.STORAGE, ...kBindingKind.storageTex,  ...kValidStagesAll,          },
 };
 export const kTextureBindingTypes = keysOf(kTextureBindingTypeInfo);
 
@@ -456,8 +451,8 @@ export const kBindingTypeInfo: {
 export const kBindingTypes = keysOf(kBindingTypeInfo);
 
 export const kShaderStages: readonly GPUShaderStageFlags[] = [
-  GPUConst.ShaderStage.VERTEX,
-  GPUConst.ShaderStage.FRAGMENT,
-  GPUConst.ShaderStage.COMPUTE,
+  GPUShaderStage.VERTEX,
+  GPUShaderStage.FRAGMENT,
+  GPUShaderStage.COMPUTE,
 ];
 export const kShaderStageCombinations: readonly GPUShaderStageFlags[] = [0, 1, 2, 3, 4, 5, 6, 7];

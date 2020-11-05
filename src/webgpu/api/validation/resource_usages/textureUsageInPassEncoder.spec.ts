@@ -48,7 +48,6 @@ import {
   kTextureBindingTypeInfo,
   kShaderStages,
 } from '../../../capability_info.js';
-import { GPUConst } from '../../../constants.js';
 import { ValidationTest } from '../validation_test.js';
 
 const SIZE = 32;
@@ -687,7 +686,7 @@ g.test('shader_stages_and_visibility')
           // Writeonly-storage-texture binding type is not supported in vertex stage. But it is the
           // only way to write into texture in compute. So there is no means to successfully create
           // a binding which attempt to write into stage(s) with vertex stage in compute pass.
-          p.compute && Boolean(p.writeVisibility & GPUConst.ShaderStage.VERTEX)
+          p.compute && Boolean(p.writeVisibility & GPUShaderStage.VERTEX)
       )
   )
   .fn(async t => {

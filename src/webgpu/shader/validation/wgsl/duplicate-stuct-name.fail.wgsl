@@ -1,10 +1,10 @@
 # v-0012 - This fails because of the duplicated `foo` structure.
 
-struct foo {
+type foo = struct {
   [[offset (0)]] a : i32;
 };
 
-struct foo {
+type foo = struct {
   [[offset (0)]] b : f32;
 };
 

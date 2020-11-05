@@ -1,14 +1,14 @@
 # v-0006 - Fails because struct 'boo' does not have a member 't'.
 
-struct boo {
+type boo = struct {
   z : f32;
 };
 
-struct goo {
+type goo = struct {
   y : boo;
 };
 
-struct foo {
+type foo = struct {
   x : goo;
 };
 

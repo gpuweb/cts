@@ -9,7 +9,6 @@ import {
   EncodableTextureFormat,
   UncompressedTextureFormat,
 } from '../../../capability_info.js';
-import { GPUConst } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { createTextureUploadBuffer } from '../../../util/texture/layout.js';
 import { BeginEndRange, SubresourceRange } from '../../../util/texture/subresource.js';
@@ -169,13 +168,13 @@ function getRequiredTextureUsage(
   uninitializeMethod: UninitializeMethod,
   readMethod: ReadMethod
 ): GPUTextureUsageFlags {
-  let usage: GPUTextureUsageFlags = GPUConst.TextureUsage.COPY_DST;
+  let usage: GPUTextureUsageFlags = GPUTextureUsage.COPY_DST;
 
   switch (uninitializeMethod) {
     case UninitializeMethod.Creation:
       break;
     case UninitializeMethod.StoreOpClear:
-      usage |= GPUConst.TextureUsage.OUTPUT_ATTACHMENT;
+      usage |= GPUTextureUsage.OUTPUT_ATTACHMENT;
       break;
     default:
       unreachable();
@@ -184,18 +183,18 @@ function getRequiredTextureUsage(
   switch (readMethod) {
     case ReadMethod.CopyToBuffer:
     case ReadMethod.CopyToTexture:
-      usage |= GPUConst.TextureUsage.COPY_SRC;
+      usage |= GPUTextureUsage.COPY_SRC;
       break;
     case ReadMethod.Sample:
-      usage |= GPUConst.TextureUsage.SAMPLED;
+      usage |= GPUTextureUsage.SAMPLED;
       break;
     case ReadMethod.Storage:
-      usage |= GPUConst.TextureUsage.STORAGE;
+      usage |= GPUTextureUsage.STORAGE;
       break;
     case ReadMethod.DepthTest:
     case ReadMethod.StencilTest:
     case ReadMethod.ColorBlending:
-      usage |= GPUConst.TextureUsage.OUTPUT_ATTACHMENT;
+      usage |= GPUTextureUsage.OUTPUT_ATTACHMENT;
       break;
     default:
       unreachable();
@@ -204,14 +203,14 @@ function getRequiredTextureUsage(
   if (sampleCount > 1) {
     // Copies to multisampled textures are not allowed. We need OutputAttachment to initialize
     // canary data in multisampled textures.
-    usage |= GPUConst.TextureUsage.OUTPUT_ATTACHMENT;
+    usage |= GPUTextureUsage.OUTPUT_ATTACHMENT;
   }
 
   if (!kUncompressedTextureFormatInfo[format].copyDst) {
     // Copies are not possible. We need OutputAttachment to initialize
     // canary data.
     assert(kUncompressedTextureFormatInfo[format].renderable);
-    usage |= GPUConst.TextureUsage.OUTPUT_ATTACHMENT;
+    usage |= GPUTextureUsage.OUTPUT_ATTACHMENT;
   }
 
   return usage;
@@ -522,11 +521,11 @@ export abstract class TextureZeroInitTest extends GPUTest {
           );
           const info = kUncompressedTextureFormatInfo[format];
 
-          if (usage & GPUConst.TextureUsage.OUTPUT_ATTACHMENT && !info.renderable) {
+          if (usage & GPUTextureUsage.OUTPUT_ATTACHMENT && !info.renderable) {
             return false;
           }
 
-          if (usage & GPUConst.TextureUsage.STORAGE && !info.storage) {
+          if (usage & GPUTextureUsage.STORAGE && !info.storage) {
             return false;
           }
 

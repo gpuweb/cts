@@ -2,7 +2,7 @@
 
 const a : Foo;
 
-struct Foo {
+type Foo = struct {
   [[offset 0]] a : i32;
 };
 

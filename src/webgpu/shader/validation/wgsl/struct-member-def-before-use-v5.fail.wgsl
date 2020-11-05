@@ -1,11 +1,11 @@
 # v-0006 - Fails because struct `foo` does not have a member `b`however `f.b` is
 # used.
 
-struct goo {
+type goo = struct {
   b : f32;
 };
 
-struct foo {
+type foo = struct {
   a : f32;
 };
 

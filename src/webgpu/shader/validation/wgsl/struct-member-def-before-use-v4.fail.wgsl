@@ -1,7 +1,7 @@
 # v-0006 - Fails because struct `foo` does not have a member `c`however `f.c`
 # is used.
 
-struct foo {
+type foo = struct {
   [[offset (0)]] b : f32;
   [[offset (8)]] a : array<f32>;
 };

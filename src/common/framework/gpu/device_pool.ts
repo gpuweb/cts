@@ -1,13 +1,13 @@
-import { SkipTestCase } from '../../common/framework/fixture.js';
+import { SkipTestCase } from '../fixture.js';
 import {
   assert,
   raceWithRejectOnTimeout,
   unreachable,
   assertReject,
-} from '../../common/framework/util/util.js';
-import { DefaultLimits } from '../constants.js';
+  objectEquals,
+} from '../util/util.js';
 
-import { getGPU } from './navigator_gpu.js';
+import { getGPU } from './implementation.js';
 
 export interface DeviceProvider {
   acquire(): GPUDevice;
@@ -20,14 +20,14 @@ export class DevicePool {
   /** Device with no descriptor. */
   private defaultHolder: DeviceHolder | 'uninitialized' | 'failed' = 'uninitialized';
   /** Devices with descriptors. */
-  private nonDefaultHolders = new DescriptorToHolderMap();
+  private nonDefaultHolders = new DescriptorToDeviceMap();
 
   /** Request a device from the pool. */
-  async reserve(descriptor?: GPUDeviceDescriptor): Promise<DeviceProvider> {
+  async reserve(desc?: GPUDeviceDescriptor): Promise<DeviceProvider> {
     // Always attempt to initialize default device, to see if it succeeds.
     if (this.defaultHolder === 'uninitialized') {
       try {
-        this.defaultHolder = await DeviceHolder.create(undefined);
+        this.defaultHolder = await DeviceHolder.create();
       } catch (ex) {
         this.defaultHolder = 'failed';
       }
@@ -35,10 +35,10 @@ export class DevicePool {
     assert(this.defaultHolder !== 'failed', 'WebGPU device failed to initialize; not retrying');
 
     let holder;
-    if (descriptor === undefined) {
+    if (desc === undefined) {
       holder = this.defaultHolder;
     } else {
-      holder = await this.nonDefaultHolders.getOrCreate(descriptor);
+      holder = await this.nonDefaultHolders.getOrInsert(desc, () => DeviceHolder.create(desc));
     }
 
     assert(holder.state === 'free', 'Device was in use on DevicePool.acquire');
@@ -85,18 +85,24 @@ export class DevicePool {
   }
 }
 
+interface DescriptorToDevice {
+  key: GPUDeviceDescriptor;
+  value: DeviceHolder;
+}
+
 /**
  * Map from GPUDeviceDescriptor to DeviceHolder.
  */
-class DescriptorToHolderMap {
-  private unsupported: Set<string> = new Set();
-  private holders: Map<string, DeviceHolder> = new Map();
+class DescriptorToDeviceMap {
+  private unsupported: GPUDeviceDescriptor[] = [];
+  // TODO: Do something like stringifyPublicParamsUniquely if searching this array gets too slow.
+  private items: Set<DescriptorToDevice> = new Set();
 
   /** Deletes an item from the map by GPUDevice value. */
   deleteByDevice(device: GPUDevice): void {
-    for (const [k, v] of this.holders) {
-      if (v.device === device) {
-        this.holders.delete(k);
+    for (const item of this.items) {
+      if (item.value.device === device) {
+        this.items.delete(item);
         return;
       }
     }
@@ -108,78 +114,54 @@ class DescriptorToHolderMap {
    *
    * Throws SkipTestCase if devices with this descriptor are unsupported.
    */
-  async getOrCreate(uncanonicalizedDescriptor: GPUDeviceDescriptor): Promise<DeviceHolder> {
-    const [descriptor, key] = canonicalizeDescriptor(uncanonicalizedDescriptor);
+  async getOrInsert(
+    key: GPUDeviceDescriptor,
+    create: () => Promise<DeviceHolder>
+  ): Promise<DeviceHolder> {
     // Never retry unsupported configurations.
-    if (this.unsupported.has(key)) {
-      throw new SkipTestCase(
-        `GPUDeviceDescriptor previously failed: ${JSON.stringify(descriptor)}`
-      );
+    for (const desc of this.unsupported) {
+      if (objectEquals(key, desc)) {
+        throw new SkipTestCase(`GPUDeviceDescriptor previously failed: ${JSON.stringify(key)}`);
+      }
     }
 
     // Search for an existing device with the same descriptor.
-    {
-      const value = this.holders.get(key);
-      if (value) {
-        // Move it to the end of the Map (most-recently-used).
-        this.holders.delete(key);
-        this.holders.set(key, value);
-        return value;
+    for (const item of this.items) {
+      if (objectEquals(key, item.key)) {
+        // Move the item to the end of the set (most recently used).
+        this.items.delete(item);
+        this.items.add(item);
+        return item.value;
       }
     }
 
     // No existing item was found; add a new one.
     let value;
     try {
-      value = await DeviceHolder.create(descriptor);
+      value = await create();
     } catch (ex) {
-      this.unsupported.add(key);
+      this.unsupported.push(key);
       throw new SkipTestCase(
-        `GPUDeviceDescriptor not supported: ${JSON.stringify(descriptor)}\n${ex?.message ?? ''}`
+        `GPUDeviceDescriptor not supported: ${JSON.stringify(key)}\n${ex?.message ?? ''}`
       );
     }
-    this.insertAndCleanUp(key, value);
+    this.insertAndCleanUp({ key, value });
     return value;
   }
 
   /** Insert an entry, then remove the least-recently-used items if there are too many. */
-  private insertAndCleanUp(key: string, value: DeviceHolder) {
-    this.holders.set(key, value);
+  private insertAndCleanUp(kv: DescriptorToDevice) {
+    this.items.add(kv);
 
     const kMaxEntries = 5;
-    if (this.holders.size > kMaxEntries) {
+    if (this.items.size > kMaxEntries) {
       // Delete the first (least recently used) item in the set.
-      for (const [key] of this.holders) {
-        this.holders.delete(key);
+      for (const item of this.items) {
+        this.items.delete(item);
         return;
       }
     }
   }
-}
-
-type CanonicalDeviceDescriptor = Omit<Required<GPUDeviceDescriptor>, 'label'>;
-/**
- * Make a stringified map-key from a GPUDeviceDescriptor.
- * Tries to make sure all defaults are resolved, first - but it's okay if some are missed
- * (it just means some GPUDevice objects won't get deduplicated).
- */
-function canonicalizeDescriptor(desc: GPUDeviceDescriptor): [CanonicalDeviceDescriptor, string] {
-  const extensionsCanonicalized = desc.extensions ? Array.from(desc.extensions).sort() : [];
-  const limits: GPULimits = { ...desc.limits };
-
-  const limitsCanonicalized: GPULimits = { ...DefaultLimits };
-  for (const k of Object.keys(limits) as (keyof GPULimits)[]) {
-    if (limits[k] !== undefined) {
-      limitsCanonicalized[k] = limits[k];
-    }
-  }
-
-  // Type ensures every field is carried through.
-  const descriptorCanonicalized: CanonicalDeviceDescriptor = {
-    extensions: extensionsCanonicalized,
-    limits: limitsCanonicalized,
-  };
-  return [descriptorCanonicalized, JSON.stringify(descriptorCanonicalized)];
 }
 
 /**
@@ -200,7 +182,7 @@ class DeviceHolder implements DeviceProvider {
 
   // Gets a device and creates a DeviceHolder.
   // If the device is lost, DeviceHolder.lostReason gets set.
-  static async create(descriptor: CanonicalDeviceDescriptor | undefined): Promise<DeviceHolder> {
+  static async create(descriptor?: GPUDeviceDescriptor): Promise<DeviceHolder> {
     const gpu = getGPU();
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null, 'requestAdapter returned null');

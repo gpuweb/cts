@@ -37,16 +37,9 @@ export class Fixture {
   async finalize(): Promise<void> {
     assert(
       this.numOutstandingAsyncExpectations === 0,
-      'there were outstanding immediateAsyncExpectations (e.g. expectUncapturedError) at the end of the test'
+      'there were outstanding asynchronous expectations (e.g. shouldReject) at the end of the test'
     );
-
-    // Loop to exhaust the eventualExpectations in case they chain off each other.
-    while (this.eventualExpectations.length) {
-      const previousExpectations = this.eventualExpectations;
-      this.eventualExpectations = [];
-
-      await Promise.all(previousExpectations);
-    }
+    await Promise.all(this.eventualExpectations);
   }
 
   warn(msg?: string): void {

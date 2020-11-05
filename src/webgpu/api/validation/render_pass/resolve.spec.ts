@@ -25,7 +25,6 @@ export const description = `API Validation Tests for RenderPass Resolve.
           the colorAttachment's height or width.`;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { GPUConst } from '../../../constants.js';
 
 import { ValidationTest } from './../validation_test.js';
 
@@ -42,7 +41,7 @@ g.test('resolve_attachment')
     // a multisampled resolve target should cause a validation error.
     { resolveTargetSamples: 4, _valid: false },
     // resolveTargetUsage without OUTPUT_ATTACHMENT usage should cause a validation error.
-    { resolveTargetUsage: GPUConst.TextureUsage.COPY_SRC, _valid: false },
+    { resolveTargetUsage: GPUTextureUsage.COPY_SRC, _valid: false },
     // non-zero resolve target base mip level should be valid.
     {
       resolveTargetViewBaseMipLevel: 1,

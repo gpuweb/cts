@@ -6,7 +6,6 @@ import { pbool, poptions, params } from '../../../common/framework/params_builde
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { unreachable } from '../../../common/framework/util/util.js';
 import { kBufferUsages } from '../../capability_info.js';
-import { GPUConst } from '../../constants.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -66,7 +65,7 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
-const kMapModeOptions = poptions('mapMode', [GPUConst.MapMode.READ, GPUConst.MapMode.WRITE]);
+const kMapModeOptions = poptions('mapMode', [GPUMapMode.READ, GPUMapMode.WRITE]);
 const kOffsetAlignment = 8;
 const kSizeAlignment = 4;
 
@@ -82,8 +81,8 @@ g.test('mapAsync,usage')
   .params(
     params()
       .combine([
-        { mapMode: GPUConst.MapMode.READ, validUsage: GPUConst.BufferUsage.MAP_READ },
-        { mapMode: GPUConst.MapMode.WRITE, validUsage: GPUConst.BufferUsage.MAP_WRITE },
+        { mapMode: GPUMapMode.READ, validUsage: GPUBufferUsage.MAP_READ },
+        { mapMode: GPUMapMode.WRITE, validUsage: GPUBufferUsage.MAP_WRITE },
         // Using mapMode 0 is never valid, so there is no validUsage.
         { mapMode: 0, validUsage: null },
       ])
@@ -126,8 +125,8 @@ g.test('mapAsync,state,mappedAtCreation')
     but succeeds after unmapping it.`
   )
   .params([
-    { mapMode: GPUConst.MapMode.READ, validUsage: GPUConst.BufferUsage.MAP_READ },
-    { mapMode: GPUConst.MapMode.WRITE, validUsage: GPUConst.BufferUsage.MAP_WRITE },
+    { mapMode: GPUMapMode.READ, validUsage: GPUBufferUsage.MAP_READ },
+    { mapMode: GPUMapMode.WRITE, validUsage: GPUBufferUsage.MAP_WRITE },
   ])
   .fn(async t => {
     const { mapMode, validUsage } = t.params;

@@ -1,7 +1,7 @@
-# v-0012 - This fails because |struct Foo|, |fn Foo| and |var Foo| have
+# v-0012 - This fails because |struct Foo|, |fn Foo| and |var Foo| have 
 # the same name |Foo|.
 
-struct Foo {
+type Foo = struct {
   b : f32;
 };
 
