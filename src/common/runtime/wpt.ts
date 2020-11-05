@@ -54,7 +54,6 @@ function addWPTTests(testcases: IterableIterator<TestTreeLeaf>): Promise<Logger>
       });
 
       running.push(p);
-      return p;
     };
 
     async_test(wpt_fn, name);
