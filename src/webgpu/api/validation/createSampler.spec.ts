@@ -17,27 +17,10 @@ g.test('lodMinAndMaxClamp')
       .combine(poptions('lodMaxClamp', [-4e-30, -1, 0, 0.5, 1, 10, 4e30]))
   )
   .fn(async t => {
-    if (t.params.lodMinClamp > t.params.lodMaxClamp) {
-      t.expectValidationError(() => {
-        t.device.createSampler({
-          lodMinClamp: t.params.lodMinClamp,
-          lodMaxClamp: t.params.lodMaxClamp,
-        });
-      });
-    } else if (
-      t.params.lodMinClamp < 0 ||
-      t.params.lodMaxClamp < 0
-    ) {
-      t.expectValidationError(() => {
-        t.device.createSampler({
-          lodMinClamp: t.params.lodMinClamp,
-          lodMaxClamp: t.params.lodMaxClamp,
-        });
-      });
-    } else {
+    t.expectValidationError(() => {
       t.device.createSampler({
         lodMinClamp: t.params.lodMinClamp,
         lodMaxClamp: t.params.lodMaxClamp,
       });
-    }
+    }, t.params.lodMinClamp > t.params.lodMaxClamp || t.params.lodMinClamp < 0 || t.params.lodMaxClamp < 0);
   });
