@@ -14,7 +14,7 @@ declare interface WptTestObject {
 }
 // Implements the wpt-embedded test runner (see also: wpt/cts.html).
 
-declare function async_test(f: (this: WptTestObject) => Promise<void>, name: string): void;
+declare function async_test(f: (this: WptTestObject) => void, name: string): void;
 
 (async () => {
   const loader = new DefaultTestFileLoader();
@@ -35,7 +35,7 @@ function addWPTTests(testcases: IterableIterator<TestTreeLeaf>): Promise<Logger>
 
   for (const testcase of testcases) {
     const name = testcase.query.toString();
-    const wpt_fn = function (this: WptTestObject): Promise<void> {
+    const wpt_fn = function (this: WptTestObject): void {
       const p = mutex.with(async () => {
         const [rec, res] = log.record(name);
         if (worker) {
@@ -54,7 +54,6 @@ function addWPTTests(testcases: IterableIterator<TestTreeLeaf>): Promise<Logger>
       });
 
       running.push(p);
-      return p;
     };
 
     async_test(wpt_fn, name);
