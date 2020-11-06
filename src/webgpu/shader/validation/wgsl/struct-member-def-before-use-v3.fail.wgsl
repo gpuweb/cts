@@ -1,4 +1,4 @@
-# v-0006 -  This fails because `fn Foo()` returns `struct goo`, which does not
+# v-0007 -  This fails because `fn Foo()` returns `struct goo`, which does not
 # have a member `s.z`.
 
 struct goo {
