@@ -79,7 +79,6 @@ g.test('bindingTypeSpecific_optional_members')
         ...pbool('hasDynamicOffset'),
         ...poptions('minBufferBindingSize', [0, 4]),
         ...poptions('textureComponentType', kTextureComponentTypes),
-        ...pbool('multisampled'),
         ...poptions('viewDimension', kTextureViewDimensions),
         ...poptions('storageTextureFormat', kAllTextureFormats),
       ])
@@ -90,7 +89,6 @@ g.test('bindingTypeSpecific_optional_members')
       hasDynamicOffset,
       minBufferBindingSize,
       textureComponentType,
-      multisampled,
       viewDimension,
       storageTextureFormat,
     } = t.params;
@@ -105,7 +103,6 @@ g.test('bindingTypeSpecific_optional_members')
     }
     if (kBindingTypeInfo[type].resource !== 'sampledTex') {
       success &&= textureComponentType === undefined;
-      success &&= multisampled === undefined;
     }
     if (kBindingTypeInfo[type].resource !== 'storageTex') {
       success &&= storageTextureFormat === undefined;
@@ -125,7 +122,6 @@ g.test('bindingTypeSpecific_optional_members')
             hasDynamicOffset,
             minBufferBindingSize,
             textureComponentType,
-            multisampled,
             viewDimension,
             storageTextureFormat,
           },
@@ -135,15 +131,11 @@ g.test('bindingTypeSpecific_optional_members')
   });
 
 g.test('multisample_requires_2d_view_dimension')
-  .params(
-    params()
-      .combine(poptions('multisampled', [undefined, false, true]))
-      .combine(poptions('viewDimension', [undefined, ...kTextureViewDimensions]))
-  )
+  .params(params().combine(poptions('viewDimension', [undefined, ...kTextureViewDimensions])))
   .fn(async t => {
-    const { multisampled, viewDimension } = t.params;
+    const { viewDimension } = t.params;
 
-    const success = multisampled !== true || viewDimension === '2d' || viewDimension === undefined;
+    const success = viewDimension === '2d' || viewDimension === undefined;
 
     t.expectValidationError(() => {
       t.device.createBindGroupLayout({
@@ -151,8 +143,7 @@ g.test('multisample_requires_2d_view_dimension')
           {
             binding: 0,
             visibility: GPUShaderStage.COMPUTE,
-            type: 'sampled-texture',
-            multisampled,
+            type: 'multisampled-texture',
             viewDimension,
           },
         ],
