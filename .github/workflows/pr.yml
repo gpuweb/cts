@@ -12,7 +12,7 @@ jobs:
         with:
           persist-credentials: false
       - run: |
-          git fetch
+          git fetch origin ${{ github.event.pull_request.head.sha }}
           git checkout ${{ github.event.pull_request.head.sha }}
       - uses: actions/setup-node@v2-beta
         with:
