@@ -19,7 +19,9 @@ import { GPUTest } from '../../../gpu_test.js';
 const SIZE = 4;
 class BufferSyncTest extends GPUTest {
   // Create a buffer, and initiate it to a specified value for all elements.
-  createBufferWithValue(initValue: number): GPUBuffer {
+  async createBufferWithValue(initValue: number): Promise<GPUBuffer> {
+    const fence = this.queue.createFence();
+    this.queue.signal(fence, 1);
     const data = new Uint32Array(SIZE / 4);
     for (let i = 0; i < SIZE / 4; ++i) {
       data[i] = initValue;
@@ -31,6 +33,7 @@ class BufferSyncTest extends GPUTest {
     });
     new Uint8Array(buffer.getMappedRange()).set(data);
     buffer.unmap();
+    await fence.onCompletion(1);
     return buffer;
   }
 
@@ -157,14 +160,14 @@ class BufferSyncTest extends GPUTest {
   }
 
   // Write bufer via BuferToBuffer copy.
-  writeByB2BCopy(buffer: GPUBuffer, value: number, encoder: GPUCommandEncoder) {
-    const tmpBuffer = this.createBufferWithValue(value);
+  async writeByB2BCopy(buffer: GPUBuffer, value: number, encoder: GPUCommandEncoder) {
+    const tmpBuffer = await this.createBufferWithValue(value);
     encoder.copyBufferToBuffer(tmpBuffer, 0, buffer, 0, SIZE);
   }
 
   // Write buffer via TextureToBuffer copy.
-  writeByT2BCopy(buffer: GPUBuffer, value: number, encoder: GPUCommandEncoder) {
-    const tmpBuffer = this.createBufferWithValue(value);
+  async writeByT2BCopy(buffer: GPUBuffer, value: number, encoder: GPUCommandEncoder) {
+    const tmpBuffer = await this.createBufferWithValue(value);
     const tmpTexture = this.device.createTexture({
       size: { width: 1, height: 1, depth: 1 },
       format: 'rgba8uint',
@@ -193,7 +196,7 @@ class BufferSyncTest extends GPUTest {
   }
 
   // Issue write operation via render pass, compute pass, copy, etc.
-  issueWriteOp(
+  async issueWriteOp(
     writeOp: string,
     bundle: boolean,
     buffer: GPUBuffer,
@@ -209,10 +212,10 @@ class BufferSyncTest extends GPUTest {
         this.writeByComputePass(buffer, value, encoder);
         break;
       case 'b2bCopy':
-        this.writeByB2BCopy(buffer, value, encoder);
+        await this.writeByB2BCopy(buffer, value, encoder);
         break;
       case 't2bCopy':
-        this.writeByT2BCopy(buffer, value, encoder);
+        await this.writeByT2BCopy(buffer, value, encoder);
         break;
       default:
         assert(true);
@@ -220,18 +223,18 @@ class BufferSyncTest extends GPUTest {
     }
   }
 
-  createCommandBufferAndIssueWriteOp(
+  async createCommandBufferAndIssueWriteOp(
     writeOp: string,
     bundle: boolean,
     buffer: GPUBuffer,
     value: number
-  ): GPUCommandBuffer {
+  ): Promise<GPUCommandBuffer> {
     const encoder = this.device.createCommandEncoder();
-    this.issueWriteOp(writeOp, bundle, buffer, value, encoder);
+    await this.issueWriteOp(writeOp, bundle, buffer, value, encoder);
     return encoder.finish();
   }
 
-  createQueueSubmitsAndIssueWriteOp(
+  async createQueueSubmitsAndIssueWriteOp(
     writeOp: string,
     bundle: boolean,
     buffer: GPUBuffer,
@@ -241,7 +244,7 @@ class BufferSyncTest extends GPUTest {
       this.writeByWriteBuffer(buffer, value);
     } else {
       const encoder = this.device.createCommandEncoder();
-      this.issueWriteOp(writeOp, bundle, buffer, value, encoder);
+      await this.issueWriteOp(writeOp, bundle, buffer, value, encoder);
       this.device.defaultQueue.submit([encoder.finish()]);
     }
   }
@@ -306,7 +309,7 @@ g.test('write_after_write')
       secondWriteInBundle,
     } = t.params;
 
-    const buffer = t.createBufferWithValue(0);
+    const buffer = await t.createBufferWithValue(0);
 
     const writeInBundle = [firstWriteInBundle, secondWriteInBundle];
     const writeOp = [firstWriteOp, secondWriteOp];
@@ -314,7 +317,7 @@ g.test('write_after_write')
       case 'sameCmdbuf': {
         const encoder = t.device.createCommandEncoder();
         for (let i = 0; i < 2; i++) {
-          t.issueWriteOp(writeOp[i], writeInBundle[i], buffer, i + 1, encoder);
+          await t.issueWriteOp(writeOp[i], writeInBundle[i], buffer, i + 1, encoder);
         }
         t.device.defaultQueue.submit([encoder.finish()]);
         break;
@@ -323,7 +326,7 @@ g.test('write_after_write')
         const command_buffers: GPUCommandBuffer[] = [];
         for (let i = 0; i < 2; i++) {
           command_buffers.push(
-            t.createCommandBufferAndIssueWriteOp(writeOp[i], writeInBundle[i], buffer, i + 1)
+            await t.createCommandBufferAndIssueWriteOp(writeOp[i], writeInBundle[i], buffer, i + 1)
           );
         }
         t.device.defaultQueue.submit(command_buffers);
@@ -331,7 +334,7 @@ g.test('write_after_write')
       }
       case 'separateSubmits': {
         for (let i = 0; i < 2; i++) {
-          t.createQueueSubmitsAndIssueWriteOp(writeOp[i], writeInBundle[i], buffer, i + 1);
+          await t.createQueueSubmitsAndIssueWriteOp(writeOp[i], writeInBundle[i], buffer, i + 1);
         }
         break;
       }
