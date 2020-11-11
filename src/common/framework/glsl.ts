@@ -5,7 +5,9 @@ type Glslang = import('@webgpu/glslang/dist/web-devel/glslang').Glslang;
 type ShaderStage = import('@webgpu/glslang/dist/web-devel/glslang').ShaderStage;
 type SpirvVersion = import('@webgpu/glslang/dist/web-devel/glslang').SpirvVersion;
 
+/** Whether we've tried to load glslang or not. */
 let glslangAttempted: boolean = false;
+/** Glslang instance if it has loaded, undefined if it hasn't (or failed). */
 let glslangInstance: Glslang | undefined;
 
 export async function initGLSL(): Promise<void> {
