@@ -45,12 +45,15 @@ jobs:
           }
           EOF
       - id: deployment
+        continue-on-error: true
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           expires: 30d
           channelId: cts-prs-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
       - uses: peter-evans/create-or-update-comment@v1
+        continue-on-error: true
+        if: ${{ steps.deployment.outcome == 'success' }}
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
