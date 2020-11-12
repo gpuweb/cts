@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "description": "",
   "scripts": {
-    "test": "grunt pre"
+    "test": "grunt pre",
+    "gen_wpt_cts_html": "tools/gen_wpt_cts_html"
   },
   "engines": {
     "node": ">=11.14.0"
