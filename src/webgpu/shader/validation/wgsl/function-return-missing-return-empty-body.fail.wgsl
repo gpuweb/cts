@@ -2,10 +2,8 @@
 # function.
 
 fn func() -> i32 {
-  var a : i32 = 0;
 }
 
 [[stage(vertex)]]
 fn main() -> void {
-  func();
 }
