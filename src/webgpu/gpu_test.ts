@@ -2,7 +2,7 @@ import { Fixture } from '../common/framework/fixture.js';
 import { attemptGarbageCollection } from '../common/framework/util/collect_garbage.js';
 import { assert } from '../common/framework/util/util.js';
 
-import { EncodableTextureFormat } from './capability_info.js';
+import { EncodableTextureFormat, SizedTextureFormat } from './capability_info.js';
 import { DevicePool, DeviceProvider, TestOOMedShouldAttemptGC } from './util/device_pool.js';
 import { align } from './util/math.js';
 import {
@@ -280,6 +280,44 @@ got [${failedByteActualValues.join(', ')}]`;
     const arrayBuffer = new ArrayBuffer(byteLength);
     fillTextureDataWithTexelValue(expectedTexelData, format, dimension, arrayBuffer, size, layout);
     this.expectContents(buffer, new Uint8Array(arrayBuffer));
+  }
+
+  // TODO: Add check for values of depth/stencil, probably through sampling of shader
+  // TODO(natashalee): Can refactor this and expectSingleColor to use a similar base expect
+  expectSinglePixelIn2DTexture(
+    src: GPUTexture,
+    format: SizedTextureFormat,
+    { x, y }: { x: number; y: number },
+    {
+      exp,
+      slice = 0,
+      layout,
+    }: {
+      exp: Uint8Array;
+      slice?: number;
+      layout?: TextureLayoutOptions;
+    }
+  ): void {
+    const { byteLength, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
+      format,
+      '2d',
+      [1, 1, 1],
+      layout
+    );
+    const buffer = this.device.createBuffer({
+      size: byteLength,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    });
+
+    const commandEncoder = this.device.createCommandEncoder();
+    commandEncoder.copyTextureToBuffer(
+      { texture: src, mipLevel: layout?.mipLevel, origin: { x, y, z: slice } },
+      { buffer, bytesPerRow, rowsPerImage },
+      mipSize
+    );
+    this.queue.submit([commandEncoder.finish()]);
+
+    this.expectContents(buffer, exp);
   }
 
   expectGPUError<R>(filter: GPUErrorFilter, fn: () => R, shouldError: boolean = true): R {
