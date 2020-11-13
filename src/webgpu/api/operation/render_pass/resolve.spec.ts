@@ -151,7 +151,7 @@ g.test('render_pass_resolve')
       colorAttachments: renderPassColorAttachmentDescriptors,
     });
     pass.setPipeline(pipeline);
-    pass.draw(3, 1, 0, 0);
+    pass.draw(3);
     pass.endPass();
     t.device.defaultQueue.submit([encoder.finish()]);
 
