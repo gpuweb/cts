@@ -8,6 +8,7 @@ import {
   float32ToFloatBits,
   floatAsNormalizedInteger,
   gammaCompress,
+  encodeRGB9E5UFloat,
 } from '../conversion.js';
 
 export const enum TexelComponent {
@@ -330,6 +331,22 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
 
     const bytesPerBlock = kUncompressedTextureFormatInfo[this.format].bytesPerBlock;
     assert(!!bytesPerBlock);
+
+    if (this.format === 'rgb9e5ufloat') {
+      assert(this.componentOrder.length === 3);
+      assert(this.componentOrder[0] === TexelComponent.R);
+      assert(this.componentOrder[1] === TexelComponent.G);
+      assert(this.componentOrder[2] === TexelComponent.B);
+      assert(bytesPerBlock === 4);
+      assert(components.R !== undefined);
+      assert(components.G !== undefined);
+      assert(components.B !== undefined);
+
+      const buf = new ArrayBuffer(bytesPerBlock);
+      new DataView(buf).setUint32(0, encodeRGB9E5UFloat(
+        components.R, components.G, components.B), this.isGPULittleEndian);
+      return buf;
+    }
 
     const data = new ArrayBuffer(bytesPerBlock);
     for (const c of this.componentOrder) {
