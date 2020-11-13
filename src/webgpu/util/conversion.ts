@@ -12,6 +12,21 @@ export function floatAsNormalizedInteger(float: number, bits: number, signed: bo
   }
 }
 
+export function normalizedIntegerAsFloat(integer: number, bits: number, signed: boolean): number {
+  if (signed) {
+    const max = Math.pow(2, bits - 1) - 1;
+    assert(integer >= -max - 1 && integer <= max);
+    if (integer === -max - 1) {
+      integer = -max;
+    }
+    return integer / max;
+  } else {
+    const max = Math.pow(2, bits) - 1;
+    assert(integer >= 0 && integer <= max);
+    return integer / max;
+  }
+}
+
 // Does not handle clamping, underflow, overflow, denormalized numbers
 export function float32ToFloatBits(
   n: number,
@@ -127,6 +142,11 @@ export function assertInIntegerRange(n: number, bits: number, signed: boolean): 
 }
 
 export function gammaCompress(n: number): number {
-  n = n <= 0.0031308 ? 12.92 * n : 1.055 * Math.pow(n, 1 / 2.4) - 0.055;
+  n = n <= 0.0031308 ? (323 * n) / 25 : (211 * Math.pow(n, 5 / 12) - 11) / 200;
+  return n < 0 ? 0 : n > 1 ? 1 : n;
+}
+
+export function gammaDecompress(n: number): number {
+  n = n <= 0.04045 ? (n * 25) / 323 : Math.pow((200 * n + 11) / 211, 12 / 5);
   return n < 0 ? 0 : n > 1 ? 1 : n;
 }
