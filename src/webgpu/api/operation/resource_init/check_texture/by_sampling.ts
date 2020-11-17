@@ -39,6 +39,10 @@ export const checkContentsBySampling: CheckContents = (
 
     const componentOrder = rep.componentOrder;
     const componentCount = componentOrder.length;
+
+    // For single-component textures, generates .r
+    // For multi-component textures, generates ex.)
+    //  .rgba[i], .bgra[i], .rgb[i]
     const indexExpression =
       componentCount === 1
         ? componentOrder[0].toLowerCase()

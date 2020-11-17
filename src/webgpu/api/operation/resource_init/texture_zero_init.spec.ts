@@ -1,3 +1,5 @@
+export const description = 'Test uninitialized textures are initialized to zero when read.';
+
 import { TestCaseRecorder } from '../../../../common/framework/logging/test_case_recorder.js';
 import {
   params,
@@ -9,17 +11,18 @@ import { CaseParams } from '../../../../common/framework/params_utils.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, unreachable } from '../../../../common/framework/util/util.js';
 import {
+  kAllTextureFormatInfo,
+  kEncodableTextureFormatInfo,
+  kTextureAspects,
   kUncompressedTextureFormatInfo,
   kUncompressedTextureFormats,
-  kEncodableTextureFormatInfo,
-  kAllTextureFormatInfo,
   EncodableTextureFormat,
   UncompressedTextureFormat,
 } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { createTextureUploadBuffer } from '../../../util/texture/layout.js';
-import { BeginEndRange, SubresourceRange } from '../../../util/texture/subresource.js';
+import { BeginEndRange, mipSize, SubresourceRange } from '../../../util/texture/subresource.js';
 import { PerTexelComponent, getTexelDataRepresentation } from '../../../util/texture/texelData.js';
 
 export enum UninitializeMethod {
@@ -338,8 +341,10 @@ export class TextureZeroInitTest extends GPUTest {
     const firstSubresource = subresourceRange.each().next().value;
     assert(typeof firstSubresource !== 'undefined');
 
-    const largestWidth = this.textureWidth >> firstSubresource.level;
-    const largestHeight = this.textureHeight >> firstSubresource.level;
+    const [largestWidth, largestHeight] = mipSize(
+      [this.textureWidth, this.textureHeight],
+      firstSubresource.level
+    );
 
     const texelData = new Uint8Array(
       getTexelDataRepresentation(format).getBytes(this.stateToTexelComponents[state])
@@ -355,8 +360,7 @@ export class TextureZeroInitTest extends GPUTest {
     const commandEncoder = this.device.createCommandEncoder();
 
     for (const { level, slice } of subresourceRange.each()) {
-      const width = this.textureWidth >> level;
-      const height = this.textureHeight >> level;
+      const [width, height] = mipSize([this.textureWidth, this.textureHeight], level);
 
       commandEncoder.copyBufferToTexture(
         {
@@ -436,71 +440,47 @@ const paramsBuilder = params()
     ])
   )
   .combine(poptions('format', kUncompressedTextureFormats))
-  .expand(({ format }) => {
+  .combine(poptions('aspect', kTextureAspects))
+  .unless(({ readMethod, format, aspect }) => {
     const info = kUncompressedTextureFormatInfo[format];
-    let aspects: { aspect: GPUTextureAspect }[] = [];
-    if (info.depth && info.stencil) {
-      aspects = [{ aspect: 'depth-only' }, { aspect: 'stencil-only' }];
-      return aspects;
-    }
-    aspects = [{ aspect: 'all' }];
-    return aspects;
+    // console.log(readMethod, format, aspect, info.depth, info.stencil);
+    return (
+      (readMethod === ReadMethod.DepthTest && (!info.depth || aspect === 'stencil-only')) ||
+      (readMethod === ReadMethod.StencilTest && (!info.stencil || aspect === 'depth-only')) ||
+      (readMethod === ReadMethod.ColorBlending && !info.color) ||
+      // TODO: Test with depth/stencil sampling
+      (readMethod === ReadMethod.Sample && (info.depth || info.stencil)) ||
+      (aspect === 'depth-only' && !info.depth) ||
+      (aspect === 'stencil-only' && !info.stencil) ||
+      (aspect === 'all' && info.depth && info.stencil) ||
+      // Cannot copy from a packed depth format.
+      // TODO: Test copying out of the stencil aspect.
+      ((readMethod === ReadMethod.CopyToBuffer || readMethod === ReadMethod.CopyToTexture) &&
+        (format === 'depth24plus' || format === 'depth24plus-stencil8'))
+    );
   })
   .combine(poptions('mipLevelCount', kMipLevelCounts))
   .combine(poptions('sampleCount', kSampleCounts))
-  // Multisampled textures may only have one mip
-  .unless(({ sampleCount, mipLevelCount }) => sampleCount > 1 && mipLevelCount > 1)
-  .combine(poptions('uninitializeMethod', kUninitializeMethods))
-  .unless(
-    ({ readMethod, format }) =>
-      // It doesn't make sense to copy from a packed depth format.
-      // This is not specified yet, but it will probably be disallowed as the bits may
-      // be vendor-specific.
-      // TODO: Test copying out of the stencil aspect.
-      (readMethod === ReadMethod.CopyToBuffer || readMethod === ReadMethod.CopyToTexture) &&
-      (format === 'depth24plus' || format === 'depth24plus-stencil8')
-  )
-  .unless(({ readMethod, format }) => {
-    const info = kUncompressedTextureFormatInfo[format];
-    return (
-      (readMethod === ReadMethod.DepthTest && !info.depth) ||
-      (readMethod === ReadMethod.StencilTest && !info.stencil) ||
-      (readMethod === ReadMethod.ColorBlending && !info.color) ||
-      // TODO: Test with depth sampling
-      (readMethod === ReadMethod.Sample && info.depth)
-    );
-  })
-  .filter(({ readMethod, aspect }) => {
-    if (readMethod === ReadMethod.DepthTest && aspect === 'stencil-only') {
-      return false;
-    }
-    if (readMethod === ReadMethod.StencilTest && aspect === 'depth-only') {
-      return false;
-    }
-    return true;
-  })
   .unless(
     ({ readMethod, sampleCount }) =>
       // We can only read from multisampled textures by sampling.
       sampleCount > 1 &&
       (readMethod === ReadMethod.CopyToBuffer || readMethod === ReadMethod.CopyToTexture)
   )
+  // Multisampled textures may only have one mip
+  .unless(({ sampleCount, mipLevelCount }) => sampleCount > 1 && mipLevelCount > 1)
+  .combine(poptions('uninitializeMethod', kUninitializeMethods))
   .combine(kCreationSizes)
   // Multisampled 3D / 2D array textures not supported.
   .unless(({ sampleCount, sliceCount }) => sampleCount > 1 && sliceCount > 1)
-  .filter(({ format, sampleCount, uninitializeMethod, readMethod }) => {
+  .unless(({ format, sampleCount, uninitializeMethod, readMethod }) => {
     const usage = getRequiredTextureUsage(format, sampleCount, uninitializeMethod, readMethod);
     const info = kUncompressedTextureFormatInfo[format];
 
-    if (usage & GPUConst.TextureUsage.OUTPUT_ATTACHMENT && !info.renderable) {
-      return false;
-    }
-
-    if (usage & GPUConst.TextureUsage.STORAGE && !info.storage) {
-      return false;
-    }
-
-    return true;
+    return (
+      ((usage & GPUConst.TextureUsage.OUTPUT_ATTACHMENT) !== 0 && !info.renderable) ||
+      ((usage & GPUConst.TextureUsage.STORAGE) !== 0 && !info.storage)
+    );
   })
   .combine(pbool('nonPowerOfTwo'))
   .combine(pbool('canaryOnCreation'))
@@ -540,7 +520,6 @@ const checkContentsImpl: { [k in ReadMethod]: CheckContents } = {
   Storage: t => t.skip('Not implemented'),
 };
 
-export const description = 'Test uninitialized textures are initialized to zero when read.';
 export const g = makeTestGroup(TextureZeroInitTest);
 
 g.test('uninitialized_texture_is_zero')

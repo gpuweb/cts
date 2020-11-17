@@ -1,8 +1,9 @@
 import { assert } from '../../../../../common/framework/util/util.js';
 import { GPUTest } from '../../../../gpu_test.js';
+import { mipSize } from '../../../../util/texture/subresource.js';
 import { CheckContents } from '../texture_zero_init.spec.js';
 
-function fullscreenVertexModule(device: GPUDevice) {
+function makeFullscreenVertexModule(device: GPUDevice) {
   return device.createShaderModule({
     code: `
     [[builtin(position)]] var<out> Position : vec4<f32>;
@@ -21,7 +22,7 @@ function fullscreenVertexModule(device: GPUDevice) {
   });
 }
 
-function getDepthTestReadbackPipeline(
+function getDepthTestEqualPipeline(
   t: GPUTest,
   format: GPUTextureFormat,
   sampleCount: number,
@@ -30,7 +31,7 @@ function getDepthTestReadbackPipeline(
   return t.device.createRenderPipeline({
     vertexStage: {
       entryPoint: 'main',
-      module: fullscreenVertexModule(t.device),
+      module: makeFullscreenVertexModule(t.device),
     },
     fragmentStage: {
       entryPoint: 'main',
@@ -48,11 +49,7 @@ function getDepthTestReadbackPipeline(
         `,
       }),
     },
-    colorStates: [
-      {
-        format: 'r8unorm',
-      },
-    ],
+    colorStates: [{ format: 'r8unorm' }],
     depthStencilState: {
       format,
       depthCompare: 'equal',
@@ -62,7 +59,7 @@ function getDepthTestReadbackPipeline(
   });
 }
 
-function getStencilTestReadbackPipeline(
+function getStencilTestEqualPipeline(
   t: GPUTest,
   format: GPUTextureFormat,
   sampleCount: number
@@ -70,7 +67,7 @@ function getStencilTestReadbackPipeline(
   return t.device.createRenderPipeline({
     vertexStage: {
       entryPoint: 'main',
-      module: fullscreenVertexModule(t.device),
+      module: makeFullscreenVertexModule(t.device),
     },
     fragmentStage: {
       entryPoint: 'main',
@@ -93,12 +90,8 @@ function getStencilTestReadbackPipeline(
     ],
     depthStencilState: {
       format,
-      stencilFront: {
-        compare: 'equal',
-      },
-      stencilBack: {
-        compare: 'equal',
-      },
+      stencilFront: { compare: 'equal' },
+      stencilBack: { compare: 'equal' },
     },
     primitiveTopology: 'triangle-list',
     sampleCount,
@@ -117,8 +110,8 @@ const checkContents: (type: 'depth' | 'stencil', ...args: Parameters<CheckConten
     params.aspect,
     subresourceRange
   )) {
-    const width = t.textureWidth >> viewDescriptor.baseMipLevel!;
-    const height = t.textureHeight >> viewDescriptor.baseMipLevel!;
+    assert(viewDescriptor.baseMipLevel !== undefined);
+    const [width, height] = mipSize([t.textureWidth, t.textureHeight], viewDescriptor.baseMipLevel);
 
     const renderTexture = t.device.createTexture({
       size: [width, height, 1],
@@ -163,7 +156,7 @@ const checkContents: (type: 'depth' | 'stencil', ...args: Parameters<CheckConten
         assert(expectedDepth !== undefined);
 
         pass.setPipeline(
-          getDepthTestReadbackPipeline(t, params.format, params.sampleCount, expectedDepth)
+          getDepthTestEqualPipeline(t, params.format, params.sampleCount, expectedDepth)
         );
         break;
       }
@@ -172,7 +165,7 @@ const checkContents: (type: 'depth' | 'stencil', ...args: Parameters<CheckConten
         const expectedStencil = t.stateToTexelComponents[state].Stencil;
         assert(expectedStencil !== undefined);
 
-        pass.setPipeline(getStencilTestReadbackPipeline(t, params.format, params.sampleCount));
+        pass.setPipeline(getStencilTestEqualPipeline(t, params.format, params.sampleCount));
         pass.setStencilReference(expectedStencil);
         break;
       }
