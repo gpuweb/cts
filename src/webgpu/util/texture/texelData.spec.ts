@@ -80,9 +80,8 @@ function doTest(
 
   [[stage(compute)]]
   fn main() -> void {
-      ${rep.componentOrder
-        .map(C => `output.result${C} = textureLoad(tex, vec2<i32>(0, 0), 0).${C.toLowerCase()};`)
-        .join('\n')}
+      var texel : vec4<${shaderType}> = textureLoad(tex, vec2<i32>(0, 0), 0);
+      ${rep.componentOrder.map(C => `output.result${C} = texel.${C.toLowerCase()};`).join('\n')}
       return;
   }`;
 
