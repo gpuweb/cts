@@ -213,10 +213,13 @@ export interface TexelDataRepresentation {
   readonly componentOrder: TexelComponent[];
   readonly componentInfo: TexelComponentInfo;
 
-  // Get the byte representation for the shader component values
+  // Gets the data representation for |components| where |components| is the expected
+  // values when read in a shader. i.e. Passing in 1.0 for a 8-bit unorm component will
+  // yield 255.
   getBytes(components: { [c in TexelComponent]?: number }): ArrayBuffer;
 
-  // Pack texel components into the packed byte representation
+  // Pack texel components into the packed byte representation. This may round values, but
+  // does not do unorm <-> float conversion.
   packData(components: { [c in TexelComponent]?: number }): ArrayBuffer;
 
   // Decode data into the shader representation
@@ -336,15 +339,18 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
     }
   }
 
-  private setComponent(data: ArrayBuffer, component: TexelComponent, n: number): void {
+  private getComponentBitOffset(component: TexelComponent): number {
     const componentIndex = this.componentOrder.indexOf(component);
     assert(componentIndex !== -1);
-    const bitOffset = this.componentOrder.slice(0, componentIndex).reduce((acc, curr) => {
+    return this.componentOrder.slice(0, componentIndex).reduce((acc, curr) => {
       const componentInfo = this.componentInfo[curr];
       assert(!!componentInfo);
       return acc + componentInfo.bitLength;
     }, 0);
+  }
 
+  private setComponent(data: ArrayBuffer, component: TexelComponent, n: number): void {
+    const bitOffset = this.getComponentBitOffset(component);
     const componentInfo = this.componentInfo[component];
     assert(!!componentInfo);
     const { write, bitLength } = componentInfo;
@@ -360,14 +366,7 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
     const componentInfo = this.componentInfo[component];
     assert(!!componentInfo);
 
-    const componentIndex = this.componentOrder.indexOf(component);
-    assert(componentIndex !== -1);
-    const bitOffset = this.componentOrder.slice(0, componentIndex).reduce((acc, curr) => {
-      const componentInfo = this.componentInfo[curr];
-      assert(!!componentInfo);
-      return acc + componentInfo.bitLength;
-    }, 0);
-
+    const bitOffset = this.getComponentBitOffset(component);
     const { bitLength } = componentInfo;
 
     switch (kEncodableTextureFormatInfo[format].dataType) {
@@ -466,12 +465,14 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
   }
 
   decode(components: PerTexelComponent<number>): PerTexelComponent<number> {
-    const values = Object.keys(components).reduce((acc, key) => {
-      const C = key as TexelComponent;
-      assert(this.componentInfo[C] !== undefined);
-      acc[C] = this.componentInfo[C]!.decode(components[C]!);
-      return acc;
-    }, {} as PerTexelComponent<number>);
+    const values: PerTexelComponent<number> = {};
+    for (const c of this.componentOrder) {
+      const componentValue = components[c];
+      const info = this.componentInfo[c];
+      assert(componentValue !== undefined);
+      assert(!!info);
+      values[c] = info.decode(componentValue);
+    }
     if (this.sRGB) {
       assert('R' in values && values.R !== undefined);
       assert('G' in values && values.G !== undefined);

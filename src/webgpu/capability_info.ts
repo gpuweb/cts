@@ -106,12 +106,12 @@ export type TextureDataType = 'uint' | 'sint' | 'unorm' | 'snorm' | 'float' | 'u
 
 export const kRegularTextureFormatInfo: {
   readonly [k in RegularTextureFormat]: {
-    color: true;
-    bytesPerBlock: number;
-    blockWidth: 1;
-    blockHeight: 1;
-    dataType: TextureDataType;
-    componentType: GPUTextureComponentType;
+    readonly color: true;
+    readonly bytesPerBlock: number;
+    readonly blockWidth: 1;
+    readonly blockHeight: 1;
+    readonly dataType: TextureDataType;
+    readonly componentType: GPUTextureComponentType;
   } & TextureFormatInfo;
 } = /* prettier-ignore */ {
   // 8-bit formats
@@ -136,7 +136,7 @@ export const kRegularTextureFormatInfo: {
   'rg16float':              { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:  'float', componentType: 'float' },
   'rgba8unorm':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:  'unorm', componentType: 'float' },
   'rgba8unorm-srgb':        { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:  'unorm', componentType: 'float' },
-  'rgba8snorm':             { renderable: false, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:   'sint', componentType: 'float' },
+  'rgba8snorm':             { renderable: false, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:   'snorm', componentType: 'float' },
   'rgba8uint':              { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:   'uint', componentType:  'uint' },
   'rgba8sint':              { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:   'sint', componentType:  'sint' },
   'bgra8unorm':             { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:  'unorm', componentType: 'float' },
@@ -166,8 +166,8 @@ export const kSizedDepthStencilFormatInfo: {
     readonly bytesPerBlock: number;
     readonly blockWidth: 1;
     readonly blockHeight: 1;
-    dataType: TextureDataType;
-    componentType: GPUTextureComponentType;
+    readonly dataType: TextureDataType;
+    readonly componentType: GPUTextureComponentType;
   } & TextureFormatInfo;
 } = /* prettier-ignore */ {
   'depth32float': { renderable:  true, color: false, depth:  true, stencil: false, storage: false, copySrc:  true, copyDst: false, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:  'float', componentType: 'float' },

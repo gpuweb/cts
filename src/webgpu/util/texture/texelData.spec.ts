@@ -10,17 +10,29 @@ import {
 } from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 
-import { getTexelDataRepresentation, TexelComponent } from './texelData.js';
+import { getTexelDataRepresentation } from './texelData.js';
 
 export const g = makeTestGroup(GPUTest);
 
 let ReadbackTypedArray: Float32ArrayConstructor | Int32ArrayConstructor | Uint32ArrayConstructor;
 
 function doTest(
-  t: GPUTest,
-  format: EncodableTextureFormat,
-  componentData: { [C in TexelComponent]?: number }
+  t: GPUTest & {
+    params: {
+      format: EncodableTextureFormat;
+      R?: number;
+      G?: number;
+      B?: number;
+      A?: number;
+    };
+  }
 ) {
+  const { format } = t.params;
+  const componentData = (() => {
+    const { R, G, B, A } = t.params;
+    return { R, G, B, A };
+  })();
+
   const rep = getTexelDataRepresentation(format);
   const texelData = rep.packData(componentData);
   const texture = t.device.createTexture({
@@ -35,7 +47,7 @@ function doTest(
     {
       bytesPerRow: texelData.byteLength,
     },
-    [1, 1, 1]
+    [1]
   );
 
   let shaderType: 'i32' | 'u32' | 'f32';
@@ -61,9 +73,7 @@ function doTest(
 
   [[block]] struct Output {
     ${rep.componentOrder
-      .map((C, i) => {
-        return `[[offset(${i * 4})]] result${C} : ${shaderType};`;
-      })
+      .map((C, i) => `[[offset(${i * 4})]] result${C} : ${shaderType};`)
       .join('\n')}
   };
   [[set(0), binding(1)]] var<storage_buffer> output : Output;
@@ -71,9 +81,7 @@ function doTest(
   [[stage(compute)]]
   fn main() -> void {
       ${rep.componentOrder
-        .map(C => {
-          return `output.result${C} = textureLoad(tex, vec2<i32>(0, 0), 0).${C.toLowerCase()};`;
-        })
+        .map(C => `output.result${C} = textureLoad(tex, vec2<i32>(0, 0), 0).${C.toLowerCase()};`)
         .join('\n')}
       return;
   }`;
@@ -128,34 +136,12 @@ function doTest(
   );
 }
 
-const testFn = (
-  t: GPUTest & {
-    params: {
-      format: EncodableTextureFormat;
-      R?: number;
-      G?: number;
-      B?: number;
-      A?: number;
-    };
-  }
-) => {
-  const components = {
-    R: t.params.R,
-    G: t.params.G,
-    B: t.params.B,
-    A: t.params.A,
-  };
-  Object.keys(components).forEach(key => {
-    const c = key as keyof typeof components;
-    components[c] === undefined && delete components[c];
-  });
-  doTest(t, t.params.format, components);
-};
-
-const makeParam = (
+// Make a test parameter by mapping a format and each component to a texel component
+// data value.
+function makeParam(
   format: EncodableTextureFormat,
   fn: (bitLength: number, index: number) => number
-) => {
+) {
   const rep = getTexelDataRepresentation(format);
   return {
     R: rep.componentInfo.R ? fn(rep.componentInfo.R.bitLength, 0) : undefined,
@@ -163,7 +149,7 @@ const makeParam = (
     B: rep.componentInfo.B ? fn(rep.componentInfo.B.bitLength, 2) : undefined,
     A: rep.componentInfo.A ? fn(rep.componentInfo.A.bitLength, 3) : undefined,
   };
-};
+}
 
 g.test('unorm_texel_data_in_shader')
   .params(
@@ -171,7 +157,6 @@ g.test('unorm_texel_data_in_shader')
       .combine(poptions('format', kEncodableTextureFormats))
       .filter(({ format }) => {
         return (
-          kEncodableTextureFormatInfo[format].copySrc &&
           kEncodableTextureFormatInfo[format].copyDst &&
           kEncodableTextureFormatInfo[format].color &&
           kEncodableTextureFormatInfo[format].dataType === 'unorm'
@@ -195,7 +180,7 @@ g.test('unorm_texel_data_in_shader')
         ];
       })
   )
-  .fn(testFn);
+  .fn(doTest);
 
 g.test('snorm_texel_data_in_shader')
   .params(
@@ -203,7 +188,6 @@ g.test('snorm_texel_data_in_shader')
       .combine(poptions('format', kEncodableTextureFormats))
       .filter(({ format }) => {
         return (
-          kEncodableTextureFormatInfo[format].copySrc &&
           kEncodableTextureFormatInfo[format].copyDst &&
           kEncodableTextureFormatInfo[format].color &&
           kEncodableTextureFormatInfo[format].dataType === 'snorm'
@@ -230,7 +214,7 @@ g.test('snorm_texel_data_in_shader')
         ];
       })
   )
-  .fn(testFn);
+  .fn(doTest);
 
 g.test('uint_texel_data_in_shader')
   .params(
@@ -238,7 +222,6 @@ g.test('uint_texel_data_in_shader')
       .combine(poptions('format', kEncodableTextureFormats))
       .filter(({ format }) => {
         return (
-          kEncodableTextureFormatInfo[format].copySrc &&
           kEncodableTextureFormatInfo[format].copyDst &&
           kEncodableTextureFormatInfo[format].color &&
           kEncodableTextureFormatInfo[format].dataType === 'uint'
@@ -262,7 +245,7 @@ g.test('uint_texel_data_in_shader')
         ];
       })
   )
-  .fn(testFn);
+  .fn(doTest);
 
 g.test('sint_texel_data_in_shader')
   .params(
@@ -270,7 +253,6 @@ g.test('sint_texel_data_in_shader')
       .combine(poptions('format', kEncodableTextureFormats))
       .filter(({ format }) => {
         return (
-          kEncodableTextureFormatInfo[format].copySrc &&
           kEncodableTextureFormatInfo[format].copyDst &&
           kEncodableTextureFormatInfo[format].color &&
           kEncodableTextureFormatInfo[format].dataType === 'sint'
@@ -282,7 +264,6 @@ g.test('sint_texel_data_in_shader')
           // Test extrema
           makeParam(format, () => 0),
           makeParam(format, bitLength => max(bitLength)),
-          makeParam(format, bitLength => -max(bitLength)),
           makeParam(format, bitLength => -max(bitLength) - 1),
 
           // Test a middle value
@@ -297,7 +278,7 @@ g.test('sint_texel_data_in_shader')
         ];
       })
   )
-  .fn(testFn);
+  .fn(doTest);
 
 g.test('float_texel_data_in_shader')
   .params(
@@ -305,7 +286,6 @@ g.test('float_texel_data_in_shader')
       .combine(poptions('format', kEncodableTextureFormats))
       .filter(({ format }) => {
         return (
-          kEncodableTextureFormatInfo[format].copySrc &&
           kEncodableTextureFormatInfo[format].copyDst &&
           kEncodableTextureFormatInfo[format].color &&
           kEncodableTextureFormatInfo[format].dataType === 'float'
@@ -328,13 +308,12 @@ g.test('float_texel_data_in_shader')
 
           // Test mixed values
           makeParam(format, (bitLength, i) => {
-            const values = [24896, -0.1319580078125, -323.25, -234.375];
-            return values[i];
+            return [24896, -0.1319580078125, -323.25, -234.375][i];
           }),
         ];
       })
   )
-  .fn(testFn);
+  .fn(doTest);
 
 g.test('ufloat_texel_data_in_shader')
   .params(
@@ -342,7 +321,6 @@ g.test('ufloat_texel_data_in_shader')
       .combine(poptions('format', kEncodableTextureFormats))
       .filter(({ format }) => {
         return (
-          kEncodableTextureFormatInfo[format].copySrc &&
           kEncodableTextureFormatInfo[format].copyDst &&
           kEncodableTextureFormatInfo[format].color &&
           kEncodableTextureFormatInfo[format].dataType === 'ufloat'
@@ -356,22 +334,20 @@ g.test('ufloat_texel_data_in_shader')
           // TODO: Test NaN, Infinity
 
           // Test some values
-          makeParam(format, () => 0.119873046875),
+          makeParam(format, () => 0.119140625),
           makeParam(format, () => 1.40625),
           makeParam(format, () => 24896),
 
-          // Test mixed values
+          // Test scattered mixed values
           makeParam(format, (bitLength, i) => {
-            if (format === 'rgb9e5ufloat') {
-              // These values can't be too scattered or the representation
-              // will be very imprecise.
-              const values = [0.1337890625, 0.17919921875, 0.23095703125, 0];
-              return values[i];
-            }
-            const values = [24896, 1.40625, 0.119873046875, 0.23095703125];
-            return values[i];
+            return [24896, 1.40625, 0.119140625, 0.23095703125][i];
+          }),
+
+          // Test mixed values that are close in magnitude.
+          makeParam(format, (bitLength, i) => {
+            return [0.1337890625, 0.17919921875, 0.119140625, 0.125][i];
           }),
         ];
       })
   )
-  .fn(testFn);
+  .fn(doTest);

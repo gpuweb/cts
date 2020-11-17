@@ -1,5 +1,7 @@
 import { assert } from '../../common/framework/util/util.js';
 
+import { clamp } from './math.js';
+
 export function floatAsNormalizedInteger(float: number, bits: number, signed: boolean): number {
   if (signed) {
     assert(float >= -1 && float <= 1);
@@ -13,6 +15,7 @@ export function floatAsNormalizedInteger(float: number, bits: number, signed: bo
 }
 
 export function normalizedIntegerAsFloat(integer: number, bits: number, signed: boolean): number {
+  assert(Number.isInteger(integer));
   if (signed) {
     const max = Math.pow(2, bits - 1) - 1;
     assert(integer >= -max - 1 && integer <= max);
@@ -32,11 +35,11 @@ export function float32ToFloatBits(
   n: number,
   signBits: 0 | 1,
   exponentBits: number,
-  fractionBits: number,
+  mantissaBits: number,
   bias: number
 ): number {
   assert(exponentBits <= 8);
-  assert(fractionBits <= 23);
+  assert(mantissaBits <= 23);
   assert(Number.isFinite(n));
 
   if (n === 0) {
@@ -52,82 +55,68 @@ export function float32ToFloatBits(
   const bits = buf.getUint32(0, true);
   // bits (32): seeeeeeeefffffffffffffffffffffff
 
-  const fractionBitsToDiscard = 23 - fractionBits;
+  const mantissaBitsToDiscard = 23 - mantissaBits;
 
   // 0 or 1
   const sign = (bits >> 31) & signBits;
 
-  // >> to remove fraction, & to remove sign, - 127 to remove bias.
+  // >> to remove mantissa, & to remove sign, - 127 to remove bias.
   const exp = ((bits >> 23) & 0xff) - 127;
 
   // Convert to the new biased exponent.
   const newBiasedExp = bias + exp;
   assert(newBiasedExp >= 0 && newBiasedExp < 1 << exponentBits);
 
-  // Mask only the fraction, and discard the lower bits.
-  const newFraction = (bits & 0x7fffff) >> fractionBitsToDiscard;
-  return (sign << (exponentBits + fractionBits)) | (newBiasedExp << fractionBits) | newFraction;
+  // Mask only the mantissa, and discard the lower bits.
+  const newMantissa = (bits & 0x7fffff) >> mantissaBitsToDiscard;
+  return (sign << (exponentBits + mantissaBits)) | (newBiasedExp << mantissaBits) | newMantissa;
 }
 
 // Three partial-precision floating-point numbers encoded into a single 32-bit value all
-// sharing the same 5-bit exponent (variant of s10e5, which is sign bit, 10-bit mantissa,
-// and 5-bit biased (15) exponent).
+// sharing the same 5-bit exponent.
 // There is no sign bit, and there is a shared 5-bit biased (15) exponent and a 9-bit
-// mantissa for each channel.
+// mantissa for each channel. The mantissa does NOT have an implicit leading "1.",
+// and instead has an implicit leading "0.".
 export function encodeRGB9E5UFloat(r: number, g: number, b: number): number {
-  assert(r >= 0 && g >= 0 && b >= 0);
-  if (r === 0 && g === 0 && b === 0) {
-    return 0;
+  for (const v of [r, g, b]) {
+    assert(v >= 0 && v < Math.pow(2, 16));
   }
 
-  const bias = 15;
-  const fractionBits = 9;
-  const exponentMask = 0b11111;
-
   const buf = new DataView(new ArrayBuffer(Float32Array.BYTES_PER_ELEMENT));
+  const extractMantissaAndExponent = (n: number) => {
+    const mantissaBits = 9;
+    buf.setFloat32(0, n, true);
+    const bits = buf.getUint32(0, true);
+    // >> to remove mantissa, & to remove sign
+    let biasedExponent = (bits >> 23) & 0xff;
+    const mantissaBitsToDiscard = 23 - mantissaBits;
+    let mantissa = (bits & 0x7fffff) >> mantissaBitsToDiscard;
 
-  buf.setFloat32(0, r, true);
-  const rBits = buf.getUint32(0, true);
+    // RGB9E5UFloat has an implicit leading 0. instead of a leading 1.,
+    // so we need to move the 1. into the mantissa and bump the exponent.
+    // For float32 encoding, the leading 1 is only present if the biased
+    // exponent is non-zero.
+    if (biasedExponent !== 0) {
+      mantissa = (mantissa >> 1) | 0b100000000;
+      biasedExponent += 1;
+    }
+    return { biasedExponent, mantissa };
+  };
 
-  buf.setFloat32(0, g, true);
-  const gBits = buf.getUint32(0, true);
+  const { biasedExponent: rExp, mantissa: rOrigMantissa } = extractMantissaAndExponent(r);
+  const { biasedExponent: gExp, mantissa: gOrigMantissa } = extractMantissaAndExponent(g);
+  const { biasedExponent: bExp, mantissa: bOrigMantissa } = extractMantissaAndExponent(b);
 
-  buf.setFloat32(0, b, true);
-  const bBits = buf.getUint32(0, true);
+  // Use the largest exponent, and shift the mantissa accordingly
+  const exp = Math.max(rExp, gExp, bExp);
+  const rMantissa = rOrigMantissa >> (exp - rExp);
+  const gMantissa = gOrigMantissa >> (exp - gExp);
+  const bMantissa = bOrigMantissa >> (exp - bExp);
 
-  // >> to remove fraction, & to remove sign, - 127 to remove bias.
-  let rExp = ((rBits >> 23) & 0xff) - 127;
-  let gExp = ((gBits >> 23) & 0xff) - 127;
-  let bExp = ((bBits >> 23) & 0xff) - 127;
-
-  const fractionBitsToDiscard = 23 - fractionBits;
-
-  let rFrac = (rBits & 0x7fffff) >> fractionBitsToDiscard;
-  let gFrac = (gBits & 0x7fffff) >> fractionBitsToDiscard;
-  let bFrac = (bBits & 0x7fffff) >> fractionBitsToDiscard;
-
-  // RGB9E5UFloat does not have the implicit 1, so we need to add it to
-  // the fraction and bump the exponent.
-  rFrac = (rFrac >> 1) | 0b100000000;
-  bFrac = (bFrac >> 1) | 0b100000000;
-  gFrac = (gFrac >> 1) | 0b100000000;
-  rExp += 1;
-  gExp += 1;
-  bExp += 1;
-
-  // Start with the exponent of a non-zero component
-  let exp = 0;
-  if (r !== 0) exp = rExp;
-  if (g !== 0) exp = gExp;
-  if (b !== 0) exp = bExp;
-
-  // Then get the smallest exponent
-  if (r !== 0) exp = Math.min(exp, rExp);
-  if (g !== 0) exp = Math.min(exp, gExp);
-  if (b !== 0) exp = Math.min(exp, bExp);
-
-  const biasedExp = (exp + bias) & exponentMask;
-  return rFrac | (gFrac << 9) | (bFrac << 18) | (biasedExp << 27);
+  const bias = 15;
+  const biasedExp = exp === 0 ? 0 : exp - 127 + bias;
+  assert(biasedExp >= 0 && biasedExp <= 31);
+  return rMantissa | (gMantissa << 9) | (bMantissa << 18) | (biasedExp << 27);
 }
 
 export function assertInIntegerRange(n: number, bits: number, signed: boolean): void {
@@ -143,10 +132,10 @@ export function assertInIntegerRange(n: number, bits: number, signed: boolean): 
 
 export function gammaCompress(n: number): number {
   n = n <= 0.0031308 ? (323 * n) / 25 : (211 * Math.pow(n, 5 / 12) - 11) / 200;
-  return n < 0 ? 0 : n > 1 ? 1 : n;
+  return clamp(n, 0, 1);
 }
 
 export function gammaDecompress(n: number): number {
   n = n <= 0.04045 ? (n * 25) / 323 : Math.pow((200 * n + 11) / 211, 12 / 5);
-  return n < 0 ? 0 : n > 1 ? 1 : n;
+  return clamp(n, 0, 1);
 }
