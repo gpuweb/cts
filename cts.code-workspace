@@ -1,6 +1,15 @@
 // Note: VS Code's setting precedence is `.vscode/` > `cts.code-workspace` > global user settings.
 {
-  "folders": [{ "path": "." }],
+  "folders": [
+    {
+      "name": "cts",
+      "path": "."
+    },
+    {
+      "name": "webgpu",
+      "path": "src/webgpu"
+    }
+  ],
   "settings": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.detectIndentation": false,
