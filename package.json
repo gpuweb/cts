@@ -1,9 +1,13 @@
 {
   "name": "@webgpu/cts",
   "version": "0.1.0",
-  "description": "",
+  "description": "WebGPU Conformance Test Suite",
   "scripts": {
     "test": "grunt pre",
+    "check": "grunt check",
+    "standalone": "grunt standalone",
+    "wpt": "grunt wpt",
+    "unittest": "grunt unittest",
     "gen_wpt_cts_html": "tools/gen_wpt_cts_html"
   },
   "engines": {
