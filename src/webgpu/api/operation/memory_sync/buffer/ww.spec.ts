@@ -1,7 +1,7 @@
 export const description = `
-Memory Synchronization Tests for Buffer.
+Memory Synchronization Tests for Buffer: write after write.
 
-- Test write-after-write on a single buffer. Create one single buffer and initiate it to 0.
+- Test write-after-write on a single buffer. Create one single buffer and initialize it to 0.
 Write a number (say 1) into the buffer via render pass, compute pass, or copy. Write another
 number (say 2) into the same buffer via render pass, compute pass, or copy.
   - x= 1st write type: {storage buffer in {render, compute}, T2B, B2B, WriteBuffer}
@@ -21,11 +21,11 @@ export const g = makeTestGroup(BufferSyncTest);
 
 g.test('write_after_write')
   .desc(
-    `Test write-after-write operations. The first write will write 1 into a storage buffer.
-    The second write will write 2 into the same storage buffer. So, expected data in buffer is 2.
+    `Test write-after-write operations. The first write will write 1 into a writable buffer.
+    The second write will write 2 into the same buffer. So, expected data in buffer is 2.
     The two writes can be in the same command buffer, or separate command buffers, or separate
     submits, or separate queues. Each write operation can be done via render, compute, copy,
-    writeBuffer, map write, etc. If the write operation is done by a render pass, it may use bundle.`
+    writeBuffer, etc. If the write operation is done by a render pass, it may use bundle.`
   )
   .params(
     params()
@@ -107,7 +107,18 @@ g.test('write_after_write')
     t.verifyData(buffer, 2);
   });
 
-// TODO (yunchao.he@intel.com):
-// * Add write-after-write tests for two-draws-or-dispatches in same pass. Note that the expected
-// value is not one single fixed value for two draws in render.
-// * Add read-before-write tests and read-after-write tests.
+g.test('write_after_write,two_draws_in_the_same_render_pass')
+  .desc(
+    `Test write-after-write operations in the same render pass. The first write will write 1 into
+    a storage buffer. The second write will write 2 into the same buffer in the same pass. Expected
+    data in buffer is either 1 or 2. It may use bundle in each draw.`
+  )
+  .unimplemented();
+
+g.test('write_after_write,two_dispatches_in_the_same_compute_pass')
+  .desc(
+    `Test write-after-write operations in the same compute pass. The first write will write 1 into
+    a storage buffer. The second write will write 2 into the same buffer in the same pass. Expected
+    data in buffer is 2.`
+  )
+  .unimplemented();

@@ -6,7 +6,6 @@ export class BufferSyncTest extends GPUTest {
   // Create a buffer, and initiate it to a specified value for all elements.
   async createBufferWithValue(initValue: number): Promise<GPUBuffer> {
     const fence = this.queue.createFence();
-    this.queue.signal(fence, 1);
     const data = new Uint32Array(SIZE / 4);
     for (let i = 0; i < SIZE / 4; ++i) {
       data[i] = initValue;
@@ -18,6 +17,7 @@ export class BufferSyncTest extends GPUTest {
     });
     new Uint8Array(buffer.getMappedRange()).set(data);
     buffer.unmap();
+    this.queue.signal(fence, 1);
     await fence.onCompletion(1);
     return buffer;
   }
@@ -101,7 +101,7 @@ export class BufferSyncTest extends GPUTest {
   beginSimpleRenderPass(encoder: GPUCommandEncoder): GPURenderPassEncoder {
     const view = this.device
       .createTexture({
-        size: { width: 4, height: 4, depth: 1 },
+        size: { width: 1, height: 1, depth: 1 },
         format: 'rgba8unorm',
         usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
       })
