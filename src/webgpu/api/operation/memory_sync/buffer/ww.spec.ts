@@ -11,101 +11,73 @@ number (say 2) into the same buffer via render pass, compute pass, or copy.
   - if not single pass, x= writes in {same cmdbuf, separate cmdbufs, separate submits, separate queues}
 `;
 
-import { pbool, poptions, params } from '../../../../../common/framework/params_builder.js';
+import { poptions, params } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { assert } from '../../../../../common/framework/util/util.js';
 
 import { BufferSyncTest } from './buffer_sync_test.js';
 
 export const g = makeTestGroup(BufferSyncTest);
 
-g.test('write_after_write')
-  .desc(
-    `Test write-after-write operations. The first write will write 1 into a writable buffer.
-    The second write will write 2 into the same buffer. So, expected data in buffer is 2.
-    The two writes can be in the same command buffer, or separate command buffers, or separate
-    submits, or separate queues. Each write operation can be done via render, compute, copy,
-    writeBuffer, etc. If the write operation is done by a render pass, it may use bundle.`
-  )
+const kAllWriteOps = ['render', 'render-via-bundle', 'compute', 'b2b-copy', 't2b-copy'];
+
+g.test('write_after_write,same_cmdbuf')
+  .desc('Test write-after-write operations in the same command buffer.')
   .params(
     params()
-      // TODO (yunchao.he@intel.com): add multi-queue.
-      .combine(
-        poptions('writeScopes', ['sameCmdbuf', 'separateCmdbufs', 'separateSubmits'] as const)
-      )
-      .combine(
-        poptions('firstWriteOp', [
-          'render',
-          'compute',
-          'b2bCopy',
-          't2bCopy',
-          'writeBuffer',
-        ] as const)
-      )
-      .combine(
-        poptions('secondWriteOp', [
-          'render',
-          'compute',
-          'b2bCopy',
-          't2bCopy',
-          'writeBuffer',
-        ] as const)
-      )
-      .combine(pbool('firstWriteInBundle'))
-      .combine(pbool('secondWriteInBundle'))
-      .unless(
-        p =>
-          (p.firstWriteInBundle && p.firstWriteOp !== 'render') ||
-          (p.secondWriteInBundle && p.secondWriteOp !== 'render') ||
-          ((p.firstWriteOp === 'writeBuffer' || p.secondWriteOp === 'writeBuffer') &&
-            p.writeScopes !== 'separateSubmits')
-      )
+      .combine(poptions('firstWriteOp', kAllWriteOps))
+      .combine(poptions('secondWriteOp', kAllWriteOps))
   )
   .fn(async t => {
-    const {
-      writeScopes,
-      firstWriteOp,
-      secondWriteOp,
-      firstWriteInBundle,
-      secondWriteInBundle,
-    } = t.params;
-
+    const { firstWriteOp, secondWriteOp } = t.params;
     const buffer = await t.createBufferWithValue(0);
 
-    const writeInBundle = [firstWriteInBundle, secondWriteInBundle];
-    const writeOp = [firstWriteOp, secondWriteOp];
-    switch (writeScopes) {
-      case 'sameCmdbuf': {
-        const encoder = t.device.createCommandEncoder();
-        for (let i = 0; i < 2; i++) {
-          await t.issueWriteOp(writeOp[i], writeInBundle[i], buffer, i + 1, encoder);
-        }
-        t.device.defaultQueue.submit([encoder.finish()]);
-        break;
-      }
-      case 'separateCmdbufs': {
-        const command_buffers: GPUCommandBuffer[] = [];
-        for (let i = 0; i < 2; i++) {
-          command_buffers.push(
-            await t.createCommandBufferAndIssueWriteOp(writeOp[i], writeInBundle[i], buffer, i + 1)
-          );
-        }
-        t.device.defaultQueue.submit(command_buffers);
-        break;
-      }
-      case 'separateSubmits': {
-        for (let i = 0; i < 2; i++) {
-          await t.createQueueSubmitsAndIssueWriteOp(writeOp[i], writeInBundle[i], buffer, i + 1);
-        }
-        break;
-      }
-      default:
-        assert(true);
-        break;
-    }
+    const encoder = t.device.createCommandEncoder();
+    await t.encodeWriteOp(encoder, firstWriteOp, buffer, 1);
+    await t.encodeWriteOp(encoder, secondWriteOp, buffer, 2);
+    t.device.defaultQueue.submit([encoder.finish()]);
 
     t.verifyData(buffer, 2);
   });
+
+g.test('write_after_write,separate_cmdbufs')
+  .desc('Test write-after-write operations in separate command buffers via the same submit.')
+  .params(
+    params()
+      .combine(poptions('firstWriteOp', kAllWriteOps))
+      .combine(poptions('secondWriteOp', kAllWriteOps))
+  )
+  .fn(async t => {
+    const { firstWriteOp, secondWriteOp } = t.params;
+    const buffer = await t.createBufferWithValue(0);
+
+    const command_buffers: GPUCommandBuffer[] = [];
+    command_buffers.push(await t.createCommandBufferWithWriteOp(firstWriteOp, buffer, 1));
+    command_buffers.push(await t.createCommandBufferWithWriteOp(secondWriteOp, buffer, 2));
+    t.device.defaultQueue.submit(command_buffers);
+
+    t.verifyData(buffer, 2);
+  });
+
+g.test('write_after_write,separate_submits')
+  .desc('Test write-after-write operations via separate submits in the same queue.')
+  .params(
+    params()
+      .combine(poptions('firstWriteOp', ['write-buffer', ...kAllWriteOps] as const))
+      .combine(poptions('secondWriteOp', ['write-buffer', ...kAllWriteOps] as const))
+  )
+  .fn(async t => {
+    const { firstWriteOp, secondWriteOp } = t.params;
+    const buffer = await t.createBufferWithValue(0);
+
+    await t.submitWriteOp(firstWriteOp, buffer, 1);
+    await t.submitWriteOp(secondWriteOp, buffer, 2);
+
+    t.verifyData(buffer, 2);
+  });
+
+g.test('write_after_write,separate_queues')
+  .desc('Test write-after-write operations in separate queues.')
+  .unimplemented();
 
 g.test('write_after_write,two_draws_in_the_same_render_pass')
   .desc(

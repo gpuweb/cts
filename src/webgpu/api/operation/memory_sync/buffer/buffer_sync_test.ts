@@ -1,18 +1,16 @@
 import { assert } from '../../../../../common/framework/util/util.js';
 import { GPUTest } from '../../../../gpu_test.js';
 
-const SIZE = 4;
+const kSize = 4;
+
 export class BufferSyncTest extends GPUTest {
-  // Create a buffer, and initiate it to a specified value for all elements.
+  // Create a buffer, and initialize it to a specified value for all elements.
   async createBufferWithValue(initValue: number): Promise<GPUBuffer> {
     const fence = this.queue.createFence();
-    const data = new Uint32Array(SIZE / 4);
-    for (let i = 0; i < SIZE / 4; ++i) {
-      data[i] = initValue;
-    }
+    const data = new Uint32Array(kSize / 4).fill(initValue);
     const buffer = this.device.createBuffer({
       mappedAtCreation: true,
-      size: SIZE,
+      size: kSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
     });
     new Uint8Array(buffer.getMappedRange()).set(data);
@@ -20,6 +18,26 @@ export class BufferSyncTest extends GPUTest {
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);
     return buffer;
+  }
+
+  // Create a texture, and initialize it to a specified value for all elements.
+  async createTextureWithValue(initValue: number): Promise<GPUTexture> {
+    const fence = this.queue.createFence();
+    const data = new Uint32Array(kSize / 4).fill(initValue);
+    const texture = this.device.createTexture({
+      size: { width: kSize / 4, height: 1, depth: 1 },
+      format: 'rgba8uint',
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+    });
+    this.device.defaultQueue.writeTexture(
+      { texture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+      data,
+      { offset: 0, bytesPerRow: kSize, rowsPerImage: 1 },
+      { width: kSize / 4, height: 1, depth: 1 }
+    );
+    this.queue.signal(fence, 1);
+    await fence.onCompletion(1);
+    return texture;
   }
 
   createBindGroup(
@@ -117,24 +135,33 @@ export class BufferSyncTest extends GPUTest {
   }
 
   // Write buffer via draw call in render pass. Use bundle if needed.
-  writeByRenderPass(bundle: boolean, buffer: GPUBuffer, value: number, encoder: GPUCommandEncoder) {
+  encodeWriteAsStorageBufferInRenderPass(
+    encoder: GPUCommandEncoder,
+    buffer: GPUBuffer,
+    value: number,
+    inBundle: boolean
+  ) {
     const pipeline = this.createStorageWriteRenderPipeline(value);
     const bindGroup = this.createBindGroup(pipeline, buffer);
 
     const pass = this.beginSimpleRenderPass(encoder);
-    const renderer = bundle
+    const renderer = inBundle
       ? this.device.createRenderBundleEncoder({ colorFormats: ['rgba8unorm'] })
       : pass;
     renderer.setBindGroup(0, bindGroup);
     renderer.setPipeline(pipeline);
     renderer.draw(1, 1, 0, 0);
 
-    if (bundle) pass.executeBundles([(renderer as GPURenderBundleEncoder).finish()]);
+    if (inBundle) pass.executeBundles([(renderer as GPURenderBundleEncoder).finish()]);
     pass.endPass();
   }
 
   // Write buffer via dispatch call in compute pass.
-  writeByComputePass(buffer: GPUBuffer, value: number, encoder: GPUCommandEncoder) {
+  encodeWriteAsStorageBufferInComputePass(
+    encoder: GPUCommandEncoder,
+    buffer: GPUBuffer,
+    value: number
+  ) {
     const pipeline = this.createStorageWriteComputePipeline(value);
     const bindGroup = this.createBindGroup(pipeline, buffer);
     const pass = encoder.beginComputePass();
@@ -145,24 +172,18 @@ export class BufferSyncTest extends GPUTest {
   }
 
   // Write bufer via BuferToBuffer copy.
-  async writeByB2BCopy(buffer: GPUBuffer, value: number, encoder: GPUCommandEncoder) {
+  async encodeWriteByB2BCopy(encoder: GPUCommandEncoder, buffer: GPUBuffer, value: number) {
     const tmpBuffer = await this.createBufferWithValue(value);
-    encoder.copyBufferToBuffer(tmpBuffer, 0, buffer, 0, SIZE);
+
+    // The write operation via b2b copy is just encoded into command encoder, it doesn't write immediately.
+    encoder.copyBufferToBuffer(tmpBuffer, 0, buffer, 0, kSize);
   }
 
   // Write buffer via TextureToBuffer copy.
-  async writeByT2BCopy(buffer: GPUBuffer, value: number, encoder: GPUCommandEncoder) {
-    const tmpBuffer = await this.createBufferWithValue(value);
-    const tmpTexture = this.device.createTexture({
-      size: { width: 1, height: 1, depth: 1 },
-      format: 'rgba8uint',
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
-    });
-    encoder.copyBufferToTexture(
-      { buffer: tmpBuffer, bytesPerRow: 256 },
-      { texture: tmpTexture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-      { width: 1, height: 1, depth: 1 }
-    );
+  async encodeWriteByT2BCopy(encoder: GPUCommandEncoder, buffer: GPUBuffer, value: number) {
+    const tmpTexture = await this.createTextureWithValue(value);
+
+    // The write operation via t2b copy is just encoded into command encoder, it doesn't write immediately.
     encoder.copyTextureToBuffer(
       { texture: tmpTexture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
       { buffer, bytesPerRow: 256 },
@@ -172,64 +193,54 @@ export class BufferSyncTest extends GPUTest {
 
   // Write buffer via writeBuffer API on queue
   writeByWriteBuffer(buffer: GPUBuffer, value: number) {
-    const data = new Uint32Array(SIZE / 4);
-    for (let i = 0; i < SIZE / 4; ++i) {
-      data[i] = value;
-    }
-
+    const data = new Uint32Array(kSize / 4).fill(value);
     this.device.defaultQueue.writeBuffer(buffer, 0, data);
   }
 
   // Issue write operation via render pass, compute pass, copy, etc.
-  async issueWriteOp(
+  async encodeWriteOp(
+    encoder: GPUCommandEncoder,
     writeOp: string,
-    bundle: boolean,
     buffer: GPUBuffer,
-    value: number,
-    encoder: GPUCommandEncoder
+    value: number
   ) {
-    assert(!bundle || writeOp === 'render');
     switch (writeOp) {
       case 'render':
-        this.writeByRenderPass(bundle, buffer, value, encoder);
+        this.encodeWriteAsStorageBufferInRenderPass(encoder, buffer, value, false);
+        break;
+      case 'render-via-bundle':
+        this.encodeWriteAsStorageBufferInRenderPass(encoder, buffer, value, true);
         break;
       case 'compute':
-        this.writeByComputePass(buffer, value, encoder);
+        this.encodeWriteAsStorageBufferInComputePass(encoder, buffer, value);
         break;
-      case 'b2bCopy':
-        await this.writeByB2BCopy(buffer, value, encoder);
+      case 'b2b-copy':
+        await this.encodeWriteByB2BCopy(encoder, buffer, value);
         break;
-      case 't2bCopy':
-        await this.writeByT2BCopy(buffer, value, encoder);
+      case 't2b-copy':
+        await this.encodeWriteByT2BCopy(encoder, buffer, value);
         break;
       default:
-        assert(true);
-        break;
+        assert(false);
     }
   }
 
-  async createCommandBufferAndIssueWriteOp(
+  async createCommandBufferWithWriteOp(
     writeOp: string,
-    bundle: boolean,
     buffer: GPUBuffer,
     value: number
   ): Promise<GPUCommandBuffer> {
     const encoder = this.device.createCommandEncoder();
-    await this.issueWriteOp(writeOp, bundle, buffer, value, encoder);
+    await this.encodeWriteOp(encoder, writeOp, buffer, value);
     return encoder.finish();
   }
 
-  async createQueueSubmitsAndIssueWriteOp(
-    writeOp: string,
-    bundle: boolean,
-    buffer: GPUBuffer,
-    value: number
-  ) {
-    if (writeOp === 'writeBuffer') {
+  async submitWriteOp(writeOp: string, buffer: GPUBuffer, value: number) {
+    if (writeOp === 'write-buffer') {
       this.writeByWriteBuffer(buffer, value);
     } else {
       const encoder = this.device.createCommandEncoder();
-      await this.issueWriteOp(writeOp, bundle, buffer, value, encoder);
+      await this.encodeWriteOp(encoder, writeOp, buffer, value);
       this.device.defaultQueue.submit([encoder.finish()]);
     }
   }
