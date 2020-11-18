@@ -1,6 +1,7 @@
 export const description = 'Test helpers for texel data produce the expected data in the shader';
 
 import { params, poptions } from '../../../common/framework/params_builder.js';
+import { pp } from '../../../common/framework/preprocessor.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { unreachable, assert } from '../../../common/framework/util/util.js';
 import {
@@ -68,20 +69,18 @@ function doTest(
       unreachable();
   }
 
-  const shader = `
+  const shader = pp`
   [[set(0), binding(0)]] var<uniform_constant> tex : texture_2d<${shaderType}>;
 
   [[block]] struct Output {
-    ${rep.componentOrder
-      .map((C, i) => `[[offset(${i * 4})]] result${C} : ${shaderType};`)
-      .join('\n')}
+    ${pp.join(rep.componentOrder.map((C, i) => `[[offset(${i * 4})]] result${C} : ${shaderType};`))}
   };
   [[set(0), binding(1)]] var<storage_buffer> output : Output;
 
   [[stage(compute)]]
   fn main() -> void {
       var texel : vec4<${shaderType}> = textureLoad(tex, vec2<i32>(0, 0), 0);
-      ${rep.componentOrder.map(C => `output.result${C} = texel.${C.toLowerCase()};`).join('\n')}
+      ${pp.join(rep.componentOrder.map(C => `output.result${C} = texel.${C.toLowerCase()};`))}
       return;
   }`;
 
