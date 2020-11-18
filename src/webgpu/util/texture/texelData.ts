@@ -227,9 +227,6 @@ export interface TexelDataRepresentation {
 }
 
 class TexelDataRepresentationImpl implements TexelDataRepresentation {
-  // TODO: Determine endianness of the GPU data?
-  private isGPULittleEndian = true;
-
   constructor(
     private readonly format: UncompressedTextureFormat,
     readonly componentOrder: TexelComponent[],
@@ -257,7 +254,7 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
         assert(byteOffset === bitOffset / 8 && byteLength === bitLength / 8);
         switch (byteLength) {
           case 4:
-            new DataView(data, byteOffset, byteLength).setFloat32(0, value, this.isGPULittleEndian);
+            new DataView(data, byteOffset, byteLength).setFloat32(0, value, true);
             break;
           default:
             unreachable();
@@ -273,10 +270,10 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
             new DataView(data, byteOffset, byteLength).setInt8(0, value);
             break;
           case 2:
-            new DataView(data, byteOffset, byteLength).setInt16(0, value, this.isGPULittleEndian);
+            new DataView(data, byteOffset, byteLength).setInt16(0, value, true);
             break;
           case 4:
-            new DataView(data, byteOffset, byteLength).setInt32(0, value, this.isGPULittleEndian);
+            new DataView(data, byteOffset, byteLength).setInt32(0, value, true);
             break;
           default:
             unreachable();
@@ -292,18 +289,10 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
               new DataView(data, byteOffset, byteLength).setUint8(0, value);
               break;
             case 2:
-              new DataView(data, byteOffset, byteLength).setUint16(
-                0,
-                value,
-                this.isGPULittleEndian
-              );
+              new DataView(data, byteOffset, byteLength).setUint16(0, value, true);
               break;
             case 4:
-              new DataView(data, byteOffset, byteLength).setUint32(
-                0,
-                value,
-                this.isGPULittleEndian
-              );
+              new DataView(data, byteOffset, byteLength).setUint32(0, value, true);
               break;
             default:
               unreachable();
@@ -314,7 +303,7 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
           switch (this.totalBitLength()) {
             case 32: {
               const view = new DataView(data);
-              const currentValue = view.getUint32(0, this.isGPULittleEndian);
+              const currentValue = view.getUint32(0, true);
 
               let mask = 0xffffffff;
               const bitsToClearRight = bitOffset;
@@ -325,7 +314,7 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
 
               const newValue = (currentValue & ~mask) | (value << bitOffset);
 
-              view.setUint32(0, newValue, this.isGPULittleEndian);
+              view.setUint32(0, newValue, true);
               break;
             }
             default:
@@ -418,7 +407,7 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
       new DataView(buf).setUint32(
         0,
         encodeRGB9E5UFloat(components.R, components.G, components.B),
-        this.isGPULittleEndian
+        true
       );
       return buf;
     }
@@ -450,7 +439,7 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
       new DataView(buf).setUint32(
         0,
         encodeRGB9E5UFloat(components.R, components.G, components.B),
-        this.isGPULittleEndian
+        true
       );
       return buf;
     }
