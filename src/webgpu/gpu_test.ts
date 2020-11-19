@@ -10,7 +10,7 @@ import {
   getTextureCopyLayout,
   LayoutOptions as TextureLayoutOptions,
 } from './util/texture/layout.js';
-import { PerTexelComponent, getTexelDataRepresentation } from './util/texture/texelData.js';
+import { PerTexelComponent, kTexelRepresentationInfo } from './util/texture/texelData.js';
 
 type TypedArrayBufferView =
   | Uint8Array
@@ -263,7 +263,8 @@ got [${failedByteActualValues.join(', ')}]`;
       size,
       layout
     );
-    const expectedTexelData = getTexelDataRepresentation(format).getBytes(exp);
+    const rep = kTexelRepresentationInfo[format];
+    const expectedTexelData = rep.pack(rep.encode(exp));
 
     const buffer = this.device.createBuffer({
       size: byteLength,

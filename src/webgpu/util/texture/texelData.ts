@@ -1,18 +1,13 @@
 import { assert, unreachable } from '../../../common/framework/util/util.js';
-import {
-  EncodableTextureFormat,
-  kEncodableTextureFormatInfo,
-  kUncompressedTextureFormatInfo,
-  UncompressedTextureFormat,
-} from '../../capability_info.js';
+import { UncompressedTextureFormat } from '../../capability_info.js';
 import {
   assertInIntegerRange,
   float32ToFloatBits,
   floatAsNormalizedInteger,
   gammaCompress,
-  encodeRGB9E5UFloat,
-  normalizedIntegerAsFloat,
   gammaDecompress,
+  normalizedIntegerAsFloat,
+  packRGB9E5UFloat,
 } from '../conversion.js';
 
 export const enum TexelComponent {
@@ -26,263 +21,101 @@ export const enum TexelComponent {
 
 export type PerTexelComponent<T> = { [c in TexelComponent]?: T };
 
-const enum TexelWriteType {
-  Sint,
-  Uint,
-  Float,
-}
+export type ComponentDataType = 'uint' | 'sint' | 'unorm' | 'snorm' | 'float' | 'ufloat' | null;
 
-// Function to convert a value into a texel value. It returns the converted value
-// and the type of the converted value. For example, conversion may convert:
-//  - floats to unsigned normalized integers
-//  - floats to half floats, interpreted as uint16 bits
-type TexelWriteFn = (value: number) => { value: number; type: TexelWriteType };
-
-// Converts a data value to its representation in a shader
-type DecodeFn = (value: number) => number;
-
-interface SingleComponentInfo {
-  decode: DecodeFn;
-  write: TexelWriteFn;
+type TexelComponentInfo = PerTexelComponent<{
+  dataType: ComponentDataType;
   bitLength: number;
-}
+}>;
 
-type TexelComponentInfo = PerTexelComponent<null | SingleComponentInfo>;
+// A function which maps component values to component values.
+type ComponentMapFn = (components: PerTexelComponent<number>) => PerTexelComponent<number>;
 
-const kR = [TexelComponent.R];
-const kRG = [TexelComponent.R, TexelComponent.G];
-const kRGB = [TexelComponent.R, TexelComponent.G, TexelComponent.B];
-const kRGBA = [TexelComponent.R, TexelComponent.G, TexelComponent.B, TexelComponent.A];
-const kBGRA = [TexelComponent.B, TexelComponent.G, TexelComponent.R, TexelComponent.A];
+// A function which packs component values as an ArrayBuffer.
+type ComponentPackFn = (components: PerTexelComponent<number>) => ArrayBuffer;
 
-const unorm = (bitLength: number) => (n: number) => ({
-  value: floatAsNormalizedInteger(n, bitLength, false),
-  type: TexelWriteType.Uint,
-});
-
-const snorm = (bitLength: number) => (n: number) => ({
-  value: floatAsNormalizedInteger(n, bitLength, true),
-  type: TexelWriteType.Sint,
-});
-
-const uint = (bitLength: number) => (n: number) => ({
-  value: (assertInIntegerRange(n, bitLength, false), n),
-  type: TexelWriteType.Uint,
-});
-
-const sint = (bitLength: number) => (n: number) => ({
-  value: (assertInIntegerRange(n, bitLength, true), n),
-  type: TexelWriteType.Sint,
-});
-
-const decodeUnorm = (bitLength: number) => (n: number) =>
-  normalizedIntegerAsFloat(n, bitLength, false);
-const decodeSnorm = (bitLength: number) => (n: number) =>
-  normalizedIntegerAsFloat(n, bitLength, true);
-const identity = (n: number) => n;
-
-const unorm2 = { decode: decodeUnorm(2), write: unorm(2), bitLength: 2 };
-const unorm8 = { decode: decodeUnorm(8), write: unorm(8), bitLength: 8 };
-const unorm10 = { decode: decodeUnorm(10), write: unorm(10), bitLength: 10 };
-
-const snorm8 = { decode: decodeSnorm(8), write: snorm(8), bitLength: 8 };
-
-const uint8 = { decode: identity, write: uint(8), bitLength: 8 };
-const uint16 = { decode: identity, write: uint(16), bitLength: 16 };
-const uint32 = { decode: identity, write: uint(32), bitLength: 32 };
-
-const sint8 = { decode: identity, write: sint(8), bitLength: 8 };
-const sint16 = { decode: identity, write: sint(16), bitLength: 16 };
-const sint32 = { decode: identity, write: sint(32), bitLength: 32 };
-
-const float10 = {
-  decode: identity,
-  write: (n: number) => ({
-    value: float32ToFloatBits(n, 0, 5, 5, 15),
-    type: TexelWriteType.Uint,
-  }),
-  bitLength: 10,
-};
-
-const float11 = {
-  decode: identity,
-  write: (n: number) => ({
-    value: float32ToFloatBits(n, 0, 5, 6, 15),
-    type: TexelWriteType.Uint,
-  }),
-  bitLength: 11,
-};
-
-const float16 = {
-  decode: identity,
-  write: (n: number) => ({
-    value: float32ToFloatBits(n, 1, 5, 10, 15),
-    type: TexelWriteType.Uint,
-  }),
-  bitLength: 16,
-};
-
-const float32 = {
-  decode: identity,
-  write: (n: number) => ({
-    value: Math.fround(n),
-    type: TexelWriteType.Float,
-  }),
-  bitLength: 32,
-};
-
-const componentUnimplemented = {
-  decode: identity,
-  write: () => {
-    unreachable('TexelComponentInfo not implemented for this texture format');
-  },
-  bitLength: 0,
-};
-
-const repeatComponents = (
-  componentOrder: TexelComponent[],
-  perComponentInfo: SingleComponentInfo
-) => {
-  const componentInfo = componentOrder.reduce((acc, curr) => {
-    return Object.assign(acc, {
-      [curr]: perComponentInfo,
-    });
-  }, {});
-
-  return {
-    componentOrder,
-    componentInfo,
-  };
-};
-
-const kRepresentationInfo: {
-  // TODO: Figure out if/how to extend this to more texture formats
-  [k in UncompressedTextureFormat]: {
-    componentOrder: TexelComponent[];
-    componentInfo: TexelComponentInfo;
-    sRGB: boolean;
-    // Add fields as needed
-  };
-} = /* prettier-ignore */ {
-  'r8unorm':                { ...repeatComponents(   kR,  unorm8), sRGB: false },
-  'r8snorm':                { ...repeatComponents(   kR,  snorm8), sRGB: false },
-  'r8uint':                 { ...repeatComponents(   kR,   uint8), sRGB: false },
-  'r8sint':                 { ...repeatComponents(   kR,   sint8), sRGB: false },
-  'r16uint':                { ...repeatComponents(   kR,  uint16), sRGB: false },
-  'r16sint':                { ...repeatComponents(   kR,  sint16), sRGB: false },
-  'r16float':               { ...repeatComponents(   kR, float16), sRGB: false },
-  'rg8unorm':               { ...repeatComponents(  kRG,  unorm8), sRGB: false },
-  'rg8snorm':               { ...repeatComponents(  kRG,  snorm8), sRGB: false },
-  'rg8uint':                { ...repeatComponents(  kRG,   uint8), sRGB: false },
-  'rg8sint':                { ...repeatComponents(  kRG,   sint8), sRGB: false },
-  'r32uint':                { ...repeatComponents(   kR,  uint32), sRGB: false },
-  'r32sint':                { ...repeatComponents(   kR,  sint32), sRGB: false },
-  'r32float':               { ...repeatComponents(   kR, float32), sRGB: false },
-  'rg16uint':               { ...repeatComponents(  kRG,  uint16), sRGB: false },
-  'rg16sint':               { ...repeatComponents(  kRG,  sint16), sRGB: false },
-  'rg16float':              { ...repeatComponents(  kRG, float16), sRGB: false },
-
-  'rgba8unorm':             { ...repeatComponents(kRGBA,  unorm8), sRGB: false },
-  'rgba8unorm-srgb':        { ...repeatComponents(kRGBA,  unorm8), sRGB:  true },
-  'rgba8snorm':             { ...repeatComponents(kRGBA,  snorm8), sRGB: false },
-  'rgba8uint':              { ...repeatComponents(kRGBA,   uint8), sRGB: false },
-  'rgba8sint':              { ...repeatComponents(kRGBA,   sint8), sRGB: false },
-  'bgra8unorm':             { ...repeatComponents(kBGRA,  unorm8), sRGB: false },
-  'bgra8unorm-srgb':        { ...repeatComponents(kBGRA,  unorm8), sRGB:  true },
-  'rg32uint':               { ...repeatComponents(  kRG,  uint32), sRGB: false },
-  'rg32sint':               { ...repeatComponents(  kRG,  sint32), sRGB: false },
-  'rg32float':              { ...repeatComponents(  kRG, float32), sRGB: false },
-  'rgba16uint':             { ...repeatComponents(kRGBA,  uint16), sRGB: false },
-  'rgba16sint':             { ...repeatComponents(kRGBA,  sint16), sRGB: false },
-  'rgba16float':            { ...repeatComponents(kRGBA, float16), sRGB: false },
-  'rgba32uint':             { ...repeatComponents(kRGBA,  uint32), sRGB: false },
-  'rgba32sint':             { ...repeatComponents(kRGBA,  sint32), sRGB: false },
-  'rgba32float':            { ...repeatComponents(kRGBA, float32), sRGB: false },
-
-  'rgb10a2unorm':           { componentOrder: kRGBA, componentInfo: { R: unorm10, G: unorm10, B: unorm10, A: unorm2 }, sRGB: false },
-  'rg11b10ufloat':          { componentOrder: kRGB, componentInfo: { R: float11, G: float11, B: float10 }, sRGB: false },
-  // TODO: the e5 is shared between all components; figure out how to write it.
-  'rgb9e5ufloat':           { componentOrder: kRGB, componentInfo: { R: componentUnimplemented, G: componentUnimplemented, B: componentUnimplemented }, sRGB: false },
-
-  'depth32float':           { componentOrder: [TexelComponent.Depth], componentInfo: { Depth: float32 }, sRGB: false },
-  'depth24plus':            { componentOrder: [TexelComponent.Depth], componentInfo: { Depth: null }, sRGB: false },
-  'depth24plus-stencil8':   { componentOrder: [TexelComponent.Depth, TexelComponent.Stencil], componentInfo: { Depth: null, Stencil: null }, sRGB: false },
-};
-
-export interface TexelDataRepresentation {
-  readonly componentOrder: TexelComponent[];
-  readonly componentInfo: TexelComponentInfo;
-
-  // Gets the data representation for |components| where |components| is the expected
-  // values when read in a shader. i.e. Passing in 1.0 for a 8-bit unorm component will
-  // yield 255.
-  getBytes(components: { [c in TexelComponent]?: number }): ArrayBuffer;
-
-  // Pack texel components into the packed byte representation. This may round values, but
-  // does not do unorm <-> float conversion.
-  packData(components: { [c in TexelComponent]?: number }): ArrayBuffer;
-
-  // Decode data into the shader representation
-  decode(components: { [c in TexelComponent]?: number }): { [c in TexelComponent]?: number };
-}
-
-class TexelDataRepresentationImpl implements TexelDataRepresentation {
-  constructor(
-    private readonly format: UncompressedTextureFormat,
-    readonly componentOrder: TexelComponent[],
-    readonly componentInfo: TexelComponentInfo,
-    private readonly sRGB: boolean
-  ) {}
-
-  private totalBitLength(): number {
-    return this.componentOrder.reduce((acc, curr) => {
-      return acc + this.componentInfo[curr]!.bitLength;
-    }, 0);
+// Create a PerTexelComponent object filled with the same value for all components.
+function makePerTexelComponent<T>(components: TexelComponent[], value: T): PerTexelComponent<T> {
+  const values: PerTexelComponent<T> = {};
+  for (const c of components) {
+    values[c] = value;
   }
+  return values;
+}
 
-  private writeTexelData(
-    data: ArrayBuffer,
-    bitOffset: number,
-    bitLength: number,
-    type: TexelWriteType,
-    value: number
-  ) {
+// Produce a |ComponentMapFn| which applies the function |fn| for each component of |components|.
+// Returns a copy of the modified |components|.
+function applyEach(fn: (value: number) => number, components: TexelComponent[]): ComponentMapFn {
+  return (values: PerTexelComponent<number>) => {
+    values = Object.assign({}, values);
+    for (const c of components) {
+      assert(values[c] !== undefined);
+      values[c] = fn(values[c]!);
+    }
+    return values;
+  };
+}
+
+// A ComponentMapFn for encoding sRGB.
+const encodeSRGB: ComponentMapFn = components => {
+  assert(
+    components.R !== undefined && components.G !== undefined && components.B !== undefined,
+    'sRGB requires all of R, G, and B components'
+  );
+  return applyEach(gammaCompress, [TexelComponent.R, TexelComponent.G, TexelComponent.B])(
+    components
+  );
+};
+
+// A ComponentMapFn for decoding sRGB.
+const decodeSRGB: ComponentMapFn = components => {
+  components = Object.assign({}, components);
+  assert(
+    components.R !== undefined && components.G !== undefined && components.B !== undefined,
+    'sRGB requires all of R, G, and B components'
+  );
+  return applyEach(gammaDecompress, [TexelComponent.R, TexelComponent.G, TexelComponent.B])(
+    components
+  );
+};
+
+// Helper function to pack components as an ArrayBuffer. |componentDataTypes| determine how values
+// are written in the ArrayBuffer.
+function packComponents(
+  componentOrder: TexelComponent[],
+  components: PerTexelComponent<number>,
+  bitLengths: number | PerTexelComponent<number>,
+  componentDataTypes: ComponentDataType | PerTexelComponent<ComponentDataType>
+): ArrayBuffer {
+  const bitLengthMap =
+    typeof bitLengths === 'number' ? makePerTexelComponent(componentOrder, bitLengths) : bitLengths;
+
+  const componentDataTypeMap =
+    typeof componentDataTypes === 'string' || componentDataTypes === null
+      ? makePerTexelComponent(componentOrder, componentDataTypes)
+      : componentDataTypes;
+
+  const totalBitLength = Object.entries(bitLengthMap).reduce((acc, [, value]) => {
+    assert(value !== undefined);
+    return acc + value;
+  }, 0);
+  assert(8 * Math.floor(totalBitLength / 8) === totalBitLength);
+
+  const data = new ArrayBuffer(totalBitLength / 8);
+  let bitOffset = 0;
+  for (const c of componentOrder) {
+    const value = components[c];
+    const type = componentDataTypeMap[c];
+    const bitLength = bitLengthMap[c];
+    assert(value !== undefined);
+    assert(type !== undefined);
+    assert(bitLength !== undefined);
+
+    const byteOffset = Math.floor(bitOffset / 8);
+    const byteLength = Math.ceil(bitLength / 8);
     switch (type) {
-      case TexelWriteType.Float: {
-        const byteOffset = Math.floor(bitOffset / 8);
-        const byteLength = Math.ceil(bitLength / 8);
-        assert(byteOffset === bitOffset / 8 && byteLength === bitLength / 8);
-        switch (byteLength) {
-          case 4:
-            new DataView(data, byteOffset, byteLength).setFloat32(0, value, true);
-            break;
-          default:
-            unreachable();
-        }
-        break;
-      }
-      case TexelWriteType.Sint: {
-        const byteOffset = Math.floor(bitOffset / 8);
-        const byteLength = Math.ceil(bitLength / 8);
-        assert(byteOffset === bitOffset / 8 && byteLength === bitLength / 8);
-        switch (byteLength) {
-          case 1:
-            new DataView(data, byteOffset, byteLength).setInt8(0, value);
-            break;
-          case 2:
-            new DataView(data, byteOffset, byteLength).setInt16(0, value, true);
-            break;
-          case 4:
-            new DataView(data, byteOffset, byteLength).setInt32(0, value, true);
-            break;
-          default:
-            unreachable();
-        }
-        break;
-      }
-      case TexelWriteType.Uint: {
-        const byteOffset = Math.floor(bitOffset / 8);
-        const byteLength = Math.ceil(bitLength / 8);
+      case 'uint':
+      case 'unorm':
         if (byteOffset === bitOffset / 8 && byteLength === bitLength / 8) {
           switch (byteLength) {
             case 1:
@@ -300,9 +133,9 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
         } else {
           // Packed representations are all 32-bit and use Uint as the data type.
           // ex.) rg10b11float, rgb10a2unorm
-          switch (this.totalBitLength()) {
-            case 32: {
-              const view = new DataView(data);
+          const view = new DataView(data);
+          switch (view.byteLength) {
+            case 4: {
               const currentValue = view.getUint32(0, true);
 
               let mask = 0xffffffff;
@@ -322,170 +155,364 @@ class TexelDataRepresentationImpl implements TexelDataRepresentation {
           }
         }
         break;
-      }
-      default:
+      case 'sint':
+      case 'snorm':
+        assert(byteOffset === bitOffset / 8 && byteLength === bitLength / 8);
+        switch (byteLength) {
+          case 1:
+            new DataView(data, byteOffset, byteLength).setInt8(0, value);
+            break;
+          case 2:
+            new DataView(data, byteOffset, byteLength).setInt16(0, value, true);
+            break;
+          case 4:
+            new DataView(data, byteOffset, byteLength).setInt32(0, value, true);
+            break;
+          default:
+            unreachable();
+        }
+        break;
+      case 'float':
+        assert(byteOffset === bitOffset / 8 && byteLength === bitLength / 8);
+        switch (byteLength) {
+          case 4:
+            new DataView(data, byteOffset, byteLength).setFloat32(0, value, true);
+            break;
+          default:
+            unreachable();
+        }
+        break;
+      case 'ufloat':
+      case null:
         unreachable();
     }
+
+    bitOffset += bitLength;
   }
 
-  private getComponentBitOffset(component: TexelComponent): number {
-    const componentIndex = this.componentOrder.indexOf(component);
-    assert(componentIndex !== -1);
-    return this.componentOrder.slice(0, componentIndex).reduce((acc, curr) => {
-      const componentInfo = this.componentInfo[curr];
-      assert(!!componentInfo);
-      return acc + componentInfo.bitLength;
-    }, 0);
-  }
-
-  private setComponent(data: ArrayBuffer, component: TexelComponent, n: number): void {
-    const bitOffset = this.getComponentBitOffset(component);
-    const componentInfo = this.componentInfo[component];
-    assert(!!componentInfo);
-    const { write, bitLength } = componentInfo;
-
-    const { value, type } = write(n);
-    this.writeTexelData(data, bitOffset, bitLength, type, value);
-  }
-
-  private setComponentBytes(data: ArrayBuffer, component: TexelComponent, value: number): void {
-    assert(this.format in kEncodableTextureFormatInfo);
-    const format = this.format as EncodableTextureFormat;
-
-    const componentInfo = this.componentInfo[component];
-    assert(!!componentInfo);
-
-    const bitOffset = this.getComponentBitOffset(component);
-    const { bitLength } = componentInfo;
-
-    switch (kEncodableTextureFormatInfo[format].dataType) {
-      case 'float':
-      case 'ufloat':
-        // Use the shader encoding which can pack floats as uint data.
-        this.setComponent(data, component, value);
-        break;
-      case 'snorm':
-      case 'sint': {
-        this.writeTexelData(data, bitOffset, bitLength, TexelWriteType.Sint, value);
-        break;
-      }
-      case 'unorm':
-      case 'uint': {
-        this.writeTexelData(data, bitOffset, bitLength, TexelWriteType.Uint, value);
-        break;
-      }
-    }
-  }
-
-  getBytes(components: PerTexelComponent<number>): ArrayBuffer {
-    if (this.sRGB) {
-      components = Object.assign({}, components);
-      assert(components.R !== undefined);
-      assert(components.G !== undefined);
-      assert(components.B !== undefined);
-      [components.R, components.G, components.B] = [
-        gammaCompress(components.R),
-        gammaCompress(components.G),
-        gammaCompress(components.B),
-      ];
-    }
-
-    const bytesPerBlock = kUncompressedTextureFormatInfo[this.format].bytesPerBlock;
-    assert(!!bytesPerBlock);
-
-    if (this.format === 'rgb9e5ufloat') {
-      assert(this.componentOrder.length === 3);
-      assert(this.componentOrder[0] === TexelComponent.R);
-      assert(this.componentOrder[1] === TexelComponent.G);
-      assert(this.componentOrder[2] === TexelComponent.B);
-      assert(bytesPerBlock === 4);
-      assert(components.R !== undefined);
-      assert(components.G !== undefined);
-      assert(components.B !== undefined);
-
-      const buf = new ArrayBuffer(bytesPerBlock);
-      new DataView(buf).setUint32(
-        0,
-        encodeRGB9E5UFloat(components.R, components.G, components.B),
-        true
-      );
-      return buf;
-    }
-
-    const data = new ArrayBuffer(bytesPerBlock);
-    for (const c of this.componentOrder) {
-      const componentValue = components[c];
-      assert(componentValue !== undefined);
-      this.setComponent(data, c, componentValue);
-    }
-    return data;
-  }
-
-  packData(components: PerTexelComponent<number>): ArrayBuffer {
-    const bytesPerBlock = kUncompressedTextureFormatInfo[this.format].bytesPerBlock;
-    assert(!!bytesPerBlock);
-
-    if (this.format === 'rgb9e5ufloat') {
-      assert(this.componentOrder.length === 3);
-      assert(this.componentOrder[0] === TexelComponent.R);
-      assert(this.componentOrder[1] === TexelComponent.G);
-      assert(this.componentOrder[2] === TexelComponent.B);
-      assert(bytesPerBlock === 4);
-      assert(components.R !== undefined);
-      assert(components.G !== undefined);
-      assert(components.B !== undefined);
-
-      const buf = new ArrayBuffer(bytesPerBlock);
-      new DataView(buf).setUint32(
-        0,
-        encodeRGB9E5UFloat(components.R, components.G, components.B),
-        true
-      );
-      return buf;
-    }
-
-    const data = new ArrayBuffer(bytesPerBlock);
-    for (const c of this.componentOrder) {
-      const componentValue = components[c];
-      assert(componentValue !== undefined);
-      this.setComponentBytes(data, c, componentValue);
-    }
-    return data;
-  }
-
-  decode(components: PerTexelComponent<number>): PerTexelComponent<number> {
-    const values: PerTexelComponent<number> = {};
-    for (const c of this.componentOrder) {
-      const componentValue = components[c];
-      const info = this.componentInfo[c];
-      assert(componentValue !== undefined);
-      assert(!!info);
-      values[c] = info.decode(componentValue);
-    }
-    if (this.sRGB) {
-      assert('R' in values && values.R !== undefined);
-      assert('G' in values && values.G !== undefined);
-      assert('B' in values && values.B !== undefined);
-      [values.R, values.G, values.B] = [
-        gammaDecompress(values.R),
-        gammaDecompress(values.G),
-        gammaDecompress(values.B),
-      ];
-    }
-    return values;
-  }
+  return data;
 }
 
-const kRepresentationCache: Map<UncompressedTextureFormat, TexelDataRepresentationImpl> = new Map();
-export function getTexelDataRepresentation(
-  format: UncompressedTextureFormat
-): TexelDataRepresentation {
-  if (!kRepresentationCache.has(format)) {
-    const { componentOrder, componentInfo, sRGB } = kRepresentationInfo[format];
-    kRepresentationCache.set(
-      format,
-      new TexelDataRepresentationImpl(format, componentOrder, componentInfo, sRGB)
-    );
+// Create an entry in |kTexelRepresentationInfo| for normalized integer texel data with constant bitlength.
+function makeNormalizedInfo(
+  componentOrder: TexelComponent[],
+  bitLength: number,
+  opt: { signed: boolean; sRGB: boolean }
+) {
+  const encodeNonSRGB = applyEach(
+    (n: number) => floatAsNormalizedInteger(n, bitLength, opt.signed),
+    componentOrder
+  );
+  const decodeNonSRGB = applyEach(
+    (n: number) => normalizedIntegerAsFloat(n, bitLength, opt.signed),
+    componentOrder
+  );
+
+  let encode: ComponentMapFn;
+  let decode: ComponentMapFn;
+  if (opt.sRGB) {
+    encode = components => encodeNonSRGB(encodeSRGB(components));
+    decode = components => decodeSRGB(decodeNonSRGB(components));
+  } else {
+    encode = encodeNonSRGB;
+    decode = decodeNonSRGB;
   }
-  return kRepresentationCache.get(format)!;
+
+  const dataType = opt.signed ? 'snorm' : ('unorm' as ComponentDataType);
+  return {
+    componentOrder,
+    componentInfo: makePerTexelComponent(componentOrder, {
+      dataType,
+      bitLength,
+    }),
+    encode,
+    decode,
+    pack: (components: PerTexelComponent<number>) =>
+      packComponents(componentOrder, components, bitLength, dataType),
+  };
+}
+
+// Create an entry in |kTexelRepresentationInfo| for integer texel data with constant bitlength.
+function makeIntegerInfo(
+  componentOrder: TexelComponent[],
+  bitLength: number,
+  opt: { signed: boolean }
+) {
+  const encode = applyEach(
+    (n: number) => (assertInIntegerRange(n, bitLength, opt.signed), n),
+    componentOrder
+  );
+  const decode = applyEach(
+    (n: number) => (assertInIntegerRange(n, bitLength, opt.signed), n),
+    componentOrder
+  );
+
+  const dataType = opt.signed ? 'sint' : ('uint' as ComponentDataType);
+  return {
+    componentOrder,
+    componentInfo: makePerTexelComponent(componentOrder, {
+      dataType,
+      bitLength,
+    }),
+    encode,
+    decode,
+    pack: (components: PerTexelComponent<number>) =>
+      packComponents(componentOrder, components, bitLength, dataType),
+  };
+}
+
+// Create an entry in |kTexelRepresentationInfo| for floating point texel data with constant bitlength.
+function makeFloatInfo(componentOrder: TexelComponent[], bitLength: number) {
+  // TODO: Use |bitLength| to round float values based on precision.
+  const encode = applyEach(identity, componentOrder);
+  const decode = applyEach(identity, componentOrder);
+
+  return {
+    componentOrder,
+    componentInfo: makePerTexelComponent(componentOrder, {
+      dataType: 'float' as ComponentDataType,
+      bitLength,
+    }),
+    encode,
+    decode,
+    pack: (components: PerTexelComponent<number>) => {
+      switch (bitLength) {
+        case 16:
+          components = applyEach(
+            (n: number) => float32ToFloatBits(n, 1, 5, 10, 15),
+            componentOrder
+          )(components);
+          return packComponents(componentOrder, components, 16, 'uint');
+        case 32:
+          return packComponents(componentOrder, components, bitLength, 'float');
+        default:
+          unreachable();
+      }
+    },
+  };
+}
+
+const kR = [TexelComponent.R];
+const kRG = [TexelComponent.R, TexelComponent.G];
+const kRGB = [TexelComponent.R, TexelComponent.G, TexelComponent.B];
+const kRGBA = [TexelComponent.R, TexelComponent.G, TexelComponent.B, TexelComponent.A];
+const kBGRA = [TexelComponent.B, TexelComponent.G, TexelComponent.R, TexelComponent.A];
+
+const identity = (n: number) => n;
+
+export const kTexelRepresentationInfo: {
+  readonly [k in UncompressedTextureFormat]: {
+    readonly componentOrder: TexelComponent[];
+    readonly componentInfo: TexelComponentInfo;
+    readonly encode: ComponentMapFn; // Encode shader values into their data representation. ex.) float 1.0 -> unorm8 255
+    readonly decode: ComponentMapFn; // Decode the data representation into the shader values. ex.) unorm8 255 -> float 1.0
+    readonly pack: ComponentPackFn; // Pack texel component values into an ArrayBuffer. ex.) rg8unorm {r: 0, g:255} -> 0xFF00
+    // Add fields as needed
+  };
+} = {
+  .../* prettier-ignore */ {
+    'r8unorm':               makeNormalizedInfo(   kR,  8, { signed: false, sRGB: false }),
+    'r8snorm':               makeNormalizedInfo(   kR,  8, { signed:  true, sRGB: false }),
+    'r8uint':                makeIntegerInfo(      kR,  8, { signed: false }),
+    'r8sint':                makeIntegerInfo(      kR,  8, { signed:  true }),
+    'r16uint':               makeIntegerInfo(      kR, 16, { signed: false }),
+    'r16sint':               makeIntegerInfo(      kR, 16, { signed:  true }),
+    'r16float':              makeFloatInfo(        kR, 16),
+    'rg8unorm':              makeNormalizedInfo(  kRG,  8, { signed: false, sRGB: false }),
+    'rg8snorm':              makeNormalizedInfo(  kRG,  8, { signed:  true, sRGB: false }),
+    'rg8uint':               makeIntegerInfo(     kRG,  8, { signed: false }),
+    'rg8sint':               makeIntegerInfo(     kRG,  8, { signed:  true }),
+    'r32uint':               makeIntegerInfo(      kR, 32, { signed: false }),
+    'r32sint':               makeIntegerInfo(      kR, 32, { signed:  true }),
+    'r32float':              makeFloatInfo(        kR, 32),
+    'rg16uint':              makeIntegerInfo(     kRG, 16, { signed: false }),
+    'rg16sint':              makeIntegerInfo(     kRG, 16, { signed:  true }),
+    'rg16float':             makeFloatInfo(       kRG, 16),
+    'rgba8unorm':            makeNormalizedInfo(kRGBA,  8, { signed: false, sRGB: false }),
+    'rgba8unorm-srgb':       makeNormalizedInfo(kRGBA,  8, { signed: false, sRGB:  true }),
+    'rgba8snorm':            makeNormalizedInfo(kRGBA,  8, { signed:  true, sRGB: false }),
+    'rgba8uint':             makeIntegerInfo(   kRGBA,  8, { signed: false }),
+    'rgba8sint':             makeIntegerInfo(   kRGBA,  8, { signed:  true }),
+    'bgra8unorm':            makeNormalizedInfo(kBGRA,  8, { signed: false, sRGB: false }),
+    'bgra8unorm-srgb':       makeNormalizedInfo(kBGRA,  8, { signed: false, sRGB:  true }),
+    'rg32uint':              makeIntegerInfo(     kRG, 32, { signed: false }),
+    'rg32sint':              makeIntegerInfo(     kRG, 32, { signed:  true }),
+    'rg32float':             makeFloatInfo(       kRG, 32),
+    'rgba16uint':            makeIntegerInfo(   kRGBA, 16, { signed: false }),
+    'rgba16sint':            makeIntegerInfo(   kRGBA, 16, { signed:  true }),
+    'rgba16float':           makeFloatInfo(     kRGBA, 16),
+    'rgba32uint':            makeIntegerInfo(   kRGBA, 32, { signed: false }),
+    'rgba32sint':            makeIntegerInfo(   kRGBA, 32, { signed:  true }),
+    'rgba32float':           makeFloatInfo(     kRGBA, 32),
+  },
+  ...{
+    rgb10a2unorm: {
+      componentOrder: kRGBA,
+      componentInfo: {
+        [TexelComponent.R]: { dataType: 'unorm', bitLength: 10 },
+        [TexelComponent.G]: { dataType: 'unorm', bitLength: 10 },
+        [TexelComponent.B]: { dataType: 'unorm', bitLength: 10 },
+        [TexelComponent.A]: { dataType: 'unorm', bitLength: 2 },
+      },
+      encode: components => {
+        components = applyEach(
+          (n: number) => (floatAsNormalizedInteger(n, 10, false), n),
+          kRGB
+        )(components);
+        components = applyEach((n: number) => (floatAsNormalizedInteger(n, 2, false), n), [
+          TexelComponent.A,
+        ])(components);
+        return components;
+      },
+      decode: components => {
+        components = applyEach(
+          (n: number) => (normalizedIntegerAsFloat(n, 10, false), n),
+          kRGB
+        )(components);
+        components = applyEach((n: number) => (normalizedIntegerAsFloat(n, 2, false), n), [
+          TexelComponent.A,
+        ])(components);
+        return components;
+      },
+      pack: components =>
+        packComponents(
+          kRGBA,
+          components,
+          {
+            [TexelComponent.R]: 10,
+            [TexelComponent.G]: 10,
+            [TexelComponent.B]: 10,
+            [TexelComponent.A]: 2,
+          },
+          'uint'
+        ),
+    },
+    rg11b10ufloat: {
+      componentOrder: kRGB,
+      encode: applyEach(identity, kRGB),
+      decode: applyEach(identity, kRGB),
+      componentInfo: {
+        [TexelComponent.R]: { dataType: 'ufloat', bitLength: 11 },
+        [TexelComponent.G]: { dataType: 'ufloat', bitLength: 11 },
+        [TexelComponent.B]: { dataType: 'ufloat', bitLength: 10 },
+      },
+      pack: components => {
+        components = applyEach((n: number) => float32ToFloatBits(n, 0, 5, 6, 15), [
+          TexelComponent.R,
+          TexelComponent.G,
+        ])(components);
+        components = applyEach((n: number) => float32ToFloatBits(n, 0, 5, 5, 15), [
+          TexelComponent.B,
+        ])(components);
+        return packComponents(
+          kRGB,
+          components,
+          {
+            [TexelComponent.R]: 11,
+            [TexelComponent.G]: 11,
+            [TexelComponent.B]: 10,
+          },
+          'uint'
+        );
+      },
+    },
+    rgb9e5ufloat: {
+      componentOrder: kRGB,
+      componentInfo: makePerTexelComponent(kRGB, {
+        dataType: 'ufloat',
+        bitLength: -1, // Components don't really have a bitLength since the format is packed.
+      }),
+      encode: applyEach(identity, kRGB),
+      decode: applyEach(identity, kRGB),
+      pack: components => {
+        assert(
+          components.R !== undefined && components.G !== undefined && components.B !== undefined
+        );
+        return new Uint32Array([packRGB9E5UFloat(components.R, components.G, components.B)]).buffer;
+      },
+    },
+    depth32float: {
+      componentOrder: [TexelComponent.Depth],
+      encode: applyEach((n: number) => (assert(n >= 0 && n <= 1.0), n), [TexelComponent.Depth]),
+      decode: applyEach((n: number) => (assert(n >= 0 && n <= 1.0), n), [TexelComponent.Depth]),
+      componentInfo: { [TexelComponent.Depth]: { dataType: 'float', bitLength: 32 } },
+      pack: components => packComponents([TexelComponent.Depth], components, 32, 'float'),
+    },
+    depth24plus: {
+      componentOrder: [TexelComponent.Depth],
+      componentInfo: { [TexelComponent.Depth]: { dataType: null, bitLength: 24 } },
+      encode: applyEach(() => unreachable('depth24plus cannot be encoded'), [TexelComponent.Depth]),
+      decode: applyEach(() => unreachable('depth24plus cannot be decoded'), [TexelComponent.Depth]),
+      pack: () => unreachable('depth24plus data cannot be packed'),
+    },
+    'depth24plus-stencil8': {
+      componentOrder: [TexelComponent.Depth, TexelComponent.Stencil],
+      componentInfo: {
+        [TexelComponent.Depth]: {
+          dataType: null,
+          bitLength: 24,
+        },
+        [TexelComponent.Stencil]: {
+          dataType: 'uint',
+          bitLength: 8,
+        },
+      },
+      encode: components => {
+        components = applyEach((n: number) => (unreachable('depth24plus cannot be encoded'), n), [
+          TexelComponent.Depth,
+        ])(components);
+        components = applyEach((n: number) => (assertInIntegerRange(n, 8, false), n), [
+          TexelComponent.Stencil,
+        ])(components);
+        return components;
+      },
+      decode: components => {
+        components = applyEach((n: number) => (unreachable('depth24plus cannot be decoded'), n), [
+          TexelComponent.Depth,
+        ])(components);
+        components = applyEach((n: number) => (assertInIntegerRange(n, 8, false), n), [
+          TexelComponent.Stencil,
+        ])(components);
+        return components;
+      },
+      pack: () => unreachable('depth24plus-stencil8 data cannot be packed'),
+    },
+  },
+};
+
+// Get the component data type for a format. All components must have the same type.
+export function getSingleDataType(format: UncompressedTextureFormat): ComponentDataType {
+  const infos = Object.values(kTexelRepresentationInfo[format].componentInfo);
+  assert(infos.length > 0);
+  return infos.reduce((acc, cur) => {
+    assert(cur !== undefined);
+    assert(acc === undefined || acc === cur.dataType);
+    return cur.dataType;
+  }, infos[0]!.dataType);
+}
+
+// Get traits for generating code to readback data from a component of type |dataType|.
+export function getComponentReadbackTraits(dataType: ComponentDataType) {
+  let ReadbackTypedArray: Float32ArrayConstructor | Int32ArrayConstructor | Uint32ArrayConstructor;
+  let shaderType: 'i32' | 'u32' | 'f32';
+  switch (dataType) {
+    case 'ufloat':
+    case 'float':
+    case 'unorm':
+    case 'snorm':
+      ReadbackTypedArray = Float32Array;
+      shaderType = 'f32';
+      break;
+    case 'uint':
+      ReadbackTypedArray = Uint32Array;
+      shaderType = 'u32';
+      break;
+    case 'sint':
+      ReadbackTypedArray = Int32Array;
+      shaderType = 'i32';
+      break;
+    default:
+      unreachable();
+  }
+  return { ReadbackTypedArray, shaderType };
 }

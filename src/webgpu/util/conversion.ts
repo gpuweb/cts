@@ -77,7 +77,7 @@ export function float32ToFloatBits(
 // There is no sign bit, and there is a shared 5-bit biased (15) exponent and a 9-bit
 // mantissa for each channel. The mantissa does NOT have an implicit leading "1.",
 // and instead has an implicit leading "0.".
-export function encodeRGB9E5UFloat(r: number, g: number, b: number): number {
+export function packRGB9E5UFloat(r: number, g: number, b: number): number {
   for (const v of [r, g, b]) {
     assert(v >= 0 && v < Math.pow(2, 16));
   }
