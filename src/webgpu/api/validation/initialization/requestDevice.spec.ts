@@ -2,10 +2,10 @@ export const description = `
 Test validation conditions for requestDevice.
 `;
 
+import { Fixture } from '../../../../common/framework/fixture.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { UnitTest } from '../../../../unittests/unit_test.js';
 
-export const g = makeTestGroup(UnitTest);
+export const g = makeTestGroup(Fixture);
 
 g.test('features,nonexistent')
   .desc('requestDevice with a made-up feature name. Should resolve to null.')
