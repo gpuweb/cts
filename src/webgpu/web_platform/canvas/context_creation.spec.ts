@@ -5,7 +5,6 @@ import { makeTestGroup } from '../../../common/framework/test_group.js';
 
 export const g = makeTestGroup(Fixture);
 
-// TODO: Test all possible combinations of context creation attributes.
 g.test('return_type')
   .desc(
     `Test the return type of getContext for WebGPU.
