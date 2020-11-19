@@ -131,6 +131,10 @@ class TestBuilder<F extends Fixture, P extends {}> {
 
   unimplemented(): void {
     assert(this.testFn === undefined);
+
+    this.description =
+      (this.description ? this.description + '\n\n' : '') + 'TODO: .unimplemented()';
+
     this.testFn = () => {
       throw new SkipTestCase('test unimplemented');
     };
