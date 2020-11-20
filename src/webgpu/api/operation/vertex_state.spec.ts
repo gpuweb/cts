@@ -1,4 +1,9 @@
-export const description = '';
+export const description = `Test indexing, index format and primitive restart.
+
+TODO(hao.x.li@intel.com): Test that use the primitive restart values as real indices with
+non-strip topologies, to make sure those behave properly (and primitive restart is appropriately
+enabled/disabled) across backends. These tests will be important for gpuweb/gpuweb#1220.
+`;
 
 import { params, poptions } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
@@ -8,6 +13,8 @@ import { getTextureCopyLayout } from '../../util/texture/layout.js';
 const kHeight = 4;
 const kWidth = 4;
 const kTextureFormat = 'bgra8unorm' as const;
+const kValidPixelColor = new Uint8Array([0x00, 0xff, 0x00, 0xff]); // green
+const kInvalidPixelColor = new Uint8Array([0x00, 0x00, 0x00, 0xff]); // black
 
 /**
  * The expected rendering shapes:
@@ -55,38 +62,13 @@ const kPrimitiveTopologiesForRestart: Array<{
   { primitiveTopology: 'triangle-strip', _expectedShape: RenderShape.BottomLeftTriangle },
 ];
 
+const { byteLength, bytesPerRow, rowsPerImage } = getTextureCopyLayout(kTextureFormat, '2d', [
+  kWidth,
+  kHeight,
+  1,
+]);
+
 class IndexFormatTest extends GPUTest {
-  private colorAttachment!: GPUTexture;
-  byteLength!: number;
-  rowsPerImage!: number;
-  bytesPerRow!: number;
-  result!: GPUBuffer;
-
-  async init(): Promise<void> {
-    await super.init();
-
-    const { byteLength, bytesPerRow, rowsPerImage } = getTextureCopyLayout(kTextureFormat, '2d', [
-      kWidth,
-      kHeight,
-      1,
-    ]);
-
-    this.byteLength = byteLength;
-    this.bytesPerRow = bytesPerRow;
-    this.rowsPerImage = rowsPerImage;
-
-    this.colorAttachment = this.device.createTexture({
-      format: kTextureFormat,
-      size: { width: kWidth, height: kHeight, depth: 1 },
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.OUTPUT_ATTACHMENT,
-    });
-
-    this.result = this.device.createBuffer({
-      size: this.byteLength,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-    });
-  }
-
   MakeRenderPipeline(
     primitiveTopology: GPUPrimitiveTopology,
     indexFormat?: GPUIndexFormat
@@ -156,7 +138,7 @@ class IndexFormatTest extends GPUTest {
     indexFormat: GPUIndexFormat,
     indexOffset: number = 0,
     primitiveTopology: GPUPrimitiveTopology = 'triangle-list'
-  ): void {
+  ): GPUBuffer {
     let pipeline: GPURenderPipeline;
     // The indexFormat must be set in render pipeline descriptor that specifys a strip primitive
     // topology for primitive restart testing
@@ -165,6 +147,17 @@ class IndexFormatTest extends GPUTest {
     } else {
       pipeline = this.MakeRenderPipeline(primitiveTopology);
     }
+
+    const colorAttachment = this.device.createTexture({
+      format: kTextureFormat,
+      size: { width: kWidth, height: kHeight, depth: 1 },
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.OUTPUT_ATTACHMENT,
+    });
+
+    const result = this.device.createBuffer({
+      size: byteLength,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    });
 
     const vertexArray = new Float32Array(
       /* prettier-ignore */ [
@@ -186,7 +179,7 @@ class IndexFormatTest extends GPUTest {
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment: this.colorAttachment.createView(),
+          attachment: colorAttachment.createView(),
           loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
           storeOp: 'store',
         },
@@ -198,38 +191,40 @@ class IndexFormatTest extends GPUTest {
     pass.drawIndexed(indexCount, 1, 0, 0, 0);
     pass.endPass();
     encoder.copyTextureToBuffer(
-      { texture: this.colorAttachment, origin: { x: 0, y: 0, z: 0 } },
-      { buffer: this.result, bytesPerRow: this.bytesPerRow, rowsPerImage: this.rowsPerImage },
+      { texture: colorAttachment, origin: { x: 0, y: 0, z: 0 } },
+      { buffer: result, bytesPerRow, rowsPerImage },
       { width: kWidth, height: kHeight, depth: 1 }
     );
     this.device.defaultQueue.submit([encoder.finish()]);
+
+    return result;
   }
 
   CreateExpectedUint8Array(renderShape: RenderShape): Uint8Array {
-    let texelValueBytes = new Uint8Array([0x00, 0x00, 0x00, 0xff]);
-    const arrayBuffer = new Uint8Array(this.byteLength);
+    let texelValueBytes;
+    const arrayBuffer = new Uint8Array(byteLength);
     for (let row = 0; row < kHeight; row++) {
       for (let col = 0; col < kWidth; col++) {
         if (renderShape === RenderShape.Square) {
-          texelValueBytes = new Uint8Array([0x00, 0xff, 0x00, 0xff]);
+          texelValueBytes = kValidPixelColor;
         } else if (renderShape === RenderShape.BottomLeftTriangle && row > col) {
-          texelValueBytes = new Uint8Array([0x00, 0xff, 0x00, 0xff]);
+          texelValueBytes = kValidPixelColor;
         } else if (
           renderShape === RenderShape.Points &&
           (row === 0 || row === kHeight - 1) &&
           (col === 0 || col === kWidth - 1)
         ) {
-          texelValueBytes = new Uint8Array([0x00, 0xff, 0x00, 0xff]);
+          texelValueBytes = kValidPixelColor;
         } else if (
           renderShape === RenderShape.XShape &&
           (col === row || col + row === kWidth - 1)
         ) {
-          texelValueBytes = new Uint8Array([0x00, 0xff, 0x00, 0xff]);
+          texelValueBytes = kValidPixelColor;
         } else {
-          texelValueBytes = new Uint8Array([0x00, 0x00, 0x00, 0xff]);
+          texelValueBytes = kInvalidPixelColor;
         }
 
-        const byteOffset = row * this.bytesPerRow + col * texelValueBytes.byteLength;
+        const byteOffset = row * bytesPerRow + col * texelValueBytes.byteLength;
         arrayBuffer.set(texelValueBytes, byteOffset);
       }
     }
@@ -253,11 +248,10 @@ g.test('index_format_uint16')
 
     const indexArray = new Uint16Array([1, 2, 0, 0, 0, 0, 0, 1, 3, 0]);
     const indexBuffer = t.CreateIndexBuffer(indexArray, 'uint16');
-    const indexCount = indexArray.length;
-    t.run(indexBuffer, indexCount, 'uint16', indexOffset);
+    const result = t.run(indexBuffer, indexArray.length, 'uint16', indexOffset);
 
     const expectedTextureValues = t.CreateExpectedUint8Array(_expectedShape);
-    t.expectContents(t.result, expectedTextureValues);
+    t.expectContents(result, expectedTextureValues);
   });
 
 // Test indexing draw with index format of uint32. If this is interpreted as uint16, then it would
@@ -274,11 +268,10 @@ g.test('index_format_uint32')
 
     const indexArray = new Uint32Array([1, 2, 0, 0, 0, 0, 0, 1, 3, 0]);
     const indexBuffer = t.CreateIndexBuffer(indexArray, 'uint32');
-    const indexCount = indexArray.length;
-    t.run(indexBuffer, indexCount, 'uint32', indexOffset);
+    const result = t.run(indexBuffer, indexArray.length, 'uint32', indexOffset);
 
     const expectedTextureValues = t.CreateExpectedUint8Array(_expectedShape);
-    t.expectContents(t.result, expectedTextureValues);
+    t.expectContents(result, expectedTextureValues);
   });
 
 // Test primitive restart with each primitive topology. The primitive restart value can used with
@@ -298,26 +291,35 @@ g.test('primitive_restart')
     let indexArray: Uint16Array | Uint32Array;
     if (indexFormat === 'uint16') {
       if (primitiveTopology === 'triangle-list') {
+        // triangles: (0, 1, 3), (2, 1, 0)
         indexArray = new Uint16Array([0, 1, 3, 0xffff, 2, 1, 0, 0]);
       } else if (primitiveTopology === 'triangle-strip') {
+        // triangles: (0, 1, 3), (1, 3, 0xffff), (3, 0xffff, 2)
         indexArray = new Uint16Array([0, 1, 3, 0xffff, 2, 2]);
       } else {
+        // points: (0), (1), (2), (3)
+        // lines(list): (0, 1), (2, 3)
+        // lines(strip): (0, 1), (1, 0xffff), (0xffff, 2), (2, 3)
         indexArray = new Uint16Array([0, 1, 0xffff, 2, 3, 3]);
       }
     } else {
       if (primitiveTopology === 'triangle-list') {
+        // triangles: (0, 1, 3), (2, 1, 0)
         indexArray = new Uint32Array([0, 1, 3, 0xffffffff, 2, 1, 0]);
       } else if (primitiveTopology === 'triangle-strip') {
+        // triangles: (0, 1, 3), (1, 3, 0xffff), (3, 0xffff, 2)
         indexArray = new Uint32Array([0, 1, 3, 0xffffffff, 2]);
       } else {
+        // points: (0), (1), (2), (3)
+        // lines(list): (0, 1), (2, 3)
+        // lines(strip): (0, 1), (1, 0xffff), (0xffff, 2), (2, 3)
         indexArray = new Uint32Array([0, 1, 0xffffffff, 2, 3]);
       }
     }
 
     const indexBuffer = t.CreateIndexBuffer(indexArray, indexFormat);
-    const indexCount = indexArray.length;
-    t.run(indexBuffer, indexCount, indexFormat, 0, primitiveTopology);
+    const result = t.run(indexBuffer, indexArray.length, indexFormat, 0, primitiveTopology);
 
     const expectedTextureValues = t.CreateExpectedUint8Array(_expectedShape);
-    t.expectContents(t.result, expectedTextureValues);
+    t.expectContents(result, expectedTextureValues);
   });
