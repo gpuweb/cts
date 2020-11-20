@@ -23,21 +23,6 @@ g.test('memcpy').fn(async t => {
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
   });
 
-  const bgl = t.device.createBindGroupLayout({
-    entries: [
-      { binding: 0, visibility: 4, type: 'storage-buffer' },
-      { binding: 1, visibility: 4, type: 'storage-buffer' },
-    ],
-  });
-  const bg = t.device.createBindGroup({
-    entries: [
-      { binding: 0, resource: { buffer: src, offset: 0, size: 4 } },
-      { binding: 1, resource: { buffer: dst, offset: 0, size: 4 } },
-    ],
-    layout: bgl,
-  });
-
-  const pl = t.device.createPipelineLayout({ bindGroupLayouts: [bgl] });
   const pipeline = t.device.createComputePipeline({
     computeStage: {
       module: t.device.createShaderModule({
@@ -57,14 +42,21 @@ g.test('memcpy').fn(async t => {
       }),
       entryPoint: 'main',
     },
-    layout: pl,
+  });
+
+  const bg = t.device.createBindGroup({
+    entries: [
+      { binding: 0, resource: { buffer: src, offset: 0, size: 4 } },
+      { binding: 1, resource: { buffer: dst, offset: 0, size: 4 } },
+    ],
+    layout: pipeline.getBindGroupLayout(0),
   });
 
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginComputePass();
   pass.setPipeline(pipeline);
   pass.setBindGroup(0, bg);
-  pass.dispatch(1, 1, 1);
+  pass.dispatch(1);
   pass.endPass();
   t.device.defaultQueue.submit([encoder.finish()]);
 
