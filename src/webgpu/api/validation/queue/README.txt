@@ -9,3 +9,5 @@ BufferMapStatesToTest = {
   unmapped -> pending (noawait map),
   created mapped-at-creation,
 }
+
+Note writeTexture is tested in copyBetweenLinearDataAndTexture.

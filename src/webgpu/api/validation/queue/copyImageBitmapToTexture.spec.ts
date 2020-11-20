@@ -433,8 +433,11 @@ g.test('OOB,destination')
 
 g.test('ImageBitmap_sources')
   .desc(
-    `Test ImageBitmap generated from all possible ImageBitmapSource and relevant ImageBitmapOptions.
-    https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#images-2`
+    `Test ImageBitmap generated from all possible ImageBitmapSource, relevant ImageBitmapOptions
+    (https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#images-2)
+    and various source filetypes and metadata (weird dimensions, EXIF orientations, video rotations
+    and visible/crop rectangles, etc. (In theory these things are handled inside createImageBitmap,
+    but in theory could affect the internal representation of the ImageBitmap.)`
   )
   .unimplemented();
 
