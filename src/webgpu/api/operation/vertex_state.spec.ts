@@ -156,8 +156,7 @@ class IndexFormatTest extends GPUTest {
       pipeline = this.MakeRenderPipeline(primitiveTopology);
     }
 
-    /* prettier-ignore */
-    const vertexArray = new Float32Array([
+    const vertexArray = new Float32Array(/* prettier-ignore */ [
       // float4 position
       -1.0, 1.0, 0.0, 1.0,
       1.0, -1.0, 0.0, 1.0,
