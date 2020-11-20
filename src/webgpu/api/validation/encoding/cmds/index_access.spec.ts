@@ -49,7 +49,7 @@ class F extends ValidationTest {
       },
       primitiveTopology: 'triangle-strip',
       colorStates: [{ format: 'rgba8unorm' }],
-      vertexState: {indexFormat: "uint32"},
+      vertexState: { indexFormat: 'uint32' },
     });
   }
 
