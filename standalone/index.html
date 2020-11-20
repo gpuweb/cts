@@ -11,9 +11,6 @@
     <link rel="stylesheet" href="third_party/normalize.min.css" />
     <script src="third_party/jquery/jquery-3.3.1.min.js"></script>
     <style>
-      html {
-        overflow-x: hidden;
-      }
       body {
         font-family: monospace;
         min-width: 400px;
@@ -94,27 +91,21 @@
       .nodetitle {
         flex: 10 0 4em;
       }
-      .nodename {
-        margin: 0 0.5em;
-        padding: 2px;
-      }
-      .leafname {
-        background: black;
-        color: white;
-      }
       .nodequery {
+        position: absolute;
+        left: 220px;
+
         background: transparent;
         border: none;
         padding: 2px;
         margin: 0 0.5em;
-        color: #999;
-        width: 50%;
-        max-width: 50%;
+        width: calc(100vw - 360px);
       }
       .nodedescription {
         margin: 0;
         color: gray;
         white-space: pre-wrap;
+        font-size: 80%;
       }
 
       /* tree nodes which are subtrees */
@@ -148,7 +139,7 @@
         border-width: 1px 0 0 1px;
         border-style: solid;
         border-color: gray;
-        background: white;
+        background: #bbb;
       }
       .testcase[data-status='fail'] {
         background: #fdd;
@@ -207,16 +198,26 @@
           margin-left: 2px;
           width: calc(100% - 2px);
         }
+        .nodequery {
+          position: relative;
+          left: 0;
+          width: 100%;
+        }
       }
     </style>
   </head>
   <body>
     <h1>WebGPU Conformance Test Suite</h1>
-    <input type="checkbox" id="expandall" /><label for="expandall">Expand All</label>
+    <p>
+      <input type=button id=expandall value="Expand All (slow!)">
+    </p>
 
     <div id="info"></div>
     <div id="resultsVis"></div>
-    <textarea id="resultsJSON" spellcheck="false"></textarea>
+
+    <p>
+      <input type="button" id="copyResultsJSON" value="Copy results as JSON">
+    </p>
 
     <script type="module" src="../out/common/runtime/standalone.js"></script>
   </body>

@@ -185,24 +185,25 @@ module.exports = function (grunt) {
     'run:unittest',
     'run:lint',
   ]);
-  registerTaskAndAddToHelp('test', 'Quick development build: standalone+typecheck+unittest', [
+  registerTaskAndAddToHelp('standalone', 'Build standalone and typecheck', [
     'set-quiet-mode',
     'build-standalone',
     'build-done-message',
     'ts:check',
-    'run:unittest',
   ]);
-  registerTaskAndAddToHelp('wpt', 'Build for WPT: wpt+typecheck+unittest', [
+  registerTaskAndAddToHelp('wpt', 'Build for WPT and typecheck', [
     'set-quiet-mode',
     'build-wpt',
     'build-done-message',
     'ts:check',
+  ]);
+  registerTaskAndAddToHelp('unittest', 'Build standalone, typecheck, and unittest', [
+    'standalone',
     'run:unittest',
   ]);
-  registerTaskAndAddToHelp('check', 'Typecheck and lint', [
+  registerTaskAndAddToHelp('check', 'Just typecheck', [
     'set-quiet-mode',
     'ts:check',
-    'run:lint',
   ]);
 
   registerTaskAndAddToHelp('dev', 'Start the dev server, and watch for changes', [

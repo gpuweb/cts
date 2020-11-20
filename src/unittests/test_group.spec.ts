@@ -84,6 +84,16 @@ g.test('stack').fn(async t0 => {
   }
 });
 
+g.test('no_fn').fn(t => {
+  const g = makeTestGroupForUnitTesting(UnitTest);
+
+  g.test('missing');
+
+  t.shouldThrow('Error', () => {
+    g.validate();
+  });
+});
+
 g.test('duplicate_test_name').fn(t => {
   const g = makeTestGroupForUnitTesting(UnitTest);
   g.test('abc').fn(() => {});
@@ -99,13 +109,13 @@ g.test('duplicate_test_params,none').fn(() => {
     g.test('abc')
       .params([])
       .fn(() => {});
-    g.checkCaseNamesAndDuplicates();
+    g.validate();
   }
 
   {
     const g = makeTestGroupForUnitTesting(UnitTest);
     g.test('abc').fn(() => {});
-    g.checkCaseNamesAndDuplicates();
+    g.validate();
   }
 
   {
@@ -115,7 +125,7 @@ g.test('duplicate_test_params,none').fn(() => {
         { a: 1 }, //
       ])
       .fn(() => {});
-    g.checkCaseNamesAndDuplicates();
+    g.validate();
   }
 });
 
@@ -129,7 +139,7 @@ g.test('duplicate_test_params,basic').fn(t => {
       ])
       .fn(() => {});
     t.shouldThrow('Error', () => {
-      g.checkCaseNamesAndDuplicates();
+      g.validate();
     });
   }
   {
@@ -141,7 +151,7 @@ g.test('duplicate_test_params,basic').fn(t => {
       ])
       .fn(() => {});
     t.shouldThrow('Error', () => {
-      g.checkCaseNamesAndDuplicates();
+      g.validate();
     });
   }
 });
@@ -155,7 +165,7 @@ g.test('duplicate_test_params,with_different_private_params').fn(t => {
     ])
     .fn(() => {});
   t.shouldThrow('Error', () => {
-    g.checkCaseNamesAndDuplicates();
+    g.validate();
   });
 });
 
@@ -185,7 +195,7 @@ g.test('param_value,invalid').fn(t => {
     const g = makeTestGroupForUnitTesting(UnitTest);
     g.test('a').params([{ badChar }]);
     t.shouldThrow('Error', () => {
-      g.checkCaseNamesAndDuplicates();
+      g.validate();
     });
   }
 });

@@ -206,6 +206,20 @@ export class ValidationTest extends GPUTest {
     });
   }
 
+  createErrorComputePipeline(): GPUComputePipeline {
+    this.device.pushErrorScope('validation');
+    const pipeline = this.device.createComputePipeline({
+      computeStage: {
+        module: this.device.createShaderModule({
+          code: '',
+        }),
+        entryPoint: '',
+      },
+    });
+    this.device.popErrorScope();
+    return pipeline;
+  }
+
   createEncoder(encoderType: 'non-pass'): CommandBufferMaker<GPUCommandEncoder>;
   createEncoder(encoderType: 'render pass'): CommandBufferMaker<GPURenderPassEncoder>;
   createEncoder(encoderType: 'compute pass'): CommandBufferMaker<GPUComputePassEncoder>;

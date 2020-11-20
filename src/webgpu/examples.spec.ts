@@ -25,6 +25,17 @@ export const g = makeTestGroup(GPUTest);
 /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
 g.test('test_name').fn(t => {});
 
+g.test('not_implemented_yet,without_plan').unimplemented();
+g.test('not_implemented_yet,with_plan')
+  .desc(
+    `
+Plan for this test. What it tests. Summary of how it tests that functionality.
+- Description of cases, by describing parameters {a, b, c}
+- x= more parameters {x, y, z}
+`
+  )
+  .unimplemented();
+
 g.test('basic').fn(t => {
   t.expect(true);
   t.expect(true, 'true should be true');
@@ -105,6 +116,10 @@ g.test('gpu,buffers').fn(async t => {
 // One of the following two tests should be skipped on most platforms.
 
 g.test('gpu,with_texture_compression,bc')
+  .desc(
+    `Example of a test using a device descriptor.
+Tests that a BC format passes validation iff the feature is enabled.`
+  )
   .params(pbool('textureCompressionBC'))
   .fn(async t => {
     const { textureCompressionBC } = t.params;
@@ -128,6 +143,11 @@ g.test('gpu,with_texture_compression,bc')
   });
 
 g.test('gpu,with_texture_compression,etc')
+  .desc(
+    `Example of a test using a device descriptor.
+
+TODO: Test that an ETC format passes validation iff the feature is enabled.`
+  )
   .params(pbool('textureCompressionETC'))
   .fn(async t => {
     const { textureCompressionETC } = t.params;
@@ -138,6 +158,5 @@ g.test('gpu,with_texture_compression,etc')
       });
     }
 
-    t.device;
     // TODO: Should actually test createTexture with an ETC format here.
   });

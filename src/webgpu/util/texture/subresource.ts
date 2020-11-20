@@ -53,3 +53,20 @@ export class SubresourceRange {
     }
   }
 }
+
+export function mipSize(size: [number], level: number): [number];
+export function mipSize(size: [number, number], level: number): [number, number];
+export function mipSize(size: [number, number, number], level: number): [number, number, number];
+export function mipSize(size: GPUExtent3DDict, level: number): GPUExtent3DDict;
+export function mipSize(size: GPUExtent3D, level: number): GPUExtent3D {
+  const rShiftMax1 = (s: number) => Math.max(s >> level, 1);
+  if (size instanceof Array) {
+    return size.map(rShiftMax1);
+  } else {
+    return {
+      width: rShiftMax1(size.width),
+      height: rShiftMax1(size.height),
+      depth: rShiftMax1(size.depth),
+    };
+  }
+}
