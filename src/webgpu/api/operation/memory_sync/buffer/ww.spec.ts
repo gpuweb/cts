@@ -1,12 +1,12 @@
 export const description = `
 Memory Synchronization Tests for Buffer: write after write.
 
-- Test write-after-write on a single buffer. Create one single buffer and initialize it to 0.
-Write a number (say 1) into the buffer via render pass, compute pass, or copy. Write another
-number (say 2) into the same buffer via render pass, compute pass, or copy.
-  - x= 1st write type: {storage buffer in {render, compute}, T2B, B2B, WriteBuffer}
-  - x= 2nd write type: {storage buffer in {render, compute}, T2B, B2B, WriteBuffer}
-  - for each write, if render, x= {bundle, non-bundle}
+- Create one single buffer and initialize it to 0. Wait on the fence to ensure the data is initialized.
+Write a number (say 1) into the buffer via render pass, compute pass, copy or writeBuffer.
+Write another number (say 2) into the same buffer via render pass, compute pass, copy, or writeBuffer.
+Wait on another fence, then call expectContents to verify the written buffer.
+  - x= 1st write type: {storage buffer in {compute, render, render-via-bundle}, t2b-copy, b2b-copy, writeBuffer}
+  - x= 2nd write type: {storage buffer in {compute, render, render-via-bundle}, t2b-copy, b2b-copy, writeBuffer}
   - if pass type is the same, x= {single pass, separate passes} (note: render has loose guarantees)
   - if not single pass, x= writes in {same cmdbuf, separate cmdbufs, separate submits, separate queues}
 `;
@@ -14,13 +14,11 @@ number (say 2) into the same buffer via render pass, compute pass, or copy.
 import { poptions, params } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 
-import { BufferSyncTest } from './buffer_sync_test.js';
+import { kAllWriteOps, BufferSyncTest } from './buffer_sync_test.js';
 
 export const g = makeTestGroup(BufferSyncTest);
 
-const kAllWriteOps = ['render', 'render-via-bundle', 'compute', 'b2b-copy', 't2b-copy'];
-
-g.test('write_after_write,same_cmdbuf')
+g.test('same_cmdbuf')
   .desc('Test write-after-write operations in the same command buffer.')
   .params(
     params()
@@ -39,7 +37,7 @@ g.test('write_after_write,same_cmdbuf')
     t.verifyData(buffer, 2);
   });
 
-g.test('write_after_write,separate_cmdbufs')
+g.test('separate_cmdbufs')
   .desc('Test write-after-write operations in separate command buffers via the same submit.')
   .params(
     params()
@@ -58,7 +56,7 @@ g.test('write_after_write,separate_cmdbufs')
     t.verifyData(buffer, 2);
   });
 
-g.test('write_after_write,separate_submits')
+g.test('separate_submits')
   .desc('Test write-after-write operations via separate submits in the same queue.')
   .params(
     params()
@@ -75,11 +73,11 @@ g.test('write_after_write,separate_submits')
     t.verifyData(buffer, 2);
   });
 
-g.test('write_after_write,separate_queues')
+g.test('separate_queues')
   .desc('Test write-after-write operations in separate queues.')
   .unimplemented();
 
-g.test('write_after_write,two_draws_in_the_same_render_pass')
+g.test('two_draws_in_the_same_render_pass')
   .desc(
     `Test write-after-write operations in the same render pass. The first write will write 1 into
     a storage buffer. The second write will write 2 into the same buffer in the same pass. Expected
@@ -87,7 +85,7 @@ g.test('write_after_write,two_draws_in_the_same_render_pass')
   )
   .unimplemented();
 
-g.test('write_after_write,two_dispatches_in_the_same_compute_pass')
+g.test('two_dispatches_in_the_same_compute_pass')
   .desc(
     `Test write-after-write operations in the same compute pass. The first write will write 1 into
     a storage buffer. The second write will write 2 into the same buffer in the same pass. Expected

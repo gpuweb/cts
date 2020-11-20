@@ -3,17 +3,20 @@ import { GPUTest } from '../../../../gpu_test.js';
 
 const kSize = 4;
 
+export const kAllWriteOps = ['render', 'render-via-bundle', 'compute', 'b2b-copy', 't2b-copy'];
+
+// Note: If it would be useful to have any of these helpers be separate from the fixture,
+// they can be refactored into standalone functions.
 export class BufferSyncTest extends GPUTest {
   // Create a buffer, and initialize it to a specified value for all elements.
   async createBufferWithValue(initValue: number): Promise<GPUBuffer> {
     const fence = this.queue.createFence();
-    const data = new Uint32Array(kSize / 4).fill(initValue);
     const buffer = this.device.createBuffer({
       mappedAtCreation: true,
       size: kSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
     });
-    new Uint8Array(buffer.getMappedRange()).set(data);
+    new Uint32Array(buffer.getMappedRange()).fill(initValue);
     buffer.unmap();
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);
@@ -26,7 +29,7 @@ export class BufferSyncTest extends GPUTest {
     const data = new Uint32Array(kSize / 4).fill(initValue);
     const texture = this.device.createTexture({
       size: { width: kSize / 4, height: 1, depth: 1 },
-      format: 'rgba8uint',
+      format: 'r32uint',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
     this.device.defaultQueue.writeTexture(
@@ -53,7 +56,7 @@ export class BufferSyncTest extends GPUTest {
   // Create a compute pipeline and write given data into storage buffer.
   createStorageWriteComputePipeline(value: number): GPUComputePipeline {
     const wgslCompute = `
-      type Data = [[block]] struct {
+      [[block]] struct Data {
         [[offset(0)]] a : i32;
       };
 
@@ -76,17 +79,18 @@ export class BufferSyncTest extends GPUTest {
 
   // Create a render pipeline and write given data into storage buffer at fragment stage.
   createStorageWriteRenderPipeline(value: number): GPURenderPipeline {
-    const wgslVertex = `
+    const wgslShaders = {
+      vertex: `
       [[builtin(position)]] var<out> Position : vec4<f32>;
       [[stage(vertex)]] fn vert_main() -> void {
         Position = vec4<f32>(0.5, 0.5, 0.0, 1.0);
         return;
       }
-    `;
+    `,
 
-    const wgslFragment = `
+      fragment: `
       [[location(0)]] var<out> outColor : vec4<f32>;
-      type Data = [[block]] struct {
+      [[block]] struct Data {
         [[offset(0)]] a : i32;
       };
 
@@ -96,18 +100,19 @@ export class BufferSyncTest extends GPUTest {
         outColor = vec4<f32>(1.0, 0.0, 0.0, 1.0);
         return;
       }
-    `;
+    `,
+    };
 
     return this.device.createRenderPipeline({
       vertexStage: {
         module: this.device.createShaderModule({
-          code: wgslVertex,
+          code: wgslShaders.vertex,
         }),
         entryPoint: 'vert_main',
       },
       fragmentStage: {
         module: this.device.createShaderModule({
-          code: wgslFragment,
+          code: wgslShaders.fragment,
         }),
         entryPoint: 'frag_main',
       },
