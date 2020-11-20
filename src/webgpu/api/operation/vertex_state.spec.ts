@@ -2,13 +2,12 @@ export const description = '';
 
 import { params, poptions } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { EncodableTextureFormat } from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 import { getTextureCopyLayout } from '../../util/texture/layout.js';
 
 const kHeight = 4;
 const kWidth = 4;
-const kTextureFormat: GPUTextureFormat = 'bgra8unorm';
+const kTextureFormat = 'bgra8unorm' as const;
 
 /**
  * The expected rendering shapes:
@@ -45,6 +44,17 @@ const enum RenderShape {
   Nothing = 'Nothing',
 }
 
+const kPrimitiveTopologiesForRestart: Array<{
+  primitiveTopology: GPUPrimitiveTopology;
+  _expectedShape: RenderShape;
+}> = [
+  { primitiveTopology: 'point-list', _expectedShape: RenderShape.Points },
+  { primitiveTopology: 'line-list', _expectedShape: RenderShape.XShape },
+  { primitiveTopology: 'line-strip', _expectedShape: RenderShape.XShape },
+  { primitiveTopology: 'triangle-list', _expectedShape: RenderShape.Square },
+  { primitiveTopology: 'triangle-strip', _expectedShape: RenderShape.BottomLeftTriangle },
+];
+
 class IndexFormatTest extends GPUTest {
   private colorAttachment!: GPUTexture;
   byteLength!: number;
@@ -55,11 +65,11 @@ class IndexFormatTest extends GPUTest {
   async init(): Promise<void> {
     await super.init();
 
-    const { byteLength, bytesPerRow, rowsPerImage } = getTextureCopyLayout(
-      <EncodableTextureFormat>kTextureFormat,
-      '2d',
-      [kWidth, kHeight, 1]
-    );
+    const { byteLength, bytesPerRow, rowsPerImage } = getTextureCopyLayout(kTextureFormat, '2d', [
+      kWidth,
+      kHeight,
+      1,
+    ]);
 
     this.byteLength = byteLength;
     this.bytesPerRow = bytesPerRow;
@@ -156,13 +166,14 @@ class IndexFormatTest extends GPUTest {
       pipeline = this.MakeRenderPipeline(primitiveTopology);
     }
 
-    const vertexArray = new Float32Array(/* prettier-ignore */ [
+    const vertexArray = new Float32Array(
+      /* prettier-ignore */ [
       // float4 position
       -1.0, 1.0, 0.0, 1.0,
       1.0, -1.0, 0.0, 1.0,
       1.0, 1.0, 0.0, 1.0,
-      -1.0, -1.0, 0.0, 1.0
-    ]);
+      -1.0, -1.0, 0.0, 1.0]
+    );
     const vertexBuffer = this.device.createBuffer({
       size: vertexArray.byteLength,
       usage: GPUBufferUsage.VERTEX,
@@ -232,25 +243,20 @@ export const g = makeTestGroup(IndexFormatTest);
 // index 1 and 2 be both 0 and render nothing. And the index buffer size - offset must be not less
 // than the size required by triangle list, otherwise it also render nothing.
 g.test('index_format_uint16')
-  .params(params().combine(poptions('indexOffset', [0, 6, 18])))
+  .params([
+    { indexOffset: 0, _expectedShape: RenderShape.Square },
+    { indexOffset: 6, _expectedShape: RenderShape.BottomLeftTriangle },
+    { indexOffset: 18, _expectedShape: RenderShape.Nothing },
+  ])
   .fn(t => {
-    const { indexOffset } = t.params;
+    const { indexOffset, _expectedShape } = t.params;
 
     const indexArray = new Uint16Array([1, 2, 0, 0, 0, 0, 0, 1, 3, 0]);
     const indexBuffer = t.CreateIndexBuffer(indexArray, 'uint16');
     const indexCount = indexArray.length;
     t.run(indexBuffer, indexCount, 'uint16', indexOffset);
 
-    let expectedShape: RenderShape;
-    if (indexOffset === 0) {
-      expectedShape = RenderShape.Square;
-    } else if (indexOffset === 6) {
-      expectedShape = RenderShape.BottomLeftTriangle;
-    } else {
-      expectedShape = RenderShape.Nothing;
-    }
-
-    const expectedTextureValues = t.CreateExpectedUint8Array(expectedShape);
+    const expectedTextureValues = t.CreateExpectedUint8Array(_expectedShape);
     t.expectContents(t.result, expectedTextureValues);
   });
 
@@ -258,25 +264,20 @@ g.test('index_format_uint16')
 // be 0, 1, 0, ... and would draw nothing. And the index buffer size - offset must be not less than
 // the size required by triangle list, otherwise it also render nothing.
 g.test('index_format_uint32')
-  .params(params().combine(poptions('indexOffset', [0, 12, 36])))
+  .params([
+    { indexOffset: 0, _expectedShape: RenderShape.Square },
+    { indexOffset: 12, _expectedShape: RenderShape.BottomLeftTriangle },
+    { indexOffset: 36, _expectedShape: RenderShape.Nothing },
+  ])
   .fn(t => {
-    const { indexOffset } = t.params;
+    const { indexOffset, _expectedShape } = t.params;
 
     const indexArray = new Uint32Array([1, 2, 0, 0, 0, 0, 0, 1, 3, 0]);
     const indexBuffer = t.CreateIndexBuffer(indexArray, 'uint32');
     const indexCount = indexArray.length;
     t.run(indexBuffer, indexCount, 'uint32', indexOffset);
 
-    let expectedShape: RenderShape;
-    if (indexOffset === 0) {
-      expectedShape = RenderShape.Square;
-    } else if (indexOffset === 12) {
-      expectedShape = RenderShape.BottomLeftTriangle;
-    } else {
-      expectedShape = RenderShape.Nothing;
-    }
-
-    const expectedTextureValues = t.CreateExpectedUint8Array(expectedShape);
+    const expectedTextureValues = t.CreateExpectedUint8Array(_expectedShape);
     t.expectContents(t.result, expectedTextureValues);
   });
 
@@ -288,19 +289,11 @@ g.test('index_format_uint32')
 g.test('primitive_restart')
   .params(
     params()
-      .combine(poptions('indexFormat', ['uint16', 'uint32']))
-      .combine(
-        poptions('primitiveTopology', [
-          'point-list',
-          'line-list',
-          'line-strip',
-          'triangle-list',
-          'triangle-strip',
-        ])
-      )
+      .combine(poptions('indexFormat', ['uint16', 'uint32'] as const))
+      .combine(kPrimitiveTopologiesForRestart)
   )
   .fn(t => {
-    const { indexFormat, primitiveTopology } = t.params;
+    const { indexFormat, primitiveTopology, _expectedShape } = t.params;
 
     let indexArray: Uint16Array | Uint32Array;
     if (indexFormat === 'uint16') {
@@ -321,27 +314,10 @@ g.test('primitive_restart')
       }
     }
 
-    const indexBuffer = t.CreateIndexBuffer(indexArray, <GPUIndexFormat>indexFormat);
+    const indexBuffer = t.CreateIndexBuffer(indexArray, indexFormat);
     const indexCount = indexArray.length;
-    t.run(
-      indexBuffer,
-      indexCount,
-      <GPUIndexFormat>indexFormat,
-      0,
-      <GPUPrimitiveTopology>primitiveTopology
-    );
+    t.run(indexBuffer, indexCount, indexFormat, 0, primitiveTopology);
 
-    let expectedShape: RenderShape = RenderShape.Nothing;
-    if (primitiveTopology === 'point-list') {
-      expectedShape = RenderShape.Points;
-    } else if (primitiveTopology === 'line-list' || primitiveTopology === 'line-strip') {
-      expectedShape = RenderShape.XShape;
-    } else if (primitiveTopology === 'triangle-list') {
-      expectedShape = RenderShape.Square;
-    } else if (primitiveTopology === 'triangle-strip') {
-      expectedShape = RenderShape.BottomLeftTriangle;
-    }
-
-    const expectedTextureValues = t.CreateExpectedUint8Array(expectedShape);
+    const expectedTextureValues = t.CreateExpectedUint8Array(_expectedShape);
     t.expectContents(t.result, expectedTextureValues);
   });
