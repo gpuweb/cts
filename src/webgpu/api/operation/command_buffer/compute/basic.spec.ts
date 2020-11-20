@@ -37,24 +37,26 @@ g.test('memcpy').fn(async t => {
     layout: bgl,
   });
 
-  const module = t.makeShaderModule('compute', {
-    glsl: `
-      #version 310 es
-      layout(std140, set = 0, binding = 0) buffer Src {
-        int value;
-      } src;
-      layout(std140, set = 0, binding = 1) buffer Dst {
-        int value;
-      } dst;
-
-      void main() {
-        dst.value = src.value;
-      }
-    `,
-  });
   const pl = t.device.createPipelineLayout({ bindGroupLayouts: [bgl] });
   const pipeline = t.device.createComputePipeline({
-    computeStage: { module, entryPoint: 'main' },
+    computeStage: {
+      module: t.device.createShaderModule({
+        code: `
+          [[block]] struct Data {
+              [[offset(0)]] value : u32;
+          };
+
+          [[set(0), binding(0)]] var<storage_buffer> src : Data;
+          [[set(0), binding(1)]] var<storage_buffer> dst : Data;
+
+          [[stage(compute)]] fn main() -> void {
+            dst.value = src.value;
+            return;
+          }
+        `,
+      }),
+      entryPoint: 'main',
+    },
     layout: pl,
   });
 
