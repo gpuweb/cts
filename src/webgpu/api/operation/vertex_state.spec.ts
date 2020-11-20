@@ -17,31 +17,35 @@ const kValidPixelColor = new Uint8Array([0x00, 0xff, 0x00, 0xff]); // green
 const kInvalidPixelColor = new Uint8Array([0x00, 0x00, 0x00, 0xff]); // black
 
 /**
- * The expected rendering shapes:
+ * The expected rendering in raster grids of 4x4 pixels:
  * Square:
- *  0---------3
- *  |         |
- *  |         |
- *  |         |
- *  2---------1
+ *  -----------
+ *  |#########|
+ *  |#########|
+ *  |#########|
+ *  |#########|
+ *  -----------
  * BottomLeftTriangle:
- *  0
- *  | \
- *  |    \
- *  |       \
- *  2---------1
+ *  -----------
+ *  |#        |
+ *  |###      |
+ *  |######   |
+ *  |#########|
+ *  -----------
  * Points:
- *  0         3
- *
- *
- *
- *  2         1
+ *  -----------
+ *  |#       #|
+ *  |         |
+ *  |         |
+ *  |#       #|
+ *  -----------
  * XShape:
- *  0         3
- *    \     /
- *       \
- *    /     \
- *  2         1
+ *  -----------
+ *  |#       #|
+ *  |  #   #  |
+ *  |    #    |
+ *  |#       #|
+ *  -----------
  */
 const enum RenderShape {
   Square = 'Square',
@@ -234,10 +238,8 @@ class IndexFormatTest extends GPUTest {
 
 export const g = makeTestGroup(IndexFormatTest);
 
-// Test indexing draw with index format of uint16. If this is interpreted as uint32, it will have
-// index 1 and 2 be both 0 and render nothing. And the index buffer size - offset must be not less
-// than the size required by triangle list, otherwise it also render nothing.
 g.test('index_format_uint16')
+  .desc('Test indexing draw with index format of uint16.')
   .params([
     { indexOffset: 0, _expectedShape: RenderShape.Square },
     { indexOffset: 6, _expectedShape: RenderShape.BottomLeftTriangle },
@@ -246,6 +248,9 @@ g.test('index_format_uint16')
   .fn(t => {
     const { indexOffset, _expectedShape } = t.params;
 
+    // If this is interpreted as uint32, it will have index 1 and 2 be both 0 and render nothing.
+    // And the index buffer size - offset must be not less than the size required by triangle
+    // list, otherwise it also render nothing.
     const indexArray = new Uint16Array([1, 2, 0, 0, 0, 0, 0, 1, 3, 0]);
     const indexBuffer = t.CreateIndexBuffer(indexArray, 'uint16');
     const result = t.run(indexBuffer, indexArray.length, 'uint16', indexOffset);
@@ -254,10 +259,8 @@ g.test('index_format_uint16')
     t.expectContents(result, expectedTextureValues);
   });
 
-// Test indexing draw with index format of uint32. If this is interpreted as uint16, then it would
-// be 0, 1, 0, ... and would draw nothing. And the index buffer size - offset must be not less than
-// the size required by triangle list, otherwise it also render nothing.
 g.test('index_format_uint32')
+  .desc('Test indexing draw with index format of uint32.')
   .params([
     { indexOffset: 0, _expectedShape: RenderShape.Square },
     { indexOffset: 12, _expectedShape: RenderShape.BottomLeftTriangle },
@@ -266,6 +269,9 @@ g.test('index_format_uint32')
   .fn(t => {
     const { indexOffset, _expectedShape } = t.params;
 
+    // If this is interpreted as uint16, then it would be 0, 1, 0, ... and would draw nothing.
+    // And the index buffer size - offset must be not less than the size required by triangle
+    // list, otherwise it also render nothing.
     const indexArray = new Uint32Array([1, 2, 0, 0, 0, 0, 0, 1, 3, 0]);
     const indexBuffer = t.CreateIndexBuffer(indexArray, 'uint32');
     const result = t.run(indexBuffer, indexArray.length, 'uint32', indexOffset);
@@ -274,12 +280,8 @@ g.test('index_format_uint32')
     t.expectContents(result, expectedTextureValues);
   });
 
-// Test primitive restart with each primitive topology. The primitive restart value can used with
-// strip primitive topologies ('line-strip' or 'triangle-strip').
-// For line-strip, [0, 1, PRIM_RESTART, 2, 3] only render a X shape.
-// For triangle-strip, [0, 1, 3, PRIM_RESTART, 2] only the first triangle.
-// Others are expected to be renderred the same as without primitive restart.
 g.test('primitive_restart')
+  .desc('Test primitive restart with each primitive topology.')
   .params(
     params()
       .combine(poptions('indexFormat', ['uint16', 'uint32'] as const))
@@ -289,6 +291,8 @@ g.test('primitive_restart')
     const { indexFormat, primitiveTopology, _expectedShape } = t.params;
 
     let indexArray: Uint16Array | Uint32Array;
+    // The primitive restart value can used with strip primitive topologies ('line-strip' or 'triangle-strip').
+    // For lists, they are expected to be renderred the same as without primitive restart.
     if (indexFormat === 'uint16') {
       if (primitiveTopology === 'triangle-list') {
         // triangles: (0, 1, 3), (2, 1, 0)
