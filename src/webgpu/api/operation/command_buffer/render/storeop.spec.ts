@@ -50,7 +50,6 @@ g.test('storeOp_controls_whether_1x1_drawn_quad_is_stored')
         }),
         entryPoint: 'main',
       },
-      layout: t.device.createPipelineLayout({ bindGroupLayouts: [] }),
       primitiveTopology: 'triangle-list',
       colorStates: [{ format: 'r8unorm' }],
     });
@@ -67,7 +66,7 @@ g.test('storeOp_controls_whether_1x1_drawn_quad_is_stored')
       ],
     });
     pass.setPipeline(renderPipeline);
-    pass.draw(3, 1, 0, 0);
+    pass.draw(3);
     pass.endPass();
     t.device.defaultQueue.submit([encoder.finish()]);
 

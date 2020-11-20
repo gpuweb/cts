@@ -14,6 +14,8 @@ function numericKeysOf<T>(obj: object): readonly T[] {
 
 // Buffers
 
+export const kBufferSizeAlignment = 4;
+
 export const kBufferUsageInfo: {
   readonly [k in GPUBufferUsage]: {};
 } = /* prettier-ignore */ {
