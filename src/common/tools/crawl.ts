@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { SpecFile } from '../framework/file_loader.js';
+import { validQueryPart } from '../framework/query/validQueryPart.js';
 import { TestSuiteListingEntry, TestSuiteListing } from '../framework/test_suite_listing.js';
 import { assert, unreachable } from '../framework/util/util.js';
 
@@ -38,6 +39,9 @@ export async function crawl(suite: string): Promise<TestSuiteListingEntry[]> {
       mod.g.validate();
 
       const path = filepathWithoutExtension.split('/');
+      for (const p of path) {
+        assert(validQueryPart.test(p), `Invalid directory name ${p}; must match ${validQueryPart}`);
+      }
       entries.push({ file: path, description: mod.description.trim() });
     } else if (path.basename(file) === 'README.txt') {
       const filepathWithoutExtension = f.substring(0, f.length - '/README.txt'.length);
