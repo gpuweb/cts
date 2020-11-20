@@ -357,4 +357,17 @@ got [${failedByteActualValues.join(', ')}]`;
 
     return returnValue;
   }
+
+  makeBufferWithContents(dataArray: TypedArrayBufferView, usage: GPUBufferUsageFlags): GPUBuffer {
+    const buffer = this.device.createBuffer({
+      mappedAtCreation: true,
+      size: dataArray.byteLength,
+      usage,
+    });
+    const mappedBuffer = buffer.getMappedRange();
+    const constructor = dataArray.constructor as TypedArrayBufferViewConstructor;
+    new constructor(mappedBuffer).set(dataArray);
+    buffer.unmap();
+    return buffer;
+  }
 }
