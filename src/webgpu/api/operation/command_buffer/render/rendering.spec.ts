@@ -18,7 +18,6 @@ g.test('fullscreen_quad').fn(async t => {
   });
   const colorAttachmentView = colorAttachment.createView();
 
-  const pl = t.device.createPipelineLayout({ bindGroupLayouts: [] });
   const pipeline = t.device.createRenderPipeline({
     vertexStage: {
       module: t.device.createShaderModule({
@@ -50,16 +49,8 @@ g.test('fullscreen_quad').fn(async t => {
       }),
       entryPoint: 'main',
     },
-    layout: pl,
     primitiveTopology: 'triangle-list',
-    rasterizationState: {
-      frontFace: 'ccw',
-    },
-    colorStates: [{ format: 'rgba8unorm', alphaBlend: {}, colorBlend: {} }],
-    vertexState: {
-      indexFormat: 'uint16',
-      vertexBuffers: [],
-    },
+    colorStates: [{ format: 'rgba8unorm' }],
   });
 
   const encoder = t.device.createCommandEncoder();
@@ -73,7 +64,7 @@ g.test('fullscreen_quad').fn(async t => {
     ],
   });
   pass.setPipeline(pipeline);
-  pass.draw(3, 1, 0, 0);
+  pass.draw(3);
   pass.endPass();
   encoder.copyTextureToBuffer(
     { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
