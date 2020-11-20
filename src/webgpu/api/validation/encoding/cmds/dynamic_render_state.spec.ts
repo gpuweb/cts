@@ -281,7 +281,7 @@ g.test('setBlendColor')
 g.test('setStencilReference')
   .desc('Test that almost any stencil reference value is valid for setStencilReference')
   .params([
-    { value: 1 },
+    { value: 1 }, //
     { value: 0 },
     { value: 1000 },
     { value: 0xffffffff },
