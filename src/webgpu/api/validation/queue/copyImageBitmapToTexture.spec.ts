@@ -1,6 +1,8 @@
 export const description = `
 copyImageBitmapToTexture Validation Tests in Queue.
 
+TODO: Split this test plan per-test.
+
 Test Plan:
 - For source.imageBitmap:
   - imageBitmap generated from ImageData:
@@ -428,3 +430,18 @@ g.test('OOB,destination')
       success
     );
   });
+
+g.test('ImageBitmap_sources')
+  .desc(
+    `Test ImageBitmap generated from all possible ImageBitmapSource and relevant ImageBitmapOptions.
+    https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#images-2`
+  )
+  .unimplemented();
+
+g.test('zero_sized')
+  .desc(
+    `Test valid zero-sized copies.
+
+- copySize { [0,x,x], [x,0,x], [x,x,0], [0,0,0] }`
+  )
+  .unimplemented();
