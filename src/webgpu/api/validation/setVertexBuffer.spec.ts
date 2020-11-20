@@ -16,10 +16,33 @@ class F extends ValidationTest {
   }
 
   createRenderPipeline(bufferCount: number): GPURenderPipeline {
-    const descriptor: GPURenderPipelineDescriptor = {
-      vertexStage: this.getVertexStage(bufferCount),
-      fragmentStage: this.getFragmentStage(),
-      layout: this.getPipelineLayout(),
+    return this.device.createRenderPipeline({
+      vertexStage: {
+        module: this.device.createShaderModule({
+          code: `
+            ${range(
+              bufferCount,
+              i => `\n[[location(${i})]] var<in> a_position${i} : vec3<f32>;`
+            ).join('')}
+            [[builtin(position)]] var<out> Position : vec4<f32>;
+            [[stage(vertex)]] fn main() -> void {
+              Position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+              return;
+            }`,
+        }),
+        entryPoint: 'main',
+      },
+      fragmentStage: {
+        module: this.device.createShaderModule({
+          code: `
+            [[location(0)]] var<out> fragColor : vec4<f32>;
+            [[stage(fragment)]] fn main() -> void {
+              fragColor = vec4<f32>(0.0, 1.0, 0.0, 1.0);
+              return;
+            }`,
+        }),
+        entryPoint: 'main',
+      },
       primitiveTopology: 'triangle-list',
       colorStates: [{ format: 'rgba8unorm' }],
       vertexState: {
@@ -34,40 +57,7 @@ class F extends ValidationTest {
           },
         ],
       },
-    };
-    return this.device.createRenderPipeline(descriptor);
-  }
-
-  getVertexStage(bufferCount: number): GPUProgrammableStageDescriptor {
-    const glsl = `
-      #version 450
-      ${range(bufferCount, i => `\nlayout(location = ${i}) in vec3 a_position${i};`).join('')}
-      void main() {
-        gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
-       }
-    `;
-    return {
-      module: this.makeShaderModule('vertex', { glsl }),
-      entryPoint: 'main',
-    };
-  }
-
-  getFragmentStage(): GPUProgrammableStageDescriptor {
-    const glsl = `
-      #version 450
-      layout(location = 0) out vec4 fragColor;
-      void main() {
-        fragColor = vec4(0.0, 1.0, 0.0, 1.0);
-      }
-    `;
-    return {
-      module: this.makeShaderModule('fragment', { glsl }),
-      entryPoint: 'main',
-    };
-  }
-
-  getPipelineLayout(): GPUPipelineLayout {
-    return this.device.createPipelineLayout({ bindGroupLayouts: [] });
+    });
   }
 
   beginRenderPass(commandEncoder: GPUCommandEncoder): GPURenderPassEncoder {
@@ -102,7 +92,7 @@ g.test('vertex_buffers_inherit_from_previous_pipeline').fn(async t => {
     const commandEncoder = t.device.createCommandEncoder();
     const renderPass = t.beginRenderPass(commandEncoder);
     renderPass.setPipeline(pipeline1);
-    renderPass.draw(3, 1, 0, 0);
+    renderPass.draw(3);
     renderPass.endPass();
 
     t.expectValidationError(() => {
@@ -116,9 +106,9 @@ g.test('vertex_buffers_inherit_from_previous_pipeline').fn(async t => {
     renderPass.setPipeline(pipeline2);
     renderPass.setVertexBuffer(0, vertexBuffer1);
     renderPass.setVertexBuffer(1, vertexBuffer2);
-    renderPass.draw(3, 1, 0, 0);
+    renderPass.draw(3);
     renderPass.setPipeline(pipeline1);
-    renderPass.draw(3, 1, 0, 0);
+    renderPass.draw(3);
     renderPass.endPass();
 
     commandEncoder.finish();
@@ -140,14 +130,14 @@ g.test('vertex_buffers_do_not_inherit_between_render_passes').fn(async t => {
       renderPass.setPipeline(pipeline2);
       renderPass.setVertexBuffer(0, vertexBuffer1);
       renderPass.setVertexBuffer(1, vertexBuffer2);
-      renderPass.draw(3, 1, 0, 0);
+      renderPass.draw(3);
       renderPass.endPass();
     }
     {
       const renderPass = t.beginRenderPass(commandEncoder);
       renderPass.setPipeline(pipeline1);
       renderPass.setVertexBuffer(0, vertexBuffer1);
-      renderPass.draw(3, 1, 0, 0);
+      renderPass.draw(3);
       renderPass.endPass();
     }
     commandEncoder.finish();
@@ -160,13 +150,13 @@ g.test('vertex_buffers_do_not_inherit_between_render_passes').fn(async t => {
       renderPass.setPipeline(pipeline2);
       renderPass.setVertexBuffer(0, vertexBuffer1);
       renderPass.setVertexBuffer(1, vertexBuffer2);
-      renderPass.draw(3, 1, 0, 0);
+      renderPass.draw(3);
       renderPass.endPass();
     }
     {
       const renderPass = t.beginRenderPass(commandEncoder);
       renderPass.setPipeline(pipeline1);
-      renderPass.draw(3, 1, 0, 0);
+      renderPass.draw(3);
       renderPass.endPass();
     }
 
