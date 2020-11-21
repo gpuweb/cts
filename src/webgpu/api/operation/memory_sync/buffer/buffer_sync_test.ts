@@ -176,7 +176,7 @@ export class BufferSyncTest extends GPUTest {
     pass.endPass();
   }
 
-  // Write bufer via BuferToBuffer copy.
+  /** Write buffer via BufferToBuffer copy. */
   async encodeWriteByB2BCopy(encoder: GPUCommandEncoder, buffer: GPUBuffer, value: number) {
     const tmpBuffer = await this.createBufferWithValue(value);
 
