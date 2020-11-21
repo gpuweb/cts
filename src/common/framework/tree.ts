@@ -96,9 +96,16 @@ export class TestTree {
 
   static *iterateSubtreeCollapsedQueries(subtree: TestSubtree): IterableIterator<TestQuery> {
     for (const [, child] of subtree.children) {
-      if ('children' in child && !child.collapsible) {
-        yield* TestTree.iterateSubtreeCollapsedQueries(child);
+      if ('children' in child) {
+        // Is a subtree
+        if (!child.collapsible) {
+          yield* TestTree.iterateSubtreeCollapsedQueries(child);
+        } else if (child.children.size) {
+          // Don't yield empty subtrees (e.g. files with no tests)
+          yield child.query;
+        }
       } else {
+        // Is a leaf
         yield child.query;
       }
     }
