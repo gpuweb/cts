@@ -253,8 +253,8 @@ export async function loadTreeForQuery(
     const seen = seenSubqueriesToExpand[i];
     assert(
       seen,
-      `subqueriesToExpand entry did not match anything \
-(can happen due to overlap with another subquery): ${sq.toString()}`
+      `subqueriesToExpand entry did not match anything (can happen if the subquery was larger \
+than one file, or due to overlap with another subquery): ${sq.toString()}`
     );
   }
   assert(foundCase, 'Query does not match any cases');
