@@ -18,53 +18,66 @@ const kInvalidPixelColor = new Uint8Array([0x00, 0x00, 0x00, 0xff]); // black
 
 /**
  * The expected rendering in raster grids of 4x4 pixels:
- * Square:
- *  -----------
- *  |#########|
- *  |#########|
- *  |#########|
- *  |#########|
- *  -----------
- * BottomLeftTriangle:
- *  -----------
- *  |#        |
- *  |###      |
- *  |######   |
- *  |#########|
- *  -----------
  * Points:
- *  -----------
- *  |#       #|
- *  |         |
- *  |         |
- *  |#       #|
- *  -----------
+ *  ------------
+ *  |#        #|
+ *  |          |
+ *  |          |
+ *  |#        #|
+ *  ------------
+ * Line:
+ *  ------------
+ *  |#         |
+ *  |   #      |
+ *  |      #   |
+ *  |         #|
+ *  ------------
  * XShape:
- *  -----------
- *  |#       #|
- *  |  #   #  |
- *  |    #    |
- *  |#       #|
- *  -----------
+ *  ------------
+ *  |#        #|
+ *  |   #  #   |
+ *  |   #  #   |
+ *  |#        #|
+ *  ------------
+ * BottomLeftTriangle:
+ *  ------------
+ *  |          |
+ *  |#         |
+ *  |#  #      |
+ *  |#  #  #   |
+ *  ------------
+ * ConcaveShape:
+ *  ------------
+ *  |         #|
+ *  |#     #  #|
+ *  |#  #  #  #|
+ *  |#  #  #  #|
+ *  ------------
+ * Square:
+ *  ------------
+ *  |#  #  #  #|
+ *  |#  #  #  #|
+ *  |#  #  #  #|
+ *  |#  #  #  #|
+ *  ------------
  */
 const enum RenderShape {
-  Square = 'Square',
-  BottomLeftTriangle = 'BottomLeftTriangle',
   Points = 'Points',
+  Line = 'Line',
   XShape = 'XShape',
+  BottomLeftTriangle = 'BottomLeftTriangle',
+  ConcaveShape = 'ConcaveShape',
+  Square = 'Square',
   Nothing = 'Nothing',
 }
 
-const kPrimitiveTopologiesForRestart: Array<{
-  primitiveTopology: GPUPrimitiveTopology;
-  _expectedShape: RenderShape;
-}> = [
+const kPrimitiveTopologiesForRestart = [
   { primitiveTopology: 'point-list', _expectedShape: RenderShape.Points },
-  { primitiveTopology: 'line-list', _expectedShape: RenderShape.XShape },
+  { primitiveTopology: 'line-list', _expectedShape: RenderShape.Line },
   { primitiveTopology: 'line-strip', _expectedShape: RenderShape.XShape },
-  { primitiveTopology: 'triangle-list', _expectedShape: RenderShape.Square },
-  { primitiveTopology: 'triangle-strip', _expectedShape: RenderShape.BottomLeftTriangle },
-];
+  { primitiveTopology: 'triangle-list', _expectedShape: RenderShape.BottomLeftTriangle },
+  { primitiveTopology: 'triangle-strip', _expectedShape: RenderShape.ConcaveShape },
+] as const;
 
 const { byteLength, bytesPerRow, rowsPerImage } = getTextureCopyLayout(kTextureFormat, '2d', [
   kWidth,
@@ -171,8 +184,19 @@ class IndexFormatTest extends GPUTest {
       1.0, 1.0, 0.0, 1.0,
       -1.0, -1.0, 0.0, 1.0]
     );
+
+    let bufferSize = vertexArray.byteLength;
+    // Create a large enough buffer for uint16 primitive restart value used as a big index.
+    if (
+      indexFormat === 'uint16' &&
+      primitiveTopology !== 'line-strip' &&
+      primitiveTopology !== 'triangle-strip'
+    ) {
+      bufferSize = 0xffff * 16;
+    }
+
     const vertexBuffer = this.device.createBuffer({
-      size: vertexArray.byteLength,
+      size: bufferSize,
       usage: GPUBufferUsage.VERTEX,
       mappedAtCreation: true,
     });
@@ -209,20 +233,27 @@ class IndexFormatTest extends GPUTest {
     const arrayBuffer = new Uint8Array(byteLength);
     for (let row = 0; row < kHeight; row++) {
       for (let col = 0; col < kWidth; col++) {
-        if (renderShape === RenderShape.Square) {
-          texelValueBytes = kValidPixelColor;
-        } else if (renderShape === RenderShape.BottomLeftTriangle && row > col) {
-          texelValueBytes = kValidPixelColor;
-        } else if (
+        if (
           renderShape === RenderShape.Points &&
           (row === 0 || row === kHeight - 1) &&
           (col === 0 || col === kWidth - 1)
         ) {
           texelValueBytes = kValidPixelColor;
+        } else if (renderShape === RenderShape.Line && col === row) {
+          texelValueBytes = kValidPixelColor;
         } else if (
           renderShape === RenderShape.XShape &&
           (col === row || col + row === kWidth - 1)
         ) {
+          texelValueBytes = kValidPixelColor;
+        } else if (renderShape === RenderShape.BottomLeftTriangle && row > col) {
+          texelValueBytes = kValidPixelColor;
+        } else if (
+          renderShape === RenderShape.ConcaveShape &&
+          (row > col || row + col >= kWidth - 1)
+        ) {
+          texelValueBytes = kValidPixelColor;
+        } else if (renderShape === RenderShape.Square) {
           texelValueBytes = kValidPixelColor;
         } else {
           texelValueBytes = kInvalidPixelColor;
@@ -295,28 +326,34 @@ g.test('primitive_restart')
     // For lists, they are expected to be renderred the same as without primitive restart.
     if (indexFormat === 'uint16') {
       if (primitiveTopology === 'triangle-list') {
-        // triangles: (0, 1, 3), (2, 1, 0)
+        // triangle-list: (0, 1, 3), (0xffff, 2, 1)
+        // triangle-list with restart: (0, 1, 3), (2, 1, 0)
+        // triangle-strip: (0, 1, 3), (2, 1, 0)
         indexArray = new Uint16Array([0, 1, 3, 0xffff, 2, 1, 0, 0]);
       } else if (primitiveTopology === 'triangle-strip') {
-        // triangles: (0, 1, 3), (1, 3, 0xffff), (3, 0xffff, 2)
-        indexArray = new Uint16Array([0, 1, 3, 0xffff, 2, 2]);
+        // triangles: (0, 1, 3), (2, 3, 1), (3, 1, 1)
+        indexArray = new Uint16Array([0, 1, 3, 0xffff, 2, 3, 1, 1]);
       } else {
-        // points: (0), (1), (2), (3)
-        // lines(list): (0, 1), (2, 3)
-        // lines(strip): (0, 1), (1, 0xffff), (0xffff, 2), (2, 3)
+        // point: (0), (1), (0xffff), (2), (3), (3)
+        // line-list: (0, 1), (0xffff, 2), (3, 3)
+        // line-list with restart: (0, 1), (2, 3)
+        // line-strip: (0, 1), (2, 3), (3, 3)
         indexArray = new Uint16Array([0, 1, 0xffff, 2, 3, 3]);
       }
     } else {
       if (primitiveTopology === 'triangle-list') {
-        // triangles: (0, 1, 3), (2, 1, 0)
+        // triangle-list: (0, 1, 3), (0xffffffff, 2, 1)
+        // triangle-list with restart: (0, 1, 3), (2, 1, 0)
+        // triangle-strip: (0, 1, 3), (2, 1, 0)
         indexArray = new Uint32Array([0, 1, 3, 0xffffffff, 2, 1, 0]);
       } else if (primitiveTopology === 'triangle-strip') {
-        // triangles: (0, 1, 3), (1, 3, 0xffff), (3, 0xffff, 2)
-        indexArray = new Uint32Array([0, 1, 3, 0xffffffff, 2]);
+        // triangle-strip : (3, 1, 0), (2, 3, 1)
+        indexArray = new Uint32Array([3, 1, 0, 0xffffffff, 2, 3, 1]);
       } else {
-        // points: (0), (1), (2), (3)
-        // lines(list): (0, 1), (2, 3)
-        // lines(strip): (0, 1), (1, 0xffff), (0xffff, 2), (2, 3)
+        // point: (0), (1), (0xffffffff), (2), (3)
+        // line-list: (0, 1), (0xffffffff, 2)
+        // line-list with restart: (0, 1), (2, 3)
+        // line-strip: (0, 1), (2, 3)
         indexArray = new Uint32Array([0, 1, 0xffffffff, 2, 3]);
       }
     }
