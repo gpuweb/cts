@@ -290,8 +290,8 @@ g.test('index_format,uint16')
     t.expectContents(result, expectedTextureValues);
   });
 
-g.test('index_format_uint32')
-  .desc('Test indexing draw with index format of uint32.')
+g.test('index_format,uint32')
+  .desc('Test rendering result of indexed draw with index format of uint32.')
   .params([
     { indexOffset: 0, _expectedShape: RenderShape.Square },
     { indexOffset: 12, _expectedShape: RenderShape.BottomLeftTriangle },
