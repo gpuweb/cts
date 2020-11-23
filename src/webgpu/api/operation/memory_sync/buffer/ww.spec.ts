@@ -11,7 +11,7 @@ Wait on another fence, then call expectContents to verify the written buffer.
   - if not single pass, x= writes in {same cmdbuf, separate cmdbufs, separate submits, separate queues}
 `;
 
-import { poptions, params } from '../../../../../common/framework/params_builder.js';
+import { pbool, poptions, params } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 
 import { kAllWriteOps, BufferSyncTest } from './buffer_sync_test.js';
@@ -83,7 +83,33 @@ g.test('two_draws_in_the_same_render_pass')
     a storage buffer. The second write will write 2 into the same buffer in the same pass. Expected
     data in buffer is either 1 or 2. It may use bundle in each draw.`
   )
-  .unimplemented();
+  .params(pbool('useBundle'))
+  .fn(async t => {
+    const { useBundle } = t.params;
+    const buffer = await t.createBufferWithValue(0);
+    const encoder = t.device.createCommandEncoder();
+    const passEncoder = t.beginSimpleRenderPass(encoder);
+
+    const bundles: GPURenderBundle[] = [];
+    for (let i = 0; i < 2; ++i) {
+      const renderEncoder = useBundle
+        ? t.device.createRenderBundleEncoder({
+            colorFormats: ['rgba8unorm'],
+          })
+        : passEncoder;
+      const pipeline = t.createStorageWriteRenderPipeline(i + 1);
+      const bindGroup = t.createBindGroup(pipeline, buffer);
+      renderEncoder.setPipeline(pipeline);
+      renderEncoder.setBindGroup(0, bindGroup);
+      renderEncoder.draw(1, 1, 0, 0);
+      if (useBundle) bundles.push((renderEncoder as GPURenderBundleEncoder).finish());
+    }
+    if (useBundle) passEncoder.executeBundles(bundles);
+
+    passEncoder.endPass();
+    t.device.defaultQueue.submit([encoder.finish()]);
+    t.verifyAlternativeData(buffer, 1, 2);
+  });
 
 g.test('two_dispatches_in_the_same_compute_pass')
   .desc(
@@ -91,4 +117,20 @@ g.test('two_dispatches_in_the_same_compute_pass')
     a storage buffer. The second write will write 2 into the same buffer in the same pass. Expected
     data in buffer is 2.`
   )
-  .unimplemented();
+  .fn(async t => {
+    const buffer = await t.createBufferWithValue(0);
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginComputePass();
+
+    for (let i = 0; i < 2; ++i) {
+      const pipeline = t.createStorageWriteComputePipeline(i + 1);
+      const bindGroup = t.createBindGroup(pipeline, buffer);
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, bindGroup);
+      pass.dispatch(1);
+    }
+
+    pass.endPass();
+    t.device.defaultQueue.submit([encoder.finish()]);
+    t.verifyData(buffer, 2);
+  });
