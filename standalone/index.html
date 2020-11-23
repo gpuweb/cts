@@ -218,21 +218,16 @@
     <p>
       <input type="button" id="copyResultsJSON" value="Copy results as JSON">
     </p>
-    <script>
+    <script type="module">
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker
           .register('../service-worker.js')
           .then(async function (registration) {
             await registration.update();
             console.debug("Service worker registered");
-
-            const script = document.createElement('script');
-            script.type = "module";
-            script.src = "../src/common/runtime/standalone.ts";
-
-            document.body.append(script);
           });
       }
+      import('../src/common/runtime/standalone.js');
     </script>
   </body>
 </html>
