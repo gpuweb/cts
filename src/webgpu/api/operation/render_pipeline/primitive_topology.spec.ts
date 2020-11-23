@@ -256,7 +256,7 @@ class PrimitiveTopologyTest extends GPUTest {
             code: `
               [[location(0)]] var<in> pos : vec4<f32>;
               [[builtin(position)]] var<out> Position : vec4<f32>;
-              
+
               [[stage(vertex)]] fn main() -> void {
                 Position = pos;
                 return;
