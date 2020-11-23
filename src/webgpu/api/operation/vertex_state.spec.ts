@@ -269,8 +269,8 @@ class IndexFormatTest extends GPUTest {
 
 export const g = makeTestGroup(IndexFormatTest);
 
-g.test('index_format_uint16')
-  .desc('Test indexing draw with index format of uint16.')
+g.test('index_format,uint16')
+  .desc('Test rendering result of indexed draw with index format of uint16.')
   .params([
     { indexOffset: 0, _expectedShape: RenderShape.Square },
     { indexOffset: 6, _expectedShape: RenderShape.BottomLeftTriangle },
