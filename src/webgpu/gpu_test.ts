@@ -10,7 +10,7 @@ import {
   getTextureCopyLayout,
   LayoutOptions as TextureLayoutOptions,
 } from './util/texture/layout.js';
-import { PerTexelComponent, kTexelRepresentationInfo } from './util/texture/texelData.js';
+import { PerTexelComponent, kTexelRepresentationInfo } from './util/texture/texel_data.js';
 
 type TypedArrayBufferView =
   | Uint8Array

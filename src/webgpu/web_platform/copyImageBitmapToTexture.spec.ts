@@ -7,7 +7,7 @@ import { makeTestGroup } from '../../common/framework/test_group.js';
 import { unreachable } from '../../common/framework/util/util.js';
 import { kUncompressedTextureFormatInfo, UncompressedTextureFormat } from '../capability_info.js';
 import { GPUTest } from '../gpu_test.js';
-import { kTexelRepresentationInfo } from '../util/texture/texelData.js';
+import { kTexelRepresentationInfo } from '../util/texture/texel_data.js';
 
 function calculateRowPitch(width: number, bytesPerPixel: number): number {
   const bytesPerRow = width * bytesPerPixel;

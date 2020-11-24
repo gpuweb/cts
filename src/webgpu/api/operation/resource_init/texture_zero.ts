@@ -23,7 +23,7 @@ import { GPUConst } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { createTextureUploadBuffer } from '../../../util/texture/layout.js';
 import { BeginEndRange, mipSize, SubresourceRange } from '../../../util/texture/subresource.js';
-import { PerTexelComponent, kTexelRepresentationInfo } from '../../../util/texture/texelData.js';
+import { PerTexelComponent, kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
 
 export enum UninitializeMethod {
   Creation = 'Creation', // The texture was just created. It is uninitialized.

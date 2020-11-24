@@ -7,8 +7,8 @@ import {
   kTexelRepresentationInfo,
   getSingleDataType,
   getComponentReadbackTraits,
-} from '../../../../util/texture/texelData.js';
-import { CheckContents } from '../textureZero.spec.js';
+} from '../../../../util/texture/texel_data.js';
+import { CheckContents } from '../texture_zero.js';
 
 export const checkContentsBySampling: CheckContents = (
   t,

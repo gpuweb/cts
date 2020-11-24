@@ -14,7 +14,7 @@ import {
   kTexelRepresentationInfo,
   getSingleDataType,
   getComponentReadbackTraits,
-} from './texelData.js';
+} from './texel_data.js';
 
 export const g = makeTestGroup(GPUTest);
 
