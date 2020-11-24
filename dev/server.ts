@@ -31,7 +31,9 @@ const watcher = chokidar.watch(srcDir, {
   persistent: true,
 });
 
-// Handler to dirty the compile cache for changed .ts files.
+/**
+ * Handler to dirty the compile cache for changed .ts files.
+ */
 function dirtyCompileCache(absPath: string, stats?: fs.Stats) {
   const relPath = path.relative(srcDir, absPath);
   if ((stats === undefined || stats.isFile()) && relPath.endsWith('.ts')) {
@@ -43,13 +45,18 @@ function dirtyCompileCache(absPath: string, stats?: fs.Stats) {
   }
 }
 
-// Handler to dirty the listing cache for directory changes. Also dirties
-// the compile cache for changed files.
+/**
+ * Handler to dirty the listing cache for directory changes and .spec.ts changes.
+ * Also dirties the compile cache for changed files.
+ */
 function dirtyListingAndCompileCache(absPath: string, stats?: fs.Stats) {
   const relPath = path.relative(srcDir, absPath);
 
   const segments = relPath.split(path.sep);
-  if (segments.length) {
+  // The listing changes if the directories change, or if a .spec.ts file is added/removed.
+  const listingChange =
+    (path.extname(relPath) === '' || relPath.endsWith('.spec.ts')) && segments.length > 0;
+  if (listingChange) {
     const suite = segments[0];
     if (listingCache.has(suite)) {
       console.debug('Dirtying listing cache', suite);
