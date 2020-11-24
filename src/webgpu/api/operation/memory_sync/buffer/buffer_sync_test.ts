@@ -256,11 +256,11 @@ export class BufferSyncTest extends GPUTest {
     this.expectContents(buffer, bufferData);
   }
 
-  verifyAlternativeData(buffer: GPUBuffer, expectedValue1: number, expectedValue2: number) {
+  verifyDataMultipleValidValues(buffer: GPUBuffer, expectedValue1: number, expectedValue2: number) {
     const bufferData1 = new Uint32Array(1);
     bufferData1[0] = expectedValue1;
     const bufferData2 = new Uint32Array(1);
     bufferData2[0] = expectedValue2;
-    this.expectAlternativeContents(buffer, bufferData1, bufferData2);
+    this.expectContentsMultipleValidValues(buffer, bufferData1, bufferData2);
   }
 }

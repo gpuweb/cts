@@ -83,16 +83,16 @@ g.test('two_draws_in_the_same_render_pass')
     a storage buffer. The second write will write 2 into the same buffer in the same pass. Expected
     data in buffer is either 1 or 2. It may use bundle in each draw.`
   )
-  .params(pbool('useBundle'))
+  .params(params().combine(pbool('firstDrawUseBundle')).combine(pbool('secondDrawUseBundle')))
   .fn(async t => {
-    const { useBundle } = t.params;
+    const { firstDrawUseBundle, secondDrawUseBundle } = t.params;
     const buffer = await t.createBufferWithValue(0);
     const encoder = t.device.createCommandEncoder();
     const passEncoder = t.beginSimpleRenderPass(encoder);
 
-    const bundles: GPURenderBundle[] = [];
+    const useBundle = [firstDrawUseBundle, secondDrawUseBundle];
     for (let i = 0; i < 2; ++i) {
-      const renderEncoder = useBundle
+      const renderEncoder = useBundle[i]
         ? t.device.createRenderBundleEncoder({
             colorFormats: ['rgba8unorm'],
           })
@@ -102,13 +102,41 @@ g.test('two_draws_in_the_same_render_pass')
       renderEncoder.setPipeline(pipeline);
       renderEncoder.setBindGroup(0, bindGroup);
       renderEncoder.draw(1, 1, 0, 0);
-      if (useBundle) bundles.push((renderEncoder as GPURenderBundleEncoder).finish());
+      if (useBundle[i])
+        passEncoder.executeBundles([(renderEncoder as GPURenderBundleEncoder).finish()]);
     }
-    if (useBundle) passEncoder.executeBundles(bundles);
 
     passEncoder.endPass();
     t.device.defaultQueue.submit([encoder.finish()]);
-    t.verifyAlternativeData(buffer, 1, 2);
+    t.verifyDataMultipleValidValues(buffer, 1, 2);
+  });
+
+g.test('two_draws_in_the_same_render_bundle')
+  .desc(
+    `Test write-after-write operations in the same render bundle. The first write will write 1 into
+    a storage buffer. The second write will write 2 into the same buffer in the same pass. Expected
+    data in buffer is either 1 or 2.`
+  )
+  .fn(async t => {
+    const buffer = await t.createBufferWithValue(0);
+    const encoder = t.device.createCommandEncoder();
+    const passEncoder = t.beginSimpleRenderPass(encoder);
+    const renderEncoder = t.device.createRenderBundleEncoder({
+      colorFormats: ['rgba8unorm'],
+    });
+
+    for (let i = 0; i < 2; ++i) {
+      const pipeline = t.createStorageWriteRenderPipeline(i + 1);
+      const bindGroup = t.createBindGroup(pipeline, buffer);
+      renderEncoder.setPipeline(pipeline);
+      renderEncoder.setBindGroup(0, bindGroup);
+      renderEncoder.draw(1, 1, 0, 0);
+    }
+
+    passEncoder.executeBundles([(renderEncoder as GPURenderBundleEncoder).finish()]);
+    passEncoder.endPass();
+    t.device.defaultQueue.submit([encoder.finish()]);
+    t.verifyDataMultipleValidValues(buffer, 1, 2);
   });
 
 g.test('two_dispatches_in_the_same_compute_pass')

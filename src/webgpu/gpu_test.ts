@@ -167,7 +167,7 @@ export class GPUTest extends Fixture {
     });
   }
 
-  expectAlternativeContents(
+  expectContentsMultipleValidValues(
     src: GPUBuffer,
     expected1: TypedArrayBufferView,
     expected2: TypedArrayBufferView,
@@ -187,7 +187,9 @@ export class GPUTest extends Fixture {
       const check1 = this.checkBuffer(actual.subarray(begin, end), expected1);
       const check2 = this.checkBuffer(actual.subarray(begin, end), expected2);
       if (check1 !== undefined && check2 !== undefined) {
-        niceStack.message = check1 + check2;
+        niceStack.message = `Expected one of the following two checks to succeed:
+  - ${check1}
+  - ${check2}`;
         this.rec.expectationFailed(niceStack);
       }
       dst.destroy();
