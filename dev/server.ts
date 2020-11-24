@@ -5,6 +5,7 @@ import * as path from 'path';
 import * as babel from '@babel/core';
 import * as chokidar from 'chokidar';
 import * as express from 'express';
+import * as morgan from 'morgan';
 import * as portfinder from 'portfinder';
 
 import { makeListing } from '../src/common/tools/crawl.js';
@@ -66,6 +67,9 @@ watcher.on('unlinkDir', dirtyListingAndCompileCache);
 watcher.on('change', dirtyCompileCache);
 
 const app = express();
+
+// Set up logging
+app.use(morgan('dev'));
 
 // Serve the standalone runner directory
 app.use('/standalone', express.static(path.resolve(srcDir, '../standalone')));
