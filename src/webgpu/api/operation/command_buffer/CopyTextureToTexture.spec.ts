@@ -190,7 +190,7 @@ g.test('t2t_non_compressed_color_formats')
     };
     const dstTexture = t.device.createTexture(dstTextureDesc);
 
-    // Fill the whole subresource of srcTexture at srcCopyLevel with initalSrcData.
+    // Fill the whole subresource of srcTexture at srcCopyLevel with initialSrcData.
     const initialSrcData = t.GetInitialDataPerMipLevel(
       textureSize.srcTextureSize,
       format,
@@ -268,7 +268,9 @@ g.test('t2t_non_compressed_color_formats')
     );
     t.device.defaultQueue.submit([encoder.finish()]);
 
-    // Fill expectedDataWithPadding with the expected data of dstTexture.
+    // Fill expectedDataWithPadding with the expected data of dstTexture. The other values in
+    // expectedDataWithPadding are kept 0 to check if the texels untouched by the copy are 0
+    // (their previous values).
     const expectedDataWithPadding = new ArrayBuffer(dstBufferSize);
     const expectedUint8DataWithPadding = new Uint8Array(expectedDataWithPadding);
     const expectedUint8Data = new Uint8Array(initialSrcData);
