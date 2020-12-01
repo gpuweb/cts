@@ -133,7 +133,7 @@ g.test('two_draws_in_the_same_render_bundle')
       renderEncoder.draw(1, 1, 0, 0);
     }
 
-    passEncoder.executeBundles([(renderEncoder as GPURenderBundleEncoder).finish()]);
+    passEncoder.executeBundles([renderEncoder.finish()]);
     passEncoder.endPass();
     t.device.defaultQueue.submit([encoder.finish()]);
     t.verifyDataTwoValidValues(buffer, 1, 2);
