@@ -10,7 +10,7 @@ import * as portfinder from 'portfinder';
 
 import { makeListing } from '../src/common/tools/crawl.js';
 
-// Make sure that makeListing doesn't cache imported spec files.
+// Make sure that makeListing doesn't cache imported spec files. See crawl().
 process.env.STANDALONE_DEV_SERVER = '1';
 
 // Import the project's babel.config.js. We'll use the same config for the runtime compiler.

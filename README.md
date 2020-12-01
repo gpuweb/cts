@@ -83,7 +83,7 @@ To start the development server, use:
 npm run dev
 ```
 
-Then, browse to the standalone test runner at `http://127.0.0.1:8080/standalone/`. If this port is used, the server will print what port it is using to the console.
+Then, browse to the standalone test runner at `http://localhost:8080/standalone/`. If port 8080 isn't available, the server will print what port it is using to the console.
 
 The server will compile the test suite listings and Typescript sources upon request so that tests can be developed without a build step. It also watches the `src/` directory for changes so that after saving changes to a `.ts` file, changes are visible in the standalone runner upon page reload.
 
