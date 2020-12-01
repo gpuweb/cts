@@ -108,7 +108,7 @@ g.test('two_draws_in_the_same_render_pass')
 
     passEncoder.endPass();
     t.device.defaultQueue.submit([encoder.finish()]);
-    t.verifyDataMultipleValidValues(buffer, 1, 2);
+    t.verifyDataTwoValidValues(buffer, 1, 2);
   });
 
 g.test('two_draws_in_the_same_render_bundle')
@@ -136,7 +136,7 @@ g.test('two_draws_in_the_same_render_bundle')
     passEncoder.executeBundles([(renderEncoder as GPURenderBundleEncoder).finish()]);
     passEncoder.endPass();
     t.device.defaultQueue.submit([encoder.finish()]);
-    t.verifyDataMultipleValidValues(buffer, 1, 2);
+    t.verifyDataTwoValidValues(buffer, 1, 2);
   });
 
 g.test('two_dispatches_in_the_same_compute_pass')

@@ -167,7 +167,9 @@ export class GPUTest extends Fixture {
     });
   }
 
-  expectContentsMultipleValidValues(
+  // We can expand this function in order to support multiple valid values or two mixed vectors
+  // if needed. See the discussion at https://github.com/gpuweb/cts/pull/384#discussion_r533101429
+  expectContentsTwoValidValues(
     src: GPUBuffer,
     expected1: TypedArrayBufferView,
     expected2: TypedArrayBufferView,
