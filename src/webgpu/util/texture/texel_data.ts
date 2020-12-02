@@ -398,33 +398,25 @@ export const kTexelRepresentationInfo: {
     rgb10a2unorm: {
       componentOrder: kRGBA,
       componentInfo: {
-        [TexelComponent.R]: { dataType: 'unorm', bitLength: 10 },
-        [TexelComponent.G]: { dataType: 'unorm', bitLength: 10 },
-        [TexelComponent.B]: { dataType: 'unorm', bitLength: 10 },
-        [TexelComponent.A]: { dataType: 'unorm', bitLength: 2 },
+        R: { dataType: 'unorm', bitLength: 10 },
+        G: { dataType: 'unorm', bitLength: 10 },
+        B: { dataType: 'unorm', bitLength: 10 },
+        A: { dataType: 'unorm', bitLength: 2 },
       },
       encode: components => {
-        assert(components.R !== undefined);
-        assert(components.G !== undefined);
-        assert(components.B !== undefined);
-        assert(components.A !== undefined);
         return {
-          [TexelComponent.R]: floatAsNormalizedInteger(components.R, 10, false),
-          [TexelComponent.G]: floatAsNormalizedInteger(components.G, 10, false),
-          [TexelComponent.B]: floatAsNormalizedInteger(components.B, 10, false),
-          [TexelComponent.A]: floatAsNormalizedInteger(components.A, 2, false),
+          R: floatAsNormalizedInteger(components.R ?? unreachable(), 10, false),
+          G: floatAsNormalizedInteger(components.G ?? unreachable(), 10, false),
+          B: floatAsNormalizedInteger(components.B ?? unreachable(), 10, false),
+          A: floatAsNormalizedInteger(components.A ?? unreachable(), 2, false),
         };
       },
       decode: components => {
-        assert(components.R !== undefined);
-        assert(components.G !== undefined);
-        assert(components.B !== undefined);
-        assert(components.A !== undefined);
         return {
-          [TexelComponent.R]: normalizedIntegerAsFloat(components.R, 10, false),
-          [TexelComponent.G]: normalizedIntegerAsFloat(components.G, 10, false),
-          [TexelComponent.B]: normalizedIntegerAsFloat(components.B, 10, false),
-          [TexelComponent.A]: normalizedIntegerAsFloat(components.A, 2, false),
+          R: normalizedIntegerAsFloat(components.R ?? unreachable(), 10, false),
+          G: normalizedIntegerAsFloat(components.G ?? unreachable(), 10, false),
+          B: normalizedIntegerAsFloat(components.B ?? unreachable(), 10, false),
+          A: normalizedIntegerAsFloat(components.A ?? unreachable(), 2, false),
         };
       },
       pack: components =>
@@ -432,10 +424,10 @@ export const kTexelRepresentationInfo: {
           kRGBA,
           components,
           {
-            [TexelComponent.R]: 10,
-            [TexelComponent.G]: 10,
-            [TexelComponent.B]: 10,
-            [TexelComponent.A]: 2,
+            R: 10,
+            G: 10,
+            B: 10,
+            A: 2,
           },
           'uint'
         ),
@@ -445,26 +437,23 @@ export const kTexelRepresentationInfo: {
       encode: applyEach(identity, kRGB),
       decode: applyEach(identity, kRGB),
       componentInfo: {
-        [TexelComponent.R]: { dataType: 'ufloat', bitLength: 11 },
-        [TexelComponent.G]: { dataType: 'ufloat', bitLength: 11 },
-        [TexelComponent.B]: { dataType: 'ufloat', bitLength: 10 },
+        R: { dataType: 'ufloat', bitLength: 11 },
+        G: { dataType: 'ufloat', bitLength: 11 },
+        B: { dataType: 'ufloat', bitLength: 10 },
       },
       pack: components => {
-        assert(components.R !== undefined);
-        assert(components.G !== undefined);
-        assert(components.B !== undefined);
         components = {
-          [TexelComponent.R]: float32ToFloatBits(components.R, 0, 5, 6, 15),
-          [TexelComponent.G]: float32ToFloatBits(components.G, 0, 5, 6, 15),
-          [TexelComponent.B]: float32ToFloatBits(components.B, 0, 5, 5, 15),
+          R: float32ToFloatBits(components.R ?? unreachable(), 0, 5, 6, 15),
+          G: float32ToFloatBits(components.G ?? unreachable(), 0, 5, 6, 15),
+          B: float32ToFloatBits(components.B ?? unreachable(), 0, 5, 5, 15),
         };
         return packComponents(
           kRGB,
           components,
           {
-            [TexelComponent.R]: 11,
-            [TexelComponent.G]: 11,
-            [TexelComponent.B]: 10,
+            R: 11,
+            G: 11,
+            B: 10,
           },
           'uint'
         );
@@ -478,23 +467,25 @@ export const kTexelRepresentationInfo: {
       }),
       encode: applyEach(identity, kRGB),
       decode: applyEach(identity, kRGB),
-      pack: components => {
-        assert(
-          components.R !== undefined && components.G !== undefined && components.B !== undefined
-        );
-        return new Uint32Array([packRGB9E5UFloat(components.R, components.G, components.B)]).buffer;
-      },
+      pack: components =>
+        new Uint32Array([
+          packRGB9E5UFloat(
+            components.R ?? unreachable(),
+            components.G ?? unreachable(),
+            components.B ?? unreachable()
+          ),
+        ]).buffer,
     },
     depth32float: {
       componentOrder: [TexelComponent.Depth],
       encode: applyEach((n: number) => (assert(n >= 0 && n <= 1.0), n), [TexelComponent.Depth]),
       decode: applyEach((n: number) => (assert(n >= 0 && n <= 1.0), n), [TexelComponent.Depth]),
-      componentInfo: { [TexelComponent.Depth]: { dataType: 'float', bitLength: 32 } },
+      componentInfo: { Depth: { dataType: 'float', bitLength: 32 } },
       pack: components => packComponents([TexelComponent.Depth], components, 32, 'float'),
     },
     depth24plus: {
       componentOrder: [TexelComponent.Depth],
-      componentInfo: { [TexelComponent.Depth]: { dataType: null, bitLength: 24 } },
+      componentInfo: { Depth: { dataType: null, bitLength: 24 } },
       encode: applyEach(() => unreachable('depth24plus cannot be encoded'), [TexelComponent.Depth]),
       decode: applyEach(() => unreachable('depth24plus cannot be decoded'), [TexelComponent.Depth]),
       pack: () => unreachable('depth24plus data cannot be packed'),
@@ -502,11 +493,11 @@ export const kTexelRepresentationInfo: {
     'depth24plus-stencil8': {
       componentOrder: [TexelComponent.Depth, TexelComponent.Stencil],
       componentInfo: {
-        [TexelComponent.Depth]: {
+        Depth: {
           dataType: null,
           bitLength: 24,
         },
-        [TexelComponent.Stencil]: {
+        Stencil: {
           dataType: 'uint',
           bitLength: 8,
         },
