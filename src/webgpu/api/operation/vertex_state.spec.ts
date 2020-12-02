@@ -150,13 +150,18 @@ class IndexFormatTest extends GPUTest {
   ): GPURenderPipeline {
     const vertexModule = this.device.createShaderModule({
       code: `
-        [[location(0)]] var<in> pos : vec4<f32>;
+        const pos: array<vec2<f32>, 4> = array<vec2<f32>, 4>(
+          vec2<f32>(-1.0, 1.0),
+          vec2<f32>(1.0, -1.0),
+          vec2<f32>(1.0, 1.0),
+          vec2<f32>(-1.0, -1.0));
+
         [[builtin(position)]] var<out> Position : vec4<f32>;
         [[builtin(vertex_idx)]] var<in> VertexIndex : u32;
 
         [[stage(vertex)]]
         fn main() -> void {
-          Position = pos;
+          Position = vec4<f32>(pos[VertexIndex], 0.0 , 1.0);
         }
       `,
     });
@@ -180,13 +185,6 @@ class IndexFormatTest extends GPUTest {
       colorStates: [{ format: kTextureFormat }],
       vertexState: {
         indexFormat,
-        vertexBuffers: [
-          {
-            arrayStride: 4 * 4,
-            stepMode: 'vertex',
-            attributes: [{ format: 'float4', offset: 0, shaderLocation: 0 }],
-          },
-        ],
       },
     });
   }
@@ -233,23 +231,6 @@ class IndexFormatTest extends GPUTest {
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
 
-    const vertexArray = new Float32Array(
-      /* prettier-ignore */ [
-      // float4 position
-      -1.0, 1.0, 0.0, 1.0,
-      1.0, -1.0, 0.0, 1.0,
-      1.0, 1.0, 0.0, 1.0,
-      -1.0, -1.0, 0.0, 1.0]
-    );
-
-    const vertexBuffer = this.device.createBuffer({
-      size: vertexArray.byteLength,
-      usage: GPUBufferUsage.VERTEX,
-      mappedAtCreation: true,
-    });
-    new Float32Array(vertexBuffer.getMappedRange()).set(vertexArray);
-    vertexBuffer.unmap();
-
     const encoder = this.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
       colorAttachments: [
@@ -261,9 +242,8 @@ class IndexFormatTest extends GPUTest {
       ],
     });
     pass.setPipeline(pipeline);
-    pass.setVertexBuffer(0, vertexBuffer);
     pass.setIndexBuffer(indexBuffer, indexFormat, indexOffset);
-    pass.drawIndexed(indexCount, 1, 0, 0, 0);
+    pass.drawIndexed(indexCount);
     pass.endPass();
     encoder.copyTextureToBuffer(
       { texture: colorAttachment },
