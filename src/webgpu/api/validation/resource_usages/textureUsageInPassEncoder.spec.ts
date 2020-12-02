@@ -39,6 +39,7 @@ Test Coverage:
 `;
 
 import { pbool, poptions, params } from '../../../../common/framework/params_builder.js';
+import { pp } from '../../../../common/framework/preprocessor.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/framework/util/util.js';
 import {
@@ -925,9 +926,9 @@ g.test('unused_bindings_in_pipeline')
       entry_point vertex = main;
     `;
     // TODO: revisit the shader code once 'image' can be supported in wgsl.
-    const wgslFragment = `
-      ${useBindGroup0 ? '[[set 0, binding 0]] var<image> image0;' : ''}
-      ${useBindGroup1 ? '[[set 1, binding 0]] var<image> image1;' : ''}
+    const wgslFragment = pp`
+      ${pp._if(useBindGroup0)}[[set 0, binding 0]] var<image> image0;${pp._endif}
+      ${pp._if(useBindGroup1)}[[set 1, binding 0]] var<image> image1;${pp._endif}
       fn main() -> void {
         return;
       }
@@ -937,8 +938,8 @@ g.test('unused_bindings_in_pipeline')
 
     // TODO: revisit the shader code once 'image' can be supported in wgsl.
     const wgslCompute = `
-      ${useBindGroup0 ? '[[set 0, binding 0]] var<image> image0;' : ''}
-      ${useBindGroup1 ? '[[set 1, binding 0]] var<image> image1;' : ''}
+      ${pp._if(useBindGroup0)}[[set 0, binding 0]] var<image> image0;${pp._endif}
+      ${pp._if(useBindGroup1)}[[set 1, binding 0]] var<image> image1;${pp._endif}
       fn main() -> void {
         return;
       }

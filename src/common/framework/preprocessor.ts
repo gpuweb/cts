@@ -23,7 +23,7 @@ abstract class Directive {
   protected checkDepth(stack: StateStack): void {
     assert(
       stack.length === this.depth,
-      `Number of "$"s must match nesting depth, currently ${stack.length} (e.g. $if $$if $$endif $endif)`
+      `Number of "_"s must match nesting depth, currently ${stack.length} (e.g. _if __if __endif _endif)`
     );
   }
 
@@ -87,6 +87,18 @@ class EndIf extends Directive {
   }
 }
 
+class Join {
+  private lines: string[];
+
+  constructor(lines: string[]) {
+    this.lines = lines;
+  }
+
+  join(indentation: number) {
+    return this.lines.join('\n' + ' '.repeat(indentation));
+  }
+}
+
 /**
  * A simple template-based, non-line-based preprocessor implementing if/elif/else/endif.
  *
@@ -104,10 +116,13 @@ class EndIf extends Directive {
  *
  * @param strings - The array of constant string chunks of the template string.
  * @param ...values - The array of interpolated ${} values within the template string.
+ *    If a value is a Directive, it affects the preprocessor state and injects no string.
+ *    If a value is a string[], the array is joined together with newlines, preserving vertical
+ *    alignment by indenting with spaces.
  */
 export function pp(
   strings: TemplateStringsArray,
-  ...values: ReadonlyArray<Directive | string | number>
+  ...values: ReadonlyArray<Directive | Join | string | number>
 ): string {
   let result = '';
   const stateStack: StateStack = [{ allowsFollowingElse: false, state: State.Passing }];
@@ -121,6 +136,11 @@ export function pp(
     const value = values[i];
     if (value instanceof Directive) {
       value.applyTo(stateStack);
+    } else if (value instanceof Join) {
+      const indexOfLastNewline = result.lastIndexOf('\n');
+      // Vertically align by indenting with spaces. Works even if indexOfLastNewline === -1.
+      const indentation = result.length - indexOfLastNewline - 1;
+      result += value.join(indentation);
     } else {
       if (passing) {
         result += value;
@@ -132,6 +152,7 @@ export function pp(
 
   return result;
 }
+pp.join = (args: string[]) => new Join(args);
 pp._if = (predicate: boolean) => new If(1, predicate);
 pp._elif = (predicate: boolean) => new ElseIf(1, predicate);
 pp._else = new Else(1);

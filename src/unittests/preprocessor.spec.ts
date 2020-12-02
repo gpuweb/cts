@@ -58,6 +58,35 @@ b`;
   t.test(act, exp);
 });
 
+g.test('join,0').fn(t => {
+  const act = pp`a ${pp.join([])} b`;
+  const exp = 'a  b';
+  t.test(act, exp);
+});
+
+g.test('join,1').fn(t => {
+  const act = pp`a ${pp.join(['3'])} b`;
+  const exp = 'a 3 b';
+  t.test(act, exp);
+});
+
+g.test('join,2').fn(t => {
+  const act = pp`a ${pp.join(['3', '4'])} b`;
+  const exp = `\
+a 3
+  4 b`;
+  t.test(act, exp);
+});
+
+g.test('join,22').fn(t => {
+  const act = pp`a ${pp.join(['33333', '4'])} b ${pp.join(['5', '66'])} d`;
+  const exp = `\
+a 33333
+  4 b 5
+      66 d`;
+  t.test(act, exp);
+});
+
 g.test('if,true').fn(t => {
   const act = pp`
 a
