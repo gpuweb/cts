@@ -131,7 +131,6 @@ app.get('/out/**/*.js', async (req, res, next) => {
 
   try {
     const result = await babel.transformFileAsync(absPath, babelConfig);
-    console.log(result.map);
     if (result && result.code) {
       compileCache.set(tsUrl, result.code);
 
