@@ -1,5 +1,7 @@
 export const description = `
 createBindGroup validation tests.
+
+TODO: review existing tests, write descriptions, and make sure tests are complete.
 `;
 
 import { poptions, params } from '../../../common/framework/params_builder.js';

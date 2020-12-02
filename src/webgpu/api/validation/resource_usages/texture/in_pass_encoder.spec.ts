@@ -38,18 +38,18 @@ Test Coverage:
       dispatch call in compute.
 `;
 
-import { pbool, poptions, params } from '../../../../common/framework/params_builder.js';
-import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert } from '../../../../common/framework/util/util.js';
+import { pbool, poptions, params } from '../../../../../common/framework/params_builder.js';
+import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { assert } from '../../../../../common/framework/util/util.js';
 import {
   kDepthStencilFormats,
   kDepthStencilFormatInfo,
   kTextureBindingTypes,
   kTextureBindingTypeInfo,
   kShaderStages,
-} from '../../../capability_info.js';
-import { GPUConst } from '../../../constants.js';
-import { ValidationTest } from '../validation_test.js';
+} from '../../../../capability_info.js';
+import { GPUConst } from '../../../../constants.js';
+import { ValidationTest } from '../../validation_test.js';
 
 const SIZE = 32;
 class TextureUsageTracking extends ValidationTest {
