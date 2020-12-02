@@ -1,0 +1,19 @@
+export const description = `
+TODO: check for duplication (render_pass/, etc.), plan, and implement. Notes:
+> - color attachments {zero, one, multiple}
+>     - many different formats
+>     - {without, with} resolve target
+>         - resolve format compatibility with multisampled format
+>     - {all possible load ops, load color {in range, negative, too large}}
+>     - all possible store ops
+> - depth/stencil attachment
+>     - {unset, all possible formats}
+>     - {all possible {depth, stencil} load ops, load values {in range, negative, too large}}
+>     - all possible {depth, stencil} store ops
+>     - depthReadOnly {t,f}, stencilReadOnly {t,f}
+`;
+
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { ValidationTest } from '../validation_test.js';
+
+export const g = makeTestGroup(ValidationTest);

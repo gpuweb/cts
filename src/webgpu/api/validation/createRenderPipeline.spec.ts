@@ -1,5 +1,20 @@
 export const description = `
 createRenderPipeline validation tests.
+
+TODO: review existing tests, write descriptions, and make sure tests are complete.
+      Make sure the following is covered.
+> - various attachment problems
+>
+> - interface matching between vertex and fragment shader
+>     - superset, subset, etc.
+>
+> - vertexStage {valid, invalid}
+> - fragmentStage {valid, invalid}
+> - primitiveTopology all possible values
+> - rasterizationState various values
+> - sampleCount {0, 1, 3, 4, 8, 16, 1024}
+> - sampleMask {0, 0xFFFFFFFF}
+> - alphaToCoverageEnabled {false, true}
 `;
 
 import { poptions } from '../../../common/framework/params_builder.js';

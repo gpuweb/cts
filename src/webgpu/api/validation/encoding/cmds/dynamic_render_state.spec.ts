@@ -1,5 +1,25 @@
 export const description = `
 API validation tests for dynamic state commands (setViewport/ScissorRect/BlendColor...).
+
+TODO: ensure existing tests cover these notes. Note many of these may be operation tests instead.
+> - setViewport
+>     - {x, y} = {0, invalid values if any}
+>     - {width, height, minDepth, maxDepth} = {
+>         - least possible value that's valid
+>         - greatest possible negative value that's invalid
+>         - greatest possible positive value that's valid
+>         - least possible positive value that's invalid if any
+>         - }
+>     - minDepth {<, =, >} maxDepth
+> - setScissorRect
+>     - {width, height} = 0
+>     - {x+width, y+height} = attachment size + 1
+> - setBlendColor
+>     - color {slightly, very} out of range
+>     - used with a simple pipeline that {does, doesn't} use it
+> - setStencilReference
+>     - {0, max}
+>     - used with a simple pipeline that {does, doesn't} use it
 `;
 
 import { params } from '../../../../../common/framework/params_builder.js';

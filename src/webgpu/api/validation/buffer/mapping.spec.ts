@@ -1,5 +1,27 @@
 export const description = `
 Validation tests for GPUBuffer.mapAsync, GPUBuffer.unmap and GPUBuffer.getMappedRange.
+
+TODO: review existing tests and merge with this plan:
+> - {mappedAtCreation, await mapAsync}
+>     - -> x = getMappedRange
+>     - check x.size == mapping size
+>     - -> noawait mapAsync
+>     - check x.size == mapping size
+>     - -> await
+>     - check x.size == mapping size
+>     - -> unmap
+>     - check x.size == 0
+>     - -> getMappedRange (should fail)
+> - await mapAsync -> await mapAsync -> getMappedRange
+> - {mappedAtCreation, await mapAsync} -> unmap -> unmap
+> - x = noawait mapAsync -> y = noawait mapAsync
+>     - -> getMappedRange (should fail)
+>     - -> await x
+>     - -> getMappedRange
+>     - -> shouldReject(y)
+> - noawait mapAsync -> unmap
+> - {mappedAtCreation, await mapAsync} -> x = getMappedRange -> unmap -> await mapAsync(subrange) -> y = getMappedRange
+>     - check x.size == 0, y.size == mapping size
 `;
 
 import { pbool, poptions, params } from '../../../../common/framework/params_builder.js';
@@ -109,7 +131,7 @@ g.test('mapAsync,invalidBuffer')
     await t.testMapAsyncCall(false, 'OperationError', buffer, mapMode);
   });
 
-g.test('mapAsync_,state,destroyed')
+g.test('mapAsync,state,destroyed')
   .desc('Test that mapAsync is an error when called on a destroyed buffer.')
   .params(kMapModeOptions)
   .fn(async t => {
@@ -383,12 +405,15 @@ g.test('getMappedRange,state,mappingPending')
     const { mapMode } = t.params;
     const buffer = t.createMappableBuffer(mapMode, 16);
 
-    buffer.mapAsync(mapMode);
+    /* noawait */ buffer.mapAsync(mapMode);
     t.testGetMappedRangeCall(false, buffer);
   });
 
 g.test('getMappedRange,offsetAndSizeAlignment')
-  .desc("Test that getMappedRange fails if the alignment of offset and size isn't correct.")
+  .desc(
+    `Test that getMappedRange fails if the alignment of offset and size isn't correct.
+  TODO: x= {mappedAtCreation, mapAsync at {0, >0}`
+  )
   .params(
     params()
       .combine(kMapModeOptions)
@@ -410,7 +435,7 @@ g.test('getMappedRange,offsetAndSizeAlignment')
     await buffer.mapAsync(mapMode);
 
     const success = offset % kOffsetAlignment === 0 && size % kSizeAlignment === 0;
-    await t.testGetMappedRangeCall(success, buffer, offset, size);
+    t.testGetMappedRangeCall(success, buffer, offset, size);
   });
 
 g.test('getMappedRange,sizeAndOffsetOOB,forMappedAtCreation')
@@ -464,10 +489,7 @@ g.test('getMappedRange,sizeAndOffsetOOB,forMappedAtCreation')
   });
 
 g.test('getMappedRange,sizeAndOffsetOOB,forMapped')
-  .desc(
-    `Test that getMappedRange size + offset must be less than the buffer size for a
-    buffer mapped.`
-  )
+  .desc('Test that getMappedRange size + offset must be less than the mapAsync range.')
   .params(
     params()
       .combine(kMapModeOptions)
