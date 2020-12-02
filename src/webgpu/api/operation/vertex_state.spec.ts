@@ -189,17 +189,26 @@ class IndexFormatTest extends GPUTest {
     });
   }
 
-  CreateIndexBuffer(indexArray: Uint16Array | Uint32Array, indexFormat: GPUIndexFormat): GPUBuffer {
+  CreateIndexBuffer(indices: number[], indexFormat: GPUIndexFormat): GPUBuffer {
+    let indexArray: Uint16Array | Uint32Array;
+    if (indexFormat === 'uint16') {
+      indexArray = new Uint16Array(indices);
+    } else {
+      indexArray = new Uint32Array(indices);
+    }
+
     const indexBuffer = this.device.createBuffer({
       size: indexArray.byteLength,
       usage: GPUBufferUsage.INDEX,
       mappedAtCreation: true,
     });
+
     if (indexFormat === 'uint16') {
       new Uint16Array(indexBuffer.getMappedRange()).set(indexArray);
     } else {
       new Uint32Array(indexBuffer.getMappedRange()).set(indexArray);
     }
+
     indexBuffer.unmap();
     return indexBuffer;
   }
@@ -289,9 +298,9 @@ g.test('index_format,uint16')
     // If this is interpreted as uint32, it will have index 1 and 2 be both 0 and render nothing.
     // And the index buffer size - offset must be not less than the size required by triangle
     // list, otherwise it also render nothing.
-    const indexArray = new Uint16Array([1, 2, 0, 0, 0, 0, 0, 1, 3, 0]);
-    const indexBuffer = t.CreateIndexBuffer(indexArray, 'uint16');
-    const result = t.run(indexBuffer, indexArray.length, 'uint16', indexOffset);
+    const indices: number[] = [1, 2, 0, 0, 0, 0, 0, 1, 3, 0];
+    const indexBuffer = t.CreateIndexBuffer(indices, 'uint16');
+    const result = t.run(indexBuffer, indices.length, 'uint16', indexOffset);
 
     const expectedTextureValues = t.CreateExpectedUint8Array(_expectedShape);
     t.expectContents(result, expectedTextureValues);
@@ -310,9 +319,9 @@ g.test('index_format,uint32')
     // If this is interpreted as uint16, then it would be 0, 1, 0, ... and would draw nothing.
     // And the index buffer size - offset must be not less than the size required by triangle
     // list, otherwise it also render nothing.
-    const indexArray = new Uint32Array([1, 2, 0, 0, 0, 0, 0, 1, 3, 0]);
-    const indexBuffer = t.CreateIndexBuffer(indexArray, 'uint32');
-    const result = t.run(indexBuffer, indexArray.length, 'uint32', indexOffset);
+    const indices: number[] = [1, 2, 0, 0, 0, 0, 0, 1, 3, 0];
+    const indexBuffer = t.CreateIndexBuffer(indices, 'uint32');
+    const result = t.run(indexBuffer, indices.length, 'uint32', indexOffset);
 
     const expectedTextureValues = t.CreateExpectedUint8Array(_expectedShape);
     t.expectContents(result, expectedTextureValues);
@@ -352,15 +361,8 @@ g.test('primitive_restart')
       indices = [0, 1, -1, 2, 3, 3];
     }
 
-    let indexArray: Uint16Array | Uint32Array;
-    if (indexFormat === 'uint16') {
-      indexArray = new Uint16Array(indices);
-    } else {
-      indexArray = new Uint32Array(indices);
-    }
-
-    const indexBuffer = t.CreateIndexBuffer(indexArray, indexFormat);
-    const result = t.run(indexBuffer, indexArray.length, indexFormat, 0, primitiveTopology);
+    const indexBuffer = t.CreateIndexBuffer(indices, indexFormat);
+    const result = t.run(indexBuffer, indices.length, indexFormat, 0, primitiveTopology);
 
     const expectedTextureValues = t.CreateExpectedUint8Array(_expectedShape);
     t.expectContents(result, expectedTextureValues);
