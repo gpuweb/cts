@@ -8,14 +8,16 @@ import * as express from 'express';
 import * as morgan from 'morgan';
 import * as portfinder from 'portfinder';
 
-import { makeListing } from '../src/common/tools/crawl.js';
+import { makeListing } from './crawl.js';
 
 // Make sure that makeListing doesn't cache imported spec files. See crawl().
 process.env.STANDALONE_DEV_SERVER = '1';
 
+const srcDir = path.resolve(__dirname, '../../');
+
 // Import the project's babel.config.js. We'll use the same config for the runtime compiler.
 const babelConfig = {
-  ...require(path.resolve(__dirname, '../babel.config.js'))({
+  ...require(path.resolve(srcDir, '../babel.config.js'))({
     cache: () => {
       /* not used */
     },
@@ -24,10 +26,10 @@ const babelConfig = {
 };
 
 // Caches for the generated listing file and compiled TS sources to speed up reloads.
+// Keyed by suite name
 const listingCache = new Map<string, string>();
+// Keyed by the path to the .ts file, without src/
 const compileCache = new Map<string, string>();
-
-const srcDir = path.resolve(__dirname, '../src');
 
 console.log('Watching changes in', srcDir);
 const watcher = chokidar.watch(srcDir, {
@@ -49,7 +51,10 @@ function dirtyCompileCache(absPath: string, stats?: fs.Stats) {
 }
 
 /**
- * Handler to dirty the listing cache for directory changes and .spec.ts changes.
+ * Handler to dirty the listing cache for:
+ *  - Directory changes
+ *  - .spec.ts changes
+ *  - README.txt changes
  * Also dirties the compile cache for changed files.
  */
 function dirtyListingAndCompileCache(absPath: string, stats?: fs.Stats) {
@@ -58,7 +63,14 @@ function dirtyListingAndCompileCache(absPath: string, stats?: fs.Stats) {
   const segments = relPath.split(path.sep);
   // The listing changes if the directories change, or if a .spec.ts file is added/removed.
   const listingChange =
-    (path.extname(relPath) === '' || relPath.endsWith('.spec.ts')) && segments.length > 0;
+    // A directory or a file with no extension that we can't stat.
+    // (stat doesn't work for deletions)
+    ((path.extname(relPath) === '' && (stats === undefined || !stats.isFile())) ||
+      // A spec file
+      relPath.endsWith('.spec.ts') ||
+      // A README.txt
+      path.basename(relPath, 'txt') === 'README') &&
+    segments.length > 0;
   if (listingChange) {
     const suite = segments[0];
     if (listingCache.has(suite)) {
@@ -96,11 +108,7 @@ app.get('/out/:suite/listing.js', async (req, res, next) => {
 
   try {
     const listing = await makeListing(path.resolve(srcDir, suite, 'listing.ts'));
-    const result = `export const listing = Promise.resolve(${JSON.stringify(
-      listing,
-      undefined,
-      2
-    )})`;
+    const result = `export const listing = ${JSON.stringify(listing, undefined, 2)}`;
 
     listingCache.set(suite, result);
     res.setHeader('Content-Type', 'application/javascript');
@@ -123,6 +131,7 @@ app.get('/out/**/*.js', async (req, res, next) => {
 
   try {
     const result = await babel.transformFileAsync(absPath, babelConfig);
+    console.log(result.map);
     if (result && result.code) {
       compileCache.set(tsUrl, result.code);
 
