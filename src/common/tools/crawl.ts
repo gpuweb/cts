@@ -32,7 +32,14 @@ export async function crawl(suite: string): Promise<TestSuiteListingEntry[]> {
       const filepathWithoutExtension = f.substring(0, f.length - specFileSuffix.length);
       const filename = `../../../${suiteDir}/${filepathWithoutExtension}.spec.js`;
 
-      const mod = (await import(filename)) as SpecFile;
+      let mod: SpecFile;
+      if (process.env.STANDALONE_DEV_SERVER) {
+        mod = require(filename) as SpecFile;
+        // Delete the cache so that changes to the file are picked up.
+        delete require.cache[require.resolve(filename)];
+      } else {
+        mod = (await import(filename)) as SpecFile;
+      }
       assert(mod.description !== undefined, 'Test spec file missing description: ' + filename);
       assert(mod.g !== undefined, 'Test spec file missing TestGroup definition: ' + filename);
 

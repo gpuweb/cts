@@ -75,6 +75,20 @@ npm install
 npx grunt  # show available grunt commands
 ```
 
+### Dev Server
+
+To start the development server, use:
+
+```sh
+npm run dev
+```
+
+Then, browse to the standalone test runner at `http://localhost:8080/standalone/`. If port 8080 isn't available, the server will print what port it is using to the console.
+
+The server will compile the test suite listings and Typescript sources upon request so that tests can be developed without a build step. It also watches the `src/` directory for changes so that after saving changes to a `.ts` file, changes are visible in the standalone runner upon page reload.
+
+Note: The first load of a test suite may take some time as generating the test suite listing can take a few seconds.
+
 ### Build
 
 The project builds into two directories:

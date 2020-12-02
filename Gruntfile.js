@@ -70,16 +70,6 @@ module.exports = function (grunt) {
       }
     },
 
-    watch: {
-      src: {
-        files: ['src/**/*'],
-        tasks: ['build-standalone', 'ts:check', 'run:lint'],
-        options: {
-          spawn: false,
-        }
-      }
-    },
-
     copy: {
       'out-wpt-generated': {
         files: [
@@ -101,19 +91,6 @@ module.exports = function (grunt) {
         host: '127.0.0.1',
         cache: -1,
       },
-      'background': {
-        root: '.',
-        port: 8080,
-        host: '127.0.0.1',
-        cache: -1,
-        runInBackground: true,
-        logFn(req, res, error) {
-          // Only log errors to not spam the console.
-          if (error) {
-            console.error(error);
-          }
-        },
-      },
     },
 
     ts: {
@@ -131,17 +108,6 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-http-server');
   grunt.loadNpmTasks('grunt-run');
   grunt.loadNpmTasks('grunt-ts');
-  grunt.loadNpmTasks('grunt-contrib-watch');
-
-  grunt.event.on('watch', (action, filepath) => {
-    const buildArgs = grunt.config(['run', 'build-out', 'args']);
-    buildArgs[buildArgs.length - 1] = filepath;
-    grunt.config(['run', 'build-out', 'args'], buildArgs);
-
-    const lintArgs = grunt.config(['run', 'lint', 'args']);
-    lintArgs[lintArgs.length - 1] = filepath;
-    grunt.config(['run', 'lint', 'args'], lintArgs);
-  });
 
   const helpMessageTasks = [];
   function registerTaskAndAddToHelp(name, desc, deps) {
@@ -204,12 +170,6 @@ module.exports = function (grunt) {
   registerTaskAndAddToHelp('check', 'Just typecheck', [
     'set-quiet-mode',
     'ts:check',
-  ]);
-
-  registerTaskAndAddToHelp('dev', 'Start the dev server, and watch for changes', [
-    'build-standalone',
-    'http-server:background',
-    'watch',
   ]);
 
   registerTaskAndAddToHelp('serve', 'Serve out/ on 127.0.0.1:8080', ['http-server:.']);
