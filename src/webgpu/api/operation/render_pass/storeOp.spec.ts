@@ -35,7 +35,7 @@ import {
   kSizedDepthStencilFormats,
 } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { PerTexelComponent } from '../../../util/texture/texelData.js';
+import { PerTexelComponent } from '../../../util/texture/texel_data.js';
 
 // Test with a zero and non-zero mip.
 const kMipLevel: number[] = [0, 1];

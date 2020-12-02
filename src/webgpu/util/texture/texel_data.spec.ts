@@ -2,7 +2,7 @@ export const description = 'Test helpers for texel data produce the expected dat
 
 import { params, poptions } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { unreachable, assert } from '../../../common/framework/util/util.js';
+import { assert } from '../../../common/framework/util/util.js';
 import {
   kEncodableTextureFormats,
   kEncodableTextureFormatInfo,
@@ -10,11 +10,13 @@ import {
 } from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 
-import { getTexelDataRepresentation } from './texelData.js';
+import {
+  kTexelRepresentationInfo,
+  getSingleDataType,
+  getComponentReadbackTraits,
+} from './texel_data.js';
 
 export const g = makeTestGroup(GPUTest);
-
-let ReadbackTypedArray: Float32ArrayConstructor | Int32ArrayConstructor | Uint32ArrayConstructor;
 
 function doTest(
   t: GPUTest & {
@@ -33,8 +35,8 @@ function doTest(
     return { R, G, B, A };
   })();
 
-  const rep = getTexelDataRepresentation(format);
-  const texelData = rep.packData(componentData);
+  const rep = kTexelRepresentationInfo[format];
+  const texelData = rep.pack(componentData);
   const texture = t.device.createTexture({
     format,
     size: [1, 1, 1],
@@ -50,23 +52,7 @@ function doTest(
     [1]
   );
 
-  let shaderType: 'i32' | 'u32' | 'f32';
-  switch (kEncodableTextureFormatInfo[format].componentType) {
-    case 'sint':
-      ReadbackTypedArray = Int32Array;
-      shaderType = 'i32';
-      break;
-    case 'uint':
-      ReadbackTypedArray = Uint32Array;
-      shaderType = 'u32';
-      break;
-    case 'float':
-      ReadbackTypedArray = Float32Array;
-      shaderType = 'f32';
-      break;
-    default:
-      unreachable();
-  }
+  const { ReadbackTypedArray, shaderType } = getComponentReadbackTraits(getSingleDataType(format));
 
   const shader = `
   [[set(0), binding(0)]] var<uniform_constant> tex : texture_2d<${shaderType}>;
@@ -141,7 +127,7 @@ function makeParam(
   format: EncodableTextureFormat,
   fn: (bitLength: number, index: number) => number
 ) {
-  const rep = getTexelDataRepresentation(format);
+  const rep = kTexelRepresentationInfo[format];
   return {
     R: rep.componentInfo.R ? fn(rep.componentInfo.R.bitLength, 0) : undefined,
     G: rep.componentInfo.G ? fn(rep.componentInfo.G.bitLength, 1) : undefined,
@@ -158,7 +144,7 @@ g.test('unorm_texel_data_in_shader')
         return (
           kEncodableTextureFormatInfo[format].copyDst &&
           kEncodableTextureFormatInfo[format].color &&
-          kEncodableTextureFormatInfo[format].dataType === 'unorm'
+          getSingleDataType(format) === 'unorm'
         );
       })
       .expand(({ format }) => {
@@ -189,7 +175,7 @@ g.test('snorm_texel_data_in_shader')
         return (
           kEncodableTextureFormatInfo[format].copyDst &&
           kEncodableTextureFormatInfo[format].color &&
-          kEncodableTextureFormatInfo[format].dataType === 'snorm'
+          getSingleDataType(format) === 'snorm'
         );
       })
       .expand(({ format }) => {
@@ -223,7 +209,7 @@ g.test('uint_texel_data_in_shader')
         return (
           kEncodableTextureFormatInfo[format].copyDst &&
           kEncodableTextureFormatInfo[format].color &&
-          kEncodableTextureFormatInfo[format].dataType === 'uint'
+          getSingleDataType(format) === 'uint'
         );
       })
       .expand(({ format }) => {
@@ -254,7 +240,7 @@ g.test('sint_texel_data_in_shader')
         return (
           kEncodableTextureFormatInfo[format].copyDst &&
           kEncodableTextureFormatInfo[format].color &&
-          kEncodableTextureFormatInfo[format].dataType === 'sint'
+          getSingleDataType(format) === 'sint'
         );
       })
       .expand(({ format }) => {
@@ -287,7 +273,7 @@ g.test('float_texel_data_in_shader')
         return (
           kEncodableTextureFormatInfo[format].copyDst &&
           kEncodableTextureFormatInfo[format].color &&
-          kEncodableTextureFormatInfo[format].dataType === 'float'
+          getSingleDataType(format) === 'float'
         );
       })
       .expand(({ format }) => {
@@ -322,7 +308,7 @@ g.test('ufloat_texel_data_in_shader')
         return (
           kEncodableTextureFormatInfo[format].copyDst &&
           kEncodableTextureFormatInfo[format].color &&
-          kEncodableTextureFormatInfo[format].dataType === 'ufloat'
+          getSingleDataType(format) === 'ufloat'
         );
       })
       .expand(({ format }) => {

@@ -7,7 +7,7 @@ import { makeTestGroup } from '../../common/framework/test_group.js';
 import { unreachable } from '../../common/framework/util/util.js';
 import { kUncompressedTextureFormatInfo, UncompressedTextureFormat } from '../capability_info.js';
 import { GPUTest } from '../gpu_test.js';
-import { getTexelDataRepresentation } from '../util/texture/texelData.js';
+import { kTexelRepresentationInfo } from '../util/texture/texel_data.js';
 
 function calculateRowPitch(width: number, bytesPerPixel: number): number {
   const bytesPerRow = width * bytesPerPixel;
@@ -143,37 +143,26 @@ got [${failedByteActualValues.join(', ')}]`;
 
     // None of the dst texture format is 'uint' or 'sint', so we can always use float value.
     if (!entry.has(color)) {
+      const rep = kTexelRepresentationInfo[format];
       let pixels;
       switch (color) {
         case Color.Red:
-          pixels = new Uint8Array(
-            getTexelDataRepresentation(format).getBytes({ R: 1.0, G: 0, B: 0, A: 1.0 })
-          );
+          pixels = new Uint8Array(rep.pack(rep.encode({ R: 1.0, G: 0, B: 0, A: 1.0 })));
           break;
         case Color.Green:
-          pixels = new Uint8Array(
-            getTexelDataRepresentation(format).getBytes({ R: 0, G: 1.0, B: 0, A: 1.0 })
-          );
+          pixels = new Uint8Array(rep.pack(rep.encode({ R: 0, G: 1.0, B: 0, A: 1.0 })));
           break;
         case Color.Blue:
-          pixels = new Uint8Array(
-            getTexelDataRepresentation(format).getBytes({ R: 0, G: 0, B: 1.0, A: 1.0 })
-          );
+          pixels = new Uint8Array(rep.pack(rep.encode({ R: 0, G: 0, B: 1.0, A: 1.0 })));
           break;
         case Color.White:
-          pixels = new Uint8Array(
-            getTexelDataRepresentation(format).getBytes({ R: 0, G: 0, B: 0, A: 1.0 })
-          );
+          pixels = new Uint8Array(rep.pack(rep.encode({ R: 0, G: 0, B: 0, A: 1.0 })));
           break;
         case Color.OpaqueBlack:
-          pixels = new Uint8Array(
-            getTexelDataRepresentation(format).getBytes({ R: 1.0, G: 1.0, B: 1.0, A: 1.0 })
-          );
+          pixels = new Uint8Array(rep.pack(rep.encode({ R: 1.0, G: 1.0, B: 1.0, A: 1.0 })));
           break;
         case Color.TransparentBlack:
-          pixels = new Uint8Array(
-            getTexelDataRepresentation(format).getBytes({ R: 1.0, G: 1.0, B: 1.0, A: 0 })
-          );
+          pixels = new Uint8Array(rep.pack(rep.encode({ R: 1.0, G: 1.0, B: 1.0, A: 0 })));
           break;
         default:
           unreachable();

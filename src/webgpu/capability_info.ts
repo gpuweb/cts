@@ -112,52 +112,50 @@ export const kRegularTextureFormatInfo: {
     readonly bytesPerBlock: number;
     readonly blockWidth: 1;
     readonly blockHeight: 1;
-    readonly dataType: TextureDataType;
-    readonly componentType: GPUTextureComponentType;
   } & TextureFormatInfo;
 } = /* prettier-ignore */ {
   // 8-bit formats
-  'r8unorm':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1, dataType:  'unorm', componentType: 'float' },
-  'r8snorm':                { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1, dataType:  'snorm', componentType: 'float' },
-  'r8uint':                 { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1, dataType:   'uint', componentType:  'uint' },
-  'r8sint':                 { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1, dataType:   'sint', componentType:  'sint' },
+  'r8unorm':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1, },
+  'r8snorm':                { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1, },
+  'r8uint':                 { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1, },
+  'r8sint':                 { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1, },
   // 16-bit formats
-  'r16uint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1, dataType:   'uint', componentType:  'uint' },
-  'r16sint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1, dataType:   'sint', componentType:  'sint' },
-  'r16float':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1, dataType:  'float', componentType: 'float' },
-  'rg8unorm':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1, dataType:  'unorm', componentType: 'float' },
-  'rg8snorm':               { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1, dataType:  'snorm', componentType: 'float' },
-  'rg8uint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1, dataType:   'uint', componentType:  'uint' },
-  'rg8sint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1, dataType:   'sint', componentType:  'sint' },
+  'r16uint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
+  'r16sint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
+  'r16float':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
+  'rg8unorm':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
+  'rg8snorm':               { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
+  'rg8uint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
+  'rg8sint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
   // 32-bit formats
-  'r32uint':                { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:   'uint', componentType:  'uint' },
-  'r32sint':                { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:   'sint', componentType:  'sint' },
-  'r32float':               { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:  'float', componentType: 'float' },
-  'rg16uint':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:   'uint', componentType:  'uint' },
-  'rg16sint':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:   'sint', componentType:  'sint' },
-  'rg16float':              { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:  'float', componentType: 'float' },
-  'rgba8unorm':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:  'unorm', componentType: 'float' },
-  'rgba8unorm-srgb':        { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:  'unorm', componentType: 'float' },
-  'rgba8snorm':             { renderable: false, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:   'snorm', componentType: 'float' },
-  'rgba8uint':              { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:   'uint', componentType:  'uint' },
-  'rgba8sint':              { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:   'sint', componentType:  'sint' },
-  'bgra8unorm':             { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:  'unorm', componentType: 'float' },
-  'bgra8unorm-srgb':        { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:  'unorm', componentType: 'float' },
+  'r32uint':                { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'r32sint':                { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'r32float':               { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rg16uint':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rg16sint':               { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rg16float':              { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rgba8unorm':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rgba8unorm-srgb':        { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rgba8snorm':             { renderable: false, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rgba8uint':              { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rgba8sint':              { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'bgra8unorm':             { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'bgra8unorm-srgb':        { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
   // Packed 32-bit formats
-  'rgb10a2unorm':           { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:  'unorm', componentType: 'float' },
-  'rg11b10ufloat':          { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType: 'ufloat', componentType: 'float' },
-  'rgb9e5ufloat':           { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType: 'ufloat', componentType: 'float' },
+  'rgb10a2unorm':           { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rg11b10ufloat':          { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
+  'rgb9e5ufloat':           { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
   // 64-bit formats
-  'rg32uint':               { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1, dataType:   'uint', componentType:  'uint' },
-  'rg32sint':               { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1, dataType:   'sint', componentType:  'sint' },
-  'rg32float':              { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1, dataType:  'float', componentType: 'float' },
-  'rgba16uint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1, dataType:   'uint', componentType:  'uint' },
-  'rgba16sint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1, dataType:   'sint', componentType:  'sint' },
-  'rgba16float':            { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1, dataType:  'float', componentType: 'float' },
+  'rg32uint':               { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1 },
+  'rg32sint':               { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1 },
+  'rg32float':              { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1 },
+  'rgba16uint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1 },
+  'rgba16sint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1 },
+  'rgba16float':            { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock:  8, blockWidth: 1, blockHeight: 1 },
   // 128-bit formats
-  'rgba32uint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 1, blockHeight: 1, dataType:   'uint', componentType:  'uint' },
-  'rgba32sint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 1, blockHeight: 1, dataType:   'sint', componentType:  'sint' },
-  'rgba32float':            { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 1, blockHeight: 1, dataType:  'float', componentType: 'float' },
+  'rgba32uint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 1, blockHeight: 1 },
+  'rgba32sint':             { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 1, blockHeight: 1 },
+  'rgba32float':            { renderable:  true, color:  true, depth: false, stencil: false, storage:  true, copySrc:  true, copyDst:  true, bytesPerBlock: 16, blockWidth: 1, blockHeight: 1 },
 } as const;
 export const kRegularTextureFormats = keysOf(kRegularTextureFormatInfo);
 
@@ -168,11 +166,9 @@ export const kSizedDepthStencilFormatInfo: {
     readonly bytesPerBlock: number;
     readonly blockWidth: 1;
     readonly blockHeight: 1;
-    readonly dataType: TextureDataType;
-    readonly componentType: GPUTextureComponentType;
   } & TextureFormatInfo;
 } = /* prettier-ignore */ {
-  'depth32float': { renderable:  true, color: false, depth:  true, stencil: false, storage: false, copySrc:  true, copyDst: false, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1, dataType:  'float', componentType: 'float' },
+  'depth32float': { renderable:  true, color: false, depth:  true, stencil: false, storage: false, copySrc:  true, copyDst: false, bytesPerBlock:  4, blockWidth: 1, blockHeight: 1 },
 };
 export const kSizedDepthStencilFormats = keysOf(kSizedDepthStencilFormatInfo);
 

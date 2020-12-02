@@ -1,7 +1,7 @@
 import { assert } from '../../../../../common/framework/util/util.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { mipSize } from '../../../../util/texture/subresource.js';
-import { CheckContents } from '../texture_zero_init.spec.js';
+import { CheckContents } from '../texture_zero.js';
 
 function makeFullscreenVertexModule(device: GPUDevice) {
   return device.createShaderModule({

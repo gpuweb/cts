@@ -23,7 +23,7 @@ import { GPUConst } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { createTextureUploadBuffer } from '../../../util/texture/layout.js';
 import { BeginEndRange, mipSize, SubresourceRange } from '../../../util/texture/subresource.js';
-import { PerTexelComponent, getTexelDataRepresentation } from '../../../util/texture/texelData.js';
+import { PerTexelComponent, kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
 
 export enum UninitializeMethod {
   Creation = 'Creation', // The texture was just created. It is uninitialized.
@@ -346,9 +346,8 @@ export class TextureZeroInitTest extends GPUTest {
       firstSubresource.level
     );
 
-    const texelData = new Uint8Array(
-      getTexelDataRepresentation(format).getBytes(this.stateToTexelComponents[state])
-    );
+    const rep = kTexelRepresentationInfo[format];
+    const texelData = new Uint8Array(rep.pack(rep.encode(this.stateToTexelComponents[state])));
     const { buffer, bytesPerRow, rowsPerImage } = createTextureUploadBuffer(
       texelData,
       this.device,
