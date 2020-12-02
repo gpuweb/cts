@@ -1,22 +1,13 @@
-export const description = `
-copyTextureToTexture tests.
-
-Test Plan:
-* Validate the correctness of the copy by filling the srcTexture with testable data and any format that is
-  supported by WebGPU, doing CopyTextureToTexture() copy, and verifying the content of the whole dstTexture:
-  Copy {1 texel block, part of, the whole} srcTexture to the dstTexture {with, without} a non-zero valid
-  srcOffset that
-  - covers the whole dstTexture subresource
-  - covers the corners of the dstTexture
-  - doesn't cover any texels that are on the edge of the dstTexture
-  - covers the mipmap level > 0 
-  - covers {one, multiple} 2D texture array slices
-`;
+export const description = 'copyTexturetoTexture operation tests';
 
 import { poptions, params } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/framework/util/util.js';
-import { kAllTextureFormatInfo, kRegularTextureFormats } from '../../../capability_info.js';
+import {
+  kSizedTextureFormatInfo,
+  kRegularTextureFormats,
+  SizedTextureFormat,
+} from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { align } from '../../../util/math.js';
 import { physicalMipSize } from '../../../util/texture/subresource.js';
@@ -24,19 +15,19 @@ import { physicalMipSize } from '../../../util/texture/subresource.js';
 class F extends GPUTest {
   GetInitialDataPerMipLevel(
     textureSize: GPUExtent3DDict,
-    format: GPUTextureFormat,
+    format: SizedTextureFormat,
     mipLevel: number
   ): Uint8Array {
     // TODO(jiawei.shao@intel.com): support 3D textures
     const textureSizeAtLevel = physicalMipSize(textureSize, format, '2d', mipLevel);
-    const bytesPerBlock = kAllTextureFormatInfo[format].bytesPerBlock;
-    assert(bytesPerBlock !== undefined);
+    const bytesPerBlock = kSizedTextureFormatInfo[format].bytesPerBlock;
+    const blockWidthInTexel = kSizedTextureFormatInfo[format].blockWidth;
+    const blockHeightInTexel = kSizedTextureFormatInfo[format].blockHeight;
+    const blocksPerSubresource =
+      (textureSizeAtLevel.width / blockWidthInTexel) *
+      (textureSizeAtLevel.height / blockHeightInTexel);
 
-    const byteSize =
-      bytesPerBlock *
-      textureSizeAtLevel.width *
-      textureSizeAtLevel.height *
-      textureSizeAtLevel.depth;
+    const byteSize = bytesPerBlock * blocksPerSubresource * textureSizeAtLevel.depth;
     const initialData = new Uint8Array(new ArrayBuffer(byteSize));
 
     for (let i = 0; i < byteSize; ++i) {
@@ -50,6 +41,20 @@ export const g = makeTestGroup(F);
 
 // TODO(jiawei.shao@intel.com): support all WebGPU texture formats
 g.test('t2t_non_compressed_color_formats')
+  .desc(
+    `
+  Validate the correctness of the copy by filling the srcTexture with testable data and any non-compressed color format that is
+  supported by WebGPU, doing CopyTextureToTexture() copy, and verifying the content of the whole dstTexture
+
+    copy {1 texel block, part of, the whole} srcTexture to the dstTexture {with, without} a non-zero valid
+    srcOffset that
+    - covers the whole dstTexture subresource
+    - covers the corners of the dstTexture
+    - doesn't cover any texels that are on the edge of the dstTexture
+    - covers the mipmap level > 0
+    - covers {one, multiple} 2D texture array slices
+  `
+  )
   .params(
     params()
       .combine(
@@ -202,15 +207,17 @@ g.test('t2t_non_compressed_color_formats')
       '2d',
       srcCopyLevel
     );
-    const bytesPerBlock = kAllTextureFormatInfo[format].bytesPerBlock;
-    assert(bytesPerBlock !== undefined);
+    const bytesPerBlock = kSizedTextureFormatInfo[format].bytesPerBlock;
+    const blockWidth = kSizedTextureFormatInfo[format].blockWidth;
+    const blockHeight = kSizedTextureFormatInfo[format].blockHeight;
+    const srcBlocksPerRow = srcTextureSizeAtLevel.width / blockWidth;
+    const srcBlockRowsPerImage = srcTextureSizeAtLevel.height / blockHeight;
     t.device.defaultQueue.writeTexture(
       { texture: srcTexture, mipLevel: srcCopyLevel },
       initialSrcData,
       {
-        offset: 0,
-        bytesPerRow: srcTextureSizeAtLevel.width * bytesPerBlock,
-        rowsPerImage: srcTextureSizeAtLevel.height,
+        bytesPerRow: srcBlocksPerRow * bytesPerBlock,
+        rowsPerImage: srcBlockRowsPerImage,
       },
       srcTextureSizeAtLevel
     );
@@ -238,6 +245,7 @@ g.test('t2t_non_compressed_color_formats')
         Math.max(copyBoxOffsets.srcOffset.z, copyBoxOffsets.dstOffset.z),
       0
     );
+    assert(appliedCopyWidth % blockWidth === 0 && appliedCopyHeight % blockHeight === 0);
 
     const encoder = t.device.createCommandEncoder();
     encoder.copyTextureToTexture(
@@ -247,10 +255,12 @@ g.test('t2t_non_compressed_color_formats')
     );
 
     // Copy the whole content of dstTexture at dstCopyLevel to dstBuffer.
-    const bytesPerDstAlignedRow = align(dstTextureSizeAtLevel.width * bytesPerBlock, 256);
+    const dstBlocksPerRow = dstTextureSizeAtLevel.width / blockWidth;
+    const dstBlockRowsPerImage = dstTextureSizeAtLevel.height / blockHeight;
+    const bytesPerDstAlignedBlockRow = align(dstBlocksPerRow * bytesPerBlock, 256);
     const dstBufferSize =
-      (dstTextureSizeAtLevel.width * dstTextureSizeAtLevel.height - 1) * bytesPerDstAlignedRow +
-      align(dstTextureSizeAtLevel.width * bytesPerBlock, 4);
+      (dstBlocksPerRow * dstBlockRowsPerImage - 1) * bytesPerDstAlignedBlockRow +
+      align(dstBlocksPerRow * bytesPerBlock, 4);
     const dstBufferDesc: GPUBufferDescriptor = {
       size: dstBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
@@ -258,10 +268,10 @@ g.test('t2t_non_compressed_color_formats')
     const dstBuffer = t.device.createBuffer(dstBufferDesc);
 
     encoder.copyTextureToBuffer(
-      { texture: dstTexture, mipLevel: dstCopyLevel, origin: { x: 0, y: 0, z: 0 } },
+      { texture: dstTexture, mipLevel: dstCopyLevel },
       {
         buffer: dstBuffer,
-        bytesPerRow: bytesPerDstAlignedRow,
+        bytesPerRow: bytesPerDstAlignedBlockRow,
         rowsPerImage: dstTextureSizeAtLevel.height,
       },
       dstTextureSizeAtLevel
@@ -274,24 +284,40 @@ g.test('t2t_non_compressed_color_formats')
     const expectedDataWithPadding = new ArrayBuffer(dstBufferSize);
     const expectedUint8DataWithPadding = new Uint8Array(expectedDataWithPadding);
     const expectedUint8Data = new Uint8Array(initialSrcData);
+
+    const appliedCopyBlocksPerRow = appliedCopyWidth / blockWidth;
+    const appliedCopyBlockRowsPerImage = appliedCopyHeight / blockHeight;
+    const srcCopyOffsetInBlocks = {
+      x: copyBoxOffsets.srcOffset.x / blockWidth,
+      y: copyBoxOffsets.srcOffset.y / blockHeight,
+      z: copyBoxOffsets.srcOffset.z,
+    };
+    const dstCopyOffsetInBlocks = {
+      x: copyBoxOffsets.dstOffset.x / blockWidth,
+      y: copyBoxOffsets.dstOffset.y / blockHeight,
+      z: copyBoxOffsets.dstOffset.z,
+    };
+
     for (let z = 0; z < appliedCopyDepth; ++z) {
-      const srcOffsetZ = copyBoxOffsets.srcOffset.z + z;
-      const dstOffsetZ = copyBoxOffsets.dstOffset.z + z;
-      for (let y = 0; y < appliedCopyHeight; ++y) {
-        const srcOffsetY = copyBoxOffsets.srcOffset.y + y;
-        const dstOffsetY = copyBoxOffsets.dstOffset.y + y;
+      const srcOffsetZ = srcCopyOffsetInBlocks.z + z;
+      const dstOffsetZ = dstCopyOffsetInBlocks.z + z;
+      for (let y = 0; y < appliedCopyBlockRowsPerImage; ++y) {
+        const dstOffsetYInBlocks = dstCopyOffsetInBlocks.y + y;
         const expectedDataWithPaddingOffset =
-          bytesPerDstAlignedRow * (dstTextureSizeAtLevel.height * dstOffsetZ + dstOffsetY) +
-          copyBoxOffsets.dstOffset.x * bytesPerBlock;
+          bytesPerDstAlignedBlockRow * (dstBlockRowsPerImage * dstOffsetZ + dstOffsetYInBlocks) +
+          dstCopyOffsetInBlocks.x * bytesPerBlock;
+
+        const srcOffsetYInBlocks = srcCopyOffsetInBlocks.y + y;
         const expectedDataOffset =
           bytesPerBlock *
-            srcTextureSizeAtLevel.width *
-            (srcTextureSizeAtLevel.height * srcOffsetZ + srcOffsetY) +
-          copyBoxOffsets.srcOffset.x * bytesPerBlock;
+            srcBlocksPerRow *
+            (srcBlockRowsPerImage * srcOffsetZ + srcOffsetYInBlocks) +
+          srcCopyOffsetInBlocks.x * bytesPerBlock;
+
         expectedUint8DataWithPadding.set(
           expectedUint8Data.slice(
             expectedDataOffset,
-            expectedDataOffset + appliedCopyWidth * bytesPerBlock
+            expectedDataOffset + appliedCopyBlocksPerRow * bytesPerBlock
           ),
           expectedDataWithPaddingOffset
         );

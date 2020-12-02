@@ -83,6 +83,7 @@ export function physicalMipSize(
   level: number
 ): GPUExtent3DDict {
   assert(dimension === '2d');
+  assert(Math.max(size.width, size.height) >> level > 0);
 
   const virtualWidthAtLevel = Math.max(size.width >> level, 1);
   const virtualHeightAtLevel = Math.max(size.height >> level, 1);
