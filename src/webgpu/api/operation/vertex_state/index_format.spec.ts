@@ -190,24 +190,15 @@ class IndexFormatTest extends GPUTest {
   }
 
   CreateIndexBuffer(indices: number[], indexFormat: GPUIndexFormat): GPUBuffer {
-    let indexArray: Uint16Array | Uint32Array;
-    if (indexFormat === 'uint16') {
-      indexArray = new Uint16Array(indices);
-    } else {
-      indexArray = new Uint32Array(indices);
-    }
+    const typedArrayConstructor = { uint16: Uint16Array, uint32: Uint32Array }[indexFormat];
 
     const indexBuffer = this.device.createBuffer({
-      size: indexArray.byteLength,
+      size: indices.length * typedArrayConstructor.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.INDEX,
       mappedAtCreation: true,
     });
 
-    if (indexFormat === 'uint16') {
-      new Uint16Array(indexBuffer.getMappedRange()).set(indexArray);
-    } else {
-      new Uint32Array(indexBuffer.getMappedRange()).set(indexArray);
-    }
+    new typedArrayConstructor(indexBuffer.getMappedRange()).set(indices);
 
     indexBuffer.unmap();
     return indexBuffer;
