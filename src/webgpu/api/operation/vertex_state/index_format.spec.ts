@@ -5,10 +5,10 @@ non-strip topologies, to make sure those behave properly (and primitive restart 
 enabled/disabled) across backends. These tests will be important for gpuweb/gpuweb#1220.
 `;
 
-import { params, poptions } from '../../../common/framework/params_builder.js';
-import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { GPUTest } from '../../gpu_test.js';
-import { getTextureCopyLayout } from '../../util/texture/layout.js';
+import { params, poptions } from '../../../../common/framework/params_builder.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { GPUTest } from '../../../gpu_test.js';
+import { getTextureCopyLayout } from '../../../util/texture/layout.js';
 
 const kHeight = 4;
 const kWidth = 4;
