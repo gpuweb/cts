@@ -1,7 +1,9 @@
 export const description = `
-TODO: for each programmable pass encoder (compute pass, render pass, render bundle encoder):
-- try to stress state caching (setting different states multiple times in different orders) (bind
-  groups, pipeline) and run to make sure the right resources get read.
+Ensure state is set correctly. Tries to stress state caching (setting different states multiple
+times in different orders) for setBindGroup and setPipeline
+
+TODO: for each programmable pass encoder {compute pass, render pass, render bundle encoder}
+- try setting states multiple times in different orders, check state is correct in draw/dispatch.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
