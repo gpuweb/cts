@@ -12,8 +12,7 @@ TODO: review and make sure these notes are covered:
 
 import { params, poptions, pbool } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-
-import { ValidationTest } from './../../validation_test.js';
+import { ValidationTest } from '../../validation_test.js';
 
 class F extends ValidationTest {
   createIndexBuffer(): GPUBuffer {
