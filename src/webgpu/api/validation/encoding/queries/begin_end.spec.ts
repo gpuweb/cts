@@ -3,16 +3,16 @@ Validation for encoding begin/endable queries.
 
 TODO:
 - balance: {
-  - begin 0, end 1
-  - begin 1, end 0
-  - begin 1, end 1
-  - begin 2, end 2
-  - }
-  - x= {
-      - render pass + occlusion
-      - render pass + pipeline statistics
-      - compute pass + pipeline statistics
-      - }
+    - begin 0, end 1
+    - begin 1, end 0
+    - begin 1, end 1
+    - begin 2, end 2
+    - }
+    - x= {
+        - render pass + occlusion
+        - render pass + pipeline statistics
+        - compute pass + pipeline statistics
+        - }
 - nesting: test whether it's allowed to nest various types of queries
   (including writeTimestamp inside begin/endable queries).
 `;

@@ -5,7 +5,7 @@ export const description = `
   which checks they're equal and sends the bool to the fragment shader;
   (2) a fragment shader which writes the result out to a storage buffer
   (or renders a red/green fragment if we can't do fragmentStoresAndAtomics,
-  maybe with some depth or stencil test magic to do the && of all fragments).
+  maybe with some depth or stencil test magic to do the '&&' of all fragments).
     - Fill some GPUBuffers with testable data, e.g.
       [[1.0, 2.0, ...], [-1.0, -2.0, ...]], for use as vertex buffers.
     - With no/trivial indexing
@@ -28,10 +28,10 @@ export const description = `
                   [2, some large number (max if possible)]
              - Bind everything possible up to limits
                  - Also with maxed out attributes?
-             - &times;= all vertex formats
+             - x= all vertex formats
         - Data is fed into the shader correctly
             - Swap attribute order (should have no effect)
-            - Vertex formats &times; shader input types (should all be valid, I think?)
+            - Vertex formats x shader input types (should all be valid, I think?)
         - Maybe a test of one buffer with two attributes, with every possible
           pair of vertex formats
     - With indexing. For each index format:
