@@ -13,120 +13,70 @@ import { getTextureCopyLayout } from '../../../util/texture/layout.js';
 const kHeight = 4;
 const kWidth = 4;
 const kTextureFormat = 'bgra8unorm' as const;
-const kValidPixelColor = new Uint8Array([0x00, 0xff, 0x00, 0xff]); // green
-const kInvalidPixelColor = new Uint8Array([0x00, 0x00, 0x00, 0xff]); // black
+const kGreen = new Uint8Array([0x00, 0xff, 0x00, 0xff]); // green
+const kBlack = new Uint8Array([0x00, 0x00, 0x00, 0xff]); // black
 
-/**
- * The expected rendering in raster grids of 4x4 pixels:
- * Points:
- *  ------------
- *  |#        #|
- *  |          |
- *  |          |
- *  |#        #|
- *  ------------
- */
-const kPoints = /* prettier-ignore */ [
-  [1, 0 , 0 , 1],
-  [0, 0 , 0 , 0],
-  [0, 0 , 0 , 0],
-  [1, 0 , 0 , 1]
+type Raster4x4 = readonly [
+  readonly [0 | 1, 0 | 1, 0 | 1, 0 | 1],
+  readonly [0 | 1, 0 | 1, 0 | 1, 0 | 1],
+  readonly [0 | 1, 0 | 1, 0 | 1, 0 | 1],
+  readonly [0 | 1, 0 | 1, 0 | 1, 0 | 1]
 ];
 
-/**
- * Line:
- *  ------------
- *  |#         |
- *  |   #      |
- *  |      #   |
- *  |         #|
- *  ------------
- */
-const kLine = /* prettier-ignore */ [
-  [1, 0 , 0 , 0],
-  [0, 1 , 0 , 0],
-  [0, 0 , 1 , 0],
-  [0, 0 , 0 , 1]
+/** Expected 4x4 rasterization of 4 points. */
+const kPoints: Raster4x4 = [
+  [1, 0, 0, 1],
+  [0, 0, 0, 0],
+  [0, 0, 0, 0],
+  [1, 0, 0, 1],
 ];
 
-/**
- * XShape:
- *  ------------
- *  |#        #|
- *  |   #  #   |
- *  |   #  #   |
- *  |#        #|
- *  ------------
- */
-const kXShape = /* prettier-ignore */ [
-  [1, 0 , 0 , 1],
-  [0, 1 , 1 , 0],
-  [0, 1 , 1 , 0],
-  [1, 0 , 0 , 1]
+/** Expected 4x4 rasterization of a diagonal line. */
+const kLine: Raster4x4 = [
+  [1, 0, 0, 0],
+  [0, 1, 0, 0],
+  [0, 0, 1, 0],
+  [0, 0, 0, 1],
 ];
 
-/**
- * BottomLeftTriangle:
- *  ------------
- *  |          |
- *  |#         |
- *  |#  #      |
- *  |#  #  #   |
- *  ------------
- */
-const kBottomLeftTriangle = /* prettier-ignore */ [
-  [0, 0 , 0 , 0],
-  [1, 0 , 0 , 0],
-  [1, 1 , 0 , 0],
-  [1, 1 , 1 , 0]
+/** Expected 4x4 rasterization of two lines forming an X. */
+const kXShape: Raster4x4 = [
+  [1, 0, 0, 1],
+  [0, 1, 1, 0],
+  [0, 1, 1, 0],
+  [1, 0, 0, 1],
 ];
 
-/**
- * ConcaveShape:
- *  ------------
- *  |         #|
- *  |#     #  #|
- *  |#  #  #  #|
- *  |#  #  #  #|
- *  ------------
- */
-const kConcaveShape = /* prettier-ignore */ [
-  [0, 0 , 0 , 1],
-  [1, 0 , 1 , 1],
-  [1, 1 , 1 , 1],
-  [1, 1 , 1 , 1]
+/** Expected 4x4 rasterization of a bottom-left triangle. */
+const kBottomLeftTriangle: Raster4x4 = [
+  [0, 0, 0, 0],
+  [1, 0, 0, 0],
+  [1, 1, 0, 0],
+  [1, 1, 1, 0],
 ];
 
-/**
- * Square:
- *  ------------
- *  |#  #  #  #|
- *  |#  #  #  #|
- *  |#  #  #  #|
- *  |#  #  #  #|
- *  ------------
- */
-const kSquare = /* prettier-ignore */ [
-  [1, 1 , 1 , 1],
-  [1, 1 , 1 , 1],
-  [1, 1 , 1 , 1],
-  [1, 1 , 1 , 1]
+/** Expected 4x4 rasterization of two overlapping triangles in a concave shape. */
+const kConcaveShape: Raster4x4 = [
+  [0, 0, 0, 1],
+  [1, 0, 1, 1],
+  [1, 1, 1, 1],
+  [1, 1, 1, 1],
 ];
 
-/**
- * Nothing:
- *  ------------
- *  |          |
- *  |          |
- *  |          |
- *  |          |
- *  ------------
- */
-const kNothing = /* prettier-ignore */ [
-  [0, 0 , 0 , 0],
-  [0, 0 , 0 , 0],
-  [0, 0 , 0 , 0],
-  [0, 0 , 0 , 0]
+/** Expected 4x4 rasterization filling the whole quad. */
+const kSquare: Raster4x4 = [
+  [1, 1, 1, 1],
+  [1, 1, 1, 1],
+  [1, 1, 1, 1],
+  [1, 1, 1, 1],
+];
+
+/** Expected 4x4 rasterization with no pixels. */
+const kNothing: Raster4x4 = [
+  [0, 0, 0, 0],
+  [0, 0, 0, 0],
+  [0, 0, 0, 0],
+  [0, 0, 0, 0],
 ];
 
 const kPrimitiveTopologiesForRestart = [
@@ -255,18 +205,15 @@ class IndexFormatTest extends GPUTest {
     return result;
   }
 
-  CreateExpectedUint8Array(renderShape: number[][]): Uint8Array {
-    let texelValueBytes;
+  CreateExpectedUint8Array(renderShape: Raster4x4): Uint8Array {
     const arrayBuffer = new Uint8Array(byteLength);
     for (let row = 0; row < renderShape.length; row++) {
       for (let col = 0; col < renderShape[row].length; col++) {
-        if (renderShape[row][col] === 1) {
-          texelValueBytes = kValidPixelColor;
-        } else {
-          texelValueBytes = kInvalidPixelColor;
-        }
+        const texel: 0 | 1 = renderShape[row][col];
+        const texelValueBytes = texel === 1 ? kGreen : kBlack;
 
-        const byteOffset = row * bytesPerRow + col * texelValueBytes.byteLength;
+        const kBytesPerTexel = 4;
+        const byteOffset = row * bytesPerRow + col * kBytesPerTexel;
         arrayBuffer.set(texelValueBytes, byteOffset);
       }
     }
@@ -286,7 +233,8 @@ g.test('index_format,uint16')
   .fn(t => {
     const { indexOffset, _expectedShape } = t.params;
 
-    // If this is interpreted as uint32, it will have index 1 and 2 be both 0 and render nothing.
+    // If this is written as uint16 but interpreted as uint32, it will have index 1 and 2 be both 0
+    // and render nothing.
     // And the index buffer size - offset must be not less than the size required by triangle
     // list, otherwise it also render nothing.
     const indices: number[] = [1, 2, 0, 0, 0, 0, 0, 1, 3, 0];
