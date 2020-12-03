@@ -1,12 +1,12 @@
-# v-0031 - This fails because the runtime array must not be the store type of variable 'buf'.
+# v-0015: variable 's' store type is struct 'SArr' that has a runtime-sized member but its storage class is not 'storage'.
 
+type RTArr = [[stride (16)]] array<vec4<f32>>;
 [[block]]
-struct Foo {
-  [[offset (0)]] a : [[stride (4)]] array<f32>;
+struct SArr{
+  [[offset(0)]] data : RTArr;
 };
-[[set(0), binding(1)]] var<storage> buf: Foo;
 
 [[stage(vertex)]]
 fn main() -> void {
-  return;
+  var s : SArr;
 }

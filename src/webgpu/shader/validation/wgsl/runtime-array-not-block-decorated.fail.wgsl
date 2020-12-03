@@ -7,4 +7,5 @@ struct S{
 
 [[stage(vertex)]]
 fn main() -> void {
+  var <storage> x : S;
 }
