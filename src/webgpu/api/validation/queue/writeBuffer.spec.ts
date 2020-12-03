@@ -2,10 +2,11 @@ export const description = `
 Tests writeBuffer validation.
 
 - buffer missing usage flag
-- bufferOffset {ok, too large for buffer}
+- bufferOffset {ok, unaligned, too large for buffer}
 - dataOffset {ok, too large for data}
-- size {ok, too large for buffer}
-- size {ok, too large for data}
+- buffer size {ok, too small for copy}
+- data size {ok, too small for copy}
+- size {aligned, unaligned}
 - size unspecified; default {ok, too large for buffer}
 
 Note: destroyed buffer is tested in destroyed/.

@@ -1,7 +1,9 @@
 export const description = `
 TODO: check for duplication (render_pass/, etc.), plan, and implement. Notes:
 > - color attachments {zero, one, multiple}
->     - many different formats
+>     - many different formats (some are non-renderable)
+>     - is a view on a texture with multiple mip levels or array layers
+>     - two attachments use the same view, or views of {intersecting, disjoint} ranges
 >     - {without, with} resolve target
 >         - resolve format compatibility with multisampled format
 >     - {all possible load ops, load color {in range, negative, too large}}

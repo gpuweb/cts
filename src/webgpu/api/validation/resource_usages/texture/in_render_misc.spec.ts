@@ -2,7 +2,7 @@ export const description = `
 TODO:
 - 2 views: upon the same subresource, or different subresources of the same texture
     - texture usages in copies and in render pass
-    - consecutively set bind groups on the same index
+    - consecutively set bind groups on the same index (@Richard-Yunchao: Maybe I can combine this one with the above tests. The two bind groups can either have the same index or different indices.)
     - unused bind groups
 `;
 

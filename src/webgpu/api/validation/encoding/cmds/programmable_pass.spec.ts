@@ -13,6 +13,7 @@ TODO: check for duplication (setBindGroup.spec.ts, etc.), plan, and implement. N
 >         - x= {sequence, Uint32Array} overload
 >     - {none, compatible, incompatible} current pipeline (should have no effect without draw/dispatch)
 >     - iff minBufferBindingSize is specified, buffer size is correctly validated against it (make sure static offset + dynamic offset are both accounted for)
+>     - setBindGroup in different orders (e.g. 0,1,2 vs 2,0,1)
 >
 > - bind group state
 >     - x= {dispatch, all draws} (dispatch/draw should be size 0 to make sure validation still happens if no-op)
