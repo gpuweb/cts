@@ -14,6 +14,8 @@ function numericKeysOf<T>(obj: object): readonly T[] {
 
 // Buffers
 
+export const kBufferSizeAlignment = 4;
+
 export const kBufferUsageInfo: {
   readonly [k in GPUBufferUsage]: {};
 } = /* prettier-ignore */ {
@@ -102,19 +104,21 @@ type TextureFormatInfo = {
   // Add fields as needed
 };
 
+export type TextureDataType = 'uint' | 'sint' | 'unorm' | 'snorm' | 'float' | 'ufloat';
+
 export const kRegularTextureFormatInfo: {
   readonly [k in RegularTextureFormat]: {
-    color: true;
-    bytesPerBlock: number;
-    blockWidth: 1;
-    blockHeight: 1;
+    readonly color: true;
+    readonly bytesPerBlock: number;
+    readonly blockWidth: 1;
+    readonly blockHeight: 1;
   } & TextureFormatInfo;
 } = /* prettier-ignore */ {
   // 8-bit formats
-  'r8unorm':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1 },
-  'r8snorm':                { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1 },
-  'r8uint':                 { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1 },
-  'r8sint':                 { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1 },
+  'r8unorm':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1, },
+  'r8snorm':                { renderable: false, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1, },
+  'r8uint':                 { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1, },
+  'r8sint':                 { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  1, blockWidth: 1, blockHeight: 1, },
   // 16-bit formats
   'r16uint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },
   'r16sint':                { renderable:  true, color:  true, depth: false, stencil: false, storage: false, copySrc:  true, copyDst:  true, bytesPerBlock:  2, blockWidth: 1, blockHeight: 1 },

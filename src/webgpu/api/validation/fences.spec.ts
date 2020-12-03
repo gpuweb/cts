@@ -1,5 +1,21 @@
 export const description = `
 fences validation tests.
+
+TODO: Add some more tests/cases (may replace some existing tests), e.g.:
+  For fence values 0 < x < y < z:
+  - initialValue=0, signal(0)
+  - initialValue=x, signal(x)
+  - initialValue=x, signal(y)
+  - initialValue=y, signal(x)
+  - initialValue=x, signal(y), signal(y)
+  - initialValue=x, signal(y), signal(z), wait(z)
+  - initialValue=x, signal(z), signal(y)
+  - initialValue=x, wait(x)
+  - initialValue=y, wait(x)
+  - initialValue=x, wait(y)
+  - initialValue=x, signal(y), wait(x)
+  - initialValue=x, signal(y), wait(y)
+  - etc.
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
@@ -56,31 +72,37 @@ g.test('increasing_fence_value_by_more_than_1_succeeds').fn(async t => {
   await fence.onCompletion(6);
 });
 
+// TODO: Move these two tests to device_mismatched. Probably merge into one test.
+// Parameterize over whether another device is used, to test the control case.
 g.test('signal_a_fence_on_a_different_device_than_it_was_created_on_is_invalid').fn(async t => {
-  const fence = t.queue.createFence();
-
   const anotherDevice = await t.device.adapter.requestDevice();
   assert(anotherDevice !== null);
-  const anotherQueue = anotherDevice.defaultQueue;
+  const fence = anotherDevice.defaultQueue.createFence();
 
   t.expectValidationError(() => {
-    anotherQueue.signal(fence, 2);
+    t.queue.signal(fence, 2);
   });
 });
 
 g.test('signal_a_fence_on_a_different_device_does_not_update_fence_signaled_value').fn(async t => {
-  const fence = t.queue.createFence({ initialValue: 1 });
-
   const anotherDevice = await t.device.adapter.requestDevice();
   assert(anotherDevice !== null);
-  const anotherQueue = anotherDevice.defaultQueue;
+  const fence = anotherDevice.defaultQueue.createFence({ initialValue: 1 });
 
   t.expectValidationError(() => {
-    anotherQueue.signal(fence, 2);
+    t.queue.signal(fence, 2);
   });
 
   t.expect(fence.getCompletedValue() === 1);
 
-  t.queue.signal(fence, 2);
+  anotherDevice.pushErrorScope('validation');
+
+  anotherDevice.defaultQueue.signal(fence, 2);
   await fence.onCompletion(2);
+  t.expect(fence.getCompletedValue() === 2);
+
+  const gpuValidationError = await anotherDevice.popErrorScope();
+  if (gpuValidationError instanceof GPUValidationError) {
+    t.fail(`Captured validation error - ${gpuValidationError.message}`);
+  }
 });

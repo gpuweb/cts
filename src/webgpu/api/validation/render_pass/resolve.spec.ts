@@ -26,8 +26,7 @@ export const description = `API Validation Tests for RenderPass Resolve.
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUConst } from '../../../constants.js';
-
-import { ValidationTest } from './../validation_test.js';
+import { ValidationTest } from '../validation_test.js';
 
 const kNumColorAttachments = 4;
 

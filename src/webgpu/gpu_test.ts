@@ -2,7 +2,7 @@ import { Fixture } from '../common/framework/fixture.js';
 import { attemptGarbageCollection } from '../common/framework/util/collect_garbage.js';
 import { assert } from '../common/framework/util/util.js';
 
-import { EncodableTextureFormat } from './capability_info.js';
+import { EncodableTextureFormat, SizedTextureFormat } from './capability_info.js';
 import { DevicePool, DeviceProvider, TestOOMedShouldAttemptGC } from './util/device_pool.js';
 import { align } from './util/math.js';
 import {
@@ -10,7 +10,7 @@ import {
   getTextureCopyLayout,
   LayoutOptions as TextureLayoutOptions,
 } from './util/texture/layout.js';
-import { PerTexelComponent, getTexelDataRepresentation } from './util/texture/texelData.js';
+import { PerTexelComponent, kTexelRepresentationInfo } from './util/texture/texel_data.js';
 
 type TypedArrayBufferView =
   | Uint8Array
@@ -167,6 +167,37 @@ export class GPUTest extends Fixture {
     });
   }
 
+  // We can expand this function in order to support multiple valid values or two mixed vectors
+  // if needed. See the discussion at https://github.com/gpuweb/cts/pull/384#discussion_r533101429
+  expectContentsTwoValidValues(
+    src: GPUBuffer,
+    expected1: TypedArrayBufferView,
+    expected2: TypedArrayBufferView,
+    srcOffset: number = 0
+  ): void {
+    assert(expected1.byteLength === expected2.byteLength);
+    const { dst, begin, end } = this.createAlignedCopyForMapRead(
+      src,
+      expected1.byteLength,
+      srcOffset
+    );
+
+    this.eventualAsyncExpectation(async niceStack => {
+      const constructor = expected1.constructor as TypedArrayBufferViewConstructor;
+      await dst.mapAsync(GPUMapMode.READ);
+      const actual = new constructor(dst.getMappedRange());
+      const check1 = this.checkBuffer(actual.subarray(begin, end), expected1);
+      const check2 = this.checkBuffer(actual.subarray(begin, end), expected2);
+      if (check1 !== undefined && check2 !== undefined) {
+        niceStack.message = `Expected one of the following two checks to succeed:
+  - ${check1}
+  - ${check2}`;
+        this.rec.expectationFailed(niceStack);
+      }
+      dst.destroy();
+    });
+  }
+
   expectBuffer(actual: Uint8Array, exp: Uint8Array): void {
     const check = this.checkBuffer(actual, exp);
     if (check !== undefined) {
@@ -263,7 +294,8 @@ got [${failedByteActualValues.join(', ')}]`;
       size,
       layout
     );
-    const expectedTexelData = getTexelDataRepresentation(format).getBytes(exp);
+    const rep = kTexelRepresentationInfo[format];
+    const expectedTexelData = rep.pack(rep.encode(exp));
 
     const buffer = this.device.createBuffer({
       size: byteLength,
@@ -280,6 +312,44 @@ got [${failedByteActualValues.join(', ')}]`;
     const arrayBuffer = new ArrayBuffer(byteLength);
     fillTextureDataWithTexelValue(expectedTexelData, format, dimension, arrayBuffer, size, layout);
     this.expectContents(buffer, new Uint8Array(arrayBuffer));
+  }
+
+  // TODO: Add check for values of depth/stencil, probably through sampling of shader
+  // TODO(natashalee): Can refactor this and expectSingleColor to use a similar base expect
+  expectSinglePixelIn2DTexture(
+    src: GPUTexture,
+    format: SizedTextureFormat,
+    { x, y }: { x: number; y: number },
+    {
+      exp,
+      slice = 0,
+      layout,
+    }: {
+      exp: Uint8Array;
+      slice?: number;
+      layout?: TextureLayoutOptions;
+    }
+  ): void {
+    const { byteLength, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
+      format,
+      '2d',
+      [1, 1, 1],
+      layout
+    );
+    const buffer = this.device.createBuffer({
+      size: byteLength,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    });
+
+    const commandEncoder = this.device.createCommandEncoder();
+    commandEncoder.copyTextureToBuffer(
+      { texture: src, mipLevel: layout?.mipLevel, origin: { x, y, z: slice } },
+      { buffer, bytesPerRow, rowsPerImage },
+      mipSize
+    );
+    this.queue.submit([commandEncoder.finish()]);
+
+    this.expectContents(buffer, exp);
   }
 
   expectGPUError<R>(filter: GPUErrorFilter, fn: () => R, shouldError: boolean = true): R {
@@ -318,5 +388,18 @@ got [${failedByteActualValues.join(', ')}]`;
     });
 
     return returnValue;
+  }
+
+  makeBufferWithContents(dataArray: TypedArrayBufferView, usage: GPUBufferUsageFlags): GPUBuffer {
+    const buffer = this.device.createBuffer({
+      mappedAtCreation: true,
+      size: dataArray.byteLength,
+      usage,
+    });
+    const mappedBuffer = buffer.getMappedRange();
+    const constructor = dataArray.constructor as TypedArrayBufferViewConstructor;
+    new constructor(mappedBuffer).set(dataArray);
+    buffer.unmap();
+    return buffer;
   }
 }

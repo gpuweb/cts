@@ -1,5 +1,7 @@
 export const description = `
 createBindGroupLayout validation tests.
+
+TODO: review existing tests, write descriptions, and make sure tests are complete.
 `;
 
 import { pbool, poptions, params } from '../../../common/framework/params_builder.js';
