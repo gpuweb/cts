@@ -42,7 +42,7 @@ const watcher = chokidar.watch(srcDir, {
 function dirtyCompileCache(absPath: string, stats?: fs.Stats) {
   const relPath = path.relative(srcDir, absPath);
   if ((stats === undefined || stats.isFile()) && relPath.endsWith('.ts')) {
-    const tsUrl = path.sep + relPath;
+    const tsUrl = relPath;
     if (compileCache.has(tsUrl)) {
       console.debug('Dirtying compile cache', tsUrl);
     }
