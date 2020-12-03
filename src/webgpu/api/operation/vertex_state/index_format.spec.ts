@@ -277,26 +277,31 @@ g.test('primitive_restart')
     const { indexFormat, primitiveTopology, _expectedShape } = t.params;
 
     let indices: number[];
-    // The primitive restart value can used with strip primitive topologies ('line-strip' or 'triangle-strip').
-    // For lists, the primitive restart value isn't special and should be treated as a regular index value.
+    // Primitive restart should be always active with strip primitive topologies
+    // ('line-strip' or 'triangle-strip') and never active for other topologies, where
+    // the primitive restart value isn't special and should be treated as a regular index value.
+    //
+    // The value -1 gets uploaded as 0xFFFF or 0xFFFF_FFFF according to the format.
+    //
+    // An arrow '->' indicates the expected result for that primitiveTopology.
     if (primitiveTopology === 'triangle-list') {
-      // -> triangle-list: (0, 1, 3), (-1, 2, 1)
-      // triangle-list with restart: (0, 1, 3), (2, 1, 0)
-      // triangle-strip: (0, 1, 3), (2, 1, 0), (1, 0, 0)
-      // triangle-strip w/o restart: (0, 1, 3), (1, 3, -1), (3, -1, 2), (-1, 2, 1), (2, 1, 0), (1, 0, 0)
+      // -> triangle-list:              (0, 1, 3), (-1, 2, 1)
+      //    triangle-list with restart: (0, 1, 3), (2, 1, 0)
+      //    triangle-strip:             (0, 1, 3), (2, 1, 0), (1, 0, 0)
+      //    triangle-strip w/o restart: (0, 1, 3), (1, 3, -1), (3, -1, 2), (-1, 2, 1), (2, 1, 0), (1, 0, 0)
       indices = [0, 1, 3, -1, 2, 1, 0, 0];
     } else if (primitiveTopology === 'triangle-strip') {
-      // -> triangle-strip : (3, 1, 0), (2, 2, 1), (2, 1, 3)
-      // triangle-strip w/o restart: (3, 1, 0), (1, 0, -1), (0, -1, 2), (2, 2, 1,), (2, 3, 1)
-      // triangle-list: (3, 1, 0), (-1, 2, 2)
-      // triangle-list with restart: (3, 1, 0), (2, 2, 1)
+      // -> triangle-strip:             (3, 1, 0), (2, 2, 1), (2, 1, 3)
+      //    triangle-strip w/o restart: (3, 1, 0), (1, 0, -1), (0, -1, 2), (2, 2, 1,), (2, 3, 1)
+      //    triangle-list:              (3, 1, 0), (-1, 2, 2)
+      //    triangle-list with restart: (3, 1, 0), (2, 2, 1)
       indices = [3, 1, 0, -1, 2, 2, 1, 3];
     } else {
-      // -> point: (0), (1), (-1), (2), (3), (3)
-      // -> line-list: (0, 1), (-1, 2), (3, 3)
-      // line-list with restart: (0, 1), (2, 3)
-      // -> line-strip: (0, 1), (2, 3), (3, 3)
-      // line-strip w/o restart: (0, 1), (1, -1), (-1, 2), (2, 3), (3, 3)
+      // -> point:                  (0), (1), (-1), (2), (3), (3)
+      // -> line-list:              (0, 1), (-1, 2), (3, 3)
+      //    line-list with restart: (0, 1), (2, 3)
+      // -> line-strip:             (0, 1), (2, 3), (3, 3)
+      //    line-strip w/o restart: (0, 1), (1, -1), (-1, 2), (2, 3), (3, 3)
       indices = [0, 1, -1, 2, 3, 3];
     }
 
