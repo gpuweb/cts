@@ -1,5 +1,5 @@
 export const description = `
-copy imageBitmap To texture tests.
+copyImageBitmapToTexture from various sources.
 `;
 
 import { poptions, params } from '../../common/framework/params_builder.js';

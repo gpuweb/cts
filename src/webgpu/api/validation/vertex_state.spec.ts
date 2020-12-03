@@ -6,6 +6,7 @@ TODO: review existing tests, write descriptions, and make sure tests are complet
 > - In createRenderPipeline():
 > - An attribute is unused by the shader
 > - If invalid, test these (if valid, they should be operation tests instead):
+>     - Vertex buffer with zero attributes
 >     - Overlapping attributes
 >         - Verify correct sizing of every vertex format
 >     - Overlapping vertex buffer elements (an attribute offset + its size > arrayStride)
