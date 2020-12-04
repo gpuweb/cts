@@ -9,10 +9,9 @@ import { getTextureCopyLayout } from '../../../util/texture/layout.js';
 
 const kHeight = 4;
 const kWidth = 4;
-const kTextureFormat = 'bgra8unorm' as const;
-const kGreen = new Uint8Array([0x00, 0xff, 0x00, 0xff]); // green
-const kBlack = new Uint8Array([0x00, 0x00, 0x00, 0xff]); // black
+const kTextureFormat = 'r8uint' as const;
 
+/** 4x4 grid of r8uint values (each 0 or 1). */
 type Raster4x4 = readonly [
   readonly [0 | 1, 0 | 1, 0 | 1, 0 | 1],
   readonly [0 | 1, 0 | 1, 0 | 1, 0 | 1],
@@ -111,11 +110,11 @@ class IndexFormatTest extends GPUTest {
 
     const fragmentModule = this.device.createShaderModule({
       code: `
-        [[location(0)]] var<out> fragColor : vec4<f32>;
+        [[location(0)]] var<out> fragColor : u32;
 
         [[stage(fragment)]]
         fn main() -> void {
-          fragColor = vec4<f32>(0.0, 1.0, 0.0, 1.0);
+          fragColor = 1u;
         }
       `,
     });
@@ -177,10 +176,7 @@ class IndexFormatTest extends GPUTest {
     const encoder = this.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
       colorAttachments: [
-        {
-          attachment: colorAttachment.createView(),
-          loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
-          storeOp: 'store',
+        { attachment: colorAttachment.createView(), loadValue: [0, 0, 0, 0], storeOp: 'store',
         },
       ],
     });
@@ -203,11 +199,10 @@ class IndexFormatTest extends GPUTest {
     for (let row = 0; row < renderShape.length; row++) {
       for (let col = 0; col < renderShape[row].length; col++) {
         const texel: 0 | 1 = renderShape[row][col];
-        const texelValueBytes = texel === 1 ? kGreen : kBlack;
 
-        const kBytesPerTexel = 4;
+        const kBytesPerTexel = 1; // r8uint
         const byteOffset = row * bytesPerRow + col * kBytesPerTexel;
-        arrayBuffer.set(texelValueBytes, byteOffset);
+        arrayBuffer[byteOffset] = texel;
       }
     }
     return arrayBuffer;
