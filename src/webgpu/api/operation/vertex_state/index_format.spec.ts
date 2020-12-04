@@ -1,8 +1,5 @@
-export const description = `Test indexing, index format and primitive restart.
-
-TODO(hao.x.li@intel.com): Test that use the primitive restart values as real indices with
-non-strip topologies, to make sure those behave properly (and primitive restart is appropriately
-enabled/disabled) across backends. These tests will be important for gpuweb/gpuweb#1220.
+export const description = `
+Test indexing, index format and primitive restart.
 `;
 
 import { params, poptions } from '../../../../common/framework/params_builder.js';
@@ -79,14 +76,6 @@ const kNothing: Raster4x4 = [
   [0, 0, 0, 0],
 ];
 
-const kPrimitiveTopologiesForRestart = [
-  { primitiveTopology: 'point-list', _expectedShape: kPoints },
-  { primitiveTopology: 'line-list', _expectedShape: kLine },
-  { primitiveTopology: 'line-strip', _expectedShape: kXShape },
-  { primitiveTopology: 'triangle-list', _expectedShape: kBottomLeftTriangle },
-  { primitiveTopology: 'triangle-strip', _expectedShape: kConcaveShape },
-] as const;
-
 const { byteLength, bytesPerRow, rowsPerImage } = getTextureCopyLayout(kTextureFormat, '2d', [
   kWidth,
   kHeight,
@@ -101,10 +90,10 @@ class IndexFormatTest extends GPUTest {
     const vertexModule = this.device.createShaderModule({
       code: `
         const pos: array<vec2<f32>, 4> = array<vec2<f32>, 4>(
-          vec2<f32>(-1.0, 1.0),
-          vec2<f32>(1.0, -1.0),
-          vec2<f32>(1.0, 1.0),
-          vec2<f32>(-1.0, -1.0));
+          vec2<f32>(-0.99, 0.99),
+          vec2<f32>(0.99, -0.99),
+          vec2<f32>(0.99, 0.99),
+          vec2<f32>(-0.99, -0.99));
 
         [[builtin(position)]] var<out> Position : vec4<f32>;
         [[builtin(vertex_idx)]] var<in> VertexIndex : u32;
@@ -112,9 +101,9 @@ class IndexFormatTest extends GPUTest {
         [[stage(vertex)]]
         fn main() -> void {
           if (VertexIndex == 0xFFFFu || VertexIndex == 0xFFFFFFFFu) {
-            Position = vec4<f32>(0.0, 0.0 , 0.0, 0.0);
+            Position = vec4<f32>(0.0, 0.0, 0.0, 0.0);
           } else {
-            Position = vec4<f32>(pos[VertexIndex], 0.0 , 1.0);
+            Position = vec4<f32>(pos[VertexIndex], 0.0, 1.0);
           }
         }
       `,
@@ -143,7 +132,7 @@ class IndexFormatTest extends GPUTest {
     });
   }
 
-  CreateIndexBuffer(indices: number[], indexFormat: GPUIndexFormat): GPUBuffer {
+  CreateIndexBuffer(indices: readonly number[], indexFormat: GPUIndexFormat): GPUBuffer {
     const typedArrayConstructor = { uint16: Uint16Array, uint32: Uint32Array }[indexFormat];
 
     const indexBuffer = this.device.createBuffer({
@@ -271,46 +260,133 @@ g.test('index_format,uint32')
   });
 
 g.test('primitive_restart')
-  .desc('Test primitive restart with each primitive topology.')
+  .desc(
+    `
+Test primitive restart with each primitive topology.
+
+Primitive restart should be always active with strip primitive topologies
+('line-strip' or 'triangle-strip') and never active for other topologies, where
+the primitive restart value isn't special and should be treated as a regular index value.
+
+The value -1 gets uploaded as 0xFFFF or 0xFFFF_FFFF according to the format.
+
+The positions of these points are embedded in the shader above, and look like this:
+  0    2
+    -1
+  3    1
+
+Below are the indices lists used for each test, and the rendering result of each.
+This shows the expected result (marked '->') is different from what you would get if
+the topology were incorrect.
+
+- primitiveTopology: triangle-list
+  indices: [0, 1, 3, -1, 2, 1, 0, 0],
+   -> triangle-list:              (0, 1, 3), (-1, 2, 1)
+        |    |
+        |#   |
+        |##  |
+        |### |
+      triangle-list with restart: (0, 1, 3), (2, 1, 0)
+      triangle-strip:             (0, 1, 3), (2, 1, 0), (1, 0, 0)
+      triangle-strip w/o restart: (0, 1, 3), (1, 3, -1), (3, -1, 2), (-1, 2, 1), (2, 1, 0), (1, 0, 0)
+        |####|
+        |####|
+        |####|
+        |####|
+
+- primitiveTopology: triangle-strip
+  indices: [3, 1, 0, -1, 2, 2, 1, 3],
+   -> triangle-strip:             (3, 1, 0), (2, 2, 1), (2, 1, 3)
+        |   #|
+        |# ##|
+        |####|
+        |####|
+      triangle-strip w/o restart: (3, 1, 0), (1, 0, -1), (0, -1, 2), (2, 2, 1), (2, 3, 1)
+        // TODO: this case, which would be erroneous, needs to have different rendering results than others
+        |   #|
+        |# ##|
+        |####|
+        |####|
+      triangle-list:              (3, 1, 0), (-1, 2, 2)
+      triangle-list with restart: (3, 1, 0), (2, 2, 1)
+        |    |
+        |#   |
+        |##  |
+        |### |
+
+- primitiveTopology: point, line-list, line-strip:
+  indices: [0, 1, -1, 2, 3, 3],
+   -> point-list:             (0), (1), (-1), (2), (3), (3)
+        |#  #|
+        |    |
+        |    |
+        |#  #|
+      point-list with restart (0), (1), (2), (3), (3)
+        // TODO: this case, which would be erroneous, needs to have different rendering results than others
+        |#  #|
+        |    |
+        |    |
+        |#  #|
+   -> line-list:              (0, 1), (-1, 2), (3, 3)
+        |#   |
+        | #  |
+        |  # |
+        |   #|
+      line-list with restart: (0, 1), (2, 3)
+        // TODO: this case, which would be erroneous, needs to have different rendering results than others
+        |#  #|
+        | ## |
+        | ## |
+        |#  #|
+   -> line-strip:             (0, 1), (2, 3), (3, 3)
+        |#  #|
+        | ## |
+        | ## |
+        |#  #|
+      line-strip w/o restart: (0, 1), (1, -1), (-1, 2), (2, 3), (3, 3)
+        // TODO: this case, which would be erroneous, needs to have different rendering results than others
+        |#  #|
+        | ## |
+        | ## |
+        |#  #|
+`
+  )
   .params(
     params()
       .combine(poptions('indexFormat', ['uint16', 'uint32'] as const))
-      .combine(kPrimitiveTopologiesForRestart)
+      .combine([
+        {
+          primitiveTopology: 'point-list',
+          _indices: [0, 1, -1, 2, 3, 3],
+          _expectedShape: kPoints,
+        },
+        {
+          primitiveTopology: 'line-list',
+          _indices: [0, 1, -1, 2, 3, 3],
+          _expectedShape: kLine,
+        },
+        {
+          primitiveTopology: 'line-strip',
+          _indices: [0, 1, -1, 2, 3, 3],
+          _expectedShape: kXShape,
+        },
+        {
+          primitiveTopology: 'triangle-list',
+          _indices: [0, 1, 3, -1, 2, 1, 0, 0],
+          _expectedShape: kBottomLeftTriangle,
+        },
+        {
+          primitiveTopology: 'triangle-strip',
+          _indices: [3, 1, 0, -1, 2, 2, 1, 3],
+          _expectedShape: kConcaveShape,
+        },
+      ] as const)
   )
   .fn(t => {
-    const { indexFormat, primitiveTopology, _expectedShape } = t.params;
+    const { indexFormat, primitiveTopology, _indices, _expectedShape } = t.params;
 
-    let indices: number[];
-    // Primitive restart should be always active with strip primitive topologies
-    // ('line-strip' or 'triangle-strip') and never active for other topologies, where
-    // the primitive restart value isn't special and should be treated as a regular index value.
-    //
-    // The value -1 gets uploaded as 0xFFFF or 0xFFFF_FFFF according to the format.
-    //
-    // An arrow '->' indicates the expected result for that primitiveTopology.
-    if (primitiveTopology === 'triangle-list') {
-      // -> triangle-list:              (0, 1, 3), (-1, 2, 1)
-      //    triangle-list with restart: (0, 1, 3), (2, 1, 0)
-      //    triangle-strip:             (0, 1, 3), (2, 1, 0), (1, 0, 0)
-      //    triangle-strip w/o restart: (0, 1, 3), (1, 3, -1), (3, -1, 2), (-1, 2, 1), (2, 1, 0), (1, 0, 0)
-      indices = [0, 1, 3, -1, 2, 1, 0, 0];
-    } else if (primitiveTopology === 'triangle-strip') {
-      // -> triangle-strip:             (3, 1, 0), (2, 2, 1), (2, 1, 3)
-      //    triangle-strip w/o restart: (3, 1, 0), (1, 0, -1), (0, -1, 2), (2, 2, 1,), (2, 3, 1)
-      //    triangle-list:              (3, 1, 0), (-1, 2, 2)
-      //    triangle-list with restart: (3, 1, 0), (2, 2, 1)
-      indices = [3, 1, 0, -1, 2, 2, 1, 3];
-    } else {
-      // -> point:                  (0), (1), (-1), (2), (3), (3)
-      // -> line-list:              (0, 1), (-1, 2), (3, 3)
-      //    line-list with restart: (0, 1), (2, 3)
-      // -> line-strip:             (0, 1), (2, 3), (3, 3)
-      //    line-strip w/o restart: (0, 1), (1, -1), (-1, 2), (2, 3), (3, 3)
-      indices = [0, 1, -1, 2, 3, 3];
-    }
-
-    const indexBuffer = t.CreateIndexBuffer(indices, indexFormat);
-    const result = t.run(indexBuffer, indices.length, indexFormat, 0, primitiveTopology);
+    const indexBuffer = t.CreateIndexBuffer(_indices, indexFormat);
+    const result = t.run(indexBuffer, _indices.length, indexFormat, 0, primitiveTopology);
 
     const expectedTextureValues = t.CreateExpectedUint8Array(_expectedShape);
     t.expectContents(result, expectedTextureValues);
