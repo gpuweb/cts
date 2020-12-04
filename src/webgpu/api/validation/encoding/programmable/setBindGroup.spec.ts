@@ -19,7 +19,6 @@ TODO: merge these notes and implement.
 
 import { poptions, params } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-
 import { ValidationTest } from '../../validation_test.js';
 
 class F extends ValidationTest {

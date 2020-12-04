@@ -3,7 +3,7 @@ import {
   EncodableTextureFormat,
   kEncodableTextureFormatInfo,
 } from '../../../../capability_info.js';
-import { CheckContents } from '../texture_zero.js';
+import { CheckContents } from '../texture_zero.spec.js';
 
 export const checkContentsByBufferCopy: CheckContents = (
   t,

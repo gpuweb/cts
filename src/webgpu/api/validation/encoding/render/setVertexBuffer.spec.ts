@@ -4,7 +4,6 @@ setVertexBuffer validation tests.
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { range } from '../../../../../common/framework/util/util.js';
-
 import { ValidationTest } from '../../validation_test.js';
 
 class F extends ValidationTest {

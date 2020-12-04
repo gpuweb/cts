@@ -1,5 +1,8 @@
 export const description = 'Test uninitialized textures are initialized to zero when read.';
 
+// TODO: This is a test file, it probably shouldn't export anything.
+// Everything that's exported should be moved to another file.
+
 import { TestCaseRecorder } from '../../../../common/framework/logging/test_case_recorder.js';
 import {
   params,
