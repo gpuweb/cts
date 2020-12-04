@@ -8,71 +8,39 @@ import { GPUTest } from '../../../gpu_test.js';
 import { getTextureCopyLayout } from '../../../util/texture/layout.js';
 
 const kHeight = 4;
-const kWidth = 4;
+const kWidth = 8;
 const kTextureFormat = 'r8uint' as const;
 
 /** 4x4 grid of r8uint values (each 0 or 1). */
-type Raster4x4 = readonly [
-  readonly [0 | 1, 0 | 1, 0 | 1, 0 | 1],
-  readonly [0 | 1, 0 | 1, 0 | 1, 0 | 1],
-  readonly [0 | 1, 0 | 1, 0 | 1, 0 | 1],
-  readonly [0 | 1, 0 | 1, 0 | 1, 0 | 1]
-];
-
-/** Expected 4x4 rasterization of 4 points. */
-const kPoints: Raster4x4 = [
-  [1, 0, 0, 1],
-  [0, 0, 0, 0],
-  [0, 0, 0, 0],
-  [1, 0, 0, 1],
-];
-
-/** Expected 4x4 rasterization of a diagonal line. */
-const kLine: Raster4x4 = [
-  [1, 0, 0, 0],
-  [0, 1, 0, 0],
-  [0, 0, 1, 0],
-  [0, 0, 0, 1],
-];
-
-/** Expected 4x4 rasterization of two lines forming an X. */
-const kXShape: Raster4x4 = [
-  [1, 0, 0, 1],
-  [0, 1, 1, 0],
-  [0, 1, 1, 0],
-  [1, 0, 0, 1],
+type Raster8x4 = readonly [
+  readonly [0 | 1, 0 | 1, 0 | 1, 0 | 1, 0 | 1, 0 | 1, 0 | 1, 0 | 1],
+  readonly [0 | 1, 0 | 1, 0 | 1, 0 | 1, 0 | 1, 0 | 1, 0 | 1, 0 | 1],
+  readonly [0 | 1, 0 | 1, 0 | 1, 0 | 1, 0 | 1, 0 | 1, 0 | 1, 0 | 1],
+  readonly [0 | 1, 0 | 1, 0 | 1, 0 | 1, 0 | 1, 0 | 1, 0 | 1, 0 | 1]
 ];
 
 /** Expected 4x4 rasterization of a bottom-left triangle. */
-const kBottomLeftTriangle: Raster4x4 = [
-  [0, 0, 0, 0],
-  [1, 0, 0, 0],
-  [1, 1, 0, 0],
-  [1, 1, 1, 0],
-];
-
-/** Expected 4x4 rasterization of two overlapping triangles in a concave shape. */
-const kConcaveShape: Raster4x4 = [
-  [0, 0, 0, 1],
-  [1, 0, 1, 1],
-  [1, 1, 1, 1],
-  [1, 1, 1, 1],
+const kBottomLeftTriangle: Raster8x4 = [
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 1, 0, 0, 0],
+  [0, 0, 0, 0, 1, 1, 0, 0],
+  [0, 0, 0, 0, 1, 1, 1, 0],
 ];
 
 /** Expected 4x4 rasterization filling the whole quad. */
-const kSquare: Raster4x4 = [
-  [1, 1, 1, 1],
-  [1, 1, 1, 1],
-  [1, 1, 1, 1],
-  [1, 1, 1, 1],
+const kSquare: Raster8x4 = [
+  [0, 0, 0, 0, 1, 1, 1, 1],
+  [0, 0, 0, 0, 1, 1, 1, 1],
+  [0, 0, 0, 0, 1, 1, 1, 1],
+  [0, 0, 0, 0, 1, 1, 1, 1],
 ];
 
 /** Expected 4x4 rasterization with no pixels. */
-const kNothing: Raster4x4 = [
-  [0, 0, 0, 0],
-  [0, 0, 0, 0],
-  [0, 0, 0, 0],
-  [0, 0, 0, 0],
+const kNothing: Raster8x4 = [
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
+  [0, 0, 0, 0, 0, 0, 0, 0],
 ];
 
 const { byteLength, bytesPerRow, rowsPerImage } = getTextureCopyLayout(kTextureFormat, '2d', [
@@ -87,12 +55,14 @@ class IndexFormatTest extends GPUTest {
     indexFormat?: GPUIndexFormat
   ): GPURenderPipeline {
     const vertexModule = this.device.createShaderModule({
+      // TODO?: These positions will create triangles that cut right through pixel centers. If this
+      // results in different rasterization results on different hardware, tweak to avoid this.
       code: `
         const pos: array<vec2<f32>, 4> = array<vec2<f32>, 4>(
-          vec2<f32>(-0.99, 0.99),
-          vec2<f32>(0.99, -0.99),
-          vec2<f32>(0.99, 0.99),
-          vec2<f32>(-0.99, -0.99));
+          vec2<f32>(0.01,  0.98),
+          vec2<f32>(0.99, -0.98),
+          vec2<f32>(0.99,  0.98),
+          vec2<f32>(0.01, -0.98));
 
         [[builtin(position)]] var<out> Position : vec4<f32>;
         [[builtin(vertex_idx)]] var<in> VertexIndex : u32;
@@ -100,7 +70,7 @@ class IndexFormatTest extends GPUTest {
         [[stage(vertex)]]
         fn main() -> void {
           if (VertexIndex == 0xFFFFu || VertexIndex == 0xFFFFFFFFu) {
-            Position = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+            Position = vec4<f32>(-0.99, -0.98, 0.0, 1.0);
           } else {
             Position = vec4<f32>(pos[VertexIndex], 0.0, 1.0);
           }
@@ -176,8 +146,7 @@ class IndexFormatTest extends GPUTest {
     const encoder = this.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
       colorAttachments: [
-        { attachment: colorAttachment.createView(), loadValue: [0, 0, 0, 0], storeOp: 'store',
-        },
+        { attachment: colorAttachment.createView(), loadValue: [0, 0, 0, 0], storeOp: 'store' },
       ],
     });
     pass.setPipeline(pipeline);
@@ -194,7 +163,7 @@ class IndexFormatTest extends GPUTest {
     return result;
   }
 
-  CreateExpectedUint8Array(renderShape: Raster4x4): Uint8Array {
+  CreateExpectedUint8Array(renderShape: Raster8x4): Uint8Array {
     const arrayBuffer = new Uint8Array(byteLength);
     for (let row = 0; row < renderShape.length; row++) {
       for (let col = 0; col < renderShape[row].length; col++) {
@@ -266,84 +235,84 @@ the primitive restart value isn't special and should be treated as a regular ind
 The value -1 gets uploaded as 0xFFFF or 0xFFFF_FFFF according to the format.
 
 The positions of these points are embedded in the shader above, and look like this:
-  0    2
-    -1
-  3    1
+  |   0  2|
+  |       |
+  -1  3  1|
 
-Below are the indices lists used for each test, and the rendering result of each.
-This shows the expected result (marked '->') is different from what you would get if
-the topology were incorrect.
+Below are the indices lists used for each test, and the expected rendering result of each
+(approximately, in the case of incorrect results). This shows the expected result (marked '->')
+is different from what you would get if the topology were incorrect.
 
 - primitiveTopology: triangle-list
   indices: [0, 1, 3, -1, 2, 1, 0, 0],
    -> triangle-list:              (0, 1, 3), (-1, 2, 1)
-        |    |
-        |#   |
-        |##  |
-        |### |
+        |    #  #|
+        |    ####|
+        |   #####|
+        | #######|
       triangle-list with restart: (0, 1, 3), (2, 1, 0)
       triangle-strip:             (0, 1, 3), (2, 1, 0), (1, 0, 0)
+        |    ####|
+        |    ####|
+        |    ####|
+        |    ####|
       triangle-strip w/o restart: (0, 1, 3), (1, 3, -1), (3, -1, 2), (-1, 2, 1), (2, 1, 0), (1, 0, 0)
-        |####|
-        |####|
-        |####|
-        |####|
+        |    ####|
+        |    ####|
+        |   #####|
+        | #######|
 
 - primitiveTopology: triangle-strip
   indices: [3, 1, 0, -1, 2, 2, 1, 3],
    -> triangle-strip:             (3, 1, 0), (2, 2, 1), (2, 1, 3)
-        |   #|
-        |# ##|
-        |####|
-        |####|
+        |    #  #|
+        |    ####|
+        |    ####|
+        |    ####|
       triangle-strip w/o restart: (3, 1, 0), (1, 0, -1), (0, -1, 2), (2, 2, 1), (2, 3, 1)
-        // TODO: this case, which would be erroneous, needs to have different rendering results than others
-        |   #|
-        |# ##|
-        |####|
-        |####|
+        |    ####|
+        |   #####|
+        |  ######|
+        | #######|
       triangle-list:              (3, 1, 0), (-1, 2, 2)
       triangle-list with restart: (3, 1, 0), (2, 2, 1)
-        |    |
-        |#   |
-        |##  |
-        |### |
+        |        |
+        |    #   |
+        |    ##  |
+        |    ### |
 
 - primitiveTopology: point, line-list, line-strip:
-  indices: [0, 1, -1, 2, 3, 3],
-   -> point-list:             (0), (1), (-1), (2), (3), (3)
-        |#  #|
-        |    |
-        |    |
-        |#  #|
-      point-list with restart (0), (1), (2), (3), (3)
-        // TODO: this case, which would be erroneous, needs to have different rendering results than others
-        |#  #|
-        |    |
-        |    |
-        |#  #|
-   -> line-list:              (0, 1), (-1, 2), (3, 3)
-        |#   |
-        | #  |
-        |  # |
-        |   #|
+  indices: [0, 1, -1, 2, -1, 2, 3, 0],
+   -> point-list:             (0), (1), (-1), (2), (3), (0)
+        |    #  #|
+        |        |
+        |        |
+        |#   #  #|
+      point-list with restart (0), (1), (2), (3), (0)
+        |    #  #|
+        |        |
+        |        |
+        |    #  #|
+   -> line-list:              (0, 1), (-1, 2), (3, 0)
+        |    # ##|
+        |    ##  |
+        |  ### # |
+        |##  #  #|
       line-list with restart: (0, 1), (2, 3)
-        // TODO: this case, which would be erroneous, needs to have different rendering results than others
-        |#  #|
-        | ## |
-        | ## |
-        |#  #|
-   -> line-strip:             (0, 1), (2, 3), (3, 3)
-        |#  #|
-        | ## |
-        | ## |
-        |#  #|
+        |    #  #|
+        |     ## |
+        |     ## |
+        |    #  #|
+   -> line-strip:             (0, 1), (2, 3), (3, 0)
+        |    #  #|
+        |    ### |
+        |    ### |
+        |    #  #|
       line-strip w/o restart: (0, 1), (1, -1), (-1, 2), (2, 3), (3, 3)
-        // TODO: this case, which would be erroneous, needs to have different rendering results than others
-        |#  #|
-        | ## |
-        | ## |
-        |#  #|
+        |    # ##|
+        |    ### |
+        |  ## ## |
+        |########|
 `
   )
   .params(
@@ -352,28 +321,53 @@ the topology were incorrect.
       .combine([
         {
           primitiveTopology: 'point-list',
-          _indices: [0, 1, -1, 2, 3, 3],
-          _expectedShape: kPoints,
+          _indices: [0, 1, -1, 2, 3, 0],
+          _expectedShape: [
+            [0, 0, 0, 0, 1, 0, 0, 1],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 0, 0, 0, 1, 0, 0, 1],
+          ],
         },
         {
           primitiveTopology: 'line-list',
-          _indices: [0, 1, -1, 2, 3, 3],
-          _expectedShape: kLine,
+          _indices: [0, 1, -1, 2, 3, 0],
+          _expectedShape: [
+            [0, 0, 0, 0, 1, 0, 1, 1],
+            [0, 0, 0, 0, 1, 1, 0, 0],
+            [0, 0, 1, 1, 1, 0, 1, 0],
+            [1, 1, 0, 0, 1, 0, 0, 1],
+          ],
         },
         {
           primitiveTopology: 'line-strip',
-          _indices: [0, 1, -1, 2, 3, 3],
-          _expectedShape: kXShape,
+          _indices: [0, 1, -1, 2, 3, 0],
+          _expectedShape: [
+            [0, 0, 0, 0, 1, 0, 0, 1],
+            [0, 0, 0, 0, 1, 1, 1, 0],
+            [0, 0, 0, 0, 1, 1, 1, 0],
+            [0, 0, 0, 0, 1, 0, 0, 1],
+          ],
         },
         {
           primitiveTopology: 'triangle-list',
           _indices: [0, 1, 3, -1, 2, 1, 0, 0],
-          _expectedShape: kBottomLeftTriangle,
+          _expectedShape: [
+            [0, 0, 0, 0, 0, 0, 0, 1],
+            [0, 0, 0, 0, 1, 1, 1, 1],
+            [0, 0, 0, 1, 1, 1, 1, 1],
+            [0, 1, 1, 1, 1, 1, 1, 1],
+          ],
         },
         {
           primitiveTopology: 'triangle-strip',
           _indices: [3, 1, 0, -1, 2, 2, 1, 3],
-          _expectedShape: kConcaveShape,
+          _expectedShape: [
+            [0, 0, 0, 0, 0, 0, 0, 1],
+            [0, 0, 0, 0, 1, 0, 1, 1],
+            [0, 0, 0, 0, 1, 1, 1, 1],
+            [0, 0, 0, 0, 1, 1, 1, 1],
+          ],
         },
       ] as const)
   )
