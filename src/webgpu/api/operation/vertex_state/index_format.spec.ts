@@ -111,7 +111,11 @@ class IndexFormatTest extends GPUTest {
 
         [[stage(vertex)]]
         fn main() -> void {
-          Position = vec4<f32>(pos[VertexIndex], 0.0 , 1.0);
+          if (VertexIndex == 0xFFFFu || VertexIndex == 0xFFFFFFFFu) {
+            Position = vec4<f32>(0.0, 0.0 , 0.0, 0.0);
+          } else {
+            Position = vec4<f32>(pos[VertexIndex], 0.0 , 1.0);
+          }
         }
       `,
     });
