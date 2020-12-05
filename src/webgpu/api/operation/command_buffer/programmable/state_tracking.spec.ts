@@ -6,6 +6,7 @@ TODO: for each programmable pass encoder {compute pass, render pass, render bund
 - try setting states multiple times in different orders, check state is correct in draw/dispatch.
     - Changing from pipeline A to B where both have the same layout except for {first,mid,last}
       bind group index.
+    - Try with a pipeline that e.g. only uses bind group 1, or bind groups 0 and 2.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
