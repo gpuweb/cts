@@ -1,11 +1,25 @@
 export const description = `
 setBindGroup validation tests.
+
+TODO: merge these notes and implement.
+> (Note: If there are errors with using certain binding types in certain passes, test those in the file for that pass type, not here.)
+>
+> All x= {compute pass, render pass, render bundle}
+>
+> - setBindGroup
+>     - x= {compute pass, render pass}
+>     - index {0, max, max+1}
+>     - GPUBindGroup object {valid, invalid, valid but refers to destroyed {buffer, texture}}
+>     - bind group {with, without} dynamic offsets with {too few, too many} dynamicOffsets entries
+>         - x= {sequence, Uint32Array} overload
+>     - {null, compatible, incompatible} current pipeline (should have no effect without draw/dispatch)
+>     - iff minBufferBindingSize is specified, buffer size is correctly validated against it (make sure static offset + dynamic offset are both accounted for)
+>     - setBindGroup in different orders (e.g. 0,1,2 vs 2,0,1)
 `;
 
-import { poptions, params } from '../../../common/framework/params_builder.js';
-import { makeTestGroup } from '../../../common/framework/test_group.js';
-
-import { ValidationTest } from './validation_test.js';
+import { poptions, params } from '../../../../../common/framework/params_builder.js';
+import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { ValidationTest } from '../../validation_test.js';
 
 class F extends ValidationTest {
   makeAttachmentTexture(): GPUTexture {
