@@ -19,8 +19,7 @@ The contents of a test file (`src/webgpu/**/*.spec.ts`) are twofold:
 
 ## 2. [Implementing Tests](tests.md)
 
-## Additional Documentation
+## [Additional Documentation](../)
 
-- [Terminology used in the test framework](more/terms.md)
 - [Guidelines](https://github.com/gpuweb/gpuweb/wiki/WebGPU-CTS-guidelines) (TODO: migrate)
 - [OBSOLETE planning guidelines](https://hackmd.io/@webgpu/H1MwoqqAU) (TODO: migrate)

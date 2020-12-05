@@ -10,8 +10,8 @@ them to be WebGPU-conformant. Mismatches between the specification and tests are
 
 ## Contributing
 
-Please read the [guidelines](docs/README.md) before contributing.
-Other documentation may be found in [`docs/more/`](docs/more/).
+Please read the [introductory guidelines](docs/intro/README.md) before contributing.
+Other documentation may be found in [`docs/`](docs/).
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) on licensing.
 
