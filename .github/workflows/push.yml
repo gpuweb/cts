@@ -17,8 +17,7 @@ jobs:
       - run: npm ci
       - run: |
           npm test
-          sed -i '/out\//d' .gitignore
-          sed -i '/out-wpt\//d' .gitignore
+          git add -f out/ out-wpt/
       - uses: JamesIves/github-pages-deploy-action@3.7.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
