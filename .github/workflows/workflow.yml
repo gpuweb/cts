@@ -35,6 +35,7 @@ jobs:
             })
             return download.url
       - run: |
+          rm -rf *
           curl -L -o "pr-artifact.zip" "${{ steps.pr-artifact.outputs.result }}"
           unzip -o pr-artifact.zip
           rm pr-artifact.zip
