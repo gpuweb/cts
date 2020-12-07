@@ -19,17 +19,6 @@ jobs:
           grep -Po "(?<=${{ github.event.workflow_run.repository.full_name }}\/pulls\/)\d*" | head -1)
           echo "PR=$PR" >> $GITHUB_ENV
       - run: |
-          git fetch origin ${{ github.event.workflow_run.head_sha }}
-          git checkout ${{ github.event.workflow_run.head_sha }}
-      - uses: actions/setup-node@v2-beta
-        with:
-          node-version: "15.x"
-      - run: npm ci
-      - run: |
-          npm test
-          sed -i '/out\//d' .gitignore
-          sed -i '/out-wpt\//d' .gitignore
-      - run: |
           cat << EOF >> firebase.json
           {
             "hosting": {
