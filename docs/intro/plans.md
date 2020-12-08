@@ -1,5 +1,7 @@
 # Adding or Editing Test Plans
 
+## 1. Write a test plan
+
 For new tests, if some notes exist already, incorporate them into your plan.
 
 A detailed test plan should be written and reviewed before substantial test code is written.
@@ -9,8 +11,8 @@ and potentially useful helpers.
 
 **A test plan must serve two functions:**
 
-- Describes the test, succinctly, but in enough detail that a reader can read *only* the test plans in
-  a file or directory and evaluate the completeness of the test coverage.
+- Describes the test, succinctly, but in enough detail that a reader can read *only* the test
+  plans in a file or directory and evaluate the completeness of the test coverage.
 - Describes the test precisely enough that, when code is added, the reviewer can ensure that the
   test really covers what the test plan says.
 
@@ -26,7 +28,7 @@ of the result. Tries to trigger [some conditional path].
 - Unaligned values (should fail) // <- only include cases like this in validation tests)
 - Extreme values`
 ).params(poptions('arg', [ // <- If complex, params should be added during implementation, instead of planning.
-  // Valid
+  // Valid  // <- Comment params as you see fit.
   4,
   8,
   100,
@@ -44,8 +46,20 @@ the top. Or, if they aren't associated with a test file, put them in a `README.t
 **Any notes about things which are unimplemented must be marked with `TODO:` inside
 the description string.**
 
-## Open a pull request
+## 2. Open a pull request
 
 Open a PR, and work with the reviewer(s) to revise the test plan.
 
 Usually (probably), plans will be landed in separate PRs before test implementations.
+
+## Conventions used in test plans
+
+- `Iff`: If and only if
+- `x=`: "cartesian-cross equals", like `+=` for cartesian product.
+  Used for combinatorial test coverage.
+    - Sometimes this will result in too many test cases; simplify/reduce as needed
+      during planning *or* implementation.
+- `{x,y,z}`: list of cases to test
+    - e.g. `x= texture format {r8unorm, r8snorm}`
+- *Control case*: a case included to make sure that the rest of the cases aren't
+  missing their target by testing some other error case.
