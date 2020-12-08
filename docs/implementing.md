@@ -18,7 +18,8 @@ use them.
 ### GPUDevices in tests
 
 `GPUDevice`s are largely stateless (except for `lost`-ness, error scope stack, and `label`).
-This allows the CTS to reuse one device across multiple test cases.
+This allows the CTS to reuse one device across multiple test cases using the `DevicePool`,
+which provides `GPUDevice` objects to tests.
 
 Currently, there is one `GPUDevice` with the default descriptor, and
 a cache of several more, for devices with additional capabilities.
@@ -28,11 +29,15 @@ Later, there may be multiple `GPUDevice`s to allow multiple test cases to run co
 
 ## Test parameterization
 
-The CTS provides a helper (`pcombine`) for creating large cartesian products of test parameters.
+The CTS provides helpers (`params().combine()`) for creating large cartesian products of test parameters.
 The harnesses runs one "test case" for each one.
 
-Test parameterization and `pcombine` should be applied liberally to ensure the maximum coverage
-possible within reasonable time. You can skip some with `pfilter`. And remember: computers are
+TODO(github.com/gpuweb/cts/issues/305): document test subcases, once they exist.
+
+See `basic,params_builder` in `examples.spec.ts` for an example.
+
+Test parameterization and `.combine()` should be applied liberally to ensure the maximum coverage
+possible within reasonable time. You can skip some with `.filter()`. And remember: computers are
 pretty fast - thousands of test cases can be reasonable.
 
 Use existing lists of parameters values (such as
@@ -48,7 +53,7 @@ way. For example:
   - Checking the result of a readback.
   - Capturing the result of a `popErrorScope()`.
 
-That said, test functions don't always need to be `async`.
+That said, test functions don't always need to be `async`; see below.
 
 ### Checking asynchronous errors/results
 

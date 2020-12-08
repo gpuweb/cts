@@ -55,9 +55,11 @@ Usually (probably), plans will be landed in separate PRs before test implementat
 ## Conventions used in test plans
 
 - `Iff`: If and only if
-- `x=`: cartesian product (for combinatorial test coverage)
-    - Sometimes this will result in too many test cases; simplify as needed
-      during planning or implementation.
+- `x=`: "cartesian-cross equals", like `+=` for cartesian product.
+  Used for combinatorial test coverage.
+    - Sometimes this will result in too many test cases; simplify/reduce as needed
+      during planning *or* implementation.
 - `{x,y,z}`: list of cases to test
+    - e.g. `x= texture format {r8unorm, r8snorm}`
 - *Control case*: a case included to make sure that the rest of the cases aren't
   missing their target by testing some other error case.
