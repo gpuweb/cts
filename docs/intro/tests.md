@@ -13,17 +13,10 @@ Before uploading, you can run pre-submit checks (`grunt pre`) to make sure it wi
 
 ## Test Helpers
 
-It's best to be familiar with the helpers in
-[`src/webgpu/gpu_test.ts`](../src/webgpu/gpu_test.ts) (for all tests) and
-[`src/webgpu/api/validation/validation_test.ts`](../src/webgpu/api/validation/validation_test.ts)
-(for validation tests).
+It's best to be familiar with helpers available in the test suite for simplifying
+test implementations.
 
 New test helpers can be added at any time to either of those files, or to new `.ts` files anywhere
 near the `.spec.ts` file where they're used.
 
-Additionally, structured information about texture formats, binding types, etc. can be found in
-[`src/webgpu/capability_info.ts`](../src/webgpu/capability_info.ts).
-Constant values (needed anytime a WebGPU constant is needed outside of a test function)
-can be found in [`src/webgpu/constants.ts`](../src/webgpu/constants.ts).
-
-TODO: Document a list of helpers.
+Documentation on existing helpers can be found in the [helper index](../helper_index.md).
