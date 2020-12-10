@@ -187,6 +187,8 @@ export const kAllTextureFormatInfo = {
   ...kCompressedTextureFormatInfo,
 } as const;
 export const kAllTextureFormats = keysOf(kAllTextureFormatInfo);
+// Assert every GPUTextureFormat is covered by one of the tables.
+((_: { readonly [k in GPUTextureFormat]: {} }) => {})(kAllTextureFormatInfo);
 
 export const kTextureDimensionInfo: {
   readonly [k in GPUTextureDimension]: {
