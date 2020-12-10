@@ -7,7 +7,7 @@ For new tests, if some notes exist already, incorporate them into your plan.
 A detailed test plan should be written and reviewed before substantial test code is written.
 This allows reviewers a chance to identify additional tests and cases, opportunities for
 generalizations that would improve the strength of tests, similar existing tests or test plans,
-and potentially useful helpers.
+and potentially useful [helpers](../helper_index.md).
 
 **A test plan must serve two functions:**
 

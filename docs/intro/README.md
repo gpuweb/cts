@@ -37,6 +37,8 @@ The contents of a test file (`src/webgpu/**/*.spec.ts`) are twofold:
 
 ### 0. [Developing](developing.md)
 
+- Reviewers should also read [Review Requirements](../reviews.md).
+
 ### 1. [Life of a Test Change](life_of.md)
 
 ### 2. [Adding or Editing Test Plans](plans.md)
