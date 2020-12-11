@@ -21,10 +21,10 @@ For changes that come through the specification process.
   The item doesn't have to be fully tested, but must be reflected in the test plan in enough
   detail (with any necessary TODOs) to ensure the tests are implemented fully, later on.
   Then, the item can move to the "Specification Done" column.
-  - Some features may have tests written before their specification is complete.
-    If they are still in the "Needs Specification" column just make sure there
-    is a note on the issue that tests are being written, and make sure any spec
-    changes get reflected in the tests.
+    - Some features may have tests written before their specification is complete.
+      If they are still in the "Needs Specification" column just make sure there
+      is a note on the issue that tests are being written, and make sure any spec
+      changes get reflected in the tests.
 1. Plan and implement as above.
 
 ## Lifetime of additions to existing test plans
