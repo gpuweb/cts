@@ -25,8 +25,10 @@ type TypeOr<T, Default> = T extends undefined ? Default : T;
  * Zips a key tuple type and a value tuple type together into an object.
  *
  * @template Keys Keys of the resulting object.
- * @template Values Values of the resulting object. If an item is `undefined` or past the end, it defaults.
- * @template Defaults Default values. If an item is past the end, it defaults to `undefined`.
+ * @template Values Values of the resulting object. If a key corresponds to a `Values` member that
+ *   is undefined or past the end, it defaults to the corresponding `Defaults` member.
+ * @template Defaults Default values. If a key corresponds to a `Defaults` member that is past the
+ *   end, the default falls back to `undefined`.
  */
 export type ZipKeysWithValues<
   Keys extends readonly string[],
