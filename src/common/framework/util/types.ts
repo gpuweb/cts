@@ -41,5 +41,9 @@ export type ZipKeysWithValues<
           TupleHeadOr<D, undefined>
         >;
       } &
-        ZipKeysWithValues<EnsureSubtype<KTail, readonly string[]>, TupleTailOr<V, []>, TupleTailOr<D, []>>
+        ZipKeysWithValues<
+          EnsureSubtype<KTail, readonly string[]>,
+          TupleTailOr<V, []>,
+          TupleTailOr<D, []>
+        >
     : {}; // K exhausted
