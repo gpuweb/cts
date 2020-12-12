@@ -58,6 +58,6 @@
     "portfinder": "^1.0.28",
     "quiet-grunt": "^0.2.3",
     "ts-node": "^9.0.0",
-    "typescript": "^4.0.3"
+    "typescript": "^4.1.2"
   }
 }
