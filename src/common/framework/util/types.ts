@@ -24,9 +24,6 @@ type TypeOr<T, Default> = T extends undefined ? Default : T;
 /**
  * Zips a key tuple type and a value tuple type together into an object.
  *
- * As of this writing, VSCode bundles an older version of TypeScript which cannot support this.
- * Use "TypeScript: Select TypeScript Version..." in the command palette to switch.
- *
  * @template K Keys of the resulting object.
  * @template V Values of the resulting object. If an item is `undefined` or past the end, it defaults.
  * @template D Default values. If an item is past the end, it defaults to `undefined`.
