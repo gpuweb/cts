@@ -24,26 +24,26 @@ type TypeOr<T, Default> = T extends undefined ? Default : T;
 /**
  * Zips a key tuple type and a value tuple type together into an object.
  *
- * @template K Keys of the resulting object.
- * @template V Values of the resulting object. If an item is `undefined` or past the end, it defaults.
- * @template D Default values. If an item is past the end, it defaults to `undefined`.
+ * @template Keys Keys of the resulting object.
+ * @template Values Values of the resulting object. If an item is `undefined` or past the end, it defaults.
+ * @template Defaults Default values. If an item is past the end, it defaults to `undefined`.
  */
 export type ZipKeysWithValues<
-  K extends readonly string[],
-  V extends readonly unknown[], // Values
-  D extends readonly unknown[] = readonly []
+  Keys extends readonly string[],
+  Values extends readonly unknown[],
+  Defaults extends readonly unknown[]
 > =
   //
-  K extends readonly [infer KHead, ...infer KTail]
+  Keys extends readonly [infer KHead, ...infer KTail]
     ? {
         readonly [k in EnsureSubtype<KHead, string>]: TypeOr<
-          TupleHeadOr<V, undefined>,
-          TupleHeadOr<D, undefined>
+          TupleHeadOr<Values, undefined>,
+          TupleHeadOr<Defaults, undefined>
         >;
       } &
         ZipKeysWithValues<
           EnsureSubtype<KTail, readonly string[]>,
-          TupleTailOr<V, []>,
-          TupleTailOr<D, []>
+          TupleTailOr<Values, []>,
+          TupleTailOr<Defaults, []>
         >
     : {}; // K exhausted
