@@ -15,7 +15,7 @@ export type UnionToIntersection<U> =
   (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
 
 /** "Type asserts" that `X` is a subtype of `Y`. */
-type Cast<X, Y> = X extends Y ? X : never;
+type EnsureSubtype<X, Y> = X extends Y ? X : never;
 
 type TupleHeadOr<T, Default> = T extends readonly [infer H, ...(readonly unknown[])] ? H : Default;
 type TupleTailOr<T, Default> = T extends readonly [unknown, ...infer Tail] ? Tail : Default;
@@ -36,10 +36,10 @@ export type ZipKeysWithValues<
   //
   K extends readonly [infer KHead, ...infer KTail]
     ? {
-        readonly [k in Cast<KHead, string>]: TypeOr<
+        readonly [k in EnsureSubtype<KHead, string>]: TypeOr<
           TupleHeadOr<V, undefined>,
           TupleHeadOr<D, undefined>
         >;
       } &
-        ZipKeysWithValues<Cast<KTail, readonly string[]>, TupleTailOr<V, []>, TupleTailOr<D, []>>
+        ZipKeysWithValues<EnsureSubtype<KTail, readonly string[]>, TupleTailOr<V, []>, TupleTailOr<D, []>>
     : {}; // K exhausted
