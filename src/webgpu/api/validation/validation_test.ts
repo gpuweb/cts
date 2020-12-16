@@ -6,7 +6,7 @@ type Encoder = GPUCommandEncoder | GPUProgrammablePassEncoder | GPURenderBundleE
 export const kEncoderTypes = ['non-pass', 'compute pass', 'render pass', 'render bundle'] as const;
 type EncoderType = typeof kEncoderTypes[number];
 
-interface CommandBufferMaker<E extends Encoder> {
+export interface CommandBufferMaker<E extends Encoder> {
   readonly encoder: E;
   finish(): GPUCommandBuffer;
 }
