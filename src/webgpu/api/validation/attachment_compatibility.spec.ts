@@ -12,10 +12,12 @@ import {
   kRegularTextureFormats,
   kSizedDepthStencilFormats,
   kUnsizedDepthStencilFormats,
-  RegularTextureFormat,
 } from '../../capability_info.js';
 
 import { ValidationTest, CommandBufferMaker } from './validation_test.js';
+
+// TODO: Update with all possible sample counts when defined
+const kSampleCounts = [1, 4] as const;
 
 // TODO: Update maximum color attachments when defined
 const kColorAttachmentCounts = range(4, i => i + 1);
@@ -26,26 +28,33 @@ const kDepthStencilAttachmentFormats = [
 ] as const;
 
 class F extends ValidationTest {
-  createAttachmentTextureView(format: GPUTextureFormat) {
+  createAttachmentTextureView(format: GPUTextureFormat, sampleCount?: number) {
     return this.device
       .createTexture({
         size: [1, 1, 1],
         format,
         usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
+        sampleCount,
       })
       .createView();
   }
 
-  createColorAttachment(format: GPUTextureFormat): GPURenderPassColorAttachmentDescriptor {
+  createColorAttachment(
+    format: GPUTextureFormat,
+    sampleCount?: number
+  ): GPURenderPassColorAttachmentDescriptor {
     return {
-      attachment: this.createAttachmentTextureView(format),
+      attachment: this.createAttachmentTextureView(format, sampleCount),
       loadValue: [0, 0, 0, 0],
     };
   }
 
-  createDepthAttachment(format: GPUTextureFormat): GPURenderPassDepthStencilAttachmentDescriptor {
+  createDepthAttachment(
+    format: GPUTextureFormat,
+    sampleCount?: number
+  ): GPURenderPassDepthStencilAttachmentDescriptor {
     return {
-      attachment: this.createAttachmentTextureView(format),
+      attachment: this.createAttachmentTextureView(format, sampleCount),
       depthLoadValue: 0,
       depthStoreOp: 'clear',
       stencilLoadValue: 1,
@@ -56,14 +65,17 @@ class F extends ValidationTest {
   createPassOrBundleEncoder(
     encoderType: 'render pass' | 'render bundle',
     colorFormats: Iterable<GPUTextureFormat>,
-    depthStencilFormat?: GPUTextureFormat
+    depthStencilFormat?: GPUTextureFormat,
+    sampleCount?: number
   ): CommandBufferMaker<GPURenderPassEncoder | GPURenderBundleEncoder> {
     const encoder = this.device.createCommandEncoder();
     const passDesc: GPURenderPassDescriptor = {
-      colorAttachments: Array.from(colorFormats, format => this.createColorAttachment(format)),
+      colorAttachments: Array.from(colorFormats, desc =>
+        this.createColorAttachment(desc, sampleCount)
+      ),
       depthStencilAttachment:
         depthStencilFormat !== undefined
-          ? this.createDepthAttachment(depthStencilFormat)
+          ? this.createDepthAttachment(depthStencilFormat, sampleCount)
           : undefined,
     };
     const pass = encoder.beginRenderPass(passDesc);
@@ -72,6 +84,7 @@ class F extends ValidationTest {
         const bundleEncoder = this.device.createRenderBundleEncoder({
           colorFormats,
           depthStencilFormat,
+          sampleCount,
         });
 
         return {
@@ -97,55 +110,43 @@ class F extends ValidationTest {
 
   createRenderPipeline(
     colorStates: Iterable<GPUColorStateDescriptor>,
-    depthStencilState?: GPUDepthStencilStateDescriptor
+    depthStencilState?: GPUDepthStencilStateDescriptor,
+    sampleCount?: number
   ) {
-    const wgslVertex = `
-    [[builtin(position)]] var<out> position : vec4<f32>;
-
-    [[stage(vertex)]]
-    fn main() -> void {
-      position = vec4<f32>(0.0, 0.0, 0.0, 0.0);
-      return;
-    }
-  `;
-    const wgslFragment = `
-    [[stage(fragment)]]
-    fn main() -> void {
-      return;
-    }
-  `;
-
     return this.device.createRenderPipeline({
       vertexStage: {
         module: this.device.createShaderModule({
-          code: wgslVertex,
+          code: `
+            [[builtin(position)]] var<out> position : vec4<f32>;
+
+            [[stage(vertex)]] fn main() -> void {
+              position = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+            }`,
         }),
         entryPoint: 'main',
       },
       fragmentStage: {
         module: this.device.createShaderModule({
-          code: wgslFragment,
+          code: '[[stage(fragment)]] fn main() -> void {}',
         }),
         entryPoint: 'main',
       },
       primitiveTopology: 'triangle-list',
       colorStates,
       depthStencilState,
+      sampleCount,
     });
   }
 }
 
 export const g = makeTestGroup(F);
 
-const kColorAttachmentFormats = kRegularTextureFormats
-  .map((key): [RegularTextureFormat, typeof kRegularTextureFormatInfo[RegularTextureFormat]] => [
-    key,
-    kRegularTextureFormatInfo[key],
-  ])
-  .filter(([, format]) => format.color && format.renderable)
-  .map(([key]) => key);
+const kColorAttachmentFormats = kRegularTextureFormats.filter(format => {
+  const info = kRegularTextureFormatInfo[format];
+  return info.color && info.renderable;
+});
 
-g.test('render_pass_and_bundle_color_format')
+g.test('render_pass_and_bundle,color_format')
   .desc('Test that color attachment formats in render passes and bundles must match.')
   .params(
     params()
@@ -169,8 +170,14 @@ g.test('render_pass_and_bundle_color_format')
     }, passFormat !== bundleFormat);
   });
 
-g.test('render_pass_and_bundle_color_count')
-  .desc('Test that the number of color attachments in render passes and bundles must match.')
+g.test('render_pass_and_bundle,color_count')
+  .desc(
+    `
+  Test that the number of color attachments in render passes and bundles must match.
+
+  TODO: Add sparse color attachment compatibility test when defined by specification
+  `
+  )
   .params(
     params()
       .combine(poptions('passCount', kColorAttachmentCounts))
@@ -194,7 +201,7 @@ g.test('render_pass_and_bundle_color_count')
     }, passCount !== bundleCount);
   });
 
-g.test('render_pass_and_bundle_depth_format')
+g.test('render_pass_and_bundle,depth_format')
   .desc('Test that the depth attachment format in render passes and bundles must match.')
   .params(
     params()
@@ -221,7 +228,32 @@ g.test('render_pass_and_bundle_depth_format')
     }, passFormat !== bundleFormat);
   });
 
-g.test('render_pass_or_bundle_and_pipeline_color_format')
+g.test('render_pass_and_bundle,sample_count')
+  .desc('Test that the sample count in render passes and bundles must match.')
+  .params(
+    params()
+      .combine(poptions('renderSampleCount', kSampleCounts))
+      .combine(poptions('bundleSampleCount', kSampleCounts))
+  )
+  .fn(t => {
+    const { renderSampleCount, bundleSampleCount } = t.params;
+    const bundleEncoder = t.device.createRenderBundleEncoder({
+      colorFormats: ['rgba8unorm'],
+      sampleCount: bundleSampleCount,
+    });
+    const bundle = bundleEncoder.finish();
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [t.createColorAttachment('rgba8unorm', renderSampleCount)],
+    });
+    pass.executeBundles([bundle]);
+    pass.endPass();
+    t.expectValidationError(() => {
+      t.queue.submit([encoder.finish()]);
+    }, renderSampleCount !== bundleSampleCount);
+  });
+
+g.test('render_pass_or_bundle_and_pipeline,color_format')
   .desc(
     `
 Test that color attachment formats in render passes or bundles match the pipeline color format.
@@ -245,11 +277,13 @@ Test that color attachment formats in render passes or bundles match the pipelin
     }, encoderFormat !== pipelineFormat);
   });
 
-g.test('render_pass_or_bundle_and_pipeline_color_count')
+g.test('render_pass_or_bundle_and_pipeline,color_count')
   .desc(
     `
 Test that the number of color attachments in render passes or bundles match the pipeline color
 count.
+
+TODO: Add sparse color attachment compatibility test when defined by specification
 `
   )
   .params(
@@ -273,7 +307,7 @@ count.
     }, encoderCount !== pipelineCount);
   });
 
-g.test('render_pass_and_pipeline_depth_format')
+g.test('render_pass_or_bundle_and_pipeline,depth_format')
   .desc(
     `
 Test that the depth attachment format in render passes or bundles match the pipeline depth format.
@@ -302,4 +336,37 @@ Test that the depth attachment format in render passes or bundles match the pipe
     t.expectValidationError(() => {
       t.queue.submit([finish()]);
     }, encoderFormat !== pipelineFormat);
+  });
+
+g.test('render_pass_or_bundle_and_pipeline,sample_count')
+  .desc(
+    `
+Test that the sample count in render passes or bundles match the pipeline sample count.
+`
+  )
+  .params(
+    params()
+      .combine(poptions('encoderType', ['render pass', 'render bundle'] as const))
+      .combine(poptions('encoderSampleCount', [1, 4] as const))
+      .combine(poptions('pipelineSampleCount', [1, 4] as const))
+  )
+  .fn(t => {
+    const { encoderType, encoderSampleCount, pipelineSampleCount } = t.params;
+    const pipeline = t.createRenderPipeline(
+      [{ format: 'rgba8unorm' }],
+      undefined,
+      pipelineSampleCount
+    );
+
+    const { encoder, finish } = t.createPassOrBundleEncoder(
+      encoderType,
+      ['rgba8unorm'],
+      undefined,
+      encoderSampleCount
+    );
+    encoder.setPipeline(pipeline);
+
+    t.expectValidationError(() => {
+      t.queue.submit([finish()]);
+    }, encoderSampleCount !== pipelineSampleCount);
   });
