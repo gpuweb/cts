@@ -12,15 +12,13 @@ import {
   kRegularTextureFormats,
   kSizedDepthStencilFormats,
   kUnsizedDepthStencilFormats,
+  kTextureSampleCounts,
+  kMaxColorAttachments,
 } from '../../capability_info.js';
 
 import { ValidationTest, CommandBufferMaker } from './validation_test.js';
 
-// TODO: Update with all possible sample counts when defined
-const kSampleCounts = [1, 4] as const;
-
-// TODO: Update maximum color attachments when defined
-const kColorAttachmentCounts = range(4, i => i + 1);
+const kColorAttachmentCounts = range(kMaxColorAttachments, i => i + 1);
 const kDepthStencilAttachmentFormats = [
   undefined,
   ...kSizedDepthStencilFormats,
@@ -232,8 +230,8 @@ g.test('render_pass_and_bundle,sample_count')
   .desc('Test that the sample count in render passes and bundles must match.')
   .params(
     params()
-      .combine(poptions('renderSampleCount', kSampleCounts))
-      .combine(poptions('bundleSampleCount', kSampleCounts))
+      .combine(poptions('renderSampleCount', kTextureSampleCounts))
+      .combine(poptions('bundleSampleCount', kTextureSampleCounts))
   )
   .fn(t => {
     const { renderSampleCount, bundleSampleCount } = t.params;
@@ -347,8 +345,8 @@ Test that the sample count in render passes or bundles match the pipeline sample
   .params(
     params()
       .combine(poptions('encoderType', ['render pass', 'render bundle'] as const))
-      .combine(poptions('encoderSampleCount', [1, 4] as const))
-      .combine(poptions('pipelineSampleCount', [1, 4] as const))
+      .combine(poptions('encoderSampleCount', kTextureSampleCounts))
+      .combine(poptions('pipelineSampleCount', kTextureSampleCounts))
   )
   .fn(t => {
     const { encoderType, encoderSampleCount, pipelineSampleCount } = t.params;
