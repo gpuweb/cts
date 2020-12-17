@@ -250,19 +250,20 @@ class F extends GPUTest {
 
 export const g = makeTestGroup(F);
 
-g.test('color_textures_non_compressed_non_array')
+// TODO(jiawei.shao@intel.com): support all WebGPU texture formats
+g.test('color_textures,non_compressed,non_array')
   .desc(
     `
-  Validate the correctness of the copy by filling the srcTexture with testable data and any non-compressed color format that is
-  supported by WebGPU, doing CopyTextureToTexture() copy, and verifying the content of the whole dstTexture
-  TODO(jiawei.shao@intel.com): support all WebGPU texture formats
+  Validate the correctness of the copy by filling the srcTexture with testable data and any
+  non-compressed color format supported by WebGPU, doing CopyTextureToTexture() copy, and verifying
+  the content of the whole dstTexture.
 
-    copy {1 texel block, part of, the whole} srcTexture to the dstTexture {with, without} a non-zero valid
-    srcOffset that
-    - covers the whole dstTexture subresource
-    - covers the corners of the dstTexture
-    - doesn't cover any texels that are on the edge of the dstTexture
-    - covers the mipmap level > 0
+  Copy {1 texel block, part of, the whole} srcTexture to the dstTexture {with, without} a non-zero
+  valid srcOffset that
+  - covers the whole dstTexture subresource
+  - covers the corners of the dstTexture
+  - doesn't cover any texels that are on the edge of the dstTexture
+  - covers the mipmap level > 0
   `
   )
   .params(
@@ -305,12 +306,13 @@ g.test('color_textures_non_compressed_non_array')
     );
   });
 
-g.test('color_textures_non_compressed_array')
+// TODO(jiawei.shao@intel.com): support all WebGPU texture formats
+g.test('color_textures,non_compressed,array')
   .desc(
     `
-  Validate the correctness of the texture-to-texture copy on 2D array textures by filling the srcTexture with testable data and any non-compressed color format that is
-  supported by WebGPU, doing CopyTextureToTexture() copy, and verifying the content of the whole dstTexture.
-  TODO(jiawei.shao@intel.com): support all WebGPU texture formats
+  Validate the correctness of the texture-to-texture copy on 2D array textures by filling the
+  srcTexture with testable data and any non-compressed color format supported by WebGPU, doing
+  CopyTextureToTexture() copy, and verifying the content of the whole dstTexture.
   `
   )
   .params(
@@ -397,7 +399,11 @@ g.test('color_textures_non_compressed_array')
 
 g.test('zero_copies')
   .desc(
-    `Validate the correctness of the functionality of CopyTextureToTexture() with zero copies
+    `
+  Validate the correctness of zero-sized copies (should be no-ops).
+
+  - Copies that are zero-sized in only one dimension {x, y, z}, each touching the {lower, upper} end
+  of that dimension.
   `
   )
   .params(
@@ -410,13 +416,13 @@ g.test('zero_copies')
             dstOffset: { x: 0, y: 0, z: 0 },
             copyExtent: { width: -64, height: 0, depth: 0 },
           },
-          // copyExtent.width === 0 && srcOffset.x === textureWidth - 1
+          // copyExtent.width === 0 && srcOffset.x === textureWidth
           {
             srcOffset: { x: 64, y: 0, z: 0 },
             dstOffset: { x: 0, y: 0, z: 0 },
             copyExtent: { width: -64, height: 0, depth: 0 },
           },
-          // copyExtent.width === 0 && dstOffset.x === textureWidth - 1
+          // copyExtent.width === 0 && dstOffset.x === textureWidth
           {
             srcOffset: { x: 0, y: 0, z: 0 },
             dstOffset: { x: 64, y: 0, z: 0 },
@@ -428,13 +434,13 @@ g.test('zero_copies')
             dstOffset: { x: 0, y: 0, z: 0 },
             copyExtent: { width: 0, height: -32, depth: 0 },
           },
-          // copyExtent.height === 0 && srcOffset.y === textureHeight - 1
+          // copyExtent.height === 0 && srcOffset.y === textureHeight
           {
             srcOffset: { x: 0, y: 32, z: 0 },
             dstOffset: { x: 0, y: 0, z: 0 },
             copyExtent: { width: 0, height: -32, depth: 0 },
           },
-          // copyExtent.height === 0 && dstOffset.y === textureHeight - 1
+          // copyExtent.height === 0 && dstOffset.y === textureHeight
           {
             srcOffset: { x: 0, y: 0, z: 0 },
             dstOffset: { x: 0, y: 32, z: 0 },
@@ -446,13 +452,13 @@ g.test('zero_copies')
             dstOffset: { x: 0, y: 0, z: 0 },
             copyExtent: { width: 0, height: 0, depth: -5 },
           },
-          // copyExtent.depth === 0 && srcOffset.z === textureDepth - 1
+          // copyExtent.depth === 0 && srcOffset.z === textureDepth
           {
             srcOffset: { x: 0, y: 0, z: 5 },
             dstOffset: { x: 0, y: 0, z: 0 },
             copyExtent: { width: 0, height: 0, depth: 0 },
           },
-          // copyExtent.depth === 0 && dstOffset.z === textureDepth - 1
+          // copyExtent.depth === 0 && dstOffset.z === textureDepth
           {
             srcOffset: { x: 0, y: 0, z: 0 },
             dstOffset: { x: 0, y: 0, z: 5 },
