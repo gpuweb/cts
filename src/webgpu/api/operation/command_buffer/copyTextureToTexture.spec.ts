@@ -1,4 +1,7 @@
-export const description = 'copyTexturetoTexture operation tests';
+export const description = `copyTexturetoTexture operation tests
+
+  TODO(jiawei.shao@intel.com): support all WebGPU texture formats.
+  `;
 
 import { poptions, params } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
@@ -250,7 +253,6 @@ class F extends GPUTest {
 
 export const g = makeTestGroup(F);
 
-// TODO(jiawei.shao@intel.com): support all WebGPU texture formats
 g.test('color_textures,non_compressed,non_array')
   .desc(
     `
@@ -306,7 +308,6 @@ g.test('color_textures,non_compressed,non_array')
     );
   });
 
-// TODO(jiawei.shao@intel.com): support all WebGPU texture formats
 g.test('color_textures,non_compressed,array')
   .desc(
     `
