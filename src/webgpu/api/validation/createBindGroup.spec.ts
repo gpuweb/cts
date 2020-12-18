@@ -15,6 +15,7 @@ import {
   kTextureBindingTypes,
   kTextureBindingTypeInfo,
 } from '../../capability_info.js';
+import { GPUConst } from '../../constants.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -106,6 +107,11 @@ g.test('texture_binding_must_have_correct_usage')
     params()
       .combine(poptions('type', kTextureBindingTypes))
       .combine(poptions('usage', kTextureUsages))
+      .unless(({ type, usage }) => {
+        const info = kTextureBindingTypeInfo[type];
+        // Can't create the texture for this (usage=STORAGE and sampleCount=4), so skip.
+        return usage === GPUConst.TextureUsage.STORAGE && info.resource === 'sampledTexMS';
+      })
   )
   .fn(async t => {
     const { type, usage } = t.params;
@@ -122,13 +128,7 @@ g.test('texture_binding_must_have_correct_usage')
       usage,
       sampleCount: info.resource === 'sampledTexMS' ? 4 : 1,
     };
-    const textureShouldError = usage === GPUTextureUsage.STORAGE && descriptor.sampleCount === 4;
-    let texture: GPUTexture | undefined;
-    t.expectValidationError(() => {
-      texture = t.device.createTexture(descriptor);
-    }, textureShouldError);
-    if (textureShouldError) return;
-    const resource = texture!.createView();
+    const resource = t.device.createTexture(descriptor).createView();
 
     const shouldError = usage !== info.usage;
     t.expectValidationError(() => {
