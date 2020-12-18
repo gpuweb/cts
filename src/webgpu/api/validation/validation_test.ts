@@ -1,3 +1,4 @@
+import { assert } from '../../../common/framework/util/util.js';
 import { BindableResource } from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 
@@ -280,15 +281,41 @@ export class ValidationTest extends GPUTest {
     }
   }
 
-  expectValidationError(fn: Function, shouldError: boolean = true): void {
+  async expectValidationErrorImmediate<T>(
+    fn: () => T | Promise<T>,
+    shouldError: boolean = true
+  ): Promise<T> {
+    if (!shouldError) {
+      return fn();
+    }
+
+    this.device.pushErrorScope('validation');
+    const returnValue = fn();
+
+    const gpuValidationError = await this.device.popErrorScope();
+    assert(gpuValidationError instanceof GPUValidationError, 'Validation error was expected.');
+    this.debug(`Captured validation error - ${gpuValidationError.message}`);
+
+    return returnValue;
+  }
+
+  expectValidationError(fn: () => unknown, shouldError: boolean = true): void {
     // If no error is expected, we let the scope surrounding the test catch it.
-    if (shouldError === false) {
-      fn();
+    if (!shouldError) {
+      const returnValue = fn();
+      assert(
+        returnValue === undefined,
+        'expectValidationError callback should not return a value (or be async)'
+      );
       return;
     }
 
     this.device.pushErrorScope('validation');
-    fn();
+    const returnValue = fn();
+    assert(
+      returnValue === undefined,
+      'expectValidationError callback should not return a value (or be async)'
+    );
     const promise = this.device.popErrorScope();
 
     this.eventualAsyncExpectation(async niceStack => {
