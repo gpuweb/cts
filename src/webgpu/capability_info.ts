@@ -268,6 +268,7 @@ type ValidBindableResource =
   | 'plainSamp'
   | 'compareSamp'
   | 'sampledTex'
+  | 'sampledTexMS'
   | 'storageTex';
 type ErrorBindableResource = 'errorBuf' | 'errorSamp' | 'errorTex';
 export type BindableResource = ValidBindableResource | ErrorBindableResource;
@@ -315,8 +316,16 @@ export const kPerPipelineBindingLimits: {
 const kBindableResource: {
   readonly [k in BindableResource]: {};
 } = /* prettier-ignore */ {
-  uniformBuf: {}, storageBuf: {}, plainSamp: {}, compareSamp: {}, sampledTex: {}, storageTex: {},
-  errorBuf: {}, errorSamp: {}, errorTex: {},
+  uniformBuf:   {},
+  storageBuf:   {},
+  plainSamp:    {},
+  compareSamp:  {},
+  sampledTex:   {},
+  sampledTexMS: {},
+  storageTex:   {},
+  errorBuf:     {},
+  errorSamp:    {},
+  errorTex:     {},
 };
 export const kBindableResources = keysOf(kBindableResource);
 
@@ -330,12 +339,13 @@ interface BindingKindInfo {
 const kBindingKind: {
   readonly [k in ValidBindableResource]: BindingKindInfo;
 } = /* prettier-ignore */ {
-  uniformBuf:  { resource: 'uniformBuf',  perStageLimitClass: kPerStageBindingLimits.uniformBuf, perPipelineLimitClass: kPerPipelineBindingLimits.uniformBuf, },
-  storageBuf:  { resource: 'storageBuf',  perStageLimitClass: kPerStageBindingLimits.storageBuf, perPipelineLimitClass: kPerPipelineBindingLimits.storageBuf, },
-  plainSamp:   { resource: 'plainSamp',   perStageLimitClass: kPerStageBindingLimits.sampler,    perPipelineLimitClass: kPerPipelineBindingLimits.sampler,    },
-  compareSamp: { resource: 'compareSamp', perStageLimitClass: kPerStageBindingLimits.sampler,    perPipelineLimitClass: kPerPipelineBindingLimits.sampler,    },
-  sampledTex:  { resource: 'sampledTex',  perStageLimitClass: kPerStageBindingLimits.sampledTex, perPipelineLimitClass: kPerPipelineBindingLimits.sampledTex, },
-  storageTex:  { resource: 'storageTex',  perStageLimitClass: kPerStageBindingLimits.storageTex, perPipelineLimitClass: kPerPipelineBindingLimits.storageTex, },
+  uniformBuf:   { resource: 'uniformBuf',   perStageLimitClass: kPerStageBindingLimits.uniformBuf, perPipelineLimitClass: kPerPipelineBindingLimits.uniformBuf, },
+  storageBuf:   { resource: 'storageBuf',   perStageLimitClass: kPerStageBindingLimits.storageBuf, perPipelineLimitClass: kPerPipelineBindingLimits.storageBuf, },
+  plainSamp:    { resource: 'plainSamp',    perStageLimitClass: kPerStageBindingLimits.sampler,    perPipelineLimitClass: kPerPipelineBindingLimits.sampler,    },
+  compareSamp:  { resource: 'compareSamp',  perStageLimitClass: kPerStageBindingLimits.sampler,    perPipelineLimitClass: kPerPipelineBindingLimits.sampler,    },
+  sampledTex:   { resource: 'sampledTex',   perStageLimitClass: kPerStageBindingLimits.sampledTex, perPipelineLimitClass: kPerPipelineBindingLimits.sampledTex, },
+  sampledTexMS: { resource: 'sampledTexMS', perStageLimitClass: kPerStageBindingLimits.sampledTex, perPipelineLimitClass: kPerPipelineBindingLimits.sampledTex, },
+  storageTex:   { resource: 'storageTex',   perStageLimitClass: kPerStageBindingLimits.storageTex, perPipelineLimitClass: kPerPipelineBindingLimits.storageTex, },
 };
 
 // Binding type info
@@ -380,10 +390,10 @@ export const kTextureBindingTypeInfo: {
     // Add fields as needed
   } & BindingTypeInfo;
 } = /* prettier-ignore */ {
-  'sampled-texture':           { usage: GPUConst.TextureUsage.SAMPLED, ...kBindingKind.sampledTex,  ...kValidStagesAll,          },
-  'multisampled-texture':      { usage: GPUConst.TextureUsage.SAMPLED, ...kBindingKind.sampledTex,  ...kValidStagesAll,          },
-  'writeonly-storage-texture': { usage: GPUConst.TextureUsage.STORAGE, ...kBindingKind.storageTex,  ...kValidStagesStorageWrite, },
-  'readonly-storage-texture':  { usage: GPUConst.TextureUsage.STORAGE, ...kBindingKind.storageTex,  ...kValidStagesAll,          },
+  'sampled-texture':           { usage: GPUConst.TextureUsage.SAMPLED, ...kBindingKind.sampledTex,    ...kValidStagesAll,          },
+  'multisampled-texture':      { usage: GPUConst.TextureUsage.SAMPLED, ...kBindingKind.sampledTexMS,  ...kValidStagesAll,          },
+  'writeonly-storage-texture': { usage: GPUConst.TextureUsage.STORAGE, ...kBindingKind.storageTex,    ...kValidStagesStorageWrite, },
+  'readonly-storage-texture':  { usage: GPUConst.TextureUsage.STORAGE, ...kBindingKind.storageTex,    ...kValidStagesAll,          },
 };
 export const kTextureBindingTypes = keysOf(kTextureBindingTypeInfo);
 

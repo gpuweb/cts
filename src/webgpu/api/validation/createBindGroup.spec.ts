@@ -120,12 +120,20 @@ g.test('texture_binding_must_have_correct_usage')
       size: { width: 16, height: 16, depth: 1 },
       format: 'rgba8unorm' as const,
       usage,
+      sampleCount: info.resource === 'sampledTexMS' ? 4 : 1,
     };
+    const textureShouldError = usage === GPUTextureUsage.STORAGE && descriptor.sampleCount === 4;
+    let texture: GPUTexture | undefined;
+    t.expectValidationError(() => {
+      texture = t.device.createTexture(descriptor);
+    }, textureShouldError);
+    if (textureShouldError) return;
+    const resource = texture!.createView();
 
     const shouldError = usage !== info.usage;
     t.expectValidationError(() => {
       t.device.createBindGroup({
-        entries: [{ binding: 0, resource: t.device.createTexture(descriptor).createView() }],
+        entries: [{ binding: 0, resource }],
         layout: bindGroupLayout,
       });
     }, shouldError);
@@ -240,6 +248,11 @@ g.test('texture_must_have_correct_dimension').fn(async t => {
 });
 
 g.test('buffer_offset_and_size_for_bind_groups_match')
+  .desc(
+    `TODO: describe
+
+TODO(#234): disallow zero-sized bindings`
+  )
   .params([
     { offset: 0, size: 512, _success: true }, // offset 0 is valid
     { offset: 256, size: 256, _success: true }, // offset 256 (aligned) is valid

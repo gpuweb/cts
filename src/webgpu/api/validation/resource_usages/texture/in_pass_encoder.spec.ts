@@ -917,33 +917,19 @@ g.test('unused_bindings_in_pipeline')
     const bindGroup0 = t.createBindGroup(0, view, 'readonly-storage-texture', '2d', 'rgba8unorm');
     const bindGroup1 = t.createBindGroup(0, view, 'writeonly-storage-texture', '2d', 'rgba8unorm');
 
-    const wgslVertex = `
-      fn main() -> void {
-        return;
-      }
-
-      entry_point vertex = main;
-    `;
+    const wgslVertex = '[[stage(vertex)]] fn main() -> void {}';
     // TODO: revisit the shader code once 'image' can be supported in wgsl.
     const wgslFragment = `
       ${useBindGroup0 ? '[[set 0, binding 0]] var<image> image0;' : ''}
       ${useBindGroup1 ? '[[set 1, binding 0]] var<image> image1;' : ''}
-      fn main() -> void {
-        return;
-      }
-
-      entry_point fragment = main;
+      [[stage(fragment)]] fn main() -> void {}
     `;
 
     // TODO: revisit the shader code once 'image' can be supported in wgsl.
     const wgslCompute = `
       ${useBindGroup0 ? '[[set 0, binding 0]] var<image> image0;' : ''}
       ${useBindGroup1 ? '[[set 1, binding 0]] var<image> image1;' : ''}
-      fn main() -> void {
-        return;
-      }
-
-      entry_point compute = main;
+      [[stage(compute)]] fn main() -> void {}
     `;
 
     const pipeline = compute
