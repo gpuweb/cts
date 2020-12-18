@@ -1,4 +1,3 @@
-import { unreachable } from '../../../common/framework/util/util.js';
 import { BindableResource } from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 
@@ -52,13 +51,18 @@ export class ValidationTest extends GPUTest {
     switch (state) {
       case 'valid':
         return this.device.createBuffer(descriptor);
-      case 'invalid':
+
+      case 'invalid': {
         // Make the buffer invalid because of an invalid combination of usages but keep the
         // descriptor passed as much as possible (for mappedAtCreation and friends).
-        return this.device.createBuffer({
+        this.device.pushErrorScope('validation');
+        const buffer = this.device.createBuffer({
           ...descriptor,
           usage: descriptor.usage | GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_SRC,
         });
+        this.device.popErrorScope();
+        return buffer;
+      }
       case 'destroyed': {
         const buffer = this.device.createBuffer(descriptor);
         buffer.destroy();
@@ -94,11 +98,12 @@ export class ValidationTest extends GPUTest {
     return sampler;
   }
 
-  getSampledTexture(): GPUTexture {
+  getSampledTexture(sampleCount: number = 1): GPUTexture {
     return this.device.createTexture({
       size: { width: 16, height: 16, depth: 1 },
       format: 'rgba8unorm',
       usage: GPUTextureUsage.SAMPLED,
+      sampleCount,
     });
   }
 
@@ -145,40 +150,25 @@ export class ValidationTest extends GPUTest {
       case 'compareSamp':
         return this.getComparisonSampler();
       case 'sampledTex':
-        return this.getSampledTexture().createView();
+        return this.getSampledTexture(1).createView();
+      case 'sampledTexMS':
+        return this.getSampledTexture(4).createView();
       case 'storageTex':
         return this.getStorageTexture().createView();
-      default:
-        unreachable('unknown binding resource type');
     }
   }
 
   createNoOpRenderPipeline(): GPURenderPipeline {
-    const wgslVertex = `
-      fn main() -> void {
-        return;
-      }
-
-      entry_point vertex = main;
-    `;
-    const wgslFragment = `
-      fn main() -> void {
-        return;
-      }
-
-      entry_point fragment = main;
-    `;
-
     return this.device.createRenderPipeline({
       vertexStage: {
         module: this.device.createShaderModule({
-          code: wgslVertex,
+          code: '[[stage(vertex)]] fn main() -> void {}',
         }),
         entryPoint: 'main',
       },
       fragmentStage: {
         module: this.device.createShaderModule({
-          code: wgslFragment,
+          code: '[[stage(fragment)]] fn main() -> void {}',
         }),
         entryPoint: 'main',
       },
@@ -188,18 +178,10 @@ export class ValidationTest extends GPUTest {
   }
 
   createNoOpComputePipeline(): GPUComputePipeline {
-    const wgslCompute = `
-      fn main() -> void {
-        return;
-      }
-
-      entry_point compute = main;
-    `;
-
     return this.device.createComputePipeline({
       computeStage: {
         module: this.device.createShaderModule({
-          code: wgslCompute,
+          code: '[[stage(compute)]] fn main() -> void {}',
         }),
         entryPoint: 'main',
       },

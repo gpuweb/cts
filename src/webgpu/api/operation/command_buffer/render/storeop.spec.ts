@@ -1,5 +1,8 @@
 export const description = `
-renderPass store op test that drawn quad is either stored or cleared based on storeop`;
+renderPass store op test that drawn quad is either stored or cleared based on storeop
+
+TODO: is this duplicated with api,operation,render_pass,storeOp?
+`;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
