@@ -10,7 +10,7 @@
 Leave the following in the pull request description:
 -->
 
-**[Reviews](https://github.com/gpuweb/cts/blob/main/docs/reviews.md) are outstanding for:**
+**[Review requirements](https://github.com/gpuweb/cts/blob/main/docs/reviews.md) are satisfied for:**
 
 - [ ] WebGPU readability
 - [ ] TypeScript readability
