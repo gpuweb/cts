@@ -26,7 +26,7 @@ TODO: review existing tests and merge with this plan:
 
 import { pbool, poptions, params } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { unreachable } from '../../../../common/framework/util/util.js';
+import { assert, unreachable } from '../../../../common/framework/util/util.js';
 import { kBufferUsages } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import { ValidationTest } from '../validation_test.js';
@@ -43,13 +43,17 @@ class F extends ValidationTest {
     if (success) {
       const p = buffer.mapAsync(mode, offset, size);
       await p;
-      this.shouldResolve(p);
     } else {
-      this.expectValidationError(async () => {
-        const p = buffer.mapAsync(mode, offset, size);
-        await p;
-        this.shouldReject(rejectName!, p);
+      let p: Promise<void>;
+      this.expectValidationError(() => {
+        p = buffer.mapAsync(mode, offset, size);
       });
+      try {
+        await p!;
+        assert(rejectName === null, 'mapAsync unexpectedly passed');
+      } catch (ex) {
+        assert(rejectName === ex.name, `mapAsync rejected unexpectedly with: ${ex}`);
+      }
     }
   }
 
