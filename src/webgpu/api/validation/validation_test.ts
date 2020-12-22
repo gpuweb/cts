@@ -284,18 +284,24 @@ export class ValidationTest extends GPUTest {
   /**
    * Expect a validation error inside the callback.
    *
-   * Awaiting the returned promise is only necessary if you want to await on the completion
-   * of an async callback. The validation error check will still happen "eventually".
-   *
    * Tests should always do just one WebGPU call in the callback, to make sure that's what's tested.
    */
-  expectValidationError(fn: () => unknown, shouldError: boolean = true): void {
+  // Note: A return value is not allowed for the callback function. This is to avoid confusion
+  // about what the actual behavior would be. We could either:
+  //   - Make expectValidationError async, and have it await on fn(). This causes an async split
+  //     between pushErrorScope and popErrorScope, so if the caller doesn't `await` on
+  //     expectValidationError (either accidentally or because it doesn't care to do so), then
+  //     other test code will be (nondeterministically) caught by the error scope.
+  //   - Make expectValidationError NOT await fn(), but just execute its first block (until the
+  //     first await) and return the return value (a Promise). This would be confusing because it
+  //     would look like the error scope includes the whole async function, but doesn't.
+  expectValidationError(fn: () => void, shouldError: boolean = true): void {
     // If no error is expected, we let the scope surrounding the test catch it.
     if (shouldError) {
       this.device.pushErrorScope('validation');
     }
 
-    const returnValue = fn();
+    const returnValue = fn() as unknown;
     assert(
       returnValue === undefined,
       'expectValidationError callback should not return a value (or be async)'
