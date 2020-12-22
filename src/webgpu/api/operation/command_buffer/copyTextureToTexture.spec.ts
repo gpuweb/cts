@@ -7,10 +7,10 @@ import { poptions, params } from '../../../../common/framework/params_builder.js
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/framework/util/util.js';
 import {
-  kAllTextureFormatInfo,
   kSizedTextureFormatInfo,
   kRegularTextureFormats,
   SizedTextureFormat,
+  kCompressedTextureFormatInfo,
   kCompressedTextureFormats,
 } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
@@ -415,8 +415,7 @@ g.test('color_textures,compressed,non_array')
   .fn(async t => {
     const { textureSize, format, copyBoxOffsets, srcCopyLevel, dstCopyLevel } = t.params;
 
-    const extension: GPUExtensionName | undefined = kAllTextureFormatInfo[format].extension;
-    assert(extension !== undefined);
+    const extension: GPUExtensionName = kCompressedTextureFormatInfo[format].extension;
     await t.selectDeviceOrSkipTestCase({ extensions: [extension] });
 
     t.DoCopyTextureToTextureTest(
@@ -501,8 +500,7 @@ g.test('color_textures,compressed,array')
   .fn(async t => {
     const { textureSize, format, copyBoxOffsets, srcCopyLevel, dstCopyLevel } = t.params;
 
-    const extension: GPUExtensionName | undefined = kAllTextureFormatInfo[format].extension;
-    assert(extension !== undefined);
+    const extension: GPUExtensionName = kCompressedTextureFormatInfo[format].extension;
     await t.selectDeviceOrSkipTestCase({ extensions: [extension] });
 
     t.DoCopyTextureToTextureTest(
