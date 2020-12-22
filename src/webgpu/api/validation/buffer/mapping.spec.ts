@@ -44,15 +44,16 @@ class F extends ValidationTest {
       const p = buffer.mapAsync(mode, offset, size);
       await p;
     } else {
-      await this.expectValidationErrorImmediate(async () => {
-        const p = buffer.mapAsync(mode, offset, size);
-        try {
-          await p;
-          assert(rejectName === null, 'mapAsync unexpectedly passed');
-        } catch (ex) {
-          assert(rejectName === ex.name, `mapAsync rejected unexpectedly with: ${ex}`);
-        }
+      let p: Promise<void>;
+      this.expectValidationError(() => {
+        p = buffer.mapAsync(mode, offset, size);
       });
+      try {
+        await p!;
+        assert(rejectName === null, 'mapAsync unexpectedly passed');
+      } catch (ex) {
+        assert(rejectName === ex.name, `mapAsync rejected unexpectedly with: ${ex}`);
+      }
     }
   }
 

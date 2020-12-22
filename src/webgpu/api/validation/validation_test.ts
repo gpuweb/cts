@@ -281,52 +281,39 @@ export class ValidationTest extends GPUTest {
     }
   }
 
-  async expectValidationErrorImmediate<T>(
-    fn: () => T | Promise<T>,
-    shouldError: boolean = true
-  ): Promise<T> {
-    if (!shouldError) {
-      return fn();
-    }
-
-    this.device.pushErrorScope('validation');
-    const returnValue = fn();
-
-    const gpuValidationError = await this.device.popErrorScope();
-    assert(gpuValidationError instanceof GPUValidationError, 'Validation error was expected.');
-    this.debug(`Captured validation error - ${gpuValidationError.message}`);
-
-    return returnValue;
-  }
-
+  /**
+   * Expect a validation error inside the callback.
+   *
+   * Awaiting the returned promise is only necessary if you want to await on the completion
+   * of an async callback. The validation error check will still happen "eventually".
+   *
+   * Tests should always do just one WebGPU call in the callback, to make sure that's what's tested.
+   */
   expectValidationError(fn: () => unknown, shouldError: boolean = true): void {
     // If no error is expected, we let the scope surrounding the test catch it.
-    if (!shouldError) {
-      const returnValue = fn();
-      assert(
-        returnValue === undefined,
-        'expectValidationError callback should not return a value (or be async)'
-      );
-      return;
+    if (shouldError) {
+      this.device.pushErrorScope('validation');
     }
 
-    this.device.pushErrorScope('validation');
     const returnValue = fn();
     assert(
       returnValue === undefined,
       'expectValidationError callback should not return a value (or be async)'
     );
-    const promise = this.device.popErrorScope();
 
-    this.eventualAsyncExpectation(async niceStack => {
-      const gpuValidationError = await promise;
-      if (!gpuValidationError) {
-        niceStack.message = 'Validation error was expected.';
-        this.rec.validationFailed(niceStack);
-      } else if (gpuValidationError instanceof GPUValidationError) {
-        niceStack.message = `Captured validation error - ${gpuValidationError.message}`;
-        this.rec.debug(niceStack);
-      }
-    });
+    if (shouldError) {
+      const promise = this.device.popErrorScope();
+
+      this.eventualAsyncExpectation(async niceStack => {
+        const gpuValidationError = await promise;
+        if (!gpuValidationError) {
+          niceStack.message = 'Validation error was expected.';
+          this.rec.validationFailed(niceStack);
+        } else if (gpuValidationError instanceof GPUValidationError) {
+          niceStack.message = `Captured validation error - ${gpuValidationError.message}`;
+          this.rec.debug(niceStack);
+        }
+      });
+    }
   }
 }
