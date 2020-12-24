@@ -12,8 +12,10 @@ TODO: merge these notes and implement.
 >     - GPUBindGroup object {valid, invalid, valid but refers to destroyed {buffer, texture}}
 >     - bind group {with, without} dynamic offsets with {too few, too many} dynamicOffsets entries
 >         - x= {sequence, Uint32Array} overload
->     - {null, compatible, incompatible} current pipeline (should have no effect without draw/dispatch)
 >     - iff minBufferBindingSize is specified, buffer size is correctly validated against it (make sure static offset + dynamic offset are both accounted for)
+> - state tracking (probably separate file)
+>     - x= {compute pass, render pass}
+>     - {null, compatible, incompatible} current pipeline (should have no effect without draw/dispatch)
 >     - setBindGroup in different orders (e.g. 0,1,2 vs 2,0,1)
 `;
 

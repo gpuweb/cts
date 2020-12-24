@@ -1,4 +1,4 @@
-Test every method or option that shouldn't be valid without an feature enabled.
+Test every method or option that shouldn't be valid without a feature enabled.
 
 - x= that feature {enabled, disabled}
 

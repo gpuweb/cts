@@ -1,6 +1,8 @@
 export const description = `
 Texture Usages Validation Tests in Render Pass and Compute Pass.
 
+TODO: description per test
+
 Test Coverage:
   - For each combination of two texture usages:
     - For various subresource ranges (different mip levels or array layers) that overlap a given

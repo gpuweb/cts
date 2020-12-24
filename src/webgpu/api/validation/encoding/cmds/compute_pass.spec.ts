@@ -106,7 +106,7 @@ indirectBuffer with 6 elements.
   - invalid, the last element is outside the buffer
 
 TODO: test specifically which call the validation error occurs in.
-      (Should be finish() for invalid, but dispatchIndirect() for destroyed.)
+      (Should be finish() for invalid, but submit() for destroyed.)
 `
   )
   .params(

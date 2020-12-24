@@ -1,10 +1,10 @@
 export const description = `
-setVertexBuffer validation tests.
+Validation tests for setVertexBuffer/setIndexBuffer state (not validation). See also operation tests.
 `;
 
-import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { range } from '../../../../../common/framework/util/util.js';
-import { ValidationTest } from '../../validation_test.js';
+import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { range } from '../../../../../../common/framework/util/util.js';
+import { ValidationTest } from '../../../validation_test.js';
 
 class F extends ValidationTest {
   getVertexBuffer(): GPUBuffer {
