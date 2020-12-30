@@ -24,3 +24,23 @@ g.test('lodMinAndMaxClamp')
       });
     }, t.params.lodMinClamp > t.params.lodMaxClamp || t.params.lodMinClamp < 0 || t.params.lodMaxClamp < 0);
   });
+
+g.test('maxAnisotropy')
+  .desc('test different maxAnisotropy values and combinations with min/mag/mipmapFilter')
+  .params(
+    params()
+      .combine(poptions('maxAnisotropy', [0, 1, 2, 4, 16, 32, 1024]))
+      .combine(poptions('minFilter', ['nearest', 'linear']))
+      .combine(poptions('magFilter', ['nearest', 'linear']))
+      .combine(poptions('mipmapFilter', ['nearest', 'linear']))
+  )
+  .fn(async t => {
+    t.expectValidationError(() => {
+      t.device.createSampler({
+        minFilter: t.params.minFilter,
+        magFilter: t.params.magFilter,
+        mipmapFilter: t.params.mipmapFilter,
+        maxAnisotropy: t.params.maxAnisotropy,
+      });
+    }, t.params.maxAnisotropy < 1 || (t.params.maxAnisotropy > 1 && !(t.params.minFilter == 'linear' && t.params.magFilter == 'linear' && t.params.mipmapFilter == 'linear') ));
+  });
