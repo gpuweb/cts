@@ -6,7 +6,7 @@ struct PositionBuffer {
   [[offset(0)]] pos: vec2<f32>; 
 };
 
-var<storage_buffer> s : PositionBuffer;
+var<storage> s : PositionBuffer;
 
 [[stage(vertex)]]
 fn main() -> void {
