@@ -37,9 +37,9 @@ g.test('maxAnisotropy')
   .fn(async t => {
     t.expectValidationError(() => {
       t.device.createSampler({
-        minFilter: t.params.minFilter,
-        magFilter: t.params.magFilter,
-        mipmapFilter: t.params.mipmapFilter,
+        minFilter: t.params.minFilter as GPUFilterMode,
+        magFilter: t.params.magFilter as GPUFilterMode,
+        mipmapFilter: t.params.mipmapFilter as GPUFilterMode,
         maxAnisotropy: t.params.maxAnisotropy,
       });
     }, t.params.maxAnisotropy < 1 || (t.params.maxAnisotropy > 1 && !(t.params.minFilter == 'linear' && t.params.magFilter == 'linear' && t.params.mipmapFilter == 'linear') ));
