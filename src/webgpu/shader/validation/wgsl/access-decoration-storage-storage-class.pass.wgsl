@@ -6,7 +6,7 @@ struct Particles {
   [[offset(0)]] particles : [[stride(16)]] array<f32, 4>;  
 };                                                              
                                                                 
-[[binding(1), set(0)]] var<storage> particles : [[access(read_write)]] Particles;
+[[group(1), binding(0)]] var<storage> particles : [[access(read_write)]] Particles;
 
 [[stage(vertex)]]
 fn main() -> void {
