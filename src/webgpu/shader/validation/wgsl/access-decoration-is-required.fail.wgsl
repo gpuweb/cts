@@ -5,7 +5,7 @@ struct Particles {
   [[offset(0)]] particles : [[stride(16)]] array<f32, 4>;  
 };                                                              
                                                                 
-[[binding(1), set(0)]] var<storage> particles : Particles;
+[[group(0), binding(1)]] var<storage> particles : Particles;
 
 [[stage(vertex)]]
 fn main() -> void {
