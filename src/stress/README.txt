@@ -7,9 +7,11 @@ Add informal notes here on possible stress tests.
 
 - getMappedRange on an oom-buffer-mappedAtCreation.
     Should throw RangeError above some threshold, but below that may just crash the page.
-- Allocating tons of {buffer, texture} memory in ~64MB chunks until OOM.
+- Allocating tons of {{unmappable, mapAtCreation, mapAtCreation then unmapped, mappable} buffer, texture}
+    memory in ~64MB chunks until OOM.
     - Fill with arbitrary data
-- Allocating and {dropping, destroying} ~64MB {buffers, textures} for a while.
+    - If mappable: then, once max is reached, try to mapAsync all of them.
+- Allocating and {dropping, destroying} ~64MB {{unmappable, mapAtCreation, mappable} buffers, textures} for a while.
     - Fill with arbitrary data
 - Creating a huge number of ShaderModules/RenderPipelines/ComputePipelines.
 - Creating a huge number of tiny resources.

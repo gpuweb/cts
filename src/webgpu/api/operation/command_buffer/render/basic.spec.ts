@@ -40,3 +40,7 @@ g.test('clear').fn(async t => {
 
   t.expectContents(dst, new Uint8Array([0x00, 0xff, 0x00, 0xff]));
 });
+
+g.test('large_draw')
+  .desc(`Test reasonably-sized large {draw, drawIndexed} (see also stress tests).`)
+  .unimplemented();

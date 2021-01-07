@@ -1,6 +1,7 @@
 export const description = `
 TODO:
-- Try to map on one thread while {pending, mapped, mappedAtCreation} on another thread.
+- Try to map on one thread while {pending, mapped, mappedAtCreation, mappedAtCreation+unmap+mapped}
+  on another thread.
 - Invalid to postMessage a mapped range's ArrayBuffer or ArrayBufferView
   {with, without} it being in the transfer array.
 - Copy GPUBuffer to another thread while {pending, mapped mappedAtCreation} on {same,diff} thread
