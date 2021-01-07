@@ -513,7 +513,7 @@ g.test('color_textures,compressed,array')
     );
   });
 
-g.test('zero_copies')
+g.test('zero_sized')
   .desc(
     `
   Validate the correctness of zero-sized copies (should be no-ops).

@@ -62,3 +62,7 @@ g.test('memcpy').fn(async t => {
 
   t.expectContents(dst, data);
 });
+
+g.test('large_dispatch')
+  .desc(`Test reasonably-sized large dispatches (see also stress tests).`)
+  .unimplemented();

@@ -1,12 +1,13 @@
 export const description = `
-Does **not** test usage scopes (resource_usages/) or programmable pass stuff (programmable_pass).
+Does **not** test usage scopes (resource_usages/) or programmable pass stuff (programmable,*).
 
-TODO: check for duplication (render_pass.spec.ts, etc.), plan, and implement. Notes:
+TODO: check for duplication (render_pass.spec.ts, etc.), plan, and implement.
+  Possibly split into many files. Notes:
 > All x= {render pass, render bundle}
 >
 > - setPipeline
 >     - {valid, invalid} GPURenderPipeline
-> - setIndexBuffer
+> - setIndexBuffer (validation only; state is tested in state_tracking)
 >     - buffer is {valid, invalid, destroyed, doesn't have usage)
 >     - (offset, size) is
 >         - (0, 0)
@@ -20,7 +21,7 @@ TODO: check for duplication (render_pass.spec.ts, etc.), plan, and implement. No
 >         - (b.size, min size)
 >         - (0, min size), and if that's valid:
 >             - (b.size - min size, min size)
-> - setVertexBuffer
+> - setVertexBuffer (validation only; state is tested in state_tracking)
 >     - slot is {0, max, max+1}
 >     - buffer is {valid, invalid, destroyed, doesn't have usage)
 >     - (offset, size) is like above
@@ -41,7 +42,7 @@ TODO: check for duplication (render_pass.spec.ts, etc.), plan, and implement. No
 >     - x= {drawIndirect, drawIndexedIndirect}
 `;
 
-import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { ValidationTest } from '../../validation_test.js';
+import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { ValidationTest } from '../../../validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);

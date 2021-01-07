@@ -6,7 +6,7 @@ import { GPUTest } from '../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('b2b')
+g.test('single')
   .desc(
     `Validate the correctness of the copy by filling the srcBuffer with testable data, doing
   CopyBufferToBuffer() copy, and verifying the content of the whole dstBuffer with MapRead:
@@ -62,11 +62,10 @@ g.test('b2b')
     t.expectContents(dst, expectedDstData);
   });
 
-g.test('b2b_CopyStateTransitions')
+g.test('state_transitions')
   .desc(
-    `Validate the state transitions after the copy:
-  first copy from srcBuffer to dstBuffer, then copy from dstBuffer to srcBuffer and check the
-  content of the whole dstBuffer`
+    `Test proper state transitions/barriers happen between copy commands.
+    Copy part of src to dst, then a different part of dst to src, and check contents of both.`
   )
   .fn(async t => {
     const srcData = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
@@ -99,12 +98,11 @@ g.test('b2b_CopyStateTransitions')
     t.expectContents(dst, expectedDstData);
   });
 
-g.test('b2b_CopyOrder')
+g.test('copy_order')
   .desc(
-    `Validate the order of the copies in one command buffer:
-  first copy from srcBuffer to a region of dstBuffer, then copy from another part of srcBuffer to
-  another region of dstBuffer which have overlaps with the region of dstBuffer in the first copy
-  and check the content of the whole dstBuffer to see the copies are done in correct order.`
+    `Test copy commands in one command buffer occur in the correct order.
+    First copies one region from src to dst, then another region from src to an overlapping region
+    of dst, then checks the dst buffer's contents.`
   )
   .fn(async t => {
     const srcData = new Uint32Array([1, 2, 3, 4, 5, 6, 7, 8]);

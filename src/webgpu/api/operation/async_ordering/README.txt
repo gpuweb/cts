@@ -6,6 +6,6 @@ TODO: plan and implement
 - cmdbuf.executionTime
 - device.popErrorScope()
 - device.lost
-- fence.onCompletion()
+- queue.onSubmittedWorkDone()
 - buffer.mapAsync()
 - shadermodule.compilationInfo()
