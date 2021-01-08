@@ -42,8 +42,9 @@ Also verifies that the specified data range:
 
     function runTest(arrayType: TypedArrayBufferViewConstructor, testBuffer: boolean) {
       const elementSize = arrayType.BYTES_PER_ELEMENT;
+      const bufferSize = 16 * elementSize;
       const buffer = t.device.createBuffer({
-        size: 16 * elementSize,
+        size: bufferSize,
         usage: GPUBufferUsage.COPY_DST,
       });
       const arraySm: TypedArrayBufferView | ArrayBuffer = testBuffer
@@ -103,6 +104,12 @@ Also verifies that the specified data range:
 
       // Writing with a size that is 4-byte aligned but an offset that is not.
       queue.writeBuffer(buffer, 0, arraySm, 3, 4);
+
+      // Writing zero bytes at the end of the buffer
+      queue.writeBuffer(buffer, bufferSize, arraySm, 0, 0);
+
+      // Writing zero bytes from the end of the data
+      queue.writeBuffer(buffer, 0, arraySm, 8, 0);
     }
 
     const arrayTypes = [
