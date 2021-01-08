@@ -12,6 +12,7 @@ Tests writeBuffer validation.
 Note: destroyed buffer is tested in destroyed/.
 
 TODO: implement usage flag validation.
+TODO: validate large write sizes that may overflow.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
@@ -34,7 +35,7 @@ Also verifies that the specified data range:
 
   - Describes a valid range of the source buffer.
   - Fits fully within the destination buffer.
-  - Is 4-byte aligned.
+  - Has a byte size which is a multiple of 4.
 `
   )
   .fn(async t => {
@@ -57,17 +58,17 @@ Also verifies that the specified data range:
         ? new arrayType(32).buffer
         : new arrayType(32);
 
-      if (testBuffer) {
-        const array15 = new Uint8Array(15).buffer;
+      if (elementSize < 4) {
+        const array15: TypedArrayBufferView | ArrayBuffer = testBuffer
+          ? new arrayType(15).buffer
+          : new arrayType(15);
 
         // Writing the full buffer that isn't 4-byte aligned.
         t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, array15));
 
         // Writing from an offset that causes source to be 4-byte aligned.
         queue.writeBuffer(buffer, 0, array15, 3);
-      }
 
-      if (testBuffer || elementSize < 4) {
         // Writing from an offset that causes the source to not be 4-byte aligned.
         t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arrayMd, 3));
 
@@ -78,11 +79,11 @@ Also verifies that the specified data range:
       // Writing the full buffer without offsets.
       queue.writeBuffer(buffer, 0, arraySm);
       queue.writeBuffer(buffer, 0, arrayMd);
-      t.expectGPUError('validation', () => queue.writeBuffer(buffer, 0, arrayLg));
+      t.expectValidationError(() => queue.writeBuffer(buffer, 0, arrayLg));
 
       // Writing the full buffer with a 4-byte aligned offset.
       queue.writeBuffer(buffer, 8, arraySm);
-      t.expectGPUError('validation', () => queue.writeBuffer(buffer, 8, arrayMd));
+      t.expectValidationError(() => queue.writeBuffer(buffer, 8, arrayMd));
 
       // Writing the full buffer with a unaligned offset.
       t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 3, arraySm));
@@ -90,7 +91,7 @@ Also verifies that the specified data range:
       // Writing remainder of buffer from offset.
       queue.writeBuffer(buffer, 0, arraySm, 4);
       queue.writeBuffer(buffer, 0, arrayMd, 4);
-      t.expectGPUError('validation', () => queue.writeBuffer(buffer, 0, arrayLg, 4));
+      t.expectValidationError(() => queue.writeBuffer(buffer, 0, arrayLg, 4));
 
       // Writing a larger buffer from an offset that allows it to fit in the destination.
       queue.writeBuffer(buffer, 0, arrayLg, 16);
@@ -110,6 +111,10 @@ Also verifies that the specified data range:
 
       // Writing zero bytes from the end of the data
       queue.writeBuffer(buffer, 0, arraySm, 8, 0);
+
+      // A data offset of undefined should be treated as 0
+      queue.writeBuffer(buffer, 0, arraySm, undefined, 8);
+      t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, undefined, 12));
     }
 
     const arrayTypes = [
