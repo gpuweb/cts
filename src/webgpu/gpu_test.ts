@@ -12,7 +12,7 @@ import {
 } from './util/texture/layout.js';
 import { PerTexelComponent, kTexelRepresentationInfo } from './util/texture/texel_data.js';
 
-type TypedArrayBufferView =
+export type TypedArrayBufferView =
   | Uint8Array
   | Uint16Array
   | Uint32Array
@@ -22,7 +22,7 @@ type TypedArrayBufferView =
   | Float32Array
   | Float64Array;
 
-type TypedArrayBufferViewConstructor =
+export type TypedArrayBufferViewConstructor =
   | Uint8ArrayConstructor
   | Uint16ArrayConstructor
   | Uint32ArrayConstructor
