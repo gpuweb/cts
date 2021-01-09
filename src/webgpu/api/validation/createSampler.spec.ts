@@ -27,20 +27,30 @@ g.test('lodMinAndMaxClamp')
 
 g.test('maxAnisotropy')
   .desc('test different maxAnisotropy values and combinations with min/mag/mipmapFilter')
-  .params(
-    params()
-      .combine(poptions('maxAnisotropy', [0, 1, 2, 4, 16, 32, 1024]))
-      .combine(poptions('minFilter', ['nearest', 'linear']))
-      .combine(poptions('magFilter', ['nearest', 'linear']))
-      .combine(poptions('mipmapFilter', ['nearest', 'linear']))
-  )
+  .params([
+    ...poptions('maxAnisotropy', [-1, undefined, 0, 1, 2, 4, 7, 16, 32, 33, 1024]),
+    { minFilter: 'nearest' as const },
+    { magFilter: 'nearest' as const },
+    { mipmapFilter: 'nearest' as const },
+  ])
   .fn(async t => {
+    const {
+      maxAnisotropy = 1,
+      minFilter = 'linear',
+      magFilter = 'linear',
+      mipmapFilter = 'linear',
+    } = t.params as {
+      maxAnisotropy?: number;
+      minFilter?: GPUFilterMode;
+      magFilter?: GPUFilterMode;
+      mipmapFilter?: GPUFilterMode;
+    };
     t.expectValidationError(() => {
       t.device.createSampler({
-        minFilter: t.params.minFilter as GPUFilterMode,
-        magFilter: t.params.magFilter as GPUFilterMode,
-        mipmapFilter: t.params.mipmapFilter as GPUFilterMode,
-        maxAnisotropy: t.params.maxAnisotropy,
+        minFilter,
+        magFilter,
+        mipmapFilter,
+        maxAnisotropy,
       });
-    }, t.params.maxAnisotropy < 1 || (t.params.maxAnisotropy > 1 && !(t.params.minFilter === 'linear' && t.params.magFilter === 'linear' && t.params.mipmapFilter === 'linear')));
+    }, typeof maxAnisotropy !== 'number' || maxAnisotropy < 1 || (maxAnisotropy > 1 && !(minFilter === 'linear' && magFilter === 'linear' && mipmapFilter === 'linear')));
   });
