@@ -24,3 +24,33 @@ g.test('lodMinAndMaxClamp')
       });
     }, t.params.lodMinClamp > t.params.lodMaxClamp || t.params.lodMinClamp < 0 || t.params.lodMaxClamp < 0);
   });
+
+g.test('maxAnisotropy')
+  .desc('test different maxAnisotropy values and combinations with min/mag/mipmapFilter')
+  .params([
+    ...poptions('maxAnisotropy', [-1, undefined, 0, 1, 2, 4, 7, 16, 32, 33, 1024]),
+    { minFilter: 'nearest' as const },
+    { magFilter: 'nearest' as const },
+    { mipmapFilter: 'nearest' as const },
+  ])
+  .fn(async t => {
+    const {
+      maxAnisotropy = 1,
+      minFilter = 'linear',
+      magFilter = 'linear',
+      mipmapFilter = 'linear',
+    } = t.params as {
+      maxAnisotropy?: number;
+      minFilter?: GPUFilterMode;
+      magFilter?: GPUFilterMode;
+      mipmapFilter?: GPUFilterMode;
+    };
+    t.expectValidationError(() => {
+      t.device.createSampler({
+        minFilter,
+        magFilter,
+        mipmapFilter,
+        maxAnisotropy,
+      });
+    }, maxAnisotropy < 1 || (maxAnisotropy > 1 && !(minFilter === 'linear' && magFilter === 'linear' && mipmapFilter === 'linear')));
+  });
