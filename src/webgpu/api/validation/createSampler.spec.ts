@@ -52,5 +52,5 @@ g.test('maxAnisotropy')
         mipmapFilter,
         maxAnisotropy,
       });
-    }, typeof maxAnisotropy !== 'number' || maxAnisotropy < 1 || (maxAnisotropy > 1 && !(minFilter === 'linear' && magFilter === 'linear' && mipmapFilter === 'linear')));
+    }, maxAnisotropy < 1 || (maxAnisotropy > 1 && !(minFilter === 'linear' && magFilter === 'linear' && mipmapFilter === 'linear')));
   });
