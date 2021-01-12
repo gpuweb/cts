@@ -1,5 +1,5 @@
-# v-0007 - Fails because struct `foo` does not have a member `b`however `f.b` is
-# used.
+// v-0007 - Fails because struct `foo` does not have a member `b`however `f.b` is
+// used.
 
 struct goo {
   b : f32;

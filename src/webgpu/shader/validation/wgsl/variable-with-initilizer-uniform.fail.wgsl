@@ -1,4 +1,4 @@
-# v-0032: variable 'u' has an initializer, however its storage class is 'uniform'.
+// v-0032: variable 'u' has an initializer, however its storage class is 'uniform'.
 
 [[block]]
 struct Params {

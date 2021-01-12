@@ -1,4 +1,4 @@
-# v-0031: in 'y = x', x is a runtime array and it's used as an expression.
+// v-0031: in 'y = x', x is a runtime array and it's used as an expression.
 
 type RTArr = [[stride (16)]] array<i32>;
 struct S{
