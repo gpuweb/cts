@@ -1,4 +1,6 @@
 export const description = `
+Tests for the indexing-specific aspects of drawIndexed/drawIndexedIndirect.
+
 TODO: plan and implement
 - Test indexed draws with the combinations:
   - Renderable cases:
@@ -18,7 +20,7 @@ TODO: plan and implement
 - ?
 `;
 
-import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { GPUTest } from '../../../../gpu_test.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { GPUTest } from '../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);

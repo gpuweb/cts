@@ -26,3 +26,10 @@ g.test('twice')
     buf.destroy();
     buf.destroy();
   });
+
+g.test('while_mapped')
+  .desc(
+    `Test destroying a {mappable, unmappable mapAtCreation, mappable mapAtCreation} buffer while it
+is {mapped, mapped at creation}`
+  )
+  .unimplemented();

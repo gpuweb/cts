@@ -8,6 +8,7 @@ Tests using a destroyed texture on a queue.
 - x= {destroyed, not destroyed (control case)}
 
 TODO: implement. (Search for other places some of these cases may have already been tested.)
+Consider whether these tests should be distributed throughout the suite, instead of centralized.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';

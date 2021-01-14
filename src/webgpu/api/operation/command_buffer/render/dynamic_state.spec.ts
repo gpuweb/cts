@@ -2,7 +2,7 @@ export const description = `
 Tests of the behavior of the viewport/scissor/blend/reference states.
 
 TODO:
-- {viewport, scissor rect, blend color, stencil reference, setIndexBuffer, setVertexBuffer}:
+- {viewport, scissor rect, blend color, stencil reference}:
   Test rendering result with {various values}.
     - Set the state in different ways to make sure it gets the correct value in the end: {
         - state unset (= default)
