@@ -86,7 +86,7 @@ export class TestTree {
    * which is less needlessly verbose when displaying the tree in the standalone runner.
    */
   dissolveLevelBoundaries(): void {
-    const newRoot = dissolveLevelBoundaries(this.root);
+    const newRoot = dissolveSingleChildTrees(this.root);
     assert(newRoot === this.root);
   }
 
@@ -314,7 +314,7 @@ function addSubtreeForFilePath(
 function addSubtreeForTestPath(
   tree: TestSubtree<TestQueryMultiTest>,
   test: readonly string[],
-  plan: string | undefined,
+  description: string | undefined,
   isCollapsible: (sq: TestQuery) => boolean
 ): TestSubtree<TestQueryMultiCase> {
   const subqueryTest: string[] = [];
@@ -331,7 +331,6 @@ function addSubtreeForTestPath(
       return {
         readableRelativeName: part + kPathSeparator + kWildcard,
         query,
-        description: plan,
         collapsible: isCollapsible(query),
       };
     });
@@ -349,6 +348,7 @@ function addSubtreeForTestPath(
       readableRelativeName: subqueryTest[subqueryTest.length - 1] + kBigSeparator + kWildcard,
       kWildcard,
       query,
+      description,
       collapsible: isCollapsible(query),
     };
   });
@@ -423,21 +423,21 @@ function insertLeaf(parent: TestSubtree, query: TestQuerySingleCase, t: RunCase)
   parent.children.set(key, leaf);
 }
 
-function dissolveLevelBoundaries(tree: TestTreeNode): TestTreeNode {
+function dissolveSingleChildTrees(tree: TestTreeNode): TestTreeNode {
   if ('children' in tree) {
-    if (tree.children.size === 1 && tree.description === undefined) {
+    const shouldDissolveThisTree =
+      tree.children.size === 1 && tree.query.depthInLevel !== 0 && tree.description === undefined;
+    if (shouldDissolveThisTree) {
       // Loops exactly once
       for (const [, child] of tree.children) {
-        if (child.query.level > tree.query.level) {
-          const newtree = dissolveLevelBoundaries(child);
-
-          return newtree;
-        }
+        // Recurse on child
+        return dissolveSingleChildTrees(child);
       }
     }
 
     for (const [k, child] of tree.children) {
-      const newChild = dissolveLevelBoundaries(child);
+      // Recurse on each child
+      const newChild = dissolveSingleChildTrees(child);
       if (newChild !== child) {
         tree.children.set(k, newChild);
       }
