@@ -21,12 +21,14 @@ g.test('iff_uncaptured')
 
 g.test('only_original_device_is_event_target')
   .desc(
-    `GPUDevices copied to other threads should not be EventTargets and should not have onuncapturederror.`
+    `Original GPUDevice objects are EventTargets and have onuncapturederror, but
+deserialized GPUDevices do not.`
   )
   .unimplemented();
 
 g.test('uncapturederror_from_non_originating_thread')
   .desc(
-    `Uncaptured errors on other threads propagate to originating thread's uncapturederror event.`
+    `Uncaptured errors on any thread should always propagate to the original GPUDevice object
+(since deserialized ones don't have EventTarget/onuncapturederror).`
   )
   .unimplemented();

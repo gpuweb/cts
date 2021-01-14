@@ -8,6 +8,9 @@ TODO: review and make sure these notes are covered:
 >             - indexCount largeish
 >             - firstIndex {=, >} 0
 >     - x= {drawIndexed, drawIndexedIndirect}
+
+TODO: Since there are no errors here, these should be "robustness" operation tests (with multiple
+valid results).
 `;
 
 import { params, poptions, pbool } from '../../../../../common/framework/params_builder.js';

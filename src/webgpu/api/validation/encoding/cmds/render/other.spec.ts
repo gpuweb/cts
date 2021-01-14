@@ -8,7 +8,7 @@ TODO: plan and implement. Notes:
 > - setPipeline
 >     - {valid, invalid} GPURenderPipeline
 > - setIndexBuffer
->     - buffer is {valid, invalid, destroyed, doesn't have usage)
+>     - buffer is {valid, invalid, doesn't have usage)
 >     - (offset, size) is
 >         - (0, 0)
 >         - (0, 1)
@@ -23,7 +23,7 @@ TODO: plan and implement. Notes:
 >             - (b.size - min size, min size)
 > - setVertexBuffer
 >     - slot is {0, max, max+1}
->     - buffer is {valid, invalid, destroyed, doesn't have usage)
+>     - buffer is {valid, invalid,  doesn't have usage)
 >     - (offset, size) is like above
 `;
 
