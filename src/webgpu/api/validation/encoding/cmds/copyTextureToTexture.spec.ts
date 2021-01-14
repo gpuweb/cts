@@ -36,19 +36,18 @@ Test Plan: (TODO(jiawei.shao@intel.com): add tests on aspects and 1D/3D textures
     texture subresources.
 `;
 
-import { poptions, params } from '../../../common/framework/params_builder.js';
-import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { assert } from '../../../common/framework/util/util.js';
+import { poptions, params } from '../../../../../common/framework/params_builder.js';
+import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { assert } from '../../../../../common/framework/util/util.js';
 import {
   kAllTextureFormatInfo,
   kAllTextureFormats,
   kCompressedTextureFormats,
   kDepthStencilFormats,
   kTextureUsages,
-} from '../../capability_info.js';
-import { align } from '../../util/math.js';
-
-import { ValidationTest } from './validation_test.js';
+} from '../../../../capability_info.js';
+import { align } from '../../../../util/math.js';
+import { ValidationTest } from '../../validation_test.js';
 
 class F extends ValidationTest {
   TestCopyTextureToTexture(

@@ -4,8 +4,8 @@ renderPass store op test that drawn quad is either stored or cleared based on st
 TODO: is this duplicated with api,operation,render_pass,storeOp?
 `;
 
-import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { GPUTest } from '../../../../gpu_test.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { GPUTest } from '../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 

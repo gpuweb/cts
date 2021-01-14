@@ -23,12 +23,11 @@ Test Plan:
 * Source buffer and destination buffer are the same buffer
 `;
 
-import { poptions, params } from '../../../common/framework/params_builder.js';
-import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { kBufferUsages } from '../../capability_info.js';
-import { kMaxSafeMultipleOf8 } from '../../util/math.js';
-
-import { ValidationTest } from './validation_test.js';
+import { poptions, params } from '../../../../../common/framework/params_builder.js';
+import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { kBufferUsages } from '../../../../capability_info.js';
+import { kMaxSafeMultipleOf8 } from '../../../../util/math.js';
+import { ValidationTest } from '../../validation_test.js';
 
 class F extends ValidationTest {
   TestCopyBufferToBuffer(options: {

@@ -1,5 +1,7 @@
 export const description = `
-TODO: check for duplication (render_pass/, etc.), plan, and implement. Notes:
+TODO: check for duplication (render_pass/, etc.), plan, and implement.
+Note possibly a lot of this should be operation tests instead.
+Notes:
 > - color attachments {zero, one, multiple}
 >     - many different formats (some are non-renderable)
 >     - is a view on a texture with multiple mip levels or array layers
