@@ -323,6 +323,7 @@ g.test('color_textures,non_compressed,non_array')
   )
   .params(
     params()
+      .combine(poptions('format', kRegularTextureFormats))
       .combine(
         poptions('textureSize', [
           {
@@ -343,7 +344,6 @@ g.test('color_textures,non_compressed,non_array')
           },
         ])
       )
-      .combine(poptions('format', kRegularTextureFormats))
       .combine(poptions('copyBoxOffsets', F.kCopyBoxOffsetsForWholeDepth))
       .combine(poptions('srcCopyLevel', [0, 3]))
       .combine(poptions('dstCopyLevel', [0, 3]))
@@ -371,6 +371,7 @@ g.test('color_textures,compressed,non_array')
   )
   .params(
     params()
+      .combine(poptions('format', kCompressedTextureFormats))
       .combine(
         poptions('textureSize', [
           // The heights and widths are all power of 2
@@ -407,7 +408,6 @@ g.test('color_textures,compressed,non_array')
           },
         ])
       )
-      .combine(poptions('format', kCompressedTextureFormats))
       .combine(poptions('copyBoxOffsets', F.kCopyBoxOffsetsForWholeDepth))
       .combine(poptions('srcCopyLevel', [0, 2]))
       .combine(poptions('dstCopyLevel', [0, 2]))
@@ -438,6 +438,7 @@ g.test('color_textures,non_compressed,array')
   )
   .params(
     params()
+      .combine(poptions('format', kRegularTextureFormats))
       .combine(
         poptions('textureSize', [
           {
@@ -450,7 +451,6 @@ g.test('color_textures,non_compressed,array')
           },
         ])
       )
-      .combine(poptions('format', kRegularTextureFormats))
       .combine(poptions('copyBoxOffsets', F.kCopyBoxOffsetsFor2DArrayTextures))
       .combine(poptions('srcCopyLevel', [0, 3]))
       .combine(poptions('dstCopyLevel', [0, 3]))
@@ -478,6 +478,7 @@ g.test('color_textures,compressed,array')
   )
   .params(
     params()
+      .combine(poptions('format', kCompressedTextureFormats))
       .combine(
         poptions('textureSize', [
           // The heights and widths are all power of 2
@@ -492,7 +493,6 @@ g.test('color_textures,compressed,array')
           },
         ])
       )
-      .combine(poptions('format', kCompressedTextureFormats))
       .combine(poptions('copyBoxOffsets', F.kCopyBoxOffsetsFor2DArrayTextures))
       .combine(poptions('srcCopyLevel', [0, 2]))
       .combine(poptions('dstCopyLevel', [0, 2]))
