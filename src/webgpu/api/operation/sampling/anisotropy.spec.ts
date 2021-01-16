@@ -37,7 +37,8 @@ g.test('anisotropic_filter_checkerboard')
     We will check the rendering result using sampler with maxAnisotropy values to be
     different from each other, as the sampling rate is different.
     We will also check if those large maxAnisotropy values are clamped so that rendering is the
-    same as the supported upper limit say 16.`)
+    same as the supported upper limit say 16.`
+  )
   .unimplemented();
 
 g.test('anisotropic_filter_mipmap_color')
@@ -46,50 +47,48 @@ g.test('anisotropic_filter_mipmap_color')
     containing mipmaps of different colors.
     A similiar webgl demo is at https://jsfiddle.net/t8k7c95o/5/`
   )
-  .params(
-    [
-      {
-        maxAnisotropy: 1,
-        _results: [
-          {
-            coord: {x: xm, y: 2},
-            expected: colors[2]
-          },
-          {
-            coord: {x: xm, y: 6},
-            expected: [colors[0], colors[1]]
-          }
-        ]
-      },
-      {
-        maxAnisotropy: 2,
-        _results: [
-          {
-            coord: {x: xm, y: 2},
-            expected: [colors[1], colors[2]]
-          },
-          {
-            coord: {x: xm, y: 6},
-            expected: colors[0]
-          }
-        ]
-      },
-      {
-        maxAnisotropy: 16,
-        _results: [
-          {
-            coord: {x: xm, y: 2},
-            expected: [colors[0], colors[1]]
-          },
-          {
-            coord: {x: xm, y: 6},
-            expected: colors[0]
-          }
-        ]
-      },
-    ]
-  )
-  .fn(async t => {  
+  .params([
+    {
+      maxAnisotropy: 1,
+      _results: [
+        {
+          coord: { x: xm, y: 2 },
+          expected: colors[2],
+        },
+        {
+          coord: { x: xm, y: 6 },
+          expected: [colors[0], colors[1]],
+        },
+      ],
+    },
+    {
+      maxAnisotropy: 2,
+      _results: [
+        {
+          coord: { x: xm, y: 2 },
+          expected: [colors[1], colors[2]],
+        },
+        {
+          coord: { x: xm, y: 6 },
+          expected: colors[0],
+        },
+      ],
+    },
+    {
+      maxAnisotropy: 16,
+      _results: [
+        {
+          coord: { x: xm, y: 2 },
+          expected: [colors[0], colors[1]],
+        },
+        {
+          coord: { x: xm, y: 6 },
+          expected: colors[0],
+        },
+      ],
+    },
+  ])
+  .fn(async t => {
     const colorAttachment = t.device.createTexture({
       format: kColorAttachmentFormat,
       size: { width: kRTSize, height: kRTSize, depth: 1 },
@@ -101,9 +100,9 @@ g.test('anisotropic_filter_mipmap_color')
     const textureSizeMipmap0 = 1 << (mipLevelCount - 1);
     const texture = t.device.createTexture({
       mipLevelCount,
-      size: { width: textureSizeMipmap0, height: textureSizeMipmap0, depth: 1},
+      size: { width: textureSizeMipmap0, height: textureSizeMipmap0, depth: 1 },
       format: kTextureFormat,
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED,
     });
 
     // init texture
@@ -111,10 +110,10 @@ g.test('anisotropic_filter_mipmap_color')
     // Populate each level with a different color
     for (let i = 0; i < mipLevelCount; i++) {
       const mipmapSize = mipSize([textureSizeMipmap0], i)[0];
-      const bufferSize = kBytesPerRow * mipmapSize;  // RGBA8 for each pixel (256 > 16 * 4)
+      const bufferSize = kBytesPerRow * mipmapSize; // RGBA8 for each pixel (256 > 16 * 4)
 
       // init texture data
-      let data : Uint8Array = new Uint8Array(bufferSize);
+      const data: Uint8Array = new Uint8Array(bufferSize);
       const color = colors[i];
       for (let r = 0; r < mipmapSize; r++) {
         const o = r * kBytesPerRow;
@@ -127,7 +126,7 @@ g.test('anisotropic_filter_mipmap_color')
       }
       const buffer = t.device.createBuffer({
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-        size: data.byteLength
+        size: data.byteLength,
       });
       t.device.defaultQueue.writeBuffer(buffer, 0, data);
       const bytesPerRow = kBytesPerRow;
@@ -137,12 +136,12 @@ g.test('anisotropic_filter_mipmap_color')
         {
           buffer,
           bytesPerRow,
-          rowsPerImage
+          rowsPerImage,
         },
         {
           texture,
           mipLevel: i,
-          origin: [0, 0, 0]
+          origin: [0, 0, 0],
         },
         [mipmapSize, mipmapSize, 1]
       );
@@ -205,13 +204,13 @@ g.test('anisotropic_filter_mipmap_color')
                 // position
                 shaderLocation: 0,
                 offset: 0,
-                format: "float4",
+                format: 'float4',
               },
               {
                 // uv
                 shaderLocation: 1,
                 offset: 4 * 4,
-                format: "float2",
+                format: 'float2',
               },
             ],
           },
@@ -235,7 +234,7 @@ g.test('anisotropic_filter_mipmap_color')
       0,
       21.693578720092773,
       21.789791107177734,
-      21.86800193786621
+      21.86800193786621,
     ]);
     const uniformBuffer = t.device.createBuffer({
       size: matrixData.byteLength,
@@ -246,8 +245,42 @@ g.test('anisotropic_filter_mipmap_color')
     // position : vec4, uv : vec2
     // uv is scaled
     const vertexData = new Float32Array([
-      -0.5, 0.5, -0.5, 1, 0, 0,  0.5, 0.5, -0.5, 1, 1, 0, -0.5, 0.5, 0.5, 1, 0, 50,
-      -0.5, 0.5, 0.5,  1, 0, 50, 0.5, 0.5, -0.5, 1, 1, 0, 0.5,  0.5, 0.5, 1, 1, 50,
+      -0.5,
+      0.5,
+      -0.5,
+      1,
+      0,
+      0,
+      0.5,
+      0.5,
+      -0.5,
+      1,
+      1,
+      0,
+      -0.5,
+      0.5,
+      0.5,
+      1,
+      0,
+      50,
+      -0.5,
+      0.5,
+      0.5,
+      1,
+      0,
+      50,
+      0.5,
+      0.5,
+      -0.5,
+      1,
+      1,
+      0,
+      0.5,
+      0.5,
+      0.5,
+      1,
+      1,
+      50,
     ]);
     const vertexBuffer = t.device.createBuffer({
       size: vertexData.byteLength,
@@ -288,15 +321,12 @@ g.test('anisotropic_filter_mipmap_color')
     pass.endPass();
     t.device.defaultQueue.submit([encoder.finish()]);
 
-    for (let entry of t.params._results) {
+    for (const entry of t.params._results) {
       if (entry.expected instanceof Uint8Array) {
         // equal exactly one color
-        t.expectSinglePixelIn2DTexture(
-          colorAttachment,
-          kColorAttachmentFormat,
-          entry.coord,
-          { exp: entry.expected as Uint8Array }
-        );
+        t.expectSinglePixelIn2DTexture(colorAttachment, kColorAttachmentFormat, entry.coord, {
+          exp: entry.expected as Uint8Array,
+        });
       } else {
         // a lerp between two colors
         t.expectSinglePixelBetweenTwoValuesIn2DTexture(

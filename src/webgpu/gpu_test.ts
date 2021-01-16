@@ -1,4 +1,3 @@
-import { listeners } from 'process';
 import { Fixture } from '../common/framework/fixture.js';
 import { attemptGarbageCollection } from '../common/framework/util/collect_garbage.js';
 import { assert } from '../common/framework/util/util.js';
@@ -168,7 +167,11 @@ export class GPUTest extends Fixture {
     });
   }
 
-  expectContentsBetweenTwoValues(src: GPUBuffer, expected: [TypedArrayBufferView, TypedArrayBufferView], srcOffset: number = 0): void {
+  expectContentsBetweenTwoValues(
+    src: GPUBuffer,
+    expected: [TypedArrayBufferView, TypedArrayBufferView],
+    srcOffset: number = 0
+  ): void {
     assert(expected[0].length === expected[1].length);
     const { dst, begin, end } = this.createAlignedCopyForMapRead(
       src,
@@ -203,11 +206,13 @@ export class GPUTest extends Fixture {
         () => {
           const lines = [] as string[];
           const format = (x: number) => x.toString(16).padStart(2, '0');
-          const exp0Hex = Array.from(new Uint8Array(
+          const exp0Hex = Array.from(
+            new Uint8Array(
               expected[0].buffer,
               expected[0].byteOffset,
               Math.min(expected[0].byteLength, 256)
-            ))
+            )
+          )
             .map(format)
             .join('');
           lines.push('EXPECT\nbetween:\t  ' + expected[0].join(' '));
@@ -215,11 +220,13 @@ export class GPUTest extends Fixture {
           if (expected[0].byteLength > 256) {
             lines.push(' ...');
           }
-          const exp1Hex = Array.from(new Uint8Array(
+          const exp1Hex = Array.from(
+            new Uint8Array(
               expected[1].buffer,
               expected[1].byteOffset,
               Math.min(expected[1].byteLength, 256)
-            ))
+            )
+          )
             .map(format)
             .join('');
           lines.push('and:    \t  ' + expected[1].join(' '));
@@ -353,14 +360,12 @@ got [${failedByteActualValues.join(', ')}]`;
       return undefined;
     }
 
-    const summary = `CheckBuffer failed`;
+    const summary = 'CheckBuffer failed';
     const lines = [summary];
 
-    const actHex = Array.from(new Uint8Array(
-        actual.buffer,
-        actual.byteOffset,
-        Math.min(actual.byteLength, 256)
-      ))
+    const actHex = Array.from(
+      new Uint8Array(actual.buffer, actual.byteOffset, Math.min(actual.byteLength, 256))
+    )
       .map(x => x.toString(16).padStart(2, '0'))
       .join('');
     lines.push('ACTUAL:\t  ' + actual.join(' '));
@@ -373,7 +378,7 @@ got [${failedByteActualValues.join(', ')}]`;
     if (errorMsgFn !== undefined) {
       lines.push(errorMsgFn());
     }
-    
+
     return lines.join('\n');
   }
 
@@ -421,12 +426,13 @@ got [${failedByteActualValues.join(', ')}]`;
   }
 
   // return a GPUBuffer that data are going to be written into
-  private readSinglePixelFrom2DTexture(src: GPUTexture,
+  private readSinglePixelFrom2DTexture(
+    src: GPUTexture,
     format: SizedTextureFormat,
     { x, y }: { x: number; y: number },
     slice = 0,
     layout?: TextureLayoutOptions
-  ) : GPUBuffer {
+  ): GPUBuffer {
     const { byteLength, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
       format,
       '2d',
@@ -465,7 +471,7 @@ got [${failedByteActualValues.join(', ')}]`;
       layout?: TextureLayoutOptions;
     }
   ): void {
-    const buffer = this.readSinglePixelFrom2DTexture(src, format, {x, y}, slice, layout);
+    const buffer = this.readSinglePixelFrom2DTexture(src, format, { x, y }, slice, layout);
     this.expectContents(buffer, exp);
   }
 
@@ -483,7 +489,7 @@ got [${failedByteActualValues.join(', ')}]`;
       layout?: TextureLayoutOptions;
     }
   ): void {
-    const buffer = this.readSinglePixelFrom2DTexture(src, format, {x, y}, slice, layout);
+    const buffer = this.readSinglePixelFrom2DTexture(src, format, { x, y }, slice, layout);
     this.expectContentsBetweenTwoValues(buffer, exp);
   }
 
