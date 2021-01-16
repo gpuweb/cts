@@ -7,6 +7,7 @@
     "check": "grunt check",
     "standalone": "grunt standalone",
     "wpt": "grunt wpt",
+    "fix": "grunt fix",
     "unittest": "grunt unittest",
     "gen_wpt_cts_html": "tools/gen_wpt_cts_html",
     "dev": "tools/dev_server"
