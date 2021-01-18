@@ -31,8 +31,8 @@ g.test('memcpy').fn(async t => {
               [[offset(0)]] value : u32;
           };
 
-          [[set(0), binding(0)]] var<storage_buffer> src : Data;
-          [[set(0), binding(1)]] var<storage_buffer> dst : Data;
+          [[group(0), binding(0)]] var<storage_buffer> src : Data;
+          [[group(0), binding(1)]] var<storage_buffer> dst : Data;
 
           [[stage(compute)]] fn main() -> void {
             dst.value = src.value;
