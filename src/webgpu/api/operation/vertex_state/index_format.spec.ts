@@ -65,7 +65,7 @@ class IndexFormatTest extends GPUTest {
           vec2<f32>(0.01, -0.98));
 
         [[builtin(position)]] var<out> Position : vec4<f32>;
-        [[builtin(vertex_idx)]] var<in> VertexIndex : u32;
+        [[builtin(vertex_index)]] var<in> VertexIndex : u32;
 
         [[stage(vertex)]]
         fn main() -> void {
