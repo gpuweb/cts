@@ -32,7 +32,7 @@ class F extends ValidationTest {
             [[block]] struct VertexUniforms {
               [[offset(0)]] transform : mat2x2<f32> ;
             };
-            [[set(0), binding(0)]] var<uniform> uniforms : VertexUniforms;
+            [[group(0), binding(0)]] var<uniform> uniforms : VertexUniforms;
 
             [[builtin(position)]] var<out> Position : vec4<f32>;
             [[builtin(vertex_idx)]] var<in> VertexIndex : i32;
@@ -54,7 +54,7 @@ class F extends ValidationTest {
             [[block]] struct FragmentUniforms {
               [[offset(0)]] color : vec4<f32>;
             };
-            [[set(1), binding(0)]] var<uniform> uniforms : FragmentUniforms;
+            [[group(1), binding(0)]] var<uniform> uniforms : FragmentUniforms;
 
             [[location(0)]] var<out> fragColor : vec4<f32>;
             [[stage(fragment)]] fn main() -> void {
