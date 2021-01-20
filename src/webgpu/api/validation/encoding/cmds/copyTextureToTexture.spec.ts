@@ -511,30 +511,43 @@ g.test('copy_within_same_texture')
     );
   });
 
+// TODO(jiawei.shao@intel.com): test 'stencil-only' is also valid for the texture format 'stencil8'
 g.test('copy_aspects')
   .params(
     params()
-      .combine(poptions('format', ['rgba8unorm', 'depth24plus-stencil8'] as const))
+      .combine(
+        poptions('formatAndValidAspects', [
+          { format: 'rgba8unorm', validAspects: ['all'] as const },
+          { format: 'depth24plus-stencil8', validAspects: ['all'] as const },
+          { format: 'depth32float', validAspects: ['all', 'depth-only'] as const },
+        ] as const)
+      )
       .combine(poptions('sourceAspect', ['all', 'depth-only', 'stencil-only'] as const))
       .combine(poptions('destinationAspect', ['all', 'depth-only', 'stencil-only'] as const))
   )
   .fn(async t => {
-    const { format, sourceAspect, destinationAspect } = t.params;
+    const { formatAndValidAspects, sourceAspect, destinationAspect } = t.params;
 
     const kTextureSize = { width: 16, height: 8, depth: 1 };
 
     const srcTexture = t.device.createTexture({
       size: kTextureSize,
-      format,
+      format: formatAndValidAspects.format,
       usage: GPUTextureUsage.COPY_SRC,
     });
     const dstTexture = t.device.createTexture({
       size: kTextureSize,
-      format,
+      format: formatAndValidAspects.format,
       usage: GPUTextureUsage.COPY_DST,
     });
 
-    const isSuccess = sourceAspect === 'all' && destinationAspect === 'all';
+    let isSuccess = false;
+    for (const aspect of formatAndValidAspects.validAspects) {
+      if (sourceAspect === aspect && destinationAspect === aspect) {
+        isSuccess = true;
+        break;
+      }
+    }
     t.TestCopyTextureToTexture(
       { texture: srcTexture, origin: { x: 0, y: 0, z: 0 }, aspect: sourceAspect },
       { texture: dstTexture, origin: { x: 0, y: 0, z: 0 }, aspect: destinationAspect },
