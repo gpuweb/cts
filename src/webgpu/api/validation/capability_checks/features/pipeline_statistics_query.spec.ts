@@ -18,21 +18,15 @@ statistics query enabled.
   .params(
     params()
       .combine(poptions('type', ['occlusion', 'pipeline-statistics', 'timestamp'] as const))
+      .combine(pbool('pipelineStatisticsQueryEnable'))
       .expand(p =>
         poptions('_pipelineStatistics', [
           p.type === 'pipeline-statistics' ? (['clipper-invocations'] as const) : ([] as const),
         ])
       )
-      .combine(pbool('pipelineStatisticsQueryEnable'))
-      .expand(p =>
-        poptions('_valid', [
-          p.type === 'occlusion' ||
-            (p.type === 'pipeline-statistics' && p.pipelineStatisticsQueryEnable),
-        ])
-      )
   )
   .fn(async t => {
-    const { type, _pipelineStatistics, pipelineStatisticsQueryEnable, _valid } = t.params;
+    const { type, pipelineStatisticsQueryEnable, _pipelineStatistics } = t.params;
 
     if (pipelineStatisticsQueryEnable) {
       await t.selectDeviceOrSkipTestCase({
@@ -40,13 +34,7 @@ statistics query enabled.
       });
     }
 
-    const count = 1;
-
-    if (_valid) {
-      t.device.createQuerySet({ type, count, pipelineStatistics: _pipelineStatistics });
-    } else {
-      t.expectValidationError(() => {
-        t.device.createQuerySet({ type, count, pipelineStatistics: _pipelineStatistics });
-      });
-    }
+    t.expectValidationError(() => {
+      t.device.createQuerySet({ type, count: 1, pipelineStatistics: _pipelineStatistics });
+    }, type === 'timestamp' || (type === 'pipeline-statistics' && !pipelineStatisticsQueryEnable));
   });
