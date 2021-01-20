@@ -517,9 +517,9 @@ g.test('copy_aspects')
     params()
       .combine(
         poptions('formatAndValidAspects', [
-          { format: 'rgba8unorm', validAspects: ['all'] as const },
-          { format: 'depth24plus-stencil8', validAspects: ['all'] as const },
-          { format: 'depth32float', validAspects: ['all', 'depth-only'] as const },
+          { format: 'rgba8unorm', validAspects: ['all'] },
+          { format: 'depth24plus-stencil8', validAspects: ['all'] },
+          { format: 'depth32float', validAspects: ['all', 'depth-only'] },
         ] as const)
       )
       .combine(poptions('sourceAspect', ['all', 'depth-only', 'stencil-only'] as const))
