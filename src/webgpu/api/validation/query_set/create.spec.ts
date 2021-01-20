@@ -2,7 +2,7 @@ export const description = `
 Tests for validation in createQuerySet.
 `;
 
-import { params, poptions } from '../../../../common/framework/params_builder.js';
+import { poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { ValidationTest } from '../validation_test.js';
 
@@ -14,8 +14,6 @@ const kMaxQueryCount = 8192;
 const kQueryCounts: number[] = [
   // valid
   0,
-  1,
-  128,
   kMaxQueryCount,
   // invalid
   kMaxQueryCount + 1,
@@ -27,44 +25,31 @@ g.test('occlusion')
 Tests that create query set with the type of occlusion.
 - control cases:
   - count <= kMaxQueryCount
-  - pipelineStatistics is undefined
+  - pipelineStatistics is undefined or empty
 - invalid cases:
   - count > kMaxQueryCount
   - pipelineStatistics is set with pipeline statistic names
   `
   )
-  .params(
-    params()
-      .combine(poptions('count', kQueryCounts))
-      .combine(
-        poptions('pipelineStatistics', [
-          // valid
-          undefined,
-          [] as const,
-          // invalid
-          ['clipper-invocations'] as const,
-        ])
-      )
-      .expand(p =>
-        poptions('_valid', [
-          p.count <= kMaxQueryCount &&
-            (p.pipelineStatistics === undefined || p.pipelineStatistics.length === 0),
-        ])
-      )
-      // TODO(hao.x.li@intel.com): zero-sized query set is not implemented.
-      .filter(({ count }) => count !== 0)
-  )
+  .params([
+    ...poptions('count', kQueryCounts),
+    ...poptions('pipelineStatistics', [
+      // valid
+      undefined,
+      [],
+      // invalid
+      ['clipper-invocations'],
+    ]),
+  ])
   .fn(t => {
-    const { count, pipelineStatistics, _valid } = t.params;
-    const type = 'occlusion';
+    const { count = 1, pipelineStatistics } = t.params as {
+      count?: number;
+      pipelineStatistics?: GPUPipelineStatisticName[];
+    };
 
-    if (_valid) {
-      t.device.createQuerySet({ type, count, pipelineStatistics });
-    } else {
-      t.expectValidationError(() => {
-        t.device.createQuerySet({ type, count, pipelineStatistics });
-      });
-    }
+    t.expectValidationError(() => {
+      t.device.createQuerySet({ type: 'occlusion', count, pipelineStatistics });
+    }, count > kMaxQueryCount || (pipelineStatistics !== undefined && pipelineStatistics.length > 0));
   });
 
 g.test('pipeline_statistics')
@@ -76,54 +61,45 @@ Tests that create query set with the type of pipeline-statistics.
   - pipelineStatistics is set with pipeline statistic names
 - invalid cases:
   - count > kMaxQueryCount
-  - pipelineStatistics is undefined or duplicated
+  - pipelineStatistics is undefined, empty or duplicated
   `
   )
-  .params(
-    params()
-      .combine(poptions('count', kQueryCounts))
-      .combine(
-        poptions('pipelineStatistics', [
-          // invalid
-          undefined,
-          [] as const,
-          ['clipper-invocations', 'clipper-invocations'] as const,
-          // valid
-          ['clipper-invocations'] as const,
-          [
-            'clipper-invocations',
-            'clipper-primitives-out',
-            'compute-shader-invocations',
-            'fragment-shader-invocations',
-            'vertex-shader-invocations',
-          ] as const,
-        ])
-      )
-      .expand(p =>
-        poptions('_valid', [
-          p.count <= kMaxQueryCount &&
-            p.pipelineStatistics !== undefined &&
-            p.pipelineStatistics.length > 0 &&
-            p.pipelineStatistics.length === Array.from(new Set(p.pipelineStatistics)).length,
-        ])
-      )
-      // TODO(hao.x.li@intel.com): zero-sized query set is not implemented.
-      .filter(({ count }) => count !== 0)
-  )
+  .params([
+    ...poptions('count', kQueryCounts),
+    ...poptions('pipelineStatistics', [
+      // valid
+      ['clipper-invocations'],
+      // invalid
+      undefined,
+      [],
+      ['clipper-invocations', 'clipper-invocations'],
+    ]),
+  ])
   .fn(async t => {
     await t.selectDeviceOrSkipTestCase({
       extensions: ['pipeline-statistics-query'],
     });
 
-    const { count, pipelineStatistics, _valid } = t.params;
-    const type = 'pipeline-statistics';
+    const { count = 1, pipelineStatistics = ['vertex-shader-invocations'] } = t.params as {
+      count?: number;
+      pipelineStatistics?: GPUPipelineStatisticName[];
+    };
 
-    if (_valid) {
-      t.device.createQuerySet({ type, count, pipelineStatistics });
-    } else {
+    // If the pipelineStatistics is passed as undefined, the default value 'vertex-shader-invocations'
+    // is got here, test it with undefined seperately.
+    if (count === 1 && pipelineStatistics[0] === 'vertex-shader-invocations') {
       t.expectValidationError(() => {
-        t.device.createQuerySet({ type, count, pipelineStatistics });
+        t.device.createQuerySet({ type: 'pipeline-statistics', count });
       });
+    } else {
+      const shouldError =
+        count > kMaxQueryCount ||
+        pipelineStatistics.length === 0 ||
+        pipelineStatistics.length !== Array.from(new Set(pipelineStatistics)).length;
+
+      t.expectValidationError(() => {
+        t.device.createQuerySet({ type: 'pipeline-statistics', count, pipelineStatistics });
+      }, shouldError);
     }
   });
 
@@ -133,46 +109,33 @@ g.test('timestamp')
 Tests that create query set with the type of timestamp.
 - control cases:
   - count <= kMaxQueryCount
-  - pipelineStatistics is undefined
+  - pipelineStatistics is undefined or empty
 - invalid cases:
   - count > kMaxQueryCount
   - pipelineStatistics is set with pipeline statistic names
   `
   )
-  .params(
-    params()
-      .combine(poptions('count', kQueryCounts))
-      .combine(
-        poptions('pipelineStatistics', [
-          // valid
-          undefined,
-          [] as const,
-          // invalid
-          ['clipper-invocations'] as const,
-        ])
-      )
-      .expand(p =>
-        poptions('_valid', [
-          p.count <= kMaxQueryCount &&
-            (p.pipelineStatistics === undefined || p.pipelineStatistics.length === 0),
-        ])
-      )
-      // TODO(hao.x.li@intel.com): zero-sized query set is not implemented.
-      .filter(({ count }) => count !== 0)
-  )
+  .params([
+    ...poptions('count', kQueryCounts),
+    ...poptions('pipelineStatistics', [
+      // valid
+      undefined,
+      [],
+      // invalid
+      ['clipper-invocations'],
+    ]),
+  ])
   .fn(async t => {
     await t.selectDeviceOrSkipTestCase({
       extensions: ['timestamp-query'],
     });
 
-    const { count, pipelineStatistics, _valid } = t.params;
-    const type = 'timestamp';
+    const { count = 1, pipelineStatistics } = t.params as {
+      count?: number;
+      pipelineStatistics?: GPUPipelineStatisticName[];
+    };
 
-    if (_valid) {
-      t.device.createQuerySet({ type, count, pipelineStatistics });
-    } else {
-      t.expectValidationError(() => {
-        t.device.createQuerySet({ type, count, pipelineStatistics });
-      });
-    }
+    t.expectValidationError(() => {
+      t.device.createQuerySet({ type: 'timestamp', count, pipelineStatistics });
+    }, count > kMaxQueryCount || (pipelineStatistics !== undefined && pipelineStatistics.length > 0));
   });
