@@ -7,7 +7,6 @@ Test Plan: (TODO(jiawei.shao@intel.com): add tests on 1D/3D textures)
   - mipLevel {>, =, <} the mipmap level count of the {source, destination} texture.
   - the source texture is created {with, without} GPUTextureUsage::CopySrc.
   - the destination texture is created {with, without} GPUTextureUsage::CopyDst.
-  - the texture copy aspects must be both 'all'.
 * sample count
   - the sample count of the source texture {is, isn't} equal to the one of the destination texture
   - when the sample count is greater than 1:
@@ -18,6 +17,8 @@ Test Plan: (TODO(jiawei.shao@intel.com): add tests on 1D/3D textures)
     - including: depth24plus-stencil8 to/from {depth24plus, stencil8}.
   - for each depth and/or stencil format: a copy between two textures with same format:
     - it {is, isn't} a copy of the whole subresource of the {source, destination} texture.
+  - for all the color and depth-stencil formats: the texture copy aspects must be both 'all'.
+  - for all the depth-only formats: the texture copy aspects must be both 'all' or 'depth-only'.
 * copy ranges
   - if the texture dimension is 2D:
     - (srcOrigin.x + copyExtent.width) {>, =, <} the width of the subresource size of source
