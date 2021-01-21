@@ -12,29 +12,55 @@ export class ShaderValidationTest extends GPUTest {
    * ```
    */
   expectCompileResult(result: boolean | string, code: string) {
-    // If no result is expected, we let the scope surrounding the test catch it.
+    // If an error is expected, push an error scope to catch it.
+    // Otherwise, the test harness will catch unexpected errors.
     if (result !== true) {
       this.device.pushErrorScope('validation');
     }
 
-    this.device.createShaderModule({ code });
+    const shaderModule = this.device.createShaderModule({ code });
 
     if (result !== true) {
       const promise = this.device.popErrorScope();
 
       this.eventualAsyncExpectation(async niceStack => {
-        const gpuValidationError = await promise;
-        if (!gpuValidationError) {
-          niceStack.message = 'Compilation succeeded unexpectedly.';
-          this.rec.validationFailed(niceStack);
-        } else if (gpuValidationError instanceof GPUValidationError) {
-          if (typeof result === 'string' && gpuValidationError.message.indexOf(result) === -1) {
-            niceStack.message = `Compilation failed, but message missing expected substring «${result}» - ${gpuValidationError.message}`;
+        // TODO: This is a non-compliant fallback path for Chrome, which doesn't
+        // implement .compilationInfo() yet. Remove it.
+        if (!shaderModule.compilationInfo) {
+          const gpuValidationError = await promise;
+          if (!gpuValidationError) {
+            niceStack.message = 'Compilation succeeded unexpectedly.';
             this.rec.validationFailed(niceStack);
-          } else {
-            niceStack.message = `Compilation failed, as expected - ${gpuValidationError.message}`;
-            this.rec.debug(niceStack);
+          } else if (gpuValidationError instanceof GPUValidationError) {
+            if (typeof result === 'string' && gpuValidationError.message.indexOf(result) === -1) {
+              niceStack.message = `Compilation failed, but message missing expected substring \
+«${result}» - ${gpuValidationError.message}`;
+              this.rec.validationFailed(niceStack);
+            } else {
+              niceStack.message = `Compilation failed, as expected - ${gpuValidationError.message}`;
+              this.rec.debug(niceStack);
+            }
           }
+          return;
+        }
+
+        if (typeof result === 'string') {
+          const info = await shaderModule.compilationInfo();
+          for (const message of info.messages) {
+            if (message.type === 'error' && message.message.indexOf(result) !== -1) {
+              niceStack.message = `Compilation failed, as expected - \
+${message.lineNum}:${message.linePos}: ${message.message}`;
+              this.rec.debug(niceStack);
+              return;
+            }
+          }
+          // The expected string was not found.
+          const messagesLog = info.messages
+            .map(m => `${m.lineNum}:${m.linePos}: ${m.type}: ${m.message}`)
+            .join('\n');
+          niceStack.message = `Compilation failed, but no error message with expected substring \
+«${result}»\n${messagesLog}`;
+          this.rec.validationFailed(niceStack);
         }
       });
     }
