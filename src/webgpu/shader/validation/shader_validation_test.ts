@@ -54,7 +54,9 @@ ${message.lineNum}:${message.linePos}: ${message.message}`;
               return;
             }
           }
-          // The expected string was not found.
+          // Here, the expected string was not found.
+
+          // TODO: Pretty-print error messages, with source context.
           const messagesLog = info.messages
             .map(m => `${m.lineNum}:${m.linePos}: ${m.type}: ${m.message}`)
             .join('\n');
