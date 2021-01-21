@@ -27,7 +27,7 @@ g.test('storeOp_controls_whether_1x1_drawn_quad_is_stored')
         module: t.device.createShaderModule({
           code: `
             [[builtin(position)]] var<out> Position : vec4<f32>;
-            [[builtin(vertex_idx)]] var<in> VertexIndex : i32;
+            [[builtin(vertex_index)]] var<in> VertexIndex : i32;
 
             [[stage(vertex)]] fn main() -> void {
               const pos : array<vec2<f32>, 3> = array<vec2<f32>, 3>(

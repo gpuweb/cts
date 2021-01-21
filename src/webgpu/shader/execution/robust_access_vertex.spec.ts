@@ -355,7 +355,7 @@ g.test('vertexAccess')
         module: t.device.createShaderModule({
           code: `
             [[builtin(position)]] var<out> Position : vec4<f32>;
-            [[builtin(vertex_idx)]] var<in> VertexIndex : u32;
+            [[builtin(vertex_index)]] var<in> VertexIndex : u32;
             ${layoutStr}
 
             fn valid(f : f32) -> bool {

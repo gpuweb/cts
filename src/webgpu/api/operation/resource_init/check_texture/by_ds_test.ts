@@ -7,7 +7,7 @@ function makeFullscreenVertexModule(device: GPUDevice) {
   return device.createShaderModule({
     code: `
     [[builtin(position)]] var<out> Position : vec4<f32>;
-    [[builtin(vertex_idx)]] var<in> VertexIndex : i32;
+    [[builtin(vertex_index)]] var<in> VertexIndex : i32;
 
     [[stage(vertex)]]
     fn main() -> void {
