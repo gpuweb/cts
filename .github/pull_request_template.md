@@ -2,13 +2,10 @@
 
 -----
 
-<!-- Reminders to the PR author:
+<!-- Leave this section in the PR description. -->
 
-* Ensure any new helpers are documented in `helpers.md`.
-* Ensure TODOs (or `.unimplemented()`) are present for any incomplete areas.
-
-Leave the following in the pull request description:
--->
+- [ ] New helpers, if any, are documented in `helper_index.md`.
+- [ ] Incomplete tests, if any, are marked with TODO or `.unimplemented()`.
 
 **[Review requirements](https://github.com/gpuweb/cts/blob/main/docs/reviews.md) are satisfied for:**
 

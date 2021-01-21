@@ -313,10 +313,10 @@ export class ValidationTest extends GPUTest {
       this.eventualAsyncExpectation(async niceStack => {
         const gpuValidationError = await promise;
         if (!gpuValidationError) {
-          niceStack.message = 'Validation error was expected.';
+          niceStack.message = 'Validation succeeded unexpectedly.';
           this.rec.validationFailed(niceStack);
         } else if (gpuValidationError instanceof GPUValidationError) {
-          niceStack.message = `Captured validation error - ${gpuValidationError.message}`;
+          niceStack.message = `Validation failed, as expected - ${gpuValidationError.message}`;
           this.rec.debug(niceStack);
         }
       });
