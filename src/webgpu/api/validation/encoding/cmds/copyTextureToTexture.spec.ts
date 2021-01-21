@@ -17,8 +17,6 @@ Test Plan: (TODO(jiawei.shao@intel.com): add tests on 1D/3D textures)
     - including: depth24plus-stencil8 to/from {depth24plus, stencil8}.
   - for each depth and/or stencil format: a copy between two textures with same format:
     - it {is, isn't} a copy of the whole subresource of the {source, destination} texture.
-  - for all the color and depth-stencil formats: the texture copy aspects must be both 'all'.
-  - for all the depth-only formats: the texture copy aspects must be both 'all' or 'depth-only'.
 * copy ranges
   - if the texture dimension is 2D:
     - (srcOrigin.x + copyExtent.width) {>, =, <} the width of the subresource size of source
@@ -514,13 +512,20 @@ g.test('copy_within_same_texture')
 
 // TODO(jiawei.shao@intel.com): test 'stencil-only' is also valid for the texture format 'stencil8'
 g.test('copy_aspects')
+  .desc(
+    `
+Test the validations on the member 'aspect' of GPUTextureCopyView in CopyTextureToTexture().
+- for all the color and depth-stencil formats: the texture copy aspects must be both 'all'.
+- for all the depth-only formats: the texture copy aspects must be both 'all' or 'depth-only'.
+`
+  )
   .params(
     params()
       .combine(
         poptions('formatAndValidAspects', [
-          { format: 'rgba8unorm', validAspects: ['all'] },
-          { format: 'depth24plus-stencil8', validAspects: ['all'] },
-          { format: 'depth32float', validAspects: ['all', 'depth-only'] },
+          { format: 'rgba8unorm', _validAspects: ['all'] },
+          { format: 'depth24plus-stencil8', _validAspects: ['all'] },
+          { format: 'depth32float', _validAspects: ['all', 'depth-only'] },
         ] as const)
       )
       .combine(poptions('sourceAspect', ['all', 'depth-only', 'stencil-only'] as const))
@@ -542,18 +547,21 @@ g.test('copy_aspects')
       usage: GPUTextureUsage.COPY_DST,
     });
 
-    let isSuccess = false;
-    for (const aspect of formatAndValidAspects.validAspects) {
-      if (sourceAspect === aspect && destinationAspect === aspect) {
-        isSuccess = true;
-        break;
+    let isSourceAspectValid = false;
+    let isDestinationAspectValid = false;
+    for (const aspect of formatAndValidAspects._validAspects) {
+      if (sourceAspect === aspect) {
+        isSourceAspectValid = true;
+      }
+      if (destinationAspect === aspect) {
+        isDestinationAspectValid = true;
       }
     }
     t.TestCopyTextureToTexture(
       { texture: srcTexture, origin: { x: 0, y: 0, z: 0 }, aspect: sourceAspect },
       { texture: dstTexture, origin: { x: 0, y: 0, z: 0 }, aspect: destinationAspect },
       kTextureSize,
-      isSuccess
+      isSourceAspectValid && isDestinationAspectValid
     );
   });
 
