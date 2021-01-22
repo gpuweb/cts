@@ -510,46 +510,55 @@ g.test('copy_within_same_texture')
     );
   });
 
-// TODO(jiawei.shao@intel.com): test 'stencil-only' is also valid for the texture format 'stencil8'
 g.test('copy_aspects')
   .desc(
     `
 Test the validations on the member 'aspect' of GPUTextureCopyView in CopyTextureToTexture().
 - for all the color and depth-stencil formats: the texture copy aspects must be both 'all'.
-- for all the depth-only formats: the texture copy aspects must be both 'all' or 'depth-only'.
+- for all the depth-only formats: the texture copy aspects must be either 'all' or 'depth-only'.
+- for all the stencil-only formats: the texture copy aspects must be either 'all' or 'stencil-only'.
 `
   )
   .params(
     params()
       .combine(
-        poptions('formatAndValidAspects', [
-          { format: 'rgba8unorm', _validAspects: ['all'] },
-          { format: 'depth24plus-stencil8', _validAspects: ['all'] },
-          { format: 'depth32float', _validAspects: ['all', 'depth-only'] },
+        poptions('format', [
+          'rgba8unorm',
+          'depth24plus-stencil8',
+          'depth32float',
+          'stencil8',
         ] as const)
       )
       .combine(poptions('sourceAspect', ['all', 'depth-only', 'stencil-only'] as const))
       .combine(poptions('destinationAspect', ['all', 'depth-only', 'stencil-only'] as const))
   )
   .fn(async t => {
-    const { formatAndValidAspects, sourceAspect, destinationAspect } = t.params;
+    const { format, sourceAspect, destinationAspect } = t.params;
 
     const kTextureSize = { width: 16, height: 8, depth: 1 };
 
     const srcTexture = t.device.createTexture({
       size: kTextureSize,
-      format: formatAndValidAspects.format,
+      format,
       usage: GPUTextureUsage.COPY_SRC,
     });
     const dstTexture = t.device.createTexture({
       size: kTextureSize,
-      format: formatAndValidAspects.format,
+      format,
       usage: GPUTextureUsage.COPY_DST,
     });
 
+    // TODO(jiawei.shao@intel.com): get the valid aspects from capability_info.ts.
+    const formatAndValidAspecs = {
+      rgba8unorm: ['all'],
+      'depth24plus-stencil8': ['all'],
+      depth32float: ['all', 'depth-only'],
+      stencil8: ['all', 'stencil-only'],
+    };
+
     let isSourceAspectValid = false;
     let isDestinationAspectValid = false;
-    for (const aspect of formatAndValidAspects._validAspects) {
+    for (const aspect of formatAndValidAspecs[format]) {
       if (sourceAspect === aspect) {
         isSourceAspectValid = true;
       }

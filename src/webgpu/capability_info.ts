@@ -116,6 +116,7 @@ const kTexFmtInfoHeader = ['renderable', 'color', 'depth', 'stencil', 'storage',
 export const kSizedDepthStencilFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
                           [        true,   false,        ,          ,     false,          ,          ,                ,            1,             1,                         ] as const, {
   'depth32float':         [        true,   false,    true,     false,          ,     false,     false,               4],
+  'stencil8':             [        true,        ,   false,      true,          ,     false,     false,               1],
 } as const);
 export const kUnsizedDepthStencilFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
                           [        true,   false,        ,          ,     false,          ,          ,       undefined,            1,             1,                         ] as const, {
