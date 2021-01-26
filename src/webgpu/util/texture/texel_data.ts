@@ -492,13 +492,17 @@ export const kTexelRepresentationInfo: {
     },
     stencil8: {
       componentOrder: [TexelComponent.Stencil],
-      encode: applyEach((n: number) => (assertInIntegerRange(n, 8, false), n), [
-        TexelComponent.Stencil,
-      ]),
-      decode: applyEach((n: number) => (assertInIntegerRange(n, 8, false), n), [
-        TexelComponent.Stencil,
-      ]),
       componentInfo: { Stencil: { dataType: 'uint', bitLength: 8 } },
+      encode: components => {
+        assert(components.Stencil !== undefined);
+        assertInIntegerRange(components.Stencil, 8, false);
+        return components;
+      },
+      decode: components => {
+        assert(components.Stencil !== undefined);
+        assertInIntegerRange(components.Stencil, 8, false);
+        return components;
+      },
       pack: components => packComponents([TexelComponent.Stencil], components, 8, 'uint'),
     },
     'depth24plus-stencil8': {

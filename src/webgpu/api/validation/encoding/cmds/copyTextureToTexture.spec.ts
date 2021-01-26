@@ -521,14 +521,7 @@ Test the validations on the member 'aspect' of GPUTextureCopyView in CopyTexture
   )
   .params(
     params()
-      .combine(
-        poptions('format', [
-          'rgba8unorm',
-          'depth24plus-stencil8',
-          'depth32float',
-          'stencil8',
-        ] as const)
-      )
+      .combine(poptions('format', ['rgba8unorm', ...kDepthStencilFormats] as const))
       .combine(poptions('sourceAspect', ['all', 'depth-only', 'stencil-only'] as const))
       .combine(poptions('destinationAspect', ['all', 'depth-only', 'stencil-only'] as const))
   )
@@ -549,23 +542,21 @@ Test the validations on the member 'aspect' of GPUTextureCopyView in CopyTexture
     });
 
     // TODO(jiawei.shao@intel.com): get the valid aspects from capability_info.ts.
-    const formatAndValidAspecs = {
+    const kValidAspectsForFormat = {
       rgba8unorm: ['all'],
+
+      // kUnsizedDepthStencilFormats
+      depth24plus: ['all', 'depth-only'],
       'depth24plus-stencil8': ['all'],
+
+      // kSizedDepthStencilFormats
       depth32float: ['all', 'depth-only'],
       stencil8: ['all', 'stencil-only'],
     };
 
-    let isSourceAspectValid = false;
-    let isDestinationAspectValid = false;
-    for (const aspect of formatAndValidAspecs[format]) {
-      if (sourceAspect === aspect) {
-        isSourceAspectValid = true;
-      }
-      if (destinationAspect === aspect) {
-        isDestinationAspectValid = true;
-      }
-    }
+    const isSourceAspectValid = kValidAspectsForFormat[format].includes(sourceAspect);
+    const isDestinationAspectValid = kValidAspectsForFormat[format].includes(destinationAspect);
+
     t.TestCopyTextureToTexture(
       { texture: srcTexture, origin: { x: 0, y: 0, z: 0 }, aspect: sourceAspect },
       { texture: dstTexture, origin: { x: 0, y: 0, z: 0 }, aspect: destinationAspect },
