@@ -67,6 +67,7 @@ g.test('wgsl-v-0033')
       }
     `;
 
-    const expectation = (lhsScalarType === rhsScalarType && lhs_x === rhs_x) || 'v-0033';
+    const expectation =
+      (lhsScalarType === rhsScalarType && lhs_x === rhs_x && lhs_y === rhs_y) || 'v-0033';
     t.expectCompileResult(expectation, code);
   });
