@@ -3,8 +3,9 @@ Tests for validation rule v-0033.
 `;
 
 import { params, poptions } from '../../../common/framework/params_builder.js';
-import { assert, repeat } from '../../../common/framework/util/util.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { assert } from '../../../common/framework/util/util.js';
+
 import { ShaderValidationTest } from './shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -12,48 +13,60 @@ export const g = makeTestGroup(ShaderValidationTest);
 type ScalarType = 'f32' | 'i32' | 'u32' | 'bool';
 const kScalarType = ['i32', 'f32', 'u32', 'bool'] as const;
 
-const kScalarTypeInfo = {
-  f32: { zero: '0.0' },
-  i32: { zero: '0' },
-  u32: { zero: '0u' },
-  bool: { zero: 'false' },
-} as const;
+function getVecTypeInfo(scalarType: ScalarType, x: number, y: number) {
+  assert(x === 1 || x === 2 || x === 3 || x === 4, 'invalid x');
+  assert(y === 1 || y === 2 || y === 3 || y === 4, 'invalid y');
 
-function getVecTypeInfo(scalarType: ScalarType, length: number) {
-  const scalarZero = kScalarTypeInfo[scalarType].zero;
-  assert(length === 1 || length === 2 || length === 3 || length === 4, 'invalid vector length');
-  const type = length === 1 ? scalarType : `vec${length}<${scalarType}>`;
-  const zero = `${type}(${repeat(length, scalarZero).join(', ')})`;
-  return { type, zero };
+  let type: string = '';
+  if (y === 1) {
+    if (x === 1) {
+      type = scalarType;
+    } else {
+      type = `vec${x}<${scalarType}>`;
+    }
+  } else {
+    type = `mat${y}x${x}<${scalarType}>`;
+  }
+
+  assert(type.length !== 0, 'type is not set');
+  return type;
 }
 
-g.test('scalar_and_vector')
-  .desc(
-    `Test the left and right hand sides of a var expression have the same type, for
-    scalar and vector types.`
-  )
+g.test('wgsl-v-0033')
+  .desc(`v-033: If present, the initializer’s type must match the store type of the variable.`)
   .params(
     params()
+      .combine(poptions('variable_or_constant', ['var', 'const']))
       .combine(poptions('lhsScalarType', kScalarType))
       .combine(poptions('rhsScalarType', kScalarType))
-      .combine(poptions('lhsLength', [1, 2, 3, 4] as const))
-      .combine(poptions('rhsLength', [1, 2, 3, 4] as const))
+      .combine(poptions('lhs_x', [1, 2, 3, 4] as const))
+      .combine(poptions('lhs_y', [1, 2, 3, 4] as const))
+      .combine(poptions('rhs_x', [1, 2, 3, 4] as const))
+      .combine(poptions('rhs_y', [1, 2, 3, 4] as const))
   )
   .fn(t => {
-    const { lhsScalarType, rhsScalarType, lhsLength, rhsLength } = t.params;
+    const {
+      variable_or_constant,
+      lhsScalarType,
+      rhsScalarType,
+      lhs_x,
+      lhs_y,
+      rhs_x,
+      rhs_y,
+    } = t.params;
 
-    const lhsType = getVecTypeInfo(lhsScalarType, lhsLength);
-    const rhsType = getVecTypeInfo(rhsScalarType, rhsLength);
+    const lhsType = getVecTypeInfo(lhsScalarType, lhs_x, lhs_y);
+    const rhsType = getVecTypeInfo(rhsScalarType, rhs_x, rhs_y);
 
-    t.debug(`var v : ${lhsType.type} = ${rhsType.zero};`);
+    t.debug(`${variable_or_constant} a : ${lhsType} = ${rhsType}()`);
 
     const code = `
       [[stage(vertex)]]
       fn main() -> void {
-        var v : ${lhsType.type} = ${rhsType.zero};
+        ${variable_or_constant} a : ${lhsType} = ${rhsType}();
       }
     `;
 
-    const expectation = (lhsScalarType === rhsScalarType && lhsLength === rhsLength) || 'v-0033';
+    const expectation = (lhsScalarType === rhsScalarType && lhs_x === rhs_x) || 'v-0033';
     t.expectCompileResult(expectation, code);
   });
