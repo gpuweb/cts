@@ -24,7 +24,7 @@ Tests that creating query set shouldn't be valid without the required feature en
   .fn(async t => {
     const { type, pipelineStatisticsQueryEnable, timestampQueryEnable } = t.params;
 
-    const extensions: GPUExtednsionName[] = [];
+    const extensions: GPUExtensionName[] = [];
     if (pipelineStatisticsQueryEnable) {
       extensions.push('pipeline-statistics-query');
     }
