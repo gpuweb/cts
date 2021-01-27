@@ -1,6 +1,6 @@
 import { Fixture, SkipTestCase } from './fixture.js';
 import { TestCaseRecorder } from './logging/test_case_recorder.js';
-import { CaseParams, CaseParamsIterable, extractPublicParams } from './params_utils.js';
+import { CaseParams, extractPublicParams, Merged, mergeParams } from './params_utils.js';
 import { kPathSeparator } from './query/separators.js';
 import { stringifyPublicParams, stringifyPublicParamsUniquely } from './query/stringify_params.js';
 import { validQueryPart } from './query/validQueryPart.js';
@@ -20,7 +20,7 @@ export interface RunCase {
 
 // Interface for defining tests
 export interface TestGroupBuilder<F extends Fixture> {
-  test(name: string): TestBuilderWithName<F, never>;
+  test(name: string): TestBuilderWithName<F>;
 }
 export function makeTestGroup<F extends Fixture>(fixture: FixtureClass<F>): TestGroupBuilder<F> {
   return new TestGroup(fixture);
@@ -43,13 +43,15 @@ export function makeTestGroupForUnitTesting<F extends Fixture>(
   return new TestGroup(fixture);
 }
 
-type FixtureClass<F extends Fixture> = new (log: TestCaseRecorder, params: CaseParams) => F;
-type TestFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
+type FixtureClass<F extends Fixture> = new <P extends {}>(log: TestCaseRecorder, params: P) => F;
+type TestFn<F extends Fixture, P extends {}, SubP extends {}> = (
+  t: F & { params: Merged<P, SubP> }
+) => Promise<void> | void;
 
 class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
   private fixture: FixtureClass<F>;
   private seen: Set<string> = new Set();
-  private tests: Array<TestBuilder<F, never>> = [];
+  private tests: Array<TestBuilder<F, {}, {}>> = [];
 
   constructor(fixture: FixtureClass<F>) {
     this.fixture = fixture;
@@ -72,7 +74,7 @@ class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
   }
 
   // TODO: This could take a fixture, too, to override the one for the group.
-  test(name: string): TestBuilderWithName<F, never> {
+  test(name: string): TestBuilderWithName<F> {
     const testCreationStack = new Error(`Test created: ${name}`);
 
     this.checkName(name);
@@ -82,7 +84,7 @@ class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
       assert(validQueryPart.test(p), `Invalid test name part ${p}; must match ${validQueryPart}`);
     }
 
-    const test = new TestBuilder<F, never>(parts, this.fixture, testCreationStack);
+    const test = new TestBuilder<F, {}, {}>(parts, this.fixture, testCreationStack);
     this.tests.push(test);
     return test;
   }
@@ -94,23 +96,33 @@ class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
   }
 }
 
-interface TestBuilderWithName<F extends Fixture, P extends {}> extends TestBuilderWithParams<F, P> {
+interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F, {}> {
   desc(description: string): this;
+  /** @deprecated use cases() and/or subcases() instead */
   params<NewP extends {}>(specs: Iterable<NewP>): TestBuilderWithParams<F, NewP>;
+  cases<NewP extends {}>(specs: Iterable<NewP>): TestBuilderWithParams<F, NewP>;
 }
 
-interface TestBuilderWithParams<F extends Fixture, P extends {}> {
-  fn(fn: TestFn<F, P>): void;
+interface TestBuilderWithParams<F extends Fixture, P extends {}>
+  extends TestBuilderWithSubParams<F, P, {}> {
+  subcases<NewSubP extends {}>(
+    specs: (_: P) => Iterable<NewSubP>
+  ): TestBuilderWithSubParams<F, P, NewSubP>;
+}
+
+interface TestBuilderWithSubParams<F extends Fixture, P extends {}, SubP extends {}> {
+  fn(fn: TestFn<F, P, SubP>): void;
   unimplemented(): void;
 }
 
-class TestBuilder<F extends Fixture, P extends {}> {
+class TestBuilder<F extends Fixture, P extends {}, SubP extends {}> {
   readonly testPath: string[];
   description: string | undefined;
 
   private readonly fixture: FixtureClass<F>;
-  private testFn: TestFn<F, P> | undefined;
-  private cases?: CaseParamsIterable = undefined;
+  private testFn: TestFn<F, P, SubP> | undefined;
+  private caseParams?: Iterable<P> = undefined;
+  private subcaseParams?: (_: P) => Iterable<SubP> = undefined;
   private testCreationStack: Error;
 
   constructor(testPath: string[], fixture: FixtureClass<F>, testCreationStack: Error) {
@@ -124,7 +136,7 @@ class TestBuilder<F extends Fixture, P extends {}> {
     return this;
   }
 
-  fn(fn: TestFn<F, P>): void {
+  fn(fn: TestFn<F, P, SubP>): void {
     // TODO: add TODO if there's no description? (and make sure it only ends up on actual tests,
     // not on test parents in the tree, which is what happens if you do it here, not sure why)
     assert(this.testFn === undefined);
@@ -152,12 +164,12 @@ class TestBuilder<F extends Fixture, P extends {}> {
       return s;
     });
 
-    if (this.cases === undefined) {
+    if (this.caseParams === undefined) {
       return;
     }
 
     const seen = new Set<string>();
-    for (const testcase of this.cases) {
+    for (const testcase of this.caseParams) {
       // stringifyPublicParams also checks for invalid params values
       const testcaseString = stringifyPublicParams(testcase);
 
@@ -171,44 +183,74 @@ class TestBuilder<F extends Fixture, P extends {}> {
     }
   }
 
-  params<NewP extends {}>(casesIterable: Iterable<NewP>): TestBuilderWithParams<F, NewP> {
-    assert(this.cases === undefined, 'test case is already parameterized');
-    this.cases = Array.from(casesIterable);
+  params<NewP extends {}>(casesIterable: Iterable<NewP>): TestBuilder<F, NewP, SubP> {
+    return this.cases(casesIterable);
+  }
 
-    return (this as unknown) as TestBuilderWithParams<F, NewP>;
+  cases<NewP extends {}>(casesIterable: Iterable<NewP>): TestBuilder<F, NewP, SubP> {
+    assert(this.caseParams === undefined, 'test case is already parameterized');
+    const newSelf = (this as unknown) as TestBuilder<F, NewP, SubP>;
+    newSelf.caseParams = Array.from(casesIterable);
+
+    return newSelf;
+  }
+
+  subcases<NewSubP extends {}>(specs: (_: P) => Iterable<NewSubP>): TestBuilder<F, P, NewSubP> {
+    assert(this.subcaseParams === undefined, 'test subcases are already parameterized');
+    const newSelf = (this as unknown) as TestBuilder<F, P, NewSubP>;
+    newSelf.subcaseParams = specs;
+
+    return newSelf;
   }
 
   *iterate(): IterableIterator<RunCase> {
     assert(this.testFn !== undefined, 'No test function (.fn()) for test');
-    for (const params of this.cases || [{}]) {
-      yield new RunCaseSpecific(this.testPath, params, this.fixture, this.testFn);
+    for (const params of this.caseParams || [<P>{}]) {
+      yield new RunCaseSpecific(
+        this.testPath,
+        params,
+        this.subcaseParams,
+        this.fixture,
+        this.testFn
+      );
     }
   }
 }
 
-class RunCaseSpecific<F extends Fixture> implements RunCase {
+class RunCaseSpecific<
+  F extends Fixture,
+  P extends CaseParams,
+  SubP extends CaseParams,
+  FN extends TestFn<F, P, SubP>
+> implements RunCase {
   readonly id: TestCaseID;
 
-  private readonly params: CaseParams | null;
+  private readonly params: P;
+  private readonly subParamGen?: (_: P) => Iterable<SubP>;
   private readonly fixture: FixtureClass<F>;
-  private readonly fn: TestFn<F, never>;
+  private readonly fn: FN;
 
   constructor(
     testPath: string[],
-    params: CaseParams,
+    params: P,
+    subParamGen: ((_: P) => Iterable<SubP>) | undefined,
     fixture: FixtureClass<F>,
-    fn: TestFn<F, never>
+    fn: FN
   ) {
     this.id = { test: testPath, params: extractPublicParams(params) };
     this.params = params;
+    this.subParamGen = subParamGen;
     this.fixture = fixture;
     this.fn = fn;
   }
 
-  async run(rec: TestCaseRecorder): Promise<void> {
-    rec.start();
+  async runTest(
+    rec: TestCaseRecorder,
+    params: P | Merged<P, SubP>,
+    throwSkip: boolean
+  ): Promise<void> {
     try {
-      const inst = new this.fixture(rec, this.params || {});
+      const inst = new this.fixture(rec, params);
 
       try {
         await inst.init();
@@ -223,7 +265,40 @@ class RunCaseSpecific<F extends Fixture> implements RunCase {
       // An error from init or test may have been a SkipTestCase.
       // An error from finalize may have been an eventualAsyncExpectation failure
       // or unexpected validation/OOM error from the GPUDevice.
+      if (throwSkip && ex instanceof SkipTestCase) {
+        throw ex;
+      }
       rec.threw(ex);
+    }
+  }
+
+  async run(rec: TestCaseRecorder): Promise<void> {
+    rec.start();
+    if (this.subParamGen) {
+      let totalCount = 0;
+      let skipCount = 0;
+      for (const subParams of this.subParamGen(this.params)) {
+        rec.info(new Error('subcase: ' + stringifyPublicParamsUniquely(subParams)));
+        try {
+          await this.runTest(rec, mergeParams(this.params, subParams), true);
+        } catch (ex) {
+          if (ex instanceof SkipTestCase) {
+            // Convert SkipTestCase to info messages
+            ex.message = 'subcase skipped: ' + ex.message;
+            rec.info(ex);
+            ++skipCount;
+          } else {
+            // Since we are catching all error inside runTest(), this should never happen
+            rec.threw(ex);
+          }
+        }
+        ++totalCount;
+      }
+      if (skipCount === totalCount) {
+        rec.skipped(new SkipTestCase('all subcases were skipped'));
+      }
+    } else {
+      await this.runTest(rec, this.params, false);
     }
     rec.finish();
   }
