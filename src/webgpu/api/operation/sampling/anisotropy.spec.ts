@@ -220,7 +220,6 @@ g.test('anisotropic_filter_checkerboard')
 
     const textureView = texture.createView();
     const byteLength = kRTSize * kBytesPerRow;
-    const dst: GPUBuffer[] = [];
     const results: Uint8Array[] = [];
 
     for (const maxAnisotropy of [1, 16, 1024]) {
@@ -235,7 +234,6 @@ g.test('anisotropic_filter_checkerboard')
         byteLength,
         0
       ).dst;
-      dst.push(d);
       await d.mapAsync(GPUMapMode.READ);
       results.push(new Uint8Array(d.getMappedRange()));
     }
@@ -263,40 +261,22 @@ g.test('anisotropic_filter_mipmap_color')
     {
       maxAnisotropy: 1,
       _results: [
-        {
-          coord: { x: xMiddle, y: 2 },
-          expected: colors[2],
-        },
-        {
-          coord: { x: xMiddle, y: 6 },
-          expected: [colors[0], colors[1]],
-        },
+        { coord: { x: xMiddle, y: 2 }, expected: colors[2] },
+        { coord: { x: xMiddle, y: 6 }, expected: [colors[0], colors[1]] },
       ],
     },
     {
       maxAnisotropy: 2,
       _results: [
-        {
-          coord: { x: xMiddle, y: 2 },
-          expected: [colors[1], colors[2]],
-        },
-        {
-          coord: { x: xMiddle, y: 6 },
-          expected: colors[0],
-        },
+        { coord: { x: xMiddle, y: 2 }, expected: [colors[1], colors[2]] },
+        { coord: { x: xMiddle, y: 6 }, expected: colors[0] },
       ],
     },
     {
       maxAnisotropy: 16,
       _results: [
-        {
-          coord: { x: xMiddle, y: 2 },
-          expected: [colors[0], colors[1]],
-        },
-        {
-          coord: { x: xMiddle, y: 6 },
-          expected: colors[0],
-        },
+        { coord: { x: xMiddle, y: 2 }, expected: [colors[0], colors[1]] },
+        { coord: { x: xMiddle, y: 6 }, expected: colors[0] },
       ],
     },
   ])
