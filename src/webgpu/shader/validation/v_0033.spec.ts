@@ -5,6 +5,7 @@ If present, the initializer's type must match the store type of the variable.
 
 import { params, poptions } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+
 import { ShaderValidationTest } from './shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -56,6 +57,6 @@ g.test('scalar_vector_matrix')
     `;
 
     const expectation =
-      (lhsScalarType === rhsScalarType && lhsContainerType == rhsContainerType) || 'v-0033';
+      (lhsScalarType === rhsScalarType && lhsContainerType === rhsContainerType) || 'v-0033';
     t.expectCompileResult(expectation, code);
   });
