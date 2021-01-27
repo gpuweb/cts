@@ -1,72 +1,61 @@
 export const description = `
 Tests for validation rule v-0033:
-If present, the initializer’s type must match the store type of the variable.
+If present, the initializer's type must match the store type of the variable.
 `;
 
 import { params, poptions } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { assert } from '../../../common/framework/util/util.js';
-
 import { ShaderValidationTest } from './shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-type ScalarType = 'f32' | 'i32' | 'u32' | 'bool';
 const kScalarType = ['i32', 'f32', 'u32', 'bool'] as const;
+const kContainerTypes = [
+  undefined,
+  'vec2',
+  'vec3',
+  'vec4',
+  'mat2x2',
+  'mat2x3',
+  'mat2x4',
+  'mat3x2',
+  'mat3x3',
+  'mat3x4',
+  'mat4x2',
+  'mat4x3',
+  'mat4x4',
+] as const;
 
-function getTypeInfo(scalarType: ScalarType, x: number, y: number) {
-  assert(x === 1 || x === 2 || x === 3 || x === 4, 'invalid x');
-  assert(y === 1 || y === 2 || y === 3 || y === 4, 'invalid y');
-
-  let type: string = '';
-  if (y === 1) {
-    if (x === 1) {
-      type = scalarType;
-    } else {
-      type = `vec${x}<${scalarType}>`;
-    }
-  } else {
-    type = `mat${x}x${y}<${scalarType}>`;
-  }
-
-  assert(type.length !== 0, 'type is not set');
-  return type;
-}
-
-g.test('wgsl_v_0033')
-  .desc(`v-033: If present, the initializer’s type must match the store type of the variable.`)
+g.test('scalar_vector_matrix')
+  .desc(`Tests for v-0033 with scalars, vectors, and matrices of every dimension and type`)
   .params(
     params()
-      .combine(poptions('variable_or_constant', ['var', 'const']))
+      .combine(poptions('variableOrConstant', ['var', 'const']))
+      .combine(poptions('lhsContainerType', kContainerTypes))
       .combine(poptions('lhsScalarType', kScalarType))
+      .combine(poptions('rhsContainerType', kContainerTypes))
       .combine(poptions('rhsScalarType', kScalarType))
-      .combine(poptions('lhs_x', [1, 2, 3, 4] as const))
-      .combine(poptions('lhs_y', [1, 2, 3, 4] as const))
-      .combine(poptions('rhs_x', [1, 2, 3, 4] as const))
-      .combine(poptions('rhs_y', [1, 2, 3, 4] as const))
   )
   .fn(t => {
     const {
-      variable_or_constant,
+      variableOrConstant,
+      lhsContainerType,
       lhsScalarType,
+      rhsContainerType,
       rhsScalarType,
-      lhs_x,
-      lhs_y,
-      rhs_x,
-      rhs_y,
     } = t.params;
 
-    const lhsType = getTypeInfo(lhsScalarType, lhs_x, lhs_y);
-    const rhsType = getTypeInfo(rhsScalarType, rhs_x, rhs_y);
+    const lhsType = lhsContainerType ? `${lhsContainerType}<${lhsScalarType}>` : lhsScalarType;
+    const rhsType = rhsContainerType ? `${rhsContainerType}<${rhsScalarType}>` : rhsScalarType;
 
     const code = `
       [[stage(vertex)]]
       fn main() -> void {
-        ${variable_or_constant} a : ${lhsType} = ${rhsType}();
+        ${variableOrConstant} a : ${lhsType} = ${rhsType}();
       }
     `;
 
     const expectation =
-      (lhsScalarType === rhsScalarType && lhs_x === rhs_x && lhs_y === rhs_y) || 'v-0033';
+      (lhsScalarType === rhsScalarType && lhsContainerType == rhsContainerType) || 'v-0033';
     t.expectCompileResult(expectation, code);
   });
