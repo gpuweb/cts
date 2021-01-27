@@ -4,8 +4,19 @@ Tests for validation in createQuerySet.
 
 import { params, poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { ValidationTest } from '../validation_test.js';
 import { kQueryTypes, kMaxQueryCount } from '../../../capability_info.js';
+import { ValidationTest } from '../validation_test.js';
+
+async function selectDeviceForQueryType(t: ValidationTest, type: GPUQueryType): Promise<void> {
+  const extensions: GPUExtensionName[] = [];
+  if (type === 'pipeline-statistics') {
+    extensions.push('pipeline-statistics-query');
+  } else if (type === 'timestamp') {
+    extensions.push('timestamp-query');
+  }
+
+  await t.selectDeviceOrSkipTestCase({ extensions });
+}
 
 export const g = makeTestGroup(ValidationTest);
 
@@ -25,15 +36,7 @@ Tests that create query set with the count for all query types:
   .fn(async t => {
     const { type, count } = t.params;
 
-    if (type === 'pipeline-statistics') {
-      await t.selectDeviceOrSkipTestCase({
-        extensions: ['pipeline-statistics-query'],
-      });
-    } else if (type === 'timestamp') {
-      await t.selectDeviceOrSkipTestCase({
-        extensions: ['timestamp-query'],
-      });
-    }
+    await selectDeviceForQueryType(t, type);
 
     const pipelineStatistics =
       type === 'pipeline-statistics' ? (['clipper-invocations'] as const) : ([] as const);
@@ -49,7 +52,6 @@ g.test('pipelineStatistics')
 Tests that create query set with the GPUPipelineStatisticName for all query types:
 - pipelineStatistics is undefined or empty
 - pipelineStatistics is a sequence of valid values
-- pipelineStatistics is a sequence of duplicate values
 - x= {occlusion, pipeline-statistics, timestamp} query
   `
   )
@@ -57,53 +59,56 @@ Tests that create query set with the GPUPipelineStatisticName for all query type
     params()
       .combine(poptions('type', kQueryTypes))
       .combine(
-        poptions('pipelineStatistics', [
-          undefined,
-          [] as const,
-          ['clipper-invocations'] as const,
-          ['clipper-invocations', 'clipper-invocations'] as const,
-          [
-            'clipper-invocations',
-            'clipper-primitives-out',
-            'compute-shader-invocations',
-            'fragment-shader-invocations',
-            'vertex-shader-invocations',
-          ] as const,
-        ])
-      )
-      // Except pipeline statistics query, there is no need to test duplicate values and all values of GPUPipelineStatisticName
-      .unless(
-        ({ type, pipelineStatistics }) =>
-          type !== 'pipeline-statistics' &&
-          pipelineStatistics !== undefined &&
-          pipelineStatistics.length >= 2
+        poptions('pipelineStatistics', [undefined, [] as const, ['clipper-invocations'] as const])
       )
   )
   .fn(async t => {
     const { type, pipelineStatistics } = t.params;
 
-    if (type === 'pipeline-statistics') {
-      await t.selectDeviceOrSkipTestCase({
-        extensions: ['pipeline-statistics-query'],
-      });
-    } else if (type === 'timestamp') {
-      await t.selectDeviceOrSkipTestCase({
-        extensions: ['timestamp-query'],
-      });
-    }
+    await selectDeviceForQueryType(t, type);
 
     const count = 1;
-
     const shouldError =
       (type !== 'pipeline-statistics' &&
         pipelineStatistics !== undefined &&
         pipelineStatistics.length > 0) ||
       (type === 'pipeline-statistics' &&
-        (pipelineStatistics === undefined ||
-          pipelineStatistics.length === 0 ||
-          pipelineStatistics.length !== Array.from(new Set(pipelineStatistics)).length));
+        (pipelineStatistics === undefined || pipelineStatistics.length === 0));
 
     t.expectValidationError(() => {
       t.device.createQuerySet({ type, count, pipelineStatistics });
     }, shouldError);
+  });
+
+g.test('pipelineStatistics_duplicates_and_all')
+  .desc(
+    `
+Tests that create query set with the duplicate values and all values of GPUPipelineStatisticName for pipeline-statistics query.
+  `
+  )
+  .params(
+    params().combine(
+      poptions('pipelineStatistics', [
+        ['clipper-invocations', 'clipper-invocations'] as const,
+        [
+          'clipper-invocations',
+          'clipper-primitives-out',
+          'compute-shader-invocations',
+          'fragment-shader-invocations',
+          'vertex-shader-invocations',
+        ] as const,
+      ])
+    )
+  )
+  .fn(async t => {
+    const type = 'pipeline-statistics';
+
+    await selectDeviceForQueryType(t, type);
+
+    const count = 1;
+    const pipelineStatistics = t.params.pipelineStatistics;
+
+    t.expectValidationError(() => {
+      t.device.createQuerySet({ type, count, pipelineStatistics });
+    }, pipelineStatistics.length !== Array.from(new Set(pipelineStatistics)).length);
   });
