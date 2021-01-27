@@ -242,14 +242,14 @@ g.test('anisotropic_filter_checkerboard')
 
     const check0 = t.checkBuffer(results[0], results[1]);
     if (check0 === undefined) {
-      t.expect(
-        false,
-        'Render results with sampler.maxAnisotropy being 1 and 16 should be different.'
-      );
+      t.warn('Render results with sampler.maxAnisotropy being 1 and 16 should be different.');
     }
     const check1 = t.checkBuffer(results[1], results[2]);
     if (check1 !== undefined) {
-      t.warn('Render results with sampler.maxAnisotropy being 16 and 1024 should be the same.');
+      t.expect(
+        false,
+        'Render results with sampler.maxAnisotropy being 16 and 1024 should be the same.'
+      );
     }
   });
 
