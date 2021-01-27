@@ -73,12 +73,13 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
                 vec3<f32>(0.5, 0.5, 0.5));
               # uv is pre-scaled to mimic repeating tiled texture
               const uv : array<vec2<f32>, 6> = array<vec2<f32>, 6>(
-                vec2<f32>(0, 0),
-                vec2<f32>(1, 0),
-                vec2<f32>(0, 50.0),
-                vec2<f32>(0, 50.0),
-                vec2<f32>(1, 0),
-                vec2<f32>(1, 50.0));
+                vec2<f32>(0.0, 0.0),
+                vec2<f32>(1.0, 0.0),
+                vec2<f32>(0.0, 50.0),
+                vec2<f32>(0.0, 50.0),
+                vec2<f32>(1.0, 0.0),
+                vec2<f32>(1.0, 50.0));
+              # draw a slanted plane in a specific way
               const matrix : mat4x4<f32> = mat4x4<f32>(
                 vec4<f32>(-1.7320507764816284, 1.8322050568049563e-16, -6.176817699518044e-17, -6.170640314703498e-17),
                 vec4<f32>(-2.1211504944260596e-16, -1.496108889579773, 0.5043753981590271, 0.5038710236549377),
@@ -86,7 +87,6 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
                 vec4<f32>(0, 21.693578720092773, 21.789791107177734, 21.86800193786621));
 
               fragUV = uv[VertexIndex];
-              #Position = matrix * position[VertexIndex];
               Position = matrix * vec4<f32>(position[VertexIndex], 1.0);
             }
             `,
@@ -217,56 +217,35 @@ g.test('anisotropic_filter_checkerboard')
     t.device.defaultQueue.submit([textureEncoder.finish()]);
 
     const textureView = texture.createView();
-
-    const samplers = [
-      t.device.createSampler({
-        magFilter: 'linear',
-        minFilter: 'linear',
-        mipmapFilter: 'linear',
-        maxAnisotropy: 1,
-      }),
-      t.device.createSampler({
-        magFilter: 'linear',
-        minFilter: 'linear',
-        mipmapFilter: 'linear',
-        maxAnisotropy: 16,
-      }),
-      t.device.createSampler({
-        magFilter: 'linear',
-        minFilter: 'linear',
-        mipmapFilter: 'linear',
-        maxAnisotropy: 1024,
-      }),
-    ];
-
     const byteLength = kRTSize * kBytesPerRow;
-
     const dst: GPUBuffer[] = [];
+    const results: Uint8Array[] = [];
 
-    await Promise.all(
-      samplers.map((sampler, idx) => {
-        const d = (dst[idx] = t.createAlignedCopyForMapRead(
-          t.copyRenderTargetToBuffer(t.drawSlantedPlane(textureView, sampler)),
-          byteLength,
-          0
-        ).dst);
-        return d.mapAsync(GPUMapMode.READ);
-      })
-    ).then(() => {
-      const results: Uint8Array[] = [];
-      for (let i = 0; i < dst.length; i++) {
-        results[i] = new Uint8Array(dst[i].getMappedRange());
-      }
+    for (const maxAnisotropy of [1, 16, 1024]) {
+      const sampler = t.device.createSampler({
+        magFilter: 'linear',
+        minFilter: 'linear',
+        mipmapFilter: 'linear',
+        maxAnisotropy,
+      });
+      const d = t.createAlignedCopyForMapRead(
+        t.copyRenderTargetToBuffer(t.drawSlantedPlane(textureView, sampler)),
+        byteLength,
+        0
+      ).dst;
+      dst.push(d);
+      await d.mapAsync(GPUMapMode.READ);
+      results.push(new Uint8Array(d.getMappedRange()));
+    }
 
-      const check0 = t.checkBuffer(results[0], results[1]);
-      if (check0 === undefined) {
-        t.expect(false, 'Render results with sampler.maxAnisotropy being 1 and 16 should be different.');
-      }
-      const check1 = t.checkBuffer(results[1], results[2]);
-      if (check1 !== undefined) {
-        t.warn('Render results with sampler.maxAnisotropy being 16 and 1024 should be the same.');
-      }
-    });
+    const check0 = t.checkBuffer(results[0], results[1]);
+    if (check0 === undefined) {
+      t.expect(false, 'Render results with sampler.maxAnisotropy being 1 and 16 should be different.');
+    }
+    const check1 = t.checkBuffer(results[1], results[2]);
+    if (check1 !== undefined) {
+      t.warn('Render results with sampler.maxAnisotropy being 16 and 1024 should be the same.');
+    }
   });
 
 g.test('anisotropic_filter_mipmap_color')
