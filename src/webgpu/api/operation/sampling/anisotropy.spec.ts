@@ -17,7 +17,7 @@ import { mipSize } from '../../../util/texture/subresource.js';
 
 const kRTSize = 16;
 const kBytesPerRow = 256;
-const xm = kRTSize / 2;
+const xMiddle = kRTSize / 2;  // we check the pixel value in the middle of the render target
 const kColorAttachmentFormat = 'rgba8unorm';
 const kTextureFormat = 'rgba8unorm';
 const colors = [
@@ -32,32 +32,6 @@ const checkerColors = [
 
 // renders texture a slanted plane placed in a specific way
 class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
-  private compareUint8ArrayResult(a: Uint8Array, b: Uint8Array) {
-    if (a.byteLength !== b.byteLength) {
-      return false;
-    }
-    for (let i = 0, len = a.length; i < len; i++) {
-      if (a[i] !== b[i]) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  checkCheckerBoardResults(results: Uint8Array[]) {
-    this.eventualAsyncExpectation(async niceStack => {
-      if (true === this.compareUint8ArrayResult(results[0], results[1])) {
-        niceStack.message =
-          'Render results with sampler.maxAnisotropy being 1 and 16 should be different.';
-        this.rec.expectationFailed(niceStack);
-      }
-      if (false === this.compareUint8ArrayResult(results[1], results[2])) {
-        niceStack.message =
-          'Render results with sampler.maxAnisotropy being 16 and 1024 should be the same.';
-        this.rec.expectationFailed(niceStack);
-      }
-    });
-  }
 
   copyRenderTargetToBuffer(rt: GPUTexture): GPUBuffer {
     const byteLength = kRTSize * kBytesPerRow;
@@ -80,7 +54,9 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
   private pipeline: GPURenderPipeline | undefined;
   private uniformBuffer: GPUBuffer | undefined;
   private vertexBuffer: GPUBuffer | undefined;
-  setup(): void {
+  async init(): Promise<void> {
+    await super.init();
+
     this.pipeline = this.device.createRenderPipeline({
       vertexStage: {
         module: this.device.createShaderModule({
@@ -274,15 +250,9 @@ g.test('anisotropic_filter_checkerboard')
     different from each other, as the sampling rate is different.
     We will also check if those large maxAnisotropy values are clamped so that rendering is the
     same as the supported upper limit say 16.
-    A smiliar webgl demo is at https://jsfiddle.net/yqnbez24`
+    A similar webgl demo is at https://jsfiddle.net/yqnbez24`
   )
-  // .unimplemented();
-  // .params([
-  //   ...poptions('maxAnisotropy', [1, 2, 4, 16]),
-  // ])
   .fn(async t => {
-    t.setup();
-
     // init texture with only a top level mipmap
     const textureSize = 32;
     const texture = t.device.createTexture({
@@ -309,11 +279,7 @@ g.test('anisotropic_filter_checkerboard')
         data[c + 3] = color[3];
       }
     }
-    const buffer = t.device.createBuffer({
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-      size: data.byteLength,
-    });
-    t.device.defaultQueue.writeBuffer(buffer, 0, data);
+    const buffer = t.makeBufferWithContents(data, GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST);
     const bytesPerRow = kBytesPerRow;
     const rowsPerImage = textureSize;
 
@@ -360,7 +326,7 @@ g.test('anisotropic_filter_checkerboard')
 
     const dst: GPUBuffer[] = [];
 
-    Promise.all(
+    await Promise.all(
       samplers.map((sampler, idx) => {
         const d = (dst[idx] = t.createAlignedCopyForMapRead(
           t.copyRenderTargetToBuffer(t.drawSlantedPlane(textureView, sampler)),
@@ -375,7 +341,14 @@ g.test('anisotropic_filter_checkerboard')
         results[i] = new Uint8Array(dst[i].getMappedRange());
       }
 
-      t.checkCheckerBoardResults(results);
+      const check0 = t.checkBuffer(results[0], results[1]);
+      if (check0 === undefined) {
+        t.expect(false, 'Render results with sampler.maxAnisotropy being 1 and 16 should be different.');
+      }
+      const check1 = t.checkBuffer(results[1], results[2]);
+      if (check1 !== undefined) {
+        t.warn('Render results with sampler.maxAnisotropy being 16 and 1024 should be the same.');
+      }
     });
   });
 
@@ -383,18 +356,18 @@ g.test('anisotropic_filter_mipmap_color')
   .desc(
     `anisotropic filter rendering tests that draws a slanted plane and samples from a texture
     containing mipmaps of different colors.
-    A similiar webgl demo is at https://jsfiddle.net/t8k7c95o/5/`
+    A similar webgl demo is at https://jsfiddle.net/t8k7c95o/5/`
   )
   .params([
     {
       maxAnisotropy: 1,
       _results: [
         {
-          coord: { x: xm, y: 2 },
+          coord: { x: xMiddle, y: 2 },
           expected: colors[2],
         },
         {
-          coord: { x: xm, y: 6 },
+          coord: { x: xMiddle, y: 6 },
           expected: [colors[0], colors[1]],
         },
       ],
@@ -403,11 +376,11 @@ g.test('anisotropic_filter_mipmap_color')
       maxAnisotropy: 2,
       _results: [
         {
-          coord: { x: xm, y: 2 },
+          coord: { x: xMiddle, y: 2 },
           expected: [colors[1], colors[2]],
         },
         {
-          coord: { x: xm, y: 6 },
+          coord: { x: xMiddle, y: 6 },
           expected: colors[0],
         },
       ],
@@ -416,19 +389,17 @@ g.test('anisotropic_filter_mipmap_color')
       maxAnisotropy: 16,
       _results: [
         {
-          coord: { x: xm, y: 2 },
+          coord: { x: xMiddle, y: 2 },
           expected: [colors[0], colors[1]],
         },
         {
-          coord: { x: xm, y: 6 },
+          coord: { x: xMiddle, y: 6 },
           expected: colors[0],
         },
       ],
     },
   ])
   .fn(async t => {
-    t.setup();
-
     // init texture
     const mipLevelCount = 3;
     const textureSizeMipmap0 = 1 << (mipLevelCount - 1);
@@ -457,11 +428,7 @@ g.test('anisotropic_filter_mipmap_color')
           data[c + 3] = color[3];
         }
       }
-      const buffer = t.device.createBuffer({
-        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-        size: data.byteLength,
-      });
-      t.device.defaultQueue.writeBuffer(buffer, 0, data);
+      const buffer = t.makeBufferWithContents(data, GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST);
       const bytesPerRow = kBytesPerRow;
       const rowsPerImage = mipmapSize;
 
