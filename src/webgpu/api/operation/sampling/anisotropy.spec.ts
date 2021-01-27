@@ -52,8 +52,6 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
   }
 
   private pipeline: GPURenderPipeline | undefined;
-  private uniformBuffer: GPUBuffer | undefined;
-  private vertexBuffer: GPUBuffer | undefined;
   async init(): Promise<void> {
     await super.init();
 
@@ -61,21 +59,35 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
       vertexStage: {
         module: this.device.createShaderModule({
           code: `
-            [[block]] struct Uniforms {
-                [[offset(0)]] matrix : mat4x4<f32>;
-            };
-
-            [[location(0)]] var<in> position : vec4<f32>;
-            [[location(1)]] var<in> uv : vec2<f32>;
-
-            [[set(0), binding(2)]] var<uniform> uniforms : Uniforms;
-
+            [[builtin(vertex_index)]] var<in> VertexIndex : i32;
             [[builtin(position)]] var<out> Position : vec4<f32>;
             [[location(0)]] var<out> fragUV : vec2<f32>;
 
             [[stage(vertex)]] fn main() -> void {
-                fragUV = uv;
-                Position = uniforms.matrix * position;
+              const position : array<vec3<f32>, 6> = array<vec3<f32>, 6>(
+                vec3<f32>(-0.5, 0.5, -0.5),
+                vec3<f32>(0.5, 0.5, -0.5),
+                vec3<f32>(-0.5, 0.5, 0.5),
+                vec3<f32>(-0.5, 0.5, 0.5),
+                vec3<f32>(0.5, 0.5, -0.5),
+                vec3<f32>(0.5, 0.5, 0.5));
+              # uv is pre-scaled to mimic repeating tiled texture
+              const uv : array<vec2<f32>, 6> = array<vec2<f32>, 6>(
+                vec2<f32>(0, 0),
+                vec2<f32>(1, 0),
+                vec2<f32>(0, 50.0),
+                vec2<f32>(0, 50.0),
+                vec2<f32>(1, 0),
+                vec2<f32>(1, 50.0));
+              const matrix : mat4x4<f32> = mat4x4<f32>(
+                vec4<f32>(-1.7320507764816284, 1.8322050568049563e-16, -6.176817699518044e-17, -6.170640314703498e-17),
+                vec4<f32>(-2.1211504944260596e-16, -1.496108889579773, 0.5043753981590271, 0.5038710236549377),
+                vec4<f32>(0, -43.63650894165039, -43.232173919677734, -43.18894577026367),
+                vec4<f32>(0, 21.693578720092773, 21.789791107177734, 21.86800193786621));
+
+              fragUV = uv[VertexIndex];
+              #Position = matrix * position[VertexIndex];
+              Position = matrix * vec4<f32>(position[VertexIndex], 1.0);
             }
             `,
         }),
@@ -102,112 +114,18 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
       },
       primitiveTopology: 'triangle-list',
       colorStates: [{ format: 'rgba8unorm' }],
-      vertexState: {
-        vertexBuffers: [
-          {
-            arrayStride: 6 * Float32Array.BYTES_PER_ELEMENT,
-            attributes: [
-              {
-                // position
-                shaderLocation: 0,
-                offset: 0,
-                format: 'float4',
-              },
-              {
-                // uv
-                shaderLocation: 1,
-                offset: 4 * 4,
-                format: 'float2',
-              },
-            ],
-          },
-        ],
-      },
     });
-
-    const matrixData = new Float32Array([
-      -1.7320507764816284,
-      1.8322050568049563e-16,
-      -6.176817699518044e-17,
-      -6.170640314703498e-17,
-      -2.1211504944260596e-16,
-      -1.496108889579773,
-      0.5043753981590271,
-      0.5038710236549377,
-      0,
-      -43.63650894165039,
-      -43.232173919677734,
-      -43.18894577026367,
-      0,
-      21.693578720092773,
-      21.789791107177734,
-      21.86800193786621,
-    ]);
-    this.uniformBuffer = this.device.createBuffer({
-      size: matrixData.byteLength,
-      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    });
-    this.device.defaultQueue.writeBuffer(this.uniformBuffer, 0, matrixData);
-
-    // position : vec4, uv : vec2
-    // uv is scaled
-    const vertexData = new Float32Array([
-      -0.5,
-      0.5,
-      -0.5,
-      1,
-      0,
-      0,
-      0.5,
-      0.5,
-      -0.5,
-      1,
-      1,
-      0,
-      -0.5,
-      0.5,
-      0.5,
-      1,
-      0,
-      50,
-      -0.5,
-      0.5,
-      0.5,
-      1,
-      0,
-      50,
-      0.5,
-      0.5,
-      -0.5,
-      1,
-      1,
-      0,
-      0.5,
-      0.5,
-      0.5,
-      1,
-      1,
-      50,
-    ]);
-    this.vertexBuffer = this.device.createBuffer({
-      size: vertexData.byteLength,
-      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-    });
-    this.device.defaultQueue.writeBuffer(this.vertexBuffer, 0, vertexData);
   }
 
   // return the render target texture object
   drawSlantedPlane(textureView: GPUTextureView, sampler: GPUSampler): GPUTexture {
     // make sure it's already initialized
     assert(this.pipeline !== undefined);
-    assert(this.uniformBuffer !== undefined);
-    assert(this.vertexBuffer !== undefined);
 
     const bindGroup = this.device.createBindGroup({
       entries: [
         { binding: 0, resource: sampler },
         { binding: 1, resource: textureView },
-        { binding: 2, resource: { buffer: this.uniformBuffer } },
       ],
       layout: this.pipeline.getBindGroupLayout(0),
     });
@@ -230,7 +148,6 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
       ],
     });
     pass.setPipeline(this.pipeline);
-    pass.setVertexBuffer(0, this.vertexBuffer);
     pass.setBindGroup(0, bindGroup);
     pass.draw(6);
     pass.endPass();
