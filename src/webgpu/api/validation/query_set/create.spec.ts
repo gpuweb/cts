@@ -87,18 +87,16 @@ Tests that create query set with the duplicate values and all values of GPUPipel
   `
   )
   .params(
-    params().combine(
-      poptions('pipelineStatistics', [
-        ['clipper-invocations', 'clipper-invocations'] as const,
-        [
-          'clipper-invocations',
-          'clipper-primitives-out',
-          'compute-shader-invocations',
-          'fragment-shader-invocations',
-          'vertex-shader-invocations',
-        ] as const,
-      ])
-    )
+    poptions('pipelineStatistics', [
+      ['clipper-invocations', 'clipper-invocations'] as const,
+      [
+        'clipper-invocations',
+        'clipper-primitives-out',
+        'compute-shader-invocations',
+        'fragment-shader-invocations',
+        'vertex-shader-invocations',
+      ] as const,
+    ])
   )
   .fn(async t => {
     const type = 'pipeline-statistics';
