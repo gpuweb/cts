@@ -27,6 +27,7 @@ const kContainerTypes = [
   'mat4x4',
 ] as const;
 
+// TODO(sarahM0): come up with test for arrays and structs for v-0033
 g.test('scalar_vector_matrix')
   .desc(`Tests for v-0033 with scalars, vectors, and matrices of every dimension and type`)
   .params(
