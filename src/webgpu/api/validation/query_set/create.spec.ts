@@ -5,11 +5,9 @@ Tests for validation in createQuerySet.
 import { params, poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { ValidationTest } from '../validation_test.js';
+import { kQueryTypes, kMaxQueryCount } from '../../../capability_info.js';
 
 export const g = makeTestGroup(ValidationTest);
-
-const kMaxQueryCount = 8192;
-const kQuerytype = ['occlusion', 'pipeline-statistics', 'timestamp'] as const;
 
 g.test('count')
   .desc(
@@ -21,7 +19,7 @@ Tests that create query set with the count for all query types:
   )
   .params(
     params()
-      .combine(poptions('type', kQuerytype))
+      .combine(poptions('type', kQueryTypes))
       .combine(poptions('count', [0, kMaxQueryCount, kMaxQueryCount + 1]))
   )
   .fn(async t => {
@@ -57,7 +55,7 @@ Tests that create query set with the GPUPipelineStatisticName for all query type
   )
   .params(
     params()
-      .combine(poptions('type', kQuerytype))
+      .combine(poptions('type', kQueryTypes))
       .combine(
         poptions('pipelineStatistics', [
           undefined,

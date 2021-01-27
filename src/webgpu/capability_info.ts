@@ -43,6 +43,11 @@ function makeTable<
   return result as any;
 }
 
+// Queries
+
+export const kMaxQueryCount = 8192;
+export const kQueryTypes = ['occlusion', 'pipeline-statistics', 'timestamp'] as const;
+
 // Buffers
 
 export const kBufferSizeAlignment = 4;
