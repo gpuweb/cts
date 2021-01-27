@@ -46,7 +46,7 @@ Tests that create query set with the count for all query types:
     }, count > kMaxQueryCount);
   });
 
-g.test('pipelineStatistics')
+g.test('pipelineStatistics,all_types')
   .desc(
     `
 Tests that create query set with the GPUPipelineStatisticName for all query types:
@@ -80,7 +80,7 @@ Tests that create query set with the GPUPipelineStatisticName for all query type
     }, shouldError);
   });
 
-g.test('pipelineStatistics_duplicates_and_all')
+g.test('pipelineStatistics,duplicates_and_all')
   .desc(
     `
 Tests that create query set with the duplicate values and all values of GPUPipelineStatisticName for pipeline-statistics query.
