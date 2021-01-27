@@ -33,7 +33,7 @@ function getTypeInfo(scalarType: ScalarType, x: number, y: number) {
   return type;
 }
 
-g.test('wgsl-v-0033')
+g.test('wgsl_v_0033')
   .desc(`v-033: If present, the initializer’s type must match the store type of the variable.`)
   .params(
     params()
