@@ -1,6 +1,5 @@
 export const description = `
-Tests for validation rule v-0033:
-If present, the initializer's type must match the store type of the variable.
+Positive and negative validation tests for variable and const.
 `;
 
 import { params, poptions } from '../../../common/framework/params_builder.js';
@@ -11,6 +10,8 @@ import { ShaderValidationTest } from './shader_validation_test.js';
 export const g = makeTestGroup(ShaderValidationTest);
 
 const kScalarType = ['i32', 'f32', 'u32', 'bool'] as const;
+type ScalarType = 'i32' | 'f32' | 'u32' | 'bool';
+
 const kContainerTypes = [
   undefined,
   'vec2',
@@ -25,11 +26,52 @@ const kContainerTypes = [
   'mat4x2',
   'mat4x3',
   'mat4x4',
+  'array',
 ] as const;
+type ContainerType =
+  | undefined
+  | 'vec2'
+  | 'vec3'
+  | 'vec4'
+  | 'mat2x2'
+  | 'mat2x3'
+  | 'mat2x4'
+  | 'mat3x2'
+  | 'mat3x3'
+  | 'mat3x4'
+  | 'mat4x2'
+  | 'mat4x3'
+  | 'mat4x4'
+  | 'array';
 
-// TODO(sarahM0): come up with test for arrays and structs for v-0033
-g.test('scalar_vector_matrix')
-  .desc(`Tests for v-0033 with scalars, vectors, and matrices of every dimension and type`)
+function getType(scalarType: ScalarType, containerType: ContainerType) {
+  let type = '';
+  switch (containerType) {
+    case undefined: {
+      type = scalarType;
+      break;
+    }
+    case 'array': {
+      // TODO(sarahM0): 12 is a random number here. find a solution to replace it.
+      // TODO(sarahM0): test array of vectors and matrices. eg. array<vec4, 9>
+      type = `array<${scalarType}, 12>`;
+      break;
+    }
+    default: {
+      type = containerType ? `${containerType}<${scalarType}>` : scalarType;
+      break;
+    }
+  }
+  return type;
+}
+
+// TODO(sarahM0): v-0033: test structs
+g.test('v_0033')
+  .desc(
+    `Tests for validation rule v-0033:
+  If present, the initializer's type must match the store type of the variable.
+  Testing scalars, vectors, and matrices of every dimension and type.`
+  )
   .params(
     params()
       .combine(poptions('variableOrConstant', ['var', 'const']))
@@ -47,8 +89,8 @@ g.test('scalar_vector_matrix')
       rhsScalarType,
     } = t.params;
 
-    const lhsType = lhsContainerType ? `${lhsContainerType}<${lhsScalarType}>` : lhsScalarType;
-    const rhsType = rhsContainerType ? `${rhsContainerType}<${rhsScalarType}>` : rhsScalarType;
+    const lhsType = getType(lhsScalarType, lhsContainerType);
+    const rhsType = getType(rhsScalarType, rhsContainerType);
 
     const code = `
       [[stage(vertex)]]
