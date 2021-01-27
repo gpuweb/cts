@@ -17,7 +17,7 @@ import { mipSize } from '../../../util/texture/subresource.js';
 
 const kRTSize = 16;
 const kBytesPerRow = 256;
-const xMiddle = kRTSize / 2;  // we check the pixel value in the middle of the render target
+const xMiddle = kRTSize / 2; // we check the pixel value in the middle of the render target
 const kColorAttachmentFormat = 'rgba8unorm';
 const kTextureFormat = 'rgba8unorm';
 const colors = [
@@ -32,7 +32,6 @@ const checkerColors = [
 
 // renders texture a slanted plane placed in a specific way
 class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
-
   copyRenderTargetToBuffer(rt: GPUTexture): GPUBuffer {
     const byteLength = kRTSize * kBytesPerRow;
     const buffer = this.device.createBuffer({
@@ -196,7 +195,10 @@ g.test('anisotropic_filter_checkerboard')
         data[c + 3] = color[3];
       }
     }
-    const buffer = t.makeBufferWithContents(data, GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST);
+    const buffer = t.makeBufferWithContents(
+      data,
+      GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+    );
     const bytesPerRow = kBytesPerRow;
     const rowsPerImage = textureSize;
 
@@ -240,7 +242,10 @@ g.test('anisotropic_filter_checkerboard')
 
     const check0 = t.checkBuffer(results[0], results[1]);
     if (check0 === undefined) {
-      t.expect(false, 'Render results with sampler.maxAnisotropy being 1 and 16 should be different.');
+      t.expect(
+        false,
+        'Render results with sampler.maxAnisotropy being 1 and 16 should be different.'
+      );
     }
     const check1 = t.checkBuffer(results[1], results[2]);
     if (check1 !== undefined) {
@@ -324,7 +329,10 @@ g.test('anisotropic_filter_mipmap_color')
           data[c + 3] = color[3];
         }
       }
-      const buffer = t.makeBufferWithContents(data, GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST);
+      const buffer = t.makeBufferWithContents(
+        data,
+        GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+      );
       const bytesPerRow = kBytesPerRow;
       const rowsPerImage = mipmapSize;
 
