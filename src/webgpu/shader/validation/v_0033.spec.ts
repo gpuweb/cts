@@ -1,5 +1,6 @@
 export const description = `
-Tests for validation rule v-0033.
+Tests for validation rule v-0033:
+If present, the initializer’s type must match the store type of the variable.
 `;
 
 import { params, poptions } from '../../../common/framework/params_builder.js';
@@ -13,7 +14,7 @@ export const g = makeTestGroup(ShaderValidationTest);
 type ScalarType = 'f32' | 'i32' | 'u32' | 'bool';
 const kScalarType = ['i32', 'f32', 'u32', 'bool'] as const;
 
-function getVecTypeInfo(scalarType: ScalarType, x: number, y: number) {
+function getTypeInfo(scalarType: ScalarType, x: number, y: number) {
   assert(x === 1 || x === 2 || x === 3 || x === 4, 'invalid x');
   assert(y === 1 || y === 2 || y === 3 || y === 4, 'invalid y');
 
@@ -25,7 +26,7 @@ function getVecTypeInfo(scalarType: ScalarType, x: number, y: number) {
       type = `vec${x}<${scalarType}>`;
     }
   } else {
-    type = `mat${y}x${x}<${scalarType}>`;
+    type = `mat${x}x${y}<${scalarType}>`;
   }
 
   assert(type.length !== 0, 'type is not set');
@@ -55,10 +56,8 @@ g.test('wgsl-v-0033')
       rhs_y,
     } = t.params;
 
-    const lhsType = getVecTypeInfo(lhsScalarType, lhs_x, lhs_y);
-    const rhsType = getVecTypeInfo(rhsScalarType, rhs_x, rhs_y);
-
-    t.debug(`${variable_or_constant} a : ${lhsType} = ${rhsType}()`);
+    const lhsType = getTypeInfo(lhsScalarType, lhs_x, lhs_y);
+    const rhsType = getTypeInfo(rhsScalarType, rhs_x, rhs_y);
 
     const code = `
       [[stage(vertex)]]
