@@ -283,9 +283,9 @@ class RunCaseSpecific<
           await this.runTest(rec, mergeParams(this.params, subParams), true);
         } catch (ex) {
           if (ex instanceof SkipTestCase) {
-            // Convert SkipTestCase to debug messages
+            // Convert SkipTestCase to info messages
             ex.message = 'subcase skipped: ' + ex.message;
-            rec.debug(ex);
+            rec.info(ex);
             ++skipCount;
           } else {
             // Since we are catching all error inside runTest(), this should never happen
