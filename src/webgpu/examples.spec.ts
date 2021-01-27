@@ -73,14 +73,18 @@ g.test('basic,async').fn(async t => {
   );
 });
 
-// A test can be parameterized with a simple array of objects.
+// A test can be parameterized with a simple array of objects using .cases().
+// Each such instance of the test is a "case".
 //
 // Parameters can be public (x, y) which means they're part of the case name.
 // They can also be private by starting with an underscore (_result), which passes
 // them into the test but does not make them part of the case name:
 //
-// - webgpu:examples:basic/cases={"x":2,"y":4}    runs with t.params = {x: 2, y: 5, _result: 6}.
-// - webgpu:examples:basic/cases={"x":-10,"y":18} runs with t.params = {x: -10, y: 18, _result: 8}.
+// In this example, the following cases are generated (identified by their "query string"):
+//   - webgpu:examples:basic,cases:x=2;y=4     runs once, with t.params set to:
+//       - { x:   2, y:  4, _result: 6 }
+//   - webgpu:examples:basic,cases:x=-10;y=18  runs once, with t.params set to:
+//       - { x: -10, y: 18, _result: 8 }
 
 g.test('basic,cases')
   .cases([
@@ -91,6 +95,18 @@ g.test('basic,cases')
     t.expect(t.params.x + t.params.y === t.params._result);
   });
 // (note the blank comment above to enforce newlines on autoformat)
+
+// Each case can be further parameterized using .subcases().
+// Each such instance of the test is a "subcase", which cannot be run independently of other
+// subcases. It is analogous to wrapping the entire fn body in a for-loop.
+//
+// In this example, the following cases are generated (identified by their "query string"):
+//   - webgpu:examples:basic,cases:x=1  runs twice, with t.params set to each of:
+//       - { x: 1, a: 2 }
+//       - { x: 1, b: 2 }
+//   - webgpu:examples:basic,cases:x=2  runs twice, with t.params set to each of:
+//       - { x: 2, a: 3 }
+//       - { x: 2, b: 2 }
 
 g.test('basic,subcases')
   .cases([{ x: 1 }, { x: 2 }])

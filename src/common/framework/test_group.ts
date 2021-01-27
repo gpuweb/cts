@@ -96,32 +96,21 @@ class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
   }
 }
 
-interface TestBuilderWithName<F extends Fixture>
-  extends TestBuilderWithParamsAndSubParams<F, {}, {}> {
+interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F, {}> {
   desc(description: string): this;
-  /** @deprecated use cases() and subcases() instead */
+  /** @deprecated use cases() and/or subcases() instead */
   params<NewP extends {}>(specs: Iterable<NewP>): TestBuilderWithParams<F, NewP>;
   cases<NewP extends {}>(specs: Iterable<NewP>): TestBuilderWithParams<F, NewP>;
-  subcases<NewSubP extends {}>(
-    specs: (_: {}) => Iterable<NewSubP>
-  ): TestBuilderWithSubParams<F, NewSubP>;
-}
-
-interface TestBuilderWithSubParams<F extends Fixture, SubP extends {}>
-  extends TestBuilderWithParamsAndSubParams<F, {}, SubP> {
-  /** @deprecated use cases() and subcases() instead */
-  params<NewP extends {}>(specs: Iterable<NewP>): TestBuilderWithParamsAndSubParams<F, NewP, SubP>;
-  cases<NewP extends {}>(specs: Iterable<NewP>): TestBuilderWithParamsAndSubParams<F, NewP, SubP>;
 }
 
 interface TestBuilderWithParams<F extends Fixture, P extends {}>
-  extends TestBuilderWithParamsAndSubParams<F, P, {}> {
+  extends TestBuilderWithSubParams<F, P, {}> {
   subcases<NewSubP extends {}>(
     specs: (_: P) => Iterable<NewSubP>
-  ): TestBuilderWithParamsAndSubParams<F, P, NewSubP>;
+  ): TestBuilderWithSubParams<F, P, NewSubP>;
 }
 
-interface TestBuilderWithParamsAndSubParams<F extends Fixture, P extends {}, SubP extends {}> {
+interface TestBuilderWithSubParams<F extends Fixture, P extends {}, SubP extends {}> {
   fn(fn: TestFn<F, P, SubP>): void;
   unimplemented(): void;
 }
@@ -289,7 +278,7 @@ class RunCaseSpecific<
       let totalCount = 0;
       let skipCount = 0;
       for (const subParams of this.subParamGen(this.params)) {
-        rec.debug(new Error('subcase: ' + stringifyPublicParamsUniquely(subParams)));
+        rec.info(new Error('subcase: ' + JSON.stringify(subParams)));
         try {
           await this.runTest(rec, mergeParams(this.params, subParams), true);
         } catch (ex) {
