@@ -53,24 +53,24 @@ function getType(scalarType: ScalarType, containerType: ContainerType) {
     }
     case 'array': {
       // TODO(sarahM0): 12 is a random number here. find a solution to replace it.
-      // TODO(sarahM0): test array of vectors and matrices. eg. array<vec4, 9>
       type = `array<${scalarType}, 12>`;
       break;
     }
     default: {
-      type = containerType ? `${containerType}<${scalarType}>` : scalarType;
+      type = `${containerType}<${scalarType}>`;
       break;
     }
   }
   return type;
 }
 
-// TODO(sarahM0): v-0033: test structs
 g.test('v_0033')
   .desc(
     `Tests for validation rule v-0033:
   If present, the initializer's type must match the store type of the variable.
-  Testing scalars, vectors, and matrices of every dimension and type.`
+  Testing scalars, vectors, and matrices of every dimension and type.
+  TODO: add test for: structs - arrays bf vectors and matrices - arrays of different length
+`
   )
   .params(
     params()
