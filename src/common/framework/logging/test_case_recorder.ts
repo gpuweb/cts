@@ -110,7 +110,7 @@ export class TestCaseRecorder {
     // Final case status should be the "worst" of all log entries.
     if (level > this.finalCaseStatus) this.finalCaseStatus = level;
 
-    // setStackHidden for all logs except 2 at the highest severity
+    // setStackHidden for all logs except `kMaxLogStacks` stacks at the highest severity
     if (level > this.hideStacksBelowSeverity) {
       this.logLinesAtCurrentSeverity = 0;
       this.hideStacksBelowSeverity = level;
