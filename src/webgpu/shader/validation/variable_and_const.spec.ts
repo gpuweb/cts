@@ -108,43 +108,42 @@ g.test('v_0038')
   .desc(
     `Tests for validation rule v-0038:
   The following types are IO-shareable:
-  numeric scalar types
-  numeric vector types
-  Matrix Types
-  Array Types if its element type is IO-shareable, and the array is not runtime-sized
-  Structure Types if all its members are IO-shareable
+  - numeric scalar types
+  - numeric vector types
+  - Matrix Types
+  - Array Types if its element type is IO-shareable, and the array is not runtime-sized
+  - Structure Types if all its members are IO-shareable
 
   As a result these are not IO-shareable:
-  boolean
-  vector of booleans
-  array of booleans
-  matrix of booleans
-  array runtime sized -> cannot be used outside of a struct, so no cts for this
-  struct with bool component
-  struct with runtime array
-  TODO: add test for structs`
+  - boolean
+  - vector of booleans
+  - array of booleans
+  - matrix of booleans
+  - array runtime sized -> cannot be used outside of a struct, so no cts for this
+  - struct with bool component
+  - struct with runtime array
+
+  Control case: 'private' is used to make sure when only the storage class changes, the shader
+  becomes invalid and nothing else is wrong.
+  TODO: add test for: struct - struct with bool component - struct with runtime array`
   )
   .params(
     params()
-      .combine([
-        { variableOrConstant: 'var', inputOrOutput: 'in' },
-        { variableOrConstant: 'var', inputOrOutput: 'out' },
-        { variableOrConstant: 'const', inputOrOutput: 'out' },
-      ])
+      .combine(poptions('storageClass', ['in', 'out', 'private']))
       .combine(poptions('containerType', kContainerTypes))
       .combine(poptions('scalarType', kScalarType))
   )
   .fn(t => {
-    const { variableOrConstant, inputOrOutput, containerType, scalarType } = t.params;
+    const { storageClass, containerType, scalarType } = t.params;
     const type = containerType ? `${containerType}<${scalarType}>` : scalarType;
 
     const code = `
-      [[location(0)]] ${variableOrConstant}<${inputOrOutput}> a : ${type} = ${type}();
+      [[location(0)]] var<${storageClass}> a : ${type} = ${type}();
         [[stage(vertex)]]
         fn main() -> void {
         }
       `;
 
-    const expectation = scalarType !== 'bool' || 'v-0038';
+    const expectation = storageClass === 'private' || scalarType !== 'bool' || 'v-0038';
     t.expectCompileResult(expectation, code);
   });
