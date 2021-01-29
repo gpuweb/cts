@@ -147,7 +147,12 @@ export class GPUTest extends Fixture {
     return { dst, begin: offsetDifference, end: offsetDifference + size };
   }
 
-  expectContents(src: GPUBuffer, expected: TypedArrayBufferView, srcOffset: number = 0): void {
+  expectContents(
+    src: GPUBuffer,
+    expected: TypedArrayBufferView,
+    srcOffset: number = 0,
+    generateWarningOnly: boolean = false
+  ): void {
     const { dst, begin, end } = this.createAlignedCopyForMapRead(
       src,
       expected.byteLength,
@@ -161,7 +166,11 @@ export class GPUTest extends Fixture {
       const check = this.checkBuffer(actual.subarray(begin, end), expected);
       if (check !== undefined) {
         niceStack.message = check;
-        this.rec.expectationFailed(niceStack);
+        if (generateWarningOnly) {
+          this.rec.warn(niceStack);
+        } else {
+          this.rec.expectationFailed(niceStack);
+        }
       }
       dst.destroy();
     });
@@ -170,8 +179,10 @@ export class GPUTest extends Fixture {
   expectContentsBetweenTwoValues(
     src: GPUBuffer,
     expected: [TypedArrayBufferView, TypedArrayBufferView],
-    srcOffset: number = 0
+    srcOffset: number = 0,
+    generateWarningOnly: boolean = false
   ): void {
+    assert(expected[0].constructor === expected[1].constructor);
     assert(expected[0].length === expected[1].length);
     const { dst, begin, end } = this.createAlignedCopyForMapRead(
       src,
@@ -196,7 +207,7 @@ export class GPUTest extends Fixture {
           if (actual.length !== expected[0].length) {
             return false;
           }
-          for (let i = 0, len = expected[0].length; i < len; i++) {
+          for (let i = 0, len = actual.length; i < len; i++) {
             if (actual[i] < bounds[0][i] || actual[i] > bounds[1][i]) {
               return false;
             }
@@ -204,17 +215,16 @@ export class GPUTest extends Fixture {
           return true;
         },
         () => {
-          const lines = [] as string[];
+          const lines: string[] = [];
           const format = (x: number) => x.toString(16).padStart(2, '0');
           const exp0Hex = Array.from(
             new Uint8Array(
               expected[0].buffer,
               expected[0].byteOffset,
               Math.min(expected[0].byteLength, 256)
-            )
-          )
-            .map(format)
-            .join('');
+            ),
+            format
+          ).join('');
           lines.push('EXPECT\nbetween:\t  ' + expected[0].join(' '));
           lines.push('\t0x' + exp0Hex);
           if (expected[0].byteLength > 256) {
@@ -239,7 +249,11 @@ export class GPUTest extends Fixture {
       );
       if (check !== undefined) {
         niceStack.message = check;
-        this.rec.expectationFailed(niceStack);
+        if (generateWarningOnly) {
+          this.rec.warn(niceStack);
+        } else {
+          this.rec.expectationFailed(niceStack);
+        }
       }
       dst.destroy();
     });
@@ -469,10 +483,11 @@ got [${failedByteActualValues.join(', ')}]`;
       exp: Uint8Array;
       slice?: number;
       layout?: TextureLayoutOptions;
-    }
+    },
+    generateWarningOnly: boolean = false
   ): void {
     const buffer = this.readSinglePixelFrom2DTexture(src, format, { x, y }, slice, layout);
-    this.expectContents(buffer, exp);
+    this.expectContents(buffer, exp, 0, generateWarningOnly);
   }
 
   expectSinglePixelBetweenTwoValuesIn2DTexture(
@@ -487,10 +502,11 @@ got [${failedByteActualValues.join(', ')}]`;
       exp: [Uint8Array, Uint8Array];
       slice?: number;
       layout?: TextureLayoutOptions;
-    }
+    },
+    generateWarningOnly: boolean = false
   ): void {
     const buffer = this.readSinglePixelFrom2DTexture(src, format, { x, y }, slice, layout);
-    this.expectContentsBetweenTwoValues(buffer, exp);
+    this.expectContentsBetweenTwoValues(buffer, exp, 0, generateWarningOnly);
   }
 
   expectGPUError<R>(filter: GPUErrorFilter, fn: () => R, shouldError: boolean = true): R {
@@ -542,5 +558,53 @@ got [${failedByteActualValues.join(', ')}]`;
     new constructor(mappedBuffer).set(dataArray);
     buffer.unmap();
     return buffer;
+  }
+
+  createTexture2DWithMipmaps(mipmapDataArray: TypedArrayBufferView[]): GPUTexture {
+    const format = 'rgba8unorm';
+    const mipLevelCount = mipmapDataArray.length;
+    const textureSizeMipmap0 = 1 << (mipLevelCount - 1);
+    const texture = this.device.createTexture({
+      mipLevelCount,
+      size: { width: textureSizeMipmap0, height: textureSizeMipmap0, depth: 1 },
+      format,
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED,
+    });
+
+    const textureEncoder = this.device.createCommandEncoder();
+    for (let i = 0; i < mipLevelCount; i++) {
+      const { byteLength, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
+        format,
+        '2d',
+        [textureSizeMipmap0, textureSizeMipmap0, 1],
+        { mipLevel: i }
+      );
+
+      const data: Uint8Array = new Uint8Array(byteLength);
+      const mipLevelData = mipmapDataArray[i];
+      assert(rowsPerImage === mipSize[0]); // format is rgba8unorm and block size should be 1
+      for (let r = 0; r < rowsPerImage; r++) {
+        const o = r * bytesPerRow;
+        for (let c = o, end = o + mipSize[1] * 4; c < end; c += 4) {
+          data[c] = mipLevelData[0];
+          data[c + 1] = mipLevelData[1];
+          data[c + 2] = mipLevelData[2];
+          data[c + 3] = mipLevelData[3];
+        }
+      }
+      const buffer = this.makeBufferWithContents(
+        data,
+        GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+      );
+
+      textureEncoder.copyBufferToTexture(
+        { buffer, bytesPerRow, rowsPerImage },
+        { texture, mipLevel: i, origin: [0, 0, 0] },
+        mipSize
+      );
+    }
+    this.device.defaultQueue.submit([textureEncoder.finish()]);
+
+    return texture;
   }
 }

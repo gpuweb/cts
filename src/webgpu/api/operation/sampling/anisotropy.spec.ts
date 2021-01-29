@@ -13,7 +13,6 @@ things. If there are no guarantees we can issue warnings instead of failures. Id
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/framework/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { mipSize } from '../../../util/texture/subresource.js';
 
 const kRTSize = 16;
 const kBytesPerRow = 256;
@@ -160,7 +159,7 @@ export const g = makeTestGroup(SamplerAnisotropicFilteringSlantedPlaneTest);
 
 g.test('anisotropic_filter_checkerboard')
   .desc(
-    `anisotropic filter rendering tests that draws a slanted plane and samples from a texture
+    `Anisotropic filter rendering tests that draws a slanted plane and samples from a texture
     that only has a top level mipmap, the content of which is like a checkerboard.
     We will check the rendering result using sampler with maxAnisotropy values to be
     different from each other, as the sampling rate is different.
@@ -253,8 +252,11 @@ g.test('anisotropic_filter_checkerboard')
 
 g.test('anisotropic_filter_mipmap_color')
   .desc(
-    `anisotropic filter rendering tests that draws a slanted plane and samples from a texture
-    containing mipmaps of different colors.
+    `Anisotropic filter rendering tests that draws a slanted plane and samples from a texture
+    containing mipmaps of different colors. Given the same fragment with dFdx and dFdy for uv being different,
+    sampler with bigger maxAnisotropy value tends to bigger mip levels to provide better details.
+    We can then look at the color of the fragment to know which mip level is being sampled from and to see
+    if it fits expectations.
     A similar webgl demo is at https://jsfiddle.net/t8k7c95o/5/`
   )
   .params([
@@ -264,73 +266,19 @@ g.test('anisotropic_filter_mipmap_color')
         { coord: { x: xMiddle, y: 2 }, expected: colors[2] },
         { coord: { x: xMiddle, y: 6 }, expected: [colors[0], colors[1]] },
       ],
+      generateWarningOnly: false,
     },
     {
-      maxAnisotropy: 2,
-      _results: [
-        { coord: { x: xMiddle, y: 2 }, expected: [colors[1], colors[2]] },
-        { coord: { x: xMiddle, y: 6 }, expected: colors[0] },
-      ],
-    },
-    {
-      maxAnisotropy: 16,
+      maxAnisotropy: 4,
       _results: [
         { coord: { x: xMiddle, y: 2 }, expected: [colors[0], colors[1]] },
         { coord: { x: xMiddle, y: 6 }, expected: colors[0] },
       ],
+      generateWarningOnly: true,
     },
   ])
   .fn(async t => {
-    // init texture
-    const mipLevelCount = 3;
-    const textureSizeMipmap0 = 1 << (mipLevelCount - 1);
-    const texture = t.device.createTexture({
-      mipLevelCount,
-      size: { width: textureSizeMipmap0, height: textureSizeMipmap0, depth: 1 },
-      format: kTextureFormat,
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED,
-    });
-
-    const textureEncoder = t.device.createCommandEncoder();
-    // Populate each level with a different color
-    for (let i = 0; i < mipLevelCount; i++) {
-      const mipmapSize = mipSize([textureSizeMipmap0], i)[0];
-      const bufferSize = kBytesPerRow * mipmapSize; // RGBA8 for each pixel (256 > 16 * 4)
-
-      // init texture data
-      const data: Uint8Array = new Uint8Array(bufferSize);
-      const color = colors[i];
-      for (let r = 0; r < mipmapSize; r++) {
-        const o = r * kBytesPerRow;
-        for (let c = o, end = o + mipmapSize * 4; c < end; c += 4) {
-          data[c] = color[0];
-          data[c + 1] = color[1];
-          data[c + 2] = color[2];
-          data[c + 3] = color[3];
-        }
-      }
-      const buffer = t.makeBufferWithContents(
-        data,
-        GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
-      );
-      const bytesPerRow = kBytesPerRow;
-      const rowsPerImage = mipmapSize;
-
-      textureEncoder.copyBufferToTexture(
-        {
-          buffer,
-          bytesPerRow,
-          rowsPerImage,
-        },
-        {
-          texture,
-          mipLevel: i,
-          origin: [0, 0, 0],
-        },
-        [mipmapSize, mipmapSize, 1]
-      );
-    }
-    t.device.defaultQueue.submit([textureEncoder.finish()]);
+    const texture = t.createTexture2DWithMipmaps(colors);
 
     const textureView = texture.createView();
 
@@ -346,16 +294,21 @@ g.test('anisotropic_filter_mipmap_color')
     for (const entry of t.params._results) {
       if (entry.expected instanceof Uint8Array) {
         // equal exactly one color
-        t.expectSinglePixelIn2DTexture(colorAttachment, kColorAttachmentFormat, entry.coord, {
-          exp: entry.expected as Uint8Array,
-        });
+        t.expectSinglePixelIn2DTexture(
+          colorAttachment,
+          kColorAttachmentFormat,
+          entry.coord,
+          { exp: entry.expected as Uint8Array },
+          t.params.generateWarningOnly
+        );
       } else {
         // a lerp between two colors
         t.expectSinglePixelBetweenTwoValuesIn2DTexture(
           colorAttachment,
           kColorAttachmentFormat,
           entry.coord,
-          { exp: entry.expected as [Uint8Array, Uint8Array] }
+          { exp: entry.expected as [Uint8Array, Uint8Array] },
+          t.params.generateWarningOnly
         );
       }
     }
