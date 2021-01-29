@@ -158,7 +158,7 @@ g.test('render_pass_resolve')
     pass.setPipeline(pipeline);
     pass.draw(3);
     pass.endPass();
-    t.device.defaultQueue.submit([encoder.finish()]);
+    t.device.queue.submit([encoder.finish()]);
 
     // Verify the resolve targets contain the correct values.
     for (let i = 0; i < resolveTargets.length; i++) {

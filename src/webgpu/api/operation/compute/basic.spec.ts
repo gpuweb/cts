@@ -58,7 +58,7 @@ g.test('memcpy').fn(async t => {
   pass.setBindGroup(0, bg);
   pass.dispatch(1);
   pass.endPass();
-  t.device.defaultQueue.submit([encoder.finish()]);
+  t.device.queue.submit([encoder.finish()]);
 
   t.expectContents(dst, data);
 });

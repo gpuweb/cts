@@ -150,7 +150,7 @@ g.test('culling')
     pass.draw(6, 1, 0, 0);
     pass.endPass();
 
-    t.device.defaultQueue.submit([encoder.finish()]);
+    t.device.queue.submit([encoder.finish()]);
 
     // front facing color is green, non front facing is red, background is blue
     const kCCWTriangleTopLeftColor = faceColor('ccw', t.params.frontFace, t.params.cullMode);

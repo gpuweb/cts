@@ -158,7 +158,7 @@ class IndexFormatTest extends GPUTest {
       { buffer: result, bytesPerRow, rowsPerImage },
       [kWidth, kHeight]
     );
-    this.device.defaultQueue.submit([encoder.finish()]);
+    this.device.queue.submit([encoder.finish()]);
 
     return result;
   }

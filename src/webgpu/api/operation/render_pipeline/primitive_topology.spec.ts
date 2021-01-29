@@ -314,7 +314,7 @@ class PrimitiveTopologyTest extends GPUTest {
 
     renderPass.endPass();
 
-    this.device.defaultQueue.submit([encoder.finish()]);
+    this.device.queue.submit([encoder.finish()]);
 
     for (const testPixel of testLocations) {
       this.expectSinglePixelIn2DTexture(

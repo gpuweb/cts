@@ -104,7 +104,7 @@ g.test('render_pass_store_op,color_attachment_with_depth_stencil_attachment')
     });
     pass.endPass();
 
-    t.device.defaultQueue.submit([encoder.finish()]);
+    t.device.queue.submit([encoder.finish()]);
 
     // Check that the correct store operation occurred.
     let expectedColorValue: PerTexelComponent<number> = {};
@@ -182,7 +182,7 @@ g.test('render_pass_store_op,color_attachment_only')
       ],
     });
     pass.endPass();
-    t.device.defaultQueue.submit([encoder.finish()]);
+    t.device.queue.submit([encoder.finish()]);
 
     // Check that the correct store operation occurred.
     let expectedValue: PerTexelComponent<number> = {};
@@ -241,7 +241,7 @@ g.test('render_pass_store_op,multiple_color_attachments')
       colorAttachments: renderPassColorAttachmentDescriptors,
     });
     pass.endPass();
-    t.device.defaultQueue.submit([encoder.finish()]);
+    t.device.queue.submit([encoder.finish()]);
 
     // Check that the correct store operation occurred.
     let expectedValue: PerTexelComponent<number> = {};
@@ -309,7 +309,7 @@ TODO: Also test unsized depth/stencil formats
       },
     });
     pass.endPass();
-    t.device.defaultQueue.submit([encoder.finish()]);
+    t.device.queue.submit([encoder.finish()]);
 
     let expectedValue: PerTexelComponent<number> = {};
     if (t.params.storeOperation === 'clear') {

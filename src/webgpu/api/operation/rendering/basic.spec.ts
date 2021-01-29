@@ -36,7 +36,7 @@ g.test('clear').fn(async t => {
     { buffer: dst, bytesPerRow: 256 },
     { width: 1, height: 1, depth: 1 }
   );
-  t.device.defaultQueue.submit([encoder.finish()]);
+  t.device.queue.submit([encoder.finish()]);
 
   t.expectContents(dst, new Uint8Array([0x00, 0xff, 0x00, 0xff]));
 });
@@ -107,7 +107,7 @@ g.test('fullscreen_quad').fn(async t => {
     { buffer: dst, bytesPerRow: 256 },
     { width: 1, height: 1, depth: 1 }
   );
-  t.device.defaultQueue.submit([encoder.finish()]);
+  t.device.queue.submit([encoder.finish()]);
 
   t.expectContents(dst, new Uint8Array([0x00, 0xff, 0x00, 0xff]));
 });
