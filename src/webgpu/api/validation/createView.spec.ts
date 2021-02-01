@@ -101,11 +101,33 @@ g.test('creating_texture_view_on_a_2D_non_array_texture')
     // mip level is in range
     { mipLevelCount: 1, baseMipLevel: MIP_LEVEL_COUNT - 1, _success: true },
     { mipLevelCount: 2, baseMipLevel: MIP_LEVEL_COUNT - 2, _success: true },
-    // baseMipLevel == k && mipLevelCount == 0 means to use levels k..end
-    { mipLevelCount: 0, baseMipLevel: 0, _success: true },
-    { mipLevelCount: 0, baseMipLevel: 1, _success: true },
-    { mipLevelCount: 0, baseMipLevel: MIP_LEVEL_COUNT - 1, _success: true },
-    { mipLevelCount: 0, baseMipLevel: MIP_LEVEL_COUNT, _success: false },
+    // mipLevelCount == 0 is invalid
+    { mipLevelCount: 0, baseMipLevel: 0, _success: false },
+    // baseMipLevel == k && mipLevelCount == undefined means to use levels k..end
+    {
+      mipLevelCount: undefined,
+      baseMipLevel: 0,
+      _mipLevelCountKeepUndefined: true,
+      _success: true,
+    },
+    {
+      mipLevelCount: undefined,
+      baseMipLevel: 1,
+      _mipLevelCountKeepUndefined: true,
+      _success: true,
+    },
+    {
+      mipLevelCount: undefined,
+      baseMipLevel: MIP_LEVEL_COUNT - 1,
+      _mipLevelCountKeepUndefined: true,
+      _success: true,
+    },
+    {
+      mipLevelCount: undefined,
+      baseMipLevel: MIP_LEVEL_COUNT,
+      _mipLevelCountKeepUndefined: true,
+      _success: false,
+    },
     // it is an error to make the mip level out of range
     { mipLevelCount: MIP_LEVEL_COUNT + 1, baseMipLevel: 0, _success: false },
     { mipLevelCount: MIP_LEVEL_COUNT, baseMipLevel: 1, _success: false },
@@ -113,7 +135,14 @@ g.test('creating_texture_view_on_a_2D_non_array_texture')
     { mipLevelCount: 1, baseMipLevel: MIP_LEVEL_COUNT, _success: false },
   ])
   .fn(async t => {
-    const { dimension = '2d', arrayLayerCount, mipLevelCount, baseMipLevel, _success } = t.params;
+    const {
+      dimension = '2d',
+      arrayLayerCount,
+      mipLevelCount,
+      baseMipLevel,
+      _mipLevelCountKeepUndefined,
+      _success,
+    } = t.params;
 
     const texture = t.createTexture({ arrayLayerCount: 1 });
 
@@ -123,6 +152,10 @@ g.test('creating_texture_view_on_a_2D_non_array_texture')
       mipLevelCount,
       baseMipLevel,
     });
+
+    if (_mipLevelCountKeepUndefined) {
+      descriptor.mipLevelCount = undefined;
+    }
 
     t.expectValidationError(() => {
       texture.createView(descriptor);
@@ -139,11 +172,33 @@ g.test('creating_texture_view_on_a_2D_array_texture')
     { _success: true }, // default view works
     { dimension: '2d' as const, arrayLayerCount: 1, _success: true }, // it is OK to create a 2D texture view on a 2D array texture
     { arrayLayerCount: ARRAY_LAYER_COUNT_2D, _success: true }, // it is OK to create a 2D array texture view on a 2D array texture
-    // baseArrayLayer == k && arrayLayerCount == 0 means to use layers k..end.
-    { arrayLayerCount: 0, baseArrayLayer: 0, _success: true },
-    { arrayLayerCount: 0, baseArrayLayer: 1, _success: true },
-    { arrayLayerCount: 0, baseArrayLayer: ARRAY_LAYER_COUNT_2D - 1, _success: true },
-    { arrayLayerCount: 0, baseArrayLayer: ARRAY_LAYER_COUNT_2D, _success: false },
+    // arrayLayerCount == 0 is invalid.
+    { arrayLayerCount: 0, baseArrayLayer: 0, _success: false },
+    // baseArrayLayer == k && arrayLayerCount == undefined means to use layers k..end.
+    {
+      arrayLayerCount: undefined,
+      baseArrayLayer: 0,
+      _arrayLayerCountKeepUndefined: true,
+      _success: true,
+    },
+    {
+      arrayLayerCount: undefined,
+      baseArrayLayer: 1,
+      _arrayLayerCountKeepUndefined: true,
+      _success: true,
+    },
+    {
+      arrayLayerCount: undefined,
+      baseArrayLayer: ARRAY_LAYER_COUNT_2D - 1,
+      _arrayLayerCountKeepUndefined: true,
+      _success: true,
+    },
+    {
+      arrayLayerCount: undefined,
+      baseArrayLayer: ARRAY_LAYER_COUNT_2D,
+      _arrayLayerCountKeepUndefined: true,
+      _success: false,
+    },
     // It is an error for the array layer range of the view to exceed that of the texture
     { arrayLayerCount: ARRAY_LAYER_COUNT_2D + 1, baseArrayLayer: 0, _success: false },
     { arrayLayerCount: ARRAY_LAYER_COUNT_2D, baseArrayLayer: 1, _success: false },
@@ -151,7 +206,13 @@ g.test('creating_texture_view_on_a_2D_array_texture')
     { arrayLayerCount: 1, baseArrayLayer: ARRAY_LAYER_COUNT_2D, _success: false },
   ])
   .fn(async t => {
-    const { dimension = '2d-array', arrayLayerCount, baseArrayLayer, _success } = t.params;
+    const {
+      dimension = '2d-array',
+      arrayLayerCount,
+      baseArrayLayer,
+      _arrayLayerCountKeepUndefined,
+      _success,
+    } = t.params;
 
     const texture = t.createTexture({ arrayLayerCount: ARRAY_LAYER_COUNT_2D });
 
@@ -160,6 +221,10 @@ g.test('creating_texture_view_on_a_2D_array_texture')
       arrayLayerCount,
       baseArrayLayer,
     });
+
+    if (_arrayLayerCountKeepUndefined) {
+      descriptor.arrayLayerCount = undefined;
+    }
 
     t.expectValidationError(() => {
       texture.createView(descriptor);
@@ -201,9 +266,10 @@ g.test('Using_defaults_validates_the_same_as_setting_values_for_only_1_array_lay
     { format: 'r8unorm', _success: false },
     { dimension: '2d-array', _success: true },
     { dimension: '2d', _success: true },
-    { arrayLayerCount: 0, _success: true },
+    { arrayLayerCount: undefined, _success: true },
     { arrayLayerCount: 1, _success: true },
     { arrayLayerCount: 2, _success: false },
+    { mipLevelCount: undefined, _success: true },
     { mipLevelCount: MIP_LEVEL_COUNT, _success: true },
     { mipLevelCount: 1, _success: true },
   ] as const)
