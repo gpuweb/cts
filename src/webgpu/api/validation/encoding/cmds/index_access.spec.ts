@@ -67,7 +67,7 @@ class F extends ValidationTest {
     const colorAttachment = this.device.createTexture({
       format: 'rgba8unorm',
       size: { width: 1, height: 1, depth: 1 },
-      usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
     return encoder.beginRenderPass({

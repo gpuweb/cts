@@ -18,7 +18,7 @@ g.test('storeOp_controls_whether_1x1_drawn_quad_is_stored')
     const renderTexture = t.device.createTexture({
       size: { width: 1, height: 1, depth: 1 },
       format: 'r8unorm',
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.OUTPUT_ATTACHMENT,
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
     // create render pipeline

@@ -63,14 +63,14 @@ g.test('culling')
     const texture = t.device.createTexture({
       size: { width: size, height: size, depth: 1 },
       format,
-      usage: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     });
 
     const depthTexture = t.params.depthStencilFormat
       ? t.device.createTexture({
           size: { width: size, height: size, depth: 1 },
           format: t.params.depthStencilFormat,
-          usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
+          usage: GPUTextureUsage.RENDER_ATTACHMENT,
         })
       : null;
 

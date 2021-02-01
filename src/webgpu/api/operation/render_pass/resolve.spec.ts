@@ -103,7 +103,7 @@ g.test('render_pass_resolve')
         sampleCount: 4,
         mipLevelCount: 1,
         usage:
-          GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.OUTPUT_ATTACHMENT,
+          GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
       });
 
       if (t.params.slotsToResolve.includes(i)) {
@@ -113,7 +113,7 @@ g.test('render_pass_resolve')
           sampleCount: 4,
           mipLevelCount: 1,
           usage:
-            GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.OUTPUT_ATTACHMENT,
+            GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
         });
 
         const resolveTarget = t.device.createTexture({
@@ -125,7 +125,7 @@ g.test('render_pass_resolve')
           },
           sampleCount: 1,
           mipLevelCount: t.params.resolveTargetBaseMipLevel + 1,
-          usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.OUTPUT_ATTACHMENT,
+          usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
         });
 
         // Clear to black for the load operation. After the draw, the top left half of the attachment

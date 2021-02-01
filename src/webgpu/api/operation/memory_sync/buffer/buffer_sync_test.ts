@@ -126,7 +126,7 @@ export class BufferSyncTest extends GPUTest {
       .createTexture({
         size: { width: 1, height: 1, depth: 1 },
         format: 'rgba8unorm',
-        usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
       })
       .createView();
     return encoder.beginRenderPass({
