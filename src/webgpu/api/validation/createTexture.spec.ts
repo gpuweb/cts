@@ -166,7 +166,7 @@ g.test('it_is_invalid_to_submit_a_destroyed_texture_before_and_after_encode')
     }, !_success);
   });
 
-g.test('it_is_invalid_to_have_an_RENDER_ATTACHMENT_texture_with_non_renderable_format')
+g.test('it_is_invalid_to_have_an_output_attachment_texture_with_non_renderable_format')
   .params(poptions('format', kAllTextureFormats))
   .fn(async t => {
     const format: GPUTextureFormat = t.params.format;
