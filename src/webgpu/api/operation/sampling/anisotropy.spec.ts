@@ -149,7 +149,7 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
     pass.setBindGroup(0, bindGroup);
     pass.draw(6);
     pass.endPass();
-    this.device.defaultQueue.submit([encoder.finish()]);
+    this.device.queue.submit([encoder.finish()]);
 
     return colorAttachment;
   }
@@ -215,7 +215,7 @@ g.test('anisotropic_filter_checkerboard')
       [textureSize, textureSize, 1]
     );
 
-    t.device.defaultQueue.submit([textureEncoder.finish()]);
+    t.device.queue.submit([textureEncoder.finish()]);
 
     const textureView = texture.createView();
     const byteLength = kRTSize * kBytesPerRow;

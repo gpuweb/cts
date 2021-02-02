@@ -603,7 +603,7 @@ got [${failedByteActualValues.join(', ')}]`;
         mipSize
       );
     }
-    this.device.defaultQueue.submit([textureEncoder.finish()]);
+    this.device.queue.submit([textureEncoder.finish()]);
 
     return texture;
   }
