@@ -131,7 +131,7 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
     const colorAttachment = this.device.createTexture({
       format: kColorAttachmentFormat,
       size: { width: kRTSize, height: kRTSize, depth: 1 },
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.OUTPUT_ATTACHMENT,
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
     const colorAttachmentView = colorAttachment.createView();
 
