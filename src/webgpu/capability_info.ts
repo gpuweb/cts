@@ -225,7 +225,7 @@ export const kTextureUsageInfo: {
   [GPUConst.TextureUsage.COPY_DST]: {},
   [GPUConst.TextureUsage.SAMPLED]: {},
   [GPUConst.TextureUsage.STORAGE]: {},
-  [GPUConst.TextureUsage.OUTPUT_ATTACHMENT]: {},
+  [GPUConst.TextureUsage.RENDER_ATTACHMENT]: {},
 };
 export const kTextureUsages = numericKeysOf<GPUTextureUsage>(kTextureUsageInfo);
 

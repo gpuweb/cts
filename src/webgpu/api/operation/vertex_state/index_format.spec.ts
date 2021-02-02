@@ -135,7 +135,7 @@ class IndexFormatTest extends GPUTest {
     const colorAttachment = this.device.createTexture({
       format: kTextureFormat,
       size: { width: kWidth, height: kHeight, depth: 1 },
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.OUTPUT_ATTACHMENT,
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
     const result = this.device.createBuffer({
@@ -158,7 +158,7 @@ class IndexFormatTest extends GPUTest {
       { buffer: result, bytesPerRow, rowsPerImage },
       [kWidth, kHeight]
     );
-    this.device.defaultQueue.submit([encoder.finish()]);
+    this.device.queue.submit([encoder.finish()]);
 
     return result;
   }

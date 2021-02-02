@@ -32,7 +32,7 @@ export class BufferSyncTest extends GPUTest {
       format: 'r32uint',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
-    this.device.defaultQueue.writeTexture(
+    this.device.queue.writeTexture(
       { texture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
       data,
       { offset: 0, bytesPerRow: kSize, rowsPerImage: 1 },
@@ -126,7 +126,7 @@ export class BufferSyncTest extends GPUTest {
       .createTexture({
         size: { width: 1, height: 1, depth: 1 },
         format: 'rgba8unorm',
-        usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
       })
       .createView();
     return encoder.beginRenderPass({
@@ -199,7 +199,7 @@ export class BufferSyncTest extends GPUTest {
   // Write buffer via writeBuffer API on queue
   writeByWriteBuffer(buffer: GPUBuffer, value: number) {
     const data = new Uint32Array(kSize / 4).fill(value);
-    this.device.defaultQueue.writeBuffer(buffer, 0, data);
+    this.device.queue.writeBuffer(buffer, 0, data);
   }
 
   // Issue write operation via render pass, compute pass, copy, etc.
@@ -246,7 +246,7 @@ export class BufferSyncTest extends GPUTest {
     } else {
       const encoder = this.device.createCommandEncoder();
       await this.encodeWriteOp(encoder, writeOp, buffer, value);
-      this.device.defaultQueue.submit([encoder.finish()]);
+      this.device.queue.submit([encoder.finish()]);
     }
   }
 

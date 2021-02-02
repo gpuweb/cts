@@ -53,7 +53,7 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
         const data = new Uint8Array(dataSize);
 
         this.expectValidationError(() => {
-          this.device.defaultQueue.writeTexture(textureCopyView, data, textureDataLayout, size);
+          this.device.queue.writeTexture(textureCopyView, data, textureDataLayout, size);
         }, !success);
 
         break;
@@ -70,7 +70,7 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
         if (submit) {
           const cmd = encoder.finish();
           this.expectValidationError(() => {
-            this.device.defaultQueue.submit([cmd]);
+            this.device.queue.submit([cmd]);
           }, !success);
         } else {
           this.expectValidationError(() => {
@@ -92,7 +92,7 @@ export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
         if (submit) {
           const cmd = encoder.finish();
           this.expectValidationError(() => {
-            this.device.defaultQueue.submit([cmd]);
+            this.device.queue.submit([cmd]);
           }, !success);
         } else {
           this.expectValidationError(() => {

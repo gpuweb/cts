@@ -43,7 +43,7 @@ function doTest(
     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED,
   });
 
-  t.device.defaultQueue.writeTexture(
+  t.device.queue.writeTexture(
     { texture },
     texelData,
     {
@@ -107,7 +107,7 @@ function doTest(
   pass.setBindGroup(0, bindGroup);
   pass.dispatch(1);
   pass.endPass();
-  t.device.defaultQueue.submit([encoder.finish()]);
+  t.device.queue.submit([encoder.finish()]);
 
   t.expectContents(
     outputBuffer,
