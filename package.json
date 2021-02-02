@@ -7,6 +7,7 @@
     "check": "grunt check",
     "standalone": "grunt standalone",
     "wpt": "grunt wpt",
+    "fix": "grunt fix",
     "unittest": "grunt unittest",
     "gen_wpt_cts_html": "tools/gen_wpt_cts_html",
     "dev": "tools/dev_server"
@@ -38,7 +39,7 @@
     "@types/morgan": "^1.9.2",
     "@types/node": "^14.11.10",
     "@types/offscreencanvas": "^2019.6.2",
-    "@webgpu/types": "0.0.32",
+    "@webgpu/types": "0.0.35",
     "babel-plugin-add-header-comment": "^1.0.3",
     "babel-plugin-const-enum": "^1.0.1",
     "chokidar": "^3.4.3",

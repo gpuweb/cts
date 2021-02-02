@@ -159,19 +159,11 @@ class CopyImageBitmapToTextureTest extends ValidationTest {
     // the other is asynchronous validation error scope errors.
     if (exceptionName) {
       this.shouldThrow(exceptionName, () => {
-        this.device.defaultQueue.copyImageBitmapToTexture(
-          imageBitmapCopyView,
-          textureCopyView,
-          copySize
-        );
+        this.device.queue.copyImageBitmapToTexture(imageBitmapCopyView, textureCopyView, copySize);
       });
     } else {
       this.expectValidationError(() => {
-        this.device.defaultQueue.copyImageBitmapToTexture(
-          imageBitmapCopyView,
-          textureCopyView,
-          copySize
-        );
+        this.device.queue.copyImageBitmapToTexture(imageBitmapCopyView, textureCopyView, copySize);
       }, !validationScopeSuccess);
     }
   }

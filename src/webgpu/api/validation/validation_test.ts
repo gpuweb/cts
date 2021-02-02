@@ -24,7 +24,7 @@ export class ValidationTest extends GPUTest {
         GPUTextureUsage.COPY_DST |
         GPUTextureUsage.SAMPLED |
         GPUTextureUsage.STORAGE |
-        GPUTextureUsage.OUTPUT_ATTACHMENT,
+        GPUTextureUsage.RENDER_ATTACHMENT,
     };
 
     switch (state) {
@@ -259,7 +259,7 @@ export class ValidationTest extends GPUTest {
           .createTexture({
             format: colorFormat,
             size: { width: 16, height: 16, depth: 1 },
-            usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
+            usage: GPUTextureUsage.RENDER_ATTACHMENT,
           })
           .createView();
         const encoder = commandEncoder.beginRenderPass({
@@ -313,10 +313,10 @@ export class ValidationTest extends GPUTest {
       this.eventualAsyncExpectation(async niceStack => {
         const gpuValidationError = await promise;
         if (!gpuValidationError) {
-          niceStack.message = 'Validation error was expected.';
+          niceStack.message = 'Validation succeeded unexpectedly.';
           this.rec.validationFailed(niceStack);
         } else if (gpuValidationError instanceof GPUValidationError) {
-          niceStack.message = `Captured validation error - ${gpuValidationError.message}`;
+          niceStack.message = `Validation failed, as expected - ${gpuValidationError.message}`;
           this.rec.debug(niceStack);
         }
       });

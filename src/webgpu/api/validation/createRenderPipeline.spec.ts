@@ -100,7 +100,7 @@ class F extends ValidationTest {
 
     return this.device.createTexture({
       size: { width: 4, height: 4, depth: 1 },
-      usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
       format,
       sampleCount,
     });

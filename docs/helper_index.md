@@ -11,6 +11,8 @@ Generally, see:
 - [`src/webgpu/gpu_test.ts`](../src/webgpu/gpu_test.ts) (for all tests)
 - [`src/webgpu/api/validation/validation_test.ts`](../src/webgpu/api/validation/validation_test.ts)
   (for validation tests).
+- [`src/webgpu/shader/validation/shader_validation_test.ts`](../src/webgpu/shader/validation/shader_validation_test.ts)
+  (for shader validation tests).
 - Structured information about texture formats, binding types, etc. can be found in
   [`src/webgpu/capability_info.ts`](../src/webgpu/capability_info.ts).
 - Constant values (needed anytime a WebGPU constant is needed outside of a test function)
@@ -19,3 +21,8 @@ Generally, see:
 ## Index
 
 - TODO: Index existing helpers.
+- [`GPUTest`](../src/webgpu/gpu_test.ts)
+- [`ValidationTest`](../src/webgpu/api/validation/validation_test.ts)
+- [`ShaderValidationTest`](../src/webgpu/shader/validation/shader_validation_test.ts)
+    - `expectCompileResult` Allows checking for compile success/failure, or failure with a
+      particular error substring.

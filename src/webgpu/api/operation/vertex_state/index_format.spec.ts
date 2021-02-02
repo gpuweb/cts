@@ -65,7 +65,7 @@ class IndexFormatTest extends GPUTest {
           vec2<f32>(0.01, -0.98));
 
         [[builtin(position)]] var<out> Position : vec4<f32>;
-        [[builtin(vertex_idx)]] var<in> VertexIndex : u32;
+        [[builtin(vertex_index)]] var<in> VertexIndex : u32;
 
         [[stage(vertex)]]
         fn main() -> void {
@@ -135,7 +135,7 @@ class IndexFormatTest extends GPUTest {
     const colorAttachment = this.device.createTexture({
       format: kTextureFormat,
       size: { width: kWidth, height: kHeight, depth: 1 },
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.OUTPUT_ATTACHMENT,
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
     const result = this.device.createBuffer({
@@ -158,7 +158,7 @@ class IndexFormatTest extends GPUTest {
       { buffer: result, bytesPerRow, rowsPerImage },
       [kWidth, kHeight]
     );
-    this.device.defaultQueue.submit([encoder.finish()]);
+    this.device.queue.submit([encoder.finish()]);
 
     return result;
   }

@@ -1,7 +1,7 @@
 export const description = `
 copyTextureToTexture tests.
 
-Test Plan: (TODO(jiawei.shao@intel.com): add tests on aspects and 1D/3D textures)
+Test Plan: (TODO(jiawei.shao@intel.com): add tests on 1D/3D textures)
 * the source and destination texture
   - the {source, destination} texture is {invalid, valid}.
   - mipLevel {>, =, <} the mipmap level count of the {source, destination} texture.
@@ -507,6 +507,61 @@ g.test('copy_within_same_texture')
       { texture: testTexture, origin: { x: 0, y: 0, z: dstCopyOriginZ } },
       { width: 16, height: 16, depth: copyExtentDepth },
       isSuccess
+    );
+  });
+
+g.test('copy_aspects')
+  .desc(
+    `
+Test the validations on the member 'aspect' of GPUTextureCopyView in CopyTextureToTexture().
+- for all the color and depth-stencil formats: the texture copy aspects must be both 'all'.
+- for all the depth-only formats: the texture copy aspects must be either 'all' or 'depth-only'.
+- for all the stencil-only formats: the texture copy aspects must be either 'all' or 'stencil-only'.
+`
+  )
+  .params(
+    params()
+      .combine(poptions('format', ['rgba8unorm', ...kDepthStencilFormats] as const))
+      .combine(poptions('sourceAspect', ['all', 'depth-only', 'stencil-only'] as const))
+      .combine(poptions('destinationAspect', ['all', 'depth-only', 'stencil-only'] as const))
+  )
+  .fn(async t => {
+    const { format, sourceAspect, destinationAspect } = t.params;
+
+    const kTextureSize = { width: 16, height: 8, depth: 1 };
+
+    const srcTexture = t.device.createTexture({
+      size: kTextureSize,
+      format,
+      usage: GPUTextureUsage.COPY_SRC,
+    });
+    const dstTexture = t.device.createTexture({
+      size: kTextureSize,
+      format,
+      usage: GPUTextureUsage.COPY_DST,
+    });
+
+    // TODO(jiawei.shao@intel.com): get the valid aspects from capability_info.ts.
+    const kValidAspectsForFormat = {
+      rgba8unorm: ['all'],
+
+      // kUnsizedDepthStencilFormats
+      depth24plus: ['all', 'depth-only'],
+      'depth24plus-stencil8': ['all'],
+
+      // kSizedDepthStencilFormats
+      depth32float: ['all', 'depth-only'],
+      stencil8: ['all', 'stencil-only'],
+    };
+
+    const isSourceAspectValid = kValidAspectsForFormat[format].includes(sourceAspect);
+    const isDestinationAspectValid = kValidAspectsForFormat[format].includes(destinationAspect);
+
+    t.TestCopyTextureToTexture(
+      { texture: srcTexture, origin: { x: 0, y: 0, z: 0 }, aspect: sourceAspect },
+      { texture: dstTexture, origin: { x: 0, y: 0, z: 0 }, aspect: destinationAspect },
+      kTextureSize,
+      isSourceAspectValid && isDestinationAspectValid
     );
   });
 

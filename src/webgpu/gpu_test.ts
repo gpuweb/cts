@@ -51,7 +51,7 @@ export class GPUTest extends Fixture {
   }
 
   get queue(): GPUQueue {
-    return this.device.defaultQueue;
+    return this.device.queue;
   }
 
   async init(): Promise<void> {

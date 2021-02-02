@@ -490,6 +490,21 @@ export const kTexelRepresentationInfo: {
       decode: applyEach(() => unreachable('depth24plus cannot be decoded'), [TexelComponent.Depth]),
       pack: () => unreachable('depth24plus data cannot be packed'),
     },
+    stencil8: {
+      componentOrder: [TexelComponent.Stencil],
+      componentInfo: { Stencil: { dataType: 'uint', bitLength: 8 } },
+      encode: components => {
+        assert(components.Stencil !== undefined);
+        assertInIntegerRange(components.Stencil, 8, false);
+        return components;
+      },
+      decode: components => {
+        assert(components.Stencil !== undefined);
+        assertInIntegerRange(components.Stencil, 8, false);
+        return components;
+      },
+      pack: components => packComponents([TexelComponent.Stencil], components, 8, 'uint'),
+    },
     'depth24plus-stencil8': {
       componentOrder: [TexelComponent.Depth, TexelComponent.Stencil],
       componentInfo: {

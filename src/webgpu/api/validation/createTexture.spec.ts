@@ -63,7 +63,7 @@ class F extends ValidationTest {
       sampleCount,
       dimension: '2d',
       format,
-      usage: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.SAMPLED,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,
     };
   }
 }

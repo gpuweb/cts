@@ -43,6 +43,11 @@ function makeTable<
   return result as any;
 }
 
+// Queries
+
+export const kMaxQueryCount = 8192;
+export const kQueryTypes = ['occlusion', 'pipeline-statistics', 'timestamp'] as const;
+
 // Buffers
 
 export const kBufferSizeAlignment = 4;
@@ -116,6 +121,7 @@ const kTexFmtInfoHeader = ['renderable', 'color', 'depth', 'stencil', 'storage',
 export const kSizedDepthStencilFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
                           [        true,   false,        ,          ,     false,          ,          ,                ,            1,             1,                         ] as const, {
   'depth32float':         [        true,   false,    true,     false,          ,     false,     false,               4],
+  'stencil8':             [        true,        ,   false,      true,          ,     false,     false,               1],
 } as const);
 export const kUnsizedDepthStencilFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
                           [        true,   false,        ,          ,     false,          ,          ,       undefined,            1,             1,                         ] as const, {
@@ -219,7 +225,7 @@ export const kTextureUsageInfo: {
   [GPUConst.TextureUsage.COPY_DST]: {},
   [GPUConst.TextureUsage.SAMPLED]: {},
   [GPUConst.TextureUsage.STORAGE]: {},
-  [GPUConst.TextureUsage.OUTPUT_ATTACHMENT]: {},
+  [GPUConst.TextureUsage.RENDER_ATTACHMENT]: {},
 };
 export const kTextureUsages = numericKeysOf<GPUTextureUsage>(kTextureUsageInfo);
 

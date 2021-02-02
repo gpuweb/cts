@@ -67,7 +67,7 @@ class F extends ValidationTest {
     const colorAttachment = this.device.createTexture({
       format: 'rgba8unorm',
       size: { width: 1, height: 1, depth: 1 },
-      usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
     return encoder.beginRenderPass({
@@ -99,7 +99,7 @@ class F extends ValidationTest {
     pass.drawIndexed(indexCount, instanceCount, firstIndex, baseVertex, firstInstance);
     pass.endPass();
 
-    this.device.defaultQueue.submit([encoder.finish()]);
+    this.device.queue.submit([encoder.finish()]);
   }
 
   drawIndexedIndirect(bufferArray: Uint32Array, indirectOffset: number) {
@@ -122,7 +122,7 @@ class F extends ValidationTest {
     pass.drawIndexedIndirect(indirectBuffer, indirectOffset);
     pass.endPass();
 
-    this.device.defaultQueue.submit([encoder.finish()]);
+    this.device.queue.submit([encoder.finish()]);
   }
 }
 

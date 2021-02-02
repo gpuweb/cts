@@ -63,14 +63,14 @@ g.test('culling')
     const texture = t.device.createTexture({
       size: { width: size, height: size, depth: 1 },
       format,
-      usage: GPUTextureUsage.OUTPUT_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     });
 
     const depthTexture = t.params.depthStencilFormat
       ? t.device.createTexture({
           size: { width: size, height: size, depth: 1 },
           format: t.params.depthStencilFormat,
-          usage: GPUTextureUsage.OUTPUT_ATTACHMENT,
+          usage: GPUTextureUsage.RENDER_ATTACHMENT,
         })
       : null;
 
@@ -102,7 +102,7 @@ g.test('culling')
           module: t.device.createShaderModule({
             code: `
               [[builtin(position)]] var<out> Position : vec4<f32>;
-              [[builtin(vertex_idx)]] var<in> VertexIndex : i32;
+              [[builtin(vertex_index)]] var<in> VertexIndex : i32;
 
               [[stage(vertex)]] fn main() -> void {
                 const pos : array<vec2<f32>, 6> = array<vec2<f32>, 6>(
@@ -150,7 +150,7 @@ g.test('culling')
     pass.draw(6, 1, 0, 0);
     pass.endPass();
 
-    t.device.defaultQueue.submit([encoder.finish()]);
+    t.device.queue.submit([encoder.finish()]);
 
     // front facing color is green, non front facing is red, background is blue
     const kCCWTriangleTopLeftColor = faceColor('ccw', t.params.frontFace, t.params.cullMode);
