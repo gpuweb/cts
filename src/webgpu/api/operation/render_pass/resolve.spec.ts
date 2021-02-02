@@ -187,21 +187,15 @@ g.test('render_pass_resolve')
       );
 
       // Test top right pixel, which should be {127, 127, 127, 127} due to the multisampled resolve.
-      {
-        const buffer = t.makeBufferFromTextureSinglePixel(
-          resolveTarget,
-          kFormat,
-          { x: kSize - 1, y: 0 },
-          {
-            slice: t.params.resolveTargetBaseArrayLayer,
-            layout: { mipLevel: t.params.resolveTargetBaseMipLevel },
-          }
-        );
-        t.expectContentsTwoValidValues(
-          buffer,
-          new Uint8Array([0x7f, 0x7f, 0x7f, 0x7f]),
-          new Uint8Array([0x80, 0x80, 0x80, 0x80])
-        );
-      }
+      t.expectSinglePixelBetweenTwoValuesIn2DTexture(
+        resolveTarget,
+        kFormat,
+        { x: kSize - 1, y: 0 },
+        {
+          exp: [new Uint8Array([0x7f, 0x7f, 0x7f, 0x7f]), new Uint8Array([0x80, 0x80, 0x80, 0x80])],
+          slice: t.params.resolveTargetBaseArrayLayer,
+          layout: { mipLevel: t.params.resolveTargetBaseMipLevel },
+        }
+      );
     }
   });
