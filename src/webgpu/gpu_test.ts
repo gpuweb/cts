@@ -444,8 +444,7 @@ got [${failedByteActualValues.join(', ')}]`;
     src: GPUTexture,
     format: SizedTextureFormat,
     { x, y }: { x: number; y: number },
-    slice = 0,
-    layout?: TextureLayoutOptions
+    { slice = 0, layout }: { slice?: number; layout?: TextureLayoutOptions }
   ): GPUBuffer {
     const { byteLength, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
       format,
@@ -487,7 +486,7 @@ got [${failedByteActualValues.join(', ')}]`;
       generateWarningOnly?: boolean;
     }
   ): void {
-    const buffer = this.readSinglePixelFrom2DTexture(src, format, { x, y }, slice, layout);
+    const buffer = this.readSinglePixelFrom2DTexture(src, format, { x, y }, { slice, layout });
     this.expectContents(buffer, exp, 0, { generateWarningOnly });
   }
 
@@ -507,7 +506,7 @@ got [${failedByteActualValues.join(', ')}]`;
       generateWarningOnly?: boolean;
     }
   ): void {
-    const buffer = this.readSinglePixelFrom2DTexture(src, format, { x, y }, slice, layout);
+    const buffer = this.readSinglePixelFrom2DTexture(src, format, { x, y }, { slice, layout });
     this.expectContentsBetweenTwoValues(buffer, exp, 0, { generateWarningOnly });
   }
 
