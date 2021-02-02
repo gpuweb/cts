@@ -266,7 +266,7 @@ g.test('anisotropic_filter_mipmap_color')
         { coord: { x: xMiddle, y: 2 }, expected: colors[2] },
         { coord: { x: xMiddle, y: 6 }, expected: [colors[0], colors[1]] },
       ],
-      generateWarningOnly: false,
+      _generateWarningOnly: false,
     },
     {
       maxAnisotropy: 4,
@@ -274,7 +274,7 @@ g.test('anisotropic_filter_mipmap_color')
         { coord: { x: xMiddle, y: 2 }, expected: [colors[0], colors[1]] },
         { coord: { x: xMiddle, y: 6 }, expected: colors[0] },
       ],
-      generateWarningOnly: true,
+      _generateWarningOnly: true,
     },
   ])
   .fn(async t => {
@@ -294,21 +294,20 @@ g.test('anisotropic_filter_mipmap_color')
     for (const entry of t.params._results) {
       if (entry.expected instanceof Uint8Array) {
         // equal exactly one color
-        t.expectSinglePixelIn2DTexture(
-          colorAttachment,
-          kColorAttachmentFormat,
-          entry.coord,
-          { exp: entry.expected as Uint8Array },
-          t.params.generateWarningOnly
-        );
+        t.expectSinglePixelIn2DTexture(colorAttachment, kColorAttachmentFormat, entry.coord, {
+          exp: entry.expected as Uint8Array,
+          generateWarningOnly: t.params._generateWarningOnly,
+        });
       } else {
         // a lerp between two colors
         t.expectSinglePixelBetweenTwoValuesIn2DTexture(
           colorAttachment,
           kColorAttachmentFormat,
           entry.coord,
-          { exp: entry.expected as [Uint8Array, Uint8Array] },
-          t.params.generateWarningOnly
+          {
+            exp: entry.expected as [Uint8Array, Uint8Array],
+            generateWarningOnly: t.params._generateWarningOnly,
+          }
         );
       }
     }

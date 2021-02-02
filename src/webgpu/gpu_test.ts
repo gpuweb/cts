@@ -151,7 +151,7 @@ export class GPUTest extends Fixture {
     src: GPUBuffer,
     expected: TypedArrayBufferView,
     srcOffset: number = 0,
-    generateWarningOnly: boolean = false
+    { generateWarningOnly = false }: { generateWarningOnly?: boolean } = {}
   ): void {
     const { dst, begin, end } = this.createAlignedCopyForMapRead(
       src,
@@ -180,7 +180,7 @@ export class GPUTest extends Fixture {
     src: GPUBuffer,
     expected: [TypedArrayBufferView, TypedArrayBufferView],
     srcOffset: number = 0,
-    generateWarningOnly: boolean = false
+    { generateWarningOnly = false }: { generateWarningOnly?: boolean }
   ): void {
     assert(expected[0].constructor === expected[1].constructor);
     assert(expected[0].length === expected[1].length);
@@ -479,15 +479,16 @@ got [${failedByteActualValues.join(', ')}]`;
       exp,
       slice = 0,
       layout,
+      generateWarningOnly = false,
     }: {
       exp: Uint8Array;
       slice?: number;
       layout?: TextureLayoutOptions;
-    },
-    generateWarningOnly: boolean = false
+      generateWarningOnly?: boolean;
+    }
   ): void {
     const buffer = this.readSinglePixelFrom2DTexture(src, format, { x, y }, slice, layout);
-    this.expectContents(buffer, exp, 0, generateWarningOnly);
+    this.expectContents(buffer, exp, 0, { generateWarningOnly });
   }
 
   expectSinglePixelBetweenTwoValuesIn2DTexture(
@@ -498,15 +499,16 @@ got [${failedByteActualValues.join(', ')}]`;
       exp,
       slice = 0,
       layout,
+      generateWarningOnly = false,
     }: {
       exp: [Uint8Array, Uint8Array];
       slice?: number;
       layout?: TextureLayoutOptions;
-    },
-    generateWarningOnly: boolean = false
+      generateWarningOnly?: boolean;
+    }
   ): void {
     const buffer = this.readSinglePixelFrom2DTexture(src, format, { x, y }, slice, layout);
-    this.expectContentsBetweenTwoValues(buffer, exp, 0, generateWarningOnly);
+    this.expectContentsBetweenTwoValues(buffer, exp, 0, { generateWarningOnly });
   }
 
   expectGPUError<R>(filter: GPUErrorFilter, fn: () => R, shouldError: boolean = true): R {
