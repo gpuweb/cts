@@ -24,7 +24,7 @@ g.test('bound_on_rows_per_image')
   .cases(poptions('method', kAllTestMethods))
   .subcases(() =>
     params()
-      .combine(poptions('rowsPerImage', [undefined, 0, 1, 2]))
+      .combine(poptions('rowsPerImage', [undefined, 0, 1, 2, 1024]))
       .combine(poptions('copyHeightInBlocks', [0, 1, 2]))
       .combine(poptions('copyDepth', [1, 3]))
   )
@@ -121,7 +121,6 @@ g.test('required_bytes_in_copy')
       format,
       method,
     } = t.params;
-
     const info = kSizedTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.extension);
 
@@ -255,9 +254,10 @@ g.test('bound_on_bytes_per_row')
     const copySize = { width: copyWidth, height: copyHeight, depth: copyDepth };
 
     const texture = t.createAlignedTexture(format, {
-      width: Math.max(info.blockWidth, copyWidth),
-      height: Math.max(info.blockHeight, copyHeight),
-      depth: Math.max(1, copyDepth),
+      width: copyWidth,
+      // size 0 is not valid; round up if needed
+      height: copyHeight || info.blockHeight,
+      depth: copyDepth || 1,
     });
 
     const layout = { bytesPerRow, rowsPerImage: copyHeight };
