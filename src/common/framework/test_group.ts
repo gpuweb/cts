@@ -278,7 +278,7 @@ class RunCaseSpecific<
       let totalCount = 0;
       let skipCount = 0;
       for (const subParams of this.subParamGen(this.params)) {
-        rec.info(new Error('subcase: ' + stringifyPublicParamsUniquely(subParams)));
+        rec.info(new Error('subcase: ' + stringifyPublicParams(subParams)));
         try {
           await this.runTest(rec, mergeParams(this.params, subParams), true);
         } catch (ex) {
