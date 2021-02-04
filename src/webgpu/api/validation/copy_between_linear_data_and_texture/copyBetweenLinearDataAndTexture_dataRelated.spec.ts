@@ -9,10 +9,14 @@ import {
   kSizedTextureFormatInfo,
 } from '../../../capability_info.js';
 import { align } from '../../../util/math.js';
+import {
+  bytesInACompleteRow,
+  dataBytesForCopy,
+  kImageCopyTypes,
+} from '../../../util/texture/image_copy.js';
 
 import {
   CopyBetweenLinearDataAndTextureTest,
-  kAllTestMethods,
   texelBlockAlignmentTestExpanderForOffset,
   texelBlockAlignmentTestExpanderForRowsPerImage,
   formatCopyableWithMethod,
@@ -21,7 +25,7 @@ import {
 export const g = makeTestGroup(CopyBetweenLinearDataAndTextureTest);
 
 g.test('bound_on_rows_per_image')
-  .cases(poptions('method', kAllTestMethods))
+  .cases(poptions('method', kImageCopyTypes))
   .subcases(() =>
     params()
       .combine(poptions('rowsPerImage', [undefined, 0, 1, 2, 1024]))
@@ -42,7 +46,7 @@ g.test('bound_on_rows_per_image')
 
     const layout = { bytesPerRow: 1024, rowsPerImage };
     const size = { width: 0, height: copyHeight, depth: copyDepth };
-    const { minDataSize, valid } = t.dataBytesForCopy(layout, format, size, { method });
+    const { minDataSize, valid } = dataBytesForCopy(layout, format, size, { method });
 
     t.testRun({ texture }, layout, size, {
       dataSize: minDataSize,
@@ -53,7 +57,7 @@ g.test('bound_on_rows_per_image')
 
 // Test with offset + requiredBytesIsCopy overflowing GPUSize64.
 g.test('offset_plus_required_bytes_in_copy_overflow')
-  .cases(poptions('method', kAllTestMethods))
+  .cases(poptions('method', kImageCopyTypes))
   .subcases(() => [
     { bytesPerRow: 2 ** 31, rowsPerImage: 2 ** 31, depth: 1, _success: true }, // success case
     { bytesPerRow: 2 ** 31, rowsPerImage: 2 ** 31, depth: 16, _success: false }, // bytesPerRow * rowsPerImage * (depth - 1) overflows.
@@ -85,7 +89,7 @@ g.test('offset_plus_required_bytes_in_copy_overflow')
 g.test('required_bytes_in_copy')
   .cases(
     params()
-      .combine(poptions('method', kAllTestMethods))
+      .combine(poptions('method', kImageCopyTypes))
       .combine(poptions('format', kSizedTextureFormats))
       .filter(formatCopyableWithMethod)
   )
@@ -134,12 +138,12 @@ g.test('required_bytes_in_copy')
     const offset = offsetInBlocks * info.bytesPerBlock;
     const rowsPerImage = copyHeight + rowsPerImagePaddingInBlocks * info.blockHeight;
     const bytesPerRow =
-      align(t.bytesInACompleteRow(copyWidth, format), bytesPerRowAlignment) +
+      align(bytesInACompleteRow(copyWidth, format), bytesPerRowAlignment) +
       bytesPerRowPadding * bytesPerRowAlignment;
     const size = { width: copyWidth, height: copyHeight, depth: copyDepth };
 
     const layout = { offset, bytesPerRow, rowsPerImage };
-    const { minDataSize, valid } = t.dataBytesForCopy(layout, format, size, { method });
+    const { minDataSize, valid } = dataBytesForCopy(layout, format, size, { method });
     assert(valid);
 
     const texture = t.createAlignedTexture(format, size);
@@ -163,7 +167,7 @@ g.test('rows_per_image_alignment')
   .desc(`rowsPerImage is measured in multiples of block height, so has no alignment constraints.`)
   .cases(
     params()
-      .combine(poptions('method', kAllTestMethods))
+      .combine(poptions('method', kImageCopyTypes))
       .combine(poptions('format', kSizedTextureFormats))
       .filter(formatCopyableWithMethod)
   )
@@ -187,7 +191,7 @@ g.test('rows_per_image_alignment')
 g.test('texel_block_alignment_on_offset')
   .cases(
     params()
-      .combine(poptions('method', kAllTestMethods))
+      .combine(poptions('method', kImageCopyTypes))
       .combine(poptions('format', kSizedTextureFormats))
       .filter(formatCopyableWithMethod)
   )
@@ -210,7 +214,7 @@ g.test('texel_block_alignment_on_offset')
 g.test('bound_on_bytes_per_row')
   .cases(
     params()
-      .combine(poptions('method', kAllTestMethods))
+      .combine(poptions('method', kImageCopyTypes))
       .combine(poptions('format', kSizedTextureFormats))
       .filter(formatCopyableWithMethod)
   )
@@ -261,7 +265,7 @@ g.test('bound_on_bytes_per_row')
     });
 
     const layout = { bytesPerRow, rowsPerImage: copyHeight };
-    const { minDataSize, valid } = t.dataBytesForCopy(layout, format, copySize, { method });
+    const { minDataSize, valid } = dataBytesForCopy(layout, format, copySize, { method });
 
     t.testRun({ texture }, layout, copySize, {
       dataSize: minDataSize,
@@ -271,7 +275,7 @@ g.test('bound_on_bytes_per_row')
   });
 
 g.test('bound_on_offset')
-  .cases(poptions('method', kAllTestMethods))
+  .cases(poptions('method', kImageCopyTypes))
   .subcases(() =>
     params()
       .combine(poptions('offsetInBlocks', [0, 1, 2]))
