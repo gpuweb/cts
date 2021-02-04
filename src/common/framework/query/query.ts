@@ -2,7 +2,7 @@ import { CaseParams } from '../params_utils.js';
 import { assert } from '../util/util.js';
 
 import { encodeURIComponentSelectively } from './encode_selectively.js';
-import { kBigSeparator, kPathSeparator, kWildcard, kParamSeparator } from './separators.js';
+import { kBigSeparator, kPathSeparator, kWildcard } from './separators.js';
 import { stringifyPublicParams } from './stringify_params.js';
 
 /**
@@ -104,12 +104,11 @@ export class TestQueryMultiCase extends TestQueryMultiTest {
   }
 
   protected toStringHelper(): string[] {
-    const paramsParts = stringifyPublicParams(this.params);
     return [
       this.suite,
       this.filePathParts.join(kPathSeparator),
       this.testPathParts.join(kPathSeparator),
-      [...paramsParts, kWildcard].join(kParamSeparator),
+      stringifyPublicParams(this.params, true),
     ];
   }
 }
@@ -128,12 +127,11 @@ export class TestQuerySingleCase extends TestQueryMultiCase {
   }
 
   protected toStringHelper(): string[] {
-    const paramsParts = stringifyPublicParams(this.params);
     return [
       this.suite,
       this.filePathParts.join(kPathSeparator),
       this.testPathParts.join(kPathSeparator),
-      paramsParts.join(kParamSeparator),
+      stringifyPublicParams(this.params),
     ];
   }
 }
