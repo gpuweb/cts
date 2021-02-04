@@ -6,10 +6,10 @@ import { assert } from '../../../../common/framework/util/util.js';
 import { kSizedTextureFormats, kSizedTextureFormatInfo } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import { align } from '../../../util/math.js';
+import { kImageCopyTypes } from '../../../util/texture/image_copy.js';
 
 import {
   CopyBetweenLinearDataAndTextureTest,
-  kAllTestMethods,
   texelBlockAlignmentTestExpanderForValueToCoordinate,
   formatCopyableWithMethod,
 } from './copyBetweenLinearDataAndTexture.js';
@@ -19,7 +19,7 @@ export const g = makeTestGroup(CopyBetweenLinearDataAndTextureTest);
 g.test('texture_must_be_valid')
   .cases(
     params()
-      .combine(poptions('method', kAllTestMethods))
+      .combine(poptions('method', kImageCopyTypes))
       .combine(poptions('textureState', ['valid', 'destroyed', 'error']))
   )
   .fn(async t => {
@@ -55,7 +55,7 @@ g.test('texture_must_be_valid')
   });
 
 g.test('texture_usage_must_be_valid')
-  .cases(poptions('method', kAllTestMethods))
+  .cases(poptions('method', kImageCopyTypes))
   .subcases(() =>
     poptions('usage', [
       GPUConst.TextureUsage.COPY_SRC | GPUConst.TextureUsage.SAMPLED,
@@ -73,7 +73,7 @@ g.test('texture_usage_must_be_valid')
     });
 
     const success =
-      method === 'CopyTextureToBuffer'
+      method === 'CopyT2B'
         ? (usage & GPUTextureUsage.COPY_SRC) !== 0
         : (usage & GPUTextureUsage.COPY_DST) !== 0;
 
@@ -86,7 +86,7 @@ g.test('texture_usage_must_be_valid')
   });
 
 g.test('sample_count_must_be_1')
-  .cases(poptions('method', kAllTestMethods))
+  .cases(poptions('method', kImageCopyTypes))
   .subcases(() => poptions('sampleCount', [1, 4]))
   .fn(async t => {
     const { sampleCount, method } = t.params;
@@ -109,7 +109,7 @@ g.test('sample_count_must_be_1')
   });
 
 g.test('mip_level_must_be_in_range')
-  .cases(poptions('method', kAllTestMethods))
+  .cases(poptions('method', kImageCopyTypes))
   .subcases(() =>
     params()
       .combine(poptions('mipLevelCount', [3, 5]))
@@ -138,7 +138,7 @@ g.test('mip_level_must_be_in_range')
 g.test('texel_block_alignments_on_origin')
   .cases(
     params()
-      .combine(poptions('method', kAllTestMethods))
+      .combine(poptions('method', kImageCopyTypes))
       .combine(poptions('format', kSizedTextureFormats))
       .filter(formatCopyableWithMethod)
   )
@@ -180,7 +180,7 @@ g.test('texel_block_alignments_on_origin')
   });
 
 g.test('1d_texture')
-  .cases(poptions('method', kAllTestMethods))
+  .cases(poptions('method', kImageCopyTypes))
   .subcases(() =>
     params()
       .combine(poptions('width', [0, 1]))
@@ -217,7 +217,7 @@ g.test('1d_texture')
 g.test('texel_block_alignments_on_size')
   .cases(
     params()
-      .combine(poptions('method', kAllTestMethods))
+      .combine(poptions('method', kImageCopyTypes))
       .combine(poptions('format', kSizedTextureFormats))
       .filter(formatCopyableWithMethod)
   )
@@ -263,7 +263,7 @@ g.test('texel_block_alignments_on_size')
   });
 
 g.test('texture_range_conditions')
-  .cases(poptions('method', kAllTestMethods))
+  .cases(poptions('method', kImageCopyTypes))
   .subcases(() =>
     params()
       .combine(poptions('originValue', [7, 8]))
