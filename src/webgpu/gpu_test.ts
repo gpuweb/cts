@@ -63,12 +63,18 @@ export class GPUTest extends Fixture {
   /**
    * When a GPUTest test accesses `.device` for the first time, a "default" GPUDevice
    * (descriptor = `undefined`) is provided by default.
-   * However, some tests or cases need particular extensions to be enabled. Call this function with
-   * a descriptor (or undefined) to select a GPUDevice matching that descriptor.
+   * However, some tests or cases need particular nonGuaranteedFeatures to be enabled.
+   * Call this function with a descriptor or feature name (or `undefined`) to select a
+   * GPUDevice with matching capabilities.
    *
    * If the request descriptor can't be supported, throws an exception to skip the entire test case.
    */
-  async selectDeviceOrSkipTestCase(descriptor: GPUDeviceDescriptor | undefined): Promise<void> {
+  async selectDeviceOrSkipTestCase(
+    descriptor: GPUDeviceDescriptor | GPUExtensionName | undefined
+  ): Promise<void> {
+    if (descriptor === undefined) return;
+    if (typeof descriptor === 'string') descriptor = { extensions: [descriptor] };
+
     assert(this.provider !== undefined);
     // Make sure the device isn't replaced after it's been retrieved once.
     assert(

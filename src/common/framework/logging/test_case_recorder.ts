@@ -98,7 +98,7 @@ export class TestCaseRecorder {
     const logMessage = new LogMessageWithStack(name, baseException);
 
     // Deduplicate errors with the exact same stack
-    if (logMessage.stack) {
+    if (!this.debugging && logMessage.stack) {
       const seen = this.messagesForPreviouslySeenStacks.get(logMessage.stack);
       if (seen) {
         seen.incrementTimesSeen();

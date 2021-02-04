@@ -2,8 +2,10 @@ export const description = '';
 
 import { params, poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { assert } from '../../../../common/framework/util/util.js';
 import { kSizedTextureFormats, kSizedTextureFormatInfo } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
+import { align } from '../../../util/math.js';
 
 import {
   CopyBetweenLinearDataAndTextureTest,
@@ -15,7 +17,7 @@ import {
 export const g = makeTestGroup(CopyBetweenLinearDataAndTextureTest);
 
 g.test('texture_must_be_valid')
-  .params(
+  .cases(
     params()
       .combine(poptions('method', kAllTestMethods))
       .combine(poptions('textureState', ['valid', 'destroyed', 'error']))
@@ -53,16 +55,13 @@ g.test('texture_must_be_valid')
   });
 
 g.test('texture_usage_must_be_valid')
-  .params(
-    params()
-      .combine(poptions('method', kAllTestMethods))
-      .combine(
-        poptions('usage', [
-          GPUConst.TextureUsage.COPY_SRC | GPUConst.TextureUsage.SAMPLED,
-          GPUConst.TextureUsage.COPY_DST | GPUConst.TextureUsage.SAMPLED,
-          GPUConst.TextureUsage.COPY_SRC | GPUConst.TextureUsage.COPY_DST,
-        ])
-      )
+  .cases(poptions('method', kAllTestMethods))
+  .subcases(() =>
+    poptions('usage', [
+      GPUConst.TextureUsage.COPY_SRC | GPUConst.TextureUsage.SAMPLED,
+      GPUConst.TextureUsage.COPY_DST | GPUConst.TextureUsage.SAMPLED,
+      GPUConst.TextureUsage.COPY_SRC | GPUConst.TextureUsage.COPY_DST,
+    ])
   )
   .fn(async t => {
     const { usage, method } = t.params;
@@ -87,11 +86,8 @@ g.test('texture_usage_must_be_valid')
   });
 
 g.test('sample_count_must_be_1')
-  .params(
-    params()
-      .combine(poptions('method', kAllTestMethods))
-      .combine(poptions('sampleCount', [1, 4]))
-  )
+  .cases(poptions('method', kAllTestMethods))
+  .subcases(() => poptions('sampleCount', [1, 4]))
   .fn(async t => {
     const { sampleCount, method } = t.params;
 
@@ -113,9 +109,9 @@ g.test('sample_count_must_be_1')
   });
 
 g.test('mip_level_must_be_in_range')
-  .params(
+  .cases(poptions('method', kAllTestMethods))
+  .subcases(() =>
     params()
-      .combine(poptions('method', kAllTestMethods))
       .combine(poptions('mipLevelCount', [3, 5]))
       .combine(poptions('mipLevel', [3, 4]))
   )
@@ -140,17 +136,23 @@ g.test('mip_level_must_be_in_range')
   });
 
 g.test('texel_block_alignments_on_origin')
-  .params(
+  .cases(
     params()
       .combine(poptions('method', kAllTestMethods))
-      .combine(poptions('coordinateToTest', ['x', 'y', 'z'] as const))
       .combine(poptions('format', kSizedTextureFormats))
       .filter(formatCopyableWithMethod)
-      .expand(texelBlockAlignmentTestExpanderForValueToCoordinate)
+  )
+  .subcases(p =>
+    params()
+      .combine(poptions('coordinateToTest', ['x', 'y', 'z'] as const))
+      .expand(({ coordinateToTest }) =>
+        texelBlockAlignmentTestExpanderForValueToCoordinate({ format: p.format, coordinateToTest })
+      )
   )
   .fn(async t => {
     const { valueToCoordinate, coordinateToTest, format, method } = t.params;
     const info = kSizedTextureFormatInfo[format];
+    await t.selectDeviceOrSkipTestCase(info.extension);
 
     const origin = { x: 0, y: 0, z: 0 };
     const size = { width: 0, height: 0, depth: 0 };
@@ -178,9 +180,9 @@ g.test('texel_block_alignments_on_origin')
   });
 
 g.test('1d_texture')
-  .params(
+  .cases(poptions('method', kAllTestMethods))
+  .subcases(() =>
     params()
-      .combine(poptions('method', kAllTestMethods))
       .combine(poptions('width', [0, 1]))
       .combine([
         { height: 1, depth: 1 },
@@ -213,17 +215,23 @@ g.test('1d_texture')
   });
 
 g.test('texel_block_alignments_on_size')
-  .params(
+  .cases(
     params()
       .combine(poptions('method', kAllTestMethods))
-      .combine(poptions('coordinateToTest', ['width', 'height', 'depth'] as const))
       .combine(poptions('format', kSizedTextureFormats))
       .filter(formatCopyableWithMethod)
-      .expand(texelBlockAlignmentTestExpanderForValueToCoordinate)
+  )
+  .subcases(p =>
+    params()
+      .combine(poptions('coordinateToTest', ['width', 'height', 'depth'] as const))
+      .expand(({ coordinateToTest }) =>
+        texelBlockAlignmentTestExpanderForValueToCoordinate({ format: p.format, coordinateToTest })
+      )
   )
   .fn(async t => {
     const { valueToCoordinate, coordinateToTest, format, method } = t.params;
     const info = kSizedTextureFormatInfo[format];
+    await t.selectDeviceOrSkipTestCase(info.extension);
 
     const origin = { x: 0, y: 0, z: 0 };
     const size = { width: 0, height: 0, depth: 0 };
@@ -243,7 +251,11 @@ g.test('texel_block_alignments_on_size')
 
     const texture = t.createAlignedTexture(format, size, origin);
 
-    t.testRun({ texture, origin }, { bytesPerRow: 0 }, size, {
+    assert(size.width % info.blockWidth === 0);
+    const bytesPerRow = align(size.width / info.blockWidth, 256);
+    assert(size.height % info.blockHeight === 0);
+    const rowsPerImage = size.height / info.blockHeight;
+    t.testRun({ texture, origin }, { bytesPerRow, rowsPerImage }, size, {
       dataSize: 1,
       method,
       success,
@@ -251,9 +263,9 @@ g.test('texel_block_alignments_on_size')
   });
 
 g.test('texture_range_conditions')
-  .params(
+  .cases(poptions('method', kAllTestMethods))
+  .subcases(() =>
     params()
-      .combine(poptions('method', kAllTestMethods))
       .combine(poptions('originValue', [7, 8]))
       .combine(poptions('copySizeValue', [7, 8]))
       .combine(poptions('textureSizeValue', [14, 15]))
@@ -269,6 +281,8 @@ g.test('texture_range_conditions')
       coordinateToTest,
       method,
     } = t.params;
+    const format = 'rgba8unorm';
+    const info = kSizedTextureFormatInfo[format];
 
     const origin: GPUOrigin3D = [0, 0, 0];
     const copySize: GPUExtent3D = [0, 0, 0];
@@ -295,11 +309,15 @@ g.test('texture_range_conditions')
     const texture = t.device.createTexture({
       size: textureSize,
       mipLevelCount: 3,
-      format: 'rgba8unorm',
+      format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
 
-    t.testRun({ texture, origin, mipLevel }, { bytesPerRow: 0 }, copySize, {
+    assert(copySize[0] % info.blockWidth === 0);
+    const bytesPerRow = align(copySize[0] / info.blockWidth, 256);
+    assert(copySize[1] % info.blockHeight === 0);
+    const rowsPerImage = copySize[1] / info.blockHeight;
+    t.testRun({ texture, origin, mipLevel }, { bytesPerRow, rowsPerImage }, copySize, {
       dataSize: 1,
       method,
       success,
