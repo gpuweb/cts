@@ -176,24 +176,27 @@ export const g = makeTestGroup(F);
 
 g.test('from_ImageData')
   .cases(
-    poptions('dstColorFormat', [
-      'rgba8unorm',
-      'bgra8unorm',
-      'rgba8unorm-srgb',
-      'bgra8unorm-srgb',
-      'rgb10a2unorm',
-      'rgba16float',
-      'rgba32float',
-      'rg8unorm',
-      'rg16float',
-    ] as const)
+    params()
+      .combine(poptions('alpha', ['none', 'premultiply']))
+      .combine(poptions('orientation', ['none', 'flipY']))
+      .combine(
+        poptions('dstColorFormat', [
+          'rgba8unorm',
+          'bgra8unorm',
+          'rgba8unorm-srgb',
+          'bgra8unorm-srgb',
+          'rgb10a2unorm',
+          'rgba16float',
+          'rgba32float',
+          'rg8unorm',
+          'rg16float',
+        ] as const)
+      )
   )
   .subcases(() =>
     params()
       .combine(poptions('width', [1, 2, 4, 15, 255, 256]))
       .combine(poptions('height', [1, 2, 4, 15, 255, 256]))
-      .combine(poptions('alpha', ['none', 'premultiply']))
-      .combine(poptions('orientation', ['none', 'flipY']))
   )
   .fn(async t => {
     const { width, height, alpha, orientation, dstColorFormat } = t.params;
