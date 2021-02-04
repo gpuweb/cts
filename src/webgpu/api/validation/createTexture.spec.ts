@@ -4,8 +4,9 @@ createTexture validation tests.
 TODO: review existing tests and merge with this plan:
 > All x= every texture format
 >
-> - {any dimension, mipLevelCount} = 0
+> - mip level count validation
 >     - x= every texture format
+>     - x= any dimension
 > - sampleCount = {0, 1, 4, 8, 16, 256} with format/dimension that supports multisample
 >     - x= every texture format
 > - sampleCount = {1, 4}
@@ -70,6 +71,57 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
+g.test('mipLevelCount_validation_on_formats')
+  .params(poptions('format', kAllTextureFormats))
+  .fn(async t => {
+    const format: GPUTextureFormat = t.params.format;
+
+    const descriptor = {
+      size: { width: 32, height: 32, depth: 1 },
+      mipLevelCount: 6,
+      format,
+      usage: GPUTextureUsage.SAMPLED,
+    };
+
+    // const extension: GPUExtensionName | undefined = kAllTextureFormatInfo[format].extension;
+    const extension: GPUExtensionName = kAllTextureFormatInfo[format].extension;
+    await t.selectDeviceOrSkipTestCase({ extensions: [extension] });
+
+    t.device.createTexture(descriptor);
+  });
+
+g.test('mipLevelCount_validation_on_dimensions')
+  .params([
+    { width: 32, height: 32, mipLevelCount: 0, _success: false }, // mipLevelCount of 0 is not allowed
+    { width: 32, height: 32, mipLevelCount: 1, _success: true }, // mipLevelCount of 1 is allowed
+    { width: 32, height: 32, mipLevelCount: 3, _success: true }, // non full mip chains are allowed (Mip leve sized: 32, 16, 8)
+    { width: 32, height: 32, mipLevelCount: 6, _success: true }, // full mip chains are allowed (Mip level sizes: 32, 16, 8, 4, 2, 1)
+    { width: 31, height: 32, mipLevelCount: 6, _success: true }, // full mip chains are allowed (Mip level sizes: 31x32, 15x16, 7x8, 3x4, 1x2, 1x1)
+    { width: 32, height: 31, mipLevelCount: 6, _success: true }, // full mip chains are allowed (Mip level sizes: 32x31, 16x15, 8x7, 4x3, 2x1, 1x1)
+    { width: 31, height: 32, mipLevelCount: 7, _success: false }, // too big mip chains on width are disallowed (Mip level sizes: 31x32, 15x16, 7x8, 3x4, 1x2, 1x1, ?x?)
+    { width: 32, height: 31, mipLevelCount: 7, _success: false }, // too big mip chains on height are disallowed (Mip level sizes: 32x31, 16x15, 8x7, 4x3, 2x1, 1x1, ?x?)
+    { width: 32, height: 32, mipLevelCount: 100, _success: false }, // undefined shift check if miplevel is bigger than the integer bit width
+    { width: 32, height: 8, mipLevelCount: 6, _success: true }, // non square mip map halves the resolution until a 1x1 dimension. (Mip maps: 32 * 8, 16 * 4, 8 * 2, 4 * 1, 2 * 1, 1 * 1)
+    { width: 32, height: 32, arrayLayerCount: 64, mipLevelCount: 7, _success: false }, // array layer count for 2D texture should not be taken account to calculate mip levels. (Mip maps: 32 * 32 * 64, 16 * 16 * 64, 8 * 8 * 64, 4 * 4 * 64, 2 * 2 * 64, 1 * 1 * 64)
+    {
+      width: 32,
+      height: 32,
+      arrayLayerCount: 64,
+      dimension: '3d',
+      mipLevelCount: 7,
+      _success: true,
+    }, // depth of 3D texture should be taken account to calculate mip levels. (Mip maps: 32 * 32 * 64, 16 * 16 * 32, 8 * 8 * 16, 4 * 4 * 8, 2 * 2 * 4, 1 * 1 * 2, 1 * 1 * 1)
+  ])
+  .fn(async t => {
+    const { width, height, mipLevelCount, arrayLayerCount, _success } = t.params;
+
+    const descriptor = t.getDescriptor({ width, height, arrayLayerCount, mipLevelCount });
+
+    t.expectValidationError(() => {
+      t.device.createTexture(descriptor);
+    }, !_success);
+  });
+
 g.test('validation_of_sampleCount')
   .params([
     // TODO: Consider making a list of "valid"+"invalid" texture descriptors in capability_info.
@@ -80,35 +132,13 @@ g.test('validation_of_sampleCount')
     { sampleCount: 4, _success: true }, // sampleCount of 4 is allowed
     { sampleCount: 8, _success: false }, // sampleCount of 8 is not allowed
     { sampleCount: 16, _success: false }, // sampleCount of 16 is not allowed
-    { sampleCount: 4, mipLevelCount: 2, _success: false }, // multisampled multi-level not allowed
+    { sampleCount: 4, mipLevelCount: 2, _success: false }, // multisampled multi-level is not allowed
     { sampleCount: 4, arrayLayerCount: 2, _success: false }, // multisampled multi-layer is not allowed
   ])
   .fn(async t => {
     const { sampleCount, mipLevelCount, arrayLayerCount, _success } = t.params;
 
     const descriptor = t.getDescriptor({ sampleCount, mipLevelCount, arrayLayerCount });
-
-    t.expectValidationError(() => {
-      t.device.createTexture(descriptor);
-    }, !_success);
-  });
-
-g.test('validation_of_mipLevelCount')
-  .params([
-    { width: 32, height: 32, mipLevelCount: 1, _success: true }, // mipLevelCount of 1 is allowed
-    { width: 32, height: 32, mipLevelCount: 0, _success: false }, // mipLevelCount of 0 is not allowed
-    { width: 32, height: 32, mipLevelCount: 6, _success: true }, // full mip chains are allowed (Mip level sizes: 32, 16, 8, 4, 2, 1)
-    { width: 31, height: 32, mipLevelCount: 6, _success: true }, // full mip chains are allowed (Mip level sizes: 31x32, 15x16, 7x8, 3x4, 1x2, 1x1)
-    { width: 32, height: 31, mipLevelCount: 6, _success: true }, // full mip chains are allowed (Mip level sizes: 32x31, 16x15, 8x7, 4x3, 2x1, 1x1)
-    { width: 31, height: 32, mipLevelCount: 7, _success: false }, // too big mip chains on width are disallowed (Mip level sizes: 31x32, 15x16, 7x8, 3x4, 1x2, 1x1, ?x?)
-    { width: 32, height: 31, mipLevelCount: 7, _success: false }, // too big mip chains on height are disallowed (Mip level sizes: 32x31, 16x15, 8x7, 4x3, 2x1, 1x1, ?x?)
-    { width: 32, height: 32, mipLevelCount: 100, _success: false }, // undefined shift check if miplevel is bigger than the integer bit width
-    { width: 32, height: 8, mipLevelCount: 6, _success: true }, // non square mip map halves the resolution until a 1x1 dimension. (Mip maps: 32 * 8, 16 * 4, 8 * 2, 4 * 1, 2 * 1, 1 * 1)
-  ])
-  .fn(async t => {
-    const { width, height, mipLevelCount, _success } = t.params;
-
-    const descriptor = t.getDescriptor({ width, height, mipLevelCount });
 
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);
