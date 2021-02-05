@@ -69,7 +69,7 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
                 vec3<f32>(-0.5, 0.5, 0.5),
                 vec3<f32>(0.5, 0.5, -0.5),
                 vec3<f32>(0.5, 0.5, 0.5));
-              # uv is pre-scaled to mimic repeating tiled texture
+              // uv is pre-scaled to mimic repeating tiled texture
               const uv : array<vec2<f32>, 6> = array<vec2<f32>, 6>(
                 vec2<f32>(0.0, 0.0),
                 vec2<f32>(1.0, 0.0),
@@ -77,7 +77,7 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
                 vec2<f32>(0.0, 50.0),
                 vec2<f32>(1.0, 0.0),
                 vec2<f32>(1.0, 50.0));
-              # draw a slanted plane in a specific way
+              // draw a slanted plane in a specific way
               const matrix : mat4x4<f32> = mat4x4<f32>(
                 vec4<f32>(-1.7320507764816284, 1.8322050568049563e-16, -6.176817699518044e-17, -6.170640314703498e-17),
                 vec4<f32>(-2.1211504944260596e-16, -1.496108889579773, 0.5043753981590271, 0.5038710236549377),
