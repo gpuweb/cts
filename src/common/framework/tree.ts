@@ -49,6 +49,7 @@ export interface TestSubtree<T extends TestQuery = TestQuery> {
   readonly children: Map<string, TestTreeNode>;
   readonly collapsible: boolean;
   description?: string;
+  readonly testCreationStack?: Error;
 }
 
 export interface TestTreeLeaf {
@@ -226,6 +227,7 @@ export async function loadTreeForQuery(
         subtreeL1,
         t.testPath,
         t.description,
+        t.testCreationStack,
         isCollapsible
       );
 
@@ -315,6 +317,7 @@ function addSubtreeForTestPath(
   tree: TestSubtree<TestQueryMultiTest>,
   test: readonly string[],
   description: string | undefined,
+  testCreationStack: Error,
   isCollapsible: (sq: TestQuery) => boolean
 ): TestSubtree<TestQueryMultiCase> {
   const subqueryTest: string[] = [];
@@ -349,6 +352,7 @@ function addSubtreeForTestPath(
       kWildcard,
       query,
       description,
+      testCreationStack,
       collapsible: isCollapsible(query),
     };
   });

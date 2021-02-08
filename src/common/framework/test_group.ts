@@ -34,6 +34,7 @@ export interface IterableTestGroup {
 export interface IterableTest {
   testPath: string[];
   description: string | undefined;
+  readonly testCreationStack: Error;
   iterate(): Iterable<RunCase>;
 }
 
@@ -118,12 +119,12 @@ interface TestBuilderWithSubParams<F extends Fixture, P extends {}, SubP extends
 class TestBuilder<F extends Fixture, P extends {}, SubP extends {}> {
   readonly testPath: string[];
   description: string | undefined;
+  readonly testCreationStack: Error;
 
   private readonly fixture: FixtureClass<F>;
   private testFn: TestFn<F, P, SubP> | undefined;
   private caseParams?: Iterable<P> = undefined;
   private subcaseParams?: (_: P) => Iterable<SubP> = undefined;
-  private testCreationStack: Error;
 
   constructor(testPath: string[], fixture: FixtureClass<F>, testCreationStack: Error) {
     this.testPath = testPath;
