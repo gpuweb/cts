@@ -1,18 +1,58 @@
 export const description = `
 vertexState validation tests.
 
-TODO: review existing tests, write descriptions, and make sure tests are complete.
-      Make sure the following is covered.
-> - In createRenderPipeline():
-> - An attribute is unused by the shader
-> - If invalid, test these (if valid, they should be operation tests instead):
->     - Vertex buffer with zero attributes
->     - Overlapping attributes
->         - Verify correct sizing of every vertex format
->     - Overlapping vertex buffer elements (an attribute offset + its size > arrayStride)
->     - Shader tries to use an attribute location that's not bound
->     - Alignment constraints on attributes, if any
->     - Alignment constraints on arrayStride, if any
+TODO: implement the combinations tests below.
+
+Test the number of vertex buffers allowed:
+ - For buffers = 0, 1, limit, limit + 1
+  - Test using empty vertex buffers except the last one with 0 or 1 element
+   - Test should fail IFF buffers > limit
+(note this also tests that empty vertex buffers are allowed)
+
+Test the limit of attributes:
+ - For attributePerBuffer = 0, 1, 4:
+  - For totalAttribs = 4, limit, limit + 1
+   - Generate buffers with attribsPerBuffer until we reach totalAttribs (or complete the last one to reach it)
+    - Test should fail IFF totalAttribs > limit
+
+Test the shaderLocation must be unique:
+ - TBD based on answer to https://github.com/gpuweb/gpuweb/issues/1418
+
+Test each declaration in the shader must have an attribute with that shaderLocation:
+ - For each shaderLocation TBD:
+  - For buffersIndex = 0 1, limit-1
+   - For attribute index = 0, 1, 4
+    - Create a vertexState with/without the attribute with that shader location at buffer[bufferIndex].attribs[attribIndex]
+     - Check error IFF vertexState doesn't have the shaderLocation
+
+Test each declaration must have a format compatible with the attribute:
+ - For each vertex format
+  - For each type of shader declaration
+   - Check error IFF shader declaration not compatible with the attribute's format.
+
+One-off test that many attributes can overlap.
+
+All tests below are for a vertex buffer index 0, 1, limit-1.
+
+Test the max stride check:
+ - For stride = 0, 4, 256, limit - 4, limit, limit +1
+  - Check error IFF stride > limit
+
+Test the stride alignment check:
+ - For stride = 0, 2, 4, limit -4, limit -2, limit:
+  - Check error IFF stride not aligned to 4
+
+Test check that the end attribute must be contained in the stride:
+ - For stride = 0 (special case), 4, 128, limit
+   - For each vertex format
+    - For offset stride, stride - componentsize(format), stride - sizeof(format), stride - sizeof(format) + componentsize(format), 0, 2^32 - componentsize(format), 2^32, 2**60
+      - Check error IFF offset + sizeof(format) > stride (or 2048 for 0)
+
+Test that an attribute must be aligned to the component size:
+ - For each vertex format
+  - For stride = 2*sizeof(format), 128, limit
+    - For offset = componentsize(format), componentsize(format) / 2, stride - sizeof(format) - componentsize(format), stride - sizeof(format)
+     - Check error IFF offset not aligned to componentsize(format);
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
