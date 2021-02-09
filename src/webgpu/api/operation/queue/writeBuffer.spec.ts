@@ -61,7 +61,7 @@ class F extends GPUTest {
     });
 
     // Initialize buffer to non-zero data (0xff)
-    const expectedData = new Uint8Array(range<number>(bufferSize, i => 0xff));
+    const expectedData = new Uint8Array(range<number>(bufferSize, () => 0xff));
     this.queue.writeBuffer(buffer, 0, expectedData);
 
     for (const { bufferOffset, data, arrayType, useArrayBuffer, dataOffset, dataSize } of writes) {
