@@ -259,7 +259,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
   /** Put data into a part of the texture with an appropriate method. */
   uploadLinearTextureDataToTextureSubBox(
     textureCopyView: TextureCopyViewWithRequiredOrigin,
-    textureDataLayout: GPUTextureDataLayout,
+    textureDataLayout: GPUImageDataLayout & { bytesPerRow: number },
     copySize: GPUExtent3DDict,
     partialData: Uint8Array,
     method: InitMethod,

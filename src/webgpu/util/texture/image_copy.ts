@@ -20,7 +20,7 @@ export function bytesInACompleteRow(copyWidth: number, format: SizedTextureForma
  * guess assuming `bytesPerRow` and `rowsPerImage` should be optimal.
  */
 export function dataBytesForCopy(
-  layout: GPUTextureDataLayout,
+  layout: GPUImageDataLayout,
   format: SizedTextureFormat,
   copyExtent: GPUExtent3DDict,
   { method }: { method: ImageCopyType }
