@@ -175,10 +175,8 @@ got [${failedByteActualValues.join(', ')}]`;
 export const g = makeTestGroup(F);
 
 g.test('from_ImageData')
-  .params(
+  .cases(
     params()
-      .combine(poptions('width', [1, 2, 4, 15, 255, 256]))
-      .combine(poptions('height', [1, 2, 4, 15, 255, 256]))
       .combine(poptions('alpha', ['none', 'premultiply']))
       .combine(poptions('orientation', ['none', 'flipY']))
       .combine(
@@ -194,6 +192,11 @@ g.test('from_ImageData')
           'rg16float',
         ] as const)
       )
+  )
+  .subcases(() =>
+    params()
+      .combine(poptions('width', [1, 2, 4, 15, 255, 256]))
+      .combine(poptions('height', [1, 2, 4, 15, 255, 256]))
   )
   .fn(async t => {
     const { width, height, alpha, orientation, dstColorFormat } = t.params;
@@ -278,7 +281,7 @@ g.test('from_ImageData')
   });
 
 g.test('from_canvas')
-  .params(
+  .subcases(() =>
     params()
       .combine(poptions('width', [1, 2, 4, 15, 255, 256]))
       .combine(poptions('height', [1, 2, 4, 15, 255, 256]))
