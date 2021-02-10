@@ -53,7 +53,7 @@ export const checkContentsBySampling: CheckContents = (
             };
 
             [[group(0), binding(0)]] var<uniform> constants : Constants;
-            [[group(0), binding(1)]] var<uniform_constant> myTexture : texture${_multisampled}${_xd}<${shaderType}>;
+            [[group(0), binding(1)]] var myTexture : texture${_multisampled}${_xd}<${shaderType}>;
 
             [[block]] struct Result {
               [[offset(0)]] values : [[stride(4)]] array<${shaderType}>;
