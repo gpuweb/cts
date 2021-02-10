@@ -203,6 +203,7 @@ export class ValidationTest extends GPUTest {
     return pipeline;
   }
 
+  // TODO: move this to a more general utils file so it can be used for operation tests
   createEncoder(encoderType: 'non-pass'): CommandBufferMaker<GPUCommandEncoder>;
   createEncoder(encoderType: 'render pass'): CommandBufferMaker<GPURenderPassEncoder>;
   createEncoder(encoderType: 'compute pass'): CommandBufferMaker<GPUComputePassEncoder>;

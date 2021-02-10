@@ -23,10 +23,11 @@ export type PerTexelComponent<T> = { [c in TexelComponent]?: T };
 
 export type ComponentDataType = 'uint' | 'sint' | 'unorm' | 'snorm' | 'float' | 'ufloat' | null;
 
-type TexelComponentInfo = PerTexelComponent<{
+export type ComponentInfo = {
   dataType: ComponentDataType;
   bitLength: number;
-}>;
+};
+type TexelComponentInfo = PerTexelComponent<ComponentInfo>;
 
 /**
  * Maps component values to component values
