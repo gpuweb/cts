@@ -40,13 +40,13 @@ Test that an attribute must be aligned to the component size:
 
 import { params, pbool, poptions } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+import {
+  kMaxVertexAttributes,
+  kMaxVertexBufferArrayStride,
+  kMaxVertexBuffers,
+} from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
-
-const MAX_VERTEX_ATTRIBUTES: number = 16;
-const MAX_VERTEX_BUFFER_END: number = 2048;
-const MAX_VERTEX_BUFFER_ARRAY_STRIDE: number = 2048;
-const MAX_VERTEX_BUFFERS: number = 8;
 
 const SIZEOF_FLOAT = Float32Array.BYTES_PER_ELEMENT;
 
@@ -129,7 +129,7 @@ g.test('max_vertex_buffer_limit')
   )
   .subcases(() =>
     params()
-      .combine(poptions('count', [0, 1, MAX_VERTEX_BUFFERS, MAX_VERTEX_BUFFERS + 1]))
+      .combine(poptions('count', [0, 1, kMaxVertexBuffers, kMaxVertexBuffers + 1]))
       .combine(pbool('lastEmpty'))
   )
   .fn(t => {
@@ -147,19 +147,19 @@ g.test('max_vertex_buffer_limit')
       }
     }
 
-    const success = count <= MAX_VERTEX_BUFFERS;
+    const success = count <= kMaxVertexBuffers;
     t.testVertexState(success, { vertexBuffers });
   });
 
 g.test('max_vertex_attribute_limit')
   .desc(
     `Test that only up to <maxVertexAttributes> vertex attributes are allowed.
-   - Tests with 0, 1, limit, limits + 1 vertex attributes.
+   - Tests with 0, 1, limit, limits + 1 vertex attribute.
    - Tests with 0, 1, 4 attributes per buffer (with remaining attributes in the last buffer).`
   )
   .subcases(() =>
     params()
-      .combine(poptions('attribCount', [0, 1, MAX_VERTEX_ATTRIBUTES, MAX_VERTEX_ATTRIBUTES + 1]))
+      .combine(poptions('attribCount', [0, 1, kMaxVertexAttributes, kMaxVertexAttributes + 1]))
       .combine(poptions('attribsPerBuffer', [0, 1, 4]))
   )
   .fn(t => {
@@ -171,7 +171,7 @@ g.test('max_vertex_attribute_limit')
     while (attribsAdded !== attribCount) {
       // Choose how many attributes to add for this buffer. The last buffer gets all remaining attributes.
       let targetCount = Math.min(attribCount, attribsAdded + attribsPerBuffer);
-      if (vertexBuffers.length === MAX_VERTEX_BUFFERS - 1) {
+      if (vertexBuffers.length === kMaxVertexBuffers - 1) {
         targetCount = attribCount;
       }
 
@@ -184,7 +184,7 @@ g.test('max_vertex_attribute_limit')
       vertexBuffers.push({ arrayStride: 0, attributes });
     }
 
-    const success = attribCount <= MAX_VERTEX_ATTRIBUTES;
+    const success = attribCount <= kMaxVertexAttributes;
     t.testVertexState(success, { vertexBuffers });
   });
 
@@ -196,15 +196,15 @@ g.test('max_vertex_buffer_array_stride_limit')
   )
   .subcases(() =>
     params()
-      .combine(poptions('vertexBufferIndex', [0, 1, MAX_VERTEX_BUFFERS - 1]))
+      .combine(poptions('vertexBufferIndex', [0, 1, kMaxVertexBuffers - 1]))
       .combine(
         poptions('arrayStride', [
           0,
           4,
           256,
-          MAX_VERTEX_BUFFER_ARRAY_STRIDE - 4,
-          MAX_VERTEX_BUFFER_ARRAY_STRIDE,
-          MAX_VERTEX_BUFFER_ARRAY_STRIDE + 4,
+          kMaxVertexBufferArrayStride - 4,
+          kMaxVertexBufferArrayStride,
+          kMaxVertexBufferArrayStride + 4,
         ])
       )
   )
@@ -214,7 +214,7 @@ g.test('max_vertex_buffer_array_stride_limit')
     const vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [];
     vertexBuffers[vertexBufferIndex] = { arrayStride, attributes: [] };
 
-    const success = arrayStride <= MAX_VERTEX_BUFFER_ARRAY_STRIDE;
+    const success = arrayStride <= kMaxVertexBufferArrayStride;
     t.testVertexState(success, { vertexBuffers });
   });
 
@@ -226,16 +226,16 @@ g.test('vertex_buffer_array_stride_limit_alignment')
   )
   .subcases(() =>
     params()
-      .combine(poptions('vertexBufferIndex', [0, 1, MAX_VERTEX_BUFFERS - 1]))
+      .combine(poptions('vertexBufferIndex', [0, 1, kMaxVertexBuffers - 1]))
       .combine(
         poptions('arrayStride', [
           0,
           1,
           2,
           4,
-          MAX_VERTEX_BUFFER_ARRAY_STRIDE - 4,
-          MAX_VERTEX_BUFFER_ARRAY_STRIDE - 2,
-          MAX_VERTEX_BUFFER_ARRAY_STRIDE,
+          kMaxVertexBufferArrayStride - 4,
+          kMaxVertexBufferArrayStride - 2,
+          kMaxVertexBufferArrayStride,
         ])
       )
   )
@@ -258,11 +258,11 @@ g.test('vertex_attribute_shaderLocation_limit')
   )
   .subcases(() =>
     params()
-      .combine(poptions('vertexBufferIndex', [0, 1, MAX_VERTEX_BUFFERS - 1]))
-      .combine(poptions('extraAttributes', [0, 1, MAX_VERTEX_ATTRIBUTES - 1]))
+      .combine(poptions('vertexBufferIndex', [0, 1, kMaxVertexBuffers - 1]))
+      .combine(poptions('extraAttributes', [0, 1, kMaxVertexAttributes - 1]))
       .combine(pbool('testAttributeAtStart'))
       .combine(
-        poptions('testShaderLocation', [0, 1, MAX_VERTEX_ATTRIBUTES - 1, MAX_VERTEX_ATTRIBUTES])
+        poptions('testShaderLocation', [0, 1, kMaxVertexAttributes - 1, kMaxVertexAttributes])
       )
   )
   .fn(t => {
@@ -299,7 +299,7 @@ g.test('vertex_attribute_shaderLocation_limit')
     const vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [];
     vertexBuffers[vertexBufferIndex] = { arrayStride: 256, attributes };
 
-    const success = testShaderLocation < MAX_VERTEX_ATTRIBUTES;
+    const success = testShaderLocation < kMaxVertexAttributes;
     t.testVertexState(success, { vertexBuffers });
   });
 
@@ -559,7 +559,7 @@ g.test('check_out_of_bounds_condition_on_attribute_shader_location').fn(async t 
       {
         arrayStride: 0,
         attributes: [
-          { format: 'float' as const, offset: 0, shaderLocation: MAX_VERTEX_ATTRIBUTES - 1 },
+          { format: 'float' as const, offset: 0, shaderLocation: kMaxVertexAttributes - 1 },
         ],
       },
     ],
@@ -571,7 +571,7 @@ g.test('check_out_of_bounds_condition_on_attribute_shader_location').fn(async t 
   }
   {
     // Test attribute location OOB
-    vertexState.vertexBuffers[0].attributes[0].shaderLocation = MAX_VERTEX_ATTRIBUTES;
+    vertexState.vertexBuffers[0].attributes[0].shaderLocation = kMaxVertexAttributes;
     const descriptor = t.getDescriptor(vertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
 
     t.expectValidationError(() => {
@@ -588,7 +588,7 @@ g.test('check_attribute_offset_out_of_bounds').fn(async t => {
         attributes: [
           {
             format: 'float2' as const,
-            offset: MAX_VERTEX_BUFFER_END - 2 * SIZEOF_FLOAT,
+            offset: kMaxVertexBufferArrayStride - 2 * SIZEOF_FLOAT,
             shaderLocation: 0,
           },
         ],
@@ -608,7 +608,7 @@ g.test('check_attribute_offset_out_of_bounds').fn(async t => {
   }
   {
     // Test attribute offset out of bounds
-    vertexState.vertexBuffers[0].attributes[0].offset = MAX_VERTEX_BUFFER_END - 4;
+    vertexState.vertexBuffers[0].attributes[0].offset = kMaxVertexBufferArrayStride - 4;
     const descriptor = t.getDescriptor(vertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
 
     t.expectValidationError(() => {
