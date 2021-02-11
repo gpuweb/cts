@@ -31,3 +31,5 @@ Generally, see:
     - `dataBytesForCopy` Validates a copy and computes the number of bytes it needs.
 - [`util/buffer.ts`](../src/webgpu/util/buffer.ts)
     - `makeBufferWithContents` Creates a buffer with the contents of some TypedArray.
+- [`util/unions.ts`](../src/webgpu/util/unions.ts)
+    - `standardizeExtent3D` Standardizes a `GPUExtent3D` into a `Required<GPUExtent3DDict>`.
