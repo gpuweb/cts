@@ -1,6 +1,7 @@
 import { assert } from '../../../common/framework/util/util.js';
 import { kSizedTextureFormatInfo, SizedTextureFormat } from '../../capability_info.js';
 import { align } from '../math.js';
+import { standardizeExtent3D } from '../unions.js';
 
 export type ImageCopyType = 'WriteTexture' | 'CopyB2T' | 'CopyT2B';
 export const kImageCopyTypes: readonly ImageCopyType[] = [
@@ -22,9 +23,11 @@ export function bytesInACompleteRow(copyWidth: number, format: SizedTextureForma
 export function dataBytesForCopy(
   layout: GPUImageDataLayout,
   format: SizedTextureFormat,
-  copyExtent: GPUExtent3DDict,
+  copyExtentValue: GPUExtent3D,
   { method }: { method: ImageCopyType }
 ): { minDataSize: number; valid: boolean } {
+  const copyExtent = standardizeExtent3D(copyExtentValue);
+
   const info = kSizedTextureFormatInfo[format];
   assert(copyExtent.width % info.blockWidth === 0);
   const widthInBlocks = copyExtent.width / info.blockWidth;
