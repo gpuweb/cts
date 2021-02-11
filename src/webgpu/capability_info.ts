@@ -146,6 +146,11 @@ export const kCompressedTextureFormatInfo = /* prettier-ignore */ makeTable(kTex
   'bc7-rgba-unorm-srgb':  [            ,        ,        ,          ,          ,          ,          ,              16,            4,             4, 'texture-compression-bc'],
 } as const);
 
+export type RegularTextureFormat = keyof typeof kRegularTextureFormatInfo;
+export type SizedDepthStencilFormat = keyof typeof kSizedDepthStencilFormatInfo;
+export type UnsizedDepthStencilFormat = keyof typeof kUnsizedDepthStencilFormatInfo;
+export type CompressedTextureFormat = keyof typeof kCompressedTextureFormatInfo;
+
 export const kRegularTextureFormats = keysOf(kRegularTextureFormatInfo);
 export const kSizedDepthStencilFormats = keysOf(kSizedDepthStencilFormatInfo);
 export const kUnsizedDepthStencilFormats = keysOf(kUnsizedDepthStencilFormatInfo);
