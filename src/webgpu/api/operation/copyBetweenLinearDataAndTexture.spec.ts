@@ -847,23 +847,23 @@ g.test('copy_with_various_origins_and_copy_extents')
  * Generates textureSizes which correspond to the same physicalSizeAtMipLevel including virtual
  * sizes at mip level different from the physical ones.
  */
-function* textureSizeExpander({
+function* generateTestTextureSizes({
   format,
   mipLevel,
-  _texturePhysicalSizeAtMipLevelInBlocks,
+  _mipSizeInBlocks,
 }: {
   format: SizedTextureFormat;
   mipLevel: number;
-  _texturePhysicalSizeAtMipLevelInBlocks: GPUExtent3DDict;
+  _mipSizeInBlocks: GPUExtent3DDict;
 }): Generator<{ textureSize: [number, number, number] }> {
   const info = kSizedTextureFormatInfo[format];
 
-  const widthAtThisLevel = _texturePhysicalSizeAtMipLevelInBlocks.width * info.blockWidth;
-  const heightAtThisLevel = _texturePhysicalSizeAtMipLevelInBlocks.height * info.blockHeight;
+  const widthAtThisLevel = _mipSizeInBlocks.width * info.blockWidth;
+  const heightAtThisLevel = _mipSizeInBlocks.height * info.blockHeight;
   const textureSize: [number, number, number] = [
     widthAtThisLevel << mipLevel,
     heightAtThisLevel << mipLevel,
-    _texturePhysicalSizeAtMipLevelInBlocks.depth,
+    _mipSizeInBlocks.depth,
   ];
   yield {
     textureSize,
@@ -919,47 +919,47 @@ g.test('copy_various_mip_levels')
         {
           copySizeInBlocks: { width: 5, height: 4, depth: 1 },
           originInBlocks: { x: 3, y: 2, z: 0 },
-          _texturePhysicalSizeAtMipLevelInBlocks: { width: 8, height: 6, depth: 1 },
+          _mipSizeInBlocks: { width: 8, height: 6, depth: 1 },
           mipLevel: 1,
         },
         // origin + copySize = texturePhysicalSizeAtMipLevel for all coordinates, 2d-array texture
         {
           copySizeInBlocks: { width: 5, height: 4, depth: 2 },
           originInBlocks: { x: 3, y: 2, z: 1 },
-          _texturePhysicalSizeAtMipLevelInBlocks: { width: 8, height: 6, depth: 3 },
+          _mipSizeInBlocks: { width: 8, height: 6, depth: 3 },
           mipLevel: 2,
         },
         // origin.x + copySize.width = texturePhysicalSizeAtMipLevel.width
         {
           copySizeInBlocks: { width: 5, height: 4, depth: 2 },
           originInBlocks: { x: 3, y: 2, z: 1 },
-          _texturePhysicalSizeAtMipLevelInBlocks: { width: 8, height: 7, depth: 4 },
+          _mipSizeInBlocks: { width: 8, height: 7, depth: 4 },
           mipLevel: 3,
         },
         // origin.y + copySize.height = texturePhysicalSizeAtMipLevel.height
         {
           copySizeInBlocks: { width: 5, height: 4, depth: 2 },
           originInBlocks: { x: 3, y: 2, z: 1 },
-          _texturePhysicalSizeAtMipLevelInBlocks: { width: 9, height: 6, depth: 4 },
+          _mipSizeInBlocks: { width: 9, height: 6, depth: 4 },
           mipLevel: 4,
         },
         // origin.z + copySize.depth = texturePhysicalSizeAtMipLevel.depth
         {
           copySizeInBlocks: { width: 5, height: 4, depth: 2 },
           originInBlocks: { x: 3, y: 2, z: 1 },
-          _texturePhysicalSizeAtMipLevelInBlocks: { width: 9, height: 7, depth: 3 },
+          _mipSizeInBlocks: { width: 9, height: 7, depth: 3 },
           mipLevel: 5,
         },
         // origin + copySize < texturePhysicalSizeAtMipLevel for all coordinates
         {
           copySizeInBlocks: { width: 5, height: 4, depth: 2 },
           originInBlocks: { x: 3, y: 2, z: 1 },
-          _texturePhysicalSizeAtMipLevelInBlocks: { width: 9, height: 7, depth: 4 },
+          _mipSizeInBlocks: { width: 9, height: 7, depth: 4 },
           mipLevel: 6,
         },
       ])
-      .expand(({ mipLevel, _texturePhysicalSizeAtMipLevelInBlocks }) =>
-        textureSizeExpander({ mipLevel, _texturePhysicalSizeAtMipLevelInBlocks, format: p.format })
+      .expand(({ mipLevel, _mipSizeInBlocks }) =>
+        generateTestTextureSizes({ mipLevel, _mipSizeInBlocks, format: p.format })
       )
   )
   .fn(async t => {
