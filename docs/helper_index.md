@@ -29,3 +29,5 @@ Generally, see:
 - [`util/texture/image_copy.ts`](../src/webgpu/util/texture/image_copy.ts)
     - `bytesInACompleteRow` Computes bytesInACompleteRow for image copies (B2T/T2B/writeTexture).
     - `dataBytesForCopy` Validates a copy and computes the number of bytes it needs.
+- [`util/buffer.ts`](../src/webgpu/util/buffer.ts)
+    - `makeBufferWithContents` Creates a buffer with the contents of some TypedArray.
