@@ -3,15 +3,6 @@ vertexState validation tests.
 
 TODO: implement the combinations tests below.
 
-TODO Test location= declarations in the shader.
-
-Test each declaration in the shader must have an attribute with that shaderLocation:
- - For each shaderLocation TBD:
-  - For buffersIndex = 0 1, limit-1
-   - For attribute index = 0, 1, 4
-    - Create a vertexState with/without the attribute with that shader location at buffer[bufferIndex].attribs[attribIndex]
-     - Check error IFF vertexState doesn't have the shaderLocation
-
 Test each declaration must have a format compatible with the attribute:
  - For each vertex format
   - For each type of shader declaration
@@ -20,10 +11,6 @@ Test each declaration must have a format compatible with the attribute:
 One-off test that many attributes can overlap.
 
 All tests below are for a vertex buffer index 0, 1, limit-1.
-
-Test the shaderLocation must be unique:
- - For attribute 0, 1, limit - 1.
-  - For target attribute value 0, 1, limit -1, limit.
 
 Test check that the end attribute must be contained in the stride:
  - For stride = 0 (special case), 4, 128, limit
@@ -115,6 +102,26 @@ class F extends ValidationTest {
         colorStates: [{ format: 'rgba8unorm' }],
       });
     }, !success);
+  }
+
+  generateTestVertexShader(inputs: { type: string; location: number }[]): string {
+    let interfaces = '';
+    let body = '';
+
+    const count = 0;
+    for (const input of inputs) {
+      interfaces += `[[location(${input.location})]] var<in> input${count} : ${input.type};\n`;
+      body += `var i${count} : ${input.type} = input${count};\n`;
+    }
+
+    return `
+      [[builtin(position)]] var<out> Position : vec4<f32>;
+      ${interfaces}
+      [[stage(vertex)]] fn main() -> void {
+        Position = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+        ${body}
+      }
+    `;
   }
 }
 
@@ -303,73 +310,169 @@ g.test('vertex_attribute_shaderLocation_limit')
     t.testVertexState(success, { vertexBuffers });
   });
 
-g.test('pipeline_vertex_buffers_are_backed_by_attributes_in_vertex_input').fn(async t => {
-  const vertexState: GPUVertexStateDescriptor = {
-    vertexBuffers: [
+g.test('vertex_attribute_shaderLocation_unique')
+  .desc(
+    `Test that shaderLocation must be unique in the vertex state.
+   - Test for various pairs of buffers that contain the potentially conflicting attributes
+   - Test for the potentially conflicting attributes in various places in the buffers (with dummy attributes)
+   - Test for various shaderLocations that conflict or not`
+  )
+  .subcases(() =>
+    params()
+      .combine(poptions('vertexBufferIndexA', [0, 1, kMaxVertexBuffers - 1]))
+      .combine(poptions('vertexBufferIndexB', [0, 1, kMaxVertexBuffers - 1]))
+      .combine(pbool('testAttributeAtStartA'))
+      .combine(pbool('testAttributeAtStartB'))
+      .combine(poptions('shaderLocationA', [0, 1, 7, kMaxVertexAttributes - 1]))
+      .combine(poptions('shaderLocationB', [0, 1, 7, kMaxVertexAttributes - 1]))
+      .combine(poptions('extraAttributes', [0, 4]))
+  )
+  .fn(t => {
+    const {
+      vertexBufferIndexA,
+      vertexBufferIndexB,
+      testAttributeAtStartA,
+      testAttributeAtStartB,
+      shaderLocationA,
+      shaderLocationB,
+      extraAttributes,
+    } = t.params;
+
+    const vertexBufferAttributes: GPUVertexAttributeDescriptor[][] = [];
+    vertexBufferAttributes[vertexBufferIndexA] = [];
+    vertexBufferAttributes[vertexBufferIndexB] = [];
+
+    // Add the dummy attributes for attribute A
+    const attributesA = vertexBufferAttributes[vertexBufferIndexA];
+    let currentLocation = 0;
+    for (let i = 0; i < extraAttributes; i++) {
+      if (currentLocation === shaderLocationA || currentLocation === shaderLocationB) {
+        currentLocation++;
+        continue;
+      }
+
+      attributesA.push({ format: 'float', shaderLocation: currentLocation, offset: 0 });
+      currentLocation++;
+    }
+
+    // Add attribute A
+    if (testAttributeAtStartA) {
+      attributesA.unshift({ format: 'float', offset: 0, shaderLocation: shaderLocationA });
+    } else {
+      attributesA.push({ format: 'float', offset: 0, shaderLocation: shaderLocationA });
+    }
+
+    // Add attribute B potentially in the same list of attributes as A
+    const attributesB = vertexBufferAttributes[vertexBufferIndexB];
+    if (testAttributeAtStartB) {
+      attributesB.unshift({ format: 'float', offset: 0, shaderLocation: shaderLocationB });
+    } else {
+      attributesB.push({ format: 'float', offset: 0, shaderLocation: shaderLocationB });
+    }
+
+    // Use the attributes to make the list of vertex buffers not that we might be setting the same vertex
+    // buffer twice but that only happens when it is the only vertex buffer.
+    const vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [];
+    vertexBuffers[vertexBufferIndexA] = { arrayStride: 256, attributes: attributesA };
+    vertexBuffers[vertexBufferIndexB] = { arrayStride: 256, attributes: attributesB };
+
+    const success = shaderLocationA !== shaderLocationB;
+    t.testVertexState(success, { vertexBuffers });
+  });
+
+g.test('vertex_shader_input_location_limit')
+  .desc(
+    `Test that vertex shader's input's location decoration must be less than maxVertexAttributes.
+   - Test for shaderLocation 0, 1, limit - 1, limit`
+  )
+  .subcases(() =>
+    params().combine(
+      poptions('testLocation', [0, 1, kMaxVertexAttributes - 1, kMaxVertexAttributes])
+    )
+  )
+  .fn(t => {
+    const { testLocation } = t.params;
+
+    const shader = t.generateTestVertexShader([
       {
-        arrayStride: 2 * SIZEOF_FLOAT,
+        type: 'vec4<f32>',
+        location: testLocation,
+      },
+    ]);
+
+    const vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [
+      {
+        arrayStride: 512,
         attributes: [
           {
             format: 'float',
             offset: 0,
-            shaderLocation: 0,
-          },
-          {
-            format: 'float',
-            offset: 0,
-            shaderLocation: 1,
+            shaderLocation: testLocation,
           },
         ],
       },
-    ],
-  };
-  {
-    // Control case: pipeline with one input per attribute
-    const code = `
-      [[location(0)]] var<in> a : vec4<f32>;
-      [[location(1)]] var<in> b : vec4<f32>;
+    ];
 
-      [[builtin(position)]] var<out> Position : vec4<f32>;
-      [[stage(vertex)]] fn main() -> void {
-        Position = vec4<f32>(0.0, 0.0, 0.0, 0.0);
-        return;
+    const success = testLocation < kMaxVertexAttributes;
+    t.testVertexState(success, { vertexBuffers }, shader);
+  });
+
+g.test('vertex_shader_input_location_in_vertex_state')
+  .desc(``)
+  .subcases(() =>
+    params()
+      .combine(poptions('vertexBufferIndex', [0, 1, kMaxVertexBuffers - 1]))
+      .combine(poptions('extraAttributes', [0, 1, kMaxVertexAttributes - 1]))
+      .combine(pbool('testAttributeAtStart'))
+      .combine(poptions('testShaderLocation', [0, 1, 4, 7, kMaxVertexAttributes - 1]))
+  )
+  .fn(t => {
+    const {
+      vertexBufferIndex,
+      extraAttributes,
+      testAttributeAtStart,
+      testShaderLocation,
+    } = t.params;
+    // We have a shader using `testShaderLocation`.
+    const shader = t.generateTestVertexShader([
+      {
+        type: 'vec4<f32>',
+        location: testShaderLocation,
+      },
+    ]);
+
+    // Fill attributes with a bunch of attributes for other locations.
+    const attributes: GPUVertexAttributeDescriptor[] = [];
+
+    let currentLocation = 0;
+    for (let i = 0; i < extraAttributes; i++) {
+      if (currentLocation === testShaderLocation) {
+        currentLocation++;
       }
-  `;
-    const descriptor = t.getDescriptor(vertexState, code);
-    t.device.createRenderPipeline(descriptor);
-  }
-  {
-    // Check it is valid for the pipeline to use a subset of the VertexState
-    const code = `
-      [[location(0)]] var<in> a : vec4<f32>;
 
-      [[builtin(position)]] var<out> Position : vec4<f32>;
-      [[stage(vertex)]] fn main() -> void {
-        Position = vec4<f32>(0.0, 0.0, 0.0, 0.0);
-        return;
-      }
-    `;
-    const descriptor = t.getDescriptor(vertexState, code);
-    t.device.createRenderPipeline(descriptor);
-  }
-  {
-    // Check for an error when the pipeline uses an attribute not in the vertex input
-    const code = `
-      [[location(2)]] var<in> a : vec4<f32>;
+      attributes.push({ format: 'float', shaderLocation: currentLocation, offset: 0 });
+      currentLocation++;
+    }
 
-      [[builtin(position)]] var<out> Position : vec4<f32>;
-      [[stage(vertex)]] fn main() -> void {
-        Position = vec4<f32>(0.0, 0.0, 0.0, 0.0);
-        return;
-      }
-    `;
-    const descriptor = t.getDescriptor(vertexState, code);
+    // Using that vertex state is invalid because the vertex state doesn't contain the test location
+    const vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [];
+    vertexBuffers[vertexBufferIndex] = { arrayStride: 256, attributes };
+    t.testVertexState(false, { vertexBuffers }, shader);
 
-    t.expectValidationError(() => {
-      t.device.createRenderPipeline(descriptor);
-    });
-  }
-});
+    // Add an attribute for the test location and try again.
+    const testAttribute: GPUVertexAttributeDescriptor = {
+      format: 'float',
+      shaderLocation: testShaderLocation,
+      offset: 0,
+    };
+    if (testAttributeAtStart) {
+      attributes.unshift(testAttribute);
+    } else {
+      attributes.push(testAttribute);
+    }
+
+    t.testVertexState(true, { vertexBuffers }, shader);
+  });
 
 g.test('offset_should_be_within_vertex_buffer_arrayStride_if_arrayStride_is_not_zero').fn(
   async t => {
@@ -459,124 +562,6 @@ g.test('check_two_attributes_overlapping').fn(async t => {
     overlappingVertexState.vertexBuffers[0].attributes[0].format = 'int2';
     const descriptor = t.getDescriptor(overlappingVertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
     t.device.createRenderPipeline(descriptor);
-  }
-});
-
-g.test('identical_duplicate_attributes_are_invalid').fn(async t => {
-  const vertexState = {
-    vertexBuffers: [
-      {
-        arrayStride: 0,
-        attributes: [{ format: 'float' as const, offset: 0, shaderLocation: 0 }],
-      },
-    ],
-  };
-  {
-    // Control case, setting attribute 0
-    const descriptor = t.getDescriptor(vertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
-    t.device.createRenderPipeline(descriptor);
-  }
-  {
-    // Oh no, attribute 0 is set twice
-    vertexState.vertexBuffers[0].attributes.push({
-      format: 'float' as const,
-      offset: 0,
-      shaderLocation: 0,
-    });
-    const descriptor = t.getDescriptor(vertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
-
-    t.expectValidationError(() => {
-      t.device.createRenderPipeline(descriptor);
-    });
-  }
-});
-
-g.test('we_cannot_set_same_shader_location').fn(async t => {
-  {
-    const vertexState = {
-      vertexBuffers: [
-        {
-          arrayStride: 0,
-          attributes: [
-            { format: 'float' as const, offset: 0, shaderLocation: 0 },
-            { format: 'float' as const, offset: SIZEOF_FLOAT, shaderLocation: 1 },
-          ],
-        },
-      ],
-    };
-    {
-      // Control case, setting different shader locations in two attributes
-      const descriptor = t.getDescriptor(vertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
-      t.device.createRenderPipeline(descriptor);
-    }
-    {
-      // Test same shader location in two attributes in the same buffer
-      vertexState.vertexBuffers[0].attributes[1].shaderLocation = 0;
-      const descriptor = t.getDescriptor(vertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
-
-      t.expectValidationError(() => {
-        t.device.createRenderPipeline(descriptor);
-      });
-    }
-  }
-  {
-    const vertexState: GPUVertexStateDescriptor = {
-      vertexBuffers: [
-        {
-          arrayStride: 0,
-          attributes: [
-            {
-              format: 'float',
-              offset: 0,
-              shaderLocation: 0,
-            },
-          ],
-        },
-        {
-          arrayStride: 0,
-          attributes: [
-            {
-              format: 'float',
-              offset: 0,
-              shaderLocation: 0,
-            },
-          ],
-        },
-      ],
-    };
-    // Test same shader location in two attributes in different buffers
-    const descriptor = t.getDescriptor(vertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
-
-    t.expectValidationError(() => {
-      t.device.createRenderPipeline(descriptor);
-    });
-  }
-});
-
-g.test('check_out_of_bounds_condition_on_attribute_shader_location').fn(async t => {
-  const vertexState = {
-    vertexBuffers: [
-      {
-        arrayStride: 0,
-        attributes: [
-          { format: 'float' as const, offset: 0, shaderLocation: kMaxVertexAttributes - 1 },
-        ],
-      },
-    ],
-  };
-  {
-    // Control case, setting last attribute shader location
-    const descriptor = t.getDescriptor(vertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
-    t.device.createRenderPipeline(descriptor);
-  }
-  {
-    // Test attribute location OOB
-    vertexState.vertexBuffers[0].attributes[0].shaderLocation = kMaxVertexAttributes;
-    const descriptor = t.getDescriptor(vertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
-
-    t.expectValidationError(() => {
-      t.device.createRenderPipeline(descriptor);
-    });
   }
 });
 
