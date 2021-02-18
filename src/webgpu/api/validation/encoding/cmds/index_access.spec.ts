@@ -129,7 +129,7 @@ class F extends ValidationTest {
 export const g = makeTestGroup(F);
 
 g.test('out_of_bounds')
-  .params(
+  .cases(
     params()
       .combine(pbool('indirect')) // indirect drawIndexed
       .combine([
@@ -141,12 +141,14 @@ g.test('out_of_bounds')
       ] as const)
       .combine(poptions('instanceCount', [1, 10000])) // normal and large instanceCount
   )
-  .fn(t => {
+  .fn(async t => {
     const { indirect, indexCount, firstIndex, instanceCount } = t.params;
 
     if (indirect) {
       t.drawIndexedIndirect(new Uint32Array([indexCount, instanceCount, firstIndex, 0, 0]), 0);
     } else {
-      t.drawIndexed(indexCount, instanceCount, firstIndex, 0, 0);
+      t.expectValidationError(() => {
+        t.drawIndexed(indexCount, instanceCount, firstIndex, 0, 0);
+      });
     }
   });
