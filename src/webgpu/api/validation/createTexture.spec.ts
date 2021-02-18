@@ -33,6 +33,7 @@ TODO: move destroy tests out of this file
 import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { kAllTextureFormats, kAllTextureFormatInfo } from '../../capability_info.js';
+import { maxMipLevelCount } from '../../util/texture/base.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -165,37 +166,37 @@ g.test('mipLevelCount,bound_check')
     TODO: test compressed texture`
   )
   .subcases(() => [
-    { size: [32, 32], mipLevelCount: 6, _success: true }, // Mip level sizes: 32x32, 16x16, 8x8, 4x4, 2x2, 1x1
-    { size: [31, 32], mipLevelCount: 6, _success: true }, // Mip level sizes: 31x32, 15x16, 7x8, 3x4, 1x2, 1x1
-    { size: [32, 31], mipLevelCount: 6, _success: true }, // Mip level sizes: 32x31, 16x15, 8x7, 4x3, 2x1, 1x1
-    { size: [31, 32], mipLevelCount: 7, _success: false }, // Mip level sizes: 31x32, 15x16, 7x8, 3x4, 1x2, 1x1, ?x?
-    { size: [32, 31], mipLevelCount: 7, _success: false }, // Mip level sizes: 32x31, 16x15, 8x7, 4x3, 2x1, 1x1, ?x?
-    { size: [31, 31], mipLevelCount: 5, _success: true }, // Mip level sizes: 31x31, 15x15, 7x7, 3x3, 1x1
-    { size: [31, 31], mipLevelCount: 6, _success: false }, // Mip level sizes: 31x31, 15x15, 7x7, 3x3, 1x1, ?x?
-    { size: [32], dimension: '1d' as const, mipLevelCount: 6, _success: true }, // Mip level sizes: 32, 16, 8, 4, 2, 1
-    { size: [32], dimension: '1d' as const, mipLevelCount: 7, _success: false }, // Mip level sizes: 32, 16, 8, 4, 2, 1, ?
-    { size: [31], dimension: '1d' as const, mipLevelCount: 5, _success: true }, // Mip level sizes: 31, 15, 7, 3, 1
-    { size: [31], dimension: '1d' as const, mipLevelCount: 6, _success: false }, // Mip level sizes: 31, 15, 7, 3, 1, ?
-    { size: [32, 32, 32], dimension: '3d' as const, mipLevelCount: 6, _success: true }, // Mip level sizes: 32x32x32, 16x16x16, 8x8x8, 4x4x4, 2x2x2, 1x1x1
-    { size: [32, 32, 32], dimension: '3d' as const, mipLevelCount: 7, _success: false }, // Mip level sizes: 32x32x32, 16x16x16, 8x8x8, 4x4x4, 2x2x2, 1x1x1, ?x?x?
-    { size: [32, 31, 31], dimension: '3d' as const, mipLevelCount: 6, _success: true }, // Mip level sizes: 32x31x31, 16x15x15, 8x7x7, 4x3x3, 2x1x1, 1x1x1
-    { size: [32, 31, 31], dimension: '3d' as const, mipLevelCount: 7, _success: false }, // Mip level sizes: 32x31x31, 16x15x15, 8x7x7, 4x3x3, 2x1x1, 1x1x1, ?x?x?
-    { size: [31, 32, 31], dimension: '3d' as const, mipLevelCount: 6, _success: true }, // Mip level sizes: 31x32x31, 15x16x15, 7x8x7, 3x4x3, 1x2x1, 1x1x1
-    { size: [31, 32, 31], dimension: '3d' as const, mipLevelCount: 7, _success: false }, // Mip level sizes: 31x32x31, 15x16x15, 7x8x7, 3x4x3, 1x2x1, 1x1x1, ?x?x?
-    { size: [31, 31, 32], dimension: '3d' as const, mipLevelCount: 6, _success: true }, // Mip level sizes: 31x31x32, 15x15x16, 7x7x8, 3x3x4, 1x1x2, 1x1x1
-    { size: [31, 31, 32], dimension: '3d' as const, mipLevelCount: 7, _success: false }, // Mip level sizes: 31x31x32, 15x15x16, 7x7x8, 3x3x4, 1x1x2, 1x1x1, ?x?x?
-    { size: [31, 31, 31], dimension: '3d' as const, mipLevelCount: 5, _success: true }, // Mip level sizes: 31x31x31, 15x15x15, 7x7x7, 3x3x3, 1x1x1
-    { size: [31, 31, 31], dimension: '3d' as const, mipLevelCount: 6, _success: false }, // Mip level sizes: 31x31x31, 15x15x15, 7x7x7, 3x3x3, 1x1x1, ?x?x?
-    { size: [32, 32], mipLevelCount: 100, _success: false }, // undefined shift check if miplevel is bigger than the integer bit width
-    { size: [32, 8], mipLevelCount: 6, _success: true }, // Mip levels: 32x8, 16x4, 8x2, 4x1, 2x1, 1x1
-    { size: [32, 8], mipLevelCount: 7, _success: true }, // Mip levels: 32x8, 16x4, 8x2, 4x1, 2x1, 1x1
-    { size: [32, 32, 64], mipLevelCount: 7, _success: false }, // Mip levels: 32x32x64, 16x16x64, 8x8x64, 4x4x64, 2x2x64, 1x1x64, ?x?x64
-    { size: [32, 32, 64], dimension: '3d' as const, mipLevelCount: 7, _success: true }, // Mip levels: 32x32x64, 16x16x32, 8x8x16, 4x4x8, 2x2x4, 1x1x2, 1x1x1
+    { size: [32, 32], mipLevelCount: 6 }, // Mip level sizes: 32x32, 16x16, 8x8, 4x4, 2x2, 1x1
+    { size: [31, 32], mipLevelCount: 6 }, // Mip level sizes: 31x32, 15x16, 7x8, 3x4, 1x2, 1x1
+    { size: [32, 31], mipLevelCount: 6 }, // Mip level sizes: 32x31, 16x15, 8x7, 4x3, 2x1, 1x1
+    { size: [31, 32], mipLevelCount: 7 }, // Mip level sizes: 31x32, 15x16, 7x8, 3x4, 1x2, 1x1, ?x?
+    { size: [32, 31], mipLevelCount: 7 }, // Mip level sizes: 32x31, 16x15, 8x7, 4x3, 2x1, 1x1, ?x?
+    { size: [31, 31], mipLevelCount: 5 }, // Mip level sizes: 31x31, 15x15, 7x7, 3x3, 1x1
+    { size: [31, 31], mipLevelCount: 6 }, // Mip level sizes: 31x31, 15x15, 7x7, 3x3, 1x1, ?x?
+    { size: [32], dimension: '1d' as const, mipLevelCount: 6 }, // Mip level sizes: 32, 16, 8, 4, 2, 1
+    { size: [32], dimension: '1d' as const, mipLevelCount: 7 }, // Mip level sizes: 32, 16, 8, 4, 2, 1, ?
+    { size: [31], dimension: '1d' as const, mipLevelCount: 5 }, // Mip level sizes: 31, 15, 7, 3, 1
+    { size: [31], dimension: '1d' as const, mipLevelCount: 6 }, // Mip level sizes: 31, 15, 7, 3, 1, ?
+    { size: [32, 32, 32], dimension: '3d' as const, mipLevelCount: 6 }, // Mip level sizes: 32x32x32, 16x16x16, 8x8x8, 4x4x4, 2x2x2, 1x1x1
+    { size: [32, 32, 32], dimension: '3d' as const, mipLevelCount: 7 }, // Mip level sizes: 32x32x32, 16x16x16, 8x8x8, 4x4x4, 2x2x2, 1x1x1, ?x?x?
+    { size: [32, 31, 31], dimension: '3d' as const, mipLevelCount: 6 }, // Mip level sizes: 32x31x31, 16x15x15, 8x7x7, 4x3x3, 2x1x1, 1x1x1
+    { size: [32, 31, 31], dimension: '3d' as const, mipLevelCount: 7 }, // Mip level sizes: 32x31x31, 16x15x15, 8x7x7, 4x3x3, 2x1x1, 1x1x1, ?x?x?
+    { size: [31, 32, 31], dimension: '3d' as const, mipLevelCount: 6 }, // Mip level sizes: 31x32x31, 15x16x15, 7x8x7, 3x4x3, 1x2x1, 1x1x1
+    { size: [31, 32, 31], dimension: '3d' as const, mipLevelCount: 7 }, // Mip level sizes: 31x32x31, 15x16x15, 7x8x7, 3x4x3, 1x2x1, 1x1x1, ?x?x?
+    { size: [31, 31, 32], dimension: '3d' as const, mipLevelCount: 6 }, // Mip level sizes: 31x31x32, 15x15x16, 7x7x8, 3x3x4, 1x1x2, 1x1x1
+    { size: [31, 31, 32], dimension: '3d' as const, mipLevelCount: 7 }, // Mip level sizes: 31x31x32, 15x15x16, 7x7x8, 3x3x4, 1x1x2, 1x1x1, ?x?x?
+    { size: [31, 31, 31], dimension: '3d' as const, mipLevelCount: 5 }, // Mip level sizes: 31x31x31, 15x15x15, 7x7x7, 3x3x3, 1x1x1
+    { size: [31, 31, 31], dimension: '3d' as const, mipLevelCount: 6 }, // Mip level sizes: 31x31x31, 15x15x15, 7x7x7, 3x3x3, 1x1x1, ?x?x?
+    { size: [32, 32], mipLevelCount: 100 }, // undefined shift check if miplevel is bigger than the integer bit width
+    { size: [32, 8], mipLevelCount: 6 }, // Mip levels: 32x8, 16x4, 8x2, 4x1, 2x1, 1x1
+    { size: [32, 8], mipLevelCount: 7 }, // Mip levels: 32x8, 16x4, 8x2, 4x1, 2x1, 1x1
+    { size: [32, 32, 64], mipLevelCount: 7 }, // Mip levels: 32x32x64, 16x16x64, 8x8x64, 4x4x64, 2x2x64, 1x1x64, ?x?x64
+    { size: [32, 32, 64], dimension: '3d' as const, mipLevelCount: 7 }, // Mip levels: 32x32x64, 16x16x32, 8x8x16, 4x4x8, 2x2x4, 1x1x2, 1x1x1
   ])
   .fn(async t => {
-    const { size, mipLevelCount, dimension, _success } = t.params;
+    const { size, mipLevelCount, dimension } = t.params;
 
-    const descriptor = {
+    const descriptor: GPUTextureDescriptor = {
       size,
       mipLevelCount,
       dimension,
@@ -203,9 +204,11 @@ g.test('mipLevelCount,bound_check')
       usage: GPUTextureUsage.SAMPLED,
     };
 
+    const success =
+      mipLevelCount <= maxMipLevelCount(descriptor.size as GPUExtent3DDict, descriptor.dimension);
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);
-    }, !_success);
+    }, !success);
   });
 
 g.test('sampleCount')
