@@ -138,6 +138,9 @@ g.test('out_of_bounds')
         { indexCount: 6, firstIndex: 10000 }, // firstIndex much larger than the bound
         { indexCount: 7, firstIndex: 0 }, // only indexCount out of bound
         { indexCount: 10000, firstIndex: 0 }, // indexCount much larger than the bound
+        { indexCount: 0xffffffff, firstIndex: 0xffffffff }, // max uint32 value
+        { indexCount: 0xffffffff, firstIndex: 2 }, // max uint32 indexCount and small firstIndex
+        { indexCount: 2, firstIndex: 0xffffffff }, // small indexCount and max uint32 firstIndex
       ] as const)
       .combine(poptions('instanceCount', [1, 10000])) // normal and large instanceCount
   )
