@@ -34,7 +34,6 @@ import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { kAllTextureFormats, kAllTextureFormatInfo } from '../../capability_info.js';
 import { maxMipLevelCount } from '../../util/texture/base.js';
-import { standardizeExtent3D } from '../../util/unions.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -192,10 +191,7 @@ g.test('mipLevelCount,bound_check')
       usage: GPUTextureUsage.SAMPLED,
     };
 
-    const mipLevelCount = maxMipLevelCount(
-      standardizeExtent3D(descriptor.size),
-      descriptor.dimension
-    );
+    const mipLevelCount = maxMipLevelCount(descriptor);
     descriptor.mipLevelCount = mipLevelCount;
     t.device.createTexture(descriptor);
 
