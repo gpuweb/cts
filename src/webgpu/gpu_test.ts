@@ -3,6 +3,7 @@ import { attemptGarbageCollection } from '../common/framework/util/collect_garba
 import { assert } from '../common/framework/util/util.js';
 
 import { EncodableTextureFormat, SizedTextureFormat } from './capability_info.js';
+import { makeBufferWithContents } from './util/buffer.js';
 import { DevicePool, DeviceProvider, TestOOMedShouldAttemptGC } from './util/device_pool.js';
 import { align } from './util/math.js';
 import {
@@ -555,16 +556,7 @@ got [${failedByteActualValues.join(', ')}]`;
   }
 
   makeBufferWithContents(dataArray: TypedArrayBufferView, usage: GPUBufferUsageFlags): GPUBuffer {
-    const buffer = this.device.createBuffer({
-      mappedAtCreation: true,
-      size: dataArray.byteLength,
-      usage,
-    });
-    const mappedBuffer = buffer.getMappedRange();
-    const constructor = dataArray.constructor as TypedArrayBufferViewConstructor;
-    new constructor(mappedBuffer).set(dataArray);
-    buffer.unmap();
-    return buffer;
+    return makeBufferWithContents(this.device, dataArray, usage);
   }
 
   createTexture2DWithMipmaps(mipmapDataArray: TypedArrayBufferView[]): GPUTexture {

@@ -26,3 +26,10 @@ Generally, see:
 - [`ShaderValidationTest`](../src/webgpu/shader/validation/shader_validation_test.ts)
     - `expectCompileResult` Allows checking for compile success/failure, or failure with a
       particular error substring.
+- [`util/texture/image_copy.ts`](../src/webgpu/util/texture/image_copy.ts)
+    - `bytesInACompleteRow` Computes bytesInACompleteRow for image copies (B2T/T2B/writeTexture).
+    - `dataBytesForCopy` Validates a copy and computes the number of bytes it needs.
+- [`util/buffer.ts`](../src/webgpu/util/buffer.ts)
+    - `makeBufferWithContents` Creates a buffer with the contents of some TypedArray.
+- [`util/unions.ts`](../src/webgpu/util/unions.ts)
+    - `standardizeExtent3D` Standardizes a `GPUExtent3D` into a `Required<GPUExtent3DDict>`.
