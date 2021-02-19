@@ -178,7 +178,6 @@ g.test('mipLevelCount,bound_check')
     { size: [31, 32, 31], dimension: '3d' as const }, // Mip level sizes: 31x32x31, 15x16x15, 7x8x7, 3x4x3, 1x2x1, 1x1x1
     { size: [31, 31, 32], dimension: '3d' as const }, // Mip level sizes: 31x31x32, 15x15x16, 7x7x8, 3x3x4, 1x1x2, 1x1x1
     { size: [31, 31, 31], dimension: '3d' as const }, // Mip level sizes: 31x31x31, 15x15x15, 7x7x7, 3x3x3, 1x1x1
-    { size: [32, 32], mipLevelCount: 100 }, // undefined shift check if miplevel is bigger than the integer bit width
     { size: [32, 8] }, // Mip levels: 32x8, 16x4, 8x2, 4x1, 2x1, 1x1
     { size: [32, 32, 64] }, // Mip levels: 32x32x64, 16x16x64, 8x8x64, 4x4x64, 2x2x64, 1x1x64
     { size: [32, 32, 64], dimension: '3d' as const }, // Mip levels: 32x32x64, 16x16x32, 8x8x16, 4x4x8, 2x2x4, 1x1x2, 1x1x1
