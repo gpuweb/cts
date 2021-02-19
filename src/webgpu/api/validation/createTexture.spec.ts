@@ -34,6 +34,7 @@ import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { kAllTextureFormats, kAllTextureFormatInfo } from '../../capability_info.js';
 import { maxMipLevelCount } from '../../util/texture/base.js';
+import { standardizeExtent3D } from '../../util/unions.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -166,49 +167,58 @@ g.test('mipLevelCount,bound_check')
     TODO: test compressed texture`
   )
   .subcases(() => [
-    { size: [32, 32], mipLevelCount: 6 }, // Mip level sizes: 32x32, 16x16, 8x8, 4x4, 2x2, 1x1
-    { size: [31, 32], mipLevelCount: 6 }, // Mip level sizes: 31x32, 15x16, 7x8, 3x4, 1x2, 1x1
-    { size: [32, 31], mipLevelCount: 6 }, // Mip level sizes: 32x31, 16x15, 8x7, 4x3, 2x1, 1x1
-    { size: [31, 32], mipLevelCount: 7 }, // Mip level sizes: 31x32, 15x16, 7x8, 3x4, 1x2, 1x1, ?x?
-    { size: [32, 31], mipLevelCount: 7 }, // Mip level sizes: 32x31, 16x15, 8x7, 4x3, 2x1, 1x1, ?x?
-    { size: [31, 31], mipLevelCount: 5 }, // Mip level sizes: 31x31, 15x15, 7x7, 3x3, 1x1
-    { size: [31, 31], mipLevelCount: 6 }, // Mip level sizes: 31x31, 15x15, 7x7, 3x3, 1x1, ?x?
-    { size: [32], dimension: '1d' as const, mipLevelCount: 6 }, // Mip level sizes: 32, 16, 8, 4, 2, 1
-    { size: [32], dimension: '1d' as const, mipLevelCount: 7 }, // Mip level sizes: 32, 16, 8, 4, 2, 1, ?
-    { size: [31], dimension: '1d' as const, mipLevelCount: 5 }, // Mip level sizes: 31, 15, 7, 3, 1
-    { size: [31], dimension: '1d' as const, mipLevelCount: 6 }, // Mip level sizes: 31, 15, 7, 3, 1, ?
-    { size: [32, 32, 32], dimension: '3d' as const, mipLevelCount: 6 }, // Mip level sizes: 32x32x32, 16x16x16, 8x8x8, 4x4x4, 2x2x2, 1x1x1
-    { size: [32, 32, 32], dimension: '3d' as const, mipLevelCount: 7 }, // Mip level sizes: 32x32x32, 16x16x16, 8x8x8, 4x4x4, 2x2x2, 1x1x1, ?x?x?
-    { size: [32, 31, 31], dimension: '3d' as const, mipLevelCount: 6 }, // Mip level sizes: 32x31x31, 16x15x15, 8x7x7, 4x3x3, 2x1x1, 1x1x1
-    { size: [32, 31, 31], dimension: '3d' as const, mipLevelCount: 7 }, // Mip level sizes: 32x31x31, 16x15x15, 8x7x7, 4x3x3, 2x1x1, 1x1x1, ?x?x?
-    { size: [31, 32, 31], dimension: '3d' as const, mipLevelCount: 6 }, // Mip level sizes: 31x32x31, 15x16x15, 7x8x7, 3x4x3, 1x2x1, 1x1x1
-    { size: [31, 32, 31], dimension: '3d' as const, mipLevelCount: 7 }, // Mip level sizes: 31x32x31, 15x16x15, 7x8x7, 3x4x3, 1x2x1, 1x1x1, ?x?x?
-    { size: [31, 31, 32], dimension: '3d' as const, mipLevelCount: 6 }, // Mip level sizes: 31x31x32, 15x15x16, 7x7x8, 3x3x4, 1x1x2, 1x1x1
-    { size: [31, 31, 32], dimension: '3d' as const, mipLevelCount: 7 }, // Mip level sizes: 31x31x32, 15x15x16, 7x7x8, 3x3x4, 1x1x2, 1x1x1, ?x?x?
-    { size: [31, 31, 31], dimension: '3d' as const, mipLevelCount: 5 }, // Mip level sizes: 31x31x31, 15x15x15, 7x7x7, 3x3x3, 1x1x1
-    { size: [31, 31, 31], dimension: '3d' as const, mipLevelCount: 6 }, // Mip level sizes: 31x31x31, 15x15x15, 7x7x7, 3x3x3, 1x1x1, ?x?x?
+    { size: [32, 32] }, // Mip level sizes: 32x32, 16x16, 8x8, 4x4, 2x2, 1x1
+    { size: [31, 32] }, // Mip level sizes: 31x32, 15x16, 7x8, 3x4, 1x2, 1x1
+    { size: [32, 31] }, // Mip level sizes: 32x31, 16x15, 8x7, 4x3, 2x1, 1x1
+    { size: [31, 31] }, // Mip level sizes: 31x31, 15x15, 7x7, 3x3, 1x1
+    { size: [32], dimension: '1d' as const }, // Mip level sizes: 32, 16, 8, 4, 2, 1
+    { size: [31], dimension: '1d' as const }, // Mip level sizes: 31, 15, 7, 3, 1
+    { size: [32, 32, 32], dimension: '3d' as const }, // Mip level sizes: 32x32x32, 16x16x16, 8x8x8, 4x4x4, 2x2x2, 1x1x1
+    { size: [32, 31, 31], dimension: '3d' as const }, // Mip level sizes: 32x31x31, 16x15x15, 8x7x7, 4x3x3, 2x1x1, 1x1x1
+    { size: [31, 32, 31], dimension: '3d' as const }, // Mip level sizes: 31x32x31, 15x16x15, 7x8x7, 3x4x3, 1x2x1, 1x1x1
+    { size: [31, 31, 32], dimension: '3d' as const }, // Mip level sizes: 31x31x32, 15x15x16, 7x7x8, 3x3x4, 1x1x2, 1x1x1
+    { size: [31, 31, 31], dimension: '3d' as const }, // Mip level sizes: 31x31x31, 15x15x15, 7x7x7, 3x3x3, 1x1x1
     { size: [32, 32], mipLevelCount: 100 }, // undefined shift check if miplevel is bigger than the integer bit width
-    { size: [32, 8], mipLevelCount: 6 }, // Mip levels: 32x8, 16x4, 8x2, 4x1, 2x1, 1x1
-    { size: [32, 8], mipLevelCount: 7 }, // Mip levels: 32x8, 16x4, 8x2, 4x1, 2x1, 1x1
-    { size: [32, 32, 64], mipLevelCount: 7 }, // Mip levels: 32x32x64, 16x16x64, 8x8x64, 4x4x64, 2x2x64, 1x1x64, ?x?x64
-    { size: [32, 32, 64], dimension: '3d' as const, mipLevelCount: 7 }, // Mip levels: 32x32x64, 16x16x32, 8x8x16, 4x4x8, 2x2x4, 1x1x2, 1x1x1
+    { size: [32, 8] }, // Mip levels: 32x8, 16x4, 8x2, 4x1, 2x1, 1x1
+    { size: [32, 32, 64] }, // Mip levels: 32x32x64, 16x16x64, 8x8x64, 4x4x64, 2x2x64, 1x1x64
+    { size: [32, 32, 64], dimension: '3d' as const }, // Mip levels: 32x32x64, 16x16x32, 8x8x16, 4x4x8, 2x2x4, 1x1x2, 1x1x1
   ])
   .fn(async t => {
-    const { size, mipLevelCount, dimension } = t.params;
+    const { size, dimension } = t.params;
 
     const descriptor: GPUTextureDescriptor = {
       size,
-      mipLevelCount,
       dimension,
       format: 'rgba8unorm' as const,
       usage: GPUTextureUsage.SAMPLED,
     };
 
-    const success =
-      mipLevelCount <= maxMipLevelCount(descriptor.size as GPUExtent3DDict, descriptor.dimension);
+    const mipLevelCount = maxMipLevelCount(
+      standardizeExtent3D(descriptor.size),
+      descriptor.dimension
+    );
+    descriptor.mipLevelCount = mipLevelCount;
+    t.device.createTexture(descriptor);
+
+    descriptor.mipLevelCount = mipLevelCount + 1;
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);
-    }, !success);
+    });
+  });
+
+g.test('mipLevelCount,bound_check,bigger_than_integer_bit_width')
+  .desc(`Test mip level count bound check when mipLevelCount is bigger than integer bit width`)
+  .fn(async t => {
+    const descriptor = {
+      size: [32, 32],
+      mipLevelCount: 100,
+      format: 'rgba8unorm' as const,
+      usage: GPUTextureUsage.SAMPLED,
+    };
+
+    t.expectValidationError(() => {
+      t.device.createTexture(descriptor);
+    });
   });
 
 g.test('sampleCount')
