@@ -11,6 +11,7 @@ import {
   createTextureWithData,
   TextureInitMethod,
   arbitraryTextureData,
+  kTextureInitMethods,
 } from '../../util/texture/create.js';
 
 /**
@@ -21,43 +22,21 @@ import {
  *   the data we were copying and that the nothing else was modified - that's primarily for testing
  *   WriteTexture and CopyB2T.
  */
-type CheckMethod = 'PartialCopyT2B' | 'FullCopyT2B';
-
-/** Each combination of methods assume that the ones before it were tested and work correctly. */
-const kMethodsToTest = [
-  // We make sure that CopyT2B works when copying the whole texture for renderable formats:
-  // TODO
-  // Then we make sure that WriteTexture works for all formats:
-  { initMethod: 'WriteTexture', checkMethod: 'FullCopyT2B' },
-  // Then we make sure that CopyB2T works for all formats:
-  { initMethod: 'CopyB2T', checkMethod: 'FullCopyT2B' },
-  // Then we make sure that CopyT2B works for all formats:
-  { initMethod: 'WriteTexture', checkMethod: 'PartialCopyT2B' },
-] as const;
+type TextureCheckMethod = 'FullCopyT2B' | 'PartialCopyT2B';
+const kTextureCheckMethods = ['FullCopyT2B', 'PartialCopyT2B'] as const;
 
 class F extends GPUTest {
-  generateData(byteSize: number, start: number = 0): Uint8Array {
-    const arr = new Uint8Array(byteSize);
-    for (let i = 0; i < byteSize; ++i) {
-      arr[i] = (i ** 3 + i + start) % 251;
-    }
-    return arr;
-  }
-
   uploadTextureAndVerifyCopy(
-    { initMethod, checkMethod }: { initMethod: TextureInitMethod; checkMethod: CheckMethod },
+    { initMethod, checkMethod }: { initMethod: TextureInitMethod; checkMethod: TextureCheckMethod },
     // TODO: Expand to EncodableTextureFormat
     textureDesc: GPUTextureDescriptor & { format: RegularTextureFormat },
     layout: GPUImageDataLayout,
     region: Omit<GPUImageCopyTexture, 'texture'>,
     copySize: GPUExtent3D
   ) {
-    const texture = createTextureWithData(
-      this.device,
-      initMethod,
-      textureDesc,
-      arbitraryTextureData(textureDesc.format)
-    );
+    const testData = arbitraryTextureData(textureDesc.format);
+    // XXX: doesn't make sense to use createTextureWithData here, the init IS what's being tested.
+    const texture = createTextureWithData(this.device, initMethod, textureDesc, testData);
     const copyTexture: GPUImageCopyTexture = { texture, ...region };
 
     switch (checkMethod) {
@@ -77,21 +56,35 @@ g.test('bytesPerRow_undefined')
   .desc(`Test the behavior when bytesPerRow is (validly) undefined is same as when it's defined`)
   .cases(
     params()
-      .combine(kMethodsToTest)
+      .combine(poptions('checkMethod', kTextureCheckMethods))
+      .combine(poptions('initMethod', kTextureInitMethods))
+      .combine(poptions('format', ['rgba8unorm', 'r8snorm', 'r16float', 'rgba32float'] as const))
+  )
+  .subcases(() =>
+    params()
       .combine(poptions('bytesPerRow', [256, undefined]))
+      .combine(
+        poptions('copySize', [
+          [1, 1, 1],
+          [3, 1, 1],
+          [0, 1, 1],
+          [3, 0, 1],
+          [3, 1, 0],
+        ])
+      )
   )
   .fn(t => {
-    const { initMethod, checkMethod, bytesPerRow } = t.params;
+    const { format, initMethod, checkMethod, bytesPerRow } = t.params;
 
     t.uploadTextureAndVerifyCopy(
       { initMethod, checkMethod },
       {
-        size: [100, 3, 2],
-        format: 'rgba8unorm',
+        size: [100, 3, 3],
+        format,
         usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
       },
       { offset: 0, bytesPerRow, rowsPerImage: 256 },
-      { mipLevel: 0, origin: [0, 0, 0] },
+      { mipLevel: 0, origin: [1, 1, 1] },
       [3, 1, 1]
     );
   });

@@ -20,7 +20,7 @@ export type DataCallback = (pos: {
 
 // TODO: expand with CopyT2T, RenderPassStore, RenderPassResolve, CopyImageBitmapToTexture, ...?
 export type TextureInitMethod = 'WriteTexture' | 'CopyB2T';
-export const kTextureInitMethods = ['WriteTexture', 'CopyB2T'];
+export const kTextureInitMethods = ['WriteTexture', 'CopyB2T'] as const;
 
 class TextureInitAccumulator {
   private device: GPUDevice;
