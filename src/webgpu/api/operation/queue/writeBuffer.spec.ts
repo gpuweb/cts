@@ -21,8 +21,8 @@ type WriteBufferSignature = {
   data: readonly number[];
   arrayType: typeof kTypedArrays[number];
   useArrayBuffer: boolean;
-  dataOffset?: number;
-  dataSize?: number;
+  dataOffset?: number; // In elements when useArrayBuffer === false, bytes otherwise
+  dataSize?: number; // In elements when useArrayBuffer === false, bytes otherwise
 };
 
 class F extends GPUTest {
@@ -30,24 +30,28 @@ class F extends GPUTest {
     let bufferSize = 0;
     // Calculate size of final buffer
     for (const { bufferOffset, data, arrayType, useArrayBuffer, dataOffset, dataSize } of writes) {
-      const typeBuilder = self[arrayType];
-      let requiredSize = data.length * typeBuilder.BYTES_PER_ELEMENT;
+      const TypedArrayConstructor = self[arrayType];
 
-      // When passing data as an ArrayBuffer, dataOffset, dataSize use byte instead of number of
-      // elements
-      const bytesPerElement = useArrayBuffer ? 1 : typeBuilder.BYTES_PER_ELEMENT;
-      if (dataOffset) {
-        requiredSize -= dataOffset * bytesPerElement;
-      }
+      // When passing data as an ArrayBuffer, dataOffset and dataSize use byte instead of number of
+      // elements. bytesPerElement is used to convert dataOffset and dataSize from elements to bytes
+      // when useArrayBuffer === false.
+      const bytesPerElement = useArrayBuffer ? 1 : TypedArrayConstructor.BYTES_PER_ELEMENT;
+
+      // Calculate the number of bytes written to the buffer. data is always an array of elements.
+      let bytesWritten =
+        data.length * TypedArrayConstructor.BYTES_PER_ELEMENT - (dataOffset || 0) * bytesPerElement;
+
       if (dataSize) {
-        requiredSize = Math.min(requiredSize, dataSize * bytesPerElement);
+        // When defined, dataSize clamps the number of bytes written
+        bytesWritten = Math.min(bytesWritten, dataSize * bytesPerElement);
       }
 
-      requiredSize += bufferOffset;
+      // The minimum buffer size required for the write to succeed is the number of bytes written +
+      // the bufferOffset
+      const requiredBufferSize = bufferOffset + bytesWritten;
 
-      if (requiredSize > bufferSize) {
-        bufferSize = requiredSize;
-      }
+      // Find the largest required size by all writes
+      bufferSize = Math.max(bufferSize, requiredBufferSize);
     }
     // writeBuffer requires buffers to be a multiple of 4
     return Math.ceil(bufferSize / 4) * 4;
@@ -58,15 +62,18 @@ class F extends GPUTest {
     const buffer = this.device.createBuffer({
       size: bufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+      mappedAtCreation: true,
     });
 
-    // Initialize buffer to non-zero data (0xff)
+    // Initialize buffer to non-zero data (0xff) for easier debug.
     const expectedData = new Uint8Array(range<number>(bufferSize, () => 0xff));
-    this.queue.writeBuffer(buffer, 0, expectedData);
+    const bufferData = buffer.getMappedRange();
+    new Uint8Array(bufferData).set(expectedData);
+    buffer.unmap();
 
     for (const { bufferOffset, data, arrayType, useArrayBuffer, dataOffset, dataSize } of writes) {
-      const typeBuilder = self[arrayType];
-      const writeData = new typeBuilder(data);
+      const TypedArrayConstructor = self[arrayType];
+      const writeData = new TypedArrayConstructor(data);
       this.queue.writeBuffer(
         buffer,
         bufferOffset,
@@ -74,7 +81,7 @@ class F extends GPUTest {
         dataOffset,
         dataSize
       );
-      const bytesPerElement = useArrayBuffer ? 1 : typeBuilder.BYTES_PER_ELEMENT;
+      const bytesPerElement = useArrayBuffer ? 1 : TypedArrayConstructor.BYTES_PER_ELEMENT;
       const begin = dataOffset ? dataOffset * bytesPerElement : 0;
       expectedData.set(
         new Uint8Array(
@@ -98,8 +105,16 @@ g.test('array_types')
   .cases(params().combine(poptions('arrayType', kTypedArrays)).combine(pbool('useArrayBuffer')))
   .fn(t => {
     const { arrayType, useArrayBuffer } = t.params;
-
-    t.testWriteBuffer({ bufferOffset: 0, data: kTestData, arrayType, useArrayBuffer });
+    const dataOffset = 1;
+    const dataSize = 8;
+    t.testWriteBuffer({
+      bufferOffset: 0,
+      arrayType,
+      data: kTestData,
+      dataOffset,
+      dataSize,
+      useArrayBuffer,
+    });
   });
 
 g.test('multiple_writes_at_different_offsets_and_sizes')
@@ -173,14 +188,14 @@ Tests that writeBuffer currently handles different offsets and writes. This incl
     },
     {
       // Zero buffer
-      writes: [],
+      writes: [{ bufferOffset: 0, data: [], arrayType: 'Uint8Array', useArrayBuffer: false }],
     }, // Expected []
     {
       // Unaligned source
       writes: [
         {
           bufferOffset: 0,
-          data: [0, ...kTestData],
+          data: [0x77, ...kTestData],
           arrayType: 'Uint8Array',
           useArrayBuffer: false,
           dataOffset: 1,
