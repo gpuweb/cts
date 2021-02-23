@@ -134,6 +134,7 @@ g.test('out_of_bounds')
       .combine(pbool('indirect')) // indirect drawIndexed
       .combine([
         { indexCount: 6, firstIndex: 1 }, // indexCount + firstIndex out of bound
+        { indexCount: 0, firstIndex: 6 }, // indexCount is 0 but firstIndex out of bound
         { indexCount: 6, firstIndex: 6 }, // only firstIndex out of bound
         { indexCount: 6, firstIndex: 10000 }, // firstIndex much larger than the bound
         { indexCount: 7, firstIndex: 0 }, // only indexCount out of bound
@@ -150,8 +151,6 @@ g.test('out_of_bounds')
     if (indirect) {
       t.drawIndexedIndirect(new Uint32Array([indexCount, instanceCount, firstIndex, 0, 0]), 0);
     } else {
-      t.expectValidationError(() => {
-        t.drawIndexed(indexCount, instanceCount, firstIndex, 0, 0);
-      });
+      t.drawIndexed(indexCount, instanceCount, firstIndex, 0, 0);
     }
   });
