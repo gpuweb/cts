@@ -364,6 +364,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
       expectedDataLayout,
       checkSize,
       origin,
+      origin,
       format,
       bufferData,
       expected
@@ -413,20 +414,27 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
    * on the texture by emulating the copy behaviour here directly.
    */
   updateLinearTextureDataSubBox(
-    { bytesPerRow, rowsPerImage }: { bytesPerRow: number; rowsPerImage: number },
-    sourceDataLayout: Required<GPUTextureDataLayout>,
+    destinationDataLayout: Required<GPUImageDataLayout>,
+    sourceDataLayout: Required<GPUImageDataLayout>,
     copySize: GPUExtent3DDict,
-    origin: Required<GPUOrigin3DDict>,
+    destinationOrigin: Required<GPUOrigin3DDict>,
+    sourceOrigin: Required<GPUOrigin3DDict>,
     format: SizedTextureFormat,
     destination: Uint8Array,
     source: Uint8Array
   ): void {
-    for (const texel of this.iterateBlockRows(copySize, origin, format)) {
-      const sourceOffset = this.getTexelOffsetInBytes(sourceDataLayout, format, texel, origin);
-      const destinationOffset = this.getTexelOffsetInBytes(
-        { bytesPerRow, rowsPerImage, offset: 0 },
+    for (const texel of this.iterateBlockRows(copySize, sourceOrigin, format)) {
+      const sourceOffset = this.getTexelOffsetInBytes(
+        sourceDataLayout,
         format,
-        texel
+        texel,
+        sourceOrigin
+      );
+      const destinationOffset = this.getTexelOffsetInBytes(
+        destinationDataLayout,
+        format,
+        texel,
+        destinationOrigin
       );
       const rowLength = bytesInACompleteRow(copySize.width, format);
       this.copyFromArrayToArray(source, sourceOffset, destination, destinationOffset, rowLength);
@@ -452,22 +460,25 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     const { mipSize, bytesPerRow, rowsPerImage, byteLength } = fullTextureCopyLayout;
     const { dst, begin, end } = this.createAlignedCopyForMapRead(fullData, byteLength, 0);
 
+    const destinationOrigin = { x: 0, y: 0, z: 0 };
+
     // We add an eventual async expectation which will update the full data and then add
     // other eventual async expectations to ensure it will be correct.
     this.eventualAsyncExpectation(async () => {
       await dst.mapAsync(GPUMapMode.READ);
       const actual = new Uint8Array(dst.getMappedRange()).subarray(begin, end);
       this.updateLinearTextureDataSubBox(
-        fullTextureCopyLayout,
+        { offset: 0, ...fullTextureCopyLayout },
         texturePartialDataLayout,
         copySize,
+        destinationOrigin,
         origin,
         format,
         actual,
         partialData
       );
       this.copyPartialTextureToBufferAndCheckContents(
-        { texture, mipLevel, origin: { x: 0, y: 0, z: 0 } },
+        { texture, mipLevel, origin: destinationOrigin },
         { width: mipSize[0], height: mipSize[1], depth: mipSize[2] },
         format,
         actual,
@@ -500,7 +511,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     dataSize: number;
     mipLevel?: number;
     origin?: Required<GPUOrigin3DDict>;
-    textureSize: [number, number, number];
+    textureSize: readonly [number, number, number];
     format: SizedTextureFormat;
     dimension?: GPUTextureDimension;
     initMethod: InitMethod;
@@ -508,7 +519,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     changeBeforePass?: ChangeBeforePass;
   }): void {
     const texture = this.device.createTexture({
-      size: textureSize,
+      size: textureSize as [number, number, number],
       format,
       dimension,
       mipLevelCount: mipLevel + 1,
