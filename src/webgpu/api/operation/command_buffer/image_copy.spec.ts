@@ -34,18 +34,18 @@ TODO: Fix this test for the various skipped formats:
 - compressed formats
 `;
 
-import { params, poptions } from '../../../common/framework/params_builder.js';
-import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { assert, unreachable } from '../../../common/framework/util/util.js';
+import { params, poptions } from '../../../../common/framework/params_builder.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { assert, unreachable } from '../../../../common/framework/util/util.js';
 import {
   kSizedTextureFormatInfo,
   SizedTextureFormat,
   kSizedTextureFormats,
-} from '../../capability_info.js';
-import { GPUTest } from '../../gpu_test.js';
-import { align } from '../../util/math.js';
-import { bytesInACompleteRow, dataBytesForCopy } from '../../util/texture/image_copy.js';
-import { getTextureCopyLayout, TextureCopyLayout } from '../../util/texture/layout.js';
+} from '../../../capability_info.js';
+import { GPUTest } from '../../../gpu_test.js';
+import { align } from '../../../util/math.js';
+import { bytesInACompleteRow, dataBytesForCopy } from '../../../util/texture/image_copy.js';
+import { getTextureCopyLayout, TextureCopyLayout } from '../../../util/texture/layout.js';
 
 interface TextureCopyViewWithRequiredOrigin {
   texture: GPUTexture;
@@ -105,7 +105,7 @@ const kExcludedFormats: Set<SizedTextureFormat> = new Set([
 ]);
 const kWorkingTextureFormats = kSizedTextureFormats.filter(x => !kExcludedFormats.has(x));
 
-class CopyBetweenLinearDataAndTextureTest extends GPUTest {
+class ImageCopyTest extends GPUTest {
   /** Offset for a particular texel in the linear texture data */
   getTexelOffsetInBytes(
     textureDataLayout: Required<GPUTextureDataLayout>,
@@ -622,16 +622,20 @@ function formatCanBeTested({ format }: { format: SizedTextureFormat }): boolean 
   return kSizedTextureFormatInfo[format].copyDst && kSizedTextureFormatInfo[format].copySrc;
 }
 
-export const g = makeTestGroup(CopyBetweenLinearDataAndTextureTest);
+export const g = makeTestGroup(ImageCopyTest);
 
-// Test that copying data with various bytesPerRow and rowsPerImage values and minimum required
-// bytes in copy works for every format.
-// Covers a special code path for Metal:
-//    bufferSize - offset < bytesPerImage * copyExtent.depth
-// Covers a special code path for D3D12:
-//    when bytesPerRow is not a multiple of 512 and copyExtent.depth > 1: copyExtent.depth % 2 == { 0, 1 }
-//    bytesPerRow == bytesInACompleteCopyImage */
-g.test('copy_with_various_rows_per_image_and_bytes_per_row')
+g.test('rowsPerImage_and_bytesPerRow')
+  .desc(
+    `Test that copying data with various bytesPerRow and rowsPerImage values and minimum required
+bytes in copy works for every format.
+
+  Covers a special code path for Metal:
+    bufferSize - offset < bytesPerImage * copyExtent.depth
+  Covers a special code path for D3D12:
+    when bytesPerRow is not a multiple of 512 and copyExtent.depth > 1: copyExtent.depth % 2 == { 0, 1 }
+    bytesPerRow == bytesInACompleteCopyImage
+  `
+  )
   .cases(
     params()
       .combine(kMethodsToTest)
@@ -721,12 +725,16 @@ g.test('copy_with_various_rows_per_image_and_bytes_per_row')
     });
   });
 
-// Test that copying data with various offset values and additional data paddings
-// works for every format with 2d and 2d-array textures.
-// Covers two special code paths for D3D12:
-//     offset + bytesInCopyExtentPerRow { ==, > } bytesPerRow
-//     offset > bytesInACompleteCopyImage
-g.test('copy_with_various_offsets_and_data_sizes')
+g.test('offsets_and_sizes')
+  .desc(
+    `Test that copying data with various offset values and additional data paddings
+works for every format with 2d and 2d-array textures.
+
+  Covers two special code paths for D3D12:
+    offset + bytesInCopyExtentPerRow { ==, > } bytesPerRow
+    offset > bytesInACompleteCopyImage
+`
+  )
   .cases(
     params()
       .combine(kMethodsToTest)
@@ -795,9 +803,11 @@ g.test('copy_with_various_offsets_and_data_sizes')
     });
   });
 
-// Test that copying slices of a texture works with various origin and copyExtent values
-// for all formats. We pass origin and copyExtent as [number, number, number].
-g.test('copy_with_various_origins_and_copy_extents')
+g.test('origins_and_extents')
+  .desc(
+    `Test that copying slices of a texture works with various origin and copyExtent values
+for all formats. We pass origin and copyExtent as [number, number, number].`
+  )
   .cases(
     params()
       .combine(kMethodsToTest)
@@ -939,11 +949,13 @@ function* generateTestTextureSizes({
   }
 }
 
-// Test that copying various mip levels works.
-// Covers two special code paths:
-//   - the physical size of the subresouce is not equal to the logical size
-//   - bufferSize - offset < bytesPerImage * copyExtent.depth and copyExtent needs to be clamped for all block formats */
-g.test('copy_various_mip_levels')
+g.test('mip_levels')
+  .desc(
+    `Test that copying various mip levels works. Covers two special code paths:
+  - The physical size of the subresource is not equal to the logical size.
+  - bufferSize - offset < bytesPerImage * copyExtent.depth, and copyExtent needs to be clamped for all block formats.
+  `
+  )
   .cases(
     params()
       .combine(kMethodsToTest)
@@ -1047,12 +1059,11 @@ g.test('copy_various_mip_levels')
     });
   });
 
-// Test that when copying a single row we can set any bytesPerRow value and when copying a single
-// slice we can set rowsPerImage to 0. Origin, offset, mipLevel and rowsPerImage values will be set
-// to undefined when appropriate.
-g.test('copy_with_no_image_or_slice_padding_and_undefined_values')
+g.test('undefined_params')
   .desc(
-    `TODO: description
+    `Tests undefined values of bytesPerRow, rowsPerImage, and origin.x/y/z.
+  Ensures bytesPerRow/rowsPerImage=undefined are valid and behave as expected.
+  Ensures origin.x/y/z undefined default to 0.
 
   TODO: "0" below really means "undefined" (it gets replaced with undefined later).
   Should clean this up so the cases say what they mean.

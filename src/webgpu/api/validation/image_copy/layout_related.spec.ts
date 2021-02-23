@@ -16,13 +16,13 @@ import {
 } from '../../../util/texture/image_copy.js';
 
 import {
-  CopyBetweenLinearDataAndTextureTest,
+  ImageCopyTest,
   texelBlockAlignmentTestExpanderForOffset,
   texelBlockAlignmentTestExpanderForRowsPerImage,
   formatCopyableWithMethod,
-} from './copyBetweenLinearDataAndTexture.js';
+} from './image_copy.js';
 
-export const g = makeTestGroup(CopyBetweenLinearDataAndTextureTest);
+export const g = makeTestGroup(ImageCopyTest);
 
 g.test('bound_on_rows_per_image')
   .cases(poptions('method', kImageCopyTypes))
@@ -57,8 +57,8 @@ g.test('bound_on_rows_per_image')
     });
   });
 
-// Test with offset + requiredBytesIsCopy overflowing GPUSize64.
-g.test('offset_plus_required_bytes_in_copy_overflow')
+g.test('copy_end_overflows_u64')
+  .desc(`Test what happens when offset+requiredBytesInCopy overflows GPUSize64.`)
   .cases(poptions('method', kImageCopyTypes))
   .subcases(() => [
     { bytesPerRow: 2 ** 31, rowsPerImage: 2 ** 31, depth: 1, _success: true }, // success case
@@ -85,10 +85,12 @@ g.test('offset_plus_required_bytes_in_copy_overflow')
     );
   });
 
-// Testing that the minimal data size condition is checked correctly.
-// In the success case, we test the exact value.
-// In the failing case, we test the exact value minus 1.
 g.test('required_bytes_in_copy')
+  .desc(`Test that the min data size condition (requiredBytesInCopy) is checked correctly.
+
+  - Exact requiredBytesInCopy should succeed.
+  - requiredBytesInCopy - 1 should fail.
+  `)
   .cases(
     params()
       .combine(poptions('method', kImageCopyTypes))
