@@ -91,13 +91,12 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     const info = kSizedTextureFormatInfo[format];
 
     assert(texel.x >= origin.x && texel.y >= origin.y && texel.z >= origin.z);
-    assert(rowsPerImage % info.blockHeight === 0);
     assert(texel.x % info.blockWidth === 0);
     assert(texel.y % info.blockHeight === 0);
     assert(origin.x % info.blockWidth === 0);
     assert(origin.y % info.blockHeight === 0);
 
-    const bytesPerImage = (rowsPerImage / info.blockHeight) * bytesPerRow;
+    const bytesPerImage = rowsPerImage * bytesPerRow;
 
     return (
       offset +
@@ -118,11 +117,11 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     }
     const info = kSizedTextureFormatInfo[format];
     assert(size.height % info.blockHeight === 0);
-    for (let y = 0; y < size.height / info.blockHeight; ++y) {
+    for (let y = 0; y < size.height; y += info.blockHeight) {
       for (let z = 0; z < size.depth; ++z) {
         yield {
           x: origin.x,
-          y: origin.y + y * info.blockHeight,
+          y: origin.y + y,
           z: origin.z + z,
         };
       }
@@ -145,12 +144,15 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
   undefDataLayoutIfNeeded(
     offset: number | undefined,
     rowsPerImage: number | undefined,
-    bytesPerRow: number,
+    bytesPerRow: number | undefined,
     changeBeforePass: ChangeBeforePass
   ): GPUTextureDataLayout {
     if (changeBeforePass === 'undefined') {
       if (offset === 0) {
         offset = undefined;
+      }
+      if (bytesPerRow === 0) {
+        bytesPerRow = undefined;
       }
       if (rowsPerImage === 0) {
         rowsPerImage = undefined;
@@ -602,10 +604,10 @@ g.test('copy_with_various_rows_per_image_and_bytes_per_row')
   .subcases(() =>
     params()
       .combine([
-        { bytesPerRowPadding: 0, rowsPerImagePaddingInBlocks: 0 }, // no padding
-        { bytesPerRowPadding: 0, rowsPerImagePaddingInBlocks: 6 }, // rowsPerImage padding
-        { bytesPerRowPadding: 6, rowsPerImagePaddingInBlocks: 0 }, // bytesPerRow padding
-        { bytesPerRowPadding: 15, rowsPerImagePaddingInBlocks: 17 }, // both paddings
+        { bytesPerRowPadding: 0, rowsPerImagePadding: 0 }, // no padding
+        { bytesPerRowPadding: 0, rowsPerImagePadding: 6 }, // rowsPerImage padding
+        { bytesPerRowPadding: 6, rowsPerImagePadding: 0 }, // bytesPerRow padding
+        { bytesPerRowPadding: 15, rowsPerImagePadding: 17 }, // both paddings
       ])
       .combine([
         // In the two cases below, for (WriteTexture, PartialCopyB2T) and (CopyB2T, FullCopyT2B)
@@ -634,7 +636,7 @@ g.test('copy_with_various_rows_per_image_and_bytes_per_row')
   .fn(async t => {
     const {
       bytesPerRowPadding,
-      rowsPerImagePaddingInBlocks,
+      rowsPerImagePadding,
       copyWidthInBlocks,
       copyHeightInBlocks,
       copyDepth,
@@ -653,7 +655,7 @@ g.test('copy_with_various_rows_per_image_and_bytes_per_row')
 
     const copyWidth = copyWidthInBlocks * info.blockWidth;
     const copyHeight = copyHeightInBlocks * info.blockHeight;
-    const rowsPerImage = copyHeight + rowsPerImagePaddingInBlocks * info.blockHeight;
+    const rowsPerImage = copyHeightInBlocks + rowsPerImagePadding;
     const bytesPerRow =
       align(bytesInACompleteRow(copyWidth, format), bytesPerRowAlignment) +
       bytesPerRowPadding * bytesPerRowAlignment;
@@ -730,7 +732,7 @@ g.test('copy_with_various_offsets_and_data_sizes')
       height: 3 * info.blockHeight,
       depth: copyDepth,
     };
-    const rowsPerImage = copySize.height;
+    const rowsPerImage = 3;
     const bytesPerRow = 256;
 
     const { validMinDataSize } = dataBytesForCopy(
@@ -775,11 +777,10 @@ g.test('copy_with_various_origins_and_copy_extents')
           // we can't create an empty texture
           p.copySizeValueInBlocks + p.originValueInBlocks + p.textureSizePaddingValueInBlocks === 0
       )
-      .combine(poptions('coordinateToTest', ['width', 'height', 'depth'] as const))
+      .combine(poptions('coordinateToTest', [0, 1, 2] as const))
   )
   .fn(async t => {
     const {
-      coordinateToTest,
       originValueInBlocks,
       copySizeValueInBlocks,
       textureSizePaddingValueInBlocks,
@@ -790,42 +791,42 @@ g.test('copy_with_various_origins_and_copy_extents')
     const info = kSizedTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.extension);
 
-    const origin: Required<GPUOrigin3DDict> = { x: info.blockWidth, y: info.blockHeight, z: 1 };
-    const copySize = { width: 2 * info.blockWidth, height: 2 * info.blockHeight, depth: 2 };
-    const textureSize: [number, number, number] = [3 * info.blockWidth, 3 * info.blockHeight, 3];
+    const originBlks = [1, 1, 1];
+    const copySizeBlks = [2, 2, 2];
+    const texSizeBlks = [3, 3, 3];
 
-    switch (coordinateToTest) {
-      case 'width': {
-        origin.x = originValueInBlocks * info.blockWidth;
-        copySize.width = copySizeValueInBlocks * info.blockWidth;
-        textureSize[0] =
-          origin.x + copySize.width + textureSizePaddingValueInBlocks * info.blockWidth;
-        break;
-      }
-      case 'height': {
-        origin.y = originValueInBlocks * info.blockHeight;
-        copySize.height = copySizeValueInBlocks * info.blockHeight;
-        textureSize[1] =
-          origin.y + copySize.height + textureSizePaddingValueInBlocks * info.blockHeight;
-        break;
-      }
-      case 'depth': {
-        origin.z = originValueInBlocks;
-        copySize.depth = copySizeValueInBlocks;
-        textureSize[2] = origin.z + copySize.depth + textureSizePaddingValueInBlocks;
-        break;
-      }
+    {
+      const ctt = t.params.coordinateToTest;
+      originBlks[ctt] = originValueInBlocks;
+      copySizeBlks[ctt] = copySizeValueInBlocks;
+      texSizeBlks[ctt] = originBlks[ctt] + copySizeBlks[ctt] + textureSizePaddingValueInBlocks;
     }
 
-    const rowsPerImage = copySize.height;
-    const bytesPerRow = align(copySize.width, 256);
-    const { minDataSize: dataSize, valid } = dataBytesForCopy(
+    const origin: Required<GPUOrigin3DDict> = {
+      x: originBlks[0] * info.blockWidth,
+      y: originBlks[1] * info.blockHeight,
+      z: originBlks[2],
+    };
+    const copySize = {
+      width: copySizeBlks[0] * info.blockWidth,
+      height: copySizeBlks[1] * info.blockHeight,
+      depth: copySizeBlks[2],
+    };
+    const textureSize = [
+      texSizeBlks[0] * info.blockWidth,
+      texSizeBlks[1] * info.blockHeight,
+      texSizeBlks[2],
+    ] as const;
+
+    const rowsPerImage = copySizeBlks[1];
+    const bytesPerRow = align(copySizeBlks[0] * info.bytesPerBlock, 256);
+    const { validMinDataSize: dataSize } = dataBytesForCopy(
       { offset: 0, bytesPerRow, rowsPerImage },
       format,
       copySize,
       { method: initMethod }
     );
-    assert(valid);
+    assert(dataSize !== undefined);
 
     // For testing width: we copy a (_ x 2 x 2) (in texel blocks) part of a (_ x 3 x 3)
     // (in texel blocks) texture with origin (_, 1, 1) (in texel blocks).
@@ -986,7 +987,7 @@ g.test('copy_various_mip_levels')
       depth: copySizeInBlocks.depth,
     };
 
-    const rowsPerImage = copySize.height + info.blockHeight;
+    const rowsPerImage = copySizeInBlocks.height + 1;
     const bytesPerRow = align(copySize.width, 256);
     const { validMinDataSize: dataSize } = dataBytesForCopy(
       { offset: 0, bytesPerRow, rowsPerImage },
@@ -1013,69 +1014,43 @@ g.test('copy_various_mip_levels')
 // slice we can set rowsPerImage to 0. Origin, offset, mipLevel and rowsPerImage values will be set
 // to undefined when appropriate.
 g.test('copy_with_no_image_or_slice_padding_and_undefined_values')
+  .desc(
+    `TODO: description
+
+  TODO: "0" below really means "undefined" (it gets replaced with undefined later).
+  Should clean this up so the cases say what they mean.
+  `
+  )
   .cases(kMethodsToTest)
   .subcases(() =>
     params().combine([
-      // copying one row: bytesPerRow and rowsPerImage can be set to 0
-      {
-        bytesPerRow: 0,
-        rowsPerImage: 0,
-        copySize: { width: 3, height: 1, depth: 1 },
-        origin: { x: 0, y: 0, z: 0 },
-      },
-      // copying one row: bytesPerRow can be < bytesInACompleteRow = 400
-      {
-        bytesPerRow: 256,
-        rowsPerImage: 0,
-        copySize: { width: 100, height: 1, depth: 1 },
-        origin: { x: 0, y: 0, z: 0 },
-      },
-      // copying one slice: rowsPerImage = 0 will be set to undefined
-      {
-        bytesPerRow: 256,
-        rowsPerImage: 0,
-        copySize: { width: 3, height: 3, depth: 1 },
-        origin: { x: 0, y: 0, z: 0 },
-      },
-      // copying one slice: rowsPerImage = 2 is valid
-      {
-        bytesPerRow: 256,
-        rowsPerImage: 2,
-        copySize: { width: 3, height: 3, depth: 1 },
-        origin: { x: 0, y: 0, z: 0 },
-      },
-      // origin.x = 0 will be set to undefined
-      {
-        bytesPerRow: 0,
-        rowsPerImage: 0,
-        copySize: { width: 1, height: 1, depth: 1 },
-        origin: { x: 0, y: 1, z: 1 },
-      },
-      // origin.y = 0 will be set to undefined
-      {
-        bytesPerRow: 0,
-        rowsPerImage: 0,
-        copySize: { width: 1, height: 1, depth: 1 },
-        origin: { x: 1, y: 0, z: 1 },
-      },
-      // origin.z = 0 will be set to undefined
-      {
-        bytesPerRow: 0,
-        rowsPerImage: 0,
-        copySize: { width: 1, height: 1, depth: 1 },
-        origin: { x: 1, y: 1, z: 0 },
-      },
+      // copying one row: bytesPerRow and rowsPerImage can be undefined
+      { copySize: [3, 1, 1], origin: [0, 0, 0], bytesPerRow: undefined, rowsPerImage: undefined },
+      // copying one slice: rowsPerImage can be undefined
+      { copySize: [3, 3, 1], origin: [0, 0, 0], bytesPerRow: 256, rowsPerImage: undefined },
+      // copying two slices
+      { copySize: [3, 3, 2], origin: [0, 0, 0], bytesPerRow: 256, rowsPerImage: 3 },
+      // origin.x = undefined
+      { copySize: [1, 1, 1], origin: [0, 1, 1], bytesPerRow: undefined, rowsPerImage: undefined },
+      // origin.y = undefined
+      { copySize: [1, 1, 1], origin: [1, 0, 1], bytesPerRow: undefined, rowsPerImage: undefined },
+      // origin.z = undefined
+      { copySize: [1, 1, 1], origin: [1, 1, 0], bytesPerRow: undefined, rowsPerImage: undefined },
     ])
   )
   .fn(async t => {
     const { bytesPerRow, rowsPerImage, copySize, origin, initMethod, checkMethod } = t.params;
 
     t.uploadTextureAndVerifyCopy({
-      textureDataLayout: { offset: 0, bytesPerRow, rowsPerImage },
-      copySize,
-      dataSize: 100 * 3 * 4,
+      textureDataLayout: {
+        offset: 0,
+        bytesPerRow: bytesPerRow ?? 0,
+        rowsPerImage: rowsPerImage ?? 0,
+      },
+      copySize: { width: copySize[0], height: copySize[1], depth: copySize[2] },
+      dataSize: 2000,
       textureSize: [100, 3, 2],
-      origin,
+      origin: { x: origin[0], y: origin[1], z: origin[2] },
       format: 'rgba8unorm',
       initMethod,
       checkMethod,
