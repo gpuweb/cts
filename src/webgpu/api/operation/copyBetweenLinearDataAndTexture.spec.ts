@@ -69,6 +69,14 @@ type CheckMethod = 'PartialCopyT2B' | 'FullCopyT2B';
  * This describes in what form the arguments will be passed to WriteTexture/CopyB2T/CopyT2B. If
  * undefined, then default values are passed as undefined instead of default values. If arrays, then
  * `GPUOrigin3D` and `GPUExtent3D` are passed as `[number, number, number]`. *
+ *
+ * TODO: Try to expand this with something like:
+ * ```ts
+ * function encodeExtent3D(
+ *   mode: 'partial-array' | 'full-array' | 'extra-array' | 'partial-dict' | 'full-dict',
+ *   value: GPUExtent3D
+ * ): GPUExtent3D { ... }
+ * ```
  */
 type ChangeBeforePass = 'none' | 'undefined' | 'arrays';
 
