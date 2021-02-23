@@ -659,18 +659,18 @@ g.test('copy_with_various_rows_per_image_and_bytes_per_row')
       bytesPerRowPadding * bytesPerRowAlignment;
     const copySize = { width: copyWidth, height: copyHeight, depth: copyDepth };
 
-    const { minDataSize, valid } = dataBytesForCopy(
+    const { validMinDataSize } = dataBytesForCopy(
       { offset: 0, bytesPerRow, rowsPerImage },
       format,
       copySize,
       { method: initMethod }
     );
-    assert(valid);
+    assert(validMinDataSize !== undefined);
 
     t.uploadTextureAndVerifyCopy({
       textureDataLayout: { offset: 0, bytesPerRow, rowsPerImage },
       copySize,
-      dataSize: minDataSize,
+      dataSize: validMinDataSize,
       textureSize: [
         Math.max(copyWidth, info.blockWidth),
         Math.max(copyHeight, info.blockHeight),
@@ -733,15 +733,15 @@ g.test('copy_with_various_offsets_and_data_sizes')
     const rowsPerImage = copySize.height;
     const bytesPerRow = 256;
 
-    const { minDataSize, valid } = dataBytesForCopy(
+    const { validMinDataSize } = dataBytesForCopy(
       { offset, bytesPerRow, rowsPerImage },
       format,
       copySize,
       { method: initMethod }
     );
-    assert(valid);
+    assert(validMinDataSize !== undefined);
 
-    const dataSize = offset + minDataSize + dataPaddingInBytes;
+    const dataSize = validMinDataSize + dataPaddingInBytes;
 
     // We're copying a (3 x 3 x copyDepth) (in texel blocks) part of a (4 x 4 x copyDepth)
     // (in texel blocks) texture with no origin.
@@ -988,13 +988,13 @@ g.test('copy_various_mip_levels')
 
     const rowsPerImage = copySize.height + info.blockHeight;
     const bytesPerRow = align(copySize.width, 256);
-    const { minDataSize: dataSize, valid } = dataBytesForCopy(
+    const { validMinDataSize: dataSize } = dataBytesForCopy(
       { offset: 0, bytesPerRow, rowsPerImage },
       format,
       copySize,
       { method: initMethod }
     );
-    assert(valid);
+    assert(dataSize !== undefined);
 
     t.uploadTextureAndVerifyCopy({
       textureDataLayout: { offset: 0, bytesPerRow, rowsPerImage },

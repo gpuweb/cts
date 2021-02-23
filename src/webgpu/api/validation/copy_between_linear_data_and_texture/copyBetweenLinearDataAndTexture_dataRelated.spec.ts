@@ -46,12 +46,14 @@ g.test('bound_on_rows_per_image')
 
     const layout = { bytesPerRow: 1024, rowsPerImage };
     const size = { width: 0, height: copyHeight, depth: copyDepth };
-    const { minDataSize, valid } = dataBytesForCopy(layout, format, size, { method });
+    const { validMinDataSize, bestGuessMinDataSize } = dataBytesForCopy(layout, format, size, {
+      method,
+    });
 
     t.testRun({ texture }, layout, size, {
-      dataSize: minDataSize,
+      dataSize: bestGuessMinDataSize,
       method,
-      success: valid,
+      success: validMinDataSize !== undefined,
     });
   });
 
@@ -143,20 +145,20 @@ g.test('required_bytes_in_copy')
     const size = { width: copyWidth, height: copyHeight, depth: copyDepth };
 
     const layout = { offset, bytesPerRow, rowsPerImage };
-    const { minDataSize, valid } = dataBytesForCopy(layout, format, size, { method });
-    assert(valid);
+    const { validMinDataSize } = dataBytesForCopy(layout, format, size, { method });
+    assert(validMinDataSize !== undefined);
 
     const texture = t.createAlignedTexture(format, size);
 
     t.testRun({ texture }, { offset, bytesPerRow, rowsPerImage }, size, {
-      dataSize: minDataSize,
+      dataSize: validMinDataSize,
       method,
       success: true,
     });
 
-    if (minDataSize > 0) {
+    if (validMinDataSize > 0) {
       t.testRun({ texture }, { offset, bytesPerRow, rowsPerImage }, size, {
-        dataSize: minDataSize - 1,
+        dataSize: validMinDataSize - 1,
         method,
         success: false,
       });
@@ -265,12 +267,14 @@ g.test('bound_on_bytes_per_row')
     });
 
     const layout = { bytesPerRow, rowsPerImage: copyHeight };
-    const { minDataSize, valid } = dataBytesForCopy(layout, format, copySize, { method });
+    const { validMinDataSize, bestGuessMinDataSize } = dataBytesForCopy(layout, format, copySize, {
+      method,
+    });
 
     t.testRun({ texture }, layout, copySize, {
-      dataSize: minDataSize,
+      dataSize: bestGuessMinDataSize,
       method,
-      success: valid,
+      success: validMinDataSize !== undefined,
     });
   });
 

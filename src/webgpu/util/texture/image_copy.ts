@@ -25,7 +25,7 @@ export function dataBytesForCopy(
   format: SizedTextureFormat,
   copyExtentValue: GPUExtent3D,
   { method }: { method: ImageCopyType }
-): { minDataSize: number; valid: boolean } {
+): { validMinDataSize: number | undefined; bestGuessMinDataSize: number } {
   const copyExtent = standardizeExtent3D(copyExtentValue);
 
   const info = kSizedTextureFormatInfo[format];
@@ -41,24 +41,33 @@ export function dataBytesForCopy(
     if (offset % info.bytesPerBlock !== 0) valid = false;
     if (layout.bytesPerRow && layout.bytesPerRow % 256 !== 0) valid = false;
   }
-  if (layout.bytesPerRow !== undefined && bytesInLastRow > layout.bytesPerRow) valid = false;
-  if (layout.rowsPerImage !== undefined && heightInBlocks > layout.rowsPerImage) valid = false;
 
   let requiredBytesInCopy = 0;
   {
     let { bytesPerRow, rowsPerImage } = layout;
 
-    // If heightInBlocks > 1, layout.bytesPerRow must be specified.
-    if (heightInBlocks > 1 && bytesPerRow === undefined) valid = false;
-    // If copyExtent.depth > 1, layout.bytesPerRow and layout.rowsPerImage must be specified.
-    if (copyExtent.depth > 1 && rowsPerImage === undefined) valid = false;
-    // If specified, layout.bytesPerRow must be greater than or equal to bytesInLastRow.
-    if (bytesPerRow !== undefined && bytesPerRow < bytesInLastRow) valid = false;
-    // If specified, layout.rowsPerImage must be greater than or equal to heightInBlocks.
-    if (rowsPerImage !== undefined && rowsPerImage < heightInBlocks) valid = false;
-
-    bytesPerRow ??= align(info.bytesPerBlock * widthInBlocks, 256);
-    rowsPerImage ??= heightInBlocks;
+    // (a) If heightInBlocks > 1, layout.bytesPerRow must be specified.
+    // (b) If copyExtent.depth > 1, layout.bytesPerRow and layout.rowsPerImage must be specified.
+    // (c) If specified, layout.bytesPerRow must be greater than or equal to bytesInLastRow.
+    // (d) If specified, layout.rowsPerImage must be greater than or equal to heightInBlocks.
+    //
+    // But for the sake of various tests that don't actually care about the exact value, guess.
+    if (bytesPerRow !== undefined && bytesPerRow < bytesInLastRow) {
+      valid = false; // (c)
+      bytesPerRow = undefined; // Override bytesPerRow to be sufficiently large.
+    }
+    if (bytesPerRow === undefined) {
+      if (heightInBlocks > 1 || copyExtent.depth > 1) valid = false; // (a) (b)
+      bytesPerRow = align(info.bytesPerBlock * widthInBlocks, 256);
+    }
+    if (rowsPerImage !== undefined && rowsPerImage < heightInBlocks) {
+      valid = false; // (d)
+      rowsPerImage = undefined; // Override rowsPerImage to be sufficiently large.
+    }
+    if (rowsPerImage === undefined) {
+      if (copyExtent.depth > 1) valid = false; // (b)
+      rowsPerImage = heightInBlocks;
+    }
 
     if (copyExtent.depth > 1) {
       const bytesPerImage = bytesPerRow * rowsPerImage;
@@ -71,5 +80,9 @@ export function dataBytesForCopy(
     }
   }
 
-  return { minDataSize: offset + requiredBytesInCopy, valid };
+  const bestGuessMinDataSize = offset + requiredBytesInCopy;
+  return {
+    validMinDataSize: valid ? bestGuessMinDataSize : undefined,
+    bestGuessMinDataSize,
+  };
 }
