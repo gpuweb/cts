@@ -483,6 +483,13 @@ export const kTexelRepresentationInfo: {
       componentInfo: { Depth: { dataType: 'float', bitLength: 32 } },
       pack: components => packComponents([TexelComponent.Depth], components, 32, 'float'),
     },
+    depth16unorm: {
+      componentOrder: [TexelComponent.Depth],
+      encode: applyEach((n: number) => (assert(n >= 0 && n <= 1.0), n), [TexelComponent.Depth]),
+      decode: applyEach((n: number) => (assert(n >= 0 && n <= 1.0), n), [TexelComponent.Depth]),
+      componentInfo: { Depth: { dataType: 'unorm', bitLength: 16 } },
+      pack: components => packComponents([TexelComponent.Depth], components, 16, 'unorm'),
+    },
     depth24plus: {
       componentOrder: [TexelComponent.Depth],
       componentInfo: { Depth: { dataType: null, bitLength: 24 } },
@@ -504,6 +511,71 @@ export const kTexelRepresentationInfo: {
         return components;
       },
       pack: components => packComponents([TexelComponent.Stencil], components, 8, 'uint'),
+    },
+    'depth24unorm-stencil8': {
+      componentOrder: [TexelComponent.Depth, TexelComponent.Stencil],
+      componentInfo: {
+        Depth: {
+          dataType: 'unorm',
+          bitLength: 24,
+        },
+        Stencil: {
+          dataType: 'uint',
+          bitLength: 8,
+        },
+      },
+      encode: components => {
+        assert(components.Depth !== undefined);
+        assert(components.Stencil !== undefined);
+        assertInIntegerRange(components.Depth, 24, false);
+        assertInIntegerRange(components.Stencil, 8, false);
+        return components;
+      },
+      decode: components => {
+        assert(components.Depth !== undefined);
+        assert(components.Stencil !== undefined);
+        assertInIntegerRange(components.Depth, 24, false);
+        assertInIntegerRange(components.Stencil, 8, false);
+        return components;
+      },
+      pack: components =>
+        packComponents(
+          [TexelComponent.Depth, TexelComponent.Stencil],
+          components,
+          {
+            Depth: 24,
+            Stencil: 8,
+          },
+          'uint'
+        ),
+    },
+    'depth32float-stencil8': {
+      componentOrder: [TexelComponent.Depth, TexelComponent.Stencil],
+      componentInfo: {
+        Depth: {
+          dataType: 'float',
+          bitLength: 32,
+        },
+        Stencil: {
+          dataType: 'uint',
+          bitLength: 8,
+        },
+      },
+      encode: components => {
+        assert(components.Depth !== undefined);
+        assert(components.Stencil !== undefined);
+        assertInIntegerRange(components.Depth, 32, false);
+        assertInIntegerRange(components.Stencil, 8, false);
+        return components;
+      },
+      decode: components => {
+        assert(components.Depth !== undefined);
+        assert(components.Stencil !== undefined);
+        assertInIntegerRange(components.Depth, 32, false);
+        assertInIntegerRange(components.Stencil, 8, false);
+        return components;
+      },
+      pack: () => unreachable('depth32float-stencil8 data cannot be packed'),
     },
     'depth24plus-stencil8': {
       componentOrder: [TexelComponent.Depth, TexelComponent.Stencil],
