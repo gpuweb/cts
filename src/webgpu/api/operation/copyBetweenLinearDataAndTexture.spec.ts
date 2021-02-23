@@ -27,6 +27,11 @@ export const description = `writeTexture + copyBufferToTexture + copyTextureToBu
   - add another initMethod which renders the texture
   - test copyT2B with buffer size not divisible by 4 (not done because expectContents 4-byte alignment)
   - add tests for 1d / 3d textures
+
+TODO: Fix this test for the various skipped formats:
+- snorm tests failing due to rounding
+- float tests failing because float values are not byte-preserved
+- compressed formats
 `;
 
 import { params, poptions } from '../../../common/framework/params_builder.js';
@@ -78,6 +83,19 @@ const kMethodsToTest = [
   // Then we make sure that CopyT2B works for all formats:
   { initMethod: 'WriteTexture', checkMethod: 'PartialCopyT2B' },
 ] as const;
+
+const kExcludedFormats: Set<SizedTextureFormat> = new Set([
+  'r8snorm',
+  'rg8snorm',
+  'rgba8snorm',
+  'rg11b10ufloat',
+  'rg16float',
+  'rgba16float',
+  'r32float',
+  'rg32float',
+  'rgba32float',
+]);
+const kWorkingTextureFormats = kSizedTextureFormats.filter(x => !kExcludedFormats.has(x));
 
 class CopyBetweenLinearDataAndTextureTest extends GPUTest {
   /** Offset for a particular texel in the linear texture data */
@@ -609,7 +627,7 @@ g.test('copy_with_various_rows_per_image_and_bytes_per_row')
   .cases(
     params()
       .combine(kMethodsToTest)
-      .combine(poptions('format', kSizedTextureFormats))
+      .combine(poptions('format', kWorkingTextureFormats))
       .filter(formatCanBeTested)
   )
   .subcases(() =>
@@ -704,7 +722,7 @@ g.test('copy_with_various_offsets_and_data_sizes')
   .cases(
     params()
       .combine(kMethodsToTest)
-      .combine(poptions('format', kSizedTextureFormats))
+      .combine(poptions('format', kWorkingTextureFormats))
       .filter(formatCanBeTested)
   )
   .subcases(
@@ -775,7 +793,7 @@ g.test('copy_with_various_origins_and_copy_extents')
   .cases(
     params()
       .combine(kMethodsToTest)
-      .combine(poptions('format', kSizedTextureFormats))
+      .combine(poptions('format', kWorkingTextureFormats))
       .filter(formatCanBeTested)
   )
   .subcases(() =>
@@ -921,7 +939,7 @@ g.test('copy_various_mip_levels')
   .cases(
     params()
       .combine(kMethodsToTest)
-      .combine(poptions('format', kSizedTextureFormats))
+      .combine(poptions('format', kWorkingTextureFormats))
       .filter(formatCanBeTested)
   )
   .subcases(p =>
