@@ -92,6 +92,7 @@ const kMethodsToTest = [
   { initMethod: 'WriteTexture', checkMethod: 'PartialCopyT2B' },
 ] as const;
 
+// TODO: Fix things so this list can be reduced to zero (see file description)
 const kExcludedFormats: Set<SizedTextureFormat> = new Set([
   'r8snorm',
   'rg8snorm',
@@ -838,35 +839,36 @@ for all formats. We pass origin and copyExtent as [number, number, number].`
     const info = kSizedTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.extension);
 
-    const originBlks = [1, 1, 1];
-    const copySizeBlks = [2, 2, 2];
-    const texSizeBlks = [3, 3, 3];
+    const originBlocks = [1, 1, 1];
+    const copySizeBlocks = [2, 2, 2];
+    const texSizeBlocks = [3, 3, 3];
 
     {
       const ctt = t.params.coordinateToTest;
-      originBlks[ctt] = originValueInBlocks;
-      copySizeBlks[ctt] = copySizeValueInBlocks;
-      texSizeBlks[ctt] = originBlks[ctt] + copySizeBlks[ctt] + textureSizePaddingValueInBlocks;
+      originBlocks[ctt] = originValueInBlocks;
+      copySizeBlocks[ctt] = copySizeValueInBlocks;
+      texSizeBlocks[ctt] =
+        originBlocks[ctt] + copySizeBlocks[ctt] + textureSizePaddingValueInBlocks;
     }
 
     const origin: Required<GPUOrigin3DDict> = {
-      x: originBlks[0] * info.blockWidth,
-      y: originBlks[1] * info.blockHeight,
-      z: originBlks[2],
+      x: originBlocks[0] * info.blockWidth,
+      y: originBlocks[1] * info.blockHeight,
+      z: originBlocks[2],
     };
     const copySize = {
-      width: copySizeBlks[0] * info.blockWidth,
-      height: copySizeBlks[1] * info.blockHeight,
-      depth: copySizeBlks[2],
+      width: copySizeBlocks[0] * info.blockWidth,
+      height: copySizeBlocks[1] * info.blockHeight,
+      depth: copySizeBlocks[2],
     };
     const textureSize = [
-      texSizeBlks[0] * info.blockWidth,
-      texSizeBlks[1] * info.blockHeight,
-      texSizeBlks[2],
+      texSizeBlocks[0] * info.blockWidth,
+      texSizeBlocks[1] * info.blockHeight,
+      texSizeBlocks[2],
     ] as const;
 
-    const rowsPerImage = copySizeBlks[1];
-    const bytesPerRow = align(copySizeBlks[0] * info.bytesPerBlock, 256);
+    const rowsPerImage = copySizeBlocks[1];
+    const bytesPerRow = align(copySizeBlocks[0] * info.bytesPerBlock, 256);
     const { validMinDataSize: dataSize } = dataBytesForCopy(
       { offset: 0, bytesPerRow, rowsPerImage },
       format,
@@ -1059,31 +1061,28 @@ g.test('mip_levels')
     });
   });
 
+const UND = undefined;
 g.test('undefined_params')
   .desc(
     `Tests undefined values of bytesPerRow, rowsPerImage, and origin.x/y/z.
   Ensures bytesPerRow/rowsPerImage=undefined are valid and behave as expected.
-  Ensures origin.x/y/z undefined default to 0.
-
-  TODO: "0" below really means "undefined" (it gets replaced with undefined later).
-  Should clean this up so the cases say what they mean.
-  `
+  Ensures origin.x/y/z undefined default to 0.`
   )
   .cases(kMethodsToTest)
   .subcases(() =>
     params().combine([
       // copying one row: bytesPerRow and rowsPerImage can be undefined
-      { copySize: [3, 1, 1], origin: [0, 0, 0], bytesPerRow: undefined, rowsPerImage: undefined },
-      // copying one slice: rowsPerImage can be undefined
-      { copySize: [3, 3, 1], origin: [0, 0, 0], bytesPerRow: 256, rowsPerImage: undefined },
+      { copySize: [3, 1, 1], origin: [UND, UND, UND], bytesPerRow: UND, rowsPerImage: UND },
+      // copying one slice: rowsPerImage can be und
+      { copySize: [3, 3, 1], origin: [UND, UND, UND], bytesPerRow: 256, rowsPerImage: UND },
       // copying two slices
-      { copySize: [3, 3, 2], origin: [0, 0, 0], bytesPerRow: 256, rowsPerImage: 3 },
-      // origin.x = undefined
-      { copySize: [1, 1, 1], origin: [0, 1, 1], bytesPerRow: undefined, rowsPerImage: undefined },
-      // origin.y = undefined
-      { copySize: [1, 1, 1], origin: [1, 0, 1], bytesPerRow: undefined, rowsPerImage: undefined },
-      // origin.z = undefined
-      { copySize: [1, 1, 1], origin: [1, 1, 0], bytesPerRow: undefined, rowsPerImage: undefined },
+      { copySize: [3, 3, 2], origin: [UND, UND, UND], bytesPerRow: 256, rowsPerImage: 3 },
+      // origin.x = und
+      { copySize: [1, 1, 1], origin: [UND, 1, 1], bytesPerRow: UND, rowsPerImage: UND },
+      // origin.y = und
+      { copySize: [1, 1, 1], origin: [1, UND, 1], bytesPerRow: UND, rowsPerImage: UND },
+      // origin.z = und
+      { copySize: [1, 1, 1], origin: [1, 1, UND], bytesPerRow: UND, rowsPerImage: UND },
     ])
   )
   .fn(async t => {
@@ -1092,13 +1091,16 @@ g.test('undefined_params')
     t.uploadTextureAndVerifyCopy({
       textureDataLayout: {
         offset: 0,
+        // Zero will get turned back into undefined later.
         bytesPerRow: bytesPerRow ?? 0,
+        // Zero will get turned back into undefined later.
         rowsPerImage: rowsPerImage ?? 0,
       },
       copySize: { width: copySize[0], height: copySize[1], depth: copySize[2] },
       dataSize: 2000,
       textureSize: [100, 3, 2],
-      origin: { x: origin[0], y: origin[1], z: origin[2] },
+      // Zeros will get turned back into undefined later.
+      origin: { x: origin[0] ?? 0, y: origin[1] ?? 0, z: origin[2] ?? 0 },
       format: 'rgba8unorm',
       initMethod,
       checkMethod,

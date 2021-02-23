@@ -86,11 +86,13 @@ g.test('copy_end_overflows_u64')
   });
 
 g.test('required_bytes_in_copy')
-  .desc(`Test that the min data size condition (requiredBytesInCopy) is checked correctly.
+  .desc(
+    `Test that the min data size condition (requiredBytesInCopy) is checked correctly.
 
   - Exact requiredBytesInCopy should succeed.
   - requiredBytesInCopy - 1 should fail.
-  `)
+  `
+  )
   .cases(
     params()
       .combine(poptions('method', kImageCopyTypes))
