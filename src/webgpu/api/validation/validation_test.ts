@@ -1,13 +1,18 @@
-import { assert } from '../../../common/framework/util/util.js';
+import { assert, unreachable } from '../../../common/framework/util/util.js';
 import { BindableResource } from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 
-type Encoder = GPUCommandEncoder | GPUProgrammablePassEncoder | GPURenderBundleEncoder;
 export const kEncoderTypes = ['non-pass', 'compute pass', 'render pass', 'render bundle'] as const;
 type EncoderType = typeof kEncoderTypes[number];
 
-export interface CommandBufferMaker<E extends Encoder> {
-  readonly encoder: E;
+export interface CommandBufferMaker<T extends EncoderType> {
+  // Look up the type of the encoder based on `T`. If `T` is a union, this will be too!
+  readonly encoder: {
+    'non-pass': GPUCommandEncoder;
+    'compute pass': GPUComputePassEncoder;
+    'render pass': GPURenderPassEncoder;
+    'render bundle': GPURenderBundleEncoder;
+  }[T];
   finish(): GPUCommandBuffer;
 }
 
@@ -203,29 +208,17 @@ export class ValidationTest extends GPUTest {
     return pipeline;
   }
 
-  createEncoder(encoderType: 'non-pass'): CommandBufferMaker<GPUCommandEncoder>;
-  createEncoder(encoderType: 'render pass'): CommandBufferMaker<GPURenderPassEncoder>;
-  createEncoder(encoderType: 'compute pass'): CommandBufferMaker<GPUComputePassEncoder>;
-  createEncoder(encoderType: 'render bundle'): CommandBufferMaker<GPURenderBundleEncoder>;
-  createEncoder(
-    encoderType: 'render pass' | 'render bundle'
-  ): CommandBufferMaker<GPURenderPassEncoder | GPURenderBundleEncoder>;
-  createEncoder(
-    encoderType: 'compute pass' | 'render pass' | 'render bundle'
-  ): CommandBufferMaker<GPUProgrammablePassEncoder>;
-  createEncoder(encoderType: EncoderType): CommandBufferMaker<Encoder>;
-  createEncoder(encoderType: EncoderType): CommandBufferMaker<Encoder> {
+  createEncoder<T extends EncoderType>(encoderType: T): CommandBufferMaker<T> {
     const colorFormat = 'rgba8unorm';
     switch (encoderType) {
       case 'non-pass': {
         const encoder = this.device.createCommandEncoder();
         return {
           encoder,
-
           finish: () => {
             return encoder.finish();
           },
-        };
+        } as CommandBufferMaker<T>;
       }
       case 'render bundle': {
         const device = this.device;
@@ -240,7 +233,7 @@ export class ValidationTest extends GPUTest {
             pass.encoder.executeBundles([bundle]);
             return pass.finish();
           },
-        };
+        } as CommandBufferMaker<T>;
       }
       case 'compute pass': {
         const commandEncoder = this.device.createCommandEncoder();
@@ -251,7 +244,7 @@ export class ValidationTest extends GPUTest {
             encoder.endPass();
             return commandEncoder.finish();
           },
-        };
+        } as CommandBufferMaker<T>;
       }
       case 'render pass': {
         const commandEncoder = this.device.createCommandEncoder();
@@ -276,9 +269,10 @@ export class ValidationTest extends GPUTest {
             encoder.endPass();
             return commandEncoder.finish();
           },
-        };
+        } as CommandBufferMaker<T>;
       }
     }
+    unreachable();
   }
 
   /**
