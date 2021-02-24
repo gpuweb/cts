@@ -55,17 +55,40 @@ function validateRowsPerImage({
   return true;
 }
 
+interface DataBytesForCopyArgs {
+  layout: GPUImageDataLayout;
+  format: SizedTextureFormat;
+  copySize: GPUExtent3D;
+  method: ImageCopyType;
+}
+
 /**
- * Validate a copy and compute the number of bytes it needs. If the copy is invalid, computes a
- * guess assuming `bytesPerRow` and `rowsPerImage` should be optimal.
+ * Validate a copy and compute the number of bytes it needs. Throws if the copy is invalid.
  */
-export function dataBytesForCopy(
-  layout: GPUImageDataLayout,
-  format: SizedTextureFormat,
-  copyExtentValue: GPUExtent3D,
-  { method }: { method: ImageCopyType }
-): { validMinDataSize: number | undefined; bestGuessMinDataSize: number } {
-  const copyExtent = standardizeExtent3D(copyExtentValue);
+export function dataBytesForCopyOrFail(args: DataBytesForCopyArgs): number {
+  const { minDataSizeOrOverestimate, copyValid } = dataBytesForCopyOrOverestimate(args);
+  assert(copyValid, 'copy was invalid');
+  return minDataSizeOrOverestimate;
+}
+
+/**
+ * Validate a copy and compute the number of bytes it needs. If the copy is invalid, attempts to
+ * "conservatively guess" (overestimate) the number of bytes that could be needed for a copy, even
+ * if the copy parameters turn out to be invalid. This hopes to avoid "buffer too small" validation
+ * errors when attempting to test other validation errors.
+ */
+export function dataBytesForCopyOrOverestimate({
+  layout,
+  format,
+  copySize: copySize_,
+  method,
+}: {
+  layout: GPUImageDataLayout;
+  format: SizedTextureFormat;
+  copySize: GPUExtent3D;
+  method: ImageCopyType;
+}): { minDataSizeOrOverestimate: number; copyValid: boolean } {
+  const copyExtent = standardizeExtent3D(copySize_);
 
   const info = kSizedTextureFormatInfo[format];
   assert(copyExtent.width % info.blockWidth === 0);
@@ -115,9 +138,5 @@ export function dataBytesForCopy(
     }
   }
 
-  const bestGuessMinDataSize = offset + requiredBytesInCopy;
-  return {
-    validMinDataSize: valid ? bestGuessMinDataSize : undefined,
-    bestGuessMinDataSize,
-  };
+  return { minDataSizeOrOverestimate: offset + requiredBytesInCopy, copyValid: valid };
 }

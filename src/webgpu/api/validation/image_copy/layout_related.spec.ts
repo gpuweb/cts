@@ -2,7 +2,6 @@ export const description = '';
 
 import { params, poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert } from '../../../../common/framework/util/util.js';
 import {
   kUncompressedTextureFormatInfo,
   kSizedTextureFormats,
@@ -11,7 +10,8 @@ import {
 import { align } from '../../../util/math.js';
 import {
   bytesInACompleteRow,
-  dataBytesForCopy,
+  dataBytesForCopyOrOverestimate,
+  dataBytesForCopyOrFail,
   kImageCopyTypes,
 } from '../../../util/texture/image_copy.js';
 
@@ -45,15 +45,18 @@ g.test('bound_on_rows_per_image')
     });
 
     const layout = { bytesPerRow: 1024, rowsPerImage };
-    const size = { width: 0, height: copyHeight, depth: copyDepth };
-    const { validMinDataSize, bestGuessMinDataSize } = dataBytesForCopy(layout, format, size, {
+    const copySize = { width: 0, height: copyHeight, depth: copyDepth };
+    const { minDataSizeOrOverestimate, copyValid } = dataBytesForCopyOrOverestimate({
+      layout,
+      format,
+      copySize,
       method,
     });
 
-    t.testRun({ texture }, layout, size, {
-      dataSize: bestGuessMinDataSize,
+    t.testRun({ texture }, layout, copySize, {
+      dataSize: minDataSizeOrOverestimate,
       method,
-      success: validMinDataSize !== undefined,
+      success: copyValid,
     });
   });
 
@@ -146,23 +149,22 @@ g.test('required_bytes_in_copy')
     const bytesPerRow =
       align(bytesInACompleteRow(copyWidth, format), bytesPerRowAlignment) +
       bytesPerRowPadding * bytesPerRowAlignment;
-    const size = { width: copyWidth, height: copyHeight, depth: copyDepth };
+    const copySize = { width: copyWidth, height: copyHeight, depth: copyDepth };
 
     const layout = { offset, bytesPerRow, rowsPerImage };
-    const { validMinDataSize } = dataBytesForCopy(layout, format, size, { method });
-    assert(validMinDataSize !== undefined);
+    const minDataSize = dataBytesForCopyOrFail({ layout, format, copySize, method });
 
-    const texture = t.createAlignedTexture(format, size);
+    const texture = t.createAlignedTexture(format, copySize);
 
-    t.testRun({ texture }, { offset, bytesPerRow, rowsPerImage }, size, {
-      dataSize: validMinDataSize,
+    t.testRun({ texture }, { offset, bytesPerRow, rowsPerImage }, copySize, {
+      dataSize: minDataSize,
       method,
       success: true,
     });
 
-    if (validMinDataSize > 0) {
-      t.testRun({ texture }, { offset, bytesPerRow, rowsPerImage }, size, {
-        dataSize: validMinDataSize - 1,
+    if (minDataSize > 0) {
+      t.testRun({ texture }, { offset, bytesPerRow, rowsPerImage }, copySize, {
+        dataSize: minDataSize - 1,
         method,
         success: false,
       });
@@ -271,14 +273,17 @@ g.test('bound_on_bytes_per_row')
     });
 
     const layout = { bytesPerRow, rowsPerImage: copyHeight };
-    const { validMinDataSize, bestGuessMinDataSize } = dataBytesForCopy(layout, format, copySize, {
+    const { minDataSizeOrOverestimate, copyValid } = dataBytesForCopyOrOverestimate({
+      layout,
+      format,
+      copySize,
       method,
     });
 
     t.testRun({ texture }, layout, copySize, {
-      dataSize: bestGuessMinDataSize,
+      dataSize: minDataSizeOrOverestimate,
       method,
-      success: validMinDataSize !== undefined,
+      success: copyValid,
     });
   });
 

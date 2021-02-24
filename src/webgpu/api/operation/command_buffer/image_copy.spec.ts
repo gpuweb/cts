@@ -44,7 +44,7 @@ import {
 } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { align } from '../../../util/math.js';
-import { bytesInACompleteRow, dataBytesForCopy } from '../../../util/texture/image_copy.js';
+import { bytesInACompleteRow, dataBytesForCopyOrFail } from '../../../util/texture/image_copy.js';
 import { getTextureCopyLayout, TextureCopyLayout } from '../../../util/texture/layout.js';
 
 interface TextureCopyViewWithRequiredOrigin {
@@ -703,18 +703,17 @@ bytes in copy works for every format.
       bytesPerRowPadding * bytesPerRowAlignment;
     const copySize = { width: copyWidth, height: copyHeight, depth: copyDepth };
 
-    const { validMinDataSize } = dataBytesForCopy(
-      { offset: 0, bytesPerRow, rowsPerImage },
+    const dataSize = dataBytesForCopyOrFail({
+      layout: { offset: 0, bytesPerRow, rowsPerImage },
       format,
       copySize,
-      { method: initMethod }
-    );
-    assert(validMinDataSize !== undefined);
+      method: initMethod,
+    });
 
     t.uploadTextureAndVerifyCopy({
       textureDataLayout: { offset: 0, bytesPerRow, rowsPerImage },
       copySize,
-      dataSize: validMinDataSize,
+      dataSize,
       textureSize: [
         Math.max(copyWidth, info.blockWidth),
         Math.max(copyHeight, info.blockHeight),
@@ -781,15 +780,13 @@ works for every format with 2d and 2d-array textures.
     const rowsPerImage = 3;
     const bytesPerRow = 256;
 
-    const { validMinDataSize } = dataBytesForCopy(
-      { offset, bytesPerRow, rowsPerImage },
+    const minDataSize = dataBytesForCopyOrFail({
+      layout: { offset, bytesPerRow, rowsPerImage },
       format,
       copySize,
-      { method: initMethod }
-    );
-    assert(validMinDataSize !== undefined);
-
-    const dataSize = validMinDataSize + dataPaddingInBytes;
+      method: initMethod,
+    });
+    const dataSize = minDataSize + dataPaddingInBytes;
 
     // We're copying a (3 x 3 x copyDepth) (in texel blocks) part of a (4 x 4 x copyDepth)
     // (in texel blocks) texture with no origin.
@@ -869,13 +866,13 @@ for all formats. We pass origin and copyExtent as [number, number, number].`
 
     const rowsPerImage = copySizeBlocks[1];
     const bytesPerRow = align(copySizeBlocks[0] * info.bytesPerBlock, 256);
-    const { validMinDataSize: dataSize } = dataBytesForCopy(
-      { offset: 0, bytesPerRow, rowsPerImage },
+
+    const dataSize = dataBytesForCopyOrFail({
+      layout: { offset: 0, bytesPerRow, rowsPerImage },
       format,
       copySize,
-      { method: initMethod }
-    );
-    assert(dataSize !== undefined);
+      method: initMethod,
+    });
 
     // For testing width: we copy a (_ x 2 x 2) (in texel blocks) part of a (_ x 3 x 3)
     // (in texel blocks) texture with origin (_, 1, 1) (in texel blocks).
@@ -1040,13 +1037,13 @@ g.test('mip_levels')
 
     const rowsPerImage = copySizeInBlocks.height + 1;
     const bytesPerRow = align(copySize.width, 256);
-    const { validMinDataSize: dataSize } = dataBytesForCopy(
-      { offset: 0, bytesPerRow, rowsPerImage },
+
+    const dataSize = dataBytesForCopyOrFail({
+      layout: { offset: 0, bytesPerRow, rowsPerImage },
       format,
       copySize,
-      { method: initMethod }
-    );
-    assert(dataSize !== undefined);
+      method: initMethod,
+    });
 
     t.uploadTextureAndVerifyCopy({
       textureDataLayout: { offset: 0, bytesPerRow, rowsPerImage },
