@@ -23,6 +23,9 @@ Generally, see:
 - TODO: Index existing helpers.
 - [`GPUTest`](../src/webgpu/gpu_test.ts)
 - [`ValidationTest`](../src/webgpu/api/validation/validation_test.ts)
+    - `createEncoder`: Generically creates non-pass, compute pass, render pass, or render bundle
+        encoders. This allows callers to use write code using common interfaces between those types.
+    - TODO
 - [`ShaderValidationTest`](../src/webgpu/shader/validation/shader_validation_test.ts)
     - `expectCompileResult` Allows checking for compile success/failure, or failure with a
       particular error substring.
