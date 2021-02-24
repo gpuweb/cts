@@ -4,6 +4,7 @@ import { params, pbool, poptions } from '../../../../common/framework/params_bui
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { range } from '../../../../common/framework/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
+import { align } from '../../../util/math.js';
 
 const kTypedArrays = [
   'Uint8Array',
@@ -30,7 +31,7 @@ class F extends GPUTest {
     let bufferSize = 0;
     // Calculate size of final buffer
     for (const { bufferOffset, data, arrayType, useArrayBuffer, dataOffset, dataSize } of writes) {
-      const TypedArrayConstructor = self[arrayType];
+      const TypedArrayConstructor = globalThis[arrayType];
 
       // When passing data as an ArrayBuffer, dataOffset and dataSize use byte instead of number of
       // elements. bytesPerElement is used to convert dataOffset and dataSize from elements to bytes
@@ -54,7 +55,7 @@ class F extends GPUTest {
       bufferSize = Math.max(bufferSize, requiredBufferSize);
     }
     // writeBuffer requires buffers to be a multiple of 4
-    return Math.ceil(bufferSize / 4) * 4;
+    return align(bufferSize, 4);
   }
 
   testWriteBuffer(...writes: WriteBufferSignature[]) {
@@ -66,13 +67,13 @@ class F extends GPUTest {
     });
 
     // Initialize buffer to non-zero data (0xff) for easier debug.
-    const expectedData = new Uint8Array(range<number>(bufferSize, () => 0xff));
+    const expectedData = new Uint8Array(bufferSize).fill(0xff);
     const bufferData = buffer.getMappedRange();
     new Uint8Array(bufferData).set(expectedData);
     buffer.unmap();
 
     for (const { bufferOffset, data, arrayType, useArrayBuffer, dataOffset, dataSize } of writes) {
-      const TypedArrayConstructor = self[arrayType];
+      const TypedArrayConstructor = globalThis[arrayType];
       const writeData = new TypedArrayConstructor(data);
       this.queue.writeBuffer(
         buffer,

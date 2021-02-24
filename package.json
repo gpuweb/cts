@@ -9,11 +9,11 @@
     "wpt": "grunt wpt",
     "fix": "grunt fix",
     "unittest": "grunt unittest",
-    "gen_wpt_cts_html": "tools/gen_wpt_cts_html",
-    "dev": "tools/dev_server"
+    "gen_wpt_cts_html": "node tools/gen_wpt_cts_html",
+    "dev": "node tools/dev_server"
   },
   "engines": {
-    "node": ">=11.14.0"
+    "node": ">=12.0.0"
   },
   "repository": {
     "type": "git",
