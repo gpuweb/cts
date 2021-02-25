@@ -42,7 +42,7 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
     commandEncoder.copyTextureToBuffer(
       { texture: rt, mipLevel: 0, origin: [0, 0, 0] },
       { buffer, bytesPerRow: kBytesPerRow, rowsPerImage: kRTSize },
-      { width: kRTSize, height: kRTSize, depth: 1 }
+      { width: kRTSize, height: kRTSize, depthOrArrayLayers: 1 }
     );
     this.queue.submit([commandEncoder.finish()]);
 
@@ -130,7 +130,7 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
 
     const colorAttachment = this.device.createTexture({
       format: kColorAttachmentFormat,
-      size: { width: kRTSize, height: kRTSize, depth: 1 },
+      size: { width: kRTSize, height: kRTSize, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
     const colorAttachmentView = colorAttachment.createView();
@@ -172,7 +172,7 @@ g.test('anisotropic_filter_checkerboard')
     const textureSize = 32;
     const texture = t.device.createTexture({
       mipLevelCount: 1,
-      size: { width: textureSize, height: textureSize, depth: 1 },
+      size: { width: textureSize, height: textureSize, depthOrArrayLayers: 1 },
       format: kTextureFormat,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED,
     });

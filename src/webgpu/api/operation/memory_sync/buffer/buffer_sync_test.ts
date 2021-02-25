@@ -28,7 +28,7 @@ export class BufferSyncTest extends GPUTest {
     const fence = this.queue.createFence();
     const data = new Uint32Array(kSize / 4).fill(initValue);
     const texture = this.device.createTexture({
-      size: { width: kSize / 4, height: 1, depth: 1 },
+      size: { width: kSize / 4, height: 1, depthOrArrayLayers: 1 },
       format: 'r32uint',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
@@ -36,7 +36,7 @@ export class BufferSyncTest extends GPUTest {
       { texture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
       data,
       { offset: 0, bytesPerRow: kSize, rowsPerImage: 1 },
-      { width: kSize / 4, height: 1, depth: 1 }
+      { width: kSize / 4, height: 1, depthOrArrayLayers: 1 }
     );
     this.queue.signal(fence, 1);
     await fence.onCompletion(1);
@@ -124,7 +124,7 @@ export class BufferSyncTest extends GPUTest {
   beginSimpleRenderPass(encoder: GPUCommandEncoder): GPURenderPassEncoder {
     const view = this.device
       .createTexture({
-        size: { width: 1, height: 1, depth: 1 },
+        size: { width: 1, height: 1, depthOrArrayLayers: 1 },
         format: 'rgba8unorm',
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
       })
@@ -192,7 +192,7 @@ export class BufferSyncTest extends GPUTest {
     encoder.copyTextureToBuffer(
       { texture: tmpTexture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
       { buffer, bytesPerRow: 256 },
-      { width: 1, height: 1, depth: 1 }
+      { width: 1, height: 1, depthOrArrayLayers: 1 }
     );
   }
 

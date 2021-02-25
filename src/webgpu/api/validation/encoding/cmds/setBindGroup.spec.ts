@@ -27,7 +27,7 @@ class F extends ValidationTest {
   makeAttachmentTexture(): GPUTexture {
     return this.device.createTexture({
       format: 'rgba8unorm',
-      size: { width: 16, height: 16, depth: 1 },
+      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
     });
   }

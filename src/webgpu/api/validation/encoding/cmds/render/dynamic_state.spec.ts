@@ -46,7 +46,7 @@ class F extends ValidationTest {
   testViewportCall(
     success: boolean,
     v: ViewportCall,
-    attachmentSize: GPUExtent3D = { width: 1, height: 1, depth: 1 }
+    attachmentSize: GPUExtent3D = { width: 1, height: 1, depthOrArrayLayers: 1 }
   ) {
     const attachment = this.device.createTexture({
       format: 'rgba8unorm',
@@ -74,7 +74,7 @@ class F extends ValidationTest {
   testScissorCall(
     success: boolean | 'type-error',
     s: ScissorCall,
-    attachmentSize: GPUExtent3D = { width: 1, height: 1, depth: 1 }
+    attachmentSize: GPUExtent3D = { width: 1, height: 1, depthOrArrayLayers: 1 }
   ) {
     const attachment = this.device.createTexture({
       format: 'rgba8unorm',
@@ -189,7 +189,7 @@ g.test('setViewport,xy_rect_contained_in_attachment')
     t.testViewportCall(
       success,
       { x, y, w, h, minDepth: 0, maxDepth: 1 },
-      { width: attachmentWidth, height: attachmentHeight, depth: 1 }
+      { width: attachmentWidth, height: attachmentHeight, depthOrArrayLayers: 1 }
     );
   });
 
@@ -279,7 +279,7 @@ g.test('setScissorRect,xy_rect_contained_in_attachment')
     t.testScissorCall(
       success,
       { x, y, w, h },
-      { width: attachmentWidth, height: attachmentHeight, depth: 1 }
+      { width: attachmentWidth, height: attachmentHeight, depthOrArrayLayers: 1 }
     );
   });
 

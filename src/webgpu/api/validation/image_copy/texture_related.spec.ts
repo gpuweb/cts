@@ -28,7 +28,7 @@ g.test('valid')
 
     // A valid texture.
     let texture = t.device.createTexture({
-      size: { width: 4, height: 4, depth: 1 },
+      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
@@ -50,7 +50,7 @@ g.test('valid')
     t.testRun(
       { texture },
       { bytesPerRow: 0 },
-      { width: 0, height: 0, depth: 0 },
+      { width: 0, height: 0, depthOrArrayLayers: 0 },
       { dataSize: 1, method, success, submit }
     );
   });
@@ -69,7 +69,7 @@ g.test('usage')
     const { usage, method } = t.params;
 
     const texture = t.device.createTexture({
-      size: { width: 4, height: 4, depth: 1 },
+      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
       usage,
     });
@@ -82,7 +82,7 @@ g.test('usage')
     t.testRun(
       { texture },
       { bytesPerRow: 0 },
-      { width: 0, height: 0, depth: 0 },
+      { width: 0, height: 0, depthOrArrayLayers: 0 },
       { dataSize: 1, method, success }
     );
   });
@@ -95,7 +95,7 @@ g.test('sample_count')
     const { sampleCount, method } = t.params;
 
     const texture = t.device.createTexture({
-      size: { width: 4, height: 4, depth: 1 },
+      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
       sampleCount,
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED,
@@ -106,7 +106,7 @@ g.test('sample_count')
     t.testRun(
       { texture },
       { bytesPerRow: 0 },
-      { width: 0, height: 0, depth: 0 },
+      { width: 0, height: 0, depthOrArrayLayers: 0 },
       { dataSize: 1, method, success }
     );
   });
@@ -123,7 +123,7 @@ g.test('mip_level')
     const { mipLevelCount, mipLevel, method } = t.params;
 
     const texture = t.device.createTexture({
-      size: { width: 32, height: 32, depth: 1 },
+      size: { width: 32, height: 32, depthOrArrayLayers: 1 },
       mipLevelCount,
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
@@ -134,7 +134,7 @@ g.test('mip_level')
     t.testRun(
       { texture, mipLevel },
       { bytesPerRow: 0 },
-      { width: 0, height: 0, depth: 0 },
+      { width: 0, height: 0, depthOrArrayLayers: 0 },
       { dataSize: 1, method, success }
     );
   });
@@ -160,7 +160,7 @@ g.test('origin_alignment')
     await t.selectDeviceOrSkipTestCase(info.extension);
 
     const origin = { x: 0, y: 0, z: 0 };
-    const size = { width: 0, height: 0, depth: 0 };
+    const size = { width: 0, height: 0, depthOrArrayLayers: 0 };
     let success = true;
 
     origin[coordinateToTest] = valueToCoordinate;
@@ -191,19 +191,19 @@ g.test('1d')
     params()
       .combine(poptions('width', [0, 1]))
       .combine([
-        { height: 1, depth: 1 },
-        { height: 1, depth: 0 },
-        { height: 1, depth: 2 },
-        { height: 0, depth: 1 },
-        { height: 2, depth: 1 },
+        { height: 1, depthOrArrayLayers: 1 },
+        { height: 1, depthOrArrayLayers: 0 },
+        { height: 1, depthOrArrayLayers: 2 },
+        { height: 0, depthOrArrayLayers: 1 },
+        { height: 2, depthOrArrayLayers: 1 },
       ])
   )
   .fn(async t => {
-    const { method, width, height, depth } = t.params;
-    const size = { width, height, depth };
+    const { method, width, height, depthOrArrayLayers } = t.params;
+    const size = { width, height, depthOrArrayLayers };
 
     const texture = t.device.createTexture({
-      size: { width: 2, height: 1, depth: 1 },
+      size: { width: 2, height: 1, depthOrArrayLayers: 1 },
       dimension: '1d',
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
@@ -211,7 +211,7 @@ g.test('1d')
 
     // For 1d textures we require copyHeight and copyDepth to be 1,
     // copyHeight or copyDepth being 0 should cause a validation error.
-    const success = size.height === 1 && size.depth === 1;
+    const success = size.height === 1 && size.depthOrArrayLayers === 1;
 
     t.testRun({ texture }, { bytesPerRow: 256, rowsPerImage: 4 }, size, {
       dataSize: 16,
@@ -230,7 +230,7 @@ g.test('size_alignment')
   )
   .subcases(p =>
     params()
-      .combine(poptions('coordinateToTest', ['width', 'height', 'depth'] as const))
+      .combine(poptions('coordinateToTest', ['width', 'height', 'depthOrArrayLayers'] as const))
       .expand(({ coordinateToTest }) =>
         texelBlockAlignmentTestExpanderForValueToCoordinate({ format: p.format, coordinateToTest })
       )
@@ -241,7 +241,7 @@ g.test('size_alignment')
     await t.selectDeviceOrSkipTestCase(info.extension);
 
     const origin = { x: 0, y: 0, z: 0 };
-    const size = { width: 0, height: 0, depth: 0 };
+    const size = { width: 0, height: 0, depthOrArrayLayers: 0 };
     let success = true;
 
     size[coordinateToTest] = valueToCoordinate;
@@ -294,7 +294,7 @@ g.test('copy_rectangle')
 
     const origin: GPUOrigin3D = [0, 0, 0];
     const copySize: GPUExtent3D = [0, 0, 0];
-    const textureSize = { width: 16 << mipLevel, height: 16 << mipLevel, depth: 16 };
+    const textureSize = { width: 16 << mipLevel, height: 16 << mipLevel, depthOrArrayLayers: 16 };
     const success = originValue + copySizeValue <= textureSizeValue;
 
     origin[coordinateToTest] = originValue;
@@ -309,7 +309,7 @@ g.test('copy_rectangle')
         break;
       }
       case 2: {
-        textureSize.depth = textureSizeValue;
+        textureSize.depthOrArrayLayers = textureSizeValue;
         break;
       }
     }

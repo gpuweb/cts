@@ -30,8 +30,11 @@ function validateBytesPerRow({
     return false;
   }
   // If heightInBlocks > 1, layout.bytesPerRow must be specified.
-  // If copyExtent.depth > 1, layout.bytesPerRow and layout.rowsPerImage must be specified.
-  if (bytesPerRow === undefined && (sizeInBlocks.height > 1 || sizeInBlocks.depth > 1)) {
+  // If copyExtent.depthOrArrayLayers > 1, layout.bytesPerRow and layout.rowsPerImage must be specified.
+  if (
+    bytesPerRow === undefined &&
+    (sizeInBlocks.height > 1 || sizeInBlocks.depthOrArrayLayers > 1)
+  ) {
     return false;
   }
   return true;
@@ -48,8 +51,8 @@ function validateRowsPerImage({
   if (rowsPerImage !== undefined && rowsPerImage < sizeInBlocks.height) {
     return false;
   }
-  // If copyExtent.depth > 1, layout.bytesPerRow and layout.rowsPerImage must be specified.
-  if (rowsPerImage === undefined && sizeInBlocks.depth > 1) {
+  // If copyExtent.depthOrArrayLayers > 1, layout.bytesPerRow and layout.rowsPerImage must be specified.
+  if (rowsPerImage === undefined && sizeInBlocks.depthOrArrayLayers > 1) {
     return false;
   }
   return true;
@@ -96,7 +99,7 @@ export function dataBytesForCopyOrOverestimate({
   const sizeInBlocks = {
     width: copyExtent.width / info.blockWidth,
     height: copyExtent.height / info.blockHeight,
-    depth: copyExtent.depth,
+    depthOrArrayLayers: copyExtent.depthOrArrayLayers,
   } as const;
   const bytesInLastRow = sizeInBlocks.width * info.bytesPerBlock;
 
@@ -127,12 +130,12 @@ export function dataBytesForCopyOrOverestimate({
     bytesPerRow ??= align(info.bytesPerBlock * sizeInBlocks.width, 256);
     rowsPerImage ??= sizeInBlocks.height;
 
-    if (copyExtent.depth > 1) {
+    if (copyExtent.depthOrArrayLayers > 1) {
       const bytesPerImage = bytesPerRow * rowsPerImage;
-      const bytesBeforeLastImage = bytesPerImage * (copyExtent.depth - 1);
+      const bytesBeforeLastImage = bytesPerImage * (copyExtent.depthOrArrayLayers - 1);
       requiredBytesInCopy += bytesBeforeLastImage;
     }
-    if (copyExtent.depth > 0) {
+    if (copyExtent.depthOrArrayLayers > 0) {
       if (sizeInBlocks.height > 1) requiredBytesInCopy += bytesPerRow * (sizeInBlocks.height - 1);
       if (sizeInBlocks.height > 0) requiredBytesInCopy += bytesInLastRow;
     }

@@ -65,7 +65,7 @@ class F extends ValidationTest {
     colorFormats: Iterable<GPUTextureFormat>,
     depthStencilFormat?: GPUTextureFormat,
     sampleCount?: number
-  ): CommandBufferMaker<GPURenderPassEncoder | GPURenderBundleEncoder> {
+  ): CommandBufferMaker<'render pass' | 'render bundle'> {
     const encoder = this.device.createCommandEncoder();
     const passDesc: GPURenderPassDescriptor = {
       colorAttachments: Array.from(colorFormats, desc =>
