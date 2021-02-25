@@ -65,10 +65,10 @@ class F extends ValidationTest {
   }
 
   GetPhysicalSubresourceSize(
-    textureSize: GPUExtent3DDict,
+    textureSize: Required<GPUExtent3DDict>,
     format: GPUTextureFormat,
     mipLevel: number
-  ): GPUExtent3DDict {
+  ): Required<GPUExtent3DDict> {
     const virtualWidthAtLevel = Math.max(textureSize.width >> mipLevel, 1);
     const virtualHeightAtLevel = Math.max(textureSize.height >> mipLevel, 1);
     const physicalWidthAtLevel = align(

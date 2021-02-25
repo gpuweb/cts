@@ -19,7 +19,7 @@ import { physicalMipSize } from '../../../util/texture/subresource.js';
 
 class F extends GPUTest {
   GetInitialDataPerMipLevel(
-    textureSize: GPUExtent3DDict,
+    textureSize: Required<GPUExtent3DDict>,
     format: SizedTextureFormat,
     mipLevel: number
   ): Uint8Array {
@@ -42,13 +42,13 @@ class F extends GPUTest {
   }
 
   DoCopyTextureToTextureTest(
-    srcTextureSize: GPUExtent3DDict,
-    dstTextureSize: GPUExtent3DDict,
+    srcTextureSize: Required<GPUExtent3DDict>,
+    dstTextureSize: Required<GPUExtent3DDict>,
     format: SizedTextureFormat,
     copyBoxOffsets: {
       srcOffset: { x: number; y: number; z: number };
       dstOffset: { x: number; y: number; z: number };
-      copyExtent: GPUExtent3DDict;
+      copyExtent: Required<GPUExtent3DDict>;
     },
     srcCopyLevel: number,
     dstCopyLevel: number
