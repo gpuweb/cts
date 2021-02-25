@@ -70,7 +70,7 @@ export function mipSize(size: GPUExtent3D, level: number): GPUExtent3D {
     return {
       width: rShiftMax1(size.width),
       height: rShiftMax1(size.height),
-      depth: rShiftMax1(size.depth),
+      depthOrArrayLayers: rShiftMax1(size.depthOrArrayLayers),
     };
   }
 }
@@ -92,5 +92,9 @@ export function physicalMipSize(
     virtualHeightAtLevel,
     kAllTextureFormatInfo[format].blockHeight
   );
-  return { width: physicalWidthAtLevel, height: physicalHeightAtLevel, depth: size.depth };
+  return {
+    width: physicalWidthAtLevel,
+    height: physicalHeightAtLevel,
+    depthOrArrayLayers: size.depthOrArrayLayers,
+  };
 }

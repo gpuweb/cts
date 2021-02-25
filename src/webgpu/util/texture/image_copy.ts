@@ -50,8 +50,8 @@ export function dataBytesForCopy(
 
     // If heightInBlocks > 1, layout.bytesPerRow must be specified.
     if (heightInBlocks > 1 && bytesPerRow === undefined) valid = false;
-    // If copyExtent.depth > 1, layout.bytesPerRow and layout.rowsPerImage must be specified.
-    if (copyExtent.depth > 1 && rowsPerImage === undefined) valid = false;
+    // If copyExtent.depthOrArrayLayers > 1, layout.bytesPerRow and layout.rowsPerImage must be specified.
+    if (copyExtent.depthOrArrayLayers > 1 && rowsPerImage === undefined) valid = false;
     // If specified, layout.bytesPerRow must be greater than or equal to bytesInLastRow.
     if (bytesPerRow !== undefined && bytesPerRow < bytesInLastRow) valid = false;
     // If specified, layout.rowsPerImage must be greater than or equal to heightInBlocks.
@@ -60,12 +60,12 @@ export function dataBytesForCopy(
     bytesPerRow ??= align(info.bytesPerBlock * widthInBlocks, 256);
     rowsPerImage ??= heightInBlocks;
 
-    if (copyExtent.depth > 1) {
+    if (copyExtent.depthOrArrayLayers > 1) {
       const bytesPerImage = bytesPerRow * rowsPerImage;
-      const bytesBeforeLastImage = bytesPerImage * (copyExtent.depth - 1);
+      const bytesBeforeLastImage = bytesPerImage * (copyExtent.depthOrArrayLayers - 1);
       requiredBytesInCopy += bytesBeforeLastImage;
     }
-    if (copyExtent.depth > 0) {
+    if (copyExtent.depthOrArrayLayers > 0) {
       if (heightInBlocks > 1) requiredBytesInCopy += bytesPerRow * (heightInBlocks - 1);
       if (heightInBlocks > 0) requiredBytesInCopy += bytesInLastRow;
     }

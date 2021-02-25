@@ -99,7 +99,7 @@ g.test('render_pass_resolve')
     for (let i = 0; i < t.params.numColorAttachments; i++) {
       const colorAttachment = t.device.createTexture({
         format: kFormat,
-        size: { width: kSize, height: kSize, depth: 1 },
+        size: { width: kSize, height: kSize, depthOrArrayLayers: 1 },
         sampleCount: 4,
         mipLevelCount: 1,
         usage:
@@ -109,7 +109,7 @@ g.test('render_pass_resolve')
       if (t.params.slotsToResolve.includes(i)) {
         const colorAttachment = t.device.createTexture({
           format: kFormat,
-          size: { width: kSize, height: kSize, depth: 1 },
+          size: { width: kSize, height: kSize, depthOrArrayLayers: 1 },
           sampleCount: 4,
           mipLevelCount: 1,
           usage:
@@ -121,7 +121,7 @@ g.test('render_pass_resolve')
           size: {
             width: kResolveTargetSize,
             height: kResolveTargetSize,
-            depth: t.params.resolveTargetBaseArrayLayer + 1,
+            depthOrArrayLayers: t.params.resolveTargetBaseArrayLayer + 1,
           },
           sampleCount: 1,
           mipLevelCount: t.params.resolveTargetBaseMipLevel + 1,
