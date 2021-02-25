@@ -120,16 +120,17 @@ export const kRegularTextureFormatInfo = /* prettier-ignore */ makeTable(
 const kTexFmtInfoHeader =  ['renderable', 'color', 'depth', 'stencil', 'storage', 'copySrc', 'copyDst', 'bytesPerBlock', 'blockWidth', 'blockHeight',              'extension'] as const;
 export const kSizedDepthStencilFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
                            [        true,   false,        ,          ,     false,          ,          ,                ,            1,             1,                         ] as const, {
-  'depth32float':          [        true,   false,    true,     false,          ,     false,     false,               4,             ,              ,                         ],
-  'depth16unorm':          [        true,   false,    true,     false,          ,     false,     false,               2,             ,              ,                         ],
-  'stencil8':              [        true,        ,   false,      true,          ,     false,     false,               1,             ,              ,                         ],
-  'depth24unorm-stencil8': [        true,   false,    true,      true,          ,     false,     false,               4,             ,              ,  'depth24unorm-stencil8'],
-  'depth32float-stencil8': [        true,   false,    true,      true,          ,     false,     false,               8,             ,              ,  'depth32float-stencil8'],
+  'depth32float':          [        true,   false,    true,     false,          ,     false,     false,               4],
+  'depth16unorm':          [        true,   false,    true,     false,          ,     false,     false,               2],
+  'stencil8':              [        true,        ,   false,      true,          ,     false,     false,               1],
 } as const);
 export const kUnsizedDepthStencilFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
                            [        true,   false,        ,          ,     false,          ,          ,       undefined,            1,             1,                         ] as const, {
   'depth24plus':           [            ,        ,    true,     false,          ,     false,     false],
   'depth24plus-stencil8':  [            ,        ,    true,      true,          ,     false,     false],
+  // bytesPerBlock only makes sense on a per-aspect basis. But this table can't express that. So we put depth24unorm-stencil8 and depth32float-stencil8 to be unsized formats for now.
+  'depth24unorm-stencil8': [            ,        ,    true,      true,          ,     false,     false,                ,             ,              ,  'depth24unorm-stencil8'],
+  'depth32float-stencil8': [            ,        ,    true,      true,          ,     false,     false,                ,             ,              ,  'depth32float-stencil8'],
 } as const);
 export const kCompressedTextureFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
                            [       false,    true,   false,     false,     false,      true,      true,                ,            4,             4,                         ] as const, {

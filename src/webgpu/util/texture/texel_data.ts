@@ -534,13 +534,7 @@ export const kTexelRepresentationInfo: {
           Stencil: components.Stencil,
         };
       },
-      pack: components =>
-        packComponents(
-          [TexelComponent.Depth, TexelComponent.Stencil],
-          components,
-          { Depth: 24, Stencil: 8 },
-          { Depth: 'unorm', Stencil: 'uint' }
-        ),
+      pack: () => unreachable('depth24unorm-stencil8 data cannot be packed'),
     },
     'depth32float-stencil8': {
       componentOrder: [TexelComponent.Depth, TexelComponent.Stencil],
