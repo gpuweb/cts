@@ -3,7 +3,7 @@ import { kSizedTextureFormatInfo, SizedTextureFormat } from '../../../capability
 import { ImageCopyType } from '../../../util/texture/image_copy.js';
 import { ValidationTest } from '../validation_test.js';
 
-export class CopyBetweenLinearDataAndTextureTest extends ValidationTest {
+export class ImageCopyTest extends ValidationTest {
   testRun(
     textureCopyView: GPUTextureCopyView,
     textureDataLayout: GPUTextureDataLayout,

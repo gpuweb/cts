@@ -9,14 +9,15 @@ import { align } from '../../../util/math.js';
 import { kImageCopyTypes } from '../../../util/texture/image_copy.js';
 
 import {
-  CopyBetweenLinearDataAndTextureTest,
+  ImageCopyTest,
   texelBlockAlignmentTestExpanderForValueToCoordinate,
   formatCopyableWithMethod,
-} from './copyBetweenLinearDataAndTexture.js';
+} from './image_copy.js';
 
-export const g = makeTestGroup(CopyBetweenLinearDataAndTextureTest);
+export const g = makeTestGroup(ImageCopyTest);
 
-g.test('texture_must_be_valid')
+g.test('valid')
+  .desc(`The texture must be valid and not destroyed.`)
   .cases(
     params()
       .combine(poptions('method', kImageCopyTypes))
@@ -54,7 +55,8 @@ g.test('texture_must_be_valid')
     );
   });
 
-g.test('texture_usage_must_be_valid')
+g.test('usage')
+  .desc(`The texture must have the appropriate COPY_SRC/COPY_DST usage.`)
   .cases(poptions('method', kImageCopyTypes))
   .subcases(() =>
     poptions('usage', [
@@ -85,7 +87,8 @@ g.test('texture_usage_must_be_valid')
     );
   });
 
-g.test('sample_count_must_be_1')
+g.test('sample_count')
+  .desc(`Multisampled textures cannot be copied.`)
   .cases(poptions('method', kImageCopyTypes))
   .subcases(() => poptions('sampleCount', [1, 4]))
   .fn(async t => {
@@ -108,7 +111,8 @@ g.test('sample_count_must_be_1')
     );
   });
 
-g.test('mip_level_must_be_in_range')
+g.test('mip_level')
+  .desc(`The mipLevel of the copy must be in range of the texture.`)
   .cases(poptions('method', kImageCopyTypes))
   .subcases(() =>
     params()
@@ -135,7 +139,8 @@ g.test('mip_level_must_be_in_range')
     );
   });
 
-g.test('texel_block_alignments_on_origin')
+g.test('origin_alignment')
+  .desc(`Copy origin must be aligned to block size.`)
   .cases(
     params()
       .combine(poptions('method', kImageCopyTypes))
@@ -179,7 +184,8 @@ g.test('texel_block_alignments_on_origin')
     });
   });
 
-g.test('1d_texture')
+g.test('1d')
+  .desc(`1d texture copies must have height=depth=1.`)
   .cases(poptions('method', kImageCopyTypes))
   .subcases(() =>
     params()
@@ -214,7 +220,8 @@ g.test('1d_texture')
     });
   });
 
-g.test('texel_block_alignments_on_size')
+g.test('size_alignment')
+  .desc(`Copy size must be aligned to block size.`)
   .cases(
     params()
       .combine(poptions('method', kImageCopyTypes))
@@ -262,7 +269,8 @@ g.test('texel_block_alignments_on_size')
     });
   });
 
-g.test('texture_range_conditions')
+g.test('copy_rectangle')
+  .desc(`The max corner of the copy rectangle (origin+copySize) must be inside the texture.`)
   .cases(poptions('method', kImageCopyTypes))
   .subcases(() =>
     params()

@@ -2,7 +2,6 @@ export const description = '';
 
 import { params, poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert } from '../../../../common/framework/util/util.js';
 import {
   kUncompressedTextureFormatInfo,
   kSizedTextureFormats,
@@ -11,18 +10,19 @@ import {
 import { align } from '../../../util/math.js';
 import {
   bytesInACompleteRow,
-  dataBytesForCopy,
+  dataBytesForCopyOrOverestimate,
+  dataBytesForCopyOrFail,
   kImageCopyTypes,
 } from '../../../util/texture/image_copy.js';
 
 import {
-  CopyBetweenLinearDataAndTextureTest,
+  ImageCopyTest,
   texelBlockAlignmentTestExpanderForOffset,
   texelBlockAlignmentTestExpanderForRowsPerImage,
   formatCopyableWithMethod,
-} from './copyBetweenLinearDataAndTexture.js';
+} from './image_copy.js';
 
-export const g = makeTestGroup(CopyBetweenLinearDataAndTextureTest);
+export const g = makeTestGroup(ImageCopyTest);
 
 g.test('bound_on_rows_per_image')
   .cases(poptions('method', kImageCopyTypes))
@@ -45,18 +45,23 @@ g.test('bound_on_rows_per_image')
     });
 
     const layout = { bytesPerRow: 1024, rowsPerImage };
-    const size = { width: 0, height: copyHeight, depthOrArrayLayers: copyDepth };
-    const { minDataSize, valid } = dataBytesForCopy(layout, format, size, { method });
-
-    t.testRun({ texture }, layout, size, {
-      dataSize: minDataSize,
+    const copySize = { width: 0, height: copyHeight, depthOrArrayLayers: copyDepth };
+    const { minDataSizeOrOverestimate, copyValid } = dataBytesForCopyOrOverestimate({
+      layout,
+      format,
+      copySize,
       method,
-      success: valid,
+    });
+
+    t.testRun({ texture }, layout, copySize, {
+      dataSize: minDataSizeOrOverestimate,
+      method,
+      success: copyValid,
     });
   });
 
-// Test with offset + requiredBytesIsCopy overflowing GPUSize64.
-g.test('offset_plus_required_bytes_in_copy_overflow')
+g.test('copy_end_overflows_u64')
+  .desc(`Test what happens when offset+requiredBytesInCopy overflows GPUSize64.`)
   .cases(poptions('method', kImageCopyTypes))
   .subcases(() => [
     { bytesPerRow: 2 ** 31, rowsPerImage: 2 ** 31, depthOrArrayLayers: 1, _success: true }, // success case
@@ -83,10 +88,14 @@ g.test('offset_plus_required_bytes_in_copy_overflow')
     );
   });
 
-// Testing that the minimal data size condition is checked correctly.
-// In the success case, we test the exact value.
-// In the failing case, we test the exact value minus 1.
 g.test('required_bytes_in_copy')
+  .desc(
+    `Test that the min data size condition (requiredBytesInCopy) is checked correctly.
+
+  - Exact requiredBytesInCopy should succeed.
+  - requiredBytesInCopy - 1 should fail.
+  `
+  )
   .cases(
     params()
       .combine(poptions('method', kImageCopyTypes))
@@ -107,7 +116,7 @@ g.test('required_bytes_in_copy')
         { copyWidthInBlocks: 256, copyHeightInBlocks: 3, copyDepth: 2, offsetInBlocks: 0 }, // copyWidth is 256-aligned
         { copyWidthInBlocks: 0, copyHeightInBlocks: 4, copyDepth: 5, offsetInBlocks: 0 }, // empty copy because of width
         { copyWidthInBlocks: 3, copyHeightInBlocks: 0, copyDepth: 5, offsetInBlocks: 0 }, // empty copy because of height
-        { copyWidthInBlocks: 3, copyHeightInBlocks: 4, copyDepth: 0, offsetInBlocks: 13 }, // empty copy because of depthOrArrayLayers, offset > 0
+        { copyWidthInBlocks: 3, copyHeightInBlocks: 4, copyDepth: 0, offsetInBlocks: 13 }, // empty copy because of depth, offset > 0
         { copyWidthInBlocks: 1, copyHeightInBlocks: 4, copyDepth: 5, offsetInBlocks: 0 }, // copyWidth = 1
         { copyWidthInBlocks: 3, copyHeightInBlocks: 1, copyDepth: 5, offsetInBlocks: 15 }, // copyHeight = 1, offset > 0
         { copyWidthInBlocks: 5, copyHeightInBlocks: 4, copyDepth: 1, offsetInBlocks: 0 }, // copyDepth = 1
@@ -140,22 +149,21 @@ g.test('required_bytes_in_copy')
     const bytesPerRow =
       align(bytesInACompleteRow(copyWidth, format), bytesPerRowAlignment) +
       bytesPerRowPadding * bytesPerRowAlignment;
-    const size = { width: copyWidth, height: copyHeight, depthOrArrayLayers: copyDepth };
+    const copySize = { width: copyWidth, height: copyHeight, depthOrArrayLayers: copyDepth };
 
     const layout = { offset, bytesPerRow, rowsPerImage };
-    const { minDataSize, valid } = dataBytesForCopy(layout, format, size, { method });
-    assert(valid);
+    const minDataSize = dataBytesForCopyOrFail({ layout, format, copySize, method });
 
-    const texture = t.createAlignedTexture(format, size);
+    const texture = t.createAlignedTexture(format, copySize);
 
-    t.testRun({ texture }, { offset, bytesPerRow, rowsPerImage }, size, {
+    t.testRun({ texture }, { offset, bytesPerRow, rowsPerImage }, copySize, {
       dataSize: minDataSize,
       method,
       success: true,
     });
 
     if (minDataSize > 0) {
-      t.testRun({ texture }, { offset, bytesPerRow, rowsPerImage }, size, {
+      t.testRun({ texture }, { offset, bytesPerRow, rowsPerImage }, copySize, {
         dataSize: minDataSize - 1,
         method,
         success: false,
@@ -265,12 +273,17 @@ g.test('bound_on_bytes_per_row')
     });
 
     const layout = { bytesPerRow, rowsPerImage: copyHeight };
-    const { minDataSize, valid } = dataBytesForCopy(layout, format, copySize, { method });
+    const { minDataSizeOrOverestimate, copyValid } = dataBytesForCopyOrOverestimate({
+      layout,
+      format,
+      copySize,
+      method,
+    });
 
     t.testRun({ texture }, layout, copySize, {
-      dataSize: minDataSize,
+      dataSize: minDataSizeOrOverestimate,
       method,
-      success: valid,
+      success: copyValid,
     });
   });
 
