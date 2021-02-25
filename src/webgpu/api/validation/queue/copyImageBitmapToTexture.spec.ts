@@ -27,7 +27,11 @@ TODO: copying into slices of 2d array textures. 1d and 3d as well if they're not
 
 import { poptions, params, pbool } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { kAllTextureFormats, kTextureUsages } from '../../../capability_info.js';
+import {
+  kAllTextureFormatInfo,
+  kAllTextureFormats,
+  kTextureUsages,
+} from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
 const kDefaultBytesPerPixel = 4; // using 'bgra8unorm' or 'rgba8unorm'
@@ -315,6 +319,9 @@ g.test('destination_texture,format')
   )
   .fn(async t => {
     const { format, copySize } = t.params;
+
+    await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].extension);
+
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
 
     // createTexture with all possible texture format may have validation error when using

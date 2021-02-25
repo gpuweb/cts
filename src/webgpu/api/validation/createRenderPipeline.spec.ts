@@ -141,6 +141,8 @@ g.test('color_formats_must_be_renderable')
 
     const descriptor = t.getDescriptor({ colorStates: [{ format }] });
 
+    await t.selectDeviceOrSkipTestCase(info.extension);
+
     if (info.renderable && info.color) {
       // Succeeds when color format is renderable
       t.device.createRenderPipeline(descriptor);

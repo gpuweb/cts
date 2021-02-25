@@ -10,6 +10,9 @@ import { range } from '../../../common/framework/util/util.js';
 import {
   kRegularTextureFormatInfo,
   kRegularTextureFormats,
+  // kAllTextureFormatInfo,
+  DepthStencilFormat,
+  kDepthStencilFormatInfo,
   kSizedDepthStencilFormats,
   kUnsizedDepthStencilFormats,
   kTextureSampleCounts,
@@ -24,6 +27,7 @@ const kDepthStencilAttachmentFormats = [
   ...kSizedDepthStencilFormats,
   ...kUnsizedDepthStencilFormats,
 ] as const;
+// type DepthStencilFormats = keyof typeof kDepthStencilAttachmentFormats;
 
 class F extends ValidationTest {
   createAttachmentTextureView(format: GPUTextureFormat, sampleCount?: number) {
@@ -135,6 +139,25 @@ class F extends ValidationTest {
       sampleCount,
     });
   }
+
+  getTextureFormatsRequiredExtensions(
+    formats: (DepthStencilFormat | undefined)[]
+    // formats: DepthStencilFormats[]
+    // formats: GPUTextureFormat[]
+  ): GPUExtensionName[] {
+    const extensions: GPUExtensionName[] = [];
+    for (let i = 0; i < formats.length; i++) {
+      const format = formats[i];
+      if (format !== undefined) {
+        const formatExtension = kDepthStencilFormatInfo[format].extension;
+        // const formatExtension = kAllTextureFormatInfo[format].extension;
+        if (formatExtension !== undefined) {
+          extensions.push(formatExtension);
+        }
+      }
+    }
+    return extensions;
+  }
 }
 
 export const g = makeTestGroup(F);
@@ -206,8 +229,43 @@ g.test('render_pass_and_bundle,depth_format')
       .combine(poptions('passFormat', kDepthStencilAttachmentFormats))
       .combine(poptions('bundleFormat', kDepthStencilAttachmentFormats))
   )
-  .fn(t => {
+  .fn(async t => {
     const { passFormat, bundleFormat } = t.params;
+
+    /* const extensions: GPUExtensionName[] = [];
+    const formats = [passFormat, bundleFormat];
+    for (let i = 0; i < formats.length; i++) {
+      const format = formats[i];
+      if (format !== undefined) {
+        const formatExtension = kDepthStencilFormatInfo[format].extension;
+        if (formatExtension !== undefined) {
+          extensions.push(formatExtension);
+        }
+      }
+      // if (format !== undefined) {
+      // }
+    } */
+    /* const passFormatExtension =
+      passFormat === undefined ? undefined : kDepthStencilFormatInfo[passFormat].extension;
+    if (passFormatExtension !== undefined) {
+      extensions.push(passFormatExtension);
+    }
+    const bundleFormatExtension =
+      bundleFormat === undefined ? undefined : kDepthStencilFormatInfo[bundleFormat].extension;
+    if (bundleFormatExtension !== undefined) {
+      extensions.push(bundleFormatExtension);
+    } */
+    /* if (passFormat === 'depth24unorm-stencil8' || bundleFormat === 'depth24unorm-stencil8') {
+      extensions.push('depth24unorm-stencil8');
+    }
+    if (passFormat === 'depth32float-stencil8' || bundleFormat === 'depth32float-stencil8') {
+      extensions.push('depth32float-stencil8');
+    } */
+    const extensions = t.getTextureFormatsRequiredExtensions([passFormat, bundleFormat]);
+    if (extensions.length) {
+      await t.selectDeviceOrSkipTestCase({ extensions });
+    }
+
     const bundleEncoder = t.device.createRenderBundleEncoder({
       colorFormats: ['rgba8unorm'],
       depthStencilFormat: bundleFormat,
@@ -317,8 +375,14 @@ Test that the depth attachment format in render passes or bundles match the pipe
       .combine(poptions('encoderFormat', kDepthStencilAttachmentFormats))
       .combine(poptions('pipelineFormat', kDepthStencilAttachmentFormats))
   )
-  .fn(t => {
+  .fn(async t => {
     const { encoderType, encoderFormat, pipelineFormat } = t.params;
+
+    const extensions = t.getTextureFormatsRequiredExtensions([encoderFormat, pipelineFormat]);
+    if (extensions.length) {
+      await t.selectDeviceOrSkipTestCase({ extensions });
+    }
+
     const pipeline = t.createRenderPipeline(
       [{ format: 'rgba8unorm' }],
       pipelineFormat !== undefined ? { format: pipelineFormat } : undefined

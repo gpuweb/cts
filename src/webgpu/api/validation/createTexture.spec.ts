@@ -297,6 +297,8 @@ g.test('it_is_invalid_to_have_an_output_attachment_texture_with_non_renderable_f
 
     const descriptor = t.getDescriptor({ width: 1, height: 1, format });
 
+    await t.selectDeviceOrSkipTestCase(info.extension);
+
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);
     }, !info.renderable);
