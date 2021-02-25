@@ -1070,15 +1070,15 @@ g.test('undefined_params')
     params().combine([
       // copying one row: bytesPerRow and rowsPerImage can be undefined
       { copySize: [3, 1, 1], origin: [UND, UND, UND], bytesPerRow: UND, rowsPerImage: UND },
-      // copying one slice: rowsPerImage can be und
+      // copying one slice: rowsPerImage can be undefined
       { copySize: [3, 3, 1], origin: [UND, UND, UND], bytesPerRow: 256, rowsPerImage: UND },
       // copying two slices
       { copySize: [3, 3, 2], origin: [UND, UND, UND], bytesPerRow: 256, rowsPerImage: 3 },
-      // origin.x = und
+      // origin.x = undefined
       { copySize: [1, 1, 1], origin: [UND, 1, 1], bytesPerRow: UND, rowsPerImage: UND },
-      // origin.y = und
+      // origin.y = undefined
       { copySize: [1, 1, 1], origin: [1, UND, 1], bytesPerRow: UND, rowsPerImage: UND },
-      // origin.z = und
+      // origin.z = undefined
       { copySize: [1, 1, 1], origin: [1, 1, UND], bytesPerRow: UND, rowsPerImage: UND },
     ])
   )
