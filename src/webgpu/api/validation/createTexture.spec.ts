@@ -10,14 +10,14 @@ TODO: review existing tests and merge with this plan:
 >     - with format that supports multisample, with all possible dimensions
 >     - with dimension that support multisample, with all possible formats
 >     - with format-dimension that support multisample, with {mipLevelCount, array layer count} = {1, 2}
-> - 1d, {width, height, depth} > whatever the max is
+> - 1d, {width, height, depthOrArrayLayers} > whatever the max is
 >     - height max is 1 (unless 1d-array is added)
->     - depth max is 1
+>     - depthOrArrayLayers max is 1
 >     - x= every texture format
-> - 2d, {width, height, depth} > whatever the max is
->     - depth (array layers) max differs from width/height
+> - 2d, {width, height, depthOrArrayLayers} > whatever the max is
+>     - depthOrArrayLayers max differs from width/height
 >     - x= every texture format
-> - 3d, {width, height, depth} > whatever the max is
+> - 3d, {width, height, depthOrArrayLayers} > whatever the max is
 >     - x= every texture format
 > - usage flags
 >     - {0, ... each single usage flag}
@@ -57,7 +57,7 @@ class F extends ValidationTest {
       format = 'rgba8unorm',
     } = options;
     return {
-      size: { width, height, depth: arrayLayerCount },
+      size: { width, height, depthOrArrayLayers: arrayLayerCount },
       mipLevelCount,
       sampleCount,
       dimension: '2d',

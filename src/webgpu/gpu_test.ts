@@ -565,7 +565,7 @@ got [${failedByteActualValues.join(', ')}]`;
     const textureSizeMipmap0 = 1 << (mipLevelCount - 1);
     const texture = this.device.createTexture({
       mipLevelCount,
-      size: { width: textureSizeMipmap0, height: textureSizeMipmap0, depth: 1 },
+      size: { width: textureSizeMipmap0, height: textureSizeMipmap0, depthOrArrayLayers: 1 },
       format,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED,
     });

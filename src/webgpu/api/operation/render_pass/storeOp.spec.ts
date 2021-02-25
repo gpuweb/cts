@@ -68,7 +68,7 @@ g.test('render_pass_store_op,color_attachment_with_depth_stencil_attachment')
     const kColorFormat: GPUTextureFormat = 'rgba8unorm';
     const colorAttachment = t.device.createTexture({
       format: kColorFormat,
-      size: { width: kWidth, height: kHeight, depth: 1 },
+      size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
@@ -78,7 +78,7 @@ g.test('render_pass_store_op,color_attachment_with_depth_stencil_attachment')
     const kDepthStencilFormat: GPUTextureFormat = 'depth32float';
     const depthStencilAttachment = t.device.createTexture({
       format: kDepthStencilFormat,
-      size: { width: kWidth, height: kHeight, depth: 1 },
+      size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
@@ -155,7 +155,7 @@ g.test('render_pass_store_op,color_attachment_only')
   .fn(t => {
     const colorAttachment = t.device.createTexture({
       format: t.params.colorFormat,
-      size: { width: kWidth, height: kHeight, depth: t.params.arrayLayer + 1 },
+      size: { width: kWidth, height: kHeight, depthOrArrayLayers: t.params.arrayLayer + 1 },
       mipLevelCount: kMipLevelCount,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
@@ -218,7 +218,7 @@ g.test('render_pass_store_op,multiple_color_attachments')
       colorAttachments.push(
         t.device.createTexture({
           format: kColorFormat,
-          size: { width: kWidth, height: kHeight, depth: 1 },
+          size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
           usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
         })
       );
@@ -281,7 +281,7 @@ TODO: Also test unsized depth/stencil formats
   .fn(t => {
     const depthStencilAttachment = t.device.createTexture({
       format: t.params.depthStencilFormat,
-      size: { width: kWidth, height: kHeight, depth: t.params.arrayLayer + 1 },
+      size: { width: kWidth, height: kHeight, depthOrArrayLayers: t.params.arrayLayer + 1 },
       mipLevelCount: kMipLevelCount,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });

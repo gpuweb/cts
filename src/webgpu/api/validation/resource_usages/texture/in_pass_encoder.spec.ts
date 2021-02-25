@@ -78,7 +78,7 @@ class TextureUsageTracking extends ValidationTest {
     } = options;
 
     return this.device.createTexture({
-      size: { width, height, depth: arrayLayerCount },
+      size: { width, height, depthOrArrayLayers: arrayLayerCount },
       mipLevelCount,
       sampleCount,
       dimension: '2d',

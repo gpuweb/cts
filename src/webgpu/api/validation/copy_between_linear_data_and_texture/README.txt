@@ -25,7 +25,7 @@ Test coverage:
 	- bound_on_offset: for various combinations of offset and dataSize.
 
 * texture copy range:
-	- 1d_texture: copyExtent.height isn't 1, copyExtent.depth isn't 1.
+	- 1d_texture: copyExtent.height isn't 1, copyExtent.depthOrArrayLayers isn't 1.
 	- texel_block_alignment_on_size: for all formats and coordinates.
 	- texture_range_conditons: for all coordinate and various combinations of origin, copyExtent, textureSize and mipLevel.
 

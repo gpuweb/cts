@@ -39,13 +39,13 @@ g.test('bound_on_rows_per_image')
     const copyHeight = copyHeightInBlocks * kUncompressedTextureFormatInfo[format].blockHeight;
 
     const texture = t.device.createTexture({
-      size: { width: 4, height: 4, depth: 3 },
+      size: { width: 4, height: 4, depthOrArrayLayers: 3 },
       format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
 
     const layout = { bytesPerRow: 1024, rowsPerImage };
-    const size = { width: 0, height: copyHeight, depth: copyDepth };
+    const size = { width: 0, height: copyHeight, depthOrArrayLayers: copyDepth };
     const { minDataSize, valid } = dataBytesForCopy(layout, format, size, { method });
 
     t.testRun({ texture }, layout, size, {
@@ -59,14 +59,14 @@ g.test('bound_on_rows_per_image')
 g.test('offset_plus_required_bytes_in_copy_overflow')
   .cases(poptions('method', kImageCopyTypes))
   .subcases(() => [
-    { bytesPerRow: 2 ** 31, rowsPerImage: 2 ** 31, depth: 1, _success: true }, // success case
-    { bytesPerRow: 2 ** 31, rowsPerImage: 2 ** 31, depth: 16, _success: false }, // bytesPerRow * rowsPerImage * (depth - 1) overflows.
+    { bytesPerRow: 2 ** 31, rowsPerImage: 2 ** 31, depthOrArrayLayers: 1, _success: true }, // success case
+    { bytesPerRow: 2 ** 31, rowsPerImage: 2 ** 31, depthOrArrayLayers: 16, _success: false }, // bytesPerRow * rowsPerImage * (depthOrArrayLayers - 1) overflows.
   ])
   .fn(async t => {
-    const { method, bytesPerRow, rowsPerImage, depth, _success } = t.params;
+    const { method, bytesPerRow, rowsPerImage, depthOrArrayLayers, _success } = t.params;
 
     const texture = t.device.createTexture({
-      size: [1, 1, depth],
+      size: [1, 1, depthOrArrayLayers],
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
@@ -74,7 +74,7 @@ g.test('offset_plus_required_bytes_in_copy_overflow')
     t.testRun(
       { texture },
       { bytesPerRow, rowsPerImage },
-      { width: 1, height: 1, depth },
+      { width: 1, height: 1, depthOrArrayLayers },
       {
         dataSize: 10000,
         method,
@@ -107,7 +107,7 @@ g.test('required_bytes_in_copy')
         { copyWidthInBlocks: 256, copyHeightInBlocks: 3, copyDepth: 2, offsetInBlocks: 0 }, // copyWidth is 256-aligned
         { copyWidthInBlocks: 0, copyHeightInBlocks: 4, copyDepth: 5, offsetInBlocks: 0 }, // empty copy because of width
         { copyWidthInBlocks: 3, copyHeightInBlocks: 0, copyDepth: 5, offsetInBlocks: 0 }, // empty copy because of height
-        { copyWidthInBlocks: 3, copyHeightInBlocks: 4, copyDepth: 0, offsetInBlocks: 13 }, // empty copy because of depth, offset > 0
+        { copyWidthInBlocks: 3, copyHeightInBlocks: 4, copyDepth: 0, offsetInBlocks: 13 }, // empty copy because of depthOrArrayLayers, offset > 0
         { copyWidthInBlocks: 1, copyHeightInBlocks: 4, copyDepth: 5, offsetInBlocks: 0 }, // copyWidth = 1
         { copyWidthInBlocks: 3, copyHeightInBlocks: 1, copyDepth: 5, offsetInBlocks: 15 }, // copyHeight = 1, offset > 0
         { copyWidthInBlocks: 5, copyHeightInBlocks: 4, copyDepth: 1, offsetInBlocks: 0 }, // copyDepth = 1
@@ -140,7 +140,7 @@ g.test('required_bytes_in_copy')
     const bytesPerRow =
       align(bytesInACompleteRow(copyWidth, format), bytesPerRowAlignment) +
       bytesPerRowPadding * bytesPerRowAlignment;
-    const size = { width: copyWidth, height: copyHeight, depth: copyDepth };
+    const size = { width: copyWidth, height: copyHeight, depthOrArrayLayers: copyDepth };
 
     const layout = { offset, bytesPerRow, rowsPerImage };
     const { minDataSize, valid } = dataBytesForCopy(layout, format, size, { method });
@@ -177,7 +177,7 @@ g.test('rows_per_image_alignment')
     const info = kSizedTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.extension);
 
-    const size = { width: 0, height: 0, depth: 0 };
+    const size = { width: 0, height: 0, depthOrArrayLayers: 0 };
 
     const texture = t.createAlignedTexture(format, size);
 
@@ -201,7 +201,7 @@ g.test('texel_block_alignment_on_offset')
     const info = kSizedTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.extension);
 
-    const size = { width: 0, height: 0, depth: 0 };
+    const size = { width: 0, height: 0, depthOrArrayLayers: 0 };
 
     const texture = t.createAlignedTexture(format, size);
 
@@ -255,13 +255,13 @@ g.test('bound_on_bytes_per_row')
       blocksPerRow * info.bytesPerBlock + additionalPaddingPerRow,
       bytesPerRowAlignment
     );
-    const copySize = { width: copyWidth, height: copyHeight, depth: copyDepth };
+    const copySize = { width: copyWidth, height: copyHeight, depthOrArrayLayers: copyDepth };
 
     const texture = t.createAlignedTexture(format, {
       width: copyWidth,
       // size 0 is not valid; round up if needed
       height: copyHeight || info.blockHeight,
-      depth: copyDepth || 1,
+      depthOrArrayLayers: copyDepth || 1,
     });
 
     const layout = { bytesPerRow, rowsPerImage: copyHeight };
@@ -290,7 +290,7 @@ g.test('bound_on_offset')
     const dataSize = dataSizeInBlocks * info.bytesPerBlock;
 
     const texture = t.device.createTexture({
-      size: { width: 4, height: 4, depth: 1 },
+      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
       format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
@@ -300,7 +300,7 @@ g.test('bound_on_offset')
     t.testRun(
       { texture },
       { offset, bytesPerRow: 0 },
-      { width: 0, height: 0, depth: 0 },
+      { width: 0, height: 0, depthOrArrayLayers: 0 },
       { dataSize, method, success }
     );
   });
