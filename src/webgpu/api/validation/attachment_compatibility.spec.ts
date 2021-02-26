@@ -10,7 +10,6 @@ import { range } from '../../../common/framework/util/util.js';
 import {
   kRegularTextureFormatInfo,
   kRegularTextureFormats,
-  // kAllTextureFormatInfo,
   DepthStencilFormat,
   kDepthStencilFormatInfo,
   kSizedDepthStencilFormats,
@@ -27,7 +26,6 @@ const kDepthStencilAttachmentFormats = [
   ...kSizedDepthStencilFormats,
   ...kUnsizedDepthStencilFormats,
 ] as const;
-// type DepthStencilFormats = keyof typeof kDepthStencilAttachmentFormats;
 
 class F extends ValidationTest {
   createAttachmentTextureView(format: GPUTextureFormat, sampleCount?: number) {
@@ -142,15 +140,12 @@ class F extends ValidationTest {
 
   getTextureFormatsRequiredExtensions(
     formats: (DepthStencilFormat | undefined)[]
-    // formats: DepthStencilFormats[]
-    // formats: GPUTextureFormat[]
   ): GPUExtensionName[] {
     const extensions: GPUExtensionName[] = [];
     for (let i = 0; i < formats.length; i++) {
       const format = formats[i];
       if (format !== undefined) {
         const formatExtension = kDepthStencilFormatInfo[format].extension;
-        // const formatExtension = kAllTextureFormatInfo[format].extension;
         if (formatExtension !== undefined) {
           extensions.push(formatExtension);
         }
@@ -232,35 +227,6 @@ g.test('render_pass_and_bundle,depth_format')
   .fn(async t => {
     const { passFormat, bundleFormat } = t.params;
 
-    /* const extensions: GPUExtensionName[] = [];
-    const formats = [passFormat, bundleFormat];
-    for (let i = 0; i < formats.length; i++) {
-      const format = formats[i];
-      if (format !== undefined) {
-        const formatExtension = kDepthStencilFormatInfo[format].extension;
-        if (formatExtension !== undefined) {
-          extensions.push(formatExtension);
-        }
-      }
-      // if (format !== undefined) {
-      // }
-    } */
-    /* const passFormatExtension =
-      passFormat === undefined ? undefined : kDepthStencilFormatInfo[passFormat].extension;
-    if (passFormatExtension !== undefined) {
-      extensions.push(passFormatExtension);
-    }
-    const bundleFormatExtension =
-      bundleFormat === undefined ? undefined : kDepthStencilFormatInfo[bundleFormat].extension;
-    if (bundleFormatExtension !== undefined) {
-      extensions.push(bundleFormatExtension);
-    } */
-    /* if (passFormat === 'depth24unorm-stencil8' || bundleFormat === 'depth24unorm-stencil8') {
-      extensions.push('depth24unorm-stencil8');
-    }
-    if (passFormat === 'depth32float-stencil8' || bundleFormat === 'depth32float-stencil8') {
-      extensions.push('depth32float-stencil8');
-    } */
     const extensions = t.getTextureFormatsRequiredExtensions([passFormat, bundleFormat]);
     if (extensions.length) {
       await t.selectDeviceOrSkipTestCase({ extensions });

@@ -101,15 +101,6 @@ g.test('bindingTypeSpecific_optional_members')
     if (storageTextureFormat !== undefined) {
       await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[storageTextureFormat].extension);
     }
-    /* const extensions: GPUExtensionName[] = [];
-    if (storageTextureFormat === 'depth24unorm-stencil8') {
-      extensions.push('depth24unorm-stencil8');
-    } else if (storageTextureFormat === 'depth32float-stencil8') {
-      extensions.push('depth32float-stencil8');
-    }
-    if (extensions.length) {
-      await t.selectDeviceOrSkipTestCase({ extensions });
-    } */
 
     let success = true;
     if (!(type in kBufferBindingTypeInfo)) {
