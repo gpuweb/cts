@@ -83,7 +83,7 @@ export class ImageCopyTest extends ValidationTest {
   // precise about its size as long as it's big enough and properly aligned.
   createAlignedTexture(
     format: SizedTextureFormat,
-    copySize: GPUExtent3DDict = { width: 1, height: 1, depthOrArrayLayers: 1 },
+    copySize: Required<GPUExtent3DDict> = { width: 1, height: 1, depthOrArrayLayers: 1 },
     origin: Required<GPUOrigin3DDict> = { x: 0, y: 0, z: 0 }
   ): GPUTexture {
     const info = kSizedTextureFormatInfo[format];
