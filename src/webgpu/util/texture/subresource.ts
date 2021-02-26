@@ -61,7 +61,10 @@ export class SubresourceRange {
 
 export function mipSize(size: readonly [number], level: number): [number];
 export function mipSize(size: readonly [number, number], level: number): [number, number];
-export function mipSize(size: readonly [number, number, number], level: number): [number, number, number];
+export function mipSize(
+  size: readonly [number, number, number],
+  level: number
+): [number, number, number];
 export function mipSize(size: GPUExtent3DDict, level: number): GPUExtent3DDict;
 export function mipSize(size: Readonly<GPUExtent3D>, level: number): GPUExtent3D {
   const rShiftMax1 = (s: number) => Math.max(s >> level, 1);
