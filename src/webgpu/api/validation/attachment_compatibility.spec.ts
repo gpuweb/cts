@@ -142,8 +142,7 @@ class F extends ValidationTest {
     formats: (DepthStencilFormat | undefined)[]
   ): GPUExtensionName[] {
     const extensions: GPUExtensionName[] = [];
-    for (let i = 0; i < formats.length; i++) {
-      const format = formats[i];
+    for (const format of new Set(formats)) {
       if (format !== undefined) {
         const formatExtension = kDepthStencilFormatInfo[format].extension;
         if (formatExtension !== undefined) {
