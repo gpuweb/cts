@@ -348,9 +348,9 @@ g.test('depth_stencil_copy_restrictions')
       dstCopyLevel,
     } = t.params;
 
-    const kMipLevelCount = 3;
-
     await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].extension);
+
+    const kMipLevelCount = 3;
 
     const srcTexture = t.device.createTexture({
       size: { width: srcTextureSize.width, height: srcTextureSize.height, depthOrArrayLayers: 1 },
