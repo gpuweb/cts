@@ -10,12 +10,11 @@ import { range } from '../../../common/framework/util/util.js';
 import {
   kRegularTextureFormatInfo,
   kRegularTextureFormats,
-  DepthStencilFormat,
-  kDepthStencilFormatInfo,
   kSizedDepthStencilFormats,
   kUnsizedDepthStencilFormats,
   kTextureSampleCounts,
   kMaxColorAttachments,
+  kAllTextureFormatInfo,
 } from '../../capability_info.js';
 
 import { ValidationTest, CommandBufferMaker } from './validation_test.js';
@@ -139,12 +138,12 @@ class F extends ValidationTest {
   }
 
   getTextureFormatsRequiredExtensions(
-    formats: (DepthStencilFormat | undefined)[]
+    formats: (GPUTextureFormat | undefined)[]
   ): GPUExtensionName[] {
     const extensions: GPUExtensionName[] = [];
     for (const format of new Set(formats)) {
       if (format !== undefined) {
-        const formatExtension = kDepthStencilFormatInfo[format].extension;
+        const formatExtension = kAllTextureFormatInfo[format].extension;
         if (formatExtension !== undefined) {
           extensions.push(formatExtension);
         }
