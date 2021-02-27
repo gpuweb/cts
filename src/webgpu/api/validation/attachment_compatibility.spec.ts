@@ -138,8 +138,11 @@ class F extends ValidationTest {
   }
 
   async selectDeviceForTextureFormatOrSkipTestCase(
-    formats: (GPUTextureFormat | undefined)[]
+    formats: GPUTextureFormat | undefined | (GPUTextureFormat | undefined)[]
   ): Promise<void> {
+    if (!Array.isArray(formats)) {
+      formats = [formats];
+    }
     const extensions = new Set<GPUExtensionName>();
     for (const format of formats) {
       if (format !== undefined) {
