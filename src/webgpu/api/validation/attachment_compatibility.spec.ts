@@ -137,19 +137,22 @@ class F extends ValidationTest {
     });
   }
 
-  getTextureFormatsRequiredExtensions(
+  async selectDeviceForTextureFormatOrSkipTestCase(
     formats: (GPUTextureFormat | undefined)[]
-  ): GPUExtensionName[] {
-    const extensions: GPUExtensionName[] = [];
-    for (const format of new Set(formats)) {
+  ): Promise<void> {
+    const extensions = new Set<GPUExtensionName>();
+    for (const format of formats) {
       if (format !== undefined) {
         const formatExtension = kAllTextureFormatInfo[format].extension;
         if (formatExtension !== undefined) {
-          extensions.push(formatExtension);
+          extensions.add(formatExtension);
         }
       }
     }
-    return extensions;
+
+    if (extensions.size) {
+      await this.selectDeviceOrSkipTestCase({ extensions });
+    }
   }
 }
 
@@ -224,11 +227,7 @@ g.test('render_pass_and_bundle,depth_format')
   )
   .fn(async t => {
     const { passFormat, bundleFormat } = t.params;
-
-    const extensions = t.getTextureFormatsRequiredExtensions([passFormat, bundleFormat]);
-    if (extensions.length) {
-      await t.selectDeviceOrSkipTestCase({ extensions });
-    }
+    await t.selectDeviceForTextureFormatOrSkipTestCase([passFormat, bundleFormat]);
 
     const bundleEncoder = t.device.createRenderBundleEncoder({
       colorFormats: ['rgba8unorm'],
@@ -341,11 +340,7 @@ Test that the depth attachment format in render passes or bundles match the pipe
   )
   .fn(async t => {
     const { encoderType, encoderFormat, pipelineFormat } = t.params;
-
-    const extensions = t.getTextureFormatsRequiredExtensions([encoderFormat, pipelineFormat]);
-    if (extensions.length) {
-      await t.selectDeviceOrSkipTestCase({ extensions });
-    }
+    await t.selectDeviceForTextureFormatOrSkipTestCase([encoderFormat, pipelineFormat]);
 
     const pipeline = t.createRenderPipeline(
       [{ format: 'rgba8unorm' }],
