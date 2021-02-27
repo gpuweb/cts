@@ -14,7 +14,6 @@ import {
   kUnsizedDepthStencilFormats,
   kTextureSampleCounts,
   kMaxColorAttachments,
-  kAllTextureFormatInfo,
 } from '../../capability_info.js';
 
 import { ValidationTest, CommandBufferMaker } from './validation_test.js';
@@ -135,27 +134,6 @@ class F extends ValidationTest {
       depthStencilState,
       sampleCount,
     });
-  }
-
-  async selectDeviceForTextureFormatOrSkipTestCase(
-    formats: GPUTextureFormat | undefined | (GPUTextureFormat | undefined)[]
-  ): Promise<void> {
-    if (!Array.isArray(formats)) {
-      formats = [formats];
-    }
-    const extensions = new Set<GPUExtensionName>();
-    for (const format of formats) {
-      if (format !== undefined) {
-        const formatExtension = kAllTextureFormatInfo[format].extension;
-        if (formatExtension !== undefined) {
-          extensions.add(formatExtension);
-        }
-      }
-    }
-
-    if (extensions.size) {
-      await this.selectDeviceOrSkipTestCase({ extensions });
-    }
   }
 }
 
