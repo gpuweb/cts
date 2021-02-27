@@ -2,8 +2,13 @@
 
 import { DefaultTestFileLoader } from '../framework/file_loader.js';
 import { Logger } from '../framework/logging/logger.js';
+import { compareQueries, Ordering } from '../framework/query/compare.js';
 import { parseQuery } from '../framework/query/parseQuery.js';
-import { assert } from '../framework/util/util.js';
+import {
+  RawTestQueryStringWithExpectation,
+  TestQueryWithExpectation,
+} from '../framework/query/query.js';
+import { assert, unreachable } from '../framework/util/util.js';
 
 import { optionEnabled } from './helper/options.js';
 import { TestWorker } from './helper/test_worker.js';
@@ -17,6 +22,8 @@ declare function setup(properties: { explicit_done?: boolean }): void;
 declare function promise_test(f: (t: WptTestObject) => Promise<void>, name: string): void;
 declare function done(): void;
 
+declare let loadWebGPUExpectations: Promise<RawTestQueryStringWithExpectation[]> | undefined;
+
 setup({
   // It's convenient for us to asynchronously add tests to the page. Prevent done() from being
   // called implicitly when the page is finished loading.
@@ -24,12 +31,51 @@ setup({
 });
 
 (async () => {
+  const workerEnabled = optionEnabled('worker');
+  const worker = workerEnabled ? new TestWorker(false) : undefined;
+
   const loader = new DefaultTestFileLoader();
   const qs = new URLSearchParams(window.location.search).getAll('q');
   assert(qs.length === 1, 'currently, there must be exactly one ?q=');
-  const testcases = await loader.loadCases(parseQuery(qs[0]));
+  const testcaseQuery = parseQuery(qs[0]);
+  const testcases = await loader.loadCases(testcaseQuery);
 
-  const worker = optionEnabled('worker') ? new TestWorker(false) : undefined;
+  const expectations: TestQueryWithExpectation[] = [];
+  if (typeof loadWebGPUExpectations !== 'undefined') {
+    (await loadWebGPUExpectations).forEach(entry => {
+      const url = new URL(`${window.location.origin}/${entry.query}`);
+      if (url.pathname !== window.location.pathname) {
+        return;
+      }
+
+      const params = url.searchParams;
+      if (workerEnabled !== optionEnabled('worker', params)) {
+        return;
+      }
+
+      const qs = params.getAll('q');
+      assert(qs.length === 1, 'currently, there must be exactly one ?q=');
+      const query = parseQuery(qs[0]);
+
+      if (compareQueries(testcaseQuery, query) === Ordering.Unordered) {
+        return;
+      }
+
+      switch (entry.expectation) {
+        case 'pass':
+        case 'skip':
+        case 'fail':
+          break;
+        default:
+          unreachable();
+      }
+
+      expectations.push({
+        query,
+        expectation: entry.expectation,
+      });
+    });
+  }
 
   const log = new Logger(false);
 
@@ -40,7 +86,7 @@ setup({
       if (worker) {
         await worker.run(rec, name);
       } else {
-        await testcase.run(rec);
+        await testcase.run(rec, expectations);
       }
 
       // Unfortunately, it seems not possible to surface any logs for warn/skip.

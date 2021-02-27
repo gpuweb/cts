@@ -2,12 +2,18 @@
 /* eslint no-process-exit: "off" */
 
 import * as fs from 'fs';
+import * as path from 'path';
 import * as process from 'process';
 
 import { DefaultTestFileLoader } from '../framework/file_loader.js';
 import { Logger } from '../framework/logging/logger.js';
 import { LiveTestCaseResult } from '../framework/logging/result.js';
+import { compareQueries, Ordering } from '../framework/query/compare.js';
 import { parseQuery } from '../framework/query/parseQuery.js';
+import {
+  RawTestQueryStringWithExpectation,
+  TestQueryWithExpectation,
+} from '../framework/query/query.js';
 import { assert, unreachable } from '../framework/util/util.js';
 
 function usage(rc: number): never {
@@ -15,9 +21,10 @@ function usage(rc: number): never {
   console.log('  tools/run [OPTIONS...] QUERIES...');
   console.log("  tools/run 'unittests:*' 'webgpu:buffers,*'");
   console.log('Options:');
-  console.log('  --verbose     Print result/log of every test as it runs.');
-  console.log('  --debug       Include debug messages in logging.');
-  console.log('  --print-json  Print the complete result JSON in the output.');
+  console.log('  --verbose       Print result/log of every test as it runs.');
+  console.log('  --debug         Include debug messages in logging.');
+  console.log('  --print-json    Print the complete result JSON in the output.');
+  console.log('  --expectations  Path to expectations file.');
   return process.exit(rc);
 }
 
@@ -29,8 +36,11 @@ if (!fs.existsSync('src/common/runtime/cmdline.ts')) {
 let verbose = false;
 let debug = false;
 let printJSON = false;
+let loadWebGPUExpectations: Promise<RawTestQueryStringWithExpectation[]> | undefined = undefined;
+
 const queries: string[] = [];
-for (const a of process.argv.slice(2)) {
+for (let i = 2; i < process.argv.length; ++i) {
+  const a = process.argv[i];
   if (a.startsWith('-')) {
     if (a === '--verbose') {
       verbose = true;
@@ -38,6 +48,9 @@ for (const a of process.argv.slice(2)) {
       debug = true;
     } else if (a === '--print-json') {
       printJSON = true;
+    } else if (a === '--expectations') {
+      const expectationsFile = path.resolve(process.cwd(), process.argv[++i]);
+      loadWebGPUExpectations = import(expectationsFile).then(m => m.expectations);
     } else {
       usage(1);
     }
@@ -54,7 +67,33 @@ if (queries.length === 0) {
   try {
     const loader = new DefaultTestFileLoader();
     assert(queries.length === 1, 'currently, there must be exactly one query on the cmd line');
-    const testcases = await loader.loadCases(parseQuery(queries[0]));
+    const testcaseQuery = parseQuery(queries[0]);
+    const testcases = await loader.loadCases(testcaseQuery);
+
+    const expectations: TestQueryWithExpectation[] = [];
+    if (typeof loadWebGPUExpectations !== 'undefined') {
+      (await loadWebGPUExpectations).forEach(entry => {
+        const query = parseQuery(entry.query);
+
+        if (compareQueries(testcaseQuery, query) === Ordering.Unordered) {
+          return;
+        }
+
+        switch (entry.expectation) {
+          case 'pass':
+          case 'skip':
+          case 'fail':
+            break;
+          default:
+            unreachable();
+        }
+
+        expectations.push({
+          query,
+          expectation: entry.expectation,
+        });
+      });
+    }
 
     const log = new Logger(debug);
 
@@ -67,7 +106,7 @@ if (queries.length === 0) {
     for (const testcase of testcases) {
       const name = testcase.query.toString();
       const [rec, res] = log.record(name);
-      await testcase.run(rec);
+      await testcase.run(rec, expectations);
 
       if (verbose) {
         printResults([[name, res]]);

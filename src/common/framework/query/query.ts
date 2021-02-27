@@ -1,3 +1,4 @@
+import { Expectation } from '../logging/result.js';
 import { CaseParams } from '../params_utils.js';
 import { assert } from '../util/util.js';
 
@@ -21,6 +22,16 @@ export type TestQueryLevel =
   | 2 // MultiTest
   | 3 // MultiCase
   | 4; // SingleCase
+
+export interface RawTestQueryStringWithExpectation {
+  query: string;
+  expectation: string;
+}
+
+export interface TestQueryWithExpectation {
+  query: TestQuery;
+  expectation: Expectation;
+}
 
 /**
  * A multi-file test query, like `s:*` or `s:a,b,*`.
