@@ -598,6 +598,8 @@ g.test('subresources_and_binding_types_combination_for_aspect')
       _usageSuccess,
     } = t.params;
 
+    await t.selectDeviceOrSkipTestCase(kDepthStencilFormatInfo[format].extension);
+
     const texture = t.createTexture({
       arrayLayerCount: TOTAL_LAYERS,
       mipLevelCount: TOTAL_LEVELS,

@@ -295,6 +295,8 @@ g.test('it_is_invalid_to_have_an_output_attachment_texture_with_non_renderable_f
     const format: GPUTextureFormat = t.params.format;
     const info = kAllTextureFormatInfo[format];
 
+    await t.selectDeviceOrSkipTestCase(info.extension);
+
     const descriptor = t.getDescriptor({ width: 1, height: 1, format });
 
     t.expectValidationError(() => {

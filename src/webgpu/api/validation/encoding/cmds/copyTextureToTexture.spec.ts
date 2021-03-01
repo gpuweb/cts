@@ -348,7 +348,10 @@ g.test('depth_stencil_copy_restrictions')
       dstCopyLevel,
     } = t.params;
 
+    await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].extension);
+
     const kMipLevelCount = 3;
+
     const srcTexture = t.device.createTexture({
       size: { width: srcTextureSize.width, height: srcTextureSize.height, depthOrArrayLayers: 1 },
       format,
@@ -555,13 +558,13 @@ Test the validations on the member 'aspect' of GPUTextureCopyView in CopyTexture
       // kUnsizedDepthStencilFormats
       depth24plus: ['all', 'depth-only'],
       'depth24plus-stencil8': ['all'],
+      'depth24unorm-stencil8': ['all'],
+      'depth32float-stencil8': ['all'],
 
       // kSizedDepthStencilFormats
       depth32float: ['all', 'depth-only'],
       stencil8: ['all', 'stencil-only'],
       depth16unorm: ['all', 'depth-only'],
-      'depth24unorm-stencil8': ['all'],
-      'depth32float-stencil8': ['all'],
     };
 
     const isSourceAspectValid = kValidAspectsForFormat[format].includes(sourceAspect);

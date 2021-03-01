@@ -22,6 +22,8 @@ Generally, see:
 
 - TODO: Index existing helpers.
 - [`GPUTest`](../src/webgpu/gpu_test.ts)
+    - `selectDeviceForTextureFormatOrSkipTestCase`: Create device with texture format(s) required
+        extension(s). If the device creation fails, then skip the test for that format(s).
 - [`ValidationTest`](../src/webgpu/api/validation/validation_test.ts)
     - `createEncoder`: Generically creates non-pass, compute pass, render pass, or render bundle
         encoders. This allows callers to write code using methods common to multiple encoder types.
@@ -29,6 +31,9 @@ Generally, see:
 - [`ShaderValidationTest`](../src/webgpu/shader/validation/shader_validation_test.ts)
     - `expectCompileResult` Allows checking for compile success/failure, or failure with a
       particular error substring.
+- [`util/texture/base.ts`](../src/webgpu/util/texture/base.ts)
+    - `maxMipLevelCount`: Compute the max mip level count allowed given texture size and texture
+        dimension types.
 - [`util/texture/image_copy.ts`](../src/webgpu/util/texture/image_copy.ts)
     - `bytesInACompleteRow` Computes bytesInACompleteRow for image copies (B2T/T2B/writeTexture).
     - `dataBytesForCopy` Validates a copy and computes the number of bytes it needs.
