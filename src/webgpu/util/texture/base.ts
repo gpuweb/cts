@@ -11,6 +11,7 @@ export function maxMipLevelCount({
 
   let maxMippedDimension = sizeDict.width;
   if (dimension !== '1d') maxMippedDimension = Math.max(maxMippedDimension, sizeDict.height);
-  if (dimension === '3d') maxMippedDimension = Math.max(maxMippedDimension, sizeDict.depth);
+  if (dimension === '3d')
+    maxMippedDimension = Math.max(maxMippedDimension, sizeDict.depthOrArrayLayers);
   return Math.floor(Math.log2(maxMippedDimension)) + 1;
 }

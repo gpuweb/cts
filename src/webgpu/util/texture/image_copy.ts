@@ -16,24 +16,92 @@ export function bytesInACompleteRow(copyWidth: number, format: SizedTextureForma
   return (info.bytesPerBlock * copyWidth) / info.blockWidth;
 }
 
+function validateBytesPerRow({
+  bytesPerRow,
+  bytesInLastRow,
+  sizeInBlocks,
+}: {
+  bytesPerRow: number | undefined;
+  bytesInLastRow: number;
+  sizeInBlocks: Required<GPUExtent3DDict>;
+}) {
+  // If specified, layout.bytesPerRow must be greater than or equal to bytesInLastRow.
+  if (bytesPerRow !== undefined && bytesPerRow < bytesInLastRow) {
+    return false;
+  }
+  // If heightInBlocks > 1, layout.bytesPerRow must be specified.
+  // If copyExtent.depthOrArrayLayers > 1, layout.bytesPerRow and layout.rowsPerImage must be specified.
+  if (
+    bytesPerRow === undefined &&
+    (sizeInBlocks.height > 1 || sizeInBlocks.depthOrArrayLayers > 1)
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function validateRowsPerImage({
+  rowsPerImage,
+  sizeInBlocks,
+}: {
+  rowsPerImage: number | undefined;
+  sizeInBlocks: Required<GPUExtent3DDict>;
+}) {
+  // If specified, layout.rowsPerImage must be greater than or equal to heightInBlocks.
+  if (rowsPerImage !== undefined && rowsPerImage < sizeInBlocks.height) {
+    return false;
+  }
+  // If copyExtent.depthOrArrayLayers > 1, layout.bytesPerRow and layout.rowsPerImage must be specified.
+  if (rowsPerImage === undefined && sizeInBlocks.depthOrArrayLayers > 1) {
+    return false;
+  }
+  return true;
+}
+
+interface DataBytesForCopyArgs {
+  layout: GPUImageDataLayout;
+  format: SizedTextureFormat;
+  copySize: GPUExtent3D;
+  method: ImageCopyType;
+}
+
 /**
- * Validate a copy and compute the number of bytes it needs. If the copy is invalid, computes a
- * guess assuming `bytesPerRow` and `rowsPerImage` should be optimal.
+ * Validate a copy and compute the number of bytes it needs. Throws if the copy is invalid.
  */
-export function dataBytesForCopy(
-  layout: GPUImageDataLayout,
-  format: SizedTextureFormat,
-  copyExtentValue: GPUExtent3D,
-  { method }: { method: ImageCopyType }
-): { minDataSize: number; valid: boolean } {
-  const copyExtent = standardizeExtent3D(copyExtentValue);
+export function dataBytesForCopyOrFail(args: DataBytesForCopyArgs): number {
+  const { minDataSizeOrOverestimate, copyValid } = dataBytesForCopyOrOverestimate(args);
+  assert(copyValid, 'copy was invalid');
+  return minDataSizeOrOverestimate;
+}
+
+/**
+ * Validate a copy and compute the number of bytes it needs. If the copy is invalid, attempts to
+ * "conservatively guess" (overestimate) the number of bytes that could be needed for a copy, even
+ * if the copy parameters turn out to be invalid. This hopes to avoid "buffer too small" validation
+ * errors when attempting to test other validation errors.
+ */
+export function dataBytesForCopyOrOverestimate({
+  layout,
+  format,
+  copySize: copySize_,
+  method,
+}: {
+  layout: GPUImageDataLayout;
+  format: SizedTextureFormat;
+  copySize: GPUExtent3D;
+  method: ImageCopyType;
+}): { minDataSizeOrOverestimate: number; copyValid: boolean } {
+  const copyExtent = standardizeExtent3D(copySize_);
 
   const info = kSizedTextureFormatInfo[format];
   assert(copyExtent.width % info.blockWidth === 0);
-  const widthInBlocks = copyExtent.width / info.blockWidth;
   assert(copyExtent.height % info.blockHeight === 0);
-  const heightInBlocks = copyExtent.height / info.blockHeight;
-  const bytesInLastRow = widthInBlocks * info.bytesPerBlock;
+  const sizeInBlocks = {
+    width: copyExtent.width / info.blockWidth,
+    height: copyExtent.height / info.blockHeight,
+    depthOrArrayLayers: copyExtent.depthOrArrayLayers,
+  } as const;
+  const bytesInLastRow = sizeInBlocks.width * info.bytesPerBlock;
 
   let valid = true;
   const offset = layout.offset ?? 0;
@@ -41,35 +109,37 @@ export function dataBytesForCopy(
     if (offset % info.bytesPerBlock !== 0) valid = false;
     if (layout.bytesPerRow && layout.bytesPerRow % 256 !== 0) valid = false;
   }
-  if (layout.bytesPerRow !== undefined && bytesInLastRow > layout.bytesPerRow) valid = false;
-  if (layout.rowsPerImage !== undefined && heightInBlocks > layout.rowsPerImage) valid = false;
 
   let requiredBytesInCopy = 0;
   {
     let { bytesPerRow, rowsPerImage } = layout;
 
-    // If heightInBlocks > 1, layout.bytesPerRow must be specified.
-    if (heightInBlocks > 1 && bytesPerRow === undefined) valid = false;
-    // If copyExtent.depth > 1, layout.bytesPerRow and layout.rowsPerImage must be specified.
-    if (copyExtent.depth > 1 && rowsPerImage === undefined) valid = false;
-    // If specified, layout.bytesPerRow must be greater than or equal to bytesInLastRow.
-    if (bytesPerRow !== undefined && bytesPerRow < bytesInLastRow) valid = false;
-    // If specified, layout.rowsPerImage must be greater than or equal to heightInBlocks.
-    if (rowsPerImage !== undefined && rowsPerImage < heightInBlocks) valid = false;
+    // If bytesPerRow or rowsPerImage is invalid, guess a value for the sake of various tests that
+    // don't actually care about the exact value.
+    // (In particular for validation tests that want to test invalid bytesPerRow or rowsPerImage but
+    // need to make sure the total buffer size is still big enough.)
+    if (!validateBytesPerRow({ bytesPerRow, bytesInLastRow, sizeInBlocks })) {
+      bytesPerRow = undefined;
+      valid = false;
+    }
+    if (!validateRowsPerImage({ rowsPerImage, sizeInBlocks })) {
+      rowsPerImage = undefined;
+      valid = false;
+    }
+    // Pick values for cases when (a) bpr/rpi was invalid or (b) they're validly undefined.
+    bytesPerRow ??= align(info.bytesPerBlock * sizeInBlocks.width, 256);
+    rowsPerImage ??= sizeInBlocks.height;
 
-    bytesPerRow ??= align(info.bytesPerBlock * widthInBlocks, 256);
-    rowsPerImage ??= heightInBlocks;
-
-    if (copyExtent.depth > 1) {
+    if (copyExtent.depthOrArrayLayers > 1) {
       const bytesPerImage = bytesPerRow * rowsPerImage;
-      const bytesBeforeLastImage = bytesPerImage * (copyExtent.depth - 1);
+      const bytesBeforeLastImage = bytesPerImage * (copyExtent.depthOrArrayLayers - 1);
       requiredBytesInCopy += bytesBeforeLastImage;
     }
-    if (copyExtent.depth > 0) {
-      if (heightInBlocks > 1) requiredBytesInCopy += bytesPerRow * (heightInBlocks - 1);
-      if (heightInBlocks > 0) requiredBytesInCopy += bytesInLastRow;
+    if (copyExtent.depthOrArrayLayers > 0) {
+      if (sizeInBlocks.height > 1) requiredBytesInCopy += bytesPerRow * (sizeInBlocks.height - 1);
+      if (sizeInBlocks.height > 0) requiredBytesInCopy += bytesInLastRow;
     }
   }
 
-  return { minDataSize: offset + requiredBytesInCopy, valid };
+  return { minDataSizeOrOverestimate: offset + requiredBytesInCopy, copyValid: valid };
 }

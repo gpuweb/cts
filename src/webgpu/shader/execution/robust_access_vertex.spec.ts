@@ -405,7 +405,7 @@ g.test('vertexAccess')
     // Pipeline setup, texture setup
     const colorAttachment = t.device.createTexture({
       format: 'rgba8unorm',
-      size: { width: 1, height: 1, depth: 1 },
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
     const colorAttachmentView = colorAttachment.createView();

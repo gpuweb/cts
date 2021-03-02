@@ -66,7 +66,7 @@ class F extends ValidationTest {
   beginRenderPass(encoder: GPUCommandEncoder) {
     const colorAttachment = this.device.createTexture({
       format: 'rgba8unorm',
-      size: { width: 1, height: 1, depth: 1 },
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
     });
 

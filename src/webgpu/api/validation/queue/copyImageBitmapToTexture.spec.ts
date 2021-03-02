@@ -27,7 +27,11 @@ TODO: copying into slices of 2d array textures. 1d and 3d as well if they're not
 
 import { poptions, params, pbool } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { kAllTextureFormats, kTextureUsages } from '../../../capability_info.js';
+import {
+  kAllTextureFormatInfo,
+  kAllTextureFormats,
+  kTextureUsages,
+} from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
 const kDefaultBytesPerPixel = 4; // using 'bgra8unorm' or 'rgba8unorm'
@@ -68,20 +72,20 @@ interface WithDstOriginMipLevel extends WithMipLevel {
 function generateCopySizeForSrcOOB({ srcOrigin }: { srcOrigin: Required<GPUOrigin2DDict> }) {
   // OOB origin fails even with no-op copy.
   if (srcOrigin.x > kDefaultWidth || srcOrigin.y > kDefaultHeight) {
-    return poptions('copySize', [{ width: 0, height: 0, depth: 0 }]);
+    return poptions('copySize', [{ width: 0, height: 0, depthOrArrayLayers: 0 }]);
   }
 
   const justFitCopySize = {
     width: kDefaultWidth - srcOrigin.x,
     height: kDefaultHeight - srcOrigin.y,
-    depth: 1,
+    depthOrArrayLayers: 1,
   };
 
   return poptions('copySize', [
     justFitCopySize, // correct size, maybe no-op copy.
-    { width: justFitCopySize.width + 1, height: justFitCopySize.height, depth: 1 }, // OOB in width
-    { width: justFitCopySize.width, height: justFitCopySize.height + 1, depth: 1 }, // OOB in height
-    { width: justFitCopySize.width, height: justFitCopySize.height, depth: 2 }, // OOB in depth
+    { width: justFitCopySize.width + 1, height: justFitCopySize.height, depthOrArrayLayers: 1 }, // OOB in width
+    { width: justFitCopySize.width, height: justFitCopySize.height + 1, depthOrArrayLayers: 1 }, // OOB in height
+    { width: justFitCopySize.width, height: justFitCopySize.height, depthOrArrayLayers: 2 }, // OOB in depthOrArrayLayers
   ]);
 }
 
@@ -112,13 +116,13 @@ function generateCopySizeForDstOOB({ mipLevel, dstOrigin }: WithDstOriginMipLeve
     dstOrigin.y > dstMipMapSize.mipHeight ||
     dstOrigin.z > kDefaultDepth
   ) {
-    return poptions('copySize', [{ width: 0, height: 0, depth: 0 }]);
+    return poptions('copySize', [{ width: 0, height: 0, depthOrArrayLayers: 0 }]);
   }
 
   const justFitCopySize = {
     width: dstMipMapSize.mipWidth - dstOrigin.x,
     height: dstMipMapSize.mipHeight - dstOrigin.y,
-    depth: kDefaultDepth - dstOrigin.z,
+    depthOrArrayLayers: kDefaultDepth - dstOrigin.z,
   };
 
   return poptions('copySize', [
@@ -126,18 +130,18 @@ function generateCopySizeForDstOOB({ mipLevel, dstOrigin }: WithDstOriginMipLeve
     {
       width: justFitCopySize.width + 1,
       height: justFitCopySize.height,
-      depth: justFitCopySize.depth,
+      depthOrArrayLayers: justFitCopySize.depthOrArrayLayers,
     }, // OOB in width
     {
       width: justFitCopySize.width,
       height: justFitCopySize.height + 1,
-      depth: justFitCopySize.depth,
+      depthOrArrayLayers: justFitCopySize.depthOrArrayLayers,
     }, // OOB in height
     {
       width: justFitCopySize.width,
       height: justFitCopySize.height,
-      depth: justFitCopySize.depth + 1,
-    }, // OOB in depth
+      depthOrArrayLayers: justFitCopySize.depthOrArrayLayers + 1,
+    }, // OOB in depthOrArrayLayers
   ]);
 }
 
@@ -177,8 +181,8 @@ g.test('source_imageBitmap,state')
       .combine(pbool('closed'))
       .combine(
         poptions('copySize', [
-          { width: 0, height: 0, depth: 0 },
-          { width: 1, height: 1, depth: 1 },
+          { width: 0, height: 0, depthOrArrayLayers: 0 },
+          { width: 1, height: 1, depthOrArrayLayers: 1 },
         ])
       )
   )
@@ -186,7 +190,7 @@ g.test('source_imageBitmap,state')
     const { closed, copySize } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
     const dstTexture = t.device.createTexture({
-      size: { width: 1, height: 1, depth: 1 },
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       format: 'bgra8unorm',
       usage: GPUTextureUsage.COPY_DST,
     });
@@ -208,8 +212,8 @@ g.test('destination_texture,state')
       .combine(poptions('state', ['valid', 'invalid', 'destroyed'] as const))
       .combine(
         poptions('copySize', [
-          { width: 0, height: 0, depth: 0 },
-          { width: 1, height: 1, depth: 1 },
+          { width: 0, height: 0, depthOrArrayLayers: 0 },
+          { width: 1, height: 1, depthOrArrayLayers: 1 },
         ])
       )
   )
@@ -227,8 +231,8 @@ g.test('destination_texture,usage')
       .combine(poptions('usage', kTextureUsages))
       .combine(
         poptions('copySize', [
-          { width: 0, height: 0, depth: 0 },
-          { width: 1, height: 1, depth: 1 },
+          { width: 0, height: 0, depthOrArrayLayers: 0 },
+          { width: 1, height: 1, depthOrArrayLayers: 1 },
         ])
       )
   )
@@ -236,7 +240,7 @@ g.test('destination_texture,usage')
     const { usage, copySize } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
     const dstTexture = t.device.createTexture({
-      size: { width: 1, height: 1, depth: 1 },
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
       usage,
     });
@@ -255,8 +259,8 @@ g.test('destination_texture,sample_count')
       .combine(poptions('sampleCount', [1, 4]))
       .combine(
         poptions('copySize', [
-          { width: 0, height: 0, depth: 0 },
-          { width: 1, height: 1, depth: 1 },
+          { width: 0, height: 0, depthOrArrayLayers: 0 },
+          { width: 1, height: 1, depthOrArrayLayers: 1 },
         ])
       )
   )
@@ -264,7 +268,7 @@ g.test('destination_texture,sample_count')
     const { sampleCount, copySize } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
     const dstTexture = t.device.createTexture({
-      size: { width: 1, height: 1, depth: 1 },
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       sampleCount,
       format: 'bgra8unorm',
       usage: GPUTextureUsage.COPY_DST,
@@ -279,8 +283,8 @@ g.test('destination_texture,mipLevel')
       .combine(poptions('mipLevel', [0, kDefaultMipLevelCount - 1, kDefaultMipLevelCount]))
       .combine(
         poptions('copySize', [
-          { width: 0, height: 0, depth: 0 },
-          { width: 1, height: 1, depth: 1 },
+          { width: 0, height: 0, depthOrArrayLayers: 0 },
+          { width: 1, height: 1, depthOrArrayLayers: 1 },
         ])
       )
   )
@@ -288,7 +292,7 @@ g.test('destination_texture,mipLevel')
     const { mipLevel, copySize } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
     const dstTexture = t.device.createTexture({
-      size: { width: kDefaultWidth, height: kDefaultHeight, depth: kDefaultDepth },
+      size: { width: kDefaultWidth, height: kDefaultHeight, depthOrArrayLayers: kDefaultDepth },
       mipLevelCount: kDefaultMipLevelCount,
       format: 'bgra8unorm',
       usage: GPUTextureUsage.COPY_DST,
@@ -308,20 +312,23 @@ g.test('destination_texture,format')
       .combine(poptions('format', kAllTextureFormats))
       .combine(
         poptions('copySize', [
-          { width: 0, height: 0, depth: 0 },
-          { width: 1, height: 1, depth: 1 },
+          { width: 0, height: 0, depthOrArrayLayers: 0 },
+          { width: 1, height: 1, depthOrArrayLayers: 1 },
         ])
       )
   )
   .fn(async t => {
     const { format, copySize } = t.params;
+
+    await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].extension);
+
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
 
     // createTexture with all possible texture format may have validation error when using
     // compressed texture format.
     t.device.pushErrorScope('validation');
     const dstTexture = t.device.createTexture({
-      size: { width: 1, height: 1, depth: 1 },
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       format,
       usage: GPUTextureUsage.COPY_DST,
     });
@@ -357,7 +364,11 @@ g.test('OOB,source')
     const { srcOrigin, copySize } = t.params;
     const imageBitmap = await createImageBitmap(t.getImageData(kDefaultWidth, kDefaultHeight));
     const dstTexture = t.device.createTexture({
-      size: { width: kDefaultWidth + 1, height: kDefaultHeight + 1, depth: kDefaultDepth },
+      size: {
+        width: kDefaultWidth + 1,
+        height: kDefaultHeight + 1,
+        depthOrArrayLayers: kDefaultDepth,
+      },
       mipLevelCount: kDefaultMipLevelCount,
       format: 'bgra8unorm',
       usage: GPUTextureUsage.COPY_DST,
@@ -368,7 +379,7 @@ g.test('OOB,source')
     if (
       srcOrigin.x + copySize.width > kDefaultWidth ||
       srcOrigin.y + copySize.height > kDefaultHeight ||
-      copySize.depth > 1
+      copySize.depthOrArrayLayers > 1
     ) {
       success = false;
     }
@@ -393,7 +404,7 @@ g.test('OOB,destination')
       size: {
         width: kDefaultWidth,
         height: kDefaultHeight,
-        depth: kDefaultDepth,
+        depthOrArrayLayers: kDefaultDepth,
       },
       format: 'bgra8unorm',
       mipLevelCount: kDefaultMipLevelCount,
@@ -404,10 +415,10 @@ g.test('OOB,destination')
     const dstMipMapSize = computeMipMapSize(kDefaultWidth, kDefaultHeight, mipLevel);
 
     if (
-      copySize.depth > 1 ||
+      copySize.depthOrArrayLayers > 1 ||
       dstOrigin.x + copySize.width > dstMipMapSize.mipWidth ||
       dstOrigin.y + copySize.height > dstMipMapSize.mipHeight ||
-      dstOrigin.z + copySize.depth > kDefaultDepth
+      dstOrigin.z + copySize.depthOrArrayLayers > kDefaultDepth
     ) {
       success = false;
     }
