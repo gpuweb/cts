@@ -7,7 +7,10 @@ TODO: plan
 
 import { poptions, params } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { kDepthStencilFormats } from '../../../../capability_info.js';
+import {
+  kDepthStencilFormats,
+  depthStencilBufferTextureCopySupported,
+} from '../../../../capability_info.js';
 import { ValidationTest } from '../../validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);
@@ -17,7 +20,6 @@ g.test('depth_stencil_format,copy_usage_and_aspect')
     `
   Validate the combination of usage and aspect of each depth stencil format in copyBufferToTexture
   and copyTextureToBuffer. See https://gpuweb.github.io/gpuweb/#depth-formats for more details.
-  TODO(jiawei.shao@intel.com): add tests on depth16norm when it is supported.
 `
   )
   .cases(
@@ -28,7 +30,7 @@ g.test('depth_stencil_format,copy_usage_and_aspect')
   .fn(async t => {
     const { format, aspect } = t.params;
 
-    const textureSize = { width: 1, height: 1, depth: 1 };
+    const textureSize = { width: 1, height: 1, depthOrArrayLayers: 1 };
     const texture = t.device.createTexture({
       size: textureSize,
       format,
@@ -40,34 +42,8 @@ g.test('depth_stencil_format,copy_usage_and_aspect')
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
 
-    const emptyStringArray: string[] = [];
-
-    const kDepthStencilFormatCapabilityInBufferTextureCopy = {
-      // kUnsizedDepthStencilFormats
-      depth24plus: {
-        AspectsSupportedInB2T: emptyStringArray,
-        AspectsSupportedInT2B: emptyStringArray,
-      },
-      'depth24plus-stencil8': {
-        AspectsSupportedInB2T: ['stencil-only'],
-        AspectsSupportedInT2B: ['stencil-only'],
-      },
-
-      // kSizedDepthStencilFormats
-      depth32float: {
-        AspectsSupportedInB2T: emptyStringArray,
-        AspectsSupportedInT2B: ['all', 'depth-only'],
-      },
-      stencil8: {
-        AspectsSupportedInB2T: ['all', 'stencil-only'],
-        AspectsSupportedInT2B: ['all', 'stencil-only'],
-      },
-    };
-
     {
-      const success = kDepthStencilFormatCapabilityInBufferTextureCopy[
-        format
-      ].AspectsSupportedInB2T.includes(aspect);
+      const success = depthStencilBufferTextureCopySupported('CopyB2T', format, aspect);
 
       const encoder = t.device.createCommandEncoder();
       encoder.copyBufferToTexture({ buffer }, { texture, aspect }, textureSize);
@@ -78,9 +54,7 @@ g.test('depth_stencil_format,copy_usage_and_aspect')
     }
 
     {
-      const success = kDepthStencilFormatCapabilityInBufferTextureCopy[
-        format
-      ].AspectsSupportedInT2B.includes(aspect);
+      const success = depthStencilBufferTextureCopySupported('CopyT2B', format, aspect);
 
       const encoder = t.device.createCommandEncoder();
       encoder.copyTextureToBuffer({ texture, aspect }, { buffer }, textureSize);

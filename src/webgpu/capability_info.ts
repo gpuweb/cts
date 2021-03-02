@@ -227,6 +227,50 @@ export const kTextureAspectInfo: {
 };
 export const kTextureAspects = keysOf(kTextureAspectInfo);
 
+export function depthStencilBufferTextureCopySupported(
+  type: 'CopyB2T' | 'CopyT2B',
+  format: DepthStencilFormat,
+  aspect: GPUTextureAspect
+): boolean {
+  const emptyStringArray: string[] = [];
+
+  const kDepthStencilFormatCapabilityInBufferTextureCopy = {
+    // kUnsizedDepthStencilFormats
+    depth24plus: {
+      CopyB2T: emptyStringArray,
+      CopyT2B: emptyStringArray,
+    },
+    'depth24plus-stencil8': {
+      CopyB2T: ['stencil-only'],
+      CopyT2B: ['stencil-only'],
+    },
+
+    // kSizedDepthStencilFormats
+    depth16unorm: {
+      CopyB2T: ['all', 'depth-only'],
+      CopyT2B: ['all', 'depth-only'],
+    },
+    depth32float: {
+      CopyB2T: emptyStringArray,
+      CopyT2B: ['all', 'depth-only'],
+    },
+    'depth24unorm-stencil8': {
+      CopyB2T: ['stencil-only'],
+      CopyT2B: ['depth-only', 'stencil-only'],
+    },
+    'depth32float-stencil8': {
+      CopyB2T: ['stencil-only'],
+      CopyT2B: ['depth-only', 'stencil-only'],
+    },
+    stencil8: {
+      CopyB2T: ['all', 'stencil-only'],
+      CopyT2B: ['all', 'stencil-only'],
+    },
+  };
+
+  return kDepthStencilFormatCapabilityInBufferTextureCopy[format][type].includes(aspect);
+}
+
 export const kTextureUsageInfo: {
   readonly [k in GPUTextureUsage]: {};
 } = {
