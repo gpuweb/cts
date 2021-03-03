@@ -1,8 +1,8 @@
 export const description = `
 copyTextureToBuffer and copyBufferToTexture validation tests not covered by
-copy_between_linear_data_and_texture or destroyed,*.
+the general image_copy tests, or by destroyed,*.
 
-TODO: plan
+TODO: plan further
 `;
 
 import { poptions, params } from '../../../../../common/framework/params_builder.js';
