@@ -29,13 +29,58 @@ import { makeTestGroup } from '../../../common/framework/test_group.js';
 import {
   kAllTextureFormats,
   kAllTextureFormatInfo,
-  kUncompressedTextureFormats,
   kTextureUsages,
 } from '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 import { maxMipLevelCount } from '../../util/texture/base.js';
 
 import { ValidationTest } from './validation_test.js';
+
+const kValidTextureFormatsForMSAA = [
+  'r8unorm',
+  'r8snorm',
+  'r8uint',
+  'r8sint',
+  'r16uint',
+  'r16sint',
+  'r16float',
+  'rg8unorm',
+  'rg8snorm',
+  'rg8uint',
+  'rg8sint',
+  'r32uint',
+  'r32sint',
+  'r32float',
+  'rg16uint',
+  'rg16sint',
+  'rg16float',
+  'rgba8unorm',
+  'rgba8unorm-srgb',
+  'rgba8snorm',
+  'rgba8uint',
+  'rgba8sint',
+  'bgra8unorm',
+  'bgra8unorm-srgb',
+  'rgb9e5ufloat',
+  'rgb10a2unorm',
+  'rg11b10ufloat',
+  'rg32uint',
+  'rg32sint',
+  'rg32float',
+  'rgba16uint',
+  'rgba16sint',
+  'rgba16float',
+  'rgba32uint',
+  'rgba32sint',
+  'rgba32float',
+  'stencil8',
+  'depth16unorm',
+  'depth24plus',
+  'depth24plus-stencil8',
+  'depth32float',
+  'depth24unorm-stencil8',
+  'depth32float-stencil8',
+];
 
 class F extends ValidationTest {
   getDescriptor(
@@ -220,7 +265,7 @@ g.test('sampleCount,various_sampleCount_with_all_formats')
   .desc(`Test texture creation with various (valid or invalid) sample count and all formats`)
   .subcases(() =>
     params()
-      .combine(poptions('sampleCount', [1, 2, 4, 8, 16, 32, 256]))
+      .combine(poptions('sampleCount', [0, 1, 2, 4, 8, 16, 32, 256]))
       .combine(poptions('format', kAllTextureFormats))
   )
   .fn(async t => {
@@ -235,7 +280,7 @@ g.test('sampleCount,various_sampleCount_with_all_formats')
     await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].extension);
 
     const success =
-      sampleCount === 1 || (sampleCount === 4 && kUncompressedTextureFormats.includes(format));
+      sampleCount === 1 || (sampleCount === 4 && kValidTextureFormatsForMSAA.includes(format));
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);
     }, !success);
@@ -243,7 +288,9 @@ g.test('sampleCount,various_sampleCount_with_all_formats')
 
 g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
   .desc(
-    `Test texture creation with valid sample count when dimensions, arrayLayerCount, mipLevelCount, format, and usage varies.`
+    `Test texture creation with valid sample count when dimensions, arrayLayerCount, mipLevelCount, format, and usage varies.
+     Texture can be single sample (sampleCount is 1) or multi-sample (sampleCount is 4).
+     Multisample texture requires that 1) its dimension is 2d, 2) its format is a uncompressed format, 3) its mipLevelCount and arrayLayerCount are 1, 4) its usage doesn't include STORAGE.`
   )
   .subcases(() =>
     params()
@@ -286,7 +333,7 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
       sampleCount === 1 ||
       (sampleCount === 4 &&
         dimension === '2d' &&
-        format in kUncompressedTextureFormats &&
+        kValidTextureFormatsForMSAA.includes(format) &&
         mipLevelCount === 1 &&
         arrayLayerCount === 1 &&
         (usage & GPUConst.TextureUsage.STORAGE) === 0);
@@ -294,28 +341,6 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);
     }, !success);
-  });
-
-g.test('sampleCount')
-  .params([
-    { sampleCount: 0, _success: false },
-    { sampleCount: 1, _success: true },
-    { sampleCount: 2, _success: false },
-    { sampleCount: 3, _success: false },
-    { sampleCount: 4, _success: true },
-    { sampleCount: 8, _success: false },
-    { sampleCount: 16, _success: false },
-    { sampleCount: 4, mipLevelCount: 2, _success: false },
-    { sampleCount: 4, arrayLayerCount: 2, _success: false },
-  ])
-  .fn(async t => {
-    const { sampleCount, mipLevelCount, arrayLayerCount, _success } = t.params;
-
-    const descriptor = t.getDescriptor({ sampleCount, mipLevelCount, arrayLayerCount });
-
-    t.expectValidationError(() => {
-      t.device.createTexture(descriptor);
-    }, !_success);
   });
 
 g.test('it_is_valid_to_destroy_a_texture').fn(t => {
