@@ -235,7 +235,7 @@ g.test('sampleCount,various_sampleCount_with_all_formats')
     await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].extension);
 
     const success =
-      sampleCount === 1 || (sampleCount === 4 && format in kUncompressedTextureFormats);
+      sampleCount === 1 || (sampleCount === 4 && kUncompressedTextureFormats.includes(format));
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);
     }, !success);
