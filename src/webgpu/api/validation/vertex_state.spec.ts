@@ -81,21 +81,24 @@ class F extends ValidationTest {
     vertexState: GPUVertexStateDescriptor,
     vertexShader: string = VERTEX_SHADER_CODE_WITH_NO_INPUT
   ) {
+    const vsModule = this.device.createShaderModule({ code: vertexShader });
+    const fsModule = this.device.createShaderModule({
+      code: `
+        [[location(0)]] var<out> fragColor : vec4<f32>;
+        [[stage(fragment)]] fn main() -> void {
+          fragColor = vec4<f32>(0.0, 1.0, 0.0, 1.0);
+        }`,
+    });
+
     this.expectValidationError(() => {
       this.device.createRenderPipeline({
         vertexState,
         vertexStage: {
-          module: this.device.createShaderModule({ code: vertexShader }),
+          module: vsModule,
           entryPoint: 'main',
         },
         fragmentStage: {
-          module: this.device.createShaderModule({
-            code: `
-            [[location(0)]] var<out> fragColor : vec4<f32>;
-            [[stage(fragment)]] fn main() -> void {
-              fragColor = vec4<f32>(0.0, 1.0, 0.0, 1.0);
-            }`,
-          }),
+          module: fsModule,
           entryPoint: 'main',
         },
         primitiveTopology: 'triangle-list',
@@ -108,10 +111,11 @@ class F extends ValidationTest {
     let interfaces = '';
     let body = '';
 
-    const count = 0;
+    let count = 0;
     for (const input of inputs) {
       interfaces += `[[location(${input.location})]] var<in> input${count} : ${input.type};\n`;
       body += `var i${count} : ${input.type} = input${count};\n`;
+      count++;
     }
 
     return `
@@ -338,6 +342,10 @@ g.test('vertex_attribute_shaderLocation_unique')
       extraAttributes,
     } = t.params;
 
+    // Depending on the params, the vertexBuffer for A and B can be the same or different. To support
+    // both cases without code changes we treat `vertexBufferAttributes` as a map from indices to
+    // vertex buffer descriptors, with A and B potentially reusing the same JS object if they have the
+    // same index.
     const vertexBufferAttributes: GPUVertexAttributeDescriptor[][] = [];
     vertexBufferAttributes[vertexBufferIndexA] = [];
     vertexBufferAttributes[vertexBufferIndexB] = [];
@@ -362,7 +370,7 @@ g.test('vertex_attribute_shaderLocation_unique')
       attributesA.push({ format: 'float', offset: 0, shaderLocation: shaderLocationA });
     }
 
-    // Add attribute B potentially in the same list of attributes as A
+    // Add attribute B. Not that attributesB can be the same object as attributesA.
     const attributesB = vertexBufferAttributes[vertexBufferIndexB];
     if (testAttributeAtStartB) {
       attributesB.unshift({ format: 'float', offset: 0, shaderLocation: shaderLocationB });
@@ -370,12 +378,14 @@ g.test('vertex_attribute_shaderLocation_unique')
       attributesB.push({ format: 'float', offset: 0, shaderLocation: shaderLocationB });
     }
 
-    // Use the attributes to make the list of vertex buffers not that we might be setting the same vertex
-    // buffer twice but that only happens when it is the only vertex buffer.
+    // Use the attributes to make the list of vertex buffers. Note that we might be setting the same vertex
+    // buffer twice, but that only happens when it is the only vertex buffer.
     const vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [];
     vertexBuffers[vertexBufferIndexA] = { arrayStride: 256, attributes: attributesA };
     vertexBuffers[vertexBufferIndexB] = { arrayStride: 256, attributes: attributesB };
 
+    // Note that an empty vertex shader will be used so errors only happens because of the conflict
+    // in the vertex state.
     const success = shaderLocationA !== shaderLocationB;
     t.testVertexState(success, { vertexBuffers });
   });
@@ -387,7 +397,7 @@ g.test('vertex_shader_input_location_limit')
   )
   .subcases(() =>
     params().combine(
-      poptions('testLocation', [0, 1, kMaxVertexAttributes - 1, kMaxVertexAttributes])
+      poptions('testLocation', [0, 1, kMaxVertexAttributes - 1, kMaxVertexAttributes, -1, 2 ** 32])
     )
   )
   .fn(t => {
@@ -418,7 +428,11 @@ g.test('vertex_shader_input_location_limit')
   });
 
 g.test('vertex_shader_input_location_in_vertex_state')
-  .desc(``)
+  .desc(
+    `Test that a vertex shader defined in the shader must have a corresponding attribute in the vertex state.
+       - Test for various input locations.
+       - Test for the attribute in various places in the list of vertex buffer and various places inside the vertex buffer descriptor`
+  )
   .subcases(() =>
     params()
       .combine(poptions('vertexBufferIndex', [0, 1, kMaxVertexBuffers - 1]))
