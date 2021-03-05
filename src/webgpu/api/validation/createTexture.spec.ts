@@ -19,11 +19,6 @@ TODO: review existing tests and merge with this plan:
 >     - x= every texture format
 > - 3d, {width, height, depthOrArrayLayers} > whatever the max is
 >     - x= every texture format
-> - usage flags
->     - {0, ... each single usage flag}
->     - x= every texture format
-> - every possible pair of usage flags
->     - with one common texture format
 > - any other conditions from the spec
 > - ...?
 
@@ -32,7 +27,12 @@ TODO: move destroy tests out of this file
 
 import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { kAllTextureFormats, kAllTextureFormatInfo } from '../../capability_info.js';
+import {
+  kAllTextureFormats,
+  kAllTextureFormatInfo,
+  kTextureDimensions,
+  kTextureUsages,
+} from '../../capability_info.js';
 import { maxMipLevelCount } from '../../util/texture/base.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -289,19 +289,43 @@ g.test('it_is_invalid_to_submit_a_destroyed_texture_before_and_after_encode')
     }, !_success);
   });
 
-g.test('it_is_invalid_to_have_an_output_attachment_texture_with_non_renderable_format')
-  .params(poptions('format', kAllTextureFormats))
+g.test('texture_usage')
+  .desc(
+    `Test texture usage (single usage or combined usages) for every texture formats and every dimension types`
+  )
+  .subcases(() =>
+    params()
+      .combine(poptions('dimension', kTextureDimensions))
+      .combine(poptions('format', kAllTextureFormats))
+      // If usage0 and usage1 are the same, then the usage being test is a single usage. Otherwise, it is a combined usage.
+      .combine(poptions('usage0', kTextureUsages))
+      .combine(poptions('usage1', kTextureUsages))
+  )
   .fn(async t => {
-    const format: GPUTextureFormat = t.params.format;
+    const { dimension, format, usage0, usage1 } = t.params;
     const info = kAllTextureFormatInfo[format];
 
     await t.selectDeviceOrSkipTestCase(info.extension);
 
-    const descriptor = t.getDescriptor({ width: 1, height: 1, format });
+    const size = dimension === '1d' ? [32, 1, 1] : dimension === '2d' ? [32, 32, 1] : [32, 32, 32];
+
+    const usage = usage0 | usage1;
+    const descriptor = {
+      size,
+      dimension,
+      format,
+      usage,
+    };
+
+    let success = true;
+    if (!info.copySrc && (usage & GPUTextureUsage.COPY_SRC) !== 0) success = false;
+    if (!info.copyDst && (usage & GPUTextureUsage.COPY_DST) !== 0) success = false;
+    if (!info.storage && (usage & GPUTextureUsage.STORAGE) !== 0) success = false;
+    if (!info.renderable && (usage & GPUTextureUsage.RENDER_ATTACHMENT) !== 0) success = false;
 
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);
-    }, !info.renderable);
+    }, !success);
   });
 
 // TODO: Add tests for compressed texture formats
