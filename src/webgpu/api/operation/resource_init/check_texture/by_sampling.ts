@@ -69,8 +69,8 @@ export const checkContentsBySampling: CheckContents = (
               var texel : vec4<${shaderType}> = textureLoad(
                 myTexture, vec2<i32>(GlobalInvocationID.xy), constants.level);
 
-              for (var i : u32 = flatIndex; i < flatIndex + ${componentCount}u; i = i + 1) {
-                result.values[i] = texel.${indexExpression};
+              for (var i : u32 = 0u; i < ${componentCount}u; i = i + 1u) {
+                result.values[flatIndex + i] = texel.${indexExpression};
               }
               return;
             }`,

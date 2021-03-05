@@ -2,12 +2,13 @@
 
 -----
 
-<!-- Leave this section in the PR description. -->
+<!-- ***** For uploader to fill out ***** -->
 
 - [ ] New helpers, if any, are documented in `helper_index.md`.
 - [ ] Incomplete tests, if any, are marked with TODO or `.unimplemented()`.
 
-**[Review requirements](https://github.com/gpuweb/cts/blob/main/docs/reviews.md) are satisfied for:**
+<!-- For reviewers to fill out (uploader may pre-check these off at their own discretion) -->
+**[Review requirement](https://github.com/gpuweb/cts/blob/main/docs/reviews.md) checklist:**
 
 - [ ] WebGPU readability
 - [ ] TypeScript readability

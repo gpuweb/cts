@@ -216,7 +216,7 @@ class PrimitiveTopologyTest extends GPUTest {
   makeAttachmentTexture(): GPUTexture {
     return this.device.createTexture({
       format: kColorFormat,
-      size: { width: kRTSize, height: kRTSize, depth: 1 },
+      size: { width: kRTSize, height: kRTSize, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     });
   }

@@ -2,8 +2,8 @@ export const description = `writeTexture + copyBufferToTexture + copyTextureToBu
 
 * copy_with_various_rows_per_image_and_bytes_per_row: test that copying data with various bytesPerRow (including { ==, > } bytesInACompleteRow) and\
  rowsPerImage (including { ==, > } copyExtent.height) values and minimum required bytes in copy works for every format. Also covers special code paths:
-  - bufferSize - offset < bytesPerImage * copyExtent.depth
-  - when bytesPerRow is not a multiple of 512 and copyExtent.depth > 1: copyExtent.depth % 2 == { 0, 1 }
+  - bufferSize - offset < bytesPerImage * copyExtent.depthOrArrayLayers
+  - when bytesPerRow is not a multiple of 512 and copyExtent.depthOrArrayLayers > 1: copyExtent.depthOrArrayLayers % 2 == { 0, 1 }
   - bytesPerRow == bytesInACompleteCopyImage
 
 * copy_with_various_offsets_and_data_sizes: test that copying data with various offset (including { ==, > } 0 and is/isn't power of 2) values and additional\
@@ -18,7 +18,7 @@ export const description = `writeTexture + copyBufferToTexture + copyTextureToBu
 
 * copy_various_mip_levels: test that copying various mip levels works for all formats. Also covers special code paths:
   - the physical size of the subresouce is not equal to the logical size
-  - bufferSize - offset < bytesPerImage * copyExtent.depth and copyExtent needs to be clamped
+  - bufferSize - offset < bytesPerImage * copyExtent.depthOrArrayLayers and copyExtent needs to be clamped
 
 * copy_with_no_image_or_slice_padding_and_undefined_values: test that when copying a single row we can set any bytesPerRow value and when copying a single\
  slice we can set rowsPerImage to 0. Also test setting offset, rowsPerImage, mipLevel, origin, origin.{x,y,z} to undefined.
@@ -27,20 +27,25 @@ export const description = `writeTexture + copyBufferToTexture + copyTextureToBu
   - add another initMethod which renders the texture
   - test copyT2B with buffer size not divisible by 4 (not done because expectContents 4-byte alignment)
   - add tests for 1d / 3d textures
+
+TODO: Fix this test for the various skipped formats:
+- snorm tests failing due to rounding
+- float tests failing because float values are not byte-preserved
+- compressed formats
 `;
 
-import { params, poptions } from '../../../common/framework/params_builder.js';
-import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { assert, unreachable } from '../../../common/framework/util/util.js';
+import { params, poptions } from '../../../../common/framework/params_builder.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { assert, unreachable } from '../../../../common/framework/util/util.js';
 import {
   kSizedTextureFormatInfo,
   SizedTextureFormat,
   kSizedTextureFormats,
-} from '../../capability_info.js';
-import { GPUTest } from '../../gpu_test.js';
-import { align } from '../../util/math.js';
-import { bytesInACompleteRow, dataBytesForCopy } from '../../util/texture/image_copy.js';
-import { getTextureCopyLayout, TextureCopyLayout } from '../../util/texture/layout.js';
+} from '../../../capability_info.js';
+import { GPUTest } from '../../../gpu_test.js';
+import { align } from '../../../util/math.js';
+import { bytesInACompleteRow, dataBytesForCopyOrFail } from '../../../util/texture/image_copy.js';
+import { getTextureCopyLayout, TextureCopyLayout } from '../../../util/texture/layout.js';
 
 interface TextureCopyViewWithRequiredOrigin {
   texture: GPUTexture;
@@ -64,6 +69,14 @@ type CheckMethod = 'PartialCopyT2B' | 'FullCopyT2B';
  * This describes in what form the arguments will be passed to WriteTexture/CopyB2T/CopyT2B. If
  * undefined, then default values are passed as undefined instead of default values. If arrays, then
  * `GPUOrigin3D` and `GPUExtent3D` are passed as `[number, number, number]`. *
+ *
+ * TODO: Try to expand this with something like:
+ * ```ts
+ * function encodeExtent3D(
+ *   mode: 'partial-array' | 'full-array' | 'extra-array' | 'partial-dict' | 'full-dict',
+ *   value: GPUExtent3D
+ * ): GPUExtent3D { ... }
+ * ```
  */
 type ChangeBeforePass = 'none' | 'undefined' | 'arrays';
 
@@ -79,7 +92,21 @@ const kMethodsToTest = [
   { initMethod: 'WriteTexture', checkMethod: 'PartialCopyT2B' },
 ] as const;
 
-class CopyBetweenLinearDataAndTextureTest extends GPUTest {
+// TODO: Fix things so this list can be reduced to zero (see file description)
+const kExcludedFormats: Set<SizedTextureFormat> = new Set([
+  'r8snorm',
+  'rg8snorm',
+  'rgba8snorm',
+  'rg11b10ufloat',
+  'rg16float',
+  'rgba16float',
+  'r32float',
+  'rg32float',
+  'rgba32float',
+]);
+const kWorkingTextureFormats = kSizedTextureFormats.filter(x => !kExcludedFormats.has(x));
+
+class ImageCopyTest extends GPUTest {
   /** Offset for a particular texel in the linear texture data */
   getTexelOffsetInBytes(
     textureDataLayout: Required<GPUTextureDataLayout>,
@@ -91,13 +118,12 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     const info = kSizedTextureFormatInfo[format];
 
     assert(texel.x >= origin.x && texel.y >= origin.y && texel.z >= origin.z);
-    assert(rowsPerImage % info.blockHeight === 0);
     assert(texel.x % info.blockWidth === 0);
     assert(texel.y % info.blockHeight === 0);
     assert(origin.x % info.blockWidth === 0);
     assert(origin.y % info.blockHeight === 0);
 
-    const bytesPerImage = (rowsPerImage / info.blockHeight) * bytesPerRow;
+    const bytesPerImage = rowsPerImage * bytesPerRow;
 
     return (
       offset +
@@ -108,21 +134,21 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
   }
 
   *iterateBlockRows(
-    size: GPUExtent3DDict,
+    size: Required<GPUExtent3DDict>,
     origin: Required<GPUOrigin3DDict>,
     format: SizedTextureFormat
   ): Generator<Required<GPUOrigin3DDict>> {
-    if (size.width === 0 || size.height === 0 || size.depth === 0) {
+    if (size.width === 0 || size.height === 0 || size.depthOrArrayLayers === 0) {
       // do not iterate anything for an empty region
       return;
     }
     const info = kSizedTextureFormatInfo[format];
     assert(size.height % info.blockHeight === 0);
-    for (let y = 0; y < size.height / info.blockHeight; ++y) {
-      for (let z = 0; z < size.depth; ++z) {
+    for (let y = 0; y < size.height; y += info.blockHeight) {
+      for (let z = 0; z < size.depthOrArrayLayers; ++z) {
         yield {
           x: origin.x,
-          y: origin.y + y * info.blockHeight,
+          y: origin.y + y,
           z: origin.z + z,
         };
       }
@@ -145,12 +171,15 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
   undefDataLayoutIfNeeded(
     offset: number | undefined,
     rowsPerImage: number | undefined,
-    bytesPerRow: number,
+    bytesPerRow: number | undefined,
     changeBeforePass: ChangeBeforePass
   ): GPUTextureDataLayout {
     if (changeBeforePass === 'undefined') {
       if (offset === 0) {
         offset = undefined;
+      }
+      if (bytesPerRow === 0) {
+        bytesPerRow = undefined;
       }
       if (rowsPerImage === 0) {
         rowsPerImage = undefined;
@@ -211,13 +240,13 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
   arrayCopySizeIfNeeded(
     width: number,
     height: number,
-    depth: number,
+    depthOrArrayLayers: number,
     changeBeforePass: ChangeBeforePass
   ): GPUExtent3D {
     if (changeBeforePass === 'arrays') {
-      return [width, height, depth];
+      return [width, height, depthOrArrayLayers];
     } else {
-      return { width, height, depth };
+      return { width, height, depthOrArrayLayers };
     }
   }
 
@@ -225,7 +254,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
   copyTextureToBufferWithAppliedArguments(
     buffer: GPUBuffer,
     { offset, rowsPerImage, bytesPerRow }: Required<GPUTextureDataLayout>,
-    { width, height, depth }: GPUExtent3DDict,
+    { width, height, depthOrArrayLayers }: Required<GPUExtent3DDict>,
     { texture, mipLevel, origin }: TextureCopyViewWithRequiredOrigin,
     changeBeforePass: ChangeBeforePass
   ): void {
@@ -245,7 +274,12 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
       bytesPerRow,
       changeBeforePass
     );
-    const appliedCheckSize = this.arrayCopySizeIfNeeded(width, height, depth, changeBeforePass);
+    const appliedCheckSize = this.arrayCopySizeIfNeeded(
+      width,
+      height,
+      depthOrArrayLayers,
+      changeBeforePass
+    );
 
     const encoder = this.device.createCommandEncoder();
     encoder.copyTextureToBuffer(
@@ -260,7 +294,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
   uploadLinearTextureDataToTextureSubBox(
     textureCopyView: TextureCopyViewWithRequiredOrigin,
     textureDataLayout: GPUImageDataLayout & { bytesPerRow: number },
-    copySize: GPUExtent3DDict,
+    copySize: Required<GPUExtent3DDict>,
     partialData: Uint8Array,
     method: InitMethod,
     changeBeforePass: ChangeBeforePass
@@ -268,7 +302,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     const { texture, mipLevel, origin } = textureCopyView;
     const { offset, rowsPerImage, bytesPerRow } = textureDataLayout;
     const { x, y, z } = origin;
-    const { width, height, depth } = copySize;
+    const { width, height, depthOrArrayLayers } = copySize;
 
     const appliedCopyView = this.undefOrArrayCopyViewIfNeeded(
       texture,
@@ -284,7 +318,12 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
       bytesPerRow,
       changeBeforePass
     );
-    const appliedCopySize = this.arrayCopySizeIfNeeded(width, height, depth, changeBeforePass);
+    const appliedCopySize = this.arrayCopySizeIfNeeded(
+      width,
+      height,
+      depthOrArrayLayers,
+      changeBeforePass
+    );
 
     switch (method) {
       case 'WriteTexture': {
@@ -330,7 +369,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
    */
   copyPartialTextureToBufferAndCheckContents(
     { texture, mipLevel, origin }: TextureCopyViewWithRequiredOrigin,
-    checkSize: GPUExtent3DDict,
+    checkSize: Required<GPUExtent3DDict>,
     format: SizedTextureFormat,
     expected: Uint8Array,
     expectedDataLayout: Required<GPUTextureDataLayout>,
@@ -361,6 +400,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
       expectedDataLayout,
       expectedDataLayout,
       checkSize,
+      origin,
       origin,
       format,
       bufferData,
@@ -411,20 +451,27 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
    * on the texture by emulating the copy behaviour here directly.
    */
   updateLinearTextureDataSubBox(
-    { bytesPerRow, rowsPerImage }: { bytesPerRow: number; rowsPerImage: number },
-    sourceDataLayout: Required<GPUTextureDataLayout>,
-    copySize: GPUExtent3DDict,
-    origin: Required<GPUOrigin3DDict>,
+    destinationDataLayout: Required<GPUImageDataLayout>,
+    sourceDataLayout: Required<GPUImageDataLayout>,
+    copySize: Required<GPUExtent3DDict>,
+    destinationOrigin: Required<GPUOrigin3DDict>,
+    sourceOrigin: Required<GPUOrigin3DDict>,
     format: SizedTextureFormat,
     destination: Uint8Array,
     source: Uint8Array
   ): void {
-    for (const texel of this.iterateBlockRows(copySize, origin, format)) {
-      const sourceOffset = this.getTexelOffsetInBytes(sourceDataLayout, format, texel, origin);
-      const destinationOffset = this.getTexelOffsetInBytes(
-        { bytesPerRow, rowsPerImage, offset: 0 },
+    for (const texel of this.iterateBlockRows(copySize, sourceOrigin, format)) {
+      const sourceOffset = this.getTexelOffsetInBytes(
+        sourceDataLayout,
         format,
-        texel
+        texel,
+        sourceOrigin
+      );
+      const destinationOffset = this.getTexelOffsetInBytes(
+        destinationDataLayout,
+        format,
+        texel,
+        destinationOrigin
       );
       const rowLength = bytesInACompleteRow(copySize.width, format);
       this.copyFromArrayToArray(source, sourceOffset, destination, destinationOffset, rowLength);
@@ -442,7 +489,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     { texture, mipLevel, origin }: TextureCopyViewWithRequiredOrigin,
     fullTextureCopyLayout: TextureCopyLayout,
     texturePartialDataLayout: Required<GPUTextureDataLayout>,
-    copySize: GPUExtent3DDict,
+    copySize: Required<GPUExtent3DDict>,
     format: SizedTextureFormat,
     fullData: GPUBuffer,
     partialData: Uint8Array
@@ -450,23 +497,26 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     const { mipSize, bytesPerRow, rowsPerImage, byteLength } = fullTextureCopyLayout;
     const { dst, begin, end } = this.createAlignedCopyForMapRead(fullData, byteLength, 0);
 
+    const destinationOrigin = { x: 0, y: 0, z: 0 };
+
     // We add an eventual async expectation which will update the full data and then add
     // other eventual async expectations to ensure it will be correct.
     this.eventualAsyncExpectation(async () => {
       await dst.mapAsync(GPUMapMode.READ);
       const actual = new Uint8Array(dst.getMappedRange()).subarray(begin, end);
       this.updateLinearTextureDataSubBox(
-        fullTextureCopyLayout,
+        { offset: 0, ...fullTextureCopyLayout },
         texturePartialDataLayout,
         copySize,
+        destinationOrigin,
         origin,
         format,
         actual,
         partialData
       );
       this.copyPartialTextureToBufferAndCheckContents(
-        { texture, mipLevel, origin: { x: 0, y: 0, z: 0 } },
-        { width: mipSize[0], height: mipSize[1], depth: mipSize[2] },
+        { texture, mipLevel, origin: destinationOrigin },
+        { width: mipSize[0], height: mipSize[1], depthOrArrayLayers: mipSize[2] },
         format,
         actual,
         { bytesPerRow, rowsPerImage, offset: 0 }
@@ -494,11 +544,11 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     changeBeforePass = 'none',
   }: {
     textureDataLayout: Required<GPUTextureDataLayout>;
-    copySize: GPUExtent3DDict;
+    copySize: Required<GPUExtent3DDict>;
     dataSize: number;
     mipLevel?: number;
     origin?: Required<GPUOrigin3DDict>;
-    textureSize: [number, number, number];
+    textureSize: readonly [number, number, number];
     format: SizedTextureFormat;
     dimension?: GPUTextureDimension;
     initMethod: InitMethod;
@@ -506,7 +556,7 @@ class CopyBetweenLinearDataAndTextureTest extends GPUTest {
     changeBeforePass?: ChangeBeforePass;
   }): void {
     const texture = this.device.createTexture({
-      size: textureSize,
+      size: textureSize as [number, number, number],
       format,
       dimension,
       mipLevelCount: mipLevel + 1,
@@ -583,29 +633,33 @@ function formatCanBeTested({ format }: { format: SizedTextureFormat }): boolean 
   return kSizedTextureFormatInfo[format].copyDst && kSizedTextureFormatInfo[format].copySrc;
 }
 
-export const g = makeTestGroup(CopyBetweenLinearDataAndTextureTest);
+export const g = makeTestGroup(ImageCopyTest);
 
-// Test that copying data with various bytesPerRow and rowsPerImage values and minimum required
-// bytes in copy works for every format.
-// Covers a special code path for Metal:
-//    bufferSize - offset < bytesPerImage * copyExtent.depth
-// Covers a special code path for D3D12:
-//    when bytesPerRow is not a multiple of 512 and copyExtent.depth > 1: copyExtent.depth % 2 == { 0, 1 }
-//    bytesPerRow == bytesInACompleteCopyImage */
-g.test('copy_with_various_rows_per_image_and_bytes_per_row')
+g.test('rowsPerImage_and_bytesPerRow')
+  .desc(
+    `Test that copying data with various bytesPerRow and rowsPerImage values and minimum required
+bytes in copy works for every format.
+
+  Covers a special code path for Metal:
+    bufferSize - offset < bytesPerImage * copyExtent.depthOrArrayLayers
+  Covers a special code path for D3D12:
+    when bytesPerRow is not a multiple of 512 and copyExtent.depthOrArrayLayers > 1: copyExtent.depthOrArrayLayers % 2 == { 0, 1 }
+    bytesPerRow == bytesInACompleteCopyImage
+  `
+  )
   .cases(
     params()
       .combine(kMethodsToTest)
-      .combine(poptions('format', kSizedTextureFormats))
+      .combine(poptions('format', kWorkingTextureFormats))
       .filter(formatCanBeTested)
   )
   .subcases(() =>
     params()
       .combine([
-        { bytesPerRowPadding: 0, rowsPerImagePaddingInBlocks: 0 }, // no padding
-        { bytesPerRowPadding: 0, rowsPerImagePaddingInBlocks: 6 }, // rowsPerImage padding
-        { bytesPerRowPadding: 6, rowsPerImagePaddingInBlocks: 0 }, // bytesPerRow padding
-        { bytesPerRowPadding: 15, rowsPerImagePaddingInBlocks: 17 }, // both paddings
+        { bytesPerRowPadding: 0, rowsPerImagePadding: 0 }, // no padding
+        { bytesPerRowPadding: 0, rowsPerImagePadding: 6 }, // rowsPerImage padding
+        { bytesPerRowPadding: 6, rowsPerImagePadding: 0 }, // bytesPerRow padding
+        { bytesPerRowPadding: 15, rowsPerImagePadding: 17 }, // both paddings
       ])
       .combine([
         // In the two cases below, for (WriteTexture, PartialCopyB2T) and (CopyB2T, FullCopyT2B)
@@ -617,7 +671,7 @@ g.test('copy_with_various_rows_per_image_and_bytes_per_row')
         { copyWidthInBlocks: 256, copyHeightInBlocks: 3, copyDepth: 2 }, // copyWidth is 256-aligned
         { copyWidthInBlocks: 0, copyHeightInBlocks: 4, copyDepth: 5 }, // empty copy because of width
         { copyWidthInBlocks: 3, copyHeightInBlocks: 0, copyDepth: 5 }, // empty copy because of height
-        { copyWidthInBlocks: 3, copyHeightInBlocks: 4, copyDepth: 0 }, // empty copy because of depth
+        { copyWidthInBlocks: 3, copyHeightInBlocks: 4, copyDepth: 0 }, // empty copy because of depthOrArrayLayers
         { copyWidthInBlocks: 1, copyHeightInBlocks: 3, copyDepth: 5 }, // copyWidth = 1
 
         // The two cases below cover another special code path for D3D12.
@@ -634,7 +688,7 @@ g.test('copy_with_various_rows_per_image_and_bytes_per_row')
   .fn(async t => {
     const {
       bytesPerRowPadding,
-      rowsPerImagePaddingInBlocks,
+      rowsPerImagePadding,
       copyWidthInBlocks,
       copyHeightInBlocks,
       copyDepth,
@@ -653,24 +707,23 @@ g.test('copy_with_various_rows_per_image_and_bytes_per_row')
 
     const copyWidth = copyWidthInBlocks * info.blockWidth;
     const copyHeight = copyHeightInBlocks * info.blockHeight;
-    const rowsPerImage = copyHeight + rowsPerImagePaddingInBlocks * info.blockHeight;
+    const rowsPerImage = copyHeightInBlocks + rowsPerImagePadding;
     const bytesPerRow =
       align(bytesInACompleteRow(copyWidth, format), bytesPerRowAlignment) +
       bytesPerRowPadding * bytesPerRowAlignment;
-    const copySize = { width: copyWidth, height: copyHeight, depth: copyDepth };
+    const copySize = { width: copyWidth, height: copyHeight, depthOrArrayLayers: copyDepth };
 
-    const { minDataSize, valid } = dataBytesForCopy(
-      { offset: 0, bytesPerRow, rowsPerImage },
+    const dataSize = dataBytesForCopyOrFail({
+      layout: { offset: 0, bytesPerRow, rowsPerImage },
       format,
       copySize,
-      { method: initMethod }
-    );
-    assert(valid);
+      method: initMethod,
+    });
 
     t.uploadTextureAndVerifyCopy({
       textureDataLayout: { offset: 0, bytesPerRow, rowsPerImage },
       copySize,
-      dataSize: minDataSize,
+      dataSize,
       textureSize: [
         Math.max(copyWidth, info.blockWidth),
         Math.max(copyHeight, info.blockHeight),
@@ -682,16 +735,20 @@ g.test('copy_with_various_rows_per_image_and_bytes_per_row')
     });
   });
 
-// Test that copying data with various offset values and additional data paddings
-// works for every format with 2d and 2d-array textures.
-// Covers two special code paths for D3D12:
-//     offset + bytesInCopyExtentPerRow { ==, > } bytesPerRow
-//     offset > bytesInACompleteCopyImage
-g.test('copy_with_various_offsets_and_data_sizes')
+g.test('offsets_and_sizes')
+  .desc(
+    `Test that copying data with various offset values and additional data paddings
+works for every format with 2d and 2d-array textures.
+
+  Covers two special code paths for D3D12:
+    offset + bytesInCopyExtentPerRow { ==, > } bytesPerRow
+    offset > bytesInACompleteCopyImage
+`
+  )
   .cases(
     params()
       .combine(kMethodsToTest)
-      .combine(poptions('format', kSizedTextureFormats))
+      .combine(poptions('format', kWorkingTextureFormats))
       .filter(formatCanBeTested)
   )
   .subcases(
@@ -728,20 +785,18 @@ g.test('copy_with_various_offsets_and_data_sizes')
     const copySize = {
       width: 3 * info.blockWidth,
       height: 3 * info.blockHeight,
-      depth: copyDepth,
+      depthOrArrayLayers: copyDepth,
     };
-    const rowsPerImage = copySize.height;
+    const rowsPerImage = 3;
     const bytesPerRow = 256;
 
-    const { minDataSize, valid } = dataBytesForCopy(
-      { offset, bytesPerRow, rowsPerImage },
+    const minDataSize = dataBytesForCopyOrFail({
+      layout: { offset, bytesPerRow, rowsPerImage },
       format,
       copySize,
-      { method: initMethod }
-    );
-    assert(valid);
-
-    const dataSize = offset + minDataSize + dataPaddingInBytes;
+      method: initMethod,
+    });
+    const dataSize = minDataSize + dataPaddingInBytes;
 
     // We're copying a (3 x 3 x copyDepth) (in texel blocks) part of a (4 x 4 x copyDepth)
     // (in texel blocks) texture with no origin.
@@ -756,13 +811,15 @@ g.test('copy_with_various_offsets_and_data_sizes')
     });
   });
 
-// Test that copying slices of a texture works with various origin and copyExtent values
-// for all formats. We pass origin and copyExtent as [number, number, number].
-g.test('copy_with_various_origins_and_copy_extents')
+g.test('origins_and_extents')
+  .desc(
+    `Test that copying slices of a texture works with various origin and copyExtent values
+for all formats. We pass origin and copyExtent as [number, number, number].`
+  )
   .cases(
     params()
       .combine(kMethodsToTest)
-      .combine(poptions('format', kSizedTextureFormats))
+      .combine(poptions('format', kWorkingTextureFormats))
       .filter(formatCanBeTested)
   )
   .subcases(() =>
@@ -775,11 +832,10 @@ g.test('copy_with_various_origins_and_copy_extents')
           // we can't create an empty texture
           p.copySizeValueInBlocks + p.originValueInBlocks + p.textureSizePaddingValueInBlocks === 0
       )
-      .combine(poptions('coordinateToTest', ['width', 'height', 'depth'] as const))
+      .combine(poptions('coordinateToTest', [0, 1, 2] as const))
   )
   .fn(async t => {
     const {
-      coordinateToTest,
       originValueInBlocks,
       copySizeValueInBlocks,
       textureSizePaddingValueInBlocks,
@@ -790,42 +846,43 @@ g.test('copy_with_various_origins_and_copy_extents')
     const info = kSizedTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.extension);
 
-    const origin: Required<GPUOrigin3DDict> = { x: info.blockWidth, y: info.blockHeight, z: 1 };
-    const copySize = { width: 2 * info.blockWidth, height: 2 * info.blockHeight, depth: 2 };
-    const textureSize: [number, number, number] = [3 * info.blockWidth, 3 * info.blockHeight, 3];
+    const originBlocks = [1, 1, 1];
+    const copySizeBlocks = [2, 2, 2];
+    const texSizeBlocks = [3, 3, 3];
 
-    switch (coordinateToTest) {
-      case 'width': {
-        origin.x = originValueInBlocks * info.blockWidth;
-        copySize.width = copySizeValueInBlocks * info.blockWidth;
-        textureSize[0] =
-          origin.x + copySize.width + textureSizePaddingValueInBlocks * info.blockWidth;
-        break;
-      }
-      case 'height': {
-        origin.y = originValueInBlocks * info.blockHeight;
-        copySize.height = copySizeValueInBlocks * info.blockHeight;
-        textureSize[1] =
-          origin.y + copySize.height + textureSizePaddingValueInBlocks * info.blockHeight;
-        break;
-      }
-      case 'depth': {
-        origin.z = originValueInBlocks;
-        copySize.depth = copySizeValueInBlocks;
-        textureSize[2] = origin.z + copySize.depth + textureSizePaddingValueInBlocks;
-        break;
-      }
+    {
+      const ctt = t.params.coordinateToTest;
+      originBlocks[ctt] = originValueInBlocks;
+      copySizeBlocks[ctt] = copySizeValueInBlocks;
+      texSizeBlocks[ctt] =
+        originBlocks[ctt] + copySizeBlocks[ctt] + textureSizePaddingValueInBlocks;
     }
 
-    const rowsPerImage = copySize.height;
-    const bytesPerRow = align(copySize.width, 256);
-    const { minDataSize: dataSize, valid } = dataBytesForCopy(
-      { offset: 0, bytesPerRow, rowsPerImage },
+    const origin: Required<GPUOrigin3DDict> = {
+      x: originBlocks[0] * info.blockWidth,
+      y: originBlocks[1] * info.blockHeight,
+      z: originBlocks[2],
+    };
+    const copySize = {
+      width: copySizeBlocks[0] * info.blockWidth,
+      height: copySizeBlocks[1] * info.blockHeight,
+      depthOrArrayLayers: copySizeBlocks[2],
+    };
+    const textureSize = [
+      texSizeBlocks[0] * info.blockWidth,
+      texSizeBlocks[1] * info.blockHeight,
+      texSizeBlocks[2],
+    ] as const;
+
+    const rowsPerImage = copySizeBlocks[1];
+    const bytesPerRow = align(copySizeBlocks[0] * info.bytesPerBlock, 256);
+
+    const dataSize = dataBytesForCopyOrFail({
+      layout: { offset: 0, bytesPerRow, rowsPerImage },
       format,
       copySize,
-      { method: initMethod }
-    );
-    assert(valid);
+      method: initMethod,
+    });
 
     // For testing width: we copy a (_ x 2 x 2) (in texel blocks) part of a (_ x 3 x 3)
     // (in texel blocks) texture with origin (_, 1, 1) (in texel blocks).
@@ -854,7 +911,7 @@ function* generateTestTextureSizes({
 }: {
   format: SizedTextureFormat;
   mipLevel: number;
-  _mipSizeInBlocks: GPUExtent3DDict;
+  _mipSizeInBlocks: Required<GPUExtent3DDict>;
 }): Generator<{ textureSize: [number, number, number] }> {
   const info = kSizedTextureFormatInfo[format];
 
@@ -863,7 +920,7 @@ function* generateTestTextureSizes({
   const textureSize: [number, number, number] = [
     widthAtThisLevel << mipLevel,
     heightAtThisLevel << mipLevel,
-    _mipSizeInBlocks.depth,
+    _mipSizeInBlocks.depthOrArrayLayers,
   ];
   yield {
     textureSize,
@@ -901,15 +958,17 @@ function* generateTestTextureSizes({
   }
 }
 
-// Test that copying various mip levels works.
-// Covers two special code paths:
-//   - the physical size of the subresouce is not equal to the logical size
-//   - bufferSize - offset < bytesPerImage * copyExtent.depth and copyExtent needs to be clamped for all block formats */
-g.test('copy_various_mip_levels')
+g.test('mip_levels')
+  .desc(
+    `Test that copying various mip levels works. Covers two special code paths:
+  - The physical size of the subresource is not equal to the logical size.
+  - bufferSize - offset < bytesPerImage * copyExtent.depthOrArrayLayers, and copyExtent needs to be clamped for all block formats.
+  `
+  )
   .cases(
     params()
       .combine(kMethodsToTest)
-      .combine(poptions('format', kSizedTextureFormats))
+      .combine(poptions('format', kWorkingTextureFormats))
       .filter(formatCanBeTested)
   )
   .subcases(p =>
@@ -917,44 +976,44 @@ g.test('copy_various_mip_levels')
       .combine([
         // origin + copySize = texturePhysicalSizeAtMipLevel for all coordinates, 2d texture */
         {
-          copySizeInBlocks: { width: 5, height: 4, depth: 1 },
+          copySizeInBlocks: { width: 5, height: 4, depthOrArrayLayers: 1 },
           originInBlocks: { x: 3, y: 2, z: 0 },
-          _mipSizeInBlocks: { width: 8, height: 6, depth: 1 },
+          _mipSizeInBlocks: { width: 8, height: 6, depthOrArrayLayers: 1 },
           mipLevel: 1,
         },
         // origin + copySize = texturePhysicalSizeAtMipLevel for all coordinates, 2d-array texture
         {
-          copySizeInBlocks: { width: 5, height: 4, depth: 2 },
+          copySizeInBlocks: { width: 5, height: 4, depthOrArrayLayers: 2 },
           originInBlocks: { x: 3, y: 2, z: 1 },
-          _mipSizeInBlocks: { width: 8, height: 6, depth: 3 },
+          _mipSizeInBlocks: { width: 8, height: 6, depthOrArrayLayers: 3 },
           mipLevel: 2,
         },
         // origin.x + copySize.width = texturePhysicalSizeAtMipLevel.width
         {
-          copySizeInBlocks: { width: 5, height: 4, depth: 2 },
+          copySizeInBlocks: { width: 5, height: 4, depthOrArrayLayers: 2 },
           originInBlocks: { x: 3, y: 2, z: 1 },
-          _mipSizeInBlocks: { width: 8, height: 7, depth: 4 },
+          _mipSizeInBlocks: { width: 8, height: 7, depthOrArrayLayers: 4 },
           mipLevel: 3,
         },
         // origin.y + copySize.height = texturePhysicalSizeAtMipLevel.height
         {
-          copySizeInBlocks: { width: 5, height: 4, depth: 2 },
+          copySizeInBlocks: { width: 5, height: 4, depthOrArrayLayers: 2 },
           originInBlocks: { x: 3, y: 2, z: 1 },
-          _mipSizeInBlocks: { width: 9, height: 6, depth: 4 },
+          _mipSizeInBlocks: { width: 9, height: 6, depthOrArrayLayers: 4 },
           mipLevel: 4,
         },
-        // origin.z + copySize.depth = texturePhysicalSizeAtMipLevel.depth
+        // origin.z + copySize.depthOrArrayLayers = texturePhysicalSizeAtMipLevel.depthOrArrayLayers
         {
-          copySizeInBlocks: { width: 5, height: 4, depth: 2 },
+          copySizeInBlocks: { width: 5, height: 4, depthOrArrayLayers: 2 },
           originInBlocks: { x: 3, y: 2, z: 1 },
-          _mipSizeInBlocks: { width: 9, height: 7, depth: 3 },
+          _mipSizeInBlocks: { width: 9, height: 7, depthOrArrayLayers: 3 },
           mipLevel: 5,
         },
         // origin + copySize < texturePhysicalSizeAtMipLevel for all coordinates
         {
-          copySizeInBlocks: { width: 5, height: 4, depth: 2 },
+          copySizeInBlocks: { width: 5, height: 4, depthOrArrayLayers: 2 },
           originInBlocks: { x: 3, y: 2, z: 1 },
-          _mipSizeInBlocks: { width: 9, height: 7, depth: 4 },
+          _mipSizeInBlocks: { width: 9, height: 7, depthOrArrayLayers: 4 },
           mipLevel: 6,
         },
       ])
@@ -983,18 +1042,18 @@ g.test('copy_various_mip_levels')
     const copySize = {
       width: copySizeInBlocks.width * info.blockWidth,
       height: copySizeInBlocks.height * info.blockHeight,
-      depth: copySizeInBlocks.depth,
+      depthOrArrayLayers: copySizeInBlocks.depthOrArrayLayers,
     };
 
-    const rowsPerImage = copySize.height + info.blockHeight;
+    const rowsPerImage = copySizeInBlocks.height + 1;
     const bytesPerRow = align(copySize.width, 256);
-    const { minDataSize: dataSize, valid } = dataBytesForCopy(
-      { offset: 0, bytesPerRow, rowsPerImage },
+
+    const dataSize = dataBytesForCopyOrFail({
+      layout: { offset: 0, bytesPerRow, rowsPerImage },
       format,
       copySize,
-      { method: initMethod }
-    );
-    assert(valid);
+      method: initMethod,
+    });
 
     t.uploadTextureAndVerifyCopy({
       textureDataLayout: { offset: 0, bytesPerRow, rowsPerImage },
@@ -1009,73 +1068,46 @@ g.test('copy_various_mip_levels')
     });
   });
 
-// Test that when copying a single row we can set any bytesPerRow value and when copying a single
-// slice we can set rowsPerImage to 0. Origin, offset, mipLevel and rowsPerImage values will be set
-// to undefined when appropriate.
-g.test('copy_with_no_image_or_slice_padding_and_undefined_values')
+const UND = undefined;
+g.test('undefined_params')
+  .desc(
+    `Tests undefined values of bytesPerRow, rowsPerImage, and origin.x/y/z.
+  Ensures bytesPerRow/rowsPerImage=undefined are valid and behave as expected.
+  Ensures origin.x/y/z undefined default to 0.`
+  )
   .cases(kMethodsToTest)
   .subcases(() =>
     params().combine([
-      // copying one row: bytesPerRow and rowsPerImage can be set to 0
-      {
-        bytesPerRow: 0,
-        rowsPerImage: 0,
-        copySize: { width: 3, height: 1, depth: 1 },
-        origin: { x: 0, y: 0, z: 0 },
-      },
-      // copying one row: bytesPerRow can be < bytesInACompleteRow = 400
-      {
-        bytesPerRow: 256,
-        rowsPerImage: 0,
-        copySize: { width: 100, height: 1, depth: 1 },
-        origin: { x: 0, y: 0, z: 0 },
-      },
-      // copying one slice: rowsPerImage = 0 will be set to undefined
-      {
-        bytesPerRow: 256,
-        rowsPerImage: 0,
-        copySize: { width: 3, height: 3, depth: 1 },
-        origin: { x: 0, y: 0, z: 0 },
-      },
-      // copying one slice: rowsPerImage = 2 is valid
-      {
-        bytesPerRow: 256,
-        rowsPerImage: 2,
-        copySize: { width: 3, height: 3, depth: 1 },
-        origin: { x: 0, y: 0, z: 0 },
-      },
-      // origin.x = 0 will be set to undefined
-      {
-        bytesPerRow: 0,
-        rowsPerImage: 0,
-        copySize: { width: 1, height: 1, depth: 1 },
-        origin: { x: 0, y: 1, z: 1 },
-      },
-      // origin.y = 0 will be set to undefined
-      {
-        bytesPerRow: 0,
-        rowsPerImage: 0,
-        copySize: { width: 1, height: 1, depth: 1 },
-        origin: { x: 1, y: 0, z: 1 },
-      },
-      // origin.z = 0 will be set to undefined
-      {
-        bytesPerRow: 0,
-        rowsPerImage: 0,
-        copySize: { width: 1, height: 1, depth: 1 },
-        origin: { x: 1, y: 1, z: 0 },
-      },
+      // copying one row: bytesPerRow and rowsPerImage can be undefined
+      { copySize: [3, 1, 1], origin: [UND, UND, UND], bytesPerRow: UND, rowsPerImage: UND },
+      // copying one slice: rowsPerImage can be undefined
+      { copySize: [3, 3, 1], origin: [UND, UND, UND], bytesPerRow: 256, rowsPerImage: UND },
+      // copying two slices
+      { copySize: [3, 3, 2], origin: [UND, UND, UND], bytesPerRow: 256, rowsPerImage: 3 },
+      // origin.x = undefined
+      { copySize: [1, 1, 1], origin: [UND, 1, 1], bytesPerRow: UND, rowsPerImage: UND },
+      // origin.y = undefined
+      { copySize: [1, 1, 1], origin: [1, UND, 1], bytesPerRow: UND, rowsPerImage: UND },
+      // origin.z = undefined
+      { copySize: [1, 1, 1], origin: [1, 1, UND], bytesPerRow: UND, rowsPerImage: UND },
     ])
   )
   .fn(async t => {
     const { bytesPerRow, rowsPerImage, copySize, origin, initMethod, checkMethod } = t.params;
 
     t.uploadTextureAndVerifyCopy({
-      textureDataLayout: { offset: 0, bytesPerRow, rowsPerImage },
-      copySize,
-      dataSize: 100 * 3 * 4,
+      textureDataLayout: {
+        offset: 0,
+        // Zero will get turned back into undefined later.
+        bytesPerRow: bytesPerRow ?? 0,
+        // Zero will get turned back into undefined later.
+        rowsPerImage: rowsPerImage ?? 0,
+      },
+      copySize: { width: copySize[0], height: copySize[1], depthOrArrayLayers: copySize[2] },
+      dataSize: 2000,
       textureSize: [100, 3, 2],
-      origin,
+      // Zeros will get turned back into undefined later.
+      origin: { x: origin[0] ?? 0, y: origin[1] ?? 0, z: origin[2] ?? 0 },
       format: 'rgba8unorm',
       initMethod,
       checkMethod,

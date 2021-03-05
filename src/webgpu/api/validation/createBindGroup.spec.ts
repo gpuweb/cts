@@ -123,7 +123,7 @@ g.test('texture_binding_must_have_correct_usage')
     });
 
     const descriptor = {
-      size: { width: 16, height: 16, depth: 1 },
+      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
       format: 'rgba8unorm' as const,
       usage,
       sampleCount: info.resource === 'sampledTexMS' ? 4 : 1,
@@ -168,7 +168,7 @@ g.test('texture_must_have_correct_component_type')
     }
 
     const goodDescriptor = {
-      size: { width: 16, height: 16, depth: 1 },
+      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
       format,
       usage: GPUTextureUsage.SAMPLED,
     };
@@ -224,7 +224,7 @@ g.test('texture_must_have_correct_dimension').fn(async t => {
   });
 
   const goodDescriptor = {
-    size: { width: 16, height: 16, depth: 1 },
+    size: { width: 16, height: 16, depthOrArrayLayers: 1 },
     format: 'rgba8unorm' as const,
     usage: GPUTextureUsage.SAMPLED,
   };
@@ -237,7 +237,7 @@ g.test('texture_must_have_correct_dimension').fn(async t => {
 
   // Mismatched texture binding formats are not valid.
   const badDescriptor = clone(goodDescriptor);
-  badDescriptor.size.depth = 2;
+  badDescriptor.size.depthOrArrayLayers = 2;
 
   t.expectValidationError(() => {
     t.device.createBindGroup({

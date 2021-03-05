@@ -2,7 +2,6 @@ export const description = '';
 
 import { params, poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert } from '../../../../common/framework/util/util.js';
 import {
   kUncompressedTextureFormatInfo,
   kSizedTextureFormats,
@@ -11,18 +10,19 @@ import {
 import { align } from '../../../util/math.js';
 import {
   bytesInACompleteRow,
-  dataBytesForCopy,
+  dataBytesForCopyOrOverestimate,
+  dataBytesForCopyOrFail,
   kImageCopyTypes,
 } from '../../../util/texture/image_copy.js';
 
 import {
-  CopyBetweenLinearDataAndTextureTest,
+  ImageCopyTest,
   texelBlockAlignmentTestExpanderForOffset,
   texelBlockAlignmentTestExpanderForRowsPerImage,
   formatCopyableWithMethod,
-} from './copyBetweenLinearDataAndTexture.js';
+} from './image_copy.js';
 
-export const g = makeTestGroup(CopyBetweenLinearDataAndTextureTest);
+export const g = makeTestGroup(ImageCopyTest);
 
 g.test('bound_on_rows_per_image')
   .cases(poptions('method', kImageCopyTypes))
@@ -39,34 +39,39 @@ g.test('bound_on_rows_per_image')
     const copyHeight = copyHeightInBlocks * kUncompressedTextureFormatInfo[format].blockHeight;
 
     const texture = t.device.createTexture({
-      size: { width: 4, height: 4, depth: 3 },
+      size: { width: 4, height: 4, depthOrArrayLayers: 3 },
       format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
 
     const layout = { bytesPerRow: 1024, rowsPerImage };
-    const size = { width: 0, height: copyHeight, depth: copyDepth };
-    const { minDataSize, valid } = dataBytesForCopy(layout, format, size, { method });
-
-    t.testRun({ texture }, layout, size, {
-      dataSize: minDataSize,
+    const copySize = { width: 0, height: copyHeight, depthOrArrayLayers: copyDepth };
+    const { minDataSizeOrOverestimate, copyValid } = dataBytesForCopyOrOverestimate({
+      layout,
+      format,
+      copySize,
       method,
-      success: valid,
+    });
+
+    t.testRun({ texture }, layout, copySize, {
+      dataSize: minDataSizeOrOverestimate,
+      method,
+      success: copyValid,
     });
   });
 
-// Test with offset + requiredBytesIsCopy overflowing GPUSize64.
-g.test('offset_plus_required_bytes_in_copy_overflow')
+g.test('copy_end_overflows_u64')
+  .desc(`Test what happens when offset+requiredBytesInCopy overflows GPUSize64.`)
   .cases(poptions('method', kImageCopyTypes))
   .subcases(() => [
-    { bytesPerRow: 2 ** 31, rowsPerImage: 2 ** 31, depth: 1, _success: true }, // success case
-    { bytesPerRow: 2 ** 31, rowsPerImage: 2 ** 31, depth: 16, _success: false }, // bytesPerRow * rowsPerImage * (depth - 1) overflows.
+    { bytesPerRow: 2 ** 31, rowsPerImage: 2 ** 31, depthOrArrayLayers: 1, _success: true }, // success case
+    { bytesPerRow: 2 ** 31, rowsPerImage: 2 ** 31, depthOrArrayLayers: 16, _success: false }, // bytesPerRow * rowsPerImage * (depthOrArrayLayers - 1) overflows.
   ])
   .fn(async t => {
-    const { method, bytesPerRow, rowsPerImage, depth, _success } = t.params;
+    const { method, bytesPerRow, rowsPerImage, depthOrArrayLayers, _success } = t.params;
 
     const texture = t.device.createTexture({
-      size: [1, 1, depth],
+      size: [1, 1, depthOrArrayLayers],
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
@@ -74,7 +79,7 @@ g.test('offset_plus_required_bytes_in_copy_overflow')
     t.testRun(
       { texture },
       { bytesPerRow, rowsPerImage },
-      { width: 1, height: 1, depth },
+      { width: 1, height: 1, depthOrArrayLayers },
       {
         dataSize: 10000,
         method,
@@ -83,10 +88,14 @@ g.test('offset_plus_required_bytes_in_copy_overflow')
     );
   });
 
-// Testing that the minimal data size condition is checked correctly.
-// In the success case, we test the exact value.
-// In the failing case, we test the exact value minus 1.
 g.test('required_bytes_in_copy')
+  .desc(
+    `Test that the min data size condition (requiredBytesInCopy) is checked correctly.
+
+  - Exact requiredBytesInCopy should succeed.
+  - requiredBytesInCopy - 1 should fail.
+  `
+  )
   .cases(
     params()
       .combine(poptions('method', kImageCopyTypes))
@@ -140,22 +149,21 @@ g.test('required_bytes_in_copy')
     const bytesPerRow =
       align(bytesInACompleteRow(copyWidth, format), bytesPerRowAlignment) +
       bytesPerRowPadding * bytesPerRowAlignment;
-    const size = { width: copyWidth, height: copyHeight, depth: copyDepth };
+    const copySize = { width: copyWidth, height: copyHeight, depthOrArrayLayers: copyDepth };
 
     const layout = { offset, bytesPerRow, rowsPerImage };
-    const { minDataSize, valid } = dataBytesForCopy(layout, format, size, { method });
-    assert(valid);
+    const minDataSize = dataBytesForCopyOrFail({ layout, format, copySize, method });
 
-    const texture = t.createAlignedTexture(format, size);
+    const texture = t.createAlignedTexture(format, copySize);
 
-    t.testRun({ texture }, { offset, bytesPerRow, rowsPerImage }, size, {
+    t.testRun({ texture }, { offset, bytesPerRow, rowsPerImage }, copySize, {
       dataSize: minDataSize,
       method,
       success: true,
     });
 
     if (minDataSize > 0) {
-      t.testRun({ texture }, { offset, bytesPerRow, rowsPerImage }, size, {
+      t.testRun({ texture }, { offset, bytesPerRow, rowsPerImage }, copySize, {
         dataSize: minDataSize - 1,
         method,
         success: false,
@@ -177,7 +185,7 @@ g.test('rows_per_image_alignment')
     const info = kSizedTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.extension);
 
-    const size = { width: 0, height: 0, depth: 0 };
+    const size = { width: 0, height: 0, depthOrArrayLayers: 0 };
 
     const texture = t.createAlignedTexture(format, size);
 
@@ -201,7 +209,7 @@ g.test('texel_block_alignment_on_offset')
     const info = kSizedTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.extension);
 
-    const size = { width: 0, height: 0, depth: 0 };
+    const size = { width: 0, height: 0, depthOrArrayLayers: 0 };
 
     const texture = t.createAlignedTexture(format, size);
 
@@ -255,22 +263,27 @@ g.test('bound_on_bytes_per_row')
       blocksPerRow * info.bytesPerBlock + additionalPaddingPerRow,
       bytesPerRowAlignment
     );
-    const copySize = { width: copyWidth, height: copyHeight, depth: copyDepth };
+    const copySize = { width: copyWidth, height: copyHeight, depthOrArrayLayers: copyDepth };
 
     const texture = t.createAlignedTexture(format, {
       width: copyWidth,
       // size 0 is not valid; round up if needed
       height: copyHeight || info.blockHeight,
-      depth: copyDepth || 1,
+      depthOrArrayLayers: copyDepth || 1,
     });
 
     const layout = { bytesPerRow, rowsPerImage: copyHeight };
-    const { minDataSize, valid } = dataBytesForCopy(layout, format, copySize, { method });
+    const { minDataSizeOrOverestimate, copyValid } = dataBytesForCopyOrOverestimate({
+      layout,
+      format,
+      copySize,
+      method,
+    });
 
     t.testRun({ texture }, layout, copySize, {
-      dataSize: minDataSize,
+      dataSize: minDataSizeOrOverestimate,
       method,
-      success: valid,
+      success: copyValid,
     });
   });
 
@@ -290,7 +303,7 @@ g.test('bound_on_offset')
     const dataSize = dataSizeInBlocks * info.bytesPerBlock;
 
     const texture = t.device.createTexture({
-      size: { width: 4, height: 4, depth: 1 },
+      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
       format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
@@ -300,7 +313,7 @@ g.test('bound_on_offset')
     t.testRun(
       { texture },
       { offset, bytesPerRow: 0 },
-      { width: 0, height: 0, depth: 0 },
+      { width: 0, height: 0, depthOrArrayLayers: 0 },
       { dataSize, method, success }
     );
   });
