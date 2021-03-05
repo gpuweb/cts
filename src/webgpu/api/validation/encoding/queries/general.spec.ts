@@ -13,92 +13,68 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { kQueryTypes } from '../../../../capability_info.js';
 import { ValidationTest } from '../../validation_test.js';
 
-async function selectDeviceForQueryType(t: ValidationTest, type: GPUQueryType): Promise<void> {
-  const extensions: GPUExtensionName[] = [];
-  if (type === 'pipeline-statistics') {
-    extensions.push('pipeline-statistics-query');
-  } else if (type === 'timestamp') {
-    extensions.push('timestamp-query');
+class F extends ValidationTest {
+  async selectDeviceForQuerySetOrSkipTestCase(type: GPUQueryType): Promise<void> {
+    return this.selectDeviceOrSkipTestCase(
+      type === 'pipeline-statistics'
+        ? 'pipeline-statistics-query'
+        : type === 'timestamp'
+        ? 'timestamp-query'
+        : undefined
+    );
   }
-
-  await t.selectDeviceOrSkipTestCase({ extensions });
 }
 
-export const enum EncoderType {
-  CommandEncoder = 'CommandEncoder',
-  ComputeEncoder = 'ComputeEncoder',
-  RenderEncoder = 'RenderEncoder',
-}
+export const g = makeTestGroup(F);
 
-export const g = makeTestGroup(ValidationTest);
-
-g.test('writeTimestamp')
+g.test('writeTimestamp,query_type_and_index')
   .desc(
     `
 Tests that write timestamp to all types of query set on all possible encoders:
+- type {occlusion, pipeline statistics, timestamp}
 - queryIndex {in, out of} range for GPUQuerySet
-- GPUQuerySet {valid, invalid}
-- x= {occlusion, pipeline statistics, timestamp} query
-- x= {compute, render, non-pass} enconder
+- x= {non-pass, compute, render} enconder
   `
   )
-  .params(
+  .cases(
     params()
-      .combine(
-        poptions('encoderType', [
-          EncoderType.CommandEncoder,
-          EncoderType.ComputeEncoder,
-          EncoderType.RenderEncoder,
-        ] as const)
-      )
+      .combine(poptions('encoderType', ['non-pass', 'compute pass', 'render pass'] as const))
       .combine(poptions('type', kQueryTypes))
-      .combine(poptions('queryIndex', [0, 1, 2]))
-      .unless(({ type, queryIndex }) => type !== 'timestamp' && queryIndex !== 0)
   )
+  .subcases(({ type }) => poptions('queryIndex', type === 'timestamp' ? [0, 2] : [0]))
   .fn(async t => {
     const { encoderType, type, queryIndex } = t.params;
 
-    await selectDeviceForQueryType(t, type);
+    await t.selectDeviceForQuerySetOrSkipTestCase(type);
 
     const count = 2;
     const pipelineStatistics =
       type === 'pipeline-statistics' ? (['clipper-invocations'] as const) : ([] as const);
     const querySet = t.device.createQuerySet({ type, count, pipelineStatistics });
 
-    const encoder = t.device.createCommandEncoder();
-
-    switch (encoderType) {
-      case EncoderType.CommandEncoder: {
-        encoder.writeTimestamp(querySet, queryIndex);
-        break;
-      }
-      case EncoderType.ComputeEncoder: {
-        const pass = encoder.beginComputePass();
-        pass.writeTimestamp(querySet, queryIndex);
-        pass.endPass();
-        break;
-      }
-      case EncoderType.RenderEncoder: {
-        const colorAttachment = t.device.createTexture({
-          format: 'rgba8unorm',
-          size: { width: 4, height: 4, depth: 1 },
-          usage: GPUTextureUsage.RENDER_ATTACHMENT,
-        });
-        const pass = encoder.beginRenderPass({
-          colorAttachments: [
-            {
-              attachment: colorAttachment.createView(),
-              loadValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
-            },
-          ],
-        });
-        pass.writeTimestamp(querySet, queryIndex);
-        pass.endPass();
-        break;
-      }
-    }
+    const encoder = t.createEncoder(encoderType);
+    encoder.encoder.writeTimestamp(querySet, queryIndex);
 
     t.expectValidationError(() => {
       encoder.finish();
     }, type !== 'timestamp' || queryIndex >= count);
+  });
+
+g.test('writeTimestamp,invalid_queryset')
+  .desc(
+    `
+Tests that write timestamp to a invalid queryset that failed during creation:
+- x= {non-pass, compute, render} enconder
+  `
+  )
+  .subcases(() => poptions('encoderType', ['non-pass', 'compute pass', 'render pass'] as const))
+  .fn(async t => {
+    const querySet = t.createQuerySetWithState('invalid');
+
+    const encoder = t.createEncoder(t.params.encoderType);
+    encoder.encoder.writeTimestamp(querySet, 0);
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    });
   });
