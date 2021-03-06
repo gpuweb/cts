@@ -49,7 +49,7 @@ class F extends ValidationTest {
           {
             arrayStride: 3 * 4,
             attributes: range(bufferCount, i => ({
-              format: 'float3',
+              format: 'float32x3',
               offset: 0,
               shaderLocation: i,
             })),
