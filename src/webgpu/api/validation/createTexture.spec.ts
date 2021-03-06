@@ -23,6 +23,7 @@ TODO: move destroy tests out of this file
 
 import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { assert } from '../../../common/framework/util/util.js';
 import {
   kAllTextureFormats,
   kAllTextureFormatInfo,
@@ -35,6 +36,9 @@ import { DefaultLimits } from '../../constants.js';
 import { maxMipLevelCount } from '../../util/texture/base.js';
 
 import { ValidationTest } from './validation_test.js';
+
+const kBlockWidth = 4;
+const kBlockHeight = 4;
 
 class F extends ValidationTest {
   getDescriptor(
@@ -337,77 +341,63 @@ g.test('texture_size,2d_texture,compressed_format')
         // Test the bound of width
         { size: [DefaultLimits.maxTextureDimension2D - 1, 1, 1] },
         {
-          size: [
-            DefaultLimits.maxTextureDimension2D - kCompressedTextureFormatInfo[format].blockWidth,
-            1,
-            1,
-          ],
+          size: [DefaultLimits.maxTextureDimension2D - kBlockWidth, 1, 1],
         },
         {
-          size: [
-            DefaultLimits.maxTextureDimension2D - kCompressedTextureFormatInfo[format].blockWidth,
-            kCompressedTextureFormatInfo[format].blockHeight,
-            1,
-          ],
+          size: [DefaultLimits.maxTextureDimension2D - kBlockWidth, kBlockHeight, 1],
         },
         { size: [DefaultLimits.maxTextureDimension2D, 1, 1] },
+        { size: [DefaultLimits.maxTextureDimension2D, kBlockHeight, 1] },
         { size: [DefaultLimits.maxTextureDimension2D + 1, 1, 1] },
         {
-          size: [
-            DefaultLimits.maxTextureDimension2D + kCompressedTextureFormatInfo[format].blockWidth,
-            1,
-            1,
-          ],
+          size: [DefaultLimits.maxTextureDimension2D + kBlockWidth, 1, 1],
         },
         {
-          size: [
-            DefaultLimits.maxTextureDimension2D + kCompressedTextureFormatInfo[format].blockWidth,
-            kCompressedTextureFormatInfo[format].blockHeight,
-            1,
-          ],
+          size: [DefaultLimits.maxTextureDimension2D + kBlockWidth, kBlockHeight, 1],
         },
         // Test the bound of height
         { size: [1, DefaultLimits.maxTextureDimension2D - 1, 1] },
         {
-          size: [
-            1,
-            DefaultLimits.maxTextureDimension2D - kCompressedTextureFormatInfo[format].blockHeight,
-            1,
-          ],
+          size: [1, DefaultLimits.maxTextureDimension2D - kBlockHeight, 1],
         },
         {
-          size: [
-            kCompressedTextureFormatInfo[format].blockWidth,
-            DefaultLimits.maxTextureDimension2D - kCompressedTextureFormatInfo[format].blockHeight,
-            1,
-          ],
+          size: [kBlockWidth, DefaultLimits.maxTextureDimension2D - kBlockHeight, 1],
         },
         { size: [1, DefaultLimits.maxTextureDimension2D, 1] },
+        { size: [kBlockWidth, DefaultLimits.maxTextureDimension2D, 1] },
         { size: [1, DefaultLimits.maxTextureDimension2D + 1, 1] },
         {
-          size: [
-            1,
-            DefaultLimits.maxTextureDimension2D + kCompressedTextureFormatInfo[format].blockWidth,
-            1,
-          ],
+          size: [1, DefaultLimits.maxTextureDimension2D + kBlockWidth, 1],
         },
         {
-          size: [
-            kCompressedTextureFormatInfo[format].blockWidth,
-            DefaultLimits.maxTextureDimension2D + kCompressedTextureFormatInfo[format].blockHeight,
-            1,
-          ],
+          size: [kBlockWidth, DefaultLimits.maxTextureDimension2D + kBlockHeight, 1],
         },
         // Test the bound of array layers
         { size: [1, 1, DefaultLimits.maxTextureArrayLayers - 1] },
+        { size: [kBlockWidth, 1, DefaultLimits.maxTextureArrayLayers - 1] },
+        { size: [1, kBlockHeight, DefaultLimits.maxTextureArrayLayers - 1] },
+        { size: [kBlockWidth, kBlockHeight, DefaultLimits.maxTextureArrayLayers - 1] },
         { size: [1, 1, DefaultLimits.maxTextureArrayLayers] },
+        { size: [kBlockWidth, 1, DefaultLimits.maxTextureArrayLayers] },
+        { size: [1, kBlockHeight, DefaultLimits.maxTextureArrayLayers] },
+        { size: [kBlockWidth, kBlockHeight, DefaultLimits.maxTextureArrayLayers] },
         { size: [1, 1, DefaultLimits.maxTextureArrayLayers + 1] },
+        { size: [kBlockWidth, 1, DefaultLimits.maxTextureArrayLayers + 1] },
+        { size: [1, kBlockHeight, DefaultLimits.maxTextureArrayLayers + 1] },
+        { size: [kBlockWidth, kBlockHeight, DefaultLimits.maxTextureArrayLayers + 1] },
       ])
   )
   .fn(async t => {
     const { format, dimension, size } = t.params;
 
-    await t.selectDeviceOrSkipTestCase(kCompressedTextureFormatInfo[format].extension);
+    const info = kCompressedTextureFormatInfo[format];
+    assert(kBlockWidth === info.blockWidth && kBlockHeight === info.blockHeight);
+    assert(
+      DefaultLimits.maxTextureDimension2D % kBlockWidth === 0 &&
+        DefaultLimits.maxTextureDimension2D % kBlockHeight === 0
+    );
+
+    await t.selectDeviceOrSkipTestCase(info.extension);
 
     const descriptor: GPUTextureDescriptor = {
       size,
@@ -417,8 +407,8 @@ g.test('texture_size,2d_texture,compressed_format')
     };
 
     const success =
-      size[0] % kAllTextureFormatInfo[format].blockWidth === 0 &&
-      size[1] % kAllTextureFormatInfo[format].blockHeight === 0 &&
+      size[0] % kBlockWidth === 0 &&
+      size[1] % kBlockHeight === 0 &&
       size[0] <= DefaultLimits.maxTextureDimension2D &&
       size[1] <= DefaultLimits.maxTextureDimension2D &&
       size[2] <= DefaultLimits.maxTextureArrayLayers;
@@ -479,77 +469,63 @@ g.test('texture_size,3d_texture,compressed_format')
         // Test the bound of width
         { size: [DefaultLimits.maxTextureDimension3D - 1, 1, 1] },
         {
-          size: [
-            DefaultLimits.maxTextureDimension3D - kCompressedTextureFormatInfo[format].blockWidth,
-            1,
-            1,
-          ],
+          size: [DefaultLimits.maxTextureDimension3D - kBlockWidth, 1, 1],
         },
         {
-          size: [
-            DefaultLimits.maxTextureDimension3D - kCompressedTextureFormatInfo[format].blockWidth,
-            kCompressedTextureFormatInfo[format].blockHeight,
-            1,
-          ],
+          size: [DefaultLimits.maxTextureDimension3D - kBlockWidth, kBlockHeight, 1],
         },
         { size: [DefaultLimits.maxTextureDimension3D, 1, 1] },
+        { size: [DefaultLimits.maxTextureDimension3D, kBlockHeight, 1] },
         { size: [DefaultLimits.maxTextureDimension3D + 1, 1, 1] },
         {
-          size: [
-            DefaultLimits.maxTextureDimension3D + kCompressedTextureFormatInfo[format].blockWidth,
-            1,
-            1,
-          ],
+          size: [DefaultLimits.maxTextureDimension3D + kBlockWidth, 1, 1],
         },
         {
-          size: [
-            DefaultLimits.maxTextureDimension3D + kCompressedTextureFormatInfo[format].blockWidth,
-            kCompressedTextureFormatInfo[format].blockHeight,
-            1,
-          ],
+          size: [DefaultLimits.maxTextureDimension3D + kBlockWidth, kBlockHeight, 1],
         },
         // Test the bound of height
         { size: [1, DefaultLimits.maxTextureDimension3D - 1, 1] },
         {
-          size: [
-            1,
-            DefaultLimits.maxTextureDimension3D - kCompressedTextureFormatInfo[format].blockHeight,
-            1,
-          ],
+          size: [1, DefaultLimits.maxTextureDimension3D - kBlockHeight, 1],
         },
         {
-          size: [
-            kAllTextureFormatInfo[format].blockWidth,
-            DefaultLimits.maxTextureDimension3D - kCompressedTextureFormatInfo[format].blockHeight,
-            1,
-          ],
+          size: [kBlockWidth, DefaultLimits.maxTextureDimension3D - kBlockHeight, 1],
         },
         { size: [1, DefaultLimits.maxTextureDimension3D, 1] },
+        { size: [kBlockWidth, DefaultLimits.maxTextureDimension3D, 1] },
         { size: [1, DefaultLimits.maxTextureDimension3D + 1, 1] },
         {
-          size: [
-            1,
-            DefaultLimits.maxTextureDimension3D + kCompressedTextureFormatInfo[format].blockWidth,
-            1,
-          ],
+          size: [1, DefaultLimits.maxTextureDimension3D + kBlockWidth, 1],
         },
         {
-          size: [
-            kCompressedTextureFormatInfo[format].blockWidth,
-            DefaultLimits.maxTextureDimension3D + kCompressedTextureFormatInfo[format].blockHeight,
-            1,
-          ],
+          size: [kBlockWidth, DefaultLimits.maxTextureDimension3D + kBlockHeight, 1],
         },
         // Test the bound of depth
         { size: [1, 1, DefaultLimits.maxTextureDimension3D - 1] },
+        { size: [kBlockWidth, 1, DefaultLimits.maxTextureDimension3D - 1] },
+        { size: [1, kBlockHeight, DefaultLimits.maxTextureDimension3D - 1] },
+        { size: [kBlockWidth, kBlockHeight, DefaultLimits.maxTextureDimension3D - 1] },
         { size: [1, 1, DefaultLimits.maxTextureDimension3D] },
+        { size: [kBlockWidth, 1, DefaultLimits.maxTextureDimension3D] },
+        { size: [1, kBlockHeight, DefaultLimits.maxTextureDimension3D] },
+        { size: [kBlockWidth, kBlockHeight, DefaultLimits.maxTextureDimension3D] },
         { size: [1, 1, DefaultLimits.maxTextureDimension3D + 1] },
+        { size: [kBlockWidth, 1, DefaultLimits.maxTextureDimension3D + 1] },
+        { size: [1, kBlockHeight, DefaultLimits.maxTextureDimension3D + 1] },
+        { size: [kBlockWidth, kBlockHeight, DefaultLimits.maxTextureDimension3D + 1] },
       ])
   )
   .fn(async t => {
     const { format, size } = t.params;
 
-    await t.selectDeviceOrSkipTestCase(kCompressedTextureFormatInfo[format].extension);
+    const info = kCompressedTextureFormatInfo[format];
+    assert(kBlockWidth === info.blockWidth && kBlockHeight === info.blockHeight);
+    assert(
+      DefaultLimits.maxTextureDimension3D % kBlockWidth === 0 &&
+        DefaultLimits.maxTextureDimension3D % kBlockHeight === 0
+    );
+
+    await t.selectDeviceOrSkipTestCase(info.extension);
 
     const descriptor: GPUTextureDescriptor = {
       size,
@@ -559,8 +535,8 @@ g.test('texture_size,3d_texture,compressed_format')
     };
 
     const success =
-      size[0] % kAllTextureFormatInfo[format].blockWidth === 0 &&
-      size[1] % kAllTextureFormatInfo[format].blockHeight === 0 &&
+      size[0] % kBlockWidth === 0 &&
+      size[1] % kBlockHeight === 0 &&
       size[0] <= DefaultLimits.maxTextureDimension3D &&
       size[1] <= DefaultLimits.maxTextureDimension3D &&
       size[2] <= DefaultLimits.maxTextureDimension3D;
