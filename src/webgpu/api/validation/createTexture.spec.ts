@@ -416,7 +416,7 @@ g.test('it_is_invalid_to_submit_a_destroyed_texture_before_and_after_encode')
 
 g.test('texture_usage')
   .desc(
-    `Test texture usage (single usage or combined usages) for every texture formats and every dimension types`
+    `Test texture usage (single usage or combined usages) for every texture format and every dimension type`
   )
   .subcases(() =>
     params()
