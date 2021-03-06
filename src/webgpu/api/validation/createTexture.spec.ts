@@ -10,11 +10,6 @@ TODO: review existing tests and merge with this plan:
 >     - with format that supports multisample, with all possible dimensions
 >     - with dimension that support multisample, with all possible formats
 >     - with format-dimension that support multisample, with {mipLevelCount, array layer count} = {1, 2}
-> - usage flags
->     - {0, ... each single usage flag}
->     - x= every texture format
-> - every possible pair of usage flags
->     - with one common texture format
 > - any other conditions from the spec
 > - ...?
 
