@@ -85,12 +85,7 @@ export function dataBytesForCopyOrOverestimate({
   format,
   copySize: copySize_,
   method,
-}: {
-  layout: GPUImageDataLayout;
-  format: SizedTextureFormat;
-  copySize: GPUExtent3D;
-  method: ImageCopyType;
-}): { minDataSizeOrOverestimate: number; copyValid: boolean } {
+}: DataBytesForCopyArgs): { minDataSizeOrOverestimate: number; copyValid: boolean } {
   const copyExtent = standardizeExtent3D(copySize_);
 
   const info = kSizedTextureFormatInfo[format];
