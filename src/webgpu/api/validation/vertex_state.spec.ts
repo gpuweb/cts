@@ -146,7 +146,7 @@ g.test('max_vertex_buffer_limit')
   .fn(t => {
     const { count, lastEmpty } = t.params;
 
-    const vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [];
+    const vertexBuffers = [];
     for (let i = 0; i < count; i++) {
       if (lastEmpty || i !== count - 1) {
         vertexBuffers.push({ attributes: [], arrayStride: 0 });
@@ -154,7 +154,7 @@ g.test('max_vertex_buffer_limit')
         vertexBuffers.push({
           attributes: [{ format: 'float32', offset: 0, shaderLocation: 0 }],
           arrayStride: 0,
-        });
+        } as const);
       }
     }
 
@@ -176,7 +176,7 @@ g.test('max_vertex_attribute_limit')
   .fn(t => {
     const { attribCount, attribsPerBuffer } = t.params;
 
-    const vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [];
+    const vertexBuffers = [];
 
     let attribsAdded = 0;
     while (attribsAdded !== attribCount) {
@@ -186,9 +186,9 @@ g.test('max_vertex_attribute_limit')
         targetCount = attribCount;
       }
 
-      const attributes: GPUVertexAttributeDescriptor[] = [];
+      const attributes = [];
       while (attribsAdded !== targetCount) {
-        attributes.push({ format: 'float32', offset: 0, shaderLocation: attribsAdded });
+        attributes.push({ format: 'float32', offset: 0, shaderLocation: attribsAdded } as const);
         attribsAdded++;
       }
 
@@ -222,7 +222,7 @@ g.test('max_vertex_buffer_array_stride_limit')
   .fn(t => {
     const { vertexBufferIndex, arrayStride } = t.params;
 
-    const vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [];
+    const vertexBuffers = [];
     vertexBuffers[vertexBufferIndex] = { arrayStride, attributes: [] };
 
     const success = arrayStride <= kMaxVertexBufferArrayStride;
@@ -253,7 +253,7 @@ g.test('vertex_buffer_array_stride_limit_alignment')
   .fn(t => {
     const { vertexBufferIndex, arrayStride } = t.params;
 
-    const vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [];
+    const vertexBuffers = [];
     vertexBuffers[vertexBufferIndex] = { arrayStride, attributes: [] };
 
     const success = arrayStride % 4 === 0;
@@ -284,7 +284,7 @@ g.test('vertex_attribute_shaderLocation_limit')
       testAttributeAtStart,
     } = t.params;
 
-    const attributes: GPUVertexAttributeDescriptor[] = [];
+    const attributes = [];
 
     let currentLocation = 0;
     for (let i = 0; i < extraAttributes; i++) {
@@ -292,22 +292,22 @@ g.test('vertex_attribute_shaderLocation_limit')
         currentLocation++;
       }
 
-      attributes.push({ format: 'float32', shaderLocation: currentLocation, offset: 0 });
+      attributes.push({ format: 'float32', shaderLocation: currentLocation, offset: 0 } as const);
       currentLocation++;
     }
 
-    const testAttribute: GPUVertexAttributeDescriptor = {
+    const testAttribute = {
       format: 'float32',
       shaderLocation: testShaderLocation,
       offset: 0,
-    };
+    } as const;
     if (testAttributeAtStart) {
       attributes.unshift(testAttribute);
     } else {
       attributes.push(testAttribute);
     }
 
-    const vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [];
+    const vertexBuffers = [];
     vertexBuffers[vertexBufferIndex] = { arrayStride: 256, attributes };
 
     const success = testShaderLocation < kMaxVertexAttributes;
@@ -380,7 +380,7 @@ g.test('vertex_attribute_shaderLocation_unique')
 
     // Use the attributes to make the list of vertex buffers. Note that we might be setting the same vertex
     // buffer twice, but that only happens when it is the only vertex buffer.
-    const vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [];
+    const vertexBuffers = [];
     vertexBuffers[vertexBufferIndexA] = { arrayStride: 256, attributes: attributesA };
     vertexBuffers[vertexBufferIndexB] = { arrayStride: 256, attributes: attributesB };
 
@@ -410,7 +410,7 @@ g.test('vertex_shader_input_location_limit')
       },
     ]);
 
-    const vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [
+    const vertexBuffers = [
       {
         arrayStride: 512,
         attributes: [
@@ -418,7 +418,7 @@ g.test('vertex_shader_input_location_limit')
             format: 'float32',
             offset: 0,
             shaderLocation: testLocation,
-          },
+          } as const,
         ],
       },
     ];
@@ -456,7 +456,7 @@ g.test('vertex_shader_input_location_in_vertex_state')
     ]);
 
     // Fill attributes with a bunch of attributes for other locations.
-    const attributes: GPUVertexAttributeDescriptor[] = [];
+    const attributes = [];
 
     let currentLocation = 0;
     for (let i = 0; i < extraAttributes; i++) {
@@ -464,17 +464,17 @@ g.test('vertex_shader_input_location_in_vertex_state')
         currentLocation++;
       }
 
-      attributes.push({ format: 'float32', shaderLocation: currentLocation, offset: 0 });
+      attributes.push({ format: 'float32', shaderLocation: currentLocation, offset: 0 } as const);
       currentLocation++;
     }
 
     // Using that vertex state is invalid because the vertex state doesn't contain the test location
-    const vertexBuffers: GPUVertexBufferLayoutDescriptor[] = [];
+    const vertexBuffers = [];
     vertexBuffers[vertexBufferIndex] = { arrayStride: 256, attributes };
     t.testVertexState(false, { vertexBuffers }, shader);
 
     // Add an attribute for the test location and try again.
-    const testAttribute: GPUVertexAttributeDescriptor = {
+    const testAttribute = {
       format: 'float32',
       shaderLocation: testShaderLocation,
       offset: 0,
