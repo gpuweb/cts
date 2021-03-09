@@ -12,7 +12,8 @@ TODO:
   Increasing the |first| param should skip some of the beginning triangles on the horizontal axis.
   Increasing the |first_instance| param should skip of the beginning triangles on the vertical axis.
   The vertex buffer contains two side-by-side triangles, and base_vertex is used to offset to select the second.
-  The fragment shader writes out to a storage buffer. If the draw is zero-sized, check that no value is written.
+  The test checks that the center of all of the expected triangles is drawn, and the others are empty.
+  The fragment shader also writes out to a storage buffer. If the draw is zero-sized, check that no value is written.
 
   Params:
   - count= {0, non-zero} either the vertexCount or indexCount

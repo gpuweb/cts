@@ -29,6 +29,7 @@ TODO: plan and implement. Notes:
 >     - buffer is {valid, invalid, doesn't have usage)
 >     - (offset, b.size) is
 >         - (0, 0)
+>         - (0, min size - min alignment)
 >         - (0, min size - 1)
 >         - (0, min size)
 >         - (min alignment, min size + min alignment)
