@@ -70,8 +70,9 @@ export const kBufferUsages = numericKeysOf<GPUBufferUsage>(kBufferUsageInfo);
 
 // Textures
 
-export const kRegularTextureFormatInfo = /* prettier-ignore */ makeTable(
-                           ['renderable', 'multisample', 'color', 'depth', 'stencil', 'storage', 'copySrc', 'copyDst', 'bytesPerBlock', 'blockWidth', 'blockHeight',              'extension'] as const,
+/* prettier-ignore */
+const kTexFmtInfoHeader =  ['renderable', 'multisample', 'color', 'depth', 'stencil', 'storage', 'copySrc', 'copyDst', 'bytesPerBlock', 'blockWidth', 'blockHeight',              'extension'] as const;
+export const kRegularTextureFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
                            [            ,          true,    true,   false,     false,          ,      true,      true,                ,            1,             1,                         ] as const, {
   // 8-bit formats
   'r8unorm':               [        true,              ,        ,        ,          ,     false,          ,          ,               1],
@@ -116,8 +117,6 @@ export const kRegularTextureFormatInfo = /* prettier-ignore */ makeTable(
   'rgba32sint':            [        true,              ,        ,        ,          ,      true,          ,          ,              16],
   'rgba32float':           [        true,              ,        ,        ,          ,      true,          ,          ,              16],
 } as const);
-/* prettier-ignore */
-const kTexFmtInfoHeader =  ['renderable', 'multisample', 'color', 'depth', 'stencil', 'storage', 'copySrc', 'copyDst', 'bytesPerBlock', 'blockWidth', 'blockHeight',              'extension'] as const;
 export const kSizedDepthStencilFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
                            [        true,          true,   false,        ,          ,     false,          ,          ,                ,            1,             1,                         ] as const, {
   'depth32float':          [        true,              ,   false,    true,     false,          ,     false,     false,               4],
