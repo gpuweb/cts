@@ -13,7 +13,16 @@ export interface CommandBufferMaker<T extends EncoderType> {
     'render pass': GPURenderPassEncoder;
     'render bundle': GPURenderBundleEncoder;
   }[T];
-  finish(): GPUCommandBuffer;
+  /** End the pass, if any. There should never be validation errors here. */
+  endPass(): {
+    /** Finish the encoder. Validation errors should occur here, except for submit() errors
+     * (like 'destroyed' state checks). */
+    finishEncoder(): {
+      /** Get a command buffer. For a render bundle, wraps the bundle in an encoder; otherwise, a
+       * no-op. There should only be validation errors here if the bundle encoder failed. TODO MAKE SURE USAGES OF THIS EXPECT THAT */
+      getCommandBuffer(): GPUCommandBuffer;
+    };
+  };
 }
 
 export class ValidationTest extends GPUTest {
@@ -245,8 +254,13 @@ export class ValidationTest extends GPUTest {
         const encoder = this.device.createCommandEncoder();
         return {
           encoder,
-          finish: () => {
-            return encoder.finish();
+          endPass: () => {
+            return {
+              finishEncoder: () => {
+                const cmdBuf = encoder.finish();
+                return { getCommandBuffer: () => cmdBuf };
+              },
+            };
           },
         } as CommandBufferMaker<T>;
       }
@@ -255,13 +269,21 @@ export class ValidationTest extends GPUTest {
         const encoder = device.createRenderBundleEncoder({
           colorFormats: [colorFormat],
         });
-        const pass = this.createEncoder('render pass');
         return {
           encoder,
-          finish: () => {
-            const bundle = encoder.finish();
-            pass.encoder.executeBundles([bundle]);
-            return pass.finish();
+          endPass: () => {
+            return {
+              finishEncoder: () => {
+                const bundle = encoder.finish();
+                return {
+                  getCommandBuffer: () => {
+                    const pass = this.createEncoder('render pass');
+                    pass.encoder.executeBundles([bundle]);
+                    return pass.endPass().finishEncoder().getCommandBuffer();
+                  },
+                };
+              },
+            };
           },
         } as CommandBufferMaker<T>;
       }
@@ -270,9 +292,14 @@ export class ValidationTest extends GPUTest {
         const encoder = commandEncoder.beginComputePass();
         return {
           encoder,
-          finish: () => {
+          endPass: () => {
             encoder.endPass();
-            return commandEncoder.finish();
+            return {
+              finishEncoder: () => {
+                const cmdBuf = commandEncoder.finish();
+                return { getCommandBuffer: () => cmdBuf };
+              },
+            };
           },
         } as CommandBufferMaker<T>;
       }
@@ -295,9 +322,14 @@ export class ValidationTest extends GPUTest {
         });
         return {
           encoder,
-          finish: () => {
+          endPass: () => {
             encoder.endPass();
-            return commandEncoder.finish();
+            return {
+              finishEncoder: () => {
+                const cmdBuf = commandEncoder.finish();
+                return { getCommandBuffer: () => cmdBuf };
+              },
+            };
           },
         } as CommandBufferMaker<T>;
       }

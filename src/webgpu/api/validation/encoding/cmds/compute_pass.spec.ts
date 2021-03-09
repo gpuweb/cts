@@ -54,10 +54,15 @@ setPipeline should generate an error iff using an 'invalid' pipeline.
   .params(poptions('state', ['valid', 'invalid'] as const))
   .fn(t => {
     const pipeline = t.createComputePipeline(t.params.state);
-    const { encoder, finish } = t.createEncoder('compute pass');
-    encoder.setPipeline(pipeline);
+
+    const encoder = t.device.createCommandEncoder();
+    {
+      const pass = encoder.beginComputePass();
+      pass.setPipeline(pipeline);
+      pass.endPass();
+    }
     t.expectValidationError(() => {
-      finish();
+      encoder.finish();
     }, t.params.state === 'invalid');
   });
 
@@ -83,14 +88,19 @@ Test 'direct' and 'indirect' dispatch with various sizes.
   .fn(t => {
     const pipeline = t.createNoOpComputePipeline();
     const [x, y, z] = t.params.workSizes;
-    const { encoder, finish } = t.createEncoder('compute pass');
-    encoder.setPipeline(pipeline);
-    if (t.params.dispatchType === 'direct') {
-      encoder.dispatch(x, y, z);
-    } else if (t.params.dispatchType === 'indirect') {
-      encoder.dispatchIndirect(t.createIndirectBuffer('valid', new Uint32Array([x, y, z])), 0);
+
+    const encoder = t.device.createCommandEncoder();
+    {
+      const pass = encoder.beginComputePass();
+      pass.setPipeline(pipeline);
+      if (t.params.dispatchType === 'direct') {
+        pass.dispatch(x, y, z);
+      } else if (t.params.dispatchType === 'indirect') {
+        pass.dispatchIndirect(t.createIndirectBuffer('valid', new Uint32Array([x, y, z])), 0);
+      }
+      pass.endPass();
     }
-    t.queue.submit([finish()]);
+    t.queue.submit([encoder.finish()]);
   });
 
 const kBufferData = new Uint32Array(6).fill(1);
@@ -99,7 +109,7 @@ g.test('indirect_dispatch_buffer')
     `
 Test dispatchIndirect validation by submitting various dispatches with a no-op pipeline and an
 indirectBuffer with 6 elements.
-- indirectBuffer: {'valid', 'invalid', 'destroyed'}
+- indirectBuffer: {'valid', 'invalid'} ('destroyed' tested in destroyed/buffer.spec.ts)
 - indirectOffset:
   - valid, within the buffer: {beginning, middle, end} of the buffer
   - invalid, non-multiple of 4
@@ -111,7 +121,7 @@ TODO: test specifically which call the validation error occurs in.
   )
   .params(
     params()
-      .combine(poptions('state', ['valid', 'invalid', 'destroyed'] as const))
+      .combine(poptions('state', ['valid', 'invalid'] as const))
       .combine(
         poptions('offset', [
           // valid (for 'valid' buffers)
@@ -129,10 +139,15 @@ TODO: test specifically which call the validation error occurs in.
     const { state, offset } = t.params;
     const pipeline = t.createNoOpComputePipeline();
     const buffer = t.createIndirectBuffer(state, kBufferData);
-    const { encoder, finish } = t.createEncoder('compute pass');
-    encoder.setPipeline(pipeline);
+
+    const encoder = t.device.createCommandEncoder();
+    {
+      const pass = encoder.beginComputePass();
+      pass.setPipeline(pipeline);
+      pass.dispatchIndirect(buffer, offset);
+    }
+
     t.expectValidationError(() => {
-      encoder.dispatchIndirect(buffer, offset);
-      t.queue.submit([finish()]);
+      encoder.finish();
     }, state !== 'valid' || offset % 4 !== 0 || offset + 3 * Uint32Array.BYTES_PER_ELEMENT > kBufferData.byteLength);
   });

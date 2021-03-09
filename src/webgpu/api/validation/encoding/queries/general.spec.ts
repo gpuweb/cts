@@ -52,11 +52,13 @@ Tests that write timestamp to all types of query set on all possible encoders:
       type === 'pipeline-statistics' ? (['clipper-invocations'] as const) : ([] as const);
     const querySet = t.device.createQuerySet({ type, count, pipelineStatistics });
 
-    const encoder = t.createEncoder(encoderType);
-    encoder.encoder.writeTimestamp(querySet, queryIndex);
+    const { encoder, endPass } = t.createEncoder(encoderType);
+    encoder.writeTimestamp(querySet, queryIndex);
+
+    const { finishEncoder } = endPass();
 
     t.expectValidationError(() => {
-      encoder.finish();
+      finishEncoder();
     }, type !== 'timestamp' || queryIndex >= count);
   });
 
@@ -71,10 +73,11 @@ Tests that write timestamp to a invalid queryset that failed during creation:
   .fn(async t => {
     const querySet = t.createQuerySetWithState('invalid');
 
-    const encoder = t.createEncoder(t.params.encoderType);
-    encoder.encoder.writeTimestamp(querySet, 0);
+    const { encoder, endPass } = t.createEncoder(t.params.encoderType);
+    encoder.writeTimestamp(querySet, 0);
+    const { finishEncoder } = endPass();
 
     t.expectValidationError(() => {
-      encoder.finish();
+      finishEncoder();
     });
   });

@@ -31,19 +31,21 @@ Tests that use a destroyed query set in writeTimestamp on {non-pass, compute, re
   .cases(poptions('encoderType', ['non-pass', 'compute pass', 'render pass'] as const))
   .subcases(() => poptions('querySetState', ['valid', 'destroyed'] as const))
   .fn(async t => {
+    const { encoderType, querySetState } = t.params;
     await t.selectDeviceOrSkipTestCase('timestamp-query');
 
-    const querySet = t.createQuerySetWithState(t.params.querySetState, {
+    const querySet = t.createQuerySetWithState(querySetState, {
       type: 'timestamp',
       count: 2,
     });
 
-    const encoder = t.createEncoder(t.params.encoderType);
-    encoder.encoder.writeTimestamp(querySet, 0);
+    const { encoder, endPass } = t.createEncoder(encoderType);
+    encoder.writeTimestamp(querySet, 0);
+    const cmdBuf = endPass().finishEncoder().getCommandBuffer();
 
     t.expectValidationError(() => {
-      t.queue.submit([encoder.finish()]);
-    }, t.params.querySetState === 'destroyed');
+      t.queue.submit([cmdBuf]);
+    }, querySetState === 'destroyed');
   });
 
 g.test('resolveQuerySet')
