@@ -284,7 +284,7 @@ class PrimitiveTopologyTest extends GPUTest {
               arrayStride: 4 * Float32Array.BYTES_PER_ELEMENT,
               attributes: [
                 {
-                  format: 'float4',
+                  format: 'float32x4',
                   offset: 0,
                   shaderLocation: 0,
                 },

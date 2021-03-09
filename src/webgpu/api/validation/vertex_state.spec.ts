@@ -152,7 +152,7 @@ g.test('max_vertex_buffer_limit')
         vertexBuffers.push({ attributes: [], arrayStride: 0 });
       } else {
         vertexBuffers.push({
-          attributes: [{ format: 'float', offset: 0, shaderLocation: 0 }],
+          attributes: [{ format: 'float32', offset: 0, shaderLocation: 0 }],
           arrayStride: 0,
         });
       }
@@ -188,7 +188,7 @@ g.test('max_vertex_attribute_limit')
 
       const attributes: GPUVertexAttributeDescriptor[] = [];
       while (attribsAdded !== targetCount) {
-        attributes.push({ format: 'float', offset: 0, shaderLocation: attribsAdded });
+        attributes.push({ format: 'float32', offset: 0, shaderLocation: attribsAdded });
         attribsAdded++;
       }
 
@@ -292,12 +292,12 @@ g.test('vertex_attribute_shaderLocation_limit')
         currentLocation++;
       }
 
-      attributes.push({ format: 'float', shaderLocation: currentLocation, offset: 0 });
+      attributes.push({ format: 'float32', shaderLocation: currentLocation, offset: 0 });
       currentLocation++;
     }
 
     const testAttribute: GPUVertexAttributeDescriptor = {
-      format: 'float',
+      format: 'float32',
       shaderLocation: testShaderLocation,
       offset: 0,
     };
@@ -359,23 +359,23 @@ g.test('vertex_attribute_shaderLocation_unique')
         continue;
       }
 
-      attributesA.push({ format: 'float', shaderLocation: currentLocation, offset: 0 });
+      attributesA.push({ format: 'float32', shaderLocation: currentLocation, offset: 0 });
       currentLocation++;
     }
 
     // Add attribute A
     if (testAttributeAtStartA) {
-      attributesA.unshift({ format: 'float', offset: 0, shaderLocation: shaderLocationA });
+      attributesA.unshift({ format: 'float32', offset: 0, shaderLocation: shaderLocationA });
     } else {
-      attributesA.push({ format: 'float', offset: 0, shaderLocation: shaderLocationA });
+      attributesA.push({ format: 'float32', offset: 0, shaderLocation: shaderLocationA });
     }
 
     // Add attribute B. Not that attributesB can be the same object as attributesA.
     const attributesB = vertexBufferAttributes[vertexBufferIndexB];
     if (testAttributeAtStartB) {
-      attributesB.unshift({ format: 'float', offset: 0, shaderLocation: shaderLocationB });
+      attributesB.unshift({ format: 'float32', offset: 0, shaderLocation: shaderLocationB });
     } else {
-      attributesB.push({ format: 'float', offset: 0, shaderLocation: shaderLocationB });
+      attributesB.push({ format: 'float32', offset: 0, shaderLocation: shaderLocationB });
     }
 
     // Use the attributes to make the list of vertex buffers. Note that we might be setting the same vertex
@@ -415,7 +415,7 @@ g.test('vertex_shader_input_location_limit')
         arrayStride: 512,
         attributes: [
           {
-            format: 'float',
+            format: 'float32',
             offset: 0,
             shaderLocation: testLocation,
           },
@@ -464,7 +464,7 @@ g.test('vertex_shader_input_location_in_vertex_state')
         currentLocation++;
       }
 
-      attributes.push({ format: 'float', shaderLocation: currentLocation, offset: 0 });
+      attributes.push({ format: 'float32', shaderLocation: currentLocation, offset: 0 });
       currentLocation++;
     }
 
@@ -475,7 +475,7 @@ g.test('vertex_shader_input_location_in_vertex_state')
 
     // Add an attribute for the test location and try again.
     const testAttribute: GPUVertexAttributeDescriptor = {
-      format: 'float',
+      format: 'float32',
       shaderLocation: testShaderLocation,
       offset: 0,
     };
@@ -496,12 +496,12 @@ g.test('offset_should_be_within_vertex_buffer_arrayStride_if_arrayStride_is_not_
           arrayStride: 2 * SIZEOF_FLOAT,
           attributes: [
             {
-              format: 'float' as GPUVertexFormat,
+              format: 'float32' as GPUVertexFormat,
               offset: 0,
               shaderLocation: 0,
             },
             {
-              format: 'float' as GPUVertexFormat,
+              format: 'float32' as GPUVertexFormat,
               offset: SIZEOF_FLOAT,
               shaderLocation: 1,
             },
@@ -517,7 +517,7 @@ g.test('offset_should_be_within_vertex_buffer_arrayStride_if_arrayStride_is_not_
     {
       // Test vertex attribute offset exceed vertex buffer arrayStride range
       const badVertexState = clone(vertexState);
-      badVertexState.vertexBuffers[0].attributes[1].format = 'float2';
+      badVertexState.vertexBuffers[0].attributes[1].format = 'float32x2';
       const descriptor = t.getDescriptor(badVertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
 
       t.expectValidationError(() => {
@@ -552,12 +552,12 @@ g.test('check_two_attributes_overlapping').fn(async t => {
         arrayStride: 2 * SIZEOF_FLOAT,
         attributes: [
           {
-            format: 'float' as GPUVertexFormat,
+            format: 'float32' as GPUVertexFormat,
             offset: 0,
             shaderLocation: 0,
           },
           {
-            format: 'float' as GPUVertexFormat,
+            format: 'float32' as GPUVertexFormat,
             offset: SIZEOF_FLOAT,
             shaderLocation: 1,
           },
@@ -573,7 +573,7 @@ g.test('check_two_attributes_overlapping').fn(async t => {
   {
     // Test two attributes overlapping
     const overlappingVertexState = clone(vertexState);
-    overlappingVertexState.vertexBuffers[0].attributes[0].format = 'int2';
+    overlappingVertexState.vertexBuffers[0].attributes[0].format = 'sint32x2';
     const descriptor = t.getDescriptor(overlappingVertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
     t.device.createRenderPipeline(descriptor);
   }
@@ -586,7 +586,7 @@ g.test('check_attribute_offset_out_of_bounds').fn(async t => {
         arrayStride: 0,
         attributes: [
           {
-            format: 'float2' as const,
+            format: 'float32x2' as const,
             offset: kMaxVertexBufferArrayStride - 2 * SIZEOF_FLOAT,
             shaderLocation: 0,
           },
@@ -622,7 +622,7 @@ g.test('check_multiple_of_4_bytes_constraint_on_offset').fn(async t => {
       {
         arrayStride: 0,
         attributes: [
-          { format: 'float' as GPUVertexFormat, offset: SIZEOF_FLOAT, shaderLocation: 0 },
+          { format: 'float32' as GPUVertexFormat, offset: SIZEOF_FLOAT, shaderLocation: 0 },
         ],
       },
     ],
@@ -633,18 +633,18 @@ g.test('check_multiple_of_4_bytes_constraint_on_offset').fn(async t => {
     t.device.createRenderPipeline(descriptor);
   }
   {
-    // Test offset of 2 bytes with uchar2 format
+    // Test offset of 2 bytes with uint8x2 format
     vertexState.vertexBuffers[0].attributes[0].offset = 2;
-    vertexState.vertexBuffers[0].attributes[0].format = 'uchar2';
+    vertexState.vertexBuffers[0].attributes[0].format = 'uint8x2';
     const descriptor = t.getDescriptor(vertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
     t.expectValidationError(() => {
       t.device.createRenderPipeline(descriptor);
     });
   }
   {
-    // Test offset of 2 bytes with float format
+    // Test offset of 2 bytes with float32 format
     vertexState.vertexBuffers[0].attributes[0].offset = 2;
-    vertexState.vertexBuffers[0].attributes[0].format = 'float';
+    vertexState.vertexBuffers[0].attributes[0].format = 'float32';
     const descriptor = t.getDescriptor(vertexState, VERTEX_SHADER_CODE_WITH_NO_INPUT);
 
     t.expectValidationError(() => {
@@ -658,7 +658,7 @@ g.test('check_attribute_offset_overflow').fn(async t => {
     vertexBuffers: [
       {
         arrayStride: 0,
-        attributes: [{ format: 'float', offset: Number.MAX_SAFE_INTEGER, shaderLocation: 0 }],
+        attributes: [{ format: 'float32', offset: Number.MAX_SAFE_INTEGER, shaderLocation: 0 }],
       },
     ],
   };
