@@ -478,5 +478,11 @@ export const kShaderStageCombinations: readonly GPUShaderStageFlags[] = [0, 1, 2
 // TODO: Switch existing tests to use kTextureSampleCounts
 export const kTextureSampleCounts = [1, 4] as const;
 
+// Pipeline limits
+
 // TODO: Update maximum color attachments when defined
 export const kMaxColorAttachments = 4;
+
+export const kMaxVertexBuffers = 8;
+export const kMaxVertexAttributes = 16;
+export const kMaxVertexBufferArrayStride = 2048;
