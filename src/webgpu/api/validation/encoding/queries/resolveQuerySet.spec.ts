@@ -21,6 +21,7 @@ Tests that resolve query set with invalid object.
   .subcases(
     () =>
       [
+        { querySetState: 'valid', destinationState: 'valid' }, // control case
         { querySetState: 'invalid', destinationState: 'valid' },
         { querySetState: 'valid', destinationState: 'invalid' },
       ] as const
