@@ -4,15 +4,6 @@ createTexture validation tests.
 TODO: review existing tests and merge with this plan:
 > All x= every texture format
 >
-> - 1d, {width, height, depthOrArrayLayers} > whatever the max is
->     - height max is 1 (unless 1d-array is added)
->     - depthOrArrayLayers max is 1
->     - x= every texture format
-> - 2d, {width, height, depthOrArrayLayers} > whatever the max is
->     - depthOrArrayLayers max differs from width/height
->     - x= every texture format
-> - 3d, {width, height, depthOrArrayLayers} > whatever the max is
->     - x= every texture format
 > - usage flags
 >     - {0, ... each single usage flag}
 >     - x= every texture format
@@ -30,8 +21,10 @@ import {
   kAllTextureFormats,
   kAllTextureFormatInfo,
   kTextureUsages,
+  kUncompressedTextureFormats,
+  kUncompressedTextureFormatInfo,
 } from '../../capability_info.js';
-import { GPUConst } from '../../constants.js';
+import { DefaultLimits, GPUConst } from '../../constants.js';
 import { maxMipLevelCount } from '../../util/texture/base.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -337,6 +330,132 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
         mipLevelCount === 1 &&
         arrayLayerCount === 1 &&
         (usage & GPUConst.TextureUsage.STORAGE) === 0);
+
+    t.expectValidationError(() => {
+      t.device.createTexture(descriptor);
+    }, !success);
+  });
+
+g.test('texture_size,1d_texture')
+  .desc(`Test texture size requirement for 1D texture`)
+  .subcases(() =>
+    params()
+      .combine(poptions('format', kAllTextureFormats))
+      .combine(
+        poptions('width', [
+          DefaultLimits.maxTextureDimension1D - 1,
+          DefaultLimits.maxTextureDimension1D,
+          DefaultLimits.maxTextureDimension1D + 1,
+        ])
+      )
+      .combine(poptions('height', [1, 2]))
+      .combine(poptions('depthOrArrayLayers', [1, 2]))
+  )
+  .fn(async t => {
+    const { format, width, height, depthOrArrayLayers } = t.params;
+
+    await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].extension);
+
+    const descriptor: GPUTextureDescriptor = {
+      size: [width, height, depthOrArrayLayers],
+      dimension: '1d' as const,
+      format,
+      usage: GPUTextureUsage.SAMPLED,
+    };
+
+    const success =
+      width <= DefaultLimits.maxTextureDimension1D && height === 1 && depthOrArrayLayers === 1;
+
+    t.expectValidationError(() => {
+      t.device.createTexture(descriptor);
+    }, !success);
+  });
+
+g.test('texture_size,2d_texture')
+  .desc(
+    `Test texture size requirement for 2D texture.
+	TODO: add tests for compressed texture.`
+  )
+  .subcases(() =>
+    params()
+      .combine(poptions('format', kUncompressedTextureFormats))
+      .combine(poptions('dimension', [undefined, '2d'] as const))
+      .combine([
+        // Test the bound of width
+        { size: [DefaultLimits.maxTextureDimension2D - 1, 1, 1] },
+        { size: [DefaultLimits.maxTextureDimension2D, 1, 1] },
+        { size: [DefaultLimits.maxTextureDimension2D + 1, 1, 1] },
+        // Test the bound of height
+        { size: [1, DefaultLimits.maxTextureDimension2D - 1, 1] },
+        { size: [1, DefaultLimits.maxTextureDimension2D, 1] },
+        { size: [1, DefaultLimits.maxTextureDimension2D + 1, 1] },
+        // Test the bound of array layers
+        { size: [1, 1, DefaultLimits.maxTextureArrayLayers - 1] },
+        { size: [1, 1, DefaultLimits.maxTextureArrayLayers] },
+        { size: [1, 1, DefaultLimits.maxTextureArrayLayers + 1] },
+      ])
+  )
+  .fn(async t => {
+    const { format, dimension, size } = t.params;
+
+    await t.selectDeviceOrSkipTestCase(kUncompressedTextureFormatInfo[format].extension);
+
+    const descriptor: GPUTextureDescriptor = {
+      size,
+      dimension,
+      format,
+      usage: GPUTextureUsage.SAMPLED,
+    };
+
+    const success =
+      size[0] <= DefaultLimits.maxTextureDimension2D &&
+      size[1] <= DefaultLimits.maxTextureDimension2D &&
+      size[2] <= DefaultLimits.maxTextureArrayLayers;
+
+    t.expectValidationError(() => {
+      t.device.createTexture(descriptor);
+    }, !success);
+  });
+
+g.test('texture_size,3d_texture')
+  .desc(
+    `Test texture size requirement for 3D texture.
+	TODO: add tests for compressed texture.`
+  )
+  .subcases(() =>
+    params()
+      .combine(poptions('format', kUncompressedTextureFormats))
+      .combine([
+        // Test the bound of width
+        { size: [DefaultLimits.maxTextureDimension3D - 1, 1, 1] },
+        { size: [DefaultLimits.maxTextureDimension3D, 1, 1] },
+        { size: [DefaultLimits.maxTextureDimension3D + 1, 1, 1] },
+        // Test the bound of height
+        { size: [1, DefaultLimits.maxTextureDimension3D - 1, 1] },
+        { size: [1, DefaultLimits.maxTextureDimension3D, 1] },
+        { size: [1, DefaultLimits.maxTextureDimension3D + 1, 1] },
+        // Test the bound of depth
+        { size: [1, 1, DefaultLimits.maxTextureDimension3D - 1] },
+        { size: [1, 1, DefaultLimits.maxTextureDimension3D] },
+        { size: [1, 1, DefaultLimits.maxTextureDimension3D + 1] },
+      ])
+  )
+  .fn(async t => {
+    const { format, size } = t.params;
+
+    await t.selectDeviceOrSkipTestCase(kUncompressedTextureFormatInfo[format].extension);
+
+    const descriptor: GPUTextureDescriptor = {
+      size,
+      dimension: '3d' as const,
+      format,
+      usage: GPUTextureUsage.SAMPLED,
+    };
+
+    const success =
+      size[0] <= DefaultLimits.maxTextureDimension3D &&
+      size[1] <= DefaultLimits.maxTextureDimension3D &&
+      size[2] <= DefaultLimits.maxTextureDimension3D;
 
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);
