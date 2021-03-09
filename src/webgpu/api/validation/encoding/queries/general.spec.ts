@@ -33,7 +33,7 @@ g.test('writeTimestamp,query_type_and_index')
 Tests that write timestamp to all types of query set on all possible encoders:
 - type {occlusion, pipeline statistics, timestamp}
 - queryIndex {in, out of} range for GPUQuerySet
-- x= {non-pass, compute, render} enconder
+- x= {non-pass, compute, render} encoder
   `
   )
   .cases(
