@@ -35,7 +35,7 @@ setup({
 
   for (const testcase of testcases) {
     const name = testcase.query.toString();
-    const wpt_fn = async (t: WptTestObject) => {
+    const wpt_fn = async () => {
       const [rec, res] = log.record(name);
       if (worker) {
         await worker.run(rec, name);
