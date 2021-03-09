@@ -29,7 +29,7 @@ import { maxMipLevelCount } from '../../util/texture/base.js';
 
 import { ValidationTest } from './validation_test.js';
 
-const kValidTextureFormatsForMSAA = [
+/* const kValidTextureFormatsForMSAA = [
   'r8unorm',
   'r8snorm',
   'r8uint',
@@ -73,7 +73,7 @@ const kValidTextureFormatsForMSAA = [
   'depth32float',
   'depth24unorm-stencil8',
   'depth32float-stencil8',
-];
+]; */
 
 class F extends ValidationTest {
   getDescriptor(
@@ -273,7 +273,7 @@ g.test('sampleCount,various_sampleCount_with_all_formats')
     await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].extension);
 
     const success =
-      sampleCount === 1 || (sampleCount === 4 && kValidTextureFormatsForMSAA.includes(format));
+      sampleCount === 1 || (sampleCount === 4 && kAllTextureFormatInfo[format].multisample);
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);
     }, !success);
@@ -326,7 +326,7 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
       sampleCount === 1 ||
       (sampleCount === 4 &&
         dimension === '2d' &&
-        kValidTextureFormatsForMSAA.includes(format) &&
+        kAllTextureFormatInfo[format].multisample &&
         mipLevelCount === 1 &&
         arrayLayerCount === 1 &&
         (usage & GPUConst.TextureUsage.STORAGE) === 0);
