@@ -4,12 +4,6 @@ createTexture validation tests.
 TODO: review existing tests and merge with this plan:
 > All x= every texture format
 >
-> - sampleCount = {0, 1, 4, 8, 16, 256} with format/dimension that supports multisample
->     - x= every texture format
-> - sampleCount = {1, 4}
->     - with format that supports multisample, with all possible dimensions
->     - with dimension that support multisample, with all possible formats
->     - with format-dimension that support multisample, with {mipLevelCount, array layer count} = {1, 2}
 > - usage flags
 >     - {0, ... each single usage flag}
 >     - x= every texture format
@@ -26,10 +20,11 @@ import { makeTestGroup } from '../../../common/framework/test_group.js';
 import {
   kAllTextureFormats,
   kAllTextureFormatInfo,
+  kTextureUsages,
   kUncompressedTextureFormats,
   kUncompressedTextureFormatInfo,
 } from '../../capability_info.js';
-import { DefaultLimits } from '../../constants.js';
+import { DefaultLimits, GPUConst } from '../../constants.js';
 import { maxMipLevelCount } from '../../util/texture/base.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -213,26 +208,86 @@ g.test('mipLevelCount,bound_check,bigger_than_integer_bit_width')
     });
   });
 
-g.test('sampleCount')
-  .params([
-    { sampleCount: 0, _success: false },
-    { sampleCount: 1, _success: true },
-    { sampleCount: 2, _success: false },
-    { sampleCount: 3, _success: false },
-    { sampleCount: 4, _success: true },
-    { sampleCount: 8, _success: false },
-    { sampleCount: 16, _success: false },
-    { sampleCount: 4, mipLevelCount: 2, _success: false },
-    { sampleCount: 4, arrayLayerCount: 2, _success: false },
-  ])
+g.test('sampleCount,various_sampleCount_with_all_formats')
+  .desc(`Test texture creation with various (valid or invalid) sample count and all formats`)
+  .subcases(() =>
+    params()
+      .combine(poptions('sampleCount', [0, 1, 2, 4, 8, 16, 32, 256]))
+      .combine(poptions('format', kAllTextureFormats))
+  )
   .fn(async t => {
-    const { sampleCount, mipLevelCount, arrayLayerCount, _success } = t.params;
+    const { sampleCount, format } = t.params;
+    const descriptor = {
+      size: [32, 32, 1],
+      sampleCount,
+      format,
+      usage: GPUTextureUsage.SAMPLED,
+    };
 
-    const descriptor = t.getDescriptor({ sampleCount, mipLevelCount, arrayLayerCount });
+    await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].extension);
+
+    const success =
+      sampleCount === 1 || (sampleCount === 4 && kAllTextureFormatInfo[format].multisample);
+    t.expectValidationError(() => {
+      t.device.createTexture(descriptor);
+    }, !success);
+  });
+
+g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
+  .desc(
+    `Test texture creation with valid sample count when dimensions, arrayLayerCount, mipLevelCount, format, and usage varies.
+     Texture can be single sample (sampleCount is 1) or multi-sample (sampleCount is 4).
+     Multisample texture requires that 1) its dimension is 2d, 2) its format is a uncompressed format, 3) its mipLevelCount and arrayLayerCount are 1, 4) its usage doesn't include STORAGE.`
+  )
+  .subcases(() =>
+    params()
+      .combine(poptions('sampleCount', [1, 4]))
+      .combine(poptions('dimension', ['1d', '2d', '3d'] as const))
+      .combine(poptions('arrayLayerCount', [1, 2]))
+      .unless(({ arrayLayerCount, dimension }) => arrayLayerCount === 2 && dimension !== '2d')
+      .combine(poptions('mipLevelCount', [1, 2]))
+      .combine(poptions('format', kAllTextureFormats))
+      .combine(poptions('usage', kTextureUsages))
+      .unless(({ usage, format }) => {
+        const info = kAllTextureFormatInfo[format];
+        return (
+          ((usage & GPUConst.TextureUsage.RENDER_ATTACHMENT) !== 0 && !info.renderable) ||
+          ((usage & GPUConst.TextureUsage.STORAGE) !== 0 && !info.storage)
+        );
+      })
+  )
+  .fn(async t => {
+    const { sampleCount, dimension, format, mipLevelCount, arrayLayerCount, usage } = t.params;
+
+    await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].extension);
+
+    const size =
+      dimension === '1d'
+        ? [32, 1, 1]
+        : dimension === '2d'
+        ? [32, 32, arrayLayerCount]
+        : [32, 32, 32];
+    const descriptor = {
+      size,
+      mipLevelCount,
+      sampleCount,
+      dimension,
+      format,
+      usage,
+    };
+
+    const success =
+      sampleCount === 1 ||
+      (sampleCount === 4 &&
+        dimension === '2d' &&
+        kAllTextureFormatInfo[format].multisample &&
+        mipLevelCount === 1 &&
+        arrayLayerCount === 1 &&
+        (usage & GPUConst.TextureUsage.STORAGE) === 0);
 
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);
-    }, !_success);
+    }, !success);
   });
 
 g.test('texture_size,1d_texture')
