@@ -18,8 +18,8 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { ValidationTest } from '../../validation_test.js';
 
 class F extends ValidationTest {
-  createIndexBuffer(): GPUBuffer {
-    const indexArray = new Uint32Array([0, 1, 2, 3, 1, 2]);
+  createIndexBuffer(indexData: Iterable<number>): GPUBuffer {
+    const indexArray = new Uint32Array(indexData);
 
     const indexBuffer = this.device.createBuffer({
       mappedAtCreation: true,
@@ -82,14 +82,13 @@ class F extends ValidationTest {
   }
 
   drawIndexed(
+    indexBuffer: GPUBuffer,
     indexCount: number,
     instanceCount: number,
     firstIndex: number,
     baseVertex: number,
     firstInstance: number
   ) {
-    const indexBuffer = this.createIndexBuffer();
-
     const pipeline = this.createRenderPipeline();
 
     const encoder = this.device.createCommandEncoder();
@@ -102,7 +101,7 @@ class F extends ValidationTest {
     this.device.queue.submit([encoder.finish()]);
   }
 
-  drawIndexedIndirect(bufferArray: Uint32Array, indirectOffset: number) {
+  drawIndexedIndirect(indexBuffer: GPUBuffer, bufferArray: Uint32Array, indirectOffset: number) {
     const indirectBuffer = this.device.createBuffer({
       mappedAtCreation: true,
       size: bufferArray.byteLength,
@@ -110,8 +109,6 @@ class F extends ValidationTest {
     });
     new Uint32Array(indirectBuffer.getMappedRange()).set(bufferArray);
     indirectBuffer.unmap();
-
-    const indexBuffer = this.createIndexBuffer();
 
     const pipeline = this.createRenderPipeline();
 
@@ -149,9 +146,44 @@ g.test('out_of_bounds')
   .fn(t => {
     const { indirect, indexCount, firstIndex, instanceCount } = t.params;
 
+    const indexBuffer = t.createIndexBuffer([0, 1, 2, 3, 1, 2]);
+
     if (indirect) {
-      t.drawIndexedIndirect(new Uint32Array([indexCount, instanceCount, firstIndex, 0, 0]), 0);
+      t.drawIndexedIndirect(
+        indexBuffer,
+        new Uint32Array([indexCount, instanceCount, firstIndex, 0, 0]),
+        0
+      );
     } else {
-      t.drawIndexed(indexCount, instanceCount, firstIndex, 0, 0);
+      t.drawIndexed(indexBuffer, indexCount, instanceCount, firstIndex, 0, 0);
+    }
+  });
+
+g.test('out_of_bounds_zero_sized_index_buffer')
+  .cases(pbool('indirect'))
+  .subcases(
+    () =>
+      params()
+        .combine([
+          { indexCount: 3, firstIndex: 1 }, // indexCount + firstIndex out of bound
+          { indexCount: 0, firstIndex: 1 }, // indexCount is 0 but firstIndex out of bound
+          { indexCount: 3, firstIndex: 0 }, // only firstIndex out of bound
+          { indexCount: 0, firstIndex: 0 }, // just zeros
+        ] as const)
+        .combine(poptions('instanceCount', [1, 10000])) // normal and large instanceCount
+  )
+  .fn(t => {
+    const { indirect, indexCount, firstIndex, instanceCount } = t.params;
+
+    const indexBuffer = t.createIndexBuffer([]);
+
+    if (indirect) {
+      t.drawIndexedIndirect(
+        indexBuffer,
+        new Uint32Array([indexCount, instanceCount, firstIndex, 0, 0]),
+        0
+      );
+    } else {
+      t.drawIndexed(indexBuffer, indexCount, instanceCount, firstIndex, 0, 0);
     }
   });
