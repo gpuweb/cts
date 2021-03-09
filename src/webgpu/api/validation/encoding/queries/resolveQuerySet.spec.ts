@@ -41,7 +41,7 @@ Tests that resolve query set with invalid object.
 
     t.expectValidationError(() => {
       encoder.finish();
-    });
+    }, querySetState === 'invalid' || destinationState === 'invalid');
   });
 
 g.test('resolveQuerySet,first_query_and_query_count')
