@@ -48,6 +48,45 @@ function clone<T extends GPUVertexStateDescriptor>(descriptor: T): T {
   return JSON.parse(JSON.stringify(descriptor));
 }
 
+function addTestAttributes(
+  attributes: GPUVertexAttributeDescriptor[],
+  {
+    testAttribute,
+    testAttributeAtStart = true,
+    extraAttributeCount = 0,
+    extraAttributeSkippedLocations = [],
+  }: {
+    testAttribute?: GPUVertexAttributeDescriptor;
+    testAttributeAtStart?: boolean;
+    extraAttributeCount?: Number;
+    extraAttributeSkippedLocations?: Number[];
+  }
+) {
+  // Add a bunch of dummy attributes each with a different location such that none of the locations
+  // are in extraAttributeSkippedLocations
+  let currentLocation = 0;
+  let extraAttribsAdded = 0;
+  while (extraAttribsAdded !== extraAttributeCount) {
+    if (extraAttributeSkippedLocations.indexOf(currentLocation) !== -1) {
+      currentLocation++;
+      continue;
+    }
+
+    attributes.push({ format: 'float32', shaderLocation: currentLocation, offset: 0 });
+    currentLocation++;
+    extraAttribsAdded++;
+  }
+
+  // Add the test attribute at the start or the end of the attributes.
+  if (testAttribute) {
+    if (testAttributeAtStart) {
+      attributes.unshift(testAttribute);
+    } else {
+      attributes.push(testAttribute);
+    }
+  }
+}
+
 class F extends ValidationTest {
   getDescriptor(
     vertexState: GPUVertexStateDescriptor,
@@ -270,7 +309,7 @@ g.test('vertex_attribute_shaderLocation_limit')
   .subcases(() =>
     params()
       .combine(poptions('vertexBufferIndex', [0, 1, kMaxVertexBuffers - 1]))
-      .combine(poptions('extraAttributes', [0, 1, kMaxVertexAttributes - 1]))
+      .combine(poptions('extraAttributeCount', [0, 1, kMaxVertexAttributes - 1]))
       .combine(pbool('testAttributeAtStart'))
       .combine(
         poptions('testShaderLocation', [0, 1, kMaxVertexAttributes - 1, kMaxVertexAttributes])
@@ -279,33 +318,18 @@ g.test('vertex_attribute_shaderLocation_limit')
   .fn(t => {
     const {
       vertexBufferIndex,
-      extraAttributes,
+      extraAttributeCount,
       testShaderLocation,
       testAttributeAtStart,
     } = t.params;
 
-    const attributes = [];
-
-    let currentLocation = 0;
-    for (let i = 0; i < extraAttributes; i++) {
-      if (currentLocation === testShaderLocation) {
-        currentLocation++;
-      }
-
-      attributes.push({ format: 'float32', shaderLocation: currentLocation, offset: 0 } as const);
-      currentLocation++;
-    }
-
-    const testAttribute = {
-      format: 'float32',
-      shaderLocation: testShaderLocation,
-      offset: 0,
-    } as const;
-    if (testAttributeAtStart) {
-      attributes.unshift(testAttribute);
-    } else {
-      attributes.push(testAttribute);
-    }
+    const attributes: GPUVertexAttributeDescriptor[] = [];
+    addTestAttributes(attributes, {
+      testAttribute: { format: 'float32', offset: 0, shaderLocation: testShaderLocation },
+      testAttributeAtStart,
+      extraAttributeCount,
+      extraAttributeSkippedLocations: [testShaderLocation],
+    });
 
     const vertexBuffers = [];
     vertexBuffers[vertexBufferIndex] = { arrayStride: 256, attributes };
@@ -329,7 +353,7 @@ g.test('vertex_attribute_shaderLocation_unique')
       .combine(pbool('testAttributeAtStartB'))
       .combine(poptions('shaderLocationA', [0, 1, 7, kMaxVertexAttributes - 1]))
       .combine(poptions('shaderLocationB', [0, 1, 7, kMaxVertexAttributes - 1]))
-      .combine(poptions('extraAttributes', [0, 4]))
+      .combine(poptions('extraAttributeCount', [0, 4]))
   )
   .fn(t => {
     const {
@@ -339,44 +363,33 @@ g.test('vertex_attribute_shaderLocation_unique')
       testAttributeAtStartB,
       shaderLocationA,
       shaderLocationB,
-      extraAttributes,
+      extraAttributeCount,
     } = t.params;
 
     // Depending on the params, the vertexBuffer for A and B can be the same or different. To support
     // both cases without code changes we treat `vertexBufferAttributes` as a map from indices to
     // vertex buffer descriptors, with A and B potentially reusing the same JS object if they have the
     // same index.
-    const vertexBufferAttributes: GPUVertexAttributeDescriptor[][] = [];
+    const vertexBufferAttributes = [];
     vertexBufferAttributes[vertexBufferIndexA] = [];
     vertexBufferAttributes[vertexBufferIndexB] = [];
 
     // Add the dummy attributes for attribute A
     const attributesA = vertexBufferAttributes[vertexBufferIndexA];
-    let currentLocation = 0;
-    for (let i = 0; i < extraAttributes; i++) {
-      if (currentLocation === shaderLocationA || currentLocation === shaderLocationB) {
-        currentLocation++;
-        continue;
-      }
+    addTestAttributes(attributesA, {
+      testAttribute: { format: 'float32', offset: 0, shaderLocation: shaderLocationA },
+      testAttributeAtStart: testAttributeAtStartA,
+      extraAttributeCount,
+      extraAttributeSkippedLocations: [shaderLocationA, shaderLocationB],
+    });
 
-      attributesA.push({ format: 'float32', shaderLocation: currentLocation, offset: 0 });
-      currentLocation++;
-    }
-
-    // Add attribute A
-    if (testAttributeAtStartA) {
-      attributesA.unshift({ format: 'float32', offset: 0, shaderLocation: shaderLocationA });
-    } else {
-      attributesA.push({ format: 'float32', offset: 0, shaderLocation: shaderLocationA });
-    }
-
-    // Add attribute B. Not that attributesB can be the same object as attributesA.
+    // Add attribute B. Not that attributesB can be the same object as attributesA so they end
+    // up in the same vertex buffer.
     const attributesB = vertexBufferAttributes[vertexBufferIndexB];
-    if (testAttributeAtStartB) {
-      attributesB.unshift({ format: 'float32', offset: 0, shaderLocation: shaderLocationB });
-    } else {
-      attributesB.push({ format: 'float32', offset: 0, shaderLocation: shaderLocationB });
-    }
+    addTestAttributes(attributesB, {
+      testAttribute: { format: 'float32', offset: 0, shaderLocation: shaderLocationB },
+      testAttributeAtStart: testAttributeAtStartB,
+    });
 
     // Use the attributes to make the list of vertex buffers. Note that we might be setting the same vertex
     // buffer twice, but that only happens when it is the only vertex buffer.
@@ -436,14 +449,14 @@ g.test('vertex_shader_input_location_in_vertex_state')
   .subcases(() =>
     params()
       .combine(poptions('vertexBufferIndex', [0, 1, kMaxVertexBuffers - 1]))
-      .combine(poptions('extraAttributes', [0, 1, kMaxVertexAttributes - 1]))
+      .combine(poptions('extraAttributeCount', [0, 1, kMaxVertexAttributes - 1]))
       .combine(pbool('testAttributeAtStart'))
       .combine(poptions('testShaderLocation', [0, 1, 4, 7, kMaxVertexAttributes - 1]))
   )
   .fn(t => {
     const {
       vertexBufferIndex,
-      extraAttributes,
+      extraAttributeCount,
       testAttributeAtStart,
       testShaderLocation,
     } = t.params;
@@ -455,36 +468,23 @@ g.test('vertex_shader_input_location_in_vertex_state')
       },
     ]);
 
-    // Fill attributes with a bunch of attributes for other locations.
-    const attributes = [];
-
-    let currentLocation = 0;
-    for (let i = 0; i < extraAttributes; i++) {
-      if (currentLocation === testShaderLocation) {
-        currentLocation++;
-      }
-
-      attributes.push({ format: 'float32', shaderLocation: currentLocation, offset: 0 } as const);
-      currentLocation++;
-    }
-
-    // Using that vertex state is invalid because the vertex state doesn't contain the test location
+    const attributes: GPUVertexAttributeDescriptor[] = [];
     const vertexBuffers = [];
     vertexBuffers[vertexBufferIndex] = { arrayStride: 256, attributes };
+
+    // Fill attributes with a bunch of attributes for other locations.
+    // Using that vertex state is invalid because the vertex state doesn't contain the test location
+    addTestAttributes(attributes, {
+      extraAttributeCount,
+      extraAttributeSkippedLocations: [testShaderLocation],
+    });
     t.testVertexState(false, { vertexBuffers }, shader);
 
     // Add an attribute for the test location and try again.
-    const testAttribute = {
-      format: 'float32',
-      shaderLocation: testShaderLocation,
-      offset: 0,
-    };
-    if (testAttributeAtStart) {
-      attributes.unshift(testAttribute);
-    } else {
-      attributes.push(testAttribute);
-    }
-
+    addTestAttributes(attributes, {
+      testAttribute: { format: 'float32', shaderLocation: testShaderLocation, offset: 0 },
+      testAttributeAtStart,
+    });
     t.testVertexState(true, { vertexBuffers }, shader);
   });
 
