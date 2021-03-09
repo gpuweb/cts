@@ -21,6 +21,15 @@ export const enum EncoderType {
 
 export const g = makeTestGroup(ValidationTest);
 
+g.test('beginRenderPass')
+  .desc(
+    `
+Tests that use a destroyed query set in beginRenderPass for occlusion query.
+- x= {destroyed, not destroyed (control case)}
+  `
+  )
+  .unimplemented();
+
 g.test('writeTimestamp')
   .desc(
     `

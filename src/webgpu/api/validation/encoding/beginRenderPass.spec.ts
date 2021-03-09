@@ -15,6 +15,8 @@ Notes:
 >     - {all possible {depth, stencil} load ops, load values {in range, negative, too large}}
 >     - all possible {depth, stencil} store ops
 >     - depthReadOnly {t,f}, stencilReadOnly {t,f}
+> - occlusion query set
+>     - tested in queries/general.spec.ts
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
