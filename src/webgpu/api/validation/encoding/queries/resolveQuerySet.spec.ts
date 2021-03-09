@@ -52,7 +52,7 @@ Tests that resolve query set with invalid firstQuery and queryCount:
   `
   )
   .subcases(() => [
-    { firstQuery: 0, queryCount: kQueryCount },
+    { firstQuery: 0, queryCount: kQueryCount }, // control case
     { firstQuery: 0, queryCount: kQueryCount + 1 },
     { firstQuery: 1, queryCount: kQueryCount },
     { firstQuery: kQueryCount, queryCount: 1 },
@@ -84,7 +84,7 @@ Tests that resolve query set with invalid destinationBuffer:
   .subcases(() =>
     poptions('bufferUsage', [
       GPUConst.BufferUsage.STORAGE,
-      GPUConst.BufferUsage.QUERY_RESOLVE,
+      GPUConst.BufferUsage.QUERY_RESOLVE, // control case
     ] as const)
   )
   .fn(async t => {
