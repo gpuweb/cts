@@ -32,7 +32,7 @@ Tests that begin/end occlusion query on render pass:
   )
   .unimplemented();
 
-  g.test('occlusion_query,begin_with_same_query_index')
+g.test('occlusion_query,begin_with_same_query_index')
   .desc(
     `
 Tests that begin occlusion query with same query index twice:
