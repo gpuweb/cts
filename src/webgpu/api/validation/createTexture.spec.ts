@@ -653,8 +653,9 @@ g.test('texture_usage')
     };
 
     let success = true;
-    if (!info.copySrc && (usage & GPUTextureUsage.COPY_SRC) !== 0) success = false;
-    if (!info.copyDst && (usage & GPUTextureUsage.COPY_DST) !== 0) success = false;
+    // Note that we unconditionally test copy usages for all formats. We don't check copySrc/copyDst in kAllTextureFormatInfo in capability_info.js
+    // if (!info.copySrc && (usage & GPUTextureUsage.COPY_SRC) !== 0) success = false;
+    // if (!info.copyDst && (usage & GPUTextureUsage.COPY_DST) !== 0) success = false;
     if (!info.storage && (usage & GPUTextureUsage.STORAGE) !== 0) success = false;
     if (!info.renderable && (usage & GPUTextureUsage.RENDER_ATTACHMENT) !== 0) success = false;
 
