@@ -6,27 +6,26 @@ import { crawl } from './crawl.js';
 
 function usage(rc: number): void {
   console.error('Usage:');
-  console.error('  tools/gen_listings [SUITES...]');
-  console.error('  tools/gen_listings webgpu unittests');
+  console.error('  tools/gen_listings [OUT_DIR] [SRC_DIR] [SUITES...]');
+  console.error('  tools/gen_listings out/ src/ webgpu unittests');
   process.exit(rc);
 }
 
-if (process.argv.length <= 2) {
+if (process.argv.length <= 4) {
   usage(0);
 }
 
 const myself = 'src/common/tools/gen_listings.ts';
-if (!fs.existsSync(myself)) {
-  console.error('Must be run from repository root');
-  usage(1);
-}
+
+const outDir = process.argv[2];
+const srcDir = process.argv[3];
 
 (async () => {
-  for (const suite of process.argv.slice(2)) {
-    const listing = await crawl(suite);
+  for (const suite of process.argv.slice(4)) {
+    const listing = await crawl(path.join(srcDir, suite));
 
-    const outFile = path.normalize(`out/${suite}/listing.js`);
-    fs.mkdirSync(`out/${suite}`, { recursive: true });
+    const outFile = path.normalize(path.join(outDir, `${suite}/listing.js`));
+    fs.mkdirSync(path.join(outDir, suite), { recursive: true });
     fs.writeFileSync(
       outFile,
       `\

@@ -1,0 +1,13 @@
+// Typescript configuration for compile sources and
+// dependent files for usage directly with Node.js. This
+// is useful for running scripts in tools/ directly with Node
+// without including extra dependencies.
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs"
+  },
+
+  // Can't be compiled for Node.js as it uses import.metal.url.
+  "exclude": ["src/common/runtime/**/*.ts"]
+}
