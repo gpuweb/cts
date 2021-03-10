@@ -126,6 +126,20 @@ class F extends ValidationTest {
 export const g = makeTestGroup(F);
 
 g.test('out_of_bounds')
+  .desc(
+    `Test drawing with out of bound index access to make sure the implementation is robust
+    with the following indexCount and firstIndex conditions
+    - valid draw
+    - either is within bound but indexCount + firstIndex is out of bound
+    - only firstIndex is out of bound
+    - only indexCount is out of bound
+    - firstIndex much larger than indexCount
+    - indexCount much larger than firstIndex
+    - max uint32 value for both to make sure the sum doesn't overflow
+    - max uint32 indexCount and small firstIndex
+    - max uint32 firstIndex and small indexCount
+    Together with normal and large instanceCount`
+  )
   .cases(pbool('indirect'))
   .subcases(
     () =>
@@ -160,6 +174,15 @@ g.test('out_of_bounds')
   });
 
 g.test('out_of_bounds_zero_sized_index_buffer')
+  .desc(
+    `Test drawing with an empty index buffer to make sure the implementation is robust
+    with the following indexCount and firstIndex conditions
+    - indexCount + firstIndex is out of bound
+    - indexCount is 0 but firstIndex is out of bound
+    - only indexCount is out of bound
+    - both are 0s (not out of bound) but index buffer size is 0
+    Together with normal and large instanceCount`
+  )
   .cases(pbool('indirect'))
   .subcases(
     () =>
@@ -167,7 +190,7 @@ g.test('out_of_bounds_zero_sized_index_buffer')
         .combine([
           { indexCount: 3, firstIndex: 1 }, // indexCount + firstIndex out of bound
           { indexCount: 0, firstIndex: 1 }, // indexCount is 0 but firstIndex out of bound
-          { indexCount: 3, firstIndex: 0 }, // only firstIndex out of bound
+          { indexCount: 3, firstIndex: 0 }, // only indexCount out of bound
           { indexCount: 0, firstIndex: 0 }, // just zeros
         ] as const)
         .combine(poptions('instanceCount', [1, 10000])) // normal and large instanceCount
