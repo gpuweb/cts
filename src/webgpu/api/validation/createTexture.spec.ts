@@ -644,11 +644,9 @@ g.test('texture_usage')
 
     await t.selectDeviceOrSkipTestCase(info.extension);
 
-    const size = dimension === '1d' ? [32, 1, 1] : dimension === '2d' ? [32, 32, 1] : [32, 32, 32];
-
     const usage = usage0 | usage1;
     const descriptor = {
-      size,
+      size: [1, 1, 1],
       dimension,
       format,
       usage,
