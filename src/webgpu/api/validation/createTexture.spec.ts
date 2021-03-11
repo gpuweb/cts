@@ -18,37 +18,7 @@ import { maxMipLevelCount } from '../../util/texture/base.js';
 
 import { ValidationTest } from './validation_test.js';
 
-class F extends ValidationTest {
-  getDescriptor(
-    options: {
-      width?: number;
-      height?: number;
-      arrayLayerCount?: number;
-      mipLevelCount?: number;
-      sampleCount?: number;
-      format?: GPUTextureFormat;
-    } = {}
-  ): GPUTextureDescriptor {
-    const {
-      width = 32,
-      height = 32,
-      arrayLayerCount = 1,
-      mipLevelCount = 1,
-      sampleCount = 1,
-      format = 'rgba8unorm',
-    } = options;
-    return {
-      size: { width, height, depthOrArrayLayers: arrayLayerCount },
-      mipLevelCount,
-      sampleCount,
-      dimension: '2d',
-      format,
-      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.SAMPLED,
-    };
-  }
-}
-
-export const g = makeTestGroup(F);
+export const g = makeTestGroup(ValidationTest);
 
 g.test('zero_size')
   .desc(
