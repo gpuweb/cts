@@ -1,14 +1,4 @@
-export const description = `
-createTexture validation tests.
-
-TODO: review existing tests and merge with this plan:
-> All x= every texture format
->
-> - any other conditions from the spec
-> - ...?
-
-TODO: move destroy tests out of this file
-`;
+export const description = `createTexture validation tests.`;
 
 import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
@@ -66,10 +56,9 @@ g.test('zero_size')
     width, height, depthOrArrayLayers and mipLevelCount for every dimension, and representative formats.
     TODO: add tests for depth/stencil format if depth/stencil format can support mipmaps.`
   )
-  // .cases(poptions('dimension', ['1d', '2d', '3d'] as const))
   .subcases(() =>
     params()
-      .combine(poptions('dimension', ['1d', '2d', '3d'] as const))
+      .combine(poptions('dimension', [undefined, ...kTextureDimensions]))
       .combine(
         poptions('zeroArgument', [
           'none',
@@ -80,7 +69,10 @@ g.test('zero_size')
         ] as const)
       )
       .combine(poptions('format', ['rgba8unorm', 'rgb10a2unorm', 'bc1-rgba-unorm'] as const))
-      .unless(({ format, dimension }) => format === 'bc1-rgba-unorm' && dimension !== '2d')
+      .unless(
+        ({ format, dimension }) =>
+          format === 'bc1-rgba-unorm' && dimension !== '2d' && dimension !== undefined
+      )
   )
   .fn(async t => {
     const { dimension, zeroArgument, format } = t.params;
@@ -251,14 +243,17 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
   .desc(
     `Test texture creation with valid sample count when dimensions, arrayLayerCount, mipLevelCount, format, and usage varies.
      Texture can be single sample (sampleCount is 1) or multi-sample (sampleCount is 4).
-     Multisample texture requires that 1) its dimension is 2d, 2) its format is a uncompressed format, 3) its mipLevelCount and arrayLayerCount are 1, 4) its usage doesn't include STORAGE.`
+     Multisample texture requires that 1) its dimension is 2d or undefined, 2) its format is a uncompressed format, 3) its mipLevelCount and arrayLayerCount are 1, 4) its usage doesn't include STORAGE.`
   )
   .subcases(() =>
     params()
       .combine(poptions('sampleCount', [1, 4]))
-      .combine(poptions('dimension', ['1d', '2d', '3d'] as const))
+      .combine(poptions('dimension', [undefined, ...kTextureDimensions]))
       .combine(poptions('arrayLayerCount', [1, 2]))
-      .unless(({ arrayLayerCount, dimension }) => arrayLayerCount === 2 && dimension !== '2d')
+      .unless(
+        ({ arrayLayerCount, dimension }) =>
+          arrayLayerCount === 2 && dimension !== '2d' && dimension !== undefined
+      )
       .combine(poptions('mipLevelCount', [1, 2]))
       .combine(poptions('format', kAllTextureFormats))
       .combine(poptions('usage', kTextureUsages))
@@ -278,7 +273,7 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
     const size =
       dimension === '1d'
         ? [32, 1, 1]
-        : dimension === '2d'
+        : dimension === '2d' || dimension === undefined
         ? [32, 32, arrayLayerCount]
         : [32, 32, 32];
     const descriptor = {
@@ -293,7 +288,7 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
     const success =
       sampleCount === 1 ||
       (sampleCount === 4 &&
-        dimension === '2d' &&
+        (dimension === '2d' || dimension === undefined) &&
         kAllTextureFormatInfo[format].multisample &&
         mipLevelCount === 1 &&
         arrayLayerCount === 1 &&
@@ -302,6 +297,72 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);
     }, !success);
+  });
+
+g.test('texture_size,default_value_and_smallest_size,uncompressed_format')
+  .desc(
+    `Test default values for height and depthOrArrayLayers for every dimension type and every uncompressed format.
+	  It also tests smallest size (lower bound) for every dimensions type and every uncompressed format, while other texture_size tests are testing the upper bound.`
+  )
+  .subcases(() =>
+    params()
+      .combine(poptions('dimension', [undefined, ...kTextureDimensions]))
+      .combine(poptions('format', kUncompressedTextureFormats))
+      .combine(poptions('size', [[1], [1, 1], [1, 1, 1]]))
+  )
+  .fn(async t => {
+    const { dimension, format, size } = t.params;
+
+    await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].extension);
+
+    const descriptor: GPUTextureDescriptor = {
+      size,
+      dimension,
+      format,
+      usage: GPUTextureUsage.SAMPLED,
+    };
+
+    t.device.createTexture(descriptor);
+  });
+
+g.test('texture_size,default_value_and_smallest_size,compressed_format')
+  .desc(
+    `Test default values for height and depthOrArrayLayers for every dimension type and every compressed format.
+	  It also tests smallest size (lower bound) for every dimensions type and every compressed format, while other texture_size tests are testing the upper bound.`
+  )
+  .subcases(() =>
+    params()
+      .combine(poptions('dimension', [undefined, ...kTextureDimensions]))
+      .combine(poptions('format', kCompressedTextureFormats))
+      .expand(p => {
+        const { blockWidth, blockHeight } = kAllTextureFormatInfo[p.format];
+        return [
+          { size: [1], _success: false },
+          { size: [blockWidth], _success: false },
+          { size: [1, 1], _success: false },
+          { size: [blockWidth, blockHeight], _success: true },
+          { size: [1, 1, 1], _success: false },
+          { size: [blockWidth, blockHeight, 1], _success: true },
+        ];
+      })
+  )
+  .fn(async t => {
+    const { dimension, format, size, _success } = t.params;
+
+    const info = kCompressedTextureFormatInfo[format];
+
+    await t.selectDeviceOrSkipTestCase(info.extension);
+
+    const descriptor: GPUTextureDescriptor = {
+      size,
+      dimension,
+      format,
+      usage: GPUTextureUsage.SAMPLED,
+    };
+
+    t.expectValidationError(() => {
+      t.device.createTexture(descriptor);
+    }, !_success);
   });
 
 g.test('texture_size,1d_texture')
@@ -575,64 +636,13 @@ g.test('texture_size,3d_texture,compressed_format')
     }, !success);
   });
 
-g.test('it_is_valid_to_destroy_a_texture').fn(t => {
-  const descriptor = t.getDescriptor();
-  const texture = t.device.createTexture(descriptor);
-  texture.destroy();
-});
-
-g.test('it_is_valid_to_destroy_a_destroyed_texture').fn(t => {
-  const descriptor = t.getDescriptor();
-  const texture = t.device.createTexture(descriptor);
-  texture.destroy();
-  texture.destroy();
-});
-
-g.test('it_is_invalid_to_submit_a_destroyed_texture_before_and_after_encode')
-  .params([
-    { destroyBeforeEncode: false, destroyAfterEncode: false, _success: true },
-    { destroyBeforeEncode: true, destroyAfterEncode: false, _success: false },
-    { destroyBeforeEncode: false, destroyAfterEncode: true, _success: false },
-  ])
-  .fn(async t => {
-    const { destroyBeforeEncode, destroyAfterEncode, _success } = t.params;
-
-    const descriptor = t.getDescriptor();
-    const texture = t.device.createTexture(descriptor);
-    const textureView = texture.createView();
-
-    if (destroyBeforeEncode) {
-      texture.destroy();
-    }
-
-    const commandEncoder = t.device.createCommandEncoder();
-    const renderPass = commandEncoder.beginRenderPass({
-      colorAttachments: [
-        {
-          attachment: textureView,
-          loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
-        },
-      ],
-    });
-    renderPass.endPass();
-    const commandBuffer = commandEncoder.finish();
-
-    if (destroyAfterEncode) {
-      texture.destroy();
-    }
-
-    t.expectValidationError(() => {
-      t.queue.submit([commandBuffer]);
-    }, !_success);
-  });
-
 g.test('texture_usage')
   .desc(
     `Test texture usage (single usage or combined usages) for every texture format and every dimension type`
   )
   .subcases(() =>
     params()
-      .combine(poptions('dimension', kTextureDimensions))
+      .combine(poptions('dimension', [undefined, ...kTextureDimensions]))
       .combine(poptions('format', kAllTextureFormats))
       // If usage0 and usage1 are the same, then the usage being test is a single usage. Otherwise, it is a combined usage.
       .combine(poptions('usage0', kTextureUsages))
