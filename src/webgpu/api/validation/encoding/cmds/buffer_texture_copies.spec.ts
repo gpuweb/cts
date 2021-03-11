@@ -2,7 +2,9 @@ export const description = `
 copyTextureToBuffer and copyBufferToTexture validation tests not covered by
 the general image_copy tests, or by destroyed,*.
 
-TODO: plan further
+TODO:
+Add tests to cover the validation rule that source.offset is a multiple of the texel block size of
+destination.texture.[[format]].
 `;
 
 import { poptions, params } from '../../../../../common/framework/params_builder.js';
@@ -54,10 +56,9 @@ g.test('depth_stencil_format,copy_usage_and_aspect')
   and copyTextureToBuffer. See https://gpuweb.github.io/gpuweb/#depth-formats for more details.
 `
   )
-  .cases(
-    params()
-      .combine(poptions('format', kDepthStencilFormats))
-      .combine(poptions('aspect', ['all', 'depth-only', 'stencil-only'] as const))
+  .cases(params().combine(poptions('format', kDepthStencilFormats)))
+  .subcases(() =>
+    params().combine(poptions('aspect', ['all', 'depth-only', 'stencil-only'] as const))
   )
   .fn(async t => {
     const { format, aspect } = t.params;
@@ -90,6 +91,12 @@ g.test('depth_stencil_format,copy_buffer_size')
     `
   Validate the minimum buffer size for each depth stencil format in copyBufferToTexture
   and copyTextureToBuffer.
+
+  Given a depth stencil format, a copy aspect ('depth-only' or 'stencil-only'), the copy method
+  (buffer-to-texture or texture-to-buffer) and the copy size, validate
+  - if the copy can be successfully executed with the minimum required buffer size.
+  - if the copy fails with a validation error when the buffer size is less than the minimum
+  required buffer size.
 `
   )
   .cases(
@@ -97,16 +104,18 @@ g.test('depth_stencil_format,copy_buffer_size')
       .combine(poptions('format', kDepthStencilFormats))
       .combine(poptions('aspect', ['depth-only', 'stencil-only'] as const))
       .combine(poptions('copyType', ['CopyB2T', 'CopyT2B'] as const))
-      .combine(
-        poptions('copySize', [
-          { width: 8, height: 1, depthOrArrayLayers: 1 },
-          { width: 4, height: 4, depthOrArrayLayers: 1 },
-          { width: 4, height: 4, depthOrArrayLayers: 3 },
-        ])
-      )
       .filter(param => {
         return depthStencilBufferTextureCopySupported(param.copyType, param.format, param.aspect);
       })
+  )
+  .subcases(() =>
+    params().combine(
+      poptions('copySize', [
+        { width: 8, height: 1, depthOrArrayLayers: 1 },
+        { width: 4, height: 4, depthOrArrayLayers: 1 },
+        { width: 4, height: 4, depthOrArrayLayers: 3 },
+      ])
+    )
   )
   .fn(async t => {
     const { format, aspect, copyType, copySize } = t.params;
