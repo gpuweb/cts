@@ -4,11 +4,6 @@ createTexture validation tests.
 TODO: review existing tests and merge with this plan:
 > All x= every texture format
 >
-> - usage flags
->     - {0, ... each single usage flag}
->     - x= every texture format
-> - every possible pair of usage flags
->     - with one common texture format
 > - any other conditions from the spec
 > - ...?
 
@@ -23,6 +18,7 @@ import {
   kAllTextureFormatInfo,
   kCompressedTextureFormats,
   kCompressedTextureFormatInfo,
+  kTextureDimensions,
   kTextureUsages,
   kUncompressedTextureFormats,
   kUncompressedTextureFormatInfo,
@@ -89,7 +85,7 @@ g.test('zero_size')
   .fn(async t => {
     const { dimension, zeroArgument, format } = t.params;
 
-    const size = dimension === '1d' ? [32, 1, 1] : dimension === '2d' ? [32, 32, 1] : [32, 32, 32];
+    const size = [1, 1, 1];
     let mipLevelCount = 1;
 
     switch (zeroArgument) {
@@ -630,17 +626,40 @@ g.test('it_is_invalid_to_submit_a_destroyed_texture_before_and_after_encode')
     }, !_success);
   });
 
-g.test('it_is_invalid_to_have_an_output_attachment_texture_with_non_renderable_format')
-  .params(poptions('format', kAllTextureFormats))
+g.test('texture_usage')
+  .desc(
+    `Test texture usage (single usage or combined usages) for every texture format and every dimension type`
+  )
+  .subcases(() =>
+    params()
+      .combine(poptions('dimension', kTextureDimensions))
+      .combine(poptions('format', kAllTextureFormats))
+      // If usage0 and usage1 are the same, then the usage being test is a single usage. Otherwise, it is a combined usage.
+      .combine(poptions('usage0', kTextureUsages))
+      .combine(poptions('usage1', kTextureUsages))
+  )
   .fn(async t => {
-    const format: GPUTextureFormat = t.params.format;
+    const { dimension, format, usage0, usage1 } = t.params;
     const info = kAllTextureFormatInfo[format];
 
     await t.selectDeviceOrSkipTestCase(info.extension);
 
-    const descriptor = t.getDescriptor({ width: 1, height: 1, format });
+    const usage = usage0 | usage1;
+    const descriptor = {
+      size: [1, 1, 1],
+      dimension,
+      format,
+      usage,
+    };
+
+    let success = true;
+    // Note that we unconditionally test copy usages for all formats. We don't check copySrc/copyDst in kAllTextureFormatInfo in capability_info.js
+    // if (!info.copySrc && (usage & GPUTextureUsage.COPY_SRC) !== 0) success = false;
+    // if (!info.copyDst && (usage & GPUTextureUsage.COPY_DST) !== 0) success = false;
+    if (!info.storage && (usage & GPUTextureUsage.STORAGE) !== 0) success = false;
+    if (!info.renderable && (usage & GPUTextureUsage.RENDER_ATTACHMENT) !== 0) success = false;
 
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);
-    }, !info.renderable);
+    }, !success);
   });
