@@ -222,7 +222,7 @@ class PrimitiveTopologyTest extends GPUTest {
   }
 
   run(
-    primitiveTopology: GPUPrimitiveTopology,
+    topology: GPUPrimitiveTopology,
     testLocations: TestLocation[],
     usePrimitiveRestart: boolean
   ): void {
@@ -239,9 +239,9 @@ class PrimitiveTopologyTest extends GPUTest {
       ],
     });
 
-    let indexFormat = undefined;
-    if (primitiveTopology === 'triangle-strip' || primitiveTopology === 'line-strip') {
-      indexFormat = 'uint32' as const;
+    let stripIndexFormat = undefined;
+    if (topology === 'triangle-strip' || topology === 'line-strip') {
+      stripIndexFormat = 'uint32' as const;
     }
 
     // Draw a primitive using 6 vertices based on the type.
@@ -251,7 +251,7 @@ class PrimitiveTopologyTest extends GPUTest {
     // Output color is solid green.
     renderPass.setPipeline(
       this.device.createRenderPipeline({
-        vertexStage: {
+        vertex: {
           module: this.device.createShaderModule({
             code: `
               [[location(0)]] var<in> pos : vec4<f32>;
@@ -263,23 +263,7 @@ class PrimitiveTopologyTest extends GPUTest {
               }`,
           }),
           entryPoint: 'main',
-        },
-        fragmentStage: {
-          module: this.device.createShaderModule({
-            code: `
-              [[location(0)]] var<out> fragColor : vec4<f32>;
-              [[stage(fragment)]] fn main() -> void {
-                fragColor = vec4<f32>(0.0, 1.0, 0.0, 1.0);
-                return;
-              }`,
-          }),
-          entryPoint: 'main',
-        },
-        primitiveTopology,
-        colorStates: [{ format: kColorFormat }],
-        vertexState: {
-          indexFormat,
-          vertexBuffers: [
+          buffers: [
             {
               arrayStride: 4 * Float32Array.BYTES_PER_ELEMENT,
               attributes: [
@@ -291,6 +275,22 @@ class PrimitiveTopologyTest extends GPUTest {
               ],
             },
           ],
+        },
+        fragment: {
+          module: this.device.createShaderModule({
+            code: `
+              [[location(0)]] var<out> fragColor : vec4<f32>;
+              [[stage(fragment)]] fn main() -> void {
+                fragColor = vec4<f32>(0.0, 1.0, 0.0, 1.0);
+                return;
+              }`,
+          }),
+          entryPoint: 'main',
+          targets: [{ format: kColorFormat }],
+        },
+        primitive: {
+          topology,
+          stripIndexFormat,
         },
       })
     );
