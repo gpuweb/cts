@@ -581,9 +581,9 @@ g.test('vertex_attribute_contained_in_stride')
     - Test for various vertex buffer indices
     - Test for various amounts of attributes in that vertex buffer`
   )
-  .cases(
+  .cases(poptions('format', kVertexFormats))
+  .subcases(({ format }) =>
     params()
-      .combine(poptions('format', kVertexFormats))
       .combine(
         poptions('arrayStride', [
           0,
@@ -594,7 +594,7 @@ g.test('vertex_attribute_contained_in_stride')
       )
       .expand(p => {
         // Compute a bunch of test offsets to test.
-        const { bytesPerComponent, componentCount } = kVertexFormatInfo[p.format];
+        const { bytesPerComponent, componentCount } = kVertexFormatInfo[format];
         const formatSize = bytesPerComponent * componentCount;
         const offsetsToTest = [0, bytesPerComponent];
 
@@ -611,9 +611,6 @@ g.test('vertex_attribute_contained_in_stride')
 
         return poptions('offset', offsetsToTest);
       })
-  )
-  .subcases(() =>
-    params()
       .combine(poptions('vertexBufferIndex', [0, 1, kMaxVertexBuffers - 1]))
       .combine(poptions('extraAttributeCount', [0, 1, kMaxVertexAttributes - 1]))
       .combine(pbool('testAttributeAtStart'))
