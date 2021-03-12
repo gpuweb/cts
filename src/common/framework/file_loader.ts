@@ -3,6 +3,7 @@ import { TestQuery } from './query/query.js';
 import { IterableTestGroup } from './test_group.js';
 import { TestSuiteListing } from './test_suite_listing.js';
 import { loadTreeForQuery, TestTree, TestTreeLeaf } from './tree.js';
+import { assert } from './util/util.js';
 
 // A listing file, e.g. either of:
 // - `src/webgpu/listing.ts` (which is dynamically computed, has a Promise<TestSuiteListing>)
@@ -22,8 +23,12 @@ export abstract class TestFileLoader {
   abstract listing(suite: string): Promise<TestSuiteListing>;
   protected abstract import(path: string): Promise<SpecFile>;
 
-  importSpecFile(suite: string, path: string[]): Promise<SpecFile> {
-    return this.import(`${suite}/${path.join('/')}.spec.js`);
+  async importSpecFile(suite: string, path: string[]): Promise<SpecFile> {
+    const specFile = await this.import(`${suite}/${path.join('/')}.spec.js`);
+    assert(specFile.description !== undefined, 'Test spec file missing description: ' + path);
+    assert(specFile.g !== undefined, 'Test spec file missing TestGroup definition: ' + path);
+    specFile.g.validate();
+    return specFile;
   }
 
   async loadTree(query: TestQuery, subqueriesToExpand: string[] = []): Promise<TestTree> {

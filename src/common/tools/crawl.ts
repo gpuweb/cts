@@ -5,7 +5,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { SpecFile } from '../framework/file_loader.js';
 import { validQueryPart } from '../framework/query/validQueryPart.js';
 import { TestSuiteListingEntry, TestSuiteListing } from '../framework/test_suite_listing.js';
 import { assert, unreachable } from '../framework/util/util.js';
@@ -30,26 +29,11 @@ export async function crawl(suite: string): Promise<TestSuiteListingEntry[]> {
     const f = file.substring((suiteDir + '/').length); // Suite-relative file path
     if (f.endsWith(specFileSuffix)) {
       const filepathWithoutExtension = f.substring(0, f.length - specFileSuffix.length);
-      const filename = `../../../${suiteDir}/${filepathWithoutExtension}.spec.js`;
-
-      let mod: SpecFile;
-      if (process.env.STANDALONE_DEV_SERVER) {
-        mod = require(filename) as SpecFile;
-        // Delete the cache so that changes to the file are picked up.
-        delete require.cache[require.resolve(filename)];
-      } else {
-        mod = (await import(filename)) as SpecFile;
-      }
-      assert(mod.description !== undefined, 'Test spec file missing description: ' + filename);
-      assert(mod.g !== undefined, 'Test spec file missing TestGroup definition: ' + filename);
-
-      mod.g.validate();
-
       const path = filepathWithoutExtension.split('/');
       for (const p of path) {
         assert(validQueryPart.test(p), `Invalid directory name ${p}; must match ${validQueryPart}`);
       }
-      entries.push({ file: path, description: mod.description.trim() });
+      entries.push({ file: path });
     } else if (path.basename(file) === 'README.txt') {
       const filepathWithoutExtension = f.substring(0, f.length - '/README.txt'.length);
       const readme = fs.readFileSync(file, 'utf8').trim();
