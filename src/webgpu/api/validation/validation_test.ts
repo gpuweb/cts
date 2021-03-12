@@ -151,6 +151,14 @@ export class ValidationTest extends GPUTest {
     });
   }
 
+  getRenderTexture(): GPUTexture {
+    return this.device.createTexture({
+      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+  }
+
   getErrorTexture(): GPUTexture {
     this.device.pushErrorScope('validation');
     const texture = this.device.createTexture({
