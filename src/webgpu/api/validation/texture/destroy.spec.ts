@@ -24,7 +24,7 @@ g.test('twice')
 
 g.test('submit_a_destroyed_texture')
   .desc(
-    `Test that it is invalid to submit a destroyed texture before or after command encoder is finished.`
+    `Test that it is invalid to submit with a texture that was destroyed {before, after} encoding finishes.`
   )
   .params([
     { destroyBeforeEncode: false, destroyAfterEncode: false, _success: true },
