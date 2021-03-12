@@ -18,7 +18,7 @@ module.exports = function (grunt) {
       },
       'generate-listings': {
         cmd: 'node',
-        args: ['tools/gen_listings', 'out/', 'src/', 'webgpu', 'unittests', 'demo'],
+        args: ['tools/gen_listings', 'out/', 'src/webgpu', 'src/unittests', 'src/demo'],
       },
       'generate-wpt-cts-html': {
         cmd: 'node',

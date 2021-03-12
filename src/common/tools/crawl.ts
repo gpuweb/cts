@@ -43,7 +43,10 @@ async function crawlFilesRecursively(dir: string): Promise<string[]> {
   );
 }
 
-export async function crawl(suiteDir: string): Promise<TestSuiteListingEntry[]> {
+export async function crawl(
+  suiteDir: string,
+  validate: boolean = true
+): Promise<TestSuiteListingEntry[]> {
   if (!fs.existsSync(suiteDir)) {
     console.error(`Could not find ${suiteDir}`);
     process.exit(1);
@@ -59,27 +62,25 @@ export async function crawl(suiteDir: string): Promise<TestSuiteListingEntry[]> 
     // |file| is the suite-relative file path.
     if (file.endsWith(specFileSuffix)) {
       const filepathWithoutExtension = file.substring(0, file.length - specFileSuffix.length);
+
       const suite = path.basename(suiteDir);
-      const filename = `../../${suite}/${filepathWithoutExtension}.spec.js`;
 
-      let mod: SpecFile;
-      if (process.env.STANDALONE_DEV_SERVER) {
-        mod = require(filename) as SpecFile;
-        // Delete the cache so that changes to the file are picked up.
-        delete require.cache[require.resolve(filename)];
-      } else {
-        mod = (await import(filename)) as SpecFile;
+      if (validate) {
+        const filename = `../../${suite}/${filepathWithoutExtension}.spec.js`;
+
+        assert(!process.env.STANDALONE_DEV_SERVER);
+        const mod = (await import(filename)) as SpecFile;
+        assert(mod.description !== undefined, 'Test spec file missing description: ' + filename);
+        assert(mod.g !== undefined, 'Test spec file missing TestGroup definition: ' + filename);
+
+        mod.g.validate();
       }
-      assert(mod.description !== undefined, 'Test spec file missing description: ' + filename);
-      assert(mod.g !== undefined, 'Test spec file missing TestGroup definition: ' + filename);
-
-      mod.g.validate();
 
       const pathSegments = filepathWithoutExtension.split('/');
       for (const p of pathSegments) {
         assert(validQueryPart.test(p), `Invalid directory name ${p}; must match ${validQueryPart}`);
       }
-      entries.push({ file: pathSegments, description: mod.description.trim() });
+      entries.push({ file: pathSegments });
     } else if (path.basename(file) === 'README.txt') {
       const dirname = path.dirname(file);
       const readme = fs.readFileSync(path.join(suiteDir, file), 'utf8').trim();

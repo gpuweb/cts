@@ -5,25 +5,46 @@ import * as process from 'process';
 import { crawl } from './crawl.js';
 
 function usage(rc: number): void {
-  console.error('Usage:');
-  console.error('  tools/gen_listings [OUT_DIR] [SRC_DIR] [SUITES...]');
-  console.error('  tools/gen_listings out/ src/ webgpu unittests');
+  console.error(`Usage: tools/gen_listings [options] [OUT_DIR] [SUITE_DIRS...]
+
+For each suite in SUITE_DIRS, generate listings and write each listing.js
+into OUT_DIR/{suite}/listing.js. Example:
+  tools/gen_listings out/ src/unittests/ src/webgpu/
+
+Options:
+  --help          Print this message and exit.
+  --no-validate   Whether to validate test modules while crawling.
+`);
   process.exit(rc);
 }
 
-if (process.argv.length <= 4) {
+const argv = process.argv;
+if (argv.indexOf('--help') !== -1) {
+  usage(0);
+}
+
+let validate = true;
+{
+  const i = argv.indexOf('--no-validate');
+  if (i !== -1) {
+    validate = false;
+    argv.splice(i, 1);
+  }
+}
+
+if (argv.length < 4) {
   usage(0);
 }
 
 const myself = 'src/common/tools/gen_listings.ts';
 
-const outDir = process.argv[2];
-const srcDir = process.argv[3];
+const outDir = argv[2];
 
 (async () => {
-  for (const suite of process.argv.slice(4)) {
-    const listing = await crawl(path.join(srcDir, suite));
+  for (const suiteDir of argv.slice(3)) {
+    const listing = await crawl(suiteDir, validate);
 
+    const suite = path.basename(suiteDir);
     const outFile = path.normalize(path.join(outDir, `${suite}/listing.js`));
     fs.mkdirSync(path.join(outDir, suite), { recursive: true });
     fs.writeFileSync(
