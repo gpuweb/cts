@@ -209,9 +209,9 @@ function makeTreeNodeHeaderHTML(
 
   const href = `?${worker ? 'worker&' : ''}${debug ? 'debug&' : ''}q=${n.query.toString()}`;
   if (onChange) {
-      div.on('toggle', function (this) {
-        onChange((this as HTMLDetailsElement).open);
-      });
+    div.on('toggle', function (this) {
+      onChange((this as HTMLDetailsElement).open);
+    });
 
     // Expand the shallower parts of the tree at load.
     // Also expand completely within subtrees that are at the same query level
