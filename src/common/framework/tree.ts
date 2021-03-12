@@ -192,6 +192,9 @@ export async function loadTreeForQuery(
       // Entry is a README that is an ancestor or descendant of the query.
       // (It's included for display in the standalone runner.)
 
+      // Mark any applicable subqueriesToExpand as seen.
+      isCollapsible(new TestQueryMultiFile(suite, entry.file));
+
       // readmeSubtree is suite:a,b,*
       // (This is always going to dedup with a file path, if there are any test spec files under
       // the directory that has the README).
