@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --unstable --allow-read --no-check
+#!/usr/bin/env -S deno run --unstable --allow-read --allow-write --no-check
 
 /* eslint no-console: "off" */
 /* eslint no-process-exit: "off" */
@@ -25,6 +25,15 @@ if (!existsSync("src/common/runtime/cmdline.ts")) {
   console.log("Must be run from repository root");
   usage(1);
 }
+
+const badComment = `/// <reference types="@webgpu/types" />`;
+const navigatorGpuPath = "./out/webgpu/util/navigator_gpu.js";
+let navigatorGpuFile = await Deno.readTextFile(navigatorGpuPath);
+navigatorGpuFile = navigatorGpuFile.replace(
+  badComment,
+  " ".repeat(badComment.length)
+);
+await Deno.writeTextFile(navigatorGpuPath, navigatorGpuFile);
 
 let verbose = false;
 let debug = false;
