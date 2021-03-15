@@ -54,8 +54,8 @@ function getDepthTestEqualPipeline(
       format,
       depthCompare: 'equal',
     },
-    primitive: { topology: 'triangle-list', },
-    multisample: { count: sampleCount, },
+    primitive: { topology: 'triangle-list' },
+    multisample: { count: sampleCount },
   });
 }
 
@@ -89,8 +89,8 @@ function getStencilTestEqualPipeline(
       stencilFront: { compare: 'equal' },
       stencilBack: { compare: 'equal' },
     },
-    primitive: { topology: 'triangle-list', },
-    multisample: { count: sampleCount, },
+    primitive: { topology: 'triangle-list' },
+    multisample: { count: sampleCount },
   });
 }
 

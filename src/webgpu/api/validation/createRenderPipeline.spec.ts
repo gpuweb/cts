@@ -85,8 +85,8 @@ class F extends ValidationTest {
         targets,
       },
       layout: this.getPipelineLayout(),
-      primitive: { topology, },
-      multisample: { count: sampleCount, },
+      primitive: { topology },
+      multisample: { count: sampleCount },
       depthStencil,
     };
   }

@@ -86,7 +86,7 @@ g.test('fullscreen_quad').fn(async t => {
       entryPoint: 'main',
       targets: [{ format: 'rgba8unorm' }],
     },
-    primitive: { topology: 'triangle-list', },
+    primitive: { topology: 'triangle-list' },
   });
 
   const encoder = t.device.createCommandEncoder();

@@ -53,7 +53,7 @@ class F extends ValidationTest {
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
-      primitive: { topology: 'triangle-list', },
+      primitive: { topology: 'triangle-list' },
     });
   }
 

@@ -117,7 +117,7 @@ export class BufferSyncTest extends GPUTest {
         entryPoint: 'frag_main',
         targets: [{ format: 'rgba8unorm' }],
       },
-      primitive: { topology: 'point-list', }
+      primitive: { topology: 'point-list' },
     });
   }
 

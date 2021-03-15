@@ -81,7 +81,7 @@ class F extends ValidationTest {
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
-      primitive: { topology: 'triangle-list', },
+      primitive: { topology: 'triangle-list' },
     };
     return descriptor;
   }
@@ -112,7 +112,7 @@ class F extends ValidationTest {
           entryPoint: 'main',
           targets: [{ format: 'rgba8unorm' }],
         },
-        primitive: { topology: 'triangle-list', },
+        primitive: { topology: 'triangle-list' },
       });
     }, !success);
   }
@@ -499,10 +499,12 @@ g.test('vertex_shader_type_matches_attribute_format')
     const success = requiredBaseType === shaderBaseType;
     t.testVertexState(
       success,
-      [{
-        arrayStride: 0,
-        attributes: [{ offset: 0, shaderLocation: 0, format }],
-      }],
+      [
+        {
+          arrayStride: 0,
+          attributes: [{ offset: 0, shaderLocation: 0, format }],
+        },
+      ],
       shader
     );
   });

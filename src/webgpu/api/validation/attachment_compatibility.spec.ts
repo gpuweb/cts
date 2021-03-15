@@ -130,9 +130,9 @@ class F extends ValidationTest {
         entryPoint: 'main',
         targets,
       },
-      primitive: { topology: 'triangle-list', },
+      primitive: { topology: 'triangle-list' },
       depthStencil,
-      multisample: { count: sampleCount, }
+      multisample: { count: sampleCount },
     });
   }
 }

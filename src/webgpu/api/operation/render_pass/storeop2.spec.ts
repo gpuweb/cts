@@ -54,7 +54,7 @@ g.test('storeOp_controls_whether_1x1_drawn_quad_is_stored')
         entryPoint: 'main',
         targets: [{ format: 'r8unorm' }],
       },
-      primitive: { topology: 'triangle-list', },
+      primitive: { topology: 'triangle-list' },
     });
 
     // encode pass and submit

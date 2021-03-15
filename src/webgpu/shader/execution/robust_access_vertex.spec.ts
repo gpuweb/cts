@@ -397,7 +397,7 @@ g.test('vertexAccess')
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
-      primitive: { topology: 'point-list', },
+      primitive: { topology: 'point-list' },
     });
 
     // Pipeline setup, texture setup

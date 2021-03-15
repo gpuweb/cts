@@ -217,7 +217,7 @@ export class ValidationTest extends GPUTest {
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
-      primitive: { topology: 'triangle-list', },
+      primitive: { topology: 'triangle-list' },
     });
   }
 

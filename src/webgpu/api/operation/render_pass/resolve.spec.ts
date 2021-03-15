@@ -85,8 +85,8 @@ g.test('render_pass_resolve')
         entryPoint: 'main',
         targets,
       },
-      primitive: { topology: 'triangle-list', },
-      multisample: { count: 4, },
+      primitive: { topology: 'triangle-list' },
+      multisample: { count: 4 },
     });
 
     const resolveTargets: GPUTexture[] = [];
