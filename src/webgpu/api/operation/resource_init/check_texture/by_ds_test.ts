@@ -82,11 +82,7 @@ function getStencilTestEqualPipeline(
         }
         `,
       }),
-      targets: [
-        {
-          format: 'r8unorm',
-        },
-      ],
+      targets: [{ format: 'r8unorm' }],
     },
     depthStencil: {
       format,
