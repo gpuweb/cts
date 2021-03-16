@@ -204,20 +204,20 @@ export class ValidationTest extends GPUTest {
 
   createNoOpRenderPipeline(): GPURenderPipeline {
     return this.device.createRenderPipeline({
-      vertexStage: {
+      vertex: {
         module: this.device.createShaderModule({
           code: '[[stage(vertex)]] fn main() -> void {}',
         }),
         entryPoint: 'main',
       },
-      fragmentStage: {
+      fragment: {
         module: this.device.createShaderModule({
           code: '[[stage(fragment)]] fn main() -> void {}',
         }),
         entryPoint: 'main',
+        targets: [{ format: 'rgba8unorm' }],
       },
-      primitiveTopology: 'triangle-list',
-      colorStates: [{ format: 'rgba8unorm' }],
+      primitive: { topology: 'triangle-list' },
     });
   }
 
