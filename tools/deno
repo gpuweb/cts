@@ -49,6 +49,7 @@ await Deno.writeTextFile(navigatorGpuPath, navigatorGpuFile);
 let verbose = false;
 let trace = false;
 let debug = false;
+let ignoreFile = undefined;
 let printJSON = false;
 const queries = [];
 for (const a of Deno.args) {
@@ -61,6 +62,8 @@ for (const a of Deno.args) {
       debug = true;
     } else if (a === "--print-json") {
       printJSON = true;
+    } else if (a.startsWith("--ignore-file=")) {
+      ignoreFile = a.slice("--ignore-file=".length);
     } else {
       usage(1);
     }
@@ -71,6 +74,13 @@ for (const a of Deno.args) {
 
 if (queries.length === 0) {
   usage(0);
+}
+
+let ignores = [];
+if (ignoreFile) {
+  const ignoreFileText = await Deno.readTextFile(ignoreFile);
+  ignores = ignoreFileText.split("\n").map((line) => line.split("#")[0].trim())
+    .filter((l) => l.length > 0);
 }
 
 try {
@@ -86,11 +96,17 @@ try {
   const failed = [];
   const warned = [];
   const skipped = [];
+  const ignored = [];
 
   let total = 0;
 
   for (const testcase of testcases) {
+    total++;
     const name = testcase.query.toString();
+    if (ignores.includes(name)) {
+      ignored.push(name);
+      continue;
+    }
     if (verbose) {
       console.log(`Starting ${name}`);
     }
@@ -106,7 +122,6 @@ try {
       printResults([[name, res]]);
     }
 
-    total++;
     switch (res.status) {
       case "pass":
         break;
@@ -158,7 +173,8 @@ try {
 Passed  w/o warnings = ${rpt(passed)}
 Passed with warnings = ${rpt(warned.length)}
 Skipped              = ${rpt(skipped.length)}
-Failed               = ${rpt(failed.length)}`);
+Failed               = ${rpt(failed.length)}
+Ignored              = ${rpt(ignored.length)}`);
 
   if (failed.length || warned.length) {
     Deno.exit(1);
