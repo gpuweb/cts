@@ -15,9 +15,11 @@ function usage(rc) {
   console.log("  tools/deno [OPTIONS...] QUERIES...");
   console.log("  tools/deno 'unittests:*' 'webgpu:buffers,*'");
   console.log("Options:");
-  console.log("  --verbose     Print result/log of every test as it runs.");
-  console.log("  --debug       Include debug messages in logging.");
-  console.log("  --print-json  Print the complete result JSON in the output.");
+  console.log("  --verbose             Print result/log of every test as it runs.");
+  console.log("  --debug               Include debug messages in logging.");
+  console.log("  --print-json          Print the complete result JSON in the output.");
+  console.log("  --trace               Record a trace of the WebGPU operations into a ./trace directory.");
+  console.log("  --ignore-file=<file>  A line delimited text file containing names of tests to skip.");
   return Deno.exit(rc);
 }
 
@@ -37,6 +39,14 @@ if (!existsSync("src/common/runtime/cmdline.ts")) {
   usage(1);
 }
 
+if (!existsSync("out/common/runtime/cmdline.js")) {
+  console.log("You must run `npm run standalone` before running ./tools/deno");
+  usage(1);
+}
+
+// Remove the `/// <reference types="@webgpu/types" />` comment, so Deno does not
+// parse it and try to import `@webgpu/types`. (Which it fails on because Deno
+// uses fully specified import specifiers).
 const badComment = `/// <reference types="@webgpu/types" />`;
 const navigatorGpuPath = "./out/webgpu/util/navigator_gpu.js";
 let navigatorGpuFile = await Deno.readTextFile(navigatorGpuPath);
