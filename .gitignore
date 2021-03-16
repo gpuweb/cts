@@ -186,4 +186,6 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+trace/
+
 # End of https://www.gitignore.io/api/linux,macos,windows,node
