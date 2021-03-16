@@ -8,6 +8,8 @@
     "module": "commonjs"
   },
 
-  // Can't be compiled for Node.js as it uses import.metal.url.
-  "exclude": ["src/common/runtime/**/*.ts"]
+  // Minimum sources required to run transpiled tools.
+  "include": [
+    "src/common/tools/**/*.ts"
+  ]
 }

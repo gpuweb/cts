@@ -56,12 +56,12 @@ module.exports = function (grunt) {
           '--ignore=src/webgpu/listing.ts',
         ],
       },
-      'build-out-node': {
+      'build-out-node-tools': {
         cmd: 'node',
         args: [
           'node_modules/typescript/lib/tsc.js',
-          '--project', 'node.tsconfig.json',
-          '--outDir', 'out-node/',
+          '--project', 'node-tools.tsconfig.json',
+          '--outDir', 'out-node-tools/',
           '--noEmit', 'false',
           '--declaration', 'false'
         ],
@@ -156,7 +156,7 @@ module.exports = function (grunt) {
     'clean',
     'build-standalone',
     'build-wpt',
-    'run:build-out-node',
+    'run:build-out-node-tools',
     'build-done-message',
     'ts:check',
     'run:unittest',

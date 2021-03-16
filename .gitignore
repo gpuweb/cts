@@ -4,7 +4,7 @@
 # Build files
 /out/
 /out-wpt/
-/out-node/
+/out-node-tools/
 .tscache/
 *.tmp.txt
 
