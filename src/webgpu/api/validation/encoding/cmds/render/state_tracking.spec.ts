@@ -16,7 +16,7 @@ class F extends ValidationTest {
 
   createRenderPipeline(bufferCount: number): GPURenderPipeline {
     return this.device.createRenderPipeline({
-      vertexStage: {
+      vertex: {
         module: this.device.createShaderModule({
           code: `
             ${range(
@@ -30,22 +30,7 @@ class F extends ValidationTest {
             }`,
         }),
         entryPoint: 'main',
-      },
-      fragmentStage: {
-        module: this.device.createShaderModule({
-          code: `
-            [[location(0)]] var<out> fragColor : vec4<f32>;
-            [[stage(fragment)]] fn main() -> void {
-              fragColor = vec4<f32>(0.0, 1.0, 0.0, 1.0);
-              return;
-            }`,
-        }),
-        entryPoint: 'main',
-      },
-      primitiveTopology: 'triangle-list',
-      colorStates: [{ format: 'rgba8unorm' }],
-      vertexState: {
-        vertexBuffers: [
+        buffers: [
           {
             arrayStride: 3 * 4,
             attributes: range(bufferCount, i => ({
@@ -56,6 +41,19 @@ class F extends ValidationTest {
           },
         ],
       },
+      fragment: {
+        module: this.device.createShaderModule({
+          code: `
+            [[location(0)]] var<out> fragColor : vec4<f32>;
+            [[stage(fragment)]] fn main() -> void {
+              fragColor = vec4<f32>(0.0, 1.0, 0.0, 1.0);
+              return;
+            }`,
+        }),
+        entryPoint: 'main',
+        targets: [{ format: 'rgba8unorm' }],
+      },
+      primitive: { topology: 'triangle-list' },
     });
   }
 
