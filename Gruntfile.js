@@ -8,7 +8,7 @@ module.exports = function (grunt) {
     pkg: grunt.file.readJSON('package.json'),
 
     clean: {
-      out: ['out/', 'out-wpt/', 'out-node/'],
+      out: ['out/', 'out-wpt/', 'out-node-tools/'],
     },
 
     run: {
