@@ -13,6 +13,10 @@ Tests that creating query set shouldn't be valid without the required feature en
 - createQuerySet
   - type {occlusion, pipeline-statistics, timestamp}
   - x= {pipeline statistics, timestamp} query {enable, disable}
+
+TODO: This test should expect *synchronous* exceptions, not validation errors, per
+<https://github.com/gpuweb/gpuweb/blob/main/design/ErrorConventions.md>.
+As of this writing, the spec needs to be fixed as well.
   `
   )
   .params(
