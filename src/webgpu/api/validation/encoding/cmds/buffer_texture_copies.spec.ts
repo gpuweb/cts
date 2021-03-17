@@ -29,7 +29,7 @@ class ImageCopyTest extends ValidationTest {
     }, !isSuccess);
   }
 
-  testCopyTexturetoBuffer(
+  testCopyTextureToBuffer(
     source: GPUImageCopyTexture,
     destination: GPUImageCopyBuffer,
     copySize: GPUExtent3DStrict,
@@ -78,7 +78,7 @@ g.test('depth_stencil_format,copy_usage_and_aspect')
 
     {
       const success = depthStencilBufferTextureCopySupported('CopyT2B', format, aspect);
-      t.testCopyTexturetoBuffer({ texture, aspect }, { buffer }, textureSize, success);
+      t.testCopyTextureToBuffer({ texture, aspect }, { buffer }, textureSize, success);
     }
   });
 
@@ -156,13 +156,13 @@ g.test('depth_stencil_format,copy_buffer_size')
       );
     } else {
       assert(copyType === 'CopyT2B');
-      t.testCopyTexturetoBuffer(
+      t.testCopyTextureToBuffer(
         { texture, aspect },
         { buffer: bigEnoughBuffer, bytesPerRow, rowsPerImage },
         copySize,
         true
       );
-      t.testCopyTexturetoBuffer(
+      t.testCopyTextureToBuffer(
         { texture, aspect },
         { buffer: smallerBuffer, bytesPerRow, rowsPerImage },
         copySize,
@@ -229,15 +229,15 @@ g.test('depth_stencil_format,buffer_offset')
       const isSuccess = offset % texelAspectSize === 0;
 
       if (copyType === 'CopyB2T') {
-        t.testCopyTexturetoBuffer(
-          { texture, aspect },
+        t.testCopyBufferToTexture(
           { buffer, offset, bytesPerRow, rowsPerImage },
+          { texture, aspect },
           textureSize,
           isSuccess
         );
       } else {
         assert(copyType === 'CopyT2B');
-        t.testCopyTexturetoBuffer(
+        t.testCopyTextureToBuffer(
           { texture, aspect },
           { buffer, offset, bytesPerRow, rowsPerImage },
           textureSize,
