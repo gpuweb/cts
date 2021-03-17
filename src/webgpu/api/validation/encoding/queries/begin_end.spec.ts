@@ -24,11 +24,7 @@ g.test('occlusion_query,begin_end_balance')
   .desc(
     `
 Tests that begin/end occlusion queries mismatch on render pass:
-- begin 0, end 1 (begin no queries, then end one query)
-- begin 1, end 0 (begin one query, then end no queries)
-- begin 1, end 1 (begin one query, then end one query)(control case)
-- begin 1, end 2 (begin one query, then end two queries)
-- begin 2, end 1 (begin two queries, then end one query)
+- begin n queries, then end m queries, for various n and m.
   `
   )
   .subcases(
@@ -36,7 +32,7 @@ Tests that begin/end occlusion queries mismatch on render pass:
       [
         { begin: 0, end: 1 },
         { begin: 1, end: 0 },
-        { begin: 1, end: 1 },
+        { begin: 1, end: 1 }, // control case
         { begin: 1, end: 2 },
         { begin: 2, end: 1 },
       ] as const
@@ -47,11 +43,19 @@ g.test('occlusion_query,begin_end_invalid_nesting')
   .desc(
     `
 Tests the invalid nesting of begin/end occlusion queries:
+- begin index 0, end, begin index 0, end (control case)
 - begin index 0, begin index 0, end, end
 - begin index 0, begin index 1, end, end
   `
   )
-  .subcases(() => [{ calls: [0, 0, 'end', 'end'] }, { calls: [0, 1, 'end', 'end'] }] as const)
+  .subcases(
+    () =>
+      [
+        { calls: [0, 'end', 1, 'end'] }, // control case
+        { calls: [0, 0, 'end', 'end'] },
+        { calls: [0, 1, 'end', 'end'] },
+      ] as const
+  )
   .unimplemented();
 
 g.test('occlusion_query,disjoint_queries_with_same_query_index')
@@ -69,16 +73,7 @@ g.test('nesting')
   .desc(
     `
 Tests that whether it's allowed to nest various types of queries:
-- beginOcclusionQuery, writeTimestamp, endOcclusionQuery
-- beginOcclusionQuery, beginOcclusionQuery, endOcclusionQuery, endOcclusionQuery
-- beginOcclusionQuery, beginPipelineStatisticsQuery, endPipelineStatisticsQuery, endOcclusionQuery
-- beginOcclusionQuery, beginPipelineStatisticsQuery, endOcclusionQuery, endPipelineStatisticsQuery
-- beginPipelineStatisticsQuery, writeTimestamp, endPipelineStatisticsQuery
-- beginPipelineStatisticsQuery, beginPipelineStatisticsQuery, endPipelineStatisticsQuery, endPipelineStatisticsQuery
-- beginPipelineStatisticsQuery, beginOcclusionQuery, endOcclusionQuery, endPipelineStatisticsQuery
-- beginPipelineStatisticsQuery, beginOcclusionQuery, endPipelineStatisticsQuery, endOcclusionQuery
-- writeTimestamp, beginOcclusionQuery, writeTimestamp, endOcclusionQuery
-- writeTimestamp, beginPipelineStatisticsQuery, writeTimestamp, endPipelineStatisticsQuery
+- call {occlusion, pipeline-statistics, timestamp} query in same type or other type.
   `
   )
   .subcases(
@@ -86,19 +81,39 @@ Tests that whether it's allowed to nest various types of queries:
       [
         { begin: 'occlusion', nest: 'timestamp', end: 'occlusion', _valid: true },
         { begin: 'occlusion', nest: 'occlusion', end: 'occlusion', _valid: false },
-        { begin: 'occlusion', nest: 'pipeline-statistcs', end: 'occlusion', _valid: true },
-        { begin: 'occlusion', nest: 'pipeline-statistcs', end: 'pipeline-statistcs', _valid: true },
-        { begin: 'pipeline-statistcs', nest: 'timestamp', end: 'pipeline-statistcs', _valid: true },
+        { begin: 'occlusion', nest: 'pipeline-statistics', end: 'occlusion', _valid: true },
         {
-          begin: 'pipeline-statistcs',
-          nest: 'pipeline-statistcs',
-          end: 'pipeline-statistcs',
+          begin: 'occlusion',
+          nest: 'pipeline-statistics',
+          end: 'pipeline-statistics',
+          _valid: true,
+        },
+        {
+          begin: 'pipeline-statistics',
+          nest: 'timestamp',
+          end: 'pipeline-statistics',
+          _valid: true,
+        },
+        {
+          begin: 'pipeline-statistics',
+          nest: 'pipeline-statistics',
+          end: 'pipeline-statistics',
           _valid: false,
         },
-        { begin: 'pipeline-statistcs', nest: 'occlusion', end: 'pipeline-statistcs', _valid: true },
-        { begin: 'pipeline-statistcs', nest: 'occlusion', end: 'occlusion', _valid: true },
+        {
+          begin: 'pipeline-statistics',
+          nest: 'occlusion',
+          end: 'pipeline-statistics',
+          _valid: true,
+        },
+        { begin: 'pipeline-statistics', nest: 'occlusion', end: 'occlusion', _valid: true },
         { begin: 'timestamp', nest: 'occlusion', end: 'occlusion', _valid: true },
-        { begin: 'timestamp', nest: 'pipeline-statistcs', end: 'pipeline-statistcs', _valid: true },
+        {
+          begin: 'timestamp',
+          nest: 'pipeline-statistics',
+          end: 'pipeline-statistics',
+          _valid: true,
+        },
       ] as const
   )
   .unimplemented();
