@@ -171,11 +171,11 @@ g.test('depth_stencil_format,copy_buffer_size')
     }
   });
 
-g.test('depth_stencil_format,buffer_offset')
+g.test('depth_stencil_format,copy_buffer_offset')
   .desc(
     `
-    Validate for every depth stencil formats the buffer offset must be a multiple of the texel aspect ('depth-only' or 'stencil-only')
-    size of the texture format in copyBufferToTexture() and copyTextureToBuffer().
+    Validate for every depth stencil formats the buffer offset must be a multiple of 4 in
+    copyBufferToTexture() and copyTextureToBuffer().
     `
   )
   .cases(
@@ -187,8 +187,9 @@ g.test('depth_stencil_format,buffer_offset')
         return depthStencilBufferTextureCopySupported(param.copyType, param.format, param.aspect);
       })
   )
+  .subcases(() => params().combine(poptions('offset', [1, 2, 4, 6, 8])))
   .fn(async t => {
-    const { format, aspect, copyType } = t.params;
+    const { format, aspect, copyType, offset } = t.params;
 
     const textureSize = { width: 4, height: 4, depthOrArrayLayers: 1 };
 
@@ -208,41 +209,27 @@ g.test('depth_stencil_format,buffer_offset')
       align(texelAspectSize * textureSize.width, kBufferCopyAlignment);
     assert(minimumBufferSize > kBufferCopyAlignment);
 
-    const offsetsToTest: number[] = [texelAspectSize, 2 * texelAspectSize];
-    if (texelAspectSize > 1) {
-      // offset < texelAspectSize
-      offsetsToTest.push(texelAspectSize / 2);
-
-      // offset > texelAspectSize and offset is not a multiple of texelAspectSize
-      offsetsToTest.push(texelAspectSize * 2 + 1);
-      if (texelAspectSize > 2) {
-        offsetsToTest.push(texelAspectSize * 2 + 2);
-      }
-    }
-
-    offsetsToTest.forEach(offset => {
-      const buffer = t.device.createBuffer({
-        size: minimumBufferSize + offset,
-        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-      });
-
-      const isSuccess = offset % texelAspectSize === 0;
-
-      if (copyType === 'CopyB2T') {
-        t.testCopyBufferToTexture(
-          { buffer, offset, bytesPerRow, rowsPerImage },
-          { texture, aspect },
-          textureSize,
-          isSuccess
-        );
-      } else {
-        assert(copyType === 'CopyT2B');
-        t.testCopyTextureToBuffer(
-          { texture, aspect },
-          { buffer, offset, bytesPerRow, rowsPerImage },
-          textureSize,
-          isSuccess
-        );
-      }
+    const buffer = t.device.createBuffer({
+      size: minimumBufferSize + offset,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
+
+    const isSuccess = offset % 4 === 0;
+
+    if (copyType === 'CopyB2T') {
+      t.testCopyBufferToTexture(
+        { buffer, offset, bytesPerRow, rowsPerImage },
+        { texture, aspect },
+        textureSize,
+        isSuccess
+      );
+    } else {
+      assert(copyType === 'CopyT2B');
+      t.testCopyTextureToBuffer(
+        { texture, aspect },
+        { buffer, offset, bytesPerRow, rowsPerImage },
+        textureSize,
+        isSuccess
+      );
+    }
   });
