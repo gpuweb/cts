@@ -1,5 +1,4 @@
 import { TestFileLoader } from './file_loader.js';
-import { TestCaseRecorder } from './logging/test_case_recorder.js';
 import { CaseParamsRW } from './params_utils.js';
 import { compareQueries, Ordering } from './query/compare.js';
 import {
@@ -428,7 +427,7 @@ function insertLeaf(parent: TestSubtree, query: TestQuerySingleCase, t: RunCase)
   const leaf: TestTreeLeaf = {
     readableRelativeName: readableNameForCase(query),
     query,
-    run: (rec: TestCaseRecorder) => t.run(rec),
+    run: (rec, expectations) => t.run(rec, query, expectations || []),
   };
   assert(!parent.children.has(key));
   parent.children.set(key, leaf);

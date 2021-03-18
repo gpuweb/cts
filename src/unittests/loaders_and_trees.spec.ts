@@ -3,6 +3,7 @@ Tests for queries/filtering, loading, and running.
 `;
 
 import { TestFileLoader, SpecFile } from '../common/framework/file_loader.js';
+import { Fixture } from '../common/framework/fixture.js';
 import { Logger } from '../common/framework/logging/logger.js';
 import { Status } from '../common/framework/logging/result.js';
 import { parseQuery } from '../common/framework/query/parseQuery.js';
@@ -12,6 +13,7 @@ import {
   TestQueryMultiCase,
   TestQueryMultiTest,
   TestQueryMultiFile,
+  TestQueryWithExpectation,
 } from '../common/framework/query/query.js';
 import { makeTestGroup, makeTestGroupForUnitTesting } from '../common/framework/test_group.js';
 import { TestSuiteListing, TestSuiteListingEntry } from '../common/framework/test_suite_listing.js';
@@ -199,44 +201,443 @@ g.test('case').fn(async t => {
   }
 });
 
+async function runTestcase(
+  t: Fixture,
+  log: Logger,
+  testcases: TestTreeLeaf[],
+  i: number,
+  query: TestQuery,
+  expectations: TestQueryWithExpectation[],
+  status: Status,
+  logs: (s: string[]) => boolean
+) {
+  t.expect(objectEquals(testcases[i].query, query));
+  const name = testcases[i].query.toString();
+  const [rec, res] = log.record(name);
+  await testcases[i].run(rec, expectations);
+
+  t.expect(log.results.get(name) === res);
+  t.expect(res.status === status);
+  t.expect(res.timems >= 0);
+  assert(res.logs !== undefined); // only undefined while pending
+  t.expect(logs(res.logs.map(l => JSON.stringify(l))));
+}
+
 g.test('end2end').fn(async t => {
   const l = await t.load('suite2:foof:*');
   assert(l.length === 3, 'listing length');
 
   const log = new Logger(true);
 
-  const exp = async (
-    i: number,
-    query: TestQuery,
-    status: Status,
-    logs: (s: string[]) => boolean
-  ) => {
-    t.expect(objectEquals(l[i].query, query));
-    const name = l[i].query.toString();
-    const [rec, res] = log.record(name);
-    await l[i].run(rec);
-
-    t.expect(log.results.get(name) === res);
-    t.expect(res.status === status);
-    t.expect(res.timems >= 0);
-    assert(res.logs !== undefined); // only undefined while pending
-    t.expect(logs(res.logs.map(l => JSON.stringify(l))));
-  };
-
-  await exp(0, new TestQuerySingleCase('suite2', ['foof'], ['blah'], {}), 'pass', logs =>
-    objectEquals(logs, ['"DEBUG: OK"'])
+  await runTestcase(
+    t,
+    log,
+    l,
+    0,
+    new TestQuerySingleCase('suite2', ['foof'], ['blah'], {}),
+    [],
+    'pass',
+    logs => objectEquals(logs, ['"DEBUG: OK"'])
   );
-  await exp(1, new TestQuerySingleCase('suite2', ['foof'], ['bleh'], { a: 1 }), 'pass', logs =>
-    objectEquals(logs, ['"DEBUG: OK"', '"DEBUG: OK"'])
+  await runTestcase(
+    t,
+    log,
+    l,
+    1,
+    new TestQuerySingleCase('suite2', ['foof'], ['bleh'], { a: 1 }),
+    [],
+    'pass',
+    logs => objectEquals(logs, ['"DEBUG: OK"', '"DEBUG: OK"'])
   );
-  await exp(
+  await runTestcase(
+    t,
+    log,
+    l,
     2,
     new TestQuerySingleCase('suite2', ['foof'], ['bluh', 'a'], {}),
+    [],
     'fail',
     logs =>
       logs.length === 1 &&
       logs[0].startsWith('"EXPECTATION FAILED: goodbye\\n') &&
       logs[0].indexOf('loaders_and_trees.spec.') !== -1
+  );
+});
+
+g.test('expectations,single_case').fn(async t => {
+  const log = new Logger(true);
+  const zedCases = await t.load('suite1:baz:zed:*');
+
+  // Single-case. Covers one case.
+  const zedExpectationsSkipA1B2 = [
+    {
+      query: new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
+      expectation: 'skip' as const,
+    },
+  ];
+
+  await runTestcase(
+    t,
+    log,
+    zedCases,
+    0,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
+    zedExpectationsSkipA1B2,
+    'skip',
+    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
+
+  await runTestcase(
+    t,
+    log,
+    zedCases,
+    1,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 3 }),
+    zedExpectationsSkipA1B2,
+    'pass',
+    logs => logs.length === 0
+  );
+});
+
+g.test('expectations,single_case,none').fn(async t => {
+  const log = new Logger(true);
+  const zedCases = await t.load('suite1:baz:zed:*');
+  // Single-case. Doesn't cover any cases.
+  const zedExpectationsSkipA1B0 = [
+    {
+      query: new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 0 }),
+      expectation: 'skip' as const,
+    },
+  ];
+
+  await runTestcase(
+    t,
+    log,
+    zedCases,
+    0,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
+    zedExpectationsSkipA1B0,
+    'pass',
+    logs => logs.length === 0
+  );
+
+  await runTestcase(
+    t,
+    log,
+    zedCases,
+    1,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 3 }),
+    zedExpectationsSkipA1B0,
+    'pass',
+    logs => logs.length === 0
+  );
+});
+
+g.test('expectations,multi_case').fn(async t => {
+  const log = new Logger(true);
+  const zedCases = await t.load('suite1:baz:zed:*');
+  // Multi-case, not all cases covered.
+  const zedExpectationsSkipB3 = [
+    {
+      query: new TestQueryMultiCase('suite1', ['baz'], ['zed'], { b: 3 }),
+      expectation: 'skip' as const,
+    },
+  ];
+
+  await runTestcase(
+    t,
+    log,
+    zedCases,
+    0,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
+    zedExpectationsSkipB3,
+    'pass',
+    logs => logs.length === 0
+  );
+
+  await runTestcase(
+    t,
+    log,
+    zedCases,
+    1,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 3 }),
+    zedExpectationsSkipB3,
+    'skip',
+    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
+});
+
+g.test('expectations,multi_case_all').fn(async t => {
+  const log = new Logger(true);
+  const zedCases = await t.load('suite1:baz:zed:*');
+  // Multi-case, all cases covered.
+  const zedExpectationsSkipA1 = [
+    {
+      query: new TestQueryMultiCase('suite1', ['baz'], ['zed'], { a: 1 }),
+      expectation: 'skip' as const,
+    },
+  ];
+
+  await runTestcase(
+    t,
+    log,
+    zedCases,
+    0,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
+    zedExpectationsSkipA1,
+    'skip',
+    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
+
+  await runTestcase(
+    t,
+    log,
+    zedCases,
+    1,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 3 }),
+    zedExpectationsSkipA1,
+    'skip',
+    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
+});
+
+g.test('expectations,multi_case_none').fn(async t => {
+  const log = new Logger(true);
+  const zedCases = await t.load('suite1:baz:zed:*');
+  // Multi-case, no params, all cases covered.
+  const zedExpectationsSkipZed = [
+    {
+      query: new TestQueryMultiCase('suite1', ['baz'], ['zed'], {}),
+      expectation: 'skip' as const,
+    },
+  ];
+
+  await runTestcase(
+    t,
+    log,
+    zedCases,
+    0,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
+    zedExpectationsSkipZed,
+    'skip',
+    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
+
+  await runTestcase(
+    t,
+    log,
+    zedCases,
+    1,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 3 }),
+    zedExpectationsSkipZed,
+    'skip',
+    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
+});
+
+g.test('expectations,multi_test').fn(async t => {
+  const log = new Logger(true);
+  const suite1Cases = await t.load('suite1:*');
+
+  // Multi-test, all cases covered.
+  const expectationsSkipAllInBaz = [
+    {
+      query: new TestQueryMultiTest('suite1', ['baz'], []),
+      expectation: 'skip' as const,
+    },
+  ];
+
+  await runTestcase(
+    t,
+    log,
+    suite1Cases,
+    4,
+    new TestQuerySingleCase('suite1', ['baz'], ['wye'], {}),
+    expectationsSkipAllInBaz,
+    'skip',
+    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
+
+  await runTestcase(
+    t,
+    log,
+    suite1Cases,
+    6,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
+    expectationsSkipAllInBaz,
+    'skip',
+    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
+});
+
+g.test('expectations,multi_test,none').fn(async t => {
+  const log = new Logger(true);
+  const suite1Cases = await t.load('suite1:*');
+
+  // Multi-test, no cases covered.
+  const expectationsSkipAllInFoo = [
+    {
+      query: new TestQueryMultiTest('suite1', ['foo'], []),
+      expectation: 'skip' as const,
+    },
+  ];
+
+  await runTestcase(
+    t,
+    log,
+    suite1Cases,
+    4,
+    new TestQuerySingleCase('suite1', ['baz'], ['wye'], {}),
+    expectationsSkipAllInFoo,
+    'pass',
+    logs => logs.length === 0
+  );
+
+  await runTestcase(
+    t,
+    log,
+    suite1Cases,
+    6,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
+    expectationsSkipAllInFoo,
+    'pass',
+    logs => logs.length === 0
+  );
+});
+
+g.test('expectations,multi_file').fn(async t => {
+  const log = new Logger(true);
+  const suite1Cases = await t.load('suite1:*');
+
+  // Multi-file
+  const expectationsSkipAll = [
+    {
+      query: new TestQueryMultiFile('suite1', []),
+      expectation: 'skip' as const,
+    },
+  ];
+
+  await runTestcase(
+    t,
+    log,
+    suite1Cases,
+    0,
+    new TestQuerySingleCase('suite1', ['foo'], ['hello'], {}),
+    expectationsSkipAll,
+    'skip',
+    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
+
+  await runTestcase(
+    t,
+    log,
+    suite1Cases,
+    3,
+    new TestQuerySingleCase('suite1', ['bar', 'buzz', 'buzz'], ['zap'], {}),
+    expectationsSkipAll,
+    'skip',
+    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
+});
+
+g.test('expectations,catches_failure').fn(async t => {
+  const log = new Logger(true);
+  const suite2Cases = await t.load('suite2:*');
+
+  // Catches failure
+  const expectedFailures = [
+    {
+      query: new TestQueryMultiCase('suite2', ['foof'], ['bluh', 'a'], {}),
+      expectation: 'fail' as const,
+    },
+  ];
+
+  await runTestcase(
+    t,
+    log,
+    suite2Cases,
+    0,
+    new TestQuerySingleCase('suite2', ['foof'], ['blah'], {}),
+    expectedFailures,
+    'pass',
+    logs => objectEquals(logs, ['"DEBUG: OK"'])
+  );
+
+  // Status is passed, but failure is logged.
+  await runTestcase(
+    t,
+    log,
+    suite2Cases,
+    2,
+    new TestQuerySingleCase('suite2', ['foof'], ['bluh', 'a'], {}),
+    expectedFailures,
+    'pass',
+    logs => logs.length === 1 && logs[0].startsWith('"EXPECTATION FAILED: goodbye\\n')
+  );
+});
+
+g.test('expectations,skip_dominates_failure').fn(async t => {
+  const log = new Logger(true);
+  const suite2Cases = await t.load('suite2:*');
+
+  const expectedFailures = [
+    {
+      query: new TestQueryMultiCase('suite2', ['foof'], ['bluh', 'a'], {}),
+      expectation: 'fail' as const,
+    },
+    {
+      query: new TestQueryMultiCase('suite2', ['foof'], ['bluh', 'a'], {}),
+      expectation: 'skip' as const,
+    },
+  ];
+
+  await runTestcase(
+    t,
+    log,
+    suite2Cases,
+    2,
+    new TestQuerySingleCase('suite2', ['foof'], ['bluh', 'a'], {}),
+    expectedFailures,
+    'skip',
+    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
+});
+
+g.test('expectations,skip_inside_failure').fn(async t => {
+  const log = new Logger(true);
+  const suite2Cases = await t.load('suite2:*');
+
+  const expectedFailures = [
+    {
+      query: new TestQueryMultiFile('suite2', []),
+      expectation: 'fail' as const,
+    },
+    {
+      query: new TestQueryMultiCase('suite2', ['foof'], ['blah'], {}),
+      expectation: 'skip' as const,
+    },
+  ];
+
+  await runTestcase(
+    t,
+    log,
+    suite2Cases,
+    0,
+    new TestQuerySingleCase('suite2', ['foof'], ['blah'], {}),
+    expectedFailures,
+    'skip',
+    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
+
+  await runTestcase(
+    t,
+    log,
+    suite2Cases,
+    2,
+    new TestQuerySingleCase('suite2', ['foof'], ['bluh', 'a'], {}),
+    expectedFailures,
+    'pass',
+    logs => logs.length === 1 && logs[0].startsWith('"EXPECTATION FAILED: goodbye\\n')
   );
 });
 

@@ -4,11 +4,14 @@
 /* eslint no-process-exit: "off" */
 
 import { existsSync } from "https://deno.land/std@0.90.0/fs/exists.ts";
+import { resolve as pathResolve } from "https://deno.land/std@0.90.0/path/mod.ts"
 
 import { DefaultTestFileLoader } from "../out/common/framework/file_loader.js";
 import { Logger } from "../out/common/framework/logging/logger.js";
 import { parseQuery } from "../out/common/framework/query/parseQuery.js";
+import { compareQueries, Ordering } from '../out/common/framework/query/compare.js';
 import { assert, unreachable } from "../out/common/framework/util/util.js";
+import { parseExpectationsForTestQuery } from "../src/common/framework/query/query.js";
 
 function usage(rc) {
   console.log("Usage:");
@@ -20,6 +23,7 @@ function usage(rc) {
   console.log("  --print-json          Print the complete result JSON in the output.");
   console.log("  --trace               Record a trace of the WebGPU operations into a ./trace directory.");
   console.log("  --ignore-file=<file>  A line delimited text file containing names of tests to skip.");
+  console.log('  --expectations        Path to expectations file. Must be absolute, or relative to')
   return Deno.exit(rc);
 }
 
@@ -61,6 +65,8 @@ let trace = false;
 let debug = false;
 let ignoreFile = undefined;
 let printJSON = false;
+let loadWebGPUExpectations = undefined;
+
 const queries = [];
 for (const a of Deno.args) {
   if (a.startsWith("-")) {
@@ -74,6 +80,9 @@ for (const a of Deno.args) {
       printJSON = true;
     } else if (a.startsWith("--ignore-file=")) {
       ignoreFile = a.slice("--ignore-file=".length);
+    } else if (a === '--expectations') {
+      const expectationsFile = pathResolve(Deno.cwd(), Deno.args[++i]);
+      loadWebGPUExpectations = import(expectationsFile).then(m => m.expectations);
     } else {
       usage(1);
     }
@@ -99,7 +108,12 @@ try {
     queries.length === 1,
     "currently, there must be exactly one query on the cmd line",
   );
-  const testcases = await loader.loadCases(parseQuery(queries[0]));
+  const filterQuery = parseQuery(queries[0]);
+  const testcases = await loader.loadCases(filterQuery);
+  const expectations = parseExpectationsForTestQuery(
+    await (loadWebGPUExpectations ?? []),
+    filterQuery
+  );
 
   const log = new Logger(debug);
 
@@ -126,7 +140,7 @@ try {
       Deno.env.set("DENO_WEBGPU_TRACE", traceDir);
     }
     const [rec, res] = log.record(name);
-    await testcase.run(rec);
+    await testcase.run(rec, expectations);
 
     if (verbose) {
       printResults([[name, res]]);
