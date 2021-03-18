@@ -80,7 +80,7 @@ for (const a of Deno.args) {
     } else if (a.startsWith("--ignore-file=")) {
       ignoreFile = a.slice("--ignore-file=".length);
     } else if (a === '--expectations') {
-      const expectationsFile = pathResolve(Deno.cwd(), process.argv[++i]);
+      const expectationsFile = pathResolve(Deno.cwd(), Deno.args[++i]);
       loadWebGPUExpectations = import(expectationsFile).then(m => m.expectations);
     } else {
       usage(1);
