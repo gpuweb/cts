@@ -12,7 +12,7 @@ import {
 import { kBigSeparator, kWildcard, kPathSeparator, kParamSeparator } from './query/separators.js';
 import { stringifySingleParam } from './query/stringify_params.js';
 import { RunCase, RunFn } from './test_group.js';
-import { assert } from './util/util.js';
+import { assert, StacklessError } from './util/util.js';
 
 // `loadTreeForQuery()` loads a TestTree for a given queryToLoad.
 // The resulting tree is a linked-list all the way from `suite:*` to queryToLoad,
@@ -252,12 +252,13 @@ export async function loadTreeForQuery(
   }
 
   for (const [i, sq] of subqueriesToExpandEntries) {
-    const seen = seenSubqueriesToExpand[i];
-    assert(
-      seen,
-      `subqueriesToExpand entry did not match anything (can happen if the subquery was larger \
-than one file, or due to overlap with another subquery): ${sq.toString()}`
-    );
+    const subquerySeen = seenSubqueriesToExpand[i];
+    if (!subquerySeen) {
+      throw new StacklessError(
+        `subqueriesToExpand entry did not match anything (can happen if the subquery was larger \
+than one file, or due to overlap with another subquery):\n  ${sq.toString()}`
+      );
+    }
   }
   assert(foundCase, 'Query does not match any cases');
 

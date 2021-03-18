@@ -101,7 +101,10 @@ Try broadening suppressions to avoid long test variant names. ' +
     }
     await generateFile(lines);
   }
-})();
+})().catch(ex => {
+  console.log(ex.stack ?? ex.toString());
+  process.exit(1);
+});
 
 async function generateFile(lines: Array<string | undefined>): Promise<void> {
   let result = '';
