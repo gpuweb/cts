@@ -62,11 +62,11 @@ if (queries.length === 0) {
 (async () => {
   const loader = new DefaultTestFileLoader();
   assert(queries.length === 1, 'currently, there must be exactly one query on the cmd line');
-  const testcaseQuery = parseQuery(queries[0]);
-  const testcases = await loader.loadCases(testcaseQuery);
+  const filterQuery = parseQuery(queries[0]);
+  const testcases = await loader.loadCases(filterQuery);
   const expectations = parseExpectationsForTestQuery(
     await (loadWebGPUExpectations ?? []),
-    testcaseQuery
+    filterQuery
   );
 
   const log = new Logger(debug);

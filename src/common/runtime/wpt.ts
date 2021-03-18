@@ -33,12 +33,12 @@ setup({
   const loader = new DefaultTestFileLoader();
   const qs = new URLSearchParams(window.location.search).getAll('q');
   assert(qs.length === 1, 'currently, there must be exactly one ?q=');
-  const testcaseQuery = parseQuery(qs[0]);
-  const testcases = await loader.loadCases(testcaseQuery);
+  const filterQuery = parseQuery(qs[0]);
+  const testcases = await loader.loadCases(filterQuery);
 
   const expectations = parseExpectationsForTestQuery(
     await (loadWebGPUExpectations ?? []),
-    testcaseQuery,
+    filterQuery,
     new URL(window.location.href)
   );
 
