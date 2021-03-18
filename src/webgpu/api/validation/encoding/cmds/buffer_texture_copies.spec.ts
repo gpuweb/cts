@@ -1,6 +1,9 @@
 export const description = `
 copyTextureToBuffer and copyBufferToTexture validation tests not covered by
 the general image_copy tests, or by destroyed,*.
+
+TODO:
+- Move all the tests here to mage_copy/ and test writeTexture() with depth/stencil formats.
 `;
 
 import { poptions, params } from '../../../../../common/framework/params_builder.js';
@@ -100,9 +103,9 @@ g.test('depth_stencil_format,copy_buffer_size')
       .combine(poptions('format', kDepthStencilFormats))
       .combine(poptions('aspect', ['depth-only', 'stencil-only'] as const))
       .combine(poptions('copyType', ['CopyB2T', 'CopyT2B'] as const))
-      .filter(param => {
-        return depthStencilBufferTextureCopySupported(param.copyType, param.format, param.aspect);
-      })
+      .filter(param =>
+        depthStencilBufferTextureCopySupported(param.copyType, param.format, param.aspect)
+      )
   )
   .subcases(() =>
     params().combine(
@@ -183,13 +186,15 @@ g.test('depth_stencil_format,copy_buffer_offset')
       .combine(poptions('format', kDepthStencilFormats))
       .combine(poptions('aspect', ['depth-only', 'stencil-only'] as const))
       .combine(poptions('copyType', ['CopyB2T', 'CopyT2B'] as const))
-      .filter(param => {
-        return depthStencilBufferTextureCopySupported(param.copyType, param.format, param.aspect);
-      })
+      .filter(param =>
+        depthStencilBufferTextureCopySupported(param.copyType, param.format, param.aspect)
+      )
   )
-  .subcases(() => params().combine(poptions('offset', [1, 2, 4, 6, 8])))
+  .subcases(() => poptions('offset', [1, 2, 4, 6, 8]))
   .fn(async t => {
     const { format, aspect, copyType, offset } = t.params;
+
+    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
 
     const textureSize = { width: 4, height: 4, depthOrArrayLayers: 1 };
 
@@ -210,7 +215,7 @@ g.test('depth_stencil_format,copy_buffer_offset')
     assert(minimumBufferSize > kBufferCopyAlignment);
 
     const buffer = t.device.createBuffer({
-      size: minimumBufferSize + offset,
+      size: align(minimumBufferSize + offset, kBufferCopyAlignment),
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
 
