@@ -21,6 +21,16 @@ export const enum EncoderType {
 
 export const g = makeTestGroup(ValidationTest);
 
+g.test('beginOcclusionQuery')
+  .desc(
+    `
+Tests that use a destroyed query set in occlusion query on render pass encoder.
+- x= {destroyed, not destroyed (control case)}
+  `
+  )
+  .subcases(() => poptions('querySetState', ['valid', 'destroyed'] as const))
+  .unimplemented();
+
 g.test('writeTimestamp')
   .desc(
     `
