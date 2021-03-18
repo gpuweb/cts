@@ -38,7 +38,7 @@ export const g = makeTestGroup(GPUTest);
 g.test('arguments')
   .desc(
     `Test that draw arguments are passed correctly by drawing triangles in a grid.
-Horizontally across the screen are triangles with increasing "primitive id".
+Horizontally across the texture are triangles with increasing "primitive id".
 Vertically down the screen are triangles with increasing instance id.
 Increasing the |first| param should skip some of the beginning triangles on the horizontal axis.
 Increasing the |first_instance| param should skip of the beginning triangles on the vertical axis.
