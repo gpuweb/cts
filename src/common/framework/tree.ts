@@ -258,8 +258,8 @@ export async function loadTreeForQuery(
     const subquerySeen = seenSubqueriesToExpand[i];
     if (!subquerySeen) {
       throw new StacklessError(
-        `subqueriesToExpand entry did not match anything (can happen if the subquery was larger \
-than one file, or due to overlap with another subquery):\n  ${sq.toString()}`
+        `subqueriesToExpand entry did not match anything \
+(could be wrong, or could be redundant with a previous subquery):\n  ${sq.toString()}`
       );
     }
   }

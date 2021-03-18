@@ -276,11 +276,6 @@ g.test('iterateCollapsed').fn(async t => {
   await testIterateCollapsed(t, [], ['suite1:foo:*', 'suite1:bar,buzz,buzz:*', 'suite1:baz:*']);
   await testIterateCollapsed(
     t,
-    ['suite1:*'],
-    ['suite1:foo:*', 'suite1:bar,buzz,buzz:*', 'suite1:baz:*']
-  );
-  await testIterateCollapsed(
-    t,
     ['suite1:foo:*'],
     ['suite1:foo:*', 'suite1:bar,buzz,buzz:*', 'suite1:baz:*']
   );
@@ -365,5 +360,6 @@ g.test('iterateCollapsed').fn(async t => {
   await testIterateCollapsed(t, ['suite1:doesntexist:*'], 'throws');
   await testIterateCollapsed(t, ['suite2:foo:*'], 'throws');
   // Can't expand subqueries bigger than one suite.
+  await testIterateCollapsed(t, ['suite1:*'], 'throws');
   await testIterateCollapsed(t, ['suite1:bar,*'], 'throws');
 });
