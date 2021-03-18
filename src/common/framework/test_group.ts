@@ -315,7 +315,7 @@ class RunCaseSpecific<
         }
 
         switch (exp.expectation) {
-          // Skip takes precendence. If there is any expecation indicating a skip,
+          // Skip takes precendence. If there is any expectation indicating a skip,
           // signal it immediately.
           case 'skip':
             return 'skip';
@@ -338,19 +338,13 @@ class RunCaseSpecific<
         rec.info(new Error('subcase: ' + stringifyPublicParams(subParams)));
         try {
           const params = mergeParams(this.params, subParams);
-          await this.runTest(
-            rec,
-            params,
-            true,
-            getExpectedStatus(
-              new TestQuerySingleCase(
-                selfQuery.suite,
-                selfQuery.filePathParts,
-                selfQuery.testPathParts,
-                <CaseParams>params
-              )
-            )
+          const subcaseQuery = new TestQuerySingleCase(
+            selfQuery.suite,
+            selfQuery.filePathParts,
+            selfQuery.testPathParts,
+            <CaseParams>params
           );
+          await this.runTest(rec, params, true, getExpectedStatus(subcaseQuery));
         } catch (ex) {
           if (ex instanceof SkipTestCase) {
             // Convert SkipTestCase to info messages

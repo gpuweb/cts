@@ -8,12 +8,8 @@ import * as process from 'process';
 import { DefaultTestFileLoader } from '../framework/file_loader.js';
 import { Logger } from '../framework/logging/logger.js';
 import { LiveTestCaseResult } from '../framework/logging/result.js';
-import { compareQueries, Ordering } from '../framework/query/compare.js';
 import { parseQuery } from '../framework/query/parseQuery.js';
-import {
-  RawTestQueryStringWithExpectation,
-  TestQueryWithExpectation,
-} from '../framework/query/query.js';
+import { parseExpectationsForTestQuery } from '../framework/query/query.js';
 import { assert, unreachable } from '../framework/util/util.js';
 
 function usage(rc: number): never {
@@ -36,7 +32,7 @@ if (!fs.existsSync('src/common/runtime/cmdline.ts')) {
 let verbose = false;
 let debug = false;
 let printJSON = false;
-let loadWebGPUExpectations: Promise<RawTestQueryStringWithExpectation[]> | undefined = undefined;
+let loadWebGPUExpectations: Promise<unknown> | undefined = undefined;
 
 const queries: string[] = [];
 for (let i = 2; i < process.argv.length; ++i) {
@@ -69,31 +65,10 @@ if (queries.length === 0) {
     assert(queries.length === 1, 'currently, there must be exactly one query on the cmd line');
     const testcaseQuery = parseQuery(queries[0]);
     const testcases = await loader.loadCases(testcaseQuery);
-
-    const expectations: TestQueryWithExpectation[] = [];
-    if (typeof loadWebGPUExpectations !== 'undefined') {
-      (await loadWebGPUExpectations).forEach(entry => {
-        const query = parseQuery(entry.query);
-
-        if (compareQueries(testcaseQuery, query) === Ordering.Unordered) {
-          return;
-        }
-
-        switch (entry.expectation) {
-          case 'pass':
-          case 'skip':
-          case 'fail':
-            break;
-          default:
-            unreachable();
-        }
-
-        expectations.push({
-          query,
-          expectation: entry.expectation,
-        });
-      });
-    }
+    const expectations = parseExpectationsForTestQuery(
+      await (loadWebGPUExpectations ?? []),
+      testcaseQuery
+    );
 
     const log = new Logger(debug);
 

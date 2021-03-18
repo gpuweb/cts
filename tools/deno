@@ -11,6 +11,7 @@ import { Logger } from "../out/common/framework/logging/logger.js";
 import { parseQuery } from "../out/common/framework/query/parseQuery.js";
 import { compareQueries, Ordering } from '../out/common/framework/query/compare.js';
 import { assert, unreachable } from "../out/common/framework/util/util.js";
+import { parseExpectationsForTestQuery } from "../src/common/framework/query/query.js";
 
 function usage(rc) {
   console.log("Usage:");
@@ -109,31 +110,10 @@ try {
   );
   const testcaseQuery = parseQuery(queries[0]);
   const testcases = await loader.loadCases(testcaseQuery);
-
-  const expectations = [];
-  if (typeof loadWebGPUExpectations !== 'undefined') {
-    (await loadWebGPUExpectations).forEach(entry => {
-      const query = parseQuery(entry.query);
-
-      if (compareQueries(testcaseQuery, query) === Ordering.Unordered) {
-        return;
-      }
-
-      switch (entry.expectation) {
-        case 'pass':
-        case 'skip':
-        case 'fail':
-          break;
-        default:
-          unreachable();
-      }
-
-      expectations.push({
-        query,
-        expectation: entry.expectation,
-      });
-    });
-  }
+  const expectations = parseExpectationsForTestQuery(
+    await (loadWebGPUExpectations ?? []),
+    testcaseQuery
+  );
 
   const log = new Logger(debug);
 
