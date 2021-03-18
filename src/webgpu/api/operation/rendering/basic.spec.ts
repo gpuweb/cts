@@ -117,6 +117,8 @@ g.test('large_draw')
   .unimplemented();
 
 g.test('reverse_depth')
-  .desc(`Tests simple rendering with reversed depth buffer, ensures depth test works properly.
-  (see https://developer.nvidia.com/content/depth-precision-visualized).`)
+  .desc(
+    `Tests simple rendering with reversed depth buffer, ensures depth test works properly.
+  (see https://developer.nvidia.com/content/depth-precision-visualized).`
+  )
   .unimplemented();

@@ -13,7 +13,10 @@ TODO: Test zero-sized copies from all sources (just make sure params cover it) (
 import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { unreachable } from '../../../common/framework/util/util.js';
-import { kUncompressedTextureFormatInfo, UncompressedTextureFormat } from '../../capability_info.js';
+import {
+  kUncompressedTextureFormatInfo,
+  UncompressedTextureFormat,
+} from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 import { kTexelRepresentationInfo } from '../../util/texture/texel_data.js';
 
