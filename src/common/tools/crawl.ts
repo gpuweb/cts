@@ -96,5 +96,7 @@ export async function crawl(
 }
 
 export function makeListing(filename: string): Promise<TestSuiteListing> {
-  return crawl(path.dirname(filename));
+  // Don't validate. This path is only used for the dev server and running tests with Node.
+  // Validation is done for listing generation and presubmit.
+  return crawl(path.dirname(filename), false);
 }

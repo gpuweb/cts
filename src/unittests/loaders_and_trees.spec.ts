@@ -30,6 +30,7 @@ const listingData: { [k: string]: TestSuiteListingEntry[] } = {
     { file: ['bar', 'biz'] },
     { file: ['bar', 'buzz', 'buzz'] },
     { file: ['baz'] },
+    { file: ['empty'], readme: 'desc 1z' }, // directory with no files
   ],
   suite2: [{ file: [], readme: 'desc 2a' }, { file: ['foof'] }],
 };
@@ -47,7 +48,7 @@ const specsData: { [k: string]: SpecFile } = {
   },
   'suite1/bar/biz.spec.js': {
     description: 'desc 1f',
-    g: makeTestGroupForUnitTesting(UnitTest),
+    g: makeTestGroupForUnitTesting(UnitTest), // file with no tests
   },
   'suite1/bar/buzz/buzz.spec.js': {
     description: 'desc 1d',
@@ -643,7 +644,8 @@ g.test('expectations,skip_inside_failure').fn(async t => {
 async function testIterateCollapsed(
   t: LoadingTest,
   expectations: string[],
-  expectedResult: 'throws' | string[]
+  expectedResult: 'throws' | string[],
+  includeEmptySubtrees = false
 ) {
   const treePromise = LoadingTest.loader.loadTree(
     new TestQueryMultiFile('suite1', []),
@@ -654,7 +656,7 @@ async function testIterateCollapsed(
     return;
   }
   const tree = await treePromise;
-  const actual = Array.from(tree.iterateCollapsedQueries(), q => q.toString());
+  const actual = Array.from(tree.iterateCollapsedQueries(includeEmptySubtrees), q => q.toString());
   if (!objectEquals(actual, expectedResult)) {
     t.fail(
       `iterateCollapsed failed:
@@ -671,13 +673,8 @@ g.test('print').fn(async () => {
 });
 
 g.test('iterateCollapsed').fn(async t => {
-  // Expectations have no effect
+  // Expectations lists that have no effect
   await testIterateCollapsed(t, [], ['suite1:foo:*', 'suite1:bar,buzz,buzz:*', 'suite1:baz:*']);
-  await testIterateCollapsed(
-    t,
-    ['suite1:*'],
-    ['suite1:foo:*', 'suite1:bar,buzz,buzz:*', 'suite1:baz:*']
-  );
   await testIterateCollapsed(
     t,
     ['suite1:foo:*'],
@@ -688,8 +685,21 @@ g.test('iterateCollapsed').fn(async t => {
     ['suite1:bar,buzz,buzz:*'],
     ['suite1:foo:*', 'suite1:bar,buzz,buzz:*', 'suite1:baz:*']
   );
+  // Test with includeEmptySubtrees=true
+  await testIterateCollapsed(
+    t,
+    [],
+    [
+      'suite1:foo:*',
+      'suite1:bar,biz:*',
+      'suite1:bar,buzz,buzz:*',
+      'suite1:baz:*',
+      'suite1:empty,*',
+    ],
+    true
+  );
 
-  // Expectations have some effect
+  // Expectations lists that have some effect
   await testIterateCollapsed(
     t,
     ['suite1:baz:wye:*'],
@@ -751,5 +761,6 @@ g.test('iterateCollapsed').fn(async t => {
   await testIterateCollapsed(t, ['suite1:doesntexist:*'], 'throws');
   await testIterateCollapsed(t, ['suite2:foo:*'], 'throws');
   // Can't expand subqueries bigger than one suite.
+  await testIterateCollapsed(t, ['suite1:*'], 'throws');
   await testIterateCollapsed(t, ['suite1:bar,*'], 'throws');
 });
