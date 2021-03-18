@@ -1,7 +1,8 @@
 export const description = `
 Tests for canvas context creation.
 
-Note there are no context creation attributes for WebGPU.
+Note there are no context creation attributes for WebGPU (as of this writing).
+Options are configured in configureSwapChain instead.
 `;
 
 import { Fixture } from '../../../common/framework/fixture.js';
