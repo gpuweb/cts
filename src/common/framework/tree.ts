@@ -70,8 +70,8 @@ export class TestTree {
     this.root = root;
   }
 
-  iterateCollapsedQueries(): IterableIterator<TestQuery> {
-    return TestTree.iterateSubtreeCollapsedQueries(this.root);
+  iterateCollapsedQueries(includeEmptySubtrees: boolean): IterableIterator<TestQuery> {
+    return TestTree.iterateSubtreeCollapsedQueries(this.root, includeEmptySubtrees);
   }
 
   iterateLeaves(): IterableIterator<TestTreeLeaf> {
@@ -95,14 +95,17 @@ export class TestTree {
     return TestTree.subtreeToString('(root)', this.root, '');
   }
 
-  static *iterateSubtreeCollapsedQueries(subtree: TestSubtree): IterableIterator<TestQuery> {
+  static *iterateSubtreeCollapsedQueries(
+    subtree: TestSubtree,
+    includeEmptySubtrees: boolean
+  ): IterableIterator<TestQuery> {
     for (const [, child] of subtree.children) {
       if ('children' in child) {
         // Is a subtree
-        if (!child.collapsible) {
-          yield* TestTree.iterateSubtreeCollapsedQueries(child);
-        } else if (child.children.size) {
-          // Don't yield empty subtrees (e.g. files with no tests)
+        if (child.children.size > 0 && !child.collapsible) {
+          yield* TestTree.iterateSubtreeCollapsedQueries(child, includeEmptySubtrees);
+        } else if (child.children.size > 0 || includeEmptySubtrees) {
+          // Don't yield empty subtrees (e.g. files with no tests) unless includeEmptySubtrees
           yield child.query;
         }
       } else {
