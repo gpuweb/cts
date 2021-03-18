@@ -1,4 +1,6 @@
-export const description = '';
+export const description = `
+Tests for capability checking for features enabling optional query types.
+`;
 
 import { params, pbool, poptions } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
