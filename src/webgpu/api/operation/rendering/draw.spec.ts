@@ -48,9 +48,9 @@ The fragment shader also writes out to a storage buffer. If the draw is zero-siz
 
 Params:
   - first= {0, 3} - either the firstVertex or firstIndex
-  - count= {0, 6} - either the vertexCount or indexCount
+  - count= {0, 3, 6} - either the vertexCount or indexCount
   - first_instance= {0, 2}
-  - instance_count= {0, 4}
+  - instance_count= {0, 1, 4}
   - indexed= {true, false}
   - indirect= {true, false}
   - vertex_buffer_offset= {0, 32}
@@ -61,9 +61,9 @@ Params:
   .cases(
     params()
       .combine(poptions('first', [0, 3] as const))
-      .combine(poptions('count', [0, 6] as const))
+      .combine(poptions('count', [0, 3, 6] as const))
       .combine(poptions('first_instance', [0, 2] as const))
-      .combine(poptions('instance_count', [0, 4] as const))
+      .combine(poptions('instance_count', [0, 1, 4] as const))
       .combine(pbool('indexed'))
       .combine(pbool('indirect'))
       .combine(poptions('vertex_buffer_offset', [0, 32] as const))
@@ -71,13 +71,13 @@ Params:
       .expand(p => poptions('base_vertex', p.indexed ? ([0, 9] as const) : [undefined]))
   )
   .fn(t => {
-    const renderTargetSize = [36, 36];
+    const renderTargetSize = [72, 36];
 
     // The test will split up the render target into a grid where triangles of
     // increasing primitive id will be placed along the X axis, and triangles
     // of increasing instance id will be placed along the Y axis. The size of the
     // grid is based on the max primitive id and instance id used.
-    const numX = 3;
+    const numX = 6;
     const numY = 6;
     const tileSizeX = renderTargetSize[0] / numX;
     const tileSizeY = renderTargetSize[1] / numY;
@@ -86,21 +86,10 @@ Params:
     // |   \
     // |______\
     // Unit triangle shaped like this. 0-1 Y-down.
-    const bottomLeftTriangleVertices = /* prettier-ignore */ [
+    const triangleVertices = /* prettier-ignore */ [
       0.0, 0.0,
       0.0, 1.0,
       1.0, 1.0,
-    ];
-
-    // _______
-    // \      |
-    //    \   |
-    //       \|
-    // Unit triangle shaped like this. 0-1 Y-down.
-    const topRightTriangleVertices = /* prettier-ignore */ [
-      0.0, 0.0,
-      1.0, 1.0,
-      1.0, 0.0,
     ];
 
     const renderTarget = t.device.createTexture({
@@ -117,11 +106,9 @@ Params:
 
 [[builtin(position)]] var<out> Position : vec4<f32>;
 [[stage(vertex)]] fn vert_main() -> void {
-  // 9u is the base_vertex offset. We select different vertices
-  // but apply the same x offset in the grid.
   // 3u is the number of points in a triangle to convert from index
   // to id.
-  var vertex_id : u32 = (vertex_index % 9u) / 3u;
+  var vertex_id : u32 = vertex_index / 3u;
 
   var x : f32 = (vertexPosition.x + f32(vertex_id)) / ${numX}.0;
   var y : f32 = (vertexPosition.y + f32(instance_id)) / ${numY}.0;
@@ -137,7 +124,7 @@ Params:
     const fragmentModule = t.device.createShaderModule({
       code: `
 [[block]] struct Output {
-  [[offset(0)]] value : u32;
+  value : u32;
 };
 
 [[group(0), binding(0)]] var<storage> output : Output;
@@ -151,22 +138,10 @@ Params:
     });
 
     const pipeline = t.device.createRenderPipeline({
-      vertexStage: {
+      vertex: {
         module: vertexModule,
         entryPoint: 'vert_main',
-      },
-      fragmentStage: {
-        module: fragmentModule,
-        entryPoint: 'frag_main',
-      },
-      colorStates: [
-        {
-          format: 'rgba8unorm',
-        },
-      ],
-      primitiveTopology: 'triangle-list',
-      vertexState: {
-        vertexBuffers: [
+        buffers: [
           {
             attributes: [
               {
@@ -176,6 +151,15 @@ Params:
               },
             ],
             arrayStride: 2 * Float32Array.BYTES_PER_ELEMENT,
+          },
+        ],
+      },
+      fragment: {
+        module: fragmentModule,
+        entryPoint: 'frag_main',
+        targets: [
+          {
+            format: 'rgba8unorm',
           },
         ],
       },
@@ -240,16 +224,16 @@ Params:
             ...new Array(t.params.vertex_buffer_offset / Float32Array.BYTES_PER_ELEMENT),
 
             // selected with base_vertex=0
-                                           // count=6
-            ...bottomLeftTriangleVertices, //   |   count=6;first=3
-            ...bottomLeftTriangleVertices, //   |       |
-            ...bottomLeftTriangleVertices, //           |
+                                 // count=6
+            ...triangleVertices, //   |   count=6;first=3
+            ...triangleVertices, //   |       |
+            ...triangleVertices, //           |
 
             // selected with base_vertex=9
-                                         // count=6
-            ...topRightTriangleVertices, //   |   count=6;first=3
-            ...topRightTriangleVertices, //   |       |
-            ...topRightTriangleVertices, //           |
+                                 // count=6
+            ...triangleVertices, //   |   count=6;first=3
+            ...triangleVertices, //   |       |
+            ...triangleVertices, //           |
           ]),
           GPUBufferUsage.VERTEX
         ),
@@ -280,10 +264,10 @@ Params:
             // Offset the vertex buffer contents by empty data.
             ...new Array(t.params.vertex_buffer_offset / Float32Array.BYTES_PER_ELEMENT),
 
-                                           // count=6
-            ...bottomLeftTriangleVertices, //   |   count=6;first=3
-            ...bottomLeftTriangleVertices, //   |       |
-            ...bottomLeftTriangleVertices, //           |
+                                 // count=6
+            ...triangleVertices, //   |   count=6;first=3
+            ...triangleVertices, //   |       |
+            ...triangleVertices, //           |
           ]),
           GPUBufferUsage.VERTEX
         ),
@@ -313,17 +297,16 @@ Params:
     const transparentBlack = new Uint8Array([0, 0, 0, 0]);
 
     const didDraw = t.params.count && t.params.instance_count;
-    const secondTriangle = !!t.params.base_vertex;
 
     t.expectContents(resultBuffer, new Uint32Array([didDraw ? 1 : 0]));
 
+    const baseVertex = t.params.base_vertex ?? 0;
     for (let primitiveId = 0; primitiveId < numX; ++primitiveId) {
       for (let instanceId = 0; instanceId < numY; ++instanceId) {
         let expectedColor = didDraw ? green : transparentBlack;
-
         if (
-          primitiveId * 3 < t.params.first ||
-          primitiveId * 3 >= t.params.first + t.params.count
+          primitiveId * 3 < t.params.first + baseVertex ||
+          primitiveId * 3 >= t.params.first + baseVertex + t.params.count
         ) {
           expectedColor = transparentBlack;
         }
@@ -335,23 +318,17 @@ Params:
           expectedColor = transparentBlack;
         }
 
-        const bottomLeftTriangleMedian = {
-          x: (1 / 3 + primitiveId) * tileSizeX,
-          y: (2 / 3 + instanceId) * tileSizeY,
-        };
-
-        const topRightTriangleMedian = {
-          x: (2 / 3 + primitiveId) * tileSizeX,
-          y: (1 / 3 + instanceId) * tileSizeY,
-        };
-
-        t.expectSinglePixelIn2DTexture(renderTarget, 'rgba8unorm', bottomLeftTriangleMedian, {
-          exp: !secondTriangle ? expectedColor : transparentBlack,
-        });
-
-        t.expectSinglePixelIn2DTexture(renderTarget, 'rgba8unorm', topRightTriangleMedian, {
-          exp: secondTriangle ? expectedColor : transparentBlack,
-        });
+        t.expectSinglePixelIn2DTexture(
+          renderTarget,
+          'rgba8unorm',
+          {
+            x: (1 / 3 + primitiveId) * tileSizeX,
+            y: (2 / 3 + instanceId) * tileSizeY,
+          },
+          {
+            exp: expectedColor,
+          }
+        );
       }
     }
   });
