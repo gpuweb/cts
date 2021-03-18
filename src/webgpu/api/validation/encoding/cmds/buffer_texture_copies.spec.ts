@@ -3,7 +3,7 @@ copyTextureToBuffer and copyBufferToTexture validation tests not covered by
 the general image_copy tests, or by destroyed,*.
 
 TODO:
-- Move all the tests here to mage_copy/ and test writeTexture() with depth/stencil formats.
+- Move all the tests here to image_copy/ and test writeTexture() with depth/stencil formats.
 `;
 
 import { poptions, params } from '../../../../../common/framework/params_builder.js';
