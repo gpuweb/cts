@@ -1,7 +1,11 @@
-export const description = '';
+export const description = `
+Tests for canvas context creation.
+
+Note there are no context creation attributes for WebGPU.
+`;
 
 import { Fixture } from '../../../common/framework/fixture.js';
-import { pbool } from '../../../common/framework/params_builder.js';
+import { pbool, poptions } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 
 export const g = makeTestGroup(Fixture);
@@ -10,9 +14,10 @@ g.test('return_type')
   .desc(
     `Test the return type of getContext for WebGPU.
 
-TODO: Test all combinations of context creation attributes.`
+    TODO: Test OffscreenCanvas made from transferControlToOffscreen.`
   )
   .cases(pbool('offscreen'))
+  .subcases(() => poptions('attributes', [undefined, {}]))
   .fn(async t => {
     let canvas: HTMLCanvasElement | OffscreenCanvas;
     if (t.params.offscreen) {
@@ -28,7 +33,7 @@ TODO: Test all combinations of context creation attributes.`
         t.skip('DOM is not available to create canvas element');
       }
 
-      canvas = document.createElement('canvas');
+      canvas = document.createElement('canvas', t.params.attributes);
       canvas.width = 10;
       canvas.height = 10;
     }
@@ -36,5 +41,3 @@ TODO: Test all combinations of context creation attributes.`
     const ctx = canvas.getContext('gpupresent');
     t.expect(ctx instanceof GPUCanvasContext);
   });
-
-g.test('attributes_idl').desc('Tests invalid context creation attribute values.').unimplemented();
