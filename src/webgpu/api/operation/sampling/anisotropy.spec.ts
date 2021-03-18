@@ -54,7 +54,7 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
     await super.init();
 
     this.pipeline = this.device.createRenderPipeline({
-      vertexStage: {
+      vertex: {
         module: this.device.createShaderModule({
           code: `
             [[builtin(vertex_index)]] var<in> VertexIndex : i32;
@@ -91,7 +91,7 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
         }),
         entryPoint: 'main',
       },
-      fragmentStage: {
+      fragment: {
         module: this.device.createShaderModule({
           code: `
             [[set(0), binding(0)]] var sampler0 : sampler;
@@ -109,9 +109,9 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
             `,
         }),
         entryPoint: 'main',
+        targets: [{ format: 'rgba8unorm' }],
       },
-      primitiveTopology: 'triangle-list',
-      colorStates: [{ format: 'rgba8unorm' }],
+      primitive: { topology: 'triangle-list' },
     });
   }
 

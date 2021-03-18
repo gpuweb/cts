@@ -34,7 +34,7 @@ class F extends ValidationTest {
 
   createRenderPipeline(): GPURenderPipeline {
     return this.device.createRenderPipeline({
-      vertexStage: {
+      vertex: {
         module: this.device.createShaderModule({
           code: `
             [[builtin(position)]] var<out> Position : vec4<f32>;
@@ -46,7 +46,7 @@ class F extends ValidationTest {
         }),
         entryPoint: 'main',
       },
-      fragmentStage: {
+      fragment: {
         module: this.device.createShaderModule({
           code: `
             [[location(0)]] var<out> fragColor : vec4<f32>;
@@ -56,10 +56,12 @@ class F extends ValidationTest {
             }`,
         }),
         entryPoint: 'main',
+        targets: [{ format: 'rgba8unorm' }],
       },
-      primitiveTopology: 'triangle-strip',
-      colorStates: [{ format: 'rgba8unorm' }],
-      vertexState: { indexFormat: 'uint32' },
+      primitive: {
+        topology: 'triangle-strip',
+        stripIndexFormat: 'uint32',
+      },
     });
   }
 

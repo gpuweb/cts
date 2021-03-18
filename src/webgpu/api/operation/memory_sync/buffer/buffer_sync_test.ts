@@ -104,20 +104,20 @@ export class BufferSyncTest extends GPUTest {
     };
 
     return this.device.createRenderPipeline({
-      vertexStage: {
+      vertex: {
         module: this.device.createShaderModule({
           code: wgslShaders.vertex,
         }),
         entryPoint: 'vert_main',
       },
-      fragmentStage: {
+      fragment: {
         module: this.device.createShaderModule({
           code: wgslShaders.fragment,
         }),
         entryPoint: 'frag_main',
+        targets: [{ format: 'rgba8unorm' }],
       },
-      primitiveTopology: 'point-list',
-      colorStates: [{ format: 'rgba8unorm' }],
+      primitive: { topology: 'point-list' },
     });
   }
 

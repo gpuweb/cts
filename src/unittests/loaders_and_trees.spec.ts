@@ -23,16 +23,13 @@ import { UnitTest } from './unit_test.js';
 const listingData: { [k: string]: TestSuiteListingEntry[] } = {
   suite1: [
     { file: [], readme: 'desc 1a' },
-    { file: ['foo'], description: 'desc 1b' },
+    { file: ['foo'] },
     { file: ['bar'], readme: 'desc 1h' },
-    { file: ['bar', 'biz'], description: 'desc 1f' },
-    { file: ['bar', 'buzz', 'buzz'], description: 'desc 1d' },
-    { file: ['baz'], description: 'desc 1e' },
+    { file: ['bar', 'biz'] },
+    { file: ['bar', 'buzz', 'buzz'] },
+    { file: ['baz'] },
   ],
-  suite2: [
-    { file: [], readme: 'desc 2a' },
-    { file: ['foof'], description: 'desc 2b' },
-  ],
+  suite2: [{ file: [], readme: 'desc 2a' }, { file: ['foof'] }],
 };
 
 const specsData: { [k: string]: SpecFile } = {
