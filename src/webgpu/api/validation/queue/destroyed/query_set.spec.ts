@@ -1,8 +1,7 @@
 export const description = `
 Tests using a destroyed query set on a queue.
 
-- used in {resolveQuerySet, timestamp {compute, render, non-pass},
-    pipeline statistics {compute, render}, occlusion}
+- used in pipeline statistics {compute, render}
 - x= {destroyed, not destroyed (control case)}
 
 TODO: implement. (Search for other places some of these cases may have already been tested.)
