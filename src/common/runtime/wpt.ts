@@ -36,11 +36,14 @@ setup({
   const filterQuery = parseQuery(qs[0]);
   const testcases = await loader.loadCases(filterQuery);
 
-  const expectations = parseExpectationsForTestQuery(
-    await (loadWebGPUExpectations ?? []),
-    filterQuery,
-    new URL(window.location.href)
-  );
+  const expectations =
+    typeof loadWebGPUExpectations !== 'undefined'
+      ? parseExpectationsForTestQuery(
+          await loadWebGPUExpectations,
+          filterQuery,
+          new URL(window.location.href)
+        )
+      : [];
 
   const log = new Logger(false);
 
