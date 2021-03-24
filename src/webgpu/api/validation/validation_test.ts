@@ -2,8 +2,12 @@ import { assert, unreachable } from '../../../common/framework/util/util.js';
 import { BindableResource, kMaxQueryCount } from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 
-export const kEncoderTypes = ['non-pass', 'compute pass', 'render pass', 'render bundle'] as const;
-type EncoderType = typeof kEncoderTypes[number];
+export const kRenderEncodeTypes = ['render pass', 'render bundle'] as const;
+export type RenderEncodeType = typeof kRenderEncodeTypes[number];
+export const kProgrammableEncoderTypes = ['compute pass', ...kRenderEncodeTypes] as const;
+export type ProgrammableEncoderType = typeof kProgrammableEncoderTypes[number];
+export const kEncoderTypes = ['non-pass', ...kProgrammableEncoderTypes] as const;
+export type EncoderType = typeof kEncoderTypes[number];
 
 export interface CommandBufferMaker<T extends EncoderType> {
   // Look up the type of the encoder based on `T`. If `T` is a union, this will be too!
