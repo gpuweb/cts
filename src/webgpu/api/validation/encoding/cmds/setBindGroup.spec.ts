@@ -13,6 +13,7 @@ TODO: merge these notes and implement.
 import { poptions, params, pbool } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { range, unreachable } from '../../../../../common/framework/util/util.js';
+import { kMinDynamicBufferOffsetAlignment } from '../../../../capability_info.js';
 import {
   kProgrammableEncoderTypes,
   ProgrammableEncoderType,
@@ -137,7 +138,7 @@ g.test('state_and_binding_index')
   });
 
 g.test('dynamic_offsets_passed_but_not_expected')
-  .desc('Tests that setBindGroup correctly unexpected dynamicOffsets.')
+  .desc('Tests that setBindGroup correctly errors on unexpected dynamicOffsets.')
   .cases(poptions('encoderType', kProgrammableEncoderTypes))
   .fn(async t => {
     const { encoderType } = t.params;
@@ -179,8 +180,6 @@ g.test('dynamic_offsets_match_expectations_in_pass_encoder')
       .combine(pbool('useU32array'))
   )
   .fn(async t => {
-    // Dynamic buffer offsets require offset to be divisible by 256
-    const kMinDynamicBufferOffsetAlignment = 256;
     const kBindingSize = 9;
 
     const bindGroupLayout = t.device.createBindGroupLayout({
@@ -275,6 +274,12 @@ g.test('u32array_start_and_length')
       offsets: [0, 0, 0] as const,
       dynamicOffsetsDataStart: 1,
       dynamicOffsetsDataLength: 1,
+      _success: true,
+    },
+    {
+      offsets: [0, 0] as const,
+      dynamicOffsetsDataStart: 0,
+      dynamicOffsetsDataLength: 2,
       _success: true,
     },
   ])

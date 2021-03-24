@@ -313,12 +313,19 @@ TODO(#234): disallow zero-sized bindings`
     }
   });
 
-g.test('minBufferBindingSize')
-  .desc('Tests that minBufferBindingSize is correctly enforced.')
+g.test('minBindingSize')
+  .desc('Tests that minBindingSize is correctly enforced.')
   .subcases(() =>
     params()
-      .combine(poptions('size', [4, 256]))
       .combine(poptions('minBindingSize', [undefined, 4, 256]))
+      .expand(({ minBindingSize }) =>
+        poptions(
+          'size',
+          minBindingSize !== undefined
+            ? [minBindingSize - 1, minBindingSize, minBindingSize + 1]
+            : [4, 256]
+        )
+      )
   )
   .fn(t => {
     const { size, minBindingSize } = t.params;
