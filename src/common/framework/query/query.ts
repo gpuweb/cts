@@ -219,7 +219,6 @@ Expectation should be of the form path/to/cts.html?worker=0&q=suite:test_path:te
           )
         : expectationQuery;
 
-
     if (compareQueries(query, queryForFilter) === Ordering.Unordered) {
       continue;
     }
