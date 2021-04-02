@@ -54,11 +54,11 @@ const [
   } else {
     // Prefixes sorted from longest to shortest
     const argsPrefixes = (await fs.readFile(argsPrefixesFile, 'utf8'))
-      .split('\n')
+      .split(/\r?\n/)
       .filter(a => a.length)
       .sort((a, b) => b.length - a.length);
     const expectationLines = new Set(
-      (await fs.readFile(expectationsFile, 'utf8')).split('\n').filter(l => l.length)
+      (await fs.readFile(expectationsFile, 'utf8')).split(/\r?\n/).filter(l => l.length)
     );
 
     const expectations: Map<string, string[]> = new Map();
