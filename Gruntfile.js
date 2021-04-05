@@ -8,7 +8,7 @@ module.exports = function (grunt) {
     pkg: grunt.file.readJSON('package.json'),
 
     clean: {
-      out: ['out/', 'out-wpt/', 'out-node-tools/'],
+      out: ['out/', 'out-wpt/', 'out-node/'],
     },
 
     run: {
@@ -56,12 +56,12 @@ module.exports = function (grunt) {
           '--ignore=src/webgpu/listing.ts',
         ],
       },
-      'build-out-node-tools': {
+      'build-out-node': {
         cmd: 'node',
         args: [
           'node_modules/typescript/lib/tsc.js',
-          '--project', 'node-tools.tsconfig.json',
-          '--outDir', 'out-node-tools/',
+          '--project', 'node.tsconfig.json',
+          '--outDir', 'out-node/',
           '--noEmit', 'false',
           '--declaration', 'false'
         ],
@@ -156,7 +156,7 @@ module.exports = function (grunt) {
     'clean',
     'build-standalone',
     'build-wpt',
-    'run:build-out-node-tools',
+    'run:build-out-node',
     'build-done-message',
     'ts:check',
     'run:unittest',
