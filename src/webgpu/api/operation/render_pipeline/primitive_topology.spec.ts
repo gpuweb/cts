@@ -55,6 +55,7 @@ Test locations are framebuffer coordinates:
                                                                 and {v3, v4, v5}.
 `;
 
+import { params, pbool, poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
 
@@ -329,78 +330,78 @@ class PrimitiveTopologyTest extends GPUTest {
 
 export const g = makeTestGroup(PrimitiveTopologyTest);
 
-// Compute test locations for valid and invalid pixels for each topology.
-// If the primitive covers the pixel, the color value will be |kValidPixelColor|.
-// Otherwise, a non-covered pixel will be |kInvalidPixelColor|.
-g.test('point_list').fn(async t => {
-  // Check valid test locations
-  const testLocations = getPointTestLocations(kValidPixelColor);
+const topologies: GPUPrimitiveTopology[] = [
+  'point-list',
+  'line-list',
+  'line-strip',
+  'triangle-list',
+  'triangle-strip',
+];
 
-  // Check invalid test locations
-  testLocations.concat(getLineStripTestLocations(kInvalidPixelColor));
-  testLocations.concat(getTriangleListTestLocations(kInvalidPixelColor));
-  testLocations.concat(getTriangleStripTestLocations(kInvalidPixelColor));
+g.test('basic')
+  .desc(
+    `Compute test locations for valid and invalid pixels for each topology.
+  If the primitive covers the pixel, the color value will be |kValidPixelColor|.
+  Otherwise, a non-covered pixel will be |kInvalidPixelColor|.
 
-  t.run('point-list', testLocations, /*usePrimitiveRestart=*/ false);
-});
+  Params:
+    - topology= {...all topologies}
+    - primitive_restart= { true, false } - always false for non-strip topologies
+  `
+  )
+  .cases(
+    params() //
+      .combine(poptions('topology', topologies))
+      .combine(pbool('primitive_restart'))
+      .unless(
+        p => p.primitive_restart && p.topology !== 'line-strip' && p.topology !== 'triangle-strip'
+      )
+  )
+  .fn(t => {
+    // Check valid test locations
+    let testLocations: TestLocation[];
+    switch (t.params.topology) {
+      case 'point-list':
+        testLocations = [
+          ...getPointTestLocations(kValidPixelColor),
+          ...getLineStripTestLocations(kInvalidPixelColor),
+          ...getTriangleListTestLocations(kInvalidPixelColor),
+          ...getTriangleStripTestLocations(kInvalidPixelColor),
+        ];
+        break;
+      case 'line-list':
+        testLocations = [
+          ...getLineTestLocations(kValidPixelColor),
+          ...getLineStripTestLocations(kInvalidPixelColor),
+          ...getTriangleListTestLocations(kInvalidPixelColor),
+          ...getTriangleStripTestLocations(kInvalidPixelColor),
+        ];
+        break;
+      case 'line-strip':
+        testLocations = [
+          ...(t.params.primitive_restart
+            ? getPrimitiveRestartLineTestLocations(kValidPixelColor)
+            : getLineTestLocations(kValidPixelColor)),
+          ...getLineStripTestLocations(kValidPixelColor),
+          ...getTriangleListTestLocations(kInvalidPixelColor),
+          ...getTriangleStripTestLocations(kInvalidPixelColor),
+        ];
+        break;
+      case 'triangle-list':
+        testLocations = [
+          ...getTriangleListTestLocations(kValidPixelColor),
+          ...getTriangleStripTestLocations(kInvalidPixelColor),
+        ];
+        break;
+      case 'triangle-strip':
+        testLocations = [
+          ...getTriangleListTestLocations(kValidPixelColor),
+          ...getTriangleStripTestLocations(
+            t.params.primitive_restart ? kInvalidPixelColor : kValidPixelColor
+          ),
+        ];
+        break;
+    }
 
-g.test('line_list').fn(async t => {
-  // Check valid test locations
-  const testLocations = getLineTestLocations(kValidPixelColor);
-
-  // Check invalid test locations
-  testLocations.concat(getLineStripTestLocations(kInvalidPixelColor));
-  testLocations.concat(getTriangleListTestLocations(kInvalidPixelColor));
-  testLocations.concat(getTriangleStripTestLocations(kInvalidPixelColor));
-  t.run('line-list', testLocations, /*usePrimitiveRestart=*/ false);
-});
-
-g.test('line_strip').fn(async t => {
-  // Check valid test locations
-  const testLocations = getLineTestLocations(kValidPixelColor);
-  testLocations.concat(getLineStripTestLocations(kValidPixelColor));
-
-  // Check invalid test locations
-  testLocations.concat(getTriangleListTestLocations(kInvalidPixelColor));
-  testLocations.concat(getTriangleStripTestLocations(kInvalidPixelColor));
-
-  t.run('line-strip', testLocations, /*usePrimitiveRestart=*/ false);
-});
-
-g.test('line_strip,primitive_restart').fn(async t => {
-  // Check valid test locations
-  const testLocations = getPrimitiveRestartLineTestLocations(kValidPixelColor);
-  testLocations.concat(getLineStripTestLocations(kValidPixelColor));
-
-  // Check invalid test locations
-  testLocations.concat(getTriangleListTestLocations(kInvalidPixelColor));
-  testLocations.concat(getTriangleStripTestLocations(kInvalidPixelColor));
-
-  t.run('line-strip', testLocations, /*usePrimitiveRestart=*/ true);
-});
-
-g.test('triangle_list').fn(async t => {
-  // Check valid test locations
-  const testLocations = getTriangleListTestLocations(kValidPixelColor);
-
-  // Check invalid test locations
-  testLocations.concat(getTriangleStripTestLocations(kInvalidPixelColor));
-
-  t.run('triangle-list', testLocations, /*usePrimitiveRestart=*/ false);
-});
-
-g.test('triangle_strip').fn(async t => {
-  // Check valid test locations
-  const testLocations = getTriangleListTestLocations(kValidPixelColor);
-  testLocations.concat(getTriangleStripTestLocations(kValidPixelColor));
-
-  t.run('triangle-strip', testLocations, /*usePrimitiveRestart=*/ false);
-});
-
-g.test('triangle_strip,primitive_restart').fn(async t => {
-  // Check valid test locations
-  const testLocations = getTriangleListTestLocations(kValidPixelColor);
-  testLocations.concat(getTriangleStripTestLocations(kInvalidPixelColor));
-
-  t.run('triangle-strip', testLocations, /*usePrimitiveRestart=*/ true);
-});
+    t.run(t.params.topology, testLocations, t.params.primitive_restart);
+  });
