@@ -12,9 +12,21 @@ const triangleColor = [0xff, 0xff, 0xff, 0xff];
 
 export const g = makeTestGroup(GPUTest);
 
+g.test('depth_bias')
+  .desc(
+    `Tests render results with different depth bias values: positive, negative, infinity, slope, clamp, etc.`
+  )
+  .unimplemented();
+
+g.test('depth_disabled').desc(`Tests render results with depth test disabled`).unimplemented();
+
+g.test('depth_write_disabled')
+  .desc(`Tests render results with depth write disabled`)
+  .unimplemented();
+
 g.test('depth_compare_func')
   .desc(
-    `Tests each depth compare function works properly. The depth of the triangle is always 0.5.`
+    `Tests each depth compare function works properly. Clears the depth attachment to various values, and renders a point at depth 0.5 with various depthCompare modes.`
   )
   .cases(
     params()
@@ -25,43 +37,39 @@ g.test('depth_compare_func')
         )
       )
       .combine([
-        { depthCompare: 'never', depthLoadValue: 1.0, expected: backgroundColor },
-        { depthCompare: 'never', depthLoadValue: 0.5, expected: backgroundColor },
-        { depthCompare: 'never', depthLoadValue: 0.0, expected: backgroundColor },
-        { depthCompare: 'less', depthLoadValue: 1.0, expected: triangleColor },
-        { depthCompare: 'less', depthLoadValue: 0.5, expected: backgroundColor },
-        { depthCompare: 'less', depthLoadValue: 0.0, expected: backgroundColor },
-        { depthCompare: 'less-equal', depthLoadValue: 1.0, expected: triangleColor },
-        { depthCompare: 'less-equal', depthLoadValue: 0.5, expected: triangleColor },
-        { depthCompare: 'less-equal', depthLoadValue: 0.0, expected: backgroundColor },
-        { depthCompare: 'equal', depthLoadValue: 1.0, expected: backgroundColor },
-        { depthCompare: 'equal', depthLoadValue: 0.5, expected: triangleColor },
-        { depthCompare: 'equal', depthLoadValue: 0.0, expected: backgroundColor },
-        { depthCompare: 'not-equal', depthLoadValue: 1.0, expected: triangleColor },
-        { depthCompare: 'not-equal', depthLoadValue: 0.5, expected: backgroundColor },
-        { depthCompare: 'not-equal', depthLoadValue: 0.0, expected: triangleColor },
-        { depthCompare: 'greater-equal', depthLoadValue: 1.0, expected: backgroundColor },
-        { depthCompare: 'greater-equal', depthLoadValue: 0.5, expected: triangleColor },
-        { depthCompare: 'greater-equal', depthLoadValue: 0.0, expected: triangleColor },
-        { depthCompare: 'greater', depthLoadValue: 1.0, expected: backgroundColor },
-        { depthCompare: 'greater', depthLoadValue: 0.5, expected: backgroundColor },
-        { depthCompare: 'greater', depthLoadValue: 0.0, expected: triangleColor },
-        { depthCompare: 'always', depthLoadValue: 1.0, expected: triangleColor },
-        { depthCompare: 'always', depthLoadValue: 0.5, expected: triangleColor },
-        { depthCompare: 'always', depthLoadValue: 0.0, expected: triangleColor },
-      ])
+        { depthCompare: 'never', depthLoadValue: 1.0, _expected: backgroundColor },
+        { depthCompare: 'never', depthLoadValue: 0.5, _expected: backgroundColor },
+        { depthCompare: 'never', depthLoadValue: 0.0, _expected: backgroundColor },
+        { depthCompare: 'less', depthLoadValue: 1.0, _expected: triangleColor },
+        { depthCompare: 'less', depthLoadValue: 0.5, _expected: backgroundColor },
+        { depthCompare: 'less', depthLoadValue: 0.0, _expected: backgroundColor },
+        { depthCompare: 'less-equal', depthLoadValue: 1.0, _expected: triangleColor },
+        { depthCompare: 'less-equal', depthLoadValue: 0.5, _expected: triangleColor },
+        { depthCompare: 'less-equal', depthLoadValue: 0.0, _expected: backgroundColor },
+        { depthCompare: 'equal', depthLoadValue: 1.0, _expected: backgroundColor },
+        { depthCompare: 'equal', depthLoadValue: 0.5, _expected: triangleColor },
+        { depthCompare: 'equal', depthLoadValue: 0.0, _expected: backgroundColor },
+        { depthCompare: 'not-equal', depthLoadValue: 1.0, _expected: triangleColor },
+        { depthCompare: 'not-equal', depthLoadValue: 0.5, _expected: backgroundColor },
+        { depthCompare: 'not-equal', depthLoadValue: 0.0, _expected: triangleColor },
+        { depthCompare: 'greater-equal', depthLoadValue: 1.0, _expected: backgroundColor },
+        { depthCompare: 'greater-equal', depthLoadValue: 0.5, _expected: triangleColor },
+        { depthCompare: 'greater-equal', depthLoadValue: 0.0, _expected: triangleColor },
+        { depthCompare: 'greater', depthLoadValue: 1.0, _expected: backgroundColor },
+        { depthCompare: 'greater', depthLoadValue: 0.5, _expected: backgroundColor },
+        { depthCompare: 'greater', depthLoadValue: 0.0, _expected: triangleColor },
+        { depthCompare: 'always', depthLoadValue: 1.0, _expected: triangleColor },
+        { depthCompare: 'always', depthLoadValue: 0.5, _expected: triangleColor },
+        { depthCompare: 'always', depthLoadValue: 0.0, _expected: triangleColor },
+      ] as const)
   )
   .fn(async t => {
-    const { depthCompare, depthLoadValue, expected, format } = t.params;
+    const { depthCompare, depthLoadValue, _expected, format } = t.params;
     await t.selectDeviceForTextureFormatOrSkipTestCase(format);
 
-    const dst = t.device.createBuffer({
-      size: 4,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-    });
-
+    const colorAttachmentFormat = 'rgba8unorm';
     const colorAttachment = t.device.createTexture({
-      format: 'rgba8unorm',
+      format: colorAttachmentFormat,
       size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
@@ -84,11 +92,7 @@ g.test('depth_compare_func')
             [[location(0)]] var<out> color : vec4<f32>;
 
             [[stage(vertex)]] fn main() -> void {
-              const pos : array<vec2<f32>, 3> = array<vec2<f32>, 3>(
-                  vec2<f32>(-1.0, -3.0),
-                  vec2<f32>(3.0, 1.0),
-                  vec2<f32>(-1.0, 1.0));
-              Position = vec4<f32>(pos[VertexIndex], 0.5, 1.0);
+              Position = vec4<f32>(0.5, 0.5, 0.5, 1.0);
             }
             `,
         }),
@@ -104,12 +108,12 @@ g.test('depth_compare_func')
             `,
         }),
         entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm' }],
+        targets: [{ format: colorAttachmentFormat }],
       },
-      primitive: { topology: 'triangle-list' },
+      primitive: { topology: 'point-list' },
       depthStencil: {
         depthWriteEnabled: true,
-        depthCompare: depthCompare as GPUCompareFunction,
+        depthCompare,
         format,
       },
     };
@@ -134,33 +138,29 @@ g.test('depth_compare_func')
       },
     });
     pass.setPipeline(pipeline);
-    pass.draw(3, 2);
+    pass.draw(1);
     pass.endPass();
-    encoder.copyTextureToBuffer(
-      { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-      { buffer: dst, bytesPerRow: 256 },
-      { width: 1, height: 1, depthOrArrayLayers: 1 }
-    );
     t.device.queue.submit([encoder.finish()]);
 
-    t.expectContents(dst, new Uint8Array(expected));
+    t.expectSinglePixelIn2DTexture(
+      colorAttachment,
+      colorAttachmentFormat,
+      { x: 0, y: 0 },
+      { exp: new Uint8Array(_expected) }
+    );
   });
 
 g.test('reverse_depth')
   .desc(
-    `Tests simple rendering with reversed depth buffer, ensures depth test works properly: triangles are in correct order and out of range triangles are clipped.
+    `Tests simple rendering with reversed depth buffer, ensures depth test works properly: fragments are in correct order and out of range fragments are clipped.
     Note that in real use case the depth range remapping is done by the modified projection matrix.
 (see https://developer.nvidia.com/content/depth-precision-visualized).`
   )
   .cases(pbool('reversed'))
   .fn(async t => {
-    const dst = t.device.createBuffer({
-      size: 4,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-    });
-
+    const colorAttachmentFormat = 'rgba8unorm';
     const colorAttachment = t.device.createTexture({
-      format: 'rgba8unorm',
+      format: colorAttachmentFormat,
       size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
@@ -185,10 +185,6 @@ g.test('reverse_depth')
             [[location(0)]] var<out> color : vec4<f32>;
 
             [[stage(vertex)]] fn main() -> void {
-              const pos : array<vec2<f32>, 3> = array<vec2<f32>, 3>(
-                  vec2<f32>(-1.0, -3.0),
-                  vec2<f32>(3.0, 1.0),
-                  vec2<f32>(-1.0, 1.0));
               // TODO: remove workaround for Tint unary array access broke
               const zv : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
                   vec2<f32>(0.2, 0.2),
@@ -196,7 +192,7 @@ g.test('reverse_depth')
                   vec2<f32>(-0.1, -0.1),
                   vec2<f32>(1.1, 1.1));
               const z : f32 = zv[InstanceIndex].x;
-              Position = vec4<f32>(pos[VertexIndex], z, 1.0);
+              Position = vec4<f32>(0.5, 0.5, z, 1.0);
               const colors : array<vec4<f32>, 4> = array<vec4<f32>, 4>(
                   vec4<f32>(1.0, 0.0, 0.0, 1.0),
                   vec4<f32>(0.0, 1.0, 0.0, 1.0),
@@ -220,9 +216,9 @@ g.test('reverse_depth')
             `,
         }),
         entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm' }],
+        targets: [{ format: colorAttachmentFormat }],
       },
-      primitive: { topology: 'triangle-list' },
+      primitive: { topology: 'point-list' },
       depthStencil: {
         depthWriteEnabled: true,
         depthCompare: t.params.reversed ? 'greater' : 'less',
@@ -250,17 +246,18 @@ g.test('reverse_depth')
       },
     });
     pass.setPipeline(pipeline);
-    pass.draw(3, 2);
+    pass.draw(1, 4);
     pass.endPass();
-    encoder.copyTextureToBuffer(
-      { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-      { buffer: dst, bytesPerRow: 256 },
-      { width: 1, height: 1, depthOrArrayLayers: 1 }
-    );
     t.device.queue.submit([encoder.finish()]);
 
-    t.expectContents(
-      dst,
-      new Uint8Array(t.params.reversed ? [0x00, 0xff, 0x00, 0xff] : [0xff, 0x00, 0x00, 0xff])
+    t.expectSinglePixelIn2DTexture(
+      colorAttachment,
+      colorAttachmentFormat,
+      { x: 0, y: 0 },
+      {
+        exp: new Uint8Array(
+          t.params.reversed ? [0x00, 0xff, 0x00, 0xff] : [0xff, 0x00, 0x00, 0xff]
+        ),
+      }
     );
   });
