@@ -22,10 +22,6 @@ TODO:
   - vertex_attributes= {0, 1, max}
   - vertex_buffer_count={0, 1, max} - where # attributes is > 0
   - step_mode= {vertex, instanced, mixed} - where mixed only applies for vertex_attributes > 1
-
-* unaligned_vertex_count - Test that drawing with a number of vertices that's not a multiple of the vertices a given primitive list topology is not an error. The last primitive is not drawn.
-  - primitive_topology= {line-list, triangle-list}
-  - mode= {draw, drawIndexed, drawIndirect, drawIndexedIndirect}
 `;
 
 import { params, pbool, poptions } from '../../../../common/framework/params_builder.js';
