@@ -216,7 +216,7 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
   .desc(
     `Test texture creation with valid sample count when dimensions, arrayLayerCount, mipLevelCount, format, and usage varies.
      Texture can be single sample (sampleCount is 1) or multi-sample (sampleCount is 4).
-     Multisample texture requires that 1) its dimension is 2d or undefined, 2) its format is a uncompressed format, 3) its mipLevelCount and arrayLayerCount are 1, 4) its usage doesn't include STORAGE.`
+     Multisample texture requires that 1) its dimension is 2d or undefined, 2) its format supports multisample, 3) its mipLevelCount and arrayLayerCount are 1, 4) its usage doesn't include STORAGE.`
   )
   .cases(poptions('dimension', [undefined, ...kTextureDimensions]))
   .subcases(({ dimension }) =>
