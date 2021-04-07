@@ -532,7 +532,7 @@ got [${failedByteActualValues.join(', ')}]`;
       layout,
       generateWarningOnly = false,
     }: {
-      exp: [Uint8Array, Uint8Array];
+      exp: [TypedArrayBufferView, TypedArrayBufferView];
       slice?: number;
       layout?: TextureLayoutOptions;
       generateWarningOnly?: boolean;
