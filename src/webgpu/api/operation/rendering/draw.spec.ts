@@ -10,10 +10,6 @@ TODO:
 * default_arguments - Test defaults to draw / drawIndexed.
   - arg= {instance_count, first, first_instance, base_vertex}
   - mode= {draw, drawIndexed}
-
-* unaligned_vertex_count - Test that drawing with a number of vertices that's not a multiple of the vertices a given primitive list topology is not an error. The last primitive is not drawn.
-  - primitive_topology= {line-list, triangle-list}
-  - mode= {draw, drawIndexed, drawIndirect, drawIndexedIndirect}
 `;
 
 import { params, pbool, poptions } from '../../../../common/framework/params_builder.js';
