@@ -290,6 +290,17 @@ export function depthStencilFormatAspectSize(
   return texelAspectSize;
 }
 
+export function dimensionTypeAndFormatCombinationError(
+  dimension: undefined | GPUTextureDimension,
+  format: GPUTextureFormat
+): boolean {
+  const info = kAllTextureFormatInfo[format];
+  return (
+    ((dimension === '1d' || dimension === '3d') && info.blockWidth > 1) ||
+    (dimension === '3d' && (info.depth || info.stencil))
+  );
+}
+
 export const kTextureUsageInfo: {
   readonly [k in GPUTextureUsage]: {};
 } = {
