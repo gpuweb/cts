@@ -92,7 +92,7 @@ function computeBlendFactor(
 }
 
 function computeBlendOperation(src: GPUColorDict, srcFactor: GPUColorDict,
-  dst: GPUColorDict, dstFactor: GPUColorDict,operation: GPUBlendOperation) {
+  dst: GPUColorDict, dstFactor: GPUColorDict, operation: GPUBlendOperation) {
   switch (operation) {
     case 'add':
       return mapColor(src, (_, k) => srcFactor[k] * src[k] + dstFactor[k] * dst[k]);
@@ -174,18 +174,10 @@ g.test('GPUBlendComponent')
           {
             format: textureFormat,
             blend: {
-              // Set both color/alpha to not do blending.
-              color: {
-                srcFactor: 'one',
-                dstFactor: 'zero',
-                operation: 'add',
-              },
-              alpha: {
-                srcFactor: 'one',
-                dstFactor: 'zero',
-                operation: 'add',
-              },
-              // And then override the component we're testing.
+              // Set both color/alpha to defaults...
+              color: {},
+              alpha: {},
+              // ... but then override the component we're testing.
               [t.params.component]: {
                 srcFactor: t.params.srcFactor,
                 dstFactor: t.params.dstFactor,
@@ -281,7 +273,7 @@ g.test('GPUBlendComponent')
 g.test('formats')
   .desc(
     `Test blending results works for all formats that support it, and that blending is not applied
-  for formats that do not.`)
+  for formats that do not. Blending should be done in linear space for srgb formats.`)
   .unimplemented();
 
 g.test('multiple_color_attachments')
