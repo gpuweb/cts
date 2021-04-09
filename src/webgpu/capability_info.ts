@@ -296,8 +296,8 @@ export function dimensionTypeAndFormatCombinationError(
 ): boolean {
   const info = kAllTextureFormatInfo[format];
   return (
-    ((dimension === '1d' || dimension === '3d') && info.blockWidth > 1) ||
-    (dimension === '3d' && (info.depth || info.stencil))
+    (dimension === '1d' || dimension === '3d') &&
+    (info.blockWidth > 1 || info.depth || info.stencil)
   );
 }
 
