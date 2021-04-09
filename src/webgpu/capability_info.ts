@@ -290,12 +290,12 @@ export function depthStencilFormatAspectSize(
   return texelAspectSize;
 }
 
-export function dimensionTypeAndFormatCombinationError(
+export function textureDimensionAndFormatCompatible(
   dimension: undefined | GPUTextureDimension,
   format: GPUTextureFormat
 ): boolean {
   const info = kAllTextureFormatInfo[format];
-  return (
+  return !(
     (dimension === '1d' || dimension === '3d') &&
     (info.blockWidth > 1 || info.depth || info.stencil)
   );

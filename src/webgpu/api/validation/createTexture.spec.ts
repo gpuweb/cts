@@ -12,7 +12,7 @@ import {
   kTextureUsages,
   kUncompressedTextureFormats,
   kUncompressedTextureFormatInfo,
-  dimensionTypeAndFormatCombinationError,
+  textureDimensionAndFormatCompatible,
 } from '../../capability_info.js';
 import { DefaultLimits, GPUConst } from '../../constants.js';
 import { maxMipLevelCount } from '../../util/texture/base.js';
@@ -86,9 +86,9 @@ g.test('zero_size')
     }, !success);
   });
 
-g.test('dimension_type_on_formats')
+g.test('dimension_type_and_format_compatibility')
   .desc(
-    `Test every dimension types on every formats. Note that 1) compressed formats are not valid for 1D and 3D dimension types and, 2) depth/stencil formats are not valid for 3D dimension type.`
+    `Test every dimension type on every format. Note that compressed formats and depth/stencil formats are not valid for 1D/3D dimension types.`
   )
   .cases(poptions('dimension', [undefined, ...kTextureDimensions]))
   .subcases(() => params().combine(poptions('format', kAllTextureFormats)))
@@ -107,7 +107,7 @@ g.test('dimension_type_on_formats')
 
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);
-    }, dimensionTypeAndFormatCombinationError(dimension, format));
+    }, !textureDimensionAndFormatCompatible(dimension, format));
   });
 
 g.test('mipLevelCount,format')
@@ -262,8 +262,8 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
       .combine(poptions('mipLevelCount', [1, 2]))
       .combine(poptions('format', kAllTextureFormats))
       .combine(poptions('usage', kTextureUsages))
-      // Filter out invalid dimension type and format combinations.
-      .unless(({ format }) => dimensionTypeAndFormatCombinationError(dimension, format))
+      // Filter out incompatible dimension type and format combinations.
+      .filter(({ format }) => textureDimensionAndFormatCompatible(dimension, format))
       .unless(({ usage, format }) => {
         const info = kAllTextureFormatInfo[format];
         return (
@@ -316,8 +316,8 @@ g.test('texture_size,default_value_and_smallest_size,uncompressed_format')
     params()
       .combine(poptions('format', kUncompressedTextureFormats))
       .combine(poptions('size', [[1], [1, 1], [1, 1, 1]]))
-      // Filter out invalid dimension type and format combinations.
-      .unless(({ format }) => dimensionTypeAndFormatCombinationError(dimension, format))
+      // Filter out incompatible dimension type and format combinations.
+      .filter(({ format }) => textureDimensionAndFormatCompatible(dimension, format))
   )
   .fn(async t => {
     const { dimension, format, size } = t.params;
@@ -573,8 +573,6 @@ g.test('texture_size,3d_texture,uncompressed_format')
     }, !success);
   });
 
-// Compressed formats are not supported in 3D in WebGPU v1 because they are complicated but not very useful.
-/*
 g.test('texture_size,3d_texture,compressed_format')
   .desc(`Test texture size requirement for 3D texture with compressed format.`)
   .subcases(() =>
@@ -620,6 +618,7 @@ g.test('texture_size,3d_texture,compressed_format')
   .fn(async t => {
     const { format, size } = t.params;
 
+    // Compressed formats are not supported in 3D in WebGPU v1 because they are complicated but not very useful for now.
     t.skip('Compressed 3D texture is not supported');
 
     const info = kCompressedTextureFormatInfo[format];
@@ -648,7 +647,6 @@ g.test('texture_size,3d_texture,compressed_format')
       t.device.createTexture(descriptor);
     }, !success);
   });
-*/
 
 g.test('texture_usage')
   .desc(
@@ -661,8 +659,8 @@ g.test('texture_usage')
       // If usage0 and usage1 are the same, then the usage being test is a single usage. Otherwise, it is a combined usage.
       .combine(poptions('usage0', kTextureUsages))
       .combine(poptions('usage1', kTextureUsages))
-      // Filter out invalid dimension type and format combinations.
-      .unless(({ format }) => dimensionTypeAndFormatCombinationError(dimension, format))
+      // Filter out incompatible dimension type and format combinations.
+      .filter(({ format }) => textureDimensionAndFormatCompatible(dimension, format))
   )
   .fn(async t => {
     const { dimension, format, usage0, usage1 } = t.params;
