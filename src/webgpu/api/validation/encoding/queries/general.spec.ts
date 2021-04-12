@@ -12,19 +12,7 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { kQueryTypes } from '../../../../capability_info.js';
 import { ValidationTest } from '../../validation_test.js';
 
-class F extends ValidationTest {
-  async selectDeviceForQuerySetOrSkipTestCase(type: GPUQueryType): Promise<void> {
-    return this.selectDeviceOrSkipTestCase(
-      type === 'pipeline-statistics'
-        ? 'pipeline-statistics-query'
-        : type === 'timestamp'
-        ? 'timestamp-query'
-        : undefined
-    );
-  }
-}
-
-export const g = makeTestGroup(F);
+export const g = makeTestGroup(ValidationTest);
 
 g.test('occlusion_query,query_type')
   .desc(
@@ -56,7 +44,7 @@ Tests that begin occlusion query with query index:
   .subcases(() => poptions('queryIndex', [0, 2]))
   .unimplemented();
 
-g.test('writeTimestamp,query_type_and_index')
+g.test('timestamp_query,query_type_and_index')
   .desc(
     `
 Tests that write timestamp to all types of query set on all possible encoders:
@@ -74,7 +62,7 @@ Tests that write timestamp to all types of query set on all possible encoders:
   .fn(async t => {
     const { encoderType, type, queryIndex } = t.params;
 
-    await t.selectDeviceForQuerySetOrSkipTestCase(type);
+    await t.selectDeviceForQueryTypeOrSkipTestCase(type);
 
     const count = 2;
     const pipelineStatistics =
@@ -89,7 +77,7 @@ Tests that write timestamp to all types of query set on all possible encoders:
     }, type !== 'timestamp' || queryIndex >= count);
   });
 
-g.test('writeTimestamp,invalid_query_set')
+g.test('timestamp_query,invalid_query_set')
   .desc(
     `
 Tests that write timestamp to a invalid query set that failed during creation:

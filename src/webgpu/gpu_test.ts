@@ -6,6 +6,7 @@ import {
   EncodableTextureFormat,
   SizedTextureFormat,
   kAllTextureFormatInfo,
+  kQueryTypeInfo,
 } from './capability_info.js';
 import { makeBufferWithContents } from './util/buffer.js';
 import { DevicePool, DeviceProvider, TestOOMedShouldAttemptGC } from './util/device_pool.js';
@@ -107,6 +108,27 @@ export class GPUTest extends Fixture {
         const formatExtension = kAllTextureFormatInfo[format].extension;
         if (formatExtension !== undefined) {
           extensions.add(formatExtension);
+        }
+      }
+    }
+
+    if (extensions.size) {
+      await this.selectDeviceOrSkipTestCase({ extensions });
+    }
+  }
+
+  async selectDeviceForQueryTypeOrSkipTestCase(
+    types: GPUQueryType | undefined | (GPUQueryType | undefined)[]
+  ): Promise<void> {
+    if (!Array.isArray(types)) {
+      types = [types];
+    }
+    const extensions = new Set<GPUExtensionName>();
+    for (const type of types) {
+      if (type !== undefined) {
+        const queryExtension = kQueryTypeInfo[type].extension;
+        if (queryExtension !== undefined) {
+          extensions.add(queryExtension);
         }
       }
     }
