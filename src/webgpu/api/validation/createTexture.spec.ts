@@ -24,8 +24,7 @@ export const g = makeTestGroup(ValidationTest);
 g.test('zero_size')
   .desc(
     `Test texture creation with zero or nonzero size of
-    width, height, depthOrArrayLayers and mipLevelCount for every dimension, and representative formats.
-    TODO: add tests for depth/stencil format if depth/stencil format can support mipmaps.`
+    width, height, depthOrArrayLayers and mipLevelCount for every dimension, and representative formats.`
   )
   .cases(poptions('dimension', [undefined, ...kTextureDimensions]))
   .subcases(({ dimension }) =>
@@ -39,10 +38,16 @@ g.test('zero_size')
           'mipLevelCount',
         ] as const)
       )
-      .combine(poptions('format', ['rgba8unorm', 'rgb10a2unorm', 'bc1-rgba-unorm'] as const))
-      .unless(
-        ({ format }) => format === 'bc1-rgba-unorm' && dimension !== '2d' && dimension !== undefined
+      .combine(
+        poptions('format', [
+          'rgba8unorm',
+          'rgb10a2unorm',
+          'bc1-rgba-unorm',
+          'depth24plus-stencil8',
+        ] as const)
       )
+      // Filter out incompatible dimension type and format combinations.
+      .filter(({ format }) => textureDimensionAndFormatCompatible(dimension, format))
   )
   .fn(async t => {
     const { dimension, zeroArgument, format } = t.params;
@@ -113,23 +118,31 @@ g.test('dimension_type_and_format_compatibility')
 g.test('mipLevelCount,format')
   .desc(
     `Test texture creation with no mipmap chain, partial mipmap chain, full mipmap chain, out-of-bounds mipmap chain
-    for every format with different texture dimension types.
-    TODO: test 1D and 3D dimensions. Note that it is invalid for some formats with 1D/3D and/or mipmapping.`
+    for every format with different texture dimension types.`
   )
-  .subcases(() =>
+  .cases(poptions('dimension', [undefined, ...kTextureDimensions]))
+  .subcases(({ dimension }) =>
     params()
       .combine(poptions('format', kAllTextureFormats))
       .combine(poptions('mipLevelCount', [1, 3, 6, 7]))
+      // Filter out incompatible dimension type and format combinations.
+      .filter(({ format }) => textureDimensionAndFormatCompatible(dimension, format))
   )
   .fn(async t => {
-    const { format, mipLevelCount } = t.params;
+    const { dimension, format, mipLevelCount } = t.params;
 
-    await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].extension);
+    const info = kAllTextureFormatInfo[format];
+    await t.selectDeviceOrSkipTestCase(info.extension);
 
-    const size = [32, 32, 1];
+    // Note that compressed formats are not valid for 1D. They have already been filtered out for 1D in this test.
+    // So there is no dilemma about size.width equals 1 vs size.width % info.blockHeight equals 0 for 1D compressed formats.
+    const size = dimension === '1d' ? [32, 1, 1] : [32, 32, 1];
+    assert(32 % info.blockWidth === 0 && 32 % info.blockHeight === 0);
+
     const descriptor = {
       size,
       mipLevelCount,
+      dimension,
       format,
       usage: GPUTextureUsage.SAMPLED,
     };
