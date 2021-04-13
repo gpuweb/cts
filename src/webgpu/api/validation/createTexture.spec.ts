@@ -46,12 +46,8 @@ g.test('zero_size')
           'depth24plus-stencil8',
         ] as const)
       )
-      .unless(
-        ({ format }) =>
-          (format === 'bc1-rgba-unorm' || format === 'depth24plus-stencil8') &&
-          dimension !== '2d' &&
-          dimension !== undefined
-      )
+      // Filter out incompatible dimension type and format combinations.
+      .filter(({ format }) => textureDimensionAndFormatCompatible(dimension, format))
   )
   .fn(async t => {
     const { dimension, zeroArgument, format } = t.params;
