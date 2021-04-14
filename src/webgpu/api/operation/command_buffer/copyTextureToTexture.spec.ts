@@ -415,9 +415,7 @@ g.test('color_textures,compressed,non_array')
   )
   .fn(async t => {
     const { textureSize, format, copyBoxOffsets, srcCopyLevel, dstCopyLevel } = t.params;
-
-    const extension: GPUExtensionName = kCompressedTextureFormatInfo[format].extension;
-    await t.selectDeviceOrSkipTestCase({ extensions: [extension] });
+    await t.selectDeviceOrSkipTestCase(kCompressedTextureFormatInfo[format].extension);
 
     t.DoCopyTextureToTextureTest(
       textureSize.srcTextureSize,
@@ -500,9 +498,7 @@ g.test('color_textures,compressed,array')
   )
   .fn(async t => {
     const { textureSize, format, copyBoxOffsets, srcCopyLevel, dstCopyLevel } = t.params;
-
-    const extension: GPUExtensionName = kCompressedTextureFormatInfo[format].extension;
-    await t.selectDeviceOrSkipTestCase({ extensions: [extension] });
+    await t.selectDeviceOrSkipTestCase(kCompressedTextureFormatInfo[format].extension);
 
     t.DoCopyTextureToTextureTest(
       textureSize.srcTextureSize,

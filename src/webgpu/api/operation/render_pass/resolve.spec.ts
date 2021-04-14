@@ -90,7 +90,7 @@ g.test('render_pass_resolve')
     });
 
     const resolveTargets: GPUTexture[] = [];
-    const renderPassColorAttachmentDescriptors: GPURenderPassColorAttachmentDescriptor[] = [];
+    const renderPassColorAttachments: GPURenderPassColorAttachment[] = [];
 
     // The resolve target must be the same size as the color attachment. If we're resolving to mip
     // level 1, the resolve target base mip level should be 2x the color attachment size.
@@ -130,7 +130,7 @@ g.test('render_pass_resolve')
 
         // Clear to black for the load operation. After the draw, the top left half of the attachment
         // will be white and the bottom right half will be black.
-        renderPassColorAttachmentDescriptors.push({
+        renderPassColorAttachments.push({
           attachment: colorAttachment.createView(),
           loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
           storeOp: t.params.storeOperation,
@@ -142,7 +142,7 @@ g.test('render_pass_resolve')
 
         resolveTargets.push(resolveTarget);
       } else {
-        renderPassColorAttachmentDescriptors.push({
+        renderPassColorAttachments.push({
           attachment: colorAttachment.createView(),
           loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
           storeOp: t.params.storeOperation,
@@ -153,7 +153,7 @@ g.test('render_pass_resolve')
     const encoder = t.device.createCommandEncoder();
 
     const pass = encoder.beginRenderPass({
-      colorAttachments: renderPassColorAttachmentDescriptors,
+      colorAttachments: renderPassColorAttachments,
     });
     pass.setPipeline(pipeline);
     pass.draw(3);

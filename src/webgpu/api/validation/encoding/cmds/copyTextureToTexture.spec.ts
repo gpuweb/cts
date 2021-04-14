@@ -51,8 +51,8 @@ import { ValidationTest } from '../../validation_test.js';
 
 class F extends ValidationTest {
   TestCopyTextureToTexture(
-    source: GPUTextureCopyView,
-    destination: GPUTextureCopyView,
+    source: GPUImageCopyTexture,
+    destination: GPUImageCopyTexture,
     copySize: GPUExtent3D,
     isSuccess: boolean
   ): void {
@@ -521,7 +521,7 @@ g.test('copy_within_same_texture')
 g.test('copy_aspects')
   .desc(
     `
-Test the validations on the member 'aspect' of GPUTextureCopyView in CopyTextureToTexture().
+Test the validations on the member 'aspect' of GPUImageCopyTexture in CopyTextureToTexture().
 - for all the color and depth-stencil formats: the texture copy aspects must be both 'all'.
 - for all the depth-only formats: the texture copy aspects must be either 'all' or 'depth-only'.
 - for all the stencil-only formats: the texture copy aspects must be either 'all' or 'stencil-only'.

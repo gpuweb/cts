@@ -153,8 +153,8 @@ class CopyImageBitmapToTextureTest extends ValidationTest {
   }
 
   runTest(
-    imageBitmapCopyView: GPUImageBitmapCopyView,
-    textureCopyView: GPUTextureCopyView,
+    imageBitmapCopyView: GPUImageCopyImageBitmap,
+    textureCopyView: GPUImageCopyTexture,
     copySize: GPUExtent3D,
     validationScopeSuccess: boolean,
     exceptionName?: string

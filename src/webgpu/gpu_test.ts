@@ -75,8 +75,9 @@ export class GPUTest extends Fixture {
    *
    * If the request descriptor can't be supported, throws an exception to skip the entire test case.
    */
+  // TODO: Allow Array<GPUFeatureName | undefined>
   async selectDeviceOrSkipTestCase(
-    descriptor: GPUDeviceDescriptor | GPUExtensionName | undefined
+    descriptor: GPUDeviceDescriptor | GPUFeatureName | undefined
   ): Promise<void> {
     if (descriptor === undefined) return;
     if (typeof descriptor === 'string') descriptor = { extensions: [descriptor] };
