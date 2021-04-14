@@ -1,3 +1,4 @@
+/* eslint-disable deprecation/deprecation */
 export const description = `
 TODO: fences are removed; replace still-relevant tests with equivalents for (multiple?) queues
 `;

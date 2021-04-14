@@ -240,6 +240,7 @@ g.test('GPUBlendComponent')
     });
     renderPass.setPipeline(pipeline);
     if (blendColor) {
+      /* eslint-disable-next-line deprecation/deprecation */
       renderPass.setBlendColor(blendColor);
     }
     renderPass.setBindGroup(

@@ -1,6 +1,8 @@
 export const description = `
 API validation tests for dynamic state commands (setViewport/ScissorRect/BlendColor...).
 
+TODO: update setBlendColor -> setBlendConstant
+
 TODO: ensure existing tests cover these notes. Note many of these may be operation tests instead.
 > - setViewport
 >     - {x, y} = {0, invalid values if any}
@@ -293,6 +295,7 @@ g.test('setBlendColor')
   .fn(t => {
     const { r, g, b, a } = t.params;
     const encoders = t.createDummyRenderPassEncoder();
+    /* eslint-disable-next-line deprecation/deprecation */
     encoders.pass.setBlendColor({ r, g, b, a });
     encoders.pass.endPass();
     encoders.encoder.finish();

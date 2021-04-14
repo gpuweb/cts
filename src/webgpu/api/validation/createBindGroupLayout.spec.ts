@@ -1,7 +1,7 @@
 export const description = `
 createBindGroupLayout validation tests.
 
-TODO: update for new binding structure.
+TODO: update for new binding structure, remove eslint-disable.
 TODO: review existing tests, write descriptions, and make sure tests are complete.
 `;
 
@@ -201,6 +201,7 @@ TODO(#230): Update to enforce per-stage and per-pipeline-layout limits on BGLs a
 
     // Dynamic buffers exceed maximum in a bind group layout.
     const badDescriptor = clone(goodDescriptor);
+    /* eslint-disable-next-line deprecation/deprecation */
     badDescriptor.entries[maxDynamicBufferCount].hasDynamicOffset = true;
 
     t.expectValidationError(() => {
@@ -216,8 +217,10 @@ TODO(#230): Update to enforce per-stage and per-pipeline-layout limits on BGLs a
 //     (i.e. 'storage-buffer' <-> 'readonly-storage-buffer').
 //   - Otherwise, an arbitrary other type.
 function* pickExtraBindingTypes(
+  /* eslint-disable-next-line deprecation/deprecation */
   bindingType: GPUBindingType,
   extraTypeSame: boolean
+  /* eslint-disable-next-line deprecation/deprecation */
 ): IterableIterator<GPUBindingType> {
   const info = kBindingTypeInfo[bindingType];
   if (extraTypeSame) {
