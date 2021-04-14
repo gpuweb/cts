@@ -37,7 +37,7 @@
     "@types/morgan": "^1.9.2",
     "@types/node": "^14.11.10",
     "@types/offscreencanvas": "^2019.6.2",
-    "@webgpu/types": "0.0.45",
+    "@webgpu/types": "^0.1.0",
     "babel-plugin-add-header-comment": "^1.0.3",
     "babel-plugin-const-enum": "^1.0.1",
     "chokidar": "^3.4.3",

@@ -5,8 +5,6 @@ import { assert } from '../common/framework/util/util.js';
 import { GPUConst } from './constants.js';
 
 type valueof<K> = K[keyof K];
-type GPUTextureUsage = valueof<typeof GPUTextureUsage>;
-type GPUBufferUsage = valueof<typeof GPUBufferUsage>;
 
 function keysOf<T extends string>(obj: { [k in T]: unknown }): readonly T[] {
   return (Object.keys(obj) as unknown[]) as T[];
@@ -54,7 +52,7 @@ export const kQueryTypes = ['occlusion', 'pipeline-statistics', 'timestamp'] as 
 export const kBufferSizeAlignment = 4;
 
 export const kBufferUsageInfo: {
-  readonly [k in GPUBufferUsage]: {};
+  readonly [k in valueof<typeof GPUConst.BufferUsage>]: {};
 } = /* prettier-ignore */ {
   [GPUConst.BufferUsage.MAP_READ]:      {},
   [GPUConst.BufferUsage.MAP_WRITE]:     {},
@@ -67,7 +65,7 @@ export const kBufferUsageInfo: {
   [GPUConst.BufferUsage.INDIRECT]:      {},
   [GPUConst.BufferUsage.QUERY_RESOLVE]: {},
 };
-export const kBufferUsages = numericKeysOf<GPUBufferUsage>(kBufferUsageInfo);
+export const kBufferUsages = numericKeysOf<GPUBufferUsageFlags>(kBufferUsageInfo);
 
 // Textures
 
@@ -291,7 +289,7 @@ export function depthStencilFormatAspectSize(
 }
 
 export const kTextureUsageInfo: {
-  readonly [k in GPUTextureUsage]: {};
+  readonly [k in valueof<typeof GPUConst.TextureUsage>]: {};
 } = {
   [GPUConst.TextureUsage.COPY_SRC]: {},
   [GPUConst.TextureUsage.COPY_DST]: {},
@@ -299,7 +297,7 @@ export const kTextureUsageInfo: {
   [GPUConst.TextureUsage.STORAGE]: {},
   [GPUConst.TextureUsage.RENDER_ATTACHMENT]: {},
 };
-export const kTextureUsages = numericKeysOf<GPUTextureUsage>(kTextureUsageInfo);
+export const kTextureUsages = numericKeysOf<GPUTextureUsageFlags>(kTextureUsageInfo);
 
 export const kTextureComponentTypeInfo: {
   readonly [k in GPUTextureComponentType]: {
@@ -487,7 +485,7 @@ const kValidStagesStorageWrite = {
 
 export const kBufferBindingTypeInfo: {
   readonly [k in BufferBindingType]: {
-    readonly usage: GPUBufferUsage;
+    readonly usage: GPUBufferUsageFlags;
     // Add fields as needed
   } & BindingTypeInfo;
 } = /* prettier-ignore */ {
@@ -509,7 +507,7 @@ export const kSamplerBindingTypes = keysOf(kSamplerBindingTypeInfo);
 
 export const kTextureBindingTypeInfo: {
   readonly [k in TextureBindingType]: {
-    readonly usage: GPUTextureUsage;
+    readonly usage: GPUTextureUsageFlags;
     // Add fields as needed
   } & BindingTypeInfo;
 } = /* prettier-ignore */ {
