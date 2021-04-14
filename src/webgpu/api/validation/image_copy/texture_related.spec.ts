@@ -292,8 +292,8 @@ g.test('copy_rectangle')
     const format = 'rgba8unorm';
     const info = kSizedTextureFormatInfo[format];
 
-    const origin: GPUOrigin3D = [0, 0, 0];
-    const copySize: GPUExtent3D = [0, 0, 0];
+    const origin = [0, 0, 0];
+    const copySize = [0, 0, 0];
     const textureSize = { width: 16 << mipLevel, height: 16 << mipLevel, depthOrArrayLayers: 16 };
     const success = originValue + copySizeValue <= textureSizeValue;
 

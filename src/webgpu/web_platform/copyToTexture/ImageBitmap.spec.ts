@@ -108,7 +108,7 @@ got [${failedByteActualValues.join(', ')}]`;
   doTestAndCheckResult(
     imageBitmapCopyView: GPUImageBitmapCopyView,
     dstTextureCopyView: GPUTextureCopyView,
-    copySize: GPUExtent3D,
+    copySize: GPUExtent3DDict,
     bytesPerPixel: number,
     expectedData: Uint8ClampedArray
   ): void {
