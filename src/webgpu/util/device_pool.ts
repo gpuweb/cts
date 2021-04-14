@@ -157,7 +157,11 @@ class DescriptorToHolderMap {
   }
 }
 
-type CanonicalDeviceDescriptor = Omit<Required<GPUDeviceDescriptor>, 'label'>;
+// TODO: Switch to using the non-deprecated member names
+type CanonicalDeviceDescriptor = Omit<
+  Required<GPUDeviceDescriptor>,
+  'label' | 'nonGuaranteedFeatures' | 'nonGuaranteedLimits'
+>;
 /**
  * Make a stringified map-key from a GPUDeviceDescriptor.
  * Tries to make sure all defaults are resolved, first - but it's okay if some are missed
