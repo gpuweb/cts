@@ -1,3 +1,4 @@
+/* eslint-disable deprecation/deprecation */
 export const description = `
 fences validation tests.
 

@@ -92,6 +92,7 @@ class TextureUsageTracking extends ValidationTest {
   createBindGroup(
     index: number,
     view: GPUTextureView,
+    /* eslint-disable-next-line deprecation/deprecation */
     bindingType: GPUBindingType,
     dimension: GPUTextureViewDimension,
     bindingTexFormat: GPUTextureFormat | undefined

@@ -322,7 +322,8 @@ export const kTextureUsages = numericKeysOf<GPUTextureUsageFlags>(kTextureUsageI
 
 // TODO: Remove once tests are updated for new binding structure.
 export const kTextureComponentTypeInfo: {
-  readonly [k in GPUTextureComponentType]: {
+  readonly /* eslint-disable-next-line deprecation/deprecation */
+  [k in GPUTextureComponentType]: {
     // Add fields as needed
   };
 } = /* prettier-ignore */ {
@@ -542,8 +543,10 @@ export const kTextureBindingTypes = keysOf(kTextureBindingTypeInfo);
 
 // All binding types (merged from above)
 
+// TODO: Update when tests are updated for new binding structure.
 export const kBindingTypeInfo: {
-  readonly [k in GPUBindingType]: BindingTypeInfo;
+  readonly /* eslint-disable-next-line deprecation/deprecation */
+  [k in GPUBindingType]: BindingTypeInfo;
 } = {
   ...kBufferBindingTypeInfo,
   ...kSamplerBindingTypeInfo,
