@@ -534,8 +534,7 @@ export const g = makeTestGroup(TextureZeroInitTest);
 g.test('uninitialized_texture_is_zero')
   .params(paramsBuilder)
   .fn(async t => {
-    const extension = kUncompressedTextureFormatInfo[t.params.format].extension;
-    await t.selectDeviceOrSkipTestCase(extension);
+    await t.selectDeviceOrSkipTestCase(kUncompressedTextureFormatInfo[t.params.format].feature);
 
     const usage = getRequiredTextureUsage(
       t.params.format,

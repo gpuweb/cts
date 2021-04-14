@@ -120,7 +120,7 @@ export class GPUTest extends Fixture {
     const features = new Set<GPUFeatureName | undefined>();
     for (const format of formats) {
       if (format !== undefined) {
-        features.add(kAllTextureFormatInfo[format].extension);
+        features.add(kAllTextureFormatInfo[format].feature);
       }
     }
 
@@ -133,7 +133,7 @@ export class GPUTest extends Fixture {
     if (!Array.isArray(types)) {
       types = [types];
     }
-    const features = types.map(t => kQueryTypeInfo[t].extension);
+    const features = types.map(t => kQueryTypeInfo[t].feature);
     await this.selectDeviceOrSkipTestCase(features);
   }
 

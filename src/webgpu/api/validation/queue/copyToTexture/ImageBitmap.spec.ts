@@ -319,8 +319,7 @@ g.test('destination_texture,format')
   )
   .fn(async t => {
     const { format, copySize } = t.params;
-
-    await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].extension);
+    await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].feature);
 
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
 

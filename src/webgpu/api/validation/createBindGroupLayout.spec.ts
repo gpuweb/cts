@@ -99,7 +99,7 @@ g.test('bindingTypeSpecific_optional_members')
     } = t.params;
 
     if (storageTextureFormat !== undefined) {
-      await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[storageTextureFormat].extension);
+      await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[storageTextureFormat].feature);
     }
 
     let success = true;
