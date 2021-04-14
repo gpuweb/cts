@@ -40,7 +40,7 @@ class F extends ValidationTest {
   createColorAttachment(
     format: GPUTextureFormat,
     sampleCount?: number
-  ): GPURenderPassColorAttachmentDescriptor {
+  ): GPURenderPassColorAttachment {
     return {
       attachment: this.createAttachmentTextureView(format, sampleCount),
       loadValue: [0, 0, 0, 0],
@@ -50,7 +50,7 @@ class F extends ValidationTest {
   createDepthAttachment(
     format: GPUTextureFormat,
     sampleCount?: number
-  ): GPURenderPassDepthStencilAttachmentDescriptor {
+  ): GPURenderPassDepthStencilAttachment {
     return {
       attachment: this.createAttachmentTextureView(format, sampleCount),
       depthLoadValue: 0,

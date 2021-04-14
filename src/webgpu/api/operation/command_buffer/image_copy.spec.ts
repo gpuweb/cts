@@ -109,7 +109,7 @@ const kWorkingTextureFormats = kSizedTextureFormats.filter(x => !kExcludedFormat
 class ImageCopyTest extends GPUTest {
   /** Offset for a particular texel in the linear texture data */
   getTexelOffsetInBytes(
-    textureDataLayout: Required<GPUTextureDataLayout>,
+    textureDataLayout: Required<GPUImageDataLayout>,
     format: SizedTextureFormat,
     texel: Required<GPUOrigin3DDict>,
     origin: Required<GPUOrigin3DDict> = { x: 0, y: 0, z: 0 }
@@ -164,7 +164,7 @@ class ImageCopyTest extends GPUTest {
   }
 
   /**
-   * This is used for testing passing undefined members of `GPUTextureDataLayout` instead of actual
+   * This is used for testing passing undefined members of `GPUImageDataLayout` instead of actual
    * values where possible. Passing arguments as values and not as objects so that they are passed
    * by copy and not by reference.
    */
@@ -173,7 +173,7 @@ class ImageCopyTest extends GPUTest {
     rowsPerImage: number | undefined,
     bytesPerRow: number | undefined,
     changeBeforePass: ChangeBeforePass
-  ): GPUTextureDataLayout {
+  ): GPUImageDataLayout {
     if (changeBeforePass === 'undefined') {
       if (offset === 0) {
         offset = undefined;
@@ -189,7 +189,7 @@ class ImageCopyTest extends GPUTest {
   }
 
   /**
-   * This is used for testing passing undefined members of `GPUTextureCopyView` instead of actual
+   * This is used for testing passing undefined members of `GPUImageCopyTexture` instead of actual
    * values where possible and also for testing passing the origin as `[number, number, number]`.
    * Passing arguments as values and not as objects so that they are passed by copy and not by
    * reference.
@@ -201,7 +201,7 @@ class ImageCopyTest extends GPUTest {
     origin_z: number | undefined,
     mipLevel: number | undefined,
     changeBeforePass: ChangeBeforePass
-  ): GPUTextureCopyView {
+  ): GPUImageCopyTexture {
     let origin: GPUOrigin3D | undefined = { x: origin_x, y: origin_y, z: origin_z };
 
     if (changeBeforePass === 'undefined') {
@@ -253,7 +253,7 @@ class ImageCopyTest extends GPUTest {
   /** Run a CopyT2B command with appropriate arguments corresponding to `ChangeBeforePass` */
   copyTextureToBufferWithAppliedArguments(
     buffer: GPUBuffer,
-    { offset, rowsPerImage, bytesPerRow }: Required<GPUTextureDataLayout>,
+    { offset, rowsPerImage, bytesPerRow }: Required<GPUImageDataLayout>,
     { width, height, depthOrArrayLayers }: Required<GPUExtent3DDict>,
     { texture, mipLevel, origin }: TextureCopyViewWithRequiredOrigin,
     changeBeforePass: ChangeBeforePass
@@ -372,7 +372,7 @@ class ImageCopyTest extends GPUTest {
     checkSize: Required<GPUExtent3DDict>,
     format: SizedTextureFormat,
     expected: Uint8Array,
-    expectedDataLayout: Required<GPUTextureDataLayout>,
+    expectedDataLayout: Required<GPUImageDataLayout>,
     changeBeforePass: ChangeBeforePass = 'none'
   ): void {
     // The alignment is necessary because we need to copy and map data from this buffer.
@@ -488,7 +488,7 @@ class ImageCopyTest extends GPUTest {
   copyWholeTextureToBufferAndCheckContentsWithUpdatedData(
     { texture, mipLevel, origin }: TextureCopyViewWithRequiredOrigin,
     fullTextureCopyLayout: TextureCopyLayout,
-    texturePartialDataLayout: Required<GPUTextureDataLayout>,
+    texturePartialDataLayout: Required<GPUImageDataLayout>,
     copySize: Required<GPUExtent3DDict>,
     format: SizedTextureFormat,
     fullData: GPUBuffer,
@@ -543,7 +543,7 @@ class ImageCopyTest extends GPUTest {
     checkMethod,
     changeBeforePass = 'none',
   }: {
-    textureDataLayout: Required<GPUTextureDataLayout>;
+    textureDataLayout: Required<GPUImageDataLayout>;
     copySize: Required<GPUExtent3DDict>;
     dataSize: number;
     mipLevel?: number;

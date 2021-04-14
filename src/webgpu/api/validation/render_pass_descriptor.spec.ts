@@ -43,7 +43,7 @@ class F extends ValidationTest {
   getColorAttachment(
     texture: GPUTexture,
     textureViewDescriptor?: GPUTextureViewDescriptor
-  ): GPURenderPassColorAttachmentDescriptor {
+  ): GPURenderPassColorAttachment {
     const attachment = texture.createView(textureViewDescriptor);
 
     return {
@@ -55,7 +55,7 @@ class F extends ValidationTest {
   getDepthStencilAttachment(
     texture: GPUTexture,
     textureViewDescriptor?: GPUTextureViewDescriptor
-  ): GPURenderPassDepthStencilAttachmentDescriptor {
+  ): GPURenderPassDepthStencilAttachment {
     const attachment = texture.createView(textureViewDescriptor);
 
     return {

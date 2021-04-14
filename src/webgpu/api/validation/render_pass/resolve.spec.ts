@@ -95,7 +95,7 @@ Test various validation behaviors when a resolveTarget is provided.
     // Run the test in a nested loop such that the configured color attachment with resolve target
     // is tested while occupying each individual colorAttachment slot.
     for (let resolveSlot = 0; resolveSlot < kNumColorAttachments; resolveSlot++) {
-      const renderPassColorAttachmentDescriptors: GPURenderPassColorAttachmentDescriptor[] = [];
+      const renderPassColorAttachmentDescriptors: GPURenderPassColorAttachment[] = [];
       for (
         let colorAttachmentSlot = 0;
         colorAttachmentSlot < kNumColorAttachments;
