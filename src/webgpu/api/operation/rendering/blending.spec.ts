@@ -62,16 +62,20 @@ function computeBlendFactor(
       return { r: 0, g: 0, b: 0, a: 0 };
     case 'one':
       return { r: 1, g: 1, b: 1, a: 1 };
+    case 'src':
     case 'src-color':
       return { ...src };
+    case 'one-minus-src':
     case 'one-minus-src-color':
       return mapColor(src, v => 1 - v);
     case 'src-alpha':
       return mapColor(src, () => src.a);
     case 'one-minus-src-alpha':
       return mapColor(src, () => 1 - src.a);
+    case 'dst':
     case 'dst-color':
       return { ...dst };
+    case 'one-minus-dst':
     case 'one-minus-dst-color':
       return mapColor(dst, v => 1 - v);
     case 'dst-alpha':
@@ -82,9 +86,11 @@ function computeBlendFactor(
       const f = Math.min(src.a, 1 - dst.a);
       return { r: f, g: f, b: f, a: 1 };
     }
+    case 'constant':
     case 'blend-color':
       assert(blendColor !== undefined);
       return { ...blendColor };
+    case 'one-minus-constant':
     case 'one-minus-blend-color':
       assert(blendColor !== undefined);
       return mapColor(blendColor, v => 1 - v);

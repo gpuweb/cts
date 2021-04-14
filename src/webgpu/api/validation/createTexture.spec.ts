@@ -194,8 +194,9 @@ g.test('mipLevelCount,bound_check')
 
     await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].extension);
 
-    const descriptor: GPUTextureDescriptor = {
+    const descriptor = {
       size,
+      mipLevelCount: 0,
       dimension,
       format,
       usage: GPUTextureUsage.SAMPLED,
