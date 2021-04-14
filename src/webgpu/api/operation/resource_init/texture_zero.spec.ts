@@ -535,11 +535,7 @@ g.test('uninitialized_texture_is_zero')
   .params(paramsBuilder)
   .fn(async t => {
     const extension = kUncompressedTextureFormatInfo[t.params.format].extension;
-    if (extension !== undefined) {
-      await t.selectDeviceOrSkipTestCase({
-        extensions: [extension],
-      });
-    }
+    await t.selectDeviceOrSkipTestCase(extension);
 
     const usage = getRequiredTextureUsage(
       t.params.format,

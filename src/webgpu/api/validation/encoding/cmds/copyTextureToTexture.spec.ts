@@ -270,20 +270,9 @@ g.test('texture_format_equality')
   )
   .fn(async t => {
     const { srcFormat, dstFormat } = t.params;
-    const extensions: Array<GPUExtensionName> = [];
-
-    const srcFormatExtension = kAllTextureFormatInfo[srcFormat].extension;
-    if (srcFormatExtension !== undefined) {
-      extensions.push(srcFormatExtension);
-    }
-    const dstFormatExtension = kAllTextureFormatInfo[dstFormat].extension;
-    if (dstFormatExtension !== undefined) {
-      extensions.push(dstFormatExtension);
-    }
-
-    if (extensions.length) {
-      await t.selectDeviceOrSkipTestCase({ extensions });
-    }
+    const srcFormatInfo = kAllTextureFormatInfo[srcFormat];
+    const dstFormatInfo = kAllTextureFormatInfo[dstFormat];
+    await t.selectDeviceOrSkipTestCase([srcFormatInfo.extension, dstFormatInfo.extension]);
 
     const kTextureSize = { width: 16, height: 16, depthOrArrayLayers: 1 };
 
@@ -603,9 +592,9 @@ g.test('copy_ranges_with_compressed_texture_formats')
   .fn(async t => {
     const { format, copyBoxOffsets, srcCopyLevel, dstCopyLevel } = t.params;
 
-    const extension: GPUExtensionName | undefined = kAllTextureFormatInfo[format].extension;
-    assert(extension !== undefined);
-    await t.selectDeviceOrSkipTestCase({ extensions: [extension] });
+    const feature = kAllTextureFormatInfo[format].extension;
+    assert(feature !== undefined);
+    await t.selectDeviceOrSkipTestCase(feature);
 
     const kTextureSize = { width: 60, height: 48, depthOrArrayLayers: 3 };
     const kMipLevelCount = 4;
