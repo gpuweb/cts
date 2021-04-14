@@ -163,7 +163,7 @@ Tests that a BC format passes validation iff the feature is enabled.`
     const { textureCompressionBC } = t.params;
 
     if (textureCompressionBC) {
-      await t.selectDeviceOrSkipTestCase({ extensions: ['texture-compression-bc'] });
+      await t.selectDeviceOrSkipTestCase('texture-compression-bc');
     }
 
     const shouldError = !textureCompressionBC;
