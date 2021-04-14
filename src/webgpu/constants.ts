@@ -1,8 +1,9 @@
-import { ResolveType } from '../common/framework/util/types.js';
+// Types ensure every field is specified.
 
-// Types ensures every field is specified.
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+function checkType<T>(x: T) {}
 
-const BufferUsage: ResolveType<Omit<GPUBufferUsage, '__brand'>> = {
+const BufferUsage = {
   MAP_READ: 0x0001,
   MAP_WRITE: 0x0002,
   COPY_SRC: 0x0004,
@@ -13,30 +14,40 @@ const BufferUsage: ResolveType<Omit<GPUBufferUsage, '__brand'>> = {
   STORAGE: 0x0080,
   INDIRECT: 0x0100,
   QUERY_RESOLVE: 0x0200,
-};
-const TextureUsage: ResolveType<Omit<GPUTextureUsage, '__brand'>> = {
+} as const;
+checkType<Omit<GPUBufferUsage, '__brand'>>(BufferUsage);
+
+const TextureUsage = {
   COPY_SRC: 0x01,
   COPY_DST: 0x02,
   SAMPLED: 0x04,
   STORAGE: 0x08,
   RENDER_ATTACHMENT: 0x10,
-};
-const ColorWrite: ResolveType<Omit<GPUColorWrite, '__brand'>> = {
+} as const;
+checkType<Omit<GPUTextureUsage, '__brand'>>(TextureUsage);
+
+const ColorWrite = {
   RED: 0x1,
   GREEN: 0x2,
   BLUE: 0x4,
   ALPHA: 0x8,
   ALL: 0xf,
-};
-const ShaderStage: ResolveType<Omit<GPUShaderStage, '__brand'>> = {
+} as const;
+checkType<Omit<GPUColorWrite, '__brand'>>(ColorWrite);
+
+const ShaderStage = {
   VERTEX: 0x1,
   FRAGMENT: 0x2,
   COMPUTE: 0x4,
-};
-const MapMode: ResolveType<Omit<GPUMapMode, '__brand'>> = {
+} as const;
+checkType<Omit<GPUShaderStage, '__brand'>>(ShaderStage);
+
+const MapMode = {
   READ: 0x1,
   WRITE: 0x2,
-};
+} as const;
+checkType<Omit<GPUMapMode, '__brand'>>(MapMode);
+
 export const GPUConst = {
   BufferUsage,
   TextureUsage,
@@ -45,7 +56,8 @@ export const GPUConst = {
   MapMode,
 } as const;
 
-export const DefaultLimits: ResolveType<Required<Readonly<GPULimits>>> = {
+type Limits = Omit<GPUAdapterLimits, '__brand'>;
+export const DefaultLimits: Limits = {
   maxTextureDimension1D: 8192,
   maxTextureDimension2D: 8192,
   maxTextureDimension3D: 2048,
@@ -59,4 +71,8 @@ export const DefaultLimits: ResolveType<Required<Readonly<GPULimits>>> = {
   maxStorageTexturesPerShaderStage: 4,
   maxUniformBuffersPerShaderStage: 12,
   maxUniformBufferBindingSize: 16384,
+  maxStorageBufferBindingSize: 134217728,
+  maxVertexBuffers: 8,
+  maxVertexAttributes: 16,
+  maxVertexBufferArrayStride: 2048,
 };
