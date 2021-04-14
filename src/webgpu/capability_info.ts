@@ -320,6 +320,7 @@ export const kTextureUsageInfo: {
 };
 export const kTextureUsages = numericKeysOf<GPUTextureUsageFlags>(kTextureUsageInfo);
 
+// TODO: Remove once tests are updated for new binding structure.
 export const kTextureComponentTypeInfo: {
   readonly [k in GPUTextureComponentType]: {
     // Add fields as needed
