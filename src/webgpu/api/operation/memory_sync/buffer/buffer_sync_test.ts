@@ -10,7 +10,6 @@ export const kAllWriteOps = ['render', 'render-via-bundle', 'compute', 'b2b-copy
 export class BufferSyncTest extends GPUTest {
   // Create a buffer, and initialize it to a specified value for all elements.
   async createBufferWithValue(initValue: number): Promise<GPUBuffer> {
-    const fence = this.queue.createFence();
     const buffer = this.device.createBuffer({
       mappedAtCreation: true,
       size: kSize,
@@ -18,14 +17,12 @@ export class BufferSyncTest extends GPUTest {
     });
     new Uint32Array(buffer.getMappedRange()).fill(initValue);
     buffer.unmap();
-    this.queue.signal(fence, 1);
-    await fence.onCompletion(1);
+    await this.queue.onSubmittedWorkDone();
     return buffer;
   }
 
   // Create a texture, and initialize it to a specified value for all elements.
   async createTextureWithValue(initValue: number): Promise<GPUTexture> {
-    const fence = this.queue.createFence();
     const data = new Uint32Array(kSize / 4).fill(initValue);
     const texture = this.device.createTexture({
       size: { width: kSize / 4, height: 1, depthOrArrayLayers: 1 },
@@ -38,8 +35,7 @@ export class BufferSyncTest extends GPUTest {
       { offset: 0, bytesPerRow: kSize, rowsPerImage: 1 },
       { width: kSize / 4, height: 1, depthOrArrayLayers: 1 }
     );
-    this.queue.signal(fence, 1);
-    await fence.onCompletion(1);
+    await this.queue.onSubmittedWorkDone();
     return texture;
   }
 
