@@ -1,6 +1,8 @@
 export const description = `
 Texture Usages Validation Tests in Render Pass and Compute Pass.
 
+TODO: update for new binding structure.
+
 TODO: description per test
 
 Test Coverage:
