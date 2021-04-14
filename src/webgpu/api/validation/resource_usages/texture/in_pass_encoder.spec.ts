@@ -597,8 +597,7 @@ g.test('subresources_and_binding_types_combination_for_aspect')
       _resourceSuccess,
       _usageSuccess,
     } = t.params;
-
-    await t.selectDeviceOrSkipTestCase(kDepthStencilFormatInfo[format].extension);
+    await t.selectDeviceOrSkipTestCase(kDepthStencilFormatInfo[format].feature);
 
     const texture = t.createTexture({
       arrayLayerCount: TOTAL_LAYERS,

@@ -157,7 +157,7 @@ g.test('origin_alignment')
   .fn(async t => {
     const { valueToCoordinate, coordinateToTest, format, method } = t.params;
     const info = kSizedTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.extension);
+    await t.selectDeviceOrSkipTestCase(info.feature);
 
     const origin = { x: 0, y: 0, z: 0 };
     const size = { width: 0, height: 0, depthOrArrayLayers: 0 };
@@ -238,7 +238,7 @@ g.test('size_alignment')
   .fn(async t => {
     const { valueToCoordinate, coordinateToTest, format, method } = t.params;
     const info = kSizedTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.extension);
+    await t.selectDeviceOrSkipTestCase(info.feature);
 
     const origin = { x: 0, y: 0, z: 0 };
     const size = { width: 0, height: 0, depthOrArrayLayers: 0 };

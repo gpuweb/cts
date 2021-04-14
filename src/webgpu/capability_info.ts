@@ -47,13 +47,13 @@ function makeTable<
 export const kMaxQueryCount = 8192;
 export const kQueryTypeInfo: {
   readonly [k in GPUQueryType]: {
-    readonly extension: GPUExtensionName | undefined;
+    readonly feature: GPUFeatureName | undefined;
   };
 } = /* prettier-ignore */ {
-  // Occlusion query does not require any extensions.
-  'occlusion':           { extension:  undefined },
-  'pipeline-statistics': { extension: 'pipeline-statistics-query' },
-  'timestamp':           { extension: 'timestamp-query' },
+  // Occlusion query does not require any features.
+  'occlusion':           { feature:  undefined },
+  'pipeline-statistics': { feature: 'pipeline-statistics-query' },
+  'timestamp':           { feature: 'timestamp-query' },
 };
 export const kQueryTypes = keysOf(kQueryTypeInfo);
 
@@ -81,7 +81,7 @@ export const kBufferUsages = numericKeysOf<GPUBufferUsageFlags>(kBufferUsageInfo
 
 // Note that we repeat the header multiple times in order to make it easier to read.
 export const kRegularTextureFormatInfo = /* prettier-ignore */ makeTable(
-                           ['renderable', 'multisample', 'color', 'depth', 'stencil', 'storage', 'copySrc', 'copyDst', 'bytesPerBlock', 'blockWidth', 'blockHeight',              'extension'] as const,
+                           ['renderable', 'multisample', 'color', 'depth', 'stencil', 'storage', 'copySrc', 'copyDst', 'bytesPerBlock', 'blockWidth', 'blockHeight',                'feature'] as const,
                            [            ,              ,    true,   false,     false,          ,      true,      true,                ,            1,             1,                         ] as const, {
   // 8-bit formats
   'r8unorm':               [        true,          true,        ,        ,          ,     false,          ,          ,               1],
@@ -127,7 +127,7 @@ export const kRegularTextureFormatInfo = /* prettier-ignore */ makeTable(
   'rgba32float':           [        true,          true,        ,        ,          ,      true,          ,          ,              16],
 } as const);
 /* prettier-ignore */
-const kTexFmtInfoHeader =  ['renderable', 'multisample', 'color', 'depth', 'stencil', 'storage', 'copySrc', 'copyDst', 'bytesPerBlock', 'blockWidth', 'blockHeight',              'extension'] as const;
+const kTexFmtInfoHeader =  ['renderable', 'multisample', 'color', 'depth', 'stencil', 'storage', 'copySrc', 'copyDst', 'bytesPerBlock', 'blockWidth', 'blockHeight',                'feature'] as const;
 export const kSizedDepthStencilFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
                            [        true,          true,   false,        ,          ,     false,     false,     false,                ,            1,             1,                         ] as const, {
   'depth32float':          [            ,              ,        ,    true,     false,          ,          ,          ,               4],

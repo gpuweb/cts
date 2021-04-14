@@ -38,7 +38,6 @@ Test Plan: (TODO(jiawei.shao@intel.com): add tests on 1D/3D textures)
 
 import { poptions, params } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { assert } from '../../../../../common/framework/util/util.js';
 import {
   kAllTextureFormatInfo,
   kAllTextureFormats,
@@ -272,7 +271,7 @@ g.test('texture_format_equality')
     const { srcFormat, dstFormat } = t.params;
     const srcFormatInfo = kAllTextureFormatInfo[srcFormat];
     const dstFormatInfo = kAllTextureFormatInfo[dstFormat];
-    await t.selectDeviceOrSkipTestCase([srcFormatInfo.extension, dstFormatInfo.extension]);
+    await t.selectDeviceOrSkipTestCase([srcFormatInfo.feature, dstFormatInfo.feature]);
 
     const kTextureSize = { width: 16, height: 16, depthOrArrayLayers: 1 };
 
@@ -336,8 +335,7 @@ g.test('depth_stencil_copy_restrictions')
       srcCopyLevel,
       dstCopyLevel,
     } = t.params;
-
-    await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].extension);
+    await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].feature);
 
     const kMipLevelCount = 3;
 
@@ -524,10 +522,9 @@ Test the validations on the member 'aspect' of GPUImageCopyTexture in CopyTextur
   )
   .fn(async t => {
     const { format, sourceAspect, destinationAspect } = t.params;
+    await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].feature);
 
     const kTextureSize = { width: 16, height: 8, depthOrArrayLayers: 1 };
-
-    await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].extension);
 
     const srcTexture = t.device.createTexture({
       size: kTextureSize,
@@ -591,10 +588,7 @@ g.test('copy_ranges_with_compressed_texture_formats')
   )
   .fn(async t => {
     const { format, copyBoxOffsets, srcCopyLevel, dstCopyLevel } = t.params;
-
-    const feature = kAllTextureFormatInfo[format].extension;
-    assert(feature !== undefined);
-    await t.selectDeviceOrSkipTestCase(feature);
+    await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].feature);
 
     const kTextureSize = { width: 60, height: 48, depthOrArrayLayers: 3 };
     const kMipLevelCount = 4;
