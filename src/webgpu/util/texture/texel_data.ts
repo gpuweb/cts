@@ -3,6 +3,7 @@ import { UncompressedTextureFormat } from '../../capability_info.js';
 import {
   assertInIntegerRange,
   float32ToFloatBits,
+  float32ToFloat16Bits,
   floatAsNormalizedInteger,
   gammaCompress,
   gammaDecompress,
@@ -326,7 +327,7 @@ function makeFloatInfo(componentOrder: TexelComponent[], bitLength: number) {
       switch (bitLength) {
         case 16:
           components = applyEach(
-            (n: number) => float32ToFloatBits(n, 1, 5, 10, 15),
+            (n: number) => float32ToFloat16Bits(n),
             componentOrder
           )(components);
           return packComponents(componentOrder, components, 16, 'uint');
