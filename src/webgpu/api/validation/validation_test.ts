@@ -221,7 +221,7 @@ export class ValidationTest extends GPUTest {
 
   createNoOpComputePipeline(): GPUComputePipeline {
     return this.device.createComputePipeline({
-      computeStage: {
+      compute: {
         module: this.device.createShaderModule({
           code: '[[stage(compute)]] fn main() {}',
         }),
@@ -233,7 +233,7 @@ export class ValidationTest extends GPUTest {
   createErrorComputePipeline(): GPUComputePipeline {
     this.device.pushErrorScope('validation');
     const pipeline = this.device.createComputePipeline({
-      computeStage: {
+      compute: {
         module: this.device.createShaderModule({
           code: '',
         }),

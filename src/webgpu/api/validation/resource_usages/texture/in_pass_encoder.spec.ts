@@ -933,7 +933,7 @@ g.test('unused_bindings_in_pipeline')
 
     const pipeline = compute
       ? t.device.createComputePipeline({
-          computeStage: {
+          compute: {
             module: t.device.createShaderModule({
               code: wgslCompute,
             }),

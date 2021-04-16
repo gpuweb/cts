@@ -24,7 +24,7 @@ g.test('memcpy').fn(async t => {
   });
 
   const pipeline = t.device.createComputePipeline({
-    computeStage: {
+    compute: {
       module: t.device.createShaderModule({
         code: `
           [[block]] struct Data {
