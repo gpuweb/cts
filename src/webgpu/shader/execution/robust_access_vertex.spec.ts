@@ -418,7 +418,7 @@ g.test('vertexAccess')
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment: colorAttachmentView,
+          view: colorAttachmentView,
           storeOp: 'store',
           loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
         },

@@ -125,13 +125,13 @@ g.test('depth_compare_func')
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment: colorAttachmentView,
+          view: colorAttachmentView,
           storeOp: 'store',
           loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
         },
       ],
       depthStencilAttachment: {
-        attachment: depthTextureView,
+        view: depthTextureView,
 
         depthLoadValue,
         depthStoreOp: 'store',
@@ -237,13 +237,13 @@ g.test('reverse_depth')
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment: colorAttachmentView,
+          view: colorAttachmentView,
           storeOp: 'store',
           loadValue: { r: 0.5, g: 0.5, b: 0.5, a: 1.0 },
         },
       ],
       depthStencilAttachment: {
-        attachment: depthTextureView,
+        view: depthTextureView,
 
         depthLoadValue: t.params.reversed ? 0.0 : 1.0,
         depthStoreOp: 'store',

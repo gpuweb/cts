@@ -70,7 +70,7 @@ class F extends ValidationTest {
     return encoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment: colorAttachment.createView(),
+          view: colorAttachment.createView(),
           loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
           storeOp: 'store',
         },

@@ -89,13 +89,13 @@ g.test('render_pass_store_op,color_attachment_with_depth_stencil_attachment')
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment: colorAttachmentView,
+          view: colorAttachmentView,
           loadValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
           storeOp: t.params.colorStoreOperation,
         },
       ],
       depthStencilAttachment: {
-        attachment: depthStencilAttachment.createView(),
+        view: depthStencilAttachment.createView(),
         depthLoadValue: 1.0,
         depthStoreOp: t.params.depthStencilStoreOperation,
         stencilLoadValue: 1.0,
@@ -175,7 +175,7 @@ g.test('render_pass_store_op,color_attachment_only')
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment: colorAttachmentView,
+          view: colorAttachmentView,
           loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
           storeOp: t.params.storeOperation,
         },
@@ -230,7 +230,7 @@ g.test('render_pass_store_op,multiple_color_attachments')
     const renderPassColorAttachments: GPURenderPassColorAttachment[] = [];
     for (let i = 0; i < t.params.colorAttachments; i++) {
       renderPassColorAttachments.push({
-        attachment: colorAttachments[i].createView(),
+        view: colorAttachments[i].createView(),
         loadValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
         storeOp: i % 2 === 0 ? t.params.storeOperation1 : t.params.storeOperation2,
       });
@@ -301,7 +301,7 @@ TODO: Also test unsized depth/stencil formats
     const pass = encoder.beginRenderPass({
       colorAttachments: [],
       depthStencilAttachment: {
-        attachment: depthStencilAttachmentView,
+        view: depthStencilAttachmentView,
         depthLoadValue: 1.0,
         depthStoreOp: t.params.storeOperation,
         stencilLoadValue: 1.0,

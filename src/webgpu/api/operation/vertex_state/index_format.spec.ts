@@ -147,7 +147,7 @@ class IndexFormatTest extends GPUTest {
     const encoder = this.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
       colorAttachments: [
-        { attachment: colorAttachment.createView(), loadValue: [0, 0, 0, 0], storeOp: 'store' },
+        { view: colorAttachment.createView(), loadValue: [0, 0, 0, 0], storeOp: 'store' },
       ],
     });
     pass.setPipeline(pipeline);

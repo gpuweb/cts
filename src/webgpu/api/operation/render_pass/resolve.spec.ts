@@ -132,7 +132,7 @@ g.test('render_pass_resolve')
         // Clear to black for the load operation. After the draw, the top left half of the attachment
         // will be white and the bottom right half will be black.
         renderPassColorAttachments.push({
-          attachment: colorAttachment.createView(),
+          view: colorAttachment.createView(),
           loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
           storeOp: t.params.storeOperation,
           resolveTarget: resolveTarget.createView({
@@ -144,7 +144,7 @@ g.test('render_pass_resolve')
         resolveTargets.push(resolveTarget);
       } else {
         renderPassColorAttachments.push({
-          attachment: colorAttachment.createView(),
+          view: colorAttachment.createView(),
           loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
           storeOp: t.params.storeOperation,
         });

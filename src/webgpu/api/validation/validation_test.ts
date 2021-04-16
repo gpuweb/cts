@@ -284,7 +284,7 @@ export class ValidationTest extends GPUTest {
       }
       case 'render pass': {
         const commandEncoder = this.device.createCommandEncoder();
-        const attachment = this.device
+        const view = this.device
           .createTexture({
             format: colorFormat,
             size: { width: 16, height: 16, depthOrArrayLayers: 1 },
@@ -294,7 +294,7 @@ export class ValidationTest extends GPUTest {
         const encoder = commandEncoder.beginRenderPass({
           colorAttachments: [
             {
-              attachment,
+              view,
               loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
               storeOp: 'store',
             },

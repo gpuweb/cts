@@ -128,14 +128,14 @@ const checkContents: (type: 'depth' | 'stencil', ...args: Parameters<CheckConten
     const pass = commandEncoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment: renderTexture.createView(),
+          view: renderTexture.createView(),
           resolveTarget,
           loadValue: [0, 0, 0, 0],
           storeOp: 'store',
         },
       ],
       depthStencilAttachment: {
-        attachment: texture.createView(viewDescriptor),
+        view: texture.createView(viewDescriptor),
         depthStoreOp: 'store',
         depthLoadValue: 'load',
         stencilStoreOp: 'store',

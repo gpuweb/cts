@@ -78,14 +78,14 @@ g.test('culling')
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment: texture.createView(),
+          view: texture.createView(),
           loadValue: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
           storeOp: 'store',
         },
       ],
       depthStencilAttachment: depthTexture
         ? {
-            attachment: depthTexture.createView(),
+            view: depthTexture.createView(),
             depthLoadValue: 1.0,
             depthStoreOp: 'store',
             stencilLoadValue: 0,

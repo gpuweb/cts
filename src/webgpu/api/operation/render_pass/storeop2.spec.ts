@@ -58,7 +58,7 @@ g.test('storeOp_controls_whether_1x1_drawn_quad_is_stored')
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment: renderTexture.createView(),
+          view: renderTexture.createView(),
           storeOp: t.params.storeOp,
           loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
         },

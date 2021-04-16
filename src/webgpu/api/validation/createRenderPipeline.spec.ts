@@ -196,7 +196,7 @@ g.test('sample_count_must_be_equal_to_the_one_of_every_attachment_in_the_render_
     const renderPassDescriptorWithoutDepthStencil = {
       colorAttachments: [
         {
-          attachment: colorTexture.createView(),
+          view: colorTexture.createView(),
           loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
           storeOp: 'store',
         },
@@ -205,7 +205,7 @@ g.test('sample_count_must_be_equal_to_the_one_of_every_attachment_in_the_render_
     const renderPassDescriptorWithDepthStencilOnly = {
       colorAttachments: [],
       depthStencilAttachment: {
-        attachment: depthStencilTexture.createView(),
+        view: depthStencilTexture.createView(),
         depthLoadValue: 1.0,
         depthStoreOp: 'store',
         stencilLoadValue: 0,
