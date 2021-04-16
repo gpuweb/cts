@@ -64,7 +64,7 @@ export class BufferSyncTest extends GPUTest {
     `;
 
     return this.device.createComputePipeline({
-      computeStage: {
+      compute: {
         module: this.device.createShaderModule({
           code: wgslCompute,
         }),
