@@ -14,7 +14,7 @@ import { ValidationTest } from './validation_test.js';
 
 const VERTEX_SHADER_CODE_WITH_NO_INPUT = `
   [[builtin(position)]] var<out> Position : vec4<f32>;
-  [[stage(vertex)]] fn main() -> void {
+  [[stage(vertex)]] fn main() {
     Position = vec4<f32>(0.0, 0.0, 0.0, 0.0);
   }
 `;
@@ -73,7 +73,7 @@ class F extends ValidationTest {
         module: this.device.createShaderModule({
           code: `
             [[location(0)]] var<out> fragColor : vec4<f32>;
-            [[stage(fragment)]] fn main() -> void {
+            [[stage(fragment)]] fn main() {
               fragColor = vec4<f32>(0.0, 1.0, 0.0, 1.0);
               return;
             }`,
@@ -95,7 +95,7 @@ class F extends ValidationTest {
     const fsModule = this.device.createShaderModule({
       code: `
         [[location(0)]] var<out> fragColor : vec4<f32>;
-        [[stage(fragment)]] fn main() -> void {
+        [[stage(fragment)]] fn main() {
           fragColor = vec4<f32>(0.0, 1.0, 0.0, 1.0);
         }`,
     });
@@ -131,7 +131,7 @@ class F extends ValidationTest {
     return `
       [[builtin(position)]] var<out> Position : vec4<f32>;
       ${interfaces}
-      [[stage(vertex)]] fn main() -> void {
+      [[stage(vertex)]] fn main() {
         Position = vec4<f32>(0.0, 0.0, 0.0, 0.0);
         ${body}
       }

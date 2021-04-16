@@ -3,5 +3,5 @@
 var<out> a : i32  = 0;
 
 [[stage(vertex)]]
-fn main() -> void {
+fn main() {
 }

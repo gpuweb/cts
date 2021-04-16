@@ -3,5 +3,5 @@
 var<out> flag : bool  = 1u;
 
 [[stage(vertex)]]
-fn main() -> void {
+fn main() {
 }

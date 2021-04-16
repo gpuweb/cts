@@ -57,7 +57,7 @@ export class BufferSyncTest extends GPUTest {
       };
 
       [[group(0), binding(0)]] var<storage> data : [[access(read_write)]] Data;
-      [[stage(compute)]] fn main() -> void {
+      [[stage(compute)]] fn main() {
         data.a = ${value};
         return;
       }
@@ -78,7 +78,7 @@ export class BufferSyncTest extends GPUTest {
     const wgslShaders = {
       vertex: `
       [[builtin(position)]] var<out> Position : vec4<f32>;
-      [[stage(vertex)]] fn vert_main() -> void {
+      [[stage(vertex)]] fn vert_main() {
         Position = vec4<f32>(0.5, 0.5, 0.0, 1.0);
         return;
       }
@@ -91,7 +91,7 @@ export class BufferSyncTest extends GPUTest {
       };
 
       [[group(0), binding(0)]] var<storage> data : [[access(read_write)]] Data;
-      [[stage(fragment)]] fn frag_main() -> void {
+      [[stage(fragment)]] fn frag_main() {
         data.a = ${value};
         outColor = vec4<f32>(1.0, 0.0, 0.0, 1.0);
         return;

@@ -117,7 +117,7 @@ class F extends ValidationTest {
           code: `
             [[builtin(position)]] var<out> position : vec4<f32>;
 
-            [[stage(vertex)]] fn main() -> void {
+            [[stage(vertex)]] fn main() {
               position = vec4<f32>(0.0, 0.0, 0.0, 0.0);
             }`,
         }),
@@ -125,7 +125,7 @@ class F extends ValidationTest {
       },
       fragment: {
         module: this.device.createShaderModule({
-          code: '[[stage(fragment)]] fn main() -> void {}',
+          code: '[[stage(fragment)]] fn main() {}',
         }),
         entryPoint: 'main',
         targets,

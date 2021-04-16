@@ -67,7 +67,7 @@ class F extends ValidationTest {
           code: `
             [[builtin(position)]] var<out> Position : vec4<f32>;
 
-            [[stage(vertex)]] fn main() -> void {
+            [[stage(vertex)]] fn main() {
               Position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
             }`,
         }),
@@ -77,7 +77,7 @@ class F extends ValidationTest {
         module: this.device.createShaderModule({
           code: `
             [[location(0)]] var<out> fragColor : vec4<${fragColorType}>;
-            [[stage(fragment)]] fn main() -> void {
+            [[stage(fragment)]] fn main() {
               fragColor = vec4<${fragColorType}>(0${suffix}, 1${suffix}, 0${suffix}, 1${suffix});
             }`,
         }),

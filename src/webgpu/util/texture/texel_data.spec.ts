@@ -65,7 +65,7 @@ function doTest(
   [[group(0), binding(1)]] var<storage> output : [[access(read_write)]] Output;
 
   [[stage(compute)]]
-  fn main() -> void {
+  fn main() {
       var texel : vec4<${shaderType}> = textureLoad(tex, vec2<i32>(0, 0), 0);
       ${rep.componentOrder.map(C => `output.result${C} = texel.${C.toLowerCase()};`).join('\n')}
       return;

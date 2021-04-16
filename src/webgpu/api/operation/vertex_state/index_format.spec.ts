@@ -68,7 +68,7 @@ class IndexFormatTest extends GPUTest {
         [[builtin(vertex_index)]] var<in> VertexIndex : u32;
 
         [[stage(vertex)]]
-        fn main() -> void {
+        fn main() {
           if (VertexIndex == 0xFFFFu || VertexIndex == 0xFFFFFFFFu) {
             Position = vec4<f32>(-0.99, -0.98, 0.0, 1.0);
           } else {
@@ -83,7 +83,7 @@ class IndexFormatTest extends GPUTest {
         [[location(0)]] var<out> fragColor : u32;
 
         [[stage(fragment)]]
-        fn main() -> void {
+        fn main() {
           fragColor = 1u;
         }
       `,

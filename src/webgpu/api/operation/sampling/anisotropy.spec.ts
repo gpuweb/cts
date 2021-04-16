@@ -61,8 +61,8 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
             [[builtin(position)]] var<out> Position : vec4<f32>;
             [[location(0)]] var<out> fragUV : vec2<f32>;
 
-            [[stage(vertex)]] fn main() -> void {
-              const position : array<vec3<f32>, 6> = array<vec3<f32>, 6>(
+            [[stage(vertex)]] fn main() {
+              let position : array<vec3<f32>, 6> = array<vec3<f32>, 6>(
                 vec3<f32>(-0.5, 0.5, -0.5),
                 vec3<f32>(0.5, 0.5, -0.5),
                 vec3<f32>(-0.5, 0.5, 0.5),
@@ -70,7 +70,7 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
                 vec3<f32>(0.5, 0.5, -0.5),
                 vec3<f32>(0.5, 0.5, 0.5));
               // uv is pre-scaled to mimic repeating tiled texture
-              const uv : array<vec2<f32>, 6> = array<vec2<f32>, 6>(
+              let uv : array<vec2<f32>, 6> = array<vec2<f32>, 6>(
                 vec2<f32>(0.0, 0.0),
                 vec2<f32>(1.0, 0.0),
                 vec2<f32>(0.0, 50.0),
@@ -78,7 +78,7 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
                 vec2<f32>(1.0, 0.0),
                 vec2<f32>(1.0, 50.0));
               // draw a slanted plane in a specific way
-              const matrix : mat4x4<f32> = mat4x4<f32>(
+              let matrix : mat4x4<f32> = mat4x4<f32>(
                 vec4<f32>(-1.7320507764816284, 1.8322050568049563e-16, -6.176817699518044e-17, -6.170640314703498e-17),
                 vec4<f32>(-2.1211504944260596e-16, -1.496108889579773, 0.5043753981590271, 0.5038710236549377),
                 vec4<f32>(0.0, -43.63650894165039, -43.232173919677734, -43.18894577026367),
@@ -103,7 +103,7 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
 
             [[location(0)]] var<out> fragColor : vec4<f32>;
 
-            [[stage(fragment)]] fn main() -> void {
+            [[stage(fragment)]] fn main() {
                 fragColor = textureSample(texture0, sampler0, fragUV);
             }
             `,

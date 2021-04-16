@@ -91,7 +91,7 @@ g.test('depth_compare_func')
 
             [[location(0)]] var<out> color : vec4<f32>;
 
-            [[stage(vertex)]] fn main() -> void {
+            [[stage(vertex)]] fn main() {
               Position = vec4<f32>(0.5, 0.5, 0.5, 1.0);
             }
             `,
@@ -102,7 +102,7 @@ g.test('depth_compare_func')
         module: t.device.createShaderModule({
           code: `
             [[location(0)]] var<out> fragColor : vec4<f32>;
-            [[stage(fragment)]] fn main() -> void {
+            [[stage(fragment)]] fn main() {
               fragColor = vec4<f32>(1.0, 1.0, 1.0, 1.0);
             }
             `,
@@ -184,16 +184,16 @@ g.test('reverse_depth')
 
             [[location(0)]] var<out> color : vec4<f32>;
 
-            [[stage(vertex)]] fn main() -> void {
+            [[stage(vertex)]] fn main() {
               // TODO: remove workaround for Tint unary array access broke
-              const zv : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
+              let zv : array<vec2<f32>, 4> = array<vec2<f32>, 4>(
                   vec2<f32>(0.2, 0.2),
                   vec2<f32>(0.3, 0.3),
                   vec2<f32>(-0.1, -0.1),
                   vec2<f32>(1.1, 1.1));
-              const z : f32 = zv[InstanceIndex].x;
+              let z : f32 = zv[InstanceIndex].x;
               Position = vec4<f32>(0.5, 0.5, z, 1.0);
-              const colors : array<vec4<f32>, 4> = array<vec4<f32>, 4>(
+              let colors : array<vec4<f32>, 4> = array<vec4<f32>, 4>(
                   vec4<f32>(1.0, 0.0, 0.0, 1.0),
                   vec4<f32>(0.0, 1.0, 0.0, 1.0),
                   vec4<f32>(0.0, 0.0, 1.0, 1.0),
@@ -210,7 +210,7 @@ g.test('reverse_depth')
           code: `
             [[location(0)]] var<in> color : vec4<f32>;
             [[location(0)]] var<out> fragColor : vec4<f32>;
-            [[stage(fragment)]] fn main() -> void {
+            [[stage(fragment)]] fn main() {
               fragColor = color;
             }
             `,
