@@ -80,6 +80,7 @@ g.test('culling')
         {
           attachment: texture.createView(),
           loadValue: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
+          storeOp: 'store',
         },
       ],
       depthStencilAttachment: depthTexture

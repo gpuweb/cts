@@ -176,6 +176,7 @@ Params:
         {
           attachment: renderTarget.createView(),
           loadValue: [0, 0, 0, 0],
+          storeOp: 'store',
         },
       ],
     });
@@ -567,6 +568,7 @@ ${shaderLocations
             })
             .createView(),
           loadValue: [0, 0, 0, 0],
+          storeOp: 'store',
         },
       ],
     });

@@ -62,6 +62,7 @@ class F extends ValidationTest {
         {
           attachment: attachment.createView(),
           loadValue: 'load',
+          storeOp: 'store',
         },
       ],
     });
@@ -90,6 +91,7 @@ class F extends ValidationTest {
         {
           attachment: attachment.createView(),
           loadValue: 'load',
+          storeOp: 'store',
         },
       ],
     });
@@ -120,6 +122,7 @@ class F extends ValidationTest {
         {
           attachment: attachment.createView(),
           loadValue: 'load',
+          storeOp: 'store',
         },
       ],
     });
