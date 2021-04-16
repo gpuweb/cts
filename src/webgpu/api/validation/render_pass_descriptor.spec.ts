@@ -44,10 +44,10 @@ class F extends ValidationTest {
     texture: GPUTexture,
     textureViewDescriptor?: GPUTextureViewDescriptor
   ): GPURenderPassColorAttachment {
-    const attachment = texture.createView(textureViewDescriptor);
+    const view = texture.createView(textureViewDescriptor);
 
     return {
-      attachment,
+      view,
       loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
       storeOp: 'store',
     };
@@ -57,10 +57,10 @@ class F extends ValidationTest {
     texture: GPUTexture,
     textureViewDescriptor?: GPUTextureViewDescriptor
   ): GPURenderPassDepthStencilAttachment {
-    const attachment = texture.createView(textureViewDescriptor);
+    const view = texture.createView(textureViewDescriptor);
 
     return {
-      attachment,
+      view,
       depthLoadValue: 1.0,
       depthStoreOp: 'store',
       stencilLoadValue: 0,
@@ -338,7 +338,7 @@ g.test('it_is_invalid_to_set_resolve_target_if_color_attachment_is_non_multisamp
     const descriptor: GPURenderPassDescriptor = {
       colorAttachments: [
         {
-          attachment: colorTexture.createView(),
+          view: colorTexture.createView(),
           resolveTarget: resolveTargetTexture.createView(),
           loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
           storeOp: 'store',

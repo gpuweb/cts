@@ -130,7 +130,7 @@ Test various validation behaviors when a resolveTarget is provided.
           });
 
           renderPassColorAttachmentDescriptors.push({
-            attachment: resolveSourceColorAttachment.createView(),
+            view: resolveSourceColorAttachment.createView(),
             loadValue: 'load',
             storeOp: 'clear',
             resolveTarget: resolveTarget.createView({
@@ -167,7 +167,7 @@ Test various validation behaviors when a resolveTarget is provided.
           });
 
           renderPassColorAttachmentDescriptors.push({
-            attachment: colorAttachment.createView(),
+            view: colorAttachment.createView(),
             loadValue: 'load',
             storeOp: 'clear',
             resolveTarget: resolveTarget.createView(),

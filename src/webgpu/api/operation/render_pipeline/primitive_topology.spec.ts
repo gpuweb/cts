@@ -311,7 +311,7 @@ class PrimitiveTopologyTest extends GPUTest {
     const renderPass = encoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment: colorAttachment.createView(),
+          view: colorAttachment.createView(),
           loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
           storeOp: 'store',
         },

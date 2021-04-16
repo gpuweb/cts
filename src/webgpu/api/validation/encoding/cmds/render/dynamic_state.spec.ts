@@ -58,7 +58,7 @@ class F extends ValidationTest {
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment: attachment.createView(),
+          view: attachment.createView(),
           loadValue: 'load',
           storeOp: 'store',
         },
@@ -87,7 +87,7 @@ class F extends ValidationTest {
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment: attachment.createView(),
+          view: attachment.createView(),
           loadValue: 'load',
           storeOp: 'store',
         },
@@ -118,7 +118,7 @@ class F extends ValidationTest {
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
-          attachment: attachment.createView(),
+          view: attachment.createView(),
           loadValue: 'load',
           storeOp: 'store',
         },
