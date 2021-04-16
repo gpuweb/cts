@@ -115,7 +115,7 @@ Params:
   value : u32;
 };
 
-[[group(0), binding(0)]] var<storage> output : Output;
+[[group(0), binding(0)]] var<storage> output : [[access(read_write)]] Output;
 
 [[location(0)]] var<out> fragColor : vec4<f32>;
 [[stage(fragment)]] fn frag_main() -> void {
