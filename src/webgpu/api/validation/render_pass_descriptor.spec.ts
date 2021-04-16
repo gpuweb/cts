@@ -49,6 +49,7 @@ class F extends ValidationTest {
     return {
       attachment,
       loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+      storeOp: 'store',
     };
   }
 
@@ -340,6 +341,7 @@ g.test('it_is_invalid_to_set_resolve_target_if_color_attachment_is_non_multisamp
           attachment: colorTexture.createView(),
           resolveTarget: resolveTargetTexture.createView(),
           loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          storeOp: 'store',
         },
       ],
     };

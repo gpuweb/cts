@@ -47,6 +47,7 @@ g.test('submit_a_destroyed_texture')
         {
           attachment: textureView,
           loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          storeOp: 'store',
         },
       ],
     });

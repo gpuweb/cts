@@ -233,6 +233,7 @@ g.test('GPUBlendComponent')
         {
           attachment: renderTarget.createView(),
           loadValue: dstColor,
+          storeOp: 'store',
         },
       ],
     });

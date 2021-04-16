@@ -198,9 +198,10 @@ g.test('sample_count_must_be_equal_to_the_one_of_every_attachment_in_the_render_
         {
           attachment: colorTexture.createView(),
           loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          storeOp: 'store',
         },
       ],
-    };
+    } as const;
     const renderPassDescriptorWithDepthStencilOnly = {
       colorAttachments: [],
       depthStencilAttachment: {
@@ -210,7 +211,7 @@ g.test('sample_count_must_be_equal_to_the_one_of_every_attachment_in_the_render_
         stencilLoadValue: 0,
         stencilStoreOp: 'store',
       },
-    };
+    } as const;
 
     const pipelineWithoutDepthStencil = t.device.createRenderPipeline(
       t.getDescriptor({

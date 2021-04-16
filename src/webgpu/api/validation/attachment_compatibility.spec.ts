@@ -44,6 +44,7 @@ class F extends ValidationTest {
     return {
       attachment: this.createAttachmentTextureView(format, sampleCount),
       loadValue: [0, 0, 0, 0],
+      storeOp: 'store',
     };
   }
 
