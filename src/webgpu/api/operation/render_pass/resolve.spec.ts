@@ -55,8 +55,8 @@ g.test('render_pass_resolve')
             [[builtin(position)]] var<out> Position : vec4<f32>;
             [[builtin(vertex_index)]] var<in> VertexIndex : i32;
 
-            [[stage(vertex)]] fn main() -> void {
-              const pos : array<vec2<f32>, 3> = array<vec2<f32>, 3>(
+            [[stage(vertex)]] fn main() {
+              let pos : array<vec2<f32>, 3> = array<vec2<f32>, 3>(
                   vec2<f32>(-1.0, -1.0),
                   vec2<f32>(-1.0,  1.0),
                   vec2<f32>( 1.0,  1.0));
@@ -74,7 +74,7 @@ g.test('render_pass_resolve')
             [[location(2)]] var<out> fragColor2 : vec4<f32>;
             [[location(3)]] var<out> fragColor3 : vec4<f32>;
 
-            [[stage(fragment)]] fn main() -> void {
+            [[stage(fragment)]] fn main() {
               fragColor0 = vec4<f32>(1.0, 1.0, 1.0, 1.0);
               fragColor1 = vec4<f32>(1.0, 1.0, 1.0, 1.0);
               fragColor2 = vec4<f32>(1.0, 1.0, 1.0, 1.0);

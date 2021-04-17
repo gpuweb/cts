@@ -200,7 +200,7 @@ g.test('GPUBlendComponent')
 [[group(0), binding(0)]] var<uniform> u : Uniform;
 
 [[location(0)]] var<out> output : vec4<f32>;
-[[stage(fragment)]] fn main() -> void {
+[[stage(fragment)]] fn main() {
   output = u.color;
 }
           `,
@@ -211,7 +211,7 @@ g.test('GPUBlendComponent')
         module: t.device.createShaderModule({
           code: `
 [[builtin(position)]] var<out> Position : vec4<f32>;
-[[stage(vertex)]] fn main() -> void {
+[[stage(vertex)]] fn main() {
     Position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
 }
           `,

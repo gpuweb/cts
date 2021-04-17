@@ -94,7 +94,7 @@ g.test('v_0033')
 
     const code = `
       [[stage(vertex)]]
-      fn main() -> void {
+      fn main() {
         ${variableOrConstant} a : ${lhsType} = ${rhsType}();
       }
     `;
@@ -140,7 +140,7 @@ g.test('v_0038')
     const code = `
       [[location(0)]] var<${storageClass}> a : ${type} = ${type}();
         [[stage(vertex)]]
-        fn main() -> void {
+        fn main() {
         }
       `;
 

@@ -93,7 +93,7 @@ Params:
 [[location(0)]] var<in> vertexPosition : vec2<f32>;
 
 [[builtin(position)]] var<out> Position : vec4<f32>;
-[[stage(vertex)]] fn vert_main() -> void {
+[[stage(vertex)]] fn vert_main() {
   // 3u is the number of points in a triangle to convert from index
   // to id.
   var vertex_id : u32 = vertex_index / 3u;
@@ -118,7 +118,7 @@ Params:
 [[group(0), binding(0)]] var<storage> output : [[access(read_write)]] Output;
 
 [[location(0)]] var<out> fragColor : vec4<f32>;
-[[stage(fragment)]] fn frag_main() -> void {
+[[stage(fragment)]] fn frag_main() {
   output.value = 1u;
   fragColor = vec4<f32>(0.0, 1.0, 0.0, 1.0);
 }
@@ -494,7 +494,7 @@ ${shaderLocations
 
 [[builtin(position)]] var<out> Position : vec4<f32>;
 
-[[stage(vertex)]] fn main() -> void {
+[[stage(vertex)]] fn main() {
 ${shaderLocations.map(i => `  outAttrib${i} = attrib${i};`).join('\n')}
   primitiveId = instanceIndex * ${instanceCount}u + vertexIndex;
   Position = vec4<f32>(0.0, 0.0, 0.5, 1.0);
@@ -518,7 +518,7 @@ ${shaderLocations.map(i => `  attrib${i} : ${wgslFormat};`).join('\n')}
 };
 [[group(0), binding(0)]] var<storage> outBuffer : [[access(read_write)]] OutBuffer;
 
-[[stage(fragment)]] fn main() -> void {
+[[stage(fragment)]] fn main() {
 ${shaderLocations
   .map(i => `  outBuffer.primitives[primitiveId].attrib${i} = attrib${i};`)
   .join('\n')}

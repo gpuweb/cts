@@ -366,7 +366,7 @@ g.test('vertexAccess')
               ${typeInfo.validationFunc}
             }
 
-            [[stage(vertex)]] fn main() -> void {
+            [[stage(vertex)]] fn main() {
               var attributesInBounds : bool = ${attributeNames
                 .map(a => `validationFunc(${a})`)
                 .join(' && ')};
@@ -390,7 +390,7 @@ g.test('vertexAccess')
         module: t.device.createShaderModule({
           code: `
             [[location(0)]] var<out> fragColor : vec4<f32>;
-            [[stage(fragment)]] fn main() -> void {
+            [[stage(fragment)]] fn main() {
               fragColor = vec4<f32>(1.0, 0.0, 0.0, 1.0);
             }`,
         }),

@@ -36,7 +36,7 @@ class F extends ValidationTest {
 
             [[builtin(position)]] var<out> Position : vec4<f32>;
             [[builtin(vertex_index)]] var<in> VertexIndex : i32;
-            [[stage(vertex)]] fn main() -> void {
+            [[stage(vertex)]] fn main() {
               var pos : array<vec2<f32>, 3> = array<vec2<f32>, 3>(
                 vec2<f32>(-1.0, -1.0),
                 vec2<f32>( 1.0, -1.0),
@@ -57,7 +57,7 @@ class F extends ValidationTest {
             [[group(1), binding(0)]] var<uniform> uniforms : FragmentUniforms;
 
             [[location(0)]] var<out> fragColor : vec4<f32>;
-            [[stage(fragment)]] fn main() -> void {
+            [[stage(fragment)]] fn main() {
               fragColor = uniforms.color;
               return;
             }`,
