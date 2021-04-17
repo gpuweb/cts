@@ -5,21 +5,18 @@ TODO: update for new binding structure, remove eslint-disable.
 TODO: review existing tests, write descriptions, and make sure tests are complete.
 `;
 
-import { pbool, poptions, params } from '../../../common/framework/params_builder.js';
+import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import {
-  kBindingTypeInfo,
-  kBindingTypes,
-  kBufferBindingTypeInfo,
   kMaxBindingsPerBindGroup,
   kShaderStages,
   kShaderStageCombinations,
-  kTextureBindingTypeInfo,
-  kTextureComponentTypes,
   kTextureViewDimensions,
-  kTextureViewDimensionInfo,
-  kAllTextureFormats,
-  kAllTextureFormatInfo,
+  allBindingEntries,
+  bindingTypeInfo,
+  bufferBindingTypeInfo,
+  kBufferBindingTypes,
+  BGLEntry,
 } from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -51,91 +48,17 @@ g.test('some_binding_index_was_specified_more_than_once').fn(async t => {
 });
 
 g.test('visibility')
-  .params(
-    params()
-      .combine(poptions('type', kBindingTypes))
-      .combine(poptions('visibility', kShaderStageCombinations))
-  )
+  .cases(poptions('visibility', kShaderStageCombinations))
+  .subcases(() => poptions('entry', allBindingEntries(false)))
   .fn(async t => {
-    const { type, visibility } = t.params;
+    const { visibility, entry } = t.params;
+    const info = bindingTypeInfo(entry);
 
-    const info = kBindingTypeInfo[type];
-    const storageTextureFormat = info.resource === 'storageTex' ? 'rgba8unorm' : undefined;
-
-    const success = (visibility & ~kBindingTypeInfo[type].validStages) === 0;
+    const success = (visibility & ~info.validStages) === 0;
 
     t.expectValidationError(() => {
       t.device.createBindGroupLayout({
-        entries: [{ binding: 0, visibility, type, storageTextureFormat }],
-      });
-    }, !success);
-  });
-
-g.test('bindingTypeSpecific_optional_members')
-  .params(
-    params()
-      .combine(poptions('type', kBindingTypes))
-      .combine([
-        // Case with every member set to `undefined`.
-        {
-          // Workaround for TS inferring the type of [ {}, ...x ] overly conservatively, as {}[].
-          _: 0,
-        },
-        // Cases with one member set.
-        ...pbool('hasDynamicOffset'),
-        ...poptions('minBufferBindingSize', [0, 4]),
-        ...poptions('textureComponentType', kTextureComponentTypes),
-        ...poptions('viewDimension', kTextureViewDimensions),
-        ...poptions('storageTextureFormat', kAllTextureFormats),
-      ])
-  )
-  .fn(async t => {
-    const {
-      type,
-      hasDynamicOffset,
-      minBufferBindingSize,
-      textureComponentType,
-      viewDimension,
-      storageTextureFormat,
-    } = t.params;
-
-    if (storageTextureFormat !== undefined) {
-      await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[storageTextureFormat].feature);
-    }
-
-    let success = true;
-    if (!(type in kBufferBindingTypeInfo)) {
-      success &&= hasDynamicOffset === undefined;
-      success &&= minBufferBindingSize === undefined;
-    }
-    if (!(type in kTextureBindingTypeInfo)) {
-      success &&= viewDimension === undefined;
-    }
-    if (kBindingTypeInfo[type].resource !== 'sampledTex') {
-      success &&= textureComponentType === undefined;
-    }
-    if (kBindingTypeInfo[type].resource !== 'storageTex') {
-      success &&= storageTextureFormat === undefined;
-    } else {
-      success &&= viewDimension === undefined || kTextureViewDimensionInfo[viewDimension].storage;
-      success &&=
-        storageTextureFormat === undefined || kAllTextureFormatInfo[storageTextureFormat].storage;
-    }
-
-    t.expectValidationError(() => {
-      t.device.createBindGroupLayout({
-        entries: [
-          {
-            binding: 0,
-            visibility: GPUShaderStage.COMPUTE,
-            type,
-            hasDynamicOffset,
-            minBufferBindingSize,
-            textureComponentType,
-            viewDimension,
-            storageTextureFormat,
-          },
-        ],
+        entries: [{ binding: 0, visibility, ...entry }],
       });
     }, !success);
   });
@@ -153,8 +76,7 @@ g.test('multisample_requires_2d_view_dimension')
           {
             binding: 0,
             visibility: GPUShaderStage.COMPUTE,
-            type: 'multisampled-texture',
-            viewDimension,
+            texture: { multisampled: true, viewDimension },
           },
         ],
       });
@@ -167,20 +89,19 @@ g.test('number_of_dynamic_buffers_exceeds_the_maximum_value')
 
 TODO(#230): Update to enforce per-stage and per-pipeline-layout limits on BGLs as well.`
   )
-  .params([
-    { type: 'storage-buffer' as const, maxDynamicBufferCount: 4 },
-    { type: 'uniform-buffer' as const, maxDynamicBufferCount: 8 },
-  ])
+  .cases(poptions('type', kBufferBindingTypes))
   .fn(async t => {
-    const { type, maxDynamicBufferCount } = t.params;
+    const { type } = t.params;
+    const info = bufferBindingTypeInfo({ type });
 
-    const maxDynamicBufferBindings: GPUBindGroupLayoutEntry[] = [];
+    const maxDynamicBufferCount = info.perPipelineLimitClass.maxDynamic;
+
+    const maxDynamicBufferBindings = [];
     for (let i = 0; i < maxDynamicBufferCount; i++) {
       maxDynamicBufferBindings.push({
         binding: i,
         visibility: GPUShaderStage.COMPUTE,
-        type,
-        hasDynamicOffset: true,
+        buffer: { type, hasDynamicOffset: true },
       });
     }
 
@@ -190,8 +111,7 @@ TODO(#230): Update to enforce per-stage and per-pipeline-layout limits on BGLs a
         {
           binding: maxDynamicBufferBindings.length,
           visibility: GPUShaderStage.COMPUTE,
-          type,
-          hasDynamicOffset: false,
+          buffer: { type, hasDynamicOffset: false },
         },
       ],
     };
@@ -201,53 +121,49 @@ TODO(#230): Update to enforce per-stage and per-pipeline-layout limits on BGLs a
 
     // Dynamic buffers exceed maximum in a bind group layout.
     const badDescriptor = clone(goodDescriptor);
-    /* eslint-disable-next-line deprecation/deprecation */
-    badDescriptor.entries[maxDynamicBufferCount].hasDynamicOffset = true;
+    badDescriptor.entries[maxDynamicBufferCount].buffer.hasDynamicOffset = true;
 
     t.expectValidationError(() => {
       t.device.createBindGroupLayout(badDescriptor);
     });
   });
 
-// One bind group layout will be filled with kPerStageBindingLimit[...] of the type |type|.
-// For each item in the array returned here, a case will be generated which tests a pipeline
-// layout with one extra bind group layout with one extra binding. That extra binding will have:
-//
-//   - If extraTypeSame, any of the binding types which counts toward the same limit as |type|.
-//     (i.e. 'storage-buffer' <-> 'readonly-storage-buffer').
-//   - Otherwise, an arbitrary other type.
-function* pickExtraBindingTypes(
-  /* eslint-disable-next-line deprecation/deprecation */
-  bindingType: GPUBindingType,
+/**
+ * One bind group layout will be filled with kPerStageBindingLimit[...] of the type |type|.
+ * For each item in the array returned here, a case will be generated which tests a pipeline
+ * layout with one extra bind group layout with one extra binding. That extra binding will have:
+ *
+ *   - If extraTypeSame, any of the binding types which counts toward the same limit as |type|.
+ *     (i.e. 'storage-buffer' <-> 'readonly-storage-buffer').
+ *   - Otherwise, an arbitrary other type.
+ */
+function* pickExtraBindingTypesForPerStage(
+  entry: BGLEntry,
   extraTypeSame: boolean
-  /* eslint-disable-next-line deprecation/deprecation */
-): IterableIterator<GPUBindingType> {
-  const info = kBindingTypeInfo[bindingType];
+): IterableIterator<BGLEntry> {
   if (extraTypeSame) {
-    for (const extraBindingType of kBindingTypes) {
-      if (
-        info.perStageLimitClass.class ===
-        kBindingTypeInfo[extraBindingType].perStageLimitClass.class
-      ) {
-        yield extraBindingType;
+    const info = bindingTypeInfo(entry);
+    for (const extra of allBindingEntries(false)) {
+      const extraInfo = bindingTypeInfo(extra);
+      if (info.perStageLimitClass.class === extraInfo.perStageLimitClass.class) {
+        yield extra;
       }
     }
   } else {
-    yield info.perStageLimitClass.class === 'sampler' ? 'sampled-texture' : 'sampler';
+    return entry.sampler ? { texture: {} } : { sampler: {} };
   }
 }
 
 const kCasesForMaxResourcesPerStageTests = params()
-  .combine(poptions('maxedType', kBindingTypes))
+  .combine(poptions('maxedEntry', allBindingEntries(false)))
   .combine(poptions('maxedVisibility', kShaderStages))
-  .filter(p => (kBindingTypeInfo[p.maxedType].validStages & p.maxedVisibility) !== 0)
+  .filter(p => (bindingTypeInfo(p.maxedEntry).validStages & p.maxedVisibility) !== 0)
   .expand(function* (p) {
-    for (const extraTypeSame of [true, false]) {
-      yield* poptions('extraType', pickExtraBindingTypes(p.maxedType, extraTypeSame));
-    }
+    yield* poptions('extraEntry', pickExtraBindingTypesForPerStage(p.maxedEntry, true));
+    yield* poptions('extraEntry', pickExtraBindingTypesForPerStage(p.maxedEntry, false));
   })
   .combine(poptions('extraVisibility', kShaderStages))
-  .filter(p => (kBindingTypeInfo[p.extraType].validStages & p.extraVisibility) !== 0);
+  .filter(p => (bindingTypeInfo(p.extraEntry).validStages & p.extraVisibility) !== 0);
 
 // Should never fail unless kMaxBindingsPerBindGroup is exceeded, because the validation for
 // resources-of-type-per-stage is in pipeline layout creation.
@@ -259,18 +175,16 @@ TODO(#230): Update to enforce per-stage and per-pipeline-layout limits on BGLs a
   )
   .params(kCasesForMaxResourcesPerStageTests)
   .fn(async t => {
-    const { maxedType, extraType, maxedVisibility, extraVisibility } = t.params;
-    const maxedTypeInfo = kBindingTypeInfo[maxedType];
+    const { maxedEntry, extraEntry, maxedVisibility, extraVisibility } = t.params;
+    const maxedTypeInfo = bindingTypeInfo(maxedEntry);
     const maxedCount = maxedTypeInfo.perStageLimitClass.max;
-    const extraTypeInfo = kBindingTypeInfo[extraType];
 
     const maxResourceBindings: GPUBindGroupLayoutEntry[] = [];
     for (let i = 0; i < maxedCount; i++) {
       maxResourceBindings.push({
         binding: i,
         visibility: maxedVisibility,
-        type: maxedType,
-        storageTextureFormat: maxedTypeInfo.resource === 'storageTex' ? 'rgba8unorm' : undefined,
+        ...maxedEntry,
       });
     }
 
@@ -283,8 +197,7 @@ TODO(#230): Update to enforce per-stage and per-pipeline-layout limits on BGLs a
     newDescriptor.entries.push({
       binding: maxedCount,
       visibility: extraVisibility,
-      type: extraType,
-      storageTextureFormat: extraTypeInfo.resource === 'storageTex' ? 'rgba8unorm' : undefined,
+      ...extraEntry,
     });
 
     const shouldError = maxedCount >= kMaxBindingsPerBindGroup;
@@ -300,18 +213,17 @@ TODO(#230): Update to enforce per-stage and per-pipeline-layout limits on BGLs a
 g.test('max_resources_per_stage,in_pipeline_layout')
   .params(kCasesForMaxResourcesPerStageTests)
   .fn(async t => {
-    const { maxedType, extraType, maxedVisibility, extraVisibility } = t.params;
-    const maxedTypeInfo = kBindingTypeInfo[maxedType];
+    const { maxedEntry, extraEntry, maxedVisibility, extraVisibility } = t.params;
+    const maxedTypeInfo = bindingTypeInfo(maxedEntry);
     const maxedCount = maxedTypeInfo.perStageLimitClass.max;
-    const extraTypeInfo = kBindingTypeInfo[extraType];
+    const extraTypeInfo = bindingTypeInfo(extraEntry);
 
     const maxResourceBindings: GPUBindGroupLayoutEntry[] = [];
     for (let i = 0; i < maxedCount; i++) {
       maxResourceBindings.push({
         binding: i,
         visibility: maxedVisibility,
-        type: maxedType,
-        storageTextureFormat: maxedTypeInfo.resource === 'storageTex' ? 'rgba8unorm' : undefined,
+        ...maxedEntry,
       });
     }
 
@@ -325,8 +237,7 @@ g.test('max_resources_per_stage,in_pipeline_layout')
         {
           binding: 0,
           visibility: extraVisibility,
-          type: extraType,
-          storageTextureFormat: extraTypeInfo.resource === 'storageTex' ? 'rgba8unorm' : undefined,
+          ...extraEntry,
         },
       ],
     });
@@ -334,8 +245,7 @@ g.test('max_resources_per_stage,in_pipeline_layout')
     // Some binding types use the same limit, e.g. 'storage-buffer' and 'readonly-storage-buffer'.
     const newBindingCountsTowardSamePerStageLimit =
       (maxedVisibility & extraVisibility) !== 0 &&
-      kBindingTypeInfo[maxedType].perStageLimitClass.class ===
-        kBindingTypeInfo[extraType].perStageLimitClass.class;
+      maxedTypeInfo.perStageLimitClass.class === extraTypeInfo.perStageLimitClass.class;
     const layoutExceedsPerStageLimit = newBindingCountsTowardSamePerStageLimit;
 
     t.expectValidationError(() => {
