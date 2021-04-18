@@ -18,6 +18,12 @@ import { pbool } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { ValidationTest } from '../../validation_test.js';
 
+import {
+  beginRenderPassWithQuerySet,
+  createQuerySetWithType,
+  createRenderEncoderWithQuerySet,
+} from './common.js';
+
 export const g = makeTestGroup(ValidationTest);
 
 g.test('occlusion_query,begin_end_balance')
@@ -37,7 +43,22 @@ Tests that begin/end occlusion queries mismatch on render pass:
         { begin: 2, end: 1 },
       ] as const
   )
-  .unimplemented();
+  .fn(async t => {
+    const { begin, end } = t.params;
+    const querySet = createQuerySetWithType(t, 'occlusion', 2);
+
+    const encoder = createRenderEncoderWithQuerySet(t, querySet);
+    for (let i = 0; i < begin; i++) {
+      encoder.encoder.beginOcclusionQuery(i);
+    }
+    for (let j = 0; j < end; j++) {
+      encoder.encoder.endOcclusionQuery();
+    }
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, begin !== end);
+  });
 
 g.test('occlusion_query,begin_end_invalid_nesting')
   .desc(
@@ -56,7 +77,23 @@ Tests the invalid nesting of begin/end occlusion queries:
         { calls: [0, 1, 'end', 'end'] },
       ] as const
   )
-  .unimplemented();
+  .fn(async t => {
+    const querySet = createQuerySetWithType(t, 'occlusion', 2);
+
+    const encoder = createRenderEncoderWithQuerySet(t, querySet);
+
+    t.params.calls.forEach(i => {
+      if (i !== 'end') {
+        encoder.encoder.beginOcclusionQuery(Number(i));
+      } else {
+        encoder.encoder.endOcclusionQuery();
+      }
+    });
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, t.params.calls[1] !== 'end');
+  });
 
 g.test('occlusion_query,disjoint_queries_with_same_query_index')
   .desc(
@@ -67,7 +104,30 @@ Tests that two disjoint occlusion queries cannot be begun with same query index 
   `
   )
   .subcases(() => pbool('isOnSameRenderPass'))
-  .unimplemented();
+  .fn(async t => {
+    const querySet = createQuerySetWithType(t, 'occlusion', 1);
+
+    const encoder = t.device.createCommandEncoder();
+    const pass = beginRenderPassWithQuerySet(t, encoder, querySet);
+    pass.beginOcclusionQuery(0);
+    pass.endOcclusionQuery();
+
+    if (t.params.isOnSameRenderPass) {
+      pass.beginOcclusionQuery(0);
+      pass.endOcclusionQuery();
+      pass.endPass();
+    } else {
+      pass.endPass();
+      const otherPass = beginRenderPassWithQuerySet(t, encoder, querySet);
+      otherPass.beginOcclusionQuery(0);
+      otherPass.endOcclusionQuery();
+      otherPass.endPass();
+    }
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, t.params.isOnSameRenderPass);
+  });
 
 g.test('nesting')
   .desc(
