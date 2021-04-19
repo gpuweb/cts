@@ -97,7 +97,7 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
             [[set(0), binding(0)]] var sampler0 : sampler;
             [[set(0), binding(1)]] var texture0 : texture_2d<f32>;
 
-            [[builtin(frag_coord)]] var<in> FragCoord : vec4<f32>;
+            [[builtin(position)]] var<in> FragCoord : vec4<f32>;
 
             [[location(0)]] var<in> fragUV: vec2<f32>;
 
