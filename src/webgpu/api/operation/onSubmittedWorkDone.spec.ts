@@ -38,3 +38,17 @@ g.test('many,parallel')
     const promises = range(1000, () => t.queue.onSubmittedWorkDone());
     await Promise.all(promises);
   });
+
+g.test('many,parallel_order')
+  .desc(`Issue 200 onSubmittedWorkDone calls and make sure they resolve in the right order.`)
+  .fn(async t => {
+    const promises = [];
+    let lastResolved = -1;
+    for (const i of range(200, i => i)) {
+      promises.push(t.queue.onSubmittedWorkDone().then(() => {
+        t.expect(i === lastResolved + 1);
+        lastResolved++;
+      }));
+    }
+    await Promise.all(promises);
+  });
