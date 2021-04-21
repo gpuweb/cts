@@ -45,10 +45,12 @@ g.test('many,parallel_order')
     const promises = [];
     let lastResolved = -1;
     for (const i of range(200, i => i)) {
-      promises.push(t.queue.onSubmittedWorkDone().then(() => {
-        t.expect(i === lastResolved + 1);
-        lastResolved++;
-      }));
+      promises.push(
+        t.queue.onSubmittedWorkDone().then(() => {
+          t.expect(i === lastResolved + 1);
+          lastResolved++;
+        })
+      );
     }
     await Promise.all(promises);
   });
