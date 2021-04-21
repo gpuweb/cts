@@ -816,7 +816,7 @@ g.test('gc_behavior,mappedAtCreation')
 
     // Trigger garbage collection that should collect the buffer (or as if it collected it)
     // NOTE: This won't fail unless the browser immediately starts reusing the memory, or gives it
-    // back to the OS. On good option for browsers to check their logic is good is to zero-out the
+    // back to the OS. One good option for browsers to check their logic is good is to zero-out the
     // memory on GPUBuffer (or internal gpu::Buffer-like object) destruction.
     buffer = null;
     await attemptGarbageCollection();
