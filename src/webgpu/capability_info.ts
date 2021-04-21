@@ -508,7 +508,7 @@ export function samplerBindingTypeInfo(d: GPUSamplerBindingLayout) {
 export const kSamplerBindingTypes = ['filtering', 'non-filtering', 'comparison'] as const;
 assertTypeTrue<TypeEqual<GPUSamplerBindingType, typeof kSamplerBindingTypes[number]>>();
 
-export function textureBindingTypeInfo(d: GPUTextureBindingLayout) {
+export function sampledTextureBindingTypeInfo(d: GPUTextureBindingLayout) {
   /* prettier-ignore */
   if (d.multisampled) {
     return { usage: GPUConst.TextureUsage.SAMPLED, ...kBindingKind.sampledTex,   ...kValidStagesAll, };
@@ -537,13 +537,13 @@ assertTypeTrue<TypeEqual<GPUStorageTextureAccess, typeof kStorageTextureAccessVa
 
 export type BGLEntry = Omit<GPUBindGroupLayoutEntry, 'binding' | 'visibility'>;
 export function texBindingTypeInfo(e: BGLEntry) {
-  if (e.texture !== undefined) return textureBindingTypeInfo(e.texture);
+  if (e.texture !== undefined) return sampledTextureBindingTypeInfo(e.texture);
   if (e.storageTexture !== undefined) return storageTextureBindingTypeInfo(e.storageTexture);
   unreachable();
 }
 export function bindingTypeInfo(e: BGLEntry) {
   if (e.buffer !== undefined) return bufferBindingTypeInfo(e.buffer);
-  if (e.texture !== undefined) return textureBindingTypeInfo(e.texture);
+  if (e.texture !== undefined) return sampledTextureBindingTypeInfo(e.texture);
   if (e.sampler !== undefined) return samplerBindingTypeInfo(e.sampler);
   if (e.storageTexture !== undefined) return storageTextureBindingTypeInfo(e.storageTexture);
   unreachable('GPUBindGroupLayoutEntry has no BindingLayout');
