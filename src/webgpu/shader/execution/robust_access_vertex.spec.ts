@@ -324,7 +324,7 @@ g.test('vertexAccess')
         }
       }
     }
-    layoutStr += '};'
+    layoutStr += '};';
 
     // Vertex buffer descriptors
     const buffers: GPUVertexBufferLayout[] = [];
