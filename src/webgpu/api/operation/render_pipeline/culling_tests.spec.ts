@@ -101,10 +101,9 @@ g.test('culling')
         vertex: {
           module: t.device.createShaderModule({
             code: `
-              [[builtin(position)]] var<out> Position : vec4<f32>;
-              [[builtin(vertex_index)]] var<in> VertexIndex : i32;
-
-              [[stage(vertex)]] fn main() {
+              [[stage(vertex)]] fn main(
+                [[builtin(vertex_index)]] VertexIndex : i32
+                ) -> [[builtin(position)]] vec4<f32> {
                 let pos : array<vec2<f32>, 6> = array<vec2<f32>, 6>(
                     vec2<f32>(-1.0,  1.0),
                     vec2<f32>(-1.0,  0.0),
@@ -112,8 +111,7 @@ g.test('culling')
                     vec2<f32>( 0.0, -1.0),
                     vec2<f32>( 1.0,  0.0),
                     vec2<f32>( 1.0, -1.0));
-                Position = vec4<f32>(pos[VertexIndex], 0.0, 1.0);
-                return;
+                return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
               }`,
           }),
           entryPoint: 'main',
@@ -121,16 +119,16 @@ g.test('culling')
         fragment: {
           module: t.device.createShaderModule({
             code: `
-              [[location(0)]] var<out> fragColor : vec4<f32>;
-              [[builtin(front_facing)]] var<in> FrontFacing : bool;
-
-              [[stage(fragment)]] fn main() {
+              [[stage(fragment)]] fn main(
+                [[builtin(front_facing)]] FrontFacing : bool
+                ) -> [[location(0)]] vec4<f32> {
+                var color : vec4<f32>;
                 if (FrontFacing) {
-                  fragColor = vec4<f32>(0.0, 1.0, 0.0, 1.0);
+                  color = vec4<f32>(0.0, 1.0, 0.0, 1.0);
                 } else {
-                  fragColor = vec4<f32>(1.0, 0.0, 0.0, 1.0);
+                  color = vec4<f32>(1.0, 0.0, 0.0, 1.0);
                 }
-                return;
+                return color;
               }`,
           }),
           entryPoint: 'main',

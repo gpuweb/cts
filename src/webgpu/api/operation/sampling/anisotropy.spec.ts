@@ -57,11 +57,13 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
       vertex: {
         module: this.device.createShaderModule({
           code: `
-            [[builtin(vertex_index)]] var<in> VertexIndex : i32;
-            [[builtin(position)]] var<out> Position : vec4<f32>;
-            [[location(0)]] var<out> fragUV : vec2<f32>;
+            struct Outputs {
+              [[builtin(position)]] Position : vec4<f32>;
+              [[location(0)]] fragUV : vec2<f32>;
+            };
 
-            [[stage(vertex)]] fn main() {
+            [[stage(vertex)]] fn main(
+              [[builtin(vertex_index)]] VertexIndex : i32) -> Outputs {
               let position : array<vec3<f32>, 6> = array<vec3<f32>, 6>(
                 vec3<f32>(-0.5, 0.5, -0.5),
                 vec3<f32>(0.5, 0.5, -0.5),
@@ -84,8 +86,10 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
                 vec4<f32>(0.0, -43.63650894165039, -43.232173919677734, -43.18894577026367),
                 vec4<f32>(0.0, 21.693578720092773, 21.789791107177734, 21.86800193786621));
 
-              fragUV = uv[VertexIndex];
-              Position = matrix * vec4<f32>(position[VertexIndex], 1.0);
+              var output : Outputs;
+              output.fragUV = uv[VertexIndex];
+              output.Position = matrix * vec4<f32>(position[VertexIndex], 1.0);
+              return output;
             }
             `,
         }),
@@ -97,14 +101,11 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
             [[set(0), binding(0)]] var sampler0 : sampler;
             [[set(0), binding(1)]] var texture0 : texture_2d<f32>;
 
-            [[builtin(position)]] var<in> FragCoord : vec4<f32>;
-
-            [[location(0)]] var<in> fragUV: vec2<f32>;
-
-            [[location(0)]] var<out> fragColor : vec4<f32>;
-
-            [[stage(fragment)]] fn main() {
-                fragColor = textureSample(texture0, sampler0, fragUV);
+            [[stage(fragment)]] fn main(
+              [[builtin(position)]] FragCoord : vec4<f32>,
+              [[location(0)]] fragUV: vec2<f32>)
+              -> [[location(0)]] vec4<f32> {
+                return textureSample(texture0, sampler0, fragUV);
             }
             `,
         }),

@@ -332,12 +332,10 @@ class PrimitiveTopologyTest extends GPUTest {
         vertex: {
           module: this.device.createShaderModule({
             code: `
-              [[location(0)]] var<in> pos : vec4<f32>;
-              [[builtin(position)]] var<out> Position : vec4<f32>;
-
-              [[stage(vertex)]] fn main() {
-                Position = pos;
-                return;
+              [[stage(vertex)]] fn main(
+                [[location(0)]] pos : vec4<f32>
+                ) -> [[builtin(position)]] vec4<f32> {
+                return pos;
               }`,
           }),
           entryPoint: 'main',
@@ -357,10 +355,8 @@ class PrimitiveTopologyTest extends GPUTest {
         fragment: {
           module: this.device.createShaderModule({
             code: `
-              [[location(0)]] var<out> fragColor : vec4<f32>;
-              [[stage(fragment)]] fn main() {
-                fragColor = vec4<f32>(0.0, 1.0, 0.0, 1.0);
-                return;
+              [[stage(fragment)]] fn main() -> [[location(0)]] vec4<f32> {
+                return vec4<f32>(0.0, 1.0, 0.0, 1.0);
               }`,
           }),
           entryPoint: 'main',

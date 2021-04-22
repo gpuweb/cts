@@ -88,23 +88,25 @@ Params:
 
     const vertexModule = t.device.createShaderModule({
       code: `
-[[builtin(vertex_index)]] var<in> vertex_index : u32;
-[[builtin(instance_index)]] var<in> instance_id : u32;
-[[location(0)]] var<in> vertexPosition : vec2<f32>;
+struct Inputs {
+  [[builtin(vertex_index)]] vertex_index : u32;
+  [[builtin(instance_index)]] instance_id : u32;
+  [[location(0)]] vertexPosition : vec2<f32>;
+};
 
-[[builtin(position)]] var<out> Position : vec4<f32>;
-[[stage(vertex)]] fn vert_main() {
+[[stage(vertex)]] fn vert_main(input : Inputs
+  ) -> [[builtin(position)]] vec4<f32> {
   // 3u is the number of points in a triangle to convert from index
   // to id.
-  var vertex_id : u32 = vertex_index / 3u;
+  var vertex_id : u32 = input.vertex_index / 3u;
 
-  var x : f32 = (vertexPosition.x + f32(vertex_id)) / ${numX}.0;
-  var y : f32 = (vertexPosition.y + f32(instance_id)) / ${numY}.0;
+  var x : f32 = (input.vertexPosition.x + f32(vertex_id)) / ${numX}.0;
+  var y : f32 = (input.vertexPosition.y + f32(input.instance_id)) / ${numY}.0;
 
   // (0,1) y-down space to (-1,1) y-up NDC
   x = 2.0 * x - 1.0;
   y = -2.0 * y + 1.0;
-  Position = vec4<f32>(x, y, 0.0, 1.0);
+  return vec4<f32>(x, y, 0.0, 1.0);
 }
 `,
     });
@@ -117,10 +119,9 @@ Params:
 
 [[group(0), binding(0)]] var<storage> output : [[access(read_write)]] Output;
 
-[[location(0)]] var<out> fragColor : vec4<f32>;
-[[stage(fragment)]] fn frag_main() {
+[[stage(fragment)]] fn frag_main() -> [[location(0)]] vec4<f32> {
   output.value = 1u;
-  fragColor = vec4<f32>(0.0, 1.0, 0.0, 1.0);
+  return vec4<f32>(0.0, 1.0, 0.0, 1.0);
 }
 `,
     });
@@ -478,26 +479,24 @@ g.test('vertex_attributes,basic')
       vertex: {
         module: t.device.createShaderModule({
           code: `
-${shaderLocations
-  .map(
-    i => `
-[[location(${i})]] var<in> attrib${i} : ${wgslFormat};
-[[location(${i})]] var<out> outAttrib${i} : ${wgslFormat};
-`
-  )
-  .join('\n')}
+struct Inputs {
+  [[builtin(vertex_index)]] vertexIndex : u32;
+  [[builtin(instance_index)]] instanceIndex : u32;
+${shaderLocations.map(i => `  [[location(${i})]] attrib${i} : ${wgslFormat};`).join('\n')}
+};
 
-[[location(${shaderLocations.length})]] var<out> primitiveId : u32;
+struct Outputs {
+  [[builtin(position)]] Position : vec4<f32>;
+${shaderLocations.map(i => `  [[location(${i})]] outAttrib${i} : ${wgslFormat};`).join('\n')}
+  [[location(${shaderLocations.length})]] primitiveId : u32;
+};
 
-[[builtin(vertex_index)]] var<in> vertexIndex : u32;
-[[builtin(instance_index)]] var<in> instanceIndex : u32;
-
-[[builtin(position)]] var<out> Position : vec4<f32>;
-
-[[stage(vertex)]] fn main() {
-${shaderLocations.map(i => `  outAttrib${i} = attrib${i};`).join('\n')}
-  primitiveId = instanceIndex * ${instanceCount}u + vertexIndex;
-  Position = vec4<f32>(0.0, 0.0, 0.5, 1.0);
+[[stage(vertex)]] fn main(input : Inputs) -> Outputs {
+  var output : Outputs;
+${shaderLocations.map(i => `  output.outAttrib${i} = input.attrib${i};`).join('\n')}
+  output.primitiveId = input.instanceIndex * ${instanceCount}u + input.vertexIndex;
+  output.Position = vec4<f32>(0.0, 0.0, 0.5, 1.0);
+  return output;
 }
           `,
         }),
@@ -507,8 +506,10 @@ ${shaderLocations.map(i => `  outAttrib${i} = attrib${i};`).join('\n')}
       fragment: {
         module: t.device.createShaderModule({
           code: `
-${shaderLocations.map(i => `[[location(${i})]] var<in> attrib${i} : ${wgslFormat};`).join('\n')}
-[[location(${shaderLocations.length})]] var<in> primitiveId : u32;
+struct Inputs {
+${shaderLocations.map(i => `  [[location(${i})]] attrib${i} : ${wgslFormat};`).join('\n')}
+  [[location(${shaderLocations.length})]] primitiveId : u32;
+};
 
 struct OutPrimitive {
 ${shaderLocations.map(i => `  attrib${i} : ${wgslFormat};`).join('\n')}
@@ -518,9 +519,9 @@ ${shaderLocations.map(i => `  attrib${i} : ${wgslFormat};`).join('\n')}
 };
 [[group(0), binding(0)]] var<storage> outBuffer : [[access(read_write)]] OutBuffer;
 
-[[stage(fragment)]] fn main() {
+[[stage(fragment)]] fn main(input : Inputs) {
 ${shaderLocations
-  .map(i => `  outBuffer.primitives[primitiveId].attrib${i} = attrib${i};`)
+  .map(i => `  outBuffer.primitives[input.primitiveId].attrib${i} = input.attrib${i};`)
   .join('\n')}
 }
           `,

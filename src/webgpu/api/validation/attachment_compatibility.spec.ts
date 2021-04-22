@@ -115,10 +115,8 @@ class F extends ValidationTest {
       vertex: {
         module: this.device.createShaderModule({
           code: `
-            [[builtin(position)]] var<out> position : vec4<f32>;
-
-            [[stage(vertex)]] fn main() {
-              position = vec4<f32>(0.0, 0.0, 0.0, 0.0);
+            [[stage(vertex)]] fn main() -> [[builtin(position)]] vec4<f32> {
+              return vec4<f32>(0.0, 0.0, 0.0, 0.0);
             }`,
         }),
         entryPoint: 'main',

@@ -64,27 +64,25 @@ class IndexFormatTest extends GPUTest {
           vec2<f32>(0.99,  0.98),
           vec2<f32>(0.01, -0.98));
 
-        [[builtin(position)]] var<out> Position : vec4<f32>;
-        [[builtin(vertex_index)]] var<in> VertexIndex : u32;
-
         [[stage(vertex)]]
-        fn main() {
+        fn main([[builtin(vertex_index)]] VertexIndex : u32)
+             -> [[builtin(position)]] vec4<f32> {
+          var Position : vec4<f32>;
           if (VertexIndex == 0xFFFFu || VertexIndex == 0xFFFFFFFFu) {
             Position = vec4<f32>(-0.99, -0.98, 0.0, 1.0);
           } else {
             Position = vec4<f32>(pos[VertexIndex], 0.0, 1.0);
           }
+          return Position;
         }
       `,
     });
 
     const fragmentModule = this.device.createShaderModule({
       code: `
-        [[location(0)]] var<out> fragColor : u32;
-
         [[stage(fragment)]]
-        fn main() {
-          fragColor = 1u;
+        fn main() -> [[location(0)]] u32 {
+          return 1u;
         }
       `,
     });
