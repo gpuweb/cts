@@ -9,12 +9,6 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { createRenderEncoderWithQuerySet } from '../../encoding/queries/common.js';
 import { ValidationTest } from '../../validation_test.js';
 
-export const enum EncoderType {
-  CommandEncoder = 'CommandEncoder',
-  ComputeEncoder = 'ComputeEncoder',
-  RenderEncoder = 'RenderEncoder',
-}
-
 export const g = makeTestGroup(ValidationTest);
 
 g.test('beginOcclusionQuery')

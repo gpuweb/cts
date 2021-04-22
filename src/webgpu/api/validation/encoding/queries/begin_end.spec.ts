@@ -1,7 +1,7 @@
 export const description = `
 Validation for encoding begin/endable queries.
 
-TODO:
+TODO: tests for pipeline statistics queries:
 - balance: {
     - begin 0, end 1
     - begin 1, end 0
@@ -72,9 +72,9 @@ Tests the invalid nesting of begin/end occlusion queries:
   .subcases(
     () =>
       [
-        { calls: [0, 'end', 1, 'end'] }, // control case
-        { calls: [0, 0, 'end', 'end'] },
-        { calls: [0, 1, 'end', 'end'] },
+        { calls: [0, 'end', 1, 'end'], _valid: true }, // control case
+        { calls: [0, 0, 'end', 'end'], _valid: false },
+        { calls: [0, 1, 'end', 'end'], _valid: false },
       ] as const
   )
   .fn(async t => {
@@ -82,17 +82,17 @@ Tests the invalid nesting of begin/end occlusion queries:
 
     const encoder = createRenderEncoderWithQuerySet(t, querySet);
 
-    t.params.calls.forEach(i => {
+    for (const i of t.params.calls) {
       if (i !== 'end') {
-        encoder.encoder.beginOcclusionQuery(Number(i));
+        encoder.encoder.beginOcclusionQuery(i);
       } else {
         encoder.encoder.endOcclusionQuery();
       }
-    });
+    }
 
     t.expectValidationError(() => {
       encoder.finish();
-    }, t.params.calls[1] !== 'end');
+    }, !t.params._valid);
   });
 
 g.test('occlusion_query,disjoint_queries_with_same_query_index')
