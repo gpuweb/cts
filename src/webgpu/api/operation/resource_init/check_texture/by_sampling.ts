@@ -60,10 +60,8 @@ export const checkContentsBySampling: CheckContents = (
             };
             [[group(0), binding(3)]] var<storage_buffer> result : Result;
 
-            [[builtin(global_invocation_id)]] var<in> GlobalInvocationID : vec3<u32>;
-
             [[stage(compute)]]
-            fn main() {
+            fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
               var flatIndex : u32 = ${width}u * GlobalInvocationID.y + GlobalInvocationID.x;
               flatIndex = flatIndex * ${componentCount}u;
               var texel : vec4<${shaderType}> = textureLoad(

@@ -19,14 +19,12 @@ class F extends ValidationTest {
       vertex: {
         module: this.device.createShaderModule({
           code: `
-            ${range(
-              bufferCount,
-              i => `\n[[location(${i})]] var<in> a_position${i} : vec3<f32>;`
-            ).join('')}
-            [[builtin(position)]] var<out> Position : vec4<f32>;
-            [[stage(vertex)]] fn main() {
-              Position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
-              return;
+            struct Inputs {
+            ${range(bufferCount, i => `\n[[location(${i})]] a_position${i} : vec3<f32>;`).join('')}
+            };
+            [[stage(vertex)]] fn main(input : Inputs
+              ) -> [[builtin(position)]] vec4<f32> {
+              return vec4<f32>(0.0, 0.0, 0.0, 1.0);
             }`,
         }),
         entryPoint: 'main',
@@ -44,10 +42,8 @@ class F extends ValidationTest {
       fragment: {
         module: this.device.createShaderModule({
           code: `
-            [[location(0)]] var<out> fragColor : vec4<f32>;
-            [[stage(fragment)]] fn main() {
-              fragColor = vec4<f32>(0.0, 1.0, 0.0, 1.0);
-              return;
+            [[stage(fragment)]] fn main() -> [[location(0)]] vec4<f32> {
+              return vec4<f32>(0.0, 1.0, 0.0, 1.0);
             }`,
         }),
         entryPoint: 'main',
