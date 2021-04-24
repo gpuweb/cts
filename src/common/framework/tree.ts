@@ -84,6 +84,8 @@ export class TestTree {
    * Collapse that down into:
    *   a,* { a,b:* { ... } }
    * which is less needlessly verbose when displaying the tree in the standalone runner.
+   *
+   * TODO: fix the name of this
    */
   dissolveLevelBoundaries(): void {
     const newRoot = dissolveSingleChildTrees(this.root);
@@ -213,8 +215,7 @@ export async function loadTreeForQuery(
     const subtreeL1: TestSubtree<TestQueryMultiTest> = addSubtreeForFilePath(
       subtreeL0,
       entry.file,
-      description,
-      isCollapsible
+      description
     );
 
     for (const t of spec.g.iterate()) {
@@ -299,8 +300,7 @@ function addSubtreeForDirPath(
 function addSubtreeForFilePath(
   tree: TestSubtree<TestQueryMultiFile>,
   file: string[],
-  description: string,
-  checkCollapsible: (sq: TestQuery) => boolean
+  description: string
 ): TestSubtree<TestQueryMultiTest> {
   // To start, tree is suite:*
   // This goes from that -> suite:a,* -> suite:a,b,*
@@ -313,7 +313,7 @@ function addSubtreeForFilePath(
       readableRelativeName: file[file.length - 1] + kBigSeparator + kWildcard,
       query,
       description,
-      collapsible: checkCollapsible(query),
+      collapsible: false,
     };
   });
   return subtree;
