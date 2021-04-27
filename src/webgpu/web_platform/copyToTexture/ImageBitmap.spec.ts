@@ -36,8 +36,8 @@ enum Color {
 }
 // Cache for generated pixels.
 const generatedPixelCache: Map<GPUTextureFormat, Map<Color, Uint8Array>> = new Map();
-type transparentOp = 'premultiply' | 'none' | 'non-transparent';
-type orientationOp = 'flipY' | 'none';
+type TransparentOp = 'premultiply' | 'none' | 'non-transparent';
+type OrientationOp = 'flipY' | 'none';
 
 class F extends GPUTest {
   checkCopyImageBitmapResult(
@@ -187,11 +187,11 @@ got [${failedByteActualValues.join(', ')}]`;
     format: UncompressedTextureFormat,
     width: number,
     height: number,
-    transparenetOp: transparentOp,
-    orientationOp: orientationOp
+    transparentOp: TransparentOp,
+    orientationOp: OrientationOp
   ): Uint8ClampedArray {
     const bytesPerPixel = kUncompressedTextureFormatInfo[format].bytesPerBlock;
-    if (typeof bytesPerPixel === 'undefined') {
+    if (bytesPerPixel === undefined) {
       return new Uint8ClampedArray(0);
     }
 
@@ -203,7 +203,7 @@ got [${failedByteActualValues.join(', ')}]`;
       const pixelData = this.generatePixel(currentPixel, format);
       for (let j = 0; j < bytesPerPixel; ++j) {
         // All pixels are 0 due to premultiply alpha
-        if (transparenetOp === 'premultiply' && currentPixel === Color.TransparentBlack) {
+        if (transparentOp === 'premultiply' && currentPixel === Color.TransparentBlack) {
           imagePixels[i * bytesPerPixel + j] = 0;
         } else {
           imagePixels[i * bytesPerPixel + j] = pixelData[j];
@@ -213,7 +213,7 @@ got [${failedByteActualValues.join(', ')}]`;
       // Refresh the iteration when hit OpaqueBlack color with 'non-transparent' config or
       // hit the TransparentBlack color(The last element in 'Color' enum).
       if (
-        (transparenetOp === 'non-transparent' && currentPixel === Color.OpaqueBlack) ||
+        (transparentOp === 'non-transparent' && currentPixel === Color.OpaqueBlack) ||
         currentPixel === Color.TransparentBlack
       ) {
         currentPixel = Color.Red;
@@ -247,7 +247,7 @@ g.test('from_ImageData')
     `
   Test ImageBitmap generated from ImageData can be copied to WebGPU
   texture correctly. These imageBitmaps are highly possible living
-  in CPU back resource. 
+  in CPU back resource.
   `
   )
   .cases(
@@ -321,7 +321,7 @@ g.test('from_canvas')
   .desc(
     `
   Test ImageBitmap generated from canvas/offscreenCanvas can be copied to WebGPU
-  texture correctly. These imageBitmaps are highly possible living in GPU back resource. 
+  texture correctly. These imageBitmaps are highly possible living in GPU back resource.
   `
   )
   .cases(
