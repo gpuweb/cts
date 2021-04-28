@@ -49,10 +49,11 @@ const [
 
   if (process.argv.length >= 7) {
     // Prefixes sorted from longest to shortest
-    argsPrefixes = (await fs.readFile(argsPrefixesFile, 'utf8'))
+    const argsPrefixesFromFile = (await fs.readFile(argsPrefixesFile, 'utf8'))
       .split(/\r?\n/)
       .filter(a => a.length)
       .sort((a, b) => b.length - a.length);
+    if (argsPrefixesFromFile.length) argsPrefixes = argsPrefixesFromFile;
     expectationLines = new Set(
       (await fs.readFile(expectationsFile, 'utf8')).split(/\r?\n/).filter(l => l.length)
     );
