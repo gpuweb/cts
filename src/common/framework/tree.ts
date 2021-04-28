@@ -78,16 +78,13 @@ export class TestTree {
   }
 
   /**
-   * If a parent and its child are at different levels, then
-   * generally the parent has only one child, i.e.:
+   * Dissolve nodes which have only one child, e.g.:
    *   a,* { a,b,* { a,b:* { ... } } }
-   * Collapse that down into:
+   * collapses down into:
    *   a,* { a,b:* { ... } }
    * which is less needlessly verbose when displaying the tree in the standalone runner.
-   *
-   * TODO: fix the name of this
    */
-  dissolveLevelBoundaries(): void {
+  dissolveSingleChildTrees(): void {
     const newRoot = dissolveSingleChildTrees(this.root);
     assert(newRoot === this.root);
   }
