@@ -9,7 +9,7 @@ For an example test file, see [`src/webgpu/examples.spec.ts`](../src/webgpu/exam
 Implement some tests and open a pull request. You can open a PR any time you're ready for a review.
 (If two tests are non-trivial but independent, consider separate pull requests.)
 
-Before uploading, you can run pre-submit checks (`grunt pre`) to make sure it will pass CI.
+Before uploading, you can run pre-submit checks (`npm test`) to make sure it will pass CI.
 
 ## Test Helpers
 
