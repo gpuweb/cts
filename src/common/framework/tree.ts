@@ -62,17 +62,44 @@ export interface TestTreeLeaf {
 
 export type TestTreeNode = TestSubtree | TestTreeLeaf;
 
+/**
+ * When iterating through "collapsed" tree nodes, indicates how many "query levels" to traverse
+ * through before starting to collapse nodes.
+ *
+ * Corresponds with TestQueryLevel, but excludes 4 (SingleCase):
+ * - 1 = MultiFile. Expands so every file is in the collapsed tree.
+ * - 2 = MultiTest. Expands so every test is in the collapsed tree.
+ * - 3 = MultiCase. Expands so every case is in the collapsed tree (i.e. collapsing disabled).
+ */
 export type ExpandThroughLevel = 1 | 2 | 3;
 
 export class TestTree {
+  /**
+   * The `queryToLoad` that this test tree was created for.
+   * Test trees are always rooted at `suite:*`, but they only contain nodes that fit
+   * within `forQuery`.
+   *
+   * This is used for `iterateCollapsedQueries` which only starts collapsing at the next
+   * `TestQueryLevel` after `forQuery`.
+   */
   readonly forQuery: TestQuery;
   readonly root: TestSubtree;
 
   constructor(forQuery: TestQuery, root: TestSubtree) {
     this.forQuery = forQuery;
     this.root = root;
+    assert(
+      root.query.level === 1 && root.query.depthInLevel === 0,
+      'TestTree root must be the root (suite:*)'
+    );
   }
 
+  /**
+   * Iterate through the leaves of a version of the tree which has been pruned to exclude
+   * subtrees which:
+   * - are at a deeper `TestQueryLevel` than `this.forQuery`, and
+   * - were not a `Ordering.StrictSubset` of any of the `subqueriesToExpand` during tree creation.
+   */
   iterateCollapsedQueries(
     includeEmptySubtrees: boolean,
     alwaysExpandThroughLevel: ExpandThroughLevel

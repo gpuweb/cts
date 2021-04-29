@@ -20,11 +20,13 @@ export type TestQuery =
   | TestQueryMultiTest
   | TestQueryMultiFile;
 
-export type TestQueryLevel =
-  | 1 // MultiFile
-  | 2 // MultiTest
-  | 3 // MultiCase
-  | 4; // SingleCase
+/**
+ * - 1 = MultiFile.
+ * - 2 = MultiTest.
+ * - 3 = MultiCase.
+ * - 4 = SingleCase.
+ */
+export type TestQueryLevel = 1 | 2 | 3 | 4;
 
 export interface TestQueryWithExpectation {
   query: TestQuery;

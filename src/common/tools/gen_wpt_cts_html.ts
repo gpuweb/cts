@@ -83,7 +83,8 @@ const [
     const tree = await loader.loadTree(rootQuery, expectations.get(prefix)!);
 
     lines.push(undefined); // output blank line between prefixes
-    for (const q of tree.iterateCollapsedQueries(false, 2)) {
+    const alwaysExpandThroughLevel = 2; // expand to, at minimum, every test.
+    for (const q of tree.iterateCollapsedQueries(false, alwaysExpandThroughLevel)) {
       const urlQueryString = prefix + q.toString(); // "?worker=0&q=..."
       // Check for a safe-ish path length limit. Filename must be <= 255, and on Windows the whole
       // path must be <= 259. Leave room for e.g.:
