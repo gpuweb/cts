@@ -58,7 +58,7 @@ export const checkContentsBySampling: CheckContents = (
             [[block]] struct Result {
               [[offset(0)]] values : [[stride(4)]] array<${shaderType}>;
             };
-            [[group(0), binding(3)]] var<storage_buffer> result : Result;
+            [[group(0), binding(3)]] var<storage> result : [[access(read_write)]] Result;
 
             [[stage(compute)]]
             fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
