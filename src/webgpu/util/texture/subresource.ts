@@ -1,7 +1,6 @@
 import { assert } from '../../../common/framework/util/util.js';
 import { kAllTextureFormatInfo } from '../../capability_info.js';
 import { align } from '../../util/math.js';
-import { standardizeExtent3D } from '../unions.js';
 
 export interface BeginCountRange {
   begin: number;
@@ -27,10 +26,14 @@ export class SubresourceRange {
   readonly mipRange: BeginEndRange;
   readonly sliceRange: BeginEndRange;
 
-  constructor(subresources: {
-    mipRange: BeginEndRange | BeginCountRange;
-    sliceRange: BeginEndRange | BeginCountRange;
-  }) {
+  constructor(
+    subresources: {
+      mipRange: BeginEndRange | BeginCountRange;
+      sliceRange: BeginEndRange | BeginCountRange;
+    },
+    private depthOrArrayLayerCount: number,
+    private dimension: GPUTextureDimension
+  ) {
     this.mipRange = {
       begin: subresources.mipRange.begin,
       end: endOfRange(subresources.mipRange),
@@ -43,7 +46,11 @@ export class SubresourceRange {
 
   *each(): Generator<{ level: number; slice: number }> {
     for (let level = this.mipRange.begin; level < this.mipRange.end; ++level) {
-      for (let slice = this.sliceRange.begin; slice < this.sliceRange.end; ++slice) {
+      const end =
+        this.dimension === '3d'
+          ? this.depthOrArrayLayerCount >> level
+          : this.depthOrArrayLayerCount;
+      for (let slice = this.sliceRange.begin; slice < Math.min(end, this.sliceRange.end); ++slice) {
         yield { level, slice };
       }
     }
@@ -51,35 +58,18 @@ export class SubresourceRange {
 
   *mipLevels(): Generator<{ level: number; slices: Generator<number> }> {
     for (let level = this.mipRange.begin; level < this.mipRange.end; ++level) {
+      const end =
+        this.dimension === '3d'
+          ? this.depthOrArrayLayerCount >> level
+          : this.depthOrArrayLayerCount;
       yield {
         level,
-        slices: rangeAsIterator(this.sliceRange),
+        slices: rangeAsIterator({
+          begin: this.sliceRange.begin,
+          end: Math.min(end, this.sliceRange.end),
+        }),
       };
     }
-  }
-}
-
-export function mipSize(size: readonly [number], level: number): [number];
-export function mipSize(size: readonly [number, number], level: number): [number, number];
-export function mipSize(
-  size: readonly [number, number, number],
-  level: number
-): [number, number, number];
-export function mipSize(size: Readonly<GPUExtent3DDict>, level: number): GPUExtent3DDict;
-export function mipSize(
-  size: Readonly<GPUExtent3DDict> | readonly number[],
-  level: number
-): GPUExtent3D {
-  const rShiftMax1 = (s: number) => Math.max(s >> level, 1);
-  if (size instanceof Array) {
-    return size.map(rShiftMax1);
-  } else {
-    const size_ = standardizeExtent3D(size);
-    return {
-      width: rShiftMax1(size_.width),
-      height: rShiftMax1(size_.height),
-      depthOrArrayLayers: rShiftMax1(size_.depthOrArrayLayers),
-    };
   }
 }
 

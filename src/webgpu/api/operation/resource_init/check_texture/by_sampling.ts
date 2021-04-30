@@ -1,4 +1,4 @@
-import { assert } from '../../../../../common/framework/util/util.js';
+import { assert, unreachable } from '../../../../../common/framework/util/util.js';
 import {
   EncodableTextureFormat,
   kEncodableTextureFormatInfo,
@@ -17,7 +17,7 @@ export const checkContentsBySampling: CheckContents = (
   state,
   subresourceRange
 ) => {
-  assert(params.dimension === '2d');
+  assert(params.dimension !== '1d');
   assert(params.format in kEncodableTextureFormatInfo);
   const format = params.format as EncodableTextureFormat;
   const rep = kTexelRepresentationInfo[format];
@@ -43,20 +43,27 @@ export const checkContentsBySampling: CheckContents = (
 
     const _xd = '_' + params.dimension;
     const _multisampled = params.sampleCount > 1 ? '_multisampled' : '';
+    const texelIndexExpresion =
+      params.dimension === '2d'
+        ? 'vec2<i32>(GlobalInvocationID.xy)'
+        : params.dimension === '3d'
+        ? 'vec3<i32>(i32(GlobalInvocationID.x), i32(GlobalInvocationID.y), constants.slice)'
+        : unreachable();
     const computePipeline = t.device.createComputePipeline({
       compute: {
         entryPoint: 'main',
         module: t.device.createShaderModule({
           code: `
             [[block]] struct Constants {
-              [[offset(0)]] level : i32;
+              level : i32;
+              slice: i32;
             };
 
             [[group(0), binding(0)]] var<uniform> constants : Constants;
             [[group(0), binding(1)]] var myTexture : texture${_multisampled}${_xd}<${shaderType}>;
 
             [[block]] struct Result {
-              [[offset(0)]] values : [[stride(4)]] array<${shaderType}>;
+              values : [[stride(4)]] array<${shaderType}>;
             };
             [[group(0), binding(3)]] var<storage> result : [[access(read_write)]] Result;
 
@@ -64,13 +71,11 @@ export const checkContentsBySampling: CheckContents = (
             fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
               var flatIndex : u32 = ${width}u * GlobalInvocationID.y + GlobalInvocationID.x;
               flatIndex = flatIndex * ${componentCount}u;
-              var texel : vec4<${shaderType}> = textureLoad(
-                myTexture, vec2<i32>(GlobalInvocationID.xy), constants.level);
+              var texel : vec4<${shaderType}> = textureLoad(myTexture, ${texelIndexExpresion}, constants.level);
 
               for (var i : u32 = 0u; i < ${componentCount}u; i = i + 1u) {
                 result.values[flatIndex + i] = texel.${indexExpression};
               }
-              return;
             }`,
         }),
       },
@@ -79,18 +84,32 @@ export const checkContentsBySampling: CheckContents = (
     for (const slice of slices) {
       const ubo = t.device.createBuffer({
         mappedAtCreation: true,
-        size: 4,
+        size: 8,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
       });
-      new Int32Array(ubo.getMappedRange(), 0, 1)[0] = level;
+      new Int32Array(ubo.getMappedRange()).set([level, slice]);
       ubo.unmap();
 
       const byteLength =
         width * height * ReadbackTypedArray.BYTES_PER_ELEMENT * rep.componentOrder.length;
+
       const resultBuffer = t.device.createBuffer({
         size: byteLength,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       });
+
+      const textureView =
+        params.dimension === '2d'
+          ? texture.createView({
+              baseMipLevel: 0,
+              mipLevelCount: params.mipLevelCount,
+              baseArrayLayer: slice,
+              arrayLayerCount: 1,
+            })
+          : texture.createView({
+              baseMipLevel: 0,
+              mipLevelCount: params.mipLevelCount,
+            });
 
       const bindGroup = t.device.createBindGroup({
         layout: computePipeline.getBindGroupLayout(0),
@@ -101,12 +120,7 @@ export const checkContentsBySampling: CheckContents = (
           },
           {
             binding: 1,
-            resource: texture.createView({
-              baseMipLevel: 0,
-              mipLevelCount: params.mipLevelCount,
-              baseArrayLayer: slice,
-              arrayLayerCount: 1,
-            }),
+            resource: textureView,
           },
           {
             binding: 3,
@@ -130,7 +144,7 @@ export const checkContentsBySampling: CheckContents = (
       const expectedState = t.stateToTexelComponents[state];
       let i = 0;
       for (let h = 0; h < height; ++h) {
-        for (let w = 0; w < height; ++w) {
+        for (let w = 0; w < width; ++w) {
           for (const c of rep.componentOrder) {
             const value = expectedState[c];
             assert(value !== undefined);
