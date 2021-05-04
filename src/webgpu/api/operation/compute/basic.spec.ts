@@ -2,6 +2,7 @@ export const description = `
 Basic command buffer compute tests.
 `;
 
+import { params, poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
 
@@ -64,5 +65,110 @@ g.test('memcpy').fn(async t => {
 });
 
 g.test('large_dispatch')
-  .desc(`Test reasonably-sized large dispatches (see also stress tests).`)
-  .unimplemented();
+  .desc(
+    `
+TODO: add query for the maximum dispatch size and test closer to those limits.
+
+Test reasonably-sized large dispatches (see also stress tests).
+`
+  )
+  .cases(
+    params()
+      .combine(
+        poptions('dispatchSize', [
+          // Reasonably-sized powers of two
+          256,
+          512,
+          1024,
+          2048,
+          // Some stranger larger sizes
+          315,
+          628,
+          1053,
+          2179,
+        ] as const)
+      )
+      .combine(
+        poptions('workgroupSize', [
+          // Test some reasonable workgroup sizes. These increase
+          // runtime by n^3, so don't go crazy with them.
+          1,
+          2,
+          4,
+        ] as const)
+      )
+  )
+  .subcases(() =>
+    poptions('largeDimension', [
+      // 0 == x axis; 1 == y axis; 2 == z axis
+      0,
+      1,
+      2,
+    ] as const)
+  )
+  .fn(async t => {
+    // The output storage buffer is filled with this value.
+    const val = 0x01020304;
+    const data = new Uint32Array([val]);
+
+    const src = t.device.createBuffer({
+      mappedAtCreation: true,
+      size: Uint32Array.BYTES_PER_ELEMENT,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
+    });
+    new Uint32Array(src.getMappedRange()).set(data);
+    src.unmap();
+
+    const wgSize = t.params.workgroupSize;
+    const bufferSize =
+      Uint32Array.BYTES_PER_ELEMENT * t.params.dispatchSize * wgSize * wgSize * wgSize;
+    const dst = t.device.createBuffer({
+      size: bufferSize,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
+    });
+
+    const pipeline = t.device.createComputePipeline({
+      compute: {
+        module: t.device.createShaderModule({
+          code: `
+            [[block]] struct OutputBuffer {
+              value : array<u32>;
+            };
+
+            [[group(0), binding(0)]] var<storage> dst : [[access(read_write)]] OutputBuffer;
+
+            [[stage(compute), workgroup_size(${wgSize}, ${wgSize}, ${wgSize})]]
+            fn main(
+              [[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>
+            ) {
+              // This indexing only works because this is conceptually a 1D array
+              // which spans a single 3D axis.
+              dst.value[GlobalInvocationID.x + GlobalInvocationID.y + GlobalInvocationID.z] = ${val}u;
+              return;
+            }
+          `,
+        }),
+        entryPoint: 'main',
+      },
+    });
+
+    const bg = t.device.createBindGroup({
+      entries: [{ binding: 0, resource: { buffer: dst, offset: 0, size: bufferSize } }],
+      layout: pipeline.getBindGroupLayout(0),
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    // Only use one large dimension in the dispatch call to keep the size of the test reasonable.
+    const dims = [1, 1, 1];
+    dims[t.params.largeDimension] = t.params.dispatchSize;
+    const pass = encoder.beginComputePass();
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bg);
+    pass.dispatch(dims[0], dims[1], dims[2]);
+    pass.endPass();
+    t.device.queue.submit([encoder.finish()]);
+
+    t.expectSingleValueContents(dst, data, bufferSize);
+
+    dst.destroy();
+  });

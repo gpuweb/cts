@@ -26,6 +26,10 @@ Generally, see:
         feature(s). If the device creation fails, then skip the test for that format(s).
     - `selectDeviceForQueryTypeOrSkipTestCase`: Create device with query type(s) required
         feature(s). If the device creation fails, then skip the test for that type(s).
+    - `expectSingleValueContents`: Expect a buffer's contents to be a single constant value,
+        specified as a TypedArrayBufferView.
+    - `checkSingleValueBuffer`: checks that an actual TypedArrayBufferView's contents are all a
+        single constant value, specified as a TypedArrayBufferView containing one element.
 - [`ValidationTest`](../src/webgpu/api/validation/validation_test.ts)
     - `createEncoder`: Generically creates non-pass, compute pass, render pass, or render bundle
         encoders. This allows callers to write code using methods common to multiple encoder types.
