@@ -229,6 +229,32 @@ export class GPUTest extends Fixture {
     });
   }
 
+  expectSingleValueContents(
+    src: GPUBuffer,
+    expected: TypedArrayBufferView,
+    byteSize: number,
+    srcOffset: number = 0,
+    { generateWarningOnly = false }: { generateWarningOnly?: boolean } = {}
+  ): void {
+    const { dst, begin, end } = this.createAlignedCopyForMapRead(src, byteSize, srcOffset);
+
+    this.eventualAsyncExpectation(async niceStack => {
+      const constructor = expected.constructor as TypedArrayBufferViewConstructor;
+      await dst.mapAsync(GPUMapMode.READ);
+      const actual = new constructor(dst.getMappedRange());
+      const check = this.checkSingleValueBuffer(actual.subarray(begin, end), expected);
+      if (check !== undefined) {
+        niceStack.message = check;
+        if (generateWarningOnly) {
+          this.rec.warn(niceStack);
+        } else {
+          this.rec.expectationFailed(niceStack);
+        }
+      }
+      dst.destroy();
+    });
+  }
+
   expectContentsBetweenTwoValues(
     src: GPUBuffer,
     expected: [TypedArrayBufferView, TypedArrayBufferView],
@@ -375,6 +401,72 @@ export class GPUTest extends Fixture {
         }
         failedByteIndices.push(i.toString());
         failedByteExpectedValues.push(exp[i].toString());
+        failedByteActualValues.push(actual[i].toString());
+      }
+    }
+    const summary = `at [${failedByteIndices.join(', ')}], \
+expected [${failedByteExpectedValues.join(', ')}], \
+got [${failedByteActualValues.join(', ')}]`;
+    const lines = [summary];
+
+    // TODO: Could make a more convenient message, which could look like e.g.:
+    //
+    //   Starting at offset 48,
+    //              got 22222222 ABCDABCD 99999999
+    //     but expected 22222222 55555555 99999999
+    //
+    // or
+    //
+    //   Starting at offset 0,
+    //              got 00000000 00000000 00000000 00000000 (... more)
+    //     but expected 00FF00FF 00FF00FF 00FF00FF 00FF00FF (... more)
+    //
+    // Or, maybe these diffs aren't actually very useful (given we have the prints just above here),
+    // and we should remove them. More important will be logging of texture data in a visual format.
+
+    if (size <= 256 && failedByteIndices.length > 0) {
+      const expHex = Array.from(new Uint8Array(exp.buffer, exp.byteOffset, exp.byteLength))
+        .map(x => x.toString(16).padStart(2, '0'))
+        .join('');
+      const actHex = Array.from(new Uint8Array(actual.buffer, actual.byteOffset, actual.byteLength))
+        .map(x => x.toString(16).padStart(2, '0'))
+        .join('');
+      lines.push('EXPECT:\t  ' + exp.join(' '));
+      lines.push('\t0x' + expHex);
+      lines.push('ACTUAL:\t  ' + actual.join(' '));
+      lines.push('\t0x' + actHex);
+    }
+    if (failedByteIndices.length) {
+      return lines.join('\n');
+    }
+    return undefined;
+  }
+
+  checkSingleValueBuffer(
+    actual: TypedArrayBufferView,
+    exp: TypedArrayBufferView,
+    tolerance: number | ((i: number) => number) = 0
+  ): string | undefined {
+    assert(actual.constructor === exp.constructor);
+
+    const size = actual.length;
+    if (1 !== exp.length) {
+      return 'expected single value typed array for expected value';
+    }
+    const failedByteIndices: string[] = [];
+    const failedByteExpectedValues: string[] = [];
+    const failedByteActualValues: string[] = [];
+    for (let i = 0; i < size; ++i) {
+      const tol = typeof tolerance === 'function' ? tolerance(i) : tolerance;
+      if (Math.abs(actual[i] - exp[0]) > tol) {
+        if (failedByteIndices.length >= 4) {
+          failedByteIndices.push('...');
+          failedByteExpectedValues.push('...');
+          failedByteActualValues.push('...');
+          break;
+        }
+        failedByteIndices.push(i.toString());
+        failedByteExpectedValues.push(exp.toString());
         failedByteActualValues.push(actual[i].toString());
       }
     }
