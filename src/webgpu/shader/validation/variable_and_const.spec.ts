@@ -161,7 +161,7 @@ g.test('v_0038')
       `;
     } else {
       code = `
-      [[location(0)]] var<${storageClass}> a : ${type} = ${type}();
+      var<${storageClass}> a : ${type} = ${type}();
 
       [[stage(fragment)]]
       fn main() {
