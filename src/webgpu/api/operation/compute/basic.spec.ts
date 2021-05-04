@@ -112,16 +112,8 @@ Test reasonably-sized large dispatches (see also stress tests).
   .fn(async t => {
     // The output storage buffer is filled with this value.
     const val = 0x01020304;
-    const badVal = 0xBAADF00D;
+    const badVal = 0xbaadf00d;
     const data = new Uint32Array([val]);
-
-    const src = t.device.createBuffer({
-      mappedAtCreation: true,
-      size: Uint32Array.BYTES_PER_ELEMENT,
-      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
-    });
-    new Uint32Array(src.getMappedRange()).set(data);
-    src.unmap();
 
     const wgSize = t.params.workgroupSize;
     const bufferSize =
@@ -163,7 +155,6 @@ Test reasonably-sized large dispatches (see also stress tests).
                 val = ${badVal}u;
               }
               dst.value[index] = val;
-              return;
             }
           `,
         }),
