@@ -75,39 +75,17 @@ Test reasonably-sized large dispatches (see also stress tests).
   .cases(
     params()
       .combine(
-        poptions('dispatchSize', [
-          // Reasonably-sized powers of two
-          256,
-          512,
-          1024,
-          2048,
-          // Some stranger larger sizes
-          315,
-          628,
-          1053,
-          2179,
-        ] as const)
+        // Reasonably-sized powers of two, and some stranger larger sizes.
+        poptions('dispatchSize', [256, 512, 1024, 2048, 315, 628, 1053, 2179] as const)
       )
       .combine(
-        poptions('workgroupSize', [
-          // Test some reasonable workgroup sizes.
-          1,
-          2,
-          4,
-          8,
-          16,
-          32,
-          64,
-        ] as const)
+        // Test some reasonable workgroup sizes.
+        poptions('workgroupSize', [1, 2, 4, 8, 16, 32, 64] as const)
       )
   )
   .subcases(() =>
-    poptions('largeDimension', [
-      // 0 == x axis; 1 == y axis; 2 == z axis
-      0,
-      1,
-      2,
-    ] as const)
+    // 0 == x axis; 1 == y axis; 2 == z axis.
+    poptions('largeDimension', [0, 1, 2] as const)
   )
   .fn(async t => {
     // The output storage buffer is filled with this value.
@@ -142,15 +120,18 @@ Test reasonably-sized large dispatches (see also stress tests).
             fn main(
               [[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>
             ) {
+              var xExtent : u32 = ${dims[0]}u * ${wgSizes[0]}u;
+              var yExtent : u32 = ${dims[1]}u * ${wgSizes[1]}u;
+              var zExtent : u32 = ${dims[2]}u * ${wgSizes[2]}u;
               var index : u32 = (
-                GlobalInvocationID.z * ${dims[0]}u * ${wgSizes[0]}u * ${dims[1]}u * ${wgSizes[1]}u +
-                GlobalInvocationID.y * ${dims[0]}u * ${wgSizes[0]}u +
+                GlobalInvocationID.z * xExtent * yExtent +
+                GlobalInvocationID.y * xExtent +
                 GlobalInvocationID.x);
               var val : u32 = ${val}u;
               // Trivial error checking in the indexing and invocation.
-              if ((GlobalInvocationID.x > ${dims[0]}u * ${wgSizes[0]}u) ||
-                  (GlobalInvocationID.y > ${dims[1]}u * ${wgSizes[1]}u) ||
-                  (GlobalInvocationID.z > ${dims[2]}u * ${wgSizes[2]}u)) {
+              if (GlobalInvocationID.x > xExtent ||
+                  GlobalInvocationID.y > yExtent ||
+                  GlobalInvocationID.z > zExtent) {
                 val = ${badVal}u;
               }
               dst.value[index] = val;
