@@ -9,7 +9,7 @@ TODO: review and make sure these cases are covered:
 >     - x= {read, write, mappedAtCreation {mappable, non-mappable}}
 `;
 
-import { pbool, params } from '../../../../common/framework/params_builder.js';
+import { pbool } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/framework/util/util.js';
 
@@ -17,7 +17,7 @@ import { MappingTest } from './mapping_test.js';
 
 export const g = makeTestGroup(MappingTest);
 
-const kCases = [
+const kSubcases = [
   { size: 0, range: [] },
   { size: 0, range: [undefined] },
   { size: 0, range: [undefined, undefined] },
@@ -45,7 +45,7 @@ function reifyMapRange(bufferSize: number, range: (number | undefined)[]): [numb
 }
 
 g.test('mapAsync,write')
-  .params(kCases)
+  .subcases(() => kSubcases)
   .fn(async t => {
     const { size, range } = t.params;
     const [rangeOffset, rangeSize] = reifyMapRange(size, range);
@@ -61,7 +61,7 @@ g.test('mapAsync,write')
   });
 
 g.test('mapAsync,read')
-  .params(kCases)
+  .subcases(() => kSubcases)
   .fn(async t => {
     const { size, range } = t.params;
     const [, rangeSize] = reifyMapRange(size, range);
@@ -87,11 +87,8 @@ g.test('mapAsync,read')
   });
 
 g.test('mappedAtCreation')
-  .params(
-    params()
-      .combine(kCases) //
-      .combine(pbool('mappable'))
-  )
+  .cases(pbool('mappable'))
+  .subcases(() => kSubcases)
   .fn(async t => {
     const { size, range, mappable } = t.params;
     const [, rangeSize] = reifyMapRange(size, range);
