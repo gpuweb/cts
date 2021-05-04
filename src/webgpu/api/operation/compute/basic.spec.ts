@@ -116,8 +116,7 @@ Test reasonably-sized large dispatches (see also stress tests).
     const data = new Uint32Array([val]);
 
     const wgSize = t.params.workgroupSize;
-    const bufferSize =
-      Uint32Array.BYTES_PER_ELEMENT * t.params.dispatchSize * wgSize;
+    const bufferSize = Uint32Array.BYTES_PER_ELEMENT * t.params.dispatchSize * wgSize;
     const dst = t.device.createBuffer({
       size: bufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
