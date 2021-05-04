@@ -137,7 +137,7 @@ g.test('v_0038')
     const { storageClass, containerType, scalarType } = t.params;
     const type = containerType ? `${containerType}<${scalarType}>` : scalarType;
 
-    var code;
+    let code;
     if (`${storageClass}` === 'in') {
       code = `
         struct MyInputs {
@@ -166,7 +166,7 @@ g.test('v_0038')
       [[stage(fragment)]]
       fn main() {
       }
-      `
+      `;
     }
 
     const expectation = storageClass === 'private' || scalarType !== 'bool' || 'v-0038';
