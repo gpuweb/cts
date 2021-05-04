@@ -7,7 +7,7 @@ The WebGPU CTS is written in TypeScript.
 After checking out the repository and installing node/npm, run:
 
 ```sh
-npm install
+npm ci
 ```
 
 `npm run` will show available npm scripts.
