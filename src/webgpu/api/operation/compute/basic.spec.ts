@@ -90,11 +90,14 @@ Test reasonably-sized large dispatches (see also stress tests).
       )
       .combine(
         poptions('workgroupSize', [
-          // Test some reasonable workgroup sizes. These increase
-          // runtime by n^3, so don't go crazy with them.
+          // Test some reasonable workgroup sizes.
           1,
           2,
           4,
+          8,
+          16,
+          32,
+          64,
         ] as const)
       )
   )
@@ -109,6 +112,7 @@ Test reasonably-sized large dispatches (see also stress tests).
   .fn(async t => {
     // The output storage buffer is filled with this value.
     const val = 0x01020304;
+    const badVal = 0xBAADF00D;
     const data = new Uint32Array([val]);
 
     const src = t.device.createBuffer({
@@ -121,12 +125,18 @@ Test reasonably-sized large dispatches (see also stress tests).
 
     const wgSize = t.params.workgroupSize;
     const bufferSize =
-      Uint32Array.BYTES_PER_ELEMENT * t.params.dispatchSize * wgSize * wgSize * wgSize;
+      Uint32Array.BYTES_PER_ELEMENT * t.params.dispatchSize * wgSize;
     const dst = t.device.createBuffer({
       size: bufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
     });
 
+    // Only use one large dimension and workgroup size in the dispatch
+    // call to keep the size of the test reasonable.
+    const dims = [1, 1, 1];
+    dims[t.params.largeDimension] = t.params.dispatchSize;
+    const wgSizes = [1, 1, 1];
+    wgSizes[t.params.largeDimension] = t.params.workgroupSize;
     const pipeline = t.device.createComputePipeline({
       compute: {
         module: t.device.createShaderModule({
@@ -137,13 +147,22 @@ Test reasonably-sized large dispatches (see also stress tests).
 
             [[group(0), binding(0)]] var<storage> dst : [[access(read_write)]] OutputBuffer;
 
-            [[stage(compute), workgroup_size(${wgSize}, ${wgSize}, ${wgSize})]]
+            [[stage(compute), workgroup_size(${wgSizes[0]}, ${wgSizes[1]}, ${wgSizes[2]})]]
             fn main(
               [[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>
             ) {
-              // This indexing only works because this is conceptually a 1D array
-              // which spans a single 3D axis.
-              dst.value[GlobalInvocationID.x + GlobalInvocationID.y + GlobalInvocationID.z] = ${val}u;
+              var index : u32 = (
+                GlobalInvocationID.z * ${dims[0]}u * ${wgSizes[0]}u * ${dims[1]}u * ${wgSizes[1]}u +
+                GlobalInvocationID.y * ${dims[0]}u * ${wgSizes[0]}u +
+                GlobalInvocationID.x);
+              var val : u32 = ${val}u;
+              // Trivial error checking in the indexing and invocation.
+              if ((GlobalInvocationID.x > ${dims[0]}u * ${wgSizes[0]}u) ||
+                  (GlobalInvocationID.y > ${dims[1]}u * ${wgSizes[1]}u) ||
+                  (GlobalInvocationID.z > ${dims[2]}u * ${wgSizes[2]}u)) {
+                val = ${badVal}u;
+              }
+              dst.value[index] = val;
               return;
             }
           `,
@@ -158,9 +177,6 @@ Test reasonably-sized large dispatches (see also stress tests).
     });
 
     const encoder = t.device.createCommandEncoder();
-    // Only use one large dimension in the dispatch call to keep the size of the test reasonable.
-    const dims = [1, 1, 1];
-    dims[t.params.largeDimension] = t.params.dispatchSize;
     const pass = encoder.beginComputePass();
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bg);

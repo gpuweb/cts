@@ -449,8 +449,8 @@ got [${failedByteActualValues.join(', ')}]`;
   ): string | undefined {
     assert(actual.constructor === exp.constructor);
 
-    const size = exp.length;
-    if (1 !== size) {
+    const size = actual.length;
+    if (1 !== exp.length) {
       return 'expected single value typed array for expected value';
     }
     const failedByteIndices: string[] = [];
