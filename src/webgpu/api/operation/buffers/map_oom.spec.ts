@@ -8,7 +8,7 @@ import { GPUTest } from '../../../gpu_test.js';
 
 // A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).
 // (Note this is likely to exceed limitations other than just the system's
-// physical memory - so also test codepaths other than "true" OOM.)
+// physical memory - so test cases are also needed to try to trigger "true" OOM.)
 const MAX_ALIGNED_SAFE_INTEGER = Number.MAX_SAFE_INTEGER - 7;
 
 const oomAndSizeParams = params()
@@ -77,7 +77,7 @@ g.test('mapAsync')
     }
   });
 
-g.test('mappedAtCreation')
+g.test('mappedAtCreation,full_getMappedRange')
   .desc(
     `Test creating a very large buffer mappedAtCreation buffer should produce
 an out-of-memory error if allocation fails.
@@ -113,9 +113,9 @@ an out-of-memory error if allocation fails.
 
 g.test('mappedAtCreation,smaller_getMappedRange')
   .desc(
-    `Test creating a very large buffer mappedAtCreation buffer should produce
+    `Test creating a very large mappedAtCreation buffer should produce
 an out-of-memory error if allocation fails.
-  - Because the buffer can be immediately mapped, getMappedRange does not throw an OperationError. Calling it on a small range of the buffer succesfully returns an ArrayBuffer.
+  - Because the buffer can be immediately mapped, getMappedRange does not throw an OperationError. Calling it on a small range of the buffer successfully returns an ArrayBuffer.
   - unmap() should detach the ArrayBuffer.
   `
   )
