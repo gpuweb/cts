@@ -144,7 +144,7 @@ g.test('v_0038')
           [[location(0)]] a : ${type};
         };
 
-        [[stage(vertex)]]
+        [[stage(fragment)]]
         fn main(inputs : MyInputs) {
         }
       `;
@@ -154,7 +154,7 @@ g.test('v_0038')
           [[location(0)]] a : ${type};
         };
 
-        [[stage(vertex)]]
+        [[stage(fragment)]]
         fn main() -> MyOutputs {
           return MyOutputs();
         }
@@ -163,7 +163,7 @@ g.test('v_0038')
       code = `
       [[location(0)]] var<${storageClass}> a : ${type} = ${type}();
 
-      [[stage(vertex)]]
+      [[stage(fragment)]]
       fn main() {
       }
       `
