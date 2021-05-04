@@ -588,7 +588,7 @@ export function sampledAndStorageBindingEntries(
   ] as const;
 }
 /** Generates all different types of binding entries.
- * Does not generate variats with different:
+ * Does not generate variants with different:
  * - buffer.hasDynamicOffset
  * - texture.sampleType
  * - texture.viewDimension
