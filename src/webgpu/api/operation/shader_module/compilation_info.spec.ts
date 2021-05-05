@@ -165,11 +165,12 @@ g.test('offset_and_length')
         'Message offset and length should be within the shader source'
       );
 
-      // If a valid line number and position are given the offset should point the the same location in the shader source.
+      // If a valid line number and position are given, the offset should point the the same
+      // location in the shader source.
       if (message.lineNum !== 0 && message.linePos !== 0) {
         let lineOffset = 0;
         for (let i = 0; i < message.lineNum - 1; ++i) {
-          lineOffset = code.indexOf('\n', lineOffset);
+          lineOffset = _code.indexOf('\n', lineOffset);
           assert(lineOffset !== -1);
           lineOffset += 1;
         }
