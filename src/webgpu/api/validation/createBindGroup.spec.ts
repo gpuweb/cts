@@ -1,4 +1,8 @@
-export const description = `createBindGroup validation tests.`;
+export const description = `
+  createBindGroup validation tests.
+
+  TODO: Ensure sure tests cover all createBindGroup validation rules.
+`;
 
 import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
@@ -232,8 +236,9 @@ g.test('texture_must_have_correct_dimension')
     - Test for every GPUTextureViewDimension`
   )
   .cases(poptions('viewDimension', kTextureViewDimensions))
+  .subcases(() => poptions('dimension', kTextureViewDimensions))
   .fn(async t => {
-    const { viewDimension } = t.params;
+    const { viewDimension, dimension } = t.params;
     const bindGroupLayout = t.device.createBindGroupLayout({
       entries: [
         {
@@ -244,26 +249,22 @@ g.test('texture_must_have_correct_dimension')
       ],
     });
 
-    const textureDescriptor = {
+    const texture = t.device.createTexture({
       size: { width: 16, height: 16, depthOrArrayLayers: 6 },
       format: 'rgba8unorm' as const,
       usage: GPUTextureUsage.SAMPLED,
-    };
+    });
 
-    const texture = t.device.createTexture(textureDescriptor);
+    const shouldError = viewDimension !== dimension;
+    const arrayLayerCount = dimension === '2d' ? 1 : undefined;
+    const textureView = texture.createView({ dimension, arrayLayerCount });
 
-    for (const dimension of kTextureViewDimensions) {
-      const shouldError = viewDimension !== dimension;
-      const arrayLayerCount = dimension === '2d' ? 1 : undefined;
-      const textureView = texture.createView({ dimension, arrayLayerCount });
-
-      t.expectValidationError(() => {
-        t.device.createBindGroup({
-          entries: [{ binding: 0, resource: textureView }],
-          layout: bindGroupLayout,
-        });
-      }, shouldError);
-    }
+    t.expectValidationError(() => {
+      t.device.createBindGroup({
+        entries: [{ binding: 0, resource: textureView }],
+        layout: bindGroupLayout,
+      });
+    }, shouldError);
   });
 
 g.test('buffer_offset_and_size_for_bind_groups_match')
