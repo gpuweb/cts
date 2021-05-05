@@ -24,60 +24,68 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('binding_count_mismatch')
   .desc('Test that the number of entries must match the number of entries in the BindGroupLayout.')
+  .subcases(() =>
+    params()
+      .combine(poptions('layoutEntryCount', [1, 2, 3]))
+      .combine(poptions('bindGroupEntryCount', [1, 2, 3]))
+  )
   .fn(async t => {
-    const bindGroupLayout = t.device.createBindGroupLayout({
-      entries: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } }],
-    });
+    const { layoutEntryCount, bindGroupEntryCount } = t.params;
 
-    const goodDescriptor = {
-      entries: [{ binding: 0, resource: { buffer: t.getStorageBuffer() } }],
-      layout: bindGroupLayout,
-    };
+    const layoutEntries: Array<GPUBindGroupLayoutEntry> = [];
+    for (let i = 0; i < layoutEntryCount; ++i) {
+      layoutEntries.push({
+        binding: i,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: 'storage' },
+      });
+    }
+    const bindGroupLayout = t.device.createBindGroupLayout({ entries: layoutEntries });
 
-    // Control case
-    t.device.createBindGroup(goodDescriptor);
+    const entries: Array<GPUBindGroupEntry> = [];
+    for (let i = 0; i < bindGroupEntryCount; ++i) {
+      entries.push({
+        binding: i,
+        resource: { buffer: t.getStorageBuffer() },
+      });
+    }
 
-    // Another binding is not expected.
-    const badDescriptor = {
-      entries: [
-        { binding: 0, resource: { buffer: t.getStorageBuffer() } },
-        // Another binding is added.
-        { binding: 1, resource: { buffer: t.getStorageBuffer() } },
-      ],
-      layout: bindGroupLayout,
-    };
-
+    const shouldError = layoutEntryCount !== bindGroupEntryCount;
     t.expectValidationError(() => {
-      t.device.createBindGroup(badDescriptor);
-    });
+      t.device.createBindGroup({
+        entries,
+        layout: bindGroupLayout,
+      });
+    }, shouldError);
   });
 
 g.test('binding_must_be_present_in_layout')
   .desc(
     'Test that the binding slot for each entry matches a binding slot defined in the BindGroupLayout.'
   )
+  .subcases(() =>
+    params()
+      .combine(poptions('layoutBinding', [0, 1, 2]))
+      .combine(poptions('binding', [0, 1, 2]))
+  )
   .fn(async t => {
+    const { layoutBinding, binding } = t.params;
+
     const bindGroupLayout = t.device.createBindGroupLayout({
-      entries: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } }],
+      entries: [
+        { binding: layoutBinding, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
+      ],
     });
 
-    const goodDescriptor = {
-      entries: [{ binding: 0, resource: { buffer: t.getStorageBuffer() } }],
+    const descriptor = {
+      entries: [{ binding, resource: { buffer: t.getStorageBuffer() } }],
       layout: bindGroupLayout,
     };
 
-    // Control case
-    t.device.createBindGroup(goodDescriptor);
-
-    // Binding index 0 must be present.
-    const badDescriptor = {
-      entries: [{ binding: 1, resource: { buffer: t.getStorageBuffer() } }],
-      layout: bindGroupLayout,
-    };
-
+    const shouldError = layoutBinding !== binding;
     t.expectValidationError(() => {
-      t.device.createBindGroup(badDescriptor);
-    });
+      t.device.createBindGroup(descriptor);
+    }, shouldError);
   });
 
 g.test('binding_must_contain_resource_defined_in_layout')
@@ -247,11 +255,11 @@ g.test('texture_must_have_correct_dimension')
     for (const dimension of kTextureViewDimensions) {
       const shouldError = viewDimension !== dimension;
       const arrayLayerCount = dimension === '2d' ? 1 : undefined;
-      const viewDescriptor = { dimension, arrayLayerCount };
+      const textureView = texture.createView({ dimension, arrayLayerCount });
 
       t.expectValidationError(() => {
         t.device.createBindGroup({
-          entries: [{ binding: 0, resource: texture.createView(viewDescriptor) }],
+          entries: [{ binding: 0, resource: textureView }],
           layout: bindGroupLayout,
         });
       }, shouldError);
