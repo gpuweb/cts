@@ -12,19 +12,19 @@ const kValidShaderSources = [
   {
     valid: true,
     unicode: false,
-    codeFn: () => `
-  [[stage(vertex)]] fn main() -> [[builtin(position)]] vec4<f32> {
-    return vec4<f32>(0.0, 0.0, 0.0, 1.0);
-  }`,
+    _code: `
+      [[stage(vertex)]] fn main() -> [[builtin(position)]] vec4<f32> {
+        return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+      }`,
   },
   {
     valid: true,
     unicode: true,
-    codeFn: () => `
-  // 頂点シェーダー
-  [[stage(vertex)]] fn main() -> [[builtin(position)]] vec4<f32> {
-    return vec4<f32>(0.0, 0.0, 0.0, 1.0);
-  }`,
+    _code: `
+      // 頂点シェーダー 👩‍💻
+      [[stage(vertex)]] fn main() -> [[builtin(position)]] vec4<f32> {
+        return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+      }`,
   },
 ];
 
@@ -32,23 +32,23 @@ const kInvalidShaderSources = [
   {
     valid: false,
     unicode: false,
-    errorLine: 4,
-    codeFn: () => `
-  [[stage(vertex)]] fn main() -> [[builtin(position)]] vec4<f32> {
-    // Expected Error: vec4 should be vec4<f32>
-    return vec4(0.0, 0.0, 0.0, 1.0);
-  }`,
+    _errorLine: 4,
+    _code: `
+      [[stage(vertex)]] fn main() -> [[builtin(position)]] vec4<f32> {
+        // Expected Error: vec4 should be vec4<f32>
+        return vec4(0.0, 0.0, 0.0, 1.0);
+      }`,
   },
   {
     valid: false,
     unicode: true,
-    errorLine: 5,
-    codeFn: () => `
-  // 頂点シェーダー
-  [[stage(vertex)]] fn main() -> [[builtin(position)]] vec4<f32> {
-    // Expected Error: vec4 should be vec4<f32>
-    return vec4(0.0, 0.0, 0.0, 1.0);
-  }`,
+    _errorLine: 5,
+    _code: `
+      // 頂点シェーダー 👩‍💻
+      [[stage(vertex)]] fn main() -> [[builtin(position)]] vec4<f32> {
+        // Expected Error: vec4 should be vec4<f32>
+        return vec4(0.0, 0.0, 0.0, 1.0);
+      }`,
   },
 ];
 
@@ -65,11 +65,11 @@ g.test('compilationInfo_returns')
   )
   .cases(kAllShaderSources)
   .fn(async t => {
-    const { codeFn, valid } = t.params;
+    const { _code, valid } = t.params;
 
     const shaderModule = t.expectGPUError(
       'validation',
-      () => t.device.createShaderModule({ code: codeFn() }),
+      () => t.device.createShaderModule({ code: _code }),
       !valid
     );
 
@@ -105,10 +105,10 @@ g.test('line_number_and_position')
   )
   .cases(kInvalidShaderSources)
   .fn(async t => {
-    const { codeFn, errorLine } = t.params;
+    const { _code, _errorLine } = t.params;
 
     const shaderModule = t.expectGPUError('validation', () =>
-      t.device.createShaderModule({ code: codeFn() })
+      t.device.createShaderModule({ code: _code })
     );
 
     const info = await shaderModule.compilationInfo();
@@ -124,7 +124,7 @@ g.test('line_number_and_position')
           "GPUCompilationMessages that don't report a line number should not report a line position."
         );
 
-        if (message.lineNum === 0 || message.lineNum === errorLine) {
+        if (message.lineNum === 0 || message.lineNum === _errorLine) {
           foundAppropriateError = true;
 
           // Various backends may choose to report the error at different positions within the line,
@@ -147,12 +147,11 @@ g.test('offset_and_length')
   )
   .cases(kAllShaderSources)
   .fn(async t => {
-    const { codeFn, valid } = t.params;
-    const code = codeFn();
+    const { _code, valid } = t.params;
 
     const shaderModule = t.expectGPUError(
       'validation',
-      () => t.device.createShaderModule({ code }),
+      () => t.device.createShaderModule({ code: _code }),
       !valid
     );
 
@@ -160,9 +159,9 @@ g.test('offset_and_length')
 
     for (const message of info.messages) {
       // Any offsets and lengths should reference valid spans of the shader code.
-      t.expect(message.offset <= code.length, 'Message offset should be within the shader source');
+      t.expect(message.offset <= _code.length, 'Message offset should be within the shader source');
       t.expect(
-        message.offset + message.length <= code.length,
+        message.offset + message.length <= _code.length,
         'Message offset and length should be within the shader source'
       );
 
