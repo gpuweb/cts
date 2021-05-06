@@ -1,7 +1,6 @@
 export const description = `
 createBindGroupLayout validation tests.
 
-TODO: update for new binding structure, remove eslint-disable.
 TODO: review existing tests, write descriptions, and make sure tests are complete.
 `;
 
