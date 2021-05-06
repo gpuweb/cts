@@ -13,10 +13,7 @@ TODO: Test zero-sized copies from all sources (just make sure params cover it) (
 import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { unreachable } from '../../../common/framework/util/util.js';
-import {
-  kUncompressedTextureFormatInfo,
-  UncompressedTextureFormat,
-} from '../../capability_info.js';
+import { RegularTextureFormat, kRegularTextureFormatInfo } from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 import { kTexelRepresentationInfo } from '../../util/texture/texel_data.js';
 
@@ -35,7 +32,9 @@ enum Color {
   TransparentBlack,
 }
 // Cache for generated pixels.
-const generatedPixelCache: Map<GPUTextureFormat, Map<Color, Uint8Array>> = new Map();
+const generatedPixelCache: Map<RegularTextureFormat, Map<Color, Uint8Array>> = new Map();
+
+// These two types correspond to |premultiplyAlpha| and |imageOrientation| in |ImageBitmapOptions|.
 type TransparentOp = 'premultiply' | 'none' | 'non-transparent';
 type OrientationOp = 'flipY' | 'none';
 
@@ -143,7 +142,7 @@ got [${failedByteActualValues.join(', ')}]`;
     );
   }
 
-  generatePixel(color: Color, format: UncompressedTextureFormat): Uint8Array {
+  generatePixel(color: Color, format: RegularTextureFormat): Uint8Array {
     let entry = generatedPixelCache.get(format);
     if (entry === undefined) {
       entry = new Map();
@@ -183,59 +182,43 @@ got [${failedByteActualValues.join(', ')}]`;
   }
 
   // Helper functions to generate imagePixels based input configs.
-  getImagePixels(
-    format: UncompressedTextureFormat,
-    width: number,
-    height: number,
-    transparentOp: TransparentOp,
-    orientationOp: OrientationOp
-  ): Uint8ClampedArray {
-    const bytesPerPixel = kUncompressedTextureFormatInfo[format].bytesPerBlock;
-    if (bytesPerPixel === undefined) {
-      return new Uint8ClampedArray(0);
-    }
+  getImagePixels({
+    format,
+    width,
+    height,
+    transparentOp,
+    orientationOp,
+  }: {
+    format: RegularTextureFormat;
+    width: number;
+    height: number;
+    transparentOp: TransparentOp;
+    orientationOp: OrientationOp;
+  }): Uint8ClampedArray {
+    const bytesPerPixel = kRegularTextureFormatInfo[format].bytesPerBlock;
 
     // Generate input contents by iterating 'Color' enum
     const imagePixels = new Uint8ClampedArray(bytesPerPixel * width * height);
-    const flipYPixels = new Uint8ClampedArray(bytesPerPixel * width * height);
-    const startPixel = Color.Red;
-    for (let i = 0, currentPixel = startPixel; i < width * height; ++i) {
-      const pixelData = this.generatePixel(currentPixel, format);
-      for (let j = 0; j < bytesPerPixel; ++j) {
+    const testColors = [Color.Red, Color.Green, Color.Blue, Color.White, Color.OpaqueBlack];
+    if (transparentOp !== 'non-transparent') testColors.push(Color.TransparentBlack);
+
+    for (let i = 0; i < height; ++i) {
+      for (let j = 0; j < width; ++j) {
+        const pixelPos = i * width + j;
+        const currentColorIndex =
+          orientationOp === 'flipY' ? (height - i - 1) * width + j : pixelPos;
+        const currentPixel = testColors[currentColorIndex % testColors.length];
+        const pixelData = this.generatePixel(currentPixel, format);
         // All pixels are 0 due to premultiply alpha
         if (transparentOp === 'premultiply' && currentPixel === Color.TransparentBlack) {
-          imagePixels[i * bytesPerPixel + j] = 0;
+          // All pixels are 0 due to premultiply alpha
+          imagePixels.fill(0, pixelPos * bytesPerPixel, (pixelPos + 1) * bytesPerPixel);
         } else {
-          imagePixels[i * bytesPerPixel + j] = pixelData[j];
+          imagePixels.set(pixelData, pixelPos * bytesPerPixel);
         }
-      }
-
-      // Refresh the iteration when hit OpaqueBlack color with 'non-transparent' config or
-      // hit the TransparentBlack color(The last element in 'Color' enum).
-      if (
-        (transparentOp === 'non-transparent' && currentPixel === Color.OpaqueBlack) ||
-        currentPixel === Color.TransparentBlack
-      ) {
-        currentPixel = Color.Red;
-      } else {
-        ++currentPixel;
       }
     }
 
-    // Handle flipY if necessary and return the flipYPixels
-    if (orientationOp === 'flipY') {
-      for (let i = 0; i < height; ++i) {
-        for (let j = 0; j < width * bytesPerPixel; ++j) {
-          const posImagePixel = (height - i - 1) * width * bytesPerPixel + j;
-          const posExpectedValue = i * width * bytesPerPixel + j;
-          flipYPixels[posExpectedValue] = imagePixels[posImagePixel];
-        }
-      }
-
-      return flipYPixels;
-    }
-
-    // No flipY, return the origin imagePixels
     return imagePixels;
   }
 }
@@ -277,18 +260,18 @@ g.test('from_ImageData')
     const { width, height, alpha, orientation, dstColorFormat } = t.params;
 
     // Generate input contents by iterating 'Color' enum
-    const imagePixels = t.getImagePixels(
-      'rgba8unorm',
+    const imagePixels = t.getImagePixels({
+      format: 'rgba8unorm',
       width,
       height,
-      'none', // transparent op
-      'none' // orientation op
-    );
+      transparentOp: 'none',
+      orientationOp: 'none',
+    });
 
     // Generate correct expected values
     const imageData = new ImageData(imagePixels, width, height);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const imageBitmap = await (createImageBitmap as any)(imageData, {
+    const imageBitmap = await createImageBitmap(imageData, {
       premultiplyAlpha: alpha,
       imageOrientation: orientation,
     });
@@ -305,8 +288,14 @@ g.test('from_ImageData')
     });
 
     // Construct expected value for different dst color format
-    const dstBytesPerPixel = kUncompressedTextureFormatInfo[dstColorFormat].bytesPerBlock!;
-    const expectedPixels = t.getImagePixels(dstColorFormat, width, height, alpha, orientation);
+    const dstBytesPerPixel = kRegularTextureFormatInfo[dstColorFormat].bytesPerBlock!;
+    const expectedPixels = t.getImagePixels({
+      format: dstColorFormat,
+      width,
+      height,
+      transparentOp: alpha,
+      orientationOp: orientation,
+    });
 
     t.doTestAndCheckResult(
       { imageBitmap, origin: { x: 0, y: 0 } },
@@ -374,13 +363,13 @@ g.test('from_canvas')
     // Generate non-transparent pixel data to avoid canvas
     // different opt behaviour on putImageData()
     // from browsers.
-    const imagePixels = t.getImagePixels(
-      'rgba8unorm',
+    const imagePixels = t.getImagePixels({
+      format: 'rgba8unorm',
       width,
       height,
-      'non-transparent', // transparent op
-      'none' // orientation op
-    );
+      transparentOp: 'non-transparent',
+      orientationOp: 'none',
+    });
 
     const imageData = new ImageData(imagePixels, width, height);
 
@@ -388,7 +377,7 @@ g.test('from_canvas')
     imageCanvasContext.putImageData(imageData, 0, 0);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const imageBitmap = await (createImageBitmap as any)(imageCanvas, {
+    const imageBitmap = await createImageBitmap(imageCanvas, {
       premultiplyAlpha: 'premultiply',
       imageOrientation: orientation,
     });
@@ -404,14 +393,14 @@ g.test('from_canvas')
         GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    const dstBytesPerPixel = kUncompressedTextureFormatInfo[dstColorFormat].bytesPerBlock!;
-    const expectedData = t.getImagePixels(
-      dstColorFormat,
+    const dstBytesPerPixel = kRegularTextureFormatInfo[dstColorFormat].bytesPerBlock!;
+    const expectedData = t.getImagePixels({
+      format: dstColorFormat,
       width,
       height,
-      'non-transparent', // transparent op
-      orientation
-    );
+      transparentOp: 'non-transparent',
+      orientationOp: orientation,
+    });
 
     t.doTestAndCheckResult(
       { imageBitmap, origin: { x: 0, y: 0 } },
