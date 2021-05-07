@@ -31,12 +31,16 @@ enum Color {
   OpaqueBlack,
   TransparentBlack,
 }
-// Cache for generated pixels.
-const generatedPixelCache: Map<RegularTextureFormat, Map<Color, Uint8Array>> = new Map();
 
 // These two types correspond to |premultiplyAlpha| and |imageOrientation| in |ImageBitmapOptions|.
 type TransparentOp = 'premultiply' | 'none' | 'non-transparent';
 type OrientationOp = 'flipY' | 'none';
+
+// Cache for generated pixels.
+const generatedPixelCache: Map<
+  RegularTextureFormat,
+  Map<Color, Map<TransparentOp, Uint8Array>>
+> = new Map();
 
 class F extends GPUTest {
   checkCopyImageBitmapResult(
@@ -142,43 +146,61 @@ got [${failedByteActualValues.join(', ')}]`;
     );
   }
 
-  generatePixel(color: Color, format: RegularTextureFormat): Uint8Array {
-    let entry = generatedPixelCache.get(format);
-    if (entry === undefined) {
-      entry = new Map();
-      generatedPixelCache.set(format, entry);
+  generatePixel(
+    color: Color,
+    format: RegularTextureFormat,
+    transparentOp: TransparentOp
+  ): Uint8Array {
+    let formatEntry = generatedPixelCache.get(format);
+    if (formatEntry === undefined) {
+      formatEntry = new Map();
+      generatedPixelCache.set(format, formatEntry);
+    }
+
+    let colorEntry = formatEntry.get(color);
+    if (colorEntry === undefined) {
+      colorEntry = new Map();
+      formatEntry.set(color, colorEntry);
     }
 
     // None of the dst texture format is 'uint' or 'sint', so we can always use float value.
-    if (!entry.has(color)) {
+    if (!colorEntry.has(transparentOp)) {
       const rep = kTexelRepresentationInfo[format];
-      let pixels;
+      let rgba: { R: number; G: number; B: number; A: number };
       switch (color) {
         case Color.Red:
-          pixels = new Uint8Array(rep.pack(rep.encode({ R: 1.0, G: 0, B: 0, A: 1.0 })));
+          rgba = { R: 1.0, G: 0.0, B: 0.0, A: 1.0 };
           break;
         case Color.Green:
-          pixels = new Uint8Array(rep.pack(rep.encode({ R: 0, G: 1.0, B: 0, A: 1.0 })));
+          rgba = { R: 0.0, G: 1.0, B: 0.0, A: 1.0 };
           break;
         case Color.Blue:
-          pixels = new Uint8Array(rep.pack(rep.encode({ R: 0, G: 0, B: 1.0, A: 1.0 })));
+          rgba = { R: 0.0, G: 0.0, B: 1.0, A: 1.0 };
           break;
         case Color.White:
-          pixels = new Uint8Array(rep.pack(rep.encode({ R: 0, G: 0, B: 0, A: 1.0 })));
+          rgba = { R: 0.0, G: 0.0, B: 0.0, A: 1.0 };
           break;
         case Color.OpaqueBlack:
-          pixels = new Uint8Array(rep.pack(rep.encode({ R: 1.0, G: 1.0, B: 1.0, A: 1.0 })));
+          rgba = { R: 1.0, G: 1.0, B: 1.0, A: 1.0 };
           break;
         case Color.TransparentBlack:
-          pixels = new Uint8Array(rep.pack(rep.encode({ R: 1.0, G: 1.0, B: 1.0, A: 0 })));
+          rgba = { R: 1.0, G: 1.0, B: 1.0, A: 0.0 };
           break;
         default:
           unreachable();
       }
-      entry.set(color, pixels);
+
+      if (transparentOp === 'premultiply') {
+        rgba.R *= rgba.A;
+        rgba.G *= rgba.A;
+        rgba.B *= rgba.A;
+      }
+
+      const pixels = new Uint8Array(rep.pack(rep.encode(rgba)));
+      colorEntry.set(transparentOp, pixels);
     }
 
-    return entry.get(color)!;
+    return colorEntry.get(transparentOp)!;
   }
 
   // Helper functions to generate imagePixels based input configs.
@@ -208,14 +230,8 @@ got [${failedByteActualValues.join(', ')}]`;
         const currentColorIndex =
           orientationOp === 'flipY' ? (height - i - 1) * width + j : pixelPos;
         const currentPixel = testColors[currentColorIndex % testColors.length];
-        const pixelData = this.generatePixel(currentPixel, format);
-        // All pixels are 0 due to premultiply alpha
-        if (transparentOp === 'premultiply' && currentPixel === Color.TransparentBlack) {
-          // All pixels are 0 due to premultiply alpha
-          imagePixels.fill(0, pixelPos * bytesPerPixel, (pixelPos + 1) * bytesPerPixel);
-        } else {
-          imagePixels.set(pixelData, pixelPos * bytesPerPixel);
-        }
+        const pixelData = this.generatePixel(currentPixel, format, transparentOp);
+        imagePixels.set(pixelData, pixelPos * bytesPerPixel);
       }
     }
 
