@@ -27,58 +27,54 @@ Params:
     - indirectOffset= {0, 4, k * sizeof(args struct), k * sizeof(args struct) + 4}
     `
   )
-  .cases(
-    params()
-      .combine(
-        poptions('indirectOffset', [
-          0,
-          Uint32Array.BYTES_PER_ELEMENT,
-          1 * kDrawIndirectParametersSize,
-          1 * kDrawIndirectParametersSize + Uint32Array.BYTES_PER_ELEMENT,
-          3 * kDrawIndirectParametersSize,
-          3 * kDrawIndirectParametersSize + Uint32Array.BYTES_PER_ELEMENT,
-          99 * kDrawIndirectParametersSize,
-          99 * kDrawIndirectParametersSize + Uint32Array.BYTES_PER_ELEMENT,
-        ] as const)
-      )
-      .expand(p => {
-        const o = p.indirectOffset / Uint32Array.BYTES_PER_ELEMENT;
-        const arraySize = o + 8;
-        const indirectBuffer = [...Array(arraySize)].map(() => Math.floor(Math.random() * 100));
-
-        // draw args that will draw the left bottom triangle (expected call)
-        indirectBuffer[o] = 3; // vertexCount
-        indirectBuffer[o + 1] = 1; // instanceCount
-        indirectBuffer[o + 2] = 0; // firstVertex
-        indirectBuffer[o + 3] = 0; // firstInstance
-
-        // draw args that will draw both triangles
-        indirectBuffer[o + 4] = 6; // vertexCount
-        indirectBuffer[o + 5] = 1; // instanceCount
-        indirectBuffer[o + 6] = 0; // firstVertex
-        indirectBuffer[o + 7] = 0; // firstInstance
-
-        if (o >= 4) {
-          // draw args that will draw the right top triangle
-          indirectBuffer[o - 4] = 3; // vertexCount
-          indirectBuffer[o - 3] = 1; // instanceCount
-          indirectBuffer[o - 2] = 3; // firstVertex
-          indirectBuffer[o - 1] = 0; // firstInstance
-        }
-
-        if (o >= 8) {
-          // draw args that will draw nothing
-          indirectBuffer[0] = 0; // vertexCount
-          indirectBuffer[1] = 0; // instanceCount
-          indirectBuffer[2] = 0; // firstVertex
-          indirectBuffer[3] = 0; // firstInstance
-        }
-
-        return [{ indirectBuffer }];
-      })
+  .subcases(() =>
+    params().combine(
+      poptions('indirectOffset', [
+        0,
+        Uint32Array.BYTES_PER_ELEMENT,
+        1 * kDrawIndirectParametersSize,
+        1 * kDrawIndirectParametersSize + Uint32Array.BYTES_PER_ELEMENT,
+        3 * kDrawIndirectParametersSize,
+        3 * kDrawIndirectParametersSize + Uint32Array.BYTES_PER_ELEMENT,
+        99 * kDrawIndirectParametersSize,
+        99 * kDrawIndirectParametersSize + Uint32Array.BYTES_PER_ELEMENT,
+      ] as const)
+    )
   )
   .fn(t => {
-    const { indirectBuffer, indirectOffset } = t.params;
+    const { indirectOffset } = t.params;
+
+    const o = indirectOffset / Uint32Array.BYTES_PER_ELEMENT;
+    const arraySize = o + 8;
+    const indirectBuffer = [...Array(arraySize)].map(() => Math.floor(Math.random() * 100));
+
+    // draw args that will draw the left bottom triangle (expected call)
+    indirectBuffer[o] = 3; // vertexCount
+    indirectBuffer[o + 1] = 1; // instanceCount
+    indirectBuffer[o + 2] = 0; // firstVertex
+    indirectBuffer[o + 3] = 0; // firstInstance
+
+    // draw args that will draw both triangles
+    indirectBuffer[o + 4] = 6; // vertexCount
+    indirectBuffer[o + 5] = 1; // instanceCount
+    indirectBuffer[o + 6] = 0; // firstVertex
+    indirectBuffer[o + 7] = 0; // firstInstance
+
+    if (o >= 4) {
+      // draw args that will draw the right top triangle
+      indirectBuffer[o - 4] = 3; // vertexCount
+      indirectBuffer[o - 3] = 1; // instanceCount
+      indirectBuffer[o - 2] = 3; // firstVertex
+      indirectBuffer[o - 1] = 0; // firstInstance
+    }
+
+    if (o >= 8) {
+      // draw args that will draw nothing
+      indirectBuffer[0] = 0; // vertexCount
+      indirectBuffer[1] = 0; // instanceCount
+      indirectBuffer[2] = 0; // firstVertex
+      indirectBuffer[3] = 0; // firstInstance
+    }
 
     const kRenderTargetFormat = 'rgba8unorm';
     const pipeline = t.device.createRenderPipeline({
