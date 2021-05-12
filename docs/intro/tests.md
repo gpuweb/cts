@@ -12,6 +12,7 @@ Implement some tests and open a pull request. You can open a PR any time you're 
 (If two tests are non-trivial but independent, consider separate pull requests.)
 
 Before uploading, you can run pre-submit checks (`npm test`) to make sure it will pass CI.
+Use `npm run fix` to fix linting issues.
 
 ## Test Helpers
 
