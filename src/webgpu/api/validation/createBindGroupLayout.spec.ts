@@ -26,26 +26,25 @@ function clone<T extends GPUBindGroupLayoutDescriptor>(descriptor: T): T {
 
 export const g = makeTestGroup(ValidationTest);
 
-g.test('some_binding_index_was_specified_more_than_once')
+g.test('duplicate_bindings')
   .desc('Test that uniqueness of binding numbers across entries is enforced.')
+  .subcases(() => poptions('bindings', [
+    { numbers: [0, 1], valid: true, },
+    { numbers: [0, 0], valid: false, }
+  ]))
   .fn(async t => {
-    const goodDescriptor = {
-      entries: [
-        { binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' as const } },
-        { binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' as const } },
-      ],
-    };
+    const { bindings } = t.params;
+    const entries : Array<GPUBindGroupLayoutEntry> = [];
 
-    // Control case
-    t.device.createBindGroupLayout(goodDescriptor);
+    for (const binding of bindings.numbers) {
+      entries.push({ binding, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' as const } });
+    }
 
-    const badDescriptor = clone(goodDescriptor);
-    badDescriptor.entries[1].binding = 0;
-
-    // Binding index 0 can't be specified twice.
     t.expectValidationError(() => {
-      t.device.createBindGroupLayout(badDescriptor);
-    });
+      t.device.createBindGroupLayout({
+        entries,
+      });
+    }, !bindings.valid);
   });
 
 g.test('visibility')
@@ -70,7 +69,7 @@ g.test('visibility')
     }, !success);
   });
 
-g.test('multisample_requires_2d_view_dimension')
+g.test('multisampled_validation')
   .desc('Test that multisampling is only allowed with "2d" view dimensions.')
   .subcases(() => poptions('viewDimension', [undefined, ...kTextureViewDimensions]))
   .fn(async t => {
@@ -91,7 +90,7 @@ g.test('multisample_requires_2d_view_dimension')
     }, !success);
   });
 
-g.test('number_of_dynamic_buffers_exceeds_the_maximum_value')
+g.test('max_dynamic_buffers')
   .desc(
     `
     Test that limits on the maximum number of dynamic buffers are enforced.
@@ -100,42 +99,39 @@ g.test('number_of_dynamic_buffers_exceeds_the_maximum_value')
     - TODO(#230): Update to enforce per-stage and per-pipeline-layout limits on BGLs as well.`
   )
   .cases(poptions('type', kBufferBindingTypes))
+  .subcases(() => params()
+    .combine(poptions('extraDynamicBuffers', [0, 1]))
+    .combine(poptions('staticBuffers', [0, 1])))
   .fn(async t => {
-    const { type } = t.params;
+    const { type, extraDynamicBuffers, staticBuffers } = t.params;
     const info = bufferBindingTypeInfo({ type });
 
-    const maxDynamicBufferCount = info.perPipelineLimitClass.maxDynamic;
+    const dynamicBufferCount = info.perPipelineLimitClass.maxDynamic + extraDynamicBuffers;
 
-    const maxDynamicBufferBindings = [];
-    for (let i = 0; i < maxDynamicBufferCount; i++) {
-      maxDynamicBufferBindings.push({
+    const entries = [];
+    for (let i = 0; i < dynamicBufferCount; i++) {
+      entries.push({
         binding: i,
         visibility: GPUShaderStage.COMPUTE,
         buffer: { type, hasDynamicOffset: true },
       });
     }
 
-    const goodDescriptor = {
-      entries: [
-        ...maxDynamicBufferBindings,
-        {
-          binding: maxDynamicBufferBindings.length,
-          visibility: GPUShaderStage.COMPUTE,
-          buffer: { type, hasDynamicOffset: false },
-        },
-      ],
+    for (let i = dynamicBufferCount; i < dynamicBufferCount+staticBuffers; i++) {
+      entries.push({
+        binding: i,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type, hasDynamicOffset: false },
+      });
+    }
+
+    const descriptor = {
+      entries,
     };
 
-    // Control case
-    t.device.createBindGroupLayout(goodDescriptor);
-
-    // Dynamic buffers exceed maximum in a bind group layout.
-    const badDescriptor = clone(goodDescriptor);
-    badDescriptor.entries[maxDynamicBufferCount].buffer.hasDynamicOffset = true;
-
     t.expectValidationError(() => {
-      t.device.createBindGroupLayout(badDescriptor);
-    });
+      t.device.createBindGroupLayout(descriptor);
+    }, extraDynamicBuffers > 0);
   });
 
 /**
@@ -178,7 +174,7 @@ function subcasesForMaxResourcesPerStageTests(caseParams: { maxedEntry: BGLEntry
 
 // Should never fail unless kMaxBindingsPerBindGroup is exceeded, because the validation for
 // resources-of-type-per-stage is in pipeline layout creation.
-g.test('max_resources_per_stage,in_bind_group_layout')
+g.test('max_resources_per_stage,bind_group_layout')
   .desc(
     `
     Test that the maximum number of bindings of a given type per-stage cannot be exceeded in a
@@ -226,7 +222,7 @@ g.test('max_resources_per_stage,in_bind_group_layout')
 // One pipeline layout can have a maximum number of each type of binding *per stage* (which is
 // different for each type). Test that the max works, then add one more binding of same-or-different
 // type and same-or-different visibility.
-g.test('max_resources_per_stage,in_pipeline_layout')
+g.test('max_resources_per_stage,pipeline_layout')
   .desc(
     `
     Test that the maximum number of bindings of a given type per-stage cannot be exceeded across
