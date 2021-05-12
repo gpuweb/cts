@@ -112,16 +112,19 @@ g.test('copy_with_invalid_texture').fn(async t => {
 });
 
 g.test('mipmap_level')
-  .params([
-    { srcLevelCount: 1, dstLevelCount: 1, srcCopyLevel: 0, dstCopyLevel: 0 },
-    { srcLevelCount: 1, dstLevelCount: 1, srcCopyLevel: 1, dstCopyLevel: 0 },
-    { srcLevelCount: 1, dstLevelCount: 1, srcCopyLevel: 0, dstCopyLevel: 1 },
-    { srcLevelCount: 3, dstLevelCount: 3, srcCopyLevel: 0, dstCopyLevel: 0 },
-    { srcLevelCount: 3, dstLevelCount: 3, srcCopyLevel: 2, dstCopyLevel: 0 },
-    { srcLevelCount: 3, dstLevelCount: 3, srcCopyLevel: 3, dstCopyLevel: 0 },
-    { srcLevelCount: 3, dstLevelCount: 3, srcCopyLevel: 0, dstCopyLevel: 2 },
-    { srcLevelCount: 3, dstLevelCount: 3, srcCopyLevel: 0, dstCopyLevel: 3 },
-  ] as const)
+  .subcases(
+    () =>
+      [
+        { srcLevelCount: 1, dstLevelCount: 1, srcCopyLevel: 0, dstCopyLevel: 0 },
+        { srcLevelCount: 1, dstLevelCount: 1, srcCopyLevel: 1, dstCopyLevel: 0 },
+        { srcLevelCount: 1, dstLevelCount: 1, srcCopyLevel: 0, dstCopyLevel: 1 },
+        { srcLevelCount: 3, dstLevelCount: 3, srcCopyLevel: 0, dstCopyLevel: 0 },
+        { srcLevelCount: 3, dstLevelCount: 3, srcCopyLevel: 2, dstCopyLevel: 0 },
+        { srcLevelCount: 3, dstLevelCount: 3, srcCopyLevel: 3, dstCopyLevel: 0 },
+        { srcLevelCount: 3, dstLevelCount: 3, srcCopyLevel: 0, dstCopyLevel: 2 },
+        { srcLevelCount: 3, dstLevelCount: 3, srcCopyLevel: 0, dstCopyLevel: 3 },
+      ] as const
+  )
   .fn(async t => {
     const { srcLevelCount, dstLevelCount, srcCopyLevel, dstCopyLevel } = t.params;
 
@@ -210,7 +213,7 @@ g.test('sample_count')
   });
 
 g.test('multisampled_copy_restrictions')
-  .params(
+  .subcases(() =>
     params()
       .combine(
         poptions('srcCopyOrigin', [
@@ -262,7 +265,7 @@ g.test('multisampled_copy_restrictions')
   });
 
 g.test('texture_format_equality')
-  .params(
+  .subcases(() =>
     params()
       .combine(poptions('srcFormat', kAllTextureFormats))
       .combine(poptions('dstFormat', kAllTextureFormats))
@@ -297,9 +300,9 @@ g.test('texture_format_equality')
   });
 
 g.test('depth_stencil_copy_restrictions')
-  .params(
+  .cases(poptions('format', kDepthStencilFormats))
+  .subcases(() =>
     params()
-      .combine(poptions('format', kDepthStencilFormats))
       .combine(
         poptions('copyBoxOffsets', [
           { x: 0, y: 0, width: 0, height: 0 },
@@ -385,7 +388,7 @@ g.test('depth_stencil_copy_restrictions')
   });
 
 g.test('copy_ranges')
-  .params(
+  .subcases(() =>
     params()
       .combine(
         poptions('copyBoxOffsets', [
@@ -477,7 +480,7 @@ g.test('copy_ranges')
   });
 
 g.test('copy_within_same_texture')
-  .params(
+  .subcases(() =>
     params()
       .combine(poptions('srcCopyOriginZ', [0, 2, 4]))
       .combine(poptions('dstCopyOriginZ', [0, 2, 4]))
@@ -514,9 +517,9 @@ Test the validations on the member 'aspect' of GPUImageCopyTexture in CopyTextur
 - for all the stencil-only formats: the texture copy aspects must be either 'all' or 'stencil-only'.
 `
   )
-  .params(
+  .cases(poptions('format', ['rgba8unorm', ...kDepthStencilFormats] as const))
+  .subcases(() =>
     params()
-      .combine(poptions('format', ['rgba8unorm', ...kDepthStencilFormats] as const))
       .combine(poptions('sourceAspect', ['all', 'depth-only', 'stencil-only'] as const))
       .combine(poptions('destinationAspect', ['all', 'depth-only', 'stencil-only'] as const))
   )
@@ -565,9 +568,9 @@ Test the validations on the member 'aspect' of GPUImageCopyTexture in CopyTextur
   });
 
 g.test('copy_ranges_with_compressed_texture_formats')
-  .params(
+  .cases(poptions('format', kCompressedTextureFormats))
+  .subcases(() =>
     params()
-      .combine(poptions('format', kCompressedTextureFormats))
       .combine(
         poptions('copyBoxOffsets', [
           { x: 0, y: 0, z: 0, width: 0, height: 0, depthOrArrayLayers: -2 },
