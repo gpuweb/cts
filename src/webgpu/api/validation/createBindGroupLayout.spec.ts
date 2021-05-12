@@ -28,16 +28,22 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('duplicate_bindings')
   .desc('Test that uniqueness of binding numbers across entries is enforced.')
-  .subcases(() => poptions('bindings', [
-    { numbers: [0, 1], valid: true, },
-    { numbers: [0, 0], valid: false, }
-  ]))
+  .subcases(() =>
+    poptions('bindings', [
+      { numbers: [0, 1], valid: true },
+      { numbers: [0, 0], valid: false },
+    ])
+  )
   .fn(async t => {
     const { bindings } = t.params;
-    const entries : Array<GPUBindGroupLayoutEntry> = [];
+    const entries: Array<GPUBindGroupLayoutEntry> = [];
 
     for (const binding of bindings.numbers) {
-      entries.push({ binding, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' as const } });
+      entries.push({
+        binding,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: { type: 'storage' as const },
+      });
     }
 
     t.expectValidationError(() => {
@@ -99,9 +105,11 @@ g.test('max_dynamic_buffers')
     - TODO(#230): Update to enforce per-stage and per-pipeline-layout limits on BGLs as well.`
   )
   .cases(poptions('type', kBufferBindingTypes))
-  .subcases(() => params()
-    .combine(poptions('extraDynamicBuffers', [0, 1]))
-    .combine(poptions('staticBuffers', [0, 1])))
+  .subcases(() =>
+    params()
+      .combine(poptions('extraDynamicBuffers', [0, 1]))
+      .combine(poptions('staticBuffers', [0, 1]))
+  )
   .fn(async t => {
     const { type, extraDynamicBuffers, staticBuffers } = t.params;
     const info = bufferBindingTypeInfo({ type });
@@ -117,7 +125,7 @@ g.test('max_dynamic_buffers')
       });
     }
 
-    for (let i = dynamicBufferCount; i < dynamicBufferCount+staticBuffers; i++) {
+    for (let i = dynamicBufferCount; i < dynamicBufferCount + staticBuffers; i++) {
       entries.push({
         binding: i,
         visibility: GPUShaderStage.COMPUTE,
