@@ -28,17 +28,15 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('duplicate_bindings')
   .desc('Test that uniqueness of binding numbers across entries is enforced.')
-  .subcases(() =>
-    poptions('bindings', [
-      { numbers: [0, 1], valid: true },
-      { numbers: [0, 0], valid: false },
-    ])
-  )
+  .subcases(() => [
+    { bindings: [0, 1], _valid: true },
+    { bindings: [0, 0], _valid: false },
+  ])
   .fn(async t => {
-    const { bindings } = t.params;
+    const { bindings, _valid } = t.params;
     const entries: Array<GPUBindGroupLayoutEntry> = [];
 
-    for (const binding of bindings.numbers) {
+    for (const binding of bindings) {
       entries.push({
         binding,
         visibility: GPUShaderStage.COMPUTE,
@@ -50,7 +48,7 @@ g.test('duplicate_bindings')
       t.device.createBindGroupLayout({
         entries,
       });
-    }, !bindings.valid);
+    }, !_valid);
   });
 
 g.test('visibility')
