@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 export const description = `
 Test blending results.
 
@@ -93,8 +92,13 @@ function computeBlendFactor(
   }
 }
 
-function computeBlendOperation(src: GPUColorDict, srcFactor: GPUColorDict,
-  dst: GPUColorDict, dstFactor: GPUColorDict, operation: GPUBlendOperation) {
+function computeBlendOperation(
+  src: GPUColorDict,
+  srcFactor: GPUColorDict,
+  dst: GPUColorDict,
+  dstFactor: GPUColorDict,
+  operation: GPUBlendOperation
+) {
   switch (operation) {
     case 'add':
       return mapColor(src, (_, k) => srcFactor[k] * src[k] + dstFactor[k] * dst[k]);
@@ -121,8 +125,8 @@ g.test('GPUBlendComponent')
     - component= {color, alpha} - whether to test blending the color or the alpha component.
     - srcFactor= {...all GPUBlendFactors}
     - dstFactor= {...all GPUBlendFactors}
-    - operation= {...all GPUBlendOperations}
-  `)
+    - operation= {...all GPUBlendOperations}`
+  )
   .cases(
     params() //
       .combine(poptions('component', ['color', 'alpha'] as const))
@@ -130,23 +134,27 @@ g.test('GPUBlendComponent')
       .combine(poptions('dstFactor', kBlendFactors))
       .combine(poptions('operation', kBlendOperations))
   )
-  .subcases((p) => {
-    const needsBlendConstant = (
-      p.srcFactor === 'one-minus-constant' || p.srcFactor === 'constant' ||
-      p.dstFactor === 'one-minus-constant' || p.dstFactor === 'constant'
-    );
+  .subcases(p => {
+    const needsBlendConstant =
+      p.srcFactor === 'one-minus-constant' ||
+      p.srcFactor === 'constant' ||
+      p.dstFactor === 'one-minus-constant' ||
+      p.dstFactor === 'constant';
 
     return params()
-      .combine(poptions('srcColor', [
-        { r: 0.11, g: 0.61, b: 0.81, a: 0.44 }
-      ]))
-      .combine(poptions('dstColor', [
-        { r: 0.51, g: 0.22, b: 0.71, a: 0.33 },
-        { r: 0.09, g: 0.73, b: 0.93, a: 0.81 }
-      ]))
-      .combine(poptions('blendConstant', needsBlendConstant ? [
-        { r: 0.91, g: 0.82, b: 0.73, a: 0.64 },
-      ] : [ undefined ]));
+      .combine(poptions('srcColor', [{ r: 0.11, g: 0.61, b: 0.81, a: 0.44 }]))
+      .combine(
+        poptions('dstColor', [
+          { r: 0.51, g: 0.22, b: 0.71, a: 0.33 },
+          { r: 0.09, g: 0.73, b: 0.93, a: 0.81 },
+        ])
+      )
+      .combine(
+        poptions(
+          'blendConstant',
+          needsBlendConstant ? [{ r: 0.91, g: 0.82, b: 0.73, a: 0.64 }] : [undefined]
+        )
+      );
   })
   .fn(t => {
     const textureFormat: GPUTextureFormat = 'rgba32float';
@@ -157,7 +165,13 @@ g.test('GPUBlendComponent')
     const srcFactor = computeBlendFactor(srcColor, dstColor, blendConstant, t.params.srcFactor);
     const dstFactor = computeBlendFactor(srcColor, dstColor, blendConstant, t.params.dstFactor);
 
-    const expectedColor = computeBlendOperation(srcColor, srcFactor, dstColor, dstFactor, t.params.operation);
+    const expectedColor = computeBlendOperation(
+      srcColor,
+      srcFactor,
+      dstColor,
+      dstFactor,
+      t.params.operation
+    );
 
     switch (t.params.component) {
       case 'color':
@@ -263,18 +277,24 @@ g.test('GPUBlendComponent')
     const expectedLow = mapColor(expectedColor, v => v - tolerance);
     const expectedHigh = mapColor(expectedColor, v => v + tolerance);
 
-    t.expectSinglePixelBetweenTwoValuesIn2DTexture(renderTarget, textureFormat, { x: 0, y: 0}, {
-      exp: [
-        new Float32Array([expectedLow.r, expectedLow.g, expectedLow.b, expectedLow.a]),
-        new Float32Array([expectedHigh.r, expectedHigh.g, expectedHigh.b, expectedHigh.a]),
-      ]
-    });
+    t.expectSinglePixelBetweenTwoValuesIn2DTexture(
+      renderTarget,
+      textureFormat,
+      { x: 0, y: 0 },
+      {
+        exp: [
+          new Float32Array([expectedLow.r, expectedLow.g, expectedLow.b, expectedLow.a]),
+          new Float32Array([expectedHigh.r, expectedHigh.g, expectedHigh.b, expectedHigh.a]),
+        ],
+      }
+    );
   });
 
 g.test('formats')
   .desc(
     `Test blending results works for all formats that support it, and that blending is not applied
-  for formats that do not. Blending should be done in linear space for srgb formats.`)
+  for formats that do not. Blending should be done in linear space for srgb formats.`
+  )
   .unimplemented();
 
 g.test('clamp,blend_factor')
