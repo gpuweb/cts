@@ -532,7 +532,7 @@ const checkContentsImpl: { [k in ReadMethod]: CheckContents } = {
 export const g = makeTestGroup(TextureZeroInitTest);
 
 g.test('uninitialized_texture_is_zero')
-  .subcases(() => paramsBuilder)
+  .params(paramsBuilder)
   .fn(async t => {
     await t.selectDeviceOrSkipTestCase(kUncompressedTextureFormatInfo[t.params.format].feature);
 
