@@ -180,7 +180,7 @@ function subcasesForMaxResourcesPerStageTests(caseParams: { maxedEntry: BGLEntry
 
 // Should never fail unless kMaxBindingsPerBindGroup is exceeded, because the validation for
 // resources-of-type-per-stage is in pipeline layout creation.
-g.test('max_resources_per_stage,bind_group_layout')
+g.test('max_resources_per_stage,in_bind_group_layout')
   .desc(
     `
     Test that the maximum number of bindings of a given type per-stage cannot be exceeded in a
@@ -228,7 +228,7 @@ g.test('max_resources_per_stage,bind_group_layout')
 // One pipeline layout can have a maximum number of each type of binding *per stage* (which is
 // different for each type). Test that the max works, then add one more binding of same-or-different
 // type and same-or-different visibility.
-g.test('max_resources_per_stage,pipeline_layout')
+g.test('max_resources_per_stage,in_pipeline_layout')
   .desc(
     `
     Test that the maximum number of bindings of a given type per-stage cannot be exceeded across
