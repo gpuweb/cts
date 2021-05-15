@@ -3,24 +3,21 @@ import { kWildcard, kParamSeparator, kParamKVSeparator } from './query/separator
 import { UnionToIntersection } from './util/types.js';
 import { assert } from './util/util.js';
 
-// Consider adding more types here if needed
-//
-// TODO: This type isn't actually used to constrain what you're allowed to do in
-// `.cases()`/`.subcases()`, so it's not really serving its purpose. Figure out how to fix that?
-export type ParamArgument =
+export type JSONWithUndefined =
   | undefined
   | null
   | number
   | string
   | boolean
-  | number[]
-  | { readonly [k: string]: undefined | null | number | string | boolean };
+  | readonly JSONWithUndefined[]
+  // Ideally this would recurse into JSONWithUndefined, but it breaks code.
+  | { readonly [k: string]: unknown };
 // FIXME: rename to TestParams ("the params passed to a test").
 export type CaseParams = {
-  readonly [k: string]: ParamArgument;
+  readonly [k: string]: JSONWithUndefined;
 };
 export interface CaseParamsRW {
-  [k: string]: ParamArgument;
+  [k: string]: JSONWithUndefined;
 }
 export type CaseParamsIterable = Iterable<CaseParams>;
 

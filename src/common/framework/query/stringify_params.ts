@@ -1,6 +1,6 @@
 import {
   CaseParams,
-  ParamArgument,
+  JSONWithUndefined,
   badParamValueChars,
   paramKeyIsPublic,
 } from '../params_utils.js';
@@ -30,15 +30,15 @@ export function stringifyPublicParamsUniquely(p: CaseParams): string {
     .join(kParamSeparator);
 }
 
-export function stringifySingleParam(k: string, v: ParamArgument) {
+export function stringifySingleParam(k: string, v: JSONWithUndefined) {
   return `${k}${kParamKVSeparator}${stringifySingleParamValue(v)}`;
 }
 
-function stringifySingleParamUniquely(k: string, v: ParamArgument) {
+function stringifySingleParamUniquely(k: string, v: JSONWithUndefined) {
   return `${k}${kParamKVSeparator}${stringifyParamValueUniquely(v)}`;
 }
 
-function stringifySingleParamValue(v: ParamArgument): string {
+function stringifySingleParamValue(v: JSONWithUndefined): string {
   const s = stringifyParamValue(v);
   assert(
     !badParamValueChars.test(s),
