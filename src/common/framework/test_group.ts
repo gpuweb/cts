@@ -111,13 +111,13 @@ class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
 interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithCases<F, {}> {
   desc(description: string): this;
   /** @deprecated use cases() and/or subcases() instead */
-  params<NewP extends {}>(specs: Iterable<NewP>): TestBuilderWithSubcases<F, NewP>;
-  cases<NewP extends {}>(specs: Iterable<NewP>): TestBuilderWithCases<F, NewP>;
+  params<NewP extends CaseParams>(specs: Iterable<NewP>): TestBuilderWithSubcases<F, NewP>;
+  cases<NewP extends CaseParams>(specs: Iterable<NewP>): TestBuilderWithCases<F, NewP>;
 }
 
 interface TestBuilderWithCases<F extends Fixture, P extends {}>
   extends TestBuilderWithSubcases<F, P> {
-  subcases<SubP extends {}>(
+  subcases<SubP extends CaseParams>(
     specs: (_: P) => Iterable<SubP>
   ): TestBuilderWithSubcases<F, Merged<P, SubP>>;
 }

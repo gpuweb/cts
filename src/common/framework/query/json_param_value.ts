@@ -1,4 +1,4 @@
-import { ParamArgument } from '../params_utils.js';
+import { JSONWithUndefined } from '../params_utils.js';
 import { assert, sortObjectByKey } from '../util/util.js';
 
 // JSON can't represent `undefined` and by default stores it as `null`.
@@ -12,14 +12,14 @@ function stringifyFilter(k: string, v: unknown): unknown {
   return v === undefined ? jsUndefinedMagicValue : v;
 }
 
-export function stringifyParamValue(value: ParamArgument): string {
+export function stringifyParamValue(value: JSONWithUndefined): string {
   return JSON.stringify(value, stringifyFilter);
 }
 
 /**
  * Like stringifyParamValue but sorts dictionaries by key, for hashing.
  */
-export function stringifyParamValueUniquely(value: ParamArgument): string {
+export function stringifyParamValueUniquely(value: JSONWithUndefined): string {
   return JSON.stringify(value, (k, v) => {
     if (typeof v === 'object' && v !== null) {
       return sortObjectByKey(v);
@@ -29,6 +29,6 @@ export function stringifyParamValueUniquely(value: ParamArgument): string {
   });
 }
 
-export function parseParamValue(s: string): ParamArgument {
+export function parseParamValue(s: string): JSONWithUndefined {
   return JSON.parse(s, (k, v) => (v === jsUndefinedMagicValue ? undefined : v));
 }
