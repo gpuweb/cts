@@ -1,5 +1,5 @@
 import { TestCaseRecorder } from './logging/test_case_recorder.js';
-import { CaseParams } from './params_utils.js';
+import { TestParams } from './params_utils.js';
 import { assert } from './util/util.js';
 
 export class SkipTestCase extends Error {}
@@ -14,7 +14,7 @@ export class Fixture {
   private eventualExpectations: Array<Promise<unknown>> = [];
   private numOutstandingAsyncExpectations = 0;
 
-  constructor(rec: TestCaseRecorder, params: CaseParams) {
+  constructor(rec: TestCaseRecorder, params: TestParams) {
     this.rec = rec;
     this._params = params;
   }

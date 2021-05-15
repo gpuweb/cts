@@ -4,8 +4,8 @@ Unit tests for parameterization helpers.
 
 import { poptions, params } from '../common/framework/params_builder.js';
 import {
-  CaseParams,
-  CaseParamsIterable,
+  TestParams,
+  TestParamsIterable,
   publicParamsEquals,
 } from '../common/framework/params_utils.js';
 import { makeTestGroup } from '../common/framework/test_group.js';
@@ -13,7 +13,7 @@ import { makeTestGroup } from '../common/framework/test_group.js';
 import { UnitTest } from './unit_test.js';
 
 class ParamsTest extends UnitTest {
-  expectSpecEqual(act: CaseParamsIterable, exp: CaseParams[]): void {
+  expectSpecEqual(act: TestParamsIterable, exp: TestParams[]): void {
     const a = Array.from(act);
     this.expect(a.length === exp.length && a.every((x, i) => publicParamsEquals(x, exp[i])));
   }

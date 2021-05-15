@@ -1,7 +1,7 @@
 import { Fixture, SkipTestCase, UnexpectedPassError } from './fixture.js';
 import { Expectation } from './logging/result.js';
 import { TestCaseRecorder } from './logging/test_case_recorder.js';
-import { CaseParams, extractPublicParams, Merged, mergeParams } from './params_utils.js';
+import { TestParams, extractPublicParams, Merged, mergeParams } from './params_utils.js';
 import { compareQueries, Ordering } from './query/compare.js';
 import { TestQuerySingleCase, TestQueryWithExpectation } from './query/query.js';
 import { kPathSeparator } from './query/separators.js';
@@ -16,7 +16,7 @@ export type RunFn = (
 
 export interface TestCaseID {
   readonly test: readonly string[];
-  readonly params: CaseParams;
+  readonly params: TestParams;
 }
 
 export interface RunCase {
@@ -56,7 +56,7 @@ export function makeTestGroupForUnitTesting<F extends Fixture>(
 
 type FixtureClass<F extends Fixture = Fixture> = new (
   log: TestCaseRecorder,
-  params: CaseParams
+  params: TestParams
 ) => F;
 type TestFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
 
@@ -111,13 +111,13 @@ class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
 interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithCases<F, {}> {
   desc(description: string): this;
   /** @deprecated use cases() and/or subcases() instead */
-  params<NewP extends CaseParams>(specs: Iterable<NewP>): TestBuilderWithSubcases<F, NewP>;
-  cases<NewP extends CaseParams>(specs: Iterable<NewP>): TestBuilderWithCases<F, NewP>;
+  params<NewP extends TestParams>(specs: Iterable<NewP>): TestBuilderWithSubcases<F, NewP>;
+  cases<NewP extends TestParams>(specs: Iterable<NewP>): TestBuilderWithCases<F, NewP>;
 }
 
 interface TestBuilderWithCases<F extends Fixture, P extends {}>
   extends TestBuilderWithSubcases<F, P> {
-  subcases<SubP extends CaseParams>(
+  subcases<SubP extends TestParams>(
     specs: (_: P) => Iterable<SubP>
   ): TestBuilderWithSubcases<F, Merged<P, SubP>>;
 }

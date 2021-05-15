@@ -1,4 +1,4 @@
-import { CaseParams, paramKeyIsPublic } from '../params_utils.js';
+import { TestParams, paramKeyIsPublic } from '../params_utils.js';
 import { assert, objectEquals } from '../util/util.js';
 
 import { TestQuery } from './query.js';
@@ -74,7 +74,7 @@ function comparePaths(a: readonly string[], b: readonly string[]): Ordering {
   }
 }
 
-export function comparePublicParamsPaths(a: CaseParams, b: CaseParams): Ordering {
+export function comparePublicParamsPaths(a: TestParams, b: TestParams): Ordering {
   const aKeys = Object.keys(a).filter(k => paramKeyIsPublic(k));
   const commonKeys = new Set(aKeys.filter(k => k in b));
 

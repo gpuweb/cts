@@ -1,5 +1,5 @@
 import {
-  CaseParamsRW,
+  TestParamsRW,
   JSONWithUndefined,
   badParamValueChars,
   paramKeyIsPublic,
@@ -90,7 +90,7 @@ function parseQueryImpl(s: string): TestQuery {
 
   assert(test.length > 0, 'Test part of case-level query was empty (::)');
 
-  const params: CaseParamsRW = {};
+  const params: TestParamsRW = {};
   for (const paramPart of paramsParts) {
     const [k, v] = parseSingleParam(paramPart);
     assert(validQueryPart.test(k), 'param key names must match ' + validQueryPart);

@@ -17,7 +17,7 @@ import {
   pbool,
   ParamsBuilder,
 } from '../../../../common/framework/params_builder.js';
-import { CaseParams } from '../../../../common/framework/params_utils.js';
+import { TestParams } from '../../../../common/framework/params_utils.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, unreachable } from '../../../../common/framework/util/util.js';
 import {
@@ -198,7 +198,7 @@ export class TextureZeroInitTest extends GPUTest {
   readonly stateToTexelComponents: { [k in InitializedState]: PerTexelComponent<number> };
 
   private p: Params;
-  constructor(rec: TestCaseRecorder, params: CaseParams) {
+  constructor(rec: TestCaseRecorder, params: TestParams) {
     super(rec, params);
     this.p = params as Params;
 

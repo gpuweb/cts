@@ -174,10 +174,10 @@ test function. They do _not_ appear individually in `/standalone/` or WPT.
 
 If `TestBuilder.subcases()` is not used, there is exactly one subcase.
 
-## Parameters / Params
+## Test Parameters / Params
 
-Each Test Subcase has a (possibly empty) set of Parameters.
-The parameters are available to the Test Function `f(t)` via `t.params`.
+Each Test Subcase has a (possibly empty) set of Test Parameters,
+The parameters are passed to the Test Function `f(t)` via `t.params`.
 
 A set of Public Parameters identifies a Test Case or Test Subcase within a Test.
 
@@ -185,7 +185,7 @@ There are also Private Parameters: any parameter name beginning with an undersco
 These parameters are not part of the Test Case identification, but are still passed into
 the Test Function. They can be used, e.g., to manually specify expected results.
 
-**Type:** `CaseParams`
+**Type:** `TestParams`
 
 ## Test Fixture / Fixture
 

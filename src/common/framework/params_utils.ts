@@ -12,21 +12,21 @@ export type JSONWithUndefined =
   | readonly JSONWithUndefined[]
   // Ideally this would recurse into JSONWithUndefined, but it breaks code.
   | { readonly [k: string]: unknown };
-// FIXME: rename to TestParams ("the params passed to a test").
-export type CaseParams = {
+/** The fully-general type for params passed to a test function invocation. */
+export type TestParams = {
   readonly [k: string]: JSONWithUndefined;
 };
-export interface CaseParamsRW {
+export interface TestParamsRW {
   [k: string]: JSONWithUndefined;
 }
-export type CaseParamsIterable = Iterable<CaseParams>;
+export type TestParamsIterable = Iterable<TestParams>;
 
 export function paramKeyIsPublic(key: string): boolean {
   return !key.startsWith('_');
 }
 
-export function extractPublicParams(params: CaseParams): CaseParams {
-  const publicParams: CaseParamsRW = {};
+export function extractPublicParams(params: TestParams): TestParams {
+  const publicParams: TestParamsRW = {};
   for (const k of Object.keys(params)) {
     if (paramKeyIsPublic(k)) {
       publicParams[k] = params[k];
@@ -39,7 +39,7 @@ export const badParamValueChars = new RegExp(
   '[' + kParamKVSeparator + kParamSeparator + kWildcard + ']'
 );
 
-export function publicParamsEquals(x: CaseParams, y: CaseParams): boolean {
+export function publicParamsEquals(x: TestParams, y: TestParams): boolean {
   return comparePublicParamsPaths(x, y) === Ordering.Equal;
 }
 

@@ -1,5 +1,5 @@
 import {
-  CaseParams,
+  TestParams,
   JSONWithUndefined,
   badParamValueChars,
   paramKeyIsPublic,
@@ -9,7 +9,7 @@ import { assert } from '../util/util.js';
 import { stringifyParamValue, stringifyParamValueUniquely } from './json_param_value.js';
 import { kParamKVSeparator, kParamSeparator, kWildcard } from './separators.js';
 
-export function stringifyPublicParams(p: CaseParams, addWildcard = false): string {
+export function stringifyPublicParams(p: TestParams, addWildcard = false): string {
   const parts = Object.keys(p)
     .filter(k => paramKeyIsPublic(k))
     .map(k => stringifySingleParam(k, p[k]));
@@ -22,7 +22,7 @@ export function stringifyPublicParams(p: CaseParams, addWildcard = false): strin
 /**
  * An _approximately_ unique string representing a CaseParams value.
  */
-export function stringifyPublicParamsUniquely(p: CaseParams): string {
+export function stringifyPublicParamsUniquely(p: TestParams): string {
   const keys = Object.keys(p).sort();
   return keys
     .filter(k => paramKeyIsPublic(k))
