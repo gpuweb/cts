@@ -1,5 +1,5 @@
 import { TestFileLoader } from './file_loader.js';
-import { CaseParamsRW } from './params_utils.js';
+import { TestParamsRW } from './params_utils.js';
 import { compareQueries, Ordering } from './query/compare.js';
 import {
   TestQuery,
@@ -417,7 +417,7 @@ function addLeafForCase(
 ): void {
   const query = tree.query;
   let name: string = '';
-  const subqueryParams: CaseParamsRW = {};
+  const subqueryParams: TestParamsRW = {};
 
   // To start, tree is suite:a,b:c,d:*
   // This loop goes from that -> suite:a,b:c,d:x=1;* -> suite:a,b:c,d:x=1;y=2;*

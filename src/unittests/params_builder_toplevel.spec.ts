@@ -3,7 +3,7 @@ Unit tests for parameterization.
 `;
 
 import { params } from '../common/framework/params_builder.js';
-import { CaseParams } from '../common/framework/params_utils.js';
+import { TestParams } from '../common/framework/params_utils.js';
 import { makeTestGroup, makeTestGroupForUnitTesting } from '../common/framework/test_group.js';
 
 import { TestGroupTest } from './test_group_test.js';
@@ -68,11 +68,11 @@ g.test('exclude')
 g.test('generator').fn(t0 => {
   const g = makeTestGroupForUnitTesting(UnitTest);
 
-  const ran: CaseParams[] = [];
+  const ran: TestParams[] = [];
 
   g.test('generator')
     .params(
-      (function* (): IterableIterator<CaseParams> {
+      (function* (): IterableIterator<TestParams> {
         for (let x = 0; x < 3; ++x) {
           for (let y = 0; y < 2; ++y) {
             yield { x, y };

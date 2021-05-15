@@ -1,6 +1,6 @@
 import {
-  CaseParams,
-  CaseParamsIterable,
+  TestParams,
+  TestParamsIterable,
   FlattenUnionOfInterfaces,
   Merged,
   mergeParams,
@@ -83,11 +83,11 @@ export function params(): ParamsBuilder<{}> {
   return new ParamsBuilder();
 }
 
-export class ParamsBuilder<A extends {}> implements CaseParamsIterable {
-  private paramSpecs: CaseParamsIterable = [{}];
+export class ParamsBuilder<A extends {}> implements TestParamsIterable {
+  private paramSpecs: TestParamsIterable = [{}];
 
   [Symbol.iterator](): Iterator<A> {
-    const iter: Iterator<CaseParams> = this.paramSpecs[Symbol.iterator]();
+    const iter: Iterator<TestParams> = this.paramSpecs[Symbol.iterator]();
     return iter as Iterator<A>;
   }
 
@@ -99,7 +99,7 @@ export class ParamsBuilder<A extends {}> implements CaseParamsIterable {
           yield mergeParams(a, b);
         }
       }
-    }) as CaseParamsIterable;
+    }) as TestParamsIterable;
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     return this as any;
   }
@@ -112,7 +112,7 @@ export class ParamsBuilder<A extends {}> implements CaseParamsIterable {
           yield mergeParams(a, b);
         }
       }
-    }) as CaseParamsIterable;
+    }) as TestParamsIterable;
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     return this as any;
   }
@@ -133,7 +133,7 @@ export class ParamsBuilder<A extends {}> implements CaseParamsIterable {
     return this.filter(x => !pred(x));
   }
 
-  exclude(exclude: CaseParamsIterable): ParamsBuilder<A> {
+  exclude(exclude: TestParamsIterable): ParamsBuilder<A> {
     const excludeArray = Array.from(exclude);
     const paramSpecs = this.paramSpecs;
     this.paramSpecs = makeReusableIterable(function* () {

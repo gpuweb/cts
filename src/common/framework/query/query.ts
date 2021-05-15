@@ -1,6 +1,6 @@
 import { optionEnabled } from '../../runtime/helper/options.js';
 import { Expectation } from '../logging/result.js';
-import { CaseParams } from '../params_utils.js';
+import { TestParams } from '../params_utils.js';
 import { assert, unreachable } from '../util/util.js';
 
 import { compareQueries, Ordering } from './compare.js';
@@ -96,15 +96,15 @@ export class TestQueryMultiTest extends TestQueryMultiFile {
  * A multi-case test query, like `s:f:t:*` or `s:f:t:a,b,*`.
  *
  * Immutable (makes copies of constructor args), except for param values
- * (which aren't normally supposed to change; they're marked readonly in CaseParams).
+ * (which aren't normally supposed to change; they're marked readonly in TestParams).
  */
 export class TestQueryMultiCase extends TestQueryMultiTest {
   readonly level: TestQueryLevel = 3;
   readonly isMultiTest: false = false;
   readonly isMultiCase: boolean = true;
-  readonly params: CaseParams;
+  readonly params: TestParams;
 
-  constructor(suite: string, file: readonly string[], test: readonly string[], params: CaseParams) {
+  constructor(suite: string, file: readonly string[], test: readonly string[], params: TestParams) {
     super(suite, file, test);
     assert(test.length > 0, 'multi-case (or finer) query must have test-path');
     this.params = { ...params };
