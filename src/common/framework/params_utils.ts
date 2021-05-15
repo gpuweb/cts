@@ -1,6 +1,6 @@
 import { comparePublicParamsPaths, Ordering } from './query/compare.js';
 import { kWildcard, kParamSeparator, kParamKVSeparator } from './query/separators.js';
-import { UnionToIntersection } from './util/types.js';
+import { ResolveType, UnionToIntersection } from './util/types.js';
 import { assert } from './util/util.js';
 
 export type JSONWithUndefined =
@@ -67,22 +67,10 @@ export type FlattenUnionOfInterfaces<T> = {
   >;
 };
 
-export type ValueTypeForKeyOfMergedType<A, B, Key extends keyof A | keyof B> = Key extends keyof A
-  ? Key extends keyof B
-    ? void // Key is in both types
-    : A[Key] // Key is only in A
-  : Key extends keyof B
-  ? B[Key] // Key is only in B
-  : void; // Key is in neither type (not possible)
-
-export type Merged<A, B> = MergedFromFlat<A, FlattenUnionOfInterfaces<B>>;
-export type MergedFromFlat<A, B> = keyof A & keyof B extends never
-  ? string extends keyof A | keyof B
-    ? never // (keyof A | keyof B) == string, which is too broad
-    : {
-        [Key in keyof A | keyof B]: ValueTypeForKeyOfMergedType<A, B, Key>;
-      }
-  : never; // (keyof A & keyof B) is not empty, so they overlapped
+export type Merged<A, B> = ResolveType<MergedFromFlat<A, FlattenUnionOfInterfaces<B>>>;
+export type MergedFromFlat<A, B> = {
+  [K in keyof A | keyof B]: K extends keyof B ? B[K] : K extends keyof A ? A[K] : never;
+};
 
 export function mergeParams<A extends {}, B extends {}>(a: A, b: B): Merged<A, B> {
   for (const key of Object.keys(a)) {
