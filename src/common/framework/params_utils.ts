@@ -15,6 +15,7 @@ export type ParamArgument =
   | boolean
   | number[]
   | { readonly [k: string]: undefined | null | number | string | boolean };
+// FIXME: rename to TestParams ("the params passed to a test").
 export type CaseParams = {
   readonly [k: string]: ParamArgument;
 };

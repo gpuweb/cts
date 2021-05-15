@@ -54,17 +54,18 @@ export function makeTestGroupForUnitTesting<F extends Fixture>(
   return new TestGroup(fixture);
 }
 
-type FixtureClass<F extends Fixture> = new <P extends {}>(log: TestCaseRecorder, params: P) => F;
-type TestFn<F extends Fixture, P extends {}, SubP extends {}> = (
-  t: F & { params: Merged<P, SubP> }
-) => Promise<void> | void;
+type FixtureClass<F extends Fixture = Fixture> = new (
+  log: TestCaseRecorder,
+  params: CaseParams
+) => F;
+type TestFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
 
 class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
-  private fixture: FixtureClass<F>;
+  private fixture: FixtureClass;
   private seen: Set<string> = new Set();
-  private tests: Array<TestBuilder<F, {}, {}>> = [];
+  private tests: Array<TestBuilder> = [];
 
-  constructor(fixture: FixtureClass<F>) {
+  constructor(fixture: FixtureClass) {
     this.fixture = fixture;
   }
 
@@ -95,9 +96,9 @@ class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
       assert(validQueryPart.test(p), `Invalid test name part ${p}; must match ${validQueryPart}`);
     }
 
-    const test = new TestBuilder<F, {}, {}>(parts, this.fixture, testCreationStack);
+    const test = new TestBuilder(parts, this.fixture, testCreationStack);
     this.tests.push(test);
-    return test;
+    return (test as unknown) as TestBuilderWithName<F>;
   }
 
   validate(): void {
@@ -107,36 +108,36 @@ class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
   }
 }
 
-interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F, {}> {
+interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithCases<F, {}> {
   desc(description: string): this;
   /** @deprecated use cases() and/or subcases() instead */
-  params<NewP extends {}>(specs: Iterable<NewP>): TestBuilderWithParams<F, NewP>;
-  cases<NewP extends {}>(specs: Iterable<NewP>): TestBuilderWithParams<F, NewP>;
+  params<NewP extends {}>(specs: Iterable<NewP>): TestBuilderWithSubcases<F, NewP>;
+  cases<NewP extends {}>(specs: Iterable<NewP>): TestBuilderWithCases<F, NewP>;
 }
 
-interface TestBuilderWithParams<F extends Fixture, P extends {}>
-  extends TestBuilderWithSubParams<F, P, {}> {
-  subcases<NewSubP extends {}>(
-    specs: (_: P) => Iterable<NewSubP>
-  ): TestBuilderWithSubParams<F, P, NewSubP>;
+interface TestBuilderWithCases<F extends Fixture, P extends {}>
+  extends TestBuilderWithSubcases<F, P> {
+  subcases<SubP extends {}>(
+    specs: (_: P) => Iterable<SubP>
+  ): TestBuilderWithSubcases<F, Merged<P, SubP>>;
 }
 
-interface TestBuilderWithSubParams<F extends Fixture, P extends {}, SubP extends {}> {
-  fn(fn: TestFn<F, P, SubP>): void;
+interface TestBuilderWithSubcases<F extends Fixture, P extends {}> {
+  fn(fn: TestFn<F, P>): void;
   unimplemented(): void;
 }
 
-class TestBuilder<F extends Fixture, P extends {}, SubP extends {}> {
+class TestBuilder {
   readonly testPath: string[];
   description: string | undefined;
   readonly testCreationStack: Error;
 
-  private readonly fixture: FixtureClass<F>;
-  private testFn: TestFn<F, P, SubP> | undefined;
-  private caseParams?: Iterable<P> = undefined;
-  private subcaseParams?: (_: P) => Iterable<SubP> = undefined;
+  private readonly fixture: FixtureClass;
+  private testFn: TestFn<Fixture, {}> | undefined;
+  private caseParams?: Iterable<{}> = undefined;
+  private subcaseParams?: (_: {}) => Iterable<{}> = undefined;
 
-  constructor(testPath: string[], fixture: FixtureClass<F>, testCreationStack: Error) {
+  constructor(testPath: string[], fixture: FixtureClass, testCreationStack: Error) {
     this.testPath = testPath;
     this.fixture = fixture;
     this.testCreationStack = testCreationStack;
@@ -147,7 +148,7 @@ class TestBuilder<F extends Fixture, P extends {}, SubP extends {}> {
     return this;
   }
 
-  fn(fn: TestFn<F, P, SubP>): void {
+  fn(fn: TestFn<Fixture, {}>): void {
     // TODO: add TODO if there's no description? (and make sure it only ends up on actual tests,
     // not on test parents in the tree, which is what happens if you do it here, not sure why)
     assert(this.testFn === undefined);
@@ -194,29 +195,25 @@ class TestBuilder<F extends Fixture, P extends {}, SubP extends {}> {
     }
   }
 
-  params<NewP extends {}>(casesIterable: Iterable<NewP>): TestBuilder<F, NewP, SubP> {
+  params(casesIterable: Iterable<{}>): TestBuilder {
     return this.cases(casesIterable);
   }
 
-  cases<NewP extends {}>(casesIterable: Iterable<NewP>): TestBuilder<F, NewP, SubP> {
+  cases(casesIterable: Iterable<{}>): TestBuilder {
     assert(this.caseParams === undefined, 'test case is already parameterized');
-    const newSelf = (this as unknown) as TestBuilder<F, NewP, SubP>;
-    newSelf.caseParams = Array.from(casesIterable);
-
-    return newSelf;
+    this.caseParams = Array.from(casesIterable);
+    return this;
   }
 
-  subcases<NewSubP extends {}>(specs: (_: P) => Iterable<NewSubP>): TestBuilder<F, P, NewSubP> {
+  subcases(specs: (_: {}) => Iterable<{}>): TestBuilder {
     assert(this.subcaseParams === undefined, 'test subcases are already parameterized');
-    const newSelf = (this as unknown) as TestBuilder<F, P, NewSubP>;
-    newSelf.subcaseParams = specs;
-
-    return newSelf;
+    this.subcaseParams = specs;
+    return this;
   }
 
   *iterate(): IterableIterator<RunCase> {
     assert(this.testFn !== undefined, 'No test function (.fn()) for test');
-    for (const params of this.caseParams || [<P>{}]) {
+    for (const params of this.caseParams || [{}]) {
       yield new RunCaseSpecific(
         this.testPath,
         params,
@@ -229,26 +226,21 @@ class TestBuilder<F extends Fixture, P extends {}, SubP extends {}> {
   }
 }
 
-class RunCaseSpecific<
-  F extends Fixture,
-  P extends CaseParams,
-  SubP extends CaseParams,
-  FN extends TestFn<F, P, SubP>
-> implements RunCase {
+class RunCaseSpecific implements RunCase {
   readonly id: TestCaseID;
 
-  private readonly params: P;
-  private readonly subParamGen?: (_: P) => Iterable<SubP>;
-  private readonly fixture: FixtureClass<F>;
-  private readonly fn: FN;
+  private readonly params: {};
+  private readonly subParamGen?: (_: {}) => Iterable<{}>;
+  private readonly fixture: FixtureClass;
+  private readonly fn: TestFn<Fixture, {}>;
   private readonly testCreationStack: Error;
 
   constructor(
     testPath: string[],
-    params: P,
-    subParamGen: ((_: P) => Iterable<SubP>) | undefined,
-    fixture: FixtureClass<F>,
-    fn: FN,
+    params: {},
+    subParamGen: ((_: {}) => Iterable<{}>) | undefined,
+    fixture: FixtureClass,
+    fn: TestFn<Fixture, {}>,
     testCreationStack: Error
   ) {
     this.id = { test: testPath, params: extractPublicParams(params) };
@@ -261,7 +253,7 @@ class RunCaseSpecific<
 
   async runTest(
     rec: TestCaseRecorder,
-    params: P | Merged<P, SubP>,
+    params: {},
     throwSkip: boolean,
     expectedStatus: Expectation
   ): Promise<void> {
@@ -342,7 +334,7 @@ class RunCaseSpecific<
             selfQuery.suite,
             selfQuery.filePathParts,
             selfQuery.testPathParts,
-            <CaseParams>params
+            params
           );
           await this.runTest(rec, params, true, getExpectedStatus(subcaseQuery));
         } catch (ex) {
