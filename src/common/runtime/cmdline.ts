@@ -7,6 +7,7 @@ import * as process from 'process';
 
 import { DefaultTestFileLoader } from '../framework/file_loader.js';
 import { Logger } from '../framework/logging/logger.js';
+import { prettyPrintLog } from '../framework/logging/log_message.js';
 import { LiveTestCaseResult } from '../framework/logging/result.js';
 import { parseQuery } from '../framework/query/parseQuery.js';
 import { parseExpectationsForTestQuery } from '../framework/query/query.js';
@@ -153,7 +154,7 @@ function printResults(results: Array<[string, LiveTestCaseResult]>): void {
     console.log(`[${r.status}] ${name} (${r.timems}ms). Log:`);
     if (r.logs) {
       for (const l of r.logs) {
-        console.log('  - ' + l.toJSON().replace(/\n/g, '\n    '));
+        console.log(prettyPrintLog(l));
       }
     }
   }
