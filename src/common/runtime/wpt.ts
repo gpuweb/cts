@@ -1,8 +1,8 @@
 // Implements the wpt-embedded test runner (see also: wpt/cts.html).
 
 import { DefaultTestFileLoader } from '../framework/file_loader.js';
-import { Logger } from '../framework/logging/logger.js';
 import { prettyPrintLog } from '../framework/logging/log_message.js';
+import { Logger } from '../framework/logging/logger.js';
 import { parseQuery } from '../framework/query/parseQuery.js';
 import { parseExpectationsForTestQuery, relativeQueryString } from '../framework/query/query.js';
 import { assert } from '../framework/util/util.js';
@@ -52,7 +52,7 @@ setup({
   for (const testcase of testcases) {
     const name = testcase.query.toString();
     // For brevity, display the case name "relative" to the ?q= path.
-    const shortName = relativeQueryString(filterQuery, testcase.query);
+    const shortName = relativeQueryString(filterQuery, testcase.query) || '(case)';
 
     const wpt_fn = async () => {
       const [rec, res] = log.record(name);

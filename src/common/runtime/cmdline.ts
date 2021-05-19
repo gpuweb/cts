@@ -6,8 +6,8 @@ import * as path from 'path';
 import * as process from 'process';
 
 import { DefaultTestFileLoader } from '../framework/file_loader.js';
-import { Logger } from '../framework/logging/logger.js';
 import { prettyPrintLog } from '../framework/logging/log_message.js';
+import { Logger } from '../framework/logging/logger.js';
 import { LiveTestCaseResult } from '../framework/logging/result.js';
 import { parseQuery } from '../framework/query/parseQuery.js';
 import { parseExpectationsForTestQuery } from '../framework/query/query.js';
