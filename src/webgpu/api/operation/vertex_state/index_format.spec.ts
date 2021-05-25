@@ -58,7 +58,7 @@ class IndexFormatTest extends GPUTest {
       // TODO?: These positions will create triangles that cut right through pixel centers. If this
       // results in different rasterization results on different hardware, tweak to avoid this.
       code: `
-        const pos: array<vec2<f32>, 4> = array<vec2<f32>, 4>(
+        let pos: array<vec2<f32>, 4> = array<vec2<f32>, 4>(
           vec2<f32>(0.01,  0.98),
           vec2<f32>(0.99, -0.98),
           vec2<f32>(0.99,  0.98),
