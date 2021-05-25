@@ -5,7 +5,7 @@ struct Foo {
   b : f32;
 };
 
-fn Foo() ->void {
+fn Foo() {
   return;
 }
 

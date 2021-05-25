@@ -2,7 +2,7 @@
 
 [[stage(vertex)]]
 fn main() {
-  const c : f32 = 0.1;
+  let c : f32 = 0.1;
   c = 0.2;
   return;
 }
