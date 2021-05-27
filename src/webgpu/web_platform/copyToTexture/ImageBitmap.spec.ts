@@ -260,10 +260,7 @@ g.test('from_ImageData')
           'rgba8unorm-srgb',
           'bgra8unorm-srgb',
           'rgb10a2unorm',
-          'rgba16float',
-          'rgba32float',
           'rg8unorm',
-          'rg16float',
         ] as const)
       )
   )
@@ -339,10 +336,7 @@ g.test('from_canvas')
           'rgba8unorm-srgb',
           'bgra8unorm-srgb',
           'rgb10a2unorm',
-          'rgba16float',
-          'rgba32float',
           'rg8unorm',
-          'rg16float',
         ] as const)
       )
   )
