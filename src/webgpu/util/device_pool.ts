@@ -136,10 +136,14 @@ class DescriptorToHolderMap {
     try {
       value = await DeviceHolder.create(descriptor);
     } catch (ex) {
-      this.unsupported.add(key);
-      throw new SkipTestCase(
-        `GPUDeviceDescriptor not supported: ${JSON.stringify(descriptor)}\n${ex?.message ?? ''}`
-      );
+      if (ex instanceof FeaturesNotSupported) {
+        this.unsupported.add(key);
+        throw new SkipTestCase(
+          `GPUDeviceDescriptor not supported: ${JSON.stringify(descriptor)}\n${ex?.message ?? ''}`
+        );
+      }
+
+      throw ex;
     }
     this.insertAndCleanUp(key, value);
     return value;
@@ -241,7 +245,7 @@ class DeviceHolder implements DeviceProvider {
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null, 'requestAdapter returned null');
     if (!isNonGuaranteedFeatureSupported(adapter, descriptor)) {
-      throw new FeaturesNotSupported('The features in GPUDeviceDescriptor are not supported');
+      throw new FeaturesNotSupported('One or more features are not supported');
     }
     const device = await adapter.requestDevice(descriptor);
     assert(device !== null, 'requestDevice returned null');
