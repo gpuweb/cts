@@ -31,6 +31,7 @@ import {
   kAllTextureFormatInfo,
   kAllTextureFormats,
   kTextureUsages,
+  kValidTextureFormatsForCopyIB2T,
 } from '../../../../capability_info.js';
 import { ValidationTest } from '../../validation_test.js';
 
@@ -39,16 +40,6 @@ const kDefaultWidth = 32;
 const kDefaultHeight = 32;
 const kDefaultDepth = 1;
 const kDefaultMipLevelCount = 6;
-
-// From spec
-const kValidTextureFormatsForCopyIB2T = [
-  'rgba8unorm',
-  'rgba8unorm-srgb',
-  'bgra8unorm',
-  'bgra8unorm-srgb',
-  'rgb10a2unorm',
-  'rg8unorm',
-];
 
 function computeMipMapSize(width: number, height: number, mipLevel: number) {
   return {
@@ -330,7 +321,7 @@ g.test('destination_texture,format')
     });
     t.device.popErrorScope();
 
-    const success = kValidTextureFormatsForCopyIB2T.includes(format);
+    const success = ([...kValidTextureFormatsForCopyIB2T] as string[]).includes(format);
 
     t.runTest({ imageBitmap }, { texture: dstTexture }, copySize, success);
   });
