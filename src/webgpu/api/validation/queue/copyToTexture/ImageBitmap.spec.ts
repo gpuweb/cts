@@ -321,7 +321,7 @@ g.test('destination_texture,format')
     });
     t.device.popErrorScope();
 
-    const success = ([...kValidTextureFormatsForCopyIB2T] as string[]).includes(format);
+    const success = (kValidTextureFormatsForCopyIB2T as readonly string[]).includes(format);
 
     t.runTest({ imageBitmap }, { texture: dstTexture }, copySize, success);
   });
