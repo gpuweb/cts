@@ -1,4 +1,5 @@
 export const description = `
+createComputePipeline and createComputePipelineAsync validation tests.
 
 TODO:
 For createComputePipeline and its async version createComputePipelineAsync,
@@ -115,30 +116,23 @@ g.test('shader_module_stage_must_be_compute')
   .cases(
     params()
       .combine(poptions('isAsync', [true, false]))
-      .combine([
-        {
-          shaderModuleStage: 'compute' as TShaderStage,
-          _success: true,
-        },
-        {
-          shaderModuleStage: 'vertex' as TShaderStage,
-          _success: false,
-        },
-        {
-          shaderModuleStage: 'fragment' as TShaderStage,
-          _success: false,
-        },
-      ])
+      .combine(
+        poptions('shaderModuleStage', [
+          'compute' as TShaderStage,
+          'vertex' as TShaderStage,
+          'fragment' as TShaderStage,
+        ])
+      )
   )
   .fn(async t => {
-    const { isAsync, shaderModuleStage, _success } = t.params;
+    const { isAsync, shaderModuleStage } = t.params;
     const descriptor = {
       compute: {
         module: t.getShaderModule(shaderModuleStage, 'main'),
         entryPoint: 'main',
       },
     };
-    t.doCreateComputePipelineTest(isAsync, _success, descriptor);
+    t.doCreateComputePipelineTest(isAsync, shaderModuleStage === 'compute', descriptor);
   });
 
 g.test('enrty_point_name_must_match')
@@ -146,24 +140,25 @@ g.test('enrty_point_name_must_match')
     params()
       .combine(poptions('isAsync', [true, false]))
       .combine([
-        { shaderModuleEntryPoint: 'main', stageEntryPoint: 'main', _success: true },
-        { shaderModuleEntryPoint: 'main', stageEntryPoint: '', _success: false },
-        { shaderModuleEntryPoint: 'main', stageEntryPoint: 'main\0', _success: false },
-        { shaderModuleEntryPoint: 'main', stageEntryPoint: 'main\0a', _success: false },
-        { shaderModuleEntryPoint: 'main', stageEntryPoint: 'mian', _success: false },
-        { shaderModuleEntryPoint: 'main', stageEntryPoint: 'main ', _success: false },
-        { shaderModuleEntryPoint: 'main', stageEntryPoint: 'main\n', _success: false },
-        { shaderModuleEntryPoint: 'mian', stageEntryPoint: 'mian', _success: true },
-        { shaderModuleEntryPoint: 'mian', stageEntryPoint: 'main', _success: false },
+        { shaderModuleEntryPoint: 'main', stageEntryPoint: 'main' },
+        { shaderModuleEntryPoint: 'main', stageEntryPoint: '' },
+        { shaderModuleEntryPoint: 'main', stageEntryPoint: 'main\0' },
+        { shaderModuleEntryPoint: 'main', stageEntryPoint: 'main\0a' },
+        { shaderModuleEntryPoint: 'main', stageEntryPoint: 'mian' },
+        { shaderModuleEntryPoint: 'main', stageEntryPoint: 'main ' },
+        { shaderModuleEntryPoint: 'main', stageEntryPoint: 'main\n' },
+        { shaderModuleEntryPoint: 'mian', stageEntryPoint: 'mian' },
+        { shaderModuleEntryPoint: 'mian', stageEntryPoint: 'main' },
       ])
   )
   .fn(async t => {
-    const { isAsync, shaderModuleEntryPoint, stageEntryPoint, _success } = t.params;
+    const { isAsync, shaderModuleEntryPoint, stageEntryPoint } = t.params;
     const descriptor = {
       compute: {
         module: t.getShaderModule('compute', shaderModuleEntryPoint),
         entryPoint: stageEntryPoint,
       },
     };
+    const _success = shaderModuleEntryPoint === stageEntryPoint;
     t.doCreateComputePipelineTest(isAsync, _success, descriptor);
   });
