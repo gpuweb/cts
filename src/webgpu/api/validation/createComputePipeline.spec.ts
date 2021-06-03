@@ -1,7 +1,6 @@
 export const description = `
 createComputePipeline and createComputePipelineAsync validation tests.
 
-TODO:
 For createComputePipeline and its async version createComputePipelineAsync,
 each start with a valid descriptor, than for the only one compute stage, make
 following errors:
@@ -30,7 +29,7 @@ class F extends ValidationTest {
     let code;
     switch (shaderStage) {
       case 'compute': {
-        code = `[[stage(compute)]] fn ${entryPoint}() {}`;
+        code = `[[stage(compute), workgroup_size(1)]] fn ${entryPoint}() {}`;
         break;
       }
       case 'vertex': {
@@ -41,11 +40,9 @@ class F extends ValidationTest {
         break;
       }
       case 'fragment': {
-        const fragColorType = 'i32';
-        const suffix = '';
         code = `
-        [[stage(fragment)]] fn ${entryPoint}() -> [[location(0)]] vec4<${fragColorType}> {
-          return vec4<${fragColorType}>(0${suffix}, 1${suffix}, 0${suffix}, 1${suffix});
+        [[stage(fragment)]] fn ${entryPoint}() -> [[location(0)]] vec4<i32> {
+          return vec4<i32>(0, 1, 0, 1);
         }`;
         break;
       }
@@ -92,6 +89,12 @@ class F extends ValidationTest {
 export const g = makeTestGroup(F);
 
 g.test('basic_use_of_createComputePipeline')
+  .desc(
+    `
+Control case for createComputePipeline and createComputePipelineAsync.
+Call the API with valid compute shader and matching valid entryPoint, making sure that the test function working well.
+`
+  )
   .cases(poptions('isAsync', [true, false]))
   .fn(async t => {
     const { isAsync } = t.params;
@@ -101,6 +104,11 @@ g.test('basic_use_of_createComputePipeline')
   });
 
 g.test('shader_module_must_be_valid')
+  .desc(
+    `
+Tests calling createComputePipeline(Async) with a invalid compute shader, and check that the APIs catch this error.
+`
+  )
   .cases(poptions('isAsync', [true, false]))
   .fn(async t => {
     const { isAsync } = t.params;
@@ -113,16 +121,16 @@ g.test('shader_module_must_be_valid')
   });
 
 g.test('shader_module_stage_must_be_compute')
+  .desc(
+    `
+Tests calling createComputePipeline(Async) with valid but different stage shader and matching entryPoint,
+and check that the APIs only accept compute shader.
+`
+  )
   .cases(
     params()
       .combine(poptions('isAsync', [true, false]))
-      .combine(
-        poptions('shaderModuleStage', [
-          'compute' as TShaderStage,
-          'vertex' as TShaderStage,
-          'fragment' as TShaderStage,
-        ])
-      )
+      .combine(poptions('shaderModuleStage', ['compute', 'vertex', 'fragment'] as TShaderStage[]))
   )
   .fn(async t => {
     const { isAsync, shaderModuleStage } = t.params;
@@ -136,6 +144,19 @@ g.test('shader_module_stage_must_be_compute')
   });
 
 g.test('enrty_point_name_must_match')
+  .desc(
+    `
+Tests calling createComputePipeline(Async) with valid compute stage shader and different entryPoint,
+and check that the APIs only accept matching entryPoint.
+
+The entryPoint in shader module include standard "main" and others.
+The entryPoint assigned in descriptor include:
+- Matching case (control case)
+- Empty string
+- Mistyping
+- Containing invalid char, including space and control codes (Null character)
+`
+  )
   .cases(
     params()
       .combine(poptions('isAsync', [true, false]))
@@ -146,9 +167,15 @@ g.test('enrty_point_name_must_match')
         { shaderModuleEntryPoint: 'main', stageEntryPoint: 'main\0a' },
         { shaderModuleEntryPoint: 'main', stageEntryPoint: 'mian' },
         { shaderModuleEntryPoint: 'main', stageEntryPoint: 'main ' },
+        { shaderModuleEntryPoint: 'main', stageEntryPoint: 'ma in' },
         { shaderModuleEntryPoint: 'main', stageEntryPoint: 'main\n' },
         { shaderModuleEntryPoint: 'mian', stageEntryPoint: 'mian' },
         { shaderModuleEntryPoint: 'mian', stageEntryPoint: 'main' },
+        { shaderModuleEntryPoint: 'mainmain', stageEntryPoint: 'mainmain' },
+        { shaderModuleEntryPoint: 'mainmain', stageEntryPoint: 'foo' },
+        { shaderModuleEntryPoint: 'main_t12V3', stageEntryPoint: 'main_t12V3' },
+        { shaderModuleEntryPoint: 'main_t12V3', stageEntryPoint: 'main_t12V5' },
+        { shaderModuleEntryPoint: 'main_t12V3', stageEntryPoint: '_main_t12V3' },
       ])
   )
   .fn(async t => {
