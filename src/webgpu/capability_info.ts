@@ -446,10 +446,10 @@ export const kPerStageBindingLimits: {
   };
 } = /* prettier-ignore */ {
   'uniformBuf': { class: 'uniformBuf', max: 12, },
-  'storageBuf': { class: 'storageBuf', max:  4, },
+  'storageBuf': { class: 'storageBuf', max:  8, },
   'sampler':    { class: 'sampler',    max: 16, },
   'sampledTex': { class: 'sampledTex', max: 16, },
-  'storageTex': { class: 'storageTex', max:  4, },
+  'storageTex': { class: 'storageTex', max:  8, },
 };
 
 export const kPerPipelineBindingLimits: {
