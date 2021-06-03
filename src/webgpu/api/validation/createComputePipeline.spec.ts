@@ -1,16 +1,5 @@
 export const description = `
 createComputePipeline and createComputePipelineAsync validation tests.
-
-For createComputePipeline and its async version createComputePipelineAsync,
-each start with a valid descriptor, than for the only one compute stage, make
-following errors:
-- compute stage's module is an invalid object
-- compute stage's module is of other stage, i.e., vertex or gragment
-- stage's entryPoint doesn't exist, including following situation:
-  - the entryPoint in module is / isn't 'main'
-  - the assigned name is different from module's name
-  - the assigned name is empty string
-  - the assigned name contain illegal character
 `;
 
 import { params, poptions } from '../../../common/framework/params_builder.js';
