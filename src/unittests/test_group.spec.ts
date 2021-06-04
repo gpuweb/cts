@@ -22,7 +22,7 @@ g.test('UnitTest_fixture').fn(async t0 => {
 
   g.test('test').fn(count);
   g.test('testp')
-    .cases([{ a: 1 }])
+    .paramsSimple([{ a: 1 }])
     .fn(count);
 
   await t0.run(g);
@@ -43,7 +43,7 @@ g.test('custom_fixture').fn(async t0 => {
     t.count();
   });
   g.test('testp')
-    .cases([{ a: 1 }])
+    .paramsSimple([{ a: 1 }])
     .fn(t => {
       t.count();
     });
@@ -107,7 +107,7 @@ g.test('duplicate_test_params,none').fn(() => {
   {
     const g = makeTestGroupForUnitTesting(UnitTest);
     g.test('abc')
-      .cases([])
+      .paramsSimple([])
       .fn(() => {});
     g.validate();
   }
@@ -121,7 +121,7 @@ g.test('duplicate_test_params,none').fn(() => {
   {
     const g = makeTestGroupForUnitTesting(UnitTest);
     g.test('abc')
-      .cases([
+      .paramsSimple([
         { a: 1 }, //
       ])
       .fn(() => {});
@@ -133,7 +133,7 @@ g.test('duplicate_test_params,basic').fn(t => {
   {
     const g = makeTestGroupForUnitTesting(UnitTest);
     g.test('abc')
-      .cases([
+      .paramsSimple([
         { a: 1 }, //
         { a: 1 },
       ])
@@ -145,7 +145,7 @@ g.test('duplicate_test_params,basic').fn(t => {
   {
     const g = makeTestGroupForUnitTesting(UnitTest);
     g.test('abc')
-      .cases([
+      .paramsSimple([
         { a: 1, b: 3 }, //
         { b: 3, a: 1 },
       ])
@@ -159,7 +159,7 @@ g.test('duplicate_test_params,basic').fn(t => {
 g.test('duplicate_test_params,with_different_private_params').fn(t => {
   const g = makeTestGroupForUnitTesting(UnitTest);
   g.test('abc')
-    .cases([
+    .paramsSimple([
       { a: 1, _b: 1 }, //
       { a: 1, _b: 2 },
     ])
@@ -187,13 +187,13 @@ g.test('invalid_test_name').fn(t => {
 
 g.test('param_value,valid').fn(() => {
   const g = makeTestGroup(UnitTest);
-  g.test('a').cases([{ x: JSON.stringify({ a: 1, b: 2 }) }]);
+  g.test('a').paramsSimple([{ x: JSON.stringify({ a: 1, b: 2 }) }]);
 });
 
 g.test('param_value,invalid').fn(t => {
   for (const badChar of ';=*') {
     const g = makeTestGroupForUnitTesting(UnitTest);
-    g.test('a').cases([{ badChar }]);
+    g.test('a').paramsSimple([{ badChar }]);
     t.shouldThrow('Error', () => {
       g.validate();
     });
@@ -203,7 +203,10 @@ g.test('param_value,invalid').fn(t => {
 g.test('subcases').fn(async t0 => {
   const g = makeTestGroupForUnitTesting(UnitTest);
   g.test('a')
-    .subcases(() => [{ a: 1 }])
+    .paramsSubcasesOnly(u =>
+      u //
+        .combineWithParams([{ a: 1 }])
+    )
     .fn(t => {
       t.expect(t.params.a === 1, 'a must be 1');
     });
@@ -218,8 +221,12 @@ g.test('subcases').fn(async t0 => {
     }
   }
   g.test('b')
-    .cases([{ a: 1 }, { b: 2 }])
-    .subcases(gen)
+    .params(u =>
+      u
+        .combineWithParams([{ a: 1 }, { b: 2 }])
+        .beginSubcases()
+        .expandWithParams(gen)
+    )
     .fn(t => {
       const { a, b, ret } = t.params;
       t.expect((a === 1 && ret === 1) || (b === 2 && ret === 2));

@@ -10,7 +10,7 @@ import { GPUTest } from '../../../gpu_test.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('storeOp_controls_whether_1x1_drawn_quad_is_stored')
-  .params([
+  .paramsSimple([
     { storeOp: 'store', _expected: 1 }, //
     { storeOp: 'clear', _expected: 0 },
   ] as const)

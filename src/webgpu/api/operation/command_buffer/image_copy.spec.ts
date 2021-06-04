@@ -34,7 +34,6 @@ TODO: Fix this test for the various skipped formats:
 - compressed formats
 `;
 
-import { params, poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, unreachable } from '../../../../common/framework/util/util.js';
 import {
@@ -647,21 +646,19 @@ bytes in copy works for every format.
     bytesPerRow == bytesInACompleteCopyImage
   `
   )
-  .cases(
-    params()
-      .combine(kMethodsToTest)
-      .combine(poptions('format', kWorkingTextureFormats))
+  .params(u =>
+    u
+      .combineWithParams(kMethodsToTest)
+      .combine('format', kWorkingTextureFormats)
       .filter(formatCanBeTested)
-  )
-  .subcases(() =>
-    params()
-      .combine([
+      .beginSubcases()
+      .combineWithParams([
         { bytesPerRowPadding: 0, rowsPerImagePadding: 0 }, // no padding
         { bytesPerRowPadding: 0, rowsPerImagePadding: 6 }, // rowsPerImage padding
         { bytesPerRowPadding: 6, rowsPerImagePadding: 0 }, // bytesPerRow padding
         { bytesPerRowPadding: 15, rowsPerImagePadding: 17 }, // both paddings
       ])
-      .combine([
+      .combineWithParams([
         // In the two cases below, for (WriteTexture, PartialCopyB2T) and (CopyB2T, FullCopyT2B)
         // sets of methods we will have bytesPerRow = 256 and copyDepth % 2 == { 0, 1 }
         // respectively. This covers a special code path for D3D12.
@@ -745,16 +742,14 @@ works for every format with 2d and 2d-array textures.
     offset > bytesInACompleteCopyImage
 `
   )
-  .cases(
-    params()
-      .combine(kMethodsToTest)
-      .combine(poptions('format', kWorkingTextureFormats))
-      .filter(formatCanBeTested)
-  )
-  .subcases(
-    () =>
-      params()
-        .combine([
+  .params(
+    u =>
+      u
+        .combineWithParams(kMethodsToTest)
+        .combine('format', kWorkingTextureFormats)
+        .filter(formatCanBeTested)
+        .beginSubcases()
+        .combineWithParams([
           { offsetInBlocks: 0, dataPaddingInBytes: 0 }, // no offset and no padding
           { offsetInBlocks: 1, dataPaddingInBytes: 0 }, // offset = 1
           { offsetInBlocks: 2, dataPaddingInBytes: 0 }, // offset = 2
@@ -767,7 +762,7 @@ works for every format with 2d and 2d-array textures.
           { offsetInBlocks: 0, dataPaddingInBytes: 1 }, // dataPaddingInBytes > 0
           { offsetInBlocks: 1, dataPaddingInBytes: 8 }, // offset > 0 and dataPaddingInBytes > 0
         ])
-        .combine(poptions('copyDepth', [1, 2])) // 2d and 2d-array textures
+        .combine('copyDepth', [1, 2]) // 2d and 2d-array textures
   )
   .fn(async t => {
     const {
@@ -816,23 +811,21 @@ g.test('origins_and_extents')
     `Test that copying slices of a texture works with various origin and copyExtent values
 for all formats. We pass origin and copyExtent as [number, number, number].`
   )
-  .cases(
-    params()
-      .combine(kMethodsToTest)
-      .combine(poptions('format', kWorkingTextureFormats))
+  .params(u =>
+    u
+      .combineWithParams(kMethodsToTest)
+      .combine('format', kWorkingTextureFormats)
       .filter(formatCanBeTested)
-  )
-  .subcases(() =>
-    params()
-      .combine(poptions('originValueInBlocks', [0, 7, 8]))
-      .combine(poptions('copySizeValueInBlocks', [0, 7, 8]))
-      .combine(poptions('textureSizePaddingValueInBlocks', [0, 7, 8]))
+      .beginSubcases()
+      .combine('originValueInBlocks', [0, 7, 8])
+      .combine('copySizeValueInBlocks', [0, 7, 8])
+      .combine('textureSizePaddingValueInBlocks', [0, 7, 8])
       .unless(
         p =>
           // we can't create an empty texture
           p.copySizeValueInBlocks + p.originValueInBlocks + p.textureSizePaddingValueInBlocks === 0
       )
-      .combine(poptions('coordinateToTest', [0, 1, 2] as const))
+      .combine('coordinateToTest', [0, 1, 2] as const)
   )
   .fn(async t => {
     const {
@@ -912,7 +905,7 @@ function* generateTestTextureSizes({
   format: SizedTextureFormat;
   mipLevel: number;
   _mipSizeInBlocks: Required<GPUExtent3DDict>;
-}): Generator<{ textureSize: [number, number, number] }> {
+}): Generator<[number, number, number]> {
   const info = kSizedTextureFormatInfo[format];
 
   const widthAtThisLevel = _mipSizeInBlocks.width * info.blockWidth;
@@ -922,9 +915,7 @@ function* generateTestTextureSizes({
     heightAtThisLevel << mipLevel,
     _mipSizeInBlocks.depthOrArrayLayers,
   ];
-  yield {
-    textureSize,
-  };
+  yield textureSize;
 
   // We choose width and height of the texture so that the values are divisible by blockWidth and
   // blockHeight respectively and so that the virtual size at mip level corresponds to the same
@@ -942,19 +933,13 @@ function* generateTestTextureSizes({
   const modifyHeight = info.blockHeight > 1 && modifiedHeight !== textureSize[1];
 
   if (modifyWidth) {
-    yield {
-      textureSize: [modifiedWidth, textureSize[1], textureSize[2]],
-    };
+    yield [modifiedWidth, textureSize[1], textureSize[2]];
   }
   if (modifyHeight) {
-    yield {
-      textureSize: [textureSize[0], modifiedHeight, textureSize[2]],
-    };
+    yield [textureSize[0], modifiedHeight, textureSize[2]];
   }
   if (modifyWidth && modifyHeight) {
-    yield {
-      textureSize: [modifiedWidth, modifiedHeight, textureSize[2]],
-    };
+    yield [modifiedWidth, modifiedHeight, textureSize[2]];
   }
 }
 
@@ -965,15 +950,13 @@ g.test('mip_levels')
   - bufferSize - offset < bytesPerImage * copyExtent.depthOrArrayLayers, and copyExtent needs to be clamped for all block formats.
   `
   )
-  .cases(
-    params()
-      .combine(kMethodsToTest)
-      .combine(poptions('format', kWorkingTextureFormats))
+  .params(u =>
+    u
+      .combineWithParams(kMethodsToTest)
+      .combine('format', kWorkingTextureFormats)
       .filter(formatCanBeTested)
-  )
-  .subcases(p =>
-    params()
-      .combine([
+      .beginSubcases()
+      .combineWithParams([
         // origin + copySize = texturePhysicalSizeAtMipLevel for all coordinates, 2d texture */
         {
           copySizeInBlocks: { width: 5, height: 4, depthOrArrayLayers: 1 },
@@ -1017,9 +1000,7 @@ g.test('mip_levels')
           mipLevel: 6,
         },
       ])
-      .expand(({ mipLevel, _mipSizeInBlocks }) =>
-        generateTestTextureSizes({ mipLevel, _mipSizeInBlocks, format: p.format })
-      )
+      .expand('textureSize', generateTestTextureSizes)
   )
   .fn(async t => {
     const {
@@ -1075,22 +1056,24 @@ g.test('undefined_params')
   Ensures bytesPerRow/rowsPerImage=undefined are valid and behave as expected.
   Ensures origin.x/y/z undefined default to 0.`
   )
-  .cases(kMethodsToTest)
-  .subcases(() =>
-    params().combine([
-      // copying one row: bytesPerRow and rowsPerImage can be undefined
-      { copySize: [3, 1, 1], origin: [UND, UND, UND], bytesPerRow: UND, rowsPerImage: UND },
-      // copying one slice: rowsPerImage can be undefined
-      { copySize: [3, 3, 1], origin: [UND, UND, UND], bytesPerRow: 256, rowsPerImage: UND },
-      // copying two slices
-      { copySize: [3, 3, 2], origin: [UND, UND, UND], bytesPerRow: 256, rowsPerImage: 3 },
-      // origin.x = undefined
-      { copySize: [1, 1, 1], origin: [UND, 1, 1], bytesPerRow: UND, rowsPerImage: UND },
-      // origin.y = undefined
-      { copySize: [1, 1, 1], origin: [1, UND, 1], bytesPerRow: UND, rowsPerImage: UND },
-      // origin.z = undefined
-      { copySize: [1, 1, 1], origin: [1, 1, UND], bytesPerRow: UND, rowsPerImage: UND },
-    ])
+  .params(u =>
+    u
+      .combineWithParams(kMethodsToTest)
+      .beginSubcases()
+      .combineWithParams([
+        // copying one row: bytesPerRow and rowsPerImage can be undefined
+        { copySize: [3, 1, 1], origin: [UND, UND, UND], bytesPerRow: UND, rowsPerImage: UND },
+        // copying one slice: rowsPerImage can be undefined
+        { copySize: [3, 3, 1], origin: [UND, UND, UND], bytesPerRow: 256, rowsPerImage: UND },
+        // copying two slices
+        { copySize: [3, 3, 2], origin: [UND, UND, UND], bytesPerRow: 256, rowsPerImage: 3 },
+        // origin.x = undefined
+        { copySize: [1, 1, 1], origin: [UND, 1, 1], bytesPerRow: UND, rowsPerImage: UND },
+        // origin.y = undefined
+        { copySize: [1, 1, 1], origin: [1, UND, 1], bytesPerRow: UND, rowsPerImage: UND },
+        // origin.z = undefined
+        { copySize: [1, 1, 1], origin: [1, 1, UND], bytesPerRow: UND, rowsPerImage: UND },
+      ])
   )
   .fn(async t => {
     const { bytesPerRow, rowsPerImage, copySize, origin, initMethod, checkMethod } = t.params;

@@ -1,6 +1,5 @@
 export const description = 'Test helpers for texel data produce the expected data in the shader';
 
-import { params, poptions } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert } from '../../../common/framework/util/util.js';
 import {
@@ -22,18 +21,17 @@ function doTest(
   t: GPUTest & {
     params: {
       format: EncodableTextureFormat;
-      R?: number;
-      G?: number;
-      B?: number;
-      A?: number;
+      componentData: {
+        R?: number;
+        G?: number;
+        B?: number;
+        A?: number;
+      };
     };
   }
 ) {
   const { format } = t.params;
-  const componentData = (() => {
-    const { R, G, B, A } = t.params;
-    return { R, G, B, A };
-  })();
+  const componentData = t.params.componentData;
 
   const rep = kTexelRepresentationInfo[format];
   const texelData = rep.pack(componentData);
@@ -137,9 +135,9 @@ function makeParam(
 }
 
 g.test('unorm_texel_data_in_shader')
-  .params(
-    params()
-      .combine(poptions('format', kEncodableTextureFormats))
+  .params(u =>
+    u
+      .combine('format', kEncodableTextureFormats)
       .filter(({ format }) => {
         return (
           kEncodableTextureFormatInfo[format].copyDst &&
@@ -147,7 +145,8 @@ g.test('unorm_texel_data_in_shader')
           getSingleDataType(format) === 'unorm'
         );
       })
-      .expand(({ format }) => {
+      .beginSubcases()
+      .expand('componentData', ({ format }) => {
         const max = (bitLength: number) => Math.pow(2, bitLength) - 1;
         return [
           // Test extrema
@@ -168,9 +167,9 @@ g.test('unorm_texel_data_in_shader')
   .fn(doTest);
 
 g.test('snorm_texel_data_in_shader')
-  .params(
-    params()
-      .combine(poptions('format', kEncodableTextureFormats))
+  .params(u =>
+    u
+      .combine('format', kEncodableTextureFormats)
       .filter(({ format }) => {
         return (
           kEncodableTextureFormatInfo[format].copyDst &&
@@ -178,7 +177,8 @@ g.test('snorm_texel_data_in_shader')
           getSingleDataType(format) === 'snorm'
         );
       })
-      .expand(({ format }) => {
+      .beginSubcases()
+      .expand('componentData', ({ format }) => {
         const max = (bitLength: number) => Math.pow(2, bitLength - 1) - 1;
         return [
           // Test extrema
@@ -202,9 +202,9 @@ g.test('snorm_texel_data_in_shader')
   .fn(doTest);
 
 g.test('uint_texel_data_in_shader')
-  .params(
-    params()
-      .combine(poptions('format', kEncodableTextureFormats))
+  .params(u =>
+    u
+      .combine('format', kEncodableTextureFormats)
       .filter(({ format }) => {
         return (
           kEncodableTextureFormatInfo[format].copyDst &&
@@ -212,7 +212,8 @@ g.test('uint_texel_data_in_shader')
           getSingleDataType(format) === 'uint'
         );
       })
-      .expand(({ format }) => {
+      .beginSubcases()
+      .expand('componentData', ({ format }) => {
         const max = (bitLength: number) => Math.pow(2, bitLength) - 1;
         return [
           // Test extrema
@@ -233,9 +234,9 @@ g.test('uint_texel_data_in_shader')
   .fn(doTest);
 
 g.test('sint_texel_data_in_shader')
-  .params(
-    params()
-      .combine(poptions('format', kEncodableTextureFormats))
+  .params(u =>
+    u
+      .combine('format', kEncodableTextureFormats)
       .filter(({ format }) => {
         return (
           kEncodableTextureFormatInfo[format].copyDst &&
@@ -243,7 +244,8 @@ g.test('sint_texel_data_in_shader')
           getSingleDataType(format) === 'sint'
         );
       })
-      .expand(({ format }) => {
+      .beginSubcases()
+      .expand('componentData', ({ format }) => {
         const max = (bitLength: number) => Math.pow(2, bitLength - 1) - 1;
         return [
           // Test extrema
@@ -266,9 +268,9 @@ g.test('sint_texel_data_in_shader')
   .fn(doTest);
 
 g.test('float_texel_data_in_shader')
-  .params(
-    params()
-      .combine(poptions('format', kEncodableTextureFormats))
+  .params(u =>
+    u
+      .combine('format', kEncodableTextureFormats)
       .filter(({ format }) => {
         return (
           kEncodableTextureFormatInfo[format].copyDst &&
@@ -276,7 +278,8 @@ g.test('float_texel_data_in_shader')
           getSingleDataType(format) === 'float'
         );
       })
-      .expand(({ format }) => {
+      .beginSubcases()
+      .expand('componentData', ({ format }) => {
         return [
           // Test extrema
           makeParam(format, () => 0),
@@ -301,9 +304,9 @@ g.test('float_texel_data_in_shader')
   .fn(doTest);
 
 g.test('ufloat_texel_data_in_shader')
-  .params(
-    params()
-      .combine(poptions('format', kEncodableTextureFormats))
+  .params(u =>
+    u
+      .combine('format', kEncodableTextureFormats)
       .filter(({ format }) => {
         return (
           kEncodableTextureFormatInfo[format].copyDst &&
@@ -311,7 +314,8 @@ g.test('ufloat_texel_data_in_shader')
           getSingleDataType(format) === 'ufloat'
         );
       })
-      .expand(({ format }) => {
+      .beginSubcases()
+      .expand('componentData', ({ format }) => {
         return [
           // Test extrema
           makeParam(format, () => 0),

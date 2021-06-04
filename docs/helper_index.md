@@ -21,20 +21,23 @@ Generally, see:
 ## Index
 
 - TODO: Index existing helpers.
-- [Parameterization helpers](../src/common/framework/params_builder.ts) for `.cases()`/`.subcases()`.
-    - `poptions('key', [1, 2, 3])` creates an iterator over `{ key: 1 }, { key: 2 }, { key: 3 }`.
-    - `pbool('key')` creates an iterator over `{ key: true }, { key: false }`.
-    - `ParamsBuilder` is an object that iterates over params, e.g:
-        `const example = params().combine(poptions('x', [1, 2])).combine(poptions('y', [1, 2])`
-        produces `{ x: 1, y: 1 }, { x: 1, y: 2 }, { x: 2, y: 1 }, { x: 2, y: 2 }`.
-        - `params()`: creates a new `ParamsBuilder` with one item with no parameters: `{}`.
-        - `xs.combine(ys)`: cartesian product of the `ParamsBuilder` `xs` with the iterable `ys`.
-        - `xs.expand(x => ys)`: like `.combine`, but each `ys` can depend on the value of `x`.
-        - `xs.filter(x => boolean)`: filters the current items according to a predicate.
-        - `xs.unless(x => boolean)`: same as `.filter`, but inverted.
-        - `xs.exclude([ p1, p2 ])`: removes cases equalling `p1` or `p2`, e.g.:
-            `example.exclude([{ x: 2, y: 1 }])`
-            produces `{ x: 1, y: 1 }, { x: 1, y: 2 }, { x: 2, y: 2 }`.
+- [`CaseParamsBuilder` and `SubcaseParamsBuilder`](../src/common/framework/params_builder.ts)
+    are objects that iterate over params. These are used in `.params()`/`.paramsSubcasesOnly()`.
+    See `examples.spec.ts` for basic examples of how this behaves.
+    - `CaseParamsBuilder`
+        - `xs.expandP(x => ys)`: Expands each item in `xs` into multiple items,
+          each extended with an item of `y`.
+        - `xs.combineP(ys)`: like `.expandP()` but `ys` doesn't depend on the value of `x`.
+          In other words, the cartesian product of `xs` with `ys`.
+        - `xs.combine('key', [1, 2, 3])`: common case of `.combineP()`;
+          combines over `{ key: 1 }, { key: 2 }, { key: 3 }`.
+        - `xs.expand('key', x => ys)`: common case of `.expandP()`;
+          expands each `x` over `{ key: y[0] }, { key: y[1] }, ...`.
+        - `xs.filter(x => boolean)` and `xs.unless(x => boolean)`:
+          filter the current items according to a predicate.
+        - `xs.beginSubcases()`: finalizes the "cases" of the builder, returning a `SubcaseParamsBuilder`.
+    - `SubcaseParamsBuilder` has the same methods, except for `.beginSubcases()`.
+        They generate more subcases, rather than more cases.
 - [`GPUTest`](../src/webgpu/gpu_test.ts)
     - `selectDeviceForTextureFormatOrSkipTestCase`: Create device with texture format(s) required
         feature(s). If the device creation fails, then skip the test for that format(s).

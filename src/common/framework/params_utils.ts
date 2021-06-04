@@ -67,6 +67,52 @@ export type FlattenUnionOfInterfaces<T> = {
   >;
 };
 
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+function typeAssert<T extends 'pass'>() {}
+{
+  type Test<T, U> = [T] extends [U]
+    ? [U] extends [T]
+      ? 'pass'
+      : { actual: ResolveType<T>; expected: U }
+    : { actual: ResolveType<T>; expected: U };
+
+  type T01 = { a: number } | { b: string };
+  type T02 = { a: number } | { b?: string };
+  type T03 = { a: number } | { a?: number };
+  type T04 = { a: number } | { a: string };
+  type T05 = { a: number } | { a?: string };
+
+  type T11 = { a: number; b?: undefined } | { a?: undefined; b: string };
+
+  type T21 = { a: number; b?: undefined } | { b: string };
+  type T22 = { a: number; b?: undefined } | { b?: string };
+  type T23 = { a: number; b?: undefined } | { a?: number };
+  type T24 = { a: number; b?: undefined } | { a: string };
+  type T25 = { a: number; b?: undefined } | { a?: string };
+  type T26 = { a: number; b?: undefined } | { a: undefined };
+  type T27 = { a: number; b?: undefined } | { a: undefined; b: undefined };
+
+  /* prettier-ignore */ {
+    typeAssert<Test<FlattenUnionOfInterfaces<T01>, { a: number | undefined; b: string | undefined }>>();
+    typeAssert<Test<FlattenUnionOfInterfaces<T02>, { a: number | undefined; b: string | undefined }>>();
+    typeAssert<Test<FlattenUnionOfInterfaces<T03>, { a: number | undefined }>>();
+    typeAssert<Test<FlattenUnionOfInterfaces<T04>, { a: number | string }>>();
+    typeAssert<Test<FlattenUnionOfInterfaces<T05>, { a: number | string | undefined }>>();
+
+    typeAssert<Test<FlattenUnionOfInterfaces<T11>, { a: number | undefined; b: string | undefined }>>();
+
+    typeAssert<Test<FlattenUnionOfInterfaces<T22>, { a: number | undefined; b: string | undefined }>>();
+    typeAssert<Test<FlattenUnionOfInterfaces<T23>, { a: number | undefined; b: undefined }>>();
+    typeAssert<Test<FlattenUnionOfInterfaces<T24>, { a: number | string; b: undefined }>>();
+    typeAssert<Test<FlattenUnionOfInterfaces<T25>, { a: number | string | undefined; b: undefined }>>();
+    typeAssert<Test<FlattenUnionOfInterfaces<T27>, { a: number | undefined; b: undefined }>>();
+
+    // Unexpected test results - hopefully okay to ignore these
+    typeAssert<Test<FlattenUnionOfInterfaces<T21>, { b: string | undefined }>>();
+    typeAssert<Test<FlattenUnionOfInterfaces<T26>, { a: number | undefined }>>();
+  }
+}
+
 export type Merged<A, B> = ResolveType<MergedFromFlat<A, FlattenUnionOfInterfaces<B>>>;
 export type MergedFromFlat<A, B> = {
   [K in keyof A | keyof B]: K extends keyof B ? B[K] : K extends keyof A ? A[K] : never;

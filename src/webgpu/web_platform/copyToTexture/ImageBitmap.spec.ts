@@ -10,7 +10,6 @@ TODO: Test ImageBitmap generated from all possible ImageBitmapSource, relevant I
 TODO: Test zero-sized copies from all sources (just make sure params cover it) (e.g. 0x0, 0x4, 4x0).
 `;
 
-import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { unreachable } from '../../../common/framework/util/util.js';
 import {
@@ -253,16 +252,14 @@ g.test('from_ImageData')
   in CPU back resource.
   `
   )
-  .cases(
-    params()
-      .combine(poptions('alpha', ['none', 'premultiply'] as const))
-      .combine(poptions('orientation', ['none', 'flipY'] as const))
-      .combine(poptions('dstColorFormat', kValidTextureFormatsForCopyIB2T))
-  )
-  .subcases(() =>
-    params()
-      .combine(poptions('width', [1, 2, 4, 15, 255, 256]))
-      .combine(poptions('height', [1, 2, 4, 15, 255, 256]))
+  .params(u =>
+    u
+      .combine('alpha', ['none', 'premultiply'] as const)
+      .combine('orientation', ['none', 'flipY'] as const)
+      .combine('dstColorFormat', kValidTextureFormatsForCopyIB2T)
+      .beginSubcases()
+      .combine('width', [1, 2, 4, 15, 255, 256])
+      .combine('height', [1, 2, 4, 15, 255, 256])
   )
   .fn(async t => {
     const { width, height, alpha, orientation, dstColorFormat } = t.params;
@@ -321,15 +318,13 @@ g.test('from_canvas')
   texture correctly. These imageBitmaps are highly possible living in GPU back resource.
   `
   )
-  .cases(
-    params()
-      .combine(poptions('orientation', ['none', 'flipY'] as const))
-      .combine(poptions('dstColorFormat', kValidTextureFormatsForCopyIB2T))
-  )
-  .subcases(() =>
-    params()
-      .combine(poptions('width', [1, 2, 4, 15, 255, 256]))
-      .combine(poptions('height', [1, 2, 4, 15, 255, 256]))
+  .params(u =>
+    u
+      .combine('orientation', ['none', 'flipY'] as const)
+      .combine('dstColorFormat', kValidTextureFormatsForCopyIB2T)
+      .beginSubcases()
+      .combine('width', [1, 2, 4, 15, 255, 256])
+      .combine('height', [1, 2, 4, 15, 255, 256])
   )
   .fn(async t => {
     const { width, height, orientation, dstColorFormat } = t.params;

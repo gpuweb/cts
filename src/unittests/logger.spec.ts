@@ -122,7 +122,7 @@ g.test('fail,threw').fn(t => {
 });
 
 g.test('debug')
-  .params([
+  .paramsSimple([
     { debug: true, _logsCount: 5 }, //
     { debug: false, _logsCount: 3 },
   ])

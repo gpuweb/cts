@@ -89,7 +89,7 @@ class F extends ValidationTest {
 export const g = makeTestGroup(F);
 
 g.test('it_is_invalid_to_draw_in_a_render_pass_with_missing_bind_groups')
-  .params([
+  .paramsSubcasesOnly([
     { setBindGroup1: true, setBindGroup2: true, _success: true },
     { setBindGroup1: true, setBindGroup2: false, _success: false },
     { setBindGroup1: false, setBindGroup2: true, _success: false },
