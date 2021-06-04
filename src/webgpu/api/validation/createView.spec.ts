@@ -93,7 +93,7 @@ g.test('creating_texture_view_on_a_2D_non_array_texture')
 
   TODO: mipLevelCount == 0 should mean 0, not "auto". "undefined" means "auto".`
   )
-  .params([
+  .paramsSimple([
     { _success: true }, // default view works
     { arrayLayerCount: 1, _success: true }, // it is OK to create a 2D texture view on a 2D texture
     { arrayLayerCount: 2, _success: false }, // it is an error to view a layer past the end of the texture
@@ -135,7 +135,7 @@ g.test('creating_texture_view_on_a_2D_array_texture')
 
   TODO: arrayLayerCount == 0 should mean 0, not "auto". "undefined" means "auto".`
   )
-  .params([
+  .paramsSimple([
     { _success: true }, // default view works
     { dimension: '2d' as const, arrayLayerCount: 1, _success: true }, // it is OK to create a 2D texture view on a 2D array texture
     { arrayLayerCount: ARRAY_LAYER_COUNT_2D, _success: true }, // it is OK to create a 2D array texture view on a 2D array texture
@@ -167,7 +167,7 @@ g.test('creating_texture_view_on_a_2D_array_texture')
   });
 
 g.test('Using_defaults_validates_the_same_as_setting_values_for_more_than_1_array_layer')
-  .params([
+  .paramsSimple([
     { _success: true },
     { format: 'rgba8unorm', _success: true },
     { format: 'r8unorm', _success: false },
@@ -195,7 +195,7 @@ g.test('Using_defaults_validates_the_same_as_setting_values_for_more_than_1_arra
   });
 
 g.test('Using_defaults_validates_the_same_as_setting_values_for_only_1_array_layer')
-  .params([
+  .paramsSimple([
     { _success: true },
     { format: 'rgba8unorm', _success: true },
     { format: 'r8unorm', _success: false },
@@ -220,7 +220,7 @@ g.test('Using_defaults_validates_the_same_as_setting_values_for_only_1_array_lay
   });
 
 g.test('creating_cube_map_texture_view')
-  .params([
+  .paramsSimple([
     { dimension: 'cube', arrayLayerCount: 6, _success: true }, // it is OK to create a cube map texture view with arrayLayerCount == 6
     // it is an error to create a cube map texture view with arrayLayerCount != 6
     { dimension: 'cube', arrayLayerCount: 3, _success: false },
@@ -248,7 +248,7 @@ g.test('creating_cube_map_texture_view')
   });
 
 g.test('creating_cube_map_texture_view_with_a_non_square_texture')
-  .params([
+  .paramsSimple([
     { dimension: 'cube', arrayLayerCount: 6 }, // it is an error to create a cube map texture view with width != height.
     { dimension: 'cube-array', arrayLayerCount: 12 }, // it is an error to create a cube map array texture view with width != height.
   ] as const)

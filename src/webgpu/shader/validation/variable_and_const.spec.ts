@@ -2,7 +2,6 @@ export const description = `
 Positive and negative validation tests for variable and const.
 `;
 
-import { params, poptions } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 
 import { ShaderValidationTest } from './shader_validation_test.js';
@@ -72,13 +71,13 @@ g.test('v_0033')
   TODO: add test for: structs - arrays of vectors and matrices - arrays of different length
 `
   )
-  .params(
-    params()
-      .combine(poptions('variableOrConstant', ['var', 'const']))
-      .combine(poptions('lhsContainerType', kContainerTypes))
-      .combine(poptions('lhsScalarType', kScalarType))
-      .combine(poptions('rhsContainerType', kContainerTypes))
-      .combine(poptions('rhsScalarType', kScalarType))
+  .params(u =>
+    u
+      .combine('variableOrConstant', ['var', 'const'])
+      .combine('lhsContainerType', kContainerTypes)
+      .combine('lhsScalarType', kScalarType)
+      .combine('rhsContainerType', kContainerTypes)
+      .combine('rhsScalarType', kScalarType)
   )
   .fn(t => {
     const {
@@ -127,11 +126,11 @@ g.test('v_0038')
   becomes invalid and nothing else is wrong.
   TODO: add test for: struct - struct with bool component - struct with runtime array`
   )
-  .params(
-    params()
-      .combine(poptions('storageClass', ['in', 'out', 'private']))
-      .combine(poptions('containerType', kContainerTypes))
-      .combine(poptions('scalarType', kScalarType))
+  .params(u =>
+    u
+      .combine('storageClass', ['in', 'out', 'private'])
+      .combine('containerType', kContainerTypes)
+      .combine('scalarType', kScalarType)
   )
   .fn(t => {
     const { storageClass, containerType, scalarType } = t.params;

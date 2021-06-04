@@ -1,6 +1,5 @@
 export const description = 'copyBufferToBuffer operation tests';
 
-import { poptions, params } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
 
@@ -17,17 +16,13 @@ g.test('single')
   - covers the end of the dstBuffer
   - covers neither the beginning nor the end of the dstBuffer`
   )
-  .subcases(() =>
-    params()
-      .combine(poptions('srcOffset', [0, 4, 8, 16]))
-      .combine(poptions('dstOffset', [0, 4, 8, 16]))
-      .combine(poptions('copySize', [0, 4, 8, 16]))
-      .expand(p =>
-        poptions('srcBufferSize', [p.srcOffset + p.copySize, p.srcOffset + p.copySize + 8])
-      )
-      .expand(p =>
-        poptions('dstBufferSize', [p.dstOffset + p.copySize, p.dstOffset + p.copySize + 8])
-      )
+  .paramsSubcasesOnly(u =>
+    u //
+      .combine('srcOffset', [0, 4, 8, 16])
+      .combine('dstOffset', [0, 4, 8, 16])
+      .combine('copySize', [0, 4, 8, 16])
+      .expand('srcBufferSize', p => [p.srcOffset + p.copySize, p.srcOffset + p.copySize + 8])
+      .expand('dstBufferSize', p => [p.dstOffset + p.copySize, p.dstOffset + p.copySize + 8])
   )
   .fn(async t => {
     const { srcOffset, dstOffset, copySize, srcBufferSize, dstBufferSize } = t.params;

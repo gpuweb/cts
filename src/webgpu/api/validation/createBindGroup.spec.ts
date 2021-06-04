@@ -4,7 +4,6 @@ export const description = `
   TODO: Ensure sure tests cover all createBindGroup validation rules.
 `;
 
-import { poptions, params } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { unreachable } from '../../../common/framework/util/util.js';
 import {
@@ -28,10 +27,10 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('binding_count_mismatch')
   .desc('Test that the number of entries must match the number of entries in the BindGroupLayout.')
-  .subcases(() =>
-    params()
-      .combine(poptions('layoutEntryCount', [1, 2, 3]))
-      .combine(poptions('bindGroupEntryCount', [1, 2, 3]))
+  .paramsSubcasesOnly(u =>
+    u //
+      .combine('layoutEntryCount', [1, 2, 3])
+      .combine('bindGroupEntryCount', [1, 2, 3])
   )
   .fn(async t => {
     const { layoutEntryCount, bindGroupEntryCount } = t.params;
@@ -67,10 +66,10 @@ g.test('binding_must_be_present_in_layout')
   .desc(
     'Test that the binding slot for each entry matches a binding slot defined in the BindGroupLayout.'
   )
-  .subcases(() =>
-    params()
-      .combine(poptions('layoutBinding', [0, 1, 2]))
-      .combine(poptions('binding', [0, 1, 2]))
+  .paramsSubcasesOnly(u =>
+    u //
+      .combine('layoutBinding', [0, 1, 2])
+      .combine('binding', [0, 1, 2])
   )
   .fn(async t => {
     const { layoutBinding, binding } = t.params;
@@ -96,10 +95,10 @@ g.test('binding_must_contain_resource_defined_in_layout')
   .desc(
     'Test that only the resource type specified in the BindGroupLayout is allowed for each entry.'
   )
-  .subcases(() =>
-    params()
-      .combine(poptions('resourceType', kBindableResources))
-      .combine(poptions('entry', allBindingEntries(false)))
+  .paramsSubcasesOnly(u =>
+    u //
+      .combine('resourceType', kBindableResources)
+      .combine('entry', allBindingEntries(false))
   )
   .fn(t => {
     const { resourceType, entry } = t.params;
@@ -119,10 +118,10 @@ g.test('binding_must_contain_resource_defined_in_layout')
 
 g.test('texture_binding_must_have_correct_usage')
   .desc('Tests that texture bindings must have the correct usage.')
-  .subcases(() =>
-    params()
-      .combine(poptions('entry', sampledAndStorageBindingEntries(false)))
-      .combine(poptions('usage', kTextureUsages))
+  .paramsSubcasesOnly(u =>
+    u //
+      .combine('entry', sampledAndStorageBindingEntries(false))
+      .combine('usage', kTextureUsages)
       .unless(({ entry, usage }) => {
         const info = texBindingTypeInfo(entry);
         // Can't create the texture for this (usage=STORAGE and sampleCount=4), so skip.
@@ -161,7 +160,7 @@ g.test('texture_must_have_correct_component_type')
     - Tests a compatible format for every sample type
     - Tests an incompatible format for every sample type`
   )
-  .cases(poptions('sampleType', ['float', 'sint', 'uint'] as const))
+  .params(u => u.combine('sampleType', ['float', 'sint', 'uint'] as const))
   .fn(async t => {
     const { sampleType } = t.params;
 
@@ -235,8 +234,12 @@ g.test('texture_must_have_correct_dimension')
     Test that bound texture views match the dimensions supplied in the BindGroupLayout
     - Test for every GPUTextureViewDimension`
   )
-  .cases(poptions('viewDimension', kTextureViewDimensions))
-  .subcases(() => poptions('dimension', kTextureViewDimensions))
+  .params(u =>
+    u
+      .combine('viewDimension', kTextureViewDimensions)
+      .beginSubcases()
+      .combine('dimension', kTextureViewDimensions)
+  )
   .fn(async t => {
     const { viewDimension, dimension } = t.params;
     const bindGroupLayout = t.device.createBindGroupLayout({
@@ -274,7 +277,7 @@ g.test('buffer_offset_and_size_for_bind_groups_match')
     - Test for various offsets and sizes
     - TODO(#234): disallow zero-sized bindings`
   )
-  .subcases(() => [
+  .paramsSubcasesOnly([
     { offset: 0, size: 512, _success: true }, // offset 0 is valid
     { offset: 256, size: 256, _success: true }, // offset 256 (aligned) is valid
 
@@ -336,16 +339,13 @@ g.test('buffer_offset_and_size_for_bind_groups_match')
 
 g.test('minBindingSize')
   .desc('Tests that minBindingSize is correctly enforced.')
-  .subcases(() =>
-    params()
-      .combine(poptions('minBindingSize', [undefined, 4, 256]))
-      .expand(({ minBindingSize }) =>
-        poptions(
-          'size',
-          minBindingSize !== undefined
-            ? [minBindingSize - 1, minBindingSize, minBindingSize + 1]
-            : [4, 256]
-        )
+  .paramsSubcasesOnly(u =>
+    u //
+      .combine('minBindingSize', [undefined, 4, 256])
+      .expand('size', ({ minBindingSize }) =>
+        minBindingSize !== undefined
+          ? [minBindingSize - 1, minBindingSize, minBindingSize + 1]
+          : [4, 256]
       )
   )
   .fn(t => {

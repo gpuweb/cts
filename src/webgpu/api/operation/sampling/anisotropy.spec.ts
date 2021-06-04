@@ -260,7 +260,7 @@ g.test('anisotropic_filter_mipmap_color')
     if it fits expectations.
     A similar webgl demo is at https://jsfiddle.net/t8k7c95o/5/`
   )
-  .params([
+  .paramsSimple([
     {
       maxAnisotropy: 1,
       _results: [
