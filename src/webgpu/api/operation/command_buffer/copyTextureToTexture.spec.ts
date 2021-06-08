@@ -592,3 +592,20 @@ g.test('zero_sized')
       dstCopyLevel
     );
   });
+
+g.test('copy_stencil_aspect')
+  .desc(
+    `
+  Validate the correctness of copyTextureToTexture() with stencil aspect.
+
+  For all the texture formats with stencil aspect:
+  - Upload the expected data into a staging buffer
+  - Copy the data of the staging buffer into the stencil aspect of the source texture
+  - Copy the stencil aspect from the source texture into the destination texture
+  - Copy the stencil aspect of the destination texture into another staging buffer and check its
+    content
+  - Test the copies from / into zero / non-zero array layer / mipmap levels
+  - Test copying multiple array layers
+  `
+  )
+  .unimplemented();

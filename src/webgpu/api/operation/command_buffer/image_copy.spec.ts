@@ -1097,3 +1097,35 @@ g.test('undefined_params')
       changeBeforePass: 'undefined',
     });
   });
+
+g.test('copy_from_stencil_aspect')
+  .desc(
+    `
+  Validate the correctness of copyTextureToBuffer() with stencil aspect.
+
+  For all the texture formats with stencil aspect:
+  - Initialize the source texture with the stencil comparison function "always" and the stencil
+    operation "replace" in a render pass encoder
+  - Copy the stencil aspect of the source texture into the destination buffer
+  - Check if the data in the destination buffer is expected
+  - Test the copies from / into zero / non-zero array layer / mipmap levels
+  - Test copying multiple array layers
+  `
+  )
+  .unimplemented();
+
+g.test('copy_into_stencil_aspect')
+  .desc(
+    `
+  Validate the correctness of copyBufferToTexture() with stencil aspect.
+
+  For all the texture formats with stencil aspect:
+  - Initialize the source buffer with the expected data
+  - Copy the data in the source buffer into the stencil aspect of the destination texture
+  - Check if the data in the stencil aspect of the destination texture is expected with the stencil
+    comparison function "equal" and the stencil operation "keep" in a render pass encoder
+  - Test the copies from / into zero / non-zero array layer / mipmap levels
+  - Test copying multiple array layers
+  `
+  )
+  .unimplemented();
