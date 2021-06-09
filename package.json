@@ -10,6 +10,7 @@
     "fix": "grunt fix",
     "unittest": "grunt unittest",
     "gen_wpt_cts_html": "node tools/gen_wpt_cts_html",
+    "tsdoc": "grunt run:tsdoc",
     "start": "node tools/dev_server",
     "dev": "node tools/dev_server"
   },
@@ -58,6 +59,8 @@
     "portfinder": "^1.0.28",
     "quiet-grunt": "^0.2.3",
     "ts-node": "^9.0.0",
+    "typedoc": "^0.20.36",
+    "typedoc-plugin-no-inherit": "^1.3.0",
     "typescript": "^4.1.2"
   }
 }

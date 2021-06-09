@@ -1,0 +1,16 @@
+<!--
+  View this file in Typedoc!
+  - https://gpuweb.github.io/cts/docs/tsdoc/
+  - or:
+    - npm run tsdoc
+    - npm start
+    - http://localhost:8080/docs/tsdoc/
+
+  This file is parsed as a tsdoc.
+-->
+
+# Test Helper Index
+
+- {@link GPUTest}
+- {@link ValidationTest}
+- {@link ShaderValidationTest}
