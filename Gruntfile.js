@@ -77,7 +77,11 @@ module.exports = function (grunt) {
       'autoformat-out-wpt': {
         cmd: 'node',
         args: ['node_modules/prettier/bin-prettier', '--loglevel=warn', '--write', 'out-wpt/**/*.js'],
-      }
+      },
+      tsdoc: {
+        cmd: 'node',
+        args: ['node_modules/typedoc/bin/typedoc'],
+      },
     },
 
     copy: {
@@ -161,6 +165,7 @@ module.exports = function (grunt) {
     'ts:check',
     'run:unittest',
     'run:lint',
+    'run:tsdoc',
   ]);
   registerTaskAndAddToHelp('standalone', 'Build standalone and typecheck', [
     'set-quiet-mode',
