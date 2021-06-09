@@ -1,5 +1,6 @@
-import { TestParams, paramKeyIsPublic } from '../params_utils.js';
-import { assert, objectEquals } from '../util/util.js';
+import { TestParams } from '../../framework/fixture.js';
+import { assert, objectEquals } from '../../util/util.js';
+import { paramKeyIsPublic } from '../params_utils.js';
 
 import { TestQuery } from './query.js';
 

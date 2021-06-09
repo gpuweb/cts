@@ -1,6 +1,6 @@
 import { Fixture } from '../common/framework/fixture.js';
-import { attemptGarbageCollection } from '../common/framework/util/collect_garbage.js';
-import { assert } from '../common/framework/util/util.js';
+import { attemptGarbageCollection } from '../common/util/collect_garbage.js';
+import { assert } from '../common/util/util.js';
 
 import {
   EncodableTextureFormat,

@@ -1,10 +1,6 @@
-import {
-  TestParams,
-  JSONWithUndefined,
-  badParamValueChars,
-  paramKeyIsPublic,
-} from '../params_utils.js';
-import { assert } from '../util/util.js';
+import { TestParams } from '../../framework/fixture.js';
+import { assert } from '../../util/util.js';
+import { JSONWithUndefined, badParamValueChars, paramKeyIsPublic } from '../params_utils.js';
 
 import { stringifyParamValue, stringifyParamValueUniquely } from './json_param_value.js';
 import { kParamKVSeparator, kParamSeparator, kWildcard } from './separators.js';

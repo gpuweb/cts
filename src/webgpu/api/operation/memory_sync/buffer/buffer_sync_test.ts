@@ -1,4 +1,4 @@
-import { assert } from '../../../../../common/framework/util/util.js';
+import { assert } from '../../../../../common/util/util.js';
 import { GPUTest } from '../../../../gpu_test.js';
 
 const kSize = 4;

@@ -2,11 +2,12 @@ export const description = `
 Tests for queries/filtering, loading, and running.
 `;
 
-import { TestFileLoader, SpecFile } from '../common/framework/file_loader.js';
 import { Fixture } from '../common/framework/fixture.js';
-import { Logger } from '../common/framework/logging/logger.js';
-import { Status } from '../common/framework/logging/result.js';
-import { parseQuery } from '../common/framework/query/parseQuery.js';
+import { makeTestGroup } from '../common/framework/test_group.js';
+import { TestFileLoader, SpecFile } from '../common/internal/file_loader.js';
+import { Logger } from '../common/internal/logging/logger.js';
+import { Status } from '../common/internal/logging/result.js';
+import { parseQuery } from '../common/internal/query/parseQuery.js';
 import {
   TestQuery,
   TestQuerySingleCase,
@@ -14,11 +15,11 @@ import {
   TestQueryMultiTest,
   TestQueryMultiFile,
   TestQueryWithExpectation,
-} from '../common/framework/query/query.js';
-import { makeTestGroup, makeTestGroupForUnitTesting } from '../common/framework/test_group.js';
-import { TestSuiteListing, TestSuiteListingEntry } from '../common/framework/test_suite_listing.js';
-import { ExpandThroughLevel, TestTreeLeaf } from '../common/framework/tree.js';
-import { assert, objectEquals } from '../common/framework/util/util.js';
+} from '../common/internal/query/query.js';
+import { makeTestGroupForUnitTesting } from '../common/internal/test_group.js';
+import { TestSuiteListing, TestSuiteListingEntry } from '../common/internal/test_suite_listing.js';
+import { ExpandThroughLevel, TestTreeLeaf } from '../common/internal/tree.js';
+import { assert, objectEquals } from '../common/util/util.js';
 
 import { UnitTest } from './unit_test.js';
 

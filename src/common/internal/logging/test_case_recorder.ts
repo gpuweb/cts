@@ -1,5 +1,5 @@
-import { SkipTestCase, UnexpectedPassError } from '../fixture.js';
-import { now, assert } from '../util/util.js';
+import { SkipTestCase, UnexpectedPassError } from '../../framework/fixture.js';
+import { now, assert } from '../../util/util.js';
 
 import { LogMessageWithStack } from './log_message.js';
 import { Expectation, LiveTestCaseResult } from './result.js';

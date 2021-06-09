@@ -1,4 +1,4 @@
-import { assert } from './util/util.js';
+import { assert } from './util.js';
 
 // The state of the preprocessor is a stack of States.
 type StateStack = { allowsFollowingElse: boolean; state: State }[];

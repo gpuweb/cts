@@ -11,7 +11,7 @@ TODO: merge these notes and implement.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { range, unreachable } from '../../../../../common/framework/util/util.js';
+import { range, unreachable } from '../../../../../common/util/util.js';
 import { kMinDynamicBufferOffsetAlignment } from '../../../../capability_info.js';
 import {
   kProgrammableEncoderTypes,

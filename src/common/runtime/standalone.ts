@@ -1,12 +1,12 @@
 // Implements the standalone test runner (see also: /standalone/index.html).
 
-import { DefaultTestFileLoader } from '../framework/file_loader.js';
-import { Logger } from '../framework/logging/logger.js';
-import { LiveTestCaseResult } from '../framework/logging/result.js';
-import { parseQuery } from '../framework/query/parseQuery.js';
-import { TestQueryLevel } from '../framework/query/query.js';
-import { TestTreeNode, TestSubtree, TestTreeLeaf } from '../framework/tree.js';
-import { assert } from '../framework/util/util.js';
+import { DefaultTestFileLoader } from '../internal/file_loader.js';
+import { Logger } from '../internal/logging/logger.js';
+import { LiveTestCaseResult } from '../internal/logging/result.js';
+import { parseQuery } from '../internal/query/parseQuery.js';
+import { TestQueryLevel } from '../internal/query/query.js';
+import { TestTreeNode, TestSubtree, TestTreeLeaf } from '../internal/tree.js';
+import { assert } from '../util/util.js';
 
 import { optionEnabled } from './helper/options.js';
 import { TestWorker } from './helper/test_worker.js';

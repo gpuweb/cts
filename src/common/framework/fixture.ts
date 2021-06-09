@@ -1,9 +1,16 @@
-import { TestCaseRecorder } from './logging/test_case_recorder.js';
-import { TestParams } from './params_utils.js';
-import { assert } from './util/util.js';
+import { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
+import { JSONWithUndefined } from '../internal/params_utils.js';
+import { assert } from '../util/util.js';
 
 export class SkipTestCase extends Error {}
 export class UnexpectedPassError extends Error {}
+
+export { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
+
+/** The fully-general type for params passed to a test function invocation. */
+export type TestParams = {
+  readonly [k: string]: JSONWithUndefined;
+};
 
 // A Fixture is a class used to instantiate each test case at run time.
 // A new instance of the Fixture is created for every single test case

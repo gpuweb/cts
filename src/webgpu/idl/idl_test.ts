@@ -1,5 +1,5 @@
 import { Fixture } from '../../common/framework/fixture.js';
-import { assert } from '../../common/framework/util/util.js';
+import { assert } from '../../common/util/util.js';
 
 interface UnknownObject {
   [k: string]: unknown;

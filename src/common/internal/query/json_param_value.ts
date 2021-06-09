@@ -1,5 +1,5 @@
+import { assert, sortObjectByKey } from '../../util/util.js';
 import { JSONWithUndefined } from '../params_utils.js';
-import { assert, sortObjectByKey } from '../util/util.js';
 
 // JSON can't represent `undefined` and by default stores it as `null`.
 // Instead, store `undefined` as this magic string value in JSON.

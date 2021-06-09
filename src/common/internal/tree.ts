@@ -1,3 +1,6 @@
+import { RunCase, RunFn } from '../internal/test_group.js';
+import { assert } from '../util/util.js';
+
 import { TestFileLoader } from './file_loader.js';
 import { TestParamsRW } from './params_utils.js';
 import { compareQueries, Ordering } from './query/compare.js';
@@ -10,8 +13,7 @@ import {
 } from './query/query.js';
 import { kBigSeparator, kWildcard, kPathSeparator, kParamSeparator } from './query/separators.js';
 import { stringifySingleParam } from './query/stringify_params.js';
-import { RunCase, RunFn } from './test_group.js';
-import { assert, StacklessError } from './util/util.js';
+import { StacklessError } from './util.js';
 
 // `loadTreeForQuery()` loads a TestTree for a given queryToLoad.
 // The resulting tree is a linked-list all the way from `suite:*` to queryToLoad,

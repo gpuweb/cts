@@ -1,7 +1,9 @@
+import { TestParams } from '../framework/fixture.js';
+import { ResolveType, UnionToIntersection } from '../util/types.js';
+import { assert } from '../util/util.js';
+
 import { comparePublicParamsPaths, Ordering } from './query/compare.js';
 import { kWildcard, kParamSeparator, kParamKVSeparator } from './query/separators.js';
-import { ResolveType, UnionToIntersection } from './util/types.js';
-import { assert } from './util/util.js';
 
 export type JSONWithUndefined =
   | undefined
@@ -12,10 +14,6 @@ export type JSONWithUndefined =
   | readonly JSONWithUndefined[]
   // Ideally this would recurse into JSONWithUndefined, but it breaks code.
   | { readonly [k: string]: unknown };
-/** The fully-general type for params passed to a test function invocation. */
-export type TestParams = {
-  readonly [k: string]: JSONWithUndefined;
-};
 export interface TestParamsRW {
   [k: string]: JSONWithUndefined;
 }

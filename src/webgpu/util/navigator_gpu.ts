@@ -1,6 +1,6 @@
 /// <reference types="@webgpu/types" />
 
-import { assert } from '../../common/framework/util/util.js';
+import { assert } from '../../common/util/util.js';
 
 let impl: GPU | undefined = undefined;
 

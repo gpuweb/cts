@@ -9,7 +9,7 @@ TODO: Some testing (probably minimal) of accessing with different TypedArray/Dat
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert } from '../../../../common/framework/util/util.js';
+import { assert } from '../../../../common/util/util.js';
 
 import { MappingTest } from './mapping_test.js';
 

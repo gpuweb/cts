@@ -52,7 +52,7 @@ module.exports = function (grunt) {
           '--only=src/common/runtime/wpt.ts',
           '--only=src/webgpu/',
           // These files will be generated, instead of compiled from TypeScript.
-          '--ignore=src/common/framework/version.ts',
+          '--ignore=src/common/internal/version.ts',
           '--ignore=src/webgpu/listing.ts',
         ],
       },
@@ -83,7 +83,7 @@ module.exports = function (grunt) {
     copy: {
       'out-wpt-generated': {
         files: [
-          { expand: true, cwd: 'out', src: 'common/framework/version.js', dest: 'out-wpt/' },
+          { expand: true, cwd: 'out', src: 'common/internal/version.js', dest: 'out-wpt/' },
           { expand: true, cwd: 'out', src: 'webgpu/listing.js', dest: 'out-wpt/' },
         ],
       },

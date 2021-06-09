@@ -8,9 +8,9 @@ import {
   ParamsBuilderBase,
   builderIterateCasesWithSubcases,
 } from '../common/framework/params_builder.js';
-import { mergeParams, publicParamsEquals } from '../common/framework/params_utils.js';
 import { makeTestGroup } from '../common/framework/test_group.js';
-import { assert, objectEquals } from '../common/framework/util/util.js';
+import { mergeParams, publicParamsEquals } from '../common/internal/params_utils.js';
+import { assert, objectEquals } from '../common/util/util.js';
 
 import { UnitTest } from './unit_test.js';
 

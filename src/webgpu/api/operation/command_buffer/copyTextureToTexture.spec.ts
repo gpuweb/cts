@@ -4,7 +4,7 @@ TODO(jiawei.shao@intel.com): support all WebGPU texture formats.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert } from '../../../../common/framework/util/util.js';
+import { assert } from '../../../../common/util/util.js';
 import {
   kSizedTextureFormatInfo,
   kRegularTextureFormats,

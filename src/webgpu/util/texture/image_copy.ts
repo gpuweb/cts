@@ -1,4 +1,4 @@
-import { assert } from '../../../common/framework/util/util.js';
+import { assert } from '../../../common/util/util.js';
 import { kSizedTextureFormatInfo, SizedTextureFormat } from '../../capability_info.js';
 import { align } from '../math.js';
 import { standardizeExtent3D } from '../unions.js';

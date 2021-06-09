@@ -1,11 +1,6 @@
 /* eslint-disable no-sparse-arrays */
-import {
-  assertTypeTrue,
-  ResolveType,
-  TypeEqual,
-  ZipKeysWithValues,
-} from '../common/framework/util/types.js';
-import { assert, unreachable } from '../common/framework/util/util.js';
+import { assertTypeTrue, ResolveType, TypeEqual, ZipKeysWithValues } from '../common/util/types.js';
+import { assert, unreachable } from '../common/util/util.js';
 
 import { GPUConst } from './constants.js';
 

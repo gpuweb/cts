@@ -11,7 +11,7 @@ things. If there are no guarantees we can issue warnings instead of failures. Id
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert } from '../../../../common/framework/util/util.js';
+import { assert } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 
 const kRTSize = 16;

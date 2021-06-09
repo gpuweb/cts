@@ -1,10 +1,10 @@
+import { assert } from '../../util/util.js';
 import {
   TestParamsRW,
   JSONWithUndefined,
   badParamValueChars,
   paramKeyIsPublic,
 } from '../params_utils.js';
-import { assert } from '../util/util.js';
 
 import { parseParamValue } from './json_param_value.js';
 import {

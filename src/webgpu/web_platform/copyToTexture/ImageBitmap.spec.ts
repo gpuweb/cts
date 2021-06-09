@@ -11,7 +11,7 @@ TODO: Test zero-sized copies from all sources (just make sure params cover it) (
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { unreachable } from '../../../common/framework/util/util.js';
+import { unreachable } from '../../../common/util/util.js';
 import {
   RegularTextureFormat,
   kRegularTextureFormatInfo,

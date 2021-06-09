@@ -35,7 +35,7 @@ TODO: Fix this test for the various skipped formats:
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert, unreachable } from '../../../../common/framework/util/util.js';
+import { assert, unreachable } from '../../../../common/util/util.js';
 import {
   kSizedTextureFormatInfo,
   SizedTextureFormat,

@@ -1,4 +1,4 @@
-import { assert, unreachable } from '../../../../../common/framework/util/util.js';
+import { assert, unreachable } from '../../../../../common/util/util.js';
 import {
   EncodableTextureFormat,
   kEncodableTextureFormatInfo,

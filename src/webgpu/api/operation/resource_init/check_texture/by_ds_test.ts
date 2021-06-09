@@ -1,4 +1,4 @@
-import { assert } from '../../../../../common/framework/util/util.js';
+import { assert } from '../../../../../common/util/util.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { getMipSizePassthroughLayers } from '../../../../util/texture/layout.js';
 import { CheckContents } from '../texture_zero.spec.js';

@@ -7,7 +7,7 @@ TODO:
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { assert } from '../../../../../common/framework/util/util.js';
+import { assert } from '../../../../../common/util/util.js';
 import {
   kDepthStencilFormats,
   depthStencilBufferTextureCopySupported,

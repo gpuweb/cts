@@ -1,4 +1,4 @@
-import { extractImportantStackTrace } from '../util/stack.js';
+import { extractImportantStackTrace } from '../stack.js';
 
 export class LogMessageWithStack extends Error {
   private stackHidden: boolean = false;

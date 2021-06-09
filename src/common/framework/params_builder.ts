@@ -1,4 +1,4 @@
-import { Merged, mergeParams } from './params_utils.js';
+import { Merged, mergeParams } from '../internal/params_utils.js';
 
 // ================================================================
 // "Public" ParamsBuilder API / Documentation
