@@ -493,8 +493,6 @@ const kTestParams = kUnitCaseParamsBuilder
   })
   .expandWithParams(function* ({ dimension }) {
     switch (dimension) {
-      case '1d':
-        unreachable();
       case '2d':
         yield { layerCount: 1 as LayerCounts };
         yield { layerCount: 7 as LayerCounts };
@@ -502,6 +500,8 @@ const kTestParams = kUnitCaseParamsBuilder
       case '3d':
         yield { layerCount: 1 as LayerCounts };
         break;
+      default:
+        unreachable();
     }
   })
   // Multisampled 3D / 2D array textures not supported.
