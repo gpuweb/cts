@@ -46,13 +46,13 @@
           {
             "target": "./src/webgpu",
             "from": "./src/common",
-            "except": ["./framework", "./util", "./tools/crawl.ts", "./constants.ts"],
+            "except": ["./framework", "./util"],
             "message": "Non-framework common/ code imported from webgpu/ suite"
           },
           {
             "target": "./src/unittests",
             "from": "./src/common",
-            "except": ["./framework", "./util", "./internal", "./tools/crawl.ts", "./constants.ts"],
+            "except": ["./framework", "./util", "./internal"],
             "message": "Non-framework common/ code imported from unittests/ suite"
           },
           {
