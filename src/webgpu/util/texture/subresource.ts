@@ -1,7 +1,6 @@
 import { assert } from '../../../common/framework/util/util.js';
 import { kAllTextureFormatInfo } from '../../capability_info.js';
 import { align } from '../../util/math.js';
-import { standardizeExtent3D } from '../unions.js';
 
 export interface BeginCountRange {
   begin: number;
@@ -25,61 +24,37 @@ function* rangeAsIterator(r: BeginEndRange | BeginCountRange): Generator<number>
 
 export class SubresourceRange {
   readonly mipRange: BeginEndRange;
-  readonly sliceRange: BeginEndRange;
+  readonly layerRange: BeginEndRange;
 
   constructor(subresources: {
     mipRange: BeginEndRange | BeginCountRange;
-    sliceRange: BeginEndRange | BeginCountRange;
+    layerRange: BeginEndRange | BeginCountRange;
   }) {
     this.mipRange = {
       begin: subresources.mipRange.begin,
       end: endOfRange(subresources.mipRange),
     };
-    this.sliceRange = {
-      begin: subresources.sliceRange.begin,
-      end: endOfRange(subresources.sliceRange),
+    this.layerRange = {
+      begin: subresources.layerRange.begin,
+      end: endOfRange(subresources.layerRange),
     };
   }
 
-  *each(): Generator<{ level: number; slice: number }> {
+  *each(): Generator<{ level: number; layer: number }> {
     for (let level = this.mipRange.begin; level < this.mipRange.end; ++level) {
-      for (let slice = this.sliceRange.begin; slice < this.sliceRange.end; ++slice) {
-        yield { level, slice };
+      for (let layer = this.layerRange.begin; layer < this.layerRange.end; ++layer) {
+        yield { level, layer };
       }
     }
   }
 
-  *mipLevels(): Generator<{ level: number; slices: Generator<number> }> {
+  *mipLevels(): Generator<{ level: number; layers: Generator<number> }> {
     for (let level = this.mipRange.begin; level < this.mipRange.end; ++level) {
       yield {
         level,
-        slices: rangeAsIterator(this.sliceRange),
+        layers: rangeAsIterator(this.layerRange),
       };
     }
-  }
-}
-
-export function mipSize(size: readonly [number], level: number): [number];
-export function mipSize(size: readonly [number, number], level: number): [number, number];
-export function mipSize(
-  size: readonly [number, number, number],
-  level: number
-): [number, number, number];
-export function mipSize(size: Readonly<GPUExtent3DDict>, level: number): GPUExtent3DDict;
-export function mipSize(
-  size: Readonly<GPUExtent3DDict> | readonly number[],
-  level: number
-): GPUExtent3D {
-  const rShiftMax1 = (s: number) => Math.max(s >> level, 1);
-  if (size instanceof Array) {
-    return size.map(rShiftMax1);
-  } else {
-    const size_ = standardizeExtent3D(size);
-    return {
-      width: rShiftMax1(size_.width),
-      height: rShiftMax1(size_.height),
-      depthOrArrayLayers: rShiftMax1(size_.depthOrArrayLayers),
-    };
   }
 }
 
