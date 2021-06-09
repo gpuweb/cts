@@ -1,7 +1,7 @@
 export const description = 'Operation tests for GPUQueue.writeBuffer()';
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { range } from '../../../../common/framework/util/util.js';
+import { range } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { align } from '../../../util/math.js';
 

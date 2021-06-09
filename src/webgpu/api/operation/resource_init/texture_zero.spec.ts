@@ -10,14 +10,13 @@ TODO:
 // TODO: This is a test file, it probably shouldn't export anything.
 // Everything that's exported should be moved to another file.
 
-import { TestCaseRecorder } from '../../../../common/framework/logging/test_case_recorder.js';
+import { TestCaseRecorder, TestParams } from '../../../../common/framework/fixture.js';
 import {
   kUnitCaseParamsBuilder,
   ParamTypeOf,
 } from '../../../../common/framework/params_builder.js';
-import { TestParams } from '../../../../common/framework/params_utils.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert, unreachable } from '../../../../common/framework/util/util.js';
+import { assert, unreachable } from '../../../../common/util/util.js';
 import {
   kAllTextureFormatInfo,
   kEncodableTextureFormatInfo,

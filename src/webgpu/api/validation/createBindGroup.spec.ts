@@ -5,7 +5,7 @@ export const description = `
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { unreachable } from '../../../common/framework/util/util.js';
+import { unreachable } from '../../../common/util/util.js';
 import {
   allBindingEntries,
   bindingTypeInfo,

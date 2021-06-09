@@ -1,7 +1,7 @@
+import { TestParams } from '../../framework/fixture.js';
 import { optionEnabled } from '../../runtime/helper/options.js';
+import { assert, unreachable } from '../../util/util.js';
 import { Expectation } from '../logging/result.js';
-import { TestParams } from '../params_utils.js';
-import { assert, unreachable } from '../util/util.js';
 
 import { compareQueries, Ordering } from './compare.js';
 import { encodeURIComponentSelectively } from './encode_selectively.js';

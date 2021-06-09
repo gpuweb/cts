@@ -1,9 +1,10 @@
+import { IterableTestGroup } from '../internal/test_group.js';
+import { assert } from '../util/util.js';
+
 import { parseQuery } from './query/parseQuery.js';
 import { TestQuery } from './query/query.js';
-import { IterableTestGroup } from './test_group.js';
 import { TestSuiteListing } from './test_suite_listing.js';
 import { loadTreeForQuery, TestTree, TestTreeLeaf } from './tree.js';
-import { assert } from './util/util.js';
 
 // A listing file, e.g. either of:
 // - `src/webgpu/listing.ts` (which is dynamically computed, has a Promise<TestSuiteListing>)

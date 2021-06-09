@@ -1,20 +1,23 @@
-import { Fixture, SkipTestCase, UnexpectedPassError } from './fixture.js';
-import { Expectation } from './logging/result.js';
-import { TestCaseRecorder } from './logging/test_case_recorder.js';
+import { Fixture, SkipTestCase, TestParams, UnexpectedPassError } from '../framework/fixture.js';
 import {
   CaseParamsBuilder,
   builderIterateCasesWithSubcases,
   kUnitCaseParamsBuilder,
   ParamsBuilderBase,
   SubcaseParamsBuilder,
-} from './params_builder.js';
-import { TestParams, extractPublicParams, Merged, mergeParams } from './params_utils.js';
-import { compareQueries, Ordering } from './query/compare.js';
-import { TestQuerySingleCase, TestQueryWithExpectation } from './query/query.js';
-import { kPathSeparator } from './query/separators.js';
-import { stringifyPublicParams, stringifyPublicParamsUniquely } from './query/stringify_params.js';
-import { validQueryPart } from './query/validQueryPart.js';
-import { assert, unreachable } from './util/util.js';
+} from '../framework/params_builder.js';
+import { Expectation } from '../internal/logging/result.js';
+import { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
+import { extractPublicParams, Merged, mergeParams } from '../internal/params_utils.js';
+import { compareQueries, Ordering } from '../internal/query/compare.js';
+import { TestQuerySingleCase, TestQueryWithExpectation } from '../internal/query/query.js';
+import { kPathSeparator } from '../internal/query/separators.js';
+import {
+  stringifyPublicParams,
+  stringifyPublicParamsUniquely,
+} from '../internal/query/stringify_params.js';
+import { validQueryPart } from '../internal/query/validQueryPart.js';
+import { assert, unreachable } from '../util/util.js';
 
 export type RunFn = (
   rec: TestCaseRecorder,
@@ -61,13 +64,13 @@ export function makeTestGroupForUnitTesting<F extends Fixture>(
   return new TestGroup(fixture);
 }
 
-type FixtureClass<F extends Fixture = Fixture> = new (
+export type FixtureClass<F extends Fixture = Fixture> = new (
   log: TestCaseRecorder,
   params: TestParams
 ) => F;
 type TestFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
 
-class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
+export class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
   private fixture: FixtureClass;
   private seen: Set<string> = new Set();
   private tests: Array<TestBuilder> = [];

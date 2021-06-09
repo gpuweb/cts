@@ -5,9 +5,9 @@ Also serves as a larger test of async test functions, and of the logging system.
 `;
 
 import { SkipTestCase } from '../common/framework/fixture.js';
-import { Logger } from '../common/framework/logging/logger.js';
 import { makeTestGroup } from '../common/framework/test_group.js';
-import { assert } from '../common/framework/util/util.js';
+import { Logger } from '../common/internal/logging/logger.js';
+import { assert } from '../common/util/util.js';
 
 import { UnitTest } from './unit_test.js';
 

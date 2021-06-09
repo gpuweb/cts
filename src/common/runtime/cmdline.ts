@@ -5,13 +5,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as process from 'process';
 
-import { DefaultTestFileLoader } from '../framework/file_loader.js';
-import { prettyPrintLog } from '../framework/logging/log_message.js';
-import { Logger } from '../framework/logging/logger.js';
-import { LiveTestCaseResult } from '../framework/logging/result.js';
-import { parseQuery } from '../framework/query/parseQuery.js';
-import { parseExpectationsForTestQuery } from '../framework/query/query.js';
-import { assert, unreachable } from '../framework/util/util.js';
+import { DefaultTestFileLoader } from '../internal/file_loader.js';
+import { prettyPrintLog } from '../internal/logging/log_message.js';
+import { Logger } from '../internal/logging/logger.js';
+import { LiveTestCaseResult } from '../internal/logging/result.js';
+import { parseQuery } from '../internal/query/parseQuery.js';
+import { parseExpectationsForTestQuery } from '../internal/query/query.js';
+import { assert, unreachable } from '../util/util.js';
 
 function usage(rc: number): never {
   console.log('Usage:');

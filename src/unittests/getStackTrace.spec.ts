@@ -3,7 +3,7 @@ Tests for getStackTrace.
 `;
 
 import { makeTestGroup } from '../common/framework/test_group.js';
-import { extractImportantStackTrace } from '../common/framework/util/stack.js';
+import { extractImportantStackTrace } from '../common/internal/stack.js';
 
 import { UnitTest } from './unit_test.js';
 

@@ -1,4 +1,4 @@
-import { unreachable } from '../../../common/framework/util/util.js';
+import { unreachable } from '../../../common/util/util.js';
 
 import { runRefTest } from './gpu_ref_test.js';
 

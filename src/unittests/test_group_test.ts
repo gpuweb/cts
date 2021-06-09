@@ -1,7 +1,7 @@
-import { Logger, LogResults } from '../common/framework/logging/logger.js';
-import { TestQuerySingleCase } from '../common/framework/query/query.js';
-import { IterableTestGroup, TestCaseID } from '../common/framework/test_group.js';
-import { objectEquals } from '../common/framework/util/util.js';
+import { Logger, LogResults } from '../common/internal/logging/logger.js';
+import { TestQuerySingleCase } from '../common/internal/query/query.js';
+import { IterableTestGroup, TestCaseID } from '../common/internal/test_group.js';
+import { objectEquals } from '../common/util/util.js';
 
 import { UnitTest } from './unit_test.js';
 
