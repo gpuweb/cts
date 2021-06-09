@@ -8,7 +8,6 @@ TODO: Test that mapping-for-write again shows the values previously written.
 TODO: Some testing (probably minimal) of accessing with different TypedArray/DataView types.
 `;
 
-import { params, pbool, poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/framework/util/util.js';
 
@@ -70,12 +69,13 @@ g.test('mapAsync,write')
     `Use map-write to write to various ranges of variously-sized buffers, then expectContents
 (which does copyBufferToBuffer + map-read) to ensure the contents were written.`
   )
-  .cases(
-    params()
-      .combine(poptions('mapAsyncRegionLeft', mapRegionBoundModes))
-      .combine(poptions('mapAsyncRegionRight', mapRegionBoundModes))
+  .params(u =>
+    u
+      .combine('mapAsyncRegionLeft', mapRegionBoundModes)
+      .combine('mapAsyncRegionRight', mapRegionBoundModes)
+      .beginSubcases()
+      .combineWithParams(kSubcases)
   )
-  .subcases(() => kSubcases)
   .fn(async t => {
     const { size, range } = t.params;
     const [rangeOffset, rangeSize] = reifyMapRange(size, range);
@@ -96,12 +96,13 @@ g.test('mapAsync,read')
     `Use mappedAtCreation to initialize various ranges of variously-sized buffers, then
 map-read and check the read-back result.`
   )
-  .cases(
-    params()
-      .combine(poptions('mapAsyncRegionLeft', mapRegionBoundModes))
-      .combine(poptions('mapAsyncRegionRight', mapRegionBoundModes))
+  .params(u =>
+    u
+      .combine('mapAsyncRegionLeft', mapRegionBoundModes)
+      .combine('mapAsyncRegionRight', mapRegionBoundModes)
+      .beginSubcases()
+      .combineWithParams(kSubcases)
   )
-  .subcases(() => kSubcases)
   .fn(async t => {
     const { size, range } = t.params;
     const [rangeOffset, rangeSize] = reifyMapRange(size, range);
@@ -133,8 +134,12 @@ g.test('mappedAtCreation')
 with or without the MAP_WRITE usage (since this could affect the mappedAtCreation upload path),
 then expectContents (which does copyBufferToBuffer + map-read) to ensure the contents were written.`
   )
-  .cases(pbool('mappable'))
-  .subcases(() => kSubcases)
+  .params(u =>
+    u //
+      .combine('mappable', [false, true])
+      .beginSubcases()
+      .combineWithParams(kSubcases)
+  )
   .fn(async t => {
     const { size, range, mappable } = t.params;
     const [, rangeSize] = reifyMapRange(size, range);

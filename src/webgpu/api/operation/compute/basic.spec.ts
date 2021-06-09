@@ -2,7 +2,6 @@ export const description = `
 Basic command buffer compute tests.
 `;
 
-import { params, poptions } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
 
@@ -72,20 +71,15 @@ TODO: add query for the maximum dispatch size and test closer to those limits.
 Test reasonably-sized large dispatches (see also stress tests).
 `
   )
-  .cases(
-    params()
-      .combine(
-        // Reasonably-sized powers of two, and some stranger larger sizes.
-        poptions('dispatchSize', [256, 512, 1024, 2048, 315, 628, 1053, 2179] as const)
-      )
-      .combine(
-        // Test some reasonable workgroup sizes.
-        poptions('workgroupSize', [1, 2, 4, 8, 16, 32, 64] as const)
-      )
-  )
-  .subcases(() =>
-    // 0 == x axis; 1 == y axis; 2 == z axis.
-    poptions('largeDimension', [0, 1, 2] as const)
+  .params(u =>
+    u
+      // Reasonably-sized powers of two, and some stranger larger sizes.
+      .combine('dispatchSize', [256, 512, 1024, 2048, 315, 628, 1053, 2179] as const)
+      // Test some reasonable workgroup sizes.
+      .combine('workgroupSize', [1, 2, 4, 8, 16, 32, 64] as const)
+      .beginSubcases()
+      // 0 == x axis; 1 == y axis; 2 == z axis.
+      .combine('largeDimension', [0, 1, 2] as const)
   )
   .fn(async t => {
     // The output storage buffer is filled with this value.
