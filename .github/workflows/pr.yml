@@ -2,9 +2,7 @@ name: Pull Request CI
 
 on:
   pull_request:
-    branches:
-      - main
-      - glsl-dependent
+    branches: [main]
 
 jobs:
   build:
