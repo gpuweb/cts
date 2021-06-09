@@ -8,7 +8,7 @@ import { Merged, mergeParams } from '../internal/params_utils.js';
  * Provides doc comments for the methods of CaseParamsBuilder and SubcaseParamsBuilder.
  * (Also enforces rough interface match between them.)
  */
-interface ParamsBuilder {
+export interface ParamsBuilder {
   /**
    * Expands each item in `this` into zero or more items.
    * Each item has its parameters expanded with those returned by the `expander`.

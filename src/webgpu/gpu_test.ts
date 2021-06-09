@@ -45,6 +45,11 @@ export type TypedArrayBufferViewConstructor =
 
 const devicePool = new DevicePool();
 
+/**
+ * Base fixture for WebGPU tests.
+ *
+ * @noInherit
+ */
 export class GPUTest extends Fixture {
   private provider: DeviceProvider | undefined;
   /** Must not be replaced once acquired. */
@@ -111,6 +116,10 @@ export class GPUTest extends Fixture {
     this.acquiredDevice = this.provider.acquire();
   }
 
+  /**
+   * Create device with texture format(s) required feature(s).
+   * If the device creation fails, then skip the test for that format(s).
+   */
   async selectDeviceForTextureFormatOrSkipTestCase(
     formats: GPUTextureFormat | undefined | (GPUTextureFormat | undefined)[]
   ): Promise<void> {
@@ -127,6 +136,10 @@ export class GPUTest extends Fixture {
     await this.selectDeviceOrSkipTestCase(Array.from(features));
   }
 
+  /**
+   * Create device with query type(s) required feature(s).
+   * If the device creation fails, then skip the test for that type(s).
+   */
   async selectDeviceForQueryTypeOrSkipTestCase(
     types: GPUQueryType | GPUQueryType[]
   ): Promise<void> {
@@ -229,6 +242,10 @@ export class GPUTest extends Fixture {
     });
   }
 
+  /**
+   * Expect a buffer's contents to be a single constant value,
+   * specified as a TypedArrayBufferView containing one element.
+   */
   expectSingleValueContents(
     src: GPUBuffer,
     expected: TypedArrayBufferView,
@@ -442,6 +459,10 @@ got [${failedByteActualValues.join(', ')}]`;
     return undefined;
   }
 
+  /**
+   * Checks that an actual TypedArrayBufferView's contents are all a single constant value,
+   * specified as a TypedArrayBufferView containing one element.
+   */
   checkSingleValueBuffer(
     actual: TypedArrayBufferView,
     exp: TypedArrayBufferView,

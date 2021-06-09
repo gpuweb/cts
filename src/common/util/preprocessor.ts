@@ -91,6 +91,7 @@ class EndIf extends Directive {
  * A simple template-based, non-line-based preprocessor implementing if/elif/else/endif.
  *
  * @example
+ * ```
  *     const shader = pp`
  * ${pp._if(expr)}
  *   const x: ${type} = ${value};
@@ -101,6 +102,7 @@ class EndIf extends Directive {
  * ...
  * ${pp.__endif}
  * ${pp._endif}`;
+ * ```
  *
  * @param strings - The array of constant string chunks of the template string.
  * @param ...values - The array of interpolated ${} values within the template string.

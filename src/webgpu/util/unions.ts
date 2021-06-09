@@ -1,3 +1,8 @@
+/** @module webgpu/util/unions */
+
+/**
+ * Reifies a `GPUExtent3D` into a `Required<GPUExtent3DDict>`.
+ */
 export function standardizeExtent3D(
   v: Readonly<GPUExtent3DDict> | readonly number[]
 ): Required<GPUExtent3DDict> {

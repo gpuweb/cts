@@ -10,6 +10,9 @@ export const kImageCopyTypes: readonly ImageCopyType[] = [
   'CopyT2B',
 ] as const;
 
+/**
+ * Computes `bytesInACompleteRow` (as defined by the WebGPU spec) for image copies (B2T/T2B/writeTexture).
+ */
 export function bytesInACompleteRow(copyWidth: number, format: SizedTextureFormat): number {
   const info = kSizedTextureFormatInfo[format];
   assert(copyWidth % info.blockWidth === 0);

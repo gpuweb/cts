@@ -1,8 +1,15 @@
+/** @module common/util/collect_garbage */
+
 import { resolveOnTimeout } from './util.js';
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 declare const Components: any;
 
+/**
+ * Attempts to trigger JavaScript garbage collection, either using explicit methods if exposed
+ * (may be available in testing environments with special browser runtime flags set), or using
+ * some weird tricks to incur GC pressure. Adopted from the WebGL CTS.
+ */
 export async function attemptGarbageCollection(): Promise<void> {
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   const w: any = self;

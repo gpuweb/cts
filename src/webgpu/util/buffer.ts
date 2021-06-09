@@ -1,5 +1,10 @@
+/** @module webgpu/util/buffer */
+
 import { TypedArrayBufferView, TypedArrayBufferViewConstructor } from '../gpu_test.js';
 
+/**
+ * Creates a buffer with the contents of some TypedArray.
+ */
 export function makeBufferWithContents(
   device: GPUDevice,
   dataArray: TypedArrayBufferView,
