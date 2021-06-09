@@ -1,22 +1,19 @@
+/** @module common/util/util */
+
 import { timeout } from './timeout.js';
 
 /**
- * Error without a stack, which can be used to fatally exit from `tool/` scripts with a
- * user-friendly message (and no confusing stack).
+ * Asserts `condition` is true. Otherwise, throws an `Error` with the provided message.
  */
-export class StacklessError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.stack = undefined;
-  }
-}
-
 export function assert(condition: boolean, msg?: string | (() => string)): asserts condition {
   if (!condition) {
     throw new Error(msg && (typeof msg === 'string' ? msg : msg()));
   }
 }
 
+/**
+ * Resolves if the provided promise rejects; rejects if it does not.
+ */
 export async function assertReject(p: Promise<unknown>, msg?: string): Promise<void> {
   try {
     await p;
@@ -26,17 +23,29 @@ export async function assertReject(p: Promise<unknown>, msg?: string): Promise<v
   }
 }
 
+/**
+ * Assert this code is unreachable. Unconditionally throws an `Error`.
+ */
 export function unreachable(msg?: string): never {
   throw new Error(msg);
 }
 
-// performance.now() is available in all browsers, but not in scope by default in Node.
+/**
+ * The `performance` interface.
+ * It is available in all browsers, but it is not in scope by default in Node.
+ */
 const perf = typeof performance !== 'undefined' ? performance : require('perf_hooks').performance;
 
+/**
+ * Calls the appropriate `performance.now()` depending on whether running in a browser or Node.
+ */
 export function now(): number {
   return perf.now();
 }
 
+/**
+ * Returns a promise which resolves after the specified time.
+ */
 export function resolveOnTimeout(ms: number): Promise<void> {
   return new Promise(resolve => {
     timeout(() => {
@@ -47,6 +56,9 @@ export function resolveOnTimeout(ms: number): Promise<void> {
 
 export class PromiseTimeoutError extends Error {}
 
+/**
+ * Returns a promise which rejects after the specified time.
+ */
 export function rejectOnTimeout(ms: number, msg: string): Promise<never> {
   return new Promise((_resolve, reject) => {
     timeout(() => {
@@ -55,10 +67,17 @@ export function rejectOnTimeout(ms: number, msg: string): Promise<never> {
   });
 }
 
+/**
+ * Takes a promise `p`, and returns a new one which rejects if `p` takes too long,
+ * and otherwise passes the result through.
+ */
 export function raceWithRejectOnTimeout<T>(p: Promise<T>, ms: number, msg: string): Promise<T> {
   return Promise.race([p, rejectOnTimeout(ms, msg)]);
 }
 
+/**
+ * Makes a copy of a JS `object`, with the keys reordered into sorted order.
+ */
 export function sortObjectByKey(v: { [k: string]: unknown }): { [k: string]: unknown } {
   const sortedObject: { [k: string]: unknown } = {};
   for (const k of Object.keys(v).sort()) {
@@ -67,6 +86,9 @@ export function sortObjectByKey(v: { [k: string]: unknown }): { [k: string]: unk
   return sortedObject;
 }
 
+/**
+ * Determines whether two JS values are equal, recursing into objects and arrays.
+ */
 export function objectEquals(x: unknown, y: unknown): boolean {
   if (typeof x !== 'object' || typeof y !== 'object') return x === y;
   if (x === null || y === null) return x === y;
@@ -85,6 +107,9 @@ export function objectEquals(x: unknown, y: unknown): boolean {
   return Object.keys(y).every(i => p.indexOf(i) !== -1) && p.every(i => objectEquals(x1[i], y1[i]));
 }
 
+/**
+ * Generates a range of values `fn(0)..fn(n-1)`.
+ */
 export function range<T>(n: number, fn: (i: number) => T): T[] {
   return [...new Array(n)].map((_, i) => fn(i));
 }

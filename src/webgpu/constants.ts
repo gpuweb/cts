@@ -1,4 +1,6 @@
-// Types ensure every field is specified.
+/** @module webgpu/constants */
+
+// Note: Types ensure every field is specified.
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 function checkType<T>(x: T) {}

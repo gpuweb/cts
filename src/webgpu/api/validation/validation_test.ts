@@ -20,6 +20,11 @@ export interface CommandBufferMaker<T extends EncoderType> {
   finish(): GPUCommandBuffer;
 }
 
+/**
+ * Base fixture for WebGPU validation tests.
+ *
+ * @noInheritDoc
+ */
 export class ValidationTest extends GPUTest {
   createTextureWithState(
     state: 'valid' | 'invalid' | 'destroyed',

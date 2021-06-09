@@ -1,5 +1,8 @@
 import { standardizeExtent3D } from '../../util/unions.js';
 
+/**
+ * Compute the maximum mip level count allowed for a given texture size and texture dimension.
+ */
 export function maxMipLevelCount({
   size,
   dimension = '2d',
