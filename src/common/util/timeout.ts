@@ -1,5 +1,3 @@
-/** @module common/util/timeout */
-
 /** Defined by WPT. Like `setTimeout`, but applies a timeout multiplier for slow test systems. */
 declare const step_timeout: undefined | typeof setTimeout;
 

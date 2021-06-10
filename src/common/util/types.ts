@@ -1,5 +1,3 @@
-/** @module common/util/types */
-
 /** Forces a type to resolve its type definitions, to make it readable/debuggable. */
 export type ResolveType<T> = T extends object
   ? T extends infer O

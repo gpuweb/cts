@@ -53,6 +53,7 @@ export class GPUTest extends Fixture {
   /** Must not be replaced once acquired. */
   private acquiredDevice: GPUDevice | undefined;
 
+  /** GPUDevice for the test to use. */
   get device(): GPUDevice {
     assert(
       this.provider !== undefined,
@@ -64,14 +65,41 @@ export class GPUTest extends Fixture {
     return this.acquiredDevice;
   }
 
+  /** GPUQueue for the test to use. (Same as `t.device.queue`.) */
   get queue(): GPUQueue {
     return this.device.queue;
   }
 
-  async init(): Promise<void> {
+  protected async init(): Promise<void> {
     await super.init();
 
     this.provider = await devicePool.reserve();
+  }
+
+  protected async finalize(): Promise<void> {
+    await super.finalize();
+
+    if (this.provider) {
+      let threw: undefined | Error;
+      {
+        const provider = this.provider;
+        this.provider = undefined;
+        try {
+          await devicePool.release(provider);
+        } catch (ex) {
+          threw = ex;
+        }
+      }
+      // The GPUDevice and GPUQueue should now have no outstanding references.
+
+      if (threw) {
+        if (threw instanceof TestOOMedShouldAttemptGC) {
+          // Try to clean up, in case there are stray GPU resources in need of collection.
+          await attemptGarbageCollection();
+        }
+        throw threw;
+      }
+    }
   }
 
   /**
@@ -148,33 +176,7 @@ export class GPUTest extends Fixture {
     await this.selectDeviceOrSkipTestCase(features);
   }
 
-  // Note: finalize is called even if init was unsuccessful.
-  async finalize(): Promise<void> {
-    await super.finalize();
-
-    if (this.provider) {
-      let threw: undefined | Error;
-      {
-        const provider = this.provider;
-        this.provider = undefined;
-        try {
-          await devicePool.release(provider);
-        } catch (ex) {
-          threw = ex;
-        }
-      }
-      // The GPUDevice and GPUQueue should now have no outstanding references.
-
-      if (threw) {
-        if (threw instanceof TestOOMedShouldAttemptGC) {
-          // Try to clean up, in case there are stray GPU resources in need of collection.
-          await attemptGarbageCollection();
-        }
-        throw threw;
-      }
-    }
-  }
-
+  /** Snapshot a GPUBuffer's contents, returning a new GPUBuffer with the `MAP_READ` usage. */
   createCopyForMapRead(src: GPUBuffer, srcOffset: number, size: number): GPUBuffer {
     assert(srcOffset % 4 === 0);
     assert(size % 4 === 0);
@@ -194,11 +196,13 @@ export class GPUTest extends Fixture {
 
   // TODO: add an expectContents for textures, which logs data: uris on failure
 
-  // Offset and size passed to createCopyForMapRead must be divisible by 4. For that
-  // we might need to copy more bytes from the buffer than we want to map.
-  // begin and end values represent the part of the copied buffer that stores the contents
-  // we initially wanted to map.
-  // The copy will not cause an OOB error because the buffer size must be 4-aligned.
+  /**
+   * Offset and size passed to createCopyForMapRead must be divisible by 4. For that
+   * we might need to copy more bytes from the buffer than we want to map.
+   * begin and end values represent the part of the copied buffer that stores the contents
+   * we initially wanted to map.
+   * The copy will not cause an OOB error because the buffer size must be 4-aligned.
+   */
   createAlignedCopyForMapRead(
     src: GPUBuffer,
     size: number,
@@ -211,6 +215,9 @@ export class GPUTest extends Fixture {
     return { dst, begin: offsetDifference, end: offsetDifference + size };
   }
 
+  /**
+   * Expect a GPUBuffer's contents to equal the values in the provided TypedArray.
+   */
   expectContents(
     src: GPUBuffer,
     expected: TypedArrayBufferView,
@@ -241,7 +248,7 @@ export class GPUTest extends Fixture {
   }
 
   /**
-   * Expect a buffer's contents to be a single constant value,
+   * Expect a GPUBuffer's contents to be a single constant value repeated,
    * specified as a TypedArrayBufferView containing one element.
    */
   expectSingleValueContents(
@@ -270,6 +277,12 @@ export class GPUTest extends Fixture {
     });
   }
 
+  /**
+   * Expect each element in a GPUBuffer is between two corresponding expected values.
+   *
+   * Interprets the GPUBuffer's contents as an array of the same type as the provided
+   * `TypedArray`s, and checks the values element-wise.
+   */
   expectContentsBetweenTwoValues(
     src: GPUBuffer,
     expected: [TypedArrayBufferView, TypedArrayBufferView],
@@ -353,8 +366,12 @@ export class GPUTest extends Fixture {
     });
   }
 
-  // We can expand this function in order to support multiple valid values or two mixed vectors
-  // if needed. See the discussion at https://github.com/gpuweb/cts/pull/384#discussion_r533101429
+  /**
+   * Expect a GPUBuffer's contents to equal one of two possible TypedArrays.
+   *
+   * We can expand this function in order to support multiple valid values or two mixed vectors
+   * if needed. See the discussion at https://github.com/gpuweb/cts/pull/384#discussion_r533101429
+   */
   expectContentsTwoValidValues(
     src: GPUBuffer,
     expected1: TypedArrayBufferView,
@@ -384,6 +401,9 @@ export class GPUTest extends Fixture {
     });
   }
 
+  /**
+   * Expect two `Uint8Array`s to have equal contents.
+   */
   expectBuffer(actual: Uint8Array, exp: Uint8Array): void {
     const check = this.checkBuffer(actual, exp);
     if (check !== undefined) {
@@ -391,6 +411,10 @@ export class GPUTest extends Fixture {
     }
   }
 
+  /**
+   * Check whether two `TypedArray`s have equal contents.
+   * Returns `undefined` if they are equal, or an explanation string if not.
+   */
   checkBuffer(
     actual: TypedArrayBufferView,
     exp: TypedArrayBufferView,
@@ -458,7 +482,7 @@ got [${failedByteActualValues.join(', ')}]`;
   }
 
   /**
-   * Checks that an actual TypedArrayBufferView's contents are all a single constant value,
+   * Checks that a TypedArrayBufferView's contents are all a single constant value,
    * specified as a TypedArrayBufferView containing one element.
    */
   checkSingleValueBuffer(
@@ -527,6 +551,10 @@ got [${failedByteActualValues.join(', ')}]`;
     return undefined;
   }
 
+  /**
+   * Check that a TypedArray passes the check `checkFn`.
+   * Returns `undefined` if it does, or an explanation string if not.
+   */
   checkBufferFn(
     actual: TypedArrayBufferView,
     checkFn: (actual: TypedArrayBufferView) => boolean,
@@ -560,6 +588,9 @@ got [${failedByteActualValues.join(', ')}]`;
     return lines.join('\n');
   }
 
+  /**
+   * Expect a whole GPUTexture to have the single provided color.
+   */
   expectSingleColor(
     src: GPUTexture,
     format: EncodableTextureFormat,
@@ -603,7 +634,7 @@ got [${failedByteActualValues.join(', ')}]`;
     this.expectContents(buffer, new Uint8Array(arrayBuffer));
   }
 
-  // return a GPUBuffer that data are going to be written into
+  /** Return a GPUBuffer that data are going to be written into. */
   private readSinglePixelFrom2DTexture(
     src: GPUTexture,
     format: SizedTextureFormat,
@@ -632,8 +663,12 @@ got [${failedByteActualValues.join(', ')}]`;
     return buffer;
   }
 
-  // TODO: Add check for values of depth/stencil, probably through sampling of shader
-  // TODO(natashalee): Can refactor this and expectSingleColor to use a similar base expect
+  /**
+   * Expect a single pixel of a 2D texture to have a particular byte representation.
+   *
+   * TODO: Add check for values of depth/stencil, probably through sampling of shader
+   * TODO: Can refactor this and expectSingleColor to use a similar base expect
+   */
   expectSinglePixelIn2DTexture(
     src: GPUTexture,
     format: SizedTextureFormat,
@@ -654,6 +689,12 @@ got [${failedByteActualValues.join(', ')}]`;
     this.expectContents(buffer, exp, 0, { generateWarningOnly });
   }
 
+  /**
+   * Expect a single pixel of a 2D texture to have values between two provided values.
+   *
+   * Interprets the contents of the pixel as an array of the same type as the provided
+   * `TypedArray`s, and checks the values element-wise.
+   */
   expectSinglePixelBetweenTwoValuesIn2DTexture(
     src: GPUTexture,
     format: SizedTextureFormat,
@@ -674,6 +715,9 @@ got [${failedByteActualValues.join(', ')}]`;
     this.expectContentsBetweenTwoValues(buffer, exp, 0, { generateWarningOnly });
   }
 
+  /**
+   * Expect the specified WebGPU error to be generated when running the provided function.
+   */
   expectGPUError<R>(filter: GPUErrorFilter, fn: () => R, shouldError: boolean = true): R {
     // If no error is expected, we let the scope surrounding the test catch it.
     if (!shouldError) {
@@ -712,10 +756,16 @@ got [${failedByteActualValues.join(', ')}]`;
     return returnValue;
   }
 
+  /**
+   * Create a GPUBuffer with the specified contents and usage.
+   */
   makeBufferWithContents(dataArray: TypedArrayBufferView, usage: GPUBufferUsageFlags): GPUBuffer {
     return makeBufferWithContents(this.device, dataArray, usage);
   }
 
+  /**
+   * Create a GPUTexture with multiple mip levels, each having the specified contents.
+   */
   createTexture2DWithMipmaps(mipmapDataArray: TypedArrayBufferView[]): GPUTexture {
     const format = 'rgba8unorm';
     const mipLevelCount = mipmapDataArray.length;

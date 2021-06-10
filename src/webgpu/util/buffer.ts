@@ -1,5 +1,3 @@
-/** @module webgpu/util/buffer */
-
 import { TypedArrayBufferView, TypedArrayBufferViewConstructor } from '../gpu_test.js';
 
 /**

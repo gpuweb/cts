@@ -14,7 +14,7 @@ import {
 } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { align } from '../../../util/math.js';
-import { physicalMipSize } from '../../../util/texture/subresource.js';
+import { physicalMipSize } from '../../../util/texture/base.js';
 
 class F extends GPUTest {
   GetInitialDataPerMipLevel(

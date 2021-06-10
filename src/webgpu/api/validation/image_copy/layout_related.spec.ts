@@ -12,7 +12,7 @@ import {
   dataBytesForCopyOrOverestimate,
   dataBytesForCopyOrFail,
   kImageCopyTypes,
-} from '../../../util/texture/image_copy.js';
+} from '../../../util/texture/layout.js';
 
 import {
   ImageCopyTest,

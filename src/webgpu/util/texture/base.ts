@@ -1,3 +1,6 @@
+import { assert, unreachable } from '../../../common/util/util.js';
+import { kAllTextureFormatInfo } from '../../capability_info.js';
+import { align } from '../../util/math.js';
 import { standardizeExtent3D } from '../../util/unions.js';
 
 /**
@@ -17,4 +20,57 @@ export function maxMipLevelCount({
   if (dimension === '3d')
     maxMippedDimension = Math.max(maxMippedDimension, sizeDict.depthOrArrayLayers);
   return Math.floor(Math.log2(maxMippedDimension)) + 1;
+}
+
+/**
+ * Compute the "physical size" of a mip level: the size of the level, rounded up to a
+ * multiple of the texel block size.
+ *
+ * TODO: Merge with getMipSizePassthroughLayers.
+ */
+export function physicalMipSize(
+  baseSize: Required<GPUExtent3DDict>,
+  format: GPUTextureFormat,
+  dimension: GPUTextureDimension,
+  level: number
+): Required<GPUExtent3DDict> {
+  assert(dimension === '2d');
+  assert(Math.max(baseSize.width, baseSize.height) >> level > 0);
+
+  const virtualWidthAtLevel = Math.max(baseSize.width >> level, 1);
+  const virtualHeightAtLevel = Math.max(baseSize.height >> level, 1);
+  const physicalWidthAtLevel = align(virtualWidthAtLevel, kAllTextureFormatInfo[format].blockWidth);
+  const physicalHeightAtLevel = align(
+    virtualHeightAtLevel,
+    kAllTextureFormatInfo[format].blockHeight
+  );
+  return {
+    width: physicalWidthAtLevel,
+    height: physicalHeightAtLevel,
+    depthOrArrayLayers: baseSize.depthOrArrayLayers,
+  };
+}
+
+/**
+ * Compute the size of a mip level of a texture.
+ *
+ * TODO: Merge with physicalMipSize.
+ */
+export function getMipSizePassthroughLayers(
+  dimension: GPUTextureDimension,
+  size: readonly [number, number, number],
+  mipLevel: number
+): [number, number, number] {
+  const shiftMinOne = (n: number) => Math.max(1, n >> mipLevel);
+  switch (dimension) {
+    case '1d':
+      assert(size[2] === 1);
+      return [shiftMinOne(size[0]), size[1], size[2]];
+    case '2d':
+      return [shiftMinOne(size[0]), shiftMinOne(size[1]), size[2]];
+    case '3d':
+      return [shiftMinOne(size[0]), shiftMinOne(size[1]), shiftMinOne(size[2])];
+    default:
+      unreachable();
+  }
 }

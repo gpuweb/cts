@@ -1,5 +1,3 @@
-/** @module common/util/collect_garbage */
-
 import { resolveOnTimeout } from './util.js';
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */

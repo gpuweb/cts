@@ -5,7 +5,7 @@ import { assert } from '../../../../common/util/util.js';
 import { kSizedTextureFormats, kSizedTextureFormatInfo } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import { align } from '../../../util/math.js';
-import { kImageCopyTypes } from '../../../util/texture/image_copy.js';
+import { kImageCopyTypes } from '../../../util/texture/layout.js';
 
 import {
   ImageCopyTest,
