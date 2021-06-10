@@ -1,7 +1,6 @@
 import { assert } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 
-/** @noInheritDoc */
 export class MappingTest extends GPUTest {
   checkMapWrite(
     buffer: GPUBuffer,

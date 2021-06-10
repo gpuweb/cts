@@ -22,8 +22,6 @@ export interface CommandBufferMaker<T extends EncoderType> {
 
 /**
  * Base fixture for WebGPU validation tests.
- *
- * @noInheritDoc
  */
 export class ValidationTest extends GPUTest {
   createTextureWithState(

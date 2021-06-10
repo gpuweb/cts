@@ -7,7 +7,6 @@ export const kAllWriteOps = ['render', 'render-via-bundle', 'compute', 'b2b-copy
 
 // Note: If it would be useful to have any of these helpers be separate from the fixture,
 // they can be refactored into standalone functions.
-/** @noInheritDoc */
 export class BufferSyncTest extends GPUTest {
   // Create a buffer, and initialize it to a specified value for all elements.
   async createBufferWithValue(initValue: number): Promise<GPUBuffer> {
