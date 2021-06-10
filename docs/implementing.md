@@ -31,7 +31,7 @@ Later, there may be multiple `GPUDevice`s to allow multiple test cases to run co
 
 The CTS provides helpers (`.params()` and friends) for creating large cartesian products of test parameters.
 These generate "test cases" further subdivided into "test subcases".
-See `basic,*` in `examples.spec.ts` for examples, and the [helper index](./helper_index.md)
+See `basic,*` in `examples.spec.ts` for examples, and the [helper index](./helper_index.txt)
 for a list of capabilities.
 
 Test parameterization should be applied liberally to ensure the maximum coverage
