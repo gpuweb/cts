@@ -35,7 +35,6 @@
     "excludePrivate": true,
     "listInvalidSymbolLinks": true,
     "readme": "./docs/helper_index.txt",
-    "theme": "minimal",
     "out": "docs/tsdoc/"
   }
 }

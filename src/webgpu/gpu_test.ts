@@ -47,8 +47,6 @@ const devicePool = new DevicePool();
 
 /**
  * Base fixture for WebGPU tests.
- *
- * @noInherit
  */
 export class GPUTest extends Fixture {
   private provider: DeviceProvider | undefined;
