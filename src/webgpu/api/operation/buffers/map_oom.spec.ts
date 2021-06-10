@@ -5,18 +5,14 @@ import { kUnitCaseParamsBuilder } from '../../../../common/framework/params_buil
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { kBufferUsages } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
-
-// A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).
-// (Note this is likely to exceed limitations other than just the system's
-// physical memory - so test cases are also needed to try to trigger "true" OOM.)
-const MAX_ALIGNED_SAFE_INTEGER = Number.MAX_SAFE_INTEGER - 7;
+import { kMaxSafeMultipleOf8 } from '../../../util/math.js';
 
 const oomAndSizeParams = kUnitCaseParamsBuilder
   .combine('oom', [false, true])
   .expand('size', ({ oom }) => {
     return oom
       ? [
-          MAX_ALIGNED_SAFE_INTEGER,
+          kMaxSafeMultipleOf8,
           0x2000000000, // 128 GB
         ]
       : [16];

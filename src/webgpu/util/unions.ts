@@ -1,5 +1,3 @@
-/** @module webgpu/util/unions */
-
 /**
  * Reifies a `GPUExtent3D` into a `Required<GPUExtent3DDict>`.
  */

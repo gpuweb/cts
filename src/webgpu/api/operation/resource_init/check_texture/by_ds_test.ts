@@ -1,6 +1,6 @@
 import { assert } from '../../../../../common/util/util.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { getMipSizePassthroughLayers } from '../../../../util/texture/layout.js';
+import { getMipSizePassthroughLayers } from '../../../../util/texture/base.js';
 import { CheckContents } from '../texture_zero.spec.js';
 
 function makeFullscreenVertexModule(device: GPUDevice) {

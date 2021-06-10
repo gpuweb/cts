@@ -29,6 +29,7 @@
       "**/*.spec.ts",
       "**/*.html.ts",
       "src/*/listing.ts",
+      "src/webgpu/util/device_pool.ts",
     ],
     "excludeInternal": true,
     "excludeProtected": true,

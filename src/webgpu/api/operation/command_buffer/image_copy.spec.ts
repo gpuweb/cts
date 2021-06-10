@@ -43,8 +43,12 @@ import {
 } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { align } from '../../../util/math.js';
-import { bytesInACompleteRow, dataBytesForCopyOrFail } from '../../../util/texture/image_copy.js';
-import { getTextureCopyLayout, TextureCopyLayout } from '../../../util/texture/layout.js';
+import {
+  bytesInACompleteRow,
+  dataBytesForCopyOrFail,
+  getTextureCopyLayout,
+  TextureCopyLayout,
+} from '../../../util/texture/layout.js';
 
 interface TextureCopyViewWithRequiredOrigin {
   texture: GPUTexture;

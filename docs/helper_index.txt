@@ -32,10 +32,9 @@ Whenever a new generally-useful helper is added, it should be indexed here.
 
 (Uncheck the "Inherited" box to hide inherited methods from documentation pages.)
 
+- {@link Fixture}: Base fixture for all tests.
 - {@link GPUTest}: Base fixture for WebGPU tests.
-    - TODO: Write documentation for these helpers. (Can mark some as `@internal` to hide.)
 - {@link ValidationTest}: Base fixture for WebGPU validation tests.
-    - TODO: Write documentation for these helpers. (Can mark some as `@internal` to hide.)
 - {@link ShaderValidationTest}: Base fixture for WGSL shader validation tests.
 - {@link IDLTest}:
     Base fixture for testing the exposed interface is correct (without actually using WebGPU).
@@ -43,11 +42,20 @@ Whenever a new generally-useful helper is added, it should be indexed here.
 ### WebGPU Helpers
 
 - {@link webgpu/capability_info}: Structured information about texture formats, binding types, etc.
+  TODO
 - {@link webgpu/constants}:
     Constant values (needed anytime a WebGPU constant is needed outside of a test function).
 - {@link webgpu/util/buffer}: Helpers for GPUBuffers.
 - {@link webgpu/util/unions}: Helpers for various union typedefs in the WebGPU spec.
-- TODO: Add remaining helper modules and write documentation for their contents.
+- {@link webgpu/util/math}: Helpers for common math operations.
+- {@link webgpu/util/conversion}: Numeric encoding/decoding for float/unorm/snorm values, etc.
+- {@link webgpu/util/navigator_gpu}: Finds and returns the `navigator.gpu` object or equivalent.
+- {@link webgpu/util/texture/base}: General texture-related helpers.
+- {@link webgpu/util/texture/layout}: Helpers for working with linear image data
+    (like in copyBufferToTexture, copyTextureToBuffer, writeTexture).
+- {@link webgpu/util/texture/subresource}: Helpers for working with texture subresource ranges.
+- {@link webgpu/util/texture/texel_data}:
+    TODO
 
 ### General Helpers
 

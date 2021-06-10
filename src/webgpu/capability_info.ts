@@ -1,5 +1,3 @@
-/** @module webgpu/capability_info */
-
 /* eslint-disable no-sparse-arrays */
 import { assertTypeTrue, ResolveType, TypeEqual, ZipKeysWithValues } from '../common/util/types.js';
 import { assert, unreachable } from '../common/util/util.js';

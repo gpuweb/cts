@@ -1,5 +1,3 @@
-/** @module common/util/util */
-
 import { timeout } from './timeout.js';
 
 /**

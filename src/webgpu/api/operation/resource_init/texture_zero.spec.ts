@@ -28,10 +28,8 @@ import {
 } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
-import {
-  createTextureUploadBuffer,
-  getMipSizePassthroughLayers,
-} from '../../../util/texture/layout.js';
+import { getMipSizePassthroughLayers } from '../../../util/texture/base.js';
+import { createTextureUploadBuffer } from '../../../util/texture/layout.js';
 import { BeginEndRange, SubresourceRange } from '../../../util/texture/subresource.js';
 import { PerTexelComponent, kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
 
