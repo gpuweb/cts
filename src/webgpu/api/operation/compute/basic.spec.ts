@@ -31,8 +31,8 @@ g.test('memcpy').fn(async t => {
               [[offset(0)]] value : u32;
           };
 
-          [[group(0), binding(0)]] var<storage> src : [[access(read)]] Data;
-          [[group(0), binding(1)]] var<storage> dst : [[access(read_write)]] Data;
+          [[group(0), binding(0)]] var<storage, read> src : Data;
+          [[group(0), binding(1)]] var<storage, read_write> dst : Data;
 
           [[stage(compute)]] fn main() {
             dst.value = src.value;
@@ -108,7 +108,7 @@ Test reasonably-sized large dispatches (see also stress tests).
               value : array<u32>;
             };
 
-            [[group(0), binding(0)]] var<storage> dst : [[access(read_write)]] OutputBuffer;
+            [[group(0), binding(0)]] var<storage, read_write> dst : OutputBuffer;
 
             [[stage(compute), workgroup_size(${wgSizes[0]}, ${wgSizes[1]}, ${wgSizes[2]})]]
             fn main(

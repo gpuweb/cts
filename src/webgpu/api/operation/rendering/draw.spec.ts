@@ -116,7 +116,7 @@ struct Inputs {
   value : u32;
 };
 
-[[group(0), binding(0)]] var<storage> output : [[access(read_write)]] Output;
+[[group(0), binding(0)]] var<storage, read_write> output : Output;
 
 [[stage(fragment)]] fn frag_main() -> [[location(0)]] vec4<f32> {
   output.value = 1u;
@@ -517,7 +517,7 @@ ${shaderLocations.map(i => `  attrib${i} : ${wgslFormat};`).join('\n')}
 [[block]] struct OutBuffer {
   primitives : [[stride(${shaderLocations.length * 4})]] array<OutPrimitive>;
 };
-[[group(0), binding(0)]] var<storage> outBuffer : [[access(read_write)]] OutBuffer;
+[[group(0), binding(0)]] var<storage, read_write> outBuffer : OutBuffer;
 
 [[stage(fragment)]] fn main(input : Inputs) {
 ${shaderLocations
