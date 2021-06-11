@@ -1,6 +1,6 @@
 import { assert } from '../../../../../common/util/util.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { getMipSizePassthroughLayers } from '../../../../util/texture/base.js';
+import { virtualMipSize } from '../../../../util/texture/base.js';
 import { CheckContents } from '../texture_zero.spec.js';
 
 function makeFullscreenVertexModule(device: GPUDevice) {
@@ -105,7 +105,7 @@ const checkContents: (type: 'depth' | 'stencil', ...args: Parameters<CheckConten
     subresourceRange
   )) {
     assert(viewDescriptor.baseMipLevel !== undefined);
-    const [width, height] = getMipSizePassthroughLayers(
+    const [width, height] = virtualMipSize(
       params.dimension,
       [t.textureWidth, t.textureHeight, 1],
       viewDescriptor.baseMipLevel

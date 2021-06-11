@@ -28,7 +28,7 @@ import {
 } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { getMipSizePassthroughLayers } from '../../../util/texture/base.js';
+import { virtualMipSize } from '../../../util/texture/base.js';
 import { createTextureUploadBuffer } from '../../../util/texture/layout.js';
 import { BeginEndRange, SubresourceRange } from '../../../util/texture/subresource.js';
 import { PerTexelComponent, kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
@@ -342,7 +342,7 @@ export class TextureZeroInitTest extends GPUTest {
     const firstSubresource = subresourceRange.each().next().value;
     assert(typeof firstSubresource !== 'undefined');
 
-    const [largestWidth, largestHeight, largestDepth] = getMipSizePassthroughLayers(
+    const [largestWidth, largestHeight, largestDepth] = virtualMipSize(
       this.p.dimension,
       [this.textureWidth, this.textureHeight, this.textureDepth],
       firstSubresource.level
@@ -361,7 +361,7 @@ export class TextureZeroInitTest extends GPUTest {
     const commandEncoder = this.device.createCommandEncoder();
 
     for (const { level, layer } of subresourceRange.each()) {
-      const [width, height, depth] = getMipSizePassthroughLayers(
+      const [width, height, depth] = virtualMipSize(
         this.p.dimension,
         [this.textureWidth, this.textureHeight, this.textureDepth],
         level

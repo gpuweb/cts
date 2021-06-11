@@ -25,8 +25,6 @@ export function maxMipLevelCount({
 /**
  * Compute the "physical size" of a mip level: the size of the level, rounded up to a
  * multiple of the texel block size.
- *
- * TODO: Merge with getMipSizePassthroughLayers.
  */
 export function physicalMipSize(
   baseSize: Required<GPUExtent3DDict>,
@@ -52,11 +50,9 @@ export function physicalMipSize(
 }
 
 /**
- * Compute the size of a mip level of a texture.
- *
- * TODO: Merge with physicalMipSize.
+ * Compute the "virtual size" of a mip level of a texture (not accounting for texel block rounding).
  */
-export function getMipSizePassthroughLayers(
+export function virtualMipSize(
   dimension: GPUTextureDimension,
   size: readonly [number, number, number],
   mipLevel: number
