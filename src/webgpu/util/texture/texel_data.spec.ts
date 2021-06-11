@@ -60,7 +60,7 @@ function doTest(
       .map((C, i) => `[[offset(${i * 4})]] result${C} : ${shaderType};`)
       .join('\n')}
   };
-  [[group(0), binding(1)]] var<storage> output : [[access(read_write)]] Output;
+  [[group(0), binding(1)]] var<storage, read_write> output : Output;
 
   [[stage(compute)]]
   fn main() {
