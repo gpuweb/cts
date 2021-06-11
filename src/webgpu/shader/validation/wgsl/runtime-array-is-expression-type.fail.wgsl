@@ -5,7 +5,7 @@ struct S{
   data : RTArr;
 };
 
-[[stage(vertex)]]
+[[stage(fragment)]]
 fn main() {
   var <storage> x : S;
   var y : array<i32,2>;

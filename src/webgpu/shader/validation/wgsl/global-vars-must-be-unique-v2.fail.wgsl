@@ -6,7 +6,7 @@ fn a() {
   return;
 }
 
-[[stage(vertex)]]
+[[stage(fragment)]]
 fn main() {
   return;
 }

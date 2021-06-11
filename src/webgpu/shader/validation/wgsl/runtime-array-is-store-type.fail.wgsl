@@ -6,7 +6,7 @@ struct SArr{
   data : RTArr;
 };
 
-[[stage(vertex)]]
+[[stage(fragment)]]
 fn main() {
   var s : SArr;
 }

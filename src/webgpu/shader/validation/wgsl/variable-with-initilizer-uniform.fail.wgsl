@@ -8,6 +8,6 @@ struct Params {
 [[group(0), binding(0)]]
 var<uniform> u : Params = Params(1);
 
-[[stage(vertex)]]
+[[stage(fragment)]]
 fn main() {
 }
