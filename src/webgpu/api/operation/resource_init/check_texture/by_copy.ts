@@ -3,7 +3,7 @@ import {
   EncodableTextureFormat,
   kEncodableTextureFormatInfo,
 } from '../../../../capability_info.js';
-import { getMipSizePassthroughLayers } from '../../../../util/texture/base.js';
+import { virtualMipSize } from '../../../../util/texture/base.js';
 import { CheckContents } from '../texture_zero.spec.js';
 
 export const checkContentsByBufferCopy: CheckContents = (
@@ -40,7 +40,7 @@ export const checkContentsByTextureCopy: CheckContents = (
     assert(params.format in kEncodableTextureFormatInfo);
     const format = params.format as EncodableTextureFormat;
 
-    const [width, height, depth] = getMipSizePassthroughLayers(
+    const [width, height, depth] = virtualMipSize(
       params.dimension,
       [t.textureWidth, t.textureHeight, t.textureDepth],
       level

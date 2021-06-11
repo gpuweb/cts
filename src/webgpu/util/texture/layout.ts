@@ -1,9 +1,14 @@
 import { assert } from '../../../common/util/util.js';
-import { kSizedTextureFormatInfo, SizedTextureFormat } from '../../capability_info.js';
+import {
+  EncodableTextureFormat,
+  kEncodableTextureFormatInfo,
+  kSizedTextureFormatInfo,
+  SizedTextureFormat,
+} from '../../capability_info.js';
 import { align } from '../math.js';
 import { standardizeExtent3D } from '../unions.js';
 
-import { getMipSizePassthroughLayers } from './base.js';
+import { virtualMipSize } from './base.js';
 
 /** The minimum `bytesPerRow` alignment, per spec. */
 export const kBytesPerRowAlignment = 256;
@@ -53,7 +58,7 @@ export function getTextureCopyLayout(
   const { mipLevel } = options;
   let { bytesPerRow, rowsPerImage } = options;
 
-  const mipSize = getMipSizePassthroughLayers(dimension, size, mipLevel);
+  const mipSize = virtualMipSize(dimension, size, mipLevel);
 
   const { blockWidth, blockHeight, bytesPerBlock } = kSizedTextureFormatInfo[format];
 
@@ -100,14 +105,18 @@ export function getTextureCopyLayout(
  */
 export function fillTextureDataWithTexelValue(
   texelValue: ArrayBuffer,
-  format: SizedTextureFormat,
+  format: EncodableTextureFormat,
   dimension: GPUTextureDimension,
   outputBuffer: ArrayBuffer,
   size: [number, number, number],
   options: LayoutOptions = kDefaultLayoutOptions
 ): void {
-  const { blockWidth, blockHeight, bytesPerBlock } = kSizedTextureFormatInfo[format];
-  assert(bytesPerBlock === texelValue.byteLength);
+  const { blockWidth, blockHeight, bytesPerBlock } = kEncodableTextureFormatInfo[format];
+  // Block formats are not handled correctly below.
+  assert(blockWidth === 1);
+  assert(blockHeight === 1);
+
+  assert(bytesPerBlock === texelValue.byteLength, 'texelValue must be of size bytesPerBlock');
 
   const { byteLength, rowsPerImage, bytesPerRow } = getTextureCopyLayout(
     format,
@@ -118,7 +127,7 @@ export function fillTextureDataWithTexelValue(
 
   assert(byteLength <= outputBuffer.byteLength);
 
-  const mipSize = getMipSizePassthroughLayers(dimension, size, options.mipLevel);
+  const mipSize = virtualMipSize(dimension, size, options.mipLevel);
 
   const texelValueBytes = new Uint8Array(texelValue);
   const outputTexelValueBytes = new Uint8Array(outputBuffer);
@@ -140,7 +149,7 @@ export function fillTextureDataWithTexelValue(
 export function createTextureUploadBuffer(
   texelValue: ArrayBuffer,
   device: GPUDevice,
-  format: SizedTextureFormat,
+  format: EncodableTextureFormat,
   dimension: GPUTextureDimension,
   size: [number, number, number],
   options: LayoutOptions = kDefaultLayoutOptions

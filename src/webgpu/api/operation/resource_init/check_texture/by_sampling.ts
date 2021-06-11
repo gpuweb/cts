@@ -3,7 +3,7 @@ import {
   EncodableTextureFormat,
   kEncodableTextureFormatInfo,
 } from '../../../../capability_info.js';
-import { getMipSizePassthroughLayers } from '../../../../util/texture/base.js';
+import { virtualMipSize } from '../../../../util/texture/base.js';
 import {
   kTexelRepresentationInfo,
   getSingleDataType,
@@ -24,7 +24,7 @@ export const checkContentsBySampling: CheckContents = (
   const rep = kTexelRepresentationInfo[format];
 
   for (const { level, layers } of subresourceRange.mipLevels()) {
-    const [width, height, depth] = getMipSizePassthroughLayers(
+    const [width, height, depth] = virtualMipSize(
       params.dimension,
       [t.textureWidth, t.textureHeight, t.textureDepth],
       level
