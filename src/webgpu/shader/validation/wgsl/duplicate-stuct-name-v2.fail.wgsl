@@ -9,7 +9,7 @@ fn Foo() {
   return;
 }
 
-[[stage(vertex)]]
+[[stage(fragment)]]
 fn main() {
   var Foo : f32;
   var f : Foo;

@@ -7,6 +7,6 @@ struct S {
   b : f32;
 };
 
-[[stage(vertex)]]
+[[stage(fragment)]]
 fn main() {
 }

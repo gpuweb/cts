@@ -5,7 +5,7 @@ struct Foo {
   a : array<f32>;
 };
 
-[[stage(vertex)]]
+[[stage(fragment)]]
 fn main() {
   return;
 }

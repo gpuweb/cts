@@ -8,5 +8,6 @@ struct Particles {
 [[group(0), binding(1)]] var<storage> particles : Particles;
 
 [[stage(vertex)]]
-fn main() {
+fn main() -> [[builtin(position)]] vec4<f32> {
+  return vec4<f32>();
 }

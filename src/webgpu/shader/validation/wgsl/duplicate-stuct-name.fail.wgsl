@@ -8,7 +8,7 @@ struct foo {
   b : f32;
 };
 
-[[stage(vertex)]]
+[[stage(fragment)]]
 fn main() {
   return;
 }
