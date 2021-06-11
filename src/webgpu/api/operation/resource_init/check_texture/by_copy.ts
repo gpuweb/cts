@@ -1,8 +1,5 @@
 import { assert } from '../../../../../common/util/util.js';
-import {
-  EncodableTextureFormat,
-  kEncodableTextureFormatInfo,
-} from '../../../../capability_info.js';
+import { EncodableTextureFormat, kTextureFormatInfo } from '../../../../capability_info.js';
 import { virtualMipSize } from '../../../../util/texture/base.js';
 import { CheckContents } from '../texture_zero.spec.js';
 
@@ -15,7 +12,7 @@ export const checkContentsByBufferCopy: CheckContents = (
 ) => {
   for (const { level: mipLevel, layer } of subresourceRange.each()) {
     assert(params.dimension !== '1d');
-    assert(params.format in kEncodableTextureFormatInfo);
+    assert(params.format in kTextureFormatInfo);
     const format = params.format as EncodableTextureFormat;
 
     t.expectSingleColor(texture, format, {
@@ -37,7 +34,7 @@ export const checkContentsByTextureCopy: CheckContents = (
 ) => {
   for (const { level, layer } of subresourceRange.each()) {
     assert(params.dimension !== '1d');
-    assert(params.format in kEncodableTextureFormatInfo);
+    assert(params.format in kTextureFormatInfo);
     const format = params.format as EncodableTextureFormat;
 
     const [width, height, depth] = virtualMipSize(

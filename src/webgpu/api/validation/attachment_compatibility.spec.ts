@@ -7,12 +7,12 @@ TODO: Add sparse color attachment compatibility test when defined by specificati
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { range } from '../../../common/util/util.js';
 import {
-  kRegularTextureFormatInfo,
   kRegularTextureFormats,
   kSizedDepthStencilFormats,
   kUnsizedDepthStencilFormats,
   kTextureSampleCounts,
   kMaxColorAttachments,
+  kTextureFormatInfo,
 } from '../../capability_info.js';
 
 import { ValidationTest, CommandBufferMaker } from './validation_test.js';
@@ -138,7 +138,7 @@ class F extends ValidationTest {
 export const g = makeTestGroup(F);
 
 const kColorAttachmentFormats = kRegularTextureFormats.filter(format => {
-  const info = kRegularTextureFormatInfo[format];
+  const info = kTextureFormatInfo[format];
   return info.color && info.renderable;
 });
 

@@ -27,8 +27,8 @@ TODO: copying into slices of 2d array textures. 1d and 3d as well if they're not
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import {
-  kAllTextureFormatInfo,
-  kAllTextureFormats,
+  kTextureFormatInfo,
+  kTextureFormats,
   kTextureUsages,
   kValidTextureFormatsForCopyIB2T,
 } from '../../../../capability_info.js';
@@ -291,7 +291,7 @@ g.test('destination_texture,mipLevel')
 g.test('destination_texture,format')
   .params(u =>
     u
-      .combine('format', kAllTextureFormats)
+      .combine('format', kTextureFormats)
       .beginSubcases()
       .combine('copySize', [
         { width: 0, height: 0, depthOrArrayLayers: 0 },
@@ -300,7 +300,7 @@ g.test('destination_texture,format')
   )
   .fn(async t => {
     const { format, copySize } = t.params;
-    await t.selectDeviceOrSkipTestCase(kAllTextureFormatInfo[format].feature);
+    await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
 

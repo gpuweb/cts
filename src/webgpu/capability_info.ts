@@ -207,13 +207,13 @@ export const kUncompressedTextureFormatInfo = {
 export type UncompressedTextureFormat = keyof typeof kUncompressedTextureFormatInfo;
 export const kUncompressedTextureFormats = keysOf(kUncompressedTextureFormatInfo);
 
-export const kAllTextureFormatInfo = {
+export const kTextureFormatInfo = {
   ...kUncompressedTextureFormatInfo,
   ...kCompressedTextureFormatInfo,
 } as const;
-export const kAllTextureFormats = keysOf(kAllTextureFormatInfo);
+export const kTextureFormats = keysOf(kTextureFormatInfo);
 // Assert every GPUTextureFormat is covered by one of the tables.
-((x: { readonly [k in GPUTextureFormat]: {} }) => x)(kAllTextureFormatInfo);
+((x: { readonly [k in GPUTextureFormat]: {} }) => x)(kTextureFormatInfo);
 
 // From spec
 export const kValidTextureFormatsForCopyIB2T = [
@@ -312,7 +312,7 @@ export function textureDimensionAndFormatCompatible(
   dimension: undefined | GPUTextureDimension,
   format: GPUTextureFormat
 ): boolean {
-  const info = kAllTextureFormatInfo[format];
+  const info = kTextureFormatInfo[format];
   return !(
     (dimension === '1d' || dimension === '3d') &&
     (info.blockWidth > 1 || info.depth || info.stencil)

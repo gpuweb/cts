@@ -1,5 +1,5 @@
 import { assert, unreachable } from '../../../common/util/util.js';
-import { kAllTextureFormatInfo } from '../../capability_info.js';
+import { kTextureFormatInfo } from '../../capability_info.js';
 import { align } from '../../util/math.js';
 import { standardizeExtent3D } from '../../util/unions.js';
 
@@ -37,11 +37,8 @@ export function physicalMipSize(
 
   const virtualWidthAtLevel = Math.max(baseSize.width >> level, 1);
   const virtualHeightAtLevel = Math.max(baseSize.height >> level, 1);
-  const physicalWidthAtLevel = align(virtualWidthAtLevel, kAllTextureFormatInfo[format].blockWidth);
-  const physicalHeightAtLevel = align(
-    virtualHeightAtLevel,
-    kAllTextureFormatInfo[format].blockHeight
-  );
+  const physicalWidthAtLevel = align(virtualWidthAtLevel, kTextureFormatInfo[format].blockWidth);
+  const physicalHeightAtLevel = align(virtualHeightAtLevel, kTextureFormatInfo[format].blockHeight);
   return {
     width: physicalWidthAtLevel,
     height: physicalHeightAtLevel,

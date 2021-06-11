@@ -24,7 +24,7 @@ TODO: review existing tests, write descriptions, and make sure tests are complet
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { kAllTextureFormats, kAllTextureFormatInfo } from '../../capability_info.js';
+import { kTextureFormats, kTextureFormatInfo } from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -130,10 +130,10 @@ g.test('at_least_one_color_state_is_required').fn(async t => {
 });
 
 g.test('color_formats_must_be_renderable')
-  .params(u => u.combine('format', kAllTextureFormats))
+  .params(u => u.combine('format', kTextureFormats))
   .fn(async t => {
     const format: GPUTextureFormat = t.params.format;
-    const info = kAllTextureFormatInfo[format];
+    const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
     const descriptor = t.getDescriptor({ targets: [{ format }] });

@@ -1,11 +1,7 @@
 export const description = '';
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import {
-  kUncompressedTextureFormatInfo,
-  kSizedTextureFormats,
-  kSizedTextureFormatInfo,
-} from '../../../capability_info.js';
+import { kTextureFormatInfo, kSizedTextureFormats } from '../../../capability_info.js';
 import { align } from '../../../util/math.js';
 import {
   bytesInACompleteRow,
@@ -36,7 +32,7 @@ g.test('bound_on_rows_per_image')
     const { rowsPerImage, copyHeightInBlocks, copyDepth, method } = t.params;
 
     const format = 'rgba8unorm';
-    const copyHeight = copyHeightInBlocks * kUncompressedTextureFormatInfo[format].blockHeight;
+    const copyHeight = copyHeightInBlocks * kTextureFormatInfo[format].blockHeight;
 
     const texture = t.device.createTexture({
       size: { width: 4, height: 4, depthOrArrayLayers: 3 },
@@ -136,7 +132,7 @@ g.test('required_bytes_in_copy')
       format,
       method,
     } = t.params;
-    const info = kSizedTextureFormatInfo[format];
+    const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
     // In the CopyB2T and CopyT2B cases we need to have bytesPerRow 256-aligned,
@@ -185,7 +181,7 @@ g.test('rows_per_image_alignment')
   )
   .fn(async t => {
     const { rowsPerImage, format, method } = t.params;
-    const info = kSizedTextureFormatInfo[format];
+    const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
     const size = { width: 0, height: 0, depthOrArrayLayers: 0 };
@@ -210,7 +206,7 @@ g.test('texel_block_alignment_on_offset')
   )
   .fn(async t => {
     const { format, offset, method } = t.params;
-    const info = kSizedTextureFormatInfo[format];
+    const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
     const size = { width: 0, height: 0, depthOrArrayLayers: 0 };
@@ -218,7 +214,7 @@ g.test('texel_block_alignment_on_offset')
     const texture = t.createAlignedTexture(format, size);
 
     const success =
-      method === 'WriteTexture' || offset % kSizedTextureFormatInfo[format].bytesPerBlock === 0;
+      method === 'WriteTexture' || offset % kTextureFormatInfo[format].bytesPerBlock === 0;
 
     t.testRun({ texture }, { offset, bytesPerRow: 0 }, size, { dataSize: offset, method, success });
   });
@@ -253,7 +249,7 @@ g.test('bound_on_bytes_per_row')
       format,
       method,
     } = t.params;
-    const info = kSizedTextureFormatInfo[format];
+    const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
     // In the CopyB2T and CopyT2B cases we need to have bytesPerRow 256-aligned.
@@ -301,7 +297,7 @@ g.test('bound_on_offset')
     const { offsetInBlocks, dataSizeInBlocks, method } = t.params;
 
     const format = 'rgba8unorm';
-    const info = kSizedTextureFormatInfo[format];
+    const info = kTextureFormatInfo[format];
     const offset = offsetInBlocks * info.bytesPerBlock;
     const dataSize = dataSizeInBlocks * info.bytesPerBlock;
 
