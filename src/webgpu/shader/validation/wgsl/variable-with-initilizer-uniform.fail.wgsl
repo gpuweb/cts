@@ -2,7 +2,7 @@
 
 [[block]]
 struct Params {
-  [[offset(0)]] count: i32;
+  count: i32;
 };
 
 [[group(0), binding(0)]]

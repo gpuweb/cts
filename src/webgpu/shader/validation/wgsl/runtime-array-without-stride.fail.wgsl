@@ -2,7 +2,7 @@
 
 [[block]]
 struct Foo {
-  [[offset (0)]] a : array<f32>;
+  a : array<f32>;
 };
 
 [[stage(vertex)]]
