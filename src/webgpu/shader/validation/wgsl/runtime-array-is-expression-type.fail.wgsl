@@ -2,7 +2,7 @@
 
 type RTArr = [[stride (16)]] array<i32>;
 struct S{
-  [[offset(0)]] data : RTArr;
+  data : RTArr;
 };
 
 [[stage(vertex)]]

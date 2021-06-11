@@ -3,7 +3,7 @@
 
 [[block]]
 struct PositionBuffer {
-  [[offset(0)]] pos: vec2<f32>; 
+  pos: vec2<f32>; 
 };
 
 var<storage> s : PositionBuffer;

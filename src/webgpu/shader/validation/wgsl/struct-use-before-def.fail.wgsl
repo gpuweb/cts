@@ -3,7 +3,7 @@
 const a : Foo;
 
 struct Foo {
-  [[offset 0]] a : i32;
+  a : i32;
 };
 
 [[stage(vertex)]]

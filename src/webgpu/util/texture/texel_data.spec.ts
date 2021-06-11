@@ -57,7 +57,7 @@ function doTest(
 
   [[block]] struct Output {
     ${rep.componentOrder
-      .map((C, i) => `[[offset(${i * 4})]] result${C} : ${shaderType};`)
+      .map((C, i) => `result${C} : ${shaderType};`)
       .join('\n')}
   };
   [[group(0), binding(1)]] var<storage, read_write> output : Output;
