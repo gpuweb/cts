@@ -1,4 +1,4 @@
-import { kSizedTextureFormatInfo, SizedTextureFormat } from '../../../capability_info.js';
+import { kTextureFormatInfo, SizedTextureFormat } from '../../../capability_info.js';
 import { ImageCopyType } from '../../../util/texture/layout.js';
 import { ValidationTest } from '../validation_test.js';
 
@@ -85,7 +85,7 @@ export class ImageCopyTest extends ValidationTest {
     copySize: Required<GPUExtent3DDict> = { width: 1, height: 1, depthOrArrayLayers: 1 },
     origin: Required<GPUOrigin3DDict> = { x: 0, y: 0, z: 0 }
   ): GPUTexture {
-    const info = kSizedTextureFormatInfo[format];
+    const info = kTextureFormatInfo[format];
     return this.device.createTexture({
       size: {
         width: Math.max(1, copySize.width + origin.x) * info.blockWidth,
@@ -122,12 +122,12 @@ interface WithFormatAndMethod extends WithFormat {
 
 // This is a helper function used for expanding test parameters for texel block alignment tests on offset
 export function texelBlockAlignmentTestExpanderForOffset({ format }: WithFormat) {
-  return valuesToTestDivisibilityBy(kSizedTextureFormatInfo[format].bytesPerBlock);
+  return valuesToTestDivisibilityBy(kTextureFormatInfo[format].bytesPerBlock);
 }
 
 // This is a helper function used for expanding test parameters for texel block alignment tests on rowsPerImage
 export function texelBlockAlignmentTestExpanderForRowsPerImage({ format }: WithFormat) {
-  return valuesToTestDivisibilityBy(kSizedTextureFormatInfo[format].blockHeight);
+  return valuesToTestDivisibilityBy(kTextureFormatInfo[format].blockHeight);
 }
 
 // This is a helper function used for expanding test parameters for texel block alignment tests on origin and size
@@ -138,11 +138,11 @@ export function texelBlockAlignmentTestExpanderForValueToCoordinate({
   switch (coordinateToTest) {
     case 'x':
     case 'width':
-      return valuesToTestDivisibilityBy(kSizedTextureFormatInfo[format].blockWidth!);
+      return valuesToTestDivisibilityBy(kTextureFormatInfo[format].blockWidth!);
 
     case 'y':
     case 'height':
-      return valuesToTestDivisibilityBy(kSizedTextureFormatInfo[format].blockHeight!);
+      return valuesToTestDivisibilityBy(kTextureFormatInfo[format].blockHeight!);
 
     case 'z':
     case 'depthOrArrayLayers':
@@ -153,8 +153,8 @@ export function texelBlockAlignmentTestExpanderForValueToCoordinate({
 // This is a helper function used for filtering test parameters
 export function formatCopyableWithMethod({ format, method }: WithFormatAndMethod): boolean {
   if (method === 'CopyTextureToBuffer') {
-    return kSizedTextureFormatInfo[format].copySrc;
+    return kTextureFormatInfo[format].copySrc;
   } else {
-    return kSizedTextureFormatInfo[format].copyDst;
+    return kTextureFormatInfo[format].copyDst;
   }
 }

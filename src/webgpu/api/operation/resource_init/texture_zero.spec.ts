@@ -18,10 +18,8 @@ import {
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, unreachable } from '../../../../common/util/util.js';
 import {
-  kAllTextureFormatInfo,
-  kEncodableTextureFormatInfo,
+  kTextureFormatInfo,
   kTextureAspects,
-  kUncompressedTextureFormatInfo,
   kUncompressedTextureFormats,
   EncodableTextureFormat,
   UncompressedTextureFormat,
@@ -170,10 +168,10 @@ function getRequiredTextureUsage(
     usage |= GPUConst.TextureUsage.RENDER_ATTACHMENT;
   }
 
-  if (!kUncompressedTextureFormatInfo[format].copyDst) {
+  if (!kTextureFormatInfo[format].copyDst) {
     // Copies are not possible. We need OutputAttachment to initialize
     // canary data.
-    assert(kUncompressedTextureFormatInfo[format].renderable);
+    assert(kTextureFormatInfo[format].renderable);
     usage |= GPUConst.TextureUsage.RENDER_ATTACHMENT;
   }
 
@@ -298,7 +296,7 @@ export class TextureZeroInitTest extends GPUTest {
       this.p.aspect,
       subresourceRange
     )) {
-      if (kUncompressedTextureFormatInfo[this.p.format].color) {
+      if (kTextureFormatInfo[this.p.format].color) {
         commandEncoder
           .beginRenderPass({
             colorAttachments: [
@@ -336,7 +334,7 @@ export class TextureZeroInitTest extends GPUTest {
     // TODO: 1D texture
     assert(this.p.dimension !== '1d');
 
-    assert(this.p.format in kEncodableTextureFormatInfo);
+    assert(this.p.format in kTextureFormatInfo);
     const format = this.p.format as EncodableTextureFormat;
 
     const firstSubresource = subresourceRange.each().next().value;
@@ -386,10 +384,10 @@ export class TextureZeroInitTest extends GPUTest {
     state: InitializedState,
     subresourceRange: SubresourceRange
   ): void {
-    if (this.p.sampleCount > 1 || !kUncompressedTextureFormatInfo[this.p.format].copyDst) {
+    if (this.p.sampleCount > 1 || !kTextureFormatInfo[this.p.format].copyDst) {
       // Copies to multisampled textures not yet specified.
       // Use a storeOp for now.
-      assert(kUncompressedTextureFormatInfo[this.p.format].renderable);
+      assert(kTextureFormatInfo[this.p.format].renderable);
       this.initializeWithStoreOp(state, texture, subresourceRange);
     } else {
       this.initializeWithCopy(texture, state, subresourceRange);
@@ -403,7 +401,7 @@ export class TextureZeroInitTest extends GPUTest {
       this.p.aspect,
       subresourceRange
     )) {
-      if (kUncompressedTextureFormatInfo[this.p.format].color) {
+      if (kTextureFormatInfo[this.p.format].color) {
         commandEncoder
           .beginRenderPass({
             colorAttachments: [
@@ -448,7 +446,7 @@ const kTestParams = kUnitCaseParamsBuilder
   .beginSubcases()
   .combine('aspect', kTextureAspects)
   .unless(({ readMethod, format, aspect }) => {
-    const info = kUncompressedTextureFormatInfo[format];
+    const info = kTextureFormatInfo[format];
     return (
       (readMethod === ReadMethod.DepthTest && (!info.depth || aspect === 'stencil-only')) ||
       (readMethod === ReadMethod.StencilTest && (!info.stencil || aspect === 'depth-only')) ||
@@ -476,7 +474,7 @@ const kTestParams = kUnitCaseParamsBuilder
   .unless(({ sampleCount, mipLevelCount }) => sampleCount > 1 && mipLevelCount > 1)
   .combine('uninitializeMethod', kUninitializeMethods)
   .unless(({ dimension, readMethod, uninitializeMethod, format, sampleCount }) => {
-    const formatInfo = kUncompressedTextureFormatInfo[format];
+    const formatInfo = kTextureFormatInfo[format];
     return (
       dimension === '3d' &&
       (sampleCount > 1 ||
@@ -505,7 +503,7 @@ const kTestParams = kUnitCaseParamsBuilder
   .unless(({ sampleCount, layerCount }) => sampleCount > 1 && layerCount > 1)
   .unless(({ format, sampleCount, uninitializeMethod, readMethod }) => {
     const usage = getRequiredTextureUsage(format, sampleCount, uninitializeMethod, readMethod);
-    const info = kUncompressedTextureFormatInfo[format];
+    const info = kTextureFormatInfo[format];
 
     return (
       ((usage & GPUConst.TextureUsage.RENDER_ATTACHMENT) !== 0 && !info.renderable) ||
@@ -516,8 +514,7 @@ const kTestParams = kUnitCaseParamsBuilder
   .combine('canaryOnCreation', [false, true])
   .filter(({ canaryOnCreation, format }) => {
     // We can only initialize the texture if it's encodable or renderable.
-    const canInitialize =
-      format in kEncodableTextureFormatInfo || kAllTextureFormatInfo[format].renderable;
+    const canInitialize = format in kTextureFormatInfo || kTextureFormatInfo[format].renderable;
 
     // Filter out cases where we want canary values but can't initialize.
     return !canaryOnCreation || canInitialize;
@@ -555,7 +552,7 @@ export const g = makeTestGroup(TextureZeroInitTest);
 g.test('uninitialized_texture_is_zero')
   .params(kTestParams)
   .fn(async t => {
-    await t.selectDeviceOrSkipTestCase(kUncompressedTextureFormatInfo[t.params.format].feature);
+    await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[t.params.format].feature);
 
     const usage = getRequiredTextureUsage(
       t.params.format,

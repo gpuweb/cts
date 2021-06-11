@@ -5,7 +5,7 @@ import { assert } from '../common/util/util.js';
 import {
   EncodableTextureFormat,
   SizedTextureFormat,
-  kAllTextureFormatInfo,
+  kTextureFormatInfo,
   kQueryTypeInfo,
 } from './capability_info.js';
 import { makeBufferWithContents } from './util/buffer.js';
@@ -155,7 +155,7 @@ export class GPUTest extends Fixture {
     const features = new Set<GPUFeatureName | undefined>();
     for (const format of formats) {
       if (format !== undefined) {
-        features.add(kAllTextureFormatInfo[format].feature);
+        features.add(kTextureFormatInfo[format].feature);
       }
     }
 

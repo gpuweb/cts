@@ -2,7 +2,7 @@ export const description = '';
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
-import { kSizedTextureFormats, kSizedTextureFormatInfo } from '../../../capability_info.js';
+import { kSizedTextureFormats, kTextureFormatInfo } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import { align } from '../../../util/math.js';
 import { kImageCopyTypes } from '../../../util/texture/layout.js';
@@ -158,7 +158,7 @@ g.test('origin_alignment')
   )
   .fn(async t => {
     const { valueToCoordinate, coordinateToTest, format, method } = t.params;
-    const info = kSizedTextureFormatInfo[format];
+    const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
     const origin = { x: 0, y: 0, z: 0 };
@@ -236,7 +236,7 @@ g.test('size_alignment')
   )
   .fn(async t => {
     const { valueToCoordinate, coordinateToTest, format, method } = t.params;
-    const info = kSizedTextureFormatInfo[format];
+    const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
     const origin = { x: 0, y: 0, z: 0 };
@@ -290,7 +290,7 @@ g.test('copy_rectangle')
       method,
     } = t.params;
     const format = 'rgba8unorm';
-    const info = kSizedTextureFormatInfo[format];
+    const info = kTextureFormatInfo[format];
 
     const origin = [0, 0, 0];
     const copySize = [0, 0, 0];

@@ -1,8 +1,7 @@
 import { assert } from '../../../common/util/util.js';
 import {
   EncodableTextureFormat,
-  kEncodableTextureFormatInfo,
-  kSizedTextureFormatInfo,
+  kTextureFormatInfo,
   SizedTextureFormat,
 } from '../../capability_info.js';
 import { align } from '../math.js';
@@ -60,7 +59,7 @@ export function getTextureCopyLayout(
 
   const mipSize = virtualMipSize(dimension, size, mipLevel);
 
-  const { blockWidth, blockHeight, bytesPerBlock } = kSizedTextureFormatInfo[format];
+  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
 
   // We align mipSize to be the physical size of the texture subresource.
   mipSize[0] = align(mipSize[0], blockWidth);
@@ -111,7 +110,7 @@ export function fillTextureDataWithTexelValue(
   size: [number, number, number],
   options: LayoutOptions = kDefaultLayoutOptions
 ): void {
-  const { blockWidth, blockHeight, bytesPerBlock } = kEncodableTextureFormatInfo[format];
+  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
   // Block formats are not handled correctly below.
   assert(blockWidth === 1);
   assert(blockHeight === 1);
@@ -194,7 +193,7 @@ export const kImageCopyTypes: readonly ImageCopyType[] = [
  * Computes `bytesInACompleteRow` (as defined by the WebGPU spec) for image copies (B2T/T2B/writeTexture).
  */
 export function bytesInACompleteRow(copyWidth: number, format: SizedTextureFormat): number {
-  const info = kSizedTextureFormatInfo[format];
+  const info = kTextureFormatInfo[format];
   assert(copyWidth % info.blockWidth === 0);
   return (info.bytesPerBlock * copyWidth) / info.blockWidth;
 }
@@ -271,7 +270,7 @@ export function dataBytesForCopyOrOverestimate({
 }: DataBytesForCopyArgs): { minDataSizeOrOverestimate: number; copyValid: boolean } {
   const copyExtent = standardizeExtent3D(copySize_);
 
-  const info = kSizedTextureFormatInfo[format];
+  const info = kTextureFormatInfo[format];
   assert(copyExtent.width % info.blockWidth === 0);
   assert(copyExtent.height % info.blockHeight === 0);
   const sizeInBlocks = {
