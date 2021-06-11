@@ -27,6 +27,7 @@
     ],
     "exclude": [
       "**/*.spec.ts",
+      "**/*.html.ts",
       "src/*/listing.ts",
     ],
     "excludeInternal": true,
