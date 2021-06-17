@@ -64,7 +64,7 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
 
             [[stage(vertex)]] fn main(
               [[builtin(vertex_index)]] VertexIndex : i32) -> Outputs {
-              let position : array<vec3<f32>, 6> = array<vec3<f32>, 6>(
+              var position : array<vec3<f32>, 6> = array<vec3<f32>, 6>(
                 vec3<f32>(-0.5, 0.5, -0.5),
                 vec3<f32>(0.5, 0.5, -0.5),
                 vec3<f32>(-0.5, 0.5, 0.5),
@@ -72,7 +72,7 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
                 vec3<f32>(0.5, 0.5, -0.5),
                 vec3<f32>(0.5, 0.5, 0.5));
               // uv is pre-scaled to mimic repeating tiled texture
-              let uv : array<vec2<f32>, 6> = array<vec2<f32>, 6>(
+              var uv : array<vec2<f32>, 6> = array<vec2<f32>, 6>(
                 vec2<f32>(0.0, 0.0),
                 vec2<f32>(1.0, 0.0),
                 vec2<f32>(0.0, 50.0),

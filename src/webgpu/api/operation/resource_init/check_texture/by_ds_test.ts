@@ -9,7 +9,7 @@ function makeFullscreenVertexModule(device: GPUDevice) {
     [[stage(vertex)]]
     fn main([[builtin(vertex_index)]] VertexIndex : i32)
          -> [[builtin(position)]] vec4<f32> {
-      let pos : array<vec2<f32>, 3> = array<vec2<f32>, 3>(
+      var pos : array<vec2<f32>, 3> = array<vec2<f32>, 3>(
         vec2<f32>(-1.0, -3.0),
         vec2<f32>( 3.0,  1.0),
         vec2<f32>(-1.0,  1.0));
