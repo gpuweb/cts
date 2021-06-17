@@ -344,7 +344,7 @@ Test that the depth attachment format in render passes or bundles match the pipe
 g.test('render_pass_or_bundle_and_pipeline,sample_count')
   .desc(
     `
-Test that the sample count in render passes or bundles match the pipeline sample count.
+Test that the sample count in render passes or bundles match the pipeline sample count for both color texture and depthstencil texture.
 `
   )
   .params(u =>
@@ -356,21 +356,38 @@ Test that the sample count in render passes or bundles match the pipeline sample
   )
   .fn(t => {
     const { encoderType, encoderSampleCount, pipelineSampleCount } = t.params;
-    const pipeline = t.createRenderPipeline(
+
+    // For color texture
+    const pipelineWithoutDepthStencil = t.createRenderPipeline(
       [{ format: 'rgba8unorm' }],
       undefined,
       pipelineSampleCount
     );
 
-    const { encoder, finish } = t.createPassOrBundleEncoder(
-      encoderType,
-      ['rgba8unorm'],
-      undefined,
-      encoderSampleCount
-    );
-    encoder.setPipeline(pipeline);
+    const {
+      encoder: encoderWithoutDepthStencil,
+      finish: finishWithoutDepthStencil,
+    } = t.createPassOrBundleEncoder(encoderType, ['rgba8unorm'], undefined, encoderSampleCount);
+    encoderWithoutDepthStencil.setPipeline(pipelineWithoutDepthStencil);
 
     t.expectValidationError(() => {
-      t.queue.submit([finish()]);
+      t.queue.submit([finishWithoutDepthStencil()]);
+    }, encoderSampleCount !== pipelineSampleCount);
+
+    // For DepthStencil texture
+    const pipelineWithDepthStencilOnly = t.createRenderPipeline(
+      [],
+      { format: 'depth24plus-stencil8' },
+      pipelineSampleCount
+    );
+
+    const {
+      encoder: encoderWithDepthStencilOnly,
+      finish: finishWithDepthStencilOnly,
+    } = t.createPassOrBundleEncoder(encoderType, [], 'depth24plus-stencil8', encoderSampleCount);
+    encoderWithDepthStencilOnly.setPipeline(pipelineWithDepthStencilOnly);
+
+    t.expectValidationError(() => {
+      t.queue.submit([finishWithDepthStencilOnly()]);
     }, encoderSampleCount !== pipelineSampleCount);
   });

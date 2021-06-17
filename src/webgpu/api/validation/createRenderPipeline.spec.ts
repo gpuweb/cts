@@ -105,23 +105,17 @@ class F extends ValidationTest {
   doCreateRenderPipelineTest(
     isAsync: boolean,
     _success: boolean,
-    descriptor: GPURenderPipelineDescriptor,
-    callback: (arg0: GPURenderPipeline) => void = _ => {
-      // dummy default callback
-      _ === _;
-    }
+    descriptor: GPURenderPipelineDescriptor
   ) {
     if (isAsync) {
       if (_success) {
-        this.shouldResolve(this.device.createRenderPipelineAsync(descriptor).then(callback));
+        this.shouldResolve(this.device.createRenderPipelineAsync(descriptor));
       } else {
-        // If creating render pipeline is expected to fail, we just skip the callback
         this.shouldReject('OperationError', this.device.createRenderPipelineAsync(descriptor));
       }
     } else {
       if (_success) {
-        const pipeline = this.device.createRenderPipeline(descriptor);
-        callback(pipeline);
+        this.device.createRenderPipeline(descriptor);
       } else {
         this.expectValidationError(() => {
           this.device.createRenderPipeline(descriptor);
@@ -163,9 +157,7 @@ g.test('at_least_one_color_state_is_required')
   });
 
 g.test('color_formats_must_be_renderable')
-  .params(u =>
-    u.combine('isAsync', [false, true]).combine('format', kTextureFormats as GPUTextureFormat[])
-  )
+  .params(u => u.combine('isAsync', [false, true]).combine('format', kTextureFormats))
   .fn(async t => {
     const { isAsync, format } = t.params;
     const info = kTextureFormatInfo[format];
@@ -173,13 +165,7 @@ g.test('color_formats_must_be_renderable')
 
     const descriptor = t.getDescriptor({ targets: [{ format }] });
 
-    if (info.renderable && info.color) {
-      // Succeeds when color format is renderable
-      t.doCreateRenderPipelineTest(isAsync, true, descriptor);
-    } else {
-      // Fails because when format is non-renderable
-      t.doCreateRenderPipelineTest(isAsync, false, descriptor);
-    }
+    t.doCreateRenderPipelineTest(isAsync, info.renderable && info.color, descriptor);
   });
 
 g.test('sample_count_must_be_valid')
@@ -200,87 +186,4 @@ g.test('sample_count_must_be_valid')
     const descriptor = t.getDescriptor({ sampleCount });
 
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
-  });
-
-g.test('sample_count_must_be_equal_to_the_one_of_every_attachment_in_the_render_pass')
-  .params(u =>
-    u.combine('isAsync', [false, true]).combineWithParams([
-      { attachmentSamples: 4, pipelineSamples: 4, _success: true }, // It is allowed to use multisampled render pass and multisampled render pipeline.
-      { attachmentSamples: 4, pipelineSamples: 1, _success: false }, // It is not allowed to use multisampled render pass and non-multisampled render pipeline.
-      { attachmentSamples: 1, pipelineSamples: 4, _success: false }, // It is not allowed to use non-multisampled render pass and multisampled render pipeline.
-    ])
-  )
-  .fn(async t => {
-    const { isAsync, attachmentSamples, pipelineSamples, _success } = t.params;
-
-    const colorTexture = t.createTexture({
-      format: 'rgba8unorm',
-      sampleCount: attachmentSamples,
-    });
-    const renderPassDescriptorWithoutDepthStencil = {
-      colorAttachments: [
-        {
-          view: colorTexture.createView(),
-          loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
-          storeOp: 'store',
-        },
-      ],
-    } as const;
-    const renderPipelineDescriptorWithoutDepthStencil = {
-      sampleCount: pipelineSamples,
-    } as GPURenderPipelineDescriptor;
-
-    const depthStencilTexture = t.createTexture({
-      format: 'depth24plus-stencil8',
-      sampleCount: attachmentSamples,
-    });
-    const renderPassDescriptorWithDepthStencilOnly = {
-      colorAttachments: [],
-      depthStencilAttachment: {
-        view: depthStencilTexture.createView(),
-        depthLoadValue: 1.0,
-        depthStoreOp: 'store',
-        stencilLoadValue: 0,
-        stencilStoreOp: 'store',
-      },
-    } as const;
-    const renderPipelineDescriptorWithDepthStencilOnly = {
-      targets: [],
-      depthStencil: { format: 'depth24plus-stencil8' },
-      sampleCount: pipelineSamples,
-    } as GPURenderPipelineDescriptor;
-
-    const buildCallback = function (
-      renderPassDescriptor: GPURenderPassDescriptor,
-      _success: boolean
-    ) {
-      return function (returnedPipeline: GPURenderPipeline) {
-        const commandEncoder = t.device.createCommandEncoder();
-        const renderPass = commandEncoder.beginRenderPass(renderPassDescriptor);
-        renderPass.setPipeline(returnedPipeline);
-        renderPass.endPass();
-
-        t.expectValidationError(() => {
-          commandEncoder.finish();
-        }, !_success);
-      };
-    };
-
-    for (const { renderPipelineDescriptor, renderPassDescriptor } of [
-      {
-        renderPipelineDescriptor: renderPipelineDescriptorWithoutDepthStencil,
-        renderPassDescriptor: renderPassDescriptorWithoutDepthStencil,
-      },
-      {
-        renderPipelineDescriptor: renderPipelineDescriptorWithDepthStencilOnly,
-        renderPassDescriptor: renderPassDescriptorWithDepthStencilOnly,
-      },
-    ]) {
-      t.doCreateRenderPipelineTest(
-        isAsync,
-        true,
-        t.getDescriptor(renderPipelineDescriptor),
-        buildCallback(renderPassDescriptor, _success)
-      );
-    }
   });
