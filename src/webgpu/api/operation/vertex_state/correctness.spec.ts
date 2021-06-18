@@ -43,17 +43,16 @@ float tolerance.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert } from '../../../../common/util/util.js';
+import { unreachable } from '../../../../common/util/util.js';
 import {
   kMaxVertexAttributes,
   kMaxVertexBufferArrayStride,
   kMaxVertexBuffers,
   kVertexFormatInfo,
   kVertexFormats,
-  VertexFormat,
 } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { float32ToFloat16Bits } from '../../../util/conversion.js';
+import { float32ToFloat16Bits, normalizedIntegerAsFloat } from '../../../util/conversion.js';
 import { align, clamp } from '../../../util/math.js';
 
 // These types mirror the structure of GPUVertexBufferLayout but allow defining the extra
@@ -74,17 +73,15 @@ function mapBufferAttribs<V, A1, A2>(
   buffer: VertexBuffer<V, A1>,
   f: (v: V, a: VertexAttrib<A1>) => A2
 ): VertexBuffer<V, A2> {
-  const { attributes, ...bufferRest } = buffer;
-
   const newAttributes: VertexAttrib<A2>[] = [];
-  attributes.forEach(a =>
+  for (const a of buffer.attributes) {
     newAttributes.push({
       shaderLocation: a.shaderLocation,
       ...f(buffer, a),
-    })
-  );
+    });
+  }
 
-  return { attributes: newAttributes, ...(bufferRest as V & { slot: number }) };
+  return { ...buffer, attributes: newAttributes };
 }
 
 function mapStateAttribs<V, A1, A2>(
@@ -115,21 +112,21 @@ class VertexStateTest extends GPUTest {
     buffers: VertexState<
       { stepMode: GPUInputStepMode },
       {
-        format: VertexFormat;
+        format: GPUVertexFormat;
         shaderBaseType: string;
         shaderComponentCount?: number;
         floatTolerance?: number;
       }
     >,
-    maxVertexIndex: number,
-    maxInstanceIndex: number
+    vertexCount: number,
+    instanceCount: number
   ): string {
     let vsInputs = '';
     let vsChecks = '';
     let vsBindings = '';
 
-    buffers.forEach(b => {
-      b.attributes.forEach(a => {
+    for (const b of buffers) {
+      for (const a of b.attributes) {
         const format = kVertexFormatInfo[a.format];
         const shaderComponentCount = a.shaderComponentCount ?? format.componentCount;
         const i = a.shaderLocation;
@@ -140,15 +137,15 @@ class VertexStateTest extends GPUTest {
           shaderType = `vec${shaderComponentCount}<${shaderType}>`;
         }
 
-        let maxIndex = `${maxVertexIndex}`;
+        let maxCount = `${vertexCount}`;
         let indexBuiltin = `input.vertexIndex`;
         if (b.stepMode === 'instance') {
-          maxIndex = `${maxInstanceIndex}`;
+          maxCount = `${instanceCount}`;
           indexBuiltin = `input.instanceIndex`;
         }
 
         vsInputs += `  [[location(${i})]] attrib${i} : ${shaderType};\n`;
-        vsBindings += `[[block]] struct S${i} { data : array<vec4<${a.shaderBaseType}>, ${maxIndex}>; };\n`;
+        vsBindings += `[[block]] struct S${i} { data : array<vec4<${a.shaderBaseType}>, ${maxCount}>; };\n`;
         vsBindings += `[[group(0), binding(${i})]] var<uniform> providedData${i} : S${i};\n`;
 
         // Generate the all the checks for the attributes.
@@ -172,8 +169,8 @@ class VertexStateTest extends GPUTest {
             })));\n`;
           }
         }
-      });
-    });
+      }
+    }
 
     return `
 struct Inputs {
@@ -223,11 +220,11 @@ struct VSOutputs {
   doTest(input);
 
   // Place that point at pixel (vertexIndex, instanceIndex) in a framebuffer of size
-  // (maxVertexIndex, maxInstanceIndex).
+  // (vertexCount , instanceCount).
   var output : VSOutputs;
   output.position = vec4<f32>(
-    ((f32(input.vertexIndex) + 0.5) / ${maxVertexIndex}.0 * 2.0) - 1.0,
-    ((f32(input.instanceIndex) + 0.5) / ${maxInstanceIndex}.0 * 2.0) - 1.0,
+    ((f32(input.vertexIndex) + 0.5) / ${vertexCount}.0 * 2.0) - 1.0,
+    ((f32(input.instanceIndex) + 0.5) / ${instanceCount}.0 * 2.0) - 1.0,
     0.0, 1.0
   );
   output.result = vsResult;
@@ -245,21 +242,23 @@ struct VSOutputs {
       { stepMode: GPUInputStepMode; arrayStride: number },
       {
         offset: number;
-        format: VertexFormat;
+        format: GPUVertexFormat;
         shaderBaseType: string;
         shaderComponentCount?: number;
         floatTolerance?: number;
       }
     >,
-    maxVertexIndex: number,
-    maxInstanceIndex: number
+    vertexCount: number,
+    instanceCount: number
   ): GPURenderPipeline {
     const module = this.device.createShaderModule({
-      code: this.makeTestWGSL(buffers, maxVertexIndex, maxInstanceIndex),
+      code: this.makeTestWGSL(buffers, vertexCount, instanceCount),
     });
 
     const bufferLayouts: GPUVertexBufferLayout[] = [];
-    buffers.forEach(b => (bufferLayouts[b.slot] = b));
+    for (const b of buffers) {
+      bufferLayouts[b.slot] = b;
+    }
 
     return this.device.createRenderPipeline({
       vertex: {
@@ -282,18 +281,18 @@ struct VSOutputs {
     });
   }
 
-  // Runs the render pass drawing points in a maxVertex*maxInstance rectangle, then check each of
-  // produced a value of 1 which means that the tests in the shader passed.
+  // Runs the render pass drawing points in a vertexCount*instanceCount rectangle, then check each
+  // of produced a value of 1 which means that the tests in the shader passed.
   submitRenderPass(
     pipeline: GPURenderPipeline,
     buffers: VertexState<{ buffer: GPUBuffer; vbOffset?: number }, {}>,
     expectedData: GPUBindGroup,
-    maxVertexIndex: number,
-    maxInstanceIndex: number
+    vertexCount: number,
+    instanceCount: number
   ) {
     const testTexture = this.device.createTexture({
       format: 'r32sint',
-      size: [maxVertexIndex, maxInstanceIndex],
+      size: [vertexCount, instanceCount],
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     });
 
@@ -310,16 +309,16 @@ struct VSOutputs {
 
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, expectedData);
-    buffers.forEach(buffer => {
+    for (const buffer of buffers) {
       pass.setVertexBuffer(buffer.slot, buffer.buffer, buffer.vbOffset ?? 0);
-    });
-    pass.draw(maxVertexIndex, maxInstanceIndex);
+    }
+    pass.draw(vertexCount, instanceCount);
     pass.endPass();
 
     this.device.queue.submit([encoder.finish()]);
 
     this.expectSingleColor(testTexture, 'r32sint', {
-      size: [maxVertexIndex, maxInstanceIndex, 1],
+      size: [vertexCount, instanceCount, 1],
       exp: { R: 1 },
     });
   }
@@ -328,15 +327,18 @@ struct VSOutputs {
   // TODO cache the result on the fixture?
   generateTestData(format: GPUVertexFormat): TestData {
     const formatInfo = kVertexFormatInfo[format];
+    const bitSize = formatInfo.bytesPerComponent * 8;
+
     switch (formatInfo.type) {
       case 'float': {
         const data = [0.0, 1.0, -1.0, 1000, 42.42, -18.7, 25.17];
         const expectedData = new Float32Array(data).buffer;
-
-        let vertexData = expectedData;
-        if (formatInfo.bytesPerComponent === 2) {
-          vertexData = new Uint16Array(data.map(float32ToFloat16Bits)).buffer;
-        }
+        const vertexData =
+          bitSize === 32
+            ? expectedData
+            : bitSize === 16
+            ? new Uint16Array(data.map(float32ToFloat16Bits)).buffer
+            : unreachable();
 
         return {
           shaderBaseType: 'f32',
@@ -352,18 +354,19 @@ struct VSOutputs {
         const data = [
           0, 1, 2, 3, 4, 5,
           -1, -2, -3, -4, -5,
-          Math.pow(2, formatInfo.bytesPerComponent * 8 - 2),
-          Math.pow(2, formatInfo.bytesPerComponent * 8 - 1) - 1, // max value
-          -Math.pow(2, formatInfo.bytesPerComponent * 8 - 2),
-          -Math.pow(2, formatInfo.bytesPerComponent * 8 - 1), // min value
+          Math.pow(2, bitSize - 2),
+          Math.pow(2, bitSize - 1) - 1, // max value
+          -Math.pow(2, bitSize - 2),
+          -Math.pow(2, bitSize - 1), // min value
         ];
         const expectedData = new Int32Array(data).buffer;
-        let vertexData = expectedData;
-        if (formatInfo.bytesPerComponent === 2) {
-          vertexData = new Int16Array(data).buffer;
-        } else if (formatInfo.bytesPerComponent === 1) {
-          vertexData = new Int8Array(data).buffer;
-        }
+        const vertexData =
+          bitSize === 32
+            ? expectedData
+            : bitSize === 16
+            ? new Int16Array(data).buffer
+            : new Int8Array(data).buffer;
+
         return {
           shaderBaseType: 'i32',
           testComponentCount: data.length,
@@ -376,16 +379,17 @@ struct VSOutputs {
         /* prettier-ignore */
         const data = [
           0, 1, 2, 3, 4, 5,
-          Math.pow(2, formatInfo.bytesPerComponent * 8 - 1),
-          Math.pow(2, formatInfo.bytesPerComponent * 8) - 1, // max value
+          Math.pow(2, bitSize - 1),
+          Math.pow(2, bitSize) - 1, // max value
         ];
         const expectedData = new Uint32Array(data).buffer;
-        let vertexData = expectedData;
-        if (formatInfo.bytesPerComponent === 2) {
-          vertexData = new Uint16Array(data).buffer;
-        } else if (formatInfo.bytesPerComponent === 1) {
-          vertexData = new Uint8Array(data).buffer;
-        }
+        const vertexData =
+          bitSize === 32
+            ? expectedData
+            : bitSize === 16
+            ? new Uint16Array(data).buffer
+            : new Uint8Array(data).buffer;
+
         return {
           shaderBaseType: 'u32',
           testComponentCount: data.length,
@@ -399,29 +403,25 @@ struct VSOutputs {
         const data = [
           0, 1, 2, 3, 4, 5,
           -1, -2, -3, -4, -5,
-          Math.pow(2, formatInfo.bytesPerComponent * 8 - 2),
-          Math.pow(2, formatInfo.bytesPerComponent * 8 - 1) - 1, // max value
-          -Math.pow(2, formatInfo.bytesPerComponent * 8 - 2),
-          -Math.pow(2, formatInfo.bytesPerComponent * 8 - 1), // min value
+          Math.pow(2,bitSize - 2),
+          Math.pow(2,bitSize - 1) - 1, // max value
+          -Math.pow(2,bitSize - 2),
+          -Math.pow(2,bitSize - 1), // min value
         ];
-
-        assert(formatInfo.bytesPerComponent <= 16);
-        let vertexData: ArrayBuffer | undefined = undefined;
-        if (formatInfo.bytesPerComponent === 2) {
-          vertexData = new Int16Array(data).buffer;
-        } else if (formatInfo.bytesPerComponent === 1) {
-          vertexData = new Int8Array(data).buffer;
-        }
-
-        const divider = Math.pow(2, formatInfo.bytesPerComponent * 8 - 1) - 1;
-        const expectedData = new Float32Array(data.map(v => Math.max(-1, v / divider))).buffer;
+        const vertexData =
+          bitSize === 16
+            ? new Int16Array(data).buffer
+            : bitSize === 8
+            ? new Int8Array(data).buffer
+            : unreachable();
 
         return {
           shaderBaseType: 'f32',
           testComponentCount: data.length,
-          expectedData,
-          vertexData: vertexData!,
-          floatTolerance: 0.1 / divider,
+          expectedData: new Float32Array(data.map(v => normalizedIntegerAsFloat(v, bitSize, true)))
+            .buffer,
+          vertexData,
+          floatTolerance: 0.1 * normalizedIntegerAsFloat(1, bitSize, true),
         };
       }
 
@@ -429,44 +429,40 @@ struct VSOutputs {
         /* prettier-ignore */
         const data = [
           0, 1, 2, 3, 4, 5,
-          Math.pow(2, formatInfo.bytesPerComponent * 8 - 1),
-          Math.pow(2, formatInfo.bytesPerComponent * 8) - 1, // max value
+          Math.pow(2, bitSize - 1),
+          Math.pow(2, bitSize) - 1, // max value
         ];
-
-        assert(formatInfo.bytesPerComponent <= 16);
-        let vertexData: ArrayBuffer | undefined = undefined;
-        if (formatInfo.bytesPerComponent === 2) {
-          vertexData = new Uint16Array(data).buffer;
-        } else if (formatInfo.bytesPerComponent === 1) {
-          vertexData = new Uint8Array(data).buffer;
-        }
-
-        const divider = Math.pow(2, formatInfo.bytesPerComponent * 8) - 1;
-        const expectedData = new Float32Array(data.map(v => v / divider)).buffer;
+        const vertexData =
+          bitSize === 16
+            ? new Uint16Array(data).buffer
+            : bitSize === 8
+            ? new Uint8Array(data).buffer
+            : unreachable();
 
         return {
           shaderBaseType: 'f32',
           testComponentCount: data.length,
-          expectedData,
+          expectedData: new Float32Array(data.map(v => normalizedIntegerAsFloat(v, bitSize, false)))
+            .buffer,
           vertexData: vertexData!,
-          floatTolerance: 0.1 / divider,
+          floatTolerance: 0.1 * normalizedIntegerAsFloat(1, bitSize, false),
         };
       }
     }
   }
 
-  // The TestData generate for a format might not contain enough data for all the vertices we are
+  // The TestData generated for a format might not contain enough data for all the vertices we are
   // going to draw, so we expand them by adding additional copies of the vertexData as needed.
   // expectedData is a bit different because it also needs to be unpacked to have `componentCount`
   // components every 4 components (because the shader uses vec4 for the expected data).
-  expandTestData(data: TestData, maxIndex: number, componentCount: number): TestData {
+  expandTestData(data: TestData, maxCount: number, componentCount: number): TestData {
     const vertexComponentSize = data.vertexData.byteLength / data.testComponentCount;
     const expectedComponentSize = data.expectedData.byteLength / data.testComponentCount;
 
-    const expandedVertexData = new Uint8Array(maxIndex * componentCount * vertexComponentSize);
-    const expandedExpectedData = new Uint8Array(4 * maxIndex * expectedComponentSize);
+    const expandedVertexData = new Uint8Array(maxCount * componentCount * vertexComponentSize);
+    const expandedExpectedData = new Uint8Array(4 * maxCount * expectedComponentSize);
 
-    for (let index = 0; index < maxIndex; index++) {
+    for (let index = 0; index < maxCount; index++) {
       for (let component = 0; component < componentCount; component++) {
         // If only we had some builtin JS memcpy function between ArrayBuffers...
         const targetVertexOffset = (index * componentCount + component) * vertexComponentSize;
@@ -489,7 +485,7 @@ struct VSOutputs {
 
     return {
       shaderBaseType: data.shaderBaseType,
-      testComponentCount: maxIndex * componentCount,
+      testComponentCount: maxCount * componentCount,
       floatTolerance: data.floatTolerance,
       expectedData: expandedExpectedData.buffer,
       vertexData: expandedVertexData.buffer,
@@ -498,13 +494,12 @@ struct VSOutputs {
 
   // Copies `size` bytes from `source` to `target` starting at `offset` each `targetStride`.
   // (the data in `source` is assumed packed)
-  mergeVertexData(
+  interleaveVertexDataInto(
     target: ArrayBuffer,
     source: ArrayBuffer,
-    d: { targetStride: number; offset: number; size: number }
+    { targetStride, offset, size }: { targetStride: number; offset: number; size: number }
   ) {
     const t = new Uint8Array(target);
-    const { targetStride, offset, size } = d;
     for (
       let sourceOffset = 0, targetOffset = offset;
       sourceOffset < source.byteLength;
@@ -524,23 +519,23 @@ struct VSOutputs {
       },
       {
         offset: number;
-        format: VertexFormat;
+        format: GPUVertexFormat;
         shaderComponentCount?: number;
       }
     >,
     // Default to using 20 vertices and 20 instances so that we cover each of the test data at least
     // once (at the time of writing the largest testData has 16 values).
-    maxVertexIndex: number = 20,
-    maxInstanceIndex: number = 20
+    vertexCount: number = 20,
+    instanceCount: number = 20
   ) {
     // Gather the test data and some additional test state for attribs.
     const pipelineAndTestState = mapStateAttribs(buffers, (buffer, attrib) => {
-      const maxIndex = buffer.stepMode === 'instance' ? maxInstanceIndex : maxVertexIndex;
+      const maxCount = buffer.stepMode === 'instance' ? instanceCount : vertexCount;
       const formatInfo = kVertexFormatInfo[attrib.format];
 
       let testData = this.generateTestData(attrib.format);
       // TODO this will not work for arrayStride 0
-      testData = this.expandTestData(testData, maxIndex, formatInfo.componentCount);
+      testData = this.expandTestData(testData, maxCount, formatInfo.componentCount);
 
       return {
         ...testData,
@@ -549,13 +544,13 @@ struct VSOutputs {
     });
 
     // Create the pipeline from the test data.
-    const pipeline = this.makeTestPipeline(pipelineAndTestState, maxVertexIndex, maxInstanceIndex);
+    const pipeline = this.makeTestPipeline(pipelineAndTestState, vertexCount, instanceCount);
 
     // Create the bindgroups from that test data
     const bgEntries: GPUBindGroupEntry[] = [];
 
-    pipelineAndTestState.forEach(buffer => {
-      buffer.attributes.forEach(attrib => {
+    for (const buffer of pipelineAndTestState) {
+      for (const attrib of buffer.attributes) {
         const expectedDataBuffer = this.makeBufferWithContents(
           new Uint8Array(attrib.expectedData),
           GPUBufferUsage.UNIFORM
@@ -564,8 +559,8 @@ struct VSOutputs {
           binding: attrib.shaderLocation,
           resource: { buffer: expectedDataBuffer },
         });
-      });
-    });
+      }
+    }
 
     const expectedDataBG = this.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
@@ -575,22 +570,22 @@ struct VSOutputs {
     // Create the vertex buffers
     const vertexBuffers: VertexState<{ buffer: GPUBuffer; vbOffset?: number }, {}> = [];
 
-    pipelineAndTestState.forEach(buffer => {
-      const maxIndex = buffer.stepMode === 'instance' ? maxInstanceIndex : maxVertexIndex;
+    for (const buffer of pipelineAndTestState) {
+      const maxCount = buffer.stepMode === 'instance' ? instanceCount : vertexCount;
 
       // Fill the vertex data with garbage so that we don't get `0` (which could be a test value)
       // if the vertex shader loads the vertex data incorrectly.
-      const vertexData = new ArrayBuffer(buffer.arrayStride * maxIndex + (buffer.vbOffset ?? 0));
+      const vertexData = new ArrayBuffer(buffer.arrayStride * maxCount + (buffer.vbOffset ?? 0));
       new Uint8Array(vertexData).fill(0xc4);
 
-      buffer.attributes.forEach(attrib => {
+      for (const attrib of buffer.attributes) {
         const formatInfo = kVertexFormatInfo[attrib.format];
-        this.mergeVertexData(vertexData, attrib.vertexData, {
+        this.interleaveVertexDataInto(vertexData, attrib.vertexData, {
           targetStride: buffer.arrayStride,
           offset: (buffer.vbOffset ?? 0) + attrib.offset,
           size: formatInfo.componentCount * formatInfo.bytesPerComponent,
         });
-      });
+      }
 
       vertexBuffers.push({
         slot: buffer.slot,
@@ -598,16 +593,10 @@ struct VSOutputs {
         vbOffset: buffer.vbOffset,
         attributes: [],
       });
-    });
+    }
 
     // Run the test shader.
-    this.submitRenderPass(
-      pipeline,
-      vertexBuffers,
-      expectedDataBG,
-      maxVertexIndex,
-      maxInstanceIndex
-    );
+    this.submitRenderPass(pipeline, vertexBuffers, expectedDataBG, vertexCount, instanceCount);
   }
 }
 
@@ -625,6 +614,7 @@ g.test('vertexFormat_to_shaderFormat_conversion')
     u //
       .combine('format', kVertexFormats)
       .combine('shaderComponentCount', [1, 2, 3, 4])
+      .beginSubcases()
       .combine('slot', [0, 1, kMaxVertexBuffers - 1])
       .combine('shaderLocation', [0, 1, kMaxVertexAttributes - 1])
   )
@@ -657,6 +647,7 @@ g.test('setVertexBufferOffset_and_attributeOffset')
   .params(u =>
     u //
       .combine('format', kVertexFormats)
+      .beginSubcases()
       .combine('vbOffset', [0, 4, 400, 1004])
       .combine('arrayStride', [128])
       .expand('offset', p => {
@@ -701,6 +692,7 @@ g.test('nonZeroArrayStride_and_attributeOffset')
   .params(u =>
     u //
       .combine('format', kVertexFormats)
+      .beginSubcases()
       .expand('arrayStride', p => {
         const formatInfo = kVertexFormatInfo[p.format];
         const componentSize = formatInfo.bytesPerComponent;
@@ -719,7 +711,7 @@ g.test('nonZeroArrayStride_and_attributeOffset')
             p.arrayStride / 2,
             p.arrayStride - formatSize - componentSize,
             p.arrayStride - formatSize,
-          ].map(offset => clamp(offset, 0, p.arrayStride - formatSize))
+          ].map(offset => clamp(offset, { min: 0, max: p.arrayStride - formatSize }))
         );
       })
   )
@@ -746,7 +738,7 @@ g.test('buffersWithVaryingStepMode')
     `Test buffers with varying step modes in the same vertex state.
   - Various combination of step modes`
   )
-  .params(u =>
+  .paramsSubcasesOnly(u =>
     u //
       .combine('stepModes', [
         ['instance'],
@@ -757,19 +749,17 @@ g.test('buffersWithVaryingStepMode')
   )
   .fn(t => {
     const { stepModes } = t.params;
-    const state = stepModes.map((stepMode, i) => {
-      return {
-        slot: i,
-        arrayStride: 4,
-        stepMode,
-        attributes: [
-          {
-            shaderLocation: i,
-            format: 'float32' as const,
-            offset: 0,
-          },
-        ],
-      };
-    });
+    const state = stepModes.map((stepMode, i) => ({
+      slot: i,
+      arrayStride: 4,
+      stepMode,
+      attributes: [
+        {
+          shaderLocation: i,
+          format: 'float32' as const,
+          offset: 0,
+        },
+      ],
+    }));
     t.runTest(state);
   });
