@@ -87,6 +87,16 @@ export function float32ToFloatBits(
 }
 
 /**
+ * Encodes a JS `number` into an IEEE754 16 bit floating point number.
+ * Returns the result as an integer-valued JS `number`.
+ *
+ * Does not handle clamping, underflow, overflow, or denormalized numbers.
+ */
+export function float32ToFloat16Bits(n: number) {
+  return float32ToFloatBits(n, 1, 5, 10, 15);
+}
+
+/**
  * Encodes three JS `number` values into RGB9E5, returned as an integer-valued JS `number`.
  *
  * RGB9E5 represents three partial-precision floating-point numbers encoded into a single 32-bit
