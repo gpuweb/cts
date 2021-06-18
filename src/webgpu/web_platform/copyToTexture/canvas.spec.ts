@@ -136,23 +136,26 @@ got [${failedByteActualValues.join(', ')}]`;
     canvasType,
     contextName,
     width,
-    height
+    height,
   }: {
     canvasType: 'onscreen' | 'offscreen';
     contextName: '2d' | 'webgl' | 'webgl2';
     width: number;
     height: number;
-  }) : {canvas: HTMLCanvasElement | OffscreenCanvas, 
-         canvasContext : WebGLRenderingContext
-         | WebGL2RenderingContext
-         | CanvasRenderingContext2D
-         | OffscreenCanvasRenderingContext2D} {
+  }): {
+    canvas: HTMLCanvasElement | OffscreenCanvas;
+    canvasContext:
+      | WebGLRenderingContext
+      | WebGL2RenderingContext
+      | CanvasRenderingContext2D
+      | OffscreenCanvasRenderingContext2D;
+  } {
     let canvas: HTMLCanvasElement | OffscreenCanvas | null = null;
     if (canvasType === 'onscreen') {
       if (typeof document !== 'undefined') {
-      canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
+        canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
       } else {
         this.skip('Cannot create HTMLCanvasElement');
       }
@@ -164,20 +167,20 @@ got [${failedByteActualValues.join(', ')}]`;
     } else {
       unreachable();
     }
-      
+
     if (canvas === null) {
       this.skip('Cannot create canvas');
     }
-  
+
     const canvasContext = canvas.getContext(contextName) as
-            | WebGLRenderingContext
-            | WebGL2RenderingContext
-            | CanvasRenderingContext2D
-            | OffscreenCanvasRenderingContext2D;
+      | WebGLRenderingContext
+      | WebGL2RenderingContext
+      | CanvasRenderingContext2D
+      | OffscreenCanvasRenderingContext2D;
     if (canvasContext === null) {
       this.skip(canvasType + ' canvas context not available');
     }
-      
+
     const contextType: '2d' | 'gl' = contextName === '2d' ? '2d' : 'gl';
 
     const rectWidth = Math.floor(width / 2);
@@ -212,7 +215,7 @@ got [${failedByteActualValues.join(', ')}]`;
       gl.clear(gl.COLOR_BUFFER_BIT);
     }
 
-    return {canvas: canvas, canvasContext: canvasContext};
+    return { canvas, canvasContext };
   }
 
   getExpectedPixels({
@@ -276,8 +279,15 @@ export const g = makeTestGroup(F);
 g.test('copy_from_2d_HTMLCanvasElement')
   .desc(
     `
-  Test 2d context HTMLCanvasElment and OffscreenCanvas
-  can be copied to WebGPU texture correctly.
+  Test HTMLCanvasElement and OffscreenCanvas can be
+  copied to WebGPU texture correctly.
+
+  It creates HTMLCanvasElement/OffscreenCanvas with '2d'/'webgl'/'webgl2'.
+  Use fillRect(2d context) or stencil + clear (gl context) to rendering
+  red rect for top-left, green rect for top-right, blue rect for bottom-left
+  and black for bottom-right.
+  Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
+  of dst texture, and read the content to compare with the canvas contents.
   `
   )
   .params(u =>
@@ -292,7 +302,7 @@ g.test('copy_from_2d_HTMLCanvasElement')
   .fn(async t => {
     const { width, height, canvasType, contextName, dstColorFormat } = t.params;
 
-    const {canvas, canvasContext} = t.initCanvasContent({
+    const { canvas, canvasContext } = t.initCanvasContent({
       canvasType,
       contextName,
       width,
@@ -317,7 +327,7 @@ g.test('copy_from_2d_HTMLCanvasElement')
       width,
       height,
       format: dstColorFormat,
-      contextType: contextName == '2d' ? '2d' : 'gl',
+      contextType: contextName === '2d' ? '2d' : 'gl',
     });
 
     t.doTestAndCheckResult(
