@@ -745,11 +745,11 @@ g.test('buffersWithVaryingStepMode')
         ['vertex', 'vertex', 'instance'],
         ['instance', 'vertex', 'instance'],
         ['vertex', 'instance', 'vertex', 'vertex'],
-      ] as const)
+      ])
   )
   .fn(t => {
     const { stepModes } = t.params;
-    const state = stepModes.map((stepMode, i) => ({
+    const state = (stepModes as GPUInputStepMode[]).map((stepMode, i) => ({
       slot: i,
       arrayStride: 4,
       stepMode,
