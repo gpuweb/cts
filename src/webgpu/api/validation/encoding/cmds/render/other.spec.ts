@@ -8,6 +8,7 @@ TODO: plan and implement. Notes:
 > - setPipeline
 >     - {valid, invalid} GPURenderPipeline
 > - setIndexBuffer
+>     - for each format
 >     - buffer is {valid, invalid, doesn't have usage)
 >     - (offset, size) is
 >         - (0, 0)
@@ -21,6 +22,7 @@ TODO: plan and implement. Notes:
 >         - (b.size, min size)
 >         - (0, min size), and if that's valid:
 >             - (b.size - min size, min size)
+>         - (min alignment / 2, ...)
 > - setVertexBuffer
 >     - slot is {0, max, max+1}
 >     - buffer is {valid, invalid,  doesn't have usage)
