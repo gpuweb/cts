@@ -15,123 +15,10 @@ import {
   kTextureFormatInfo,
   kValidTextureFormatsForCopyIB2T,
 } from '../../capability_info.js';
-import { GPUTest } from '../../gpu_test.js';
+import { CopyToTextureUtils } from '../../util/copyToTexture.js';
 import { kTexelRepresentationInfo } from '../../util/texture/texel_data.js';
 
-function calculateRowPitch(width: number, bytesPerPixel: number): number {
-  const bytesPerRow = width * bytesPerPixel;
-  // Rounds up to a multiple of 256 according to WebGPU requirements.
-  return (((bytesPerRow - 1) >> 8) + 1) << 8;
-}
-
-class F extends GPUTest {
-  checkCopyExternalImageResult(
-    src: GPUBuffer,
-    expected: ArrayBufferView,
-    width: number,
-    height: number,
-    bytesPerPixel: number
-  ): void {
-    const exp = new Uint8Array(expected.buffer, expected.byteOffset, expected.byteLength);
-    const rowPitch = calculateRowPitch(width, bytesPerPixel);
-    const dst = this.createCopyForMapRead(src, 0, rowPitch * height);
-
-    this.eventualAsyncExpectation(async niceStack => {
-      await dst.mapAsync(GPUMapMode.READ);
-      const actual = new Uint8Array(dst.getMappedRange());
-      const check = this.checkBufferWithRowPitch(
-        actual,
-        exp,
-        width,
-        height,
-        rowPitch,
-        bytesPerPixel
-      );
-      if (check !== undefined) {
-        niceStack.message = check;
-        this.rec.expectationFailed(niceStack);
-      }
-      dst.destroy();
-    });
-  }
-
-  checkBufferWithRowPitch(
-    actual: Uint8Array,
-    exp: Uint8Array,
-    width: number,
-    height: number,
-    rowPitch: number,
-    bytesPerPixel: number
-  ): string | undefined {
-    const failedByteIndices: string[] = [];
-    const failedByteExpectedValues: string[] = [];
-    const failedByteActualValues: string[] = [];
-    iLoop: for (let i = 0; i < height; ++i) {
-      const bytesPerRow = width * bytesPerPixel;
-      for (let j = 0; j < bytesPerRow; ++j) {
-        const indexExp = j + i * bytesPerRow;
-        const indexActual = j + rowPitch * i;
-        if (actual[indexActual] !== exp[indexExp]) {
-          if (failedByteIndices.length >= 4) {
-            failedByteIndices.push('...');
-            failedByteExpectedValues.push('...');
-            failedByteActualValues.push('...');
-            break iLoop;
-          }
-          failedByteIndices.push(`(${i},${j})`);
-          failedByteExpectedValues.push(exp[indexExp].toString());
-          failedByteActualValues.push(actual[indexActual].toString());
-        }
-      }
-    }
-    if (failedByteIndices.length > 0) {
-      return `at [${failedByteIndices.join(', ')}], \
-expected [${failedByteExpectedValues.join(', ')}], \
-got [${failedByteActualValues.join(', ')}]`;
-    }
-    return undefined;
-  }
-
-  doTestAndCheckResult(
-    imageCopyExternalImage: GPUImageCopyExternalImage,
-    dstTextureCopyView: GPUImageCopyTexture,
-    copySize: GPUExtent3DDict,
-    bytesPerPixel: number,
-    expectedData: Uint8ClampedArray
-  ): void {
-    this.device.queue.copyExternalImageToTexture(
-      imageCopyExternalImage,
-      dstTextureCopyView,
-      copySize
-    );
-
-    const externalImage = imageCopyExternalImage.source;
-    const dstTexture = dstTextureCopyView.texture;
-
-    const bytesPerRow = calculateRowPitch(externalImage.width, bytesPerPixel);
-    const testBuffer = this.device.createBuffer({
-      size: bytesPerRow * externalImage.height,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-    });
-
-    const encoder = this.device.createCommandEncoder();
-
-    encoder.copyTextureToBuffer(
-      { texture: dstTexture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-      { buffer: testBuffer, bytesPerRow },
-      { width: externalImage.width, height: externalImage.height, depthOrArrayLayers: 1 }
-    );
-    this.device.queue.submit([encoder.finish()]);
-
-    this.checkCopyExternalImageResult(
-      testBuffer,
-      expectedData,
-      externalImage.width,
-      externalImage.height,
-      bytesPerPixel
-    );
-  }
-
+class F extends CopyToTextureUtils {
   initCanvasContent({
     canvasType,
     contextName,
@@ -276,18 +163,25 @@ got [${failedByteActualValues.join(', ')}]`;
 
 export const g = makeTestGroup(F);
 
-g.test('copy_from_2d_HTMLCanvasElement')
+g.test('copy_contents_from_canvas')
   .desc(
     `
-  Test HTMLCanvasElement and OffscreenCanvas can be
-  copied to WebGPU texture correctly.
+  Test HTMLCanvasElement and OffscreenCanvas with 2d/webgl/webgl2 context
+  can be copied to WebGPU texture correctly.
 
   It creates HTMLCanvasElement/OffscreenCanvas with '2d'/'webgl'/'webgl2'.
   Use fillRect(2d context) or stencil + clear (gl context) to rendering
   red rect for top-left, green rect for top-right, blue rect for bottom-left
   and black for bottom-right.
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
-  of dst texture, and read the content to compare with the canvas contents.
+  of dst texture, and read the contents out to compare with the canvas contents.
+
+  The tests convers:
+  - Valid canvas type
+  - Valid context type
+  - TODO: premultiplied alpha needs to be added.
+
+  And the expected results are all passed.
   `
   )
   .params(u =>
