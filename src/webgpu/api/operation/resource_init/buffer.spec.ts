@@ -18,7 +18,7 @@ Test the buffers whose first usage is being used:
 `;
 
 const kMapModeOptions = [GPUConst.MapMode.READ, GPUConst.MapMode.WRITE];
-const kBufferUsagesInBufferMappingTests = [
+const kBufferUsagesForMappedAtCreationTests = [
   GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.MAP_READ,
   GPUConst.BufferUsage.COPY_SRC | GPUConst.BufferUsage.MAP_WRITE,
   GPUConst.BufferUsage.COPY_SRC,
@@ -153,7 +153,7 @@ g.test('mapped_at_creation_whole_buffer')
 mappedAtCreation === true just after its creation, the contents of both the returned typed
 array buffer of getMappedRange() and the GPUBuffer itself have all been initialized to 0.`
   )
-  .params(u => u.combine('bufferUsage', kBufferUsagesInBufferMappingTests))
+  .params(u => u.combine('bufferUsage', kBufferUsagesForMappedAtCreationTests))
   .fn(async t => {
     const { bufferUsage } = t.params;
 
@@ -182,7 +182,7 @@ array buffer of getMappedRange() and the GPUBuffer itself have all been initiali
   )
   .params(u =>
     u
-      .combine('bufferUsage', kBufferUsagesInBufferMappingTests)
+      .combine('bufferUsage', kBufferUsagesForMappedAtCreationTests)
       .beginSubcases()
       .combine('offset', [0, 8, -16])
   )
