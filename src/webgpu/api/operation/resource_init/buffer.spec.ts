@@ -7,7 +7,8 @@ export const description = `
 Test uninitialized buffers are initialized to zero when read
 (or read-written, e.g. with depth write or atomics).
 
-Here lists all the buffer usages to test in future patches:
+TODO:
+Test the buffers whose first usage is being used:
 - as copy source
 - as copy destination in a partial copy
 - in ResolveQuerySet()
@@ -58,10 +59,8 @@ export const g = makeTestGroup(F);
 
 g.test('partial_write_buffer')
   .desc(
-    `
-  Verify when we upload data to a part of a buffer with writeBuffer() just after the creation of the
-  buffer, the remaining part of that buffer will be initialized to 0.
-  `
+    `Verify when we upload data to a part of a buffer with writeBuffer() just after the creation of
+the buffer, the remaining part of that buffer will be initialized to 0.`
   )
   .paramsSubcasesOnly(u => u.combine('offset', [0, 8, -12]))
   .fn(async t => {
@@ -87,11 +86,9 @@ g.test('partial_write_buffer')
 
 g.test('map_whole_buffer')
   .desc(
-    `
-  Verify when we map the whole range of a mappable GPUBuffer to a typed array buffer just after
-  creating the GPUBuffer, the contents of both the typed array buffer and the GPUBuffer itself have
-  already been initialized to 0.
-  `
+    `Verify when we map the whole range of a mappable GPUBuffer to a typed array buffer just after
+creating the GPUBuffer, the contents of both the typed array buffer and the GPUBuffer itself
+have already been initialized to 0.`
   )
   .params(u => u.combine('mapMode', kMapModeOptions))
   .fn(async t => {
@@ -111,21 +108,15 @@ g.test('map_whole_buffer')
     }
     buffer.unmap();
 
-    // We can only check the buffer contents with t.expectContents() when the buffer usage contains
-    // COPY_SRC.
-    if (bufferUsage & GPUBufferUsage.COPY_SRC) {
-      const expectedData = new Uint8Array(bufferSize);
-      t.expectContents(buffer, expectedData);
-    }
+    const expectedData = new Uint8Array(bufferSize);
+    await t.CheckGPUBufferContent(buffer, bufferUsage, expectedData);
   });
 
 g.test('map_partial_buffer')
   .desc(
-    `
-  Verify when we map a subrange of a mappable GPUBuffer to a typed array buffer just after the
-  creation of the GPUBuffer, the contents of both the typed array buffer and the GPUBuffer have
-  already been initialized to 0.
-  `
+    `Verify when we map a subrange of a mappable GPUBuffer to a typed array buffer just after the
+creation of the GPUBuffer, the contents of both the typed array buffer and the GPUBuffer have
+already been initialized to 0.`
   )
   .params(u => u.combine('mapMode', kMapModeOptions).beginSubcases().combine('offset', [0, 8, -16]))
   .fn(async t => {
@@ -158,11 +149,9 @@ g.test('map_partial_buffer')
 
 g.test('mapped_at_creation_whole_buffer')
   .desc(
-    `
-  Verify when we call getMappedRange() at the whole range of a GPUBuffer created with
-  mappedAtCreation === true just after its creation, the contents of both the returned typed array
-  buffer of getMappedRange() and the GPUBuffer itself have all been initialized to 0.
-  `
+    `Verify when we call getMappedRange() at the whole range of a GPUBuffer created with
+mappedAtCreation === true just after its creation, the contents of both the returned typed
+array buffer of getMappedRange() and the GPUBuffer itself have all been initialized to 0.`
   )
   .params(u => u.combine('bufferUsage', kBufferUsagesInBufferMappingTests))
   .fn(async t => {
@@ -181,21 +170,15 @@ g.test('mapped_at_creation_whole_buffer')
     }
     buffer.unmap();
 
-    // We can only check the buffer contents with t.expectContents() when the buffer usage contains
-    // COPY_SRC.
-    if (bufferUsage & GPUBufferUsage.COPY_SRC) {
-      const expectedData = new Uint8Array(bufferSize);
-      t.expectContents(buffer, expectedData);
-    }
+    const expectedData = new Uint8Array(bufferSize);
+    await t.CheckGPUBufferContent(buffer, bufferUsage, expectedData);
   });
 
 g.test('mapped_at_creation_partial_buffer')
   .desc(
-    `
-  Verify when we call getMappedRange() at a subrange of a GPUBuffer created with
-  mappedAtCreation === true just after its creation, the contents of both the returned typed array
-  buffer of getMappedRange() and the GPUBuffer itself have all been initialized to 0.
-  `
+    `Verify when we call getMappedRange() at a subrange of a GPUBuffer created with
+mappedAtCreation === true just after its creation, the contents of both the returned typed
+array buffer of getMappedRange() and the GPUBuffer itself have all been initialized to 0.`
   )
   .params(u =>
     u
