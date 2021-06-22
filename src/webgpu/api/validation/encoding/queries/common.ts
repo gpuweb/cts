@@ -19,7 +19,7 @@ export function beginRenderPassWithQuerySet(
   encoder: GPUCommandEncoder,
   querySet?: GPUQuerySet
 ): GPURenderPassEncoder {
-  const attachment = t.device
+  const view = t.device
     .createTexture({
       format: 'rgba8unorm' as const,
       size: { width: 16, height: 16, depthOrArrayLayers: 1 },
@@ -29,8 +29,9 @@ export function beginRenderPassWithQuerySet(
   return encoder.beginRenderPass({
     colorAttachments: [
       {
-        attachment,
+        view,
         loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+        storeOp: 'store',
       },
     ],
     occlusionQuerySet: querySet,

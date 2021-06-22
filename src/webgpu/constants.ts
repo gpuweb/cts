@@ -56,7 +56,7 @@ export const GPUConst = {
   MapMode,
 } as const;
 
-type Limits = Omit<GPUAdapterLimits, '__brand'>;
+type Limits = Omit<GPUSupportedLimits, '__brand'>;
 export const DefaultLimits: Limits = {
   maxTextureDimension1D: 8192,
   maxTextureDimension2D: 8192,
