@@ -319,8 +319,7 @@ class RunCaseSpecific implements RunCase {
 
       try {
         await inst.doInit();
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        await this.fn(inst as any);
+        await this.fn(inst as Fixture & { params: {} });
       } finally {
         // Runs as long as constructor succeeded, even if initialization or the test failed.
         await inst.doFinalize();

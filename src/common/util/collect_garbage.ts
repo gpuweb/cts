@@ -26,8 +26,9 @@ export async function attemptGarbageCollection(): Promise<void> {
       .getInterface(Components.interfaces.nsIDOMWindowUtils)
       .garbageCollect();
     return;
-    /* eslint-disable-next-line no-empty */
-  } catch (e) {}
+  } catch (e) {
+    // ignore any failure
+  }
 
   if (w.gc) {
     w.gc();

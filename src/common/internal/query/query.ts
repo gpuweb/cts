@@ -175,12 +175,7 @@ export function parseExpectationsForTestQuery(
   const expectations: TestQueryWithExpectation[] = [];
   for (const entry of rawExpectations) {
     assert(typeof entry === 'object');
-    const rawExpectation = <
-      {
-        query?: string;
-        expectation?: string;
-      }
-    >entry;
+    const rawExpectation = entry as { query?: string; expectation?: string };
     assert(rawExpectation.query !== undefined, 'Expectation missing query string');
     assert(rawExpectation.expectation !== undefined, 'Expectation missing expectation string');
 

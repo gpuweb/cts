@@ -159,6 +159,7 @@ export class CaseParamsBuilder<CaseP extends {}>
   ): CaseParamsBuilder<Merged<CaseP, { [name in NewPKey]: NewPValue }>> {
     return this.expandWithParams(function* (p) {
       for (const value of expander(p)) {
+        // TypeScript doesn't know here that NewPKey is always a single literal string type.
         yield { [key]: value } as { [name in NewPKey]: NewPValue };
       }
     });
@@ -254,6 +255,7 @@ export class SubcaseParamsBuilder<CaseP extends {}, SubcaseP extends {}>
   ): SubcaseParamsBuilder<CaseP, Merged<SubcaseP, { [name in NewPKey]: NewPValue }>> {
     return this.expandWithParams(function* (p) {
       for (const value of expander(p)) {
+        // TypeScript doesn't know here that NewPKey is always a single literal string type.
         yield { [key]: value } as { [name in NewPKey]: NewPValue };
       }
     });
