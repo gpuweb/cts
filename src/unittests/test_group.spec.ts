@@ -14,7 +14,6 @@ export const g = makeTestGroup(TestGroupTest);
 
 g.test('UnitTest_fixture').fn(async t0 => {
   let seen = 0;
-  /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
   function count(t: Fixture): void {
     seen++;
   }
@@ -65,11 +64,9 @@ g.test('stack').fn(async t0 => {
   g.test('fail').fn(t => {
     t.fail();
   });
-  /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
   g.test('throw').fn(t => {
     throw new Error('hello');
   });
-  /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
   g.test('throw_nested').fn(t => {
     doNestedThrow2();
   });
@@ -240,7 +237,6 @@ g.test('subcases').fn(async t0 => {
 g.test('throws').fn(async t0 => {
   const g = makeTestGroupForUnitTesting(UnitTest);
 
-  /* eslint-disable-next-line  @typescript-eslint/no-unused-vars */
   g.test('a').fn(t => {
     throw new Error();
   });

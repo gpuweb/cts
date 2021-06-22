@@ -13,6 +13,7 @@
   },
   "plugins": ["node", "ban", "import", "deprecation"],
   "rules": {
+    // Core rules
     "linebreak-style": ["warn", "unix"],
     "no-console": "warn",
     "no-undef": "off",
@@ -20,6 +21,11 @@
     "object-shorthand": "warn",
     "quotes": ["warn", "single", { "avoidEscape": true, "allowTemplateLiterals": true }],
 
+    // Plugin: @typescript-eslint
+    "@typescript-eslint/no-inferrable-types": "off",
+    "@typescript-eslint/no-unused-vars": ["warn", { "vars": "all", "args": "none" }],
+
+    // Plugin: ban
     "ban/ban": [
       "warn",
       {
@@ -27,8 +33,11 @@
         "message": "WPT disallows setTimeout; use `framework/util/timeout.js`."
       }
     ],
+
+    // Plugin: deprecation
     //"deprecation/deprecation": "warn",
-    "@typescript-eslint/no-inferrable-types": "off",
+
+    // Plugin: import
     "import/order": [
       "warn",
       {
