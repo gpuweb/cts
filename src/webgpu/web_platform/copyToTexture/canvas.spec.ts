@@ -2,10 +2,9 @@ export const description = `
 copyToTexture with HTMLCanvasElement and OffscreenCanvas sources.
 
 - x= {HTMLCanvasElement, OffscreenCanvas}
-- x= {2d, webgl, webgl2, gpupresent, bitmaprenderer} context, {various context creation attributes}
+- x= {2d, webgl, webgl2} context, {various context creation attributes}
 
 TODO: consider whether external_texture and copyToTexture video tests should be in the same file
-TODO: plan
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
@@ -63,7 +62,8 @@ class F extends CopyToTextureUtils {
       | WebGLRenderingContext
       | WebGL2RenderingContext
       | CanvasRenderingContext2D
-      | OffscreenCanvasRenderingContext2D;
+      | OffscreenCanvasRenderingContext2D
+      | null;
     if (canvasContext === null) {
       this.skip(canvasType + ' canvas context not available');
     }
@@ -74,13 +74,13 @@ class F extends CopyToTextureUtils {
     const rectHeight = Math.floor(height / 2);
     if (contextType === '2d') {
       const ctx = canvasContext as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
-      ctx.fillStyle = 'red'; // #ff0000
+      ctx.fillStyle = '#ff0000'; // red
       ctx.fillRect(0, 0, rectWidth, rectHeight);
-      ctx.fillStyle = 'lime'; // #00ff00
+      ctx.fillStyle = '#00ff00'; // lime
       ctx.fillRect(rectWidth, 0, width - rectWidth, rectHeight);
-      ctx.fillStyle = 'blue'; // #0000ff
+      ctx.fillStyle = '#0000ff'; // blue
       ctx.fillRect(0, rectHeight, rectWidth, height - rectHeight);
-      ctx.fillStyle = 'black'; // #000000
+      ctx.fillStyle = '#000000'; // black
       ctx.fillRect(rectWidth, rectHeight, width - rectWidth, height - rectHeight);
     } else if (contextType === 'gl') {
       const gl = canvasContext as WebGLRenderingContext | WebGL2RenderingContext;
@@ -125,14 +125,14 @@ class F extends CopyToTextureUtils {
     const bytesPerPixel = kTextureFormatInfo[format].bytesPerBlock;
 
     const expectedPixels = new Uint8ClampedArray(bytesPerPixel * width * height);
-    let originPixels;
+    let sourcePixels;
     if (contextType === '2d') {
       const ctx = context as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
-      originPixels = ctx.getImageData(0, 0, width, height).data;
+      sourcePixels = ctx.getImageData(0, 0, width, height).data;
     } else if (contextType === 'gl') {
-      originPixels = new Uint8ClampedArray(width * height * 4);
+      sourcePixels = new Uint8ClampedArray(width * height * 4);
       const gl = context as WebGLRenderingContext | WebGL2RenderingContext;
-      gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, originPixels);
+      gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, sourcePixels);
     } else {
       unreachable();
     }
@@ -146,10 +146,10 @@ class F extends CopyToTextureUtils {
         const pixelData = new Uint8Array(
           rep.pack(
             rep.encode({
-              R: originPixels[pixelPos * 4] / divide,
-              G: originPixels[pixelPos * 4 + 1] / divide,
-              B: originPixels[pixelPos * 4 + 2] / divide,
-              A: originPixels[pixelPos * 4 + 3] / divide,
+              R: sourcePixels[pixelPos * 4] / divide,
+              G: sourcePixels[pixelPos * 4 + 1] / divide,
+              B: sourcePixels[pixelPos * 4 + 2] / divide,
+              A: sourcePixels[pixelPos * 4 + 3] / divide,
             })
           )
         );
@@ -176,10 +176,11 @@ g.test('copy_contents_from_canvas')
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the canvas contents.
 
-  The tests convers:
+  The tests covers:
   - Valid canvas type
   - Valid context type
-  - TODO: premultiplied alpha needs to be added.
+  - TODO: premultiplied alpha tests need to be added.
+  - TODO: color space tests need to be added
 
   And the expected results are all passed.
   `
@@ -215,7 +216,7 @@ g.test('copy_contents_from_canvas')
     });
 
     // Construct expected value for different dst color format
-    const dstBytesPerPixel = kTextureFormatInfo[dstColorFormat].bytesPerBlock!;
+    const dstBytesPerPixel = kTextureFormatInfo[dstColorFormat].bytesPerBlock;
     const expectedPixels = t.getExpectedPixels({
       context: canvasContext,
       width,
