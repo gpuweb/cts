@@ -48,6 +48,8 @@ Whenever a new generally-useful helper is added, it should be indexed here.
 - {@link webgpu/util/unions}: Helpers for various union typedefs in the WebGPU spec.
 - {@link webgpu/util/math}: Helpers for common math operations.
 - {@link webgpu/util/conversion}: Numeric encoding/decoding for float/unorm/snorm values, etc.
+- {@link webgpu/util/copyToTexture}:
+    Helper class for copyToTexture test suites for execution copy and check results.
 - {@link webgpu/util/navigator_gpu}: Finds and returns the `navigator.gpu` object or equivalent.
 - {@link webgpu/util/texture/base}: General texture-related helpers.
 - {@link webgpu/util/texture/layout}: Helpers for working with linear image data
