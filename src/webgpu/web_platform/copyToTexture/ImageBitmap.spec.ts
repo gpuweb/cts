@@ -275,7 +275,6 @@ g.test('from_ImageData')
 
     // Generate correct expected values
     const imageData = new ImageData(imagePixels, width, height);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const imageBitmap = await createImageBitmap(imageData, {
       premultiplyAlpha: alpha,
       imageOrientation: orientation,
@@ -367,7 +366,6 @@ g.test('from_canvas')
     // Use putImageData to prevent color space conversion.
     imageCanvasContext.putImageData(imageData, 0, 0);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const imageBitmap = await createImageBitmap(imageCanvas, {
       premultiplyAlpha: 'premultiply',
       imageOrientation: orientation,

@@ -49,5 +49,5 @@ export function createRenderEncoderWithQuerySet(
       encoder.endPass();
       return commandEncoder.finish();
     },
-  } as CommandBufferMaker<'render pass'>;
+  } as const;
 }

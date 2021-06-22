@@ -24,6 +24,7 @@
     // Plugin: @typescript-eslint
     "@typescript-eslint/no-inferrable-types": "off",
     "@typescript-eslint/no-unused-vars": ["warn", { "vars": "all", "args": "none" }],
+    "@typescript-eslint/consistent-type-assertions": "warn",
 
     // Plugin: ban
     "ban/ban": [

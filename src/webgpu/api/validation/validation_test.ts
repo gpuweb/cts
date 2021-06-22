@@ -311,6 +311,8 @@ export class ValidationTest extends GPUTest {
     switch (encoderType) {
       case 'non-pass': {
         const encoder = this.device.createCommandEncoder();
+        // TypeScript introduces an intersection type here where it seems like there shouldn't be
+        // one. Maybe there is a soundness issue here, but I don't think there is one in practice.
         return {
           encoder,
           finish: () => {
