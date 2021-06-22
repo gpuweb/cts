@@ -1,8 +1,7 @@
 import { GPUTest } from '../gpu_test.js';
 
 import { align } from './math.js';
-
-const kBytesPerRowAlignment = 256;
+import { kBytesPerRowAlignment } from './texture/layout.js';
 
 export class CopyToTextureUtils extends GPUTest {
   checkCopyExternalImageResult(
