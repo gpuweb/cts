@@ -120,10 +120,10 @@ export class GPUTest extends Fixture {
   ): Promise<void> {
     if (descriptor === undefined) return;
     if (typeof descriptor === 'string') {
-      descriptor = { nonGuaranteedFeatures: [descriptor] };
+      descriptor = { requiredFeatures: [descriptor] };
     } else if (descriptor instanceof Array) {
       descriptor = {
-        nonGuaranteedFeatures: descriptor.filter(f => f !== undefined) as GPUFeatureName[],
+        requiredFeatures: descriptor.filter(f => f !== undefined) as GPUFeatureName[],
       };
     }
 
