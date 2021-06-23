@@ -6,17 +6,22 @@ import { TestCaseRecorder } from './test_case_recorder.js';
 export type LogResults = Map<string, LiveTestCaseResult>;
 
 export class Logger {
-  readonly debug: boolean;
+  static globalDebugMode: boolean = false;
+
+  readonly overriddenDebugMode: boolean | undefined;
   readonly results: LogResults = new Map();
 
-  constructor(debug: boolean) {
-    this.debug = debug;
+  constructor({ overrideDebugMode }: { overrideDebugMode?: boolean } = {}) {
+    this.overriddenDebugMode = overrideDebugMode;
   }
 
   record(name: string): [TestCaseRecorder, LiveTestCaseResult] {
     const result: LiveTestCaseResult = { status: 'running', timems: -1 };
     this.results.set(name, result);
-    return [new TestCaseRecorder(result, this.debug), result];
+    return [
+      new TestCaseRecorder(result, this.overriddenDebugMode ?? Logger.globalDebugMode),
+      result,
+    ];
   }
 
   asJSON(space?: number): string {

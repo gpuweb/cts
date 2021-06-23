@@ -1,14 +1,20 @@
+import { ErrorWithExtra } from '../../util/util.js';
 import { extractImportantStackTrace } from '../stack.js';
 
 export class LogMessageWithStack extends Error {
+  readonly extra: unknown;
+
   private stackHiddenMessage: string | undefined = undefined;
   private timesSeen: number = 1;
 
-  constructor(name: string, ex: Error) {
+  constructor(name: string, ex: Error | ErrorWithExtra) {
     super(ex.message);
 
     this.name = name;
     this.stack = ex.stack;
+    if ('extra' in ex) {
+      this.extra = ex.extra;
+    }
   }
 
   /** Set a flag so the stack is not printed in toJSON(). */

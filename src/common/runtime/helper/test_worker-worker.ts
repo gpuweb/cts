@@ -15,7 +15,8 @@ self.onmessage = async (ev: MessageEvent) => {
   const expectations: TestQueryWithExpectation[] = ev.data.expectations;
   const debug: boolean = ev.data.debug;
 
-  const log = new Logger(debug);
+  Logger.globalDebugMode = debug;
+  const log = new Logger();
 
   const testcases = Array.from(await loader.loadCases(parseQuery(query)));
   assert(testcases.length === 1, 'worker query resulted in != 1 cases');
