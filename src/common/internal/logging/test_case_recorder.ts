@@ -14,6 +14,7 @@ enum LogSeverity {
 }
 
 const kMaxLogStacks = 2;
+const kMinSeverityForStack = LogSeverity.Warn;
 
 /** Holds onto a LiveTestCaseResult owned by the Logger, and writes the results into it. */
 export class TestCaseRecorder {
@@ -21,7 +22,7 @@ export class TestCaseRecorder {
   private inSubCase: boolean = false;
   private subCaseStatus = LogSeverity.Pass;
   private finalCaseStatus = LogSeverity.Pass;
-  private hideStacksBelowSeverity = LogSeverity.Warn;
+  private hideStacksBelowSeverity = kMinSeverityForStack;
   private startTime = -1;
   private logs: LogMessageWithStack[] = [];
   private logLinesAtCurrentSeverity = 0;
@@ -145,14 +146,18 @@ export class TestCaseRecorder {
 
       // Go back and setStackHidden for everything of a lower log level
       for (const log of this.logs) {
-        log.setStackHidden();
+        log.setStackHidden('stack hidden; lower-severity');
       }
     }
     if (level === this.hideStacksBelowSeverity) {
       this.logLinesAtCurrentSeverity++;
+    } else if (level < kMinSeverityForStack) {
+      logMessage.setStackHidden('');
+    } else if (level < this.hideStacksBelowSeverity) {
+      logMessage.setStackHidden('stack hidden; lower-severity');
     }
-    if (level < this.hideStacksBelowSeverity || this.logLinesAtCurrentSeverity > kMaxLogStacks) {
-      logMessage.setStackHidden();
+    if (this.logLinesAtCurrentSeverity > kMaxLogStacks) {
+      logMessage.setStackHidden(`only ${kMaxLogStacks} stacks are shown`);
     }
 
     this.logs.push(logMessage);

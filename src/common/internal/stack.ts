@@ -1,17 +1,23 @@
 // Returns the stack trace of an Error, but without the extra boilerplate at the bottom
 // (e.g. RunCaseSpecific, processTicksAndRejections, etc.), for logging.
 export function extractImportantStackTrace(e: Error): string {
-  if (!e.stack) {
+  let stack = e.stack;
+  if (!stack) {
     return '';
   }
-  const lines = e.stack.split('\n');
+  const redundantMessage = 'Error: ' + e.message + '\n';
+  if (stack.startsWith(redundantMessage)) {
+    stack = stack.substring(redundantMessage.length);
+  }
+
+  const lines = stack.split('\n');
   for (let i = lines.length - 1; i >= 0; --i) {
     const line = lines[i];
     if (line.indexOf('.spec.') !== -1) {
       return lines.slice(0, i + 1).join('\n');
     }
   }
-  return e.stack;
+  return stack;
 }
 
 // *** Examples ***
