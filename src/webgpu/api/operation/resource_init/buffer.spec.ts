@@ -230,6 +230,7 @@ CopyBufferToBuffer(), the contents of the GPUBuffer have already been initialize
     });
 
     const expectedData = new Uint8Array(bufferSize);
+    // copyBufferToBuffer() is called inside t.CheckGPUBufferContent().
     await t.CheckGPUBufferContent(buffer, bufferUsage, expectedData);
   });
 
@@ -255,17 +256,10 @@ CopyBufferToTexture(), the contents of the GPUBuffer have already been initializ
       textureSize.depthOrArrayLayers,
     ]);
     const srcBufferSize = layout.byteLength + bufferOffset;
-
     const srcBufferUsage = GPUBufferUsage.COPY_SRC;
     const srcBuffer = t.device.createBuffer({
       size: srcBufferSize,
       usage: srcBufferUsage,
-    });
-
-    const stagingBufferUsage = GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ;
-    const stagingBuffer = t.device.createBuffer({
-      size: layout.byteLength,
-      usage: stagingBufferUsage,
     });
 
     const encoder = t.device.createCommandEncoder();
@@ -279,11 +273,6 @@ CopyBufferToTexture(), the contents of the GPUBuffer have already been initializ
       { texture: dstTexture },
       textureSize
     );
-    encoder.copyTextureToBuffer(
-      { texture: dstTexture },
-      { buffer: stagingBuffer, bytesPerRow: layout.bytesPerRow, rowsPerImage: layout.rowsPerImage },
-      textureSize
-    );
     t.queue.submit([encoder.finish()]);
 
     // Verify the contents in srcBuffer are all 0.
@@ -291,8 +280,10 @@ CopyBufferToTexture(), the contents of the GPUBuffer have already been initializ
     await t.CheckGPUBufferContent(srcBuffer, srcBufferUsage, expectedSrcBufferData);
 
     // Verify the texels in dstTexture are all 0.
-    const expectedStagingBufferData = new Uint8Array(layout.byteLength);
-    await t.CheckGPUBufferContent(stagingBuffer, stagingBufferUsage, expectedStagingBufferData);
+    t.expectSingleColor(dstTexture, dstTextureFormat, {
+      size: [textureSize.width, textureSize.height, textureSize.depthOrArrayLayers],
+      exp: { R: 0.0, G: 0.0, B: 0.0, A: 0.0 },
+    });
   });
 
 g.test('resolve_query_set_to_partial_buffer')
