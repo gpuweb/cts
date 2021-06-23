@@ -2,16 +2,19 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, unreachable } from '../../../../common/util/util.js';
 import { GPUConst } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
+import { getTextureCopyLayout } from '../../../util/texture/layout.js';
 
 export const description = `
 Test uninitialized buffers are initialized to zero when read
 (or read-written, e.g. with depth write or atomics).
 
+Note that:
+-  We don't need 'copy_buffer_to_buffer_copy_destination' here because there has already been an
+   operation test 'command_buffer.copyBufferToBuffer.single' that provides the same functionality.
+
 TODO:
 Test the buffers whose first usage is being used:
-- as copy source
 - as copy destination in a partial copy
-- in ResolveQuerySet()
 - as uniform / read-only storage / storage buffer
 - as vertex / index buffer
 - as indirect buffer
@@ -211,4 +214,98 @@ array buffer of getMappedRange() and the GPUBuffer itself have all been initiali
     }
 
     await t.CheckGPUBufferContent(buffer, bufferUsage, expectedData);
+  });
+
+g.test('copy_buffer_to_buffer_copy_source')
+  .desc(
+    `Verify when the first usage of a GPUBuffer is being used as the source buffer of
+CopyBufferToBuffer(), the contents of the GPUBuffer have already been initialized to 0.`
+  )
+  .fn(async t => {
+    const bufferSize = 32;
+    const bufferUsage = GPUBufferUsage.COPY_SRC;
+    const buffer = t.device.createBuffer({
+      size: bufferSize,
+      usage: bufferUsage,
+    });
+
+    const expectedData = new Uint8Array(bufferSize);
+    // copyBufferToBuffer() is called inside t.CheckGPUBufferContent().
+    await t.CheckGPUBufferContent(buffer, bufferUsage, expectedData);
+  });
+
+g.test('copy_buffer_to_texture')
+  .desc(
+    `Verify when the first usage of a GPUBuffer is being used as the source buffer of
+CopyBufferToTexture(), the contents of the GPUBuffer have already been initialized to 0.`
+  )
+  .paramsSubcasesOnly(u => u.combine('bufferOffset', [0, 8]))
+  .fn(async t => {
+    const { bufferOffset } = t.params;
+    const textureSize = { width: 8, height: 8, depthOrArrayLayers: 1 };
+    const dstTextureFormat = 'rgba8unorm';
+
+    const dstTexture = t.device.createTexture({
+      size: textureSize,
+      format: dstTextureFormat,
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+    });
+    const layout = getTextureCopyLayout(dstTextureFormat, '2d', [
+      textureSize.width,
+      textureSize.height,
+      textureSize.depthOrArrayLayers,
+    ]);
+    const srcBufferSize = layout.byteLength + bufferOffset;
+    const srcBufferUsage = GPUBufferUsage.COPY_SRC;
+    const srcBuffer = t.device.createBuffer({
+      size: srcBufferSize,
+      usage: srcBufferUsage,
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    encoder.copyBufferToTexture(
+      {
+        buffer: srcBuffer,
+        offset: bufferOffset,
+        bytesPerRow: layout.bytesPerRow,
+        rowsPerImage: layout.rowsPerImage,
+      },
+      { texture: dstTexture },
+      textureSize
+    );
+    t.queue.submit([encoder.finish()]);
+
+    // Verify the contents in srcBuffer are all 0.
+    const expectedSrcBufferData = new Uint8Array(srcBufferSize);
+    await t.CheckGPUBufferContent(srcBuffer, srcBufferUsage, expectedSrcBufferData);
+
+    // Verify the texels in dstTexture are all 0.
+    t.expectSingleColor(dstTexture, dstTextureFormat, {
+      size: [textureSize.width, textureSize.height, textureSize.depthOrArrayLayers],
+      exp: { R: 0.0, G: 0.0, B: 0.0, A: 0.0 },
+    });
+  });
+
+g.test('resolve_query_set_to_partial_buffer')
+  .desc(
+    `Verify when we resolve a query set into a GPUBuffer just after creating that GPUBuffer, the
+remaining part of it will be initialized to 0.`
+  )
+  .paramsSubcasesOnly(u => u.combine('bufferOffset', [0, 256]))
+  .fn(async t => {
+    const { bufferOffset } = t.params;
+    const bufferSize = bufferOffset + 8;
+    const bufferUsage = GPUBufferUsage.COPY_SRC | GPUBufferUsage.QUERY_RESOLVE;
+    const dstBuffer = t.device.createBuffer({
+      size: bufferSize,
+      usage: bufferUsage,
+    });
+
+    const querySet = t.device.createQuerySet({ type: 'occlusion', count: 1 });
+    const encoder = t.device.createCommandEncoder();
+    encoder.resolveQuerySet(querySet, 0, 1, dstBuffer, bufferOffset);
+    t.queue.submit([encoder.finish()]);
+
+    const expectedBufferData = new Uint8Array(bufferSize);
+    await t.CheckGPUBufferContent(dstBuffer, bufferUsage, expectedBufferData);
   });
