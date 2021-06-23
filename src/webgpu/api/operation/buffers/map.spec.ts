@@ -3,6 +3,14 @@ Test the operation of buffer mapping, specifically the data contents written via
 map-write/mappedAtCreation, and the contents of buffers returned by getMappedRange on
 buffers which are mapped-read/mapped-write/mappedAtCreation.
 
+range: used for getMappedRange
+mapRegion: used for mapAsync
+
+mapRegionBoundModes is used to get mapRegion from range:
+ - default-expand: expand mapRegion to buffer bound by setting offset/size to undefined
+ - explicit-expand: expand mapRegion to buffer bound by explicitly calculating offset/size
+ - minimal: make mapRegion to be the same as range which is the minimal range to make getMappedRange input valid
+
 TODO: Test that ranges not written preserve previous contents.
 TODO: Test that mapping-for-write again shows the values previously written.
 TODO: Some testing (probably minimal) of accessing with different TypedArray/DataView types.
