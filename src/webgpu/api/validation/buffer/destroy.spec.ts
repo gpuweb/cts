@@ -74,7 +74,7 @@ g.test('while_mapped')
           mapMode: GPUConst.MapMode.READ,
         },
       ])
-      .filter(p => p.mappedAtCreation === false && p.mapMode === undefined)
+      .unless(p => p.mappedAtCreation === false && p.mapMode === undefined)
   )
   .fn(async t => {
     const { usage, mapMode, mappedAtCreation } = t.params;
@@ -87,6 +87,45 @@ g.test('while_mapped')
     if (!mappedAtCreation && mapMode !== undefined) {
       await buf.mapAsync(mapMode);
     }
+
+    buf.destroy();
+  });
+
+g.test('after_unmapped')
+  .desc(
+    `Test destroying buffers after it's been unmapped.
+      - Tests {mappable, unmappable mapAtCreation, mappable mapAtCreation}
+      - Tests while {mapped -> unmapped, mapAtCreation -> unmapped}`
+  )
+  .paramsSubcasesOnly(u =>
+    u //
+      .combine('mappedAtCreation', [false, true])
+      .combineWithParams([
+        { usage: GPUConst.BufferUsage.COPY_SRC },
+        {
+          usage: GPUConst.BufferUsage.MAP_WRITE | GPUConst.BufferUsage.COPY_SRC,
+          mapMode: GPUConst.MapMode.WRITE,
+        },
+        {
+          usage: GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.MAP_READ,
+          mapMode: GPUConst.MapMode.READ,
+        },
+      ])
+      .unless(p => p.mappedAtCreation === false && p.mapMode === undefined)
+  )
+  .fn(async t => {
+    const { usage, mapMode, mappedAtCreation } = t.params;
+    const buf = t.device.createBuffer({
+      size: 4,
+      usage,
+      mappedAtCreation,
+    });
+
+    if (!mappedAtCreation && mapMode !== undefined) {
+      await buf.mapAsync(mapMode);
+    }
+
+    buf.unmap();
 
     buf.destroy();
   });
