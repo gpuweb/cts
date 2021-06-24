@@ -321,7 +321,7 @@ remaining part of it will be initialized to 0.`
       .combine('copyMipLevel', [0, 2])
       .combine('rowsPerImage', [16, 20])
       .filter(t => {
-        // We don't need to test the copy that will cover the whole GPUBuffer.
+        // We don't need to test the copies that will cover the whole GPUBuffer.
         return !(t.bufferOffset === 0 && t.rowsPerImage === 16);
       })
   )
