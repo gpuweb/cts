@@ -119,6 +119,7 @@ Also verifies that the specified data range:
 
     const arrayTypes = [
       Uint8Array,
+      Uint8ClampedArray,
       Int8Array,
       Uint16Array,
       Int16Array,
@@ -135,6 +136,29 @@ Also verifies that the specified data range:
     }
   });
 
+g.test('write_sizes_overflow')
+  .desc(
+    `
+Tests writing large sizes that may overflow a 64-bit integer.
+`
+  )
+  .paramsSubcasesOnly([
+    { size: 16, _valid: true }, // control case
+    { size: 0xfffffffffffff800, _valid: false }, // The largest number less than the maximum of uint64
+    { size: 0xffffffffffffff00, _valid: false }, // The smallest number overflow uint64
+  ])
+  .fn(async t => {
+    const { size, _valid } = t.params;
+    const buffer = t.device.createBuffer({ size: 16, usage: GPUBufferUsage.COPY_DST });
+    const data = new Uint8Array(16);
+
+    if (_valid) {
+      t.device.queue.writeBuffer(buffer, 0, data, 0, size);
+    } else {
+      t.shouldThrow('TypeError', () => t.device.queue.writeBuffer(buffer, 0, data, 0, size));
+    }
+  });
+
 g.test('usages')
   .desc(
     `
@@ -144,7 +168,7 @@ Tests calling writeBuffer with the buffer missed COPY_DST usage.
   )
   .paramsSubcasesOnly([
     { usage: GPUConst.BufferUsage.COPY_DST, _valid: true }, // control case
-    { usage: GPUConst.BufferUsage.STORAGE, _valid: false }, // wihtout COPY_DST usage
+    { usage: GPUConst.BufferUsage.STORAGE, _valid: false }, // without COPY_DST usage
     { usage: GPUConst.BufferUsage.STORAGE | GPUConst.BufferUsage.COPY_SRC, _valid: false }, // with other usage
     { usage: GPUConst.BufferUsage.STORAGE | GPUConst.BufferUsage.COPY_DST, _valid: true }, // with COPY_DST usage
   ])

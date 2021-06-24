@@ -157,6 +157,7 @@ export function* iterRange<T>(n: number, fn: (i: number) => T): Iterable<T> {
 
 export type TypedArrayBufferView =
   | Uint8Array
+  | Uint8ClampedArray
   | Uint16Array
   | Uint32Array
   | Int8Array
