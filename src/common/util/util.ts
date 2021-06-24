@@ -9,10 +9,20 @@ import { timeout } from './timeout.js';
 export class ErrorWithExtra extends Error {
   readonly extra: {};
 
-  /** `extra` function is only called if in debug mode. */
-  constructor(message: string, extra: () => {}) {
+  /**
+   * `extra` function is only called if in debug mode.
+   * If an `ErrorWithExtra` is passed, its message is used and its extras are passed through.
+   */
+  constructor(message: string, extra: () => {});
+  constructor(base: ErrorWithExtra, newExtra: () => {});
+  constructor(baseOrMessage: string | ErrorWithExtra, newExtra: () => {}) {
+    const message = typeof baseOrMessage === 'string' ? baseOrMessage : baseOrMessage.message;
     super(message);
-    this.extra = Logger.globalDebugMode ? extra() : { omitted: 'must ?debug=1' };
+
+    const oldExtras = baseOrMessage instanceof ErrorWithExtra ? baseOrMessage.extra : {};
+    this.extra = Logger.globalDebugMode
+      ? { ...oldExtras, ...newExtra() }
+      : { omitted: 'pass ?debug=1' };
   }
 }
 
