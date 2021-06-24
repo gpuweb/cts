@@ -14,7 +14,6 @@ Note that:
 
 TODO:
 Test the buffers whose first usage is being used:
-- as copy destination in a partial copy
 - as uniform / read-only storage / storage buffer
 - as vertex / index buffer
 - as indirect buffer
@@ -308,4 +307,94 @@ remaining part of it will be initialized to 0.`
 
     const expectedBufferData = new Uint8Array(bufferSize);
     await t.CheckGPUBufferContent(dstBuffer, bufferUsage, expectedBufferData);
+  });
+
+g.test('copy_texture_to_partial_buffer')
+  .desc(
+    `Verify when we copy from a GPUTexture into a GPUBuffer just after creating that GPUBuffer, the
+remaining part of it will be initialized to 0.`
+  )
+  .paramsSubcasesOnly(u =>
+    u
+      .combine('bufferOffset', [0, 8, -16])
+      .combine('arrayLayerCount', [1, 3])
+      .combine('copyMipLevel', [0, 2])
+      .combine('rowsPerImage', [16, 20])
+      .filter(t => {
+        // We don't need to test the copy that will cover the whole GPUBuffer.
+        return !(t.bufferOffset === 0 && t.rowsPerImage === 16);
+      })
+  )
+  .fn(async t => {
+    const { bufferOffset, arrayLayerCount, copyMipLevel, rowsPerImage } = t.params;
+    const srcTextureFormat = 'r8unorm';
+    const textureSize = { width: 32, height: 16, depthOrArrayLayers: arrayLayerCount };
+
+    const srcTexture = t.device.createTexture({
+      format: srcTextureFormat,
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+      size: textureSize,
+      mipLevelCount: copyMipLevel + 1,
+    });
+
+    const bytesPerRow = 256;
+    const layout = getTextureCopyLayout(
+      srcTextureFormat,
+      '2d',
+      [textureSize.width, textureSize.height, textureSize.depthOrArrayLayers],
+      {
+        mipLevel: copyMipLevel,
+        bytesPerRow,
+        rowsPerImage,
+      }
+    );
+
+    const extraBufferData = Math.abs(bufferOffset);
+    const bufferSize = layout.byteLength + extraBufferData;
+    const bufferUsage = GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST;
+    const dstBuffer = t.device.createBuffer({
+      size: bufferSize,
+      usage: bufferUsage,
+    });
+
+    const encoder = t.device.createCommandEncoder();
+
+    // Initialize srcTexture
+    for (let layer = 0; layer < arrayLayerCount; ++layer) {
+      const renderPass = encoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: srcTexture.createView({
+              baseArrayLayer: layer,
+              arrayLayerCount: 1,
+              baseMipLevel: copyMipLevel,
+            }),
+            loadValue: { r: 0.2 * (layer + 1), g: 0, b: 0, a: 0 },
+            storeOp: 'store',
+          },
+        ],
+      });
+      renderPass.endPass();
+    }
+
+    // Do texture-to-buffer copy
+    const appliedOffset = Math.max(bufferOffset, 0);
+    encoder.copyTextureToBuffer(
+      { texture: srcTexture, mipLevel: copyMipLevel },
+      { buffer: dstBuffer, offset: appliedOffset, bytesPerRow, rowsPerImage },
+      layout.mipSize
+    );
+    t.queue.submit([encoder.finish()]);
+
+    // Check if the contents of the destination bufer are what we expect.
+    const expectedData = new Uint8Array(bufferSize);
+    for (let layer = 0; layer < arrayLayerCount; ++layer) {
+      for (let y = 0; y < layout.mipSize[1]; ++y) {
+        for (let x = 0; x < layout.mipSize[0]; ++x) {
+          expectedData[appliedOffset + layer * bytesPerRow * rowsPerImage + y * bytesPerRow + x] =
+            51 * (layer + 1);
+        }
+      }
+    }
+    t.CheckGPUBufferContent(dstBuffer, bufferUsage, expectedData);
   });
