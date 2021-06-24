@@ -165,12 +165,21 @@ export type TypedArrayBufferView =
   | Float32Array
   | Float64Array;
 
-export type TypedArrayBufferViewConstructor =
-  | Uint8ArrayConstructor
-  | Uint16ArrayConstructor
-  | Uint32ArrayConstructor
-  | Int8ArrayConstructor
-  | Int16ArrayConstructor
-  | Int32ArrayConstructor
-  | Float32ArrayConstructor
-  | Float64ArrayConstructor;
+export type TypedArrayBufferViewConstructor<
+  A extends TypedArrayBufferView = TypedArrayBufferView
+> = {
+  // Interface copied from Uint8Array, and made generic.
+  readonly prototype: A;
+  readonly BYTES_PER_ELEMENT: number;
+
+  new (): A;
+  new (elements: Iterable<number>): A;
+  new (array: ArrayLike<number> | ArrayBufferLike): A;
+  new (buffer: ArrayBufferLike, byteOffset?: number, length?: number): A;
+  new (length: number): A;
+
+  from(arrayLike: ArrayLike<number>): A;
+  from(arrayLike: Iterable<number>, mapfn?: (v: number, k: number) => number, thisArg?: any): A;
+  from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): A;
+  of(...items: number[]): A;
+};

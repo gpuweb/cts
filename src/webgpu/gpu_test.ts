@@ -201,9 +201,9 @@ export class GPUTest extends Fixture {
   /**
    * Expect a GPUBuffer's contents to pass the provided check.
    */
-  expectGPUBufferValuesPassCheck(
+  expectGPUBufferValuesPassCheck<T extends TypedArrayBufferView>(
     src: GPUBuffer,
-    check: (actual: TypedArrayBufferView) => Error | undefined,
+    check: (actual: T) => Error | undefined,
     {
       srcByteOffset = 0,
       type,
@@ -211,7 +211,7 @@ export class GPUTest extends Fixture {
       mode = 'fail',
     }: {
       srcByteOffset?: number;
-      type: TypedArrayBufferViewConstructor;
+      type: TypedArrayBufferViewConstructor<T>;
       typedLength: number;
       mode?: 'fail' | 'warn';
     }
@@ -221,7 +221,9 @@ export class GPUTest extends Fixture {
 
     this.eventualAsyncExpectation(async niceStack => {
       await dst.mapAsync(GPUMapMode.READ);
-      const actual = new type(dst.getMappedRange()).subarray(begin, end);
+      // TODO: begin and end are byte offsets, but used here as array offsets.
+      const mapped: T = new type(dst.getMappedRange());
+      const actual = mapped.subarray(begin, end) as T;
       this.expectOK(check(actual), { mode, niceStack });
       dst.destroy();
     });
