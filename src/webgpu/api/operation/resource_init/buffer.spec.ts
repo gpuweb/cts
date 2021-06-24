@@ -327,8 +327,8 @@ remaining part of it will be initialized to 0.`
   )
   .fn(async t => {
     const { bufferOffset, arrayLayerCount, copyMipLevel, rowsPerImage } = t.params;
-    const srcTextureFormat = 'r8unorm';
-    const textureSize = { width: 32, height: 16, depthOrArrayLayers: arrayLayerCount };
+    const srcTextureFormat = 'r8uint';
+    const textureSize = [32, 16, arrayLayerCount] as const;
 
     const srcTexture = t.device.createTexture({
       format: srcTextureFormat,
@@ -338,23 +338,16 @@ remaining part of it will be initialized to 0.`
     });
 
     const bytesPerRow = 256;
-    const layout = getTextureCopyLayout(
-      srcTextureFormat,
-      '2d',
-      [textureSize.width, textureSize.height, textureSize.depthOrArrayLayers],
-      {
-        mipLevel: copyMipLevel,
-        bytesPerRow,
-        rowsPerImage,
-      }
-    );
+    const layout = getTextureCopyLayout(srcTextureFormat, '2d', textureSize, {
+      mipLevel: copyMipLevel,
+      bytesPerRow,
+      rowsPerImage,
+    });
 
-    const extraBufferData = Math.abs(bufferOffset);
-    const bufferSize = layout.byteLength + extraBufferData;
-    const bufferUsage = GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST;
+    const dstBufferSize = layout.byteLength + Math.abs(bufferOffset);
     const dstBuffer = t.device.createBuffer({
-      size: bufferSize,
-      usage: bufferUsage,
+      size: dstBufferSize,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
 
     const encoder = t.device.createCommandEncoder();
@@ -369,7 +362,7 @@ remaining part of it will be initialized to 0.`
               arrayLayerCount: 1,
               baseMipLevel: copyMipLevel,
             }),
-            loadValue: { r: 0.2 * (layer + 1), g: 0, b: 0, a: 0 },
+            loadValue: { r: layer + 1, g: 0, b: 0, a: 0 },
             storeOp: 'store',
           },
         ],
@@ -387,14 +380,14 @@ remaining part of it will be initialized to 0.`
     t.queue.submit([encoder.finish()]);
 
     // Check if the contents of the destination bufer are what we expect.
-    const expectedData = new Uint8Array(bufferSize);
+    const expectedData = new Uint8Array(dstBufferSize);
     for (let layer = 0; layer < arrayLayerCount; ++layer) {
       for (let y = 0; y < layout.mipSize[1]; ++y) {
         for (let x = 0; x < layout.mipSize[0]; ++x) {
           expectedData[appliedOffset + layer * bytesPerRow * rowsPerImage + y * bytesPerRow + x] =
-            51 * (layer + 1);
+            layer + 1;
         }
       }
     }
-    t.CheckGPUBufferContent(dstBuffer, bufferUsage, expectedData);
+    t.expectContents(dstBuffer, expectedData);
   });
