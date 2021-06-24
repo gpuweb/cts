@@ -63,9 +63,11 @@ g.test('while_mapped')
   .paramsSubcasesOnly(u =>
     u //
       .combine('mappedAtCreation', [false, true])
-      .combine('unmapBeforeDestoy', [false, true])
+      .combine('unmapBeforeDestroy', [false, true])
       .combineWithParams([
         { usage: GPUConst.BufferUsage.COPY_SRC },
+        { usage: GPUConst.BufferUsage.MAP_WRITE | GPUConst.BufferUsage.COPY_SRC },
+        { usage: GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.MAP_READ },
         {
           usage: GPUConst.BufferUsage.MAP_WRITE | GPUConst.BufferUsage.COPY_SRC,
           mapMode: GPUConst.MapMode.WRITE,
@@ -78,23 +80,21 @@ g.test('while_mapped')
       .unless(p => p.mappedAtCreation === false && p.mapMode === undefined)
   )
   .fn(async t => {
-    const { usage, mapMode, mappedAtCreation, unmapBeforeDestoy } = t.params;
+    const { usage, mapMode, mappedAtCreation, unmapBeforeDestroy } = t.params;
     const buf = t.device.createBuffer({
       size: 4,
       usage,
       mappedAtCreation,
     });
 
-    if (mappedAtCreation && unmapBeforeDestoy) {
-      buf.unmap();
-    }
-
-    if ((!mappedAtCreation || unmapBeforeDestoy) && mapMode !== undefined) {
-      await buf.mapAsync(mapMode);
-
-      if (unmapBeforeDestoy) {
+    if (mapMode !== undefined) {
+      if (mappedAtCreation) {
         buf.unmap();
       }
+      await buf.mapAsync(mapMode);
+    }
+    if (unmapBeforeDestroy) {
+      buf.unmap();
     }
 
     buf.destroy();
