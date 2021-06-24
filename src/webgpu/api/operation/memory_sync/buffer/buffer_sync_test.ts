@@ -246,7 +246,7 @@ export class BufferSyncTest extends GPUTest {
   verifyData(buffer: GPUBuffer, expectedValue: number) {
     const bufferData = new Uint32Array(1);
     bufferData[0] = expectedValue;
-    this.expectContents(buffer, bufferData);
+    this.expectGPUBufferValuesEqual(buffer, bufferData);
   }
 
   verifyDataTwoValidValues(buffer: GPUBuffer, expectedValue1: number, expectedValue2: number) {

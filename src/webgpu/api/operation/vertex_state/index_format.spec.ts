@@ -199,7 +199,7 @@ g.test('index_format,uint16')
     const result = t.run(indexBuffer, indices.length, 'uint16', indexOffset);
 
     const expectedTextureValues = t.CreateExpectedUint8Array(_expectedShape);
-    t.expectContents(result, expectedTextureValues);
+    t.expectGPUBufferValuesEqual(result, expectedTextureValues);
   });
 
 g.test('index_format,uint32')
@@ -220,7 +220,7 @@ g.test('index_format,uint32')
     const result = t.run(indexBuffer, indices.length, 'uint32', indexOffset);
 
     const expectedTextureValues = t.CreateExpectedUint8Array(_expectedShape);
-    t.expectContents(result, expectedTextureValues);
+    t.expectGPUBufferValuesEqual(result, expectedTextureValues);
   });
 
 g.test('primitive_restart')
@@ -378,5 +378,5 @@ is different from what you would get if the topology were incorrect.
     const result = t.run(indexBuffer, _indices.length, indexFormat, 0, primitiveTopology);
 
     const expectedTextureValues = t.CreateExpectedUint8Array(_expectedShape);
-    t.expectContents(result, expectedTextureValues);
+    t.expectGPUBufferValuesEqual(result, expectedTextureValues);
   });

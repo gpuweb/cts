@@ -105,7 +105,7 @@ function doTest(
   pass.endPass();
   t.device.queue.submit([encoder.finish()]);
 
-  t.expectContents(
+  t.expectGPUBufferValuesEqual(
     outputBuffer,
     new ReadbackTypedArray(
       rep.componentOrder.map(c => {

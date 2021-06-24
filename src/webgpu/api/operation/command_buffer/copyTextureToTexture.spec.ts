@@ -202,7 +202,7 @@ class F extends GPUTest {
     }
 
     // Verify the content of the whole subresouce of dstTexture at dstCopyLevel (in dstBuffer) is expected.
-    this.expectContents(dstBuffer, expectedUint8DataWithPadding);
+    this.expectGPUBufferValuesEqual(dstBuffer, expectedUint8DataWithPadding);
   }
 }
 

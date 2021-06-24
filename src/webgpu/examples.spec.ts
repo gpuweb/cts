@@ -222,7 +222,7 @@ g.test('gpu,buffers').fn(async t => {
 
   // Use the expectContents helper to check the actual contents of a GPUBuffer.
   // Like shouldReject, it must be awaited.
-  t.expectContents(src, data);
+  t.expectGPUBufferValuesEqual(src, data);
 });
 
 // One of the following two tests should be skipped on most platforms.

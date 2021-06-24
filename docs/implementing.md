@@ -78,7 +78,7 @@ does:
 **Example:**
 
 ```typescript
-t.expectContents(srcBuffer, expectedData);
+t.expectGPUBufferValuesEqual(srcBuffer, expectedData);
 ```
 
 does:

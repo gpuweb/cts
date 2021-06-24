@@ -60,7 +60,7 @@ g.test('memcpy').fn(async t => {
   pass.endPass();
   t.device.queue.submit([encoder.finish()]);
 
-  t.expectContents(dst, data);
+  t.expectGPUBufferValuesEqual(dst, data);
 });
 
 g.test('large_dispatch')

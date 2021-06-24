@@ -38,7 +38,7 @@ g.test('clear').fn(async t => {
   );
   t.device.queue.submit([encoder.finish()]);
 
-  t.expectContents(dst, new Uint8Array([0x00, 0xff, 0x00, 0xff]));
+  t.expectGPUBufferValuesEqual(dst, new Uint8Array([0x00, 0xff, 0x00, 0xff]));
 });
 
 g.test('fullscreen_quad').fn(async t => {
@@ -105,7 +105,7 @@ g.test('fullscreen_quad').fn(async t => {
   );
   t.device.queue.submit([encoder.finish()]);
 
-  t.expectContents(dst, new Uint8Array([0x00, 0xff, 0x00, 0xff]));
+  t.expectGPUBufferValuesEqual(dst, new Uint8Array([0x00, 0xff, 0x00, 0xff]));
 });
 
 g.test('large_draw')

@@ -54,7 +54,7 @@ g.test('single')
       expectedDstData[dstOffset + i] = srcData[srcOffset + i];
     }
 
-    t.expectContents(dst, expectedDstData);
+    t.expectGPUBufferValuesEqual(dst, expectedDstData);
   });
 
 g.test('state_transitions')
@@ -89,8 +89,8 @@ g.test('state_transitions')
 
     const expectedSrcData = new Uint8Array([1, 2, 3, 4, 10, 20, 30, 40]);
     const expectedDstData = new Uint8Array([10, 20, 30, 40, 1, 2, 3, 4]);
-    t.expectContents(src, expectedSrcData);
-    t.expectContents(dst, expectedDstData);
+    t.expectGPUBufferValuesEqual(src, expectedSrcData);
+    t.expectGPUBufferValuesEqual(dst, expectedDstData);
   });
 
 g.test('copy_order')
@@ -121,5 +121,5 @@ g.test('copy_order')
     t.device.queue.submit([encoder.finish()]);
 
     const expectedDstData = new Uint32Array([1, 2, 5, 6, 7, 8, 0, 0]);
-    t.expectContents(dst, expectedDstData);
+    t.expectGPUBufferValuesEqual(dst, expectedDstData);
   });
