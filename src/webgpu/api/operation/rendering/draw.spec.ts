@@ -13,12 +13,12 @@ TODO:
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert } from '../../../../common/util/util.js';
 import {
-  GPUTest,
+  assert,
   TypedArrayBufferView,
   TypedArrayBufferViewConstructor,
-} from '../../../gpu_test.js';
+} from '../../../../common/util/util.js';
+import { GPUTest } from '../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 

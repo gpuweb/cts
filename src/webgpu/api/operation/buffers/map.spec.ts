@@ -18,6 +18,7 @@ TODO: Some testing (probably minimal) of accessing with different TypedArray/Dat
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
+import { checkElementsEqual } from '../../../util/check_contents.js';
 
 import { MappingTest } from './mapping_test.js';
 
@@ -133,7 +134,7 @@ map-read and check the read-back result.`
     const mapRegion = getRegionForMap(size, [rangeOffset, rangeSize], t.params);
     await buffer.mapAsync(GPUMapMode.READ, ...mapRegion);
     const actual = new Uint8Array(buffer.getMappedRange(...range));
-    t.expectBuffer(actual, new Uint8Array(expected.buffer));
+    t.expectOK(checkElementsEqual(actual, new Uint8Array(expected.buffer)));
   });
 
 g.test('mappedAtCreation')

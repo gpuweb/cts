@@ -145,3 +145,32 @@ export function objectEquals(x: unknown, y: unknown): boolean {
 export function range<T>(n: number, fn: (i: number) => T): T[] {
   return [...new Array(n)].map((_, i) => fn(i));
 }
+
+/**
+ * Generates a range of values `fn(0)..fn(n-1)`.
+ */
+export function* iterRange<T>(n: number, fn: (i: number) => T): Iterable<T> {
+  for (let i = 0; i < n; ++i) {
+    yield fn(i);
+  }
+}
+
+export type TypedArrayBufferView =
+  | Uint8Array
+  | Uint16Array
+  | Uint32Array
+  | Int8Array
+  | Int16Array
+  | Int32Array
+  | Float32Array
+  | Float64Array;
+
+export type TypedArrayBufferViewConstructor =
+  | Uint8ArrayConstructor
+  | Uint16ArrayConstructor
+  | Uint32ArrayConstructor
+  | Int8ArrayConstructor
+  | Int16ArrayConstructor
+  | Int32ArrayConstructor
+  | Float32ArrayConstructor
+  | Float64ArrayConstructor;

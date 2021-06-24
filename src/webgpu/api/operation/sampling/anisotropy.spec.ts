@@ -13,6 +13,7 @@ things. If there are no guarantees we can issue warnings instead of failures. Id
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
+import { checkElementsEqual } from '../../../util/check_contents.js';
 
 const kRTSize = 16;
 const kBytesPerRow = 256;
@@ -238,11 +239,11 @@ g.test('anisotropic_filter_checkerboard')
       results.push(new Uint8Array(d.getMappedRange()));
     }
 
-    const check0 = t.checkBuffer(results[0], results[1]);
+    const check0 = checkElementsEqual(results[0], results[1]);
     if (check0 === undefined) {
       t.warn('Render results with sampler.maxAnisotropy being 1 and 16 should be different.');
     }
-    const check1 = t.checkBuffer(results[1], results[2]);
+    const check1 = checkElementsEqual(results[1], results[2]);
     if (check1 !== undefined) {
       t.expect(
         false,
