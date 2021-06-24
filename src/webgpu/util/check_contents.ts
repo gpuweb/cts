@@ -7,12 +7,20 @@ import {
   TypedArrayBufferViewConstructor,
 } from '../../common/util/util.js';
 
-export type BufferCheckGenerator = (index: number) => number;
-export type BufferCheckPredicate = (index: number, value: number) => boolean;
-export type BufferCheckPredicatePrinter = {
+/** Generate an expected value at `index`, to test for equality with the actual value. */
+export type CheckElementsGenerator = (index: number) => number;
+/** Check whether the actual `value` at `index` is as expected. */
+export type CheckElementsPredicate = (index: number, value: number) => boolean;
+/**
+ * Provides a pretty-printing implementation for a particular CheckElementsPredicate.
+ * This is an array; each element provides info to print an additional row in the error message.
+ */
+export type CheckElementsSupplementalTableRows = ReadonlyArray<{
+  /** Row header. */
   leftHeader: string;
-  cell: (index: number) => number;
-}[];
+  /** Get the value for a cell in the table with TypedArray element index `index`. */
+  getValueForCell: (index: number) => number;
+}>;
 
 /**
  * Check whether two `TypedArray`s have equal contents.
@@ -35,21 +43,20 @@ export function checkElementsBetween(
   actual: TypedArrayBufferView,
   expected: readonly [TypedArrayBufferView, TypedArrayBufferView]
 ): ErrorWithExtra | undefined {
-  const e = checkElementsPassPredicate(
+  const error = checkElementsPassPredicate(
     actual,
     (index, value) =>
       value >= Math.min(expected[0][index], expected[1][index]) &&
       value <= Math.max(expected[0][index], expected[1][index]),
     {
       predicatePrinter: [
-        { leftHeader: 'between', cell: index => expected[0][index] },
-        { leftHeader: 'and', cell: index => expected[1][index] },
+        { leftHeader: 'between', getValueForCell: index => expected[0][index] },
+        { leftHeader: 'and', getValueForCell: index => expected[1][index] },
       ],
     }
   );
-  return e === undefined
-    ? undefined
-    : new ErrorWithExtra(e.message, () => ({ ...e.extra, expected }));
+  // If there was an error, extend it with additional extras.
+  return error ? new ErrorWithExtra(error, () => ({ expected })) : undefined;
 }
 
 /**
@@ -60,19 +67,18 @@ export function checkElementsEqualEither(
   actual: TypedArrayBufferView,
   expected: readonly [TypedArrayBufferView, TypedArrayBufferView]
 ): ErrorWithExtra | undefined {
-  const e = checkElementsPassPredicate(
+  const error = checkElementsPassPredicate(
     actual,
     (index, value) => value === expected[0][index] || value === expected[1][index],
     {
       predicatePrinter: [
-        { leftHeader: 'either', cell: index => expected[0][index] },
-        { leftHeader: 'or', cell: index => expected[1][index] },
+        { leftHeader: 'either', getValueForCell: index => expected[0][index] },
+        { leftHeader: 'or', getValueForCell: index => expected[1][index] },
       ],
     }
   );
-  return e === undefined
-    ? undefined
-    : new ErrorWithExtra(e.message, () => ({ ...e.extra, expected }));
+  // If there was an error, extend it with additional extras.
+  return error ? new ErrorWithExtra(error, () => ({ expected })) : undefined;
 }
 
 /**
@@ -84,19 +90,18 @@ export function checkElementsEqualEither(
  *  Starting at index 1:
  *    actual == 0x: 00 fe ff 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 00
  *    failed ->        xx xx    xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx
- *  expected == 0x: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ *  expected ==     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
  * ```
  */
 export function checkElementsEqualGenerated(
   actual: TypedArrayBufferView,
-  generator: BufferCheckGenerator
+  generator: CheckElementsGenerator
 ): ErrorWithExtra | undefined {
-  const e = checkElementsPassPredicate(actual, (index, value) => value === generator(index), {
-    predicatePrinter: [{ leftHeader: 'expected ==', cell: index => generator(index) }],
+  const error = checkElementsPassPredicate(actual, (index, value) => value === generator(index), {
+    predicatePrinter: [{ leftHeader: 'expected ==', getValueForCell: index => generator(index) }],
   });
-  return e === undefined
-    ? undefined
-    : new ErrorWithExtra(e.message, () => ({ ...e.extra, generator }));
+  // If there was an error, extend it with additional extras.
+  return error ? new ErrorWithExtra(error, () => ({ generator })) : undefined;
 }
 
 /**
@@ -105,14 +110,15 @@ export function checkElementsEqualGenerated(
  */
 export function checkElementsPassPredicate(
   actual: TypedArrayBufferView,
-  predicate: BufferCheckPredicate,
-  { predicatePrinter }: { predicatePrinter?: BufferCheckPredicatePrinter }
+  predicate: CheckElementsPredicate,
+  { predicatePrinter }: { predicatePrinter?: CheckElementsSupplementalTableRows }
 ): ErrorWithExtra | undefined {
   const size = actual.length;
   const ctor = actual.constructor as TypedArrayBufferViewConstructor;
   const printAsFloat = ctor === Float32Array || ctor === Float64Array;
 
   let failedElementsFirstMaybe: number | undefined = undefined;
+  /** Sparse array with `true` for elements that failed. */
   const failedElements: (true | undefined)[] = [];
   for (let i = 0; i < size; ++i) {
     if (!predicate(i, actual[i])) {
@@ -140,10 +146,10 @@ export function checkElementsPassPredicate(
   const printActual = actual.subarray(printElementsStart, printElementsEnd);
   const printExpected: Array<Iterable<string | number>> = [];
   if (predicatePrinter) {
-    for (const { leftHeader, cell } of predicatePrinter) {
+    for (const { leftHeader, getValueForCell: cell } of predicatePrinter) {
       printExpected.push(
         (function* () {
-          yield* [leftHeader, numberPrefix];
+          yield* [leftHeader, ''];
           yield* iterRange(printElementsCount, i => cell(printElementsStart + i));
         })()
       );
@@ -161,12 +167,11 @@ export function checkElementsPassPredicate(
   };
   const msg = `Array had unexpected contents at indices ${failedElementsFirst} through ${failedElementsLast}.
  Starting at index ${printElementsStart}:
-${generatePrettyTable(
-  opts,
+${generatePrettyTable(opts, [
   ['actual ==', numberPrefix, ...printActual],
   printFailedValueMarkers,
-  ...printExpected
-)}`;
+  ...printExpected,
+])}`;
   return new ErrorWithExtra(msg, () => ({
     actual: actual.slice(),
   }));
@@ -196,7 +201,7 @@ function intToPaddedHex(number: number, { byteLength }: { byteLength: number }) 
  */
 function generatePrettyTable(
   { fillToWidth, numberToString }: { fillToWidth: number; numberToString: (n: number) => string },
-  ...rows: ReadonlyArray<Iterable<string | number>>
+  rows: ReadonlyArray<Iterable<string | number>>
 ): string {
   const rowStrings = range(rows.length, () => '');
   let totalTableWidth = 0;

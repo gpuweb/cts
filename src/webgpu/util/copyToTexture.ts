@@ -35,6 +35,7 @@ export class CopyToTextureUtils extends GPUTest {
     });
   }
 
+  // TODO
   checkBufferWithRowPitch(
     actual: Uint8Array,
     exp: Uint8Array,
