@@ -63,7 +63,7 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
             };
 
             [[stage(vertex)]] fn main(
-              [[builtin(vertex_index)]] VertexIndex : i32) -> Outputs {
+              [[builtin(vertex_index)]] VertexIndex : u32) -> Outputs {
               var position : array<vec3<f32>, 6> = array<vec3<f32>, 6>(
                 vec3<f32>(-0.5, 0.5, -0.5),
                 vec3<f32>(0.5, 0.5, -0.5),
