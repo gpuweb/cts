@@ -56,13 +56,14 @@ g.test('twice')
 
 g.test('while_mapped')
   .desc(
-    `Test destroying buffers while mapped.
+    `Test destroying buffers while mapped or after being unmapped.
       - Tests {mappable, unmappable mapAtCreation, mappable mapAtCreation}
-      - Tests while {mapped, mapped at creation}`
+      - Tests while {mapped, mapped at creation, unmapped}`
   )
   .paramsSubcasesOnly(u =>
     u //
       .combine('mappedAtCreation', [false, true])
+      .combine('unmapBeforeDestoy', [false, true])
       .combineWithParams([
         { usage: GPUConst.BufferUsage.COPY_SRC },
         {
@@ -77,55 +78,24 @@ g.test('while_mapped')
       .unless(p => p.mappedAtCreation === false && p.mapMode === undefined)
   )
   .fn(async t => {
-    const { usage, mapMode, mappedAtCreation } = t.params;
+    const { usage, mapMode, mappedAtCreation, unmapBeforeDestoy } = t.params;
     const buf = t.device.createBuffer({
       size: 4,
       usage,
       mappedAtCreation,
     });
 
-    if (!mappedAtCreation && mapMode !== undefined) {
-      await buf.mapAsync(mapMode);
+    if (mappedAtCreation && unmapBeforeDestoy) {
+      buf.unmap();
     }
 
-    buf.destroy();
-  });
-
-g.test('after_unmapped')
-  .desc(
-    `Test destroying buffers after it's been unmapped.
-      - Tests {mappable, unmappable mapAtCreation, mappable mapAtCreation}
-      - Tests while {mapped -> unmapped, mapAtCreation -> unmapped}`
-  )
-  .paramsSubcasesOnly(u =>
-    u //
-      .combine('mappedAtCreation', [false, true])
-      .combineWithParams([
-        { usage: GPUConst.BufferUsage.COPY_SRC },
-        {
-          usage: GPUConst.BufferUsage.MAP_WRITE | GPUConst.BufferUsage.COPY_SRC,
-          mapMode: GPUConst.MapMode.WRITE,
-        },
-        {
-          usage: GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.MAP_READ,
-          mapMode: GPUConst.MapMode.READ,
-        },
-      ])
-      .unless(p => p.mappedAtCreation === false && p.mapMode === undefined)
-  )
-  .fn(async t => {
-    const { usage, mapMode, mappedAtCreation } = t.params;
-    const buf = t.device.createBuffer({
-      size: 4,
-      usage,
-      mappedAtCreation,
-    });
-
-    if (!mappedAtCreation && mapMode !== undefined) {
+    if ((!mappedAtCreation || unmapBeforeDestoy) && mapMode !== undefined) {
       await buf.mapAsync(mapMode);
-    }
 
-    buf.unmap();
+      if (unmapBeforeDestoy) {
+        buf.unmap();
+      }
+    }
 
     buf.destroy();
   });
