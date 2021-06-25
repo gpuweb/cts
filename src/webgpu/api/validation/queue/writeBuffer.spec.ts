@@ -140,22 +140,28 @@ g.test('write_sizes_overflow')
   .desc(
     `
 Tests writing large sizes that may overflow a 64-bit integer.
+- dataOffset + size overflow
 `
   )
   .paramsSubcasesOnly([
-    { size: 16, _valid: true }, // control case
-    { size: 0xfffffffffffff800, _valid: false }, // The largest number less than the maximum of uint64
-    { size: 0xffffffffffffff00, _valid: false }, // The smallest number overflow uint64
+    { dataOffset: 0, size: 0x1008, _valid: true }, // control case
+    { dataOffset: 0x800, size: 0xfffffffffffff800, _valid: false }, // dataOffset + size overflow to zero
+    { dataOffset: 0xfffffffffffff800, size: 0x800, _valid: false }, // dataOffset + size overflow to zero
+    { dataOffset: 0x1008, size: 0xfffffffffffff800, _valid: false }, // dataOffset + size overflow to non-zero
+    { dataOffset: 0xfffffffffffff800, size: 0x1008, _valid: false }, // dataOffset + size overflow to non-zero
   ])
   .fn(async t => {
-    const { size, _valid } = t.params;
-    const buffer = t.device.createBuffer({ size: 16, usage: GPUBufferUsage.COPY_DST });
-    const data = new Uint8Array(16);
+    const { dataOffset, size, _valid } = t.params;
+    const dataSize = 4104; // Large enough to write the sizes after overflow
+    const buffer = t.device.createBuffer({ size: dataSize, usage: GPUBufferUsage.COPY_DST });
+    const data = new Uint8Array(dataSize);
 
     if (_valid) {
-      t.device.queue.writeBuffer(buffer, 0, data, 0, size);
+      t.device.queue.writeBuffer(buffer, 0, data, dataOffset, size);
     } else {
-      t.shouldThrow('TypeError', () => t.device.queue.writeBuffer(buffer, 0, data, 0, size));
+      t.shouldThrow('OperationError', () =>
+        t.device.queue.writeBuffer(buffer, 0, data, dataOffset, size)
+      );
     }
   });
 
