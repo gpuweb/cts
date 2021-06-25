@@ -57,29 +57,6 @@ class F extends GPUTest {
     }
   }
 
-  RecordInitializeTextureAsRenderAttachment(
-    encoder: GPUCommandEncoder,
-    texture: GPUTexture,
-    color: GPUColor,
-    baseArrayLayer = 0,
-    baseMipLevel = 0
-  ): void {
-    const renderPass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          view: texture.createView({
-            baseArrayLayer,
-            arrayLayerCount: 1,
-            baseMipLevel,
-          }),
-          loadValue: color,
-          storeOp: 'store',
-        },
-      ],
-    });
-    renderPass.endPass();
-  }
-
   TestBufferZeroInitInBindGroup(
     computeShaderModule: GPUShaderModule,
     buffer: GPUBuffer,
@@ -433,13 +410,20 @@ remaining part of it will be initialized to 0.`
 
     // Initialize srcTexture
     for (let layer = 0; layer < arrayLayerCount; ++layer) {
-      t.RecordInitializeTextureAsRenderAttachment(
-        encoder,
-        srcTexture,
-        { r: layer + 1, g: 0, b: 0, a: 0 },
-        layer,
-        copyMipLevel
-      );
+      const renderPass = encoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: srcTexture.createView({
+              baseArrayLayer: layer,
+              arrayLayerCount: 1,
+              baseMipLevel: copyMipLevel,
+            }),
+            loadValue: { r: layer + 1, g: 0, b: 0, a: 0 },
+            storeOp: 'store',
+          },
+        ],
+      });
+      renderPass.endPass();
     }
 
     // Do texture-to-buffer copy
