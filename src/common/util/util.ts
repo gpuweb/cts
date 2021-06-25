@@ -179,7 +179,9 @@ export type TypedArrayBufferViewConstructor<
   new (length: number): A;
 
   from(arrayLike: ArrayLike<number>): A;
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   from(arrayLike: Iterable<number>, mapfn?: (v: number, k: number) => number, thisArg?: any): A;
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): A;
   of(...items: number[]): A;
 };
