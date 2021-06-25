@@ -1,6 +1,10 @@
 import { Fixture } from '../common/framework/fixture.js';
 import { attemptGarbageCollection } from '../common/util/collect_garbage.js';
-import { assert } from '../common/util/util.js';
+import {
+  assert,
+  TypedArrayBufferView,
+  TypedArrayBufferViewConstructor,
+} from '../common/util/util.js';
 
 import {
   EncodableTextureFormat,
@@ -9,6 +13,7 @@ import {
   kQueryTypeInfo,
 } from './capability_info.js';
 import { makeBufferWithContents } from './util/buffer.js';
+import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
 import {
   DevicePool,
   DeviceProvider,
@@ -22,26 +27,6 @@ import {
   LayoutOptions as TextureLayoutOptions,
 } from './util/texture/layout.js';
 import { PerTexelComponent, kTexelRepresentationInfo } from './util/texture/texel_data.js';
-
-export type TypedArrayBufferView =
-  | Uint8Array
-  | Uint16Array
-  | Uint32Array
-  | Int8Array
-  | Int16Array
-  | Int32Array
-  | Float32Array
-  | Float64Array;
-
-export type TypedArrayBufferViewConstructor =
-  | Uint8ArrayConstructor
-  | Uint16ArrayConstructor
-  | Uint32ArrayConstructor
-  | Int8ArrayConstructor
-  | Int16ArrayConstructor
-  | Int32ArrayConstructor
-  | Float32ArrayConstructor
-  | Float64ArrayConstructor;
 
 const devicePool = new DevicePool();
 
@@ -194,8 +179,6 @@ export class GPUTest extends Fixture {
     return dst;
   }
 
-  // TODO: add an expectContents for textures, which logs data: uris on failure
-
   /**
    * Offset and size passed to createCopyForMapRead must be divisible by 4. For that
    * we might need to copy more bytes from the buffer than we want to map.
@@ -216,377 +199,54 @@ export class GPUTest extends Fixture {
   }
 
   /**
+   * Expect a GPUBuffer's contents to pass the provided check.
+   */
+  expectGPUBufferValuesPassCheck<T extends TypedArrayBufferView>(
+    src: GPUBuffer,
+    check: (actual: T) => Error | undefined,
+    {
+      srcByteOffset = 0,
+      type,
+      typedLength,
+      mode = 'fail',
+    }: {
+      srcByteOffset?: number;
+      type: TypedArrayBufferViewConstructor<T>;
+      typedLength: number;
+      mode?: 'fail' | 'warn';
+    }
+  ) {
+    const byteLength = typedLength * type.BYTES_PER_ELEMENT;
+    const { dst, begin, end } = this.createAlignedCopyForMapRead(src, byteLength, srcByteOffset);
+
+    this.eventualAsyncExpectation(async niceStack => {
+      await dst.mapAsync(GPUMapMode.READ);
+      // TODO: begin and end are byte offsets, but used here as array offsets.
+      const mapped: T = new type(dst.getMappedRange());
+      const actual = mapped.subarray(begin, end) as T;
+      this.expectOK(check(actual), { mode, niceStack });
+      dst.destroy();
+    });
+  }
+
+  /**
    * Expect a GPUBuffer's contents to equal the values in the provided TypedArray.
    */
   expectGPUBufferValuesEqual(
     src: GPUBuffer,
     expected: TypedArrayBufferView,
-    srcOffset: number = 0,
-    { generateWarningOnly = false }: { generateWarningOnly?: boolean } = {}
+    srcByteOffset: number = 0,
+    { mode = 'fail' }: { mode?: 'fail' | 'warn' } = {}
   ): void {
-    const { dst, begin, end } = this.createAlignedCopyForMapRead(
-      src,
-      expected.byteLength,
-      srcOffset
-    );
-
-    this.eventualAsyncExpectation(async niceStack => {
-      const constructor = expected.constructor as TypedArrayBufferViewConstructor;
-      await dst.mapAsync(GPUMapMode.READ);
-      const actual = new constructor(dst.getMappedRange());
-      const check = this.checkBuffer(actual.subarray(begin, end), expected);
-      if (check !== undefined) {
-        niceStack.message = check;
-        if (generateWarningOnly) {
-          this.rec.warn(niceStack);
-        } else {
-          this.rec.expectationFailed(niceStack);
-        }
-      }
-      dst.destroy();
+    this.expectGPUBufferValuesPassCheck(src, a => checkElementsEqual(a, expected), {
+      srcByteOffset,
+      type: expected.constructor as TypedArrayBufferViewConstructor,
+      typedLength: expected.length,
+      mode,
     });
   }
 
-  /**
-   * Expect a GPUBuffer's contents to be a single constant value repeated,
-   * specified as a TypedArrayBufferView containing one element.
-   */
-  expectSingleValueContents(
-    src: GPUBuffer,
-    expected: TypedArrayBufferView,
-    byteSize: number,
-    srcOffset: number = 0,
-    { generateWarningOnly = false }: { generateWarningOnly?: boolean } = {}
-  ): void {
-    const { dst, begin, end } = this.createAlignedCopyForMapRead(src, byteSize, srcOffset);
-
-    this.eventualAsyncExpectation(async niceStack => {
-      const constructor = expected.constructor as TypedArrayBufferViewConstructor;
-      await dst.mapAsync(GPUMapMode.READ);
-      const actual = new constructor(dst.getMappedRange());
-      const check = this.checkSingleValueBuffer(actual.subarray(begin, end), expected);
-      if (check !== undefined) {
-        niceStack.message = check;
-        if (generateWarningOnly) {
-          this.rec.warn(niceStack);
-        } else {
-          this.rec.expectationFailed(niceStack);
-        }
-      }
-      dst.destroy();
-    });
-  }
-
-  /**
-   * Expect each element in a GPUBuffer is between two corresponding expected values.
-   *
-   * Interprets the GPUBuffer's contents as an array of the same type as the provided
-   * `TypedArray`s, and checks the values element-wise.
-   */
-  expectContentsBetweenTwoValues(
-    src: GPUBuffer,
-    expected: [TypedArrayBufferView, TypedArrayBufferView],
-    srcOffset: number = 0,
-    { generateWarningOnly = false }: { generateWarningOnly?: boolean }
-  ): void {
-    assert(expected[0].constructor === expected[1].constructor);
-    assert(expected[0].length === expected[1].length);
-    const { dst, begin, end } = this.createAlignedCopyForMapRead(
-      src,
-      expected[0].byteLength,
-      srcOffset
-    );
-
-    this.eventualAsyncExpectation(async niceStack => {
-      const constructor = expected[0].constructor as TypedArrayBufferViewConstructor;
-      await dst.mapAsync(GPUMapMode.READ);
-      const actual = new constructor(dst.getMappedRange());
-
-      const bounds = [new constructor(expected[0].length), new constructor(expected[1].length)];
-      for (let i = 0, len = expected[0].length; i < len; i++) {
-        bounds[0][i] = Math.min(expected[0][i], expected[1][i]);
-        bounds[1][i] = Math.max(expected[0][i], expected[1][i]);
-      }
-
-      const check = this.checkBufferFn(
-        actual.subarray(begin, end),
-        (actual: TypedArrayBufferView) => {
-          if (actual.length !== expected[0].length) {
-            return false;
-          }
-          for (let i = 0, len = actual.length; i < len; i++) {
-            if (actual[i] < bounds[0][i] || actual[i] > bounds[1][i]) {
-              return false;
-            }
-          }
-          return true;
-        },
-        () => {
-          const lines: string[] = [];
-          const format = (x: number) => x.toString(16).padStart(2, '0');
-          const exp0Hex = Array.from(
-            new Uint8Array(
-              expected[0].buffer,
-              expected[0].byteOffset,
-              Math.min(expected[0].byteLength, 256)
-            ),
-            format
-          ).join('');
-          lines.push('EXPECT\nbetween:\t  ' + expected[0].join(' '));
-          lines.push('\t0x' + exp0Hex);
-          if (expected[0].byteLength > 256) {
-            lines.push(' ...');
-          }
-          const exp1Hex = Array.from(
-            new Uint8Array(
-              expected[1].buffer,
-              expected[1].byteOffset,
-              Math.min(expected[1].byteLength, 256)
-            )
-          )
-            .map(format)
-            .join('');
-          lines.push('and:    \t  ' + expected[1].join(' '));
-          lines.push('\t0x' + exp1Hex);
-          if (expected[1].byteLength > 256) {
-            lines.push(' ...');
-          }
-          return lines.join('\n');
-        }
-      );
-      if (check !== undefined) {
-        niceStack.message = check;
-        if (generateWarningOnly) {
-          this.rec.warn(niceStack);
-        } else {
-          this.rec.expectationFailed(niceStack);
-        }
-      }
-      dst.destroy();
-    });
-  }
-
-  /**
-   * Expect a GPUBuffer's contents to equal one of two possible TypedArrays.
-   *
-   * We can expand this function in order to support multiple valid values or two mixed vectors
-   * if needed. See the discussion at https://github.com/gpuweb/cts/pull/384#discussion_r533101429
-   */
-  expectContentsTwoValidValues(
-    src: GPUBuffer,
-    expected1: TypedArrayBufferView,
-    expected2: TypedArrayBufferView,
-    srcOffset: number = 0
-  ): void {
-    assert(expected1.byteLength === expected2.byteLength);
-    const { dst, begin, end } = this.createAlignedCopyForMapRead(
-      src,
-      expected1.byteLength,
-      srcOffset
-    );
-
-    this.eventualAsyncExpectation(async niceStack => {
-      const constructor = expected1.constructor as TypedArrayBufferViewConstructor;
-      await dst.mapAsync(GPUMapMode.READ);
-      const actual = new constructor(dst.getMappedRange());
-      const check1 = this.checkBuffer(actual.subarray(begin, end), expected1);
-      const check2 = this.checkBuffer(actual.subarray(begin, end), expected2);
-      if (check1 !== undefined && check2 !== undefined) {
-        niceStack.message = `Expected one of the following two checks to succeed:
-  - ${check1}
-  - ${check2}`;
-        this.rec.expectationFailed(niceStack);
-      }
-      dst.destroy();
-    });
-  }
-
-  /**
-   * Expect two `Uint8Array`s to have equal contents.
-   */
-  expectBuffer(actual: Uint8Array, exp: Uint8Array): void {
-    const check = this.checkBuffer(actual, exp);
-    if (check !== undefined) {
-      this.rec.expectationFailed(new Error(check));
-    }
-  }
-
-  /**
-   * Check whether two `TypedArray`s have equal contents.
-   * Returns `undefined` if they are equal, or an explanation string if not.
-   */
-  checkBuffer(
-    actual: TypedArrayBufferView,
-    exp: TypedArrayBufferView,
-    tolerance: number | ((i: number) => number) = 0
-  ): string | undefined {
-    assert(actual.constructor === exp.constructor);
-
-    const size = exp.byteLength;
-    if (actual.byteLength !== size) {
-      return 'size mismatch';
-    }
-    const failedByteIndices: string[] = [];
-    const failedByteExpectedValues: string[] = [];
-    const failedByteActualValues: string[] = [];
-    for (let i = 0; i < size; ++i) {
-      const tol = typeof tolerance === 'function' ? tolerance(i) : tolerance;
-      if (Math.abs(actual[i] - exp[i]) > tol) {
-        if (failedByteIndices.length >= 4) {
-          failedByteIndices.push('...');
-          failedByteExpectedValues.push('...');
-          failedByteActualValues.push('...');
-          break;
-        }
-        failedByteIndices.push(i.toString());
-        failedByteExpectedValues.push(exp[i].toString());
-        failedByteActualValues.push(actual[i].toString());
-      }
-    }
-    const summary = `at [${failedByteIndices.join(', ')}], \
-expected [${failedByteExpectedValues.join(', ')}], \
-got [${failedByteActualValues.join(', ')}]`;
-    const lines = [summary];
-
-    // TODO: Could make a more convenient message, which could look like e.g.:
-    //
-    //   Starting at offset 48,
-    //              got 22222222 ABCDABCD 99999999
-    //     but expected 22222222 55555555 99999999
-    //
-    // or
-    //
-    //   Starting at offset 0,
-    //              got 00000000 00000000 00000000 00000000 (... more)
-    //     but expected 00FF00FF 00FF00FF 00FF00FF 00FF00FF (... more)
-    //
-    // Or, maybe these diffs aren't actually very useful (given we have the prints just above here),
-    // and we should remove them. More important will be logging of texture data in a visual format.
-
-    if (size <= 256 && failedByteIndices.length > 0) {
-      const expHex = Array.from(new Uint8Array(exp.buffer, exp.byteOffset, exp.byteLength))
-        .map(x => x.toString(16).padStart(2, '0'))
-        .join('');
-      const actHex = Array.from(new Uint8Array(actual.buffer, actual.byteOffset, actual.byteLength))
-        .map(x => x.toString(16).padStart(2, '0'))
-        .join('');
-      lines.push('EXPECT:\t  ' + exp.join(' '));
-      lines.push('\t0x' + expHex);
-      lines.push('ACTUAL:\t  ' + actual.join(' '));
-      lines.push('\t0x' + actHex);
-    }
-    if (failedByteIndices.length) {
-      return lines.join('\n');
-    }
-    return undefined;
-  }
-
-  /**
-   * Checks that a TypedArrayBufferView's contents are all a single constant value,
-   * specified as a TypedArrayBufferView containing one element.
-   */
-  checkSingleValueBuffer(
-    actual: TypedArrayBufferView,
-    exp: TypedArrayBufferView,
-    tolerance: number | ((i: number) => number) = 0
-  ): string | undefined {
-    assert(actual.constructor === exp.constructor);
-
-    const size = actual.length;
-    if (1 !== exp.length) {
-      return 'expected single value typed array for expected value';
-    }
-    const failedByteIndices: string[] = [];
-    const failedByteExpectedValues: string[] = [];
-    const failedByteActualValues: string[] = [];
-    for (let i = 0; i < size; ++i) {
-      const tol = typeof tolerance === 'function' ? tolerance(i) : tolerance;
-      if (Math.abs(actual[i] - exp[0]) > tol) {
-        if (failedByteIndices.length >= 4) {
-          failedByteIndices.push('...');
-          failedByteExpectedValues.push('...');
-          failedByteActualValues.push('...');
-          break;
-        }
-        failedByteIndices.push(i.toString());
-        failedByteExpectedValues.push(exp.toString());
-        failedByteActualValues.push(actual[i].toString());
-      }
-    }
-    const summary = `at [${failedByteIndices.join(', ')}], \
-expected [${failedByteExpectedValues.join(', ')}], \
-got [${failedByteActualValues.join(', ')}]`;
-    const lines = [summary];
-
-    // TODO: Could make a more convenient message, which could look like e.g.:
-    //
-    //   Starting at offset 48,
-    //              got 22222222 ABCDABCD 99999999
-    //     but expected 22222222 55555555 99999999
-    //
-    // or
-    //
-    //   Starting at offset 0,
-    //              got 00000000 00000000 00000000 00000000 (... more)
-    //     but expected 00FF00FF 00FF00FF 00FF00FF 00FF00FF (... more)
-    //
-    // Or, maybe these diffs aren't actually very useful (given we have the prints just above here),
-    // and we should remove them. More important will be logging of texture data in a visual format.
-
-    if (size <= 256 && failedByteIndices.length > 0) {
-      const expHex = Array.from(new Uint8Array(exp.buffer, exp.byteOffset, exp.byteLength))
-        .map(x => x.toString(16).padStart(2, '0'))
-        .join('');
-      const actHex = Array.from(new Uint8Array(actual.buffer, actual.byteOffset, actual.byteLength))
-        .map(x => x.toString(16).padStart(2, '0'))
-        .join('');
-      lines.push('EXPECT:\t  ' + exp.join(' '));
-      lines.push('\t0x' + expHex);
-      lines.push('ACTUAL:\t  ' + actual.join(' '));
-      lines.push('\t0x' + actHex);
-    }
-    if (failedByteIndices.length) {
-      return lines.join('\n');
-    }
-    return undefined;
-  }
-
-  /**
-   * Check that a TypedArray passes the check `checkFn`.
-   * Returns `undefined` if it does, or an explanation string if not.
-   */
-  checkBufferFn(
-    actual: TypedArrayBufferView,
-    checkFn: (actual: TypedArrayBufferView) => boolean,
-    errorMsgFn?: () => string
-  ): string | undefined {
-    const result = checkFn(actual);
-
-    if (result) {
-      return undefined;
-    }
-
-    const summary = 'CheckBuffer failed';
-    const lines = [summary];
-
-    const actHex = Array.from(
-      new Uint8Array(actual.buffer, actual.byteOffset, Math.min(actual.byteLength, 256))
-    )
-      .map(x => x.toString(16).padStart(2, '0'))
-      .join('');
-    lines.push('ACTUAL:\t  ' + actual.join(' '));
-    lines.push('\t0x' + actHex);
-
-    if (actual.byteLength > 256) {
-      lines.push(' ...');
-    }
-
-    if (errorMsgFn !== undefined) {
-      lines.push(errorMsgFn());
-    }
-
-    return lines.join('\n');
-  }
+  // TODO: add an expectContents for textures, which logs data: uris on failure
 
   /**
    * Expect a whole GPUTexture to have the single provided color.
@@ -686,14 +346,15 @@ got [${failedByteActualValues.join(', ')}]`;
     }
   ): void {
     const buffer = this.readSinglePixelFrom2DTexture(src, format, { x, y }, { slice, layout });
-    this.expectGPUBufferValuesEqual(buffer, exp, 0, { generateWarningOnly });
+    this.expectGPUBufferValuesEqual(buffer, exp, 0, {
+      mode: generateWarningOnly ? 'warn' : 'fail',
+    });
   }
 
   /**
-   * Expect a single pixel of a 2D texture to have values between two provided values.
-   *
-   * Interprets the contents of the pixel as an array of the same type as the provided
-   * `TypedArray`s, and checks the values element-wise.
+   * Take a single pixel of a 2D texture, interpret it using a TypedArray of the `expected` type,
+   * and expect each value in that array to be between the corresponding "expected" values
+   * (either `a[i] <= actual[i] <= b[i]` or `a[i] >= actual[i] => b[i]`).
    */
   expectSinglePixelBetweenTwoValuesIn2DTexture(
     src: GPUTexture,
@@ -711,8 +372,17 @@ got [${failedByteActualValues.join(', ')}]`;
       generateWarningOnly?: boolean;
     }
   ): void {
+    assert(exp[0].constructor === exp[1].constructor);
+    const constructor = exp[0].constructor as TypedArrayBufferViewConstructor;
+    assert(exp[0].length === exp[1].length);
+    const typedLength = exp[0].length;
+
     const buffer = this.readSinglePixelFrom2DTexture(src, format, { x, y }, { slice, layout });
-    this.expectContentsBetweenTwoValues(buffer, exp, 0, { generateWarningOnly });
+    this.expectGPUBufferValuesPassCheck(buffer, a => checkElementsBetween(a, exp), {
+      type: constructor,
+      typedLength,
+      mode: generateWarningOnly ? 'warn' : 'fail',
+    });
   }
 
   /**

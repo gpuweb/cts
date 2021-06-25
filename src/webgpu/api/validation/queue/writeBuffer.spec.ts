@@ -16,7 +16,10 @@ TODO: validate large write sizes that may overflow.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { TypedArrayBufferView, TypedArrayBufferViewConstructor } from '../../../gpu_test.js';
+import {
+  TypedArrayBufferView,
+  TypedArrayBufferViewConstructor,
+} from '../../../../common/util/util.js';
 import { ValidationTest } from '../validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);

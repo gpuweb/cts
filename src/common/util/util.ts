@@ -145,3 +145,43 @@ export function objectEquals(x: unknown, y: unknown): boolean {
 export function range<T>(n: number, fn: (i: number) => T): T[] {
   return [...new Array(n)].map((_, i) => fn(i));
 }
+
+/**
+ * Generates a range of values `fn(0)..fn(n-1)`.
+ */
+export function* iterRange<T>(n: number, fn: (i: number) => T): Iterable<T> {
+  for (let i = 0; i < n; ++i) {
+    yield fn(i);
+  }
+}
+
+export type TypedArrayBufferView =
+  | Uint8Array
+  | Uint16Array
+  | Uint32Array
+  | Int8Array
+  | Int16Array
+  | Int32Array
+  | Float32Array
+  | Float64Array;
+
+export type TypedArrayBufferViewConstructor<
+  A extends TypedArrayBufferView = TypedArrayBufferView
+> = {
+  // Interface copied from Uint8Array, and made generic.
+  readonly prototype: A;
+  readonly BYTES_PER_ELEMENT: number;
+
+  new (): A;
+  new (elements: Iterable<number>): A;
+  new (array: ArrayLike<number> | ArrayBufferLike): A;
+  new (buffer: ArrayBufferLike, byteOffset?: number, length?: number): A;
+  new (length: number): A;
+
+  from(arrayLike: ArrayLike<number>): A;
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  from(arrayLike: Iterable<number>, mapfn?: (v: number, k: number) => number, thisArg?: any): A;
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): A;
+  of(...items: number[]): A;
+};

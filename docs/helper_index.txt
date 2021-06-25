@@ -47,6 +47,9 @@ Whenever a new generally-useful helper is added, it should be indexed here.
 - {@link webgpu/util/buffer}: Helpers for GPUBuffers.
 - {@link webgpu/util/unions}: Helpers for various union typedefs in the WebGPU spec.
 - {@link webgpu/util/math}: Helpers for common math operations.
+- {@link webgpu/util/check_contents}: Check the contents of TypedArrays, with nice messages.
+    Also can be composed with {@link GPUTest.expectGPUBufferValuesPassCheck}, used to implement
+    GPUBuffer checking helpers in GPUTest.
 - {@link webgpu/util/conversion}: Numeric encoding/decoding for float/unorm/snorm values, etc.
 - {@link webgpu/util/copyToTexture}:
     Helper class for copyToTexture test suites for execution copy and check results.
