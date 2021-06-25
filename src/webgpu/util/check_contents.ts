@@ -92,6 +92,14 @@ export function checkElementsEqualEither(
  *    failed ->        xx xx    xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx
  *  expected ==     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
  * ```
+ *
+ * ```text
+ * Array had unexpected contents at indices 2 through 29.
+ *  Starting at index 1:
+ *    actual ==  0.000 -2.000e+100 -1.000e+100 0.000 1.000e+100 2.000e+100 3.000e+100 4.000e+100 5.000e+100 6.000e+100 7.000e+100 ...
+ *    failed ->                 xx          xx               xx         xx         xx         xx         xx         xx         xx ...
+ *  expected ==  0.000       0.000       0.000 0.000      0.000      0.000      0.000      0.000      0.000      0.000      0.000 ...
+ * ```
  */
 export function checkElementsEqualGenerated(
   actual: TypedArrayBufferView,
@@ -141,7 +149,7 @@ export function checkElementsPassPredicate(
   const numberToString = printAsFloat
     ? (n: number) => n.toPrecision(4)
     : (n: number) => intToPaddedHex(n, { byteLength: ctor.BYTES_PER_ELEMENT });
-  const numberPrefix = printAsFloat ? '   ' : '0x:';
+  const numberPrefix = printAsFloat ? '' : '0x:';
 
   const printActual = actual.subarray(printElementsStart, printElementsEnd);
   const printExpected: Array<Iterable<string | number>> = [];
@@ -217,7 +225,7 @@ function generatePrettyTable(
 
     // Maximum width of any cell in this column, plus one for space between columns
     // (also inserts a space at the left of the first column).
-    const colWidth = Math.max(...cellsForColumn.map(c => (c === undefined ? 0 : c.length)));
+    const colWidth = Math.max(...cellsForColumn.map(c => (c === undefined ? 0 : c.length))) + 1;
     for (let row = 0; row < rowStrings.length; ++row) {
       const cell = cellsForColumn[row];
       if (cell !== undefined) {
