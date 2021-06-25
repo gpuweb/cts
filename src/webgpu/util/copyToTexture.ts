@@ -35,7 +35,7 @@ export class CopyToTextureUtils extends GPUTest {
     });
   }
 
-  // TODO
+  // TODO(crbug.com/dawn/868): Should be possible to consolidate this along with texture checking
   checkBufferWithRowPitch(
     actual: Uint8Array,
     exp: Uint8Array,
