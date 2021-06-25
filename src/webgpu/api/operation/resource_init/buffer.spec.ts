@@ -15,7 +15,6 @@ Note that:
 
 TODO:
 Test the buffers whose first usage is being used:
-- as uniform / read-only storage / storage buffer
 - as vertex / index buffer
 - as indirect buffer
 `;
