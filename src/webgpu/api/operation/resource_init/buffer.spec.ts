@@ -389,5 +389,5 @@ remaining part of it will be initialized to 0.`
         }
       }
     }
-    t.expectContents(dstBuffer, expectedData);
+    t.expectGPUBufferValuesEqual(dstBuffer, expectedData);
   });
