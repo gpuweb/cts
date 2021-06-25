@@ -7,7 +7,7 @@ import { UnitTest } from './unit_test.js';
 
 export class TestGroupTest extends UnitTest {
   async run(g: IterableTestGroup): Promise<LogResults> {
-    const logger = new Logger(true);
+    const logger = new Logger({ overrideDebugMode: true });
     for (const t of g.iterate()) {
       for (const rc of t.iterate()) {
         const query = new TestQuerySingleCase('xx', ['yy'], rc.id.test, rc.id.params);

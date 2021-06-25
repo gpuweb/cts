@@ -1,4 +1,30 @@
+import { Logger } from '../internal/logging/logger.js';
+
 import { timeout } from './timeout.js';
+
+/**
+ * Error with arbitrary `extra` data attached, for debugging.
+ * The extra data is omitted if not running the test in debug mode (`?debug=1`).
+ */
+export class ErrorWithExtra extends Error {
+  readonly extra: {};
+
+  /**
+   * `extra` function is only called if in debug mode.
+   * If an `ErrorWithExtra` is passed, its message is used and its extras are passed through.
+   */
+  constructor(message: string, extra: () => {});
+  constructor(base: ErrorWithExtra, newExtra: () => {});
+  constructor(baseOrMessage: string | ErrorWithExtra, newExtra: () => {}) {
+    const message = typeof baseOrMessage === 'string' ? baseOrMessage : baseOrMessage.message;
+    super(message);
+
+    const oldExtras = baseOrMessage instanceof ErrorWithExtra ? baseOrMessage.extra : {};
+    this.extra = Logger.globalDebugMode
+      ? { ...oldExtras, ...newExtra() }
+      : { omitted: 'pass ?debug=1' };
+  }
+}
 
 /**
  * Asserts `condition` is true. Otherwise, throws an `Error` with the provided message.
@@ -7,6 +33,14 @@ export function assert(condition: boolean, msg?: string | (() => string)): asser
   if (!condition) {
     throw new Error(msg && (typeof msg === 'string' ? msg : msg()));
   }
+}
+
+/** If the argument is an Error, throw it. Otherwise, pass it back. */
+export function assertOK<T>(value: Error | T): T {
+  if (value instanceof Error) {
+    throw value;
+  }
+  return value;
 }
 
 /**

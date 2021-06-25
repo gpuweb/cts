@@ -228,7 +228,7 @@ g.test('end2end').fn(async t => {
   const l = await t.load('suite2:foof:*');
   assert(l.length === 3, 'listing length');
 
-  const log = new Logger(true);
+  const log = new Logger({ overrideDebugMode: true });
 
   await runTestcase(
     t,
@@ -266,7 +266,7 @@ g.test('end2end').fn(async t => {
 });
 
 g.test('expectations,single_case').fn(async t => {
-  const log = new Logger(true);
+  const log = new Logger({ overrideDebugMode: true });
   const zedCases = await t.load('suite1:baz:zed:*');
 
   // Single-case. Covers one case.
@@ -301,7 +301,7 @@ g.test('expectations,single_case').fn(async t => {
 });
 
 g.test('expectations,single_case,none').fn(async t => {
-  const log = new Logger(true);
+  const log = new Logger({ overrideDebugMode: true });
   const zedCases = await t.load('suite1:baz:zed:*');
   // Single-case. Doesn't cover any cases.
   const zedExpectationsSkipA1B0 = [
@@ -335,7 +335,7 @@ g.test('expectations,single_case,none').fn(async t => {
 });
 
 g.test('expectations,multi_case').fn(async t => {
-  const log = new Logger(true);
+  const log = new Logger({ overrideDebugMode: true });
   const zedCases = await t.load('suite1:baz:zed:*');
   // Multi-case, not all cases covered.
   const zedExpectationsSkipB3 = [
@@ -369,7 +369,7 @@ g.test('expectations,multi_case').fn(async t => {
 });
 
 g.test('expectations,multi_case_all').fn(async t => {
-  const log = new Logger(true);
+  const log = new Logger({ overrideDebugMode: true });
   const zedCases = await t.load('suite1:baz:zed:*');
   // Multi-case, all cases covered.
   const zedExpectationsSkipA1 = [
@@ -403,7 +403,7 @@ g.test('expectations,multi_case_all').fn(async t => {
 });
 
 g.test('expectations,multi_case_none').fn(async t => {
-  const log = new Logger(true);
+  const log = new Logger({ overrideDebugMode: true });
   const zedCases = await t.load('suite1:baz:zed:*');
   // Multi-case, no params, all cases covered.
   const zedExpectationsSkipZed = [
@@ -437,7 +437,7 @@ g.test('expectations,multi_case_none').fn(async t => {
 });
 
 g.test('expectations,multi_test').fn(async t => {
-  const log = new Logger(true);
+  const log = new Logger({ overrideDebugMode: true });
   const suite1Cases = await t.load('suite1:*');
 
   // Multi-test, all cases covered.
@@ -472,7 +472,7 @@ g.test('expectations,multi_test').fn(async t => {
 });
 
 g.test('expectations,multi_test,none').fn(async t => {
-  const log = new Logger(true);
+  const log = new Logger({ overrideDebugMode: true });
   const suite1Cases = await t.load('suite1:*');
 
   // Multi-test, no cases covered.
@@ -507,7 +507,7 @@ g.test('expectations,multi_test,none').fn(async t => {
 });
 
 g.test('expectations,multi_file').fn(async t => {
-  const log = new Logger(true);
+  const log = new Logger({ overrideDebugMode: true });
   const suite1Cases = await t.load('suite1:*');
 
   // Multi-file
@@ -542,7 +542,7 @@ g.test('expectations,multi_file').fn(async t => {
 });
 
 g.test('expectations,catches_failure').fn(async t => {
-  const log = new Logger(true);
+  const log = new Logger({ overrideDebugMode: true });
   const suite2Cases = await t.load('suite2:*');
 
   // Catches failure
@@ -578,7 +578,7 @@ g.test('expectations,catches_failure').fn(async t => {
 });
 
 g.test('expectations,skip_dominates_failure').fn(async t => {
-  const log = new Logger(true);
+  const log = new Logger({ overrideDebugMode: true });
   const suite2Cases = await t.load('suite2:*');
 
   const expectedFailures = [
@@ -605,7 +605,7 @@ g.test('expectations,skip_dominates_failure').fn(async t => {
 });
 
 g.test('expectations,skip_inside_failure').fn(async t => {
-  const log = new Logger(true);
+  const log = new Logger({ overrideDebugMode: true });
   const suite2Cases = await t.load('suite2:*');
 
   const expectedFailures = [

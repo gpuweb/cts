@@ -70,7 +70,8 @@ if (queries.length === 0) {
     filterQuery
   );
 
-  const log = new Logger(debug);
+  Logger.globalDebugMode = debug;
+  const log = new Logger();
 
   const failed: Array<[string, LiveTestCaseResult]> = [];
   const warned: Array<[string, LiveTestCaseResult]> = [];
