@@ -15,7 +15,6 @@ Note that:
 
 TODO:
 Test the buffers whose first usage is being used:
-- as uniform / read-only storage / storage buffer
 - as vertex / index buffer
 - as indirect buffer
 `;
@@ -54,6 +53,61 @@ class F extends GPUTest {
     } else {
       assert((bufferUsage & GPUBufferUsage.COPY_SRC) !== 0);
       this.expectGPUBufferValuesEqual(buffer, expectedData);
+    }
+  }
+
+  TestBufferZeroInitInBindGroup(
+    computeShaderModule: GPUShaderModule,
+    buffer: GPUBuffer,
+    bufferOffset: number,
+    boundBufferSize: number
+  ): void {
+    const computePipeline = this.device.createComputePipeline({
+      compute: {
+        module: computeShaderModule,
+        entryPoint: 'main',
+      },
+    });
+    const outputTexture = this.device.createTexture({
+      format: 'rgba8unorm',
+      size: [1, 1, 1],
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE,
+    });
+    const bindGroup = this.device.createBindGroup({
+      layout: computePipeline.getBindGroupLayout(0),
+      entries: [
+        {
+          binding: 0,
+          resource: {
+            buffer,
+            offset: bufferOffset,
+            size: boundBufferSize,
+          },
+        },
+        {
+          binding: 1,
+          resource: outputTexture.createView(),
+        },
+      ],
+    });
+
+    const encoder = this.device.createCommandEncoder();
+    const computePass = encoder.beginComputePass();
+    computePass.setBindGroup(0, bindGroup);
+    computePass.setPipeline(computePipeline);
+    computePass.dispatch(1);
+    computePass.endPass();
+    this.queue.submit([encoder.finish()]);
+
+    this.expectSingleColor(outputTexture, 'rgba8unorm', {
+      size: [1, 1, 1],
+      exp: { R: 0.0, G: 1.0, B: 0.0, A: 1.0 },
+    });
+
+    // Verify the remaining part of the buffer is also cleared to 0.
+    if (bufferOffset > 0) {
+      const expectedBufferdata = new Uint8Array(boundBufferSize + bufferOffset);
+      this.expectGPUBufferValuesEqual(buffer, expectedBufferdata);
     }
   }
 }
@@ -391,4 +445,110 @@ remaining part of it will be initialized to 0.`
       }
     }
     t.expectGPUBufferValuesEqual(dstBuffer, expectedData);
+  });
+
+g.test('uniform_buffer')
+  .desc(
+    `Verify when we use a GPUBuffer as a uniform buffer just after the creation of that GPUBuffer,
+    all the contents in that GPUBuffer have been initialized to 0.`
+  )
+  .paramsSubcasesOnly(u => u.combine('bufferOffset', [0, 256]))
+  .fn(async t => {
+    const { bufferOffset } = t.params;
+
+    const boundBufferSize = 16;
+    const buffer = t.device.createBuffer({
+      size: bufferOffset + boundBufferSize,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.UNIFORM,
+    });
+
+    const computeShaderModule = t.device.createShaderModule({
+      code: `
+  [[block]] struct UBO {
+      value : vec4<u32>;
+  };
+  [[group(0), binding(0)]] var<uniform> ubo : UBO;
+  [[group(0), binding(1)]] var outImage : texture_storage_2d<rgba8unorm, write>;
+
+  [[stage(compute), workgroup_size(1)]] fn main() {
+      if (all(ubo.value == vec4<u32>(0u, 0u, 0u, 0u))) {
+          textureStore(outImage, vec2<i32>(0, 0), vec4<f32>(0.0, 1.0, 0.0, 1.0));
+      } else {
+          textureStore(outImage, vec2<i32>(0, 0), vec4<f32>(1.0, 0.0, 0.0, 1.0));
+      }
+  }`,
+    });
+
+    // Verify the whole range of the buffer has been initialized to 0 in a compute shader.
+    t.TestBufferZeroInitInBindGroup(computeShaderModule, buffer, bufferOffset, boundBufferSize);
+  });
+
+g.test('readonly_storage_buffer')
+  .desc(
+    `Verify when we use a GPUBuffer as a read-only storage buffer just after the creation of that
+    GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
+  )
+  .paramsSubcasesOnly(u => u.combine('bufferOffset', [0, 256]))
+  .fn(async t => {
+    const { bufferOffset } = t.params;
+    const boundBufferSize = 16;
+    const buffer = t.device.createBuffer({
+      size: bufferOffset + boundBufferSize,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
+    });
+
+    const computeShaderModule = t.device.createShaderModule({
+      code: `
+    [[block]] struct SSBO {
+        value : vec4<u32>;
+    };
+    [[group(0), binding(0)]] var<storage, read> ssbo : SSBO;
+    [[group(0), binding(1)]] var outImage : texture_storage_2d<rgba8unorm, write>;
+
+    [[stage(compute), workgroup_size(1)]] fn main() {
+        if (all(ssbo.value == vec4<u32>(0u, 0u, 0u, 0u))) {
+            textureStore(outImage, vec2<i32>(0, 0), vec4<f32>(0.0, 1.0, 0.0, 1.0));
+        } else {
+            textureStore(outImage, vec2<i32>(0, 0), vec4<f32>(1.0, 0.0, 0.0, 1.0));
+        }
+    }`,
+    });
+
+    // Verify the whole range of the buffer has been initialized to 0 in a compute shader.
+    t.TestBufferZeroInitInBindGroup(computeShaderModule, buffer, bufferOffset, boundBufferSize);
+  });
+
+g.test('storage_buffer')
+  .desc(
+    `Verify when we use a GPUBuffer as a storage buffer just after the creation of that
+    GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
+  )
+  .paramsSubcasesOnly(u => u.combine('bufferOffset', [0, 256]))
+  .fn(async t => {
+    const { bufferOffset } = t.params;
+    const boundBufferSize = 16;
+    const buffer = t.device.createBuffer({
+      size: bufferOffset + boundBufferSize,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
+    });
+
+    const computeShaderModule = t.device.createShaderModule({
+      code: `
+    [[block]] struct SSBO {
+        value : vec4<u32>;
+    };
+    [[group(0), binding(0)]] var<storage, read_write> ssbo : SSBO;
+    [[group(0), binding(1)]] var outImage : texture_storage_2d<rgba8unorm, write>;
+
+    [[stage(compute), workgroup_size(1)]] fn main() {
+        if (all(ssbo.value == vec4<u32>(0u, 0u, 0u, 0u))) {
+            textureStore(outImage, vec2<i32>(0, 0), vec4<f32>(0.0, 1.0, 0.0, 1.0));
+        } else {
+            textureStore(outImage, vec2<i32>(0, 0), vec4<f32>(1.0, 0.0, 0.0, 1.0));
+        }
+    }`,
+    });
+
+    // Verify the whole range of the buffer has been initialized to 0 in a compute shader.
+    t.TestBufferZeroInitInBindGroup(computeShaderModule, buffer, bufferOffset, boundBufferSize);
   });
