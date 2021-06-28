@@ -57,7 +57,7 @@ export class CopyToTextureUtils extends GPUTest {
 
   doTestAndCheckResult(
     imageCopyExternalImage: GPUImageCopyExternalImage,
-    dstTextureCopyView: GPUImageCopyTexture,
+    dstTextureCopyView: GPUImageCopyTextureTagged,
     copySize: GPUExtent3DDict,
     bytesPerPixel: number,
     expectedData: Uint8ClampedArray
