@@ -221,7 +221,7 @@ g.test('anisotropic_filter_checkerboard')
 
     const textureView = texture.createView();
     const byteLength = kRTSize * kBytesPerRow;
-    const results: Uint8Array[] = [];
+    const results = [];
 
     for (const maxAnisotropy of [1, 16, 1024]) {
       const sampler = t.device.createSampler({
@@ -230,25 +230,27 @@ g.test('anisotropic_filter_checkerboard')
         mipmapFilter: 'linear',
         maxAnisotropy,
       });
-      const d = t.createAlignedCopyForMapRead(
+      const result = await t.readGPUBufferRangeTyped(
         t.copyRenderTargetToBuffer(t.drawSlantedPlane(textureView, sampler)),
-        byteLength,
-        0
-      ).dst;
-      await d.mapAsync(GPUMapMode.READ);
-      results.push(new Uint8Array(d.getMappedRange()));
+        { type: Uint8Array, typedLength: byteLength }
+      );
+      results.push(result);
     }
 
-    const check0 = checkElementsEqual(results[0], results[1]);
+    const check0 = checkElementsEqual(results[0].data, results[1].data);
     if (check0 === undefined) {
       t.warn('Render results with sampler.maxAnisotropy being 1 and 16 should be different.');
     }
-    const check1 = checkElementsEqual(results[1], results[2]);
+    const check1 = checkElementsEqual(results[1].data, results[2].data);
     if (check1 !== undefined) {
       t.expect(
         false,
         'Render results with sampler.maxAnisotropy being 16 and 1024 should be the same.'
       );
+    }
+
+    for (const result of results) {
+      result.cleanup();
     }
   });
 

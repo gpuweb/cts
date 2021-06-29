@@ -498,15 +498,17 @@ class ImageCopyTest extends GPUTest {
     partialData: Uint8Array
   ): void {
     const { mipSize, bytesPerRow, rowsPerImage, byteLength } = fullTextureCopyLayout;
-    const { dst, begin, end } = this.createAlignedCopyForMapRead(fullData, byteLength, 0);
+    const readbackPromise = this.readGPUBufferRangeTyped(fullData, {
+      type: Uint8Array,
+      typedLength: byteLength,
+    });
 
     const destinationOrigin = { x: 0, y: 0, z: 0 };
 
     // We add an eventual async expectation which will update the full data and then add
     // other eventual async expectations to ensure it will be correct.
     this.eventualAsyncExpectation(async () => {
-      await dst.mapAsync(GPUMapMode.READ);
-      const actual = new Uint8Array(dst.getMappedRange()).subarray(begin, end);
+      const readback = await readbackPromise;
       this.updateLinearTextureDataSubBox(
         { offset: 0, ...fullTextureCopyLayout },
         texturePartialDataLayout,
@@ -514,17 +516,17 @@ class ImageCopyTest extends GPUTest {
         destinationOrigin,
         origin,
         format,
-        actual,
+        readback.data,
         partialData
       );
       this.copyPartialTextureToBufferAndCheckContents(
         { texture, mipLevel, origin: destinationOrigin },
         { width: mipSize[0], height: mipSize[1], depthOrArrayLayers: mipSize[2] },
         format,
-        actual,
+        readback.data,
         { bytesPerRow, rowsPerImage, offset: 0 }
       );
-      dst.destroy();
+      readback.cleanup();
     });
   }
 

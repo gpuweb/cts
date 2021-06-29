@@ -45,16 +45,10 @@ class F extends GPUTest {
     bufferUsage: GPUBufferUsageFlags,
     expectedData: Uint8Array
   ): Promise<void> {
-    // We can only check the buffer contents with t.expectGPUBufferValuesEqual() when the buffer
-    // usage contains COPY_SRC.
-    if (bufferUsage & GPUBufferUsage.MAP_READ) {
-      await buffer.mapAsync(GPUMapMode.READ);
-      this.expectOK(checkElementsEqual(new Uint8Array(buffer.getMappedRange()), expectedData));
-      buffer.unmap();
-    } else {
-      assert((bufferUsage & GPUBufferUsage.COPY_SRC) !== 0);
-      this.expectGPUBufferValuesEqual(buffer, expectedData);
-    }
+    const isMappable = bufferUsage & GPUBufferUsage.MAP_READ;
+    this.expectGPUBufferValuesEqual(buffer, expectedData, 0, {
+      method: isMappable ? 'map' : undefined,
+    });
   }
 }
 
