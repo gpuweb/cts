@@ -114,7 +114,7 @@ class F extends GPUTest {
     vertexShaderModule: GPUShaderModule,
     testVertexBuffer: boolean
   ): GPURenderPipeline {
-    const RenderPipelineDescriptor: GPURenderPipelineDescriptor = {
+    const renderPipelineDescriptor: GPURenderPipelineDescriptor = {
       vertex: {
         module: vertexShaderModule,
         entryPoint: 'main',
@@ -135,7 +135,7 @@ class F extends GPUTest {
       },
     };
     if (testVertexBuffer) {
-      RenderPipelineDescriptor.vertex.buffers = [
+      renderPipelineDescriptor.vertex.buffers = [
         {
           arrayStride: 16,
           attributes: [{ format: 'float32x4', offset: 0, shaderLocation: 0 }],
@@ -143,7 +143,7 @@ class F extends GPUTest {
       ];
     }
 
-    return this.device.createRenderPipeline(RenderPipelineDescriptor);
+    return this.device.createRenderPipeline(renderPipelineDescriptor);
   }
 }
 
