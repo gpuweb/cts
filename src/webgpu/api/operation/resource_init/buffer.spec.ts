@@ -924,6 +924,6 @@ creation of that GPUBuffer, all the contents in that GPUBuffer have been initial
     t.queue.submit([encoder.finish()]);
 
     // The indirect buffer should be lazily cleared to 0, so we actually draw nothing and the color
-    // attachment will keep its original color (green) after we end the render pass.
+    // attachment will keep its original color (green) after we end the compute pass.
     t.CheckBufferAndOutputTexture(indirectBuffer, bufferSize, outputTexture);
   });
