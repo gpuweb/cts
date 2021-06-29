@@ -136,7 +136,7 @@ class F extends CopyToTextureUtils {
       | null;
 
     if (gl === null) {
-      this.skip(canvasType + ' canvas ' +  contextName + ' context not available');
+      this.skip(canvasType + ' canvas ' + contextName + ' context not available');
     }
 
     const rectWidth = Math.floor(width / 2);
