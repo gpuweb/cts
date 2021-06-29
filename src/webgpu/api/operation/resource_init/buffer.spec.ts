@@ -4,6 +4,7 @@ import { GPUConst } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { checkElementsEqual } from '../../../util/check_contents.js';
 import { getTextureCopyLayout } from '../../../util/texture/layout.js';
+import { PerTexelComponent } from '../../../util/texture/texel_data.js';
 
 export const description = `
 Test uninitialized buffers are initialized to zero when read
@@ -12,10 +13,6 @@ Test uninitialized buffers are initialized to zero when read
 Note that:
 -  We don't need 'copy_buffer_to_buffer_copy_destination' here because there has already been an
    operation test 'command_buffer.copyBufferToBuffer.single' that provides the same functionality.
-
-TODO:
-Test the buffers whose first usage is being used:
-- as indirect buffer
 `;
 
 const kMapModeOptions = [GPUConst.MapMode.READ, GPUConst.MapMode.WRITE];
@@ -98,19 +95,10 @@ class F extends GPUTest {
     computePass.endPass();
     this.queue.submit([encoder.finish()]);
 
-    this.expectSingleColor(outputTexture, 'rgba8unorm', {
-      size: [1, 1, 1],
-      exp: { R: 0.0, G: 1.0, B: 0.0, A: 1.0 },
-    });
-
-    // Verify the remaining part of the buffer is also cleared to 0.
-    if (bufferOffset > 0) {
-      const expectedBufferdata = new Uint8Array(boundBufferSize + bufferOffset);
-      this.expectGPUBufferValuesEqual(buffer, expectedBufferdata);
-    }
+    this.CheckBufferAndOutputTexture(buffer, boundBufferSize + bufferOffset, outputTexture);
   }
 
-  CreateRenderPipelineForVertexAndIndexBufferInitTest(
+  CreateRenderPipelineForTest(
     vertexShaderModule: GPUShaderModule,
     testVertexBuffer: boolean
   ): GPURenderPipeline {
@@ -144,6 +132,39 @@ class F extends GPUTest {
     }
 
     return this.device.createRenderPipeline(renderPipelineDescriptor);
+  }
+
+  RecordInitializeTextureColor(
+    encoder: GPUCommandEncoder,
+    texture: GPUTexture,
+    color: GPUColor
+  ): void {
+    const renderPass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: texture.createView(),
+          loadValue: color,
+          storeOp: 'store',
+        },
+      ],
+    });
+    renderPass.endPass();
+  }
+
+  CheckBufferAndOutputTexture(
+    buffer: GPUBuffer,
+    bufferSize: number,
+    outputTexture: GPUTexture,
+    outputTextureSize: [number, number, number] = [1, 1, 1],
+    outputTextureColor: PerTexelComponent<number> = { R: 0.0, G: 1.0, B: 0.0, A: 1.0 }
+  ): void {
+    this.expectSingleColor(outputTexture, 'rgba8unorm', {
+      size: outputTextureSize,
+      exp: outputTextureColor,
+    });
+
+    const expectedBufferData = new Uint8Array(bufferSize);
+    this.expectGPUBufferValuesEqual(buffer, expectedBufferData);
   }
 }
 
@@ -364,15 +385,13 @@ CopyBufferToTexture(), the contents of the GPUBuffer have already been initializ
     );
     t.queue.submit([encoder.finish()]);
 
-    // Verify the contents in srcBuffer are all 0.
-    const expectedSrcBufferData = new Uint8Array(srcBufferSize);
-    await t.CheckGPUBufferContent(srcBuffer, srcBufferUsage, expectedSrcBufferData);
-
-    // Verify the texels in dstTexture are all 0.
-    t.expectSingleColor(dstTexture, dstTextureFormat, {
-      size: [textureSize.width, textureSize.height, textureSize.depthOrArrayLayers],
-      exp: { R: 0.0, G: 0.0, B: 0.0, A: 0.0 },
-    });
+    t.CheckBufferAndOutputTexture(
+      srcBuffer,
+      srcBufferSize,
+      dstTexture,
+      [textureSize.width, textureSize.height, textureSize.depthOrArrayLayers],
+      { R: 0.0, G: 0.0, B: 0.0, A: 0.0 }
+    );
   });
 
 g.test('resolve_query_set_to_partial_buffer')
@@ -597,7 +616,7 @@ g.test('vertex_buffer')
   .fn(async t => {
     const { bufferOffset } = t.params;
 
-    const renderPipeline = t.CreateRenderPipelineForVertexAndIndexBufferInitTest(
+    const renderPipeline = t.CreateRenderPipelineForTest(
       t.device.createShaderModule({
         code: `
       struct VertexOut {
@@ -647,13 +666,7 @@ g.test('vertex_buffer')
     renderPass.endPass();
     t.queue.submit([encoder.finish()]);
 
-    t.expectSingleColor(outputTexture, 'rgba8unorm', {
-      size: [1, 1, 1],
-      exp: { R: 0.0, G: 1.0, B: 0.0, A: 1.0 },
-    });
-
-    const expectedBufferData = new Uint8Array(bufferSize);
-    t.expectGPUBufferValuesEqual(vertexBuffer, expectedBufferData);
+    t.CheckBufferAndOutputTexture(vertexBuffer, bufferSize, outputTexture);
   });
 
 g.test('index_buffer')
@@ -665,7 +678,7 @@ GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
   .fn(async t => {
     const { bufferOffset } = t.params;
 
-    const renderPipeline = t.CreateRenderPipelineForVertexAndIndexBufferInitTest(
+    const renderPipeline = t.CreateRenderPipelineForTest(
       t.device.createShaderModule({
         code: `
     struct VertexOut {
@@ -717,11 +730,200 @@ GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
     renderPass.endPass();
     t.queue.submit([encoder.finish()]);
 
-    t.expectSingleColor(outputTexture, 'rgba8unorm', {
-      size: [1, 1, 1],
-      exp: { R: 0.0, G: 1.0, B: 0.0, A: 1.0 },
+    t.CheckBufferAndOutputTexture(indexBuffer, bufferSize, outputTexture);
+  });
+
+g.test('indirect_buffer_for_draw_indirect')
+  .desc(
+    `Verify when we use a GPUBuffer as an indirect buffer for drawIndirect() just after the creation
+of that GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
+  )
+  .paramsSubcasesOnly(u => u.combine('bufferOffset', [0, 16]))
+  .fn(async t => {
+    const { bufferOffset } = t.params;
+
+    const renderPipeline = t.CreateRenderPipelineForTest(
+      t.device.createShaderModule({
+        code: `
+    struct VertexOut {
+      [[location(0)]] color : vec4<f32>;
+      [[builtin(position)]] position : vec4<f32>;
+    };
+
+    [[stage(vertex)]] fn main() -> VertexOut {
+      var output : VertexOut;
+      output.color = vec4<f32>(1.0, 0.0, 0.0, 1.0);
+      output.position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+      return output;
+    }`,
+      }),
+      false
+    );
+
+    const kDrawIndirectParametersSize = 16;
+    const bufferSize = kDrawIndirectParametersSize + bufferOffset;
+    const indirectBuffer = t.device.createBuffer({
+      size: bufferSize,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.INDIRECT,
     });
 
-    const expectedBufferData = new Uint8Array(bufferSize);
-    t.expectGPUBufferValuesEqual(indexBuffer, expectedBufferData);
+    const outputTexture = t.device.createTexture({
+      format: 'rgba8unorm',
+      size: [1, 1, 1],
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    // Initialize outputTexture to green.
+    const encoder = t.device.createCommandEncoder();
+    t.RecordInitializeTextureColor(encoder, outputTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 });
+
+    const renderPass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: outputTexture.createView(),
+          loadValue: 'load',
+          storeOp: 'store',
+        },
+      ],
+    });
+    renderPass.setPipeline(renderPipeline);
+    renderPass.drawIndirect(indirectBuffer, bufferOffset);
+    renderPass.endPass();
+    t.queue.submit([encoder.finish()]);
+
+    // The indirect buffer should be lazily cleared to 0, so we actually draw nothing and the color
+    // attachment will keep its original color (green) after we end the render pass.
+    t.CheckBufferAndOutputTexture(indirectBuffer, bufferSize, outputTexture);
+  });
+
+g.test('indirect_buffer_for_draw_indexed_indirect')
+  .desc(
+    `Verify when we use a GPUBuffer as an indirect buffer for drawIndexedIndirect() just after the
+creation of that GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
+  )
+  .paramsSubcasesOnly(u => u.combine('bufferOffset', [0, 16]))
+  .fn(async t => {
+    const { bufferOffset } = t.params;
+
+    const renderPipeline = t.CreateRenderPipelineForTest(
+      t.device.createShaderModule({
+        code: `
+    struct VertexOut {
+      [[location(0)]] color : vec4<f32>;
+      [[builtin(position)]] position : vec4<f32>;
+    };
+
+    [[stage(vertex)]] fn main() -> VertexOut {
+      var output : VertexOut;
+      output.color = vec4<f32>(1.0, 0.0, 0.0, 1.0);
+      output.position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+      return output;
+    }`,
+      }),
+      false
+    );
+
+    const kDrawIndexedIndirectParametersSize = 20;
+    const bufferSize = kDrawIndexedIndirectParametersSize + bufferOffset;
+    const indirectBuffer = t.device.createBuffer({
+      size: bufferSize,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.INDIRECT,
+    });
+
+    const outputTexture = t.device.createTexture({
+      format: 'rgba8unorm',
+      size: [1, 1, 1],
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    // Initialize outputTexture to green.
+    const encoder = t.device.createCommandEncoder();
+    t.RecordInitializeTextureColor(encoder, outputTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 });
+
+    const indexBuffer = t.device.createBuffer({
+      size: 4,
+      usage: GPUBufferUsage.INDEX,
+    });
+    const renderPass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: outputTexture.createView(),
+          loadValue: 'load',
+          storeOp: 'store',
+        },
+      ],
+    });
+    renderPass.setPipeline(renderPipeline);
+    renderPass.setIndexBuffer(indexBuffer, 'uint16');
+    renderPass.drawIndexedIndirect(indirectBuffer, bufferOffset);
+    renderPass.endPass();
+    t.queue.submit([encoder.finish()]);
+
+    // The indirect buffer should be lazily cleared to 0, so we actually draw nothing and the color
+    // attachment will keep its original color (green) after we end the render pass.
+    t.CheckBufferAndOutputTexture(indirectBuffer, bufferSize, outputTexture);
+  });
+
+g.test('indirect_buffer_for_dispatch_indirect')
+  .desc(
+    `Verify when we use a GPUBuffer as an indirect buffer for dispatchIndirect() just after the
+creation of that GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
+  )
+  .paramsSubcasesOnly(u => u.combine('bufferOffset', [0, 16]))
+  .fn(async t => {
+    const { bufferOffset } = t.params;
+
+    const computePipeline = t.device.createComputePipeline({
+      compute: {
+        module: t.device.createShaderModule({
+          code: `
+        [[group(0), binding(0)]] var outImage : texture_storage_2d<rgba8unorm, write>;
+
+        [[stage(compute), workgroup_size(1)]] fn main() {
+          textureStore(outImage, vec2<i32>(0, 0), vec4<f32>(1.0, 0.0, 0.0, 1.0));
+        }`,
+        }),
+        entryPoint: 'main',
+      },
+    });
+
+    const kDispatchIndirectParametersSize = 12;
+    const bufferSize = kDispatchIndirectParametersSize + bufferOffset;
+    const indirectBuffer = t.device.createBuffer({
+      size: bufferSize,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.INDIRECT,
+    });
+
+    const outputTexture = t.device.createTexture({
+      format: 'rgba8unorm',
+      size: [1, 1, 1],
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.STORAGE,
+    });
+
+    // Initialize outputTexture to green.
+    const encoder = t.device.createCommandEncoder();
+    t.RecordInitializeTextureColor(encoder, outputTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 });
+
+    const bindGroup = t.device.createBindGroup({
+      layout: computePipeline.getBindGroupLayout(0),
+      entries: [
+        {
+          binding: 0,
+          resource: outputTexture.createView(),
+        },
+      ],
+    });
+
+    // The indirect buffer should be lazily cleared to 0, so we actually don't execute the compute
+    // shader and the output texture should keep its original color (green).
+    const computePass = encoder.beginComputePass();
+    computePass.setBindGroup(0, bindGroup);
+    computePass.setPipeline(computePipeline);
+    computePass.dispatchIndirect(indirectBuffer, bufferOffset);
+    computePass.endPass();
+    t.queue.submit([encoder.finish()]);
+
+    // The indirect buffer should be lazily cleared to 0, so we actually draw nothing and the color
+    // attachment will keep its original color (green) after we end the render pass.
+    t.CheckBufferAndOutputTexture(indirectBuffer, bufferSize, outputTexture);
   });
