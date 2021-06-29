@@ -136,35 +136,6 @@ Also verifies that the specified data range:
     }
   });
 
-g.test('write_sizes_overflow')
-  .desc(
-    `
-Tests writing large sizes that may overflow a 64-bit integer.
-- dataOffset + size overflow
-`
-  )
-  .paramsSubcasesOnly([
-    { dataOffset: 0, size: 0x1008, _valid: true }, // control case
-    { dataOffset: 0x800, size: 0xfffffffffffff800, _valid: false }, // dataOffset + size overflow to zero
-    { dataOffset: 0xfffffffffffff800, size: 0x800, _valid: false }, // dataOffset + size overflow to zero
-    { dataOffset: 0x1008, size: 0xfffffffffffff800, _valid: false }, // dataOffset + size overflow to non-zero
-    { dataOffset: 0xfffffffffffff800, size: 0x1008, _valid: false }, // dataOffset + size overflow to non-zero
-  ])
-  .fn(async t => {
-    const { dataOffset, size, _valid } = t.params;
-    const dataSize = 4104; // Large enough to write the sizes after overflow
-    const buffer = t.device.createBuffer({ size: dataSize, usage: GPUBufferUsage.COPY_DST });
-    const data = new Uint8Array(dataSize);
-
-    if (_valid) {
-      t.device.queue.writeBuffer(buffer, 0, data, dataOffset, size);
-    } else {
-      t.shouldThrow('OperationError', () =>
-        t.device.queue.writeBuffer(buffer, 0, data, dataOffset, size)
-      );
-    }
-  });
-
 g.test('usages')
   .desc(
     `
