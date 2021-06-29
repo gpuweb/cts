@@ -352,7 +352,7 @@ CopyBufferToTexture(), the contents of the GPUBuffer have already been initializ
   .paramsSubcasesOnly(u => u.combine('bufferOffset', [0, 8]))
   .fn(async t => {
     const { bufferOffset } = t.params;
-    const textureSize = { width: 8, height: 8, depthOrArrayLayers: 1 };
+    const textureSize: [number, number, number] = [8, 8, 1];
     const dstTextureFormat = 'rgba8unorm';
 
     const dstTexture = t.device.createTexture({
@@ -360,11 +360,7 @@ CopyBufferToTexture(), the contents of the GPUBuffer have already been initializ
       format: dstTextureFormat,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
-    const layout = getTextureCopyLayout(dstTextureFormat, '2d', [
-      textureSize.width,
-      textureSize.height,
-      textureSize.depthOrArrayLayers,
-    ]);
+    const layout = getTextureCopyLayout(dstTextureFormat, '2d', textureSize);
     const srcBufferSize = layout.byteLength + bufferOffset;
     const srcBufferUsage = GPUBufferUsage.COPY_SRC;
     const srcBuffer = t.device.createBuffer({
@@ -385,13 +381,12 @@ CopyBufferToTexture(), the contents of the GPUBuffer have already been initializ
     );
     t.queue.submit([encoder.finish()]);
 
-    t.CheckBufferAndOutputTexture(
-      srcBuffer,
-      srcBufferSize,
-      dstTexture,
-      [textureSize.width, textureSize.height, textureSize.depthOrArrayLayers],
-      { R: 0.0, G: 0.0, B: 0.0, A: 0.0 }
-    );
+    t.CheckBufferAndOutputTexture(srcBuffer, srcBufferSize, dstTexture, textureSize, {
+      R: 0.0,
+      G: 0.0,
+      B: 0.0,
+      A: 0.0,
+    });
   });
 
 g.test('resolve_query_set_to_partial_buffer')
@@ -735,12 +730,15 @@ GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
 
 g.test('indirect_buffer_for_draw_indirect')
   .desc(
-    `Verify when we use a GPUBuffer as an indirect buffer for drawIndirect() just after the creation
-of that GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
+    `Verify when we use a GPUBuffer as an indirect buffer for drawIndirect() or
+drawIndexedIndirect() just after the creation of that GPUBuffer, all the contents in that GPUBuffer
+have been initialized to 0.`
   )
-  .paramsSubcasesOnly(u => u.combine('bufferOffset', [0, 16]))
+  .params(u =>
+    u.combine('test_indexed_draw', [true, false]).beginSubcases().combine('bufferOffset', [0, 16])
+  )
   .fn(async t => {
-    const { bufferOffset } = t.params;
+    const { test_indexed_draw, bufferOffset } = t.params;
 
     const renderPipeline = t.CreateRenderPipelineForTest(
       t.device.createShaderModule({
@@ -787,75 +785,19 @@ of that GPUBuffer, all the contents in that GPUBuffer have been initialized to 0
       ],
     });
     renderPass.setPipeline(renderPipeline);
-    renderPass.drawIndirect(indirectBuffer, bufferOffset);
-    renderPass.endPass();
-    t.queue.submit([encoder.finish()]);
 
-    // The indirect buffer should be lazily cleared to 0, so we actually draw nothing and the color
-    // attachment will keep its original color (green) after we end the render pass.
-    t.CheckBufferAndOutputTexture(indirectBuffer, bufferSize, outputTexture);
-  });
+    let indexBuffer = undefined;
+    if (test_indexed_draw) {
+      indexBuffer = t.device.createBuffer({
+        size: 4,
+        usage: GPUBufferUsage.INDEX,
+      });
+      renderPass.setIndexBuffer(indexBuffer, 'uint16');
+      renderPass.drawIndexedIndirect(indirectBuffer, bufferOffset);
+    } else {
+      renderPass.drawIndirect(indirectBuffer, bufferOffset);
+    }
 
-g.test('indirect_buffer_for_draw_indexed_indirect')
-  .desc(
-    `Verify when we use a GPUBuffer as an indirect buffer for drawIndexedIndirect() just after the
-creation of that GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
-  )
-  .paramsSubcasesOnly(u => u.combine('bufferOffset', [0, 16]))
-  .fn(async t => {
-    const { bufferOffset } = t.params;
-
-    const renderPipeline = t.CreateRenderPipelineForTest(
-      t.device.createShaderModule({
-        code: `
-    struct VertexOut {
-      [[location(0)]] color : vec4<f32>;
-      [[builtin(position)]] position : vec4<f32>;
-    };
-
-    [[stage(vertex)]] fn main() -> VertexOut {
-      var output : VertexOut;
-      output.color = vec4<f32>(1.0, 0.0, 0.0, 1.0);
-      output.position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
-      return output;
-    }`,
-      }),
-      false
-    );
-
-    const kDrawIndexedIndirectParametersSize = 20;
-    const bufferSize = kDrawIndexedIndirectParametersSize + bufferOffset;
-    const indirectBuffer = t.device.createBuffer({
-      size: bufferSize,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.INDIRECT,
-    });
-
-    const outputTexture = t.device.createTexture({
-      format: 'rgba8unorm',
-      size: [1, 1, 1],
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-
-    // Initialize outputTexture to green.
-    const encoder = t.device.createCommandEncoder();
-    t.RecordInitializeTextureColor(encoder, outputTexture, { r: 0.0, g: 1.0, b: 0.0, a: 1.0 });
-
-    const indexBuffer = t.device.createBuffer({
-      size: 4,
-      usage: GPUBufferUsage.INDEX,
-    });
-    const renderPass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          view: outputTexture.createView(),
-          loadValue: 'load',
-          storeOp: 'store',
-        },
-      ],
-    });
-    renderPass.setPipeline(renderPipeline);
-    renderPass.setIndexBuffer(indexBuffer, 'uint16');
-    renderPass.drawIndexedIndirect(indirectBuffer, bufferOffset);
     renderPass.endPass();
     t.queue.submit([encoder.finish()]);
 
