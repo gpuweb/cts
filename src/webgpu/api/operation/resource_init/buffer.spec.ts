@@ -15,7 +15,6 @@ Note that:
 
 TODO:
 Test the buffers whose first usage is being used:
-- as vertex / index buffer
 - as indirect buffer
 `;
 
@@ -109,6 +108,42 @@ class F extends GPUTest {
       const expectedBufferdata = new Uint8Array(boundBufferSize + bufferOffset);
       this.expectGPUBufferValuesEqual(buffer, expectedBufferdata);
     }
+  }
+
+  CreateRenderPipelineForVertexAndIndexBufferInitTest(
+    vertexShaderModule: GPUShaderModule,
+    testVertexBuffer: boolean
+  ): GPURenderPipeline {
+    const renderPipelineDescriptor: GPURenderPipelineDescriptor = {
+      vertex: {
+        module: vertexShaderModule,
+        entryPoint: 'main',
+      },
+      fragment: {
+        module: this.device.createShaderModule({
+          code: `
+        [[stage(fragment)]]
+        fn main([[location(0)]] i_color : vec4<f32>) -> [[location(0)]] vec4<f32> {
+            return i_color;
+        }`,
+        }),
+        entryPoint: 'main',
+        targets: [{ format: 'rgba8unorm' }],
+      },
+      primitive: {
+        topology: 'point-list',
+      },
+    };
+    if (testVertexBuffer) {
+      renderPipelineDescriptor.vertex.buffers = [
+        {
+          arrayStride: 16,
+          attributes: [{ format: 'float32x4', offset: 0, shaderLocation: 0 }],
+        },
+      ];
+    }
+
+    return this.device.createRenderPipeline(renderPipelineDescriptor);
   }
 }
 
@@ -551,4 +586,142 @@ g.test('storage_buffer')
 
     // Verify the whole range of the buffer has been initialized to 0 in a compute shader.
     t.TestBufferZeroInitInBindGroup(computeShaderModule, buffer, bufferOffset, boundBufferSize);
+  });
+
+g.test('vertex_buffer')
+  .desc(
+    `Verify when we use a GPUBuffer as a vertex buffer just after the creation of that
+  GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
+  )
+  .paramsSubcasesOnly(u => u.combine('bufferOffset', [0, 16]))
+  .fn(async t => {
+    const { bufferOffset } = t.params;
+
+    const renderPipeline = t.CreateRenderPipelineForVertexAndIndexBufferInitTest(
+      t.device.createShaderModule({
+        code: `
+      struct VertexOut {
+        [[location(0)]] color : vec4<f32>;
+        [[builtin(position)]] position : vec4<f32>;
+      };
+
+      [[stage(vertex)]] fn main([[location(0)]] pos : vec4<f32>) -> VertexOut {
+        var output : VertexOut;
+        if (all(pos == vec4<f32>(0.0, 0.0, 0.0, 0.0))) {
+          output.color = vec4<f32>(0.0, 1.0, 0.0, 1.0);
+        } else {
+          output.color = vec4<f32>(1.0, 0.0, 0.0, 1.0);
+        }
+        output.position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+        return output;
+      }`,
+      }),
+      true
+    );
+
+    const bufferSize = 16 + bufferOffset;
+    const vertexBuffer = t.device.createBuffer({
+      size: bufferSize,
+      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_SRC,
+    });
+
+    const outputTexture = t.device.createTexture({
+      format: 'rgba8unorm',
+      size: [1, 1, 1],
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    const renderPass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: outputTexture.createView(),
+          loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+          storeOp: 'store',
+        },
+      ],
+    });
+    renderPass.setVertexBuffer(0, vertexBuffer, bufferOffset);
+    renderPass.setPipeline(renderPipeline);
+    renderPass.draw(1);
+    renderPass.endPass();
+    t.queue.submit([encoder.finish()]);
+
+    t.expectSingleColor(outputTexture, 'rgba8unorm', {
+      size: [1, 1, 1],
+      exp: { R: 0.0, G: 1.0, B: 0.0, A: 1.0 },
+    });
+
+    const expectedBufferData = new Uint8Array(bufferSize);
+    t.expectGPUBufferValuesEqual(vertexBuffer, expectedBufferData);
+  });
+
+g.test('index_buffer')
+  .desc(
+    `Verify when we use a GPUBuffer as an index buffer just after the creation of that
+GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
+  )
+  .paramsSubcasesOnly(u => u.combine('bufferOffset', [0, 16]))
+  .fn(async t => {
+    const { bufferOffset } = t.params;
+
+    const renderPipeline = t.CreateRenderPipelineForVertexAndIndexBufferInitTest(
+      t.device.createShaderModule({
+        code: `
+    struct VertexOut {
+      [[location(0)]] color : vec4<f32>;
+      [[builtin(position)]] position : vec4<f32>;
+    };
+
+    [[stage(vertex)]]
+    fn main([[builtin(vertex_index)]] VertexIndex : u32) -> VertexOut {
+      var output : VertexOut;
+      if (VertexIndex == 0u) {
+        output.color = vec4<f32>(0.0, 1.0, 0.0, 1.0);
+      } else {
+        output.color = vec4<f32>(1.0, 0.0, 0.0, 1.0);
+      }
+      output.position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+      return output;
+    }`,
+      }),
+      false
+    );
+
+    // The size of GPUBuffer must be at least 4.
+    const bufferSize = 4 + bufferOffset;
+    const indexBuffer = t.device.createBuffer({
+      size: bufferSize,
+      usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_SRC,
+    });
+
+    const outputTexture = t.device.createTexture({
+      format: 'rgba8unorm',
+      size: [1, 1, 1],
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    const renderPass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: outputTexture.createView(),
+          loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+          storeOp: 'store',
+        },
+      ],
+    });
+    renderPass.setPipeline(renderPipeline);
+    renderPass.setIndexBuffer(indexBuffer, 'uint16', bufferOffset, 4);
+    renderPass.drawIndexed(1);
+    renderPass.endPass();
+    t.queue.submit([encoder.finish()]);
+
+    t.expectSingleColor(outputTexture, 'rgba8unorm', {
+      size: [1, 1, 1],
+      exp: { R: 0.0, G: 1.0, B: 0.0, A: 1.0 },
+    });
+
+    const expectedBufferData = new Uint8Array(bufferSize);
+    t.expectGPUBufferValuesEqual(indexBuffer, expectedBufferData);
   });
