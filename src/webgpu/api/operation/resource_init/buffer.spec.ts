@@ -759,7 +759,9 @@ have been initialized to 0.`
     );
 
     const kDrawIndirectParametersSize = 16;
-    const bufferSize = kDrawIndirectParametersSize + bufferOffset;
+    const kDrawIndirectIndexedParametersSize = 20;
+    const bufferSize =
+      Math.max(kDrawIndirectParametersSize, kDrawIndirectIndexedParametersSize) + bufferOffset;
     const indirectBuffer = t.device.createBuffer({
       size: bufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.INDIRECT,
