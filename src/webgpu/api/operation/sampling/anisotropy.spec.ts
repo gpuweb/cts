@@ -99,8 +99,8 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
       fragment: {
         module: this.device.createShaderModule({
           code: `
-            [[set(0), binding(0)]] var sampler0 : sampler;
-            [[set(0), binding(1)]] var texture0 : texture_2d<f32>;
+            [[group(0), binding(0)]] var sampler0 : sampler;
+            [[group(0), binding(1)]] var texture0 : texture_2d<f32>;
 
             [[stage(fragment)]] fn main(
               [[builtin(position)]] FragCoord : vec4<f32>,
