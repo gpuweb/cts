@@ -53,7 +53,7 @@ class F extends CopyToTextureUtils {
     return canvas;
   }
 
-  // TODO: Cache the generated canvas to avoid duplicated initialization. 
+  // TODO: Cache the generated canvas to avoid duplicated initialization.
   init2DCanvasContent({
     canvasType,
     width,
@@ -107,7 +107,7 @@ class F extends CopyToTextureUtils {
     return { canvas, canvasContext };
   }
 
-  // TODO: Cache the generated canvas to avoid duplicated initialization. 
+  // TODO: Cache the generated canvas to avoid duplicated initialization.
   initGLCanvasContent({
     canvasType,
     contextName,
