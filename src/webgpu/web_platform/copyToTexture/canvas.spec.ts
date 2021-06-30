@@ -53,6 +53,7 @@ class F extends CopyToTextureUtils {
     return canvas;
   }
 
+  // TODO: Cache the generated canvas to avoid duplicated initialization. 
   init2DCanvasContent({
     canvasType,
     width,
@@ -91,21 +92,22 @@ class F extends CopyToTextureUtils {
     const alphaValue = paintOpaqueRects ? 1.0 : 0.6;
     const ctx = canvasContext as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
     // Red
-    ctx.fillStyle = 'rgba(255, 0, 0,' + alphaValue + ')';
+    ctx.fillStyle = `rgba(255, 0, 0, ${alphaValue})`;
     ctx.fillRect(0, 0, rectWidth, rectHeight);
     // Lime
-    ctx.fillStyle = 'rgba(0, 255, 0,' + alphaValue + ')';
+    ctx.fillStyle = `rgba(0, 255, 0, ${alphaValue})`;
     ctx.fillRect(rectWidth, 0, width - rectWidth, rectHeight);
     // Blue
-    ctx.fillStyle = 'rgba(0, 0, 255,' + alphaValue + ')';
+    ctx.fillStyle = `rgba(0, 0, 255, ${alphaValue})`;
     ctx.fillRect(0, rectHeight, rectWidth, height - rectHeight);
     // White
-    ctx.fillStyle = 'rgba(255, 255, 255,' + alphaValue + ')';
+    ctx.fillStyle = `rgba(255, 255, 255, ${alphaValue})`;
     ctx.fillRect(rectWidth, rectHeight, width - rectWidth, height - rectHeight);
 
     return { canvas, canvasContext };
   }
 
+  // TODO: Cache the generated canvas to avoid duplicated initialization. 
   initGLCanvasContent({
     canvasType,
     contextName,
