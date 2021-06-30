@@ -58,6 +58,8 @@ Tests indirect draw calls with various indirect offsets and buffer sizes.
   - (min alignment, min size + min alignment)
   - (min alignment, min alignment + min size - 1)
   - (min alignment +/- 1, min size + alignment)
+  - (min size, min size)
+  - (min size + min alignment, min size)
   `
   )
   .paramsSubcasesOnly(
@@ -72,6 +74,8 @@ Tests indirect draw calls with various indirect offsets and buffer sizes.
         { indirectOffset: 4, bufferSize: minSize + 3 },
         { indirectOffset: 3, bufferSize: minSize + 4 },
         { indirectOffset: 5, bufferSize: minSize + 4 },
+        { indirectOffset: minSize, bufferSize: minSize },
+        { indirectOffset: minSize + 4, bufferSize: minSize },
       ] as const;
     })
   )
