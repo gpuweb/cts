@@ -12,7 +12,6 @@ mapRegionBoundModes is used to get mapRegion from range:
  - minimal: make mapRegion to be the same as range which is the minimal range to make getMappedRange input valid
 
 TODO: Test that ranges not written preserve previous contents.
-TODO: Test that mapping-for-write again shows the values previously written.
 TODO: Some testing (probably minimal) of accessing with different TypedArray/DataView types.
 `;
 
@@ -160,4 +159,52 @@ then expectContents (which does copyBufferToBuffer + map-read) to ensure the con
     });
     const arrayBuffer = buffer.getMappedRange(...range);
     t.checkMapWrite(buffer, range[0] ?? 0, arrayBuffer, rangeSize);
+  });
+
+g.test('remapped_for_write')
+  .desc(
+    `Use mappedAtCreation or mapAsync to write to various ranges of variously-sized buffers created
+with the MAP_WRITE usage, then mapAsync again and ensure that the previously written values are
+still present in the mapped buffer.`
+  )
+  .params(u =>
+    u //
+      .combine('mapAsyncRegionLeft', mapRegionBoundModes)
+      .combine('mapAsyncRegionRight', mapRegionBoundModes)
+      .beginSubcases()
+      .combine('mappedAtCreation', [false, true])
+      .combineWithParams(kSubcases)
+  )
+  .fn(async t => {
+    const { size, range, mappedAtCreation } = t.params;
+    const [rangeOffset, rangeSize] = reifyMapRange(size, range);
+
+    const buffer = t.device.createBuffer({
+      mappedAtCreation,
+      size,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE,
+    });
+
+    // If the buffer is not mappedAtCreation map it now.
+    if (!mappedAtCreation) {
+      await buffer.mapAsync(GPUMapMode.WRITE);
+    }
+
+    // Set the initial contents of the buffer.
+    const init = buffer.getMappedRange(...range);
+
+    assert(init.byteLength === rangeSize);
+    const expected = new Uint32Array(new ArrayBuffer(rangeSize));
+    const data = new Uint32Array(init);
+    for (let i = 0; i < data.length; ++i) {
+      data[i] = expected[i] = i + 1;
+    }
+    buffer.unmap();
+
+    // Check that upon remapping the for WRITE the values in the buffer are
+    // still the same.
+    const mapRegion = getRegionForMap(size, [rangeOffset, rangeSize], t.params);
+    await buffer.mapAsync(GPUMapMode.WRITE, ...mapRegion);
+    const actual = new Uint8Array(buffer.getMappedRange(...range));
+    t.expectOK(checkElementsEqual(actual, new Uint8Array(expected.buffer)));
   });
