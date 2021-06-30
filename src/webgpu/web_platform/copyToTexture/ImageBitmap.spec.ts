@@ -46,6 +46,7 @@ const generatedPixelCache: Map<
 > = new Map();
 
 class F extends GPUTest {
+  // TODO(crbug.com/dawn/868): Should be possible to consolidate this along with texture checking
   checkCopyImageBitmapResult(
     src: GPUBuffer,
     expected: ArrayBufferView,
@@ -55,13 +56,16 @@ class F extends GPUTest {
   ): void {
     const exp = new Uint8Array(expected.buffer, expected.byteOffset, expected.byteLength);
     const rowPitch = calculateRowPitch(width, bytesPerPixel);
-    const dst = this.createCopyForMapRead(src, 0, rowPitch * height);
+
+    const readbackPromise = this.readGPUBufferRangeTyped(src, {
+      type: Uint8Array,
+      typedLength: rowPitch * height,
+    });
 
     this.eventualAsyncExpectation(async niceStack => {
-      await dst.mapAsync(GPUMapMode.READ);
-      const actual = new Uint8Array(dst.getMappedRange());
+      const readback = await readbackPromise;
       const check = this.checkBufferWithRowPitch(
-        actual,
+        readback.data,
         exp,
         width,
         height,
@@ -72,10 +76,11 @@ class F extends GPUTest {
         niceStack.message = check;
         this.rec.expectationFailed(niceStack);
       }
-      dst.destroy();
+      readback.cleanup();
     });
   }
 
+  // TODO(crbug.com/dawn/868): Should be possible to consolidate this along with texture checking
   checkBufferWithRowPitch(
     actual: Uint8Array,
     exp: Uint8Array,
