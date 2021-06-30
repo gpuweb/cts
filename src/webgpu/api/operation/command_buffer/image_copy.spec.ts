@@ -1289,8 +1289,6 @@ g.test('write_into_stencil_aspect')
     comparison function "equal" and the stencil operation "keep" in a render pass encoder
   - Test the copies from / into zero / non-zero array layer / mipmap levels
   - Test copying multiple array layers
-  - Test different values as bytesPerRow
-  - Test different values as rowsPerImage
   `
   )
   .params(u =>
