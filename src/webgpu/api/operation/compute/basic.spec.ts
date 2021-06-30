@@ -35,7 +35,7 @@ g.test('memcpy').fn(async t => {
           [[group(0), binding(0)]] var<storage, read> src : Data;
           [[group(0), binding(1)]] var<storage, read_write> dst : Data;
 
-          [[stage(compute)]] fn main() {
+          [[stage(compute), workgroup_size(1)]] fn main() {
             dst.value = src.value;
             return;
           }

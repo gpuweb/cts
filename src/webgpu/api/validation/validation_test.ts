@@ -257,7 +257,7 @@ export class ValidationTest extends GPUTest {
     return this.device.createComputePipeline({
       compute: {
         module: this.device.createShaderModule({
-          code: '[[stage(compute)]] fn main() {}',
+          code: '[[stage(compute), workgroup_size(1)]] fn main() {}',
         }),
         entryPoint: 'main',
       },
