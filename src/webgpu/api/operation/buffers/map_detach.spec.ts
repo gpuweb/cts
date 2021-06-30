@@ -7,21 +7,7 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUConst } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
 
-class F extends GPUTest {
-  checkDetach(buffer: GPUBuffer, arrayBuffer: ArrayBuffer, unmap: boolean, destroy: boolean): void {
-    const view = new Uint8Array(arrayBuffer);
-    this.expect(arrayBuffer.byteLength === 4);
-    this.expect(view.length === 4);
-
-    if (unmap) buffer.unmap();
-    if (destroy) buffer.destroy();
-
-    this.expect(arrayBuffer.byteLength === 0, 'ArrayBuffer should be detached');
-    this.expect(view.byteLength === 0, 'ArrayBufferView should be detached');
-  }
-}
-
-export const g = makeTestGroup(F);
+export const g = makeTestGroup(GPUTest);
 
 g.test('while_mapped')
   .desc(
@@ -69,5 +55,13 @@ g.test('while_mapped')
     }
 
     const arrayBuffer = buffer.getMappedRange();
-    t.checkDetach(buffer, arrayBuffer, unmap, destroy);
+    const view = new Uint8Array(arrayBuffer);
+    t.expect(arrayBuffer.byteLength === 4);
+    t.expect(view.length === 4);
+
+    if (unmap) buffer.unmap();
+    if (destroy) buffer.destroy();
+
+    t.expect(arrayBuffer.byteLength === 0, 'ArrayBuffer should be detached');
+    t.expect(view.byteLength === 0, 'ArrayBufferView should be detached');
   });
