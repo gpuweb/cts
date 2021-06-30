@@ -1,8 +1,7 @@
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert, unreachable } from '../../../../common/util/util.js';
+import { unreachable } from '../../../../common/util/util.js';
 import { GPUConst } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { checkElementsEqual } from '../../../util/check_contents.js';
 import { getTextureCopyLayout } from '../../../util/texture/layout.js';
 
 export const description = `
@@ -45,10 +44,8 @@ class F extends GPUTest {
     bufferUsage: GPUBufferUsageFlags,
     expectedData: Uint8Array
   ): Promise<void> {
-    const isMappable = bufferUsage & GPUBufferUsage.MAP_READ;
-    this.expectGPUBufferValuesEqual(buffer, expectedData, 0, {
-      method: isMappable ? 'map' : undefined,
-    });
+    const mappable = bufferUsage & GPUBufferUsage.MAP_READ;
+    this.expectGPUBufferValuesEqual(buffer, expectedData, 0, { method: mappable ? 'map' : 'copy' });
   }
 }
 
