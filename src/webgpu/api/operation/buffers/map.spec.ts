@@ -12,7 +12,6 @@ mapRegionBoundModes is used to get mapRegion from range:
  - minimal: make mapRegion to be the same as range which is the minimal range to make getMappedRange input valid
 
 TODO: Test that ranges not written preserve previous contents.
-TODO: Some testing (probably minimal) of accessing with different TypedArray/DataView types.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
@@ -134,6 +133,90 @@ map-read and check the read-back result.`
     await buffer.mapAsync(GPUMapMode.READ, ...mapRegion);
     const actual = new Uint8Array(buffer.getMappedRange(...range));
     t.expectOK(checkElementsEqual(actual, new Uint8Array(expected.buffer)));
+  });
+
+g.test('mapAsync,read,typedArrayAccess')
+  .desc(`Use various TypedArray types to read back from a mapped buffer`)
+  .params(u =>
+    u
+      .combine('mapAsyncRegionLeft', mapRegionBoundModes)
+      .combine('mapAsyncRegionRight', mapRegionBoundModes)
+      .beginSubcases()
+      .combineWithParams([
+        { size: 80, range: [] },
+        { size: 160, range: [] },
+        { size: 160, range: [0, 80] },
+        { size: 160, range: [80] },
+        { size: 160, range: [40, 120] },
+        { size: 160, range: [40] },
+      ] as const)
+  )
+  .fn(async t => {
+    const { size, range } = t.params;
+    const [rangeOffset, rangeSize] = reifyMapRange(size, range);
+
+    // Fill an array buffer with a variety of values of different types.
+    const expectedArrayBuffer = new ArrayBuffer(80);
+    const uint8Expected = new Uint8Array(expectedArrayBuffer, 0, 2);
+    uint8Expected[0] = 1;
+    uint8Expected[1] = 255;
+
+    const int8Expected = new Int8Array(expectedArrayBuffer, 2, 2);
+    int8Expected[0] = -1;
+    int8Expected[1] = 127;
+
+    const uint16Expected = new Uint16Array(expectedArrayBuffer, 4, 2);
+    uint16Expected[0] = 1;
+    uint16Expected[1] = 65535;
+
+    const int16Expected = new Int16Array(expectedArrayBuffer, 8, 2);
+    int16Expected[0] = -1;
+    int16Expected[1] = 32767;
+
+    const uint32Expected = new Uint32Array(expectedArrayBuffer, 12, 2);
+    uint32Expected[0] = 1;
+    uint32Expected[1] = 4294967295;
+
+    const int32Expected = new Int32Array(expectedArrayBuffer, 20, 2);
+    int32Expected[2] = -1;
+    int32Expected[3] = 2147483647;
+
+    const float32Expected = new Float32Array(expectedArrayBuffer, 28, 3);
+    float32Expected[0] = 1;
+    float32Expected[1] = -1;
+    float32Expected[2] = 12345.6789;
+
+    const float64Expected = new Float64Array(expectedArrayBuffer, 40, 5);
+    float64Expected[0] = 1;
+    float64Expected[1] = -1;
+    float64Expected[2] = 12345.6789;
+    float64Expected[3] = Number.MAX_VALUE;
+    float64Expected[4] = Number.MIN_VALUE;
+
+    const buffer = t.device.createBuffer({
+      mappedAtCreation: true,
+      size,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+    });
+    const init = buffer.getMappedRange(...range);
+
+    // Copy the expected values into the mapped range.
+    assert(init.byteLength === rangeSize);
+    const data = new Uint8Array(init);
+    data.set(new Uint8Array(expectedArrayBuffer));
+    buffer.unmap();
+
+    const mapRegion = getRegionForMap(size, [rangeOffset, rangeSize], t.params);
+    await buffer.mapAsync(GPUMapMode.READ, ...mapRegion);
+    const mappedArrayBuffer = buffer.getMappedRange(...range);
+    t.expectOK(checkElementsEqual(new Uint8Array(mappedArrayBuffer, 0, 2), uint8Expected));
+    t.expectOK(checkElementsEqual(new Int8Array(mappedArrayBuffer, 2, 2), int8Expected));
+    t.expectOK(checkElementsEqual(new Uint16Array(mappedArrayBuffer, 4, 2), uint16Expected));
+    t.expectOK(checkElementsEqual(new Int16Array(mappedArrayBuffer, 8, 2), int16Expected));
+    t.expectOK(checkElementsEqual(new Uint32Array(mappedArrayBuffer, 12, 2), uint32Expected));
+    t.expectOK(checkElementsEqual(new Int32Array(mappedArrayBuffer, 20, 2), int32Expected));
+    t.expectOK(checkElementsEqual(new Float32Array(mappedArrayBuffer, 28, 3), float32Expected));
+    t.expectOK(checkElementsEqual(new Float64Array(mappedArrayBuffer, 40, 5), float64Expected));
   });
 
 g.test('mappedAtCreation')
