@@ -627,7 +627,7 @@ class ImageCopyTest extends GPUTest {
     }
   }
 
-  async CheckStencilTextureContent(
+  async checkStencilTextureContent(
     stencilTexture: GPUTexture,
     stencilTextureSize: [number, number, number],
     stencilTextureFormat: GPUTextureFormat,
@@ -648,9 +648,8 @@ class ImageCopyTest extends GPUTest {
       vertex: {
         module: this.device.createShaderModule({
           code: `
-            [[stage(vertex)]] fn main(
-              [[builtin(vertex_index)]] VertexIndex : u32
-              ) -> [[builtin(position)]] vec4<f32> {
+            [[stage(vertex)]]
+            fn main([[builtin(vertex_index)]] VertexIndex : u32)-> [[builtin(position)]] vec4<f32> {
               var pos : array<vec2<f32>, 6> = array<vec2<f32>, 6>(
                   vec2<f32>(-1.0,  1.0),
                   vec2<f32>(-1.0, -1.0),
@@ -667,10 +666,10 @@ class ImageCopyTest extends GPUTest {
       fragment: {
         module: this.device.createShaderModule({
           code: `
-            [[stage(fragment)]] fn main(
-            ) -> [[location(0)]] vec4<f32> {
-            return vec4<f32>(0.0, 1.0, 0.0, 1.0);
-          }`,
+            [[stage(fragment)]]
+            fn main() -> [[location(0)]] vec4<f32> {
+              return vec4<f32>(0.0, 1.0, 0.0, 1.0);
+            }`,
         }),
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
@@ -716,6 +715,7 @@ class ImageCopyTest extends GPUTest {
         depthStencilAttachment: {
           view: stencilTexture.createView({
             baseMipLevel: stencilTextureMipLevel,
+            mipLevelCount: 1,
             baseArrayLayer: z,
             arrayLayerCount: 1,
           }),
@@ -1347,7 +1347,7 @@ g.test('write_into_stencil_aspect')
       [widthAtLevel, heightAtLevel, arrayLayers]
     );
 
-    await t.CheckStencilTextureContent(
+    await t.checkStencilTextureContent(
       srcTexture,
       textureSize,
       stencilFormat,
