@@ -93,7 +93,7 @@ g.test('binding_must_be_present_in_layout')
 
 g.test('binding_must_contain_resource_defined_in_layout')
   .desc(
-    'Test that only the resource type specified in the BindGroupLayout is allowed for each entry.'
+    'Test that only compatible resource types specified in the BindGroupLayout are allowed for each entry.'
   )
   .paramsSubcasesOnly(u =>
     u //
@@ -110,10 +110,24 @@ g.test('binding_must_contain_resource_defined_in_layout')
 
     const resource = t.getBindingResource(resourceType);
 
-    const resourceBindingMatches = info.resource === resourceType;
+    let resourceBindingIsCompatible;
+    switch (resourceType) {
+      // Either type of sampler may be bound to a filtering sampler binding.
+      case 'filtSamp':
+        resourceBindingIsCompatible =
+          info.resource === 'filtSamp' || info.resource === 'nonFiltSamp';
+        break;
+      // But only non-filtering samplers can be used with non-filtering sampler bindings.
+      case 'nonFiltSamp':
+        resourceBindingIsCompatible = info.resource === 'nonFiltSamp';
+        break;
+      default:
+        resourceBindingIsCompatible = info.resource === resourceType;
+        break;
+    }
     t.expectValidationError(() => {
       t.device.createBindGroup({ layout, entries: [{ binding: 0, resource }] });
-    }, !resourceBindingMatches);
+    }, !resourceBindingIsCompatible);
   });
 
 g.test('texture_binding_must_have_correct_usage')
