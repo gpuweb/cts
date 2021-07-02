@@ -108,22 +108,20 @@ second mapped range were not altered.`
       .beginSubcases()
       .combine('mappedAtCreation', [false, true])
       .combineWithParams([
-        { size: 12, range1: [], range2: [8], verify: [0, 8] },
-        { size: 12, range1: [], range2: [0, 8], verify: [8] },
-        { size: 12, range1: [0, 8], range2: [8], verify: [0, 8] },
-        { size: 12, range1: [8], range2: [0, 8], verify: [8] },
-        { size: 28, range1: [], range2: [8, 8], verify: [0, 8] },
-        { size: 28, range1: [], range2: [8, 8], verify: [16] },
-        { size: 28, range1: [8, 16], range2: [16, 8], verify: [8, 8] },
-        { size: 32, range1: [16, 12], range2: [8, 16], verify: [24, 4] },
-        { size: 32, range1: [8, 8], range2: [24, 4], verify: [8, 8] },
+        { size: 12, range1: [], range2: [8] },
+        { size: 12, range1: [], range2: [0, 8] },
+        { size: 12, range1: [0, 8], range2: [8] },
+        { size: 12, range1: [8], range2: [0, 8] },
+        { size: 28, range1: [], range2: [8, 8] },
+        { size: 28, range1: [8, 16], range2: [16, 8] },
+        { size: 32, range1: [16, 12], range2: [8, 16] },
+        { size: 32, range1: [8, 8], range2: [24, 4] },
       ] as const)
   )
   .fn(async t => {
-    const { size, range1, range2, verify, mappedAtCreation } = t.params;
+    const { size, range1, range2, mappedAtCreation } = t.params;
     const [rangeOffset1, rangeSize1] = reifyMapRange(size, range1);
-    const [, rangeSize2] = reifyMapRange(size, range2);
-    const [verifyOffset, verifySize] = reifyMapRange(size, verify);
+    const [rangeOffset2, rangeSize2] = reifyMapRange(size, range2);
 
     const buffer = t.device.createBuffer({
       mappedAtCreation,
@@ -140,10 +138,15 @@ second mapped range were not altered.`
     const init = buffer.getMappedRange(...range1);
 
     assert(init.byteLength === rangeSize1);
-    const written = new Uint32Array(new ArrayBuffer(rangeSize1));
+    const expectedBuffer = new ArrayBuffer(size);
+    const expected = new Uint32Array(
+      expectedBuffer,
+      rangeOffset1,
+      rangeSize1 / Uint32Array.BYTES_PER_ELEMENT
+    );
     const data = new Uint32Array(init);
     for (let i = 0; i < data.length; ++i) {
-      data[i] = written[i] = i + 1;
+      data[i] = expected[i] = i + 1;
     }
     buffer.unmap();
 
@@ -152,15 +155,19 @@ second mapped range were not altered.`
     const init2 = buffer.getMappedRange(...range2);
 
     assert(init2.byteLength === rangeSize2);
+    const expected2 = new Uint32Array(
+      expectedBuffer,
+      rangeOffset2,
+      rangeSize2 / Uint32Array.BYTES_PER_ELEMENT
+    );
     const data2 = new Uint32Array(init2);
     for (let i = 0; i < data2.length; ++i) {
-      data2[i] = 0;
+      data2[i] = expected2[i] = 0;
     }
     buffer.unmap();
 
     // Verify that the range of the buffer which was not overwritten was preserved.
-    const expected = new Uint8Array(written.buffer, verifyOffset - rangeOffset1, verifySize);
-    t.expectGPUBufferValuesEqual(buffer, expected, verifyOffset);
+    t.expectGPUBufferValuesEqual(buffer, expected, rangeOffset1);
   });
 
 g.test('mapAsync,read')
