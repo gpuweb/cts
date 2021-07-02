@@ -489,6 +489,8 @@ export class GPUTest extends Fixture {
 
   /**
    * Create a GPUBuffer with the specified contents and usage.
+   *
+   * TODO: Several call sites would be simplified if this took ArrayBuffer as well.
    */
   makeBufferWithContents(dataArray: TypedArrayBufferView, usage: GPUBufferUsageFlags): GPUBuffer {
     return makeBufferWithContents(this.device, dataArray, usage);
