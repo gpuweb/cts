@@ -19,7 +19,7 @@ export class LogMessageWithStack extends Error {
 
   /** Set a flag so the stack is not printed in toJSON(). */
   setStackHidden(stackHiddenMessage: string) {
-    this.stackHiddenMessage = stackHiddenMessage;
+    this.stackHiddenMessage ??= stackHiddenMessage;
   }
 
   /** Increment the "seen x times" counter. */
