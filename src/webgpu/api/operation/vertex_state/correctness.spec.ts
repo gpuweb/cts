@@ -43,7 +43,7 @@ float tolerance.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { unreachable } from '../../../../common/util/util.js';
+import { memcpy, unreachable } from '../../../../common/util/util.js';
 import {
   kMaxVertexAttributes,
   kMaxVertexBufferArrayStride,
@@ -467,18 +467,18 @@ struct VSOutputs {
         // If only we had some builtin JS memcpy function between ArrayBuffers...
         const targetVertexOffset = (index * componentCount + component) * vertexComponentSize;
         const sourceVertexOffset = targetVertexOffset % data.vertexData.byteLength;
-        expandedVertexData.set(
-          new Uint8Array(data.vertexData, sourceVertexOffset, vertexComponentSize),
-          targetVertexOffset
+        memcpy(
+          { src: data.vertexData, start: sourceVertexOffset, length: vertexComponentSize },
+          { dst: expandedVertexData, start: targetVertexOffset }
         );
 
         const targetExpectedOffset = (index * 4 + component) * expectedComponentSize;
         const sourceExpectedOffset =
           ((index * componentCount + component) * expectedComponentSize) %
           data.expectedData.byteLength;
-        expandedExpectedData.set(
-          new Uint8Array(data.expectedData, sourceExpectedOffset, expectedComponentSize),
-          targetExpectedOffset
+        memcpy(
+          { src: data.expectedData, start: sourceExpectedOffset, length: vertexComponentSize },
+          { dst: expandedExpectedData, start: targetExpectedOffset }
         );
       }
     }
@@ -496,17 +496,16 @@ struct VSOutputs {
   // (the data in `source` is assumed packed)
   interleaveVertexDataInto(
     target: ArrayBuffer,
-    source: ArrayBuffer,
+    src: ArrayBuffer,
     { targetStride, offset, size }: { targetStride: number; offset: number; size: number }
   ) {
-    const t = new Uint8Array(target);
+    const dst = new Uint8Array(target);
     for (
-      let sourceOffset = 0, targetOffset = offset;
-      sourceOffset < source.byteLength;
-      sourceOffset += size, targetOffset += targetStride
+      let srcStart = 0, dstStart = offset;
+      srcStart < src.byteLength;
+      srcStart += size, dstStart += targetStride
     ) {
-      const a = new Uint8Array(source, sourceOffset, size);
-      t.set(a, targetOffset);
+      memcpy({ src, start: srcStart, length: size }, { dst, start: dstStart });
     }
   }
 

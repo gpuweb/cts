@@ -103,17 +103,7 @@ class IndexFormatTest extends GPUTest {
 
   CreateIndexBuffer(indices: readonly number[], indexFormat: GPUIndexFormat): GPUBuffer {
     const typedArrayConstructor = { uint16: Uint16Array, uint32: Uint32Array }[indexFormat];
-
-    const indexBuffer = this.device.createBuffer({
-      size: indices.length * typedArrayConstructor.BYTES_PER_ELEMENT,
-      usage: GPUBufferUsage.INDEX,
-      mappedAtCreation: true,
-    });
-
-    new typedArrayConstructor(indexBuffer.getMappedRange()).set(indices);
-
-    indexBuffer.unmap();
-    return indexBuffer;
+    return this.makeBufferWithContents(new typedArrayConstructor(indices), GPUBufferUsage.INDEX);
   }
 
   run(

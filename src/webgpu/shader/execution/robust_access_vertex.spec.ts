@@ -51,7 +51,7 @@ export const g = makeTestGroup(GPUTest);
 
 // Encapsulates a draw call (either indexed or non-indexed)
 class DrawCall {
-  private device: GPUDevice;
+  private t: GPUTest;
   private vertexBuffers: GPUBuffer[];
   private indexBuffer: GPUBuffer;
 
@@ -72,13 +72,13 @@ class DrawCall {
   public firstInstance: number;
 
   constructor(
-    device: GPUDevice,
+    t: GPUTest,
     vertexArrays: Float32Array[],
     vertexCount: number,
     partialLastNumber: boolean,
     offsetVertexBuffer: boolean
   ) {
-    this.device = device;
+    this.t = t;
     this.vertexBuffers = vertexArrays.map(v => this.generateVertexBuffer(v, partialLastNumber));
 
     const indexArray = new Uint16Array(vertexCount).fill(0).map((_, i) => i);
@@ -160,24 +160,24 @@ class DrawCall {
     if (partialLastNumber) {
       size -= 1;
     }
-    const vertexBuffer = this.device.createBuffer({
+    const vertexBuffer = this.t.device.createBuffer({
       size,
       usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
     });
     if (partialLastNumber) {
       size -= 3;
     }
-    this.device.queue.writeBuffer(vertexBuffer, 0, vertexArray, size);
+    this.t.device.queue.writeBuffer(vertexBuffer, 0, vertexArray, size);
     return vertexBuffer;
   }
 
   // Create an index buffer from |indexArray|
   private generateIndexBuffer(indexArray: Uint16Array): GPUBuffer {
-    const indexBuffer = this.device.createBuffer({
+    const indexBuffer = this.t.device.createBuffer({
       size: indexArray.byteLength,
       usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
     });
-    this.device.queue.writeBuffer(indexBuffer, 0, indexArray);
+    this.t.device.queue.writeBuffer(indexBuffer, 0, indexArray);
     return indexBuffer;
   }
 
@@ -189,14 +189,7 @@ class DrawCall {
       this.firstVertex,
       this.firstInstance,
     ]);
-    const indirectBuffer = this.device.createBuffer({
-      mappedAtCreation: true,
-      size: indirectArray.byteLength,
-      usage: GPUBufferUsage.INDIRECT,
-    });
-    new Int32Array(indirectBuffer.getMappedRange()).set(indirectArray);
-    indirectBuffer.unmap();
-    return indirectBuffer;
+    return this.t.makeBufferWithContents(indirectArray, GPUBufferUsage.INDIRECT);
   }
 
   // Create an indirect buffer containing indexed draw call values
@@ -208,14 +201,7 @@ class DrawCall {
       this.baseVertex,
       this.firstInstance,
     ]);
-    const indirectBuffer = this.device.createBuffer({
-      mappedAtCreation: true,
-      size: indirectArray.byteLength,
-      usage: GPUBufferUsage.INDIRECT,
-    });
-    new Int32Array(indirectBuffer.getMappedRange()).set(indirectArray);
-    indirectBuffer.unmap();
-    return indirectBuffer;
+    return this.t.makeBufferWithContents(indirectArray, GPUBufferUsage.INDIRECT);
   }
 }
 
@@ -295,7 +281,7 @@ g.test('vertexAccess')
 
     // Mutable draw call
     const draw = new DrawCall(
-      t.device,
+      t,
       bufferContents,
       numVertices,
       p.partialLastNumber,

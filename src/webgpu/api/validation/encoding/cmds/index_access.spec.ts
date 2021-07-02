@@ -18,17 +18,7 @@ import { ValidationTest } from '../../validation_test.js';
 
 class F extends ValidationTest {
   createIndexBuffer(indexData: Iterable<number>): GPUBuffer {
-    const indexArray = new Uint32Array(indexData);
-
-    const indexBuffer = this.device.createBuffer({
-      mappedAtCreation: true,
-      size: indexArray.byteLength,
-      usage: GPUBufferUsage.INDEX,
-    });
-    new Uint32Array(indexBuffer.getMappedRange()).set(indexArray);
-    indexBuffer.unmap();
-
-    return indexBuffer;
+    return this.makeBufferWithContents(new Uint32Array(indexData), GPUBufferUsage.INDEX);
   }
 
   createRenderPipeline(): GPURenderPipeline {
@@ -98,13 +88,7 @@ class F extends ValidationTest {
   }
 
   drawIndexedIndirect(indexBuffer: GPUBuffer, bufferArray: Uint32Array, indirectOffset: number) {
-    const indirectBuffer = this.device.createBuffer({
-      mappedAtCreation: true,
-      size: bufferArray.byteLength,
-      usage: GPUBufferUsage.INDIRECT,
-    });
-    new Uint32Array(indirectBuffer.getMappedRange()).set(bufferArray);
-    indirectBuffer.unmap();
+    const indirectBuffer = this.makeBufferWithContents(bufferArray, GPUBufferUsage.INDIRECT);
 
     const pipeline = this.createRenderPipeline();
 

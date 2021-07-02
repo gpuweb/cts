@@ -35,7 +35,7 @@ TODO: Fix this test for the various skipped formats:
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert, unreachable } from '../../../../common/util/util.js';
+import { assert, memcpy, unreachable } from '../../../../common/util/util.js';
 import {
   kTextureFormatInfo,
   SizedTextureFormat,
@@ -340,13 +340,8 @@ class ImageCopyTest extends GPUTest {
         break;
       }
       case 'CopyB2T': {
-        const buffer = this.device.createBuffer({
-          mappedAtCreation: true,
-          size: align(partialData.byteLength, 4),
-          usage: GPUBufferUsage.COPY_SRC,
-        });
-        new Uint8Array(buffer.getMappedRange()).set(partialData);
-        buffer.unmap();
+        assert(partialData.byteLength % 4 === 0, 'partialData must be multiple of 4 bytes');
+        const buffer = this.makeBufferWithContents(partialData, GPUBufferUsage.COPY_SRC);
 
         const encoder = this.device.createCommandEncoder();
         encoder.copyBufferToTexture(
@@ -383,13 +378,10 @@ class ImageCopyTest extends GPUTest {
     // The start value ensures generated data here doesn't match the expected data.
     const bufferData = this.generateData(bufferSize, 17);
 
-    const buffer = this.device.createBuffer({
-      mappedAtCreation: true,
-      size: bufferSize,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-    });
-    new Uint8Array(buffer.getMappedRange()).set(bufferData);
-    buffer.unmap();
+    const buffer = this.makeBufferWithContents(
+      bufferData,
+      GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+    );
 
     this.copyTextureToBufferWithAppliedArguments(
       buffer,
@@ -439,16 +431,6 @@ class ImageCopyTest extends GPUTest {
     return buffer;
   }
 
-  copyFromArrayToArray(
-    src: Uint8Array,
-    srcOffset: number,
-    dst: Uint8Array,
-    dstOffset: number,
-    size: number
-  ): void {
-    dst.set(src.subarray(srcOffset, srcOffset + size), dstOffset);
-  }
-
   /**
    * Takes the data returned by `copyWholeTextureToNewBuffer` and updates it after a copy operation
    * on the texture by emulating the copy behaviour here directly.
@@ -464,20 +446,23 @@ class ImageCopyTest extends GPUTest {
     source: Uint8Array
   ): void {
     for (const texel of this.iterateBlockRows(copySize, sourceOrigin, format)) {
-      const sourceOffset = this.getTexelOffsetInBytes(
+      const srcOffsetElements = this.getTexelOffsetInBytes(
         sourceDataLayout,
         format,
         texel,
         sourceOrigin
       );
-      const destinationOffset = this.getTexelOffsetInBytes(
+      const dstOffsetElements = this.getTexelOffsetInBytes(
         destinationDataLayout,
         format,
         texel,
         destinationOrigin
       );
       const rowLength = bytesInACompleteRow(copySize.width, format);
-      this.copyFromArrayToArray(source, sourceOffset, destination, destinationOffset, rowLength);
+      memcpy(
+        { src: source, start: srcOffsetElements, length: rowLength },
+        { dst: destination, start: dstOffsetElements }
+      );
     }
   }
 
