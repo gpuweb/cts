@@ -10,8 +10,6 @@ mapRegionBoundModes is used to get mapRegion from range:
  - default-expand: expand mapRegion to buffer bound by setting offset/size to undefined
  - explicit-expand: expand mapRegion to buffer bound by explicitly calculating offset/size
  - minimal: make mapRegion to be the same as range which is the minimal range to make getMappedRange input valid
-
-TODO: Test that ranges not written preserve previous contents.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
@@ -96,6 +94,80 @@ g.test('mapAsync,write')
     await buffer.mapAsync(GPUMapMode.WRITE, ...mapRegion);
     const arrayBuffer = buffer.getMappedRange(...range);
     t.checkMapWrite(buffer, rangeOffset, arrayBuffer, rangeSize);
+  });
+
+g.test('mapAsync,write,unchanged_ranges_preserved')
+  .desc(
+    `Use mappedAtCreation or mapAsync to write to various ranges of variously-sized buffers, then
+use mapAsync to map a different range and zero it out. Finally use expectGPUBufferValuesEqual
+(which does copyBufferToBuffer + map-read) to verify that contents originally written outside the
+second mapped range were not altered.`
+  )
+  .params(u =>
+    u
+      .beginSubcases()
+      .combine('mappedAtCreation', [false, true])
+      .combineWithParams([
+        { size: 12, range1: [], range2: [8] },
+        { size: 12, range1: [], range2: [0, 8] },
+        { size: 12, range1: [0, 8], range2: [8] },
+        { size: 12, range1: [8], range2: [0, 8] },
+        { size: 28, range1: [], range2: [8, 8] },
+        { size: 28, range1: [8, 16], range2: [16, 8] },
+        { size: 32, range1: [16, 12], range2: [8, 16] },
+        { size: 32, range1: [8, 8], range2: [24, 4] },
+      ] as const)
+  )
+  .fn(async t => {
+    const { size, range1, range2, mappedAtCreation } = t.params;
+    const [rangeOffset1, rangeSize1] = reifyMapRange(size, range1);
+    const [rangeOffset2, rangeSize2] = reifyMapRange(size, range2);
+
+    const buffer = t.device.createBuffer({
+      mappedAtCreation,
+      size,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE,
+    });
+
+    // If the buffer is not mappedAtCreation map it now.
+    if (!mappedAtCreation) {
+      await buffer.mapAsync(GPUMapMode.WRITE);
+    }
+
+    // Set the initial contents of the buffer.
+    const init = buffer.getMappedRange(...range1);
+
+    assert(init.byteLength === rangeSize1);
+    const expectedBuffer = new ArrayBuffer(size);
+    const expected = new Uint32Array(
+      expectedBuffer,
+      rangeOffset1,
+      rangeSize1 / Uint32Array.BYTES_PER_ELEMENT
+    );
+    const data = new Uint32Array(init);
+    for (let i = 0; i < data.length; ++i) {
+      data[i] = expected[i] = i + 1;
+    }
+    buffer.unmap();
+
+    // Write to a second range of the buffer
+    await buffer.mapAsync(GPUMapMode.WRITE, ...range2);
+    const init2 = buffer.getMappedRange(...range2);
+
+    assert(init2.byteLength === rangeSize2);
+    const expected2 = new Uint32Array(
+      expectedBuffer,
+      rangeOffset2,
+      rangeSize2 / Uint32Array.BYTES_PER_ELEMENT
+    );
+    const data2 = new Uint32Array(init2);
+    for (let i = 0; i < data2.length; ++i) {
+      data2[i] = expected2[i] = 0;
+    }
+    buffer.unmap();
+
+    // Verify that the range of the buffer which was not overwritten was preserved.
+    t.expectGPUBufferValuesEqual(buffer, expected, rangeOffset1);
   });
 
 g.test('mapAsync,read')
