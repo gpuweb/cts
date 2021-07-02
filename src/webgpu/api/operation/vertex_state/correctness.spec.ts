@@ -510,26 +510,35 @@ struct VSOutputs {
     }
   }
 
-  runTest(
-    buffers: VertexState<
+  createPipelineAndTestData<V, A>(
+    state: VertexState<
       {
         stepMode: GPUInputStepMode;
         arrayStride: number;
-        vbOffset?: number;
-      },
+      } & V,
       {
         offset: number;
         format: GPUVertexFormat;
-        shaderComponentCount?: number;
-      }
+      } & A
     >,
-    // Default to using 20 vertices and 20 instances so that we cover each of the test data at least
-    // once (at the time of writing the largest testData has 16 values).
-    vertexCount: number = 20,
-    instanceCount: number = 20
-  ) {
+    vertexCount: number,
+    instanceCount: number
+  ): {
+    pipeline: GPURenderPipeline;
+    testData: VertexState<
+      {
+        stepMode: GPUInputStepMode;
+        arrayStride: number;
+      } & V,
+      {
+        offset: number;
+        format: GPUVertexFormat;
+      } & A &
+        TestData
+    >;
+  } {
     // Gather the test data and some additional test state for attribs.
-    const pipelineAndTestState = mapStateAttribs(buffers, (buffer, attrib) => {
+    const pipelineAndTestState = mapStateAttribs(state, (buffer, attrib) => {
       const maxCount = buffer.stepMode === 'instance' ? instanceCount : vertexCount;
       const formatInfo = kVertexFormatInfo[attrib.format];
 
@@ -544,12 +553,17 @@ struct VSOutputs {
     });
 
     // Create the pipeline from the test data.
-    const pipeline = this.makeTestPipeline(pipelineAndTestState, vertexCount, instanceCount);
+    return {
+      testData: pipelineAndTestState,
+      pipeline: this.makeTestPipeline(pipelineAndTestState, vertexCount, instanceCount),
+    };
+  }
 
+  createExpectedBG(state: VertexState<{}, TestData>, pipeline: GPURenderPipeline): GPUBindGroup {
     // Create the bindgroups from that test data
     const bgEntries: GPUBindGroupEntry[] = [];
 
-    for (const buffer of pipelineAndTestState) {
+    for (const buffer of state) {
       for (const attrib of buffer.attributes) {
         const expectedDataBuffer = this.makeBufferWithContents(
           new Uint8Array(attrib.expectedData),
@@ -562,15 +576,31 @@ struct VSOutputs {
       }
     }
 
-    const expectedDataBG = this.device.createBindGroup({
+    return this.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
       entries: bgEntries,
     });
+  }
 
+  createVertexBuffers(
+    state: VertexState<
+      {
+        stepMode: GPUInputStepMode;
+        arrayStride: number;
+        vbOffset?: number;
+      },
+      {
+        format: GPUVertexFormat;
+        offset: number;
+      } & TestData
+    >,
+    vertexCount: number = 20,
+    instanceCount: number = 20
+  ): VertexState<{ buffer: GPUBuffer; vbOffset?: number }, {}> {
     // Create the vertex buffers
     const vertexBuffers: VertexState<{ buffer: GPUBuffer; vbOffset?: number }, {}> = [];
 
-    for (const buffer of pipelineAndTestState) {
+    for (const buffer of state) {
       const maxCount = buffer.stepMode === 'instance' ? instanceCount : vertexCount;
 
       // Fill the vertex data with garbage so that we don't get `0` (which could be a test value)
@@ -595,7 +625,34 @@ struct VSOutputs {
       });
     }
 
-    // Run the test shader.
+    return vertexBuffers;
+  }
+
+  runTest(
+    buffers: VertexState<
+      {
+        stepMode: GPUInputStepMode;
+        arrayStride: number;
+        vbOffset?: number;
+      },
+      {
+        offset: number;
+        format: GPUVertexFormat;
+        shaderComponentCount?: number;
+      }
+    >,
+    // Default to using 20 vertices and 20 instances so that we cover each of the test data at least
+    // once (at the time of writing the largest testData has 16 values).
+    vertexCount: number = 20,
+    instanceCount: number = 20
+  ) {
+    const { testData, pipeline } = this.createPipelineAndTestData(
+      buffers,
+      vertexCount,
+      instanceCount
+    );
+    const expectedDataBG = this.createExpectedBG(testData, pipeline);
+    const vertexBuffers = this.createVertexBuffers(testData);
     this.submitRenderPass(pipeline, vertexBuffers, expectedDataBG, vertexCount, instanceCount);
   }
 }
