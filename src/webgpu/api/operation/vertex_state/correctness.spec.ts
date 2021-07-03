@@ -69,6 +69,11 @@ type VertexBuffer<V, A> = V & {
 };
 type VertexState<V, A> = VertexBuffer<V, A>[];
 
+type VertexLayoutState<V, A> = VertexState<
+  { stepMode: GPUInputStepMode; arrayStride: number } & V,
+  { format: GPUVertexFormat; offset: number } & A
+>;
+
 function mapBufferAttribs<V, A1, A2>(
   buffer: VertexBuffer<V, A1>,
   f: (v: V, a: VertexAttrib<A1>) => A2
@@ -511,31 +516,12 @@ struct VSOutputs {
   }
 
   createPipelineAndTestData<V, A>(
-    state: VertexState<
-      {
-        stepMode: GPUInputStepMode;
-        arrayStride: number;
-      } & V,
-      {
-        offset: number;
-        format: GPUVertexFormat;
-      } & A
-    >,
+    state: VertexLayoutState<V, A>,
     vertexCount: number,
     instanceCount: number
   ): {
     pipeline: GPURenderPipeline;
-    testData: VertexState<
-      {
-        stepMode: GPUInputStepMode;
-        arrayStride: number;
-      } & V,
-      {
-        offset: number;
-        format: GPUVertexFormat;
-      } & A &
-        TestData
-    >;
+    testData: VertexLayoutState<V, A & TestData>;
   } {
     // Gather the test data and some additional test state for attribs.
     const pipelineAndTestState = mapStateAttribs(state, (buffer, attrib) => {
@@ -583,17 +569,7 @@ struct VSOutputs {
   }
 
   createVertexBuffers(
-    state: VertexState<
-      {
-        stepMode: GPUInputStepMode;
-        arrayStride: number;
-        vbOffset?: number;
-      },
-      {
-        format: GPUVertexFormat;
-        offset: number;
-      } & TestData
-    >,
+    state: VertexLayoutState<{ vbOffset?: number }, TestData>,
     vertexCount: number = 20,
     instanceCount: number = 20
   ): VertexState<{ buffer: GPUBuffer; vbOffset?: number }, {}> {
@@ -629,18 +605,7 @@ struct VSOutputs {
   }
 
   runTest(
-    buffers: VertexState<
-      {
-        stepMode: GPUInputStepMode;
-        arrayStride: number;
-        vbOffset?: number;
-      },
-      {
-        offset: number;
-        format: GPUVertexFormat;
-        shaderComponentCount?: number;
-      }
-    >,
+    buffers: VertexLayoutState<{ vbOffset?: number }, { shaderComponentCount?: number }>,
     // Default to using 20 vertices and 20 instances so that we cover each of the test data at least
     // once (at the time of writing the largest testData has 16 values).
     vertexCount: number = 20,
