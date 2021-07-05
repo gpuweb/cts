@@ -570,8 +570,8 @@ struct VSOutputs {
 
   createVertexBuffers(
     state: VertexLayoutState<{ vbOffset?: number }, TestData>,
-    vertexCount: number = 20,
-    instanceCount: number = 20
+    vertexCount: number,
+    instanceCount: number
   ): VertexState<{ buffer: GPUBuffer; vbOffset?: number }, {}> {
     // Create the vertex buffers
     const vertexBuffers: VertexState<{ buffer: GPUBuffer; vbOffset?: number }, {}> = [];
@@ -617,7 +617,7 @@ struct VSOutputs {
       instanceCount
     );
     const expectedDataBG = this.createExpectedBG(testData, pipeline);
-    const vertexBuffers = this.createVertexBuffers(testData);
+    const vertexBuffers = this.createVertexBuffers(testData, vertexCount, instanceCount);
     this.submitRenderPass(pipeline, vertexBuffers, expectedDataBG, vertexCount, instanceCount);
   }
 }
