@@ -252,6 +252,21 @@ export class ValidationTest extends GPUTest {
     });
   }
 
+  /** Return an invalid GPURenderPipeline. */
+  createErrorRenderPipeline(): GPURenderPipeline {
+    this.device.pushErrorScope('validation');
+    const pipeline = this.device.createRenderPipeline({
+      vertex: {
+        module: this.device.createShaderModule({
+          code: '',
+        }),
+        entryPoint: '',
+      },
+    });
+    this.device.popErrorScope();
+    return pipeline;
+  }
+
   /** Return a GPUComputePipeline with a no-op shader. */
   createNoOpComputePipeline(): GPUComputePipeline {
     return this.device.createComputePipeline({
