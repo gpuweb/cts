@@ -1,53 +1,15 @@
 export const description = `
-
-TODO: check overlap with api,operation,rendering,draw:vertex_attributes,basic before implementing
-
-- Tests that render N points, using a generated pipeline with:
-  (1) a vertex shader that has necessary vertex inputs and a static array of
-  expected data (as indexed by vertexID + instanceID * verticesPerInstance),
-  which checks they're equal and sends the bool to the fragment shader;
-  (2) a fragment shader which writes the result out to a storage buffer
-  (or renders a red/green fragment if we can't do fragmentStoresAndAtomics,
-  maybe with some depth or stencil test magic to do the '&&' of all fragments).
-    - Fill some GPUBuffers with testable data, e.g.
-      [[1.0, 2.0, ...], [-1.0, -2.0, ...]], for use as vertex buffers.
-    - With no/trivial indexing
-        - Either non-indexed, or indexed with a passthrough index buffer ([0, 1, 2, ...])
-            - Of either format
-            - If non-indexed, index format has no effect
-        - Vertex data is read from the buffer correctly
-            - Several vertex buffers with several attributes each
-                - Two setVertexBuffers pointing at the same GPUBuffer (if possible)
-                    - Overlapping, non-overlapping
-                - Overlapping attributes (iff that's supposed to work)
-                - Overlapping vertex buffer elements
-                  (an attribute offset + its size > arrayStride)
-                  (iff that's supposed to work)
-                - Discontiguous vertex buffer slots, e.g.
-                  [1, some large number (API doesn't practically allow huge numbers here)]
-                - Discontiguous shader locations, e.g.
-                  [2, some large number (max if possible)]
-             - Bind everything possible up to limits
-                 - Also with maxed out attributes?
-             - x= all vertex formats
-        - Maybe a test of one buffer with two attributes, with every possible
-          pair of vertex formats
-    - With indexing. For each index format:
-        - Indices are read from the buffer correctly
-            - setIndexBuffer offset
-        - For each vertex format:
-            - Basic test with several vertex buffers and several attributes
-
 TODO: Test more corner case values for Float16 / Float32 (INF, NaN, +-0, ...) and reduce the
 float tolerance.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { unreachable } from '../../../../common/util/util.js';
+import { assert, unreachable } from '../../../../common/util/util.js';
 import {
   kMaxVertexAttributes,
   kMaxVertexBufferArrayStride,
   kMaxVertexBuffers,
+  kPerStageBindingLimits,
   kVertexFormatInfo,
   kVertexFormats,
 } from '../../../capability_info.js';
@@ -330,13 +292,15 @@ struct VSOutputs {
 
   // Generate TestData for the format with interesting test values.
   // TODO cache the result on the fixture?
+  // Note that the test data always starts with an interesting value, so that using the first
+  // test value in a test is still meaningful.
   generateTestData(format: GPUVertexFormat): TestData {
     const formatInfo = kVertexFormatInfo[format];
     const bitSize = formatInfo.bytesPerComponent * 8;
 
     switch (formatInfo.type) {
       case 'float': {
-        const data = [0.0, 1.0, -1.0, 1000, 42.42, -18.7, 25.17];
+        const data = [42.42, 0.0, 1.0, -1.0, 1000, -18.7, 25.17];
         const expectedData = new Float32Array(data).buffer;
         const vertexData =
           bitSize === 32
@@ -357,6 +321,7 @@ struct VSOutputs {
       case 'sint': {
         /* prettier-ignore */
         const data = [
+          42,
           0, 1, 2, 3, 4, 5,
           -1, -2, -3, -4, -5,
           Math.pow(2, bitSize - 2),
@@ -383,6 +348,7 @@ struct VSOutputs {
       case 'uint': {
         /* prettier-ignore */
         const data = [
+          42,
           0, 1, 2, 3, 4, 5,
           Math.pow(2, bitSize - 1),
           Math.pow(2, bitSize) - 1, // max value
@@ -406,6 +372,7 @@ struct VSOutputs {
       case 'snorm': {
         /* prettier-ignore */
         const data = [
+          42,
           0, 1, 2, 3, 4, 5,
           -1, -2, -3, -4, -5,
           Math.pow(2,bitSize - 2),
@@ -433,6 +400,7 @@ struct VSOutputs {
       case 'unorm': {
         /* prettier-ignore */
         const data = [
+          42,
           0, 1, 2, 3, 4, 5,
           Math.pow(2, bitSize - 1),
           Math.pow(2, bitSize) - 1, // max value
@@ -515,16 +483,13 @@ struct VSOutputs {
     }
   }
 
-  createPipelineAndTestData<V, A>(
+  createTestAndPipelineData<V, A>(
     state: VertexLayoutState<V, A>,
     vertexCount: number,
     instanceCount: number
-  ): {
-    pipeline: GPURenderPipeline;
-    testData: VertexLayoutState<V, A & TestData>;
-  } {
+  ): VertexLayoutState<V, A & TestData> {
     // Gather the test data and some additional test state for attribs.
-    const pipelineAndTestState = mapStateAttribs(state, (buffer, attrib) => {
+    return mapStateAttribs(state, (buffer, attrib) => {
       const maxCount = buffer.stepMode === 'instance' ? instanceCount : vertexCount;
       const formatInfo = kVertexFormatInfo[attrib.format];
 
@@ -537,12 +502,6 @@ struct VSOutputs {
         ...attrib,
       };
     });
-
-    // Create the pipeline from the test data.
-    return {
-      testData: pipelineAndTestState,
-      pipeline: this.makeTestPipeline(pipelineAndTestState, vertexCount, instanceCount),
-    };
   }
 
   createExpectedBG(state: VertexState<{}, TestData>, pipeline: GPURenderPipeline): GPUBindGroup {
@@ -581,7 +540,9 @@ struct VSOutputs {
 
       // Fill the vertex data with garbage so that we don't get `0` (which could be a test value)
       // if the vertex shader loads the vertex data incorrectly.
-      const vertexData = new ArrayBuffer(buffer.arrayStride * maxCount + (buffer.vbOffset ?? 0));
+      const vertexData = new ArrayBuffer(
+        align(buffer.arrayStride * maxCount + (buffer.vbOffset ?? 0), 4)
+      );
       new Uint8Array(vertexData).fill(0xc4);
 
       for (const attrib of buffer.attributes) {
@@ -611,11 +572,8 @@ struct VSOutputs {
     vertexCount: number = 20,
     instanceCount: number = 20
   ) {
-    const { testData, pipeline } = this.createPipelineAndTestData(
-      buffers,
-      vertexCount,
-      instanceCount
-    );
+    const testData = this.createTestAndPipelineData(buffers, vertexCount, instanceCount);
+    const pipeline = this.makeTestPipeline(testData, vertexCount, instanceCount);
     const expectedDataBG = this.createExpectedBG(testData, pipeline);
     const vertexBuffers = this.createVertexBuffers(testData, vertexCount, instanceCount);
     this.submitRenderPass(pipeline, vertexBuffers, expectedDataBG, vertexCount, instanceCount);
@@ -788,4 +746,334 @@ g.test('buffersWithVaryingStepMode')
       ],
     }));
     t.runTest(state);
+  });
+
+g.test('vertexBufferUsedMultipleTime_overlapped')
+  .desc(
+    `Test using the same vertex buffer in for multiple "vertex buffers", with data from each buffer overlapping.
+  - For each vertex format.
+  - For various numbers of vertex buffers [2, 3, max]`
+  )
+  .params(u =>
+    u //
+      .combine('format', kVertexFormats)
+      .beginSubcases()
+      .combine('vbCount', [2, 3, kMaxVertexBuffers])
+      .combine('additionalVBOffset', [0, 4, 120])
+  )
+  .fn(t => {
+    const { format, vbCount, additionalVBOffset } = t.params;
+    const kVertexCount = 20;
+    const kInstanceCount = 1;
+    const formatInfo = kVertexFormatInfo[format];
+    const formatByteSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
+    // We need to align so the offset for non-0 setVertexBuffer don't fail validation.
+    const alignedFormatByteSize = align(formatByteSize, 4);
+
+    // Create the data that will be in the vertex buffer. It is larger than kVertexCount because
+    // each vertex buffer will be offset by one whole vertexData (so essentially) from the previous one.
+    const baseDataVertexCount = kVertexCount + vbCount - 1;
+    const baseData = t.createTestAndPipelineData(
+      [
+        {
+          slot: 0,
+          arrayStride: alignedFormatByteSize,
+          stepMode: 'vertex',
+          vbOffset: additionalVBOffset,
+          attributes: [{ shaderLocation: 0, format, offset: 0 }],
+        },
+      ],
+      baseDataVertexCount,
+      kInstanceCount
+    );
+    const vertexBuffer = t.createVertexBuffers(baseData, baseDataVertexCount, kInstanceCount)[0]
+      .buffer;
+
+    // We're going to create a multi-vertex buffer vertex data from baseData by viewing
+    // `vbCount` ranges of `kVertexCount` vertices of the data each as their own buffer.
+    const baseTestData = baseData[0].attributes[0];
+    assert(baseTestData.testComponentCount === formatInfo.componentCount * baseDataVertexCount);
+    const expectedDataBytesPerVertex = baseTestData.expectedData.byteLength / baseDataVertexCount;
+
+    const testData: VertexLayoutState<{}, TestData> = [];
+    const vertexBuffers: VertexState<{ buffer: GPUBuffer; vbOffset: number }, {}> = [];
+    for (let i = 0; i < vbCount; i++) {
+      vertexBuffers.push({
+        buffer: vertexBuffer,
+        slot: i,
+        vbOffset: additionalVBOffset + i * alignedFormatByteSize,
+        attributes: [],
+      });
+
+      testData.push({
+        slot: i,
+        arrayStride: alignedFormatByteSize,
+        stepMode: 'vertex',
+        attributes: [
+          {
+            shaderLocation: i,
+            format,
+            offset: 0,
+
+            shaderBaseType: baseTestData.shaderBaseType,
+            floatTolerance: baseTestData.floatTolerance,
+            // Select vertices [i, i + kVertexCount]
+            testComponentCount: kVertexCount * formatInfo.componentCount,
+            expectedData: baseTestData.expectedData.slice(
+              expectedDataBytesPerVertex * i,
+              expectedDataBytesPerVertex * (kVertexCount + i)
+            ),
+            vertexData: new ArrayBuffer(0),
+          },
+        ],
+      });
+    }
+
+    // Run the test with the modified test data.
+    const pipeline = t.makeTestPipeline(testData, kVertexCount, kInstanceCount);
+    const expectedDataBG = t.createExpectedBG(testData, pipeline);
+    t.submitRenderPass(pipeline, vertexBuffers, expectedDataBG, kVertexCount, kInstanceCount);
+  });
+
+g.test('vertexBufferUsedMultipleTime_interleaved')
+  .desc(
+    `Test using the same vertex buffer in for multiple "vertex buffers", with data from each buffer interleaved.
+  - For each vertex format.
+  - For various numbers of vertex buffers [2, 3, max]`
+  )
+  .params(u =>
+    u //
+      .combine('format', kVertexFormats)
+      .beginSubcases()
+      .combine('vbCount', [2, 3, kMaxVertexBuffers])
+      .combine('additionalVBOffset', [0, 4, 120])
+  )
+  .fn(t => {
+    const { format, vbCount, additionalVBOffset } = t.params;
+    const kVertexCount = 20;
+    const kInstanceCount = 1;
+    const formatInfo = kVertexFormatInfo[format];
+    const formatByteSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
+    // We need to align so the offset for non-0 setVertexBuffer don't fail validation.
+    const alignedFormatByteSize = align(formatByteSize, 4);
+
+    // Create data for a single vertex buffer with many attributes, that will be split between
+    // many vertexbuffers set at different offsets.
+    const attribs: GPUVertexAttribute[] = [];
+    for (let i = 0; i < vbCount; i++) {
+      attribs.push({ format, offset: i * alignedFormatByteSize, shaderLocation: i });
+    }
+    const baseData = t.createTestAndPipelineData(
+      [
+        {
+          slot: 0,
+          arrayStride: alignedFormatByteSize * vbCount,
+          stepMode: 'vertex',
+          vbOffset: additionalVBOffset,
+          attributes: attribs,
+        },
+      ],
+      kVertexCount,
+      kInstanceCount
+    );
+    const vertexBuffer = t.createVertexBuffers(baseData, kVertexCount, kInstanceCount)[0].buffer;
+
+    // Split the 1 vertex buffer with N attributes into N vertex buffers with one attribute.
+    const testData: VertexLayoutState<{}, TestData> = [];
+    const vertexBuffers: VertexState<{ buffer: GPUBuffer; vbOffset: number }, {}> = [];
+    for (let i = 0; i < vbCount; i++) {
+      vertexBuffers.push({
+        slot: i,
+        buffer: vertexBuffer,
+        vbOffset: additionalVBOffset + i * alignedFormatByteSize,
+        attributes: [],
+      });
+      testData.push({
+        ...baseData[0],
+        slot: i,
+        attributes: [{ ...baseData[0].attributes[i], offset: 0 }],
+      });
+    }
+
+    // Run the test with the modified test data.
+    const pipeline = t.makeTestPipeline(testData, kVertexCount, kInstanceCount);
+    const expectedDataBG = t.createExpectedBG(testData, pipeline);
+    t.submitRenderPass(pipeline, vertexBuffers, expectedDataBG, kVertexCount, kInstanceCount);
+  });
+
+g.test('maxBuffersAndAttribs')
+  .desc(
+    `Test a vertex state that loads as many attributes and buffers as possible.
+  - For each format.
+  TODO find a way to test maxAttribs. Right now this test is gated on kMaxUniformBuffersPerStage
+  `
+  )
+  .paramsSubcasesOnly(u => u.combine('format', kVertexFormats))
+  .fn(t => {
+    const { format } = t.params;
+    // The fixture uses one uniform buffer per attribute, so we can't test more than
+    // kMaxUniformBuffersPerStage attributes.
+    const maxTestableAttribs = Math.min(
+      kMaxVertexAttributes,
+      kPerStageBindingLimits['uniformBuf'].max
+    );
+
+    const attributesPerBuffer = Math.ceil(maxTestableAttribs / kMaxVertexBuffers);
+    let attributesEmitted = 0;
+
+    const state: VertexLayoutState<{}, {}> = [];
+    for (let i = 0; i < kMaxVertexBuffers; i++) {
+      const attributes: GPUVertexAttribute[] = [];
+      for (let j = 0; j < attributesPerBuffer && attributesEmitted < maxTestableAttribs; j++) {
+        attributes.push({ format, offset: 0, shaderLocation: attributesEmitted });
+        attributesEmitted++;
+      }
+      state.push({
+        slot: i,
+        stepMode: 'vertex',
+        arrayStride: 32,
+        attributes,
+      });
+    }
+    t.runTest(state);
+  });
+
+g.test('arrayStride0')
+  .desc(
+    `Test that arrayStride 0 correctly uses the same data for all vertex/instances, while another test vertex buffer with arrayStrude != 0 gets different data.
+  - Test for all formats
+  - Test for both step modes`
+  )
+  .params(u =>
+    u //
+      .combine('format', kVertexFormats)
+      .beginSubcases()
+      .combine('stepMode', ['vertex', 'instance'] as const)
+      .expand('offset', p => {
+        const formatInfo = kVertexFormatInfo[p.format];
+        const componentSize = formatInfo.bytesPerComponent;
+        const formatSize = componentSize * formatInfo.componentCount;
+        return new Set([
+          0,
+          componentSize,
+          componentSize * 2,
+          componentSize * 3,
+          kMaxVertexBufferArrayStride / 2,
+          kMaxVertexBufferArrayStride - formatSize - componentSize * 3,
+          kMaxVertexBufferArrayStride - formatSize - componentSize * 2,
+          kMaxVertexBufferArrayStride - formatSize - componentSize,
+          kMaxVertexBufferArrayStride - formatSize,
+        ]);
+      })
+  )
+  .fn(t => {
+    const { format, stepMode, offset } = t.params;
+    const kCount = 10;
+
+    // Create the stride 0 part of the test, first be faking a single vertex being drawn and
+    // then expanding the data to cover kCount vertex / instances
+    const stride0TestData = t.createTestAndPipelineData(
+      [
+        {
+          slot: 0,
+          arrayStride: 2048,
+          stepMode,
+          vbOffset: offset, // used to push data in the vertex buffer
+          attributes: [{ format, offset: 0, shaderLocation: 0 }],
+        },
+      ],
+      1,
+      1
+    )[0];
+    const stride0VertexBuffer = t.createVertexBuffers([stride0TestData], kCount, kCount)[0];
+
+    // Expand the stride0 test data to have kCount values for expectedData.
+    const originalData = stride0TestData.attributes[0].expectedData;
+    const expandedData = new ArrayBuffer(kCount * originalData.byteLength);
+    for (let i = 0; i < kCount; i++) {
+      new Uint8Array(expandedData, originalData.byteLength * i).set(new Uint8Array(originalData));
+    }
+
+    // Fixup stride0TestData to use arrayStride 0.
+    stride0TestData.attributes[0].offset = offset;
+    stride0TestData.attributes[0].expectedData = expandedData;
+    stride0TestData.attributes[0].testComponentCount *= kCount;
+    stride0TestData.arrayStride = 0;
+    stride0VertexBuffer.vbOffset = 0;
+
+    // Create the part of the state that will be varying for each vertex / instance
+    const varyingTestData = t.createTestAndPipelineData(
+      [
+        {
+          slot: 1,
+          arrayStride: 32,
+          stepMode,
+          attributes: [{ format, offset: 0, shaderLocation: 1 }],
+        },
+      ],
+      kCount,
+      kCount
+    )[0];
+    const varyingVertexBuffer = t.createVertexBuffers([varyingTestData], kCount, kCount)[0];
+
+    // Run the test with the merged test state.
+    const state = [stride0TestData, varyingTestData];
+    const vertexBuffers = [stride0VertexBuffer, varyingVertexBuffer];
+
+    const pipeline = t.makeTestPipeline(state, kCount, kCount);
+    const expectedDataBG = t.createExpectedBG(state, pipeline);
+    t.submitRenderPass(pipeline, vertexBuffers, expectedDataBG, kCount, kCount);
+  });
+
+g.test('discontiguousLocationAndAttribs')
+  .desc('Test that using far away slots / shaderLocations works as expected')
+  .fn(t => {
+    t.runTest([
+      {
+        slot: kMaxVertexBuffers - 1,
+        arrayStride: 4,
+        stepMode: 'vertex',
+        attributes: [
+          { format: 'uint8x2', offset: 2, shaderLocation: 0 },
+          { format: 'uint8x2', offset: 0, shaderLocation: 8 },
+        ],
+      },
+      {
+        slot: 1,
+        arrayStride: 16,
+        stepMode: 'instance',
+        vbOffset: 1000,
+        attributes: [{ format: 'uint32x4', offset: 0, shaderLocation: kMaxVertexAttributes - 1 }],
+      },
+    ]);
+  });
+
+g.test('overlappingAttributes')
+  .desc(
+    `Test that overlapping attributes in the same vertex buffer works
+   - Test for all formats`
+  )
+  .paramsSubcasesOnly(u => u.combine('format', kVertexFormats))
+  .fn(t => {
+    const { format } = t.params;
+    // The fixture uses one uniform buffer per attribute, so we can't test more than
+    // kMaxUniformBuffersPerStage attributes.
+    const maxTestableAttribs = Math.min(
+      kMaxVertexAttributes,
+      kPerStageBindingLimits['uniformBuf'].max
+    );
+
+    const attributes: GPUVertexAttribute[] = [];
+    for (let i = 0; i < maxTestableAttribs; i++) {
+      attributes.push({ format, offset: 0, shaderLocation: i });
+    }
+
+    t.runTest([
+      {
+        slot: 0,
+        stepMode: 'vertex',
+        arrayStride: 32,
+        attributes,
+      },
+    ]);
   });
