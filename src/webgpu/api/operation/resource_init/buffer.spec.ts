@@ -1,8 +1,7 @@
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert, unreachable } from '../../../../common/util/util.js';
+import { unreachable } from '../../../../common/util/util.js';
 import { GPUConst } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { checkElementsEqual } from '../../../util/check_contents.js';
 import { getTextureCopyLayout } from '../../../util/texture/layout.js';
 import { PerTexelComponent } from '../../../util/texture/texel_data.js';
 
@@ -40,16 +39,8 @@ class F extends GPUTest {
     bufferUsage: GPUBufferUsageFlags,
     expectedData: Uint8Array
   ): Promise<void> {
-    // We can only check the buffer contents with t.expectGPUBufferValuesEqual() when the buffer
-    // usage contains COPY_SRC.
-    if (bufferUsage & GPUBufferUsage.MAP_READ) {
-      await buffer.mapAsync(GPUMapMode.READ);
-      this.expectOK(checkElementsEqual(new Uint8Array(buffer.getMappedRange()), expectedData));
-      buffer.unmap();
-    } else {
-      assert((bufferUsage & GPUBufferUsage.COPY_SRC) !== 0);
-      this.expectGPUBufferValuesEqual(buffer, expectedData);
-    }
+    const mappable = bufferUsage & GPUBufferUsage.MAP_READ;
+    this.expectGPUBufferValuesEqual(buffer, expectedData, 0, { method: mappable ? 'map' : 'copy' });
   }
 
   TestBufferZeroInitInBindGroup(

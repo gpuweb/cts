@@ -5,6 +5,7 @@ import { align } from './math.js';
 import { kBytesPerRowAlignment } from './texture/layout.js';
 
 export class CopyToTextureUtils extends GPUTest {
+  // TODO(crbug.com/dawn/868): Should be possible to consolidate this along with texture checking
   checkCopyExternalImageResult(
     src: GPUBuffer,
     expected: ArrayBufferView,
@@ -14,13 +15,16 @@ export class CopyToTextureUtils extends GPUTest {
   ): void {
     const exp = new Uint8Array(expected.buffer, expected.byteOffset, expected.byteLength);
     const rowPitch = align(width * bytesPerPixel, kBytesPerRowAlignment);
-    const dst = this.createCopyForMapRead(src, 0, rowPitch * height);
+
+    const readbackPromise = this.readGPUBufferRangeTyped(src, {
+      type: Uint8Array,
+      typedLength: rowPitch * height,
+    });
 
     this.eventualAsyncExpectation(async niceStack => {
-      await dst.mapAsync(GPUMapMode.READ);
-      const actual = new Uint8Array(dst.getMappedRange());
+      const readback = await readbackPromise;
       const check = this.checkBufferWithRowPitch(
-        actual,
+        readback.data,
         exp,
         width,
         height,
@@ -31,7 +35,7 @@ export class CopyToTextureUtils extends GPUTest {
         niceStack.message = check;
         this.rec.expectationFailed(niceStack);
       }
-      dst.destroy();
+      readback.cleanup();
     });
   }
 

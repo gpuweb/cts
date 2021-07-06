@@ -59,6 +59,7 @@ Whenever a new generally-useful helper is added, it should be indexed here.
     (like in copyBufferToTexture, copyTextureToBuffer, writeTexture).
 - {@link webgpu/util/texture/subresource}: Helpers for working with texture subresource ranges.
 - {@link webgpu/util/texture/texel_data}: Helpers encoding/decoding texel formats.
+- {@link webgpu/shader/types}: Helpers for WGSL data types.
 
 ### General Helpers
 

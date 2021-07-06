@@ -9,11 +9,19 @@ import { assert } from '../../common/util/util.js';
  */
 export const kMaxSafeMultipleOf8 = Number.MAX_SAFE_INTEGER - 7;
 
-/** Round `n` up to the next multiple of `alignment`. */
+/** Round `n` up to the next multiple of `alignment` (inclusive). */
+// TODO: Rename to `roundUp`
 export function align(n: number, alignment: number): number {
   assert(Number.isInteger(n) && n >= 0, 'n must be a non-negative integer');
   assert(Number.isInteger(alignment) && alignment > 0, 'alignment must be a positive integer');
   return Math.ceil(n / alignment) * alignment;
+}
+
+/** Round `n` down to the next multiple of `alignment` (inclusive). */
+export function roundDown(n: number, alignment: number): number {
+  assert(Number.isInteger(n) && n >= 0, 'n must be a non-negative integer');
+  assert(Number.isInteger(alignment) && alignment > 0, 'alignment must be a positive integer');
+  return Math.floor(n / alignment) * alignment;
 }
 
 /** Clamp a number to the provided range. */

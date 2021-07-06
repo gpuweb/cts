@@ -926,7 +926,7 @@ g.test('unused_bindings_in_pipeline')
       ${pp._if(useBindGroup1)}
       [[group(1), binding(0)]] var<image> image1 : texture_storage_2d<rgba8unorm, read>;
       ${pp._endif}
-      [[stage(compute)]] fn main() {}
+      [[stage(compute), workgroup_size(1)]] fn main() {}
     `;
 
     const pipeline = compute

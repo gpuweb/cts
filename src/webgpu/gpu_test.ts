@@ -4,6 +4,7 @@ import {
   assert,
   TypedArrayBufferView,
   TypedArrayBufferViewConstructor,
+  unreachable,
 } from '../common/util/util.js';
 
 import {
@@ -20,7 +21,7 @@ import {
   TestOOMedShouldAttemptGC,
   UncanonicalizedDeviceDescriptor,
 } from './util/device_pool.js';
-import { align } from './util/math.js';
+import { align, roundDown } from './util/math.js';
 import {
   fillTextureDataWithTexelValue,
   getTextureCopyLayout,
@@ -162,7 +163,7 @@ export class GPUTest extends Fixture {
   }
 
   /** Snapshot a GPUBuffer's contents, returning a new GPUBuffer with the `MAP_READ` usage. */
-  createCopyForMapRead(src: GPUBuffer, srcOffset: number, size: number): GPUBuffer {
+  private createCopyForMapRead(src: GPUBuffer, srcOffset: number, size: number): GPUBuffer {
     assert(srcOffset % 4 === 0);
     assert(size % 4 === 0);
 
@@ -173,7 +174,6 @@ export class GPUTest extends Fixture {
 
     const c = this.device.createCommandEncoder();
     c.copyBufferToBuffer(src, srcOffset, dst, 0, size);
-
     this.queue.submit([c.finish()]);
 
     return dst;
@@ -186,16 +186,74 @@ export class GPUTest extends Fixture {
    * we initially wanted to map.
    * The copy will not cause an OOB error because the buffer size must be 4-aligned.
    */
-  createAlignedCopyForMapRead(
+  private createAlignedCopyForMapRead(
     src: GPUBuffer,
     size: number,
     offset: number
-  ): { dst: GPUBuffer; begin: number; end: number } {
-    const alignedOffset = Math.floor(offset / 4) * 4;
-    const offsetDifference = offset - alignedOffset;
-    const alignedSize = align(size + offsetDifference, 4);
-    const dst = this.createCopyForMapRead(src, alignedOffset, alignedSize);
-    return { dst, begin: offsetDifference, end: offsetDifference + size };
+  ): { mappable: GPUBuffer; subarrayByteStart: number } {
+    const alignedOffset = roundDown(offset, 4);
+    const subarrayByteStart = offset - alignedOffset;
+    const alignedSize = align(size + subarrayByteStart, 4);
+    const mappable = this.createCopyForMapRead(src, alignedOffset, alignedSize);
+    return { mappable, subarrayByteStart };
+  }
+
+  /**
+   * Snapshot the current contents of a range of a GPUBuffer, and return them as a TypedArray.
+   * Also provides a cleanup() function to unmap and destroy the staging buffer.
+   */
+  async readGPUBufferRangeTyped<T extends TypedArrayBufferView>(
+    src: GPUBuffer,
+    {
+      srcByteOffset = 0,
+      method = 'copy',
+      type,
+      typedLength,
+    }: {
+      srcByteOffset?: number;
+      method?: 'copy' | 'map';
+      type: TypedArrayBufferViewConstructor<T>;
+      typedLength: number;
+    }
+  ): Promise<{ data: T; cleanup(): void }> {
+    assert(
+      srcByteOffset % type.BYTES_PER_ELEMENT === 0,
+      'srcByteOffset must be a multiple of BYTES_PER_ELEMENT'
+    );
+
+    const byteLength = typedLength * type.BYTES_PER_ELEMENT;
+    let mappable: GPUBuffer;
+    let mapOffset: number | undefined, mapSize: number | undefined, subarrayByteStart: number;
+    if (method === 'copy') {
+      ({ mappable, subarrayByteStart } = this.createAlignedCopyForMapRead(
+        src,
+        byteLength,
+        srcByteOffset
+      ));
+    } else if (method === 'map') {
+      mappable = src;
+      mapOffset = roundDown(srcByteOffset, 8);
+      mapSize = align(byteLength, 4);
+      subarrayByteStart = srcByteOffset - mapOffset;
+    } else {
+      unreachable();
+    }
+
+    assert(subarrayByteStart % type.BYTES_PER_ELEMENT === 0);
+    const subarrayStart = subarrayByteStart / type.BYTES_PER_ELEMENT;
+
+    // 2. Map the staging buffer, and create the TypedArray from it.
+    await mappable.mapAsync(GPUMapMode.READ, mapOffset, mapSize);
+    const mapped = new type(mappable.getMappedRange(mapOffset, mapSize));
+    const data = mapped.subarray(subarrayStart, typedLength) as T;
+
+    return {
+      data,
+      cleanup() {
+        mappable.unmap();
+        mappable.destroy();
+      },
+    };
   }
 
   /**
@@ -208,24 +266,26 @@ export class GPUTest extends Fixture {
       srcByteOffset = 0,
       type,
       typedLength,
+      method = 'copy',
       mode = 'fail',
     }: {
       srcByteOffset?: number;
       type: TypedArrayBufferViewConstructor<T>;
       typedLength: number;
+      method?: 'copy' | 'map';
       mode?: 'fail' | 'warn';
     }
   ) {
-    const byteLength = typedLength * type.BYTES_PER_ELEMENT;
-    const { dst, begin, end } = this.createAlignedCopyForMapRead(src, byteLength, srcByteOffset);
-
+    const readbackPromise = this.readGPUBufferRangeTyped(src, {
+      srcByteOffset,
+      type,
+      typedLength,
+      method,
+    });
     this.eventualAsyncExpectation(async niceStack => {
-      await dst.mapAsync(GPUMapMode.READ);
-      // TODO: begin and end are byte offsets, but used here as array offsets.
-      const mapped: T = new type(dst.getMappedRange());
-      const actual = mapped.subarray(begin, end) as T;
-      this.expectOK(check(actual), { mode, niceStack });
-      dst.destroy();
+      const readback = await readbackPromise;
+      this.expectOK(check(readback.data), { mode, niceStack });
+      readback.cleanup();
     });
   }
 
@@ -236,12 +296,13 @@ export class GPUTest extends Fixture {
     src: GPUBuffer,
     expected: TypedArrayBufferView,
     srcByteOffset: number = 0,
-    { mode = 'fail' }: { mode?: 'fail' | 'warn' } = {}
+    { method = 'copy', mode = 'fail' }: { method?: 'copy' | 'map'; mode?: 'fail' | 'warn' } = {}
   ): void {
     this.expectGPUBufferValuesPassCheck(src, a => checkElementsEqual(a, expected), {
       srcByteOffset,
       type: expected.constructor as TypedArrayBufferViewConstructor,
       typedLength: expected.length,
+      method,
       mode,
     });
   }
@@ -428,6 +489,8 @@ export class GPUTest extends Fixture {
 
   /**
    * Create a GPUBuffer with the specified contents and usage.
+   *
+   * TODO: Several call sites would be simplified if this took ArrayBuffer as well.
    */
   makeBufferWithContents(dataArray: TypedArrayBufferView, usage: GPUBufferUsageFlags): GPUBuffer {
     return makeBufferWithContents(this.device, dataArray, usage);
