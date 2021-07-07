@@ -1104,6 +1104,22 @@ g.test('undefined_params')
     });
   });
 
+g.test('coppy_from_depth_aspect')
+  .desc(
+    `
+  Validate the correctness of copyTextureToBuffer() with depth aspect.
+
+  For all the texture formats that support calling copyTextureToBuffer() with depth aspect:
+  - Initialize the depth aspect of the source texture by assigning depth values to
+    "[[builtin(frag_depth)]] f32" in a fragment shader
+  - Copy the depth aspect of the source texture into the destination buffer
+  - Check if the data in the destination buffer is expected
+  - Test the copies from / into zero / non-zero array layer / mipmap levels
+  - Test copying multiple array layers
+  `
+  )
+  .unimplemented();
+
 g.test('copy_from_stencil_aspect')
   .desc(
     `
