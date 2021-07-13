@@ -225,7 +225,7 @@ export const kTextureFormatInfo: {
 /* prettier-ignore */ export const kTextureFormats: readonly GPUTextureFormat[] = keysOf(kAllTextureFormatInfo);
 
 /** Valid GPUTextureFormats for `copyExternalImageToTexture`, by spec. */
-export const kValidTextureFormatsForCopyIB2T = [
+export const kValidTextureFormatsForCopyE2T = [
   'rgba8unorm',
   'rgba8unorm-srgb',
   'bgra8unorm',
