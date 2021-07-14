@@ -14,6 +14,16 @@ Tests setPipeline should generate an error iff using an 'invalid' pipeline.
   `
   )
   .paramsSubcasesOnly(u =>
-    u.combine('encoder', kRenderEncodeTypes).combine('state', ['valid', 'invalid'] as const)
+    u.combine('encoderType', kRenderEncodeTypes).combine('state', ['valid', 'invalid'] as const)
   )
-  .unimplemented();
+  .fn(t => {
+    const { encoderType, state } = t.params;
+    const pipeline = t.createRenderPipelineWithState(state);
+
+    const { encoder, finish } = t.createEncoder(encoderType);
+    encoder.setPipeline(pipeline);
+
+    t.expectValidationError(() => {
+      finish();
+    }, state === 'invalid');
+  });

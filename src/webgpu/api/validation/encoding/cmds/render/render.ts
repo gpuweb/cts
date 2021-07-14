@@ -2,7 +2,7 @@ import { kUnitCaseParamsBuilder } from '../../../../../../common/framework/param
 import { kRenderEncodeTypes } from '../../../validation_test.js';
 
 export const kRenderEncodeTypeParams = kUnitCaseParamsBuilder.combine(
-  'encoder',
+  'encoderType',
   kRenderEncodeTypes
 );
 
@@ -11,21 +11,21 @@ export const kBufferStates = ['valid', 'invalid', 'destroyed'] as const;
 export function buildBufferOffsetAndSizeOOBTestParams(minAlignment: number, bufferSize: number) {
   return kRenderEncodeTypeParams.combineWithParams([
     // Explicit size
-    { offset: 0, size: 0 },
-    { offset: 0, size: 1 }, // control case
-    { offset: 0, size: 4 },
-    { offset: 0, size: 5 },
-    { offset: 0, size: bufferSize },
-    { offset: 0, size: bufferSize + 4 },
-    { offset: minAlignment, size: bufferSize },
-    { offset: minAlignment, size: bufferSize - minAlignment },
-    { offset: bufferSize - 1, size: 1 },
-    { offset: bufferSize, size: 1 },
+    { offset: 0, size: 0, _valid: true },
+    { offset: 0, size: 1, _valid: true },
+    { offset: 0, size: 4, _valid: true },
+    { offset: 0, size: 5, _valid: true },
+    { offset: 0, size: bufferSize, _valid: true },
+    { offset: 0, size: bufferSize + 4, _valid: false },
+    { offset: minAlignment, size: bufferSize, _valid: false },
+    { offset: minAlignment, size: bufferSize - minAlignment, _valid: true },
+    { offset: bufferSize - minAlignment, size: minAlignment, _valid: true },
+    { offset: bufferSize, size: 1, _valid: false },
     // Implicit size: buffer.size - offset
-    { offset: 0, size: undefined }, // control case
-    { offset: minAlignment, size: undefined },
-    { offset: bufferSize - minAlignment, size: undefined },
-    { offset: bufferSize, size: undefined },
-    { offset: bufferSize + minAlignment, size: undefined },
+    { offset: 0, size: undefined, _valid: true },
+    { offset: minAlignment, size: undefined, _valid: true },
+    { offset: bufferSize - minAlignment, size: undefined, _valid: true },
+    { offset: bufferSize, size: undefined, _valid: true },
+    { offset: bufferSize + minAlignment, size: undefined, _valid: false },
   ]);
 }
