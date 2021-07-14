@@ -97,6 +97,17 @@ export function float32ToFloat16Bits(n: number) {
 }
 
 /**
+ * Decodes an IEEE754 16 bit floating point number into a JS `number` and returns.
+ */
+export function float16BitsToFloat32(float16Bits: number): number {
+  const buf = new DataView(new ArrayBuffer(Float32Array.BYTES_PER_ELEMENT));
+  // shift exponent and mantissa bits and fill with 0 on right, shift sign bit
+  buf.setUint32(0, ((float16Bits & 0x7fff) << 13) | ((float16Bits & 0x8000) << 16), true);
+  // shifting for bias different: f16 uses a bias of 15, f32 uses a bias of 127
+  return buf.getFloat32(0, true) * 2 ** (127 - 15);
+}
+
+/**
  * Encodes three JS `number` values into RGB9E5, returned as an integer-valued JS `number`.
  *
  * RGB9E5 represents three partial-precision floating-point numbers encoded into a single 32-bit
