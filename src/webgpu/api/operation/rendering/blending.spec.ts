@@ -265,7 +265,7 @@ g.test('GPUBlendComponent')
 
     t.device.queue.submit([commandEncoder.finish()]);
 
-    const tolerance = 0.001;
+    const tolerance = 0.003;
     const expectedLow = mapColor(expectedColor, v => v - tolerance);
     const expectedHigh = mapColor(expectedColor, v => v + tolerance);
 
