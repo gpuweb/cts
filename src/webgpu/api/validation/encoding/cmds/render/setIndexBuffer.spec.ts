@@ -32,7 +32,11 @@ Tests index buffer must be valid.
     encoder.setIndexBuffer(indexBuffer, 'uint32');
 
     t.expectValidationError(() => {
-      t.queue.submit([finish()]);
+      if (state === 'destroyed') {
+        t.queue.submit([finish()]);
+      } else {
+        finish();
+      }
     }, state !== 'valid');
   });
 

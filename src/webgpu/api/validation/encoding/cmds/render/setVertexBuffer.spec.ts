@@ -60,7 +60,11 @@ Tests vertex buffer must be valid.
     encoder.setVertexBuffer(0, vertexBuffer);
 
     t.expectValidationError(() => {
-      t.queue.submit([finish()]);
+      if (state === 'destroyed') {
+        t.queue.submit([finish()]);
+      } else {
+        finish();
+      }
     }, state !== 'valid');
   });
 
