@@ -308,7 +308,8 @@ g.test('getMappedRange,state,mapped')
 
 g.test('getMappedRange,state,mappedAtCreation')
   .desc(
-    'Test that it is valid to call getMappedRange in the mapped at creation state, for all buffer usages'
+    `Test that, in the mapped-at-creation state, it is valid to call getMappedRange, for all buffer usages,
+    and invalid to call mapAsync, for all map modes.`
   )
   .paramsSubcasesOnly(u =>
     u.combine('bufferUsage', kBufferUsages).combine('mapMode', kMapModeOptions)
@@ -391,7 +392,7 @@ Test for various cases of being unmapped: at creation, after a mapAsync call or 
 
 g.test('getMappedRange,subrange,mapped')
   .desc(
-    `Test that old getMappedRange returned arrybuffer does not exist after unmap and newly returned
+    `Test that old getMappedRange returned arraybuffer does not exist after unmap, and newly returned
     arraybuffer after new map has correct subrange`
   )
   .params(u => u.combine('mapMode', kMapModeOptions))
@@ -408,6 +409,7 @@ g.test('getMappedRange,subrange,mapped')
     t.expect(data0.byteLength === bufferSize);
 
     buffer.unmap();
+    t.expect(data0.byteLength === 0);
 
     await buffer.mapAsync(mapMode, offset);
     const data1 = buffer.getMappedRange(8);
@@ -436,6 +438,7 @@ g.test('getMappedRange,subrange,mappedAtCreation')
     t.expect(data0.byteLength === bufferSize);
 
     buffer.unmap();
+    t.expect(data0.byteLength === 0);
 
     await buffer.mapAsync(GPUMapMode.READ, offset);
     const data1 = buffer.getMappedRange(8);
