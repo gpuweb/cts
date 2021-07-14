@@ -109,5 +109,24 @@ g.test('fullscreen_quad').fn(async t => {
 });
 
 g.test('large_draw')
-  .desc(`Test reasonably-sized large {draw, drawIndexed} (see also stress tests).`)
+  .desc(
+    `Test reasonably-sized large {draw, drawIndexed} (see also stress tests).
+
+  Tests that draw calls behave reasonably with large vertex counts for
+  non-indexed draws, large index counts for indexed draws, and large instance
+  counts in both cases. Various combinations of these counts are tested with
+  both direct and indrect draw calls.
+
+  Draw call sizes are increased incrementally over these parameters until the
+  completion of a draw call exceeds a fixed time limit of 500ms.
+
+  Params:
+    - indexed= {true, false} - whether to test indexed or non-indexed draw calls
+    - indirect= {true, false} - whether to use indirect or direct draw calls`
+  )
+  .params(u =>
+    u //
+      .combine('indexed', [true, false])
+      .combine('indirect', [true, false])
+  )
   .unimplemented();
