@@ -710,7 +710,7 @@ class ImageCopyTest extends GPUTest {
             format: 'r8unorm',
             blend: {
               color: { srcFactor: 'one', dstFactor: 'one', operation: 'add' },
-              alpha: { srcFactor: 'one', dstFactor: 'one', operation: 'add' },
+              alpha: {},
             },
           },
         ],
@@ -1425,7 +1425,7 @@ g.test('write_into_stencil_aspect')
       for (let y = 0; y < heightAtLevel; ++y) {
         for (let x = 0; x < widthAtLevel; ++x) {
           const index = appliedBytesPerRow * appliedRowsPerImage * z + appliedBytesPerRow * y + x;
-          initialData[index] = (index + 1) % 255;
+          initialData[dataOffset + index] = (index + 1) % 255;
         }
       }
     }
