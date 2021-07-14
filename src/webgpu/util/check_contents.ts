@@ -62,7 +62,7 @@ export function checkElementsBetween(
 }
 
 /**
- * Equivalent to checkElementsBetween but interpret value as float16 and convert to JS number before comparison.
+ * Equivalent to {@link checkElementsBetween} but interpret values as float16 and convert to JS number before comparison.
  */
 export function checkElementsFloat16Between(
   actual: TypedArrayBufferView,
@@ -70,14 +70,14 @@ export function checkElementsFloat16Between(
 ): ErrorWithExtra | undefined {
   assert(actual.BYTES_PER_ELEMENT === 2, 'bytes per element need to be 2 (16bit)');
   const actualF32 = new Float32Array(actual.length);
-  actual.forEach((v, i) => {
+  actual.forEach((v: number, i: number) => {
     actualF32[i] = float16BitsToFloat32(v);
   });
   const expectedF32 = [new Float32Array(expected[0].length), new Float32Array(expected[1].length)];
-  expected[0].forEach((v, i) => {
+  expected[0].forEach((v: number, i: number) => {
     expectedF32[0][i] = float16BitsToFloat32(v);
   });
-  expected[1].forEach((v, i) => {
+  expected[1].forEach((v: number, i: number) => {
     expectedF32[1][i] = float16BitsToFloat32(v);
   });
 

@@ -456,7 +456,7 @@ export class GPUTest extends Fixture {
   }
 
   /**
-   * Equivalent to expectSinglePixelBetweenTwoValuesIn2DTexture but use special check func
+   * Equivalent to {@link expectSinglePixelBetweenTwoValuesIn2DTexture} but uses a special check func
    * to interpret incoming values as float16
    */
   expectSinglePixelBetweenTwoValuesFloat16In2DTexture(
