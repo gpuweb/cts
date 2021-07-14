@@ -469,7 +469,7 @@ export class GPUTest extends Fixture {
       layout,
       generateWarningOnly = false,
     }: {
-      exp: [TypedArrayBufferView, TypedArrayBufferView];
+      exp: [Uint16Array, Uint16Array];
       slice?: number;
       layout?: TextureLayoutOptions;
       generateWarningOnly?: boolean;
