@@ -124,7 +124,7 @@ g.test('large_draw')
   100ms.
 
   To validate that the drawn vertices actually made it though the pipeline on
-  each draw call, we render a 3x3 target with position the first and last
+  each draw call, we render a 3x3 target with the position the first and last
   vertices of the first and last instances in different respective corners, an
   everything else positioned to cover only one of the intermediate fragments.
 
@@ -138,10 +138,11 @@ g.test('large_draw')
       .combine('indirect', [true, false])
   )
   .fn(async t => {
-    const {indexed, indirect} = t.params;
+    const { indexed, indirect } = t.params;
 
+    const BYTES_PER_ROW = 256;
     const dst = t.device.createBuffer({
-      size: 768,
+      size: 3 * BYTES_PER_ROW,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
 
@@ -151,27 +152,32 @@ g.test('large_draw')
     });
     const writeIndirectParams = (count: number, instanceCount: number) => {
       const params = new Uint32Array(5);
-      params[0] = count;  // Vertex or index count
+      params[0] = count; // Vertex or index count
       params[1] = instanceCount;
-      params[2] = 0;  // First vertex or index
-      params[3] = 0;  // First instance (non-indexed) or base vertex (indexed)
-      params[4] = 0;  // First instance (indexed)
+      params[2] = 0; // First vertex or index
+      params[3] = 0; // First instance (non-indexed) or base vertex (indexed)
+      params[4] = 0; // First instance (indexed)
       t.device.queue.writeBuffer(indirectBuffer, 0, params, 0, 5);
     };
 
+    const MILLION = 1024 * 1024;
+    const MAX_INDICES = 16 * MILLION;
     const indexBuffer = t.device.createBuffer({
-      size: 2**26,  // 64 MB, enough to hold 16M index values.
+      size: MAX_INDICES * Uint32Array.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
     });
-    const M = 1024 * 1024;
-    let indexData = new Uint32Array(1*M);
-    for (let i = 0; i < 16; ++i) {
-      for (let k = 0; k < 1*M; ++k) {
-        indexData[k] = i * M + k;
+    const indexData = new Uint32Array(MILLION);
+    for (let offset = 0; offset < MAX_INDICES; offset += MILLION) {
+      for (let k = 0; k < MILLION; ++k) {
+        indexData[k] = offset + k;
       }
       t.device.queue.writeBuffer(
-          indexBuffer, i * M * Uint32Array.BYTES_PER_ELEMENT, indexData,
-          0, 1*M);
+        indexBuffer,
+        offset * Uint32Array.BYTES_PER_ELEMENT,
+        indexData,
+        0,
+        MILLION
+      );
     }
 
     const colorAttachment = t.device.createTexture({
@@ -259,7 +265,7 @@ g.test('large_draw')
       pass.endPass();
       encoder.copyTextureToBuffer(
         { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-        { buffer: dst, bytesPerRow: 256 },
+        { buffer: dst, bytesPerRow: BYTES_PER_ROW },
         { width: 3, height: 3, depthOrArrayLayers: 1 }
       );
       t.device.queue.submit([encoder.finish()]);
@@ -267,18 +273,16 @@ g.test('large_draw')
       // Red should go 0, 127, 255 from left to right. Blue should to the same
       // from top to bottom.
       const expectedRows = [
-        [0x00, 0x00, 0x00, 0xff, 0x7f, 0x00, 0x00, 0xff,
-         0xff, 0x00, 0x00, 0xff],
-        [0x00, 0x00, 0x7f, 0xff, 0x7f, 0x00, 0x7f, 0xff,
-         0xff, 0x00, 0x7f, 0xff],
-        [0x00, 0x00, 0xff, 0xff, 0x7f, 0x00, 0xff, 0xff,
-         0xff, 0x00, 0xff, 0xff],
+        [0x00, 0x00, 0x00, 0xff, 0x7f, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0xff],
+        [0x00, 0x00, 0x7f, 0xff, 0x7f, 0x00, 0x7f, 0xff, 0xff, 0x00, 0x7f, 0xff],
+        [0x00, 0x00, 0xff, 0xff, 0x7f, 0x00, 0xff, 0xff, 0xff, 0x00, 0xff, 0xff],
       ];
       for (const row of [0, 1, 2]) {
         t.expectGPUBufferValuesPassCheck(
           dst,
           data => checkElementsEqual(data, new Uint8Array(expectedRows[row])),
-          {srcByteOffset: row * 256, type: Uint8Array, typedLength: 12});
+          { srcByteOffset: row * 256, type: Uint8Array, typedLength: 12 }
+        );
       }
     };
 
@@ -287,29 +291,29 @@ g.test('large_draw')
     // supported vertex count for any iteration is 2**25 due to our choice of
     // index buffer size.
     const maxDurationMs = 100;
-    const counts: {numInstances: number, vertexCounts: number[]}[] = [
+    const counts: { numInstances: number; vertexCounts: number[] }[] = [
       {
         numInstances: 4,
-        vertexCounts: [2**10, 2**16, 2**18, 2**20, 2**22, 2**24],
+        vertexCounts: [2 ** 10, 2 ** 16, 2 ** 18, 2 ** 20, 2 ** 22, 2 ** 24],
       },
       {
-        numInstances: 2**8,
-        vertexCounts: [2**10, 2**16, 2**18, 2**20, 2**22],
+        numInstances: 2 ** 8,
+        vertexCounts: [2 ** 10, 2 ** 16, 2 ** 18, 2 ** 20, 2 ** 22],
       },
       {
-        numInstances: 2**10,
-        vertexCounts: [2**8, 2**10, 2**12, 2**16, 2**18, 2**20],
+        numInstances: 2 ** 10,
+        vertexCounts: [2 ** 8, 2 ** 10, 2 ** 12, 2 ** 16, 2 ** 18, 2 ** 20],
       },
       {
-        numInstances: 2**16,
-        vertexCounts: [2**4, 2**8, 2**10, 2**12, 2**14],
+        numInstances: 2 ** 16,
+        vertexCounts: [2 ** 4, 2 ** 8, 2 ** 10, 2 ** 12, 2 ** 14],
       },
       {
-        numInstances: 2**20,
-        vertexCounts: [2**4, 2**8, 2**10],
+        numInstances: 2 ** 20,
+        vertexCounts: [2 ** 4, 2 ** 8, 2 ** 10],
       },
     ];
-    for (const {numInstances, vertexCounts} of counts) {
+    for (const { numInstances, vertexCounts } of counts) {
       let lastRunDuration = null;
       for (const numVertices of vertexCounts) {
         const start = now();
