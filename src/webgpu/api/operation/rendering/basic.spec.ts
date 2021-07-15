@@ -124,8 +124,8 @@ g.test('large_draw')
   100ms.
 
   To validate that the drawn vertices actually made it though the pipeline on
-  each draw call, we render a 3x3 target with the position the first and last
-  vertices of the first and last instances in different respective corners, an
+  each draw call, we render a 3x3 target with the positions of the first and last
+  vertices of the first and last instances in different respective corners, and
   everything else positioned to cover only one of the intermediate fragments.
 
   Params:
