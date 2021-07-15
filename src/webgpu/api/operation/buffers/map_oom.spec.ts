@@ -138,7 +138,5 @@ an out-of-memory error if allocation fails.
     t.expect(mapping.byteLength === 16);
 
     t.expectGPUError('validation', () => buffer.unmap(), oom);
-    if (mapping !== undefined) {
-      t.expect(mapping.byteLength === 0, 'Mapping should be detached');
-    }
+    t.expect(mapping.byteLength === 0, 'Mapping should be detached');
   });
