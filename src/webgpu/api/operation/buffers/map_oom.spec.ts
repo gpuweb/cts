@@ -76,7 +76,7 @@ g.test('mappedAtCreation,full_getMappedRange')
   .desc(
     `Test creating a very large buffer mappedAtCreation buffer should produce
 an out-of-memory error if allocation fails.
-  - Because the buffer can be immediately mapped, getMappedRange does not throw an OperationError. It throws a OperationError because such a
+  - Because the buffer can be immediately mapped, getMappedRange throws an OperationError only because such a
     large ArrayBuffer cannot be created.
   - unmap() should not throw.
   `
@@ -134,18 +134,8 @@ an out-of-memory error if allocation fails.
       oom
     );
 
-    const f = () => buffer.getMappedRange(0, 16);
-
-    let mapping: ArrayBuffer | undefined = undefined;
-    if (oom) {
-      // Smaller range inside a too-big mapping
-      t.shouldThrow('OperationError', () => {
-        mapping = f();
-        t.expect(mapping.byteLength === 16);
-      });
-    } else {
-      mapping = f();
-    }
+    const mapping = buffer.getMappedRange(0, 16);
+    t.expect(mapping.byteLength === 16);
 
     t.expectGPUError('validation', () => buffer.unmap(), oom);
     if (mapping !== undefined) {
