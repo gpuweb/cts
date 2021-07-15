@@ -124,9 +124,11 @@ g.test('large_draw')
   100ms.
 
   To validate that the drawn vertices actually made it though the pipeline on
-  each draw call, we render a 3x3 target with the position the first and last
-  vertices of the first and last instances in different respective corners, an
-  everything else positioned to cover only one of the intermediate fragments.
+  each draw call, we render a 3x3 target with the positions of the first and
+  last vertices of the first and last instances in different respective corners,
+  and everything else positioned to cover only one of the intermediate
+  fragments. If the output image is complete yellow, then we can reasonably
+  infer that all vertices were drawn.
 
   Params:
     - indexed= {true, false} - whether to test indexed or non-indexed draw calls
@@ -140,10 +142,15 @@ g.test('large_draw')
   .fn(async t => {
     const { indexed, indirect } = t.params;
 
-    const BYTES_PER_ROW = 256;
+    const kBytesPerRow = 256;
     const dst = t.device.createBuffer({
-      size: 3 * BYTES_PER_ROW,
+      size: 3 * kBytesPerRow,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    });
+
+    const paramsBuffer = t.device.createBuffer({
+      size: 8,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
 
     const indirectBuffer = t.device.createBuffer({
@@ -160,24 +167,19 @@ g.test('large_draw')
       t.device.queue.writeBuffer(indirectBuffer, 0, params, 0, 5);
     };
 
-    const MILLION = 1024 * 1024;
-    const MAX_INDICES = 16 * MILLION;
-    const indexBuffer = t.device.createBuffer({
-      size: MAX_INDICES * Uint32Array.BYTES_PER_ELEMENT,
-      usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
-    });
-    const indexData = new Uint32Array(MILLION);
-    for (let offset = 0; offset < MAX_INDICES; offset += MILLION) {
-      for (let k = 0; k < MILLION; ++k) {
-        indexData[k] = offset + k;
+    let indexBuffer: null | GPUBuffer = null;
+    if (indexed) {
+      const kMaxIndices = 16 * 1024 * 1024;
+      indexBuffer = t.device.createBuffer({
+        size: kMaxIndices * Uint32Array.BYTES_PER_ELEMENT,
+        usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
+        mappedAtCreation: true,
+      });
+      const indexData = new Uint32Array(indexBuffer.getMappedRange());
+      for (let i = 0; i < kMaxIndices; ++i) {
+        indexData[i] = i;
       }
-      t.device.queue.writeBuffer(
-        indexBuffer,
-        offset * Uint32Array.BYTES_PER_ELEMENT,
-        indexData,
-        0,
-        MILLION
-      );
+      indexBuffer.unmap();
     }
 
     const colorAttachment = t.device.createTexture({
@@ -187,64 +189,85 @@ g.test('large_draw')
     });
     const colorAttachmentView = colorAttachment.createView();
 
-    const runPipeline = async (numInstances: number, numVertices: number) => {
-      const pipeline = t.device.createRenderPipeline({
-        vertex: {
-          module: t.device.createShaderModule({
-            code: `
-            struct Output {
-              [[builtin(position)]] position: vec4<f32>;
-              [[location(0)]] color: vec4<f32>;
-            };
+    const bgLayout = t.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.VERTEX,
+          buffer: {},
+        },
+      ],
+    });
 
-            fn selectValue(index: u32, maxIndex: u32) -> f32 {
-              let highOrMid = select(1.0, 0.5, index == maxIndex - 1u);
-              return select(0.0, highOrMid, index == 0u);
-            }
+    const bindGroup = t.device.createBindGroup({
+      layout: bgLayout,
+      entries: [
+        {
+          binding: 0,
+          resource: { buffer: paramsBuffer },
+        },
+      ],
+    });
 
-            [[stage(vertex)]] fn main(
-                [[builtin(vertex_index)]] v: u32,
-                [[builtin(instance_index)]] i: u32)
-                -> Output {
-              let r = selectValue(v, ${numVertices}u);
-              let b = selectValue(i, ${numInstances}u);
-              let x = (r * 4.0 - 2.0) / 3.0;
-              let y = (b * 4.0 - 2.0) / -3.0;
-              return Output(vec4<f32>(x, y, 0.0, 1.0),
-                            vec4<f32>(r, 0.0, b, 1.0));
+    const pipeline = t.device.createRenderPipeline({
+      layout: t.device.createPipelineLayout({ bindGroupLayouts: [bgLayout] }),
+
+      vertex: {
+        module: t.device.createShaderModule({
+          code: `
+          [[block]] struct Params {
+            numVertices: u32;
+            numInstances: u32;
+          };
+
+          fn selectValue(index: u32, maxIndex: u32) -> f32 {
+            let highOrMid = select(2.0 / 3.0, 0.0, index == maxIndex - 1u);
+            return select(-2.0 / 3.0, highOrMid, index == 0u);
+          }
+
+          [[group(0), binding(0)]] var<uniform> params: Params;
+
+          [[stage(vertex)]] fn main(
+              [[builtin(vertex_index)]] v: u32,
+              [[builtin(instance_index)]] i: u32)
+              -> [[builtin(position)]] vec4<f32> {
+            let x = selectValue(v, params.numVertices);
+            let y = -selectValue(i, params.numInstances);
+            return vec4<f32>(x, y, 0.0, 1.0);
+          }
+          `,
+        }),
+        entryPoint: 'main',
+      },
+      fragment: {
+        module: t.device.createShaderModule({
+          code: `
+            [[stage(fragment)]] fn main() -> [[location(0)]] vec4<f32> {
+              return vec4<f32>(1.0, 1.0, 0.0, 1.0);
             }
             `,
-          }),
-          entryPoint: 'main',
-        },
-        fragment: {
-          module: t.device.createShaderModule({
-            code: `
-              [[stage(fragment)]] fn main([[location(0)]] color: vec4<f32>)
-                  -> [[location(0)]] vec4<f32> {
-                return color;
-              }
-              `,
-          }),
-          entryPoint: 'main',
-          targets: [{ format: 'rgba8unorm' }],
-        },
-        primitive: { topology: 'point-list' },
-      });
+        }),
+        entryPoint: 'main',
+        targets: [{ format: 'rgba8unorm' }],
+      },
+      primitive: { topology: 'point-list' },
+    });
 
+    const runPipeline = async (numVertices: number, numInstances: number) => {
       const encoder = t.device.createCommandEncoder();
       const pass = encoder.beginRenderPass({
         colorAttachments: [
           {
             view: colorAttachmentView,
             storeOp: 'store',
-            loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+            loadValue: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
           },
         ],
       });
 
       pass.setPipeline(pipeline);
-      if (indexed) {
+      pass.setBindGroup(0, bindGroup);
+      if (indexBuffer !== null) {
         pass.setIndexBuffer(indexBuffer, 'uint32');
       }
 
@@ -265,24 +288,22 @@ g.test('large_draw')
       pass.endPass();
       encoder.copyTextureToBuffer(
         { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-        { buffer: dst, bytesPerRow: BYTES_PER_ROW },
+        { buffer: dst, bytesPerRow: kBytesPerRow },
         { width: 3, height: 3, depthOrArrayLayers: 1 }
       );
+
+      const params = new Uint32Array([numVertices, numInstances]);
+      t.device.queue.writeBuffer(paramsBuffer, 0, params, 0, 2);
       t.device.queue.submit([encoder.finish()]);
 
-      // Red should go 0, 127, 255 from left to right. Blue should to the same
-      // from top to bottom.
-      const expectedRows = [
-        [0x00, 0x00, 0x00, 0xff, 0x7f, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0xff],
-        [0x00, 0x00, 0x7f, 0xff, 0x7f, 0x00, 0x7f, 0xff, 0xff, 0x00, 0x7f, 0xff],
-        [0x00, 0x00, 0xff, 0xff, 0x7f, 0x00, 0xff, 0xff, 0xff, 0x00, 0xff, 0xff],
-      ];
+      const yellow = [0xff, 0xff, 0x00, 0xff];
+      const allYellow = new Uint8Array([...yellow, ...yellow, ...yellow]);
       for (const row of [0, 1, 2]) {
-        t.expectGPUBufferValuesPassCheck(
-          dst,
-          data => checkElementsEqual(data, new Uint8Array(expectedRows[row])),
-          { srcByteOffset: row * 256, type: Uint8Array, typedLength: 12 }
-        );
+        t.expectGPUBufferValuesPassCheck(dst, data => checkElementsEqual(data, allYellow), {
+          srcByteOffset: row * 256,
+          type: Uint8Array,
+          typedLength: 12,
+        });
       }
     };
 
@@ -291,7 +312,7 @@ g.test('large_draw')
     // supported vertex count for any iteration is 2**24 due to our choice of
     // index buffer size.
     const maxDurationMs = 100;
-    const counts: { numInstances: number; vertexCounts: number[] }[] = [
+    const counts = [
       {
         numInstances: 4,
         vertexCounts: [2 ** 10, 2 ** 16, 2 ** 18, 2 ** 20, 2 ** 22, 2 ** 24],
@@ -316,12 +337,16 @@ g.test('large_draw')
     for (const { numInstances, vertexCounts } of counts) {
       for (const numVertices of vertexCounts) {
         const start = now();
-        runPipeline(numInstances, numVertices);
+        runPipeline(numVertices, numInstances);
         await t.device.queue.onSubmittedWorkDone();
         const duration = now() - start;
         if (duration >= maxDurationMs) {
           break;
         }
       }
+    }
+
+    if (indexBuffer !== null) {
+      indexBuffer.destroy();
     }
   });
