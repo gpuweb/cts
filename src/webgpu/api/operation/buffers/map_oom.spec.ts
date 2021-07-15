@@ -61,7 +61,7 @@ g.test('mapAsync')
         buffer.getMappedRange();
       });
 
-      // Should be a validation error since the buffer is invalid.
+      // Should be a validation error since the buffer failed to be mapped.
       t.expectGPUError('validation', () => buffer.unmap());
     } else {
       await promise;
@@ -76,8 +76,8 @@ g.test('mappedAtCreation,full_getMappedRange')
   .desc(
     `Test creating a very large buffer mappedAtCreation buffer should produce
 an out-of-memory error if allocation fails.
-  - Because the buffer can be immediately mapped, getMappedRange throws an OperationError only because such a
-    large ArrayBuffer cannot be created.
+  - Because the buffer can be immediately mapped, getMappedRange throws an OperationError only
+    because such a large ArrayBuffer cannot be created.
   - unmap() should not throw.
   `
   )
@@ -99,14 +99,15 @@ an out-of-memory error if allocation fails.
 
     let mapping: ArrayBuffer | undefined = undefined;
     if (oom) {
-      // Note: It is always valid to get mapped ranges of a GPUBuffer that is mapped at creation, even if it is invalid,
-      // because the Content timeline might not know it is invalid.
-      t.shouldThrow('OperationError', f);
+      // getMappedRange is normally valid on OOM buffers, but this one fails because the
+      // (default) range is too large to create the returned ArrayBuffer.
+      t.shouldThrow('RangeError', f);
     } else {
       mapping = f();
     }
 
-    t.expectGPUError('validation', () => buffer.unmap(), oom);
+    // Should be valid because buffer is mapped, regardless of OOM.
+    buffer.unmap();
     if (mapping !== undefined) {
       t.expect(mapping.byteLength === 0, 'Mapping should be detached');
     }
@@ -134,9 +135,13 @@ an out-of-memory error if allocation fails.
       oom
     );
 
+    // Note: It is always valid to get mapped ranges of a GPUBuffer that is mapped at creation,
+    // even if it is invalid, because the Content timeline might not know it is invalid.
+    // Should be valid because mappedAtCreation was set, regardless of OOM.
     const mapping = buffer.getMappedRange(0, 16);
     t.expect(mapping.byteLength === 16);
 
-    t.expectGPUError('validation', () => buffer.unmap(), oom);
+    // Should be valid because buffer is mapped, regardless of OOM.
+    buffer.unmap();
     t.expect(mapping.byteLength === 0, 'Mapping should be detached');
   });
