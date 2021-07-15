@@ -11,6 +11,11 @@ Add informal notes here on possible stress tests.
     memory in ~64MB chunks until OOM.
     - Fill with arbitrary data
     - If mappable: then, once max is reached, try to mapAsync all of them.
+- Test buffer mapping conditions around real-VRAM-OOM (as opposed to shmem OOM):
+  - while(!oom) { allocate 512MB (non-mappable) }
+  - Try to allocate 64MB to fill a little extra space (ignore OOM if it happens).
+  - Try to allocate 512MB with `mappedAtCreation:true`, expect this to OOM (theoretically this should be VRAM OOM and not shmem OOM).
+  - Test getMappedRange of a small range, it should still succeed in returning a (dummy) range.
 - Allocating and {dropping, destroying} ~64MB {{unmappable, mapAtCreation, mappable} buffers, textures} for a while.
     - Fill with arbitrary data
 - Creating a huge number of ShaderModules/RenderPipelines/ComputePipelines.
