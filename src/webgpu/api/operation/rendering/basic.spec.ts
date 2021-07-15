@@ -127,7 +127,7 @@ g.test('large_draw')
   each draw call, we render a 3x3 target with the positions of the first and
   last vertices of the first and last instances in different respective corners,
   and everything else positioned to cover only one of the intermediate
-  fragments. If the output image is complete yellow, then we can reasonably
+  fragments. If the output image is completely yellow, then we can reasonably
   infer that all vertices were drawn.
 
   Params:
