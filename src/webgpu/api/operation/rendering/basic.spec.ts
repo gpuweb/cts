@@ -288,7 +288,7 @@ g.test('large_draw')
 
     // If any iteration takes longer than this, we stop incrementing along that
     // branch and move on to the next instance count. Note that the max
-    // supported vertex count for any iteration is 2**25 due to our choice of
+    // supported vertex count for any iteration is 2**24 due to our choice of
     // index buffer size.
     const maxDurationMs = 100;
     const counts: { numInstances: number; vertexCounts: number[] }[] = [
