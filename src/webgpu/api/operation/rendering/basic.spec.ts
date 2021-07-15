@@ -314,15 +314,12 @@ g.test('large_draw')
       },
     ];
     for (const { numInstances, vertexCounts } of counts) {
-      let lastRunDuration = null;
       for (const numVertices of vertexCounts) {
         const start = now();
         runPipeline(numInstances, numVertices);
         await t.device.queue.onSubmittedWorkDone();
-        lastRunDuration = now() - start;
-        if (lastRunDuration >= maxDurationMs) {
-          // If this vertex count took too long to draw, move on to the next
-          // instance count.
+        const duration = now() - start;
+        if (duration >= maxDurationMs) {
           break;
         }
       }
