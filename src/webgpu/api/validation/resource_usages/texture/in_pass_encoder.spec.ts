@@ -805,6 +805,29 @@ g.test('bindings_in_bundle')
       .beginSubcases()
       .combine('binding0InBundle', [false, true])
       .combine('binding1InBundle', [false, true])
+      .expandWithParams(function* ({ type0, type1 }) {
+        const usageForType = (type: typeof type0 | typeof type1) => {
+          switch (type) {
+            case 'multisampled-texture':
+            case 'sampled-texture':
+              return 'SAMPLED' as const;
+            case 'readonly-storage-texture':
+            case 'writeonly-storage-texture':
+              return 'STORAGE' as const;
+            case 'render-target':
+              return 'RENDER_ATTACHMENT' as const;
+          }
+        };
+
+        yield {
+          _usage0: usageForType(type0),
+          _usage1: usageForType(type1),
+          _sampleCount:
+            type0 === 'multisampled-texture' || type1 === 'multisampled-texture'
+              ? (4 as const)
+              : undefined,
+        };
+      })
       .unless(
         p =>
           // We can't set 'render-target' in bundle, so we need to exclude it from bundle.
@@ -812,17 +835,32 @@ g.test('bindings_in_bundle')
           // we have far more comprehensive test cases for that situation in this file.
           (p.binding0InBundle && p.type0 === 'render-target') ||
           (p.binding1InBundle && p.type1 === 'render-target') ||
-          (!p.binding0InBundle && !p.binding1InBundle)
+          (!p.binding0InBundle && !p.binding1InBundle) ||
+          // Storage textures can't be multisampled.
+          (p._sampleCount !== undefined &&
+            p._sampleCount > 1 &&
+            (p._usage0 === 'STORAGE' || p._usage1 === 'STORAGE')) ||
+          // If both are sampled, we create two views of the same texture, so both must be multisampled.
+          (p.type0 === 'multisampled-texture' && p.type1 === 'sampled-texture') ||
+          (p.type0 === 'sampled-texture' && p.type1 === 'multisampled-texture')
       )
   )
   .fn(async t => {
-    const { binding0InBundle, binding1InBundle, type0, type1 } = t.params;
+    const {
+      binding0InBundle,
+      binding1InBundle,
+      type0,
+      type1,
+      _usage0,
+      _usage1,
+      _sampleCount,
+    } = t.params;
 
     // Two bindings are attached to the same texture view.
     const view = t
       .createTexture({
-        usage:
-          GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.STORAGE | GPUTextureUsage.SAMPLED,
+        usage: GPUTextureUsage[_usage0] | GPUTextureUsage[_usage1],
+        sampleCount: _sampleCount,
       })
       .createView();
 
@@ -863,11 +901,19 @@ g.test('bindings_in_bundle')
 
     pass.endPass();
 
+    const isReadOnly = (t: typeof type0 | typeof type1) => {
+      switch (t) {
+        case 'sampled-texture':
+        case 'multisampled-texture':
+        case 'readonly-storage-texture':
+          return true;
+        default:
+          return false;
+      }
+    };
+
     let success = false;
-    if (
-      (type0 === 'sampled-texture' || type0 === 'readonly-storage-texture') &&
-      (type1 === 'sampled-texture' || type1 === 'readonly-storage-texture')
-    ) {
+    if (isReadOnly(type0) && isReadOnly(type1)) {
       success = true;
     }
 
