@@ -907,24 +907,22 @@ g.test('unused_bindings_in_pipeline')
     const wgslVertex = `[[stage(vertex)]] fn main() -> [[builtin(position)]] vec4<f32> {
   return vec4<f32>();
 }`;
-    // TODO: revisit the shader code once 'image' can be supported in wgsl.
     const wgslFragment = pp`
       ${pp._if(useBindGroup0)}
-      [[group(0), binding(0)]] var<image> image0 : texture_storage_2d<rgba8unorm, read>;
+      [[group(0), binding(0)]] var image0 : texture_storage_2d<rgba8unorm, read>;
       ${pp._endif}
       ${pp._if(useBindGroup1)}
-      [[group(1), binding(0)]] var<image> image1 : texture_storage_2d<rgba8unorm, read>;
+      [[group(1), binding(0)]] var image1 : texture_storage_2d<rgba8unorm, read>;
       ${pp._endif}
       [[stage(fragment)]] fn main() {}
     `;
 
-    // TODO: revisit the shader code once 'image' can be supported in wgsl.
     const wgslCompute = pp`
       ${pp._if(useBindGroup0)}
-      [[group(0), binding(0)]] var<image> image0 : texture_storage_2d<rgba8unorm, read>;
+      [[group(0), binding(0)]] var image0 : texture_storage_2d<rgba8unorm, read>;
       ${pp._endif}
       ${pp._if(useBindGroup1)}
-      [[group(1), binding(0)]] var<image> image1 : texture_storage_2d<rgba8unorm, read>;
+      [[group(1), binding(0)]] var image1 : texture_storage_2d<rgba8unorm, read>;
       ${pp._endif}
       [[stage(compute), workgroup_size(1)]] fn main() {}
     `;
