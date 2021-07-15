@@ -172,7 +172,7 @@ g.test('Using_defaults_validates_the_same_as_setting_values_for_more_than_1_arra
     { format: 'rgba8unorm', _success: true },
     { format: 'r8unorm', _success: false },
     { dimension: '2d-array', _success: true },
-    { dimension: '2d', _success: false },
+    { dimension: '2d', _success: true }, // setting dimension to 2D means that arrayLayerCount will default to 1.
     { arrayLayerCount: ARRAY_LAYER_COUNT_2D, _success: false }, // setting array layers to non-0 means the dimensionality will default to 2D so by itself it causes an error.
     { arrayLayerCount: ARRAY_LAYER_COUNT_2D, dimension: '2d-array', _success: true },
     {
