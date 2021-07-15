@@ -61,10 +61,8 @@ g.test('mapAsync')
         buffer.getMappedRange();
       });
 
-      // Should throw an OperationError because the buffer is already unmapped.
-      t.shouldThrow('OperationError', () => {
-        buffer.unmap();
-      });
+      // Should be a validation error since the buffer is invalid.
+      t.expectGPUError('validation', () => buffer.unmap());
     } else {
       await promise;
       const arraybuffer = buffer.getMappedRange();
@@ -78,7 +76,7 @@ g.test('mappedAtCreation,full_getMappedRange')
   .desc(
     `Test creating a very large buffer mappedAtCreation buffer should produce
 an out-of-memory error if allocation fails.
-  - Because the buffer can be immediately mapped, getMappedRange does not throw an OperationError. It throws a RangeError because such a
+  - Because the buffer can be immediately mapped, getMappedRange throws an OperationError only because such a
     large ArrayBuffer cannot be created.
   - unmap() should not throw.
   `
@@ -101,11 +99,14 @@ an out-of-memory error if allocation fails.
 
     let mapping: ArrayBuffer | undefined = undefined;
     if (oom) {
-      t.shouldThrow('RangeError', f);
+      // Note: It is always valid to get mapped ranges of a GPUBuffer that is mapped at creation, even if it is invalid,
+      // because the Content timeline might not know it is invalid.
+      t.shouldThrow('OperationError', f);
     } else {
       mapping = f();
     }
-    buffer.unmap();
+
+    t.expectGPUError('validation', () => buffer.unmap(), oom);
     if (mapping !== undefined) {
       t.expect(mapping.byteLength === 0, 'Mapping should be detached');
     }
@@ -125,15 +126,17 @@ an out-of-memory error if allocation fails.
       .combine('usage', kBufferUsages)
   )
   .fn(async t => {
-    const { usage, size } = t.params;
+    const { oom, usage, size } = t.params;
 
-    const buffer = t.expectGPUError('out-of-memory', () =>
-      t.device.createBuffer({ mappedAtCreation: true, size, usage })
+    const buffer = t.expectGPUError(
+      'out-of-memory',
+      () => t.device.createBuffer({ mappedAtCreation: true, size, usage }),
+      oom
     );
 
-    // Smaller range inside a too-big mapping
     const mapping = buffer.getMappedRange(0, 16);
     t.expect(mapping.byteLength === 16);
-    buffer.unmap();
+
+    t.expectGPUError('validation', () => buffer.unmap(), oom);
     t.expect(mapping.byteLength === 0, 'Mapping should be detached');
   });
