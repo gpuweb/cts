@@ -70,6 +70,8 @@ g.test('dispatch_sizes')
   Workgroup sizes:
     - valid: { zero, one, just under limit }
     - invalid: { just over limit, way over limit }
+
+  TODO: Verify that the invalid cases don't execute any invocations at all.
 `
   )
   .params(u =>
