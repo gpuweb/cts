@@ -734,7 +734,6 @@ g.test('replaced_binding')
       .combine('callDrawOrDispatch', [false, true])
       .combine('entry', [
         { texture: {} },
-        { texture: { multisampled: true } },
         { storageTexture: { access: 'read-only', format: 'rgba8unorm' } },
         { storageTexture: { access: 'write-only', format: 'rgba8unorm' } },
       ] as const)
