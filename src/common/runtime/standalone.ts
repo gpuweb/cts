@@ -29,18 +29,18 @@ const worker = optionEnabled('worker') ? new TestWorker(debug) : undefined;
 const resultsVis = document.getElementById('resultsVis')!;
 
 interface SubtreeResult {
-  pass: number,
-  fail: number,
-  skip: number,
-  total: number,
-  timems: number,
-};
-
-function emptySubtreeResult() {
-  return { pass: 0, fail: 0, skip: 0, total: 0, timems: 0 }
+  pass: number;
+  fail: number;
+  skip: number;
+  total: number;
+  timems: number;
 }
 
-function mergeSubtreeResults(...results : SubtreeResult[]) {
+function emptySubtreeResult() {
+  return { pass: 0, fail: 0, skip: 0, total: 0, timems: 0 };
+}
+
+function mergeSubtreeResults(...results: SubtreeResult[]) {
   const target = emptySubtreeResult();
   for (const result of results) {
     target.pass += result.pass;
@@ -101,7 +101,7 @@ function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
   const runSubtree = async () => {
     if (clearRenderedResult) clearRenderedResult();
 
-    const result : SubtreeResult = emptySubtreeResult();
+    const result: SubtreeResult = emptySubtreeResult();
 
     haveSomeResults = true;
     const [rec, res] = logger.record(name);
@@ -116,11 +116,14 @@ function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
     result.timems = caseResult.timems;
     switch (caseResult.status) {
       case 'pass':
-        result.pass++; break;
+        result.pass++;
+        break;
       case 'fail':
-        result.fail++; break;
+        result.fail++;
+        break;
       case 'skip':
-        result.fail++; break;
+        result.fail++;
+        break;
     }
 
     if (updateRenderedResult) updateRenderedResult();
@@ -178,7 +181,7 @@ function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
 }
 
 function makeSubtreeHTML(n: TestSubtree, parentLevel: TestQueryLevel): VisualizedSubtree {
-  let subtreeResult : SubtreeResult = emptySubtreeResult();
+  let subtreeResult: SubtreeResult = emptySubtreeResult();
   // Becomes set once the DOM for this case exists.
   let clearRenderedResult: (() => void) | undefined;
   let updateRenderedResult: (() => void) | undefined;
@@ -223,7 +226,7 @@ function makeSubtreeHTML(n: TestSubtree, parentLevel: TestQueryLevel): Visualize
     updateRenderedResult = () => {
       let status = '';
       if (subtreeResult.pass > 0) {
-        status += 'pass'
+        status += 'pass';
       }
       if (subtreeResult.fail > 0) {
         status += 'fail';
@@ -250,7 +253,7 @@ function makeSubtreeChildrenHTML(
   const childFns = Array.from(children, subtree => makeTreeNodeHTML(subtree, parentLevel));
 
   const runMySubtree = async () => {
-    const results : SubtreeResult[] = [];
+    const results: SubtreeResult[] = [];
     for (const { runSubtree } of childFns) {
       results.push(await runSubtree());
     }
