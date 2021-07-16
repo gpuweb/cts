@@ -94,10 +94,13 @@ function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
   let caseResult: LiveTestCaseResult | undefined;
 
   // Becomes set once the DOM for this case exists.
+  let clearRenderedResult: (() => void) | undefined;
   let updateRenderedResult: (() => void) | undefined;
 
   const name = t.query.toString();
   const runSubtree = async () => {
+    if (clearRenderedResult) clearRenderedResult();
+
     const result : SubtreeResult = emptySubtreeResult();
 
     haveSomeResults = true;
@@ -136,6 +139,12 @@ function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
     div.appendChild(casehead);
     div.appendChild(caselogs[0]);
 
+    clearRenderedResult = () => {
+      div.removeAttribute('data-status');
+      casetime.text('ms');
+      caselogs.empty();
+    };
+
     updateRenderedResult = () => {
       if (caseResult) {
         div.setAttribute('data-status', caseResult.status);
@@ -171,6 +180,7 @@ function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
 function makeSubtreeHTML(n: TestSubtree, parentLevel: TestQueryLevel): VisualizedSubtree {
   let subtreeResult : SubtreeResult = emptySubtreeResult();
   // Becomes set once the DOM for this case exists.
+  let clearRenderedResult: (() => void) | undefined;
   let updateRenderedResult: (() => void) | undefined;
 
   const { runSubtree, generateSubtreeHTML } = makeSubtreeChildrenHTML(
@@ -179,6 +189,7 @@ function makeSubtreeHTML(n: TestSubtree, parentLevel: TestQueryLevel): Visualize
   );
 
   const runMySubtree = async () => {
+    if (clearRenderedResult) clearRenderedResult();
     subtreeResult = await runSubtree();
     if (updateRenderedResult) updateRenderedResult();
     return subtreeResult;
@@ -204,6 +215,10 @@ function makeSubtreeHTML(n: TestSubtree, parentLevel: TestQueryLevel): Visualize
     div.classList.add(['', 'multifile', 'multitest', 'multicase'][n.query.level]);
     div.appendChild(header);
     div.appendChild(subtreeHTML[0]);
+
+    clearRenderedResult = () => {
+      div.removeAttribute('data-status');
+    };
 
     updateRenderedResult = () => {
       let status = '';
