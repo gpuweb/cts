@@ -134,6 +134,34 @@
         border-style: solid;
         border-color: #ddd;
       }
+      .subtree::before {
+        float: right;
+        margin-right: 3px;
+      }
+      .subtree[data-status='fail'] {
+        background: #fdd;
+      }
+      .subtree[data-status='fail']::before {
+        content: "⛔"
+      }
+      .subtree[data-status='pass'] {
+        background: #cfc;
+      }
+      .subtree[data-status='pass']::before {
+        content: "✔"
+      }
+      .subtree[data-status='passfail'] {
+        background: repeating-linear-gradient(
+          45deg,
+          #cfc,
+          #cfc 10px,
+          #fdd 10px,
+          #fdd 20px
+        );
+      }
+      .subtree[data-status='passfail']::before {
+        content: "✔/⛔"
+      }
       .subtree:hover {
         border-left-color: #000;
       }
