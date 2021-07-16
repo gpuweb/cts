@@ -5,6 +5,7 @@ Does **not** test usage scopes (resource_usages/) or programmable pass stuff (pr
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { DefaultLimits } from '../../../../constants.js';
 import { ValidationTest } from '../../validation_test.js';
 
 class F extends ValidationTest {
@@ -60,35 +61,55 @@ setPipeline should generate an error iff using an 'invalid' pipeline.
     }, t.params.state === 'invalid');
   });
 
+const kMaxDispatch = DefaultLimits.maxComputePerDimensionDispatchSize;
 g.test('dispatch_sizes')
   .desc(
-    `
-Test 'direct' and 'indirect' dispatch with various sizes.
-  - workgroup sizes:
-    - valid, {[0, 0, 0], [1, 1, 1]}
-    - invalid, TODO: workSizes {x,y,z} just under and above limit, once limit is established.
+    `Test 'direct' and 'indirect' dispatch with various sizes.
+
+  Only direct dispatches can produce validation errors.
+  Workgroup sizes:
+    - valid: { zero, one, just under limit }
+    - invalid: { just over limit, way over limit }
+
+  TODO: Verify that the invalid cases don't execute any invocations at all.
 `
   )
   .params(u =>
     u
       .combine('dispatchType', ['direct', 'indirect'] as const)
+      .combine('largeDimValue', [0, 1, kMaxDispatch, kMaxDispatch + 1, 0x7fff_ffff, 0xffff_ffff])
       .beginSubcases()
-      .combine('workSizes', [
-        [0, 0, 0],
-        [1, 1, 1],
-      ] as const)
+      .combine('largeDimIndex', [0, 1, 2] as const)
+      .combine('smallDimValue', [0, 1])
   )
   .fn(t => {
+    const { dispatchType, largeDimIndex, smallDimValue, largeDimValue } = t.params;
+
     const pipeline = t.createNoOpComputePipeline();
-    const [x, y, z] = t.params.workSizes;
+
+    const workSizes = [smallDimValue, smallDimValue, smallDimValue];
+    workSizes[largeDimIndex] = largeDimValue;
+
     const { encoder, finish } = t.createEncoder('compute pass');
     encoder.setPipeline(pipeline);
-    if (t.params.dispatchType === 'direct') {
+    if (dispatchType === 'direct') {
+      const [x, y, z] = workSizes;
       encoder.dispatch(x, y, z);
-    } else if (t.params.dispatchType === 'indirect') {
-      encoder.dispatchIndirect(t.createIndirectBuffer('valid', new Uint32Array([x, y, z])), 0);
+    } else if (dispatchType === 'indirect') {
+      encoder.dispatchIndirect(t.createIndirectBuffer('valid', new Uint32Array(workSizes)), 0);
     }
-    t.queue.submit([finish()]);
+
+    const shouldError =
+      dispatchType === 'direct' &&
+      (workSizes[0] > kMaxDispatch || workSizes[1] > kMaxDispatch || workSizes[2] > kMaxDispatch);
+
+    if (shouldError) {
+      t.expectValidationError(() => {
+        finish();
+      });
+    } else {
+      t.queue.submit([finish()]);
+    }
   });
 
 const kBufferData = new Uint32Array(6).fill(1);

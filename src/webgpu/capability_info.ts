@@ -9,6 +9,8 @@ import { assert, unreachable } from '../common/util/util.js';
 
 import { GPUConst } from './constants.js';
 
+// Base device limits can be found in constants.ts.
+
 // Queries
 
 /** Maximum number of queries in GPUQuerySet, by spec. */
