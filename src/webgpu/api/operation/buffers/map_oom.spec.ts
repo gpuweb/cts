@@ -13,7 +13,7 @@ const oomAndSizeParams = kUnitCaseParamsBuilder
     return oom
       ? [
           kMaxSafeMultipleOf8,
-          0x2000000000, // 128 GB
+          0x20_0000_0000, // 128 GB
         ]
       : [16];
   });
