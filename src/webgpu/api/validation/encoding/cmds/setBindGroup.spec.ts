@@ -312,15 +312,22 @@ g.test('u32array_start_and_length')
     });
 
     const { encoder, finish } = t.createEncoder('render pass');
-    encoder.setBindGroup(
-      0,
-      bindGroup,
-      new Uint32Array(offsets),
-      dynamicOffsetsDataStart,
-      dynamicOffsetsDataLength
-    );
 
-    t.expectValidationError(() => {
-      finish();
-    }, !_success);
+    const doSetBindGroup = () => {
+      encoder.setBindGroup(
+        0,
+        bindGroup,
+        new Uint32Array(offsets),
+        dynamicOffsetsDataStart,
+        dynamicOffsetsDataLength
+      );
+    };
+
+    if (_success) {
+      doSetBindGroup();
+    } else {
+      t.shouldThrow('RangeError', doSetBindGroup);
+    }
+
+    finish();
   });
