@@ -167,7 +167,12 @@ class DrawCall {
     if (partialLastNumber) {
       size -= 3;
     }
-    this.device.queue.writeBuffer(vertexBuffer, 0, vertexArray, size);
+    this.device.queue.writeBuffer(
+      vertexBuffer,
+      0,
+      vertexArray,
+      size / vertexArray.BYTES_PER_ELEMENT
+    );
     return vertexBuffer;
   }
 
@@ -227,22 +232,22 @@ interface VertexInfo {
 }
 
 const typeInfoMap: { [k: string]: VertexInfo } = {
-  float: {
+  float32: {
     wgslType: 'f32',
     size: 4,
     validationFunc: 'return valid(v);',
   },
-  float2: {
+  float32x2: {
     wgslType: 'vec2<f32>',
     size: 8,
     validationFunc: 'return valid(v.x) && valid(v.y);',
   },
-  float3: {
+  float32x3: {
     wgslType: 'vec3<f32>',
     size: 12,
     validationFunc: 'return valid(v.x) && valid(v.y) && valid(v.z);',
   },
-  float4: {
+  float32x4: {
     wgslType: 'vec4<f32>',
     size: 16,
     validationFunc: `return valid(v.x) && valid(v.y) && valid(v.z) && valid(v.w) ||
