@@ -11,11 +11,15 @@ Add informal notes here on possible stress tests.
     memory in ~64MB chunks until OOM.
     - Fill with arbitrary data
     - If mappable: then, once max is reached, try to mapAsync all of them.
-- Test buffer mapping conditions around real-VRAM-OOM (as opposed to shmem OOM):
-  - while(!oom) { allocate 512MB (non-mappable) }
-  - Try to allocate 64MB to fill a little extra space (ignore OOM if it happens).
-  - Try to allocate 512MB with `mappedAtCreation:true`, expect this to OOM (theoretically this should be VRAM OOM and not shmem OOM).
+- Test buffer mapping conditions around real-VRAM-OOM (as opposed to shmem OOM).
+  See "mappedAtCreation,smaller_getMappedRange".
+  - exhaustVramBelow512MiBFree()
+  - Try to allocate 512MiB with `mappedAtCreation:true`, expect this to OOM (theoretically this should be VRAM OOM and not shmem OOM).
   - Test getMappedRange of a small range, it should still succeed in returning a (dummy) range.
+- Test that when there are validation errors and VRAM OOM in the same call, validation takes
+  precedent (same as "createBuffer_invalid_and_oom", but ensure the OOM is VRAM OOM and not shmem OOM).
+  - exhaustVramBelow512MiBFree()
+  - Run the same tests in createBuffer_invalid_and_oom, except with only a 512MiB allocation.
 - Allocating and {dropping, destroying} ~64MB {{unmappable, mapAtCreation, mappable} buffers, textures} for a while.
     - Fill with arbitrary data
 - Creating a huge number of ShaderModules/RenderPipelines/ComputePipelines.
@@ -23,7 +27,12 @@ Add informal notes here on possible stress tests.
 - Creating huge numbers of other objects.
 - Issuing {draw, dispatch} calls with huge counts.
 - Issuing {draw, dispatch} calls with very slow or infinite-looping shaders.
-- {Render,compute} passes with ~millions of bind groups,
+- {Render,compute} passes with ~millions of bind groups.
 - Huge amounts of bind group churn (creating many bind groups and switching between them).
+
+Helper "exhaustVramBelow512MiBFree":
+  - while(!oom) { allocate 512MiB (non-mappable) }
+  - Try to allocate 64MiB to fill a little extra space (ignore OOM if it happens).
+  - (Track all of those resources to destroy them at the end of the test.)
 
 TODO: Look at dEQP (OpenGL ES and Vulkan) and WebGL for inspiration here.
