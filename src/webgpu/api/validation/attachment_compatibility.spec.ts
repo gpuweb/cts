@@ -54,9 +54,9 @@ class F extends ValidationTest {
     return {
       view: this.createAttachmentTextureView(format, sampleCount),
       depthLoadValue: 0,
-      depthStoreOp: 'clear',
+      depthStoreOp: 'discard',
       stencilLoadValue: 1,
-      stencilStoreOp: 'clear',
+      stencilStoreOp: 'discard',
     };
   }
 

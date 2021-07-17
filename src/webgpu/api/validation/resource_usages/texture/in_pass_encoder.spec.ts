@@ -621,9 +621,9 @@ g.test('subresources_and_binding_types_combination_for_aspect')
               ? undefined
               : {
                   view: view1,
-                  depthStoreOp: 'clear',
+                  depthStoreOp: 'discard',
                   depthLoadValue: 'load',
-                  stencilStoreOp: 'clear',
+                  stencilStoreOp: 'discard',
                   stencilLoadValue: 'load',
                 },
         });
