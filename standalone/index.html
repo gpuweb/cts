@@ -138,20 +138,17 @@
         float: right;
         margin-right: 3px;
       }
-      .subtree[data-status='fail'] {
-        background: #fdd;
+      .subtree[data-status='fail'], .subtree[data-status='passfail'] {
+        background: linear-gradient(90deg, #fdd, #fdd 90px, #fff 115px);
       }
       .subtree[data-status='fail']::before {
         content: "⛔"
       }
       .subtree[data-status='pass'] {
-        background: #cfc;
+        background: linear-gradient(90deg, #cfc, #cfc 90px, #fff 115px);
       }
       .subtree[data-status='pass']::before {
         content: "✔"
-      }
-      .subtree[data-status='passfail'] {
-        background: #fef;
       }
       .subtree[data-status='passfail']::before {
         content: "✔/⛔"
