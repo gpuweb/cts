@@ -221,8 +221,8 @@ g.test('large_draw')
           };
 
           fn selectValue(index: u32, maxIndex: u32) -> f32 {
-            let highOrMid = select(2.0 / 3.0, 0.0, index == maxIndex - 1u);
-            return select(-2.0 / 3.0, highOrMid, index == 0u);
+            let highOrMid = select(0.0, 2.0 / 3.0, index == maxIndex - 1u);
+            return select(highOrMid, -2.0 / 3.0, index == 0u);
           }
 
           [[group(0), binding(0)]] var<uniform> params: Params;
