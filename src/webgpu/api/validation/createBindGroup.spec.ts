@@ -295,8 +295,7 @@ g.test('buffer_offset_and_size_for_bind_groups_match')
   .desc(
     `
     Test that a buffer binding's [offset, offset + size) must be contained in the BindGroup entry's buffer.
-    - Test for various offsets and sizes
-    - TODO(#234): disallow zero-sized bindings`
+    - Test for various offsets and sizes`
   )
   .paramsSubcasesOnly([
     { offset: 0, size: 512, _success: true }, // offset 0 is valid
@@ -309,10 +308,10 @@ g.test('buffer_offset_and_size_for_bind_groups_match')
     { offset: 256 * 3, size: undefined, _success: true },
 
     // Zero-sized bindings
-    { offset: 0, size: 0, _success: true },
-    { offset: 256, size: 0, _success: true },
-    { offset: 1024, size: 0, _success: true },
-    { offset: 1024, size: undefined, _success: true },
+    { offset: 0, size: 0, _success: false },
+    { offset: 256, size: 0, _success: false },
+    { offset: 1024, size: 0, _success: false },
+    { offset: 1024, size: undefined, _success: false },
 
     // Unaligned buffer offset is invalid
     { offset: 1, size: 256, _success: false },
