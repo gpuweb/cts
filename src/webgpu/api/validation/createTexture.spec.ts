@@ -551,7 +551,8 @@ g.test('texture_size,3d_texture,uncompressed_format')
   )
   .fn(async t => {
     const { format, size } = t.params;
-    await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
+    const info = kTextureFormatInfo[format];
+    await t.selectDeviceOrSkipTestCase(info.feature);
 
     const descriptor: GPUTextureDescriptor = {
       size,
@@ -563,7 +564,9 @@ g.test('texture_size,3d_texture,uncompressed_format')
     const success =
       size[0] <= DefaultLimits.maxTextureDimension3D &&
       size[1] <= DefaultLimits.maxTextureDimension3D &&
-      size[2] <= DefaultLimits.maxTextureDimension3D;
+      size[2] <= DefaultLimits.maxTextureDimension3D &&
+      !info.depth &&
+      !info.stencil;
 
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);
