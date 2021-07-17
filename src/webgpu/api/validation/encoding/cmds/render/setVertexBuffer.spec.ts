@@ -34,12 +34,9 @@ Tests slot must be less than the maxVertexBuffers in device limits.
       usage: GPUBufferUsage.VERTEX,
     });
 
-    const { encoder, finish } = t.createEncoder(encoderType);
+    const { encoder, validateFinish } = t.createEncoder(encoderType);
     encoder.setVertexBuffer(slot, vertexBuffer);
-
-    t.expectValidationError(() => {
-      finish();
-    }, slot >= DefaultLimits.maxVertexBuffers);
+    validateFinish(slot < DefaultLimits.maxVertexBuffers);
   });
 
 g.test('vertex_buffer')
@@ -56,16 +53,9 @@ Tests vertex buffer must be valid.
       usage: GPUBufferUsage.VERTEX,
     });
 
-    const { encoder, finish } = t.createEncoder(encoderType);
+    const { encoder, validateFinishAndSubmitGivenState } = t.createEncoder(encoderType);
     encoder.setVertexBuffer(0, vertexBuffer);
-
-    t.expectValidationError(() => {
-      if (state === 'destroyed') {
-        t.queue.submit([finish()]);
-      } else {
-        finish();
-      }
-    }, state !== 'valid');
+    validateFinishAndSubmitGivenState(state);
   });
 
 g.test('vertex_buffer_usage')
@@ -88,12 +78,9 @@ Tests vertex buffer must have 'Vertex' usage.
       usage,
     });
 
-    const { encoder, finish } = t.createEncoder(encoderType);
+    const { encoder, validateFinish } = t.createEncoder(encoderType);
     encoder.setVertexBuffer(0, vertexBuffer);
-
-    t.expectValidationError(() => {
-      finish();
-    }, (usage | GPUConst.BufferUsage.VERTEX) !== usage);
+    validateFinish((usage & GPUBufferUsage.VERTEX) !== 0);
   });
 
 g.test('offset_alignment')
@@ -110,12 +97,9 @@ Tests offset must be a multiple of 4.
       usage: GPUBufferUsage.VERTEX,
     });
 
-    const { encoder, finish } = t.createEncoder(encoderType);
+    const { encoder, validateFinish: finish } = t.createEncoder(encoderType);
     encoder.setVertexBuffer(0, vertexBuffer, offset);
-
-    t.expectValidationError(() => {
-      finish();
-    }, offset % 4 !== 0);
+    finish(offset % 4 === 0);
   });
 
 g.test('offset_and_size_oob')
@@ -132,10 +116,7 @@ Tests offset and size cannot be larger than vertex buffer size.
       usage: GPUBufferUsage.VERTEX,
     });
 
-    const { encoder, finish } = t.createEncoder(encoderType);
+    const { encoder, validateFinish } = t.createEncoder(encoderType);
     encoder.setVertexBuffer(0, vertexBuffer, offset, size);
-
-    t.expectValidationError(() => {
-      finish();
-    }, !_valid);
+    validateFinish(_valid);
   });
