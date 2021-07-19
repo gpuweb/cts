@@ -134,6 +134,25 @@
         border-style: solid;
         border-color: #ddd;
       }
+      .subtree::before {
+        float: right;
+        margin-right: 3px;
+      }
+      .subtree[data-status='fail'], .subtree[data-status='passfail'] {
+        background: linear-gradient(90deg, #fdd, #fdd 16px, #fff 16px);
+      }
+      .subtree[data-status='fail']::before {
+        content: "⛔"
+      }
+      .subtree[data-status='pass'] {
+        background: linear-gradient(90deg, #cfc, #cfc 16px, #fff 16px);
+      }
+      .subtree[data-status='pass']::before {
+        content: "✔"
+      }
+      .subtree[data-status='passfail']::before {
+        content: "✔/⛔"
+      }
       .subtree:hover {
         border-left-color: #000;
       }
