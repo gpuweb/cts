@@ -494,7 +494,6 @@ struct VSOutputs {
       const formatInfo = kVertexFormatInfo[attrib.format];
 
       let testData = this.generateTestData(attrib.format);
-      // TODO this will not work for arrayStride 0
       testData = this.expandTestData(testData, maxCount, formatInfo.componentCount);
 
       return {
@@ -582,7 +581,7 @@ struct VSOutputs {
 
 export const g = makeTestGroup(VertexStateTest);
 
-g.test('vertexFormat_to_shaderFormat_conversion')
+g.test('vertex_format_to_shader_format_conversion')
   .desc(
     `Test that the raw data passed in vertex buffers is correctly converted to the input type in the shader. Test for:
   - all formats
@@ -617,7 +616,7 @@ g.test('vertexFormat_to_shaderFormat_conversion')
     ]);
   });
 
-g.test('setVertexBufferOffset_and_attributeOffset')
+g.test('setVertexBuffer_offset_and_attribute_offset')
   .desc(
     `Test that the vertex buffer offset and attribute offset in the vertex state are applied correctly. Test for:
   - all formats
@@ -666,7 +665,7 @@ g.test('setVertexBufferOffset_and_attributeOffset')
     ]);
   });
 
-g.test('nonZeroArrayStride_and_attributeOffset')
+g.test('non_zero_array_stride_and_attribute_offset')
   .desc(
     `Test that the array stride and attribute offset in the vertex state are applied correctly. Test for:
   - all formats
@@ -717,7 +716,7 @@ g.test('nonZeroArrayStride_and_attributeOffset')
     ]);
   });
 
-g.test('buffersWithVaryingStepMode')
+g.test('buffers_with_varying_step_mode')
   .desc(
     `Test buffers with varying step modes in the same vertex state.
   - Various combination of step modes`
@@ -748,7 +747,7 @@ g.test('buffersWithVaryingStepMode')
     t.runTest(state);
   });
 
-g.test('vertexBufferUsedMultipleTime_overlapped')
+g.test('vertex_buffer_used_multiple_times_overlapped')
   .desc(
     `Test using the same vertex buffer in for multiple "vertex buffers", with data from each buffer overlapping.
   - For each vertex format.
@@ -770,8 +769,11 @@ g.test('vertexBufferUsedMultipleTime_overlapped')
     // We need to align so the offset for non-0 setVertexBuffer don't fail validation.
     const alignedFormatByteSize = align(formatByteSize, 4);
 
-    // Create the data that will be in the vertex buffer. It is larger than kVertexCount because
-    // each vertex buffer will be offset by one whole vertexData (so essentially) from the previous one.
+    // In this test we want to test using the same vertex buffer for multiple different attributes.
+    // For example if vbCount is 3, we will create a vertex buffer containing the following data:
+    //    a0, a1, a2, a3, ..., a<baseDataVertexCount>
+    // We also create the expected data for the vertex fetching from that buffer so we can modify it
+    // below.
     const baseDataVertexCount = kVertexCount + vbCount - 1;
     const baseData = t.createTestAndPipelineData(
       [
@@ -789,8 +791,17 @@ g.test('vertexBufferUsedMultipleTime_overlapped')
     const vertexBuffer = t.createVertexBuffers(baseData, baseDataVertexCount, kInstanceCount)[0]
       .buffer;
 
-    // We're going to create a multi-vertex buffer vertex data from baseData by viewing
-    // `vbCount` ranges of `kVertexCount` vertices of the data each as their own buffer.
+    // We are going to bind the vertex buffer multiple times, each time at a different offset that's
+    // a multiple of the data size. So what should be fetched by the vertex shader is:
+    //    - attrib0: a0, a1, ..., a19
+    //    - attrib1: a1, a2, ..., a20
+    //    - attrib2: a2, a3, ..., a21
+    //    etc.
+    // We re-create the test data by:
+    //   1) creating multiple "vertex buffers" that all point at the GPUBuffer above but at
+    //      different offsets.
+    //   2) selecting what parts of the expectedData each attribute will see in the expectedData for
+    //      the full vertex buffer.
     const baseTestData = baseData[0].attributes[0];
     assert(baseTestData.testComponentCount === formatInfo.componentCount * baseDataVertexCount);
     const expectedDataBytesPerVertex = baseTestData.expectedData.byteLength / baseDataVertexCount;
@@ -835,7 +846,7 @@ g.test('vertexBufferUsedMultipleTime_overlapped')
     t.submitRenderPass(pipeline, vertexBuffers, expectedDataBG, kVertexCount, kInstanceCount);
   });
 
-g.test('vertexBufferUsedMultipleTime_interleaved')
+g.test('vertex_buffer_used_multiple_times_interleaved')
   .desc(
     `Test using the same vertex buffer in for multiple "vertex buffers", with data from each buffer interleaved.
   - For each vertex format.
@@ -859,6 +870,12 @@ g.test('vertexBufferUsedMultipleTime_interleaved')
 
     // Create data for a single vertex buffer with many attributes, that will be split between
     // many vertexbuffers set at different offsets.
+
+    // In this test we want to test using the same vertex buffer for multiple different attributes.
+    // For example if vbCount is 3, we will create a vertex buffer containing the following data:
+    //    a0, a0, a0, a1, a1, a1, ...
+    // To do that we create a single vertex buffer with `vbCount` attributes that all have the same
+    // format.
     const attribs: GPUVertexAttribute[] = [];
     for (let i = 0; i < vbCount; i++) {
       attribs.push({ format, offset: i * alignedFormatByteSize, shaderLocation: i });
@@ -878,7 +895,10 @@ g.test('vertexBufferUsedMultipleTime_interleaved')
     );
     const vertexBuffer = t.createVertexBuffers(baseData, kVertexCount, kInstanceCount)[0].buffer;
 
-    // Split the 1 vertex buffer with N attributes into N vertex buffers with one attribute.
+    // Then we recreate test data by:
+    //   1) creating multiple "vertex buffers" that all point at the GPUBuffer above but at
+    //      different offsets.
+    //   2) have multiple vertex buffer, each with one attributes that will expect a0, a1, ...
     const testData: VertexLayoutState<{}, TestData> = [];
     const vertexBuffers: VertexState<{ buffer: GPUBuffer; vbOffset: number }, {}> = [];
     for (let i = 0; i < vbCount; i++) {
@@ -901,7 +921,7 @@ g.test('vertexBufferUsedMultipleTime_interleaved')
     t.submitRenderPass(pipeline, vertexBuffers, expectedDataBG, kVertexCount, kInstanceCount);
   });
 
-g.test('maxBuffersAndAttribs')
+g.test('max_buffers_and_attribs')
   .desc(
     `Test a vertex state that loads as many attributes and buffers as possible.
   - For each format.
@@ -938,7 +958,7 @@ g.test('maxBuffersAndAttribs')
     t.runTest(state);
   });
 
-g.test('arrayStride0')
+g.test('array_stride_zero')
   .desc(
     `Test that arrayStride 0 correctly uses the same data for all vertex/instances, while another test vertex buffer with arrayStrude != 0 gets different data.
   - Test for all formats
@@ -970,7 +990,7 @@ g.test('arrayStride0')
     const { format, stepMode, offset } = t.params;
     const kCount = 10;
 
-    // Create the stride 0 part of the test, first be faking a single vertex being drawn and
+    // Create the stride 0 part of the test, first by faking a single vertex being drawn and
     // then expanding the data to cover kCount vertex / instances
     const stride0TestData = t.createTestAndPipelineData(
       [
@@ -1025,7 +1045,7 @@ g.test('arrayStride0')
     t.submitRenderPass(pipeline, vertexBuffers, expectedDataBG, kCount, kCount);
   });
 
-g.test('discontiguousLocationAndAttribs')
+g.test('discontiguous_location_and_attribs')
   .desc('Test that using far away slots / shaderLocations works as expected')
   .fn(t => {
     t.runTest([
@@ -1048,10 +1068,11 @@ g.test('discontiguousLocationAndAttribs')
     ]);
   });
 
-g.test('overlappingAttributes')
+g.test('overlapping_attributes')
   .desc(
     `Test that overlapping attributes in the same vertex buffer works
-   - Test for all formats`
+   - Test for all formats
+  TODO find a way to test maxAttribs. Right now this test is gated on kMaxUniformBuffersPerStage`
   )
   .paramsSubcasesOnly(u => u.combine('format', kVertexFormats))
   .fn(t => {
