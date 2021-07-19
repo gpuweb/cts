@@ -31,13 +31,14 @@ const resultsVis = document.getElementById('resultsVis')!;
 interface SubtreeResult {
   pass: number;
   fail: number;
+  warn: number;
   skip: number;
   total: number;
   timems: number;
 }
 
 function emptySubtreeResult() {
-  return { pass: 0, fail: 0, skip: 0, total: 0, timems: 0 };
+  return { pass: 0, fail: 0, warn: 0, skip: 0, total: 0, timems: 0 };
 }
 
 function mergeSubtreeResults(...results: SubtreeResult[]) {
@@ -45,6 +46,7 @@ function mergeSubtreeResults(...results: SubtreeResult[]) {
   for (const result of results) {
     target.pass += result.pass;
     target.fail += result.fail;
+    target.warn += result.warn;
     target.skip += result.skip;
     target.total += result.total;
     target.timems += result.timems;
@@ -113,7 +115,7 @@ function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
     }
 
     result.total++;
-    result.timems = caseResult.timems;
+    result.timems += caseResult.timems;
     switch (caseResult.status) {
       case 'pass':
         result.pass++;
@@ -122,7 +124,10 @@ function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
         result.fail++;
         break;
       case 'skip':
-        result.fail++;
+        result.skip++;
+        break;
+      case 'warn':
+        result.warn++;
         break;
     }
 
