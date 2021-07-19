@@ -9,6 +9,7 @@ import {
   kTextureDimensions,
   kTextureUsages,
   kUncompressedTextureFormats,
+  kRegularTextureFormats,
   textureDimensionAndFormatCompatible,
 } from '../../capability_info.js';
 import { DefaultLimits, GPUConst } from '../../constants.js';
@@ -531,11 +532,11 @@ g.test('texture_size,2d_texture,compressed_format')
 
 g.test('texture_size,3d_texture,uncompressed_format')
   .desc(
-    `Test that depth/stencil formats are invalid for 3D texture and regular formats have particualr textures size limits for 3D texture.`
+    `Test texture size requirement for 3D texture with uncompressed format. Note that depth/stencil formats are invalid for 3D textures, so we only test regular formats.`
   )
   .paramsSubcasesOnly(u =>
     u //
-      .combine('format', kUncompressedTextureFormats)
+      .combine('format', kRegularTextureFormats)
       .combine('size', [
         // Test the bound of width
         [DefaultLimits.maxTextureDimension3D - 1, 1, 1],
@@ -553,8 +554,7 @@ g.test('texture_size,3d_texture,uncompressed_format')
   )
   .fn(async t => {
     const { format, size } = t.params;
-    const info = kTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
+    await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 
     const descriptor: GPUTextureDescriptor = {
       size,
@@ -566,9 +566,7 @@ g.test('texture_size,3d_texture,uncompressed_format')
     const success =
       size[0] <= DefaultLimits.maxTextureDimension3D &&
       size[1] <= DefaultLimits.maxTextureDimension3D &&
-      size[2] <= DefaultLimits.maxTextureDimension3D &&
-      !info.depth &&
-      !info.stencil;
+      size[2] <= DefaultLimits.maxTextureDimension3D;
 
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);
