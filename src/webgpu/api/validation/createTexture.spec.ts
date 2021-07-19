@@ -530,7 +530,9 @@ g.test('texture_size,2d_texture,compressed_format')
   });
 
 g.test('texture_size,3d_texture,uncompressed_format')
-  .desc(`Test texture size requirement for 3D texture with uncompressed format.`)
+  .desc(
+    `Test that depth/stencil formats are invalid for 3D texture and regular formats have particualr textures size limits for 3D texture.`
+  )
   .paramsSubcasesOnly(u =>
     u //
       .combine('format', kUncompressedTextureFormats)
