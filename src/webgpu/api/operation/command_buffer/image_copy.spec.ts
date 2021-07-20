@@ -631,6 +631,7 @@ class ImageCopyTest extends GPUTest {
     }
   }
 
+  // TODO(crbug.com/dawn/868): Revisit this when consolidating texture helpers.
   async checkStencilTextureContent(
     stencilTexture: GPUTexture,
     stencilTextureSize: [number, number, number],
