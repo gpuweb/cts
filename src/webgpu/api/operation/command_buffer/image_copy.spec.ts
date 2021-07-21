@@ -653,7 +653,11 @@ class ImageCopyTest extends GPUTest {
     });
 
     const copySize = [textureSize[0] >> mipLevel, textureSize[1] >> mipLevel, textureSize[2]];
-    const initialData = this.generateData(initialDataSize, 0, initialDataOffset);
+    const initialData = this.generateData(
+      align(initialDataSize, kBufferSizeAlignment),
+      0,
+      initialDataOffset
+    );
     switch (uploadMethod) {
       case 'WriteTexture':
         this.queue.writeTexture(
@@ -669,14 +673,11 @@ class ImageCopyTest extends GPUTest {
         break;
       case 'CopyB2T':
         {
-          const stagingBuffer = this.device.createBuffer({
-            size: align(initialDataSize, kBufferSizeAlignment),
-            usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE,
-            mappedAtCreation: true,
-          });
-          const mapped = new Uint8Array(stagingBuffer.getMappedRange());
-          mapped.set(initialData);
-          stagingBuffer.unmap();
+          const stagingBuffer = makeBufferWithContents(
+            this.device,
+            initialData,
+            GPUBufferUsage.COPY_SRC
+          );
           const encoder = this.device.createCommandEncoder();
           encoder.copyBufferToTexture(
             { buffer: stagingBuffer, offset: initialDataOffset, bytesPerRow, rowsPerImage },
