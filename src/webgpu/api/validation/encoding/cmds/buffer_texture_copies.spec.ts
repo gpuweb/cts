@@ -24,11 +24,9 @@ class ImageCopyTest extends ValidationTest {
     copySize: GPUExtent3DStrict,
     isSuccess: boolean
   ): void {
-    const encoder = this.device.createCommandEncoder();
+    const { encoder, validateFinishAndSubmit } = this.createEncoder('non-pass');
     encoder.copyBufferToTexture(source, destination, copySize);
-    this.expectValidationError(() => {
-      this.device.queue.submit([encoder.finish()]);
-    }, !isSuccess);
+    validateFinishAndSubmit(isSuccess, true);
   }
 
   testCopyTextureToBuffer(
@@ -37,11 +35,9 @@ class ImageCopyTest extends ValidationTest {
     copySize: GPUExtent3DStrict,
     isSuccess: boolean
   ): void {
-    const encoder = this.device.createCommandEncoder();
+    const { encoder, validateFinishAndSubmit } = this.createEncoder('non-pass');
     encoder.copyTextureToBuffer(source, destination, copySize);
-    this.expectValidationError(() => {
-      this.device.queue.submit([encoder.finish()]);
-    }, !isSuccess);
+    validateFinishAndSubmit(isSuccess, true);
   }
 }
 

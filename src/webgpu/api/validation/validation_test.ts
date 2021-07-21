@@ -2,23 +2,9 @@ import { assert, unreachable } from '../../../common/util/util.js';
 import { BindableResource, kMaxQueryCount } from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 
-export const kRenderEncodeTypes = ['render pass', 'render bundle'] as const;
-export type RenderEncodeType = typeof kRenderEncodeTypes[number];
-export const kProgrammableEncoderTypes = ['compute pass', ...kRenderEncodeTypes] as const;
-export type ProgrammableEncoderType = typeof kProgrammableEncoderTypes[number];
-export const kEncoderTypes = ['non-pass', ...kProgrammableEncoderTypes] as const;
-export type EncoderType = typeof kEncoderTypes[number];
+import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js';
 
-export interface CommandBufferMaker<T extends EncoderType> {
-  // Look up the type of the encoder based on `T`. If `T` is a union, this will be too!
-  readonly encoder: {
-    'non-pass': GPUCommandEncoder;
-    'compute pass': GPUComputePassEncoder;
-    'render pass': GPURenderPassEncoder;
-    'render bundle': GPURenderBundleEncoder;
-  }[T];
-  finish(): GPUCommandBuffer;
-}
+export type ResourceState = 'valid' | 'invalid' | 'destroyed';
 
 /**
  * Base fixture for WebGPU validation tests.
@@ -29,7 +15,7 @@ export class ValidationTest extends GPUTest {
    * A `descriptor` may optionally be passed, which is used when `state` is not `'invalid'`.
    */
   createTextureWithState(
-    state: 'valid' | 'invalid' | 'destroyed',
+    state: ResourceState,
     descriptor?: Readonly<GPUTextureDescriptor>
   ): GPUTexture {
     descriptor = descriptor ?? {
@@ -61,7 +47,7 @@ export class ValidationTest extends GPUTest {
    * if `state` is `'invalid'`, it will be modified to add an invalid combination of usages.
    */
   createBufferWithState(
-    state: 'valid' | 'invalid' | 'destroyed',
+    state: ResourceState,
     descriptor?: Readonly<GPUBufferDescriptor>
   ): GPUBuffer {
     descriptor = descriptor ?? {
@@ -97,26 +83,18 @@ export class ValidationTest extends GPUTest {
    * A `descriptor` may optionally be passed, which is used when `state` is not `'invalid'`.
    */
   createQuerySetWithState(
-    state: 'valid' | 'invalid' | 'destroyed',
-    descriptor?: Readonly<GPUQuerySetDescriptor>
+    state: ResourceState,
+    desc?: Readonly<GPUQuerySetDescriptor>
   ): GPUQuerySet {
-    descriptor = descriptor ?? {
-      type: 'occlusion',
-      count: 2,
-    };
+    const descriptor = { type: 'occlusion' as const, count: 2, ...desc };
 
     switch (state) {
       case 'valid':
         return this.device.createQuerySet(descriptor);
       case 'invalid': {
         // Make the queryset invalid because of the count out of bounds.
-        this.device.pushErrorScope('validation');
-        const queryset = this.device.createQuerySet({
-          type: 'occlusion',
-          count: kMaxQueryCount + 1,
-        });
-        this.device.popErrorScope();
-        return queryset;
+        descriptor.count = kMaxQueryCount + 1;
+        return this.expectGPUError('validation', () => this.device.createQuerySet(descriptor));
       }
       case 'destroyed': {
         const queryset = this.device.createQuerySet(descriptor);
@@ -304,9 +282,6 @@ export class ValidationTest extends GPUTest {
    * GPURenderBundleEncoder, and a `finish` method returning a GPUCommandBuffer.
    * Allows testing methods which have the same signature across multiple encoder interfaces.
    *
-   * TODO(https://github.com/gpuweb/cts/pull/489#issuecomment-812283347):
-   * Make this have stricter validation to ensure errors are generated in the right API call.
-   *
    * @example
    * ```
    * g.test('popDebugGroup')
@@ -326,71 +301,90 @@ export class ValidationTest extends GPUTest {
    *   });
    * ```
    */
-  createEncoder<T extends EncoderType>(encoderType: T): CommandBufferMaker<T> {
-    const colorFormat = 'rgba8unorm';
+  createEncoder<T extends EncoderType>(
+    encoderType: T,
+    {
+      attachmentInfo,
+      occlusionQuerySet,
+    }: {
+      attachmentInfo?: GPURenderBundleEncoderDescriptor;
+      occlusionQuerySet?: GPUQuerySet;
+    } = {}
+  ): CommandBufferMaker<T> {
+    const fullAttachmentInfo = {
+      // Defaults if not overridden:
+      colorFormats: ['rgba8unorm'],
+      sampleCount: 1,
+      // Passed values take precedent.
+      ...attachmentInfo,
+    } as const;
+
     switch (encoderType) {
       case 'non-pass': {
         const encoder = this.device.createCommandEncoder();
-        // TypeScript introduces an intersection type here where it seems like there shouldn't be
-        // one. Maybe there is a soundness issue here, but I don't think there is one in practice.
-        return {
-          encoder,
-          finish: () => {
-            return encoder.finish();
-          },
-        } as CommandBufferMaker<T>;
+
+        return new CommandBufferMaker(this, encoder, (shouldSucceed: boolean) =>
+          this.expectGPUError('validation', () => encoder.finish(), !shouldSucceed)
+        );
       }
       case 'render bundle': {
         const device = this.device;
-        const encoder = device.createRenderBundleEncoder({
-          colorFormats: [colorFormat],
+        const rbEncoder = device.createRenderBundleEncoder(fullAttachmentInfo);
+        const pass = this.createEncoder('render pass', { attachmentInfo });
+
+        return new CommandBufferMaker(this, rbEncoder, (shouldSucceed: boolean) => {
+          // If !shouldSucceed, the resulting bundle should be invalid.
+          const rb = this.expectGPUError('validation', () => rbEncoder.finish(), !shouldSucceed);
+          pass.encoder.executeBundles([rb]);
+          // Then, the pass should also be invalid if the bundle was invalid.
+          return pass.validateFinish(shouldSucceed);
         });
-        const pass = this.createEncoder('render pass');
-        return {
-          encoder,
-          finish: () => {
-            const bundle = encoder.finish();
-            pass.encoder.executeBundles([bundle]);
-            return pass.finish();
-          },
-        } as CommandBufferMaker<T>;
       }
       case 'compute pass': {
         const commandEncoder = this.device.createCommandEncoder();
         const encoder = commandEncoder.beginComputePass();
-        return {
-          encoder,
-          finish: () => {
-            encoder.endPass();
-            return commandEncoder.finish();
-          },
-        } as CommandBufferMaker<T>;
+
+        return new CommandBufferMaker(this, encoder, (shouldSucceed: boolean) => {
+          encoder.endPass();
+          return this.expectGPUError('validation', () => commandEncoder.finish(), !shouldSucceed);
+        });
       }
       case 'render pass': {
+        const makeAttachmentView = (format: GPUTextureFormat) =>
+          this.device
+            .createTexture({
+              size: [16, 16, 1],
+              format,
+              usage: GPUTextureUsage.RENDER_ATTACHMENT,
+              sampleCount: fullAttachmentInfo.sampleCount,
+            })
+            .createView();
+
+        const passDesc: GPURenderPassDescriptor = {
+          colorAttachments: Array.from(fullAttachmentInfo.colorFormats, format => ({
+            view: makeAttachmentView(format),
+            loadValue: [0, 0, 0, 0],
+            storeOp: 'store',
+          })),
+          depthStencilAttachment:
+            fullAttachmentInfo.depthStencilFormat !== undefined
+              ? {
+                  view: makeAttachmentView(fullAttachmentInfo.depthStencilFormat),
+                  depthLoadValue: 0,
+                  depthStoreOp: 'discard',
+                  stencilLoadValue: 1,
+                  stencilStoreOp: 'discard',
+                }
+              : undefined,
+          occlusionQuerySet,
+        };
+
         const commandEncoder = this.device.createCommandEncoder();
-        const view = this.device
-          .createTexture({
-            format: colorFormat,
-            size: { width: 16, height: 16, depthOrArrayLayers: 1 },
-            usage: GPUTextureUsage.RENDER_ATTACHMENT,
-          })
-          .createView();
-        const encoder = commandEncoder.beginRenderPass({
-          colorAttachments: [
-            {
-              view,
-              loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
-              storeOp: 'store',
-            },
-          ],
+        const encoder = commandEncoder.beginRenderPass(passDesc);
+        return new CommandBufferMaker(this, encoder, (shouldSucceed: boolean) => {
+          encoder.endPass();
+          return this.expectGPUError('validation', () => commandEncoder.finish(), !shouldSucceed);
         });
-        return {
-          encoder,
-          finish: () => {
-            encoder.endPass();
-            return commandEncoder.finish();
-          },
-        } as CommandBufferMaker<T>;
       }
     }
     unreachable();
