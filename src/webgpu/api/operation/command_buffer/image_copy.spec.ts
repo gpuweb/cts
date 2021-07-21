@@ -1511,9 +1511,7 @@ works for copyBufferToTexture() and writeTexture() with stencil aspect.
       .combine('uploadMethod', ['WriteTexture', 'CopyB2T'] as const)
       .beginSubcases()
       .combineWithParams(kOffsetsAndSizesParams.offsetsAndPaddings)
-      .filter(t => {
-        return t.offsetInBlocks % 4 === 0;
-      })
+      .filter(t => t.offsetInBlocks % 4 === 0)
       .combine('copyDepth', kOffsetsAndSizesParams.copyDepth)
       .combine('mipLevel', [0, 2])
   )
