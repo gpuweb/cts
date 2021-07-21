@@ -52,6 +52,7 @@ g.test('initializer_type')
   .params(u =>
     u
       .combine('variableOrConstant', ['var', 'let'])
+      .beginSubcases()
       .combine('lhsType', kTestTypes)
       .combine('rhsType', kTestTypes)
   )
