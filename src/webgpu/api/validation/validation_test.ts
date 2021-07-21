@@ -333,10 +333,10 @@ export class ValidationTest extends GPUTest {
         const pass = this.createEncoder('render pass', { attachmentInfo });
 
         return new CommandBufferMaker(this, rbEncoder, (shouldSucceed: boolean) => {
-          // Bundle should be invalid.
+          // If !shouldSucceed, the resulting bundle should be invalid.
           const rb = this.expectGPUError('validation', () => rbEncoder.finish(), !shouldSucceed);
           pass.encoder.executeBundles([rb]);
-          // Then pass should be invalid because the bundle was invalid.
+          // Then, the pass should also be invalid if the bundle was invalid.
           return pass.validateFinish(shouldSucceed);
         });
       }

@@ -297,42 +297,19 @@ Test that the sample count in render passes or bundles match the pipeline sample
   .fn(t => {
     const { encoderType, attachmentType, encoderSampleCount, pipelineSampleCount } = t.params;
 
-    switch (attachmentType) {
-      case 'color':
-        {
-          const pipelineWithoutDepthStencil = t.createRenderPipeline(
-            [{ format: 'rgba8unorm' }],
-            undefined,
-            pipelineSampleCount
-          );
+    const colorFormats = attachmentType === 'color' ? ['rgba8unorm' as const] : [];
+    const depthStencilFormat =
+      attachmentType === 'depthstencil' ? ('depth24plus-stencil8' as const) : undefined;
 
-          const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType, {
-            attachmentInfo: { colorFormats: ['rgba8unorm'], sampleCount: encoderSampleCount },
-          });
-          encoder.setPipeline(pipelineWithoutDepthStencil);
-          validateFinishAndSubmit(encoderSampleCount === pipelineSampleCount, true);
-        }
-        break;
-      case 'depthstencil':
-        {
-          const pipelineWithDepthStencilOnly = t.createRenderPipeline(
-            [],
-            { format: 'depth24plus-stencil8' },
-            pipelineSampleCount
-          );
+    const pipeline = t.createRenderPipeline(
+      colorFormats.map(format => ({ format })),
+      depthStencilFormat ? { format: depthStencilFormat } : undefined,
+      pipelineSampleCount
+    );
 
-          const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType, {
-            attachmentInfo: {
-              colorFormats: [],
-              depthStencilFormat: 'depth24plus-stencil8',
-              sampleCount: encoderSampleCount,
-            },
-          });
-          encoder.setPipeline(pipelineWithDepthStencilOnly);
-          validateFinishAndSubmit(encoderSampleCount === pipelineSampleCount, true);
-        }
-        break;
-      default:
-        unreachable();
-    }
+    const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType, {
+      attachmentInfo: { colorFormats, depthStencilFormat, sampleCount: encoderSampleCount },
+    });
+    encoder.setPipeline(pipeline);
+    validateFinishAndSubmit(encoderSampleCount === pipelineSampleCount, true);
   });

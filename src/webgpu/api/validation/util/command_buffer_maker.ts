@@ -18,8 +18,6 @@ type EncoderByEncoderType<T extends EncoderType> = {
 /** See {@link webgpu/api/validation/validation_test.ValidationTest.createEncoder |
  * ValidationTest.createEncoder()}. */
 export class CommandBufferMaker<T extends EncoderType> {
-  private readonly t: ValidationTest;
-
   /** `GPU___Encoder` for recording commands into. */
   // Look up the type of the encoder based on `T`. If `T` is a union, this will be too!
   readonly encoder: EncoderByEncoderType<T>;
@@ -51,7 +49,6 @@ export class CommandBufferMaker<T extends EncoderType> {
     encoder: EncoderByEncoderType<EncoderType>,
     finish: (shouldSucceed: boolean) => GPUCommandBuffer
   ) {
-    this.t = t;
     // TypeScript introduces an intersection type here where we don't want one.
     this.encoder = encoder as EncoderByEncoderType<T>;
     this.validateFinish = finish;
