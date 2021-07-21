@@ -5,7 +5,7 @@ TODO: Add sparse color attachment compatibility test when defined by specificati
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { range, unreachable } from '../../../common/util/util.js';
+import { range } from '../../../common/util/util.js';
 import {
   kRegularTextureFormats,
   kSizedDepthStencilFormats,
