@@ -155,25 +155,26 @@ g.test('out_of_bounds')
       u
         .combine('indirect', [false, true])
         .combineWithParams([
-          { indexCount: 5, firstIndex: 1, isSuccess: true }, // draw the last 5 out of 6 index
-          { indexCount: 1, firstIndex: 5, isSuccess: true }, // draw the last 1 out of 6 index
-          { indexCount: 6, firstIndex: 1, isSuccess: false }, // indexCount + firstIndex out of bound
-          { indexCount: 0, firstIndex: 6, isSuccess: true }, // firstIndex point to the one after last, but (indexCount + firstIndex) * stride <= bufferSize, valid
-          { indexCount: 0, firstIndex: 7, isSuccess: false }, // (indexCount + firstIndex) * stride > bufferSize, invalid
-          { indexCount: 1, firstIndex: 6, isSuccess: false }, // indexCount valid, but (indexCount + firstIndex) out of bound
-          { indexCount: 6, firstIndex: 10000, isSuccess: false }, // firstIndex much larger than the bound
-          { indexCount: 7, firstIndex: 0, isSuccess: false }, // only indexCount out of bound
-          { indexCount: 10000, firstIndex: 0, isSuccess: false }, // indexCount much larger than the bound
-          { indexCount: 0xffffffff, firstIndex: 0xffffffff, isSuccess: false }, // max uint32 value
-          { indexCount: 0xffffffff, firstIndex: 2, isSuccess: false }, // max uint32 indexCount and small firstIndex
-          { indexCount: 2, firstIndex: 0xffffffff, isSuccess: false }, // small indexCount and max uint32 firstIndex
+          { indexCount: 5, firstIndex: 1 }, // draw the last 5 out of 6 index
+          { indexCount: 1, firstIndex: 5 }, // draw the last 1 out of 6 index
+          { indexCount: 6, firstIndex: 1 }, // indexCount + firstIndex out of bound
+          { indexCount: 0, firstIndex: 6 }, // firstIndex point to the one after last, but (indexCount + firstIndex) * stride <= bufferSize, valid
+          { indexCount: 0, firstIndex: 7 }, // (indexCount + firstIndex) * stride > bufferSize, invalid
+          { indexCount: 1, firstIndex: 6 }, // indexCount valid, but (indexCount + firstIndex) out of bound
+          { indexCount: 6, firstIndex: 10000 }, // firstIndex much larger than the bound
+          { indexCount: 7, firstIndex: 0 }, // only indexCount out of bound
+          { indexCount: 10000, firstIndex: 0 }, // indexCount much larger than the bound
+          { indexCount: 0xffffffff, firstIndex: 0xffffffff }, // max uint32 value
+          { indexCount: 0xffffffff, firstIndex: 2 }, // max uint32 indexCount and small firstIndex
+          { indexCount: 2, firstIndex: 0xffffffff }, // small indexCount and max uint32 firstIndex
         ] as const)
         .combine('instanceCount', [1, 10000]) // normal and large instanceCount
   )
   .fn(t => {
-    const { indirect, indexCount, firstIndex, instanceCount, isSuccess } = t.params;
+    const { indirect, indexCount, firstIndex, instanceCount } = t.params;
 
     const indexBuffer = t.createIndexBuffer([0, 1, 2, 3, 1, 2]);
+    const isSuccess: boolean = indexCount + firstIndex <= 6;
 
     if (indirect) {
       t.drawIndexedIndirect(
@@ -202,17 +203,18 @@ g.test('out_of_bounds_zero_sized_index_buffer')
       u
         .combine('indirect', [false, true])
         .combineWithParams([
-          { indexCount: 3, firstIndex: 1, isSuccess: false }, // indexCount + firstIndex out of bound
-          { indexCount: 0, firstIndex: 1, isSuccess: false }, // indexCount is 0 but firstIndex out of bound
-          { indexCount: 3, firstIndex: 0, isSuccess: false }, // only indexCount out of bound
-          { indexCount: 0, firstIndex: 0, isSuccess: true }, // just zeros, valid
+          { indexCount: 3, firstIndex: 1 }, // indexCount + firstIndex out of bound
+          { indexCount: 0, firstIndex: 1 }, // indexCount is 0 but firstIndex out of bound
+          { indexCount: 3, firstIndex: 0 }, // only indexCount out of bound
+          { indexCount: 0, firstIndex: 0 }, // just zeros, valid
         ] as const)
         .combine('instanceCount', [1, 10000]) // normal and large instanceCount
   )
   .fn(t => {
-    const { indirect, indexCount, firstIndex, instanceCount, isSuccess } = t.params;
+    const { indirect, indexCount, firstIndex, instanceCount } = t.params;
 
     const indexBuffer = t.createIndexBuffer([]);
+    const isSuccess: boolean = indexCount + firstIndex <= 0;
 
     if (indirect) {
       t.drawIndexedIndirect(
