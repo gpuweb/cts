@@ -1020,9 +1020,17 @@ g.test('unused_bindings_in_pipeline')
     if (callDrawOrDispatch) t.issueDrawOrDispatch(pass, compute);
     pass.endPass();
 
-    // Resource usage validation scope is defined by dispatch calls. If dispatch is not called,
-    // we don't need to do resource usage validation and no validation error to be reported.
-    const success = compute && !callDrawOrDispatch;
+    // Resource usage validation scope is defined by the whole render pass or by dispatch calls.
+    // Regardless of whether or not dispatch is called, in a compute pass, we always succeed
+    // because in this test, none of the bindings are used by the pipeline.
+    // In a render pass, we always fail because usage is based on any bindings used in the
+    // render pass, regardless of whether the pipeline uses them.
+    let success = compute;
+
+    // Also fails if we try to draw/dispatch without a pipeline.
+    if (callDrawOrDispatch && setPipeline === 'none') {
+      success = false;
+    }
 
     t.expectValidationError(() => {
       encoder.finish();
