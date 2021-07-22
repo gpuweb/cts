@@ -251,8 +251,9 @@ export class ValidationTest extends GPUTest {
   }
 
   /** Return a GPUComputePipeline with a no-op shader. */
-  createNoOpComputePipeline(): GPUComputePipeline {
+  createNoOpComputePipeline(layout?: GPUPipelineLayout): GPUComputePipeline {
     return this.device.createComputePipeline({
+      layout,
       compute: {
         module: this.device.createShaderModule({
           code: '[[stage(compute), workgroup_size(1)]] fn main() {}',
