@@ -890,10 +890,14 @@ g.test('vertex_buffer_used_multiple_times_interleaved')
           attributes: attribs,
         },
       ],
-      kVertexCount,
+      // Request one vertex more than what we need so we have an extra full stride. Otherwise WebGPU
+      // validation of vertex being in bounds will fail for all vertex buffers at an offset that's
+      // not 0 (since their last stride will go beyond the data for vertex kVertexCount -1).
+      kVertexCount + 1,
       kInstanceCount
     );
-    const vertexBuffer = t.createVertexBuffers(baseData, kVertexCount, kInstanceCount)[0].buffer;
+    const vertexBuffer = t.createVertexBuffers(baseData, kVertexCount + 1, kInstanceCount)[0]
+      .buffer;
 
     // Then we recreate test data by:
     //   1) creating multiple "vertex buffers" that all point at the GPUBuffer above but at
