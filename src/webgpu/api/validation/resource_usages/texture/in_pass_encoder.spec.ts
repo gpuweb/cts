@@ -1155,7 +1155,7 @@ g.test('validation_scope,different_passes')
       : t.beginSimpleRenderPass(encoder, t.createTexture().createView());
     t.setPipeline(pass1, pipeline, compute);
     pass1.setBindGroup(1, bindGroup1);
-    if (compute) t.setComputePipelineAndCallDispatch(pass as GPUComputePassEncoder);
+    if (compute) t.setComputePipelineAndCallDispatch(pass1 as GPUComputePassEncoder);
     pass1.endPass();
 
     // No validation error.
