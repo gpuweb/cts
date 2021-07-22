@@ -168,7 +168,7 @@ function* generateIndexableTypes({
                 kArrayLength *
                 arrayStride({
                   ...scalarInfo.layout,
-                  alignment: align(scalarInfo.layout.alignment, 16),
+                  alignment: 16,
                 })
               : kArrayLength * arrayStride(scalarInfo.layout),
         }
