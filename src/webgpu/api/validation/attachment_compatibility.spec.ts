@@ -215,7 +215,7 @@ Test that color attachment formats in render passes or bundles match the pipelin
   )
   .fn(t => {
     const { encoderType, encoderFormat, pipelineFormat } = t.params;
-    const pipeline = t.createRenderPipeline([{ format: pipelineFormat }]);
+    const pipeline = t.createRenderPipeline([{ format: pipelineFormat, writeMask: 0 }]);
 
     const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType, {
       attachmentInfo: { colorFormats: [encoderFormat] },
@@ -242,7 +242,9 @@ TODO: Add sparse color attachment compatibility test when defined by specificati
   )
   .fn(t => {
     const { encoderType, encoderCount, pipelineCount } = t.params;
-    const pipeline = t.createRenderPipeline(range(pipelineCount, () => ({ format: 'rgba8unorm' })));
+    const pipeline = t.createRenderPipeline(
+      range(pipelineCount, () => ({ format: 'rgba8unorm', writeMask: 0 }))
+    );
 
     const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType, {
       attachmentInfo: { colorFormats: range(encoderCount, () => 'rgba8unorm') },
@@ -269,7 +271,7 @@ Test that the depth attachment format in render passes or bundles match the pipe
     await t.selectDeviceForTextureFormatOrSkipTestCase([encoderFormat, pipelineFormat]);
 
     const pipeline = t.createRenderPipeline(
-      [{ format: 'rgba8unorm' }],
+      [{ format: 'rgba8unorm', writeMask: 0 }],
       pipelineFormat !== undefined ? { format: pipelineFormat } : undefined
     );
 
@@ -302,7 +304,7 @@ Test that the sample count in render passes or bundles match the pipeline sample
       attachmentType === 'depthstencil' ? ('depth24plus-stencil8' as const) : undefined;
 
     const pipeline = t.createRenderPipeline(
-      colorFormats.map(format => ({ format })),
+      colorFormats.map(format => ({ format, writeMask: 0 })),
       depthStencilFormat ? { format: depthStencilFormat } : undefined,
       pipelineSampleCount
     );
