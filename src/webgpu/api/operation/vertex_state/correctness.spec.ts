@@ -646,19 +646,20 @@ g.test('setVertexBuffer_offset_and_attribute_offset')
       .combine('arrayStride', [128])
       .expand('offset', p => {
         const formatInfo = kVertexFormatInfo[p.format];
-        const componentSize = formatInfo.bytesPerComponent;
-        const formatSize = componentSize * formatInfo.componentCount;
-        return [
+        const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
+        return new Set([
           0,
-          componentSize,
-          componentSize * 2,
-          componentSize * 3,
+          4,
+          8,
+          formatSize,
+          formatSize * 2,
           p.arrayStride / 2,
-          p.arrayStride - formatSize - componentSize * 3,
-          p.arrayStride - formatSize - componentSize * 2,
-          p.arrayStride - formatSize - componentSize,
+          p.arrayStride - formatSize - 4,
+          p.arrayStride - formatSize - 8,
+          p.arrayStride - formatSize - formatSize,
+          p.arrayStride - formatSize - formatSize * 2,
           p.arrayStride - formatSize,
-        ];
+        ]);
       })
   )
   .fn(t => {
@@ -693,21 +694,21 @@ g.test('non_zero_array_stride_and_attribute_offset')
       .beginSubcases()
       .expand('arrayStride', p => {
         const formatInfo = kVertexFormatInfo[p.format];
-        const componentSize = formatInfo.bytesPerComponent;
-        const formatSize = componentSize * formatInfo.componentCount;
+        const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
 
         return [align(formatSize, 4), align(formatSize, 4) + 4, kMaxVertexBufferArrayStride];
       })
       .expand('offset', p => {
         const formatInfo = kVertexFormatInfo[p.format];
-        const componentSize = formatInfo.bytesPerComponent;
-        const formatSize = componentSize * formatInfo.componentCount;
+        const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
         return new Set(
           [
             0,
-            componentSize,
+            formatSize,
+            4,
             p.arrayStride / 2,
-            p.arrayStride - formatSize - componentSize,
+            p.arrayStride - formatSize * 2,
+            p.arrayStride - formatSize - 4,
             p.arrayStride - formatSize,
           ].map(offset => clamp(offset, { min: 0, max: p.arrayStride - formatSize }))
         );
@@ -982,18 +983,18 @@ g.test('array_stride_zero')
       .combine('stepMode', ['vertex', 'instance'] as const)
       .expand('offset', p => {
         const formatInfo = kVertexFormatInfo[p.format];
-        const componentSize = formatInfo.bytesPerComponent;
-        const formatSize = componentSize * formatInfo.componentCount;
+        const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
         return new Set([
           0,
-          componentSize,
-          componentSize * 2,
-          componentSize * 3,
+          4,
+          8,
+          formatSize,
+          formatSize * 2,
           kMaxVertexBufferArrayStride / 2,
-          kMaxVertexBufferArrayStride - formatSize - componentSize * 3,
-          kMaxVertexBufferArrayStride - formatSize - componentSize * 2,
-          kMaxVertexBufferArrayStride - formatSize - componentSize,
+          kMaxVertexBufferArrayStride - formatSize - 4,
+          kMaxVertexBufferArrayStride - formatSize - 8,
           kMaxVertexBufferArrayStride - formatSize,
+          kMaxVertexBufferArrayStride - formatSize * 2,
         ]);
       })
   )
