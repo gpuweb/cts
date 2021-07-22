@@ -157,22 +157,16 @@ class DrawCall {
   // If |partialLastNumber| is true, delete one byte off the end
   private generateVertexBuffer(vertexArray: Float32Array, partialLastNumber: boolean): GPUBuffer {
     let size = vertexArray.byteLength;
+    let length = vertexArray.length;
     if (partialLastNumber) {
-      size -= 1;
+      size -= 1; // Shave off one byte from the buffer size.
+      length -= 1; // And one whole element from the writeBuffer.
     }
     const vertexBuffer = this.device.createBuffer({
       size,
       usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
     });
-    if (partialLastNumber) {
-      size -= 3;
-    }
-    this.device.queue.writeBuffer(
-      vertexBuffer,
-      0,
-      vertexArray,
-      size / vertexArray.BYTES_PER_ELEMENT
-    );
+    this.device.queue.writeBuffer(vertexBuffer, 0, vertexArray, 0, length);
     return vertexBuffer;
   }
 
