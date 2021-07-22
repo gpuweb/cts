@@ -229,7 +229,7 @@ export class ValidationTest extends GPUTest {
           code: '[[stage(fragment)]] fn main() {}',
         }),
         entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm' }],
+        targets: [{ format: 'rgba8unorm', writeMask: 0 }],
       },
       primitive: { topology: 'triangle-list' },
     });
