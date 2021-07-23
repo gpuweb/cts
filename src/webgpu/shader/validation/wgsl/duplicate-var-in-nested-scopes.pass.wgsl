@@ -1,4 +1,4 @@
-// v-0014 - This passes because inter-scope shadowing is supported
+// This passes because inter-scope shadowing is supported
 
 [[stage(fragment)]]
 fn main() {
