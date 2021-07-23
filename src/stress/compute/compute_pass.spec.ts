@@ -9,23 +9,23 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('many_passes')
   .desc(
-`Tests execution of a huge number of compute passes using the same
-GPUComputePipeline.`)
+    `Tests execution of a huge number of compute passes using the same
+GPUComputePipeline.`
+  )
   .unimplemented();
 
-g.test('pipeline_churn')
-  .desc(
-`Tests execution of a huge number of compute passes which each use a different
-GPUComputePipeline.`);
+g.test('pipeline_churn').desc(
+  `Tests execution of a huge number of compute passes which each use a different
+GPUComputePipeline.`
+);
 
-g.test('bind_group_churn')
-  .desc(
-`Tests execution of compute passes which switch between a huge number of bind
-groups.`)
+g.test('bind_group_churn').desc(
+  `Tests execution of compute passes which switch between a huge number of bind
+groups.`
+);
 
 g.test('huge_passes')
-  .desc(
-`Tests execution of compute passes with a huge number of dispatch calls`)
+  .desc(`Tests execution of compute passes with a huge number of dispatch calls`)
   .unimplemented();
 
 g.test('huge_dispatches')

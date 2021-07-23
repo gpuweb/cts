@@ -9,14 +9,15 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('huge_command_buffer')
   .desc(
-`Tests submission of huge command buffers to a GPUQueue. Huge buffers are
+    `Tests submission of huge command buffers to a GPUQueue. Huge buffers are
 encoded by chaining together repeated sequences of compute and copy
-operations, with expected results verified at the end of the test.`)
+operations, with expected results verified at the end of the test.`
+  )
   .unimplemented();
 
 g.test('many_command_buffers')
   .desc(
-`Tests submission of a huge number of command buffers to a GPUQueue by a single
-submit() call.`)
+    `Tests submission of a huge number of command buffers to a GPUQueue by a single
+submit() call.`
+  )
   .unimplemented();
-

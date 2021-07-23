@@ -13,8 +13,8 @@ g.test('concurrent_compute_pipeline_allocation')
 
 g.test('continuous_compute_pipeline_allocation')
   .desc(
-`Tests allocation and implicit GC of many GPUComputePipeline objects over time.
+    `Tests allocation and implicit GC of many GPUComputePipeline objects over time.
 Objects are sequentially created and dropped for GC over a very large number of
-iterations.`)
+iterations.`
+  )
   .unimplemented();
-

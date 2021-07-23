@@ -8,6 +8,5 @@ import { GPUTest } from '../../webgpu/gpu_test.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('many_entry_points')
-  .desc(
-`Tests compilation and usage of shaders with a huge number of entry points.`)
+  .desc(`Tests compilation and usage of shaders with a huge number of entry points.`)
   .unimplemented();

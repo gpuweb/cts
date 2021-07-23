@@ -9,6 +9,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('huge_buffers')
   .desc(
-`Tests execution of draw calls using as many huge vertex buffers as are
-supported by the device, with as many attributes as are supported.`)
+    `Tests execution of draw calls using as many huge vertex buffers as are
+supported by the device, with as many attributes as are supported.`
+  )
   .unimplemented();

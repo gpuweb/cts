@@ -13,8 +13,8 @@ g.test('concurrent_bind_group_allocation')
 
 g.test('continuous_bind_group_allocation')
   .desc(
-`Tests allocation and implicit GC of many GPUBindGroup objects over time.
+    `Tests allocation and implicit GC of many GPUBindGroup objects over time.
 Objects are sequentially created and dropped for GC over a very large number of
-iterations.`)
+iterations.`
+  )
   .unimplemented();
-

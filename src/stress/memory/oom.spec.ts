@@ -9,12 +9,12 @@ export const g = makeTestGroup(GPUTest);
 
 // Helper to exhaust VRAM until there is less than 64 MB of capacity. Returns
 // an opaque closure which can be called to free the allocated resources later.
-const exhaustVramUntilUnder64MB = async device => {
-  const allocateUntilOom = async (device, size) => {
+const exhaustVramUntilUnder64MB = async (device: GPUDevice) => {
+  const allocateUntilOom = async (device: GPUDevice, size: number) => {
     const buffers = [];
-    while (true) {
+    for (;;) {
       device.pushErrorScope('out-of-memory');
-      const buffer = device.createBuffer({size, usage: GPUBufferUsage.STORAGE});
+      const buffer = device.createBuffer({ size, usage: GPUBufferUsage.STORAGE });
       if (await device.popErrorScope()) {
         return buffers;
       }
@@ -25,34 +25,44 @@ const exhaustVramUntilUnder64MB = async device => {
   const kLargeChunkSize = 512 * 1024 * 1024;
   const kSmallChunkSize = 64 * 1024 * 1024;
   const buffers = await allocateUntilOom(device, kLargeChunkSize);
-  buffers.push(...allocateUntilOom(device, kSmallChunkSize));
+  buffers.push(...(await allocateUntilOom(device, kSmallChunkSize)));
   return () => {
     buffers.forEach(buffer => buffer.destroy());
   };
 };
 
+g.test('vram_oom')
+  .desc(`Tests that we can allocate buffers until we run out of VRAM.`)
+  .fn(async t => {
+    await exhaustVramUntilUnder64MB(t.device);
+  });
+
 g.test('get_mapped_range')
   .desc(
-`Tests getMappedRange on a mappedAtCreation GPUBuffer that failed allocation due
+    `Tests getMappedRange on a mappedAtCreation GPUBuffer that failed allocation due
 to OOM. This should throw a RangeError, but below a certain threshold may just
-crash the page.`)
+crash the page.`
+  )
   .unimplemented();
 
 g.test('map_after_vram_oom')
   .desc(
-`Allocates tons of buffers and textures with varying mapping states (unmappable,
+    `Allocates tons of buffers and textures with varying mapping states (unmappable,
 mappable, mapAtCreation, matAtCreation-then-unmapped) until OOM; then attempts
-to mapAsync all the mappable objects.`);
+to mapAsync all the mappable objects.`
+  )
   .unimplemented();
 
 g.test('validation_vs_oom')
   .desc(
-`Tests that calls affected by both OOM and validation errors expose the
-validation error with precedence.`)
+    `Tests that calls affected by both OOM and validation errors expose the
+validation error with precedence.`
+  )
   .unimplemented();
 
 g.test('recovery')
   .desc(
-`Tests that after going VRAM-OOM, destroying allocated resources eventually
-allows new resources to be allocated.`)
+    `Tests that after going VRAM-OOM, destroying allocated resources eventually
+allows new resources to be allocated.`
+  )
   .unimplemented();

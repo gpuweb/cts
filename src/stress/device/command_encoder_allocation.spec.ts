@@ -13,8 +13,8 @@ g.test('concurrent_command_encoder_allocation')
 
 g.test('continuous_command_encoder_allocation')
   .desc(
-`Tests allocation and implicit GC of many GPUCommandEncoder objects over time.
+    `Tests allocation and implicit GC of many GPUCommandEncoder objects over time.
 Objects are sequentially created and dropped for GC over a very large number of
-iterations.`)
+iterations.`
+  )
   .unimplemented();
-

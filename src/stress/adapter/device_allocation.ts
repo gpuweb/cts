@@ -13,15 +13,16 @@ g.test('concurrent_device_allocation')
 
 g.test('continuous_device_allocation_with_destroy')
   .desc(
-`Tests allocation and destruction of many GPUDevice objects over time. Objects
+    `Tests allocation and destruction of many GPUDevice objects over time. Objects
 are sequentially requested and destroyed over a very large number of
-iterations.`)
+iterations.`
+  )
   .unimplemented();
 
 g.test('continuous_device_allocation_with_gc')
   .desc(
-`Tests allocation and implicit GC of many GPUDevice objects over time. Objects
+    `Tests allocation and implicit GC of many GPUDevice objects over time. Objects
 are sequentially requested and dropped for GC over a very large number of
-iterations.`)
+iterations.`
+  )
   .unimplemented();
-
