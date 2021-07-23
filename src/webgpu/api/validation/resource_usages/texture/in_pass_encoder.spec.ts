@@ -102,15 +102,19 @@ class TextureUsageTracking extends ValidationTest {
     binding: number,
     bindingType: TextureBindingType,
     viewDimension: GPUTextureViewDimension,
-    format?: GPUTextureFormat
+    options: {
+      format?: GPUTextureFormat;
+      sampleType?: GPUTextureSampleType;
+    } = {}
   ): GPUBindGroupLayout {
+    const { sampleType, format } = options;
     let entry: Omit<GPUBindGroupLayoutEntry, 'binding' | 'visibility'>;
     switch (bindingType) {
       case 'sampled-texture':
-        entry = { texture: { viewDimension } };
+        entry = { texture: { viewDimension, sampleType } };
         break;
       case 'multisampled-texture':
-        entry = { texture: { viewDimension, multisampled: true } };
+        entry = { texture: { viewDimension, multisampled: true, sampleType } };
         break;
       case 'readonly-storage-texture':
         assert(format !== undefined);
@@ -134,17 +138,26 @@ class TextureUsageTracking extends ValidationTest {
     resource: GPUTextureView,
     bindingType: TextureBindingType,
     viewDimension: GPUTextureViewDimension,
-    format: GPUTextureFormat | undefined
+    options: {
+      format?: GPUTextureFormat;
+      sampleType?: GPUTextureSampleType;
+    } = {}
   ): GPUBindGroup {
     return this.device.createBindGroup({
       entries: [{ binding, resource }],
-      layout: this.createBindGroupLayout(binding, bindingType, viewDimension, format),
+      layout: this.createBindGroupLayout(binding, bindingType, viewDimension, options),
     });
   }
 
-  createAndExecuteBundle(binding: number, bindGroup: GPUBindGroup, pass: GPURenderPassEncoder) {
+  createAndExecuteBundle(
+    binding: number,
+    bindGroup: GPUBindGroup,
+    pass: GPURenderPassEncoder,
+    depthStencilFormat?: GPUTextureFormat
+  ) {
     const bundleEncoder = this.device.createRenderBundleEncoder({
       colorFormats: ['rgba8unorm'],
+      depthStencilFormat,
     });
     bundleEncoder.setBindGroup(binding, bindGroup);
     const bundle = bundleEncoder.finish();
@@ -179,7 +192,7 @@ class TextureUsageTracking extends ValidationTest {
     }).createView();
     const bindGroupLayouts = [
       this.createBindGroupLayout(0, 'sampled-texture', '2d'),
-      this.createBindGroupLayout(0, 'writeonly-storage-texture', '2d', 'rgba8unorm'),
+      this.createBindGroupLayout(0, 'writeonly-storage-texture', '2d', { format: 'rgba8unorm' }),
     ];
     const bindGroup0 = this.device.createBindGroup({
       layout: bindGroupLayouts[0],
@@ -496,7 +509,7 @@ g.test('subresources_and_binding_types_combination_for_color')
       // Create bind groups. Set bind groups in pass directly or set bind groups in bundle.
       const storageTextureFormat0 = type0 === 'sampled-texture' ? undefined : 'rgba8unorm';
 
-      const bgl0 = t.createBindGroupLayout(0, type0, dimension0, storageTextureFormat0);
+      const bgl0 = t.createBindGroupLayout(0, type0, dimension0, { format: storageTextureFormat0 });
       const bindGroup0 = t.device.createBindGroup({
         layout: bgl0,
         entries: [{ binding: 0, resource: view0 }],
@@ -512,7 +525,9 @@ g.test('subresources_and_binding_types_combination_for_color')
       if (type1 !== 'render-target') {
         const storageTextureFormat1 = type1 === 'sampled-texture' ? undefined : 'rgba8unorm';
 
-        const bgl1 = t.createBindGroupLayout(1, type1, dimension1, storageTextureFormat1);
+        const bgl1 = t.createBindGroupLayout(1, type1, dimension1, {
+          format: storageTextureFormat1,
+        });
         const bindGroup1 = t.device.createBindGroup({
           layout: bgl1,
           entries: [{ binding: 1, resource: view1 }],
@@ -591,6 +606,14 @@ g.test('subresources_and_binding_types_combination_for_aspect')
         },
       ] as const)
       .unless(
+        // Can't sample a multiplanar texture without selecting an aspect.
+        p =>
+          kTextureFormatInfo[p.format].depth &&
+          kTextureFormatInfo[p.format].stencil &&
+          ((p.aspect0 === 'all' && p.type0 === 'sampled-texture') ||
+            (p.aspect1 === 'all' && p.type1 === 'sampled-texture'))
+      )
+      .unless(
         p =>
           // We can't set 'render-target' in bundle, so we need to exclude it from bundle.
           p.binding1InBundle && p.type1 === 'render-target'
@@ -644,6 +667,8 @@ g.test('subresources_and_binding_types_combination_for_aspect')
     const encoder = t.device.createCommandEncoder();
     // Color attachment's size should match depth/stencil attachment's size. Note that if
     // type1 !== 'render-target' then there's no depthStencilAttachment to match anyway.
+    const depthStencilFormat = type1 === 'render-target' ? format : undefined;
+
     const size = SIZE >> baseLevel;
     const pass = compute
       ? encoder.beginComputePass()
@@ -655,31 +680,49 @@ g.test('subresources_and_binding_types_combination_for_aspect')
               storeOp: 'store',
             },
           ],
-          depthStencilAttachment:
-            type1 !== 'render-target'
-              ? undefined
-              : {
-                  view: view1,
-                  depthStoreOp: 'discard',
-                  depthLoadValue: 'load',
-                  stencilStoreOp: 'discard',
-                  stencilLoadValue: 'load',
-                },
+          depthStencilAttachment: depthStencilFormat
+            ? {
+                view: view1,
+                depthStoreOp: 'discard',
+                depthLoadValue: 'load',
+                stencilStoreOp: 'discard',
+                stencilLoadValue: 'load',
+              }
+            : undefined,
         });
 
+    const aspectSampleType = (format: GPUTextureFormat, aspect: typeof aspect0) => {
+      switch (aspect) {
+        case 'depth-only':
+          return 'float';
+        case 'stencil-only':
+          return 'uint';
+        case 'all':
+          assert(kTextureFormatInfo[format].depth !== kTextureFormatInfo[format].stencil);
+          if (kTextureFormatInfo[format].stencil) {
+            return 'uint';
+          }
+          return 'float';
+      }
+    };
+
     // Create bind groups. Set bind groups in pass directly or set bind groups in bundle.
-    const bindGroup0 = t.createBindGroup(0, view0, type0, '2d', undefined);
+    const bindGroup0 = t.createBindGroup(0, view0, type0, '2d', {
+      sampleType: type0 === 'sampled-texture' ? aspectSampleType(format, aspect0) : undefined,
+    });
     if (binding0InBundle) {
       assert(pass instanceof GPURenderPassEncoder);
-      t.createAndExecuteBundle(0, bindGroup0, pass as GPURenderPassEncoder);
+      t.createAndExecuteBundle(0, bindGroup0, pass, depthStencilFormat);
     } else {
       pass.setBindGroup(0, bindGroup0);
     }
     if (type1 !== 'render-target') {
-      const bindGroup1 = t.createBindGroup(1, view1, type1, '2d', undefined);
+      const bindGroup1 = t.createBindGroup(1, view1, type1, '2d', {
+        sampleType: type1 === 'sampled-texture' ? aspectSampleType(format, aspect1) : undefined,
+      });
       if (binding1InBundle) {
         assert(pass instanceof GPURenderPassEncoder);
-        t.createAndExecuteBundle(1, bindGroup1, pass as GPURenderPassEncoder);
+        t.createAndExecuteBundle(1, bindGroup1, pass, depthStencilFormat);
       } else {
         pass.setBindGroup(1, bindGroup1);
       }
@@ -913,11 +956,11 @@ g.test('bindings_in_bundle')
     const bindGroups: GPUBindGroup[] = [];
     if (type0 !== 'render-target') {
       const binding0TexFormat = type0 === 'sampled-texture' ? undefined : 'rgba8unorm';
-      bindGroups[0] = t.createBindGroup(0, view, type0, '2d', binding0TexFormat);
+      bindGroups[0] = t.createBindGroup(0, view, type0, '2d', { format: binding0TexFormat });
     }
     if (type1 !== 'render-target') {
       const binding1TexFormat = type1 === 'sampled-texture' ? undefined : 'rgba8unorm';
-      bindGroups[1] = t.createBindGroup(1, view, type1, '2d', binding1TexFormat);
+      bindGroups[1] = t.createBindGroup(1, view, type1, '2d', { format: binding1TexFormat });
     }
 
     const encoder = t.device.createCommandEncoder();
@@ -993,8 +1036,12 @@ g.test('unused_bindings_in_pipeline')
       callDrawOrDispatch,
     } = t.params;
     const view = t.createTexture({ usage: GPUTextureUsage.STORAGE }).createView();
-    const bindGroup0 = t.createBindGroup(0, view, 'readonly-storage-texture', '2d', 'rgba8unorm');
-    const bindGroup1 = t.createBindGroup(0, view, 'writeonly-storage-texture', '2d', 'rgba8unorm');
+    const bindGroup0 = t.createBindGroup(0, view, 'readonly-storage-texture', '2d', {
+      format: 'rgba8unorm',
+    });
+    const bindGroup1 = t.createBindGroup(0, view, 'writeonly-storage-texture', '2d', {
+      format: 'rgba8unorm',
+    });
 
     const wgslVertex = `[[stage(vertex)]] fn main() -> [[builtin(position)]] vec4<f32> {
   return vec4<f32>();
