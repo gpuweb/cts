@@ -257,10 +257,11 @@ g.test('size_alignment')
 
     const texture = t.createAlignedTexture(format, size, origin);
 
-    assert(size.width % info.blockWidth === 0);
-    const bytesPerRow = align(size.width / info.blockWidth, 256);
-    assert(size.height % info.blockHeight === 0);
-    const rowsPerImage = size.height / info.blockHeight;
+    const bytesPerRow = align(
+      (align(size.width, info.blockWidth) / info.blockWidth) * info.bytesPerBlock,
+      256
+    );
+    const rowsPerImage = align(size.height, info.blockHeight) / info.blockHeight;
     t.testRun({ texture, origin }, { bytesPerRow, rowsPerImage }, size, {
       dataSize: 1,
       method,
