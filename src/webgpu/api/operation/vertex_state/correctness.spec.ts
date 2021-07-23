@@ -947,7 +947,7 @@ g.test('max_buffers_and_attribs')
   - For each format.
   `
   )
-  .paramsSubcasesOnly(u => u.combine('format', kVertexFormats))
+  .params(u => u.combine('format', kVertexFormats))
   .fn(t => {
     const { format } = t.params;
     const attributesPerBuffer = Math.ceil(kMaxVertexAttributes / kMaxVertexBuffers);
@@ -1085,7 +1085,7 @@ g.test('overlapping_attributes')
     `Test that overlapping attributes in the same vertex buffer works
    - Test for all formats`
   )
-  .paramsSubcasesOnly(u => u.combine('format', kVertexFormats))
+  .params(u => u.combine('format', kVertexFormats))
   .fn(t => {
     const { format } = t.params;
 
