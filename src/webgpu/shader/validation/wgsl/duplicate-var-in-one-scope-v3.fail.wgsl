@@ -1,4 +1,4 @@
-// v-0014 - This fails because variable `a` is redeclared.
+// This fails because variable `a` is redeclared.
 
 fn func(a: i32) -> i32 {
   var a : u32 = 1u;

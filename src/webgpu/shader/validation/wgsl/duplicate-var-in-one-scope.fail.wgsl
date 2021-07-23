@@ -1,4 +1,4 @@
-// v-0014 - This fails because variable `a` is redeclared.
+// This fails because variable `a` is redeclared.
 
 [[stage(fragment)]]
 fn main() {
