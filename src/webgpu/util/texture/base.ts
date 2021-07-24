@@ -1,7 +1,7 @@
 import { assert, unreachable } from '../../../common/util/util.js';
 import { kTextureFormatInfo } from '../../capability_info.js';
 import { align } from '../../util/math.js';
-import { standardizeExtent3D } from '../../util/unions.js';
+import { reifyExtent3D } from '../../util/unions.js';
 
 /**
  * Compute the maximum mip level count allowed for a given texture size and texture dimension.
@@ -13,7 +13,7 @@ export function maxMipLevelCount({
   readonly size: Readonly<GPUExtent3DDict> | readonly number[];
   readonly dimension?: GPUTextureDimension;
 }): number {
-  const sizeDict = standardizeExtent3D(size);
+  const sizeDict = reifyExtent3D(size);
 
   let maxMippedDimension = sizeDict.width;
   if (dimension !== '1d') maxMippedDimension = Math.max(maxMippedDimension, sizeDict.height);
@@ -88,4 +88,52 @@ export function getTextureDimensionFromView(
     default:
       unreachable();
   }
+}
+
+/** Reifies the optional fields of `GPUTextureDescriptor`. */
+export function reifyTextureDescriptor(
+  desc: Readonly<GPUTextureDescriptor>
+): Required<Omit<GPUTextureDescriptor, 'label'>> {
+  return { dimension: '2d' as const, mipLevelCount: 1, sampleCount: 1, ...desc };
+}
+
+/** Reifies the optional fields of `GPUTextureViewDescriptor` (given a `GPUTextureDescriptor`). */
+export function reifyTextureViewDescriptor(
+  textureDescriptor: Readonly<GPUTextureDescriptor>,
+  view: Readonly<GPUTextureViewDescriptor>
+): Required<Omit<GPUTextureViewDescriptor, 'label'>> {
+  const texture = reifyTextureDescriptor(textureDescriptor);
+
+  // IDL defaulting
+
+  const baseMipLevel = view.baseMipLevel ?? 0;
+  const baseArrayLayer = view.baseArrayLayer ?? 0;
+  const aspect = view.aspect ?? 'all';
+
+  // Spec defaulting
+
+  const format = view.format ?? texture.format;
+  const mipLevelCount = view.mipLevelCount ?? texture.mipLevelCount - baseMipLevel;
+  const dimension = view.dimension ?? texture.dimension;
+
+  let arrayLayerCount = view.arrayLayerCount;
+  if (arrayLayerCount === undefined) {
+    if (dimension === 'cube') {
+      arrayLayerCount = 6;
+    } else if (dimension === '2d-array' || dimension === 'cube-array') {
+      arrayLayerCount = reifyExtent3D(texture.size).depthOrArrayLayers - baseArrayLayer;
+    } else {
+      arrayLayerCount = 1;
+    }
+  }
+
+  return {
+    format,
+    dimension,
+    aspect,
+    baseMipLevel,
+    mipLevelCount,
+    baseArrayLayer,
+    arrayLayerCount,
+  };
 }
