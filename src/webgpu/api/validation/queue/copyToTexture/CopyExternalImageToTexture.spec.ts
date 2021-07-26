@@ -3,13 +3,19 @@ copyExternalImageToTexture Validation Tests in Queue.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { timeout } from '../../../../../common/util/timeout.js';
+import { raceWithRejectOnTimeout, unreachable, assert } from '../../../../../common/util/util.js';
 import {
   kTextureFormatInfo,
   kTextureFormats,
   kTextureUsages,
   kValidTextureFormatsForCopyE2T,
 } from '../../../../capability_info.js';
+import {
+  canvasTypes,
+  createCanvas,
+  createOnscreenCanvas,
+  createOffscreenCanvas,
+} from '../../../../util/create_elements.js';
 import { ValidationTest } from '../../validation_test.js';
 
 const kDefaultBytesPerPixel = 4; // using 'bgra8unorm' or 'rgba8unorm'
@@ -31,23 +37,6 @@ interface WithMipLevel {
 
 interface WithDstOriginMipLevel extends WithMipLevel {
   dstOrigin: Required<GPUOrigin3DDict>;
-}
-
-async function awaitTimeout(ms: number) {
-  await new Promise(() => {
-    timeout(() => {}, ms);
-  });
-}
-
-async function awaitOrTimeout(promise: Promise<void>, opt_timeout_ms: number = 5000) {
-  async function throwOnTimeout(ms: number) {
-    await awaitTimeout(ms);
-    throw 'timeout';
-  }
-
-  const timeout_ms = opt_timeout_ms;
-
-  await Promise.race([promise, throwOnTimeout(timeout_ms)]);
 }
 
 // Helper function to generate copySize for src OOB test
@@ -127,7 +116,7 @@ function generateCopySizeForDstOOB({ mipLevel, dstOrigin }: WithDstOriginMipLeve
   ];
 }
 
-function isValidContextType(contextName: string) {
+function canCopyFromContextType(contextName: string) {
   switch (contextName) {
     case '2d':
     case 'experimental-webgl':
@@ -146,11 +135,18 @@ class CopyExternalImageToTextureTest extends ValidationTest {
     return new ImageData(imagePixels, width, height);
   }
 
-  getOffscreenCanvas(width: number, height: number): OffscreenCanvas {
-    if (typeof OffscreenCanvas === 'undefined') {
-      this.skip('OffscreenCanvas is not supported');
-    }
-    return new OffscreenCanvas(width, height);
+  getCanvasWithContent(
+    canvasType: canvasTypes,
+    width: number,
+    height: number,
+    content: HTMLImageElement | HTMLCanvasElement | OffscreenCanvas | ImageBitmap
+  ): HTMLCanvasElement | OffscreenCanvas {
+    const canvas = createCanvas(this, canvasType, 1, 1);
+    const ctx = canvas.getContext('2d');
+    assert(ctx !== null);
+    ctx.drawImage(content, 0, 0);
+
+    return canvas;
   }
 
   runTest(
@@ -187,11 +183,14 @@ export const g = makeTestGroup(CopyExternalImageToTextureTest);
 g.test('source_canvas,contexts')
   .desc(
     `
-  Test HTMLCanvasElement as source image with different contexts.
+  Test HTMLCanvasElement and OffscreenCanvas as source image with different contexts.
 
   Call HTMLCanvasElment.getContext() with different context type.
   Only '2d', 'experimental-webgl', 'webgl', 'webgl2' is valid context
   type.
+
+  Call OffscreenCanvas.getContext() with different context type.
+  Only '2d', 'webgl', 'webgl2' is valid context type.
   
   Check whether 'OperationError' is generated when context type is invalid.
   `
@@ -214,22 +213,25 @@ g.test('source_canvas,contexts')
   )
   .fn(async t => {
     const { contextType, copySize } = t.params;
-    const canvas = document.createElement('canvas');
-
+    const canvas = createOnscreenCanvas(t, 1, 1);
     const dstTexture = t.device.createTexture({
       size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       format: 'bgra8unorm',
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    canvas.getContext(contextType);
+    const ctx = canvas.getContext(contextType);
+    if (ctx === null) {
+      t.skip('Failed to get context for canvas element');
+      return;
+    }
 
     t.runTest(
       { source: canvas },
       { texture: dstTexture },
       copySize,
       true, // No validation errors.
-      isValidContextType(contextType) ? '' : 'OperationError'
+      canCopyFromContextType(contextType) ? '' : 'OperationError'
     );
   });
 
@@ -240,7 +242,7 @@ g.test('source_offscreenCanvas,contexts')
 
   Call OffscreenCanvas.getContext() with different context type.
   Only '2d', 'webgl', 'webgl2' is valid context type.
-
+  
   Check whether 'OperationError' is generated when context type is invalid.
   `
   )
@@ -255,22 +257,25 @@ g.test('source_offscreenCanvas,contexts')
   )
   .fn(async t => {
     const { contextType, copySize } = t.params;
-    const canvas = t.getOffscreenCanvas(1, 1);
-
+    const canvas = createOffscreenCanvas(t, 1, 1);
     const dstTexture = t.device.createTexture({
       size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       format: 'bgra8unorm',
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    canvas.getContext(contextType);
+    const ctx = canvas.getContext(contextType);
+    if (ctx === null) {
+      t.skip('Failed to get context for canvas element');
+      return;
+    }
 
     t.runTest(
       { source: canvas },
       { texture: dstTexture },
       copySize,
       true, // No validation errors.
-      isValidContextType(contextType) ? '' : 'OperationError'
+      canCopyFromContextType(contextType) ? '' : 'OperationError'
     );
   });
 
@@ -290,40 +295,75 @@ g.test('source_image,crossOrigin')
       .combine('sourceImage', ['canvas', 'offscreenCanvas', 'imageBitmap'])
       .combine('isOriginClean', [true, false])
       .beginSubcases()
+      .combine('contentFrom', ['image', 'imageBitmap', 'canvas', 'offscreenCanvas'] as const)
       .combine('copySize', [
         { width: 0, height: 0, depthOrArrayLayers: 0 },
         { width: 1, height: 1, depthOrArrayLayers: 1 },
       ])
   )
   .fn(async t => {
-    const { sourceImage, isOriginClean, copySize } = t.params;
+    const { sourceImage, isOriginClean, contentFrom, copySize } = t.params;
 
     const crossOriginUrl = 'https://get.webgl.org/conformance-resources/opengl_logo.jpg';
     const originCleanUrl = '../out/resources/Di-3d.png';
 
     const img = document.createElement('img');
     img.src = isOriginClean ? originCleanUrl : crossOriginUrl;
+
+    // Load image
+    const timeout_ms = 5000;
     try {
-      await awaitOrTimeout(img.decode());
+      await raceWithRejectOnTimeout(img.decode(), timeout_ms, 'load image timeout');
     } catch (e) {
-      t.skip('Cannot load image');
+      if (isOriginClean) {
+        throw e;
+      } else {
+        t.warn('Something wrong happens in get.webgl.org');
+        t.skip('Cannot load image in time');
+        return;
+      }
     }
 
-    const canvas =
-      sourceImage === 'offscreenCanvas'
-        ? t.getOffscreenCanvas(1, 1)
-        : document.createElement('canvas');
-
-    const ctx = canvas.getContext('2d');
-    if (ctx === null) {
-      t.skip('Cannot get 2d context');
-    } else {
-      ctx.drawImage(img, 0, 0);
+    // The externalImage contents can be updated by:
+    // - decoded image element
+    // - canvas/offscreenCanvas with image draw on it.
+    // - imageBitmap created with the image.
+    // Test covers all of these cases to ensure origin clean checks works.
+    let source: HTMLImageElement | HTMLCanvasElement | OffscreenCanvas | ImageBitmap;
+    switch (contentFrom) {
+      case 'image': {
+        source = img;
+        break;
+      }
+      case 'imageBitmap': {
+        source = await createImageBitmap(img);
+        break;
+      }
+      case 'canvas':
+      case 'offscreenCanvas': {
+        const canvasType = contentFrom === 'offscreenCanvas' ? 'offscreen' : 'onscreen';
+        source = t.getCanvasWithContent(canvasType, 1, 1, img);
+        break;
+      }
+      default:
+        unreachable();
     }
 
-    let externalImage: HTMLCanvasElement | OffscreenCanvas | ImageBitmap = canvas;
-    if (sourceImage === 'imageBitmap') {
-      externalImage = await createImageBitmap(canvas);
+    // Update the externalImage content with source.
+    let externalImage: HTMLCanvasElement | OffscreenCanvas | ImageBitmap;
+    switch (sourceImage) {
+      case 'imageBitmap': {
+        externalImage = await createImageBitmap(source);
+        break;
+      }
+      case 'canvas':
+      case 'offscreenCanvas': {
+        const canvasType = contentFrom === 'offscreenCanvas' ? 'offscreen' : 'onscreen';
+        externalImage = t.getCanvasWithContent(canvasType, 1, 1, source);
+        break;
+      }
+      default:
+        unreachable();
     }
 
     const dstTexture = t.device.createTexture({
@@ -382,13 +422,62 @@ g.test('source_imageBitmap,state')
     );
   });
 
+g.test('source_canvas,state')
+  .desc(
+    `
+  Test HTMLCanvasElement as source image in state [placeholder, valid].
+
+  Call 'transferControlToOffscreen' on HTMLCanvasElement will cause the
+  canvas control right transfer. And this canvas is in state 'placeholder'
+  
+  Check whether 'InvalidStateError' is generated when HTMLCanvasElement is
+  in 'placeholder' state.
+    `
+  )
+  .params(u =>
+    u //
+      .combine('state', ['placeholder', 'valid'])
+      .beginSubcases()
+      .combine('copySize', [
+        { width: 0, height: 0, depthOrArrayLayers: 0 },
+        { width: 1, height: 1, depthOrArrayLayers: 1 },
+      ])
+  )
+  .fn(async t => {
+    const { state, copySize } = t.params;
+    const canvas = createOnscreenCanvas(t, 1, 1);
+    if (typeof canvas.transferControlToOffscreen === 'undefined') {
+      t.skip("Browser doesn't support HTMLCanvasElement transfer control right");
+      return;
+    }
+
+    const dstTexture = t.device.createTexture({
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+      format: 'bgra8unorm',
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    if (state === 'placeholder') {
+      canvas.transferControlToOffscreen();
+    } else {
+      assert(canvas.getContext('2d') !== null);
+    }
+
+    t.runTest(
+      { source: canvas },
+      { texture: dstTexture },
+      copySize,
+      true, // No validation errors.
+      state === 'placeholder' ? 'InvalidStateError' : ''
+    );
+  });
+
 g.test('source_offscreenCanvas,state')
   .desc(
     `
   Test OffscreenCanvas as source image in state [valid, detached].
 
-  Transfer OffsreenCanvas to worker will detach the OffscreenCanvas
-  in main thread.
+  Transfer OffscreenCanvas with MessageChannel will detach the OffscreenCanvas.
   
   Check whether 'InvalidStateError' is generated when OffscreenCanvas is
   detached.
@@ -405,7 +494,7 @@ g.test('source_offscreenCanvas,state')
   )
   .fn(async t => {
     const { detached, copySize } = t.params;
-    const offscreenCanvas = t.getOffscreenCanvas(1, 1);
+    const offscreenCanvas = createOffscreenCanvas(t, 1, 1);
     const dstTexture = t.device.createTexture({
       size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       format: 'bgra8unorm',
@@ -413,30 +502,19 @@ g.test('source_offscreenCanvas,state')
     });
 
     if (detached) {
-      const workerCode =
-        "self.onmessage = function(e) {e.data.canvas.getContext('2d'); poseMessage('get 2d context');};";
-      const blob = new Blob([workerCode], { type: 'text/javascript' });
-      const url = URL.createObjectURL(blob);
-      const worker = new Worker(url);
-      worker.postMessage({ canvas: offscreenCanvas }, [offscreenCanvas]);
-      worker.onmessage = function (e) {
-        t.runTest(
-          { source: offscreenCanvas },
-          { texture: dstTexture },
-          copySize,
-          true, // No validation errors.
-          'InvalidStateError'
-        );
-      };
+      const messageChannel = new MessageChannel();
+      messageChannel.port1.postMessage(offscreenCanvas, [offscreenCanvas]);
     } else {
       offscreenCanvas.getContext('2d');
-      t.runTest(
-        { source: offscreenCanvas },
-        { texture: dstTexture },
-        copySize,
-        true // No validation errors.
-      );
     }
+
+    t.runTest(
+      { source: offscreenCanvas },
+      { texture: dstTexture },
+      copySize,
+      true, // No validation errors.
+      detached ? 'InvalidStateError' : ''
+    );
   });
 
 g.test('destination_texture,state')
@@ -500,7 +578,7 @@ g.test('destination_texture,usage')
     `
   Test dst texture usages
 
-  Check that an error is generated when texture is created witout usage COPY_DST | RENDER_ATTACHMENT.
+  Check that an error is generated when texture is created without usage COPY_DST | RENDER_ATTACHMENT.
   `
   )
   .params(u =>
