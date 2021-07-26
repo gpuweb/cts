@@ -91,14 +91,21 @@ class DrawCall {
   public instanceCount: number;
   public firstInstance: number;
 
-  constructor(
-    device: GPUDevice,
-    vertexArrays: Float32Array[],
-    vertexCount: number,
-    partialLastNumber: boolean,
-    offsetVertexBuffer: boolean,
-    keepInstanceStepModeBufferInRange: boolean
-  ) {
+  constructor({
+    device,
+    vertexArrays,
+    vertexCount,
+    partialLastNumber,
+    offsetVertexBuffer,
+    keepInstanceStepModeBufferInRange,
+  }: {
+    device: GPUDevice;
+    vertexArrays: Float32Array[];
+    vertexCount: number;
+    partialLastNumber: boolean;
+    offsetVertexBuffer: boolean;
+    keepInstanceStepModeBufferInRange: boolean;
+  }) {
     this.device = device;
 
     // Default arguments (valid call)
@@ -156,7 +163,7 @@ class DrawCall {
   // Insert an indexed draw call into |pass|
   public drawIndexed(pass: GPURenderPassEncoder) {
     // Generate index buffer
-    const indexArray = new Uint32Array(this.vertexCountInIndexBuffer).fill(0).map((_, i) => i);
+    const indexArray = new Uint32Array(this.vertexCountInIndexBuffer).map((_, i) => i);
     const indexBuffer = this.generateIndexBuffer(indexArray);
     this.bindVertexBuffers(pass);
     pass.setIndexBuffer(indexBuffer, 'uint32');
@@ -178,7 +185,7 @@ class DrawCall {
   // Insert an indexed indirect draw call into |pass|
   public drawIndexedIndirect(pass: GPURenderPassEncoder) {
     // Generate index buffer
-    const indexArray = new Uint32Array(this.vertexCountInIndexBuffer).fill(0).map((_, i) => i);
+    const indexArray = new Uint32Array(this.vertexCountInIndexBuffer).map((_, i) => i);
     const indexBuffer = this.generateIndexBuffer(indexArray);
     this.bindVertexBuffers(pass);
     pass.setIndexBuffer(indexBuffer, 'uint32');
@@ -220,7 +227,6 @@ class DrawCall {
   // Create an index buffer from |indexArray|
   private generateIndexBuffer(indexArray: Uint32Array): GPUBuffer {
     const byteLength = indexArray.byteLength;
-    assert(byteLength % 4 === 0); // Since indexArray is Uint32Array, (byteLength % 4) must be 0
     const indexBuffer = this.device.createBuffer({
       size: byteLength,
       usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
@@ -348,15 +354,23 @@ class F extends GPUTest {
     return buffers;
   }
 
-  generateVertexShaderCode(
-    bufferCount: number,
-    attributesPerBuffer: number,
-    validValues: number[],
-    typeInfo: VertexInfo,
-    vertexIndexOffset: number,
-    numVertices: number,
-    isIndexed: boolean
-  ): string {
+  generateVertexShaderCode({
+    bufferCount,
+    attributesPerBuffer,
+    validValues,
+    typeInfo,
+    vertexIndexOffset,
+    numVertices,
+    isIndexed,
+  }: {
+    bufferCount: number;
+    attributesPerBuffer: number;
+    validValues: number[];
+    typeInfo: VertexInfo;
+    vertexIndexOffset: number;
+    numVertices: number;
+    isIndexed: boolean;
+  }): string {
     // Create layout and attributes listing
     let layoutStr = 'struct Attributes {';
     const attributeNames = [];
@@ -407,28 +421,37 @@ class F extends GPUTest {
     return vertexShaderCode;
   }
 
-  createRenderPipeline(
-    bufferCount: number,
-    attributesPerBuffer: number,
-    validValues: number[],
-    typeInfo: VertexInfo,
-    vertexIndexOffset: number,
-    numVertices: number,
-    isIndexed: boolean,
-    buffers: GPUVertexBufferLayout[]
-  ): GPURenderPipeline {
+  createRenderPipeline({
+    bufferCount,
+    attributesPerBuffer,
+    validValues,
+    typeInfo,
+    vertexIndexOffset,
+    numVertices,
+    isIndexed,
+    buffers,
+  }: {
+    bufferCount: number;
+    attributesPerBuffer: number;
+    validValues: number[];
+    typeInfo: VertexInfo;
+    vertexIndexOffset: number;
+    numVertices: number;
+    isIndexed: boolean;
+    buffers: GPUVertexBufferLayout[];
+  }): GPURenderPipeline {
     const pipeline = this.device.createRenderPipeline({
       vertex: {
         module: this.device.createShaderModule({
-          code: this.generateVertexShaderCode(
+          code: this.generateVertexShaderCode({
             bufferCount,
             attributesPerBuffer,
             validValues,
             typeInfo,
             vertexIndexOffset,
             numVertices,
-            isIndexed
-          ),
+            isIndexed,
+          }),
         }),
         entryPoint: 'main',
         buffers,
@@ -448,17 +471,27 @@ class F extends GPUTest {
     return pipeline;
   }
 
-  doTest(
-    bufferCount: number,
-    attributesPerBuffer: number,
-    dataType: string,
-    validValues: number[],
-    vertexIndexOffset: number,
-    numVertices: number,
-    isIndexed: boolean,
-    isIndirect: boolean,
-    drawCall: DrawCall
-  ): void {
+  doTest({
+    bufferCount,
+    attributesPerBuffer,
+    dataType,
+    validValues,
+    vertexIndexOffset,
+    numVertices,
+    isIndexed,
+    isIndirect,
+    drawCall,
+  }: {
+    bufferCount: number;
+    attributesPerBuffer: number;
+    dataType: string;
+    validValues: number[];
+    vertexIndexOffset: number;
+    numVertices: number;
+    isIndexed: boolean;
+    isIndirect: boolean;
+    drawCall: DrawCall;
+  }): void {
     // Vertex buffer descriptors
     const buffers: GPUVertexBufferLayout[] = this.generateVertexBufferDescriptors(
       bufferCount,
@@ -467,16 +500,16 @@ class F extends GPUTest {
     );
 
     // Pipeline setup, texture setup
-    const pipeline = this.createRenderPipeline(
+    const pipeline = this.createRenderPipeline({
       bufferCount,
       attributesPerBuffer,
       validValues,
-      typeInfoMap[dataType],
+      typeInfo: typeInfoMap[dataType],
       vertexIndexOffset,
       numVertices,
       isIndexed,
-      buffers
-    );
+      buffers,
+    });
 
     const colorAttachment = this.device.createTexture({
       format: 'rgba8unorm',
@@ -523,22 +556,18 @@ g.test('vertex_buffer_access')
         { indexed: true, indirect: false },
         { indexed: true, indirect: true },
       ])
-      .expand(
-        'drawCallTestParameter',
-        p =>
-          p.indirect
-            ? p.indexed
-              ? ([
-                  'indexCount',
-                  'instanceCount',
-                  'firstIndex',
-                  'baseVertex',
-                  'firstInstance',
-                  'vertexCountInIndexBuffer',
-                ] as const) // For drawIndexedIndirect
-              : (['vertexCount', 'instanceCount', 'firstVertex', 'firstInstance'] as const) // For drawIndirected
-            : (['baseVertex', 'vertexCountInIndexBuffer'] as const) // For drawIndexed
-      )
+      .expand('drawCallTestParameter', function* (p) {
+        if (p.indexed) {
+          yield* ['baseVertex', 'vertexCountInIndexBuffer'] as const;
+          if (p.indirect) {
+            yield* ['indexCount', 'instanceCount', 'firstIndex', 'firstInstance'] as const;
+          }
+        } else {
+          if (p.indirect) {
+            yield* ['vertexCount', 'instanceCount', 'firstVertex', 'firstInstance'] as const;
+          }
+        }
+      })
       .combine('type', Object.keys(typeInfoMap))
       .combine('additionalBuffers', [0, 4])
       .combine('partialLastNumber', [false, true])
@@ -575,14 +604,14 @@ g.test('vertex_buffer_access')
     );
 
     // Mutable draw call
-    const draw = new DrawCall(
-      t.device,
-      bufferContents,
-      numVertices,
-      p.partialLastNumber,
-      p.offsetVertexBuffer,
-      p.indexed && !p.indirect // keep instance step mode buffer in range for drawIndexed
-    );
+    const draw = new DrawCall({
+      device: t.device,
+      vertexArrays: bufferContents,
+      vertexCount: numVertices,
+      partialLastNumber: p.partialLastNumber,
+      offsetVertexBuffer: p.offsetVertexBuffer,
+      keepInstanceStepModeBufferInRange: p.indexed && !p.indirect, // keep instance step mode buffer in range for drawIndexed
+    });
 
     // Offset the draw call parameter we are testing by |errorScale|
     draw[p.drawCallTestParameter] += p.errorScale;
@@ -592,15 +621,15 @@ g.test('vertex_buffer_access')
       vertexIndexOffset += p.errorScale;
     }
 
-    t.doTest(
+    t.doTest({
       bufferCount,
       attributesPerBuffer,
-      p.type,
+      dataType: p.type,
       validValues,
       vertexIndexOffset,
       numVertices,
-      p.indexed,
-      p.indirect,
-      draw
-    );
+      isIndexed: p.indexed,
+      isIndirect: p.indirect,
+      drawCall: draw,
+    });
   });
