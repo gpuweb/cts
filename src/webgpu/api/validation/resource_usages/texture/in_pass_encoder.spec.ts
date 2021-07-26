@@ -1087,7 +1087,7 @@ g.test('unused_bindings_in_pipeline')
               code: wgslFragment,
             }),
             entryPoint: 'main',
-            targets: [{ format: 'rgba8unorm' }],
+            targets: [{ format: 'rgba8unorm', writeMask: 0 }],
           },
           primitive: { topology: 'triangle-list' },
         });
