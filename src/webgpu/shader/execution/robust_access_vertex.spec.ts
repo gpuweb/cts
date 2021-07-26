@@ -207,6 +207,24 @@ class DrawCall {
     }
   }
 
+  // Create a buffer with given size and usage: usage | GPUBufferUsage.COPY_DST, and call
+  // writeBuffer with given data and parameter.
+  private createBufferWithContent(
+    usage: number,
+    bufferSize: number,
+    bufferOffset: number,
+    dataArray: Float32Array | Uint32Array | Int32Array,
+    dataOffset?: number,
+    dataSize?: number
+  ) {
+    const buffer = this.device.createBuffer({
+      size: bufferSize,
+      usage: usage | GPUBufferUsage.COPY_DST, // Ensure that buffer can be used by writeBuffer
+    });
+    this.device.queue.writeBuffer(buffer, bufferOffset, dataArray, dataOffset, dataSize);
+    return buffer;
+  }
+
   // Create a vertex buffer from |vertexArray|
   // If |partialLastNumber| is true, delete one byte off the end
   private generateVertexBuffer(vertexArray: Float32Array, partialLastNumber: boolean): GPUBuffer {
@@ -216,23 +234,12 @@ class DrawCall {
       size -= 1; // Shave off one byte from the buffer size.
       length -= 1; // And one whole element from the writeBuffer.
     }
-    const vertexBuffer = this.device.createBuffer({
-      size,
-      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-    });
-    this.device.queue.writeBuffer(vertexBuffer, 0, vertexArray, 0, length);
-    return vertexBuffer;
+    return this.createBufferWithContent(GPUBufferUsage.VERTEX, size, 0, vertexArray, 0, length);
   }
 
   // Create an index buffer from |indexArray|
   private generateIndexBuffer(indexArray: Uint32Array): GPUBuffer {
-    const byteLength = indexArray.byteLength;
-    const indexBuffer = this.device.createBuffer({
-      size: byteLength,
-      usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
-    });
-    this.device.queue.writeBuffer(indexBuffer, 0, indexArray);
-    return indexBuffer;
+    return this.createBufferWithContent(GPUBufferUsage.INDEX, indexArray.byteLength, 0, indexArray);
   }
 
   // Create an indirect buffer containing draw call values
@@ -243,14 +250,12 @@ class DrawCall {
       this.firstVertex,
       this.firstInstance,
     ]);
-    const indirectBuffer = this.device.createBuffer({
-      mappedAtCreation: true,
-      size: indirectArray.byteLength,
-      usage: GPUBufferUsage.INDIRECT,
-    });
-    new Int32Array(indirectBuffer.getMappedRange()).set(indirectArray);
-    indirectBuffer.unmap();
-    return indirectBuffer;
+    return this.createBufferWithContent(
+      GPUBufferUsage.INDIRECT,
+      indirectArray.byteLength,
+      0,
+      indirectArray
+    );
   }
 
   // Create an indirect buffer containing indexed draw call values
@@ -262,14 +267,12 @@ class DrawCall {
       this.baseVertex,
       this.firstInstance,
     ]);
-    const indirectBuffer = this.device.createBuffer({
-      mappedAtCreation: true,
-      size: indirectArray.byteLength,
-      usage: GPUBufferUsage.INDIRECT,
-    });
-    new Int32Array(indirectBuffer.getMappedRange()).set(indirectArray);
-    indirectBuffer.unmap();
-    return indirectBuffer;
+    return this.createBufferWithContent(
+      GPUBufferUsage.INDIRECT,
+      indirectArray.byteLength,
+      0,
+      indirectArray
+    );
   }
 }
 
@@ -410,10 +413,10 @@ class F extends GPUTest {
 
         var Position : vec4<f32>;
         if (attributesInBounds && (${!isIndexed} || indexInBounds)) {
-          // Success case, move the vertex out of the viewport
-          Position = vec4<f32>(-1.0, 0.0, 0.0, 1.0);
+          // Success case, move the vertex to the right of the viewport to show that at least one case succeed
+          Position = vec4<f32>(1.0, 0.0, 0.0, 1.0);
         } else {
-          // Failure case, move the vertex inside the viewport
+          // Failure case, move the vertex to the left of the viewport
           Position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
         }
         return Position;
@@ -513,7 +516,7 @@ class F extends GPUTest {
 
     const colorAttachment = this.device.createTexture({
       format: 'rgba8unorm',
-      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+      size: { width: 2, height: 1, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
     const colorAttachmentView = colorAttachment.createView();
@@ -536,12 +539,20 @@ class F extends GPUTest {
     pass.endPass();
     this.device.queue.submit([encoder.finish()]);
 
-    // Validate we see green instead of red, meaning no fragment ended up on-screen
+    // Validate we see green on the left pixel, showing that no failure case is detected
     this.expectSinglePixelIn2DTexture(
       colorAttachment,
       'rgba8unorm',
       { x: 0, y: 0 },
       { exp: new Uint8Array([0x00, 0xff, 0x00, 0xff]), layout: { mipLevel: 0 } }
+    );
+    // Validate wee see red on the right pixel, showing that at least one case succeed, prevent the test
+    // from unexpectly doing nothing and pass the validation
+    this.expectSinglePixelIn2DTexture(
+      colorAttachment,
+      'rgba8unorm',
+      { x: 1, y: 0 },
+      { exp: new Uint8Array([0xff, 0x00, 0x00, 0xff]), layout: { mipLevel: 0 } }
     );
   }
 }
