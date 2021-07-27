@@ -3,17 +3,17 @@ Test vertex attributes behave correctly (no crash / data leak) when accessed out
 
 Test coverage:
 
-The following will be parameterized (all combinations tested):
+The following is parameterized (all combinations tested):
 
 1) Draw call type? (drawIndexed, drawIndirect, drawIndexedIndirect)
   - Run the draw call using an index buffer and/or an indirect buffer.
-  - Direct draw will not test, as vertex buffer OOB are CPU validated and treated as validation errors.
+  - Doesn't test direct draw, as vertex buffer OOB are CPU validated and treated as validation errors.
   - Also the instance step mode vertex buffer OOB are CPU validated for drawIndexed, so we only test
     robustness access for vertex step mode vertex buffers.
 
 2) Draw call parameter (vertexCount, firstVertex, indexCount, firstIndex, baseVertex, instanceCount,
   firstInstance, vertexCountInIndexBuffer)
-  - The parameter which will go out of bounds. Filtered depending on the draw call type.
+  - The parameter which goes out of bounds. Filtered depending on the draw call type.
   - vertexCount, firstVertex: used for drawIndirect only, test for vertex step mode buffer OOB
   - instanceCount, firstInstance: used for both drawIndirect and drawIndexedIndirect, test for
     instance step mode buffer OOB
@@ -21,7 +21,7 @@ The following will be parameterized (all combinations tested):
     for vertex step mode buffer OOB. vertexCountInIndexBuffer indicates how many vertices are used
     within the index buffer, i.e. [0, 1, ..., vertexCountInIndexBuffer-1].
   - indexCount, firstIndex: used for drawIndexedIndirect only, validate the vertex buffer access
-    when the vertex itself is OOB in index buffer. This won't happen in drawIndexed as we have index
+    when the vertex itself is OOB in index buffer. This never happens in drawIndexed as we have index
     buffer OOB CPU validation for it.
 
 3) Attribute type (float32, float32x2, float32x3, float32x4)
@@ -36,28 +36,23 @@ The following will be parameterized (all combinations tested):
 
 6) Partial last number and offset vertex buffer (false, true)
   - Tricky cases that make vertex buffer OOB.
-  - Partial last number will make vertex buffer 1 byte less than enough, making the last vertex OOB
-    with 1 byte.
+  - With partial last number enabled, vertex buffer size will be 1 byte less than enough, making the
+    last vertex OOB with 1 byte.
   - Offset vertex buffer will bind the vertex buffer to render pass with 4 bytes offset, causing OOB
-  - For drawIndexed, these two flag will be surpressed for instance step mode vertex buffer to make
-    sure it pass the CPU validation.
+  - For drawIndexed, these two flags are suppressed for instance step mode vertex buffer to make sure
+    it pass the CPU validation.
 
-The tests will have one instance step mode vertex buffer bound for instanced attributes, to make
-sure instanceCount / firstInstance are tested.
+The tests have one instance step mode vertex buffer bound for instanced attributes, to make sure
+instanceCount / firstInstance are tested.
 
-The tests will include multiple attributes per vertex buffer.
+The tests include multiple attributes per vertex buffer.
 
-The vertex buffers will be filled by repeating a few values randomly chosen for each test until the
+The vertex buffers are filled by repeating a few values randomly chosen for each test until the
 end of the buffer.
 
-The test will run a render pipeline which verifies the following:
+The tests run a render pipeline which verifies the following:
 1) All vertex attribute values occur in the buffer or are 0 (for control case it can't be 0)
 2) All gl_VertexIndex values are within the index buffer or 0
-
-TODO:
-
-A suppression may be needed for d3d12 on tests that have non-zero baseVertex, since d3d12 counts
-from 0 instead of from baseVertex (will fail check for gl_VertexIndex).
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
@@ -66,14 +61,14 @@ import { GPUTest } from '../../gpu_test.js';
 
 // Encapsulates a draw call (either indexed or non-indexed)
 class DrawCall {
-  private device: GPUDevice;
+  private test: GPUTest;
   private vertexBuffers: GPUBuffer[];
 
   // Add a float offset when binding vertex buffer
   private offsetVertexBuffer: boolean;
 
   // Keep instance step mode vertex buffer in range, in order to test vertex step
-  // mode buffer OOB in drawIndexed. Setting true will surpress partialLastNumber
+  // mode buffer OOB in drawIndexed. Setting true will suppress partialLastNumber
   // and offsetVertexBuffer for instance step mode vertex buffer.
   private keepInstanceStepModeBufferInRange: boolean;
 
@@ -92,21 +87,21 @@ class DrawCall {
   public firstInstance: number;
 
   constructor({
-    device,
+    test,
     vertexArrays,
     vertexCount,
     partialLastNumber,
     offsetVertexBuffer,
     keepInstanceStepModeBufferInRange,
   }: {
-    device: GPUDevice;
+    test: GPUTest;
     vertexArrays: Float32Array[];
     vertexCount: number;
     partialLastNumber: boolean;
     offsetVertexBuffer: boolean;
     keepInstanceStepModeBufferInRange: boolean;
   }) {
-    this.device = device;
+    this.test = test;
 
     // Default arguments (valid call)
     this.vertexCount = vertexCount;
@@ -121,20 +116,15 @@ class DrawCall {
     this.offsetVertexBuffer = offsetVertexBuffer;
     this.keepInstanceStepModeBufferInRange = keepInstanceStepModeBufferInRange;
 
-    // Since vertexInIndexBuffer is mutable, index buffer generating should be deferred to right before calling draw
+    // Since vertexInIndexBuffer is mutable, generation of the index buffer should be deferred to right before calling draw
 
     // Generate vertex buffer
-    if (keepInstanceStepModeBufferInRange) {
-      // Surpress partialLastNumber for the first vertex buffer, aka the instance step mode buffer
-      this.vertexBuffers = [
-        this.generateVertexBuffer(vertexArrays[0], false),
-        ...vertexArrays
-          .slice(1, vertexArrays.length)
-          .map(v => this.generateVertexBuffer(v, partialLastNumber)),
-      ];
-    } else {
-      this.vertexBuffers = vertexArrays.map(v => this.generateVertexBuffer(v, partialLastNumber));
-    }
+    this.vertexBuffers = vertexArrays.map((v, i) =>
+      i === 0 && keepInstanceStepModeBufferInRange
+        ? // Suppress partialLastNumber for the first vertex buffer, aka the instance step mode buffer
+          this.generateVertexBuffer(v, false)
+        : this.generateVertexBuffer(v, partialLastNumber)
+    );
   }
 
   // Insert a draw call into |pass| with specified type
@@ -207,24 +197,6 @@ class DrawCall {
     }
   }
 
-  // Create a buffer with given size and usage: usage | GPUBufferUsage.COPY_DST, and call
-  // writeBuffer with given data and parameter.
-  private createBufferWithContent(
-    usage: number,
-    bufferSize: number,
-    bufferOffset: number,
-    dataArray: Float32Array | Uint32Array | Int32Array,
-    dataOffset?: number,
-    dataSize?: number
-  ) {
-    const buffer = this.device.createBuffer({
-      size: bufferSize,
-      usage: usage | GPUBufferUsage.COPY_DST, // Ensure that buffer can be used by writeBuffer
-    });
-    this.device.queue.writeBuffer(buffer, bufferOffset, dataArray, dataOffset, dataSize);
-    return buffer;
-  }
-
   // Create a vertex buffer from |vertexArray|
   // If |partialLastNumber| is true, delete one byte off the end
   private generateVertexBuffer(vertexArray: Float32Array, partialLastNumber: boolean): GPUBuffer {
@@ -234,12 +206,17 @@ class DrawCall {
       size -= 1; // Shave off one byte from the buffer size.
       length -= 1; // And one whole element from the writeBuffer.
     }
-    return this.createBufferWithContent(GPUBufferUsage.VERTEX, size, 0, vertexArray, 0, length);
+    const buffer = this.test.device.createBuffer({
+      size,
+      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST, // Ensure that buffer can be used by writeBuffer
+    });
+    this.test.device.queue.writeBuffer(buffer, 0, vertexArray.slice(0, length));
+    return buffer;
   }
 
   // Create an index buffer from |indexArray|
   private generateIndexBuffer(indexArray: Uint32Array): GPUBuffer {
-    return this.createBufferWithContent(GPUBufferUsage.INDEX, indexArray.byteLength, 0, indexArray);
+    return this.test.makeBufferWithContents(indexArray, GPUBufferUsage.INDEX);
   }
 
   // Create an indirect buffer containing draw call values
@@ -250,12 +227,7 @@ class DrawCall {
       this.firstVertex,
       this.firstInstance,
     ]);
-    return this.createBufferWithContent(
-      GPUBufferUsage.INDIRECT,
-      indirectArray.byteLength,
-      0,
-      indirectArray
-    );
+    return this.test.makeBufferWithContents(indirectArray, GPUBufferUsage.INDIRECT);
   }
 
   // Create an indirect buffer containing indexed draw call values
@@ -267,12 +239,7 @@ class DrawCall {
       this.baseVertex,
       this.firstInstance,
     ]);
-    return this.createBufferWithContent(
-      GPUBufferUsage.INDIRECT,
-      indirectArray.byteLength,
-      0,
-      indirectArray
-    );
+    return this.test.makeBufferWithContents(indirectArray, GPUBufferUsage.INDIRECT);
   }
 }
 
@@ -334,7 +301,11 @@ class F extends GPUTest {
     return bufferContents;
   }
 
-  generateVertexBufferDescriptors(bufferCount: number, attributesPerBuffer: number, type: string) {
+  generateVertexBufferDescriptors(
+    bufferCount: number,
+    attributesPerBuffer: number,
+    type: GPUVertexFormat
+  ) {
     const typeInfo = typeInfoMap[type];
     // Vertex buffer descriptors
     const buffers: GPUVertexBufferLayout[] = [];
@@ -407,17 +378,21 @@ class F extends GPUTest {
         var attributesInBounds : bool = ${attributeNames
           .map(a => `validationFunc(attributes.${a})`)
           .join(' && ')};
-        var indexInBounds : bool = VertexIndex == 0u ||
+
+        var indexInBoundsCountFromBaseVertex : bool =
             (VertexIndex >= ${vertexIndexOffset}u &&
             VertexIndex < ${vertexIndexOffset + numVertices}u);
+        // For D3D12, VertexIndex count from 0. For index robust access it can be 0.
+        var indexInBoundsCountFrom0 : bool = (VertexIndex >= 0u && VertexIndex < ${numVertices}u);
+        var indexInBounds : bool = indexInBoundsCountFrom0 || indexInBoundsCountFromBaseVertex;
 
         var Position : vec4<f32>;
         if (attributesInBounds && (${!isIndexed} || indexInBounds)) {
           // Success case, move the vertex to the right of the viewport to show that at least one case succeed
-          Position = vec4<f32>(1.0, 0.0, 0.0, 1.0);
+          Position = vec4<f32>(0.5, 0.0, 0.0, 1.0);
         } else {
           // Failure case, move the vertex to the left of the viewport
-          Position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+          Position = vec4<f32>(-0.5, 0.0, 0.0, 1.0);
         }
         return Position;
       }`;
@@ -487,7 +462,7 @@ class F extends GPUTest {
   }: {
     bufferCount: number;
     attributesPerBuffer: number;
-    dataType: string;
+    dataType: GPUVertexFormat;
     validValues: number[];
     vertexIndexOffset: number;
     numVertices: number;
@@ -573,13 +548,11 @@ g.test('vertex_buffer_access')
           if (p.indirect) {
             yield* ['indexCount', 'instanceCount', 'firstIndex', 'firstInstance'] as const;
           }
-        } else {
-          if (p.indirect) {
-            yield* ['vertexCount', 'instanceCount', 'firstVertex', 'firstInstance'] as const;
-          }
+        } else if (p.indirect) {
+          yield* ['vertexCount', 'instanceCount', 'firstVertex', 'firstInstance'] as const;
         }
       })
-      .combine('type', Object.keys(typeInfoMap))
+      .combine('type', Object.keys(typeInfoMap) as GPUVertexFormat[])
       .combine('additionalBuffers', [0, 4])
       .combine('partialLastNumber', [false, true])
       .combine('offsetVertexBuffer', [false, true])
@@ -591,7 +564,7 @@ g.test('vertex_buffer_access')
 
     // Number of vertices to draw
     const numVertices = 4;
-    // Each buffer will be bound to this many attributes (2 would mean 2 attributes per buffer)
+    // Each buffer is bound to this many attributes (2 would mean 2 attributes per buffer)
     const attributesPerBuffer = 2;
     // Random values to fill our buffer with to avoid collisions with other tests
     const arbitraryValues = Array(5)
@@ -616,7 +589,7 @@ g.test('vertex_buffer_access')
 
     // Mutable draw call
     const draw = new DrawCall({
-      device: t.device,
+      test: t,
       vertexArrays: bufferContents,
       vertexCount: numVertices,
       partialLastNumber: p.partialLastNumber,
