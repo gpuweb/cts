@@ -32,7 +32,7 @@ import {
   kTextureUsages,
   kValidTextureFormatsForCopyIB2T,
 } from '../../../../capability_info.js';
-import { ValidationTest } from '../../validation_test.js';
+import { kResourceStates, ValidationTest } from '../../validation_test.js';
 
 const kDefaultBytesPerPixel = 4; // using 'bgra8unorm' or 'rgba8unorm'
 const kDefaultWidth = 32;
@@ -195,7 +195,7 @@ g.test('source_imageBitmap,state')
 g.test('destination_texture,state')
   .params(u =>
     u //
-      .combine('state', ['valid', 'invalid', 'destroyed'] as const)
+      .combine('state', kResourceStates)
       .beginSubcases()
       .combine('copySize', [
         { width: 0, height: 0, depthOrArrayLayers: 0 },
