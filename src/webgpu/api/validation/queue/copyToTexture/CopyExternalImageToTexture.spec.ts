@@ -183,14 +183,11 @@ export const g = makeTestGroup(CopyExternalImageToTextureTest);
 g.test('source_canvas,contexts')
   .desc(
     `
-  Test HTMLCanvasElement and OffscreenCanvas as source image with different contexts.
+  Test HTMLCanvasElement as source image with different contexts.
 
   Call HTMLCanvasElment.getContext() with different context type.
   Only '2d', 'experimental-webgl', 'webgl', 'webgl2' is valid context
   type.
-
-  Call OffscreenCanvas.getContext() with different context type.
-  Only '2d', 'webgl', 'webgl2' is valid context type.
   
   Check whether 'OperationError' is generated when context type is invalid.
   `
@@ -288,6 +285,9 @@ g.test('source_image,crossOrigin')
   images.
   
   Check whether 'SecurityError' is generated when source image is not origin clean.
+
+  TODO: make this test case work offline, ref link to achieve this :
+  https://web-platform-tests.org/writing-tests/server-features.html#tests-involving-multiple-origins
   `
   )
   .params(u =>
@@ -425,26 +425,35 @@ g.test('source_imageBitmap,state')
 g.test('source_canvas,state')
   .desc(
     `
-  Test HTMLCanvasElement as source image in state [placeholder, valid].
+  Test HTMLCanvasElement as source image in state [nocontext, placeholder, valid].
+
+  Nocontext means using a canvas without any context as copy param.
 
   Call 'transferControlToOffscreen' on HTMLCanvasElement will cause the
   canvas control right transfer. And this canvas is in state 'placeholder'
+  Whether getContext in new generated offscreenCanvas won't affect the origin
+  canvas state.
   
+  
+  Check whether 'OperationError' is generated when HTMLCanvasElement has no
+  context.
+
   Check whether 'InvalidStateError' is generated when HTMLCanvasElement is
   in 'placeholder' state.
     `
   )
   .params(u =>
     u //
-      .combine('state', ['placeholder', 'valid'])
+      .combine('state', ['nocontext', 'placeholder', 'valid'])
       .beginSubcases()
+      .combine('getContextInOffscreenCanvas', [false, true])
       .combine('copySize', [
         { width: 0, height: 0, depthOrArrayLayers: 0 },
         { width: 1, height: 1, depthOrArrayLayers: 1 },
       ])
   )
   .fn(async t => {
-    const { state, copySize } = t.params;
+    const { state, getContextInOffscreenCanvas, copySize } = t.params;
     const canvas = createOnscreenCanvas(t, 1, 1);
     if (typeof canvas.transferControlToOffscreen === 'undefined') {
       t.skip("Browser doesn't support HTMLCanvasElement transfer control right");
@@ -457,10 +466,28 @@ g.test('source_canvas,state')
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    if (state === 'placeholder') {
-      canvas.transferControlToOffscreen();
-    } else {
-      assert(canvas.getContext('2d') !== null);
+    let offscreenCanvas: OffscreenCanvas;
+    let exceptionName: string = '';
+
+    switch (state) {
+      case 'nocontext': {
+        exceptionName = 'OperationError';
+        break;
+      }
+      case 'placeholder': {
+        offscreenCanvas = canvas.transferControlToOffscreen();
+        if (getContextInOffscreenCanvas) {
+          offscreenCanvas.getContext('webgl');
+        }
+        exceptionName = 'InvalidStateError';
+        break;
+      }
+      case 'valid': {
+        assert(canvas.getContext('2d') !== null);
+        break;
+      }
+      default:
+        unreachable();
     }
 
     t.runTest(
@@ -468,7 +495,7 @@ g.test('source_canvas,state')
       { texture: dstTexture },
       copySize,
       true, // No validation errors.
-      state === 'placeholder' ? 'InvalidStateError' : ''
+      exceptionName
     );
   });
 
@@ -477,23 +504,29 @@ g.test('source_offscreenCanvas,state')
     `
   Test OffscreenCanvas as source image in state [valid, detached].
 
+  Nocontext means using a canvas without any context as copy param.
+
   Transfer OffscreenCanvas with MessageChannel will detach the OffscreenCanvas.
-  
+
+  Check whether 'OperationError' is generated when HTMLCanvasElement has no
+  context.
+
   Check whether 'InvalidStateError' is generated when OffscreenCanvas is
   detached.
   `
   )
   .params(u =>
     u //
-      .combine('detached', [false, true])
+      .combine('state', ['nocontext', 'detached', 'valid'])
       .beginSubcases()
+      .combine('getContextInOffscreenCanvas', [false, true])
       .combine('copySize', [
         { width: 0, height: 0, depthOrArrayLayers: 0 },
         { width: 1, height: 1, depthOrArrayLayers: 1 },
       ])
   )
   .fn(async t => {
-    const { detached, copySize } = t.params;
+    const { state, getContextInOffscreenCanvas, copySize } = t.params;
     const offscreenCanvas = createOffscreenCanvas(t, 1, 1);
     const dstTexture = t.device.createTexture({
       size: { width: 1, height: 1, depthOrArrayLayers: 1 },
@@ -501,11 +534,34 @@ g.test('source_offscreenCanvas,state')
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    if (detached) {
-      const messageChannel = new MessageChannel();
-      messageChannel.port1.postMessage(offscreenCanvas, [offscreenCanvas]);
-    } else {
-      offscreenCanvas.getContext('2d');
+    let exceptionName: string = '';
+    switch (state) {
+      case 'nocontext': {
+        exceptionName = 'OperationError';
+        break;
+      }
+      case 'detached': {
+        const messageChannel = new MessageChannel();
+        messageChannel.port1.postMessage(offscreenCanvas, [offscreenCanvas]);
+
+        if (getContextInOffscreenCanvas) {
+          const port2FirstMessage = new Promise(resolve => {
+            messageChannel.port2.onmessage = m => resolve(m);
+          });
+
+          const receivedOffscreenCanvas = (await port2FirstMessage) as MessageEvent;
+          receivedOffscreenCanvas.data.getContext('webgl');
+        }
+
+        exceptionName = 'InvalidStateError';
+        break;
+      }
+      case 'valid': {
+        offscreenCanvas.getContext('webgl');
+        break;
+      }
+      default:
+        unreachable();
     }
 
     t.runTest(
@@ -513,7 +569,7 @@ g.test('source_offscreenCanvas,state')
       { texture: dstTexture },
       copySize,
       true, // No validation errors.
-      detached ? 'InvalidStateError' : ''
+      exceptionName
     );
   });
 
