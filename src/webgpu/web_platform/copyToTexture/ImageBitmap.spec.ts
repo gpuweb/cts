@@ -15,7 +15,7 @@ import { unreachable } from '../../../common/util/util.js';
 import {
   RegularTextureFormat,
   kTextureFormatInfo,
-  kValidTextureFormatsForCopyIB2T,
+  kValidTextureFormatsForCopyE2T,
 } from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 import { kTexelRepresentationInfo } from '../../util/texture/texel_data.js';
@@ -261,7 +261,7 @@ g.test('from_ImageData')
     u
       .combine('alpha', ['none', 'premultiply'] as const)
       .combine('orientation', ['none', 'flipY'] as const)
-      .combine('dstColorFormat', kValidTextureFormatsForCopyIB2T)
+      .combine('dstColorFormat', kValidTextureFormatsForCopyE2T)
       .beginSubcases()
       .combine('width', [1, 2, 4, 15, 255, 256])
       .combine('height', [1, 2, 4, 15, 255, 256])
@@ -325,7 +325,7 @@ g.test('from_canvas')
   .params(u =>
     u
       .combine('orientation', ['none', 'flipY'] as const)
-      .combine('dstColorFormat', kValidTextureFormatsForCopyIB2T)
+      .combine('dstColorFormat', kValidTextureFormatsForCopyE2T)
       .beginSubcases()
       .combine('width', [1, 2, 4, 15, 255, 256])
       .combine('height', [1, 2, 4, 15, 255, 256])
