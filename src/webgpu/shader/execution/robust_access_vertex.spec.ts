@@ -565,10 +565,8 @@ g.test('vertex_buffer_access')
     const numVertices = 4;
     // Each buffer is bound to this many attributes (2 would mean 2 attributes per buffer)
     const attributesPerBuffer = 2;
-    // Random values to fill our buffer with to avoid collisions with other tests
-    const arbitraryValues = Array(5)
-      .fill(0)
-      .map(v => Math.ceil(Math.random() * 1024));
+    // Some arbitrary values to fill our buffer with to avoid collisions with other tests
+    const arbitraryValues = [990, 685, 446, 175];
 
     // A valid value is 0 or one in the buffer
     const validValues =
