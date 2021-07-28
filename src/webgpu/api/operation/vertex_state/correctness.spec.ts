@@ -88,6 +88,15 @@ class VertexStateTest extends GPUTest {
     vertexCount: number,
     instanceCount: number
   ): string {
+    // In the base WebGPU spec maxVertexAttributes is larger than maxUniformBufferPerStage. We'll
+    // use a combination of uniform and storage buffers to cover all possible attributes. This
+    // happens to work because maxUniformBuffer + maxStorageBuffer = 12 + 8 = 20 which is larger
+    // than maxVertexAttributes = 16.
+    // However this might not work in the future for implementations that allow even more vertex
+    // attributes so there will need to be larger changes when that happens.
+    const maxUniformBuffers = kPerStageBindingLimits['uniformBuf'].max;
+    assert(maxUniformBuffers + kPerStageBindingLimits['storageBuf'].max >= kMaxVertexAttributes);
+
     let vsInputs = '';
     let vsChecks = '';
     let vsBindings = '';
@@ -111,9 +120,15 @@ class VertexStateTest extends GPUTest {
           indexBuiltin = `input.instanceIndex`;
         }
 
+        // Start using storage buffers when we run out of uniform buffers.
+        let storageType = 'uniform';
+        if (i >= maxUniformBuffers) {
+          storageType = 'storage, read';
+        }
+
         vsInputs += `  [[location(${i})]] attrib${i} : ${shaderType};\n`;
         vsBindings += `[[block]] struct S${i} { data : array<vec4<${a.shaderBaseType}>, ${maxCount}>; };\n`;
-        vsBindings += `[[group(0), binding(${i})]] var<uniform> providedData${i} : S${i};\n`;
+        vsBindings += `[[group(0), binding(${i})]] var<${storageType}> providedData${i} : S${i};\n`;
 
         // Generate the all the checks for the attributes.
         for (let component = 0; component < shaderComponentCount; component++) {
@@ -511,7 +526,7 @@ struct VSOutputs {
       for (const attrib of buffer.attributes) {
         const expectedDataBuffer = this.makeBufferWithContents(
           new Uint8Array(attrib.expectedData),
-          GPUBufferUsage.UNIFORM
+          GPUBufferUsage.UNIFORM | GPUBufferUsage.STORAGE
         );
         bgEntries.push({
           binding: attrib.shaderLocation,
@@ -631,19 +646,20 @@ g.test('setVertexBuffer_offset_and_attribute_offset')
       .combine('arrayStride', [128])
       .expand('offset', p => {
         const formatInfo = kVertexFormatInfo[p.format];
-        const componentSize = formatInfo.bytesPerComponent;
-        const formatSize = componentSize * formatInfo.componentCount;
-        return [
+        const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
+        return new Set([
           0,
-          componentSize,
-          componentSize * 2,
-          componentSize * 3,
+          4,
+          8,
+          formatSize,
+          formatSize * 2,
           p.arrayStride / 2,
-          p.arrayStride - formatSize - componentSize * 3,
-          p.arrayStride - formatSize - componentSize * 2,
-          p.arrayStride - formatSize - componentSize,
+          p.arrayStride - formatSize - 4,
+          p.arrayStride - formatSize - 8,
+          p.arrayStride - formatSize - formatSize,
+          p.arrayStride - formatSize - formatSize * 2,
           p.arrayStride - formatSize,
-        ];
+        ]);
       })
   )
   .fn(t => {
@@ -678,21 +694,21 @@ g.test('non_zero_array_stride_and_attribute_offset')
       .beginSubcases()
       .expand('arrayStride', p => {
         const formatInfo = kVertexFormatInfo[p.format];
-        const componentSize = formatInfo.bytesPerComponent;
-        const formatSize = componentSize * formatInfo.componentCount;
+        const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
 
         return [align(formatSize, 4), align(formatSize, 4) + 4, kMaxVertexBufferArrayStride];
       })
       .expand('offset', p => {
         const formatInfo = kVertexFormatInfo[p.format];
-        const componentSize = formatInfo.bytesPerComponent;
-        const formatSize = componentSize * formatInfo.componentCount;
+        const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
         return new Set(
           [
             0,
-            componentSize,
+            formatSize,
+            4,
             p.arrayStride / 2,
-            p.arrayStride - formatSize - componentSize,
+            p.arrayStride - formatSize * 2,
+            p.arrayStride - formatSize - 4,
             p.arrayStride - formatSize,
           ].map(offset => clamp(offset, { min: 0, max: p.arrayStride - formatSize }))
         );
@@ -890,10 +906,14 @@ g.test('vertex_buffer_used_multiple_times_interleaved')
           attributes: attribs,
         },
       ],
-      kVertexCount,
+      // Request one vertex more than what we need so we have an extra full stride. Otherwise WebGPU
+      // validation of vertex being in bounds will fail for all vertex buffers at an offset that's
+      // not 0 (since their last stride will go beyond the data for vertex kVertexCount -1).
+      kVertexCount + 1,
       kInstanceCount
     );
-    const vertexBuffer = t.createVertexBuffers(baseData, kVertexCount, kInstanceCount)[0].buffer;
+    const vertexBuffer = t.createVertexBuffers(baseData, kVertexCount + 1, kInstanceCount)[0]
+      .buffer;
 
     // Then we recreate test data by:
     //   1) creating multiple "vertex buffers" that all point at the GPUBuffer above but at
@@ -925,26 +945,18 @@ g.test('max_buffers_and_attribs')
   .desc(
     `Test a vertex state that loads as many attributes and buffers as possible.
   - For each format.
-  TODO find a way to test maxAttribs. Right now this test is gated on kMaxUniformBuffersPerStage
   `
   )
-  .paramsSubcasesOnly(u => u.combine('format', kVertexFormats))
+  .params(u => u.combine('format', kVertexFormats))
   .fn(t => {
     const { format } = t.params;
-    // The fixture uses one uniform buffer per attribute, so we can't test more than
-    // kMaxUniformBuffersPerStage attributes.
-    const maxTestableAttribs = Math.min(
-      kMaxVertexAttributes,
-      kPerStageBindingLimits['uniformBuf'].max
-    );
-
-    const attributesPerBuffer = Math.ceil(maxTestableAttribs / kMaxVertexBuffers);
+    const attributesPerBuffer = Math.ceil(kMaxVertexAttributes / kMaxVertexBuffers);
     let attributesEmitted = 0;
 
     const state: VertexLayoutState<{}, {}> = [];
     for (let i = 0; i < kMaxVertexBuffers; i++) {
       const attributes: GPUVertexAttribute[] = [];
-      for (let j = 0; j < attributesPerBuffer && attributesEmitted < maxTestableAttribs; j++) {
+      for (let j = 0; j < attributesPerBuffer && attributesEmitted < kMaxVertexAttributes; j++) {
         attributes.push({ format, offset: 0, shaderLocation: attributesEmitted });
         attributesEmitted++;
       }
@@ -971,18 +983,18 @@ g.test('array_stride_zero')
       .combine('stepMode', ['vertex', 'instance'] as const)
       .expand('offset', p => {
         const formatInfo = kVertexFormatInfo[p.format];
-        const componentSize = formatInfo.bytesPerComponent;
-        const formatSize = componentSize * formatInfo.componentCount;
+        const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
         return new Set([
           0,
-          componentSize,
-          componentSize * 2,
-          componentSize * 3,
+          4,
+          8,
+          formatSize,
+          formatSize * 2,
           kMaxVertexBufferArrayStride / 2,
-          kMaxVertexBufferArrayStride - formatSize - componentSize * 3,
-          kMaxVertexBufferArrayStride - formatSize - componentSize * 2,
-          kMaxVertexBufferArrayStride - formatSize - componentSize,
+          kMaxVertexBufferArrayStride - formatSize - 4,
+          kMaxVertexBufferArrayStride - formatSize - 8,
           kMaxVertexBufferArrayStride - formatSize,
+          kMaxVertexBufferArrayStride - formatSize * 2,
         ]);
       })
   )
@@ -1071,21 +1083,14 @@ g.test('discontiguous_location_and_attribs')
 g.test('overlapping_attributes')
   .desc(
     `Test that overlapping attributes in the same vertex buffer works
-   - Test for all formats
-  TODO find a way to test maxAttribs. Right now this test is gated on kMaxUniformBuffersPerStage`
+   - Test for all formats`
   )
-  .paramsSubcasesOnly(u => u.combine('format', kVertexFormats))
+  .params(u => u.combine('format', kVertexFormats))
   .fn(t => {
     const { format } = t.params;
-    // The fixture uses one uniform buffer per attribute, so we can't test more than
-    // kMaxUniformBuffersPerStage attributes.
-    const maxTestableAttribs = Math.min(
-      kMaxVertexAttributes,
-      kPerStageBindingLimits['uniformBuf'].max
-    );
 
     const attributes: GPUVertexAttribute[] = [];
-    for (let i = 0; i < maxTestableAttribs; i++) {
+    for (let i = 0; i < kMaxVertexAttributes; i++) {
       attributes.push({ format, offset: 0, shaderLocation: i });
     }
 

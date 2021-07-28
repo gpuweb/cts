@@ -4,7 +4,9 @@ import { GPUTest } from '../../gpu_test.js';
 
 import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js';
 
-export type ResourceState = 'valid' | 'invalid' | 'destroyed';
+const kResourceStateValues = ['valid', 'invalid', 'destroyed'] as const;
+export type ResourceState = typeof kResourceStateValues[number];
+export const kResourceStates: readonly ResourceState[] = kResourceStateValues;
 
 /**
  * Base fixture for WebGPU validation tests.
@@ -229,7 +231,7 @@ export class ValidationTest extends GPUTest {
           code: '[[stage(fragment)]] fn main() {}',
         }),
         entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm' }],
+        targets: [{ format: 'rgba8unorm', writeMask: 0 }],
       },
       primitive: { topology: 'triangle-list' },
     });
@@ -251,8 +253,9 @@ export class ValidationTest extends GPUTest {
   }
 
   /** Return a GPUComputePipeline with a no-op shader. */
-  createNoOpComputePipeline(): GPUComputePipeline {
+  createNoOpComputePipeline(layout?: GPUPipelineLayout): GPUComputePipeline {
     return this.device.createComputePipeline({
+      layout,
       compute: {
         module: this.device.createShaderModule({
           code: '[[stage(compute), workgroup_size(1)]] fn main() {}',

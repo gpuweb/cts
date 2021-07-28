@@ -4,13 +4,9 @@ Validation tests for setVertexBuffer on render pass and render bundle.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUConst, DefaultLimits } from '../../../../../constants.js';
-import { ValidationTest } from '../../../validation_test.js';
+import { kResourceStates, ValidationTest } from '../../../validation_test.js';
 
-import {
-  kRenderEncodeTypeParams,
-  kBufferStates,
-  buildBufferOffsetAndSizeOOBTestParams,
-} from './render.js';
+import { kRenderEncodeTypeParams, buildBufferOffsetAndSizeOOBTestParams } from './render.js';
 
 export const g = makeTestGroup(ValidationTest);
 
@@ -45,7 +41,7 @@ g.test('vertex_buffer')
 Tests vertex buffer must be valid.
   `
   )
-  .paramsSubcasesOnly(kRenderEncodeTypeParams.combine('state', kBufferStates))
+  .paramsSubcasesOnly(kRenderEncodeTypeParams.combine('state', kResourceStates))
   .fn(t => {
     const { encoderType, state } = t.params;
     const vertexBuffer = t.createBufferWithState(state, {

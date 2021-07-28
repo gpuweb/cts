@@ -5,10 +5,12 @@ export const description = `
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { unreachable } from '../../../common/util/util.js';
+import { assert, unreachable } from '../../../common/util/util.js';
 import {
   allBindingEntries,
   bindingTypeInfo,
+  bufferBindingEntries,
+  bufferBindingTypeInfo,
   kBindableResources,
   kTextureUsages,
   kTextureViewDimensions,
@@ -18,7 +20,7 @@ import {
 import { GPUConst } from '../../constants.js';
 import { getTextureDimensionFromView } from '../../util/texture/base.js';
 
-import { ValidationTest } from './validation_test.js';
+import { kResourceStates, ValidationTest } from './validation_test.js';
 
 function clone<T extends GPUTextureDescriptor>(descriptor: T): T {
   return JSON.parse(JSON.stringify(descriptor));
@@ -402,4 +404,91 @@ g.test('minBindingSize')
         ],
       });
     }, minBindingSize !== undefined && size < minBindingSize);
+  });
+
+g.test('buffer,resource_state')
+  .desc('Test bind group creation with various buffer resource states')
+  .paramsSubcasesOnly(u =>
+    u.combine('state', kResourceStates).combine('entry', bufferBindingEntries(true))
+  )
+  .fn(t => {
+    const { state, entry } = t.params;
+
+    assert(entry.buffer !== undefined);
+    const info = bufferBindingTypeInfo(entry.buffer);
+
+    const bgl = t.device.createBindGroupLayout({
+      entries: [
+        {
+          ...entry,
+          binding: 0,
+          visibility: info.validStages,
+        },
+      ],
+    });
+
+    const buffer = t.createBufferWithState(state, {
+      usage: info.usage,
+      size: 4,
+    });
+
+    t.expectValidationError(() => {
+      t.device.createBindGroup({
+        layout: bgl,
+        entries: [
+          {
+            binding: 0,
+            resource: {
+              buffer,
+            },
+          },
+        ],
+      });
+    }, state === 'invalid');
+  });
+
+g.test('texture,resource_state')
+  .desc('Test bind group creation with various texture resource states')
+  .paramsSubcasesOnly(u =>
+    u
+      .combine('state', kResourceStates)
+      .combine('entry', sampledAndStorageBindingEntries(true, 'rgba8unorm'))
+  )
+  .fn(t => {
+    const { state, entry } = t.params;
+    const info = texBindingTypeInfo(entry);
+
+    const bgl = t.device.createBindGroupLayout({
+      entries: [
+        {
+          ...entry,
+          binding: 0,
+          visibility: info.validStages,
+        },
+      ],
+    });
+
+    const texture = t.createTextureWithState(state, {
+      usage: info.usage,
+      size: [1, 1],
+      format: 'rgba8unorm',
+      sampleCount: entry.texture?.multisampled ? 4 : 1,
+    });
+
+    let textureView: GPUTextureView;
+    t.expectValidationError(() => {
+      textureView = texture.createView();
+    }, state === 'invalid');
+
+    t.expectValidationError(() => {
+      t.device.createBindGroup({
+        layout: bgl,
+        entries: [
+          {
+            binding: 0,
+            resource: textureView,
+          },
+        ],
+      });
+    }, state === 'invalid');
   });

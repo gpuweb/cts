@@ -109,12 +109,20 @@ Tests that write timestamp to a invalid query set that failed during creation:
   `
   )
   .paramsSubcasesOnly(u =>
-    u.combine('encoderType', ['non-pass', 'compute pass', 'render pass'] as const)
+    u
+      .combine('encoderType', ['non-pass', 'compute pass', 'render pass'] as const)
+      .combine('querySetState', ['valid', 'invalid'] as const)
   )
   .fn(async t => {
-    const querySet = t.createQuerySetWithState('invalid');
+    const { encoderType, querySetState } = t.params;
+    await t.selectDeviceForQueryTypeOrSkipTestCase('timestamp');
 
-    const encoder = t.createEncoder(t.params.encoderType);
+    const querySet = t.createQuerySetWithState(querySetState, {
+      type: 'timestamp',
+      count: 2,
+    });
+
+    const encoder = t.createEncoder(encoderType);
     encoder.encoder.writeTimestamp(querySet, 0);
-    encoder.validateFinish(false);
+    encoder.validateFinish(querySetState !== 'invalid');
   });

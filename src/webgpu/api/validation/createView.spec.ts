@@ -13,7 +13,7 @@ import {
   reifyTextureViewDescriptor,
 } from '../../util/texture/base.js';
 
-import { ValidationTest } from './validation_test.js';
+import { kResourceStates, ValidationTest } from './validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);
 
@@ -307,12 +307,12 @@ g.test('cube_faces_square')
 
 g.test('texture_state')
   .desc(`createView should fail if the texture is invalid (but succeed if it is destroyed)`)
-  .params(u => u.combine('textureState', ['valid', 'invalid', 'destroyed'] as const))
-  .fn(t => {
-    const { textureState } = t.params;
+  .paramsSubcasesOnly(u => u.combine('state', kResourceStates))
+  .fn(async t => {
+    const { state } = t.params;
+    const texture = t.createTextureWithState(state);
 
-    const texture = t.createTextureWithState(textureState);
     t.expectValidationError(() => {
       texture.createView();
-    }, textureState === 'invalid');
+    }, state === 'invalid');
   });

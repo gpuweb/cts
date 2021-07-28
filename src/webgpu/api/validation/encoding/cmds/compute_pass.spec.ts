@@ -6,7 +6,7 @@ Does **not** test usage scopes (resource_usages/) or programmable pass stuff (pr
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { DefaultLimits } from '../../../../constants.js';
-import { ResourceState, ValidationTest } from '../../validation_test.js';
+import { kResourceStates, ResourceState, ValidationTest } from '../../validation_test.js';
 
 class F extends ValidationTest {
   createComputePipeline(state: 'valid' | 'invalid'): GPUComputePipeline {
@@ -124,7 +124,7 @@ TODO: test specifically which call the validation error occurs in.
   )
   .paramsSubcasesOnly(u =>
     u //
-      .combine('state', ['valid', 'invalid', 'destroyed'] as const)
+      .combine('state', kResourceStates)
       .combine('offset', [
         // valid (for 'valid' buffers)
         0,
