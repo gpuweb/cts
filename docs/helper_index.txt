@@ -51,8 +51,10 @@ Whenever a new generally-useful helper is added, it should be indexed here.
     Also can be composed with {@link GPUTest.expectGPUBufferValuesPassCheck}, used to implement
     GPUBuffer checking helpers in GPUTest.
 - {@link webgpu/util/conversion}: Numeric encoding/decoding for float/unorm/snorm values, etc.
-- {@link webgpu/util/copyToTexture}:
+- {@link webgpu/util/copy_to_texture}:
     Helper class for copyToTexture test suites for execution copy and check results.
+- {@link webgpu/util/create_elements}:
+    Helpers for creating web elements like HTMLCanvasElement, OffscrrenCanvas, etc.
 - {@link webgpu/util/navigator_gpu}: Finds and returns the `navigator.gpu` object or equivalent.
 - {@link webgpu/util/texture/base}: General texture-related helpers.
 - {@link webgpu/util/texture/layout}: Helpers for working with linear image data
