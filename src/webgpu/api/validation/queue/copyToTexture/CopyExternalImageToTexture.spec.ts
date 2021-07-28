@@ -425,7 +425,8 @@ g.test('source_imageBitmap,state')
 g.test('source_canvas,state')
   .desc(
     `
-  Test HTMLCanvasElement as source image in state [nocontext, placeholder, valid].
+  Test HTMLCanvasElement as source image in state 
+  [nocontext, 'placeholder-nocontext', 'placeholder-hascontext', valid].
 
   Nocontext means using a canvas without any context as copy param.
 
@@ -444,16 +445,15 @@ g.test('source_canvas,state')
   )
   .params(u =>
     u //
-      .combine('state', ['nocontext', 'placeholder', 'valid'])
+      .combine('state', ['nocontext', 'placeholder-nocontext', 'placeholder-hascontext', 'valid'])
       .beginSubcases()
-      .combine('getContextInOffscreenCanvas', [false, true])
       .combine('copySize', [
         { width: 0, height: 0, depthOrArrayLayers: 0 },
         { width: 1, height: 1, depthOrArrayLayers: 1 },
       ])
   )
   .fn(async t => {
-    const { state, getContextInOffscreenCanvas, copySize } = t.params;
+    const { state, copySize } = t.params;
     const canvas = createOnscreenCanvas(t, 1, 1);
     if (typeof canvas.transferControlToOffscreen === 'undefined') {
       t.skip("Browser doesn't support HTMLCanvasElement transfer control right");
@@ -466,7 +466,6 @@ g.test('source_canvas,state')
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    let offscreenCanvas: OffscreenCanvas;
     let exceptionName: string = '';
 
     switch (state) {
@@ -474,11 +473,14 @@ g.test('source_canvas,state')
         exceptionName = 'OperationError';
         break;
       }
-      case 'placeholder': {
-        offscreenCanvas = canvas.transferControlToOffscreen();
-        if (getContextInOffscreenCanvas) {
-          offscreenCanvas.getContext('webgl');
-        }
+      case 'placeholder-nocontext': {
+        canvas.transferControlToOffscreen();
+        exceptionName = 'InvalidStateError';
+        break;
+      }
+      case 'placeholder-hascontext': {
+        const offscreenCanvas = canvas.transferControlToOffscreen();
+        offscreenCanvas.getContext('webgl');
         exceptionName = 'InvalidStateError';
         break;
       }
@@ -517,7 +519,7 @@ g.test('source_offscreenCanvas,state')
   )
   .params(u =>
     u //
-      .combine('state', ['nocontext', 'detached', 'valid'])
+      .combine('state', ['nocontext', 'detached-nocontext', 'detached-hascontext', 'valid'])
       .beginSubcases()
       .combine('getContextInOffscreenCanvas', [false, true])
       .combine('copySize', [
@@ -526,7 +528,7 @@ g.test('source_offscreenCanvas,state')
       ])
   )
   .fn(async t => {
-    const { state, getContextInOffscreenCanvas, copySize } = t.params;
+    const { state, copySize } = t.params;
     const offscreenCanvas = createOffscreenCanvas(t, 1, 1);
     const dstTexture = t.device.createTexture({
       size: { width: 1, height: 1, depthOrArrayLayers: 1 },
@@ -540,18 +542,23 @@ g.test('source_offscreenCanvas,state')
         exceptionName = 'OperationError';
         break;
       }
-      case 'detached': {
+      case 'detached-nocontext': {
         const messageChannel = new MessageChannel();
         messageChannel.port1.postMessage(offscreenCanvas, [offscreenCanvas]);
 
-        if (getContextInOffscreenCanvas) {
-          const port2FirstMessage = new Promise(resolve => {
-            messageChannel.port2.onmessage = m => resolve(m);
-          });
+        exceptionName = 'InvalidStateError';
+        break;
+      }
+      case 'detached-hascontext': {
+        const messageChannel = new MessageChannel();
+        const port2FirstMessage = new Promise(resolve => {
+          messageChannel.port2.onmessage = m => resolve(m);
+        });
 
-          const receivedOffscreenCanvas = (await port2FirstMessage) as MessageEvent;
-          receivedOffscreenCanvas.data.getContext('webgl');
-        }
+        messageChannel.port1.postMessage(offscreenCanvas, [offscreenCanvas]);
+
+        const receivedOffscreenCanvas = (await port2FirstMessage) as MessageEvent;
+        receivedOffscreenCanvas.data.getContext('webgl');
 
         exceptionName = 'InvalidStateError';
         break;
