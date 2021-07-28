@@ -12,11 +12,10 @@ The following is parameterized (all combinations tested):
     robustness access for vertex step mode vertex buffers.
 
 2) Draw call parameter (vertexCount, firstVertex, indexCount, firstIndex, baseVertex, instanceCount,
-  firstInstance, vertexCountInIndexBuffer)
+   vertexCountInIndexBuffer)
   - The parameter which goes out of bounds. Filtered depending on the draw call type.
   - vertexCount, firstVertex: used for drawIndirect only, test for vertex step mode buffer OOB
-  - instanceCount, firstInstance: used for both drawIndirect and drawIndexedIndirect, test for
-    instance step mode buffer OOB
+  - instanceCount: used for both drawIndirect and drawIndexedIndirect, test for instance step mode buffer OOB
   - baseVertex, vertexCountInIndexBuffer: used for both drawIndexed and drawIndexedIndirect, test
     for vertex step mode buffer OOB. vertexCountInIndexBuffer indicates how many vertices are used
     within the index buffer, i.e. [0, 1, ..., vertexCountInIndexBuffer-1].
@@ -53,6 +52,11 @@ end of the buffer.
 The tests run a render pipeline which verifies the following:
 1) All vertex attribute values occur in the buffer or are 0 (for control case it can't be 0)
 2) All gl_VertexIndex values are within the index buffer or 0
+
+TODO:
+Currently firstInstance is not tested, as for drawIndexed it is CPU validated, and for drawIndirect
+and drawIndexedIndirect it should always be 0. Once there is an extension to allow making them non-zero,
+it should be added into drawCallTestParameter list.
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
@@ -119,12 +123,14 @@ class DrawCall {
     // Since vertexInIndexBuffer is mutable, generation of the index buffer should be deferred to right before calling draw
 
     // Generate vertex buffer
-    this.vertexBuffers = vertexArrays.map((v, i) =>
-      i === 0 && keepInstanceStepModeBufferInRange
-        ? // Suppress partialLastNumber for the first vertex buffer, aka the instance step mode buffer
-          this.generateVertexBuffer(v, false)
-        : this.generateVertexBuffer(v, partialLastNumber)
-    );
+    this.vertexBuffers = vertexArrays.map((v, i) => {
+      if (i === 0 && keepInstanceStepModeBufferInRange) {
+        // Suppress partialLastNumber for the first vertex buffer, aka the instance step mode buffer
+        return this.generateVertexBuffer(v, false);
+      } else {
+        return this.generateVertexBuffer(v, partialLastNumber);
+      }
+    });
   }
 
   // Insert a draw call into |pass| with specified type
@@ -154,7 +160,7 @@ class DrawCall {
   public drawIndexed(pass: GPURenderPassEncoder) {
     // Generate index buffer
     const indexArray = new Uint32Array(this.vertexCountInIndexBuffer).map((_, i) => i);
-    const indexBuffer = this.generateIndexBuffer(indexArray);
+    const indexBuffer = this.test.makeBufferWithContents(indexArray, GPUBufferUsage.INDEX);
     this.bindVertexBuffers(pass);
     pass.setIndexBuffer(indexBuffer, 'uint32');
     pass.drawIndexed(
@@ -176,7 +182,7 @@ class DrawCall {
   public drawIndexedIndirect(pass: GPURenderPassEncoder) {
     // Generate index buffer
     const indexArray = new Uint32Array(this.vertexCountInIndexBuffer).map((_, i) => i);
-    const indexBuffer = this.generateIndexBuffer(indexArray);
+    const indexBuffer = this.test.makeBufferWithContents(indexArray, GPUBufferUsage.INDEX);
     this.bindVertexBuffers(pass);
     pass.setIndexBuffer(indexBuffer, 'uint32');
     pass.drawIndexedIndirect(this.generateIndexedIndirectBuffer(), 0);
@@ -214,11 +220,6 @@ class DrawCall {
     return buffer;
   }
 
-  // Create an index buffer from |indexArray|
-  private generateIndexBuffer(indexArray: Uint32Array): GPUBuffer {
-    return this.test.makeBufferWithContents(indexArray, GPUBufferUsage.INDEX);
-  }
-
   // Create an indirect buffer containing draw call values
   private generateIndirectBuffer(): GPUBuffer {
     const indirectArray = new Int32Array([
@@ -235,7 +236,7 @@ class DrawCall {
     const indirectArray = new Int32Array([
       this.indexCount,
       this.instanceCount,
-      this.firstVertex,
+      this.firstIndex,
       this.baseVertex,
       this.firstInstance,
     ]);
@@ -375,16 +376,14 @@ class F extends GPUTest {
         [[builtin(vertex_index)]] VertexIndex : u32,
         attributes : Attributes
         ) -> [[builtin(position)]] vec4<f32> {
-        var attributesInBounds : bool = ${attributeNames
+        var attributesInBounds = ${attributeNames
           .map(a => `validationFunc(attributes.${a})`)
           .join(' && ')};
 
-        var indexInBoundsCountFromBaseVertex : bool =
+        var indexInBoundsCountFromBaseVertex =
             (VertexIndex >= ${vertexIndexOffset}u &&
             VertexIndex < ${vertexIndexOffset + numVertices}u);
-        // For D3D12, VertexIndex count from 0. For index robust access it can be 0.
-        var indexInBoundsCountFrom0 : bool = (VertexIndex >= 0u && VertexIndex < ${numVertices}u);
-        var indexInBounds : bool = indexInBoundsCountFrom0 || indexInBoundsCountFromBaseVertex;
+        var indexInBounds = VertexIndex == 0u || indexInBoundsCountFromBaseVertex;
 
         var Position : vec4<f32>;
         if (attributesInBounds && (${!isIndexed} || indexInBounds)) {
@@ -546,10 +545,10 @@ g.test('vertex_buffer_access')
         if (p.indexed) {
           yield* ['baseVertex', 'vertexCountInIndexBuffer'] as const;
           if (p.indirect) {
-            yield* ['indexCount', 'instanceCount', 'firstIndex', 'firstInstance'] as const;
+            yield* ['indexCount', 'instanceCount', 'firstIndex'] as const;
           }
         } else if (p.indirect) {
-          yield* ['vertexCount', 'instanceCount', 'firstVertex', 'firstInstance'] as const;
+          yield* ['vertexCount', 'instanceCount', 'firstVertex'] as const;
         }
       })
       .combine('type', Object.keys(typeInfoMap) as GPUVertexFormat[])
