@@ -5,3 +5,8 @@ TODO:
   - different componentCounts of the output doesn't matter (e.g. f32, vec2<f32>, vec3<f32>, vec4<f32>)
     Extra components are discarded and missing components are filled to 0,0,1.
 `;
+
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { GPUTest } from '../../../gpu_test.js';
+
+export const g = makeTestGroup(GPUTest);
