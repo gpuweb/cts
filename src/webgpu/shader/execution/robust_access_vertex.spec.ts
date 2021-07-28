@@ -191,15 +191,13 @@ class DrawCall {
   // Bind all vertex buffers generated
   private bindVertexBuffers(pass: GPURenderPassEncoder) {
     let currSlot = 0;
-    // Deal with the instance step mode buffer
-    pass.setVertexBuffer(
-      currSlot++,
-      this.vertexBuffers[0],
-      !this.keepInstanceStepModeBufferInRange && this.offsetVertexBuffer ? 4 : 0
-    );
-    // Deal with the rest vertex step mode buffer
-    for (let i = 1; i < this.vertexBuffers.length; i++) {
-      pass.setVertexBuffer(currSlot++, this.vertexBuffers[i], this.offsetVertexBuffer ? 4 : 0);
+    for (let i = 0; i < this.vertexBuffers.length; i++) {
+      if (i === 0 && this.keepInstanceStepModeBufferInRange) {
+        // Keep the instance step mode buffer in range
+        pass.setVertexBuffer(currSlot++, this.vertexBuffers[i], 0);
+      } else {
+        pass.setVertexBuffer(currSlot++, this.vertexBuffers[i], this.offsetVertexBuffer ? 4 : 0);
+      }
     }
   }
 
