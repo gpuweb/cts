@@ -16,7 +16,7 @@ import {
   createOnscreenCanvas,
   createOffscreenCanvas,
 } from '../../../../util/create_elements.js';
-import { ValidationTest } from '../../validation_test.js';
+import { kResourceStates, ValidationTest } from '../../validation_test.js';
 
 const kDefaultBytesPerPixel = 4; // using 'bgra8unorm' or 'rgba8unorm'
 const kDefaultWidth = 32;
@@ -188,7 +188,7 @@ g.test('source_canvas,contexts')
   Call HTMLCanvasElment.getContext() with different context type.
   Only '2d', 'experimental-webgl', 'webgl', 'webgl2' is valid context
   type.
-  
+
   Check whether 'OperationError' is generated when context type is invalid.
   `
   )
@@ -239,7 +239,7 @@ g.test('source_offscreenCanvas,contexts')
 
   Call OffscreenCanvas.getContext() with different context type.
   Only '2d', 'webgl', 'webgl2' is valid context type.
-  
+
   Check whether 'OperationError' is generated when context type is invalid.
   `
   )
@@ -283,7 +283,7 @@ g.test('source_image,crossOrigin')
 
   Load crossOrigin image or same origin image and init the source
   images.
-  
+
   Check whether 'SecurityError' is generated when source image is not origin clean.
 
   TODO: make this test case work offline, ref link to achieve this :
@@ -388,7 +388,7 @@ g.test('source_imageBitmap,state')
 
   Call imageBitmap.close() to transfer the imageBitmap into
   'closed' state.
-  
+
   Check whether 'InvalidStateError' is generated when ImageBitmap is
   closed.
   `
@@ -425,7 +425,7 @@ g.test('source_imageBitmap,state')
 g.test('source_canvas,state')
   .desc(
     `
-  Test HTMLCanvasElement as source image in state 
+  Test HTMLCanvasElement as source image in state
   [nocontext, 'placeholder-nocontext', 'placeholder-hascontext', valid].
 
   Nocontext means using a canvas without any context as copy param.
@@ -434,8 +434,8 @@ g.test('source_canvas,state')
   canvas control right transfer. And this canvas is in state 'placeholder'
   Whether getContext in new generated offscreenCanvas won't affect the origin
   canvas state.
-  
-  
+
+
   Check whether 'OperationError' is generated when HTMLCanvasElement has no
   context.
 
@@ -584,14 +584,14 @@ g.test('destination_texture,state')
   .desc(
     `
   Test dst texture is [valid, invalid, destroyed].
-  
+
   Check that an error is generated when texture is an error texture.
   Check that an error is generated when texture is in destroyed state.
   `
   )
   .params(u =>
     u //
-      .combine('state', ['valid', 'invalid', 'destroyed'] as const)
+      .combine('state', kResourceStates)
       .beginSubcases()
       .combine('copySize', [
         { width: 0, height: 0, depthOrArrayLayers: 0 },

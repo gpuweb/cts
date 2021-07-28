@@ -4,9 +4,9 @@ Validation tests for drawIndirect/drawIndexedIndirect on render pass and render 
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUConst } from '../../../../../constants.js';
-import { ValidationTest } from '../../../validation_test.js';
+import { kResourceStates, ValidationTest } from '../../../validation_test.js';
 
-import { kRenderEncodeTypeParams, kBufferStates } from './render.js';
+import { kRenderEncodeTypeParams } from './render.js';
 
 const kIndirectDrawTestParams = kRenderEncodeTypeParams.combine('indexed', [true, false] as const);
 
@@ -27,7 +27,7 @@ g.test('indirect_buffer')
 Tests indirect buffer must be valid.
   `
   )
-  .paramsSubcasesOnly(kIndirectDrawTestParams.combine('state', kBufferStates))
+  .paramsSubcasesOnly(kIndirectDrawTestParams.combine('state', kResourceStates))
   .fn(t => {
     const { encoderType, indexed, state } = t.params;
     const pipeline = t.createNoOpRenderPipeline();

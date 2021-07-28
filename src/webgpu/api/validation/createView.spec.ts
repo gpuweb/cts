@@ -22,7 +22,7 @@ TODO: review existing tests and merge with this plan:
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 
-import { ValidationTest } from './validation_test.js';
+import { kResourceStates, ValidationTest } from './validation_test.js';
 
 const ARRAY_LAYER_COUNT_2D = 6;
 const MIP_LEVEL_COUNT: number = 6;
@@ -286,26 +286,16 @@ g.test('test_the_format_compatibility_rules_when_creating_a_texture_view').fn(as
   });
 });
 
-g.test('it_is_invalid_to_use_a_texture_view_created_from_a_destroyed_texture').fn(async t => {
-  const texture = t.createTexture({ arrayLayerCount: 1 });
+g.test('texture_state')
+  .desc('Test texture view creation with various texture states')
+  .paramsSubcasesOnly(u => u.combine('state', kResourceStates))
+  .fn(async t => {
+    const { state } = t.params;
+    const texture = t.createTextureWithState(state);
 
-  const commandEncoder = t.device.createCommandEncoder();
-  const renderPass = commandEncoder.beginRenderPass({
-    colorAttachments: [
-      {
-        view: texture.createView(),
-        loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
-        storeOp: 'store',
-      },
-    ],
+    t.expectValidationError(() => {
+      texture.createView();
+    }, state === 'invalid');
   });
-  renderPass.endPass();
-
-  texture.destroy();
-
-  t.expectValidationError(() => {
-    commandEncoder.finish();
-  });
-});
 
 // TODO: Add tests for TextureAspect

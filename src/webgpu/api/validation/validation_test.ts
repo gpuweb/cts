@@ -4,7 +4,9 @@ import { GPUTest } from '../../gpu_test.js';
 
 import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js';
 
-export type ResourceState = 'valid' | 'invalid' | 'destroyed';
+const kResourceStateValues = ['valid', 'invalid', 'destroyed'] as const;
+export type ResourceState = typeof kResourceStateValues[number];
+export const kResourceStates: readonly ResourceState[] = kResourceStateValues;
 
 /**
  * Base fixture for WebGPU validation tests.

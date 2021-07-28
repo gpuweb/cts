@@ -4,13 +4,9 @@ Validation tests for setIndexBuffer on render pass and render bundle.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUConst } from '../../../../../constants.js';
-import { ValidationTest } from '../../../validation_test.js';
+import { kResourceStates, ValidationTest } from '../../../validation_test.js';
 
-import {
-  kRenderEncodeTypeParams,
-  kBufferStates,
-  buildBufferOffsetAndSizeOOBTestParams,
-} from './render.js';
+import { kRenderEncodeTypeParams, buildBufferOffsetAndSizeOOBTestParams } from './render.js';
 
 export const g = makeTestGroup(ValidationTest);
 
@@ -20,7 +16,7 @@ g.test('index_buffer')
 Tests index buffer must be valid.
   `
   )
-  .paramsSubcasesOnly(kRenderEncodeTypeParams.combine('state', kBufferStates))
+  .paramsSubcasesOnly(kRenderEncodeTypeParams.combine('state', kResourceStates))
   .fn(t => {
     const { encoderType, state } = t.params;
     const indexBuffer = t.createBufferWithState(state, {
