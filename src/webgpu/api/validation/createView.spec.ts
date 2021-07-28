@@ -25,10 +25,11 @@ g.test('format')
     `Views must have the same format as the base texture, for all {texture format}x{view format}.`
   )
   .params(u =>
-    u //
+    u
       .combine('textureFormat', kTextureFormats)
       .beginSubcases()
-      .combine('viewFormat', kTextureFormats)
+      // If undefined, should default to textureFormat.
+      .combine('viewFormat', [undefined, ...kTextureFormats])
   )
   .fn(async t => {
     const { textureFormat, viewFormat } = t.params;
@@ -40,7 +41,7 @@ g.test('format')
       usage: GPUTextureUsage.SAMPLED,
     });
 
-    const success = textureFormat === viewFormat;
+    const success = viewFormat === undefined || viewFormat === textureFormat;
     t.expectValidationError(() => {
       texture.createView({ format: viewFormat });
     }, !success);
@@ -56,21 +57,26 @@ g.test('dimension')
   .params(u =>
     u
       .combine('textureDimension', kTextureDimensions)
-      .combine('viewDimension', kTextureViewDimensions)
+      .combine('viewDimension', [...kTextureViewDimensions, undefined])
   )
   .fn(t => {
     const { textureDimension, viewDimension } = t.params;
 
-    const texture = t.device.createTexture({
-      format: 'rgba8unorm',
+    const size = textureDimension === '1d' ? [4] : [4, 4, 6];
+    const textureDescriptor = {
+      format: 'rgba8unorm' as const,
       dimension: textureDimension,
-      size: [4, 4, 6],
+      size,
       usage: GPUTextureUsage.SAMPLED,
-    });
+    };
+    const texture = t.device.createTexture(textureDescriptor);
 
-    const success = getTextureDimensionFromView(viewDimension) === textureDimension;
+    const view = { dimension: viewDimension };
+    const reified = reifyTextureViewDescriptor(textureDescriptor, view);
+
+    const success = getTextureDimensionFromView(reified.dimension) === textureDimension;
     t.expectValidationError(() => {
-      texture.createView({ dimension: viewDimension });
+      texture.createView(view);
     }, !success);
   });
 
@@ -106,17 +112,17 @@ g.test('aspect')
     }, !success);
   });
 
-g.test('2d_dimension_layers')
+g.test('dimension_layers')
   .desc(
-    `For the 2d view dimensions {2d, 2d-array, cube, cube-array}, test validation of layer counts:
-  - 2d must have 1 layer
+    `For all possible texture view dimensions, test validation of layer counts:
+  - 1d, 2d, and 3d must have exactly 1 layer
   - 2d-array must have 1 or more layers
   - cube must have 6 layers
   - cube-array must have a positive multiple of 6 layers`
   )
   .params(u =>
     u
-      .combine('dimension', ['2d', '2d-array', 'cube', 'cube-array'] as const)
+      .combine('dimension', kTextureViewDimensions)
       .beginSubcases()
       .combine('baseArrayLayer', [0, 1, 6])
       .combine('arrayLayerCount', [0, 1, 3, 4, 5, 6, 7, 12])
@@ -126,12 +132,13 @@ g.test('2d_dimension_layers')
 
     const texture = t.device.createTexture({
       format: 'rgba8unorm',
+      dimension: getTextureDimensionFromView(dimension),
       size: [4, 4, 18],
       usage: GPUTextureUsage.SAMPLED,
     });
 
     let success = arrayLayerCount > 0;
-    if (dimension === '2d') {
+    if (dimension === '1d' || dimension === '2d' || dimension === '3d') {
       success &&= arrayLayerCount === 1;
     } else if (dimension === 'cube') {
       success &&= arrayLayerCount === 6;
@@ -144,7 +151,7 @@ g.test('2d_dimension_layers')
     }, !success);
   });
 
-g.test('array_layers')
+g.test('2d_array_layers')
   .desc(
     `Views must have at least one layer, and must be within the layers of the base texture.
 
@@ -170,7 +177,8 @@ g.test('array_layers')
         { baseArrayLayer: 0, arrayLayerCount: 2 },
         { baseArrayLayer: 1, arrayLayerCount: 2 },
         { baseArrayLayer: kLayers - 2, arrayLayerCount: 2 },
-        // arrayLayerCount == undefined means to use all remaining layers
+        // For 2d-array/cube-array, arrayLayerCount == undefined means to use all remaining layers.
+        // Otherwise it means a fixed 1 or 6 layers.
         { arrayLayerCount: undefined, baseArrayLayer: 0 },
         { arrayLayerCount: undefined, baseArrayLayer: 1 },
         { arrayLayerCount: undefined, baseArrayLayer: kLayers - 1 },
