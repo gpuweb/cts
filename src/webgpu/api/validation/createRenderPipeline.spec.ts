@@ -24,17 +24,82 @@ TODO: review existing tests, write descriptions, and make sure tests are complet
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { kTextureFormats, kTextureFormatInfo } from '../../capability_info.js';
+import { unreachable } from '../../../common/util/util.js';
+import {
+  kTextureFormats,
+  kRenderableColorTextureFormats,
+  kTextureFormatInfo,
+} from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
 
 class F extends ValidationTest {
+  getExpectedType(format: GPUTextureFormat): GPUTextureSampleType {
+    if (format.endsWith('sint')) {
+      return 'sint';
+    } else if (format.endsWith('uint')) {
+      return 'uint';
+    } else {
+      return 'float';
+    }
+  }
+
+  getFragmentShaderCode(sampleType: GPUTextureSampleType, componentCount: number): string {
+    const v = ['0', '1', '0', '1'];
+
+    let fragColorType;
+    let suffix;
+    switch (sampleType) {
+      case 'sint':
+        fragColorType = 'i32';
+        suffix = '';
+        break;
+      case 'uint':
+        fragColorType = 'u32';
+        suffix = 'u';
+        break;
+      default:
+        fragColorType = 'f32';
+        suffix = '.0';
+        break;
+    }
+
+    let outputType;
+    let result;
+    switch (componentCount) {
+      case 1:
+        outputType = fragColorType;
+        result = `${v[0]}${suffix}`;
+        break;
+      case 2:
+        outputType = `vec2<${fragColorType}>`;
+        result = `${outputType}(${v[0]}${suffix}, ${v[1]}${suffix})`;
+        break;
+      case 3:
+        outputType = `vec3<${fragColorType}>`;
+        result = `${outputType}(${v[0]}${suffix}, ${v[1]}${suffix}, ${v[2]}${suffix})`;
+        break;
+      case 4:
+        outputType = `vec4<${fragColorType}>`;
+        result = `${outputType}(${v[0]}${suffix}, ${v[1]}${suffix}, ${v[2]}${suffix}, ${v[3]}${suffix})`;
+        break;
+      default:
+        unreachable();
+    }
+
+    return `
+    [[stage(fragment)]] fn main() -> [[location(0)]] ${outputType} {
+      return ${result};
+    }`;
+  }
+
   getDescriptor(
     options: {
       topology?: GPUPrimitiveTopology;
       targets?: GPUColorTargetState[];
       sampleCount?: number;
       depthStencil?: GPUDepthStencilState;
+      fragmentShaderCode?: string;
     } = {}
   ): GPURenderPipelineDescriptor {
     const defaultTargets: GPUColorTargetState[] = [{ format: 'rgba8unorm' }];
@@ -43,22 +108,11 @@ class F extends ValidationTest {
       targets = defaultTargets,
       sampleCount = 1,
       depthStencil,
+      fragmentShaderCode = this.getFragmentShaderCode(
+        this.getExpectedType(targets[0] ? targets[0].format : 'rgba8unorm'),
+        4
+      ),
     } = options;
-
-    const format = targets.length ? targets[0].format : 'rgba8unorm';
-
-    let fragColorType;
-    let suffix;
-    if (format.endsWith('sint')) {
-      fragColorType = 'i32';
-      suffix = '';
-    } else if (format.endsWith('uint')) {
-      fragColorType = 'u32';
-      suffix = 'u';
-    } else {
-      fragColorType = 'f32';
-      suffix = '.0';
-    }
 
     return {
       vertex: {
@@ -72,10 +126,7 @@ class F extends ValidationTest {
       },
       fragment: {
         module: this.device.createShaderModule({
-          code: `
-            [[stage(fragment)]] fn main() -> [[location(0)]] vec4<${fragColorType}> {
-              return vec4<${fragColorType}>(0${suffix}, 1${suffix}, 0${suffix}, 1${suffix});
-            }`,
+          code: fragmentShaderCode,
         }),
         entryPoint: 'main',
         targets,
@@ -185,5 +236,36 @@ g.test('sample_count_must_be_valid')
 
     const descriptor = t.getDescriptor({ sampleCount });
 
+    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+  });
+
+g.test('pipeline_fragment_output_type_must_be_compatible_with_target_color_state_format')
+  .params(u =>
+    u
+      .combine('isAsync', [false, true])
+      .combine('format', kRenderableColorTextureFormats)
+      .beginSubcases()
+      .combine('sampleType', [
+        'float',
+        'uint',
+        'sint',
+        'unfilterable-float',
+      ] as GPUTextureSampleType[])
+      .combine('componentCount', [1, 2, 3, 4])
+  )
+  .fn(async t => {
+    const { isAsync, format, sampleType, componentCount } = t.params;
+    const info = kTextureFormatInfo[format];
+    await t.selectDeviceOrSkipTestCase(info.feature);
+
+    const descriptor = t.getDescriptor({
+      targets: [{ format }],
+      fragmentShaderCode: t.getFragmentShaderCode(sampleType, componentCount),
+    });
+
+    const expectedType = t.getExpectedType(format);
+    const _success =
+      expectedType === sampleType ||
+      (expectedType === 'float' && sampleType === 'unfilterable-float');
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });

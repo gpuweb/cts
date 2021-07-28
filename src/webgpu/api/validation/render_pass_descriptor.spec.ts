@@ -68,16 +68,9 @@ class F extends ValidationTest {
     };
   }
 
-  async tryRenderPass(
-    success: boolean,
-    descriptor: GPURenderPassDescriptor,
-    pipeline?: GPURenderPipeline
-  ): Promise<void> {
+  async tryRenderPass(success: boolean, descriptor: GPURenderPassDescriptor): Promise<void> {
     const commandEncoder = this.device.createCommandEncoder();
     const renderPass = commandEncoder.beginRenderPass(descriptor);
-    if (pipeline !== undefined) {
-      renderPass.setPipeline(pipeline);
-    }
     renderPass.endPass();
 
     this.expectValidationError(() => {
@@ -198,57 +191,6 @@ g.test('attachments_must_match_whether_they_are_used_for_color_or_depth_stencil'
     await t.tryRenderPass(false, descriptor);
   }
 });
-
-g.test('attachments_must_match_fragment_outputs_base_type')
-  .paramsSubcasesOnly([
-    { format: 'rgba8unorm', _success: true }, // valid
-    { format: 'rgba8unorm-srgb', _success: false },
-    { format: 'r8unorm', _success: false },
-    { format: 'bgra8unorm', _success: false },
-    { format: 'r16float', _success: false },
-    { format: 'r32uint', _success: false },
-    { format: 'rgba32float', _success: false },
-  ])
-  .fn(async t => {
-    const { format, _success } = t.params;
-
-    const pipeline = t.device.createRenderPipeline({
-      vertex: {
-        module: t.device.createShaderModule({
-          code: `
-        [[stage(vertex)]] fn main(
-          [[builtin(vertex_index)]] VertexIndex : u32
-          ) -> [[builtin(position)]] vec4<f32> {
-            return vec4<f32>(0.0, 0.0, 0.0, 1.0);
-          }
-          `,
-        }),
-        entryPoint: 'main',
-      },
-      fragment: {
-        module: t.device.createShaderModule({
-          code: `
-          [[stage(fragment)]] fn main() -> [[location(0)]] vec4<f32> {
-            return vec4<f32>(1.0, 0.0, 0.0, 1.0);
-          }
-          `,
-        }),
-        entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm' }],
-      },
-      primitive: { topology: 'triangle-list' },
-    });
-
-    {
-      const descriptor: GPURenderPassDescriptor = {
-        colorAttachments: [
-          t.getColorAttachment(t.createTexture({ format: format as GPUTextureFormat })),
-        ],
-      };
-
-      await t.tryRenderPass(_success, descriptor, pipeline);
-    }
-  });
 
 g.test('check_layer_count_for_color_or_depth_stencil')
   .paramsSimple([
