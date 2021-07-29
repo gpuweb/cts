@@ -22,7 +22,6 @@ import { kResourceStates, ValidationTest } from './validation_test.js';
 export const g = makeTestGroup(ValidationTest);
 
 const kLevels = 6;
-const kLayers = 6;
 
 g.test('format')
   .desc(
