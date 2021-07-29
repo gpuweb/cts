@@ -72,9 +72,7 @@ export function virtualMipSize(
  * Get texture dimension from view dimension in order to create an compatible texture for a given
  * view dimension.
  */
-export function getTextureDimensionFromView(
-  viewDimension: GPUTextureViewDimension
-): GPUTextureDimension {
+export function getTextureDimensionFromView(viewDimension: GPUTextureViewDimension) {
   switch (viewDimension) {
     case '1d':
       return '1d';
@@ -87,6 +85,18 @@ export function getTextureDimensionFromView(
       return '3d';
     default:
       unreachable();
+  }
+}
+
+/** Returns the possible valid view dimensions for a given texture dimension. */
+export function viewDimensionsForTextureDimension(textureDimension: GPUTextureDimension) {
+  switch (textureDimension) {
+    case '1d':
+      return ['1d'] as const;
+    case '2d':
+      return ['2d', '2d-array', 'cube', 'cube-array'] as const;
+    case '3d':
+      return ['3d'] as const;
   }
 }
 
@@ -118,10 +128,10 @@ export function reifyTextureViewDescriptor(
 
   let arrayLayerCount = view.arrayLayerCount;
   if (arrayLayerCount === undefined) {
-    if (dimension === 'cube') {
-      arrayLayerCount = 6;
-    } else if (dimension === '2d-array' || dimension === 'cube-array') {
+    if (dimension === '2d-array' || dimension === 'cube-array') {
       arrayLayerCount = reifyExtent3D(texture.size).depthOrArrayLayers - baseArrayLayer;
+    } else if (dimension === 'cube') {
+      arrayLayerCount = 6;
     } else {
       arrayLayerCount = 1;
     }

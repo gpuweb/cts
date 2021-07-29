@@ -1,6 +1,8 @@
 export const description = `createView validation tests.`;
 
+import { kUnitCaseParamsBuilder } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { unreachable } from '../../../common/util/util.js';
 import {
   kTextureAspects,
   kTextureDimensions,
@@ -11,7 +13,9 @@ import {
 import {
   getTextureDimensionFromView,
   reifyTextureViewDescriptor,
+  viewDimensionsForTextureDimension,
 } from '../../util/texture/base.js';
+import { reifyExtent3D } from '../../util/unions.js';
 
 import { kResourceStates, ValidationTest } from './validation_test.js';
 
@@ -112,107 +116,95 @@ g.test('aspect')
     }, !success);
   });
 
-g.test('dimension_layers')
+const kTextureAndViewDimensions = kUnitCaseParamsBuilder
+  .combine('textureDimension', kTextureDimensions)
+  .expand('viewDimension', p => [
+    undefined,
+    ...viewDimensionsForTextureDimension(p.textureDimension),
+  ]);
+
+function validateCreateViewLayersLevels(tex: GPUTextureDescriptor, view: GPUTextureViewDescriptor) {
+  const textureLevels = tex.mipLevelCount ?? 1;
+  const textureLayers = tex.dimension === '2d' ? reifyExtent3D(tex.size).depthOrArrayLayers : 1;
+  const reified = reifyTextureViewDescriptor(tex, view);
+
+  let success =
+    reified.mipLevelCount > 0 &&
+    reified.baseMipLevel < textureLevels &&
+    reified.baseMipLevel + reified.mipLevelCount <= textureLevels &&
+    reified.arrayLayerCount > 0 &&
+    reified.baseArrayLayer < textureLayers &&
+    reified.baseArrayLayer + reified.arrayLayerCount <= textureLayers;
+  if (reified.dimension === '1d' || reified.dimension === '2d' || reified.dimension === '3d') {
+    success &&= reified.arrayLayerCount === 1;
+  } else if (reified.dimension === 'cube') {
+    success &&= reified.arrayLayerCount === 6;
+  } else if (reified.dimension === 'cube-array') {
+    success &&= reified.arrayLayerCount % 6 === 0;
+  }
+  return success;
+}
+
+g.test('array_layers')
   .desc(
-    `For all possible texture view dimensions, test validation of layer counts:
+    `For each texture dimension {1d,2d,3d}, for each possible view dimension for that texture
+    dimension (or undefined, which defaults to the texture dimension), test validation of layer
+    counts:
   - 1d, 2d, and 3d must have exactly 1 layer
   - 2d-array must have 1 or more layers
   - cube must have 6 layers
-  - cube-array must have a positive multiple of 6 layers`
+  - cube-array must have a positive multiple of 6 layers
+  - Defaulting of baseArrayLayer and arrayLayerCount
+  - baseArrayLayer+arrayLayerCount must be within the texture`
   )
   .params(u =>
-    u
-      .combine('dimension', kTextureViewDimensions)
+    kTextureAndViewDimensions
       .beginSubcases()
-      .combine('baseArrayLayer', [0, 1, 6])
-      .combine('arrayLayerCount', [0, 1, 3, 4, 5, 6, 7, 12])
+      .expand('textureLayers', ({ textureDimension: d }) => (d === '2d' ? [1, 6, 18] : [1]))
+      .combine('textureLevels', [1, kLevels])
+      .expand(
+        'baseArrayLayer',
+        ({ textureLayers: l }) => new Set([undefined, 0, 1, 5, 6, 7, l - 1, l, l + 1])
+      )
+      .expand('arrayLayerCount', function* ({ textureLayers: l, baseArrayLayer = 0 }) {
+        yield undefined;
+        for (const lastArrayLayer of new Set([0, 1, 5, 6, 7, l - 1, l, l + 1])) {
+          if (baseArrayLayer <= lastArrayLayer) yield lastArrayLayer - baseArrayLayer;
+        }
+      })
   )
   .fn(t => {
-    const { dimension, arrayLayerCount } = t.params;
+    const {
+      textureDimension,
+      viewDimension,
+      textureLayers,
+      textureLevels,
+      baseArrayLayer,
+      arrayLayerCount,
+    } = t.params;
 
-    const texture = t.device.createTexture({
-      format: 'rgba8unorm',
-      dimension: getTextureDimensionFromView(dimension),
-      size: [4, 4, 18],
-      usage: GPUTextureUsage.SAMPLED,
-    });
-
-    let success = arrayLayerCount > 0;
-    if (dimension === '1d' || dimension === '2d' || dimension === '3d') {
-      success &&= arrayLayerCount === 1;
-    } else if (dimension === 'cube') {
-      success &&= arrayLayerCount === 6;
-    } else if (dimension === 'cube-array') {
-      success &&= arrayLayerCount % 6 === 0;
-    }
-
-    t.expectValidationError(() => {
-      texture.createView({ dimension, arrayLayerCount });
-    }, !success);
-  });
-
-g.test('2d_array_layers')
-  .desc(
-    `Views must have at least one layer, and must be within the layers of the base texture.
-
-  - arrayLayerCount=0 at various baseArrayLayer values
-  - Cases where baseArrayLayer+arrayLayerCount goes past the end of the texture
-  - Cases with baseArrayLayer or arrayLayerCount undefined (compares against reference defaulting impl)
-  `
-  )
-  .paramsSubcasesOnly(u =>
-    u
-      .combineWithParams([
-        { textureLayers: 1, textureLevels: 1 },
-        { textureLayers: kLayers, textureLevels: kLevels },
-      ])
-      .combine('view', [
-        {},
-        { baseArrayLayer: 0 },
-        { arrayLayerCount: 1 },
-        { baseArrayLayer: 0, arrayLayerCount: 1 },
-        { baseArrayLayer: 1, arrayLayerCount: 1 },
-        { baseArrayLayer: kLayers - 2, arrayLayerCount: 1 },
-        { baseArrayLayer: kLayers - 1, arrayLayerCount: 1 },
-        { baseArrayLayer: 0, arrayLayerCount: 2 },
-        { baseArrayLayer: 1, arrayLayerCount: 2 },
-        { baseArrayLayer: kLayers - 2, arrayLayerCount: 2 },
-        // For 2d-array/cube-array, arrayLayerCount == undefined means to use all remaining layers.
-        // Otherwise it means a fixed 1 or 6 layers.
-        { arrayLayerCount: undefined, baseArrayLayer: 0 },
-        { arrayLayerCount: undefined, baseArrayLayer: 1 },
-        { arrayLayerCount: undefined, baseArrayLayer: kLayers - 1 },
-        { arrayLayerCount: undefined, baseArrayLayer: kLayers },
-        // arrayLayerCount == 0 means zero array layers, which is never valid
-        { arrayLayerCount: 0, baseArrayLayer: 0 },
-        { arrayLayerCount: 0, baseArrayLayer: 1 },
-        { arrayLayerCount: 0, baseArrayLayer: kLayers - 1 },
-        { arrayLayerCount: 0, baseArrayLayer: kLayers },
-        // array layer range out of bounds
-        { baseArrayLayer: 0, arrayLayerCount: kLayers + 1 },
-        { baseArrayLayer: 1, arrayLayerCount: kLayers },
-        { baseArrayLayer: kLayers - 1, arrayLayerCount: 2 },
-        { baseArrayLayer: kLayers, arrayLayerCount: 1 },
-      ])
-  )
-  .fn(t => {
-    const { textureLayers, textureLevels, view } = t.params;
-
+    const kWidth = 1 << (kLevels - 1); // 32
     const textureDescriptor: GPUTextureDescriptor = {
       format: 'rgba8unorm',
-      size: [32, 32, textureLayers],
+      dimension: textureDimension,
+      size:
+        textureDimension === '1d'
+          ? [kWidth]
+          : textureDimension === '2d'
+          ? [kWidth, kWidth, textureLayers]
+          : textureDimension === '3d'
+          ? [kWidth, kWidth, kWidth]
+          : unreachable(),
       mipLevelCount: textureLevels,
       usage: GPUTextureUsage.SAMPLED,
     };
-    const reified = reifyTextureViewDescriptor(textureDescriptor, view);
-    let success =
-      reified.baseArrayLayer < textureLayers &&
-      reified.baseArrayLayer + reified.arrayLayerCount <= textureLayers;
-    if (reified.dimension !== '2d-array') success &&= reified.arrayLayerCount === 1;
+
+    const viewDescriptor = { dimension: viewDimension, baseArrayLayer, arrayLayerCount };
+    const success = validateCreateViewLayersLevels(textureDescriptor, viewDescriptor);
 
     const texture = t.device.createTexture(textureDescriptor);
     t.expectValidationError(() => {
-      texture.createView(view);
+      texture.createView(viewDescriptor);
     }, !success);
   });
 
@@ -226,59 +218,45 @@ g.test('mip_levels')
   `
   )
   .params(u =>
-    u
-      .combine('dimension', kTextureDimensions)
+    kTextureAndViewDimensions
       .beginSubcases()
-      .combineWithParams([
-        { textureLayers: 1, textureLevels: 1 },
-        { textureLayers: kLayers, textureLevels: kLevels },
-      ])
-      .combine('view', [
-        {},
-        { baseMipLevel: 0 },
-        { mipLevelCount: 1 },
-        { baseMipLevel: 0, mipLevelCount: 1 },
-        { baseMipLevel: 1, mipLevelCount: 1 },
-        { baseMipLevel: kLevels - 2, mipLevelCount: 1 },
-        { baseMipLevel: kLevels - 1, mipLevelCount: 1 },
-        { baseMipLevel: 0, mipLevelCount: 2 },
-        { baseMipLevel: 1, mipLevelCount: 2 },
-        { baseMipLevel: kLevels - 2, mipLevelCount: 2 },
-        // mipLevelCount == undefined means to use all remaining levels
-        { mipLevelCount: undefined, baseMipLevel: 0 },
-        { mipLevelCount: undefined, baseMipLevel: 1 },
-        { mipLevelCount: undefined, baseMipLevel: kLevels - 1 },
-        { mipLevelCount: undefined, baseMipLevel: kLevels },
-        // mipLevelCount == 0 means zero mip levels, which is never valid
-        { mipLevelCount: 0, baseMipLevel: 0 },
-        { mipLevelCount: 0, baseMipLevel: 1 },
-        { mipLevelCount: 0, baseMipLevel: kLevels - 1 },
-        { mipLevelCount: 0, baseMipLevel: kLevels },
-        // mip level range out of bounds
-        { baseMipLevel: 0, mipLevelCount: kLevels + 1 },
-        { baseMipLevel: 1, mipLevelCount: kLevels },
-        { baseMipLevel: kLevels - 1, mipLevelCount: 2 },
-        { baseMipLevel: kLevels, mipLevelCount: 1 },
-      ])
+      .combine('textureLevels', [1, kLevels - 2, kLevels])
+      .expand(
+        'baseMipLevel',
+        ({ textureLevels: l }) => new Set([undefined, 0, 1, 5, 6, 7, l - 1, l, l + 1])
+      )
+      .expand('mipLevelCount', function* ({ textureLevels: l, baseMipLevel = 0 }) {
+        yield undefined;
+        for (const lastMipLevel of new Set([0, 1, 5, 6, 7, l - 1, l, l + 1])) {
+          if (baseMipLevel <= lastMipLevel) yield lastMipLevel - baseMipLevel;
+        }
+      })
   )
   .fn(t => {
-    const { dimension, textureLayers, textureLevels, view } = t.params;
+    const {
+      textureDimension,
+      viewDimension,
+      textureLevels,
+      baseMipLevel,
+      mipLevelCount,
+    } = t.params;
 
     const textureDescriptor: GPUTextureDescriptor = {
       format: 'rgba8unorm',
-      dimension,
-      size: [32, 32, textureLayers],
+      dimension: textureDimension,
+      size:
+        textureDimension === '1d' ? [32] : textureDimension === '3d' ? [32, 32, 32] : [32, 32, 18],
       mipLevelCount: textureLevels,
       usage: GPUTextureUsage.SAMPLED,
     };
-    const reified = reifyTextureViewDescriptor(textureDescriptor, view);
-    const success =
-      reified.baseMipLevel < textureLevels &&
-      reified.baseMipLevel + reified.mipLevelCount <= textureLevels;
+
+    const viewDescriptor = { dimension: viewDimension, baseMipLevel, mipLevelCount };
+    const success = validateCreateViewLayersLevels(textureDescriptor, viewDescriptor);
 
     const texture = t.device.createTexture(textureDescriptor);
+    t.debug(mipLevelCount + ' ' + success);
     t.expectValidationError(() => {
-      texture.createView(view);
+      texture.createView(viewDescriptor);
     }, !success);
   });
 
