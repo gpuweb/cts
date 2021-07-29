@@ -100,8 +100,7 @@ class F extends CopyToTextureUtils {
   } {
     const canvas = createCanvas(this, canvasType, width, height);
 
-    let gl = null;
-    gl = canvas.getContext(contextName, { premultipliedAlpha: premultiplied }) as
+    const gl = canvas.getContext(contextName, { premultipliedAlpha: premultiplied }) as
       | WebGLRenderingContext
       | WebGL2RenderingContext
       | null;
@@ -109,6 +108,7 @@ class F extends CopyToTextureUtils {
     if (gl === null) {
       this.skip(canvasType + ' canvas ' + contextName + ' context not available');
     }
+    this.trackForCleanup(gl);
 
     const rectWidth = Math.floor(width / 2);
     const rectHeight = Math.floor(height / 2);
@@ -318,7 +318,7 @@ g.test('copy_contents_from_gl_context_canvas')
   for top-right, blue rect for bottom-left and white for bottom-right.
   And do premultiply alpha in advance if the webgl/webgl2 context is created
   with premultipliedAlpha : true.
-  
+
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the canvas contents.
 

@@ -222,6 +222,7 @@ g.test('source_canvas,contexts')
       t.skip('Failed to get context for canvas element');
       return;
     }
+    t.tryTrackForCleanup(ctx);
 
     t.runTest(
       { source: canvas },
@@ -266,6 +267,7 @@ g.test('source_offscreenCanvas,contexts')
       t.skip('Failed to get context for canvas element');
       return;
     }
+    t.tryTrackForCleanup(ctx);
 
     t.runTest(
       { source: canvas },
@@ -480,7 +482,7 @@ g.test('source_canvas,state')
       }
       case 'placeholder-hascontext': {
         const offscreenCanvas = canvas.transferControlToOffscreen();
-        offscreenCanvas.getContext('webgl');
+        t.tryTrackForCleanup(offscreenCanvas.getContext('webgl'));
         exceptionName = 'InvalidStateError';
         break;
       }
@@ -558,7 +560,7 @@ g.test('source_offscreenCanvas,state')
         messageChannel.port1.postMessage(offscreenCanvas, [offscreenCanvas]);
 
         const receivedOffscreenCanvas = (await port2FirstMessage) as MessageEvent;
-        receivedOffscreenCanvas.data.getContext('webgl');
+        t.tryTrackForCleanup(receivedOffscreenCanvas.data.getContext('webgl'));
 
         exceptionName = 'InvalidStateError';
         break;

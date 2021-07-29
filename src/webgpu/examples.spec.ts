@@ -217,6 +217,7 @@ g.test('gpu,buffers').fn(async t => {
     size: 12,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
   });
+  t.trackForCleanup(src);
   new Uint32Array(src.getMappedRange()).set(data);
   src.unmap();
 
