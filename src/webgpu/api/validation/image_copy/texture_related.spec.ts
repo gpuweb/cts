@@ -89,31 +89,38 @@ g.test('usage')
   });
 
 g.test('sample_count')
-  .desc(`Multisampled textures cannot be copied.`)
+  .desc(`It must be a full copy if the texture is multisampled.`)
   .params(u =>
     u //
       .combine('method', kImageCopyTypes)
       .beginSubcases()
       .combine('sampleCount', [1, 4])
+      .combine('copyWidthRatio', [1.0, 0.5])
+      .combine('copyHeightRatio', [1.0, 0.5])
   )
   .fn(async t => {
-    const { sampleCount, method } = t.params;
+    const { sampleCount, method, copyWidthRatio, copyHeightRatio } = t.params;
 
+    const size = { width: 4, height: 4, depthOrArrayLayers: 1 };
     const texture = t.device.createTexture({
-      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
+      size,
       sampleCount,
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED,
     });
 
-    const success = sampleCount === 1;
+    const success = sampleCount === 1 || (copyWidthRatio === 1.0 && copyHeightRatio === 1.0);
+    const copySize = [
+      size.width * copyWidthRatio,
+      size.height * copyHeightRatio,
+      size.depthOrArrayLayers,
+    ];
 
-    t.testRun(
-      { texture },
-      { bytesPerRow: 0 },
-      { width: 0, height: 0, depthOrArrayLayers: 0 },
-      { dataSize: 1, method, success }
-    );
+    t.testRun({ texture }, { bytesPerRow: 256, rowsPerImage: copySize[1] }, copySize, {
+      dataSize: 256 * 4,
+      method,
+      success,
+    });
   });
 
 g.test('mip_level')

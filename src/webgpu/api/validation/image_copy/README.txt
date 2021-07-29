@@ -7,7 +7,7 @@ Test coverage:
 
 * textureCopyView:
 	- texture_must_be_valid: for valid, destroyed, error textures.
-	- sample_count_must_be_1: for sample count 1 and 4.
+	- sample_count: it must be a full copy if the texture is multisampled.
 	- mip_level_must_be_in_range: for various combinations of mipLevel and mipLevelCount.
 	- texel_block_alignment_on_origin: for all formats and coordinates.
 
