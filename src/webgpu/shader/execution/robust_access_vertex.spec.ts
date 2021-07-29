@@ -532,28 +532,30 @@ class F extends GPUTest {
 export const g = makeTestGroup(F);
 
 g.test('vertex_buffer_access')
-  .params(u =>
-    u
-      .combineWithParams([
-        { indexed: false, indirect: true },
-        { indexed: true, indirect: false },
-        { indexed: true, indirect: true },
-      ])
-      .expand('drawCallTestParameter', function* (p) {
-        if (p.indexed) {
-          yield* ['baseVertex', 'vertexCountInIndexBuffer'] as const;
-          if (p.indirect) {
-            yield* ['indexCount', 'instanceCount', 'firstIndex'] as const;
+  .params(
+    u =>
+      u
+        .combineWithParams([
+          { indexed: false, indirect: true },
+          { indexed: true, indirect: false },
+          { indexed: true, indirect: true },
+        ])
+        .expand('drawCallTestParameter', function* (p) {
+          if (p.indexed) {
+            yield* ['baseVertex', 'vertexCountInIndexBuffer'] as const;
+            if (p.indirect) {
+              yield* ['indexCount', 'instanceCount', 'firstIndex'] as const;
+            }
+          } else if (p.indirect) {
+            yield* ['vertexCount', 'instanceCount', 'firstVertex'] as const;
           }
-        } else if (p.indirect) {
-          yield* ['vertexCount', 'instanceCount', 'firstVertex'] as const;
-        }
-      })
-      .combine('type', Object.keys(typeInfoMap) as GPUVertexFormat[])
-      .combine('additionalBuffers', [0, 4])
-      .combine('partialLastNumber', [false, true])
-      .combine('offsetVertexBuffer', [false, true])
-      .combine('errorScale', [0, 1, 4, 10 ** 2, 10 ** 4, 10 ** 6])
+        })
+        .combine('type', Object.keys(typeInfoMap) as GPUVertexFormat[])
+        .combine('additionalBuffers', [0, 4])
+        .combine('partialLastNumber', [false, true])
+        .combine('offsetVertexBuffer', [false, true])
+        .combine('errorScale', [0, 1, 4, 10 ** 2, 10 ** 4, 10 ** 6])
+        .unless(p => p.drawCallTestParameter === 'instanceCount' && p.errorScale > 10 ** 4) // To avoid timeout
   )
   .fn(async t => {
     const p = t.params;
