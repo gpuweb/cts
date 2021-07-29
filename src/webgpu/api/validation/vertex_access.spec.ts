@@ -89,3 +89,41 @@ import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { ValidationTest } from './validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);
+
+g.test('Blabla').unimplemented();
+/* fn(t => {
+  const p = t.params;
+  // Vertex buffer descriptors
+  const buffers: GPUVertexBufferLayout[] = this.generateVertexBufferDescriptors();
+
+  // Pipeline setup, texture setup
+  const pipeline = this.createRenderPipeline();
+
+  const colorAttachment = t.device.createTexture({
+    format: 'rgba8unorm',
+    size: { width: 2, height: 1, depthOrArrayLayers: 1 },
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+  });
+  const colorAttachmentView = colorAttachment.createView();
+
+  const encoder = t.device.createCommandEncoder();
+  const pass = encoder.beginRenderPass({
+    colorAttachments: [
+      {
+        view: colorAttachmentView,
+        storeOp: 'store',
+        loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+      },
+    ],
+  });
+  pass.setPipeline(pipeline);
+
+  // Run the draw variant
+  drawCall.insertInto(pass, isIndexed, isIndirect);
+
+  pass.endPass();
+  const commandBuffer: GPUCommandBuffer = encoder.finish();
+  t.device.queue.submit([commandBuffer]);
+
+})
+*/
