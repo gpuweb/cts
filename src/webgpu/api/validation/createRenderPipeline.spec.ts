@@ -34,17 +34,20 @@ import {
 import { ValidationTest } from './validation_test.js';
 
 class F extends ValidationTest {
+  getExpectedType(format: GPUTextureFormat): GPUTextureSampleType {
+    if (format.endsWith('sint')) {
+      return 'sint';
+    } else if (format.endsWith('uint')) {
+      return 'uint';
+    } else {
+      return 'float';
+    }
+  }
+
   getExpectedTypeAndComponentCount(
     format: GPUTextureFormat
   ): { expectedType: GPUTextureSampleType; expectedComponentCount: number } {
-    let expectedType: GPUTextureSampleType;
-    if (format.endsWith('sint')) {
-      expectedType = 'sint';
-    } else if (format.endsWith('uint')) {
-      expectedType = 'uint';
-    } else {
-      expectedType = 'float';
-    }
+    const expectedType = this.getExpectedType(format);
     // Only used for renderable color formats
     let expectedComponentCount: number = 1;
     if (format.startsWith('rgba') || format.startsWith('bgra') || format.startsWith('rgb10a2')) {
