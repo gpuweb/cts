@@ -239,18 +239,14 @@ g.test('sample_count_must_be_valid')
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
-g.test('pipeline_fragment_output_type_must_be_compatible_with_target_color_state_format')
+g.test('pipeline_output_targets')
+  .desc('Pipeline fragment output types must be compatible with target color state format')
   .params(u =>
     u
       .combine('isAsync', [false, true])
       .combine('format', kRenderableColorTextureFormats)
       .beginSubcases()
-      .combine('sampleType', [
-        'float',
-        'uint',
-        'sint',
-        'unfilterable-float',
-      ] as GPUTextureSampleType[])
+      .combine('sampleType', ['float', 'uint', 'sint'] as const)
       .combine('componentCount', [1, 2, 3, 4])
   )
   .fn(async t => {
@@ -264,8 +260,6 @@ g.test('pipeline_fragment_output_type_must_be_compatible_with_target_color_state
     });
 
     const expectedType = t.getExpectedType(format);
-    const _success =
-      expectedType === sampleType ||
-      (expectedType === 'float' && sampleType === 'unfilterable-float');
+    const _success = expectedType === sampleType;
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });

@@ -182,7 +182,8 @@ const kCompressedTextureFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfo
 /* prettier-ignore */ export const        kDepthStencilFormats: readonly        DepthStencilFormat[] = keysOf(       kDepthStencilFormatInfo);
 /* prettier-ignore */ export const kUncompressedTextureFormats: readonly UncompressedTextureFormat[] = keysOf(kUncompressedTextureFormatInfo);
 
-/* prettier-ignore */ export const kRenderableColorTextureFormats: readonly     ColorTextureFormat[] = kColorTextureFormats.filter(v => kColorTextureFormatInfo[v].renderable);
+// CompressedTextureFormat are unrenderable so filter from RegularTextureFormats for color targets is enough
+/* prettier-ignore */ export const kRenderableColorTextureFormats = kRegularTextureFormats.filter(v => kColorTextureFormatInfo[v].renderable);
 
 /** Per-GPUTextureFormat info. */
 // Exists just for documentation. Otherwise could be inferred by `makeTable`.
