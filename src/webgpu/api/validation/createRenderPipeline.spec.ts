@@ -34,14 +34,30 @@ import {
 import { ValidationTest } from './validation_test.js';
 
 class F extends ValidationTest {
-  getExpectedType(format: GPUTextureFormat): GPUTextureSampleType {
+  getExpectedTypeAndComponentCount(
+    format: GPUTextureFormat
+  ): { expectedType: GPUTextureSampleType; expectedComponentCount: number } {
+    let expectedType: GPUTextureSampleType;
     if (format.endsWith('sint')) {
-      return 'sint';
+      expectedType = 'sint';
     } else if (format.endsWith('uint')) {
-      return 'uint';
+      expectedType = 'uint';
     } else {
-      return 'float';
+      expectedType = 'float';
     }
+    // Only used for renderable color formats
+    let expectedComponentCount: number = 1;
+    if (format.startsWith('rgba') || format.startsWith('bgra') || format.startsWith('rgb10a2')) {
+      expectedComponentCount = 4;
+    } else if (format.startsWith('rg')) {
+      expectedComponentCount = 2;
+    } else if (format.startsWith('r')) {
+      expectedComponentCount = 1;
+    } else {
+      unreachable();
+    }
+
+    return { expectedType, expectedComponentCount };
   }
 
   getFragmentShaderCode(sampleType: GPUTextureSampleType, componentCount: number): string {
@@ -240,7 +256,13 @@ g.test('sample_count_must_be_valid')
   });
 
 g.test('pipeline_output_targets')
-  .desc('Pipeline fragment output types must be compatible with target color state format')
+  .desc(
+    `Pipeline fragment output types must be compatible with target color state format
+  - The scalar type (f32, i32, or u32) must match the sample type of the format.
+  - The componentCount of the fragment output (e.g. f32, vec2, vec3, vec4) must not have fewer
+    channels than that of the color attachment texture formats. Extra components are allowed and are discarded.
+  `
+  )
   .params(u =>
     u
       .combine('isAsync', [false, true])
@@ -251,6 +273,7 @@ g.test('pipeline_output_targets')
   )
   .fn(async t => {
     const { isAsync, format, sampleType, componentCount } = t.params;
+    const { expectedType, expectedComponentCount } = t.getExpectedTypeAndComponentCount(format);
     const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
@@ -259,7 +282,6 @@ g.test('pipeline_output_targets')
       fragmentShaderCode: t.getFragmentShaderCode(sampleType, componentCount),
     });
 
-    const expectedType = t.getExpectedType(format);
-    const _success = expectedType === sampleType;
+    const _success = expectedType === sampleType && componentCount >= expectedComponentCount;
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });

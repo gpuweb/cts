@@ -39,7 +39,6 @@ class F extends GPUTest {
     sampleType: GPUTextureSampleType,
     componentCount: number
   ): string {
-    console.log(v);
     let fragColorType;
     let suffix;
     switch (sampleType) {
@@ -101,16 +100,16 @@ g.test('color,component_count')
   )
   .fn(async t => {
     const { format, componentCount } = t.params;
+    const { expectedType, expectedComponentCount } = t.getExpectedTypeAndComponentCount(format);
+    if (componentCount < expectedComponentCount) {
+      t.skip('componentCount of pipeline output must not be fewer than that of target format');
+    }
     const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
-    const { expectedType, expectedComponentCount } = t.getExpectedTypeAndComponentCount(format);
 
     // expected RGBA values
     // extra channels are discarded
     const v = [0, 1, 0, 1];
-    if (componentCount < expectedComponentCount) {
-      t.skip('componentCount of pipeline output must not be fewer than that of target format');
-    }
 
     const renderTarget = t.device.createTexture({
       format,
