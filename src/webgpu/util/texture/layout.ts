@@ -5,7 +5,7 @@ import {
   SizedTextureFormat,
 } from '../../capability_info.js';
 import { align } from '../math.js';
-import { standardizeExtent3D } from '../unions.js';
+import { reifyExtent3D } from '../unions.js';
 
 import { virtualMipSize } from './base.js';
 
@@ -268,7 +268,7 @@ export function dataBytesForCopyOrOverestimate({
   copySize: copySize_,
   method,
 }: DataBytesForCopyArgs): { minDataSizeOrOverestimate: number; copyValid: boolean } {
-  const copyExtent = standardizeExtent3D(copySize_);
+  const copyExtent = reifyExtent3D(copySize_);
 
   const info = kTextureFormatInfo[format];
   assert(copyExtent.width % info.blockWidth === 0);
