@@ -282,19 +282,18 @@ g.test('drawTo2DCanvas')
   )
   .params(u =>
     u //
-      .combine('canvasType', allCanvasTypes)
-      .beginSubcases()
       .combine('webgpuCanvasType', allCanvasTypes)
+      .combine('canvas2DType', allCanvasTypes)
   )
   .fn(async t => {
-    const { canvasType, webgpuCanvasType } = t.params;
+    const { webgpuCanvasType, canvas2DType } = t.params;
 
     const canvas = await initCanvasContent(t, webgpuCanvasType);
 
-    const expectCanvas = createCanvas(t, canvasType, canvas.width, canvas.height);
+    const expectCanvas = createCanvas(t, canvas2DType, canvas.width, canvas.height);
     const ctx = expectCanvas.getContext('2d');
     if (ctx === null) {
-      t.skip(canvasType + ' canvas cannot get 2d context');
+      t.skip(canvas2DType + ' canvas cannot get 2d context');
       return;
     }
     ctx.drawImage(canvas, 0, 0);
