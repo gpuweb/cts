@@ -6,7 +6,12 @@ import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert, raceWithRejectOnTimeout, unreachable } from '../../../common/util/util.js';
 import { GPUTest } from '../../gpu_test.js';
 import { checkElementsEqual } from '../../util/check_contents.js';
-import { canvasTypes, createCanvas, createOnscreenCanvas } from '../../util/create_elements.js';
+import {
+  allCanvasTypes,
+  canvasTypes,
+  createCanvas,
+  createOnscreenCanvas,
+} from '../../util/create_elements.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -96,17 +101,25 @@ async function initCanvasContent(
   return canvas;
 }
 
-async function checkImageResult(t: GPUTest, image: CanvasImageSource, expect: Uint8ClampedArray) {
-  const expectCanvas: HTMLCanvasElement = createOnscreenCanvas(t, 2, 2);
-  const expectContext = expectCanvas.getContext('2d');
-  assert(expectContext !== null);
-  expectContext.drawImage(image, 0, 0);
-  const actual = expectContext.getImageData(0, 0, 2, 2).data;
+function checkImageResult(t: GPUTest, image: CanvasImageSource, expect: Uint8ClampedArray) {
+  const canvas: HTMLCanvasElement = createOnscreenCanvas(t, 2, 2);
+  const ctx = canvas.getContext('2d');
+  assert(ctx !== null);
+  ctx.drawImage(image, 0, 0);
+  readPixelsFrom2DCanvasAndCompare(t, ctx, expect);
+}
+
+function readPixelsFrom2DCanvasAndCompare(
+  t: GPUTest,
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  expect: Uint8ClampedArray
+) {
+  const actual = ctx.getImageData(0, 0, 2, 2).data;
 
   t.expectOK(checkElementsEqual(actual, expect));
 }
 
-g.test('canvas,snapshot')
+g.test('onscreenCanvas,snapshot')
   .desc(
     `
     Ensure snapshot of canvas with WebGPU context is correct
@@ -152,7 +165,7 @@ g.test('canvas,snapshot')
         unreachable();
     }
 
-    await checkImageResult(t, snapshot, expect);
+    checkImageResult(t, snapshot, expect);
   });
 
 g.test('offscreenCanvas,snapshot')
@@ -202,10 +215,10 @@ g.test('offscreenCanvas,snapshot')
         unreachable();
     }
 
-    await checkImageResult(t, snapshot, expect);
+    checkImageResult(t, snapshot, expect);
   });
 
-g.test('canvas,uploadToWebGL')
+g.test('onscreenCanvas,uploadToWebGL')
   .desc(
     `
     Ensure upload WebGPU context canvas to webgl texture is correct.
@@ -262,4 +275,32 @@ g.test('canvas,uploadToWebGL')
     const actual = new Uint8ClampedArray(pixels);
 
     t.expectOK(checkElementsEqual(actual, webglExpect));
+  });
+
+g.test('drawTo2DCanvas')
+  .desc(
+    `
+    Ensure draw WebGPU context canvas to 2d context canvas/offscreenCanvas is correct.
+    `
+  )
+  .params(u =>
+    u //
+      .combine('canvasType', allCanvasTypes)
+      .beginSubcases()
+      .combine('webgpuCanvasType', allCanvasTypes)
+  )
+  .fn(async t => {
+    const { canvasType, webgpuCanvasType } = t.params;
+
+    const canvas = await initCanvasContent(t, webgpuCanvasType);
+
+    const expectCanvas = createCanvas(t, canvasType, canvas.width, canvas.height);
+    const ctx = expectCanvas.getContext('2d');
+    if (ctx === null) {
+      t.skip(canvasType + ' canvas cannot get 2d context');
+      return;
+    }
+    ctx.drawImage(canvas, 0, 0);
+
+    readPixelsFrom2DCanvasAndCompare(t, ctx, expect);
   });
