@@ -303,12 +303,13 @@ const kDepthStencilFormatCapabilityInBufferTextureCopy = {
  * Computes whether a copy between a depth/stencil texture aspect and a buffer is supported, by spec.
  */
 export function depthStencilBufferTextureCopySupported(
-  type: 'CopyB2T' | 'CopyT2B',
+  type: 'CopyB2T' | 'CopyT2B' | 'WriteTexture',
   format: DepthStencilFormat,
   aspect: GPUTextureAspect
 ): boolean {
+  const appliedType = type === 'WriteTexture' ? 'CopyB2T' : type;
   const supportedAspects: readonly GPUTextureAspect[] =
-    kDepthStencilFormatCapabilityInBufferTextureCopy[format][type];
+    kDepthStencilFormatCapabilityInBufferTextureCopy[format][appliedType];
   return supportedAspects.includes(aspect);
 }
 
