@@ -1,4 +1,10 @@
-export const description = '';
+export const description = `
+  texture related validation tests for B2T copy and T2B copy and writeTexture.
+
+  Note: see api,validation,encoding,cmds,copyTextureToTexture:* for validation tests of T2T copy.
+
+  TODO: expand the tests below to 1d texture.
+`;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
@@ -352,7 +358,7 @@ g.test('copy_rectangle')
       }
       case 2: {
         textureSize.depthOrArrayLayers =
-          dimension === '2d' ? textureSizeValue : textureSizeValue << mipLevel;
+          dimension === '3d' ? textureSizeValue << mipLevel : textureSizeValue;
         break;
       }
     }
