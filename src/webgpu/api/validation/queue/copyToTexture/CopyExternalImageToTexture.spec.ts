@@ -2,6 +2,7 @@ export const description = `
 copyExternalImageToTexture Validation Tests in Queue.
 `;
 
+import { getResourcePath } from '../../../../../common/framework/resources.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { raceWithRejectOnTimeout, unreachable, assert } from '../../../../../common/util/util.js';
 import {
@@ -305,7 +306,7 @@ g.test('source_image,crossOrigin')
     const { sourceImage, isOriginClean, contentFrom, copySize } = t.params;
 
     const crossOriginUrl = 'https://get.webgl.org/conformance-resources/opengl_logo.jpg';
-    const originCleanUrl = '../out/resources/Di-3d.png';
+    const originCleanUrl = getResourcePath('Di-3d.png');
 
     const img = document.createElement('img');
     img.src = isOriginClean ? originCleanUrl : crossOriginUrl;
