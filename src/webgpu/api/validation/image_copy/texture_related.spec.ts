@@ -127,7 +127,7 @@ g.test('sample_count')
       size: { width: 4, height: 4, depthOrArrayLayers: 1 },
       sampleCount,
       format: 'rgba8unorm',
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED,
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
 
     const success = sampleCount === 1;
@@ -173,6 +173,73 @@ g.test('mip_level')
       { width: 0, height: 0, depthOrArrayLayers: 0 },
       { dataSize: 1, method, success }
     );
+  });
+
+g.test('format')
+  .desc(`Test that it must be a full copy if the texture's format is depth/stencil format`)
+  .params(u =>
+    u //
+      .combine('method', kImageCopyTypes)
+      .combineWithParams([
+        { depthOrArrayLayers: 1, dimension: '2d' },
+        { depthOrArrayLayers: 3, dimension: '2d' },
+        { depthOrArrayLayers: 32, dimension: '3d' },
+      ] as const)
+      .combine('format', kSizedTextureFormats)
+      .filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format))
+      .filter(formatCopyableWithMethod)
+      .beginSubcases()
+      .combine('mipLevel', [0, 2])
+      .combine('copyWidthModifier', [0, -1])
+      .combine('copyHeightModifier', [0, -1])
+      .expand('copyDepthModifier', ({ dimension: d }) => (d === '3d' ? [0, -1] : [0]))
+  )
+  .fn(async t => {
+    const {
+      method,
+      depthOrArrayLayers,
+      dimension,
+      format,
+      mipLevel,
+      copyWidthModifier,
+      copyHeightModifier,
+      copyDepthModifier,
+    } = t.params;
+
+    const info = kTextureFormatInfo[format];
+    await t.selectDeviceOrSkipTestCase(info.feature);
+
+    const size = { width: 32, height: 32, depthOrArrayLayers };
+    const texture = t.device.createTexture({
+      size,
+      dimension,
+      format,
+      mipLevelCount: 5,
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+    });
+
+    let success = true;
+    if (
+      (info.depth || info.stencil) &&
+      (copyWidthModifier !== 0 || copyHeightModifier !== 0 || copyDepthModifier !== 0)
+    ) {
+      success = false;
+    }
+
+    const copySize = [
+      (size.width >> mipLevel) + copyWidthModifier * info.blockWidth,
+      (size.height >> mipLevel) + copyHeightModifier * info.blockHeight,
+      // Note that compressed format is not supported for 3D textures yet, so there is no info.blockDepth.
+      dimension === '3d'
+        ? (size.depthOrArrayLayers >> mipLevel) + copyDepthModifier
+        : size.depthOrArrayLayers,
+    ];
+
+    t.testRun({ texture, mipLevel }, { bytesPerRow: 512, rowsPerImage: 32 }, copySize, {
+      dataSize: 512 * 32 * 32,
+      method,
+      success,
+    });
   });
 
 g.test('origin_alignment')
