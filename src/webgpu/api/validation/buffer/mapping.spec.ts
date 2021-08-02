@@ -1,27 +1,5 @@
 export const description = `
 Validation tests for GPUBuffer.mapAsync, GPUBuffer.unmap and GPUBuffer.getMappedRange.
-
-TODO: review existing tests and merge with this plan:
-> - {mappedAtCreation, await mapAsync}
->     - -> x = getMappedRange
->     - check x.size == mapping size
->     - -> noawait mapAsync
->     - check x.size == mapping size
->     - -> await
->     - check x.size == mapping size
->     - -> unmap
->     - check x.size == 0
->     - -> getMappedRange (should fail)
-> - await mapAsync -> await mapAsync -> getMappedRange
-> - {mappedAtCreation, await mapAsync} -> unmap -> unmap
-> - x = noawait mapAsync -> y = noawait mapAsync
->     - -> getMappedRange (should fail)
->     - -> await x
->     - -> getMappedRange
->     - -> shouldReject(y)
-> - noawait mapAsync -> unmap
-> - {mappedAtCreation, await mapAsync} -> x = getMappedRange -> unmap -> await mapAsync(subrange) -> y = getMappedRange
->     - check x.size == 0, y.size == mapping size
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
@@ -246,19 +224,10 @@ g.test('mapAsync,sizeUnspecifiedOOB')
 g.test('mapAsync,offsetAndSizeAlignment')
   .desc("Test that mapAsync fails if the alignment of offset and size isn't correct.")
   .paramsSubcasesOnly(u =>
-    u //
+    u
       .combine('mapMode', kMapModeOptions)
-      .combineWithParams([
-        // Valid cases, 0 and required alignments values are valid.
-        { offset: 0, size: 0 },
-        { offset: kOffsetAlignment, size: kSizeAlignment },
-
-        // Invalid case, offset isn't aligned.
-        { offset: kOffsetAlignment / 2, size: kSizeAlignment },
-
-        // Invalid case, size isn't aligned.
-        { offset: kOffsetAlignment, size: kSizeAlignment / 2 },
-      ])
+      .combine('offset', [0, kOffsetAlignment, kOffsetAlignment / 2])
+      .combine('size', [0, kSizeAlignment, kSizeAlignment / 2])
   )
   .fn(async t => {
     const { mapMode, offset, size } = t.params;
@@ -315,25 +284,96 @@ g.test('getMappedRange,state,mapped')
   .paramsSubcasesOnly(u => u.combine('mapMode', kMapModeOptions))
   .fn(async t => {
     const { mapMode } = t.params;
-    const buffer = t.createMappableBuffer(mapMode, 16);
+    const bufferSize = 16;
+    const buffer = t.createMappableBuffer(mapMode, bufferSize);
     await buffer.mapAsync(mapMode);
 
-    t.testGetMappedRangeCall(true, buffer);
+    const data = buffer.getMappedRange();
+    t.expect(data instanceof ArrayBuffer);
+    t.expect(data.byteLength === bufferSize);
+
+    t.expectValidationError(() => {
+      // map on already mapped buffer should be rejected
+      const mapping = buffer.mapAsync(mapMode);
+      t.expect(data.byteLength === bufferSize);
+      t.shouldReject('OperationError', mapping);
+    });
+
+    t.expect(data.byteLength === bufferSize);
+
+    buffer.unmap();
+
+    t.expect(data.byteLength === 0);
   });
 
 g.test('getMappedRange,state,mappedAtCreation')
   .desc(
-    'Test that it is valid to call getMappedRange in the mapped at creation state, for all buffer usages'
+    `Test that, in the mapped-at-creation state, it is valid to call getMappedRange, for all buffer usages,
+    and invalid to call mapAsync, for all map modes.`
   )
-  .paramsSubcasesOnly(u => u.combine('bufferUsage', kBufferUsages))
+  .paramsSubcasesOnly(u =>
+    u.combine('bufferUsage', kBufferUsages).combine('mapMode', kMapModeOptions)
+  )
   .fn(async t => {
-    const { bufferUsage } = t.params;
+    const { bufferUsage, mapMode } = t.params;
+    const bufferSize = 16;
     const buffer = t.device.createBuffer({
       usage: bufferUsage,
-      size: 16,
+      size: bufferSize,
       mappedAtCreation: true,
     });
 
+    const data = buffer.getMappedRange();
+    t.expect(data instanceof ArrayBuffer);
+    t.expect(data.byteLength === bufferSize);
+
+    t.expectValidationError(() => {
+      // map on already mapped buffer should be rejected
+      const mapping = buffer.mapAsync(mapMode);
+      t.expect(data.byteLength === bufferSize);
+      t.shouldReject('OperationError', mapping);
+    });
+
+    t.expect(data.byteLength === bufferSize);
+
+    buffer.unmap();
+
+    t.expect(data.byteLength === 0);
+  });
+
+g.test('getMappedRange,state,invalid_mappedAtCreation')
+  .desc(
+    `mappedAtCreation should return a mapped buffer, even if the buffer is invalid.
+Like VRAM allocation (see map_oom), validation can be performed asynchronously (in the GPU process)
+so the Content process doesn't necessarily know the buffer is invalid.`
+  )
+  .fn(async t => {
+    const buffer = t.expectGPUError('validation', () =>
+      t.device.createBuffer({
+        mappedAtCreation: true,
+        size: 16,
+        usage: 0xffff_ffff, // Invalid usage
+      })
+    );
+
+    // Should still be valid.
+    buffer.getMappedRange();
+  });
+
+g.test('getMappedRange,state,mappedAgain')
+  .desc(
+    'Test that it is valid to call getMappedRange in the mapped state, even if there is a duplicate mapAsync before'
+  )
+  .paramsSubcasesOnly(u => u.combine('mapMode', kMapModeOptions))
+  .fn(async t => {
+    const { mapMode } = t.params;
+    const buffer = t.createMappableBuffer(mapMode, 16);
+    await buffer.mapAsync(mapMode);
+
+    // call mapAsync again on already mapped buffer should fail
+    await t.testMapAsyncCall(false, 'OperationError', buffer, mapMode);
+
+    // getMapppedRange should still success
     t.testGetMappedRangeCall(true, buffer);
   });
 
@@ -367,6 +407,63 @@ Test for various cases of being unmapped: at creation, after a mapAsync call or 
       buffer.unmap();
       t.testGetMappedRangeCall(false, buffer);
     }
+  });
+
+g.test('getMappedRange,subrange,mapped')
+  .desc(
+    `Test that old getMappedRange returned arraybuffer does not exist after unmap, and newly returned
+    arraybuffer after new map has correct subrange`
+  )
+  .params(u => u.combine('mapMode', kMapModeOptions))
+  .fn(async t => {
+    const { mapMode } = t.params;
+    const bufferSize = 16;
+    const offset = 8;
+    const subrangeSize = bufferSize - offset;
+    const buffer = t.createMappableBuffer(mapMode, bufferSize);
+    await buffer.mapAsync(mapMode);
+
+    const data0 = buffer.getMappedRange();
+    t.expect(data0 instanceof ArrayBuffer);
+    t.expect(data0.byteLength === bufferSize);
+
+    buffer.unmap();
+    t.expect(data0.byteLength === 0);
+
+    await buffer.mapAsync(mapMode, offset);
+    const data1 = buffer.getMappedRange(8);
+
+    t.expect(data0.byteLength === 0);
+    t.expect(data1.byteLength === subrangeSize);
+  });
+
+g.test('getMappedRange,subrange,mappedAtCreation')
+  .desc(
+    `Test that old getMappedRange returned arrybuffer does not exist after unmap and newly returned
+    arraybuffer after new map has correct subrange`
+  )
+  .fn(async t => {
+    const bufferSize = 16;
+    const offset = 8;
+    const subrangeSize = bufferSize - offset;
+    const buffer = t.device.createBuffer({
+      size: bufferSize,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+      mappedAtCreation: true,
+    });
+
+    const data0 = buffer.getMappedRange();
+    t.expect(data0 instanceof ArrayBuffer);
+    t.expect(data0.byteLength === bufferSize);
+
+    buffer.unmap();
+    t.expect(data0.byteLength === 0);
+
+    await buffer.mapAsync(GPUMapMode.READ, offset);
+    const data1 = buffer.getMappedRange(8);
+
+    t.expect(data0.byteLength === 0);
+    t.expect(data1.byteLength === subrangeSize);
   });
 
 g.test('getMappedRange,state,destroyed')
@@ -405,45 +502,63 @@ Test for various cases of being destroyed: at creation, after a mapAsync call or
 g.test('getMappedRange,state,mappingPending')
   .desc('Test that it is invalid to call getMappedRange in the mappingPending state.')
   .paramsSubcasesOnly(u => u.combine('mapMode', kMapModeOptions))
-  .fn(t => {
+  .fn(async t => {
     const { mapMode } = t.params;
     const buffer = t.createMappableBuffer(mapMode, 16);
 
-    /* noawait */ buffer.mapAsync(mapMode);
+    /* noawait */ const mapping0 = buffer.mapAsync(mapMode);
+    t.expectValidationError(() => {
+      // seconding mapping should be rejected
+      t.shouldReject('OperationError', buffer.mapAsync(mapMode));
+    });
+
+    // invalid in mappingPending state
     t.testGetMappedRangeCall(false, buffer);
+
+    await mapping0;
+
+    // valid after buffer is mapped
+    t.testGetMappedRangeCall(true, buffer);
   });
 
-g.test('getMappedRange,offsetAndSizeAlignment')
-  .desc(
-    `Test that getMappedRange fails if the alignment of offset and size isn't correct.
-  TODO: x= {mappedAtCreation, mapAsync at {0, >0}`
-  )
+g.test('getMappedRange,offsetAndSizeAlignment,mapped')
+  .desc(`Test that getMappedRange fails if the alignment of offset and size isn't correct.`)
   .params(u =>
     u
       .combine('mapMode', kMapModeOptions)
       .beginSubcases()
-      .combineWithParams([
-        // Valid cases, 0 and required alignments values are valid.
-        { offset: 0, size: 0 },
-        { offset: kOffsetAlignment, size: kSizeAlignment },
-
-        // Invalid case, offset isn't aligned.
-        { offset: kOffsetAlignment / 2, size: kSizeAlignment },
-
-        // Invalid case, size isn't aligned.
-        { offset: kOffsetAlignment, size: kSizeAlignment / 2 },
-      ])
+      .combine('mapOffset', [0, kOffsetAlignment])
+      .combine('offset', [0, kOffsetAlignment, kOffsetAlignment / 2])
+      .combine('size', [0, kSizeAlignment, kSizeAlignment / 2])
   )
   .fn(async t => {
-    const { mapMode, offset, size } = t.params;
-    const buffer = t.createMappableBuffer(mapMode, 16);
-    await buffer.mapAsync(mapMode);
+    const { mapMode, mapOffset, offset, size } = t.params;
+    const buffer = t.createMappableBuffer(mapMode, 32);
+    await buffer.mapAsync(mapMode, mapOffset);
 
+    const success = offset % kOffsetAlignment === 0 && size % kSizeAlignment === 0;
+    t.testGetMappedRangeCall(success, buffer, offset + mapOffset, size);
+  });
+
+g.test('getMappedRange,offsetAndSizeAlignment,mappedAtCreation')
+  .desc(`Test that getMappedRange fails if the alignment of offset and size isn't correct.`)
+  .paramsSubcasesOnly(u =>
+    u
+      .combine('offset', [0, kOffsetAlignment, kOffsetAlignment / 2])
+      .combine('size', [0, kSizeAlignment, kSizeAlignment / 2])
+  )
+  .fn(async t => {
+    const { offset, size } = t.params;
+    const buffer = t.device.createBuffer({
+      size: 16,
+      usage: GPUBufferUsage.COPY_DST,
+      mappedAtCreation: true,
+    });
     const success = offset % kOffsetAlignment === 0 && size % kSizeAlignment === 0;
     t.testGetMappedRangeCall(success, buffer, offset, size);
   });
 
-g.test('getMappedRange,sizeAndOffsetOOB,forMappedAtCreation')
+g.test('getMappedRange,sizeAndOffsetOOB,mappedAtCreation')
   .desc(
     `Test that getMappedRange size + offset must be less than the buffer size for a
     buffer mapped at creation. (and offset has not constraints on its own)`
@@ -493,7 +608,7 @@ g.test('getMappedRange,sizeAndOffsetOOB,forMappedAtCreation')
     t.testGetMappedRangeCall(success, buffer, offset, size);
   });
 
-g.test('getMappedRange,sizeAndOffsetOOB,forMapped')
+g.test('getMappedRange,sizeAndOffsetOOB,mapped')
   .desc('Test that getMappedRange size + offset must be less than the mapAsync range.')
   .paramsSubcasesOnly(u =>
     u //

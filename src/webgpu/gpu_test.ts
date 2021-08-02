@@ -14,7 +14,11 @@ import {
   kQueryTypeInfo,
 } from './capability_info.js';
 import { makeBufferWithContents } from './util/buffer.js';
-import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
+import {
+  checkElementsEqual,
+  checkElementsBetween,
+  checkElementsFloat16Between,
+} from './util/check_contents.js';
 import {
   DevicePool,
   DeviceProvider,
@@ -426,11 +430,16 @@ export class GPUTest extends Fixture {
       slice = 0,
       layout,
       generateWarningOnly = false,
+      checkElementsBetweenFn = checkElementsBetween,
     }: {
       exp: [TypedArrayBufferView, TypedArrayBufferView];
       slice?: number;
       layout?: TextureLayoutOptions;
       generateWarningOnly?: boolean;
+      checkElementsBetweenFn?: (
+        actual: TypedArrayBufferView,
+        expected: readonly [TypedArrayBufferView, TypedArrayBufferView]
+      ) => Error | undefined;
     }
   ): void {
     assert(exp[0].constructor === exp[1].constructor);
@@ -439,11 +448,45 @@ export class GPUTest extends Fixture {
     const typedLength = exp[0].length;
 
     const buffer = this.readSinglePixelFrom2DTexture(src, format, { x, y }, { slice, layout });
-    this.expectGPUBufferValuesPassCheck(buffer, a => checkElementsBetween(a, exp), {
+    this.expectGPUBufferValuesPassCheck(buffer, a => checkElementsBetweenFn(a, exp), {
       type: constructor,
       typedLength,
       mode: generateWarningOnly ? 'warn' : 'fail',
     });
+  }
+
+  /**
+   * Equivalent to {@link expectSinglePixelBetweenTwoValuesIn2DTexture} but uses a special check func
+   * to interpret incoming values as float16
+   */
+  expectSinglePixelBetweenTwoValuesFloat16In2DTexture(
+    src: GPUTexture,
+    format: SizedTextureFormat,
+    { x, y }: { x: number; y: number },
+    {
+      exp,
+      slice = 0,
+      layout,
+      generateWarningOnly = false,
+    }: {
+      exp: [Uint16Array, Uint16Array];
+      slice?: number;
+      layout?: TextureLayoutOptions;
+      generateWarningOnly?: boolean;
+    }
+  ): void {
+    this.expectSinglePixelBetweenTwoValuesIn2DTexture(
+      src,
+      format,
+      { x, y },
+      {
+        exp,
+        slice,
+        layout,
+        generateWarningOnly,
+        checkElementsBetweenFn: checkElementsFloat16Between,
+      }
+    );
   }
 
   /**

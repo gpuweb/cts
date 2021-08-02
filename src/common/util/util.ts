@@ -7,7 +7,7 @@ import { timeout } from './timeout.js';
  * The extra data is omitted if not running the test in debug mode (`?debug=1`).
  */
 export class ErrorWithExtra extends Error {
-  readonly extra: {};
+  readonly extra: { [k: string]: unknown };
 
   /**
    * `extra` function is only called if in debug mode.

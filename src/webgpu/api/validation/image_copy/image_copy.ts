@@ -83,7 +83,8 @@ export class ImageCopyTest extends ValidationTest {
   createAlignedTexture(
     format: SizedTextureFormat,
     copySize: Required<GPUExtent3DDict> = { width: 1, height: 1, depthOrArrayLayers: 1 },
-    origin: Required<GPUOrigin3DDict> = { x: 0, y: 0, z: 0 }
+    origin: Required<GPUOrigin3DDict> = { x: 0, y: 0, z: 0 },
+    dimension: Required<GPUTextureDimension> = '2d'
   ): GPUTexture {
     const info = kTextureFormatInfo[format];
     return this.device.createTexture({
@@ -92,6 +93,7 @@ export class ImageCopyTest extends ValidationTest {
         height: Math.max(1, copySize.height + origin.y) * info.blockHeight,
         depthOrArrayLayers: Math.max(1, copySize.depthOrArrayLayers + origin.z),
       },
+      dimension,
       format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });

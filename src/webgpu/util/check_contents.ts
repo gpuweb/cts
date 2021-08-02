@@ -7,6 +7,8 @@ import {
   TypedArrayBufferViewConstructor,
 } from '../../common/util/util.js';
 
+import { float16BitsToFloat32 } from './conversion.js';
+
 /** Generate an expected value at `index`, to test for equality with the actual value. */
 export type CheckElementsGenerator = (index: number) => number;
 /** Check whether the actual `value` at `index` is as expected. */
@@ -57,6 +59,42 @@ export function checkElementsBetween(
   );
   // If there was an error, extend it with additional extras.
   return error ? new ErrorWithExtra(error, () => ({ expected })) : undefined;
+}
+
+/**
+ * Equivalent to {@link checkElementsBetween} but interpret values as float16 and convert to JS number before comparison.
+ */
+export function checkElementsFloat16Between(
+  actual: TypedArrayBufferView,
+  expected: readonly [TypedArrayBufferView, TypedArrayBufferView]
+): ErrorWithExtra | undefined {
+  assert(actual.BYTES_PER_ELEMENT === 2, 'bytes per element need to be 2 (16bit)');
+  const actualF32 = new Float32Array(actual.length);
+  actual.forEach((v: number, i: number) => {
+    actualF32[i] = float16BitsToFloat32(v);
+  });
+  const expectedF32 = [new Float32Array(expected[0].length), new Float32Array(expected[1].length)];
+  expected[0].forEach((v: number, i: number) => {
+    expectedF32[0][i] = float16BitsToFloat32(v);
+  });
+  expected[1].forEach((v: number, i: number) => {
+    expectedF32[1][i] = float16BitsToFloat32(v);
+  });
+
+  const error = checkElementsPassPredicate(
+    actualF32,
+    (index, value) =>
+      value >= Math.min(expectedF32[0][index], expectedF32[1][index]) &&
+      value <= Math.max(expectedF32[0][index], expectedF32[1][index]),
+    {
+      predicatePrinter: [
+        { leftHeader: 'between', getValueForCell: index => expectedF32[0][index] },
+        { leftHeader: 'and', getValueForCell: index => expectedF32[1][index] },
+      ],
+    }
+  );
+  // If there was an error, extend it with additional extras.
+  return error ? new ErrorWithExtra(error, () => ({ expectedF32 })) : undefined;
 }
 
 /**
