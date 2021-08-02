@@ -12,8 +12,8 @@ Test coverage:
 	- texel_block_alignment_on_origin: for all formats and coordinates.
 
 * bufferCopyView:
-	- TODO: buffer_must_be_valid
-	- TODO: bytes_per_row_alignment
+	- buffer_must_be_valid: for valid, destroyed, error buffers.
+	- bytes_per_row_alignment: for bytesPerRow to be 256-byte aligned or not, and bytesPerRow is required or not.
 
 * linear texture data:
 	- bound_on_rows_per_image: for various combinations of copyDepth (1, >1), copyHeight, rowsPerImage.
