@@ -745,12 +745,13 @@ class ImageCopyTest extends GPUTest {
       const baseExpectedOffset = offset + z * bytesPerRow * rowsPerImage;
       const baseInitialiDataOffset = z * copySize[0] * copySize[1];
       for (let y = 0; y < copySize[1]; ++y) {
-        expectedData.set(
-          initialData.slice(
-            baseInitialiDataOffset + y * copySize[0],
-            baseInitialiDataOffset + (y + 1) * copySize[0]
-          ),
-          baseExpectedOffset + y * bytesPerRow
+        memcpy(
+          {
+            src: initialData,
+            start: baseInitialiDataOffset + y * copySize[0],
+            length: copySize[0],
+          },
+          { dst: expectedData, start: baseExpectedOffset + y * bytesPerRow }
         );
       }
     }
