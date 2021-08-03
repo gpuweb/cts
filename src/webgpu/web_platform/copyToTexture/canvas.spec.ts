@@ -5,7 +5,7 @@ TODO: consider whether external_texture and copyToTexture video tests should be 
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { unreachable, assert } from '../../../common/util/util.js';
+import { unreachable, assert, memcpy } from '../../../common/util/util.js';
 import {
   RegularTextureFormat,
   kTextureFormatInfo,
@@ -205,8 +205,10 @@ class F extends CopyToTextureUtils {
           rgba.B /= rgba.A;
         }
 
-        const pixelData = new Uint8Array(rep.pack(rep.encode(rgba)));
-        expectedPixels.set(pixelData, pixelPos * bytesPerPixel);
+        memcpy(
+          { src: rep.pack(rep.encode(rgba)) },
+          { dst: expectedPixels, start: pixelPos * bytesPerPixel }
+        );
       }
     }
 
