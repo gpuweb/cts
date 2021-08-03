@@ -1,4 +1,4 @@
-import { assert } from '../../../common/util/util.js';
+import { assert, memcpy } from '../../../common/util/util.js';
 import {
   EncodableTextureFormat,
   kTextureFormatInfo,
@@ -128,14 +128,13 @@ export function fillTextureDataWithTexelValue(
 
   const mipSize = virtualMipSize(dimension, size, options.mipLevel);
 
-  const texelValueBytes = new Uint8Array(texelValue);
   const outputTexelValueBytes = new Uint8Array(outputBuffer);
   for (let slice = 0; slice < mipSize[2]; ++slice) {
     for (let row = 0; row < mipSize[1]; row += blockHeight) {
       for (let col = 0; col < mipSize[0]; col += blockWidth) {
         const byteOffset =
           slice * rowsPerImage * bytesPerRow + row * bytesPerRow + col * texelValue.byteLength;
-        outputTexelValueBytes.set(texelValueBytes, byteOffset);
+        memcpy({ src: texelValue }, { dst: outputTexelValueBytes, start: byteOffset });
       }
     }
   }

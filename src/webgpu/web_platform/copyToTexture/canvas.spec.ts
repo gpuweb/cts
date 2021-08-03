@@ -5,7 +5,7 @@ TODO: consider whether external_texture and copyToTexture video tests should be 
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { unreachable, assert } from '../../../common/util/util.js';
+import { unreachable, assert, memcpy } from '../../../common/util/util.js';
 import {
   RegularTextureFormat,
   kTextureFormatInfo,
@@ -205,8 +205,10 @@ class F extends CopyToTextureUtils {
           rgba.B /= rgba.A;
         }
 
-        const pixelData = new Uint8Array(rep.pack(rep.encode(rgba)));
-        expectedPixels.set(pixelData, pixelPos * bytesPerPixel);
+        memcpy(
+          { src: rep.pack(rep.encode(rgba)) },
+          { dst: expectedPixels, start: pixelPos * bytesPerPixel }
+        );
       }
     }
 
@@ -318,7 +320,7 @@ g.test('copy_contents_from_gl_context_canvas')
   for top-right, blue rect for bottom-left and white for bottom-right.
   And do premultiply alpha in advance if the webgl/webgl2 context is created
   with premultipliedAlpha : true.
-  
+
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the canvas contents.
 
