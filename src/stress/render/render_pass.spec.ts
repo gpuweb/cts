@@ -14,8 +14,9 @@ GPURenderPipeline.`
   )
   .unimplemented();
 
-g.test('pipeline_churn').desc(
-  `Tests execution of a huge number of render passes which each use a different
+g.test('pipeline_churn')
+  .desc(
+    `Tests execution of a huge number of render passes which each use a different
 GPURenderPipeline.`
   )
   .unimplemented();

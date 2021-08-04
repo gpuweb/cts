@@ -14,14 +14,16 @@ GPUComputePipeline.`
   )
   .unimplemented();
 
-g.test('pipeline_churn').desc(
-  `Tests execution of a huge number of compute passes which each use a different
+g.test('pipeline_churn')
+  .desc(
+    `Tests execution of a huge number of compute passes which each use a different
 GPUComputePipeline.`
   )
   .unimplemented();
 
-g.test('bind_group_churn').desc(
-  `Tests execution of compute passes which switch between a huge number of bind
+g.test('bind_group_churn')
+  .desc(
+    `Tests execution of compute passes which switch between a huge number of bind
 groups.`
   )
   .unimplemented();
