@@ -194,7 +194,7 @@ function subarrayAsU8(
   if (buf instanceof ArrayBuffer) {
     return new Uint8Array(buf, start, length);
   } else {
-    const sub = buf.subarray(start, length ? start + length : undefined);
+    const sub = buf.subarray(start, length !== undefined ? start + length : undefined);
     return new Uint8Array(sub.buffer, sub.byteOffset, sub.byteLength);
   }
 }
