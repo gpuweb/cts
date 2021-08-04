@@ -1,4 +1,4 @@
-import { TypedArrayBufferView, TypedArrayBufferViewConstructor } from '../../common/util/util.js';
+import { memcpy, TypedArrayBufferView } from '../../common/util/util.js';
 
 /**
  * Creates a buffer with the contents of some TypedArray.
@@ -13,9 +13,7 @@ export function makeBufferWithContents(
     size: dataArray.byteLength,
     usage,
   });
-  const mappedBuffer = buffer.getMappedRange();
-  const constructor = dataArray.constructor as TypedArrayBufferViewConstructor;
-  new constructor(mappedBuffer).set(dataArray);
+  memcpy({ src: dataArray }, { dst: buffer.getMappedRange() });
   buffer.unmap();
   return buffer;
 }

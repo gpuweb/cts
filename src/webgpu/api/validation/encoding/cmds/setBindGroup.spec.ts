@@ -17,7 +17,7 @@ import {
   kProgrammableEncoderTypes,
   ProgrammableEncoderType,
 } from '../../util/command_buffer_maker.js';
-import { ResourceState, ValidationTest } from '../../validation_test.js';
+import { kResourceStates, ResourceState, ValidationTest } from '../../validation_test.js';
 
 class F extends ValidationTest {
   encoderTypeToStageFlag(encoderType: ProgrammableEncoderType): GPUShaderStageFlags {
@@ -104,7 +104,7 @@ g.test('state_and_binding_index')
   .params(u =>
     u
       .combine('encoderType', kProgrammableEncoderTypes)
-      .combine('state', ['valid', 'invalid', 'destroyed'] as const)
+      .combine('state', kResourceStates)
       .combine('resourceType', ['buffer', 'texture'] as const)
   )
   .fn(async t => {

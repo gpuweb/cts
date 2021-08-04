@@ -6,8 +6,6 @@ export const kRenderEncodeTypeParams = kUnitCaseParamsBuilder.combine(
   kRenderEncodeTypes
 );
 
-export const kBufferStates = ['valid', 'invalid', 'destroyed'] as const;
-
 export function buildBufferOffsetAndSizeOOBTestParams(minAlignment: number, bufferSize: number) {
   return kRenderEncodeTypeParams.combineWithParams([
     // Explicit size
