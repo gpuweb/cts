@@ -12,17 +12,7 @@ import { ValidationTest } from '../../validation_test.js';
 
 class F extends ValidationTest {
   createIndexBuffer(indexData: Iterable<number>): GPUBuffer {
-    const indexArray = new Uint32Array(indexData);
-
-    const indexBuffer = this.device.createBuffer({
-      mappedAtCreation: true,
-      size: indexArray.byteLength,
-      usage: GPUBufferUsage.INDEX,
-    });
-    new Uint32Array(indexBuffer.getMappedRange()).set(indexArray);
-    indexBuffer.unmap();
-
-    return indexBuffer;
+    return this.makeBufferWithContents(new Uint32Array(indexData), GPUBufferUsage.INDEX);
   }
 
   createRenderPipeline(): GPURenderPipeline {

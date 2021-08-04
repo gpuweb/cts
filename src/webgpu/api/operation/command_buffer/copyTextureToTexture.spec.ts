@@ -4,7 +4,7 @@ TODO(jiawei.shao@intel.com): support all WebGPU texture formats.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert } from '../../../../common/util/util.js';
+import { assert, memcpy } from '../../../../common/util/util.js';
 import {
   kTextureFormatInfo,
   kRegularTextureFormats,
@@ -191,12 +191,10 @@ class F extends GPUTest {
             (srcBlockRowsPerImage * srcOffsetZ + srcOffsetYInBlocks) +
           srcCopyOffsetInBlocks.x * bytesPerBlock;
 
-        expectedUint8DataWithPadding.set(
-          expectedUint8Data.slice(
-            expectedDataOffset,
-            expectedDataOffset + appliedCopyBlocksPerRow * bytesPerBlock
-          ),
-          expectedDataWithPaddingOffset
+        const bytesInRow = appliedCopyBlocksPerRow * bytesPerBlock;
+        memcpy(
+          { src: expectedUint8Data, start: expectedDataOffset, length: bytesInRow },
+          { dst: expectedUint8DataWithPadding, start: expectedDataWithPaddingOffset }
         );
       }
     }

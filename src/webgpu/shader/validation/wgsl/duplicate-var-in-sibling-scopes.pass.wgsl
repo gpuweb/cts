@@ -1,4 +1,4 @@
-// v-0014 - This passes because variable `a` is redeclared in a sibling scope.
+// This passes because variable `a` is redeclared in a sibling scope.
 
 [[stage(fragment)]]
 fn main() {
