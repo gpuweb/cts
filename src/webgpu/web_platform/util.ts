@@ -17,9 +17,9 @@ export function startPlayingAndWaitForVideo(
     new Promise((resolve, reject) => {
       const callbackAndResolve = async () => {
         try {
-          await callback()
+          await callback();
           resolve();
-        } catch(ex) {
+        } catch (ex) {
           reject();
         }
       };
