@@ -7,6 +7,4 @@ import { GPUTest } from '../../webgpu/gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('many_queries')
-  .desc(`Tests a huge number of occlusion queries in a render pass.`)
-  .unimplemented();
+g.test('many').desc(`Tests a huge number of occlusion queries in a render pass.`).unimplemented();

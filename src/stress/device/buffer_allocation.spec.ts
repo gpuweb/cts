@@ -7,18 +7,16 @@ import { GPUTest } from '../../webgpu/gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('concurrent_buffer_allocation')
-  .desc(`Tests allocation of many concurrent GPUBuffer objects.`)
-  .unimplemented();
+g.test('coexisting').desc(`Tests allocation of many coexisting GPUBuffer objects.`).unimplemented();
 
-g.test('continuous_buffer_allocation_with_destroy')
+g.test('continuous,with_destroy')
   .desc(
     `Tests allocation and destruction of many GPUBuffer objects over time. Objects
 are sequentially created and destroyed over a very large number of iterations.`
   )
   .unimplemented();
 
-g.test('continuous_buffer_allocation_with_gc')
+g.test('continuous,no_destroy')
   .desc(
     `Tests allocation and implicit GC of many GPUBuffer objects over time. Objects
 are sequentially created and dropped for GC over a very large number of

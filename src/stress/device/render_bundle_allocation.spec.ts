@@ -7,11 +7,11 @@ import { GPUTest } from '../../webgpu/gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('concurrent_render_bundle_allocation')
-  .desc(`Tests allocation of many concurrent GPURenderBundle objects.`)
+g.test('coexisting')
+  .desc(`Tests allocation of many coexisting GPURenderBundle objects.`)
   .unimplemented();
 
-g.test('continuous_render_bundle_allocation')
+g.test('continuous')
   .desc(
     `Tests allocation and implicit GC of many GPURenderBundle objects over time.
 Objects are sequentially created and dropped for GC over a very large number of

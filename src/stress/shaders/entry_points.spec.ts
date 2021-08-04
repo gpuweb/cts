@@ -7,6 +7,11 @@ import { GPUTest } from '../../webgpu/gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('many_entry_points')
-  .desc(`Tests compilation and usage of shaders with a huge number of entry points.`)
+g.test('many')
+  .desc(
+    `Tests compilation and usage of shaders with a huge number of entry points.
+
+TODO: There may be a normative limit to the number of entry points allowed in
+a shader, in which case this would become a validation test instead.`
+  )
   .unimplemented();

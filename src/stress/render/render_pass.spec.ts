@@ -7,7 +7,7 @@ import { GPUTest } from '../../webgpu/gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('many_passes')
+g.test('many')
   .desc(
     `Tests execution of a huge number of render passes using the same
 GPURenderPipeline.`
@@ -17,7 +17,8 @@ GPURenderPipeline.`
 g.test('pipeline_churn').desc(
   `Tests execution of a huge number of render passes which each use a different
 GPURenderPipeline.`
-);
+  )
+  .unimplemented();
 
 g.test('bind_group_churn')
   .desc(
@@ -26,7 +27,7 @@ groups.`
   )
   .unimplemented();
 
-g.test('huge_passes')
+g.test('many_draws')
   .desc(`Tests execution of render passes with a huge number of draw calls`)
   .unimplemented();
 
