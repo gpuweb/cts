@@ -100,8 +100,7 @@ class F extends CopyToTextureUtils {
   } {
     const canvas = createCanvas(this, canvasType, width, height);
 
-    let gl = null;
-    gl = canvas.getContext(contextName, { premultipliedAlpha: premultiplied }) as
+    const gl = canvas.getContext(contextName, { premultipliedAlpha: premultiplied }) as
       | WebGLRenderingContext
       | WebGL2RenderingContext
       | null;
@@ -109,6 +108,7 @@ class F extends CopyToTextureUtils {
     if (gl === null) {
       this.skip(canvasType + ' canvas ' + contextName + ' context not available');
     }
+    this.trackForCleanup(gl);
 
     const rectWidth = Math.floor(width / 2);
     const rectHeight = Math.floor(height / 2);
