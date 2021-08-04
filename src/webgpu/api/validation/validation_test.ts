@@ -33,7 +33,7 @@ export class ValidationTest extends GPUTest {
 
     switch (state) {
       case 'valid':
-        return this.device.createTexture(descriptor);
+        return this.trackForCleanup(this.device.createTexture(descriptor));
       case 'invalid':
         return this.getErrorTexture();
       case 'destroyed': {
@@ -59,7 +59,7 @@ export class ValidationTest extends GPUTest {
 
     switch (state) {
       case 'valid':
-        return this.device.createBuffer(descriptor);
+        return this.trackForCleanup(this.device.createBuffer(descriptor));
 
       case 'invalid': {
         // Make the buffer invalid because of an invalid combination of usages but keep the
@@ -92,7 +92,7 @@ export class ValidationTest extends GPUTest {
 
     switch (state) {
       case 'valid':
-        return this.device.createQuerySet(descriptor);
+        return this.trackForCleanup(this.device.createQuerySet(descriptor));
       case 'invalid': {
         // Make the queryset invalid because of the count out of bounds.
         descriptor.count = kMaxQueryCount + 1;
@@ -108,12 +108,16 @@ export class ValidationTest extends GPUTest {
 
   /** Create an arbitrarily-sized GPUBuffer with the STORAGE usage. */
   getStorageBuffer(): GPUBuffer {
-    return this.device.createBuffer({ size: 1024, usage: GPUBufferUsage.STORAGE });
+    return this.trackForCleanup(
+      this.device.createBuffer({ size: 1024, usage: GPUBufferUsage.STORAGE })
+    );
   }
 
   /** Create an arbitrarily-sized GPUBuffer with the UNIFORM usage. */
   getUniformBuffer(): GPUBuffer {
-    return this.device.createBuffer({ size: 1024, usage: GPUBufferUsage.UNIFORM });
+    return this.trackForCleanup(
+      this.device.createBuffer({ size: 1024, usage: GPUBufferUsage.UNIFORM })
+    );
   }
 
   /** Return an invalid GPUBuffer. */
@@ -133,30 +137,36 @@ export class ValidationTest extends GPUTest {
    * Return an arbitrarily-configured GPUTexture with the `SAMPLED` usage and specified sampleCount.
    */
   getSampledTexture(sampleCount: number = 1): GPUTexture {
-    return this.device.createTexture({
-      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
-      format: 'rgba8unorm',
-      usage: GPUTextureUsage.SAMPLED,
-      sampleCount,
-    });
+    return this.trackForCleanup(
+      this.device.createTexture({
+        size: { width: 16, height: 16, depthOrArrayLayers: 1 },
+        format: 'rgba8unorm',
+        usage: GPUTextureUsage.SAMPLED,
+        sampleCount,
+      })
+    );
   }
 
   /** Return an arbitrarily-configured GPUTexture with the `STORAGE` usage. */
   getStorageTexture(): GPUTexture {
-    return this.device.createTexture({
-      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
-      format: 'rgba8unorm',
-      usage: GPUTextureUsage.STORAGE,
-    });
+    return this.trackForCleanup(
+      this.device.createTexture({
+        size: { width: 16, height: 16, depthOrArrayLayers: 1 },
+        format: 'rgba8unorm',
+        usage: GPUTextureUsage.STORAGE,
+      })
+    );
   }
 
   /** Return an arbitrarily-configured GPUTexture with the `RENDER_ATTACHMENT` usage. */
   getRenderTexture(): GPUTexture {
-    return this.device.createTexture({
-      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
-      format: 'rgba8unorm',
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    });
+    return this.trackForCleanup(
+      this.device.createTexture({
+        size: { width: 16, height: 16, depthOrArrayLayers: 1 },
+        format: 'rgba8unorm',
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      })
+    );
   }
 
   /** Return an invalid GPUTexture. */
@@ -354,14 +364,14 @@ export class ValidationTest extends GPUTest {
       }
       case 'render pass': {
         const makeAttachmentView = (format: GPUTextureFormat) =>
-          this.device
-            .createTexture({
+          this.trackForCleanup(
+            this.device.createTexture({
               size: [16, 16, 1],
               format,
               usage: GPUTextureUsage.RENDER_ATTACHMENT,
               sampleCount: fullAttachmentInfo.sampleCount,
             })
-            .createView();
+          ).createView();
 
         const passDesc: GPURenderPassDescriptor = {
           colorAttachments: Array.from(fullAttachmentInfo.colorFormats, format => ({
