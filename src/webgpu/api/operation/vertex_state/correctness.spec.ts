@@ -465,7 +465,7 @@ struct VSOutputs {
           ((index * componentCount + component) * expectedComponentSize) %
           data.expectedData.byteLength;
         memcpy(
-          { src: data.expectedData, start: sourceExpectedOffset, length: vertexComponentSize },
+          { src: data.expectedData, start: sourceExpectedOffset, length: expectedComponentSize },
           { dst: expandedExpectedData, start: targetExpectedOffset }
         );
       }

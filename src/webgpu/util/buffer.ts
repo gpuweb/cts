@@ -1,4 +1,5 @@
 import { memcpy, TypedArrayBufferView } from '../../common/util/util.js';
+
 import { align } from './math.js';
 
 /**
