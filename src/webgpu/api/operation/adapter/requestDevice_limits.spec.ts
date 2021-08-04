@@ -2,6 +2,7 @@ export const description = `
 Tests passing various requiredLimits to GPUAdapter.requestDevice.
 `;
 
+import { getGPU } from '../../../util/navigator_gpu.js';
 import { Fixture } from '../../../../common/framework/fixture.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../common/util/data_tables.js';
@@ -46,11 +47,13 @@ g.test('default_limits')
   .fn(async t => {
     const { limit } = t.params;
 
-    const adapter = await navigator.gpu.requestAdapter();
+    const gpu = getGPU();
+    const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
 
-    const requiredLimits: Record<string, number> = {};
-    requiredLimits[limit] = DefaultLimits[limit];
+    if (adapter.limits) { return; }
+
+    const requiredLimits = { [limit]: DefaultLimits[limit] as number };
 
     const device = await adapter.requestDevice({ requiredLimits });
     assert(device !== null);
@@ -72,11 +75,11 @@ g.test('adapter_limits')
   .fn(async t => {
     const { limit } = t.params;
 
-    const adapter = await navigator.gpu.requestAdapter();
+    const gpu = getGPU();
+    const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
 
-    const requiredLimits: Record<string, number> = {};
-    requiredLimits[limit] = adapter.limits[limit];
+    const requiredLimits = { [limit]: adapter.limits[limit] };
 
     const device = await adapter.requestDevice({ requiredLimits });
     assert(device !== null);
@@ -103,13 +106,15 @@ g.test('better_than_supported')
   .fn(async t => {
     const { limit, over } = t.params;
 
-    const adapter = await navigator.gpu.requestAdapter();
+    const gpu = getGPU();
+    const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
 
     const mult = limit.startsWith('min') ? -1 : 1;
 
-    const requiredLimits: Record<string, number> = {};
-    requiredLimits[limit] = clampToUnsignedLong(adapter.limits[limit] + over * mult);
+    const requiredLimits = {
+      [limit]: clampToUnsignedLong(adapter.limits[limit] + over * mult)
+    };
 
     t.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }));
   });
@@ -131,13 +136,15 @@ g.test('worse_than_default')
   .fn(async t => {
     const { limit, under } = t.params;
 
-    const adapter = await navigator.gpu.requestAdapter();
+    const gpu = getGPU();
+    const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
 
     const mult = limit.startsWith('min') ? -1 : 1;
 
-    const requiredLimits: Record<string, number> = {};
-    requiredLimits[limit] = clampToUnsignedLong(DefaultLimits[limit] - under * mult);
+    const requiredLimits = {
+      [limit]: clampToUnsignedLong(DefaultLimits[limit] as number - under * mult)
+    };
 
     const device = await adapter.requestDevice({ requiredLimits });
     assert(device !== null);
