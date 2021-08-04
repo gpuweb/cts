@@ -11,13 +11,17 @@ import { raceWithRejectOnTimeout } from '../../common/util/util.js';
  */
 export function startPlayingAndWaitForVideo(
   video: HTMLVideoElement,
-  callback: () => void
+  callback: () => unknown
 ): Promise<void> {
   return raceWithRejectOnTimeout(
     new Promise((resolve, reject) => {
-      const callbackAndResolve = () => {
-        callback();
-        resolve();
+      const callbackAndResolve = async () => {
+        try {
+          await callback()
+          resolve();
+        } catch(ex) {
+          reject();
+        }
       };
 
       if (video.error) {

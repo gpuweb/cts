@@ -8,7 +8,6 @@ TODO: consider whether external_texture and copyToTexture video tests should be 
 
 import { getResourcePath } from '../../../common/framework/resources.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { resolveOnTimeout } from '../../../common/util/util.js';
 import { GPUTest } from '../../gpu_test.js';
 import { startPlayingAndWaitForVideo } from '../../web_platform/util.js';
 
@@ -101,7 +100,7 @@ g.test('importExternalTexture,sample')
     `
 Tests that we can import an HTMLVideoElement into a GPUExternalTexture, sample from it for all
 supported video formats {vp8, vp9, ogg, mp4}, and ensure the GPUExternalTexture is destroyed by
-a microtask. 
+a microtask.
 TODO: Multiplanar scenarios
 `
   )
@@ -177,43 +176,56 @@ destroyed results in an error.
     const video = document.createElement('video');
     video.src = videoUrl;
 
-    let commandEncoder: GPUCommandEncoder;
+    const colorAttachment = t.device.createTexture({
+      format: kFormat,
+      size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+    const passDescriptor = {
+      colorAttachments: [
+        { view: colorAttachment.createView(), loadValue: [0, 0, 0, 1], storeOp: 'store' },
+      ],
+    } as const;
+
+    const bindGroupLayout = t.device.createBindGroupLayout({
+      entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, externalTexture: {} }],
+    });
+
+    let bindGroup: GPUBindGroup;
+    const useExternalTexture = () => {
+      const commandEncoder = t.device.createCommandEncoder();
+      const passEncoder = commandEncoder.beginRenderPass(passDescriptor);
+      passEncoder.setBindGroup(0, bindGroup);
+      passEncoder.endPass();
+      return commandEncoder.finish();
+    };
 
     await startPlayingAndWaitForVideo(video, async () => {
-      await Promise.resolve().then(() => {
-        const colorAttachment = t.device.createTexture({
-          format: kFormat,
-          size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
-          usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
-        });
-
-        const pipeline = createExternalTextureSamplingTestPipeline(t);
-
-        const bindGroup = createExternalTextureSamplingTestBindGroup(t, video, pipeline);
-
-        commandEncoder = t.device.createCommandEncoder();
-        const passEncoder = commandEncoder.beginRenderPass({
-          colorAttachments: [
-            {
-              view: colorAttachment.createView(),
-              loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
-              storeOp: 'store',
-            },
-          ],
-        });
-        passEncoder.setPipeline(pipeline);
-        passEncoder.setBindGroup(0, bindGroup);
-        passEncoder.draw(6);
-        passEncoder.endPass();
+      // 1. Enqueue a microtask which uses the GPUExternalTexture. This should happen immediately
+      // after the current microtask - before the GPUExternalTexture is destroyed.
+      const microtask1 = Promise.resolve().then(() => {
+        const commandBuffer = useExternalTexture();
+        t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), false);
       });
 
-      // This should trigger a microtask that destroys the GPUExternalTexture, which will cause
-      // a validation error when we try to use the destroyed GPUExternalTexture.
-      await Promise.resolve().then(() => {
-        t.expectGPUError('validation', () => t.device.queue.submit([commandEncoder.finish()]));
+      // 2. importExternalTexture enqueues a microtask that destroys the GPUExternalTexture.
+      const externalTexture = t.device.importExternalTexture({ source: video });
+      // Set `bindGroup` here, which will then be used in microtask1 and microtask3.
+      bindGroup = t.device.createBindGroup({
+        layout: bindGroupLayout,
+        entries: [{ binding: 0, resource: externalTexture }],
       });
 
-      await resolveOnTimeout(0);
+      // 3. Enqueue a microtask which uses the GPUExternalTexture. This should happen immediately
+      // after the microtask which destroys the GPUExternalTexture.
+      const microtask3 = Promise.resolve().then(() => {
+        const commandBuffer = useExternalTexture();
+        t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), true);
+      });
+
+      // Now make sure the test doesn't end before all of those microtasks complete.
+      await microtask1;
+      await microtask3;
     });
   });
 
@@ -243,7 +255,7 @@ Tests that we can import an HTMLVideoElement into a GPUExternalTexture and use i
           // Shader will load a pixel near the upper left and lower right corners, which are then
           // stored in storage texture.
           module: t.device.createShaderModule({
-            code: `    
+            code: `
               [[group(0), binding(0)]] var t : texture_external;
               [[group(0), binding(1)]] var outImage : texture_storage_2d<rgba8unorm, write>;
 
