@@ -346,8 +346,9 @@ class ImageCopyTest extends GPUTest {
         break;
       }
       case 'CopyB2T': {
-        assert(partialData.byteLength % 4 === 0, 'partialData must be multiple of 4 bytes');
-        const buffer = this.makeBufferWithContents(partialData, GPUBufferUsage.COPY_SRC);
+        const buffer = this.makeBufferWithContents(partialData, GPUBufferUsage.COPY_SRC, {
+          padToMultipleOf4: true,
+        });
 
         const encoder = this.device.createCommandEncoder();
         encoder.copyBufferToTexture(

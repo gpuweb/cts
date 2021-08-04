@@ -535,8 +535,12 @@ export class GPUTest extends Fixture {
    *
    * TODO: Several call sites would be simplified if this took ArrayBuffer as well.
    */
-  makeBufferWithContents(dataArray: TypedArrayBufferView, usage: GPUBufferUsageFlags): GPUBuffer {
-    return makeBufferWithContents(this.device, dataArray, usage);
+  makeBufferWithContents(
+    dataArray: TypedArrayBufferView,
+    usage: GPUBufferUsageFlags,
+    opts: { padToMultipleOf4?: boolean } = {}
+  ): GPUBuffer {
+    return makeBufferWithContents(this.device, dataArray, usage, opts);
   }
 
   /**
