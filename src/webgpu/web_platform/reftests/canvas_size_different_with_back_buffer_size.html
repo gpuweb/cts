@@ -3,8 +3,8 @@
   <meta charset="utf-8" />
   <link rel="help" href="https://gpuweb.github.io/gpuweb/" />
   <meta
-    name=fuzzy
-    content="128;48"
+    name="assert"
+    content="WebGPU canvas should present correctly with different size of back buffer"
   />
   <link rel="match" 
         href="./ref/canvas_size_different_with_back_buffer_size-ref.html" />
@@ -12,6 +12,9 @@
   <canvas id="cvs_larger_than_back_buffer" width="6" height="8"></canvas>
   <canvas id="cvs_same_as_back_buffer" width="3" height="4"></canvas>
   <canvas id="cvs_smaller_than_back_buffer" width="3" height="4"></canvas>
+  <canvas id="cvs_change_size_after_configure" width="3" height="4"></canvas>
+  <canvas id="cvs_change_size_and_reconfigure" width="3" height="4"></canvas>
+  <canvas id="cvs_back_buffer_css_different_size" width="6" height="8" style="width: 12px; height: 16px;"></canvas>
   <script src="/common/reftest-wait.js"></script>
   <script type="module">
     import { run } from './canvas_size_different_with_back_buffer_size.html.js';
