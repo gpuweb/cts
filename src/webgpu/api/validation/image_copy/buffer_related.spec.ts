@@ -6,6 +6,7 @@ import {
   kTextureFormatInfo,
   textureDimensionAndFormatCompatible,
 } from '../../../capability_info.js';
+import { GPUConst } from '../../../constants.js';
 import { kImageCopyTypes } from '../../../util/texture/layout.js';
 
 import { ImageCopyTest, formatCopyableWithMethod } from './image_copy.js';
@@ -44,7 +45,7 @@ g.test('valid')
     const submit = bufferState === 'destroyed';
 
     const texture = t.device.createTexture({
-      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
+      size: { width: 2, height: 2, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
@@ -55,6 +56,47 @@ g.test('valid')
       { bytesPerRow: 0 },
       { width: 0, height: 0, depthOrArrayLayers: 0 },
       { dataSize: 16, method, success, submit }
+    );
+  });
+
+g.test('usage')
+  .desc(`The buffer must have the appropriate COPY_SRC/COPY_DST usage.`)
+  .params(u =>
+    u
+      // B2B copy validations are at api,validation,encoding,cmds,copyBufferToBuffer.spec.ts
+      .combine('method', ['CopyB2T', 'CopyT2B'] as const)
+      .beginSubcases()
+      .combine('usage', [
+        GPUConst.BufferUsage.COPY_SRC | GPUConst.BufferUsage.UNIFORM,
+        GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.UNIFORM,
+        GPUConst.BufferUsage.COPY_SRC | GPUConst.BufferUsage.COPY_DST,
+      ])
+  )
+  .fn(async t => {
+    const { method, usage } = t.params;
+
+    const buffer = t.device.createBuffer({
+      size: 16,
+      usage,
+    });
+
+    const success =
+      method === 'CopyB2T'
+        ? (usage & GPUBufferUsage.COPY_SRC) !== 0
+        : (usage & GPUBufferUsage.COPY_DST) !== 0;
+
+    const texture = t.device.createTexture({
+      size: { width: 2, height: 2, depthOrArrayLayers: 1 },
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+    });
+
+    t.testBuffer(
+      buffer,
+      texture,
+      { bytesPerRow: 0 },
+      { width: 0, height: 0, depthOrArrayLayers: 0 },
+      { dataSize: 16, method, success }
     );
   });
 
