@@ -27,6 +27,9 @@ export const description = `writeTexture + copyBufferToTexture + copyTextureToBu
   - add another initMethod which renders the texture
   - test copyT2B with buffer size not divisible by 4 (not done because expectContents 4-byte alignment)
   - add tests for 1d / 3d textures
+  - Convert the float32 values in initialData into the ones compatible to the depth aspect of
+    depthFormats when depth16unorm and depth24unorm-stencil8 are supported by the browsers in
+    DoCopyTextureToBufferWithDepthAspectTest().
 
 TODO: Fix this test for the various skipped formats:
 - snorm tests failing due to rounding
@@ -44,6 +47,8 @@ import {
   kMinDynamicBufferOffsetAlignment,
   kBufferSizeAlignment,
   DepthStencilFormat,
+  depthStencilBufferTextureCopySupported,
+  depthStencilFormatAspectSize,
 } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { makeBufferWithContents } from '../../../util/buffer.js';
@@ -973,6 +978,200 @@ class ImageCopyTest extends GPUTest {
       }
     }
   }
+
+  // TODO(crbug.com/dawn/868): Revisit this when consolidating texture helpers.
+  initializeDepthAspectWithRendering(
+    depthTexture: GPUTexture,
+    depthFormat: GPUTextureFormat,
+    copySize: readonly [number, number, number],
+    copyMipLevel: number,
+    initialData: Float32Array
+  ): void {
+    assert(kTextureFormatInfo[depthFormat].depth);
+
+    const inputTexture = this.device.createTexture({
+      size: copySize,
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED,
+      format: 'r32float',
+    });
+    this.queue.writeTexture(
+      { texture: inputTexture },
+      initialData,
+      {
+        bytesPerRow: copySize[0] * 4,
+        rowsPerImage: copySize[1],
+      },
+      copySize
+    );
+
+    const renderPipeline = this.device.createRenderPipeline({
+      vertex: {
+        module: this.device.createShaderModule({
+          code: `
+          [[stage(vertex)]]
+          fn main([[builtin(vertex_index)]] VertexIndex : u32)-> [[builtin(position)]] vec4<f32> {
+            var pos : array<vec2<f32>, 6> = array<vec2<f32>, 6>(
+                vec2<f32>(-1.0,  1.0),
+                vec2<f32>(-1.0, -1.0),
+                vec2<f32>( 1.0,  1.0),
+                vec2<f32>(-1.0, -1.0),
+                vec2<f32>( 1.0,  1.0),
+                vec2<f32>( 1.0, -1.0));
+            return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
+          }`,
+        }),
+        entryPoint: 'main',
+      },
+      fragment: {
+        module: this.device.createShaderModule({
+          code: `
+            [[group(0), binding(0)]] var inputTexture: texture_2d<f32>;
+            [[stage(fragment)]] fn main([[builtin(position)]] fragcoord : vec4<f32>) ->
+              [[builtin(frag_depth)]] f32 {
+              var depthValue : vec4<f32> = textureLoad(inputTexture, vec2<i32>(fragcoord.xy), 0);
+              return depthValue.x;
+            }`,
+        }),
+        entryPoint: 'main',
+        targets: [],
+      },
+      primitive: {
+        topology: 'triangle-list',
+      },
+      depthStencil: {
+        format: depthFormat,
+        depthWriteEnabled: true,
+        depthCompare: 'always',
+      },
+    });
+
+    const encoder = this.device.createCommandEncoder();
+    for (let z = 0; z < copySize[2]; ++z) {
+      const renderPass = encoder.beginRenderPass({
+        colorAttachments: [],
+        depthStencilAttachment: {
+          view: depthTexture.createView({
+            baseArrayLayer: z,
+            arrayLayerCount: 1,
+            baseMipLevel: copyMipLevel,
+            mipLevelCount: 1,
+          }),
+          depthLoadValue: 0.0,
+          depthStoreOp: 'store',
+          stencilLoadValue: 'load',
+          stencilStoreOp: 'store',
+        },
+      });
+      renderPass.setPipeline(renderPipeline);
+
+      const bindGroup = this.device.createBindGroup({
+        layout: renderPipeline.getBindGroupLayout(0),
+        entries: [
+          {
+            binding: 0,
+            resource: inputTexture.createView({
+              baseArrayLayer: z,
+              arrayLayerCount: 1,
+              baseMipLevel: 0,
+              mipLevelCount: 1,
+            }),
+          },
+        ],
+      });
+      renderPass.setBindGroup(0, bindGroup);
+      renderPass.draw(6);
+      renderPass.endPass();
+    }
+
+    this.queue.submit([encoder.finish()]);
+  }
+
+  DoCopyTextureToBufferWithDepthAspectTest(
+    format: DepthStencilFormat,
+    copySize: readonly [number, number, number],
+    bytesPerRowPadding: number,
+    rowsPerImagePadding: number,
+    offset: number,
+    dataPaddingInBytes: number,
+    mipLevel: number
+  ): void {
+    // TODO(crbug.com/dawn/868): convert the float32 values in initialData into the ones compatible
+    // to the depth aspect of depthFormats when depth16unorm and depth24unorm-stencil8 are supported
+    // by the browsers.
+    assert(format !== 'depth16unorm' && format !== 'depth24unorm-stencil8');
+
+    // Generate the initial depth data
+    const initialData = new Float32Array(copySize[0] * copySize[1] * copySize[2]);
+    for (let i = 0; i < initialData.length; ++i) {
+      const baseValue = 0.05 * i;
+
+      // We expect there are both 1's and 0's in initialData.
+      initialData[i] = i % 40 === 0 ? 1 : baseValue - Math.floor(baseValue);
+      assert(initialData[i] >= 0 && initialData[i] <= 1);
+    }
+
+    // Initialize the depth aspect of the source texture
+    const depthTexture = this.device.createTexture({
+      format,
+      size: [copySize[0] << mipLevel, copySize[1] << mipLevel, copySize[2]] as const,
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+      mipLevelCount: mipLevel + 1,
+    });
+    this.initializeDepthAspectWithRendering(depthTexture, format, copySize, mipLevel, initialData);
+
+    // Copy the depth aspect of the texture into the destination buffer.
+    const aspectBytesPerBlock = depthStencilFormatAspectSize(format, 'depth-only');
+    const bytesPerRow =
+      align(aspectBytesPerBlock * copySize[0], kBytesPerRowAlignment) +
+      bytesPerRowPadding * kBytesPerRowAlignment;
+    const rowsPerImage = copySize[1] + rowsPerImagePadding;
+
+    const destinationBufferSize = align(
+      bytesPerRow * rowsPerImage * copySize[2] +
+        bytesPerRow * (copySize[1] - 1) +
+        aspectBytesPerBlock * copySize[0] +
+        offset +
+        dataPaddingInBytes,
+      kBufferSizeAlignment
+    );
+    const destinationBuffer = this.device.createBuffer({
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+      size: destinationBufferSize,
+    });
+    const copyEncoder = this.device.createCommandEncoder();
+    copyEncoder.copyTextureToBuffer(
+      {
+        texture: depthTexture,
+        mipLevel,
+      },
+      {
+        buffer: destinationBuffer,
+        offset,
+        bytesPerRow,
+        rowsPerImage,
+      },
+      copySize
+    );
+    this.queue.submit([copyEncoder.finish()]);
+
+    // Validate the data in destinationBuffer is what we expect.
+    const expectedData = new Uint8Array(destinationBufferSize);
+    for (let z = 0; z < copySize[2]; ++z) {
+      const baseExpectedOffset = z * bytesPerRow * rowsPerImage + offset;
+      const baseInitialiDataOffset = z * copySize[0] * copySize[1];
+      for (let y = 0; y < copySize[1]; ++y) {
+        memcpy(
+          {
+            src: initialData,
+            start: baseInitialiDataOffset + y * copySize[0],
+            length: copySize[0],
+          },
+          { dst: expectedData, start: baseExpectedOffset + y * bytesPerRow }
+        );
+      }
+    }
+    this.expectGPUBufferValuesEqual(destinationBuffer, expectedData);
+  }
 }
 
 /**
@@ -1461,11 +1660,27 @@ g.test('undefined_params')
     });
   });
 
-g.test('rowsPerImage_and_bytesPerRow_copy_with_stencil_aspect')
+function CopyMethodSupportedWithDepthStencilFormat(
+  aspect: 'depth-only' | 'stencil-only',
+  format: DepthStencilFormat,
+  copyMethod: 'WriteTexture' | 'CopyB2T' | 'CopyT2B'
+): boolean {
+  {
+    return (
+      (aspect === 'stencil-only' && kTextureFormatInfo[format].stencil) ||
+      (aspect === 'depth-only' &&
+        kTextureFormatInfo[format].depth &&
+        copyMethod === 'CopyT2B' &&
+        depthStencilBufferTextureCopySupported('CopyT2B', format, aspect))
+    );
+  }
+}
+
+g.test('rowsPerImage_and_bytesPerRow_depth_stencil')
   .desc(
     `Test that copying data with various bytesPerRow and rowsPerImage values and minimum required
 bytes in copy works for copyBufferToTexture(), copyTextureToBuffer() and writeTexture() with stencil
-aspect.
+aspect and copyTextureToBuffer() with depth aspect.
 
   Covers a special code path for Metal:
     bufferSize - offset < bytesPerImage * copyExtent.depthOrArrayLayers
@@ -1477,11 +1692,10 @@ aspect.
   )
   .params(u =>
     u
-      .combine('stencilFormat', kDepthStencilFormats)
-      .filter(t => {
-        return kTextureFormatInfo[t.stencilFormat].stencil;
-      })
+      .combine('format', kDepthStencilFormats)
       .combine('copyMethod', ['WriteTexture', 'CopyB2T', 'CopyT2B'] as const)
+      .combine('aspect', ['depth-only', 'stencil-only'] as const)
+      .filter(t => CopyMethodSupportedWithDepthStencilFormat(t.aspect, t.format, t.copyMethod))
       .beginSubcases()
       .combineWithParams(kRowsPerImageAndBytesPerRowParams.paddings)
       .combineWithParams(kRowsPerImageAndBytesPerRowParams.copySizes)
@@ -1492,8 +1706,9 @@ aspect.
   )
   .fn(async t => {
     const {
-      stencilFormat,
+      format,
       copyMethod,
+      aspect,
       bytesPerRowPadding,
       rowsPerImagePadding,
       copyWidthInBlocks,
@@ -1502,39 +1717,49 @@ aspect.
       mipLevel,
     } = t.params;
 
-    await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[stencilFormat].feature);
+    await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 
-    const info = kTextureFormatInfo['stencil8'];
-    const copyWidth = copyWidthInBlocks * info.blockWidth;
-    const copyHeight = copyHeightInBlocks * info.blockHeight;
+    const bytesPerBlock = depthStencilFormatAspectSize(format, aspect);
     const rowsPerImage = copyHeightInBlocks + rowsPerImagePadding;
 
     const bytesPerRowAlignment = copyMethod === 'WriteTexture' ? 1 : kBytesPerRowAlignment;
     const bytesPerRow =
-      align(info.bytesPerBlock * copyWidthInBlocks, bytesPerRowAlignment) +
+      align(bytesPerBlock * copyWidthInBlocks, bytesPerRowAlignment) +
       bytesPerRowPadding * bytesPerRowAlignment;
 
-    const textureSize = [copyWidth << mipLevel, copyHeight << mipLevel, copyDepth] as const;
+    const copySize = [copyWidthInBlocks, copyHeightInBlocks, copyDepth] as const;
+    const textureSize = [
+      copyWidthInBlocks << mipLevel,
+      copyHeightInBlocks << mipLevel,
+      copyDepth,
+    ] as const;
     if (copyMethod === 'CopyT2B') {
-      await t.DoCopyFromStencilTest(
-        stencilFormat,
-        textureSize,
-        bytesPerRow,
-        rowsPerImage,
-        0,
-        mipLevel
-      );
+      if (aspect === 'depth-only') {
+        t.DoCopyTextureToBufferWithDepthAspectTest(
+          format,
+          copySize,
+          bytesPerRowPadding,
+          rowsPerImagePadding,
+          0,
+          0,
+          mipLevel
+        );
+      } else {
+        await t.DoCopyFromStencilTest(format, textureSize, bytesPerRow, rowsPerImage, 0, mipLevel);
+      }
     } else {
-      assert(copyMethod === 'CopyB2T' || copyMethod === 'WriteTexture');
+      assert(
+        aspect === 'stencil-only' && (copyMethod === 'CopyB2T' || copyMethod === 'WriteTexture')
+      );
       const initialDataSize = dataBytesForCopyOrFail({
         layout: { bytesPerRow, rowsPerImage },
         format: 'stencil8',
-        copySize: { width: copyWidth, height: copyHeight, depthOrArrayLayers: copyDepth },
+        copySize,
         method: copyMethod,
       });
 
       await t.DoUploadToStencilTest(
-        stencilFormat,
+        format,
         textureSize,
         copyMethod,
         bytesPerRow,
@@ -1546,10 +1771,11 @@ aspect.
     }
   });
 
-g.test('offsets_and_sizes_copy_with_stencil_aspect')
+g.test('offsets_and_sizes_copy_depth_stencil')
   .desc(
     `Test that copying data with various offset values and additional data paddings
-works for copyBufferToTexture(), copyTextureToBfufer() and writeTexture() with stencil aspect.
+works for copyBufferToTexture(), copyTextureToBuffer() and writeTexture() with stencil aspect and
+copyTextureToBuffer() with depth aspect.
 
   Covers two special code paths for D3D12:
     offset + bytesInCopyExtentPerRow { ==, > } bytesPerRow
@@ -1558,11 +1784,10 @@ works for copyBufferToTexture(), copyTextureToBfufer() and writeTexture() with s
   )
   .params(u =>
     u
-      .combine('stencilFormat', kDepthStencilFormats)
-      .filter(t => {
-        return kTextureFormatInfo[t.stencilFormat].stencil;
-      })
+      .combine('format', kDepthStencilFormats)
       .combine('copyMethod', ['WriteTexture', 'CopyB2T', 'CopyT2B'] as const)
+      .combine('aspect', ['depth-only', 'stencil-only'] as const)
+      .filter(t => CopyMethodSupportedWithDepthStencilFormat(t.aspect, t.format, t.copyMethod))
       .beginSubcases()
       .combineWithParams(kOffsetsAndSizesParams.offsetsAndPaddings)
       .filter(t => t.offsetInBlocks % 4 === 0)
@@ -1571,33 +1796,40 @@ works for copyBufferToTexture(), copyTextureToBfufer() and writeTexture() with s
   )
   .fn(async t => {
     const {
-      stencilFormat,
+      format,
       copyMethod,
+      aspect,
       offsetInBlocks,
       dataPaddingInBytes,
       copyDepth,
       mipLevel,
     } = t.params;
-    await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[stencilFormat].feature);
-    const info = kTextureFormatInfo['stencil8'];
+    await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 
-    const initialDataOffset = offsetInBlocks * info.bytesPerBlock;
-    const copySize = [3 * info.blockWidth, 3 * info.blockHeight, copyDepth];
+    const bytesPerBlock = depthStencilFormatAspectSize(format, aspect);
+    const initialDataOffset = offsetInBlocks * bytesPerBlock;
+    const copySize = [3, 3, copyDepth] as const;
     const rowsPerImage = 3;
     const bytesPerRow = 256;
 
     const textureSize = [copySize[0] << mipLevel, copySize[1] << mipLevel, copyDepth] as const;
     if (copyMethod === 'CopyT2B') {
-      await t.DoCopyFromStencilTest(
-        stencilFormat,
-        textureSize,
-        bytesPerRow,
-        rowsPerImage,
-        initialDataOffset,
-        mipLevel
-      );
+      if (aspect === 'depth-only') {
+        t.DoCopyTextureToBufferWithDepthAspectTest(format, copySize, 0, 0, 0, 0, mipLevel);
+      } else {
+        await t.DoCopyFromStencilTest(
+          format,
+          textureSize,
+          bytesPerRow,
+          rowsPerImage,
+          initialDataOffset,
+          mipLevel
+        );
+      }
     } else {
-      assert(copyMethod === 'CopyB2T' || copyMethod === 'WriteTexture');
+      assert(
+        aspect === 'stencil-only' && (copyMethod === 'CopyB2T' || copyMethod === 'WriteTexture')
+      );
       const minDataSize = dataBytesForCopyOrFail({
         layout: { offset: initialDataOffset, bytesPerRow, rowsPerImage },
         format: 'stencil8',
@@ -1606,7 +1838,7 @@ works for copyBufferToTexture(), copyTextureToBfufer() and writeTexture() with s
       });
       const initialDataSize = minDataSize + dataPaddingInBytes;
       await t.DoUploadToStencilTest(
-        stencilFormat,
+        format,
         textureSize,
         copyMethod,
         bytesPerRow,
