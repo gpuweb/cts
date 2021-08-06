@@ -8,7 +8,8 @@ declare const cvs_same_as_back_buffer: HTMLCanvasElement;
 declare const cvs_smaller_than_back_buffer: HTMLCanvasElement;
 declare const cvs_change_size_after_configure: HTMLCanvasElement;
 declare const cvs_change_size_and_reconfigure: HTMLCanvasElement;
-declare const cvs_back_buffer_css_different_size: HTMLCanvasElement;
+declare const back_buffer_smaller_than_cvs_and_css: HTMLCanvasElement;
+declare const cvs_smaller_than_back_buffer_and_css: HTMLCanvasElement;
 
 export function run() {
   runRefTest(async t => {
@@ -25,16 +26,17 @@ export function run() {
     }
 
     function updateWebGPUBackBuffer(
+      canvas: HTMLCanvasElement,
       ctx: GPUPresentationContext,
-      back_buffer_width: number,
-      back_buffer_height: number,
+      configureSize: [number, number] | undefined,
       pixels: Array<Array<Uint8Array>>
     ) {
+      const backBufferSize = configureSize ?? [canvas.width, canvas.height];
       ctx.configure({
         device: t.device,
         format: 'bgra8unorm',
         usage: GPUTextureUsage.COPY_DST,
-        size: [back_buffer_width, back_buffer_height],
+        size: configureSize,
       });
 
       const rows = pixels.length;
@@ -55,12 +57,9 @@ export function run() {
       const texture = ctx.getCurrentTexture();
 
       const encoder = t.device.createCommandEncoder();
-      encoder.copyBufferToTexture({ buffer, bytesPerRow }, { texture }, [
-        back_buffer_width,
-        back_buffer_height,
-        1,
-      ]);
+      encoder.copyBufferToTexture({ buffer, bytesPerRow }, { texture }, backBufferSize);
       t.device.queue.submit([encoder.finish()]);
+      buffer.destroy();
     }
 
     // Test back buffer smaller than canvas size
@@ -70,22 +69,25 @@ export function run() {
       const ctx = cvs_larger_than_back_buffer.getContext('gpupresent');
       assert(ctx !== null);
 
-      updateWebGPUBackBuffer(ctx, back_buffer_width, back_buffer_height, [
-        [red, red, green],
-        [red, red, green],
-        [blue, blue, yellow],
-        [blue, blue, yellow],
-      ]);
+      updateWebGPUBackBuffer(
+        cvs_larger_than_back_buffer,
+        ctx,
+        [back_buffer_width, back_buffer_height],
+        [
+          [red, red, green],
+          [red, red, green],
+          [blue, blue, yellow],
+          [blue, blue, yellow],
+        ]
+      );
     }
 
     // Test back buffer is same as canvas size
     {
-      const back_buffer_width = cvs_same_as_back_buffer.width;
-      const back_buffer_height = cvs_same_as_back_buffer.height;
       const ctx = cvs_same_as_back_buffer.getContext('gpupresent');
       assert(ctx !== null);
 
-      updateWebGPUBackBuffer(ctx, back_buffer_width, back_buffer_height, [
+      updateWebGPUBackBuffer(cvs_same_as_back_buffer, ctx, undefined, [
         [red, red, green],
         [red, red, green],
         [blue, blue, yellow],
@@ -100,16 +102,21 @@ export function run() {
       const ctx = cvs_smaller_than_back_buffer.getContext('gpupresent');
       assert(ctx !== null);
 
-      updateWebGPUBackBuffer(ctx, back_buffer_width, back_buffer_height, [
-        [red, red, red, red, green, green],
-        [red, red, red, red, green, green],
-        [red, red, red, red, green, green],
-        [red, red, red, red, green, green],
-        [blue, blue, blue, blue, yellow, yellow],
-        [blue, blue, blue, blue, yellow, yellow],
-        [blue, blue, blue, blue, yellow, yellow],
-        [blue, blue, blue, blue, yellow, yellow],
-      ]);
+      updateWebGPUBackBuffer(
+        cvs_smaller_than_back_buffer,
+        ctx,
+        [back_buffer_width, back_buffer_height],
+        [
+          [red, red, red, red, green, green],
+          [red, red, red, red, green, green],
+          [red, red, red, red, green, green],
+          [red, red, red, red, green, green],
+          [blue, blue, blue, blue, yellow, yellow],
+          [blue, blue, blue, blue, yellow, yellow],
+          [blue, blue, blue, blue, yellow, yellow],
+          [blue, blue, blue, blue, yellow, yellow],
+        ]
+      );
     }
 
     // Test js change canvas size after back buffer has been configured
@@ -119,12 +126,17 @@ export function run() {
       const ctx = cvs_change_size_after_configure.getContext('gpupresent');
       assert(ctx !== null);
 
-      updateWebGPUBackBuffer(ctx, back_buffer_width, back_buffer_height, [
-        [red, red, green],
-        [red, red, green],
-        [blue, blue, yellow],
-        [blue, blue, yellow],
-      ]);
+      updateWebGPUBackBuffer(
+        cvs_change_size_after_configure,
+        ctx,
+        [back_buffer_width, back_buffer_height],
+        [
+          [red, red, green],
+          [red, red, green],
+          [blue, blue, yellow],
+          [blue, blue, yellow],
+        ]
+      );
 
       cvs_change_size_after_configure.width = 6;
       cvs_change_size_after_configure.height = 8;
@@ -133,12 +145,10 @@ export function run() {
     // Test js change canvas size after back buffer has been configured
     // and back buffer configure again.
     {
-      let back_buffer_width: number = cvs_change_size_and_reconfigure.width;
-      let back_buffer_height: number = cvs_change_size_and_reconfigure.height;
       const ctx = cvs_change_size_and_reconfigure.getContext('gpupresent');
       assert(ctx !== null);
 
-      updateWebGPUBackBuffer(ctx, back_buffer_width, back_buffer_height, [
+      updateWebGPUBackBuffer(cvs_change_size_and_reconfigure, ctx, undefined, [
         [red, red, green],
         [red, red, green],
         [blue, blue, yellow],
@@ -148,10 +158,7 @@ export function run() {
       cvs_change_size_and_reconfigure.width = 6;
       cvs_change_size_and_reconfigure.height = 8;
 
-      back_buffer_width = cvs_change_size_and_reconfigure.width;
-      back_buffer_height = cvs_change_size_and_reconfigure.height;
-
-      updateWebGPUBackBuffer(ctx, back_buffer_width, back_buffer_height, [
+      updateWebGPUBackBuffer(cvs_change_size_and_reconfigure, ctx, undefined, [
         [red, red, red, red, green, green],
         [red, red, red, red, green, green],
         [red, red, red, red, green, green],
@@ -163,19 +170,48 @@ export function run() {
       ]);
     }
 
-    // Test canvas size, back buffer size and CSS size are different
+    // Test back buffer size < canvas size < CSS size
     {
-      const back_buffer_width = cvs_back_buffer_css_different_size.width / 2;
-      const back_buffer_height = cvs_back_buffer_css_different_size.height / 2;
-      const ctx = cvs_back_buffer_css_different_size.getContext('gpupresent');
+      const back_buffer_width = back_buffer_smaller_than_cvs_and_css.width / 2;
+      const back_buffer_height = back_buffer_smaller_than_cvs_and_css.height / 2;
+      const ctx = back_buffer_smaller_than_cvs_and_css.getContext('gpupresent');
       assert(ctx !== null);
 
-      updateWebGPUBackBuffer(ctx, back_buffer_width, back_buffer_height, [
-        [red, red, green],
-        [red, red, green],
-        [blue, blue, yellow],
-        [blue, blue, yellow],
-      ]);
+      updateWebGPUBackBuffer(
+        back_buffer_smaller_than_cvs_and_css,
+        ctx,
+        [back_buffer_width, back_buffer_height],
+        [
+          [red, red, green],
+          [red, red, green],
+          [blue, blue, yellow],
+          [blue, blue, yellow],
+        ]
+      );
+    }
+
+    // Test canvas size < back buffer size < CSS size
+    {
+      const back_buffer_width = cvs_smaller_than_back_buffer_and_css.width * 2;
+      const back_buffer_height = cvs_smaller_than_back_buffer_and_css.height * 2;
+      const ctx = cvs_smaller_than_back_buffer_and_css.getContext('gpupresent');
+      assert(ctx !== null);
+
+      updateWebGPUBackBuffer(
+        cvs_smaller_than_back_buffer_and_css,
+        ctx,
+        [back_buffer_width, back_buffer_height],
+        [
+          [red, red, red, red, green, green],
+          [red, red, red, red, green, green],
+          [red, red, red, red, green, green],
+          [red, red, red, red, green, green],
+          [blue, blue, blue, blue, yellow, yellow],
+          [blue, blue, blue, blue, yellow, yellow],
+          [blue, blue, blue, blue, yellow, yellow],
+          [blue, blue, blue, blue, yellow, yellow],
+        ]
+      );
     }
   });
 }
