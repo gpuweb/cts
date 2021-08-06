@@ -35,6 +35,7 @@ export function run(format: GPUTextureFormat, writeCanvasMethod: WriteCanvasMeth
     });
 
     function copyBufferToTexture() {
+      assert(ctx !== null);
       const rows = 2;
       const bytesPerRow = 256;
       const buffer = t.device.createBuffer({
@@ -110,6 +111,7 @@ export function run(format: GPUTextureFormat, writeCanvasMethod: WriteCanvasMeth
     }
 
     async function copyExternalImageToTexture() {
+      assert(ctx !== null);
       const imageBitmap = await getImageBitmapFromFile();
       t.device.queue.copyExternalImageToTexture(
         { source: imageBitmap },
@@ -119,6 +121,7 @@ export function run(format: GPUTextureFormat, writeCanvasMethod: WriteCanvasMeth
     }
 
     async function copyTextureToTexture() {
+      assert(ctx !== null);
       const imageBitmap = await getImageBitmapFromFile();
       const srcTexture = setupSrcTexture(imageBitmap);
 
@@ -132,6 +135,7 @@ export function run(format: GPUTextureFormat, writeCanvasMethod: WriteCanvasMeth
     }
 
     async function DrawTextureSample() {
+      assert(ctx !== null);
       const imageBitmap = await getImageBitmapFromFile();
       const srcTexture = setupSrcTexture(imageBitmap);
 
@@ -235,6 +239,7 @@ fn main([[location(0)]] fragUV: vec2<f32>) -> [[location(0)]] vec4<f32> {
     }
 
     function DrawVertexColor() {
+      assert(ctx !== null);
       const pipeline = t.device.createRenderPipeline({
         vertex: {
           module: t.device.createShaderModule({
