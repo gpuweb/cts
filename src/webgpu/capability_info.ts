@@ -604,9 +604,9 @@ assertTypeTrue<TypeEqual<GPUTextureSampleType, typeof kTextureSampleTypes[number
 /** Binding type info (including class limits) for the specified GPUStorageTextureBindingLayout. */
 export function storageTextureBindingTypeInfo(d: GPUStorageTextureBindingLayout) {
   /* prettier-ignore */
-  switch (d.access) {
-    case 'read-only':  return { usage: GPUConst.TextureUsage.STORAGE, ...kBindingKind.storageTex, ...kValidStagesAll,          };
-    case 'write-only': return { usage: GPUConst.TextureUsage.STORAGE, ...kBindingKind.storageTex, ...kValidStagesStorageWrite, };
+  switch (d.access ?? 'write-only') {
+    case 'read-only':  return { usage: GPUConst.TextureUsage.STORAGE_BINDING, ...kBindingKind.storageTex, ...kValidStagesAll,          };
+    case 'write-only': return { usage: GPUConst.TextureUsage.STORAGE_BINDING, ...kBindingKind.storageTex, ...kValidStagesStorageWrite, };
   }
 }
 /** List of all GPUStorageTextureAccess values. */

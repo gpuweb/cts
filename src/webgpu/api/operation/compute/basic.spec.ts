@@ -9,6 +9,12 @@ import { checkElementsEqualGenerated } from '../../../util/check_contents.js';
 
 export const g = makeTestGroup(GPUTest);
 
+const kMaxComputeWorkgroupSize = [
+  DefaultLimits.maxComputeWorkgroupSizeX,
+  DefaultLimits.maxComputeWorkgroupSizeY,
+  DefaultLimits.maxComputeWorkgroupSizeZ,
+];
+
 g.test('memcpy').fn(async t => {
   const data = new Uint32Array([0x01020304]);
 
@@ -70,19 +76,13 @@ g.test('large_dispatch')
         315,
         628,
         2179,
-        DefaultLimits.maxComputePerDimensionDispatchSize,
+        DefaultLimits.maxComputeWorkgroupsPerDimension,
       ])
       // Test some reasonable workgroup sizes.
       .beginSubcases()
       // 0 == x axis; 1 == y axis; 2 == z axis.
       .combine('largeDimension', [0, 1, 2] as const)
-      .expand('workgroupSize', p => [
-        1,
-        2,
-        8,
-        32,
-        DefaultLimits.maxComputeWorkgroupSize[p.largeDimension],
-      ])
+      .expand('workgroupSize', p => [1, 2, 8, 32, kMaxComputeWorkgroupSize[p.largeDimension]])
   )
   .fn(async t => {
     // The output storage buffer is filled with this value.
