@@ -181,16 +181,10 @@ class DrawCall {
   callDraw(encoder: GPURenderEncoderBase) {
     switch (this.drawType) {
       case 'draw': {
-        this.test.debug(
-          `drawCall: encoder.draw(${this.vertexCount}, ${this.instanceCount}, ${this.firstVertex}, ${this.firstInstance})`
-        );
         encoder.draw(this.vertexCount, this.instanceCount, this.firstVertex, this.firstInstance);
         break;
       }
       case 'drawIndexed': {
-        this.test.debug(
-          `drawCall: encoder.drawIndexed(${this.indexCount}, ${this.instanceCount}, ${this.firstIndex}, ${this.baseVertex}, ${this.firstInstance})`
-        );
         encoder.drawIndexed(
           this.indexCount,
           this.instanceCount,
