@@ -203,7 +203,7 @@ export function run() {
         [back_buffer_width, back_buffer_height],
         [
           [red, red, red, red, green, green],
-          [red, red, red, red, green, green],
+          [red, red, green, red, green, green],
           [red, red, red, red, green, green],
           [red, red, red, red, green, green],
           [blue, blue, blue, blue, yellow, yellow],
