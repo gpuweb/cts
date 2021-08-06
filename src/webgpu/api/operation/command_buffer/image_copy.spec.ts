@@ -27,6 +27,9 @@ export const description = `writeTexture + copyBufferToTexture + copyTextureToBu
   - add another initMethod which renders the texture
   - test copyT2B with buffer size not divisible by 4 (not done because expectContents 4-byte alignment)
   - add tests for 1d / 3d textures
+  - Convert the float32 values in initialData into the ones compatible to the depth aspect of
+    depthFormats when depth16unorm and depth24unorm-stencil8 are supported by the browsers in
+    DoCopyTextureToBufferWithDepthAspectTest().
 
 TODO: Fix this test for the various skipped formats:
 - snorm tests failing due to rounding
@@ -1091,12 +1094,19 @@ class ImageCopyTest extends GPUTest {
     dataPaddingInBytes: number,
     mipLevel: number
   ): void {
+    // TODO(crbug.com/dawn/868): convert the float32 values in initialData into the ones compatible
+    // to the depth aspect of depthFormats when depth16unorm and depth24unorm-stencil8 are supported
+    // by the browsers.
+    assert(format !== 'depth16unorm' && format !== 'depth24unorm-stencil8');
+
     // Generate the initial depth data
     const initialData = new Float32Array(copySize[0] * copySize[1] * copySize[2]);
     for (let i = 0; i < initialData.length; ++i) {
-      const baseValue = 0.01 * i;
-      initialData[i] = baseValue - Math.floor(baseValue);
-      assert(initialData[i] >= 0 && initialData[i] < 1);
+      const baseValue = 0.05 * i;
+
+      // We expect there are both 1's and 0's in initialData.
+      initialData[i] = i % 40 === 0 ? 1 : baseValue - Math.floor(baseValue);
+      assert(initialData[i] >= 0 && initialData[i] <= 1);
     }
 
     // Initialize the depth aspect of the source texture
@@ -1144,9 +1154,6 @@ class ImageCopyTest extends GPUTest {
     this.queue.submit([copyEncoder.finish()]);
 
     // Validate the data in destinationBuffer is what we expect.
-    // TODO(crbug.com/dawn/868): convert the float32 values in initialData into the ones compatible
-    // to the depth aspect of depthFormats when depth16unorm and depth24unorm-stencil8 are supported
-    // by the browsers.
     const expectedData = new Uint8Array(destinationBufferSize);
     for (let z = 0; z < copySize[2]; ++z) {
       const baseExpectedOffset = z * bytesPerRow * rowsPerImage + offset;
@@ -1652,6 +1659,22 @@ g.test('undefined_params')
     });
   });
 
+function CopyMethodSupportedWithDepthStencilFormat(
+  aspect: 'depth-only' | 'stencil-only',
+  format: DepthStencilFormat,
+  copyMethod: 'WriteTexture' | 'CopyB2T' | 'CopyT2B'
+): boolean {
+  {
+    return (
+      (aspect === 'stencil-only' && kTextureFormatInfo[format].stencil) ||
+      (aspect === 'depth-only' &&
+        kTextureFormatInfo[format].depth &&
+        copyMethod === 'CopyT2B' &&
+        depthStencilBufferTextureCopySupported('CopyT2B', format, aspect))
+    );
+  }
+}
+
 g.test('rowsPerImage_and_bytesPerRow_depth_stencil')
   .desc(
     `Test that copying data with various bytesPerRow and rowsPerImage values and minimum required
@@ -1671,15 +1694,7 @@ aspect and copyTextureToBuffer() with depth aspect.
       .combine('format', kDepthStencilFormats)
       .combine('copyMethod', ['WriteTexture', 'CopyB2T', 'CopyT2B'] as const)
       .combine('aspect', ['depth-only', 'stencil-only'] as const)
-      .filter(t => {
-        return (
-          (t.aspect === 'stencil-only' && kTextureFormatInfo[t.format].stencil) ||
-          (t.aspect === 'depth-only' &&
-            kTextureFormatInfo[t.format].depth &&
-            t.copyMethod === 'CopyT2B' &&
-            depthStencilBufferTextureCopySupported('CopyT2B', t.format, t.aspect))
-        );
-      })
+      .filter(t => CopyMethodSupportedWithDepthStencilFormat(t.aspect, t.format, t.copyMethod))
       .beginSubcases()
       .combineWithParams(kRowsPerImageAndBytesPerRowParams.paddings)
       .combineWithParams(kRowsPerImageAndBytesPerRowParams.copySizes)
@@ -1711,6 +1726,7 @@ aspect and copyTextureToBuffer() with depth aspect.
       align(bytesPerBlock * copyWidthInBlocks, bytesPerRowAlignment) +
       bytesPerRowPadding * bytesPerRowAlignment;
 
+    const copySize = [copyWidthInBlocks, copyHeightInBlocks, copyDepth] as const;
     const textureSize = [
       copyWidthInBlocks << mipLevel,
       copyHeightInBlocks << mipLevel,
@@ -1720,7 +1736,7 @@ aspect and copyTextureToBuffer() with depth aspect.
       if (aspect === 'depth-only') {
         t.DoCopyTextureToBufferWithDepthAspectTest(
           format,
-          [copyWidthInBlocks, copyHeightInBlocks, copyDepth] as const,
+          copySize,
           bytesPerRowPadding,
           rowsPerImagePadding,
           0,
@@ -1737,11 +1753,7 @@ aspect and copyTextureToBuffer() with depth aspect.
       const initialDataSize = dataBytesForCopyOrFail({
         layout: { bytesPerRow, rowsPerImage },
         format: 'stencil8',
-        copySize: {
-          width: copyWidthInBlocks,
-          height: copyHeightInBlocks,
-          depthOrArrayLayers: copyDepth,
-        },
+        copySize,
         method: copyMethod,
       });
 
@@ -1774,15 +1786,7 @@ copyTextureToBuffer() with depth aspect.
       .combine('format', kDepthStencilFormats)
       .combine('copyMethod', ['WriteTexture', 'CopyB2T', 'CopyT2B'] as const)
       .combine('aspect', ['depth-only', 'stencil-only'] as const)
-      .filter(t => {
-        return (
-          (t.aspect === 'stencil-only' && kTextureFormatInfo[t.format].stencil) ||
-          (t.aspect === 'depth-only' &&
-            kTextureFormatInfo[t.format].depth &&
-            t.copyMethod === 'CopyT2B' &&
-            depthStencilBufferTextureCopySupported('CopyT2B', t.format, t.aspect))
-        );
-      })
+      .filter(t => CopyMethodSupportedWithDepthStencilFormat(t.aspect, t.format, t.copyMethod))
       .beginSubcases()
       .combineWithParams(kOffsetsAndSizesParams.offsetsAndPaddings)
       .filter(t => t.offsetInBlocks % 4 === 0)
