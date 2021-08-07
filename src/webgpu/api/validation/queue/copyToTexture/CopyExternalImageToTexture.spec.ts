@@ -199,7 +199,7 @@ g.test('source_canvas,contexts')
         '2d',
         'bitmaprenderer',
         'experimental-webgl',
-        'gpupresent',
+        'webgpu',
         'webgl',
         'webgl2',
       ] as const)
