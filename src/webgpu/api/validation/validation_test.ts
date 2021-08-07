@@ -324,9 +324,9 @@ export class ValidationTest extends GPUTest {
       occlusionQuerySet?: GPUQuerySet;
     } = {}
   ): CommandBufferMaker<T> {
-    const fullAttachmentInfo: GPURenderBundleEncoderDescriptor = {
+    const fullAttachmentInfo = {
       // Defaults if not overridden:
-      colorFormats: ['rgba8unorm'] as GPUTextureFormat[],
+      colorFormats: ['rgba8unorm'],
       sampleCount: 1,
       // Passed values take precedent.
       ...attachmentInfo,
