@@ -1,6 +1,6 @@
 export const description = `copyTexturetoTexture operation tests
 
-TODO(jiawei.shao@intel.com): support all WebGPU texture formats.
+TODO: remove fragment stage in InitializeDepthAspect() when browsers support null fragment stage.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
@@ -10,12 +10,27 @@ import {
   kRegularTextureFormats,
   SizedTextureFormat,
   kCompressedTextureFormats,
+  depthStencilFormatAspectSize,
+  DepthStencilFormat,
+  kBufferSizeAlignment,
+  kDepthStencilFormats,
+  kMinDynamicBufferOffsetAlignment,
 } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
+import { makeBufferWithContents } from '../../../util/buffer.js';
 import { align } from '../../../util/math.js';
 import { physicalMipSize } from '../../../util/texture/base.js';
+import { kBytesPerRowAlignment, dataBytesForCopyOrFail } from '../../../util/texture/layout.js';
 
 class F extends GPUTest {
+  GetInitialData(byteSize: number): Uint8Array {
+    const initialData = new Uint8Array(byteSize);
+    for (let i = 0; i < initialData.length; ++i) {
+      initialData[i] = (i ** 3 + i) % 251;
+    }
+    return initialData;
+  }
+
   GetInitialDataPerMipLevel(
     textureSize: Required<GPUExtent3DDict>,
     format: SizedTextureFormat,
@@ -31,12 +46,22 @@ class F extends GPUTest {
       (textureSizeAtLevel.height / blockHeightInTexel);
 
     const byteSize = bytesPerBlock * blocksPerSubresource * textureSizeAtLevel.depthOrArrayLayers;
-    const initialData = new Uint8Array(new ArrayBuffer(byteSize));
+    return this.GetInitialData(byteSize);
+  }
 
-    for (let i = 0; i < byteSize; ++i) {
-      initialData[i] = (i ** 3 + i) % 251;
-    }
-    return initialData;
+  GetInitialStencilDataPerMipLevel(
+    textureSize: Required<GPUExtent3DDict>,
+    format: DepthStencilFormat,
+    mipLevel: number
+  ): Uint8Array {
+    const textureSizeAtLevel = physicalMipSize(textureSize, format, '2d', mipLevel);
+    const aspectBytesPerBlock = depthStencilFormatAspectSize(format, 'stencil-only');
+    const byteSize =
+      aspectBytesPerBlock *
+      textureSizeAtLevel.width *
+      textureSizeAtLevel.height *
+      textureSizeAtLevel.depthOrArrayLayers;
+    return this.GetInitialData(byteSize);
   }
 
   DoCopyTextureToTextureTest(
@@ -201,6 +226,346 @@ class F extends GPUTest {
 
     // Verify the content of the whole subresouce of dstTexture at dstCopyLevel (in dstBuffer) is expected.
     this.expectGPUBufferValuesEqual(dstBuffer, expectedUint8DataWithPadding);
+  }
+
+  InitializeStencilAspect(
+    sourceTexture: GPUTexture,
+    initialStencilData: Uint8Array,
+    srcCopyLevel: number,
+    srcCopyBaseArrayLayer: number,
+    copySize: readonly [number, number, number]
+  ): void {
+    this.queue.writeTexture(
+      {
+        texture: sourceTexture,
+        mipLevel: srcCopyLevel,
+        aspect: 'stencil-only',
+        origin: { x: 0, y: 0, z: srcCopyBaseArrayLayer },
+      },
+      initialStencilData,
+      { bytesPerRow: copySize[0], rowsPerImage: copySize[1] },
+      copySize
+    );
+  }
+
+  VerifyStencilAspect(
+    destinationTexture: GPUTexture,
+    initialStencilData: Uint8Array,
+    dstCopyLevel: number,
+    dstCopyBaseArrayLayer: number,
+    copySize: readonly [number, number, number]
+  ): void {
+    const bytesPerRow = align(copySize[0], kBytesPerRowAlignment);
+    const rowsPerImage = copySize[1];
+    const outputBufferSize = align(
+      dataBytesForCopyOrFail({
+        layout: { bytesPerRow, rowsPerImage },
+        format: 'stencil8',
+        copySize,
+        method: 'CopyT2B',
+      }),
+      kBufferSizeAlignment
+    );
+    const outputBuffer = this.device.createBuffer({
+      size: outputBufferSize,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    });
+    const encoder = this.device.createCommandEncoder();
+    encoder.copyTextureToBuffer(
+      {
+        texture: destinationTexture,
+        aspect: 'stencil-only',
+        mipLevel: dstCopyLevel,
+        origin: { x: 0, y: 0, z: dstCopyBaseArrayLayer },
+      },
+      { buffer: outputBuffer, bytesPerRow, rowsPerImage },
+      copySize
+    );
+    this.queue.submit([encoder.finish()]);
+
+    assert(initialStencilData !== undefined);
+    const expectedStencilData = new Uint8Array(outputBufferSize);
+    for (let z = 0; z < copySize[2]; ++z) {
+      const initialOffsetPerLayer = z * copySize[0] * copySize[1];
+      const expectedOffsetPerLayer = z * bytesPerRow * rowsPerImage;
+      for (let y = 0; y < copySize[1]; ++y) {
+        const initialOffsetPerRow = initialOffsetPerLayer + y * copySize[0];
+        const expectedOffsetPerRow = expectedOffsetPerLayer + y * bytesPerRow;
+        memcpy(
+          { src: initialStencilData, start: initialOffsetPerRow, length: copySize[0] },
+          { dst: expectedStencilData, start: expectedOffsetPerRow }
+        );
+      }
+    }
+
+    this.expectGPUBufferValuesEqual(outputBuffer, expectedStencilData);
+  }
+
+  // Initialize the depth aspect of sourceTexture with draw calls
+  InitializeDepthAspect(
+    sourceTexture: GPUTexture,
+    depthFormat: GPUTextureFormat,
+    srcCopyLevel: number,
+    srcCopyBaseArrayLayer: number,
+    copySize: readonly [number, number, number]
+  ): void {
+    // Prepare the uniform buffer that contains all the copy layers to generate different depth
+    // values for different copy layers.
+    const uniformBufferSize = kMinDynamicBufferOffsetAlignment * (copySize[2] - 1) + 4;
+    const uniformBufferData = new Float32Array(uniformBufferSize / 4);
+    for (let i = 1; i < copySize[2]; ++i) {
+      uniformBufferData[(kMinDynamicBufferOffsetAlignment / 4) * i] = i;
+    }
+    const uniformBuffer = makeBufferWithContents(
+      this.device,
+      uniformBufferData,
+      GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM
+    );
+    const bindGroupLayout = this.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.VERTEX,
+          buffer: {
+            type: 'uniform',
+            minBindingSize: 4,
+            hasDynamicOffset: true,
+          },
+        },
+      ],
+    });
+    const bindGroup = this.device.createBindGroup({
+      layout: bindGroupLayout,
+      entries: [
+        {
+          binding: 0,
+          resource: {
+            buffer: uniformBuffer,
+            size: 4,
+          },
+        },
+      ],
+    });
+
+    // Prepare a renderPipeline with depthCompareFunction == 'always' and depthWriteEnabled == true
+    // for the initializations of the depth attachment.
+    // TODO: remove the fragment stage when the browsers support null fragment stage.
+    const renderPipeline = this.device.createRenderPipeline({
+      layout: this.device.createPipelineLayout({ bindGroupLayouts: [bindGroupLayout] }),
+      vertex: {
+        module: this.device.createShaderModule({
+          code: `
+            [[block]] struct Params {
+              copyLayer: f32;
+            };
+            [[group(0), binding(0)]] var<uniform> param: Params;
+            [[stage(vertex)]]
+            fn main([[builtin(vertex_index)]] VertexIndex : u32)-> [[builtin(position)]] vec4<f32> {
+              var depthValue = 0.5 + 0.2 * sin(param.copyLayer);
+              var pos : array<vec3<f32>, 6> = array<vec3<f32>, 6>(
+                  vec3<f32>(-1.0,  1.0, depthValue),
+                  vec3<f32>(-1.0, -1.0, 0.0),
+                  vec3<f32>( 1.0,  1.0, 1.0),
+                  vec3<f32>(-1.0, -1.0, 0.0),
+                  vec3<f32>( 1.0,  1.0, 1.0),
+                  vec3<f32>( 1.0, -1.0, depthValue));
+              return vec4<f32>(pos[VertexIndex], 1.0);
+            }`,
+        }),
+        entryPoint: 'main',
+      },
+
+      fragment: {
+        module: this.device.createShaderModule({
+          code: `
+            [[stage(fragment)]]
+            fn main() -> [[location(0)]] vec4<f32> {
+              return vec4<f32>(0.0, 1.0, 0.0, 1.0);
+            }`,
+        }),
+        entryPoint: 'main',
+        targets: [],
+      },
+
+      primitive: {
+        topology: 'triangle-list',
+      },
+
+      depthStencil: {
+        format: depthFormat,
+        depthWriteEnabled: true,
+        depthCompare: 'always',
+      },
+    });
+
+    const encoder = this.device.createCommandEncoder();
+    for (let srcCopyLayer = 0; srcCopyLayer < copySize[2]; ++srcCopyLayer) {
+      const renderPass = encoder.beginRenderPass({
+        colorAttachments: [],
+        depthStencilAttachment: {
+          view: sourceTexture.createView({
+            baseArrayLayer: srcCopyLayer + srcCopyBaseArrayLayer,
+            arrayLayerCount: 1,
+            baseMipLevel: srcCopyLevel,
+            mipLevelCount: 1,
+          }),
+          depthLoadValue: 0.0,
+          depthStoreOp: 'store',
+          stencilLoadValue: 'load',
+          stencilStoreOp: 'store',
+        },
+      });
+      renderPass.setBindGroup(0, bindGroup, [srcCopyLayer * kMinDynamicBufferOffsetAlignment]);
+      renderPass.setPipeline(renderPipeline);
+      renderPass.draw(6);
+      renderPass.endPass();
+    }
+    this.queue.submit([encoder.finish()]);
+  }
+
+  VerifyDepthAspect(
+    destinationTexture: GPUTexture,
+    depthFormat: GPUTextureFormat,
+    dstCopyLevel: number,
+    dstCopyBaseArrayLayer: number,
+    copySize: [number, number, number]
+  ): void {
+    // Prepare the uniform buffer that contains all the copy layers to generate different depth
+    // values for different copy layers.
+    const uniformBufferSize = kMinDynamicBufferOffsetAlignment * (copySize[2] - 1) + 4;
+    const uniformBufferData = new Float32Array(uniformBufferSize / 4);
+    for (let i = 1; i < copySize[2]; ++i) {
+      uniformBufferData[(kMinDynamicBufferOffsetAlignment / 4) * i] = i;
+    }
+    const uniformBuffer = makeBufferWithContents(
+      this.device,
+      uniformBufferData,
+      GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM
+    );
+    const bindGroupLayout = this.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.VERTEX,
+          buffer: {
+            type: 'uniform',
+            minBindingSize: 4,
+            hasDynamicOffset: true,
+          },
+        },
+      ],
+    });
+    const bindGroup = this.device.createBindGroup({
+      layout: bindGroupLayout,
+      entries: [
+        {
+          binding: 0,
+          resource: {
+            buffer: uniformBuffer,
+            size: 4,
+          },
+        },
+      ],
+    });
+
+    // Prepare a renderPipeline with depthCompareFunction == 'equal' and depthWriteEnabled == false
+    // for the comparations of the depth attachment.
+    const renderPipeline = this.device.createRenderPipeline({
+      layout: this.device.createPipelineLayout({ bindGroupLayouts: [bindGroupLayout] }),
+      vertex: {
+        module: this.device.createShaderModule({
+          code: `
+            [[block]] struct Params {
+              copyLayer: f32;
+            };
+            [[group(0), binding(0)]] var<uniform> param: Params;
+            [[stage(vertex)]]
+            fn main([[builtin(vertex_index)]] VertexIndex : u32)-> [[builtin(position)]] vec4<f32> {
+              var depthValue = 0.5 + 0.2 * sin(param.copyLayer);
+              var pos : array<vec3<f32>, 6> = array<vec3<f32>, 6>(
+                  vec3<f32>(-1.0,  1.0, depthValue),
+                  vec3<f32>(-1.0, -1.0, 0.0),
+                  vec3<f32>( 1.0,  1.0, 1.0),
+                  vec3<f32>(-1.0, -1.0, 0.0),
+                  vec3<f32>( 1.0,  1.0, 1.0),
+                  vec3<f32>( 1.0, -1.0, depthValue));
+              return vec4<f32>(pos[VertexIndex], 1.0);
+            }`,
+        }),
+        entryPoint: 'main',
+      },
+
+      fragment: {
+        module: this.device.createShaderModule({
+          code: `
+            [[stage(fragment)]]
+            fn main() -> [[location(0)]] vec4<f32> {
+              return vec4<f32>(0.0, 1.0, 0.0, 1.0);
+            }`,
+        }),
+        entryPoint: 'main',
+        targets: [
+          {
+            format: 'rgba8unorm',
+          },
+        ],
+      },
+
+      primitive: {
+        topology: 'triangle-list',
+      },
+
+      depthStencil: {
+        format: depthFormat,
+        depthWriteEnabled: false,
+        depthCompare: 'equal',
+      },
+    });
+
+    const outputColorTexture = this.device.createTexture({
+      format: 'rgba8unorm',
+      size: copySize,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+    });
+
+    const encoder = this.device.createCommandEncoder();
+    for (let dstCopyLayer = 0; dstCopyLayer < copySize[2]; ++dstCopyLayer) {
+      const renderPass = encoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: outputColorTexture.createView({
+              baseArrayLayer: dstCopyLayer,
+              arrayLayerCount: 1,
+            }),
+            loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+            storeOp: 'store',
+          },
+        ],
+        depthStencilAttachment: {
+          view: destinationTexture.createView({
+            baseArrayLayer: dstCopyLayer + dstCopyBaseArrayLayer,
+            arrayLayerCount: 1,
+            baseMipLevel: dstCopyLevel,
+            mipLevelCount: 1,
+          }),
+          depthLoadValue: 'load',
+          depthStoreOp: 'store',
+          stencilLoadValue: 'load',
+          stencilStoreOp: 'store',
+        },
+      });
+      renderPass.setBindGroup(0, bindGroup, [dstCopyLayer * kMinDynamicBufferOffsetAlignment]);
+      renderPass.setPipeline(renderPipeline);
+      renderPass.draw(6);
+      renderPass.endPass();
+    }
+
+    this.queue.submit([encoder.finish()]);
+
+    this.expectSingleColor(outputColorTexture, 'rgba8unorm', {
+      size: copySize,
+      exp: { R: 0.0, G: 1.0, B: 0.0, A: 1.0 },
+    });
   }
 }
 
@@ -590,19 +955,128 @@ g.test('zero_sized')
     );
   });
 
-g.test('copy_stencil_aspect')
+g.test('copy_depth_stencil')
   .desc(
     `
-  Validate the correctness of copyTextureToTexture() with stencil aspect.
+  Validate the correctness of copyTextureToTexture() with depth and stencil aspect.
 
   For all the texture formats with stencil aspect:
-  - Upload the expected data into a staging buffer
-  - Copy the data of the staging buffer into the stencil aspect of the source texture
+  - Initialize the stencil aspect of the source texture with writeTexture().
   - Copy the stencil aspect from the source texture into the destination texture
   - Copy the stencil aspect of the destination texture into another staging buffer and check its
     content
   - Test the copies from / into zero / non-zero array layer / mipmap levels
   - Test copying multiple array layers
+
+  For all the texture formats with depth aspect:
+  - Initialize the depth texture with a draw call
+  - Copy the depth aspect from the source texture into the destination texture
+  - Validate the content in the destination texture with the depth comparation function 'equal'
   `
   )
-  .unimplemented();
+  .params(u =>
+    u
+      .combine('format', kDepthStencilFormats)
+      .beginSubcases()
+      .combine('srcTextureSize', [
+        { width: 32, height: 16, depthOrArrayLayers: 1 },
+        { width: 32, height: 16, depthOrArrayLayers: 4 },
+        { width: 24, height: 48, depthOrArrayLayers: 5 },
+      ])
+      .combine('srcCopyLevel', [0, 2])
+      .combine('dstCopyLevel', [0, 2])
+      .combine('srcCopyBaseArrayLayer', [0, 1])
+      .combine('dstCopyBaseArrayLayer', [0, 1])
+      .filter(t => {
+        return (
+          t.srcTextureSize.depthOrArrayLayers > t.srcCopyBaseArrayLayer &&
+          t.srcTextureSize.depthOrArrayLayers > t.dstCopyBaseArrayLayer
+        );
+      })
+  )
+  .fn(async t => {
+    const {
+      format,
+      srcTextureSize,
+      srcCopyLevel,
+      dstCopyLevel,
+      srcCopyBaseArrayLayer,
+      dstCopyBaseArrayLayer,
+    } = t.params;
+    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
+
+    const copySize: [number, number, number] = [
+      srcTextureSize.width >> srcCopyLevel,
+      srcTextureSize.height >> srcCopyLevel,
+      srcTextureSize.depthOrArrayLayers - Math.max(srcCopyBaseArrayLayer, dstCopyBaseArrayLayer),
+    ];
+    const sourceTexture = t.device.createTexture({
+      format,
+      size: srcTextureSize,
+      usage:
+        GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+      mipLevelCount: srcCopyLevel + 1,
+    });
+    const destinationTexture = t.device.createTexture({
+      format,
+      size: [
+        copySize[0] << dstCopyLevel,
+        copySize[1] << dstCopyLevel,
+        srcTextureSize.depthOrArrayLayers,
+      ] as const,
+      usage:
+        GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+      mipLevelCount: dstCopyLevel + 1,
+    });
+
+    let initialStencilData: undefined | Uint8Array = undefined;
+    if (kTextureFormatInfo[format].stencil) {
+      initialStencilData = t.GetInitialStencilDataPerMipLevel(srcTextureSize, format, srcCopyLevel);
+      t.InitializeStencilAspect(
+        sourceTexture,
+        initialStencilData,
+        srcCopyLevel,
+        srcCopyBaseArrayLayer,
+        copySize
+      );
+    }
+    if (kTextureFormatInfo[format].depth) {
+      t.InitializeDepthAspect(sourceTexture, format, srcCopyLevel, srcCopyBaseArrayLayer, copySize);
+    }
+
+    const encoder = t.device.createCommandEncoder();
+    encoder.copyTextureToTexture(
+      {
+        texture: sourceTexture,
+        mipLevel: srcCopyLevel,
+        origin: { x: 0, y: 0, z: srcCopyBaseArrayLayer },
+      },
+      {
+        texture: destinationTexture,
+        mipLevel: dstCopyLevel,
+        origin: { x: 0, y: 0, z: dstCopyBaseArrayLayer },
+      },
+      copySize
+    );
+    t.queue.submit([encoder.finish()]);
+
+    if (kTextureFormatInfo[format].stencil) {
+      assert(initialStencilData !== undefined);
+      t.VerifyStencilAspect(
+        destinationTexture,
+        initialStencilData,
+        dstCopyLevel,
+        dstCopyBaseArrayLayer,
+        copySize
+      );
+    }
+    if (kTextureFormatInfo[format].depth) {
+      t.VerifyDepthAspect(
+        destinationTexture,
+        format,
+        dstCopyLevel,
+        dstCopyBaseArrayLayer,
+        copySize
+      );
+    }
+  });
