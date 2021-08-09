@@ -220,28 +220,6 @@ function generateBindingDeclare(group: number, binding: GPUBindGroupLayoutEntry)
         }
         // TODO: it seems that cts defines the viewDimenstion type to
         // '2d' only. Not sure whether we shoud change it now.
-        /*case '1d': {
-          assert(!isDepth);
-          textureType = 'texture_1d';
-          break;
-        }
-        case '2d-array': {
-          textureType = isDepth ? 'texture_depth_2d_array' : 'texture_2d_array';
-          break;
-        }
-        case 'cube': {
-          textureType = isDepth ? 'texture_depth_cube' : 'texture_cube';
-          break;
-        }
-        case 'cube-array': {
-          textureType = isDepth ? 'texture_depth_cube_array' : 'texture_cube_array';
-          break;
-        }
-        case '3d': {
-          assert(!isDepth);
-          textureType = 'texture_3d';
-          break;
-        }*/
         default:
           unreachable();
       }
@@ -291,15 +269,11 @@ function generateShaderCode(
   const bindGroupLayouts = [];
 
   for (let i = 0; i < bindGroups.length; ++i) {
-    //if (bindGroups[i].length === 0) {
-    //  continue;
-    //}
+    // Support empty bindGroupLayout
     const entries = [];
     for (let j = 0; j < bindGroups[i].length; ++j) {
       const binding = bindGroups[i][j];
-      //if (binding === undefined) {
-      //  continue;
-      //}
+      assert(binding !== undefined);
       entries.push(bindGroups[i][j]);
       const declare = generateBindingDeclare(i, binding);
       switch (binding.visibility) {
