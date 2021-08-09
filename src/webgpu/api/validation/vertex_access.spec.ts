@@ -62,6 +62,8 @@ import { GPUConst } from '../../constants.js';
 
 import { ValidationTest } from './validation_test.js';
 
+// Map the general type (u32, s32, f32) to list of compatible WGSL types and incompatible WGSL typs
+// Used to test the attribute type validation when creating render pipeline
 const typeCompatibleMap: {
   [k: string]: { compatibleWGSLType: string[]; incompatibleWGSLType: string[] };
 } = {
@@ -228,6 +230,7 @@ class DrawCall {
   }
 }
 
+// Classes that indicate how to call setIndexBuffer and setIndexBuffer
 class BufferMapping {
   buffer: GPUBuffer;
   offset?: number;
@@ -269,11 +272,6 @@ class F extends ValidationTest {
     const vertexComputedBoundSize =
       bufferBoundSize === undefined ? bufferSize - vertexComputedOffset : bufferBoundSize;
     return [vertexComputedOffset, vertexComputedBoundSize];
-  }
-
-  createBundle(): GPURenderBundleEncoder {
-    const bundleDesc: GPURenderBundleEncoderDescriptor = { colorFormats: ['rgba8unorm'] };
-    return this.device.createRenderBundleEncoder(bundleDesc);
   }
 
   // Create a vertex shader module with given attributes wgsl type
@@ -440,7 +438,9 @@ class F extends ValidationTest {
     const renderPipeline = this.createRenderPipelineFromBufferLayout(vertexBufferLayouts);
 
     const [encoder, pass] = this.createCommandEncoder();
-    const bundleEncoder: GPURenderBundleEncoder = this.createBundle();
+
+    const bundleDesc: GPURenderBundleEncoderDescriptor = { colorFormats: ['rgba8unorm'] };
+    const bundleEncoder: GPURenderBundleEncoder = this.device.createRenderBundleEncoder(bundleDesc);
 
     if (setPipelineBeforeBuffer) {
       if (useBundle) {
@@ -487,64 +487,33 @@ class F extends ValidationTest {
       }
     }
   }
+
+  // Test one given draw call with given buffer setting with/out using bundle and setting buffer
+  // before/after setting pipeline. If the draw call is null, we only test setting buffer and pipeline.
+  testSingleShoot(
+    vertexBufferLayouts: GPUVertexBufferLayout[],
+    indexBufferMappings: IndexBufferMapping[],
+    vertexBufferMappings: VertexBufferMapping[],
+    drawCall: DrawCall | null,
+    isSuccess: boolean
+  ) {
+    [true, false].forEach(setPipelineBeforeBuffer => {
+      [true, false].forEach(useBundle => {
+        this.testBuffer(
+          vertexBufferLayouts,
+          indexBufferMappings,
+          vertexBufferMappings,
+          drawCall,
+          isSuccess,
+          setPipelineBeforeBuffer,
+          useBundle
+        );
+      });
+    });
+  }
 }
 
 export const g = makeTestGroup(F);
-
-g.test('basic').fn(async t => {
-  const vertexBufferLayouts: GPUVertexBufferLayout[] = [
-    {
-      arrayStride: 20,
-      stepMode: 'vertex',
-      attributes: [
-        { format: 'float32x4', offset: 0, shaderLocation: 0 },
-        { format: 'uint8x2', offset: 16, shaderLocation: 1 },
-      ],
-    },
-    {
-      arrayStride: 8,
-      stepMode: 'vertex',
-      attributes: [{ format: 'unorm8x2', offset: 0, shaderLocation: 3 }],
-    },
-  ];
-  const pipeline = t.createRenderPipelineFromBufferLayout(vertexBufferLayouts);
-
-  // Create buffers
-  const buffers = [
-    t.device.createBuffer({
-      size: 24 * 4,
-      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.INDEX,
-      mappedAtCreation: false,
-    }),
-    t.device.createBuffer({ size: 2 * 4, usage: GPUBufferUsage.VERTEX, mappedAtCreation: false }),
-  ];
-
-  // Create command encoder
-  const [encoder, pass] = t.createCommandEncoder();
-
-  // Set vertex buffers
-  t.setVertexBuffers(pass, [
-    new VertexBufferMapping(0, buffers[0], 0, 24 * 4),
-    new VertexBufferMapping(1, buffers[0], 0),
-  ]);
-
-  // Set pipeline
-  pass.setPipeline(pipeline);
-
-  // Insert draw call
-  pass.draw(4, 1, 0, 0);
-
-  t.setIndexBuffers(pass, [new IndexBufferMapping(buffers[0], 'uint16')]);
-
-  pass.drawIndexed(4, 1, 0, 0, 0);
-
-  // Finish encoder
-  pass.endPass();
-  const commandBuffer = encoder.finish();
-
-  // Submit command buffer
-  t.queue.submit([commandBuffer]);
-});
 
 // Buffer usage list for testing index and vertex buffer
 const bufferUsageListForTest: number[] = [
@@ -606,8 +575,6 @@ Related set*Buffer validation rules:
           return [GPUConst.BufferUsage.MAP_WRITE];
         }
       })
-      .combine('setPipelineBeforeBuffer', [false, true])
-      .combine('useBundle', [false, true])
   )
   .fn(t => {
     const p = t.params;
@@ -645,14 +612,12 @@ Related set*Buffer validation rules:
     const isSuccess: boolean = isUsageValid;
 
     // Test setIndexBuffer and setVertexBuffer without calling draw
-    t.testBuffer(
+    t.testSingleShoot(
       t.getBasicVertexBufferLayouts({}),
       indexBufferMappings,
       vertexBufferMappings,
       null,
-      isSuccess,
-      p.setPipelineBeforeBuffer,
-      p.useBundle
+      isSuccess
     );
   });
 
@@ -748,9 +713,6 @@ Related set*Buffer validation rules:
           return [0];
         }
       })
-      .beginSubcases()
-      .combine('setPipelineBeforeBuffer', [false, true])
-      .combine('useBundle', [false, true])
   )
   .fn(t => {
     const p = t.params;
@@ -817,14 +779,12 @@ Related set*Buffer validation rules:
 
     const isSetBufferSuccess = isSetIBSuccess && isSetVBSuccess;
 
-    t.testBuffer(
+    t.testSingleShoot(
       vertexBufferLayouts,
       indexBufferMappings,
       vertexBufferMappings,
       null,
-      isSetBufferSuccess,
-      p.setPipelineBeforeBuffer,
-      p.useBundle
+      isSetBufferSuccess
     );
 
     if (isSetBufferSuccess) {
@@ -839,48 +799,40 @@ Related set*Buffer validation rules:
       // size is correctly set for vertex buffer.
       drawCall.drawType = 'draw';
       drawCall.vertexCount = maxVertexCount;
-      t.testBuffer(
+      t.testSingleShoot(
         vertexBufferLayouts,
         indexBufferMappings,
         vertexBufferMappings,
         drawCall,
-        isDrawSuccess,
-        p.setPipelineBeforeBuffer,
-        p.useBundle
+        isDrawSuccess
       );
       drawCall.vertexCount = maxVertexCount + 1;
-      t.testBuffer(
+      t.testSingleShoot(
         vertexBufferLayouts,
         indexBufferMappings,
         vertexBufferMappings,
         drawCall,
-        false,
-        p.setPipelineBeforeBuffer,
-        p.useBundle
+        false
       );
 
       // Use draw to validate that max valid index count is what we computed, showing that bound
       // size is correctly set for index buffer.
       drawCall.drawType = 'drawIndexed';
       drawCall.indexCount = maxIndexCount;
-      t.testBuffer(
+      t.testSingleShoot(
         vertexBufferLayouts,
         indexBufferMappings,
         vertexBufferMappings,
         drawCall,
-        isDrawSuccess,
-        p.setPipelineBeforeBuffer,
-        p.useBundle
+        isDrawSuccess
       );
       drawCall.indexCount = maxIndexCount + 1;
-      t.testBuffer(
+      t.testSingleShoot(
         vertexBufferLayouts,
         indexBufferMappings,
         vertexBufferMappings,
         drawCall,
-        false,
-        p.setPipelineBeforeBuffer,
-        p.useBundle
+        false
       );
     }
   });
@@ -1100,33 +1052,6 @@ Test the vertex buffer layuouts validation within creating render pipeline.
     const isBufferCountNoLargerThanMax: boolean =
       p.bufferCount + p.additionalEmptyBufferCount <= kMaxVertexBuffers;
 
-    /*
-    // Create the shader
-    const vertexShader: GPUShaderModule = t.generateVertexShaderModuleFromBufferDescriptor(
-      vertexBufferDescriptorsForShader
-    );
-
-    // Create the pipeline and test the validation
-    const pipelineDesc: GPURenderPipelineDescriptor = {
-      vertex: {
-        module: vertexShader,
-        entryPoint: 'main',
-        buffers: vertexBufferLayoutsForPipeline,
-      },
-      fragment: {
-        module: t.device.createShaderModule({
-          code: `
-          [[stage(fragment)]] fn main() -> [[location(0)]] vec4<f32> {
-            return vec4<f32>(1.0, 0.0, 0.0, 1.0);
-          }`,
-        }),
-        entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm', writeMask: 0 }],
-      },
-      primitive: { topology: 'triangle-list' },
-    };
-    */
-
     const isSuccess =
       isArrayStrideMultipleOf4 &&
       isArrayStrideNoLargerThanMax &&
@@ -1151,5 +1076,3 @@ Test the vertex buffer layuouts validation within creating render pipeline.
       });
     }
   });
-
-g.test('buffer_must_unmap_before_queue_submit').unimplemented();
