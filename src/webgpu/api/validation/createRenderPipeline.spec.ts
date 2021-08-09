@@ -187,3 +187,17 @@ g.test('sample_count_must_be_valid')
 
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
+
+g.test('pipeline_layout,device_mismatch')
+  .desc(
+    'Tests createRenderPipeline(Async) cannot be called with a pipeline layout created from another device'
+  )
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false] as const))
+  .unimplemented();
+
+g.test('shader_module,device_mismatch')
+  .desc(
+    'Tests createRenderPipeline(Async) cannot be called with a shader module created from another device'
+  )
+  .paramsSubcasesOnly(u => u.combine('isAsync', [true, false]).combine('mismatched', [true, false]))
+  .unimplemented();

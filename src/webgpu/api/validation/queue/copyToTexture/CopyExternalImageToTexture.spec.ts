@@ -609,6 +609,13 @@ g.test('destination_texture,state')
     t.runTest({ source: imageBitmap }, { texture: dstTexture }, copySize, state === 'valid');
   });
 
+g.test('destination_texture,device_mismatch')
+  .desc(
+    'Tests copyExternalImageToTexture cannot be called with a destination texture created from another device'
+  )
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .unimplemented();
+
 g.test('destination_texture,dimension')
   .desc(
     `

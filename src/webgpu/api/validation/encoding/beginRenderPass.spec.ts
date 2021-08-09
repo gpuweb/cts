@@ -23,3 +23,31 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { ValidationTest } from '../validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);
+
+g.test('color_attachments,device_mismatch')
+  .desc(
+    `
+    Tests beginRenderPass cannot be called with color attachments whose texure view or resolve target is created from another device
+    The 'view' and 'resolveTarget' are:
+    - created from {same, different} device in same color attachment
+    - created from same device in same color attachment, but different in another color attachment
+    `
+  )
+  .paramsSubcasesOnly(u =>
+    u.combine('sameAttachment', [true, false]).combine('mismatched', [true, false])
+  )
+  .unimplemented();
+
+g.test('depth_stencil_attachment,device_mismatch')
+  .desc(
+    'Tests beginRenderPass cannot be called with a depth stencil attachment whose texure view is created from another device'
+  )
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .unimplemented();
+
+g.test('occlusion_query_set,device_mismatch')
+  .desc(
+    'Tests beginRenderPass cannot be called with an occlusion query set created from another device'
+  )
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .unimplemented();

@@ -492,3 +492,31 @@ g.test('texture,resource_state')
       });
     }, state === 'invalid');
   });
+
+g.test('bind_group_layout,device_mismatch')
+  .desc(
+    'Tests createBindGroup cannot be called with a bind group layout created from another device'
+  )
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .unimplemented();
+
+g.test('binding_resources,device_mismatch')
+  .desc(
+    `
+    Tests createBindGroup cannot be called with various resources created from another device
+    - two resources from same device
+    - two resources from different device
+    `
+  )
+  .paramsSubcasesOnly(u =>
+    u
+      .combine('bindingResource', [
+        'buffer',
+        'sampler',
+        'texture',
+        'storageTexture',
+        'externalTexture',
+      ] as const)
+      .combine('mismatched', [true, false])
+  )
+  .unimplemented();

@@ -125,6 +125,18 @@ g.test('state_and_binding_index')
     }
   });
 
+g.test('bind_group,device_mismatch')
+  .desc(
+    `
+    Tests setBindGroup cannot be called with a bind group created from another device
+    - x= setBindGroup {with, without} Uint32Array
+    `
+  )
+  .paramsSubcasesOnly(u =>
+    u.combine('encoderType', kProgrammableEncoderTypes).combine('mismatched', [true, false])
+  )
+  .unimplemented();
+
 g.test('dynamic_offsets_passed_but_not_expected')
   .desc('Tests that setBindGroup correctly errors on unexpected dynamicOffsets.')
   .params(u => u.combine('encoderType', kProgrammableEncoderTypes))

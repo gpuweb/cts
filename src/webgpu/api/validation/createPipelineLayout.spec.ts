@@ -102,3 +102,14 @@ g.test('number_of_bind_group_layouts_exceeds_the_maximum_value').fn(async t => {
     t.device.createPipelineLayout(badPipelineLayoutDescriptor);
   });
 });
+
+g.test('bind_group_layouts,device_mismatch')
+  .desc(
+    `
+    Tests createPipelineLayout cannot be called with bind group layouts created from another device
+    - two layouts from same device
+    - two layouts from different device
+    `
+  )
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .unimplemented();

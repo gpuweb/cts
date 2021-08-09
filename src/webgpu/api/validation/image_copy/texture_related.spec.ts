@@ -70,6 +70,20 @@ g.test('valid')
     );
   });
 
+g.test('texture,device_mismatch')
+  .desc('Tests the image copies cannot be called with a texture created from another device')
+  .paramsSubcasesOnly(u =>
+    u.combine('method', kImageCopyTypes).combine('mismatched', [true, false])
+  )
+  .unimplemented();
+
+g.test('buffer,device_mismatch')
+  .desc('Tests the image copies cannot be called with a buffer created from another device')
+  .paramsSubcasesOnly(u =>
+    u.combine('method', ['CopyB2T', 'CopyT2B'] as const).combine('mismatched', [true, false])
+  )
+  .unimplemented();
+
 g.test('usage')
   .desc(`The texture must have the appropriate COPY_SRC/COPY_DST usage.`)
   .params(u =>
