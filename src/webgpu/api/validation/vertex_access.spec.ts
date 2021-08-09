@@ -574,7 +574,8 @@ Related set*Buffer validation rules:
       drawCall.vertexCount = 4;
       drawCall.firstVertex = 0;
       // DrawIndexed
-      drawCall.indexCount = 4;
+      const indexFormatBytes = p.indexFormat === 'uint16' ? 2 : 4;
+      drawCall.indexCount = 32 / indexFormatBytes;
       drawCall.firstIndex = 0;
       drawCall.baseVertex = 0;
       // Both Draw and DrawIndexed
