@@ -7,6 +7,21 @@ drawIndexedIndirect are covered in robust access.
 
 TODO: make sure this isn't already covered somewhere else, review, organize, and implement.
 > - In encoder.finish():
+>     - setVertexBuffer and setIndexBuffer commands (even if no draw):
+>         - Implicit offset/size are computed correctly. E.g.:
+>             { offset:         0, boundSize:         0, bufferSize: 24 },
+>             { offset:         0, boundSize: undefined, bufferSize: 24 },
+>             { offset: undefined, boundSize:         0, bufferSize: 24 },
+>             { offset: undefined, boundSize: undefined, bufferSize: 24 },
+>             { offset:         8, boundSize:        16, bufferSize: 24 },
+>             { offset:         8, boundSize: undefined, bufferSize: 24 },
+>         - Computed {index, vertex} buffer size is zero.
+>             (Omit draw command if it's not necessary to trigger error, otherwise test both with and without draw command to make sure error happens at the right time.)
+>             { offset: 24, boundSize: undefined, bufferSize: 24, _ok: false },
+>         - Bound range out-of-bounds on the GPUBuffer. E.g.:
+>             - x= offset in {0,8}
+>             - x= boundSize in {8,16,17}
+>             - x= extraSpaceInBuffer in {-1,0}
 >     - All (non/indexed, in/direct) draw commands
 >         - Same GPUBuffer bound to multiple vertex buffer slots
 >             - Non-overlapping, overlapping ranges
@@ -118,7 +133,7 @@ interface VertexBufferDescriptorForWGSLShader {
 // Class that indicate how to call a draw function
 class DrawCall {
   test: ValidationTest;
-  drawType: 'draw' | 'drawIndexed' | 'drawIndirect' | 'drawIndexedIndirect' = 'draw';
+  drawType: 'draw' | 'drawIndexed' = 'draw';
 
   // Draw
   vertexCount: number = 4;
@@ -153,37 +168,7 @@ class DrawCall {
         );
         break;
       }
-      case 'drawIndirect': {
-        encoder.drawIndirect(this.generateIndirectBuffer(), 0);
-        break;
-      }
-      case 'drawIndexedIndirect': {
-        encoder.drawIndexedIndirect(this.generateIndexedIndirectBuffer(), 0);
-        break;
-      }
     }
-  }
-
-  private generateIndirectBuffer(): GPUBuffer {
-    const indirectArray = new Int32Array([
-      this.vertexCount,
-      this.instanceCount,
-      this.firstVertex,
-      this.firstInstance,
-    ]);
-    return this.test.makeBufferWithContents(indirectArray, GPUBufferUsage.INDIRECT);
-  }
-
-  // Create an indirect buffer containing indexed draw call values
-  private generateIndexedIndirectBuffer(): GPUBuffer {
-    const indirectArray = new Int32Array([
-      this.indexCount,
-      this.instanceCount,
-      this.firstIndex,
-      this.baseVertex,
-      this.firstInstance,
-    ]);
-    return this.test.makeBufferWithContents(indirectArray, GPUBufferUsage.INDIRECT);
   }
 }
 
@@ -615,64 +600,3 @@ Related set*Buffer validation rules:
       );
     }
   });
-
-g.test('set_buffer_parameter_validation')
-  .desc(
-    `
-In this test we test the parameter validation in setIndexBuffer and setVertexBuffer, and we test
-that implicit parameter used in setIndexBuffer and setVertexBuffer is computed correctly, and use
-draw and drawIndexed to validate the computed value.
-    - Test that bound range out-of-bounds on the GPUBuffer is catched by set*Buffer.
-    - Exam that implicit offset/size are computed correctly.
-    - Test that validation catch the situation that buffer offset > buffer size.
-    - Test that setVertexBuffer validate the slot is less than maxVertexBuffers.
-    - Test that given/computed zero index/vertex buffer bound size is valid as long as drawing
-      0 index/vertex.
-    - Test setting index and vertex buffer before/after setPipeline make no different.
-
-Related set*Buffer validation rules:
-    - Index buffer
-        - offset is a multiple of indexFormat’s byte size.
-        - offset + size ≤ buffer.[[size]].
-    - Vertex buffer
-        - slot < this.[[device]].[[limits]].maxVertexBuffers.
-        - offset is a multiple of 4.
-        - offset + size ≤ buffer.[[size]].
-`
-  )
-  .unimplemented();
-
-g.test('create_render_pipeline_vertex_buffer_layout_must_valid')
-  .desc(
-    `
-Test the vertex buffer layuouts validation within creating render pipeline.
-    - Test aspect: arrayStrideValue, attributeOffset, attributeCount, wgslTypeCompatible,
-      bufferCount, indistinctLocation
-    - When testing the arrayStrideValue aspect, we test the following validation in GPUVertexBufferLayout:
-      - descriptor.arrayStride ≤ device.[[device]].[[limits]].maxVertexBufferArrayStride.
-      - descriptor.arrayStride is a multiple of 4.
-    - When testing the attributeOffset aspect, we test the following validation in GPUVertexBufferLayout:
-      - For each attribute attrib in the list descriptor.attributes:
-        - If descriptor.arrayStride is zero:
-          - attrib.offset + sizeof(attrib.format) ≤ device.[[device]].[[limits]].maxVertexBufferArrayStride.
-        - Otherwise:
-          - attrib.offset + sizeof(attrib.format) ≤ descriptor.arrayStride.
-        - attrib.offset is a multiple of the minimum of 4 and sizeof(attrib.format).
-    - When testing the attributeCount aspect, we test the following validation:
-      - In GPUVertexBufferLayout, for each attribute attrib in the list descriptor.attributes:
-        - attrib.shaderLocation is less than device.[[device]].[[limits]].maxVertexAttributes.
-      - In GPUVertexState, The sum of vertexBuffer.attributes.length, over every vertexBuffer in
-        descriptor.buffers, is less than or equal to device.[[device]].[[limits]].maxVertexAttributes.
-    - When testing the wgslTypeCompatible aspect, we test the following validation in GPUVertexBufferLayout:
-      - For each vertex attribute that serve as a input of the vertex shader entry point, the corresponding
-        attrib element of descriptor.attributes with matched shader location satisfying that:
-        - The format in shader must be compatible with attrbi.format
-    - When testing the bufferCount aspect, we test the following validation in GPUVertexState:
-      - descriptor.buffers.length is less than or equal to device.[[device]].[[limits]].maxVertexBuffers.
-        - By changing the number of buffers with attributes and adding buffer with no attribute
-    - When testing the indistinctLocation aspect, we test the following validation in GPUVertexState:
-      - Each attrib in the union of all GPUVertexAttribute across descriptor.buffers has a distinct
-        attrib.shaderLocation value.
-`
-  )
-  .unimplemented();
