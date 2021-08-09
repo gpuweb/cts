@@ -57,57 +57,13 @@ TODO: make sure this isn't already covered somewhere else, review, organize, and
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { kMaxVertexBufferArrayStride, kMaxVertexBuffers } from '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 
 import { ValidationTest } from './validation_test.js';
 
-// Map the general type (u32, s32, f32) to list of compatible WGSL types and incompatible WGSL typs
-// Used to test the attribute type validation when creating render pipeline
-const typeCompatibleMap: {
-  [k: string]: { compatibleWGSLType: string[]; incompatibleWGSLType: string[] };
-} = {
-  float: {
-    compatibleWGSLType: ['f32', 'vec2<f32>', 'vec3<f32>', 'vec4<f32>'],
-    incompatibleWGSLType: [
-      'u32',
-      'vec2<u32>',
-      'vec3<u32>',
-      'vec4<u32>',
-      'i32',
-      'vec2<i32>',
-      'vec3<i32>',
-      'vec4<i32>',
-    ],
-  },
-  uint: {
-    compatibleWGSLType: ['u32', 'vec2<u32>', 'vec3<u32>', 'vec4<u32>'],
-    incompatibleWGSLType: [
-      'i32',
-      'vec2<i32>',
-      'vec3<i32>',
-      'vec4<i32>',
-      'f32',
-      'vec2<f32>',
-      'vec3<f32>',
-      'vec4<f32>',
-    ],
-  },
-  sint: {
-    compatibleWGSLType: ['i32', 'vec2<i32>', 'vec3<i32>', 'vec4<i32>'],
-    incompatibleWGSLType: [
-      'u32',
-      'vec2<u32>',
-      'vec3<u32>',
-      'vec4<u32>',
-      'f32',
-      'vec2<f32>',
-      'vec3<f32>',
-      'vec4<f32>',
-    ],
-  },
-};
-
+// A map for buffer format informations. compatibleType indicate the general class of a format, and
+// can further map to compatible and incompatible WGSL types. I.e., for "float", "f32" and "vec*<f32>"
+// are compatible WGSL types, while "i32" and others are incompatible WGSL types.
 const typeInfoMap: {
   [k: string]: { wgslType: string; sizeInBytes: number; compatibleType: string };
 } = {
@@ -153,12 +109,13 @@ const typeInfoMap: {
   },
 };
 
+// Class that indicate how to make input attribute for vertex shader module
 interface VertexBufferDescriptorForWGSLShader {
-  offset: GPUSize64;
   shaderLocation: GPUIndex32;
   wgslType: string;
 }
 
+// Class that indicate how to call a draw function
 class DrawCall {
   test: ValidationTest;
   drawType: 'draw' | 'drawIndexed' | 'drawIndirect' | 'drawIndexedIndirect' = 'draw';
@@ -262,18 +219,6 @@ class IndexBufferMapping extends BufferMapping {
 }
 
 class F extends ValidationTest {
-  // Compute the parameters for setting index/vertex buffer binding following the spec
-  computeBufferOffsetAndBoundSize(
-    bufferSize: number,
-    bufferOffset?: number,
-    bufferBoundSize?: number
-  ): [number, number] {
-    const vertexComputedOffset = bufferOffset === undefined ? 0 : bufferOffset;
-    const vertexComputedBoundSize =
-      bufferBoundSize === undefined ? bufferSize - vertexComputedOffset : bufferBoundSize;
-    return [vertexComputedOffset, vertexComputedBoundSize];
-  }
-
   // Create a vertex shader module with given attributes wgsl type
   generateVertexShaderModuleFromBufferDescriptor(
     vertexBufferDescriptor: VertexBufferDescriptorForWGSLShader[]
@@ -300,7 +245,6 @@ class F extends ValidationTest {
         .reduce((a, c) => [...a, ...c.attributes], [] as GPUVertexAttribute[])
         .map(attr => {
           return {
-            offset: attr.offset,
             shaderLocation: attr.shaderLocation,
             wgslType: typeInfoMap[attr.format].wgslType,
           } as VertexBufferDescriptorForWGSLShader;
@@ -308,6 +252,10 @@ class F extends ValidationTest {
     );
   }
 
+  // Create a render pipeline with given vertex buffer layouts. The vertex shader module is created
+  // using the exact matching WGSL type (as in typeInfoMap) for all attributes in all buffers in layouts.
+  // If a different vertex shader is wanted (especially when testing WGSL type compatibility), a standalone
+  // list of vertex buffer descriptor should be given.
   createRenderPipelineFromBufferLayout(
     vertexBufferLayoutsForPipelineDescriptor: GPUVertexBufferLayout[],
     vertexBufferDescriptorForShaderModule?: VertexBufferDescriptorForWGSLShader[]
@@ -338,8 +286,8 @@ class F extends ValidationTest {
     });
   }
 
+  // Create command encoder and render pass encoder
   createCommandEncoder(): [GPUCommandEncoder, GPURenderPassEncoder] {
-    // Create command encoder
     const colorAttachment = this.device.createTexture({
       format: 'rgba8unorm',
       size: { width: 2, height: 1, depthOrArrayLayers: 1 },
@@ -529,7 +477,8 @@ g.test('set_buffer_usage_validation_and_overlap')
 In this test, we test the usage validation within setIndexBuffer and setVertexBuffer, and test the
 buffer overlapping, i.e. one GPUBuffer is bound to multiple vertex buffer slot or both index buffer
 and vertex buffer slot, with different offset setting (range completely overlap, partially overlap
-and no renge overlap). No draw called in this test.
+and no renge overlap). If the setting is valid, we also call draw and drawIndexed to test that no
+validation errors occurs.
     - Test overlapping {vertex/vertex,vertex/index} buffers are valid without draw.
     - Test all range overlapping situation for buffers
     - Validate that calling set*Buffer before/after setPipeline is the same
@@ -549,11 +498,14 @@ Related set*Buffer validation rules:
       .combine('indexBufferOffsetStep', [0])
       .combine('instanceBufferOffsetStep', [0, 1, 2])
       .expand('vertexBufferOffsetStep', p => {
-        return Array(p.instanceBufferOffsetStep + 2)
+        return Array(p.instanceBufferOffsetStep + 3)
           .fill(0)
           .map((_, index) => index);
       })
       .beginSubcases()
+      // We have 3 buffers slot, i.e. a index buffer, a instance step mode vertex buffer and a vertex
+      // step mode vertex buffer should be set. To test buffer overlap, we have 3 GPU buffers, and
+      // each buffer slot is bound to one of them.
       // Test all overlap cases for three buffers, i.e. 000, 001, 010, 011, 012
       .combine('indexBufferId', [0])
       .combine('instanceBufferId', [0, 1])
@@ -569,6 +521,7 @@ Related set*Buffer validation rules:
       .combine('buffer2Usage', bufferUsageListForTest)
       .expand('buffer3Usage', p => {
         if (p.vertexBufferId === 2) {
+          // Buffer 3 is used as vertex setp mode buffer, test all usage
           return bufferUsageListForTest;
         } else {
           // Buffer 3 unused
@@ -609,58 +562,59 @@ Related set*Buffer validation rules:
       (usages[p.indexBufferId] & GPUBufferUsage.INDEX) === GPUBufferUsage.INDEX &&
       (usages[p.instanceBufferId] & GPUBufferUsage.VERTEX) === GPUBufferUsage.VERTEX &&
       (usages[p.vertexBufferId] & GPUBufferUsage.VERTEX) === GPUBufferUsage.VERTEX;
-    const isSuccess: boolean = isUsageValid;
+
+    const vertexBufferLayouts = t.getBasicVertexBufferLayouts({
+      arrayStride: 8,
+      attributePerBuffer: 2,
+      offsetStep: 4,
+      formatList: ['float32'],
+      instanceStepModeBufferCount: 1,
+      vertexStepModeBufferCount: 1,
+    });
 
     // Test setIndexBuffer and setVertexBuffer without calling draw
     t.testSingleShoot(
-      t.getBasicVertexBufferLayouts({}),
+      vertexBufferLayouts,
       indexBufferMappings,
       vertexBufferMappings,
       null,
-      isSuccess
+      isUsageValid
     );
-  });
 
-const bufferBindingParamList: { bufferSize: number; offset?: number; boundSize?: number }[] = [
-  // Valid settings with/out implicit parameters
-  { bufferSize: 64, offset: 0, boundSize: 64 },
-  { bufferSize: 64, offset: 0, boundSize: undefined },
-  { bufferSize: 64, offset: undefined, boundSize: 64 },
-  { bufferSize: 64, offset: undefined, boundSize: undefined },
-  { bufferSize: 64, offset: 32, boundSize: 32 },
-  { bufferSize: 64, offset: 32, boundSize: undefined },
-  { bufferSize: 64, offset: undefined, boundSize: 32 },
-  // Bingding buffer with zero bound size
-  // { bufferSize: 64, offset: 0, boundSize: 0 },
-  { bufferSize: 64, offset: 64, boundSize: 0 },
-  { bufferSize: 64, offset: 64, boundSize: undefined },
-  // Strange buffer size
-  { bufferSize: 63, offset: 0, boundSize: 63 },
-  { bufferSize: 63, offset: 0, boundSize: undefined },
-  // Bound range OOB
-  { bufferSize: 63, offset: 0, boundSize: 64 },
-  // { bufferSize: 63, offset: 64, boundSize: -1 },
-  { bufferSize: 63, offset: 64, boundSize: 0 },
-  { bufferSize: 63, offset: 64, boundSize: undefined },
-  { bufferSize: 63, offset: 68, boundSize: undefined },
-  { bufferSize: 63, offset: 2147483647, boundSize: undefined },
-  { bufferSize: 63, offset: 2147483648, boundSize: undefined },
-  { bufferSize: 63, offset: 4294967295, boundSize: undefined },
-  { bufferSize: 63, offset: 4294967296, boundSize: undefined },
-  { bufferSize: 64, offset: 4, boundSize: 2147483647 },
-  { bufferSize: 64, offset: 4, boundSize: 2147483648 },
-  { bufferSize: 64, offset: 4, boundSize: 4294967295 },
-  { bufferSize: 64, offset: 4, boundSize: 4294967296 },
-  // Offset alignment
-  { bufferSize: 64, offset: 1, boundSize: 63 },
-  { bufferSize: 64, offset: 2, boundSize: 62 },
-  { bufferSize: 64, offset: 3, boundSize: 61 },
-  { bufferSize: 64, offset: 4, boundSize: 60 },
-  { bufferSize: 64, offset: 1, boundSize: undefined },
-  { bufferSize: 64, offset: 2, boundSize: undefined },
-  { bufferSize: 64, offset: 3, boundSize: undefined },
-  { bufferSize: 64, offset: 4, boundSize: undefined },
-];
+    if (isUsageValid) {
+      // Test that the buffer setting won't cause validation error in draw functions.
+
+      const drawCall = new DrawCall(t);
+      // Draw
+      drawCall.vertexCount = 4;
+      drawCall.firstVertex = 0;
+      // DrawIndexed
+      drawCall.indexCount = 4;
+      drawCall.firstIndex = 0;
+      drawCall.baseVertex = 0;
+      // Both Draw and DrawIndexed
+      drawCall.instanceCount = 4;
+      drawCall.firstInstance = 0;
+
+      drawCall.drawType = 'draw';
+      t.testSingleShoot(
+        vertexBufferLayouts,
+        indexBufferMappings,
+        vertexBufferMappings,
+        drawCall,
+        isUsageValid
+      );
+
+      drawCall.drawType = 'drawIndexed';
+      t.testSingleShoot(
+        vertexBufferLayouts,
+        indexBufferMappings,
+        vertexBufferMappings,
+        drawCall,
+        isUsageValid
+      );
+    }
+  });
 
 g.test('set_buffer_parameter_validation')
   .desc(
@@ -686,156 +640,7 @@ Related set*Buffer validation rules:
         - offset + size ≤ buffer.[[size]].
 `
   )
-  .params(u =>
-    u
-      .combine('testAspect', ['indexBufferParam', 'vertexBufferParam', 'vertexSlot'])
-      .expand('indexBuffer', p => {
-        if (p.testAspect === 'indexBufferParam') {
-          return bufferBindingParamList;
-        } else {
-          return [{ bufferSize: 64, offset: undefined, boundSize: undefined }];
-        }
-      })
-      .expand('vertexBuffer', p => {
-        if (p.testAspect === 'vertexBufferParam') {
-          return bufferBindingParamList;
-        } else {
-          return [{ bufferSize: 64, offset: undefined, boundSize: undefined }];
-        }
-      })
-      .combine('indexFormat', ['uint16', 'uint32'] as GPUIndexFormat[])
-      .expand('vertexSlot', p => {
-        if (p.testAspect === 'vertexParam') {
-          return Array(2 * kMaxVertexBuffers)
-            .fill(0)
-            .map((_, index) => index);
-        } else {
-          return [0];
-        }
-      })
-  )
-  .fn(t => {
-    const p = t.params;
-    const indexFormatSize = p.indexFormat === 'uint16' ? 2 : 4;
-
-    const indexBuffer = t.createBufferWithState('valid', {
-      size: p.indexBuffer.bufferSize,
-      usage: GPUBufferUsage.INDEX,
-      mappedAtCreation: false,
-    });
-    const vertexBuffer = t.createBufferWithState('valid', {
-      size: p.vertexBuffer.bufferSize,
-      usage: GPUBufferUsage.VERTEX,
-      mappedAtCreation: false,
-    });
-
-    const indexBufferMappings: IndexBufferMapping[] = [
-      {
-        indexFormat: p.indexFormat,
-        buffer: indexBuffer,
-        offset: p.indexBuffer.offset,
-        size: p.indexBuffer.boundSize,
-      },
-    ];
-    const vertexBufferMappings: VertexBufferMapping[] = [
-      {
-        slot: p.vertexSlot,
-        buffer: vertexBuffer,
-        offset: p.vertexBuffer.offset,
-        size: p.vertexBuffer.boundSize,
-      },
-    ];
-
-    // Get a simple vertex buffer layout that only has one vertex step mode buffer with one f32 attribute
-    const vertexBufferLayouts: GPUVertexBufferLayout[] = t.getBasicVertexBufferLayouts({
-      arrayStride: 4,
-      attributePerBuffer: 1,
-      offsetStep: 0,
-      formatList: ['float32'],
-      instanceStepModeBufferCount: 0,
-      vertexStepModeBufferCount: 1,
-    });
-
-    const [vertexComputedOffset, vertexComputedBoundSize] = t.computeBufferOffsetAndBoundSize(
-      p.vertexBuffer.bufferSize,
-      p.vertexBuffer.offset,
-      p.vertexBuffer.boundSize
-    );
-    const [indexComputedOffset, indexComputedBoundSize] = t.computeBufferOffsetAndBoundSize(
-      p.indexBuffer.bufferSize,
-      p.indexBuffer.offset,
-      p.indexBuffer.boundSize
-    );
-
-    const isSetVBSuccess =
-      p.vertexSlot < kMaxVertexBuffers &&
-      vertexComputedOffset % 4 === 0 &&
-      vertexComputedBoundSize >= 0 &&
-      vertexComputedOffset + vertexComputedBoundSize <= p.vertexBuffer.bufferSize;
-    const isSetIBSuccess =
-      indexComputedOffset % indexFormatSize === 0 &&
-      indexComputedBoundSize >= 0 &&
-      indexComputedOffset + indexComputedBoundSize <= p.indexBuffer.bufferSize;
-
-    const isSetBufferSuccess = isSetIBSuccess && isSetVBSuccess;
-
-    t.testSingleShoot(
-      vertexBufferLayouts,
-      indexBufferMappings,
-      vertexBufferMappings,
-      null,
-      isSetBufferSuccess
-    );
-
-    if (isSetBufferSuccess) {
-      // Test with draw call
-      const maxVertexCount = Math.floor(vertexComputedBoundSize / 4);
-      const maxIndexCount = Math.floor(indexComputedBoundSize / indexFormatSize);
-
-      const drawCall = new DrawCall(t);
-      const isDrawSuccess = p.vertexSlot === 0;
-
-      // Use draw to validate that max valid vertex count is what we computed, showing that bound
-      // size is correctly set for vertex buffer.
-      drawCall.drawType = 'draw';
-      drawCall.vertexCount = maxVertexCount;
-      t.testSingleShoot(
-        vertexBufferLayouts,
-        indexBufferMappings,
-        vertexBufferMappings,
-        drawCall,
-        isDrawSuccess
-      );
-      drawCall.vertexCount = maxVertexCount + 1;
-      t.testSingleShoot(
-        vertexBufferLayouts,
-        indexBufferMappings,
-        vertexBufferMappings,
-        drawCall,
-        false
-      );
-
-      // Use draw to validate that max valid index count is what we computed, showing that bound
-      // size is correctly set for index buffer.
-      drawCall.drawType = 'drawIndexed';
-      drawCall.indexCount = maxIndexCount;
-      t.testSingleShoot(
-        vertexBufferLayouts,
-        indexBufferMappings,
-        vertexBufferMappings,
-        drawCall,
-        isDrawSuccess
-      );
-      drawCall.indexCount = maxIndexCount + 1;
-      t.testSingleShoot(
-        vertexBufferLayouts,
-        indexBufferMappings,
-        vertexBufferMappings,
-        drawCall,
-        false
-      );
-    }
-  });
+  .unimplemented();
 
 g.test('create_render_pipeline_vertex_buffer_layout_must_valid')
   .desc(
@@ -870,209 +675,4 @@ Test the vertex buffer layuouts validation within creating render pipeline.
         attrib.shaderLocation value.
 `
   )
-  .params(u =>
-    u
-      .combine('testAspect', [
-        'arrayStrideValue',
-        'wgslTypeCompatible',
-        'attributeOffset',
-        'attributeCount',
-        'bufferCount',
-        'indistinctLocation',
-      ])
-      .expand('arrayStride', p => {
-        if (p.testAspect === 'arrayStrideValue') {
-          return Array(70)
-            .fill(0)
-            .map((_, index) => index);
-        } else {
-          return [0, 64];
-        }
-      })
-      .expand('arrayStrideGoOverMax', p => {
-        if (p.testAspect === 'arrayStrideValue') {
-          return [false, true];
-        } else {
-          return [false];
-        }
-      })
-      .combine('attribFormat', ['uint8x2', 'float32x2', 'float32x4'] as GPUVertexFormat[])
-      .expand('attributeOffsetStep', p => {
-        if (p.testAspect === 'attributeOffset') {
-          // By default we have 2 attributes in a buffer, their offset is 0 and attributeOffsetStep.
-          // Therefore we can test the corner case for arrayStride = 64 and 0.
-          return [
-            1,
-            2,
-            3,
-            4,
-            16,
-            32,
-            64 - 16,
-            64 - 15,
-            64 - 8,
-            64 - 7,
-            64 - 4,
-            64 - 3,
-            64 - 2,
-            64 - 1,
-            64,
-            kMaxVertexBufferArrayStride - 16,
-            kMaxVertexBufferArrayStride - 15,
-            kMaxVertexBufferArrayStride - 8,
-            kMaxVertexBufferArrayStride - 7,
-            kMaxVertexBufferArrayStride - 4,
-            kMaxVertexBufferArrayStride - 3,
-            kMaxVertexBufferArrayStride - 2,
-            kMaxVertexBufferArrayStride - 1,
-            kMaxVertexBufferArrayStride,
-          ];
-        } else {
-          return [16];
-        }
-      })
-      //.combine('attributeOffsetStep', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 16, 32])
-      .expand('attributePerBuffer', p => {
-        if (p.testAspect === 'attributeCount') {
-          return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-        } else {
-          return [2];
-        }
-      })
-      //.combine('attributePerBuffer', [1, 2, 3, 4, 5, 6, 7, 8])
-      .expand('bufferCount', p => {
-        if (p.testAspect === 'bufferCount') {
-          return [0, 1, 2, 4, 8, 16];
-        } else {
-          return [2];
-        }
-      })
-      .beginSubcases()
-      .expand('additionalEmptyBufferCount', p => {
-        if (p.testAspect === 'bufferCount') {
-          return [0, 4, 8, 16];
-        } else {
-          return [0];
-        }
-      })
-      .expand('indistinctLocation', p => {
-        if (p.testAspect === 'indistinctLocation') {
-          return [true, false];
-        } else {
-          return [false];
-        }
-      })
-      .expand('wgslTypeCompatible', p => {
-        if (p.testAspect === 'wgslTypeCompatible') {
-          return [true, false];
-        } else {
-          return [true];
-        }
-      })
-      .expand('wgslType', p => {
-        if (p.testAspect === 'wgslTypeCompatible') {
-          if (p.wgslTypeCompatible) {
-            return typeCompatibleMap[typeInfoMap[p.attribFormat].compatibleType].compatibleWGSLType;
-          } else {
-            return typeCompatibleMap[typeInfoMap[p.attribFormat].compatibleType]
-              .incompatibleWGSLType;
-          }
-        } else {
-          return [typeInfoMap[p.attribFormat].wgslType];
-        }
-      })
-  )
-  .fn(t => {
-    const p = t.params;
-    const arrayStride = p.arrayStrideGoOverMax
-      ? p.arrayStride + t.device.limits.maxVertexBufferArrayStride
-      : p.arrayStride;
-
-    const isArrayStrideNoLargerThanMax: boolean = arrayStride <= kMaxVertexBufferArrayStride;
-    const isArrayStrideMultipleOf4: boolean = arrayStride % 4 === 0;
-
-    const vertexBufferDescriptorsForShader: VertexBufferDescriptorForWGSLShader[] = [];
-    const vertexBufferLayoutsForPipeline: GPUVertexBufferLayout[] = [];
-    let isEveryAttributeOffsetValid: boolean = true;
-    let shaderLocation = 0;
-    for (let buffer = 0; buffer < p.bufferCount; buffer++) {
-      const attributesForPipeline: GPUVertexAttribute[] = [];
-      for (let attr = 0; attr < p.attributePerBuffer; attr++) {
-        const offset: number = attr * p.attributeOffsetStep;
-        attributesForPipeline.push({
-          format: p.attribFormat,
-          offset,
-          shaderLocation,
-        });
-        // Use the distince location within limit to ensure that creating shader module won't fail
-        if (buffer * p.attributePerBuffer + attr < 16) {
-          vertexBufferDescriptorsForShader.push({
-            offset,
-            shaderLocation: buffer * p.attributePerBuffer + attr,
-            wgslType: p.wgslType,
-          });
-        }
-        shaderLocation++;
-        // Validate the offset of each attributes
-        if (arrayStride === 0) {
-          if (offset + typeInfoMap[p.attribFormat].sizeInBytes > kMaxVertexBufferArrayStride) {
-            isEveryAttributeOffsetValid = false;
-          }
-        } else {
-          if (offset + typeInfoMap[p.attribFormat].sizeInBytes > arrayStride) {
-            isEveryAttributeOffsetValid = false;
-          }
-        }
-        if (offset % Math.min(4, typeInfoMap[p.attribFormat].sizeInBytes) !== 0) {
-          isEveryAttributeOffsetValid = false;
-        }
-      }
-      if (p.indistinctLocation) {
-        // Reset the shader location used in pipeline descriptor to cause a location appears multiple times
-        shaderLocation = 0;
-      }
-      const layout: GPUVertexBufferLayout = {
-        arrayStride,
-        stepMode: 'vertex',
-        attributes: attributesForPipeline,
-      };
-      vertexBufferLayoutsForPipeline.push(layout);
-    }
-    // Validate the total attribute number limit
-    const isAttributesCountNoLargerThanMax: boolean =
-      p.bufferCount * p.attributePerBuffer <= t.device.limits.maxVertexAttributes;
-    // Add additional empty buffer to test the buffer number limit validation
-    for (let emptyBuffer = 0; emptyBuffer < p.additionalEmptyBufferCount; emptyBuffer++) {
-      vertexBufferLayoutsForPipeline.push({
-        arrayStride,
-        stepMode: 'vertex',
-        attributes: [],
-      });
-    }
-    const isBufferCountNoLargerThanMax: boolean =
-      p.bufferCount + p.additionalEmptyBufferCount <= kMaxVertexBuffers;
-
-    const isSuccess =
-      isArrayStrideMultipleOf4 &&
-      isArrayStrideNoLargerThanMax &&
-      isEveryAttributeOffsetValid &&
-      isAttributesCountNoLargerThanMax &&
-      isBufferCountNoLargerThanMax &&
-      p.wgslTypeCompatible &&
-      !p.indistinctLocation;
-    if (isSuccess) {
-      // t.device.createRenderPipeline(pipelineDesc);
-      t.createRenderPipelineFromBufferLayout(
-        vertexBufferLayoutsForPipeline,
-        vertexBufferDescriptorsForShader
-      );
-    } else {
-      t.expectValidationError(() => {
-        // t.device.createRenderPipeline(pipelineDesc);
-        t.createRenderPipelineFromBufferLayout(
-          vertexBufferLayoutsForPipeline,
-          vertexBufferDescriptorsForShader
-        );
-      });
-    }
-  });
+  .unimplemented();
