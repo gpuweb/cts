@@ -14,7 +14,326 @@ TODO: subsume existing test, rewrite fixture as needed.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { assert, unreachable } from '../../../../../common/util/util.js';
 import { ValidationTest } from '../../validation_test.js';
+
+function generateBindingDeclare(group: number, binding: GPUBindGroupLayoutEntry) {
+  // Buffers:
+  //   - var<uniform> buf : Buf;
+  //   - var<storage, read_write> buf: Buf;
+  //   - var<storage, read> buf: Buf;
+
+  // ExternalTexture:
+  //   - var tex : texture_external;
+
+  // Sampler:
+  //   - var samp : sampler;
+  //   - var samp : sampler_comparison;
+
+  // StorageTexture: access must be write is specified
+  //   - var storeTex: texture_storage_1d<texel_format,access>
+  //   - var storeTex: texture_storage_2d<texel_format,access>
+  //   - var storeTex: texture_storage_3d<texel_format,access>
+
+  // Texture
+  //   - var tex: texture_1d<type>
+  //   - var tex: texture_2d<type>
+  //   - var tex: texture_2d_array<type>
+  //   - var tex: texture_3d<type>
+  //   - var tex: texture_cube<type>
+  //   - var tex: texture_cube_array<type>
+  //   - var tex: texture_multisampled_2d<type>
+  //   - var tex: texture_depth_2d;
+  //   - var tex: texture_depth_2d_array;
+  //   - var tex: texture_depth_multisampled_2d;
+  //   - var tex: texture_depth_cube_array;
+  //   - var tex: texture_depth_cube;
+
+  let declare: string;
+  if (binding.buffer !== undefined) {
+    let decoration: string;
+    if (binding.buffer.type === undefined) {
+      decoration = 'uniform';
+    } else {
+      switch (binding.buffer.type) {
+        case 'uniform': {
+          decoration = 'uniform';
+          break;
+        }
+        case 'storage': {
+          decoration = 'storage, read_write';
+          break;
+        }
+        case 'read-only-storage': {
+          decoration = 'storage, read';
+          break;
+        }
+        default:
+          unreachable();
+      }
+    }
+    declare = `var<${decoration}> buf: Buf`;
+  } else if (binding.externalTexture !== undefined) {
+    declare = `var tex : texture_external;`;
+  } else if (binding.sampler !== undefined) {
+    let suffix: string;
+    switch (binding.sampler.type) {
+      case 'filtering':
+      case 'non-filtering': {
+        suffix = 'sampler';
+        break;
+      }
+      case 'comparison': {
+        suffix = 'sampler_comparison';
+        break;
+      }
+      default:
+        unreachable();
+    }
+    declare = `var samp : ${suffix}`;
+  } else if (binding.storageTexture !== undefined) {
+    let suffix: string;
+    let textureType: string;
+    let texelFormat: string;
+
+    if (binding.storageTexture.viewDimension === undefined) {
+      textureType = 'texture_storage_2d';
+    } else {
+      switch (binding.storageTexture.viewDimension) {
+        case '1d': {
+          textureType = 'texture_storage_1d';
+          break;
+        }
+        case '2d': {
+          textureType = 'texture_storage_2d';
+          break;
+        }
+        case '2d-array':
+        case '3d': {
+          textureType = 'texture_storage_3d';
+          break;
+        }
+        default:
+          // Cannot be 'cube' or 'cube-array'
+          unreachable();
+      }
+    }
+
+    switch (binding.storageTexture.format) {
+      // float
+      case 'rgba8unorm':
+      case 'rgba8snorm':
+      case 'rgba16float':
+      case 'r32float':
+      case 'rg32float':
+      case 'rgba32float': {
+        texelFormat = 'f32';
+        break;
+      }
+
+      // uint
+      case 'rgba8uint':
+      case 'rgba16uint':
+      case 'r32uint':
+      case 'rg32uint':
+      case 'rgba32uint': {
+        texelFormat = 'u32';
+        break;
+      }
+
+      // sint
+      case 'rgba8sint':
+      case 'rgba16sint':
+      case 'r32sint':
+      case 'rg32sint':
+      case 'rgba32sint': {
+        texelFormat = 'i32';
+        break;
+      }
+      default:
+        unreachable();
+    }
+
+    suffix = `${textureType}<${texelFormat}`;
+
+    if (binding.storageTexture.access === 'write-only') {
+      suffix += ', write>';
+    } else {
+      suffix += '>';
+    }
+
+    declare = `var storeTex: ${suffix}`;
+  } else if (binding.texture !== undefined) {
+    let textureType: string;
+    let texelFormat: string = '';
+
+    const isMultisampled =
+      binding.texture.multisampled !== undefined && binding.texture.multisampled;
+    assert(
+      isMultisampled &&
+        (binding.texture.viewDimension === undefined || binding.texture.viewDimension === '2d')
+    );
+    let isDepth: boolean = false;
+
+    if (binding.texture.sampleType === undefined) {
+      texelFormat = 'f32';
+    } else {
+      switch (binding.texture.sampleType) {
+        case 'float':
+        case 'unfilterable-float': {
+          assert(!isMultisampled);
+          texelFormat = '<f32>';
+          break;
+        }
+        case 'sint': {
+          texelFormat = '<i32>';
+          break;
+        }
+        case 'uint': {
+          texelFormat = '<u32>';
+          break;
+        }
+        case 'depth': {
+          isDepth = true;
+          break;
+        }
+        default:
+          unreachable();
+      }
+    }
+
+    if (binding.texture.viewDimension === undefined) {
+      if (isDepth && isMultisampled) {
+        textureType = 'texture_depth_multisampled_2d';
+      } else if (isMultisampled) {
+        textureType = 'texture_multisampled_2d';
+      } else if (isDepth) {
+        textureType = 'texture_depth_2d';
+      } else {
+        textureType = 'texture_2d';
+      }
+    } else {
+      switch (binding.texture.viewDimension) {
+        case '2d': {
+          textureType = isDepth ? 'texture_depth_2d' : 'texture_2d';
+          break;
+        }
+        // TODO: it seems that cts defines the viewDimenstion type to
+        // '2d' only. Not sure whether we shoud change it now.
+        /*case '1d': {
+          assert(!isDepth);
+          textureType = 'texture_1d';
+          break;
+        }
+        case '2d-array': {
+          textureType = isDepth ? 'texture_depth_2d_array' : 'texture_2d_array';
+          break;
+        }
+        case 'cube': {
+          textureType = isDepth ? 'texture_depth_cube' : 'texture_cube';
+          break;
+        }
+        case 'cube-array': {
+          textureType = isDepth ? 'texture_depth_cube_array' : 'texture_cube_array';
+          break;
+        }
+        case '3d': {
+          assert(!isDepth);
+          textureType = 'texture_3d';
+          break;
+        }*/
+        default:
+          unreachable();
+      }
+    }
+
+    const suffix = textureType + texelFormat;
+    declare = `var tex : ${suffix}`;
+  } else {
+    unreachable();
+  }
+
+  const result = `[[group(${group}), binding(${binding.binding})]] ${declare};`;
+  return result;
+}
+
+function generateShaderCode(
+  device: GPUDevice,
+  bindGroups: Array<Array<GPUBindGroupLayoutEntry>>
+): { layout: GPUPipelineLayout; vertex: string; fragment: string; compute: string } {
+  const header = `
+    [[block]] struct Buf {
+      data : vec4<f32> ;
+    };
+  `;
+
+  const vertexBody = `
+  [[stage(vertex)]] fn main([[location(0)]] pos : vec4<f32>) -> [[builtin(position)]] vec4<f32> {
+    return pos;
+  }
+  `;
+
+  const fragmentBody = `
+  [[stage(fragment)]] fn main() -> [[location(0)]] vec4<f32> {
+    return vec4<f32>(0.0, 1.0, 0.0, 1.0);
+  }
+  `;
+
+  const computeBody = `
+  [[stage(compute), workgroup_size(1, 1, 1)]]
+  fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
+  }
+  `;
+
+  let vertexSource: string = header;
+  let fragmentSource: string = header;
+  let computeSource: string = header;
+  const bindGroupLayouts = [];
+
+  for (let i = 0; i < bindGroups.length; ++i) {
+    //if (bindGroups[i].length === 0) {
+    //  continue;
+    //}
+    const entries = [];
+    for (let j = 0; j < bindGroups[i].length; ++j) {
+      const binding = bindGroups[i][j];
+      //if (binding === undefined) {
+      //  continue;
+      //}
+      entries.push(bindGroups[i][j]);
+      const declare = generateBindingDeclare(i, binding);
+      switch (binding.visibility) {
+        case GPUShaderStage.VERTEX: {
+          vertexSource += declare;
+          break;
+        }
+        case GPUShaderStage.FRAGMENT: {
+          fragmentSource += declare;
+          break;
+        }
+        case GPUShaderStage.COMPUTE: {
+          computeSource += declare;
+          break;
+        }
+        default:
+          unreachable();
+      }
+    }
+    bindGroupLayouts.push(device.createBindGroupLayout({ entries }));
+  }
+
+  vertexSource += vertexBody;
+  fragmentSource += fragmentBody;
+  computeSource += computeBody;
+  const pipelineLayout = device.createPipelineLayout({ bindGroupLayouts });
+
+  return {
+    layout: pipelineLayout,
+    vertex: vertexSource,
+    fragment: fragmentSource,
+    compute: computeSource,
+  };
+}
 
 class F extends ValidationTest {
   getUniformBuffer(): GPUBuffer {
@@ -24,40 +343,36 @@ class F extends ValidationTest {
     });
   }
 
-  createRenderPipeline(): GPURenderPipeline {
+  createRenderPipelineWithLayout(
+    device: GPUDevice,
+    bindGroups: Array<Array<GPUBindGroupLayoutEntry>>
+  ): GPURenderPipeline {
+    const { layout, vertex, fragment } = generateShaderCode(device, bindGroups);
+
     const pipeline = this.device.createRenderPipeline({
+      layout,
       vertex: {
         module: this.device.createShaderModule({
-          code: `
-            [[block]] struct VertexUniforms {
-              transform : mat2x2<f32> ;
-            };
-            [[group(0), binding(0)]] var<uniform> uniforms : VertexUniforms;
-
-            [[stage(vertex)]] fn main(
-              [[builtin(vertex_index)]] VertexIndex : u32
-              ) -> [[builtin(position)]] vec4<f32> {
-              var pos : array<vec2<f32>, 3> = array<vec2<f32>, 3>(
-                vec2<f32>(-1.0, -1.0),
-                vec2<f32>( 1.0, -1.0),
-                vec2<f32>(-1.0,  1.0)
-              );
-              return vec4<f32>(uniforms.transform * pos[VertexIndex], 0.0, 1.0);
-            }`,
+          code: vertex,
         }),
         entryPoint: 'main',
+        buffers: [
+          {
+            arrayStride: 0,
+            attributes: [
+              {
+                // position
+                shaderLocation: 0,
+                offset: 0,
+                format: 'float32x4',
+              },
+            ],
+          },
+        ],
       },
       fragment: {
         module: this.device.createShaderModule({
-          code: `
-            [[block]] struct FragmentUniforms {
-              color : vec4<f32>;
-            };
-            [[group(1), binding(0)]] var<uniform> uniforms : FragmentUniforms;
-
-            [[stage(fragment)]] fn main() -> [[location(0)]] vec4<f32> {
-              return uniforms.color;
-            }`,
+          code: fragment,
         }),
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
@@ -65,6 +380,46 @@ class F extends ValidationTest {
       primitive: { topology: 'triangle-list' },
     });
     return pipeline;
+  }
+
+  createComputePipeline(
+    device: GPUDevice,
+    bindGroups: Array<Array<GPUBindGroupLayoutEntry>>
+  ): GPUComputePipeline {
+    const result = generateShaderCode(device, bindGroups);
+
+    const pipeline = this.device.createComputePipeline({
+      layout: result.layout,
+      compute: {
+        module: this.device.createShaderModule({
+          code: result.compute,
+        }),
+        entryPoint: 'main',
+      },
+    });
+    return pipeline;
+  }
+
+  createRenderPipeline(device: GPUDevice): GPURenderPipeline {
+    return this.createRenderPipelineWithLayout(device, [
+      // Group 0
+      [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.VERTEX,
+          buffer: {},
+        },
+      ],
+
+      // Group 1
+      [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.FRAGMENT,
+          buffer: {},
+        },
+      ],
+    ]);
   }
 
   beginRenderPass(commandEncoder: GPUCommandEncoder): GPURenderPassEncoder {
@@ -98,7 +453,7 @@ g.test('it_is_invalid_to_draw_in_a_render_pass_with_missing_bind_groups')
   .fn(async t => {
     const { setBindGroup1, setBindGroup2, _success } = t.params;
 
-    const pipeline = t.createRenderPipeline();
+    const pipeline = t.createRenderPipeline(t.device);
 
     const uniformBuffer = t.getUniformBuffer();
 
@@ -111,7 +466,15 @@ g.test('it_is_invalid_to_draw_in_a_render_pass_with_missing_bind_groups')
           },
         },
       ],
-      layout: pipeline.getBindGroupLayout(0),
+      layout: t.device.createBindGroupLayout({
+        entries: [
+          {
+            binding: 0,
+            visibility: GPUShaderStage.VERTEX,
+            buffer: {}, // default type: uniform
+          },
+        ],
+      }),
     });
 
     const bindGroup1 = t.device.createBindGroup({
@@ -123,8 +486,38 @@ g.test('it_is_invalid_to_draw_in_a_render_pass_with_missing_bind_groups')
           },
         },
       ],
-      layout: pipeline.getBindGroupLayout(1),
+      layout: t.device.createBindGroupLayout({
+        entries: [
+          {
+            binding: 0,
+            visibility: GPUShaderStage.FRAGMENT,
+            buffer: {}, // default type uniform
+          },
+        ],
+      }),
     });
+
+    const vertices = new Float32Array([
+      -1.0,
+      -1.0,
+      0.0,
+      1.0,
+      1.0,
+      -1.0,
+      0.0,
+      1.0,
+      -1.0,
+      1.0,
+      0.0,
+      1.0,
+    ]);
+    const verticesBuffer = t.device.createBuffer({
+      size: vertices.byteLength,
+      usage: GPUBufferUsage.VERTEX,
+      mappedAtCreation: true,
+    });
+    new Float32Array(verticesBuffer.getMappedRange()).set(vertices);
+    verticesBuffer.unmap();
 
     const commandEncoder = t.device.createCommandEncoder();
     const renderPass = t.beginRenderPass(commandEncoder);
@@ -135,6 +528,7 @@ g.test('it_is_invalid_to_draw_in_a_render_pass_with_missing_bind_groups')
     if (setBindGroup2) {
       renderPass.setBindGroup(1, bindGroup1);
     }
+    renderPass.setVertexBuffer(0, verticesBuffer);
     renderPass.draw(3);
     renderPass.endPass();
     t.expectValidationError(() => {
