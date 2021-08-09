@@ -283,7 +283,6 @@ class F extends GPUTest {
     );
     this.queue.submit([encoder.finish()]);
 
-    assert(initialStencilData !== undefined);
     const expectedStencilData = new Uint8Array(outputBufferSize);
     for (let z = 0; z < copySize[2]; ++z) {
       const initialOffsetPerLayer = z * copySize[0] * copySize[1];
@@ -297,31 +296,33 @@ class F extends GPUTest {
         );
       }
     }
-
     this.expectGPUBufferValuesEqual(outputBuffer, expectedStencilData);
   }
 
-  // Initialize the depth aspect of sourceTexture with draw calls
-  InitializeDepthAspect(
-    sourceTexture: GPUTexture,
-    depthFormat: GPUTextureFormat,
-    srcCopyLevel: number,
-    srcCopyBaseArrayLayer: number,
-    copySize: readonly [number, number, number]
-  ): void {
-    // Prepare the uniform buffer that contains all the copy layers to generate different depth
-    // values for different copy layers.
-    const uniformBufferSize = kMinDynamicBufferOffsetAlignment * (copySize[2] - 1) + 4;
-    const uniformBufferData = new Float32Array(uniformBufferSize / 4);
-    for (let i = 1; i < copySize[2]; ++i) {
-      uniformBufferData[(kMinDynamicBufferOffsetAlignment / 4) * i] = i;
-    }
-    const uniformBuffer = makeBufferWithContents(
-      this.device,
-      uniformBufferData,
-      GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM
-    );
-    const bindGroupLayout = this.device.createBindGroupLayout({
+  GetVertexModuleForT2TCopyWithDepthTests(): GPUShaderModule {
+    return this.device.createShaderModule({
+      code: `
+        [[block]] struct Params {
+          copyLayer: f32;
+        };
+        [[group(0), binding(0)]] var<uniform> param: Params;
+        [[stage(vertex)]]
+        fn main([[builtin(vertex_index)]] VertexIndex : u32)-> [[builtin(position)]] vec4<f32> {
+          var depthValue = 0.5 + 0.2 * sin(param.copyLayer);
+          var pos : array<vec3<f32>, 6> = array<vec3<f32>, 6>(
+              vec3<f32>(-1.0,  1.0, depthValue),
+              vec3<f32>(-1.0, -1.0, 0.0),
+              vec3<f32>( 1.0,  1.0, 1.0),
+              vec3<f32>(-1.0, -1.0, 0.0),
+              vec3<f32>( 1.0,  1.0, 1.0),
+              vec3<f32>( 1.0, -1.0, depthValue));
+          return vec4<f32>(pos[VertexIndex], 1.0);
+        }`,
+    });
+  }
+
+  GetBindGroupLayoutForT2TCopyWithDepthTests(): GPUBindGroupLayout {
+    return this.device.createBindGroupLayout({
       entries: [
         {
           binding: 0,
@@ -334,7 +335,26 @@ class F extends GPUTest {
         },
       ],
     });
-    const bindGroup = this.device.createBindGroup({
+  }
+
+  GetBindGroupForT2TCopyWithDepthTests(
+    bindGroupLayout: GPUBindGroupLayout,
+    totalCopyArrayLayers: number
+  ): GPUBindGroup {
+    // Prepare the uniform buffer that contains all the copy layers to generate different depth
+    // values for different copy layers.
+    assert(totalCopyArrayLayers > 0);
+    const uniformBufferSize = kMinDynamicBufferOffsetAlignment * (totalCopyArrayLayers - 1) + 4;
+    const uniformBufferData = new Float32Array(uniformBufferSize / 4);
+    for (let i = 1; i < totalCopyArrayLayers; ++i) {
+      uniformBufferData[(kMinDynamicBufferOffsetAlignment / 4) * i] = i;
+    }
+    const uniformBuffer = makeBufferWithContents(
+      this.device,
+      uniformBufferData,
+      GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM
+    );
+    return this.device.createBindGroup({
       layout: bindGroupLayout,
       entries: [
         {
@@ -346,35 +366,26 @@ class F extends GPUTest {
         },
       ],
     });
+  }
 
+  // Initialize the depth aspect of sourceTexture with draw calls
+  InitializeDepthAspect(
+    sourceTexture: GPUTexture,
+    depthFormat: GPUTextureFormat,
+    srcCopyLevel: number,
+    srcCopyBaseArrayLayer: number,
+    copySize: readonly [number, number, number]
+  ): void {
     // Prepare a renderPipeline with depthCompareFunction == 'always' and depthWriteEnabled == true
     // for the initializations of the depth attachment.
     // TODO: remove the fragment stage when the browsers support null fragment stage.
+    const bindGroupLayout = this.GetBindGroupLayoutForT2TCopyWithDepthTests();
     const renderPipeline = this.device.createRenderPipeline({
       layout: this.device.createPipelineLayout({ bindGroupLayouts: [bindGroupLayout] }),
       vertex: {
-        module: this.device.createShaderModule({
-          code: `
-            [[block]] struct Params {
-              copyLayer: f32;
-            };
-            [[group(0), binding(0)]] var<uniform> param: Params;
-            [[stage(vertex)]]
-            fn main([[builtin(vertex_index)]] VertexIndex : u32)-> [[builtin(position)]] vec4<f32> {
-              var depthValue = 0.5 + 0.2 * sin(param.copyLayer);
-              var pos : array<vec3<f32>, 6> = array<vec3<f32>, 6>(
-                  vec3<f32>(-1.0,  1.0, depthValue),
-                  vec3<f32>(-1.0, -1.0, 0.0),
-                  vec3<f32>( 1.0,  1.0, 1.0),
-                  vec3<f32>(-1.0, -1.0, 0.0),
-                  vec3<f32>( 1.0,  1.0, 1.0),
-                  vec3<f32>( 1.0, -1.0, depthValue));
-              return vec4<f32>(pos[VertexIndex], 1.0);
-            }`,
-        }),
+        module: this.GetVertexModuleForT2TCopyWithDepthTests(),
         entryPoint: 'main',
       },
-
       fragment: {
         module: this.device.createShaderModule({
           code: `
@@ -386,11 +397,6 @@ class F extends GPUTest {
         entryPoint: 'main',
         targets: [],
       },
-
-      primitive: {
-        topology: 'triangle-list',
-      },
-
       depthStencil: {
         format: depthFormat,
         depthWriteEnabled: true,
@@ -398,6 +404,7 @@ class F extends GPUTest {
       },
     });
 
+    const bindGroup = this.GetBindGroupForT2TCopyWithDepthTests(bindGroupLayout, copySize[2]);
     const encoder = this.device.createCommandEncoder();
     for (let srcCopyLayer = 0; srcCopyLayer < copySize[2]; ++srcCopyLayer) {
       const renderPass = encoder.beginRenderPass({
@@ -430,71 +437,15 @@ class F extends GPUTest {
     dstCopyBaseArrayLayer: number,
     copySize: [number, number, number]
   ): void {
-    // Prepare the uniform buffer that contains all the copy layers to generate different depth
-    // values for different copy layers.
-    const uniformBufferSize = kMinDynamicBufferOffsetAlignment * (copySize[2] - 1) + 4;
-    const uniformBufferData = new Float32Array(uniformBufferSize / 4);
-    for (let i = 1; i < copySize[2]; ++i) {
-      uniformBufferData[(kMinDynamicBufferOffsetAlignment / 4) * i] = i;
-    }
-    const uniformBuffer = makeBufferWithContents(
-      this.device,
-      uniformBufferData,
-      GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM
-    );
-    const bindGroupLayout = this.device.createBindGroupLayout({
-      entries: [
-        {
-          binding: 0,
-          visibility: GPUShaderStage.VERTEX,
-          buffer: {
-            type: 'uniform',
-            minBindingSize: 4,
-            hasDynamicOffset: true,
-          },
-        },
-      ],
-    });
-    const bindGroup = this.device.createBindGroup({
-      layout: bindGroupLayout,
-      entries: [
-        {
-          binding: 0,
-          resource: {
-            buffer: uniformBuffer,
-            size: 4,
-          },
-        },
-      ],
-    });
-
     // Prepare a renderPipeline with depthCompareFunction == 'equal' and depthWriteEnabled == false
     // for the comparations of the depth attachment.
+    const bindGroupLayout = this.GetBindGroupLayoutForT2TCopyWithDepthTests();
     const renderPipeline = this.device.createRenderPipeline({
       layout: this.device.createPipelineLayout({ bindGroupLayouts: [bindGroupLayout] }),
       vertex: {
-        module: this.device.createShaderModule({
-          code: `
-            [[block]] struct Params {
-              copyLayer: f32;
-            };
-            [[group(0), binding(0)]] var<uniform> param: Params;
-            [[stage(vertex)]]
-            fn main([[builtin(vertex_index)]] VertexIndex : u32)-> [[builtin(position)]] vec4<f32> {
-              var depthValue = 0.5 + 0.2 * sin(param.copyLayer);
-              var pos : array<vec3<f32>, 6> = array<vec3<f32>, 6>(
-                  vec3<f32>(-1.0,  1.0, depthValue),
-                  vec3<f32>(-1.0, -1.0, 0.0),
-                  vec3<f32>( 1.0,  1.0, 1.0),
-                  vec3<f32>(-1.0, -1.0, 0.0),
-                  vec3<f32>( 1.0,  1.0, 1.0),
-                  vec3<f32>( 1.0, -1.0, depthValue));
-              return vec4<f32>(pos[VertexIndex], 1.0);
-            }`,
-        }),
+        module: this.GetVertexModuleForT2TCopyWithDepthTests(),
         entryPoint: 'main',
       },
-
       fragment: {
         module: this.device.createShaderModule({
           code: `
@@ -510,11 +461,6 @@ class F extends GPUTest {
           },
         ],
       },
-
-      primitive: {
-        topology: 'triangle-list',
-      },
-
       depthStencil: {
         format: depthFormat,
         depthWriteEnabled: false,
@@ -527,9 +473,11 @@ class F extends GPUTest {
       size: copySize,
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     });
-
+    const bindGroup = this.GetBindGroupForT2TCopyWithDepthTests(bindGroupLayout, copySize[2]);
     const encoder = this.device.createCommandEncoder();
     for (let dstCopyLayer = 0; dstCopyLayer < copySize[2]; ++dstCopyLayer) {
+      // If the depth value is not expected, the color of outputColorTexture will remain Red after
+      // the render pass.
       const renderPass = encoder.beginRenderPass({
         colorAttachments: [
           {
@@ -559,7 +507,6 @@ class F extends GPUTest {
       renderPass.draw(6);
       renderPass.endPass();
     }
-
     this.queue.submit([encoder.finish()]);
 
     this.expectSingleColor(outputColorTexture, 'rgba8unorm', {
