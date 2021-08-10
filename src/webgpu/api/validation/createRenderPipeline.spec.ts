@@ -288,3 +288,117 @@ g.test('pipeline_output_targets')
     const _success = expectedType === sampleType && componentCount >= expectedComponentCount;
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
+
+g.test('pipeline_output_targets,blend')
+  .desc(
+    `On top of requirements from pipeline_output_targets, when blending is enabled and alpha channel is read indicated by any blend factor, an extra requirement is added:
+  - fragment output must be vec4.
+  `
+  )
+  .params(u =>
+    u
+      .combine('isAsync', [false, true])
+      .combine('format', ['r8unorm', 'rg8unorm', 'rgba8unorm', 'bgra8unorm'] as const)
+      .beginSubcases()
+      .combine('componentCount', [1, 2, 3, 4])
+      .combineWithParams([
+        // extra requirement does not apply
+        {
+          colorSrcFactor: 'one',
+          colorDstFactor: 'zero',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'zero',
+        },
+        {
+          colorSrcFactor: 'dst-alpha',
+          colorDstFactor: 'zero',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'zero',
+        },
+        // extra requirement applies, fragment output must be vec4 (contain alpha channel)
+        {
+          colorSrcFactor: 'src-alpha',
+          colorDstFactor: 'one',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'zero',
+        },
+        {
+          colorSrcFactor: 'one',
+          colorDstFactor: 'one-minus-src-alpha',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'zero',
+        },
+        {
+          colorSrcFactor: 'src-alpha-saturated',
+          colorDstFactor: 'one',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'zero',
+        },
+        {
+          colorSrcFactor: 'one',
+          colorDstFactor: 'zero',
+          alphaSrcFactor: 'one',
+          alphaDstFactor: 'zero',
+        },
+        {
+          colorSrcFactor: 'one',
+          colorDstFactor: 'zero',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'src',
+        },
+        {
+          colorSrcFactor: 'one',
+          colorDstFactor: 'zero',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'src-alpha',
+        },
+      ] as const)
+  )
+  .fn(async t => {
+    const sampleType = 'float';
+    const {
+      isAsync,
+      format,
+      componentCount,
+      colorSrcFactor,
+      colorDstFactor,
+      alphaSrcFactor,
+      alphaDstFactor,
+    } = t.params;
+    const { expectedType, expectedComponentCount } = t.getExpectedTypeAndComponentCount(format);
+    const info = kTextureFormatInfo[format];
+    await t.selectDeviceOrSkipTestCase(info.feature);
+
+    const descriptor = t.getDescriptor({
+      targets: [
+        {
+          format,
+          blend: {
+            color: {
+              srcFactor: colorSrcFactor,
+              dstFactor: colorDstFactor,
+              operation: 'add',
+            },
+            alpha: {
+              srcFactor: alphaSrcFactor,
+              dstFactor: alphaDstFactor,
+              operation: 'add',
+            },
+          },
+        },
+      ],
+      fragmentShaderCode: t.getFragmentShaderCode(sampleType, componentCount),
+    });
+
+    const blendingReadAlpha =
+      colorSrcFactor.includes('src-alpha') ||
+      colorDstFactor.includes('src-alpha') ||
+      alphaSrcFactor !== 'zero' ||
+      alphaDstFactor.includes('src');
+    const meetsExtraBlendingRequirement = !blendingReadAlpha || componentCount === 4;
+    const _success =
+      expectedType === sampleType &&
+      componentCount >= expectedComponentCount &&
+      meetsExtraBlendingRequirement;
+    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+  });

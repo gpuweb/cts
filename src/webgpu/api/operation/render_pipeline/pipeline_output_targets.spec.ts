@@ -35,12 +35,13 @@ class F extends GPUTest {
   }
 
   getFragmentShaderCode(
-    v: string[],
+    output: readonly number[],
     sampleType: GPUTextureSampleType,
     componentCount: number
   ): string {
     let fragColorType;
     let suffix;
+    let fractionDigits = 0;
     switch (sampleType) {
       case 'sint':
         fragColorType = 'i32';
@@ -52,9 +53,12 @@ class F extends GPUTest {
         break;
       default:
         fragColorType = 'f32';
-        suffix = '.0';
+        suffix = '';
+        fractionDigits = 2;
         break;
     }
+
+    const v = output.map(n => n.toFixed(fractionDigits));
 
     let outputType;
     let result;
@@ -109,7 +113,7 @@ g.test('color,component_count')
 
     // expected RGBA values
     // extra channels are discarded
-    const v = [0, 1, 0, 1];
+    const result = [0, 1, 0, 1];
 
     const renderTarget = t.device.createTexture({
       format,
@@ -136,11 +140,7 @@ g.test('color,component_count')
       },
       fragment: {
         module: t.device.createShaderModule({
-          code: t.getFragmentShaderCode(
-            v.map(n => n.toString()),
-            expectedType,
-            componentCount
-          ),
+          code: t.getFragmentShaderCode(result, expectedType, componentCount),
         }),
         entryPoint: 'main',
         targets: [{ format }],
@@ -165,6 +165,235 @@ g.test('color,component_count')
 
     t.expectSingleColor(renderTarget, format, {
       size: [1, 1, 1],
-      exp: { R: v[0], G: v[1], B: v[2], A: v[3] },
+      exp: { R: result[0], G: result[1], B: result[2], A: result[3] },
+    });
+  });
+
+g.test('color,component_count,blend')
+  .desc(
+    `Test that blending behaves correctly when:
+- fragement output has no alpha, but the src alpha is not used for the blend operation indicated by blend factors
+- attachment format has no alpha, and the dst alpha should be assumed as 1
+
+The attachment has a load value of [1, 0, 0, 1]
+`
+  )
+  .params(u =>
+    u
+      .combine('format', ['r8unorm', 'rg8unorm', 'rgba8unorm', 'bgra8unorm'] as const)
+      .beginSubcases()
+      // result is expected values in the color attachment (extra channels are discarded)
+      // output is the fragment shader output vector
+      // 0.498 -> 0x7f, 0.502 -> 0x80
+      .combineWithParams([
+        // fragment output has no alpha
+        {
+          result: [0, 1, 0, 0],
+          output: [0],
+          colorSrcFactor: 'one',
+          colorDstFactor: 'zero',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'zero',
+        },
+        {
+          result: [0, 1, 0, 0],
+          output: [0],
+          colorSrcFactor: 'dst-alpha',
+          colorDstFactor: 'zero',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'zero',
+        },
+        {
+          result: [1, 0, 0, 1],
+          output: [0],
+          colorSrcFactor: 'one-minus-dst-alpha',
+          colorDstFactor: 'dst-alpha',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'one',
+        },
+        {
+          result: [0.498, 0, 0, 1],
+          output: [0.498],
+          colorSrcFactor: 'dst-alpha',
+          colorDstFactor: 'zero',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'one',
+        },
+        {
+          result: [0, 1, 0, 0],
+          output: [0, 1],
+          colorSrcFactor: 'one',
+          colorDstFactor: 'zero',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'zero',
+        },
+        {
+          result: [0, 1, 0, 0],
+          output: [0, 1],
+          colorSrcFactor: 'dst-alpha',
+          colorDstFactor: 'zero',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'zero',
+        },
+        {
+          result: [1, 0, 0, 1],
+          output: [0, 1],
+          colorSrcFactor: 'one-minus-dst-alpha',
+          colorDstFactor: 'dst-alpha',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'one',
+        },
+        {
+          result: [0, 1, 0, 0],
+          output: [0, 1, 0],
+          colorSrcFactor: 'one',
+          colorDstFactor: 'zero',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'zero',
+        },
+        {
+          result: [0, 1, 0, 0],
+          output: [0, 1, 0],
+          colorSrcFactor: 'dst-alpha',
+          colorDstFactor: 'zero',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'zero',
+        },
+        {
+          result: [1, 0, 0, 1],
+          output: [0, 1, 0],
+          colorSrcFactor: 'one-minus-dst-alpha',
+          colorDstFactor: 'dst-alpha',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'one',
+        },
+        // fragment output has alpha
+        {
+          result: [0.502, 1, 0, 0.498],
+          output: [0, 1, 0, 0.498],
+          colorSrcFactor: 'one',
+          colorDstFactor: 'one-minus-src-alpha',
+          alphaSrcFactor: 'one',
+          alphaDstFactor: 'zero',
+        },
+        {
+          result: [0.502, 0.498, 0, 0.498],
+          output: [0, 1, 0, 0.498],
+          colorSrcFactor: 'src-alpha',
+          colorDstFactor: 'one-minus-src-alpha',
+          alphaSrcFactor: 'one',
+          alphaDstFactor: 'zero',
+        },
+        {
+          result: [0, 1, 0, 0.498],
+          output: [0, 1, 0, 0.498],
+          colorSrcFactor: 'dst-alpha',
+          colorDstFactor: 'zero',
+          alphaSrcFactor: 'one',
+          alphaDstFactor: 'zero',
+        },
+        {
+          result: [0, 1, 0, 0.498],
+          output: [0, 1, 0, 0.498],
+          colorSrcFactor: 'dst-alpha',
+          colorDstFactor: 'zero',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'src',
+        },
+        {
+          result: [1, 0, 0, 1],
+          output: [0, 1, 0, 0.498],
+          colorSrcFactor: 'one-minus-dst-alpha',
+          colorDstFactor: 'dst-alpha',
+          alphaSrcFactor: 'zero',
+          alphaDstFactor: 'dst-alpha',
+        },
+      ] as const)
+  )
+  .fn(async t => {
+    const {
+      format,
+      result,
+      output,
+      colorSrcFactor,
+      colorDstFactor,
+      alphaSrcFactor,
+      alphaDstFactor,
+    } = t.params;
+    const { expectedType, expectedComponentCount } = t.getExpectedTypeAndComponentCount(format);
+    const componentCount = output.length;
+    if (componentCount < expectedComponentCount) {
+      t.skip('componentCount of pipeline output must not be fewer than that of target format');
+    }
+    const info = kTextureFormatInfo[format];
+    await t.selectDeviceOrSkipTestCase(info.feature);
+
+    const renderTarget = t.device.createTexture({
+      format,
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    const pipeline = t.device.createRenderPipeline({
+      vertex: {
+        module: t.device.createShaderModule({
+          code: `
+            [[stage(vertex)]] fn main(
+              [[builtin(vertex_index)]] VertexIndex : u32
+              ) -> [[builtin(position)]] vec4<f32> {
+                var pos : array<vec2<f32>, 3> = array<vec2<f32>, 3>(
+                    vec2<f32>(-1.0, -3.0),
+                    vec2<f32>(3.0, 1.0),
+                    vec2<f32>(-1.0, 1.0));
+                return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
+              }
+              `,
+        }),
+        entryPoint: 'main',
+      },
+      fragment: {
+        module: t.device.createShaderModule({
+          code: t.getFragmentShaderCode(output, expectedType, componentCount),
+        }),
+        entryPoint: 'main',
+        targets: [
+          {
+            format,
+            blend: {
+              color: {
+                srcFactor: colorSrcFactor,
+                dstFactor: colorDstFactor,
+                operation: 'add',
+              },
+              alpha: {
+                srcFactor: alphaSrcFactor,
+                dstFactor: alphaDstFactor,
+                operation: 'add',
+              },
+            },
+          },
+        ],
+      },
+      primitive: { topology: 'triangle-list' },
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: renderTarget.createView(),
+          storeOp: 'store',
+          loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+        },
+      ],
+    });
+    pass.setPipeline(pipeline);
+    pass.draw(3);
+    pass.endPass();
+    t.device.queue.submit([encoder.finish()]);
+
+    t.expectSingleColor(renderTarget, format, {
+      size: [1, 1, 1],
+      exp: { R: result[0], G: result[1], B: result[2], A: result[3] },
     });
   });
