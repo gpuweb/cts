@@ -4,71 +4,6 @@ buffer, and calling draw function. For draw function, we only tests OOB for draw
 and instance step mode vertex buffer OOB for drawIndexed. Vertex step mode vertex buffer OOB for
 drawIndexed, vertex buffer OOB for drawIndirect and vertex and index buffer OOB for
 drawIndexedIndirect are covered in robust access.
-
-TODO: make sure this isn't already covered somewhere else, review, organize, and implement.
-> - In encoder.finish():
->     - setVertexBuffer and setIndexBuffer commands (even if no draw):
->         - Implicit offset/size are computed correctly. E.g.:
->             { offset:         0, boundSize:         0, bufferSize: 24 },
->             { offset:         0, boundSize: undefined, bufferSize: 24 },
->             { offset: undefined, boundSize:         0, bufferSize: 24 },
->             { offset: undefined, boundSize: undefined, bufferSize: 24 },
->             { offset:         8, boundSize:        16, bufferSize: 24 },
->             { offset:         8, boundSize: undefined, bufferSize: 24 },
->         - Computed {index, vertex} buffer size is zero.
->             (Omit draw command if it's not necessary to trigger error, otherwise test both with and without draw command to make sure error happens at the right time.)
->             { offset: 24, boundSize: undefined, bufferSize: 24, _ok: false },
->         - Bound range out-of-bounds on the GPUBuffer. E.g.:
->             - x= offset in {0,8}
->             - x= boundSize in {8,16,17}
->             - x= extraSpaceInBuffer in {-1,0}
->     - All (non/indexed, in/direct) draw commands
->         - Same GPUBuffer bound to multiple vertex buffer slots
->             - Non-overlapping, overlapping ranges
->         - A needed vertex buffer is not bound
->             - Was bound in another render pass but not the current one
->             - x= all vertex formats
->         - setPl, setVB, setIB, draw, {setPl,setVB,setIB,nothing (control)}, then
->           a larger draw that wouldn't have been valid before that
->         - Draw call needs to read {=, >} any bound vertex buffer range
->           (with GPUBuffer that is always large enough)
->             - x= all vertex formats
->             - x= weird offset values
->             - x= weird arrayStride values
->         - A bound vertex buffer range is significantly larger than necessary
->
->     - All non-indexed (in/direct) draw commands,
->         - An unused {index (with uselessly small range), vertex} buffer
->           is bound (immediately before draw call)
->         - vertex access out of bounds (make sure this doesn't overlap with robust access)
->             - bound vertex buffer **ranges** are {exact size, just under exact size} needed for draws with:
->                 - vertexCount largeish
->                 - firstVertex {=, >} 0
->                 - instanceCount largeish
->                 - firstInstance {=, >} 0
->             - include VBs with both step modes
->         - x= {draw, drawIndirect}
->         - x= {render pass, render bundle}
->     - Indexed draw commands,
->         - No index buffer is bound
->         - Same GPUBuffer bound to index buffer and a vertex buffer slot
->             - Non-overlapping, overlapping ranges
->         - Draw call needs to read {=, >} the bound index buffer range
->           (with GPUBuffer that is always large enough)
->             - range is too small and GPUBuffer is large enough
->             - range and GPUBuffer are exact size
->             - x= all index formats
->         - Bound index buffer range is significantly larger than necessary
->         - vertex access out of bounds (make sure this doesn't overlap with robust access)
->         - bound vertex buffer **ranges** are {exact size, just under exact size} needed for draws with:
->                 - a vertex index in the buffer is largeish
->                 - baseVertex {=, >} 0
->                 - instanceCount largeish
->                 - firstInstance {=, >} 0
->             - include VBs with both step modes
->         - x= {render pass, render bundle}
-> - In queue.submit():
->     - Every GPUBuffer referenced in any element of commandBuffers is in the "unmapped" buffer state.
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
@@ -373,3 +308,176 @@ Related set*Buffer validation rules:
       isUsageValid
     );
   });
+
+g.test('set_buffer_parameter_validation')
+  .desc(
+    `
+In this test we test the parameter validation in setIndexBuffer and setVertexBuffer, and we test
+that implicit parameter used in setIndexBuffer and setVertexBuffer is computed correctly, and use
+draw and drawIndexed to validate the buffer binding is as we expect.
+    - Test that bound range out-of-bounds on the GPUBuffer is catched by set*Buffer.
+    - Exam that implicit offset/size are computed correctly.
+    - Test that validation catch the situation that buffer offset > buffer size.
+    - Test that setVertexBuffer validate the slot is less than maxVertexBuffers.
+    - Test that given/computed zero index/vertex buffer bound size is valid as long as drawing
+      0 index/vertex.
+    - Test setting index and vertex buffer before/after setPipeline make no different.
+
+Related set*Buffer validation rules:
+    - Index buffer
+        - offset is a multiple of indexFormat's byte size.
+        - offset + size less than or equal to buffer.[[size]].
+    - Vertex buffer
+        - slot < this.[[device]].[[limits]].maxVertexBuffers.
+        - offset is a multiple of 4.
+        - offset + size less than or equal to buffer.[[size]].
+`
+  )
+  .unimplemented();
+
+g.test(`buffer_binding_overlap`)
+  .desc(
+    `
+In this test, we test the buffer overlapping, i.e. one GPUBuffer is bound to multiple vertex buffer
+slot or both index buffer and vertex buffer slot, with different offset setting (range completely
+overlap, partially overlap and no renge overlap). All 4 types of draw call are tested to ensure
+that the setting doesn't cause validation error when drawing.
+    - Test overlapping {vertex/vertex,vertex/index} buffers are valid with/out draw.
+    - Test all range overlapping situation for buffers
+    - Validate that calling set*Buffer before/after setPipeline is the same
+`
+  )
+  .unimplemented();
+
+g.test(`needed_buffer_missing`)
+  .desc(
+    `
+In this test we test that any missing buffer for a used slot will cause validation errors when drawing.
+- All (non/indexed, in/direct) draw commands
+    - A needed vertex buffer is not bound
+        - Was bound in another render pass but not the current one
+        - x= all vertex formats
+- Indexed draw commands,
+    - No index buffer is bound
+`
+  )
+  .unimplemented();
+
+g.test(`unused_buffer_bound`)
+  .desc(
+    `
+In this test we test that a small buffer bound to unused buffer slot won't cause validation error.
+- All draw commands,
+  - An unused {index , vertex} buffer with uselessly small range is bound (immediately before draw
+    call)
+`
+  )
+  .unimplemented();
+
+g.test(`last_buffer_setting_take_account`)
+  .desc(
+    `
+In this test we test that only the last setting for a buffer slot take account.
+- All (non/indexed, in/direct) draw commands
+  - setPl, setVB, setIB, draw, {setPl,setVB,setIB,nothing (control)}, then a larger draw that
+    wouldn't have been valid before that
+`
+  )
+  .unimplemented();
+
+g.test(`index_buffer_OOB`)
+  .desc(
+    `
+In this test we test that index buffer OOB is catched as validation error in drawIndex.
+drawIndexedIndirect didn't has such validation yet.
+- Indexed draw commands,
+    - Draw call needs to read {=, >} the bound index buffer range, with GPUBuffer that is {large
+      enough, exactly the size of bound range}
+        - range is too small and GPUBuffer is large enough
+        - range and GPUBuffer are exact size
+        - x= all index formats
+`
+  )
+  .unimplemented();
+
+g.test(`vertex_buffer_OOB`)
+  .desc(
+    `
+In this test we test that vertex buffer OOB is catched as validation error in draw call. Specifically,
+only vertex step mode buffer OOB in draw and instance step mode buffer OOB in draw and drawIndexed
+are CPU-validated. Other cases are currently handled by robust access.
+- Test that:
+    - Draw call needs to read {=, >} any bound vertex buffer range, with GPUBuffer that is {large
+      enough, exactly the size of bound range}
+        - x= all vertex formats
+        - x= weird offset values
+        - x= weird arrayStride values
+        - x= {render pass, render bundle}
+- For vertex step mode vertex buffer,
+    - Test with draw:
+        - vertexCount largeish
+        - firstVertex {=, >} 0
+    - drawIndexed, draIndirect and drawIndexedIndirect are dealt by robust access
+- For instance step mode vertex buffer,
+    - Test with draw and drawIndexed:
+        - instanceCount largeish
+        - firstInstance {=, >} 0
+    - draIndirect and drawIndexedIndirect are dealt by robust access
+`
+  )
+  .unimplemented();
+
+g.test(`largeish_buffer`)
+  .desc(
+    `
+In this test we test that a very large range of buffer is bound to different slot, and no validation
+error occurs.
+- A bound vertex buffer range is significantly larger than necessary
+- A bound index buffer range is significantly larger than necessary
+`
+  )
+  .unimplemented();
+
+g.test('buffer_must_unmap_before_queue_submit')
+  .desc(
+    `
+In this test we test that submitting a command buffer with buffers that are still mapping will cause
+validation error.
+  `
+  )
+  .unimplemented();
+
+g.test('create_render_pipeline_vertex_buffer_layout_validation')
+  .desc(
+    `
+In this test we test the vertex buffer layuouts validation within creating render pipeline.
+    - Test aspect: arrayStrideValue, attributeOffset, attributeCount, wgslTypeCompatible,
+      bufferCount, indistinctLocation
+    - When testing the arrayStrideValue aspect, we test the following validation in GPUVertexBufferLayout:
+      - descriptor.arrayStride Γëñ device.[[device]].[[limits]].maxVertexBufferArrayStride.
+      - descriptor.arrayStride is a multiple of 4.
+    - When testing the attributeOffset aspect, we test the following validation in GPUVertexBufferLayout:
+      - For each attribute attrib in the list descriptor.attributes:
+        - If descriptor.arrayStride is zero:
+          - attrib.offset + sizeof(attrib.format) Γëñ device.[[device]].[[limits]].maxVertexBufferArrayStride.
+        - Otherwise:
+          - attrib.offset + sizeof(attrib.format) Γëñ descriptor.arrayStride.
+        - attrib.offset is a multiple of the minimum of 4 and sizeof(attrib.format).
+    - When testing the attributeCount aspect, we test the following validation:
+      - In GPUVertexBufferLayout, for each attribute attrib in the list descriptor.attributes:
+        - attrib.shaderLocation is less than device.[[device]].[[limits]].maxVertexAttributes.
+      - In GPUVertexState, The sum of vertexBuffer.attributes.length, over every vertexBuffer in
+        descriptor.buffers, is less than or equal to device.[[device]].[[limits]].maxVertexAttributes.
+    - When testing the wgslTypeCompatible aspect, we test the following validation in GPUVertexBufferLayout:
+      - For each vertex attribute that serve as a input of the vertex shader entry point, the corresponding
+        attrib element of descriptor.attributes with matched shader location satisfying that:
+        - The format in shader must be compatible with attrbi.format
+    - When testing the bufferCount aspect, we test the following validation in GPUVertexState:
+      - descriptor.buffers.length is less than or equal to device.[[device]].[[limits]].maxVertexBuffers.
+        - By changing the number of buffers with attributes and adding buffer with no attribute
+    - When testing the indistinctLocation aspect, we test the following validation in GPUVertexState:
+      - Each attrib in the union of all GPUVertexAttribute across descriptor.buffers has a distinct
+        attrib.shaderLocation value.
+`
+  )
+  .unimplemented();
