@@ -14,140 +14,58 @@ TODO: subsume existing test, rewrite fixture as needed.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { assert, unreachable } from '../../../../../common/util/util.js';
+import { kSamplerBindingTypes, kBufferBindingTypes } from '../../../../capability_info.js';
+import { generateWgslBindingDeclaresAndBindGroupLayouts } from '../../../../util/binding_type_declare_helpers/generate_wgsl_binding_declare_helper.js';
 import { ValidationTest } from '../../validation_test.js';
-
-function generateBindingDeclare(group: number, binding: GPUBindGroupLayoutEntry) {
-  // Buffers:
-  //   - var<uniform> buf : Buf;
-  //   - var<storage, read_write> buf: Buf;
-  //   - var<storage, read> buf: Buf;
-  let declare: string;
-  if (binding.buffer !== undefined) {
-    let decoration: string;
-    if (binding.buffer.type === undefined) {
-      decoration = 'uniform';
-    } else {
-      switch (binding.buffer.type) {
-        case 'uniform': {
-          decoration = 'uniform';
-          break;
-        }
-        case 'storage': {
-          decoration = 'storage, read_write';
-          break;
-        }
-        case 'read-only-storage': {
-          decoration = 'storage, read';
-          break;
-        }
-        default:
-          unreachable();
-      }
-    }
-    declare = `var<${decoration}> buf: Buf`;
-  } else {
-    // TODO: need to support more types:
-    // ExternalTexture:
-    //   - var tex : texture_external;
-
-    // Sampler:
-    //   - var samp : sampler;
-    //   - var samp : sampler_comparison;
-
-    // StorageTexture: access must be write is specified
-    //   - var storeTex: texture_storage_1d<texel_format,access>
-    //   - var storeTex: texture_storage_2d<texel_format,access>
-    //   - var storeTex: texture_storage_3d<texel_format,access>
-
-    // Texture
-    //   - var tex: texture_1d<type>
-    //   - var tex: texture_2d<type>
-    //   - var tex: texture_2d_array<type>
-    //   - var tex: texture_3d<type>
-    //   - var tex: texture_cube<type>
-    //   - var tex: texture_cube_array<type>
-    //   - var tex: texture_multisampled_2d<type>
-    //   - var tex: texture_depth_2d;
-    //   - var tex: texture_depth_2d_array;
-    //   - var tex: texture_depth_multisampled_2d;
-    //   - var tex: texture_depth_cube_array;
-    //   - var tex: texture_depth_cube;
-    unreachable();
-  }
-
-  const result = `[[group(${group}), binding(${binding.binding})]] ${declare};`;
-  return result;
-}
 
 function generateShaderCode(
   device: GPUDevice,
   bindGroups: Array<Array<GPUBindGroupLayoutEntry>>
-): { layout: GPUPipelineLayout; vertex: string; fragment: string; compute: string } {
+): {
+  bindGroupLayouts: Array<GPUBindGroupLayout>;
+  vertex: string;
+  fragment: string;
+  compute: string;
+} {
+  const {
+    bindGroupLayouts,
+    vertex,
+    fragment,
+    compute,
+  } = generateWgslBindingDeclaresAndBindGroupLayouts(device, bindGroups);
+
   const header = `
     [[block]] struct Buf {
       data : vec4<f32> ;
     };
   `;
 
-  const vertexBody = `
+  const vertexSource = `
+  ${header}
+  ${vertex}
   [[stage(vertex)]] fn main([[location(0)]] pos : vec4<f32>) -> [[builtin(position)]] vec4<f32> {
     return pos;
   }
   `;
 
-  const fragmentBody = `
+  const fragmentSource = `
+  ${header}
+  ${fragment}
   [[stage(fragment)]] fn main() -> [[location(0)]] vec4<f32> {
     return vec4<f32>(0.0, 1.0, 0.0, 1.0);
   }
   `;
 
-  const computeBody = `
+  const computeSource = `
+  ${header}
+  ${compute}
   [[stage(compute), workgroup_size(1, 1, 1)]]
   fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
   }
   `;
 
-  let vertexSource: string = header;
-  let fragmentSource: string = header;
-  let computeSource: string = header;
-  const bindGroupLayouts = [];
-
-  for (let i = 0; i < bindGroups.length; ++i) {
-    // Support empty bindGroupLayout
-    const entries = [];
-    for (let j = 0; j < bindGroups[i].length; ++j) {
-      const binding = bindGroups[i][j];
-      assert(binding !== undefined);
-      entries.push(bindGroups[i][j]);
-      const declare = generateBindingDeclare(i, binding);
-      switch (binding.visibility) {
-        case GPUShaderStage.VERTEX: {
-          vertexSource += declare;
-          break;
-        }
-        case GPUShaderStage.FRAGMENT: {
-          fragmentSource += declare;
-          break;
-        }
-        case GPUShaderStage.COMPUTE: {
-          computeSource += declare;
-          break;
-        }
-        default:
-          unreachable();
-      }
-    }
-    bindGroupLayouts.push(device.createBindGroupLayout({ entries }));
-  }
-
-  vertexSource += vertexBody;
-  fragmentSource += fragmentBody;
-  computeSource += computeBody;
-  const pipelineLayout = device.createPipelineLayout({ bindGroupLayouts });
-
   return {
-    layout: pipelineLayout,
+    bindGroupLayouts,
     vertex: vertexSource,
     fragment: fragmentSource,
     compute: computeSource,
@@ -155,6 +73,32 @@ function generateShaderCode(
 }
 
 class F extends ValidationTest {
+  bindGroupLayouts: Array<GPUBindGroupLayout> = [];
+  getVertexBuffer(): GPUBuffer {
+    const vertices = new Float32Array([
+      -1.0,
+      -1.0,
+      0.0,
+      1.0,
+      1.0,
+      -1.0,
+      0.0,
+      1.0,
+      -1.0,
+      1.0,
+      0.0,
+      1.0,
+    ]);
+    const vertexBuffer = this.device.createBuffer({
+      size: vertices.byteLength,
+      usage: GPUBufferUsage.VERTEX,
+      mappedAtCreation: true,
+    });
+    new Float32Array(vertexBuffer.getMappedRange()).set(vertices);
+    vertexBuffer.unmap();
+    return vertexBuffer;
+  }
+
   getUniformBuffer(): GPUBuffer {
     return this.device.createBuffer({
       size: 8 * Float32Array.BYTES_PER_ELEMENT,
@@ -166,10 +110,11 @@ class F extends ValidationTest {
     device: GPUDevice,
     bindGroups: Array<Array<GPUBindGroupLayoutEntry>>
   ): GPURenderPipeline {
-    const { layout, vertex, fragment } = generateShaderCode(device, bindGroups);
+    const { bindGroupLayouts, vertex, fragment } = generateShaderCode(device, bindGroups);
+    this.bindGroupLayouts = bindGroupLayouts;
 
     const pipeline = this.device.createRenderPipeline({
-      layout,
+      layout: this.device.createPipelineLayout({ bindGroupLayouts }),
       vertex: {
         module: this.device.createShaderModule({
           code: vertex,
@@ -208,7 +153,7 @@ class F extends ValidationTest {
     const result = generateShaderCode(device, bindGroups);
 
     const pipeline = this.device.createComputePipeline({
-      layout: result.layout,
+      layout: this.device.createPipelineLayout({ bindGroupLayouts: result.bindGroupLayouts }),
       compute: {
         module: this.device.createShaderModule({
           code: result.compute,
@@ -316,27 +261,7 @@ g.test('it_is_invalid_to_draw_in_a_render_pass_with_missing_bind_groups')
       }),
     });
 
-    const vertices = new Float32Array([
-      -1.0,
-      -1.0,
-      0.0,
-      1.0,
-      1.0,
-      -1.0,
-      0.0,
-      1.0,
-      -1.0,
-      1.0,
-      0.0,
-      1.0,
-    ]);
-    const verticesBuffer = t.device.createBuffer({
-      size: vertices.byteLength,
-      usage: GPUBufferUsage.VERTEX,
-      mappedAtCreation: true,
-    });
-    new Float32Array(verticesBuffer.getMappedRange()).set(vertices);
-    verticesBuffer.unmap();
+    const vertexBuffer = t.getVertexBuffer();
 
     const commandEncoder = t.device.createCommandEncoder();
     const renderPass = t.beginRenderPass(commandEncoder);
@@ -347,10 +272,136 @@ g.test('it_is_invalid_to_draw_in_a_render_pass_with_missing_bind_groups')
     if (setBindGroup2) {
       renderPass.setBindGroup(1, bindGroup1);
     }
-    renderPass.setVertexBuffer(0, verticesBuffer);
+    renderPass.setVertexBuffer(0, vertexBuffer);
     renderPass.draw(3);
     renderPass.endPass();
     t.expectValidationError(() => {
       commandEncoder.finish();
     }, !_success);
+  });
+
+g.test('buffer_binding_layout_should_be_exactly_equivalent,render_pipeline')
+  .desc(
+    `
+  The GPUBufferBindingLayout bindings configure should be exactly
+  same in PipelineLayout and bindgroup.
+  - TODO: test more draw functions, e.g. indirect
+  - TODO: test more visibilities, e.g. vetex
+  - TODO: bind group should be created with different layout
+  `
+  )
+  .params(u => u.combine('type', kBufferBindingTypes))
+  .fn(async t => {
+    const { type } = t.params;
+
+    // Create fixed bindGroup
+    const uniformBuffer = t.getUniformBuffer();
+
+    const bindGroup = t.device.createBindGroup({
+      entries: [
+        {
+          binding: 0,
+          resource: {
+            buffer: uniformBuffer,
+          },
+        },
+      ],
+      layout: t.device.createBindGroupLayout({
+        entries: [
+          {
+            binding: 0,
+            visibility: GPUShaderStage.FRAGMENT,
+            buffer: {}, // default type: uniform
+          },
+        ],
+      }),
+    });
+
+    // Create pipeline with different layouts
+    const pipeline = t.createRenderPipelineWithLayout(t.device, [
+      [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.FRAGMENT,
+          buffer: {
+            type,
+          },
+        },
+      ],
+    ]);
+
+    const success = type === undefined || type === 'uniform';
+
+    const vertexBuffer = t.getVertexBuffer();
+
+    const commandEncoder = t.device.createCommandEncoder();
+    const renderPass = t.beginRenderPass(commandEncoder);
+    renderPass.setPipeline(pipeline);
+    renderPass.setBindGroup(0, bindGroup);
+    renderPass.setVertexBuffer(0, vertexBuffer);
+    renderPass.draw(3);
+    renderPass.endPass();
+    t.expectValidationError(() => {
+      commandEncoder.finish();
+    }, !success);
+  });
+
+g.test('sampler_binding_layout_should_be_exactly_equivalent,render_pipeline')
+  .desc(
+    `
+  The GPUSamplerBindingLayout bindings configure should be exactly
+  same in PipelineLayout and bindgroup.
+  - TODO: test more draw functions, e.g. indirect
+  - TODO: test more visibilities, e.g. vetex
+  - TODO: bind group should be created with different layout
+  `
+  )
+  .params(u => u.combine('type', kSamplerBindingTypes))
+  .fn(async t => {
+    const { type } = t.params;
+    const bindGroup = t.device.createBindGroup({
+      entries: [
+        {
+          binding: 0,
+          resource: t.device.createSampler(),
+        },
+      ],
+      layout: t.device.createBindGroupLayout({
+        entries: [
+          {
+            binding: 0,
+            visibility: GPUShaderStage.FRAGMENT,
+            sampler: {}, // default type: filtering
+          },
+        ],
+      }),
+    });
+
+    // Create pipeline with different layouts
+    const pipeline = t.createRenderPipelineWithLayout(t.device, [
+      [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.FRAGMENT,
+          sampler: {
+            type,
+          },
+        },
+      ],
+    ]);
+
+    const success = type === 'filtering';
+
+    const vertexBuffer = t.getVertexBuffer();
+
+    const commandEncoder = t.device.createCommandEncoder();
+    const renderPass = t.beginRenderPass(commandEncoder);
+    renderPass.setPipeline(pipeline);
+    renderPass.setBindGroup(0, bindGroup);
+    renderPass.setVertexBuffer(0, vertexBuffer);
+    renderPass.draw(3);
+    renderPass.endPass();
+    t.expectValidationError(() => {
+      commandEncoder.finish();
+    }, !success);
   });

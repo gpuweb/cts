@@ -63,6 +63,15 @@ Whenever a new generally-useful helper is added, it should be indexed here.
 - {@link webgpu/util/texture/texel_data}: Helpers encoding/decoding texel formats.
 - {@link webgpu/shader/types}: Helpers for WGSL data types.
 - {@link webgpu/web_platform/util}: Helpers for web platform features (e.g. video elements).
+- {@link webgpu/util/binding_type_declare_helpers/generate_wgsl_binding_declare_helper}:
+    Helper functions to generate wgsl shader for binding resources and create bind group layouts
+    based on arrays of GPUBindGroupLayoutDescriptor.
+- {@link webgpu/util/binding_type_declare_helpers/buffer_binding_declare_helper}:
+    Helper functions to generate wgsl shader for buffer bindings based on GPUBufferBindingLayout.
+- {@link webgpu/util/binding_type_declare_helpers/sampler_binding_declare_helper}:
+    Helper functions to generate wgsl shader for sampler bindings based on GPUSamplerBindingLayout.
+- {@link webgpu/util/binding_type_declare_helpers/external_binding_declare_helper}:
+    Helper functions to generate wgsl shader for external bindings.
 
 ### General Helpers
 
