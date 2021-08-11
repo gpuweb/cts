@@ -1,4 +1,3 @@
-import { assert } from '../../../../../common/util/util.js';
 import { GPUTest } from '../../../../gpu_test.js';
 
 const kSize = 4;
@@ -12,20 +11,16 @@ interface BindGroupIndices {
 export class ProgrammableStateTest extends GPUTest {
   private commonBindGroupLayout: GPUBindGroupLayout | undefined;
 
-  protected async init(): Promise<void> {
-    await super.init();
-
-    
-  }
-
   get bindGroupLayout(): GPUBindGroupLayout {
     if (!this.commonBindGroupLayout) {
       this.commonBindGroupLayout = this.device.createBindGroupLayout({
-        entries: [{
-          binding: 0,
-          visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
-          buffer: { type: 'storage' }
-        }]
+        entries: [
+          {
+            binding: 0,
+            visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
+            buffer: { type: 'storage' },
+          },
+        ],
       });
     }
     return this.commonBindGroupLayout;
@@ -42,9 +37,7 @@ export class ProgrammableStateTest extends GPUTest {
     return buffer;
   }
 
-  createBindGroup(
-    buffer: GPUBuffer
-  ): GPUBindGroup {
+  createBindGroup(buffer: GPUBuffer): GPUBindGroup {
     return this.device.createBindGroup({
       layout: this.bindGroupLayout,
       entries: [{ binding: 0, resource: { buffer } }],
@@ -53,8 +46,8 @@ export class ProgrammableStateTest extends GPUTest {
 
   // Create a compute pipeline that performs an operation on data from two bind groups,
   // then writes the result to a third bind group.
-  createBindingStateComputePipeline(groups : BindGroupIndices): GPUComputePipeline {
-    var wgsl = `[[block]] struct Data {
+  createBindingStateComputePipeline(groups: BindGroupIndices): GPUComputePipeline {
+    const wgsl = `[[block]] struct Data {
         value : i32;
       };
 
@@ -70,11 +63,7 @@ export class ProgrammableStateTest extends GPUTest {
 
     return this.device.createComputePipeline({
       layout: this.device.createPipelineLayout({
-        bindGroupLayouts: [
-          this.bindGroupLayout,
-          this.bindGroupLayout,
-          this.bindGroupLayout
-        ]
+        bindGroupLayouts: [this.bindGroupLayout, this.bindGroupLayout, this.bindGroupLayout],
       }),
       compute: {
         module: this.device.createShaderModule({
