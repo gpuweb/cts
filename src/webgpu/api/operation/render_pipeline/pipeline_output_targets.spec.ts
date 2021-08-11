@@ -6,34 +6,9 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { unreachable } from '../../../../common/util/util.js';
 import { kRenderableColorTextureFormats, kTextureFormatInfo } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
+import { kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
 
 class F extends GPUTest {
-  getExpectedTypeAndComponentCount(
-    format: GPUTextureFormat
-  ): { expectedType: GPUTextureSampleType; expectedComponentCount: number } {
-    let expectedType: GPUTextureSampleType;
-    if (format.endsWith('sint')) {
-      expectedType = 'sint';
-    } else if (format.endsWith('uint')) {
-      expectedType = 'uint';
-    } else {
-      expectedType = 'float';
-    }
-    // Only used for renderable color formats
-    let expectedComponentCount: number = 1;
-    if (format.startsWith('rgba') || format.startsWith('bgra') || format.startsWith('rgb10a2')) {
-      expectedComponentCount = 4;
-    } else if (format.startsWith('rg')) {
-      expectedComponentCount = 2;
-    } else if (format.startsWith('r')) {
-      expectedComponentCount = 1;
-    } else {
-      unreachable();
-    }
-
-    return { expectedType, expectedComponentCount };
-  }
-
   getFragmentShaderCode(
     output: readonly number[],
     sampleType: GPUTextureSampleType,
@@ -51,11 +26,13 @@ class F extends GPUTest {
         fragColorType = 'u32';
         suffix = 'u';
         break;
-      default:
+      case 'float':
         fragColorType = 'f32';
         suffix = '';
-        fractionDigits = 2;
+        fractionDigits = 4;
         break;
+      default:
+        unreachable();
     }
 
     const v = output.map(n => n.toFixed(fractionDigits));
@@ -101,13 +78,10 @@ g.test('color,component_count')
       .combine('format', kRenderableColorTextureFormats)
       .beginSubcases()
       .combine('componentCount', [1, 2, 3, 4])
+      .filter(x => x.componentCount >= kTexelRepresentationInfo[x.format].componentOrder.length)
   )
   .fn(async t => {
     const { format, componentCount } = t.params;
-    const { expectedType, expectedComponentCount } = t.getExpectedTypeAndComponentCount(format);
-    if (componentCount < expectedComponentCount) {
-      t.skip('componentCount of pipeline output must not be fewer than that of target format');
-    }
     const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
@@ -140,7 +114,7 @@ g.test('color,component_count')
       },
       fragment: {
         module: t.device.createShaderModule({
-          code: t.getFragmentShaderCode(result, expectedType, componentCount),
+          code: t.getFragmentShaderCode(result, info.sampleType, componentCount),
         }),
         entryPoint: 'main',
         targets: [{ format }],
@@ -172,7 +146,7 @@ g.test('color,component_count')
 g.test('color,component_count,blend')
   .desc(
     `Test that blending behaves correctly when:
-- fragement output has no alpha, but the src alpha is not used for the blend operation indicated by blend factors
+- fragment output has no alpha, but the src alpha is not used for the blend operation indicated by blend factors
 - attachment format has no alpha, and the dst alpha should be assumed as 1
 
 The attachment has a load value of [1, 0, 0, 1]
@@ -182,13 +156,13 @@ The attachment has a load value of [1, 0, 0, 1]
     u
       .combine('format', ['r8unorm', 'rg8unorm', 'rgba8unorm', 'bgra8unorm'] as const)
       .beginSubcases()
-      // result is expected values in the color attachment (extra channels are discarded)
+      // _result is expected values in the color attachment (extra channels are discarded)
       // output is the fragment shader output vector
       // 0.498 -> 0x7f, 0.502 -> 0x80
       .combineWithParams([
         // fragment output has no alpha
         {
-          result: [0, 1, 0, 0],
+          _result: [0, 0, 0, 0],
           output: [0],
           colorSrcFactor: 'one',
           colorDstFactor: 'zero',
@@ -196,7 +170,7 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaDstFactor: 'zero',
         },
         {
-          result: [0, 1, 0, 0],
+          _result: [0, 0, 0, 0],
           output: [0],
           colorSrcFactor: 'dst-alpha',
           colorDstFactor: 'zero',
@@ -204,7 +178,7 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaDstFactor: 'zero',
         },
         {
-          result: [1, 0, 0, 1],
+          _result: [1, 0, 0, 0],
           output: [0],
           colorSrcFactor: 'one-minus-dst-alpha',
           colorDstFactor: 'dst-alpha',
@@ -212,7 +186,7 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaDstFactor: 'one',
         },
         {
-          result: [0.498, 0, 0, 1],
+          _result: [0.498, 0, 0, 0],
           output: [0.498],
           colorSrcFactor: 'dst-alpha',
           colorDstFactor: 'zero',
@@ -220,7 +194,7 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaDstFactor: 'one',
         },
         {
-          result: [0, 1, 0, 0],
+          _result: [0, 1, 0, 0],
           output: [0, 1],
           colorSrcFactor: 'one',
           colorDstFactor: 'zero',
@@ -228,7 +202,7 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaDstFactor: 'zero',
         },
         {
-          result: [0, 1, 0, 0],
+          _result: [0, 1, 0, 0],
           output: [0, 1],
           colorSrcFactor: 'dst-alpha',
           colorDstFactor: 'zero',
@@ -236,7 +210,7 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaDstFactor: 'zero',
         },
         {
-          result: [1, 0, 0, 1],
+          _result: [1, 0, 0, 0],
           output: [0, 1],
           colorSrcFactor: 'one-minus-dst-alpha',
           colorDstFactor: 'dst-alpha',
@@ -244,7 +218,7 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaDstFactor: 'one',
         },
         {
-          result: [0, 1, 0, 0],
+          _result: [0, 1, 0, 0],
           output: [0, 1, 0],
           colorSrcFactor: 'one',
           colorDstFactor: 'zero',
@@ -252,7 +226,7 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaDstFactor: 'zero',
         },
         {
-          result: [0, 1, 0, 0],
+          _result: [0, 1, 0, 0],
           output: [0, 1, 0],
           colorSrcFactor: 'dst-alpha',
           colorDstFactor: 'zero',
@@ -260,7 +234,7 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaDstFactor: 'zero',
         },
         {
-          result: [1, 0, 0, 1],
+          _result: [1, 0, 0, 0],
           output: [0, 1, 0],
           colorSrcFactor: 'one-minus-dst-alpha',
           colorDstFactor: 'dst-alpha',
@@ -269,7 +243,7 @@ The attachment has a load value of [1, 0, 0, 1]
         },
         // fragment output has alpha
         {
-          result: [0.502, 1, 0, 0.498],
+          _result: [0.502, 1, 0, 0.498],
           output: [0, 1, 0, 0.498],
           colorSrcFactor: 'one',
           colorDstFactor: 'one-minus-src-alpha',
@@ -277,7 +251,7 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaDstFactor: 'zero',
         },
         {
-          result: [0.502, 0.498, 0, 0.498],
+          _result: [0.502, 0.498, 0, 0.498],
           output: [0, 1, 0, 0.498],
           colorSrcFactor: 'src-alpha',
           colorDstFactor: 'one-minus-src-alpha',
@@ -285,7 +259,7 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaDstFactor: 'zero',
         },
         {
-          result: [0, 1, 0, 0.498],
+          _result: [0, 1, 0, 0.498],
           output: [0, 1, 0, 0.498],
           colorSrcFactor: 'dst-alpha',
           colorDstFactor: 'zero',
@@ -293,7 +267,7 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaDstFactor: 'zero',
         },
         {
-          result: [0, 1, 0, 0.498],
+          _result: [0, 1, 0, 0.498],
           output: [0, 1, 0, 0.498],
           colorSrcFactor: 'dst-alpha',
           colorDstFactor: 'zero',
@@ -301,7 +275,7 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaDstFactor: 'src',
         },
         {
-          result: [1, 0, 0, 1],
+          _result: [1, 0, 0, 1],
           output: [0, 1, 0, 0.498],
           colorSrcFactor: 'one-minus-dst-alpha',
           colorDstFactor: 'dst-alpha',
@@ -309,22 +283,19 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaDstFactor: 'dst-alpha',
         },
       ] as const)
+      .filter(x => x.output.length >= kTexelRepresentationInfo[x.format].componentOrder.length)
   )
   .fn(async t => {
     const {
       format,
-      result,
+      _result,
       output,
       colorSrcFactor,
       colorDstFactor,
       alphaSrcFactor,
       alphaDstFactor,
     } = t.params;
-    const { expectedType, expectedComponentCount } = t.getExpectedTypeAndComponentCount(format);
     const componentCount = output.length;
-    if (componentCount < expectedComponentCount) {
-      t.skip('componentCount of pipeline output must not be fewer than that of target format');
-    }
     const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
@@ -353,7 +324,7 @@ The attachment has a load value of [1, 0, 0, 1]
       },
       fragment: {
         module: t.device.createShaderModule({
-          code: t.getFragmentShaderCode(output, expectedType, componentCount),
+          code: t.getFragmentShaderCode(output, info.sampleType, componentCount),
         }),
         entryPoint: 'main',
         targets: [
@@ -394,6 +365,6 @@ The attachment has a load value of [1, 0, 0, 1]
 
     t.expectSingleColor(renderTarget, format, {
       size: [1, 1, 1],
-      exp: { R: result[0], G: result[1], B: result[2], A: result[3] },
+      exp: { R: _result[0], G: _result[1], B: _result[2], A: _result[3] },
     });
   });

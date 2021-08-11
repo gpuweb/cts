@@ -30,39 +30,11 @@ import {
   kRenderableColorTextureFormats,
   kTextureFormatInfo,
 } from '../../capability_info.js';
+import { kTexelRepresentationInfo } from '../../util/texture/texel_data.js';
 
 import { ValidationTest } from './validation_test.js';
 
 class F extends ValidationTest {
-  getExpectedType(format: GPUTextureFormat): GPUTextureSampleType {
-    if (format.endsWith('sint')) {
-      return 'sint';
-    } else if (format.endsWith('uint')) {
-      return 'uint';
-    } else {
-      return 'float';
-    }
-  }
-
-  getExpectedTypeAndComponentCount(
-    format: GPUTextureFormat
-  ): { expectedType: GPUTextureSampleType; expectedComponentCount: number } {
-    const expectedType = this.getExpectedType(format);
-    // Only used for renderable color formats
-    let expectedComponentCount: number = 1;
-    if (format.startsWith('rgba') || format.startsWith('bgra') || format.startsWith('rgb10a2')) {
-      expectedComponentCount = 4;
-    } else if (format.startsWith('rg')) {
-      expectedComponentCount = 2;
-    } else if (format.startsWith('r')) {
-      expectedComponentCount = 1;
-    } else {
-      unreachable();
-    }
-
-    return { expectedType, expectedComponentCount };
-  }
-
   getFragmentShaderCode(sampleType: GPUTextureSampleType, componentCount: number): string {
     const v = ['0', '1', '0', '1'];
 
@@ -128,7 +100,7 @@ class F extends ValidationTest {
       sampleCount = 1,
       depthStencil,
       fragmentShaderCode = this.getFragmentShaderCode(
-        this.getExpectedType(targets[0] ? targets[0].format : 'rgba8unorm'),
+        kTextureFormatInfo[targets[0] ? targets[0].format : 'rgba8unorm'].sampleType,
         4
       ),
     } = options;
@@ -276,7 +248,6 @@ g.test('pipeline_output_targets')
   )
   .fn(async t => {
     const { isAsync, format, sampleType, componentCount } = t.params;
-    const { expectedType, expectedComponentCount } = t.getExpectedTypeAndComponentCount(format);
     const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
@@ -285,7 +256,9 @@ g.test('pipeline_output_targets')
       fragmentShaderCode: t.getFragmentShaderCode(sampleType, componentCount),
     });
 
-    const _success = expectedType === sampleType && componentCount >= expectedComponentCount;
+    const _success =
+      info.sampleType === sampleType &&
+      componentCount >= kTexelRepresentationInfo[format].componentOrder.length;
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
@@ -365,7 +338,6 @@ g.test('pipeline_output_targets,blend')
       alphaSrcFactor,
       alphaDstFactor,
     } = t.params;
-    const { expectedType, expectedComponentCount } = t.getExpectedTypeAndComponentCount(format);
     const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
@@ -390,15 +362,15 @@ g.test('pipeline_output_targets,blend')
       fragmentShaderCode: t.getFragmentShaderCode(sampleType, componentCount),
     });
 
-    const blendingReadAlpha =
+    const blendingReadSrcAlpha =
       colorSrcFactor.includes('src-alpha') ||
       colorDstFactor.includes('src-alpha') ||
       alphaSrcFactor !== 'zero' ||
       alphaDstFactor.includes('src');
-    const meetsExtraBlendingRequirement = !blendingReadAlpha || componentCount === 4;
+    const meetsExtraBlendingRequirement = !blendingReadSrcAlpha || componentCount === 4;
     const _success =
-      expectedType === sampleType &&
-      componentCount >= expectedComponentCount &&
+      info.sampleType === sampleType &&
+      componentCount >= kTexelRepresentationInfo[format].componentOrder.length &&
       meetsExtraBlendingRequirement;
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
