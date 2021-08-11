@@ -73,57 +73,10 @@ TODO: make sure this isn't already covered somewhere else, review, organize, and
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { unreachable } from '../../../common/util/util.js';
+import { kVertexFormatInfo } from '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 
 import { ValidationTest } from './validation_test.js';
-
-// A map for buffer format informations. compatibleType indicate the general class of a format, and
-// can further map to compatible and incompatible WGSL types. I.e., for "float", "f32" and "vec*<f32>"
-// are compatible WGSL types, while "i32" and others are incompatible WGSL types.
-const typeInfoMap: {
-  [k: string]: { wgslType: string; sizeInBytes: number; compatibleType: string };
-} = {
-  float32: {
-    wgslType: 'f32',
-    sizeInBytes: 4,
-    compatibleType: 'float',
-  },
-  float32x2: {
-    wgslType: 'vec2<f32>',
-    sizeInBytes: 8,
-    compatibleType: 'float',
-  },
-  float32x3: {
-    wgslType: 'vec3<f32>',
-    sizeInBytes: 12,
-    compatibleType: 'float',
-  },
-  float32x4: {
-    wgslType: 'vec4<f32>',
-    sizeInBytes: 16,
-    compatibleType: 'float',
-  },
-  uint8x2: {
-    wgslType: 'vec2<u32>',
-    sizeInBytes: 2,
-    compatibleType: 'uint',
-  },
-  uint8x4: {
-    wgslType: 'vec4<u32>',
-    sizeInBytes: 4,
-    compatibleType: 'uint',
-  },
-  unorm8x2: {
-    wgslType: 'vec2<f32>',
-    sizeInBytes: 2,
-    compatibleType: 'float',
-  },
-  unorm8x4: {
-    wgslType: 'vec4<f32>',
-    sizeInBytes: 4,
-    compatibleType: 'float',
-  },
-};
 
 // Class that indicate how to call a draw function
 // TODO: implement this class to hold the draw call parameter and insert draw call to encoder
@@ -133,49 +86,33 @@ class DrawCall {
   }
 }
 
-// Classes that indicate how to call setIndexBuffer and setIndexBuffer
-class BufferMapping {
+// Interfaces that indicate how to call setIndexBuffer and setIndexBuffer
+interface SetBufferParam {
   buffer: GPUBuffer;
   offset?: number;
   size?: number;
-
-  constructor(buffer: GPUBuffer, offset?: number, size?: number) {
-    this.buffer = buffer;
-    this.offset = offset;
-    this.size = size;
-  }
 }
 
-class VertexBufferMapping extends BufferMapping {
+interface SetVertexBufferParam extends SetBufferParam {
   slot: number;
-
-  constructor(slot: number, buffer: GPUBuffer, offset?: number, size?: number) {
-    super(buffer, offset, size);
-    this.slot = slot;
-  }
 }
 
-class IndexBufferMapping extends BufferMapping {
+interface SetIndexBufferParam extends SetBufferParam {
   indexFormat: GPUIndexFormat;
-
-  constructor(buffer: GPUBuffer, indexFormat: GPUIndexFormat, offset?: number, size?: number) {
-    super(buffer, offset, size);
-    this.indexFormat = indexFormat;
-  }
 }
 
 // Class that indicate how to make input attribute for vertex shader module
-interface VertexBufferDescriptorForWGSLShader {
+interface VertexShaderInput {
   shaderLocation: GPUIndex32;
   wgslType: string;
 }
 
 class F extends ValidationTest {
   // Create a vertex shader module with given attributes wgsl type
-  generateVertexShaderModuleFromBufferDescriptor(
-    vertexBufferDescriptor: VertexBufferDescriptorForWGSLShader[]
+  generateVertexShaderModuleFromInputDescriptor(
+    vertexInputDescriptor: VertexShaderInput[]
   ): GPUShaderModule {
-    const shaderInput = vertexBufferDescriptor
+    const shaderInput = vertexInputDescriptor
       .map((attr, index) => `[[location(${attr.shaderLocation})]] var_${index} : ${attr.wgslType}`)
       .join(', ');
 
@@ -192,37 +129,40 @@ class F extends ValidationTest {
   generateVertexShaderModuleFromBufferLayout(
     vertexBufferLayouts: GPUVertexBufferLayout[]
   ): GPUShaderModule {
-    return this.generateVertexShaderModuleFromBufferDescriptor(
+    return this.generateVertexShaderModuleFromInputDescriptor(
       vertexBufferLayouts
-        .reduce((a, c) => [...a, ...c.attributes], [] as GPUVertexAttribute[])
-        .map(attr => {
-          return {
-            shaderLocation: attr.shaderLocation,
-            wgslType: typeInfoMap[attr.format].wgslType,
-          } as VertexBufferDescriptorForWGSLShader;
-        })
+        .reduce<GPUVertexAttribute[]>((a, c) => [...a, ...c.attributes], [])
+        .map(
+          attr =>
+            ({
+              shaderLocation: attr.shaderLocation,
+              wgslType: kVertexFormatInfo[attr.format].wgslType,
+            } as const)
+        )
     );
   }
 
-  // Create a render pipeline with given vertex buffer layouts. The vertex shader module is created
-  // using the exact matching WGSL type (as in typeInfoMap) for all attributes in all buffers in layouts.
-  // If a different vertex shader is wanted (especially when testing WGSL type compatibility), a standalone
-  // list of vertex buffer descriptor should be given.
+  /**
+   * Create a render pipeline with given vertex buffer layouts. The vertex shader module is created
+   * using the exact matching WGSL type (as in typeInfoMap) for all attributes in all buffers in
+   * layouts. If a different vertex shader is wanted (especially when testing WGSL type
+   * compatibility), a standalone list of vertex shader input descriptor should be given.
+   * @param vertexBufferLayouts A list of GPUVertexBufferLayout to be used in render pipeline descriptor,
+   * and also used to generate the vertex shader module if `vertexShaderInputs` is not given.
+   * @param vertexShaderInputs Optional, the standalone list of vertex shader input descriptor.
+   * @returns
+   */
   createRenderPipelineFromBufferLayout(
-    vertexBufferLayoutsForPipelineDescriptor: GPUVertexBufferLayout[],
-    vertexBufferDescriptorForShaderModule?: VertexBufferDescriptorForWGSLShader[]
+    vertexBufferLayouts: GPUVertexBufferLayout[],
+    vertexShaderInputs?: VertexShaderInput[]
   ): GPURenderPipeline {
     return this.device.createRenderPipeline({
       vertex: {
-        module: vertexBufferDescriptorForShaderModule
-          ? this.generateVertexShaderModuleFromBufferDescriptor(
-              vertexBufferDescriptorForShaderModule
-            )
-          : this.generateVertexShaderModuleFromBufferLayout(
-              vertexBufferLayoutsForPipelineDescriptor
-            ),
+        module: vertexShaderInputs
+          ? this.generateVertexShaderModuleFromInputDescriptor(vertexShaderInputs)
+          : this.generateVertexShaderModuleFromBufferLayout(vertexBufferLayouts),
         entryPoint: 'main',
-        buffers: vertexBufferLayoutsForPipelineDescriptor,
+        buffers: vertexBufferLayouts,
       },
       fragment: {
         module: this.device.createShaderModule({
@@ -238,32 +178,12 @@ class F extends ValidationTest {
     });
   }
 
-  // Create command encoder and render pass encoder
-  createCommandEncoder(): [GPUCommandEncoder, GPURenderPassEncoder] {
-    const colorAttachment = this.device.createTexture({
-      format: 'rgba8unorm',
-      size: { width: 2, height: 1, depthOrArrayLayers: 1 },
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-    const colorAttachmentView = colorAttachment.createView();
-
-    const encoder = this.device.createCommandEncoder();
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          view: colorAttachmentView,
-          storeOp: 'store',
-          loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
-        },
-      ],
-    });
-    return [encoder, pass];
-  }
-
-  // Generate a basic vertex buffer layout array containing given number of instance step mode and
-  // vertex step mode vertex buffer, each of them contain a given number of attributes, whose
-  // offsets form a arithmetic sequence. Within a buffer, the formats of attributes are chosen from
-  // formatList repeatedly.
+  /**
+   * Generate a basic vertex buffer layout array containing given number of instance step mode and
+   * vertex step mode vertex buffer, each of them contain a given number of attributes, whose
+   * offsets form a arithmetic sequence. Within a buffer, the formats of attributes are chosen from
+   * formatList repeatedly.
+   */
   getBasicVertexBufferLayouts({
     arrayStride = 32,
     attributePerBuffer = 2,
@@ -306,110 +226,81 @@ class F extends ValidationTest {
     return basicVertexBufferLayouts;
   }
 
-  setIndexBuffers(renderEncoder: GPURenderEncoderBase, mappings: IndexBufferMapping[]) {
-    mappings.forEach(mapping =>
-      renderEncoder.setIndexBuffer(
-        mapping.buffer,
-        mapping.indexFormat,
-        mapping.offset,
-        mapping.size
-      )
-    );
+  setIndexBuffers(renderEncoder: GPURenderEncoderBase, params: SetIndexBufferParam[]) {
+    for (const p of params) {
+      renderEncoder.setIndexBuffer(p.buffer, p.indexFormat, p.offset, p.size);
+    }
   }
 
-  setVertexBuffers(renderEncoder: GPURenderEncoderBase, mappings: VertexBufferMapping[]) {
-    mappings.forEach(mapping =>
-      renderEncoder.setVertexBuffer(mapping.slot, mapping.buffer, mapping.offset, mapping.size)
-    );
+  setVertexBuffers(renderEncoder: GPURenderEncoderBase, params: SetVertexBufferParam[]) {
+    for (const p of params) {
+      renderEncoder.setVertexBuffer(p.slot, p.buffer, p.offset, p.size);
+    }
   }
 
-  // Testing method that create render pipeline from a given buffer layout array, set index and
-  // vertex buffer before/after setting pipeline, call one given draw function if any, and check if
-  // there is any validation error.
-  testBuffer(
+  /**
+   * Testing method that create render pipeline from a given buffer layout array, set index and
+   * vertex buffer before/after setting pipeline, call one given draw function if any, and check if
+   * there is any validation error when finishing encoder.
+   */
+  doBufferSettingAndDraw(
     vertexBufferLayouts: GPUVertexBufferLayout[],
-    indexBufferMappings: IndexBufferMapping[],
-    vertexBufferMappings: VertexBufferMapping[],
+    indexBufferParams: SetIndexBufferParam[],
+    vertexBufferParams: SetVertexBufferParam[],
     drawCall: DrawCall | null,
-    isSuccess: boolean,
+    isFinishSuccess: boolean,
     setPipelineBeforeBuffer: boolean,
     useBundle: boolean
   ) {
     const renderPipeline = this.createRenderPipelineFromBufferLayout(vertexBufferLayouts);
 
-    const [encoder, pass] = this.createCommandEncoder();
-
-    const bundleDesc: GPURenderBundleEncoderDescriptor = { colorFormats: ['rgba8unorm'] };
-    const bundleEncoder: GPURenderBundleEncoder = this.device.createRenderBundleEncoder(bundleDesc);
+    const commandBufferMaker = this.createEncoder(useBundle ? 'render bundle' : 'render pass');
+    const renderEncoder = commandBufferMaker.encoder;
 
     if (setPipelineBeforeBuffer) {
-      if (useBundle) {
-        bundleEncoder.setPipeline(renderPipeline);
-      } else {
-        pass.setPipeline(renderPipeline);
-      }
+      renderEncoder.setPipeline(renderPipeline);
     }
 
-    this.setIndexBuffers(useBundle ? bundleEncoder : pass, indexBufferMappings);
-    this.setVertexBuffers(useBundle ? bundleEncoder : pass, vertexBufferMappings);
+    this.setIndexBuffers(renderEncoder, indexBufferParams);
+    this.setVertexBuffers(renderEncoder, vertexBufferParams);
 
     if (!setPipelineBeforeBuffer) {
-      if (useBundle) {
-        bundleEncoder.setPipeline(renderPipeline);
-      } else {
-        pass.setPipeline(renderPipeline);
-      }
+      renderEncoder.setPipeline(renderPipeline);
     }
 
     if (drawCall !== null) {
-      drawCall.callDraw(useBundle ? bundleEncoder : pass);
+      drawCall.callDraw(renderEncoder);
     }
 
-    if (useBundle) {
-      if (isSuccess) {
-        const bundle: GPURenderBundle = bundleEncoder.finish();
-        pass.executeBundles([bundle]);
-        pass.endPass();
-        encoder.finish();
-      } else {
-        this.expectValidationError(() => {
-          bundleEncoder.finish();
-        });
-      }
-    } else {
-      pass.endPass();
-      if (isSuccess) {
-        encoder.finish();
-      } else {
-        this.expectValidationError(() => {
-          encoder.finish();
-        });
-      }
-    }
+    commandBufferMaker.validateFinishAndSubmit(isFinishSuccess, true);
   }
 
-  // Test one given draw call with given buffer setting with/out using bundle and setting buffer
-  // before/after setting pipeline. If the draw call is null, we only test setting buffer and pipeline.
-  testSingleShoot(
+  /**
+   * Test from setting index buffer, setting vertex buffer, setting pipeline, calling one given draw
+   * call if any, to finish the encoder and submit the commang buffer, and check if validation error
+   * does or doesn't occur as expected when finishing the encoder. This method tests all cases that
+   * are with/out using bundle and setting buffer before/after setting pipeline.
+   */
+  testEncoderFinish(
     vertexBufferLayouts: GPUVertexBufferLayout[],
-    indexBufferMappings: IndexBufferMapping[],
-    vertexBufferMappings: VertexBufferMapping[],
+    indexBufferMappings: SetIndexBufferParam[],
+    vertexBufferMappings: SetVertexBufferParam[],
     drawCall: DrawCall | null,
-    isSuccess: boolean
+    isFinishSuccess: boolean
   ) {
-    [true, false].forEach(setPipelineBeforeBuffer => {
-      [true, false].forEach(useBundle => {
-        this.testBuffer(
+    for (const setPipelineBeforeBuffer of [false, true]) {
+      for (const useBundle of [false, true]) {
+        this.doBufferSettingAndDraw(
           vertexBufferLayouts,
           indexBufferMappings,
           vertexBufferMappings,
           drawCall,
-          isSuccess,
+          isFinishSuccess,
           setPipelineBeforeBuffer,
           useBundle
         );
-      });
-    });
+      }
+    }
   }
 }
 
@@ -461,10 +352,10 @@ Related set*Buffer validation rules:
     const instanceBuffer = buffers[1];
     const vertexBuffer = buffers[2];
 
-    const indexBufferMappings: IndexBufferMapping[] = [
+    const indexBufferParams: SetIndexBufferParam[] = [
       { indexFormat: p.indexFormat, buffer: indexBuffer },
     ];
-    const vertexBufferMappings: VertexBufferMapping[] = [
+    const vertexBufferParams: SetVertexBufferParam[] = [
       { slot: 0, buffer: instanceBuffer },
       { slot: 1, buffer: vertexBuffer },
     ];
@@ -475,10 +366,10 @@ Related set*Buffer validation rules:
       (usages[2] & GPUBufferUsage.VERTEX) === GPUBufferUsage.VERTEX;
 
     // Test setIndexBuffer and setVertexBuffer without calling draw
-    t.testSingleShoot(
+    t.testEncoderFinish(
       t.getBasicVertexBufferLayouts({}),
-      indexBufferMappings,
-      vertexBufferMappings,
+      indexBufferParams,
+      vertexBufferParams,
       null,
       isUsageValid
     );
