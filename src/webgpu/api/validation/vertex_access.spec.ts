@@ -456,16 +456,11 @@ const bufferUsageListForTest: number[] = [
   GPUConst.BufferUsage.INDEX | GPUConst.BufferUsage.VERTEX,
 ];
 
-g.test('set_buffer_usage_validation_and_overlap')
+g.test('set_buffer_usage_validation')
   .desc(
     `
-In this test, we test the usage validation within setIndexBuffer and setVertexBuffer, and test the
-buffer overlapping, i.e. one GPUBuffer is bound to multiple vertex buffer slot or both index buffer
-and vertex buffer slot, with different offset setting (range completely overlap, partially overlap
-and no renge overlap). If the setting is valid, we also call draw and drawIndexed to test that no
-validation errors occurs.
-    - Test overlapping {vertex/vertex,vertex/index} buffers are valid without draw.
-    - Test all range overlapping situation for buffers
+In this test, we test the usage validation within setIndexBuffer and setVertexBuffer.
+    - Validate that buffer usage mismatch is catched by set*Buffer
     - Validate that calling set*Buffer before/after setPipeline is the same
 
 Related set*Buffer validation rules:
@@ -478,46 +473,15 @@ Related set*Buffer validation rules:
   .params(u =>
     u
       .combine('indexFormat', ['uint16', 'uint32'] as GPUIndexFormat[])
-      // Combine offset situations for all 3 buffers to test different range overlapping.
-      // 1 step euqal to 16 bytes and we bound each buffer with a size of 32 bytes.
-      .combine('indexBufferOffsetStep', [0])
-      .combine('instanceBufferOffsetStep', [0, 1, 2])
-      .expand('vertexBufferOffsetStep', p => {
-        return Array(p.instanceBufferOffsetStep + 3)
-          .fill(0)
-          .map((_, index) => index);
-      })
-      .beginSubcases()
-      // We have 3 buffers slot, i.e. a index buffer, a instance step mode vertex buffer and a vertex
-      // step mode vertex buffer should be set. To test buffer overlap, we have 3 GPU buffers, and
-      // each buffer slot is bound to one of them.
-      // Test all overlap cases for three buffers, i.e. 000, 001, 010, 011, 012
-      .combine('indexBufferId', [0])
-      .combine('instanceBufferId', [0, 1])
-      .expand('vertexBufferId', p => {
-        if (p.instanceBufferId === 0) {
-          return [0, 1];
-        } else {
-          return [0, 1, 2];
-        }
-      })
       // Test all usage case for all 3 buffers
-      .combine('buffer1Usage', bufferUsageListForTest)
-      .combine('buffer2Usage', bufferUsageListForTest)
-      .expand('buffer3Usage', p => {
-        if (p.vertexBufferId === 2) {
-          // Buffer 3 is used as vertex setp mode buffer, test all usage
-          return bufferUsageListForTest;
-        } else {
-          // Buffer 3 unused
-          return [GPUConst.BufferUsage.MAP_WRITE];
-        }
-      })
+      .combine('indexBufferUsage', bufferUsageListForTest)
+      .combine('veretxBufferUsage', bufferUsageListForTest)
+      .combine('instanceBufferUsage', bufferUsageListForTest)
   )
   .fn(t => {
     const p = t.params;
 
-    const usages = [p.buffer1Usage, p.buffer2Usage, p.buffer3Usage];
+    const usages = [p.indexBufferUsage, p.veretxBufferUsage, p.instanceBufferUsage];
     const buffers: GPUBuffer[] = usages.map(usage =>
       t.createBufferWithState('valid', {
         size: 128,
@@ -526,78 +490,29 @@ Related set*Buffer validation rules:
       })
     );
 
-    const indexBuffer = buffers[p.indexBufferId];
-    const instanceBuffer = buffers[p.instanceBufferId];
-    const vertexBuffer = buffers[p.vertexBufferId];
+    const indexBuffer = buffers[0];
+    const instanceBuffer = buffers[1];
+    const vertexBuffer = buffers[2];
 
     const indexBufferMappings: IndexBufferMapping[] = [
-      {
-        indexFormat: p.indexFormat,
-        buffer: indexBuffer,
-        offset: p.indexBufferOffsetStep * 16,
-        size: 32,
-      },
+      { indexFormat: p.indexFormat, buffer: indexBuffer },
     ];
     const vertexBufferMappings: VertexBufferMapping[] = [
-      { slot: 0, buffer: instanceBuffer, offset: p.instanceBufferOffsetStep * 16, size: 32 },
-      { slot: 1, buffer: vertexBuffer, offset: p.vertexBufferOffsetStep * 16, size: 32 },
+      { slot: 0, buffer: instanceBuffer },
+      { slot: 1, buffer: vertexBuffer },
     ];
 
     const isUsageValid =
-      (usages[p.indexBufferId] & GPUBufferUsage.INDEX) === GPUBufferUsage.INDEX &&
-      (usages[p.instanceBufferId] & GPUBufferUsage.VERTEX) === GPUBufferUsage.VERTEX &&
-      (usages[p.vertexBufferId] & GPUBufferUsage.VERTEX) === GPUBufferUsage.VERTEX;
-
-    const vertexBufferLayouts = t.getBasicVertexBufferLayouts({
-      arrayStride: 8,
-      attributePerBuffer: 2,
-      offsetStep: 4,
-      formatList: ['float32'],
-      instanceStepModeBufferCount: 1,
-      vertexStepModeBufferCount: 1,
-    });
+      (usages[0] & GPUBufferUsage.INDEX) === GPUBufferUsage.INDEX &&
+      (usages[1] & GPUBufferUsage.VERTEX) === GPUBufferUsage.VERTEX &&
+      (usages[2] & GPUBufferUsage.VERTEX) === GPUBufferUsage.VERTEX;
 
     // Test setIndexBuffer and setVertexBuffer without calling draw
     t.testSingleShoot(
-      vertexBufferLayouts,
+      t.getBasicVertexBufferLayouts({}),
       indexBufferMappings,
       vertexBufferMappings,
       null,
       isUsageValid
     );
-
-    if (isUsageValid) {
-      // Test that the buffer setting won't cause validation error in draw functions.
-
-      const drawCall = new DrawCall(t);
-      // Draw
-      drawCall.vertexCount = 4;
-      drawCall.firstVertex = 0;
-      // DrawIndexed
-      const indexFormatBytes = p.indexFormat === 'uint16' ? 2 : 4;
-      drawCall.indexCount = 32 / indexFormatBytes;
-      drawCall.firstIndex = 0;
-      drawCall.baseVertex = 0;
-      // Both Draw and DrawIndexed
-      drawCall.instanceCount = 4;
-      drawCall.firstInstance = 0;
-
-      drawCall.drawType = 'draw';
-      t.testSingleShoot(
-        vertexBufferLayouts,
-        indexBufferMappings,
-        vertexBufferMappings,
-        drawCall,
-        isUsageValid
-      );
-
-      drawCall.drawType = 'drawIndexed';
-      t.testSingleShoot(
-        vertexBufferLayouts,
-        indexBufferMappings,
-        vertexBufferMappings,
-        drawCall,
-        isUsageValid
-      );
-    }
   });
