@@ -22,33 +22,6 @@ function generateBindingDeclare(group: number, binding: GPUBindGroupLayoutEntry)
   //   - var<uniform> buf : Buf;
   //   - var<storage, read_write> buf: Buf;
   //   - var<storage, read> buf: Buf;
-
-  // ExternalTexture:
-  //   - var tex : texture_external;
-
-  // Sampler:
-  //   - var samp : sampler;
-  //   - var samp : sampler_comparison;
-
-  // StorageTexture: access must be write is specified
-  //   - var storeTex: texture_storage_1d<texel_format,access>
-  //   - var storeTex: texture_storage_2d<texel_format,access>
-  //   - var storeTex: texture_storage_3d<texel_format,access>
-
-  // Texture
-  //   - var tex: texture_1d<type>
-  //   - var tex: texture_2d<type>
-  //   - var tex: texture_2d_array<type>
-  //   - var tex: texture_3d<type>
-  //   - var tex: texture_cube<type>
-  //   - var tex: texture_cube_array<type>
-  //   - var tex: texture_multisampled_2d<type>
-  //   - var tex: texture_depth_2d;
-  //   - var tex: texture_depth_2d_array;
-  //   - var tex: texture_depth_multisampled_2d;
-  //   - var tex: texture_depth_cube_array;
-  //   - var tex: texture_depth_cube;
-
   let declare: string;
   if (binding.buffer !== undefined) {
     let decoration: string;
@@ -73,161 +46,33 @@ function generateBindingDeclare(group: number, binding: GPUBindGroupLayoutEntry)
       }
     }
     declare = `var<${decoration}> buf: Buf`;
-  } else if (binding.externalTexture !== undefined) {
-    declare = `var tex : texture_external;`;
-  } else if (binding.sampler !== undefined) {
-    let suffix: string;
-    switch (binding.sampler.type) {
-      case 'filtering':
-      case 'non-filtering': {
-        suffix = 'sampler';
-        break;
-      }
-      case 'comparison': {
-        suffix = 'sampler_comparison';
-        break;
-      }
-      default:
-        unreachable();
-    }
-    declare = `var samp : ${suffix}`;
-  } else if (binding.storageTexture !== undefined) {
-    let suffix: string;
-    let textureType: string;
-    let texelFormat: string;
-
-    if (binding.storageTexture.viewDimension === undefined) {
-      textureType = 'texture_storage_2d';
-    } else {
-      switch (binding.storageTexture.viewDimension) {
-        case '1d': {
-          textureType = 'texture_storage_1d';
-          break;
-        }
-        case '2d': {
-          textureType = 'texture_storage_2d';
-          break;
-        }
-        case '2d-array':
-        case '3d': {
-          textureType = 'texture_storage_3d';
-          break;
-        }
-        default:
-          // Cannot be 'cube' or 'cube-array'
-          unreachable();
-      }
-    }
-
-    switch (binding.storageTexture.format) {
-      // float
-      case 'rgba8unorm':
-      case 'rgba8snorm':
-      case 'rgba16float':
-      case 'r32float':
-      case 'rg32float':
-      case 'rgba32float': {
-        texelFormat = 'f32';
-        break;
-      }
-
-      // uint
-      case 'rgba8uint':
-      case 'rgba16uint':
-      case 'r32uint':
-      case 'rg32uint':
-      case 'rgba32uint': {
-        texelFormat = 'u32';
-        break;
-      }
-
-      // sint
-      case 'rgba8sint':
-      case 'rgba16sint':
-      case 'r32sint':
-      case 'rg32sint':
-      case 'rgba32sint': {
-        texelFormat = 'i32';
-        break;
-      }
-      default:
-        unreachable();
-    }
-
-    suffix = `${textureType}<${texelFormat}`;
-
-    if (binding.storageTexture.access === 'write-only') {
-      suffix += ', write>';
-    } else {
-      suffix += '>';
-    }
-
-    declare = `var storeTex: ${suffix}`;
-  } else if (binding.texture !== undefined) {
-    let textureType: string;
-    let texelFormat: string = '';
-
-    const isMultisampled =
-      binding.texture.multisampled !== undefined && binding.texture.multisampled;
-    assert(
-      isMultisampled &&
-        (binding.texture.viewDimension === undefined || binding.texture.viewDimension === '2d')
-    );
-    let isDepth: boolean = false;
-
-    if (binding.texture.sampleType === undefined) {
-      texelFormat = 'f32';
-    } else {
-      switch (binding.texture.sampleType) {
-        case 'float':
-        case 'unfilterable-float': {
-          assert(!isMultisampled);
-          texelFormat = '<f32>';
-          break;
-        }
-        case 'sint': {
-          texelFormat = '<i32>';
-          break;
-        }
-        case 'uint': {
-          texelFormat = '<u32>';
-          break;
-        }
-        case 'depth': {
-          isDepth = true;
-          break;
-        }
-        default:
-          unreachable();
-      }
-    }
-
-    if (binding.texture.viewDimension === undefined) {
-      if (isDepth && isMultisampled) {
-        textureType = 'texture_depth_multisampled_2d';
-      } else if (isMultisampled) {
-        textureType = 'texture_multisampled_2d';
-      } else if (isDepth) {
-        textureType = 'texture_depth_2d';
-      } else {
-        textureType = 'texture_2d';
-      }
-    } else {
-      switch (binding.texture.viewDimension) {
-        case '2d': {
-          textureType = isDepth ? 'texture_depth_2d' : 'texture_2d';
-          break;
-        }
-        // TODO: it seems that cts defines the viewDimenstion type to
-        // '2d' only. Not sure whether we shoud change it now.
-        default:
-          unreachable();
-      }
-    }
-
-    const suffix = textureType + texelFormat;
-    declare = `var tex : ${suffix}`;
   } else {
+    // TODO: need to support more types:
+    // ExternalTexture:
+    //   - var tex : texture_external;
+
+    // Sampler:
+    //   - var samp : sampler;
+    //   - var samp : sampler_comparison;
+
+    // StorageTexture: access must be write is specified
+    //   - var storeTex: texture_storage_1d<texel_format,access>
+    //   - var storeTex: texture_storage_2d<texel_format,access>
+    //   - var storeTex: texture_storage_3d<texel_format,access>
+
+    // Texture
+    //   - var tex: texture_1d<type>
+    //   - var tex: texture_2d<type>
+    //   - var tex: texture_2d_array<type>
+    //   - var tex: texture_3d<type>
+    //   - var tex: texture_cube<type>
+    //   - var tex: texture_cube_array<type>
+    //   - var tex: texture_multisampled_2d<type>
+    //   - var tex: texture_depth_2d;
+    //   - var tex: texture_depth_2d_array;
+    //   - var tex: texture_depth_multisampled_2d;
+    //   - var tex: texture_depth_cube_array;
+    //   - var tex: texture_depth_cube;
     unreachable();
   }
 
