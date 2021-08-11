@@ -454,14 +454,14 @@ In this test we test the vertex buffer layuouts validation within creating rende
     - Test aspect: arrayStrideValue, attributeOffset, attributeCount, wgslTypeCompatible,
       bufferCount, indistinctLocation
     - When testing the arrayStrideValue aspect, we test the following validation in GPUVertexBufferLayout:
-      - descriptor.arrayStride Γëñ device.[[device]].[[limits]].maxVertexBufferArrayStride.
+      - descriptor.arrayStride no larger than device.[[device]].[[limits]].maxVertexBufferArrayStride.
       - descriptor.arrayStride is a multiple of 4.
     - When testing the attributeOffset aspect, we test the following validation in GPUVertexBufferLayout:
       - For each attribute attrib in the list descriptor.attributes:
         - If descriptor.arrayStride is zero:
-          - attrib.offset + sizeof(attrib.format) Γëñ device.[[device]].[[limits]].maxVertexBufferArrayStride.
+          - attrib.offset + sizeof(attrib.format) no larger than device.[[device]].[[limits]].maxVertexBufferArrayStride.
         - Otherwise:
-          - attrib.offset + sizeof(attrib.format) Γëñ descriptor.arrayStride.
+          - attrib.offset + sizeof(attrib.format) no larger than descriptor.arrayStride.
         - attrib.offset is a multiple of the minimum of 4 and sizeof(attrib.format).
     - When testing the attributeCount aspect, we test the following validation:
       - In GPUVertexBufferLayout, for each attribute attrib in the list descriptor.attributes:
