@@ -150,7 +150,6 @@ class F extends ValidationTest {
    * @param vertexBufferLayouts A list of GPUVertexBufferLayout to be used in render pipeline descriptor,
    * and also used to generate the vertex shader module if `vertexShaderInputs` is not given.
    * @param vertexShaderInputs Optional, the standalone list of vertex shader input descriptor.
-   * @returns
    */
   createRenderPipelineFromBufferLayout(
     vertexBufferLayouts: GPUVertexBufferLayout[],
