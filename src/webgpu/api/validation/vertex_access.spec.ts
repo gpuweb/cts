@@ -72,6 +72,7 @@ TODO: make sure this isn't already covered somewhere else, review, organize, and
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { unreachable } from '../../../common/util/util.js';
 import { GPUConst } from '../../constants.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -124,51 +125,11 @@ const typeInfoMap: {
   },
 };
 
-// Class that indicate how to make input attribute for vertex shader module
-interface VertexBufferDescriptorForWGSLShader {
-  shaderLocation: GPUIndex32;
-  wgslType: string;
-}
-
 // Class that indicate how to call a draw function
+// TODO: implement this class to hold the draw call parameter and insert draw call to encoder
 class DrawCall {
-  test: ValidationTest;
-  drawType: 'draw' | 'drawIndexed' = 'draw';
-
-  // Draw
-  vertexCount: number = 4;
-  firstVertex: number = 0;
-
-  // DrawIndexed
-  indexCount: number = 4; // For accessing index buffer in drawIndexed and drawIndexedIndirect
-  firstIndex: number = 0;
-  baseVertex: number = 0;
-
-  // Both Draw and DrawIndexed
-  instanceCount: number = 1;
-  firstInstance: number = 0;
-
-  constructor(test: ValidationTest) {
-    this.test = test;
-  }
-
   callDraw(encoder: GPURenderEncoderBase) {
-    switch (this.drawType) {
-      case 'draw': {
-        encoder.draw(this.vertexCount, this.instanceCount, this.firstVertex, this.firstInstance);
-        break;
-      }
-      case 'drawIndexed': {
-        encoder.drawIndexed(
-          this.indexCount,
-          this.instanceCount,
-          this.firstIndex,
-          this.baseVertex,
-          this.firstInstance
-        );
-        break;
-      }
-    }
+    unreachable();
   }
 }
 
@@ -201,6 +162,12 @@ class IndexBufferMapping extends BufferMapping {
     super(buffer, offset, size);
     this.indexFormat = indexFormat;
   }
+}
+
+// Class that indicate how to make input attribute for vertex shader module
+interface VertexBufferDescriptorForWGSLShader {
+  shaderLocation: GPUIndex32;
+  wgslType: string;
 }
 
 class F extends ValidationTest {
