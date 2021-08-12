@@ -11,9 +11,11 @@ TODO: for each programmable pass encoder {compute pass, render pass, render bund
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 
-import { ProgrammableStateTest } from './programmable_state_test.js';
+import { ProgrammableStateTest, PassType } from './programmable_state_test.js';
 
 export const g = makeTestGroup(ProgrammableStateTest);
+
+const kPassTypes = [PassType.Compute, PassType.Render, PassType.RenderBundle];
 
 g.test('bind_group_indices')
   .desc(
@@ -22,8 +24,10 @@ g.test('bind_group_indices')
     - Test places the value of buffer a - buffer b into the out buffer, then reads the result.
   `
   )
-  .paramsSubcasesOnly(u =>
+  .params(u =>
     u //
+      .combine('passType', kPassTypes)
+      .beginSubcases()
       .combine('groupIndices', [
         { a: 0, b: 1, out: 2 },
         { a: 1, b: 2, out: 0 },
@@ -34,9 +38,9 @@ g.test('bind_group_indices')
       ])
   )
   .fn(async t => {
-    const { groupIndices } = t.params;
+    const { passType, groupIndices } = t.params;
 
-    const pipeline = t.createBindingStateComputePipeline(groupIndices);
+    const pipeline = t.createBindingStatePipeline(passType, groupIndices);
 
     const out = t.createBufferWithValue(0);
     const bindGroups = {
@@ -45,15 +49,13 @@ g.test('bind_group_indices')
       out: t.createBindGroup(out),
     };
 
-    const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginComputePass();
-    pass.setPipeline(pipeline);
+    const pass = t.beginSimplePass(passType);
+    t.setPipeline(pass, pipeline);
     pass.setBindGroup(groupIndices.a, bindGroups.a);
     pass.setBindGroup(groupIndices.b, bindGroups.b);
     pass.setBindGroup(groupIndices.out, bindGroups.out);
-    pass.dispatch(1);
-    pass.endPass();
-    t.device.queue.submit([encoder.finish()]);
+    t.dispatchOrDraw(pass);
+    t.endAndSubmitSimplePass(pass);
 
     t.verifyData(out, 1);
   });
@@ -64,8 +66,10 @@ g.test('bind_group_order')
     Test that the order in which you set the bind groups doesn't matter.
   `
   )
-  .paramsSubcasesOnly(u =>
+  .params(u =>
     u //
+      .combine('passType', kPassTypes)
+      .beginSubcases()
       .combine('setOrder', [
         ['a', 'b', 'out'],
         ['b', 'out', 'a'],
@@ -76,10 +80,10 @@ g.test('bind_group_order')
       ] as const)
   )
   .fn(async t => {
-    const { setOrder } = t.params;
+    const { passType, setOrder } = t.params;
 
     const groupIndices = { a: 0, b: 1, out: 2 };
-    const pipeline = t.createBindingStateComputePipeline(groupIndices);
+    const pipeline = t.createBindingStatePipeline(passType, groupIndices);
 
     const out = t.createBufferWithValue(0);
     const bindGroups = {
@@ -88,17 +92,15 @@ g.test('bind_group_order')
       out: t.createBindGroup(out),
     };
 
-    const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginComputePass();
-    pass.setPipeline(pipeline);
+    const pass = t.beginSimplePass(passType);
+    t.setPipeline(pass, pipeline);
 
     for (const group of setOrder) {
       pass.setBindGroup(groupIndices[group], bindGroups[group]);
     }
 
-    pass.dispatch(1);
-    pass.endPass();
-    t.device.queue.submit([encoder.finish()]);
+    t.dispatchOrDraw(pass);
+    t.endAndSubmitSimplePass(pass);
 
     t.verifyData(out, 1);
   });
@@ -109,8 +111,10 @@ g.test('bind_group_before_pipeline')
     Test that setting bind groups prior to setting the pipeline is still valid.
   `
   )
-  .paramsSubcasesOnly(u =>
+  .params(u =>
     u //
+      .combine('passType', kPassTypes)
+      .beginSubcases()
       .combineWithParams([
         { setBefore: ['a', 'b'], setAfter: ['out'] },
         { setBefore: ['a'], setAfter: ['b', 'out'] },
@@ -119,9 +123,9 @@ g.test('bind_group_before_pipeline')
       ] as const)
   )
   .fn(async t => {
-    const { setBefore, setAfter } = t.params;
+    const { passType, setBefore, setAfter } = t.params;
     const groupIndices = { a: 0, b: 1, out: 2 };
-    const pipeline = t.createBindingStateComputePipeline(groupIndices);
+    const pipeline = t.createBindingStatePipeline(passType, groupIndices);
 
     const out = t.createBufferWithValue(0);
     const bindGroups = {
@@ -130,22 +134,20 @@ g.test('bind_group_before_pipeline')
       out: t.createBindGroup(out),
     };
 
-    const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginComputePass();
+    const pass = t.beginSimplePass(passType);
 
     for (const group of setBefore) {
       pass.setBindGroup(groupIndices[group], bindGroups[group]);
     }
 
-    pass.setPipeline(pipeline);
+    t.setPipeline(pass, pipeline);
 
     for (const group of setAfter) {
       pass.setBindGroup(groupIndices[group], bindGroups[group]);
     }
 
-    pass.dispatch(1);
-    pass.endPass();
-    t.device.queue.submit([encoder.finish()]);
+    t.dispatchOrDraw(pass);
+    t.endAndSubmitSimplePass(pass);
 
     t.verifyData(out, 1);
   });
@@ -156,8 +158,13 @@ g.test('one_bind_group_multiple_slots')
     Test that a single bind group may be bound to more than one slot.
   `
   )
+  .params(u =>
+    u //
+      .combine('passType', kPassTypes)
+  )
   .fn(async t => {
-    const pipeline = t.createBindingStateComputePipeline({ a: 0, b: 1, out: 2 });
+    const { passType } = t.params;
+    const pipeline = t.createBindingStatePipeline(passType, { a: 0, b: 1, out: 2 });
 
     const out = t.createBufferWithValue(1);
     const bindGroups = {
@@ -165,17 +172,15 @@ g.test('one_bind_group_multiple_slots')
       out: t.createBindGroup(out),
     };
 
-    const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginComputePass();
-    pass.setPipeline(pipeline);
+    const pass = t.beginSimplePass(passType);
+    t.setPipeline(pass, pipeline);
 
     pass.setBindGroup(0, bindGroups.ab);
     pass.setBindGroup(1, bindGroups.ab);
     pass.setBindGroup(2, bindGroups.out);
 
-    pass.dispatch(1);
-    pass.endPass();
-    t.device.queue.submit([encoder.finish()]);
+    t.dispatchOrDraw(pass);
+    t.endAndSubmitSimplePass(pass);
 
     t.verifyData(out, 0);
   });
@@ -186,8 +191,13 @@ g.test('bind_group_multiple_sets')
     Test that the last bind group set to a given slot is used when dispatching.
   `
   )
+  .params(u =>
+    u //
+      .combine('passType', kPassTypes)
+  )
   .fn(async t => {
-    const pipeline = t.createBindingStateComputePipeline({ a: 0, b: 1, out: 2 });
+    const { passType } = t.params;
+    const pipeline = t.createBindingStatePipeline(passType, { a: 0, b: 1, out: 2 });
 
     const badOut = t.createBufferWithValue(-1);
     const out = t.createBufferWithValue(0);
@@ -199,12 +209,11 @@ g.test('bind_group_multiple_sets')
       out: t.createBindGroup(out),
     };
 
-    const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginComputePass();
+    const pass = t.beginSimplePass(passType);
 
     pass.setBindGroup(1, bindGroups.c);
 
-    pass.setPipeline(pipeline);
+    t.setPipeline(pass, pipeline);
 
     pass.setBindGroup(0, bindGroups.c);
     pass.setBindGroup(0, bindGroups.a);
@@ -214,9 +223,8 @@ g.test('bind_group_multiple_sets')
     pass.setBindGroup(1, bindGroups.b);
     pass.setBindGroup(2, bindGroups.out);
 
-    pass.dispatch(1);
-    pass.endPass();
-    t.device.queue.submit([encoder.finish()]);
+    t.dispatchOrDraw(pass);
+    t.endAndSubmitSimplePass(pass);
 
     t.verifyData(out, 1);
     t.verifyData(badOut, -1);
@@ -224,9 +232,18 @@ g.test('bind_group_multiple_sets')
 
 g.test('compatible_pipelines')
   .desc('Test that bind groups can be shared between compatible pipelines.')
+  .params(u =>
+    u //
+      .combine('passType', kPassTypes)
+  )
   .fn(async t => {
-    const pipelineA = t.createBindingStateComputePipeline({ a: 0, b: 1, out: 2 });
-    const pipelineB = t.createBindingStateComputePipeline({ a: 0, b: 1, out: 2 }, 'a.value + b.value');
+    const { passType } = t.params;
+    const pipelineA = t.createBindingStatePipeline(passType, { a: 0, b: 1, out: 2 });
+    const pipelineB = t.createBindingStatePipeline(
+      passType,
+      { a: 0, b: 1, out: 2 },
+      'a.value + b.value'
+    );
 
     const outA = t.createBufferWithValue(0);
     const outB = t.createBufferWithValue(0);
@@ -237,21 +254,19 @@ g.test('compatible_pipelines')
       outB: t.createBindGroup(outB),
     };
 
-    const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginComputePass();
+    const pass = t.beginSimplePass(passType);
     pass.setBindGroup(0, bindGroups.a);
     pass.setBindGroup(1, bindGroups.b);
 
-    pass.setPipeline(pipelineA);
+    t.setPipeline(pass, pipelineA);
     pass.setBindGroup(2, bindGroups.outA);
-    pass.dispatch(1);
+    t.dispatchOrDraw(pass);
 
-    pass.setPipeline(pipelineB);
+    t.setPipeline(pass, pipelineB);
     pass.setBindGroup(2, bindGroups.outB);
-    pass.dispatch(1);
+    t.dispatchOrDraw(pass);
 
-    pass.endPass();
-    t.device.queue.submit([encoder.finish()]);
+    t.endAndSubmitSimplePass(pass);
 
     t.verifyData(outA, 1);
     t.verifyData(outB, 5);
