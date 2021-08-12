@@ -63,6 +63,9 @@ export class TestCaseRecorder {
   beginSubCase() {
     this.subCaseStatus = LogSeverity.Pass;
     this.inSubCase = true;
+    // Reset log elision state.
+    this.logLinesAtCurrentSeverity = 0;
+    this.hideStacksBelowSeverity = kMinSeverityForStack;
   }
 
   endSubCase(expectedStatus: Expectation) {
@@ -136,18 +139,18 @@ export class TestCaseRecorder {
 
       // Go back and setFirstLineOnly for everything of a lower log level
       for (const log of this.logs) {
-        log.setFirstLineOnly('below max severity');
+        log.setStackHidden('below max severity');
       }
     }
     if (level === this.hideStacksBelowSeverity) {
       this.logLinesAtCurrentSeverity++;
     } else if (level < kMinSeverityForStack) {
-      logMessage.setFirstLineOnly('');
+      logMessage.setStackHidden('');
     } else if (level < this.hideStacksBelowSeverity) {
-      logMessage.setFirstLineOnly('below max severity');
+      logMessage.setStackHidden('below max severity');
     }
     if (this.logLinesAtCurrentSeverity > kMaxDetailedLogs) {
-      logMessage.setFirstLineOnly(`only ${kMaxDetailedLogs} shown`);
+      logMessage.setStackHidden(`only ${kMaxDetailedLogs} shown`);
     }
 
     this.logs.push(logMessage);

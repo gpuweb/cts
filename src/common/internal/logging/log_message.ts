@@ -4,7 +4,7 @@ import { extractImportantStackTrace } from '../stack.js';
 export class LogMessageWithStack extends Error {
   readonly extra: unknown;
 
-  private firstLineOnlyMessage: string | undefined = undefined;
+  private stackHiddenMessage: string | undefined = undefined;
 
   constructor(name: string, ex: Error | ErrorWithExtra) {
     super(ex.message);
@@ -16,21 +16,20 @@ export class LogMessageWithStack extends Error {
     }
   }
 
-  /** Set a flag so the details and stack are not printed in toJSON(). */
-  setFirstLineOnly(firstLineOnlyMessage: string) {
-    this.firstLineOnlyMessage ??= firstLineOnlyMessage;
+  /** Set a flag so the stack is not printed in toJSON(). */
+  setStackHidden(stackHiddenMessage: string) {
+    this.stackHiddenMessage ??= stackHiddenMessage;
   }
 
   toJSON(): string {
     let m = this.name;
-    if (this.firstLineOnlyMessage !== undefined) {
-      if (this.message) m += ': ' + this.message.split('\n')[0];
-      if (this.firstLineOnlyMessage !== '') {
-        m += ` (elided: ${this.firstLineOnlyMessage})`;
+    if (this.message) m += ': ' + this.message;
+    if (this.stack) {
+      if (this.stackHiddenMessage) {
+        m += `\n  at (elided: ${this.stackHiddenMessage})`;
+      } else {
+        m += '\n' + extractImportantStackTrace(this);
       }
-    } else {
-      if (this.message) m += ': ' + this.message;
-      if (this.stack) m += '\n' + extractImportantStackTrace(this);
     }
     return m;
   }
