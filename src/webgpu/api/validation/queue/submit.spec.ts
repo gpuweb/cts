@@ -1,7 +1,7 @@
 export const description = `
 Tests submit validation.
 
-Note: destroyed buffer/texture/querySet are tested in destroyed/.
+Note: destroyed buffer/texture/querySet are tested in destroyed/. (unless it gets moved here)
 Note: buffer map state is tested in ./buffer_mapped.spec.ts.
 `;
 
