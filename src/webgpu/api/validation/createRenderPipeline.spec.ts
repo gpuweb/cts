@@ -362,9 +362,9 @@ g.test('pipeline_output_targets,blend')
       fragmentShaderCode: t.getFragmentShaderCode(sampleType, componentCount),
     });
 
-    const blendingReadSrcAlpha =
+    const colorBlendReadsSrcAlpha =
       colorSrcFactor.includes('src-alpha') || colorDstFactor.includes('src-alpha');
-    const meetsExtraBlendingRequirement = !blendingReadSrcAlpha || componentCount === 4;
+    const meetsExtraBlendingRequirement = !colorBlendReadsSrcAlpha || componentCount === 4;
     const _success =
       info.sampleType === sampleType &&
       componentCount >= kTexelRepresentationInfo[format].componentOrder.length &&
