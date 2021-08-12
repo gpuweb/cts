@@ -13,7 +13,7 @@ enum LogSeverity {
   ThrewException = 5,
 }
 
-const kMaxDetailedLogs = 2;
+const kMaxLogStacks = 2;
 const kMinSeverityForStack = LogSeverity.Warn;
 
 /** Holds onto a LiveTestCaseResult owned by the Logger, and writes the results into it. */
@@ -63,9 +63,6 @@ export class TestCaseRecorder {
   beginSubCase() {
     this.subCaseStatus = LogSeverity.Pass;
     this.inSubCase = true;
-    // Reset log elision state.
-    this.logLinesAtCurrentSeverity = 0;
-    this.hideStacksBelowSeverity = kMinSeverityForStack;
   }
 
   endSubCase(expectedStatus: Expectation) {
@@ -149,8 +146,8 @@ export class TestCaseRecorder {
     } else if (level < this.hideStacksBelowSeverity) {
       logMessage.setStackHidden('below max severity');
     }
-    if (this.logLinesAtCurrentSeverity > kMaxDetailedLogs) {
-      logMessage.setStackHidden(`only ${kMaxDetailedLogs} shown`);
+    if (this.logLinesAtCurrentSeverity > kMaxLogStacks) {
+      logMessage.setStackHidden(`only ${kMaxLogStacks} shown`);
     }
 
     this.logs.push(logMessage);

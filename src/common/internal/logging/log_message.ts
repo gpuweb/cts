@@ -25,10 +25,10 @@ export class LogMessageWithStack extends Error {
     let m = this.name;
     if (this.message) m += ': ' + this.message;
     if (this.stack) {
-      if (this.stackHiddenMessage) {
-        m += `\n  at (elided: ${this.stackHiddenMessage})`;
-      } else {
+      if (this.stackHiddenMessage === undefined) {
         m += '\n' + extractImportantStackTrace(this);
+      } else if (this.stackHiddenMessage) {
+        m += `\n  at (elided: ${this.stackHiddenMessage})`;
       }
     }
     return m;
