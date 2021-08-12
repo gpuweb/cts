@@ -363,10 +363,7 @@ g.test('pipeline_output_targets,blend')
     });
 
     const blendingReadSrcAlpha =
-      colorSrcFactor.includes('src-alpha') ||
-      colorDstFactor.includes('src-alpha') ||
-      alphaSrcFactor !== 'zero' ||
-      alphaDstFactor.includes('src');
+      colorSrcFactor.includes('src-alpha') || colorDstFactor.includes('src-alpha');
     const meetsExtraBlendingRequirement = !blendingReadSrcAlpha || componentCount === 4;
     const _success =
       info.sampleType === sampleType &&
