@@ -11,12 +11,22 @@ TODO: subsume existing test, rewrite fixture as needed.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { kBindableResources, kShaderStages } from '../../../../capability_info.js';
+import { kShaderStageCombinations } from '../../../../capability_info.js';
 import { GPUConst } from '../../../../constants.js';
+import {
+  ProgrammableEncoderType,
+  kProgrammableEncoderTypes,
+} from '../../util/command_buffer_maker.js';
 import { ValidationTest } from '../../validation_test.js';
 
-const kDrawCmds = ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect'];
-const kDispatchCmds = ['dispatch', 'dispatchIndirect'];
+function getTestCmds(encoderType: ProgrammableEncoderType): readonly string[] {
+  if (encoderType === 'compute pass') {
+    return ['dispatch', 'dispatchIndirect'] as const;
+  } else {
+    return ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect'] as const;
+  }
+}
+
 const kResourceTypes = ['buffer', 'sampler', 'texture', 'storageTexture', 'externalTexture'];
 
 class F extends ValidationTest {
@@ -91,36 +101,33 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
-g.test('set_pipeline_or_bind_group_missing_in_render_pass')
-  .desc('Tests the bind groups required by the pipeline layout are required.')
-  .paramsSubcasesOnly(u =>
-    u
-      .combine('cmd', kDrawCmds)
-      .combine('setPipeline', [true, false] as const)
-      .combine('setBindGroup', [true, false] as const)
-  )
-  .unimplemented();
-
-g.test('set_pipeline_or_bind_group_missing_in_compute_pass')
-  .desc('Tests the bind groups required by the pipeline layout are required.')
-  .paramsSubcasesOnly(u =>
-    u
-      .combine('cmd', kDispatchCmds)
-      .combine('setPipeline', [true, false] as const)
-      .combine('setBindGroup', [true, false] as const)
-  )
-  .unimplemented();
-
-g.test('bind_groups_mismatch_with_pipeline_layout_in_render_pass')
+g.test('bind_groups_and_pipeline_layout_mismatch')
   .desc(
     `
-  Tests the bind groups unused by the pipeline layout can be set or not.
-  TODO:
-  Set 3 bindGroups
-  - all 2 needed bindGroups are set
-  - x = all draw cmds
-  `
+    Tests the bind groups must match the requirements of the pipeline layout.
+    - bind groups required by the pipeline layout are required.
+    - bind groups unused by the pipeline layout can be set or not.
+
+    TODO: merge existing tests to this test
+    `
   )
+  .params(u =>
+    u
+      .combine('encoderType', kProgrammableEncoderTypes)
+      .expand('call', p => getTestCmds(p.encoderType))
+      .beginSubcases()
+      .combineWithParams([
+        { setBindGroup0: true, setUnusedBindGroup1: true, setBindGroup2: true, _success: true },
+        { setBindGroup0: true, setUnusedBindGroup1: false, setBindGroup2: true, _success: true },
+        { setBindGroup0: true, setUnusedBindGroup1: true, setBindGroup2: false, _success: false },
+        { setBindGroup0: false, setUnusedBindGroup1: true, setBindGroup2: true, _success: false },
+        { setBindGroup0: false, setUnusedBindGroup1: false, setBindGroup2: false, _success: false },
+      ])
+      .combine('useU32Array', [false, true])
+  )
+  .unimplemented();
+
+g.test('it_is_invalid_to_draw_in_a_render_pass_with_missing_bind_groups')
   .paramsSubcasesOnly([
     { setBindGroup1: true, setBindGroup2: true, _success: true },
     { setBindGroup1: true, setBindGroup2: false, _success: false },
@@ -174,89 +181,57 @@ g.test('bind_groups_mismatch_with_pipeline_layout_in_render_pass')
     }, !_success);
   });
 
-g.test('bind_groups_mismatch_with_pipeline_layout_in_compute_pass')
-  .desc('Tests the bind groups unused by the pipeline layout can be set or not')
-  .paramsSubcasesOnly(u =>
-    u.combine('cmd', kDispatchCmds).combineWithParams([
-      { setBindGroup1: true, setBindGroup2: true, setUnusedBindGroup: true, _success: true },
-      { setBindGroup1: true, setBindGroup2: true, setUnusedBindGroup: false, _success: true },
-      { setBindGroup1: true, setBindGroup2: false, setUnusedBindGroup: true, _success: false },
-      { setBindGroup1: false, setBindGroup2: true, setUnusedBindGroup: true, _success: false },
-      { setBindGroup1: false, setBindGroup2: false, setUnusedBindGroup: false, _success: false },
-    ])
-  )
-  .unimplemented();
-
-g.test('binding_mismatch_in_bgl_in_render_pass')
+g.test('bgl_binding_mismatch_in_bind_group_and_pipeline_layout')
   .desc(
     'Tests the binding number must exist or not exist in both bindGroups[i].layout and pipelineLayout.bgls[i]'
   )
-  .paramsSubcasesOnly(u =>
-    u.combine('cmd', kDrawCmds).combineWithParams([
-      { bgBindings: [0, 1, 2] as const, plBindings: [0, 1, 2] as const, _success: true },
-      { bgBindings: [0, 1, 2] as const, plBindings: [0, 1, 3] as const, _success: false },
-      { bgBindings: [0, 2] as const, plBindings: [0, 2] as const, _success: true },
-      { bgBindings: [0, 2] as const, plBindings: [2, 0] as const, _success: true },
-      { bgBindings: [0, 1, 2] as const, plBindings: [0, 1] as const, _success: false },
-      { bgBindings: [0, 1] as const, plBindings: [0, 1, 2] as const, _success: false },
-    ])
-  )
-  .unimplemented();
-
-g.test('binding_mismatch_in_bgl_in_compute_pass')
-  .desc(
-    'Tests the binding number must exist or not exist in both bindGroups[i].layout and pipelineLayout.bgls[i]'
-  )
-  .paramsSubcasesOnly(u =>
-    u.combine('cmd', kDispatchCmds).combineWithParams([
-      { bgBindings: [0, 1, 2] as const, plBindings: [0, 1, 2] as const, _success: true },
-      { bgBindings: [0, 1, 2] as const, plBindings: [0, 1, 3] as const, _success: false },
-      { bgBindings: [0, 2] as const, plBindings: [0, 2] as const, _success: true },
-      { bgBindings: [0, 2] as const, plBindings: [2, 0] as const, _success: true },
-      { bgBindings: [0, 1, 2] as const, plBindings: [0, 1] as const, _success: false },
-      { bgBindings: [0, 1] as const, plBindings: [0, 1, 2] as const, _success: false },
-    ])
-  )
-  .unimplemented();
-
-g.test('visibility_mismatch_in_bgl_in_render_pass')
-  .desc('Tests the visibility in bindGroups[i].layout and pipelineLayout.bgls[i] must be matched')
-  .paramsSubcasesOnly(u =>
+  .params(u =>
     u
-      .combine('cmd', kDrawCmds)
-      .combine('bgVisibility', kShaderStages)
-      .combine('plVisibility', [
-        GPUConst.ShaderStage.VERTEX,
-        GPUConst.ShaderStage.FRAGMENT,
-      ] as const)
+      .combine('encoderType', kProgrammableEncoderTypes)
+      .expand('call', p => getTestCmds(p.encoderType))
+      .beginSubcases()
+      .combineWithParams([
+        { bgBindings: [0, 1, 2], plBindings: [0, 1, 2], _success: true },
+        { bgBindings: [0, 1, 2], plBindings: [0, 1, 3], _success: false },
+        { bgBindings: [0, 2], plBindings: [0, 2], _success: true },
+        { bgBindings: [0, 2], plBindings: [2, 0], _success: true },
+        { bgBindings: [0, 1, 2], plBindings: [0, 1], _success: false },
+        { bgBindings: [0, 1], plBindings: [0, 1, 2], _success: false },
+      ])
+      .combine('useU32Array', [false, true])
   )
   .unimplemented();
 
-g.test('visibility_mismatch_in_bgl_in_compute_pass')
+g.test('bgl_visibility_mismatch_in_bind_group_and_pipeline_layout')
   .desc('Tests the visibility in bindGroups[i].layout and pipelineLayout.bgls[i] must be matched')
-  .paramsSubcasesOnly(u => u.combine('cmd', kDispatchCmds).combine('bgVisibility', kShaderStages))
+  .params(u =>
+    u
+      .combine('encoderType', kProgrammableEncoderTypes)
+      .expand('call', p => getTestCmds(p.encoderType))
+      .beginSubcases()
+      .combine('bgVisibility', kShaderStageCombinations)
+      .expand('plVisibility', p =>
+        p.encoderType === 'compute pass'
+          ? ([GPUConst.ShaderStage.COMPUTE] as const)
+          : ([
+              GPUConst.ShaderStage.VERTEX,
+              GPUConst.ShaderStage.FRAGMENT,
+              GPUConst.ShaderStage.VERTEX | GPUConst.ShaderStage.FRAGMENT,
+            ] as const)
+      )
+  )
   .unimplemented();
 
-g.test('resource_type_mismatch_in_bgl_in_render_pass')
+g.test('bgl_resource_type_mismatch_in_bind_group_and_pipeline_layout')
   .desc(
     'Tests the binding resource type in bindGroups[i].layout and pipelineLayout.bgls[i] must be matched'
   )
-  .paramsSubcasesOnly(u =>
+  .params(u =>
     u
-      .combine('cmd', kDrawCmds)
-      .combine('bgResource', kBindableResources)
-      .combine('plResourceType', kResourceTypes)
-  )
-  .unimplemented();
-
-g.test('resource_type_mismatch_in_bgl_in_compute_pass')
-  .desc(
-    'Tests the binding resource type in bindGroups[i].layout and pipelineLayout.bgls[i] must be matched'
-  )
-  .paramsSubcasesOnly(u =>
-    u
-      .combine('cmd', kDispatchCmds)
-      .combine('bgResource', kBindableResources)
+      .combine('encoderType', kProgrammableEncoderTypes)
+      .expand('call', p => getTestCmds(p.encoderType))
+      .beginSubcases()
+      .combine('bgResource', kResourceTypes)
       .combine('plResourceType', kResourceTypes)
   )
   .unimplemented();
