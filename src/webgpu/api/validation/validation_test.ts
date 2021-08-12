@@ -134,7 +134,7 @@ export class ValidationTest extends GPUTest {
   }
 
   /**
-   * Return an arbitrarily-configured GPUTexture with the `SAMPLED` usage and specified sampleCount.
+   * Return an arbitrarily-configured GPUTexture with the `TEXTURE_BINDING` usage and specified sampleCount.
    */
   getSampledTexture(sampleCount: number = 1): GPUTexture {
     return this.trackForCleanup(
@@ -147,7 +147,7 @@ export class ValidationTest extends GPUTest {
     );
   }
 
-  /** Return an arbitrarily-configured GPUTexture with the `STORAGE` usage. */
+  /** Return an arbitrarily-configured GPUTexture with the `STORAGE_BINDING` usage. */
   getStorageTexture(): GPUTexture {
     return this.trackForCleanup(
       this.device.createTexture({
