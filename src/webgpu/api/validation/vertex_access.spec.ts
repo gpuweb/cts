@@ -217,8 +217,8 @@ class F extends ValidationTest {
    */
   testEncoderFinish(
     vertexBufferLayouts: GPUVertexBufferLayout[],
-    indexBufferMappings: SetIndexBufferParam[],
-    vertexBufferMappings: SetVertexBufferParam[],
+    indexBufferParams: SetIndexBufferParam[],
+    vertexBufferParams: SetVertexBufferParam[],
     drawCall: DrawCall | null,
     isFinishSuccess: boolean
   ) {
@@ -226,8 +226,8 @@ class F extends ValidationTest {
       for (const useBundle of [false, true]) {
         this.doBufferSettingAndDraw(
           vertexBufferLayouts,
-          indexBufferMappings,
-          vertexBufferMappings,
+          indexBufferParams,
+          vertexBufferParams,
           drawCall,
           isFinishSuccess,
           setPipelineBeforeBuffer,
