@@ -127,7 +127,7 @@ Tests that write timestamp to a invalid query set that failed during creation:
     encoder.validateFinish(querySetState !== 'invalid');
   });
 
-g.test('timestamo_query,device_mismatch')
+g.test('timestamp_query,device_mismatch')
   .desc('Tests writeTimestamp cannot be called with a query set created from another device')
   .paramsSubcasesOnly(u =>
     u
