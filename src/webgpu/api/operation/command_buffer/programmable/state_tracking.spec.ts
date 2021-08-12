@@ -221,3 +221,38 @@ g.test('bind_group_multiple_sets')
     t.verifyData(out, 1);
     t.verifyData(badOut, -1);
   });
+
+g.test('compatible_pipelines')
+  .desc('Test that bind groups can be shared between compatible pipelines.')
+  .fn(async t => {
+    const pipelineA = t.createBindingStateComputePipeline({ a: 0, b: 1, out: 2 });
+    const pipelineB = t.createBindingStateComputePipeline({ a: 0, b: 1, out: 2 }, 'a.value + b.value');
+
+    const outA = t.createBufferWithValue(0);
+    const outB = t.createBufferWithValue(0);
+    const bindGroups = {
+      a: t.createBindGroup(t.createBufferWithValue(3)),
+      b: t.createBindGroup(t.createBufferWithValue(2)),
+      outA: t.createBindGroup(outA),
+      outB: t.createBindGroup(outB),
+    };
+
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginComputePass();
+    pass.setBindGroup(0, bindGroups.a);
+    pass.setBindGroup(1, bindGroups.b);
+
+    pass.setPipeline(pipelineA);
+    pass.setBindGroup(2, bindGroups.outA);
+    pass.dispatch(1);
+
+    pass.setPipeline(pipelineB);
+    pass.setBindGroup(2, bindGroups.outB);
+    pass.dispatch(1);
+
+    pass.endPass();
+    t.device.queue.submit([encoder.finish()]);
+
+    t.verifyData(outA, 1);
+    t.verifyData(outB, 5);
+  });
