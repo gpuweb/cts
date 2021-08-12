@@ -1,3 +1,4 @@
+import { assert } from '../../../../../common/util/util.js';
 import { GPUTest } from '../../../../gpu_test.js';
 
 const kSize = 4;
@@ -8,8 +9,15 @@ interface BindGroupIndices {
   out: number;
 }
 
+export enum PassType {
+  Compute = 'compute',
+  Render = 'render',
+  RenderBundle = 'renderBundle',
+}
+
 export class ProgrammableStateTest extends GPUTest {
   private commonBindGroupLayout: GPUBindGroupLayout | undefined;
+  private encoder: GPUCommandEncoder | null = null;
 
   get bindGroupLayout(): GPUBindGroupLayout {
     if (!this.commonBindGroupLayout) {
@@ -46,7 +54,24 @@ export class ProgrammableStateTest extends GPUTest {
 
   // Create a compute pipeline that performs an operation on data from two bind groups,
   // then writes the result to a third bind group.
-  createBindingStateComputePipeline(groups: BindGroupIndices, algorthim: String = 'a.value - b.value'): GPUComputePipeline {
+  createBindingStatePipeline(
+    passType: PassType,
+    groups: BindGroupIndices,
+    algorthim: String = 'a.value - b.value'
+  ): GPUComputePipeline | GPURenderPipeline {
+    switch (passType) {
+      case PassType.Compute:
+        return this.createBindingStateComputePipeline(groups, algorthim);
+      case PassType.Render:
+      case PassType.RenderBundle:
+        return this.createBindingStateRenderPipeline(groups, algorthim);
+    }
+  }
+
+  createBindingStateComputePipeline(
+    groups: BindGroupIndices,
+    algorthim: String = 'a.value - b.value'
+  ): GPUComputePipeline {
     const wgsl = `[[block]] struct Data {
         value : i32;
       };
@@ -74,28 +99,31 @@ export class ProgrammableStateTest extends GPUTest {
     });
   }
 
-  createBindingStateRenderPipeline(groups: BindGroupIndices, algorthim: String = 'a.value - b.value'): GPURenderPipeline {
+  createBindingStateRenderPipeline(
+    groups: BindGroupIndices,
+    algorthim: String = 'a.value - b.value'
+  ): GPURenderPipeline {
     const wgslShaders = {
       vertex: `
-      [[stage(vertex)]] fn vert_main() -> [[builtin(position)]] vec4<f32> {
-        return vec4<f32>(0.5, 0.5, 0.0, 1.0);
-      }
-    `,
+        [[stage(vertex)]] fn vert_main() -> [[builtin(position)]] vec4<f32> {
+          return vec4<f32>(0.5, 0.5, 0.0, 1.0);
+        }
+      `,
 
       fragment: `
-      [[block]] struct Data {
-        value : i32;
-      };
+        [[block]] struct Data {
+          value : i32;
+        };
 
-      [[group(${groups.a}), binding(0)]] var<storage> a : Data;
-      [[group(${groups.b}), binding(0)]] var<storage> b : Data;
-      [[group(${groups.out}), binding(0)]] var<storage, read_write> out : Data;
+        [[group(${groups.a}), binding(0)]] var<storage> a : Data;
+        [[group(${groups.b}), binding(0)]] var<storage> b : Data;
+        [[group(${groups.out}), binding(0)]] var<storage, read_write> out : Data;
 
-      [[stage(fragment)]] fn frag_main() -> [[location(0)]] vec4<f32> {
-        out.value = ${algorthim};
-        return vec4<f32>(1.0, 0.0, 0.0, 1.0);
-      }
-    `,
+        [[stage(fragment)]] fn frag_main() -> [[location(0)]] vec4<f32> {
+          out.value = ${algorthim};
+          return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+        }
+      `,
     };
 
     return this.device.createRenderPipeline({
@@ -119,6 +147,19 @@ export class ProgrammableStateTest extends GPUTest {
     });
   }
 
+  beginSimplePass(passType: PassType): GPUProgrammablePassEncoder {
+    assert(this.encoder === null);
+    this.encoder = this.device.createCommandEncoder();
+    switch (passType) {
+      case PassType.Compute:
+        return this.encoder.beginComputePass();
+      case PassType.Render:
+        return this.beginSimpleRenderPass(this.encoder);
+      case PassType.RenderBundle:
+        return this.device.createRenderBundleEncoder({ colorFormats: ['rgba8unorm'] });
+    }
+  }
+
   beginSimpleRenderPass(encoder: GPUCommandEncoder): GPURenderPassEncoder {
     const view = this.device
       .createTexture({
@@ -136,6 +177,42 @@ export class ProgrammableStateTest extends GPUTest {
         },
       ],
     });
+  }
+
+  setPipeline(pass: GPUProgrammablePassEncoder, pipeline: GPUComputePipeline | GPURenderPipeline) {
+    if (pass instanceof GPUComputePassEncoder) {
+      pass.setPipeline(pipeline as GPUComputePipeline);
+    } else if (pass instanceof GPURenderPassEncoder || pass instanceof GPURenderBundleEncoder) {
+      pass.setPipeline(pipeline as GPURenderPipeline);
+    }
+  }
+
+  dispatchOrDraw(pass: GPUProgrammablePassEncoder) {
+    if (pass instanceof GPUComputePassEncoder) {
+      pass.dispatch(1);
+    } else if (pass instanceof GPURenderPassEncoder) {
+      pass.draw(1);
+    } else if (pass instanceof GPURenderBundleEncoder) {
+      pass.draw(1);
+    }
+  }
+
+  endAndSubmitSimplePass(pass: GPUProgrammablePassEncoder) {
+    assert(this.encoder !== null);
+
+    if (pass instanceof GPUComputePassEncoder) {
+      pass.endPass();
+    } else if (pass instanceof GPURenderPassEncoder) {
+      pass.endPass();
+    } else if (pass instanceof GPURenderBundleEncoder) {
+      const renderBundle = pass.finish();
+      const renderPass = this.beginSimpleRenderPass(this.encoder);
+      renderPass.executeBundles([renderBundle]);
+      renderPass.endPass();
+    }
+
+    this.device.queue.submit([this.encoder.finish()]);
+    this.encoder = null;
   }
 
   verifyData(buffer: GPUBuffer, expectedValue: number) {
