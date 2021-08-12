@@ -49,6 +49,13 @@ Tests indirect buffer must be valid.
     validateFinishAndSubmitGivenState(state);
   });
 
+g.test('indirect_buffer,device_mismatch')
+  .desc(
+    'Tests draw(Indexed)Indirect cannot be called with an indirect buffer created from another device'
+  )
+  .paramsSubcasesOnly(kIndirectDrawTestParams.combine('mismatched', [true, false]))
+  .unimplemented();
+
 g.test('indirect_buffer_usage')
   .desc(
     `

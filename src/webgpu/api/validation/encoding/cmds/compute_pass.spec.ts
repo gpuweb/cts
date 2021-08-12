@@ -61,6 +61,11 @@ setPipeline should generate an error iff using an 'invalid' pipeline.
     validateFinishAndSubmitGivenState(state);
   });
 
+g.test('pipeline,device_mismatch')
+  .desc('Tests setPipeline cannot be called with a compute pipeline created from another device')
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .unimplemented();
+
 const kMaxDispatch = DefaultLimits.maxComputeWorkgroupsPerDimension;
 g.test('dispatch_sizes')
   .desc(
@@ -151,3 +156,10 @@ TODO: test specifically which call the validation error occurs in.
       offset + 3 * Uint32Array.BYTES_PER_ELEMENT > kBufferData.byteLength;
     validateFinishAndSubmit(!finishShouldError, state !== 'destroyed');
   });
+
+g.test('indirect_dispatch_buffer,device_mismatch')
+  .desc(
+    'Tests dispatchIndirect cannot be called with an indirect buffer created from another device'
+  )
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .unimplemented();

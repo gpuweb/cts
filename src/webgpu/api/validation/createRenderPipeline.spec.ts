@@ -374,3 +374,17 @@ g.test('pipeline_output_targets,blend')
       meetsExtraBlendingRequirement;
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
+
+g.test('pipeline_layout,device_mismatch')
+  .desc(
+    'Tests createRenderPipeline(Async) cannot be called with a pipeline layout created from another device'
+  )
+  .paramsSubcasesOnly(u => u.combine('isAsync', [true, false]).combine('mismatched', [true, false]))
+  .unimplemented();
+
+g.test('shader_module,device_mismatch')
+  .desc(
+    'Tests createRenderPipeline(Async) cannot be called with a shader module created from another device'
+  )
+  .paramsSubcasesOnly(u => u.combine('isAsync', [true, false]).combine('mismatched', [true, false]))
+  .unimplemented();
