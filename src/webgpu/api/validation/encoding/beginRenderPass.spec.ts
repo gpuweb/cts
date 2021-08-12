@@ -29,13 +29,37 @@ g.test('color_attachments,device_mismatch')
     `
     Tests beginRenderPass cannot be called with color attachments whose texure view or resolve target is created from another device
     The 'view' and 'resolveTarget' are:
-    - created from {same, different} device in same color attachment
-    - created from same device in same color attachment, but different in another color attachment
+    - created from same device in ColorAttachment0 and ColorAttachment1
+    - created from different device in ColorAttachment0 and ColorAttachment1
+    - created from same device in ColorAttachment0, but from different device in ColorAttachment1
     `
   )
-  .paramsSubcasesOnly(u =>
-    u.combine('sameAttachment', [true, false]).combine('mismatched', [true, false])
-  )
+  .paramsSubcasesOnly([
+    {
+      view0Mismatched: false,
+      target0Mismatched: false,
+      view1Mismatched: false,
+      target1Mismatched: false,
+    }, // control case
+    {
+      view0Mismatched: false,
+      target0Mismatched: true,
+      view1Mismatched: false,
+      target1Mismatched: true,
+    },
+    {
+      view0Mismatched: false,
+      target0Mismatched: false,
+      view1Mismatched: true,
+      target1Mismatched: false,
+    },
+    {
+      view0Mismatched: false,
+      target0Mismatched: false,
+      view1Mismatched: false,
+      target1Mismatched: true,
+    },
+  ])
   .unimplemented();
 
 g.test('depth_stencil_attachment,device_mismatch')

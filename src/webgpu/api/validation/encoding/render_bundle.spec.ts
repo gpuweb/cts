@@ -15,9 +15,14 @@ g.test('render_bundles,device_mismatch')
   .desc(
     `
     Tests executeBundles cannot be called with render bundles created from another device
-    - two bundles from same device
-    - two bundles from different device
+    Test with two bundles to make sure all bundles can be validated:
+    - bundle0 and bundle1 from same device
+    - bundle0 and bundle1 from different device
     `
   )
-  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .paramsSubcasesOnly([
+    { bundle0Mismatched: false, bundle1Mismatched: false }, // control case
+    { bundle0Mismatched: true, bundle1Mismatched: false },
+    { bundle0Mismatched: false, bundle1Mismatched: true },
+  ])
   .unimplemented();

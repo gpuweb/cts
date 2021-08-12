@@ -504,8 +504,9 @@ g.test('binding_resources,device_mismatch')
   .desc(
     `
     Tests createBindGroup cannot be called with various resources created from another device
-    - two resources from same device
-    - two resources from different device
+    Test with two resources to make sure all resources can be validated:
+    - resource0 and resource1 from same device
+    - resource0 and resource1 from different device
     `
   )
   .paramsSubcasesOnly(u =>
@@ -517,6 +518,10 @@ g.test('binding_resources,device_mismatch')
         'storageTexture',
         'externalTexture',
       ] as const)
-      .combine('mismatched', [true, false])
+      .combineWithParams([
+        { resource0Mismatched: false, resource1Mismatched: false }, //control case
+        { resource0Mismatched: true, resource1Mismatched: false },
+        { resource0Mismatched: false, resource1Mismatched: true },
+      ])
   )
   .unimplemented();

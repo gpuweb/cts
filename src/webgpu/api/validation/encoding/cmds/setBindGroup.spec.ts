@@ -132,8 +132,12 @@ g.test('bind_group,device_mismatch')
     - x= setBindGroup {with, without} Uint32Array
     `
   )
-  .paramsSubcasesOnly(u =>
-    u.combine('encoderType', kProgrammableEncoderTypes).combine('mismatched', [true, false])
+  .params(u =>
+    u
+      .combine('encoderType', kProgrammableEncoderTypes)
+      .beginSubcases()
+      .combine('useU32Array', [true, false])
+      .combine('mismatched', [true, false])
   )
   .unimplemented();
 

@@ -107,9 +107,14 @@ g.test('bind_group_layouts,device_mismatch')
   .desc(
     `
     Tests createPipelineLayout cannot be called with bind group layouts created from another device
-    - two layouts from same device
-    - two layouts from different device
+    Test with two layouts to make sure all layouts can be validated:
+    - layout0 and layout1 from same device
+    - layout0 and layout1 from different device
     `
   )
-  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .paramsSubcasesOnly([
+    { layout0Mismatched: false, layout1Mismatched: false }, // control case
+    { layout0Mismatched: true, layout1Mismatched: false },
+    { layout0Mismatched: false, layout1Mismatched: true },
+  ])
   .unimplemented();
