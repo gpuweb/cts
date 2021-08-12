@@ -46,7 +46,7 @@ export class ProgrammableStateTest extends GPUTest {
 
   // Create a compute pipeline that performs an operation on data from two bind groups,
   // then writes the result to a third bind group.
-  createBindingStateComputePipeline(groups: BindGroupIndices): GPUComputePipeline {
+  createBindingStateComputePipeline(groups: BindGroupIndices, algorthim: String = 'a.value - b.value'): GPUComputePipeline {
     const wgsl = `[[block]] struct Data {
         value : i32;
       };
@@ -56,7 +56,7 @@ export class ProgrammableStateTest extends GPUTest {
       [[group(${groups.out}), binding(0)]] var<storage, read_write> out : Data;
 
       [[stage(compute), workgroup_size(1)]] fn main() {
-        out.value = a.value - b.value;
+        out.value = ${algorthim};
         return;
       }
     `;
@@ -71,6 +71,70 @@ export class ProgrammableStateTest extends GPUTest {
         }),
         entryPoint: 'main',
       },
+    });
+  }
+
+  createBindingStateRenderPipeline(groups: BindGroupIndices, algorthim: String = 'a.value - b.value'): GPURenderPipeline {
+    const wgslShaders = {
+      vertex: `
+      [[stage(vertex)]] fn vert_main() -> [[builtin(position)]] vec4<f32> {
+        return vec4<f32>(0.5, 0.5, 0.0, 1.0);
+      }
+    `,
+
+      fragment: `
+      [[block]] struct Data {
+        value : i32;
+      };
+
+      [[group(${groups.a}), binding(0)]] var<storage> a : Data;
+      [[group(${groups.b}), binding(0)]] var<storage> b : Data;
+      [[group(${groups.out}), binding(0)]] var<storage, read_write> out : Data;
+
+      [[stage(fragment)]] fn frag_main() -> [[location(0)]] vec4<f32> {
+        out.value = ${algorthim};
+        return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+      }
+    `,
+    };
+
+    return this.device.createRenderPipeline({
+      layout: this.device.createPipelineLayout({
+        bindGroupLayouts: [this.bindGroupLayout, this.bindGroupLayout, this.bindGroupLayout],
+      }),
+      vertex: {
+        module: this.device.createShaderModule({
+          code: wgslShaders.vertex,
+        }),
+        entryPoint: 'vert_main',
+      },
+      fragment: {
+        module: this.device.createShaderModule({
+          code: wgslShaders.fragment,
+        }),
+        entryPoint: 'frag_main',
+        targets: [{ format: 'rgba8unorm' }],
+      },
+      primitive: { topology: 'point-list' },
+    });
+  }
+
+  beginSimpleRenderPass(encoder: GPUCommandEncoder): GPURenderPassEncoder {
+    const view = this.device
+      .createTexture({
+        size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+        format: 'rgba8unorm',
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      })
+      .createView();
+    return encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view,
+          loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+          storeOp: 'store',
+        },
+      ],
     });
   }
 
