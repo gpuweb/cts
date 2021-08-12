@@ -129,7 +129,7 @@ g.test('bind_group,device_mismatch')
   .desc(
     `
     Tests setBindGroup cannot be called with a bind group created from another device
-    - x= setBindGroup {with, without} Uint32Array
+    - x= setBindGroup {sequence overload, Uint32Array overload}
     `
   )
   .params(u =>
