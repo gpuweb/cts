@@ -230,7 +230,6 @@ g.test('sample_count_must_be_valid')
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
-
 g.test('pipeline_output_targets')
   .desc(
     `Pipeline fragment output types must be compatible with target color state format
