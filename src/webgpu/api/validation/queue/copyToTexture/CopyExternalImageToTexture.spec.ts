@@ -2,6 +2,7 @@ export const description = `
 copyExternalImageToTexture Validation Tests in Queue.
 `;
 
+import { getResourcePath } from '../../../../../common/framework/resources.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { raceWithRejectOnTimeout, unreachable, assert } from '../../../../../common/util/util.js';
 import {
@@ -198,7 +199,7 @@ g.test('source_canvas,contexts')
         '2d',
         'bitmaprenderer',
         'experimental-webgl',
-        'gpupresent',
+        'webgpu',
         'webgl',
         'webgl2',
       ] as const)
@@ -222,6 +223,7 @@ g.test('source_canvas,contexts')
       t.skip('Failed to get context for canvas element');
       return;
     }
+    t.tryTrackForCleanup(ctx);
 
     t.runTest(
       { source: canvas },
@@ -266,6 +268,7 @@ g.test('source_offscreenCanvas,contexts')
       t.skip('Failed to get context for canvas element');
       return;
     }
+    t.tryTrackForCleanup(ctx);
 
     t.runTest(
       { source: canvas },
@@ -305,7 +308,7 @@ g.test('source_image,crossOrigin')
     const { sourceImage, isOriginClean, contentFrom, copySize } = t.params;
 
     const crossOriginUrl = 'https://get.webgl.org/conformance-resources/opengl_logo.jpg';
-    const originCleanUrl = '../out/resources/Di-3d.png';
+    const originCleanUrl = getResourcePath('Di-3d.png');
 
     const img = document.createElement('img');
     img.src = isOriginClean ? originCleanUrl : crossOriginUrl;
@@ -480,7 +483,7 @@ g.test('source_canvas,state')
       }
       case 'placeholder-hascontext': {
         const offscreenCanvas = canvas.transferControlToOffscreen();
-        offscreenCanvas.getContext('webgl');
+        t.tryTrackForCleanup(offscreenCanvas.getContext('webgl'));
         exceptionName = 'InvalidStateError';
         break;
       }
@@ -558,7 +561,7 @@ g.test('source_offscreenCanvas,state')
         messageChannel.port1.postMessage(offscreenCanvas, [offscreenCanvas]);
 
         const receivedOffscreenCanvas = (await port2FirstMessage) as MessageEvent;
-        receivedOffscreenCanvas.data.getContext('webgl');
+        t.tryTrackForCleanup(receivedOffscreenCanvas.data.getContext('webgl'));
 
         exceptionName = 'InvalidStateError';
         break;
@@ -605,6 +608,13 @@ g.test('destination_texture,state')
 
     t.runTest({ source: imageBitmap }, { texture: dstTexture }, copySize, state === 'valid');
   });
+
+g.test('destination_texture,device_mismatch')
+  .desc(
+    'Tests copyExternalImageToTexture cannot be called with a destination texture created from another device'
+  )
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .unimplemented();
 
 g.test('destination_texture,dimension')
   .desc(

@@ -6,6 +6,8 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { kRenderEncodeTypes } from '../../../util/command_buffer_maker.js';
 import { ValidationTest } from '../../../validation_test.js';
 
+import { kRenderEncodeTypeParams } from './render.js';
+
 export const g = makeTestGroup(ValidationTest);
 
 g.test('invalid_pipeline')
@@ -25,3 +27,8 @@ Tests setPipeline should generate an error iff using an 'invalid' pipeline.
     encoder.setPipeline(pipeline);
     validateFinish(state !== 'invalid');
   });
+
+g.test('pipeline,device_mismatch')
+  .desc('Tests setPipeline cannot be called with a render pipeline created from another device')
+  .paramsSubcasesOnly(kRenderEncodeTypeParams.combine('mismatched', [true, false]))
+  .unimplemented();

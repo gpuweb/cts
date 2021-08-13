@@ -20,7 +20,9 @@ checkType<Omit<GPUBufferUsage, '__brand'>>(BufferUsage);
 const TextureUsage = {
   COPY_SRC: 0x01,
   COPY_DST: 0x02,
+  TEXTURE_BINDING: 0x04,
   SAMPLED: 0x04,
+  STORAGE_BINDING: 0x08,
   STORAGE: 0x08,
   RENDER_ATTACHMENT: 0x10,
 } as const;
@@ -56,17 +58,8 @@ export const GPUConst = {
   MapMode,
 } as const;
 
-type Limits = Omit<GPUSupportedLimits, '__brand'> & {
-  maxComputeWorkgroupStorageSize: number;
-  maxComputeWorkgroupInvocations: number;
-  maxComputeWorkgroupSize: readonly [number, number, number];
-  maxComputePerDimensionDispatchSize: number;
-  minUniformBufferOffsetAlignment: number;
-  minStorageBufferOffsetAlignment: number;
-  maxInterStageShaderComponents: number;
-};
 /** Base limits, per spec. */
-export const DefaultLimits: Limits = {
+export const DefaultLimits = {
   maxTextureDimension1D: 8192,
   maxTextureDimension2D: 8192,
   maxTextureDimension3D: 2048,
@@ -92,7 +85,10 @@ export const DefaultLimits: Limits = {
   maxInterStageShaderComponents: 60,
 
   maxComputeWorkgroupStorageSize: 16352,
-  maxComputeWorkgroupInvocations: 256,
-  maxComputeWorkgroupSize: [256, 256, 64],
-  maxComputePerDimensionDispatchSize: 65535,
+  maxComputeInvocationsPerWorkgroup: 256,
+  maxComputeWorkgroupSizeX: 256,
+  maxComputeWorkgroupSizeY: 256,
+  maxComputeWorkgroupSizeZ: 64,
+  maxComputeWorkgroupsPerDimension: 65535,
 };
+checkType<Omit<GPUSupportedLimits, '__brand'>>(DefaultLimits);

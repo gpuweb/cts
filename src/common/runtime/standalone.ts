@@ -1,5 +1,6 @@
 // Implements the standalone test runner (see also: /standalone/index.html).
 
+import { setBaseResourcePath } from '../framework/resources.js';
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
 import { Logger } from '../internal/logging/logger.js';
 import { LiveTestCaseResult } from '../internal/logging/result.js';
@@ -23,6 +24,8 @@ const debug = optionEnabled('debug');
 
 Logger.globalDebugMode = debug;
 const logger = new Logger();
+
+setBaseResourcePath('../out/resources');
 
 const worker = optionEnabled('worker') ? new TestWorker(debug) : undefined;
 

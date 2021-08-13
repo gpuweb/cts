@@ -447,8 +447,6 @@ g.test('linear_memory')
         expectedBytes.subarray(bufferBindingEnd, testBufferSize),
         bufferBindingEnd
       );
-
-      testBuffer.destroy();
     } else {
       runShaderTest(t, GPUShaderStage.COMPUTE, testSource, []);
     }
