@@ -10,7 +10,7 @@ import { GPUTest } from './gpu_test.js';
 
 // To run these tests in the standalone runner, run `npm start` then open:
 // - http://localhost:XXXX/standalone/?runnow=1&q=webgpu:examples:*
-// To run in WPT, copy/symlink the out-wpt/ directory as the webgpu/ directory in WPT, then open:
+// To run in WPT, copy/symlink the out-wpt/ directory as the webgpu/ directory in WPT, and then open:
 // - (wpt server url)/webgpu/cts.html?q=webgpu:examples:
 //
 // Tests here can be run individually or in groups:
