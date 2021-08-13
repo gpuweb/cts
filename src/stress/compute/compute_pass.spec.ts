@@ -3,7 +3,7 @@ Stress tests covering GPUComputePassEncoder usage.
 `;
 
 import { makeTestGroup } from '../../common/framework/test_group.js';
-import { iterRange } from '../../common/util/util.js';
+import { assert, iterRange } from '../../common/util/util.js';
 import { GPUTest } from '../../webgpu/gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -58,51 +58,38 @@ g.test('pipeline_churn')
 GPUComputePipeline.`
   )
   .fn(async t => {
-    const kNumElements = 64;
-    const data = new Uint32Array([...iterRange(kNumElements, x => x)]);
-    const buffer = t.makeBufferWithContents(data, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
-    const module1 = t.device.createShaderModule({
-      code: `
-        [[block]] struct Buffer { data: array<u32>; };
+    const buffer = t.makeBufferWithContents(
+      new Uint32Array([0]),
+      GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+    );
+    const kNumIterations = 10_000;
+    const stages = iterRange(kNumIterations, i => ({
+      module: t.device.createShaderModule({
+        code: `
+        [[block]] struct Buffer { data: u32; };
         [[group(0), binding(0)]] var<storage, read_write> buffer: Buffer;
-        [[stage(compute), workgroup_size(1)]] fn main(
-            [[builtin(global_invocation_id)]] id: vec3<u32>) {
-          buffer.data[id.x] = buffer.data[id.x] + 1u;
+        [[stage(compute), workgroup_size(1)]] fn main${i}() {
+          buffer.data = buffer.data + 1u;
         }
-      `,
-    });
-    const module2 = t.device.createShaderModule({
-      code: `
-        [[block]] struct Buffer { data: array<u32>; };
-        [[group(0), binding(0)]] var<storage, read_write> buffer: Buffer;
-        [[stage(compute), workgroup_size(1)]] fn main(
-            [[builtin(global_invocation_id)]] id: vec3<u32>) {
-          buffer.data[id.x] = buffer.data[id.x] + 2u;
-        }
-      `,
-    });
-    const kNumIterations = 250_000;
-    for (let i = 0; i < kNumIterations; ++i) {
-      const module = i % 2 === 0 ? module1 : module2;
-      const pipeline = t.device.createComputePipeline({ compute: { module, entryPoint: 'main' } });
+        `,
+      }),
+      entryPoint: `main${i}`,
+    }));
+    for (const compute of stages) {
+      const encoder = t.device.createCommandEncoder();
+      const pipeline = t.device.createComputePipeline({ compute });
       const bindGroup = t.device.createBindGroup({
         layout: pipeline.getBindGroupLayout(0),
         entries: [{ binding: 0, resource: { buffer } }],
       });
-
-      const encoder = t.device.createCommandEncoder();
       const pass = encoder.beginComputePass();
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, bindGroup);
-      pass.dispatch(kNumElements);
+      pass.dispatch(1);
       pass.endPass();
       t.device.queue.submit([encoder.finish()]);
     }
-    const kTotalAddition = (kNumIterations / 2) * 3;
-    t.expectGPUBufferValuesEqual(
-      buffer,
-      new Uint32Array([...iterRange(kNumElements, x => x + kTotalAddition)])
-    );
+    t.expectGPUBufferValuesEqual(buffer, new Uint32Array([kNumIterations]));
   });
 
 g.test('bind_group_churn')
@@ -205,6 +192,10 @@ g.test('huge_dispatches')
   .desc(`Tests execution of compute passes with huge dispatch calls`)
   .fn(async t => {
     const kDimensions = [512, 512, 128];
+    kDimensions.forEach(x => {
+      assert(x <= t.device.limits.maxComputeWorkgroupsPerDimension);
+    });
+
     const kNumElements = kDimensions[0] * kDimensions[1] * kDimensions[2];
     const data = new Uint32Array([...iterRange(kNumElements, x => x)]);
     const buffer = t.makeBufferWithContents(data, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
