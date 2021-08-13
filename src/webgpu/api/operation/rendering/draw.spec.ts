@@ -599,3 +599,13 @@ g.test('vertex_attributes,formats')
   `
   )
   .unimplemented();
+
+g.test(`largeish_buffer`)
+  .desc(
+    `
+    Test a very large range of buffer is bound to different slot.
+    - A bound vertex buffer range is significantly larger than necessary
+    - A bound index buffer range is significantly larger than necessary
+`
+  )
+  .unimplemented();

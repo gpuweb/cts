@@ -187,3 +187,38 @@ g.test('sample_count_must_be_valid')
 
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
+
+g.test('vertex_buffer_layout_must_be_valid')
+  .desc(
+    `
+In this test we test the vertex buffer layuouts validation within creating render pipeline.
+    - Test aspect: arrayStrideValue, attributeOffset, attributeCount, wgslTypeCompatible,
+      bufferCount, indistinctLocation
+    - When testing the arrayStrideValue aspect, we test the following validation in GPUVertexBufferLayout:
+      - descriptor.arrayStride no larger than device.[[device]].[[limits]].maxVertexBufferArrayStride.
+      - descriptor.arrayStride is a multiple of 4.
+    - When testing the attributeOffset aspect, we test the following validation in GPUVertexBufferLayout:
+      - For each attribute attrib in the list descriptor.attributes:
+        - If descriptor.arrayStride is zero:
+          - attrib.offset + sizeof(attrib.format) no larger than device.[[device]].[[limits]].maxVertexBufferArrayStride.
+        - Otherwise:
+          - attrib.offset + sizeof(attrib.format) no larger than descriptor.arrayStride.
+        - attrib.offset is a multiple of the minimum of 4 and sizeof(attrib.format).
+    - When testing the attributeCount aspect, we test the following validation:
+      - In GPUVertexBufferLayout, for each attribute attrib in the list descriptor.attributes:
+        - attrib.shaderLocation is less than device.[[device]].[[limits]].maxVertexAttributes.
+      - In GPUVertexState, The sum of vertexBuffer.attributes.length, over every vertexBuffer in
+        descriptor.buffers, is less than or equal to device.[[device]].[[limits]].maxVertexAttributes.
+    - When testing the wgslTypeCompatible aspect, we test the following validation in GPUVertexBufferLayout:
+      - For each vertex attribute that serve as a input of the vertex shader entry point, the corresponding
+        attrib element of descriptor.attributes with matched shader location satisfying that:
+        - The format in shader must be compatible with attrbi.format
+    - When testing the bufferCount aspect, we test the following validation in GPUVertexState:
+      - descriptor.buffers.length is less than or equal to device.[[device]].[[limits]].maxVertexBuffers.
+        - By changing the number of buffers with attributes and adding buffer with no attribute
+    - When testing the indistinctLocation aspect, we test the following validation in GPUVertexState:
+      - Each attrib in the union of all GPUVertexAttribute across descriptor.buffers has a distinct
+        attrib.shaderLocation value.
+`
+  )
+  .unimplemented();
