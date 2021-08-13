@@ -697,7 +697,7 @@ g.test('subresources_and_binding_types_combination_for_aspect')
     const aspectSampleType = (format: GPUTextureFormat, aspect: typeof aspect0) => {
       switch (aspect) {
         case 'depth-only':
-          return 'float';
+          return 'depth';
         case 'stencil-only':
           return 'uint';
         case 'all':
@@ -705,7 +705,7 @@ g.test('subresources_and_binding_types_combination_for_aspect')
           if (kTextureFormatInfo[format].stencil) {
             return 'uint';
           }
-          return 'float';
+          return 'depth';
       }
     };
 
