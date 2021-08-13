@@ -251,6 +251,9 @@ const bufferUsageListForTest: number[] = [
 g.test('set_buffer_usage_validation')
   .desc(
     `
+> I believe this is the same as in api/validation/encoding/cmds/render/setIndexBuffer.spec.ts and setVertexBuffer.spec.ts
+(Although setVertexBuffer.spec.ts doesn't test instance buffers. I don't think it's very necessary but a TODO could be added there.)
+
 In this test, we test the usage validation within setIndexBuffer and setVertexBuffer.
     - Validate that buffer usage mismatch is catched by set*Buffer
     - Validate that calling set*Buffer before/after setPipeline is the same
@@ -312,6 +315,8 @@ Related set*Buffer validation rules:
 g.test('set_buffer_parameter_validation')
   .desc(
     `
+> I think these are covered in setVertexBuffer.spec.ts and setIndexBuffer.spec.ts.
+
 In this test we test the parameter validation in setIndexBuffer and setVertexBuffer, and we test
 that implicit parameter used in setIndexBuffer and setVertexBuffer is computed correctly, and use
 draw and drawIndexed to validate the buffer binding is as we expect.
@@ -352,6 +357,9 @@ that the setting doesn't cause validation error when drawing.
 g.test(`needed_buffer_missing`)
   .desc(
     `
+> May have some overlap with api/validation/encoding/cmds/render/state_tracking.spec.ts but otherwise
+lgtm. In fact a lot of the render state tests listed here should probably be in that file.
+
 In this test we test that any missing buffer for a used slot will cause validation errors when drawing.
 - All (non/indexed, in/direct) draw commands
     - A needed vertex buffer is not bound
@@ -366,6 +374,8 @@ In this test we test that any missing buffer for a used slot will cause validati
 g.test(`unused_buffer_bound`)
   .desc(
     `
+Specifically that the small buffer binding is too small for the draw call.
+
 In this test we test that a small buffer bound to unused buffer slot won't cause validation error.
 - All draw commands,
   - An unused {index , vertex} buffer with uselessly small range is bound (immediately before draw
@@ -388,6 +398,9 @@ In this test we test that only the last setting for a buffer slot take account.
 g.test(`index_buffer_OOB`)
   .desc(
     `
+> index_buffer_OOB and vertex_buffer_OOB probably should go in a new file, like
+api/validation/encoding/cmds/render/direct_draw.spec.ts
+
 In this test we test that index buffer OOB is catched as validation error in drawIndex.
 drawIndexedIndirect didn't has such validation yet.
 - Indexed draw commands,
@@ -403,6 +416,9 @@ drawIndexedIndirect didn't has such validation yet.
 g.test(`vertex_buffer_OOB`)
   .desc(
     `
+> index_buffer_OOB and vertex_buffer_OOB probably should go in a new file, like
+api/validation/encoding/cmds/render/direct_draw.spec.ts
+
 In this test we test that vertex buffer OOB is catched as validation error in draw call. Specifically,
 only vertex step mode buffer OOB in draw and instance step mode buffer OOB in draw and drawIndexed
 are CPU-validated. Other cases are currently handled by robust access.
@@ -430,6 +446,9 @@ are CPU-validated. Other cases are currently handled by robust access.
 g.test(`largeish_buffer`)
   .desc(
     `
+> Technically it doesn't matter if this is a validation or operation test, but I think it would
+make more sense to categorize it as an operation test, e.g. in api/operation/rendering/draw.spec.ts.
+
 In this test we test that a very large range of buffer is bound to different slot, and no validation
 error occurs.
 - A bound vertex buffer range is significantly larger than necessary
@@ -441,6 +460,8 @@ error occurs.
 g.test('buffer_must_unmap_before_queue_submit')
   .desc(
     `
+> This is in api/validation/queue/buffer_mapped.spec.ts
+
 In this test we test that submitting a command buffer with buffers that are still mapping will cause
 validation error.
   `
@@ -450,6 +471,8 @@ validation error.
 g.test('create_render_pipeline_vertex_buffer_layout_validation')
   .desc(
     `
+> Any validation tests for createRenderPipeline should be in api/validation/createRenderPipeline.spec.ts
+
 In this test we test the vertex buffer layuouts validation within creating render pipeline.
     - Test aspect: arrayStrideValue, attributeOffset, attributeCount, wgslTypeCompatible,
       bufferCount, indistinctLocation
