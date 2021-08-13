@@ -55,7 +55,7 @@ jobs:
           cat << EOF >> .firebaserc
           {
             "projects": {
-              "default": "gpuweb-prs"
+              "default": "gpuweb-cts"
             }
           }
           EOF
