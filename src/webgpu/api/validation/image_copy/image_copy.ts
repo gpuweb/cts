@@ -121,7 +121,7 @@ interface WithFormatAndCoordinate extends WithFormat {
 }
 
 interface WithFormatAndMethod extends WithFormat {
-  method: string;
+  method: ImageCopyType;
 }
 
 // This is a helper function used for expanding test parameters for texel block alignment tests on offset
