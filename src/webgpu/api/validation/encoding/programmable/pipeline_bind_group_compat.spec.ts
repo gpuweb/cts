@@ -14,27 +14,8 @@ TODO: subsume existing test, rewrite fixture as needed.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { assert } from '../../../../../common/util/util.js';
 import { kSamplerBindingTypes, kBufferBindingTypes } from '../../../../capability_info.js';
 import { ValidationTest } from '../../validation_test.js';
-
-function getBindGroupLayouts(
-  device: GPUDevice,
-  bindGroups: Array<Array<GPUBindGroupLayoutEntry>>
-): Array<GPUBindGroupLayout> {
-  const bindGroupLayouts = [];
-  for (let i = 0; i < bindGroups.length; ++i) {
-    // Support empty bindGroupLayout
-    const entries = [];
-    for (let j = 0; j < bindGroups[i].length; ++j) {
-      const binding = bindGroups[i][j];
-      assert(binding !== undefined);
-      entries.push(bindGroups[i][j]);
-    }
-    bindGroupLayouts.push(device.createBindGroupLayout({ entries }));
-  }
-  return bindGroupLayouts;
-}
 
 class F extends ValidationTest {
   getUniformBuffer(): GPUBuffer {
@@ -57,20 +38,17 @@ class F extends ValidationTest {
         return vec4<f32>(0.0, 1.0, 0.0, 1.0);
       }
     `;
-    const bindGroupLayouts = getBindGroupLayouts(this.device, bindGroups);
-
+    const module = device.createShaderModule({ code: shader });
     const pipeline = this.device.createRenderPipeline({
-      layout: this.device.createPipelineLayout({ bindGroupLayouts }),
+      layout: device.createPipelineLayout({
+        bindGroupLayouts: bindGroups.map(entries => device.createBindGroupLayout({ entries })),
+      }),
       vertex: {
-        module: this.device.createShaderModule({
-          code: shader,
-        }),
+        module,
         entryPoint: 'vs_main',
       },
       fragment: {
-        module: this.device.createShaderModule({
-          code: shader,
-        }),
+        module,
         entryPoint: 'fs_main',
         targets: [{ format: 'rgba8unorm' }],
       },
@@ -79,7 +57,7 @@ class F extends ValidationTest {
     return pipeline;
   }
 
-  createComputePipeline(
+  createComputePipelineWithLayout(
     device: GPUDevice,
     bindGroups: Array<Array<GPUBindGroupLayoutEntry>>
   ): GPUComputePipeline {
@@ -88,39 +66,18 @@ class F extends ValidationTest {
         fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
       }
     `;
-    const bindGroupLayouts = getBindGroupLayouts(this.device, bindGroups);
+
+    const module = device.createShaderModule({ code: shader });
     const pipeline = this.device.createComputePipeline({
-      layout: this.device.createPipelineLayout({ bindGroupLayouts }),
+      layout: device.createPipelineLayout({
+        bindGroupLayouts: bindGroups.map(entries => device.createBindGroupLayout({ entries })),
+      }),
       compute: {
-        module: this.device.createShaderModule({
-          code: shader,
-        }),
+        module,
         entryPoint: 'main',
       },
     });
     return pipeline;
-  }
-
-  createRenderPipeline(device: GPUDevice): GPURenderPipeline {
-    return this.createRenderPipelineWithLayout(device, [
-      // Group 0
-      [
-        {
-          binding: 0,
-          visibility: GPUShaderStage.VERTEX,
-          buffer: {},
-        },
-      ],
-
-      // Group 1
-      [
-        {
-          binding: 0,
-          visibility: GPUShaderStage.FRAGMENT,
-          buffer: {},
-        },
-      ],
-    ]);
   }
 
   beginRenderPass(commandEncoder: GPUCommandEncoder): GPURenderPassEncoder {
@@ -154,7 +111,26 @@ g.test('it_is_invalid_to_draw_in_a_render_pass_with_missing_bind_groups')
   .fn(async t => {
     const { setBindGroup1, setBindGroup2, _success } = t.params;
 
-    const pipeline = t.createRenderPipeline(t.device);
+    const bindGroupLayouts = [
+      // bind group layout 0
+      [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.VERTEX,
+          buffer: { type: 'uniform' },
+        },
+      ],
+
+      // bind group layout 1
+      [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.VERTEX,
+          buffer: { type: 'uniform' },
+        },
+      ],
+    ] as Array<Array<GPUBindGroupLayoutEntry>>;
+    const pipeline = t.createRenderPipelineWithLayout(t.device, bindGroupLayouts);
 
     const uniformBuffer = t.getUniformBuffer();
 
@@ -168,13 +144,7 @@ g.test('it_is_invalid_to_draw_in_a_render_pass_with_missing_bind_groups')
         },
       ],
       layout: t.device.createBindGroupLayout({
-        entries: [
-          {
-            binding: 0,
-            visibility: GPUShaderStage.VERTEX,
-            buffer: {}, // default type: uniform
-          },
-        ],
+        entries: bindGroupLayouts[0],
       }),
     });
 
@@ -188,13 +158,7 @@ g.test('it_is_invalid_to_draw_in_a_render_pass_with_missing_bind_groups')
         },
       ],
       layout: t.device.createBindGroupLayout({
-        entries: [
-          {
-            binding: 0,
-            visibility: GPUShaderStage.FRAGMENT,
-            buffer: {}, // default type uniform
-          },
-        ],
+        entries: bindGroupLayouts[1],
       }),
     });
 
