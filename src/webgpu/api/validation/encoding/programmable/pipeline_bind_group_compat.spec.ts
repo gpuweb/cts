@@ -181,7 +181,7 @@ g.test('it_is_invalid_to_draw_in_a_render_pass_with_missing_bind_groups')
     }, !_success);
   });
 
-g.test('bgl_binding_mismatch_in_bind_group_and_pipeline_layout')
+g.test('bgl_binding_mismatch')
   .desc(
     'Tests the binding number must exist or not exist in both bindGroups[i].layout and pipelineLayout.bgls[i]'
   )
@@ -202,7 +202,7 @@ g.test('bgl_binding_mismatch_in_bind_group_and_pipeline_layout')
   )
   .unimplemented();
 
-g.test('bgl_visibility_mismatch_in_bind_group_and_pipeline_layout')
+g.test('bgl_visibility_mismatch')
   .desc('Tests the visibility in bindGroups[i].layout and pipelineLayout.bgls[i] must be matched')
   .params(u =>
     u
@@ -222,7 +222,7 @@ g.test('bgl_visibility_mismatch_in_bind_group_and_pipeline_layout')
   )
   .unimplemented();
 
-g.test('bgl_resource_type_mismatch_in_bind_group_and_pipeline_layout')
+g.test('bgl_resource_type_mismatch')
   .desc(
     'Tests the binding resource type in bindGroups[i].layout and pipelineLayout.bgls[i] must be matched'
   )
