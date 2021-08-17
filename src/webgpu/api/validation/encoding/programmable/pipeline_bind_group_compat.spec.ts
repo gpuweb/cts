@@ -219,6 +219,7 @@ g.test('bgl_visibility_mismatch')
               GPUConst.ShaderStage.VERTEX | GPUConst.ShaderStage.FRAGMENT,
             ] as const)
       )
+      .combine('useU32Array', [false, true])
   )
   .unimplemented();
 
@@ -231,7 +232,8 @@ g.test('bgl_resource_type_mismatch')
       .combine('encoderType', kProgrammableEncoderTypes)
       .expand('call', p => getTestCmds(p.encoderType))
       .beginSubcases()
-      .combine('bgResource', kResourceTypes)
+      .combine('bgResourceType', kResourceTypes)
       .combine('plResourceType', kResourceTypes)
+      .combine('useU32Array', [false, true])
   )
   .unimplemented();
