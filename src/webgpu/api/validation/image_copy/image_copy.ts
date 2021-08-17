@@ -156,7 +156,7 @@ export function texelBlockAlignmentTestExpanderForValueToCoordinate({
 
 // This is a helper function used for filtering test parameters
 export function formatCopyableWithMethod({ format, method }: WithFormatAndMethod): boolean {
-  if (method === 'CopyTextureToBuffer') {
+  if (method === 'CopyT2B') {
     return kTextureFormatInfo[format].copySrc;
   } else {
     return kTextureFormatInfo[format].copyDst;
