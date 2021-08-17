@@ -395,7 +395,7 @@ class F extends GPUTest {
     });
   }
 
-  // Initialize the depth aspect of sourceTexture with draw calls
+  /** Initialize the depth aspect of sourceTexture with draw calls */
   InitializeDepthAspect(
     sourceTexture: GPUTexture,
     depthFormat: GPUTextureFormat,
@@ -903,7 +903,7 @@ g.test('copy_depth_stencil')
   - Test copying multiple array layers
 
   For all the texture formats with depth aspect:
-  - Initialize the depth texture with a draw call
+  - Initialize the depth aspect of the source texture with a draw call
   - Copy the depth aspect from the source texture into the destination texture
   - Validate the content in the destination texture with the depth comparation function 'equal'
   `
