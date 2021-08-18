@@ -153,7 +153,7 @@ g.test('it_is_invalid_to_draw_in_a_render_pass_with_missing_bind_groups')
   .fn(async t => {
     const { setBindGroup1, setBindGroup2, _success } = t.params;
 
-    const bindGroupLayouts = [
+    const bindGroupLayouts: GPUBindGroupLayoutEntry[][] = [
       // bind group layout 0
       [
         {
@@ -171,7 +171,7 @@ g.test('it_is_invalid_to_draw_in_a_render_pass_with_missing_bind_groups')
           buffer: { type: 'uniform' },
         },
       ],
-    ] as Array<Array<GPUBindGroupLayoutEntry>>;
+    ];
     const pipeline = t.createRenderPipelineWithLayout(t.device, bindGroupLayouts);
 
     const uniformBuffer = t.getUniformBuffer();
