@@ -175,6 +175,7 @@ export class GPUTest extends Fixture {
       size,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     });
+    this.trackForCleanup(dst);
 
     const c = this.device.createCommandEncoder();
     c.copyBufferToBuffer(src, srcOffset, dst, 0, size);
@@ -346,6 +347,7 @@ export class GPUTest extends Fixture {
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
+    this.trackForCleanup(buffer);
 
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyTextureToBuffer(
@@ -376,6 +378,7 @@ export class GPUTest extends Fixture {
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
+    this.trackForCleanup(buffer);
 
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyTextureToBuffer(
@@ -535,8 +538,12 @@ export class GPUTest extends Fixture {
    *
    * TODO: Several call sites would be simplified if this took ArrayBuffer as well.
    */
-  makeBufferWithContents(dataArray: TypedArrayBufferView, usage: GPUBufferUsageFlags): GPUBuffer {
-    return makeBufferWithContents(this.device, dataArray, usage);
+  makeBufferWithContents(
+    dataArray: TypedArrayBufferView,
+    usage: GPUBufferUsageFlags,
+    opts: { padToMultipleOf4?: boolean } = {}
+  ): GPUBuffer {
+    return this.trackForCleanup(makeBufferWithContents(this.device, dataArray, usage, opts));
   }
 
   /**
@@ -550,8 +557,9 @@ export class GPUTest extends Fixture {
       mipLevelCount,
       size: { width: textureSizeMipmap0, height: textureSizeMipmap0, depthOrArrayLayers: 1 },
       format,
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.SAMPLED,
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     });
+    this.trackForCleanup(texture);
 
     const textureEncoder = this.device.createCommandEncoder();
     for (let i = 0; i < mipLevelCount; i++) {

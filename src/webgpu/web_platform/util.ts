@@ -1,4 +1,4 @@
-import { raceWithRejectOnTimeout } from '../../common/util/util.js';
+import { ErrorWithExtra, raceWithRejectOnTimeout } from '../../common/util/util.js';
 
 /**
  * Starts playing a video and waits for it to be consumable.
@@ -11,23 +11,29 @@ import { raceWithRejectOnTimeout } from '../../common/util/util.js';
  */
 export function startPlayingAndWaitForVideo(
   video: HTMLVideoElement,
-  callback: () => void
+  callback: () => unknown
 ): Promise<void> {
   return raceWithRejectOnTimeout(
     new Promise((resolve, reject) => {
-      const callbackAndResolve = () => {
-        callback();
-        resolve();
+      const callbackAndResolve = async () => {
+        try {
+          await callback();
+          resolve();
+        } catch (ex) {
+          reject();
+        }
       };
 
       if (video.error) {
-        reject(new Error('Video failed to load: ' + video.error));
+        reject(
+          new ErrorWithExtra('Video.error: ' + video.error.message, () => ({ error: video.error }))
+        );
         return;
       }
 
       video.addEventListener(
         'error',
-        e => reject(new Error('Video playback failed: ' + e.message)),
+        event => reject(new ErrorWithExtra('Video received "error" event', () => ({ event }))),
         true
       );
 
@@ -51,7 +57,7 @@ export function startPlayingAndWaitForVideo(
       video.loop = true;
       video.muted = true;
       video.preload = 'auto';
-      video.play();
+      video.play().catch(reject);
     }),
     2000,
     'Video never became ready'

@@ -3,7 +3,7 @@ TODO:
 
 - Start a pipeline statistics query in all possible encoders:
     - queryIndex {in, out of} range for GPUQuerySet
-    - GPUQuerySet {valid, invalid}
+    - GPUQuerySet {valid, invalid, device mismatched}
     - x ={render pass, compute pass} encoder
 `;
 
@@ -126,3 +126,12 @@ Tests that write timestamp to a invalid query set that failed during creation:
     encoder.encoder.writeTimestamp(querySet, 0);
     encoder.validateFinish(querySetState !== 'invalid');
   });
+
+g.test('timestamp_query,device_mismatch')
+  .desc('Tests writeTimestamp cannot be called with a query set created from another device')
+  .paramsSubcasesOnly(u =>
+    u
+      .combine('encoderType', ['non-pass', 'compute pass', 'render pass'] as const)
+      .combine('mismatched', [true, false])
+  )
+  .unimplemented();

@@ -80,6 +80,7 @@ export class CopyToTextureUtils extends GPUTest {
       size: bytesPerRow * externalImage.height,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
+    this.trackForCleanup(testBuffer);
 
     const encoder = this.device.createCommandEncoder();
 

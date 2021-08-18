@@ -36,6 +36,7 @@ export class ImageCopyTest extends ValidationTest {
           size: dataSize,
           usage: GPUBufferUsage.COPY_SRC,
         });
+        this.trackForCleanup(buffer);
 
         const encoder = this.device.createCommandEncoder();
         encoder.copyBufferToTexture({ buffer, ...textureDataLayout }, textureCopyView, size);
@@ -58,6 +59,7 @@ export class ImageCopyTest extends ValidationTest {
           size: dataSize,
           usage: GPUBufferUsage.COPY_DST,
         });
+        this.trackForCleanup(buffer);
 
         const encoder = this.device.createCommandEncoder();
         encoder.copyTextureToBuffer(textureCopyView, { buffer, ...textureDataLayout }, size);
@@ -119,7 +121,7 @@ interface WithFormatAndCoordinate extends WithFormat {
 }
 
 interface WithFormatAndMethod extends WithFormat {
-  method: string;
+  method: ImageCopyType;
 }
 
 // This is a helper function used for expanding test parameters for texel block alignment tests on offset
@@ -154,7 +156,7 @@ export function texelBlockAlignmentTestExpanderForValueToCoordinate({
 
 // This is a helper function used for filtering test parameters
 export function formatCopyableWithMethod({ format, method }: WithFormatAndMethod): boolean {
-  if (method === 'CopyTextureToBuffer') {
+  if (method === 'CopyT2B') {
     return kTextureFormatInfo[format].copySrc;
   } else {
     return kTextureFormatInfo[format].copyDst;
