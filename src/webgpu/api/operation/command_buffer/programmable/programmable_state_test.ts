@@ -1,7 +1,5 @@
-import { assert } from '../../../../../common/util/util.js';
 import { GPUTest } from '../../../../gpu_test.js';
-
-const kSize = 4;
+import { EncoderType } from '../../../../util/command_buffer_maker.js';
 
 interface BindGroupIndices {
   a: number;
@@ -9,11 +7,12 @@ interface BindGroupIndices {
   out: number;
 }
 
-export enum PassType {
-  Compute = 'compute',
-  Render = 'render',
-  RenderBundle = 'renderBundle',
-}
+type PipelineByEncoderType<T extends EncoderType> = {
+  'non-pass': null;
+  'compute pass': GPUComputePipeline;
+  'render pass': GPURenderPipeline;
+  'render bundle': GPURenderBundleEncoder;
+}[T];
 
 export class ProgrammableStateTest extends GPUTest {
   private commonBindGroupLayout: GPUBindGroupLayout | undefined;
@@ -35,14 +34,10 @@ export class ProgrammableStateTest extends GPUTest {
   }
 
   createBufferWithValue(initValue: number): GPUBuffer {
-    const buffer = this.device.createBuffer({
-      mappedAtCreation: true,
-      size: kSize,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
-    });
-    new Uint32Array(buffer.getMappedRange()).fill(initValue);
-    buffer.unmap();
-    return buffer;
+    return this.makeBufferWithContents(
+      new Int32Array([initValue]),
+      GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE
+    );
   }
 
   createBindGroup(buffer: GPUBuffer): GPUBindGroup {
@@ -54,17 +49,21 @@ export class ProgrammableStateTest extends GPUTest {
 
   // Create a compute pipeline that performs an operation on data from two bind groups,
   // then writes the result to a third bind group.
-  createBindingStatePipeline(
-    passType: PassType,
+  createBindingStatePipeline<T extends EncoderType>(
+    encoderType: T,
     groups: BindGroupIndices,
     algorthim: String = 'a.value - b.value'
-  ): GPUComputePipeline | GPURenderPipeline {
-    switch (passType) {
-      case PassType.Compute:
-        return this.createBindingStateComputePipeline(groups, algorthim);
-      case PassType.Render:
-      case PassType.RenderBundle:
-        return this.createBindingStateRenderPipeline(groups, algorthim);
+  ): PipelineByEncoderType<T> {
+    switch (encoderType) {
+      case 'compute pass':
+        return this.createBindingStateComputePipeline(groups, algorthim) as PipelineByEncoderType<
+          T
+        >;
+      case 'render pass':
+      case 'render bundle':
+        return this.createBindingStateRenderPipeline(groups, algorthim) as PipelineByEncoderType<T>;
+      default:
+        return null as PipelineByEncoderType<T>;
     }
   }
 
@@ -147,39 +146,10 @@ export class ProgrammableStateTest extends GPUTest {
     });
   }
 
-  beginSimplePass(passType: PassType): GPUProgrammablePassEncoder {
-    assert(this.encoder === null);
-    this.encoder = this.device.createCommandEncoder();
-    switch (passType) {
-      case PassType.Compute:
-        return this.encoder.beginComputePass();
-      case PassType.Render:
-        return this.beginSimpleRenderPass(this.encoder);
-      case PassType.RenderBundle:
-        return this.device.createRenderBundleEncoder({ colorFormats: ['rgba8unorm'] });
-    }
-  }
-
-  beginSimpleRenderPass(encoder: GPUCommandEncoder): GPURenderPassEncoder {
-    const view = this.device
-      .createTexture({
-        size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-        format: 'rgba8unorm',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
-      })
-      .createView();
-    return encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          view,
-          loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
-          storeOp: 'store',
-        },
-      ],
-    });
-  }
-
-  setPipeline(pass: GPUProgrammablePassEncoder, pipeline: GPUComputePipeline | GPURenderPipeline) {
+  setPipeline<T extends EncoderType>(
+    pass: GPUProgrammablePassEncoder,
+    pipeline: PipelineByEncoderType<T>
+  ) {
     if (pass instanceof GPUComputePassEncoder) {
       pass.setPipeline(pipeline as GPUComputePipeline);
     } else if (pass instanceof GPURenderPassEncoder || pass instanceof GPURenderBundleEncoder) {
@@ -195,29 +165,5 @@ export class ProgrammableStateTest extends GPUTest {
     } else if (pass instanceof GPURenderBundleEncoder) {
       pass.draw(1);
     }
-  }
-
-  endAndSubmitSimplePass(pass: GPUProgrammablePassEncoder) {
-    assert(this.encoder !== null);
-
-    if (pass instanceof GPUComputePassEncoder) {
-      pass.endPass();
-    } else if (pass instanceof GPURenderPassEncoder) {
-      pass.endPass();
-    } else if (pass instanceof GPURenderBundleEncoder) {
-      const renderBundle = pass.finish();
-      const renderPass = this.beginSimpleRenderPass(this.encoder);
-      renderPass.executeBundles([renderBundle]);
-      renderPass.endPass();
-    }
-
-    this.device.queue.submit([this.encoder.finish()]);
-    this.encoder = null;
-  }
-
-  verifyData(buffer: GPUBuffer, expectedValue: number) {
-    const bufferData = new Int32Array(1);
-    bufferData[0] = expectedValue;
-    this.expectGPUBufferValuesEqual(buffer, bufferData);
   }
 }
