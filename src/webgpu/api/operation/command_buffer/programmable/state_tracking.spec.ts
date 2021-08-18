@@ -10,12 +10,13 @@ TODO: for each programmable pass encoder {compute pass, render pass, render bund
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-
-import { ProgrammableStateTest, PassType } from './programmable_state_test.js';
+import { GPUConst } from '../../../../constants.js';
+import { ProgrammableStateTest } from './programmable_state_test.js';
 
 export const g = makeTestGroup(ProgrammableStateTest);
 
-const kPassTypes = [PassType.Compute, PassType.Render, PassType.RenderBundle];
+const kEncoderTypes = ['compute pass', 'render pass', 'render bundle'] as const;
+const kBufferUsage = GPUConst.BufferUsage.COPY_SRC | GPUConst.BufferUsage.STORAGE;
 
 g.test('bind_group_indices')
   .desc(
@@ -26,7 +27,7 @@ g.test('bind_group_indices')
   )
   .params(u =>
     u //
-      .combine('passType', kPassTypes)
+      .combine('encoderType', kEncoderTypes)
       .beginSubcases()
       .combine('groupIndices', [
         { a: 0, b: 1, out: 2 },
@@ -38,26 +39,27 @@ g.test('bind_group_indices')
       ])
   )
   .fn(async t => {
-    const { passType, groupIndices } = t.params;
+    const { encoderType, groupIndices } = t.params;
 
-    const pipeline = t.createBindingStatePipeline(passType, groupIndices);
+    const pipeline = t.createBindingStatePipeline(encoderType, groupIndices);
 
-    const out = t.createBufferWithValue(0);
+    const out = t.makeBufferWithContents(new Int32Array([0]), kBufferUsage);
     const bindGroups = {
-      a: t.createBindGroup(t.createBufferWithValue(3)),
-      b: t.createBindGroup(t.createBufferWithValue(2)),
+      a: t.createBindGroup(t.makeBufferWithContents(new Int32Array([3]), kBufferUsage)),
+      b: t.createBindGroup(t.makeBufferWithContents(new Int32Array([2]), kBufferUsage)),
       out: t.createBindGroup(out),
     };
 
-    const pass = t.beginSimplePass(passType);
-    t.setPipeline(pass, pipeline);
-    pass.setBindGroup(groupIndices.a, bindGroups.a);
-    pass.setBindGroup(groupIndices.b, bindGroups.b);
-    pass.setBindGroup(groupIndices.out, bindGroups.out);
-    t.dispatchOrDraw(pass);
-    t.endAndSubmitSimplePass(pass);
+    const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
 
-    t.verifyData(out, 1);
+    t.setPipeline(encoder, pipeline);
+    encoder.setBindGroup(groupIndices.a, bindGroups.a);
+    encoder.setBindGroup(groupIndices.b, bindGroups.b);
+    encoder.setBindGroup(groupIndices.out, bindGroups.out);
+    t.dispatchOrDraw(encoder);
+    validateFinishAndSubmit(true, true);
+
+    t.expectGPUBufferValuesEqual(out, new Int32Array([1]));
   });
 
 g.test('bind_group_order')
@@ -68,7 +70,7 @@ g.test('bind_group_order')
   )
   .params(u =>
     u //
-      .combine('passType', kPassTypes)
+      .combine('encoderType', kEncoderTypes)
       .beginSubcases()
       .combine('setOrder', [
         ['a', 'b', 'out'],
@@ -80,29 +82,29 @@ g.test('bind_group_order')
       ] as const)
   )
   .fn(async t => {
-    const { passType, setOrder } = t.params;
+    const { encoderType, setOrder } = t.params;
 
     const groupIndices = { a: 0, b: 1, out: 2 };
-    const pipeline = t.createBindingStatePipeline(passType, groupIndices);
+    const pipeline = t.createBindingStatePipeline(encoderType, groupIndices);
 
-    const out = t.createBufferWithValue(0);
+    const out = t.makeBufferWithContents(new Int32Array([0]), kBufferUsage);
     const bindGroups = {
-      a: t.createBindGroup(t.createBufferWithValue(3)),
-      b: t.createBindGroup(t.createBufferWithValue(2)),
+      a: t.createBindGroup(t.makeBufferWithContents(new Int32Array([3]), kBufferUsage)),
+      b: t.createBindGroup(t.makeBufferWithContents(new Int32Array([2]), kBufferUsage)),
       out: t.createBindGroup(out),
     };
 
-    const pass = t.beginSimplePass(passType);
-    t.setPipeline(pass, pipeline);
+    const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
+    t.setPipeline(encoder, pipeline);
 
     for (const group of setOrder) {
-      pass.setBindGroup(groupIndices[group], bindGroups[group]);
+      encoder.setBindGroup(groupIndices[group], bindGroups[group]);
     }
 
-    t.dispatchOrDraw(pass);
-    t.endAndSubmitSimplePass(pass);
+    t.dispatchOrDraw(encoder);
+    validateFinishAndSubmit(true, true);
 
-    t.verifyData(out, 1);
+    t.expectGPUBufferValuesEqual(out, new Int32Array([1]));
   });
 
 g.test('bind_group_before_pipeline')
@@ -113,7 +115,7 @@ g.test('bind_group_before_pipeline')
   )
   .params(u =>
     u //
-      .combine('passType', kPassTypes)
+      .combine('encoderType', kEncoderTypes)
       .beginSubcases()
       .combineWithParams([
         { setBefore: ['a', 'b'], setAfter: ['out'] },
@@ -123,33 +125,33 @@ g.test('bind_group_before_pipeline')
       ] as const)
   )
   .fn(async t => {
-    const { passType, setBefore, setAfter } = t.params;
+    const { encoderType, setBefore, setAfter } = t.params;
     const groupIndices = { a: 0, b: 1, out: 2 };
-    const pipeline = t.createBindingStatePipeline(passType, groupIndices);
+    const pipeline = t.createBindingStatePipeline(encoderType, groupIndices);
 
-    const out = t.createBufferWithValue(0);
+    const out = t.makeBufferWithContents(new Int32Array([0]), kBufferUsage);
     const bindGroups = {
-      a: t.createBindGroup(t.createBufferWithValue(3)),
-      b: t.createBindGroup(t.createBufferWithValue(2)),
+      a: t.createBindGroup(t.makeBufferWithContents(new Int32Array([3]), kBufferUsage)),
+      b: t.createBindGroup(t.makeBufferWithContents(new Int32Array([2]), kBufferUsage)),
       out: t.createBindGroup(out),
     };
 
-    const pass = t.beginSimplePass(passType);
+    const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
 
     for (const group of setBefore) {
-      pass.setBindGroup(groupIndices[group], bindGroups[group]);
+      encoder.setBindGroup(groupIndices[group], bindGroups[group]);
     }
 
-    t.setPipeline(pass, pipeline);
+    t.setPipeline(encoder, pipeline);
 
     for (const group of setAfter) {
-      pass.setBindGroup(groupIndices[group], bindGroups[group]);
+      encoder.setBindGroup(groupIndices[group], bindGroups[group]);
     }
 
-    t.dispatchOrDraw(pass);
-    t.endAndSubmitSimplePass(pass);
+    t.dispatchOrDraw(encoder);
+    validateFinishAndSubmit(true, true);
 
-    t.verifyData(out, 1);
+    t.expectGPUBufferValuesEqual(out, new Int32Array([1]));
   });
 
 g.test('one_bind_group_multiple_slots')
@@ -160,29 +162,29 @@ g.test('one_bind_group_multiple_slots')
   )
   .params(u =>
     u //
-      .combine('passType', kPassTypes)
+      .combine('encoderType', kEncoderTypes)
   )
   .fn(async t => {
-    const { passType } = t.params;
-    const pipeline = t.createBindingStatePipeline(passType, { a: 0, b: 1, out: 2 });
+    const { encoderType } = t.params;
+    const pipeline = t.createBindingStatePipeline(encoderType, { a: 0, b: 1, out: 2 });
 
-    const out = t.createBufferWithValue(1);
+    const out = t.makeBufferWithContents(new Int32Array([1]), kBufferUsage);
     const bindGroups = {
-      ab: t.createBindGroup(t.createBufferWithValue(3)),
+      ab: t.createBindGroup(t.makeBufferWithContents(new Int32Array([3]), kBufferUsage)),
       out: t.createBindGroup(out),
     };
 
-    const pass = t.beginSimplePass(passType);
-    t.setPipeline(pass, pipeline);
+    const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
+    t.setPipeline(encoder, pipeline);
 
-    pass.setBindGroup(0, bindGroups.ab);
-    pass.setBindGroup(1, bindGroups.ab);
-    pass.setBindGroup(2, bindGroups.out);
+    encoder.setBindGroup(0, bindGroups.ab);
+    encoder.setBindGroup(1, bindGroups.ab);
+    encoder.setBindGroup(2, bindGroups.out);
 
-    t.dispatchOrDraw(pass);
-    t.endAndSubmitSimplePass(pass);
+    t.dispatchOrDraw(encoder);
+    validateFinishAndSubmit(true, true);
 
-    t.verifyData(out, 0);
+    t.expectGPUBufferValuesEqual(out, new Int32Array([0]));
   });
 
 g.test('bind_group_multiple_sets')
@@ -193,81 +195,81 @@ g.test('bind_group_multiple_sets')
   )
   .params(u =>
     u //
-      .combine('passType', kPassTypes)
+      .combine('encoderType', kEncoderTypes)
   )
   .fn(async t => {
-    const { passType } = t.params;
-    const pipeline = t.createBindingStatePipeline(passType, { a: 0, b: 1, out: 2 });
+    const { encoderType } = t.params;
+    const pipeline = t.createBindingStatePipeline(encoderType, { a: 0, b: 1, out: 2 });
 
-    const badOut = t.createBufferWithValue(-1);
-    const out = t.createBufferWithValue(0);
+    const badOut = t.makeBufferWithContents(new Int32Array([-1]), kBufferUsage);
+    const out = t.makeBufferWithContents(new Int32Array([0]), kBufferUsage);
     const bindGroups = {
-      a: t.createBindGroup(t.createBufferWithValue(3)),
-      b: t.createBindGroup(t.createBufferWithValue(2)),
-      c: t.createBindGroup(t.createBufferWithValue(5)),
-      badOut: t.createBindGroup(t.createBufferWithValue(-1)),
+      a: t.createBindGroup(t.makeBufferWithContents(new Int32Array([3]), kBufferUsage)),
+      b: t.createBindGroup(t.makeBufferWithContents(new Int32Array([2]), kBufferUsage)),
+      c: t.createBindGroup(t.makeBufferWithContents(new Int32Array([5]), kBufferUsage)),
+      badOut: t.createBindGroup(badOut),
       out: t.createBindGroup(out),
     };
 
-    const pass = t.beginSimplePass(passType);
+    const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
 
-    pass.setBindGroup(1, bindGroups.c);
+    encoder.setBindGroup(1, bindGroups.c);
 
-    t.setPipeline(pass, pipeline);
+    t.setPipeline(encoder, pipeline);
 
-    pass.setBindGroup(0, bindGroups.c);
-    pass.setBindGroup(0, bindGroups.a);
+    encoder.setBindGroup(0, bindGroups.c);
+    encoder.setBindGroup(0, bindGroups.a);
 
-    pass.setBindGroup(2, bindGroups.badOut);
+    encoder.setBindGroup(2, bindGroups.badOut);
 
-    pass.setBindGroup(1, bindGroups.b);
-    pass.setBindGroup(2, bindGroups.out);
+    encoder.setBindGroup(1, bindGroups.b);
+    encoder.setBindGroup(2, bindGroups.out);
 
-    t.dispatchOrDraw(pass);
-    t.endAndSubmitSimplePass(pass);
+    t.dispatchOrDraw(encoder);
+    validateFinishAndSubmit(true, true);
 
-    t.verifyData(out, 1);
-    t.verifyData(badOut, -1);
+    t.expectGPUBufferValuesEqual(out, new Int32Array([1]));
+    t.expectGPUBufferValuesEqual(badOut, new Int32Array([-1]));
   });
 
 g.test('compatible_pipelines')
   .desc('Test that bind groups can be shared between compatible pipelines.')
   .params(u =>
     u //
-      .combine('passType', kPassTypes)
+      .combine('encoderType', kEncoderTypes)
   )
   .fn(async t => {
-    const { passType } = t.params;
-    const pipelineA = t.createBindingStatePipeline(passType, { a: 0, b: 1, out: 2 });
+    const { encoderType } = t.params;
+    const pipelineA = t.createBindingStatePipeline(encoderType, { a: 0, b: 1, out: 2 });
     const pipelineB = t.createBindingStatePipeline(
-      passType,
+      encoderType,
       { a: 0, b: 1, out: 2 },
       'a.value + b.value'
     );
 
-    const outA = t.createBufferWithValue(0);
-    const outB = t.createBufferWithValue(0);
+    const outA = t.makeBufferWithContents(new Int32Array([0]), kBufferUsage);
+    const outB = t.makeBufferWithContents(new Int32Array([0]), kBufferUsage);
     const bindGroups = {
-      a: t.createBindGroup(t.createBufferWithValue(3)),
-      b: t.createBindGroup(t.createBufferWithValue(2)),
+      a: t.createBindGroup(t.makeBufferWithContents(new Int32Array([3]), kBufferUsage)),
+      b: t.createBindGroup(t.makeBufferWithContents(new Int32Array([2]), kBufferUsage)),
       outA: t.createBindGroup(outA),
       outB: t.createBindGroup(outB),
     };
 
-    const pass = t.beginSimplePass(passType);
-    pass.setBindGroup(0, bindGroups.a);
-    pass.setBindGroup(1, bindGroups.b);
+    const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
+    encoder.setBindGroup(0, bindGroups.a);
+    encoder.setBindGroup(1, bindGroups.b);
 
-    t.setPipeline(pass, pipelineA);
-    pass.setBindGroup(2, bindGroups.outA);
-    t.dispatchOrDraw(pass);
+    t.setPipeline(encoder, pipelineA);
+    encoder.setBindGroup(2, bindGroups.outA);
+    t.dispatchOrDraw(encoder);
 
-    t.setPipeline(pass, pipelineB);
-    pass.setBindGroup(2, bindGroups.outB);
-    t.dispatchOrDraw(pass);
+    t.setPipeline(encoder, pipelineB);
+    encoder.setBindGroup(2, bindGroups.outB);
+    t.dispatchOrDraw(encoder);
 
-    t.endAndSubmitSimplePass(pass);
+    validateFinishAndSubmit(true, true);
 
-    t.verifyData(outA, 1);
-    t.verifyData(outB, 5);
+    t.expectGPUBufferValuesEqual(outA, new Int32Array([1]));
+    t.expectGPUBufferValuesEqual(outB, new Int32Array([5]));
   });

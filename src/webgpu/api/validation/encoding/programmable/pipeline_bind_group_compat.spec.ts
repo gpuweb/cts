@@ -20,7 +20,7 @@ import { GPUConst } from '../../../../constants.js';
 import {
   ProgrammableEncoderType,
   kProgrammableEncoderTypes,
-} from '../../util/command_buffer_maker.js';
+} from '../../../../util/command_buffer_maker.js';
 import { ValidationTest } from '../../validation_test.js';
 
 function getTestCmds(encoderType: ProgrammableEncoderType): readonly string[] {

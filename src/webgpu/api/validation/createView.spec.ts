@@ -10,6 +10,7 @@ import {
   kTextureFormats,
   kTextureViewDimensions,
 } from '../../capability_info.js';
+import { kResourceStates } from '../../gpu_test.js';
 import {
   getTextureDimensionFromView,
   reifyTextureViewDescriptor,
@@ -17,7 +18,7 @@ import {
 } from '../../util/texture/base.js';
 import { reifyExtent3D } from '../../util/unions.js';
 
-import { kResourceStates, ValidationTest } from './validation_test.js';
+import { ValidationTest } from './validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);
 
