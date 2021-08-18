@@ -1,4 +1,5 @@
 import { assert, unreachable } from '../../../common/util/util.js';
+import { gammaDecompress } from '../../util/conversion.js';
 
 import { runRefTest } from './gpu_ref_test.js';
 
@@ -10,23 +11,31 @@ type WriteCanvasMethod =
   | 'copyTextureToTexture'
   | 'copyExternalImageToTexture'
   | 'DrawTextureSample'
-  | 'DrawVertexColor';
+  | 'DrawVertexColor'
+  | 'DrawFragcoord';
 
 export function run(format: GPUTextureFormat, writeCanvasMethod: WriteCanvasMethod) {
   runRefTest(async t => {
-    // const ctx = (cvs.getContext('webgpu') as unknown) as GPUCanvasContext;
     const ctx = cvs.getContext('webgpu');
     assert(ctx !== null, 'Failed to get WebGPU context from canvas');
 
+    let shaderValue: number = 0.49804; // 0.49804 -> 0x7f
+    let isOutputSrgb = false;
     switch (format) {
       case 'bgra8unorm':
-      case 'bgra8unorm-srgb':
       case 'rgba8unorm':
+        break;
+      case 'bgra8unorm-srgb':
       case 'rgba8unorm-srgb':
+        // TODO: srgb output format is untested
+        // reverse gammaCompress to get same value shader output as non-srgb formats
+        shaderValue = gammaDecompress(shaderValue);
+        isOutputSrgb = true;
         break;
       default:
         unreachable();
     }
+    const shaderValueStr = shaderValue.toFixed(5);
 
     ctx.configure({
       device: t.device,
@@ -46,6 +55,7 @@ export function run(format: GPUTextureFormat, writeCanvasMethod: WriteCanvasMeth
       const mapping = buffer.getMappedRange();
       switch (format) {
         case 'bgra8unorm':
+        case 'bgra8unorm-srgb':
           {
             const data = new Uint8Array(mapping);
             data.set(new Uint8Array([0x00, 0x00, 0x7f, 0xff]), 0); // red
@@ -55,22 +65,13 @@ export function run(format: GPUTextureFormat, writeCanvasMethod: WriteCanvasMeth
           }
           break;
         case 'rgba8unorm':
+        case 'rgba8unorm-srgb':
           {
             const data = new Uint8Array(mapping);
             data.set(new Uint8Array([0x7f, 0x00, 0x00, 0xff]), 0); // red
             data.set(new Uint8Array([0x00, 0x7f, 0x00, 0xff]), 4); // green
             data.set(new Uint8Array([0x00, 0x00, 0x7f, 0xff]), 256 + 0); // blue
             data.set(new Uint8Array([0x7f, 0x7f, 0x00, 0xff]), 256 + 4); // yellow
-          }
-          break;
-        case 'bgra8unorm-srgb':
-          {
-            // TODO
-          }
-          break;
-        case 'rgba8unorm-srgb':
-          {
-            // TODO
           }
           break;
       }
@@ -85,11 +86,18 @@ export function run(format: GPUTextureFormat, writeCanvasMethod: WriteCanvasMeth
       t.device.queue.submit([encoder.finish()]);
     }
 
-    async function getImageBitmapFromFile(): Promise<ImageBitmap> {
-      const img = new Image();
-      img.src = '../../../resources/canvas-complex-2x2.png';
-      await img.decode();
-      return createImageBitmap(img);
+    function getImageBitmap(): Promise<ImageBitmap> {
+      const imageData = new ImageData(
+        /* prettier-ignore */ new Uint8ClampedArray([
+          0x7f, 0x00, 0x00, 0xff,
+          0x00, 0x7f, 0x00, 0xff,
+          0x00, 0x00, 0x7f, 0xff,
+          0x7f, 0x7f, 0x00, 0xff,
+        ]),
+        2,
+        2
+      );
+      return createImageBitmap(imageData);
     }
 
     function setupSrcTexture(imageBitmap: ImageBitmap): GPUTexture {
@@ -98,7 +106,7 @@ export function run(format: GPUTextureFormat, writeCanvasMethod: WriteCanvasMeth
         size: [srcWidth, srcHeight, 1],
         format,
         usage:
-          GPUTextureUsage.SAMPLED |
+          GPUTextureUsage.TEXTURE_BINDING |
           GPUTextureUsage.RENDER_ATTACHMENT |
           GPUTextureUsage.COPY_DST |
           GPUTextureUsage.COPY_SRC,
@@ -112,7 +120,7 @@ export function run(format: GPUTextureFormat, writeCanvasMethod: WriteCanvasMeth
 
     async function copyExternalImageToTexture() {
       assert(ctx !== null);
-      const imageBitmap = await getImageBitmapFromFile();
+      const imageBitmap = await getImageBitmap();
       t.device.queue.copyExternalImageToTexture(
         { source: imageBitmap },
         { texture: ctx.getCurrentTexture() },
@@ -122,7 +130,7 @@ export function run(format: GPUTextureFormat, writeCanvasMethod: WriteCanvasMeth
 
     async function copyTextureToTexture() {
       assert(ctx !== null);
-      const imageBitmap = await getImageBitmapFromFile();
+      const imageBitmap = await getImageBitmap();
       const srcTexture = setupSrcTexture(imageBitmap);
 
       const encoder = t.device.createCommandEncoder();
@@ -136,7 +144,7 @@ export function run(format: GPUTextureFormat, writeCanvasMethod: WriteCanvasMeth
 
     async function DrawTextureSample() {
       assert(ctx !== null);
-      const imageBitmap = await getImageBitmapFromFile();
+      const imageBitmap = await getImageBitmap();
       const srcTexture = setupSrcTexture(imageBitmap);
 
       const pipeline = t.device.createRenderPipeline({
@@ -177,7 +185,9 @@ fn main([[builtin(vertex_index)]] VertexIndex : u32) -> VertexOutput {
         },
         fragment: {
           module: t.device.createShaderModule({
-            code: `
+            // TODO: srgb output format is untested
+            code: !isOutputSrgb
+              ? `
 [[group(0), binding(0)]] var mySampler: sampler;
 [[group(0), binding(1)]] var myTexture: texture_2d<f32>;
 
@@ -185,14 +195,34 @@ fn main([[builtin(vertex_index)]] VertexIndex : u32) -> VertexOutput {
 fn main([[location(0)]] fragUV: vec2<f32>) -> [[location(0)]] vec4<f32> {
   return textureSample(myTexture, mySampler, fragUV);
 }
+            `
+              : `
+[[group(0), binding(0)]] var mySampler: sampler;
+[[group(0), binding(1)]] var myTexture: texture_2d<f32>;
+
+fn gammaDecompress(n: f32) -> f32 {
+  var r = n;
+  if (r <= 0.04045) {
+    r = r * 25.0 / 323.0;
+  } else {
+    r = pow((200.0 * r + 11.0) / 121.0, 12.0 / 5.0);
+  }
+  r = clamp(r, 0.0, 1.0);
+  return r;
+}
+
+[[stage(fragment)]]
+fn main([[location(0)]] fragUV: vec2<f32>) -> [[location(0)]] vec4<f32> {
+  var result = textureSample(myTexture, mySampler, fragUV);
+  result.r = gammaDecompress(result.r);
+  result.g = gammaDecompress(result.g);
+  result.b = gammaDecompress(result.b);
+  return result;
+}
             `,
           }),
           entryPoint: 'main',
-          targets: [
-            {
-              format,
-            },
-          ],
+          targets: [{ format }],
         },
         primitive: {
           topology: 'triangle-list',
@@ -266,10 +296,10 @@ fn main([[builtin(vertex_index)]] VertexIndex : u32) -> VertexOutput {
     vec2<f32>( 0.5,  -0.5));
 
   var color = array<vec4<f32>, 4>(
-      vec4<f32>(0.49804, 0.0, 0.0, 1.0),
-      vec4<f32>(0.0, 0.49804, 0.0, 1.0),
-      vec4<f32>(0.0, 0.0, 0.49804, 1.0),
-      vec4<f32>(0.49804, 0.49804, 0.0, 1.0)); // 0.49804 -> 0x7f
+      vec4<f32>(${shaderValueStr}, 0.0, 0.0, 1.0),
+      vec4<f32>(0.0, ${shaderValueStr}, 0.0, 1.0),
+      vec4<f32>(0.0, 0.0, ${shaderValueStr}, 1.0),
+      vec4<f32>(${shaderValueStr}, ${shaderValueStr}, 0.0, 1.0));
 
   var output : VertexOutput;
   output.Position = vec4<f32>(pos[VertexIndex % 6u] + offset[VertexIndex / 6u], 0.0, 1.0);
@@ -290,11 +320,7 @@ fn main([[location(0)]] fragColor: vec4<f32>) -> [[location(0)]] vec4<f32> {
             `,
           }),
           entryPoint: 'main',
-          targets: [
-            {
-              format,
-            },
-          ],
+          targets: [{ format }],
         },
         primitive: {
           topology: 'triangle-list',
@@ -320,6 +346,89 @@ fn main([[location(0)]] fragColor: vec4<f32>) -> [[location(0)]] vec4<f32> {
       t.device.queue.submit([commandEncoder.finish()]);
     }
 
+    function DrawFragcoord() {
+      assert(ctx !== null);
+      const pipeline = t.device.createRenderPipeline({
+        vertex: {
+          module: t.device.createShaderModule({
+            code: `
+struct VertexOutput {
+  [[builtin(position)]] Position : vec4<f32>;
+};
+
+[[stage(vertex)]]
+fn main([[builtin(vertex_index)]] VertexIndex : u32) -> VertexOutput {
+  var pos = array<vec2<f32>, 6>(
+      vec2<f32>( 1.0,  1.0),
+      vec2<f32>( 1.0, -1.0),
+      vec2<f32>(-1.0, -1.0),
+      vec2<f32>( 1.0,  1.0),
+      vec2<f32>(-1.0, -1.0),
+      vec2<f32>(-1.0,  1.0));
+
+  var output : VertexOutput;
+  output.Position = vec4<f32>(pos[VertexIndex], 0.0, 1.0);
+  return output;
+}
+            `,
+          }),
+          entryPoint: 'main',
+        },
+        fragment: {
+          module: t.device.createShaderModule({
+            code: `
+[[group(0), binding(0)]] var mySampler: sampler;
+[[group(0), binding(1)]] var myTexture: texture_2d<f32>;
+
+[[stage(fragment)]]
+fn main([[builtin(position)]] fragcoord: vec4<f32>) -> [[location(0)]] vec4<f32> {
+  var coord = vec2<u32>(floor(fragcoord.xy));
+  var color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+  if (coord.x == 0u) {
+    if (coord.y == 0u) {
+      color.r = ${shaderValueStr};
+    } else {
+      color.b = ${shaderValueStr};
+    }
+  } else {
+    if (coord.y == 0u) {
+      color.g = ${shaderValueStr};
+    } else {
+      color.r = ${shaderValueStr};
+      color.g = ${shaderValueStr};
+    }
+  }
+  return color;
+}
+            `,
+          }),
+          entryPoint: 'main',
+          targets: [{ format }],
+        },
+        primitive: {
+          topology: 'triangle-list',
+        },
+      });
+
+      const renderPassDescriptor: GPURenderPassDescriptor = {
+        colorAttachments: [
+          {
+            view: ctx.getCurrentTexture().createView(),
+
+            loadValue: { r: 0.5, g: 0.5, b: 0.5, a: 1.0 },
+            storeOp: 'store',
+          },
+        ],
+      };
+
+      const commandEncoder = t.device.createCommandEncoder();
+      const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+      passEncoder.setPipeline(pipeline);
+      passEncoder.draw(6, 1, 0, 0);
+      passEncoder.endPass();
+      t.device.queue.submit([commandEncoder.finish()]);
+    }
+
     switch (writeCanvasMethod) {
       case 'copyBufferToTexture':
         copyBufferToTexture();
@@ -335,6 +444,9 @@ fn main([[location(0)]] fragColor: vec4<f32>) -> [[location(0)]] vec4<f32> {
         break;
       case 'DrawVertexColor':
         DrawVertexColor();
+        break;
+      case 'DrawFragcoord':
+        DrawFragcoord();
         break;
       default:
         unreachable();

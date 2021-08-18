@@ -7,7 +7,7 @@ declare const cvs: HTMLCanvasElement;
 
 export function run(format: GPUTextureFormat, compositingAlphaMode: GPUCanvasCompositingAlphaMode) {
   runRefTest(async t => {
-    const ctx = cvs.getContext('gpupresent');
+    const ctx = cvs.getContext('webgpu');
     assert(ctx !== null, 'Failed to get WebGPU context from canvas');
 
     switch (format) {
@@ -20,6 +20,7 @@ export function run(format: GPUTextureFormat, compositingAlphaMode: GPUCanvasCom
         unreachable();
     }
 
+    // const a = (0.5).toFixed(1);
     const a = compositingAlphaMode === 'opaque' ? (1.0).toFixed(1) : (0.5).toFixed(1);
 
     ctx.configure({
@@ -91,11 +92,13 @@ return fragColor;
                       dstFactor: 'one-minus-src-alpha',
                       operation: 'add',
                     },
-                    alpha: {
-                      srcFactor: 'one',
-                      dstFactor: 'one-minus-src-alpha',
-                      operation: 'add',
-                    },
+                    // alpha: {
+                    //   srcFactor: 'one',
+                    //   dstFactor: 'one-minus-src-alpha',
+                    //   operation: 'add',
+                    // },
+                    // color: { srcFactor: 'src-alpha' }, // Premultiply alpha into the color channels
+                    alpha: { dstFactor: 'one-minus-src-alpha' }, // Pass through alpha
                   },
           },
         ],
