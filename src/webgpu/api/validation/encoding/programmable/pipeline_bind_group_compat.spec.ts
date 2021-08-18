@@ -11,7 +11,11 @@ TODO: subsume existing test, rewrite fixture as needed.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { kSamplerBindingTypes, kBufferBindingTypes } from '../../../../capability_info.js';
+import {
+  kSamplerBindingTypes,
+  kShaderStageCombinations,
+  kBufferBindingTypes,
+} from '../../../../capability_info.js';
 import { GPUConst } from '../../../../constants.js';
 import {
   ProgrammableEncoderType,
