@@ -19,7 +19,7 @@ export function run(format: GPUTextureFormat, writeCanvasMethod: WriteCanvasMeth
     const ctx = cvs.getContext('webgpu');
     assert(ctx !== null, 'Failed to get WebGPU context from canvas');
 
-    let shaderValue: number = 0.49804; // 0.49804 -> 0x7f
+    let shaderValue: number = 0x7f / 0xff; // 0x7f
     let isOutputSrgb = false;
     switch (format) {
       case 'bgra8unorm':
@@ -186,17 +186,7 @@ fn main([[builtin(vertex_index)]] VertexIndex : u32) -> VertexOutput {
         fragment: {
           module: t.device.createShaderModule({
             // TODO: srgb output format is untested
-            code: !isOutputSrgb
-              ? `
-[[group(0), binding(0)]] var mySampler: sampler;
-[[group(0), binding(1)]] var myTexture: texture_2d<f32>;
-
-[[stage(fragment)]]
-fn main([[location(0)]] fragUV: vec2<f32>) -> [[location(0)]] vec4<f32> {
-  return textureSample(myTexture, mySampler, fragUV);
-}
-            `
-              : `
+            code: `
 [[group(0), binding(0)]] var mySampler: sampler;
 [[group(0), binding(1)]] var myTexture: texture_2d<f32>;
 
@@ -212,16 +202,21 @@ fn gammaDecompress(n: f32) -> f32 {
 }
 
 [[stage(fragment)]]
-fn main([[location(0)]] fragUV: vec2<f32>) -> [[location(0)]] vec4<f32> {
+fn srgbMain([[location(0)]] fragUV: vec2<f32>) -> [[location(0)]] vec4<f32> {
   var result = textureSample(myTexture, mySampler, fragUV);
   result.r = gammaDecompress(result.r);
   result.g = gammaDecompress(result.g);
   result.b = gammaDecompress(result.b);
   return result;
 }
+
+[[stage(fragment)]]
+fn linearMain([[location(0)]] fragUV: vec2<f32>) -> [[location(0)]] vec4<f32> {
+  return textureSample(myTexture, mySampler, fragUV);
+}
             `,
           }),
-          entryPoint: 'main',
+          entryPoint: isOutputSrgb ? 'srgbMain' : 'linearMain',
           targets: [{ format }],
         },
         primitive: {

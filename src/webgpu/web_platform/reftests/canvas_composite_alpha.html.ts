@@ -20,7 +20,7 @@ export function run(format: GPUTextureFormat, compositingAlphaMode: GPUCanvasCom
         unreachable();
     }
 
-    // const a = (0.5).toFixed(1);
+    // This is mimic globalAlpha in 2d context blending behavior
     const a = compositingAlphaMode === 'opaque' ? (1.0).toFixed(1) : (0.5).toFixed(1);
 
     ctx.configure({
@@ -87,18 +87,19 @@ return fragColor;
               compositingAlphaMode === 'opaque'
                 ? undefined
                 : {
+                    // The blending behavior here is to mimic 2d context blending behavior
+                    // of drawing rects in order
+                    // https://drafts.fxtf.org/compositing/#porterduffcompositingoperators_srcover
                     color: {
                       srcFactor: 'src-alpha',
                       dstFactor: 'one-minus-src-alpha',
                       operation: 'add',
                     },
-                    // alpha: {
-                    //   srcFactor: 'one',
-                    //   dstFactor: 'one-minus-src-alpha',
-                    //   operation: 'add',
-                    // },
-                    // color: { srcFactor: 'src-alpha' }, // Premultiply alpha into the color channels
-                    alpha: { dstFactor: 'one-minus-src-alpha' }, // Pass through alpha
+                    alpha: {
+                      srcFactor: 'one',
+                      dstFactor: 'one-minus-src-alpha',
+                      operation: 'add',
+                    },
                   },
           },
         ],
