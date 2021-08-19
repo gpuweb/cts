@@ -1,21 +1,16 @@
 export const description = `
 Ensure state is set correctly. Tries to stress state caching (setting different states multiple
 times in different orders) for setBindGroup and setPipeline.
-
-TODO: for each programmable pass encoder {compute pass, render pass, render bundle encoder}
-- try setting states multiple times in different orders, check state is correct in draw/dispatch.
-    - Changing from pipeline A to B where both have the same layout except for {first,mid,last}
-      bind group index.
-    - Try with a pipeline that e.g. only uses bind group 1, or bind groups 0 and 2.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUConst } from '../../../../constants.js';
+import { kProgrammableEncoderTypes } from '../../../../util/command_buffer_maker.js';
+
 import { ProgrammableStateTest } from './programmable_state_test.js';
 
 export const g = makeTestGroup(ProgrammableStateTest);
 
-const kEncoderTypes = ['compute pass', 'render pass', 'render bundle'] as const;
 const kBufferUsage = GPUConst.BufferUsage.COPY_SRC | GPUConst.BufferUsage.STORAGE;
 
 g.test('bind_group_indices')
@@ -27,7 +22,7 @@ g.test('bind_group_indices')
   )
   .params(u =>
     u //
-      .combine('encoderType', kEncoderTypes)
+      .combine('encoderType', kProgrammableEncoderTypes)
       .beginSubcases()
       .combine('groupIndices', [
         { a: 0, b: 1, out: 2 },
@@ -70,7 +65,7 @@ g.test('bind_group_order')
   )
   .params(u =>
     u //
-      .combine('encoderType', kEncoderTypes)
+      .combine('encoderType', kProgrammableEncoderTypes)
       .beginSubcases()
       .combine('setOrder', [
         ['a', 'b', 'out'],
@@ -115,7 +110,7 @@ g.test('bind_group_before_pipeline')
   )
   .params(u =>
     u //
-      .combine('encoderType', kEncoderTypes)
+      .combine('encoderType', kProgrammableEncoderTypes)
       .beginSubcases()
       .combineWithParams([
         { setBefore: ['a', 'b'], setAfter: ['out'] },
@@ -162,7 +157,7 @@ g.test('one_bind_group_multiple_slots')
   )
   .params(u =>
     u //
-      .combine('encoderType', kEncoderTypes)
+      .combine('encoderType', kProgrammableEncoderTypes)
   )
   .fn(async t => {
     const { encoderType } = t.params;
@@ -195,7 +190,7 @@ g.test('bind_group_multiple_sets')
   )
   .params(u =>
     u //
-      .combine('encoderType', kEncoderTypes)
+      .combine('encoderType', kProgrammableEncoderTypes)
   )
   .fn(async t => {
     const { encoderType } = t.params;
@@ -236,7 +231,7 @@ g.test('compatible_pipelines')
   .desc('Test that bind groups can be shared between compatible pipelines.')
   .params(u =>
     u //
-      .combine('encoderType', kEncoderTypes)
+      .combine('encoderType', kProgrammableEncoderTypes)
   )
   .fn(async t => {
     const { encoderType } = t.params;
