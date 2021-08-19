@@ -1,3 +1,4 @@
+import { unreachable } from '../../../../../common/util/util.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { EncoderType } from '../../../../util/command_buffer_maker.js';
 
@@ -6,13 +7,6 @@ interface BindGroupIndices {
   b: number;
   out: number;
 }
-
-type PipelineByEncoderType<T extends EncoderType> = {
-  'non-pass': null;
-  'compute pass': GPUComputePipeline;
-  'render pass': GPURenderPipeline;
-  'render bundle': GPURenderBundleEncoder;
-}[T];
 
 export class ProgrammableStateTest extends GPUTest {
   private commonBindGroupLayout: GPUBindGroupLayout | undefined;
@@ -46,7 +40,7 @@ export class ProgrammableStateTest extends GPUTest {
     encoderType: T,
     groups: BindGroupIndices,
     algorithm: string = 'a.value - b.value'
-  ): PipelineByEncoderType<T> {
+  ): GPUComputePipeline | GPURenderPipeline {
     switch (encoderType) {
       case 'compute pass': {
         const wgsl = `[[block]] struct Data {
@@ -73,7 +67,7 @@ export class ProgrammableStateTest extends GPUTest {
             }),
             entryPoint: 'main',
           },
-        }) as PipelineByEncoderType<T>;
+        });
       }
       case 'render pass':
       case 'render bundle': {
@@ -118,17 +112,14 @@ export class ProgrammableStateTest extends GPUTest {
             targets: [{ format: 'rgba8unorm' }],
           },
           primitive: { topology: 'point-list' },
-        }) as PipelineByEncoderType<T>;
+        });
       }
       default:
-        return null as PipelineByEncoderType<T>;
+        unreachable();
     }
   }
 
-  setPipeline<T extends EncoderType>(
-    pass: GPUProgrammablePassEncoder,
-    pipeline: PipelineByEncoderType<T>
-  ) {
+  setPipeline(pass: GPUProgrammablePassEncoder, pipeline: GPUComputePipeline | GPURenderPipeline) {
     if (pass instanceof GPUComputePassEncoder) {
       pass.setPipeline(pipeline as GPUComputePipeline);
     } else if (pass instanceof GPURenderPassEncoder || pass instanceof GPURenderBundleEncoder) {
