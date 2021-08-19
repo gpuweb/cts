@@ -8,6 +8,7 @@ import { assertTypeTrue, TypeEqual } from '../common/util/types.js';
 import { assert, unreachable } from '../common/util/util.js';
 
 import { GPUConst } from './constants.js';
+import { ImageCopyType } from './util/texture/layout.js';
 
 // Base device limits can be found in constants.ts.
 
@@ -307,16 +308,28 @@ const kDepthStencilFormatCapabilityInBufferTextureCopy = {
 } as const;
 
 /**
+ * Gets all copyable aspects for copies between texture and buffer for specified depth/stencil format and copy type, by spec.
+ */
+export function depthStencilFormatCopyableAspects(
+  type: ImageCopyType,
+  format: DepthStencilFormat
+): readonly GPUTextureAspect[] {
+  const appliedType = type === 'WriteTexture' ? 'CopyB2T' : type;
+  return kDepthStencilFormatCapabilityInBufferTextureCopy[format][appliedType];
+}
+
+/**
  * Computes whether a copy between a depth/stencil texture aspect and a buffer is supported, by spec.
  */
 export function depthStencilBufferTextureCopySupported(
-  type: 'CopyB2T' | 'CopyT2B' | 'WriteTexture',
+  type: ImageCopyType,
   format: DepthStencilFormat,
   aspect: GPUTextureAspect
 ): boolean {
-  const appliedType = type === 'WriteTexture' ? 'CopyB2T' : type;
-  const supportedAspects: readonly GPUTextureAspect[] =
-    kDepthStencilFormatCapabilityInBufferTextureCopy[format][appliedType];
+  const supportedAspects: readonly GPUTextureAspect[] = depthStencilFormatCopyableAspects(
+    type,
+    format
+  );
   return supportedAspects.includes(aspect);
 }
 
