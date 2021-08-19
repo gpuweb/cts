@@ -3,9 +3,6 @@ import { gammaDecompress } from '../../util/conversion.js';
 
 import { runRefTest } from './gpu_ref_test.js';
 
-// <canvas> element from html page
-declare const cvs: HTMLCanvasElement;
-
 type WriteCanvasMethod =
   | 'copyBufferToTexture'
   | 'copyTextureToTexture'
@@ -14,12 +11,12 @@ type WriteCanvasMethod =
   | 'DrawVertexColor'
   | 'DrawFragcoord';
 
-export function run(format: GPUTextureFormat, writeCanvasMethod: WriteCanvasMethod) {
+export function run(
+  format: GPUTextureFormat,
+  targets: { cvs: HTMLCanvasElement; writeCanvasMethod: WriteCanvasMethod }[]
+) {
   runRefTest(async t => {
-    const ctx = cvs.getContext('webgpu');
-    assert(ctx !== null, 'Failed to get WebGPU context from canvas');
-
-    let shaderValue: number = 0x7f / 0xff; // 0x7f
+    let shaderValue: number = 0x7f / 0xff;
     let isOutputSrgb = false;
     switch (format) {
       case 'bgra8unorm':
@@ -37,14 +34,7 @@ export function run(format: GPUTextureFormat, writeCanvasMethod: WriteCanvasMeth
     }
     const shaderValueStr = shaderValue.toFixed(5);
 
-    ctx.configure({
-      device: t.device,
-      format,
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-
-    function copyBufferToTexture() {
-      assert(ctx !== null);
+    function copyBufferToTexture(ctx: GPUCanvasContext) {
       const rows = 2;
       const bytesPerRow = 256;
       const buffer = t.device.createBuffer({
@@ -118,8 +108,7 @@ export function run(format: GPUTextureFormat, writeCanvasMethod: WriteCanvasMeth
       return srcTexture;
     }
 
-    async function copyExternalImageToTexture() {
-      assert(ctx !== null);
+    async function copyExternalImageToTexture(ctx: GPUCanvasContext) {
       const imageBitmap = await getImageBitmap();
       t.device.queue.copyExternalImageToTexture(
         { source: imageBitmap },
@@ -128,8 +117,7 @@ export function run(format: GPUTextureFormat, writeCanvasMethod: WriteCanvasMeth
       );
     }
 
-    async function copyTextureToTexture() {
-      assert(ctx !== null);
+    async function copyTextureToTexture(ctx: GPUCanvasContext) {
       const imageBitmap = await getImageBitmap();
       const srcTexture = setupSrcTexture(imageBitmap);
 
@@ -142,8 +130,7 @@ export function run(format: GPUTextureFormat, writeCanvasMethod: WriteCanvasMeth
       t.device.queue.submit([encoder.finish()]);
     }
 
-    async function DrawTextureSample() {
-      assert(ctx !== null);
+    async function DrawTextureSample(ctx: GPUCanvasContext) {
       const imageBitmap = await getImageBitmap();
       const srcTexture = setupSrcTexture(imageBitmap);
 
@@ -263,8 +250,7 @@ fn linearMain([[location(0)]] fragUV: vec2<f32>) -> [[location(0)]] vec4<f32> {
       t.device.queue.submit([commandEncoder.finish()]);
     }
 
-    function DrawVertexColor() {
-      assert(ctx !== null);
+    function DrawVertexColor(ctx: GPUCanvasContext) {
       const pipeline = t.device.createRenderPipeline({
         vertex: {
           module: t.device.createShaderModule({
@@ -341,8 +327,7 @@ fn main([[location(0)]] fragColor: vec4<f32>) -> [[location(0)]] vec4<f32> {
       t.device.queue.submit([commandEncoder.finish()]);
     }
 
-    function DrawFragcoord() {
-      assert(ctx !== null);
+    function DrawFragcoord(ctx: GPUCanvasContext) {
       const pipeline = t.device.createRenderPipeline({
         vertex: {
           module: t.device.createShaderModule({
@@ -424,27 +409,38 @@ fn main([[builtin(position)]] fragcoord: vec4<f32>) -> [[location(0)]] vec4<f32>
       t.device.queue.submit([commandEncoder.finish()]);
     }
 
-    switch (writeCanvasMethod) {
-      case 'copyBufferToTexture':
-        copyBufferToTexture();
-        break;
-      case 'copyExternalImageToTexture':
-        await copyExternalImageToTexture();
-        break;
-      case 'copyTextureToTexture':
-        await copyTextureToTexture();
-        break;
-      case 'DrawTextureSample':
-        await DrawTextureSample();
-        break;
-      case 'DrawVertexColor':
-        DrawVertexColor();
-        break;
-      case 'DrawFragcoord':
-        DrawFragcoord();
-        break;
-      default:
-        unreachable();
+    for (const { cvs, writeCanvasMethod } of targets) {
+      const ctx = cvs.getContext('webgpu');
+      assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+
+      ctx.configure({
+        device: t.device,
+        format,
+        usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+      });
+
+      switch (writeCanvasMethod) {
+        case 'copyBufferToTexture':
+          copyBufferToTexture(ctx);
+          break;
+        case 'copyExternalImageToTexture':
+          await copyExternalImageToTexture(ctx);
+          break;
+        case 'copyTextureToTexture':
+          await copyTextureToTexture(ctx);
+          break;
+        case 'DrawTextureSample':
+          await DrawTextureSample(ctx);
+          break;
+        case 'DrawVertexColor':
+          DrawVertexColor(ctx);
+          break;
+        case 'DrawFragcoord':
+          DrawFragcoord(ctx);
+          break;
+        default:
+          unreachable();
+      }
     }
   });
 }
