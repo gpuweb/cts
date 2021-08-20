@@ -129,7 +129,7 @@ interface WithFormatAndMethod extends WithFormat {
   method: ImageCopyType;
 }
 
-// This is a helper function used for expanding test parameters for texel block alignment tests on offset
+// This is a helper function used for expanding test parameters for offset alignment, by spec
 export function texelBlockAlignmentTestExpanderForOffset({ format }: WithFormat) {
   const info = kTextureFormatInfo[format];
   if (info.depth || info.stencil) {
