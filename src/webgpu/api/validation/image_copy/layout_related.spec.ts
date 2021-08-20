@@ -120,7 +120,9 @@ g.test('required_bytes_in_copy')
         { copyWidthInBlocks: 5, copyHeightInBlocks: 4, copyDepth: 1, offsetInBlocks: 0 }, // copyDepth = 1
         { copyWidthInBlocks: 7, copyHeightInBlocks: 1, copyDepth: 1, offsetInBlocks: 0 }, // copyHeight = 1 and copyDepth = 1
       ])
-      // If the format is a depth/stencil format, its copy size must equal to subresource's size. So the width, height or depth of copy size should not be 0.
+      // The test texture size will be rounded up from the copy size to the next valid texture size.
+      // If the format is a depth/stencil format, its copy size must equal to subresource's size.
+      // So filter out depth/stencil cases where the rounded-up texture size would be different from the copy size.
       .filter(({ format, copyWidthInBlocks, copyHeightInBlocks, copyDepth }) => {
         const info = kTextureFormatInfo[format];
         return (
