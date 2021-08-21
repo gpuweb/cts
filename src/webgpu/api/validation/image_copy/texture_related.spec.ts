@@ -9,6 +9,7 @@ export const description = `
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
 import {
+  kColorTextureFormats,
   kSizedTextureFormats,
   kTextureFormatInfo,
   textureDimensionAndFormatCompatible,
@@ -276,7 +277,8 @@ g.test('origin_alignment')
   .params(u =>
     u
       .combine('method', kImageCopyTypes)
-      .combine('format', kSizedTextureFormats)
+      // No need to test depth/stencil formats because its copy origin must be [0, 0, 0], which is already aligned with block size.
+      .combine('format', kColorTextureFormats)
       .filter(formatCopyableWithMethod)
       .combineWithParams([
         { depthOrArrayLayers: 1, dimension: '2d' },
@@ -367,7 +369,8 @@ g.test('size_alignment')
   .params(u =>
     u
       .combine('method', kImageCopyTypes)
-      .combine('format', kSizedTextureFormats)
+      // No need to test depth/stencil formats because its copy size must be subresource's size, which is already aligned with block size.
+      .combine('format', kColorTextureFormats)
       .filter(formatCopyableWithMethod)
       .combine('dimension', ['2d', '3d'] as const)
       .filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format))
