@@ -21,8 +21,8 @@ const mismatchedDevicePool = new DevicePool();
  * Base fixture for WebGPU validation tests.
  */
 export class ValidationTest extends GPUTest {
-  // Device mismatched validation tests require another GPUDevice different with the dafault
-  // GPUDevice of GPUTest, which is only used to create device mismatched objects.
+  // Device mismatched validation tests require another GPUDevice different from the default
+  // GPUDevice of GPUTest. It is only used to create device mismatched objects.
   private mismatchedProvider: DeviceProvider | undefined;
   private mismatchedAcquiredDevice: GPUDevice | undefined;
 
