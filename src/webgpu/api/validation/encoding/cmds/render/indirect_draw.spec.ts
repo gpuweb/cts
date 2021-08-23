@@ -4,7 +4,8 @@ Validation tests for drawIndirect/drawIndexedIndirect on render pass and render 
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUConst } from '../../../../../constants.js';
-import { kResourceStates, ValidationTest } from '../../../validation_test.js';
+import { kResourceStates } from '../../../../../gpu_test.js';
+import { ValidationTest } from '../../../validation_test.js';
 
 import { kRenderEncodeTypeParams } from './render.js';
 
@@ -48,6 +49,13 @@ Tests indirect buffer must be valid.
 
     validateFinishAndSubmitGivenState(state);
   });
+
+g.test('indirect_buffer,device_mismatch')
+  .desc(
+    'Tests draw(Indexed)Indirect cannot be called with an indirect buffer created from another device'
+  )
+  .paramsSubcasesOnly(kIndirectDrawTestParams.combine('mismatched', [true, false]))
+  .unimplemented();
 
 g.test('indirect_buffer_usage')
   .desc(

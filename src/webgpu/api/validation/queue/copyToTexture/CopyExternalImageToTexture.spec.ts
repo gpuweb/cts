@@ -11,13 +11,14 @@ import {
   kTextureUsages,
   kValidTextureFormatsForCopyE2T,
 } from '../../../../capability_info.js';
+import { kResourceStates } from '../../../../gpu_test.js';
 import {
   canvasTypes,
   createCanvas,
   createOnscreenCanvas,
   createOffscreenCanvas,
 } from '../../../../util/create_elements.js';
-import { kResourceStates, ValidationTest } from '../../validation_test.js';
+import { ValidationTest } from '../../validation_test.js';
 
 const kDefaultBytesPerPixel = 4; // using 'bgra8unorm' or 'rgba8unorm'
 const kDefaultWidth = 32;
@@ -199,7 +200,7 @@ g.test('source_canvas,contexts')
         '2d',
         'bitmaprenderer',
         'experimental-webgl',
-        'gpupresent',
+        'webgpu',
         'webgl',
         'webgl2',
       ] as const)
@@ -223,6 +224,7 @@ g.test('source_canvas,contexts')
       t.skip('Failed to get context for canvas element');
       return;
     }
+    t.tryTrackForCleanup(ctx);
 
     t.runTest(
       { source: canvas },
@@ -267,6 +269,7 @@ g.test('source_offscreenCanvas,contexts')
       t.skip('Failed to get context for canvas element');
       return;
     }
+    t.tryTrackForCleanup(ctx);
 
     t.runTest(
       { source: canvas },
@@ -481,7 +484,7 @@ g.test('source_canvas,state')
       }
       case 'placeholder-hascontext': {
         const offscreenCanvas = canvas.transferControlToOffscreen();
-        offscreenCanvas.getContext('webgl');
+        t.tryTrackForCleanup(offscreenCanvas.getContext('webgl'));
         exceptionName = 'InvalidStateError';
         break;
       }
@@ -559,7 +562,7 @@ g.test('source_offscreenCanvas,state')
         messageChannel.port1.postMessage(offscreenCanvas, [offscreenCanvas]);
 
         const receivedOffscreenCanvas = (await port2FirstMessage) as MessageEvent;
-        receivedOffscreenCanvas.data.getContext('webgl');
+        t.tryTrackForCleanup(receivedOffscreenCanvas.data.getContext('webgl'));
 
         exceptionName = 'InvalidStateError';
         break;
@@ -606,6 +609,13 @@ g.test('destination_texture,state')
 
     t.runTest({ source: imageBitmap }, { texture: dstTexture }, copySize, state === 'valid');
   });
+
+g.test('destination_texture,device_mismatch')
+  .desc(
+    'Tests copyExternalImageToTexture cannot be called with a destination texture created from another device'
+  )
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .unimplemented();
 
 g.test('destination_texture,dimension')
   .desc(

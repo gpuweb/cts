@@ -4,7 +4,8 @@ Validation tests for setVertexBuffer on render pass and render bundle.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUConst, DefaultLimits } from '../../../../../constants.js';
-import { kResourceStates, ValidationTest } from '../../../validation_test.js';
+import { kResourceStates } from '../../../../../gpu_test.js';
+import { ValidationTest } from '../../../validation_test.js';
 
 import { kRenderEncodeTypeParams, buildBufferOffsetAndSizeOOBTestParams } from './render.js';
 
@@ -53,6 +54,11 @@ Tests vertex buffer must be valid.
     encoder.setVertexBuffer(0, vertexBuffer);
     validateFinishAndSubmitGivenState(state);
   });
+
+g.test('vertex_buffer,device_mismatch')
+  .desc('Tests setVertexBuffer cannot be called with a vertex buffer created from another device')
+  .paramsSubcasesOnly(kRenderEncodeTypeParams.combine('mismatched', [true, false]))
+  .unimplemented();
 
 g.test('vertex_buffer_usage')
   .desc(

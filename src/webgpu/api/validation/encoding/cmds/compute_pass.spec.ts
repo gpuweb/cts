@@ -6,7 +6,8 @@ Does **not** test usage scopes (resource_usages/) or programmable pass stuff (pr
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { DefaultLimits } from '../../../../constants.js';
-import { kResourceStates, ResourceState, ValidationTest } from '../../validation_test.js';
+import { kResourceStates, ResourceState } from '../../../../gpu_test.js';
+import { ValidationTest } from '../../validation_test.js';
 
 class F extends ValidationTest {
   createComputePipeline(state: 'valid' | 'invalid'): GPUComputePipeline {
@@ -61,7 +62,12 @@ setPipeline should generate an error iff using an 'invalid' pipeline.
     validateFinishAndSubmitGivenState(state);
   });
 
-const kMaxDispatch = DefaultLimits.maxComputePerDimensionDispatchSize;
+g.test('pipeline,device_mismatch')
+  .desc('Tests setPipeline cannot be called with a compute pipeline created from another device')
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .unimplemented();
+
+const kMaxDispatch = DefaultLimits.maxComputeWorkgroupsPerDimension;
 g.test('dispatch_sizes')
   .desc(
     `Test 'direct' and 'indirect' dispatch with various sizes.
@@ -151,3 +157,10 @@ TODO: test specifically which call the validation error occurs in.
       offset + 3 * Uint32Array.BYTES_PER_ELEMENT > kBufferData.byteLength;
     validateFinishAndSubmit(!finishShouldError, state !== 'destroyed');
   });
+
+g.test('indirect_dispatch_buffer,device_mismatch')
+  .desc(
+    'Tests dispatchIndirect cannot be called with an indirect buffer created from another device'
+  )
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .unimplemented();

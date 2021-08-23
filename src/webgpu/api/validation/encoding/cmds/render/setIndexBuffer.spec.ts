@@ -4,7 +4,8 @@ Validation tests for setIndexBuffer on render pass and render bundle.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUConst } from '../../../../../constants.js';
-import { kResourceStates, ValidationTest } from '../../../validation_test.js';
+import { kResourceStates } from '../../../../../gpu_test.js';
+import { ValidationTest } from '../../../validation_test.js';
 
 import { kRenderEncodeTypeParams, buildBufferOffsetAndSizeOOBTestParams } from './render.js';
 
@@ -28,6 +29,11 @@ Tests index buffer must be valid.
     encoder.setIndexBuffer(indexBuffer, 'uint32');
     validateFinishAndSubmitGivenState(state);
   });
+
+g.test('index_buffer,device_mismatch')
+  .desc('Tests setIndexBuffer cannot be called with an index buffer created from another device')
+  .paramsSubcasesOnly(kRenderEncodeTypeParams.combine('mismatched', [true, false]))
+  .unimplemented();
 
 g.test('index_buffer_usage')
   .desc(

@@ -13,11 +13,12 @@ TODO: merge these notes and implement.
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { range, unreachable } from '../../../../../common/util/util.js';
 import { kMinDynamicBufferOffsetAlignment } from '../../../../capability_info.js';
+import { kResourceStates, ResourceState } from '../../../../gpu_test.js';
 import {
   kProgrammableEncoderTypes,
   ProgrammableEncoderType,
-} from '../../util/command_buffer_maker.js';
-import { kResourceStates, ResourceState, ValidationTest } from '../../validation_test.js';
+} from '../../../../util/command_buffer_maker.js';
+import { ValidationTest } from '../../validation_test.js';
 
 class F extends ValidationTest {
   encoderTypeToStageFlag(encoderType: ProgrammableEncoderType): GPUShaderStageFlags {
@@ -124,6 +125,22 @@ g.test('state_and_binding_index')
       await runTest(index);
     }
   });
+
+g.test('bind_group,device_mismatch')
+  .desc(
+    `
+    Tests setBindGroup cannot be called with a bind group created from another device
+    - x= setBindGroup {sequence overload, Uint32Array overload}
+    `
+  )
+  .params(u =>
+    u
+      .combine('encoderType', kProgrammableEncoderTypes)
+      .beginSubcases()
+      .combine('useU32Array', [true, false])
+      .combine('mismatched', [true, false])
+  )
+  .unimplemented();
 
 g.test('dynamic_offsets_passed_but_not_expected')
   .desc('Tests that setBindGroup correctly errors on unexpected dynamicOffsets.')
