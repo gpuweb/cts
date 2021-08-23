@@ -50,12 +50,10 @@ export class ValidationTest extends GPUTest {
       | undefined
       | Array<GPUFeatureName | undefined>
   ): Promise<void> {
-    if (this.mismatchedProvider) {
-      const oldProvider = this.mismatchedProvider;
-      this.mismatchedProvider = undefined;
-      await mismatchedDevicePool.release(oldProvider);
-      this.mismatchedAcquiredDevice = undefined;
-    }
+    assert(
+      this.mismatchedProvider === undefined,
+      "Can't selectMismatchedDeviceOrSkipTestCase() multiple times"
+    );
 
     if (descriptor === undefined) {
       this.mismatchedProvider = await mismatchedDevicePool.reserve();
