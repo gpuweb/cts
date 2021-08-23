@@ -1,7 +1,7 @@
 export const description = `
-Here we test the vertex buffer validation for direct draw function. For drawIndexed We only tests
-index buffer and instance step mode vertex buffer OOB. Vertex step mode vertex buffer OOB for
-drawIndexed is covered in robust access.
+Here we test the validation for draw functions, mainly the buffer access validation. All four types
+of draw calls are tested, and test that validation errors do / don't occur for certain call type
+and parameters as expect.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -27,8 +27,8 @@ In this test we test that a small buffer bound to unused buffer slot won't cause
 g.test(`index_buffer_OOB`)
   .desc(
     `
-In this test we test that index buffer OOB is catched as validation error in drawIndexed.
-(drawIndexedIndirect doesn't produce a validation error in this case as it is GPU-validated.)
+In this test we test that index buffer OOB is catched as validation error in drawIndexed, but not in
+drawIndexedIndirect as it is GPU-validated.
 - Issue an indexed draw call, with the following index buffer states, for {all index formats}:
     - range and GPUBuffer are exactly the required size for the draw call
     - range is too small but GPUBuffer is still large enough
@@ -40,26 +40,32 @@ In this test we test that index buffer OOB is catched as validation error in dra
 g.test(`vertex_buffer_OOB`)
   .desc(
     `
-In this test we test that vertex buffer OOB is catched as validation error in draw call. Specifically,
-only vertex step mode buffer OOB in draw and instance step mode buffer OOB in draw and drawIndexed
-are CPU-validated. Other cases are handled by robust access.
+In this test we test the vertex buffer OOB validation in draw calls. Specifically, only vertex step
+mode buffer OOB in draw and instance step mode buffer OOB in draw and drawIndexed are CPU-validated.
+Other cases are handled by robust access and no validation error occurs.
 - Test that:
     - Draw call needs to read {=, >} any bound vertex buffer range, with GPUBuffer that is {large
       enough, exactly the size of bound range}
-        - Special cases of bound size = 0
+        - Binding size = 0 (ensure it's not treated as a special case)
         - x= weird offset values
         - x= weird arrayStride values
         - x= {render pass, render bundle}
 - For vertex step mode vertex buffer,
-    - Test with draw:
+    - Test that:
         - vertexCount largeish
         - firstVertex {=, >} 0
-    - drawIndexed, draIndirect and drawIndexedIndirect are dealt by robust access
+        - arrayStride is 0 and bound buffer size too small
+    - Validation error occurs in:
+        - draw
+        - drawIndexed with a zero array stride vertex step mode buffer OOB
+    - Otherwise no validation error in drawIndexed, draIndirect and drawIndexedIndirect
 - For instance step mode vertex buffer,
     - Test with draw and drawIndexed:
         - instanceCount largeish
         - firstInstance {=, >} 0
-    - draIndirect and drawIndexedIndirect are dealt by robust access
+        - arrayStride is 0 and bound buffer size too small
+    - Validation error occurs in draw and drawIndexed
+    - No validation error in drawIndirect and drawIndexedIndirect
 
 In this test, we use a a render pipeline requiring one vertex step mode and one instance step mode
 vertex buffer. Then for a given drawing parameter set (e.g., vertexCount, instanceCount, firstVertex,
@@ -88,6 +94,7 @@ g.test(`buffer_binding_overlap`)
     `
 In this test we test that binding one GPU buffer to multiple vertex buffer slot or both vertex
 buffer slot and index buffer will cause no validation error, with completely/partial overlap.
+    - x= all adraw types
 `
   )
   .unimplemented();
