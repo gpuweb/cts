@@ -8,11 +8,6 @@ import { GPUTest } from '../../webgpu/gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-const colorDictToLittleEndianU32 = (color: GPUColorDict) => {
-  const byte = (x: number, shift: number) => (x * 255) << shift;
-  return (byte(color.r, 0) | byte(color.g, 8) | byte(color.b, 16) | byte(color.a, 24)) >>> 0;
-};
-
 g.test('many')
   .desc(
     `Tests execution of a huge number of render passes using the same GPURenderPipeline. This uses
