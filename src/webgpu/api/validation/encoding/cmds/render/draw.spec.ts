@@ -94,7 +94,7 @@ g.test(`buffer_binding_overlap`)
     `
 In this test we test that binding one GPU buffer to multiple vertex buffer slot or both vertex
 buffer slot and index buffer will cause no validation error, with completely/partial overlap.
-    - x= all adraw types
+    - x= all draw types
 `
   )
   .unimplemented();
