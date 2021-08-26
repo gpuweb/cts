@@ -1,7 +1,7 @@
 import { attemptGarbageCollection } from '../../../common/util/collect_garbage.js';
 import { assert } from '../../../common/util/util.js';
 import { ValidBindableResource, BindableResource, kMaxQueryCount } from '../../capability_info.js';
-import { GPUTest, ResourceState } from '../../gpu_test.js';
+import { GPUTest, ResourceState, initUncanonicalizedDeviceDescriptor } from '../../gpu_test.js';
 import {
   DevicePool,
   DeviceProvider,
@@ -9,6 +9,7 @@ import {
   UncanonicalizedDeviceDescriptor,
 } from '../../util/device_pool.js';
 
+// TODO: When DevicePool becomes able to provide multiple devices at once, use the usual one instead of a new one.
 const mismatchedDevicePool = new DevicePool();
 
 /**
@@ -49,18 +50,10 @@ export class ValidationTest extends GPUTest {
       "Can't selectMismatchedDeviceOrSkipTestCase() multiple times"
     );
 
-    if (descriptor === undefined) {
-      this.mismatchedProvider = await mismatchedDevicePool.reserve();
-    } else {
-      if (typeof descriptor === 'string') {
-        descriptor = { requiredFeatures: [descriptor] };
-      } else if (descriptor instanceof Array) {
-        descriptor = {
-          requiredFeatures: descriptor.filter(f => f !== undefined) as GPUFeatureName[],
-        };
-      }
-      this.mismatchedProvider = await mismatchedDevicePool.reserve(descriptor);
-    }
+    this.mismatchedProvider =
+      descriptor === undefined
+        ? await mismatchedDevicePool.reserve()
+        : await mismatchedDevicePool.reserve(initUncanonicalizedDeviceDescriptor(descriptor));
 
     this.mismatchedAcquiredDevice = this.mismatchedProvider.acquire();
   }
@@ -69,6 +62,7 @@ export class ValidationTest extends GPUTest {
     await super.finalize();
 
     if (this.mismatchedProvider) {
+      // TODO(kainino0x): Deduplicate this with code in GPUTest.finalize
       let threw: undefined | Error;
       {
         const provider = this.mismatchedProvider;

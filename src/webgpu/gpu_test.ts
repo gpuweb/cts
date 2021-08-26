@@ -40,6 +40,20 @@ const kResourceStateValues = ['valid', 'invalid', 'destroyed'] as const;
 export type ResourceState = typeof kResourceStateValues[number];
 export const kResourceStates: readonly ResourceState[] = kResourceStateValues;
 
+export function initUncanonicalizedDeviceDescriptor(
+  descriptor: UncanonicalizedDeviceDescriptor | GPUFeatureName | Array<GPUFeatureName | undefined>
+): UncanonicalizedDeviceDescriptor {
+  if (typeof descriptor === 'string') {
+    return { requiredFeatures: [descriptor] };
+  } else if (descriptor instanceof Array) {
+    return {
+      requiredFeatures: descriptor.filter(f => f !== undefined) as GPUFeatureName[],
+    };
+  } else {
+    return descriptor;
+  }
+}
+
 /**
  * Base fixture for WebGPU tests.
  */
@@ -114,13 +128,6 @@ export class GPUTest extends Fixture {
       | Array<GPUFeatureName | undefined>
   ): Promise<void> {
     if (descriptor === undefined) return;
-    if (typeof descriptor === 'string') {
-      descriptor = { requiredFeatures: [descriptor] };
-    } else if (descriptor instanceof Array) {
-      descriptor = {
-        requiredFeatures: descriptor.filter(f => f !== undefined) as GPUFeatureName[],
-      };
-    }
 
     assert(this.provider !== undefined);
     // Make sure the device isn't replaced after it's been retrieved once.
@@ -133,7 +140,7 @@ export class GPUTest extends Fixture {
     this.provider = undefined;
     await devicePool.release(oldProvider);
 
-    this.provider = await devicePool.reserve(descriptor);
+    this.provider = await devicePool.reserve(initUncanonicalizedDeviceDescriptor(descriptor));
     this.acquiredDevice = this.provider.acquire();
   }
 
