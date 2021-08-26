@@ -1127,13 +1127,6 @@ export const listing = [
     "file": [
       "shader",
       "validation",
-      "builtin_function"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "validation",
       "variable_and_const"
     ]
   },
