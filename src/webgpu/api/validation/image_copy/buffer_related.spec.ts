@@ -7,6 +7,7 @@ import {
   textureDimensionAndFormatCompatible,
 } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
+import { kResourceStates } from '../../../gpu_test.js';
 import { kImageCopyTypes } from '../../../util/texture/layout.js';
 
 import { ImageCopyTest, formatCopyableWithMethod } from './image_copy.js';
@@ -19,30 +20,19 @@ g.test('valid')
     u //
       // B2B copy validations are at api,validation,encoding,cmds,copyBufferToBuffer.spec.ts
       .combine('method', ['CopyB2T', 'CopyT2B'] as const)
-      .combine('bufferState', ['valid', 'destroyed', 'error'])
+      .combine('state', kResourceStates)
   )
   .fn(async t => {
-    const { method, bufferState } = t.params;
+    const { method, state } = t.params;
 
     // A valid buffer.
-    let buffer = t.device.createBuffer({
+    const buffer = t.createBufferWithState(state, {
       size: 16,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
 
-    switch (bufferState) {
-      case 'destroyed': {
-        buffer.destroy();
-        break;
-      }
-      case 'error': {
-        buffer = t.getErrorBuffer();
-        break;
-      }
-    }
-
-    const success = bufferState === 'valid';
-    const submit = bufferState === 'destroyed';
+    const success = state === 'valid';
+    const submit = state === 'destroyed';
 
     const texture = t.device.createTexture({
       size: { width: 2, height: 2, depthOrArrayLayers: 1 },
@@ -120,7 +110,7 @@ g.test('bytes_per_row_alignment')
       // Note that we are copying one single block on each row in this test.
       .filter(
         ({ format, bytesPerRow, copyHeight }) =>
-          copyHeight / kTextureFormatInfo[format].blockHeight <= 1 ||
+          (bytesPerRow === undefined && copyHeight / kTextureFormatInfo[format].blockHeight <= 1) ||
           (bytesPerRow !== undefined && bytesPerRow >= kTextureFormatInfo[format].bytesPerBlock)
       )
   )
@@ -136,25 +126,24 @@ g.test('bytes_per_row_alignment')
     });
 
     let success = false;
-    // writeTexture doesn't require bytersPerRow to be 256-byte aligned.
+    // writeTexture doesn't require bytesPerRow to be 256-byte aligned.
     if (method === 'WriteTexture') success = true;
     // If the copy height <= 1, bytesPerRow is not required.
     if (copyHeight / info.blockHeight <= 1 && bytesPerRow === undefined) success = true;
     // If bytesPerRow > 0 and it is a multiple of 256, it will succeeed if other parameters are valid.
     if (bytesPerRow !== undefined && bytesPerRow > 0 && bytesPerRow % 256 === 0) success = true;
 
+    const size = [info.blockWidth, !copyHeight ? info.blockHeight : copyHeight, 1];
     const texture = t.device.createTexture({
-      size: [info.blockWidth, !copyHeight ? info.blockHeight : copyHeight, 1],
+      size,
       dimension,
       format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
 
-    t.testBuffer(
-      buffer,
-      texture,
-      { bytesPerRow },
-      { width: info.blockWidth, height: copyHeight, depthOrArrayLayers: 1 },
-      { dataSize: 512 * 8 * 16, method, success }
-    );
+    t.testBuffer(buffer, texture, { bytesPerRow }, size, {
+      dataSize: 512 * 8 * 16,
+      method,
+      success,
+    });
   });
