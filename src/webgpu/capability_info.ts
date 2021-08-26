@@ -136,8 +136,6 @@ const kTexFmtInfoHeader =  ['renderable', 'multisample', 'color', 'depth', 'sten
 export const kSizedDepthStencilFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
                            [        true,          true,   false,        ,          ,     false,     false,     false,                ,            1,             1,                         ] as const, {
   'depth32float':          [            ,              ,        ,    true,     false,          ,          ,          ,               4],
-  'depth16unorm':          [            ,              ,        ,    true,     false,          ,          ,          ,               2],
-  'stencil8':              [            ,              ,        ,   false,      true,          ,          ,          ,               1],
 } as const);
 export const kUnsizedDepthStencilFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
                            [        true,          true,   false,        ,          ,     false,     false,     false,       undefined,            1,             1,                         ] as const, {
@@ -256,11 +254,6 @@ const kDepthStencilFormatCapabilityInBufferTextureCopy = {
   },
 
   // kSizedDepthStencilFormats
-  depth16unorm: {
-    CopyB2T: ['all', 'depth-only'],
-    CopyT2B: ['all', 'depth-only'],
-    texelAspectSize: { 'depth-only': 2, 'stencil-only': -1 },
-  },
   depth32float: {
     CopyB2T: [],
     CopyT2B: ['all', 'depth-only'],
@@ -275,11 +268,6 @@ const kDepthStencilFormatCapabilityInBufferTextureCopy = {
     CopyB2T: ['stencil-only'],
     CopyT2B: ['depth-only', 'stencil-only'],
     texelAspectSize: { 'depth-only': 4, 'stencil-only': 1 },
-  },
-  stencil8: {
-    CopyB2T: ['all', 'stencil-only'],
-    CopyT2B: ['all', 'stencil-only'],
-    texelAspectSize: { 'depth-only': -1, 'stencil-only': 1 },
   },
 } as const;
 

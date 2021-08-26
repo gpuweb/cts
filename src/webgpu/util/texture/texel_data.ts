@@ -483,28 +483,12 @@ export const kTexelRepresentationInfo: {
       componentInfo: { Depth: { dataType: 'float', bitLength: 32 } },
       pack: components => packComponents([TexelComponent.Depth], components, 32, 'float'),
     },
-    depth16unorm: makeNormalizedInfo([TexelComponent.Depth], 16, { signed: false, sRGB: false }),
     depth24plus: {
       componentOrder: [TexelComponent.Depth],
       componentInfo: { Depth: { dataType: null, bitLength: 24 } },
       encode: applyEach(() => unreachable('depth24plus cannot be encoded'), [TexelComponent.Depth]),
       decode: applyEach(() => unreachable('depth24plus cannot be decoded'), [TexelComponent.Depth]),
       pack: () => unreachable('depth24plus data cannot be packed'),
-    },
-    stencil8: {
-      componentOrder: [TexelComponent.Stencil],
-      componentInfo: { Stencil: { dataType: 'uint', bitLength: 8 } },
-      encode: components => {
-        assert(components.Stencil !== undefined);
-        assertInIntegerRange(components.Stencil, 8, false);
-        return components;
-      },
-      decode: components => {
-        assert(components.Stencil !== undefined);
-        assertInIntegerRange(components.Stencil, 8, false);
-        return components;
-      },
-      pack: components => packComponents([TexelComponent.Stencil], components, 8, 'uint'),
     },
     'depth24unorm-stencil8': {
       componentOrder: [TexelComponent.Depth, TexelComponent.Stencil],

@@ -549,8 +549,6 @@ Test the validations on the member 'aspect' of GPUImageCopyTexture in CopyTextur
 
       // kSizedDepthStencilFormats
       depth32float: ['all', 'depth-only'],
-      stencil8: ['all', 'stencil-only'],
-      depth16unorm: ['all', 'depth-only'],
     };
 
     const isSourceAspectValid = kValidAspectsForFormat[format].includes(sourceAspect);
