@@ -1,6 +1,8 @@
 export const description = `
 Tests for the behavior of ArrayBuffers returned by getMappedRange.
 
+TODO: Update these tests if we make this not an error, but instead "fake" the transfer:
+  https://github.com/gpuweb/gpuweb/issues/747#issuecomment-623712878
 TODO: Add tests that transfer to another thread instead of just using MessageChannel.
 TODO: Add tests for any other Web APIs that can detach ArrayBuffers.
 `;
