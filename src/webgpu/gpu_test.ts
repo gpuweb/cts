@@ -433,7 +433,7 @@ export class GPUTest extends Fixture {
       layout: pipeline.getBindGroupLayout(0),
       entries: [
         { binding: 0, resource: { buffer: expectedDataBuffer } },
-        { binding: 1, resource: { buffer: storageBuffer, } },
+        { binding: 1, resource: { buffer: storageBuffer } },
         { binding: 2, resource: { buffer: resultBuffer } },
       ],
     });
