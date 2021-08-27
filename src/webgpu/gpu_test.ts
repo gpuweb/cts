@@ -2,6 +2,7 @@ import { Fixture } from '../common/framework/fixture.js';
 import { attemptGarbageCollection } from '../common/util/collect_garbage.js';
 import {
   assert,
+  range,
   TypedArrayBufferView,
   TypedArrayBufferViewConstructor,
   unreachable,
@@ -28,7 +29,6 @@ import {
 } from './util/device_pool.js';
 import { align, roundDown } from './util/math.js';
 import {
-  fillTextureDataWithTexelValue,
   getTextureCopyLayout,
   LayoutOptions as TextureLayoutOptions,
 } from './util/texture/layout.js';
@@ -317,6 +317,140 @@ export class GPUTest extends Fixture {
     });
   }
 
+  /**
+   * Expect a buffer to consist exclusively of rows of some repeated expected value. The size of
+   * `expectedValue` must be 1, 2, or any multiple of 4 bytes. Rows in the buffer are expected to be
+   * zero-padded out to `bytesPerRow`. `minBytesPerRow` is the number of bytes per row that contain
+   * actual (non-padding) data and must be an exact multiple of the byte-length of `expectedValue`.
+   */
+  expectGPUBufferRepeatsSingleValue(
+    buffer: GPUBuffer,
+    {
+      expectedValue,
+      numRows,
+      minBytesPerRow,
+      bytesPerRow,
+    }: {
+      expectedValue: ArrayBuffer;
+      numRows: number;
+      minBytesPerRow: number;
+      bytesPerRow: number;
+    }
+  ) {
+    const valueSize = expectedValue.byteLength;
+    assert(valueSize === 1 || valueSize === 2 || valueSize % 4 === 0);
+    assert(minBytesPerRow % valueSize === 0);
+    assert(bytesPerRow % 4 === 0);
+
+    // If the buffer is small enough, just generate the full expected buffer contents and check
+    // against them on the CPU.
+    const kMaxBufferSizeToCheckOnCpu = 256 * 1024;
+    const bufferSize = bytesPerRow * (numRows - 1) + minBytesPerRow;
+    if (bufferSize <= kMaxBufferSizeToCheckOnCpu) {
+      const valueBytes = Array.from(new Uint8Array(expectedValue));
+      const rowValues = new Array(minBytesPerRow / valueSize).fill(valueBytes);
+      const rowBytes = new Uint8Array([].concat(...rowValues));
+      const expectedContents = new Uint8Array(bufferSize);
+      range(numRows, row => expectedContents.set(rowBytes, row * bytesPerRow));
+      this.expectGPUBufferValuesEqual(buffer, expectedContents);
+      return;
+    }
+
+    // Copy into a buffer suitable for STORAGE usage.
+    const storageBuffer = this.device.createBuffer({
+      size: bufferSize,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+    });
+    this.trackForCleanup(storageBuffer);
+
+    // This buffer conveys the data we expect to see for a single value read. Since we read 32 bits at
+    // a time, for values smaller than 32 bits we pad this expectation with repeated value data, or
+    // with zeroes if the width of a row in the buffer is less than 4 bytes. For value sizes larger
+    // than 32 bits, we assume they're a multiple of 32 bits and expect to read exact matches of
+    // `expectedValue` as-is.
+    const expectedDataSize = Math.max(4, valueSize);
+    const expectedDataBuffer = this.device.createBuffer({
+      size: expectedDataSize,
+      usage: GPUBufferUsage.STORAGE,
+      mappedAtCreation: true,
+    });
+    this.trackForCleanup(expectedDataBuffer);
+    const expectedData = new Uint32Array(expectedDataBuffer.getMappedRange());
+    if (valueSize === 1) {
+      const value = new Uint8Array(expectedValue)[0];
+      const values = new Array(Math.min(4, minBytesPerRow)).fill(value);
+      const padding = new Array(Math.max(0, 4 - values.length)).fill(0);
+      const expectedBytes = new Uint8Array(expectedData.buffer);
+      expectedBytes.set([...values, ...padding]);
+    } else if (valueSize === 2) {
+      const value = new Uint16Array(expectedValue)[0];
+      const expectedWords = new Uint16Array(expectedData.buffer);
+      expectedWords.set([value, minBytesPerRow > 2 ? value : 0]);
+    } else {
+      expectedData.set(new Uint32Array(expectedValue));
+    }
+    expectedDataBuffer.unmap();
+
+    // The output buffer has one 32-bit entry per buffer row. An entry's value will be 1 if every
+    // read from the corresponding row matches the expected data derived above, or 0 otherwise.
+    const resultBuffer = this.device.createBuffer({
+      size: numRows * 4,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+    });
+    this.trackForCleanup(resultBuffer);
+
+    const readsPerRow = Math.ceil(minBytesPerRow / expectedDataSize);
+    const reducer = `
+    [[block]] struct Buffer { data: array<u32>; };
+    [[group(0), binding(0)]] var<storage, read> expected: Buffer;
+    [[group(0), binding(1)]] var<storage, read> in: Buffer;
+    [[group(0), binding(2)]] var<storage, read_write> out: Buffer;
+    [[stage(compute), workgroup_size(1)]] fn reduce(
+        [[builtin(global_invocation_id)]] id: vec3<u32>) {
+      let rowBaseIndex = id.x * ${bytesPerRow / 4}u;
+      let readSize = ${expectedDataSize / 4}u;
+      out.data[id.x] = 1u;
+      for (var i: u32 = 0u; i < ${readsPerRow}u; i = i + 1u) {
+        let elementBaseIndex = rowBaseIndex + i * readSize;
+        for (var j: u32 = 0u; j < readSize; j = j + 1u) {
+          if (in.data[elementBaseIndex + j] != expected.data[j]) {
+            out.data[id.x] = 0u;
+            return;
+          }
+        }
+      }
+    }
+    `;
+
+    const pipeline = this.device.createComputePipeline({
+      compute: {
+        module: this.device.createShaderModule({ code: reducer }),
+        entryPoint: 'reduce',
+      },
+    });
+
+    const bindGroup = this.device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [
+        { binding: 0, resource: { buffer: expectedDataBuffer } },
+        { binding: 1, resource: { buffer: storageBuffer } },
+        { binding: 2, resource: { buffer: resultBuffer } },
+      ],
+    });
+
+    const commandEncoder = this.device.createCommandEncoder();
+    commandEncoder.copyBufferToBuffer(buffer, 0, storageBuffer, 0, bufferSize);
+    const pass = commandEncoder.beginComputePass();
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bindGroup);
+    pass.dispatch(numRows);
+    pass.endPass();
+    this.device.queue.submit([commandEncoder.finish()]);
+
+    const expectedResults = new Array(numRows).fill(1);
+    this.expectGPUBufferValuesEqual(resultBuffer, new Uint32Array(expectedResults));
+  }
+
   // TODO: add an expectContents for textures, which logs data: uris on failure
 
   /**
@@ -339,7 +473,7 @@ export class GPUTest extends Fixture {
       layout?: TextureLayoutOptions;
     }
   ): void {
-    const { byteLength, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
+    const { byteLength, minBytesPerRow, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
       format,
       dimension,
       size,
@@ -361,9 +495,13 @@ export class GPUTest extends Fixture {
       mipSize
     );
     this.queue.submit([commandEncoder.finish()]);
-    const arrayBuffer = new ArrayBuffer(byteLength);
-    fillTextureDataWithTexelValue(expectedTexelData, format, dimension, arrayBuffer, size, layout);
-    this.expectGPUBufferValuesEqual(buffer, new Uint8Array(arrayBuffer));
+
+    this.expectGPUBufferRepeatsSingleValue(buffer, {
+      expectedValue: expectedTexelData,
+      numRows: rowsPerImage,
+      minBytesPerRow,
+      bytesPerRow,
+    });
   }
 
   /** Return a GPUBuffer that data are going to be written into. */
