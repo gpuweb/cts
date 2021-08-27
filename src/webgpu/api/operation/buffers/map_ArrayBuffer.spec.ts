@@ -13,11 +13,16 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('postMessage')
   .desc(
-    `Transferring an ArrayBuffer from getMappedRange should throw an exception.
+    `Using postMessage to send a getMappedRange-returned ArrayBuffer should throw an exception iff
+    the ArrayBuffer is in the transfer list (x= map read, map write).
 
   TODO: Determine what the exception.name is expected to be.`
   )
-  .params(u => u.combine('transfer', [false, true]).combine('mapWrite', [false, true]))
+  .params(u =>
+    u //
+      .combine('transfer', [false, true])
+      .combine('mapWrite', [false, true])
+  )
   .fn(async t => {
     const { transfer, mapWrite } = t.params;
     const kSize = 1024;
