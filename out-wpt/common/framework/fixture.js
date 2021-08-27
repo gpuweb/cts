@@ -156,15 +156,15 @@ export class Fixture {
     return promise;
   }
 
-  expectErrorValue(expectedName, ex, niceStack) {
+  expectErrorValue(expectedError, ex, niceStack) {
     if (!(ex instanceof Error)) {
       niceStack.message = `THREW non-error value, of type ${typeof ex}: ${ex}`;
       this.rec.expectationFailed(niceStack);
       return;
     }
     const actualName = ex.name;
-    if (actualName !== expectedName) {
-      niceStack.message = `THREW ${actualName}, instead of ${expectedName}: ${ex}`;
+    if (expectedError !== true && actualName !== expectedError) {
+      niceStack.message = `THREW ${actualName}, instead of ${expectedError}: ${ex}`;
       this.rec.expectationFailed(niceStack);
     } else {
       niceStack.message = `OK: threw ${actualName}: ${ex.message}`;
@@ -201,14 +201,25 @@ export class Fixture {
     });
   }
 
-  /** Expect that the provided function throws, with the provided exception name. */
-  shouldThrow(expectedName, fn, msg) {
+  /**
+   * Expect that the provided function throws.
+   * If an `expectedName` is provided, expect that the throw exception has that name.
+   */
+  shouldThrow(expectedError, fn, msg) {
     const m = msg ? ': ' + msg : '';
     try {
       fn();
-      this.rec.expectationFailed(new Error('DID NOT THROW' + m));
+      if (expectedError === false) {
+        this.rec.debug(new Error('did not throw, as expected' + m));
+      } else {
+        this.rec.expectationFailed(new Error('unexpectedly did not throw' + m));
+      }
     } catch (ex) {
-      this.expectErrorValue(expectedName, ex, new Error(m));
+      if (expectedError === false) {
+        this.rec.expectationFailed(new Error('threw unexpectedly' + m));
+      } else {
+        this.expectErrorValue(expectedError, ex, new Error(m));
+      }
     }
   }
 

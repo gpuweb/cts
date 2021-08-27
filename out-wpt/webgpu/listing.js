@@ -63,6 +63,14 @@ export const listing = [
       "api",
       "operation",
       "buffers",
+      "map_ArrayBuffer"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
+      "buffers",
       "map_detach"
     ]
   },
