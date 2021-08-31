@@ -485,7 +485,7 @@ export type PerStageBindingLimitClass =
  */
 export type PerPipelineBindingLimitClass = PerStageBindingLimitClass;
 
-type ValidBindableResource =
+export type ValidBindableResource =
   | 'uniformBuf'
   | 'storageBuf'
   | 'filtSamp'
