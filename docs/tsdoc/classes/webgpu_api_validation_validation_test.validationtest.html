@@ -101,6 +101,7 @@
 							<h3>Accessors</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited"><a href="webgpu_api_validation_validation_test.validationtest.html#device" class="tsd-kind-icon">device</a></li>
+								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="webgpu_api_validation_validation_test.validationtest.html#mismatcheddevice" class="tsd-kind-icon">mismatched<wbr>Device</a></li>
 								<li class="tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited"><a href="webgpu_api_validation_validation_test.validationtest.html#params" class="tsd-kind-icon">params</a></li>
 								<li class="tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited"><a href="webgpu_api_validation_validation_test.validationtest.html#queue" class="tsd-kind-icon">queue</a></li>
 							</ul>
@@ -132,6 +133,11 @@
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="webgpu_api_validation_validation_test.validationtest.html#expectvalidationerror" class="tsd-kind-icon">expect<wbr>Validation<wbr>Error</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="webgpu_api_validation_validation_test.validationtest.html#fail" class="tsd-kind-icon">fail</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_api_validation_validation_test.validationtest.html#getbindingresource" class="tsd-kind-icon">get<wbr>Binding<wbr>Resource</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_api_validation_validation_test.validationtest.html#getdevicemismatchedbindingresource" class="tsd-kind-icon">get<wbr>Device<wbr>Mismatched<wbr>Binding<wbr>Resource</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_api_validation_validation_test.validationtest.html#getdevicemismatchedsampledtexture" class="tsd-kind-icon">get<wbr>Device<wbr>Mismatched<wbr>Sampled<wbr>Texture</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_api_validation_validation_test.validationtest.html#getdevicemismatchedstoragebuffer" class="tsd-kind-icon">get<wbr>Device<wbr>Mismatched<wbr>Storage<wbr>Buffer</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_api_validation_validation_test.validationtest.html#getdevicemismatchedstoragetexture" class="tsd-kind-icon">get<wbr>Device<wbr>Mismatched<wbr>Storage<wbr>Texture</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_api_validation_validation_test.validationtest.html#getdevicemismatcheduniformbuffer" class="tsd-kind-icon">get<wbr>Device<wbr>Mismatched<wbr>Uniform<wbr>Buffer</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_api_validation_validation_test.validationtest.html#geterrorbuffer" class="tsd-kind-icon">get<wbr>Error<wbr>Buffer</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_api_validation_validation_test.validationtest.html#geterrorsampler" class="tsd-kind-icon">get<wbr>Error<wbr>Sampler</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_api_validation_validation_test.validationtest.html#geterrortexture" class="tsd-kind-icon">get<wbr>Error<wbr>Texture</a></li>
@@ -146,6 +152,7 @@
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="webgpu_api_validation_validation_test.validationtest.html#selectdeviceforquerytypeorskiptestcase" class="tsd-kind-icon">select<wbr>Device<wbr>For<wbr>Query<wbr>Type<wbr>OrSkip<wbr>Test<wbr>Case</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="webgpu_api_validation_validation_test.validationtest.html#selectdevicefortextureformatorskiptestcase" class="tsd-kind-icon">select<wbr>Device<wbr>For<wbr>Texture<wbr>Format<wbr>OrSkip<wbr>Test<wbr>Case</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="webgpu_api_validation_validation_test.validationtest.html#selectdeviceorskiptestcase" class="tsd-kind-icon">select<wbr>Device<wbr>OrSkip<wbr>Test<wbr>Case</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_api_validation_validation_test.validationtest.html#selectmismatcheddeviceorskiptestcase" class="tsd-kind-icon">select<wbr>Mismatched<wbr>Device<wbr>OrSkip<wbr>Test<wbr>Case</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="webgpu_api_validation_validation_test.validationtest.html#shouldreject" class="tsd-kind-icon">should<wbr>Reject</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="webgpu_api_validation_validation_test.validationtest.html#shouldresolve" class="tsd-kind-icon">should<wbr>Resolve</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><a href="webgpu_api_validation_validation_test.validationtest.html#shouldthrow" class="tsd-kind-icon">should<wbr>Throw</a></li>
@@ -170,12 +177,34 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/gpu_test.ts#L52">src/webgpu/gpu_test.ts:52</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/gpu_test.ts#L66">src/webgpu/gpu_test.ts:66</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>GPUDevice for the test to use.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">GPUDevice</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class">
+					<a name="mismatcheddevice" class="tsd-anchor"></a>
+					<h3>mismatched<wbr>Device</h3>
+					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> mismatchedDevice<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GPUDevice</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L25">src/webgpu/api/validation/validation_test.ts:25</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>GPUDevice for creating mismatched objects required by device mismatched validation tests.</p>
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">GPUDevice</span></h4>
@@ -192,7 +221,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/common/framework/fixture.ts#L46">src/common/framework/fixture.ts:46</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/common/framework/fixture.ts#L46">src/common/framework/fixture.ts:46</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -214,7 +243,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/gpu_test.ts#L64">src/webgpu/gpu_test.ts:64</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/gpu_test.ts#L78">src/webgpu/gpu_test.ts:78</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -239,7 +268,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/api/validation/validation_test.ts#L44">src/webgpu/api/validation/validation_test.ts:44</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L123">src/webgpu/api/validation/validation_test.ts:123</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -272,7 +301,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#createencoder">createEncoder</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/gpu_test.ts#L811">src/webgpu/gpu_test.ts:811</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/gpu_test.ts#L818">src/webgpu/gpu_test.ts:818</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -339,7 +368,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/api/validation/validation_test.ts#L272">src/webgpu/api/validation/validation_test.ts:272</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L411">src/webgpu/api/validation/validation_test.ts:411</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -361,7 +390,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/api/validation/validation_test.ts#L244">src/webgpu/api/validation/validation_test.ts:244</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L383">src/webgpu/api/validation/validation_test.ts:383</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -383,7 +412,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/api/validation/validation_test.ts#L259">src/webgpu/api/validation/validation_test.ts:259</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L398">src/webgpu/api/validation/validation_test.ts:398</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -411,7 +440,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/api/validation/validation_test.ts#L222">src/webgpu/api/validation/validation_test.ts:222</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L361">src/webgpu/api/validation/validation_test.ts:361</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -433,7 +462,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/api/validation/validation_test.ts#L80">src/webgpu/api/validation/validation_test.ts:80</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L159">src/webgpu/api/validation/validation_test.ts:159</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -465,7 +494,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/api/validation/validation_test.ts#L217">src/webgpu/api/validation/validation_test.ts:217</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L356">src/webgpu/api/validation/validation_test.ts:356</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -494,7 +523,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#createtexture2dwithmipmaps">createTexture2DWithMipmaps</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/gpu_test.ts#L738">src/webgpu/gpu_test.ts:738</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/gpu_test.ts#L745">src/webgpu/gpu_test.ts:745</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -522,7 +551,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/api/validation/validation_test.ts#L12">src/webgpu/api/validation/validation_test.ts:12</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L91">src/webgpu/api/validation/validation_test.ts:91</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -555,7 +584,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#debug">debug</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/common/framework/fixture.ts#L127">src/common/framework/fixture.ts:127</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/common/framework/fixture.ts#L127">src/common/framework/fixture.ts:127</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -584,7 +613,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#expect">expect</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/common/framework/fixture.ts#L235">src/common/framework/fixture.ts:235</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/common/framework/fixture.ts#L235">src/common/framework/fixture.ts:235</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -616,7 +645,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#expectgpubufferrepeatssinglevalue">expectGPUBufferRepeatsSingleValue</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/gpu_test.ts#L326">src/webgpu/gpu_test.ts:326</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/gpu_test.ts#L333">src/webgpu/gpu_test.ts:333</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -665,7 +694,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#expectgpubuffervaluesequal">expectGPUBufferValuesEqual</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/gpu_test.ts#L305">src/webgpu/gpu_test.ts:305</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/gpu_test.ts#L312">src/webgpu/gpu_test.ts:312</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -711,7 +740,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#expectgpubuffervaluespasscheck">expectGPUBufferValuesPassCheck</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/gpu_test.ts#L272">src/webgpu/gpu_test.ts:272</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/gpu_test.ts#L279">src/webgpu/gpu_test.ts:279</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -787,7 +816,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#expectgpuerror">expectGPUError</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/gpu_test.ts#L641">src/webgpu/gpu_test.ts:641</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/gpu_test.ts#L648">src/webgpu/gpu_test.ts:648</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -840,7 +869,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#expectok">expectOK</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/common/framework/fixture.ts#L246">src/common/framework/fixture.ts:246</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/common/framework/fixture.ts#L246">src/common/framework/fixture.ts:246</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -880,7 +909,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#expectsinglecolor">expectSingleColor</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/gpu_test.ts#L459">src/webgpu/gpu_test.ts:459</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/gpu_test.ts#L466">src/webgpu/gpu_test.ts:466</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -932,7 +961,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#expectsinglepixelbetweentwovaluesfloat16in2dtexture">expectSinglePixelBetweenTwoValuesFloat16In2DTexture</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/gpu_test.ts#L608">src/webgpu/gpu_test.ts:608</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/gpu_test.ts#L615">src/webgpu/gpu_test.ts:615</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -993,7 +1022,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#expectsinglepixelbetweentwovaluesin2dtexture">expectSinglePixelBetweenTwoValuesIn2DTexture</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/gpu_test.ts#L570">src/webgpu/gpu_test.ts:570</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/gpu_test.ts#L577">src/webgpu/gpu_test.ts:577</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1079,7 +1108,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#expectsinglepixelin2dtexture">expectSinglePixelIn2DTexture</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/gpu_test.ts#L543">src/webgpu/gpu_test.ts:543</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/gpu_test.ts#L550">src/webgpu/gpu_test.ts:550</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1141,7 +1170,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#expectvalidationerror">expectValidationError</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/gpu_test.ts#L684">src/webgpu/gpu_test.ts:684</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/gpu_test.ts#L691">src/webgpu/gpu_test.ts:691</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1186,7 +1215,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#fail">fail</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/common/framework/fixture.ts#L142">src/common/framework/fixture.ts:142</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/common/framework/fixture.ts#L142">src/common/framework/fixture.ts:142</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1214,7 +1243,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/api/validation/validation_test.ts#L189">src/webgpu/api/validation/validation_test.ts:189</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L268">src/webgpu/api/validation/validation_test.ts:268</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1234,6 +1263,123 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getdevicemismatchedbindingresource" class="tsd-anchor"></a>
+					<h3>get<wbr>Device<wbr>Mismatched<wbr>Binding<wbr>Resource</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Device<wbr>Mismatched<wbr>Binding<wbr>Resource<span class="tsd-signature-symbol">(</span>bindingType<span class="tsd-signature-symbol">: </span><a href="../modules/webgpu_capability_info.html#validbindableresource" class="tsd-signature-type" data-tsd-kind="Type alias">ValidBindableResource</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GPUBindingResource</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L334">src/webgpu/api/validation/validation_test.ts:334</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>bindingType: <a href="../modules/webgpu_capability_info.html#validbindableresource" class="tsd-signature-type" data-tsd-kind="Type alias">ValidBindableResource</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">GPUBindingResource</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getdevicemismatchedsampledtexture" class="tsd-anchor"></a>
+					<h3>get<wbr>Device<wbr>Mismatched<wbr>Sampled<wbr>Texture</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Device<wbr>Mismatched<wbr>Sampled<wbr>Texture<span class="tsd-signature-symbol">(</span>sampleCount<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GPUTexture</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L312">src/webgpu/api/validation/validation_test.ts:312</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return an arbitrarily-configured GPUTexture with the <code>SAMPLED</code> usage from mismatched device.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>sampleCount: <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = 1</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">GPUTexture</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getdevicemismatchedstoragebuffer" class="tsd-anchor"></a>
+					<h3>get<wbr>Device<wbr>Mismatched<wbr>Storage<wbr>Buffer</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Device<wbr>Mismatched<wbr>Storage<wbr>Buffer<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GPUBuffer</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L296">src/webgpu/api/validation/validation_test.ts:296</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Create an arbitrarily-sized GPUBuffer with the STORAGE usage from mismatched device.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">GPUBuffer</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getdevicemismatchedstoragetexture" class="tsd-anchor"></a>
+					<h3>get<wbr>Device<wbr>Mismatched<wbr>Storage<wbr>Texture</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Device<wbr>Mismatched<wbr>Storage<wbr>Texture<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GPUTexture</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L324">src/webgpu/api/validation/validation_test.ts:324</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return an arbitrarily-configured GPUTexture with the <code>STORAGE</code> usage from mismatched device.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">GPUTexture</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="getdevicemismatcheduniformbuffer" class="tsd-anchor"></a>
+					<h3>get<wbr>Device<wbr>Mismatched<wbr>Uniform<wbr>Buffer</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Device<wbr>Mismatched<wbr>Uniform<wbr>Buffer<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GPUBuffer</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L303">src/webgpu/api/validation/validation_test.ts:303</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Create an arbitrarily-sized GPUBuffer with the UNIFORM usage from mismatched device.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">GPUBuffer</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="geterrorbuffer" class="tsd-anchor"></a>
 					<h3>get<wbr>Error<wbr>Buffer</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -1243,7 +1389,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/api/validation/validation_test.ts#L117">src/webgpu/api/validation/validation_test.ts:117</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L196">src/webgpu/api/validation/validation_test.ts:196</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1265,7 +1411,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/api/validation/validation_test.ts#L122">src/webgpu/api/validation/validation_test.ts:122</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L201">src/webgpu/api/validation/validation_test.ts:201</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1287,7 +1433,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/api/validation/validation_test.ts#L166">src/webgpu/api/validation/validation_test.ts:166</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L245">src/webgpu/api/validation/validation_test.ts:245</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1309,7 +1455,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/api/validation/validation_test.ts#L178">src/webgpu/api/validation/validation_test.ts:178</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L257">src/webgpu/api/validation/validation_test.ts:257</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1331,7 +1477,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/api/validation/validation_test.ts#L155">src/webgpu/api/validation/validation_test.ts:155</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L234">src/webgpu/api/validation/validation_test.ts:234</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1353,7 +1499,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/api/validation/validation_test.ts#L132">src/webgpu/api/validation/validation_test.ts:132</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L211">src/webgpu/api/validation/validation_test.ts:211</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1381,7 +1527,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/api/validation/validation_test.ts#L103">src/webgpu/api/validation/validation_test.ts:103</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L182">src/webgpu/api/validation/validation_test.ts:182</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1403,7 +1549,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/api/validation/validation_test.ts#L144">src/webgpu/api/validation/validation_test.ts:144</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L223">src/webgpu/api/validation/validation_test.ts:223</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1425,7 +1571,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/api/validation/validation_test.ts#L110">src/webgpu/api/validation/validation_test.ts:110</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L189">src/webgpu/api/validation/validation_test.ts:189</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1448,7 +1594,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#makebufferwithcontents">makeBufferWithContents</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/gpu_test.ts#L727">src/webgpu/gpu_test.ts:727</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/gpu_test.ts#L734">src/webgpu/gpu_test.ts:734</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1489,7 +1635,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#readgpubufferrangetyped">readGPUBufferRangeTyped</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/gpu_test.ts#L215">src/webgpu/gpu_test.ts:215</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/gpu_test.ts#L222">src/webgpu/gpu_test.ts:222</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1542,7 +1688,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#selectdeviceforquerytypeorskiptestcase">selectDeviceForQueryTypeOrSkipTestCase</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/gpu_test.ts#L164">src/webgpu/gpu_test.ts:164</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/gpu_test.ts#L171">src/webgpu/gpu_test.ts:171</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1572,7 +1718,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#selectdevicefortextureformatorskiptestcase">selectDeviceForTextureFormatOrSkipTestCase</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/gpu_test.ts#L144">src/webgpu/gpu_test.ts:144</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/gpu_test.ts#L151">src/webgpu/gpu_test.ts:151</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1602,7 +1748,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#selectdeviceorskiptestcase">selectDeviceOrSkipTestCase</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/webgpu/gpu_test.ts#L109">src/webgpu/gpu_test.ts:109</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/gpu_test.ts#L123">src/webgpu/gpu_test.ts:123</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1625,6 +1771,36 @@
 						</li>
 					</ul>
 				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="selectmismatcheddeviceorskiptestcase" class="tsd-anchor"></a>
+					<h3>select<wbr>Mismatched<wbr>Device<wbr>OrSkip<wbr>Test<wbr>Case</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">select<wbr>Mismatched<wbr>Device<wbr>OrSkip<wbr>Test<wbr>Case<span class="tsd-signature-symbol">(</span>descriptor<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">UncanonicalizedDeviceDescriptor</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;depth-clamping&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;depth24unorm-stencil8&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;depth32float-stencil8&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;pipeline-statistics-query&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;texture-compression-bc&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;timestamp-query&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;depth-clamping&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;depth24unorm-stencil8&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;depth32float-stencil8&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;pipeline-statistics-query&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;texture-compression-bc&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;timestamp-query&quot;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/webgpu/api/validation/validation_test.ts#L41">src/webgpu/api/validation/validation_test.ts:41</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Create other device different with current test device, which could be got by <code>.mismatchedDevice</code>.
+										A <code>descriptor</code> may be undefined, which returns a <code>default</code> mismatched device.
+									If the request descriptor or feature name can&#39;t be supported, throws an exception to skip the entire test case.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>descriptor: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">UncanonicalizedDeviceDescriptor</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;depth-clamping&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;depth24unorm-stencil8&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;depth32float-stencil8&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;pipeline-statistics-query&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;texture-compression-bc&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;timestamp-query&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;depth-clamping&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;depth24unorm-stencil8&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;depth32float-stencil8&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;pipeline-statistics-query&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;texture-compression-bc&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;timestamp-query&quot;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
 					<a name="shouldreject" class="tsd-anchor"></a>
 					<h3>should<wbr>Reject</h3>
@@ -1636,7 +1812,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#shouldreject">shouldReject</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/common/framework/fixture.ts#L198">src/common/framework/fixture.ts:198</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/common/framework/fixture.ts#L198">src/common/framework/fixture.ts:198</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1671,7 +1847,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#shouldresolve">shouldResolve</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/common/framework/fixture.ts#L184">src/common/framework/fixture.ts:184</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/common/framework/fixture.ts#L184">src/common/framework/fixture.ts:184</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1703,7 +1879,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#shouldthrow">shouldThrow</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/common/framework/fixture.ts#L216">src/common/framework/fixture.ts:216</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/common/framework/fixture.ts#L216">src/common/framework/fixture.ts:216</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1751,7 +1927,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#skip">skip</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/common/framework/fixture.ts#L132">src/common/framework/fixture.ts:132</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/common/framework/fixture.ts#L132">src/common/framework/fixture.ts:132</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1780,7 +1956,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#trackforcleanup">trackForCleanup</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/common/framework/fixture.ts#L106">src/common/framework/fixture.ts:106</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/common/framework/fixture.ts#L106">src/common/framework/fixture.ts:106</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1816,7 +1992,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#trytrackforcleanup">tryTrackForCleanup</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/common/framework/fixture.ts#L112">src/common/framework/fixture.ts:112</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/common/framework/fixture.ts#L112">src/common/framework/fixture.ts:112</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1851,7 +2027,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="webgpu_gpu_test.gputest.html">GPUTest</a>.<a href="webgpu_gpu_test.gputest.html#warn">warn</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/be89cc6/src/common/framework/fixture.ts#L137">src/common/framework/fixture.ts:137</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/afc14d1/src/common/framework/fixture.ts#L137">src/common/framework/fixture.ts:137</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1891,6 +2067,9 @@
 						<ul>
 							<li class=" tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
 								<a href="webgpu_api_validation_validation_test.validationtest.html#device" class="tsd-kind-icon">device</a>
+							</li>
+							<li class=" tsd-kind-get-signature tsd-parent-kind-class">
+								<a href="webgpu_api_validation_validation_test.validationtest.html#mismatcheddevice" class="tsd-kind-icon">mismatched<wbr>Device</a>
 							</li>
 							<li class=" tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
 								<a href="webgpu_api_validation_validation_test.validationtest.html#params" class="tsd-kind-icon">params</a>
@@ -1971,6 +2150,21 @@
 								<a href="webgpu_api_validation_validation_test.validationtest.html#getbindingresource" class="tsd-kind-icon">get<wbr>Binding<wbr>Resource</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="webgpu_api_validation_validation_test.validationtest.html#getdevicemismatchedbindingresource" class="tsd-kind-icon">get<wbr>Device<wbr>Mismatched<wbr>Binding<wbr>Resource</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="webgpu_api_validation_validation_test.validationtest.html#getdevicemismatchedsampledtexture" class="tsd-kind-icon">get<wbr>Device<wbr>Mismatched<wbr>Sampled<wbr>Texture</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="webgpu_api_validation_validation_test.validationtest.html#getdevicemismatchedstoragebuffer" class="tsd-kind-icon">get<wbr>Device<wbr>Mismatched<wbr>Storage<wbr>Buffer</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="webgpu_api_validation_validation_test.validationtest.html#getdevicemismatchedstoragetexture" class="tsd-kind-icon">get<wbr>Device<wbr>Mismatched<wbr>Storage<wbr>Texture</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="webgpu_api_validation_validation_test.validationtest.html#getdevicemismatcheduniformbuffer" class="tsd-kind-icon">get<wbr>Device<wbr>Mismatched<wbr>Uniform<wbr>Buffer</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="webgpu_api_validation_validation_test.validationtest.html#geterrorbuffer" class="tsd-kind-icon">get<wbr>Error<wbr>Buffer</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
@@ -2011,6 +2205,9 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
 								<a href="webgpu_api_validation_validation_test.validationtest.html#selectdeviceorskiptestcase" class="tsd-kind-icon">select<wbr>Device<wbr>OrSkip<wbr>Test<wbr>Case</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="webgpu_api_validation_validation_test.validationtest.html#selectmismatcheddeviceorskiptestcase" class="tsd-kind-icon">select<wbr>Mismatched<wbr>Device<wbr>OrSkip<wbr>Test<wbr>Case</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited">
 								<a href="webgpu_api_validation_validation_test.validationtest.html#shouldreject" class="tsd-kind-icon">should<wbr>Reject</a>

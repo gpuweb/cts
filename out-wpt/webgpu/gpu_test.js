@@ -23,6 +23,18 @@ const kResourceStateValues = ['valid', 'invalid', 'destroyed'];
 
 export const kResourceStates = kResourceStateValues;
 
+export function initUncanonicalizedDeviceDescriptor(descriptor) {
+  if (typeof descriptor === 'string') {
+    return { requiredFeatures: [descriptor] };
+  } else if (descriptor instanceof Array) {
+    return {
+      requiredFeatures: descriptor.filter(f => f !== undefined),
+    };
+  } else {
+    return descriptor;
+  }
+}
+
 /**
  * Base fixture for WebGPU tests.
  */
@@ -90,13 +102,6 @@ export class GPUTest extends Fixture {
    */
   async selectDeviceOrSkipTestCase(descriptor) {
     if (descriptor === undefined) return;
-    if (typeof descriptor === 'string') {
-      descriptor = { requiredFeatures: [descriptor] };
-    } else if (descriptor instanceof Array) {
-      descriptor = {
-        requiredFeatures: descriptor.filter(f => f !== undefined),
-      };
-    }
 
     assert(this.provider !== undefined);
     // Make sure the device isn't replaced after it's been retrieved once.
@@ -109,7 +114,7 @@ export class GPUTest extends Fixture {
     this.provider = undefined;
     await devicePool.release(oldProvider);
 
-    this.provider = await devicePool.reserve(descriptor);
+    this.provider = await devicePool.reserve(initUncanonicalizedDeviceDescriptor(descriptor));
     this.acquiredDevice = this.provider.acquire();
   }
 

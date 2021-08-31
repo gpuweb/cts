@@ -1,10 +1,89 @@
-import { BindableResource, kMaxQueryCount } from '../../capability_info.js';
-import { GPUTest, ResourceState } from '../../gpu_test.js';
+import { attemptGarbageCollection } from '../../../common/util/collect_garbage.js';
+import { assert } from '../../../common/util/util.js';
+import { ValidBindableResource, BindableResource, kMaxQueryCount } from '../../capability_info.js';
+import { GPUTest, ResourceState, initUncanonicalizedDeviceDescriptor } from '../../gpu_test.js';
+import {
+  DevicePool,
+  DeviceProvider,
+  TestOOMedShouldAttemptGC,
+  UncanonicalizedDeviceDescriptor,
+} from '../../util/device_pool.js';
+
+// TODO: When DevicePool becomes able to provide multiple devices at once, use the usual one instead of a new one.
+const mismatchedDevicePool = new DevicePool();
 
 /**
  * Base fixture for WebGPU validation tests.
  */
 export class ValidationTest extends GPUTest {
+  // Device mismatched validation tests require another GPUDevice different from the default
+  // GPUDevice of GPUTest. It is only used to create device mismatched objects.
+  private mismatchedProvider: DeviceProvider | undefined;
+  private mismatchedAcquiredDevice: GPUDevice | undefined;
+
+  /** GPUDevice for creating mismatched objects required by device mismatched validation tests. */
+  get mismatchedDevice(): GPUDevice {
+    assert(
+      this.mismatchedProvider !== undefined,
+      'No provider available right now; did you "await" selectMismatchedDeviceOrSkipTestCase?'
+    );
+    if (!this.mismatchedAcquiredDevice) {
+      this.mismatchedAcquiredDevice = this.mismatchedProvider.acquire();
+    }
+    return this.mismatchedAcquiredDevice;
+  }
+
+  /**
+   * Create other device different with current test device, which could be got by `.mismatchedDevice`.
+   * A `descriptor` may be undefined, which returns a `default` mismatched device.
+   * If the request descriptor or feature name can't be supported, throws an exception to skip the entire test case.
+   */
+  async selectMismatchedDeviceOrSkipTestCase(
+    descriptor:
+      | UncanonicalizedDeviceDescriptor
+      | GPUFeatureName
+      | undefined
+      | Array<GPUFeatureName | undefined>
+  ): Promise<void> {
+    assert(
+      this.mismatchedProvider === undefined,
+      "Can't selectMismatchedDeviceOrSkipTestCase() multiple times"
+    );
+
+    this.mismatchedProvider =
+      descriptor === undefined
+        ? await mismatchedDevicePool.reserve()
+        : await mismatchedDevicePool.reserve(initUncanonicalizedDeviceDescriptor(descriptor));
+
+    this.mismatchedAcquiredDevice = this.mismatchedProvider.acquire();
+  }
+
+  protected async finalize(): Promise<void> {
+    await super.finalize();
+
+    if (this.mismatchedProvider) {
+      // TODO(kainino0x): Deduplicate this with code in GPUTest.finalize
+      let threw: undefined | Error;
+      {
+        const provider = this.mismatchedProvider;
+        this.mismatchedProvider = undefined;
+        try {
+          await mismatchedDevicePool.release(provider);
+        } catch (ex) {
+          threw = ex;
+        }
+      }
+
+      if (threw) {
+        if (threw instanceof TestOOMedShouldAttemptGC) {
+          // Try to clean up, in case there are stray GPU resources in need of collection.
+          await attemptGarbageCollection();
+        }
+        throw threw;
+      }
+    }
+  }
+
   /**
    * Create a GPUTexture in the specified state.
    * A `descriptor` may optionally be passed, which is used when `state` is not `'invalid'`.
@@ -210,6 +289,66 @@ export class ValidationTest extends GPUTest {
         return this.getSampledTexture(4).createView();
       case 'storageTex':
         return this.getStorageTexture().createView();
+    }
+  }
+
+  /** Create an arbitrarily-sized GPUBuffer with the STORAGE usage from mismatched device. */
+  getDeviceMismatchedStorageBuffer(): GPUBuffer {
+    return this.trackForCleanup(
+      this.mismatchedDevice.createBuffer({ size: 4, usage: GPUBufferUsage.STORAGE })
+    );
+  }
+
+  /** Create an arbitrarily-sized GPUBuffer with the UNIFORM usage from mismatched device. */
+  getDeviceMismatchedUniformBuffer(): GPUBuffer {
+    return this.trackForCleanup(
+      this.mismatchedDevice.createBuffer({ size: 4, usage: GPUBufferUsage.UNIFORM })
+    );
+  }
+
+  /**
+   * Return an arbitrarily-configured GPUTexture with the `SAMPLED` usage from mismatched device.
+   */
+  getDeviceMismatchedSampledTexture(sampleCount: number = 1): GPUTexture {
+    return this.trackForCleanup(
+      this.mismatchedDevice.createTexture({
+        size: { width: 4, height: 4, depthOrArrayLayers: 1 },
+        format: 'rgba8unorm',
+        usage: GPUTextureUsage.TEXTURE_BINDING,
+        sampleCount,
+      })
+    );
+  }
+
+  /** Return an arbitrarily-configured GPUTexture with the `STORAGE` usage from mismatched device. */
+  getDeviceMismatchedStorageTexture(): GPUTexture {
+    return this.trackForCleanup(
+      this.mismatchedDevice.createTexture({
+        size: { width: 4, height: 4, depthOrArrayLayers: 1 },
+        format: 'rgba8unorm',
+        usage: GPUTextureUsage.STORAGE_BINDING,
+      })
+    );
+  }
+
+  getDeviceMismatchedBindingResource(bindingType: ValidBindableResource): GPUBindingResource {
+    switch (bindingType) {
+      case 'uniformBuf':
+        return { buffer: this.getDeviceMismatchedStorageBuffer() };
+      case 'storageBuf':
+        return { buffer: this.getDeviceMismatchedUniformBuffer() };
+      case 'filtSamp':
+        return this.mismatchedDevice.createSampler({ minFilter: 'linear' });
+      case 'nonFiltSamp':
+        return this.mismatchedDevice.createSampler();
+      case 'compareSamp':
+        return this.mismatchedDevice.createSampler({ compare: 'never' });
+      case 'sampledTex':
+        return this.getDeviceMismatchedSampledTexture(1).createView();
+      case 'sampledTexMS':
+        return this.getDeviceMismatchedSampledTexture(4).createView();
+      case 'storageTex':
+        return this.getDeviceMismatchedStorageTexture().createView();
     }
   }
 
