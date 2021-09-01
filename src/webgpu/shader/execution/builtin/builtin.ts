@@ -1,15 +1,25 @@
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { TypedArrayBufferView } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { TypeInfo } from '../../types.js';
 import {
-  NumberType,
-  Case,
+  float32ToInt32,
   float32ToUint32,
   uint32ToFloat32,
-  float32ToInt32,
   uint32ToInt32,
-} from '../../util.js';
+} from '../../../util/conversion.js';
+import { TypeInfo } from '../../types.js';
+
+export enum NumberType {
+  Float,
+  Int,
+  Uint,
+  Hex,
+}
+
+export type Case = {
+  input: number;
+  expected: number[];
+};
 
 export const g = makeTestGroup(GPUTest);
 
@@ -26,10 +36,7 @@ export function createInputBuffer(
       inputData = new Float32Array(4 * cases.length);
       break;
     }
-    case NumberType.Hex: {
-      inputData = new Uint32Array(4 * cases.length);
-      break;
-    }
+    case NumberType.Hex:
     case NumberType.Uint: {
       inputData = new Uint32Array(4 * cases.length);
       break;
@@ -85,23 +92,6 @@ export function submitComputeShader(
   t.queue.submit([encoder.finish()]);
   return outputBuffer;
 }
-// type Data = {
-//   asF32: Float32Array;
-//   asU32: Uint32Array;
-//   asI32: Int32Array;
-// };
-
-// function getDataAs(inData: number, numberType: NumberType): Data{
-//   switch(numberType){{
-//     case Float:
-//       const data : Data{asF32 = inData, asU32= }
-//       return DataTransfer
-//   }
-//   const expectedDataAsU32 = numberType === NumberType.Float ? float32ToUint32(e) : e;
-//   const expectedDataAsF32 = numberType === NumberType.Float ? e : uint32ToFloat32(e);
-//   const expectedDataAsI32 =
-//     numberType === NumberType.Float ? float32ToInt32(e) : uint32ToInt32(e);
-// }
 
 export function createBuiltinCall(
   typeInfo: TypeInfo,

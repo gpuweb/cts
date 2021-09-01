@@ -6,9 +6,14 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { generateTypes, TypeInfo } from '../../types.js';
-import { NumberType, Case } from '../../util.js';
 
-import { submitComputeShader, createInputBuffer, createBuiltinCall } from './builtin.js';
+import {
+  NumberType,
+  Case,
+  submitComputeShader,
+  createInputBuffer,
+  createBuiltinCall,
+} from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
