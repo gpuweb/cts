@@ -1107,6 +1107,14 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "builtin",
+      "logical_built_in_functions"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
       "robust_access"
     ]
   },
