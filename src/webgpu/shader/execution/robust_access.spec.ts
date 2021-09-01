@@ -16,7 +16,10 @@ import {
   kVectorContainerTypeInfo,
   kMatrixContainerTypes,
   kMatrixContainerTypeInfo,
-  kScalarTypes,
+  kStorageClasses,
+  kStorageClassInfo,
+  supportedScalarTypes,
+  supportsAtomics,
 } from '../types.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -191,30 +194,6 @@ function arrayStride(elementLayout: { size: number; alignment: number }) {
   return align(elementLayout.size, elementLayout.alignment);
 }
 
-/** Generates scalarTypes (i32/u32/f32/bool) that support the specified usage. */
-function* supportedScalarTypes(p: { atomic: boolean; storageClass: string }) {
-  for (const scalarType of kScalarTypes) {
-    const info = kScalarTypeInfo[scalarType];
-
-    // Test atomics only on supported scalar types.
-    if (p.atomic && !info.supportsAtomics) continue;
-
-    // Storage and uniform require host-sharable types.
-    const isHostShared = p.storageClass === 'storage' || p.storageClass === 'uniform';
-    if (isHostShared && info.layout === undefined) continue;
-
-    yield scalarType;
-  }
-}
-
-/** Atomic access requires atomic type and storage/workgroup memory. */
-function supportsAtomics(p: { storageClass: string; storageMode: string | undefined }) {
-  return (
-    (p.storageClass === 'storage' && p.storageMode === 'read_write') ||
-    p.storageClass === 'workgroup'
-  );
-}
-
 g.test('linear_memory')
   .desc(
     `For each indexable data type (vec, mat, sized/unsized array, of various scalar types), attempts
@@ -232,19 +211,9 @@ g.test('linear_memory')
   )
   .params(u =>
     u
-      .combineWithParams([
-        { storageClass: 'storage', storageMode: 'read', access: 'read' },
-        { storageClass: 'storage', storageMode: 'write', access: 'write' },
-        { storageClass: 'storage', storageMode: 'read_write', access: 'read' },
-        { storageClass: 'storage', storageMode: 'read_write', access: 'write' },
-        { storageClass: 'uniform', access: 'read' },
-        { storageClass: 'private', access: 'read' },
-        { storageClass: 'private', access: 'write' },
-        { storageClass: 'function', access: 'read' },
-        { storageClass: 'function', access: 'write' },
-        { storageClass: 'workgroup', access: 'read' },
-        { storageClass: 'workgroup', access: 'write' },
-      ] as const)
+      .combine('storageClass', kStorageClasses)
+      .expand('storageMode', p => kStorageClassInfo[p.storageClass].validStorageMode)
+      .expand('access', p => kStorageClassInfo[p.storageClass].validAccess)
       .expand('atomic', p => (supportsAtomics(p) ? [false, true] : [false]))
       .expand('baseType', supportedScalarTypes)
       .beginSubcases()
