@@ -12,10 +12,18 @@ function node() {
   };
 }
 
+declare global {
+  namespace Deno {
+    function readFileSync(path: string): Uint8Array;
+    const args: string[];
+    const cwd: () => string;
+    function exit(code?: number): never;
+  }
+}
+
 function deno() {
   function existsSync(path: string) {
     try {
-      // @ts-ignore
       Deno.readFileSync(path);
       return true;
     } catch (err) {
@@ -26,12 +34,9 @@ function deno() {
   return {
     type: "deno",
     existsSync,
-    // @ts-ignore
     args: Deno.args,
-    // @ts-ignore
     cwd: Deno.cwd,
-    // @ts-ignore
-    exit: Deno.exit as (rc: number) => never,
+    exit: Deno.exit,
   };
 }
 
