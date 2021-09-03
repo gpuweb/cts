@@ -1,10 +1,11 @@
 /* eslint no-process-exit: "off" */
+/* eslint @typescript-eslint/no-namespace: "off" */
 
 function node() {
-  const { existsSync } = require("fs");
+  const { existsSync } = require('fs');
 
   return {
-    type: "node",
+    type: 'node',
     existsSync,
     args: process.argv.slice(2),
     cwd: process.cwd,
@@ -32,7 +33,7 @@ function deno() {
   }
 
   return {
-    type: "deno",
+    type: 'deno',
     existsSync,
     args: Deno.args,
     cwd: Deno.cwd,
@@ -40,6 +41,6 @@ function deno() {
   };
 }
 
-const sys = (typeof globalThis.process !== "undefined" ? node() : deno());
+const sys = typeof globalThis.process !== 'undefined' ? node() : deno();
 
 export default sys;

@@ -1,7 +1,5 @@
 /* eslint no-console: "off" */
 
-import sys from "./helper/sys.js";
-
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
 import { prettyPrintLog } from '../internal/logging/log_message.js';
 import { Logger } from '../internal/logging/logger.js';
@@ -9,6 +7,8 @@ import { LiveTestCaseResult } from '../internal/logging/result.js';
 import { parseQuery } from '../internal/query/parseQuery.js';
 import { parseExpectationsForTestQuery } from '../internal/query/query.js';
 import { assert, unreachable } from '../util/util.js';
+
+import sys from './helper/sys.js';
 
 function usage(rc: number): never {
   console.log('Usage:');
