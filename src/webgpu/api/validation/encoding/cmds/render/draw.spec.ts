@@ -98,3 +98,7 @@ buffer slot and index buffer will cause no validation error, with completely/par
 `
   )
   .unimplemented();
+
+g.test(`always_failed`).fn(t => {
+  t.expect(false);
+});
