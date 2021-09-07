@@ -140,21 +140,13 @@ g.test('linear_memory')
         { containerType: 'matrix' },
         { containerType: 'vector' },
       ] as const)
-      .expand('supportsAtomics', p => (supportsAtomics(p) ? [false, true] : [false]))
+      .expand('isAtomic', p => (supportsAtomics(p) ? [false, true] : [false]))
       .beginSubcases()
       .expand('baseType', supportedScalarTypes)
       .expandWithParams(generateTypes)
   )
   .fn(async t => {
-    const {
-      storageClass,
-      storageMode,
-      access,
-      supportsAtomics,
-      baseType,
-      type,
-      _kTypeInfo,
-    } = t.params;
+    const { storageClass, storageMode, access, isAtomic, baseType, type, _kTypeInfo } = t.params;
 
     assert(_kTypeInfo !== undefined, 'not an indexable type');
     assert('arrayLength' in _kTypeInfo);
@@ -270,9 +262,7 @@ g.test('linear_memory')
           switch (access) {
             case 'read':
               {
-                const exprLoadElement = supportsAtomics
-                  ? `atomicLoad(&${exprElement})`
-                  : exprElement;
+                const exprLoadElement = isAtomic ? `atomicLoad(&${exprElement})` : exprElement;
                 let condition = `${exprLoadElement} != ${exprZeroElement}`;
                 if ('innerLength' in _kTypeInfo) condition = `any(${condition})`;
                 testFunctionSource += `
@@ -281,7 +271,7 @@ g.test('linear_memory')
               break;
 
             case 'write':
-              if (supportsAtomics) {
+              if (isAtomic) {
                 testFunctionSource += `
                   atomicStore(&s.data[${exprIndex}], ${exprZeroElement});`;
               } else {

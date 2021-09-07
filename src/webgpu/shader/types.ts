@@ -50,7 +50,7 @@ export function* generateTypes({
   storageClass,
   baseType,
   containerType,
-  supportsAtomics = false,
+  isAtomic = false,
 }: {
   storageClass: string;
   /** Base scalar type (i32/u32/f32/bool). */
@@ -58,13 +58,13 @@ export function* generateTypes({
   /** Container type (scalar/vector/matrix/array) */
   containerType: ContainerType;
   /** Whether to wrap the baseType in `atomic<>`. */
-  supportsAtomics?: boolean;
+  isAtomic?: boolean;
 }) {
   const scalarInfo = kScalarTypeInfo[baseType];
-  if (supportsAtomics) {
+  if (isAtomic) {
     assert(scalarInfo.supportsAtomics, 'type does not support atomics');
   }
-  const scalarType = supportsAtomics ? `atomic<${baseType}>` : baseType;
+  const scalarType = isAtomic ? `atomic<${baseType}>` : baseType;
 
   // Storage and uniform require host-sharable types.
   if (storageClass === 'storage' || storageClass === 'uniform') {
@@ -171,12 +171,12 @@ export function supportsAtomics(p: {
 }
 
 /** Generates an iterator of supported base types (i32/u32/f32/bool) */
-export function* supportedScalarTypes(p: { supportsAtomics: boolean; storageClass: string }) {
+export function* supportedScalarTypes(p: { isAtomic: boolean; storageClass: string }) {
   for (const scalarType of kScalarTypes) {
     const info = kScalarTypeInfo[scalarType];
 
     // Test atomics only on supported scalar types.
-    if (p.supportsAtomics && !info.supportsAtomics) continue;
+    if (p.isAtomic && !info.supportsAtomics) continue;
 
     // Storage and uniform require host-sharable types.
     const isHostShared = p.storageClass === 'storage' || p.storageClass === 'uniform';
