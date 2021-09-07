@@ -231,12 +231,13 @@ export class ValidationTest extends GPUTest {
   }
 
   /** Return an arbitrarily-configured GPUTexture with the `RENDER_ATTACHMENT` usage. */
-  getRenderTexture(): GPUTexture {
+  getRenderTexture(sampleCount: number = 1): GPUTexture {
     return this.trackForCleanup(
       this.device.createTexture({
         size: { width: 16, height: 16, depthOrArrayLayers: 1 },
         format: 'rgba8unorm',
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        sampleCount,
       })
     );
   }
@@ -292,6 +293,33 @@ export class ValidationTest extends GPUTest {
     }
   }
 
+  /** Return a GPUBindGroupLayout with descriptor from mismatched device. */
+  getDeviceMismatchedBindGroupLayout(descriptor: GPUBindGroupLayoutDescriptor): GPUBindGroupLayout {
+    return this.mismatchedDevice.createBindGroupLayout(descriptor);
+  }
+
+  /** Return a GPUPipelineLayout with descriptor from mismatched device. */
+  getDeviceMismatchedPipelineLayout(descriptor: GPUPipelineLayoutDescriptor): GPUPipelineLayout {
+    return this.mismatchedDevice.createPipelineLayout(descriptor);
+  }
+
+  /** Return a GPUShaderModule with descriptor from mismatched device. */
+  getDeviceMismatchedShaderModule(descriptor: GPUShaderModuleDescriptor): GPUShaderModule {
+    return this.mismatchedDevice.createShaderModule(descriptor);
+  }
+
+  /** Return a GPURenderBundleEncoder with descriptor from mismatched device. */
+  getDeviceMismatchedRenderBundle(
+    descriptor: GPURenderBundleEncoderDescriptor
+  ): GPURenderBundleEncoder {
+    return this.mismatchedDevice.createRenderBundleEncoder(descriptor);
+  }
+
+  /** Return a GPUQuerySet with descriptor from mismatched device. */
+  getDeviceMismatchedQuerySet(descriptor: GPUQuerySetDescriptor): GPUQuerySet {
+    return this.trackForCleanup(this.mismatchedDevice.createQuerySet(descriptor));
+  }
+
   /** Create an arbitrarily-sized GPUBuffer with the STORAGE usage from mismatched device. */
   getDeviceMismatchedStorageBuffer(): GPUBuffer {
     return this.trackForCleanup(
@@ -306,29 +334,38 @@ export class ValidationTest extends GPUTest {
     );
   }
 
-  /**
-   * Return an arbitrarily-configured GPUTexture with the `SAMPLED` usage from mismatched device.
-   */
+  /** Return a GPUTexture with descriptor from mismatched device. */
+  getDeviceMismatchedTexture(descriptor: GPUTextureDescriptor): GPUTexture {
+    return this.trackForCleanup(this.mismatchedDevice.createTexture(descriptor));
+  }
+
+  /** Return an arbitrarily-configured GPUTexture with the `SAMPLED` usage from mismatched device. */
   getDeviceMismatchedSampledTexture(sampleCount: number = 1): GPUTexture {
-    return this.trackForCleanup(
-      this.mismatchedDevice.createTexture({
-        size: { width: 4, height: 4, depthOrArrayLayers: 1 },
-        format: 'rgba8unorm',
-        usage: GPUTextureUsage.TEXTURE_BINDING,
-        sampleCount,
-      })
-    );
+    return this.getDeviceMismatchedTexture({
+      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.TEXTURE_BINDING,
+      sampleCount,
+    });
   }
 
   /** Return an arbitrarily-configured GPUTexture with the `STORAGE` usage from mismatched device. */
   getDeviceMismatchedStorageTexture(): GPUTexture {
-    return this.trackForCleanup(
-      this.mismatchedDevice.createTexture({
-        size: { width: 4, height: 4, depthOrArrayLayers: 1 },
-        format: 'rgba8unorm',
-        usage: GPUTextureUsage.STORAGE_BINDING,
-      })
-    );
+    return this.getDeviceMismatchedTexture({
+      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.STORAGE_BINDING,
+    });
+  }
+
+  /** Return an arbitrarily-configured GPUTexture with the `RENDER_ATTACHMENT` usage from mismatched device. */
+  getDeviceMismatchedRenderTexture(sampleCount: number = 1): GPUTexture {
+    return this.getDeviceMismatchedTexture({
+      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      sampleCount,
+    });
   }
 
   getDeviceMismatchedBindingResource(bindingType: ValidBindableResource): GPUBindingResource {
