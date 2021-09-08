@@ -115,7 +115,7 @@ export class ImageCopyTest extends ValidationTest {
       method,
       dataSize,
       success,
-      submit = false,
+      submit = true,
     }: {
       method: ImageCopyType;
       dataSize: number;
@@ -136,36 +136,16 @@ export class ImageCopyTest extends ValidationTest {
         break;
       }
       case 'CopyB2T': {
-        const encoder = this.device.createCommandEncoder();
+        const { encoder, validateFinishAndSubmit } = this.createEncoder('non-pass');
         encoder.copyBufferToTexture({ buffer, ...textureDataLayout }, { texture }, size);
-
-        if (submit) {
-          const cmd = encoder.finish();
-          this.expectValidationError(() => {
-            this.device.queue.submit([cmd]);
-          }, !success);
-        } else {
-          this.expectValidationError(() => {
-            encoder.finish();
-          }, !success);
-        }
+        validateFinishAndSubmit(success, submit);
 
         break;
       }
       case 'CopyT2B': {
-        const encoder = this.device.createCommandEncoder();
+        const { encoder, validateFinishAndSubmit } = this.createEncoder('non-pass');
         encoder.copyTextureToBuffer({ texture }, { buffer, ...textureDataLayout }, size);
-
-        if (submit) {
-          const cmd = encoder.finish();
-          this.expectValidationError(() => {
-            this.device.queue.submit([cmd]);
-          }, !success);
-        } else {
-          this.expectValidationError(() => {
-            encoder.finish();
-          }, !success);
-        }
+        validateFinishAndSubmit(success, submit);
 
         break;
       }

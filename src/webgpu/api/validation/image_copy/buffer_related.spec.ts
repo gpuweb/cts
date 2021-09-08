@@ -31,8 +31,8 @@ g.test('valid')
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
 
-    const success = state === 'valid';
-    const submit = state === 'destroyed';
+    const success = state !== 'invalid';
+    const submit = state !== 'destroyed';
 
     const texture = t.device.createTexture({
       size: { width: 2, height: 2, depthOrArrayLayers: 1 },
@@ -104,8 +104,15 @@ g.test('bytes_per_row_alignment')
       .beginSubcases()
       .combine('bytesPerRow', [undefined, 0, 1, 255, 256, 257, 512])
       .combine('copyHeight', [0, 1, 2, 4, 8])
-      // copyHeight must be aligned with blockHeight
-      .filter(({ format, copyHeight }) => copyHeight % kTextureFormatInfo[format].blockHeight === 0)
+      // copyHeight has some constraints:
+      //   - it must be aligned with blockHeight.
+      //   - if it is 0, the format cannot be a depth/stencil format. Because it must be a full copy if the format is a depth/stencil format but copied subresource's height can never be 0.
+      .filter(
+        ({ format, copyHeight }) =>
+          copyHeight % kTextureFormatInfo[format].blockHeight === 0 &&
+          (copyHeight !== 0 ||
+            (!kTextureFormatInfo[format].depth && !kTextureFormatInfo[format].stencil))
+      )
       // bytesPerRow must be specified and it must be equal or greater than the bytes size of each row if we are copying multiple rows.
       // Note that we are copying one single block on each row in this test.
       .filter(
@@ -133,7 +140,7 @@ g.test('bytes_per_row_alignment')
     // If bytesPerRow > 0 and it is a multiple of 256, it will succeeed if other parameters are valid.
     if (bytesPerRow !== undefined && bytesPerRow > 0 && bytesPerRow % 256 === 0) success = true;
 
-    const size = [info.blockWidth, !copyHeight ? info.blockHeight : copyHeight, 1];
+    const size = [info.blockWidth, copyHeight === 0 ? info.blockHeight : copyHeight, 1];
     const texture = t.device.createTexture({
       size,
       dimension,
@@ -141,7 +148,9 @@ g.test('bytes_per_row_alignment')
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
 
-    t.testBuffer(buffer, texture, { bytesPerRow }, size, {
+    const copySize = [info.blockWidth, copyHeight, 1];
+
+    t.testBuffer(buffer, texture, { bytesPerRow }, copySize, {
       dataSize: 512 * 8 * 16,
       method,
       success,
