@@ -1,7 +1,7 @@
 export const description = `
-Tests for GPUCanvasContext.configureSwapChain.
+Tests for GPUCanvasContext.configure.
 
-TODO: Test all options of configureSwapChain.
+TODO: Test all options of configure.
 `;
 
 import { Fixture } from '../../../common/framework/fixture.js';
