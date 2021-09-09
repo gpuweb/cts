@@ -1,7 +1,13 @@
 import { keysOf } from '../../common/util/data_tables.js';
+import { assert } from '../../common/util/util.js';
+import { align } from '../util/math.js';
 
-/** WGSL plain scalar type names. */
+const kArrayLength = 3;
+
+export type ContainerType = 'scalar' | 'vector' | 'matrix' | 'atomic' | 'array';
 export type ScalarType = 'i32' | 'u32' | 'f32' | 'bool';
+
+export const HostSharableTypes = ['i32', 'u32', 'f32'] as const;
 
 /** Info for each plain scalar type. */
 export const kScalarTypeInfo = /* prettier-ignore */ {
@@ -36,3 +42,146 @@ export const kMatrixContainerTypeInfo = /* prettier-ignore */ {
 } as const;
 /** List of all matNxN<> container types. */
 export const kMatrixContainerTypes = keysOf(kMatrixContainerTypeInfo);
+
+/**
+ * Generate a bunch types (vec, mat, sized/unsized array) for testing.
+ */
+export function* generateTypes({
+  storageClass,
+  baseType,
+  containerType,
+  isAtomic = false,
+}: {
+  storageClass: string;
+  /** Base scalar type (i32/u32/f32/bool). */
+  baseType: ScalarType;
+  /** Container type (scalar/vector/matrix/array) */
+  containerType: ContainerType;
+  /** Whether to wrap the baseType in `atomic<>`. */
+  isAtomic?: boolean;
+}) {
+  const scalarInfo = kScalarTypeInfo[baseType];
+  if (isAtomic) {
+    assert(scalarInfo.supportsAtomics, 'type does not support atomics');
+  }
+  const scalarType = isAtomic ? `atomic<${baseType}>` : baseType;
+
+  // Storage and uniform require host-sharable types.
+  if (storageClass === 'storage' || storageClass === 'uniform') {
+    assert(isHostSharable(baseType), 'type ' + baseType.toString() + ' is not host sharable');
+  }
+
+  // Scalar types
+  if (containerType === 'scalar') {
+    yield {
+      type: `${scalarType}`,
+      _kTypeInfo: {
+        elementBaseType: `${scalarType}`,
+        ...scalarInfo,
+      },
+    };
+  }
+
+  // Vector types
+  if (containerType === 'vector') {
+    for (const vectorType of kVectorContainerTypes) {
+      yield {
+        type: `${vectorType}<${scalarType}>`,
+        _kTypeInfo: { elementBaseType: baseType, ...kVectorContainerTypeInfo[vectorType] },
+      };
+    }
+  }
+
+  if (containerType === 'matrix') {
+    // Matrices can only be f32.
+    if (baseType === 'f32') {
+      for (const matrixType of kMatrixContainerTypes) {
+        const matrixInfo = kMatrixContainerTypeInfo[matrixType];
+        yield {
+          type: `${matrixType}<${scalarType}>`,
+          _kTypeInfo: {
+            elementBaseType: `vec${matrixInfo.innerLength}<${scalarType}>`,
+            ...matrixInfo,
+          },
+        };
+      }
+    }
+  }
+
+  // Array types
+  if (containerType === 'array') {
+    const arrayTypeInfo = {
+      elementBaseType: `${baseType}`,
+      arrayLength: kArrayLength,
+      layout: scalarInfo.layout
+        ? {
+            alignment: scalarInfo.layout.alignment,
+            size:
+              storageClass === 'uniform'
+                ? // Uniform storage class must have array elements aligned to 16.
+                  kArrayLength *
+                  arrayStride({
+                    ...scalarInfo.layout,
+                    alignment: 16,
+                  })
+                : kArrayLength * arrayStride(scalarInfo.layout),
+          }
+        : undefined,
+    };
+
+    // Sized
+    if (storageClass === 'uniform') {
+      yield {
+        type: `[[stride(16)]] array<${scalarType},${kArrayLength}>`,
+        _kTypeInfo: arrayTypeInfo,
+      };
+    } else {
+      yield { type: `array<${scalarType},${kArrayLength}>`, _kTypeInfo: arrayTypeInfo };
+    }
+    // Unsized
+    if (storageClass === 'storage') {
+      yield { type: `array<${scalarType}>`, _kTypeInfo: arrayTypeInfo };
+    }
+  }
+
+  function arrayStride(elementLayout: { size: number; alignment: number }) {
+    return align(elementLayout.size, elementLayout.alignment);
+  }
+
+  function isHostSharable(baseType: ScalarType) {
+    for (const sharableType of HostSharableTypes) {
+      if (sharableType === baseType) return true;
+    }
+    return false;
+  }
+}
+
+/** Atomic access requires scalar/array container type and storage/workgroup memory. */
+export function supportsAtomics(p: {
+  storageClass: string;
+  storageMode: string | undefined;
+  access: string;
+  containerType: ContainerType;
+}) {
+  return (
+    ((p.storageClass === 'storage' && p.storageMode === 'read_write') ||
+      p.storageClass === 'workgroup') &&
+    (p.containerType === 'scalar' || p.containerType === 'array')
+  );
+}
+
+/** Generates an iterator of supported base types (i32/u32/f32/bool) */
+export function* supportedScalarTypes(p: { isAtomic: boolean; storageClass: string }) {
+  for (const scalarType of kScalarTypes) {
+    const info = kScalarTypeInfo[scalarType];
+
+    // Test atomics only on supported scalar types.
+    if (p.isAtomic && !info.supportsAtomics) continue;
+
+    // Storage and uniform require host-sharable types.
+    const isHostShared = p.storageClass === 'storage' || p.storageClass === 'uniform';
+    if (isHostShared && info.layout === undefined) continue;
+
+    yield scalarType;
+  }
+}
