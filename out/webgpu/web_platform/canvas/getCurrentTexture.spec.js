@@ -1,7 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/export const description = `
-Tests for GPUSwapChain.getCurrentTexture.
+Tests for GPUCanvasContext.getCurrentTexture.
 `;import { Fixture } from '../../../common/framework/fixture.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 

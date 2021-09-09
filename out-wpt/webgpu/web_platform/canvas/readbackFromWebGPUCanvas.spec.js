@@ -58,7 +58,7 @@ const webglExpect = new Uint8ClampedArray([
 
 async function initCanvasContent(t, canvasType) {
   const canvas = createCanvas(t, canvasType, 2, 2);
-  const ctx = canvas.getContext('gpupresent');
+  const ctx = canvas.getContext('webgpu');
   assert(ctx !== null, 'Failed to get WebGPU context from canvas');
 
   ctx.configure({

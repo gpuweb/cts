@@ -4,7 +4,7 @@
 Tests for external textures with HTMLCanvasElement and OffscreenCanvas sources.
 
 - x= {HTMLCanvasElement, OffscreenCanvas}
-- x= {2d, webgl, webgl2, gpupresent, bitmaprenderer} context, {various context creation attributes}
+- x= {2d, webgl, webgl2, webgpu, bitmaprenderer} context, {various context creation attributes}
 
 TODO: consider whether external_texture and copyToTexture video tests should be in the same file
 TODO: plan

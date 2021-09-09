@@ -1165,7 +1165,7 @@ export const listing = [
     "file": [
       "web_platform"
     ],
-    "readme": "Tests for Web platform-specific interactions like GPUSwapChain and canvas, WebXR,\nImageBitmaps, and video APIs."
+    "readme": "Tests for Web platform-specific interactions like GPUCanvasContext and canvas, WebXR,\nImageBitmaps, and video APIs."
   },
   {
     "file": [
@@ -1178,7 +1178,7 @@ export const listing = [
     "file": [
       "web_platform",
       "canvas",
-      "configureSwapChain"
+      "configure"
     ]
   },
   {
@@ -1199,7 +1199,7 @@ export const listing = [
     "file": [
       "web_platform",
       "canvas",
-      "getSwapChainPreferredFormat"
+      "getPreferredFormat"
     ]
   },
   {

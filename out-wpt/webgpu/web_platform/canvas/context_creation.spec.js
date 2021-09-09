@@ -4,7 +4,7 @@
 Tests for canvas context creation.
 
 Note there are no context creation attributes for WebGPU (as of this writing).
-Options are configured in configureSwapChain instead.
+Options are configured in configure() instead.
 `;
 import { Fixture } from '../../../common/framework/fixture.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
@@ -43,6 +43,6 @@ g.test('return_type')
       canvas.height = 10;
     }
 
-    const ctx = canvas.getContext('gpupresent');
+    const ctx = canvas.getContext('webgpu');
     t.expect(ctx instanceof GPUCanvasContext);
   });
