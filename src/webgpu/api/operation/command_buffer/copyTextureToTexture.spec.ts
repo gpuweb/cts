@@ -1050,6 +1050,7 @@ g.test('copy_multisampled_color')
       sampleCount: kSampleCount,
     });
 
+    // Initialize sourceTexture with a draw call.
     const renderPipelineForInit = t.device.createRenderPipeline({
       vertex: {
         module: t.device.createShaderModule({
@@ -1081,7 +1082,6 @@ g.test('copy_multisampled_color')
         count: kSampleCount,
       },
     });
-
     const initEncoder = t.device.createCommandEncoder();
     const renderPassForInit = initEncoder.beginRenderPass({
       colorAttachments: [
@@ -1097,6 +1097,7 @@ g.test('copy_multisampled_color')
     renderPassForInit.endPass();
     t.queue.submit([initEncoder.finish()]);
 
+    // Do the texture-to-texture copy
     const copyEncoder = t.device.createCommandEncoder();
     copyEncoder.copyTextureToTexture(
       {
@@ -1109,6 +1110,8 @@ g.test('copy_multisampled_color')
     );
     t.queue.submit([copyEncoder.finish()]);
 
+    // Verify if all the sub-pixel values at the same location of sourceTexture and
+    // destinationTextureare equal.
     const renderPipelineForValidation = t.device.createRenderPipeline({
       vertex: {
         module: t.device.createShaderModule({
