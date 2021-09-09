@@ -32,12 +32,9 @@ Tests that resolve query set with invalid object.
       usage: GPUBufferUsage.QUERY_RESOLVE,
     });
 
-    const encoder = t.device.createCommandEncoder();
-    encoder.resolveQuerySet(querySet, 0, 1, destination, 0);
-
-    t.expectValidationError(() => {
-      encoder.finish();
-    }, querySetState === 'invalid' || destinationState === 'invalid');
+    const encoder = t.createEncoder('non-pass');
+    encoder.encoder.resolveQuerySet(querySet, 0, 1, destination, 0);
+    encoder.validateFinish(querySetState === 'valid' && destinationState === 'valid');
   });
 
 g.test('resolveQuerySet,first_query_and_query_count')
@@ -62,12 +59,9 @@ Tests that resolve query set with invalid firstQuery and queryCount:
       usage: GPUBufferUsage.QUERY_RESOLVE,
     });
 
-    const encoder = t.device.createCommandEncoder();
-    encoder.resolveQuerySet(querySet, firstQuery, queryCount, destination, 0);
-
-    t.expectValidationError(() => {
-      encoder.finish();
-    }, firstQuery + queryCount > kQueryCount);
+    const encoder = t.createEncoder('non-pass');
+    encoder.encoder.resolveQuerySet(querySet, firstQuery, queryCount, destination, 0);
+    encoder.validateFinish(firstQuery + queryCount <= kQueryCount);
   });
 
 g.test('resolveQuerySet,destination_buffer_usage')
@@ -91,37 +85,35 @@ Tests that resolve query set with invalid destinationBuffer:
       usage: t.params.bufferUsage,
     });
 
-    const encoder = t.device.createCommandEncoder();
-    encoder.resolveQuerySet(querySet, 0, kQueryCount, destination, 0);
-
-    t.expectValidationError(() => {
-      encoder.finish();
-    }, t.params.bufferUsage !== GPUConst.BufferUsage.QUERY_RESOLVE);
+    const encoder = t.createEncoder('non-pass');
+    encoder.encoder.resolveQuerySet(querySet, 0, kQueryCount, destination, 0);
+    encoder.validateFinish(t.params.bufferUsage === GPUConst.BufferUsage.QUERY_RESOLVE);
   });
 
 g.test('resolveQuerySet,destination_offset')
   .desc(
     `
 Tests that resolve query set with invalid destinationOffset:
-- destinationOffset is not a multiple of 8
+- destinationOffset is not a multiple of 256
 - The size of destinationBuffer - destinationOffset < queryCount * 8
 - destinationOffset out of range
   `
   )
-  .paramsSubcasesOnly(u => u.combine('destinationOffset', [0, 6, 8, 16]))
+  .paramsSubcasesOnly(u => u.combine('destinationOffset', [0, 8, 256, 512, 768]))
   .fn(async t => {
+    const { destinationOffset } = t.params;
     const querySet = t.device.createQuerySet({ type: 'occlusion', count: kQueryCount });
+    const size = (kQueryCount - 1) * 8 + 512;
     const destination = t.device.createBuffer({
-      size: kQueryCount * 8,
+      size,
       usage: GPUBufferUsage.QUERY_RESOLVE,
     });
 
-    const encoder = t.device.createCommandEncoder();
-    encoder.resolveQuerySet(querySet, 0, kQueryCount, destination, t.params.destinationOffset);
-
-    t.expectValidationError(() => {
-      encoder.finish();
-    }, t.params.destinationOffset > 0);
+    const encoder = t.createEncoder('non-pass');
+    encoder.encoder.resolveQuerySet(querySet, 0, kQueryCount, destination, destinationOffset);
+    encoder.validateFinish(
+      destinationOffset % 256 === 0 && destinationOffset + kQueryCount * 8 <= size
+    );
   });
 
 g.test('query_set_buffer,device_mismatch')
