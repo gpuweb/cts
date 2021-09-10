@@ -1,5 +1,4 @@
 import { keysOf } from '../../common/util/data_tables.js';
-import { assertTypeTrue, TypeEqual } from '../../common/util/types.js';
 
 /** WGSL plain scalar type names. */
 export type ScalarType = 'i32' | 'u32' | 'f32' | 'bool';
@@ -37,45 +36,3 @@ export const kMatrixContainerTypeInfo = /* prettier-ignore */ {
 } as const;
 /** List of all matNxN<> container types. */
 export const kMatrixContainerTypes = keysOf(kMatrixContainerTypeInfo);
-
-export type AccessQualifier = 'read' | 'write';
-export const kAccessQualifiers = ['read', 'write'] as const;
-assertTypeTrue<TypeEqual<AccessQualifier, typeof kAccessQualifiers[number]>>();
-
-export type StorageMode = 'read' | 'write' | 'read_write';
-export const kStorageModes = ['read', 'write', 'read_write'] as const;
-assertTypeTrue<TypeEqual<StorageMode, typeof kStorageModes[number]>>();
-
-export const kStorageClassInfo = /* prettier-ignore */ {
-  'storage':    { validAccess: kAccessQualifiers, validStorageMode: kStorageModes },
-  'uniform':    { validAccess: ['read'],          validStorageMode: [undefined] },
-  'private':    { validAccess: kAccessQualifiers, validStorageMode: [undefined] },
-  'function':   { validAccess: kAccessQualifiers, validStorageMode: [undefined] },
-  'workgroup':  { validAccess: kAccessQualifiers, validStorageMode: [undefined] },
-} as const;
-export const kStorageClasses = keysOf(kStorageClassInfo);
-export type StorageClass = keyof typeof kStorageClassInfo;
-
-/** Generates scalarTypes (i32/u32/f32/bool) that support the specified usage. */
-export function* supportedScalarTypes(p: { atomic: boolean; storageClass: StorageClass }) {
-  for (const scalarType of kScalarTypes) {
-    const info = kScalarTypeInfo[scalarType];
-
-    // Test atomics only on supported scalar types.
-    if (p.atomic && !info.supportsAtomics) continue;
-
-    // Storage and uniform require host-sharable types.
-    const isHostShared = p.storageClass === 'storage' || p.storageClass === 'uniform';
-    if (isHostShared && info.layout === undefined) continue;
-
-    yield scalarType;
-  }
-}
-
-/** Atomic access requires atomic type and storage/workgroup memory. */
-export function supportsAtomics(p: { storageClass: StorageClass; storageMode?: StorageMode }) {
-  return (
-    (p.storageClass === 'storage' && p.storageMode === 'read_write') ||
-    p.storageClass === 'workgroup'
-  );
-}
