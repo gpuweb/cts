@@ -369,7 +369,10 @@ g.test('compute,zero_init')
           if (type.isAtomic) {
             value = `atomicLoad(&${value})`;
           }
-          return `\nif (${value} != ${expected}) { atomicStore(&output.failed, 1u); return; }`;
+
+          // Note: this could have an early return, but we omit it because it makes
+          // the tests fail cause with DXGI_ERROR_DEVICE_HUNG on Windows.
+          return `\nif (${value} != ${expected}) { atomicStore(&output.failed, 1u); }`;
         }
       }
     })('testVar', t.params._type);
