@@ -82,7 +82,11 @@ g.test('compute,zero_init')
       // Fewer subases: Only 0 and 2. If double-nested containers work, single-nested should too.
       .combine('_containerDepth', [0, 2])
       .expandWithParams(function* (p) {
-        const kElementCounts = [1, 2, 7] as const;
+        const kElementCounts = [
+          [], // Not used. Depth 0 is always scalars.
+          [1, 3, 67], // Test something above the workgroup size.
+          [1, 3],
+        ] as const;
         const kMemberCounts = [1, 3] as const;
 
         const memoizedTypes: ShaderTypeInfo[][] = [];
@@ -156,7 +160,7 @@ g.test('compute,zero_init')
             const innerTypes = generateTypesMemo(depth - 1);
             switch (containerType) {
               case 'array':
-                for (const elementCount of kElementCounts) {
+                for (const elementCount of kElementCounts[depth]) {
                   for (const innerType of innerTypes) {
                     yield {
                       type: 'container',
