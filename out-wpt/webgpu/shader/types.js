@@ -10,10 +10,15 @@ export const HostSharableTypes = ['i32', 'u32', 'f32'];
 
 /** Info for each plain scalar type. */
 export const kScalarTypeInfo = {
-  i32: { layout: { alignment: 4, size: 4 }, supportsAtomics: true },
-  u32: { layout: { alignment: 4, size: 4 }, supportsAtomics: true },
-  f32: { layout: { alignment: 4, size: 4 }, supportsAtomics: false },
-  bool: { layout: undefined, supportsAtomics: false },
+  i32: { layout: { alignment: 4, size: 4 }, supportsAtomics: true, arrayLength: 1, innerLength: 0 },
+  u32: { layout: { alignment: 4, size: 4 }, supportsAtomics: true, arrayLength: 1, innerLength: 0 },
+  f32: {
+    layout: { alignment: 4, size: 4 },
+    supportsAtomics: false,
+    arrayLength: 1,
+    innerLength: 0,
+  },
+  bool: { layout: undefined, supportsAtomics: false, arrayLength: 1, innerLength: 0 },
 };
 
 /** List of all plain scalar types. */
@@ -21,9 +26,9 @@ export const kScalarTypes = keysOf(kScalarTypeInfo);
 
 /** Info for each vecN<> container type. */
 export const kVectorContainerTypeInfo = {
-  vec2: { layout: { alignment: 8, size: 8 }, arrayLength: 2 },
-  vec3: { layout: { alignment: 16, size: 12 }, arrayLength: 3 },
-  vec4: { layout: { alignment: 16, size: 16 }, arrayLength: 4 },
+  vec2: { layout: { alignment: 8, size: 8 }, arrayLength: 2, innerLength: 0 },
+  vec3: { layout: { alignment: 16, size: 12 }, arrayLength: 3, innerLength: 0 },
+  vec4: { layout: { alignment: 16, size: 16 }, arrayLength: 4, innerLength: 0 },
 };
 
 /** List of all vecN<> container types. */

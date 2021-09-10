@@ -190,4 +190,36 @@ export function gammaDecompress(n) {
   n = n <= 0.04045 ? n * 25 / 323 : Math.pow((200 * n + 11) / 211, 12 / 5);
   return clamp(n, { min: 0, max: 1 });
 }
+
+/** Converts a 32-bit float value to a 32-bit unsigned integer value */
+export function float32ToUint32(f32) {
+  const f32Arr = new Float32Array(1);
+  f32Arr[0] = f32;
+  const u32Arr = new Uint32Array(f32Arr.buffer);
+  return u32Arr[0];
+}
+
+/** Converts a 32-bit unsigned integer value to a 32-bit float value */
+export function uint32ToFloat32(u32) {
+  const u32Arr = new Uint32Array(1);
+  u32Arr[0] = u32;
+  const f32Arr = new Float32Array(u32Arr.buffer);
+  return f32Arr[0];
+}
+
+/** Converts a 32-bit float value to a 32-bit signed integer value */
+export function float32ToInt32(f32) {
+  const f32Arr = new Float32Array(1);
+  f32Arr[0] = f32;
+  const i32Arr = new Int32Array(f32Arr.buffer);
+  return i32Arr[0];
+}
+
+/** Converts a 32-bit unsigned integer value to a 32-bit signed integer value */
+export function uint32ToInt32(u32) {
+  const u32Arr = new Uint32Array(1);
+  u32Arr[0] = u32;
+  const i32Arr = new Int32Array(u32Arr.buffer);
+  return i32Arr[0];
+}
 //# sourceMappingURL=conversion.js.map
