@@ -170,6 +170,7 @@ export class TestGroup {
 
 
 
+
 class TestBuilder {
 
 
@@ -178,6 +179,7 @@ class TestBuilder {
 
 
   testCases = undefined;
+  batchSize = 0;
 
   constructor(testPath, fixture, testCreationStack) {
     this.testPath = testPath;
@@ -199,6 +201,11 @@ class TestBuilder {
     // not on test parents in the tree, which is what happens if you do it here, not sure why)
     assert(this.testFn === undefined);
     this.testFn = fn;
+  }
+
+  batch(b) {
+    this.batchSize = b;
+    return this;
   }
 
   unimplemented() {
@@ -230,6 +237,8 @@ class TestBuilder {
     for (const [caseParams, subcases] of builderIterateCasesWithSubcases(this.testCases)) {
       for (const subcaseParams of subcases ?? [{}]) {
         const params = mergeParams(caseParams, subcaseParams);
+        assert(this.batchSize === 0 || !('batch__' in params));
+
         // stringifyPublicParams also checks for invalid params values
         const testcaseString = stringifyPublicParams(params);
 
@@ -276,14 +285,39 @@ class TestBuilder {
     assert(this.testFn !== undefined, 'No test function (.fn()) for test');
     this.testCases ??= kUnitCaseParamsBuilder;
     for (const [caseParams, subcases] of builderIterateCasesWithSubcases(this.testCases)) {
-      yield new RunCaseSpecific(
-      this.testPath,
-      caseParams,
-      subcases,
-      this.fixture,
-      this.testFn,
-      this.testCreationStack);
+      if (this.batchSize === 0 || subcases === undefined) {
+        yield new RunCaseSpecific(
+        this.testPath,
+        caseParams,
+        subcases,
+        this.fixture,
+        this.testFn,
+        this.testCreationStack);
 
+      } else {
+        const subcaseArray = Array.from(subcases);
+        if (subcaseArray.length <= this.batchSize) {
+          yield new RunCaseSpecific(
+          this.testPath,
+          caseParams,
+          subcaseArray,
+          this.fixture,
+          this.testFn,
+          this.testCreationStack);
+
+        } else {
+          for (let i = 0; i < subcaseArray.length; i = i + this.batchSize) {
+            yield new RunCaseSpecific(
+            this.testPath,
+            { ...caseParams, batch__: i / this.batchSize },
+            subcaseArray.slice(i, Math.min(subcaseArray.length, i + this.batchSize)),
+            this.fixture,
+            this.testFn,
+            this.testCreationStack);
+
+          }
+        }
+      }
     }
   }}
 
