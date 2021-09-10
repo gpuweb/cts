@@ -28,9 +28,9 @@ Component-wise when T is a vector.
       .combineWithParams([
         { storageClass: 'storage', storageMode: 'read_write', access: 'read' },
       ] as const)
-      .combineWithParams([{ containerType: 'scalar' }, { containerType: 'vector' }] as const)
-      .combineWithParams([{ isAtomic: false }] as const)
-      .combineWithParams([{ baseType: 'f32' }] as const)
+      .combine('containerType', ['scalar', 'vector'] as const)
+      .combine('isAtomic', [false])
+      .combine('baseType', ['f32'] as const)
       .beginSubcases()
       .expandWithParams(generateTypes)
   )
@@ -116,9 +116,9 @@ If e evaluates to the largest negative value, then the result is e.
       .combineWithParams([
         { storageClass: 'storage', storageMode: 'read_write', access: 'read' },
       ] as const)
-      .combineWithParams([{ containerType: 'scalar' }, { containerType: 'vector' }] as const)
-      .combineWithParams([{ isAtomic: false }] as const)
-      .combineWithParams([{ baseType: 'i32' }] as const)
+      .combine('containerType', ['scalar', 'vector'] as const)
+      .combine('isAtomic', [false])
+      .combine('baseType', ['i32'] as const)
       .beginSubcases()
       .expandWithParams(generateTypes)
   )
@@ -208,9 +208,9 @@ Component-wise when T is a vector.
       .combineWithParams([
         { storageClass: 'storage', storageMode: 'read_write', access: 'read' },
       ] as const)
-      .combineWithParams([{ containerType: 'scalar' }, { containerType: 'vector' }] as const)
-      .combineWithParams([{ isAtomic: false }] as const)
-      .combineWithParams([{ baseType: 'u32' }] as const)
+      .combine('containerType', ['scalar', 'vector'] as const)
+      .combine('isAtomic', [false])
+      .combine('baseType', ['u32'] as const)
       .beginSubcases()
       .expandWithParams(generateTypes)
   )
@@ -257,7 +257,7 @@ Component-wise when T is a vector.
     );
   });
 
-g.test('abs_hex')
+g.test('abs_uint_hex')
   .uniqueId(0x59ff84968a839124)
   .desc(
     `
@@ -273,9 +273,9 @@ Component-wise when T is a vector.
       .combineWithParams([
         { storageClass: 'storage', storageMode: 'read_write', access: 'read' },
       ] as const)
-      .combineWithParams([{ containerType: 'scalar' }, { containerType: 'vector' }] as const)
-      .combineWithParams([{ isAtomic: false }] as const)
-      .combineWithParams([{ baseType: 'u32' }] as const)
+      .combine('containerType', ['scalar', 'vector'] as const)
+      .combine('isAtomic', [false])
+      .combine('baseType', ['u32'] as const)
       .beginSubcases()
       .expandWithParams(generateTypes)
   )
@@ -294,7 +294,6 @@ Component-wise when T is a vector.
         { input: 0xffffffff, expected: [0xffffffff] }, // -Inf f32
         { input: 0x477fe000, expected: [0x477fe000] }, // 65504 - largest positive f16
         { input: 0xc77fe000, expected: [0xc77fe000] }, // -65504 - largest negative f16
-        { input: 0x3380346c, expected: [0x3380346c] }, // 0.0000000597 - smallest positive f16
         { input: 0x3380346c, expected: [0x3380346c] }, // 0.0000000597 - smallest positive f16
       ]
     );

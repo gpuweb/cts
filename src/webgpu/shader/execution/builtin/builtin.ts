@@ -9,6 +9,8 @@ import {
 } from '../../../util/conversion.js';
 import { ScalarType } from '../../types.js';
 
+export const g = makeTestGroup(GPUTest);
+
 export enum OperandType {
   Float,
   Int,
@@ -18,12 +20,9 @@ export enum OperandType {
 
 export type Case = {
   input: number;
-  expected: number[];
+  expected: Array<number>;
 };
-
-export const g = makeTestGroup(GPUTest);
-
-type Cases = Case[];
+type Cases = Array<Case>;
 
 export function createInputBuffer(
   numberType: OperandType,
@@ -127,7 +126,7 @@ export function createBuiltinCall(
     for (let j = 0; j < arrayLength; j++) {
       const idx = i * 4 + j;
       const caseExpected: string[] = [];
-      cases[i].expected.forEach((e: number) => {
+      for (const e of cases[i].expected) {
         const expectedDataAsU32 = numberType === OperandType.Float ? float32ToUint32(e) : e;
         const expectedDataAsF32 = numberType === OperandType.Float ? e : uint32ToFloat32(e);
         const expectedDataAsI32 =
@@ -156,7 +155,7 @@ export function createBuiltinCall(
             break;
           }
         }
-      });
+      }
 
       switch (baseType) {
         case 'u32': {
