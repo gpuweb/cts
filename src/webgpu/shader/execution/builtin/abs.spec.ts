@@ -11,9 +11,16 @@ import { OperandType, runShaderTest } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('float')
+g.test('abs_float')
+  .uniqueId(0x1f3fc889e2b1727f)
   .desc(
-    `abs(e: T ) -> T, T is f32 or vecN<f32>
+    `
+https://www.w3.org/TR/2021/WD-WGSL-20210831#float-builtin-functions
+float abs:
+T is f32 or vecN<f32> abs(e: T ) -> T
+Returns the absolute value of e (e.g. e with a positive sign bit).
+Component-wise when T is a vector.
+(GLSLstd450Fabs)
 `
   )
   .params(u =>
@@ -93,8 +100,17 @@ g.test('float')
     );
   });
 
-g.test('int')
-  .desc(`abs(e: T ) -> T, T is i32 or vecN<i32>`)
+g.test('abs_int')
+  .uniqueId(0xfab878e682c16d42)
+  .desc(
+    `
+https://www.w3.org/TR/2021/WD-WGSL-20210831#integer-builtin-functions
+signed abs:
+T is i32 or vecN<i32> abs(e: T ) -> T The absolute value of e.
+Component-wise when T is a vector.
+If e evaluates to the largest negative value, then the result is e.
+`
+  )
   .params(u =>
     u
       .combineWithParams([
@@ -176,8 +192,17 @@ g.test('int')
     );
   });
 
-g.test('uint')
-  .desc(`abs(e: T ) -> T, T is u32 or vecN<u32>`)
+g.test('abs_uint')
+  .uniqueId(0x59ff84968a839124)
+  .desc(
+    `
+https://www.w3.org/TR/2021/WD-WGSL-20210831#integer-builtin-function
+scalar case, unsigned abs:
+T is u32 or vecN<u32> abs(e: T ) -> T Result is e.
+This is provided for symmetry with abs for signed integers.
+Component-wise when T is a vector.
+`
+  )
   .params(u =>
     u
       .combineWithParams([
@@ -232,8 +257,17 @@ g.test('uint')
     );
   });
 
-g.test('hex')
-  .desc(`abs(e: T ) -> T, T is u32 or vecN<u32>`)
+g.test('abs_hex')
+  .uniqueId(0x59ff84968a839124)
+  .desc(
+    `
+https://www.w3.org/TR/2021/WD-WGSL-20210831#integer-builtin-functions
+scalar case, unsigned abs:
+T is u32 or vecN<u32> abs(e: T ) -> T Result is e.
+This is provided for symmetry with abs for signed integers.
+Component-wise when T is a vector.
+`
+  )
   .params(u =>
     u
       .combineWithParams([
@@ -262,7 +296,6 @@ g.test('hex')
         { input: 0xc77fe000, expected: [0xc77fe000] }, // -65504 - largest negative f16
         { input: 0x3380346c, expected: [0x3380346c] }, // 0.0000000597 - smallest positive f16
         { input: 0x3380346c, expected: [0x3380346c] }, // 0.0000000597 - smallest positive f16
-        //   { input: NevativeInf, expected: [PositiveInf] }, // 0.0000000597 - smallest positive f16
       ]
     );
   });

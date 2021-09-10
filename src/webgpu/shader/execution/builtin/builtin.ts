@@ -28,7 +28,7 @@ type Cases = Case[];
 export function createInputBuffer(
   numberType: OperandType,
   cases: Cases,
-  arrayLength: number
+  length: number
 ): TypedArrayBufferView {
   let inputData: TypedArrayBufferView;
   switch (numberType) {
@@ -47,7 +47,7 @@ export function createInputBuffer(
     }
   }
   for (let i = 0; i < cases.length; i++) {
-    for (let j = 0; j < arrayLength; j++) {
+    for (let j = 0; j < length; j++) {
       inputData[i * 4 + j] = cases[i].input;
     }
   }
