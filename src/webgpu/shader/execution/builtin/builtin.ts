@@ -7,9 +7,9 @@ import {
   uint32ToFloat32,
   uint32ToInt32,
 } from '../../../util/conversion.js';
-import { TypeInfo } from '../../types.js';
+import { ScalarType } from '../../types.js';
 
-export enum NumberType {
+export enum OperandType {
   Float,
   Int,
   Uint,
@@ -26,28 +26,28 @@ export const g = makeTestGroup(GPUTest);
 type Cases = Case[];
 
 export function createInputBuffer(
-  numberType: NumberType,
+  numberType: OperandType,
   cases: Cases,
-  typeInfo: TypeInfo
+  arrayLength: number
 ): TypedArrayBufferView {
   let inputData: TypedArrayBufferView;
   switch (numberType) {
-    case NumberType.Float: {
+    case OperandType.Float: {
       inputData = new Float32Array(4 * cases.length);
       break;
     }
-    case NumberType.Hex:
-    case NumberType.Uint: {
+    case OperandType.Hex:
+    case OperandType.Uint: {
       inputData = new Uint32Array(4 * cases.length);
       break;
     }
-    case NumberType.Int: {
+    case OperandType.Int: {
       inputData = new Int32Array(4 * cases.length);
       break;
     }
   }
   for (let i = 0; i < cases.length; i++) {
-    for (let j = 0; j < typeInfo.arrayLength; j++) {
+    for (let j = 0; j < arrayLength; j++) {
       inputData[i * 4 + j] = cases[i].input;
     }
   }
@@ -94,17 +94,18 @@ export function submitComputeShader(
 }
 
 export function createBuiltinCall(
-  typeInfo: TypeInfo,
+  baseType: ScalarType,
+  arrayLength: number,
   builtin: string,
   outputDataAsF32: Float32Array,
   inputData: TypedArrayBufferView,
   cases: Cases,
-  numberType: NumberType
+  numberType: OperandType
 ): string[] {
   let inputDataAsF32: Float32Array;
   let inputDataAsU32: Uint32Array;
   let inputDataAsI32: Int32Array;
-  if (numberType === NumberType.Float) {
+  if (numberType === OperandType.Float) {
     inputDataAsF32 = inputData as Float32Array;
     inputDataAsU32 = new Uint32Array(inputData.buffer);
     inputDataAsI32 = new Int32Array(inputData.buffer);
@@ -123,16 +124,16 @@ export function createBuiltinCall(
     const output: string[] = [];
     const expected: string[] = [];
     let matched = true;
-    for (let j = 0; j < typeInfo.arrayLength; j++) {
+    for (let j = 0; j < arrayLength; j++) {
       const idx = i * 4 + j;
       const caseExpected: string[] = [];
       cases[i].expected.forEach((e: number) => {
-        const expectedDataAsU32 = numberType === NumberType.Float ? float32ToUint32(e) : e;
-        const expectedDataAsF32 = numberType === NumberType.Float ? e : uint32ToFloat32(e);
+        const expectedDataAsU32 = numberType === OperandType.Float ? float32ToUint32(e) : e;
+        const expectedDataAsF32 = numberType === OperandType.Float ? e : uint32ToFloat32(e);
         const expectedDataAsI32 =
-          numberType === NumberType.Float ? float32ToInt32(e) : uint32ToInt32(e);
+          numberType === OperandType.Float ? float32ToInt32(e) : uint32ToInt32(e);
 
-        switch (typeInfo.baseType) {
+        switch (baseType) {
           case 'u32': {
             caseExpected.push(expectedDataAsU32 + ' (0x' + expectedDataAsU32.toString(16) + ')');
             if (outputDataAsU32[idx] !== expectedDataAsU32) {
@@ -157,7 +158,7 @@ export function createBuiltinCall(
         }
       });
 
-      switch (typeInfo.baseType) {
+      switch (baseType) {
         case 'u32': {
           input.push(inputDataAsU32[idx] + ' (0x' + inputDataAsU32[idx].toString(16) + ')');
           output.push(outputDataAsU32[idx] + ' (0x' + outputDataAsU32[idx].toString(16) + ')');
@@ -183,11 +184,11 @@ export function createBuiltinCall(
       continue;
     }
 
-    if (typeInfo.arrayLength > 1) {
+    if (arrayLength > 1) {
       errs.push(
-        `${builtin}(${typeInfo.baseType}(${input.join(', ')}))\n` +
-          `    returned: ${typeInfo.baseType}(${output.join(', ')})\n` +
-          `    expected: ${typeInfo.baseType}(${expected.join(', ')})`
+        `${builtin}(${baseType}(${input.join(', ')}))\n` +
+          `    returned: ${baseType}(${output.join(', ')})\n` +
+          `    expected: ${baseType}(${expected.join(', ')})`
       );
     } else {
       errs.push(
@@ -199,4 +200,59 @@ export function createBuiltinCall(
   }
 
   return errs;
+}
+
+export function runShaderTest(
+  t: GPUTest,
+  storageClass: string,
+  storageMode: string,
+  baseType: ScalarType,
+  type: string,
+  arrayLength: number,
+  builtin: string,
+  numberType: OperandType,
+  cases: Cases
+): void {
+  const source = `
+  [[block]]
+  struct Data {
+    values : [[stride(16)]] array<${type}, ${cases.length}>;
+  };
+
+  [[group(0), binding(0)]] var<${storageClass}, ${storageMode}> inputs : Data;
+  [[group(0), binding(1)]] var<${storageClass}, write> outputs : Data;
+
+  [[stage(compute), workgroup_size(1)]]
+  fn main() {
+    for(var i = 0; i < ${cases.length}; i = i + 1) {
+        let input : ${type} = inputs.values[i];
+        let result : ${type} = ${builtin}(input);
+        outputs.values[i] = result;
+    }
+  }
+`;
+
+  const inputData = createInputBuffer(numberType, cases, arrayLength);
+  const outputBuffer = submitComputeShader(source, t, inputData);
+
+  const checkExpectation = (outputDataAsF32: Float32Array) => {
+    const errs = createBuiltinCall(
+      baseType,
+      arrayLength,
+      builtin,
+      outputDataAsF32,
+      inputData,
+      cases,
+      numberType
+    );
+    if (errs.length > 0) {
+      return new Error(errs.join('\n\n'));
+    }
+    return undefined;
+  };
+
+  t.expectGPUBufferValuesPassCheck(outputBuffer, checkExpectation, {
+    type: Float32Array,
+    typedLength: inputData.length,
+  });
 }
