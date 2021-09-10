@@ -1020,7 +1020,7 @@ g.test('copy_multisampled_color')
     `
   Validate the correctness of copyTextureToTexture() with multisampled color formats.
 
-  - Initialize the source texture in a render pass.
+  - Initialize the source texture with a triangle in a render pass.
   - Copy from the source texture into the destination texture with CopyTextureToTexture().
   - Compare every sub-pixel of source texture and destination texture in another render pass:
     - If they are different, then output RED; otherwise output GREEN
@@ -1118,7 +1118,7 @@ g.test('copy_multisampled_color')
           code: `
           [[stage(vertex)]]
           fn main([[builtin(vertex_index)]] VertexIndex : u32) -> [[builtin(position)]] vec4<f32> {
-            var pos : array<vec2<f32>, 6> = array<vec2<f32>, 6>(
+            var pos = array<vec2<f32>, 6>(
               vec2<f32>(-1.0,  1.0),
               vec2<f32>(-1.0, -1.0),
               vec2<f32>( 1.0,  1.0),
@@ -1136,16 +1136,15 @@ g.test('copy_multisampled_color')
           [[group(0), binding(0)]] var sourceTexture : texture_multisampled_2d<f32>;
           [[group(0), binding(1)]] var destinationTexture : texture_multisampled_2d<f32>;
           [[stage(fragment)]]
-          fn main() -> [[location(0)]] vec4<f32> {
-            for (var sampleIndex = 0; sampleIndex < 4; sampleIndex = sampleIndex + 1) {
+          fn main([[builtin(position)]] coord_in: vec4<f32>) -> [[location(0)]] vec4<f32> {
+            var coord_in_vec2 = vec2<i32>(i32(coord_in.x), i32(coord_in.y));
+            for (var sampleIndex = 0; sampleIndex < ${kSampleCount};
+              sampleIndex = sampleIndex + 1) {
               var sourceSubPixel : vec4<f32> =
-                textureLoad(sourceTexture, vec2<i32>(0, 0), sampleIndex);
+                textureLoad(sourceTexture, coord_in_vec2, sampleIndex);
               var destinationSubPixel : vec4<f32> =
-                textureLoad(destinationTexture, vec2<i32>(0, 0), sampleIndex);
-              if (sourceSubPixel.r != destinationSubPixel.r ||
-                sourceSubPixel.g != destinationSubPixel.g ||
-                sourceSubPixel.b != destinationSubPixel.b ||
-                sourceSubPixel.a != destinationSubPixel.a) {
+                textureLoad(destinationTexture, coord_in_vec2, sampleIndex);
+              if (!all(sourceSubPixel == destinationSubPixel)) {
                 return vec4<f32>(1.0, 0.0, 0.0, 1.0);
               }
             }
