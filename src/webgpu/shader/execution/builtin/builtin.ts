@@ -1,5 +1,5 @@
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { TypedArrayBufferView } from '../../../../common/util/util.js';
+import { TypedArrayBufferView, assert } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 import {
   float32ToInt32,
@@ -11,7 +11,7 @@ import { ScalarType } from '../../types.js';
 
 export const g = makeTestGroup(GPUTest);
 
-export enum OperandType {
+export enum NumberType {
   Float,
   Int,
   Uint,
@@ -21,33 +21,71 @@ export enum OperandType {
 export type Case = {
   input: number;
   expected: Array<number>;
+  numberType: NumberType;
 };
 type Cases = Array<Case>;
 
 export function createInputBuffer(
-  numberType: OperandType,
+  baseType: ScalarType,
   cases: Cases,
   length: number
 ): TypedArrayBufferView {
   let inputData: TypedArrayBufferView;
-  switch (numberType) {
-    case OperandType.Float: {
+  switch (baseType) {
+    case 'f32':
       inputData = new Float32Array(4 * cases.length);
       break;
-    }
-    case OperandType.Hex:
-    case OperandType.Uint: {
+    case 'u32':
       inputData = new Uint32Array(4 * cases.length);
       break;
-    }
-    case OperandType.Int: {
+    case 'i32':
       inputData = new Int32Array(4 * cases.length);
       break;
-    }
+    default:
+      assert(false, 'unimplemented input scalar type');
+      break;
   }
   for (let i = 0; i < cases.length; i++) {
     for (let j = 0; j < length; j++) {
-      inputData[i * 4 + j] = cases[i].input;
+      switch (cases[i].numberType) {
+        case NumberType.Hex:
+          switch (baseType) {
+            case 'f32':
+              inputData[i * 4 + j] = uint32ToFloat32(cases[i].input);
+              break;
+            case 'i32':
+              inputData[i * 4 + j] = uint32ToInt32(cases[i].input);
+              break;
+            case 'u32':
+              inputData[i * 4 + j] = cases[i].input;
+              break;
+            default:
+              assert(false, 'unimplemented input scalar type');
+              break;
+          }
+          break;
+        case NumberType.Uint:
+          assert(
+            baseType === 'u32',
+            "incompatible number type and baseType: 'Uint' and '" + baseType.toString()
+          );
+          inputData[i * 4 + j] = cases[i].input;
+          break;
+        case NumberType.Int:
+          assert(
+            baseType === 'i32',
+            "incompatible number type and baseType: 'Int' and '" + baseType.toString()
+          );
+          inputData[i * 4 + j] = cases[i].input;
+          break;
+        case NumberType.Float:
+          assert(
+            baseType === 'f32',
+            "incompatible number type and baseType: 'Float' and '" + baseType.toString()
+          );
+          inputData[i * 4 + j] = cases[i].input;
+          break;
+      }
     }
   }
   return inputData;
@@ -98,26 +136,32 @@ export function createBuiltinCall(
   builtin: string,
   outputDataAsF32: Float32Array,
   inputData: TypedArrayBufferView,
-  cases: Cases,
-  numberType: OperandType
+  cases: Cases
 ): string[] {
+  const errs: string[] = [];
   let inputDataAsF32: Float32Array;
   let inputDataAsU32: Uint32Array;
   let inputDataAsI32: Int32Array;
-  if (numberType === OperandType.Float) {
+  if (baseType === 'f32') {
     inputDataAsF32 = inputData as Float32Array;
+    inputDataAsI32 = new Int32Array(inputData.buffer);
     inputDataAsU32 = new Uint32Array(inputData.buffer);
-    inputDataAsI32 = new Int32Array(inputData.buffer);
-  } else {
+  } else if (baseType === 'i32') {
     inputDataAsF32 = new Float32Array(inputData.buffer);
-    inputDataAsU32 = inputData as Uint32Array;
+    inputDataAsI32 = inputData as Int32Array;
+    inputDataAsU32 = new Uint32Array(inputData.buffer);
+  } else if (baseType === 'u32') {
+    inputDataAsF32 = new Float32Array(inputData.buffer);
     inputDataAsI32 = new Int32Array(inputData.buffer);
+    inputDataAsU32 = inputData as Uint32Array;
+  } else {
+    errs.push('unimplemented baseType');
+    return errs;
   }
 
   const outputDataAsU32 = new Uint32Array(outputDataAsF32.buffer);
   const outputDataAsI32 = new Int32Array(outputDataAsF32.buffer);
 
-  const errs: string[] = [];
   for (let i = 0; i < cases.length; i++) {
     const input: string[] = [];
     const output: string[] = [];
@@ -126,11 +170,12 @@ export function createBuiltinCall(
     for (let j = 0; j < arrayLength; j++) {
       const idx = i * 4 + j;
       const caseExpected: string[] = [];
+      const c = cases[i];
       for (const e of cases[i].expected) {
-        const expectedDataAsU32 = numberType === OperandType.Float ? float32ToUint32(e) : e;
-        const expectedDataAsF32 = numberType === OperandType.Float ? e : uint32ToFloat32(e);
+        const expectedDataAsU32 = c.numberType === NumberType.Float ? float32ToUint32(e) : e;
+        const expectedDataAsF32 = c.numberType === NumberType.Float ? e : uint32ToFloat32(e);
         const expectedDataAsI32 =
-          numberType === OperandType.Float ? float32ToInt32(e) : uint32ToInt32(e);
+          c.numberType === NumberType.Float ? float32ToInt32(e) : uint32ToInt32(e);
 
         switch (baseType) {
           case 'u32': {
@@ -209,7 +254,6 @@ export function runShaderTest(
   type: string,
   arrayLength: number,
   builtin: string,
-  numberType: OperandType,
   cases: Cases
 ): void {
   const source = `
@@ -231,7 +275,7 @@ export function runShaderTest(
   }
 `;
 
-  const inputData = createInputBuffer(numberType, cases, arrayLength);
+  const inputData = createInputBuffer(baseType, cases, arrayLength);
   const outputBuffer = submitComputeShader(source, t, inputData);
 
   const checkExpectation = (outputDataAsF32: Float32Array) => {
@@ -241,8 +285,7 @@ export function runShaderTest(
       builtin,
       outputDataAsF32,
       inputData,
-      cases,
-      numberType
+      cases
     );
     if (errs.length > 0) {
       return new Error(errs.join('\n\n'));
@@ -255,3 +298,195 @@ export function runShaderTest(
     typedLength: inputData.length,
   });
 }
+
+export const kValue = {
+  // Values of power(2, n) n = {-31, ..., 31}
+  pow2: {
+    positive: {
+      toMinus1: 0x3f00_0000,
+      toMinus2: 0x3e80_0000,
+      toMinus3: 0x3e00_0000,
+      toMinus4: 0x3d800000,
+      toMinus5: 0x3d000000,
+      toMinus6: 0x3c800000,
+      toMinus7: 0x3c000000,
+      toMinus8: 0x3b800000,
+      toMinus9: 0x3b000000,
+      toMinus10: 0x3a800000,
+      toMinus11: 0x3a000000,
+      toMinus12: 0x39800000,
+      toMinus13: 0x39000000,
+      toMinus14: 0x38800000,
+      toMinus15: 0x38000000,
+      toMinus16: 0x37800000,
+      toMinus17: 0x37000000,
+      toMinus18: 0x36800000,
+      toMinus19: 0x36000000,
+      toMinus20: 0x35800000,
+      toMinus21: 0x35000000,
+      toMinus22: 0x34800000,
+      toMinus23: 0x34000000,
+      toMinus24: 0x33800000,
+      toMinus25: 0x33000000,
+      toMinus26: 0x32800000,
+      toMinus27: 0x32000000,
+      toMinus28: 0x31800000,
+      toMinus29: 0x31000000,
+      toMinus30: 0x30800000,
+      toMinus31: 0x30000000,
+
+      to0: 0x0000_0001,
+      to1: 0x0000_0002,
+      to2: 0x0000_0004,
+      to3: 0x0000_0008,
+      to4: 0x0000_0010,
+      to5: 0x0000_0020,
+      to6: 0x0000_0040,
+      to7: 0x0000_0080,
+      to8: 0x0000_0100,
+      to9: 0x0000_0200,
+      to10: 0x0000_0400,
+      to11: 0x0000_0800,
+      to12: 0x0000_1000,
+      to13: 0x0000_2000,
+      to14: 0x0000_4000,
+      to15: 0x0000_8000,
+      to16: 0x0001_0000,
+      to17: 0x0002_0000,
+      to18: 0x0004_0000,
+      to19: 0x0008_0000,
+      to20: 0x0010_0000,
+      to21: 0x0020_0000,
+      to22: 0x0040_0000,
+      to23: 0x0080_0000,
+      to24: 0x0100_0000,
+      to25: 0x0200_0000,
+      to26: 0x0400_0000,
+      to27: 0x0800_0000,
+      to28: 0x1000_0000,
+      to29: 0x2000_0000,
+      to30: 0x4000_0000,
+      to31: 0x8000_0000,
+    },
+
+    // Values of -1 * power(2, n) n = {-31, ..., 31}
+    negative: {
+      toMinus1: 0xbf000000,
+      toMinus2: 0xbe800000,
+      toMinus3: 0xbe000000,
+      toMinus4: 0xbd800000,
+      toMinus5: 0xbd000000,
+      toMinus6: 0xbc800000,
+      toMinus7: 0xbc000000,
+      toMinus8: 0xbb800000,
+      toMinus9: 0xbb000000,
+      toMinus10: 0xba800000,
+      toMinus11: 0xba000000,
+      toMinus12: 0xb9800000,
+      toMinus13: 0xb9000000,
+      toMinus14: 0xb8800000,
+      toMinus15: 0xb8000000,
+      toMinus16: 0xb7800000,
+      toMinus17: 0xb7000000,
+      toMinus18: 0xb6800000,
+      toMinus19: 0xb6000000,
+      toMinus20: 0xb5800000,
+      toMinus21: 0xb5000000,
+      toMinus22: 0xb4800000,
+      toMinus23: 0xb4000000,
+      toMinus24: 0xb3800000,
+      toMinus25: 0xb3000000,
+      toMinus26: 0xb2800000,
+      toMinus27: 0xb2000000,
+      toMinus28: 0xb1800000,
+      toMinus29: 0xb1000000,
+      toMinus30: 0xb0800000,
+      toMinus31: 0xb0000000,
+
+      to0: -1,
+      to1: -2,
+      to2: -4,
+      to3: -8,
+      to4: -16,
+      to5: -32,
+      to6: -64,
+      to7: -128,
+      to8: -256,
+      to9: -512,
+      to10: -1024,
+      to11: 0xffff_f800,
+      to12: 0xffff_f000,
+      to13: 0xffff_e000,
+      to14: 0xffff_c000,
+      to15: 0xffff_8000,
+      to16: 0xffff_0000,
+      to17: 0xfffe_0000,
+      to18: 0xfffc_0000,
+      to19: 0xfff8_0000,
+      to20: 0xfff0_0000,
+      to21: 0xffe0_0000,
+      to22: 0xffc0_0000,
+      to23: 0xff80_0000,
+      to24: 0xff00_0000,
+      to25: 0xfe00_0000,
+      to26: 0xfc00_0000,
+      to27: 0xf800_0000,
+      to28: 0xf000_0000,
+      to29: 0xe000_0000,
+      to30: 0xc000_0000,
+      to31: 0x8000_0000,
+    },
+  },
+
+  // Limits of signed 32 bit integer
+  i32: {
+    positive: {
+      min: 0x0000_0000, // 0
+      max: 0x7fff_ffff, // 2147483647
+    },
+    negative: {
+      min: 0x8000_0000, // -2147483648
+      max: 0x0000_0000, // 0
+    },
+  },
+
+  // Limits of unsigned 32 bit integer
+  u32: {
+    min: 0x0000_0000,
+    max: 0xffff_ffff,
+  },
+
+  // Limits of 32 bit float
+  f32: {
+    positive: {
+      min: 0x0080_0000,
+      max: 0x7f7f_ffff,
+      zero: 0x0000_0000,
+    },
+    negative: {
+      max: 0x8080_0000,
+      min: 0xff7f_ffff,
+      zero: 0x8000_0000,
+    },
+    subnormal: {
+      positive: {
+        min: 0x0000_0001,
+        max: 0x007f_ffff,
+      },
+    },
+    nan: {
+      negative: {
+        s: 0xff80_0001,
+        q: 0xffc0_0001,
+      },
+      positive: {
+        s: 0x7f80_0001,
+        q: 0x7fc0_0001,
+      },
+    },
+    infinity: {
+      positive: 0x7f80_0000,
+      negative: 0xff80_0000,
+    },
+  },
+} as const;
