@@ -1,8 +1,35 @@
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> 04d0408 (wgsl: Add section 16.3 test plan)
 <<<<<<< HEAD:src/webgpu/shader/execution/builtin/logical_built_in_functions.spec.ts
 export const description = `WGSL execution test. Section: Logical built-in functions`;
 =======
 export const description = `WGSL logical builtin functions execution test plan`;
 >>>>>>> a267bf1 (wgsl: Add section 16.3 test plan):src/webgpu/shader/execution/builtin/plan_logical_builtin_functions.spec.ts
+<<<<<<< HEAD
+=======
+=======
+=======
+>>>>>>> e10f565 (wgsl: Add section 16.3 test plan)
+<<<<<<< HEAD:src/webgpu/shader/execution/builtin/plan_logical_builtin_functions.spec.ts
+export const description = `WGSL logical builtin functions execution test plan`;
+=======
+export const description = `WGSL execution test. Section: Logical built-in functions`;
+>>>>>>> dbc13b1 (uniqueId argument to string. Update the test plans (#770)):src/webgpu/shader/execution/builtin/logical_built_in_functions.spec.ts
+<<<<<<< HEAD
+>>>>>>> 7b7f05a (uniqueId argument to string. Update the test plans (#770))
+=======
+=======
+<<<<<<< HEAD:src/webgpu/shader/execution/builtin/logical_built_in_functions.spec.ts
+export const description = `WGSL execution test. Section: Logical built-in functions`;
+=======
+export const description = `WGSL logical builtin functions execution test plan`;
+>>>>>>> a267bf1 (wgsl: Add section 16.3 test plan):src/webgpu/shader/execution/builtin/plan_logical_builtin_functions.spec.ts
+>>>>>>> eebc11d (wgsl: Add section 16.3 test plan)
+>>>>>>> e10f565 (wgsl: Add section 16.3 test plan)
+>>>>>>> 04d0408 (wgsl: Add section 16.3 test plan)
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
