@@ -99,7 +99,7 @@ Tests that resolve query set with invalid destinationOffset:
 - destinationOffset out of range
   `
   )
-  .paramsSubcasesOnly(u => u.combine('destinationOffset', [0, 8, 256, 512, 768]))
+  .paramsSubcasesOnly(u => u.combine('destinationOffset', [0, 128, 256, 384, 512, 768]))
   .fn(async t => {
     const { destinationOffset } = t.params;
     const querySet = t.device.createQuerySet({ type: 'occlusion', count: kQueryCount });
