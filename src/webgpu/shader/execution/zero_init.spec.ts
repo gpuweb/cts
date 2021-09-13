@@ -226,7 +226,7 @@ g.test('compute,zero_init')
         }
       })
   )
-  .batch(25)
+  .batch(15)
   .fn(async t => {
     let moduleScope = `
       [[block]] struct Output {
