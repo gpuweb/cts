@@ -1137,8 +1137,7 @@ g.test('copy_multisampled_color')
           [[group(0), binding(1)]] var destinationTexture : texture_multisampled_2d<f32>;
           [[stage(fragment)]]
           fn main([[builtin(position)]] coord_in: vec4<f32>) -> [[location(0)]] vec4<f32> {
-            var coord_in_vec2 =
-              vec2<i32>(i32(coord_in.x) * ${textureSize[0]}, i32(coord_in.y) * ${textureSize[1]});
+            var coord_in_vec2 = vec2<i32>(i32(coord_in.x), i32(coord_in.y));
             for (var sampleIndex = 0; sampleIndex < ${kSampleCount};
               sampleIndex = sampleIndex + 1) {
               var sourceSubPixel : vec4<f32> =
