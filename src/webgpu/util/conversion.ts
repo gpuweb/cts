@@ -222,3 +222,87 @@ export function uint32ToInt32(u32: number): number {
   const i32Arr = new Int32Array(u32Arr.buffer);
   return i32Arr[0];
 }
+
+type NumberType =
+  | 'f64'
+  | 'f32'
+  | 'f16'
+  | 'u64'
+  | 'u32'
+  | 'u16'
+  | 'u8'
+  | 'i64'
+  | 'i32'
+  | 'i16'
+  | 'i8';
+
+type NumberReprValue<T extends NumberType> = T extends 'u64' | 'i64' ? bigint : number;
+type NumberReprBits<T extends NumberType> = T extends 'u64' | 'i64' | 'f64'
+  ? BigUint64Array
+  : T extends 'u32' | 'i32' | 'f32'
+  ? Uint32Array
+  : T extends 'u16' | 'i16' | 'f16'
+  ? Uint16Array
+  : Uint8Array;
+
+export class NumberRepr<T extends NumberType> {
+  readonly value: NumberReprValue<T>;
+  readonly bits: NumberReprBits<T>;
+
+  private constructor(value: NumberReprValue<T>, bits: NumberReprBits<T>) {
+    this.value = value;
+    this.bits = bits;
+  }
+
+  static fromF64(value: number) {
+    return new NumberRepr<'f64'>(value, new BigUint64Array(new Float64Array([value]).buffer));
+  }
+  static fromF32(value: number) {
+    return new NumberRepr<'f32'>(value, new Uint32Array(new Float32Array([value]).buffer));
+  }
+
+  static fromF64Bits(bits: bigint) {
+    const abv = new BigUint64Array([bits]);
+    return new NumberRepr<'f64'>(new Float64Array(abv.buffer)[0], abv);
+  }
+  static fromF32Bits(bits: number) {
+    const abv = new Uint32Array([bits]);
+    return new NumberRepr<'f32'>(new Float32Array(abv.buffer)[0], abv);
+  }
+  static fromF16Bits(bits: number) {
+    return new NumberRepr<'f16'>(float16BitsToFloat32(bits), new Uint16Array(bits));
+  }
+
+  static fromI32(value: number) {
+    return new NumberRepr<'i32'>(value, new Uint32Array(new Int32Array([value]).buffer));
+  }
+  static fromI16(value: number) {
+    return new NumberRepr<'i16'>(value, new Uint16Array(new Int16Array([value]).buffer));
+  }
+  static fromI8(value: number) {
+    return new NumberRepr<'i8'>(value, new Uint8Array(new Int8Array([value]).buffer));
+  }
+
+  static fromI32Bits(bits: number) {
+    const abv = new Uint32Array([bits]);
+    return new NumberRepr<'i32'>(new Int32Array(abv.buffer)[0], abv);
+  }
+  static fromI16Bits(bits: number) {
+    const abv = new Uint16Array([bits]);
+    return new NumberRepr<'i16'>(new Int16Array(abv.buffer)[0], abv);
+  }
+  static fromI8Bits(bits: number) {
+    const abv = new Uint8Array([bits]);
+    return new NumberRepr<'i8'>(new Int8Array(abv.buffer)[0], abv);
+  }
+
+  static fromU32(value: number) {
+    return new NumberRepr<'u32'>(value, new Uint32Array(value));
+  }
+  static fromU16(value: number) {
+    return new NumberRepr<'u16'>(value, new Uint16Array(value));
+  }
+  static fromU8(value: number) {
+    return new NumberRepr<'u8'>(value, new Uint8Array(value));
+  }
+}
