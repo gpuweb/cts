@@ -1136,6 +1136,13 @@ export const listing = [
   {
     "file": [
       "shader",
+      "execution",
+      "zero_init"
+    ]
+  },
+  {
+    "file": [
+      "shader",
       "regression"
     ],
     "readme": "One-off tests that reproduce shader bugs found in implementations to prevent the bugs from\nappearing again."

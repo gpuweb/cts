@@ -43,6 +43,8 @@ export const kMatrixContainerTypeInfo = {
 /** List of all matNxN<> container types. */
 export const kMatrixContainerTypes = keysOf(kMatrixContainerTypeInfo);
 
+
+
 /**
                                                                         * Generate a bunch types (vec, mat, sized/unsized array) for testing.
                                                                         */
