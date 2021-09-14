@@ -127,9 +127,11 @@ g.test('compute,zero_init')
                     // vec2<u32>, vec3<i32>, and vec4<f32>
                     if (p._containerDepth > 0) {
                       if (
-                        (vectorType !== 'vec2' || scalarType !== 'u32') &&
-                        (vectorType !== 'vec3' || scalarType !== 'i32') &&
-                        (vectorType !== 'vec4' || scalarType !== 'f32')
+                        !(
+                          (vectorType === 'vec2' && scalarType === 'u32') ||
+                          (vectorType === 'vec3' && scalarType === 'i32') ||
+                          (vectorType === 'vec4' && scalarType === 'f32')
+                        )
                       ) {
                         continue;
                       }
