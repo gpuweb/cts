@@ -43,6 +43,8 @@ export const kMatrixContainerTypeInfo = /* prettier-ignore */ {
 /** List of all matNxN<> container types. */
 export const kMatrixContainerTypes = keysOf(kMatrixContainerTypeInfo);
 
+export type StorageClass = 'storage' | 'uniform' | 'private' | 'function' | 'workgroup';
+
 /**
  * Generate a bunch types (vec, mat, sized/unsized array) for testing.
  */
@@ -52,7 +54,7 @@ export function* generateTypes({
   containerType,
   isAtomic = false,
 }: {
-  storageClass: string;
+  storageClass: StorageClass;
   /** Base scalar type (i32/u32/f32/bool). */
   baseType: ScalarType;
   /** Container type (scalar/vector/matrix/array) */
