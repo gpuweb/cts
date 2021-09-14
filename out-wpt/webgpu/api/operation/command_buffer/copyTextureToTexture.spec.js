@@ -1053,3 +1053,201 @@ g.test('copy_depth_stencil')
       );
     }
   });
+
+g.test('copy_multisampled_color')
+  .desc(
+    `
+  Validate the correctness of copyTextureToTexture() with multisampled color formats.
+
+  - Initialize the source texture with a triangle in a render pass.
+  - Copy from the source texture into the destination texture with CopyTextureToTexture().
+  - Compare every sub-pixel of source texture and destination texture in another render pass:
+    - If they are different, then output RED; otherwise output GREEN
+  - Verify the pixels in the output texture are all GREEN.
+  - Note that in current WebGPU SPEC the mipmap level count and array layer count of a multisampled
+    texture can only be 1.
+  `
+  )
+  .fn(async t => {
+    const textureSize = [32, 16, 1];
+    const kColorFormat = 'rgba8unorm';
+    const kSampleCount = 4;
+
+    const sourceTexture = t.device.createTexture({
+      format: kColorFormat,
+      size: textureSize,
+      usage:
+        GPUTextureUsage.COPY_SRC |
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.RENDER_ATTACHMENT,
+      sampleCount: kSampleCount,
+    });
+
+    const destinationTexture = t.device.createTexture({
+      format: kColorFormat,
+      size: textureSize,
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+      sampleCount: kSampleCount,
+    });
+
+    // Initialize sourceTexture with a draw call.
+    const renderPipelineForInit = t.device.createRenderPipeline({
+      vertex: {
+        module: t.device.createShaderModule({
+          code: `
+            [[stage(vertex)]]
+            fn main([[builtin(vertex_index)]] VertexIndex : u32) -> [[builtin(position)]] vec4<f32> {
+              var pos = array<vec2<f32>, 3>(
+                  vec2<f32>(-1.0,  1.0),
+                  vec2<f32>( 1.0,  1.0),
+                  vec2<f32>( 1.0, -1.0)
+              );
+              return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
+            }`,
+        }),
+
+        entryPoint: 'main',
+      },
+
+      fragment: {
+        module: t.device.createShaderModule({
+          code: `
+            [[stage(fragment)]]
+            fn main() -> [[location(0)]] vec4<f32> {
+              return vec4<f32>(0.3, 0.5, 0.8, 1.0);
+            }`,
+        }),
+
+        entryPoint: 'main',
+        targets: [{ format: kColorFormat }],
+      },
+
+      multisample: {
+        count: kSampleCount,
+      },
+    });
+
+    const initEncoder = t.device.createCommandEncoder();
+    const renderPassForInit = initEncoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: sourceTexture.createView(),
+          loadValue: [1.0, 0.0, 0.0, 1.0],
+          storeOp: 'store',
+        },
+      ],
+    });
+
+    renderPassForInit.setPipeline(renderPipelineForInit);
+    renderPassForInit.draw(3);
+    renderPassForInit.endPass();
+    t.queue.submit([initEncoder.finish()]);
+
+    // Do the texture-to-texture copy
+    const copyEncoder = t.device.createCommandEncoder();
+    copyEncoder.copyTextureToTexture(
+      {
+        texture: sourceTexture,
+      },
+
+      {
+        texture: destinationTexture,
+      },
+
+      textureSize
+    );
+
+    t.queue.submit([copyEncoder.finish()]);
+
+    // Verify if all the sub-pixel values at the same location of sourceTexture and
+    // destinationTextureare equal.
+    const renderPipelineForValidation = t.device.createRenderPipeline({
+      vertex: {
+        module: t.device.createShaderModule({
+          code: `
+          [[stage(vertex)]]
+          fn main([[builtin(vertex_index)]] VertexIndex : u32) -> [[builtin(position)]] vec4<f32> {
+            var pos = array<vec2<f32>, 6>(
+              vec2<f32>(-1.0,  1.0),
+              vec2<f32>(-1.0, -1.0),
+              vec2<f32>( 1.0,  1.0),
+              vec2<f32>(-1.0, -1.0),
+              vec2<f32>( 1.0,  1.0),
+              vec2<f32>( 1.0, -1.0));
+            return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
+          }`,
+        }),
+
+        entryPoint: 'main',
+      },
+
+      fragment: {
+        module: t.device.createShaderModule({
+          code: `
+          [[group(0), binding(0)]] var sourceTexture : texture_multisampled_2d<f32>;
+          [[group(0), binding(1)]] var destinationTexture : texture_multisampled_2d<f32>;
+          [[stage(fragment)]]
+          fn main([[builtin(position)]] coord_in: vec4<f32>) -> [[location(0)]] vec4<f32> {
+            var coord_in_vec2 = vec2<i32>(i32(coord_in.x), i32(coord_in.y));
+            for (var sampleIndex = 0; sampleIndex < ${kSampleCount};
+              sampleIndex = sampleIndex + 1) {
+              var sourceSubPixel : vec4<f32> =
+                textureLoad(sourceTexture, coord_in_vec2, sampleIndex);
+              var destinationSubPixel : vec4<f32> =
+                textureLoad(destinationTexture, coord_in_vec2, sampleIndex);
+              if (!all(sourceSubPixel == destinationSubPixel)) {
+                return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+              }
+            }
+            return vec4<f32>(0.0, 1.0, 0.0, 1.0);
+          }`,
+        }),
+
+        entryPoint: 'main',
+        targets: [{ format: kColorFormat }],
+      },
+    });
+
+    const bindGroup = t.device.createBindGroup({
+      layout: renderPipelineForValidation.getBindGroupLayout(0),
+      entries: [
+        {
+          binding: 0,
+          resource: sourceTexture.createView(),
+        },
+
+        {
+          binding: 1,
+          resource: destinationTexture.createView(),
+        },
+      ],
+    });
+
+    const expectedOutputTexture = t.device.createTexture({
+      format: kColorFormat,
+      size: textureSize,
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    const validationEncoder = t.device.createCommandEncoder();
+    const renderPassForValidation = validationEncoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: expectedOutputTexture.createView(),
+          loadValue: [1.0, 0.0, 0.0, 1.0],
+          storeOp: 'store',
+        },
+      ],
+    });
+
+    renderPassForValidation.setPipeline(renderPipelineForValidation);
+    renderPassForValidation.setBindGroup(0, bindGroup);
+    renderPassForValidation.draw(6);
+    renderPassForValidation.endPass();
+    t.queue.submit([validationEncoder.finish()]);
+
+    t.expectSingleColor(expectedOutputTexture, 'rgba8unorm', {
+      size: [textureSize[0], textureSize[1], textureSize[2]],
+      exp: { R: 0.0, G: 1.0, B: 0.0, A: 1.0 },
+    });
+  });
