@@ -91,6 +91,40 @@ export class ImageCopyTest extends ValidationTest {
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
   }
+
+  testBuffer(
+    buffer,
+    texture,
+    textureDataLayout,
+    size,
+    { method, dataSize, success, submit = true }
+  ) {
+    switch (method) {
+      case 'WriteTexture': {
+        const data = new Uint8Array(dataSize);
+
+        this.expectValidationError(() => {
+          this.device.queue.writeTexture({ texture }, data, textureDataLayout, size);
+        }, !success);
+
+        break;
+      }
+      case 'CopyB2T': {
+        const { encoder, validateFinishAndSubmit } = this.createEncoder('non-pass');
+        encoder.copyBufferToTexture({ buffer, ...textureDataLayout }, { texture }, size);
+        validateFinishAndSubmit(success, submit);
+
+        break;
+      }
+      case 'CopyT2B': {
+        const { encoder, validateFinishAndSubmit } = this.createEncoder('non-pass');
+        encoder.copyTextureToBuffer({ texture }, { buffer, ...textureDataLayout }, size);
+        validateFinishAndSubmit(success, submit);
+
+        break;
+      }
+    }
+  }
 }
 
 // For testing divisibility by a number we test all the values returned by this function:
