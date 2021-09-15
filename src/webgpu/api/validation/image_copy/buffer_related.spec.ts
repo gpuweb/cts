@@ -104,12 +104,14 @@ g.test('bytes_per_row_alignment')
       .beginSubcases()
       .combine('bytesPerRow', [undefined, 0, 1, 255, 256, 257, 512])
       .combine('copyHeightInBlocks', [0, 1, 2, 3])
-      // If copyHeightInBlocks is 0, the format cannot be a depth/stencil format. Because depth/stencil copy must copy the whole subresource but copied subresource's height can never be 0.
-      .filter(
-        ({ format, copyHeightInBlocks }) =>
-          copyHeightInBlocks !== 0 ||
-          (!kTextureFormatInfo[format].depth && !kTextureFormatInfo[format].stencil)
-      )
+      .expand('_textureHeightInBlocks', p => [
+        p.copyHeightInBlocks === 0 ? 1 : p.copyHeightInBlocks,
+      ])
+      // Depth/stencil format copies must copy the whole subresource.
+      .unless(p => {
+        const info = kTextureFormatInfo[p.format];
+        return (info.depth || info.stencil) && p.copyHeightInBlocks !== p._textureHeightInBlocks;
+      })
       // bytesPerRow must be specified and it must be equal or greater than the bytes size of each row if we are copying multiple rows.
       // Note that we are copying one single block on each row in this test.
       .filter(
@@ -119,7 +121,14 @@ g.test('bytes_per_row_alignment')
       )
   )
   .fn(async t => {
-    const { method, dimension, format, bytesPerRow, copyHeightInBlocks } = t.params;
+    const {
+      method,
+      dimension,
+      format,
+      bytesPerRow,
+      copyHeightInBlocks,
+      _textureHeightInBlocks,
+    } = t.params;
 
     const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
@@ -137,8 +146,7 @@ g.test('bytes_per_row_alignment')
     // If bytesPerRow > 0 and it is a multiple of 256, it will succeeed if other parameters are valid.
     if (bytesPerRow !== undefined && bytesPerRow > 0 && bytesPerRow % 256 === 0) success = true;
 
-    const copyHeight = copyHeightInBlocks * info.blockHeight;
-    const size = [info.blockWidth, copyHeight === 0 ? info.blockHeight : copyHeight, 1];
+    const size = [info.blockWidth, _textureHeightInBlocks * info.blockHeight, 1];
     const texture = t.device.createTexture({
       size,
       dimension,
@@ -146,7 +154,7 @@ g.test('bytes_per_row_alignment')
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
 
-    const copySize = [info.blockWidth, copyHeight, 1];
+    const copySize = [info.blockWidth, copyHeightInBlocks * info.blockHeight, 1];
 
     t.testBuffer(buffer, texture, { bytesPerRow }, copySize, {
       dataSize: 512 * 8 * 16,
