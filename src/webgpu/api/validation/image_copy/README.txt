@@ -3,7 +3,7 @@ writeTexture + copyBufferToTexture + copyTextureToBuffer validation tests.
 Test coverage:
 * resource usages:
 	- texture_usage_must_be_valid: for GPUTextureUsage::COPY_SRC, GPUTextureUsage::COPY_DST flags.
-	- TODO: buffer_usage_must_be_valid
+	- buffer_usage_must_be_valid: for GPUBufferUsage::COPY_SRC, GPUBufferUsage::COPY_DST flags.
 
 * textureCopyView:
 	- texture_must_be_valid: for valid, destroyed, error textures.

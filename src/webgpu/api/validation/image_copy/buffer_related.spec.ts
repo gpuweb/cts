@@ -103,26 +103,23 @@ g.test('bytes_per_row_alignment')
       .filter(formatCopyableWithMethod)
       .beginSubcases()
       .combine('bytesPerRow', [undefined, 0, 1, 255, 256, 257, 512])
-      .combine('copyHeight', [0, 1, 2, 4, 8])
-      // copyHeight has some constraints:
-      //   - it must be aligned with blockHeight.
-      //   - if it is 0, the format cannot be a depth/stencil format. Because it must be a full copy if the format is a depth/stencil format but copied subresource's height can never be 0.
+      .combine('copyHeightInBlocks', [0, 1, 2, 3])
+      // If copyHeightInBlocks is 0, the format cannot be a depth/stencil format. Because depth/stencil copy must copy the whole subresource but copied subresource's height can never be 0.
       .filter(
-        ({ format, copyHeight }) =>
-          copyHeight % kTextureFormatInfo[format].blockHeight === 0 &&
-          (copyHeight !== 0 ||
-            (!kTextureFormatInfo[format].depth && !kTextureFormatInfo[format].stencil))
+        ({ format, copyHeightInBlocks }) =>
+          copyHeightInBlocks !== 0 ||
+          (!kTextureFormatInfo[format].depth && !kTextureFormatInfo[format].stencil)
       )
       // bytesPerRow must be specified and it must be equal or greater than the bytes size of each row if we are copying multiple rows.
       // Note that we are copying one single block on each row in this test.
       .filter(
-        ({ format, bytesPerRow, copyHeight }) =>
-          (bytesPerRow === undefined && copyHeight / kTextureFormatInfo[format].blockHeight <= 1) ||
+        ({ format, bytesPerRow, copyHeightInBlocks }) =>
+          (bytesPerRow === undefined && copyHeightInBlocks <= 1) ||
           (bytesPerRow !== undefined && bytesPerRow >= kTextureFormatInfo[format].bytesPerBlock)
       )
   )
   .fn(async t => {
-    const { method, dimension, format, bytesPerRow, copyHeight } = t.params;
+    const { method, dimension, format, bytesPerRow, copyHeightInBlocks } = t.params;
 
     const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
@@ -136,10 +133,11 @@ g.test('bytes_per_row_alignment')
     // writeTexture doesn't require bytesPerRow to be 256-byte aligned.
     if (method === 'WriteTexture') success = true;
     // If the copy height <= 1, bytesPerRow is not required.
-    if (copyHeight / info.blockHeight <= 1 && bytesPerRow === undefined) success = true;
+    if (copyHeightInBlocks <= 1 && bytesPerRow === undefined) success = true;
     // If bytesPerRow > 0 and it is a multiple of 256, it will succeeed if other parameters are valid.
     if (bytesPerRow !== undefined && bytesPerRow > 0 && bytesPerRow % 256 === 0) success = true;
 
+    const copyHeight = copyHeightInBlocks * info.blockHeight;
     const size = [info.blockWidth, copyHeight === 0 ? info.blockHeight : copyHeight, 1];
     const texture = t.device.createTexture({
       size,
