@@ -13,7 +13,7 @@ export class ShaderValidationTest extends GPUTest {
    * t.expectCompileResult(true, `wgsl code`); // Expect success
    * t.expectCompileResult(false, `wgsl code`); // Expect validation error with any error string
    * ```
-   *
+   * foobar
    */
   expectCompileResult(expectedResult: boolean | string, code: string) {
     let shaderModule: GPUShaderModule;
