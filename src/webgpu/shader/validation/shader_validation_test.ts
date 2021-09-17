@@ -14,7 +14,7 @@ export class ShaderValidationTest extends GPUTest {
    * t.expectCompileResult(false, `wgsl code`); // Expect validation error with any error string
    * ```
    */
-  expectCompileResult(expectedResult: boolean | string, code: string) {
+  expectCompileResult(expectedResult: boolean, code: string) {
     let shaderModule: GPUShaderModule;
     this.expectGPUError(
       'validation',
