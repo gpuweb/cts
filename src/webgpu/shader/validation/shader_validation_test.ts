@@ -15,7 +15,7 @@ export class ShaderValidationTest extends GPUTest {
    * ```
    * foobar
    */
-  expectCompileResult(expectedResult: boolean | string, code: string) {
+  expectCompileResult(expectedResult: boolean, code: string) {
     let shaderModule: GPUShaderModule;
     this.expectGPUError(
       'validation',
