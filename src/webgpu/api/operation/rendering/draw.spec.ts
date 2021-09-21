@@ -52,12 +52,16 @@ Params:
       .combine('first_instance', [0, 2] as const)
       .combine('instance_count', [0, 1, 4] as const)
       .combine('indexed', [false, true])
+      .combine('indirect', [false, true])
       .combine('vertex_buffer_offset', [0, 32] as const)
-      .expand('indirect', p => (p.first_instance > 0 ? [false] : [false, true]))
       .expand('index_buffer_offset', p => (p.indexed ? ([0, 16] as const) : [undefined]))
       .expand('base_vertex', p => (p.indexed ? ([0, 9] as const) : [undefined]))
   )
-  .fn(t => {
+  .fn(async t => {
+    if (t.params.first_instance > 0 && t.params.indirect) {
+      await t.selectDeviceOrSkipTestCase('indirect-first-instance');
+    }
+
     const renderTargetSize = [72, 36];
 
     // The test will split up the render target into a grid where triangles of
