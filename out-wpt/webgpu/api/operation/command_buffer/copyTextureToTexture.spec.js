@@ -330,7 +330,11 @@ class F extends GPUTest {
         entryPoint: 'main',
       },
 
-      fragment: {
+      depthStencil,
+    };
+
+    if (hasColorAttachment) {
+      renderPipelineDescriptor.fragment = {
         module: this.device.createShaderModule({
           code: `
             [[stage(fragment)]]
@@ -340,15 +344,8 @@ class F extends GPUTest {
         }),
 
         entryPoint: 'main',
-        targets: [],
-      },
-
-      depthStencil,
-    };
-
-    if (hasColorAttachment) {
-      assert(renderPipelineDescriptor.fragment !== undefined);
-      renderPipelineDescriptor.fragment.targets = [{ format: 'rgba8unorm' }];
+        targets: [{ format: 'rgba8unorm' }],
+      };
     }
     return this.device.createRenderPipeline(renderPipelineDescriptor);
   }
@@ -402,7 +399,6 @@ class F extends GPUTest {
   InitializeDepthAspect(sourceTexture, depthFormat, srcCopyLevel, srcCopyBaseArrayLayer, copySize) {
     // Prepare a renderPipeline with depthCompareFunction == 'always' and depthWriteEnabled == true
     // for the initializations of the depth attachment.
-    // TODO: remove the fragment stage when the browsers support null fragment stage.
     const bindGroupLayout = this.GetBindGroupLayoutForT2TCopyWithDepthTests();
     const renderPipeline = this.GetRenderPipelineForT2TCopyWithDepthTests(bindGroupLayout, false, {
       format: depthFormat,
