@@ -84,6 +84,24 @@ module.exports = function (grunt) {
           '--copy-files'
         ],
       },
+      'copy-shaders': {
+        cmd: 'node',
+        args: [
+          'node_modules/@babel/cli/bin/babel',
+          'src/webgpu/shader/validation/wgsl',
+          '--out-dir=out/webgpu/shader/validation/wgsl',
+          '--copy-files'
+        ],
+      },
+      'copy-shaders-wpt': {
+        cmd: 'node',
+        args: [
+          'node_modules/@babel/cli/bin/babel',
+          'src/webgpu/shader/validation/wgsl',
+          '--out-dir=out-wpt/webgpu/shader/validation/wgsl',
+          '--copy-files'
+        ],
+      },
       lint: {
         cmd: 'node',
         args: ['node_modules/eslint/bin/eslint', 'src/**/*.ts', '--max-warnings=0'],
@@ -158,12 +176,14 @@ module.exports = function (grunt) {
   grunt.registerTask('build-standalone', 'Build out/ (no checks, no WPT)', [
     'run:build-out',
     'run:copy-assets',
+    'run:copy-shaders',
     'run:generate-version',
     'run:generate-listings',
   ]);
   grunt.registerTask('build-wpt', 'Build out/ (no checks)', [
     'run:build-out-wpt',
     'run:copy-assets-wpt',
+    'run:copy-shaders-wpt',
     'run:autoformat-out-wpt',
     'run:generate-version',
     'run:generate-listings',
