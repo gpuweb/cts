@@ -231,12 +231,13 @@ export class ValidationTest extends GPUTest {
   }
 
   /** Return an arbitrarily-configured GPUTexture with the `RENDER_ATTACHMENT` usage. */
-  getRenderTexture() {
+  getRenderTexture(sampleCount = 1) {
     return this.trackForCleanup(
     this.device.createTexture({
       size: { width: 16, height: 16, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
-      usage: GPUTextureUsage.RENDER_ATTACHMENT }));
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      sampleCount }));
 
 
   }
@@ -306,28 +307,37 @@ export class ValidationTest extends GPUTest {
 
   }
 
-  /**
-     * Return an arbitrarily-configured GPUTexture with the `SAMPLED` usage from mismatched device.
-     */
+  /** Return a GPUTexture with descriptor from mismatched device. */
+  getDeviceMismatchedTexture(descriptor) {
+    return this.trackForCleanup(this.mismatchedDevice.createTexture(descriptor));
+  }
+
+  /** Return an arbitrarily-configured GPUTexture with the `SAMPLED` usage from mismatched device. */
   getDeviceMismatchedSampledTexture(sampleCount = 1) {
-    return this.trackForCleanup(
-    this.mismatchedDevice.createTexture({
+    return this.getDeviceMismatchedTexture({
       size: { width: 4, height: 4, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
       usage: GPUTextureUsage.TEXTURE_BINDING,
-      sampleCount }));
-
+      sampleCount });
 
   }
 
   /** Return an arbitrarily-configured GPUTexture with the `STORAGE` usage from mismatched device. */
   getDeviceMismatchedStorageTexture() {
-    return this.trackForCleanup(
-    this.mismatchedDevice.createTexture({
+    return this.getDeviceMismatchedTexture({
       size: { width: 4, height: 4, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
-      usage: GPUTextureUsage.STORAGE_BINDING }));
+      usage: GPUTextureUsage.STORAGE_BINDING });
 
+  }
+
+  /** Return an arbitrarily-configured GPUTexture with the `RENDER_ATTACHMENT` usage from mismatched device. */
+  getDeviceMismatchedRenderTexture(sampleCount = 1) {
+    return this.getDeviceMismatchedTexture({
+      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      sampleCount });
 
   }
 
