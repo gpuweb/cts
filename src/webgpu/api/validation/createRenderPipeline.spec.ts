@@ -382,7 +382,7 @@ g.test('pipeline_layout,device_mismatch')
 
     const layoutDescriptor = { bindGroupLayouts: [] };
     const layout = mismatched
-      ? t.getDeviceMismatchedPipelineLayout(layoutDescriptor)
+      ? t.mismatchedDevice.createPipelineLayout(layoutDescriptor)
       : t.device.createPipelineLayout(layoutDescriptor);
 
     const descriptor = {
@@ -434,13 +434,13 @@ g.test('shader_module,device_mismatch')
     const descriptor = {
       vertex: {
         module: vertex_mismatched
-          ? t.getDeviceMismatchedShaderModule({ code })
+          ? t.mismatchedDevice.createShaderModule({ code })
           : t.device.createShaderModule({ code }),
         entryPoint: 'main',
       },
       fragment: {
         module: fragment_mismatched
-          ? t.getDeviceMismatchedShaderModule({ code: t.getFragmentShaderCode('float', 4) })
+          ? t.mismatchedDevice.createShaderModule({ code: t.getFragmentShaderCode('float', 4) })
           : t.device.createShaderModule({ code: t.getFragmentShaderCode('float', 4) }),
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }] as const,

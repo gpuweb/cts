@@ -38,11 +38,11 @@ g.test('render_bundles,device_mismatch')
     };
 
     const bundle0Encoder = mismatched
-      ? t.getDeviceMismatchedRenderBundle(descriptor)
+      ? t.mismatchedDevice.createRenderBundleEncoder(descriptor)
       : t.device.createRenderBundleEncoder(descriptor);
     const bundle0 = bundle0Encoder.finish();
     const bundle1Encoder = mismatched
-      ? t.getDeviceMismatchedRenderBundle(descriptor)
+      ? t.mismatchedDevice.createRenderBundleEncoder(descriptor)
       : t.device.createRenderBundleEncoder(descriptor);
     const bundle1 = bundle1Encoder.finish();
 

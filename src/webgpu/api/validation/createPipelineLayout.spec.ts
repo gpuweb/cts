@@ -131,10 +131,10 @@ g.test('bind_group_layouts,device_mismatch')
     };
 
     const layout0 = layout0Mismatched
-      ? t.getDeviceMismatchedBindGroupLayout(bglDescriptor)
+      ? t.mismatchedDevice.createBindGroupLayout(bglDescriptor)
       : t.device.createBindGroupLayout(bglDescriptor);
     const layout1 = layout1Mismatched
-      ? t.getDeviceMismatchedBindGroupLayout(bglDescriptor)
+      ? t.mismatchedDevice.createBindGroupLayout(bglDescriptor)
       : t.device.createBindGroupLayout(bglDescriptor);
 
     t.expectValidationError(() => {

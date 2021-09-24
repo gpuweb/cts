@@ -185,7 +185,7 @@ g.test('pipeline_layout,device_mismatch')
 
     const layoutDescriptor = { bindGroupLayouts: [] };
     const layout = mismatched
-      ? t.getDeviceMismatchedPipelineLayout(layoutDescriptor)
+      ? t.mismatchedDevice.createPipelineLayout(layoutDescriptor)
       : t.device.createPipelineLayout(layoutDescriptor);
 
     const descriptor = {
@@ -213,7 +213,7 @@ g.test('shader_module,device_mismatch')
 
     const code = '[[stage(compute), workgroup_size(1)]] fn main() {}';
     const module = mismatched
-      ? t.getDeviceMismatchedShaderModule({ code })
+      ? t.mismatchedDevice.createShaderModule({ code })
       : t.device.createShaderModule({ code });
 
     const descriptor = {

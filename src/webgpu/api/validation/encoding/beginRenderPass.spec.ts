@@ -160,7 +160,7 @@ g.test('occlusion_query_set,device_mismatch')
     };
 
     const occlusionQuerySet = mismatched
-      ? t.getDeviceMismatchedQuerySet(descriptor)
+      ? t.mismatchedDevice.createQuerySet(descriptor)
       : t.device.createQuerySet(descriptor);
 
     const encoder = t.createEncoder('render pass', { occlusionQuerySet });

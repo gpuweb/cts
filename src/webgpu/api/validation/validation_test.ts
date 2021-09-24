@@ -293,33 +293,6 @@ export class ValidationTest extends GPUTest {
     }
   }
 
-  /** Return a GPUBindGroupLayout with descriptor from mismatched device. */
-  getDeviceMismatchedBindGroupLayout(descriptor: GPUBindGroupLayoutDescriptor): GPUBindGroupLayout {
-    return this.mismatchedDevice.createBindGroupLayout(descriptor);
-  }
-
-  /** Return a GPUPipelineLayout with descriptor from mismatched device. */
-  getDeviceMismatchedPipelineLayout(descriptor: GPUPipelineLayoutDescriptor): GPUPipelineLayout {
-    return this.mismatchedDevice.createPipelineLayout(descriptor);
-  }
-
-  /** Return a GPUShaderModule with descriptor from mismatched device. */
-  getDeviceMismatchedShaderModule(descriptor: GPUShaderModuleDescriptor): GPUShaderModule {
-    return this.mismatchedDevice.createShaderModule(descriptor);
-  }
-
-  /** Return a GPURenderBundleEncoder with descriptor from mismatched device. */
-  getDeviceMismatchedRenderBundle(
-    descriptor: GPURenderBundleEncoderDescriptor
-  ): GPURenderBundleEncoder {
-    return this.mismatchedDevice.createRenderBundleEncoder(descriptor);
-  }
-
-  /** Return a GPUQuerySet with descriptor from mismatched device. */
-  getDeviceMismatchedQuerySet(descriptor: GPUQuerySetDescriptor): GPUQuerySet {
-    return this.trackForCleanup(this.mismatchedDevice.createQuerySet(descriptor));
-  }
-
   /** Create an arbitrarily-sized GPUBuffer with the STORAGE usage from mismatched device. */
   getDeviceMismatchedStorageBuffer(): GPUBuffer {
     return this.trackForCleanup(
