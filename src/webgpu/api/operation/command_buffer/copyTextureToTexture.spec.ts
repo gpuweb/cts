@@ -1282,8 +1282,8 @@ g.test('copy_multisampled_depth')
     );
     t.queue.submit([copyEncoder.finish()]);
 
-    // Verify the depth values in destinationTexture with depthCompareFunction == 'equal' and
-    // depthWriteEnabled == false in the render pipeline.
+    // Verify the depth values in destinationTexture are what we expected with
+    // depthCompareFunction == 'equal' and depthWriteEnabled == false in the render pipeline
     const kColorFormat = 'rgba8unorm';
     const renderPipelineForVerify = t.device.createRenderPipeline({
       vertex: vertexState,
