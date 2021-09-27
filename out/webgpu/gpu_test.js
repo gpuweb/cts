@@ -583,7 +583,7 @@ export class GPUTest extends Fixture {
     slice = 0,
     layout,
     generateWarningOnly = false,
-    checkElementsBetweenFn = checkElementsBetween })
+    checkElementsBetweenFn = (act, [a, b]) => checkElementsBetween(act, [i => a[i], i => b[i]]) })
 
 
 

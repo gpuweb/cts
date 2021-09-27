@@ -365,6 +365,14 @@ export const listing = [
       "api",
       "operation",
       "rendering",
+      "depth_clip_clamp"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
+      "rendering",
       "draw"
     ]
   },

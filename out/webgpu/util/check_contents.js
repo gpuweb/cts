@@ -24,6 +24,9 @@ import { float16BitsToFloat32 } from './conversion.js';
 
 
 
+
+
+
 /**
                                                                                            * Check whether two `TypedArray`s have equal contents.
                                                                                            * Returns `undefined` if the check passes, or an `Error` if not.
@@ -39,7 +42,7 @@ expected)
 
 /**
    * Check whether each value in a `TypedArray` is between the two corresponding "expected" values
-   * (either `a[i] <= actual[i] <= b[i]` or `a[i] >= actual[i] => b[i]`).
+   * (either `a(i) <= actual[i] <= b(i)` or `a(i) >= actual[i] => b(i)`).
    */
 export function checkElementsBetween(
 actual,
@@ -48,12 +51,12 @@ expected)
   const error = checkElementsPassPredicate(
   actual,
   (index, value) =>
-  value >= Math.min(expected[0][index], expected[1][index]) &&
-  value <= Math.max(expected[0][index], expected[1][index]),
+  value >= Math.min(expected[0](index), expected[1](index)) &&
+  value <= Math.max(expected[0](index), expected[1](index)),
   {
     predicatePrinter: [
-    { leftHeader: 'between', getValueForCell: index => expected[0][index] },
-    { leftHeader: 'and', getValueForCell: index => expected[1][index] }] });
+    { leftHeader: 'between', getValueForCell: index => expected[0](index) },
+    { leftHeader: 'and', getValueForCell: index => expected[1](index) }] });
 
 
 
