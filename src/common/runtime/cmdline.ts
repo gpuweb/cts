@@ -16,6 +16,7 @@ function usage(rc: number): never {
   console.log(`  tools/run_${sys.type} 'unittests:*' 'webgpu:buffers,*'`);
   console.log('Options:');
   console.log('  --verbose       Print result/log of every test as it runs.');
+  console.log('  --list          Print all testcase names that match the given query and exit.');
   console.log('  --debug         Include debug messages in logging.');
   console.log('  --print-json    Print the complete result JSON in the output.');
   console.log('  --expectations  Path to expectations file.');
@@ -28,6 +29,7 @@ if (!sys.existsSync('src/common/runtime/cmdline.ts')) {
 }
 
 let verbose = false;
+let listTestcases = false;
 let debug = false;
 let printJSON = false;
 let loadWebGPUExpectations: Promise<unknown> | undefined = undefined;
@@ -38,6 +40,8 @@ for (let i = 0; i < sys.args.length; ++i) {
   if (a.startsWith('-')) {
     if (a === '--verbose') {
       verbose = true;
+    } else if (a === '--list') {
+      listTestcases = true;
     } else if (a === '--debug') {
       debug = true;
     } else if (a === '--print-json') {
@@ -46,6 +50,7 @@ for (let i = 0; i < sys.args.length; ++i) {
       const expectationsFile = new URL(sys.args[++i], `file://${sys.cwd()}`).pathname;
       loadWebGPUExpectations = import(expectationsFile).then(m => m.expectations);
     } else {
+      console.log('unrecognized flag: ', a);
       usage(1);
     }
   } else {
@@ -54,6 +59,7 @@ for (let i = 0; i < sys.args.length; ++i) {
 }
 
 if (queries.length === 0) {
+  console.log('no queries specified');
   usage(0);
 }
 
@@ -78,6 +84,11 @@ if (queries.length === 0) {
 
   for (const testcase of testcases) {
     const name = testcase.query.toString();
+    if (listTestcases) {
+      console.log(name);
+      continue;
+    }
+
     const [rec, res] = log.record(name);
     await testcase.run(rec, expectations);
 
@@ -101,6 +112,10 @@ if (queries.length === 0) {
       default:
         unreachable('unrecognized status');
     }
+  }
+
+  if (listTestcases) {
+    return;
   }
 
   assert(total > 0, 'found no tests!');
