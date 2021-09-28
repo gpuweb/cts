@@ -2,6 +2,33 @@
 
 import { assert } from '../../common/util/util.js';
 
+/**
+ * Finds and returns the `navigator.gpu` object (or equivalent, for non-browser implementations).
+ * Throws an exception if not found.
+ */
+function defaultGPUProvider(): GPU {
+  assert(
+    typeof navigator !== 'undefined' && navigator.gpu !== undefined,
+    'No WebGPU implementation found'
+  );
+  return navigator.gpu;
+}
+
+/**
+ * GPUProvider is a function that creates and returns a new GPU instance.
+ * May throw an exception if a GPU cannot be created.
+ */
+export type GPUProvider = () => GPU;
+
+let gpuProvider: GPUProvider = defaultGPUProvider;
+
+/**
+ * Sets the function to create and return a new GPU instance.
+ */
+export function setGPUProvider(provider: GPUProvider) {
+  gpuProvider = provider;
+}
+
 let impl: GPU | undefined = undefined;
 
 /**
@@ -13,11 +40,7 @@ export function getGPU(): GPU {
     return impl;
   }
 
-  assert(
-    typeof navigator !== 'undefined' && navigator.gpu !== undefined,
-    'No WebGPU implementation found'
-  );
+  impl = gpuProvider();
 
-  impl = navigator.gpu;
   return impl;
 }
