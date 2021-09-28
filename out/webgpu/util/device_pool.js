@@ -1,13 +1,12 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { SkipTestCase } from '../../common/framework/fixture.js';import { assert,
+**/import { SkipTestCase } from '../../common/framework/fixture.js';import { getGPU } from '../../common/util/navigator_gpu.js';import {
+assert,
 raceWithRejectOnTimeout,
 unreachable,
 assertReject } from
 '../../common/util/util.js';
 import { DefaultLimits } from '../constants.js';
-
-import { getGPU } from './navigator_gpu.js';
 
 
 

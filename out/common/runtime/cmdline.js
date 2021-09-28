@@ -6,6 +6,7 @@ import { Logger } from '../internal/logging/logger.js';
 
 import { parseQuery } from '../internal/query/parseQuery.js';
 import { parseExpectationsForTestQuery } from '../internal/query/query.js';
+import { setGPUProvider } from '../util/navigator_gpu.js';
 import { assert, unreachable } from '../util/util.js';
 
 import sys from './helper/sys.js';
@@ -20,6 +21,7 @@ function usage(rc) {
   console.log('  --debug         Include debug messages in logging.');
   console.log('  --print-json    Print the complete result JSON in the output.');
   console.log('  --expectations  Path to expectations file.');
+  console.log('  --gpu-provider  Path to node module that provides the GPU implementation.');
   return sys.exit(rc);
 }
 
@@ -49,6 +51,9 @@ for (let i = 0; i < sys.args.length; ++i) {
     } else if (a === '--expectations') {
       const expectationsFile = new URL(sys.args[++i], `file://${sys.cwd()}`).pathname;
       loadWebGPUExpectations = import(expectationsFile).then(m => m.expectations);
+    } else if (a === '--gpu-provider') {
+      const modulePath = sys.args[++i];
+      setGPUProvider(() => require(modulePath).gpu);
     } else {
       console.log('unrecognized flag: ', a);
       usage(1);

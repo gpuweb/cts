@@ -5,9 +5,9 @@ Tests passing various requiredLimits to GPUAdapter.requestDevice.
 `;import { Fixture } from '../../../../common/framework/fixture.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../common/util/data_tables.js';
+import { getGPU } from '../../../../common/util/navigator_gpu.js';
 import { assert } from '../../../../common/util/util.js';
 import { DefaultLimits } from '../../../constants.js';
-import { getGPU } from '../../../util/navigator_gpu.js';
 
 const kLimitTypes = keysOf(DefaultLimits);
 

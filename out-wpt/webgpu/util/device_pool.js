@@ -1,6 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { SkipTestCase } from '../../common/framework/fixture.js';
+import { getGPU } from '../../common/util/navigator_gpu.js';
 import {
   assert,
   raceWithRejectOnTimeout,
@@ -8,8 +9,6 @@ import {
   assertReject,
 } from '../../common/util/util.js';
 import { DefaultLimits } from '../constants.js';
-
-import { getGPU } from './navigator_gpu.js';
 
 class TestFailedButDeviceReusable extends Error {}
 class FeaturesNotSupported extends Error {}
