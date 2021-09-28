@@ -29,7 +29,3 @@ export function clamp(n: number, { min, max }: { min: number; max: number }): nu
   assert(max >= min);
   return Math.min(Math.max(n, min), max);
 }
-
-/**  */
-export const kPositiveInfF32AsHex = 0x7f800000;
-export const kNegativeInfF32AsHex = 0xff800000;

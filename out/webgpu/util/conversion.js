@@ -326,5 +326,21 @@ export class NumberRepr {
   /** Create a u8 from a numeric value, a JS `number`. */
   static fromU8(value) {
     return new NumberRepr(value, new Uint8Array(value));
+  }
+
+  /** Create a u32 from a bit representation, a uint32 represented as a JS `number`. */
+  static fromU32Bits(bits) {
+    const abv = new Uint32Array([bits]);
+    return new NumberRepr(new Uint32Array(abv.buffer)[0], abv);
+  }
+  /** Create a u16 from a bit representation, a uint16 represented as a JS `number`. */
+  static fromU16Bits(bits) {
+    const abv = new Uint16Array([bits]);
+    return new NumberRepr(new Uint16Array(abv.buffer)[0], abv);
+  }
+  /** Create a u8 from a bit representation, a uint8 represented as a JS `number`. */
+  static fromU8Bits(bits) {
+    const abv = new Uint8Array([bits]);
+    return new NumberRepr(new Uint8Array(abv.buffer)[0], abv);
   }}
 //# sourceMappingURL=conversion.js.map
