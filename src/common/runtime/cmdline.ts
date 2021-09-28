@@ -1,12 +1,12 @@
 /* eslint no-console: "off" */
 
-import { setGPUProvider } from '../../webgpu/util/navigator_gpu.js';
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
 import { prettyPrintLog } from '../internal/logging/log_message.js';
 import { Logger } from '../internal/logging/logger.js';
 import { LiveTestCaseResult } from '../internal/logging/result.js';
 import { parseQuery } from '../internal/query/parseQuery.js';
 import { parseExpectationsForTestQuery } from '../internal/query/query.js';
+import { setGPUProvider } from '../util/navigator_gpu.js';
 import { assert, unreachable } from '../util/util.js';
 
 import sys from './helper/sys.js';

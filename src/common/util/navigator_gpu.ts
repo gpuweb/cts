@@ -1,6 +1,6 @@
 /// <reference types="@webgpu/types" />
 
-import { assert } from '../../common/util/util.js';
+import { assert } from './util.js';
 
 /**
  * Finds and returns the `navigator.gpu` object (or equivalent, for non-browser implementations).
@@ -26,6 +26,7 @@ let gpuProvider: GPUProvider = defaultGPUProvider;
  * Sets the function to create and return a new GPU instance.
  */
 export function setGPUProvider(provider: GPUProvider) {
+  assert(impl === undefined, 'setGPUProvider() should not be after getGPU()');
   gpuProvider = provider;
 }
 
