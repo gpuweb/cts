@@ -43,8 +43,7 @@ Component-wise when T is a vector.
       t.params._kTypeInfo.arrayLength,
       'abs',
       Uint32Array,
-      [
-        /* eslint-disable */
+      /* prettier-ignore */ [
         // Min and Max u32
         {input: NumberRepr.fromU32Bits(kBit.u32.min), expected: [NumberRepr.fromU32Bits(kBit.u32.min)] },
         {input: NumberRepr.fromU32Bits(kBit.u32.max), expected: [NumberRepr.fromU32Bits(kBit.u32.max)] },
@@ -81,7 +80,6 @@ Component-wise when T is a vector.
         {input: NumberRepr.fromU32Bits(kBit.powTwo.to29), expected: [NumberRepr.fromU32Bits(kBit.powTwo.to29)] },
         {input: NumberRepr.fromU32Bits(kBit.powTwo.to30), expected: [NumberRepr.fromU32Bits(kBit.powTwo.to30)] },
         {input: NumberRepr.fromU32Bits(kBit.powTwo.to31), expected: [NumberRepr.fromU32Bits(kBit.powTwo.to31)] },
-        /* eslint-enable */
       ]
     );
   });
@@ -117,15 +115,14 @@ Component-wise when T is a vector.
       t.params._kTypeInfo.arrayLength,
       'abs',
       Int32Array,
-      [
-        /* eslint-disable */
-        // Min and max i32 
+      /* prettier-ignore */ [
+        // Min and max i32
         // If e evaluates to the largest negative value, then the result is e.
         {input: NumberRepr.fromI32Bits(kBit.i32.negative.min), expected: [NumberRepr.fromI32Bits(kBit.i32.negative.min)] },
         {input: NumberRepr.fromI32Bits(kBit.i32.negative.max), expected: [NumberRepr.fromI32Bits(kBit.i32.positive.min)] },
         {input: NumberRepr.fromI32Bits(kBit.i32.positive.max), expected: [NumberRepr.fromI32Bits(kBit.i32.positive.max)] },
         {input: NumberRepr.fromI32Bits(kBit.i32.positive.min), expected: [NumberRepr.fromI32Bits(kBit.i32.positive.min)] },
-        // input: -1 * pow(2, n), n = {-31, ..., 0 }, expected: [pow(2, n), n = {-31, ..., 0}] 
+        // input: -1 * pow(2, n), n = {-31, ..., 0 }, expected: [pow(2, n), n = {-31, ..., 0}]
         {input: NumberRepr.fromI32Bits(kBit.negPowTwo.to0), expected: [NumberRepr.fromI32Bits(kBit.powTwo.to0)] },
         {input: NumberRepr.fromI32Bits(kBit.negPowTwo.to1), expected: [NumberRepr.fromI32Bits(kBit.powTwo.to1)] },
         {input: NumberRepr.fromI32Bits(kBit.negPowTwo.to2), expected: [NumberRepr.fromI32Bits(kBit.powTwo.to2)] },
@@ -158,7 +155,6 @@ Component-wise when T is a vector.
         {input: NumberRepr.fromI32Bits(kBit.negPowTwo.to29), expected: [NumberRepr.fromI32Bits(kBit.powTwo.to29)] },
         {input: NumberRepr.fromI32Bits(kBit.negPowTwo.to30), expected: [NumberRepr.fromI32Bits(kBit.powTwo.to30)] },
         {input: NumberRepr.fromI32Bits(kBit.negPowTwo.to31), expected: [NumberRepr.fromI32Bits(kBit.powTwo.to31)] },
-         /* eslint-enable */
       ]
     );
   });
@@ -194,8 +190,7 @@ Component-wise when T is a vector.
       t.params._kTypeInfo.arrayLength,
       'abs',
       Float32Array,
-      [
-        /* eslint-disable */
+      /* prettier-ignore */ [
         // Min and Max f32
         // TODO(sarahM0): This is not in spec. Double check this.
         // If e evaluates to the largest negative value, then the result is e.
@@ -278,7 +273,6 @@ Component-wise when T is a vector.
         {input: NumberRepr.fromF32(kValue.negPowTwo.to29), expected: [NumberRepr.fromF32(kValue.powTwo.to29)] },
         {input: NumberRepr.fromF32(kValue.negPowTwo.to30), expected: [NumberRepr.fromF32(kValue.powTwo.to30)] },
         {input: NumberRepr.fromF32(kValue.negPowTwo.to31), expected: [NumberRepr.fromF32(kValue.powTwo.to31)] },
-        /* eslint-enable */
       ]
     );
   });

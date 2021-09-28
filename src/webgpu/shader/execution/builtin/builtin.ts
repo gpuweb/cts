@@ -41,6 +41,14 @@ export function runShaderTest<F extends NumberType>(
 
   const inputData: TypedArrayBufferView = new arrayType(cases.length * 4);
 
+  // an arbitrary approach of mapping cases into inputData:
+  // if the arrayLength > 1, ie. type is a vector, or matrix then
+  //   fill the i-th element with the input value of cases[i+j]
+  // if arrayLength = 1 or i+j > length of cases
+  //   fill the i-th element with input value of  cases[i]
+  // TODO(sarahM0): This is using a TypedArray to convert the value into bits,
+  // but NumberRepr already has bits. There's a chance some numbers won't get the same bit pattern both ways
+  // (having been converted from bits to double back to bits). Probably best to copy the bits in directly.
   for (let i = 0; i < cases.length; i++) {
     for (let j = 0; j < arrayLength; j++) {
       inputData[i * 4 + j] = (i + j < cases.length
@@ -51,13 +59,14 @@ export function runShaderTest<F extends NumberType>(
 
   const inputBuffer = t.makeBufferWithContents(
     inputData,
-    GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
+    GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE
   );
 
-  const outputBuffer = t.makeBufferWithContents(
-    new arrayType(inputData.length),
-    GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
-  );
+  const outputBuffer = t.device.createBuffer({
+    // TODO(sarahM0): investigate why "size: cases.length*4*arrayLength" returns zero
+    size: inputData.length * 4,
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
+  });
 
   const module = t.device.createShaderModule({ code: source });
   const pipeline = t.device.createComputePipeline({
@@ -134,6 +143,11 @@ export function runShaderTest<F extends NumberType>(
   });
 }
 
+// TODO(sarahM0): Perhaps instead of kBit and kValue tables we could have one table
+// where every value is a NumberRepr instead of either bits or value?
+// Then tests wouldn't need most of the NumberRepr.fromX calls,
+// and you would probably need fewer table entries in total
+// (since each NumberRepr has both bits and value).
 export const kBit = {
   // Limits of int32
   i32: {
