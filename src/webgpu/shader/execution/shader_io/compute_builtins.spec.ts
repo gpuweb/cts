@@ -14,39 +14,37 @@ g.test('inputs')
       .combine('method', ['param', 'struct', 'mixed'] as const)
       .combineWithParams([
         {
-          groupSize: { x: 1, y: 1, z: 1 }, numGroups: { x: 1, y: 1, z: 1 },
+          groupSize: { x: 1, y: 1, z: 1 },
+          numGroups: { x: 1, y: 1, z: 1 },
         },
         {
-          groupSize: { x: 8, y: 4, z: 2 }, numGroups: { x: 1, y: 1, z: 1 },
+          groupSize: { x: 8, y: 4, z: 2 },
+          numGroups: { x: 1, y: 1, z: 1 },
         },
         {
-          groupSize: { x: 1, y: 1, z: 1 }, numGroups: { x: 8, y: 4, z: 2 },
+          groupSize: { x: 1, y: 1, z: 1 },
+          numGroups: { x: 8, y: 4, z: 2 },
         },
         {
-          groupSize: { x: 3, y: 7, z: 5 }, numGroups: { x: 13, y: 9, z: 11 },
+          groupSize: { x: 3, y: 7, z: 5 },
+          numGroups: { x: 13, y: 9, z: 11 },
         },
       ] as const)
       .beginSubcases()
   )
   .fn(async t => {
-    const invocationsPerGroup =
-      t.params.groupSize.x *
-      t.params.groupSize.y *
-      t.params.groupSize.z;
+    const invocationsPerGroup = t.params.groupSize.x * t.params.groupSize.y * t.params.groupSize.z;
     const totalInvocations =
-      invocationsPerGroup *
-      t.params.numGroups.x *
-      t.params.numGroups.y *
-      t.params.numGroups.z;
+      invocationsPerGroup * t.params.numGroups.x * t.params.numGroups.y * t.params.numGroups.z;
 
     // Generate the structures, parameters, and builtin expressions used in the shader.
-    let params = ''
-    let structures = ''
-    let local_id = ''
-    let local_index = ''
-    let global_id = ''
-    let group_id = ''
-    let num_groups = ''
+    let params = '';
+    let structures = '';
+    let local_id = '';
+    let local_index = '';
+    let global_id = '';
+    let group_id = '';
+    let num_groups = '';
     switch (t.params.method) {
       case 'param':
         params = `
@@ -55,12 +53,12 @@ g.test('inputs')
           [[builtin(global_invocation_id)]] global_id : vec3<u32>,
           [[builtin(workgroup_id)]] group_id : vec3<u32>,
           [[builtin(num_workgroups)]] num_groups : vec3<u32>,
-        `
-        local_id = 'local_id'
-        local_index = 'local_index'
-        global_id = 'global_id'
-        group_id = 'group_id'
-        num_groups = 'num_groups'
+        `;
+        local_id = 'local_id';
+        local_index = 'local_index';
+        global_id = 'global_id';
+        group_id = 'group_id';
+        num_groups = 'num_groups';
         break;
       case 'struct':
         structures = `struct Inputs {
@@ -69,13 +67,13 @@ g.test('inputs')
             [[builtin(global_invocation_id)]] global_id : vec3<u32>;
             [[builtin(workgroup_id)]] group_id : vec3<u32>;
             [[builtin(num_workgroups)]] num_groups : vec3<u32>;
-          };`
-        params = `inputs : Inputs`
-        local_id = 'inputs.local_id'
-        local_index = 'inputs.local_index'
-        global_id = 'inputs.global_id'
-        group_id = 'inputs.group_id'
-        num_groups = 'inputs.num_groups'
+          };`;
+        params = `inputs : Inputs`;
+        local_id = 'inputs.local_id';
+        local_index = 'inputs.local_index';
+        global_id = 'inputs.global_id';
+        group_id = 'inputs.group_id';
+        num_groups = 'inputs.num_groups';
         break;
       case 'mixed':
         structures = `struct InputsA {
@@ -84,16 +82,16 @@ g.test('inputs')
         };
         struct InputsB {
           [[builtin(workgroup_id)]] group_id : vec3<u32>;
-        };`
+        };`;
         params = `[[builtin(local_invocation_id)]] local_id : vec3<u32>,
                   inputsA : InputsA,
                   inputsB : InputsB,
-                  [[builtin(num_workgroups)]] num_groups : vec3<u32>,`
-        local_id = 'local_id'
-        local_index = 'inputsA.local_index'
-        global_id = 'inputsA.global_id'
-        group_id = 'inputsB.group_id'
-        num_groups = 'num_groups'
+                  [[builtin(num_workgroups)]] num_groups : vec3<u32>,`;
+        local_id = 'local_id';
+        local_index = 'inputsA.local_index';
+        global_id = 'inputsA.global_id';
+        group_id = 'inputsB.group_id';
+        num_groups = 'num_groups';
         break;
     }
 
@@ -145,24 +143,23 @@ fn main(
     // Helper to create a `size`-byte buffer with binding number `binding`.
     function createBuffer(size: number, binding: number) {
       const buffer = t.device.createBuffer({
-        size: size,
+        size,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       });
       t.trackForCleanup(buffer);
 
-      bindGroupEntries.push(
-        {
-          binding: binding,
-          resource: {
-            buffer: buffer,
-          },
-        });
+      bindGroupEntries.push({
+        binding,
+        resource: {
+          buffer,
+        },
+      });
 
       return buffer;
     }
 
     // Create the output buffers.
-    let bindGroupEntries: GPUBindGroupEntry[] = [];
+    const bindGroupEntries: GPUBindGroupEntry[] = [];
     const localIdBuffer = createBuffer(totalInvocations * 16, 0);
     const localIndexBuffer = createBuffer(totalInvocations * 4, 1);
     const globalIdBuffer = createBuffer(totalInvocations * 16, 2);
@@ -183,7 +180,7 @@ fn main(
     pass.endPass();
     t.queue.submit([encoder.finish()]);
 
-    type vec3 = { x: number, y: number, z: number };
+    type vec3 = { x: number; y: number; z: number };
 
     // Helper to check that the vec3<u32> value at each index of the provided `output` buffer
     // matches the expected value for that invocation, as generated by the `getBuiltinValue`
@@ -191,7 +188,8 @@ fn main(
     const checkEachIndex = (
       output: Uint32Array,
       name: string,
-      getBuiltinValue: (groupId: vec3, localId: vec3) => vec3) => {
+      getBuiltinValue: (groupId: vec3, localId: vec3) => vec3
+    ) => {
       // Loop over workgroups.
       for (let gz = 0; gz < t.params.numGroups.z; gz++) {
         for (let gy = 0; gy < t.params.numGroups.y; gy++) {
@@ -200,27 +198,33 @@ fn main(
             for (let lz = 0; lz < t.params.groupSize.z; lz++) {
               for (let ly = 0; ly < t.params.groupSize.y; ly++) {
                 for (let lx = 0; lx < t.params.groupSize.x; lx++) {
-                  let groupIndex = ((gz * t.params.numGroups.y) + gy) * t.params.numGroups.x + gx;
-                  let localIndex = ((lz * t.params.groupSize.y) + ly) * t.params.groupSize.x + lx;
-                  let globalIndex = groupIndex * invocationsPerGroup + localIndex;
-                  let expected = getBuiltinValue({ x: gx, y: gy, z: gz }, { x: lx, y: ly, z: lz });
-                  if (output[globalIndex * 4 + 0] != expected.x) {
+                  const groupIndex = (gz * t.params.numGroups.y + gy) * t.params.numGroups.x + gx;
+                  const localIndex = (lz * t.params.groupSize.y + ly) * t.params.groupSize.x + lx;
+                  const globalIndex = groupIndex * invocationsPerGroup + localIndex;
+                  const expected = getBuiltinValue(
+                    { x: gx, y: gy, z: gz },
+                    { x: lx, y: ly, z: lz }
+                  );
+                  if (output[globalIndex * 4 + 0] !== expected.x) {
                     return new Error(
                       `${name}.x failed at group(${gx},${gy},${gz}) local(${lx},${ly},${lz}))\n` +
-                      `    expected: ${expected.x}\n` +
-                      `    got:      ${output[globalIndex * 4 + 0]}`);
+                        `    expected: ${expected.x}\n` +
+                        `    got:      ${output[globalIndex * 4 + 0]}`
+                    );
                   }
-                  if (output[globalIndex * 4 + 1] != expected.y) {
+                  if (output[globalIndex * 4 + 1] !== expected.y) {
                     return new Error(
                       `${name}.y failed at group(${gx},${gy},${gz}) local(${lx},${ly},${lz}))\n` +
-                      `    expected: ${expected.y}\n` +
-                      `    got:      ${output[globalIndex * 4 + 1]}`);
+                        `    expected: ${expected.y}\n` +
+                        `    got:      ${output[globalIndex * 4 + 1]}`
+                    );
                   }
-                  if (output[globalIndex * 4 + 2] != expected.z) {
+                  if (output[globalIndex * 4 + 2] !== expected.z) {
                     return new Error(
                       `${name}.z failed at group(${gx},${gy},${gz}) local(${lx},${ly},${lz}))\n` +
-                      `    expected: ${expected.z}\n` +
-                      `    got:      ${output[globalIndex * 4 + 2]}`);
+                        `    expected: ${expected.z}\n` +
+                        `    got:      ${output[globalIndex * 4 + 2]}`
+                    );
                   }
                 }
               }
@@ -242,7 +246,8 @@ fn main(
       return checkEachIndex(outputData, 'local_invocation_id', (_, localId) => localId);
     };
     t.expectGPUBufferValuesPassCheck(localIdBuffer, checkLocalId, {
-      type: Uint32Array, typedLength: totalInvocations * 4,
+      type: Uint32Array,
+      typedLength: totalInvocations * 4,
     });
 
     // Check [[builtin(global_invocation_id)]] values.
@@ -257,7 +262,8 @@ fn main(
       return checkEachIndex(outputData, 'global_invocation_id', getGlobalId);
     };
     t.expectGPUBufferValuesPassCheck(globalIdBuffer, checkGlobalId, {
-      type: Uint32Array, typedLength: totalInvocations * 4,
+      type: Uint32Array,
+      typedLength: totalInvocations * 4,
     });
 
     // Check [[builtin(workgroup_id)]] values.
@@ -265,7 +271,8 @@ fn main(
       return checkEachIndex(outputData, 'workgroup_id', (groupId, _) => groupId);
     };
     t.expectGPUBufferValuesPassCheck(groupIdBuffer, checkWorkgroupId, {
-      type: Uint32Array, typedLength: totalInvocations * 4,
+      type: Uint32Array,
+      typedLength: totalInvocations * 4,
     });
 
     // Check [[builtin(num_workgroups)]] values.
@@ -273,6 +280,7 @@ fn main(
       return checkEachIndex(outputData, 'num_workgroups', () => t.params.numGroups);
     };
     t.expectGPUBufferValuesPassCheck(numGroupsBuffer, checkNumWorkgroups, {
-      type: Uint32Array, typedLength: totalInvocations * 4,
+      type: Uint32Array,
+      typedLength: totalInvocations * 4,
     });
   });
