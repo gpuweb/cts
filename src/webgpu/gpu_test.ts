@@ -275,6 +275,8 @@ export class GPUTest extends Fixture {
 
   /**
    * Expect a GPUBuffer's contents to pass the provided check.
+   *
+   * A library of checks can be found in {@link webgpu/util/check_contents}.
    */
   expectGPUBufferValuesPassCheck<T extends TypedArrayBufferView>(
     src: GPUBuffer,
