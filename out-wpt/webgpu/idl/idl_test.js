@@ -1,6 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { Fixture } from '../../common/framework/fixture.js';
+import { getGPU } from '../../common/util/navigator_gpu.js';
 import { assert } from '../../common/util/util.js';
 
 /**
@@ -8,6 +9,11 @@ import { assert } from '../../common/util/util.js';
  */
 export class IDLTest extends Fixture {
   // TODO: add a helper to check prototype chains
+
+  async init() {
+    // Ensure the GPU provider is initialized
+    getGPU();
+  }
 
   /**
    * Asserts that a member of an IDL interface has the expected value.
