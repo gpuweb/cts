@@ -97,39 +97,39 @@ g.test('inputs')
 
     // WGSL shader that stores every builtin value to a buffer, for every invocation in the grid.
     const wgsl = `
-[[block]]
-struct S {
-  data : array<u32>;
-};
-[[block]]
-struct V {
-  data : array<vec3<u32>>;
-};
-[[group(0), binding(0)]] var<storage, write> local_id_out : V;
-[[group(0), binding(1)]] var<storage, write> local_index_out : S;
-[[group(0), binding(2)]] var<storage, write> global_id_out : V;
-[[group(0), binding(3)]] var<storage, write> group_id_out : V;
-[[group(0), binding(4)]] var<storage, write> num_groups_out : V;
+      [[block]]
+      struct S {
+        data : array<u32>;
+      };
+      [[block]]
+      struct V {
+        data : array<vec3<u32>>;
+      };
+      [[group(0), binding(0)]] var<storage, write> local_id_out : V;
+      [[group(0), binding(1)]] var<storage, write> local_index_out : S;
+      [[group(0), binding(2)]] var<storage, write> global_id_out : V;
+      [[group(0), binding(3)]] var<storage, write> group_id_out : V;
+      [[group(0), binding(4)]] var<storage, write> num_groups_out : V;
 
-${structures}
+      ${structures}
 
-let group_width = ${t.params.groupSize.x}u;
-let group_height = ${t.params.groupSize.y}u;
-let group_depth = ${t.params.groupSize.z}u;
+      let group_width = ${t.params.groupSize.x}u;
+      let group_height = ${t.params.groupSize.y}u;
+      let group_depth = ${t.params.groupSize.z}u;
 
-[[stage(compute), workgroup_size(group_width, group_height, group_depth)]]
-fn main(
-  ${params}
-  ) {
-  let group_index = ((${group_id}.z * ${num_groups}.y) + ${group_id}.y) * ${num_groups}.x + ${group_id}.x;
-  let global_index = group_index * ${invocationsPerGroup}u + ${local_index};
-  local_id_out.data[global_index] = ${local_id};
-  local_index_out.data[global_index] = ${local_index};
-  global_id_out.data[global_index] = ${global_id};
-  group_id_out.data[global_index] = ${group_id};
-  num_groups_out.data[global_index] = ${num_groups};
-}
-`;
+      [[stage(compute), workgroup_size(group_width, group_height, group_depth)]]
+      fn main(
+        ${params}
+        ) {
+        let group_index = ((${group_id}.z * ${num_groups}.y) + ${group_id}.y) * ${num_groups}.x + ${group_id}.x;
+        let global_index = group_index * ${invocationsPerGroup}u + ${local_index};
+        local_id_out.data[global_index] = ${local_id};
+        local_index_out.data[global_index] = ${local_index};
+        global_id_out.data[global_index] = ${global_id};
+        group_id_out.data[global_index] = ${group_id};
+        num_groups_out.data[global_index] = ${num_groups};
+      }
+    `;
 
     const pipeline = t.device.createComputePipeline({
       compute: {
