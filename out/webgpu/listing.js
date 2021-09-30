@@ -1161,6 +1161,14 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "shader_io",
+      "compute_builtins"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
       "zero_init"
     ]
   },
