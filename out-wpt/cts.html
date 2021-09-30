@@ -106,6 +106,7 @@
 <meta name=variant content='webgpu:api,operation,render_pipeline,pipeline_output_targets:color,component_count,blend:*'>
 <meta name=variant content='webgpu:api,operation,render_pipeline,primitive_topology:basic:*'>
 <meta name=variant content='webgpu:api,operation,render_pipeline,primitive_topology:unaligned_vertex_count:*'>
+<meta name=variant content='webgpu:api,operation,render_pipeline,vertex_only_render_pipeline:draw_depth_and_stencil_with_vertex_only_pipeline:*'>
 <meta name=variant content='webgpu:api,operation,rendering,basic:clear:*'>
 <meta name=variant content='webgpu:api,operation,rendering,basic:fullscreen_quad:*'>
 <meta name=variant content='webgpu:api,operation,rendering,basic:large_draw:*'>
@@ -246,7 +247,8 @@
 <meta name=variant content='webgpu:api,validation,createPipelineLayout:number_of_bind_group_layouts_exceeds_the_maximum_value:*'>
 <meta name=variant content='webgpu:api,validation,createPipelineLayout:bind_group_layouts,device_mismatch:*'>
 <meta name=variant content='webgpu:api,validation,createRenderPipeline:basic_use_of_createRenderPipeline:*'>
-<meta name=variant content='webgpu:api,validation,createRenderPipeline:at_least_one_color_state_is_required:*'>
+<meta name=variant content='webgpu:api,validation,createRenderPipeline:create_vertex_only_pipeline_with_without_depth_stencil_state:*'>
+<meta name=variant content='webgpu:api,validation,createRenderPipeline:at_least_one_color_state_is_required_for_complete_pipeline:*'>
 <meta name=variant content='webgpu:api,validation,createRenderPipeline:color_formats_must_be_renderable:*'>
 <meta name=variant content='webgpu:api,validation,createRenderPipeline:sample_count_must_be_valid:*'>
 <meta name=variant content='webgpu:api,validation,createRenderPipeline:pipeline_output_targets:*'>

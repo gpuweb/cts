@@ -340,6 +340,14 @@ export const listing = [
     "file": [
       "api",
       "operation",
+      "render_pipeline",
+      "vertex_only_render_pipeline"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
       "rendering",
       "basic"
     ]

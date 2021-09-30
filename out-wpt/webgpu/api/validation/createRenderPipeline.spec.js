@@ -96,6 +96,8 @@ class F extends ValidationTest {
         kTextureFormatInfo[targets[0] ? targets[0].format : 'rgba8unorm'].sampleType,
         4
       ),
+
+      noFragment = false,
     } = options;
 
     return {
@@ -110,14 +112,16 @@ class F extends ValidationTest {
         entryPoint: 'main',
       },
 
-      fragment: {
-        module: this.device.createShaderModule({
-          code: fragmentShaderCode,
-        }),
+      fragment: noFragment
+        ? undefined
+        : {
+            module: this.device.createShaderModule({
+              code: fragmentShaderCode,
+            }),
 
-        entryPoint: 'main',
-        targets,
-      },
+            entryPoint: 'main',
+            targets,
+          },
 
       layout: this.getPipelineLayout(),
       primitive: { topology },
@@ -167,7 +171,40 @@ g.test('basic_use_of_createRenderPipeline')
     t.doCreateRenderPipelineTest(isAsync, true, descriptor);
   });
 
-g.test('at_least_one_color_state_is_required')
+g.test('create_vertex_only_pipeline_with_without_depth_stencil_state')
+  .desc(
+    `Test creating vertex-only render pipeline. A vertex-only render pipeline have no fragment
+state (and thus have no color state), and can be create with or without depth stencil state.`
+  )
+  .params(u =>
+    u
+      .combine('isAsync', [false, true])
+      .beginSubcases()
+      .combine('depthStencilFormat', ['depth24plus', 'depth24plus-stencil8', 'depth32float', ''])
+      .combine('haveColor', [false, true])
+  )
+  .fn(async t => {
+    const { isAsync, depthStencilFormat, haveColor } = t.params;
+
+    let depthStencilState;
+    if (depthStencilFormat === '') {
+      depthStencilState = undefined;
+    } else {
+      depthStencilState = { format: depthStencilFormat };
+    }
+
+    // Having targets or not should have no effect in result, since it will not appear in the
+    // descriptor in vertex-only render pipeline
+    const descriptor = t.getDescriptor({
+      noFragment: true,
+      depthStencil: depthStencilState,
+      targets: haveColor ? [{ format: 'rgba8unorm' }] : [],
+    });
+
+    t.doCreateRenderPipelineTest(isAsync, true, descriptor);
+  });
+
+g.test('at_least_one_color_state_is_required_for_complete_pipeline')
   .params(u => u.combine('isAsync', [false, true]))
   .fn(async t => {
     const { isAsync } = t.params;
