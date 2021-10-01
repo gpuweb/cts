@@ -123,15 +123,15 @@ interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F
   /**
    * A noop function with the purpose of highlighting value `id`.
    *
-   * @param id a value uniquely assigned to this test.
+   * @param id a token uniquely assigned to this test.
    */
-  uniqueId(id: number): this;
+  uniqueId(id: string): this;
   /**
    * Parameterize the test, generating multiple cases, each possibly having subcases.
    *
    * The `unit` value passed to the `cases` callback is an immutable constant
    * `CaseParamsBuilder<{}>` representing the "unit" builder `[ {} ]`,
-   * provided for convienience. The non-callback overload can be used if `unit` is not needed.
+   * provided for convenience. The non-callback overload can be used if `unit` is not needed.
    */
   params<CaseP extends {}, SubcaseP extends {}>(
     cases: (unit: CaseParamsBuilder<{}>) => ParamsBuilderBase<CaseP, SubcaseP>
@@ -192,7 +192,7 @@ class TestBuilder {
     return this;
   }
 
-  uniqueId(id: number): this {
+  uniqueId(id: string): this {
     return this;
   }
 
