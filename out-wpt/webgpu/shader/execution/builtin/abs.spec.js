@@ -13,13 +13,14 @@ import { kBit, kValue, runShaderTest } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('abs_uint')
-  .uniqueId(0x59ff84968a839124)
+g.test('abs_unsigned,integer_builtin_functions')
+  .uniqueId('59ff84968a839124')
   .desc(
     `
-https://www.w3.org/TR/2021/WD-WGSL-20210831#integer-builtin-function
+https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions
 scalar case, unsigned abs:
-T is u32 or vecN<u32> abs(e: T ) -> T Result is e.
+abs(e: T ) -> T
+T is u32 or vecN<u32>. Result is e.
 This is provided for symmetry with abs for signed integers.
 Component-wise when T is a vector.
 `
@@ -185,15 +186,17 @@ Component-wise when T is a vector.
     );
   });
 
-g.test('abs_int')
-  .uniqueId(0x59ff84968a839124)
+g.test('abs_signed,integer_builtin_functions')
+  .uniqueId('d8fc581d17db6ae8')
   .desc(
     `
-https://www.w3.org/TR/2021/WD-WGSL-20210831#integer-builtin-function
-scalar case, unsigned abs:
-T is u32 or vecN<u32> abs(e: T ) -> T Result is e.
-This is provided for symmetry with abs for signed integers.
+https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions
+signed abs:
+abs(e: T ) -> T
+T is i32 or vecN<i32>. The result is the absolute value of e.
 Component-wise when T is a vector.
+If e evaluates to the largest negative value, then the result is e.
+(GLSLstd450SAbs)
 `
   )
   .params(u =>
@@ -366,15 +369,16 @@ Component-wise when T is a vector.
     );
   });
 
-g.test('abs_float')
-  .uniqueId(0x59ff84968a839124)
+g.test('abs_float,float_builtin_functions')
+  .uniqueId('2c1782b6a8dec8cb')
   .desc(
     `
-https://www.w3.org/TR/2021/WD-WGSL-20210831#integer-builtin-function
-scalar case, unsigned abs:
-T is u32 or vecN<u32> abs(e: T ) -> T Result is e.
-This is provided for symmetry with abs for signed integers.
-Component-wise when T is a vector.
+https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions
+float abs:
+abs(e: T ) -> T
+T is f32 or vecN<f32>
+Returns the absolute value of e (e.g. e with a positive sign bit).
+Component-wise when T is a vector. (GLSLstd450Fabs)
 `
   )
   .params(u =>
@@ -397,11 +401,9 @@ Component-wise when T is a vector.
       Float32Array,
       [
         // Min and Max f32
-        // TODO(sarahM0): This is not in spec. Double check this.
-        // If e evaluates to the largest negative value, then the result is e.
         {
           input: NumberRepr.fromF32Bits(kBit.f32.negative.max),
-          expected: [NumberRepr.fromF32Bits(0x800000)],
+          expected: [NumberRepr.fromF32Bits(0x0080_0000)],
         },
         {
           input: NumberRepr.fromF32Bits(kBit.f32.negative.min),
