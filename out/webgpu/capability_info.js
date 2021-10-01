@@ -538,7 +538,7 @@ export const kPerStageBindingLimits =
   'storageBuf': { class: 'storageBuf', max: 8 },
   'sampler': { class: 'sampler', max: 16 },
   'sampledTex': { class: 'sampledTex', max: 16 },
-  'storageTex': { class: 'storageTex', max: 8 } };
+  'storageTex': { class: 'storageTex', max: 4 } };
 
 
 /**
