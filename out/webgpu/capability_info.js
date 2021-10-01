@@ -704,10 +704,7 @@ export function textureBindingEntries(includeUndefined) {
    * Note: Generates different `access` options, but not `format` or `viewDimension` options.
    */
 export function storageTextureBindingEntries(format) {
-  return [
-  { storageTexture: { access: 'read-only', format } },
-  { storageTexture: { access: 'write-only', format } }];
-
+  return [{ storageTexture: { access: 'write-only', format } }];
 }
 /** Generate a list of possible texture-or-storageTexture-typed BGLEntry values. */
 export function sampledAndStorageBindingEntries(

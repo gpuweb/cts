@@ -704,10 +704,7 @@ export function textureBindingEntries(includeUndefined: boolean): readonly BGLEn
  * Note: Generates different `access` options, but not `format` or `viewDimension` options.
  */
 export function storageTextureBindingEntries(format: GPUTextureFormat): readonly BGLEntry[] {
-  return [
-    { storageTexture: { access: 'read-only', format } },
-    { storageTexture: { access: 'write-only', format } },
-  ] as const;
+  return [{ storageTexture: { access: 'write-only', format } }] as const;
 }
 /** Generate a list of possible texture-or-storageTexture-typed BGLEntry values. */
 export function sampledAndStorageBindingEntries(
