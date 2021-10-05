@@ -7,7 +7,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('unsigned_clamp,integer_builtin_functions')
   .uniqueId('386458e12e52645b')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `
 unsigned clamp:
@@ -22,7 +22,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('signed_clamp,integer_builtin_functions')
   .uniqueId('da51d3c8cc902ab2')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `
 signed clamp:
@@ -37,7 +37,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('count_1_bits,integer_builtin_functions')
   .uniqueId('259605bdcc180a4b')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `
 count 1 bits:
@@ -52,7 +52,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('unsigned_max,integer_builtin_functions')
   .uniqueId('2cce54f65e71b3a3')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `
 unsigned max:
@@ -67,7 +67,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('signed_max,integer_builtin_functions')
   .uniqueId('ef8c37107946a69e')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `
 signed max:
@@ -82,7 +82,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('unsigned_min,integer_builtin_functions')
   .uniqueId('29aba7ede5b93cdd')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `
 unsigned min:
@@ -97,7 +97,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('signed_min,integer_builtin_functions')
   .uniqueId('60c8ecdf409b45fc')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `
 signed min:
@@ -112,7 +112,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('bit_reversal,integer_builtin_functions')
   .uniqueId('8a7550f1097993f8')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `
 bit reversal:

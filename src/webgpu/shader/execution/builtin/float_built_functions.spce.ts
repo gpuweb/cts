@@ -7,7 +7,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('acos,float_builtin_functions')
   .uniqueId('3b55004d23fedacf')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 acos:
@@ -22,7 +22,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('asin,float_builtin_functions')
   .uniqueId('322c7c5ba84c257a')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 asin:
@@ -37,7 +37,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('atan,float_builtin_functions')
   .uniqueId('b13828d6243d13dd')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 atan:
@@ -52,7 +52,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('atan2,float_builtin_functions')
   .uniqueId('cc85953f226ac95c')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 atan2:
@@ -67,7 +67,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('ceil,float_builtin_functions')
   .uniqueId('38d65728ea728bc5')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 ceil:
@@ -82,7 +82,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('clamp,float_builtin_functions')
   .uniqueId('88e39c61e6dbd26f')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 clamp:
@@ -97,7 +97,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('cos,float_builtin_functions')
   .uniqueId('650973d690dcd841')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 cos:
@@ -112,7 +112,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('cosh,float_builtin_functions')
   .uniqueId('e4499ece6f25610d')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 cosh:
@@ -127,7 +127,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('vector_case_cross,float_builtin_functions')
   .uniqueId('61356f087238c33c')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 vector case, cross:
@@ -142,7 +142,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('distance,float_builtin_functions')
   .uniqueId('a1459d94b9d23add')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 distance:
@@ -157,7 +157,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('exp,float_builtin_functions')
   .uniqueId('ba1d78b3923e3ecc')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 exp:
@@ -172,7 +172,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('exp2,float_builtin_functions')
   .uniqueId('335173647c18d7b0')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 exp2:
@@ -187,7 +187,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('faceForward,float_builtin_functions')
   .uniqueId('ff98e4f5d2064a6f')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 faceForward:
@@ -202,7 +202,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('floor,float_builtin_functions')
   .uniqueId('2edb4534aa0e48a6')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 floor:
@@ -217,7 +217,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('fma,float_builtin_functions')
   .uniqueId('c6212635b880548b')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 fma:
@@ -232,7 +232,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('fract,float_builtin_functions')
   .uniqueId('58222ecf6f963798')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 fract:
@@ -247,7 +247,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('scalar_case_frexp,float_builtin_functions')
   .uniqueId('c5df46977f5b77a0')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 scalar case, frexp:
@@ -263,7 +263,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('vector_case_frexp,float_builtin_functions')
   .uniqueId('69806278766b12a2')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 vector case, frexp:
@@ -279,7 +279,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('inverseSqrt,float_builtin_functions')
   .uniqueId('84fc180ad82c5618')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 inverseSqrt:
@@ -294,7 +294,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('ldexp,float_builtin_functions')
   .uniqueId('358f6e4501a32907')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 ldexp:
@@ -309,7 +309,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('length,float_builtin_functions')
   .uniqueId('0e5dba3253f9dec6')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 length:
@@ -324,7 +324,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('log,float_builtin_functions')
   .uniqueId('7cd6780116b47d00')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 log:
@@ -339,7 +339,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('log2,float_builtin_functions')
   .uniqueId('9ed120de1990296a')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 log2:
@@ -354,7 +354,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('max,float_builtin_functions')
   .uniqueId('bcb6c69b4ec703b1')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 max:
@@ -369,7 +369,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('min,float_builtin_functions')
   .uniqueId('53efc46faad0f380')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 min:
@@ -384,7 +384,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('mix_all_same_type_operands,float_builtin_functions')
   .uniqueId('f17861e71386bb59')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 mix all same type operands:
@@ -399,7 +399,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('vector_mix_with_scalar_blending_factor,float_builtin_functions')
   .uniqueId('0a9f4a579e0c1348')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 vector mix with scalar blending factor:
@@ -414,7 +414,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('scalar_case_modf,float_builtin_functions')
   .uniqueId('2a7234321aef021d')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 scalar case, modf:
@@ -430,7 +430,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('vector_case_modf,float_builtin_functions')
   .uniqueId('d1426ca015843ddf')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 vector case, modf:
@@ -446,7 +446,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('vector_case_normalize,float_builtin_functions')
   .uniqueId('29c971aea0969a86')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 vector case, normalize:
@@ -461,7 +461,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('pow,float_builtin_functions')
   .uniqueId('a3ff963b1810c8c4')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 pow:
@@ -476,7 +476,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('quantize_to_f16,float_builtin_functions')
   .uniqueId('ec899bfcd46a6316')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 quantize to f16:
@@ -491,7 +491,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('reflect,float_builtin_functions')
   .uniqueId('463ddb8c59de0a98')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 reflect:
@@ -506,7 +506,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('refract,float_builtin_functions')
   .uniqueId('8e0c0021b980cf0a')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 refract:
@@ -521,7 +521,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('round,float_builtin_functions')
   .uniqueId('427d7791f5cd13dc')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 round:
@@ -536,7 +536,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('float_sign,float_builtin_functions')
   .uniqueId('411a9acbb5411c89')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 float sign:
@@ -551,7 +551,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('sin,float_builtin_functions')
   .uniqueId('d10f3745e5ea639d')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 sin:
@@ -566,7 +566,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('sinh,float_builtin_functions')
   .uniqueId('d1d30e0b45aabed5')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 sinh:
@@ -581,7 +581,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('smoothStep,float_builtin_functions')
   .uniqueId('d1e9e5d30be184c0')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 smoothStep:
@@ -596,7 +596,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('sqrt,float_builtin_functions')
   .uniqueId('f16f8ca434c7e6d8')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 sqrt:
@@ -611,7 +611,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('step,float_builtin_functions')
   .uniqueId('ac15bb28d3fa3032')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 step:
@@ -626,7 +626,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('tan,float_builtin_functions')
   .uniqueId('0229869d4d7f2702')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 tan:
@@ -641,7 +641,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('tanh,float_builtin_functions')
   .uniqueId('5d36803b13b3522d')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 tanh:
@@ -656,7 +656,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('trunc,float_builtin_functions')
   .uniqueId('2f5ce2108f924fca')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 trunc:

@@ -7,7 +7,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('isNan,value_testing_builtin_functions')
   .uniqueId('fdd1e7105af70b74')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#value-testing-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#value-testing-builtin-functions')
   .desc(
     `
 isNan:
@@ -22,7 +22,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('isInf,value_testing_builtin_functions')
   .uniqueId('3591ae3f3daa3871')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#value-testing-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#value-testing-builtin-functions')
   .desc(
     `
 isInf:
@@ -37,7 +37,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('isFinite,value_testing_builtin_functions')
   .uniqueId('bf8ee3764330ceb4')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#value-testing-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#value-testing-builtin-functions')
   .desc(
     `
 isFinite:
@@ -52,7 +52,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('isNormal,value_testing_builtin_functions')
   .uniqueId('ea51009a88a27a15')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#value-testing-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#value-testing-builtin-functions')
   .desc(
     `
 isNormal:
@@ -67,7 +67,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('runtime_sized_array_length,value_testing_builtin_functions')
   .uniqueId('8089b54fa4eeaa0b')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#value-testing-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#value-testing-builtin-functions')
   .desc(
     `
 runtime-sized array length:
