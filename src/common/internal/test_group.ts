@@ -127,11 +127,11 @@ interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F
    */
   uniqueId(id: string): this;
   /**
-   * A noop function with the purpose of highlighting value `url`.
+   * A noop function to associate a test with the relevant part of the specification.
    *
    * @param url a link to the spec where test is extracted from.
    */
-  url(url: string): this;
+  specURL(url: string): this;
   /**
    * Parameterize the test, generating multiple cases, each possibly having subcases.
    *
@@ -202,7 +202,7 @@ class TestBuilder {
     return this;
   }
 
-  url(url: string): this {
+  specURL(url: string): this {
     return this;
   }
 

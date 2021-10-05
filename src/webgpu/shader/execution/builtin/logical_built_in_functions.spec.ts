@@ -7,7 +7,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('vector_all,logical_builtin_functions')
   .uniqueId('d140d173a2acf981')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
   .desc(
     `
 vector all:
@@ -22,7 +22,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('vector_any,logical_builtin_functions')
   .uniqueId('ac2b3a100379d70f')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
   .desc(
     `
 vector any:
@@ -37,7 +37,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('scalar_select,logical_builtin_functions')
   .uniqueId('50b1f627c11098a1')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
   .desc(
     `
 scalar select:
@@ -52,7 +52,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
 g.test('vector_select,logical_builtin_functions')
   .uniqueId('8b7bb7f58ee1e479')
-  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
+  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
   .desc(
     `
 vector select:

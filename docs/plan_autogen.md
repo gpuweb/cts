@@ -5,7 +5,7 @@ An `auto-generated test plan` is a [test plan](./intro/plans.md) with a `unique-
 ```
 g.test(<name>)
   .uniqueId(<unique-id>)
-  .url(<url>)
+  .specURL(<url>)
   .desc(<description>)
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
