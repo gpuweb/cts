@@ -5,10 +5,8 @@ An `auto-generated test plan` is a [test plan](./intro/plans.md) with a `unique-
 ```
 g.test(<name>)
   .uniqueId(<unique-id>)
-  .desc(
-    <url>
-    <description>
-  )
+  .specURL(<url>)
+  .desc(<description>)
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 ```
@@ -26,7 +24,7 @@ unique-id = sha1(<section-name> + <description>)
 To implement an auto-generated test plan:
 1. Choose an auto-generated test plan that is not currently under development, ie. looking up the `unique-id` in [this list](https://bugs.chromium.org/p/tint/issues/list) must not return any results.
 2. [Submit](https://chromium.googlesource.com/infra/infra/+/HEAD/appengine/monorail/doc/userguide/working-with-issues.md#How-to-enter-an-issue) a new issue using this [template](https://bugs.chromium.org/p/tint/issues/entry?template=WGSL+CTS+with+a+unique+id). Make sure to include the `unique-id` and `url`.
-3. Implement the test plan. You may change the test name and description; however, the `unique-id` must remain as is.
+3. Implement the test plan. You may modify the test name and description; however, `url` and `unique-id` must remain unchanged.
 4. Add a [comment](https://chromium.googlesource.com/infra/infra/+/HEAD/appengine/monorail/doc/userguide/working-with-issues.md#How-to-comment-on-an-issue) to the issue (created in step 2) with a link to your merged pull request. Then close the issue with status `Fixed`.
 
 # Useful helpers

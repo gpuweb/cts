@@ -171,6 +171,12 @@ export class TestGroup {
 
 
 
+
+
+
+
+
+
 class TestBuilder {
 
 
@@ -193,6 +199,10 @@ class TestBuilder {
   }
 
   uniqueId(id) {
+    return this;
+  }
+
+  specURL(url) {
     return this;
   }
 
