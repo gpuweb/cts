@@ -127,6 +127,12 @@ interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F
    */
   uniqueId(id: string): this;
   /**
+   * A noop function with the purpose of highlighting value `url`.
+   *
+   * @param url a link to the spec where test is extracted from.
+   */
+  url(url: string): this;
+  /**
    * Parameterize the test, generating multiple cases, each possibly having subcases.
    *
    * The `unit` value passed to the `cases` callback is an immutable constant
@@ -193,6 +199,10 @@ class TestBuilder {
   }
 
   uniqueId(id: string): this {
+    return this;
+  }
+
+  url(url: string): this {
     return this;
   }
 

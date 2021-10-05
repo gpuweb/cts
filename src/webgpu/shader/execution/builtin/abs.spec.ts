@@ -14,9 +14,9 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('abs_unsigned,integer_builtin_functions')
   .uniqueId('59ff84968a839124')
+  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `
-https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions
 scalar case, unsigned abs:
 abs(e: T ) -> T
 T is u32 or vecN<u32>. Result is e.
@@ -87,9 +87,9 @@ Component-wise when T is a vector.
 
 g.test('abs_signed,integer_builtin_functions')
   .uniqueId('d8fc581d17db6ae8')
+  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `
-https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions
 signed abs:
 abs(e: T ) -> T
 T is i32 or vecN<i32>. The result is the absolute value of e.
@@ -164,9 +164,9 @@ If e evaluates to the largest negative value, then the result is e.
 
 g.test('abs_float,float_builtin_functions')
   .uniqueId('2c1782b6a8dec8cb')
+  .url('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
-https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions
 float abs:
 abs(e: T ) -> T
 T is f32 or vecN<f32>
