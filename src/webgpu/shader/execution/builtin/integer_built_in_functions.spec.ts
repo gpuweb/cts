@@ -5,7 +5,7 @@ import { GPUTest } from '../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('unsigned_clamp,integer_builtin_functions')
+g.test('integer_builtin_functions,unsigned_clamp')
   .uniqueId('386458e12e52645b')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
@@ -20,7 +20,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('signed_clamp,integer_builtin_functions')
+g.test('integer_builtin_functions,signed_clamp')
   .uniqueId('da51d3c8cc902ab2')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
@@ -35,7 +35,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('count_1_bits,integer_builtin_functions')
+g.test('integer_builtin_functions,count_1_bits')
   .uniqueId('259605bdcc180a4b')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
@@ -50,7 +50,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('unsigned_max,integer_builtin_functions')
+g.test('integer_builtin_functions,unsigned_max')
   .uniqueId('2cce54f65e71b3a3')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
@@ -65,7 +65,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('signed_max,integer_builtin_functions')
+g.test('integer_builtin_functions,signed_max')
   .uniqueId('ef8c37107946a69e')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
@@ -80,7 +80,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('unsigned_min,integer_builtin_functions')
+g.test('integer_builtin_functions,unsigned_min')
   .uniqueId('29aba7ede5b93cdd')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
@@ -95,7 +95,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('signed_min,integer_builtin_functions')
+g.test('integer_builtin_functions,signed_min')
   .uniqueId('60c8ecdf409b45fc')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
@@ -110,7 +110,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('bit_reversal,integer_builtin_functions')
+g.test('integer_builtin_functions,bit_reversal')
   .uniqueId('8a7550f1097993f8')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(

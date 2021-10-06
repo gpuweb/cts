@@ -5,7 +5,7 @@ import { GPUTest } from '../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('vector_all,logical_builtin_functions')
+g.test('logical_builtin_functions,vector_all')
   .uniqueId('d140d173a2acf981')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
   .desc(
@@ -20,7 +20,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('vector_any,logical_builtin_functions')
+g.test('logical_builtin_functions,vector_any')
   .uniqueId('ac2b3a100379d70f')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
   .desc(
@@ -35,7 +35,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('scalar_select,logical_builtin_functions')
+g.test('logical_builtin_functions,scalar_select')
   .uniqueId('50b1f627c11098a1')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
   .desc(
@@ -50,7 +50,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('vector_select,logical_builtin_functions')
+g.test('logical_builtin_functions,vector_select')
   .uniqueId('8b7bb7f58ee1e479')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
   .desc(

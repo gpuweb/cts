@@ -5,7 +5,7 @@ import { GPUTest } from '../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('acos,float_builtin_functions')
+g.test('float_builtin_functions,acos')
   .uniqueId('3b55004d23fedacf')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -20,7 +20,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('asin,float_builtin_functions')
+g.test('float_builtin_functions,asin')
   .uniqueId('322c7c5ba84c257a')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -35,7 +35,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('atan,float_builtin_functions')
+g.test('float_builtin_functions,atan')
   .uniqueId('b13828d6243d13dd')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -50,7 +50,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('atan2,float_builtin_functions')
+g.test('float_builtin_functions,atan2')
   .uniqueId('cc85953f226ac95c')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -65,7 +65,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('ceil,float_builtin_functions')
+g.test('float_builtin_functions,ceil')
   .uniqueId('38d65728ea728bc5')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -80,7 +80,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('clamp,float_builtin_functions')
+g.test('float_builtin_functions,clamp')
   .uniqueId('88e39c61e6dbd26f')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -95,7 +95,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('cos,float_builtin_functions')
+g.test('float_builtin_functions,cos')
   .uniqueId('650973d690dcd841')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -110,7 +110,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('cosh,float_builtin_functions')
+g.test('float_builtin_functions,cosh')
   .uniqueId('e4499ece6f25610d')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -125,7 +125,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('vector_case_cross,float_builtin_functions')
+g.test('float_builtin_functions,vector_case_cross')
   .uniqueId('61356f087238c33c')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -140,7 +140,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('distance,float_builtin_functions')
+g.test('float_builtin_functions,distance')
   .uniqueId('a1459d94b9d23add')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -155,7 +155,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('exp,float_builtin_functions')
+g.test('float_builtin_functions,exp')
   .uniqueId('ba1d78b3923e3ecc')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -170,7 +170,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('exp2,float_builtin_functions')
+g.test('float_builtin_functions,exp2')
   .uniqueId('335173647c18d7b0')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -185,7 +185,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('faceForward,float_builtin_functions')
+g.test('float_builtin_functions,faceForward')
   .uniqueId('ff98e4f5d2064a6f')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -200,7 +200,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('floor,float_builtin_functions')
+g.test('float_builtin_functions,floor')
   .uniqueId('2edb4534aa0e48a6')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -215,7 +215,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('fma,float_builtin_functions')
+g.test('float_builtin_functions,fma')
   .uniqueId('c6212635b880548b')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -230,7 +230,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('fract,float_builtin_functions')
+g.test('float_builtin_functions,fract')
   .uniqueId('58222ecf6f963798')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -245,7 +245,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('scalar_case_frexp,float_builtin_functions')
+g.test('float_builtin_functions,scalar_case_frexp')
   .uniqueId('c5df46977f5b77a0')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -261,7 +261,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('vector_case_frexp,float_builtin_functions')
+g.test('float_builtin_functions,vector_case_frexp')
   .uniqueId('69806278766b12a2')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -277,7 +277,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('inverseSqrt,float_builtin_functions')
+g.test('float_builtin_functions,inverseSqrt')
   .uniqueId('84fc180ad82c5618')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -292,7 +292,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('ldexp,float_builtin_functions')
+g.test('float_builtin_functions,ldexp')
   .uniqueId('358f6e4501a32907')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -307,7 +307,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('length,float_builtin_functions')
+g.test('float_builtin_functions,length')
   .uniqueId('0e5dba3253f9dec6')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -322,7 +322,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('log,float_builtin_functions')
+g.test('float_builtin_functions,log')
   .uniqueId('7cd6780116b47d00')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -337,7 +337,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('log2,float_builtin_functions')
+g.test('float_builtin_functions,log2')
   .uniqueId('9ed120de1990296a')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -352,7 +352,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('max,float_builtin_functions')
+g.test('float_builtin_functions,max')
   .uniqueId('bcb6c69b4ec703b1')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -367,7 +367,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('min,float_builtin_functions')
+g.test('float_builtin_functions,min')
   .uniqueId('53efc46faad0f380')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -382,7 +382,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('mix_all_same_type_operands,float_builtin_functions')
+g.test('float_builtin_functions,mix_all_same_type_operands')
   .uniqueId('f17861e71386bb59')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -397,7 +397,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('vector_mix_with_scalar_blending_factor,float_builtin_functions')
+g.test('float_builtin_functions,vector_mix_with_scalar_blending_factor')
   .uniqueId('0a9f4a579e0c1348')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -412,7 +412,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('scalar_case_modf,float_builtin_functions')
+g.test('float_builtin_functions,scalar_case_modf')
   .uniqueId('2a7234321aef021d')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -428,7 +428,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('vector_case_modf,float_builtin_functions')
+g.test('float_builtin_functions,vector_case_modf')
   .uniqueId('d1426ca015843ddf')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -444,7 +444,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('vector_case_normalize,float_builtin_functions')
+g.test('float_builtin_functions,vector_case_normalize')
   .uniqueId('29c971aea0969a86')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -459,7 +459,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('pow,float_builtin_functions')
+g.test('float_builtin_functions,pow')
   .uniqueId('a3ff963b1810c8c4')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -474,7 +474,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('quantize_to_f16,float_builtin_functions')
+g.test('float_builtin_functions,quantize_to_f16')
   .uniqueId('ec899bfcd46a6316')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -489,7 +489,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('reflect,float_builtin_functions')
+g.test('float_builtin_functions,reflect')
   .uniqueId('463ddb8c59de0a98')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -504,7 +504,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('refract,float_builtin_functions')
+g.test('float_builtin_functions,refract')
   .uniqueId('8e0c0021b980cf0a')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -519,7 +519,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('round,float_builtin_functions')
+g.test('float_builtin_functions,round')
   .uniqueId('427d7791f5cd13dc')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -534,7 +534,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('float_sign,float_builtin_functions')
+g.test('float_builtin_functions,float_sign')
   .uniqueId('411a9acbb5411c89')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -549,7 +549,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('sin,float_builtin_functions')
+g.test('float_builtin_functions,sin')
   .uniqueId('d10f3745e5ea639d')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -564,7 +564,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('sinh,float_builtin_functions')
+g.test('float_builtin_functions,sinh')
   .uniqueId('d1d30e0b45aabed5')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -579,7 +579,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('smoothStep,float_builtin_functions')
+g.test('float_builtin_functions,smoothStep')
   .uniqueId('d1e9e5d30be184c0')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -594,7 +594,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('sqrt,float_builtin_functions')
+g.test('float_builtin_functions,sqrt')
   .uniqueId('f16f8ca434c7e6d8')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -609,7 +609,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('step,float_builtin_functions')
+g.test('float_builtin_functions,step')
   .uniqueId('ac15bb28d3fa3032')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -624,7 +624,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('tan,float_builtin_functions')
+g.test('float_builtin_functions,tan')
   .uniqueId('0229869d4d7f2702')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -639,7 +639,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('tanh,float_builtin_functions')
+g.test('float_builtin_functions,tanh')
   .uniqueId('5d36803b13b3522d')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
@@ -654,7 +654,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('trunc,float_builtin_functions')
+g.test('float_builtin_functions,trunc')
   .uniqueId('2f5ce2108f924fca')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(

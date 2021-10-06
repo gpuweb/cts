@@ -12,7 +12,7 @@ import { kBit, kValue, runShaderTest } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('abs_unsigned,integer_builtin_functions')
+g.test('integer_builtin_functions,abs_unsigned')
   .uniqueId('59ff84968a839124')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
@@ -85,7 +85,7 @@ Component-wise when T is a vector.
     );
   });
 
-g.test('abs_signed,integer_builtin_functions')
+g.test('integer_builtin_functions,abs_signed')
   .uniqueId('d8fc581d17db6ae8')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
@@ -162,7 +162,7 @@ If e evaluates to the largest negative value, then the result is e.
     );
   });
 
-g.test('abs_float,float_builtin_functions')
+g.test('float_builtin_functions,abs_float')
   .uniqueId('2c1782b6a8dec8cb')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
