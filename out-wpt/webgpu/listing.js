@@ -1140,7 +1140,23 @@ export const listing = [
       "shader",
       "execution",
       "builtin",
+      "integer_built_in_functions"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "builtin",
       "logical_built_in_functions"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "builtin",
+      "value_testing_built_in_functions"
     ]
   },
   {
