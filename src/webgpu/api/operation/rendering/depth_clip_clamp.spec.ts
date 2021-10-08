@@ -348,6 +348,7 @@ to be empty.`
   .params(u =>
     u //
       .combine('format', kDepthStencilFormats)
+      .filter(p => kTextureFormatInfo[p.format].depth)
       .combine('clampDepth', [false, true])
       .combine('multisampled', [false, true])
   )
