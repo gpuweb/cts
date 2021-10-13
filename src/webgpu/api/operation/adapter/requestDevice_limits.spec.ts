@@ -7,15 +7,9 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../common/util/data_tables.js';
 import { getGPU } from '../../../../common/util/navigator_gpu.js';
 import { assert } from '../../../../common/util/util.js';
-import { DefaultLimits } from '../../../constants.js';
+import { DefaultLimits, LimitMaximum } from '../../../constants.js';
 
 const kLimitTypes = keysOf(DefaultLimits);
-
-const kMaxUnsignedLongValue = 4294967295;
-/** Clamps a numeric value to the valid unsigned long range, as defined by WebIDL */
-function clampToUnsignedLong(value: number): number {
-  return Math.min(kMaxUnsignedLongValue, Math.max(0, value));
-}
 
 export const g = makeTestGroup(Fixture);
 
@@ -98,7 +92,7 @@ g.test('better_than_supported')
     const mult = limit.startsWith('min') ? -1 : 1;
 
     const requiredLimits = {
-      [limit]: clampToUnsignedLong(adapter.limits[limit] + over * mult),
+      [limit]: Math.max(Math.min(adapter.limits[limit] + over * mult, LimitMaximum[limit]), 0),
     };
 
     t.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }));
@@ -129,7 +123,10 @@ g.test('worse_than_default')
     const mult = limit.startsWith('min') ? -1 : 1;
 
     const requiredLimits = {
-      [limit]: clampToUnsignedLong((DefaultLimits[limit] as number) - under * mult),
+      [limit]: Math.max(
+        Math.min((DefaultLimits[limit] as number) - under * mult, LimitMaximum[limit]),
+        0
+      ),
     };
 
     const device = await adapter.requestDevice({ requiredLimits });
