@@ -8,6 +8,7 @@ import { keysOf } from '../../../../common/util/data_tables.js';
 import { getGPU } from '../../../../common/util/navigator_gpu.js';
 import { assert } from '../../../../common/util/util.js';
 import { DefaultLimits, LimitMaximum } from '../../../constants.js';
+import { clamp } from '../../../util/math.js';
 
 const kLimitTypes = keysOf(DefaultLimits);
 
@@ -92,7 +93,10 @@ g.test('better_than_supported')
     const mult = limit.startsWith('min') ? -1 : 1;
 
     const requiredLimits = {
-      [limit]: Math.max(Math.min(adapter.limits[limit] + over * mult, LimitMaximum[limit]), 0),
+      [limit]: clamp(adapter.limits[limit] + over * mult, {
+        min: 0,
+        max: LimitMaximum[limit],
+      }),
     };
 
     t.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }));
@@ -123,10 +127,10 @@ g.test('worse_than_default')
     const mult = limit.startsWith('min') ? -1 : 1;
 
     const requiredLimits = {
-      [limit]: Math.max(
-        Math.min((DefaultLimits[limit] as number) - under * mult, LimitMaximum[limit]),
-        0
-      ),
+      [limit]: clamp(DefaultLimits[limit] - under * mult, {
+        min: 0,
+        max: LimitMaximum[limit],
+      }),
     };
 
     const device = await adapter.requestDevice({ requiredLimits });
