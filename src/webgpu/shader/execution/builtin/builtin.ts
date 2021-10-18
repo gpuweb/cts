@@ -1,3 +1,4 @@
+import { Colors } from '../../../../common/util/colors.js';
 import {
   TypedArrayBufferView,
   TypedArrayBufferViewConstructor,
@@ -90,15 +91,15 @@ export function runShaderTest<F extends NumberType>(
 
   t.queue.submit([encoder.finish()]);
 
-  // Returns the string representation of number.
-  const formatNum = (num: number | bigint) => {
+  // Returns the string representation of num using the specified color.
+  const formatNum = (num: number | bigint, color = Colors.reset) => {
     switch (num) {
       case 0:
       case Infinity:
       case -Infinity:
-        return num.toString();
+        return color.bold(num.toString());
       default:
-        return num + ' (0x' + num.toString(16) + ')';
+        return color.bold(num.toString()) + color(' (0x' + num.toString(16) + ')');
     }
   };
 
@@ -123,9 +124,21 @@ export function runShaderTest<F extends NumberType>(
         // `cases[expectedIndex].expected` is an array of values that are treated as a pass.
         // Do any of these expected values match?
         const elementMatched = cases[expectedIndex].expected.some(e => e.value === outputData[idx]);
-        outputValue.push(formatNum(outputData[idx]));
+        outputValue.push(formatNum(outputData[idx], elementMatched ? Colors.green : Colors.red));
 
-        const caseExpected = cases[expectedIndex].expected.map(e => formatNum(e.value));
+        const caseExpected: string[] = [];
+        for (const e of cases[expectedIndex].expected) {
+          if (outputData[idx] === e.value) {
+            // This expected value matched
+            caseExpected.push(formatNum(e.value, Colors.green));
+          } else if (elementMatched) {
+            // The element matched, but it wasn't for this value.
+            caseExpected.push(formatNum(e.value, Colors.grey));
+          } else {
+            // The element did not match any expected value
+            caseExpected.push(formatNum(e.value, Colors.red));
+          }
+        }
         expectedValue.push(caseExpected.join(' or '));
 
         // If none of the expected values matched, then the case has failed.
