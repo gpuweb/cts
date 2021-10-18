@@ -422,11 +422,17 @@ Component-wise when T is a vector. (GLSLstd450Fabs)
         // TODO(sarahM0): Check if this is needed (or if it has to fail). If yes add other values.
         {
           input: NumberRepr.fromF32Bits(kBit.f32.subnormal.positive.max),
-          expected: [NumberRepr.fromF32Bits(kBit.f32.subnormal.positive.max)],
+          expected: [
+            NumberRepr.fromF32Bits(kBit.f32.subnormal.positive.max),
+            NumberRepr.fromF32(0),
+          ],
         },
         {
           input: NumberRepr.fromF32Bits(kBit.f32.subnormal.positive.min),
-          expected: [NumberRepr.fromF32Bits(kBit.f32.subnormal.positive.min)],
+          expected: [
+            NumberRepr.fromF32Bits(kBit.f32.subnormal.positive.min),
+            NumberRepr.fromF32(0),
+          ],
         },
 
         // Infinity f32
