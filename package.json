@@ -28,6 +28,9 @@
     "url": "https://github.com/gpuweb/cts/issues"
   },
   "homepage": "https://github.com/gpuweb/cts#readme",
+  "dependencies": {
+    "ansi-colors": "4.1.1"
+  },
   "devDependencies": {
     "@babel/cli": "^7.12.1",
     "@babel/core": "^7.12.3",
