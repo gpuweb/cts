@@ -1140,6 +1140,14 @@ export const listing = [
       "shader",
       "execution",
       "builtin",
+      "ceil"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "builtin",
       "integer_built_in_functions"
     ]
   },

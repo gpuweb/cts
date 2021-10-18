@@ -571,7 +571,7 @@ Component-wise when T is a vector. (GLSLstd450Fabs)
           expected: [NumberRepr.fromF32(kValue.powTwo.toMinus31)],
         },
 
-        // Powers of 2.0: -2.0^i: 1 =< i =< 31
+        // Powers of 2.0: -2.0^i: 1 <= i <= 31
         {
           input: NumberRepr.fromF32(kValue.negPowTwo.to1),
           expected: [NumberRepr.fromF32(kValue.powTwo.to1)],
