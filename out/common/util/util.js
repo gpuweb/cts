@@ -104,7 +104,16 @@ export function rejectOnTimeout(ms, msg) {
    * and otherwise passes the result through.
    */
 export function raceWithRejectOnTimeout(p, ms, msg) {
-  return Promise.race([p, rejectOnTimeout(ms, msg)]);
+  // Setup a promise that will reject after `ms` milliseconds. We cancel this timeout when
+  // `p` is finalized, so the JavaScript VM doesn't hang around waiting for the timer to
+  // complete, once the test runner has finished executing the tests.
+  const timeoutPromise = new Promise((_resolve, reject) => {
+    const handle = timeout(() => {
+      reject(new PromiseTimeoutError(msg));
+    }, ms);
+    p.finally(() => clearTimeout(handle));
+  });
+  return Promise.race([p, timeoutPromise]);
 }
 
 /**
