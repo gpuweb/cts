@@ -1,3 +1,5 @@
+import * as colors from 'ansi-colors';
+
 import {
   TypedArrayBufferView,
   TypedArrayBufferViewConstructor,
@@ -25,10 +27,10 @@ export function runShaderTest<F extends NumberType>(
     struct Data {
       values : [[stride(16)]] array<${type}, ${cases.length}>;
     };
-  
+
     [[group(0), binding(0)]] var<${storageClass}, ${storageMode}> inputs : Data;
     [[group(0), binding(1)]] var<${storageClass}, write> outputs : Data;
-  
+
     [[stage(compute), workgroup_size(1)]]
     fn main() {
       for(var i = 0; i < ${cases.length}; i = i + 1) {
@@ -90,44 +92,73 @@ export function runShaderTest<F extends NumberType>(
 
   t.queue.submit([encoder.finish()]);
 
+  // Returns the string representation of num using the specified color.
+  const formatNum = (num: number | bigint, color = colors.reset) => {
+    switch (num) {
+      case 0:
+      case Infinity:
+      case -Infinity:
+        return color.bold(num.toString());
+      default:
+        return color.bold(num.toString()) + color(' (0x' + num.toString(16) + ')');
+    }
+  };
+
   const checkExpectation = (outputData: typeof inputData) => {
+    // The list of expectation failures
     const errs: string[] = [];
+
+    // For each case...
     for (let i = 0; i < cases.length; i++) {
-      const input: string[] = [];
-      const output: string[] = [];
-      const expected: string[] = [];
-      let matched = true;
+      // String representations of the input, output and expectation values for this case.
+      const inputValue: string[] = [];
+      const outputValue: string[] = [];
+      const expectedValue: string[] = [];
+      let caseMatched = true;
+
+      // For each element in the case...
       for (let j = 0; j < arrayLength; j++) {
         const idx = i * 4 + j;
         const caseExpected: string[] = [];
         const expectedIndex = i + j < cases.length ? i + j : i;
+        inputValue.push(formatNum(inputData[idx]));
+
+        // `cases[expectedIndex].expected` is an array of values that are treated as a pass.
+        // Do any of these expected values match?
+        const elementMatched = cases[expectedIndex].expected.some(e => e.value === outputData[idx]);
+        outputValue.push(formatNum(outputData[idx], elementMatched ? colors.green : colors.red));
         for (const e of cases[expectedIndex].expected) {
-          caseExpected.push(e.value + ' (0x' + e.value.toString(16) + ')');
-          if (outputData[idx] !== e.value) {
-            matched = false;
+          if (outputData[idx] === e.value) {
+            // This expected value matched
+            caseExpected.push(formatNum(e.value, colors.green));
+          } else if (elementMatched) {
+            // The element matched, but it wasn't for this value.
+            caseExpected.push(formatNum(e.value, colors.grey));
+          } else {
+            // The element did not match any expected value
+            caseExpected.push(formatNum(e.value, colors.red));
           }
-
-          input.push(inputData[idx] + ' (0x' + inputData[idx].toString(16) + ')');
-          output.push(outputData[idx] + ' (0x' + outputData[idx].toString(16) + ')');
-          expected.push(caseExpected.join(' or '));
         }
-      }
-      if (matched) {
-        continue;
+        expectedValue.push(caseExpected.join(' or '));
+
+        // If none of the expected values matched, then the case has failed.
+        caseMatched = caseMatched && elementMatched;
       }
 
-      if (arrayLength > 1) {
-        errs.push(
-          `${builtin}(${type}(${input.join(', ')}))\n` +
-            `    returned: ${type}(${output.join(', ')})\n` +
-            `    expected: ${type}(${expected.join(', ')})`
-        );
-      } else {
-        errs.push(
-          `${builtin}(${input.join(', ')})\n` +
-            `    returned: ${output.join(', ')}\n` +
-            `    expected: ${expected.join(', ')}`
-        );
+      if (!caseMatched) {
+        if (arrayLength > 1) {
+          errs.push(
+            `${builtin}(${type}(${inputValue.join(', ')}))\n` +
+              `    returned: ${type}(${outputValue.join(', ')})\n` +
+              `    expected: ${type}(${expectedValue.join(', ')})`
+          );
+        } else {
+          errs.push(
+            `${builtin}(${inputValue.join(', ')})\n` +
+              `    returned: ${outputValue.join(', ')}\n` +
+              `    expected: ${expectedValue.join(', ')}`
+          );
+        }
       }
     }
 
