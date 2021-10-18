@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>BeginCountRange | @webgpu/cts</title>
+	<title>common/util/colors | @webgpu/cts</title>
 	<meta name="description" content="Documentation for @webgpu/cts">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -55,69 +55,54 @@
 					<a href="../modules.html">@webgpu/cts</a>
 				</li>
 				<li>
-					<a href="../modules/webgpu_util_texture_subresource.html">webgpu/util/texture/subresource</a>
-				</li>
-				<li>
-					<a href="webgpu_util_texture_subresource.begincountrange.html">BeginCountRange</a>
+					<a href="common_util_colors.html">common/util/colors</a>
 				</li>
 			</ul>
-			<h1>Interface BeginCountRange</h1>
+			<h1>Module common/util/colors</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
-			<section class="tsd-panel tsd-comment">
-				<div class="tsd-comment tsd-typography">
-					<div class="lead">
-						<p>A range of indices expressed as { begin, count }.</p>
-					</div>
-				</div>
-			</section>
-			<section class="tsd-panel tsd-hierarchy">
-				<h3>Hierarchy</h3>
-				<ul class="tsd-hierarchy">
-					<li>
-						<span class="target">BeginCountRange</span>
-					</li>
-				</ul>
-			</section>
 			<section class="tsd-panel-group tsd-index-group">
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
 						<section class="tsd-index-section ">
-							<h3>Properties</h3>
+							<h3>Interfaces</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="webgpu_util_texture_subresource.begincountrange.html#begin" class="tsd-kind-icon">begin</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="webgpu_util_texture_subresource.begincountrange.html#count" class="tsd-kind-icon">count</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/common_util_colors.colors.html" class="tsd-kind-icon">Colors</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Variables</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-variable tsd-parent-kind-module"><a href="common_util_colors.html#colors-1" class="tsd-kind-icon">Colors</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
-				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="begin" class="tsd-anchor"></a>
-					<h3>begin</h3>
-					<div class="tsd-signature tsd-kind-icon">begin<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+				<h2>Variables</h2>
+				<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-module">
+					<a name="colors-1" class="tsd-anchor"></a>
+					<h3>Colors</h3>
+					<div class="tsd-signature tsd-kind-icon">Colors<span class="tsd-signature-symbol">:</span> <a href="common_util_colors.html#colors-1" class="tsd-signature-type" data-tsd-kind="Variable">Colors</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/gpuweb/cts/blob/6e1b3a2/src/webgpu/util/texture/subresource.ts#L3">src/webgpu/util/texture/subresource.ts:3</a></li>
+							<li>Defined in <a href="https://github.com/gpuweb/cts/blob/6e1b3a2/src/common/util/colors.ts#L73">src/common/util/colors.ts:73</a></li>
 						</ul>
 					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="count" class="tsd-anchor"></a>
-					<h3>count</h3>
-					<div class="tsd-signature tsd-kind-icon">count<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/gpuweb/cts/blob/6e1b3a2/src/webgpu/util/texture/subresource.ts#L4">src/webgpu/util/texture/subresource.ts:4</a></li>
-						</ul>
-					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The interface used for formatting strings with color metadata.</p>
+						</div>
+						<p>Currently Colors will use the &#39;ansi-colors&#39; module if it can be loaded.
+						If it cannot be loaded, then the Colors implementation is a straight pass-through.</p>
+						<p>Colors may also be a no-op if the current environment does not support colors.</p>
+					</div>
 				</section>
 			</section>
 		</div>
@@ -128,32 +113,17 @@
 						<a href="../modules.html">Modules</a>
 					</li>
 					<li class="current tsd-kind-module">
-						<a href="../modules/webgpu_util_texture_subresource.html">webgpu/util/texture/subresource</a>
+						<a href="common_util_colors.html">common/util/colors</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="../classes/webgpu_util_texture_subresource.subresourcerange.html" class="tsd-kind-icon">Subresource<wbr>Range</a>
-					</li>
-				</ul>
-				<ul class="current">
-					<li class="current tsd-kind-interface tsd-parent-kind-module">
-						<a href="webgpu_util_texture_subresource.begincountrange.html" class="tsd-kind-icon">Begin<wbr>Count<wbr>Range</a>
-						<ul>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="webgpu_util_texture_subresource.begincountrange.html#begin" class="tsd-kind-icon">begin</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="webgpu_util_texture_subresource.begincountrange.html#count" class="tsd-kind-icon">count</a>
-							</li>
-						</ul>
-					</li>
-				</ul>
-				<ul class="after-current">
 					<li class=" tsd-kind-interface tsd-parent-kind-module">
-						<a href="webgpu_util_texture_subresource.beginendrange.html" class="tsd-kind-icon">Begin<wbr>End<wbr>Range</a>
+						<a href="../interfaces/common_util_colors.colors.html" class="tsd-kind-icon">Colors</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="common_util_colors.html#colors-1" class="tsd-kind-icon">Colors</a>
 					</li>
 				</ul>
 			</nav>
@@ -173,15 +143,14 @@
 				<li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li>
 			</ul>
 			<ul class="tsd-legend">
-				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
-			</ul>
-			<ul class="tsd-legend">
 				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
 				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
 			</ul>
 			<ul class="tsd-legend">
 				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
 			</ul>
 		</div>
 	</div>
