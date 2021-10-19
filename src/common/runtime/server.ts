@@ -112,6 +112,6 @@ for (let i = 0; i < sys.args.length; ++i) {
     console.log(`Server listening at [[${address.port}]]`);
   });
 })().catch(ex => {
-  console.log(ex.stack ?? ex.toString());
+  console.error(ex.stack ?? ex.toString());
   sys.exit(1);
 });
