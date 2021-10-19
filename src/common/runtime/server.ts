@@ -44,11 +44,13 @@ let debug = false;
 for (let i = 0; i < sys.args.length; ++i) {
   const a = sys.args[i];
   if (a.startsWith('-')) {
-    if (a === '--verbose') {
-      debug = true;
-    } else if (a === '--gpu-provider') {
+    if (a === '--gpu-provider') {
       const modulePath = sys.args[++i];
       setGPUProvider(() => require(modulePath).gpu);
+    } else if (a === '--help') {
+      usage(1);
+    } else if (a === '--verbose') {
+      debug = true;
     }
   }
 }
@@ -56,7 +58,7 @@ for (let i = 0; i < sys.args.length; ++i) {
 (async () => {
   Logger.globalDebugMode = debug;
   const log = new Logger();
-  const testcases = await allWebGPUTestcases();
+  const testcases = allWebGPUTestcases();
 
   async function allWebGPUTestcases() {
     const webgpuQuery = parseQuery('webgpu:*');
@@ -82,11 +84,16 @@ for (let i = 0; i < sys.args.length; ++i) {
   const server = http.createServer(
     async (request: http.IncomingMessage, response: http.ServerResponse) => {
       if (request.url === undefined) {
+        response.end('invalid url');
         return;
       }
-      if (request.url.startsWith('/run?')) {
-        const name = request.url.substr(5);
-        const testcase = testcases.get(name);
+
+      const runPrefix = '/run?';
+      const terminatePrefix = '/terminate';
+
+      if (request.url.startsWith(runPrefix)) {
+        const name = request.url.substr(runPrefix.length);
+        const testcase = (await testcases).get(name);
         let status = 'fail';
         let message = '';
         if (testcase) {
@@ -100,9 +107,12 @@ for (let i = 0; i < sys.args.length; ++i) {
         }
         const res: RunResult = { status, message };
         response.end(JSON.stringify(res));
-      } else if (request.url.startsWith('/terminate')) {
+      } else if (request.url.startsWith(terminatePrefix)) {
         server.close();
         sys.exit(1);
+      } else {
+        response.statusCode = 404;
+        response.end('unhandled url request');
       }
     }
   );
