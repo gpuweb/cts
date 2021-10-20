@@ -111,7 +111,7 @@ export function raceWithRejectOnTimeout<T>(p: Promise<T>, ms: number, msg: strin
     const handle = timeout(() => {
       reject(new PromiseTimeoutError(msg));
     }, ms);
-    p.finally(() => clearTimeout(handle));
+    p = p.finally(() => clearTimeout(handle));
   });
   return Promise.race([p, timeoutPromise]) as Promise<T>;
 }
