@@ -26,9 +26,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   )
   .params(u =>
     u
-      .combineWithParams([
-        { storageClass: 'storage', storageMode: 'read_write', access: 'read' },
-      ] as const)
+      .combineWithParams([{ storageClass: 'storage', storageMode: 'read_write' }] as const)
       .combine('containerType', ['scalar', 'vector'] as const)
       .combine('isAtomic', [false])
       .combine('baseType', ['f32'] as const)
