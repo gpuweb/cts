@@ -26,9 +26,7 @@ Component-wise when T is a vector.
   )
   .params(u =>
     u
-      .combineWithParams([
-        { storageClass: 'storage', storageMode: 'read_write', access: 'read' },
-      ] as const)
+      .combineWithParams([{ storageClass: 'storage', storageMode: 'read_write' }] as const)
       .combine('containerType', ['scalar', 'vector'] as const)
       .combine('isAtomic', [false])
       .combine('baseType', ['u32'] as const)
@@ -100,9 +98,7 @@ If e evaluates to the largest negative value, then the result is e.
   )
   .params(u =>
     u
-      .combineWithParams([
-        { storageClass: 'storage', storageMode: 'read_write', access: 'read' },
-      ] as const)
+      .combineWithParams([{ storageClass: 'storage', storageMode: 'read_write' }] as const)
       .combine('containerType', ['scalar', 'vector'] as const)
       .combine('isAtomic', [false])
       .combine('baseType', ['i32'] as const)
@@ -176,9 +172,7 @@ Component-wise when T is a vector. (GLSLstd450Fabs)
   )
   .params(u =>
     u
-      .combineWithParams([
-        { storageClass: 'storage', storageMode: 'read_write', access: 'read' },
-      ] as const)
+      .combineWithParams([{ storageClass: 'storage', storageMode: 'read_write' }] as const)
       .combine('containerType', ['scalar', 'vector'] as const)
       .combine('isAtomic', [false])
       .combine('baseType', ['f32'] as const)

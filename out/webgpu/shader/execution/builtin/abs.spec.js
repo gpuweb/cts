@@ -26,9 +26,7 @@ Component-wise when T is a vector.
 
 params((u) =>
 u.
-combineWithParams([
-{ storageClass: 'storage', storageMode: 'read_write', access: 'read' }]).
-
+combineWithParams([{ storageClass: 'storage', storageMode: 'read_write' }]).
 combine('containerType', ['scalar', 'vector']).
 combine('isAtomic', [false]).
 combine('baseType', ['u32']).
@@ -100,9 +98,7 @@ If e evaluates to the largest negative value, then the result is e.
 
 params((u) =>
 u.
-combineWithParams([
-{ storageClass: 'storage', storageMode: 'read_write', access: 'read' }]).
-
+combineWithParams([{ storageClass: 'storage', storageMode: 'read_write' }]).
 combine('containerType', ['scalar', 'vector']).
 combine('isAtomic', [false]).
 combine('baseType', ['i32']).
@@ -176,9 +172,7 @@ Component-wise when T is a vector. (GLSLstd450Fabs)
 
 params((u) =>
 u.
-combineWithParams([
-{ storageClass: 'storage', storageMode: 'read_write', access: 'read' }]).
-
+combineWithParams([{ storageClass: 'storage', storageMode: 'read_write' }]).
 combine('containerType', ['scalar', 'vector']).
 combine('isAtomic', [false]).
 combine('baseType', ['f32']).
