@@ -18,8 +18,9 @@ function usage(rc: number): never {
   console.log('Usage:');
   console.log(`  tools/run_${sys.type} [OPTIONS...]`);
   console.log('Options:');
-  console.log('  --verbose       Print result/log of every test as it runs.');
-  console.log('  --gpu-provider  Path to node module that provides the GPU implementation.');
+  console.log('  --verbose            Print result/log of every test as it runs.');
+  console.log('  --gpu-provider       Path to node module that provides the GPU implementation.');
+  console.log('  --gpu-provider-flag  Flag to set on the gpu-provider as <flag>=<value>');
   console.log(``);
   console.log(`Provides an HTTP server used for running tests via an HTTP RPC interface`);
   console.log(`To run a test, perform an HTTP GET or POST at the URL:`);
@@ -34,25 +35,37 @@ interface RunResult {
   message: string;
 }
 
+interface GPUProviderModule {
+  create(flags: string[]): GPU;
+}
+
 if (!sys.existsSync('src/common/runtime/cmdline.ts')) {
   console.log('Must be run from repository root');
   usage(1);
 }
 
 let debug = false;
+let gpuProviderModule: GPUProviderModule | undefined = undefined;
 
+const gpuProviderFlags: string[] = [];
 for (let i = 0; i < sys.args.length; ++i) {
   const a = sys.args[i];
   if (a.startsWith('-')) {
     if (a === '--gpu-provider') {
       const modulePath = sys.args[++i];
-      setGPUProvider(() => require(modulePath).gpu);
+      gpuProviderModule = require(modulePath);
+    } else if (a === '--gpu-provider-flag') {
+      gpuProviderFlags.push(sys.args[++i]);
     } else if (a === '--help') {
       usage(1);
     } else if (a === '--verbose') {
       debug = true;
     }
   }
+}
+
+if (gpuProviderModule) {
+  setGPUProvider(() => gpuProviderModule!.create(gpuProviderFlags));
 }
 
 (async () => {
