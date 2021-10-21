@@ -16,12 +16,15 @@ function usage(rc) {
   console.log(`  tools/run_${sys.type} [OPTIONS...] QUERIES...`);
   console.log(`  tools/run_${sys.type} 'unittests:*' 'webgpu:buffers,*'`);
   console.log('Options:');
-  console.log('  --verbose       Print result/log of every test as it runs.');
-  console.log('  --list          Print all testcase names that match the given query and exit.');
-  console.log('  --debug         Include debug messages in logging.');
-  console.log('  --print-json    Print the complete result JSON in the output.');
-  console.log('  --expectations  Path to expectations file.');
-  console.log('  --gpu-provider  Path to node module that provides the GPU implementation.');
+  console.log('  --verbose            Print result/log of every test as it runs.');
+  console.log(
+  '  --list               Print all testcase names that match the given query and exit.');
+
+  console.log('  --debug              Include debug messages in logging.');
+  console.log('  --print-json         Print the complete result JSON in the output.');
+  console.log('  --expectations       Path to expectations file.');
+  console.log('  --gpu-provider       Path to node module that provides the GPU implementation.');
+  console.log('  --gpu-provider-flag  Flag to set on the gpu-provider as <flag>=<value>');
   return sys.exit(rc);
 }
 
@@ -30,13 +33,19 @@ if (!sys.existsSync('src/common/runtime/cmdline.ts')) {
   usage(1);
 }
 
+
+
+
+
 let verbose = false;
 let listTestcases = false;
 let debug = false;
 let printJSON = false;
 let loadWebGPUExpectations = undefined;
+let gpuProviderModule = undefined;
 
 const queries = [];
+const gpuProviderFlags = [];
 for (let i = 0; i < sys.args.length; ++i) {
   const a = sys.args[i];
   if (a.startsWith('-')) {
@@ -53,7 +62,9 @@ for (let i = 0; i < sys.args.length; ++i) {
       loadWebGPUExpectations = import(expectationsFile).then(m => m.expectations);
     } else if (a === '--gpu-provider') {
       const modulePath = sys.args[++i];
-      setGPUProvider(() => require(modulePath).gpu);
+      gpuProviderModule = require(modulePath);
+    } else if (a === '--gpu-provider-flag') {
+      gpuProviderFlags.push(sys.args[++i]);
     } else {
       console.log('unrecognized flag: ', a);
       usage(1);
@@ -61,6 +72,10 @@ for (let i = 0; i < sys.args.length; ++i) {
   } else {
     queries.push(a);
   }
+}
+
+if (gpuProviderModule) {
+  setGPUProvider(() => gpuProviderModule.create(gpuProviderFlags));
 }
 
 if (queries.length === 0) {
