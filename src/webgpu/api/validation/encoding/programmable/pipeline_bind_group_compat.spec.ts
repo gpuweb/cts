@@ -11,7 +11,7 @@ TODO: subsume existing test, rewrite fixture as needed.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { memcpy } from '../../../../../common/util/util.js';
+import { memcpy, unreachable } from '../../../../../common/util/util.js';
 import {
   kSamplerBindingTypes,
   kShaderStageCombinations,
@@ -25,15 +25,25 @@ import {
 } from '../../../../util/command_buffer_maker.js';
 import { ValidationTest } from '../../validation_test.js';
 
-function getTestCmds(encoderType: ProgrammableEncoderType): readonly string[] {
-  if (encoderType === 'compute pass') {
-    return ['dispatch', 'dispatchIndirect'] as const;
-  } else {
-    return ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect'] as const;
-  }
-}
+const kComputeCmds = ['dispatch', 'dispatchIndirect'] as const;
+type ComputeCmd = typeof kComputeCmds[number];
+const kRenderCmds = ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect'] as const;
+type RenderCmd = typeof kRenderCmds[number];
 
-const kResourceTypes = ['uniformBuf', 'filtSamp', 'sampledTex', 'storageTex'] as const;
+// Test resource type compatibility in pipeline and bind group
+// TODO: Add externalTexture
+const kResourceTypes: ValidBindableResource[] = [
+  'uniformBuf',
+  'filtSamp',
+  'sampledTex',
+  'storageTex',
+];
+
+function getTestCmds(
+  encoderType: ProgrammableEncoderType
+): readonly ComputeCmd[] | readonly RenderCmd[] {
+  return encoderType === 'compute pass' ? kComputeCmds : kRenderCmds;
+}
 
 class F extends ValidationTest {
   getIndexBuffer(): GPUBuffer {
@@ -59,7 +69,7 @@ class F extends ValidationTest {
     if (entry.sampler !== undefined) return 'filtSamp';
     if (entry.texture !== undefined) return 'sampledTex';
     if (entry.storageTexture !== undefined) return 'storageTex';
-    return 'uniformBuf';
+    unreachable();
   }
 
   createRenderPipelineWithLayout(
@@ -116,14 +126,6 @@ class F extends ValidationTest {
   }
 
   createBindGroupWithLayout(bglEntries: Array<GPUBindGroupLayoutEntry>): GPUBindGroup {
-    if (bglEntries.length === 0) {
-      bglEntries.push({
-        binding: 0,
-        visibility: GPUShaderStage.COMPUTE | GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-        buffer: {}, // default type: uniform
-      });
-    }
-
     const bgEntries: Array<GPUBindGroupEntry> = [];
     for (const entry of bglEntries) {
       const resource = this.getBindingResource(this.getBindingResourceType(entry));
@@ -139,8 +141,8 @@ class F extends ValidationTest {
     });
   }
 
-  doCompute(pass: GPUComputePassEncoder, call: string | undefined, isNoop: boolean) {
-    const x = isNoop ? 0 : 1;
+  doCompute(pass: GPUComputePassEncoder, call: ComputeCmd | undefined, callWithZero: boolean) {
+    const x = callWithZero ? 0 : 1;
     switch (call) {
       case 'dispatch':
         pass.dispatch(x, 1, 1);
@@ -155,10 +157,10 @@ class F extends ValidationTest {
 
   doRender(
     pass: GPURenderPassEncoder | GPURenderBundleEncoder,
-    call: string | undefined,
-    isNoop: boolean
+    call: RenderCmd | undefined,
+    callWithZero: boolean
   ) {
-    const vertexCount = isNoop ? 0 : 3;
+    const vertexCount = callWithZero ? 0 : 3;
     switch (call) {
       case 'draw':
         pass.draw(vertexCount, 1, 0, 0);
@@ -212,8 +214,8 @@ class F extends ValidationTest {
     pipeline: GPUComputePipeline | GPURenderPipeline,
     bindGroups: Array<GPUBindGroup | undefined>,
     dynamicOffsets: Array<number> | undefined,
-    call: string | undefined,
-    isNoop: boolean,
+    call: ComputeCmd | RenderCmd | undefined,
+    callWithZero: boolean,
     success: boolean
   ) {
     const { encoder, validateFinish } = this.createEncoder(encoderType);
@@ -243,9 +245,9 @@ class F extends ValidationTest {
     }
 
     if (encoder instanceof GPUComputePassEncoder) {
-      this.doCompute(encoder, call, isNoop);
+      this.doCompute(encoder, call as ComputeCmd, callWithZero);
     } else {
-      this.doRender(encoder, call, isNoop);
+      this.doRender(encoder, call as RenderCmd, callWithZero);
     }
 
     validateFinish(success);
@@ -266,7 +268,7 @@ g.test('bind_groups_and_pipeline_layout_mismatch')
     u
       .combine('encoderType', kProgrammableEncoderTypes)
       .expand('call', p => getTestCmds(p.encoderType))
-      .combine('isNoop', [true, false])
+      .combine('callWithZero', [true, false])
       .beginSubcases()
       .combineWithParams([
         { setBindGroup0: true, setBindGroup1: true, setUnusedBindGroup2: true, _success: true },
@@ -281,7 +283,7 @@ g.test('bind_groups_and_pipeline_layout_mismatch')
     const {
       encoderType,
       call,
-      isNoop,
+      callWithZero,
       setBindGroup0,
       setBindGroup1,
       setUnusedBindGroup2,
@@ -343,7 +345,7 @@ g.test('bind_groups_and_pipeline_layout_mismatch')
       [bindGroup0, bindGroup1, unusedBindGroup2],
       dynamicOffsets,
       call,
-      isNoop,
+      callWithZero,
       _success
     );
   });
@@ -472,7 +474,7 @@ g.test('bgl_binding_mismatch')
     u
       .combine('encoderType', kProgrammableEncoderTypes)
       .expand('call', p => getTestCmds(p.encoderType))
-      .combine('isNoop', [true, false])
+      .combine('callWithZero', [true, false])
       .beginSubcases()
       .combineWithParams([
         { bgBindings: [0, 1, 2], plBindings: [0, 1, 2], _success: true },
@@ -485,7 +487,15 @@ g.test('bgl_binding_mismatch')
       .combine('useU32Array', [false, true])
   )
   .fn(t => {
-    const { encoderType, call, isNoop, bgBindings, plBindings, _success, useU32Array } = t.params;
+    const {
+      encoderType,
+      call,
+      callWithZero,
+      bgBindings,
+      plBindings,
+      _success,
+      useU32Array,
+    } = t.params;
     const visibility =
       encoderType === 'compute pass' ? GPUShaderStage.COMPUTE : GPUShaderStage.VERTEX;
 
@@ -518,7 +528,7 @@ g.test('bgl_binding_mismatch')
     t.runTest(encoderType, pipeline, [bindGroup], dynamicOffsets, undefined, false, true);
 
     // Test with the dispatch/draw, to make sure the validation happens in dispatch/draw.
-    t.runTest(encoderType, pipeline, [bindGroup], dynamicOffsets, call, isNoop, _success);
+    t.runTest(encoderType, pipeline, [bindGroup], dynamicOffsets, call, callWithZero, _success);
   });
 
 g.test('bgl_visibility_mismatch')
@@ -527,7 +537,7 @@ g.test('bgl_visibility_mismatch')
     u
       .combine('encoderType', kProgrammableEncoderTypes)
       .expand('call', p => getTestCmds(p.encoderType))
-      .combine('isNoop', [true, false])
+      .combine('callWithZero', [true, false])
       .beginSubcases()
       .combine('bgVisibility', kShaderStageCombinations)
       .expand('plVisibility', p =>
@@ -542,7 +552,7 @@ g.test('bgl_visibility_mismatch')
       .combine('useU32Array', [false, true])
   )
   .fn(t => {
-    const { encoderType, call, isNoop, bgVisibility, plVisibility, useU32Array } = t.params;
+    const { encoderType, call, callWithZero, bgVisibility, plVisibility, useU32Array } = t.params;
 
     const bglEntries: Array<GPUBindGroupLayoutEntry> = [
       {
@@ -579,7 +589,7 @@ g.test('bgl_visibility_mismatch')
       [bindGroup],
       dynamicOffsets,
       call,
-      isNoop,
+      callWithZero,
       bgVisibility === plVisibility
     );
   });
@@ -595,14 +605,21 @@ g.test('bgl_resource_type_mismatch')
     u
       .combine('encoderType', kProgrammableEncoderTypes)
       .expand('call', p => getTestCmds(p.encoderType))
-      .combine('isNoop', [true, false])
+      .combine('callWithZero', [true, false])
       .beginSubcases()
       .combine('bgResourceType', kResourceTypes)
       .combine('plResourceType', kResourceTypes)
       .expand('useU32Array', p => (p.bgResourceType === 'uniformBuf' ? [true, false] : [false]))
   )
   .fn(t => {
-    const { encoderType, call, isNoop, bgResourceType, plResourceType, useU32Array } = t.params;
+    const {
+      encoderType,
+      call,
+      callWithZero,
+      bgResourceType,
+      plResourceType,
+      useU32Array,
+    } = t.params;
 
     const bglEntries: Array<GPUBindGroupLayoutEntry> = [
       t.createBindGroupLayoutEntry(encoderType, bgResourceType, useU32Array),
@@ -629,7 +646,7 @@ g.test('bgl_resource_type_mismatch')
       [bindGroup],
       dynamicOffsets,
       call,
-      isNoop,
+      callWithZero,
       bgResourceType === plResourceType
     );
   });
