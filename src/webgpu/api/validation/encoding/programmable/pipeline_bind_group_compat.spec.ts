@@ -10,6 +10,7 @@ TODO:
 TODO: subsume existing test, rewrite fixture as needed.
 `;
 
+import { kUnitCaseParamsBuilder } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { memcpy, unreachable } from '../../../../../common/util/util.js';
 import {
@@ -44,6 +45,11 @@ function getTestCmds(
 ): readonly ComputeCmd[] | readonly RenderCmd[] {
   return encoderType === 'compute pass' ? kComputeCmds : kRenderCmds;
 }
+
+const kCompatTestParams = kUnitCaseParamsBuilder
+  .combine('encoderType', kProgrammableEncoderTypes)
+  .expand('call', p => getTestCmds(p.encoderType))
+  .combine('callWithZero', [true, false]);
 
 class F extends ValidationTest {
   getIndexBuffer(): GPUBuffer {
@@ -264,11 +270,8 @@ g.test('bind_groups_and_pipeline_layout_mismatch')
     - bind groups unused by the pipeline layout can be set or not.
     `
   )
-  .params(u =>
-    u
-      .combine('encoderType', kProgrammableEncoderTypes)
-      .expand('call', p => getTestCmds(p.encoderType))
-      .combine('callWithZero', [true, false])
+  .params(
+    kCompatTestParams
       .beginSubcases()
       .combineWithParams([
         { setBindGroup0: true, setBindGroup1: true, setUnusedBindGroup2: true, _success: true },
@@ -470,11 +473,8 @@ g.test('bgl_binding_mismatch')
   .desc(
     'Tests the binding number must exist or not exist in both bindGroups[i].layout and pipelineLayout.bgls[i]'
   )
-  .params(u =>
-    u
-      .combine('encoderType', kProgrammableEncoderTypes)
-      .expand('call', p => getTestCmds(p.encoderType))
-      .combine('callWithZero', [true, false])
+  .params(
+    kCompatTestParams
       .beginSubcases()
       .combineWithParams([
         { bgBindings: [0, 1, 2], plBindings: [0, 1, 2], _success: true },
@@ -533,11 +533,8 @@ g.test('bgl_binding_mismatch')
 
 g.test('bgl_visibility_mismatch')
   .desc('Tests the visibility in bindGroups[i].layout and pipelineLayout.bgls[i] must be matched')
-  .params(u =>
-    u
-      .combine('encoderType', kProgrammableEncoderTypes)
-      .expand('call', p => getTestCmds(p.encoderType))
-      .combine('callWithZero', [true, false])
+  .params(
+    kCompatTestParams
       .beginSubcases()
       .combine('bgVisibility', kShaderStageCombinations)
       .expand('plVisibility', p =>
@@ -601,11 +598,8 @@ g.test('bgl_resource_type_mismatch')
   - TODO: Test externalTexture
   `
   )
-  .params(u =>
-    u
-      .combine('encoderType', kProgrammableEncoderTypes)
-      .expand('call', p => getTestCmds(p.encoderType))
-      .combine('callWithZero', [true, false])
+  .params(
+    kCompatTestParams
       .beginSubcases()
       .combine('bgResourceType', kResourceTypes)
       .combine('plResourceType', kResourceTypes)
