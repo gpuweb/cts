@@ -29,4 +29,24 @@ export function clamp(n, { min, max }) {
   assert(max >= min);
   return Math.min(Math.max(n, min), max);
 }
+
+/**
+   * Return the Units of Last Place difference between the numbers a and b.
+   * Requires `a` and `b` to be finite numbers.
+   */
+export function diffULP(a, b) {
+  const arr = new Uint32Array(new Float32Array([a, b]).buffer);
+  const u32_a = arr[0];
+  const u32_b = arr[1];
+
+  const sign_a = (u32_a & 0x80000000) !== 0;
+  const sign_b = (u32_b & 0x80000000) !== 0;
+  const masked_a = u32_a & 0x7fffffff;
+  const masked_b = u32_b & 0x7fffffff;
+
+  if (sign_a === sign_b) {
+    return Math.max(masked_a, masked_b) - Math.min(masked_a, masked_b);
+  }
+  return masked_a + masked_b;
+}
 //# sourceMappingURL=math.js.map
