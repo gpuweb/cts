@@ -126,7 +126,7 @@ and check that the APIs only accept compute shader.
     t.doCreateComputePipelineTest(isAsync, shaderModuleStage === 'compute', descriptor);
   });
 
-g.test('enrty_point_name_must_match')
+g.test('entry_point_name_must_match')
   .desc(
     `
 Tests calling createComputePipeline(Async) with valid compute stage shader and different entryPoint,
@@ -224,4 +224,47 @@ g.test('shader_module,device_mismatch')
     };
 
     t.doCreateComputePipelineTest(isAsync, !mismatched, descriptor);
+  });
+
+g.test('shader_module,overridable_constant_no_init_no_override')
+  .desc(
+    `Test that createComputePipeline(Async) cannot be called when a pipeline overridable constant has no initializer value and no override value.`
+  )
+  .paramsSubcasesOnly(u =>
+    u
+      .combine('success', [false, true])
+      .combine('isAsync', [true, false])
+      // 'id' controls how the POC is identified (by name or numerical id)
+      .combine('id', ['name', 'numeric'])
+  )
+  .fn(async t => {
+    const overridable_numeric_id = '1234';
+    const overridable_name = 'override';
+    const override =
+      t.params.id === 'name' ? '[[override]]' : `[[override(${overridable_numeric_id})]]`;
+    const wgsl = `
+      ${override} let ${overridable_name}: f32;
+
+      [[stage(compute), workgroup_size(1)]]
+      fn main() {
+        _ = ${overridable_name};
+      }
+      `;
+
+    const constant_values: Record<string, number> = {};
+    if (t.params.success) {
+      if (t.params.id === 'name') {
+        constant_values[overridable_name] = 1.23;
+      } else {
+        constant_values[overridable_numeric_id] = 1.23;
+      }
+    }
+
+    t.doCreateComputePipelineTest(t.params.isAsync, t.params.success, {
+      compute: {
+        module: t.device.createShaderModule({ code: wgsl }),
+        entryPoint: 'main',
+        constants: constant_values,
+      },
+    });
   });

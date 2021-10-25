@@ -492,3 +492,47 @@ g.test('shader_module,device_mismatch')
 
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
+
+g.test('shader_module,overridable_constant_no_init_no_override')
+  .desc(
+    `Test that createRenderPipeline(Async) cannot be called when a pipeline overridable constant has no initializer value and no override value.`
+  )
+  .paramsSubcasesOnly(u =>
+    u
+      .combine('success', [false, true])
+      .combine('isAsync', [true, false])
+      // 'id' controls how the POC is identified (by name or numerical id)
+      .combine('id', ['name', 'numeric'])
+  )
+  .fn(async t => {
+    const overridable_numeric_id = '1234';
+    const overridable_name = 'override';
+    const override =
+      t.params.id === 'name' ? '[[override]]' : `[[override(${overridable_numeric_id})]]`;
+    const wgsl = `
+      ${override} let ${overridable_name}: f32;
+
+      [[stage(vertex)]]
+      fn main() -> [[builtin(position)]] vec4<f32> {
+        _ = ${overridable_name};
+        return vec4<f32>();
+      }
+      `;
+
+    const constant_values: Record<string, number> = {};
+    if (t.params.success) {
+      if (t.params.id === 'name') {
+        constant_values[overridable_name] = 1.23;
+      } else {
+        constant_values[overridable_numeric_id] = 1.23;
+      }
+    }
+
+    t.doCreateRenderPipelineTest(t.params.isAsync, t.params.success, {
+      vertex: {
+        module: t.device.createShaderModule({ code: wgsl }),
+        entryPoint: 'main',
+        constants: constant_values,
+      },
+    });
+  });

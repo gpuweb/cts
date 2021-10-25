@@ -1,5 +1,6 @@
 import { keysOf } from '../../common/util/data_tables.js';
-import { assert } from '../../common/util/util.js';
+import { assert, TypedArrayBufferView } from '../../common/util/util.js';
+import { NumberRepr } from '../util/conversion.js';
 import { align } from '../util/math.js';
 
 const kArrayLength = 3;
@@ -186,4 +187,72 @@ export function* supportedScalarTypes(p: { isAtomic: boolean; storageClass: stri
 
     yield scalarType;
   }
+}
+
+/** Returns the zero value for the given scalar type */
+export function zeroValueOf(type: ScalarType): Number | boolean {
+  switch (type) {
+    case 'i32':
+    case 'u32':
+    case 'f32':
+      return 0;
+    case 'bool':
+      return false;
+  }
+  assert(false, `unhandled type for zeroValueOf(${type})`);
+}
+
+/** Returns an array of 'interesting' values for the given scalar type */
+export function interestingValuesOf(type: ScalarType): Array<Number | boolean> {
+  switch (type) {
+    case 'i32':
+      return [0, 1, -1, 256, -256, -0x80000000, 0x7fffffff];
+    case 'u32':
+      return [0, 1, 256, 0xffffffff];
+    case 'f32':
+      return [
+        0,
+        0.1,
+        -0.1,
+        1,
+        -1,
+        NumberRepr.fromF32Bits(0x00800001).value,
+        -NumberRepr.fromF32Bits(0x00800001).value,
+        NumberRepr.fromF32Bits(0x7f7fffff).value,
+        -NumberRepr.fromF32Bits(0x7f7fffff).value,
+      ];
+    case 'bool':
+      return [false, true];
+  }
+  assert(false, `unhandled type for interestingValuesOf(${type})`);
+}
+
+/** Returns a WGSL literal string for the given scalar value and type */
+export function wgslLiteralValue(value: Number | boolean, type: ScalarType): string {
+  const num = `${Number(value)}`;
+  switch (type) {
+    case 'i32':
+      return `${num}`;
+    case 'u32':
+      return `${num}u`;
+    case 'f32':
+      return num.indexOf('.') >= 0 ? num : `${num}.0`;
+    case 'bool':
+      return `${!!value}`;
+  }
+  assert(false, `unhandled type for wgslLiteralValue(${value}, ${type})`);
+}
+
+/** Returns a typed array holding a single element of the given scalar value and type */
+export function typedArrayFor(value: Number | boolean, type: ScalarType): TypedArrayBufferView {
+  switch (type) {
+    case 'i32':
+    case 'bool':
+      return new Int32Array([Number(value)]);
+    case 'u32':
+      return new Uint32Array([Number(value)]);
+    case 'f32':
+      return new Float32Array([Number(value)]);
+  }
+  assert(false, `unhandled type for typedArrayFor(${value}, ${type})`);
 }
