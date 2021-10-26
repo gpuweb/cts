@@ -184,6 +184,7 @@ export const kEncodableTextureFormats = keysOf(kEncodableTextureFormatInfo);
 export const kSizedTextureFormats = keysOf(kSizedTextureFormatInfo);
 export const kDepthStencilFormats = keysOf(kDepthStencilFormatInfo);
 export const kUncompressedTextureFormats = keysOf(kUncompressedTextureFormatInfo);
+export const kAllTextureFormats = keysOf(kAllTextureFormatInfo);
 
 // CompressedTextureFormat are unrenderable so filter from RegularTextureFormats for color targets is enough
 export const kRenderableColorTextureFormats = kRegularTextureFormats.filter(
