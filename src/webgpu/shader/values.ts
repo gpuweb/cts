@@ -63,3 +63,29 @@ export function normalF32Examples(): Array<number> {
   );
   return result;
 }
+
+/** Returns an array of 32-bit NaNs, as Uint32 bit patterns.
+ * NaNs have: maximum exponent, but the mantissa is not zero.
+ */
+export function nanF32BitsExamples(): Array<number> {
+  const result: number[] = [];
+  const exponent_bit = 0x7f80_0000;
+  const sign_bits: [number, number] = [0, 0x8000_0000];
+  for (const sign_bit in sign_bits) {
+    const sign_and_exponent = ((sign_bit as unknown) as number) | exponent_bit;
+    const bits = sign_and_exponent | 0x40_0000;
+    // Only the most significant bit of the mantissa is set.
+    result.push(bits);
+
+    // Quiet and signalling NaNs differ based on the most significant bit
+    // of the mantissa. Try both.
+    for (const quiet_signalling in [0, 0x40_0000]) {
+      // Set each of the lower bits.
+      for (let lower_bits = 1; lower_bits < 0x40_0000; lower_bits <<= 1) {
+        const bits = sign_and_exponent | ((quiet_signalling as unknown) as number) | lower_bits;
+        result.push(bits);
+      }
+    }
+  }
+  return result;
+}
