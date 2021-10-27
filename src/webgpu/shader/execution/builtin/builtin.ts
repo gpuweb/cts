@@ -11,7 +11,7 @@ export type Case<T extends NumberType> = {
   expected: Array<NumberRepr<T>>;
 };
 
-export function runShaderTest<F extends NumberType>(
+export function runShaderTestImpl<F extends NumberType>(
   t: GPUTest,
   storageClass: string,
   storageMode: string,
@@ -19,27 +19,9 @@ export function runShaderTest<F extends NumberType>(
   arrayLength: number,
   builtin: string,
   arrayType: TypedArrayBufferViewConstructor,
-  cases: Array<Case<F>>
+  cases: Array<Case<F>>,
+  source: string
 ): void {
-  const source = `
-    [[block]]
-    struct Data {
-      values : [[stride(16)]] array<${type}, ${cases.length}>;
-    };
-
-    [[group(0), binding(0)]] var<${storageClass}, ${storageMode}> inputs : Data;
-    [[group(0), binding(1)]] var<${storageClass}, write> outputs : Data;
-
-    [[stage(compute), workgroup_size(1)]]
-    fn main() {
-      for(var i = 0; i < ${cases.length}; i = i + 1) {
-          let input : ${type} = inputs.values[i];
-          let result : ${type} = ${builtin}(input);
-          outputs.values[i] = result;
-      }
-    }
-  `;
-
   const inputData: TypedArrayBufferView = new arrayType(cases.length * 4);
 
   // an arbitrary approach of mapping cases into inputData:
@@ -510,4 +492,45 @@ export const kValue = {
     toMinus31: -Math.pow(2, -31),
     toMinus32: -Math.pow(2, -32),
   },
-} as const;
+};
+
+export function runShaderTest<F extends NumberType>(
+  t: GPUTest,
+  storageClass: string,
+  storageMode: string,
+  type: string,
+  arrayLength: number,
+  builtin: string,
+  arrayType: TypedArrayBufferViewConstructor,
+  cases: Array<Case<F>>
+): void {
+  const source = `
+    [[block]]
+    struct Data {
+      values : [[stride(16)]] array<${type}, ${cases.length}>;
+    };
+
+    [[group(0), binding(0)]] var<${storageClass}, ${storageMode}> inputs : Data;
+    [[group(0), binding(1)]] var<${storageClass}, write> outputs : Data;
+
+    [[stage(compute), workgroup_size(1)]]
+    fn main() {
+      for(var i = 0; i < ${cases.length}; i = i + 1) {
+          let input : ${type} = inputs.values[i];
+          let result : ${type} = ${builtin}(input);
+          outputs.values[i] = result;
+      }
+    }
+  `;
+  runShaderTestImpl(
+    t,
+    storageClass,
+    storageMode,
+    type,
+    arrayLength,
+    builtin,
+    arrayType,
+    cases,
+    source
+  );
+}
