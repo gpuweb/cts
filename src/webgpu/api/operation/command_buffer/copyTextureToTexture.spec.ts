@@ -665,40 +665,91 @@ g.test('color_textures,compressed,non_array')
     u
       .combine('format', kCompressedTextureFormats)
       .beginSubcases()
-      .combine('textureSize', [
-        // The heights and widths are all power of 2
-        {
-          srcTextureSize: { width: 64, height: 32, depthOrArrayLayers: 1 },
-          dstTextureSize: { width: 64, height: 32, depthOrArrayLayers: 1 },
-        },
-        // The virtual width of the source texture at mipmap level 2 (15) is not a multiple of 4
-        {
-          srcTextureSize: { width: 60, height: 32, depthOrArrayLayers: 1 },
-          dstTextureSize: { width: 64, height: 32, depthOrArrayLayers: 1 },
-        },
-        // The virtual width of the destination texture at mipmap level 2 (15) is not a multiple
-        // of 4
-        {
-          srcTextureSize: { width: 64, height: 32, depthOrArrayLayers: 1 },
-          dstTextureSize: { width: 60, height: 32, depthOrArrayLayers: 1 },
-        },
-        // The virtual height of the source texture at mipmap level 2 (13) is not a multiple of 4
-        {
-          srcTextureSize: { width: 64, height: 52, depthOrArrayLayers: 1 },
-          dstTextureSize: { width: 64, height: 32, depthOrArrayLayers: 1 },
-        },
-        // The virtual height of the destination texture at mipmap level 2 (13) is not a
-        // multiple of 4
-        {
-          srcTextureSize: { width: 64, height: 32, depthOrArrayLayers: 1 },
-          dstTextureSize: { width: 64, height: 52, depthOrArrayLayers: 1 },
-        },
-        // None of the widths or heights are power of 2
-        {
-          srcTextureSize: { width: 60, height: 52, depthOrArrayLayers: 1 },
-          dstTextureSize: { width: 60, height: 52, depthOrArrayLayers: 1 },
-        },
-      ])
+      .expand('textureSize', p => {
+        const { blockWidth, blockHeight } = kTextureFormatInfo[p.format];
+        return [
+          // The heights and widths are all power of 2
+          {
+            srcTextureSize: {
+              width: 16 * blockWidth,
+              height: 8 * blockHeight,
+              depthOrArrayLayers: 1,
+            },
+            dstTextureSize: {
+              width: 16 * blockWidth,
+              height: 8 * blockHeight,
+              depthOrArrayLayers: 1,
+            },
+          },
+          // The virtual width of the source texture at mipmap level 2 (15) is not a multiple of 4
+          {
+            srcTextureSize: {
+              width: 15 * blockWidth,
+              height: 8 * blockHeight,
+              depthOrArrayLayers: 1,
+            },
+            dstTextureSize: {
+              width: 16 * blockWidth,
+              height: 8 * blockHeight,
+              depthOrArrayLayers: 1,
+            },
+          },
+          // The virtual width of the destination texture at mipmap level 2 (15) is not a multiple
+          // of 4
+          {
+            srcTextureSize: {
+              width: 16 * blockWidth,
+              height: 8 * blockHeight,
+              depthOrArrayLayers: 1,
+            },
+            dstTextureSize: {
+              width: 15 * blockWidth,
+              height: 8 * blockHeight,
+              depthOrArrayLayers: 1,
+            },
+          },
+          // The virtual height of the source texture at mipmap level 2 (13) is not a multiple of 4
+          {
+            srcTextureSize: {
+              width: 16 * blockWidth,
+              height: 13 * blockHeight,
+              depthOrArrayLayers: 1,
+            },
+            dstTextureSize: {
+              width: 16 * blockWidth,
+              height: 8 * blockHeight,
+              depthOrArrayLayers: 1,
+            },
+          },
+          // The virtual height of the destination texture at mipmap level 2 (13) is not a
+          // multiple of 4
+          {
+            srcTextureSize: {
+              width: 16 * blockWidth,
+              height: 8 * blockHeight,
+              depthOrArrayLayers: 1,
+            },
+            dstTextureSize: {
+              width: 16 * blockWidth,
+              height: 13 * blockHeight,
+              depthOrArrayLayers: 1,
+            },
+          },
+          // None of the widths or heights are power of 2
+          {
+            srcTextureSize: {
+              width: 15 * blockWidth,
+              height: 13 * blockHeight,
+              depthOrArrayLayers: 1,
+            },
+            dstTextureSize: {
+              width: 15 * blockWidth,
+              height: 13 * blockHeight,
+              depthOrArrayLayers: 1,
+            },
+          },
+        ];
+      })
       .combine('copyBoxOffsets', kCopyBoxOffsetsForWholeDepth)
       .combine('srcCopyLevel', [0, 2])
       .combine('dstCopyLevel', [0, 2])
@@ -769,19 +820,37 @@ g.test('color_textures,compressed,array')
     u
       .combine('format', kCompressedTextureFormats)
       .beginSubcases()
-      .combine('textureSize', [
-        // The heights and widths are all power of 2
-        {
-          srcTextureSize: { width: 8, height: 8, depthOrArrayLayers: 5 },
-          dstTextureSize: { width: 8, height: 8, depthOrArrayLayers: 5 },
-        },
-        // None of the widths or heights are power of 2
-        {
-          srcTextureSize: { width: 60, height: 52, depthOrArrayLayers: 5 },
-          dstTextureSize: { width: 60, height: 52, depthOrArrayLayers: 5 },
-        },
-      ])
-
+      .expand('textureSize', p => {
+        const { blockWidth, blockHeight } = kTextureFormatInfo[p.format];
+        return [
+          // The heights and widths are all power of 2
+          {
+            srcTextureSize: {
+              width: 2 * blockWidth,
+              height: 2 * blockHeight,
+              depthOrArrayLayers: 5,
+            },
+            dstTextureSize: {
+              width: 2 * blockWidth,
+              height: 2 * blockHeight,
+              depthOrArrayLayers: 5,
+            },
+          },
+          // None of the widths or heights are power of 2
+          {
+            srcTextureSize: {
+              width: 15 * blockWidth,
+              height: 13 * blockHeight,
+              depthOrArrayLayers: 5,
+            },
+            dstTextureSize: {
+              width: 15 * blockWidth,
+              height: 13 * blockHeight,
+              depthOrArrayLayers: 5,
+            },
+          },
+        ];
+      })
       .combine('copyBoxOffsets', kCopyBoxOffsetsFor2DArrayTextures)
       .combine('srcCopyLevel', [0, 2])
       .combine('dstCopyLevel', [0, 2])
