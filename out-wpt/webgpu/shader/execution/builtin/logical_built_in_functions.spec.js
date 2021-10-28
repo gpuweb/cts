@@ -6,21 +6,6 @@ import { GPUTest } from '../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('logical_builtin_functions,vector_all')
-  .uniqueId('d140d173a2acf981')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
-  .desc(
-    `
-vector all:
-e: vecN<bool> all(e): bool Returns true if each component of e is true. (OpAll)
-
-Please read the following guidelines before contributing:
-https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
-`
-  )
-  .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
-  .unimplemented();
-
 g.test('logical_builtin_functions,vector_any')
   .uniqueId('ac2b3a100379d70f')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')

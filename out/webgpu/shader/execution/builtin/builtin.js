@@ -11,7 +11,7 @@
 
 
 
-export function runShaderTest(
+export function runShaderTestImpl(
 t,
 storageClass,
 storageMode,
@@ -19,27 +19,9 @@ type,
 arrayLength,
 builtin,
 arrayType,
-cases)
+cases,
+source)
 {
-  const source = `
-    [[block]]
-    struct Data {
-      values : [[stride(16)]] array<${type}, ${cases.length}>;
-    };
-
-    [[group(0), binding(0)]] var<${storageClass}, ${storageMode}> inputs : Data;
-    [[group(0), binding(1)]] var<${storageClass}, write> outputs : Data;
-
-    [[stage(compute), workgroup_size(1)]]
-    fn main() {
-      for(var i = 0; i < ${cases.length}; i = i + 1) {
-          let input : ${type} = inputs.values[i];
-          let result : ${type} = ${builtin}(input);
-          outputs.values[i] = result;
-      }
-    }
-  `;
-
   const inputData = new arrayType(cases.length * 4);
 
   // an arbitrary approach of mapping cases into inputData:
@@ -509,4 +491,47 @@ export const kValue = {
     toMinus30: -Math.pow(2, -30),
     toMinus31: -Math.pow(2, -31),
     toMinus32: -Math.pow(2, -32) } };
+
+
+
+export function runShaderTest(
+t,
+storageClass,
+storageMode,
+type,
+arrayLength,
+builtin,
+arrayType,
+cases)
+{
+  const source = `
+    [[block]]
+    struct Data {
+      values : [[stride(16)]] array<${type}, ${cases.length}>;
+    };
+
+    [[group(0), binding(0)]] var<${storageClass}, ${storageMode}> inputs : Data;
+    [[group(0), binding(1)]] var<${storageClass}, write> outputs : Data;
+
+    [[stage(compute), workgroup_size(1)]]
+    fn main() {
+      for(var i = 0; i < ${cases.length}; i = i + 1) {
+          let input : ${type} = inputs.values[i];
+          let result : ${type} = ${builtin}(input);
+          outputs.values[i] = result;
+      }
+    }
+  `;
+  runShaderTestImpl(
+  t,
+  storageClass,
+  storageMode,
+  type,
+  arrayLength,
+  builtin,
+  arrayType,
+  cases,
+  source);
+
+}
 //# sourceMappingURL=builtin.js.map
