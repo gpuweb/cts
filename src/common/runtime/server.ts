@@ -108,21 +108,20 @@ if (gpuProviderModule) {
         const name = request.url.substr(runPrefix.length);
         try {
           const testcase = (await testcases).get(name);
-          let status = 'fail';
-          let message = '';
-          console.log('testcase: ', testcase);
           if (testcase) {
             const result = await runTestcase(testcase);
-            status = result.status;
+            let message = '';
             if (result.logs !== undefined) {
               message = result.logs.map(log => prettyPrintLog(log)).join('\n');
             }
+            const status = result.status;
+            const res: RunResult = { status, message };
+            response.statusCode = 200;
+            response.end(JSON.stringify(res));
           } else {
-            message = `test case '${name}' not found`;
+            response.statusCode = 404;
+            response.end(`test case '${name}' not found`);
           }
-          const res: RunResult = { status, message };
-          response.statusCode = 200;
-          response.end(JSON.stringify(res));
         } catch (err) {
           response.statusCode = 500;
           response.end('run failed with error: ' + err);
