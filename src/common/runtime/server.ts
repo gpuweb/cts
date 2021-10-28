@@ -106,20 +106,27 @@ if (gpuProviderModule) {
 
       if (request.url.startsWith(runPrefix)) {
         const name = request.url.substr(runPrefix.length);
-        const testcase = (await testcases).get(name);
-        let status = 'fail';
-        let message = '';
-        if (testcase) {
-          const result = await runTestcase(testcase);
-          status = result.status;
-          if (result.logs !== undefined) {
-            message = result.logs.map(log => prettyPrintLog(log)).join('\n');
+        try {
+          const testcase = (await testcases).get(name);
+          let status = 'fail';
+          let message = '';
+          console.log('testcase: ', testcase);
+          if (testcase) {
+            const result = await runTestcase(testcase);
+            status = result.status;
+            if (result.logs !== undefined) {
+              message = result.logs.map(log => prettyPrintLog(log)).join('\n');
+            }
+          } else {
+            message = `test case '${name}' not found`;
           }
-        } else {
-          message = `test case '${name}' not found`;
+          const res: RunResult = { status, message };
+          response.statusCode = 200;
+          response.end(JSON.stringify(res));
+        } catch (err) {
+          response.statusCode = 500;
+          response.end('run failed with error: ' + err);
         }
-        const res: RunResult = { status, message };
-        response.end(JSON.stringify(res));
       } else if (request.url.startsWith(terminatePrefix)) {
         server.close();
         sys.exit(1);
