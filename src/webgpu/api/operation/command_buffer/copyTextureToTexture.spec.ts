@@ -666,19 +666,19 @@ g.test('color_textures,compressed,non_array')
       .combine('format', kCompressedTextureFormats)
       .beginSubcases()
       .combine('textureSizeInBlocks', [
-        // The heights and widths are all power of 2
+        // The heights and widths in blocks are all power of 2
         { src: { width: 16, height: 8 }, dst: { width: 16, height: 8 } },
-        // The virtual width of the source texture at mipmap level 2 (15) is not a multiple of 4
+        // The virtual width of the source texture at mipmap level 2 (15) is not a multiple of 4 blocks
         { src: { width: 15, height: 8 }, dst: { width: 16, height: 8 } },
         // The virtual width of the destination texture at mipmap level 2 (15) is not a multiple
-        // of 4
+        // of 4 blocks
         { src: { width: 16, height: 8 }, dst: { width: 15, height: 8 } },
-        // The virtual height of the source texture at mipmap level 2 (13) is not a multiple of 4
+        // The virtual height of the source texture at mipmap level 2 (13) is not a multiple of 4 blocks
         { src: { width: 16, height: 13 }, dst: { width: 16, height: 8 } },
         // The virtual height of the destination texture at mipmap level 2 (13) is not a
-        // multiple of 4
+        // multiple of 4 blocks
         { src: { width: 16, height: 8 }, dst: { width: 16, height: 13 } },
-        // None of the widths or heights are power of 2
+        // None of the widths or heights in blocks are power of 2
         { src: { width: 15, height: 13 }, dst: { width: 15, height: 13 } },
       ])
       .combine('copyBoxOffsets', kCopyBoxOffsetsForWholeDepth)
@@ -761,9 +761,9 @@ g.test('color_textures,compressed,array')
       .combine('format', kCompressedTextureFormats)
       .beginSubcases()
       .combine('textureSizeInBlocks', [
-        // The heights and widths are all power of 2
+        // The heights and widths in blocks are all power of 2
         { src: { width: 2, height: 2 }, dst: { width: 2, height: 2 } },
-        // None of the widths or heights are power of 2
+        // None of the widths or heights in blocks are power of 2
         { src: { width: 15, height: 13 }, dst: { width: 15, height: 13 } },
       ])
       .combine('copyBoxOffsets', kCopyBoxOffsetsFor2DArrayTextures)
