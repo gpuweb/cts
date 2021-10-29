@@ -38,6 +38,7 @@
     "@types/morgan": "^1.9.2",
     "@types/node": "^14.11.10",
     "@types/offscreencanvas": "^2019.6.2",
+    "@types/serve-index": "^1.9.1",
     "@typescript-eslint/parser": "^4.22.0",
     "@webgpu/types": "^0.1.6",
     "ansi-colors": "4.1.1",
@@ -60,6 +61,7 @@
     "morgan": "^1.10.0",
     "portfinder": "^1.0.28",
     "quiet-grunt": "^0.2.3",
+    "serve-index": "^1.9.1",
     "ts-node": "^9.0.0",
     "typedoc": "^0.20.36",
     "typescript": "^4.1.2"
