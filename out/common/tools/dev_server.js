@@ -7,6 +7,7 @@ import * as chokidar from 'chokidar';
 import * as express from 'express';
 import * as morgan from 'morgan';
 import * as portfinder from 'portfinder';
+import * as serveIndex from 'serve-index';
 
 import { makeListing } from './crawl.js';
 
@@ -170,5 +171,6 @@ portfinder.getPort({ host, port }, (err, port) => {
 });
 
 // Serve everything else (not .js) as static, and directories as directory listings.
+app.use('/out', serveIndex(path.resolve(srcDir, '../src')));
 app.use('/out', express.static(path.resolve(srcDir, '../src')));
 //# sourceMappingURL=dev_server.js.map
