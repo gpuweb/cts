@@ -7,38 +7,38 @@ export const g = makeTestGroup(ShaderValidationTest);
 
 // List of types to test against.
 const kTestTypes = [
-  { type: 'bool', valid: false },
-  { type: 'u32', valid: true },
-  { type: 'i32', valid: true },
-  { type: 'f32', valid: true },
-  { type: 'vec2<bool>', valid: false },
-  { type: 'vec2<u32>', valid: true },
-  { type: 'vec2<i32>', valid: true },
-  { type: 'vec2<f32>', valid: true },
-  { type: 'vec3<bool>', valid: false },
-  { type: 'vec3<u32>', valid: true },
-  { type: 'vec3<i32>', valid: true },
-  { type: 'vec3<f32>', valid: true },
-  { type: 'vec4<bool>', valid: false },
-  { type: 'vec4<u32>', valid: true },
-  { type: 'vec4<i32>', valid: true },
-  { type: 'vec4<f32>', valid: true },
-  { type: 'mat2x2<f32>', valid: false },
-  { type: 'mat2x3<f32>', valid: false },
-  { type: 'mat2x4<f32>', valid: false },
-  { type: 'mat3x2<f32>', valid: false },
-  { type: 'mat3x3<f32>', valid: false },
-  { type: 'mat3x4<f32>', valid: false },
-  { type: 'mat4x2<f32>', valid: false },
-  { type: 'mat4x3<f32>', valid: false },
-  { type: 'mat4x4<f32>', valid: false },
-  { type: 'atomic<u32>', valid: false },
-  { type: 'atomic<i32>', valid: false },
-  { type: 'array<bool,4>', valid: false },
-  { type: 'array<u32,4>', valid: false },
-  { type: 'array<i32,4>', valid: false },
-  { type: 'array<f32,4>', valid: false },
-  { type: 'MyStruct', valid: false },
+  { type: 'bool', _valid: false },
+  { type: 'u32', _valid: true },
+  { type: 'i32', _valid: true },
+  { type: 'f32', _valid: true },
+  { type: 'vec2<bool>', _valid: false },
+  { type: 'vec2<u32>', _valid: true },
+  { type: 'vec2<i32>', _valid: true },
+  { type: 'vec2<f32>', _valid: true },
+  { type: 'vec3<bool>', _valid: false },
+  { type: 'vec3<u32>', _valid: true },
+  { type: 'vec3<i32>', _valid: true },
+  { type: 'vec3<f32>', _valid: true },
+  { type: 'vec4<bool>', _valid: false },
+  { type: 'vec4<u32>', _valid: true },
+  { type: 'vec4<i32>', _valid: true },
+  { type: 'vec4<f32>', _valid: true },
+  { type: 'mat2x2<f32>', _valid: false },
+  { type: 'mat2x3<f32>', _valid: false },
+  { type: 'mat2x4<f32>', _valid: false },
+  { type: 'mat3x2<f32>', _valid: false },
+  { type: 'mat3x3<f32>', _valid: false },
+  { type: 'mat3x4<f32>', _valid: false },
+  { type: 'mat4x2<f32>', _valid: false },
+  { type: 'mat4x3<f32>', _valid: false },
+  { type: 'mat4x4<f32>', _valid: false },
+  { type: 'atomic<u32>', _valid: false },
+  { type: 'atomic<i32>', _valid: false },
+  { type: 'array<bool,4>', _valid: false },
+  { type: 'array<u32,4>', _valid: false },
+  { type: 'array<i32,4>', _valid: false },
+  { type: 'array<f32,4>', _valid: false },
+  { type: 'MyStruct', _valid: false },
 ] as const;
 
 /**
@@ -51,13 +51,19 @@ const kTestTypes = [
  * @param use_struct True to wrap the user-defined IO in a struct.
  * @returns The generated shader code.
  */
-function generateShader(
-  attribute: string,
-  type: string,
-  stage: string,
-  io: string,
-  use_struct: boolean
-) {
+function generateShader({
+  attribute,
+  type,
+  stage,
+  io,
+  use_struct,
+}: {
+  attribute: string;
+  type: string;
+  stage: string;
+  io: string;
+  use_struct: boolean;
+}) {
   let code = '';
 
   if (use_struct) {
@@ -124,13 +130,13 @@ g.test('stage_inout')
       .beginSubcases()
   )
   .fn(t => {
-    const code = generateShader(
-      '[[location(0)]]',
-      'f32',
-      t.params.target_stage,
-      t.params.target_io,
-      t.params.use_struct
-    );
+    const code = generateShader({
+      attribute: '[[location(0)]]',
+      type: 'f32',
+      stage: t.params.target_stage,
+      io: t.params.target_io,
+      use_struct: t.params.use_struct,
+    });
 
     // Expect to fail for compute shaders or when used as a non-struct vertex output (since the
     // position built-in must also be specified).
@@ -145,29 +151,29 @@ g.test('type')
   .params(u =>
     u
       .combine('use_struct', [true, false] as const)
-      .combine('target_type', kTestTypes)
+      .combineWithParams(kTestTypes)
       .beginSubcases()
   )
   .fn(t => {
     let code = '';
 
-    if (t.params.target_type.type === 'MyStruct') {
+    if (t.params.type === 'MyStruct') {
       // Generate a struct that contains a valid type.
       code += 'struct MyStruct {\n';
       code += `  value : f32;\n`;
       code += '};\n\n';
     }
 
-    code += generateShader(
-      '[[location(0)]]',
-      t.params.target_type.type,
-      'fragment',
-      'in',
-      t.params.use_struct
-    );
+    code += generateShader({
+      attribute: '[[location(0)]]',
+      type: t.params.type,
+      stage: 'fragment',
+      io: 'in',
+      use_struct: t.params.use_struct,
+    });
 
     // Expect to pass iff a valid type is used.
-    t.expectCompileResult(t.params.target_type.valid, code);
+    t.expectCompileResult(t.params._valid, code);
   });
 
 g.test('nesting')
@@ -189,7 +195,13 @@ g.test('nesting')
     code += `  inner : Inner;\n`;
     code += '};\n\n';
 
-    code += generateShader('', 'Outer', t.params.target_stage, t.params.target_io, false);
+    code += generateShader({
+      attribute: '',
+      type: 'Outer',
+      stage: t.params.target_stage,
+      io: t.params.target_io,
+      use_struct: false,
+    });
 
     // Expect to fail pass only if the struct is not used for entry point IO.
     t.expectCompileResult(t.params.target_stage === '', code);
