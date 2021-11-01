@@ -10,6 +10,7 @@ import {
   TypeU32,
   VectorType,
 } from '../../../util/conversion.js';
+import { diffULP } from '../../../util/math.js';
 
 /** Comparison describes the result of a Comparator function. */
 export interface Comparison {
@@ -18,13 +19,50 @@ export interface Comparison {
   expected: string; // The string representation of the 'expected' value (possibly with markup)
 }
 
+/** FloatTest is a function that compares whether the two floating point numbers match. */
+export interface FloatTest {
+  (got: number, expected: number): boolean;
+}
+
 /** Comparator is a function that compares whether the provided value matches an expectation. */
 export interface Comparator {
-  (got: Value): Comparison;
+  (got: Value, cmpFloats: FloatTest): Comparison;
+}
+
+/**
+ * @returns a FloatTest that returns true iff the two numbers are equal to, or
+ * less than the specified absolute error threshold.
+ */
+export function absThreshold(diff: number): FloatTest {
+  return (got, expected) => {
+    if (got === expected) {
+      return true;
+    }
+    if (!Number.isFinite(got) || !Number.isFinite(expected)) {
+      return false;
+    }
+    return Math.abs(got - expected) <= diff;
+  };
+}
+
+/**
+ * @returns a FloatTest that returns true iff the two numbers are within or
+ * equal to the specified ULP threshold value.
+ */
+export function ulpThreshold(ulp: number): FloatTest {
+  return (got, expected) => {
+    if (got === expected) {
+      return true;
+    }
+    if (!Number.isFinite(got) || !Number.isFinite(expected)) {
+      return false;
+    }
+    return diffULP(got, expected) <= ulp;
+  };
 }
 
 // diff compares 'got' to 'expected, returning the Comparison information.
-function diff(got: Value, expected: Value): Comparison {
+function diff(got: Value, expected: Value, cmpFloats: FloatTest): Comparison {
   {
     // Check types
     const gTy = got.type;
@@ -41,17 +79,14 @@ function diff(got: Value, expected: Value): Comparison {
   if (got instanceof Scalar) {
     const g = got;
     const e = expected as Scalar;
-    if (g.value === e.value) {
-      return {
-        matched: true,
-        got: g.toString(),
-        expected: Colors.green(e.toString()),
-      };
-    }
+    const isFloat = g.type.kind === 'f32';
+    const matched =
+      (isFloat && cmpFloats(g.value as number, e.value as number)) ||
+      (!isFloat && g.value === e.value);
     return {
-      matched: false,
+      matched,
       got: g.toString(),
-      expected: Colors.red(e.toString()),
+      expected: matched ? Colors.green(e.toString()) : Colors.red(e.toString()),
     };
   }
   if (got instanceof Vector) {
@@ -64,7 +99,7 @@ function diff(got: Value, expected: Value): Comparison {
       if (i < gLen && i < eLen) {
         const g = got.elements[i];
         const e = (expected as Vector).elements[i];
-        const d = diff(g, e);
+        const d = diff(g, e, cmpFloats);
         matched = matched && d.matched;
         gElements[i] = d.got;
         eElements[i] = d.expected;
@@ -89,10 +124,10 @@ function diff(got: Value, expected: Value): Comparison {
 
 /** @returns a Comparator that checks whether a test value matches any of the provided values */
 export function anyOf(...values: Value[]): Comparator {
-  return got => {
+  return (got, cmpFloats) => {
     const failed: Array<string> = [];
     for (const e of values) {
-      const d = diff(got, e);
+      const d = diff(got, e, cmpFloats);
       if (d.matched) {
         return d;
       }
@@ -105,7 +140,7 @@ export function anyOf(...values: Value[]): Comparator {
 // Helper for converting Values to Comparators.
 function toComparator(input: Value | Comparator): Comparator {
   if ((input as Value).type !== undefined) {
-    return got => diff(got, input as Value);
+    return (got, cmpFloats) => diff(got, input as Value, cmpFloats);
   }
   return input as Comparator;
 }
@@ -130,6 +165,9 @@ export type Config = {
   // If the number of test cases is not a multiple of the vector width, then the
   // last scalar value is repeated to fill the last vector value.
   vectorize?: number;
+  // The FloatTest to use when comparing floating point numbers.
+  // If undefined, floating point numbers must match exactly.
+  cmpFloats?: FloatTest;
 };
 
 // Helper for returning the WGSL storage type for the given Type.
@@ -192,10 +230,13 @@ export function run(
   cfg: Config = { storageClass: 'storage_r' },
   cases: CaseList
 ) {
+  const cmpFloats =
+    cfg.cmpFloats !== undefined ? cfg.cmpFloats : (got: number, expect: number) => got === expect;
+
   // If the 'vectorize' config option was provided, pack the cases into vectors.
   if (cfg.vectorize !== undefined) {
-    cases = packScalarsToVector(cases, cfg.vectorize);
     // Note: packScalarsToVector() would have thrown if parameters aren't of a single scalar type
+    cases = packScalarsToVector(cases, cfg.vectorize, cmpFloats);
     parameterTypes = [TypeVec(cfg.vectorize, parameterTypes[0] as ScalarType)];
     returnType = TypeVec(cfg.vectorize, returnType as ScalarType);
   }
@@ -315,7 +356,7 @@ fn main() {
     for (let caseIdx = 0; caseIdx < cases.length; caseIdx++) {
       const c = cases[caseIdx];
       const got = outputs[caseIdx];
-      const cmp = toComparator(c.expected)(got);
+      const cmp = toComparator(c.expected)(got, cmpFloats);
       if (!cmp.matched) {
         errs.push(`${builtin}(${c.input instanceof Array ? c.input.join(', ') : c.input})
     returned: ${cmp.got}
@@ -338,7 +379,7 @@ fn main() {
  * If `cases.length` is not a multiple of `vectorWidth`, then the last scalar
  * test case value is repeated to fill the vector value.
  */
-function packScalarsToVector(cases: CaseList, vectorWidth: number): CaseList {
+function packScalarsToVector(cases: CaseList, vectorWidth: number, cmpFloats: FloatTest): CaseList {
   const asScalar = function (val: Array<Value> | Value): Scalar {
     if (val instanceof Scalar) {
       return val;
@@ -367,7 +408,7 @@ function packScalarsToVector(cases: CaseList, vectorWidth: number): CaseList {
         const gElements = new Array<string>(vectorWidth);
         const eElements = new Array<string>(vectorWidth);
         for (let i = 0; i < vectorWidth; i++) {
-          const d = comparators[i]((got as Vector).elements[i]);
+          const d = comparators[i]((got as Vector).elements[i], cmpFloats);
           matched = matched && d.matched;
           gElements[i] = d.got;
           eElements[i] = d.expected;
