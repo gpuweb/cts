@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>LayoutOptions | @webgpu/cts</title>
+	<title>Comparison | @webgpu/cts</title>
 	<meta name="description" content="Documentation for @webgpu/cts">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -55,13 +55,13 @@
 					<a href="../modules.html">@webgpu/cts</a>
 				</li>
 				<li>
-					<a href="../modules/webgpu_util_texture_layout.html">webgpu/util/texture/layout</a>
+					<a href="../modules/webgpu_shader_execution_builtin_builtin.html">webgpu/shader/execution/builtin/builtin</a>
 				</li>
 				<li>
-					<a href="webgpu_util_texture_layout.layoutoptions.html">LayoutOptions</a>
+					<a href="webgpu_shader_execution_builtin_builtin.comparison.html">Comparison</a>
 				</li>
 			</ul>
-			<h1>Interface LayoutOptions</h1>
+			<h1>Interface Comparison</h1>
 		</div>
 	</div>
 </header>
@@ -71,7 +71,7 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>Overridable layout options for <a href="../modules/webgpu_util_texture_layout.html#gettexturecopylayout">getTextureCopyLayout</a>.</p>
+						<p>Comparison describes the result of a Comparator function.</p>
 					</div>
 				</div>
 			</section>
@@ -79,7 +79,7 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">LayoutOptions</span>
+						<span class="target">Comparison</span>
 					</li>
 				</ul>
 			</section>
@@ -90,9 +90,9 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="webgpu_util_texture_layout.layoutoptions.html#bytesperrow" class="tsd-kind-icon">bytes<wbr>Per<wbr>Row</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="webgpu_util_texture_layout.layoutoptions.html#miplevel" class="tsd-kind-icon">mip<wbr>Level</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="webgpu_util_texture_layout.layoutoptions.html#rowsperimage" class="tsd-kind-icon">rows<wbr>Per<wbr>Image</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="webgpu_shader_execution_builtin_builtin.comparison.html#expected" class="tsd-kind-icon">expected</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="webgpu_shader_execution_builtin_builtin.comparison.html#got" class="tsd-kind-icon">got</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="webgpu_shader_execution_builtin_builtin.comparison.html#matched" class="tsd-kind-icon">matched</a></li>
 							</ul>
 						</section>
 					</div>
@@ -101,32 +101,32 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="bytesperrow" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagOptional">Optional</span> bytes<wbr>Per<wbr>Row</h3>
-					<div class="tsd-signature tsd-kind-icon">bytes<wbr>Per<wbr>Row<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<a name="expected" class="tsd-anchor"></a>
+					<h3>expected</h3>
+					<div class="tsd-signature tsd-kind-icon">expected<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7b92621/src/webgpu/util/texture/layout.ts#L22">src/webgpu/util/texture/layout.ts:22</a></li>
+							<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7b92621/src/webgpu/shader/execution/builtin/builtin.ts#L18">src/webgpu/shader/execution/builtin/builtin.ts:18</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="miplevel" class="tsd-anchor"></a>
-					<h3>mip<wbr>Level</h3>
-					<div class="tsd-signature tsd-kind-icon">mip<wbr>Level<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<a name="got" class="tsd-anchor"></a>
+					<h3>got</h3>
+					<div class="tsd-signature tsd-kind-icon">got<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7b92621/src/webgpu/util/texture/layout.ts#L21">src/webgpu/util/texture/layout.ts:21</a></li>
+							<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7b92621/src/webgpu/shader/execution/builtin/builtin.ts#L17">src/webgpu/shader/execution/builtin/builtin.ts:17</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="rowsperimage" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagOptional">Optional</span> rows<wbr>Per<wbr>Image</h3>
-					<div class="tsd-signature tsd-kind-icon">rows<wbr>Per<wbr>Image<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<a name="matched" class="tsd-anchor"></a>
+					<h3>matched</h3>
+					<div class="tsd-signature tsd-kind-icon">matched<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7b92621/src/webgpu/util/texture/layout.ts#L23">src/webgpu/util/texture/layout.ts:23</a></li>
+							<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7b92621/src/webgpu/shader/execution/builtin/builtin.ts#L16">src/webgpu/shader/execution/builtin/builtin.ts:16</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -139,62 +139,53 @@
 						<a href="../modules.html">Modules</a>
 					</li>
 					<li class="current tsd-kind-module">
-						<a href="../modules/webgpu_util_texture_layout.html">webgpu/util/texture/layout</a>
+						<a href="../modules/webgpu_shader_execution_builtin_builtin.html">webgpu/shader/execution/builtin/builtin</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="webgpu_shader_execution_builtin_builtin.comparator.html" class="tsd-kind-icon">Comparator</a>
+					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-interface tsd-parent-kind-module">
-						<a href="webgpu_util_texture_layout.layoutoptions.html" class="tsd-kind-icon">Layout<wbr>Options</a>
+						<a href="webgpu_shader_execution_builtin_builtin.comparison.html" class="tsd-kind-icon">Comparison</a>
 						<ul>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="webgpu_util_texture_layout.layoutoptions.html#bytesperrow" class="tsd-kind-icon">bytes<wbr>Per<wbr>Row</a>
+								<a href="webgpu_shader_execution_builtin_builtin.comparison.html#expected" class="tsd-kind-icon">expected</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="webgpu_util_texture_layout.layoutoptions.html#miplevel" class="tsd-kind-icon">mip<wbr>Level</a>
+								<a href="webgpu_shader_execution_builtin_builtin.comparison.html#got" class="tsd-kind-icon">got</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="webgpu_util_texture_layout.layoutoptions.html#rowsperimage" class="tsd-kind-icon">rows<wbr>Per<wbr>Image</a>
+								<a href="webgpu_shader_execution_builtin_builtin.comparison.html#matched" class="tsd-kind-icon">matched</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-interface tsd-parent-kind-module">
-						<a href="webgpu_util_texture_layout.texturecopylayout.html" class="tsd-kind-icon">Texture<wbr>Copy<wbr>Layout</a>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
+						<a href="../modules/webgpu_shader_execution_builtin_builtin.html#case" class="tsd-kind-icon">Case</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
-						<a href="../modules/webgpu_util_texture_layout.html#imagecopytype" class="tsd-kind-icon">Image<wbr>Copy<wbr>Type</a>
+						<a href="../modules/webgpu_shader_execution_builtin_builtin.html#caselist" class="tsd-kind-icon">Case<wbr>List</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
+						<a href="../modules/webgpu_shader_execution_builtin_builtin.html#config" class="tsd-kind-icon">Config</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-module">
-						<a href="../modules/webgpu_util_texture_layout.html#kbuffercopyalignment" class="tsd-kind-icon">k<wbr>Buffer<wbr>Copy<wbr>Alignment</a>
+						<a href="../modules/webgpu_shader_execution_builtin_builtin.html#kbit" class="tsd-kind-icon">k<wbr>Bit</a>
 					</li>
 					<li class=" tsd-kind-variable tsd-parent-kind-module">
-						<a href="../modules/webgpu_util_texture_layout.html#kbytesperrowalignment" class="tsd-kind-icon">k<wbr>Bytes<wbr>Per<wbr>Row<wbr>Alignment</a>
-					</li>
-					<li class=" tsd-kind-variable tsd-parent-kind-module">
-						<a href="../modules/webgpu_util_texture_layout.html#kimagecopytypes" class="tsd-kind-icon">k<wbr>Image<wbr>Copy<wbr>Types</a>
+						<a href="../modules/webgpu_shader_execution_builtin_builtin.html#kvalue" class="tsd-kind-icon">k<wbr>Value</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
-						<a href="../modules/webgpu_util_texture_layout.html#bytesinacompleterow" class="tsd-kind-icon">bytes<wbr>InAComplete<wbr>Row</a>
+						<a href="../modules/webgpu_shader_execution_builtin_builtin.html#anyof" class="tsd-kind-icon">any<wbr>Of</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
-						<a href="../modules/webgpu_util_texture_layout.html#createtextureuploadbuffer" class="tsd-kind-icon">create<wbr>Texture<wbr>Upload<wbr>Buffer</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-module">
-						<a href="../modules/webgpu_util_texture_layout.html#databytesforcopyorfail" class="tsd-kind-icon">data<wbr>Bytes<wbr>For<wbr>Copy<wbr>OrFail</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-module">
-						<a href="../modules/webgpu_util_texture_layout.html#databytesforcopyoroverestimate" class="tsd-kind-icon">data<wbr>Bytes<wbr>For<wbr>Copy<wbr>OrOverestimate</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-module">
-						<a href="../modules/webgpu_util_texture_layout.html#filltexturedatawithtexelvalue" class="tsd-kind-icon">fill<wbr>Texture<wbr>Data<wbr>With<wbr>Texel<wbr>Value</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-module">
-						<a href="../modules/webgpu_util_texture_layout.html#gettexturecopylayout" class="tsd-kind-icon">get<wbr>Texture<wbr>Copy<wbr>Layout</a>
+						<a href="../modules/webgpu_shader_execution_builtin_builtin.html#run" class="tsd-kind-icon">run</a>
 					</li>
 				</ul>
 			</nav>
