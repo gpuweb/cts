@@ -326,8 +326,14 @@ g.test('depth_stencil_copy_restrictions')
       .combine('dstCopyLevel', [0, 1])
   )
   .fn(async t => {
-    const { format, copyBoxOffsets, srcTextureSize, dstTextureSize, srcCopyLevel, dstCopyLevel } =
-      t.params;
+    const {
+      format,
+      copyBoxOffsets,
+      srcTextureSize,
+      dstTextureSize,
+      srcCopyLevel,
+      dstCopyLevel,
+    } = t.params;
     await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 
     const kMipLevelCount = 3;
