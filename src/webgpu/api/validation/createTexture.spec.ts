@@ -506,11 +506,6 @@ g.test('texture_size,2d_texture,compressed_format')
     const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
-    assert(
-      DefaultLimits.maxTextureDimension2D % info.blockWidth === 0 &&
-        DefaultLimits.maxTextureDimension2D % info.blockHeight === 0
-    );
-
     const descriptor: GPUTextureDescriptor = {
       size,
       dimension,

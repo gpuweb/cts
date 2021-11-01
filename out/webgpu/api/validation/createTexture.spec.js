@@ -506,11 +506,6 @@ fn(async t => {
   const info = kTextureFormatInfo[format];
   await t.selectDeviceOrSkipTestCase(info.feature);
 
-  assert(
-  DefaultLimits.maxTextureDimension2D % info.blockWidth === 0 &&
-  DefaultLimits.maxTextureDimension2D % info.blockHeight === 0);
-
-
   const descriptor = {
     size,
     dimension,

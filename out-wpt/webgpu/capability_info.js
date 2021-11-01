@@ -155,10 +155,12 @@ const kUnsizedDepthStencilFormatInfo = makeTable(
   }
 );
 
-const kCompressedTextureFormatInfo = makeTable(
+// Separated compressed formats by type
+const kBCTextureFormatInfo = makeTable(
   kTexFmtInfoHeader,
   [false, false, true, false, false, false, true, true, , , 4, 4],
   {
+    // Block Compression (BC) formats
     'bc1-rgba-unorm': [, , , , , , , , 'float', 8, 4, 4, 'texture-compression-bc'],
     'bc1-rgba-unorm-srgb': [, , , , , , , , 'float', 8, 4, 4, 'texture-compression-bc'],
     'bc2-rgba-unorm': [, , , , , , , , 'float', 16, 4, 4, 'texture-compression-bc'],
@@ -176,10 +178,69 @@ const kCompressedTextureFormatInfo = makeTable(
   }
 );
 
+const kETC2TextureFormatInfo = makeTable(
+  kTexFmtInfoHeader,
+  [false, false, true, false, false, false, true, true, , , 4, 4],
+  {
+    // Ericsson Compression (ETC2) formats
+    'etc2-rgb8unorm': [, , , , , , , , 'float', 8, 4, 4, 'texture-compression-etc2'],
+    'etc2-rgb8unorm-srgb': [, , , , , , , , 'float', 8, 4, 4, 'texture-compression-etc2'],
+    'etc2-rgb8a1unorm': [, , , , , , , , 'float', 8, 4, 4, 'texture-compression-etc2'],
+    'etc2-rgb8a1unorm-srgb': [, , , , , , , , 'float', 8, 4, 4, 'texture-compression-etc2'],
+    'etc2-rgba8unorm': [, , , , , , , , 'float', 16, 4, 4, 'texture-compression-etc2'],
+    'etc2-rgba8unorm-srgb': [, , , , , , , , 'float', 16, 4, 4, 'texture-compression-etc2'],
+    'eac-r11unorm': [, , , , , , , , 'float', 8, 4, 4, 'texture-compression-etc2'],
+    'eac-r11snorm': [, , , , , , , , 'float', 8, 4, 4, 'texture-compression-etc2'],
+    'eac-rg11unorm': [, , , , , , , , 'float', 16, 4, 4, 'texture-compression-etc2'],
+    'eac-rg11snorm': [, , , , , , , , 'float', 16, 4, 4, 'texture-compression-etc2'],
+  }
+);
+
+const kASTCTextureFormatInfo = makeTable(
+  kTexFmtInfoHeader,
+  [false, false, true, false, false, false, true, true, , , , ,],
+  {
+    // Adaptable Scalable Compression (ASTC) formats
+    'astc-4x4-unorm': [, , , , , , , , 'float', 16, 4, 4, 'texture-compression-astc'],
+    'astc-4x4-unorm-srgb': [, , , , , , , , 'float', 16, 4, 4, 'texture-compression-astc'],
+    'astc-5x4-unorm': [, , , , , , , , 'float', 16, 5, 4, 'texture-compression-astc'],
+    'astc-5x4-unorm-srgb': [, , , , , , , , 'float', 16, 5, 4, 'texture-compression-astc'],
+    'astc-5x5-unorm': [, , , , , , , , 'float', 16, 5, 5, 'texture-compression-astc'],
+    'astc-5x5-unorm-srgb': [, , , , , , , , 'float', 16, 5, 5, 'texture-compression-astc'],
+    'astc-6x5-unorm': [, , , , , , , , 'float', 16, 6, 5, 'texture-compression-astc'],
+    'astc-6x5-unorm-srgb': [, , , , , , , , 'float', 16, 6, 5, 'texture-compression-astc'],
+    'astc-6x6-unorm': [, , , , , , , , 'float', 16, 6, 6, 'texture-compression-astc'],
+    'astc-6x6-unorm-srgb': [, , , , , , , , 'float', 16, 6, 6, 'texture-compression-astc'],
+    'astc-8x5-unorm': [, , , , , , , , 'float', 16, 8, 5, 'texture-compression-astc'],
+    'astc-8x5-unorm-srgb': [, , , , , , , , 'float', 16, 8, 5, 'texture-compression-astc'],
+    'astc-8x6-unorm': [, , , , , , , , 'float', 16, 8, 6, 'texture-compression-astc'],
+    'astc-8x6-unorm-srgb': [, , , , , , , , 'float', 16, 8, 6, 'texture-compression-astc'],
+    'astc-8x8-unorm': [, , , , , , , , 'float', 16, 8, 8, 'texture-compression-astc'],
+    'astc-8x8-unorm-srgb': [, , , , , , , , 'float', 16, 8, 8, 'texture-compression-astc'],
+    'astc-10x5-unorm': [, , , , , , , , 'float', 16, 10, 5, 'texture-compression-astc'],
+    'astc-10x5-unorm-srgb': [, , , , , , , , 'float', 16, 10, 5, 'texture-compression-astc'],
+    'astc-10x6-unorm': [, , , , , , , , 'float', 16, 10, 6, 'texture-compression-astc'],
+    'astc-10x6-unorm-srgb': [, , , , , , , , 'float', 16, 10, 6, 'texture-compression-astc'],
+    'astc-10x8-unorm': [, , , , , , , , 'float', 16, 10, 8, 'texture-compression-astc'],
+    'astc-10x8-unorm-srgb': [, , , , , , , , 'float', 16, 10, 8, 'texture-compression-astc'],
+    'astc-10x10-unorm': [, , , , , , , , 'float', 16, 10, 10, 'texture-compression-astc'],
+    'astc-10x10-unorm-srgb': [, , , , , , , , 'float', 16, 10, 10, 'texture-compression-astc'],
+    'astc-12x10-unorm': [, , , , , , , , 'float', 16, 12, 10, 'texture-compression-astc'],
+    'astc-12x10-unorm-srgb': [, , , , , , , , 'float', 16, 12, 10, 'texture-compression-astc'],
+    'astc-12x12-unorm': [, , , , , , , , 'float', 16, 12, 12, 'texture-compression-astc'],
+    'astc-12x12-unorm-srgb': [, , , , , , , , 'float', 16, 12, 12, 'texture-compression-astc'],
+  }
+);
+
 // Definitions for use locally. To access the table entries, use `kTextureFormatInfo`.
 
 // TODO: Consider generating the exports below programmatically by filtering the big list, instead
 // of using these local constants? Requires some type magic though.
+const kCompressedTextureFormatInfo = {
+  ...kBCTextureFormatInfo,
+  ...kETC2TextureFormatInfo,
+  ...kASTCTextureFormatInfo,
+};
 const kColorTextureFormatInfo = { ...kRegularTextureFormatInfo, ...kCompressedTextureFormatInfo };
 const kEncodableTextureFormatInfo = {
   ...kRegularTextureFormatInfo,
