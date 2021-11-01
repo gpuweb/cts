@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>webgpu/util/memory | @webgpu/cts</title>
+	<title>webgpu/shader/validation/shader_io/util | @webgpu/cts</title>
 	<meta name="description" content="Documentation for @webgpu/cts">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -55,10 +55,10 @@
 					<a href="../modules.html">@webgpu/cts</a>
 				</li>
 				<li>
-					<a href="webgpu_util_memory.html">webgpu/util/memory</a>
+					<a href="webgpu_shader_validation_shader_io_util.html">webgpu/shader/validation/shader_io/util</a>
 				</li>
 			</ul>
-			<h1>Module webgpu/util/memory</h1>
+			<h1>Module webgpu/shader/validation/shader_io/util</h1>
 		</div>
 	</div>
 </header>
@@ -72,7 +72,7 @@
 						<section class="tsd-index-section ">
 							<h3>Functions</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_memory.html#exhaustvramuntilunder64mb" class="tsd-kind-icon">exhaust<wbr>Vram<wbr>Until<wbr>Under64MB</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_shader_validation_shader_io_util.html#generateshader" class="tsd-kind-icon">generate<wbr>Shader</a></li>
 							</ul>
 						</section>
 					</div>
@@ -81,31 +81,48 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Functions</h2>
 				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
-					<a name="exhaustvramuntilunder64mb" class="tsd-anchor"></a>
-					<h3>exhaust<wbr>Vram<wbr>Until<wbr>Under64MB</h3>
+					<a name="generateshader" class="tsd-anchor"></a>
+					<h3>generate<wbr>Shader</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
-						<li class="tsd-signature tsd-kind-icon">exhaust<wbr>Vram<wbr>Until<wbr>Under64MB<span class="tsd-signature-symbol">(</span>device<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GPUDevice</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">generate<wbr>Shader<span class="tsd-signature-symbol">(</span>__namedParameters<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span>attribute<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>io<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>stage<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>use_struct<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/6a232fd/src/webgpu/util/memory.ts#L5">src/webgpu/util/memory.ts:5</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/6a232fd/src/webgpu/shader/validation/shader_io/util.ts#L12">src/webgpu/shader/validation/shader_io/util.ts:12</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Helper to exhaust VRAM until there is less than 64 MB of capacity. Returns
-									an opaque closure which can be called to free the allocated resources later.</p>
+									<p>Generate an entry point that uses an entry point IO variable.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>device: <span class="tsd-signature-type">GPUDevice</span></h5>
+									<h5>__namedParameters: <span class="tsd-signature-symbol">{ </span>attribute<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>io<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>stage<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span>use_struct<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> }</span></h5>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter">
+											<h5>attribute<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5>io<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5>stage<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></h5>
+										</li>
+										<li class="tsd-parameter">
+											<h5>use_<wbr>struct<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+										</li>
+									</ul>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+							<p>The generated shader code.</p>
 						</li>
 					</ul>
 				</section>
@@ -118,14 +135,14 @@
 						<a href="../modules.html">Modules</a>
 					</li>
 					<li class="current tsd-kind-module">
-						<a href="webgpu_util_memory.html">webgpu/util/memory</a>
+						<a href="webgpu_shader_validation_shader_io_util.html">webgpu/shader/validation/shader_<wbr>io/util</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-function tsd-parent-kind-module">
-						<a href="webgpu_util_memory.html#exhaustvramuntilunder64mb" class="tsd-kind-icon">exhaust<wbr>Vram<wbr>Until<wbr>Under64MB</a>
+						<a href="webgpu_shader_validation_shader_io_util.html#generateshader" class="tsd-kind-icon">generate<wbr>Shader</a>
 					</li>
 				</ul>
 			</nav>

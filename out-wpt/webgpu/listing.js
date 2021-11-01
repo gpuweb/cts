@@ -1231,6 +1231,14 @@ export const listing = [
       "shader",
       "validation",
       "shader_io",
+      "builtins"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "shader_io",
       "locations"
     ]
   },

@@ -3,6 +3,8 @@
 **/export const description = `Validation tests for entry point user-defined IO`;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
+import { generateShader } from './util.js';
+
 export const g = makeTestGroup(ShaderValidationTest);
 
 // List of types to test against.
@@ -40,85 +42,6 @@ const kTestTypes = [
 { type: 'array<f32,4>', _valid: false },
 { type: 'MyStruct', _valid: false }];
 
-
-/**
-                                       * Generate an entry point that uses a user-defined IO variable.
-                                       *
-                                       * @param attribute The attribute to use for the user-defined IO.
-                                       * @param type The type to use for the user-defined IO.
-                                       * @param stage The shader stage.
-                                       * @param io An "in|out" string specifying whether the user-defined IO is an input or an output.
-                                       * @param use_struct True to wrap the user-defined IO in a struct.
-                                       * @returns The generated shader code.
-                                       */
-function generateShader({
-  attribute,
-  type,
-  stage,
-  io,
-  use_struct })
-
-
-
-
-
-
-{
-  let code = '';
-
-  if (use_struct) {
-    // Generate a struct that wraps the location attribute variable.
-    code += 'struct S {\n';
-    code += `  ${attribute} value : ${type};\n`;
-    if (stage === 'vertex' && io === 'out') {
-      // Add position builtin for vertex outputs.
-      code += `  [[builtin(position)]] position : vec4<f32>;\n`;
-    }
-    code += '};\n\n';
-  }
-
-  if (stage !== '') {
-    // Generate the entry point attributes.
-    code += `[[stage(${stage})]]`;
-    if (stage === 'compute') {
-      code += ' [[workgroup_size(1)]]';
-    }
-  }
-
-  // Generate the entry point parameter and return type.
-  let param = '';
-  let retType = '';
-  let retVal = '';
-  if (io === 'in') {
-    if (use_struct) {
-      param = `in : S`;
-    } else {
-      param = `${attribute} value : ${type}`;
-    }
-
-    // Vertex shaders must always return `builtin(position)`.
-    if (stage === 'vertex') {
-      retType = `-> [[builtin(position)]] vec4<f32>`;
-      retVal = `return vec4<f32>();`;
-    }
-  } else if (io === 'out') {
-    if (use_struct) {
-      retType = '-> S';
-      retVal = `return S();`;
-    } else {
-      retType = `-> ${attribute} ${type}`;
-      retVal = `return ${type}();`;
-    }
-  }
-
-  code += `
-    fn main(${param}) ${retType} {
-      ${retVal}
-    }
-  `;
-
-  return code;
-}
 
 g.test('stage_inout').
 desc(`Test validation of user-defined IO stage and in/out usage`).
