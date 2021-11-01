@@ -4,7 +4,7 @@ Execution Tests for the 'cos' builtin function
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { F32, TypeF32 } from '../../../util/conversion.js';
+import { f32, TypeF32 } from '../../../util/conversion.js';
 
 import { absThreshold, Case, Config, run } from './builtin.js';
 
@@ -31,7 +31,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
     const cases = new Array<Case>(1000);
     for (let i = 0; i < cases.length; i++) {
       const angle = -Math.PI + (2.0 * Math.PI * i) / cases.length;
-      cases[i] = { input: F32(angle), expected: F32(Math.cos(angle)) };
+      cases[i] = { input: f32(angle), expected: f32(Math.cos(angle)) };
     }
 
     const cfg: Config = t.params;
