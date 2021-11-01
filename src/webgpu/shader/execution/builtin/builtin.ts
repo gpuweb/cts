@@ -125,7 +125,10 @@ export type CaseList = Array<Case>;
 export type Config = {
   // Where the input values are read from
   storageClass: 'uniform' | 'storage_r' | 'storage_rw';
-  // If defined, scalar test cases will be packed into vectors of the given width
+  // If defined, scalar test cases will be packed into vectors of the given width.
+  // Requires that all input cases are of a single scalar parameter type.
+  // If the number of test cases is not a multiple of the vector width, then the
+  // last scalar value is repeated to fill the last vector value.
   vectorize?: number;
 };
 
@@ -192,6 +195,7 @@ export function run(
   // If the 'vectorize' config option was provided, pack the cases into vectors.
   if (cfg.vectorize !== undefined) {
     cases = packScalarsToVector(cases, cfg.vectorize);
+    // Note: packScalarsToVector() would have thrown if parameters aren't of a single scalar type
     parameterTypes = [TypeVec(cfg.vectorize, parameterTypes[0] as ScalarType)];
     returnType = TypeVec(cfg.vectorize, returnType as ScalarType);
   }
@@ -328,8 +332,13 @@ fn main() {
   });
 }
 
-// Packs a list of scalar test cases into a smaller list of vector cases.
-export function packScalarsToVector(cases: CaseList, vectorWidth: number): CaseList {
+/**
+ * Packs a list of scalar test cases into a smaller list of vector cases.
+ * Requires that all input cases are of a single scalar parameter type.
+ * If `cases.length` is not a multiple of `vectorWidth`, then the last scalar
+ * test case value is repeated to fill the vector value.
+ */
+function packScalarsToVector(cases: CaseList, vectorWidth: number): CaseList {
   const asScalar = function (val: Array<Value> | Value): Scalar {
     if (val instanceof Scalar) {
       return val;
