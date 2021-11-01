@@ -1,6 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/ // Implements the wpt-embedded test runner (see also: wpt/cts.html).
+**/ // Implements the wpt-embedded test runner (see also: wpt/cts.https.html).
 import { DefaultTestFileLoader } from '../internal/file_loader.js';import { prettyPrintLog } from '../internal/logging/log_message.js';
 import { Logger } from '../internal/logging/logger.js';
 import { parseQuery } from '../internal/query/parseQuery.js';
