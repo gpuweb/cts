@@ -36,7 +36,7 @@ fn(async t => {
     vec2: {
       type: TypeVec(2, TypeBool),
       cases: [
-      { input: vec2(False, True), expected: False },
+      { input: vec2(False, False), expected: False },
       { input: vec2(True, False), expected: False },
       { input: vec2(False, True), expected: False },
       { input: vec2(True, True), expected: True }] },
