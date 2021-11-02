@@ -29,6 +29,9 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   )
   .fn(async t => {
     run(t, 'min', [TypeU32, TypeU32], TypeU32, t.params, [
+      { input: [u32(1), u32(1)], expected: u32(1) },
+      { input: [u32(0), u32(0)], expected: u32(0) },
+      { input: [u32(0xffffffff), u32(0xffffffff)], expected: u32(0xffffffff) },
       { input: [u32(1), u32(2)], expected: u32(1) },
       { input: [u32(2), u32(1)], expected: u32(1) },
       { input: [u32(0x70000000), u32(0x80000000)], expected: u32(0x70000000) },
@@ -58,6 +61,9 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   )
   .fn(async t => {
     run(t, 'min', [TypeI32, TypeI32], TypeI32, t.params, [
+      { input: [i32(1), i32(1)], expected: i32(1) },
+      { input: [i32(0), i32(0)], expected: i32(0) },
+      { input: [i32(-1), i32(-1)], expected: i32(-1) },
       { input: [i32(1), i32(2)], expected: i32(1) },
       { input: [i32(2), i32(1)], expected: i32(1) },
       { input: [i32(-1), i32(-2)], expected: i32(-2) },
