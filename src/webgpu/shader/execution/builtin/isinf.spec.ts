@@ -44,8 +44,8 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
       // Infinities
       // "Implementations may assume that NaNs, infinities are not
       // present."
-      { input: f32(Infinity), expected: anyOf(bool(false), bool(true)) },
-      { input: f32(-Infinity), expected: anyOf(bool(false), bool(true)) },
+      { input: f32(Infinity), expected: anyBool },
+      { input: f32(-Infinity), expected: anyBool },
       { input: f32Bits(kBit.f32.infinity.positive), expected: anyBool },
       { input: f32Bits(kBit.f32.infinity.negative), expected: anyBool },
       // NaNs
