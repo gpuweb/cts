@@ -31,10 +31,13 @@ export function clamp(n: number, { min, max }: { min: number; max: number }): nu
 }
 
 /**
- * Return the Units of Last Place difference between the numbers a and b.
- * Requires `a` and `b` to be finite numbers.
+ * @returns the Units of Last Place difference between the numbers a and b.
+ * If either `a` or `b` are not finite numbers, then diffULP() returns Infinity.
  */
 export function diffULP(a: number, b: number): number {
+  if (!Number.isFinite(a) || !Number.isFinite(b)) {
+    return Infinity;
+  }
   const arr = new Uint32Array(new Float32Array([a, b]).buffer);
   const u32_a = arr[0];
   const u32_b = arr[1];
