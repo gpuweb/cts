@@ -1255,6 +1255,14 @@ export const listing = [
       "shader",
       "validation",
       "shader_io",
+      "invariant"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "shader_io",
       "locations"
     ]
   },

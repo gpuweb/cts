@@ -11,7 +11,7 @@ export const g = makeTestGroup(ShaderValidationTest);
 // List of all built-in variables and their stage, in|out usage, and type.
 // Taken from table in Section 15:
 // https://www.w3.org/TR/2021/WD-WGSL-20211013/#builtin-variables
-const kBuiltins = [
+export const kBuiltins = [
   { name: 'vertex_index', stage: 'vertex', io: 'in', type: 'u32' },
   { name: 'instance_index', stage: 'vertex', io: 'in', type: 'u32' },
   { name: 'position', stage: 'vertex', io: 'out', type: 'vec4<f32>' },
