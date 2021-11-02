@@ -158,7 +158,8 @@ export type Config = {
   // Where the input values are read from
   storageClass: 'uniform' | 'storage_r' | 'storage_rw';
   // If defined, scalar test cases will be packed into vectors of the given width.
-  // Requires that all input cases are of a single scalar parameter type.
+  // Requires that all parameters of the builtin overload are of a scalar type,
+  // and the return type of the builtin overload is also a scalar type.
   // If the number of test cases is not a multiple of the vector width, then the
   // last scalar value is repeated to fill the last vector value.
   vectorize?: number;
@@ -232,10 +233,10 @@ export function run(
 
   // If the 'vectorize' config option was provided, pack the cases into vectors.
   if (cfg.vectorize !== undefined) {
-    // Note: packScalarsToVector() would have thrown if parameters aren't of a single scalar type
-    cases = packScalarsToVector(cases, cfg.vectorize, cmpFloats);
-    parameterTypes = [TypeVec(cfg.vectorize, parameterTypes[0] as ScalarType)];
-    returnType = TypeVec(cfg.vectorize, returnType as ScalarType);
+    const packed = packScalarsToVector(parameterTypes, returnType, cases, cfg.vectorize, cmpFloats);
+    cases = packed.cases;
+    parameterTypes = packed.parameterTypes;
+    returnType = packed.returnType;
   }
 
   // Currently all values are packed into buffers of 16 byte strides
@@ -372,58 +373,84 @@ fn main() {
 
 /**
  * Packs a list of scalar test cases into a smaller list of vector cases.
- * Requires that all input cases are of a single scalar parameter type.
+ * Requires that all parameters of the builtin overload are of a scalar type,
+ * and the return type of the builtin overload is also a scalar type.
  * If `cases.length` is not a multiple of `vectorWidth`, then the last scalar
  * test case value is repeated to fill the vector value.
  */
 function packScalarsToVector(
+  parameterTypes: Array<Type>,
+  returnType: Type,
   cases: CaseList,
   vectorWidth: number,
   cmpFloats: FloatMatch
-): CaseList {
-  const asScalar = function (val: Array<Value> | Value): Scalar {
-    if (val instanceof Scalar) {
-      return val;
+): { cases: CaseList; parameterTypes: Array<Type>; returnType: Type } {
+  // Validate that the parameters and return type are all vectorizable
+  for (let i = 0; i < parameterTypes.length; i++) {
+    const ty = parameterTypes[i];
+    if (!(ty instanceof ScalarType)) {
+      throw new Error(
+        `packScalarsToVector() can only be used on scalar parameter types, but the ${i}'th parameter type is a ${ty}'`
+      );
     }
-    if (val instanceof Array && val.length === 1) {
-      return asScalar(val[0]);
-    }
-    throw new Error('packScalarsToVector() requires all Case values to be a single scalar Value');
-  };
+  }
+  if (!(returnType instanceof ScalarType)) {
+    throw new Error(
+      `packScalarsToVector() can only be used with a scalar return type, but the return type is a ${returnType}'`
+    );
+  }
+
+  const packedCases: Array<Case> = [];
+  const packedParameterTypes = parameterTypes.map(p => TypeVec(vectorWidth, p as ScalarType));
+  const packedReturnType = new VectorType(vectorWidth, returnType as ScalarType);
+
   const clampCaseIdx = (idx: number) => Math.min(idx, cases.length - 1);
-  const packed: Array<Case> = [];
+
   let caseIdx = 0;
   while (caseIdx < cases.length) {
-    const inputElements = new Array<Scalar>(vectorWidth);
+    // Construct the vectorized inputs from the scalar cases
+    const packedInputs = new Array<Vector>(parameterTypes.length);
+    for (let paramIdx = 0; paramIdx < parameterTypes.length; paramIdx++) {
+      const inputElements = new Array<Scalar>(vectorWidth);
+      for (let i = 0; i < vectorWidth; i++) {
+        const input = cases[clampCaseIdx(caseIdx + i)].input;
+        inputElements[i] = (input instanceof Array ? input[paramIdx] : input) as Scalar;
+      }
+      packedInputs[paramIdx] = new Vector(inputElements);
+    }
+
+    // Gather the comparators for the packed cases
     const comparators = new Array<Comparator>(vectorWidth);
     for (let i = 0; i < vectorWidth; i++) {
-      const c = cases[clampCaseIdx(caseIdx + i)];
-      inputElements[i] = asScalar(c.input);
-      comparators[i] = toComparator(c.expected);
+      comparators[i] = toComparator(cases[clampCaseIdx(caseIdx + i)].expected);
     }
-    const vec = new Vector(inputElements);
-    packed.push({
-      input: [vec],
-      expected: (got: Value) => {
-        let matched = true;
-        const gElements = new Array<string>(vectorWidth);
-        const eElements = new Array<string>(vectorWidth);
-        for (let i = 0; i < vectorWidth; i++) {
-          const d = comparators[i]((got as Vector).elements[i], cmpFloats);
-          matched = matched && d.matched;
-          gElements[i] = d.got;
-          eElements[i] = d.expected;
-        }
-        return {
-          matched,
-          got: `${vec.type}(${gElements.join(', ')})`,
-          expected: `${vec.type}(${eElements.join(', ')})`,
-        };
-      },
-    });
+    const packedComparator = (got: Value) => {
+      let matched = true;
+      const gElements = new Array<string>(vectorWidth);
+      const eElements = new Array<string>(vectorWidth);
+      for (let i = 0; i < vectorWidth; i++) {
+        const d = comparators[i]((got as Vector).elements[i], cmpFloats);
+        matched = matched && d.matched;
+        gElements[i] = d.got;
+        eElements[i] = d.expected;
+      }
+      return {
+        matched,
+        got: `${packedReturnType}(${gElements.join(', ')})`,
+        expected: `${packedReturnType}(${eElements.join(', ')})`,
+      };
+    };
+
+    // Append the new packed case
+    packedCases.push({ input: packedInputs, expected: packedComparator });
     caseIdx += vectorWidth;
   }
-  return packed;
+
+  return {
+    cases: packedCases,
+    parameterTypes: packedParameterTypes,
+    returnType: packedReturnType,
+  };
 }
 
 // TODO(sarahM0): Perhaps instead of kBit and kValue tables we could have one table
