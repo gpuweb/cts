@@ -51,9 +51,7 @@ g.test('shared_with_buffer')
 
     const pipeline = t.device.createComputePipeline({
       compute: {
-        module: t.device.createShaderModule({
-          code: wgsl,
-        }),
+        module: t.device.createShaderModule({ code: wgsl }),
         entryPoint: 'main',
       },
     });
@@ -66,14 +64,7 @@ g.test('shared_with_buffer')
     });
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
-      entries: [
-        {
-          binding: 0,
-          resource: {
-            buffer: outputBuffer,
-          },
-        },
-      ],
+      entries: [{ binding: 0, resource: { buffer: outputBuffer } }],
     });
 
     // Run the shader.
@@ -157,9 +148,7 @@ g.test('shared_between_stages')
     `;
 
     // Set up the render pipeline.
-    const module = t.device.createShaderModule({
-      code: wgsl,
-    });
+    const module = t.device.createShaderModule({ code: wgsl });
     const pipeline = t.device.createRenderPipeline({
       vertex: {
         module,
@@ -278,9 +267,7 @@ g.test('shared_with_non_entry_point_function')
     `;
 
     // Set up the render pipeline.
-    const module = t.device.createShaderModule({
-      code: wgsl,
-    });
+    const module = t.device.createShaderModule({ code: wgsl });
     const pipeline = t.device.createRenderPipeline({
       vertex: {
         module,
@@ -309,8 +296,9 @@ g.test('shared_with_non_entry_point_function')
       },
     });
 
-    // Draw a red triangle.
-    const colorBuffer = t.makeBufferWithContents(
+    // Draw a triangle.
+    // The vertex buffer contains the vertex colors (all red).
+    const vertexBuffer = t.makeBufferWithContents(
       new Float32Array([1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0]),
       GPUBufferUsage.VERTEX
     );
@@ -330,7 +318,7 @@ g.test('shared_with_non_entry_point_function')
       ],
     });
     pass.setPipeline(pipeline);
-    pass.setVertexBuffer(0, colorBuffer);
+    pass.setVertexBuffer(0, vertexBuffer);
     pass.draw(3);
     pass.endPass();
     t.queue.submit([encoder.finish()]);
