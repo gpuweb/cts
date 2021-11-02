@@ -10,6 +10,7 @@ TypeVec,
 TypeU32,
 VectorType } from
 '../../../util/conversion.js';
+import { diffULP } from '../../../util/math.js';
 
 /** Comparison describes the result of a Comparator function. */
 
@@ -23,8 +24,42 @@ VectorType } from
 
 
 
-// diff compares 'got' to 'expected, returning the Comparison information.
-function diff(got, expected) {
+
+
+
+
+
+/**
+                                                                  * @returns a FloatMatch that returns true iff the two numbers are equal to, or
+                                                                  * less than the specified absolute error threshold.
+                                                                  */
+export function absThreshold(diff) {
+  return (got, expected) => {
+    if (got === expected) {
+      return true;
+    }
+    if (!Number.isFinite(got) || !Number.isFinite(expected)) {
+      return false;
+    }
+    return Math.abs(got - expected) <= diff;
+  };
+}
+
+/**
+   * @returns a FloatMatch that returns true iff the two numbers are within or
+   * equal to the specified ULP threshold value.
+   */
+export function ulpThreshold(ulp) {
+  return (got, expected) => {
+    if (got === expected) {
+      return true;
+    }
+    return diffULP(got, expected) <= ulp;
+  };
+}
+
+// compare() compares 'got' to 'expected', returning the Comparison information.
+function compare(got, expected, cmpFloats) {
   {
     // Check types
     const gTy = got.type;
@@ -41,17 +76,14 @@ function diff(got, expected) {
   if (got instanceof Scalar) {
     const g = got;
     const e = expected;
-    if (g.value === e.value) {
-      return {
-        matched: true,
-        got: g.toString(),
-        expected: Colors.green(e.toString()) };
-
-    }
+    const isFloat = g.type.kind === 'f32';
+    const matched =
+    isFloat && cmpFloats(g.value, e.value) ||
+    !isFloat && g.value === e.value;
     return {
-      matched: false,
+      matched,
       got: g.toString(),
-      expected: Colors.red(e.toString()) };
+      expected: matched ? Colors.green(e.toString()) : Colors.red(e.toString()) };
 
   }
   if (got instanceof Vector) {
@@ -64,10 +96,10 @@ function diff(got, expected) {
       if (i < gLen && i < eLen) {
         const g = got.elements[i];
         const e = expected.elements[i];
-        const d = diff(g, e);
-        matched = matched && d.matched;
-        gElements[i] = d.got;
-        eElements[i] = d.expected;
+        const cmp = compare(g, e, cmpFloats);
+        matched = matched && cmp.matched;
+        gElements[i] = cmp.got;
+        eElements[i] = cmp.expected;
         continue;
       }
       matched = false;
@@ -89,14 +121,14 @@ function diff(got, expected) {
 
 /** @returns a Comparator that checks whether a test value matches any of the provided values */
 export function anyOf(...values) {
-  return got => {
+  return (got, cmpFloats) => {
     const failed = [];
     for (const e of values) {
-      const d = diff(got, e);
-      if (d.matched) {
-        return d;
+      const cmp = compare(got, e, cmpFloats);
+      if (cmp.matched) {
+        return cmp;
       }
-      failed.push(d.expected);
+      failed.push(cmp.expected);
     }
     return { matched: false, got: got.toString(), expected: failed.join(' or ') };
   };
@@ -105,12 +137,15 @@ export function anyOf(...values) {
 // Helper for converting Values to Comparators.
 function toComparator(input) {
   if (input.type !== undefined) {
-    return got => diff(got, input);
+    return (got, cmpFloats) => compare(got, input, cmpFloats);
   }
   return input;
 }
 
 /** Case is a single builtin test case. */
+
+
+
 
 
 
@@ -192,10 +227,13 @@ returnType,
 cfg = { storageClass: 'storage_r' },
 cases)
 {
+  const cmpFloats =
+  cfg.cmpFloats !== undefined ? cfg.cmpFloats : (got, expect) => got === expect;
+
   // If the 'vectorize' config option was provided, pack the cases into vectors.
   if (cfg.vectorize !== undefined) {
-    cases = packScalarsToVector(cases, cfg.vectorize);
     // Note: packScalarsToVector() would have thrown if parameters aren't of a single scalar type
+    cases = packScalarsToVector(cases, cfg.vectorize, cmpFloats);
     parameterTypes = [TypeVec(cfg.vectorize, parameterTypes[0])];
     returnType = TypeVec(cfg.vectorize, returnType);
   }
@@ -315,7 +353,7 @@ fn main() {
     for (let caseIdx = 0; caseIdx < cases.length; caseIdx++) {
       const c = cases[caseIdx];
       const got = outputs[caseIdx];
-      const cmp = toComparator(c.expected)(got);
+      const cmp = toComparator(c.expected)(got, cmpFloats);
       if (!cmp.matched) {
         errs.push(`${builtin}(${c.input instanceof Array ? c.input.join(', ') : c.input})
     returned: ${cmp.got}
@@ -338,7 +376,11 @@ fn main() {
    * If `cases.length` is not a multiple of `vectorWidth`, then the last scalar
    * test case value is repeated to fill the vector value.
    */
-function packScalarsToVector(cases, vectorWidth) {
+function packScalarsToVector(
+cases,
+vectorWidth,
+cmpFloats)
+{
   const asScalar = function (val) {
     if (val instanceof Scalar) {
       return val;
@@ -367,7 +409,7 @@ function packScalarsToVector(cases, vectorWidth) {
         const gElements = new Array(vectorWidth);
         const eElements = new Array(vectorWidth);
         for (let i = 0; i < vectorWidth; i++) {
-          const d = comparators[i](got.elements[i]);
+          const d = comparators[i](got.elements[i], cmpFloats);
           matched = matched && d.matched;
           gElements[i] = d.got;
           eElements[i] = d.expected;

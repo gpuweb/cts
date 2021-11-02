@@ -289,31 +289,31 @@ export function TypeVec(width, elementType) {
 
 
 export const TypeI32 = new ScalarType('i32', 4, (buf, offset) =>
-I32(new Int32Array(buf.buffer, offset)[0]));
+i32(new Int32Array(buf.buffer, offset)[0]));
 
 export const TypeU32 = new ScalarType('u32', 4, (buf, offset) =>
-U32(new Uint32Array(buf.buffer, offset)[0]));
+u32(new Uint32Array(buf.buffer, offset)[0]));
 
 export const TypeF32 = new ScalarType('f32', 4, (buf, offset) =>
-F32(new Float32Array(buf.buffer, offset)[0]));
+f32(new Float32Array(buf.buffer, offset)[0]));
 
 export const TypeI16 = new ScalarType('i16', 2, (buf, offset) =>
-I16(new Int16Array(buf.buffer, offset)[0]));
+i16(new Int16Array(buf.buffer, offset)[0]));
 
 export const TypeU16 = new ScalarType('u16', 2, (buf, offset) =>
-U16(new Uint16Array(buf.buffer, offset)[0]));
+u16(new Uint16Array(buf.buffer, offset)[0]));
 
 export const TypeF16 = new ScalarType('f16', 2, (buf, offset) =>
-F16Bits(new Uint16Array(buf.buffer, offset)[0]));
+f16Bits(new Uint16Array(buf.buffer, offset)[0]));
 
 export const TypeI8 = new ScalarType('i8', 1, (buf, offset) =>
-I8(new Int8Array(buf.buffer, offset)[0]));
+i8(new Int8Array(buf.buffer, offset)[0]));
 
 export const TypeU8 = new ScalarType('u8', 1, (buf, offset) =>
-U8(new Uint8Array(buf.buffer, offset)[0]));
+u8(new Uint8Array(buf.buffer, offset)[0]));
 
 export const TypeBool = new ScalarType('bool', 4, (buf, offset) =>
-Bool(new Uint32Array(buf.buffer, offset)[0] !== 0));
+bool(new Uint32Array(buf.buffer, offset)[0] !== 0));
 
 
 /** @returns the number of scalar (element) types of the given Type */
@@ -380,80 +380,80 @@ export class Scalar {
 
 
 /** Create an f32 from a numeric value, a JS `number`. */
-export function F32(value) {
+export function f32(value) {
   return new Scalar(TypeF32, value, new Float32Array([value]));
 }
 /** Create an f32 from a bit representation, a uint32 represented as a JS `number`. */
-export function F32Bits(bits) {
+export function f32Bits(bits) {
   const arr = new Uint32Array([bits]);
   return new Scalar(TypeF32, new Float32Array(arr.buffer)[0], arr);
 }
 /** Create an f16 from a bit representation, a uint16 represented as a JS `number`. */
-export function F16Bits(bits) {
+export function f16Bits(bits) {
   const arr = new Uint32Array([bits]);
   return new Scalar(TypeF16, float16BitsToFloat32(bits), arr);
 }
 
 /** Create an i32 from a numeric value, a JS `number`. */
-export function I32(value) {
+export function i32(value) {
   return new Scalar(TypeI32, value, new Int32Array([value]));
 }
 /** Create an i16 from a numeric value, a JS `number`. */
-export function I16(value) {
+export function i16(value) {
   return new Scalar(TypeI16, value, new Int16Array([value]));
 }
 /** Create an i8 from a numeric value, a JS `number`. */
-export function I8(value) {
+export function i8(value) {
   return new Scalar(TypeI8, value, new Int8Array([value]));
 }
 
 /** Create an i32 from a bit representation, a uint32 represented as a JS `number`. */
-export function I32Bits(bits) {
+export function i32Bits(bits) {
   const arr = new Uint32Array([bits]);
   return new Scalar(TypeI32, new Int32Array(arr.buffer)[0], arr);
 }
 /** Create an i16 from a bit representation, a uint16 represented as a JS `number`. */
-export function I16Bits(bits) {
+export function i16Bits(bits) {
   const arr = new Uint16Array([bits]);
   return new Scalar(TypeI16, new Int16Array(arr.buffer)[0], arr);
 }
 /** Create an i8 from a bit representation, a uint8 represented as a JS `number`. */
-export function I8Bits(bits) {
+export function i8Bits(bits) {
   const arr = new Uint8Array([bits]);
   return new Scalar(TypeI8, new Int8Array(arr.buffer)[0], arr);
 }
 
 /** Create a u32 from a numeric value, a JS `number`. */
-export function U32(value) {
+export function u32(value) {
   return new Scalar(TypeU32, value, new Uint32Array([value]));
 }
 /** Create a u16 from a numeric value, a JS `number`. */
-export function U16(value) {
+export function u16(value) {
   return new Scalar(TypeU16, value, new Uint16Array([value]));
 }
 /** Create a u8 from a numeric value, a JS `number`. */
-export function U8(value) {
+export function u8(value) {
   return new Scalar(TypeU8, value, new Uint8Array([value]));
 }
 
 /** Create an u32 from a bit representation, a uint32 represented as a JS `number`. */
-export function U32Bits(bits) {
+export function u32Bits(bits) {
   const arr = new Uint32Array([bits]);
   return new Scalar(TypeU32, bits, arr);
 }
 /** Create an u16 from a bit representation, a uint16 represented as a JS `number`. */
-export function U16Bits(bits) {
+export function u16Bits(bits) {
   const arr = new Uint16Array([bits]);
   return new Scalar(TypeU16, bits, arr);
 }
 /** Create an u8 from a bit representation, a uint8 represented as a JS `number`. */
-export function U8Bits(bits) {
+export function u8Bits(bits) {
   const arr = new Uint8Array([bits]);
   return new Scalar(TypeU8, bits, arr);
 }
 
 /** Create a boolean value. */
-export function Bool(value) {
+export function bool(value) {
   // WGSL does not support using 'bool' types directly in storage / uniform
   // buffers, so instead we pack booleans in a u32, where 'false' is zero and
   // 'true' is any non-zero value.
@@ -461,10 +461,10 @@ export function Bool(value) {
 }
 
 /** A 'true' literal value */
-export const True = Bool(true);
+export const True = bool(true);
 
 /** A 'false' literal value */
-export const False = Bool(false);
+export const False = bool(false);
 
 /**
                                    * Class that encapsulates a vector value.

@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>BeginEndRange | @webgpu/cts</title>
+	<title>FloatMatch | @webgpu/cts</title>
 	<meta name="description" content="Documentation for @webgpu/cts">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -55,63 +55,63 @@
 					<a href="../modules.html">@webgpu/cts</a>
 				</li>
 				<li>
-					<a href="../modules/webgpu_util_texture_subresource.html">webgpu/util/texture/subresource</a>
+					<a href="../modules/webgpu_shader_execution_builtin_builtin.html">webgpu/shader/execution/builtin/builtin</a>
 				</li>
 				<li>
-					<a href="webgpu_util_texture_subresource.beginendrange.html">BeginEndRange</a>
+					<a href="webgpu_shader_execution_builtin_builtin.floatmatch.html">FloatMatch</a>
 				</li>
 			</ul>
-			<h1>Interface BeginEndRange</h1>
+			<h1>Interface FloatMatch</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>FloatMatch is a function that compares whether the two floating point numbers match.</p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">BeginEndRange</span>
+						<span class="target">FloatMatch</span>
 					</li>
 				</ul>
 			</section>
-			<section class="tsd-panel-group tsd-index-group">
-				<h2>Index</h2>
-				<section class="tsd-panel tsd-index-panel">
-					<div class="tsd-index-content">
-						<section class="tsd-index-section ">
-							<h3>Properties</h3>
-							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="webgpu_util_texture_subresource.beginendrange.html#begin" class="tsd-kind-icon">begin</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="webgpu_util_texture_subresource.beginendrange.html#end" class="tsd-kind-icon">end</a></li>
+			<section class="tsd-panel">
+				<h3 class="tsd-before-signature">Callable</h3>
+				<ul class="tsd-signatures tsd-kind-interface tsd-parent-kind-module">
+					<li class="tsd-signature tsd-kind-icon">Float<wbr>Match<span class="tsd-signature-symbol">(</span>got<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, expected<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+				</ul>
+				<ul class="tsd-descriptions">
+					<li class="tsd-description">
+						<aside class="tsd-sources">
+							<ul>
+								<li>Defined in <a href="https://github.com/gpuweb/cts/blob/4d3f2eb/src/webgpu/shader/execution/builtin/builtin.ts#L23">src/webgpu/shader/execution/builtin/builtin.ts:23</a></li>
 							</ul>
-						</section>
-					</div>
-				</section>
-			</section>
-			<section class="tsd-panel-group tsd-member-group ">
-				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="begin" class="tsd-anchor"></a>
-					<h3>begin</h3>
-					<div class="tsd-signature tsd-kind-icon">begin<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/gpuweb/cts/blob/4d3f2eb/src/webgpu/util/texture/subresource.ts#L9">src/webgpu/util/texture/subresource.ts:9</a></li>
+						</aside>
+						<div class="tsd-comment tsd-typography">
+							<div class="lead">
+								<p>FloatMatch is a function that compares whether the two floating point numbers match.</p>
+							</div>
+						</div>
+						<h4 class="tsd-parameters-title">Parameters</h4>
+						<ul class="tsd-parameters">
+							<li>
+								<h5>got: <span class="tsd-signature-type">number</span></h5>
+							</li>
+							<li>
+								<h5>expected: <span class="tsd-signature-type">number</span></h5>
+							</li>
 						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="end" class="tsd-anchor"></a>
-					<h3>end</h3>
-					<div class="tsd-signature tsd-kind-icon">end<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/gpuweb/cts/blob/4d3f2eb/src/webgpu/util/texture/subresource.ts#L10">src/webgpu/util/texture/subresource.ts:10</a></li>
-						</ul>
-					</aside>
-				</section>
+						<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+					</li>
+				</ul>
 			</section>
 		</div>
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
@@ -121,33 +121,52 @@
 						<a href="../modules.html">Modules</a>
 					</li>
 					<li class="current tsd-kind-module">
-						<a href="../modules/webgpu_util_texture_subresource.html">webgpu/util/texture/subresource</a>
+						<a href="../modules/webgpu_shader_execution_builtin_builtin.html">webgpu/shader/execution/builtin/builtin</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="../classes/webgpu_util_texture_subresource.subresourcerange.html" class="tsd-kind-icon">Subresource<wbr>Range</a>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="webgpu_shader_execution_builtin_builtin.comparator.html" class="tsd-kind-icon">Comparator</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-module">
-						<a href="webgpu_util_texture_subresource.begincountrange.html" class="tsd-kind-icon">Begin<wbr>Count<wbr>Range</a>
+						<a href="webgpu_shader_execution_builtin_builtin.comparison.html" class="tsd-kind-icon">Comparison</a>
 					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-interface tsd-parent-kind-module">
-						<a href="webgpu_util_texture_subresource.beginendrange.html" class="tsd-kind-icon">Begin<wbr>End<wbr>Range</a>
-						<ul>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="webgpu_util_texture_subresource.beginendrange.html#begin" class="tsd-kind-icon">begin</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="webgpu_util_texture_subresource.beginendrange.html#end" class="tsd-kind-icon">end</a>
-							</li>
-						</ul>
+						<a href="webgpu_shader_execution_builtin_builtin.floatmatch.html" class="tsd-kind-icon">Float<wbr>Match</a>
 					</li>
 				</ul>
 				<ul class="after-current">
+					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
+						<a href="../modules/webgpu_shader_execution_builtin_builtin.html#case" class="tsd-kind-icon">Case</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
+						<a href="../modules/webgpu_shader_execution_builtin_builtin.html#caselist" class="tsd-kind-icon">Case<wbr>List</a>
+					</li>
+					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
+						<a href="../modules/webgpu_shader_execution_builtin_builtin.html#config" class="tsd-kind-icon">Config</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="../modules/webgpu_shader_execution_builtin_builtin.html#kbit" class="tsd-kind-icon">k<wbr>Bit</a>
+					</li>
+					<li class=" tsd-kind-variable tsd-parent-kind-module">
+						<a href="../modules/webgpu_shader_execution_builtin_builtin.html#kvalue" class="tsd-kind-icon">k<wbr>Value</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="../modules/webgpu_shader_execution_builtin_builtin.html#absthreshold" class="tsd-kind-icon">abs<wbr>Threshold</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="../modules/webgpu_shader_execution_builtin_builtin.html#anyof" class="tsd-kind-icon">any<wbr>Of</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="../modules/webgpu_shader_execution_builtin_builtin.html#run" class="tsd-kind-icon">run</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="../modules/webgpu_shader_execution_builtin_builtin.html#ulpthreshold" class="tsd-kind-icon">ulp<wbr>Threshold</a>
+					</li>
 				</ul>
 			</nav>
 		</div>
@@ -166,15 +185,14 @@
 				<li class="tsd-kind-type-alias tsd-has-type-parameter"><span class="tsd-kind-icon">Type alias with type parameter</span></li>
 			</ul>
 			<ul class="tsd-legend">
-				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
-				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
-			</ul>
-			<ul class="tsd-legend">
 				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
 				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
 			</ul>
 			<ul class="tsd-legend">
 				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
 			</ul>
 		</div>
 	</div>

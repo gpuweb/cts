@@ -1164,6 +1164,14 @@ export const listing = [
       "shader",
       "execution",
       "builtin",
+      "cos"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "builtin",
       "float_built_functions"
     ]
   },
