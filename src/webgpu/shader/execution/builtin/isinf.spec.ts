@@ -1,13 +1,11 @@
 export const description = `WGSL execution test. Section: Value-testing built-in functions Function: isInf`;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { NumberRepr } from '../../../util/conversion.js';
-import { generateTypes } from '../../types.js';
+import { TypeBool, TypeF32, bool, f32, f32Bits } from '../../../util/conversion.js';
 import { subnormalF32Examples, normalF32Examples } from '../../values.js';
 
-import { runValueCheckTest } from './value_testing_built_in_functions.spec.js';
+import { anyOf, run, kBit } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -23,44 +21,45 @@ Please read the following guidelines before contributing:
 https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 `
   )
-  .params(u =>
-    u
-      .combine('baseType', ['f32'] as const)
-      .combine('containerType', ['scalar', 'vector'] as const)
-      .combine('storageClass', ['storage'] as const) // Needed by generateTypes
-      .expandWithParams(generateTypes)
+  .params(
+    u =>
+      u
+        .combine('storageClass', ['storage_r'] as const)
+        .combine('vectorize', [undefined, 2] as const)
+    //.combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    assert(t.params._kTypeInfo !== undefined, 'generated type is undefined');
     const make = (the_input: number, expected: boolean) => {
       return {
-        input: NumberRepr.fromF32(the_input),
-        expected: [NumberRepr.fromF32(expected ? 1.0 : 0.0)],
+        input: f32(the_input),
+        expected: bool(expected),
       };
     };
+    const anyBool = anyOf(bool(false), bool(true));
     const cases = [
       // Non-infinity
       make(0.0, false),
       make(10.0, false),
       make(-10.0, false),
       // Infinities
-      make(Infinity, true),
-      make(-Infinity, true),
+      // "Implementations may assume that NaNs, infinities are not
+      // present."
+      { input: f32(Infinity), expected: anyOf(bool(false), bool(true)) },
+      { input: f32(-Infinity), expected: anyOf(bool(false), bool(true)) },
+      { input: f32Bits(kBit.f32.infinity.positive), expected: anyBool },
+      { input: f32Bits(kBit.f32.infinity.negative), expected: anyBool },
       // NaNs
       make(NaN, false),
       make(-NaN, false),
+      { input: f32Bits(kBit.f32.nan.positive.s), expected: bool(false) },
+      { input: f32Bits(kBit.f32.nan.positive.q), expected: bool(false) },
+      { input: f32Bits(kBit.f32.nan.negative.s), expected: bool(false) },
+      { input: f32Bits(kBit.f32.nan.negative.q), expected: bool(false) },
     ]
       // Normal values are not infinite.
       .concat(normalF32Examples().map(n => make(n, false)))
       // Subnormal values are not infinite.
       .concat(subnormalF32Examples().map(n => make(n, false)));
 
-    runValueCheckTest(
-      t,
-      t.params.type,
-      t.params._kTypeInfo.arrayLength,
-      'isInf',
-      Float32Array,
-      cases
-    );
+    run(t, 'isInf', [TypeF32], TypeBool, t.params, cases);
   });
