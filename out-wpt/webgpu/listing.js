@@ -1225,6 +1225,14 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "shader_io",
+      "shared_structs"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
       "zero_init"
     ]
   },
