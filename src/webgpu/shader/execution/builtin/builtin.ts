@@ -19,21 +19,21 @@ export interface Comparison {
   expected: string; // The string representation of the 'expected' value (possibly with markup)
 }
 
-/** FloatTest is a function that compares whether the two floating point numbers match. */
-export interface FloatTest {
+/** FloatMatch is a function that compares whether the two floating point numbers match. */
+export interface FloatMatch {
   (got: number, expected: number): boolean;
 }
 
 /** Comparator is a function that compares whether the provided value matches an expectation. */
 export interface Comparator {
-  (got: Value, cmpFloats: FloatTest): Comparison;
+  (got: Value, cmpFloats: FloatMatch): Comparison;
 }
 
 /**
- * @returns a FloatTest that returns true iff the two numbers are equal to, or
+ * @returns a FloatMatch that returns true iff the two numbers are equal to, or
  * less than the specified absolute error threshold.
  */
-export function absThreshold(diff: number): FloatTest {
+export function absThreshold(diff: number): FloatMatch {
   return (got, expected) => {
     if (got === expected) {
       return true;
@@ -46,23 +46,20 @@ export function absThreshold(diff: number): FloatTest {
 }
 
 /**
- * @returns a FloatTest that returns true iff the two numbers are within or
+ * @returns a FloatMatch that returns true iff the two numbers are within or
  * equal to the specified ULP threshold value.
  */
-export function ulpThreshold(ulp: number): FloatTest {
+export function ulpThreshold(ulp: number): FloatMatch {
   return (got, expected) => {
     if (got === expected) {
       return true;
-    }
-    if (!Number.isFinite(got) || !Number.isFinite(expected)) {
-      return false;
     }
     return diffULP(got, expected) <= ulp;
   };
 }
 
-// diff compares 'got' to 'expected, returning the Comparison information.
-function diff(got: Value, expected: Value, cmpFloats: FloatTest): Comparison {
+// compare() compares 'got' to 'expected', returning the Comparison information.
+function compare(got: Value, expected: Value, cmpFloats: FloatMatch): Comparison {
   {
     // Check types
     const gTy = got.type;
@@ -99,10 +96,10 @@ function diff(got: Value, expected: Value, cmpFloats: FloatTest): Comparison {
       if (i < gLen && i < eLen) {
         const g = got.elements[i];
         const e = (expected as Vector).elements[i];
-        const d = diff(g, e, cmpFloats);
-        matched = matched && d.matched;
-        gElements[i] = d.got;
-        eElements[i] = d.expected;
+        const cmp = compare(g, e, cmpFloats);
+        matched = matched && cmp.matched;
+        gElements[i] = cmp.got;
+        eElements[i] = cmp.expected;
         continue;
       }
       matched = false;
@@ -127,11 +124,11 @@ export function anyOf(...values: Value[]): Comparator {
   return (got, cmpFloats) => {
     const failed: Array<string> = [];
     for (const e of values) {
-      const d = diff(got, e, cmpFloats);
-      if (d.matched) {
-        return d;
+      const cmp = compare(got, e, cmpFloats);
+      if (cmp.matched) {
+        return cmp;
       }
-      failed.push(d.expected);
+      failed.push(cmp.expected);
     }
     return { matched: false, got: got.toString(), expected: failed.join(' or ') };
   };
@@ -140,7 +137,7 @@ export function anyOf(...values: Value[]): Comparator {
 // Helper for converting Values to Comparators.
 function toComparator(input: Value | Comparator): Comparator {
   if ((input as Value).type !== undefined) {
-    return (got, cmpFloats) => diff(got, input as Value, cmpFloats);
+    return (got, cmpFloats) => compare(got, input as Value, cmpFloats);
   }
   return input as Comparator;
 }
@@ -165,9 +162,9 @@ export type Config = {
   // If the number of test cases is not a multiple of the vector width, then the
   // last scalar value is repeated to fill the last vector value.
   vectorize?: number;
-  // The FloatTest to use when comparing floating point numbers.
+  // The FloatMatch to use when comparing floating point numbers.
   // If undefined, floating point numbers must match exactly.
-  cmpFloats?: FloatTest;
+  cmpFloats?: FloatMatch;
 };
 
 // Helper for returning the WGSL storage type for the given Type.
@@ -379,7 +376,11 @@ fn main() {
  * If `cases.length` is not a multiple of `vectorWidth`, then the last scalar
  * test case value is repeated to fill the vector value.
  */
-function packScalarsToVector(cases: CaseList, vectorWidth: number, cmpFloats: FloatTest): CaseList {
+function packScalarsToVector(
+  cases: CaseList,
+  vectorWidth: number,
+  cmpFloats: FloatMatch
+): CaseList {
   const asScalar = function (val: Array<Value> | Value): Scalar {
     if (val instanceof Scalar) {
       return val;
