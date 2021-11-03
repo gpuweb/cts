@@ -133,3 +133,58 @@ g.test('type')
     );
     t.expectCompileResult(expectation, code);
   });
+
+g.test('duplicates')
+  .desc(`Test that duplicated built-in variables are validated.`)
+  .params(u =>
+    u
+      // Place two [[builtin(sample_mask)]] attributes onto the entry point function.
+      // We use `sample_mask` as it is valid as both an input and output for the same entry point.
+      // The function:
+      // - has two non-struct parameters (`p1` and `p2`)
+      // - has two struct parameters each with two members (`s1{a,b}` and `s2{a,b}`)
+      // - returns a struct with two members (`ra` and `rb`)
+      // By default, all of these variables will have unique [[location()]] attributes.
+      .combine('first', ['p1', 's1a', 's2a', 'ra'] as const)
+      .combine('second', ['p2', 's1b', 's2b', 'rb'] as const)
+      .beginSubcases()
+  )
+  .fn(t => {
+    const p1 = t.params.first === 'p1' ? '[[builtin(sample_mask)]]' : '[[location(1)]]';
+    const p2 = t.params.second === 'p2' ? '[[builtin(sample_mask)]]' : '[[location(2)]]';
+    const s1a = t.params.first === 's1a' ? '[[builtin(sample_mask)]]' : '[[location(3)]]';
+    const s1b = t.params.second === 's1b' ? '[[builtin(sample_mask)]]' : '[[location(4)]]';
+    const s2a = t.params.first === 's2a' ? '[[builtin(sample_mask)]]' : '[[location(5)]]';
+    const s2b = t.params.second === 's2b' ? '[[builtin(sample_mask)]]' : '[[location(6)]]';
+    const ra = t.params.first === 'ra' ? '[[builtin(sample_mask)]]' : '[[location(1)]]';
+    const rb = t.params.second === 'rb' ? '[[builtin(sample_mask)]]' : '[[location(2)]]';
+    const code = `
+    struct S1 {
+      ${s1a} a : u32;
+      ${s1b} b : u32;
+    };
+    struct S2 {
+      ${s2a} a : u32;
+      ${s2b} b : u32;
+    };
+    struct R {
+      ${ra} a : u32;
+      ${rb} b : u32;
+    };
+    [[stage(fragment)]]
+    fn main(${p1} p1 : u32,
+            ${p2} p2 : u32,
+            s1 : S1,
+            s2 : S2,
+            ) -> R {
+      return R();
+    }
+    `;
+
+    // The test should fail if both [[builtin(sample_mask)]] attributes are on the input parameters
+    // or structures, or it they are both on the output struct. Otherwise it should pass.
+    const firstIsRet = t.params.first === 'ra';
+    const secondIsRet = t.params.second === 'rb';
+    const expectation = firstIsRet !== secondIsRet;
+    t.expectCompileResult(expectation, code);
+  });
