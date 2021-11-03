@@ -21,21 +21,6 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('value_testing_builtin_functions,isInf')
-  .uniqueId('3591ae3f3daa3871')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#value-testing-builtin-functions')
-  .desc(
-    `
-isInf:
-isInf(e: I ) -> T Test for infinity according to IEEE-754. Component-wise when I is a vector. (OpIsInf)
-
-Please read the following guidelines before contributing:
-https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
-`
-  )
-  .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
-  .unimplemented();
-
 g.test('value_testing_builtin_functions,isFinite')
   .uniqueId('bf8ee3764330ceb4')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#value-testing-builtin-functions')

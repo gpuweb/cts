@@ -163,14 +163,20 @@ function toStorage(ty, expr) {
   }
   if (ty instanceof VectorType) {
     if (ty.elementType.kind === 'bool') {
-      return `select(vec${ty.width}<u32>(0u), vec${ty.width}<u32>(0u), ${expr})`;
+      return `select(vec${ty.width}<u32>(0u), vec${ty.width}<u32>(1u), ${expr})`;
     }
   }
   return expr;
 }
 
+// Currently all values are packed into buffers of 16 byte strides
+const kValueStride = 16;
+
 /**
- * Runs a builtin test
+ * Runs the list of builtin tests, possibly splitting the tests into multiple
+ * dispatches to keep the input data within the buffer binding limits.
+ * run() will pack the scalar test cases into smaller set of vectorized tests
+ * if `cfg.vectorize` is defined.
  * @param t the GPUTest
  * @param builtin the builtin being tested
  * @param parameterTypes the list of builtin parameter types
@@ -190,15 +196,37 @@ export function run(
 
   // If the 'vectorize' config option was provided, pack the cases into vectors.
   if (cfg.vectorize !== undefined) {
-    const packed = packScalarsToVector(parameterTypes, returnType, cases, cfg.vectorize, cmpFloats);
+    const packed = packScalarsToVector(parameterTypes, returnType, cases, cfg.vectorize);
     cases = packed.cases;
     parameterTypes = packed.parameterTypes;
     returnType = packed.returnType;
   }
 
-  // Currently all values are packed into buffers of 16 byte strides
-  const kValueStride = 16;
+  // The size of the input buffer max exceed the maximum buffer binding size,
+  // so chunk the tests up into batches that fit into the limits.
+  const maxInputSize =
+    cfg.storageClass === 'uniform'
+      ? t.device.limits.maxUniformBufferBindingSize
+      : t.device.limits.maxStorageBufferBindingSize;
+  const casesPerBatch = Math.floor(maxInputSize / (parameterTypes.length * kValueStride));
+  for (let i = 0; i < cases.length; i += casesPerBatch) {
+    const batchCases = cases.slice(i, Math.min(i + casesPerBatch, cases.length));
+    runBatch(t, builtin, parameterTypes, returnType, batchCases, cfg.storageClass, cmpFloats);
+  }
+}
 
+/**
+ * Runs the list of builtin tests. The input data must fit within the buffer
+ * binding limits of the given storageClass.
+ * @param t the GPUTest
+ * @param builtin the builtin being tested
+ * @param parameterTypes the list of builtin parameter types
+ * @param returnType the return type for the builtin overload
+ * @param cases list of test cases that fit within the binding limits of the device
+ * @param storageClass the storage class to use for the input buffer
+ * @param cmpFloats the method to compare floating point numbers
+ */
+function runBatch(t, builtin, parameterTypes, returnType, cases, storageClass, cmpFloats) {
   // returns the WGSL expression to load the ith parameter of the given type from the input buffer
   const paramExpr = (ty, i) => fromStorage(ty, `inputs.test[i].param${i}`);
 
@@ -227,10 +255,10 @@ struct Outputs {
 };
 
 ${
-  cfg.storageClass === 'uniform'
+  storageClass === 'uniform'
     ? `[[group(0), binding(0)]] var<uniform> inputs : Inputs;`
     : `[[group(0), binding(0)]] var<storage, ${
-        cfg.storageClass === 'storage_r' ? 'read' : 'read_write'
+        storageClass === 'storage_r' ? 'read' : 'read_write'
       }> inputs : Inputs;`
 }
 [[group(0), binding(1)]] var<storage, write> outputs : Outputs;
@@ -243,8 +271,10 @@ fn main() {
 }
 `;
 
+  const inputSize = cases.length * parameterTypes.length * kValueStride;
+
   // Holds all the parameter values for all cases
-  const inputData = new Uint8Array(cases.length * parameterTypes.length * kValueStride);
+  const inputData = new Uint8Array(inputSize);
 
   // Pack all the input parameter values into the inputData buffer
   {
@@ -265,7 +295,7 @@ fn main() {
   const inputBuffer = t.makeBufferWithContents(
     inputData,
     GPUBufferUsage.COPY_SRC |
-      (cfg.storageClass === 'uniform' ? GPUBufferUsage.UNIFORM : GPUBufferUsage.STORAGE)
+      (storageClass === 'uniform' ? GPUBufferUsage.UNIFORM : GPUBufferUsage.STORAGE)
   );
 
   // Construct a buffer to hold the results of the builtin tests
@@ -335,7 +365,7 @@ fn main() {
  * If `cases.length` is not a multiple of `vectorWidth`, then the last scalar
  * test case value is repeated to fill the vector value.
  */
-function packScalarsToVector(parameterTypes, returnType, cases, vectorWidth, cmpFloats) {
+function packScalarsToVector(parameterTypes, returnType, cases, vectorWidth) {
   // Validate that the parameters and return type are all vectorizable
   for (let i = 0; i < parameterTypes.length; i++) {
     const ty = parameterTypes[i];
@@ -375,7 +405,7 @@ function packScalarsToVector(parameterTypes, returnType, cases, vectorWidth, cmp
     for (let i = 0; i < vectorWidth; i++) {
       comparators[i] = toComparator(cases[clampCaseIdx(caseIdx + i)].expected);
     }
-    const packedComparator = got => {
+    const packedComparator = (got, cmpFloats) => {
       let matched = true;
       const gElements = new Array(vectorWidth);
       const eElements = new Array(vectorWidth);
