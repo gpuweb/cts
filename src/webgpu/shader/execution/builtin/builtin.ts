@@ -205,7 +205,7 @@ function toStorage(ty: Type, expr: string): string {
   }
   if (ty instanceof VectorType) {
     if (ty.elementType.kind === 'bool') {
-      return `select(vec${ty.width}<u32>(0u), vec${ty.width}<u32>(0u), ${expr})`;
+      return `select(vec${ty.width}<u32>(0u), vec${ty.width}<u32>(1u), ${expr})`;
     }
   }
   return expr;
