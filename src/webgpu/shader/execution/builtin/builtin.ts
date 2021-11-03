@@ -51,7 +51,7 @@ export function absThreshold(diff: number): FloatMatch {
  */
 export function ulpThreshold(ulp: number): FloatMatch {
   return (got, expected) => {
-    if (got === expected) {
+    if (got === expected || (Number.isNaN(got) && Number.isNaN(expected))) {
       return true;
     }
     return diffULP(got, expected) <= ulp;
