@@ -160,7 +160,8 @@ export type StorageClass = 'uniform' | 'storage_r' | 'storage_rw';
 export type Config = {
   // Where the input values are read from
   storageClass: StorageClass;
-  // If defined, scalar test cases will be packed into vectors of the given width.
+  // If defined, scalar test cases will be packed into vectors of the given
+  // width, which must be 2, 3 or 4.
   // Requires that all parameters of the builtin overload are of a scalar type,
   // and the return type of the builtin overload is also a scalar type.
   // If the number of test cases is not a multiple of the vector width, then the
