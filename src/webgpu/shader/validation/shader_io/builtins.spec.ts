@@ -134,6 +134,36 @@ g.test('type')
     t.expectCompileResult(expectation, code);
   });
 
+g.test('nesting')
+  .desc(`Test validation of nested built-in variables`)
+  .params(u =>
+    u
+      .combine('target_stage', ['fragment', ''] as const)
+      .combine('target_io', ['in', 'out'] as const)
+      .beginSubcases()
+  )
+  .fn(t => {
+    // Generate a struct that contains a sample_mask builtin, nested inside another struct.
+    let code = `
+    struct Inner {
+      [[builtin(sample_mask)]] value : u32;
+    };
+    struct Outer {
+      inner : Inner;
+    };`;
+
+    code += generateShader({
+      attribute: '',
+      type: 'Outer',
+      stage: t.params.target_stage,
+      io: t.params.target_io,
+      use_struct: false,
+    });
+
+    // Expect to pass only if the struct is not used for entry point IO.
+    t.expectCompileResult(t.params.target_stage === '', code);
+  });
+
 g.test('duplicates')
   .desc(`Test that duplicated built-in variables are validated.`)
   .params(u =>

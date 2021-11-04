@@ -126,7 +126,7 @@ fn(t => {
     use_struct: false });
 
 
-  // Expect to fail pass only if the struct is not used for entry point IO.
+  // Expect to pass only if the struct is not used for entry point IO.
   t.expectCompileResult(t.params.target_stage === '', code);
 });
 
