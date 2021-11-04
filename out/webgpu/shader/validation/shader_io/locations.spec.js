@@ -131,6 +131,56 @@ fn(t => {
 });
 
 g.test('duplicates').
-desc(`Test validation of duplicate user-defined IO attributes`).
-unimplemented();
+desc(`Test that duplicated user-defined IO attributes are validated.`).
+params((u) =>
+u
+// Place two [[location(0)]] attributes onto the entry point function.
+// The function:
+// - has two non-struct parameters (`p1` and `p2`)
+// - has two struct parameters each with two members (`s1{a,b}` and `s2{a,b}`)
+// - returns a struct with two members (`ra` and `rb`)
+// By default, all of these user-defined IO variables will have unique location attributes.
+.combine('first', ['p1', 's1a', 's2a', 'ra']).
+combine('second', ['p2', 's1b', 's2b', 'rb']).
+beginSubcases()).
+
+fn(t => {
+  const p1 = t.params.first === 'p1' ? '0' : '1';
+  const p2 = t.params.second === 'p2' ? '0' : '2';
+  const s1a = t.params.first === 's1a' ? '0' : '3';
+  const s1b = t.params.second === 's1b' ? '0' : '4';
+  const s2a = t.params.first === 's2a' ? '0' : '5';
+  const s2b = t.params.second === 's2b' ? '0' : '6';
+  const ra = t.params.first === 'ra' ? '0' : '1';
+  const rb = t.params.second === 'rb' ? '0' : '2';
+  const code = `
+    struct S1 {
+      [[location(${s1a})]] a : f32;
+      [[location(${s1b})]] b : f32;
+    };
+    struct S2 {
+      [[location(${s2a})]] a : f32;
+      [[location(${s2b})]] b : f32;
+    };
+    struct R {
+      [[location(${ra})]] a : f32;
+      [[location(${rb})]] b : f32;
+    };
+    [[stage(fragment)]]
+    fn main([[location(${p1})]] p1 : f32,
+            [[location(${p2})]] p2 : f32,
+            s1 : S1,
+            s2 : S2,
+            ) -> R {
+      return R();
+    }
+    `;
+
+  // The test should fail if both [[location(0)]] attributes are on the input parameters or
+  // structures, or it they are both on the output struct. Otherwise it should pass.
+  const firstIsRet = t.params.first === 'ra';
+  const secondIsRet = t.params.second === 'rb';
+  const expectation = firstIsRet !== secondIsRet;
+  t.expectCompileResult(expectation, code);
+});
 //# sourceMappingURL=locations.spec.js.map
