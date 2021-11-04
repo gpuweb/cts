@@ -218,3 +218,27 @@ g.test('duplicates')
     const expectation = firstIsRet !== secondIsRet;
     t.expectCompileResult(expectation, code);
   });
+
+g.test('missing_vertex_position')
+  .desc(`Test that vertex shaders are required to output [[builtin(position)]].`)
+  .params(u =>
+    u
+      .combine('use_struct', [true, false])
+      .combine('attribute', ['[[builtin(position)]]', '[[location(0)]]'])
+      .beginSubcases()
+  )
+  .fn(t => {
+    const code = `
+    struct S {
+      ${t.params.attribute} value : vec4<f32>;
+    };
+
+    [[stage(vertex)]]
+    fn main() -> ${t.params.use_struct ? 'S' : `${t.params.attribute} vec4<f32>`} {
+      return ${t.params.use_struct ? 'S' : 'vec4<f32>'}();
+    }
+    `;
+
+    // Expect to pass only when using [[builtin(position)]].
+    t.expectCompileResult(t.params.attribute === '[[builtin(position)]]', code);
+  });
