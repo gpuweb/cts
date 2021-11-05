@@ -3,9 +3,9 @@ export const description = `WGSL execution test. Section: Value-testing built-in
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { TypeBool, TypeF32, f32, f32Bits, False, True } from '../../../util/conversion.js';
-import { subnormalF32Examples, normalF32Examples } from '../../values.js';
+import { subnormalF32Examples, normalF32Examples, nanF32BitsExamples } from '../../values.js';
 
-import { run, kBit } from './builtin.js';
+import { anyOf, run, kBit } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -28,8 +28,8 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   //       Note: This means some functions (e.g. isInf, isNan, min and max) may not return
   //       the expected result due to optimizations about the presence of NaNs and infinities.
   //
-  // TODO: For now, test assuming infinities are handled strictly, according to IEEE-754.
-  // Relax the tests if necessary.
+  // See https://github.com/gpuweb/gpuweb/issues/2259 for consideration of a feature to
+  // enable more strict handling of infinities.
   .params(u =>
     u
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
@@ -42,18 +42,20 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
       { input: f32(10.0), expected: False },
       { input: f32(-10.0), expected: False },
       // Infinities
-      { input: f32(Infinity), expected: True },
-      { input: f32(-Infinity), expected: True },
-      { input: f32Bits(kBit.f32.infinity.positive), expected: True },
-      { input: f32Bits(kBit.f32.infinity.negative), expected: True },
+      { input: f32Bits(kBit.f32.infinity.positive), expected: anyOf(True, False) },
+      { input: f32Bits(kBit.f32.infinity.negative), expected: anyOf(True, False) },
       // NaNs
-      { input: f32(NaN), expected: False },
-      { input: f32(-NaN), expected: False },
       { input: f32Bits(kBit.f32.nan.positive.s), expected: False },
       { input: f32Bits(kBit.f32.nan.positive.q), expected: False },
       { input: f32Bits(kBit.f32.nan.negative.s), expected: False },
       { input: f32Bits(kBit.f32.nan.negative.q), expected: False },
     ]
+      // Exotic NaN values are not infinite.
+      .concat(
+        nanF32BitsExamples().map(n => {
+          return { input: f32Bits(n), expected: False };
+        })
+      )
       // Normal values are not infinite.
       .concat(
         normalF32Examples().map(n => {
