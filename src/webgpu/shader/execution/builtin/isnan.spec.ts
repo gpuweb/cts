@@ -5,7 +5,7 @@ import { GPUTest } from '../../../gpu_test.js';
 import { TypeBool, TypeF32, f32, f32Bits, False, True } from '../../../util/conversion.js';
 import { subnormalF32Examples, normalF32Examples, nanF32BitsExamples } from '../../values.js';
 
-import { kBit, run } from './builtin.js';
+import { anyOf, kBit, run } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -28,8 +28,6 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   //       Note: This means some functions (e.g. isInf, isNan, min and max) may not return
   //       the expected result due to optimizations about the presence of NaNs and infinities.
   //
-  // TODO: For now, test assuming NaNs are handled strictly, according to IEEE-754. Relax
-  // Relax the tests if necessary.
   .params(u =>
     u
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
@@ -42,22 +40,18 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
       { input: f32(10.0), expected: False },
       { input: f32(-10.0), expected: False },
       // Infinities
-      { input: f32(Infinity), expected: False },
-      { input: f32(-Infinity), expected: False },
       { input: f32Bits(kBit.f32.infinity.positive), expected: False },
       { input: f32Bits(kBit.f32.infinity.negative), expected: False },
       // NaNs
-      { input: f32(NaN), expected: True },
-      { input: f32(-NaN), expected: True },
-      { input: f32Bits(kBit.f32.nan.positive.s), expected: True },
-      { input: f32Bits(kBit.f32.nan.positive.q), expected: True },
-      { input: f32Bits(kBit.f32.nan.negative.s), expected: True },
-      { input: f32Bits(kBit.f32.nan.negative.q), expected: True },
+      { input: f32Bits(kBit.f32.nan.positive.s), expected: anyOf(True, False) },
+      { input: f32Bits(kBit.f32.nan.positive.q), expected: anyOf(True, False) },
+      { input: f32Bits(kBit.f32.nan.negative.s), expected: anyOf(True, False) },
+      { input: f32Bits(kBit.f32.nan.negative.q), expected: anyOf(True, False) },
     ]
       // Try exotic NaN patterns.
       .concat(
         nanF32BitsExamples().map(n => {
-          return { input: f32Bits(n), expected: True };
+          return { input: f32Bits(n), expected: anyOf(True, False) };
         })
       )
       // Normals are not Nan
