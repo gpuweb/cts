@@ -19,9 +19,18 @@ isInf(e: I ) -> T Test for infinity according to IEEE-754. Component-wise when I
 
 Please read the following guidelines before contributing:
 https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
-`).
+`)
 
-params((u) =>
+// https://gpuweb.github.io/gpuweb/wgsl/#floating-point-evaluation says:
+//
+//    Implementations may assume that NaNs, inifinities are not present
+//
+//       Note: This means some functions (e.g. isInf, isNan, min and max) may not return
+//       the expected result due to optimizations about the presence of NaNs and infinities.
+//
+// TODO: For now, test assuming infinities are handled strictly, according to IEEE-754.
+// Relax the tests if necessary.
+.params((u) =>
 u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('vectorize', [undefined, 2, 3, 4])).
