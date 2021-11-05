@@ -12,10 +12,10 @@ export function subnormalF32Examples(): Array<number> {
   const result_as_bits: number[] = [];
 
   const max_mantissa = 0x7f_ffff;
-  const sign_bits: [number, number] = [0, 0x8000_0000];
-  for (const sign_bit in sign_bits) {
+  const sign_bits = [0, 0x8000_0000];
+  for (const sign_bit of sign_bits) {
     // exponent bits must be zero.
-    const sign_and_exponent = (sign_bit as unknown) as number;
+    const sign_and_exponent = sign_bit;
 
     // Set all bits
     result_as_bits.push(sign_and_exponent | max_mantissa);
@@ -42,9 +42,9 @@ export function normalF32Examples(): Array<number> {
   const min_exponent_as_bits = 0x0080_0000;
   const max_exponent_as_bits = 0x7f00_0000; // Max normal exponent
   const sign_bits = [0, 0x8000_0000];
-  for (const sign_bit in sign_bits) {
+  for (const sign_bit of sign_bits) {
     for (let e = min_exponent_as_bits; e <= max_exponent_as_bits; e += min_exponent_as_bits) {
-      const sign_and_exponent = ((sign_bit as unknown) as number) | e;
+      const sign_and_exponent = sign_bit | e;
 
       // Set zero mantissa bits
       result.push(uint32ToFloat32(sign_and_exponent));
@@ -61,5 +61,31 @@ export function normalF32Examples(): Array<number> {
     result.length === 2 + 2 * 254 * 25,
     'normal number sample count is ' + result.length.toString()
   );
+  return result;
+}
+
+/** Returns an array of 32-bit NaNs, as Uint32 bit patterns.
+ * NaNs have: maximum exponent, but the mantissa is not zero.
+ */
+export function nanF32BitsExamples(): Array<number> {
+  const result: number[] = [];
+  const exponent_bit = 0x7f80_0000;
+  const sign_bits = [0, 0x8000_0000];
+  for (const sign_bit of sign_bits) {
+    const sign_and_exponent = sign_bit | exponent_bit;
+    const bits = sign_and_exponent | 0x40_0000;
+    // Only the most significant bit of the mantissa is set.
+    result.push(bits);
+
+    // Quiet and signalling NaNs differ based on the most significant bit
+    // of the mantissa. Try both.
+    for (const quiet_signalling of [0, 0x40_0000]) {
+      // Set each of the lower bits.
+      for (let lower_bits = 1; lower_bits < 0x40_0000; lower_bits <<= 1) {
+        const bits = sign_and_exponent | quiet_signalling | lower_bits;
+        result.push(bits);
+      }
+    }
+  }
   return result;
 }
