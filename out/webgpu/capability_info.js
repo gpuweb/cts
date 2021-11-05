@@ -287,12 +287,19 @@ export const kTextureFormats = keysOf(kAllTextureFormatInfo);
 
 /** Valid GPUTextureFormats for `copyExternalImageToTexture`, by spec. */
 export const kValidTextureFormatsForCopyE2T = [
+'r8unorm',
+'r16float',
+'r32float',
+'rg8unorm',
+'rg16float',
+'rg32float',
 'rgba8unorm',
 'rgba8unorm-srgb',
 'bgra8unorm',
 'bgra8unorm-srgb',
 'rgb10a2unorm',
-'rg8unorm'];
+'rgba16float',
+'rgba32float'];
 
 
 /** Per-GPUTextureDimension info. */
