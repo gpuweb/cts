@@ -4,6 +4,7 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
 import {
   Scalar,
+  Vector,
   TypeVec,
   TypeBool,
   TypeF32,
@@ -133,5 +134,89 @@ Please read the following guidelines before contributing:
 https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 `
   )
-  .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
-  .unimplemented();
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('component', ['b', 'f', 'i', 'u'] as const)
+      .combine('overload', ['vec2', 'vec3', 'vec4'] as const)
+  )
+  .fn(async t => {
+    const componentType = dataType[t.params.component as scalarKind].type;
+    const cons = dataType[t.params.component as scalarKind].constructor;
+
+    const c = [0, 1, 2, 3, 4, 5, 6, 7].map(i => cons(i)) as Scalar[];
+    const T = True;
+    const F = False;
+    // Form vectors be used for the 'false' and 'true' data operands.
+    const FF = vec2(c[0], c[1]);
+    const TT = vec2(c[4], c[5]);
+    const FFF = vec3(c[0], c[1], c[2]);
+    const TTT = vec3(c[4], c[5], c[6]);
+    const FFFF = vec4(c[0], c[1], c[2], c[3]);
+    const TTTT = vec4(c[4], c[5], c[6], c[7]);
+
+    const pick2 = (a: Vector, b: Vector) => vec2(a.elements[0], b.elements[1]);
+    const pick3 = (a: Vector, b: Vector, c: Vector) =>
+      vec3(a.elements[0], b.elements[1], c.elements[2]);
+    const pick4 = (a: Vector, b: Vector, c: Vector, d: Vector) =>
+      vec4(a.elements[0], b.elements[1], c.elements[2], d.elements[3]);
+
+    const overloads = {
+      vec2: {
+        dataType: TypeVec(2, componentType),
+        boolType: TypeVec(2, TypeBool),
+        cases: [
+          { input: [FF, TT, vec2(F, F)], expected: pick2(FF, FF) },
+          { input: [FF, TT, vec2(F, T)], expected: pick2(FF, TT) },
+          { input: [FF, TT, vec2(T, F)], expected: pick2(TT, FF) },
+          { input: [FF, TT, vec2(T, T)], expected: pick2(TT, TT) },
+        ],
+      },
+      vec3: {
+        dataType: TypeVec(3, componentType),
+        boolType: TypeVec(3, TypeBool),
+        cases: [
+          { input: [FFF, TTT, vec3(F, F, F)], expected: pick3(FFF, FFF, FFF) },
+          { input: [FFF, TTT, vec3(F, F, T)], expected: pick3(FFF, FFF, TTT) },
+          { input: [FFF, TTT, vec3(F, T, F)], expected: pick3(FFF, TTT, FFF) },
+          { input: [FFF, TTT, vec3(F, T, T)], expected: pick3(FFF, TTT, TTT) },
+          { input: [FFF, TTT, vec3(T, F, F)], expected: pick3(TTT, FFF, FFF) },
+          { input: [FFF, TTT, vec3(T, F, T)], expected: pick3(TTT, FFF, TTT) },
+          { input: [FFF, TTT, vec3(T, T, F)], expected: pick3(TTT, TTT, FFF) },
+          { input: [FFF, TTT, vec3(T, T, T)], expected: pick3(TTT, TTT, TTT) },
+        ],
+      },
+      vec4: {
+        dataType: TypeVec(4, componentType),
+        boolType: TypeVec(4, TypeBool),
+        cases: [
+          { input: [FFFF, TTTT, vec4(F, F, F, F)], expected: pick4(FFFF, FFFF, FFFF, FFFF) },
+          { input: [FFFF, TTTT, vec4(F, F, F, T)], expected: pick4(FFFF, FFFF, FFFF, TTTT) },
+          { input: [FFFF, TTTT, vec4(F, F, T, F)], expected: pick4(FFFF, FFFF, TTTT, FFFF) },
+          { input: [FFFF, TTTT, vec4(F, F, T, T)], expected: pick4(FFFF, FFFF, TTTT, TTTT) },
+          { input: [FFFF, TTTT, vec4(F, T, F, F)], expected: pick4(FFFF, TTTT, FFFF, FFFF) },
+          { input: [FFFF, TTTT, vec4(F, T, F, T)], expected: pick4(FFFF, TTTT, FFFF, TTTT) },
+          { input: [FFFF, TTTT, vec4(F, T, T, F)], expected: pick4(FFFF, TTTT, TTTT, FFFF) },
+          { input: [FFFF, TTTT, vec4(F, T, T, T)], expected: pick4(FFFF, TTTT, TTTT, TTTT) },
+          { input: [FFFF, TTTT, vec4(T, F, F, F)], expected: pick4(TTTT, FFFF, FFFF, FFFF) },
+          { input: [FFFF, TTTT, vec4(T, F, F, T)], expected: pick4(TTTT, FFFF, FFFF, TTTT) },
+          { input: [FFFF, TTTT, vec4(T, F, T, F)], expected: pick4(TTTT, FFFF, TTTT, FFFF) },
+          { input: [FFFF, TTTT, vec4(T, F, T, T)], expected: pick4(TTTT, FFFF, TTTT, TTTT) },
+          { input: [FFFF, TTTT, vec4(T, T, F, F)], expected: pick4(TTTT, TTTT, FFFF, FFFF) },
+          { input: [FFFF, TTTT, vec4(T, T, F, T)], expected: pick4(TTTT, TTTT, FFFF, TTTT) },
+          { input: [FFFF, TTTT, vec4(T, T, T, F)], expected: pick4(TTTT, TTTT, TTTT, FFFF) },
+          { input: [FFFF, TTTT, vec4(T, T, T, T)], expected: pick4(TTTT, TTTT, TTTT, TTTT) },
+        ],
+      },
+    };
+    const overload = overloads[t.params.overload];
+
+    run(
+      t,
+      'select',
+      [overload.dataType, overload.dataType, overload.boolType],
+      overload.dataType,
+      t.params,
+      overload.cases
+    );
+  });
