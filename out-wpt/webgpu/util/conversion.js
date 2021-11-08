@@ -266,10 +266,11 @@ export class VectorType {
   }
 }
 
+// Maps a string representation of a vector type to vector type.
 const vectorTypes = new Map();
 
 export function TypeVec(width, elementType) {
-  const key = { width, elementType };
+  const key = `${elementType.toString()} ${width}}`;
   let ty = vectorTypes.get(key);
   if (ty !== undefined) {
     return ty;
