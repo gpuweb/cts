@@ -44,14 +44,14 @@ T is f32 or vecN<f32> atan(e: T ) -> T Returns the arc tangent of e. Component-w
     ];
 
     // Spread of cases over wide domain
-    const automatic_cases = new Array<Case>(1000);
-    const increment = (Number.MAX_SAFE_INTEGER - Number.MIN_SAFE_INTEGER) / automatic_cases.length;
-    for (let i = 0; i < automatic_cases.length; i++) {
+    const automatic = new Array<Case>(1000);
+    const increment = (Number.MAX_SAFE_INTEGER - Number.MIN_SAFE_INTEGER) / automatic.length;
+    for (let i = 0; i < automatic.length; i++) {
       const x = Number.MIN_SAFE_INTEGER + increment * i;
-      automatic_cases[i] = { input: f32(x), expected: f32(truthFunc(x)) };
+      automatic[i] = { input: f32(x), expected: f32(truthFunc(x)) };
     }
 
     const cfg: Config = t.params;
     cfg.cmpFloats = ulpThreshold(4096);
-    run(t, 'atan', [TypeF32], TypeF32, cfg, manual.concat(automatic_cases));
+    run(t, 'atan', [TypeF32], TypeF32, cfg, manual.concat(automatic));
   });
