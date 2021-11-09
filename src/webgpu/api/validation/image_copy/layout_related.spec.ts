@@ -149,7 +149,6 @@ g.test('required_bytes_in_copy')
     // to make this happen we align the bytesInACompleteRow value and multiply
     // bytesPerRowPadding by 256.
     const bytesPerRowAlignment = method === 'WriteTexture' ? 1 : 256;
-
     const copyWidth = copyWidthInBlocks * info.blockWidth;
     const copyHeight = copyHeightInBlocks * info.blockHeight;
     const offset = offsetInBlocks * info.bytesPerBlock;
@@ -162,7 +161,11 @@ g.test('required_bytes_in_copy')
     const layout = { offset, bytesPerRow, rowsPerImage };
     const minDataSize = dataBytesForCopyOrFail({ layout, format, copySize, method });
 
-    const texture = t.createAlignedTexture(format, copySize);
+    const texture = t.createAlignedTexture(format, {
+      width: copyWidthInBlocks,
+      height: copyHeightInBlocks,
+      depthOrArrayLayers: copyDepth,
+    });
 
     t.testRun({ texture }, { offset, bytesPerRow, rowsPerImage }, copySize, {
       dataSize: minDataSize,
@@ -285,7 +288,7 @@ g.test('bound_on_bytes_per_row')
     // In the CopyB2T and CopyT2B cases we need to have bytesPerRow 256-aligned.
     const bytesPerRowAlignment = method === 'WriteTexture' ? 1 : 256;
 
-    const copyWidth = align(copyWidthInBlocks * info.blockWidth, bytesPerRowAlignment);
+    const copyWidth = copyWidthInBlocks * info.blockWidth;
     const copyHeight = copyHeightInBlocks * info.blockHeight;
     const bytesPerRow = align(
       blocksPerRow * info.bytesPerBlock + additionalPaddingPerRow,

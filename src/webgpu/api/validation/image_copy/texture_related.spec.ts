@@ -231,7 +231,7 @@ g.test('format')
     const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
-    const size = { width: 32, height: 32, depthOrArrayLayers };
+    const size = { width: 32 * info.blockWidth, height: 32 * info.blockHeight, depthOrArrayLayers };
     const texture = t.device.createTexture({
       size,
       dimension,
