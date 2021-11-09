@@ -250,29 +250,19 @@ Tests that a BC format passes validation iff the feature is enabled.`
     );
   });
 
-g.test('gpu,with_texture_compression,etc2')
+g.test('gpu,with_texture_compression,etc')
   .desc(
     `Example of a test using a device descriptor.
-Tests that an ETC2 format passes validation iff the feature is enabled.`
-  )
-  .params(u => u.combine('textureCompressionETC2', [false, true]))
-  .fn(async t => {
-    const { textureCompressionETC2 } = t.params;
 
-    if (textureCompressionETC2) {
-      await t.selectDeviceOrSkipTestCase('texture-compression-etc2');
+TODO: Test that an ETC format passes validation iff the feature is enabled.`
+  )
+  .params(u => u.combine('textureCompressionETC', [false, true]))
+  .fn(async t => {
+    const { textureCompressionETC } = t.params;
+
+    if (textureCompressionETC) {
+      await t.selectDeviceOrSkipTestCase('texture-compression-etc');
     }
 
-    const shouldError = !textureCompressionETC2;
-    t.expectGPUError(
-      'validation',
-      () => {
-        t.device.createTexture({
-          format: 'etc2-rgb8unorm',
-          size: [4, 4, 1],
-          usage: GPUTextureUsage.TEXTURE_BINDING,
-        });
-      },
-      shouldError
-    );
+    // TODO: Should actually test createTexture with an ETC format here.
   });
