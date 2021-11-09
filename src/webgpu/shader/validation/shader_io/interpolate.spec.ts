@@ -21,7 +21,7 @@ const kValidInterpolationAttributes = [
   '[[interpolate(linear, sample)]]',
 ] as const;
 
-g.test('parameters')
+g.test('type_and_sampling')
   .desc(`Test that all combinations of interpolation type and sampling are validated correctly.`)
   .params(u =>
     u
