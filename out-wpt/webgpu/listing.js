@@ -1156,6 +1156,14 @@ export const listing = [
       "shader",
       "execution",
       "builtin",
+      "atan"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "builtin",
       "ceil"
     ]
   },

@@ -1,3 +1,3 @@
 // AUTO-GENERATED - DO NOT EDIT. See tools/gen_version.
 
-export const version = 'fd20759f167bd58bdbf4db84743b80020936b455';
+export const version = 'ce59faa19967a3f033e8081b56e62c2335b61607';
