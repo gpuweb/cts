@@ -45,9 +45,9 @@ T is f32 or vecN<f32> atan(e: T ) -> T Returns the arc tangent of e. Component-w
 
     // Spread of cases over wide domain
     const automatic = new Array<Case>(1000);
-    const increment = (Number.MAX_SAFE_INTEGER - Number.MIN_SAFE_INTEGER) / automatic.length;
+    const increment = (kBit.f32.positive.max - kBit.f32.negative.min) / automatic.length;
     for (let i = 0; i < automatic.length; i++) {
-      const x = Number.MIN_SAFE_INTEGER + increment * i;
+      const x = kBit.f32.negative.min + increment * i;
       automatic[i] = { input: f32(x), expected: f32(truthFunc(x)) };
     }
 
