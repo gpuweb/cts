@@ -8,7 +8,7 @@ import { generateShader } from './util.js';
 export const g = makeTestGroup(ShaderValidationTest);
 
 // List of valid interpolation attributes.
-const kValidInterpolationAttributes = [
+const kValidInterpolationAttributes = new Set([
   '',
   '[[interpolate(flat)]]',
   '[[interpolate(perspective)]]',
@@ -19,7 +19,7 @@ const kValidInterpolationAttributes = [
   '[[interpolate(linear, center)]]',
   '[[interpolate(linear, centroid)]]',
   '[[interpolate(linear, sample)]]',
-] as const;
+]);
 
 g.test('type_and_sampling')
   .desc(`Test that all combinations of interpolation type and sampling are validated correctly.`)
@@ -53,10 +53,7 @@ g.test('type_and_sampling')
       use_struct: t.params.use_struct,
     });
 
-    t.expectCompileResult(
-      kValidInterpolationAttributes.some(x => x === interpolate),
-      code
-    );
+    t.expectCompileResult(kValidInterpolationAttributes.has(interpolate), code);
   });
 
 g.test('require_location')
