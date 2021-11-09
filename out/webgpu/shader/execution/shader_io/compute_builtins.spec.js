@@ -12,6 +12,7 @@ desc(`Test compute shader builtin inputs values`).
 params((u) =>
 u.
 combine('method', ['param', 'struct', 'mixed']).
+combine('dispatch', ['direct', 'indirect']).
 combineWithParams([
 {
   groupSize: { x: 1, y: 1, z: 1 },
@@ -176,7 +177,26 @@ fn(async t => {
   const pass = encoder.beginComputePass();
   pass.setPipeline(pipeline);
   pass.setBindGroup(0, bindGroup);
-  pass.dispatch(t.params.numGroups.x, t.params.numGroups.y, t.params.numGroups.z);
+  switch (t.params.dispatch) {
+    case 'direct':
+      pass.dispatch(t.params.numGroups.x, t.params.numGroups.y, t.params.numGroups.z);
+      break;
+    case 'indirect':{
+        const dispatchBuffer = t.device.createBuffer({
+          size: 3 * Uint32Array.BYTES_PER_ELEMENT,
+          usage: GPUBufferUsage.INDIRECT,
+          mappedAtCreation: true });
+
+        t.trackForCleanup(dispatchBuffer);
+        const dispatchData = new Uint32Array(dispatchBuffer.getMappedRange());
+        dispatchData[0] = t.params.numGroups.x;
+        dispatchData[1] = t.params.numGroups.y;
+        dispatchData[2] = t.params.numGroups.z;
+        dispatchBuffer.unmap();
+        pass.dispatchIndirect(dispatchBuffer, 0);
+        break;
+      }}
+
   pass.endPass();
   t.queue.submit([encoder.finish()]);
 
