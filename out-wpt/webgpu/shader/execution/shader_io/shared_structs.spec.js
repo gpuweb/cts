@@ -133,7 +133,7 @@ g.test('shared_between_stages')
 
       [[stage(vertex)]]
       fn vert_main([[builtin(vertex_index)]] index : u32) -> Interface {
-        return Interface(vec4<f32>(vertices[index], 0.0, 1.0), 0.5);
+        return Interface(vec4<f32>(vertices[index], 0.0, 1.0), 1.0);
       }
 
       [[stage(fragment)]]
@@ -192,8 +192,8 @@ g.test('shared_between_stages')
     t.queue.submit([encoder.finish()]);
 
     // Test a few points to make sure we rendered a half-red/half-green triangle.
-    const redPixel = new Uint8Array([128, 0, 0, 255]);
-    const greenPixel = new Uint8Array([0, 128, 0, 255]);
+    const redPixel = new Uint8Array([255, 0, 0, 255]);
+    const greenPixel = new Uint8Array([0, 255, 0, 255]);
     for (const p of [
       { x: 16, y: 15 },
       { x: 16, y: 15 },
