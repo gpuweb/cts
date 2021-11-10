@@ -159,7 +159,7 @@ ${vsChecks}
 }
 
 struct VSOutputs {
-  [[location(0)]] result : i32;
+  [[location(0), interpolate(flat)]] result : i32;
   [[builtin(position)]] position : vec4<f32>;
 };
 
@@ -178,7 +178,8 @@ struct VSOutputs {
   return output;
 }
 
-[[stage(fragment)]] fn fsMain([[location(0)]] result : i32) -> [[location(0)]] i32 {
+[[stage(fragment)]] fn fsMain([[location(0), interpolate(flat)]] result : i32)
+  -> [[location(0)]] i32 {
   return result;
 }
     `;
