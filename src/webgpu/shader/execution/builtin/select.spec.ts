@@ -4,7 +4,7 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
 import {
   Scalar,
-  Vector,
+  VectorType,
   TypeVec,
   TypeBool,
   TypeF32,
@@ -21,7 +21,7 @@ import {
   vec4,
 } from '../../../util/conversion.js';
 
-import { run } from './builtin.js';
+import { run, CaseList } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -72,7 +72,14 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
     const componentType = dataType[t.params.component as scalarKind].type;
     const cons = dataType[t.params.component as scalarKind].constructor;
 
-    const c = [0, 1, 2, 3, 4, 5, 6, 7].map(i => cons(i)) as Scalar[];
+    // Create the scalar values that will be selected from, either as scalars
+    // or vectors.
+    //
+    // Each boolean will select between c[k] and c[k+4].  Those values must
+    // always compare as different.  The tricky case is boolean, where the parity
+    // has to be different, i.e. c[k]-c[k+4] must be odd.
+    const c = [0, 1, 2, 3, 5, 6, 7, 8].map(i => cons(i)) as Scalar[];
+    // Now form vectors that will have different components from each other.
     const v2a = vec2(c[0], c[1]);
     const v2b = vec2(c[4], c[5]);
     const v3a = vec3(c[0], c[1], c[2]);
@@ -144,79 +151,87 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
     const componentType = dataType[t.params.component as scalarKind].type;
     const cons = dataType[t.params.component as scalarKind].constructor;
 
-    const c = [0, 1, 2, 3, 4, 5, 6, 7].map(i => cons(i)) as Scalar[];
+    // Create the scalar values that will be selected from.
+    //
+    // Each boolean will select between c[k] and c[k+4].  Those values must
+    // always compare as different.  The tricky case is boolean, where the parity
+    // has to be different, i.e. c[k]-c[k+4] must be odd.
+    const c = [0, 1, 2, 3, 5, 6, 7, 8].map(i => cons(i)) as Scalar[];
     const T = True;
     const F = False;
-    // Form vectors be used for the 'false' and 'true' data operands.
-    const FF = vec2(c[0], c[1]);
-    const TT = vec2(c[4], c[5]);
-    const FFF = vec3(c[0], c[1], c[2]);
-    const TTT = vec3(c[4], c[5], c[6]);
-    const FFFF = vec4(c[0], c[1], c[2], c[3]);
-    const TTTT = vec4(c[4], c[5], c[6], c[7]);
 
-    const pick2 = (a: Vector, b: Vector) => vec2(a.elements[0], b.elements[1]);
-    const pick3 = (a: Vector, b: Vector, c: Vector) =>
-      vec3(a.elements[0], b.elements[1], c.elements[2]);
-    const pick4 = (a: Vector, b: Vector, c: Vector, d: Vector) =>
-      vec4(a.elements[0], b.elements[1], c.elements[2], d.elements[3]);
+    let tests: { dataType: VectorType; boolType: VectorType; cases: CaseList };
 
-    const overloads = {
-      vec2: {
-        dataType: TypeVec(2, componentType),
-        boolType: TypeVec(2, TypeBool),
-        cases: [
-          { input: [FF, TT, vec2(F, F)], expected: pick2(FF, FF) },
-          { input: [FF, TT, vec2(F, T)], expected: pick2(FF, TT) },
-          { input: [FF, TT, vec2(T, F)], expected: pick2(TT, FF) },
-          { input: [FF, TT, vec2(T, T)], expected: pick2(TT, TT) },
-        ],
-      },
-      vec3: {
-        dataType: TypeVec(3, componentType),
-        boolType: TypeVec(3, TypeBool),
-        cases: [
-          { input: [FFF, TTT, vec3(F, F, F)], expected: pick3(FFF, FFF, FFF) },
-          { input: [FFF, TTT, vec3(F, F, T)], expected: pick3(FFF, FFF, TTT) },
-          { input: [FFF, TTT, vec3(F, T, F)], expected: pick3(FFF, TTT, FFF) },
-          { input: [FFF, TTT, vec3(F, T, T)], expected: pick3(FFF, TTT, TTT) },
-          { input: [FFF, TTT, vec3(T, F, F)], expected: pick3(TTT, FFF, FFF) },
-          { input: [FFF, TTT, vec3(T, F, T)], expected: pick3(TTT, FFF, TTT) },
-          { input: [FFF, TTT, vec3(T, T, F)], expected: pick3(TTT, TTT, FFF) },
-          { input: [FFF, TTT, vec3(T, T, T)], expected: pick3(TTT, TTT, TTT) },
-        ],
-      },
-      vec4: {
-        dataType: TypeVec(4, componentType),
-        boolType: TypeVec(4, TypeBool),
-        cases: [
-          { input: [FFFF, TTTT, vec4(F, F, F, F)], expected: pick4(FFFF, FFFF, FFFF, FFFF) },
-          { input: [FFFF, TTTT, vec4(F, F, F, T)], expected: pick4(FFFF, FFFF, FFFF, TTTT) },
-          { input: [FFFF, TTTT, vec4(F, F, T, F)], expected: pick4(FFFF, FFFF, TTTT, FFFF) },
-          { input: [FFFF, TTTT, vec4(F, F, T, T)], expected: pick4(FFFF, FFFF, TTTT, TTTT) },
-          { input: [FFFF, TTTT, vec4(F, T, F, F)], expected: pick4(FFFF, TTTT, FFFF, FFFF) },
-          { input: [FFFF, TTTT, vec4(F, T, F, T)], expected: pick4(FFFF, TTTT, FFFF, TTTT) },
-          { input: [FFFF, TTTT, vec4(F, T, T, F)], expected: pick4(FFFF, TTTT, TTTT, FFFF) },
-          { input: [FFFF, TTTT, vec4(F, T, T, T)], expected: pick4(FFFF, TTTT, TTTT, TTTT) },
-          { input: [FFFF, TTTT, vec4(T, F, F, F)], expected: pick4(TTTT, FFFF, FFFF, FFFF) },
-          { input: [FFFF, TTTT, vec4(T, F, F, T)], expected: pick4(TTTT, FFFF, FFFF, TTTT) },
-          { input: [FFFF, TTTT, vec4(T, F, T, F)], expected: pick4(TTTT, FFFF, TTTT, FFFF) },
-          { input: [FFFF, TTTT, vec4(T, F, T, T)], expected: pick4(TTTT, FFFF, TTTT, TTTT) },
-          { input: [FFFF, TTTT, vec4(T, T, F, F)], expected: pick4(TTTT, TTTT, FFFF, FFFF) },
-          { input: [FFFF, TTTT, vec4(T, T, F, T)], expected: pick4(TTTT, TTTT, FFFF, TTTT) },
-          { input: [FFFF, TTTT, vec4(T, T, T, F)], expected: pick4(TTTT, TTTT, TTTT, FFFF) },
-          { input: [FFFF, TTTT, vec4(T, T, T, T)], expected: pick4(TTTT, TTTT, TTTT, TTTT) },
-        ],
-      },
-    };
-    const overload = overloads[t.params.overload];
+    switch (t.params.overload) {
+      case 'vec2': {
+        const a = vec2(c[0], c[1]);
+        const b = vec2(c[4], c[5]);
+        tests = {
+          dataType: TypeVec(2, componentType),
+          boolType: TypeVec(2, TypeBool),
+          cases: [
+            { input: [a, b, vec2(F, F)], expected: vec2(a.x, a.y) },
+            { input: [a, b, vec2(F, T)], expected: vec2(a.x, b.y) },
+            { input: [a, b, vec2(T, F)], expected: vec2(b.x, a.y) },
+            { input: [a, b, vec2(T, T)], expected: vec2(b.x, b.y) },
+          ],
+        };
+        break;
+      }
+      case 'vec3': {
+        const a = vec3(c[0], c[1], c[2]);
+        const b = vec3(c[4], c[5], c[6]);
+        tests = {
+          dataType: TypeVec(3, componentType),
+          boolType: TypeVec(3, TypeBool),
+          cases: [
+            { input: [a, b, vec3(F, F, F)], expected: vec3(a.x, a.y, a.z) },
+            { input: [a, b, vec3(F, F, T)], expected: vec3(a.x, a.y, b.z) },
+            { input: [a, b, vec3(F, T, F)], expected: vec3(a.x, b.y, a.z) },
+            { input: [a, b, vec3(F, T, T)], expected: vec3(a.x, b.y, b.z) },
+            { input: [a, b, vec3(T, F, F)], expected: vec3(b.x, a.y, a.z) },
+            { input: [a, b, vec3(T, F, T)], expected: vec3(b.x, a.y, b.z) },
+            { input: [a, b, vec3(T, T, F)], expected: vec3(b.x, b.y, a.z) },
+            { input: [a, b, vec3(T, T, T)], expected: vec3(b.x, b.y, b.z) },
+          ],
+        };
+        break;
+      }
+      case 'vec4': {
+        const a = vec4(c[0], c[1], c[2], c[3]);
+        const b = vec4(c[4], c[5], c[6], c[7]);
+        tests = {
+          dataType: TypeVec(4, componentType),
+          boolType: TypeVec(4, TypeBool),
+          cases: [
+            { input: [a, b, vec4(F, F, F, F)], expected: vec4(a.x, a.y, a.z, a.w) },
+            { input: [a, b, vec4(F, F, F, T)], expected: vec4(a.x, a.y, a.z, b.w) },
+            { input: [a, b, vec4(F, F, T, F)], expected: vec4(a.x, a.y, b.z, a.w) },
+            { input: [a, b, vec4(F, F, T, T)], expected: vec4(a.x, a.y, b.z, b.w) },
+            { input: [a, b, vec4(F, T, F, F)], expected: vec4(a.x, b.y, a.z, a.w) },
+            { input: [a, b, vec4(F, T, F, T)], expected: vec4(a.x, b.y, a.z, b.w) },
+            { input: [a, b, vec4(F, T, T, F)], expected: vec4(a.x, b.y, b.z, a.w) },
+            { input: [a, b, vec4(F, T, T, T)], expected: vec4(a.x, b.y, b.z, b.w) },
+            { input: [a, b, vec4(T, F, F, F)], expected: vec4(b.x, a.y, a.z, a.w) },
+            { input: [a, b, vec4(T, F, F, T)], expected: vec4(b.x, a.y, a.z, b.w) },
+            { input: [a, b, vec4(T, F, T, F)], expected: vec4(b.x, a.y, b.z, a.w) },
+            { input: [a, b, vec4(T, F, T, T)], expected: vec4(b.x, a.y, b.z, b.w) },
+            { input: [a, b, vec4(T, T, F, F)], expected: vec4(b.x, b.y, a.z, a.w) },
+            { input: [a, b, vec4(T, T, F, T)], expected: vec4(b.x, b.y, a.z, b.w) },
+            { input: [a, b, vec4(T, T, T, F)], expected: vec4(b.x, b.y, b.z, a.w) },
+            { input: [a, b, vec4(T, T, T, T)], expected: vec4(b.x, b.y, b.z, b.w) },
+          ],
+        };
+        break;
+      }
+    }
 
     run(
       t,
       'select',
-      [overload.dataType, overload.dataType, overload.boolType],
-      overload.dataType,
+      [tests.dataType, tests.dataType, tests.boolType],
+      tests.dataType,
       t.params,
-      overload.cases
+      tests.cases
     );
   });
