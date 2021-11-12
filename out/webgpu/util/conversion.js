@@ -505,6 +505,26 @@ export class Vector {
 
   toString() {
     return `${this.type}(${this.elements.map(e => e.toString()).join(', ')})`;
+  }
+
+  get x() {
+    assert(0 < this.elements.length);
+    return this.elements[0];
+  }
+
+  get y() {
+    assert(1 < this.elements.length);
+    return this.elements[1];
+  }
+
+  get z() {
+    assert(2 < this.elements.length);
+    return this.elements[2];
+  }
+
+  get w() {
+    assert(3 < this.elements.length);
+    return this.elements[3];
   }}
 
 
