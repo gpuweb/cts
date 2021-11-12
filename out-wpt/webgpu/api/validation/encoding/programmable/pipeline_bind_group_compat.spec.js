@@ -11,7 +11,9 @@ TODO:
 
 TODO: subsume existing test, rewrite fixture as needed.
 `;
+import { kUnitCaseParamsBuilder } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { memcpy, unreachable } from '../../../../../common/util/util.js';
 import {
   kSamplerBindingTypes,
   kShaderStageCombinations,
@@ -21,25 +23,52 @@ import { GPUConst } from '../../../../constants.js';
 import { kProgrammableEncoderTypes } from '../../../../util/command_buffer_maker.js';
 import { ValidationTest } from '../../validation_test.js';
 
+const kComputeCmds = ['dispatch', 'dispatchIndirect'];
+
+const kRenderCmds = ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect'];
+
+// Test resource type compatibility in pipeline and bind group
+// TODO: Add externalTexture
+const kResourceTypes = ['uniformBuf', 'filtSamp', 'sampledTex', 'storageTex'];
+
 function getTestCmds(encoderType) {
-  if (encoderType === 'compute pass') {
-    return ['dispatch', 'dispatchIndirect'];
-  } else {
-    return ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect'];
-  }
+  return encoderType === 'compute pass' ? kComputeCmds : kRenderCmds;
 }
 
-const kResourceTypes = ['buffer', 'sampler', 'texture', 'storageTexture', 'externalTexture'];
+const kCompatTestParams = kUnitCaseParamsBuilder
+  .combine('encoderType', kProgrammableEncoderTypes)
+  .expand('call', p => getTestCmds(p.encoderType))
+  .combine('callWithZero', [true, false]);
 
 class F extends ValidationTest {
-  getUniformBuffer() {
+  getIndexBuffer() {
     return this.device.createBuffer({
-      size: 8 * Float32Array.BYTES_PER_ELEMENT,
-      usage: GPUBufferUsage.UNIFORM,
+      size: 8 * Uint32Array.BYTES_PER_ELEMENT,
+      usage: GPUBufferUsage.INDEX,
     });
   }
 
-  createRenderPipelineWithLayout(device, bindGroups) {
+  getIndirectBuffer(indirectParams) {
+    const buffer = this.device.createBuffer({
+      mappedAtCreation: true,
+      size: indirectParams.length * Uint32Array.BYTES_PER_ELEMENT,
+      usage: GPUBufferUsage.INDIRECT | GPUBufferUsage.COPY_DST,
+    });
+
+    memcpy({ src: new Uint32Array(indirectParams) }, { dst: buffer.getMappedRange() });
+    buffer.unmap();
+    return buffer;
+  }
+
+  getBindingResourceType(entry) {
+    if (entry.buffer !== undefined) return 'uniformBuf';
+    if (entry.sampler !== undefined) return 'filtSamp';
+    if (entry.texture !== undefined) return 'sampledTex';
+    if (entry.storageTexture !== undefined) return 'storageTex';
+    unreachable();
+  }
+
+  createRenderPipelineWithLayout(bindGroups) {
     const shader = `
       [[stage(vertex)]] fn vs_main() -> [[builtin(position)]] vec4<f32> {
         return vec4<f32>(1.0, 1.0, 0.0, 1.0);
@@ -49,10 +78,10 @@ class F extends ValidationTest {
         return vec4<f32>(0.0, 1.0, 0.0, 1.0);
       }
     `;
-    const module = device.createShaderModule({ code: shader });
+    const module = this.device.createShaderModule({ code: shader });
     const pipeline = this.device.createRenderPipeline({
-      layout: device.createPipelineLayout({
-        bindGroupLayouts: bindGroups.map(entries => device.createBindGroupLayout({ entries })),
+      layout: this.device.createPipelineLayout({
+        bindGroupLayouts: bindGroups.map(entries => this.device.createBindGroupLayout({ entries })),
       }),
 
       vertex: {
@@ -72,17 +101,17 @@ class F extends ValidationTest {
     return pipeline;
   }
 
-  createComputePipelineWithLayout(device, bindGroups) {
+  createComputePipelineWithLayout(bindGroups) {
     const shader = `
       [[stage(compute), workgroup_size(1, 1, 1)]]
         fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
       }
     `;
 
-    const module = device.createShaderModule({ code: shader });
+    const module = this.device.createShaderModule({ code: shader });
     const pipeline = this.device.createComputePipeline({
-      layout: device.createPipelineLayout({
-        bindGroupLayouts: bindGroups.map(entries => device.createBindGroupLayout({ entries })),
+      layout: this.device.createPipelineLayout({
+        bindGroupLayouts: bindGroups.map(entries => this.device.createBindGroupLayout({ entries })),
       }),
 
       compute: {
@@ -94,22 +123,116 @@ class F extends ValidationTest {
     return pipeline;
   }
 
-  beginRenderPass(commandEncoder) {
-    const attachmentTexture = this.device.createTexture({
-      format: 'rgba8unorm',
-      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    });
+  createBindGroupWithLayout(bglEntries) {
+    const bgEntries = [];
+    for (const entry of bglEntries) {
+      const resource = this.getBindingResource(this.getBindingResourceType(entry));
+      bgEntries.push({
+        binding: entry.binding,
+        resource,
+      });
+    }
 
-    return commandEncoder.beginRenderPass({
-      colorAttachments: [
-        {
-          view: attachmentTexture.createView(),
-          loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
-          storeOp: 'store',
-        },
-      ],
+    return this.device.createBindGroup({
+      entries: bgEntries,
+      layout: this.device.createBindGroupLayout({ entries: bglEntries }),
     });
+  }
+
+  doCompute(pass, call, callWithZero) {
+    const x = callWithZero ? 0 : 1;
+    switch (call) {
+      case 'dispatch':
+        pass.dispatch(x, 1, 1);
+        break;
+      case 'dispatchIndirect':
+        pass.dispatchIndirect(this.getIndirectBuffer([x, 1, 1]), 0);
+        break;
+      default:
+        break;
+    }
+  }
+
+  doRender(pass, call, callWithZero) {
+    const vertexCount = callWithZero ? 0 : 3;
+    switch (call) {
+      case 'draw':
+        pass.draw(vertexCount, 1, 0, 0);
+        break;
+      case 'drawIndexed':
+        pass.setIndexBuffer(this.getIndexBuffer(), 'uint32');
+        pass.drawIndexed(vertexCount, 1, 0, 0, 0);
+        break;
+      case 'drawIndirect':
+        pass.drawIndirect(this.getIndirectBuffer([vertexCount, 1, 0, 0, 0]), 0);
+        break;
+      case 'drawIndexedIndirect':
+        pass.setIndexBuffer(this.getIndexBuffer(), 'uint32');
+        pass.drawIndexedIndirect(this.getIndirectBuffer([vertexCount, 1, 0, 0, 0]), 0);
+        break;
+      default:
+        break;
+    }
+  }
+
+  createBindGroupLayoutEntry(encoderType, resourceType, useU32Array) {
+    const entry = {
+      binding: 0,
+      visibility: encoderType === 'compute pass' ? GPUShaderStage.COMPUTE : GPUShaderStage.FRAGMENT,
+    };
+
+    switch (resourceType) {
+      case 'uniformBuf':
+        entry.buffer = { hasDynamicOffset: useU32Array }; // default type: uniform
+        break;
+      case 'filtSamp':
+        entry.sampler = {}; // default type: filtering
+        break;
+      case 'sampledTex':
+        entry.texture = {}; // default sampleType: float
+        break;
+      case 'storageTex':
+        entry.storageTexture = { access: 'write-only', format: 'rgba8unorm' };
+        break;
+    }
+
+    return entry;
+  }
+
+  runTest(encoderType, pipeline, bindGroups, dynamicOffsets, call, callWithZero, success) {
+    const { encoder, validateFinish } = this.createEncoder(encoderType);
+
+    if (encoder instanceof GPUComputePassEncoder) {
+      encoder.setPipeline(pipeline);
+    } else {
+      encoder.setPipeline(pipeline);
+    }
+
+    for (let i = 0; i < bindGroups.length; i++) {
+      const bindGroup = bindGroups[i];
+      if (!bindGroup) {
+        break;
+      }
+      if (dynamicOffsets) {
+        encoder.setBindGroup(
+          i,
+          bindGroup,
+          new Uint32Array(dynamicOffsets),
+          0,
+          dynamicOffsets.length
+        );
+      } else {
+        encoder.setBindGroup(i, bindGroup);
+      }
+    }
+
+    if (encoder instanceof GPUComputePassEncoder) {
+      this.doCompute(encoder, call, callWithZero);
+    } else {
+      this.doRender(encoder, call, callWithZero);
+    }
+
+    validateFinish(success);
   }
 }
 
@@ -121,43 +244,41 @@ g.test('bind_groups_and_pipeline_layout_mismatch')
     Tests the bind groups must match the requirements of the pipeline layout.
     - bind groups required by the pipeline layout are required.
     - bind groups unused by the pipeline layout can be set or not.
-
-    TODO: merge existing tests to this test
     `
   )
-  .params(u =>
-    u
-      .combine('encoderType', kProgrammableEncoderTypes)
-      .expand('call', p => getTestCmds(p.encoderType))
+  .params(
+    kCompatTestParams
       .beginSubcases()
       .combineWithParams([
-        { setBindGroup0: true, setUnusedBindGroup1: true, setBindGroup2: true, _success: true },
-        { setBindGroup0: true, setUnusedBindGroup1: false, setBindGroup2: true, _success: true },
-        { setBindGroup0: true, setUnusedBindGroup1: true, setBindGroup2: false, _success: false },
-        { setBindGroup0: false, setUnusedBindGroup1: true, setBindGroup2: true, _success: false },
-        { setBindGroup0: false, setUnusedBindGroup1: false, setBindGroup2: false, _success: false },
+        { setBindGroup0: true, setBindGroup1: true, setUnusedBindGroup2: true, _success: true },
+        { setBindGroup0: true, setBindGroup1: true, setUnusedBindGroup2: false, _success: true },
+        { setBindGroup0: true, setBindGroup1: false, setUnusedBindGroup2: true, _success: false },
+        { setBindGroup0: false, setBindGroup1: true, setUnusedBindGroup2: true, _success: false },
+        { setBindGroup0: false, setBindGroup1: false, setUnusedBindGroup2: false, _success: false },
       ])
       .combine('useU32Array', [false, true])
   )
-  .unimplemented();
-
-g.test('it_is_invalid_to_draw_in_a_render_pass_with_missing_bind_groups')
-  .paramsSubcasesOnly([
-    { setBindGroup1: true, setBindGroup2: true, _success: true },
-    { setBindGroup1: true, setBindGroup2: false, _success: false },
-    { setBindGroup1: false, setBindGroup2: true, _success: false },
-    { setBindGroup1: false, setBindGroup2: false, _success: false },
-  ])
-  .fn(async t => {
-    const { setBindGroup1, setBindGroup2, _success } = t.params;
+  .fn(t => {
+    const {
+      encoderType,
+      call,
+      callWithZero,
+      setBindGroup0,
+      setBindGroup1,
+      setUnusedBindGroup2,
+      _success,
+      useU32Array,
+    } = t.params;
+    const visibility =
+      encoderType === 'compute pass' ? GPUShaderStage.COMPUTE : GPUShaderStage.VERTEX;
 
     const bindGroupLayouts = [
       // bind group layout 0
       [
         {
           binding: 0,
-          visibility: GPUShaderStage.VERTEX,
-          buffer: { type: 'uniform' },
+          visibility,
+          buffer: { hasDynamicOffset: useU32Array }, // default type: uniform
         },
       ],
 
@@ -165,60 +286,48 @@ g.test('it_is_invalid_to_draw_in_a_render_pass_with_missing_bind_groups')
       [
         {
           binding: 0,
-          visibility: GPUShaderStage.VERTEX,
-          buffer: { type: 'uniform' },
+          visibility,
+          buffer: { hasDynamicOffset: useU32Array }, // default type: uniform
         },
       ],
     ];
 
-    const pipeline = t.createRenderPipelineWithLayout(t.device, bindGroupLayouts);
+    // Create required bind groups
+    const bindGroup0 = setBindGroup0 ? t.createBindGroupWithLayout(bindGroupLayouts[0]) : undefined;
+    const bindGroup1 = setBindGroup1 ? t.createBindGroupWithLayout(bindGroupLayouts[1]) : undefined;
+    const unusedBindGroup2 = setUnusedBindGroup2
+      ? t.createBindGroupWithLayout(bindGroupLayouts[1])
+      : undefined;
 
-    const uniformBuffer = t.getUniformBuffer();
+    // Create fixed pipeline
+    const pipeline =
+      encoderType === 'compute pass'
+        ? t.createComputePipelineWithLayout(bindGroupLayouts)
+        : t.createRenderPipelineWithLayout(bindGroupLayouts);
 
-    const bindGroup0 = t.device.createBindGroup({
-      entries: [
-        {
-          binding: 0,
-          resource: {
-            buffer: uniformBuffer,
-          },
-        },
-      ],
+    const dynamicOffsets = useU32Array ? [0] : undefined;
 
-      layout: t.device.createBindGroupLayout({
-        entries: bindGroupLayouts[0],
-      }),
-    });
+    // Test without the dispatch/draw (should always be valid)
+    t.runTest(
+      encoderType,
+      pipeline,
+      [bindGroup0, bindGroup1, unusedBindGroup2],
+      dynamicOffsets,
+      undefined,
+      false,
+      true
+    );
 
-    const bindGroup1 = t.device.createBindGroup({
-      entries: [
-        {
-          binding: 0,
-          resource: {
-            buffer: uniformBuffer,
-          },
-        },
-      ],
-
-      layout: t.device.createBindGroupLayout({
-        entries: bindGroupLayouts[1],
-      }),
-    });
-
-    const commandEncoder = t.device.createCommandEncoder();
-    const renderPass = t.beginRenderPass(commandEncoder);
-    renderPass.setPipeline(pipeline);
-    if (setBindGroup1) {
-      renderPass.setBindGroup(0, bindGroup0);
-    }
-    if (setBindGroup2) {
-      renderPass.setBindGroup(1, bindGroup1);
-    }
-    renderPass.draw(3);
-    renderPass.endPass();
-    t.expectValidationError(() => {
-      commandEncoder.finish();
-    }, !_success);
+    // Test with the dispatch/draw, to make sure the validation happens in dispatch/draw.
+    t.runTest(
+      encoderType,
+      pipeline,
+      [bindGroup0, bindGroup1, unusedBindGroup2],
+      dynamicOffsets,
+      call,
+      callWithZero,
+      _success
+    );
   });
 
 g.test('buffer_binding,render_pipeline')
@@ -260,7 +369,7 @@ g.test('buffer_binding,render_pipeline')
     });
 
     // Create pipeline with different layouts
-    const pipeline = t.createRenderPipelineWithLayout(t.device, [
+    const pipeline = t.createRenderPipelineWithLayout([
       [
         {
           binding: 0,
@@ -272,17 +381,12 @@ g.test('buffer_binding,render_pipeline')
       ],
     ]);
 
-    const success = type === undefined || type === 'uniform';
+    const { encoder, validateFinish } = t.createEncoder('render pass');
+    encoder.setPipeline(pipeline);
+    encoder.setBindGroup(0, bindGroup);
+    encoder.draw(3);
 
-    const commandEncoder = t.device.createCommandEncoder();
-    const renderPass = t.beginRenderPass(commandEncoder);
-    renderPass.setPipeline(pipeline);
-    renderPass.setBindGroup(0, bindGroup);
-    renderPass.draw(3);
-    renderPass.endPass();
-    t.expectValidationError(() => {
-      commandEncoder.finish();
-    }, !success);
+    validateFinish(type === undefined || type === 'uniform');
   });
 
 g.test('sampler_binding,render_pipeline')
@@ -324,7 +428,7 @@ g.test('sampler_binding,render_pipeline')
     });
 
     // Create pipeline with different layouts
-    const pipeline = t.createRenderPipelineWithLayout(t.device, [
+    const pipeline = t.createRenderPipelineWithLayout([
       [
         {
           binding: 0,
@@ -336,27 +440,20 @@ g.test('sampler_binding,render_pipeline')
       ],
     ]);
 
-    const success = bglType === bgType;
+    const { encoder, validateFinish } = t.createEncoder('render pass');
+    encoder.setPipeline(pipeline);
+    encoder.setBindGroup(0, bindGroup);
+    encoder.draw(3);
 
-    const commandEncoder = t.device.createCommandEncoder();
-    const renderPass = t.beginRenderPass(commandEncoder);
-    renderPass.setPipeline(pipeline);
-    renderPass.setBindGroup(0, bindGroup);
-    renderPass.draw(3);
-    renderPass.endPass();
-    t.expectValidationError(() => {
-      commandEncoder.finish();
-    }, !success);
+    validateFinish(bglType === bgType);
   });
 
 g.test('bgl_binding_mismatch')
   .desc(
     'Tests the binding number must exist or not exist in both bindGroups[i].layout and pipelineLayout.bgls[i]'
   )
-  .params(u =>
-    u
-      .combine('encoderType', kProgrammableEncoderTypes)
-      .expand('call', p => getTestCmds(p.encoderType))
+  .params(
+    kCompatTestParams
       .beginSubcases()
       .combineWithParams([
         { bgBindings: [0, 1, 2], plBindings: [0, 1, 2], _success: true },
@@ -368,14 +465,55 @@ g.test('bgl_binding_mismatch')
       ])
       .combine('useU32Array', [false, true])
   )
-  .unimplemented();
+  .fn(t => {
+    const {
+      encoderType,
+      call,
+      callWithZero,
+      bgBindings,
+      plBindings,
+      _success,
+      useU32Array,
+    } = t.params;
+    const visibility =
+      encoderType === 'compute pass' ? GPUShaderStage.COMPUTE : GPUShaderStage.VERTEX;
+
+    const bglEntries = [];
+    for (const binding of bgBindings) {
+      bglEntries.push({
+        binding,
+        visibility,
+        buffer: { hasDynamicOffset: useU32Array }, // default type: uniform
+      });
+    }
+    const bindGroup = t.createBindGroupWithLayout(bglEntries);
+
+    const plEntries = [[]];
+    for (const binding of plBindings) {
+      plEntries[0].push({
+        binding,
+        visibility,
+        buffer: { hasDynamicOffset: useU32Array }, // default type: uniform
+      });
+    }
+    const pipeline =
+      encoderType === 'compute pass'
+        ? t.createComputePipelineWithLayout(plEntries)
+        : t.createRenderPipelineWithLayout(plEntries);
+
+    const dynamicOffsets = useU32Array ? new Array(bgBindings.length).fill(0) : undefined;
+
+    // Test without the dispatch/draw (should always be valid)
+    t.runTest(encoderType, pipeline, [bindGroup], dynamicOffsets, undefined, false, true);
+
+    // Test with the dispatch/draw, to make sure the validation happens in dispatch/draw.
+    t.runTest(encoderType, pipeline, [bindGroup], dynamicOffsets, call, callWithZero, _success);
+  });
 
 g.test('bgl_visibility_mismatch')
   .desc('Tests the visibility in bindGroups[i].layout and pipelineLayout.bgls[i] must be matched')
-  .params(u =>
-    u
-      .combine('encoderType', kProgrammableEncoderTypes)
-      .expand('call', p => getTestCmds(p.encoderType))
+  .params(
+    kCompatTestParams
       .beginSubcases()
       .combine('bgVisibility', kShaderStageCombinations)
       .expand('plVisibility', p =>
@@ -389,19 +527,99 @@ g.test('bgl_visibility_mismatch')
       )
       .combine('useU32Array', [false, true])
   )
-  .unimplemented();
+  .fn(t => {
+    const { encoderType, call, callWithZero, bgVisibility, plVisibility, useU32Array } = t.params;
+
+    const bglEntries = [
+      {
+        binding: 0,
+        visibility: bgVisibility,
+        buffer: { hasDynamicOffset: useU32Array }, // default type: uniform
+      },
+    ];
+
+    const bindGroup = t.createBindGroupWithLayout(bglEntries);
+
+    const plEntries = [
+      [
+        {
+          binding: 0,
+          visibility: plVisibility,
+          buffer: { hasDynamicOffset: useU32Array }, // default type: uniform
+        },
+      ],
+    ];
+
+    const pipeline =
+      encoderType === 'compute pass'
+        ? t.createComputePipelineWithLayout(plEntries)
+        : t.createRenderPipelineWithLayout(plEntries);
+
+    const dynamicOffsets = useU32Array ? [0] : undefined;
+
+    // Test without the dispatch/draw (should always be valid)
+    t.runTest(encoderType, pipeline, [bindGroup], dynamicOffsets, undefined, false, true);
+
+    // Test with the dispatch/draw, to make sure the validation happens in dispatch/draw.
+    t.runTest(
+      encoderType,
+      pipeline,
+      [bindGroup],
+      dynamicOffsets,
+      call,
+      callWithZero,
+      bgVisibility === plVisibility
+    );
+  });
 
 g.test('bgl_resource_type_mismatch')
   .desc(
-    'Tests the binding resource type in bindGroups[i].layout and pipelineLayout.bgls[i] must be matched'
+    `
+  Tests the binding resource type in bindGroups[i].layout and pipelineLayout.bgls[i] must be matched
+  - TODO: Test externalTexture
+  `
   )
-  .params(u =>
-    u
-      .combine('encoderType', kProgrammableEncoderTypes)
-      .expand('call', p => getTestCmds(p.encoderType))
+  .params(
+    kCompatTestParams
       .beginSubcases()
       .combine('bgResourceType', kResourceTypes)
       .combine('plResourceType', kResourceTypes)
-      .combine('useU32Array', [false, true])
+      .expand('useU32Array', p => (p.bgResourceType === 'uniformBuf' ? [true, false] : [false]))
   )
-  .unimplemented();
+  .fn(t => {
+    const {
+      encoderType,
+      call,
+      callWithZero,
+      bgResourceType,
+      plResourceType,
+      useU32Array,
+    } = t.params;
+
+    const bglEntries = [t.createBindGroupLayoutEntry(encoderType, bgResourceType, useU32Array)];
+
+    const bindGroup = t.createBindGroupWithLayout(bglEntries);
+
+    const plEntries = [[t.createBindGroupLayoutEntry(encoderType, plResourceType, useU32Array)]];
+
+    const pipeline =
+      encoderType === 'compute pass'
+        ? t.createComputePipelineWithLayout(plEntries)
+        : t.createRenderPipelineWithLayout(plEntries);
+
+    const dynamicOffsets = useU32Array ? [0] : undefined;
+
+    // Test without the dispatch/draw (should always be valid)
+    t.runTest(encoderType, pipeline, [bindGroup], dynamicOffsets, undefined, false, true);
+
+    // Test with the dispatch/draw, to make sure the validation happens in dispatch/draw.
+    t.runTest(
+      encoderType,
+      pipeline,
+      [bindGroup],
+      dynamicOffsets,
+      call,
+      callWithZero,
+      bgResourceType === plResourceType
+    );
+  });
