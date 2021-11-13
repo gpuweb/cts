@@ -162,11 +162,7 @@ g.test('required_bytes_in_copy')
     const layout = { offset, bytesPerRow, rowsPerImage };
     const minDataSize = dataBytesForCopyOrFail({ layout, format, copySize, method });
 
-    const texture = t.createAlignedTexture(format, {
-      width: copyWidthInBlocks,
-      height: copyHeightInBlocks,
-      depthOrArrayLayers: copyDepth,
-    });
+    const texture = t.createAlignedTexture(format, copySize);
 
     t.testRun({ texture }, { offset, bytesPerRow, rowsPerImage }, copySize, {
       dataSize: minDataSize,
@@ -261,79 +257,105 @@ g.test('bound_on_bytes_per_row')
       .combine('format', kSizedTextureFormats)
       .filter(formatCopyableWithMethod)
       .beginSubcases()
-      .expand('params', p => {
+      .combine('copyHeightInBlocks', [1, 2])
+      .combine('copyDepth', [1, 2])
+      .expandWithParams(p => {
         const info = kTextureFormatInfo[p.format];
+        // We currently have a built-in assumption that for all formats, 128 % bytesPerBlock === 0.
+        // This assumption ensures that all division below results in integers.
+        assert(128 % info.bytesPerBlock === 0);
         return [
           // Copying exact fit with aligned bytesPerRow should work.
           {
             bytesPerRow: 256,
-            blocksPerRow: 256 / info.bytesPerBlock,
+            widthInBlocks: 256 / info.bytesPerBlock,
             copyWidthInBlocks: 256 / info.bytesPerBlock,
-            success: true,
+            _success: true,
           },
-          // Copying larger texture when padding in bytesPerRow is enough should work.
+          // Copying into smaller texture when padding in bytesPerRow is enough should work unless
+          // it is a depth/stencil typed format.
           {
             bytesPerRow: 256,
-            blocksPerRow: 256 / info.bytesPerBlock - 1,
-            copyWidthInBlocks: 256 / info.bytesPerBlock,
-            success: true,
+            widthInBlocks: 256 / info.bytesPerBlock,
+            copyWidthInBlocks: 256 / info.bytesPerBlock - 1,
+            _success: !(info.stencil || info.depth),
           },
           // Unaligned bytesPerRow should not work unless the method is 'WriteTexture'.
           {
-            bytesPerRow: 257,
-            blocksPerRow: 256 / info.bytesPerBlock,
-            copyWidthInBlocks: 256 / info.bytesPerBlock,
-            success: p.method === 'WriteTexture',
+            bytesPerRow: 128,
+            widthInBlocks: 128 / info.bytesPerBlock,
+            copyWidthInBlocks: 128 / info.bytesPerBlock,
+            _success: p.method === 'WriteTexture',
+          },
+          {
+            bytesPerRow: 384,
+            widthInBlocks: 384 / info.bytesPerBlock,
+            copyWidthInBlocks: 384 / info.bytesPerBlock,
+            _success: p.method === 'WriteTexture',
           },
           // Copying larger texture when padding in bytesPerRow is not enough should fail.
           {
             bytesPerRow: 256,
-            blocksPerRow: 256 / info.bytesPerBlock,
+            widthInBlocks: 256 / info.bytesPerBlock,
             copyWidthInBlocks: 256 / info.bytesPerBlock + 1,
-            success: false,
+            _success: false,
           },
           // When bytesPerRow is smaller than bytesInLastRow copying should fail.
           {
             bytesPerRow: 256,
-            blocksPerRow: (2 * 256) / info.bytesPerBlock,
+            widthInBlocks: (2 * 256) / info.bytesPerBlock,
             copyWidthInBlocks: (2 * 256) / info.bytesPerBlock,
-            success: false,
+            _success: false,
+          },
+          // When copyHeightInBlocks > 1, bytesPerRow must be specified.
+          {
+            bytesPerRow: undefined,
+            widthInBlocks: 256 / info.bytesPerBlock,
+            copyWidthInBlocks: 256 / info.bytesPerBlock,
+            _success: !(p.copyHeightInBlocks > 1 || p.copyDepth > 1),
           },
         ];
       })
-      // The heights and depths do not affect success or failure but provide testing coverage.
-      .combine('copyHeightInBlocks', [1, 2])
-      .combine('copyDepth', [1, 2])
   )
   .fn(async t => {
-    const { params, copyHeightInBlocks, copyDepth, format, method } = t.params;
+    const {
+      method,
+      format,
+      bytesPerRow,
+      widthInBlocks,
+      copyWidthInBlocks,
+      copyHeightInBlocks,
+      copyDepth,
+      _success,
+    } = t.params;
     const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
+    // We create an aligned texture using the widthInBlocks which may be different from the
+    // copyWidthInBlocks. This allows us to test scenarios where the two may be different.
     const texture = t.createAlignedTexture(format, {
-      width: params.copyWidthInBlocks,
-      height: copyHeightInBlocks,
+      width: widthInBlocks * info.blockWidth,
+      height: copyHeightInBlocks * info.blockHeight,
       depthOrArrayLayers: copyDepth,
     });
 
-    const layout = { bytesPerRow: params.bytesPerRow, rowsPerImage: copyHeightInBlocks };
+    const layout = { bytesPerRow, rowsPerImage: copyHeightInBlocks };
     const copySize = {
-      width: params.copyWidthInBlocks * info.blockWidth,
+      width: copyWidthInBlocks * info.blockWidth,
       height: copyHeightInBlocks * info.blockHeight,
       depthOrArrayLayers: copyDepth,
     };
-    const { minDataSizeOrOverestimate, copyValid } = dataBytesForCopyOrOverestimate({
+    const { minDataSizeOrOverestimate } = dataBytesForCopyOrOverestimate({
       layout,
       format,
       copySize,
       method,
     });
-    assert(params.success === copyValid);
 
     t.testRun({ texture }, layout, copySize, {
       dataSize: minDataSizeOrOverestimate,
       method,
-      success: params.success,
+      success: _success,
     });
   });
 

@@ -130,15 +130,18 @@ g.test('mipLevelCount,format')
     const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
-    // Compute dimensions such that the dimensions are less than 2^6 (32) but also a multiple of the format block size.
-    const maxMipLevelCount = 6;
-    const textureWidth =
-      Math.floor(((1 << maxMipLevelCount) - 1) / info.blockWidth) * info.blockWidth;
+    // Compute dimensions such that the dimensions are in range [17, 32] and alinged with the
+    // format block size so that there will be exactly 6 mip levels.
+    const maxMipLevelCount = 5;
+    const textureWidth = Math.floor((1 << maxMipLevelCount) / info.blockWidth) * info.blockWidth;
     const textureHeight =
       Math.floor(((1 << maxMipLevelCount) - 1) / info.blockHeight) * info.blockHeight;
+    assert(17 <= textureWidth && textureWidth <= 32);
+    assert(17 <= textureHeight && textureHeight <= 32);
 
-    // Note that compressed formats are not valid for 1D. They have already been filtered out for 1D in this test.
-    // So there is no dilemma about size.width equals 1 vs size.width % info.blockHeight equals 0 for 1D compressed formats.
+    // Note that compressed formats are not valid for 1D. They have already been filtered out for 1D
+    // in this test. So there is no dilemma about size.width equals 1 vs
+    // size.width % info.blockHeight equals 0 for 1D compressed formats.
     const size = dimension === '1d' ? [textureWidth, 1, 1] : [textureWidth, textureHeight, 1];
     const descriptor = {
       size,
