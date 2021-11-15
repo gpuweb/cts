@@ -133,7 +133,8 @@ g.test('mipLevelCount,format')
     // Compute dimensions such that the dimensions are in range [17, 32] and alinged with the
     // format block size so that there will be exactly 6 mip levels.
     const maxMipLevelCount = 5;
-    const textureWidth = Math.floor((1 << maxMipLevelCount) / info.blockWidth) * info.blockWidth;
+    const textureWidth =
+      Math.floor(((1 << maxMipLevelCount) - 1) / info.blockWidth) * info.blockWidth;
     const textureHeight =
       Math.floor(((1 << maxMipLevelCount) - 1) / info.blockHeight) * info.blockHeight;
     assert(17 <= textureWidth && textureWidth <= 32);
