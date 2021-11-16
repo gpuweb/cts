@@ -293,13 +293,6 @@ g.test('bound_on_bytes_per_row')
             copyWidthInBlocks: 384 / info.bytesPerBlock,
             _success: p.method === 'WriteTexture',
           },
-          // Copying larger texture when padding in bytesPerRow is not enough should fail.
-          {
-            bytesPerRow: 256,
-            widthInBlocks: 256 / info.bytesPerBlock,
-            copyWidthInBlocks: 256 / info.bytesPerBlock + 1,
-            _success: false,
-          },
           // When bytesPerRow is smaller than bytesInLastRow copying should fail.
           {
             bytesPerRow: 256,

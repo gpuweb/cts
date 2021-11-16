@@ -130,7 +130,7 @@ g.test('mipLevelCount,format')
     const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
-    // Compute dimensions such that the dimensions are in range [17, 32] and alinged with the
+    // Compute dimensions such that the dimensions are in range [17, 32] and aligned with the
     // format block size so that there will be exactly 6 mip levels.
     const maxMipLevelCount = 5;
     const textureWidth =
