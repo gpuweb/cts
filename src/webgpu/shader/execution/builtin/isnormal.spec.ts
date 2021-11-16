@@ -42,10 +42,10 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
       // Simple non-zero finite numbers.
       { input: f32(10.0), expected: True },
       { input: f32(-10.0), expected: True },
-      // Infinities
+      // Infinities are not normal
       { input: f32Bits(kBit.f32.infinity.positive), expected: False },
       { input: f32Bits(kBit.f32.infinity.negative), expected: False },
-      // NaNs
+      // NaNs are not normal
       { input: f32Bits(kBit.f32.nan.positive.s), expected: False },
       { input: f32Bits(kBit.f32.nan.positive.q), expected: False },
       { input: f32Bits(kBit.f32.nan.negative.s), expected: False },
@@ -57,13 +57,13 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
           return { input: f32Bits(n), expected: False };
         })
       )
-      // Normals are finite
+      // Normals are normal
       .concat(
         normalF32Examples().map(n => {
           return { input: f32(n), expected: True };
         })
       )
-      // Subnormals are finite
+      // Subnormals are not normal
       .concat(
         subnormalF32Examples().map(n => {
           return { input: f32(n), expected: False };
