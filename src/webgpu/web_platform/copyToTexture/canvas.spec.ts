@@ -15,18 +15,6 @@ import { CopyToTextureUtils, isFp16Format } from '../../util/copy_to_texture.js'
 import { canvasTypes, allCanvasTypes, createCanvas } from '../../util/create_elements.js';
 import { kTexelRepresentationInfo } from '../../util/texture/texel_data.js';
 
-/**
- * If the destination format specifies a transfer function,
- * copyExternalImageToTexture (like B2T/T2T copies) should ignore it.
- */
-function formatForExpectedPixels(format: RegularTextureFormat): RegularTextureFormat {
-  return format === 'rgba8unorm-srgb'
-    ? 'rgba8unorm'
-    : format === 'bgra8unorm-srgb'
-    ? 'bgra8unorm'
-    : format;
-}
-
 class F extends CopyToTextureUtils {
   // TODO: Cache the generated canvas to avoid duplicated initialization.
   init2DCanvasContent({
@@ -286,7 +274,7 @@ g.test('copy_contents_from_2d_context_canvas')
 
     // Construct expected value for different dst color format
     const dstBytesPerPixel = kTextureFormatInfo[dstColorFormat].bytesPerBlock;
-    const format: RegularTextureFormat = formatForExpectedPixels(dstColorFormat);
+    const format: RegularTextureFormat = dstColorFormat;
 
     // For 2d canvas, get expected pixels with getImageData(), which returns unpremultiplied
     // values.
@@ -392,7 +380,7 @@ g.test('copy_contents_from_gl_context_canvas')
 
     // Construct expected value for different dst color format
     const dstBytesPerPixel = kTextureFormatInfo[dstColorFormat].bytesPerBlock;
-    const format: RegularTextureFormat = formatForExpectedPixels(dstColorFormat);
+    const format: RegularTextureFormat = dstColorFormat;
     const expectedPixels = t.getExpectedPixels({
       context: canvasContext,
       width,
