@@ -1,4 +1,3 @@
-
 export const description = `
 Execution Tests for the 'atan' builtin function
 `;
