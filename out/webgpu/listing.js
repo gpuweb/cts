@@ -1196,22 +1196,6 @@ export const listing = [
       "shader",
       "execution",
       "builtin",
-      "isinf"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "execution",
-      "builtin",
-      "isnan"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "execution",
-      "builtin",
       "logical_built_in_functions"
     ]
   },
