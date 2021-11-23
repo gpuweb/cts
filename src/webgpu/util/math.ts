@@ -50,10 +50,9 @@ export function diffULP(a: number, b: number): number {
   const subnormal_or_zero_a = (u32_a & 0x7f800000) === 0;
   const subnormal_or_zero_b = (u32_b & 0x7f800000) === 0;
 
-  // If the number is not subnormal, then subtract 0x7fffff to remove the
-  // subnormal region from the ULP comparison.
-  const bits_a = masked_a - (subnormal_or_zero_a ? 0 : 0x7fffff);
-  const bits_b = masked_b - (subnormal_or_zero_b ? 0 : 0x7fffff);
+  // If the number is subnormal, then reduce it to 0 for ULP comparison.
+  const bits_a = subnormal_or_zero_a ? 0 : masked_a - 0x7fffff;
+  const bits_b = subnormal_or_zero_b ? 0 : masked_b - 0x7fffff;
 
   if (sign_a === sign_b) {
     return Math.max(bits_a, bits_b) - Math.min(bits_a, bits_b);
