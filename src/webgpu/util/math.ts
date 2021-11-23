@@ -51,6 +51,9 @@ export function diffULP(a: number, b: number): number {
   const subnormal_or_zero_b = (u32_b & 0x7f800000) === 0;
 
   // If the number is subnormal, then reduce it to 0 for ULP comparison.
+  // If the number is normal then reduce its bits-representation so to that we
+  // can pretend that the subnormal numbers don't exist, for the purposes of
+  // counting ULP steps from zero (or any subnormal) to any of the normal numbers.
   const bits_a = subnormal_or_zero_a ? 0 : masked_a - 0x7fffff;
   const bits_b = subnormal_or_zero_b ? 0 : masked_b - 0x7fffff;
 
