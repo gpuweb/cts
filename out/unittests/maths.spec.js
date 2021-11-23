@@ -30,6 +30,10 @@ paramsSimple([
 { a: -2, b: -1, ulp: 2 ** 23 }, // Single exponent step
 { a: -2, b: -4, ulp: 2 ** 23 }, // Single exponent step
 { a: -4, b: -2, ulp: 2 ** 23 }, // Single exponent step
+{ a: 1, b: 4, ulp: 2 ** 24 }, // Double exponent step
+{ a: 4, b: 1, ulp: 2 ** 24 }, // Double exponent step
+{ a: -1, b: -4, ulp: 2 ** 24 }, // Double exponent step
+{ a: -4, b: -1, ulp: 2 ** 24 }, // Double exponent step
 { a: hexToF32(0x00800000), b: hexToF32(0x00800001), ulp: 1 }, // Single mantissa step
 { a: hexToF32(0x00800001), b: hexToF32(0x00800000), ulp: 1 }, // Single mantissa step
 { a: hexToF32(0x03800000), b: hexToF32(0x03800001), ulp: 1 }, // Single mantissa step
@@ -38,8 +42,34 @@ paramsSimple([
 { a: -hexToF32(0x00800001), b: -hexToF32(0x00800000), ulp: 1 }, // Single mantissa step
 { a: -hexToF32(0x03800000), b: -hexToF32(0x03800001), ulp: 1 }, // Single mantissa step
 { a: -hexToF32(0x03800001), b: -hexToF32(0x03800000), ulp: 1 }, // Single mantissa step
-{ a: hexToF32(0x00800000), b: -hexToF32(0x00800000), ulp: 2 ** 24 }, // Two exponent steps
-{ a: -hexToF32(0x00800000), b: hexToF32(0x00800000), ulp: 2 ** 24 } // Two exponent steps
+{ a: hexToF32(0x00800000), b: hexToF32(0x00800002), ulp: 2 }, // Double mantissa step
+{ a: hexToF32(0x00800002), b: hexToF32(0x00800000), ulp: 2 }, // Double mantissa step
+{ a: hexToF32(0x03800000), b: hexToF32(0x03800002), ulp: 2 }, // Double mantissa step
+{ a: hexToF32(0x03800002), b: hexToF32(0x03800000), ulp: 2 }, // Double mantissa step
+{ a: -hexToF32(0x00800000), b: -hexToF32(0x00800002), ulp: 2 }, // Double mantissa step
+{ a: -hexToF32(0x00800002), b: -hexToF32(0x00800000), ulp: 2 }, // Double mantissa step
+{ a: -hexToF32(0x03800000), b: -hexToF32(0x03800002), ulp: 2 }, // Double mantissa step
+{ a: -hexToF32(0x03800002), b: -hexToF32(0x03800000), ulp: 2 }, // Double mantissa step
+{ a: hexToF32(0x00800000), b: 0, ulp: 1 }, // Normals near 0
+{ a: 0, b: hexToF32(0x00800000), ulp: 1 }, // Normals near 0
+{ a: -hexToF32(0x00800000), b: 0, ulp: 1 }, // Normals near 0
+{ a: 0, b: -hexToF32(0x00800000), ulp: 1 }, // Normals near 0
+{ a: hexToF32(0x00800000), b: -hexToF32(0x00800000), ulp: 2 }, // Normals around 0
+{ a: -hexToF32(0x00800000), b: hexToF32(0x00800000), ulp: 2 }, // Normals around 0
+{ a: hexToF32(0x00000001), b: 0, ulp: 0 }, // Subnormals near 0
+{ a: 0, b: hexToF32(0x00000001), ulp: 0 }, // Subnormals near 0
+{ a: -hexToF32(0x00000001), b: 0, ulp: 0 }, // Subnormals near 0
+{ a: 0, b: -hexToF32(0x00000001), ulp: 0 }, // Subnormals near 0
+{ a: hexToF32(0x00000001), b: -hexToF32(0x00000001), ulp: 0 }, // Subnormals near 0
+{ a: -hexToF32(0x00000001), b: hexToF32(0x00000001), ulp: 0 }, // Subnormals near 0
+{ a: hexToF32(0x00000001), b: hexToF32(0x00800000), ulp: 1 }, // Normal/Subnormal boundary
+{ a: hexToF32(0x00800000), b: hexToF32(0x00000001), ulp: 1 }, // Normal/Subnormal boundary
+{ a: -hexToF32(0x00000001), b: -hexToF32(0x00800000), ulp: 1 }, // Normal/Subnormal boundary
+{ a: -hexToF32(0x00800000), b: -hexToF32(0x00000001), ulp: 1 }, // Normal/Subnormal boundary
+{ a: hexToF32(0x00800001), b: hexToF32(0x00000000), ulp: 2 }, // Just-above-Normal/Subnormal boundary
+{ a: hexToF32(0x00800001), b: hexToF32(0x00000001), ulp: 2 }, // Just-above-Normal/Subnormal boundary
+{ a: hexToF32(0x00800005), b: hexToF32(0x00000001), ulp: 6 }, // Just-above-Normal/Subnormal boundary
+{ a: hexToF32(0x00800005), b: hexToF32(0x00000111), ulp: 6 } // Just-above-Normal/Subnormal boundary
 ]).
 fn(t => {
   const a = t.params.a;

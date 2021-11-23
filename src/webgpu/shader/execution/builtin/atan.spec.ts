@@ -36,11 +36,24 @@ T is f32 or vecN<f32> atan(e: T ) -> T Returns the arc tangent of e. Component-w
       { input: f32(-Math.sqrt(3)), expected: f32(-Math.PI / 3) },
       { input: f32(-1), expected: f32(-Math.PI / 4) },
       { input: f32(-Math.sqrt(3) / 3), expected: f32(-Math.PI / 6) },
-      { input: f32(0), expected: f32(0) },
       { input: f32(Math.sqrt(3) / 3), expected: f32(Math.PI / 6) },
       { input: f32(1), expected: f32(Math.PI / 4) },
       { input: f32(Math.sqrt(3)), expected: f32(Math.PI / 3) },
       { input: f32Bits(kBit.f32.infinity.positive), expected: f32(Math.PI / 2) },
+      // Zero-like cases
+      { input: f32(0), expected: f32(0) },
+      { input: f32Bits(kBit.f32.positive.min), expected: f32(0) },
+      { input: f32Bits(kBit.f32.negative.max), expected: f32(0) },
+      { input: f32Bits(kBit.f32.positive.zero), expected: f32(0) },
+      { input: f32Bits(kBit.f32.negative.zero), expected: f32(0) },
+      { input: f32Bits(kBit.f32.positive.min), expected: f32Bits(kBit.f32.positive.min) },
+      { input: f32Bits(kBit.f32.negative.max), expected: f32Bits(kBit.f32.negative.max) },
+      { input: f32Bits(kBit.f32.positive.min), expected: f32Bits(kBit.f32.negative.max) },
+      { input: f32Bits(kBit.f32.negative.max), expected: f32Bits(kBit.f32.positive.min) },
+      { input: f32Bits(kBit.f32.positive.zero), expected: f32Bits(kBit.f32.positive.zero) },
+      { input: f32Bits(kBit.f32.negative.zero), expected: f32Bits(kBit.f32.negative.zero) },
+      { input: f32Bits(kBit.f32.positive.zero), expected: f32Bits(kBit.f32.negative.zero) },
+      { input: f32Bits(kBit.f32.negative.zero), expected: f32Bits(kBit.f32.positive.zero) },
     ];
 
     // Spread of cases over wide domain
