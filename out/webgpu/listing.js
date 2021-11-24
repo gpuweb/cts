@@ -1303,6 +1303,14 @@ export const listing = [
       "shader",
       "validation",
       "shader_io",
+      "interpolate"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "shader_io",
       "invariant"
     ]
   },
