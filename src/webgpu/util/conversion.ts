@@ -466,7 +466,7 @@ export function bool(value: boolean): Scalar {
   // buffers, so instead we pack booleans in a u32, where 'false' is zero and
   // 'true' is any non-zero value.
   const arr = new Uint32Array([value ? 1 : 0]);
-  return new Scalar(TypeBool, arr[0], arr);
+  return new Scalar(TypeBool, value, arr);
 }
 
 /** A 'true' literal value */
