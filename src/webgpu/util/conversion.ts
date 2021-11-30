@@ -382,7 +382,8 @@ export class Scalar {
 
 /** Create an f32 from a numeric value, a JS `number`. */
 export function f32(value: number): Scalar {
-  return new Scalar(TypeF32, value, new Float32Array([value]));
+  const arr = new Float32Array([value]);
+  return new Scalar(TypeF32, arr[0], arr);
 }
 /** Create an f32 from a bit representation, a uint32 represented as a JS `number`. */
 export function f32Bits(bits: number): Scalar {
@@ -391,7 +392,7 @@ export function f32Bits(bits: number): Scalar {
 }
 /** Create an f16 from a bit representation, a uint16 represented as a JS `number`. */
 export function f16Bits(bits: number): Scalar {
-  const arr = new Uint32Array([bits]);
+  const arr = new Uint16Array([bits]);
   return new Scalar(TypeF16, float16BitsToFloat32(bits), arr);
 }
 
