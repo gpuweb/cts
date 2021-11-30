@@ -50,10 +50,6 @@ T is f32 or vecN<f32> floor(e: T ) -> T Returns the floor of e. Component-wise w
       { input: f32Bits(kBit.f32.subnormal.positive.max), expected: anyOf(f32(1.0), f32(0.0)) },
       { input: f32Bits(kBit.f32.subnormal.positive.min), expected: anyOf(f32(1.0), f32(0.0)) },
 
-      // Infinity f32
-      { input: f32Bits(kBit.f32.infinity.negative), expected: f32Bits(kBit.f32.infinity.negative) },
-      { input: f32Bits(kBit.f32.infinity.positive), expected: f32Bits(kBit.f32.infinity.positive) },
-
       // Powers of +2.0: 2.0^i: 1 <= i <= 31
       { input: f32(kValue.powTwo.to1), expected: f32(kValue.powTwo.to1) },
       { input: f32(kValue.powTwo.to2), expected: f32(kValue.powTwo.to2) },
