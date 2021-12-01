@@ -155,21 +155,6 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3'])).
 unimplemented();
 
-g.test('float_builtin_functions,floor').
-uniqueId('2edb4534aa0e48a6').
-specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions').
-desc(
-`
-floor:
-T is f32 or vecN<f32> floor(e: T ) -> T Returns the floor of e. Component-wise when T is a vector. (GLSLstd450Floor)
-
-Please read the following guidelines before contributing:
-https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
-`).
-
-params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3'])).
-unimplemented();
-
 g.test('float_builtin_functions,fma').
 uniqueId('c6212635b880548b').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions').
