@@ -428,9 +428,9 @@ g.test('subresources_and_binding_types_combination_for_color')
       ])
       .unless(
         p =>
-          // Every color attachment can use only one single subresource.
-          (p.type0 === 'render-target' && (p.levelCount0 !== 1 || p.layerCount0 !== 1)) ||
-          (p.type1 === 'render-target' && (p.levelCount1 !== 1 || p.layerCount1 !== 1)) ||
+          // Every color attachment or storage texture can use only one single subresource.
+          (p.type0 !== 'sampled-texture' && (p.levelCount0 !== 1 || p.layerCount0 !== 1)) ||
+          (p.type1 !== 'sampled-texture' && (p.levelCount1 !== 1 || p.layerCount1 !== 1)) ||
           // All color attachments' size should be the same.
           (p.type0 === 'render-target' &&
             p.type1 === 'render-target' &&
