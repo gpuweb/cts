@@ -57,7 +57,6 @@ import { ValidationTest } from '../../validation_test.js';
 const kTextureBindingTypes = [
   'sampled-texture',
   'multisampled-texture',
-  'readonly-storage-texture',
   'writeonly-storage-texture',
 ];
 
@@ -93,10 +92,6 @@ class TextureUsageTracking extends ValidationTest {
         break;
       case 'multisampled-texture':
         entry = { texture: { viewDimension, multisampled: true, sampleType } };
-        break;
-      case 'readonly-storage-texture':
-        assert(format !== undefined);
-        entry = { storageTexture: { access: 'read-only', format, viewDimension } };
         break;
       case 'writeonly-storage-texture':
         assert(format !== undefined);
@@ -222,12 +217,8 @@ g.test('subresources_and_binding_types_combination_for_color')
       .combine('compute', [false, true])
       .combineWithParams([
         { _usageOK: true, type0: 'sampled-texture', type1: 'sampled-texture' },
-        { _usageOK: true, type0: 'sampled-texture', type1: 'readonly-storage-texture' },
         { _usageOK: false, type0: 'sampled-texture', type1: 'writeonly-storage-texture' },
         { _usageOK: false, type0: 'sampled-texture', type1: 'render-target' },
-        { _usageOK: true, type0: 'readonly-storage-texture', type1: 'readonly-storage-texture' },
-        { _usageOK: false, type0: 'readonly-storage-texture', type1: 'writeonly-storage-texture' },
-        { _usageOK: false, type0: 'readonly-storage-texture', type1: 'render-target' },
         // Race condition upon multiple writable storage texture is valid.
         { _usageOK: true, type0: 'writeonly-storage-texture', type1: 'writeonly-storage-texture' },
         { _usageOK: false, type0: 'writeonly-storage-texture', type1: 'render-target' },
@@ -794,7 +785,6 @@ g.test('replaced_binding')
       .combine('callDrawOrDispatch', [false, true])
       .combine('entry', [
         { texture: {} },
-        { storageTexture: { access: 'read-only', format: 'rgba8unorm' } },
         { storageTexture: { access: 'write-only', format: 'rgba8unorm' } },
       ])
   )
@@ -872,7 +862,6 @@ g.test('bindings_in_bundle')
             case 'multisampled-texture':
             case 'sampled-texture':
               return 'TEXTURE_BINDING';
-            case 'readonly-storage-texture':
             case 'writeonly-storage-texture':
               return 'STORAGE_BINDING';
             case 'render-target':
@@ -965,7 +954,6 @@ g.test('bindings_in_bundle')
       switch (t) {
         case 'sampled-texture':
         case 'multisampled-texture':
-        case 'readonly-storage-texture':
           return true;
         default:
           return false;
@@ -1007,7 +995,7 @@ g.test('unused_bindings_in_pipeline')
       callDrawOrDispatch,
     } = t.params;
     const view = t.createTexture({ usage: GPUTextureUsage.STORAGE_BINDING }).createView();
-    const bindGroup0 = t.createBindGroup(0, view, 'readonly-storage-texture', '2d', {
+    const bindGroup0 = t.createBindGroup(0, view, 'sampled-texture', '2d', {
       format: 'rgba8unorm',
     });
 

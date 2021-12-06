@@ -695,14 +695,14 @@ assertTypeTrue();
 
 /** Binding type info (including class limits) for the specified GPUStorageTextureBindingLayout. */
 export function storageTextureBindingTypeInfo(d) {
-
-  switch (d.access ?? 'write-only') {
-    case 'read-only':return { usage: GPUConst.TextureUsage.STORAGE_BINDING, ...kBindingKind.storageTex, ...kValidStagesAll };
-    case 'write-only':return { usage: GPUConst.TextureUsage.STORAGE_BINDING, ...kBindingKind.storageTex, ...kValidStagesStorageWrite };}
+  return {
+    usage: GPUConst.TextureUsage.STORAGE_BINDING,
+    ...kBindingKind.storageTex,
+    ...kValidStagesStorageWrite };
 
 }
 /** List of all GPUStorageTextureAccess values. */
-export const kStorageTextureAccessValues = ['read-only', 'write-only'];
+export const kStorageTextureAccessValues = ['write-only'];
 assertTypeTrue();
 
 /** GPUBindGroupLayoutEntry, but only the "union" fields, not the common fields. */

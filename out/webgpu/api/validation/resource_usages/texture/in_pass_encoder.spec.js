@@ -54,14 +54,9 @@ import { GPUConst } from '../../../../constants.js';
 import { ValidationTest } from '../../validation_test.js';
 
 
-
-
-
-
 const kTextureBindingTypes = [
 'sampled-texture',
 'multisampled-texture',
-'readonly-storage-texture',
 'writeonly-storage-texture'];
 
 
@@ -115,10 +110,6 @@ class TextureUsageTracking extends ValidationTest {
         break;
       case 'multisampled-texture':
         entry = { texture: { viewDimension, multisampled: true, sampleType } };
-        break;
-      case 'readonly-storage-texture':
-        assert(format !== undefined);
-        entry = { storageTexture: { access: 'read-only', format, viewDimension } };
         break;
       case 'writeonly-storage-texture':
         assert(format !== undefined);
@@ -267,12 +258,8 @@ u.
 combine('compute', [false, true]).
 combineWithParams([
 { _usageOK: true, type0: 'sampled-texture', type1: 'sampled-texture' },
-{ _usageOK: true, type0: 'sampled-texture', type1: 'readonly-storage-texture' },
 { _usageOK: false, type0: 'sampled-texture', type1: 'writeonly-storage-texture' },
 { _usageOK: false, type0: 'sampled-texture', type1: 'render-target' },
-{ _usageOK: true, type0: 'readonly-storage-texture', type1: 'readonly-storage-texture' },
-{ _usageOK: false, type0: 'readonly-storage-texture', type1: 'writeonly-storage-texture' },
-{ _usageOK: false, type0: 'readonly-storage-texture', type1: 'render-target' },
 // Race condition upon multiple writable storage texture is valid.
 { _usageOK: true, type0: 'writeonly-storage-texture', type1: 'writeonly-storage-texture' },
 { _usageOK: false, type0: 'writeonly-storage-texture', type1: 'render-target' },
@@ -827,7 +814,6 @@ combine('compute', [false, true]).
 combine('callDrawOrDispatch', [false, true]).
 combine('entry', [
 { texture: {} },
-{ storageTexture: { access: 'read-only', format: 'rgba8unorm' } },
 { storageTexture: { access: 'write-only', format: 'rgba8unorm' } }])).
 
 
@@ -903,7 +889,6 @@ expandWithParams(function* ({ type0, type1 }) {
       case 'multisampled-texture':
       case 'sampled-texture':
         return 'TEXTURE_BINDING';
-      case 'readonly-storage-texture':
       case 'writeonly-storage-texture':
         return 'STORAGE_BINDING';
       case 'render-target':
@@ -997,7 +982,6 @@ fn(async t => {
     switch (t) {
       case 'sampled-texture':
       case 'multisampled-texture':
-      case 'readonly-storage-texture':
         return true;
       default:
         return false;}
@@ -1039,7 +1023,7 @@ fn(async t => {
     callDrawOrDispatch } =
   t.params;
   const view = t.createTexture({ usage: GPUTextureUsage.STORAGE_BINDING }).createView();
-  const bindGroup0 = t.createBindGroup(0, view, 'readonly-storage-texture', '2d', {
+  const bindGroup0 = t.createBindGroup(0, view, 'sampled-texture', '2d', {
     format: 'rgba8unorm' });
 
   const bindGroup1 = t.createBindGroup(0, view, 'writeonly-storage-texture', '2d', {
