@@ -51,6 +51,7 @@
 <meta name=variant content='webgpu:api,operation,command_buffer,basic:empty:*'>
 <meta name=variant content='webgpu:api,operation,command_buffer,basic:b2t2b:*'>
 <meta name=variant content='webgpu:api,operation,command_buffer,basic:b2t2t2b:*'>
+<meta name=variant content='webgpu:api,operation,command_buffer,clearBuffer:clear:*'>
 <meta name=variant content='webgpu:api,operation,command_buffer,copyBufferToBuffer:single:*'>
 <meta name=variant content='webgpu:api,operation,command_buffer,copyBufferToBuffer:state_transitions:*'>
 <meta name=variant content='webgpu:api,operation,command_buffer,copyBufferToBuffer:copy_order:*'>
@@ -288,6 +289,13 @@
 <meta name=variant content='webgpu:api,validation,encoding,cmds,buffer_texture_copies:depth_stencil_format,copy_usage_and_aspect:*'>
 <meta name=variant content='webgpu:api,validation,encoding,cmds,buffer_texture_copies:depth_stencil_format,copy_buffer_size:*'>
 <meta name=variant content='webgpu:api,validation,encoding,cmds,buffer_texture_copies:depth_stencil_format,copy_buffer_offset:*'>
+<meta name=variant content='webgpu:api,validation,encoding,cmds,clearBuffer:invalid_buffer:*'>
+<meta name=variant content='webgpu:api,validation,encoding,cmds,clearBuffer:default_args:*'>
+<meta name=variant content='webgpu:api,validation,encoding,cmds,clearBuffer:buffer_usage:*'>
+<meta name=variant content='webgpu:api,validation,encoding,cmds,clearBuffer:size_alignment:*'>
+<meta name=variant content='webgpu:api,validation,encoding,cmds,clearBuffer:offset_alignment:*'>
+<meta name=variant content='webgpu:api,validation,encoding,cmds,clearBuffer:overflow:*'>
+<meta name=variant content='webgpu:api,validation,encoding,cmds,clearBuffer:out_of_bounds:*'>
 <meta name=variant content='webgpu:api,validation,encoding,cmds,compute_pass:set_pipeline:*'>
 <meta name=variant content='webgpu:api,validation,encoding,cmds,compute_pass:pipeline,device_mismatch:*'>
 <meta name=variant content='webgpu:api,validation,encoding,cmds,compute_pass:dispatch_sizes:*'>

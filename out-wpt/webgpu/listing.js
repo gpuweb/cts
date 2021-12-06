@@ -103,6 +103,14 @@ export const listing = [
       "api",
       "operation",
       "command_buffer",
+      "clearBuffer"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
+      "command_buffer",
       "copyBufferToBuffer"
     ]
   },
@@ -671,6 +679,15 @@ export const listing = [
       "encoding",
       "cmds",
       "buffer_texture_copies"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "encoding",
+      "cmds",
+      "clearBuffer"
     ]
   },
   {
