@@ -69,10 +69,12 @@ export function diffULP(a: number, b: number): number {
 /**
  * @returns the next single precision floating point value after |val|,
  * towards +inf if |dir| is true, otherwise towards -inf.
+ * For -/+0 the nextAfter will be the closest subnormal in the correct
+ * direction, since -0 === +0.
  */
 export function nextAfter(val: number, dir: boolean = true): Scalar {
   if (Number.isNaN(val)) {
-    return f32Bits(0x7fffffff);
+    return f32Bits(kBit.f32.nan.positive.s);
   }
 
   if (val === Number.POSITIVE_INFINITY) {
