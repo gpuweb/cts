@@ -22,8 +22,8 @@ g.test('clear')
       .combine('offset', [0, 4, 8, 16, undefined])
       .combine('size', [0, 4, 8, 16, undefined])
       .expand('bufferSize', p => [
-        (p.offset || 0) + (p.size || 16),
-        (p.offset || 0) + (p.size || 16) + 8,
+        (p.offset ?? 0) + (p.size ?? 16),
+        (p.offset ?? 0) + (p.size ?? 16) + 8,
       ])
   )
   .fn(async t => {
@@ -43,8 +43,8 @@ g.test('clear')
     encoder.clearBuffer(buffer, offset, size);
     t.device.queue.submit([encoder.finish()]);
 
-    const expectOffset = offset === undefined ? 0 : offset;
-    const expectSize = size === undefined ? bufferSize - expectOffset : size;
+    const expectOffset = offset ?? 0;
+    const expectSize = size ?? bufferSize - expectOffset;
 
     for (let i = 0; i < expectSize; ++i) {
       bufferData[expectOffset + i] = 0;
