@@ -32,7 +32,7 @@ type VertexBuffer<V, A> = V & {
 type VertexState<V, A> = VertexBuffer<V, A>[];
 
 type VertexLayoutState<V, A> = VertexState<
-  { stepMode: GPUInputStepMode; arrayStride: number } & V,
+  { stepMode: GPUVertexStepMode; arrayStride: number } & V,
   { format: GPUVertexFormat; offset: number } & A
 >;
 
@@ -77,7 +77,7 @@ class VertexStateTest extends GPUTest {
   // a negative number corresponding to the check number (in case you need to debug a failure).
   makeTestWGSL(
     buffers: VertexState<
-      { stepMode: GPUInputStepMode },
+      { stepMode: GPUVertexStepMode },
       {
         format: GPUVertexFormat;
         shaderBaseType: string;
@@ -222,7 +222,7 @@ struct VSOutputs {
 
   makeTestPipeline(
     buffers: VertexState<
-      { stepMode: GPUInputStepMode; arrayStride: number },
+      { stepMode: GPUVertexStepMode; arrayStride: number },
       {
         offset: number;
         format: GPUVertexFormat;
@@ -748,7 +748,7 @@ g.test('buffers_with_varying_step_mode')
   )
   .fn(t => {
     const { stepModes } = t.params;
-    const state = (stepModes as GPUInputStepMode[]).map((stepMode, i) => ({
+    const state = (stepModes as GPUVertexStepMode[]).map((stepMode, i) => ({
       slot: i,
       arrayStride: 4,
       stepMode,
