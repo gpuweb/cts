@@ -42,7 +42,14 @@ g.test('invalid_buffer')
 
 g.test('default_args')
   .desc(`Test that calling clearBuffer with a default offset and size is valid.`)
+  .paramsSubcasesOnly([
+    { offset: undefined, size: undefined },
+    { offset: 4, size: undefined },
+    { offset: undefined, size: 8 },
+  ] as const)
   .fn(async t => {
+    const { offset, size } = t.params;
+
     const buffer = t.device.createBuffer({
       size: 16,
       usage: GPUBufferUsage.COPY_DST,
@@ -50,8 +57,8 @@ g.test('default_args')
 
     t.TestClearBuffer({
       buffer,
-      offset: undefined,
-      size: undefined,
+      offset,
+      size,
       isSuccess: true,
     });
   });
@@ -94,6 +101,7 @@ g.test('size_alignment')
     { size: 4, _isSuccess: true },
     { size: 5, _isSuccess: false },
     { size: 8, _isSuccess: true },
+    { size: 20, _isSuccess: false },
     { size: undefined, _isSuccess: true },
   ] as const)
   .fn(async t => {
@@ -127,6 +135,7 @@ g.test('offset_alignment')
     { offset: 4, _isSuccess: true },
     { offset: 5, _isSuccess: false },
     { offset: 8, _isSuccess: true },
+    { offset: 20, _isSuccess: false },
     { offset: undefined, _isSuccess: true },
   ] as const)
   .fn(async t => {
@@ -170,10 +179,12 @@ g.test('overflow')
   });
 
 g.test('out_of_bounds')
-  .desc(`Test that clears which exceed the buffer bounds invalid.`)
+  .desc(`Test that clears which exceed the buffer bounds are invalid.`)
   .paramsSubcasesOnly([
     { offset: 0, size: 32, _isSuccess: true },
     { offset: 0, size: 36 },
+    { offset: 32, size: 0, _isSuccess: true },
+    { offset: 32, size: 4 },
     { offset: 36, size: 4 },
     { offset: 36, size: 0 },
     { offset: 20, size: 16 },
