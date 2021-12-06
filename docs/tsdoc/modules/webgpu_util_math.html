@@ -81,6 +81,7 @@
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.html#align" class="tsd-kind-icon">align</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.html#clamp" class="tsd-kind-icon">clamp</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.html#diffulp" class="tsd-kind-icon">diffULP</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.html#nextafter" class="tsd-kind-icon">next<wbr>After</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.html#rounddown" class="tsd-kind-icon">round<wbr>Down</a></li>
 							</ul>
 						</section>
@@ -95,7 +96,7 @@
 					<div class="tsd-signature tsd-kind-icon">k<wbr>Max<wbr>Safe<wbr>Multiple<wbr>Of8<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = ...</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/gpuweb/cts/blob/256a043/src/webgpu/util/math.ts#L10">src/webgpu/util/math.ts:10</a></li>
+							<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7b86357/src/webgpu/util/math.ts#L13">src/webgpu/util/math.ts:13</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -120,7 +121,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/256a043/src/webgpu/util/math.ts#L14">src/webgpu/util/math.ts:14</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7b86357/src/webgpu/util/math.ts#L17">src/webgpu/util/math.ts:17</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -151,7 +152,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/256a043/src/webgpu/util/math.ts#L28">src/webgpu/util/math.ts:28</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7b86357/src/webgpu/util/math.ts#L31">src/webgpu/util/math.ts:31</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -190,7 +191,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/256a043/src/webgpu/util/math.ts#L37">src/webgpu/util/math.ts:37</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7b86357/src/webgpu/util/math.ts#L40">src/webgpu/util/math.ts:40</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -209,6 +210,36 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="nextafter" class="tsd-anchor"></a>
+					<h3>next<wbr>After</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">next<wbr>After<span class="tsd-signature-symbol">(</span>val<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, dir<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7b86357/src/webgpu/util/math.ts#L75">src/webgpu/util/math.ts:75</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>val: <span class="tsd-signature-type">number</span></h5>
+								</li>
+								<li>
+									<h5>dir: <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = true</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a></h4>
+							<p>the next single precision floating point value after |val|,
+								towards +inf if |dir| is true, otherwise towards -inf.
+								For -/+0 the nextAfter will be the closest subnormal in the correct
+							direction, since -0 === +0.</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
 					<a name="rounddown" class="tsd-anchor"></a>
 					<h3>round<wbr>Down</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
@@ -218,7 +249,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/256a043/src/webgpu/util/math.ts#L21">src/webgpu/util/math.ts:21</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7b86357/src/webgpu/util/math.ts#L24">src/webgpu/util/math.ts:24</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -265,6 +296,9 @@
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="webgpu_util_math.html#diffulp" class="tsd-kind-icon">diffULP</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="webgpu_util_math.html#nextafter" class="tsd-kind-icon">next<wbr>After</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="webgpu_util_math.html#rounddown" class="tsd-kind-icon">round<wbr>Down</a>

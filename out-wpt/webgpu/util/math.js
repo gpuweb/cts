@@ -1,6 +1,9 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { assert } from '../../common/util/util.js';
+import { kBit } from '../shader/execution/builtin/builtin.js';
+import { f32Bits } from './conversion.js';
+
 /**
  * A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).
  * This is a "safe" integer (ULP <= 1.0) very close to MAX_SAFE_INTEGER.
@@ -62,4 +65,51 @@ export function diffULP(a, b) {
     return Math.max(bits_a, bits_b) - Math.min(bits_a, bits_b);
   }
   return bits_a + bits_b;
+}
+
+/**
+ * @returns the next single precision floating point value after |val|,
+ * towards +inf if |dir| is true, otherwise towards -inf.
+ * For -/+0 the nextAfter will be the closest subnormal in the correct
+ * direction, since -0 === +0.
+ */
+export function nextAfter(val, dir = true) {
+  if (Number.isNaN(val)) {
+    return f32Bits(kBit.f32.nan.positive.s);
+  }
+
+  if (val === Number.POSITIVE_INFINITY) {
+    return f32Bits(kBit.f32.infinity.positive);
+  }
+
+  if (val === Number.NEGATIVE_INFINITY) {
+    return f32Bits(kBit.f32.infinity.negative);
+  }
+
+  const u32_val = new Uint32Array(new Float32Array([val]).buffer)[0];
+  if (u32_val === kBit.f32.positive.zero || u32_val === kBit.f32.negative.zero) {
+    if (dir) {
+      return f32Bits(kBit.f32.subnormal.positive.min);
+    } else {
+      return f32Bits(kBit.f32.subnormal.negative.max);
+    }
+  }
+
+  let result = u32_val;
+  const is_positive = (u32_val & 0x80000000) === 0;
+  if (dir === is_positive) {
+    result += 1;
+  } else {
+    result -= 1;
+  }
+
+  // Checking for overflow
+  if ((result & 0x7f800000) === 0x7f800000) {
+    if (dir) {
+      return f32Bits(kBit.f32.infinity.positive);
+    } else {
+      return f32Bits(kBit.f32.infinity.negative);
+    }
+  }
+  return f32Bits(result);
 }

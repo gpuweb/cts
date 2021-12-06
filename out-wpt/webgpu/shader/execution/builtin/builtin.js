@@ -477,6 +477,11 @@ export const kBit = {
         min: 0x0000_0001,
         max: 0x007f_ffff,
       },
+
+      negative: {
+        max: 0x8000_0001,
+        min: 0x807f_ffff,
+      },
     },
 
     nan: {
