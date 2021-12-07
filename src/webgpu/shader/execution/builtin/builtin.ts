@@ -1,6 +1,7 @@
 import { Colors } from '../../../../common/util/colors.js';
 import { GPUTest } from '../../../gpu_test.js';
 import {
+  f32,
   ScalarType,
   Scalar,
   Vector,
@@ -10,7 +11,7 @@ import {
   TypeU32,
   VectorType,
 } from '../../../util/conversion.js';
-import { diffULP } from '../../../util/math.js';
+import { correctlyRounded, diffULP } from '../../../util/math.js';
 
 /** Comparison describes the result of a Comparator function. */
 export interface Comparison {
@@ -55,6 +56,17 @@ export function ulpThreshold(ulp: number): FloatMatch {
       return true;
     }
     return diffULP(got, expected) <= ulp;
+  };
+}
+
+/**
+ * @returns a FloatMatch that returns true iff |expected| is a correctly round
+ * to |got|.
+ * |got| must be expressible as a float32.
+ */
+export function correctlyRoundedThreshold(): FloatMatch {
+  return (got, expected) => {
+    return correctlyRounded(f32(got), expected);
   };
 }
 
