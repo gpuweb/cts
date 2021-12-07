@@ -7,8 +7,120 @@ and parameters as expect.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { ValidationTest } from '../../../validation_test.js';
 
+// Class that indicate how to call a draw function
+class DrawCall {
+  test: ValidationTest;
+  drawType: 'draw' | 'drawIndexed' | 'drawIndirect' | 'drawIndexedIndirect' = 'draw';
+
+  // Draw
+  vertexCount: number = 4;
+  firstVertex: number = 0;
+
+  // DrawIndexed
+  indexCount: number = 4;
+  firstIndex: number = 0;
+  baseVertex: number = 0;
+
+  // Both Draw and DrawIndexed
+  instanceCount: number = 1;
+  firstInstance: number = 0;
+
+  constructor(test: ValidationTest) {
+    this.test = test;
+  }
+
+  callDraw(encoder: GPURenderEncoderBase) {
+    switch (this.drawType) {
+      case 'draw': {
+        encoder.draw(this.vertexCount, this.instanceCount, this.firstVertex, this.firstInstance);
+        break;
+      }
+      case 'drawIndexed': {
+        encoder.drawIndexed(
+          this.indexCount,
+          this.instanceCount,
+          this.firstIndex,
+          this.baseVertex,
+          this.firstInstance
+        );
+        break;
+      }
+      case 'drawIndirect': {
+        encoder.drawIndirect(this.generateIndirectBuffer(), 0);
+        break;
+      }
+      case 'drawIndexedIndirect': {
+        encoder.drawIndexedIndirect(this.generateIndexedIndirectBuffer(), 0);
+        break;
+      }
+    }
+  }
+
+  // Create an indirect buffer containing draw call values
+  private generateIndirectBuffer(): GPUBuffer {
+    const indirectArray = new Int32Array([
+      this.vertexCount,
+      this.instanceCount,
+      this.firstVertex,
+      this.firstInstance,
+    ]);
+    return this.test.makeBufferWithContents(indirectArray, GPUBufferUsage.INDIRECT);
+  }
+
+  // Create an indirect buffer containing indexed draw call values
+  private generateIndexedIndirectBuffer(): GPUBuffer {
+    const indirectArray = new Int32Array([
+      this.indexCount,
+      this.instanceCount,
+      this.firstIndex,
+      this.baseVertex,
+      this.firstInstance,
+    ]);
+    return this.test.makeBufferWithContents(indirectArray, GPUBufferUsage.INDIRECT);
+  }
+}
+
 class F extends ValidationTest {
-  // TODO: Implement the helper functions
+  // Create a GPUBuffer that suitable for given index count and format
+  createIndexBufferWithElementCount(elementCount: number, indexFormat: GPUIndexFormat): GPUBuffer {
+    const elementSize = indexFormat === 'uint16' ? 2 : 4;
+    const bufferSize = elementCount * elementSize;
+    const desc: GPUBufferDescriptor = {
+      size: bufferSize,
+      usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
+    };
+    return this.createBufferWithState('valid', desc);
+  }
+
+  // Create a render pipeline that has no vertex input
+  createNaiveRenderPipeline(): GPURenderPipeline {
+    const desc: GPURenderPipelineDescriptor = {
+      vertex: {
+        module: this.device.createShaderModule({
+          code: `
+          [[stage(vertex)]]
+          fn main() -> [[builtin(position)]] vec4<f32> {
+            return vec4<f32>(0.0, 1.0, 0.0, 1.0);
+          }
+          `,
+        }),
+        entryPoint: 'main',
+        buffers: [],
+      },
+      fragment: {
+        module: this.device.createShaderModule({
+          code: `
+          [[stage(fragment)]] fn main() -> [[location(0)]] vec4<f32> {
+            return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+          }`,
+        }),
+        entryPoint: 'main',
+        targets: [{ format: 'rgba8unorm', writeMask: 0 }],
+      },
+      primitive: { topology: 'triangle-list' },
+    };
+    return this.device.createRenderPipeline(desc);
+  }
 }
 
 export const g = makeTestGroup(F);
@@ -35,7 +147,53 @@ drawIndexedIndirect as it is GPU-validated.
     - range and GPUBuffer are both too small
 `
   )
-  .unimplemented();
+  .params(u =>
+    u
+      .combine('bufferSizeInElements', [10, 100])
+      // Binding size always smaller than buffer size, make sure that setIndexBuffer succeed
+      .combine('bindingSizeInElements', [10])
+      .combine('drawIndexCount', [10, 11])
+      .combine('drawType', ['drawIndexed', 'drawIndexedIndirect'] as const)
+      .beginSubcases()
+      .combine('indexFormat', ['uint16', 'uint32'] as const)
+      .combine('useBundle', [false, true])
+  )
+  .fn(t => {
+    const {
+      indexFormat,
+      bindingSizeInElements,
+      bufferSizeInElements,
+      drawIndexCount,
+      drawType,
+      useBundle,
+    } = t.params;
+
+    const indexBuffer = t.createIndexBufferWithElementCount(bufferSizeInElements, indexFormat);
+    const indexElementSize = indexFormat === 'uint16' ? 2 : 4;
+    const bindingSize = bindingSizeInElements * indexElementSize;
+
+    const drawCall = new DrawCall(t);
+    drawCall.indexCount = drawIndexCount;
+    drawCall.drawType = drawType;
+
+    // Encoder finish will succeed if no index buffer access OOB when calling drawIndexed,
+    // and always succeed when calling drawIndexedIndirect.
+    const isFinishSuccess =
+      drawIndexCount <= bindingSizeInElements || drawType === 'drawIndexedIndirect';
+
+    const renderPipeline = t.createNaiveRenderPipeline();
+
+    const commandBufferMaker = t.createEncoder(useBundle ? 'render bundle' : 'render pass');
+    const renderEncoder = commandBufferMaker.encoder;
+
+    renderEncoder.setIndexBuffer(indexBuffer, indexFormat, 0, bindingSize);
+
+    renderEncoder.setPipeline(renderPipeline);
+
+    drawCall.callDraw(renderEncoder);
+
+    commandBufferMaker.validateFinish(isFinishSuccess);
+  });
 
 g.test(`vertex_buffer_OOB`)
   .desc(
