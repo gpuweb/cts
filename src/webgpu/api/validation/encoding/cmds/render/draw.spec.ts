@@ -150,7 +150,7 @@ drawIndexedIndirect as it is GPU-validated.
   .params(u =>
     u
       .combine('bufferSizeInElements', [10, 100])
-      // Binding size always smaller than buffer size, make sure that setIndexBuffer succeed
+      // Binding size is always no larger than buffer size, make sure that setIndexBuffer succeed
       .combine('bindingSizeInElements', [10])
       .combine('drawIndexCount', [10, 11])
       .combine('drawType', ['drawIndexed', 'drawIndexedIndirect'] as const)
