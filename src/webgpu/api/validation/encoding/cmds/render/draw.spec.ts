@@ -5,7 +5,6 @@ and parameters as expect.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
-import { unreachable } from '../../../../../../common/util/util.js';
 import { ValidationTest } from '../../../validation_test.js';
 
 interface DrawIndexedParameter {
@@ -45,8 +44,6 @@ class F extends ValidationTest {
         encoder.drawIndexedIndirect(indirectBuffer, 0);
         break;
       }
-      default:
-        unreachable();
     }
   }
 }
