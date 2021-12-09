@@ -2,7 +2,7 @@
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { assert } from '../../common/util/util.js';
 import { kBit } from '../shader/execution/builtin/builtin.js';
-import { f32Bits } from './conversion.js';
+import { f32, f32Bits } from './conversion.js';
 
 /**
  * A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).
@@ -72,6 +72,7 @@ export function diffULP(a, b) {
  * towards +inf if |dir| is true, otherwise towards -inf.
  * For -/+0 the nextAfter will be the closest subnormal in the correct
  * direction, since -0 === +0.
+ * |val| must be expressible as a f32.
  */
 export function nextAfter(val, dir = true) {
   if (Number.isNaN(val)) {
@@ -86,8 +87,8 @@ export function nextAfter(val, dir = true) {
     return f32Bits(kBit.f32.infinity.negative);
   }
 
-  const u32_val = new Uint32Array(new Float32Array([val]).buffer)[0];
-  if (u32_val === kBit.f32.positive.zero || u32_val === kBit.f32.negative.zero) {
+  // -/+0 === 0 returns true
+  if (val === 0) {
     if (dir) {
       return f32Bits(kBit.f32.subnormal.positive.min);
     } else {
@@ -95,8 +96,13 @@ export function nextAfter(val, dir = true) {
     }
   }
 
-  let result = u32_val;
+  // number is float64 internally, so need to test if value is expressible as a float32.
+  const converted = new Float32Array([val])[0];
+  assert(val === converted, `${val} is not expressible as a f32.`);
+
+  const u32_val = new Uint32Array(new Float32Array([val]).buffer)[0];
   const is_positive = (u32_val & 0x80000000) === 0;
+  let result = u32_val;
   if (dir === is_positive) {
     result += 1;
   } else {
@@ -112,4 +118,51 @@ export function nextAfter(val, dir = true) {
     }
   }
   return f32Bits(result);
+}
+
+/**
+ * @returns if a test value is correctly rounded to an target value. Only
+ * defined for |test_values| being a float32. target values may be any number.
+ *
+ * Correctly rounded means that if the target value is precisely expressible
+ * as a float32, then |test_value| === |target|.
+ * Otherwise |test_value| needs to be either the closest expressible number greater
+ * or less than |target|.
+ */
+export function correctlyRounded(test_value, target) {
+  assert(test_value.type.kind === 'f32', `${test_value} is expected to be a 'f32'`);
+
+  if (Number.isNaN(target)) {
+    return Number.isNaN(test_value.value.valueOf());
+  }
+
+  if (target === Number.POSITIVE_INFINITY) {
+    return test_value.value === f32Bits(kBit.f32.infinity.positive).value;
+  }
+
+  if (target === Number.NEGATIVE_INFINITY) {
+    return test_value.value === f32Bits(kBit.f32.infinity.negative).value;
+  }
+
+  const target32 = new Float32Array([target])[0];
+  const converted = target32;
+  if (target === converted) {
+    // expected is precisely expressible in float32
+    return test_value.value === f32(target32).value;
+  }
+
+  let after_target;
+  let before_target;
+
+  if (converted > target) {
+    // target32 is rounded towards +inf, so is after_target
+    after_target = f32(target32);
+    before_target = nextAfter(target32, false);
+  } else {
+    // target32 is rounded towards -inf, so is before_target
+    after_target = nextAfter(target32, true);
+    before_target = f32(target32);
+  }
+
+  return test_value.value === before_target.value || test_value.value === after_target.value;
 }

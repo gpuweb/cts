@@ -1,15 +1,51 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { assert, sortObjectByKey } from '../../util/util.js';
-// JSON can't represent `undefined` and by default stores it as `null`.
-// Instead, store `undefined` as this magic string value in JSON.
+// JSON can't represent various values and by default stores them as `null`.
+// Instead, storing them as a magic string values in JSON.
 const jsUndefinedMagicValue = '_undef_';
+const jsNaNMagicValue = '_nan_';
+const jsPositiveInfinityMagicValue = '_posinfinity_';
+const jsNegativeInfinityMagicValue = '_neginfinity_';
+
+const toStringMagicValue = new Map([
+[undefined, jsUndefinedMagicValue],
+[NaN, jsNaNMagicValue],
+[Number.POSITIVE_INFINITY, jsPositiveInfinityMagicValue],
+[Number.NEGATIVE_INFINITY, jsNegativeInfinityMagicValue]]);
+
+
+const fromStringMagicValue = new Map([
+[jsUndefinedMagicValue, undefined],
+[jsNaNMagicValue, NaN],
+[jsPositiveInfinityMagicValue, Number.POSITIVE_INFINITY],
+[jsNegativeInfinityMagicValue, Number.NEGATIVE_INFINITY]]);
+
+
+// -0 needs to be handled separately, because -0 === +0 returns true. Not
+// special casing +0/0, since it behaves intuitively. Assuming that if -0 is
+// being used, the differentiation from +0 is desired.
+const jsNegativeZeroMagicValue = '_negzero_';
 
 function stringifyFilter(k, v) {
-  // Make sure no one actually uses the magic value as a parameter.
-  assert(v !== jsUndefinedMagicValue);
+  // Make sure no one actually uses a magic value as a parameter.
+  if (typeof v === 'string') {
+    assert(
+    !fromStringMagicValue.has(v),
+    `${v} is a magic value for stringification, so cannot be used`);
 
-  return v === undefined ? jsUndefinedMagicValue : v;
+
+    assert(
+    v !== jsNegativeZeroMagicValue,
+    `${v} is a magic value for stringification, so cannot be used`);
+
+  }
+
+  if (Object.is(v, -0)) {
+    return jsNegativeZeroMagicValue;
+  }
+
+  return toStringMagicValue.has(v) ? toStringMagicValue.get(v) : v;
 }
 
 export function stringifyParamValue(value) {
@@ -29,7 +65,21 @@ export function stringifyParamValueUniquely(value) {
   });
 }
 
+// 'any' is part of the JSON.parse reviver interface, so cannot be avoided.
+
+function parseParamValueReviver(k, v) {
+  if (k === jsNegativeZeroMagicValue) {
+    return -0;
+  }
+
+  if (fromStringMagicValue.has(k)) {
+    return fromStringMagicValue.get(k);
+  }
+
+  return v;
+}
+
 export function parseParamValue(s) {
-  return JSON.parse(s, (k, v) => v === jsUndefinedMagicValue ? undefined : v);
+  return JSON.parse(s, parseParamValueReviver);
 }
 //# sourceMappingURL=json_param_value.js.map

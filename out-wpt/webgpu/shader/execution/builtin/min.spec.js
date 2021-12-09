@@ -7,7 +7,7 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { i32, i32Bits, TypeI32, TypeU32, u32 } from '../../../util/conversion.js';
 
-import { run } from './builtin.js';
+import { correctlyRoundedThreshold, run } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -29,7 +29,10 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
       .combine('vectorize', [undefined, 2, 3, 4])
   )
   .fn(async t => {
-    run(t, 'min', [TypeU32, TypeU32], TypeU32, t.params, [
+    const cfg = t.params;
+    cfg.cmpFloats = correctlyRoundedThreshold();
+
+    run(t, 'min', [TypeU32, TypeU32], TypeU32, cfg, [
       { input: [u32(1), u32(1)], expected: u32(1) },
       { input: [u32(0), u32(0)], expected: u32(0) },
       { input: [u32(0xffffffff), u32(0xffffffff)], expected: u32(0xffffffff) },
@@ -61,7 +64,10 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
       .combine('vectorize', [undefined, 2, 3, 4])
   )
   .fn(async t => {
-    run(t, 'min', [TypeI32, TypeI32], TypeI32, t.params, [
+    const cfg = t.params;
+    cfg.cmpFloats = correctlyRoundedThreshold();
+
+    run(t, 'min', [TypeI32, TypeI32], TypeI32, cfg, [
       { input: [i32(1), i32(1)], expected: i32(1) },
       { input: [i32(0), i32(0)], expected: i32(0) },
       { input: [i32(-1), i32(-1)], expected: i32(-1) },
