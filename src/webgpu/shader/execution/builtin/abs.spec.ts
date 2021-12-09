@@ -14,7 +14,7 @@ import {
   u32Bits,
 } from '../../../util/conversion.js';
 
-import { anyOf, kBit, kValue, run } from './builtin.js';
+import { anyOf, Config, correctlyRoundedThreshold, kBit, kValue, run } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -95,7 +95,10 @@ If e evaluates to the largest negative value, then the result is e.
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    run(t, 'abs', [TypeI32], TypeI32, t.params, [
+    const cfg: Config = t.params;
+    cfg.cmpFloats = correctlyRoundedThreshold();
+
+    run(t, 'abs', [TypeI32], TypeI32, cfg, [
       // Min and max i32
       // If e evaluates to the largest negative value, then the result is e.
       { input: i32Bits(kBit.i32.negative.min), expected: i32Bits(kBit.i32.negative.min) },
@@ -156,7 +159,10 @@ Component-wise when T is a vector. (GLSLstd450Fabs)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    run(t, 'abs', [TypeF32], TypeF32, t.params, [
+    const cfg: Config = t.params;
+    cfg.cmpFloats = correctlyRoundedThreshold();
+
+    run(t, 'abs', [TypeF32], TypeF32, cfg, [
       // Min and Max f32
       { input: f32Bits(kBit.f32.negative.max), expected: f32Bits(0x0080_0000) },
       { input: f32Bits(kBit.f32.negative.min), expected: f32Bits(0x7f7f_ffff) },
