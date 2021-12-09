@@ -52,8 +52,6 @@ class F extends GPUTest {
   MakeIndirectBuffer(isIndexed: boolean, indirectOffset: number): GPUBuffer {
     const o = indirectOffset / Uint32Array.BYTES_PER_ELEMENT;
 
-    // The parameters in the indirectBuffer is a tightly packed block of five 32-bit uint values in
-    // drawIndexedIndirect, and a tightly packed block of four 32-bit uint values in drawIndirect.
     const parametersSize = isIndexed
       ? kDrawIndexedIndirectParametersSize
       : kDrawIndirectParametersSize;
