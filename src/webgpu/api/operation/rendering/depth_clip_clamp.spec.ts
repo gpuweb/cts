@@ -101,7 +101,7 @@ have unexpected values then get drawn to the color buffer, which is later checke
         return vf;
       }
 
-      [[block]] struct Output {
+      struct Output {
         // Each fragment (that didn't get clipped) writes into one element of this output.
         // (Anything that doesn't get written is already zero.)
         fragInputZDiff: array<f32, ${kNumTestPoints}>;
