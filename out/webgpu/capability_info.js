@@ -826,4 +826,9 @@ export const kMaxVertexBuffers = 8;
 export const kMaxVertexAttributes = 16;
 /** `maxVertexBufferArrayStride` in a vertex buffer in a GPURenderPipeline, by spec. */
 export const kMaxVertexBufferArrayStride = 2048;
+
+/** The size of indirect draw parameters in the indirectBuffer of drawIndirect */
+export const kDrawIndirectParametersSize = 4;
+/** The size of indirect drawIndexed parameters in the indirectBuffer of drawIndexedIndirect */
+export const kDrawIndexedIndirectParametersSize = 5;
 //# sourceMappingURL=capability_info.js.map
