@@ -5,50 +5,50 @@ and parameters as expect.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { GPUTest } from '../../../../../gpu_test.js';
 import { ValidationTest } from '../../../validation_test.js';
 
 interface DrawIndexedParameter {
   indexCount: number;
+  instanceCount?: number;
   firstIndex?: number;
   baseVertex?: number;
-  instanceCount?: number;
   firstInstance?: number;
 }
 
-class F extends ValidationTest {
-  callDrawIndexed(
-    encoder: GPURenderEncoderBase,
-    drawType: 'drawIndexed' | 'drawIndexedIndirect',
-    param: DrawIndexedParameter
-  ) {
-    switch (drawType) {
-      case 'drawIndexed': {
-        encoder.drawIndexed(
-          param.indexCount,
-          param.instanceCount || 1,
-          param.firstIndex || 0,
-          param.baseVertex || 0,
-          param.firstInstance || 0
-        );
-        break;
-      }
-      case 'drawIndexedIndirect': {
-        const indirectArray = new Int32Array([
-          param.indexCount,
-          param.instanceCount || 1,
-          param.firstIndex || 0,
-          param.baseVertex || 0,
-          param.firstInstance || 0,
-        ]);
-        const indirectBuffer = this.makeBufferWithContents(indirectArray, GPUBufferUsage.INDIRECT);
-        encoder.drawIndexedIndirect(indirectBuffer, 0);
-        break;
-      }
+function callDrawIndexed(
+  test: GPUTest,
+  encoder: GPURenderEncoderBase,
+  drawType: 'drawIndexed' | 'drawIndexedIndirect',
+  param: DrawIndexedParameter
+) {
+  switch (drawType) {
+    case 'drawIndexed': {
+      encoder.drawIndexed(
+        param.indexCount,
+        param.instanceCount ?? 1,
+        param.firstIndex ?? 0,
+        param.baseVertex ?? 0,
+        param.firstInstance ?? 0
+      );
+      break;
+    }
+    case 'drawIndexedIndirect': {
+      const indirectArray = new Int32Array([
+        param.indexCount,
+        param.instanceCount ?? 1,
+        param.firstIndex ?? 0,
+        param.baseVertex ?? 0,
+        param.firstInstance ?? 0,
+      ]);
+      const indirectBuffer = test.makeBufferWithContents(indirectArray, GPUBufferUsage.INDIRECT);
+      encoder.drawIndexedIndirect(indirectBuffer, 0);
+      break;
     }
   }
 }
 
-export const g = makeTestGroup(F);
+export const g = makeTestGroup(ValidationTest);
 
 g.test(`unused_buffer_bound`)
   .desc(
@@ -121,7 +121,7 @@ drawIndexedIndirect as it is GPU-validated.
 
     renderEncoder.setPipeline(renderPipeline);
 
-    t.callDrawIndexed(renderEncoder, drawType, drawCallParam);
+    callDrawIndexed(t, renderEncoder, drawType, drawCallParam);
 
     commandBufferMaker.validateFinishAndSubmit(isFinishSuccess, true);
   });
