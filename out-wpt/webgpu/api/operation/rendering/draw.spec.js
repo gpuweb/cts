@@ -110,7 +110,7 @@ struct Inputs {
 
     const fragmentModule = t.device.createShaderModule({
       code: `
-[[block]] struct Output {
+struct Output {
   value : u32;
 };
 
@@ -573,7 +573,7 @@ ${accumulateVariableDeclarationsInFragmentShader}
 struct OutPrimitive {
 ${vertexInputShaderLocations.map(i => `  attrib${i} : ${wgslFormat};`).join('\n')}
 };
-[[block]] struct OutBuffer {
+struct OutBuffer {
   primitives : [[stride(${vertexInputShaderLocations.length * 4})]] array<OutPrimitive>;
 };
 [[group(0), binding(0)]] var<storage, read_write> outBuffer : OutBuffer;

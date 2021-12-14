@@ -55,7 +55,7 @@ export class BufferSyncTest extends GPUTest {
   // Create a compute pipeline and write given data into storage buffer.
   createStorageWriteComputePipeline(value) {
     const wgslCompute = `
-      [[block]] struct Data {
+      struct Data {
         a : i32;
       };
 
@@ -87,7 +87,7 @@ export class BufferSyncTest extends GPUTest {
     `,
 
       fragment: `
-      [[block]] struct Data {
+      struct Data {
         a : i32;
       };
 

@@ -231,7 +231,7 @@ expandWithParams(function* (p) {
 batch(15).
 fn(async t => {
   let moduleScope = `
-      [[block]] struct Output {
+      struct Output {
         failed : atomic<u32>;
       };
       [[group(0), binding(0)]] var <storage, read_write> output : Output;

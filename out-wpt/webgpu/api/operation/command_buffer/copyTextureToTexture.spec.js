@@ -309,7 +309,7 @@ class F extends GPUTest {
       vertex: {
         module: this.device.createShaderModule({
           code: `
-            [[block]] struct Params {
+            struct Params {
               copyLayer: f32;
             };
             [[group(0), binding(0)]] var<uniform> param: Params;

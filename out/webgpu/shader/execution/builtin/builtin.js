@@ -311,12 +311,10 @@ ${parameterTypes.
   join('\n')}
 };
 
-[[block]]
 struct Inputs {
   test : array<Parameters, ${cases.length}>;
 };
 
-[[block]]
 struct Outputs {
   test : [[stride(${kValueStride})]] array<${storageType(returnType)}, ${cases.length}>;
 };

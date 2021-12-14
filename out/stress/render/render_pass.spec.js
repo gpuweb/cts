@@ -157,7 +157,7 @@ fn(async t => {
   const kSize = 128;
   const module = t.device.createShaderModule({
     code: `
-    [[block]] struct Uniforms { index: u32; };
+    struct Uniforms { index: u32; };
     [[group(0), binding(0)]] var<uniform> uniforms: Uniforms;
     [[stage(vertex)]] fn vmain() -> [[builtin(position)]] vec4<f32> {
       let index = uniforms.index;

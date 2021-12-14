@@ -196,7 +196,7 @@ fn(t => {
 
       module: t.device.createShaderModule({
         code: `
-[[block]] struct Uniform {
+struct Uniform {
   color: vec4<f32>;
 };
 [[group(0), binding(0)]] var<uniform> u : Uniform;

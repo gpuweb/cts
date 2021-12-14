@@ -92,7 +92,7 @@ class VertexStateTest extends GPUTest {
         }
 
         vsInputs += `  [[location(${i})]] attrib${i} : ${shaderType};\n`;
-        vsBindings += `[[block]] struct S${i} { data : array<vec4<${a.shaderBaseType}>, ${maxCount}>; };\n`;
+        vsBindings += `struct S${i} { data : array<vec4<${a.shaderBaseType}>, ${maxCount}>; };\n`;
         vsBindings += `[[group(0), binding(${i})]] var<${storageType}> providedData${i} : S${i};\n`;
 
         // Generate the all the checks for the attributes.
