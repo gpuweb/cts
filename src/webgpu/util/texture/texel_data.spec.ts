@@ -55,7 +55,7 @@ function doTest(
   const shader = `
   [[group(0), binding(0)]] var tex : texture_2d<${shaderType}>;
 
-  [[block]] struct Output {
+  struct Output {
     ${rep.componentOrder.map(C => `result${C} : ${shaderType};`).join('\n')}
   };
   [[group(0), binding(1)]] var<storage, read_write> output : Output;

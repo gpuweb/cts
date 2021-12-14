@@ -827,7 +827,7 @@ class ImageCopyTest extends GPUTest {
       fragment: {
         module: this.device.createShaderModule({
           code: `
-            [[block]] struct Params {
+            struct Params {
               stencilBitIndex: u32;
             };
             [[group(0), binding(0)]] var<uniform> param: Params;
