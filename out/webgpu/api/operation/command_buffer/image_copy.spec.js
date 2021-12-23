@@ -351,10 +351,7 @@ class ImageCopyTest extends GPUTest {
           break;
         }
       case 'CopyB2T':{
-          const buffer = this.makeBufferWithContents(partialData, GPUBufferUsage.COPY_SRC, {
-            padToMultipleOf4: true });
-
-
+          const buffer = this.makeBufferWithContents(partialData, GPUBufferUsage.COPY_SRC);
           const encoder = this.device.createCommandEncoder();
           encoder.copyBufferToTexture(
           { buffer, ...appliedDataLayout },

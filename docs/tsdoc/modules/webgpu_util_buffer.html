@@ -84,18 +84,20 @@
 					<a name="makebufferwithcontents" class="tsd-anchor"></a>
 					<h3>make<wbr>Buffer<wbr>With<wbr>Contents</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
-						<li class="tsd-signature tsd-kind-icon">make<wbr>Buffer<wbr>With<wbr>Contents<span class="tsd-signature-symbol">(</span>device<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GPUDevice</span>, dataArray<span class="tsd-signature-symbol">: </span><a href="common_util_util.html#typedarraybufferview" class="tsd-signature-type" data-tsd-kind="Type alias">TypedArrayBufferView</a>, usage<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GPUBufferUsageFlags</span>, opts<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-symbol">{ </span>padToMultipleOf4<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GPUBuffer</span></li>
+						<li class="tsd-signature tsd-kind-icon">make<wbr>Buffer<wbr>With<wbr>Contents<span class="tsd-signature-symbol">(</span>device<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GPUDevice</span>, dataArray<span class="tsd-signature-symbol">: </span><a href="common_util_util.html#typedarraybufferview" class="tsd-signature-type" data-tsd-kind="Type alias">TypedArrayBufferView</a>, usage<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GPUBufferUsageFlags</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GPUBuffer</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/c843f8d/src/webgpu/util/buffer.ts#L8">src/webgpu/util/buffer.ts:8</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fca7b33/src/webgpu/util/buffer.ts#L10">src/webgpu/util/buffer.ts:10</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Creates a buffer with the contents of some TypedArray.</p>
+									<p>Creates a buffer with the contents of some TypedArray.
+										The buffer size will always be aligned to 4 as we set mappedAtCreation === true when creating the
+									buffer.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -108,14 +110,6 @@
 								</li>
 								<li>
 									<h5>usage: <span class="tsd-signature-type">GPUBufferUsageFlags</span></h5>
-								</li>
-								<li>
-									<h5>opts: <span class="tsd-signature-symbol">{ </span>padToMultipleOf4<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> = {}</span></h5>
-									<ul class="tsd-parameters">
-										<li class="tsd-parameter">
-											<h5><span class="tsd-flag ts-flagOptional">Optional</span> pad<wbr>ToMultiple<wbr>Of4<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span></h5>
-										</li>
-									</ul>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">GPUBuffer</span></h4>

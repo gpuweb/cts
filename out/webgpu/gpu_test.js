@@ -733,12 +733,8 @@ export class GPUTest extends Fixture {
      *
      * TODO: Several call sites would be simplified if this took ArrayBuffer as well.
      */
-  makeBufferWithContents(
-  dataArray,
-  usage,
-  opts = {})
-  {
-    return this.trackForCleanup(makeBufferWithContents(this.device, dataArray, usage, opts));
+  makeBufferWithContents(dataArray, usage) {
+    return this.trackForCleanup(makeBufferWithContents(this.device, dataArray, usage));
   }
 
   /**

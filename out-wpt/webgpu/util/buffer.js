@@ -5,11 +5,13 @@ import { align } from './math.js';
 
 /**
  * Creates a buffer with the contents of some TypedArray.
+ * The buffer size will always be aligned to 4 as we set mappedAtCreation === true when creating the
+ * buffer.
  */
-export function makeBufferWithContents(device, dataArray, usage, opts = {}) {
+export function makeBufferWithContents(device, dataArray, usage) {
   const buffer = device.createBuffer({
     mappedAtCreation: true,
-    size: align(dataArray.byteLength, opts.padToMultipleOf4 ? 4 : 1),
+    size: align(dataArray.byteLength, 4),
     usage,
   });
 
