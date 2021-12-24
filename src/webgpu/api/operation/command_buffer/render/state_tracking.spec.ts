@@ -27,10 +27,8 @@ g.test('set_index_buffer_without_changing_buffer')
   )
   .fn(async t => {
     // Initialize the index buffer with 5 uint16 indices (0, 1, 2, 3, 4).
-    // 0 is a padding to make sure the buffer size is a multiple of 4.
-    // TODO: remove the padding after the issue in makeBufferWithContents() is fixed.
     const indexBuffer = t.makeBufferWithContents(
-      new Uint16Array([0, 1, 2, 3, 4, 0]),
+      new Uint16Array([0, 1, 2, 3, 4]),
       GPUBufferUsage.INDEX
     );
 
