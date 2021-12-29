@@ -124,6 +124,7 @@ function canCopyFromContextType(contextName: string) {
     case 'experimental-webgl':
     case 'webgl':
     case 'webgl2':
+    case 'webgpu':
       return true;
     default:
       return false;
