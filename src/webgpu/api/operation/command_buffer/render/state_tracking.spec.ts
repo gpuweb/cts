@@ -152,15 +152,17 @@ g.test('set_index_buffer_without_changing_buffer')
     renderPass.setIndexBuffer(indexBuffer, 'uint32', 0, 4);
     renderPass.drawIndexed(1);
 
-    // 2nd draw: indexFormat = 'uint16', offset = 0, size = 2 (index value: 0)
-    renderPass.setIndexBuffer(indexBuffer, 'uint16', 0, 2);
+    // 2nd draw: indexFormat = 'uint16', offset = 0, size = 4 (index value: 0)
+    renderPass.setIndexBuffer(indexBuffer, 'uint16', 0, 4);
     renderPass.drawIndexed(1);
 
     // 3rd draw: indexFormat = 'uint16', offset = 4, size = 2 (index value: 2)
+    renderPass.setIndexBuffer(indexBuffer, 'uint16', 0, 2);
     renderPass.setIndexBuffer(indexBuffer, 'uint16', 4, 2);
     renderPass.drawIndexed(1);
 
     // 4th draw: indexformat = 'uint16', offset = 6, size = 4 (index values: 3, 4)
+    renderPass.setIndexBuffer(indexBuffer, 'uint16', 6, 2);
     renderPass.setIndexBuffer(indexBuffer, 'uint16', 6, 4);
     renderPass.drawIndexed(2);
 
