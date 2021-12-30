@@ -23,6 +23,8 @@ g.test('texture_descriptor')
     `
   Test creating a texture with an optional texture format will fail if the required optional feature
   is not enabled.
+
+  TODO: Actually it should throw an exception, not fail with a validation error.
   `
   )
   .params(u =>
@@ -53,6 +55,8 @@ g.test('storage_texture_binding_layout')
     `
   Test creating a GPUStorageTextureBindingLayout with an optional texture format will fail if the
   required optional feature are not enabled.
+
+  Note: This test has no cases if there are no optional texture formats supporting storage.
   `
   )
   .params(u =>
@@ -90,6 +94,8 @@ g.test('color_target_state')
     `
   Test creating a render pipeline with an optional texture format set in GPUColorTargetState will
   fail if the required optional feature is not enabled.
+
+  Note: This test has no cases if there are no optional texture formats supporting color rendering.
   `
   )
   .params(u =>
@@ -195,6 +201,8 @@ g.test('render_bundle_encoder_descriptor_color_format')
     `
   Test creating a render bundle encoder with an optional texture format set as one of the color
   format will fail if the required optional feature is not enabled.
+
+  Note: This test has no cases if there are no optional texture formats supporting color rendering.
   `
   )
   .params(u =>
