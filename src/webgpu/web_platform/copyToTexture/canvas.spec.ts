@@ -5,6 +5,7 @@ TODO: consider whether external_texture and copyToTexture video tests should be 
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { attemptGarbageCollection } from '../../../common/util/collect_garbage.js';
 import { assert, memcpy } from '../../../common/util/util.js';
 import {
   RegularTextureFormat,
@@ -13,7 +14,10 @@ import {
 } from '../../capability_info.js';
 import { CopyToTextureUtils, isFp16Format } from '../../util/copy_to_texture.js';
 import { canvasTypes, allCanvasTypes, createCanvas } from '../../util/create_elements.js';
+import { DevicePool, DeviceProvider, TestOOMedShouldAttemptGC } from '../../util/device_pool.js';
 import { kTexelRepresentationInfo } from '../../util/texture/texel_data.js';
+
+const devicePool = new DevicePool();
 
 /**
  * If the destination format specifies a transfer function,
@@ -28,6 +32,53 @@ function formatForExpectedPixels(format: RegularTextureFormat): RegularTextureFo
 }
 
 class F extends CopyToTextureUtils {
+  private anotherProvider: DeviceProvider | undefined;
+  /** Must not be replaced once acquired. */
+  private anotherDevice: GPUDevice | undefined;
+
+  getAnotherDevice(): GPUDevice {
+    assert(this.anotherProvider !== undefined, 'No another provider available right now;');
+    if (!this.anotherDevice) {
+      this.anotherDevice = this.anotherProvider.acquire();
+    }
+    return this.anotherDevice;
+  }
+
+  protected async init(): Promise<void> {
+    await super.init();
+
+    // Create another device which is not the default one.
+    this.anotherProvider = await devicePool.reserve({
+      requiredFeatures: ['texture-compression-bc'],
+    });
+  }
+
+  protected async finalize(): Promise<void> {
+    await super.finalize();
+
+    if (this.anotherProvider) {
+      let threw: undefined | Error;
+      {
+        const provider = this.anotherProvider;
+        this.anotherProvider = undefined;
+        try {
+          await devicePool.release(provider);
+        } catch (ex) {
+          threw = ex;
+        }
+      }
+      // The GPUDevice and GPUQueue should now have no outstanding references.
+
+      if (threw) {
+        if (threw instanceof TestOOMedShouldAttemptGC) {
+          // Try to clean up, in case there are stray GPU resources in need of collection.
+          await attemptGarbageCollection();
+        }
+        throw threw;
+      }
+    }
+  }
+
   // TODO: Cache the generated canvas to avoid duplicated initialization.
   init2DCanvasContent({
     canvasType,
@@ -390,6 +441,8 @@ g.test('copy_contents_from_2d_context_canvas')
   The tests covers:
   - Valid canvas type
   - Valid 2d context type
+  - Valid dstColorFormat of copyExternalImageToTexture()
+  - Valid dest alphaMode
   - TODO: color space tests need to be added
   - TODO: Add error tolerance for rgb10a2unorm dst texture format
 
@@ -473,7 +526,7 @@ g.test('copy_contents_from_gl_context_canvas')
   can be copied to WebGPU texture correctly.
 
   It creates HTMLCanvasElement/OffscreenCanvas with webgl'/'webgl2'.
-  Use stencil + clear to render red rect for top-left, green rect
+  Use scissor + clear to render red rect for top-left, green rect
   for top-right, blue rect for bottom-left and white for bottom-right.
   And do premultiply alpha in advance if the webgl/webgl2 context is created
   with premultipliedAlpha : true.
@@ -484,6 +537,9 @@ g.test('copy_contents_from_gl_context_canvas')
   The tests covers:
   - Valid canvas type
   - Valid webgl/webgl2 context type
+  - Valid dstColorFormat of copyExternalImageToTexture()
+  - Valid source image alphaMode
+  - Valid dest alphaMode
   - TODO: color space tests need to be added
   - TODO: Add error tolerance for rgb10a2unorm dst texture format
 
@@ -576,17 +632,22 @@ g.test('copy_contents_from_gpu_context_canvas')
   can be copied to WebGPU texture correctly.
 
   It creates HTMLCanvasElement/OffscreenCanvas with 'webgpu'.
-  Use stencil + clear to render red rect for top-left, green rect
-  for top-right, blue rect for bottom-left and white for bottom-right.
-  And do premultiply alpha in advance if the webgl/webgl2 context is created
-  with premultipliedAlpha : true.
+  Use writeTexture to copy pixels to back buffer. The results are:
+  red rect for top-left, green rect for top-right, blue rect for bottom-left
+  and white for bottom-right.
+  
+  And do premultiply alpha in advance if the webgpu context is created
+  with compositingAlphaMode="premultiplied".
 
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the canvas contents.
 
   The tests covers:
   - Valid canvas type
-  - Valid webgl/webgl2 context type
+  - Source WebGPU Canvas lives in the same GPUDevice or different GPUDevice as test
+  - Valid dstColorFormat of copyExternalImageToTexture()
+  - Valid source image alphaMode
+  - Valid dest alphaMode
   - TODO: color space tests need to be added
   - TODO: Add error tolerance for rgb10a2unorm dst texture format
 
@@ -618,15 +679,7 @@ g.test('copy_contents_from_gpu_context_canvas')
     let device = t.device;
 
     if (!srcAndDstInSameGPUDevice) {
-      const adapter = await navigator.gpu.requestAdapter();
-      if (adapter === null) {
-        this.skip('Request GPUAdapter failed');
-      }
-
-      device = await adapter.requestDevice();
-      if (device === null) {
-        this.skip('Adapter requets GPUDevice failed');
-      }
+      device = t.getAnotherDevice();
     }
 
     // When dst texture format is rgb10a2unorm, the generated expected value of the result
