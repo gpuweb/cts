@@ -336,7 +336,7 @@ class F extends CopyToTextureUtils {
     return finalResult;
   }
 
-  getSourceCanvasGPUContent(
+  calculateSourceContentOnCPU(
     width: number,
     height: number,
     premultipliedAlpha: boolean,
@@ -714,7 +714,7 @@ g.test('copy_contents_from_gpu_context_canvas')
     // Construct expected value for different dst color format
     const dstBytesPerPixel = kTextureFormatInfo[dstColorFormat].bytesPerBlock;
     const format: RegularTextureFormat = formatForExpectedPixels(dstColorFormat);
-    const sourcePixels = t.getSourceCanvasGPUContent(
+    const sourcePixels = t.calculateSourceContentOnCPU(
       width,
       height,
       srcPremultiplied,
