@@ -28,7 +28,7 @@ function formatForExpectedPixels(format: RegularTextureFormat): RegularTextureFo
 }
 
 class F extends CopyToTextureUtils {
-  // TODO: Cache the generated canvas to avoid duplicated initialization.
+  // MAINTENANCE_TODO: Cache the generated canvas to avoid duplicated initialization.
   init2DCanvasContent({
     canvasType,
     width,
@@ -79,7 +79,7 @@ class F extends CopyToTextureUtils {
     return { canvas, canvasContext };
   }
 
-  // TODO: Cache the generated canvas to avoid duplicated initialization.
+  // MAINTENANCE_TODO: Cache the generated canvas to avoid duplicated initialization.
   initGLCanvasContent({
     canvasType,
     contextName,

@@ -307,7 +307,7 @@ struct VSOutputs {
   }
 
   // Generate TestData for the format with interesting test values.
-  // TODO cache the result on the fixture?
+  // MAINTENANCE_TODO cache the result on the fixture?
   // Note that the test data always starts with an interesting value, so that using the first
   // test value in a test is still meaningful.
   generateTestData(format: GPUVertexFormat): TestData {

@@ -9,7 +9,7 @@ import {
   UncanonicalizedDeviceDescriptor,
 } from '../../util/device_pool.js';
 
-// TODO: When DevicePool becomes able to provide multiple devices at once, use the usual one instead of a new one.
+// MAINTENANCE_TODO: When DevicePool becomes able to provide multiple devices at once, use the usual one instead of a new one.
 const mismatchedDevicePool = new DevicePool();
 
 /**
@@ -62,7 +62,7 @@ export class ValidationTest extends GPUTest {
     await super.finalize();
 
     if (this.mismatchedProvider) {
-      // TODO(kainino0x): Deduplicate this with code in GPUTest.finalize
+      // MAINTENANCE_TODO(kainino0x): Deduplicate this with code in GPUTest.finalize
       let threw: undefined | Error;
       {
         const provider = this.mismatchedProvider;
