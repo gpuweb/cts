@@ -5,7 +5,6 @@ TODO: consider whether external_texture and copyToTexture video tests should be 
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { attemptGarbageCollection } from '../../../common/util/collect_garbage.js';
 import { assert, memcpy } from '../../../common/util/util.js';
 import {
   RegularTextureFormat,
@@ -14,10 +13,7 @@ import {
 } from '../../capability_info.js';
 import { CopyToTextureUtils, isFp16Format } from '../../util/copy_to_texture.js';
 import { canvasTypes, allCanvasTypes, createCanvas } from '../../util/create_elements.js';
-import { DevicePool, DeviceProvider, TestOOMedShouldAttemptGC } from '../../util/device_pool.js';
 import { kTexelRepresentationInfo } from '../../util/texture/texel_data.js';
-
-const devicePool = new DevicePool();
 
 /**
  * If the destination format specifies a transfer function,
@@ -32,53 +28,6 @@ function formatForExpectedPixels(format: RegularTextureFormat): RegularTextureFo
 }
 
 class F extends CopyToTextureUtils {
-  private anotherProvider: DeviceProvider | undefined;
-  /** Must not be replaced once acquired. */
-  private anotherDevice: GPUDevice | undefined;
-
-  getAnotherDevice(): GPUDevice {
-    assert(this.anotherProvider !== undefined, 'No another provider available right now;');
-    if (!this.anotherDevice) {
-      this.anotherDevice = this.anotherProvider.acquire();
-    }
-    return this.anotherDevice;
-  }
-
-  protected async init(): Promise<void> {
-    await super.init();
-
-    // Create another device which is not the default one.
-    this.anotherProvider = await devicePool.reserve({
-      requiredFeatures: ['texture-compression-bc'],
-    });
-  }
-
-  protected async finalize(): Promise<void> {
-    await super.finalize();
-
-    if (this.anotherProvider) {
-      let threw: undefined | Error;
-      {
-        const provider = this.anotherProvider;
-        this.anotherProvider = undefined;
-        try {
-          await devicePool.release(provider);
-        } catch (ex) {
-          threw = ex;
-        }
-      }
-      // The GPUDevice and GPUQueue should now have no outstanding references.
-
-      if (threw) {
-        if (threw instanceof TestOOMedShouldAttemptGC) {
-          // Try to clean up, in case there are stray GPU resources in need of collection.
-          await attemptGarbageCollection();
-        }
-        throw threw;
-      }
-    }
-  }
-
   // TODO: Cache the generated canvas to avoid duplicated initialization.
   init2DCanvasContent({
     canvasType,
@@ -659,7 +608,7 @@ g.test('copy_contents_from_gpu_context_canvas')
       .combine('canvasType', allCanvasTypes)
       .combine('srcAndDstInSameGPUDevice', [true, false])
       .combine('dstColorFormat', kValidTextureFormatsForCopyE2T)
-      .combine('srcPremultiplied', [true, false])
+      .combine('srcPremultiplied', [true])
       .combine('dstPremultiplied', [true, false])
       .beginSubcases()
       .combine('width', [1, 2, 4, 15, 255, 256])
@@ -676,10 +625,13 @@ g.test('copy_contents_from_gpu_context_canvas')
       dstPremultiplied,
     } = t.params;
 
-    let device = t.device;
+    let device: GPUDevice;
 
     if (!srcAndDstInSameGPUDevice) {
-      device = t.getAnotherDevice();
+      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+      device = t.mismatchedDevice;
+    } else {
+      device = t.device;
     }
 
     // When dst texture format is rgb10a2unorm, the generated expected value of the result
