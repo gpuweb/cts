@@ -26,6 +26,11 @@ const kDefaultHeight = 32;
 const kDefaultDepth = 1;
 const kDefaultMipLevelCount = 6;
 
+/** Valid contextId for HTMLCanvasElement/OffscreenCanvas,
+ *  spec: https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-getcontext
+ */
+export const kValidContextId = ['2d', 'bitmaprenderer', 'webgl', 'webgl2', 'webgpu'];
+
 function computeMipMapSize(width, height, mipLevel) {
   return {
     mipWidth: Math.max(width >> mipLevel, 1),
@@ -116,9 +121,9 @@ function generateCopySizeForDstOOB({ mipLevel, dstOrigin }) {
 function canCopyFromContextType(contextName) {
   switch (contextName) {
     case '2d':
-    case 'experimental-webgl':
     case 'webgl':
     case 'webgl2':
+    case 'webgpu':
       return true;
     default:
       return false;
@@ -180,14 +185,7 @@ g.test('source_canvas,contexts')
   )
   .params(u =>
     u //
-      .combine('contextType', [
-        '2d',
-        'bitmaprenderer',
-        'experimental-webgl',
-        'webgpu',
-        'webgl',
-        'webgl2',
-      ])
+      .combine('contextType', kValidContextId)
       .beginSubcases()
       .combine('copySize', [
         { width: 0, height: 0, depthOrArrayLayers: 0 },
@@ -225,14 +223,14 @@ g.test('source_offscreenCanvas,contexts')
   Test OffscreenCanvas as source image with different contexts.
 
   Call OffscreenCanvas.getContext() with different context type.
-  Only '2d', 'webgl', 'webgl2' is valid context type.
+  Only '2d', 'webgl', 'webgl2', 'webgpu' is valid context type.
 
   Check whether 'OperationError' is generated when context type is invalid.
   `
   )
   .params(u =>
     u //
-      .combine('contextType', ['2d', 'bitmaprenderer', 'webgl', 'webgl2'])
+      .combine('contextType', kValidContextId)
       .beginSubcases()
       .combine('copySize', [
         { width: 0, height: 0, depthOrArrayLayers: 0 },
@@ -248,6 +246,8 @@ g.test('source_offscreenCanvas,contexts')
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
+    // Workaround the compile error that 'webgpu' is not a valid
+    // OffscreenRenderingContextId.
     const ctx = canvas.getContext(contextType);
     if (ctx === null) {
       t.skip('Failed to get context for canvas element');
