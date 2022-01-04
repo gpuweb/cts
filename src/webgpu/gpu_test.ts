@@ -161,7 +161,7 @@ export class GPUTest extends Fixture {
     }
 
     if (this.mismatchedProvider) {
-      // TODO(kainino0x): Deduplicate this with code in GPUTest.finalize
+      // MAINTENANCE_TODO(kainino0x): Deduplicate this with code in GPUTest.finalize
       let threw: undefined | Error;
       {
         const provider = this.mismatchedProvider;
