@@ -16,7 +16,7 @@ export function isFp16Format(format) {
 }
 
 export class CopyToTextureUtils extends GPUTest {
-  // TODO(crbug.com/dawn/868): Should be possible to consolidate this along with texture checking
+  // MAINTENANCE_TODO(crbug.com/dawn/868): Should be possible to consolidate this along with texture checking
   checkCopyExternalImageResult(
   src,
   expected,
@@ -52,7 +52,7 @@ export class CopyToTextureUtils extends GPUTest {
     });
   }
 
-  // TODO(crbug.com/dawn/868): Should be possible to consolidate this along with texture checking
+  // MAINTENANCE_TODO(crbug.com/dawn/868): Should be possible to consolidate this along with texture checking
   checkBufferWithRowPitch(
   actual,
   exp,

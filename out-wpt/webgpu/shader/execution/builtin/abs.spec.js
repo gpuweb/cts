@@ -152,6 +152,8 @@ abs(e: T ) -> T
 T is f32 or vecN<f32>
 Returns the absolute value of e (e.g. e with a positive sign bit).
 Component-wise when T is a vector. (GLSLstd450Fabs)
+
+TODO(sarahM0): Check if this is needed (or if it has to fail). If yes add other values. [1]
 `
   )
   .params(u =>
@@ -171,7 +173,7 @@ Component-wise when T is a vector. (GLSLstd450Fabs)
       { input: f32Bits(kBit.f32.positive.max), expected: f32Bits(kBit.f32.positive.max) },
 
       // Subnormal f32
-      // TODO(sarahM0): Check if this is needed (or if it has to fail). If yes add other values.
+      // [1] If needed add other values.
       {
         input: f32Bits(kBit.f32.subnormal.positive.max),
         expected: anyOf(f32Bits(kBit.f32.subnormal.positive.max), f32(0)),

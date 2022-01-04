@@ -444,7 +444,7 @@ function packScalarsToVector(parameterTypes, returnType, cases, vectorWidth) {
   };
 }
 
-// TODO(sarahM0): Perhaps instead of kBit and kValue tables we could have one table
+// MAINTENANCE_TODO(sarahM0): Perhaps instead of kBit and kValue tables we could have one table
 // where every value is a Scalar instead of either bits or value?
 // Then tests wouldn't need most of the Scalar.fromX calls,
 // and you would probably need fewer table entries in total

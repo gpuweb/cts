@@ -3,6 +3,8 @@
  **/ export const description = `copyTexturetoTexture operation tests
 
 TODO: remove fragment stage in InitializeDepthAspect() when browsers support null fragment stage.
+TODO: 1d/3d texture tests [1]
+TODO: 1d texture tests
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, memcpy } from '../../../../common/util/util.js';
@@ -31,7 +33,7 @@ class F extends GPUTest {
   }
 
   GetInitialDataPerMipLevel(textureSize, format, mipLevel) {
-    // TODO(jiawei.shao@intel.com): support 3D textures
+    // [1]: Does not presently support 1d/3d textures.
     const textureSizeAtLevel = physicalMipSize(textureSize, format, '2d', mipLevel);
     const bytesPerBlock = kTextureFormatInfo[format].bytesPerBlock;
     const blockWidthInTexel = kTextureFormatInfo[format].blockWidth;

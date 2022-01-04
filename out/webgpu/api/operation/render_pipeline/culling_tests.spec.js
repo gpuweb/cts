@@ -40,7 +40,14 @@ function faceColor(face, frontFace, cullMode) {
 export const g = makeTestGroup(GPUTest);
 
 g.test('culling').
-params((u) =>
+desc(
+`
+TODO: test triangle-strip as well [1]
+TODO: check the contents of the depth and stencil outputs [2]
+`).
+
+params(
+(u) =>
 u.
 combine('frontFace', ['ccw', 'cw']).
 combine('cullMode', ['none', 'front', 'back']).
@@ -49,11 +56,10 @@ combine('depthStencilFormat', [
 null,
 'depth24plus',
 'depth32float',
-'depth24plus-stencil8'])
+'depth24plus-stencil8']).
 
-// TODO: test triangle-strip as well
-.combine('primitiveTopology', ['triangle-list'])).
-
+combine('primitiveTopology', ['triangle-list']) // [1]
+).
 fn(t => {
   const size = 4;
   const format = 'rgba8unorm';
@@ -165,6 +171,6 @@ fn(t => {
   { x: size - 1, y: size - 1 },
   { exp: kCWTriangleBottomRightColor });
 
-  // TODO: check the contents of the depth and stencil outputs
+  // [2]: check the contents of the depth and stencil outputs
 });
 //# sourceMappingURL=culling_tests.spec.js.map

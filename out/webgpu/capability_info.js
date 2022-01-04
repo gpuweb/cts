@@ -1,7 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/ // TODO: The generated Typedoc for this file is hard to navigate because it's alphabetized.
-// Consider using namespaces or renames to fix this?
+**/ // MAINTENANCE_TODO: The generated Typedoc for this file is hard to navigate because it's
+// alphabetized. Consider using namespaces or renames to fix this?
 
 import { keysOf, makeTable, numericKeysOf } from '../common/util/data_tables.js';
 import { assertTypeTrue } from '../common/util/types.js';
@@ -121,7 +121,7 @@ const kUnsizedDepthStencilFormatInfo = makeTable(kTexFmtInfoHeader,
 [true, true, false,,, false, false, false,, undefined, 1, 1], {
   'depth24plus': [,,, true, false,,,, 'depth'],
   'depth24plus-stencil8': [,,, true, true,,,, 'depth'],
-  // These should really be sized formats; see below TODO about multi-aspect formats.
+  // MAINTENANCE_TODO: These should really be sized formats; see below MAINTENANCE_TODO about multi-aspect formats.
   'depth24unorm-stencil8': [,,, true, true,,,, 'depth',,,, 'depth24unorm-stencil8'],
   'depth32float-stencil8': [,,, true, true,,,, 'depth',,,, 'depth32float-stencil8'] });
 
@@ -194,7 +194,7 @@ const kASTCTextureFormatInfo = makeTable(kTexFmtInfoHeader,
 
 // Definitions for use locally. To access the table entries, use `kTextureFormatInfo`.
 
-// TODO: Consider generating the exports below programmatically by filtering the big list, instead
+// MAINTENANCE_TODO: Consider generating the exports below programmatically by filtering the big list, instead
 // of using these local constants? Requires some type magic though.
 const kCompressedTextureFormatInfo = { ...kBCTextureFormatInfo, ...kETC2TextureFormatInfo, ...kASTCTextureFormatInfo };
 const kColorTextureFormatInfo = { ...kRegularTextureFormatInfo, ...kCompressedTextureFormatInfo };
@@ -243,7 +243,7 @@ v => kColorTextureFormatInfo[v].renderable);
 
 /** Per-GPUTextureFormat info. */
 // Exists just for documentation. Otherwise could be inferred by `makeTable`.
-// TODO: Refactor this to separate per-aspect data for multi-aspect formats. In particular:
+// MAINTENANCE_TODO: Refactor this to separate per-aspect data for multi-aspect formats. In particular:
 // - bytesPerBlock only makes sense on a per-aspect basis. But this table can't express that.
 //   So we put depth24unorm-stencil8 and depth32float-stencil8 to be unsized formats for now.
 
@@ -806,8 +806,7 @@ export const kShaderStageCombinations = [0, 1, 2, 3, 4, 5, 6, 7];
 /**
                                                                    * List of all possible texture sampleCount values.
                                                                    *
-                                                                   * - TODO: Update with all possible sample counts when defined
-                                                                   * - TODO: Switch existing tests to use kTextureSampleCounts
+                                                                   * MAINTENANCE_TODO: Switch existing tests to use kTextureSampleCounts
                                                                    */
 export const kTextureSampleCounts = [1, 4];
 

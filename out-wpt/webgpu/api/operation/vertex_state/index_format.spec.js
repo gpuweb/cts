@@ -46,7 +46,7 @@ const { byteLength, bytesPerRow, rowsPerImage } = getTextureCopyLayout(kTextureF
 class IndexFormatTest extends GPUTest {
   MakeRenderPipeline(topology, stripIndexFormat) {
     const vertexModule = this.device.createShaderModule({
-      // TODO?: These positions will create triangles that cut right through pixel centers. If this
+      // NOTE: These positions will create triangles that cut right through pixel centers. If this
       // results in different rasterization results on different hardware, tweak to avoid this.
       code: `
         [[stage(vertex)]]

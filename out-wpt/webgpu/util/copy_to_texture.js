@@ -17,7 +17,7 @@ export function isFp16Format(format) {
 }
 
 export class CopyToTextureUtils extends GPUTest {
-  // TODO(crbug.com/dawn/868): Should be possible to consolidate this along with texture checking
+  // MAINTENANCE_TODO(crbug.com/dawn/868): Should be possible to consolidate this along with texture checking
   checkCopyExternalImageResult(src, expected, width, height, bytesPerPixel, isFp16) {
     const exp = new Uint8Array(expected.buffer, expected.byteOffset, expected.byteLength);
     const rowPitch = align(width * bytesPerPixel, kBytesPerRowAlignment);
@@ -47,7 +47,7 @@ export class CopyToTextureUtils extends GPUTest {
     });
   }
 
-  // TODO(crbug.com/dawn/868): Should be possible to consolidate this along with texture checking
+  // MAINTENANCE_TODO(crbug.com/dawn/868): Should be possible to consolidate this along with texture checking
   checkBufferWithRowPitch(actual, exp, width, height, rowPitch, bytesPerPixel, isFp16) {
     const bytesPerRow = width * bytesPerPixel;
     // When dst format is fp16 formats, the expectation and real result always has 1 bit difference in the ending

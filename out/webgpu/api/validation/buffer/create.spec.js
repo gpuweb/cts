@@ -35,7 +35,7 @@ u //
 .beginSubcases().
 combine('mappedAtCreation', [false, true]).
 combine('usage', [
-  // TODO
+  // Not implemented
 ])).
 
 unimplemented();

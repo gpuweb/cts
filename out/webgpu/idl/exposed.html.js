@@ -2,8 +2,6 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/ // WPT-specific test checking that WebGPU is available iff isSecureContext.
 import { assert } from '../../common/util/util.js';
-// TODO: Test all WebGPU interfaces.
-
 const items = [
 globalThis.navigator.gpu,
 globalThis.GPU,
@@ -16,8 +14,9 @@ globalThis.GPUCommandBuffer,
 globalThis.GPUComputePassEncoder,
 globalThis.GPURenderPipeline,
 globalThis.GPUDeviceLostInfo,
-globalThis.GPUValidationError];
-
+globalThis.GPUValidationError
+// Need to test the rest of the interfaces.
+];
 
 for (const item of items) {
   if (globalThis.isSecureContext) {

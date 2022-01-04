@@ -182,7 +182,8 @@ export class TestTree {
   }}
 
 
-// TODO: Consider having subqueriesToExpand actually impact the depth-order of params in the tree.
+// MAINTENANCE_TODO: Consider having subqueriesToExpand actually impact the depth-order of params
+// in the tree.
 export async function loadTreeForQuery(
 loader,
 queryToLoad,
@@ -275,8 +276,8 @@ subqueriesToExpand)
       isCollapsible);
 
 
-      // TODO: If tree generation gets too slow, avoid actually iterating the cases in a file
-      // if there's no need to (based on the subqueriesToExpand).
+      // MAINTENANCE_TODO: If tree generation gets too slow, avoid actually iterating the cases in a
+      // file if there's no need to (based on the subqueriesToExpand).
       for (const c of t.iterate()) {
         {
           const queryL3 = new TestQuerySingleCase(suite, entry.file, c.id.test, c.id.params);

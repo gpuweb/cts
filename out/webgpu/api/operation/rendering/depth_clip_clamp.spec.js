@@ -193,8 +193,8 @@ fn(async t => {
     primitive: { topology: 'point-list' },
     depthStencil: {
       format,
-      // TODO: This check is probably very susceptible to floating point error.
-      // Replace it with two checks (less + greater) with an epsilon applied in the check shader?
+      // NOTE: This check is probably very susceptible to floating point error. If it fails, maybe
+      // replace it with two checks (less + greater) with an epsilon applied in the check shader?
       depthCompare: 'not-equal', // Expect every depth value to be exactly equal.
       depthWriteEnabled: true // If the check failed, overwrite with the expected result.
     },

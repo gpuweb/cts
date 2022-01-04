@@ -252,6 +252,10 @@ g.test('sint_texel_data_in_shader')
   .fn(doTest);
 
 g.test('float_texel_data_in_shader')
+  .desc(
+    `
+TODO: Test NaN, Infinity, -Infinity [1]`
+  )
   .params(u =>
     u
       .combine('format', kEncodableTextureFormats)
@@ -268,7 +272,7 @@ g.test('float_texel_data_in_shader')
           // Test extrema
           makeParam(format, () => 0),
 
-          // TODO: Test NaN, Infinity, -Infinity
+          // [1]: Test NaN, Infinity, -Infinity
 
           // Test some values
           makeParam(format, () => 0.1199951171875),
@@ -288,6 +292,10 @@ g.test('float_texel_data_in_shader')
   .fn(doTest);
 
 g.test('ufloat_texel_data_in_shader')
+  .desc(
+    `
+TODO: Test NaN, Infinity [1]`
+  )
   .params(u =>
     u
       .combine('format', kEncodableTextureFormats)
@@ -304,7 +312,7 @@ g.test('ufloat_texel_data_in_shader')
           // Test extrema
           makeParam(format, () => 0),
 
-          // TODO: Test NaN, Infinity
+          // [2]: Test NaN, Infinity
 
           // Test some values
           makeParam(format, () => 0.119140625),

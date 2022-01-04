@@ -41,15 +41,25 @@ function faceColor(face, frontFace, cullMode) {
 export const g = makeTestGroup(GPUTest);
 
 g.test('culling')
-  .params(u =>
-    u
-      .combine('frontFace', ['ccw', 'cw'])
-      .combine('cullMode', ['none', 'front', 'back'])
-      .beginSubcases()
-      .combine('depthStencilFormat', [null, 'depth24plus', 'depth32float', 'depth24plus-stencil8'])
-
-      // TODO: test triangle-strip as well
-      .combine('primitiveTopology', ['triangle-list'])
+  .desc(
+    `
+TODO: test triangle-strip as well [1]
+TODO: check the contents of the depth and stencil outputs [2]
+`
+  )
+  .params(
+    u =>
+      u
+        .combine('frontFace', ['ccw', 'cw'])
+        .combine('cullMode', ['none', 'front', 'back'])
+        .beginSubcases()
+        .combine('depthStencilFormat', [
+          null,
+          'depth24plus',
+          'depth32float',
+          'depth24plus-stencil8',
+        ])
+        .combine('primitiveTopology', ['triangle-list']) // [1]
   )
   .fn(t => {
     const size = 4;
@@ -167,5 +177,5 @@ g.test('culling')
       { exp: kCWTriangleBottomRightColor }
     );
 
-    // TODO: check the contents of the depth and stencil outputs
+    // [2]: check the contents of the depth and stencil outputs
   });

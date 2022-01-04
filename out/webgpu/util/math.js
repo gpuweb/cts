@@ -13,7 +13,7 @@ import { f32, f32Bits } from './conversion.js';
 export const kMaxSafeMultipleOf8 = Number.MAX_SAFE_INTEGER - 7;
 
 /** Round `n` up to the next multiple of `alignment` (inclusive). */
-// TODO: Rename to `roundUp`
+// MAINTENANCE_TODO: Rename to `roundUp`
 export function align(n, alignment) {
   assert(Number.isInteger(n) && n >= 0, 'n must be a non-negative integer');
   assert(Number.isInteger(alignment) && alignment > 0, 'alignment must be a positive integer');

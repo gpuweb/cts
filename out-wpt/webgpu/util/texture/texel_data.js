@@ -287,7 +287,7 @@ function makeIntegerInfo(componentOrder, bitLength, opt) {
  * @param {number} bitLength - The number of bits in each component.
  */
 function makeFloatInfo(componentOrder, bitLength) {
-  // TODO: Use |bitLength| to round float values based on precision.
+  // MAINTENANCE_TODO: Use |bitLength| to round float values based on precision.
   const encode = applyEach(identity, componentOrder);
   const decode = applyEach(identity, componentOrder);
 

@@ -56,7 +56,6 @@ Params:
   )
   .fn(async t => {
     if (t.params.first_instance > 0 && t.params.indirect) {
-      // TODO: 'as' cast because types don't have this feature name yet
       await t.selectDeviceOrSkipTestCase('indirect-first-instance');
     }
 

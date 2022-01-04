@@ -36,7 +36,8 @@ import { kTexelRepresentationInfo } from './util/texture/texel_data.js';
 
 const devicePool = new DevicePool();
 
-// TODO: When DevicePool becomes able to provide multiple devices at once, use the usual one instead of a new one.
+// MAINTENANCE_TODO: When DevicePool becomes able to provide multiple devices at once, use the
+// usual one instead of a new one.
 const mismatchedDevicePool = new DevicePool();
 
 const kResourceStateValues = ['valid', 'invalid', 'destroyed'];
@@ -160,7 +161,7 @@ export class GPUTest extends Fixture {
     }
 
     if (this.mismatchedProvider) {
-      // TODO(kainino0x): Deduplicate this with code in GPUTest.finalize
+      // MAINTENANCE_TODO(kainino0x): Deduplicate this with code in GPUTest.finalize
       let threw;
       {
         const provider = this.mismatchedProvider;
@@ -531,7 +532,7 @@ export class GPUTest extends Fixture {
     this.expectGPUBufferValuesEqual(resultBuffer, new Uint32Array(expectedResults));
   }
 
-  // TODO: add an expectContents for textures, which logs data: uris on failure
+  // MAINTENANCE_TODO: add an expectContents for textures, which logs data: uris on failure
 
   /**
    * Expect a whole GPUTexture to have the single provided color.
@@ -617,8 +618,8 @@ export class GPUTest extends Fixture {
   /**
      * Expect a single pixel of a 2D texture to have a particular byte representation.
      *
-     * TODO: Add check for values of depth/stencil, probably through sampling of shader
-     * TODO: Can refactor this and expectSingleColor to use a similar base expect
+     * MAINENANCE_TODO: Add check for values of depth/stencil, probably through sampling of shader
+     * MAINENANCE_TODO: Can refactor this and expectSingleColor to use a similar base expect
      */
   expectSinglePixelIn2DTexture(
   src,
@@ -802,7 +803,7 @@ export class GPUTest extends Fixture {
   /**
      * Create a GPUBuffer with the specified contents and usage.
      *
-     * TODO: Several call sites would be simplified if this took ArrayBuffer as well.
+     * MAINTENANCE_TODO: Several call sites would be simplified if this took ArrayBuffer as well.
      */
   makeBufferWithContents(dataArray, usage) {
     return this.trackForCleanup(makeBufferWithContents(this.device, dataArray, usage));

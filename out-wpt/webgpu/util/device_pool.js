@@ -72,7 +72,7 @@ export class DevicePool {
         } else {
           this.nonDefaultHolders.deleteByDevice(holder.device);
         }
-        // TODO: device.destroy()
+        // MAINTENANCE_TODO: device.destroy()
       }
       throw ex;
     } finally {

@@ -17,6 +17,8 @@ desc(
 `
 atan:
 T is f32 or vecN<f32> atan(e: T ) -> T Returns the arc tangent of e. Component-wise when T is a vector. (GLSLstd450Atan)
+
+TODO(#792): Decide what the ground-truth is for these tests. [1]
 `).
 
 params((u) =>
@@ -25,7 +27,7 @@ combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async t => {
-  // TODO(https://github.com/gpuweb/cts/issues/792): Decide what the ground-truth is for these tests.
+  // [1]: Need to decide what the ground-truth is.
   const truthFunc = x => {
     return Math.atan(x);
   };
