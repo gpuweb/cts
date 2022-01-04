@@ -80,3 +80,14 @@ To make the review process smoother, once a reviewer has started looking at your
 - When you address a review comment, mark the thread as "Resolved".
 
 Pull requests will (usually) be landed with the "Squash and merge" option.
+
+### TODOs
+
+The word "TODO" refers to missing test coverage. It may only appear inside file/test descriptions
+and README files (enforced by linting).
+
+To use comments to refer to TODOs inside the description, use a backreference, e.g., in the
+description, `TODO: Also test the FROBNICATE usage flag [1]`, and somewhere in the code, `[1]:
+Need to add FROBNICATE to this list.`.
+
+Use `MAINTENANCE_TODO` for TODOs which don't impact test coverage.
