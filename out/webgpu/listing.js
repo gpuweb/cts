@@ -260,6 +260,14 @@ export const listing = [
     "file": [
       "api",
       "operation",
+      "pipeline",
+      "default_layout"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
       "queue",
       "writeBuffer"
     ]
@@ -271,6 +279,14 @@ export const listing = [
       "render_pass"
     ],
     "readme": "Render pass stuff other than commands (which are in command_buffer/)."
+  },
+  {
+    "file": [
+      "api",
+      "operation",
+      "render_pass",
+      "clear_value"
+    ]
   },
   {
     "file": [
@@ -404,6 +420,14 @@ export const listing = [
     "file": [
       "api",
       "operation",
+      "rendering",
+      "robust_access_index"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
       "resource_init",
       "buffer"
     ]
@@ -477,14 +501,6 @@ export const listing = [
       "api",
       "operation",
       "uncapturederror"
-    ]
-  },
-  {
-    "file": [
-      "api",
-      "operation",
-      "vertex_state",
-      "basic"
     ]
   },
   {
@@ -599,7 +615,7 @@ export const listing = [
       "capability_checks",
       "limits"
     ],
-    "readme": "Test everything that shouldn't be valid without a higher-than-specified limit.\n\n- x= that limit {default, max supported (if different), lower than default (TODO: if allowed)}\n\nOne file for each limit name.\n\nTODO: implement"
+    "readme": "Test everything that shouldn't be valid without a higher-than-specified limit.\n\n- x= that limit {default, max supported (if different), lower than default (TODO: if allowed)}\n\nOne file for each limit name.\n\nTODO: implement\nTODO: Also test that \"alignment\" limits require a power of 2."
   },
   {
     "file": [
@@ -1450,14 +1466,7 @@ export const listing = [
       "web_platform",
       "external_texture"
     ],
-    "readme": "Tests for external textures from video/canvas."
-  },
-  {
-    "file": [
-      "web_platform",
-      "external_texture",
-      "canvas"
-    ]
+    "readme": "Tests for external textures."
   },
   {
     "file": [

@@ -410,6 +410,14 @@ fn(async t => {
   t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
 });
 
+g.test('pipeline_output_targets,format_blendable').
+desc(`If blending is used, the target's format must be blendable (support "float" sample type).`).
+unimplemented();
+
+g.test('pipeline_output_targets,blend_min_max').
+desc(`If the blend operation is "min" or "max", srcFactor and dstFactor must be "one".`).
+unimplemented();
+
 g.test('pipeline_layout,device_mismatch').
 desc(
 'Tests createRenderPipeline(Async) cannot be called with a pipeline layout created from another device').

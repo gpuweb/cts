@@ -95,8 +95,15 @@
 <meta name=variant content='webgpu:api,operation,onSubmittedWorkDone:many,serial:*'>
 <meta name=variant content='webgpu:api,operation,onSubmittedWorkDone:many,parallel:*'>
 <meta name=variant content='webgpu:api,operation,onSubmittedWorkDone:many,parallel_order:*'>
+<meta name=variant content='webgpu:api,operation,pipeline,default_layout:getBindGroupLayout_js_object:*'>
+<meta name=variant content='webgpu:api,operation,pipeline,default_layout:incompatible_with_explicit:*'>
+<meta name=variant content='webgpu:api,operation,pipeline,default_layout:layout:*'>
 <meta name=variant content='webgpu:api,operation,queue,writeBuffer:array_types:*'>
 <meta name=variant content='webgpu:api,operation,queue,writeBuffer:multiple_writes_at_different_offsets_and_sizes:*'>
+<meta name=variant content='webgpu:api,operation,render_pass,clear_value:stored:*'>
+<meta name=variant content='webgpu:api,operation,render_pass,clear_value:loaded:*'>
+<meta name=variant content='webgpu:api,operation,render_pass,clear_value:srgb:*'>
+<meta name=variant content='webgpu:api,operation,render_pass,clear_value:layout:*'>
 <meta name=variant content='webgpu:api,operation,render_pass,resolve:render_pass_resolve:*'>
 <meta name=variant content='webgpu:api,operation,render_pass,storeOp:render_pass_store_op,color_attachment_with_depth_stencil_attachment:*'>
 <meta name=variant content='webgpu:api,operation,render_pass,storeOp:render_pass_store_op,color_attachment_only:*'>
@@ -257,6 +264,8 @@
 <meta name=variant content='webgpu:api,validation,createRenderPipeline:sample_count_must_be_valid:*'>
 <meta name=variant content='webgpu:api,validation,createRenderPipeline:pipeline_output_targets:*'>
 <meta name=variant content='webgpu:api,validation,createRenderPipeline:pipeline_output_targets,blend:*'>
+<meta name=variant content='webgpu:api,validation,createRenderPipeline:pipeline_output_targets,format_blendable:*'>
+<meta name=variant content='webgpu:api,validation,createRenderPipeline:pipeline_output_targets,blend_min_max:*'>
 <meta name=variant content='webgpu:api,validation,createRenderPipeline:pipeline_layout,device_mismatch:*'>
 <meta name=variant content='webgpu:api,validation,createRenderPipeline:shader_module,device_mismatch:*'>
 <meta name=variant content='webgpu:api,validation,createSampler:lodMinAndMaxClamp:*'>
