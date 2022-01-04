@@ -1,7 +1,5 @@
 export const description = `
-- Baseline tests checking vertex/instance IDs, with:
-    - No vertexState at all (i.e. no vertex buffers)
-    - One vertex buffer with no attributes
+TODO: Test that drawIndexedIndirect accesses the index buffer robustly.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';

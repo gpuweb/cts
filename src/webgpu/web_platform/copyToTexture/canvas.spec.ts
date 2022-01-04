@@ -2,6 +2,7 @@ export const description = `
 copyToTexture with HTMLCanvasElement and OffscreenCanvas sources.
 
 TODO: consider whether external_texture and copyToTexture video tests should be in the same file
+TODO: Add tests for flipY
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';

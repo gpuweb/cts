@@ -812,13 +812,8 @@ export const kTextureSampleCounts = [1, 4] as const;
 
 // Pipeline limits
 
-/**
- * Maximum number of color attachments to a render pass.
- *
- * - TODO: Update maximum color attachments when defined in the spec.
- */
-export const kMaxColorAttachments = 4;
-
+/** Maximum number of color attachments to a render pass, by spec. */
+export const kMaxColorAttachments = 8;
 /** `maxVertexBuffers` per GPURenderPipeline, by spec. */
 export const kMaxVertexBuffers = 8;
 /** `maxVertexAttributes` per GPURenderPipeline, by spec. */

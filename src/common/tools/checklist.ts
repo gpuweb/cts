@@ -39,10 +39,12 @@ async function loadQueryListFromTextFile(filename: string): Promise<QueriesBySui
 }
 
 function checkForOverlappingQueries(queries: TestQuery[]): void {
-  for (const q1 of queries) {
-    for (const q2 of queries) {
-      if (q1 !== q2 && compareQueries(q1, q2) !== Ordering.Unordered) {
-        throw new StacklessError(`The following checklist items overlap:\n    ${q1}\n    ${q2}`);
+  for (let i1 = 0; i1 < queries.length; ++i1) {
+    for (let i2 = i1 + 1; i2 < queries.length; ++i2) {
+      const q1 = queries[i1];
+      const q2 = queries[i2];
+      if (compareQueries(q1, q2) !== Ordering.Unordered) {
+        console.log(`    FYI, the following checklist items overlap:\n      ${q1}\n      ${q2}`);
       }
     }
   }
