@@ -29,6 +29,7 @@ import {
   kTextureFormats,
   kRenderableColorTextureFormats,
   kTextureFormatInfo,
+  kDepthStencilFormats,
 } from '../../capability_info.js';
 import { kTexelRepresentationInfo } from '../../util/texture/texel_data.js';
 
@@ -246,6 +247,56 @@ g.test('color_formats_must_be_renderable')
     const descriptor = t.getDescriptor({ targets: [{ format }] });
 
     t.doCreateRenderPipelineTest(isAsync, info.renderable && info.color, descriptor);
+  });
+
+g.test('formats_for_depth_stencil_state_must_be_depth_stencil_formats')
+  .params(u => u.combine('isAsync', [false, true]).combine('format', kTextureFormats))
+  .fn(async t => {
+    const { isAsync, format } = t.params;
+    const info = kTextureFormatInfo[format];
+    await t.selectDeviceOrSkipTestCase(info.feature);
+
+    const descriptor = t.getDescriptor({ depthStencil: { format } });
+
+    t.doCreateRenderPipelineTest(isAsync, info.depth || info.stencil, descriptor);
+  });
+
+g.test('format_aspect_requirement_for_depth_stencil_test')
+  .desc(
+    `Tests the format aspect requirement:
+  - Depth aspect must be contained in the format if depth test or depth write is enabled.
+  - Stencil aspect must be contained in the format if stencil test or stencil write is enabled.
+  `
+  )
+  .params(u => u.combine('isAsync', [false, true]).combine('format', kDepthStencilFormats))
+  .fn(async t => {
+    const { isAsync, format } = t.params;
+    const info = kTextureFormatInfo[format];
+    await t.selectDeviceOrSkipTestCase(info.feature);
+
+    // Depth test is enabled
+    const descriptorDepthTest = t.getDescriptor({
+      depthStencil: { format, depthCompare: 'less-equal' },
+    });
+    t.doCreateRenderPipelineTest(isAsync, info.depth, descriptorDepthTest);
+
+    // Depth write is enabled
+    const descriptorDepthWrite = t.getDescriptor({
+      depthStencil: { format, depthWriteEnabled: true },
+    });
+    t.doCreateRenderPipelineTest(isAsync, info.depth, descriptorDepthWrite);
+
+    // Stencil test is enabled
+    const descriptorStencilTest = t.getDescriptor({
+      depthStencil: { format, stencilFront: { compare: 'less-equal' } },
+    });
+    t.doCreateRenderPipelineTest(isAsync, info.stencil, descriptorStencilTest);
+
+    // Stencil write is enabled
+    const descriptorStencilWrite = t.getDescriptor({
+      depthStencil: { format, stencilBack: { failOp: 'replace' } },
+    });
+    t.doCreateRenderPipelineTest(isAsync, info.stencil, descriptorStencilWrite);
   });
 
 g.test('sample_count_must_be_valid')
