@@ -190,37 +190,25 @@ g.test('set_vertex_buffer_without_changing_buffer')
     `
   Test that setting vertex buffer states (offset, size) multiple times in different orders still
   keeps the correctness of each draw call.
+  - Tries several different sequences of setVertexBuffer+draw commands, each of which draws vertices
+    in all 4 output pixels, and check they were drawn correctly.
 `
   )
-  .params(u =>
-    u.combine('drawParams', [
-      [
-        // Change 'size' then 'offset' in setVertexBuffer()
-        { offset: 0, vertices: 1 },
-        { offset: 0, vertices: 2 },
-        { offset: 2, vertices: 2 },
-      ],
-      [
-        // Change 'offset' then 'size' in setVertexBuffer()
-        { offset: 0, vertices: 1 },
-        { offset: 1, vertices: 1 },
-        { offset: 1, vertices: 3 },
-      ],
-    ] as const)
-  )
   .fn(async t => {
-    const { drawParams } = t.params;
-
-    const kPositions = [-0.75, -0.25, 0.25, 0.75];
+    const kPositions = [-0.875, -0.625, -0.375, -0.125, 0.125, 0.375, 0.625, 0.875];
     const kColors = [
       new Uint8Array([255, 0, 0, 255]),
       new Uint8Array([0, 255, 0, 255]),
       new Uint8Array([0, 0, 255, 255]),
+      new Uint8Array([51, 0, 0, 255]),
+      new Uint8Array([0, 51, 0, 255]),
+      new Uint8Array([0, 0, 51, 255]),
       new Uint8Array([255, 0, 255, 255]),
+      new Uint8Array([255, 255, 0, 255]),
     ];
 
     // Initialize the vertex buffer with required vertex attributes (position: f32, color: f32x4)
-    const kVertexAttributesCount = 4;
+    const kVertexAttributesCount = 8;
     const vertexBuffer = t.device.createBuffer({
       usage: GPUBufferUsage.VERTEX,
       size: t.kVertexAttributeSize * kVertexAttributesCount,
@@ -258,15 +246,35 @@ g.test('set_vertex_buffer_without_changing_buffer')
     });
     renderPass.setPipeline(renderPipeline);
 
-    for (const drawParam of drawParams) {
-      renderPass.setVertexBuffer(
-        0,
-        vertexBuffer,
-        drawParam.offset * t.kVertexAttributeSize,
-        drawParam.vertices * t.kVertexAttributeSize
-      );
-      renderPass.draw(drawParam.vertices);
-    }
+    // Change 'size' in setVertexBuffer()
+    renderPass.setVertexBuffer(0, vertexBuffer, 0, t.kVertexAttributeSize);
+    renderPass.setVertexBuffer(0, vertexBuffer, 0, t.kVertexAttributeSize * 2);
+    renderPass.draw(2);
+
+    // Change 'offset' in setVertexBuffer()
+    renderPass.setVertexBuffer(
+      0,
+      vertexBuffer,
+      t.kVertexAttributeSize * 2,
+      t.kVertexAttributeSize * 2
+    );
+    renderPass.draw(2);
+
+    // Change 'size' again in setVertexBuffer()
+    renderPass.setVertexBuffer(
+      0,
+      vertexBuffer,
+      t.kVertexAttributeSize * 4,
+      t.kVertexAttributeSize * 2
+    );
+    renderPass.setVertexBuffer(
+      0,
+      vertexBuffer,
+      t.kVertexAttributeSize * 4,
+      t.kVertexAttributeSize * 4
+    );
+    renderPass.draw(4);
+
     renderPass.endPass();
     t.queue.submit([encoder.finish()]);
 
