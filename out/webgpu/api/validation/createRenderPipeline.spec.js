@@ -170,6 +170,7 @@ class F extends ValidationTest {
 export const g = makeTestGroup(F);
 
 g.test('basic_use_of_createRenderPipeline').
+desc(`TODO: review and add description; shorten name`).
 params(u => u.combine('isAsync', [false, true])).
 fn(async t => {
   const { isAsync } = t.params;
@@ -181,7 +182,9 @@ fn(async t => {
 g.test('create_vertex_only_pipeline_with_without_depth_stencil_state').
 desc(
 `Test creating vertex-only render pipeline. A vertex-only render pipeline have no fragment
-state (and thus have no color state), and can be create with or without depth stencil state.`).
+state (and thus have no color state), and can be create with or without depth stencil state.
+
+TODO: review and shorten name`).
 
 params((u) =>
 u.
@@ -217,6 +220,7 @@ fn(async t => {
 });
 
 g.test('at_least_one_color_state_is_required_for_complete_pipeline').
+desc(`TODO: review and add description; shorten name`).
 params(u => u.combine('isAsync', [false, true])).
 fn(async t => {
   const { isAsync } = t.params;
@@ -237,6 +241,7 @@ fn(async t => {
 });
 
 g.test('color_formats_must_be_renderable').
+desc(`TODO: review and add description; shorten name`).
 params(u => u.combine('isAsync', [false, true]).combine('format', kTextureFormats)).
 fn(async t => {
   const { isAsync, format } = t.params;
@@ -249,6 +254,7 @@ fn(async t => {
 });
 
 g.test('sample_count_must_be_valid').
+desc(`TODO: review and add description; shorten name`).
 params((u) =>
 u.combine('isAsync', [false, true]).combineWithParams([
 { sampleCount: 0, _success: false },
@@ -274,7 +280,8 @@ desc(
   - The scalar type (f32, i32, or u32) must match the sample type of the format.
   - The componentCount of the fragment output (e.g. f32, vec2, vec3, vec4) must not have fewer
     channels than that of the color attachment texture formats. Extra components are allowed and are discarded.
-  `).
+
+TODO: review`).
 
 params((u) =>
 u.

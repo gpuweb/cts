@@ -5,13 +5,6 @@ Tests for the general aspects of draw/drawIndexed/drawIndirect/drawIndexedIndire
 
 Primitive topology tested in api/operation/render_pipeline/primitive_topology.spec.ts.
 Index format tested in api/operation/command_buffer/render/state_tracking.spec.ts.
-
-* arguments - Test that draw arguments are passed correctly.
-
-TODO:
-* default_arguments - Test defaults to draw / drawIndexed.
-  - arg= {instance_count, first, first_instance, base_vertex}
-  - mode= {draw, drawIndexed}
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
@@ -332,6 +325,15 @@ struct Output {
       }
     }
   });
+
+g.test('default_arguments')
+  .desc(
+    `TODO: Test defaults to draw / drawIndexed. Maybe merge with the 'arguments' test.
+- arg= {instance_count, first, first_instance, base_vertex}
+- mode= {draw, drawIndexed}
+  `
+  )
+  .unimplemented();
 
 g.test('vertex_attributes,basic')
   .desc(

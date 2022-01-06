@@ -48,6 +48,8 @@
 <meta name=variant content='webgpu:api,operation,buffers,map_oom:mapAsync:*'>
 <meta name=variant content='webgpu:api,operation,buffers,map_oom:mappedAtCreation,full_getMappedRange:*'>
 <meta name=variant content='webgpu:api,operation,buffers,map_oom:mappedAtCreation,smaller_getMappedRange:*'>
+<meta name=variant content='webgpu:api,operation,buffers,threading:serialize:*'>
+<meta name=variant content='webgpu:api,operation,buffers,threading:destroyed:*'>
 <meta name=variant content='webgpu:api,operation,command_buffer,basic:empty:*'>
 <meta name=variant content='webgpu:api,operation,command_buffer,basic:b2t2b:*'>
 <meta name=variant content='webgpu:api,operation,command_buffer,basic:b2t2t2b:*'>
@@ -82,6 +84,7 @@
 <meta name=variant content='webgpu:api,operation,device,lost:not_lost_on_gc:*'>
 <meta name=variant content='webgpu:api,operation,device,lost:lost_on_destroy:*'>
 <meta name=variant content='webgpu:api,operation,device,lost:same_object:*'>
+<meta name=variant content='webgpu:api,operation,labels:object_has_descriptor_label:*'>
 <meta name=variant content='webgpu:api,operation,memory_sync,buffer,ww:same_cmdbuf:*'>
 <meta name=variant content='webgpu:api,operation,memory_sync,buffer,ww:separate_cmdbufs:*'>
 <meta name=variant content='webgpu:api,operation,memory_sync,buffer,ww:separate_submits:*'>
@@ -132,6 +135,7 @@
 <meta name=variant content='webgpu:api,operation,rendering,depth_clip_clamp:depth_clamp_and_clip:*'>
 <meta name=variant content='webgpu:api,operation,rendering,depth_clip_clamp:depth_test_input_clamped:*'>
 <meta name=variant content='webgpu:api,operation,rendering,draw:arguments:*'>
+<meta name=variant content='webgpu:api,operation,rendering,draw:default_arguments:*'>
 <meta name=variant content='webgpu:api,operation,rendering,draw:vertex_attributes,basic:*'>
 <meta name=variant content='webgpu:api,operation,rendering,draw:vertex_attributes,formats:*'>
 <meta name=variant content='webgpu:api,operation,rendering,draw:largeish_buffer:*'>
@@ -226,6 +230,7 @@
 <meta name=variant content='webgpu:api,validation,buffer,mapping:unmap,state,mappingPending:*'>
 <meta name=variant content='webgpu:api,validation,buffer,mapping:gc_behavior,mappedAtCreation:*'>
 <meta name=variant content='webgpu:api,validation,buffer,mapping:gc_behavior,mapAsync:*'>
+<meta name=variant content='webgpu:api,validation,capability_checks,features,depth_clip_control:createRenderPipeline:*'>
 <meta name=variant content='webgpu:api,validation,capability_checks,features,query_types:createQuerySet:*'>
 <meta name=variant content='webgpu:api,validation,capability_checks,features,texture_formats:texture_descriptor:*'>
 <meta name=variant content='webgpu:api,validation,capability_checks,features,texture_formats:depth_stencil_state:*'>

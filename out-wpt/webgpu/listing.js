@@ -587,7 +587,7 @@ export const listing = [
       "validation",
       "capability_checks",
       "features",
-      "depth_clamping"
+      "depth_clip_control"
     ]
   },
   {
