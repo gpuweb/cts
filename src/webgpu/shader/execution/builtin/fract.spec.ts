@@ -6,7 +6,7 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { f32, f32Bits, TypeF32 } from '../../../util/conversion.js';
 
-import { anyOf, Config, correctlyRoundedThreshold, kBit, kValue, run } from './builtin.js';
+import { Config, correctlyRoundedThreshold, kBit, run } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -21,8 +21,8 @@ T is f32 or vecN<f32> fract(e: T ) -> T Returns the fractional bits of e (e.g. e
   )
   .params(u =>
     u
-     .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
-     .combine('vectorize', [undefined, 2, 3, 4] as const)
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
     const cfg: Config = t.params;
