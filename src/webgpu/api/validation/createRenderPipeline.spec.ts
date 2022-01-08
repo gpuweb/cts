@@ -316,7 +316,7 @@ g.test('depth_stencil_state,stencil_aspect,stencil_test')
     u
       .combine('isAsync', [false, true])
       .combine('format', kDepthStencilFormats)
-      .combine('face', ['front', 'back'])
+      .combine('face', ['front', 'back'] as const)
       .combine('compare', [undefined, ...kCompareFunctions])
   )
   .fn(async t => {
@@ -350,7 +350,7 @@ g.test('depth_stencil_state,stencil_aspect,stencil_write')
         'backFailOp',
         'backDepthFailOp',
         'backPassOp',
-      ])
+      ] as const)
       .combine('op', [undefined, ...kStencilOperations])
   )
   .fn(async t => {
@@ -358,33 +358,30 @@ g.test('depth_stencil_state,stencil_aspect,stencil_write')
     const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
-    let descriptor: GPURenderPipelineDescriptor;
+    let depthStencil: GPUDepthStencilState;
     switch (faceAndOpType) {
       case 'frontFailOp':
-        descriptor = t.getDescriptor({ depthStencil: { format, stencilFront: { failOp: op } } });
+        depthStencil = { format, stencilFront: { failOp: op } };
         break;
       case 'frontDepthFailOp':
-        descriptor = t.getDescriptor({
-          depthStencil: { format, stencilFront: { depthFailOp: op } },
-        });
+        depthStencil = { format, stencilFront: { depthFailOp: op } };
         break;
       case 'frontPassOp':
-        descriptor = t.getDescriptor({ depthStencil: { format, stencilFront: { passOp: op } } });
+        depthStencil = { format, stencilFront: { passOp: op } };
         break;
       case 'backFailOp':
-        descriptor = t.getDescriptor({ depthStencil: { format, stencilBack: { failOp: op } } });
+        depthStencil = { format, stencilBack: { failOp: op } };
         break;
       case 'backDepthFailOp':
-        descriptor = t.getDescriptor({
-          depthStencil: { format, stencilBack: { depthFailOp: op } },
-        });
+        depthStencil = { format, stencilBack: { depthFailOp: op } };
         break;
       case 'backPassOp':
-        descriptor = t.getDescriptor({ depthStencil: { format, stencilBack: { passOp: op } } });
+        depthStencil = { format, stencilBack: { passOp: op } };
         break;
       default:
         unreachable();
     }
+    const descriptor = t.getDescriptor({ depthStencil });
 
     const stencilWriteEnabled = op !== undefined && op !== 'keep';
     t.doCreateRenderPipelineTest(isAsync, !stencilWriteEnabled || info.stencil, descriptor);
