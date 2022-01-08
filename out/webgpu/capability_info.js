@@ -324,6 +324,38 @@ export const kTextureAspectInfo =
 /** List of all GPUTextureAspect values. */
 export const kTextureAspects = keysOf(kTextureAspectInfo);
 
+/** Per-GPUCompareFunction info. */
+export const kCompareFunctionInfo =
+
+{
+  'never': {},
+  'less': {},
+  'equal': {},
+  'less-equal': {},
+  'greater': {},
+  'not-equal': {},
+  'greater-equal': {},
+  'always': {} };
+
+/** List of all GPUCompareFunction values. */
+export const kCompareFunctions = keysOf(kCompareFunctionInfo);
+
+/** Per-GPUStencilOperation info. */
+export const kStencilOperationInfo =
+
+{
+  'keep': {},
+  'zero': {},
+  'replace': {},
+  'invert': {},
+  'increment-clamp': {},
+  'decrement-clamp': {},
+  'increment-wrap': {},
+  'decrement-wrap': {} };
+
+/** List of all GPUStencilOperation values. */
+export const kStencilOperations = keysOf(kStencilOperationInfo);
+
 const kDepthStencilFormatCapabilityInBufferTextureCopy = {
   // kUnsizedDepthStencilFormats
   depth24plus: {
