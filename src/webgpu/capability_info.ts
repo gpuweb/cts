@@ -382,8 +382,8 @@ const kDepthStencilFormatCapabilityInBufferTextureCopy = {
   },
   'depth24unorm-stencil8': {
     CopyB2T: ['stencil-only'],
-    CopyT2B: ['depth-only', 'stencil-only'],
-    texelAspectSize: { 'depth-only': 4, 'stencil-only': 1 },
+    CopyT2B: ['stencil-only'],
+    texelAspectSize: { 'depth-only': -1, 'stencil-only': 1 },
   },
   'depth32float-stencil8': {
     CopyB2T: ['stencil-only'],
