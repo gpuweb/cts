@@ -2,8 +2,6 @@
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ export const description = `
 Tests using a destroyed query set on a queue.
-
-TODO: Test with pipeline statistics queries on {compute, render} as well.
 `;
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { ValidationTest } from '../../validation_test.js';

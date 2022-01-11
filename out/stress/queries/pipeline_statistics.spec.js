@@ -2,6 +2,8 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/export const description = `
 Stress tests for pipeline statistics queries.
+
+TODO: pipeline statistics queries are removed from core; consider moving tests to another suite.
 `;import { makeTestGroup } from '../../common/framework/test_group.js';
 import { GPUTest } from '../../webgpu/gpu_test.js';
 

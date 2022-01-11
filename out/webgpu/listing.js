@@ -146,7 +146,7 @@ export const listing = [
       "command_buffer",
       "queries"
     ],
-    "readme": "TODO: test the behavior of creating/using/resolving queries.\n- occlusion\n- pipeline statistics\n- timestamp\n- nested (e.g. timestamp or PS query inside occlusion query), if any such cases are valid. Try\n  writing to the same query set (at same or different indices), if valid. Check results make sense.\n- start a query (all types) with no draw calls"
+    "readme": "TODO: test the behavior of creating/using/resolving queries.\n- occlusion\n- pipeline statistics\n  TODO: pipeline statistics queries are removed from core; consider moving tests to another suite.\n- timestamp\n- nested (e.g. timestamp or PS query inside occlusion query), if any such cases are valid. Try\n  writing to the same query set (at same or different indices), if valid. Check results make sense.\n- start a query (all types) with no draw calls"
   },
   {
     "file": [
@@ -494,7 +494,7 @@ export const listing = [
       "operation",
       "threading"
     ],
-    "readme": "Tests for behavior with multiple threads (main thread + workers).\n\nTODO: plan and implement\n- Try postMessage'ing an object of every type (to same or different thread)\n    - {main -> main, main -> worker, worker -> main, worker1 -> worker1, worker1 -> worker2}\n    - through {global postMessage, MessageChannel}\n    - {in, not in} transferrable object list, when valid\n- Short tight loop doing many of an action from two threads at the same time\n    - e.g. {create {buffer, texture, shader, pipeline}}"
+    "readme": "Tests for behavior with multiple threads (main thread + workers).\n\nTODO: plan and implement\n- 'postMessage'\n  Try postMessage'ing an object of every type (to same or different thread)\n    - {main -> main, main -> worker, worker -> main, worker1 -> worker1, worker1 -> worker2}\n    - through {global postMessage, MessageChannel}\n    - {in, not in} transferrable object list, when valid\n- 'concurrency'\n  Short tight loop doing many of an action from two threads at the same time\n    - e.g. {create {buffer, texture, shader, pipeline}}"
   },
   {
     "file": [

@@ -3,7 +3,6 @@
  **/ export const description = `
 copyToTexture with HTMLCanvasElement and OffscreenCanvas sources.
 
-TODO: consider whether external_texture and copyToTexture video tests should be in the same file
 TODO: Add tests for flipY
 `;
 import { makeTestGroup } from '../../../common/framework/test_group.js';
@@ -510,7 +509,7 @@ g.test('copy_contents_from_gpu_context_canvas')
   Use writeTexture to copy pixels to back buffer. The results are:
   red rect for top-left, green rect for top-right, blue rect for bottom-left
   and white for bottom-right.
-  
+
   And do premultiply alpha in advance if the webgpu context is created
   with compositingAlphaMode="premultiplied".
 
