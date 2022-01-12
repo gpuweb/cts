@@ -6,7 +6,7 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { f32, f32Bits, TypeF32 } from '../../../util/conversion.js';
 
-import { Config, correctlyRoundedThreshold, kBit, run } from './builtin.js';
+import { anyOf, Config, correctlyRoundedThreshold, kBit, run } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -49,15 +49,17 @@ T is f32 or vecN<f32> fract(e: T ) -> T Returns the fractional bits of e (e.g. e
       // Min and Max f32
       { input: f32Bits(kBit.f32.positive.min), expected: f32Bits(kBit.f32.positive.min) },
       { input: f32Bits(kBit.f32.positive.max), expected: f32(0) },
-      { input: f32Bits(kBit.f32.negative.max), expected: f32Bits(0x3f7fffff) },
+      { input: f32Bits(kBit.f32.negative.max), expected: anyOf(f32Bits(0x3f7fffff), f32(1)) },
       { input: f32Bits(kBit.f32.negative.min), expected: f32(0) },
 
       // Subnormal f32
       // prettier-ignore
-      { input: f32Bits(kBit.f32.subnormal.positive.max), expected: f32Bits(kBit.f32.subnormal.positive.max) },
+      { input: f32Bits(kBit.f32.subnormal.positive.max), expected: anyOf(f32(0), f32Bits(kBit.f32.subnormal.positive.max)) },
       // prettier-ignore
-      { input: f32Bits(kBit.f32.subnormal.positive.min), expected: f32Bits(kBit.f32.subnormal.positive.min) },
-      { input: f32Bits(kBit.f32.subnormal.negative.max), expected: f32Bits(0x3f7fffff) },
-      { input: f32Bits(kBit.f32.subnormal.negative.min), expected: f32Bits(0x3f7fffff) },
+      { input: f32Bits(kBit.f32.subnormal.positive.min), expected: anyOf(f32(0), f32Bits(kBit.f32.subnormal.positive.min)) },
+      // prettier-ignore
+      { input: f32Bits(kBit.f32.subnormal.negative.max), expected: anyOf(f32(0), f32Bits(0x3f7fffff), f32(1)) },
+      // prettier-ignore
+      { input: f32Bits(kBit.f32.subnormal.negative.min), expected: anyOf(f32(0), f32Bits(0x3f7fffff), f32(1)) },
     ]);
   });
