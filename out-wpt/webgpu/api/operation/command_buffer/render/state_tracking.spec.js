@@ -7,8 +7,6 @@ Equivalent tests for setBindGroup and setPipeline are in programmable/state_trac
 Equivalent tests for viewport/scissor/blend/reference are in render/dynamic_state.spec.ts
 
 TODO: plan and implement
-- try changing the pipeline {before,after} the vertex/index buffers.
-  (In D3D12, the vertex buffer stride is part of SetVertexBuffer instead of the pipeline.)
 - Test that drawing after having set vertex buffer slots not used by the pipeline.
 - Test that setting / not setting the index buffer does not impact a non-indexed draw.
 `;
@@ -16,7 +14,7 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 
 class VertexAndIndexStateTrackingTest extends GPUTest {
-  GetRenderPipelineForTest() {
+  GetRenderPipelineForTest(arrayStride) {
     return this.device.createRenderPipeline({
       vertex: {
         module: this.device.createShaderModule({
@@ -42,7 +40,7 @@ class VertexAndIndexStateTrackingTest extends GPUTest {
         entryPoint: 'main',
         buffers: [
           {
-            arrayStride: this.kVertexAttributeSize,
+            arrayStride,
             attributes: [
               {
                 format: 'float32',
@@ -140,7 +138,7 @@ g.test('set_index_buffer_without_changing_buffer')
 
     vertexBuffer.unmap();
 
-    const renderPipeline = t.GetRenderPipelineForTest();
+    const renderPipeline = t.GetRenderPipelineForTest(t.kVertexAttributeSize);
 
     const outputTexture = t.device.createTexture({
       format: 'rgba8unorm',
@@ -236,7 +234,7 @@ g.test('set_vertex_buffer_without_changing_buffer')
 
     vertexBuffer.unmap();
 
-    const renderPipeline = t.GetRenderPipelineForTest();
+    const renderPipeline = t.GetRenderPipelineForTest(t.kVertexAttributeSize);
 
     const outputTexture = t.device.createTexture({
       format: 'rgba8unorm',
@@ -298,6 +296,94 @@ g.test('set_vertex_buffer_without_changing_buffer')
         'rgba8unorm',
         { x: i, y: 0 },
         { exp: kColors[i] }
+      );
+    }
+  });
+
+g.test('change_pipeline_before_and_after_vertex_buffer')
+  .desc(
+    `
+  Test that changing the pipeline {before,after} the vertex buffers still keeps the correctness of
+  each draw call (In D3D12, the vertex buffer stride is part of SetVertexBuffer instead of the
+  pipeline.)
+`
+  )
+  .fn(async t => {
+    const kPositions = [-0.8, -0.4, 0.0, 0.4, 0.8, 0.9];
+    const kColors = [
+      new Uint8Array([255, 0, 0, 255]),
+      new Uint8Array([255, 255, 255, 255]),
+      new Uint8Array([0, 255, 0, 255]),
+      new Uint8Array([0, 0, 255, 255]),
+      new Uint8Array([255, 0, 255, 255]),
+      new Uint8Array([0, 255, 255, 255]),
+    ];
+
+    // Initialize the vertex buffer with required vertex attributes (position: f32, color: f32x4)
+    const vertexBuffer = t.device.createBuffer({
+      usage: GPUBufferUsage.VERTEX,
+      size: t.kVertexAttributeSize * kPositions.length,
+      mappedAtCreation: true,
+    });
+
+    t.trackForCleanup(vertexBuffer);
+    // Note that kPositions[1], kColors[1], kPositions[5] and kColors[5] are not used.
+    const vertexAttributes = vertexBuffer.getMappedRange();
+    for (let i = 0; i < kPositions.length; ++i) {
+      const baseOffset = t.kVertexAttributeSize * i;
+      const vertexPosition = new Float32Array(vertexAttributes, baseOffset, 1);
+      vertexPosition[0] = kPositions[i];
+      const vertexColor = new Uint8Array(vertexAttributes, baseOffset + 4, 4);
+      vertexColor.set(kColors[i]);
+    }
+    vertexBuffer.unmap();
+
+    // Create two render pipelines with different vertex attribute strides
+    const renderPipeline1 = t.GetRenderPipelineForTest(t.kVertexAttributeSize);
+    const renderPipeline2 = t.GetRenderPipelineForTest(t.kVertexAttributeSize * 2);
+
+    const kPointsCount = kPositions.length - 1;
+    const outputTexture = t.device.createTexture({
+      format: 'rgba8unorm',
+      size: [kPointsCount, 1, 1],
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    const renderPass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: outputTexture.createView(),
+          loadValue: [0, 0, 0, 1],
+          storeOp: 'store',
+        },
+      ],
+    });
+
+    // Update render pipeline before setVertexBuffer. The applied vertex attribute stride should be
+    // 2 * kVertexAttributeSize.
+    renderPass.setPipeline(renderPipeline1);
+    renderPass.setPipeline(renderPipeline2);
+    renderPass.setVertexBuffer(0, vertexBuffer);
+    renderPass.draw(2);
+
+    // Update render pipeline after setVertexBuffer. The applied vertex attribute stride should be
+    // kVertexAttributeSize.
+    renderPass.setVertexBuffer(0, vertexBuffer, 3 * t.kVertexAttributeSize);
+    renderPass.setPipeline(renderPipeline1);
+    renderPass.draw(2);
+
+    renderPass.endPass();
+
+    t.queue.submit([encoder.finish()]);
+
+    for (let i = 0; i < kPointsCount; ++i) {
+      const expectedColor = i === 1 ? new Uint8Array([0, 0, 0, 255]) : kColors[i];
+      t.expectSinglePixelIn2DTexture(
+        outputTexture,
+        'rgba8unorm',
+        { x: i, y: 0 },
+        { exp: expectedColor }
       );
     }
   });
