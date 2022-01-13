@@ -11,10 +11,19 @@ import { reifyExtent3D } from '../../util/unions.js';
 export function maxMipLevelCount({ size, dimension = '2d' }) {
   const sizeDict = reifyExtent3D(size);
 
-  let maxMippedDimension = sizeDict.width;
-  if (dimension !== '1d') maxMippedDimension = Math.max(maxMippedDimension, sizeDict.height);
-  if (dimension === '3d')
-    maxMippedDimension = Math.max(maxMippedDimension, sizeDict.depthOrArrayLayers);
+  let maxMippedDimension = 0;
+  switch (dimension) {
+    case '1d':
+      maxMippedDimension = 1; // No mipmaps allowed.
+      break;
+    case '2d':
+      maxMippedDimension = Math.max(sizeDict.width, sizeDict.height);
+      break;
+    case '3d':
+      maxMippedDimension = Math.max(sizeDict.width, sizeDict.height, sizeDict.depthOrArrayLayers);
+      break;
+  }
+
   return Math.floor(Math.log2(maxMippedDimension)) + 1;
 }
 
