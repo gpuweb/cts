@@ -60,10 +60,17 @@ export class DevicePool {
       // (Hopefully if the device was lost, it has been reported by the time endErrorScopes()
       // has finished (or timed out). If not, it could cause a finite number of extra test
       // failures following this one (but should recover eventually).)
-      const lostReason = holder.lostReason;
-      if (lostReason !== undefined) {
-        // Fail the current test.
-        unreachable(`Device was lost: ${lostReason}`);
+      const lost = holder.lost;
+      if (lost !== undefined) {
+        if (lost.reason !== 'destroyed') {
+          // Fail the current test.
+          unreachable(`Device was unexpectedly lost: ${lost.message}`);
+        }
+        if (holder === this.defaultHolder) {
+          this.defaultHolder = 'uninitialized';
+        } else {
+          this.nonDefaultHolders.deleteByDevice(holder.device);
+        }
       }
     } catch (ex) {
       // Any error that isn't explicitly TestFailedButDeviceReusable forces a new device to be
@@ -243,10 +250,11 @@ type DeviceHolderState = 'free' | 'reserved' | 'acquired';
 class DeviceHolder implements DeviceProvider {
   readonly device: GPUDevice;
   state: DeviceHolderState = 'free';
-  lostReason?: string; // initially undefined; becomes set when the device is lost
+  // initially undefined; becomes set when the device is lost
+  lost?: GPUDeviceLostInfo;
 
   // Gets a device and creates a DeviceHolder.
-  // If the device is lost, DeviceHolder.lostReason gets set.
+  // If the device is lost, DeviceHolder.lost gets set.
   static async create(descriptor: CanonicalDeviceDescriptor | undefined): Promise<DeviceHolder> {
     const gpu = getGPU();
     const adapter = await gpu.requestAdapter();
@@ -263,7 +271,7 @@ class DeviceHolder implements DeviceProvider {
   private constructor(device: GPUDevice) {
     this.device = device;
     this.device.lost.then(ev => {
-      this.lostReason = ev.message;
+      this.lost = ev;
     });
   }
 
@@ -306,7 +314,7 @@ class DeviceHolder implements DeviceProvider {
       gpuOutOfMemoryError = await this.device.popErrorScope();
     } catch (ex) {
       assert(
-        this.lostReason !== undefined,
+        this.lost !== undefined,
         'popErrorScope failed; should only happen if device has been lost'
       );
       throw ex;
