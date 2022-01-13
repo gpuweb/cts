@@ -163,17 +163,32 @@ export function nextAfter(val: number, dir: boolean = true, flush: boolean): Sca
  * Otherwise |test_value| needs to be either the closest expressible number
  * greater or less than |target|.
  *
- * Internally tests with both subnormals being flushed to 0 and not being
- * flushed.
+ * By default internally tests with both subnormals being flushed to 0 and not
+ * being flushed, but |accept_to_zero| and |accept_no_flush| can be used to
+ * control that behaviour. At least one accept flag must be true.
  */
-export function correctlyRounded(test_value: Scalar, target: number): boolean {
-  return (
-    correctlyRoundedImpl(test_value, target, true) ||
-    correctlyRoundedImpl(test_value, target, false)
+export function correctlyRounded(
+  test_value: Scalar,
+  target: number,
+  accept_to_zero: boolean = true,
+  accept_no_flush: boolean = true
+): boolean {
+  assert(
+    accept_to_zero || accept_no_flush,
+    `At least one of |accept_to_zero| & |accept_no_flush| must be true`
   );
+
+  let result: boolean = false;
+  if (accept_to_zero) {
+    result = result || correctlyRoundedImpl(test_value, target, true);
+  }
+  if (accept_no_flush) {
+    result = result || correctlyRoundedImpl(test_value, target, false);
+  }
+  return result;
 }
 
-function correctlyRoundedImpl(test_value: Scalar, target: number, flush: boolean = true): boolean {
+function correctlyRoundedImpl(test_value: Scalar, target: number, flush: boolean): boolean {
   assert(test_value.type.kind === 'f32', `${test_value} is expected to be a 'f32'`);
 
   if (Number.isNaN(target)) {
