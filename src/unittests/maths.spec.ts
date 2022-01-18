@@ -94,128 +94,112 @@ g.test('test,math,diffULP')
 interface nextAfterCase {
   val: number;
   dir: boolean;
-  flush: boolean;
   result: Scalar;
 }
 
-g.test('test,math,nextAfter')
+g.test('test,math,nextAfterFlushToZero')
   .paramsSubcasesOnly<nextAfterCase>([
     // Edge Cases
-    { val: Number.NaN, dir: true, flush: true, result: f32Bits(0x7fffffff) },
-    { val: Number.NaN, dir: true, flush: false, result: f32Bits(0x7fffffff) },
-    { val: Number.NaN, dir: false, flush: true, result: f32Bits(0x7fffffff) },
-    { val: Number.NaN, dir: false, flush: false, result: f32Bits(0x7fffffff) },
-    // prettier-ignore
-    { val: Number.POSITIVE_INFINITY, dir: true, flush: true, result: f32Bits(kBit.f32.infinity.positive) },
-    // prettier-ignore
-    { val: Number.POSITIVE_INFINITY, dir: true, flush: false, result: f32Bits(kBit.f32.infinity.positive) },
-    // prettier-ignore
-    { val: Number.POSITIVE_INFINITY, dir: false, flush: true, result: f32Bits(kBit.f32.infinity.positive) },
-    // prettier-ignore
-    { val: Number.POSITIVE_INFINITY, dir: false, flush: false, result: f32Bits(kBit.f32.infinity.positive) },
-    // prettier-ignore
-    { val: Number.NEGATIVE_INFINITY, dir: true, flush: true, result: f32Bits(kBit.f32.infinity.negative) },
-    // prettier-ignore
-    { val: Number.NEGATIVE_INFINITY, dir: true, flush: false, result: f32Bits(kBit.f32.infinity.negative) },
-    // prettier-ignore
-    { val: Number.NEGATIVE_INFINITY, dir: false, flush: true, result: f32Bits(kBit.f32.infinity.negative) },
-    // prettier-ignore
-    { val: Number.NEGATIVE_INFINITY, dir: false, flush: false, result: f32Bits(kBit.f32.infinity.negative) },
+    { val: Number.NaN, dir: true, result: f32Bits(0x7fffffff) },
+    { val: Number.NaN, dir: false, result: f32Bits(0x7fffffff) },
+    { val: Number.POSITIVE_INFINITY, dir: true, result: f32Bits(kBit.f32.infinity.positive) },
+    { val: Number.POSITIVE_INFINITY, dir: false, result: f32Bits(kBit.f32.infinity.positive) },
+    { val: Number.NEGATIVE_INFINITY, dir: true, result: f32Bits(kBit.f32.infinity.negative) },
+    { val: Number.NEGATIVE_INFINITY, dir: false, result: f32Bits(kBit.f32.infinity.negative) },
 
     // Zeroes
-    { val: +0, dir: true, flush: true, result: f32Bits(kBit.f32.positive.min) },
-    { val: +0, dir: true, flush: false, result: f32Bits(kBit.f32.subnormal.positive.min) },
-    { val: +0, dir: false, flush: true, result: f32Bits(kBit.f32.negative.max) },
-    { val: +0, dir: false, flush: false, result: f32Bits(kBit.f32.subnormal.negative.max) },
-    { val: -0, dir: true, flush: true, result: f32Bits(kBit.f32.positive.min) },
-    { val: -0, dir: true, flush: false, result: f32Bits(kBit.f32.subnormal.positive.min) },
-    { val: -0, dir: false, flush: true, result: f32Bits(kBit.f32.negative.max) },
-    { val: -0, dir: false, flush: false, result: f32Bits(kBit.f32.subnormal.negative.max) },
+    { val: +0, dir: true, result: f32Bits(kBit.f32.positive.min) },
+    { val: +0, dir: false, result: f32Bits(kBit.f32.negative.max) },
+    { val: -0, dir: true, result: f32Bits(kBit.f32.positive.min) },
+    { val: -0, dir: false, result: f32Bits(kBit.f32.negative.max) },
 
     // Subnormals
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.subnormal.positive.min), dir: true, flush: true, result: f32Bits(kBit.f32.positive.min) },
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.subnormal.positive.min), dir: true, flush: false, result: f32Bits(0x00000002) },
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.subnormal.positive.min), dir: false, flush: true, result:  f32Bits(kBit.f32.negative.max) },
-    { val: hexToF32(kBit.f32.subnormal.positive.min), dir: false, flush: false, result: f32(0) },
-
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.subnormal.positive.max), dir: true, flush: true, result: f32Bits(kBit.f32.positive.min) },
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.subnormal.positive.max), dir: true, flush: false, result: f32Bits(kBit.f32.positive.min) },
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.subnormal.positive.max), dir: false, flush: true, result: f32Bits(kBit.f32.negative.max) },
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.subnormal.positive.max), dir: false, flush: false, result: f32Bits(0x007ffffe) },
-
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.subnormal.negative.min), dir: true, flush: true, result: f32Bits(kBit.f32.positive.min) },
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.subnormal.negative.min), dir: true, flush: false, result: f32Bits(0x807ffffe) },
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.subnormal.negative.min), dir: false, flush: true, result: f32Bits(kBit.f32.negative.max) },
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.subnormal.negative.min), dir: false, flush: false, result: f32Bits(kBit.f32.negative.max) },
-
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.subnormal.negative.max), dir: true, flush: true, result: f32Bits(kBit.f32.positive.min) },
-    { val: hexToF32(kBit.f32.subnormal.negative.max), dir: true, flush: false, result: f32(0) },
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.subnormal.negative.max), dir: false, flush: true, result: f32Bits(kBit.f32.negative.max) },
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.subnormal.negative.max), dir: false, flush: false, result: f32Bits(0x80000002) },
+    { val: hexToF32(kBit.f32.subnormal.positive.min), dir: true, result: f32Bits(kBit.f32.positive.min) },
+    { val: hexToF32(kBit.f32.subnormal.positive.min), dir: false, result: f32Bits(kBit.f32.negative.max) },
+    { val: hexToF32(kBit.f32.subnormal.positive.max), dir: true, result: f32Bits(kBit.f32.positive.min) },
+    { val: hexToF32(kBit.f32.subnormal.positive.max), dir: false, result: f32Bits(kBit.f32.negative.max) },
+    { val: hexToF32(kBit.f32.subnormal.negative.min), dir: true, result: f32Bits(kBit.f32.positive.min) },
+    { val: hexToF32(kBit.f32.subnormal.negative.min), dir: false, result: f32Bits(kBit.f32.negative.max) },
+    { val: hexToF32(kBit.f32.subnormal.negative.max), dir: true, result: f32Bits(kBit.f32.positive.min) },
+    { val: hexToF32(kBit.f32.subnormal.negative.max), dir: false, result: f32Bits(kBit.f32.negative.max) },
 
     // Normals
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.positive.max), dir: true, flush: true, result: f32Bits(kBit.f32.infinity.positive) },
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.positive.max), dir: true, flush: false, result: f32Bits(kBit.f32.infinity.positive) },
-    { val: hexToF32(kBit.f32.positive.max), dir: false, flush: true, result: f32Bits(0x7f7ffffe) },
-    { val: hexToF32(kBit.f32.positive.max), dir: false, flush: false, result: f32Bits(0x7f7ffffe) },
-
-    { val: hexToF32(kBit.f32.positive.min), dir: true, flush: true, result: f32Bits(0x00800001) },
-    { val: hexToF32(kBit.f32.positive.min), dir: true, flush: false, result: f32Bits(0x00800001) },
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.positive.min), dir: false, flush: true, result: f32(0) },
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.positive.min), dir: false, flush: false, result: f32Bits(kBit.f32.subnormal.positive.max) },
-
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.negative.max), dir: true, flush: true, result: f32(0) },
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.negative.max), dir: true, flush: false, result: f32Bits(kBit.f32.subnormal.negative.min) },
-    { val: hexToF32(kBit.f32.negative.max), dir: false, flush: true, result: f32Bits(0x80800001) },
-    { val: hexToF32(kBit.f32.negative.max), dir: false, flush: false, result: f32Bits(0x80800001) },
-
-    { val: hexToF32(kBit.f32.negative.min), dir: true, flush: true, result: f32Bits(0xff7ffffe) },
-    { val: hexToF32(kBit.f32.negative.min), dir: true, flush: false, result: f32Bits(0xff7ffffe) },
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.negative.min), dir: false, flush: true, result: f32Bits(kBit.f32.infinity.negative) },
-    // prettier-ignore
-    { val: hexToF32(kBit.f32.negative.min), dir: false, flush: false, result: f32Bits(kBit.f32.infinity.negative) },
-
-    { val: hexToF32(0x03800000), dir: true, flush: true, result: f32Bits(0x03800001) },
-    { val: hexToF32(0x03800000), dir: true, flush: false, result: f32Bits(0x03800001) },
-    { val: hexToF32(0x03800000), dir: false, flush: true, result: f32Bits(0x037fffff) },
-    { val: hexToF32(0x03800000), dir: false, flush: false, result: f32Bits(0x037fffff) },
-    { val: hexToF32(0x83800000), dir: true, flush: true, result: f32Bits(0x837fffff) },
-    { val: hexToF32(0x83800000), dir: true, flush: false, result: f32Bits(0x837fffff) },
-    { val: hexToF32(0x83800000), dir: false, flush: true, result: f32Bits(0x83800001) },
-    { val: hexToF32(0x83800000), dir: false, flush: false, result: f32Bits(0x83800001) },
+    { val: hexToF32(kBit.f32.positive.max), dir: true, result: f32Bits(kBit.f32.infinity.positive) },
+    { val: hexToF32(kBit.f32.positive.max), dir: false, result: f32Bits(0x7f7ffffe) },
+    { val: hexToF32(kBit.f32.positive.min), dir: true, result: f32Bits(0x00800001) },
+    { val: hexToF32(kBit.f32.positive.min), dir: false, result: f32(0) },
+    { val: hexToF32(kBit.f32.negative.max), dir: true, result: f32(0) },
+    { val: hexToF32(kBit.f32.negative.max), dir: false, result: f32Bits(0x80800001) },
+    { val: hexToF32(kBit.f32.negative.min), dir: true, result: f32Bits(0xff7ffffe) },
+    { val: hexToF32(kBit.f32.negative.min), dir: false, result: f32Bits(kBit.f32.infinity.negative) },
+    { val: hexToF32(0x03800000), dir: true, result: f32Bits(0x03800001) },
+    { val: hexToF32(0x03800000), dir: false, result: f32Bits(0x037fffff) },
+    { val: hexToF32(0x83800000), dir: true, result: f32Bits(0x837fffff) },
+    { val: hexToF32(0x83800000), dir: false, result: f32Bits(0x83800001) },
   ])
   .fn(t => {
     const val = t.params.val;
     const dir = t.params.dir;
-    const flush = t.params.flush;
     const expect = t.params.result;
     const expect_type = typeof expect;
-    const got = nextAfter(val, dir, flush);
+    const got = nextAfter(val, dir, true);
     const got_type = typeof got;
     t.expect(
       got.value === expect.value || (Number.isNaN(got.value) && Number.isNaN(expect.value)),
-      `nextAfter(${val}, ${dir}, ${flush}) returned ${got} (${got_type}). Expected ${expect} (${expect_type})`
+      `nextAfter(${val}, ${dir}, true) returned ${got} (${got_type}). Expected ${expect} (${expect_type})`
+    );
+  });
+
+g.test('test,math,nextAfterNoFlush')
+  .paramsSubcasesOnly<nextAfterCase>([
+    // Edge Cases
+    { val: Number.NaN, dir: true, result: f32Bits(0x7fffffff) },
+    { val: Number.NaN, dir: false, result: f32Bits(0x7fffffff) },
+    { val: Number.POSITIVE_INFINITY, dir: true, result: f32Bits(kBit.f32.infinity.positive) },
+    { val: Number.POSITIVE_INFINITY, dir: false, result: f32Bits(kBit.f32.infinity.positive) },
+    { val: Number.NEGATIVE_INFINITY, dir: true, result: f32Bits(kBit.f32.infinity.negative) },
+    { val: Number.NEGATIVE_INFINITY, dir: false, result: f32Bits(kBit.f32.infinity.negative) },
+
+    // Zeroes
+    { val: +0, dir: true, result: f32Bits(kBit.f32.subnormal.positive.min) },
+    { val: +0, dir: false, result: f32Bits(kBit.f32.subnormal.negative.max) },
+    { val: -0, dir: true, result: f32Bits(kBit.f32.subnormal.positive.min) },
+    { val: -0, dir: false, result: f32Bits(kBit.f32.subnormal.negative.max) },
+
+    // Subnormals
+    { val: hexToF32(kBit.f32.subnormal.positive.min), dir: true, result: f32Bits(0x00000002) },
+    { val: hexToF32(kBit.f32.subnormal.positive.min), dir: false, result: f32(0) },
+    { val: hexToF32(kBit.f32.subnormal.positive.max), dir: true, result: f32Bits(kBit.f32.positive.min) },
+    { val: hexToF32(kBit.f32.subnormal.positive.max), dir: false, result: f32Bits(0x007ffffe) },
+    { val: hexToF32(kBit.f32.subnormal.negative.min), dir: true, result: f32Bits(0x807ffffe) },
+    { val: hexToF32(kBit.f32.subnormal.negative.min), dir: false, result: f32Bits(kBit.f32.negative.max) },
+    { val: hexToF32(kBit.f32.subnormal.negative.max), dir: true, result: f32(0) },
+    { val: hexToF32(kBit.f32.subnormal.negative.max), dir: false, result: f32Bits(0x80000002) },
+
+    // Normals
+    { val: hexToF32(kBit.f32.positive.max), dir: true, result: f32Bits(kBit.f32.infinity.positive) },
+    { val: hexToF32(kBit.f32.positive.max), dir: false, result: f32Bits(0x7f7ffffe) },
+    { val: hexToF32(kBit.f32.positive.min), dir: true, result: f32Bits(0x00800001) },
+    { val: hexToF32(kBit.f32.positive.min), dir: false, result: f32Bits(kBit.f32.subnormal.positive.max) },
+    { val: hexToF32(kBit.f32.negative.max), dir: true, result: f32Bits(kBit.f32.subnormal.negative.min) },
+    { val: hexToF32(kBit.f32.negative.max), dir: false, result: f32Bits(0x80800001) },
+    { val: hexToF32(kBit.f32.negative.min), dir: true, result: f32Bits(0xff7ffffe) },
+    { val: hexToF32(kBit.f32.negative.min), dir: false, result: f32Bits(kBit.f32.infinity.negative) },
+    { val: hexToF32(0x03800000), dir: true, result: f32Bits(0x03800001) },
+    { val: hexToF32(0x03800000), dir: false, result: f32Bits(0x037fffff) },
+    { val: hexToF32(0x83800000), dir: true, result: f32Bits(0x837fffff) },
+    { val: hexToF32(0x83800000), dir: false, result: f32Bits(0x83800001) },
+  ])
+  .fn(t => {
+    const val = t.params.val;
+    const dir = t.params.dir;
+    const expect = t.params.result;
+    const expect_type = typeof expect;
+    const got = nextAfter(val, dir, false);
+    const got_type = typeof got;
+    t.expect(
+      got.value === expect.value || (Number.isNaN(got.value) && Number.isNaN(expect.value)),
+      `nextAfter(${val}, ${dir}, false) returned ${got} (${got_type}). Expected ${expect} (${expect_type})`
     );
   });
 
