@@ -114,16 +114,25 @@ g.test('test,math,nextAfterFlushToZero')
     { val: -0, dir: false, result: f32Bits(kBit.f32.negative.max) },
 
     // Subnormals
+    // prettier-ignore
     { val: hexToF32(kBit.f32.subnormal.positive.min), dir: true, result: f32Bits(kBit.f32.positive.min) },
+    // prettier-ignore
     { val: hexToF32(kBit.f32.subnormal.positive.min), dir: false, result: f32Bits(kBit.f32.negative.max) },
+    // prettier-ignore
     { val: hexToF32(kBit.f32.subnormal.positive.max), dir: true, result: f32Bits(kBit.f32.positive.min) },
+    // prettier-ignore
     { val: hexToF32(kBit.f32.subnormal.positive.max), dir: false, result: f32Bits(kBit.f32.negative.max) },
+    // prettier-ignore
     { val: hexToF32(kBit.f32.subnormal.negative.min), dir: true, result: f32Bits(kBit.f32.positive.min) },
+    // prettier-ignore
     { val: hexToF32(kBit.f32.subnormal.negative.min), dir: false, result: f32Bits(kBit.f32.negative.max) },
+    // prettier-ignore
     { val: hexToF32(kBit.f32.subnormal.negative.max), dir: true, result: f32Bits(kBit.f32.positive.min) },
+    // prettier-ignore
     { val: hexToF32(kBit.f32.subnormal.negative.max), dir: false, result: f32Bits(kBit.f32.negative.max) },
 
     // Normals
+    // prettier-ignore
     { val: hexToF32(kBit.f32.positive.max), dir: true, result: f32Bits(kBit.f32.infinity.positive) },
     { val: hexToF32(kBit.f32.positive.max), dir: false, result: f32Bits(0x7f7ffffe) },
     { val: hexToF32(kBit.f32.positive.min), dir: true, result: f32Bits(0x00800001) },
@@ -131,6 +140,7 @@ g.test('test,math,nextAfterFlushToZero')
     { val: hexToF32(kBit.f32.negative.max), dir: true, result: f32(0) },
     { val: hexToF32(kBit.f32.negative.max), dir: false, result: f32Bits(0x80800001) },
     { val: hexToF32(kBit.f32.negative.min), dir: true, result: f32Bits(0xff7ffffe) },
+    // prettier-ignore
     { val: hexToF32(kBit.f32.negative.min), dir: false, result: f32Bits(kBit.f32.infinity.negative) },
     { val: hexToF32(0x03800000), dir: true, result: f32Bits(0x03800001) },
     { val: hexToF32(0x03800000), dir: false, result: f32Bits(0x037fffff) },
@@ -169,21 +179,27 @@ g.test('test,math,nextAfterNoFlush')
     // Subnormals
     { val: hexToF32(kBit.f32.subnormal.positive.min), dir: true, result: f32Bits(0x00000002) },
     { val: hexToF32(kBit.f32.subnormal.positive.min), dir: false, result: f32(0) },
+    // prettier-ignore
     { val: hexToF32(kBit.f32.subnormal.positive.max), dir: true, result: f32Bits(kBit.f32.positive.min) },
     { val: hexToF32(kBit.f32.subnormal.positive.max), dir: false, result: f32Bits(0x007ffffe) },
     { val: hexToF32(kBit.f32.subnormal.negative.min), dir: true, result: f32Bits(0x807ffffe) },
+    // prettier-ignore
     { val: hexToF32(kBit.f32.subnormal.negative.min), dir: false, result: f32Bits(kBit.f32.negative.max) },
     { val: hexToF32(kBit.f32.subnormal.negative.max), dir: true, result: f32(0) },
     { val: hexToF32(kBit.f32.subnormal.negative.max), dir: false, result: f32Bits(0x80000002) },
 
     // Normals
+    // prettier-ignore
     { val: hexToF32(kBit.f32.positive.max), dir: true, result: f32Bits(kBit.f32.infinity.positive) },
     { val: hexToF32(kBit.f32.positive.max), dir: false, result: f32Bits(0x7f7ffffe) },
     { val: hexToF32(kBit.f32.positive.min), dir: true, result: f32Bits(0x00800001) },
+    // prettier-ignore
     { val: hexToF32(kBit.f32.positive.min), dir: false, result: f32Bits(kBit.f32.subnormal.positive.max) },
+    // prettier-ignore
     { val: hexToF32(kBit.f32.negative.max), dir: true, result: f32Bits(kBit.f32.subnormal.negative.min) },
     { val: hexToF32(kBit.f32.negative.max), dir: false, result: f32Bits(0x80800001) },
     { val: hexToF32(kBit.f32.negative.min), dir: true, result: f32Bits(0xff7ffffe) },
+    // prettier-ignore
     { val: hexToF32(kBit.f32.negative.min), dir: false, result: f32Bits(kBit.f32.infinity.negative) },
     { val: hexToF32(0x03800000), dir: true, result: f32Bits(0x03800001) },
     { val: hexToF32(0x03800000), dir: false, result: f32Bits(0x037fffff) },
