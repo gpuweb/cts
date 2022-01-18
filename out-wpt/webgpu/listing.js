@@ -1229,6 +1229,14 @@ export const listing = [
       "shader",
       "execution",
       "builtin",
+      "fract"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "builtin",
       "integer_built_in_functions"
     ]
   },

@@ -97,7 +97,7 @@
 					<div class="tsd-signature tsd-kind-icon">k<wbr>Max<wbr>Safe<wbr>Multiple<wbr>Of8<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = ...</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7256178/src/webgpu/util/math.ts#L13">src/webgpu/util/math.ts:13</a></li>
+							<li>Defined in <a href="https://github.com/gpuweb/cts/blob/ae96de5/src/webgpu/util/math.ts#L13">src/webgpu/util/math.ts:13</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -122,7 +122,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7256178/src/webgpu/util/math.ts#L17">src/webgpu/util/math.ts:17</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/ae96de5/src/webgpu/util/math.ts#L17">src/webgpu/util/math.ts:17</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -153,7 +153,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7256178/src/webgpu/util/math.ts#L31">src/webgpu/util/math.ts:31</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/ae96de5/src/webgpu/util/math.ts#L31">src/webgpu/util/math.ts:31</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -186,13 +186,13 @@
 					<a name="correctlyrounded" class="tsd-anchor"></a>
 					<h3>correctly<wbr>Rounded</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
-						<li class="tsd-signature tsd-kind-icon">correctly<wbr>Rounded<span class="tsd-signature-symbol">(</span>test_value<span class="tsd-signature-symbol">: </span><a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a>, target<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+						<li class="tsd-signature tsd-kind-icon">correctly<wbr>Rounded<span class="tsd-signature-symbol">(</span>test_value<span class="tsd-signature-symbol">: </span><a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a>, target<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, accept_to_zero<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span>, accept_no_flush<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7256178/src/webgpu/util/math.ts#L131">src/webgpu/util/math.ts:131</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/ae96de5/src/webgpu/util/math.ts#L170">src/webgpu/util/math.ts:170</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -203,14 +203,23 @@
 								<li>
 									<h5>target: <span class="tsd-signature-type">number</span></h5>
 								</li>
+								<li>
+									<h5>accept_to_zero: <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = true</span></h5>
+								</li>
+								<li>
+									<h5>accept_no_flush: <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = true</span></h5>
+								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
 							<p>if a test value is correctly rounded to an target value. Only
 							defined for |test_values| being a float32. target values may be any number.</p>
 							<p>Correctly rounded means that if the target value is precisely expressible
 								as a float32, then |test_value| === |target|.
-								Otherwise |test_value| needs to be either the closest expressible number greater
-							or less than |target|.</p>
+								Otherwise |test_value| needs to be either the closest expressible number
+							greater or less than |target|.</p>
+							<p>By default internally tests with both subnormals being flushed to 0 and not
+								being flushed, but |accept_to_zero| and |accept_no_flush| can be used to
+							control that behaviour. At least one accept flag must be true.</p>
 						</li>
 					</ul>
 				</section>
@@ -224,7 +233,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7256178/src/webgpu/util/math.ts#L40">src/webgpu/util/math.ts:40</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/ae96de5/src/webgpu/util/math.ts#L40">src/webgpu/util/math.ts:40</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -246,13 +255,13 @@
 					<a name="nextafter" class="tsd-anchor"></a>
 					<h3>next<wbr>After</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
-						<li class="tsd-signature tsd-kind-icon">next<wbr>After<span class="tsd-signature-symbol">(</span>val<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, dir<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a></li>
+						<li class="tsd-signature tsd-kind-icon">next<wbr>After<span class="tsd-signature-symbol">(</span>val<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, dir<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">boolean</span>, flush<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7256178/src/webgpu/util/math.ts#L76">src/webgpu/util/math.ts:76</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/ae96de5/src/webgpu/util/math.ts#L108">src/webgpu/util/math.ts:108</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -263,12 +272,18 @@
 								<li>
 									<h5>dir: <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol"> = true</span></h5>
 								</li>
+								<li>
+									<h5>flush: <span class="tsd-signature-type">boolean</span></h5>
+								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a></h4>
 							<p>the next single precision floating point value after |val|,
 								towards +inf if |dir| is true, otherwise towards -inf.
-								For -/+0 the nextAfter will be the closest subnormal in the correct
-								direction, since -0 === +0.
+								If |flush| is true, all subnormal values will be flushed to 0,
+								before processing.
+								If |flush| is false, the next subnormal will be calculated when appropriate,
+								and for -/+0 the nextAfter will be the closest subnormal in the correct
+								direction.
 							|val| must be expressible as a f32.</p>
 						</li>
 					</ul>
@@ -283,7 +298,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/7256178/src/webgpu/util/math.ts#L24">src/webgpu/util/math.ts:24</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/ae96de5/src/webgpu/util/math.ts#L24">src/webgpu/util/math.ts:24</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">

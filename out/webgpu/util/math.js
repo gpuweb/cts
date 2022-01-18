@@ -67,13 +67,45 @@ export function diffULP(a, b) {
 }
 
 /**
+   * @returns 0 if |val| is a subnormal f32 number, otherwise returns |val|
+   */
+function flushSubnormalNumber(val) {
+  const u32_val = new Uint32Array(new Float32Array([val]).buffer)[0];
+  return (u32_val & 0x7f800000) === 0 ? 0 : val;
+}
+
+/**
+   * @returns 0 if |val| is a bit field for a subnormal f32 number, otherwise
+   * returns |val|
+   * |val| is assumed to be a u32 value representing a f32
+   */
+function flushSubnormalBits(val) {
+  return (val & 0x7f800000) === 0 ? 0 : val;
+}
+
+/**
+   * @returns 0 if |val| is a subnormal f32 number, otherwise returns |val|
+   */
+function flushSubnormalScalar(val) {
+  if (val.type.kind !== 'f32') {
+    return val;
+  }
+
+  const u32_val = new Uint32Array(new Float32Array([val.value.valueOf()]).buffer)[0];
+  return (u32_val & 0x7f800000) === 0 ? f32(0) : val;
+}
+
+/**
    * @returns the next single precision floating point value after |val|,
    * towards +inf if |dir| is true, otherwise towards -inf.
-   * For -/+0 the nextAfter will be the closest subnormal in the correct
-   * direction, since -0 === +0.
+   * If |flush| is true, all subnormal values will be flushed to 0,
+   * before processing.
+   * If |flush| is false, the next subnormal will be calculated when appropriate,
+   * and for -/+0 the nextAfter will be the closest subnormal in the correct
+   * direction.
    * |val| must be expressible as a f32.
    */
-export function nextAfter(val, dir = true) {
+export function nextAfter(val, dir = true, flush) {
   if (Number.isNaN(val)) {
     return f32Bits(kBit.f32.nan.positive.s);
   }
@@ -86,12 +118,14 @@ export function nextAfter(val, dir = true) {
     return f32Bits(kBit.f32.infinity.negative);
   }
 
+  val = flush ? flushSubnormalNumber(val) : val;
+
   // -/+0 === 0 returns true
   if (val === 0) {
     if (dir) {
-      return f32Bits(kBit.f32.subnormal.positive.min);
+      return flush ? f32Bits(kBit.f32.positive.min) : f32Bits(kBit.f32.subnormal.positive.min);
     } else {
-      return f32Bits(kBit.f32.subnormal.negative.max);
+      return flush ? f32Bits(kBit.f32.negative.max) : f32Bits(kBit.f32.subnormal.negative.max);
     }
   }
 
@@ -107,6 +141,7 @@ export function nextAfter(val, dir = true) {
   } else {
     result -= 1;
   }
+  result = flush ? flushSubnormalBits(result) : result;
 
   // Checking for overflow
   if ((result & 0x7f800000) === 0x7f800000) {
@@ -125,10 +160,35 @@ export function nextAfter(val, dir = true) {
    *
    * Correctly rounded means that if the target value is precisely expressible
    * as a float32, then |test_value| === |target|.
-   * Otherwise |test_value| needs to be either the closest expressible number greater
-   * or less than |target|.
+   * Otherwise |test_value| needs to be either the closest expressible number
+   * greater or less than |target|.
+   *
+   * By default internally tests with both subnormals being flushed to 0 and not
+   * being flushed, but |accept_to_zero| and |accept_no_flush| can be used to
+   * control that behaviour. At least one accept flag must be true.
    */
-export function correctlyRounded(test_value, target) {
+export function correctlyRounded(
+test_value,
+target,
+accept_to_zero = true,
+accept_no_flush = true)
+{
+  assert(
+  accept_to_zero || accept_no_flush,
+  `At least one of |accept_to_zero| & |accept_no_flush| must be true`);
+
+
+  let result = false;
+  if (accept_to_zero) {
+    result = result || correctlyRoundedImpl(test_value, target, true);
+  }
+  if (accept_no_flush) {
+    result = result || correctlyRoundedImpl(test_value, target, false);
+  }
+  return result;
+}
+
+function correctlyRoundedImpl(test_value, target, flush) {
   assert(test_value.type.kind === 'f32', `${test_value} is expected to be a 'f32'`);
 
   if (Number.isNaN(target)) {
@@ -143,6 +203,9 @@ export function correctlyRounded(test_value, target) {
     return test_value.value === f32Bits(kBit.f32.infinity.negative).value;
   }
 
+  test_value = flush ? flushSubnormalScalar(test_value) : test_value;
+  target = flush ? flushSubnormalNumber(target) : target;
+
   const target32 = new Float32Array([target])[0];
   const converted = target32;
   if (target === converted) {
@@ -156,10 +219,10 @@ export function correctlyRounded(test_value, target) {
   if (converted > target) {
     // target32 is rounded towards +inf, so is after_target
     after_target = f32(target32);
-    before_target = nextAfter(target32, false);
+    before_target = nextAfter(target32, false, flush);
   } else {
     // target32 is rounded towards -inf, so is before_target
-    after_target = nextAfter(target32, true);
+    after_target = nextAfter(target32, true, flush);
     before_target = f32(target32);
   }
 
