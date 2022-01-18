@@ -27,9 +27,13 @@ Anyone with access should do this eagerly, to ensure no testing ideas are forgot
 
 1. As necessary:
 
-    - The draft issue is converted to a full, numbered issue for linking from later PRs.
-    - The "Assignees" of the issue is updated when an issue is assigned or unassigned.
-    - The "Status" of the issue changes to "Started" once started.
+    - Convert the draft issue to a full, numbered issue for linking from later PRs.
+
+        ![convert to issue button screenshot](convert_to_issue.png)
+
+    - Update the "Assignees" of the issue when an issue is assigned or unassigned
+      (you can assign yourself).
+    - Change the "Status" of the issue to "Started" once you start the task.
 
 1. Open one or more PRs, **each linking to the associated issue**.
     Each PR may is reviewed and landed, and may leave further TODOs for parts it doesn't complete.
