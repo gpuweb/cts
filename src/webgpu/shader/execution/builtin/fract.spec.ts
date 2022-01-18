@@ -28,6 +28,10 @@ T is f32 or vecN<f32> fract(e: T ) -> T Returns the fractional bits of e (e.g. e
     const cfg: Config = t.params;
     cfg.cmpFloats = correctlyRoundedThreshold();
     run(t, 'fract', [TypeF32], TypeF32, cfg, [
+      // Zeroes
+      { input: f32Bits(kBit.f32.positive.zero), expected: f32(0) },
+      { input: f32Bits(kBit.f32.negative.zero), expected: f32(0) },
+
       // Positive numbers
       { input: f32Bits(0x3dcccccd), expected: f32Bits(0x3dcccccd) }, // ~0.1 -> ~0.1
       { input: f32(0.5), expected: f32(0.5) }, // 0.5 -> 0.5
@@ -49,6 +53,10 @@ T is f32 or vecN<f32> fract(e: T ) -> T Returns the fractional bits of e (e.g. e
       // Min and Max f32
       { input: f32Bits(kBit.f32.positive.min), expected: f32Bits(kBit.f32.positive.min) },
       { input: f32Bits(kBit.f32.positive.max), expected: f32(0) },
+      // For negative numbers on the extremes, here and below, different backends disagree on if this should be 1
+      // exactly vs very close to 1. I think what is occurring is that if the calculation is internally done in f32,
+      // i.e. rounding/flushing each step, you end up with one value, but if all of the math is done in a higher
+      // precision, and then converted at the end, you end up with a different value.
       { input: f32Bits(kBit.f32.negative.max), expected: anyOf(f32Bits(0x3f7fffff), f32(1)) },
       { input: f32Bits(kBit.f32.negative.min), expected: f32(0) },
 
@@ -57,6 +65,8 @@ T is f32 or vecN<f32> fract(e: T ) -> T Returns the fractional bits of e (e.g. e
       { input: f32Bits(kBit.f32.subnormal.positive.max), expected: anyOf(f32(0), f32Bits(kBit.f32.subnormal.positive.max)) },
       // prettier-ignore
       { input: f32Bits(kBit.f32.subnormal.positive.min), expected: anyOf(f32(0), f32Bits(kBit.f32.subnormal.positive.min)) },
+      // Similar to above when these values are not immediately flushed to zero, how the back end internally calculates
+      // the value will dictate if the end value is 1 or very close to 1.
       // prettier-ignore
       { input: f32Bits(kBit.f32.subnormal.negative.max), expected: anyOf(f32(0), f32Bits(0x3f7fffff), f32(1)) },
       // prettier-ignore

@@ -98,7 +98,7 @@ function flushSubnormalScalar(val: Scalar): Scalar {
 /**
  * @returns the next single precision floating point value after |val|,
  * towards +inf if |dir| is true, otherwise towards -inf.
- * If |flush_| is true, all subnormal values will be flushed to 0,
+ * If |flush| is true, all subnormal values will be flushed to 0,
  * before processing.
  * If |flush| is false, the next subnormal will be calculated when appropriate,
  * and for -/+0 the nextAfter will be the closest subnormal in the correct
