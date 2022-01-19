@@ -120,6 +120,12 @@ g.test('GPUBlendComponent')
       .combine('srcFactor', kBlendFactors)
       .combine('dstFactor', kBlendFactors)
       .combine('operation', kBlendOperations)
+      .filter(t => {
+        if (t.operation === 'min' || t.operation === 'max') {
+          return t.srcFactor === 'one' && t.dstFactor === 'one';
+        }
+        return true;
+      })
       .beginSubcases()
       .combine('srcColor', [{ r: 0.11, g: 0.61, b: 0.81, a: 0.44 }])
       .combine('dstColor', [
