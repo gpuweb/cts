@@ -806,8 +806,8 @@ class ImageCopyTest extends GPUTest {
       vertex: {
         module: this.device.createShaderModule({
           code: `
-            [[stage(vertex)]]
-            fn main([[builtin(vertex_index)]] VertexIndex : u32)-> [[builtin(position)]] vec4<f32> {
+            @stage(vertex)
+            fn main(@builtin(vertex_index) VertexIndex : u32)-> @builtin(position) vec4<f32> {
               var pos : array<vec2<f32>, 6> = array<vec2<f32>, 6>(
                   vec2<f32>(-1.0,  1.0),
                   vec2<f32>(-1.0, -1.0),
@@ -827,9 +827,9 @@ class ImageCopyTest extends GPUTest {
             struct Params {
               stencilBitIndex: u32;
             };
-            [[group(0), binding(0)]] var<uniform> param: Params;
-            [[stage(fragment)]]
-            fn main() -> [[location(0)]] vec4<f32> {
+            @group(0) @binding(0) var<uniform> param: Params;
+            @stage(fragment)
+            fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(f32(1u << param.stencilBitIndex) / 255.0, 0.0, 0.0, 0.0);
             }`,
         }),
@@ -1005,8 +1005,8 @@ class ImageCopyTest extends GPUTest {
       vertex: {
         module: this.device.createShaderModule({
           code: `
-          [[stage(vertex)]]
-          fn main([[builtin(vertex_index)]] VertexIndex : u32)-> [[builtin(position)]] vec4<f32> {
+          @stage(vertex)
+          fn main(@builtin(vertex_index) VertexIndex : u32)-> @builtin(position) vec4<f32> {
             var pos : array<vec2<f32>, 6> = array<vec2<f32>, 6>(
                 vec2<f32>(-1.0,  1.0),
                 vec2<f32>(-1.0, -1.0),
@@ -1022,9 +1022,9 @@ class ImageCopyTest extends GPUTest {
       fragment: {
         module: this.device.createShaderModule({
           code: `
-            [[group(0), binding(0)]] var inputTexture: texture_2d<f32>;
-            [[stage(fragment)]] fn main([[builtin(position)]] fragcoord : vec4<f32>) ->
-              [[builtin(frag_depth)]] f32 {
+            @group(0) @binding(0) var inputTexture: texture_2d<f32>;
+            @stage(fragment) fn main(@builtin(position) fragcoord : vec4<f32>) ->
+              @builtin(frag_depth) f32 {
               var depthValue : vec4<f32> = textureLoad(inputTexture, vec2<i32>(fragcoord.xy), 0);
               return depthValue.x;
             }`,
