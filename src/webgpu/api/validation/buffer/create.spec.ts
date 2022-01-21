@@ -13,7 +13,9 @@ export const g = makeTestGroup(ValidationTest);
 
 assert(kBufferSizeAlignment === 4);
 g.test('size')
-  .desc('Test buffer size alignment.')
+  .desc(
+    'Test buffer size alignment is validated to be a multiple of 4 if mappedAtCreation is true.'
+  )
   .params(u =>
     u
       .combine('mappedAtCreation', [false, true])
@@ -26,21 +28,56 @@ g.test('size')
         kBufferSizeAlignment * 2,
       ])
   )
-  .unimplemented();
-
-g.test('usage')
-  .desc('Test combinations of (one to two?) usage flags.')
-  .params(u =>
-    u //
-      .beginSubcases()
-      .combine('mappedAtCreation', [false, true])
-      .combine('usage', [
-        // Not implemented
-      ])
-  )
-  .unimplemented();
+  .fn(t => {
+    const { mappedAtCreation, size } = t.params;
+    const isValid = !mappedAtCreation || size % kBufferSizeAlignment === 0;
+    const usage = BufferUsage.COPY_SRC;
+    t.expectGPUError(
+      'validation',
+      () => t.device.createBuffer({ size, usage, mappedAtCreation }),
+      !isValid
+    );
+  });
 
 const BufferUsage = GPUConst.BufferUsage;
+const BufferUsageWithEmptyAndInvalid = { ...BufferUsage, NO_USAGE: 0, INVAILD: 0x8000 } as const;
+const listBufferUsage = Object.keys(BufferUsage) as [keyof typeof BufferUsage];
+const listBufferUsageWithEmptyAndInvalid = Object.keys(BufferUsageWithEmptyAndInvalid) as [
+  keyof typeof BufferUsageWithEmptyAndInvalid
+];
+const allowedBufferUsageSet = listBufferUsage.reduce(
+  (previousSet, currentUsage) => previousSet | BufferUsage[currentUsage],
+  0
+);
+
+g.test('usage')
+  .desc('Test combinations of up to two usage flags are validated to be valid.')
+  .params(u =>
+    u
+      .combine('usage1', listBufferUsageWithEmptyAndInvalid)
+      .combine('usage2', listBufferUsageWithEmptyAndInvalid)
+      .beginSubcases()
+      .combine('mappedAtCreation', [false, true])
+  )
+  .fn(t => {
+    const { mappedAtCreation, usage1, usage2 } = t.params;
+    const usage = BufferUsageWithEmptyAndInvalid[usage1] | BufferUsageWithEmptyAndInvalid[usage2];
+
+    const isValid =
+      usage !== 0 &&
+      (usage & ~allowedBufferUsageSet) === 0 &&
+      ((usage & BufferUsage.MAP_READ) === 0 ||
+        (usage & ~(BufferUsage.COPY_DST | BufferUsage.MAP_READ)) === 0) &&
+      ((usage & BufferUsage.MAP_WRITE) === 0 ||
+        (usage & ~(BufferUsage.COPY_SRC | BufferUsage.MAP_WRITE)) === 0);
+
+    t.expectGPUError(
+      'validation',
+      () => t.device.createBuffer({ size: kBufferSizeAlignment * 2, usage, mappedAtCreation }),
+      !isValid
+    );
+  });
+
 g.test('createBuffer_invalid_and_oom')
   .desc(
     `When creating a mappable buffer, it's expected that shmem may be immediately allocated
