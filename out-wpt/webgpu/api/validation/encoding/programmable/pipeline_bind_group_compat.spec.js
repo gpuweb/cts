@@ -71,11 +71,11 @@ class F extends ValidationTest {
 
   createRenderPipelineWithLayout(bindGroups) {
     const shader = `
-      [[stage(vertex)]] fn vs_main() -> [[builtin(position)]] vec4<f32> {
+      @stage(vertex) fn vs_main() -> @builtin(position) vec4<f32> {
         return vec4<f32>(1.0, 1.0, 0.0, 1.0);
       }
 
-      [[stage(fragment)]] fn fs_main() -> [[location(0)]] vec4<f32> {
+      @stage(fragment) fn fs_main() -> @location(0) vec4<f32> {
         return vec4<f32>(0.0, 1.0, 0.0, 1.0);
       }
     `;
@@ -105,7 +105,7 @@ class F extends ValidationTest {
   createComputePipelineWithLayout(bindGroups) {
     const shader = `
       [[stage(compute), workgroup_size(1, 1, 1)]]
-        fn main([[builtin(global_invocation_id)]] GlobalInvocationID : vec3<u32>) {
+        fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
       }
     `;
 

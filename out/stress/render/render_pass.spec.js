@@ -17,15 +17,15 @@ fn(async t => {
   const kSize = 1024;
   const module = t.device.createShaderModule({
     code: `
-    [[stage(vertex)]] fn vmain([[builtin(vertex_index)]] index: u32)
-        -> [[builtin(position)]] vec4<f32> {
+    @stage(vertex) fn vmain(@builtin(vertex_index) index: u32)
+        -> @builtin(position) vec4<f32> {
       let position = vec2<f32>(f32(index % ${kSize}u), f32(index / ${kSize}u));
       let r = vec2<f32>(1.0 / f32(${kSize}));
       let a = 2.0 * r;
       let b = r - vec2<f32>(1.0);
       return vec4<f32>(fma(position, a, b), 0.0, 1.0);
     }
-    [[stage(fragment)]] fn fmain() -> [[location(0)]] vec4<f32> {
+    @stage(fragment) fn fmain() -> @location(0) vec4<f32> {
       return vec4<f32>(1.0, 0.0, 1.0, 1.0);
     }
     ` });
@@ -77,8 +77,8 @@ fn(async t => {
   const kHeight = 8;
   const module = t.device.createShaderModule({
     code: `
-    [[stage(vertex)]] fn vmain([[builtin(vertex_index)]] index: u32)
-        -> [[builtin(position)]] vec4<f32> {
+    @stage(vertex) fn vmain(@builtin(vertex_index) index: u32)
+        -> @builtin(position) vec4<f32> {
       let position = vec2<f32>(f32(index % ${kWidth}u), f32(index / ${kWidth}u));
       let size = vec2<f32>(f32(${kWidth}), f32(${kHeight}));
       let r = vec2<f32>(1.0) / size;
@@ -86,7 +86,7 @@ fn(async t => {
       let b = r - vec2<f32>(1.0);
       return vec4<f32>(fma(position, a, b), 0.0, 1.0);
     }
-    [[stage(fragment)]] fn fmain() -> [[location(0)]] vec4<f32> {
+    @stage(fragment) fn fmain() -> @location(0) vec4<f32> {
       return vec4<f32>(1.0, 0.0, 1.0, 1.0);
     }
     ` });
@@ -158,8 +158,8 @@ fn(async t => {
   const module = t.device.createShaderModule({
     code: `
     struct Uniforms { index: u32; };
-    [[group(0), binding(0)]] var<uniform> uniforms: Uniforms;
-    [[stage(vertex)]] fn vmain() -> [[builtin(position)]] vec4<f32> {
+    @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+    @stage(vertex) fn vmain() -> @builtin(position) vec4<f32> {
       let index = uniforms.index;
       let position = vec2<f32>(f32(index % ${kSize}u), f32(index / ${kSize}u));
       let r = vec2<f32>(1.0 / f32(${kSize}));
@@ -167,7 +167,7 @@ fn(async t => {
       let b = r - vec2<f32>(1.0);
       return vec4<f32>(fma(position, a, b), 0.0, 1.0);
     }
-    [[stage(fragment)]] fn fmain() -> [[location(0)]] vec4<f32> {
+    @stage(fragment) fn fmain() -> @location(0) vec4<f32> {
       return vec4<f32>(1.0, 0.0, 1.0, 1.0);
     }
     ` });
@@ -239,15 +239,15 @@ fn(async t => {
   const kSize = 4096;
   const module = t.device.createShaderModule({
     code: `
-    [[stage(vertex)]] fn vmain([[builtin(vertex_index)]] index: u32)
-        -> [[builtin(position)]] vec4<f32> {
+    @stage(vertex) fn vmain(@builtin(vertex_index) index: u32)
+        -> @builtin(position) vec4<f32> {
       let position = vec2<f32>(f32(index % ${kSize}u), f32(index / ${kSize}u));
       let r = vec2<f32>(1.0 / f32(${kSize}));
       let a = 2.0 * r;
       let b = r - vec2<f32>(1.0);
       return vec4<f32>(fma(position, a, b), 0.0, 1.0);
     }
-    [[stage(fragment)]] fn fmain() -> [[location(0)]] vec4<f32> {
+    @stage(fragment) fn fmain() -> @location(0) vec4<f32> {
       return vec4<f32>(1.0, 0.0, 1.0, 1.0);
     }
     ` });
@@ -298,8 +298,8 @@ fn(async t => {
   const kVertsPerFragment = kSize * kSize / (kTextureSize * kTextureSize);
   const module = t.device.createShaderModule({
     code: `
-    [[stage(vertex)]] fn vmain([[builtin(vertex_index)]] vert_index: u32)
-        -> [[builtin(position)]] vec4<f32> {
+    @stage(vertex) fn vmain(@builtin(vertex_index) vert_index: u32)
+        -> @builtin(position) vec4<f32> {
       let index = vert_index / ${kVertsPerFragment}u;
       let position = vec2<f32>(f32(index % ${kTextureSize}u), f32(index / ${kTextureSize}u));
       let r = vec2<f32>(1.0 / f32(${kTextureSize}));
@@ -307,7 +307,7 @@ fn(async t => {
       let b = r - vec2<f32>(1.0);
       return vec4<f32>(fma(position, a, b), 0.0, 1.0);
     }
-    [[stage(fragment)]] fn fmain() -> [[location(0)]] vec4<f32> {
+    @stage(fragment) fn fmain() -> @location(0) vec4<f32> {
       return vec4<f32>(1.0, 0.0, 1.0, 1.0);
     }
     ` });

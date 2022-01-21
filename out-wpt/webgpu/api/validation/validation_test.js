@@ -287,7 +287,7 @@ export class ValidationTest extends GPUTest {
     return this.device.createRenderPipeline({
       vertex: {
         module: this.device.createShaderModule({
-          code: `[[stage(vertex)]] fn main() -> [[builtin(position)]] vec4<f32> {
+          code: `@stage(vertex) fn main() -> @builtin(position) vec4<f32> {
   return vec4<f32>();
 }`,
         }),
@@ -297,7 +297,7 @@ export class ValidationTest extends GPUTest {
 
       fragment: {
         module: this.device.createShaderModule({
-          code: '[[stage(fragment)]] fn main() {}',
+          code: '@stage(fragment) fn main() {}',
         }),
 
         entryPoint: 'main',
@@ -331,7 +331,7 @@ export class ValidationTest extends GPUTest {
       layout,
       compute: {
         module: this.device.createShaderModule({
-          code: '[[stage(compute), workgroup_size(1)]] fn main() {}',
+          code: '@stage(compute) @workgroup_size(1) fn main() {}',
         }),
 
         entryPoint: 'main',

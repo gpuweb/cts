@@ -19,14 +19,14 @@ class VertexAndIndexStateTrackingTest extends GPUTest {
         module: this.device.createShaderModule({
           code: `
         struct Inputs {
-          [[location(0)]] vertexPosition : f32;
-          [[location(1)]] vertexColor : vec4<f32>;
+          @location(0) vertexPosition : f32;
+          @location(1) vertexColor : vec4<f32>;
         };
         struct Outputs {
-          [[builtin(position)]] position : vec4<f32>;
-          [[location(0)]] color : vec4<f32>;
+          @builtin(position) position : vec4<f32>;
+          @location(0) color : vec4<f32>;
         };
-        [[stage(vertex)]]
+        @stage(vertex)
         fn main(input : Inputs)-> Outputs {
           var outputs : Outputs;
           outputs.position =
@@ -58,10 +58,10 @@ class VertexAndIndexStateTrackingTest extends GPUTest {
         module: this.device.createShaderModule({
           code: `
         struct Input {
-          [[location(0)]] color : vec4<f32>;
+          @location(0) color : vec4<f32>;
         };
-        [[stage(fragment)]]
-        fn main(input : Input) -> [[location(0)]] vec4<f32> {
+        @stage(fragment)
+        fn main(input : Input) -> @location(0) vec4<f32> {
           return input.color;
         }` }),
 

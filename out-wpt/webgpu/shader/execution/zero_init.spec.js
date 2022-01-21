@@ -227,7 +227,7 @@ g.test('compute,zero_init')
       struct Output {
         failed : atomic<u32>;
       };
-      [[group(0), binding(0)]] var <storage, read_write> output : Output;
+      @group(0) @binding(0) var <storage, read_write> output : Output;
     `;
     let functionScope = '';
 
@@ -376,7 +376,7 @@ g.test('compute,zero_init')
 
     const wgsl = `
       ${moduleScope}
-      [[stage(compute), workgroup_size(${t.params.workgroupSize})]]
+      @stage(compute) @workgroup_size(${t.params.workgroupSize})
       fn main() {
         ${functionScope}
         ${checkZeroCode}

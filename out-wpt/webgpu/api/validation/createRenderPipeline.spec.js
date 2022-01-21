@@ -83,7 +83,7 @@ class F extends ValidationTest {
     }
 
     return `
-    [[stage(fragment)]] fn main() -> [[location(0)]] ${outputType} {
+    @stage(fragment) fn main() -> @location(0) ${outputType} {
       return ${result};
     }`;
   }
@@ -107,7 +107,7 @@ class F extends ValidationTest {
       vertex: {
         module: this.device.createShaderModule({
           code: `
-            [[stage(vertex)]] fn main() -> [[builtin(position)]] vec4<f32> {
+            @stage(vertex) fn main() -> @builtin(position) vec4<f32> {
               return vec4<f32>(0.0, 0.0, 0.0, 1.0);
             }`,
         }),
@@ -585,7 +585,7 @@ g.test('pipeline_layout,device_mismatch')
       vertex: {
         module: t.device.createShaderModule({
           code: `
-        [[stage(vertex)]] fn main() -> [[builtin(position)]] vec4<f32> {
+        @stage(vertex) fn main() -> @builtin(position) vec4<f32> {
           return vec4<f32>(0.0, 0.0, 0.0, 1.0);
         }
       `,
@@ -623,7 +623,7 @@ g.test('shader_module,device_mismatch')
     }
 
     const code = `
-      [[stage(vertex)]] fn main() -> [[builtin(position)]] vec4<f32> {
+      @stage(vertex) fn main() -> @builtin(position) vec4<f32> {
         return vec4<f32>(0.0, 0.0, 0.0, 1.0);
       }
     `;

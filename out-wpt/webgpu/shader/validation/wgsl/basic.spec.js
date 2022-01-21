@@ -13,12 +13,12 @@ g.test('trivial')
   .fn(t => {
     t.expectCompileResult(
       true,
-      `[[stage(vertex)]] fn main() -> [[builtin(position)]] vec4<f32> {
+      `@stage(vertex) fn main() -> @builtin(position) vec4<f32> {
   return vec4<f32>();
 }`
     );
 
-    t.expectCompileResult(false, `[[stage(vertex), stage(fragment)]] fn main() {}`);
+    t.expectCompileResult(false, `@stage(vertex) @stage(fragment) fn main() {}`);
   });
 
 g.test('nonsense')

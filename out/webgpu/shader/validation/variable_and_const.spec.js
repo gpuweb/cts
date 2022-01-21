@@ -62,7 +62,7 @@ fn(t => {
   const { variableOrConstant, lhsType, rhsType } = t.params;
 
   const code = `
-      [[stage(fragment)]]
+      @stage(fragment)
       fn main() {
         ${variableOrConstant} a : ${lhsType} = ${rhsType}();
       }
@@ -105,20 +105,20 @@ fn(t => {
   if (`${storageClass}` === 'in') {
     code = `
         struct MyInputs {
-          [[location(0)]] a : ${type};
+          @location(0) a : ${type};
         };
 
-        [[stage(fragment)]]
+        @stage(fragment)
         fn main(inputs : MyInputs) {
         }
       `;
   } else if (`${storageClass}` === 'out') {
     code = `
         struct MyOutputs {
-          [[location(0)]] a : ${type};
+          @location(0) a : ${type};
         };
 
-        [[stage(fragment)]]
+        @stage(fragment)
         fn main() -> MyOutputs {
           return MyOutputs();
         }
@@ -127,7 +127,7 @@ fn(t => {
     code = `
       var<${storageClass}> a : ${type} = ${type}();
 
-      [[stage(fragment)]]
+      @stage(fragment)
       fn main() {
       }
       `;
