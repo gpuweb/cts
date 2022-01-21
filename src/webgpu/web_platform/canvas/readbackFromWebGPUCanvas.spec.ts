@@ -15,6 +15,11 @@ import {
 
 export const g = makeTestGroup(GPUTest);
 
+const kValidSwapchainFormats = [
+  'bgra8unorm',
+  'rgba8unorm',
+];
+
 // Use four pixels rectangle for the test:
 // blue: top-left;
 // green: top-right;
@@ -62,6 +67,7 @@ const webglExpect = new Uint8ClampedArray([
 
 async function initCanvasContent(
   t: GPUTest,
+  format: GPUTextureFormat,
   canvasType: canvasTypes
 ): Promise<HTMLCanvasElement | OffscreenCanvas> {
   const canvas = createCanvas(t, canvasType, 2, 2);
@@ -70,7 +76,7 @@ async function initCanvasContent(
 
   ctx.configure({
     device: t.device,
-    format: 'bgra8unorm',
+    format: format,
     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
   });
 
@@ -81,12 +87,29 @@ async function initCanvasContent(
     size: rows * bytesPerRow,
     usage: GPUBufferUsage.COPY_SRC,
   });
+  const blue = new Object();
+  blue['bgra8unorm'] = new Uint8Array([0xff, 0x00, 0x00, 0xff]);
+  blue['rgba8unorm'] = new Uint8Array([0x00, 0x00, 0xff, 0xff]);
+
+  const green = new Object();
+  green['bgra8unorm'] = new Uint8Array([0x00, 0xff, 0x00, 0xff]);
+  green['rgba8unorm'] = green['bgra8unorm'];
+
+  const red = new Object();
+  red['bgra8unorm'] = new Uint8Array([0x00, 0x00, 0xff, 0xff]);
+  red['rgba8unorm'] = new Uint8Array([0xff, 0x00, 0x00, 0xff]);
+
+  const yellow = new Object();
+  yellow['bgra8unorm'] = new Uint8Array([0x00, 0xff, 0xff, 0xff]);
+  yellow['rgba8unorm'] = new Uint8Array([0xff, 0xff, 0x00, 0xff]);
+
+
   const mapping = buffer.getMappedRange();
   const data = new Uint8Array(mapping);
-  data.set(new Uint8Array([0xff, 0x00, 0x00, 0xff]), 0); // blue
-  data.set(new Uint8Array([0x00, 0xff, 0x00, 0xff]), 4); // green
-  data.set(new Uint8Array([0x00, 0x00, 0xff, 0xff]), 256 + 0); // red
-  data.set(new Uint8Array([0x00, 0xff, 0xff, 0xff]), 256 + 4); // yellow
+  data.set(blue[format], 0); // blue
+  data.set(green[format], 4); // green
+  data.set(red[format], 256 + 0); // red
+  data.set(yellow[format], 256 + 4); // yellow
   buffer.unmap();
 
   const texture = ctx.getCurrentTexture();
@@ -120,17 +143,18 @@ g.test('onscreenCanvas,snapshot')
   .desc(
     `
     Ensure snapshot of canvas with WebGPU context is correct
-     
+
     TODO: Snapshot canvas to jpeg, webp and other mime type and
           different quality. Maybe we should test them in reftest.
     `
   )
   .params(u =>
     u //
+      .combine('format', kValidSwapchainFormats)
       .combine('snapshotType', ['toDataURL', 'toBlob', 'imageBitmap'])
   )
   .fn(async t => {
-    const canvas = (await initCanvasContent(t, 'onscreen')) as HTMLCanvasElement;
+    const canvas = (await initCanvasContent(t, t.params.format, 'onscreen')) as HTMLCanvasElement;
 
     let snapshot: HTMLImageElement | ImageBitmap;
     switch (t.params.snapshotType) {
@@ -169,17 +193,18 @@ g.test('offscreenCanvas,snapshot')
   .desc(
     `
     Ensure snapshot of offscreenCanvas with WebGPU context is correct
-     
+
     TODO: Snapshot offscreenCanvas to jpeg, webp and other mime type and
           different quality. Maybe we should test them in reftest.
     `
   )
   .params(u =>
     u //
+      .combine('format', kValidSwapchainFormats)
       .combine('snapshotType', ['convertToBlob', 'transferToImageBitmap', 'imageBitmap'])
   )
   .fn(async t => {
-    const offscreenCanvas = (await initCanvasContent(t, 'offscreen')) as OffscreenCanvas;
+    const offscreenCanvas = (await initCanvasContent(t, t.params.format, 'offscreen')) as OffscreenCanvas;
 
     let snapshot: HTMLImageElement | ImageBitmap;
     switch (t.params.snapshotType) {
@@ -223,12 +248,13 @@ g.test('onscreenCanvas,uploadToWebGL')
   )
   .params(u =>
     u //
+      .combine('format', kValidSwapchainFormats)
       .combine('webgl', ['webgl', 'webgl2'])
       .combine('upload', ['texImage2D', 'texSubImage2D'])
   )
   .fn(async t => {
-    const { webgl, upload } = t.params;
-    const canvas = (await initCanvasContent(t, 'onscreen')) as HTMLCanvasElement;
+    const { format, webgl, upload } = t.params;
+    const canvas = (await initCanvasContent(t, format, 'onscreen')) as HTMLCanvasElement;
 
     const expectCanvas: HTMLCanvasElement = createOnscreenCanvas(t, canvas.width, canvas.height);
     const gl = expectCanvas.getContext(webgl) as WebGLRenderingContext | WebGL2RenderingContext;
@@ -282,13 +308,14 @@ g.test('drawTo2DCanvas')
   )
   .params(u =>
     u //
+      .combine('format', kValidSwapchainFormats)
       .combine('webgpuCanvasType', allCanvasTypes)
       .combine('canvas2DType', allCanvasTypes)
   )
   .fn(async t => {
-    const { webgpuCanvasType, canvas2DType } = t.params;
+    const { format, webgpuCanvasType, canvas2DType } = t.params;
 
-    const canvas = await initCanvasContent(t, webgpuCanvasType);
+    const canvas = await initCanvasContent(t, format, webgpuCanvasType);
 
     const expectCanvas = createCanvas(t, canvas2DType, canvas.width, canvas.height);
     const ctx = expectCanvas.getContext('2d');
