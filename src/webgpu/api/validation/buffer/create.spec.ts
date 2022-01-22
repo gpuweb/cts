@@ -4,7 +4,11 @@ Tests for validation in createBuffer.
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
-import { kBufferSizeAlignment } from '../../../capability_info.js';
+import {
+  kAllBufferUsageBits,
+  kBufferSizeAlignment,
+  kBufferUsages,
+} from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import { kMaxSafeMultipleOf8 } from '../../../util/math.js';
 import { ValidationTest } from '../validation_test.js';
@@ -39,37 +43,29 @@ g.test('size')
     );
   });
 
-const BufferUsage = GPUConst.BufferUsage;
-const BufferUsageWithEmptyAndInvalid = { ...BufferUsage, NO_USAGE: 0, INVAILD: 0x8000 } as const;
-const listBufferUsage = Object.keys(BufferUsage) as [keyof typeof BufferUsage];
-const listBufferUsageWithEmptyAndInvalid = Object.keys(BufferUsageWithEmptyAndInvalid) as [
-  keyof typeof BufferUsageWithEmptyAndInvalid
-];
-const allowedBufferUsageSet = listBufferUsage.reduce(
-  (previousSet, currentUsage) => previousSet | BufferUsage[currentUsage],
-  0
-);
+const kInvalidUsage = 0x8000;
+assert((kInvalidUsage & kAllBufferUsageBits) === 0);
 
 g.test('usage')
-  .desc('Test combinations of up to two usage flags are validated to be valid.')
+  .desc('Test combinations of zero to two usage flags are validated to be valid.')
   .params(u =>
     u
-      .combine('usage1', listBufferUsageWithEmptyAndInvalid)
-      .combine('usage2', listBufferUsageWithEmptyAndInvalid)
+      .combine('usage1', [0, ...kBufferUsages, kInvalidUsage])
+      .combine('usage2', [0, ...kBufferUsages, kInvalidUsage])
       .beginSubcases()
       .combine('mappedAtCreation', [false, true])
   )
   .fn(t => {
     const { mappedAtCreation, usage1, usage2 } = t.params;
-    const usage = BufferUsageWithEmptyAndInvalid[usage1] | BufferUsageWithEmptyAndInvalid[usage2];
+    const usage = usage1 | usage2;
 
     const isValid =
       usage !== 0 &&
-      (usage & ~allowedBufferUsageSet) === 0 &&
-      ((usage & BufferUsage.MAP_READ) === 0 ||
-        (usage & ~(BufferUsage.COPY_DST | BufferUsage.MAP_READ)) === 0) &&
-      ((usage & BufferUsage.MAP_WRITE) === 0 ||
-        (usage & ~(BufferUsage.COPY_SRC | BufferUsage.MAP_WRITE)) === 0);
+      (usage & ~kAllBufferUsageBits) === 0 &&
+      ((usage & GPUBufferUsage.MAP_READ) === 0 ||
+        (usage & ~(GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ)) === 0) &&
+      ((usage & GPUBufferUsage.MAP_WRITE) === 0 ||
+        (usage & ~(GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE)) === 0);
 
     t.expectGPUError(
       'validation',
@@ -77,6 +73,8 @@ g.test('usage')
       !isValid
     );
   });
+
+const BufferUsage = GPUConst.BufferUsage;
 
 g.test('createBuffer_invalid_and_oom')
   .desc(
