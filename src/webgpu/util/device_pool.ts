@@ -1,11 +1,6 @@
 import { SkipTestCase } from '../../common/framework/fixture.js';
 import { getGPU } from '../../common/util/navigator_gpu.js';
-import {
-  assert,
-  raceWithRejectOnTimeout,
-  unreachable,
-  assertReject,
-} from '../../common/util/util.js';
+import { assert, raceWithRejectOnTimeout, assertReject } from '../../common/util/util.js';
 import { DefaultLimits } from '../constants.js';
 
 export interface DeviceProvider {
@@ -60,18 +55,7 @@ export class DevicePool {
       // (Hopefully if the device was lost, it has been reported by the time endErrorScopes()
       // has finished (or timed out). If not, it could cause a finite number of extra test
       // failures following this one (but should recover eventually).)
-      const lost = holder.lost;
-      if (lost !== undefined) {
-        if (lost.reason !== 'destroyed') {
-          // Fail the current test.
-          unreachable(`Device was unexpectedly lost: ${lost.message}`);
-        }
-        if (holder === this.defaultHolder) {
-          this.defaultHolder = 'uninitialized';
-        } else {
-          this.nonDefaultHolders.deleteByDevice(holder.device);
-        }
-      }
+      assert(holder.lostInfo === undefined, `Device was unexpectedly lost: ${holder.lostInfo}`);
     } catch (ex) {
       // Any error that isn't explicitly TestFailedButDeviceReusable forces a new device to be
       // created for the next test.
@@ -81,7 +65,9 @@ export class DevicePool {
         } else {
           this.nonDefaultHolders.deleteByDevice(holder.device);
         }
-        // MAINTENANCE_TODO: device.destroy()
+        if ('destroy' in holder.device) {
+          holder.device.destroy();
+        }
       }
       throw ex;
     } finally {
@@ -251,7 +237,7 @@ class DeviceHolder implements DeviceProvider {
   readonly device: GPUDevice;
   state: DeviceHolderState = 'free';
   // initially undefined; becomes set when the device is lost
-  lost?: GPUDeviceLostInfo;
+  lostInfo?: GPUDeviceLostInfo;
 
   // Gets a device and creates a DeviceHolder.
   // If the device is lost, DeviceHolder.lost gets set.
@@ -271,7 +257,7 @@ class DeviceHolder implements DeviceProvider {
   private constructor(device: GPUDevice) {
     this.device = device;
     this.device.lost.then(ev => {
-      this.lost = ev;
+      this.lostInfo = ev;
     });
   }
 
@@ -314,7 +300,7 @@ class DeviceHolder implements DeviceProvider {
       gpuOutOfMemoryError = await this.device.popErrorScope();
     } catch (ex) {
       assert(
-        this.lost !== undefined,
+        this.lostInfo !== undefined,
         'popErrorScope failed; should only happen if device has been lost'
       );
       throw ex;
