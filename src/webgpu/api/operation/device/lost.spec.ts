@@ -71,14 +71,18 @@ g.test('same_object')
     const lostPromise2 = device.lost;
     t.expect(lostPromise1 === lostPromise2);
 
-    // The results should also be the same result object.
+    // Promise object should still be the same after destroy.
     device.destroy();
     const lostPromise3 = device.lost;
     t.expect(lostPromise1 === lostPromise3);
 
+    // The results should also be the same result object.
     const lost1 = await t.getDeviceLostWithTimeout(lostPromise1);
     const lost2 = await t.getDeviceLostWithTimeout(lostPromise2);
     const lost3 = await t.getDeviceLostWithTimeout(lostPromise3);
-    const lost4 = await t.getDeviceLostWithTimeout(device.lost);
+    // Promise object should still be the same after we've been notified about device loss.
+    const lostPromise4 = device.lost;
+    t.expect(lostPromise1 === lostPromise4);
+    const lost4 = await t.getDeviceLostWithTimeout(lostPromise4);
     t.expect(lost1 === lost2 && lost2 === lost3 && lost3 === lost4);
   });
