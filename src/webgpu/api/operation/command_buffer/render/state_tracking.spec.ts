@@ -380,31 +380,13 @@ g.test('set_vertex_buffer_but_not_used_in_draw')
   `
   )
   .fn(async t => {
-    const kPositions = [-0.75, -0.25];
-    const kColors = [new Uint8Array([255, 0, 0, 255]), new Uint8Array([0, 255, 0, 255])];
+    const kPositions = new Float32Array([-0.75, -0.25]);
+    const kColors = new Uint8Array([255, 0, 0, 255, 0, 255, 0, 255]);
 
     // Initialize the vertex buffers with required vertex attributes (position: f32, color: f32x4)
-    const kAttribudeStride = 4;
-    const positionBuffer = t.device.createBuffer({
-      usage: GPUBufferUsage.VERTEX,
-      size: kAttribudeStride * kPositions.length,
-      mappedAtCreation: true,
-    });
-    t.trackForCleanup(positionBuffer);
-    const positions = new Float32Array(positionBuffer.getMappedRange());
-    positions.set(kPositions);
-    positionBuffer.unmap();
-
-    const colorBuffer = t.device.createBuffer({
-      usage: GPUBufferUsage.VERTEX,
-      size: kAttribudeStride * kPositions.length,
-      mappedAtCreation: true,
-    });
-    t.trackForCleanup(colorBuffer);
-    const colors = new Uint8Array(colorBuffer.getMappedRange());
-    colors.set(kColors[0]);
-    colors.set(kColors[1], kAttribudeStride);
-    colorBuffer.unmap();
+    const kAttributeStride = 4;
+    const positionBuffer = t.makeBufferWithContents(kPositions, GPUBufferUsage.VERTEX);
+    const colorBuffer = t.makeBufferWithContents(kColors, GPUBufferUsage.VERTEX);
 
     const fragmentState: GPUFragmentState = {
       module: t.device.createShaderModule({
@@ -446,7 +428,7 @@ g.test('set_vertex_buffer_but_not_used_in_draw')
         entryPoint: 'main',
         buffers: [
           {
-            arrayStride: kAttribudeStride,
+            arrayStride: kAttributeStride,
             attributes: [
               {
                 format: 'unorm8x4',
@@ -456,7 +438,7 @@ g.test('set_vertex_buffer_but_not_used_in_draw')
             ],
           },
           {
-            arrayStride: kAttribudeStride,
+            arrayStride: kAttributeStride,
             attributes: [
               {
                 format: 'float32',
@@ -498,7 +480,7 @@ g.test('set_vertex_buffer_but_not_used_in_draw')
         entryPoint: 'main',
         buffers: [
           {
-            arrayStride: kAttribudeStride,
+            arrayStride: kAttributeStride,
             attributes: [
               {
                 format: 'unorm8x4',
@@ -545,7 +527,12 @@ g.test('set_vertex_buffer_but_not_used_in_draw')
 
     t.queue.submit([encoder.finish()]);
 
-    const kExpectedColors = [kColors[0], kColors[1], kColors[0], kColors[1]];
+    const kExpectedColors = [
+      kColors.subarray(0, 4),
+      kColors.subarray(4),
+      kColors.subarray(0, 4),
+      kColors.subarray(4),
+    ];
 
     for (let i = 0; i < kPointsCount; ++i) {
       t.expectSinglePixelIn2DTexture(
