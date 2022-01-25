@@ -88,7 +88,7 @@ g.test('type')
     }
 
     code += generateShader({
-      attribute: '@location(0)',
+      attribute: '@location(0) @interpolate(flat)',
       type: t.params.type,
       stage: 'fragment',
       io: 'in',

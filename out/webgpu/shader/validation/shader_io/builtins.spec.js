@@ -180,14 +180,22 @@ combine('second', ['p2', 's1b', 's2b', 'rb']).
 beginSubcases()).
 
 fn(t => {
-  const p1 = t.params.first === 'p1' ? '@builtin(sample_mask)' : '@location(1)';
-  const p2 = t.params.second === 'p2' ? '@builtin(sample_mask)' : '@location(2)';
-  const s1a = t.params.first === 's1a' ? '@builtin(sample_mask)' : '@location(3)';
-  const s1b = t.params.second === 's1b' ? '@builtin(sample_mask)' : '@location(4)';
-  const s2a = t.params.first === 's2a' ? '@builtin(sample_mask)' : '@location(5)';
-  const s2b = t.params.second === 's2b' ? '@builtin(sample_mask)' : '@location(6)';
-  const ra = t.params.first === 'ra' ? '@builtin(sample_mask)' : '@location(1)';
-  const rb = t.params.second === 'rb' ? '@builtin(sample_mask)' : '@location(2)';
+  const p1 =
+  t.params.first === 'p1' ? '@builtin(sample_mask)' : '@location(1) @interpolate(flat)';
+  const p2 =
+  t.params.second === 'p2' ? '@builtin(sample_mask)' : '@location(2) @interpolate(flat)';
+  const s1a =
+  t.params.first === 's1a' ? '@builtin(sample_mask)' : '@location(3) @interpolate(flat)';
+  const s1b =
+  t.params.second === 's1b' ? '@builtin(sample_mask)' : '@location(4) @interpolate(flat)';
+  const s2a =
+  t.params.first === 's2a' ? '@builtin(sample_mask)' : '@location(5) @interpolate(flat)';
+  const s2b =
+  t.params.second === 's2b' ? '@builtin(sample_mask)' : '@location(6) @interpolate(flat)';
+  const ra =
+  t.params.first === 'ra' ? '@builtin(sample_mask)' : '@location(1) @interpolate(flat)';
+  const rb =
+  t.params.second === 'rb' ? '@builtin(sample_mask)' : '@location(2) @interpolate(flat)';
   const code = `
     struct S1 {
       ${s1a} a : u32;

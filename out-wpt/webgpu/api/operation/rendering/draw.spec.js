@@ -506,14 +506,14 @@ g.test('vertex_attributes,basic')
     // The remaining 3 vertex attributes
     if (t.params.vertex_attribute_count === 16) {
       accumulateVariableDeclarationsInVertexShader = `
-        @location(13) outAttrib13 : vec4<${wgslFormat}>;
+        @location(13) @interpolate(flat) outAttrib13 : vec4<${wgslFormat}>;
       `;
       accumulateVariableAssignmentsInVertexShader = `
       output.outAttrib13 =
           vec4<${wgslFormat}>(input.attrib12, input.attrib13, input.attrib14, input.attrib15);
       `;
       accumulateVariableDeclarationsInFragmentShader = `
-      @location(13) attrib13 : vec4<${wgslFormat}>;
+      @location(13) @interpolate(flat) attrib13 : vec4<${wgslFormat}>;
       `;
       accumulateVariableAssignmentsInFragmentShader = `
       outBuffer.primitives[input.primitiveId].attrib12 = input.attrib13.x;
@@ -536,9 +536,9 @@ ${vertexInputShaderLocations.map(i => `  @location(${i}) attrib${i} : ${wgslForm
 struct Outputs {
   @builtin(position) Position : vec4<f32>;
 ${interStageScalarShaderLocations
-  .map(i => `  @location(${i}) outAttrib${i} : ${wgslFormat};`)
+  .map(i => `  @location(${i}) @interpolate(flat) outAttrib${i} : ${wgslFormat};`)
   .join('\n')}
-  @location(${interStageScalarShaderLocations.length}) primitiveId : u32;
+  @location(${interStageScalarShaderLocations.length}) @interpolate(flat) primitiveId : u32;
 ${accumulateVariableDeclarationsInVertexShader}
 };
 
@@ -563,9 +563,9 @@ ${accumulateVariableAssignmentsInVertexShader}
           code: `
 struct Inputs {
 ${interStageScalarShaderLocations
-  .map(i => `  @location(${i}) attrib${i} : ${wgslFormat};`)
+  .map(i => `  @location(${i}) @interpolate(flat) attrib${i} : ${wgslFormat};`)
   .join('\n')}
-  @location(${interStageScalarShaderLocations.length}) primitiveId : u32;
+  @location(${interStageScalarShaderLocations.length}) @interpolate(flat) primitiveId : u32;
 ${accumulateVariableDeclarationsInFragmentShader}
 };
 
