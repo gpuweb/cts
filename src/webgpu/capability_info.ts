@@ -55,6 +55,10 @@ export const kBufferUsageInfo: {
 };
 /** List of all GPUBufferUsage values. */
 export const kBufferUsages = numericKeysOf<GPUBufferUsageFlags>(kBufferUsageInfo);
+export const kAllBufferUsageBits = kBufferUsages.reduce(
+  (previousSet, currentUsage) => previousSet | currentUsage,
+  0
+);
 
 // Textures
 
