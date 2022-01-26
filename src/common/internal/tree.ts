@@ -47,7 +47,7 @@ interface TestTreeNodeBase<T extends TestQuery> {
    * one (e.g. s:f:* relative to s:f,*), but something that is readable.
    */
   readonly readableRelativeName: string;
-  subtreeCounts?: { tests: number, nodesWithTODO: number };
+  subtreeCounts?: { tests: number; nodesWithTODO: number };
 }
 
 export interface TestSubtree<T extends TestQuery = TestQuery> extends TestTreeNodeBase<T> {
@@ -183,7 +183,7 @@ export class TestTree {
   }
 
   /** Propagate the subtreeTODOs/subtreeTests state upward from leaves to parent nodes. */
-  static propagateCounts(subtree: TestSubtree): { tests: number, nodesWithTODO: number } {
+  static propagateCounts(subtree: TestSubtree): { tests: number; nodesWithTODO: number } {
     subtree.subtreeCounts ??= { tests: 0, nodesWithTODO: 0 };
     for (const [, child] of subtree.children) {
       if ('children' in child) {
@@ -206,7 +206,9 @@ export class TestTree {
 
   static subtreeToString(name: string, tree: TestTreeNode, indent: string): string {
     const collapsible = 'run' in tree ? '>' : tree.collapsible ? '+' : '-';
-    let s = indent + `${collapsible} ${TestTree.countsToString(tree)} ${JSON.stringify(name)} => ${tree.query}`;
+    let s =
+      indent +
+      `${collapsible} ${TestTree.countsToString(tree)} ${JSON.stringify(name)} => ${tree.query}`;
     if ('children' in tree) {
       if (tree.description !== undefined) {
         s += `\n${indent}  | ${JSON.stringify(tree.description)}`;
@@ -354,7 +356,10 @@ export async function loadTreeForQuery(
   return new TestTree(queryToLoad, subtreeL0);
 }
 
-function setSubtreeDescriptionAndCountTODOs(subtree: TestSubtree<TestQueryMultiFile>, description: string) {
+function setSubtreeDescriptionAndCountTODOs(
+  subtree: TestSubtree<TestQueryMultiFile>,
+  description: string
+) {
   assert(subtree.description === undefined);
   subtree.description = description.trim();
   subtree.subtreeCounts ??= { tests: 0, nodesWithTODO: 0 };
