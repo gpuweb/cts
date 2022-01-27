@@ -79,9 +79,12 @@
 							<h3>Functions</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.html#align" class="tsd-kind-icon">align</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.html#biasedrange" class="tsd-kind-icon">biased<wbr>Range</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.html#clamp" class="tsd-kind-icon">clamp</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.html#correctlyrounded" class="tsd-kind-icon">correctly<wbr>Rounded</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.html#diffulp" class="tsd-kind-icon">diffULP</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.html#lerp" class="tsd-kind-icon">lerp</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.html#linearrange" class="tsd-kind-icon">linear<wbr>Range</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.html#nextafter" class="tsd-kind-icon">next<wbr>After</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.html#rounddown" class="tsd-kind-icon">round<wbr>Down</a></li>
 							</ul>
@@ -97,7 +100,7 @@
 					<div class="tsd-signature tsd-kind-icon">k<wbr>Max<wbr>Safe<wbr>Multiple<wbr>Of8<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = ...</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd2a425/src/webgpu/util/math.ts#L13">src/webgpu/util/math.ts:13</a></li>
+							<li>Defined in <a href="https://github.com/gpuweb/cts/blob/99c5b20/src/webgpu/util/math.ts#L13">src/webgpu/util/math.ts:13</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -122,7 +125,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd2a425/src/webgpu/util/math.ts#L17">src/webgpu/util/math.ts:17</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/99c5b20/src/webgpu/util/math.ts#L17">src/webgpu/util/math.ts:17</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -144,6 +147,40 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="biasedrange" class="tsd-anchor"></a>
+					<h3>biased<wbr>Range</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">biased<wbr>Range<span class="tsd-signature-symbol">(</span>min<span class="tsd-signature-symbol">: </span><a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a>, max<span class="tsd-signature-symbol">: </span><a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a>, num_steps<span class="tsd-signature-symbol">: </span><a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">[]</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/99c5b20/src/webgpu/util/math.ts#L290">src/webgpu/util/math.ts:290</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>min: <a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a></h5>
+								</li>
+								<li>
+									<h5>max: <a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a></h5>
+								</li>
+								<li>
+									<h5>num_steps: <a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">[]</span></h4>
+							<p>a non-linear increasing range of numbers, with a bias towards min.</p>
+							<p>Generates a linear range on [0,1] with |num_steps|, then squares all the values to make the curve be quadratic,
+								thus biasing towards 0, but remaining on the [0, 1] range.
+								This biased range is then scaled to the desired range using lerp.
+							Different curves could be generated by changing c, where greater values of c will bias more towards 0.</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
 					<a name="clamp" class="tsd-anchor"></a>
 					<h3>clamp</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
@@ -153,7 +190,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd2a425/src/webgpu/util/math.ts#L31">src/webgpu/util/math.ts:31</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/99c5b20/src/webgpu/util/math.ts#L31">src/webgpu/util/math.ts:31</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -192,7 +229,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd2a425/src/webgpu/util/math.ts#L170">src/webgpu/util/math.ts:170</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/99c5b20/src/webgpu/util/math.ts#L170">src/webgpu/util/math.ts:170</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -233,7 +270,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd2a425/src/webgpu/util/math.ts#L40">src/webgpu/util/math.ts:40</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/99c5b20/src/webgpu/util/math.ts#L40">src/webgpu/util/math.ts:40</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -252,6 +289,73 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="lerp" class="tsd-anchor"></a>
+					<h3>lerp</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">lerp<span class="tsd-signature-symbol">(</span>a<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, b<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, t<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/99c5b20/src/webgpu/util/math.ts#L240">src/webgpu/util/math.ts:240</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Calculates the linear interpolation between two values of a given fractional.</p>
+								</div>
+								<p>If |t| is 0, |a| is returned, if |t| is 1, |b| is returned, otherwise
+								interpolation/extrapolation equivalent to a + t(b - a) is performed.</p>
+								<p>Numerical stable version is adapted from <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0811r2.html">http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0811r2.html</a></p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>a: <span class="tsd-signature-type">number</span></h5>
+								</li>
+								<li>
+									<h5>b: <span class="tsd-signature-type">number</span></h5>
+								</li>
+								<li>
+									<h5>t: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="linearrange" class="tsd-anchor"></a>
+					<h3>linear<wbr>Range</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">linear<wbr>Range<span class="tsd-signature-symbol">(</span>min<span class="tsd-signature-symbol">: </span><a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a>, max<span class="tsd-signature-symbol">: </span><a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a>, num_steps<span class="tsd-signature-symbol">: </span><a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">[]</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/99c5b20/src/webgpu/util/math.ts#L274">src/webgpu/util/math.ts:274</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>min: <a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a></h5>
+								</li>
+								<li>
+									<h5>max: <a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a></h5>
+								</li>
+								<li>
+									<h5>num_steps: <a href="../classes/webgpu_util_conversion.scalar.html" class="tsd-signature-type" data-tsd-kind="Class">Scalar</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">[]</span></h4>
+							<p>a linear increasing range of numbers.</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
 					<a name="nextafter" class="tsd-anchor"></a>
 					<h3>next<wbr>After</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
@@ -261,7 +365,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd2a425/src/webgpu/util/math.ts#L108">src/webgpu/util/math.ts:108</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/99c5b20/src/webgpu/util/math.ts#L108">src/webgpu/util/math.ts:108</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -298,7 +402,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd2a425/src/webgpu/util/math.ts#L24">src/webgpu/util/math.ts:24</a></li>
+									<li>Defined in <a href="https://github.com/gpuweb/cts/blob/99c5b20/src/webgpu/util/math.ts#L24">src/webgpu/util/math.ts:24</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -341,6 +445,9 @@
 						<a href="webgpu_util_math.html#align" class="tsd-kind-icon">align</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="webgpu_util_math.html#biasedrange" class="tsd-kind-icon">biased<wbr>Range</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="webgpu_util_math.html#clamp" class="tsd-kind-icon">clamp</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
@@ -348,6 +455,12 @@
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="webgpu_util_math.html#diffulp" class="tsd-kind-icon">diffULP</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="webgpu_util_math.html#lerp" class="tsd-kind-icon">lerp</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="webgpu_util_math.html#linearrange" class="tsd-kind-icon">linear<wbr>Range</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="webgpu_util_math.html#nextafter" class="tsd-kind-icon">next<wbr>After</a>
