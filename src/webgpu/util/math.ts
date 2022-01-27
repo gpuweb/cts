@@ -232,41 +232,26 @@ function correctlyRoundedImpl(test_value: Scalar, target: number, flush: boolean
 /**
  * Calculates the linear interpolation between two values of a given fractional.
  *
- * Assumes |min| <= |max|, they are internally swapped if needed.
- * If |t| >= 1, then |max| is returned, and if |t| <= 0 |min| is returned.
- * Numerical stability is adapted from http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0811r2.html
+ * If |t| is 0, |a| is returned, if |t| is 1, |b| is returned, otherwise
+ * interpolation/extrapolation equivalent to a + t(b - a) is performed.
+ *
+ * Numerical stable version is adapted from http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0811r2.html
  */
-export function lerp(min: number, max: number, t: number) {
-  if (!Number.isFinite(min) || !Number.isFinite(max)) {
+export function lerp(a: number, b: number, t: number) {
+  if (!Number.isFinite(a) || !Number.isFinite(b)) {
     return Number.NaN;
   }
 
-  if (min > max) {
-    const temp = min;
-    min = max;
-    max = temp;
+  if ((a <= 0.0 && b >= 0.0) || (a >= 0.0 && b <= 0.0)) {
+    return t * b + (1 - t) * a;
   }
 
-  if (t <= 0) {
-    return min;
+  if (t === 1.0) {
+    return b;
   }
 
-  if (t >= 1) {
-    return max;
-  }
-
-  if (min === max) {
-    return min;
-  }
-
-  // Don't need the min >= && max <= 0 case, since min < max is already enforced.
-  if (min <= 0 && max >= 0) {
-    return t * max + (1 - t) * min;
-  }
-
-  const x = min + t * (max - min);
-  // t is on (0, 1) here, and min < max, so only need the Math.min() case
-  return Math.min(max, x);
+  const x = a + t * (b - a);
+  return t > 1.0 === b > a ? Math.max(b, x) : Math.min(b, x);
 }
 
 /** Unwrap Scalar params into numbers and check preconditions */
