@@ -874,7 +874,7 @@ interface lerpCase {
 
 g.test('test,math,lerp')
   .paramsSimple<lerpCase>([
-    // Infinite Case
+    // Infinite cases
     { min: 0.0, max: Number.POSITIVE_INFINITY, t: 0.5, result: Number.NaN },
     { min: Number.NEGATIVE_INFINITY, max: 1.0, t: 0.5, result: Number.NaN },
     { min: Number.NEGATIVE_INFINITY, max: Number.POSITIVE_INFINITY, t: 0.5, result: Number.NaN },
@@ -909,47 +909,61 @@ g.test('test,math,lerp')
     { min: 0.0, max: 10.0, t: 1.0, result: 10.0 },
     { min: 0.0, max: 10.0, t: 2.0, result: 20.0 },
 
-    // // [2.0, 10.0] cases
-    // { min: 2.0, max: 10.0, t: -1.0, result: 2.0 },
-    // { min: 2.0, max: 10.0, t: 0.0, result: 2.0 },
-    // { min: 2.0, max: 10.0, t: 0.1, result: 2.8 },
-    // { min: 2.0, max: 10.0, t: 0.01, result: 2.08 },
-    // { min: 2.0, max: 10.0, t: 0.001, result: 2.008 },
-    // { min: 2.0, max: 10.0, t: 0.25, result: 4.0 },
-    // { min: 2.0, max: 10.0, t: 0.5, result: 6.0 },
-    // { min: 2.0, max: 10.0, t: 0.9, result: 9.2 },
-    // { min: 2.0, max: 10.0, t: 0.99, result: 9.92 },
-    // { min: 2.0, max: 10.0, t: 0.999, result: 9.992 },
-    // { min: 2.0, max: 10.0, t: 1.0, result: 10.0 },
-    // { min: 2.0, max: 10.0, t: 2.0, result: 10.0 },
-    //
-    // // [-1.0, 1.0] cases
-    // { min: -1.0, max: 1.0, t: -2.0, result: -1.0 },
-    // { min: -1.0, max: 1.0, t: 0.0, result: -1.0 },
-    // { min: -1.0, max: 1.0, t: 0.1, result: -0.8 },
-    // { min: -1.0, max: 1.0, t: 0.01, result: -0.98 },
-    // { min: -1.0, max: 1.0, t: 0.001, result: -0.998 },
-    // { min: -1.0, max: 1.0, t: 0.25, result: -0.5 },
-    // { min: -1.0, max: 1.0, t: 0.5, result: 0.0 },
-    // { min: -1.0, max: 1.0, t: 0.9, result: 0.8 },
-    // { min: -1.0, max: 1.0, t: 0.99, result: 0.98 },
-    // { min: -1.0, max: 1.0, t: 0.999, result: 0.998 },
-    // { min: -1.0, max: 1.0, t: 1.0, result: 1.0 },
-    // { min: -1.0, max: 1.0, t: 2.0, result: 1.0 },
-    //
-    // // [-1.0, 0.0] cases
-    // { min: -1.0, max: 0.0, t: -1.0, result: -1.0 },
-    // { min: -1.0, max: 0.0, t: 0.0, result: -1.0 },
-    // { min: -1.0, max: 0.0, t: 0.1, result: -0.9 },
-    // { min: -1.0, max: 0.0, t: 0.01, result: -0.99 },
-    // { min: -1.0, max: 0.0, t: 0.001, result: -0.999 },
-    // { min: -1.0, max: 0.0, t: 0.25, result: -0.75 },
-    // { min: -1.0, max: 0.0, t: 0.5, result: -0.5 },
-    // { min: -1.0, max: 0.0, t: 0.9, result: -0.1 },
-    // { min: -1.0, max: 0.0, t: 0.99, result: -0.01 },
-    // { min: -1.0, max: 0.0, t: 0.999, result: -0.001 },
-    // { min: -1.0, max: 0.0, t: 1.0, result: 0.0 },
-    // { min: -1.0, max: 0.0, t: 2.0, result: 0.0 },
+    // [2.0, 10.0] cases
+    { min: 2.0, max: 10.0, t: -1.0, result: -6.0 },
+    { min: 2.0, max: 10.0, t: 0.0, result: 2.0 },
+    { min: 2.0, max: 10.0, t: 0.1, result: 2.8 },
+    { min: 2.0, max: 10.0, t: 0.01, result: 2.08 },
+    { min: 2.0, max: 10.0, t: 0.001, result: 2.008 },
+    { min: 2.0, max: 10.0, t: 0.25, result: 4.0 },
+    { min: 2.0, max: 10.0, t: 0.5, result: 6.0 },
+    { min: 2.0, max: 10.0, t: 0.9, result: 9.2 },
+    { min: 2.0, max: 10.0, t: 0.99, result: 9.92 },
+    { min: 2.0, max: 10.0, t: 0.999, result: 9.992 },
+    { min: 2.0, max: 10.0, t: 1.0, result: 10.0 },
+    { min: 2.0, max: 10.0, t: 2.0, result: 18.0 },
+
+    // [-1.0, 1.0] cases
+    { min: -1.0, max: 1.0, t: -2.0, result: -5.0 },
+    { min: -1.0, max: 1.0, t: 0.0, result: -1.0 },
+    { min: -1.0, max: 1.0, t: 0.1, result: -0.8 },
+    { min: -1.0, max: 1.0, t: 0.01, result: -0.98 },
+    { min: -1.0, max: 1.0, t: 0.001, result: -0.998 },
+    { min: -1.0, max: 1.0, t: 0.25, result: -0.5 },
+    { min: -1.0, max: 1.0, t: 0.5, result: 0.0 },
+    { min: -1.0, max: 1.0, t: 0.9, result: 0.8 },
+    { min: -1.0, max: 1.0, t: 0.99, result: 0.98 },
+    { min: -1.0, max: 1.0, t: 0.999, result: 0.998 },
+    { min: -1.0, max: 1.0, t: 1.0, result: 1.0 },
+    { min: -1.0, max: 1.0, t: 2.0, result: 3.0 },
+
+    // [-1.0, 0.0] cases
+    { min: -1.0, max: 0.0, t: -1.0, result: -2.0 },
+    { min: -1.0, max: 0.0, t: 0.0, result: -1.0 },
+    { min: -1.0, max: 0.0, t: 0.1, result: -0.9 },
+    { min: -1.0, max: 0.0, t: 0.01, result: -0.99 },
+    { min: -1.0, max: 0.0, t: 0.001, result: -0.999 },
+    { min: -1.0, max: 0.0, t: 0.25, result: -0.75 },
+    { min: -1.0, max: 0.0, t: 0.5, result: -0.5 },
+    { min: -1.0, max: 0.0, t: 0.9, result: -0.1 },
+    { min: -1.0, max: 0.0, t: 0.99, result: -0.01 },
+    { min: -1.0, max: 0.0, t: 0.999, result: -0.001 },
+    { min: -1.0, max: 0.0, t: 1.0, result: 0.0 },
+    { min: -1.0, max: 0.0, t: 2.0, result: 1.0 },
+
+    // [0.0, -1.0] cases
+    { min: 0.0, max: -1.0, t: -1.0, result: 1.0 },
+    { min: 0.0, max: -1.0, t: 0.0, result: 0.0 },
+    { min: 0.0, max: -1.0, t: 0.1, result: -0.1 },
+    { min: 0.0, max: -1.0, t: 0.01, result: -0.01 },
+    { min: 0.0, max: -1.0, t: 0.001, result: -0.001 },
+    { min: 0.0, max: -1.0, t: 0.25, result: -0.25 },
+    { min: 0.0, max: -1.0, t: 0.5, result: -0.5 },
+    { min: 0.0, max: -1.0, t: 0.9, result: -0.9 },
+    { min: 0.0, max: -1.0, t: 0.99, result: -0.99 },
+    { min: 0.0, max: -1.0, t: 0.999, result: -0.999 },
+    { min: 0.0, max: -1.0, t: 1.0, result: -1.0 },
+    { min: 0.0, max: -1.0, t: 2.0, result: -2.0 },
   ])
   .fn(test => {
     const min = test.params.min;
