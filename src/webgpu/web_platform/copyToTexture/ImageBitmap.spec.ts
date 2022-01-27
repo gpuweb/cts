@@ -29,21 +29,14 @@ enum Color {
   TransparentBlack,
 }
 
-// These two types correspond to |premultiplyAlpha| and |imageOrientation| in |ImageBitmapOptions|.
-type TransparentOp = 'premultiply' | 'none' | 'non-transparent';
-type OrientationOp = 'flipY' | 'none';
-
 // Cache for generated pixels.
-const generatedPixelCache: Map<
-  RegularTextureFormat,
-  Map<Color, Map<TransparentOp, Uint8Array>>
-> = new Map();
+const generatedPixelCache: Map<RegularTextureFormat, Map<Color, Uint8Array>> = new Map();
 
 class F extends CopyToTextureUtils {
   generatePixel(
     color: Color,
     format: RegularTextureFormat,
-    transparentOp: TransparentOp
+    hasTransparentPixels: boolean
   ): Uint8Array {
     let formatEntry = generatedPixelCache.get(format);
     if (formatEntry === undefined) {
@@ -51,14 +44,9 @@ class F extends CopyToTextureUtils {
       generatedPixelCache.set(format, formatEntry);
     }
 
-    let colorEntry = formatEntry.get(color);
+    const colorEntry = formatEntry.get(color);
     if (colorEntry === undefined) {
-      colorEntry = new Map();
-      formatEntry.set(color, colorEntry);
-    }
-
-    // None of the dst texture format is 'uint' or 'sint', so we can always use float value.
-    if (!colorEntry.has(transparentOp)) {
+      // None of the dst texture format is 'uint' or 'sint', so we can always use float value.
       const rep = kTexelRepresentationInfo[format];
       let rgba: { R: number; G: number; B: number; A: number };
       switch (color) {
@@ -78,23 +66,17 @@ class F extends CopyToTextureUtils {
           rgba = { R: 1.0, G: 1.0, B: 1.0, A: 1.0 };
           break;
         case Color.TransparentBlack:
-          rgba = { R: 1.0, G: 1.0, B: 1.0, A: 0.0 };
+          rgba = { R: 1.0, G: 1.0, B: 1.0, A: 0.6 };
           break;
         default:
           unreachable();
       }
 
-      if (transparentOp === 'premultiply') {
-        rgba.R *= rgba.A;
-        rgba.G *= rgba.A;
-        rgba.B *= rgba.A;
-      }
-
       const pixels = new Uint8Array(rep.pack(rep.encode(rgba)));
-      colorEntry.set(transparentOp, pixels);
+      formatEntry.set(color, pixels);
     }
 
-    return colorEntry.get(transparentOp)!;
+    return formatEntry.get(color)!;
   }
 
   // Helper functions to generate imagePixels based input configs.
@@ -102,29 +84,25 @@ class F extends CopyToTextureUtils {
     format,
     width,
     height,
-    transparentOp,
-    orientationOp,
+    hasTransparentPixels,
   }: {
     format: RegularTextureFormat;
     width: number;
     height: number;
-    transparentOp: TransparentOp;
-    orientationOp: OrientationOp;
+    hasTransparentPixels: boolean;
   }): Uint8ClampedArray {
     const bytesPerPixel = kTextureFormatInfo[format].bytesPerBlock;
 
     // Generate input contents by iterating 'Color' enum
     const imagePixels = new Uint8ClampedArray(bytesPerPixel * width * height);
     const testColors = [Color.Red, Color.Green, Color.Blue, Color.White, Color.OpaqueBlack];
-    if (transparentOp !== 'non-transparent') testColors.push(Color.TransparentBlack);
+    if (hasTransparentPixels) testColors.push(Color.TransparentBlack);
 
     for (let i = 0; i < height; ++i) {
       for (let j = 0; j < width; ++j) {
         const pixelPos = i * width + j;
-        const currentColorIndex =
-          orientationOp === 'flipY' ? (height - i - 1) * width + j : pixelPos;
-        const currentPixel = testColors[currentColorIndex % testColors.length];
-        const pixelData = this.generatePixel(currentPixel, format, transparentOp);
+        const currentPixel = testColors[pixelPos % testColors.length];
+        const pixelData = this.generatePixel(currentPixel, format, hasTransparentPixels);
         imagePixels.set(pixelData, pixelPos * bytesPerPixel);
       }
     }
@@ -149,20 +127,28 @@ g.test('from_ImageData')
       .combine('orientation', ['none', 'flipY'] as const)
       .combine('dstColorFormat', kValidTextureFormatsForCopyE2T)
       .combine('dstPremultiplied', [true, false])
+      .combine('srcDoFlipYDuringCopy', [true, false])
       .beginSubcases()
       .combine('width', [1, 2, 4, 15, 255, 256])
       .combine('height', [1, 2, 4, 15, 255, 256])
   )
   .fn(async t => {
-    const { width, height, alpha, orientation, dstColorFormat, dstPremultiplied } = t.params;
+    const {
+      width,
+      height,
+      alpha,
+      orientation,
+      dstColorFormat,
+      dstPremultiplied,
+      srcDoFlipYDuringCopy,
+    } = t.params;
 
     // Generate input contents by iterating 'Color' enum
     const imagePixels = t.getImagePixels({
       format: 'rgba8unorm',
       width,
       height,
-      transparentOp: 'none',
-      orientationOp: 'none',
+      hasTransparentPixels: true,
     });
 
     // Generate correct expected values
@@ -185,19 +171,29 @@ g.test('from_ImageData')
 
     // Construct expected value for different dst color format
     const dstBytesPerPixel = kTextureFormatInfo[dstColorFormat].bytesPerBlock;
-    const expectedTransparentOP =
-      alpha === 'premultiply' || dstPremultiplied ? 'premultiply' : 'none';
-
-    const expectedPixels = t.getImagePixels({
-      format: dstColorFormat,
+    const srcPremultiplied = alpha === 'premultiply';
+    const sourceImageBitmapPixels = t.getSourceImageBitmapPixels(
+      imagePixels,
       width,
       height,
-      transparentOp: expectedTransparentOP,
-      orientationOp: orientation,
-    });
+      srcPremultiplied,
+      orientation === 'flipY'
+    );
+
+    const format: RegularTextureFormat = t.formatForExpectedPixels(dstColorFormat);
+
+    const expectedPixels = t.getExpectedPixels(
+      sourceImageBitmapPixels,
+      width,
+      height,
+      format,
+      srcPremultiplied,
+      dstPremultiplied,
+      srcDoFlipYDuringCopy
+    );
 
     t.doTestAndCheckResult(
-      { source: imageBitmap, origin: { x: 0, y: 0 } },
+      { source: imageBitmap, origin: { x: 0, y: 0 }, flipY: srcDoFlipYDuringCopy },
       {
         texture: dst,
         origin: { x: 0, y: 0 },
@@ -223,12 +219,20 @@ g.test('from_canvas')
       .combine('orientation', ['none', 'flipY'] as const)
       .combine('dstColorFormat', kValidTextureFormatsForCopyE2T)
       .combine('dstPremultiplied', [true, false])
+      .combine('srcDoFlipYDuringCopy', [true, false])
       .beginSubcases()
       .combine('width', [1, 2, 4, 15, 255, 256])
       .combine('height', [1, 2, 4, 15, 255, 256])
   )
   .fn(async t => {
-    const { width, height, orientation, dstColorFormat, dstPremultiplied } = t.params;
+    const {
+      width,
+      height,
+      orientation,
+      dstColorFormat,
+      dstPremultiplied,
+      srcDoFlipYDuringCopy,
+    } = t.params;
 
     // CTS sometimes runs on worker threads, where document is not available.
     // In this case, OffscreenCanvas can be used instead of <canvas>.
@@ -259,8 +263,7 @@ g.test('from_canvas')
       format: 'rgba8unorm',
       width,
       height,
-      transparentOp: 'non-transparent',
-      orientationOp: 'none',
+      hasTransparentPixels: false,
     });
 
     const imageData = new ImageData(imagePixels, width, height);
@@ -285,16 +288,29 @@ g.test('from_canvas')
     });
 
     const dstBytesPerPixel = kTextureFormatInfo[dstColorFormat].bytesPerBlock;
-    const expectedPixels = t.getImagePixels({
-      format: dstColorFormat,
+
+    const sourceImageBitmapPixels = t.getSourceImageBitmapPixels(
+      imagePixels,
       width,
       height,
-      transparentOp: 'non-transparent',
-      orientationOp: orientation,
-    });
+      true,
+      orientation === 'flipY'
+    );
+
+    const format: RegularTextureFormat = t.formatForExpectedPixels(dstColorFormat);
+
+    const expectedPixels = t.getExpectedPixels(
+      sourceImageBitmapPixels,
+      width,
+      height,
+      format,
+      true,
+      dstPremultiplied,
+      srcDoFlipYDuringCopy
+    );
 
     t.doTestAndCheckResult(
-      { source: imageBitmap, origin: { x: 0, y: 0 } },
+      { source: imageBitmap, origin: { x: 0, y: 0 }, flipY: srcDoFlipYDuringCopy },
       {
         texture: dst,
         origin: { x: 0, y: 0 },
