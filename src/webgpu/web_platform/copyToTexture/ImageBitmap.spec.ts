@@ -119,6 +119,30 @@ g.test('from_ImageData')
   Test ImageBitmap generated from ImageData can be copied to WebGPU
   texture correctly. These imageBitmaps are highly possible living
   in CPU back resource.
+
+  It generates pixels in ImageData one by one based on a color list:
+  [RED, GREEN, BLUE, WHITE, OPAQUE_BLACK, TRANSPARENT_BLACK].
+
+  Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
+  of dst texture, and read the contents out to compare with the ImageBitmap contents.
+
+  Do premultiply alpha during copy if  'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
+  is set to 'ture' and do unpremultiply alpha if it is set to 'false'.
+
+  If 'flipY' in 'GPUImageCopyExternalImage' is set to 'true', copy will ensure the result
+  is flipped.
+
+  The tests covers:
+  - Valid canvas type
+  - Source WebGPU Canvas lives in the same GPUDevice or different GPUDevice as test
+  - Valid dstColorFormat of copyExternalImageToTexture()
+  - Valid source image alphaMode
+  - Valid dest alphaMode
+  - Valid 'flipY' config in 'GPUImageCopyExternalImage'(named 'srcDoFlipYDuringCopy' in cases)
+  - TODO: color space tests need to be added
+  - TODO: Add error tolerance for rgb10a2unorm dst texture format
+
+  And the expected results are all passed.
   `
   )
   .params(u =>
@@ -180,7 +204,10 @@ g.test('from_ImageData')
       orientation === 'flipY'
     );
 
-    const format: RegularTextureFormat = t.formatForExpectedPixels(dstColorFormat);
+    const format: RegularTextureFormat =
+      kTextureFormatInfo[dstColorFormat].baseFormat !== undefined
+        ? kTextureFormatInfo[dstColorFormat].baseFormat!
+        : dstColorFormat;
 
     const expectedPixels = t.getExpectedPixels(
       sourceImageBitmapPixels,
@@ -212,6 +239,30 @@ g.test('from_canvas')
     `
   Test ImageBitmap generated from canvas/offscreenCanvas can be copied to WebGPU
   texture correctly. These imageBitmaps are highly possible living in GPU back resource.
+
+  It generates pixels in ImageData one by one based on a color list:
+  [RED, GREEN, BLUE, WHITE, OPAQUE_BLACK].
+
+  Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
+  of dst texture, and read the contents out to compare with the ImageBitmap contents.
+
+  Do premultiply alpha during copy if  'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
+  is set to 'ture' and do unpremultiply alpha if it is set to 'false'.
+
+  If 'flipY' in 'GPUImageCopyExternalImage' is set to 'true', copy will ensure the result
+  is flipped.
+
+  The tests covers:
+  - Valid canvas type
+  - Source WebGPU Canvas lives in the same GPUDevice or different GPUDevice as test
+  - Valid dstColorFormat of copyExternalImageToTexture()
+  - Valid source image alphaMode
+  - Valid dest alphaMode
+  - Valid 'flipY' config in 'GPUImageCopyExternalImage'(named 'srcDoFlipYDuringCopy' in cases)
+  - TODO: color space tests need to be added
+  - TODO: Add error tolerance for rgb10a2unorm dst texture format
+
+  And the expected results are all passed.
   `
   )
   .params(u =>
@@ -297,7 +348,10 @@ g.test('from_canvas')
       orientation === 'flipY'
     );
 
-    const format: RegularTextureFormat = t.formatForExpectedPixels(dstColorFormat);
+    const format: RegularTextureFormat =
+      kTextureFormatInfo[dstColorFormat].baseFormat !== undefined
+        ? kTextureFormatInfo[dstColorFormat].baseFormat!
+        : dstColorFormat;
 
     const expectedPixels = t.getExpectedPixels(
       sourceImageBitmapPixels,

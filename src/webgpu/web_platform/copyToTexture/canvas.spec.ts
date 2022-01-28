@@ -306,11 +306,18 @@ g.test('copy_contents_from_2d_context_canvas')
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the canvas contents.
 
+  Do premultiply alpha in advance if  'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
+  is set to 'ture' and do unpremultiply alpha if it is set to 'false'.
+
+  If 'flipY' in 'GPUImageCopyExternalImage' is set to 'true', copy will ensure the result
+  is flipped.
+
   The tests covers:
   - Valid canvas type
   - Valid 2d context type
   - Valid dstColorFormat of copyExternalImageToTexture()
   - Valid dest alphaMode
+  - Valid 'flipY' config in 'GPUImageCopyExternalImage'(named 'srcDoFlipYDuringCopy' in cases)
   - TODO: color space tests need to be added
   - TODO: Add error tolerance for rgb10a2unorm dst texture format
 
@@ -366,7 +373,10 @@ g.test('copy_contents_from_2d_context_canvas')
 
     // Construct expected value for different dst color format
     const dstBytesPerPixel = kTextureFormatInfo[dstColorFormat].bytesPerBlock;
-    const format: RegularTextureFormat = t.formatForExpectedPixels(dstColorFormat);
+    const format: RegularTextureFormat =
+      kTextureFormatInfo[dstColorFormat].baseFormat !== undefined
+        ? kTextureFormatInfo[dstColorFormat].baseFormat!
+        : dstColorFormat;
 
     // For 2d canvas, get expected pixels with getImageData(), which returns unpremultiplied
     // values.
@@ -411,12 +421,19 @@ g.test('copy_contents_from_gl_context_canvas')
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the canvas contents.
 
+  Do premultiply alpha during copy if  'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
+  is set to 'ture' and do unpremultiply alpha if it is set to 'false'.
+
+  If 'flipY' in 'GPUImageCopyExternalImage' is set to 'true', copy will ensure the result
+  is flipped.
+
   The tests covers:
   - Valid canvas type
   - Valid webgl/webgl2 context type
   - Valid dstColorFormat of copyExternalImageToTexture()
   - Valid source image alphaMode
   - Valid dest alphaMode
+  - Valid 'flipY' config in 'GPUImageCopyExternalImage'(named 'srcDoFlipYDuringCopy' in cases)
   - TODO: color space tests need to be added
   - TODO: Add error tolerance for rgb10a2unorm dst texture format
 
@@ -478,7 +495,10 @@ g.test('copy_contents_from_gl_context_canvas')
 
     // Construct expected value for different dst color format
     const dstBytesPerPixel = kTextureFormatInfo[dstColorFormat].bytesPerBlock;
-    const format: RegularTextureFormat = t.formatForExpectedPixels(dstColorFormat);
+    const format: RegularTextureFormat =
+      kTextureFormatInfo[dstColorFormat].baseFormat !== undefined
+        ? kTextureFormatInfo[dstColorFormat].baseFormat!
+        : dstColorFormat;
     const sourcePixels = t.getSourceCanvasGLContent(canvasContext, width, height);
     const expectedPixels = t.getExpectedPixels(
       sourcePixels,
@@ -522,12 +542,19 @@ g.test('copy_contents_from_gpu_context_canvas')
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the canvas contents.
 
+  Do premultiply alpha during copy if  'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
+  is set to 'ture' and do unpremultiply alpha if it is set to 'false'.
+
+  If 'flipY' in 'GPUImageCopyExternalImage' is set to 'true', copy will ensure the result
+  is flipped.
+
   The tests covers:
   - Valid canvas type
   - Source WebGPU Canvas lives in the same GPUDevice or different GPUDevice as test
   - Valid dstColorFormat of copyExternalImageToTexture()
   - Valid source image alphaMode
   - Valid dest alphaMode
+  - Valid 'flipY' config in 'GPUImageCopyExternalImage'(named 'srcDoFlipYDuringCopy' in cases)
   - TODO: color space tests need to be added
   - TODO: Add error tolerance for rgb10a2unorm dst texture format
 
@@ -598,7 +625,10 @@ g.test('copy_contents_from_gpu_context_canvas')
 
     // Construct expected value for different dst color format
     const dstBytesPerPixel = kTextureFormatInfo[dstColorFormat].bytesPerBlock;
-    const format: RegularTextureFormat = t.formatForExpectedPixels(dstColorFormat);
+    const format: RegularTextureFormat =
+      kTextureFormatInfo[dstColorFormat].baseFormat !== undefined
+        ? kTextureFormatInfo[dstColorFormat].baseFormat!
+        : dstColorFormat;
     const sourcePixels = t.calculateSourceContentOnCPU(
       width,
       height,
