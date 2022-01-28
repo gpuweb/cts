@@ -4,19 +4,13 @@ Stress tests for GPUAdapter.requestDevice.
 
 import { Fixture } from '../../common/framework/fixture.js';
 import { makeTestGroup } from '../../common/framework/test_group.js';
-import { getGPU } from '../../common/util/navigator_gpu.js';
 import { attemptGarbageCollection } from '../../common/util/collect_garbage.js';
+import { getGPU } from '../../common/util/navigator_gpu.js';
 import { assert, iterRange } from '../../common/util/util.js';
-import {
-  kAdapterTypes,
-  kAdapterTypeOptions,
-} from '../../webgpu/capability_info.js';
-import {
-  DefaultLimits,
-} from '../../webgpu/constants.js';
+import { kAdapterTypes, kAdapterTypeOptions } from '../../webgpu/capability_info.js';
+import { DefaultLimits } from '../../webgpu/constants.js';
 
 class DeviceAllocationTests extends Fixture {
-
   async createDeviceAndComputeCommands(adapter: GPUAdapter) {
     // Constants are computed such that per run, this function should allocate roughly 2G
     // worth of data. This should be sufficient as we run these creation functions many
@@ -28,7 +22,7 @@ class DeviceAllocationTests extends Fixture {
     const kBufferSize = kNumBufferElements * 4;
     const kBufferData = new Uint32Array([...iterRange(kNumBufferElements, x => x)]);
 
-    let device: GPUDevice = await adapter.requestDevice();
+    const device: GPUDevice = await adapter.requestDevice();
     const commands = [];
 
     for (let pipelineIndex = 0; pipelineIndex < kNumPipelines; ++pipelineIndex) {
@@ -65,13 +59,15 @@ class DeviceAllocationTests extends Fixture {
         const pass = encoder.beginComputePass();
         pass.setPipeline(pipeline);
         pass.setBindGroup(0, bindgroup);
-        pass.dispatch(DefaultLimits.maxComputeWorkgroupSizeX,
-                      DefaultLimits.maxComputeWorkgroupSizeY);
+        pass.dispatch(
+          DefaultLimits.maxComputeWorkgroupSizeX,
+          DefaultLimits.maxComputeWorkgroupSizeY
+        );
         pass.endPass();
         commands.push(encoder.finish());
       }
     }
-    return {device, objects: commands};
+    return { device, objects: commands };
   }
 
   async createDeviceAndRenderCommands(adapter: GPUAdapter) {
@@ -83,13 +79,13 @@ class DeviceAllocationTests extends Fixture {
     const kSize = 128;
     const kBufferData = new Uint32Array([...iterRange(kSize * kSize, x => x)]);
 
-    let device: GPUDevice = await adapter.requestDevice();
+    const device: GPUDevice = await adapter.requestDevice();
     const commands = [];
 
     for (let pipelineIndex = 0; pipelineIndex < kNumPipelines; ++pipelineIndex) {
       const module = device.createShaderModule({
         code: `
-          struct Buffer { data: array<vec4<u32>, ${kSize*kSize/4}>; };
+          struct Buffer { data: array<vec4<u32>, ${(kSize * kSize) / 4}>; };
 
           @group(0) @binding(0) var<uniform> buffer: Buffer;
           @stage(vertex) fn vmain(
@@ -123,7 +119,7 @@ class DeviceAllocationTests extends Fixture {
           ],
         }),
         vertex: { module, entryPoint: 'vmain', buffers: [] },
-        primitives: { topology: 'point-list' },
+        primitive: { topology: 'point-list' },
         fragment: {
           targets: [{ format: 'rgba8unorm' }],
           module,
@@ -148,11 +144,13 @@ class DeviceAllocationTests extends Fixture {
 
         const encoder = device.createCommandEncoder();
         const pass = encoder.beginRenderPass({
-          colorAttachments: [{
-            view: texture.createView(),
-            loadValue: 'load',
-            storeOp: 'store',
-          }],
+          colorAttachments: [
+            {
+              view: texture.createView(),
+              loadValue: 'load',
+              storeOp: 'store',
+            },
+          ],
         });
         pass.setPipeline(pipeline);
         pass.setBindGroup(0, bindgroup);
@@ -161,7 +159,7 @@ class DeviceAllocationTests extends Fixture {
         commands.push(encoder.finish());
       }
     }
-    return {device, objects: commands};
+    return { device, objects: commands };
   }
 
   async createDeviceAndBuffers(adapter: GPUAdapter) {
@@ -172,33 +170,27 @@ class DeviceAllocationTests extends Fixture {
     const kMemoryBlockSize = 512 * 1024 * 1024;
     const kMemoryBlockData = new Uint8Array(kMemoryBlockSize);
 
-    let device: GPUDevice = await adapter.requestDevice();
+    const device: GPUDevice = await adapter.requestDevice();
     const buffers = [];
     for (let memory = 0; memory < kTotalMemorySize; memory += kMemoryBlockSize) {
       const buffer = device.createBuffer({
         size: kMemoryBlockSize,
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
       });
 
       // Write out to the buffer to make sure that it has backing memory.
       device.queue.writeBuffer(buffer, 0, kMemoryBlockData, 0, kMemoryBlockData.length);
       buffers.push(buffer);
     }
-    return {device, objects: buffers};
+    return { device, objects: buffers };
   }
-
 }
 
 export const g = makeTestGroup(DeviceAllocationTests);
 
 g.test('coexisting')
-  .desc(
-    `Tests allocation of many coexisting GPUDevice objects.`
-  )
-  .params(u =>
-    u
-      .combine('adapterType', kAdapterTypes)
-  )
+  .desc(`Tests allocation of many coexisting GPUDevice objects.`)
+  .params(u => u.combine('adapterType', kAdapterTypes))
   .fn(async t => {
     const { adapterType } = t.params;
     const adapter = await getGPU().requestAdapter(kAdapterTypeOptions[adapterType]);
@@ -209,7 +201,7 @@ g.test('coexisting')
 
     const devices = [];
     for (let i = 0; i < kNumDevices; ++i) {
-      let device: GPUDevice = await adapter.requestDevice();
+      const device: GPUDevice = await adapter.requestDevice();
       devices.push(device);
     }
   });
@@ -221,10 +213,7 @@ are sequentially requested with a series of device allocated objects created on 
 device. The devices are then destroyed to verify that the device and the device allocated
 objects are recycled over a very large number of iterations.`
   )
-  .params(u =>
-    u
-      .combine('adapterType', kAdapterTypes)
-  )
+  .params(u => u.combine('adapterType', kAdapterTypes))
   .fn(async t => {
     const { adapterType } = t.params;
     const adapter = await getGPU().requestAdapter(kAdapterTypeOptions[adapterType]);
@@ -236,15 +225,15 @@ objects are recycled over a very large number of iterations.`
       t.createDeviceAndBuffers,
       t.createDeviceAndComputeCommands,
       t.createDeviceAndRenderCommands,
-    ]
+    ];
 
-    const devices = [];
-    const objects = [];
+    const deviceList = [];
+    const objectLists = [];
     for (let i = 0; i < kNumDevices; ++i) {
-      let { device, objects } = await kFunctions[i % kFunctions.length](adapter);
+      const { device, objects } = await kFunctions[i % kFunctions.length](adapter);
       t.expect(objects.length > 0, 'unable to allocate any objects');
-      devices.push(device);
-      objects.push(objects);
+      deviceList.push(device);
+      objectLists.push(objects);
       device.destroy();
     }
   });
@@ -256,10 +245,7 @@ sequentially requested and dropped for GC over a very large number of iterations
 that without destroy, we do not create device allocated objects because that will
 implicitly keep the device in scope.`
   )
-  .params(u =>
-    u
-      .combine('adapterType', kAdapterTypes)
-  )
+  .params(u => u.combine('adapterType', kAdapterTypes))
   .fn(async t => {
     const { adapterType } = t.params;
     const adapter = await getGPU().requestAdapter(kAdapterTypeOptions[adapterType]);
@@ -268,7 +254,7 @@ implicitly keep the device in scope.`
     const kNumDevices = 10_000;
     for (let i = 1; i <= kNumDevices; ++i) {
       await (async () => {
-        t.expect(await adapter.requestDevice() !== null, 'unexpected null device');
+        t.expect((await adapter.requestDevice()) !== null, 'unexpected null device');
       })();
       if (i % 10 === 0) {
         // We need to occassionally wait for GC to clear out stale devices.
