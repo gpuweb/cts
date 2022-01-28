@@ -24,9 +24,9 @@ enum Color {
   Red,
   Green,
   Blue,
+  Black,
   White,
-  OpaqueBlack,
-  TransparentBlack,
+  SemitransparentWhite,
 }
 
 // Cache for generated pixels.
@@ -59,13 +59,13 @@ class F extends CopyToTextureUtils {
         case Color.Blue:
           rgba = { R: 0.0, G: 0.0, B: 1.0, A: 1.0 };
           break;
-        case Color.White:
+        case Color.Black:
           rgba = { R: 0.0, G: 0.0, B: 0.0, A: 1.0 };
           break;
-        case Color.OpaqueBlack:
+        case Color.White:
           rgba = { R: 1.0, G: 1.0, B: 1.0, A: 1.0 };
           break;
-        case Color.TransparentBlack:
+        case Color.SemitransparentWhite:
           rgba = { R: 1.0, G: 1.0, B: 1.0, A: 0.6 };
           break;
         default:
@@ -95,8 +95,8 @@ class F extends CopyToTextureUtils {
 
     // Generate input contents by iterating 'Color' enum
     const imagePixels = new Uint8ClampedArray(bytesPerPixel * width * height);
-    const testColors = [Color.Red, Color.Green, Color.Blue, Color.White, Color.OpaqueBlack];
-    if (hasTransparentPixels) testColors.push(Color.TransparentBlack);
+    const testColors = [Color.Red, Color.Green, Color.Blue, Color.Black, Color.White];
+    if (hasTransparentPixels) testColors.push(Color.SemitransparentWhite);
 
     for (let i = 0; i < height; ++i) {
       for (let j = 0; j < width; ++j) {
@@ -121,7 +121,7 @@ g.test('from_ImageData')
   in CPU back resource.
 
   It generates pixels in ImageData one by one based on a color list:
-  [RED, GREEN, BLUE, WHITE, OPAQUE_BLACK, TRANSPARENT_BLACK].
+  [Red, Green, Blue, Black, White, SemitransparentWhite].
 
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the ImageBitmap contents.
@@ -241,7 +241,7 @@ g.test('from_canvas')
   texture correctly. These imageBitmaps are highly possible living in GPU back resource.
 
   It generates pixels in ImageData one by one based on a color list:
-  [RED, GREEN, BLUE, WHITE, OPAQUE_BLACK].
+  [Red, Green, Blue, Black, White].
 
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the ImageBitmap contents.
