@@ -625,10 +625,7 @@ g.test('copy_contents_from_gpu_context_canvas')
 
     // Construct expected value for different dst color format
     const dstBytesPerPixel = kTextureFormatInfo[dstColorFormat].bytesPerBlock;
-    const format: RegularTextureFormat =
-      kTextureFormatInfo[dstColorFormat].baseFormat !== undefined
-        ? kTextureFormatInfo[dstColorFormat].baseFormat!
-        : dstColorFormat;
+    const format = kTextureFormatInfo[dstColorFormat].baseFormat ?? dstColorFormat;
     const sourcePixels = t.calculateSourceContentOnCPU(
       width,
       height,

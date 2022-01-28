@@ -204,10 +204,7 @@ g.test('from_ImageData')
       orientation === 'flipY'
     );
 
-    const format: RegularTextureFormat =
-      kTextureFormatInfo[dstColorFormat].baseFormat !== undefined
-        ? kTextureFormatInfo[dstColorFormat].baseFormat!
-        : dstColorFormat;
+    const format = kTextureFormatInfo[dstColorFormat].baseFormat ?? dstColorFormat;
 
     const expectedPixels = t.getExpectedPixels(
       sourceImageBitmapPixels,
@@ -348,10 +345,7 @@ g.test('from_canvas')
       orientation === 'flipY'
     );
 
-    const format: RegularTextureFormat =
-      kTextureFormatInfo[dstColorFormat].baseFormat !== undefined
-        ? kTextureFormatInfo[dstColorFormat].baseFormat!
-        : dstColorFormat;
+    const format = kTextureFormatInfo[dstColorFormat].baseFormat ?? dstColorFormat;
 
     const expectedPixels = t.getExpectedPixels(
       sourceImageBitmapPixels,
