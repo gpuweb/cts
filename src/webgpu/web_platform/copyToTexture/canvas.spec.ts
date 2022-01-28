@@ -306,7 +306,7 @@ g.test('copy_contents_from_2d_context_canvas')
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the canvas contents.
 
-  Do premultiply alpha in advance if  'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
+  Do premultiply alpha in advance if 'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
   is set to 'ture' and do unpremultiply alpha if it is set to 'false'.
 
   If 'flipY' in 'GPUImageCopyExternalImage' is set to 'true', copy will ensure the result
@@ -317,8 +317,8 @@ g.test('copy_contents_from_2d_context_canvas')
   - Valid 2d context type
   - Valid dstColorFormat of copyExternalImageToTexture()
   - Valid dest alphaMode
-  - Valid 'flipY' config in 'GPUImageCopyExternalImage'(named 'srcDoFlipYDuringCopy' in cases)
-  - TODO: color space tests need to be added
+  - Valid 'flipY' config in 'GPUImageCopyExternalImage' (named 'srcDoFlipYDuringCopy' in cases)
+  - TODO(#913): color space tests need to be added
   - TODO: Add error tolerance for rgb10a2unorm dst texture format
 
   And the expected results are all passed.

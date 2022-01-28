@@ -126,8 +126,8 @@ g.test('from_ImageData')
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the ImageBitmap contents.
 
-  Do premultiply alpha during copy if  'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
-  is set to 'ture' and do unpremultiply alpha if it is set to 'false'.
+  Do premultiply alpha during copy if 'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
+  is set to 'true' and do unpremultiply alpha if it is set to 'false'.
 
   If 'flipY' in 'GPUImageCopyExternalImage' is set to 'true', copy will ensure the result
   is flipped.
@@ -138,8 +138,8 @@ g.test('from_ImageData')
   - Valid dstColorFormat of copyExternalImageToTexture()
   - Valid source image alphaMode
   - Valid dest alphaMode
-  - Valid 'flipY' config in 'GPUImageCopyExternalImage'(named 'srcDoFlipYDuringCopy' in cases)
-  - TODO: color space tests need to be added
+  - Valid 'flipY' config in 'GPUImageCopyExternalImage' (named 'srcDoFlipYDuringCopy' in cases)
+  - TODO(#913): color space tests need to be added
   - TODO: Add error tolerance for rgb10a2unorm dst texture format
 
   And the expected results are all passed.
@@ -246,8 +246,8 @@ g.test('from_canvas')
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the ImageBitmap contents.
 
-  Do premultiply alpha during copy if  'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
-  is set to 'ture' and do unpremultiply alpha if it is set to 'false'.
+  Do premultiply alpha during copy if 'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
+  is set to 'true' and do unpremultiply alpha if it is set to 'false'.
 
   If 'flipY' in 'GPUImageCopyExternalImage' is set to 'true', copy will ensure the result
   is flipped.
@@ -258,8 +258,8 @@ g.test('from_canvas')
   - Valid dstColorFormat of copyExternalImageToTexture()
   - Valid source image alphaMode
   - Valid dest alphaMode
-  - Valid 'flipY' config in 'GPUImageCopyExternalImage'(named 'srcDoFlipYDuringCopy' in cases)
-  - TODO: color space tests need to be added
+  - Valid 'flipY' config in 'GPUImageCopyExternalImage' (named 'srcDoFlipYDuringCopy' in cases)
+  - TODO(#913): color space tests need to be added
   - TODO: Add error tolerance for rgb10a2unorm dst texture format
 
   And the expected results are all passed.
