@@ -1,9 +1,13 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { GPUTest } from '../gpu_test.js';
+ **/ import { assert, memcpy } from '../../common/util/util.js';
+import { kTextureFormatInfo } from '../capability_info.js';
+import { GPUTest } from '../gpu_test.js';
+
 import { checkElementsEqual, checkElementsBetween } from './check_contents.js';
 import { align } from './math.js';
 import { kBytesPerRowAlignment } from './texture/layout.js';
+import { kTexelRepresentationInfo } from './texture/texel_data.js';
 
 export function isFp16Format(format) {
   switch (format) {
@@ -17,6 +21,103 @@ export function isFp16Format(format) {
 }
 
 export class CopyToTextureUtils extends GPUTest {
+  doFlipY(sourcePixels, width, height, bytesPerPixel) {
+    const dstPixels = new Uint8ClampedArray(width * height * bytesPerPixel);
+    for (let i = 0; i < height; ++i) {
+      for (let j = 0; j < width; ++j) {
+        const srcPixelPos = i * width + j;
+        // WebGL readPixel returns pixels from bottom-left origin. Using CopyExternalImageToTexture
+        // to copy from WebGL Canvas keeps top-left origin. So the expectation from webgl.readPixel should
+        // be flipped.
+        const dstPixelPos = (height - i - 1) * width + j;
+
+        memcpy(
+          { src: sourcePixels, start: srcPixelPos * bytesPerPixel, length: bytesPerPixel },
+          { dst: dstPixels, start: dstPixelPos * bytesPerPixel }
+        );
+      }
+    }
+
+    return dstPixels;
+  }
+
+  /**
+   * If the destination format specifies a transfer function,
+   * copyExternalImageToTexture (like B2T/T2T copies) should ignore it.
+   */
+  formatForExpectedPixels(format) {
+    return format === 'rgba8unorm-srgb'
+      ? 'rgba8unorm'
+      : format === 'bgra8unorm-srgb'
+      ? 'bgra8unorm'
+      : format;
+  }
+
+  getSourceImageBitmapPixels(sourcePixels, width, height, isPremultiplied, isFlipY) {
+    return this.getExpectedPixels(
+      sourcePixels,
+      width,
+      height,
+      'rgba8unorm',
+      false,
+      isPremultiplied,
+      isFlipY
+    );
+  }
+
+  getExpectedPixels(
+    sourcePixels,
+    width,
+    height,
+    format,
+    srcPremultiplied,
+    dstPremultiplied,
+    isFlipY
+  ) {
+    const bytesPerPixel = kTextureFormatInfo[format].bytesPerBlock;
+
+    const orientedPixels = isFlipY ? this.doFlipY(sourcePixels, width, height, 4) : sourcePixels;
+    const expectedPixels = new Uint8ClampedArray(bytesPerPixel * width * height);
+
+    // Generate expectedPixels
+    // Use getImageData and readPixels to get canvas contents.
+    const rep = kTexelRepresentationInfo[format];
+    const divide = 255.0;
+    let rgba;
+    for (let i = 0; i < height; ++i) {
+      for (let j = 0; j < width; ++j) {
+        const pixelPos = i * width + j;
+
+        rgba = {
+          R: orientedPixels[pixelPos * 4] / divide,
+          G: orientedPixels[pixelPos * 4 + 1] / divide,
+          B: orientedPixels[pixelPos * 4 + 2] / divide,
+          A: orientedPixels[pixelPos * 4 + 3] / divide,
+        };
+
+        if (!srcPremultiplied && dstPremultiplied) {
+          rgba.R *= rgba.A;
+          rgba.G *= rgba.A;
+          rgba.B *= rgba.A;
+        }
+
+        if (srcPremultiplied && !dstPremultiplied) {
+          assert(rgba.A !== 0.0);
+          rgba.R /= rgba.A;
+          rgba.G /= rgba.A;
+          rgba.B /= rgba.A;
+        }
+
+        memcpy(
+          { src: rep.pack(rep.encode(rgba)) },
+          { dst: expectedPixels, start: pixelPos * bytesPerPixel }
+        );
+      }
+    }
+
+    return expectedPixels;
+  }
+
   // MAINTENANCE_TODO(crbug.com/dawn/868): Should be possible to consolidate this along with texture checking
   checkCopyExternalImageResult(src, expected, width, height, bytesPerPixel, isFp16) {
     const exp = new Uint8Array(expected.buffer, expected.byteOffset, expected.byteLength);
