@@ -13,7 +13,7 @@ Test Plan: (TODO(jiawei.shao@intel.com): add tests on 1D/3D textures)
     - it {is, isn't} a copy of the whole subresource of the source texture.
     - it {is, isn't} a copy of the whole subresource of the destination texture.
 * texture format
-  - the format of the source texture {is, isn't} equal to or compatible to the one of the destination texture.
+  - the format of the source texture {is, isn't} compatible to the one of the destination texture.
     - including: depth24plus-stencil8 to/from {depth24plus, stencil8}.
   - for each depth and/or stencil format: a copy between two textures with same format:
     - it {is, isn't} a copy of the whole subresource of the {source, destination} texture.
@@ -265,7 +265,7 @@ g.test('multisampled_copy_restrictions')
     );
   });
 
-g.test('texture_format_equality_or_compatibility')
+g.test('texture_format_compatibility')
   .paramsSubcasesOnly(u =>
     u //
       .combine('srcFormat', kTextureFormats)
@@ -292,13 +292,9 @@ g.test('texture_format_equality_or_compatibility')
     });
 
     // Allow copy between compatible format textures.
-    const srcBaseFormat = kTextureFormatInfo[srcFormat].baseFormat;
-    const dstBaseFormat = kTextureFormatInfo[dstFormat].baseFormat;
-    const isSuccess =
-      srcFormat === dstFormat ||
-      (srcBaseFormat !== undefined &&
-        dstBaseFormat !== undefined &&
-        srcBaseFormat === dstBaseFormat);
+    const srcBaseFormat = kTextureFormatInfo[srcFormat].baseFormat ?? srcFormat;
+    const dstBaseFormat = kTextureFormatInfo[dstFormat].baseFormat ?? dstFormat;
+    const isSuccess = srcBaseFormat === dstBaseFormat;
 
     t.TestCopyTextureToTexture(
       { texture: srcTexture },
