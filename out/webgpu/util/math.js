@@ -87,12 +87,24 @@ function flushSubnormalBits(val) {
    * @returns 0 if |val| is a subnormal f32 number, otherwise returns |val|
    */
 function flushSubnormalScalar(val) {
+  return isSubnormalScalar(val) ? f32(0) : val;
+}
+
+/**
+   * @returns true if |val| is a subnormal f32 number, otherwise returns false
+   * 0 is considered a non-subnormal number by this function.
+   */
+export function isSubnormalScalar(val) {
   if (val.type.kind !== 'f32') {
-    return val;
+    return false;
+  }
+
+  if (val === f32(0)) {
+    return false;
   }
 
   const u32_val = new Uint32Array(new Float32Array([val.value.valueOf()]).buffer)[0];
-  return (u32_val & 0x7f800000) === 0 ? f32(0) : val;
+  return (u32_val & 0x7f800000) === 0;
 }
 
 /**
