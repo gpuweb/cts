@@ -5,12 +5,29 @@ Stress tests for GPUAdapter.requestDevice.
 import { Fixture } from '../../common/framework/fixture.js';
 import { makeTestGroup } from '../../common/framework/test_group.js';
 import { attemptGarbageCollection } from '../../common/util/collect_garbage.js';
+import { keysOf } from '../../common/util/data_tables.js';
 import { getGPU } from '../../common/util/navigator_gpu.js';
 import { assert, iterRange } from '../../common/util/util.js';
-import { kAdapterTypes, kAdapterTypeOptions } from '../../webgpu/capability_info.js';
 import { DefaultLimits } from '../../webgpu/constants.js';
 
+/** Adapter preference identifier to option. */
+const kAdapterTypeOptions: {
+  readonly [k in GPUPowerPreference | 'fallback']: GPURequestAdapterOptions;
+} = /* prettier-ignore */ {
+  'low-power':        { powerPreference:        'low-power', forceFallbackAdapter: false },
+  'high-performance': { powerPreference: 'high-performance', forceFallbackAdapter: false },
+  'fallback':         { powerPreference:          undefined, forceFallbackAdapter:  true },
+};
+/** List of all adapter hint types. */
+const kAdapterTypes = keysOf(kAdapterTypeOptions);
+
 class DeviceAllocationTests extends Fixture {
+  /**
+   * Creates a device, a valid compute pipeline, valid resources for the pipeline, and
+   * ties them together into a set of compute commands ready to be submitted to the GPU
+   * queue. Does not submit the commands in order to make sure that all resources are
+   * kept alive until the device is destroyed.
+   */
   async createDeviceAndComputeCommands(adapter: GPUAdapter) {
     // Constants are computed such that per run, this function should allocate roughly 2G
     // worth of data. This should be sufficient as we run these creation functions many
@@ -70,6 +87,12 @@ class DeviceAllocationTests extends Fixture {
     return { device, objects: commands };
   }
 
+  /**
+   * Creates a device, a valid render pipeline, valid resources for the pipeline, and
+   * ties them together into a set of render commands ready to be submitted to the GPU
+   * queue. Does not submit the commands in order to make sure that all resources are
+   * kept alive until the device is destroyed.
+   */
   async createDeviceAndRenderCommands(adapter: GPUAdapter) {
     // Constants are computed such that per run, this function should allocate roughly 2G
     // worth of data. This should be sufficient as we run these creation functions many
@@ -162,6 +185,10 @@ class DeviceAllocationTests extends Fixture {
     return { device, objects: commands };
   }
 
+  /**
+   * Creates a device and a large number of buffers which are immediately written to. The
+   * buffers are expected to be kept alive until they or the device are destroyed.
+   */
   async createDeviceAndBuffers(adapter: GPUAdapter) {
     // Currently we just allocate 2G of memory using 512MB blocks. We may be able to
     // increase this to hit OOM instead, but on integrated GPUs on Metal, this can cause

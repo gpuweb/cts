@@ -12,19 +12,6 @@ import { ImageCopyType } from './util/texture/layout.js';
 
 // Base device limits can be found in constants.ts.
 
-// Adapters
-
-/** Adapter preference identifier to option. */
-export const kAdapterTypeOptions: {
-  readonly [k in GPUPowerPreference | 'fallback']: GPURequestAdapterOptions;
-} = /* prettier-ignore */ {
-  'low-power':        { powerPreference:        'low-power', forceFallbackAdapter: false },
-  'high-performance': { powerPreference: 'high-performance', forceFallbackAdapter: false },
-  'fallback':         { powerPreference:          undefined, forceFallbackAdapter:  true },
-};
-/** List of all adapter hint types. */
-export const kAdapterTypes = keysOf(kAdapterTypeOptions);
-
 // Queries
 
 /** Maximum number of queries in GPUQuerySet, by spec. */
