@@ -10,9 +10,3 @@ g.test("atomicity")
   .desc(`
 Checks whether a store on one thread can interrupt an atomic RMW on a second thread.`)
   .unimplemented();
-
-g.test("workgroup barrier store load")
-  .desc(`
-Checks whether the workgroup barrier properly synchronizes a non-atomic write and read on
-separate threads`)
-  .unimplemented();
