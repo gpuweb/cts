@@ -50,36 +50,6 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('integer_builtin_functions,unsigned_max')
-  .uniqueId('2cce54f65e71b3a3')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
-  .desc(
-    `
-unsigned max:
-T is u32 or vecN<u32> max(e1: T ,e2: T) -> T Returns e2 if e1 is less than e2, and e1 otherwise. Component-wise when T is a vector. (GLSLstd450UMax)
-
-Please read the following guidelines before contributing:
-https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
-`
-  )
-  .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
-  .unimplemented();
-
-g.test('integer_builtin_functions,signed_max')
-  .uniqueId('ef8c37107946a69e')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
-  .desc(
-    `
-signed max:
-T is i32 or vecN<i32> max(e1: T ,e2: T) -> T Returns e2 if e1 is less than e2, and e1 otherwise. Component-wise when T is a vector. (GLSLstd450SMax)
-
-Please read the following guidelines before contributing:
-https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
-`
-  )
-  .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
-  .unimplemented();
-
 g.test('integer_builtin_functions,bit_reversal')
   .uniqueId('8a7550f1097993f8')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
