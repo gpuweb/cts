@@ -565,10 +565,10 @@ params((u) =>
 u.
 combine('canvasType', allCanvasTypes).
 combine('srcAndDstInSameGPUDevice', [true, false]).
-combine('srcDoFlipYDuringCopy', [true, false]).
 combine('dstColorFormat', kValidTextureFormatsForCopyE2T).
 combine('srcPremultiplied', [true]).
 combine('dstPremultiplied', [true, false]).
+combine('srcDoFlipYDuringCopy', [true, false]).
 beginSubcases().
 combine('width', [1, 2, 4, 15, 255, 256]).
 combine('height', [1, 2, 4, 15, 255, 256])).
