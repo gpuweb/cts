@@ -1261,6 +1261,14 @@ export const listing = [
       "shader",
       "execution",
       "builtin",
+      "max"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "builtin",
       "min"
     ]
   },
