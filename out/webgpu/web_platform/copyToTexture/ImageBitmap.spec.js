@@ -150,8 +150,8 @@ u.
 combine('alpha', ['none', 'premultiply']).
 combine('orientation', ['none', 'flipY']).
 combine('srcDoFlipYDuringCopy', [true, false]).
-combine('dstColorFormat', kValidTextureFormatsForCopyE2T).
 combine('dstPremultiplied', [true, false]).
+combine('dstColorFormat', kValidTextureFormatsForCopyE2T).
 beginSubcases().
 combine('width', [1, 2, 4, 15, 255, 256]).
 combine('height', [1, 2, 4, 15, 255, 256])).
@@ -266,8 +266,8 @@ params((u) =>
 u.
 combine('orientation', ['none', 'flipY']).
 combine('srcDoFlipYDuringCopy', [true, false]).
-combine('dstColorFormat', kValidTextureFormatsForCopyE2T).
 combine('dstPremultiplied', [true, false]).
+combine('dstColorFormat', kValidTextureFormatsForCopyE2T).
 beginSubcases().
 combine('width', [1, 2, 4, 15, 255, 256]).
 combine('height', [1, 2, 4, 15, 255, 256])).
