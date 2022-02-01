@@ -86,5 +86,27 @@ fn(t => {
 
 g.test('integral_types').
 desc(`Test that the implementation requires @interpolate(flat) for integral user-defined IO.`).
-unimplemented();
+params((u) =>
+u.
+combine('stage', ['vertex', 'fragment']).
+combine('type', ['i32', 'u32', 'vec2<i32>', 'vec4<u32>']).
+combine('use_struct', [true, false]).
+combine('attribute', kValidInterpolationAttributes).
+beginSubcases()).
+
+fn(t => {
+  if (t.params.stage === 'vertex' && t.params.use_struct === false) {
+    t.skip('vertex output must include a position builtin, so must use a struct');
+  }
+
+  const code = generateShader({
+    attribute: '@location(0)' + t.params.attribute,
+    type: t.params.type,
+    stage: t.params.stage,
+    io: t.params.stage === 'vertex' ? 'out' : 'in',
+    use_struct: t.params.use_struct });
+
+
+  t.expectCompileResult(t.params.attribute === '@interpolate(flat)', code);
+});
 //# sourceMappingURL=interpolate.spec.js.map
