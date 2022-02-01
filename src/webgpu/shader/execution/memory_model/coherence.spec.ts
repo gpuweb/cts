@@ -8,7 +8,7 @@ threads to increase coverage of possible bugs.`;
 
 export const g = makeTestGroup(GPUTest);
 
-g.test("CoRR")
+g.test("corr")
   .desc(`
 Ensures two reads on one thread cannot observe an inconsistent view of a write on a second thread.`)
   .unimplemented();

@@ -8,7 +8,7 @@ weak behaviors in several classic memory model litmus tests.`;
 
 export const g = makeTestGroup(GPUTest);
 
-g.test("Message Passing, workgroup memory")
+g.test("message passing, workgroup memory")
   .desc(`
 Checks whether two reads on one thread can observe two writes in another thread in a way
 that is inconsistent with sequential consistency.`)
