@@ -55,7 +55,7 @@ dynamicOffsets)
 
     @stage(compute) @workgroup_size(1)
     fn main() {
-      ignore(constants.zero); // Ensure constants buffer is statically-accessed
+      _ = constants.zero; // Ensure constants buffer is statically-accessed
       result.value = runTest();
     }`;
 
