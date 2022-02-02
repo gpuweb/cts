@@ -1,8 +1,8 @@
-import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { GPUTest } from '../../../gpu_test.js';
-
 export const description = `
 Tests for non-atomic memory synchronization within a workgroup in the presence of a WebGPU barrier`;
+
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { GPUTest } from '../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
