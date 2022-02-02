@@ -21,6 +21,21 @@ import { anyOf, correctlyRoundedThreshold, kBit, run } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
+/** Generate set of min test cases from an ascending list of values */
+function generateTestCases(test_values) {
+  const cases = new Array();
+  test_values.forEach((e, ei) => {
+    test_values.forEach((f, fi) => {
+      const precise_expected = ei <= fi ? e : f;
+      const expected = isSubnormalScalar(precise_expected) ?
+      anyOf(precise_expected, f32(0.0)) :
+      precise_expected;
+      cases.push({ input: [e, f], expected });
+    });
+  });
+  return cases;
+}
+
 g.test('integer_builtin_functions,unsigned_min').
 uniqueId('29aba7ede5b93cdd').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions').
@@ -42,18 +57,18 @@ fn(async t => {
   const cfg = t.params;
   cfg.cmpFloats = correctlyRoundedThreshold();
 
-  run(t, 'min', [TypeU32, TypeU32], TypeU32, cfg, [
-  { input: [u32(1), u32(1)], expected: u32(1) },
-  { input: [u32(0), u32(0)], expected: u32(0) },
-  { input: [u32(0xffffffff), u32(0xffffffff)], expected: u32(0xffffffff) },
-  { input: [u32(1), u32(2)], expected: u32(1) },
-  { input: [u32(2), u32(1)], expected: u32(1) },
-  { input: [u32(0x70000000), u32(0x80000000)], expected: u32(0x70000000) },
-  { input: [u32(0x80000000), u32(0x70000000)], expected: u32(0x70000000) },
-  { input: [u32(0), u32(0xffffffff)], expected: u32(0) },
-  { input: [u32(0xffffffff), u32(0)], expected: u32(0) },
-  { input: [u32(0), u32(0xffffffff)], expected: u32(0) }]);
+  // This array must be strictly increasing, since that ordering determines
+  // the expected values.
+  const test_values = [
+  u32(0),
+  u32(1),
+  u32(2),
+  u32(0x70000000),
+  u32(0x80000000),
+  u32(0xffffffff)];
 
+
+  run(t, 'min', [TypeU32, TypeU32], TypeU32, cfg, generateTestCases(test_values));
 });
 
 g.test('integer_builtin_functions,signed_min').
@@ -77,21 +92,19 @@ fn(async t => {
   const cfg = t.params;
   cfg.cmpFloats = correctlyRoundedThreshold();
 
-  run(t, 'min', [TypeI32, TypeI32], TypeI32, cfg, [
-  { input: [i32(1), i32(1)], expected: i32(1) },
-  { input: [i32(0), i32(0)], expected: i32(0) },
-  { input: [i32(-1), i32(-1)], expected: i32(-1) },
-  { input: [i32(1), i32(2)], expected: i32(1) },
-  { input: [i32(2), i32(1)], expected: i32(1) },
-  { input: [i32(-1), i32(-2)], expected: i32(-2) },
-  { input: [i32(-2), i32(-1)], expected: i32(-2) },
-  { input: [i32(1), i32(-1)], expected: i32(-1) },
-  { input: [i32(-1), i32(1)], expected: i32(-1) },
-  { input: [i32Bits(0x70000000), i32Bits(0x80000000)], expected: i32Bits(0x80000000) },
-  { input: [i32Bits(0x80000000), i32Bits(0x70000000)], expected: i32Bits(0x80000000) },
-  { input: [i32Bits(0xffffffff), i32(0)], expected: i32Bits(0xffffffff) },
-  { input: [i32(0), i32Bits(0xffffffff)], expected: i32Bits(0xffffffff) }]);
+  // This array must be strictly increasing, since that ordering determines
+  // the expected values.
+  const test_values = [
+  i32Bits(0x80000000),
+  i32(-2),
+  i32(-1),
+  i32(0),
+  i32(1),
+  i32(2),
+  i32Bits(0x70000000)];
 
+
+  run(t, 'min', [TypeI32, TypeI32], TypeI32, cfg, generateTestCases(test_values));
 });
 
 g.test('float_builtin_functions,min').
@@ -135,17 +148,6 @@ fn(async t => {
   f32Bits(kBit.f32.infinity.positive)];
 
 
-  const cases = new Array();
-  test_values.forEach((e, ei) => {
-    test_values.forEach((f, fi) => {
-      const precise_expected = ei <= fi ? e : f;
-      const expected = isSubnormalScalar(precise_expected) ?
-      anyOf(precise_expected, f32(0.0)) :
-      precise_expected;
-      cases.push({ input: [e, f], expected });
-    });
-  });
-
-  run(t, 'min', [TypeF32, TypeF32], TypeF32, cfg, cases);
+  run(t, 'min', [TypeF32, TypeF32], TypeF32, cfg, generateTestCases(test_values));
 });
 //# sourceMappingURL=min.spec.js.map
