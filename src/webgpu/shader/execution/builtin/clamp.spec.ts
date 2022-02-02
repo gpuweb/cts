@@ -15,7 +15,7 @@ import {
   TypeU32,
   u32,
 } from '../../../util/conversion.js';
-import { clamp, isSubnormalScalar } from '../../../util/math.js';
+import { isSubnormalScalar } from '../../../util/math.js';
 
 import { anyOf, Case, Config, correctlyRoundedThreshold, kBit, run } from './builtin.js';
 
