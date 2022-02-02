@@ -21,8 +21,8 @@ import { anyOf, Case, Config, correctlyRoundedThreshold, kBit, run } from './bui
 
 export const g = makeTestGroup(GPUTest);
 
-/** Generate set of max test cases from an ascending list of values */
-function generateTestCases(test_values: Array<Scalar>) {
+/** Generate set of clamp test cases from an ascending list of values */
+function generateTestCases(test_values: Array<Scalar>): Array<Case> {
   const cases = new Array<Case>();
   test_values.forEach((e, ei) => {
     test_values.forEach((f, fi) => {
