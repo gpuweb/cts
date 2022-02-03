@@ -26,6 +26,7 @@ export const description = `writeTexture + copyBufferToTexture + copyTextureToBu
 * TODO:
   - add another initMethod which renders the texture [3]
   - test copyT2B with buffer size not divisible by 4 (not done because expectContents 4-byte alignment)
+  - add tests for 1d / 3d textures
   - Convert the float32 values in initialData into the ones compatible to the depth aspect of
     depthFormats when depth16unorm and depth24unorm-stencil8 are supported by the browsers in
     DoCopyTextureToBufferWithDepthAspectTest().

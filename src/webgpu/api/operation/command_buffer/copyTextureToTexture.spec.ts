@@ -36,7 +36,6 @@ class F extends GPUTest {
     format: SizedTextureFormat,
     mipLevel: number
   ): Uint8Array {
-    // [1]: Does not presently support 1d/3d textures.
     const textureSizeAtLevel = physicalMipSize(textureSize, format, dimension, mipLevel);
     const bytesPerBlock = kTextureFormatInfo[format].bytesPerBlock;
     const blockWidthInTexel = kTextureFormatInfo[format].blockWidth;
@@ -90,6 +89,7 @@ class F extends GPUTest {
     };
     const srcTexture = this.device.createTexture(srcTextureDesc);
     const dstTextureDesc: GPUTextureDescriptor = {
+      dimension,
       size: dstTextureSize,
       format: dstFormat,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
@@ -661,24 +661,34 @@ g.test('color_textures,non_compressed,non_array')
           textureDimensionAndFormatCompatible(dimension, dstFormat)
       )
       .beginSubcases()
-      .combine('textureSize', [
-        {
-          srcTextureSize: { width: 32, height: 32, depthOrArrayLayers: 1 },
-          dstTextureSize: { width: 32, height: 32, depthOrArrayLayers: 1 },
-        },
-        {
-          srcTextureSize: { width: 31, height: 33, depthOrArrayLayers: 1 },
-          dstTextureSize: { width: 31, height: 33, depthOrArrayLayers: 1 },
-        },
-        {
-          srcTextureSize: { width: 32, height: 32, depthOrArrayLayers: 1 },
-          dstTextureSize: { width: 64, height: 64, depthOrArrayLayers: 1 },
-        },
-        {
-          srcTextureSize: { width: 32, height: 32, depthOrArrayLayers: 1 },
-          dstTextureSize: { width: 63, height: 61, depthOrArrayLayers: 1 },
-        },
-      ])
+      .expandWithParams(p => {
+        const params = [
+          {
+            srcTextureSize: { width: 32, height: 32, depthOrArrayLayers: 1 },
+            dstTextureSize: { width: 32, height: 32, depthOrArrayLayers: 1 },
+          },
+          {
+            srcTextureSize: { width: 31, height: 33, depthOrArrayLayers: 1 },
+            dstTextureSize: { width: 31, height: 33, depthOrArrayLayers: 1 },
+          },
+          {
+            srcTextureSize: { width: 32, height: 32, depthOrArrayLayers: 1 },
+            dstTextureSize: { width: 64, height: 64, depthOrArrayLayers: 1 },
+          },
+          {
+            srcTextureSize: { width: 32, height: 32, depthOrArrayLayers: 1 },
+            dstTextureSize: { width: 63, height: 61, depthOrArrayLayers: 1 },
+          },
+        ];
+        if (p.dimension === '1d') {
+          for (const param of params) {
+            param.srcTextureSize.height = 1;
+            param.dstTextureSize.height = 1;
+          }
+        }
+
+        return params;
+      })
       .combine('copyBoxOffsets', kCopyBoxOffsetsForWholeDepth)
       .unless(
         p =>
@@ -694,7 +704,8 @@ g.test('color_textures,non_compressed,non_array')
   .fn(async t => {
     const {
       dimension,
-      textureSize,
+      srcTextureSize,
+      dstTextureSize,
       srcFormat,
       dstFormat,
       copyBoxOffsets,
@@ -702,15 +713,10 @@ g.test('color_textures,non_compressed,non_array')
       dstCopyLevel,
     } = t.params;
 
-    if (dimension === '1d') {
-      textureSize.srcTextureSize.height = 1;
-      textureSize.dstTextureSize.height = 1;
-    }
-
     t.DoCopyTextureToTextureTest(
       dimension,
-      textureSize.srcTextureSize,
-      textureSize.dstTextureSize,
+      srcTextureSize,
+      dstTextureSize,
       srcFormat,
       dstFormat,
       copyBoxOffsets,
@@ -972,7 +978,11 @@ g.test('zero_sized')
   )
   .paramsSubcasesOnly(u =>
     u //
-      .combine('dimension', kTextureDimensions)
+      .combineWithParams([
+        { dimension: '1d', textureSize: { width: 32, height: 1, depthOrArrayLayers: 1 } },
+        { dimension: '2d', textureSize: { width: 32, height: 32, depthOrArrayLayers: 5 } },
+        { dimension: '3d', textureSize: { width: 32, height: 32, depthOrArrayLayers: 5 } },
+      ] as const)
       .combine('copyBoxOffset', [
         // copyExtent.width === 0
         {
@@ -1041,15 +1051,10 @@ g.test('zero_sized')
       .unless(p => p.dimension === '1d' && (p.srcCopyLevel !== 0 || p.dstCopyLevel !== 0))
   )
   .fn(async t => {
-    const { dimension, copyBoxOffset, srcCopyLevel, dstCopyLevel } = t.params;
+    const { dimension, textureSize, copyBoxOffset, srcCopyLevel, dstCopyLevel } = t.params;
 
     const srcFormat = 'rgba8unorm';
     const dstFormat = 'rgba8unorm';
-    const textureSize = { width: 64, height: 32, depthOrArrayLayers: 5 };
-    if (dimension === '1d') {
-      textureSize.height = 1;
-      textureSize.depthOrArrayLayers = 1;
-    }
 
     t.DoCopyTextureToTextureTest(
       dimension,

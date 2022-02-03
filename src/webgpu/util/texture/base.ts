@@ -77,8 +77,6 @@ export function physicalMipSize(
         depthOrArrayLayers: Math.max(baseSize.depthOrArrayLayers >> level, 1),
       };
     }
-    default:
-      unreachable();
   }
 }
 
