@@ -6,8 +6,10 @@ import { GPUTest } from '../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test("workgroup barrier store load")
-  .desc(`
-Checks whether the workgroup barrier properly synchronizes a non-atomic write and read on
-separate threads in the same workgroup`)
+g.test('workgroup_barrier_store_load')
+  .desc(
+    `Checks whether the workgroup barrier properly synchronizes a non-atomic write and read on
+    separate threads in the same workgroup.
+    `
+  )
   .unimplemented();

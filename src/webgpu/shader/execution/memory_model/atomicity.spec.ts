@@ -5,7 +5,9 @@ import { GPUTest } from '../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test("atomicity")
-  .desc(`
-Checks whether a store on one thread can interrupt an atomic RMW on a second thread.`)
+g.test('atomicity')
+  .desc(
+    `Checks whether a store on one thread can interrupt an atomic RMW on a second thread.
+    `
+  )
   .unimplemented();

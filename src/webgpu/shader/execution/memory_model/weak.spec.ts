@@ -8,8 +8,10 @@ import { GPUTest } from '../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test("message passing, workgroup memory")
-  .desc(`
-Checks whether two reads on one thread can observe two writes in another thread in a way
-that is inconsistent with sequential consistency.`)
+g.test('message_passing_workgroup_memory')
+  .desc(
+    `Checks whether two reads on one thread can observe two writes in another thread in a way
+    that is inconsistent with sequential consistency.
+    `
+  )
   .unimplemented();

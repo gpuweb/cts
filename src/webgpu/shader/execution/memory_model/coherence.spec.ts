@@ -8,7 +8,9 @@ import { GPUTest } from '../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test("corr")
-  .desc(`
-Ensures two reads on one thread cannot observe an inconsistent view of a write on a second thread.`)
+g.test('corr')
+  .desc(
+    `Ensures two reads on one thread cannot observe an inconsistent view of a write on a second thread.
+    `
+  )
   .unimplemented();
