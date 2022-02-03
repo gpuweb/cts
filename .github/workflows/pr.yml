@@ -21,7 +21,10 @@ jobs:
       - run: npm test
       - run: |
           mkdir deploy-build/
-          cp -r README.md src standalone out docs deploy-build/
+          cp -r README.md src out-standalone out docs deploy-build/
+          mkdir deploy-build/standalone
+          cp standalone/index.html standalone/webgpu-logo-notext.svg deploy-build/standalone/
+          cp -r standalone/third_party deploy-build/standalone/
       - uses: actions/upload-artifact@v2
         with:
           name: pr-artifact

@@ -28,7 +28,11 @@ export abstract class TestFileLoader {
     return this.import(`${suite}/${path.join('/')}.spec.js`);
   }
 
-  async loadTree(query: TestQuery, subqueriesToExpand: string[] = []): Promise<TestTree> {
+  async loadTree(
+    query: TestQuery,
+    subqueriesToExpand: string[] = [],
+    deferredFileLoadPromise?: Promise<void>
+  ): Promise<TestTree> {
     return loadTreeForQuery(
       this,
       query,
@@ -36,7 +40,8 @@ export abstract class TestFileLoader {
         const q = parseQuery(s);
         assert(q.level >= 2, () => `subqueriesToExpand entries should not be multi-file:\n  ${q}`);
         return q;
-      })
+      }),
+      deferredFileLoadPromise
     );
   }
 

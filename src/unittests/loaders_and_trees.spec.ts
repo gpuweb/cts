@@ -18,7 +18,7 @@ import {
 } from '../common/internal/query/query.js';
 import { makeTestGroupForUnitTesting } from '../common/internal/test_group.js';
 import { TestSuiteListing, TestSuiteListingEntry } from '../common/internal/test_suite_listing.js';
-import { ExpandThroughLevel, TestTreeLeaf } from '../common/internal/tree.js';
+import { ExpandThroughLevel, TestTree, TestTreeLeaf } from '../common/internal/tree.js';
 import { assert, objectEquals } from '../common/util/util.js';
 
 import { UnitTest } from './unit_test.js';
@@ -661,6 +661,7 @@ async function testIterateCollapsed(
     return;
   }
   const tree = await treePromise;
+  TestTree.propagateCounts(tree.root);
   const actualIter = tree.iterateCollapsedNodes({
     includeEmptySubtrees,
     alwaysExpandThroughLevel,

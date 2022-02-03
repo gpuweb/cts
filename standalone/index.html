@@ -15,7 +15,8 @@
     <!-- Chrome Origin Trial token for https://gpuweb.github.io (see dev_server.ts for localhost tokens) -->
     <meta http-equiv="origin-trial" content="At6MXIsdbkOn9G7zcCbxYbgOwf4A8s3jBUW4cqnyDtzPnexBb1bdPkdDRtinADOTelA+/Fn3XEKutibMyzD0Kw0AAABQeyJvcmlnaW4iOiJodHRwczovL2dwdXdlYi5naXRodWIuaW86NDQzIiwiZmVhdHVyZSI6IldlYkdQVSIsImV4cGlyeSI6MTY0MzE1NTE5OX0=">
     <link rel="stylesheet" href="third_party/normalize.min.css" />
-    <script src="third_party/jquery/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="/out-standalone/react.production.min.js"></script>
+    <script type="text/javascript" src="/out-standalone/react-dom.production.min.js"></script>
     <style>
       body {
         font-family: monospace;
@@ -113,6 +114,14 @@
         position: absolute;
         left: 220px;
       }
+      .lds-ring.subtreeloading {
+        vertical-align: top;
+        width: 16px;
+        height: 16px;
+        margin: 1px 4px;
+        position: absolute;
+        left: -18px;
+      }
       .nodequery {
         font-weight: bold;
         background: transparent;
@@ -140,6 +149,9 @@
       .subtree::before {
         float: right;
         margin-right: 3px;
+      }
+      .subtree[data-status='skip'] {
+        background: #eee;
       }
       .subtree[data-status='fail'], .subtree[data-status='passfail'] {
         background: linear-gradient(90deg, #fdd, #fdd 16px, #fff 16px);
@@ -265,21 +277,46 @@
           width: 100%;
         }
       }
+
+      /* LoadingSpinner */
+      .lds-ring {
+        display: inline-block;
+        position: relative;
+      }
+      .lds-ring div {
+        box-sizing: border-box;
+        display: block;
+        position: absolute;
+        width: 80%;
+        height: 80%;
+        margin: 5%;
+        border: 2px solid #000;
+        border-radius: 50%;
+        animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+        border-color: #000 transparent transparent transparent;
+      }
+      .lds-ring div:nth-child(1) {
+        animation-delay: -0.45s;
+      }
+      .lds-ring div:nth-child(2) {
+        animation-delay: -0.3s;
+      }
+      .lds-ring div:nth-child(3) {
+        animation-delay: -0.15s;
+      }
+      @keyframes lds-ring {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     </style>
   </head>
   <body>
     <h1><img class="logo" src="webgpu-logo-notext.svg">WebGPU Conformance Test Suite</h1>
-    <p>
-      <input type=button id=expandall value="Expand All (slow!)">
-    </p>
-
-    <div id="info"></div>
-    <div id="resultsVis"></div>
-
-    <p>
-      <input type="button" id="copyResultsJSON" value="Copy results as JSON">
-    </p>
-
-    <script type="module" src="../out/common/runtime/standalone.js"></script>
+    <main id="root"></main>
+    <script type="module" src="../out-standalone/app.js"></script>
   </body>
 </html>

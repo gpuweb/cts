@@ -127,6 +127,7 @@ function checkForUnmatchedSubtreesAndDoneness(
       suiteQuery,
       queriesInSuite.map(q => q.query)
     );
+    TestTree.propagateCounts(tree.root);
     console.log('  Found no invalid queries in the checklist. Checking for unmatched tests...');
     const subtreeCount = checkForUnmatchedSubtreesAndDoneness(tree, queriesInSuite);
     console.log(`  No unmatched tests or done/todo mismatches among ${subtreeCount} subtrees!`);

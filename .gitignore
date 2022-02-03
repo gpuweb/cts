@@ -5,6 +5,7 @@
 /out/
 /out-wpt/
 /out-node/
+/out-standalone/
 .tscache/
 *.tmp.txt
 /docs/tsdoc/

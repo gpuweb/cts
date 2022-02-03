@@ -8,7 +8,7 @@ module.exports = function (grunt) {
     pkg: grunt.file.readJSON('package.json'),
 
     clean: {
-      out: ['out/', 'out-wpt/', 'out-node/'],
+      out: ['out/', 'out-wpt/', 'out-node/', 'out-standalone/'],
     },
 
     run: {
@@ -66,6 +66,26 @@ module.exports = function (grunt) {
           '--tsBuildInfoFile', 'out-node/build.tsbuildinfo',
           '--noEmit', 'false',
           '--declaration', 'false'
+        ],
+      },
+      'build-out-standalone': {
+        cmd: 'node',
+        args: [
+          'node_modules/@babel/cli/bin/babel',
+          '--extensions=.ts,.tsx',
+          '--source-maps=true',
+          '--out-dir=out-standalone',
+          'standalone/',
+        ],
+      },
+      'copy-standalone-deps': {
+        cmd: 'node',
+        args: [
+          'node_modules/@babel/cli/bin/babel',
+          'node_modules/react/umd/react.production.min.js',
+          'node_modules/react-dom/umd/react-dom.production.min.js',
+          '--out-dir=out-standalone',
+          '--copy-files'
         ],
       },
       'copy-assets': {
@@ -154,6 +174,8 @@ module.exports = function (grunt) {
 
   grunt.registerTask('build-standalone', 'Build out/ (no checks, no WPT)', [
     'run:build-out',
+    'run:build-out-standalone',
+    'run:copy-standalone-deps',
     'run:copy-assets',
     'run:generate-version',
     'run:generate-listings',

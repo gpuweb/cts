@@ -18,7 +18,10 @@ jobs:
       - run: |
           npm test
           mkdir deploy-build/
-          cp -r README.md src standalone out out-wpt docs tools deploy-build/
+          cp -r README.md src out out-wpt out-standalone docs tools deploy-build/
+          mkdir deploy-build/standalone
+          cp standalone/index.html standalone/webgpu-logo-notext.svg deploy-build/standalone/
+          cp -r standalone/third_party deploy-build/standalone/
       - uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
           BRANCH: gh-pages

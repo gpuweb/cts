@@ -107,6 +107,7 @@ app.use(morgan('dev'));
 
 // Serve the standalone runner directory
 app.use('/standalone', express.static(path.resolve(srcDir, '../standalone')));
+app.use('/out-standalone', express.static(path.resolve(srcDir, '../out-standalone')));
 // Add out-wpt/ build dir for convenience
 app.use('/out-wpt', express.static(path.resolve(srcDir, '../out-wpt')));
 app.use('/docs/tsdoc', express.static(path.resolve(srcDir, '../docs/tsdoc')));
