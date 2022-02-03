@@ -69,7 +69,10 @@ export class DevicePool {
           holder.device.destroy();
         }
       }
-      throw ex;
+      // Supress failures if the device was explicitly destroyed.
+      if (holder.lostInfo !== undefined && holder.lostInfo.reason !== 'destroyed') {
+        throw ex;
+      }
     } finally {
       // Mark the holder as free. (This only has an effect if the pool still has the holder.)
       // This could be done at the top but is done here to guard against async-races during release.

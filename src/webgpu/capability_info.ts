@@ -38,6 +38,34 @@ export const kQueryTypes = keysOf(kQueryTypeInfo);
 /** Required alignment of a GPUBuffer size, by spec. */
 export const kBufferSizeAlignment = 4;
 
+/** Per-GPUBufferUsage type info. */
+export const kBufferUsageTypesInfo: {
+  readonly [name: string]: number;
+} = /* prettier-ignore */ {
+  'map-read':      Number(GPUConst.BufferUsage.MAP_READ),
+  'map-write':     Number(GPUConst.BufferUsage.MAP_WRITE),
+  'index':         Number(GPUConst.BufferUsage.INDEX),
+  'vertex':        Number(GPUConst.BufferUsage.VERTEX),
+  'uniform':       Number(GPUConst.BufferUsage.UNIFORM),
+  'storage':       Number(GPUConst.BufferUsage.STORAGE),
+  'indirect':      Number(GPUConst.BufferUsage.INDIRECT),
+  'query-resolve': Number(GPUConst.BufferUsage.QUERY_RESOLVE),
+};
+/** List of all GPUBufferUsage type values. */
+export const kBufferUsageTypes = keysOf(kBufferUsageTypesInfo);
+
+/** Per-GPUBufferUsage copy info. */
+export const kBufferUsageCopyInfo: {
+  readonly [name: string]: number;
+} = /* prettier-ignore */ {
+  'none':     0,
+  'src':      Number(GPUConst.BufferUsage.COPY_SRC),
+  'dst':      Number(GPUConst.BufferUsage.COPY_DST),
+  'src-dest': Number(GPUConst.BufferUsage.COPY_SRC) | Number(GPUConst.BufferUsage.COPY_DST),
+};
+/** List of all GPUBufferUsage copy values. */
+export const kBufferUsageCopy = keysOf(kBufferUsageCopyInfo);
+
 /** Per-GPUBufferUsage info. */
 export const kBufferUsageInfo: {
   readonly [k in valueof<typeof GPUConst.BufferUsage>]: {};
@@ -455,6 +483,29 @@ export function textureDimensionAndFormatCompatible(
     (info.blockWidth > 1 || info.depth || info.stencil)
   );
 }
+
+/** Per-GPUTextureUsage type info. */
+export const kTextureUsageTypeInfo: {
+  readonly [name: string]: number;
+} = /* prettier-ignore */ {
+  'texture': Number(GPUConst.TextureUsage.TEXTURE_BINDING),
+  'storage': Number(GPUConst.TextureUsage.STORAGE_BINDING),
+  'render':  Number(GPUConst.TextureUsage.RENDER_ATTACHMENT),
+};
+/** List of all GPUTextureUsage type values. */
+export const kTextureUsageType = keysOf(kTextureUsageTypeInfo);
+
+/** Per-GPUTextureUsage copy info. */
+export const kTextureUsageCopyInfo: {
+  readonly [name: string]: number;
+} = /* prettier-ignore */ {
+  'none':     0,
+  'src':      Number(GPUConst.TextureUsage.COPY_SRC),
+  'dst':      Number(GPUConst.TextureUsage.COPY_DST),
+  'src-dest': Number(GPUConst.TextureUsage.COPY_SRC) | Number(GPUConst.TextureUsage.COPY_DST),
+};
+/** List of all GPUTextureUsage copy values. */
+export const kTextureUsageCopy = keysOf(kTextureUsageCopyInfo);
 
 /** Per-GPUTextureUsage info. */
 export const kTextureUsageInfo: {
