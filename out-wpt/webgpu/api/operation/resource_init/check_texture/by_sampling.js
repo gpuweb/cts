@@ -10,7 +10,6 @@ import {
 } from '../../../../util/texture/texel_data.js';
 
 export const checkContentsBySampling = (t, params, texture, state, subresourceRange) => {
-  assert(params.dimension !== '1d');
   assert(params.format in kTextureFormatInfo);
   const format = params.format;
   const rep = kTexelRepresentationInfo[format];
@@ -39,11 +38,13 @@ export const checkContentsBySampling = (t, params, texture, state, subresourceRa
 
     const _xd = '_' + params.dimension;
     const _multisampled = params.sampleCount > 1 ? '_multisampled' : '';
-    const texelIndexExpresion =
+    const texelIndexExpression =
       params.dimension === '2d'
         ? 'vec2<i32>(GlobalInvocationID.xy)'
         : params.dimension === '3d'
         ? 'vec3<i32>(GlobalInvocationID.xyz)'
+        : params.dimension === '1d'
+        ? 'i32(GlobalInvocationID.x)'
         : unreachable();
     const computePipeline = t.device.createComputePipeline({
       compute: {
@@ -70,7 +71,7 @@ export const checkContentsBySampling = (t, params, texture, state, subresourceRa
                 GlobalInvocationID.x
               );
               let texel : vec4<${shaderType}> = textureLoad(
-                myTexture, ${texelIndexExpresion}, constants.level);
+                myTexture, ${texelIndexExpression}, constants.level);
 
               for (var i : u32 = 0u; i < ${componentCount}u; i = i + 1u) {
                 result.values[flatIndex + i] = texel.${indexExpression};

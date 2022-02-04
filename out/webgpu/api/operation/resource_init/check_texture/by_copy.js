@@ -11,7 +11,6 @@ state,
 subresourceRange) =>
 {
   for (const { level: mipLevel, layer } of subresourceRange.each()) {
-    assert(params.dimension !== '1d');
     assert(params.format in kTextureFormatInfo);
     const format = params.format;
 
@@ -33,7 +32,6 @@ state,
 subresourceRange) =>
 {
   for (const { level, layer } of subresourceRange.each()) {
-    assert(params.dimension !== '1d');
     assert(params.format in kTextureFormatInfo);
     const format = params.format;
 

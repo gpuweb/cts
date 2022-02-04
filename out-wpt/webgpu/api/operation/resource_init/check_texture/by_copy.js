@@ -6,7 +6,6 @@ import { virtualMipSize } from '../../../../util/texture/base.js';
 
 export const checkContentsByBufferCopy = (t, params, texture, state, subresourceRange) => {
   for (const { level: mipLevel, layer } of subresourceRange.each()) {
-    assert(params.dimension !== '1d');
     assert(params.format in kTextureFormatInfo);
     const format = params.format;
 
@@ -22,7 +21,6 @@ export const checkContentsByBufferCopy = (t, params, texture, state, subresource
 
 export const checkContentsByTextureCopy = (t, params, texture, state, subresourceRange) => {
   for (const { level, layer } of subresourceRange.each()) {
-    assert(params.dimension !== '1d');
     assert(params.format in kTextureFormatInfo);
     const format = params.format;
 

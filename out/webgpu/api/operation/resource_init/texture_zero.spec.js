@@ -4,9 +4,9 @@
 Test uninitialized textures are initialized to zero when read.
 
 TODO:
-- 1d [1]
-- test by sampling depth/stencil [2]
-- test by copying out of stencil [3]
+- test by sampling depth/stencil [1]
+- test by copying out of stencil [2]
+- test compressed texture formats [3]
 `; // MAINTENANCE_TODO: This is a test file, it probably shouldn't export anything.
 // Everything that's exported should be moved to another file.
 
@@ -20,9 +20,11 @@ import { assert, unreachable } from '../../../../common/util/util.js';
 import {
 kTextureFormatInfo,
 kTextureAspects,
-kUncompressedTextureFormats } from
+kUncompressedTextureFormats,
 
 
+textureDimensionAndFormatCompatible,
+kTextureDimensions } from
 '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
@@ -213,6 +215,10 @@ export class TextureZeroInitTest extends GPUTest {
   }
 
   get textureHeight() {
+    if (this.p.dimension === '1d') {
+      return 1;
+    }
+
     let height = 1 << this.p.mipLevelCount;
     if (this.p.nonPowerOfTwo) {
       height = 2 * height - 1;
@@ -331,9 +337,6 @@ export class TextureZeroInitTest extends GPUTest {
   state,
   subresourceRange)
   {
-    // [1]: 1D texture
-    assert(this.p.dimension !== '1d');
-
     assert(this.p.format in kTextureFormatInfo);
     const format = this.p.format;
 
@@ -432,17 +435,18 @@ export class TextureZeroInitTest extends GPUTest {
   }}
 
 
-const kTestParams = kUnitCaseParamsBuilder
-// [1]: 1d textures
-.combine('dimension', ['2d', '3d']).
+const kTestParams = kUnitCaseParamsBuilder.
+combine('dimension', kTextureDimensions).
 combine('readMethod', [
 ReadMethod.CopyToBuffer,
 ReadMethod.CopyToTexture,
 ReadMethod.Sample,
 ReadMethod.DepthTest,
-ReadMethod.StencilTest]).
+ReadMethod.StencilTest])
 
-combine('format', kUncompressedTextureFormats).
+// [3] compressed formats
+.combine('format', kUncompressedTextureFormats).
+filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format)).
 beginSubcases().
 combine('aspect', kTextureAspects).
 unless(({ readMethod, format, aspect }) => {
@@ -451,18 +455,20 @@ unless(({ readMethod, format, aspect }) => {
     readMethod === ReadMethod.DepthTest && (!info.depth || aspect === 'stencil-only') ||
     readMethod === ReadMethod.StencilTest && (!info.stencil || aspect === 'depth-only') ||
     readMethod === ReadMethod.ColorBlending && !info.color ||
-    // [2]: Test with depth/stencil sampling
+    // [1]: Test with depth/stencil sampling
     readMethod === ReadMethod.Sample && (info.depth || info.stencil) ||
     aspect === 'depth-only' && !info.depth ||
     aspect === 'stencil-only' && !info.stencil ||
     aspect === 'all' && info.depth && info.stencil ||
     // Cannot copy from a packed depth format.
-    // [3]: Test copying out of the stencil aspect.
+    // [2]: Test copying out of the stencil aspect.
     (readMethod === ReadMethod.CopyToBuffer || readMethod === ReadMethod.CopyToTexture) && (
     format === 'depth24plus' || format === 'depth24plus-stencil8'));
 
 }).
-combine('mipLevelCount', kMipLevelCounts).
+combine('mipLevelCount', kMipLevelCounts)
+// 1D texture can only have a single mip level
+.unless(p => p.dimension === '1d' && p.mipLevelCount !== 1).
 combine('sampleCount', kSampleCounts).
 unless(
 ({ readMethod, sampleCount }) =>
@@ -476,7 +482,7 @@ combine('uninitializeMethod', kUninitializeMethods).
 unless(({ dimension, readMethod, uninitializeMethod, format, sampleCount }) => {
   const formatInfo = kTextureFormatInfo[format];
   return (
-    dimension === '3d' && (
+    dimension !== '2d' && (
     sampleCount > 1 ||
     formatInfo.depth ||
     formatInfo.stencil ||
@@ -492,11 +498,10 @@ expandWithParams(function* ({ dimension }) {
       yield { layerCount: 1 };
       yield { layerCount: 7 };
       break;
+    case '1d':
     case '3d':
       yield { layerCount: 1 };
-      break;
-    default:
-      unreachable();}
+      break;}
 
 })
 // Multisampled 3D / 2D array textures not supported.

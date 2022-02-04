@@ -163,6 +163,7 @@ kTextureAndViewDimensions.
 beginSubcases().
 expand('textureLayers', ({ textureDimension: d }) => d === '2d' ? [1, 6, 18] : [1]).
 combine('textureLevels', [1, kLevels]).
+unless(p => p.textureDimension === '1d' && p.textureLevels !== 1).
 expand(
 'baseArrayLayer',
 ({ textureLayers: l }) => new Set([undefined, 0, 1, 5, 6, 7, l - 1, l, l + 1])).
@@ -222,6 +223,7 @@ params((u) =>
 kTextureAndViewDimensions.
 beginSubcases().
 combine('textureLevels', [1, kLevels - 2, kLevels]).
+unless(p => p.textureDimension === '1d' && p.textureLevels !== 1).
 expand(
 'baseMipLevel',
 ({ textureLevels: l }) => new Set([undefined, 0, 1, 5, 6, 7, l - 1, l, l + 1])).
