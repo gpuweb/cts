@@ -1377,6 +1377,7 @@ works for every format with 2d and 2d-array textures.
       textureHeight = info.blockHeight;
       rowsPerImage = 1;
     }
+    const textureSize = [4 * info.blockWidth, textureHeight, copyDepth] as const;
 
     const minDataSize = dataBytesForCopyOrFail({
       layout: { offset, bytesPerRow, rowsPerImage },
@@ -1392,7 +1393,7 @@ works for every format with 2d and 2d-array textures.
       textureDataLayout: { offset, bytesPerRow, rowsPerImage },
       copySize,
       dataSize,
-      textureSize: [4 * info.blockWidth, textureHeight, copyDepth],
+      textureSize,
       format,
       dimension,
       initMethod,
@@ -1512,6 +1513,7 @@ function* generateTestTextureSizes({
   mipLevel: number;
   _mipSizeInBlocks: Required<GPUExtent3DDict>;
 }): Generator<[number, number, number]> {
+  assert(dimension !== '1d'); // textureSize[1] would be wrong for 1D mipped textures.
   const info = kTextureFormatInfo[format];
 
   const widthAtThisLevel = _mipSizeInBlocks.width * info.blockWidth;
@@ -1558,6 +1560,9 @@ g.test('mip_levels')
     `Test that copying various mip levels works. Covers two special code paths:
   - The physical size of the subresource is not equal to the logical size.
   - bufferSize - offset < bytesPerImage * copyExtent.depthOrArrayLayers, and copyExtent needs to be clamped for all block formats.
+  - For 3D textures test copying to a sub-range of the depth.
+
+Tests both 2D and 3D textures. 1D textures are skipped because they can only have one mip level.
   `
   )
   .params(u =>
