@@ -38,25 +38,9 @@ export const kQueryTypes = keysOf(kQueryTypeInfo);
 /** Required alignment of a GPUBuffer size, by spec. */
 export const kBufferSizeAlignment = 4;
 
-/** Per-GPUBufferUsage type info. */
-export const kBufferUsageTypesInfo: {
-  readonly [name: string]: number;
-} = /* prettier-ignore */ {
-  'map-read':      Number(GPUConst.BufferUsage.MAP_READ),
-  'map-write':     Number(GPUConst.BufferUsage.MAP_WRITE),
-  'index':         Number(GPUConst.BufferUsage.INDEX),
-  'vertex':        Number(GPUConst.BufferUsage.VERTEX),
-  'uniform':       Number(GPUConst.BufferUsage.UNIFORM),
-  'storage':       Number(GPUConst.BufferUsage.STORAGE),
-  'indirect':      Number(GPUConst.BufferUsage.INDIRECT),
-  'query-resolve': Number(GPUConst.BufferUsage.QUERY_RESOLVE),
-};
-/** List of all GPUBufferUsage type values. */
-export const kBufferUsageTypes = keysOf(kBufferUsageTypesInfo);
-
 /** Per-GPUBufferUsage copy info. */
 export const kBufferUsageCopyInfo: {
-  readonly [name: string]: number;
+  readonly [name: string]: GPUBufferUsageFlags;
 } = /* prettier-ignore */ {
   'none':     0,
   'src':      Number(GPUConst.BufferUsage.COPY_SRC),
@@ -66,23 +50,20 @@ export const kBufferUsageCopyInfo: {
 /** List of all GPUBufferUsage copy values. */
 export const kBufferUsageCopy = keysOf(kBufferUsageCopyInfo);
 
-/** Per-GPUBufferUsage info. */
+/** Per-GPUBufferUsage keys and info. */
+export const kBufferUsageKeys = Object.keys(GPUConst.BufferUsage);
 export const kBufferUsageInfo: {
-  readonly [k in valueof<typeof GPUConst.BufferUsage>]: {};
-} = /* prettier-ignore */ {
-  [GPUConst.BufferUsage.MAP_READ]:      {},
-  [GPUConst.BufferUsage.MAP_WRITE]:     {},
-  [GPUConst.BufferUsage.COPY_SRC]:      {},
-  [GPUConst.BufferUsage.COPY_DST]:      {},
-  [GPUConst.BufferUsage.INDEX]:         {},
-  [GPUConst.BufferUsage.VERTEX]:        {},
-  [GPUConst.BufferUsage.UNIFORM]:       {},
-  [GPUConst.BufferUsage.STORAGE]:       {},
-  [GPUConst.BufferUsage.INDIRECT]:      {},
-  [GPUConst.BufferUsage.QUERY_RESOLVE]: {},
-};
+  readonly [k in typeof kBufferUsageKeys[number]]: GPUBufferUsageFlags;
+} = (() => {
+  const result: { [k in typeof kBufferUsageKeys[number]]: GPUBufferUsageFlags } = {};
+  for (const k in kBufferUsageKeys) {
+    result[k] = GPUConst.BufferUsage[k as keyof typeof GPUConst.BufferUsage];
+  }
+  return result;
+})();
+
 /** List of all GPUBufferUsage values. */
-export const kBufferUsages = numericKeysOf<GPUBufferUsageFlags>(kBufferUsageInfo);
+export const kBufferUsages = Object.values(GPUConst.BufferUsage);
 export const kAllBufferUsageBits = kBufferUsages.reduce(
   (previousSet, currentUsage) => previousSet | currentUsage,
   0
@@ -882,6 +863,9 @@ export function allBindingEntries(
 // Shader stages
 
 /** List of all GPUShaderStage values. */
+export const kShaderStageKeys = Object.keys(
+  GPUConst.ShaderStage
+) as (keyof typeof GPUConst.ShaderStage)[];
 export const kShaderStages: readonly GPUShaderStageFlags[] = [
   GPUConst.ShaderStage.VERTEX,
   GPUConst.ShaderStage.FRAGMENT,
