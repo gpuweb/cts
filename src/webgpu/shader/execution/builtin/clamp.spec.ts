@@ -13,8 +13,8 @@ import {
   TypeF32,
   TypeI32,
   TypeU32,
-  u32,
-} from '../../../util/conversion.js';
+  u32, u32Bits
+} from "../../../util/conversion.js";
 import { isSubnormalScalar } from '../../../util/math.js';
 
 import { anyOf, Case, Config, correctlyRoundedThreshold, kBit, run } from './builtin.js';
@@ -73,12 +73,12 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
     // This array must be strictly increasing, since that ordering determines
     // the expected values.
     const test_values: Array<Scalar> = [
-      u32(0),
+      u32Bits(kBit.u32.min),
       u32(1),
       u32(2),
       u32(0x70000000),
       u32(0x80000000),
-      u32(0xffffffff),
+      u32Bits(kBit.u32.max),
     ];
 
     run(t, 'clamp', [TypeU32, TypeU32, TypeU32], TypeU32, cfg, generateTestCases(test_values));
@@ -108,13 +108,14 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
     // This array must be strictly increasing, since that ordering determines
     // the expected values.
     const test_values: Array<Scalar> = [
-      i32Bits(0x80000000),
+      i32Bits(kBit.i32.negative.min),
       i32(-2),
       i32(-1),
       i32(0),
       i32(1),
       i32(2),
       i32Bits(0x70000000),
+      i32Bits(kBit.i32.positive.max),
     ];
 
     run(t, 'clamp', [TypeI32, TypeI32, TypeI32], TypeI32, cfg, generateTestCases(test_values));
