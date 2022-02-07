@@ -1205,6 +1205,14 @@ export const listing = [
       "shader",
       "execution",
       "builtin",
+      "clamp"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "builtin",
       "cos"
     ]
   },
