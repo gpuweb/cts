@@ -1,5 +1,9 @@
-import { ValidBindableResource, BindableResource, kMaxQueryCount } from '../../capability_info.js';
-import { GPUConst } from '../../constants.js';
+import {
+  ValidBindableResource,
+  BindableResource,
+  kMaxQueryCount,
+  ShaderStageKey,
+} from '../../capability_info.js';
 import { GPUTest, ResourceState } from '../../gpu_test.js';
 
 /**
@@ -285,7 +289,7 @@ export class ValidationTest extends GPUTest {
   }
 
   /** Return a no-op shader code snippet for the specified shader stage. */
-  getNoOpShaderCode(stage: keyof typeof GPUConst.ShaderStage): string {
+  getNoOpShaderCode(stage: ShaderStageKey): string {
     switch (stage) {
       case 'VERTEX':
         return `

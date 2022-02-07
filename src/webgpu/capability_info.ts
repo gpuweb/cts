@@ -42,25 +42,22 @@ export const kBufferSizeAlignment = 4;
 export const kBufferUsageCopyInfo: {
   readonly [name: string]: GPUBufferUsageFlags;
 } = /* prettier-ignore */ {
-  'none':     0,
-  'src':      Number(GPUConst.BufferUsage.COPY_SRC),
-  'dst':      Number(GPUConst.BufferUsage.COPY_DST),
-  'src-dest': Number(GPUConst.BufferUsage.COPY_SRC) | Number(GPUConst.BufferUsage.COPY_DST),
+  'COPY_NONE':    0,
+  'COPY_SRC':     Number(GPUConst.BufferUsage.COPY_SRC),
+  'COPY_DST':     Number(GPUConst.BufferUsage.COPY_DST),
+  'COPY_SRC_DST': Number(GPUConst.BufferUsage.COPY_SRC) | Number(GPUConst.BufferUsage.COPY_DST),
 };
 /** List of all GPUBufferUsage copy values. */
 export const kBufferUsageCopy = keysOf(kBufferUsageCopyInfo);
 
 /** Per-GPUBufferUsage keys and info. */
-export const kBufferUsageKeys = Object.keys(GPUConst.BufferUsage);
+type BufferUsageKey = keyof typeof GPUConst.BufferUsage;
+export const kBufferUsageKeys = Object.keys(GPUConst.BufferUsage) as BufferUsageKey[];
 export const kBufferUsageInfo: {
-  readonly [k in typeof kBufferUsageKeys[number]]: GPUBufferUsageFlags;
-} = (() => {
-  const result: { [k in typeof kBufferUsageKeys[number]]: GPUBufferUsageFlags } = {};
-  for (const k in kBufferUsageKeys) {
-    result[k] = GPUConst.BufferUsage[k as keyof typeof GPUConst.BufferUsage];
-  }
-  return result;
-})();
+  readonly [k in BufferUsageKey]: GPUBufferUsageFlags;
+} = {
+  ...GPUConst.BufferUsage,
+};
 
 /** List of all GPUBufferUsage values. */
 export const kBufferUsages = Object.values(GPUConst.BufferUsage);
@@ -863,9 +860,8 @@ export function allBindingEntries(
 // Shader stages
 
 /** List of all GPUShaderStage values. */
-export const kShaderStageKeys = Object.keys(
-  GPUConst.ShaderStage
-) as (keyof typeof GPUConst.ShaderStage)[];
+export type ShaderStageKey = keyof typeof GPUConst.ShaderStage;
+export const kShaderStageKeys = Object.keys(GPUConst.ShaderStage) as ShaderStageKey[];
 export const kShaderStages: readonly GPUShaderStageFlags[] = [
   GPUConst.ShaderStage.VERTEX,
   GPUConst.ShaderStage.FRAGMENT,

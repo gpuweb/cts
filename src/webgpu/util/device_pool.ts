@@ -5,6 +5,7 @@ import { DefaultLimits } from '../constants.js';
 
 export interface DeviceProvider {
   acquire(): GPUDevice;
+  expectDeviceLost(reason?: GPUDeviceLostReason): void;
 }
 
 class TestFailedButDeviceReusable extends Error {}
@@ -69,8 +70,18 @@ export class DevicePool {
           holder.device.destroy();
         }
       }
-      // Supress failures if the device was explicitly destroyed.
-      if (holder.lostInfo !== undefined && holder.lostInfo.reason !== 'destroyed') {
+      // In the try block, we may throw an error if the device is lost, however, we want to suppress
+      // the error if the device lost was expected. The device lost is expected when
+      // `holder.expectedLostReason` is set to null or equal to `holder.lostInfo.reason`. The
+      // condition below is just the negation to avoid extra branching.
+      if (
+        !(
+          holder.lostInfo !== undefined &&
+          holder.expectedLostReason !== undefined &&
+          (holder.expectedLostReason === null ||
+            holder.expectedLostReason === holder.lostInfo.reason)
+        )
+      ) {
         throw ex;
       }
     } finally {
@@ -241,6 +252,9 @@ class DeviceHolder implements DeviceProvider {
   state: DeviceHolderState = 'free';
   // initially undefined; becomes set when the device is lost
   lostInfo?: GPUDeviceLostInfo;
+  // Set if the device is expected to be lost. The null value is used to indicate that the lost
+  // reason can be anything.
+  expectedLostReason?: GPUDeviceLostReason | null;
 
   // Gets a device and creates a DeviceHolder.
   // If the device is lost, DeviceHolder.lost gets set.
@@ -270,6 +284,14 @@ class DeviceHolder implements DeviceProvider {
     this.device.pushErrorScope('out-of-memory');
     this.device.pushErrorScope('validation');
     return this.device;
+  }
+
+  expectDeviceLost(reason?: GPUDeviceLostReason) {
+    if (reason === undefined) {
+      this.expectedLostReason = null;
+    } else {
+      this.expectedLostReason = reason;
+    }
   }
 
   async ensureRelease(): Promise<void> {

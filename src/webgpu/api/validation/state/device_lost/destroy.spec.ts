@@ -32,6 +32,8 @@ class DeviceDestroyTests extends ValidationTest {
    * produces a validation error after the device is destroyed.
    */
   expectValidationErrorAfterDestroy(fn: () => void): void {
+    this.expectDeviceLost('destroyed');
+
     this.expectValidationError(fn, false);
     this.device.destroy();
     this.expectValidationError(fn);
@@ -58,10 +60,10 @@ Tests creating buffers on destroyed device fails. Tests valid combinations of:
           return false;
         }
         if (usageType === 'MAP_READ') {
-          return usageCopy === 'none' || usageCopy === 'dst';
+          return usageCopy === 'COPY_NONE' || usageCopy === 'COPY_DST';
         }
         if (usageType === 'MAP_WRITE') {
-          return usageCopy === 'none' || usageCopy === 'src';
+          return usageCopy === 'COPY_NONE' || usageCopy === 'COPY_SRC';
         }
         return true;
       })
@@ -406,3 +408,136 @@ Tests creating query sets on destroyed device fails.
       t.device.createQuerySet({ type, count: 4 });
     });
   });
+
+g.test('command,copyBufferToBuffer')
+  .desc(
+    `
+Tests copyBufferToBuffer command on destroyed device fails.
+  - Tests that finishing encoding fails on destroyed device
+  - Tests that submitting command fails on destroyed device
+  `
+  )
+  .unimplemented();
+
+g.test('command,copyBufferToTexture,uncompressed_format')
+  .desc(
+    `
+Tests copyBufferToTexture command with various uncompressed formats on destroyed device fails
+  - Tests that finishing encoding fails on destroyed device
+  - Tests that submitting command fails on destroyed device
+  `
+  )
+  .unimplemented();
+
+g.test('command,copyBufferToTexture,compressed_format')
+  .desc(
+    `
+Tests copyBufferToTexture command with various compressed formats on destroyed device fails.
+  - Tests that finishing encoding fails on destroyed device
+  - Tests that submitting command fails on destroyed device
+  `
+  )
+  .unimplemented();
+
+g.test('command,copyTextureToBuffer,uncompressed_format')
+  .desc(
+    `
+Tests copyTextureToBuffer command with various uncompressed formats on destroyed device fails.
+  - Tests that finishing encoding fails on destroyed device
+  - Tests that submitting command fails on destroyed device
+  `
+  )
+  .unimplemented();
+
+g.test('command,finish,copyTextureToBuffer,compressed_format')
+  .desc(
+    `
+Tests copyTextureToBuffer command with various compressed formats on destroyed device fails.
+  - Tests that finishing encoding fails on destroyed device
+  - Tests that submitting command fails on destroyed device
+  `
+  )
+  .unimplemented();
+
+g.test('command,copyTextureToTexture,uncompressed_format')
+  .desc(
+    `
+Tests copyTextureToTexture command with various uncompressed formats on destroyed device fails.
+  - Tests that finishing encoding fails on destroyed device
+  - Tests that submitting command fails on destroyed device
+  `
+  )
+  .unimplemented();
+
+g.test('command,copyTextureToTexture,compressed_format')
+  .desc(
+    `
+Tests copyTextureToTexture command with various compressed formats on destroyed device fails
+  - Tests that finishing encoding fails on destroyed device
+  - Tests that submitting command fails on destroyed device
+  `
+  )
+  .unimplemented();
+
+g.test('command,clearBuffer')
+  .desc(
+    `
+Tests encoding and finishing a clearBuffer command on destroyed device fails.
+  - Tests that finishing encoding fails on destroyed device
+  - Tests that submitting command fails on destroyed device
+  `
+  )
+  .unimplemented();
+
+g.test('command,writeTimestamp')
+  .desc(
+    `
+Tests encoding and finishing a writeTimestamp command on destroyed device fails.
+  - Tests that finishing encoding fails on destroyed device
+  - Tests that submitting command fails on destroyed device
+  `
+  )
+  .unimplemented();
+
+g.test('command,resolveQuerySet')
+  .desc(
+    `
+Tests encoding and finishing a resolveQuerySet command on destroyed device fails.
+  - Tests that finishing encoding fails on destroyed device
+  - Tests that submitting command fails on destroyed device
+  `
+  )
+  .unimplemented();
+
+g.test('command,computePass,dispatch')
+  .desc(
+    `
+Tests encoding and dispatching a simple valid compute pass on destroyed device fails.
+  - Binds valid pipeline and bindgroups, then dispatches
+  - Tests that finishing encoding fails on destroyed device
+  - Tests that submitting command fails on destroyed device
+  `
+  )
+  .unimplemented();
+
+g.test('command,renderPass,draw')
+  .desc(
+    `
+Tests encoding and finishing a simple valid render pass on destroyed device fails.
+  - Binds valid pipeline and bindgroups, then draws
+  - Tests that finishing encoding fails on destroyed device
+  - Tests that submitting command fails on destroyed device
+  `
+  )
+  .unimplemented();
+
+g.test('command,renderPass,renderBundle')
+  .desc(
+    `
+Tests encoding and drawing a render pass including a render bundle on destroyed device fails.
+  - Binds valid pipeline and bindgroups, executes render bundle, then draws
+  - Tests that finishing encoding fails on destroyed device
+  - Tests that submitting command fails on destroyed device
+  `
+  )
+  .unimplemented();
