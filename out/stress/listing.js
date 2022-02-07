@@ -13,6 +13,12 @@ export const listing = [
   },
   {
     "file": [
+      "adapter",
+      "device_allocation"
+    ]
+  },
+  {
+    "file": [
       "compute"
     ],
     "readme": "Stress tests covering operations specific to GPUComputePipeline and GPUComputePass."
