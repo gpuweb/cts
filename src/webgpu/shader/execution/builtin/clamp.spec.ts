@@ -13,8 +13,9 @@ import {
   TypeF32,
   TypeI32,
   TypeU32,
-  u32, u32Bits
-} from "../../../util/conversion.js";
+  u32,
+  u32Bits,
+} from '../../../util/conversion.js';
 import { isSubnormalScalar } from '../../../util/math.js';
 
 import { anyOf, Case, Config, correctlyRoundedThreshold, kBit, run } from './builtin.js';
