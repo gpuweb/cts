@@ -1300,6 +1300,38 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "memory_model",
+      "atomicity"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "memory_model",
+      "barrier"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "memory_model",
+      "coherence"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "memory_model",
+      "weak"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
       "robust_access"
     ]
   },
