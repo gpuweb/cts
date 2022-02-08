@@ -13,10 +13,12 @@ import {
 } from '../../../../capability_info.js';
 import { kResourceStates } from '../../../../gpu_test.js';
 import {
-  canvasTypes,
+  CanvasType,
+  canCopyFromCanvasContext,
   createCanvas,
   createOnscreenCanvas,
   createOffscreenCanvas,
+  kValidCanvasContextIds,
 } from '../../../../util/create_elements.js';
 import { ValidationTest } from '../../validation_test.js';
 
@@ -25,11 +27,6 @@ const kDefaultWidth = 32;
 const kDefaultHeight = 32;
 const kDefaultDepth = 1;
 const kDefaultMipLevelCount = 6;
-
-/** Valid contextId for HTMLCanvasElement/OffscreenCanvas,
- *  spec: https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-getcontext
- */
-export const kValidContextId = ['2d', 'bitmaprenderer', 'webgl', 'webgl2', 'webgpu'] as const;
 
 function computeMipMapSize(width: number, height: number, mipLevel: number) {
   return {
@@ -123,18 +120,6 @@ function generateCopySizeForDstOOB({ mipLevel, dstOrigin }: WithDstOriginMipLeve
   ];
 }
 
-function canCopyFromContextType(contextName: string) {
-  switch (contextName) {
-    case '2d':
-    case 'webgl':
-    case 'webgl2':
-    case 'webgpu':
-      return true;
-    default:
-      return false;
-  }
-}
-
 class CopyExternalImageToTextureTest extends ValidationTest {
   getImageData(width: number, height: number): ImageData {
     const pixelSize = kDefaultBytesPerPixel * width * height;
@@ -143,7 +128,7 @@ class CopyExternalImageToTextureTest extends ValidationTest {
   }
 
   getCanvasWithContent(
-    canvasType: canvasTypes,
+    canvasType: CanvasType,
     width: number,
     height: number,
     content: HTMLImageElement | HTMLCanvasElement | OffscreenCanvas | ImageBitmap
@@ -201,7 +186,7 @@ g.test('source_canvas,contexts')
   )
   .params(u =>
     u //
-      .combine('contextType', kValidContextId)
+      .combine('contextType', kValidCanvasContextIds)
       .beginSubcases()
       .combine('copySize', [
         { width: 0, height: 0, depthOrArrayLayers: 0 },
@@ -229,7 +214,7 @@ g.test('source_canvas,contexts')
       { texture: dstTexture },
       copySize,
       true, // No validation errors.
-      canCopyFromContextType(contextType) ? '' : 'OperationError'
+      canCopyFromCanvasContext(contextType) ? '' : 'OperationError'
     );
   });
 
@@ -246,7 +231,7 @@ g.test('source_offscreenCanvas,contexts')
   )
   .params(u =>
     u //
-      .combine('contextType', kValidContextId)
+      .combine('contextType', kValidCanvasContextIds)
       .beginSubcases()
       .combine('copySize', [
         { width: 0, height: 0, depthOrArrayLayers: 0 },
@@ -277,7 +262,7 @@ g.test('source_offscreenCanvas,contexts')
       { texture: dstTexture },
       copySize,
       true, // No validation errors.
-      canCopyFromContextType(contextType) ? '' : 'OperationError'
+      canCopyFromCanvasContext(contextType) ? '' : 'OperationError'
     );
   });
 
