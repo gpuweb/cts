@@ -284,7 +284,8 @@ struct VSOutputs {
       colorAttachments: [
         {
           view: testTexture.createView(),
-          loadValue: [0, 0, 0, 0],
+          clearValue: [0, 0, 0, 0],
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
@@ -296,7 +297,7 @@ struct VSOutputs {
       pass.setVertexBuffer(buffer.slot, buffer.buffer, buffer.vbOffset ?? 0);
     }
     pass.draw(vertexCount, instanceCount);
-    pass.endPass();
+    pass.end();
 
     this.device.queue.submit([encoder.finish()]);
 
