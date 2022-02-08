@@ -32,34 +32,12 @@ import {
   kDepthStencilFormats,
   kCompareFunctions,
   kStencilOperations,
+  kBlendFactors,
+  kBlendOperations,
 } from '../../capability_info.js';
 import { kTexelRepresentationInfo } from '../../util/texture/texel_data.js';
 
 import { ValidationTest } from './validation_test.js';
-
-const kBlendFactors: GPUBlendFactor[] = [
-  'zero',
-  'one',
-  'src',
-  'one-minus-src',
-  'src-alpha',
-  'one-minus-src-alpha',
-  'dst',
-  'one-minus-dst',
-  'dst-alpha',
-  'one-minus-dst-alpha',
-  'src-alpha-saturated',
-  'constant',
-  'one-minus-constant',
-];
-
-const kBlendOperations: GPUBlendOperation[] = [
-  'add', //
-  'subtract',
-  'reverse-subtract',
-  'min',
-  'max',
-];
 
 class F extends ValidationTest {
   getFragmentShaderCode(sampleType: GPUTextureSampleType, componentCount: number): string {
@@ -585,7 +563,13 @@ g.test('pipeline_output_targets,format_blendable')
   .unimplemented();
 
 g.test('pipeline_output_targets,blend_min_max')
-  .desc(`If the blend operation is "min" or "max", srcFactor and dstFactor must be "one".`)
+  .desc(
+    `
+  For the blend components on either GPUBlendState.color or GPUBlendState.alpha:
+  - Tests if the combination of 'srcFactor', 'dstFactor' and 'operation' is valid (if the blend
+    operation is "min" or "max", srcFactor and dstFactor must be "one").
+  `
+  )
   .params(u =>
     u
       .combine('isAsync', [false, true])
@@ -611,32 +595,18 @@ g.test('pipeline_output_targets,blend_min_max')
     const fragmentShaderCode = t.getFragmentShaderCode('float', 4);
     const format = 'rgba8unorm';
 
-    const descriptor =
-      component === 'color'
-        ? t.getDescriptor({
-            targets: [
-              {
-                format,
-                blend: {
-                  color: blendComponentToTest,
-                  alpha: defaultBlendComponent,
-                },
-              },
-            ],
-            fragmentShaderCode,
-          })
-        : t.getDescriptor({
-            targets: [
-              {
-                format,
-                blend: {
-                  color: defaultBlendComponent,
-                  alpha: blendComponentToTest,
-                },
-              },
-            ],
-            fragmentShaderCode,
-          });
+    const descriptor = t.getDescriptor({
+      targets: [
+        {
+          format,
+          blend: {
+            color: component === 'color' ? blendComponentToTest : defaultBlendComponent,
+            alpha: component === 'alpha' ? blendComponentToTest : defaultBlendComponent,
+          },
+        },
+      ],
+      fragmentShaderCode,
+    });
 
     if (operation === 'min' || operation === 'max') {
       const _success = srcFactor === 'one' && dstFactor === 'one';
