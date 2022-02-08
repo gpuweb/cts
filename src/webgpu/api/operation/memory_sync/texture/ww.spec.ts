@@ -1,5 +1,7 @@
 export const description = `
 Memory Synchronization Tests for Texture: write after write.
+
+- TODO: Test synchronization between multiple queues.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';

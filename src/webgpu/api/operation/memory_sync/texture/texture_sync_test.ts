@@ -1,9 +1,7 @@
-export const kAccessPatterns = ['rw', 'wr'] as const;
-export type AccessPattern = typeof kAccessPatterns[number];
-
-// Boundary between the first operation, and the second operation.
+/**
+ * Boundary between the first operation, and the second operation.
+ */
 export const kOperationBoundaries = [
-  'queue', // Operations are performed on different queues.
   'queue-op', // Operations are performed in different queue operations (submit, writeTexture).
   'command-buffer', // Operations are in different command buffers.
   'pass', // Operations are in different passes.
@@ -13,7 +11,9 @@ export const kOperationBoundaries = [
 ] as const;
 export type OperationBoundary = typeof kOperationBoundaries[number];
 
-// Context a particular operation is permitted in.
+/**
+ * Context a particular operation is permitted in.
+ */
 export const kOperationContexts = [
   'queue', // Operation occurs on the GPUQueue object
   'command-encoder', // Operation may be encoded in a GPUCommandEncoder.
@@ -47,14 +47,13 @@ const commandBufferContexts = combineContexts(
   kOperationContexts.filter(c => c !== 'queue')
 );
 
-// Mapping of OperationBoundary => to a set of OperationContext pairs.
-// The boundary is capable of separating operations in those two contexts.
+/**
+ * Mapping of OperationBoundary => to a set of OperationContext pairs.
+ * The boundary is capable of separating operations in those two contexts.
+ */
 export const kBoundaryInfo: {
   readonly [k in OperationBoundary]: BoundaryInfo;
 } = /* prettier-ignore */ {
-  'queue': {
-    contexts: queueContexts,
-  },
   'queue-op': {
     contexts: queueContexts,
   },
@@ -118,7 +117,9 @@ interface OpInfo {
   // Add fields as needed
 }
 
-// Mapping of Op to the OperationContext(s) it is valid in
+/**
+ * Mapping of Op to the OperationContext(s) it is valid in
+ */
 const kOpInfo: {
   readonly [k in Op]: OpInfo;
 } = /* prettier-ignore */ {
