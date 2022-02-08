@@ -287,14 +287,12 @@ fn(async t => {
 
 });
 
-g.test('texture_format_equality').
+g.test('texture_format_compatibility').
 desc(
 `
 Test the formats of textures in copyTextureToTexture must be copy-compatible.
 - for all source texture formats
 - for all destination texture formats
-
-TODO: Update with SRGBness now being compatible.
 `).
 
 paramsSubcasesOnly((u) =>
@@ -322,7 +320,11 @@ fn(async t => {
     usage: GPUTextureUsage.COPY_DST });
 
 
-  const isSuccess = srcFormat === dstFormat;
+  // Allow copy between compatible format textures.
+  const srcBaseFormat = kTextureFormatInfo[srcFormat].baseFormat ?? srcFormat;
+  const dstBaseFormat = kTextureFormatInfo[dstFormat].baseFormat ?? dstFormat;
+  const isSuccess = srcBaseFormat === dstBaseFormat;
+
   t.TestCopyTextureToTexture(
   { texture: srcTexture },
   { texture: dstTexture },
