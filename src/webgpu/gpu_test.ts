@@ -801,10 +801,9 @@ export class GPUTest extends Fixture {
   }
 
   /**
-   * Expects that the device should be lost, and, optionally, for a particular reason at the
-   * teardown of the test.
+   * Expects that the device should be lost for a particular reason at the teardown of the test.
    */
-  expectDeviceLost(reason?: GPUDeviceLostReason): void {
+  expectDeviceLost(reason: GPUDeviceLostReason): void {
     assert(
       this.provider !== undefined,
       'No provider available right now; did you "await" selectDeviceOrSkipTestCase?'

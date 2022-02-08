@@ -5,7 +5,7 @@ import { DefaultLimits } from '../constants.js';
 
 export interface DeviceProvider {
   acquire(): GPUDevice;
-  expectDeviceLost(reason?: GPUDeviceLostReason): void;
+  expectDeviceLost(reason: GPUDeviceLostReason): void;
 }
 
 class TestFailedButDeviceReusable extends Error {}
@@ -70,18 +70,15 @@ export class DevicePool {
           holder.device.destroy();
         }
       }
-      // In the try block, we may throw an error if the device is lost, however, we want to suppress
-      // the error if the device lost was expected. The device lost is expected when
-      // `holder.expectedLostReason` is set to null or equal to `holder.lostInfo.reason`. The
-      // condition below is just the negation to avoid extra branching.
-      if (
-        !(
-          holder.lostInfo !== undefined &&
-          holder.expectedLostReason !== undefined &&
-          (holder.expectedLostReason === null ||
-            holder.expectedLostReason === holder.lostInfo.reason)
-        )
-      ) {
+      // In the try block, we may throw an error if the device is lost in order to force device
+      // reinitialization, however, if the device lost was expected we want to suppress the error
+      // The device lost is expected when `holder.expectedLostReason` is equal to
+      // `holder.lostInfo.reason`.
+      const expectedDeviceLost =
+        holder.expectedLostReason !== undefined &&
+        holder.lostInfo !== undefined &&
+        holder.expectedLostReason === holder.lostInfo.reason;
+      if (!expectedDeviceLost) {
         throw ex;
       }
     } finally {
@@ -252,9 +249,8 @@ class DeviceHolder implements DeviceProvider {
   state: DeviceHolderState = 'free';
   // initially undefined; becomes set when the device is lost
   lostInfo?: GPUDeviceLostInfo;
-  // Set if the device is expected to be lost. The null value is used to indicate that the lost
-  // reason can be anything.
-  expectedLostReason?: GPUDeviceLostReason | null;
+  // Set if the device is expected to be lost.
+  expectedLostReason?: GPUDeviceLostReason;
 
   // Gets a device and creates a DeviceHolder.
   // If the device is lost, DeviceHolder.lost gets set.
@@ -286,12 +282,8 @@ class DeviceHolder implements DeviceProvider {
     return this.device;
   }
 
-  expectDeviceLost(reason?: GPUDeviceLostReason) {
-    if (reason === undefined) {
-      this.expectedLostReason = null;
-    } else {
-      this.expectedLostReason = reason;
-    }
+  expectDeviceLost(reason: GPUDeviceLostReason) {
+    this.expectedLostReason = reason;
   }
 
   async ensureRelease(): Promise<void> {

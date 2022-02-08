@@ -419,60 +419,30 @@ Tests copyBufferToBuffer command on destroyed device fails.
   )
   .unimplemented();
 
-g.test('command,copyBufferToTexture,uncompressed_format')
+g.test('command,copyBufferToTexture')
   .desc(
     `
-Tests copyBufferToTexture command with various uncompressed formats on destroyed device fails
+Tests copyBufferToTexture command on destroyed device fails.
   - Tests that finishing encoding fails on destroyed device
   - Tests that submitting command fails on destroyed device
   `
   )
   .unimplemented();
 
-g.test('command,copyBufferToTexture,compressed_format')
+g.test('command,copyTextureToBuffer')
   .desc(
     `
-Tests copyBufferToTexture command with various compressed formats on destroyed device fails.
+Tests copyTextureToBuffer command on destroyed device fails.
   - Tests that finishing encoding fails on destroyed device
   - Tests that submitting command fails on destroyed device
   `
   )
   .unimplemented();
 
-g.test('command,copyTextureToBuffer,uncompressed_format')
+g.test('command,copyTextureToTexture')
   .desc(
     `
-Tests copyTextureToBuffer command with various uncompressed formats on destroyed device fails.
-  - Tests that finishing encoding fails on destroyed device
-  - Tests that submitting command fails on destroyed device
-  `
-  )
-  .unimplemented();
-
-g.test('command,finish,copyTextureToBuffer,compressed_format')
-  .desc(
-    `
-Tests copyTextureToBuffer command with various compressed formats on destroyed device fails.
-  - Tests that finishing encoding fails on destroyed device
-  - Tests that submitting command fails on destroyed device
-  `
-  )
-  .unimplemented();
-
-g.test('command,copyTextureToTexture,uncompressed_format')
-  .desc(
-    `
-Tests copyTextureToTexture command with various uncompressed formats on destroyed device fails.
-  - Tests that finishing encoding fails on destroyed device
-  - Tests that submitting command fails on destroyed device
-  `
-  )
-  .unimplemented();
-
-g.test('command,copyTextureToTexture,compressed_format')
-  .desc(
-    `
-Tests copyTextureToTexture command with various compressed formats on destroyed device fails
+Tests copyTextureToTexture command on destroyed device fails.
   - Tests that finishing encoding fails on destroyed device
   - Tests that submitting command fails on destroyed device
   `
@@ -538,6 +508,30 @@ Tests encoding and drawing a render pass including a render bundle on destroyed 
   - Binds valid pipeline and bindgroups, executes render bundle, then draws
   - Tests that finishing encoding fails on destroyed device
   - Tests that submitting command fails on destroyed device
+  `
+  )
+  .unimplemented();
+
+g.test('queue,writeBuffer')
+  .desc(
+    `
+Tests writeBuffer on queue on destroyed device fails.
+  `
+  )
+  .unimplemented();
+
+g.test('queue,writeTexture')
+  .desc(
+    `
+Tests writeTexture on queue on destroyed device fails.
+  `
+  )
+  .unimplemented();
+
+g.test('queue,copyExternalImageToTexture')
+  .desc(
+    `
+Tests copyExternalImageToTexture on queue on destroyed device fails.
   `
   )
   .unimplemented();

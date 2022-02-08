@@ -43,16 +43,16 @@ export const kBufferUsageCopyInfo: {
   readonly [name: string]: GPUBufferUsageFlags;
 } = /* prettier-ignore */ {
   'COPY_NONE':    0,
-  'COPY_SRC':     Number(GPUConst.BufferUsage.COPY_SRC),
-  'COPY_DST':     Number(GPUConst.BufferUsage.COPY_DST),
-  'COPY_SRC_DST': Number(GPUConst.BufferUsage.COPY_SRC) | Number(GPUConst.BufferUsage.COPY_DST),
+  'COPY_SRC':     GPUConst.BufferUsage.COPY_SRC,
+  'COPY_DST':     GPUConst.BufferUsage.COPY_DST,
+  'COPY_SRC_DST': GPUConst.BufferUsage.COPY_SRC | GPUConst.BufferUsage.COPY_DST,
 };
 /** List of all GPUBufferUsage copy values. */
 export const kBufferUsageCopy = keysOf(kBufferUsageCopyInfo);
 
 /** Per-GPUBufferUsage keys and info. */
 type BufferUsageKey = keyof typeof GPUConst.BufferUsage;
-export const kBufferUsageKeys = Object.keys(GPUConst.BufferUsage) as BufferUsageKey[];
+export const kBufferUsageKeys = keysOf(GPUConst.BufferUsage);
 export const kBufferUsageInfo: {
   readonly [k in BufferUsageKey]: GPUBufferUsageFlags;
 } = {
