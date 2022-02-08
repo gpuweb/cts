@@ -33,14 +33,8 @@ g.test('ww')
           for (const second of kAllWriteOps) {
             if (checkOpsValidForContext([first, second], _context)) {
               yield {
-                first: {
-                  op: first,
-                  in: _context[0],
-                },
-                second: {
-                  op: second,
-                  in: _context[1],
-                },
+                first: { op: first, in: _context[0] },
+                second: { op: second, in: _context[1] },
               };
             }
           }

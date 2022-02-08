@@ -34,14 +34,8 @@ g.test('rw')
           for (const write of kAllWriteOps) {
             if (checkOpsValidForContext([read, write], _context)) {
               yield {
-                write: {
-                  op: write,
-                  in: _context[0],
-                },
-                read: {
-                  op: read,
-                  in: _context[1],
-                },
+                write: { op: write, in: _context[0] },
+                read: { op: read, in: _context[1] },
               };
             }
           }
@@ -67,14 +61,8 @@ g.test('wr')
           for (const write of kAllWriteOps) {
             if (checkOpsValidForContext([write, read], _context)) {
               yield {
-                read: {
-                  op: read,
-                  in: _context[0],
-                },
-                write: {
-                  op: write,
-                  in: _context[1],
-                },
+                read: { op: read, in: _context[0] },
+                write: { op: write, in: _context[1] },
               };
             }
           }
