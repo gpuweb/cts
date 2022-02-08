@@ -13,7 +13,7 @@ import {
   kValidTextureFormatsForCopyE2T,
 } from '../../capability_info.js';
 import { CopyToTextureUtils } from '../../util/copy_to_texture.js';
-import { canvasTypes, allCanvasTypes, createCanvas } from '../../util/create_elements.js';
+import { CanvasType, kAllCanvasTypes, createCanvas } from '../../util/create_elements.js';
 
 class F extends CopyToTextureUtils {
   init2DCanvasContentWithColorSpace({
@@ -119,7 +119,7 @@ class F extends CopyToTextureUtils {
     height,
     paintOpaqueRects,
   }: {
-    canvasType: canvasTypes;
+    canvasType: CanvasType;
     width: number;
     height: number;
     paintOpaqueRects: boolean;
@@ -181,7 +181,7 @@ class F extends CopyToTextureUtils {
     premultiplied,
     paintOpaqueRects,
   }: {
-    canvasType: canvasTypes;
+    canvasType: CanvasType;
     contextName: 'webgl' | 'webgl2';
     width: number;
     height: number;
@@ -297,7 +297,7 @@ class F extends CopyToTextureUtils {
     paintOpaqueRects,
   }: {
     device: GPUDevice;
-    canvasType: canvasTypes;
+    canvasType: CanvasType;
     width: number;
     height: number;
     premultiplied: boolean;
@@ -446,7 +446,7 @@ g.test('copy_contents_from_2d_context_canvas')
   )
   .params(u =>
     u
-      .combine('canvasType', allCanvasTypes)
+      .combine('canvasType', kAllCanvasTypes)
       .combine('dstColorFormat', kValidTextureFormatsForCopyE2T)
       .combine('dstPremultiplied', [true, false])
       .combine('srcDoFlipYDuringCopy', [true, false])
@@ -562,7 +562,7 @@ g.test('copy_contents_from_gl_context_canvas')
   )
   .params(u =>
     u
-      .combine('canvasType', allCanvasTypes)
+      .combine('canvasType', kAllCanvasTypes)
       .combine('contextName', ['webgl', 'webgl2'] as const)
       .combine('dstColorFormat', kValidTextureFormatsForCopyE2T)
       .combine('srcPremultiplied', [true, false])
@@ -683,7 +683,7 @@ g.test('copy_contents_from_gpu_context_canvas')
   )
   .params(u =>
     u
-      .combine('canvasType', allCanvasTypes)
+      .combine('canvasType', kAllCanvasTypes)
       .combine('srcAndDstInSameGPUDevice', [true, false])
       .combine('dstColorFormat', kValidTextureFormatsForCopyE2T)
       .combine('srcPremultiplied', [true])
