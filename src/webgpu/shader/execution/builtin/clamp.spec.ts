@@ -1,5 +1,5 @@
 export const description = `
-Execution Tests for the 'min' builtin function
+Execution Tests for the 'clamp' builtin function
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
@@ -14,6 +14,7 @@ import {
   TypeI32,
   TypeU32,
   u32,
+  u32Bits,
 } from '../../../util/conversion.js';
 import { isSubnormalScalar } from '../../../util/math.js';
 
@@ -21,28 +22,41 @@ import { anyOf, Case, Config, correctlyRoundedThreshold, kBit, run } from './bui
 
 export const g = makeTestGroup(GPUTest);
 
-/** Generate set of min test cases from an ascending list of values */
+/** Generate set of clamp test cases from an ascending list of values */
 function generateTestCases(test_values: Array<Scalar>): Array<Case> {
   const cases = new Array<Case>();
   test_values.forEach((e, ei) => {
     test_values.forEach((f, fi) => {
-      const precise_expected = ei <= fi ? e : f;
-      const expected = isSubnormalScalar(precise_expected)
-        ? anyOf(precise_expected, f32(0.0))
-        : precise_expected;
-      cases.push({ input: [e, f], expected });
+      test_values.forEach((g, gi) => {
+        // This is enforcing that low <= high, since most backends languages
+        // have undefined behaviour for high < low, so implementations would
+        // need to polyfill, and it is unclear if this was intended.
+        //
+        // https://github.com/gpuweb/gpuweb/issues/2557 discusses changing the
+        // spec to explicitly require low <= high.
+        if (fi <= gi) {
+          // Intentionally not using clamp from math.ts or other TypeScript
+          // defined clamp to avoid rounding issues from going in/out of
+          // `number` type.
+          const precise_expected = ei <= fi ? f : ei <= gi ? e : g;
+          const expected = isSubnormalScalar(precise_expected)
+            ? anyOf(precise_expected, f32(0.0))
+            : precise_expected;
+          cases.push({ input: [e, f, g], expected });
+        }
+      });
     });
   });
   return cases;
 }
 
-g.test('integer_builtin_functions,unsigned_min')
-  .uniqueId('29aba7ede5b93cdd')
+g.test('integer_builtin_functions,unsigned_clamp')
+  .uniqueId('386458e12e52645b')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `
-unsigned min:
-T is u32 or vecN<u32> min(e1: T ,e2: T) -> T Returns e1 if e1 is less than e2, and e2 otherwise. Component-wise when T is a vector. (GLSLstd450UMin)
+unsigned clamp:
+T is u32 or vecN<u32> clamp(e: T , low: T, high: T) -> T Returns min(max(e, low), high). Component-wise when T is a vector. (GLSLstd450UClamp)
 
 Please read the following guidelines before contributing:
 https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
@@ -60,24 +74,24 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
     // This array must be strictly increasing, since that ordering determines
     // the expected values.
     const test_values: Array<Scalar> = [
-      u32(0),
+      u32Bits(kBit.u32.min),
       u32(1),
       u32(2),
       u32(0x70000000),
       u32(0x80000000),
-      u32(0xffffffff),
+      u32Bits(kBit.u32.max),
     ];
 
-    run(t, 'min', [TypeU32, TypeU32], TypeU32, cfg, generateTestCases(test_values));
+    run(t, 'clamp', [TypeU32, TypeU32, TypeU32], TypeU32, cfg, generateTestCases(test_values));
   });
 
-g.test('integer_builtin_functions,signed_min')
-  .uniqueId('60c8ecdf409b45fc')
+g.test('integer_builtin_functions,signed_clamp')
+  .uniqueId('da51d3c8cc902ab2')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `
-signed min:
-T is i32 or vecN<i32> min(e1: T ,e2: T) -> T Returns e1 if e1 is less than e2, and e2 otherwise. Component-wise when T is a vector. (GLSLstd45SUMin)
+signed clamp:
+T is i32 or vecN<i32> clamp(e: T , low: T, high: T) -> T Returns min(max(e, low), high). Component-wise when T is a vector. (GLSLstd450SClamp)
 
 Please read the following guidelines before contributing:
 https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
@@ -95,25 +109,26 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
     // This array must be strictly increasing, since that ordering determines
     // the expected values.
     const test_values: Array<Scalar> = [
-      i32Bits(0x80000000),
+      i32Bits(kBit.i32.negative.min),
       i32(-2),
       i32(-1),
       i32(0),
       i32(1),
       i32(2),
       i32Bits(0x70000000),
+      i32Bits(kBit.i32.positive.max),
     ];
 
-    run(t, 'min', [TypeI32, TypeI32], TypeI32, cfg, generateTestCases(test_values));
+    run(t, 'clamp', [TypeI32, TypeI32, TypeI32], TypeI32, cfg, generateTestCases(test_values));
   });
 
-g.test('float_builtin_functions,min')
-  .uniqueId('53efc46faad0f380')
+g.test('float_builtin_functions,clamp')
+  .uniqueId('88e39c61e6dbd26f')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
-min:
-T is f32 or vecN<f32> min(e1: T ,e2: T ) -> T Returns e2 if e2 is less than e1, and e1 otherwise. If one operand is a NaN, the other is returned. If both operands are NaNs, a NaN is returned. Component-wise when T is a vector. (GLSLstd450NMin)
+clamp:
+T is f32 or vecN<f32> clamp(e: T , low: T, high: T) -> T Returns min(max(e, low), high). Component-wise when T is a vector. (GLSLstd450NClamp)
 
 Please read the following guidelines before contributing:
 https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
@@ -148,5 +163,5 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
       f32Bits(kBit.f32.infinity.positive),
     ];
 
-    run(t, 'min', [TypeF32, TypeF32], TypeF32, cfg, generateTestCases(test_values));
+    run(t, 'clamp', [TypeF32, TypeF32, TypeF32], TypeF32, cfg, generateTestCases(test_values));
   });
