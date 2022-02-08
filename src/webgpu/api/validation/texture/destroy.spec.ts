@@ -46,12 +46,13 @@ g.test('submit_a_destroyed_texture')
       colorAttachments: [
         {
           view: textureView,
-          loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
     });
-    renderPass.endPass();
+    renderPass.end();
     const commandBuffer = commandEncoder.finish();
 
     if (destroyAfterEncode) {

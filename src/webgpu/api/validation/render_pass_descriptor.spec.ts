@@ -48,7 +48,8 @@ class F extends ValidationTest {
 
     return {
       view,
-      loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+      clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+      loadOp: 'clear',
       storeOp: 'store',
     };
   }
@@ -61,9 +62,11 @@ class F extends ValidationTest {
 
     return {
       view,
-      depthLoadValue: 1.0,
+      depthClearValue: 1.0,
+      depthLoadOp: 'clear',
       depthStoreOp: 'store',
-      stencilLoadValue: 0,
+      stencilClearValue: 0,
+      stencilLoadOp: 'clear',
       stencilStoreOp: 'store',
     };
   }
@@ -71,7 +74,7 @@ class F extends ValidationTest {
   async tryRenderPass(success: boolean, descriptor: GPURenderPassDescriptor): Promise<void> {
     const commandEncoder = this.device.createCommandEncoder();
     const renderPass = commandEncoder.beginRenderPass(descriptor);
-    renderPass.endPass();
+    renderPass.end();
 
     this.expectValidationError(() => {
       commandEncoder.finish();
@@ -340,7 +343,8 @@ g.test('it_is_invalid_to_set_resolve_target_if_color_attachment_is_non_multisamp
         {
           view: colorTexture.createView(),
           resolveTarget: resolveTargetTexture.createView(),
-          loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],

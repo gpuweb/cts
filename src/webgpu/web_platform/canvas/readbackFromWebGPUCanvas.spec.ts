@@ -63,7 +63,9 @@ async function initCanvasContent(
 
   const clearOnePixel = (origin: GPUOrigin3D, color: GPUColor) => {
     const pass = encoder.beginRenderPass({
-      colorAttachments: [{ view: tempTextureView, loadValue: color, storeOp: 'store' }],
+      colorAttachments: [
+        { view: tempTextureView, clearValue: color, loadOp: 'clear', storeOp: 'store' },
+      ],
     });
     pass.endPass();
     encoder.copyTextureToTexture(

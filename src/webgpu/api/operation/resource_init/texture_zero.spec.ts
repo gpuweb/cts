@@ -309,11 +309,12 @@ export class TextureZeroInitTest extends GPUTest {
               {
                 view: texture.createView(viewDescriptor),
                 storeOp: 'store',
-                loadValue: initializedStateAsColor(state, this.p.format),
+                clearValue: initializedStateAsColor(state, this.p.format),
+                loadOp: 'clear',
               },
             ],
           })
-          .endPass();
+          .end();
       } else {
         commandEncoder
           .beginRenderPass({
@@ -321,12 +322,14 @@ export class TextureZeroInitTest extends GPUTest {
             depthStencilAttachment: {
               view: texture.createView(viewDescriptor),
               depthStoreOp: 'store',
-              depthLoadValue: initializedStateAsDepth[state],
+              depthClearValue: initializedStateAsDepth[state],
+              depthLoadOp: 'clear',
               stencilStoreOp: 'store',
-              stencilLoadValue: initializedStateAsStencil[state],
+              stencilClearValue: initializedStateAsStencil[state],
+              stencilLoadOp: 'clear',
             },
           })
-          .endPass();
+          .end();
       }
     }
     this.queue.submit([commandEncoder.finish()]);
@@ -411,11 +414,11 @@ export class TextureZeroInitTest extends GPUTest {
               {
                 view: texture.createView(desc),
                 storeOp: 'discard',
-                loadValue: 'load',
+                loadOp: 'load',
               },
             ],
           })
-          .endPass();
+          .end();
       } else {
         commandEncoder
           .beginRenderPass({
@@ -423,12 +426,12 @@ export class TextureZeroInitTest extends GPUTest {
             depthStencilAttachment: {
               view: texture.createView(desc),
               depthStoreOp: 'discard',
-              depthLoadValue: 'load',
+              depthLoadOp: 'load',
               stencilStoreOp: 'discard',
-              stencilLoadValue: 'load',
+              stencilLoadOp: 'load',
             },
           })
-          .endPass();
+          .end();
       }
     }
     this.queue.submit([commandEncoder.finish()]);
