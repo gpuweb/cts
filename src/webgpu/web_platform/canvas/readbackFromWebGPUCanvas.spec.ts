@@ -16,8 +16,6 @@ import {
 
 export const g = makeTestGroup(GPUTest);
 
-const kValidSwapchainFormats: GPUTextureFormat[] = ['bgra8unorm', 'rgba8unorm'];
-
 // Use four pixels rectangle for the test:
 // blue: top-left;
 // green: top-right;
@@ -75,48 +73,88 @@ async function initCanvasContent(
   ctx.configure({
     device: t.device,
     format,
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
   });
 
-  const rows = 2;
-  const bytesPerRow = 256;
-  const buffer = t.device.createBuffer({
-    mappedAtCreation: true,
-    size: rows * bytesPerRow,
-    usage: GPUBufferUsage.COPY_SRC,
+  const pipeline = t.device.createRenderPipeline({
+    vertex: {
+      module: t.device.createShaderModule({
+        code: `
+struct VertexOutput {
+  @builtin(position) Position : vec4<f32>;
+};
+
+@stage(vertex)
+fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
+  var pos = array<vec2<f32>, 6>(
+      vec2<f32>( 1.0,  1.0),
+      vec2<f32>( 1.0, -1.0),
+      vec2<f32>(-1.0, -1.0),
+      vec2<f32>( 1.0,  1.0),
+      vec2<f32>(-1.0, -1.0),
+      vec2<f32>(-1.0,  1.0));
+
+  var output : VertexOutput;
+  output.Position = vec4<f32>(pos[VertexIndex], 0.0, 1.0);
+  return output;
+}
+            `,
+      }),
+      entryPoint: 'main',
+    },
+    fragment: {
+      module: t.device.createShaderModule({
+        code: `
+@group(0) @binding(0) var mySampler: sampler;
+@group(0) @binding(1) var myTexture: texture_2d<f32>;
+
+@stage(fragment)
+fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
+  var coord = vec2<u32>(floor(fragcoord.xy));
+  var color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+  if (coord.x == 0u) {
+    if (coord.y == 0u) {
+      color.b = 1.0;
+    } else {
+      color.r = 1.0;
+    }
+  } else {
+    if (coord.y == 0u) {
+      color.g = 1.0;
+    } else {
+      color.r = 1.0;
+      color.g = 1.0;
+    }
+  }
+  return color;
+}
+            `,
+      }),
+      entryPoint: 'main',
+      targets: [{ format }],
+    },
+    primitive: {
+      topology: 'triangle-list',
+    },
   });
-  const blue: { [index: string]: Uint8Array } = {
-    bgra8unorm: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
-    rgba8unorm: new Uint8Array([0x00, 0x00, 0xff, 0xff]),
+
+  const renderPassDescriptor: GPURenderPassDescriptor = {
+    colorAttachments: [
+      {
+        view: ctx.getCurrentTexture().createView(),
+
+        loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+        storeOp: 'store',
+      },
+    ],
   };
 
-  const green: { [index: string]: Uint8Array } = {
-    bgra8unorm: new Uint8Array([0x00, 0xff, 0x00, 0xff]),
-  };
-  green['rgba8unorm'] = green['bgra8unorm'];
-
-  const red: { [index: string]: Uint8Array } = {
-    bgra8unorm: new Uint8Array([0x00, 0x00, 0xff, 0xff]),
-    rgba8unorm: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
-  };
-
-  const yellow: { [index: string]: Uint8Array } = {
-    bgra8unorm: new Uint8Array([0x00, 0xff, 0xff, 0xff]),
-    rgba8unorm: new Uint8Array([0xff, 0xff, 0x00, 0xff]),
-  };
-
-  const mapping = buffer.getMappedRange();
-  const data = new Uint8Array(mapping);
-  data.set(blue[format], 0); // blue
-  data.set(green[format], 4); // green
-  data.set(red[format], 256 + 0); // red
-  data.set(yellow[format], 256 + 4); // yellow
-  buffer.unmap();
-
-  const texture = ctx.getCurrentTexture();
-  const encoder = t.device.createCommandEncoder();
-  encoder.copyBufferToTexture({ buffer, bytesPerRow }, { texture }, [2, 2, 1]);
-  t.device.queue.submit([encoder.finish()]);
+  const commandEncoder = t.device.createCommandEncoder();
+  const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+  passEncoder.setPipeline(pipeline);
+  passEncoder.draw(6, 1, 0, 0);
+  passEncoder.endPass();
+  t.device.queue.submit([commandEncoder.finish()]);
   await t.device.queue.onSubmittedWorkDone();
 
   return canvas;
@@ -201,7 +239,7 @@ g.test('offscreenCanvas,snapshot')
   )
   .params(u =>
     u //
-      .combine('format', kValidSwapchainFormats)
+      .combine('format', kCanvasTextureFormats)
       .combine('snapshotType', ['convertToBlob', 'transferToImageBitmap', 'imageBitmap'])
   )
   .fn(async t => {
@@ -253,7 +291,7 @@ g.test('onscreenCanvas,uploadToWebGL')
   )
   .params(u =>
     u //
-      .combine('format', kValidSwapchainFormats)
+      .combine('format', kCanvasTextureFormats)
       .combine('webgl', ['webgl', 'webgl2'])
       .combine('upload', ['texImage2D', 'texSubImage2D'])
   )
@@ -313,7 +351,7 @@ g.test('drawTo2DCanvas')
   )
   .params(u =>
     u //
-      .combine('format', kValidSwapchainFormats)
+      .combine('format', kCanvasTextureFormats)
       .combine('webgpuCanvasType', allCanvasTypes)
       .combine('canvas2DType', allCanvasTypes)
   )
