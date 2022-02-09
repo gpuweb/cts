@@ -846,6 +846,34 @@ export const kShaderStageCombinations = [0, 1, 2, 3, 4, 5, 6, 7];
                                                                    */
 export const kTextureSampleCounts = [1, 4];
 
+// Blend factors and Blend components
+
+/** List of all GPUBlendFactor values. */
+export const kBlendFactors = [
+'zero',
+'one',
+'src',
+'one-minus-src',
+'src-alpha',
+'one-minus-src-alpha',
+'dst',
+'one-minus-dst',
+'dst-alpha',
+'one-minus-dst-alpha',
+'src-alpha-saturated',
+'constant',
+'one-minus-constant'];
+
+
+/** List of all GPUBlendOperation values. */
+export const kBlendOperations = [
+'add', //
+'subtract',
+'reverse-subtract',
+'min',
+'max'];
+
+
 // Pipeline limits
 
 /** Maximum number of color attachments to a render pass, by spec. */

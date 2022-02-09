@@ -33,6 +33,8 @@ import {
   kDepthStencilFormats,
   kCompareFunctions,
   kStencilOperations,
+  kBlendFactors,
+  kBlendOperations,
 } from '../../capability_info.js';
 import { kTexelRepresentationInfo } from '../../util/texture/texel_data.js';
 
@@ -560,8 +562,61 @@ g.test('pipeline_output_targets,format_blendable')
   .unimplemented();
 
 g.test('pipeline_output_targets,blend_min_max')
-  .desc(`If the blend operation is "min" or "max", srcFactor and dstFactor must be "one".`)
-  .unimplemented();
+  .desc(
+    `
+  For the blend components on either GPUBlendState.color or GPUBlendState.alpha:
+  - Tests if the combination of 'srcFactor', 'dstFactor' and 'operation' is valid (if the blend
+    operation is "min" or "max", srcFactor and dstFactor must be "one").
+  `
+  )
+  .params(u =>
+    u
+      .combine('isAsync', [false, true])
+      .combine('component', ['color', 'alpha'])
+      .beginSubcases()
+      .combine('srcFactor', kBlendFactors)
+      .combine('dstFactor', kBlendFactors)
+      .combine('operation', kBlendOperations)
+  )
+  .fn(async t => {
+    const { isAsync, component, srcFactor, dstFactor, operation } = t.params;
+
+    const defaultBlendComponent = {
+      srcFactor: 'src-alpha',
+      dstFactor: 'dst-alpha',
+      operation: 'add',
+    };
+
+    const blendComponentToTest = {
+      srcFactor,
+      dstFactor,
+      operation,
+    };
+
+    const fragmentShaderCode = t.getFragmentShaderCode('float', 4);
+    const format = 'rgba8unorm';
+
+    const descriptor = t.getDescriptor({
+      targets: [
+        {
+          format,
+          blend: {
+            color: component === 'color' ? blendComponentToTest : defaultBlendComponent,
+            alpha: component === 'alpha' ? blendComponentToTest : defaultBlendComponent,
+          },
+        },
+      ],
+
+      fragmentShaderCode,
+    });
+
+    if (operation === 'min' || operation === 'max') {
+      const _success = srcFactor === 'one' && dstFactor === 'one';
+      t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+    } else {
+      t.doCreateRenderPipelineTest(isAsync, true, descriptor);
+    }
+  });
 
 g.test('pipeline_layout,device_mismatch')
   .desc(

@@ -9,34 +9,11 @@ TODO:
 - ?
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, unreachable } from '../../../../common/util/util.js';
+import { kBlendFactors, kBlendOperations } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { float32ToFloat16Bits } from '../../../util/conversion.js';
 
 export const g = makeTestGroup(GPUTest);
-
-const kBlendFactors = [
-'zero',
-'one',
-'src',
-'one-minus-src',
-'src-alpha',
-'one-minus-src-alpha',
-'dst',
-'one-minus-dst',
-'dst-alpha',
-'one-minus-dst-alpha',
-'src-alpha-saturated',
-'constant',
-'one-minus-constant'];
-
-
-const kBlendOperations = [
-'add', //
-'subtract',
-'reverse-subtract',
-'min',
-'max'];
-
 
 function mapColor(
 col,
