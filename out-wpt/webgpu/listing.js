@@ -237,16 +237,7 @@ export const listing = [
       "operation",
       "memory_sync",
       "texture",
-      "rw_and_wr"
-    ]
-  },
-  {
-    "file": [
-      "api",
-      "operation",
-      "memory_sync",
-      "texture",
-      "ww"
+      "same_subresource"
     ]
   },
   {
