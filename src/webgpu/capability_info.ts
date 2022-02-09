@@ -245,6 +245,9 @@ export const kRenderableColorTextureFormats = kRegularTextureFormats.filter(
   v => kColorTextureFormatInfo[v].renderable
 );
 
+// The formats of GPUTextureFormat for canvas context.
+export const kCanvasTextureFormats = ['bgra8unorm', 'rgba8unorm'] as const;
+
 /** Per-GPUTextureFormat info. */
 // Exists just for documentation. Otherwise could be inferred by `makeTable`.
 // MAINTENANCE_TODO: Refactor this to separate per-aspect data for multi-aspect formats. In particular:

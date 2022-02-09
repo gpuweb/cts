@@ -4,6 +4,7 @@ Tests for readback from WebGPU Canvas.
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert, raceWithRejectOnTimeout, unreachable } from '../../../common/util/util.js';
+import { kCanvasTextureFormats } from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 import { checkElementsEqual } from '../../util/check_contents.js';
 import {
@@ -62,6 +63,7 @@ const webglExpect = new Uint8ClampedArray([
 
 async function initCanvasContent(
   t: GPUTest,
+  format: GPUTextureFormat,
   canvasType: canvasTypes
 ): Promise<HTMLCanvasElement | OffscreenCanvas> {
   const canvas = createCanvas(t, canvasType, 2, 2);
@@ -70,29 +72,89 @@ async function initCanvasContent(
 
   ctx.configure({
     device: t.device,
-    format: 'bgra8unorm',
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
+    format,
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
   });
 
-  const rows = 2;
-  const bytesPerRow = 256;
-  const buffer = t.device.createBuffer({
-    mappedAtCreation: true,
-    size: rows * bytesPerRow,
-    usage: GPUBufferUsage.COPY_SRC,
-  });
-  const mapping = buffer.getMappedRange();
-  const data = new Uint8Array(mapping);
-  data.set(new Uint8Array([0xff, 0x00, 0x00, 0xff]), 0); // blue
-  data.set(new Uint8Array([0x00, 0xff, 0x00, 0xff]), 4); // green
-  data.set(new Uint8Array([0x00, 0x00, 0xff, 0xff]), 256 + 0); // red
-  data.set(new Uint8Array([0x00, 0xff, 0xff, 0xff]), 256 + 4); // yellow
-  buffer.unmap();
+  const pipeline = t.device.createRenderPipeline({
+    vertex: {
+      module: t.device.createShaderModule({
+        code: `
+struct VertexOutput {
+  @builtin(position) Position : vec4<f32>;
+};
 
-  const texture = ctx.getCurrentTexture();
-  const encoder = t.device.createCommandEncoder();
-  encoder.copyBufferToTexture({ buffer, bytesPerRow }, { texture }, [2, 2, 1]);
-  t.device.queue.submit([encoder.finish()]);
+@stage(vertex)
+fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
+  var pos = array<vec2<f32>, 6>(
+      vec2<f32>( 1.0,  1.0),
+      vec2<f32>( 1.0, -1.0),
+      vec2<f32>(-1.0, -1.0),
+      vec2<f32>( 1.0,  1.0),
+      vec2<f32>(-1.0, -1.0),
+      vec2<f32>(-1.0,  1.0));
+
+  var output : VertexOutput;
+  output.Position = vec4<f32>(pos[VertexIndex], 0.0, 1.0);
+  return output;
+}
+            `,
+      }),
+      entryPoint: 'main',
+    },
+    fragment: {
+      module: t.device.createShaderModule({
+        code: `
+@group(0) @binding(0) var mySampler: sampler;
+@group(0) @binding(1) var myTexture: texture_2d<f32>;
+
+@stage(fragment)
+fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
+  var coord = vec2<u32>(floor(fragcoord.xy));
+  var color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+  if (coord.x == 0u) {
+    if (coord.y == 0u) {
+      color.b = 1.0;
+    } else {
+      color.r = 1.0;
+    }
+  } else {
+    if (coord.y == 0u) {
+      color.g = 1.0;
+    } else {
+      color.r = 1.0;
+      color.g = 1.0;
+    }
+  }
+  return color;
+}
+            `,
+      }),
+      entryPoint: 'main',
+      targets: [{ format }],
+    },
+    primitive: {
+      topology: 'triangle-list',
+    },
+  });
+
+  const renderPassDescriptor: GPURenderPassDescriptor = {
+    colorAttachments: [
+      {
+        view: ctx.getCurrentTexture().createView(),
+
+        loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+        storeOp: 'store',
+      },
+    ],
+  };
+
+  const commandEncoder = t.device.createCommandEncoder();
+  const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+  passEncoder.setPipeline(pipeline);
+  passEncoder.draw(6, 1, 0, 0);
+  passEncoder.endPass();
+  t.device.queue.submit([commandEncoder.finish()]);
   await t.device.queue.onSubmittedWorkDone();
 
   return canvas;
@@ -120,17 +182,18 @@ g.test('onscreenCanvas,snapshot')
   .desc(
     `
     Ensure snapshot of canvas with WebGPU context is correct
-     
+
     TODO: Snapshot canvas to jpeg, webp and other mime type and
           different quality. Maybe we should test them in reftest.
     `
   )
   .params(u =>
     u //
+      .combine('format', kCanvasTextureFormats)
       .combine('snapshotType', ['toDataURL', 'toBlob', 'imageBitmap'])
   )
   .fn(async t => {
-    const canvas = (await initCanvasContent(t, 'onscreen')) as HTMLCanvasElement;
+    const canvas = (await initCanvasContent(t, t.params.format, 'onscreen')) as HTMLCanvasElement;
 
     let snapshot: HTMLImageElement | ImageBitmap;
     switch (t.params.snapshotType) {
@@ -169,17 +232,22 @@ g.test('offscreenCanvas,snapshot')
   .desc(
     `
     Ensure snapshot of offscreenCanvas with WebGPU context is correct
-     
+
     TODO: Snapshot offscreenCanvas to jpeg, webp and other mime type and
           different quality. Maybe we should test them in reftest.
     `
   )
   .params(u =>
     u //
+      .combine('format', kCanvasTextureFormats)
       .combine('snapshotType', ['convertToBlob', 'transferToImageBitmap', 'imageBitmap'])
   )
   .fn(async t => {
-    const offscreenCanvas = (await initCanvasContent(t, 'offscreen')) as OffscreenCanvas;
+    const offscreenCanvas = (await initCanvasContent(
+      t,
+      t.params.format,
+      'offscreen'
+    )) as OffscreenCanvas;
 
     let snapshot: HTMLImageElement | ImageBitmap;
     switch (t.params.snapshotType) {
@@ -223,12 +291,13 @@ g.test('onscreenCanvas,uploadToWebGL')
   )
   .params(u =>
     u //
+      .combine('format', kCanvasTextureFormats)
       .combine('webgl', ['webgl', 'webgl2'])
       .combine('upload', ['texImage2D', 'texSubImage2D'])
   )
   .fn(async t => {
-    const { webgl, upload } = t.params;
-    const canvas = (await initCanvasContent(t, 'onscreen')) as HTMLCanvasElement;
+    const { format, webgl, upload } = t.params;
+    const canvas = (await initCanvasContent(t, format, 'onscreen')) as HTMLCanvasElement;
 
     const expectCanvas: HTMLCanvasElement = createOnscreenCanvas(t, canvas.width, canvas.height);
     const gl = expectCanvas.getContext(webgl) as WebGLRenderingContext | WebGL2RenderingContext;
@@ -282,13 +351,14 @@ g.test('drawTo2DCanvas')
   )
   .params(u =>
     u //
+      .combine('format', kCanvasTextureFormats)
       .combine('webgpuCanvasType', allCanvasTypes)
       .combine('canvas2DType', allCanvasTypes)
   )
   .fn(async t => {
-    const { webgpuCanvasType, canvas2DType } = t.params;
+    const { format, webgpuCanvasType, canvas2DType } = t.params;
 
-    const canvas = await initCanvasContent(t, webgpuCanvasType);
+    const canvas = await initCanvasContent(t, format, webgpuCanvasType);
 
     const expectCanvas = createCanvas(t, canvas2DType, canvas.width, canvas.height);
     const ctx = expectCanvas.getContext('2d');
