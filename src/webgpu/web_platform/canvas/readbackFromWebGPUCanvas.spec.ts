@@ -21,44 +21,20 @@ export const g = makeTestGroup(GPUTest);
 // green: top-right;
 // red: bottom-left;
 // yellow: bottom-right;
-const expect = new Uint8ClampedArray([
-  0x00,
-  0x00,
-  0xff,
-  0xff, // blue
-  0x00,
-  0xff,
-  0x00,
-  0xff, // green
-  0xff,
-  0x00,
-  0x00,
-  0xff, // red
-  0xff,
-  0xff,
-  0x00,
-  0xff, // yellow
+const expect = /* prettier-ignore */ new Uint8ClampedArray([
+  0x00, 0x00, 0xff, 0xff, // blue
+  0x00, 0xff, 0x00, 0xff, // green
+  0xff, 0x00, 0x00, 0xff, // red
+  0xff, 0xff, 0x00, 0xff, // yellow
 ]);
 
 // WebGL has opposite Y direction so we need to
 // flipY to get correct expects.
-const webglExpect = new Uint8ClampedArray([
-  0xff,
-  0x00,
-  0x00,
-  0xff, // red
-  0xff,
-  0xff,
-  0x00,
-  0xff, // yellow
-  0x00,
-  0x00,
-  0xff,
-  0xff, // blue
-  0x00,
-  0xff,
-  0x00,
-  0xff, // green
+const webglExpect = /* prettier-ignore */ new Uint8ClampedArray([
+  0xff, 0x00, 0x00, 0xff, // red
+  0xff, 0xff, 0x00, 0xff, // yellow
+  0x00, 0x00, 0xff, 0xff, // blue
+  0x00, 0xff, 0x00, 0xff, // green
 ]);
 
 async function initCanvasContent(
@@ -87,7 +63,7 @@ async function initCanvasContent(
 
   const clearOnePixel = (origin: GPUOrigin3D, color: GPUColor) => {
     const pass = encoder.beginRenderPass({
-      colorAttachments: [{ view: tempTextureView, loadValue: color, storeOp: 'store', }],
+      colorAttachments: [{ view: tempTextureView, loadValue: color, storeOp: 'store' }],
     });
     pass.endPass();
     encoder.copyTextureToTexture(
