@@ -117,6 +117,7 @@ async function initCanvasContent(
   pixels.forEach(pixel => {
     clearOnePixel(pixel.color, pixel.pos.x, pixel.pos.y);
   });
+
   await t.device.queue.onSubmittedWorkDone();
 
   return canvas;
