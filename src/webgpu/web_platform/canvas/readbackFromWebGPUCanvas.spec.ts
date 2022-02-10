@@ -76,47 +76,34 @@ async function initCanvasContent(
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
   });
 
-  const textureCanvas = ctx.getCurrentTexture();
-  const clearOnePixel = (color: GPUColor, x: number, y: number) => {
-    const tempTexture = t.device.createTexture({
-      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-      format,
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-    const colorAttachmentView = tempTexture.createView();
-    let encoder = t.device.createCommandEncoder();
+  const canvasTexture = ctx.getCurrentTexture();
+  const tempTexture = t.device.createTexture({
+    size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+    format,
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+  });
+  const tempTextureView = tempTexture.createView();
+  const encoder = t.device.createCommandEncoder();
+
+  const clearOnePixel = (origin: GPUOrigin3D, color: GPUColor) => {
     const pass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          view: colorAttachmentView,
-          loadValue: color,
-          storeOp: 'store',
-        },
-      ],
+      colorAttachments: [{ view: tempTextureView, loadValue: color, storeOp: 'store', }],
     });
     pass.endPass();
-    t.device.queue.submit([encoder.finish()]);
-
-    encoder = t.device.createCommandEncoder();
     encoder.copyTextureToTexture(
       { texture: tempTexture },
-      { texture: textureCanvas, origin: { x, y, z: 0 } },
-      { width: 1, height: 1, depthOrArrayLayers: 1 }
+      { texture: canvasTexture, origin },
+      { width: 1, height: 1 }
     );
-    t.device.queue.submit([encoder.finish()]);
   };
 
-  // | b, g |
-  // | r, y |
-  const pixels = [
-    { color: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 }, pos: { x: 0, y: 0 } },
-    { color: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, pos: { x: 1, y: 0 } },
-    { color: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }, pos: { x: 0, y: 1 } },
-    { color: { r: 1.0, g: 1.0, b: 0.0, a: 1.0 }, pos: { x: 1, y: 1 } },
-  ];
-  pixels.forEach(pixel => {
-    clearOnePixel(pixel.color, pixel.pos.x, pixel.pos.y);
-  });
+  clearOnePixel([0, 0], [0, 0, 1, 1]);
+  clearOnePixel([1, 0], [0, 1, 0, 1]);
+  clearOnePixel([0, 1], [1, 0, 0, 1]);
+  clearOnePixel([1, 1], [1, 1, 0, 1]);
+
+  t.device.queue.submit([encoder.finish()]);
+  tempTexture.destroy();
 
   await t.device.queue.onSubmittedWorkDone();
 
