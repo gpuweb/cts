@@ -28,7 +28,15 @@ function usage(rc: number): never {
   return sys.exit(rc);
 }
 
-if (!sys.existsSync('src/common/runtime/cmdline.ts')) {
+function selfFileExtension() {
+  if (sys.type === 'deno' || __filename.endsWith('.ts')) {
+    return 'ts';
+  } else {
+    return 'js';
+  }
+}
+
+if (!sys.existsSync(`src/common/runtime/cmdline.${selfFileExtension()}`)) {
   console.log('Must be run from repository root');
   usage(1);
 }
