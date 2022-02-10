@@ -90,7 +90,7 @@ have unexpected values then get drawn to the color buffer, which is later checke
 
       struct VFTest {
         @builtin(position) pos: vec4<f32>;
-        @location(0) vertexIndex: u32;
+        @location(0) @interpolate(flat) vertexIndex: u32;
       };
 
       @stage(vertex)
@@ -127,7 +127,7 @@ have unexpected values then get drawn to the color buffer, which is later checke
 
       struct VFCheck {
         @builtin(position) pos: vec4<f32>;
-        @location(0) vertexIndex: u32;
+        @location(0) @interpolate(flat) vertexIndex: u32;
       };
 
       @stage(vertex)
@@ -378,7 +378,7 @@ to be empty.`
 
       struct VF {
         @builtin(position) pos: vec4<f32>;
-        @location(0) vertexIndex: u32;
+        @location(0) @interpolate(flat) vertexIndex: u32;
       };
 
       @stage(vertex)

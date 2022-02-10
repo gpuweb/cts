@@ -1,5 +1,5 @@
 export const description = `
-Execution Tests for the 'min' builtin function
+Execution Tests for the 'max' builtin function
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
@@ -21,12 +21,12 @@ import { anyOf, Case, Config, correctlyRoundedThreshold, kBit, run } from './bui
 
 export const g = makeTestGroup(GPUTest);
 
-/** Generate set of min test cases from an ascending list of values */
-function generateTestCases(test_values: Array<Scalar>): Array<Case> {
+/** Generate set of max test cases from an ascending list of values */
+function generateTestCases(test_values: Array<Scalar>) {
   const cases = new Array<Case>();
   test_values.forEach((e, ei) => {
     test_values.forEach((f, fi) => {
-      const precise_expected = ei <= fi ? e : f;
+      const precise_expected = ei >= fi ? e : f;
       const expected = isSubnormalScalar(precise_expected)
         ? anyOf(precise_expected, f32(0.0))
         : precise_expected;
@@ -36,13 +36,13 @@ function generateTestCases(test_values: Array<Scalar>): Array<Case> {
   return cases;
 }
 
-g.test('integer_builtin_functions,unsigned_min')
-  .uniqueId('29aba7ede5b93cdd')
+g.test('integer_builtin_functions,unsigned_max')
+  .uniqueId('2cce54f65e71b3a3')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `
-unsigned min:
-T is u32 or vecN<u32> min(e1: T ,e2: T) -> T Returns e1 if e1 is less than e2, and e2 otherwise. Component-wise when T is a vector. (GLSLstd450UMin)
+unsigned max:
+T is u32 or vecN<u32> max(e1: T ,e2: T) -> T Returns e2 if e1 is less than e2, and e1 otherwise. Component-wise when T is a vector. (GLSLstd450UMax)
 
 Please read the following guidelines before contributing:
 https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
@@ -68,16 +68,16 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
       u32(0xffffffff),
     ];
 
-    run(t, 'min', [TypeU32, TypeU32], TypeU32, cfg, generateTestCases(test_values));
+    run(t, 'max', [TypeU32, TypeU32], TypeU32, cfg, generateTestCases(test_values));
   });
 
-g.test('integer_builtin_functions,signed_min')
-  .uniqueId('60c8ecdf409b45fc')
+g.test('integer_builtin_functions,signed_max')
+  .uniqueId('ef8c37107946a69e')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `
-signed min:
-T is i32 or vecN<i32> min(e1: T ,e2: T) -> T Returns e1 if e1 is less than e2, and e2 otherwise. Component-wise when T is a vector. (GLSLstd45SUMin)
+signed max:
+T is i32 or vecN<i32> max(e1: T ,e2: T) -> T Returns e2 if e1 is less than e2, and e1 otherwise. Component-wise when T is a vector. (GLSLstd450SMax)
 
 Please read the following guidelines before contributing:
 https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
@@ -104,16 +104,16 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
       i32Bits(0x70000000),
     ];
 
-    run(t, 'min', [TypeI32, TypeI32], TypeI32, cfg, generateTestCases(test_values));
+    run(t, 'max', [TypeI32, TypeI32], TypeI32, cfg, generateTestCases(test_values));
   });
 
-g.test('float_builtin_functions,min')
-  .uniqueId('53efc46faad0f380')
+g.test('float_builtin_functions,max')
+  .uniqueId('bcb6c69b4ec703b1')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
-min:
-T is f32 or vecN<f32> min(e1: T ,e2: T ) -> T Returns e2 if e2 is less than e1, and e1 otherwise. If one operand is a NaN, the other is returned. If both operands are NaNs, a NaN is returned. Component-wise when T is a vector. (GLSLstd450NMin)
+max:
+T is f32 or vecN<f32> max(e1: T ,e2: T ) -> T Returns e2 if e1 is less than e2, and e1 otherwise. If one operand is a NaN, the other is returned. If both operands are NaNs, a NaN is returned. Component-wise when T is a vector. (GLSLstd450NMax)
 
 Please read the following guidelines before contributing:
 https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
@@ -148,5 +148,5 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
       f32Bits(kBit.f32.infinity.positive),
     ];
 
-    run(t, 'min', [TypeF32, TypeF32], TypeF32, cfg, generateTestCases(test_values));
+    run(t, 'max', [TypeF32, TypeF32], TypeF32, cfg, generateTestCases(test_values));
   });
