@@ -73,88 +73,50 @@ async function initCanvasContent(
   ctx.configure({
     device: t.device,
     format,
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
   });
 
-  const pipeline = t.device.createRenderPipeline({
-    vertex: {
-      module: t.device.createShaderModule({
-        code: `
-struct VertexOutput {
-  @builtin(position) Position : vec4<f32>;
-};
+  const textureCanvas = ctx.getCurrentTexture();
+  const clearOnePixel = (color: GPUColor, x: number, y: number) => {
+    const tempTexture = t.device.createTexture({
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+      format,
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+    const colorAttachmentView = tempTexture.createView();
+    let encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: colorAttachmentView,
+          loadValue: color,
+          storeOp: 'store',
+        },
+      ],
+    });
+    pass.endPass();
+    t.device.queue.submit([encoder.finish()]);
 
-@stage(vertex)
-fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
-  var pos = array<vec2<f32>, 6>(
-      vec2<f32>( 1.0,  1.0),
-      vec2<f32>( 1.0, -1.0),
-      vec2<f32>(-1.0, -1.0),
-      vec2<f32>( 1.0,  1.0),
-      vec2<f32>(-1.0, -1.0),
-      vec2<f32>(-1.0,  1.0));
-
-  var output : VertexOutput;
-  output.Position = vec4<f32>(pos[VertexIndex], 0.0, 1.0);
-  return output;
-}
-            `,
-      }),
-      entryPoint: 'main',
-    },
-    fragment: {
-      module: t.device.createShaderModule({
-        code: `
-@group(0) @binding(0) var mySampler: sampler;
-@group(0) @binding(1) var myTexture: texture_2d<f32>;
-
-@stage(fragment)
-fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
-  var coord = vec2<u32>(floor(fragcoord.xy));
-  var color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
-  if (coord.x == 0u) {
-    if (coord.y == 0u) {
-      color.b = 1.0;
-    } else {
-      color.r = 1.0;
-    }
-  } else {
-    if (coord.y == 0u) {
-      color.g = 1.0;
-    } else {
-      color.r = 1.0;
-      color.g = 1.0;
-    }
-  }
-  return color;
-}
-            `,
-      }),
-      entryPoint: 'main',
-      targets: [{ format }],
-    },
-    primitive: {
-      topology: 'triangle-list',
-    },
-  });
-
-  const renderPassDescriptor: GPURenderPassDescriptor = {
-    colorAttachments: [
-      {
-        view: ctx.getCurrentTexture().createView(),
-
-        loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
-        storeOp: 'store',
-      },
-    ],
+    encoder = t.device.createCommandEncoder();
+    encoder.copyTextureToTexture(
+      { texture: tempTexture },
+      { texture: textureCanvas, origin: { x, y, z: 0 } },
+      { width: 1, height: 1, depthOrArrayLayers: 1 }
+    );
+    t.device.queue.submit([encoder.finish()]);
   };
 
-  const commandEncoder = t.device.createCommandEncoder();
-  const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
-  passEncoder.setPipeline(pipeline);
-  passEncoder.draw(6, 1, 0, 0);
-  passEncoder.endPass();
-  t.device.queue.submit([commandEncoder.finish()]);
+  // | b, g |
+  // | r, y |
+  const pixels = [
+    { color: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 }, pos: { x: 0, y: 0 } },
+    { color: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }, pos: { x: 1, y: 0 } },
+    { color: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }, pos: { x: 0, y: 1 } },
+    { color: { r: 1.0, g: 1.0, b: 0.0, a: 1.0 }, pos: { x: 1, y: 1 } },
+  ];
+  pixels.forEach(pixel => {
+    clearOnePixel(pixel.color, pixel.pos.x, pixel.pos.y);
+  });
   await t.device.queue.onSubmittedWorkDone();
 
   return canvas;
