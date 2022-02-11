@@ -6,6 +6,7 @@ weak behaviors in several classic memory model litmus tests.`;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { DefaultLimits } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
+
 import { MemoryModelParams, MemoryModelTester } from './memory_model_setup.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -34,7 +35,7 @@ const memoryModelParams: MemoryModelParams = {
   aliasedMemory: true,
   numMemLocations: 1,
   numReadOutputs: 2,
-  numBehaviors: 4
+  numBehaviors: 4,
 };
 
 g.test('message_passing_workgroup_memory')

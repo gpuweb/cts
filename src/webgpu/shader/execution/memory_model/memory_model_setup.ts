@@ -1,11 +1,11 @@
-import { GPUTest } from "../../../gpu_test";
+import { GPUTest } from '../../../gpu_test';
 import { checkElementsPassPredicate } from '../../../util/check_contents.js';
 
 export type MemoryModelParams = {
   workgroupSize: number;
   /** The number of workgroups to assign to running the test. */
   testingWorkgroups: number;
-  /** 
+  /**
    * Run no more than this many workgroups. Must be >= the number of testing workgroups. Non-testing workgroups are used
    * to stress other memory locations.
    */
@@ -52,14 +52,14 @@ export type MemoryModelParams = {
   numReadOutputs: number;
   /** The number of possible behaviors that a test can have. */
   numBehaviors: number;
-}
+};
 
 /** Represents a device buffer and a utility buffer for resetting memory and copying parameters. */
 type BufferWithSource = {
   deviceBuf: GPUBuffer;
   srcBuf: GPUBuffer;
   size: number;
-}
+};
 
 /** Specifies the buffers used during a memory model test. */
 type MemoryModelBuffers = {
@@ -79,7 +79,7 @@ type MemoryModelBuffers = {
   scratchMemoryLocations: BufferWithSource;
   /** Parameters that are used by the shader to calculate memory locations and perform stress. */
   stressParams: BufferWithSource;
-}
+};
 
 /** The number of stress params to add to the stress params buffer. */
 const numStressParams = 12;
@@ -90,7 +90,6 @@ const byteMultiplier = 4;
 /** Uniform buffer elements must align to a 16 byte boundary (see https://www.w3.org/TR/WGSL/#storage-class-layout-constraints). */
 const uniformBufferAlignment = 4;
 const uniformByteMultiplier = 16;
-
 
 /** Implements setup code necessary to run a memory model shader.  */
 export class MemoryModelTester {
@@ -109,82 +108,109 @@ export class MemoryModelTester {
 
     // set up buffers
     const testingThreads = this.params.workgroupSize * this.params.testingWorkgroups;
-    const testLocationsSize = testingThreads * this.params.numMemLocations * this.params.memStride * byteMultiplier;
+    const testLocationsSize =
+      testingThreads * this.params.numMemLocations * this.params.memStride * byteMultiplier;
     const testLocationsBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: testLocationsSize,
-        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE}),
-      srcBuf: this.test.makeBufferWithContents(new Uint32Array(testLocationsSize).fill(0), GPUBufferUsage.COPY_SRC),
-      size: testLocationsSize
+        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
+      }),
+      srcBuf: this.test.makeBufferWithContents(
+        new Uint32Array(testLocationsSize).fill(0),
+        GPUBufferUsage.COPY_SRC
+      ),
+      size: testLocationsSize,
     };
 
     const readResultsSize = testingThreads * this.params.numReadOutputs * byteMultiplier;
     const readResultsBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: readResultsSize,
-        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE}),
-      srcBuf: this.test.makeBufferWithContents(new Uint32Array(readResultsSize).fill(0), GPUBufferUsage.COPY_SRC),
-      size: readResultsSize
+        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
+      }),
+      srcBuf: this.test.makeBufferWithContents(
+        new Uint32Array(readResultsSize).fill(0),
+        GPUBufferUsage.COPY_SRC
+      ),
+      size: readResultsSize,
     };
 
     const testResultsSize = this.params.numBehaviors * byteMultiplier;
     const testResultsBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: testResultsSize,
-        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC}),
-      srcBuf: this.test.makeBufferWithContents(new Uint32Array(testResultsSize).fill(0), GPUBufferUsage.COPY_SRC),
-      size: testResultsSize
+        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+      }),
+      srcBuf: this.test.makeBufferWithContents(
+        new Uint32Array(testResultsSize).fill(0),
+        GPUBufferUsage.COPY_SRC
+      ),
+      size: testResultsSize,
     };
 
     const shuffledWorkgroupsSize = this.params.testingWorkgroups * byteMultiplier;
     const shuffledWorkgroupsBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: shuffledWorkgroupsSize,
-        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE}),
+        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
+      }),
       srcBuf: this.test.device.createBuffer({
         size: shuffledWorkgroupsSize,
-        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE}),
-      size: shuffledWorkgroupsSize
+        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE,
+      }),
+      size: shuffledWorkgroupsSize,
     };
 
     const barrierSize = byteMultiplier;
     const barrierBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: barrierSize,
-        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE}),
-      srcBuf: this.test.makeBufferWithContents(new Uint32Array(barrierSize).fill(0), GPUBufferUsage.COPY_SRC),
-      size: barrierSize
+        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
+      }),
+      srcBuf: this.test.makeBufferWithContents(
+        new Uint32Array(barrierSize).fill(0),
+        GPUBufferUsage.COPY_SRC
+      ),
+      size: barrierSize,
     };
 
     const scratchpadSize = this.params.scratchMemorySize * byteMultiplier;
     const scratchpadBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: scratchpadSize,
-        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE}),
-      srcBuf: this.test.makeBufferWithContents(new Uint32Array(scratchpadSize).fill(0), GPUBufferUsage.COPY_SRC),
-      size: scratchpadSize
+        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
+      }),
+      srcBuf: this.test.makeBufferWithContents(
+        new Uint32Array(scratchpadSize).fill(0),
+        GPUBufferUsage.COPY_SRC
+      ),
+      size: scratchpadSize,
     };
 
     const scratchMemoryLocationsSize = this.params.maxWorkgroups * byteMultiplier;
     const scratchMemoryLocationsBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: scratchMemoryLocationsSize,
-        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE}),
+        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
+      }),
       srcBuf: this.test.device.createBuffer({
         size: scratchMemoryLocationsSize,
-        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE}),
-      size: scratchMemoryLocationsSize
+        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE,
+      }),
+      size: scratchMemoryLocationsSize,
     };
 
     const stressParamsSize = numStressParams * uniformByteMultiplier;
     const stressParamsBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: stressParamsSize,
-        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM}),
+        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM,
+      }),
       srcBuf: this.test.device.createBuffer({
         size: stressParamsSize,
-        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE}),
-      size: stressParamsSize
+        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE,
+      }),
+      size: stressParamsSize,
     };
 
     this.buffers = {
@@ -195,31 +221,31 @@ export class MemoryModelTester {
       barrier: barrierBuffer,
       scratchpad: scratchpadBuffer,
       scratchMemoryLocations: scratchMemoryLocationsBuffer,
-      stressParams: stressParamsBuffer
+      stressParams: stressParamsBuffer,
     };
 
     // set up pipeline layouts
     const testLayout = this.test.device.createBindGroupLayout({
       entries: [
-        { binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: "storage" } },
-        { binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: "storage" } },
-        { binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: "storage" } },
-        { binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: "storage" } },
-        { binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: { type: "storage" } },
-        { binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: { type: "storage" } },
-        { binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: { type: "uniform" } }
-      ]
+        { binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
+        { binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
+        { binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
+        { binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
+        { binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
+        { binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
+        { binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' } },
+      ],
     });
     this.testPipeline = this.test.device.createComputePipeline({
       layout: this.test.device.createPipelineLayout({
-        bindGroupLayouts: [testLayout]
+        bindGroupLayouts: [testLayout],
       }),
       compute: {
         module: this.test.device.createShaderModule({
-          code: testShader
+          code: testShader,
         }),
-        entryPoint: 'main'
-      }
+        entryPoint: 'main',
+      },
     });
     this.testBindGroup = this.test.device.createBindGroup({
       entries: [
@@ -229,48 +255,51 @@ export class MemoryModelTester {
         { binding: 3, resource: { buffer: this.buffers.barrier.deviceBuf } },
         { binding: 4, resource: { buffer: this.buffers.scratchpad.deviceBuf } },
         { binding: 5, resource: { buffer: this.buffers.scratchMemoryLocations.deviceBuf } },
-        { binding: 6, resource: { buffer: this.buffers.stressParams.deviceBuf } }
+        { binding: 6, resource: { buffer: this.buffers.stressParams.deviceBuf } },
       ],
-      layout: testLayout
+      layout: testLayout,
     });
 
     const resultLayout = this.test.device.createBindGroupLayout({
       entries: [
-        { binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: "storage" } },
-        { binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: "storage" } },
-        { binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: "storage" } },
-        { binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: "uniform" } }
-      ]
+        { binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
+        { binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
+        { binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
+        { binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' } },
+      ],
     });
     this.resultPipeline = this.test.device.createComputePipeline({
       layout: this.test.device.createPipelineLayout({
-        bindGroupLayouts: [resultLayout]
+        bindGroupLayouts: [resultLayout],
       }),
       compute: {
         module: this.test.device.createShaderModule({
-          code: resultShader
+          code: resultShader,
         }),
-        entryPoint: 'main'
-      }
+        entryPoint: 'main',
+      },
     });
     this.resultBindGroup = this.test.device.createBindGroup({
       entries: [
         { binding: 0, resource: { buffer: this.buffers.testLocations.deviceBuf } },
         { binding: 1, resource: { buffer: this.buffers.readResults.deviceBuf } },
         { binding: 2, resource: { buffer: this.buffers.testResults.deviceBuf } },
-        { binding: 3, resource: { buffer: this.buffers.stressParams.deviceBuf } }
+        { binding: 3, resource: { buffer: this.buffers.stressParams.deviceBuf } },
       ],
-      layout: resultLayout
+      layout: resultLayout,
     });
   }
 
-  /** 
+  /**
    * Run the test for the specified number of iterations. Checks the testResults buffer on the weakIndex; if
    * this value is not 0 then the test has failed.
    */
   async run(iterations: number, weakIndex: number): Promise<void> {
     for (let i = 0; i < iterations; i++) {
-      const numWorkgroups = this.getRandomInRange(this.params.testingWorkgroups, this.params.maxWorkgroups);
+      const numWorkgroups = this.getRandomInRange(
+        this.params.testingWorkgroups,
+        this.params.maxWorkgroups
+      );
       await this.setShuffledWorkgroups(numWorkgroups);
       await this.setScratchLocations(numWorkgroups);
       await this.setStressParams();
@@ -297,10 +326,14 @@ export class MemoryModelTester {
       resultPass.endPass();
 
       this.test.device.queue.submit([encoder.finish()]);
-      this.test.expectGPUBufferValuesPassCheck(this.buffers.testResults.deviceBuf, this.checkWeakIndex(weakIndex), {
-        type: Uint32Array,
-        typedLength: this.params.numBehaviors
-      });
+      this.test.expectGPUBufferValuesPassCheck(
+        this.buffers.testResults.deviceBuf,
+        this.checkWeakIndex(weakIndex),
+        {
+          type: Uint32Array,
+          typedLength: this.params.numBehaviors,
+        }
+      );
     }
   }
 
@@ -308,32 +341,32 @@ export class MemoryModelTester {
   protected checkWeakIndex(weakIndex: number): (a: Uint32Array) => Error | undefined {
     const checkResult = this.checkResult(weakIndex);
     const resultPrinter = this.resultPrinter(weakIndex);
-    return function(a: Uint32Array): Error | undefined {
+    return function (a: Uint32Array): Error | undefined {
       return checkElementsPassPredicate(a, checkResult, {
-        predicatePrinter: [{leftHeader: 'expected ==', getValueForCell: resultPrinter}]
-      })
-    }
+        predicatePrinter: [{ leftHeader: 'expected ==', getValueForCell: resultPrinter }],
+      });
+    };
   }
 
   /** Returns a function that checks whether the specified weak index's value is not equal to 0. */
   protected checkResult(weakIndex: number): (i: number, v: number) => boolean {
-    return function(i: number, v: number): boolean {
-      if (i == weakIndex && v > 0) {
+    return function (i: number, v: number): boolean {
+      if (i === weakIndex && v > 0) {
         return false;
       }
       return true;
-    }
+    };
   }
 
   /** Returns a printer function that visualizes the results of checking the test results. */
   protected resultPrinter(weakIndex: number): (i: number) => string | number {
-    return function(i: number): string | number {
-      if (i == weakIndex) {
+    return function (i: number): string | number {
+      if (i === weakIndex) {
         return 0;
       } else {
-        return "any value";
+        return 'any value';
       }
-    }
+    };
   }
 
   /** Utility method that simplifies copying source buffers to device buffers. */
@@ -348,7 +381,7 @@ export class MemoryModelTester {
 
   /** Returns a random number in between the min and max values. */
   protected getRandomInRange(min: number, max: number): number {
-    if (min == max) {
+    if (min === max) {
       return min;
     } else {
       const offset = this.getRandomInt(max - min);
@@ -356,8 +389,8 @@ export class MemoryModelTester {
     }
   }
 
-  /** 
-   * Shuffles the order of workgroup ids, so that threads operating on the same memory location are not always in 
+  /**
+   * Shuffles the order of workgroup ids, so that threads operating on the same memory location are not always in
    * consecutive workgroups.
    */
   protected async setShuffledWorkgroups(numWorkgroups: number): Promise<void> {
@@ -398,11 +431,16 @@ export class MemoryModelTester {
       } else {
         const workgroupsPerLocation = numWorkgroups / this.params.stressTargetLines;
         for (let j = 0; j < workgroupsPerLocation; j++) {
-          scratchLocationsArray[i * workgroupsPerLocation + j] = region * this.params.stressLineSize + locInRegion;
+          scratchLocationsArray[i * workgroupsPerLocation + j] =
+            region * this.params.stressLineSize + locInRegion;
         }
-        if (i == this.params.stressTargetLines - 1 && numWorkgroups % this.params.stressTargetLines != 0) {
+        if (
+          i === this.params.stressTargetLines - 1 &&
+          numWorkgroups % this.params.stressTargetLines !== 0
+        ) {
           for (let j = 0; j < numWorkgroups % this.params.stressTargetLines; j++) {
-            scratchLocationsArray[numWorkgroups - j - 1] = region * this.params.stressLineSize + locInRegion;
+            scratchLocationsArray[numWorkgroups - j - 1] =
+              region * this.params.stressLineSize + locInRegion;
           }
         }
       }
@@ -428,7 +466,7 @@ export class MemoryModelTester {
     }
     stressParamsArray[2 * uniformBufferAlignment] = this.params.memStressIterations;
     const memStressStoreFirst = this.getRandomInt(100) < this.params.memStressStoreFirstPct;
-    const memStressStoreSecond = this.getRandomInt(100) < this.params.memStressStoreSecondPct; 
+    const memStressStoreSecond = this.getRandomInt(100) < this.params.memStressStoreSecondPct;
     let memStressPattern;
     if (memStressStoreFirst && memStressStoreSecond) {
       memStressPattern = 0;
@@ -439,7 +477,7 @@ export class MemoryModelTester {
     } else {
       memStressPattern = 3;
     }
-    stressParamsArray[3*uniformBufferAlignment] = memStressPattern;
+    stressParamsArray[3 * uniformBufferAlignment] = memStressPattern;
     if (this.getRandomInt(100) < this.params.preStressPct) {
       stressParamsArray[4 * uniformBufferAlignment] = 1;
     } else {
@@ -447,7 +485,7 @@ export class MemoryModelTester {
     }
     stressParamsArray[5 * uniformBufferAlignment] = this.params.preStressIterations;
     const preStressStoreFirst = this.getRandomInt(100) < this.params.preStressStoreFirstPct;
-    const preStressStoreSecond = this.getRandomInt(100) < this.params.preStressStoreSecondPct; 
+    const preStressStoreSecond = this.getRandomInt(100) < this.params.preStressStoreSecondPct;
     let preStressPattern;
     if (preStressStoreFirst && preStressStoreSecond) {
       preStressPattern = 0;
@@ -458,7 +496,7 @@ export class MemoryModelTester {
     } else {
       preStressPattern = 3;
     }
-    stressParamsArray[6*uniformBufferAlignment] = preStressPattern;
+    stressParamsArray[6 * uniformBufferAlignment] = preStressPattern;
     stressParamsArray[7 * uniformBufferAlignment] = this.params.permuteFirst;
     stressParamsArray[8 * uniformBufferAlignment] = this.params.permuteSecond;
     stressParamsArray[9 * uniformBufferAlignment] = this.params.testingWorkgroups;
