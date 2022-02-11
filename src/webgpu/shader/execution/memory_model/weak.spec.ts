@@ -32,8 +32,8 @@ const memoryModelParams: MemoryModelParams = {
   permuteFirst: 109,
   permuteSecond: 419,
   memStride: 4,
-  aliasedMemory: true,
-  numMemLocations: 1,
+  aliasedMemory: false,
+  numMemLocations: 2,
   numReadOutputs: 2,
   numBehaviors: 4,
 };

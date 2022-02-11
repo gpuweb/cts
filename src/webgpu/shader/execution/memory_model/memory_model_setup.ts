@@ -148,7 +148,7 @@ export class MemoryModelTester {
       size: testResultsSize,
     };
 
-    const shuffledWorkgroupsSize = this.params.testingWorkgroups * byteMultiplier;
+    const shuffledWorkgroupsSize = this.params.maxWorkgroups * byteMultiplier;
     const shuffledWorkgroupsBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: shuffledWorkgroupsSize,
