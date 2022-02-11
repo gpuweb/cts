@@ -4,7 +4,6 @@ accesses to a single memory location. Uses a parallel testing strategy along wit
 threads to increase coverage of possible bugs.`;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { DefaultLimits } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
 
 import { MemoryModelParams, MemoryModelTester } from './memory_model_setup.js';

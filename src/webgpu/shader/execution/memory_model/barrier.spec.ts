@@ -2,7 +2,6 @@ export const description = `
 Tests for non-atomic memory synchronization within a workgroup in the presence of a WebGPU barrier`;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { DefaultLimits } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
 
 import { MemoryModelParams, MemoryModelTester } from './memory_model_setup.js';

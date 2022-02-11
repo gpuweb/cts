@@ -4,7 +4,6 @@ Specifically, the acquire/release ordering provided by WebGPU's barriers can be 
 weak behaviors in several classic memory model litmus tests.`;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { DefaultLimits } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
 
 import { MemoryModelParams, MemoryModelTester } from './memory_model_setup.js';

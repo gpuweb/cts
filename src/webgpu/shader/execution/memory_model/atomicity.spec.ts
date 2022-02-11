@@ -1,7 +1,6 @@
 export const description = `Tests for the atomicity of atomic read-modify-write instructions.`;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { DefaultLimits } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
 
 import { MemoryModelParams, MemoryModelTester } from './memory_model_setup.js';
