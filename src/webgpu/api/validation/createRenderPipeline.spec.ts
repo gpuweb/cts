@@ -559,43 +559,8 @@ g.test('pipeline_output_targets,blend')
   });
 
 g.test('pipeline_output_targets,format_blendable')
-  .desc(
-    `
-  Tests if blending is used, the target's format must be blendable (support "float" sample type).
-  - For all the formats, test that blending can be enabled if and only if the format is blendable.`
-  )
-  .params(u =>
-    u.combine('isAsync', [false, true]).combine('format', kRenderableColorTextureFormats)
-  )
-  .fn(async t => {
-    const { isAsync, format } = t.params;
-    const info = kTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
-
-    const _success = info.sampleType === 'float';
-
-    const blendComponent: GPUBlendComponent = {
-      srcFactor: 'src-alpha',
-      dstFactor: 'dst-alpha',
-      operation: 'add',
-    };
-    t.doCreateRenderPipelineTest(
-      isAsync,
-      _success,
-      t.getDescriptor({
-        targets: [
-          {
-            format,
-            blend: {
-              color: blendComponent,
-              alpha: blendComponent,
-            },
-          },
-        ],
-        fragmentShaderCode: t.getFragmentShaderCode('float', 4),
-      })
-    );
-  });
+  .desc(`If blending is used, the target's format must be blendable (support "float" sample type).`)
+  .unimplemented();
 
 g.test('pipeline_output_targets,blend_min_max')
   .desc(
