@@ -1,7 +1,11 @@
 import { GPUTest } from '../../../gpu_test';
 import { checkElementsPassPredicate } from '../../../util/check_contents.js';
 
-export type MemoryModelParams = {
+/* All buffer sizes are counted in units of 4-byte words. */
+
+/* Parameter values are set heuristically, typically by a time-intensive search. */
+export type MemoryModelTestParams = {
+  /* Number of invocations per workgroup. The workgroups are 1-dimensional. */
   workgroupSize: number;
   /** The number of workgroups to assign to running the test. */
   testingWorkgroups: number;
@@ -56,8 +60,11 @@ export type MemoryModelParams = {
 
 /** Represents a device buffer and a utility buffer for resetting memory and copying parameters. */
 type BufferWithSource = {
+  /** Buffer used by shader code. */
   deviceBuf: GPUBuffer;
+  /** Buffer populated from the host size, data is copied to device buffer for use by shader. */
   srcBuf: GPUBuffer;
+  /** Size in bytes of the buffer. */
   size: number;
 };
 
@@ -83,18 +90,29 @@ type MemoryModelBuffers = {
 
 /** The number of stress params to add to the stress params buffer. */
 const numStressParams = 12;
+const barrierParamIndex = 0;
+const memStressIndex = 1;
+const memStressIterationsIndex = 2;
+const memStressPatternIndex = 3;
+const preStressIndex = 4;
+const preStressIterationsIndex = 5;
+const preStressPatternIndex = 6;
+const permuteFirstIndex = 7;
+const permuteSecondIndex = 8;
+const testingWorkgroupsIndex = 9;
+const memStrideIndex = 10;
+const memLocationOffsetIndex = 11;
 
-/** Buffer sizes are specified in number of memory locations, multiplying by 4 gives the number of bytes. */
-const byteMultiplier = 4;
-
-/** Uniform buffer elements must align to a 16 byte boundary (see https://www.w3.org/TR/WGSL/#storage-class-layout-constraints). */
-const uniformBufferAlignment = 4;
-const uniformByteMultiplier = 16;
+/** 
+ * All memory used in these consists of a four byte word, so this value is used to correctly set the byte size of buffers that
+ * are read to/written from during tests and for storing test results.
+ */
+const bytesPerWord = 4;
 
 /** Implements setup code necessary to run a memory model shader.  */
 export class MemoryModelTester {
   protected test: GPUTest;
-  protected params: MemoryModelParams;
+  protected params: MemoryModelTestParams;
   protected buffers: MemoryModelBuffers;
   protected testPipeline: GPUComputePipeline;
   protected testBindGroup: GPUBindGroup;
@@ -102,14 +120,14 @@ export class MemoryModelTester {
   protected resultBindGroup: GPUBindGroup;
 
   /** Sets up a memory model test by initializing buffers and pipeline layouts. */
-  constructor(t: GPUTest, params: MemoryModelParams, testShader: string, resultShader: string) {
+  constructor(t: GPUTest, params: MemoryModelTestParams, testShader: string, resultShader: string) {
     this.test = t;
     this.params = params;
 
     // set up buffers
     const testingThreads = this.params.workgroupSize * this.params.testingWorkgroups;
     const testLocationsSize =
-      testingThreads * this.params.numMemLocations * this.params.memStride * byteMultiplier;
+      testingThreads * this.params.numMemLocations * this.params.memStride * bytesPerWord;
     const testLocationsBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: testLocationsSize,
@@ -122,7 +140,7 @@ export class MemoryModelTester {
       size: testLocationsSize,
     };
 
-    const readResultsSize = testingThreads * this.params.numReadOutputs * byteMultiplier;
+    const readResultsSize = testingThreads * this.params.numReadOutputs * bytesPerWord;
     const readResultsBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: readResultsSize,
@@ -135,7 +153,7 @@ export class MemoryModelTester {
       size: readResultsSize,
     };
 
-    const testResultsSize = this.params.numBehaviors * byteMultiplier;
+    const testResultsSize = this.params.numBehaviors * bytesPerWord;
     const testResultsBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: testResultsSize,
@@ -148,7 +166,7 @@ export class MemoryModelTester {
       size: testResultsSize,
     };
 
-    const shuffledWorkgroupsSize = this.params.maxWorkgroups * byteMultiplier;
+    const shuffledWorkgroupsSize = this.params.maxWorkgroups * bytesPerWord;
     const shuffledWorkgroupsBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: shuffledWorkgroupsSize,
@@ -161,7 +179,7 @@ export class MemoryModelTester {
       size: shuffledWorkgroupsSize,
     };
 
-    const barrierSize = byteMultiplier;
+    const barrierSize = bytesPerWord;
     const barrierBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: barrierSize,
@@ -174,7 +192,7 @@ export class MemoryModelTester {
       size: barrierSize,
     };
 
-    const scratchpadSize = this.params.scratchMemorySize * byteMultiplier;
+    const scratchpadSize = this.params.scratchMemorySize * bytesPerWord;
     const scratchpadBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: scratchpadSize,
@@ -187,7 +205,7 @@ export class MemoryModelTester {
       size: scratchpadSize,
     };
 
-    const scratchMemoryLocationsSize = this.params.maxWorkgroups * byteMultiplier;
+    const scratchMemoryLocationsSize = this.params.maxWorkgroups * bytesPerWord;
     const scratchMemoryLocationsBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: scratchMemoryLocationsSize,
@@ -200,7 +218,7 @@ export class MemoryModelTester {
       size: scratchMemoryLocationsSize,
     };
 
-    const stressParamsSize = numStressParams * uniformByteMultiplier;
+    const stressParamsSize = numStressParams * bytesPerWord;
     const stressParamsBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: stressParamsSize,
@@ -389,6 +407,16 @@ export class MemoryModelTester {
     }
   }
 
+  /** Returns a permuted array using a simple Fisher-Yates shuffle algorithm. */
+  protected shuffleArray(a: number[]): void {
+    for (let i = a.length - 1; i >= 0; i--) {
+      const toSwap = this.getRandomInt(i + 1);
+      const temp = a[toSwap];
+      a[toSwap] = a[i];
+      a[i] = temp;
+    }
+  }
+
   /**
    * Shuffles the order of workgroup ids, so that threads operating on the same memory location are not always in
    * consecutive workgroups.
@@ -416,19 +444,22 @@ export class MemoryModelTester {
     await this.buffers.scratchMemoryLocations.srcBuf.mapAsync(GPUMapMode.WRITE);
     const scratchLocationsArrayBuffer = this.buffers.scratchMemoryLocations.srcBuf.getMappedRange();
     const scratchLocationsArray = new Uint32Array(scratchLocationsArrayBuffer);
-    const scratchUsedRegions = new Set();
     const scratchNumRegions = this.params.scratchMemorySize / this.params.stressLineSize;
+    const scratchRegions = [...Array(scratchNumRegions).keys()];
+    this.shuffleArray(scratchRegions);
     for (let i = 0; i < this.params.stressTargetLines; i++) {
-      let region = this.getRandomInt(scratchNumRegions);
-      while (scratchUsedRegions.has(region)) {
-        region = this.getRandomInt(scratchNumRegions);
-      }
+      let region = scratchRegions[i];
       const locInRegion = this.getRandomInt(this.params.stressLineSize);
       if (this.getRandomInt(100) < this.params.stressStrategyBalancePct) {
+        // In the round-robin case, the current scratch location is striped across all workgroups.
         for (let j = i; j < numWorkgroups; j += this.params.stressTargetLines) {
           scratchLocationsArray[j] = region * this.params.stressLineSize + locInRegion;
         }
+
       } else {
+        // In the chunking case, the current scratch location is assigned to a block of workgroups. The final scratch
+        // location may be assigned to more workgroups, if the number of scratch locations does not cleanly divide the
+        // number of workgroups.
         const workgroupsPerLocation = numWorkgroups / this.params.stressTargetLines;
         for (let j = 0; j < workgroupsPerLocation; j++) {
           scratchLocationsArray[i * workgroupsPerLocation + j] =
@@ -444,7 +475,6 @@ export class MemoryModelTester {
           }
         }
       }
-      scratchUsedRegions.add(region);
     }
     this.buffers.scratchMemoryLocations.srcBuf.unmap();
   }
@@ -455,16 +485,16 @@ export class MemoryModelTester {
     const stressParamsArrayBuffer = this.buffers.stressParams.srcBuf.getMappedRange();
     const stressParamsArray = new Uint32Array(stressParamsArrayBuffer);
     if (this.getRandomInt(100) < this.params.barrierPct) {
-      stressParamsArray[0] = 1;
+      stressParamsArray[barrierParamIndex] = 1;
     } else {
-      stressParamsArray[0] = 0;
+      stressParamsArray[barrierParamIndex] = 0;
     }
     if (this.getRandomInt(100) < this.params.memStressPct) {
-      stressParamsArray[1 * uniformBufferAlignment] = 1;
+      stressParamsArray[memStressIndex] = 1;
     } else {
-      stressParamsArray[1 * uniformBufferAlignment] = 0;
+      stressParamsArray[memStressIndex] = 0;
     }
-    stressParamsArray[2 * uniformBufferAlignment] = this.params.memStressIterations;
+    stressParamsArray[memStressIterationsIndex] = this.params.memStressIterations;
     const memStressStoreFirst = this.getRandomInt(100) < this.params.memStressStoreFirstPct;
     const memStressStoreSecond = this.getRandomInt(100) < this.params.memStressStoreSecondPct;
     let memStressPattern;
@@ -477,13 +507,13 @@ export class MemoryModelTester {
     } else {
       memStressPattern = 3;
     }
-    stressParamsArray[3 * uniformBufferAlignment] = memStressPattern;
+    stressParamsArray[memStressPatternIndex] = memStressPattern;
     if (this.getRandomInt(100) < this.params.preStressPct) {
-      stressParamsArray[4 * uniformBufferAlignment] = 1;
+      stressParamsArray[preStressIndex] = 1;
     } else {
-      stressParamsArray[4 * uniformBufferAlignment] = 0;
+      stressParamsArray[preStressIndex] = 0;
     }
-    stressParamsArray[5 * uniformBufferAlignment] = this.params.preStressIterations;
+    stressParamsArray[preStressIterationsIndex] = this.params.preStressIterations;
     const preStressStoreFirst = this.getRandomInt(100) < this.params.preStressStoreFirstPct;
     const preStressStoreSecond = this.getRandomInt(100) < this.params.preStressStoreSecondPct;
     let preStressPattern;
@@ -496,16 +526,189 @@ export class MemoryModelTester {
     } else {
       preStressPattern = 3;
     }
-    stressParamsArray[6 * uniformBufferAlignment] = preStressPattern;
-    stressParamsArray[7 * uniformBufferAlignment] = this.params.permuteFirst;
-    stressParamsArray[8 * uniformBufferAlignment] = this.params.permuteSecond;
-    stressParamsArray[9 * uniformBufferAlignment] = this.params.testingWorkgroups;
-    stressParamsArray[10 * uniformBufferAlignment] = this.params.memStride;
+    stressParamsArray[preStressPatternIndex] = preStressPattern;
+    stressParamsArray[permuteFirstIndex] = this.params.permuteFirst;
+    stressParamsArray[permuteSecondIndex] = this.params.permuteSecond;
+    stressParamsArray[testingWorkgroupsIndex] = this.params.testingWorkgroups;
+    stressParamsArray[memStrideIndex] = this.params.memStride;
     if (this.params.aliasedMemory) {
-      stressParamsArray[11 * uniformBufferAlignment] = 0;
+      stressParamsArray[memLocationOffsetIndex] = 0;
     } else {
-      stressParamsArray[11 * uniformBufferAlignment] = this.params.memStride;
+      stressParamsArray[memLocationOffsetIndex] = this.params.memStride;
     }
     this.buffers.stressParams.srcBuf.unmap();
   }
 }
+
+const shaderMemStructures = `
+  struct Memory {
+    value: array<u32>;
+  };
+    
+  struct AtomicMemory {
+    value: array<atomic<u32>>;
+  };
+    
+  struct ReadResult {
+    r0: atomic<u32>;
+    r1: atomic<u32>;
+  };
+    
+  struct ReadResults {
+    value: array<ReadResult>;
+  };
+    
+  struct StressParamsMemory {
+    do_barrier: u32;
+    mem_stress: u32;
+    mem_stress_iterations: u32;
+    mem_stress_pattern: u32;
+    pre_stress: u32;
+    pre_stress_iterations: u32;
+    pre_stress_pattern: u32;
+    permute_first: u32;
+    permute_second: u32;
+    testing_workgroups: u32;
+    mem_stride: u32;
+    location_offset: u32;
+  };
+`;
+
+export const fourBehaviorTestResultStructure = `
+  struct TestResults {
+    seq0: atomic<u32>;
+    seq1: atomic<u32>;
+    interleaved: atomic<u32>;
+    weak: atomic<u32>;
+  };
+`;
+
+export const twoBehaviorTestResultStructure = `
+  struct TestResults {
+    seq: atomic<u32>;
+    weak: atomic<u32>;
+  };
+`;
+
+const testShaderBindings = `
+  @group(0) @binding(0) var<storage, read_write> test_locations : AtomicMemory;
+  @group(0) @binding(1) var<storage, read_write> results : ReadResults;
+  @group(0) @binding(2) var<storage, read_write> shuffled_workgroups : Memory;
+  @group(0) @binding(3) var<storage, read_write> barrier : AtomicMemory;
+  @group(0) @binding(4) var<storage, read_write> scratchpad : Memory;
+  @group(0) @binding(5) var<storage, read_write> scratch_locations : Memory;
+  @group(0) @binding(6) var<uniform> stress_params : StressParamsMemory;
+`;
+
+const resultShaderBindings = `
+  @group(0) @binding(0) var<storage, read_write> test_locations : AtomicMemory;
+  @group(0) @binding(1) var<storage, read_write> read_results : ReadResults;
+  @group(0) @binding(2) var<storage, read_write> test_results : TestResults;
+  @group(0) @binding(3) var<uniform> stress_params : StressParamsMemory;
+`;
+
+const workgroupMemory = `
+  var<workgroup> wg_test_locations: array<atomic<u32>, 3584>;
+`;
+
+const memoryLocationFunctions = `
+  fn permute_id(id: u32, factor: u32, mask: u32) -> u32 {
+    return (id * factor) % mask;
+  }
+    
+  fn stripe_workgroup(workgroup_id: u32, local_id: u32) -> u32 {
+    return (workgroup_id + 1u + local_id % (stress_params.testing_workgroups - 1u)) % stress_params.testing_workgroups;
+  }
+`;
+
+const testShaderFunctions = `
+  fn spin(limit: u32) {
+    var i : u32 = 0u;
+    var bar_val : u32 = atomicAdd(&barrier.value[0], 1u);
+    loop {
+      if (i == 1024u || bar_val >= limit) {
+        break;
+      }
+      bar_val = atomicAdd(&barrier.value[0], 0u);
+      i = i + 1u;
+    }
+  }
+    
+  fn do_stress(iterations: u32, pattern: u32, workgroup_id: u32) {
+    let addr = scratch_locations.value[workgroup_id];
+    switch(pattern) {
+      case 0u: {
+        for(var i: u32 = 0u; i < iterations; i = i + 1u) {
+          scratchpad.value[addr] = i;
+          scratchpad.value[addr] = i + 1u;
+        }
+      }
+      case 1u: {
+        for(var i: u32 = 0u; i < iterations; i = i + 1u) {
+          scratchpad.value[addr] = i;
+          let tmp1: u32 = scratchpad.value[addr];
+          if (tmp1 > 100000u) {
+            scratchpad.value[addr] = i;
+            break;
+          }
+        }
+      }
+      case 2u: {
+        for(var i: u32 = 0u; i < iterations; i = i + 1u) {
+          let tmp1: u32 = scratchpad.value[addr];
+          if (tmp1 > 100000u) {
+            scratchpad.value[addr] = i;
+            break;
+          }
+          scratchpad.value[addr] = i;
+        }
+      }
+      case 3u: {
+        for(var i: u32 = 0u; i < iterations; i = i + 1u) {
+          let tmp1: u32 = scratchpad.value[addr];
+          if (tmp1 > 100000u) {
+            scratchpad.value[addr] = i;
+            break;
+          }
+          let tmp2: u32 = scratchpad.value[addr];
+          if (tmp2 > 100000u) {
+            scratchpad.value[addr] = i;
+            break;
+          }
+        }
+      }
+      default: {
+        break;
+      }
+    }
+  }
+`;
+
+const shaderEntryPoint = `
+  let workgroupXSize = 256u;
+  @stage(compute) @workgroup_size(workgroupXSize) fn main(
+    @builtin(local_invocation_id) local_invocation_id : vec3<u32>,
+    @builtin(workgroup_id) workgroup_id : vec3<u32>) {
+`;
+
+const testShaderCommonHeader = `
+    let shuffled_workgroup = shuffled_workgroups.value[workgroup_id[0]];
+    if (shuffled_workgroup < stress_params.testing_workgroups) {
+`;
+
+export const testShaderCommonFooter = `
+    } else if (stress_params.mem_stress == 1u) {
+      do_stress(stress_params.mem_stress_iterations, stress_params.mem_stress_pattern, shuffled_workgroup);
+    }
+  }
+`;
+
+export const resultShaderCommonFooter = `
+}
+`;
+
+export const interWorkgroupTestShaderCommonCode = [shaderMemStructures, testShaderBindings, memoryLocationFunctions, testShaderFunctions, shaderEntryPoint, testShaderCommonHeader].join("\n");
+export const intraWorkgroupTestShaderCommonCode = [shaderMemStructures, testShaderBindings, workgroupMemory, memoryLocationFunctions, testShaderFunctions, shaderEntryPoint, testShaderCommonHeader].join("\n");
+
+export const resultShaderCommonCode = [shaderMemStructures, resultShaderBindings, memoryLocationFunctions, shaderEntryPoint].join("\n");
+
