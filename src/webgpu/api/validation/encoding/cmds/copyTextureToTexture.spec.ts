@@ -12,6 +12,7 @@ import {
   textureDimensionAndFormatCompatible,
   kTextureDimensions,
 } from '../../../../capability_info.js';
+import { kResourceStates } from '../../../../gpu_test.js';
 import { align } from '../../../../util/math.js';
 import { ValidationTest } from '../../validation_test.js';
 
@@ -20,14 +21,24 @@ class F extends ValidationTest {
     source: GPUImageCopyTexture,
     destination: GPUImageCopyTexture,
     copySize: GPUExtent3D,
-    isSuccess: boolean
+    isSuccess: boolean,
+    /** If submit is true, the validaton error is expected to come from the submit and encoding
+     * should succeed. */
+    submit?: boolean
   ): void {
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyTextureToTexture(source, destination, copySize);
 
-    this.expectValidationError(() => {
-      commandEncoder.finish();
-    }, !isSuccess);
+    if (submit) {
+      const cmd = commandEncoder.finish();
+      this.expectValidationError(() => {
+        this.device.queue.submit([cmd]);
+      }, !isSuccess);
+    } else {
+      this.expectValidationError(() => {
+        commandEncoder.finish();
+      }, !isSuccess);
+    }
   }
 
   GetPhysicalSubresourceSize(
@@ -65,28 +76,34 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
-g.test('copy_with_invalid_texture')
-  .desc('Test copyTextureToTexture is an error when one of the textures is invalid.')
+g.test('copy_with_invalid_or_destroyed_texture')
+  .desc('Test copyTextureToTexture is an error when one of the textures is invalid or destroyed.')
+  .paramsSubcasesOnly(u =>
+    u //
+      .combine('srcState', kResourceStates)
+      .combine('dstState', kResourceStates)
+  )
   .fn(async t => {
-    const validTexture = t.device.createTexture({
+    const { srcState, dstState } = t.params;
+
+    const textureDesc: GPUTextureDescriptor = {
       size: { width: 4, height: 4, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
-    });
+    };
 
-    const errorTexture = t.getErrorTexture();
+    const srcTexture = t.createTextureWithState(srcState, textureDesc);
+    const dstTexture = t.createTextureWithState(dstState, textureDesc);
+
+    const isSuccess = srcState === 'valid' && dstState === 'valid';
+    const submit = srcState !== 'invalid' && dstState !== 'invalid';
 
     t.TestCopyTextureToTexture(
-      { texture: errorTexture },
-      { texture: validTexture },
+      { texture: srcTexture },
+      { texture: dstTexture },
       { width: 1, height: 1, depthOrArrayLayers: 1 },
-      false
-    );
-    t.TestCopyTextureToTexture(
-      { texture: validTexture },
-      { texture: errorTexture },
-      { width: 1, height: 1, depthOrArrayLayers: 1 },
-      false
+      isSuccess,
+      submit
     );
   });
 
