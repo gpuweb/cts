@@ -103,13 +103,13 @@ const testingWorkgroupsIndex = 9;
 const memStrideIndex = 10;
 const memLocationOffsetIndex = 11;
 
-/** 
+/**
  * All memory used in these consists of a four byte word, so this value is used to correctly set the byte size of buffers that
  * are read to/written from during tests and for storing test results.
  */
 const bytesPerWord = 4;
 
-/** 
+/**
  * Implements setup code necessary to run a memory model test. A test consists of two parts:
  *  1.) A test shader that runs a specified memory model litmus test and attempts to reveal a weak (disallowed) behavior.
  *      At a high level, a test shader consists of a set of testing workgroups where every invocation executes the litmus test
@@ -374,8 +374,8 @@ export class MemoryModelTester {
     };
   }
 
-  /** 
-   * Returns a function that checks whether the specified weak index's value is not equal to 0. 
+  /**
+   * Returns a function that checks whether the specified weak index's value is not equal to 0.
    * If the weak index's value is not 0, it means the test has observed a behavior disallowed by the memory model and
    * is considered a test failure.
    */
@@ -460,14 +460,13 @@ export class MemoryModelTester {
     const scratchRegions = [...Array(scratchNumRegions).keys()];
     this.shuffleArray(scratchRegions);
     for (let i = 0; i < this.params.stressTargetLines; i++) {
-      let region = scratchRegions[i];
+      const region = scratchRegions[i];
       const locInRegion = this.getRandomInt(this.params.stressLineSize);
       if (this.getRandomInt(100) < this.params.stressStrategyBalancePct) {
         // In the round-robin case, the current scratch location is striped across all workgroups.
         for (let j = i; j < numWorkgroups; j += this.params.stressTargetLines) {
           scratchLocationsArray[j] = region * this.params.stressLineSize + locInRegion;
         }
-
       } else {
         // In the chunking case, the current scratch location is assigned to a block of workgroups. The final scratch
         // location may be assigned to more workgroups, if the number of scratch locations does not cleanly divide the
@@ -587,7 +586,7 @@ const shaderMemStructures = `
   };
 `;
 
-/** 
+/**
  * Defines the possible behaviors of a two-thread, four-instruction test.
  * "seq0" means the first invocation's instructions are observed to have occurred before the second invocation's instructions.
  * "seq1" means the second invocation's instructions are observed to have occurred before the first invocation's instructions.
@@ -635,16 +634,16 @@ const resultShaderBindings = `
   @group(0) @binding(3) var<uniform> stress_params : StressParamsMemory;
 `;
 
-/** 
- * For tests that operate on workgroup memory, include this definition. 3584 bytes is large enough to accomodate 
+/**
+ * For tests that operate on workgroup memory, include this definition. 3584 bytes is large enough to accomodate
  * the maximum memory size needed per workgroup for testing.
  */
 const atomicWorkgroupMemory = `
   var<workgroup> wg_test_locations: array<atomic<u32>, 3584>;
 `;
 
-/** 
- * For tests that operate on non-atomic workgroup memory, include this definition. 3584 bytes is large enough to accomodate 
+/**
+ * For tests that operate on non-atomic workgroup memory, include this definition. 3584 bytes is large enough to accomodate
  * the maximum memory size needed per workgroup for testing.
  */
 const nonAtomicWorkgroupMemory = `
@@ -735,10 +734,10 @@ const testShaderFunctions = `
   }
 `;
 
-/** 
- * Entry point to both test and result shaders. One-dimensional workgroup size is hardcoded to 256, until 
+/**
+ * Entry point to both test and result shaders. One-dimensional workgroup size is hardcoded to 256, until
  * pipeline overrideable constants are supported.
-*/
+ */
 const shaderEntryPoint = `
   let workgroupXSize = 256u;
   @stage(compute) @workgroup_size(workgroupXSize) fn main(
@@ -766,36 +765,77 @@ const resultShaderCommonFooter = `
 `;
 
 /** The common shader code for test shaders that perform inter-workgroup litmus tests. */
-const interWorkgroupTestShaderCommonCode = [shaderMemStructures, testShaderBindings, memoryLocationFunctions, testShaderFunctions, shaderEntryPoint, testShaderCommonHeader].join("\n");
+const interWorkgroupTestShaderCommonCode = [
+  shaderMemStructures,
+  testShaderBindings,
+  memoryLocationFunctions,
+  testShaderFunctions,
+  shaderEntryPoint,
+  testShaderCommonHeader,
+].join('\n');
 /** The common shader code for test shaders that perform atomic intra-workgroup litmus tests. */
-const intraWorkgroupAtomicTestShaderCommonCode = [shaderMemStructures, testShaderBindings, atomicWorkgroupMemory, memoryLocationFunctions, testShaderFunctions, shaderEntryPoint, testShaderCommonHeader].join("\n");
+const intraWorkgroupAtomicTestShaderCommonCode = [
+  shaderMemStructures,
+  testShaderBindings,
+  atomicWorkgroupMemory,
+  memoryLocationFunctions,
+  testShaderFunctions,
+  shaderEntryPoint,
+  testShaderCommonHeader,
+].join('\n');
 /** The common shader code for test shaders that perform non-atomic intra-workgroup litmus tests. */
-const intraWorkgroupNonAtomicTestShaderCommonCode = [shaderMemStructures, testShaderBindings, nonAtomicWorkgroupMemory, memoryLocationFunctions, testShaderFunctions, shaderEntryPoint, testShaderCommonHeader].join("\n");
+const intraWorkgroupNonAtomicTestShaderCommonCode = [
+  shaderMemStructures,
+  testShaderBindings,
+  nonAtomicWorkgroupMemory,
+  memoryLocationFunctions,
+  testShaderFunctions,
+  shaderEntryPoint,
+  testShaderCommonHeader,
+].join('\n');
 /** The common shader code for all result shaders. */
-const resultShaderCommonCode = [shaderMemStructures, resultShaderBindings, memoryLocationFunctions, shaderEntryPoint].join("\n");
+const resultShaderCommonCode = [
+  shaderMemStructures,
+  resultShaderBindings,
+  memoryLocationFunctions,
+  shaderEntryPoint,
+].join('\n');
 
 /** Given test code for an inter-workgroup test, returns a combined shader. */
 export function buildInterWorkgroupTestShader(testCode: string): string {
-  return [interWorkgroupTestShaderCommonCode, testCode, testShaderCommonFooter].join("\n");
+  return [interWorkgroupTestShaderCommonCode, testCode, testShaderCommonFooter].join('\n');
 }
 
 /** Given test code for an intra-workgroup test, returns a combined shader. */
-export function buildIntraWorkgroupTestShader(testCode: string, atomicMemory: boolean = true): string {
+export function buildIntraWorkgroupTestShader(
+  testCode: string,
+  atomicMemory: boolean = true
+): string {
   let commonCode;
   if (atomicMemory) {
     commonCode = intraWorkgroupAtomicTestShaderCommonCode;
   } else {
     commonCode = intraWorkgroupNonAtomicTestShaderCommonCode;
   }
-  return [commonCode, testCode, testShaderCommonFooter].join("\n");
+  return [commonCode, testCode, testShaderCommonFooter].join('\n');
 }
 
 /** Given result code for a four behavior test, returns a combined result shader. */
 export function buildFourResultShader(resultCode: string): string {
-  return [fourBehaviorTestResultStructure, resultShaderCommonCode, resultCode, resultShaderCommonFooter].join("\n");
+  return [
+    fourBehaviorTestResultStructure,
+    resultShaderCommonCode,
+    resultCode,
+    resultShaderCommonFooter,
+  ].join('\n');
 }
 
 /** Given result code for a two behavior test, returns a combined result shader. */
 export function buildTwoResultShader(resultCode: string): string {
-  return [twoBehaviorTestResultStructure, resultShaderCommonCode, resultCode, resultShaderCommonFooter].join("\n");
+  return [
+    twoBehaviorTestResultStructure,
+    resultShaderCommonCode,
+    resultCode,
+    resultShaderCommonFooter,
+  ].join('\n');
 }

@@ -3,7 +3,12 @@ export const description = `Tests for the atomicity of atomic read-modify-write 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
 
-import { MemoryModelTestParams, MemoryModelTester, buildInterWorkgroupTestShader, buildFourResultShader } from './memory_model_setup.js';
+import {
+  MemoryModelTestParams,
+  MemoryModelTester,
+  buildInterWorkgroupTestShader,
+  buildFourResultShader,
+} from './memory_model_setup.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -77,6 +82,11 @@ g.test('atomicity')
 
     const testShader = buildInterWorkgroupTestShader(testCode);
     const resultShader = buildFourResultShader(resultCode);
-    const memModelTester = new MemoryModelTester(t, memoryModelTestParams, testShader, resultShader);
+    const memModelTester = new MemoryModelTester(
+      t,
+      memoryModelTestParams,
+      testShader,
+      resultShader
+    );
     await memModelTester.run(20, 3);
   });

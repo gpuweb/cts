@@ -4,7 +4,12 @@ Tests for non-atomic memory synchronization within a workgroup in the presence o
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
 
-import { MemoryModelTestParams, MemoryModelTester, buildIntraWorkgroupTestShader, buildTwoResultShader } from './memory_model_setup.js';
+import {
+  MemoryModelTestParams,
+  MemoryModelTester,
+  buildIntraWorkgroupTestShader,
+  buildTwoResultShader,
+} from './memory_model_setup.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -73,6 +78,11 @@ g.test('workgroup_barrier_store_load')
     `;
     const testShader = buildIntraWorkgroupTestShader(testCode, false);
     const resultShader = buildTwoResultShader(resultCode);
-    const memModelTester = new MemoryModelTester(t, memoryModelTestParams, testShader, resultShader);
+    const memModelTester = new MemoryModelTester(
+      t,
+      memoryModelTestParams,
+      testShader,
+      resultShader
+    );
     await memModelTester.run(20, 1);
   });

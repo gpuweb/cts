@@ -6,7 +6,12 @@ weak behaviors in several classic memory model litmus tests.`;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
 
-import { MemoryModelTestParams, MemoryModelTester, buildIntraWorkgroupTestShader, buildFourResultShader } from './memory_model_setup.js';
+import {
+  MemoryModelTestParams,
+  MemoryModelTester,
+  buildIntraWorkgroupTestShader,
+  buildFourResultShader,
+} from './memory_model_setup.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -86,6 +91,11 @@ g.test('message_passing_workgroup_memory')
 
     const testShader = buildIntraWorkgroupTestShader(testCode);
     const resultShader = buildFourResultShader(resultCode);
-    const memModelTester = new MemoryModelTester(t, memoryModelTestParams, testShader, resultShader);
+    const memModelTester = new MemoryModelTester(
+      t,
+      memoryModelTestParams,
+      testShader,
+      resultShader
+    );
     await memModelTester.run(20, 3);
   });
