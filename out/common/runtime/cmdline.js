@@ -28,11 +28,6 @@ function usage(rc) {
   return sys.exit(rc);
 }
 
-if (!sys.existsSync('src/common/runtime/cmdline.ts')) {
-  console.log('Must be run from repository root');
-  usage(1);
-}
-
 
 
 
