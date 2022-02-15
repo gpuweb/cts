@@ -6,7 +6,7 @@ weak behaviors in several classic memory model litmus tests.`;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
 
-import { MemoryModelTestParams, MemoryModelTester, intraWorkgroupTestShaderCommonCode, testShaderCommonFooter, fourBehaviorTestResultStructure, resultShaderCommonCode, resultShaderCommonFooter } from './memory_model_setup.js';
+import { MemoryModelTestParams, MemoryModelTester, buildIntraWorkgroupTestShader, buildFourResultShader } from './memory_model_setup.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -45,7 +45,7 @@ g.test('message_passing_workgroup_memory')
     `
   )
   .fn(async t => {
-    const testShader = `
+    const testCode = `
         let total_ids = workgroupXSize;
         let id_0 = local_invocation_id[0];
         let id_1 = permute_id(local_invocation_id[0], stress_params.permute_first, workgroupXSize);
@@ -69,8 +69,7 @@ g.test('message_passing_workgroup_memory')
         atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r0, r0);
         atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r1, r1);
     `;
-
-    const resultShader = `
+    const resultCode = `
       let id_0 = workgroup_id[0] * workgroupXSize + local_invocation_id[0];
       let r0 = atomicLoad(&read_results.value[id_0].r0);
       let r1 = atomicLoad(&read_results.value[id_0].r1);
@@ -85,9 +84,8 @@ g.test('message_passing_workgroup_memory')
       }
     `;
 
-    const combinedTestShader = [intraWorkgroupTestShaderCommonCode, testShader, testShaderCommonFooter].join("\n");
-    const combinedResultShader = [fourBehaviorTestResultStructure, resultShaderCommonCode, resultShader, resultShaderCommonFooter].join("\n");
-
-    const memModelTester = new MemoryModelTester(t, memoryModelTestParams, combinedTestShader, combinedResultShader);
+    const testShader = buildIntraWorkgroupTestShader(testCode);
+    const resultShader = buildFourResultShader(resultCode);
+    const memModelTester = new MemoryModelTester(t, memoryModelTestParams, testShader, resultShader);
     await memModelTester.run(20, 3);
   });
