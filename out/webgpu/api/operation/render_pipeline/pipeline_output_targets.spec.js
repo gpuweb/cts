@@ -27,6 +27,7 @@ class F extends GPUTest {
         suffix = 'u';
         break;
       case 'float':
+      case 'unfilterable-float':
         fragColorType = 'f32';
         suffix = '';
         fractionDigits = 4;

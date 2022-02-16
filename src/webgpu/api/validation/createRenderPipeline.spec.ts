@@ -422,7 +422,8 @@ g.test('pipeline_output_targets')
   - The componentCount of the fragment output (e.g. f32, vec2, vec3, vec4) must not have fewer
     channels than that of the color attachment texture formats. Extra components are allowed and are discarded.
 
-TODO: review`
+  MAINTAINENCE_TODO: update this test after the WebGPU SPEC ISSUE 50 "define what 'compatible' means
+  for render target formats" is resolved.`
   )
   .params(u =>
     u
@@ -442,9 +443,13 @@ TODO: review`
       fragmentShaderCode: t.getFragmentShaderCode(sampleType, componentCount),
     });
 
+    const sampleTypeSuccess =
+      info.sampleType === 'float' || info.sampleType === 'unfilterable-float'
+        ? sampleType === 'float'
+        : info.sampleType === sampleType;
+
     const _success =
-      info.sampleType === sampleType &&
-      componentCount >= kTexelRepresentationInfo[format].componentOrder.length;
+      sampleTypeSuccess && componentCount >= kTexelRepresentationInfo[format].componentOrder.length;
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
@@ -559,8 +564,43 @@ g.test('pipeline_output_targets,blend')
   });
 
 g.test('pipeline_output_targets,format_blendable')
-  .desc(`If blending is used, the target's format must be blendable (support "float" sample type).`)
-  .unimplemented();
+  .desc(
+    `
+Tests if blending is used, the target's format must be blendable (support "float" sample type).
+- For all the formats, test that blending can be enabled if and only if the format is blendable.`
+  )
+  .params(u =>
+    u.combine('isAsync', [false, true]).combine('format', kRenderableColorTextureFormats)
+  )
+  .fn(async t => {
+    const { isAsync, format } = t.params;
+    const info = kTextureFormatInfo[format];
+    await t.selectDeviceOrSkipTestCase(info.feature);
+
+    const _success = info.sampleType === 'float';
+
+    const blendComponent: GPUBlendComponent = {
+      srcFactor: 'src-alpha',
+      dstFactor: 'dst-alpha',
+      operation: 'add',
+    };
+    t.doCreateRenderPipelineTest(
+      isAsync,
+      _success,
+      t.getDescriptor({
+        targets: [
+          {
+            format,
+            blend: {
+              color: blendComponent,
+              alpha: blendComponent,
+            },
+          },
+        ],
+        fragmentShaderCode: t.getFragmentShaderCode('float', 4),
+      })
+    );
+  });
 
 g.test('pipeline_output_targets,blend_min_max')
   .desc(
