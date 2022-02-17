@@ -351,7 +351,7 @@ export async function loadTreeForQuery(
       );
     }
   }
-  assert(foundCase, 'Query does not match any cases');
+  assert(foundCase, `Query \`${queryToLoad.toString()}\` does not match any cases`);
 
   return new TestTree(queryToLoad, subtreeL0);
 }
