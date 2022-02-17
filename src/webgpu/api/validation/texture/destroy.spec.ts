@@ -69,14 +69,15 @@ that was destroyed {before, after} encoding finishes.
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
     };
 
-    const colorTexture = t.createTextureWithState(
-      colorTextureState === 'destroyedBeforeEncode' ? 'destroyed' : 'valid',
-      colorTextureDesc
-    );
-    const depthStencilTexture = t.createTextureWithState(
-      depthStencilTextureState === 'destroyedBeforeEncode' ? 'destroyed' : 'valid',
-      depthStencilTextureDesc
-    );
+    const colorTexture = t.device.createTexture(colorTextureDesc);
+    const depthStencilTexture = t.device.createTexture(depthStencilTextureDesc);
+
+    if (colorTextureState === 'destroyedBeforeEncode') {
+      colorTexture.destroy();
+    }
+    if (depthStencilTextureState === 'destroyedBeforeEncode') {
+      depthStencilTexture.destroy();
+    }
 
     const commandEncoder = t.device.createCommandEncoder();
     const renderPass = commandEncoder.beginRenderPass({
