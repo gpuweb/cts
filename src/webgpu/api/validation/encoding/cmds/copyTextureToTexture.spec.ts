@@ -24,7 +24,7 @@ class F extends ValidationTest {
     isSuccess: boolean,
     /** If submit is true, the validaton error is expected to come from the submit and encoding
      * should succeed. */
-    submit?: boolean
+    submit: boolean = false
   ): void {
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyTextureToTexture(source, destination, copySize);
