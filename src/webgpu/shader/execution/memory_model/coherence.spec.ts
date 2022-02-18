@@ -46,6 +46,8 @@ const memoryModelTestParams: MemoryModelTestParams = {
 g.test('corr')
   .desc(
     `Ensures two reads on one thread cannot observe an inconsistent view of a write on a second thread.
+     The first thread writes the value 1 some location x, and the second thread reads x twice in a row.
+     If the first read returns 1 but the second read returns 0, then there has been a coherence violation.
     `
   )
   .fn(async t => {

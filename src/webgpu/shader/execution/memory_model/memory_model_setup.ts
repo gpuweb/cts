@@ -271,6 +271,9 @@ export class MemoryModelTester {
           code: testShader,
         }),
         entryPoint: 'main',
+        constants: {
+          wg_mem_size: 3584,
+        },
       },
     });
     this.testBindGroup = this.test.device.createBindGroup({
@@ -587,7 +590,7 @@ const shaderMemStructures = `
 `;
 
 /**
- * Defines the possible behaviors of a two-thread, four-instruction test.
+ * Structure to hold the counts of occurrences of the possible behaviors of a two-thread, four-instruction test.
  * "seq0" means the first invocation's instructions are observed to have occurred before the second invocation's instructions.
  * "seq1" means the second invocation's instructions are observed to have occurred before the first invocation's instructions.
  * "interleaved" means there was an observation of some interleaving of instructions between the two invocations.
@@ -635,16 +638,18 @@ const resultShaderBindings = `
 `;
 
 /**
- * For tests that operate on workgroup memory, include this definition. 3584 bytes is large enough to accomodate
- * the maximum memory size needed per workgroup for testing.
+ * For tests that operate on workgroup memory, include this definition. 3584 memory locations is
+ * large enough to accomodate the maximum memory size needed per workgroup for testing, which is
+ * 256 invocations per workgroup x 2 memory locations x 7 (memStride, or max stride between successive memory locations).
+ * Should change to a pipeline overridable constant when possible.
  */
 const atomicWorkgroupMemory = `
   var<workgroup> wg_test_locations: array<atomic<u32>, 3584>;
 `;
 
 /**
- * For tests that operate on non-atomic workgroup memory, include this definition. 3584 bytes is large enough to accomodate
- * the maximum memory size needed per workgroup for testing.
+ * For tests that operate on non-atomic workgroup memory, include this definition. 3584 memory locations
+ * is large enough to accomodate the maximum memory size needed per workgroup for testing.
  */
 const nonAtomicWorkgroupMemory = `
   var<workgroup> wg_test_locations: array<u32, 3584>;
@@ -668,7 +673,9 @@ const memoryLocationFunctions = `
 /** Functions that help add stress to the test. */
 const testShaderFunctions = `
   //Force the invocations in the workgroup to wait for each other, but without the general memory ordering
-  // effects of a control barrier.
+  // effects of a control barrier. The barrier spins until either all invocations have incremented the atomic
+  // variable or 1024 loops have occurred. 1024 was chosen because it gives more time for invocations to enter
+  // the barrier but does not overly reduce testing throughput.
   fn spin(limit: u32) {
     var i : u32 = 0u;
     var bar_val : u32 = atomicAdd(&barrier.value[0], 1u);
@@ -739,6 +746,7 @@ const testShaderFunctions = `
  * pipeline overrideable constants are supported.
  */
 const shaderEntryPoint = `
+  // Change to pipeline overridable constant when possible.
   let workgroupXSize = 256u;
   @stage(compute) @workgroup_size(workgroupXSize) fn main(
     @builtin(local_invocation_id) local_invocation_id : vec3<u32>,

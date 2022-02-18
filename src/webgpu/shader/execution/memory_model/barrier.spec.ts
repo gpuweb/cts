@@ -44,7 +44,8 @@ const memoryModelTestParams: MemoryModelTestParams = {
 g.test('workgroup_barrier_store_load')
   .desc(
     `Checks whether the workgroup barrier properly synchronizes a non-atomic write and read on
-    separate threads in the same workgroup.
+    separate threads in the same workgroup. Within a workgroup, the barrier should force an invocation
+    after the barrier to read a write from an invocation before the barrier.
     `
   )
   .fn(async t => {

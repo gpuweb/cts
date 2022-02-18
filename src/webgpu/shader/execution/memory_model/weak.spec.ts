@@ -46,7 +46,11 @@ const memoryModelTestParams: MemoryModelTestParams = {
 g.test('message_passing_workgroup_memory')
   .desc(
     `Checks whether two reads on one thread can observe two writes in another thread in a way
-    that is inconsistent with sequential consistency.
+    that is inconsistent with sequential consistency. In the message passing litmus test, one
+    thread writes the value 1 to some location x and then 1 to some location y. The second thread
+    reads y and then x. If the second thread reads y == 1 and x == 0, then sequential consistency
+    has not been respected. The acquire/release semantics of WebGPU's workgroupBarrier() should disallow
+    this behavior within a workgroup.
     `
   )
   .fn(async t => {
