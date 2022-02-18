@@ -271,9 +271,6 @@ export class MemoryModelTester {
           code: testShader,
         }),
         entryPoint: 'main',
-        constants: {
-          wg_mem_size: 3584,
-        },
       },
     });
     this.testBindGroup = this.test.device.createBindGroup({
