@@ -23,21 +23,14 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { ValidationTest } from '../validation_test.js';
 
 class F extends ValidationTest {
-  async runBufferDependencyTest(
-    options: {
-      usage: number;
-      mapMode: number;
-      bufferSize?: number;
-    },
-    callback: Function
-  ): Promise<void> {
-    const { usage, mapMode, bufferSize } = options;
-
+  async runBufferDependencyTest(usage: number, callback: Function): Promise<void> {
     const bufferDesc = {
+      size: 8,
       usage,
-      size: bufferSize || 8,
       mappedAtCreation: false,
     };
+
+    const mapMode = usage & GPUBufferUsage.MAP_READ ? GPUMapMode.READ : GPUMapMode.WRITE;
 
     // Create a mappable buffer, and one that will remain unmapped for comparison.
     const mappableBuffer = this.device.createBuffer(bufferDesc);
@@ -102,14 +95,12 @@ g.test('writeBuffer')
   .fn(async t => {
     const data = new Uint32Array([42]);
 
-    const options = {
-      usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-      mapMode: GPUMapMode.READ,
-    };
-
-    t.runBufferDependencyTest(options, (buffer: GPUBuffer) => {
-      t.queue.writeBuffer(buffer, 0, data);
-    });
+    t.runBufferDependencyTest(
+      GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+      (buffer: GPUBuffer) => {
+        t.queue.writeBuffer(buffer, 0, data);
+      }
+    );
   });
 
 g.test('copyBufferToBuffer')
@@ -129,27 +120,23 @@ g.test('copyBufferToBuffer')
       usage: GPUBufferUsage.COPY_DST,
     });
 
-    const srcOptions = {
-      usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
-      mapMode: GPUMapMode.WRITE,
-    };
+    t.runBufferDependencyTest(
+      GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
+      (buffer: GPUBuffer) => {
+        const commandEncoder = t.device.createCommandEncoder();
+        commandEncoder.copyBufferToBuffer(buffer, 0, destBuffer, 0, 4);
+        t.queue.submit([commandEncoder.finish()]);
+      }
+    );
 
-    t.runBufferDependencyTest(srcOptions, (buffer: GPUBuffer) => {
-      const commandEncoder = t.device.createCommandEncoder();
-      commandEncoder.copyBufferToBuffer(buffer, 0, destBuffer, 0, 4);
-      t.queue.submit([commandEncoder.finish()]);
-    });
-
-    const destOptions = {
-      usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-      mapMode: GPUMapMode.READ,
-    };
-
-    t.runBufferDependencyTest(destOptions, (buffer: GPUBuffer) => {
-      const commandEncoder = t.device.createCommandEncoder();
-      commandEncoder.copyBufferToBuffer(sourceBuffer, 0, buffer, 0, 4);
-      t.queue.submit([commandEncoder.finish()]);
-    });
+    t.runBufferDependencyTest(
+      GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+      (buffer: GPUBuffer) => {
+        const commandEncoder = t.device.createCommandEncoder();
+        commandEncoder.copyBufferToBuffer(sourceBuffer, 0, buffer, 0, 4);
+        t.queue.submit([commandEncoder.finish()]);
+      }
+    );
   });
 
 g.test('copyBufferToTexture')
@@ -165,16 +152,14 @@ g.test('copyBufferToTexture')
       usage: GPUTextureUsage.COPY_DST,
     });
 
-    const options = {
-      usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
-      mapMode: GPUMapMode.WRITE,
-    };
-
-    t.runBufferDependencyTest(options, (buffer: GPUBuffer) => {
-      const commandEncoder = t.device.createCommandEncoder();
-      commandEncoder.copyBufferToTexture({ buffer }, { texture }, size);
-      t.queue.submit([commandEncoder.finish()]);
-    });
+    t.runBufferDependencyTest(
+      GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
+      (buffer: GPUBuffer) => {
+        const commandEncoder = t.device.createCommandEncoder();
+        commandEncoder.copyBufferToTexture({ buffer }, { texture }, size);
+        t.queue.submit([commandEncoder.finish()]);
+      }
+    );
   });
 
 g.test('copyTextureToBuffer')
@@ -190,16 +175,14 @@ g.test('copyTextureToBuffer')
       usage: GPUTextureUsage.COPY_SRC,
     });
 
-    const options = {
-      usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-      mapMode: GPUMapMode.READ,
-    };
-
-    t.runBufferDependencyTest(options, (buffer: GPUBuffer) => {
-      const commandEncoder = t.device.createCommandEncoder();
-      commandEncoder.copyTextureToBuffer({ texture }, { buffer }, size);
-      t.queue.submit([commandEncoder.finish()]);
-    });
+    t.runBufferDependencyTest(
+      GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+      (buffer: GPUBuffer) => {
+        const commandEncoder = t.device.createCommandEncoder();
+        commandEncoder.copyTextureToBuffer({ texture }, { buffer }, size);
+        t.queue.submit([commandEncoder.finish()]);
+      }
+    );
   });
 
 g.test('map_command_recording_order')
@@ -210,21 +193,57 @@ Test that the order of mapping a buffer relative to when commands are recorded t
   `
   )
   .paramsSubcasesOnly([
-    { order: ['record', 'map', 'unmap', 'finish', 'submit'], _shouldError: false },
-    { order: ['record', 'map', 'finish', 'unmap', 'submit'], _shouldError: false },
-    { order: ['record', 'finish', 'map', 'unmap', 'submit'], _shouldError: false },
-    { order: ['map', 'record', 'unmap', 'finish', 'submit'], _shouldError: false },
-    { order: ['map', 'record', 'finish', 'unmap', 'submit'], _shouldError: false },
-    { order: ['map', 'record', 'finish', 'submit', 'unmap'], _shouldError: true },
-    { order: ['record', 'map', 'finish', 'submit', 'unmap'], _shouldError: true },
-    { order: ['record', 'finish', 'map', 'submit', 'unmap'], _shouldError: true },
+    {
+      order: ['record', 'map', 'unmap', 'finish', 'submit'],
+      mappedAtCreation: false,
+      _shouldError: false,
+    },
+    {
+      order: ['record', 'map', 'finish', 'unmap', 'submit'],
+      mappedAtCreation: false,
+      _shouldError: false,
+    },
+    {
+      order: ['record', 'finish', 'map', 'unmap', 'submit'],
+      mappedAtCreation: false,
+      _shouldError: false,
+    },
+    {
+      order: ['map', 'record', 'unmap', 'finish', 'submit'],
+      mappedAtCreation: false,
+      _shouldError: false,
+    },
+    {
+      order: ['map', 'record', 'finish', 'unmap', 'submit'],
+      mappedAtCreation: false,
+      _shouldError: false,
+    },
+    {
+      order: ['map', 'record', 'finish', 'submit', 'unmap'],
+      mappedAtCreation: false,
+      _shouldError: true,
+    },
+    {
+      order: ['record', 'map', 'finish', 'submit', 'unmap'],
+      mappedAtCreation: false,
+      _shouldError: true,
+    },
+    {
+      order: ['record', 'finish', 'map', 'submit', 'unmap'],
+      mappedAtCreation: false,
+      _shouldError: true,
+    },
+    { order: ['record', 'unmap', 'finish', 'submit'], mappedAtCreation: true, _shouldError: false },
+    { order: ['record', 'finish', 'unmap', 'submit'], mappedAtCreation: true, _shouldError: false },
+    { order: ['record', 'finish', 'submit', 'unmap'], mappedAtCreation: true, _shouldError: true },
   ] as const)
   .fn(async t => {
-    const { order, _shouldError: shouldError } = t.params;
+    const { order, mappedAtCreation, _shouldError: shouldError } = t.params;
 
     const buffer = t.device.createBuffer({
       size: 4,
       usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
+      mappedAtCreation,
     });
 
     const targetBuffer = t.device.createBuffer({
