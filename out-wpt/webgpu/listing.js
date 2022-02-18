@@ -1009,15 +1009,6 @@ export const listing = [
       "api",
       "validation",
       "queue",
-      "destroyed",
-      "texture"
-    ]
-  },
-  {
-    "file": [
-      "api",
-      "validation",
-      "queue",
       "submit"
     ]
   },

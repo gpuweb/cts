@@ -13,17 +13,25 @@ import {
   textureDimensionAndFormatCompatible,
   kTextureDimensions,
 } from '../../../../capability_info.js';
+import { kResourceStates } from '../../../../gpu_test.js';
 import { align } from '../../../../util/math.js';
 import { ValidationTest } from '../../validation_test.js';
 
 class F extends ValidationTest {
-  TestCopyTextureToTexture(source, destination, copySize, isSuccess) {
+  TestCopyTextureToTexture(source, destination, copySize, expectation) {
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyTextureToTexture(source, destination, copySize);
 
-    this.expectValidationError(() => {
-      commandEncoder.finish();
-    }, !isSuccess);
+    if (expectation === 'FinishError') {
+      this.expectValidationError(() => {
+        commandEncoder.finish();
+      });
+    } else {
+      const cmd = commandEncoder.finish();
+      this.expectValidationError(() => {
+        this.device.queue.submit([cmd]);
+      }, expectation === 'SubmitError');
+    }
   }
 
   GetPhysicalSubresourceSize(dimension, textureSize, format, mipLevel) {
@@ -57,29 +65,38 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
-g.test('copy_with_invalid_texture')
-  .desc('Test copyTextureToTexture is an error when one of the textures is invalid.')
+g.test('copy_with_invalid_or_destroyed_texture')
+  .desc('Test copyTextureToTexture is an error when one of the textures is invalid or destroyed.')
+  .paramsSubcasesOnly(u =>
+    u //
+      .combine('srcState', kResourceStates)
+      .combine('dstState', kResourceStates)
+  )
   .fn(async t => {
-    const validTexture = t.device.createTexture({
+    const { srcState, dstState } = t.params;
+
+    const textureDesc = {
       size: { width: 4, height: 4, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
-    });
+    };
 
-    const errorTexture = t.getErrorTexture();
+    const srcTexture = t.createTextureWithState(srcState, textureDesc);
+    const dstTexture = t.createTextureWithState(dstState, textureDesc);
+
+    const isSubmitSuccess = srcState === 'valid' && dstState === 'valid';
+    const isFinishSuccess = srcState !== 'invalid' && dstState !== 'invalid';
+    const expectation = isFinishSuccess
+      ? isSubmitSuccess
+        ? 'Success'
+        : 'SubmitError'
+      : 'FinishError';
 
     t.TestCopyTextureToTexture(
-      { texture: errorTexture },
-      { texture: validTexture },
+      { texture: srcTexture },
+      { texture: dstTexture },
       { width: 1, height: 1, depthOrArrayLayers: 1 },
-      false
-    );
-
-    t.TestCopyTextureToTexture(
-      { texture: validTexture },
-      { texture: errorTexture },
-      { width: 1, height: 1, depthOrArrayLayers: 1 },
-      false
+      expectation
     );
   });
 
@@ -143,7 +160,7 @@ Test copyTextureToTexture must specify mipLevels that are in range.
       { texture: srcTexture, mipLevel: srcCopyLevel },
       { texture: dstTexture, mipLevel: dstCopyLevel },
       { width: 1, height: 1, depthOrArrayLayers: 1 },
-      isSuccess
+      isSuccess ? 'Success' : 'FinishError'
     );
   });
 
@@ -182,7 +199,7 @@ Test that copyTextureToTexture source/destination need COPY_SRC/COPY_DST usages.
       { texture: srcTexture },
       { texture: dstTexture },
       { width: 1, height: 1, depthOrArrayLayers: 1 },
-      isSuccess
+      isSuccess ? 'Success' : 'FinishError'
     );
   });
 
@@ -221,7 +238,7 @@ Test that textures in copyTextureToTexture must have the same sample count.
       { texture: srcTexture },
       { texture: dstTexture },
       { width: 4, height: 4, depthOrArrayLayers: 1 },
-      isSuccess
+      isSuccess ? 'Success' : 'FinishError'
     );
   });
 
@@ -279,7 +296,7 @@ TODO: Check the source and destination constraints separately.
       { texture: srcTexture, origin: srcCopyOrigin },
       { texture: dstTexture, origin: dstCopyOrigin },
       { width: copyWidth, height: copyHeight, depthOrArrayLayers: 1 },
-      isSuccess
+      isSuccess ? 'Success' : 'FinishError'
     );
   });
 
@@ -325,7 +342,7 @@ Test the formats of textures in copyTextureToTexture must be copy-compatible.
       { texture: srcTexture },
       { texture: dstTexture },
       kTextureSize,
-      isSuccess
+      isSuccess ? 'Success' : 'FinishError'
     );
   });
 
@@ -414,14 +431,14 @@ Note: this is only tested for 2D textures as it is the only dimension compatible
       { texture: srcTexture, origin: { x: 0, y: 0, z: 0 }, mipLevel: srcCopyLevel },
       { texture: dstTexture, origin: copyOrigin, mipLevel: dstCopyLevel },
       { width: copyWidth, height: copyHeight, depthOrArrayLayers: 1 },
-      isSuccess
+      isSuccess ? 'Success' : 'FinishError'
     );
 
     t.TestCopyTextureToTexture(
       { texture: srcTexture, origin: copyOrigin, mipLevel: srcCopyLevel },
       { texture: dstTexture, origin: { x: 0, y: 0, z: 0 }, mipLevel: dstCopyLevel },
       { width: copyWidth, height: copyHeight, depthOrArrayLayers: 1 },
-      isSuccess
+      isSuccess ? 'Success' : 'FinishError'
     );
   });
 
@@ -545,7 +562,7 @@ Test that copyTextureToTexture copy boxes must be in range of the subresource.
         { texture: srcTexture, origin: { x: 0, y: 0, z: 0 }, mipLevel: srcCopyLevel },
         { texture: dstTexture, origin: copyOrigin, mipLevel: dstCopyLevel },
         { width: copyWidth, height: copyHeight, depthOrArrayLayers: copyDepth },
-        isSuccess
+        isSuccess ? 'Success' : 'FinishError'
       );
     }
 
@@ -572,7 +589,7 @@ Test that copyTextureToTexture copy boxes must be in range of the subresource.
         { texture: srcTexture, origin: copyOrigin, mipLevel: srcCopyLevel },
         { texture: dstTexture, origin: { x: 0, y: 0, z: 0 }, mipLevel: dstCopyLevel },
         { width: copyWidth, height: copyHeight, depthOrArrayLayers: copyDepth },
-        isSuccess
+        isSuccess ? 'Success' : 'FinishError'
       );
     }
   });
@@ -611,7 +628,7 @@ TODO: Extend to 1D and 3D textures.`
       { texture: testTexture, origin: { x: 0, y: 0, z: srcCopyOriginZ } },
       { texture: testTexture, origin: { x: 0, y: 0, z: dstCopyOriginZ } },
       { width: 16, height: 16, depthOrArrayLayers: copyExtentDepth },
-      isSuccess
+      isSuccess ? 'Success' : 'FinishError'
     );
   });
 
@@ -672,7 +689,7 @@ Test the validations on the member 'aspect' of GPUImageCopyTexture in CopyTextur
       { texture: srcTexture, origin: { x: 0, y: 0, z: 0 }, aspect: sourceAspect },
       { texture: dstTexture, origin: { x: 0, y: 0, z: 0 }, aspect: destinationAspect },
       kTextureSize,
-      isSourceAspectValid && isDestinationAspectValid
+      isSourceAspectValid && isDestinationAspectValid ? 'Success' : 'FinishError'
     );
   });
 
@@ -789,7 +806,7 @@ TODO: Express the offsets in "block size" so as to be able to test non-4x4 compr
         { texture: srcTexture, origin: { x: 0, y: 0, z: 0 }, mipLevel: srcCopyLevel },
         { texture: dstTexture, origin: copyOrigin, mipLevel: dstCopyLevel },
         { width: copyWidth, height: copyHeight, depthOrArrayLayers: copyDepth },
-        isSuccess
+        isSuccess ? 'Success' : 'FinishError'
       );
     }
 
@@ -806,7 +823,7 @@ TODO: Express the offsets in "block size" so as to be able to test non-4x4 compr
         { texture: srcTexture, origin: copyOrigin, mipLevel: srcCopyLevel },
         { texture: dstTexture, origin: { x: 0, y: 0, z: 0 }, mipLevel: dstCopyLevel },
         { width: copyWidth, height: copyHeight, depthOrArrayLayers: copyDepth },
-        isSuccess
+        isSuccess ? 'Success' : 'FinishError'
       );
     }
   });

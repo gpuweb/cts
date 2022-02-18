@@ -4,6 +4,7 @@
 Destroying a texture more than once is allowed.
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { kTextureAspects } from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);
@@ -23,44 +24,87 @@ g.test('twice')
     texture.destroy();
   });
 
-g.test('submit_a_destroyed_texture')
+g.test('submit_a_destroyed_texture_as_attachment')
   .desc(
-    `Test that it is invalid to submit with a texture that was destroyed {before, after} encoding finishes.`
+    `
+Test that it is invalid to submit with a texture as {color, depth, stencil, depth-stencil} attachment
+that was destroyed {before, after} encoding finishes.
+`
   )
-  .paramsSimple([
-    { destroyBeforeEncode: false, destroyAfterEncode: false, _success: true },
-    { destroyBeforeEncode: true, destroyAfterEncode: false, _success: false },
-    { destroyBeforeEncode: false, destroyAfterEncode: true, _success: false },
-  ])
+  .params(u =>
+    u //
+      .combine('depthStencilTextureAspect', kTextureAspects)
+      .combine('colorTextureState', ['valid', 'destroyedBeforeEncode', 'destroyedAfterEncode'])
+      .combine('depthStencilTextureState', [
+        'valid',
+        'destroyedBeforeEncode',
+        'destroyedAfterEncode',
+      ])
+  )
   .fn(async t => {
-    const { destroyBeforeEncode, destroyAfterEncode, _success } = t.params;
+    const { colorTextureState, depthStencilTextureAspect, depthStencilTextureState } = t.params;
 
-    const texture = t.getRenderTexture();
-    const textureView = texture.createView();
+    const isSubmitSuccess = colorTextureState === 'valid' && depthStencilTextureState === 'valid';
 
-    if (destroyBeforeEncode) {
-      texture.destroy();
+    const colorTextureFormat = 'rgba32float';
+    const depthStencilTextureFormat =
+      depthStencilTextureAspect === 'all'
+        ? 'depth24plus-stencil8'
+        : depthStencilTextureAspect === 'depth-only'
+        ? 'depth32float'
+        : 'stencil8';
+
+    const colorTextureDesc = {
+      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
+      format: colorTextureFormat,
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+    };
+
+    const depthStencilTextureDesc = {
+      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
+      format: depthStencilTextureFormat,
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+    };
+
+    const colorTexture = t.device.createTexture(colorTextureDesc);
+    const depthStencilTexture = t.device.createTexture(depthStencilTextureDesc);
+
+    if (colorTextureState === 'destroyedBeforeEncode') {
+      colorTexture.destroy();
+    }
+    if (depthStencilTextureState === 'destroyedBeforeEncode') {
+      depthStencilTexture.destroy();
     }
 
     const commandEncoder = t.device.createCommandEncoder();
     const renderPass = commandEncoder.beginRenderPass({
       colorAttachments: [
         {
-          view: textureView,
-          loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          view: colorTexture.createView(),
+          loadValue: [0, 0, 0, 0],
           storeOp: 'store',
         },
       ],
+
+      depthStencilAttachment: {
+        view: depthStencilTexture.createView({ aspect: depthStencilTextureAspect }),
+        depthLoadValue: 0,
+        depthStoreOp: 'discard',
+        stencilLoadValue: 0,
+        stencilStoreOp: 'discard',
+      },
     });
 
     renderPass.endPass();
-    const commandBuffer = commandEncoder.finish();
 
-    if (destroyAfterEncode) {
-      texture.destroy();
+    const cmd = commandEncoder.finish();
+
+    if (colorTextureState === 'destroyedAfterEncode') {
+      colorTexture.destroy();
+    }
+    if (depthStencilTextureState === 'destroyedAfterEncode') {
+      depthStencilTexture.destroy();
     }
 
-    t.expectValidationError(() => {
-      t.queue.submit([commandBuffer]);
-    }, !_success);
+    t.expectValidationError(() => t.queue.submit([cmd]), !isSubmitSuccess);
   });
