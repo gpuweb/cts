@@ -8,7 +8,8 @@ This tests things like:
 - The canvas renders with the correct transfer function.
 - The canvas blends and interpolates in the correct color encoding.
 
-TODO(#916): Test all possible ways to write into those formats (currently only testing B2T copy).
+TODO(#915): canvas_complex: test rgba8unorm and rgba16float
+TODO(#916): canvas_complex: Test all ways to write into textures (currently only testing copy methods).
 TODO(#917): Test compositingAlphaMode options
 TODO(#918): Test all possible color spaces (once we have more than 1)
 
