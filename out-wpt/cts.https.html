@@ -448,7 +448,11 @@
 <meta name=variant content='webgpu:api,validation,query_set,create:pipelineStatistics,all_types:*'>
 <meta name=variant content='webgpu:api,validation,query_set,create:pipelineStatistics,duplicates_and_all:*'>
 <meta name=variant content='webgpu:api,validation,query_set,destroy:twice:*'>
-<meta name=variant content='webgpu:api,validation,queue,buffer_mapped:submit:*'>
+<meta name=variant content='webgpu:api,validation,queue,buffer_mapped:writeBuffer:*'>
+<meta name=variant content='webgpu:api,validation,queue,buffer_mapped:copyBufferToBuffer:*'>
+<meta name=variant content='webgpu:api,validation,queue,buffer_mapped:copyBufferToTexture:*'>
+<meta name=variant content='webgpu:api,validation,queue,buffer_mapped:copyTextureToBuffer:*'>
+<meta name=variant content='webgpu:api,validation,queue,buffer_mapped:map_command_recording_order:*'>
 <meta name=variant content='webgpu:api,validation,queue,copyToTexture,CopyExternalImageToTexture:source_canvas,contexts:*'>
 <meta name=variant content='webgpu:api,validation,queue,copyToTexture,CopyExternalImageToTexture:source_canvas,state:*'>
 <meta name=variant content='webgpu:api,validation,queue,copyToTexture,CopyExternalImageToTexture:source_offscreenCanvas,contexts:*'>
