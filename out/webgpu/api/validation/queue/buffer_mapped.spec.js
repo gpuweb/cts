@@ -129,7 +129,7 @@ fn(async t => {
   });
 
 
-  t.runBufferDependencyTest(
+  await t.runBufferDependencyTest(
   GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
   buffer => {
     const commandEncoder = t.device.createCommandEncoder();
