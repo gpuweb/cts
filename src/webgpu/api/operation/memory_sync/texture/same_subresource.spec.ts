@@ -3,6 +3,7 @@ Memory Synchronization Tests for Texture: read before write, read after write, a
 
 - TODO: Test synchronization between multiple queues.
 - TODO: Test depth/stencil attachments.
+- TODO: Use non-solid-color texture contents [2]
 `;
 
 import { SkipTestCase } from '../../../../../common/framework/fixture.js';
