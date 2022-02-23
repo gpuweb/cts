@@ -9,9 +9,9 @@
     "allowJs": false,
     "strict": true,
     /* tsc lint options */
-    "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
-    /* These should be caught be eslint instead */
+    /* These should be caught by eslint instead */
+    "noFallthroughCasesInSwitch": false,
     "noUnusedLocals": false,
     "allowUnreachableCode": true,
     /* Module Options */
