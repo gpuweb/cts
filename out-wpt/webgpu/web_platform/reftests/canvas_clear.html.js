@@ -31,4 +31,5 @@ runRefTest(async t => {
 
   draw('cvs0', 'bgra8unorm');
   draw('cvs1', 'rgba8unorm');
+  draw('cvs2', 'rgba16float');
 });
