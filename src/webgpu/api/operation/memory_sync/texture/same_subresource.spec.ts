@@ -43,6 +43,7 @@ class TextureSyncTestHelper {
   private renderPassEncoder?: GPURenderPassEncoder;
   private renderBundleEncoder?: GPURenderBundleEncoder;
 
+  private t: GPUTest;
   private device: GPUDevice;
   private texture: GPUTexture;
 
@@ -52,18 +53,21 @@ class TextureSyncTestHelper {
   public readonly kTextureFormat: EncodableTextureFormat = 'rgba8unorm';
 
   constructor(
-    device: GPUDevice,
+    t: GPUTest,
     textureCreationParams: {
       usage: GPUTextureUsageFlags;
     }
   ) {
-    this.device = device;
-    this.queue = device.queue;
-    this.texture = device.createTexture({
-      size: this.kTextureSize,
-      format: this.kTextureFormat,
-      ...textureCreationParams,
-    });
+    this.t = t;
+    this.device = t.device;
+    this.queue = t.device.queue;
+    this.texture = t.trackForCleanup(
+      t.device.createTexture({
+        size: this.kTextureSize,
+        format: this.kTextureFormat,
+        ...textureCreationParams,
+      })
+    );
   }
 
   /**
@@ -74,11 +78,13 @@ class TextureSyncTestHelper {
     this.ensureContext(context);
     switch (op) {
       case 't2t-copy': {
-        const texture = this.device.createTexture({
-          size: this.kTextureSize,
-          format: this.kTextureFormat,
-          usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
-        });
+        const texture = this.t.trackForCleanup(
+          this.device.createTexture({
+            size: this.kTextureSize,
+            format: this.kTextureFormat,
+            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+          })
+        );
 
         assert(this.commandEncoder !== undefined);
         this.commandEncoder.copyTextureToTexture(
@@ -95,16 +101,20 @@ class TextureSyncTestHelper {
           ...this.kTextureSize,
           1,
         ]);
-        const buffer = this.device.createBuffer({
-          size: byteLength,
-          usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-        });
+        const buffer = this.t.trackForCleanup(
+          this.device.createBuffer({
+            size: byteLength,
+            usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+          })
+        );
 
-        const texture = this.device.createTexture({
-          size: this.kTextureSize,
-          format: this.kTextureFormat,
-          usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
-        });
+        const texture = this.t.trackForCleanup(
+          this.device.createTexture({
+            size: this.kTextureSize,
+            format: this.kTextureFormat,
+            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+          })
+        );
 
         assert(this.commandEncoder !== undefined);
         this.commandEncoder.copyTextureToBuffer(
@@ -146,7 +156,7 @@ class TextureSyncTestHelper {
           colorAttachments: [
             {
               view: this.texture.createView(),
-              // [2] Use non-uniform texture values
+              // [2] Use non-solid-color texture values
               loadValue: [data.R ?? 0, data.G ?? 0, data.B ?? 0, data.A ?? 0],
               storeOp: 'store',
             },
@@ -156,7 +166,7 @@ class TextureSyncTestHelper {
         break;
       }
       case 'write-texture': {
-        // [2] Use non-uniform texture values
+        // [2] Use non-solid-color texture values
         const rep = kTexelRepresentationInfo[this.kTextureFormat];
         const texelData = rep.pack(rep.encode(data));
         const numTexels = this.kTextureSize[0] * this.kTextureSize[1];
@@ -182,7 +192,7 @@ class TextureSyncTestHelper {
           usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
         });
 
-        // [2] Use non-uniform texture values
+        // [2] Use non-solid-color texture values
         const rep = kTexelRepresentationInfo[this.kTextureFormat];
         const texelData = rep.pack(rep.encode(data));
         const numTexels = this.kTextureSize[0] * this.kTextureSize[1];
@@ -209,7 +219,7 @@ class TextureSyncTestHelper {
         break;
       }
       case 'b2t-copy': {
-        // [2] Use non-uniform texture values
+        // [2] Use non-solid-color texture values
         const rep = kTexelRepresentationInfo[this.kTextureFormat];
         const texelData = rep.pack(rep.encode(data));
         const bytesPerRow = align(texelData.byteLength, 256);
@@ -226,10 +236,12 @@ class TextureSyncTestHelper {
           }
         }
 
-        const buffer = this.device.createBuffer({
-          size: fullTexelData.byteLength,
-          usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-        });
+        const buffer = this.t.trackForCleanup(
+          this.device.createBuffer({
+            size: fullTexelData.byteLength,
+            usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+          })
+        );
 
         this.queue.writeBuffer(buffer, 0, fullTexelData);
 
@@ -293,11 +305,13 @@ class TextureSyncTestHelper {
   }
 
   private makeDummyAttachment(): GPURenderPassColorAttachment {
-    const texture = this.device.createTexture({
-      format: this.kTextureFormat,
-      size: this.kTextureSize,
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    });
+    const texture = this.t.trackForCleanup(
+      this.device.createTexture({
+        format: this.kTextureFormat,
+        size: this.kTextureSize,
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      })
+    );
     return {
       view: texture.createView(),
       loadValue: 'load',
@@ -317,16 +331,23 @@ class TextureSyncTestHelper {
 
     // Pop the context until we're at the common ancestor.
     while (this.currentContext !== ancestorContext) {
-      // We're about to pop another context. Make sure we've
-      // executed any previous render bundles / command buffers.
-      this.flushEncodedCommands();
+      // About to pop the render pass encoder. Execute any outstanding render bundles.
+      if (this.currentContext === 'render-pass-encoder') {
+        this.flushEncodedCommands();
+      }
 
       const result = this.popContext();
       if (result) {
         if (result instanceof GPURenderBundle) {
-          this.encodedCommands = [result];
+          assert(
+            this.encodedCommands.length === 0 || this.encodedCommands[0] instanceof GPURenderBundle
+          );
+          (this.encodedCommands as GPURenderBundle[]).push(result);
         } else {
-          this.encodedCommands = [result];
+          assert(
+            this.encodedCommands.length === 0 || this.encodedCommands[0] instanceof GPUCommandBuffer
+          );
+          (this.encodedCommands as GPUCommandBuffer[]).push(result);
         }
       }
     }
@@ -347,8 +368,7 @@ class TextureSyncTestHelper {
         switch (this.currentContext) {
           case 'queue':
             this.commandEncoder = this.device.createCommandEncoder();
-            this.computePassEncoder = this.commandEncoder.beginComputePass();
-            break;
+          // fallthrough
           case 'command-encoder':
             assert(this.commandEncoder !== undefined);
             this.computePassEncoder = this.commandEncoder.beginComputePass();
@@ -363,10 +383,7 @@ class TextureSyncTestHelper {
         switch (this.currentContext) {
           case 'queue':
             this.commandEncoder = this.device.createCommandEncoder();
-            this.renderPassEncoder = this.commandEncoder.beginRenderPass({
-              colorAttachments: [this.makeDummyAttachment()],
-            });
-            break;
+          // fallthrough
           case 'command-encoder':
             assert(this.commandEncoder !== undefined);
             this.renderPassEncoder = this.commandEncoder.beginRenderPass({
@@ -383,22 +400,13 @@ class TextureSyncTestHelper {
         switch (this.currentContext) {
           case 'queue':
             this.commandEncoder = this.device.createCommandEncoder();
-            this.renderPassEncoder = this.commandEncoder.beginRenderPass({
-              colorAttachments: [this.makeDummyAttachment()],
-            });
-            this.renderBundleEncoder = this.device.createRenderBundleEncoder({
-              colorFormats: [this.kTextureFormat],
-            });
-            break;
+          // fallthrough
           case 'command-encoder':
             assert(this.commandEncoder !== undefined);
             this.renderPassEncoder = this.commandEncoder.beginRenderPass({
               colorAttachments: [this.makeDummyAttachment()],
             });
-            this.renderBundleEncoder = this.device.createRenderBundleEncoder({
-              colorFormats: [this.kTextureFormat],
-            });
-            break;
+          // fallthrough
           case 'render-pass-encoder':
             this.renderBundleEncoder = this.device.createRenderBundleEncoder({
               colorFormats: [this.kTextureFormat],
@@ -413,6 +421,9 @@ class TextureSyncTestHelper {
     this.currentContext = context;
   }
 
+  /**
+   * Execute/submit encoded GPURenderBundles or GPUCommandBuffers.
+   */
   private flushEncodedCommands() {
     if (this.encodedCommands.length > 0) {
       if (this.encodedCommands[0] instanceof GPURenderBundle) {
@@ -487,13 +498,13 @@ g.test('rw')
       })
   )
   .fn(t => {
-    const helper = new TextureSyncTestHelper(t.device, {
+    const helper = new TextureSyncTestHelper(t, {
       usage:
         GPUTextureUsage.COPY_DST |
         kOpInfo[t.params.read.op].readUsage |
         kOpInfo[t.params.write.op].writeUsage,
     });
-    // [2] Use non-uniform texture value.
+    // [2] Use non-solid-color texture value.
     const texelValue1 = { R: 0, G: 1, B: 0, A: 1 } as const;
     const texelValue2 = { R: 1, G: 0, B: 0, A: 1 } as const;
 
@@ -520,7 +531,7 @@ g.test('wr')
     The read should see exactly the contents written by the previous write.
 
     - TODO: Finish implementation [1]
-    - TODO: Use non-uniform texture contents [2]`
+    - TODO: Use non-solid-color texture contents [2]`
   )
   .params(u =>
     u
@@ -540,10 +551,10 @@ g.test('wr')
       })
   )
   .fn(t => {
-    const helper = new TextureSyncTestHelper(t.device, {
+    const helper = new TextureSyncTestHelper(t, {
       usage: kOpInfo[t.params.read.op].readUsage | kOpInfo[t.params.write.op].writeUsage,
     });
-    // [2] Use non-uniform texture value.
+    // [2] Use non-solid-color texture value.
     const texelValue = { R: 0, G: 1, B: 0, A: 1 } as const;
 
     helper.performWriteOp(t.params.write, texelValue);
@@ -584,13 +595,13 @@ g.test('ww')
       })
   )
   .fn(t => {
-    const helper = new TextureSyncTestHelper(t.device, {
+    const helper = new TextureSyncTestHelper(t, {
       usage:
         GPUTextureUsage.COPY_SRC |
         kOpInfo[t.params.first.op].writeUsage |
         kOpInfo[t.params.second.op].writeUsage,
     });
-    // [2] Use non-uniform texture value.
+    // [2] Use non-solid-color texture value.
     const texelValue1 = { R: 1, G: 0, B: 0, A: 1 } as const;
     const texelValue2 = { R: 0, G: 1, B: 0, A: 1 } as const;
 
