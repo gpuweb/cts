@@ -170,6 +170,47 @@ class F extends ValidationTest {
       }, !_success);
     }
   }
+
+  doBlendMinMaxTest(
+    isAsync: boolean,
+    component: 'color' | 'alpha',
+    srcFactor: GPUBlendFactor,
+    dstFactor: GPUBlendFactor,
+    operation: GPUBlendOperation
+  ) {
+    const defaultBlendComponent: GPUBlendComponent = {
+      srcFactor: 'src-alpha',
+      dstFactor: 'dst-alpha',
+      operation: 'add',
+    };
+    const blendComponentToTest = {
+      srcFactor,
+      dstFactor,
+      operation,
+    };
+    const fragmentShaderCode = this.getFragmentShaderCode('float', 4);
+    const format = 'rgba8unorm';
+
+    const descriptor = this.getDescriptor({
+      targets: [
+        {
+          format,
+          blend: {
+            color: component === 'color' ? blendComponentToTest : defaultBlendComponent,
+            alpha: component === 'alpha' ? blendComponentToTest : defaultBlendComponent,
+          },
+        },
+      ],
+      fragmentShaderCode,
+    });
+
+    if (operation === 'min' || operation === 'max') {
+      const _success = srcFactor === 'one' && dstFactor === 'one';
+      this.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+    } else {
+      this.doCreateRenderPipelineTest(isAsync, true, descriptor);
+    }
+  }
 }
 
 export const g = makeTestGroup(F);
@@ -602,10 +643,11 @@ Tests if blending is used, the target's format must be blendable (support "float
     );
   });
 
-g.test('pipeline_output_targets,blend_min_max')
+// Further split blend_min_max test to avoid timing out
+g.test('pipeline_output_targets,blend_min_max,color')
   .desc(
     `
-  For the blend components on either GPUBlendState.color or GPUBlendState.alpha:
+  For the blend components on GPUBlendState.color:
   - Tests if the combination of 'srcFactor', 'dstFactor' and 'operation' is valid (if the blend
     operation is "min" or "max", srcFactor and dstFactor must be "one").
   `
@@ -613,47 +655,37 @@ g.test('pipeline_output_targets,blend_min_max')
   .params(u =>
     u
       .combine('isAsync', [false, true])
-      .combine('component', ['color', 'alpha'] as const)
       .beginSubcases()
       .combine('srcFactor', kBlendFactors)
       .combine('dstFactor', kBlendFactors)
       .combine('operation', kBlendOperations)
   )
   .fn(async t => {
-    const { isAsync, component, srcFactor, dstFactor, operation } = t.params;
+    const { isAsync, srcFactor, dstFactor, operation } = t.params;
 
-    const defaultBlendComponent: GPUBlendComponent = {
-      srcFactor: 'src-alpha',
-      dstFactor: 'dst-alpha',
-      operation: 'add',
-    };
-    const blendComponentToTest = {
-      srcFactor,
-      dstFactor,
-      operation,
-    };
-    const fragmentShaderCode = t.getFragmentShaderCode('float', 4);
-    const format = 'rgba8unorm';
+    t.doBlendMinMaxTest(isAsync, 'color', srcFactor, dstFactor, operation);
+  });
 
-    const descriptor = t.getDescriptor({
-      targets: [
-        {
-          format,
-          blend: {
-            color: component === 'color' ? blendComponentToTest : defaultBlendComponent,
-            alpha: component === 'alpha' ? blendComponentToTest : defaultBlendComponent,
-          },
-        },
-      ],
-      fragmentShaderCode,
-    });
+g.test('pipeline_output_targets,blend_min_max,alpha')
+  .desc(
+    `
+  For the blend components on GPUBlendState.alpha:
+  - Tests if the combination of 'srcFactor', 'dstFactor' and 'operation' is valid (if the blend
+    operation is "min" or "max", srcFactor and dstFactor must be "one").
+  `
+  )
+  .params(u =>
+    u
+      .combine('isAsync', [false, true])
+      .beginSubcases()
+      .combine('srcFactor', kBlendFactors)
+      .combine('dstFactor', kBlendFactors)
+      .combine('operation', kBlendOperations)
+  )
+  .fn(async t => {
+    const { isAsync, srcFactor, dstFactor, operation } = t.params;
 
-    if (operation === 'min' || operation === 'max') {
-      const _success = srcFactor === 'one' && dstFactor === 'one';
-      t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
-    } else {
-      t.doCreateRenderPipelineTest(isAsync, true, descriptor);
-    }
+    t.doBlendMinMaxTest(isAsync, 'alpha', srcFactor, dstFactor, operation);
   });
 
 g.test('pipeline_layout,device_mismatch')
