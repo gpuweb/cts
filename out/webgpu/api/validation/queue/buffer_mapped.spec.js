@@ -95,7 +95,7 @@ desc(`Test that an outstanding mapping will prevent writeBuffer calls.`).
 fn(async t => {
   const data = new Uint32Array([42]);
 
-  t.runBufferDependencyTest(
+  await t.runBufferDependencyTest(
   GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
   buffer => {
     t.queue.writeBuffer(buffer, 0, data);
@@ -120,7 +120,7 @@ fn(async t => {
     usage: GPUBufferUsage.COPY_DST });
 
 
-  t.runBufferDependencyTest(
+  await t.runBufferDependencyTest(
   GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
   buffer => {
     const commandEncoder = t.device.createCommandEncoder();
@@ -152,7 +152,7 @@ fn(async t => {
     usage: GPUTextureUsage.COPY_DST });
 
 
-  t.runBufferDependencyTest(
+  await t.runBufferDependencyTest(
   GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
   buffer => {
     const commandEncoder = t.device.createCommandEncoder();
@@ -175,7 +175,7 @@ fn(async t => {
     usage: GPUTextureUsage.COPY_SRC });
 
 
-  t.runBufferDependencyTest(
+  await t.runBufferDependencyTest(
   GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
   buffer => {
     const commandEncoder = t.device.createCommandEncoder();

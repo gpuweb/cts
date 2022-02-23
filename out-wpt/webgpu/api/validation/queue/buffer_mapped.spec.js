@@ -96,7 +96,7 @@ g.test('writeBuffer')
   .fn(async t => {
     const data = new Uint32Array([42]);
 
-    t.runBufferDependencyTest(GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST, buffer => {
+    await t.runBufferDependencyTest(GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST, buffer => {
       t.queue.writeBuffer(buffer, 0, data);
     });
   });
@@ -118,7 +118,7 @@ g.test('copyBufferToBuffer')
       usage: GPUBufferUsage.COPY_DST,
     });
 
-    t.runBufferDependencyTest(GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC, buffer => {
+    await t.runBufferDependencyTest(GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC, buffer => {
       const commandEncoder = t.device.createCommandEncoder();
       commandEncoder.copyBufferToBuffer(buffer, 0, destBuffer, 0, 4);
       t.queue.submit([commandEncoder.finish()]);
@@ -144,7 +144,7 @@ g.test('copyBufferToTexture')
       usage: GPUTextureUsage.COPY_DST,
     });
 
-    t.runBufferDependencyTest(GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC, buffer => {
+    await t.runBufferDependencyTest(GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC, buffer => {
       const commandEncoder = t.device.createCommandEncoder();
       commandEncoder.copyBufferToTexture({ buffer }, { texture }, size);
       t.queue.submit([commandEncoder.finish()]);
@@ -164,7 +164,7 @@ g.test('copyTextureToBuffer')
       usage: GPUTextureUsage.COPY_SRC,
     });
 
-    t.runBufferDependencyTest(GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST, buffer => {
+    await t.runBufferDependencyTest(GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST, buffer => {
       const commandEncoder = t.device.createCommandEncoder();
       commandEncoder.copyTextureToBuffer({ texture }, { buffer }, size);
       t.queue.submit([commandEncoder.finish()]);
