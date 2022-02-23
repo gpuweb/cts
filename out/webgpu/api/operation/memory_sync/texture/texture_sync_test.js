@@ -1,10 +1,13 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/ /**
-     * Boundary between the first operation, and the second operation.
-     */export const kOperationBoundaries = ['queue-op', // Operations are performed in different queue operations (submit, writeTexture).
+**/import { GPUConst } from '../../../../constants.js'; /**
+                                                         * Boundary between the first operation, and the second operation.
+                                                         */
+export const kOperationBoundaries = [
+'queue-op', // Operations are performed in different queue operations (submit, writeTexture).
 'command-buffer', // Operations are in different command buffers.
 'pass', // Operations are in different passes.
+'execute-bundles', // Operations are in different executeBundles(...) calls
 'render-bundle', // Operations are in different render bundles.
 'dispatch', // Operations are in different dispatches.
 'draw' // Operations are in different draws.
@@ -13,6 +16,8 @@
 
 /**
     * Context a particular operation is permitted in.
+    * These contexts should be sorted such that the first is the most top-level
+    * context, and the last is most nested (inside a render bundle, in a render pass, ...).
     */
 export const kOperationContexts = [
 'queue', // Operation occurs on the GPUQueue object
@@ -71,6 +76,11 @@ export const kBoundaryInfo =
     ['render-bundle-encoder', 'render-bundle-encoder']] },
 
 
+  'execute-bundles': {
+    contexts: [
+    ['render-bundle-encoder', 'render-bundle-encoder']] },
+
+
   'render-bundle': {
     contexts: [
     ['render-bundle-encoder', 'render-pass-encoder'],
@@ -101,12 +111,8 @@ export const kAllWriteOps = [
 
 
 
-export const kAllReadOps = [
-'t2b-copy',
-'t2t-copy',
-'attachment-load',
-'storage',
-'sample'];
+export const kAllReadOps = ['t2b-copy', 't2t-copy', 'storage', 'sample'];
+
 
 
 
@@ -118,20 +124,51 @@ export const kAllReadOps = [
 
 
 /**
-            * Mapping of Op to the OperationContext(s) it is valid in
-            */
-const kOpInfo =
+                                                                           * Mapping of Op to the OperationContext(s) it is valid in
+                                                                           */
+export const kOpInfo =
 
 {
-  'write-texture': { contexts: ['queue'] },
-  'b2t-copy': { contexts: ['command-encoder'] },
-  't2t-copy': { contexts: ['command-encoder'] },
-  't2b-copy': { contexts: ['command-encoder'] },
-  'storage': { contexts: ['compute-pass-encoder', 'render-pass-encoder', 'render-bundle-encoder'] },
-  'sample': { contexts: ['compute-pass-encoder', 'render-pass-encoder', 'render-bundle-encoder'] },
-  'attachment-store': { contexts: ['render-pass-encoder'] },
-  'attachment-resolve': { contexts: ['render-pass-encoder'] },
-  'attachment-load': { contexts: ['render-pass-encoder'] } };
+  'write-texture': {
+    contexts: ['queue'],
+    readUsage: 0,
+    writeUsage: GPUConst.TextureUsage.COPY_DST },
+
+  'b2t-copy': {
+    contexts: ['command-encoder'],
+    readUsage: 0,
+    writeUsage: GPUConst.TextureUsage.COPY_DST },
+
+  't2t-copy': {
+    contexts: ['command-encoder'],
+    readUsage: GPUConst.TextureUsage.COPY_SRC,
+    writeUsage: GPUConst.TextureUsage.COPY_DST },
+
+  't2b-copy': {
+    contexts: ['command-encoder'],
+    readUsage: GPUConst.TextureUsage.COPY_SRC,
+    writeUsage: 0 },
+
+  'storage': {
+    contexts: ['compute-pass-encoder', 'render-pass-encoder', 'render-bundle-encoder'],
+    readUsage: GPUConst.TextureUsage.STORAGE,
+    writeUsage: GPUConst.TextureUsage.STORAGE },
+
+  'sample': {
+    contexts: ['compute-pass-encoder', 'render-pass-encoder', 'render-bundle-encoder'],
+    readUsage: GPUConst.TextureUsage.SAMPLED,
+    writeUsage: 0 },
+
+  'attachment-store': {
+    contexts: ['command-encoder'],
+    readUsage: 0,
+    writeUsage: GPUConst.TextureUsage.RENDER_ATTACHMENT },
+
+  'attachment-resolve': {
+    contexts: ['command-encoder'],
+    readUsage: 0,
+    writeUsage: GPUConst.TextureUsage.RENDER_ATTACHMENT } };
+
 
 
 export function checkOpsValidForContext(
