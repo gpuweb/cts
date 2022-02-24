@@ -295,7 +295,7 @@ function runBatch(
   cmpFloats: FloatMatch
 ) {
   // returns the WGSL expression to load the ith parameter of the given type from the input buffer
-  const paramExpr = (ty: Type, i: number) => fromStorage(ty, `inputs.test[i].param${i}`);
+  const paramExpr = (ty: Type, i: number) => fromStorage(ty, `inputs[i].param${i}`);
 
   // resolves to the expression that calls the builtin
   const expr = toStorage(
@@ -303,35 +303,32 @@ function runBatch(
     builtin + '(' + parameterTypes.map(paramExpr).join(', ') + ')'
   );
 
+  const storage = storageClass === 'storage_r' ? 'read' : 'read_write';
+
   // the full WGSL shader source
   const source = `
-struct Parameters {
+struct Input {
 ${parameterTypes
   .map((ty, i) => `  @size(${kValueStride}) param${i} : ${storageType(ty)};`)
   .join('\n')}
 };
 
-struct Inputs {
-  test : array<Parameters, ${cases.length}>;
+struct Output {
+  @size(${kValueStride}) value : ${storageType(returnType)};
 };
 
-struct Outputs {
-  test : @stride(${kValueStride}) array<${storageType(returnType)}, ${cases.length}>;
-};
-
+@group(0) @binding(0)
 ${
   storageClass === 'uniform'
-    ? `@group(0) @binding(0) var<uniform> inputs : Inputs;`
-    : `@group(0) @binding(0) var<storage, ${
-        storageClass === 'storage_r' ? 'read' : 'read_write'
-      }> inputs : Inputs;`
+    ? `var<uniform> inputs : array<Input, ${cases.length}>;`
+    : `var<storage, ${storage}> inputs : array<Input, ${cases.length}>;`
 }
-@group(0) @binding(1) var<storage, write> outputs : Outputs;
+@group(0) @binding(1) var<storage, write> outputs : array<Output, ${cases.length}>;
 
 @stage(compute) @workgroup_size(1)
 fn main() {
   for(var i = 0; i < ${cases.length}; i = i + 1) {
-    outputs.test[i] = ${expr};
+    outputs[i].value = ${expr};
   }
 }
 `;
