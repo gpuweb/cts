@@ -1219,6 +1219,30 @@ export const listing = [
       "shader",
       "execution",
       "builtin",
+      "extractBits"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "builtin",
+      "firstLeadingBit"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "builtin",
+      "firstTrailingBit"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "builtin",
       "float_built_functions"
     ]
   },
@@ -1236,6 +1260,14 @@ export const listing = [
       "execution",
       "builtin",
       "fract"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "builtin",
+      "insertBits"
     ]
   },
   {
