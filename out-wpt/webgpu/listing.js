@@ -1211,6 +1211,22 @@ export const listing = [
       "shader",
       "execution",
       "builtin",
+      "countTrailingZeros"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "builtin",
+      "firstTrailingBit"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "builtin",
       "float_built_functions"
     ]
   },
