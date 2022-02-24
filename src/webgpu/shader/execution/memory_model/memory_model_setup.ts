@@ -76,7 +76,7 @@ type MemoryModelBuffers = {
   readResults: BufferWithSource;
   /** This buffer is the aggregated results of every testing thread, and is used to check for test success/failure. */
   testResults: BufferWithSource;
-  /** This buffer stores the shuffled workgroup ids for use during testing. */
+  /** This buffer stores the shuffled workgroup ids for use during testing. Read-only in the shader. */
   shuffledWorkgroups: BufferWithSource;
   /** This is the bounded spin-loop barrier, used to temporally align testing threads. */
   barrier: BufferWithSource;
@@ -255,7 +255,7 @@ export class MemoryModelTester {
       entries: [
         { binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
         { binding: 1, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
-        { binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
+        { binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'read-only-storage' } },
         { binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
         { binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
         { binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
@@ -619,7 +619,7 @@ const twoBehaviorTestResultStructure = `
 const testShaderBindings = `
   @group(0) @binding(0) var<storage, read_write> test_locations : AtomicMemory;
   @group(0) @binding(1) var<storage, read_write> results : ReadResults;
-  @group(0) @binding(2) var<storage, read_write> shuffled_workgroups : Memory;
+  @group(0) @binding(2) var<storage, read> shuffled_workgroups : Memory;
   @group(0) @binding(3) var<storage, read_write> barrier : AtomicMemory;
   @group(0) @binding(4) var<storage, read_write> scratchpad : Memory;
   @group(0) @binding(5) var<storage, read_write> scratch_locations : Memory;
