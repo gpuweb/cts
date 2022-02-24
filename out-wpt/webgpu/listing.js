@@ -1219,6 +1219,14 @@ export const listing = [
       "shader",
       "execution",
       "builtin",
+      "firstLeadingBit"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "builtin",
       "firstTrailingBit"
     ]
   },
