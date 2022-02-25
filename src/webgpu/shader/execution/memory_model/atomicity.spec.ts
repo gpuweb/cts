@@ -6,10 +6,11 @@ import { GPUTest } from '../../../gpu_test.js';
 import {
   MemoryModelTestParams,
   MemoryModelTester,
-  buildFourResultShader,
   buildTestShader,
   MemoryType,
-  TestType
+  TestType,
+  buildResultShader,
+  ResultType,
 } from './memory_model_setup.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -57,10 +58,6 @@ g.test('atomicity')
       atomicStore(&results.value[id_0].r0, r0);
     `;
     const resultCode = `
-      let id_0 = workgroup_id[0] * u32(workgroupXSize) + local_invocation_id[0];
-      let r0 = atomicLoad(&read_results.value[id_0].r0);
-      let x_0 = (id_0) * stress_params.mem_stride * 2u;
-      let mem_x_0 = atomicLoad(&test_locations.value[x_0]);
       if ((r0 == 0u && mem_x_0 == 2u)) {
         atomicAdd(&test_results.seq0, 1u);
       } else if ((r0 == 2u && mem_x_0 == 1u)) {
@@ -70,8 +67,16 @@ g.test('atomicity')
       }
     `;
 
-    const testShader = buildTestShader(testCode, MemoryType.AtomicStorageClass, TestType.InterWorkgroup);
-    const resultShader = buildFourResultShader(resultCode);
+    const testShader = buildTestShader(
+      testCode,
+      MemoryType.AtomicStorageClass,
+      TestType.InterWorkgroup
+    );
+    const resultShader = buildResultShader(
+      resultCode,
+      TestType.InterWorkgroup,
+      ResultType.FourBehavior
+    );
     const memModelTester = new MemoryModelTester(
       t,
       memoryModelTestParams,

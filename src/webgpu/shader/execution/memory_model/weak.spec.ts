@@ -9,10 +9,11 @@ import { GPUTest } from '../../../gpu_test.js';
 import {
   MemoryModelTestParams,
   MemoryModelTester,
-  buildFourResultShader,
   buildTestShader,
   MemoryType,
   TestType,
+  buildResultShader,
+  ResultType,
 } from './memory_model_setup.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -45,10 +46,8 @@ const memoryModelTestParams: MemoryModelTestParams = {
   numBehaviors: 4,
 };
 
-const messagePassingResultShader = buildFourResultShader(`
-  let id_0 = workgroup_id[0] * workgroupXSize + local_invocation_id[0];
-  let r0 = atomicLoad(&read_results.value[id_0].r0);
-  let r1 = atomicLoad(&read_results.value[id_0].r1);
+const messagePassingResultShader = buildResultShader(
+  `
   if ((r0 == 0u && r1 == 0u)) {
     atomicAdd(&test_results.seq0, 1u);
   } else if ((r0 == 1u && r1 == 1u)) {
@@ -58,7 +57,10 @@ const messagePassingResultShader = buildFourResultShader(`
   } else if ((r0 == 1u && r1 == 0u)) {
     atomicAdd(&test_results.weak, 1u);
   }
-`);
+`,
+  TestType.IntraWorkgroup,
+  ResultType.FourBehavior
+);
 
 g.test('message_passing_workgroup_memory')
   .desc(
@@ -82,7 +84,11 @@ g.test('message_passing_workgroup_memory')
       atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r1, r1);
     `;
 
-    const testShader = buildTestShader(testCode, MemoryType.AtomicWorkgroupClass, TestType.IntraWorkgroup);
+    const testShader = buildTestShader(
+      testCode,
+      MemoryType.AtomicWorkgroupClass,
+      TestType.IntraWorkgroup
+    );
     const memModelTester = new MemoryModelTester(
       t,
       memoryModelTestParams,
@@ -109,7 +115,11 @@ g.test('message_passing_storage_memory')
       atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r1, r1);
     `;
 
-    const testShader = buildTestShader(testCode, MemoryType.AtomicStorageClass, TestType.IntraWorkgroup);
+    const testShader = buildTestShader(
+      testCode,
+      MemoryType.AtomicStorageClass,
+      TestType.IntraWorkgroup
+    );
     const memModelTester = new MemoryModelTester(
       t,
       memoryModelTestParams,

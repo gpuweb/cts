@@ -7,10 +7,11 @@ import { GPUTest } from '../../../gpu_test.js';
 import {
   MemoryModelTestParams,
   MemoryModelTester,
-  buildTwoResultShader,
   buildTestShader,
   MemoryType,
   TestType,
+  buildResultShader,
+  ResultType,
 } from './memory_model_setup.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -60,16 +61,22 @@ g.test('workgroup_barrier_store_load')
     `;
 
     const resultCode = `
-      let id_0 = workgroup_id[0] * u32(workgroupXSize) + local_invocation_id[0];
-      let r0 = atomicLoad(&read_results.value[id_0].r0);
       if (r0 == 1u) {
         atomicAdd(&test_results.seq, 1u);
       } else if (r0 == 0u) {
         atomicAdd(&test_results.weak, 1u);
       }
     `;
-    const testShader = buildTestShader(testCode, MemoryType.NonAtomicWorkgroupClass, TestType.IntraWorkgroup);
-    const resultShader = buildTwoResultShader(resultCode);
+    const testShader = buildTestShader(
+      testCode,
+      MemoryType.NonAtomicWorkgroupClass,
+      TestType.IntraWorkgroup
+    );
+    const resultShader = buildResultShader(
+      resultCode,
+      TestType.IntraWorkgroup,
+      ResultType.TwoBehavior
+    );
     const memModelTester = new MemoryModelTester(
       t,
       memoryModelTestParams,
