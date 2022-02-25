@@ -6,8 +6,10 @@ import { GPUTest } from '../../../gpu_test.js';
 import {
   MemoryModelTestParams,
   MemoryModelTester,
-  buildStorageClassMemoryTestShader,
   buildFourResultShader,
+  buildTestShader,
+  MemoryType,
+  TestType
 } from './memory_model_setup.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -49,22 +51,10 @@ g.test('atomicity')
   )
   .fn(async t => {
     const testCode = `
-        let total_ids = u32(workgroupXSize) * stress_params.testing_workgroups;
-        let id_0 = shuffled_workgroup * u32(workgroupXSize) + local_invocation_id[0];
-        let new_workgroup = stripe_workgroup(shuffled_workgroup, local_invocation_id[0]);
-        let id_1 = new_workgroup * u32(workgroupXSize) + permute_id(local_invocation_id[0], stress_params.permute_first, u32(workgroupXSize));
-        let x_0 = (id_0) * stress_params.mem_stride * 2u;
-        let x_1 = (id_1) * stress_params.mem_stride * 2u;
-        if (stress_params.pre_stress == 1u) {
-          do_stress(stress_params.pre_stress_iterations, stress_params.pre_stress_pattern, shuffled_workgroup);
-        }
-        if (stress_params.do_barrier == 1u) {
-          spin(u32(workgroupXSize) * stress_params.testing_workgroups);
-        }
-        let r0 = atomicAdd(&test_locations.value[x_0], 0u);
-        atomicStore(&test_locations.value[x_1], 2u);
-        workgroupBarrier();
-        atomicStore(&results.value[id_0].r0, r0);
+      let r0 = atomicAdd(&test_locations.value[x_0], 0u);
+      atomicStore(&test_locations.value[x_1], 2u);
+      workgroupBarrier();
+      atomicStore(&results.value[id_0].r0, r0);
     `;
     const resultCode = `
       let id_0 = workgroup_id[0] * u32(workgroupXSize) + local_invocation_id[0];
@@ -80,7 +70,7 @@ g.test('atomicity')
       }
     `;
 
-    const testShader = buildStorageClassMemoryTestShader(testCode);
+    const testShader = buildTestShader(testCode, MemoryType.AtomicStorageClass, TestType.InterWorkgroup);
     const resultShader = buildFourResultShader(resultCode);
     const memModelTester = new MemoryModelTester(
       t,

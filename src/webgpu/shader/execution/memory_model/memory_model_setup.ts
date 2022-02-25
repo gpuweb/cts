@@ -625,21 +625,21 @@ const commonTestShaderBindings = `
   @group(0) @binding(6) var<uniform> stress_params : StressParamsMemory;
 `;
 
-/** A binding for atomic memory used to write to/read from during the test shader phase of a test. */
-const atomicTestLocations = `
-  @group(0) @binding(0) var<storage, read_write> test_locations : AtomicMemory;
-`;
-
 /** The combined bindings for a test on atomic memory. */
-const atomicTestShaderBindings = [atomicTestLocations, commonTestShaderBindings].join("\n");
-
-/** A binding for non-atomic memory used to write to/read from during the test shader phase of a test. */
-const nonAtomicTestLocations = `
-  @group(0) @binding(0) var<storage, read_write> test_locations : Memory;
-`;
+const atomicTestShaderBindings = [
+`
+  @group(0) @binding(0) var<storage, read_write> test_locations : AtomicMemory;
+`,
+  commonTestShaderBindings
+].join("\n");
 
 /** The combined bindings for a test on non-atomic memory. */
-const nonAtomicTestShaderBindings = [nonAtomicTestLocations, commonTestShaderBindings].join("\n");
+const nonAtomicTestShaderBindings = [
+`
+  @group(0) @binding(0) var<storage, read_write> test_locations : Memory;
+`,
+  commonTestShaderBindings
+].join("\n");
 
 /** Bindings used in the result aggregation phase of the test. */
 const resultShaderBindings = `
@@ -771,6 +771,55 @@ const testShaderCommonHeader = `
     if (shuffled_workgroup < stress_params.testing_workgroups) {
 `;
 
+/** 
+ * All test shaders must calculate addresses for memory locations used in the test. Not all these addresses are
+ * used in every test, but no test uses more than these addresses.
+ */
+const testShaderCommonCalculations = `
+  let x_0 = id_0 * stress_params.mem_stride * 2u;
+  let y_0 = permute_id(id_0, stress_params.permute_second, total_ids) * stress_params.mem_stride * 2u + stress_params.location_offset;
+  let x_1 = id_1 * stress_params.mem_stride * 2u;
+  let y_1 = permute_id(id_1, stress_params.permute_second, total_ids) * stress_params.mem_stride * 2u + stress_params.location_offset;
+  if (stress_params.pre_stress == 1u) {
+    do_stress(stress_params.pre_stress_iterations, stress_params.pre_stress_pattern, shuffled_workgroup);
+  }
+`;
+
+/** 
+ * An inter-workgroup test calculates two sets of memory locations that are guaranteed to be in separate workgroups. 
+ * If the bounded spin-loop barrier is called, it attempts to wait for all invocations in all workgroups.
+ */
+const interWorkgroupCommonHeader = [
+`
+  let total_ids = workgroupXSize * stress_params.testing_workgroups;
+  let id_0 = shuffled_workgroup * workgroupXSize + local_invocation_id[0];
+  let new_workgroup = stripe_workgroup(shuffled_workgroup, local_invocation_id[0]);
+  let id_1 = new_workgroup * workgroupXSize + permute_id(local_invocation_id[0], stress_params.permute_first, workgroupXSize);
+`,
+  testShaderCommonCalculations,
+`
+  if (stress_params.do_barrier == 1u) {
+    spin(workgroupXSize * stress_params.testing_workgroups);
+  }
+`].join("\n");
+
+/** 
+ * An intra-workgroup test calculates two set of memory locations that are guaranteed to be in the same workgroup.
+ * If the bounded spin-loop barrier is called, it attempts to wait for all invocations in the same workgroup.
+ */
+const intraWorkgroupCommonHeader = [
+`
+  let total_ids = workgroupXSize;
+  let id_0 = local_invocation_id[0];
+  let id_1 = permute_id(local_invocation_id[0], stress_params.permute_first, workgroupXSize);
+`,
+  testShaderCommonCalculations,
+`
+  if (stress_params.do_barrier == 1u) {
+    spin(workgroupXSize);
+  }
+`].join("\n");
+
 /** All test shaders may perform stress with non-testing threads. */
 const testShaderCommonFooter = `
     } else if (stress_params.mem_stress == 1u) {
@@ -834,32 +883,58 @@ const resultShaderCommonCode = [
   shaderEntryPoint,
 ].join('\n');
 
-/** Given test code for an inter-workgroup test, returns a combined shader. */
-export function buildStorageClassMemoryTestShader(
-  testCode: string,
-  atomicMemory: boolean = true
-): string {
-  let commonCode;
-  if (atomicMemory) {
-    commonCode = storageMemoryAtomicTestShaderCommonCode;
-  } else {
-    commonCode = storageMemoryNonAtomicTestShaderCommonCode;
-  }
-  return [commonCode, testCode, testShaderCommonFooter].join('\n');
-}
+/** 
+ * Defines the types of possible memory a test is operating on. Used as part of the process of building shader code from
+ * its composite parts.
+ */
+export enum MemoryType {
+  AtomicStorageClass,
+  NonAtomicStorageClass,
+  AtomicWorkgroupClass,
+  NonAtomicWorkgroupClass
+};
 
-/** Given test code for an intra-workgroup test, returns a combined shader. */
-export function buildWorkgroupClassMemoryTestShader(
+/** 
+ * Defines the relative positions of two invocations coordinating on a test. Used as part of the process of building shader 
+ * code from its composite parts.
+ */
+export enum TestType {
+  InterWorkgroup,
+  IntraWorkgroup
+};
+
+/** 
+ * Given test code that performs the actual sequence of loads and stores, as well as a memory type and test type, returns
+ * a complete test shader.
+ */
+export function buildTestShader(
   testCode: string,
-  atomicMemory: boolean = true
+  memoryType: MemoryType,
+  testType: TestType
 ): string {
-  let commonCode;
-  if (atomicMemory) {
-    commonCode = workgroupMemoryAtomicTestShaderCommonCode;
-  } else {
-    commonCode = workgroupMemoryNonAtomicTestShaderCommonCode;
+  let commonMemoryHeader;
+  switch (memoryType) {
+    case MemoryType.AtomicStorageClass:
+      commonMemoryHeader = storageMemoryAtomicTestShaderCommonCode;
+      break;
+    case MemoryType.NonAtomicStorageClass:
+      commonMemoryHeader = storageMemoryNonAtomicTestShaderCommonCode;
+      break;
+    case MemoryType.AtomicWorkgroupClass:
+      commonMemoryHeader = workgroupMemoryAtomicTestShaderCommonCode;
+      break;
+    case MemoryType.NonAtomicWorkgroupClass:
+      commonMemoryHeader = workgroupMemoryNonAtomicTestShaderCommonCode;
   }
-  return [commonCode, testCode, testShaderCommonFooter].join('\n');
+  let commonTestHeader;
+  switch (testType) {
+    case TestType.InterWorkgroup:
+      commonTestHeader = interWorkgroupCommonHeader;
+      break;
+    case TestType.IntraWorkgroup:
+      commonTestHeader = intraWorkgroupCommonHeader;
+  }
+  return [commonMemoryHeader, commonTestHeader, testCode, testShaderCommonFooter].join('\n');
 }
 
 /** Given result code for a four behavior test, returns a combined result shader. */

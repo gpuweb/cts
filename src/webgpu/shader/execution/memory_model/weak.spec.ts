@@ -10,8 +10,9 @@ import {
   MemoryModelTestParams,
   MemoryModelTester,
   buildFourResultShader,
-  buildWorkgroupClassMemoryTestShader,
-  buildStorageClassMemoryTestShader,
+  buildTestShader,
+  MemoryType,
+  TestType,
 } from './memory_model_setup.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -43,22 +44,6 @@ const memoryModelTestParams: MemoryModelTestParams = {
   numReadOutputs: 2,
   numBehaviors: 4,
 };
-
-const commonWeakSetupCode = `
-  let total_ids = workgroupXSize;
-  let id_0 = local_invocation_id[0];
-  let id_1 = permute_id(local_invocation_id[0], stress_params.permute_first, workgroupXSize);
-  let x_0 = (id_0) * stress_params.mem_stride * 2u;
-  let y_0 = (permute_id(id_0, stress_params.permute_second, total_ids)) * stress_params.mem_stride * 2u + stress_params.location_offset;
-  let y_1 = (permute_id(id_1, stress_params.permute_second, total_ids)) * stress_params.mem_stride * 2u + stress_params.location_offset;
-  let x_1 = (id_1) * stress_params.mem_stride * 2u;
-  if (stress_params.pre_stress == 1u) {
-    do_stress(stress_params.pre_stress_iterations, stress_params.pre_stress_pattern, shuffled_workgroup);
-  }
-  if (stress_params.do_barrier == 1u) {
-    spin(workgroupXSize);
-  }
-`;
 
 const messagePassingResultShader = buildFourResultShader(`
   let id_0 = workgroup_id[0] * workgroupXSize + local_invocation_id[0];
@@ -97,7 +82,7 @@ g.test('message_passing_workgroup_memory')
       atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r1, r1);
     `;
 
-    const testShader = buildWorkgroupClassMemoryTestShader([commonWeakSetupCode, testCode].join("\n"));
+    const testShader = buildTestShader(testCode, MemoryType.AtomicWorkgroupClass, TestType.IntraWorkgroup);
     const memModelTester = new MemoryModelTester(
       t,
       memoryModelTestParams,
@@ -124,7 +109,7 @@ g.test('message_passing_storage_memory')
       atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r1, r1);
     `;
 
-    const testShader = buildStorageClassMemoryTestShader([commonWeakSetupCode, testCode].join("\n"));
+    const testShader = buildTestShader(testCode, MemoryType.AtomicStorageClass, TestType.IntraWorkgroup);
     const memModelTester = new MemoryModelTester(
       t,
       memoryModelTestParams,
