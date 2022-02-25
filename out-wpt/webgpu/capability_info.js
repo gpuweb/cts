@@ -91,8 +91,8 @@ const kRegularTextureFormatInfo = makeTable(
     rg8uint: [true, true, , , , false, , , 'uint', 2],
     rg8sint: [true, true, , , , false, , , 'sint', 2],
     // 32-bit formats
-    r32uint: [true, true, , , , true, , , 'uint', 4],
-    r32sint: [true, true, , , , true, , , 'sint', 4],
+    r32uint: [true, false, , , , true, , , 'uint', 4],
+    r32sint: [true, false, , , , true, , , 'sint', 4],
     r32float: [true, true, , , , true, , , 'unfilterable-float', 4],
     rg16uint: [true, true, , , , false, , , 'uint', 4],
     rg16sint: [true, true, , , , false, , , 'sint', 4],
@@ -109,16 +109,16 @@ const kRegularTextureFormatInfo = makeTable(
     rg11b10ufloat: [false, false, , , , false, , , 'float', 4],
     rgb9e5ufloat: [false, false, , , , false, , , 'float', 4],
     // 64-bit formats
-    rg32uint: [true, true, , , , true, , , 'uint', 8],
-    rg32sint: [true, true, , , , true, , , 'sint', 8],
-    rg32float: [true, true, , , , true, , , 'unfilterable-float', 8],
+    rg32uint: [true, false, , , , true, , , 'uint', 8],
+    rg32sint: [true, false, , , , true, , , 'sint', 8],
+    rg32float: [true, false, , , , true, , , 'unfilterable-float', 8],
     rgba16uint: [true, true, , , , true, , , 'uint', 8],
     rgba16sint: [true, true, , , , true, , , 'sint', 8],
     rgba16float: [true, true, , , , true, , , 'float', 8],
     // 128-bit formats
-    rgba32uint: [true, true, , , , true, , , 'uint', 16],
-    rgba32sint: [true, true, , , , true, , , 'sint', 16],
-    rgba32float: [true, true, , , , true, , , 'unfilterable-float', 16],
+    rgba32uint: [true, false, , , , true, , , 'uint', 16],
+    rgba32sint: [true, false, , , , true, , , 'sint', 16],
+    rgba32float: [true, false, , , , true, , , 'unfilterable-float', 16],
   }
 );
 

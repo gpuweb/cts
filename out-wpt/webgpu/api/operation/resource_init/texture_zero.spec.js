@@ -486,7 +486,8 @@ const kTestParams = kUnitCaseParamsBuilder
 
     return (
       ((usage & GPUConst.TextureUsage.RENDER_ATTACHMENT) !== 0 && !info.renderable) ||
-      ((usage & GPUConst.TextureUsage.STORAGE_BINDING) !== 0 && !info.storage)
+      ((usage & GPUConst.TextureUsage.STORAGE_BINDING) !== 0 && !info.storage) ||
+      (sampleCount > 1 && !info.multisample)
     );
   })
   .combine('nonPowerOfTwo', [false, true])
