@@ -9,7 +9,7 @@ import { GPUTest } from '../../../gpu_test.js';
 import {
   MemoryModelTestParams,
   MemoryModelTester,
-  buildInterWorkgroupTestShader,
+  buildStorageClassMemoryTestShader,
   buildFourResultShader,
 } from './memory_model_setup.js';
 
@@ -87,7 +87,7 @@ g.test('corr')
       }
     `;
 
-    const testShader = buildInterWorkgroupTestShader(testCode);
+    const testShader = buildStorageClassMemoryTestShader(testCode);
     const resultShader = buildFourResultShader(resultCode);
     const memModelTester = new MemoryModelTester(
       t,

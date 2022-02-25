@@ -615,9 +615,8 @@ const twoBehaviorTestResultStructure = `
   };
 `;
 
-/** Bindings used in the test shader phase of a test. */
-const testShaderBindings = `
-  @group(0) @binding(0) var<storage, read_write> test_locations : AtomicMemory;
+/** Common bindings used in the test shader phase of a test. */
+const commonTestShaderBindings = `
   @group(0) @binding(1) var<storage, read_write> results : ReadResults;
   @group(0) @binding(2) var<storage, read> shuffled_workgroups : Memory;
   @group(0) @binding(3) var<storage, read_write> barrier : AtomicMemory;
@@ -625,6 +624,22 @@ const testShaderBindings = `
   @group(0) @binding(5) var<storage, read_write> scratch_locations : Memory;
   @group(0) @binding(6) var<uniform> stress_params : StressParamsMemory;
 `;
+
+/** A binding for atomic memory used to write to/read from during the test shader phase of a test. */
+const atomicTestLocations = `
+  @group(0) @binding(0) var<storage, read_write> test_locations : AtomicMemory;
+`;
+
+/** The combined bindings for a test on atomic memory. */
+const atomicTestShaderBindings = [atomicTestLocations, commonTestShaderBindings].join("\n");
+
+/** A binding for non-atomic memory used to write to/read from during the test shader phase of a test. */
+const nonAtomicTestLocations = `
+  @group(0) @binding(0) var<storage, read_write> test_locations : Memory;
+`;
+
+/** The combined bindings for a test on non-atomic memory. */
+const nonAtomicTestShaderBindings = [nonAtomicTestLocations, commonTestShaderBindings].join("\n");
 
 /** Bindings used in the result aggregation phase of the test. */
 const resultShaderBindings = `
@@ -769,35 +784,48 @@ const resultShaderCommonFooter = `
 }
 `;
 
-/** The common shader code for test shaders that perform inter-workgroup litmus tests. */
-const interWorkgroupTestShaderCommonCode = [
+/** The common shader code for test shaders that perform atomic storage class memory litmus tests. */
+const storageMemoryAtomicTestShaderCommonCode = [
   shaderMemStructures,
-  testShaderBindings,
+  atomicTestShaderBindings,
   memoryLocationFunctions,
   testShaderFunctions,
   shaderEntryPoint,
   testShaderCommonHeader,
 ].join('\n');
-/** The common shader code for test shaders that perform atomic intra-workgroup litmus tests. */
-const intraWorkgroupAtomicTestShaderCommonCode = [
+
+/** The common shader code for test shaders that perform non-atomic storage class memory litmus tests. */
+const storageMemoryNonAtomicTestShaderCommonCode = [
   shaderMemStructures,
-  testShaderBindings,
+  nonAtomicTestShaderBindings,
+  memoryLocationFunctions,
+  testShaderFunctions,
+  shaderEntryPoint,
+  testShaderCommonHeader,
+].join('\n');
+
+/** The common shader code for test shaders that perform atomic workgroup class memory litmus tests. */
+const workgroupMemoryAtomicTestShaderCommonCode = [
+  shaderMemStructures,
+  atomicTestShaderBindings,
   atomicWorkgroupMemory,
   memoryLocationFunctions,
   testShaderFunctions,
   shaderEntryPoint,
   testShaderCommonHeader,
 ].join('\n');
-/** The common shader code for test shaders that perform non-atomic intra-workgroup litmus tests. */
-const intraWorkgroupNonAtomicTestShaderCommonCode = [
+
+/** The common shader code for test shaders that perform non-atomic workgroup class memory litmus tests. */
+const workgroupMemoryNonAtomicTestShaderCommonCode = [
   shaderMemStructures,
-  testShaderBindings,
+  nonAtomicTestShaderBindings,
   nonAtomicWorkgroupMemory,
   memoryLocationFunctions,
   testShaderFunctions,
   shaderEntryPoint,
   testShaderCommonHeader,
 ].join('\n');
+
 /** The common shader code for all result shaders. */
 const resultShaderCommonCode = [
   shaderMemStructures,
@@ -807,20 +835,29 @@ const resultShaderCommonCode = [
 ].join('\n');
 
 /** Given test code for an inter-workgroup test, returns a combined shader. */
-export function buildInterWorkgroupTestShader(testCode: string): string {
-  return [interWorkgroupTestShaderCommonCode, testCode, testShaderCommonFooter].join('\n');
-}
-
-/** Given test code for an intra-workgroup test, returns a combined shader. */
-export function buildIntraWorkgroupTestShader(
+export function buildStorageClassMemoryTestShader(
   testCode: string,
   atomicMemory: boolean = true
 ): string {
   let commonCode;
   if (atomicMemory) {
-    commonCode = intraWorkgroupAtomicTestShaderCommonCode;
+    commonCode = storageMemoryAtomicTestShaderCommonCode;
   } else {
-    commonCode = intraWorkgroupNonAtomicTestShaderCommonCode;
+    commonCode = storageMemoryNonAtomicTestShaderCommonCode;
+  }
+  return [commonCode, testCode, testShaderCommonFooter].join('\n');
+}
+
+/** Given test code for an intra-workgroup test, returns a combined shader. */
+export function buildWorkgroupClassMemoryTestShader(
+  testCode: string,
+  atomicMemory: boolean = true
+): string {
+  let commonCode;
+  if (atomicMemory) {
+    commonCode = workgroupMemoryAtomicTestShaderCommonCode;
+  } else {
+    commonCode = workgroupMemoryNonAtomicTestShaderCommonCode;
   }
   return [commonCode, testCode, testShaderCommonFooter].join('\n');
 }

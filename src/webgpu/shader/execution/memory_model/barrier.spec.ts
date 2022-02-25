@@ -7,7 +7,7 @@ import { GPUTest } from '../../../gpu_test.js';
 import {
   MemoryModelTestParams,
   MemoryModelTester,
-  buildIntraWorkgroupTestShader,
+  buildWorkgroupClassMemoryTestShader,
   buildTwoResultShader,
 } from './memory_model_setup.js';
 
@@ -77,7 +77,7 @@ g.test('workgroup_barrier_store_load')
         atomicAdd(&test_results.weak, 1u);
       }
     `;
-    const testShader = buildIntraWorkgroupTestShader(testCode, false);
+    const testShader = buildWorkgroupClassMemoryTestShader(testCode, false);
     const resultShader = buildTwoResultShader(resultCode);
     const memModelTester = new MemoryModelTester(
       t,
