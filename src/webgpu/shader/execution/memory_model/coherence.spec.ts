@@ -46,6 +46,22 @@ const memoryModelTestParams: MemoryModelTestParams = {
   numBehaviors: 4,
 };
 
+const storageMemoryCorrTestCode = `
+  atomicStore(&test_locations.value[x_0], 1u);
+  let r0 = atomicLoad(&test_locations.value[x_1]);
+  let r1 = atomicLoad(&test_locations.value[y_1]);
+  atomicStore(&results.value[id_1].r0, r0);
+  atomicStore(&results.value[id_1].r1, r1);
+`;
+
+const workgroupMemoryCorrTestCode = `
+  atomicStore(&wg_test_locations[x_0], 1u);
+  let r0 = atomicLoad(&wg_test_locations[x_1]);
+  let r1 = atomicLoad(&wg_test_locations[y_1]);
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r0, r0);
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r1, r1);
+`;
+
 g.test('corr')
   .desc(
     `Ensures two reads on one thread cannot observe an inconsistent view of a write on a second thread.
@@ -53,15 +69,24 @@ g.test('corr')
      If the first read returns 1 but the second read returns 0, then there has been a coherence violation.
     `
   )
+  .paramsSimple([
+    {
+      memType: MemoryType.AtomicStorageClass,
+      testType: TestType.InterWorkgroup,
+      _testCode: storageMemoryCorrTestCode,
+    },
+    {
+      memType: MemoryType.AtomicStorageClass,
+      testType: TestType.IntraWorkgroup,
+      _testCode: storageMemoryCorrTestCode,
+    },
+    {
+      memType: MemoryType.AtomicWorkgroupClass,
+      testType: TestType.IntraWorkgroup,
+      _testCode: workgroupMemoryCorrTestCode,
+    },
+  ])
   .fn(async t => {
-    const testCode = `
-      atomicStore(&test_locations.value[x_0], 1u);
-      let r0 = atomicLoad(&test_locations.value[x_1]);
-      let r1 = atomicLoad(&test_locations.value[y_1]);
-      workgroupBarrier();
-      atomicStore(&results.value[id_1].r0, r0);
-      atomicStore(&results.value[id_1].r1, r1);
-    `;
     const resultCode = `
       if ((r0 == 0u && r1 == 0u)) {
         atomicAdd(&test_results.seq0, 1u);
@@ -74,11 +99,7 @@ g.test('corr')
       }
     `;
 
-    const testShader = buildTestShader(
-      testCode,
-      MemoryType.AtomicStorageClass,
-      TestType.InterWorkgroup
-    );
+    const testShader = buildTestShader(t.params._testCode, t.params.memType, t.params.testType);
     const resultShader = buildResultShader(
       resultCode,
       TestType.InterWorkgroup,

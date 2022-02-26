@@ -44,6 +44,20 @@ const memoryModelTestParams: MemoryModelTestParams = {
   numBehaviors: 2,
 };
 
+const storageMemoryBarrierStoreLoadTestCode = `
+  test_locations.value[x_0] = 1u;
+  workgroupBarrier();
+  let r0 = test_locations.value[x_1];
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r0, r0);
+`;
+
+const workgroupMemoryBarrierStoreLoadTestCode = `
+  wg_test_locations[x_0] = 1u;
+  workgroupBarrier();
+  let r0 = wg_test_locations[x_1];
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r0, r0);
+`;
+
 g.test('workgroup_barrier_store_load')
   .desc(
     `Checks whether the workgroup barrier properly synchronizes a non-atomic write and read on
@@ -51,15 +65,14 @@ g.test('workgroup_barrier_store_load')
     after the barrier to read a write from an invocation before the barrier.
     `
   )
+  .paramsSimple([
+    { memType: MemoryType.NonAtomicStorageClass, _testCode: storageMemoryBarrierStoreLoadTestCode },
+    {
+      memType: MemoryType.NonAtomicWorkgroupClass,
+      _testCode: workgroupMemoryBarrierStoreLoadTestCode,
+    },
+  ])
   .fn(async t => {
-    const testCode = `
-      wg_test_locations[x_0] = 1u;
-      workgroupBarrier();
-      let r0 = wg_test_locations[x_1];
-      workgroupBarrier();
-      atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r0, r0);
-    `;
-
     const resultCode = `
       if (r0 == 1u) {
         atomicAdd(&test_results.seq, 1u);
@@ -68,8 +81,8 @@ g.test('workgroup_barrier_store_load')
       }
     `;
     const testShader = buildTestShader(
-      testCode,
-      MemoryType.NonAtomicWorkgroupClass,
+      t.params._testCode,
+      t.params.memType,
       TestType.IntraWorkgroup
     );
     const resultShader = buildResultShader(

@@ -46,21 +46,27 @@ const memoryModelTestParams: MemoryModelTestParams = {
   numBehaviors: 4,
 };
 
-const messagePassingResultShader = buildResultShader(
-  `
-  if ((r0 == 0u && r1 == 0u)) {
-    atomicAdd(&test_results.seq0, 1u);
-  } else if ((r0 == 1u && r1 == 1u)) {
-    atomicAdd(&test_results.seq1, 1u);
-  } else if ((r0 == 0u && r1 == 1u)) {
-    atomicAdd(&test_results.interleaved, 1u);
-  } else if ((r0 == 1u && r1 == 0u)) {
-    atomicAdd(&test_results.weak, 1u);
-  }
-`,
-  TestType.IntraWorkgroup,
-  ResultType.FourBehavior
-);
+const workgroupMemoryMessagePassingTestCode = `
+  atomicStore(&wg_test_locations[x_0], 1u);
+  workgroupBarrier();
+  atomicStore(&wg_test_locations[y_0], 1u);
+  let r0 = atomicLoad(&wg_test_locations[y_1]);
+  workgroupBarrier();
+  let r1 = atomicLoad(&wg_test_locations[x_1]);
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r0, r0);
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r1, r1);
+`;
+
+const storageMemoryMessagePassingTestCode = `
+  atomicStore(&test_locations.value[x_0], 1u);
+  storageBarrier();
+  atomicStore(&test_locations.value[y_0], 1u);
+  let r0 = atomicLoad(&test_locations.value[y_1]);
+  storageBarrier();
+  let r1 = atomicLoad(&test_locations.value[x_1]);
+  atomicStore(&results.value[shuffled_workgroup * u32(workgroupXSize) + id_1].r0, r0);
+  atomicStore(&results.value[shuffled_workgroup * u32(workgroupXSize) + id_1].r1, r1);
+`;
 
 g.test('message_passing_workgroup_memory')
   .desc(
@@ -68,57 +74,34 @@ g.test('message_passing_workgroup_memory')
     that is inconsistent with sequential consistency. In the message passing litmus test, one
     thread writes the value 1 to some location x and then 1 to some location y. The second thread
     reads y and then x. If the second thread reads y == 1 and x == 0, then sequential consistency
-    has not been respected. The acquire/release semantics of WebGPU's workgroupBarrier() should disallow
+    has not been respected. The acquire/release semantics of WebGPU's barrier functions should disallow
     this behavior within a workgroup.
     `
   )
+  .paramsSimple([
+    { memType: MemoryType.AtomicWorkgroupClass, _testCode: workgroupMemoryMessagePassingTestCode },
+    { memType: MemoryType.AtomicStorageClass, _testCode: storageMemoryMessagePassingTestCode },
+  ])
   .fn(async t => {
-    const testCode = `
-      atomicStore(&wg_test_locations[x_0], 1u);
-      workgroupBarrier();
-      atomicStore(&wg_test_locations[y_0], 1u);
-      let r0 = atomicLoad(&wg_test_locations[y_1]);
-      workgroupBarrier();
-      let r1 = atomicLoad(&wg_test_locations[x_1]);
-      atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r0, r0);
-      atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r1, r1);
-    `;
-
     const testShader = buildTestShader(
-      testCode,
-      MemoryType.AtomicWorkgroupClass,
+      t.params._testCode,
+      t.params.memType,
       TestType.IntraWorkgroup
     );
-    const memModelTester = new MemoryModelTester(
-      t,
-      memoryModelTestParams,
-      testShader,
-      messagePassingResultShader
-    );
-    await memModelTester.run(20, 3);
-  });
-
-g.test('message_passing_storage_memory')
-  .desc(
-    `Performs the message passing litmus test using storage class memory.
-    `
-  )
-  .fn(async t => {
-    const testCode = `
-      atomicStore(&test_locations.value[x_0], 1u);
-      storageBarrier();
-      atomicStore(&test_locations.value[y_0], 1u);
-      let r0 = atomicLoad(&test_locations.value[y_1]);
-      storageBarrier();
-      let r1 = atomicLoad(&test_locations.value[x_1]);
-      atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r0, r0);
-      atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r1, r1);
-    `;
-
-    const testShader = buildTestShader(
-      testCode,
-      MemoryType.AtomicStorageClass,
-      TestType.IntraWorkgroup
+    const messagePassingResultShader = buildResultShader(
+      `
+      if ((r0 == 0u && r1 == 0u)) {
+        atomicAdd(&test_results.seq0, 1u);
+      } else if ((r0 == 1u && r1 == 1u)) {
+        atomicAdd(&test_results.seq1, 1u);
+      } else if ((r0 == 0u && r1 == 1u)) {
+        atomicAdd(&test_results.interleaved, 1u);
+      } else if ((r0 == 1u && r1 == 0u)) {
+        atomicAdd(&test_results.weak, 1u);
+      }
+      `,
+      TestType.IntraWorkgroup,
+      ResultType.FourBehavior
     );
     const memModelTester = new MemoryModelTester(
       t,

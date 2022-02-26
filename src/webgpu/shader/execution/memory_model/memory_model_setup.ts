@@ -922,10 +922,14 @@ const resultShaderCommonCode = [
  * its composite parts.
  */
 export enum MemoryType {
-  AtomicStorageClass,
-  NonAtomicStorageClass,
-  AtomicWorkgroupClass,
-  NonAtomicWorkgroupClass,
+  /** Atomic memory in the storage address space. */
+  AtomicStorageClass = 'atomic_storage',
+  /** Non-atomic memory in the storage address space. */
+  NonAtomicStorageClass = 'non_atomic_storage',
+  /** Atomic memory in the workgroup address space. */
+  AtomicWorkgroupClass = 'atomic_workgroup',
+  /** Non-atomic memory in the workgroup address space. */
+  NonAtomicWorkgroupClass = 'non_atomic_workgroup',
 }
 
 /**
@@ -933,8 +937,10 @@ export enum MemoryType {
  * code from its composite parts.
  */
 export enum TestType {
-  InterWorkgroup,
-  IntraWorkgroup,
+  /** A test consists of two invocations in different workgroups. */
+  InterWorkgroup = 'inter_workgroup',
+  /** A test consists of two invocations in the same workgroup. */
+  IntraWorkgroup = 'intra_workgroup',
 }
 
 /** Defines the number of behaviors a test may have. */
