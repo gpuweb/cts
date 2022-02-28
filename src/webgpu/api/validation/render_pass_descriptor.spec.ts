@@ -6,10 +6,7 @@ TODO: review for completeness
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import {
-  kRenderableColorTextureFormats,
-  kTextureFormatInfo,
-} from '../../capability_info.js';
+import { kRenderableColorTextureFormats, kTextureFormatInfo } from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
 
