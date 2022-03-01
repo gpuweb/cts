@@ -37,7 +37,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
     };
 
     // Spec defines accuracy on [-π, π]
-    const cases = linearRange(f32(-Math.PI), f32(Math.PI), u32(1000)).map(x => truthFunc(x));
+    const cases = linearRange(-Math.PI, Math.PI, 1000).map(x => truthFunc(x));
 
     const cfg: Config = t.params;
     cfg.cmpFloats = absThreshold(2 ** -11);

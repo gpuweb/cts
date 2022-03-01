@@ -37,17 +37,17 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
 
     let numeric_range: Array<number> = [];
     // //  -2^32 < x <= -1, biased towards -1
-    numeric_range = numeric_range.concat(biasedRange(f32(-1), f32(-(2 ** 32)), u32(50)));
+    numeric_range = numeric_range.concat(biasedRange(-1, -(2 ** 32), 50));
     // -1 <= x < 0, linearly spread
     numeric_range = numeric_range.concat(
-      linearRange(f32(-1), f32Bits(kBit.f32.negative.max), u32(20))
+      linearRange(-1, f32Bits(kBit.f32.negative.max).value as number, 20)
     );
     // 0 < x < -1, linearly spread
     numeric_range = numeric_range.concat(
-      linearRange(f32Bits(kBit.f32.positive.min), f32(1), u32(20))
+      linearRange(f32Bits(kBit.f32.positive.min).value as number, 1, 20)
     );
     // // 1 <= x < 2^32, biased towards 1
-    numeric_range = numeric_range.concat(biasedRange(f32(1), f32(2 ** 32), u32(50)));
+    numeric_range = numeric_range.concat(biasedRange(1, 2 ** 32, 50));
 
     let cases: Array<Case> = [];
     cases = cases.concat(numeric_range.map(x => truthFunc(0, x)));

@@ -42,10 +42,10 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
     // 0 < x <= 1 linearly spread
     cases = cases.concat(
-      linearRange(f32Bits(kBit.f32.positive.min), f32(1), u32(100)).map(x => truthFunc(x))
+      linearRange(f32Bits(kBit.f32.positive.min).value as number, 1, 100).map(x => truthFunc(x))
     );
     // 1 <= x < 2^32, biased towards 1
-    cases = cases.concat(biasedRange(f32(1), f32(2 ** 32), u32(1000)).map(x => truthFunc(x)));
+    cases = cases.concat(biasedRange(1, 2 ** 32, 1000).map(x => truthFunc(x)));
 
     const cfg: Config = t.params;
     cfg.cmpFloats = ulpThreshold(2);

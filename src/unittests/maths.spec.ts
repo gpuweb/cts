@@ -1040,60 +1040,54 @@ g.test('test,math,lerp')
   });
 
 interface rangeCase {
-  a: Scalar;
-  b: Scalar;
-  num_steps: Scalar;
+  a: number;
+  b: number;
+  num_steps: number;
   result: Array<number>;
 }
 
 g.test('test,math,linearRange')
   .paramsSimple<rangeCase>([
     // prettier-ignore
-    { a: f32(0.0), b: f32(Number.POSITIVE_INFINITY), num_steps: u32(10), result: new Array<number>(10).fill(Number.NaN) },
+    { a: 0.0, b: Number.POSITIVE_INFINITY, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
     // prettier-ignore
-    { a: f32(Number.POSITIVE_INFINITY), b: f32(0.0), num_steps: u32(10), result: new Array<number>(10).fill(Number.NaN) },
+    { a: Number.POSITIVE_INFINITY, b: 0.0, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
     // prettier-ignore
-    { a: f32(Number.NEGATIVE_INFINITY), b: f32(1.0), num_steps: u32(10), result: new Array<number>(10).fill(Number.NaN) },
+    { a: Number.NEGATIVE_INFINITY, b: 1.0, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
     // prettier-ignore
-    { a: f32(1.0), b: f32(Number.NEGATIVE_INFINITY), num_steps: u32(10), result: new Array<number>(10).fill(Number.NaN) },
+    { a: 1.0, b: Number.NEGATIVE_INFINITY, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
     // prettier-ignore
-    { a: f32(Number.NEGATIVE_INFINITY), b: f32(Number.POSITIVE_INFINITY), num_steps: u32(10), result: new Array<number>(10).fill(Number.NaN) },
+    { a: Number.NEGATIVE_INFINITY, b: Number.POSITIVE_INFINITY, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
     // prettier-ignore
-    { a: f32(Number.POSITIVE_INFINITY), b: f32(Number.NEGATIVE_INFINITY), num_steps: u32(10), result: new Array<number>(10).fill(Number.NaN) },
+    { a: Number.POSITIVE_INFINITY, b: Number.NEGATIVE_INFINITY, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
+    { a: 0.0, b: 0.0, num_steps: 10, result: new Array<number>(10).fill(0.0) },
+    { a: 10.0, b: 10.0, num_steps: 10, result: new Array<number>(10).fill(10.0) },
+    { a: 0.0, b: 10.0, num_steps: 1, result: [0.0] },
+    { a: 10.0, b: 0.0, num_steps: 1, result: [10] },
     // prettier-ignore
-    { a: f32(0.0), b: f32(0.0), num_steps: u32(10), result: new Array<number>(10).fill(0.0) },
+    { a: 0.0, b: 10.0, num_steps: 11, result: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0] },
     // prettier-ignore
-    { a: f32(10.0), b: f32(10.0), num_steps: u32(10), result: new Array<number>(10).fill(10.0) },
-    { a: f32(0.0), b: f32(10.0), num_steps: u32(1), result: [0.0] },
-    { a: f32(10.0), b: f32(0.0), num_steps: u32(1), result: [10] },
+    { a: 10.0, b: 0.0, num_steps: 11, result: [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0] },
     // prettier-ignore
-    { a: f32(0.0), b: f32(10.0), num_steps: u32(11), result: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0] },
+    { a: 0.0, b: 1000.0, num_steps: 11, result: [0.0, 100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 800.0, 900.0, 1000.0] },
     // prettier-ignore
-    { a: f32(10.0), b: f32(0.0), num_steps: u32(11), result: [10.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0] },
+    { a: 1000.0, b: 0.0, num_steps: 11, result: [1000.0, 900.0, 800.0, 700.0, 600.0, 500.0, 400.0, 300.0, 200.0, 100.0, 0.0] },
+    { a: 1.0, b: 5.0, num_steps: 5, result: [1.0, 2.0, 3.0, 4.0, 5.0] },
+    { a: 5.0, b: 1.0, num_steps: 5, result: [5.0, 4.0, 3.0, 2.0, 1.0] },
     // prettier-ignore
-    { a: f32(0.0), b: f32(1000.0), num_steps: u32(11), result: [0.0, 100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 800.0, 900.0, 1000.0] },
+    { a: 0.0, b: 1.0, num_steps: 11, result: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] },
     // prettier-ignore
-    { a: f32(1000.0), b: f32(0.0), num_steps: u32(11), result: [1000.0, 900.0, 800.0, 700.0, 600.0, 500.0, 400.0, 300.0, 200.0, 100.0, 0.0] },
+    { a: 1.0, b: 0.0, num_steps: 11, result: [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0] },
+    { a: 0.0, b: 1.0, num_steps: 5, result: [0.0, 0.25, 0.5, 0.75, 1.0] },
+    { a: 1.0, b: 0.0, num_steps: 5, result: [1.0, 0.75, 0.5, 0.25, 0.0] },
     // prettier-ignore
-    { a: f32(1.0), b: f32(5.0), num_steps: u32(5), result: [1.0, 2.0, 3.0, 4.0, 5.0] },
+    { a: -1.0, b: 1.0, num_steps: 11, result: [-1.0, -0.8, -0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0] },
     // prettier-ignore
-    { a: f32(5.0), b: f32(1.0), num_steps: u32(5), result: [5.0, 4.0, 3.0, 2.0, 1.0] },
+    { a: 1.0, b: -1.0, num_steps: 11, result: [1.0, 0.8, 0.6, 0.4, 0.2, 0.0, -0.2, -0.4, -0.6, -0.8, -1.0] },
     // prettier-ignore
-    { a: f32(0.0), b: f32(1.0), num_steps: u32(11), result: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] },
+    { a: -1.0, b: 0, num_steps: 11, result: [-1.0, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0.0] },
     // prettier-ignore
-    { a: f32(1.0), b: f32(0.0), num_steps: u32(11), result: [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0] },
-    // prettier-ignore
-    { a: f32(0.0), b: f32(1.0), num_steps: u32(5), result: [0.0, 0.25, 0.5, 0.75, 1.0] },
-    // prettier-ignore
-    { a: f32(1.0), b: f32(0.0), num_steps: u32(5), result: [1.0, 0.75, 0.5, 0.25, 0.0] },
-    // prettier-ignore
-    { a: f32(-1.0), b: f32(1.0), num_steps: u32(11), result: [-1.0, -0.8, -0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0] },
-    // prettier-ignore
-    { a: f32(1.0), b: f32(-1.0), num_steps: u32(11), result: [1.0, 0.8, 0.6, 0.4, 0.2, 0.0, -0.2, -0.4, -0.6, -0.8, -1.0] },
-    // prettier-ignore
-    { a: f32(-1.0), b: f32(0), num_steps: u32(11), result: [-1.0, -0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0.0] },
-    // prettier-ignore
-    { a: f32(0.0), b: f32(-1.0), num_steps: u32(11), result: [0.0, -0.1, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8, -0.9, -1.0] },
+    { a: 0.0, b: -1.0, num_steps: 11, result: [0.0, -0.1, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8, -0.9, -1.0] },
   ])
   .fn(test => {
     const a = test.params.a;
@@ -1111,50 +1105,45 @@ g.test('test,math,linearRange')
 g.test('test,math,biasedRange')
   .paramsSimple<rangeCase>([
     // prettier-ignore
-    { a: f32(0.0), b: f32(Number.POSITIVE_INFINITY), num_steps: u32(10), result: new Array<number>(10).fill(Number.NaN) },
+    { a: 0.0, b: Number.POSITIVE_INFINITY, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
     // prettier-ignore
-    { a: f32(Number.POSITIVE_INFINITY), b: f32(0.0), num_steps: u32(10), result: new Array<number>(10).fill(Number.NaN) },
+    { a: Number.POSITIVE_INFINITY, b: 0.0, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
     // prettier-ignore
-    { a: f32(Number.NEGATIVE_INFINITY), b: f32(1.0), num_steps: u32(10), result: new Array<number>(10).fill(Number.NaN) },
+    { a: Number.NEGATIVE_INFINITY, b: 1.0, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
     // prettier-ignore
-    { a: f32(1.0), b: f32(Number.NEGATIVE_INFINITY), num_steps: u32(10), result: new Array<number>(10).fill(Number.NaN) },
+    { a: 1.0, b: Number.NEGATIVE_INFINITY, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
     // prettier-ignore
-    { a: f32(Number.NEGATIVE_INFINITY), b: f32(Number.POSITIVE_INFINITY), num_steps: u32(10), result: new Array<number>(10).fill(Number.NaN) },
+    { a: Number.NEGATIVE_INFINITY, b: Number.POSITIVE_INFINITY, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
     // prettier-ignore
-    { a: f32(Number.POSITIVE_INFINITY), b: f32(Number.NEGATIVE_INFINITY), num_steps: u32(10), result: new Array<number>(10).fill(Number.NaN) },
+    { a: Number.POSITIVE_INFINITY, b: Number.NEGATIVE_INFINITY, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
+    { a: 0.0, b: 0.0, num_steps: 10, result: new Array<number>(10).fill(0.0) },
+    { a: 10.0, b: 10.0, num_steps: 10, result: new Array<number>(10).fill(10.0) },
+    { a: 0.0, b: 10.0, num_steps: 1, result: [0.0] },
+    { a: 10.0, b: 0.0, num_steps: 1, result: [10.0] },
     // prettier-ignore
-    { a: f32(0.0), b: f32(0.0), num_steps: u32(10), result: new Array<number>(10).fill(0.0) },
-    { a: f32(10.0), b: f32(10.0), num_steps: u32(10), result: new Array<number>(10).fill(10.0) },
-    { a: f32(0.0), b: f32(10.0), num_steps: u32(1), result: [0.0] },
-    { a: f32(10.0), b: f32(0.0), num_steps: u32(1), result: [10.0] },
+    { a: 0.0, b: 10.0, num_steps: 11, result: [0.0, 0.1, 0.4, 0.9, 1.6, 2.5, 3.6, 4.9, 6.4, 8.1, 10.0] },
     // prettier-ignore
-    { a: f32(0.0), b: f32(10.0), num_steps: u32(11), result: [0.0, 0.1, 0.4, 0.9, 1.6, 2.5, 3.6, 4.9, 6.4, 8.1, 10.0] },
+    { a: 10.0, b: 0.0, num_steps: 11, result: [10.0, 9.9, 9.6, 9.1, 8.4, 7.5, 6.4, 5.1, 3.6, 1.9, 0.0] },
     // prettier-ignore
-    { a: f32(10.0), b: f32(0.0), num_steps: u32(11), result: [10.0, 9.9, 9.6, 9.1, 8.4, 7.5, 6.4, 5.1, 3.6, 1.9, 0.0] },
+    { a: 0.0, b: 1000.0, num_steps: 11, result: [0.0, 10.0, 40.0, 90.0, 160.0, 250.0, 360.0, 490.0, 640.0, 810.0, 1000.0] },
     // prettier-ignore
-    { a: f32(0.0), b: f32(1000.0), num_steps: u32(11), result: [0.0, 10.0, 40.0, 90.0, 160.0, 250.0, 360.0, 490.0, 640.0, 810.0, 1000.0] },
+    { a: 1000.0, b: 0.0, num_steps: 11, result: [1000.0, 990.0, 960.0, 910.0, 840.0, 750.0, 640.0, 510.0, 360.0, 190.0, 0.0] },
+    { a: 1.0, b: 5.0, num_steps: 5, result: [1.0, 1.25, 2.0, 3.25, 5.0] },
+    { a: 5.0, b: 1.0, num_steps: 5, result: [5.0, 4.75, 4.0, 2.75, 1.0] },
     // prettier-ignore
-    { a: f32(1000.0), b: f32(0.0), num_steps: u32(11), result: [1000.0, 990.0, 960.0, 910.0, 840.0, 750.0, 640.0, 510.0, 360.0, 190.0, 0.0] },
+    { a: 0.0, b: 1.0, num_steps: 11, result: [0.0, 0.01, 0.04, 0.09, 0.16, 0.25, 0.36, 0.49, 0.64, 0.81, 1.0] },
     // prettier-ignore
-    { a: f32(1.0), b: f32(5.0), num_steps: u32(5), result: [1.0, 1.25, 2.0, 3.25, 5.0] },
+    { a: 1.0, b: 0.0, num_steps: 11, result: [1.0, 0.99, 0.96, 0.91, 0.84, 0.75, 0.64, 0.51, 0.36, 0.19, 0.0] },
+    { a: 0.0, b: 1.0, num_steps: 5, result: [0.0, 0.0625, 0.25, 0.5625, 1.0] },
+    { a: 1.0, b: 0.0, num_steps: 5, result: [1.0, 0.9375, 0.75, 0.4375, 0.0] },
     // prettier-ignore
-    { a: f32(5.0), b: f32(1.0), num_steps: u32(5), result: [5.0, 4.75, 4.0, 2.75, 1.0] },
+    { a: -1.0, b: 1.0, num_steps: 11, result: [-1.0, -0.98, -0.92, -0.82, -0.68, -0.5, -0.28 ,-0.02, 0.28, 0.62, 1.0] },
     // prettier-ignore
-    { a: f32(0.0), b: f32(1.0), num_steps: u32(11), result: [0.0, 0.01, 0.04, 0.09, 0.16, 0.25, 0.36, 0.49, 0.64, 0.81, 1.0] },
+    { a: 1.0, b: -1.0, num_steps: 11, result: [1.0, 0.98, 0.92, 0.82, 0.68, 0.5, 0.28 ,0.02, -0.28, -0.62, -1.0] },
     // prettier-ignore
-    { a: f32(1.0), b: f32(0.0), num_steps: u32(11), result: [1.0, 0.99, 0.96, 0.91, 0.84, 0.75, 0.64, 0.51, 0.36, 0.19, 0.0] },
+    { a: -1.0, b: 0, num_steps: 11, result: [-1.0 , -0.99, -0.96, -0.91, -0.84, -0.75, -0.64, -0.51, -0.36, -0.19, 0.0] },
     // prettier-ignore
-    { a: f32(0.0), b: f32(1.0), num_steps: u32(5), result: [0.0, 0.0625, 0.25, 0.5625, 1.0] },
-    // prettier-ignore
-    { a: f32(1.0), b: f32(0.0), num_steps: u32(5), result: [1.0, 0.9375, 0.75, 0.4375, 0.0] },
-    // prettier-ignore
-    { a: f32(-1.0), b: f32(1.0), num_steps: u32(11), result: [-1.0, -0.98, -0.92, -0.82, -0.68, -0.5, -0.28 ,-0.02, 0.28, 0.62, 1.0] },
-    // prettier-ignore
-    { a: f32(1.0), b: f32(-1.0), num_steps: u32(11), result: [1.0, 0.98, 0.92, 0.82, 0.68, 0.5, 0.28 ,0.02, -0.28, -0.62, -1.0] },
-    // prettier-ignore
-    { a: f32(-1.0), b: f32(0), num_steps: u32(11), result: [-1.0 , -0.99, -0.96, -0.91, -0.84, -0.75, -0.64, -0.51, -0.36, -0.19, 0.0] },
-    // prettier-ignore
-    { a: f32(0.0), b: f32(-1.0), num_steps: u32(11), result: [0.0, -0.01, -0.04, -0.09, -0.16, -0.25, -0.36, -0.49, -0.64, -0.81, -1.0] },
+    { a: 0.0, b: -1.0, num_steps: 11, result: [0.0, -0.01, -0.04, -0.09, -0.16, -0.25, -0.36, -0.49, -0.64, -0.81, -1.0] },
   ])
   .fn(test => {
     const a = test.params.a;
