@@ -9,8 +9,11 @@ import { GPUTest } from '../../../gpu_test.js';
 import {
 
 MemoryModelTester,
-buildInterWorkgroupTestShader,
-buildFourResultShader } from
+buildTestShader,
+MemoryType,
+TestType,
+buildResultShader,
+ResultType } from
 './memory_model_setup.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -43,6 +46,22 @@ const memoryModelTestParams = {
   numBehaviors: 4 };
 
 
+const storageMemoryCorrTestCode = `
+  atomicStore(&test_locations.value[x_0], 1u);
+  let r0 = atomicLoad(&test_locations.value[x_1]);
+  let r1 = atomicLoad(&test_locations.value[y_1]);
+  atomicStore(&results.value[id_1].r0, r0);
+  atomicStore(&results.value[id_1].r1, r1);
+`;
+
+const workgroupMemoryCorrTestCode = `
+  atomicStore(&wg_test_locations[x_0], 1u);
+  let r0 = atomicLoad(&wg_test_locations[x_1]);
+  let r1 = atomicLoad(&wg_test_locations[y_1]);
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r0, r0);
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r1, r1);
+`;
+
 g.test('corr').
 desc(
 `Ensures two reads on one thread cannot observe an inconsistent view of a write on a second thread.
@@ -50,32 +69,25 @@ desc(
      If the first read returns 1 but the second read returns 0, then there has been a coherence violation.
     `).
 
+paramsSimple([
+{
+  memType: MemoryType.AtomicStorageClass,
+  testType: TestType.InterWorkgroup,
+  _testCode: storageMemoryCorrTestCode },
+
+{
+  memType: MemoryType.AtomicStorageClass,
+  testType: TestType.IntraWorkgroup,
+  _testCode: storageMemoryCorrTestCode },
+
+{
+  memType: MemoryType.AtomicWorkgroupClass,
+  testType: TestType.IntraWorkgroup,
+  _testCode: workgroupMemoryCorrTestCode }]).
+
+
 fn(async t => {
-  const testCode = `
-        let total_ids = u32(workgroupXSize) * stress_params.testing_workgroups;
-        let id_0 = shuffled_workgroup * u32(workgroupXSize) + local_invocation_id[0];
-        let new_workgroup = stripe_workgroup(shuffled_workgroup, local_invocation_id[0]);
-        let id_1 = new_workgroup * u32(workgroupXSize) + permute_id(local_invocation_id[0], stress_params.permute_first, u32(workgroupXSize));
-        let x_0 = (id_0) * stress_params.mem_stride * 2u;
-        let x_1 = (id_1) * stress_params.mem_stride * 2u;
-        let y_1 = (permute_id(id_1, stress_params.permute_second, total_ids)) * stress_params.mem_stride * 2u + stress_params.location_offset;
-        if (stress_params.pre_stress == 1u) {
-          do_stress(stress_params.pre_stress_iterations, stress_params.pre_stress_pattern, shuffled_workgroup);
-        }
-        if (stress_params.do_barrier == 1u) {
-          spin(u32(workgroupXSize) * stress_params.testing_workgroups);
-        }
-        atomicStore(&test_locations.value[x_0], 1u);
-        let r0 = atomicLoad(&test_locations.value[x_1]);
-        let r1 = atomicLoad(&test_locations.value[y_1]);
-        workgroupBarrier();
-        atomicStore(&results.value[id_1].r0, r0);
-        atomicStore(&results.value[id_1].r1, r1);
-    `;
   const resultCode = `
-      let id_0 = workgroup_id[0] * u32(workgroupXSize) + local_invocation_id[0];
-      let r0 = atomicLoad(&read_results.value[id_0].r0);
-      let r1 = atomicLoad(&read_results.value[id_0].r1);
       if ((r0 == 0u && r1 == 0u)) {
         atomicAdd(&test_results.seq0, 1u);
       } else if ((r0 == 1u && r1 == 1u)) {
@@ -87,8 +99,12 @@ fn(async t => {
       }
     `;
 
-  const testShader = buildInterWorkgroupTestShader(testCode);
-  const resultShader = buildFourResultShader(resultCode);
+  const testShader = buildTestShader(t.params._testCode, t.params.memType, t.params.testType);
+  const resultShader = buildResultShader(
+  resultCode,
+  TestType.InterWorkgroup,
+  ResultType.FourBehavior);
+
   const memModelTester = new MemoryModelTester(
   t,
   memoryModelTestParams,

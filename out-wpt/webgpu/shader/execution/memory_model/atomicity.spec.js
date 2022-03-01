@@ -6,8 +6,11 @@ import { GPUTest } from '../../../gpu_test.js';
 
 import {
   MemoryModelTester,
-  buildInterWorkgroupTestShader,
-  buildFourResultShader,
+  buildTestShader,
+  TestType,
+  buildResultShader,
+  ResultType,
+  MemoryType,
 } from './memory_model_setup.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -40,6 +43,30 @@ const memoryModelTestParams = {
   numBehaviors: 4,
 };
 
+const storageMemoryTestCode = `
+  let r0 = atomicAdd(&test_locations.value[x_0], 0u);
+  atomicStore(&test_locations.value[x_1], 2u);
+  atomicStore(&results.value[id_0].r0, r0);
+`;
+
+const workgroupMemoryTestCode = `
+  let r0 = atomicAdd(&wg_test_locations[x_0], 0u);
+  atomicStore(&wg_test_locations[x_1], 2u);
+  workgroupBarrier();
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_0].r0, r0);
+  atomicStore(&test_locations.value[shuffled_workgroup * workgroupXSize * stress_params.mem_stride * 2u + x_1], atomicLoad(&wg_test_locations[x_1]));
+`;
+
+const resultCode = `
+  if ((r0 == 0u && mem_x_0 == 2u)) {
+    atomicAdd(&test_results.seq0, 1u);
+  } else if ((r0 == 2u && mem_x_0 == 1u)) {
+    atomicAdd(&test_results.seq1, 1u);
+  } else if ((r0 == 0u && mem_x_0 == 1u)) {
+    atomicAdd(&test_results.weak, 1u);
+  }
+`;
+
 g.test('atomicity')
   .desc(
     `Checks whether a store on one thread can interrupt an atomic RMW on a second thread. If the read returned by
@@ -47,41 +74,28 @@ g.test('atomicity')
     in the second thread occurred in between the read and the write of the RMW.
     `
   )
-  .fn(async t => {
-    const testCode = `
-        let total_ids = u32(workgroupXSize) * stress_params.testing_workgroups;
-        let id_0 = shuffled_workgroup * u32(workgroupXSize) + local_invocation_id[0];
-        let new_workgroup = stripe_workgroup(shuffled_workgroup, local_invocation_id[0]);
-        let id_1 = new_workgroup * u32(workgroupXSize) + permute_id(local_invocation_id[0], stress_params.permute_first, u32(workgroupXSize));
-        let x_0 = (id_0) * stress_params.mem_stride * 2u;
-        let x_1 = (id_1) * stress_params.mem_stride * 2u;
-        if (stress_params.pre_stress == 1u) {
-          do_stress(stress_params.pre_stress_iterations, stress_params.pre_stress_pattern, shuffled_workgroup);
-        }
-        if (stress_params.do_barrier == 1u) {
-          spin(u32(workgroupXSize) * stress_params.testing_workgroups);
-        }
-        let r0 = atomicAdd(&test_locations.value[x_0], 0u);
-        atomicStore(&test_locations.value[x_1], 2u);
-        workgroupBarrier();
-        atomicStore(&results.value[id_0].r0, r0);
-    `;
-    const resultCode = `
-      let id_0 = workgroup_id[0] * u32(workgroupXSize) + local_invocation_id[0];
-      let r0 = atomicLoad(&read_results.value[id_0].r0);
-      let x_0 = (id_0) * stress_params.mem_stride * 2u;
-      let mem_x_0 = atomicLoad(&test_locations.value[x_0]);
-      if ((r0 == 0u && mem_x_0 == 2u)) {
-        atomicAdd(&test_results.seq0, 1u);
-      } else if ((r0 == 2u && mem_x_0 == 1u)) {
-        atomicAdd(&test_results.seq1, 1u);
-      } else if ((r0 == 0u && mem_x_0 == 1u)) {
-        atomicAdd(&test_results.weak, 1u);
-      }
-    `;
+  .paramsSimple([
+    {
+      memType: MemoryType.AtomicStorageClass,
+      testType: TestType.InterWorkgroup,
+      _testCode: storageMemoryTestCode,
+    },
 
-    const testShader = buildInterWorkgroupTestShader(testCode);
-    const resultShader = buildFourResultShader(resultCode);
+    {
+      memType: MemoryType.AtomicStorageClass,
+      testType: TestType.IntraWorkgroup,
+      _testCode: storageMemoryTestCode,
+    },
+
+    {
+      memType: MemoryType.AtomicWorkgroupClass,
+      testType: TestType.IntraWorkgroup,
+      _testCode: workgroupMemoryTestCode,
+    },
+  ])
+  .fn(async t => {
+    const testShader = buildTestShader(t.params._testCode, t.params.memType, t.params.testType);
+    const resultShader = buildResultShader(resultCode, t.params.testType, ResultType.FourBehavior);
     const memModelTester = new MemoryModelTester(
       t,
       memoryModelTestParams,
