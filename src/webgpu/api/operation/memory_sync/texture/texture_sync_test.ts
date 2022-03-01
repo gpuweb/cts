@@ -175,8 +175,51 @@ export function checkOpsValidForContext(
   ops: [Op, Op],
   context: [OperationContext, OperationContext]
 ) {
-  return (
+  const valid =
     kOpInfo[ops[0]].contexts.indexOf(context[0]) !== -1 &&
-    kOpInfo[ops[1]].contexts.indexOf(context[1]) !== -1
-  );
+    kOpInfo[ops[1]].contexts.indexOf(context[1]) !== -1;
+  if (!valid) return false;
+
+  if (
+    context[0] === 'render-bundle-encoder' ||
+    context[0] === 'render-pass-encoder' ||
+    context[1] === 'render-bundle-encoder' ||
+    context[1] === 'render-pass-encoder'
+  ) {
+    // In a render pass, it is invalid to use a resource as both writable and another usage.
+    // Also, for storage+storage usage, the application is opting into racy behavior.
+    // The storage+storage case is also skipped as the results cannot be reliably tested.
+    const checkImpl = (op1: Op, op2: Op) => {
+      switch (op1) {
+        case 'attachment-resolve':
+        case 'attachment-store':
+        case 'storage':
+          switch (op2) {
+            case 'attachment-resolve':
+            case 'attachment-store':
+            case 'storage':
+            case 'sample':
+              // Write+other, or racy.
+              return false;
+            case 'b2t-copy':
+            case 't2b-copy':
+            case 't2t-copy':
+            case 'write-texture':
+              // These don't occur in a render pass.
+              return true;
+          }
+          break;
+        case 'b2t-copy':
+        case 'sample':
+        case 't2b-copy':
+        case 't2t-copy':
+        case 'write-texture':
+          // These are not write usages, or don't occur in a render pass.
+          break;
+      }
+      return true;
+    };
+    return checkImpl(ops[0], ops[1]) && checkImpl(ops[1], ops[0]);
+  }
+  return true;
 }
