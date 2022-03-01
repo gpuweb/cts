@@ -4,7 +4,7 @@ Util math unit tests.
 
 import { makeTestGroup } from '../common/framework/test_group.js';
 import { kBit } from '../webgpu/shader/execution/builtin/builtin.js';
-import { f32, f32Bits, Scalar, u32 } from '../webgpu/util/conversion.js';
+import { f32, f32Bits, Scalar } from '../webgpu/util/conversion.js';
 import {
   biasedRange,
   correctlyRounded,

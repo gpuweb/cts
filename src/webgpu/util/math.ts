@@ -266,19 +266,6 @@ export function lerp(a: number, b: number, t: number) {
   return t > 1.0 === b > a ? Math.max(b, x) : Math.min(b, x);
 }
 
-/** Unwrap Scalar params into numbers and check preconditions */
-function unwrapRangeParams(a: Scalar, b: Scalar, num_steps: Scalar) {
-  assert(a.type.kind === 'f32', '|a| needs to be a f32');
-  assert(b.type.kind === 'f32', '|b| needs to be a f32');
-  assert(num_steps.type.kind === 'u32', '|num_steps| needs to be a u32');
-
-  const f32_a = a.value as number;
-  const f32_b = b.value as number;
-  const u32_num_steps = num_steps.value as number;
-
-  return { f32_a, f32_b, u32_num_steps };
-}
-
 /** @returns a linear increasing range of numbers. */
 export function linearRange(a: number, b: number, num_steps: number): Array<number> {
   assert(num_steps > 0, '|num_steps| must be greater than 0');

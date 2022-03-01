@@ -4,7 +4,7 @@ Execution Tests for the 'atan' builtin function
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { f32, f32Bits, TypeF32, u32 } from '../../../util/conversion.js';
+import { f32, f32Bits, TypeF32 } from '../../../util/conversion.js';
 import { biasedRange, linearRange } from '../../../util/math.js';
 
 import { Case, Config, kBit, run, ulpThreshold } from './builtin.js';

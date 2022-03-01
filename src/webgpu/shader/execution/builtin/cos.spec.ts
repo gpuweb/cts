@@ -4,7 +4,7 @@ Execution Tests for the 'cos' builtin function
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { f32, TypeF32, u32 } from '../../../util/conversion.js';
+import { f32, TypeF32 } from '../../../util/conversion.js';
 import { linearRange } from '../../../util/math.js';
 
 import { absThreshold, Case, Config, run } from './builtin.js';
