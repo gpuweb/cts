@@ -581,7 +581,7 @@ g.test('check_depth_stencil_attachment_sample_counts_mismatch').fn(async t => {
   }
 });
 
-g.test('resolve_target_formats_must_support_resolve')
+g.test('multisample_render_target_formats_support_resolve')
   .params(u =>
     u
       .combine('format', kRenderableColorTextureFormats)
