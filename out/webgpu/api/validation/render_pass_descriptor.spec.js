@@ -6,6 +6,7 @@ render pass descriptor validation tests.
 TODO: per-test descriptions, make test names more succinct
 TODO: review for completeness
 `;import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { kRenderableColorTextureFormats, kTextureFormatInfo } from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -578,5 +579,24 @@ g.test('check_depth_stencil_attachment_sample_counts_mismatch').fn(async t => {
 
     t.tryRenderPass(true, descriptor);
   }
+});
+
+g.test('multisample_render_target_formats_support_resolve').
+params((u) =>
+u.
+combine('format', kRenderableColorTextureFormats).
+filter(t => kTextureFormatInfo[t.format].multisample)).
+
+fn(async t => {
+  const { format } = t.params;
+  const multisampledColorTexture = t.createTexture({ format, sampleCount: 4 });
+  const resolveTarget = t.createTexture({ format });
+
+  const colorAttachment = t.getColorAttachment(multisampledColorTexture);
+  colorAttachment.resolveTarget = resolveTarget.createView();
+
+  t.tryRenderPass(kTextureFormatInfo[format].resolve, {
+    colorAttachments: [colorAttachment] });
+
 });
 //# sourceMappingURL=render_pass_descriptor.spec.js.map

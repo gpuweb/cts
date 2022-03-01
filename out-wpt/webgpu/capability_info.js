@@ -62,6 +62,7 @@ const kRegularTextureFormatInfo = makeTable(
   [
     'renderable',
     'multisample',
+    'resolve',
     'color',
     'depth',
     'stencil',
@@ -75,56 +76,57 @@ const kRegularTextureFormatInfo = makeTable(
     'feature',
     'baseFormat',
   ],
-  [, , true, false, false, , true, true, , , 1, 1, , undefined],
+  [, , , true, false, false, , true, true, , , 1, 1, , undefined],
   {
     // 8-bit formats
-    r8unorm: [true, true, , , , false, , , 'float', 1],
-    r8snorm: [false, false, , , , false, , , 'float', 1],
-    r8uint: [true, true, , , , false, , , 'uint', 1],
-    r8sint: [true, true, , , , false, , , 'sint', 1],
+    r8unorm: [true, true, true, , , , false, , , 'float', 1],
+    r8snorm: [false, false, false, , , , false, , , 'float', 1],
+    r8uint: [true, true, false, , , , false, , , 'uint', 1],
+    r8sint: [true, true, false, , , , false, , , 'sint', 1],
     // 16-bit formats
-    r16uint: [true, true, , , , false, , , 'uint', 2],
-    r16sint: [true, true, , , , false, , , 'sint', 2],
-    r16float: [true, true, , , , false, , , 'float', 2],
-    rg8unorm: [true, true, , , , false, , , 'float', 2],
-    rg8snorm: [false, false, , , , false, , , 'float', 2],
-    rg8uint: [true, true, , , , false, , , 'uint', 2],
-    rg8sint: [true, true, , , , false, , , 'sint', 2],
+    r16uint: [true, true, false, , , , false, , , 'uint', 2],
+    r16sint: [true, true, false, , , , false, , , 'sint', 2],
+    r16float: [true, true, true, , , , false, , , 'float', 2],
+    rg8unorm: [true, true, true, , , , false, , , 'float', 2],
+    rg8snorm: [false, false, false, , , , false, , , 'float', 2],
+    rg8uint: [true, true, false, , , , false, , , 'uint', 2],
+    rg8sint: [true, true, false, , , , false, , , 'sint', 2],
     // 32-bit formats
-    r32uint: [true, false, , , , true, , , 'uint', 4],
-    r32sint: [true, false, , , , true, , , 'sint', 4],
-    r32float: [true, true, , , , true, , , 'unfilterable-float', 4],
-    rg16uint: [true, true, , , , false, , , 'uint', 4],
-    rg16sint: [true, true, , , , false, , , 'sint', 4],
-    rg16float: [true, true, , , , false, , , 'float', 4],
-    rgba8unorm: [true, true, , , , true, , , 'float', 4, , , , 'rgba8unorm'],
-    'rgba8unorm-srgb': [true, true, , , , false, , , 'float', 4, , , , 'rgba8unorm'],
-    rgba8snorm: [false, false, , , , true, , , 'float', 4],
-    rgba8uint: [true, true, , , , true, , , 'uint', 4],
-    rgba8sint: [true, true, , , , true, , , 'sint', 4],
-    bgra8unorm: [true, true, , , , false, , , 'float', 4, , , , 'bgra8unorm'],
-    'bgra8unorm-srgb': [true, true, , , , false, , , 'float', 4, , , , 'bgra8unorm'],
+    r32uint: [true, false, false, , , , true, , , 'uint', 4],
+    r32sint: [true, false, false, , , , true, , , 'sint', 4],
+    r32float: [true, true, false, , , , true, , , 'unfilterable-float', 4],
+    rg16uint: [true, true, false, , , , false, , , 'uint', 4],
+    rg16sint: [true, true, false, , , , false, , , 'sint', 4],
+    rg16float: [true, true, true, , , , false, , , 'float', 4],
+    rgba8unorm: [true, true, true, , , , true, , , 'float', 4, , , , 'rgba8unorm'],
+    'rgba8unorm-srgb': [true, true, true, , , , false, , , 'float', 4, , , , 'rgba8unorm'],
+    rgba8snorm: [false, false, false, , , , true, , , 'float', 4],
+    rgba8uint: [true, true, false, , , , true, , , 'uint', 4],
+    rgba8sint: [true, true, false, , , , true, , , 'sint', 4],
+    bgra8unorm: [true, true, true, , , , false, , , 'float', 4, , , , 'bgra8unorm'],
+    'bgra8unorm-srgb': [true, true, true, , , , false, , , 'float', 4, , , , 'bgra8unorm'],
     // Packed 32-bit formats
-    rgb10a2unorm: [true, true, , , , false, , , 'float', 4],
-    rg11b10ufloat: [false, false, , , , false, , , 'float', 4],
-    rgb9e5ufloat: [false, false, , , , false, , , 'float', 4],
+    rgb10a2unorm: [true, true, true, , , , false, , , 'float', 4],
+    rg11b10ufloat: [false, false, false, , , , false, , , 'float', 4],
+    rgb9e5ufloat: [false, false, false, , , , false, , , 'float', 4],
     // 64-bit formats
-    rg32uint: [true, false, , , , true, , , 'uint', 8],
-    rg32sint: [true, false, , , , true, , , 'sint', 8],
-    rg32float: [true, false, , , , true, , , 'unfilterable-float', 8],
-    rgba16uint: [true, true, , , , true, , , 'uint', 8],
-    rgba16sint: [true, true, , , , true, , , 'sint', 8],
-    rgba16float: [true, true, , , , true, , , 'float', 8],
+    rg32uint: [true, false, false, , , , true, , , 'uint', 8],
+    rg32sint: [true, false, false, , , , true, , , 'sint', 8],
+    rg32float: [true, false, false, , , , true, , , 'unfilterable-float', 8],
+    rgba16uint: [true, true, false, , , , true, , , 'uint', 8],
+    rgba16sint: [true, true, false, , , , true, , , 'sint', 8],
+    rgba16float: [true, true, true, , , , true, , , 'float', 8],
     // 128-bit formats
-    rgba32uint: [true, false, , , , true, , , 'uint', 16],
-    rgba32sint: [true, false, , , , true, , , 'sint', 16],
-    rgba32float: [true, false, , , , true, , , 'unfilterable-float', 16],
+    rgba32uint: [true, false, false, , , , true, , , 'uint', 16],
+    rgba32sint: [true, false, false, , , , true, , , 'sint', 16],
+    rgba32float: [true, false, false, , , , true, , , 'unfilterable-float', 16],
   }
 );
 
 const kTexFmtInfoHeader = [
   'renderable',
   'multisample',
+  'resolve',
   'color',
   'depth',
   'stencil',
@@ -140,34 +142,35 @@ const kTexFmtInfoHeader = [
 ];
 const kSizedDepthStencilFormatInfo = makeTable(
   kTexFmtInfoHeader,
-  [true, true, false, , , false, false, false, , , 1, 1, , undefined],
+  [true, true, false, false, , , false, false, false, , , 1, 1, , undefined],
   {
-    depth32float: [, , , true, false, , , , 'depth', 4],
-    depth16unorm: [, , , true, false, , , , 'depth', 2],
-    stencil8: [, , , false, true, , , , 'uint', 1],
+    depth32float: [, , , , true, false, , , , 'depth', 4],
+    depth16unorm: [, , , , true, false, , , , 'depth', 2],
+    stencil8: [, , , , false, true, , , , 'uint', 1],
   }
 );
 
 // Multi aspect sample type are now set to their first aspect
 const kUnsizedDepthStencilFormatInfo = makeTable(
   kTexFmtInfoHeader,
-  [true, true, false, , , false, false, false, , undefined, 1, 1, , undefined],
+  [true, true, false, false, , , false, false, false, , undefined, 1, 1, , undefined],
   {
-    depth24plus: [, , , true, false, , , , 'depth'],
-    'depth24plus-stencil8': [, , , true, true, , , , 'depth'],
+    depth24plus: [, , , , true, false, , , , 'depth'],
+    'depth24plus-stencil8': [, , , , true, true, , , , 'depth'],
     // MAINTENANCE_TODO: These should really be sized formats; see below MAINTENANCE_TODO about multi-aspect formats.
-    'depth24unorm-stencil8': [, , , true, true, , , , 'depth', , , , 'depth24unorm-stencil8'],
-    'depth32float-stencil8': [, , , true, true, , , , 'depth', , , , 'depth32float-stencil8'],
+    'depth24unorm-stencil8': [, , , , true, true, , , , 'depth', , , , 'depth24unorm-stencil8'],
+    'depth32float-stencil8': [, , , , true, true, , , , 'depth', , , , 'depth32float-stencil8'],
   }
 );
 
 // Separated compressed formats by type
 const kBCTextureFormatInfo = makeTable(
   kTexFmtInfoHeader,
-  [false, false, true, false, false, false, true, true, , , 4, 4, , undefined],
+  [false, false, false, true, false, false, false, true, true, , , 4, 4, , undefined],
   {
     // Block Compression (BC) formats
     'bc1-rgba-unorm': [
+      ,
       ,
       ,
       ,
@@ -192,6 +195,7 @@ const kBCTextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       8,
       4,
@@ -200,6 +204,7 @@ const kBCTextureFormatInfo = makeTable(
       'bc1-rgba-unorm',
     ],
     'bc2-rgba-unorm': [
+      ,
       ,
       ,
       ,
@@ -224,6 +229,7 @@ const kBCTextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       16,
       4,
@@ -232,6 +238,7 @@ const kBCTextureFormatInfo = makeTable(
       'bc2-rgba-unorm',
     ],
     'bc3-rgba-unorm': [
+      ,
       ,
       ,
       ,
@@ -256,6 +263,7 @@ const kBCTextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       16,
       4,
@@ -263,13 +271,14 @@ const kBCTextureFormatInfo = makeTable(
       'texture-compression-bc',
       'bc3-rgba-unorm',
     ],
-    'bc4-r-unorm': [, , , , , , , , 'float', 8, 4, 4, 'texture-compression-bc'],
-    'bc4-r-snorm': [, , , , , , , , 'float', 8, 4, 4, 'texture-compression-bc'],
-    'bc5-rg-unorm': [, , , , , , , , 'float', 16, 4, 4, 'texture-compression-bc'],
-    'bc5-rg-snorm': [, , , , , , , , 'float', 16, 4, 4, 'texture-compression-bc'],
-    'bc6h-rgb-ufloat': [, , , , , , , , 'float', 16, 4, 4, 'texture-compression-bc'],
-    'bc6h-rgb-float': [, , , , , , , , 'float', 16, 4, 4, 'texture-compression-bc'],
+    'bc4-r-unorm': [, , , , , , , , , 'float', 8, 4, 4, 'texture-compression-bc'],
+    'bc4-r-snorm': [, , , , , , , , , 'float', 8, 4, 4, 'texture-compression-bc'],
+    'bc5-rg-unorm': [, , , , , , , , , 'float', 16, 4, 4, 'texture-compression-bc'],
+    'bc5-rg-snorm': [, , , , , , , , , 'float', 16, 4, 4, 'texture-compression-bc'],
+    'bc6h-rgb-ufloat': [, , , , , , , , , 'float', 16, 4, 4, 'texture-compression-bc'],
+    'bc6h-rgb-float': [, , , , , , , , , 'float', 16, 4, 4, 'texture-compression-bc'],
     'bc7-rgba-unorm': [
+      ,
       ,
       ,
       ,
@@ -294,6 +303,7 @@ const kBCTextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       16,
       4,
@@ -306,10 +316,11 @@ const kBCTextureFormatInfo = makeTable(
 
 const kETC2TextureFormatInfo = makeTable(
   kTexFmtInfoHeader,
-  [false, false, true, false, false, false, true, true, , , 4, 4, , undefined],
+  [false, false, false, true, false, false, false, true, true, , , 4, 4, , undefined],
   {
     // Ericsson Compression (ETC2) formats
     'etc2-rgb8unorm': [
+      ,
       ,
       ,
       ,
@@ -334,6 +345,7 @@ const kETC2TextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       8,
       4,
@@ -342,6 +354,7 @@ const kETC2TextureFormatInfo = makeTable(
       'etc2-rgb8unorm',
     ],
     'etc2-rgb8a1unorm': [
+      ,
       ,
       ,
       ,
@@ -366,6 +379,7 @@ const kETC2TextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       8,
       4,
@@ -374,6 +388,7 @@ const kETC2TextureFormatInfo = makeTable(
       'etc2-rgb8a1unorm',
     ],
     'etc2-rgba8unorm': [
+      ,
       ,
       ,
       ,
@@ -398,6 +413,7 @@ const kETC2TextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       16,
       4,
@@ -405,19 +421,20 @@ const kETC2TextureFormatInfo = makeTable(
       'texture-compression-etc2',
       'etc2-rgba8unorm',
     ],
-    'eac-r11unorm': [, , , , , , , , 'float', 8, 4, 4, 'texture-compression-etc2'],
-    'eac-r11snorm': [, , , , , , , , 'float', 8, 4, 4, 'texture-compression-etc2'],
-    'eac-rg11unorm': [, , , , , , , , 'float', 16, 4, 4, 'texture-compression-etc2'],
-    'eac-rg11snorm': [, , , , , , , , 'float', 16, 4, 4, 'texture-compression-etc2'],
+    'eac-r11unorm': [, , , , , , , , , 'float', 8, 4, 4, 'texture-compression-etc2'],
+    'eac-r11snorm': [, , , , , , , , , 'float', 8, 4, 4, 'texture-compression-etc2'],
+    'eac-rg11unorm': [, , , , , , , , , 'float', 16, 4, 4, 'texture-compression-etc2'],
+    'eac-rg11snorm': [, , , , , , , , , 'float', 16, 4, 4, 'texture-compression-etc2'],
   }
 );
 
 const kASTCTextureFormatInfo = makeTable(
   kTexFmtInfoHeader,
-  [false, false, true, false, false, false, true, true, , , , , , undefined],
+  [false, false, false, true, false, false, false, true, true, , , , , , undefined],
   {
     // Adaptable Scalable Compression (ASTC) formats
     'astc-4x4-unorm': [
+      ,
       ,
       ,
       ,
@@ -442,6 +459,7 @@ const kASTCTextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       16,
       4,
@@ -450,6 +468,7 @@ const kASTCTextureFormatInfo = makeTable(
       'astc-4x4-unorm',
     ],
     'astc-5x4-unorm': [
+      ,
       ,
       ,
       ,
@@ -474,6 +493,7 @@ const kASTCTextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       16,
       5,
@@ -482,6 +502,7 @@ const kASTCTextureFormatInfo = makeTable(
       'astc-5x4-unorm',
     ],
     'astc-5x5-unorm': [
+      ,
       ,
       ,
       ,
@@ -506,6 +527,7 @@ const kASTCTextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       16,
       5,
@@ -514,6 +536,7 @@ const kASTCTextureFormatInfo = makeTable(
       'astc-5x5-unorm',
     ],
     'astc-6x5-unorm': [
+      ,
       ,
       ,
       ,
@@ -538,6 +561,7 @@ const kASTCTextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       16,
       6,
@@ -546,6 +570,7 @@ const kASTCTextureFormatInfo = makeTable(
       'astc-6x5-unorm',
     ],
     'astc-6x6-unorm': [
+      ,
       ,
       ,
       ,
@@ -570,6 +595,7 @@ const kASTCTextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       16,
       6,
@@ -578,6 +604,7 @@ const kASTCTextureFormatInfo = makeTable(
       'astc-6x6-unorm',
     ],
     'astc-8x5-unorm': [
+      ,
       ,
       ,
       ,
@@ -602,6 +629,7 @@ const kASTCTextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       16,
       8,
@@ -610,6 +638,7 @@ const kASTCTextureFormatInfo = makeTable(
       'astc-8x5-unorm',
     ],
     'astc-8x6-unorm': [
+      ,
       ,
       ,
       ,
@@ -634,6 +663,7 @@ const kASTCTextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       16,
       8,
@@ -642,6 +672,7 @@ const kASTCTextureFormatInfo = makeTable(
       'astc-8x6-unorm',
     ],
     'astc-8x8-unorm': [
+      ,
       ,
       ,
       ,
@@ -666,6 +697,7 @@ const kASTCTextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       16,
       8,
@@ -674,6 +706,7 @@ const kASTCTextureFormatInfo = makeTable(
       'astc-8x8-unorm',
     ],
     'astc-10x5-unorm': [
+      ,
       ,
       ,
       ,
@@ -698,6 +731,7 @@ const kASTCTextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       16,
       10,
@@ -706,6 +740,7 @@ const kASTCTextureFormatInfo = makeTable(
       'astc-10x5-unorm',
     ],
     'astc-10x6-unorm': [
+      ,
       ,
       ,
       ,
@@ -730,6 +765,7 @@ const kASTCTextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       16,
       10,
@@ -738,6 +774,7 @@ const kASTCTextureFormatInfo = makeTable(
       'astc-10x6-unorm',
     ],
     'astc-10x8-unorm': [
+      ,
       ,
       ,
       ,
@@ -762,6 +799,7 @@ const kASTCTextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       16,
       10,
@@ -770,6 +808,7 @@ const kASTCTextureFormatInfo = makeTable(
       'astc-10x8-unorm',
     ],
     'astc-10x10-unorm': [
+      ,
       ,
       ,
       ,
@@ -794,6 +833,7 @@ const kASTCTextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       16,
       10,
@@ -802,6 +842,7 @@ const kASTCTextureFormatInfo = makeTable(
       'astc-10x10-unorm',
     ],
     'astc-12x10-unorm': [
+      ,
       ,
       ,
       ,
@@ -826,6 +867,7 @@ const kASTCTextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       16,
       12,
@@ -842,6 +884,7 @@ const kASTCTextureFormatInfo = makeTable(
       ,
       ,
       ,
+      ,
       'float',
       16,
       12,
@@ -850,6 +893,7 @@ const kASTCTextureFormatInfo = makeTable(
       'astc-12x12-unorm',
     ],
     'astc-12x12-unorm-srgb': [
+      ,
       ,
       ,
       ,
