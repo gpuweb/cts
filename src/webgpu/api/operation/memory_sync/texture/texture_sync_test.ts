@@ -111,7 +111,7 @@ export const kAllWriteOps = [
 ] as const;
 export type WriteOp = typeof kAllWriteOps[number];
 
-export const kAllReadOps = ['t2b-copy', 't2t-copy', 'storage', 'sample'] as const;
+export const kAllReadOps = ['t2b-copy', 't2t-copy', 'sample'] as const;
 export type ReadOp = typeof kAllReadOps[number];
 
 export type Op = ReadOp | WriteOp;
@@ -151,7 +151,7 @@ export const kOpInfo: {
   },
   'storage': {
     contexts: [ 'compute-pass-encoder', 'render-pass-encoder', 'render-bundle-encoder' ],
-    readUsage: GPUConst.TextureUsage.STORAGE,
+    readUsage: 0,
     writeUsage: GPUConst.TextureUsage.STORAGE,
   },
   'sample': {
