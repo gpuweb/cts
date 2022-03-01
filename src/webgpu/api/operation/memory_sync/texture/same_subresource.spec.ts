@@ -416,7 +416,30 @@ class TextureSyncTestHelper {
         );
         break;
       }
-      case 'attachment-resolve':
+      case 'attachment-resolve': {
+        assert(this.commandEncoder !== undefined);
+        const renderTarget = this.t.trackForCleanup(
+          this.device.createTexture({
+            format: this.kTextureFormat,
+            size: this.kTextureSize,
+            usage: GPUTextureUsage.RENDER_ATTACHMENT,
+            sampleCount: 4,
+          })
+        );
+        this.renderPassEncoder = this.commandEncoder.beginRenderPass({
+          colorAttachments: [
+            {
+              view: renderTarget.createView(),
+              resolveTarget: this.texture.createView(),
+              // [2] Use non-solid-color texture values
+              loadValue: [data.R ?? 0, data.G ?? 0, data.B ?? 0, data.A ?? 0],
+              storeOp: 'discard',
+            },
+          ],
+        });
+        this.currentContext = 'render-pass-encoder';
+        break;
+      }
       case 'storage':
         // [1] Finish implementation
         throw new SkipTestCase('unimplemented');
