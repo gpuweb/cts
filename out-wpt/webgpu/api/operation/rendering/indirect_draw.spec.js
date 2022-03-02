@@ -224,7 +224,8 @@ Params:
       colorAttachments: [
         {
           view: renderTarget.createView(),
-          loadValue: [0, 0, 0, 0],
+          clearValue: [0, 0, 0, 0],
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
@@ -239,7 +240,7 @@ Params:
     } else {
       renderPass.drawIndirect(indirectBuffer, indirectOffset);
     }
-    renderPass.endPass();
+    renderPass.end();
     t.queue.submit([commandEncoder.finish()]);
 
     // The bottom left area is filled

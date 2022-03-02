@@ -101,13 +101,13 @@ fn(async t => {
   if (t.params.isOnSameRenderPass) {
     pass.beginOcclusionQuery(0);
     pass.endOcclusionQuery();
-    pass.endPass();
+    pass.end();
   } else {
-    pass.endPass();
+    pass.end();
     const otherPass = beginRenderPassWithQuerySet(t, encoder, querySet);
     otherPass.beginOcclusionQuery(0);
     otherPass.endOcclusionQuery();
-    otherPass.endPass();
+    otherPass.end();
   }
 
   t.expectValidationError(() => {

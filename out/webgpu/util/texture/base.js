@@ -134,7 +134,10 @@ export function viewDimensionsForTextureDimension(textureDimension) {
 
 }
 
-/** Reifies the optional fields of `GPUTextureDescriptor`. */
+/** Reifies the optional fields of `GPUTextureDescriptor`.
+   * MAINTENANCE_TODO: viewFormats should not be omitted here, but it seems likely that the
+   * @webgpu/types definition will have to change before we can include it again.
+   */
 export function reifyTextureDescriptor(
 desc)
 {

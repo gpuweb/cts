@@ -39,14 +39,14 @@ class F extends ValidationTest {
       colorAttachments: [
         {
           view: attachment.createView(),
-          loadValue: 'load',
+          loadOp: 'load',
           storeOp: 'store',
         },
       ],
     });
 
     pass.setViewport(v.x, v.y, v.w, v.h, v.minDepth, v.maxDepth);
-    pass.endPass();
+    pass.end();
 
     this.expectValidationError(() => {
       encoder.finish();
@@ -65,7 +65,7 @@ class F extends ValidationTest {
       colorAttachments: [
         {
           view: attachment.createView(),
-          loadValue: 'load',
+          loadOp: 'load',
           storeOp: 'store',
         },
       ],
@@ -77,7 +77,7 @@ class F extends ValidationTest {
       });
     } else {
       pass.setScissorRect(s.x, s.y, s.w, s.h);
-      pass.endPass();
+      pass.end();
 
       this.expectValidationError(() => {
         encoder.finish();
@@ -97,7 +97,7 @@ class F extends ValidationTest {
       colorAttachments: [
         {
           view: attachment.createView(),
-          loadValue: 'load',
+          loadOp: 'load',
           storeOp: 'store',
         },
       ],
@@ -277,7 +277,7 @@ g.test('setBlendConstant')
     const { r, g, b, a } = t.params;
     const encoders = t.createDummyRenderPassEncoder();
     encoders.pass.setBlendConstant({ r, g, b, a });
-    encoders.pass.endPass();
+    encoders.pass.end();
     encoders.encoder.finish();
   });
 
@@ -293,6 +293,6 @@ g.test('setStencilReference')
     const { value } = t.params;
     const encoders = t.createDummyRenderPassEncoder();
     encoders.pass.setStencilReference(value);
-    encoders.pass.endPass();
+    encoders.pass.end();
     encoders.encoder.finish();
   });

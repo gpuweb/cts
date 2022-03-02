@@ -41,7 +41,7 @@ fn(async t => {
 
   pass.setBindGroup(0, bindGroup);
   pass.dispatch(1);
-  pass.endPass();
+  pass.end();
   t.device.queue.submit([encoder.finish()]);
   await t.device.lost;
 });
@@ -103,7 +103,8 @@ fn(async t => {
     colorAttachments: [
     {
       view: renderTarget.createView(),
-      loadValue: [0, 0, 0, 0],
+      clearValue: [0, 0, 0, 0],
+      loadOp: 'clear',
       storeOp: 'store' }] });
 
 
@@ -111,7 +112,7 @@ fn(async t => {
   pass.setPipeline(pipeline);
   pass.setBindGroup(0, bindGroup);
   pass.draw(1);
-  pass.endPass();
+  pass.end();
   t.device.queue.submit([encoder.finish()]);
   await t.device.lost;
 });
@@ -173,7 +174,8 @@ fn(async t => {
     colorAttachments: [
     {
       view: renderTarget.createView(),
-      loadValue: [0, 0, 0, 0],
+      clearValue: [0, 0, 0, 0],
+      loadOp: 'clear',
       storeOp: 'store' }] });
 
 
@@ -181,7 +183,7 @@ fn(async t => {
   pass.setPipeline(pipeline);
   pass.setBindGroup(0, bindGroup);
   pass.draw(1);
-  pass.endPass();
+  pass.end();
   t.device.queue.submit([encoder.finish()]);
   await t.device.lost;
 });

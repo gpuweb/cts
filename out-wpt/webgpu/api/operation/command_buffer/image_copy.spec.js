@@ -855,7 +855,8 @@ class ImageCopyTest extends GPUTest {
         colorAttachments: [
           {
             view: outputTexture.createView(),
-            loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+            clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+            loadOp: 'clear',
             storeOp: 'store',
           },
         ],
@@ -868,9 +869,9 @@ class ImageCopyTest extends GPUTest {
             arrayLayerCount: 1,
           }),
 
-          stencilLoadValue: 'load',
+          stencilLoadOp: 'load',
           stencilStoreOp: 'store',
-          depthLoadValue: 0,
+          depthClearValue: 0,
           depthStoreOp: 'store',
         },
       });
@@ -886,7 +887,7 @@ class ImageCopyTest extends GPUTest {
         renderPass.setBindGroup(0, bindGroup, [stencilBitIndex * kMinDynamicBufferOffsetAlignment]);
         renderPass.draw(6);
       }
-      renderPass.endPass();
+      renderPass.end();
 
       // Check outputTexture by copying the content of outputTexture into outputStagingBuffer and
       // checking all the data in outputStagingBuffer.
@@ -1013,9 +1014,9 @@ class ImageCopyTest extends GPUTest {
             mipLevelCount: 1,
           }),
 
-          depthLoadValue: 0.0,
+          depthClearValue: 0.0,
           depthStoreOp: 'store',
-          stencilLoadValue: 'load',
+          stencilLoadOp: 'load',
           stencilStoreOp: 'store',
         },
       });
@@ -1039,7 +1040,7 @@ class ImageCopyTest extends GPUTest {
 
       renderPass.setBindGroup(0, bindGroup);
       renderPass.draw(6);
-      renderPass.endPass();
+      renderPass.end();
     }
 
     this.queue.submit([encoder.finish()]);

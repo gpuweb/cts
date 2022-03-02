@@ -20,7 +20,6 @@ export const kMaxQueryCount = 8192;
 export const kQueryTypeInfo = {
   // Occlusion query does not require any features.
   occlusion: { feature: undefined },
-  'pipeline-statistics': { feature: 'pipeline-statistics-query' },
   timestamp: { feature: 'timestamp-query' },
 };
 

@@ -7,9 +7,7 @@ count)
 {
   return t.device.createQuerySet({
     type,
-    count,
-    pipelineStatistics:
-    type === 'pipeline-statistics' ? ['clipper-invocations'] : [] });
+    count });
 
 }
 
@@ -29,7 +27,8 @@ querySet)
     colorAttachments: [
     {
       view,
-      loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+      clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+      loadOp: 'clear',
       storeOp: 'store' }],
 
 

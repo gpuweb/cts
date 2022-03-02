@@ -143,7 +143,8 @@ class TextureSyncTestHelper {
             {
               view: this.texture.createView(),
               // [2] Use non-solid-color texture values
-              loadValue: [data.R ?? 0, data.G ?? 0, data.B ?? 0, data.A ?? 0],
+              clearValue: [data.R ?? 0, data.G ?? 0, data.B ?? 0, data.A ?? 0],
+              loadOp: 'clear',
               storeOp: 'store',
             },
           ],
@@ -308,7 +309,7 @@ class TextureSyncTestHelper {
 
     return {
       view: texture.createView(),
-      loadValue: 'load',
+      loadOp: 'load',
       storeOp: 'store',
     };
   }

@@ -85,7 +85,7 @@ dynamicOffsets)
   pass.setBindGroup(0, testGroup, dynamicOffsets);
   pass.setBindGroup(1, group);
   pass.dispatch(1);
-  pass.endPass();
+  pass.end();
 
   t.queue.submit([encoder.finish()]);
 

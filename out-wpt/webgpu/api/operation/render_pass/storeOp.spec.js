@@ -89,21 +89,24 @@ g.test('render_pass_store_op,color_attachment_with_depth_stencil_attachment')
       colorAttachments: [
         {
           view: colorAttachmentView,
-          loadValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+          clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+          loadOp: 'clear',
           storeOp: t.params.colorStoreOperation,
         },
       ],
 
       depthStencilAttachment: {
         view: depthStencilAttachment.createView(),
-        depthLoadValue: 1.0,
+        depthClearValue: 1.0,
+        depthLoadOp: 'clear',
         depthStoreOp: t.params.depthStencilStoreOperation,
-        stencilLoadValue: 1.0,
+        stencilClearValue: 1.0,
+        stencilLoadOp: 'clear',
         stencilStoreOp: t.params.depthStencilStoreOperation,
       },
     });
 
-    pass.endPass();
+    pass.end();
 
     t.device.queue.submit([encoder.finish()]);
 
@@ -178,13 +181,14 @@ g.test('render_pass_store_op,color_attachment_only')
       colorAttachments: [
         {
           view: colorAttachmentView,
-          loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          loadOp: 'clear',
           storeOp: t.params.storeOperation,
         },
       ],
     });
 
-    pass.endPass();
+    pass.end();
     t.device.queue.submit([encoder.finish()]);
 
     // Check that the correct store operation occurred.
@@ -235,7 +239,8 @@ g.test('render_pass_store_op,multiple_color_attachments')
     for (let i = 0; i < t.params.colorAttachments; i++) {
       renderPassColorAttachments.push({
         view: colorAttachments[i].createView(),
-        loadValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+        clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+        loadOp: 'clear',
         storeOp: i % 2 === 0 ? t.params.storeOperation1 : t.params.storeOperation2,
       });
     }
@@ -245,7 +250,7 @@ g.test('render_pass_store_op,multiple_color_attachments')
       colorAttachments: renderPassColorAttachments,
     });
 
-    pass.endPass();
+    pass.end();
     t.device.queue.submit([encoder.finish()]);
 
     // Check that the correct store operation occurred.
@@ -308,14 +313,16 @@ TODO: Also test unsized depth/stencil formats [1]
       colorAttachments: [],
       depthStencilAttachment: {
         view: depthStencilAttachmentView,
-        depthLoadValue: 1.0,
+        depthClearValue: 1.0,
+        depthLoadOp: 'clear',
         depthStoreOp: t.params.storeOperation,
-        stencilLoadValue: 1.0,
+        stencilClearValue: 1.0,
+        stencilLoadOp: 'clear',
         stencilStoreOp: t.params.storeOperation,
       },
     });
 
-    pass.endPass();
+    pass.end();
     t.device.queue.submit([encoder.finish()]);
 
     let expectedValue = {};

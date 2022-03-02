@@ -128,7 +128,8 @@ const checkContents = (type, t, params, texture, state, subresourceRange) => {
         {
           view: renderTexture.createView(),
           resolveTarget,
-          loadValue: [0, 0, 0, 0],
+          clearValue: [0, 0, 0, 0],
+          loadOp: 'load',
           storeOp: 'store',
         },
       ],
@@ -136,9 +137,9 @@ const checkContents = (type, t, params, texture, state, subresourceRange) => {
       depthStencilAttachment: {
         view: texture.createView(viewDescriptor),
         depthStoreOp: 'store',
-        depthLoadValue: 'load',
+        depthLoadOp: 'load',
         stencilStoreOp: 'store',
-        stencilLoadValue: 'load',
+        stencilLoadOp: 'load',
       },
     });
 
@@ -165,7 +166,7 @@ const checkContents = (type, t, params, texture, state, subresourceRange) => {
     }
 
     pass.draw(3);
-    pass.endPass();
+    pass.end();
 
     t.queue.submit([commandEncoder.finish()]);
 

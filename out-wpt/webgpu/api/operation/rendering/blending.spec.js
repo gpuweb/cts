@@ -209,7 +209,8 @@ struct Uniform {
       colorAttachments: [
         {
           view: renderTarget.createView(),
-          loadValue: dstColor,
+          clearValue: dstColor,
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
@@ -238,7 +239,7 @@ struct Uniform {
     );
 
     renderPass.draw(1);
-    renderPass.endPass();
+    renderPass.end();
 
     t.device.queue.submit([commandEncoder.finish()]);
 

@@ -525,7 +525,7 @@ export class GPUTest extends Fixture {
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
     pass.dispatch(numRows);
-    pass.endPass();
+    pass.end();
     this.device.queue.submit([commandEncoder.finish()]);
 
     const expectedResults = new Array(numRows).fill(1);
@@ -929,7 +929,7 @@ export class GPUTest extends Fixture {
           const encoder = commandEncoder.beginComputePass();
 
           return new CommandBufferMaker(this, encoder, shouldSucceed => {
-            encoder.endPass();
+            encoder.end();
             return this.expectGPUError('validation', () => commandEncoder.finish(), !shouldSucceed);
           });
         }
@@ -947,16 +947,19 @@ export class GPUTest extends Fixture {
           const passDesc = {
             colorAttachments: Array.from(fullAttachmentInfo.colorFormats, format => ({
               view: makeAttachmentView(format),
-              loadValue: [0, 0, 0, 0],
+              clearValue: [0, 0, 0, 0],
+              loadOp: 'clear',
               storeOp: 'store' })),
 
             depthStencilAttachment:
             fullAttachmentInfo.depthStencilFormat !== undefined ?
             {
               view: makeAttachmentView(fullAttachmentInfo.depthStencilFormat),
-              depthLoadValue: 0,
+              depthClearValue: 0,
+              depthLoadOp: 'clear',
               depthStoreOp: 'discard',
-              stencilLoadValue: 1,
+              stencilClearValue: 1,
+              stencilLoadOp: 'clear',
               stencilStoreOp: 'discard' } :
 
             undefined,
@@ -966,7 +969,7 @@ export class GPUTest extends Fixture {
           const commandEncoder = this.device.createCommandEncoder();
           const encoder = commandEncoder.beginRenderPass(passDesc);
           return new CommandBufferMaker(this, encoder, shouldSucceed => {
-            encoder.endPass();
+            encoder.end();
             return this.expectGPUError('validation', () => commandEncoder.finish(), !shouldSucceed);
           });
         }}

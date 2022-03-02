@@ -54,7 +54,8 @@ class F extends ValidationTest {
       colorAttachments: [
         {
           view: colorAttachment.createView(),
-          loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+          clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
@@ -77,7 +78,7 @@ class F extends ValidationTest {
     pass.setPipeline(pipeline);
     pass.setIndexBuffer(indexBuffer, 'uint32');
     pass.drawIndexed(indexCount, instanceCount, firstIndex, baseVertex, firstInstance);
-    pass.endPass();
+    pass.end();
 
     if (isSuccess) {
       this.device.queue.submit([encoder.finish()]);

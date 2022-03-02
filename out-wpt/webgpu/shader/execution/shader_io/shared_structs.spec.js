@@ -74,7 +74,7 @@ g.test('shared_with_buffer')
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
     pass.dispatch(numGroups[0], numGroups[1], numGroups[2]);
-    pass.endPass();
+    pass.end();
     t.queue.submit([encoder.finish()]);
 
     // Check the output values.
@@ -179,7 +179,8 @@ g.test('shared_between_stages')
       colorAttachments: [
         {
           view: renderTarget.createView(),
-          loadValue: [0, 0, 0, 0],
+          clearValue: [0, 0, 0, 0],
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
@@ -187,7 +188,7 @@ g.test('shared_between_stages')
 
     pass.setPipeline(pipeline);
     pass.draw(3);
-    pass.endPass();
+    pass.end();
     t.queue.submit([encoder.finish()]);
 
     // Test a few points to make sure we rendered a half-red/half-green triangle.
@@ -320,7 +321,8 @@ g.test('shared_with_non_entry_point_function')
       colorAttachments: [
         {
           view: renderTarget.createView(),
-          loadValue: [0, 0, 0, 0],
+          clearValue: [0, 0, 0, 0],
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
@@ -329,7 +331,7 @@ g.test('shared_with_non_entry_point_function')
     pass.setPipeline(pipeline);
     pass.setVertexBuffer(0, vertexBuffer);
     pass.draw(3);
-    pass.endPass();
+    pass.end();
     t.queue.submit([encoder.finish()]);
 
     // Test a few points to make sure we rendered a red triangle.

@@ -43,7 +43,7 @@ fn(async t => {
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
     pass.dispatch(kNumElements);
-    pass.endPass();
+    pass.end();
     t.device.queue.submit([encoder.finish()]);
   }
   t.expectGPUBufferValuesEqual(
@@ -86,7 +86,7 @@ fn(async t => {
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
     pass.dispatch(1);
-    pass.endPass();
+    pass.end();
     t.device.queue.submit([encoder.finish()]);
   }
   t.expectGPUBufferValuesEqual(buffer, new Uint32Array([kNumIterations]));
@@ -138,7 +138,7 @@ fn(async t => {
     pass.setBindGroup(0, bindGroup);
     pass.dispatch(kNumElements);
   }
-  pass.endPass();
+  pass.end();
   t.device.queue.submit([encoder.finish()]);
   const kTotalAddition = kNumIterations / 2 * 3;
   t.expectGPUBufferValuesEqual(
@@ -180,7 +180,7 @@ fn(async t => {
   for (let i = 0; i < kNumIterations; ++i) {
     pass.dispatch(kNumElements);
   }
-  pass.endPass();
+  pass.end();
   t.device.queue.submit([encoder.finish()]);
   t.expectGPUBufferValuesEqual(
   buffer,
@@ -222,7 +222,7 @@ fn(async t => {
     pass.setBindGroup(0, bindGroup);
     pass.setPipeline(pipeline);
     pass.dispatch(kDimensions[0], kDimensions[1], kDimensions[2]);
-    pass.endPass();
+    pass.end();
     t.device.queue.submit([encoder.finish()]);
     await t.device.queue.onSubmittedWorkDone();
   }

@@ -84,7 +84,8 @@ fn(async t => {
     colorAttachments: [
     {
       view: colorTexture.createView(),
-      loadValue: [0, 0, 0, 0],
+      clearValue: [0, 0, 0, 0],
+      loadOp: 'clear',
       storeOp: 'store' }],
 
 
@@ -96,7 +97,7 @@ fn(async t => {
       stencilStoreOp: 'discard' } });
 
 
-  renderPass.endPass();
+  renderPass.end();
 
   const cmd = commandEncoder.finish();
 

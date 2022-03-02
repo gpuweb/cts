@@ -447,9 +447,10 @@ class F extends GPUTest {
             mipLevelCount: 1,
           }),
 
-          depthLoadValue: 0.0,
+          depthClearValue: 0.0,
+          depthLoadOp: 'clear',
           depthStoreOp: 'store',
-          stencilLoadValue: 'load',
+          stencilLoadOp: 'load',
           stencilStoreOp: 'store',
         },
       });
@@ -457,7 +458,7 @@ class F extends GPUTest {
       renderPass.setBindGroup(0, bindGroup, [srcCopyLayer * kMinDynamicBufferOffsetAlignment]);
       renderPass.setPipeline(renderPipeline);
       renderPass.draw(6);
-      renderPass.endPass();
+      renderPass.end();
     }
     this.queue.submit([encoder.finish()]);
   }
@@ -498,7 +499,8 @@ class F extends GPUTest {
               arrayLayerCount: 1,
             }),
 
-            loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+            clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+            loadOp: 'clear',
             storeOp: 'store',
           },
         ],
@@ -511,9 +513,9 @@ class F extends GPUTest {
             mipLevelCount: 1,
           }),
 
-          depthLoadValue: 'load',
+          depthLoadOp: 'load',
           depthStoreOp: 'store',
-          stencilLoadValue: 'load',
+          stencilLoadOp: 'load',
           stencilStoreOp: 'store',
         },
       });
@@ -521,7 +523,7 @@ class F extends GPUTest {
       renderPass.setBindGroup(0, bindGroup, [dstCopyLayer * kMinDynamicBufferOffsetAlignment]);
       renderPass.setPipeline(renderPipeline);
       renderPass.draw(6);
-      renderPass.endPass();
+      renderPass.end();
     }
     this.queue.submit([encoder.finish()]);
 
@@ -1316,7 +1318,8 @@ g.test('copy_multisampled_color')
       colorAttachments: [
         {
           view: sourceTexture.createView(),
-          loadValue: [1.0, 0.0, 0.0, 1.0],
+          clearValue: [1.0, 0.0, 0.0, 1.0],
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
@@ -1324,7 +1327,7 @@ g.test('copy_multisampled_color')
 
     renderPassForInit.setPipeline(renderPipelineForInit);
     renderPassForInit.draw(3);
-    renderPassForInit.endPass();
+    renderPassForInit.end();
     t.queue.submit([initEncoder.finish()]);
 
     // Do the texture-to-texture copy
@@ -1418,7 +1421,8 @@ g.test('copy_multisampled_color')
       colorAttachments: [
         {
           view: expectedOutputTexture.createView(),
-          loadValue: [1.0, 0.0, 0.0, 1.0],
+          clearValue: [1.0, 0.0, 0.0, 1.0],
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
@@ -1427,7 +1431,7 @@ g.test('copy_multisampled_color')
     renderPassForValidation.setPipeline(renderPipelineForValidation);
     renderPassForValidation.setBindGroup(0, bindGroup);
     renderPassForValidation.draw(6);
-    renderPassForValidation.endPass();
+    renderPassForValidation.end();
     t.queue.submit([validationEncoder.finish()]);
 
     t.expectSingleColor(expectedOutputTexture, 'rgba8unorm', {
@@ -1505,16 +1509,18 @@ g.test('copy_multisampled_depth')
       colorAttachments: [],
       depthStencilAttachment: {
         view: sourceTexture.createView(),
-        depthLoadValue: 0.0,
+        depthClearValue: 0.0,
+        depthLoadOp: 'clear',
         depthStoreOp: 'store',
-        stencilLoadValue: 0,
+        stencilClearValue: 0,
+        stencilLoadOp: 'clear',
         stencilStoreOp: 'store',
       },
     });
 
     renderPassForInit.setPipeline(renderPipelineForInit);
     renderPassForInit.draw(6);
-    renderPassForInit.endPass();
+    renderPassForInit.end();
     t.queue.submit([encoderForInit.finish()]);
 
     // Do the texture-to-texture copy
@@ -1580,7 +1586,8 @@ g.test('copy_multisampled_depth')
       colorAttachments: [
         {
           view: multisampledColorTexture.createView(),
-          loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          loadOp: 'clear',
           storeOp: 'discard',
           resolveTarget: colorTextureAsResolveTarget.createView(),
         },
@@ -1588,16 +1595,17 @@ g.test('copy_multisampled_depth')
 
       depthStencilAttachment: {
         view: destinationTexture.createView(),
-        depthLoadValue: 'load',
+        depthLoadOp: 'load',
         depthStoreOp: 'store',
-        stencilLoadValue: 0,
+        stencilClearValue: 0,
+        stencilLoadOp: 'clear',
         stencilStoreOp: 'store',
       },
     });
 
     renderPassForVerify.setPipeline(renderPipelineForVerify);
     renderPassForVerify.draw(6);
-    renderPassForVerify.endPass();
+    renderPassForVerify.end();
     t.queue.submit([encoderForVerify.finish()]);
 
     t.expectSingleColor(colorTextureAsResolveTarget, kColorFormat, {

@@ -424,7 +424,7 @@ fn(async t => {
   pass.setPipeline(pipeline);
   pass.setBindGroup(0, bindGroup);
   pass.dispatch(1);
-  pass.endPass();
+  pass.end();
   t.queue.submit([encoder.finish()]);
   t.expectGPUBufferValuesEqual(resultBuffer, new Uint32Array([0]));
 });

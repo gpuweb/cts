@@ -48,7 +48,7 @@ fn(async t => {
     colorAttachments: [
     {
       view: renderTarget.createView(),
-      loadValue: 'load',
+      loadOp: 'load',
       storeOp: 'store' }] };
 
 
@@ -58,7 +58,7 @@ fn(async t => {
     const pass = encoder.beginRenderPass(renderPassDescriptor);
     pass.setPipeline(pipeline);
     pass.draw(1, 1, i);
-    pass.endPass();
+    pass.end();
   });
   t.device.queue.submit([encoder.finish()]);
   t.expectSingleColor(renderTarget, 'rgba8unorm', {
@@ -105,15 +105,15 @@ fn(async t => {
     colorAttachments: [
     {
       view: renderTarget.createView(),
-      loadValue: 'load',
+      loadOp: 'load',
       storeOp: 'store' }],
 
 
     depthStencilAttachment: {
       view: depthTarget.createView(),
-      depthLoadValue: 'load',
+      depthLoadOp: 'load',
       depthStoreOp: 'store',
-      stencilLoadValue: 'load',
+      stencilLoadOp: 'load',
       stencilStoreOp: 'discard' } };
 
 
@@ -137,7 +137,7 @@ fn(async t => {
     const pass = encoder.beginRenderPass(renderPassDescriptor);
     pass.setPipeline(pipeline);
     pass.draw(1, 1, i);
-    pass.endPass();
+    pass.end();
   });
   t.device.queue.submit([encoder.finish()]);
   t.expectSingleColor(renderTarget, 'rgba8unorm', {
@@ -200,7 +200,7 @@ fn(async t => {
     colorAttachments: [
     {
       view: renderTarget.createView(),
-      loadValue: 'load',
+      loadOp: 'load',
       storeOp: 'store' }] };
 
 
@@ -222,7 +222,7 @@ fn(async t => {
 
     pass.draw(1, 1);
   });
-  pass.endPass();
+  pass.end();
   t.device.queue.submit([encoder.finish()]);
   t.expectSingleColor(renderTarget, 'rgba8unorm', {
     size: [kSize, kSize, 1],
@@ -270,7 +270,7 @@ fn(async t => {
     colorAttachments: [
     {
       view: renderTarget.createView(),
-      loadValue: 'load',
+      loadOp: 'load',
       storeOp: 'store' }] };
 
 
@@ -279,7 +279,7 @@ fn(async t => {
   const pass = encoder.beginRenderPass(renderPassDescriptor);
   pass.setPipeline(pipeline);
   range(kSize * kSize, i => pass.draw(1, 1, i));
-  pass.endPass();
+  pass.end();
   t.device.queue.submit([encoder.finish()]);
   t.expectSingleColor(renderTarget, 'rgba8unorm', {
     size: [kSize, kSize, 1],
@@ -330,7 +330,7 @@ fn(async t => {
     colorAttachments: [
     {
       view: renderTarget.createView(),
-      loadValue: 'load',
+      loadOp: 'load',
       storeOp: 'store' }] };
 
 
@@ -340,7 +340,7 @@ fn(async t => {
   const pass = encoder.beginRenderPass(renderPassDescriptor);
   pass.setPipeline(pipeline);
   pass.draw(kSize * kSize);
-  pass.endPass();
+  pass.end();
   t.device.queue.submit([encoder.finish()]);
   t.expectSingleColor(renderTarget, 'rgba8unorm', {
     size: [kTextureSize, kTextureSize, 1],

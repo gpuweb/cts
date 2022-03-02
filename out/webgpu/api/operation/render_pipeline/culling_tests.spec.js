@@ -83,16 +83,19 @@ fn(t => {
     colorAttachments: [
     {
       view: texture.createView(),
-      loadValue: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
+      clearValue: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
+      loadOp: 'clear',
       storeOp: 'store' }],
 
 
     depthStencilAttachment: depthTexture ?
     {
       view: depthTexture.createView(),
-      depthLoadValue: 1.0,
+      depthClearValue: 1.0,
+      depthLoadOp: 'clear',
       depthStoreOp: 'store',
-      stencilLoadValue: 0,
+      stencilClearValue: 0,
+      stencilLoadOp: 'clear',
       stencilStoreOp: 'store' } :
 
     undefined });
@@ -151,7 +154,7 @@ fn(t => {
 
 
   pass.draw(6, 1, 0, 0);
-  pass.endPass();
+  pass.end();
 
   t.device.queue.submit([encoder.finish()]);
 

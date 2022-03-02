@@ -19,13 +19,14 @@ runRefTest(async t => {
       colorAttachments: [
         {
           view: colorAttachmentView,
-          loadValue: { r: 0.4, g: 1.0, b: 0.0, a: 1.0 },
+          clearValue: { r: 0.4, g: 1.0, b: 0.0, a: 1.0 },
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
     });
 
-    pass.endPass();
+    pass.end();
     t.device.queue.submit([encoder.finish()]);
   }
 

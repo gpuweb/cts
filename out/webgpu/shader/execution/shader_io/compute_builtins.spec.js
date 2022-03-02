@@ -195,7 +195,7 @@ fn(async t => {
         break;
       }}
 
-  pass.endPass();
+  pass.end();
   t.queue.submit([encoder.finish()]);
 
 

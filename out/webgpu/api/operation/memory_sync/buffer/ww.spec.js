@@ -109,7 +109,7 @@ fn(async t => {
     passEncoder.executeBundles([renderEncoder.finish()]);
   }
 
-  passEncoder.endPass();
+  passEncoder.end();
   t.device.queue.submit([encoder.finish()]);
   t.verifyDataTwoValidValues(buffer, 1, 2);
 });
@@ -137,7 +137,7 @@ fn(async t => {
   }
 
   passEncoder.executeBundles([renderEncoder.finish()]);
-  passEncoder.endPass();
+  passEncoder.end();
   t.device.queue.submit([encoder.finish()]);
   t.verifyDataTwoValidValues(buffer, 1, 2);
 });
@@ -161,7 +161,7 @@ fn(async t => {
     pass.dispatch(1);
   }
 
-  pass.endPass();
+  pass.end();
   t.device.queue.submit([encoder.finish()]);
   t.verifyData(buffer, 2);
 });

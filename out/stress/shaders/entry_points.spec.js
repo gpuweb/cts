@@ -70,7 +70,7 @@ fn(async t => {
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
     pass.dispatch(1);
-    pass.endPass();
+    pass.end();
   });
 
   t.device.queue.submit([encoder.finish()]);

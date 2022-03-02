@@ -131,7 +131,8 @@ TODO: Multiplanar scenarios
         colorAttachments: [
           {
             view: colorAttachment.createView(),
-            loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+            clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+            loadOp: 'clear',
             storeOp: 'store',
           },
         ],
@@ -140,7 +141,7 @@ TODO: Multiplanar scenarios
       passEncoder.setPipeline(pipeline);
       passEncoder.setBindGroup(0, bindGroup);
       passEncoder.draw(6);
-      passEncoder.endPass();
+      passEncoder.end();
       t.device.queue.submit([commandEncoder.finish()]);
 
       // Top left corner should be red. Sample a few pixels away from the edges to avoid compression
@@ -187,7 +188,12 @@ destroyed results in an error.
 
     const passDescriptor = {
       colorAttachments: [
-        { view: colorAttachment.createView(), loadValue: [0, 0, 0, 1], storeOp: 'store' },
+        {
+          view: colorAttachment.createView(),
+          clearValue: [0, 0, 0, 1],
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
       ],
     };
 
@@ -200,7 +206,7 @@ destroyed results in an error.
       const commandEncoder = t.device.createCommandEncoder();
       const passEncoder = commandEncoder.beginRenderPass(passDescriptor);
       passEncoder.setBindGroup(0, bindGroup);
-      passEncoder.endPass();
+      passEncoder.end();
       return commandEncoder.finish();
     };
 
@@ -291,7 +297,7 @@ Tests that we can import an HTMLVideoElement into a GPUExternalTexture and use i
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, bg);
       pass.dispatch(1);
-      pass.endPass();
+      pass.end();
       t.device.queue.submit([encoder.finish()]);
 
       // Pixel loaded from top left corner should be red.

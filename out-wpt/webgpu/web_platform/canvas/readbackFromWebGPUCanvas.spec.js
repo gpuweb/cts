@@ -80,7 +80,9 @@ async function initCanvasContent(t, format, canvasType) {
 
   const clearOnePixel = (origin, color) => {
     const pass = encoder.beginRenderPass({
-      colorAttachments: [{ view: tempTextureView, loadValue: color, storeOp: 'store' }],
+      colorAttachments: [
+        { view: tempTextureView, clearValue: color, loadOp: 'clear', storeOp: 'store' },
+      ],
     });
 
     pass.endPass();

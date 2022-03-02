@@ -72,7 +72,7 @@ fn(async t => {
   pass.setPipeline(pipeline);
   pass.setBindGroup(0, bindGroup);
   pass.dispatch(numGroups[0], numGroups[1], numGroups[2]);
-  pass.endPass();
+  pass.end();
   t.queue.submit([encoder.finish()]);
 
   // Check the output values.
@@ -175,14 +175,15 @@ fn(async t => {
     colorAttachments: [
     {
       view: renderTarget.createView(),
-      loadValue: [0, 0, 0, 0],
+      clearValue: [0, 0, 0, 0],
+      loadOp: 'clear',
       storeOp: 'store' }] });
 
 
 
   pass.setPipeline(pipeline);
   pass.draw(3);
-  pass.endPass();
+  pass.end();
   t.queue.submit([encoder.finish()]);
 
   // Test a few points to make sure we rendered a half-red/half-green triangle.
@@ -311,7 +312,8 @@ fn(async t => {
     colorAttachments: [
     {
       view: renderTarget.createView(),
-      loadValue: [0, 0, 0, 0],
+      clearValue: [0, 0, 0, 0],
+      loadOp: 'clear',
       storeOp: 'store' }] });
 
 
@@ -319,7 +321,7 @@ fn(async t => {
   pass.setPipeline(pipeline);
   pass.setVertexBuffer(0, vertexBuffer);
   pass.draw(3);
-  pass.endPass();
+  pass.end();
   t.queue.submit([encoder.finish()]);
 
   // Test a few points to make sure we rendered a red triangle.

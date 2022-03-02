@@ -118,8 +118,8 @@ return fragColor;
       colorAttachments: [
         {
           view: ctx.getCurrentTexture().createView(),
-
-          loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+          clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
@@ -132,7 +132,7 @@ return fragColor;
     passEncoder.draw(6, 1, 6, 0);
     passEncoder.draw(6, 1, 12, 0);
     passEncoder.draw(6, 1, 18, 0);
-    passEncoder.endPass();
+    passEncoder.end();
     t.device.queue.submit([commandEncoder.finish()]);
   });
 }

@@ -203,7 +203,7 @@ g.test('inputs')
       }
     }
 
-    pass.endPass();
+    pass.end();
     t.queue.submit([encoder.finish()]);
 
     // Helper to check that the vec3<u32> value at each index of the provided `output` buffer
