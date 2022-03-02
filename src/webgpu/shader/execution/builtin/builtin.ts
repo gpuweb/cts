@@ -1,15 +1,12 @@
 import { Colors } from '../../../../common/util/colors.js';
 import { GPUTest } from '../../../gpu_test.js';
 import {
-  i32Bits,
   f32,
-  f32Bits,
   ScalarType,
   Scalar,
   Type,
   TypeVec,
   TypeU32,
-  u32Bits,
   Value,
   Vector,
   VectorType,
