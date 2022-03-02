@@ -3,7 +3,7 @@ Util math unit tests.
 `;
 
 import { makeTestGroup } from '../common/framework/test_group.js';
-import { kBit } from '../webgpu/shader/execution/builtin/builtin.js';
+import { kBit, kValue } from '../webgpu/shader/execution/builtin/builtin.js';
 import { f32, f32Bits, Scalar } from '../webgpu/util/conversion.js';
 import {
   biasedRange,
@@ -309,56 +309,56 @@ g.test('test,math,correctlyRounded')
 
     // 32-bit subnormals
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.positive.zero), target: f32Bits(kBit.f32.subnormal.positive.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.positive.zero), target: kValue.f32.subnormal.positive.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.negative.zero), target: f32Bits(kBit.f32.subnormal.positive.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.negative.zero), target: kValue.f32.subnormal.positive.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: f32Bits(kBit.f32.subnormal.positive.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: kValue.f32.subnormal.positive.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: f32Bits(kBit.f32.subnormal.positive.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: kValue.f32.subnormal.positive.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: f32Bits(kBit.f32.subnormal.positive.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: kValue.f32.subnormal.positive.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: f32Bits(kBit.f32.subnormal.positive.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: kValue.f32.subnormal.positive.min, is_correct: true },
 
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.positive.zero), target: f32Bits(kBit.f32.subnormal.positive.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.positive.zero), target: kValue.f32.subnormal.positive.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.negative.zero), target: f32Bits(kBit.f32.subnormal.positive.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.negative.zero), target: kValue.f32.subnormal.positive.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: f32Bits(kBit.f32.subnormal.positive.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: kValue.f32.subnormal.positive.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: f32Bits(kBit.f32.subnormal.positive.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: kValue.f32.subnormal.positive.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: f32Bits(kBit.f32.subnormal.positive.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: kValue.f32.subnormal.positive.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: f32Bits(kBit.f32.subnormal.positive.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: kValue.f32.subnormal.positive.max, is_correct: true },
 
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.positive.zero), target: f32Bits(kBit.f32.subnormal.negative.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.positive.zero), target: kValue.f32.subnormal.negative.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.negative.zero), target: f32Bits(kBit.f32.subnormal.negative.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.negative.zero), target: kValue.f32.subnormal.negative.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: f32Bits(kBit.f32.subnormal.negative.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: kValue.f32.subnormal.negative.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: f32Bits(kBit.f32.subnormal.negative.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: kValue.f32.subnormal.negative.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: f32Bits(kBit.f32.subnormal.negative.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: kValue.f32.subnormal.negative.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: f32Bits(kBit.f32.subnormal.negative.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: kValue.f32.subnormal.negative.max, is_correct: true },
 
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.positive.zero), target: f32Bits(kBit.f32.subnormal.negative.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.positive.zero), target: kValue.f32.subnormal.negative.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.negative.zero), target: f32Bits(kBit.f32.subnormal.negative.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.negative.zero), target: kValue.f32.subnormal.negative.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: f32Bits(kBit.f32.subnormal.negative.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: kValue.f32.subnormal.negative.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: f32Bits(kBit.f32.subnormal.negative.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: kValue.f32.subnormal.negative.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: f32Bits(kBit.f32.subnormal.negative.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: kValue.f32.subnormal.negative.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: f32Bits(kBit.f32.subnormal.negative.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: kValue.f32.subnormal.negative.min, is_correct: true },
 
     // 64-bit subnormals
     // prettier-ignore
@@ -515,56 +515,56 @@ g.test('test,math,correctlyRoundedNoFlushOnly')
 
     // 32-bit subnormals
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.positive.zero), target: f32Bits(kBit.f32.subnormal.positive.min).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.positive.zero), target: kValue.f32.subnormal.positive.min, is_correct: false },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.negative.zero), target: f32Bits(kBit.f32.subnormal.positive.min).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.negative.zero), target: kValue.f32.subnormal.positive.min, is_correct: false },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: f32Bits(kBit.f32.subnormal.positive.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: kValue.f32.subnormal.positive.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: f32Bits(kBit.f32.subnormal.positive.min).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: kValue.f32.subnormal.positive.min, is_correct: false },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: f32Bits(kBit.f32.subnormal.positive.min).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: kValue.f32.subnormal.positive.min, is_correct: false },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: f32Bits(kBit.f32.subnormal.positive.min).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: kValue.f32.subnormal.positive.min, is_correct: false },
 
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.positive.zero), target: f32Bits(kBit.f32.subnormal.positive.max).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.positive.zero), target: kValue.f32.subnormal.positive.max, is_correct: false },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.negative.zero), target: f32Bits(kBit.f32.subnormal.positive.max).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.negative.zero), target: kValue.f32.subnormal.positive.max, is_correct: false },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: f32Bits(kBit.f32.subnormal.positive.max).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: kValue.f32.subnormal.positive.max, is_correct: false },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: f32Bits(kBit.f32.subnormal.positive.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: kValue.f32.subnormal.positive.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: f32Bits(kBit.f32.subnormal.positive.max).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: kValue.f32.subnormal.positive.max, is_correct: false },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: f32Bits(kBit.f32.subnormal.positive.max).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: kValue.f32.subnormal.positive.max, is_correct: false },
 
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.positive.zero), target: f32Bits(kBit.f32.subnormal.negative.max).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.positive.zero), target: kValue.f32.subnormal.negative.max, is_correct: false },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.negative.zero), target: f32Bits(kBit.f32.subnormal.negative.max).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.negative.zero), target: kValue.f32.subnormal.negative.max, is_correct: false },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: f32Bits(kBit.f32.subnormal.negative.max).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: kValue.f32.subnormal.negative.max, is_correct: false },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: f32Bits(kBit.f32.subnormal.negative.max).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: kValue.f32.subnormal.negative.max, is_correct: false },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: f32Bits(kBit.f32.subnormal.negative.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: kValue.f32.subnormal.negative.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: f32Bits(kBit.f32.subnormal.negative.max).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: kValue.f32.subnormal.negative.max, is_correct: false },
 
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.positive.zero), target: f32Bits(kBit.f32.subnormal.negative.min).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.positive.zero), target: kValue.f32.subnormal.negative.min, is_correct: false },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.negative.zero), target: f32Bits(kBit.f32.subnormal.negative.min).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.negative.zero), target: kValue.f32.subnormal.negative.min, is_correct: false },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: f32Bits(kBit.f32.subnormal.negative.min).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: kValue.f32.subnormal.negative.min, is_correct: false },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: f32Bits(kBit.f32.subnormal.negative.min).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: kValue.f32.subnormal.negative.min, is_correct: false },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: f32Bits(kBit.f32.subnormal.negative.min).value as number, is_correct: false },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: kValue.f32.subnormal.negative.min, is_correct: false },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: f32Bits(kBit.f32.subnormal.negative.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: kValue.f32.subnormal.negative.min, is_correct: true },
 
     // 64-bit subnormals
     // prettier-ignore
@@ -721,56 +721,56 @@ g.test('test,math,correctlyRoundedFlushToZeroOnly')
 
     // 32-bit subnormals
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.positive.zero), target: f32Bits(kBit.f32.subnormal.positive.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.positive.zero), target: kValue.f32.subnormal.positive.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.negative.zero), target: f32Bits(kBit.f32.subnormal.positive.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.negative.zero), target: kValue.f32.subnormal.positive.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: f32Bits(kBit.f32.subnormal.positive.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: kValue.f32.subnormal.positive.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: f32Bits(kBit.f32.subnormal.positive.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: kValue.f32.subnormal.positive.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: f32Bits(kBit.f32.subnormal.positive.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: kValue.f32.subnormal.positive.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: f32Bits(kBit.f32.subnormal.positive.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: kValue.f32.subnormal.positive.min, is_correct: true },
 
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.positive.zero), target: f32Bits(kBit.f32.subnormal.positive.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.positive.zero), target: kValue.f32.subnormal.positive.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.negative.zero), target: f32Bits(kBit.f32.subnormal.positive.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.negative.zero), target: kValue.f32.subnormal.positive.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: f32Bits(kBit.f32.subnormal.positive.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: kValue.f32.subnormal.positive.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: f32Bits(kBit.f32.subnormal.positive.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: kValue.f32.subnormal.positive.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: f32Bits(kBit.f32.subnormal.positive.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: kValue.f32.subnormal.positive.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: f32Bits(kBit.f32.subnormal.positive.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: kValue.f32.subnormal.positive.max, is_correct: true },
 
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.positive.zero), target: f32Bits(kBit.f32.subnormal.negative.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.positive.zero), target: kValue.f32.subnormal.negative.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.negative.zero), target: f32Bits(kBit.f32.subnormal.negative.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.negative.zero), target: kValue.f32.subnormal.negative.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: f32Bits(kBit.f32.subnormal.negative.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: kValue.f32.subnormal.negative.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: f32Bits(kBit.f32.subnormal.negative.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: kValue.f32.subnormal.negative.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: f32Bits(kBit.f32.subnormal.negative.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: kValue.f32.subnormal.negative.max, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: f32Bits(kBit.f32.subnormal.negative.max).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: kValue.f32.subnormal.negative.max, is_correct: true },
 
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.positive.zero), target: f32Bits(kBit.f32.subnormal.negative.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.positive.zero), target: kValue.f32.subnormal.negative.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.negative.zero), target: f32Bits(kBit.f32.subnormal.negative.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.negative.zero), target: kValue.f32.subnormal.negative.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: f32Bits(kBit.f32.subnormal.negative.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.min), target: kValue.f32.subnormal.negative.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: f32Bits(kBit.f32.subnormal.negative.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.positive.max), target: kValue.f32.subnormal.negative.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: f32Bits(kBit.f32.subnormal.negative.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.max), target: kValue.f32.subnormal.negative.min, is_correct: true },
     // prettier-ignore
-    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: f32Bits(kBit.f32.subnormal.negative.min).value as number, is_correct: true },
+    { test_val: f32Bits(kBit.f32.subnormal.negative.min), target: kValue.f32.subnormal.negative.min, is_correct: true },
 
     // 64-bit subnormals
     // prettier-ignore

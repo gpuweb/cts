@@ -1,14 +1,17 @@
 import { Colors } from '../../../../common/util/colors.js';
 import { GPUTest } from '../../../gpu_test.js';
 import {
+  i32Bits,
   f32,
+  f32Bits,
   ScalarType,
   Scalar,
-  Vector,
-  Value,
   Type,
   TypeVec,
   TypeU32,
+  u32Bits,
+  Value,
+  Vector,
   VectorType,
 } from '../../../util/conversion.js';
 import { correctlyRounded, diffULP } from '../../../util/math.js';
@@ -705,6 +708,61 @@ export const kBit = {
 } as const;
 
 export const kValue = {
+  i32: {
+    positive: {
+      min: i32Bits(kBit.i32.positive.min).value as number,
+      max: i32Bits(kBit.i32.positive.max).value as number,
+    },
+    negative: {
+      min: i32Bits(kBit.i32.negative.min).value as number,
+      max: i32Bits(kBit.i32.negative.max).value as number,
+    },
+  },
+
+  // Limits of uint32
+  u32: {
+    min: u32Bits(kBit.u32.min).value as number,
+    max: u32Bits(kBit.u32.max).value as number,
+  },
+
+  // Limits of f32
+  f32: {
+    positive: {
+      min: f32Bits(kBit.f32.positive.min).value as number,
+      max: f32Bits(kBit.f32.positive.max).value as number,
+      zero: f32Bits(kBit.f32.positive.zero).value as number,
+    },
+    negative: {
+      max: f32Bits(kBit.f32.negative.max).value as number,
+      min: f32Bits(kBit.f32.negative.min).value as number,
+      zero: f32Bits(kBit.f32.negative.zero).value as number,
+    },
+    subnormal: {
+      positive: {
+        min: f32Bits(kBit.f32.subnormal.positive.min).value as number,
+        max: f32Bits(kBit.f32.subnormal.positive.max).value as number,
+      },
+      negative: {
+        max: f32Bits(kBit.f32.subnormal.negative.max).value as number,
+        min: f32Bits(kBit.f32.subnormal.negative.min).value as number,
+      },
+    },
+    nan: {
+      negative: {
+        s: f32Bits(kBit.f32.nan.negative.s).value as number,
+        q: f32Bits(kBit.f32.nan.negative.q).value as number,
+      },
+      positive: {
+        s: f32Bits(kBit.f32.nan.positive.s).value as number,
+        q: f32Bits(kBit.f32.nan.positive.q).value as number,
+      },
+    },
+    infinity: {
+      positive: f32Bits(kBit.f32.infinity.positive).value as number,
+      negative: f32Bits(kBit.f32.infinity.negative).value as number,
+    },
+  },
+
   powTwo: {
     to0: Math.pow(2, 0),
     to1: Math.pow(2, 1),

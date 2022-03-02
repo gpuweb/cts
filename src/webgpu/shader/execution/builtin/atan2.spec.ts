@@ -5,10 +5,10 @@ Execution Tests for the 'atan2' builtin function
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { f32, f32Bits, float32ToUint32, TypeF32 } from '../../../util/conversion.js';
+import { f32, TypeF32 } from '../../../util/conversion.js';
 import { biasedRange, linearRange } from '../../../util/math.js';
 
-import { Case, Config, kBit, run, ulpThreshold } from './builtin.js';
+import { Case, Config, kValue, run, ulpThreshold } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -37,17 +37,13 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
 
     let numeric_range: Array<number> = [];
     //  -2^32 < x <= -1, biased towards -1
-    numeric_range = numeric_range.concat(biasedRange(-1.0, -(2 ** 32), float32ToUint32(50)));
+    numeric_range = numeric_range.concat(biasedRange(-1.0, -(2 ** 32), 50));
     // -1 <= x < 0, linearly spread
-    numeric_range = numeric_range.concat(
-      linearRange(-1.0, f32Bits(kBit.f32.negative.max).value as number, float32ToUint32(20))
-    );
+    numeric_range = numeric_range.concat(linearRange(-1.0, kValue.f32.negative.max, 20));
     // 0 < x < -1, linearly spread
-    numeric_range = numeric_range.concat(
-      linearRange(f32Bits(kBit.f32.positive.min).value as number, 1.0, float32ToUint32(20))
-    );
+    numeric_range = numeric_range.concat(linearRange(kValue.f32.positive.min, 1.0, 20));
     // 1 <= x < 2^32, biased towards 1
-    numeric_range = numeric_range.concat(biasedRange(1.0, 2 ** 32, float32ToUint32(20)));
+    numeric_range = numeric_range.concat(biasedRange(1.0, 2 ** 32, 20));
 
     let cases: Array<Case> = [];
     cases = cases.concat(numeric_range.map(x => truthFunc(0.0, x)));
