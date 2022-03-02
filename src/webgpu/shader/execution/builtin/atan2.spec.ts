@@ -5,7 +5,7 @@ Execution Tests for the 'atan2' builtin function
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { f32, f32Bits, TypeF32 } from '../../../util/conversion.js';
+import { f32, f32Bits, float32ToUint32, TypeF32 } from '../../../util/conversion.js';
 import { biasedRange, linearRange } from '../../../util/math.js';
 
 import { Case, Config, kBit, run, ulpThreshold } from './builtin.js';
@@ -36,21 +36,21 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
     };
 
     let numeric_range: Array<number> = [];
-    // //  -2^32 < x <= -1, biased towards -1
-    numeric_range = numeric_range.concat(biasedRange(-1, -(2 ** 32), 50));
+    //  -2^32 < x <= -1, biased towards -1
+    numeric_range = numeric_range.concat(biasedRange(-1.0, -(2 ** 32), float32ToUint32(50)));
     // -1 <= x < 0, linearly spread
     numeric_range = numeric_range.concat(
-      linearRange(-1, f32Bits(kBit.f32.negative.max).value as number, 20)
+      linearRange(-1.0, f32Bits(kBit.f32.negative.max).value as number, float32ToUint32(20))
     );
     // 0 < x < -1, linearly spread
     numeric_range = numeric_range.concat(
-      linearRange(f32Bits(kBit.f32.positive.min).value as number, 1, 20)
+      linearRange(f32Bits(kBit.f32.positive.min).value as number, 1.0, float32ToUint32(20))
     );
-    // // 1 <= x < 2^32, biased towards 1
-    numeric_range = numeric_range.concat(biasedRange(1, 2 ** 32, 50));
+    // 1 <= x < 2^32, biased towards 1
+    numeric_range = numeric_range.concat(biasedRange(1.0, 2 ** 32, float32ToUint32(20)));
 
     let cases: Array<Case> = [];
-    cases = cases.concat(numeric_range.map(x => truthFunc(0, x)));
+    cases = cases.concat(numeric_range.map(x => truthFunc(0.0, x)));
     numeric_range.forEach((y, y_idx) => {
       numeric_range.forEach((x, x_idx) => {
         if (x_idx >= y_idx) {
