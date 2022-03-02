@@ -36,8 +36,7 @@ As of this writing, the spec needs to be fixed as well.
     await t.selectDeviceOrSkipTestCase({ requiredFeatures });
 
     const count = 1;
-    const shouldError =
-      (type === 'timestamp' && !timestampQueryEnable);
+    const shouldError = type === 'timestamp' && !timestampQueryEnable;
 
     t.expectValidationError(() => {
       t.device.createQuerySet({ type, count });

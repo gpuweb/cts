@@ -107,10 +107,7 @@ Tests that write timestamp to a invalid query set that failed during creation:
 - x= {non-pass} enconder
   `
   )
-  .paramsSubcasesOnly(u =>
-    u
-      .combine('querySetState', ['valid', 'invalid'] as const)
-  )
+  .paramsSubcasesOnly(u => u.combine('querySetState', ['valid', 'invalid'] as const))
   .fn(async t => {
     const { querySetState } = t.params;
     await t.selectDeviceForQueryTypeOrSkipTestCase('timestamp');
@@ -127,8 +124,5 @@ Tests that write timestamp to a invalid query set that failed during creation:
 
 g.test('timestamp_query,device_mismatch')
   .desc('Tests writeTimestamp cannot be called with a query set created from another device')
-  .paramsSubcasesOnly(u =>
-    u
-      .combine('mismatched', [true, false])
-  )
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
   .unimplemented();
