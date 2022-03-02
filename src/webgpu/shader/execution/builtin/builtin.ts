@@ -704,6 +704,16 @@ export const kBit = {
   },
 } as const;
 
+/**
+ * Converts a 32-bit hex value to a 32-bit float value
+ *
+ * Using a locally defined function here, instead of uint32ToFloat32 or f32Bits
+ * functions, to avoid compile time dependency issues.
+ * */
+function hexToF32(hex: number): number {
+  return new Float32Array(new Uint32Array([hex]).buffer)[0];
+}
+
 export const kValue = {
   // Limits of i32
   i32: {
@@ -724,21 +734,14 @@ export const kValue = {
   },
 
   // Limits of f32
-  // These values will converted into JS's internal number representation, so
-  // may only be approximates. If you need precise values, use the above kBit
-  // entries and associated utilities.
-  //
-  // If you are testing around NaN/zeroes/infinity/subnormals, you really should
-  // use the KBit entries to get the precise values and not be adding entries
-  // here.
   f32: {
     positive: {
-      min: 1.17549435082e-38,
-      max: 3.40282346639e38,
+      min: hexToF32(kBit.f32.positive.min),
+      max: hexToF32(kBit.f32.positive.max),
     },
     negative: {
-      max: -1.17549435082e-38,
-      min: -3.40282346639e38,
+      max: hexToF32(kBit.f32.negative.max),
+      min: hexToF32(kBit.f32.negative.min),
     },
   },
 

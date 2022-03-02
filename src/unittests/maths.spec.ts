@@ -3,8 +3,13 @@ Util math unit tests.
 `;
 
 import { makeTestGroup } from '../common/framework/test_group.js';
-import { kBit } from '../webgpu/shader/execution/builtin/builtin.js';
-import { f32, f32Bits, Scalar } from '../webgpu/util/conversion.js';
+import { kBit, kValue } from '../webgpu/shader/execution/builtin/builtin.js';
+import {
+  f32,
+  f32Bits,
+  float32ToUint32,
+  Scalar,
+} from '../webgpu/util/conversion.js';
 import {
   biasedRange,
   correctlyRounded,
@@ -1155,5 +1160,30 @@ g.test('test,math,biasedRange')
     test.expect(
       compareArrayOfNumbers(got, expect),
       `biasedRange(${a}, ${b}, ${num_steps}) returned ${got}. Expected ${expect}`
+    );
+  });
+
+interface limitsCase {
+  bits: number;
+  value: number;
+}
+
+// Test to confirm kBit and kValue constants are equivalent for f32
+g.test('test,math,f32LimitsEquivalency')
+  .paramsSimple<limitsCase>([
+    { bits: kBit.f32.positive.max, value: kValue.f32.positive.max },
+    { bits: kBit.f32.positive.min, value: kValue.f32.positive.min },
+    { bits: kBit.f32.negative.max, value: kValue.f32.negative.max },
+    { bits: kBit.f32.negative.min, value: kValue.f32.negative.min },
+  ])
+  .fn(test => {
+    const bits = test.params.bits;
+    const value = test.params.value;
+
+    const val_to_bits = bits === float32ToUint32(value);
+    const bits_to_val = value === (f32Bits(bits).value as number);
+    test.expect(
+      val_to_bits && bits_to_val,
+      `bits = ${bits}, value = ${value}, returned val_to_bits as ${val_to_bits}, and bits_to_val as ${bits_to_val}, they are expected to be equivalent`
     );
   });
