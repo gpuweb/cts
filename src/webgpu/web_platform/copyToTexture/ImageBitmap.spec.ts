@@ -1,5 +1,5 @@
 export const description = `
-copyImageBitmapToTexture from ImageBitmaps created from various sources.
+copyExternalImageToTexture from ImageBitmaps created from various sources.
 
 TODO: Test ImageBitmap generated from all possible ImageBitmapSource, relevant ImageBitmapOptions
     (https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#images-2)
