@@ -28,8 +28,7 @@ runRefTest(async t => {
     t.device.queue.submit([encoder.finish()]);
   }
 
-  // FIXME: Ben's patch removed these. Why?
-  // draw('cvs0', 'bgra8unorm');
-  // draw('cvs1', 'rgba8unorm');
-  // draw('cvs2', 'rgba16float');
+  draw('cvs0', 'bgra8unorm');
+  draw('cvs1', 'rgba8unorm');
+  draw('cvs2', 'rgba16float');
 });
