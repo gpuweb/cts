@@ -4,11 +4,11 @@
 f32,
 ScalarType,
 Scalar,
-Vector,
-
 
 TypeVec,
 TypeU32,
+
+Vector,
 VectorType } from
 '../../../util/conversion.js';
 import { correctlyRounded, diffULP } from '../../../util/math.js';
@@ -704,7 +704,47 @@ export const kBit = {
 
 
 
+/**
+                            * Converts a 32-bit hex value to a 32-bit float value
+                            *
+                            * Using a locally defined function here, instead of uint32ToFloat32 or f32Bits
+                            * functions, to avoid compile time dependency issues.
+                            * */
+function hexToF32(hex) {
+  return new Float32Array(new Uint32Array([hex]).buffer)[0];
+}
+
 export const kValue = {
+  // Limits of i32
+  i32: {
+    positive: {
+      min: 0,
+      max: 2147483647 },
+
+    negative: {
+      min: -2147483648,
+      max: 0 } },
+
+
+
+  // Limits of uint32
+  u32: {
+    min: 0,
+    max: 4294967295 },
+
+
+  // Limits of f32
+  f32: {
+    positive: {
+      min: hexToF32(kBit.f32.positive.min),
+      max: hexToF32(kBit.f32.positive.max) },
+
+    negative: {
+      max: hexToF32(kBit.f32.negative.max),
+      min: hexToF32(kBit.f32.negative.min) } },
+
+
+
   powTwo: {
     to0: Math.pow(2, 0),
     to1: Math.pow(2, 1),

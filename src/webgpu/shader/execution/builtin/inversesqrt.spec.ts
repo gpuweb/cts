@@ -4,10 +4,10 @@ Execution Tests for the 'inverseSqrt' builtin function
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { f32, f32Bits, TypeF32, u32 } from '../../../util/conversion.js';
+import { f32, f32Bits, TypeF32 } from '../../../util/conversion.js';
 import { biasedRange, linearRange } from '../../../util/math.js';
 
-import { Case, Config, kBit, run, ulpThreshold } from './builtin.js';
+import { Case, Config, kBit, kValue, run, ulpThreshold } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -41,11 +41,9 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
     ];
 
     // 0 < x <= 1 linearly spread
-    cases = cases.concat(
-      linearRange(f32Bits(kBit.f32.positive.min), f32(1), u32(100)).map(x => truthFunc(x))
-    );
+    cases = cases.concat(linearRange(kValue.f32.positive.min, 1, 100).map(x => truthFunc(x)));
     // 1 <= x < 2^32, biased towards 1
-    cases = cases.concat(biasedRange(f32(1), f32(2 ** 32), u32(1000)).map(x => truthFunc(x)));
+    cases = cases.concat(biasedRange(1, 2 ** 32, 1000).map(x => truthFunc(x)));
 
     const cfg: Config = t.params;
     cfg.cmpFloats = ulpThreshold(2);
