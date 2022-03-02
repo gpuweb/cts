@@ -1,10 +1,6 @@
 export const description = `
 Tests for depth clipping, depth clamping (at various points in the pipeline), and maybe extended
 depth ranges as well.
-
-TODO: Based on documentation and experimental results, depth should actually always be clamped.
-The depth-clamping feature here is actually used to toggle depth _clipping_. These tests need to be
-updated to say what they mean, once that's possible.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
@@ -41,14 +37,14 @@ have unexpected values then get drawn to the color buffer, which is later checke
     u //
       .combine('format', kDepthStencilFormats)
       .filter(p => kTextureFormatInfo[p.format].depth)
-      .combine('clampDepth', [false, true])
+      .combine('unclippedDepth', [false, true])
       .combine('writeDepth', [false, true])
       .combine('multisampled', [false, true])
   )
   .fn(async t => {
-    const { format, clampDepth, writeDepth, multisampled } = t.params;
+    const { format, unclippedDepth, writeDepth, multisampled } = t.params;
     await t.selectDeviceOrSkipTestCase([
-      clampDepth ? 'depth-clamping' : undefined,
+      unclippedDepth ? 'depth-clip-control' : undefined,
       kTextureFormatInfo[format].feature,
     ]);
     const info = kTextureFormatInfo[format];
@@ -154,7 +150,7 @@ have unexpected values then get drawn to the color buffer, which is later checke
 
         let expectedDepthWriteInput = ${writeDepth ? 'writtenDepth' : 'expFragPosZ'};
         var expectedDepthBufferValue = clamp(expectedDepthWriteInput, vpMin, vpMax);
-        if (${!clampDepth} && outOfRange) {
+        if (${!unclippedDepth} && outOfRange) {
           // Test fragment should have been clipped; expect the depth attachment to
           // have its clear value (0.5).
           expectedDepthBufferValue = 0.5;
@@ -176,7 +172,7 @@ have unexpected values then get drawn to the color buffer, which is later checke
         topology: 'point-list',
         // `|| undefined` is a workaround for Chromium not allowing `false` here
         // when the feature is unavailable.
-        clampDepth: clampDepth || undefined,
+        unclippedDepth: unclippedDepth || undefined,
       },
       depthStencil: { format, depthWriteEnabled: true },
       multisample: multisampled ? { count: 4 } : undefined,
@@ -353,13 +349,13 @@ to be empty.`
     u //
       .combine('format', kDepthStencilFormats)
       .filter(p => kTextureFormatInfo[p.format].depth)
-      .combine('clampDepth', [false, true])
+      .combine('unclippedDepth', [false, true])
       .combine('multisampled', [false, true])
   )
   .fn(async t => {
-    const { format, clampDepth, multisampled } = t.params;
+    const { format, unclippedDepth, multisampled } = t.params;
     await t.selectDeviceOrSkipTestCase([
-      clampDepth ? 'depth-clamping' : undefined,
+      unclippedDepth ? 'depth-clip-control' : undefined,
       kTextureFormatInfo[format].feature,
     ]);
 
@@ -426,14 +422,14 @@ to be empty.`
     });
 
     // With a viewport set to [0.25,0.75], output values in [0.0,1.0] and check they're clamped
-    // before the depth test, regardless of whether clampDepth is enabled.
+    // before the depth test, regardless of whether unclippedDepth is enabled.
     const testPipeline = t.device.createRenderPipeline({
       vertex: { module, entryPoint: 'vmain' },
       primitive: {
         topology: 'point-list',
         // `|| undefined` is a workaround for Chromium not allowing `false` here
         // when the feature is unavailable.
-        clampDepth: clampDepth || undefined,
+        unclippedDepth: unclippedDepth || undefined,
       },
       depthStencil: { format, depthCompare: 'not-equal' },
       multisample: multisampled ? { count: 4 } : undefined,
