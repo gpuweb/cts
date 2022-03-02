@@ -27,7 +27,6 @@ export const kQueryTypeInfo: {
 } = /* prettier-ignore */ {
   // Occlusion query does not require any features.
   'occlusion':           { feature:  undefined },
-  'pipeline-statistics': { feature: 'pipeline-statistics-query' },
   'timestamp':           { feature: 'timestamp-query' },
 };
 /** List of all GPUQueryType values. */

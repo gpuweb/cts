@@ -78,25 +78,24 @@ g.test('timestamp_query,query_type_and_index')
 Tests that write timestamp to all types of query set on all possible encoders:
 - type {occlusion, pipeline statistics, timestamp}
 - queryIndex {in, out of} range for GPUQuerySet
-- x= {non-pass, compute, render} encoder
+- x= {non-pass} encoder
   `
   )
   .params(u =>
     u
-      .combine('encoderType', ['non-pass', 'compute pass', 'render pass'] as const)
       .combine('type', kQueryTypes)
       .beginSubcases()
       .expand('queryIndex', p => (p.type === 'timestamp' ? [0, 2] : [0]))
   )
   .fn(async t => {
-    const { encoderType, type, queryIndex } = t.params;
+    const { type, queryIndex } = t.params;
 
     await t.selectDeviceForQueryTypeOrSkipTestCase(type);
 
     const count = 2;
     const querySet = createQuerySetWithType(t, type, count);
 
-    const encoder = t.createEncoder(encoderType);
+    const encoder = t.createEncoder('non-pass');
     encoder.encoder.writeTimestamp(querySet, queryIndex);
     encoder.validateFinish(type === 'timestamp' && queryIndex < count);
   });
@@ -105,16 +104,15 @@ g.test('timestamp_query,invalid_query_set')
   .desc(
     `
 Tests that write timestamp to a invalid query set that failed during creation:
-- x= {non-pass, compute, render} enconder
+- x= {non-pass} enconder
   `
   )
   .paramsSubcasesOnly(u =>
     u
-      .combine('encoderType', ['non-pass', 'compute pass', 'render pass'] as const)
       .combine('querySetState', ['valid', 'invalid'] as const)
   )
   .fn(async t => {
-    const { encoderType, querySetState } = t.params;
+    const { querySetState } = t.params;
     await t.selectDeviceForQueryTypeOrSkipTestCase('timestamp');
 
     const querySet = t.createQuerySetWithState(querySetState, {
@@ -122,7 +120,7 @@ Tests that write timestamp to a invalid query set that failed during creation:
       count: 2,
     });
 
-    const encoder = t.createEncoder(encoderType);
+    const encoder = t.createEncoder('non-pass');
     encoder.encoder.writeTimestamp(querySet, 0);
     encoder.validateFinish(querySetState !== 'invalid');
   });
@@ -131,7 +129,6 @@ g.test('timestamp_query,device_mismatch')
   .desc('Tests writeTimestamp cannot be called with a query set created from another device')
   .paramsSubcasesOnly(u =>
     u
-      .combine('encoderType', ['non-pass', 'compute pass', 'render pass'] as const)
       .combine('mismatched', [true, false])
   )
   .unimplemented();

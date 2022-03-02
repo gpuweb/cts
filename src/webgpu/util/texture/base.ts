@@ -134,10 +134,12 @@ export function viewDimensionsForTextureDimension(textureDimension: GPUTextureDi
   }
 }
 
+// TODO: viewFormats should not be omitted here, but it seems likely that the @webgpu/types
+// definition will have to change before we can include it again.
 /** Reifies the optional fields of `GPUTextureDescriptor`. */
 export function reifyTextureDescriptor(
   desc: Readonly<GPUTextureDescriptor>
-): Required<Omit<GPUTextureDescriptor, 'label'>> {
+): Required<Omit<GPUTextureDescriptor, 'label' | 'viewFormats'>> {
   return { dimension: '2d' as const, mipLevelCount: 1, sampleCount: 1, ...desc };
 }
 

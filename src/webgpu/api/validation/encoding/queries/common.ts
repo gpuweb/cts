@@ -8,8 +8,6 @@ export function createQuerySetWithType(
   return t.device.createQuerySet({
     type,
     count,
-    pipelineStatistics:
-      type === 'pipeline-statistics' ? (['clipper-invocations'] as const) : ([] as const),
   });
 }
 
