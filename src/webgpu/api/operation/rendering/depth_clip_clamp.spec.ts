@@ -37,7 +37,7 @@ have unexpected values then get drawn to the color buffer, which is later checke
     u //
       .combine('format', kDepthStencilFormats)
       .filter(p => kTextureFormatInfo[p.format].depth)
-      .combine('unclippedDepth', [false, true])
+      .combine('unclippedDepth', [undefined, false, true])
       .combine('writeDepth', [false, true])
       .combine('multisampled', [false, true])
   )
@@ -170,9 +170,7 @@ have unexpected values then get drawn to the color buffer, which is later checke
       vertex: { module, entryPoint: 'vtest' },
       primitive: {
         topology: 'point-list',
-        // `|| undefined` is a workaround for Chromium not allowing `false` here
-        // when the feature is unavailable.
-        unclippedDepth: unclippedDepth || undefined,
+        unclippedDepth,
       },
       depthStencil: { format, depthWriteEnabled: true },
       multisample: multisampled ? { count: 4 } : undefined,
@@ -427,9 +425,7 @@ to be empty.`
       vertex: { module, entryPoint: 'vmain' },
       primitive: {
         topology: 'point-list',
-        // `|| undefined` is a workaround for Chromium not allowing `false` here
-        // when the feature is unavailable.
-        unclippedDepth: unclippedDepth || undefined,
+        unclippedDepth,
       },
       depthStencil: { format, depthCompare: 'not-equal' },
       multisample: multisampled ? { count: 4 } : undefined,
