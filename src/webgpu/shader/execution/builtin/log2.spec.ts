@@ -30,12 +30,13 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
   .fn(async t => {
     // [1]: Need to decide what the ground-truth is.
     const truthFunc = (x: number): Case => {
-      return { input: f32(x), expected: f32(Math.log2(x)) };
+      const f32_x = f32(x);
+      return { input: f32_x, expected: f32(Math.log2(f32_x.value as number)) };
     };
 
-    // log's accuracy is defined in three regions { [0, 0.5), [0.5, 2.0], (2.0, +∞] }
+    // log2's accuracy is defined in three regions { [0, 0.5), [0.5, 2.0], (2.0, +∞] }
     let cases: Array<Case> = [];
-    cases = cases.concat({ input: f32(0), expected: f32Bits(kBit.f32.infinity.positive) });
+    cases = cases.concat({ input: f32(0), expected: f32Bits(kBit.f32.infinity.negative) });
     cases = cases.concat(linearRange(kValue.f32.positive.min, 0.5, 20).map(x => truthFunc(x)));
     cases = cases.concat(linearRange(0.5, 2.0, 20).map(x => truthFunc(x)));
     cases = cases.concat(biasedRange(2.0, 2 ** 32, 1000).map(x => truthFunc(x)));
@@ -47,5 +48,5 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
       }
       return ulpThreshold(3)(got, expected);
     };
-    run(t, 'log', [TypeF32], TypeF32, cfg, cases);
+    run(t, 'log2', [TypeF32], TypeF32, cfg, cases);
   });
