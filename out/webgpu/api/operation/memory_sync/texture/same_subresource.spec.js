@@ -285,13 +285,13 @@ class TextureSyncTestHelper {
         }
       case 'compute-pass-encoder':
         assert(this.computePassEncoder !== undefined);
-        this.computePassEncoder.endPass();
+        this.computePassEncoder.end();
         this.computePassEncoder = undefined;
         this.currentContext = 'command-encoder';
         break;
       case 'render-pass-encoder':
         assert(this.renderPassEncoder !== undefined);
-        this.renderPassEncoder.endPass();
+        this.renderPassEncoder.end();
         this.renderPassEncoder = undefined;
         this.currentContext = 'command-encoder';
         break;

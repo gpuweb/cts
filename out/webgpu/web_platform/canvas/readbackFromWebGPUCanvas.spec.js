@@ -67,7 +67,7 @@ canvasType)
       { view: tempTextureView, clearValue: color, loadOp: 'clear', storeOp: 'store' }] });
 
 
-    pass.endPass();
+    pass.end();
     encoder.copyTextureToTexture(
     { texture: tempTexture },
     { texture: canvasTexture, origin },

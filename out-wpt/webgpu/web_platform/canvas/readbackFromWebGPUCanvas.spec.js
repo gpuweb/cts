@@ -85,7 +85,7 @@ async function initCanvasContent(t, format, canvasType) {
       ],
     });
 
-    pass.endPass();
+    pass.end();
     encoder.copyTextureToTexture(
       { texture: tempTexture },
       { texture: canvasTexture, origin },

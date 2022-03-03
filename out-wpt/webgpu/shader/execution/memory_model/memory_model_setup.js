@@ -279,13 +279,13 @@ export class MemoryModelTester {
       testPass.setPipeline(this.testPipeline);
       testPass.setBindGroup(0, this.testBindGroup);
       testPass.dispatch(numWorkgroups);
-      testPass.endPass();
+      testPass.end();
 
       const resultPass = encoder.beginComputePass();
       resultPass.setPipeline(this.resultPipeline);
       resultPass.setBindGroup(0, this.resultBindGroup);
       resultPass.dispatch(this.params.testingWorkgroups);
-      resultPass.endPass();
+      resultPass.end();
 
       this.test.device.queue.submit([encoder.finish()]);
       this.test.expectGPUBufferValuesPassCheck(
@@ -492,20 +492,20 @@ const shaderMemStructures = `
   struct Memory {
     value: array<u32>;
   };
-    
+
   struct AtomicMemory {
     value: array<atomic<u32>>;
   };
-    
+
   struct ReadResult {
     r0: atomic<u32>;
     r1: atomic<u32>;
   };
-    
+
   struct ReadResults {
     value: array<ReadResult>;
   };
-    
+
   struct StressParamsMemory {
     do_barrier: u32;
     mem_stress: u32;
@@ -612,7 +612,7 @@ const memoryLocationFunctions = `
   fn permute_id(id: u32, factor: u32, mask: u32) -> u32 {
     return (id * factor) % mask;
   }
-    
+
   fn stripe_workgroup(workgroup_id: u32, local_id: u32) -> u32 {
     return (workgroup_id + 1u + local_id % (stress_params.testing_workgroups - 1u)) % stress_params.testing_workgroups;
   }
@@ -635,7 +635,7 @@ const testShaderFunctions = `
       i = i + 1u;
     }
   }
-    
+
   // Perform iterations of stress, depending on the specified pattern. Pattern 0 is store-store, pattern 1 is store-load,
   // pattern 2 is load-store, and pattern 3 is load-load. The extra if condition (if tmpX > 100000u), is used to avoid
   // the compiler optimizing out unused loads, where 100,000 is larger than the maximum number of stress iterations used
