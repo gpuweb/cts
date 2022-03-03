@@ -6,7 +6,6 @@ Tests for the behavior of ArrayBuffers returned by getMappedRange.
 TODO: Add tests that transfer to another thread instead of just using MessageChannel.
 TODO: Add tests for any other Web APIs that can detach ArrayBuffers.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { memcpy } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { checkElementsEqual } from '../../../util/check_contents.js';
 
@@ -27,20 +26,20 @@ fn(async t => {
   const { transfer, mapMode } = t.params;
   const kSize = 1024;
 
-  const buf = t.device.createBuffer({
-    size: kSize,
-    usage: mapMode === 'WRITE' ? GPUBufferUsage.MAP_WRITE : GPUBufferUsage.MAP_READ });
-
-  await buf.mapAsync(GPUMapMode[mapMode]);
-  let ab1 = buf.getMappedRange();
-  t.expect(ab1.byteLength === kSize, 'ab1 should have the size of the buffer');
-
   // Populate initial data.
   const initialData = new Uint32Array(new ArrayBuffer(kSize));
   for (let i = 0; i < initialData.length; ++i) {
     initialData[i] = i;
   }
-  memcpy({ src: initialData }, { dst: ab1 });
+
+  const buf = t.makeBufferWithContents(
+  initialData,
+  mapMode === 'WRITE' ? GPUBufferUsage.MAP_WRITE : GPUBufferUsage.MAP_READ);
+
+
+  await buf.mapAsync(GPUMapMode[mapMode]);
+  let ab1 = buf.getMappedRange();
+  t.expect(ab1.byteLength === kSize, 'ab1 should have the size of the buffer');
 
   const mc = new MessageChannel();
   const ab2Promise = new Promise(resolve => {
