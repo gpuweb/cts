@@ -65,7 +65,7 @@ g.test('postMessage')
     t.expect(ab2.byteLength === kSize, 'ab2 should be the same size');
     const ab2Data = new Uint32Array(ab2, 0, initialData.length);
     // ab2 should have the same initial contents.
-    checkElementsEqual(ab2Data, initialData);
+    t.expectOK(checkElementsEqual(ab2Data, initialData));
 
     // Mutations to ab2 should not be visible in ab1.
     const ab1Data = new Uint32Array(ab1, 0, initialData.length);
