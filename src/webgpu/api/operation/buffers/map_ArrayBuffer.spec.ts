@@ -73,8 +73,8 @@ g.test('postMessage')
     for (let i = 0; i < ab2Data.length; ++i) {
       ab2Data[i] = abs2NewData[i];
     }
-    checkElementsEqual(ab1Data, initialData);
-    checkElementsEqual(ab2Data, abs2NewData);
+    t.expectOK(checkElementsEqual(ab1Data, initialData));
+    t.expectOK(checkElementsEqual(ab2Data, abs2NewData));
 
     buf.unmap();
     t.expect(ab1.byteLength === 0, 'after unmap, ab1 should be detached');
