@@ -277,7 +277,6 @@ fn main() {
   }
 }
 `;
-
   const inputSize = cases.length * parameterTypes.length * kValueStride;
 
   // Holds all the parameter values for all cases
