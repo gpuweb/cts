@@ -415,21 +415,6 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
   .unimplemented();
 
-g.test('float_builtin_functions,sin')
-  .uniqueId('d10f3745e5ea639d')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
-  .desc(
-    `
-sin:
-T is f32 or vecN<f32> sin(e: T ) -> T Returns the sine of e. Component-wise when T is a vector. (GLSLstd450Sin)
-
-Please read the following guidelines before contributing:
-https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
-`
-  )
-  .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
-  .unimplemented();
-
 g.test('float_builtin_functions,sinh')
   .uniqueId('d1d30e0b45aabed5')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')

@@ -20,9 +20,6 @@ g.test('float_builtin_functions,cos')
 cos:
 T is f32 or vecN<f32> cos(e: T ) -> T Returns the cosine of e. Component-wise when T is a vector. (GLSLstd450Cos)
 
-Please read the following guidelines before contributing:
-https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
-
 TODO(#792): Decide what the ground-truth is for these tests. [1]
 `
   )

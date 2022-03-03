@@ -1331,6 +1331,14 @@ export const listing = [
       "shader",
       "execution",
       "builtin",
+      "sin"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "builtin",
       "value_testing_built_in_functions"
     ]
   },
