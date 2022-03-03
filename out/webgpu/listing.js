@@ -1299,6 +1299,14 @@ export const listing = [
       "shader",
       "execution",
       "builtin",
+      "log2"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "builtin",
       "logical_built_in_functions"
     ]
   },
