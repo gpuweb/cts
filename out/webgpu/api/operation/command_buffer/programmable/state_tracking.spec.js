@@ -39,18 +39,20 @@ fn(async t => {
   const pipeline = t.createBindingStatePipeline(encoderType, groupIndices);
 
   const out = t.makeBufferWithContents(new Int32Array([0]), kBufferUsage);
-  const bindGroups = {
-    a: t.createBindGroup(t.makeBufferWithContents(new Int32Array([3]), kBufferUsage)),
-    b: t.createBindGroup(t.makeBufferWithContents(new Int32Array([2]), kBufferUsage)),
-    out: t.createBindGroup(out) };
+  const bindGroupFactories = {
+    a: (i) =>
+    t.createBindGroup(t.makeBufferWithContents(new Int32Array([3]), kBufferUsage), i),
+    b: (i) =>
+    t.createBindGroup(t.makeBufferWithContents(new Int32Array([2]), kBufferUsage), i),
+    out: i => t.createBindGroup(out, i) };
 
 
   const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
 
   t.setPipeline(encoder, pipeline);
-  encoder.setBindGroup(groupIndices.a, bindGroups.a);
-  encoder.setBindGroup(groupIndices.b, bindGroups.b);
-  encoder.setBindGroup(groupIndices.out, bindGroups.out);
+  t.setBindGroup(encoder, groupIndices.a, bindGroupFactories.a);
+  t.setBindGroup(encoder, groupIndices.b, bindGroupFactories.b);
+  t.setBindGroup(encoder, groupIndices.out, bindGroupFactories.out);
   t.dispatchOrDraw(encoder);
   validateFinishAndSubmit(true, true);
 
@@ -83,17 +85,19 @@ fn(async t => {
   const pipeline = t.createBindingStatePipeline(encoderType, groupIndices);
 
   const out = t.makeBufferWithContents(new Int32Array([0]), kBufferUsage);
-  const bindGroups = {
-    a: t.createBindGroup(t.makeBufferWithContents(new Int32Array([3]), kBufferUsage)),
-    b: t.createBindGroup(t.makeBufferWithContents(new Int32Array([2]), kBufferUsage)),
-    out: t.createBindGroup(out) };
+  const bindGroupFactories = {
+    a: (i) =>
+    t.createBindGroup(t.makeBufferWithContents(new Int32Array([3]), kBufferUsage), i),
+    b: (i) =>
+    t.createBindGroup(t.makeBufferWithContents(new Int32Array([2]), kBufferUsage), i),
+    out: i => t.createBindGroup(out, i) };
 
 
   const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
   t.setPipeline(encoder, pipeline);
 
-  for (const group of setOrder) {
-    encoder.setBindGroup(groupIndices[group], bindGroups[group]);
+  for (let i = 0; i < setOrder.length; ++i) {
+    t.setBindGroup(encoder, groupIndices[setOrder[i]], bindGroupFactories[setOrder[i]]);
   }
 
   t.dispatchOrDraw(encoder);
@@ -125,22 +129,24 @@ fn(async t => {
   const pipeline = t.createBindingStatePipeline(encoderType, groupIndices);
 
   const out = t.makeBufferWithContents(new Int32Array([0]), kBufferUsage);
-  const bindGroups = {
-    a: t.createBindGroup(t.makeBufferWithContents(new Int32Array([3]), kBufferUsage)),
-    b: t.createBindGroup(t.makeBufferWithContents(new Int32Array([2]), kBufferUsage)),
-    out: t.createBindGroup(out) };
+  const bindGroupFactories = {
+    a: (i) =>
+    t.createBindGroup(t.makeBufferWithContents(new Int32Array([3]), kBufferUsage), i),
+    b: (i) =>
+    t.createBindGroup(t.makeBufferWithContents(new Int32Array([2]), kBufferUsage), i),
+    out: i => t.createBindGroup(out, i) };
 
 
   const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
 
-  for (const group of setBefore) {
-    encoder.setBindGroup(groupIndices[group], bindGroups[group]);
+  for (let i = 0; i < setBefore.length; ++i) {
+    t.setBindGroup(encoder, groupIndices[setBefore[i]], bindGroupFactories[setBefore[i]]);
   }
 
   t.setPipeline(encoder, pipeline);
 
-  for (const group of setAfter) {
-    encoder.setBindGroup(groupIndices[group], bindGroups[group]);
+  for (let i = 0; i < setAfter.length; ++i) {
+    t.setBindGroup(encoder, groupIndices[setAfter[i]], bindGroupFactories[setAfter[i]]);
   }
 
   t.dispatchOrDraw(encoder);
@@ -164,17 +170,18 @@ fn(async t => {
   const pipeline = t.createBindingStatePipeline(encoderType, { a: 0, b: 1, out: 2 });
 
   const out = t.makeBufferWithContents(new Int32Array([1]), kBufferUsage);
-  const bindGroups = {
-    ab: t.createBindGroup(t.makeBufferWithContents(new Int32Array([3]), kBufferUsage)),
-    out: t.createBindGroup(out) };
+  const bindGroupFactories = {
+    ab: (i) =>
+    t.createBindGroup(t.makeBufferWithContents(new Int32Array([3]), kBufferUsage), i),
+    out: i => t.createBindGroup(out, i) };
 
 
   const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
   t.setPipeline(encoder, pipeline);
 
-  encoder.setBindGroup(0, bindGroups.ab);
-  encoder.setBindGroup(1, bindGroups.ab);
-  encoder.setBindGroup(2, bindGroups.out);
+  t.setBindGroup(encoder, 0, bindGroupFactories.ab);
+  t.setBindGroup(encoder, 1, bindGroupFactories.ab);
+  t.setBindGroup(encoder, 2, bindGroupFactories.out);
 
   t.dispatchOrDraw(encoder);
   validateFinishAndSubmit(true, true);
@@ -198,27 +205,30 @@ fn(async t => {
 
   const badOut = t.makeBufferWithContents(new Int32Array([-1]), kBufferUsage);
   const out = t.makeBufferWithContents(new Int32Array([0]), kBufferUsage);
-  const bindGroups = {
-    a: t.createBindGroup(t.makeBufferWithContents(new Int32Array([3]), kBufferUsage)),
-    b: t.createBindGroup(t.makeBufferWithContents(new Int32Array([2]), kBufferUsage)),
-    c: t.createBindGroup(t.makeBufferWithContents(new Int32Array([5]), kBufferUsage)),
-    badOut: t.createBindGroup(badOut),
-    out: t.createBindGroup(out) };
+  const bindGroupFactories = {
+    a: (i) =>
+    t.createBindGroup(t.makeBufferWithContents(new Int32Array([3]), kBufferUsage), i),
+    b: (i) =>
+    t.createBindGroup(t.makeBufferWithContents(new Int32Array([2]), kBufferUsage), i),
+    c: (i) =>
+    t.createBindGroup(t.makeBufferWithContents(new Int32Array([5]), kBufferUsage), i),
+    badOut: i => t.createBindGroup(badOut, i),
+    out: i => t.createBindGroup(out, i) };
 
 
   const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
 
-  encoder.setBindGroup(1, bindGroups.c);
+  t.setBindGroup(encoder, 1, bindGroupFactories.c);
 
   t.setPipeline(encoder, pipeline);
 
-  encoder.setBindGroup(0, bindGroups.c);
-  encoder.setBindGroup(0, bindGroups.a);
+  t.setBindGroup(encoder, 0, bindGroupFactories.c);
+  t.setBindGroup(encoder, 0, bindGroupFactories.a);
 
-  encoder.setBindGroup(2, bindGroups.badOut);
+  t.setBindGroup(encoder, 2, bindGroupFactories.badOut);
 
-  encoder.setBindGroup(1, bindGroups.b);
-  encoder.setBindGroup(2, bindGroups.out);
+  t.setBindGroup(encoder, 1, bindGroupFactories.b);
+  t.setBindGroup(encoder, 2, bindGroupFactories.out);
 
   t.dispatchOrDraw(encoder);
   validateFinishAndSubmit(true, true);
@@ -244,23 +254,25 @@ fn(async t => {
 
   const outA = t.makeBufferWithContents(new Int32Array([0]), kBufferUsage);
   const outB = t.makeBufferWithContents(new Int32Array([0]), kBufferUsage);
-  const bindGroups = {
-    a: t.createBindGroup(t.makeBufferWithContents(new Int32Array([3]), kBufferUsage)),
-    b: t.createBindGroup(t.makeBufferWithContents(new Int32Array([2]), kBufferUsage)),
-    outA: t.createBindGroup(outA),
-    outB: t.createBindGroup(outB) };
+  const bindGroupFactories = {
+    a: (i) =>
+    t.createBindGroup(t.makeBufferWithContents(new Int32Array([3]), kBufferUsage), i),
+    b: (i) =>
+    t.createBindGroup(t.makeBufferWithContents(new Int32Array([2]), kBufferUsage), i),
+    outA: i => t.createBindGroup(outA, i),
+    outB: i => t.createBindGroup(outB, i) };
 
 
   const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
-  encoder.setBindGroup(0, bindGroups.a);
-  encoder.setBindGroup(1, bindGroups.b);
+  t.setBindGroup(encoder, 0, bindGroupFactories.a);
+  t.setBindGroup(encoder, 1, bindGroupFactories.b);
 
   t.setPipeline(encoder, pipelineA);
-  encoder.setBindGroup(2, bindGroups.outA);
+  t.setBindGroup(encoder, 2, bindGroupFactories.outA);
   t.dispatchOrDraw(encoder);
 
   t.setPipeline(encoder, pipelineB);
-  encoder.setBindGroup(2, bindGroups.outB);
+  t.setBindGroup(encoder, 2, bindGroupFactories.outB);
   t.dispatchOrDraw(encoder);
 
   validateFinishAndSubmit(true, true);

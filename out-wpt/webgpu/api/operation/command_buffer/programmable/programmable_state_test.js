@@ -4,28 +4,39 @@
 import { GPUTest } from '../../../../gpu_test.js';
 
 export class ProgrammableStateTest extends GPUTest {
-  encoder = null;
+  commonBindGroupLayouts = new Map();
 
-  get bindGroupLayout() {
-    if (!this.commonBindGroupLayout) {
-      this.commonBindGroupLayout = this.device.createBindGroupLayout({
-        entries: [
-          {
-            binding: 0,
-            visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
-            buffer: { type: 'storage' },
-          },
-        ],
-      });
+  // These types match the shader types in createBindingStatePipeline, below.
+  storageTypes = ['read-only-storage', 'read-only-storage', 'storage'];
+
+  getBindGroupLayout(index) {
+    const type = this.storageTypes[index];
+    if (!this.commonBindGroupLayouts.has(type)) {
+      this.commonBindGroupLayouts.set(
+        type,
+        this.device.createBindGroupLayout({
+          entries: [
+            {
+              binding: 0,
+              visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
+              buffer: { type },
+            },
+          ],
+        })
+      );
     }
-    return this.commonBindGroupLayout;
+    return this.commonBindGroupLayouts.get(type);
   }
 
-  createBindGroup(buffer) {
+  createBindGroup(buffer, index) {
     return this.device.createBindGroup({
-      layout: this.bindGroupLayout,
+      layout: this.getBindGroupLayout(index),
       entries: [{ binding: 0, resource: { buffer } }],
     });
+  }
+
+  setBindGroup(encoder, index, factory) {
+    encoder.setBindGroup(index, factory(index));
   }
 
   // Create a compute pipeline that performs an operation on data from two bind groups,
@@ -49,7 +60,11 @@ export class ProgrammableStateTest extends GPUTest {
 
         return this.device.createComputePipeline({
           layout: this.device.createPipelineLayout({
-            bindGroupLayouts: [this.bindGroupLayout, this.bindGroupLayout, this.bindGroupLayout],
+            bindGroupLayouts: [
+              this.getBindGroupLayout(0),
+              this.getBindGroupLayout(1),
+              this.getBindGroupLayout(2),
+            ],
           }),
 
           compute: {
@@ -88,7 +103,11 @@ export class ProgrammableStateTest extends GPUTest {
 
         return this.device.createRenderPipeline({
           layout: this.device.createPipelineLayout({
-            bindGroupLayouts: [this.bindGroupLayout, this.bindGroupLayout, this.bindGroupLayout],
+            bindGroupLayouts: [
+              this.getBindGroupLayout(0),
+              this.getBindGroupLayout(1),
+              this.getBindGroupLayout(2),
+            ],
           }),
 
           vertex: {
