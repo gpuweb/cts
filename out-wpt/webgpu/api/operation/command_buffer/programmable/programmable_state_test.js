@@ -6,11 +6,7 @@ import { GPUTest } from '../../../../gpu_test.js';
 export class ProgrammableStateTest extends GPUTest {
   commonBindGroupLayouts = new Map();
 
-  // These types match the shader types in createBindingStatePipeline, below.
-  storageTypes = ['read-only-storage', 'read-only-storage', 'storage'];
-
-  getBindGroupLayout(index) {
-    const type = this.storageTypes[index];
+  getBindGroupLayout(type) {
     if (!this.commonBindGroupLayouts.has(type)) {
       this.commonBindGroupLayouts.set(
         type,
@@ -28,9 +24,17 @@ export class ProgrammableStateTest extends GPUTest {
     return this.commonBindGroupLayouts.get(type);
   }
 
-  createBindGroup(buffer, index) {
+  getBindGroupLayouts(indices) {
+    const bindGroupLayouts = [];
+    bindGroupLayouts[indices.a] = this.getBindGroupLayout('read-only-storage');
+    bindGroupLayouts[indices.b] = this.getBindGroupLayout('read-only-storage');
+    bindGroupLayouts[indices.out] = this.getBindGroupLayout('storage');
+    return bindGroupLayouts;
+  }
+
+  createBindGroup(buffer, type) {
     return this.device.createBindGroup({
-      layout: this.getBindGroupLayout(index),
+      layout: this.getBindGroupLayout(type),
       entries: [{ binding: 0, resource: { buffer } }],
     });
   }
@@ -60,11 +64,7 @@ export class ProgrammableStateTest extends GPUTest {
 
         return this.device.createComputePipeline({
           layout: this.device.createPipelineLayout({
-            bindGroupLayouts: [
-              this.getBindGroupLayout(0),
-              this.getBindGroupLayout(1),
-              this.getBindGroupLayout(2),
-            ],
+            bindGroupLayouts: this.getBindGroupLayouts(groups),
           }),
 
           compute: {
@@ -103,11 +103,7 @@ export class ProgrammableStateTest extends GPUTest {
 
         return this.device.createRenderPipeline({
           layout: this.device.createPipelineLayout({
-            bindGroupLayouts: [
-              this.getBindGroupLayout(0),
-              this.getBindGroupLayout(1),
-              this.getBindGroupLayout(2),
-            ],
+            bindGroupLayouts: this.getBindGroupLayouts(groups),
           }),
 
           vertex: {
