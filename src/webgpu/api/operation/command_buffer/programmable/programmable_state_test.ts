@@ -11,6 +11,7 @@ interface BindGroupIndices {
 export class ProgrammableStateTest extends GPUTest {
   private commonBindGroupLayouts: Map<string, GPUBindGroupLayout> = new Map();
 
+  // These types match the shader types in createBindingStatePipeline, below.
   private storageTypes: ('storage' | 'read-only-storage')[] = [
     'read-only-storage',
     'read-only-storage',
