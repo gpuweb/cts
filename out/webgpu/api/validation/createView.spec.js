@@ -35,7 +35,7 @@ beginSubcases()
 // If undefined, should default to textureFormat.
 .combine('viewFormat', [undefined, ...kTextureFormats])).
 
-fn(async t => {
+fn(async (t) => {
   const { textureFormat, viewFormat } = t.params;
   await t.selectDeviceForTextureFormatOrSkipTestCase([textureFormat, viewFormat]);
   const { blockWidth, blockHeight } = kTextureFormatInfo[textureFormat];
@@ -64,7 +64,7 @@ u.
 combine('textureDimension', kTextureDimensions).
 combine('viewDimension', [...kTextureViewDimensions, undefined])).
 
-fn(t => {
+fn((t) => {
   const { textureDimension, viewDimension } = t.params;
 
   const size = textureDimension === '1d' ? [4] : [4, 4, 6];
@@ -97,7 +97,7 @@ u //
 .combine('format', kTextureFormats).
 combine('aspect', kTextureAspects)).
 
-fn(async t => {
+fn(async (t) => {
   const { format, aspect } = t.params;
   await t.selectDeviceForTextureFormatOrSkipTestCase(format);
   const info = kTextureFormatInfo[format];
@@ -119,7 +119,7 @@ fn(async t => {
 
 const kTextureAndViewDimensions = kUnitCaseParamsBuilder.
 combine('textureDimension', kTextureDimensions).
-expand('viewDimension', p => [
+expand('viewDimension', (p) => [
 undefined,
 ...viewDimensionsForTextureDimension(p.textureDimension)]);
 
@@ -163,7 +163,7 @@ kTextureAndViewDimensions.
 beginSubcases().
 expand('textureLayers', ({ textureDimension: d }) => d === '2d' ? [1, 6, 18] : [1]).
 combine('textureLevels', [1, kLevels]).
-unless(p => p.textureDimension === '1d' && p.textureLevels !== 1).
+unless((p) => p.textureDimension === '1d' && p.textureLevels !== 1).
 expand(
 'baseArrayLayer',
 ({ textureLayers: l }) => new Set([undefined, 0, 1, 5, 6, 7, l - 1, l, l + 1])).
@@ -175,7 +175,7 @@ expand('arrayLayerCount', function* ({ textureLayers: l, baseArrayLayer = 0 }) {
   }
 })).
 
-fn(t => {
+fn((t) => {
   const {
     textureDimension,
     viewDimension,
@@ -223,7 +223,7 @@ params((u) =>
 kTextureAndViewDimensions.
 beginSubcases().
 combine('textureLevels', [1, kLevels - 2, kLevels]).
-unless(p => p.textureDimension === '1d' && p.textureLevels !== 1).
+unless((p) => p.textureDimension === '1d' && p.textureLevels !== 1).
 expand(
 'baseMipLevel',
 ({ textureLevels: l }) => new Set([undefined, 0, 1, 5, 6, 7, l - 1, l, l + 1])).
@@ -235,7 +235,7 @@ expand('mipLevelCount', function* ({ textureLevels: l, baseMipLevel = 0 }) {
   }
 })).
 
-fn(t => {
+fn((t) => {
   const {
     textureDimension,
     viewDimension,
@@ -279,7 +279,7 @@ combine('size', [
 [8, 4, 6]])).
 
 
-fn(async t => {
+fn(async (t) => {
   const { dimension, size } = t.params;
 
   const texture = t.device.createTexture({
@@ -296,8 +296,8 @@ fn(async t => {
 
 g.test('texture_state').
 desc(`createView should fail if the texture is invalid (but succeed if it is destroyed)`).
-paramsSubcasesOnly(u => u.combine('state', kResourceStates)).
-fn(async t => {
+paramsSubcasesOnly((u) => u.combine('state', kResourceStates)).
+fn(async (t) => {
   const { state } = t.params;
   const texture = t.createTextureWithState(state);
 

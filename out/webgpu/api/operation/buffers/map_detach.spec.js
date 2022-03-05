@@ -37,9 +37,9 @@ combineWithParams([
 { unmap: false, destroy: true },
 { unmap: true, destroy: true }]).
 
-unless(p => p.mappedAtCreation === false && p.mapMode === undefined)).
+unless((p) => p.mappedAtCreation === false && p.mapMode === undefined)).
 
-fn(async t => {
+fn(async (t) => {
   const { usage, mapMode, mappedAtCreation, unmap, destroy } = t.params;
   const buffer = t.device.createBuffer({
     size: 4,

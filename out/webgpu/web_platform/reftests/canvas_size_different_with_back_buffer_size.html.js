@@ -12,7 +12,7 @@
 
 
 export function run() {
-  runRefTest(async t => {
+  runRefTest(async (t) => {
     const red = new Uint8Array([0x00, 0x00, 0xff, 0xff]);
     const green = new Uint8Array([0x00, 0xff, 0x00, 0xff]);
     const blue = new Uint8Array([0xff, 0x00, 0x00, 0xff]);

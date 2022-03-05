@@ -22,7 +22,7 @@ paramsSubcasesOnly([
 { querySetState: 'invalid', destinationState: 'valid' },
 { querySetState: 'valid', destinationState: 'invalid' }]).
 
-fn(async t => {
+fn(async (t) => {
   const { querySetState, destinationState } = t.params;
 
   const querySet = t.createQuerySetWithState(querySetState);
@@ -50,7 +50,7 @@ paramsSubcasesOnly([
 { firstQuery: 1, queryCount: kQueryCount },
 { firstQuery: kQueryCount, queryCount: 1 }]).
 
-fn(async t => {
+fn(async (t) => {
   const { firstQuery, queryCount } = t.params;
 
   const querySet = t.device.createQuerySet({ type: 'occlusion', count: kQueryCount });
@@ -78,7 +78,7 @@ GPUConst.BufferUsage.STORAGE,
 GPUConst.BufferUsage.QUERY_RESOLVE // control case
 ])).
 
-fn(async t => {
+fn(async (t) => {
   const querySet = t.device.createQuerySet({ type: 'occlusion', count: kQueryCount });
   const destination = t.device.createBuffer({
     size: kQueryCount * 8,
@@ -97,8 +97,8 @@ Tests that resolve query set with invalid destinationOffset:
 - destinationOffset is not a multiple of 256
   `).
 
-paramsSubcasesOnly(u => u.combine('destinationOffset', [0, 128, 256, 384])).
-fn(async t => {
+paramsSubcasesOnly((u) => u.combine('destinationOffset', [0, 128, 256, 384])).
+fn(async (t) => {
   const { destinationOffset } = t.params;
   const querySet = t.device.createQuerySet({ type: 'occlusion', count: kQueryCount });
   const destination = t.device.createBuffer({
@@ -127,7 +127,7 @@ u.combineWithParams([
 { queryCount: 2, bufferSize: 264, destinationOffset: 256, _success: false }])).
 
 
-fn(async t => {
+fn(async (t) => {
   const { queryCount, bufferSize, destinationOffset, _success } = t.params;
   const querySet = t.device.createQuerySet({ type: 'occlusion', count: queryCount });
   const destination = t.device.createBuffer({

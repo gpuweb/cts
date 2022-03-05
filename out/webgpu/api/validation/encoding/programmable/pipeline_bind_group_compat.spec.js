@@ -49,7 +49,7 @@ encoderType)
 
 const kCompatTestParams = kUnitCaseParamsBuilder.
 combine('encoderType', kProgrammableEncoderTypes).
-expand('call', p => getTestCmds(p.encoderType)).
+expand('call', (p) => getTestCmds(p.encoderType)).
 combine('callWithZero', [true, false]);
 
 class F extends ValidationTest {
@@ -94,7 +94,7 @@ class F extends ValidationTest {
     const module = this.device.createShaderModule({ code: shader });
     const pipeline = this.device.createRenderPipeline({
       layout: this.device.createPipelineLayout({
-        bindGroupLayouts: bindGroups.map(entries => this.device.createBindGroupLayout({ entries })) }),
+        bindGroupLayouts: bindGroups.map((entries) => this.device.createBindGroupLayout({ entries })) }),
 
       vertex: {
         module,
@@ -122,7 +122,7 @@ class F extends ValidationTest {
     const module = this.device.createShaderModule({ code: shader });
     const pipeline = this.device.createComputePipeline({
       layout: this.device.createPipelineLayout({
-        bindGroupLayouts: bindGroups.map(entries => this.device.createBindGroupLayout({ entries })) }),
+        bindGroupLayouts: bindGroups.map((entries) => this.device.createBindGroupLayout({ entries })) }),
 
       compute: {
         module,
@@ -283,7 +283,7 @@ combineWithParams([
 
 combine('useU32Array', [false, true])).
 
-fn(t => {
+fn((t) => {
   const {
     encoderType,
     call,
@@ -364,8 +364,8 @@ desc(
   - TODO: bind group should be created with different layout
   `).
 
-params(u => u.combine('type', kBufferBindingTypes)).
-fn(async t => {
+params((u) => u.combine('type', kBufferBindingTypes)).
+fn(async (t) => {
   const { type } = t.params;
 
   // Create fixed bindGroup
@@ -426,7 +426,7 @@ u //
 .combine('bglType', kSamplerBindingTypes).
 combine('bgType', kSamplerBindingTypes)).
 
-fn(async t => {
+fn(async (t) => {
   const { bglType, bgType } = t.params;
   const bindGroup = t.device.createBindGroup({
     entries: [
@@ -487,7 +487,7 @@ combineWithParams([
 
 combine('useU32Array', [false, true])).
 
-fn(t => {
+fn((t) => {
   const {
     encoderType,
     call,
@@ -549,7 +549,7 @@ GPUConst.ShaderStage.VERTEX | GPUConst.ShaderStage.FRAGMENT]).
 
 combine('useU32Array', [false, true])).
 
-fn(t => {
+fn((t) => {
   const { encoderType, call, callWithZero, bgVisibility, plVisibility, useU32Array } = t.params;
 
   const bglEntries = [
@@ -604,9 +604,9 @@ kCompatTestParams.
 beginSubcases().
 combine('bgResourceType', kResourceTypes).
 combine('plResourceType', kResourceTypes).
-expand('useU32Array', p => p.bgResourceType === 'uniformBuf' ? [true, false] : [false])).
+expand('useU32Array', (p) => p.bgResourceType === 'uniformBuf' ? [true, false] : [false])).
 
-fn(t => {
+fn((t) => {
   const {
     encoderType,
     call,

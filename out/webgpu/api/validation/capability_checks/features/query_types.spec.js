@@ -25,7 +25,7 @@ u.
 combine('type', ['occlusion', 'timestamp']).
 combine('timestampQueryEnable', [false, true])).
 
-fn(async t => {
+fn(async (t) => {
   const { type, timestampQueryEnable } = t.params;
 
   const requiredFeatures = [];

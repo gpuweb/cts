@@ -36,6 +36,8 @@ export let UninitializeMethod;
 const kUninitializeMethods = Object.keys(UninitializeMethod);
 
 export let ReadMethod;
+
+// Test with these mip level counts
 (function (ReadMethod) {
   ReadMethod['Sample'] = 'Sample';
   ReadMethod['CopyToBuffer'] = 'CopyToBuffer';
@@ -45,7 +47,6 @@ export let ReadMethod;
   ReadMethod['ColorBlending'] = 'ColorBlending';
   ReadMethod['Storage'] = 'Storage';
 })(ReadMethod || (ReadMethod = {}));
-
 const kMipLevelCounts = [1, 5];
 
 // For each mip level count, define the mip ranges to leave uninitialized.

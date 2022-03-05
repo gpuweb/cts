@@ -29,7 +29,7 @@ u //
 .combine('method', ['CopyB2T', 'CopyT2B']).
 combine('state', kResourceStates)).
 
-fn(async t => {
+fn(async (t) => {
   const { method, state } = t.params;
 
   // A valid buffer.
@@ -76,7 +76,7 @@ GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.UNIFORM,
 GPUConst.BufferUsage.COPY_SRC | GPUConst.BufferUsage.COPY_DST])).
 
 
-fn(async t => {
+fn(async (t) => {
   const { method, usage } = t.params;
 
   const buffer = t.device.createBuffer({
@@ -125,12 +125,12 @@ filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension,
 beginSubcases().
 combine('bytesPerRow', [undefined, 0, 1, 255, 256, 257, 512]).
 combine('copyHeightInBlocks', [0, 1, 2, 3]).
-expand('_textureHeightInBlocks', p => [
+expand('_textureHeightInBlocks', (p) => [
 p.copyHeightInBlocks === 0 ? 1 : p.copyHeightInBlocks]).
 
-unless(p => p.dimension === '1d' && p.copyHeightInBlocks > 1)
+unless((p) => p.dimension === '1d' && p.copyHeightInBlocks > 1)
 // Depth/stencil format copies must copy the whole subresource.
-.unless(p => {
+.unless((p) => {
   const info = kTextureFormatInfo[p.format];
   return (info.depth || info.stencil) && p.copyHeightInBlocks !== p._textureHeightInBlocks;
 })
@@ -142,7 +142,7 @@ bytesPerRow === undefined && copyHeightInBlocks <= 1 ||
 bytesPerRow !== undefined && bytesPerRow >= kTextureFormatInfo[format].bytesPerBlock)).
 
 
-fn(async t => {
+fn(async (t) => {
   const {
     method,
     dimension,

@@ -22,7 +22,7 @@ u //
 .combine('transfer', [false, true]).
 combine('mapMode', ['READ', 'WRITE'])).
 
-fn(async t => {
+fn(async (t) => {
   const { transfer, mapMode } = t.params;
   const kSize = 1024;
 
@@ -42,8 +42,8 @@ fn(async t => {
   t.expect(ab1.byteLength === kSize, 'ab1 should have the size of the buffer');
 
   const mc = new MessageChannel();
-  const ab2Promise = new Promise(resolve => {
-    mc.port2.onmessage = ev => resolve(ev.data);
+  const ab2Promise = new Promise((resolve) => {
+    mc.port2.onmessage = (ev) => resolve(ev.data);
   });
 
   mc.port1.postMessage(ab1, transfer ? [ab1] : undefined);

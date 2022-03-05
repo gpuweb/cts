@@ -108,7 +108,7 @@ params((u) =>
 u //
 .combine('videoSource', kVideoSources)).
 
-fn(async t => {
+fn(async (t) => {
   const videoUrl = getResourcePath(t.params.videoSource);
   const video = document.createElement('video');
   video.src = videoUrl;
@@ -172,7 +172,7 @@ Tests that a GPUExternalTexture is destroyed by a microtask and that using it af
 destroyed results in an error.
 `).
 
-fn(async t => {
+fn(async (t) => {
   const videoUrl = getResourcePath('red-green.webmvp8.webm');
   const video = document.createElement('video');
   video.src = videoUrl;
@@ -241,7 +241,7 @@ desc(
 Tests that we can import an HTMLVideoElement into a GPUExternalTexture and use it in a compute shader.
 `).
 
-fn(async t => {
+fn(async (t) => {
   const videoUrl = getResourcePath('red-green.webmvp8.webm');
   const video = document.createElement('video');
   video.src = videoUrl;

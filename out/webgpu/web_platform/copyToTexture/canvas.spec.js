@@ -334,7 +334,7 @@ beginSubcases().
 combine('width', [1, 2, 4, 15, 255, 256]).
 combine('height', [1, 2, 4, 15, 255, 256])).
 
-fn(async t => {
+fn(async (t) => {
   const {
     width,
     height,
@@ -452,7 +452,7 @@ beginSubcases().
 combine('width', [1, 2, 4, 15, 255, 256]).
 combine('height', [1, 2, 4, 15, 255, 256])).
 
-fn(async t => {
+fn(async (t) => {
   const {
     width,
     height,
@@ -573,7 +573,7 @@ beginSubcases().
 combine('width', [1, 2, 4, 15, 255, 256]).
 combine('height', [1, 2, 4, 15, 255, 256])).
 
-fn(async t => {
+fn(async (t) => {
   const {
     width,
     height,

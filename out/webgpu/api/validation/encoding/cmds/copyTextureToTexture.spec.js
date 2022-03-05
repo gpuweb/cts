@@ -80,7 +80,7 @@ u //
 .combine('srcState', kResourceStates).
 combine('dstState', kResourceStates)).
 
-fn(async t => {
+fn(async (t) => {
   const { srcState, dstState } = t.params;
 
   const textureDesc = {
@@ -142,10 +142,10 @@ combineWithParams([
 { srcLevelCount: 3, dstLevelCount: 3, srcCopyLevel: 0, dstCopyLevel: 2 },
 { srcLevelCount: 3, dstLevelCount: 3, srcCopyLevel: 0, dstCopyLevel: 3 }]).
 
-unless(p => p.dimension === '1d' && (p.srcLevelCount !== 1 || p.dstLevelCount !== 1))).
+unless((p) => p.dimension === '1d' && (p.srcLevelCount !== 1 || p.dstLevelCount !== 1))).
 
 
-fn(async t => {
+fn(async (t) => {
   const { srcLevelCount, dstLevelCount, srcCopyLevel, dstCopyLevel, dimension } = t.params;
 
   const srcTexture = t.device.createTexture({
@@ -185,7 +185,7 @@ u //
 .combine('srcUsage', kTextureUsages).
 combine('dstUsage', kTextureUsages)).
 
-fn(async t => {
+fn(async (t) => {
   const { srcUsage, dstUsage } = t.params;
 
   const srcTexture = t.device.createTexture({
@@ -223,7 +223,7 @@ u //
 .combine('srcSampleCount', [1, 4]).
 combine('dstSampleCount', [1, 4])).
 
-fn(async t => {
+fn(async (t) => {
   const { srcSampleCount, dstSampleCount } = t.params;
 
   const srcTexture = t.device.createTexture({
@@ -272,10 +272,10 @@ combine('dstCopyOrigin', [
 { x: 0, y: 1, z: 0 },
 { x: 1, y: 1, z: 0 }]).
 
-expand('copyWidth', p => [32 - Math.max(p.srcCopyOrigin.x, p.dstCopyOrigin.x), 16]).
-expand('copyHeight', p => [16 - Math.max(p.srcCopyOrigin.y, p.dstCopyOrigin.y), 8])).
+expand('copyWidth', (p) => [32 - Math.max(p.srcCopyOrigin.x, p.dstCopyOrigin.x), 16]).
+expand('copyHeight', (p) => [16 - Math.max(p.srcCopyOrigin.y, p.dstCopyOrigin.y), 8])).
 
-fn(async t => {
+fn(async (t) => {
   const { srcCopyOrigin, dstCopyOrigin, copyWidth, copyHeight } = t.params;
 
   const kWidth = 32;
@@ -318,7 +318,7 @@ u //
 .combine('srcFormat', kTextureFormats).
 combine('dstFormat', kTextureFormats)).
 
-fn(async t => {
+fn(async (t) => {
   const { srcFormat, dstFormat } = t.params;
   const srcFormatInfo = kTextureFormatInfo[srcFormat];
   const dstFormatInfo = kTextureFormatInfo[dstFormat];
@@ -387,7 +387,7 @@ combine('dstTextureSize', [
 combine('srcCopyLevel', [1, 2]).
 combine('dstCopyLevel', [0, 1])).
 
-fn(async t => {
+fn(async (t) => {
   const {
     format,
     copyBoxOffsets,
@@ -483,9 +483,9 @@ p.copyBoxOffsets.depthOrArrayLayers !== 0)).
 
 combine('srcCopyLevel', [0, 1, 3]).
 combine('dstCopyLevel', [0, 1, 3]).
-unless(p => p.dimension === '1d' && (p.srcCopyLevel !== 0 || p.dstCopyLevel !== 0))).
+unless((p) => p.dimension === '1d' && (p.srcCopyLevel !== 0 || p.dstCopyLevel !== 0))).
 
-fn(async t => {
+fn(async (t) => {
   const { dimension, copyBoxOffsets, srcCopyLevel, dstCopyLevel } = t.params;
 
   const textureSize = { width: 16, height: 8, depthOrArrayLayers: 3 };
@@ -609,7 +609,7 @@ u //
 combine('dstCopyOriginZ', [0, 2, 4]).
 combine('copyExtentDepth', [1, 2, 3])).
 
-fn(async t => {
+fn(async (t) => {
   const { srcCopyOriginZ, dstCopyOriginZ, copyExtentDepth } = t.params;
 
   const kArrayLayerCount = 7;
@@ -647,7 +647,7 @@ beginSubcases().
 combine('sourceAspect', ['all', 'depth-only', 'stencil-only']).
 combine('destinationAspect', ['all', 'depth-only', 'stencil-only'])).
 
-fn(async t => {
+fn(async (t) => {
   const { format, sourceAspect, destinationAspect } = t.params;
   await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 
@@ -724,7 +724,7 @@ combine('copyBoxOffsets', [
 combine('srcCopyLevel', [0, 1, 2]).
 combine('dstCopyLevel', [0, 1, 2])).
 
-fn(async t => {
+fn(async (t) => {
   const { format, dimension, copyBoxOffsets, srcCopyLevel, dstCopyLevel } = t.params;
   await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
   const { blockWidth, blockHeight } = kTextureFormatInfo[format];

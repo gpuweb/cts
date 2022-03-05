@@ -32,7 +32,7 @@ kBufferSizeAlignment * 1.5,
 kBufferSizeAlignment * 2])).
 
 
-fn(t => {
+fn((t) => {
   const { mappedAtCreation, size } = t.params;
   const isValid = !mappedAtCreation || size % kBufferSizeAlignment === 0;
   const usage = BufferUsage.COPY_SRC;
@@ -55,7 +55,7 @@ combine('usage2', [0, ...kBufferUsages, kInvalidUsage]).
 beginSubcases().
 combine('mappedAtCreation', [false, true])).
 
-fn(t => {
+fn((t) => {
   const { mappedAtCreation, usage1, usage2 } = t.params;
   const usage = usage1 | usage2;
 
@@ -100,7 +100,7 @@ u.combineWithParams([
 { usage: BufferUsage.STORAGE, size: 0x20_0000_0000 - 1 } // 128 GiB - 1
 ])).
 
-fn(t => {
+fn((t) => {
   const { _valid, usage, size } = t.params;
 
   t.expectGPUError('validation', () => t.device.createBuffer({ size, usage }), !_valid);

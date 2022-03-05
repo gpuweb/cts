@@ -60,7 +60,7 @@ paramsSubcasesOnly([
   target1Mismatched: true }]).
 
 
-fn(async t => {
+fn(async (t) => {
   const { view0Mismatched, target0Mismatched, view1Mismatched, target1Mismatched } = t.params;
 
   const mismatched = view0Mismatched || target0Mismatched || view1Mismatched || target1Mismatched;
@@ -110,8 +110,8 @@ g.test('depth_stencil_attachment,device_mismatch').
 desc(
 'Tests beginRenderPass cannot be called with a depth stencil attachment whose texure view is created from another device').
 
-paramsSubcasesOnly(u => u.combine('mismatched', [true, false])).
-fn(async t => {
+paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
+fn(async (t) => {
   const { mismatched } = t.params;
 
   if (mismatched) {
@@ -150,8 +150,8 @@ g.test('occlusion_query_set,device_mismatch').
 desc(
 'Tests beginRenderPass cannot be called with an occlusion query set created from another device').
 
-paramsSubcasesOnly(u => u.combine('mismatched', [true, false])).
-fn(async t => {
+paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
+fn(async (t) => {
   const { mismatched } = t.params;
 
   if (mismatched) {

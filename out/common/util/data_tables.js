@@ -7,14 +7,14 @@ export function keysOf(obj) {
 }
 
 export function numericKeysOf(obj) {
-  return Object.keys(obj).map(n => Number(n));
+  return Object.keys(obj).map((n) => Number(n));
 }
 
 /**
-   * Creates an info lookup object from a more nicely-formatted table. See below for examples.
-   *
-   * Note: Using `as const` on the arguments to this function is necessary to infer the correct type.
-   */
+ * Creates an info lookup object from a more nicely-formatted table. See below for examples.
+ *
+ * Note: Using `as const` on the arguments to this function is necessary to infer the correct type.
+ */
 export function makeTable(
 
 

@@ -13,9 +13,9 @@ desc(
 `Tests execution of a huge number of compute passes using the same
 GPUComputePipeline.`).
 
-fn(async t => {
+fn(async (t) => {
   const kNumElements = 64;
-  const data = new Uint32Array([...iterRange(kNumElements, x => x)]);
+  const data = new Uint32Array([...iterRange(kNumElements, (x) => x)]);
   const buffer = t.makeBufferWithContents(data, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
   const pipeline = t.device.createComputePipeline({
     compute: {
@@ -48,7 +48,7 @@ fn(async t => {
   }
   t.expectGPUBufferValuesEqual(
   buffer,
-  new Uint32Array([...iterRange(kNumElements, x => x + kNumIterations)]));
+  new Uint32Array([...iterRange(kNumElements, (x) => x + kNumIterations)]));
 
 });
 
@@ -57,13 +57,13 @@ desc(
 `Tests execution of a huge number of compute passes which each use a different
 GPUComputePipeline.`).
 
-fn(async t => {
+fn(async (t) => {
   const buffer = t.makeBufferWithContents(
   new Uint32Array([0]),
   GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
 
   const kNumIterations = 10_000;
-  const stages = iterRange(kNumIterations, i => ({
+  const stages = iterRange(kNumIterations, (i) => ({
     module: t.device.createShaderModule({
       code: `
         struct Buffer { data: u32; };
@@ -97,9 +97,9 @@ desc(
 `Tests execution of compute passes which switch between a huge number of bind
 groups.`).
 
-fn(async t => {
+fn(async (t) => {
   const kNumElements = 64;
-  const data = new Uint32Array([...iterRange(kNumElements, x => x)]);
+  const data = new Uint32Array([...iterRange(kNumElements, (x) => x)]);
   const buffer1 = t.makeBufferWithContents(
   data,
   GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
@@ -143,19 +143,19 @@ fn(async t => {
   const kTotalAddition = kNumIterations / 2 * 3;
   t.expectGPUBufferValuesEqual(
   buffer1,
-  new Uint32Array([...iterRange(kNumElements, x => x + kTotalAddition)]));
+  new Uint32Array([...iterRange(kNumElements, (x) => x + kTotalAddition)]));
 
   t.expectGPUBufferValuesEqual(
   buffer2,
-  new Uint32Array([...iterRange(kNumElements, x => x + kTotalAddition)]));
+  new Uint32Array([...iterRange(kNumElements, (x) => x + kTotalAddition)]));
 
 });
 
 g.test('many_dispatches').
 desc(`Tests execution of compute passes with a huge number of dispatch calls`).
-fn(async t => {
+fn(async (t) => {
   const kNumElements = 64;
-  const data = new Uint32Array([...iterRange(kNumElements, x => x)]);
+  const data = new Uint32Array([...iterRange(kNumElements, (x) => x)]);
   const buffer = t.makeBufferWithContents(data, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
   const module = t.device.createShaderModule({
     code: `
@@ -184,20 +184,20 @@ fn(async t => {
   t.device.queue.submit([encoder.finish()]);
   t.expectGPUBufferValuesEqual(
   buffer,
-  new Uint32Array([...iterRange(kNumElements, x => x + kNumIterations)]));
+  new Uint32Array([...iterRange(kNumElements, (x) => x + kNumIterations)]));
 
 });
 
 g.test('huge_dispatches').
 desc(`Tests execution of compute passes with huge dispatch calls`).
-fn(async t => {
+fn(async (t) => {
   const kDimensions = [512, 512, 128];
-  kDimensions.forEach(x => {
+  kDimensions.forEach((x) => {
     assert(x <= t.device.limits.maxComputeWorkgroupsPerDimension);
   });
 
   const kNumElements = kDimensions[0] * kDimensions[1] * kDimensions[2];
-  const data = new Uint32Array([...iterRange(kNumElements, x => x)]);
+  const data = new Uint32Array([...iterRange(kNumElements, (x) => x)]);
   const buffer = t.makeBufferWithContents(data, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
   const module = t.device.createShaderModule({
     code: `
@@ -228,7 +228,7 @@ fn(async t => {
   }
   t.expectGPUBufferValuesEqual(
   buffer,
-  new Uint32Array([...iterRange(kNumElements, x => x + kNumIterations)]));
+  new Uint32Array([...iterRange(kNumElements, (x) => x + kNumIterations)]));
 
 });
 //# sourceMappingURL=compute_pass.spec.js.map

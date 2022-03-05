@@ -35,7 +35,7 @@ u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('vectorize', [undefined, 2, 3, 4])).
 
-fn(async t => {
+fn(async (t) => {
   run(t, 'abs', [TypeU32], TypeU32, t.params, [
   // Min and Max u32
   { input: u32Bits(kBit.u32.min), expected: u32Bits(kBit.u32.min) },
@@ -94,7 +94,7 @@ u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('vectorize', [undefined, 2, 3, 4])).
 
-fn(async t => {
+fn(async (t) => {
   const cfg = t.params;
   cfg.cmpFloats = correctlyRoundedThreshold();
 
@@ -160,7 +160,7 @@ u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('vectorize', [undefined, 2, 3, 4])).
 
-fn(async t => {
+fn(async (t) => {
   const cfg = t.params;
   cfg.cmpFloats = correctlyRoundedThreshold();
 

@@ -68,7 +68,7 @@ class F extends UnitTest {
 
 export const g = makeTestGroup(F);
 
-g.test('constructor').fn(t => {
+g.test('constructor').fn((t) => {
   t.shouldThrow('Error', () => new TestQueryMultiTest('suite', [], []));
 
   t.shouldThrow('Error', () => new TestQueryMultiCase('suite', ['a'], [], {}));
@@ -80,7 +80,7 @@ g.test('constructor').fn(t => {
   t.shouldThrow('Error', () => new TestQuerySingleCase('suite', [], [], {}));
 });
 
-g.test('toString').fn(t => {
+g.test('toString').fn((t) => {
   t.expectToString(new TestQueryMultiFile('s', []), 's:*');
   t.expectToString(new TestQueryMultiFile('s', ['a']), 's:a,*');
   t.expectToString(new TestQueryMultiFile('s', ['a', 'b']), 's:a,b,*');
@@ -111,7 +111,7 @@ g.test('toString').fn(t => {
   t.expectToString(new TestQuerySingleCase('s', ['a'], ['b'], { c: -0 }), 's:a:b:c="_negzero_"');
 });
 
-g.test('parseQuery').fn(t => {
+g.test('parseQuery').fn((t) => {
   t.expectQueryParse('s:*', new TestQueryMultiFile('s', []));
   t.expectQueryParse('s:a,*', new TestQueryMultiFile('s', ['a']));
   t.expectQueryParse('s:a,b,*', new TestQueryMultiFile('s', ['a', 'b']));

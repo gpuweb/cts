@@ -24,7 +24,7 @@ u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('overload', ['scalar', 'vec2', 'vec3', 'vec4'])).
 
-fn(async t => {
+fn(async (t) => {
   const overloads = {
     scalar: {
       type: TypeBool,

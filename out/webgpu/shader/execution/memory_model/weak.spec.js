@@ -82,7 +82,7 @@ paramsSimple([
 { memType: MemoryType.AtomicWorkgroupClass, _testCode: workgroupMemoryMessagePassingTestCode },
 { memType: MemoryType.AtomicStorageClass, _testCode: storageMemoryMessagePassingTestCode }]).
 
-fn(async t => {
+fn(async (t) => {
   const testShader = buildTestShader(
   t.params._testCode,
   t.params.memType,

@@ -15,7 +15,7 @@ DefaultLimits.maxComputeWorkgroupSizeY,
 DefaultLimits.maxComputeWorkgroupSizeZ];
 
 
-g.test('memcpy').fn(async t => {
+g.test('memcpy').fn(async (t) => {
   const data = new Uint32Array([0x01020304]);
 
   const src = t.makeBufferWithContents(data, GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE);
@@ -82,9 +82,9 @@ DefaultLimits.maxComputeWorkgroupsPerDimension])
 .beginSubcases()
 // 0 == x axis; 1 == y axis; 2 == z axis.
 .combine('largeDimension', [0, 1, 2]).
-expand('workgroupSize', p => [1, 2, 8, 32, kMaxComputeWorkgroupSize[p.largeDimension]])).
+expand('workgroupSize', (p) => [1, 2, 8, 32, kMaxComputeWorkgroupSize[p.largeDimension]])).
 
-fn(async t => {
+fn(async (t) => {
   // The output storage buffer is filled with this value.
   const val = 0x01020304;
   const badVal = 0xbaadf00d;
@@ -152,7 +152,7 @@ fn(async t => {
   pass.end();
   t.device.queue.submit([encoder.finish()]);
 
-  t.expectGPUBufferValuesPassCheck(dst, a => checkElementsEqualGenerated(a, i => val), {
+  t.expectGPUBufferValuesPassCheck(dst, (a) => checkElementsEqualGenerated(a, (i) => val), {
     type: Uint32Array,
     typedLength: bufferLength });
 

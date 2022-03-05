@@ -184,8 +184,8 @@ desc(
     loops and fails with a timeout. See https://crbug.com/tint/1112.
     `).
 
-params(u => u.combine('iterations', [1, 2, 3])).
-fn(async t => {
+params((u) => u.combine('iterations', [1, 2, 3])).
+fn(async (t) => {
   const byteLength = kRTSize * kBytesPerRow;
 
   const numIterations = t.params.iterations;

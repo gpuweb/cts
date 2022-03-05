@@ -37,7 +37,7 @@ combine('slotsToResolve', kSlotsToResolve).
 combine('resolveTargetBaseMipLevel', [0, 1]).
 combine('resolveTargetBaseArrayLayer', [0, 1])).
 
-fn(t => {
+fn((t) => {
   const targets = [];
   for (let i = 0; i < t.params.numColorAttachments; i++) {
     targets.push({ format: kFormat });

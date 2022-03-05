@@ -86,7 +86,7 @@ paramsSimple([
   _testCode: workgroupMemoryCorrTestCode }]).
 
 
-fn(async t => {
+fn(async (t) => {
   const resultCode = `
       if ((r0 == 0u && r1 == 0u)) {
         atomicAdd(&test_results.seq0, 1u);

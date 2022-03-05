@@ -33,7 +33,7 @@ combineWithParams([
 
 beginSubcases()).
 
-fn(async t => {
+fn(async (t) => {
   const invocationsPerGroup = t.params.groupSize.x * t.params.groupSize.y * t.params.groupSize.z;
   const totalInvocations =
   invocationsPerGroup * t.params.numGroups.x * t.params.numGroups.y * t.params.numGroups.z;
@@ -256,13 +256,13 @@ fn(async t => {
   // Check @builtin(local_invocation_index) values.
   t.expectGPUBufferValuesEqual(
   localIndexBuffer,
-  new Uint32Array([...iterRange(totalInvocations, x => x % invocationsPerGroup)]));
+  new Uint32Array([...iterRange(totalInvocations, (x) => x % invocationsPerGroup)]));
 
 
   // Check @builtin(local_invocation_id) values.
   t.expectGPUBufferValuesPassCheck(
   localIdBuffer,
-  outputData => checkEachIndex(outputData, 'local_invocation_id', (_, localId) => localId),
+  (outputData) => checkEachIndex(outputData, 'local_invocation_id', (_, localId) => localId),
   { type: Uint32Array, typedLength: totalInvocations * 4 });
 
 
@@ -276,21 +276,21 @@ fn(async t => {
   };
   t.expectGPUBufferValuesPassCheck(
   globalIdBuffer,
-  outputData => checkEachIndex(outputData, 'global_invocation_id', getGlobalId),
+  (outputData) => checkEachIndex(outputData, 'global_invocation_id', getGlobalId),
   { type: Uint32Array, typedLength: totalInvocations * 4 });
 
 
   // Check @builtin(workgroup_id) values.
   t.expectGPUBufferValuesPassCheck(
   groupIdBuffer,
-  outputData => checkEachIndex(outputData, 'workgroup_id', (groupId, _) => groupId),
+  (outputData) => checkEachIndex(outputData, 'workgroup_id', (groupId, _) => groupId),
   { type: Uint32Array, typedLength: totalInvocations * 4 });
 
 
   // Check @builtin(num_workgroups) values.
   t.expectGPUBufferValuesPassCheck(
   numGroupsBuffer,
-  outputData => checkEachIndex(outputData, 'num_workgroups', () => t.params.numGroups),
+  (outputData) => checkEachIndex(outputData, 'num_workgroups', () => t.params.numGroups),
   { type: Uint32Array, typedLength: totalInvocations * 4 });
 
 });

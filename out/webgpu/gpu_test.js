@@ -51,7 +51,7 @@ descriptor)
     return { requiredFeatures: [descriptor] };
   } else if (descriptor instanceof Array) {
     return {
-      requiredFeatures: descriptor.filter(f => f !== undefined) };
+      requiredFeatures: descriptor.filter((f) => f !== undefined) };
 
   } else {
     return descriptor;
@@ -59,8 +59,8 @@ descriptor)
 }
 
 /**
-   * Base fixture for WebGPU tests.
-   */
+ * Base fixture for WebGPU tests.
+ */
 export class GPUTest extends Fixture {
 
   /** Must not be replaced once acquired. */
@@ -85,9 +85,9 @@ export class GPUTest extends Fixture {
   }
 
   /** GPUDevice for tests requires another device from default one.
-     *  e.g. creating objects required creating mismatched objects required
-     * by device mismatched validation tests.
-     */
+   *  e.g. creating objects required creating mismatched objects required
+   * by device mismatched validation tests.
+   */
   get mismatchedDevice() {
     assert(
     this.mismatchedProvider !== undefined,
@@ -100,10 +100,10 @@ export class GPUTest extends Fixture {
   }
 
   /**
-     * Create other device different with current test device, which could be got by `.mismatchedDevice`.
-     * A `descriptor` may be undefined, which returns a `default` mismatched device.
-     * If the request descriptor or feature name can't be supported, throws an exception to skip the entire test case.
-     */
+   * Create other device different with current test device, which could be got by `.mismatchedDevice`.
+   * A `descriptor` may be undefined, which returns a `default` mismatched device.
+   * If the request descriptor or feature name can't be supported, throws an exception to skip the entire test case.
+   */
   async selectMismatchedDeviceOrSkipTestCase(
   descriptor)
 
@@ -184,14 +184,14 @@ export class GPUTest extends Fixture {
   }
 
   /**
-     * When a GPUTest test accesses `.device` for the first time, a "default" GPUDevice
-     * (descriptor = `undefined`) is provided by default.
-     * However, some tests or cases need particular nonGuaranteedFeatures to be enabled.
-     * Call this function with a descriptor or feature name (or `undefined`) to select a
-     * GPUDevice with matching capabilities.
-     *
-     * If the request descriptor can't be supported, throws an exception to skip the entire test case.
-     */
+   * When a GPUTest test accesses `.device` for the first time, a "default" GPUDevice
+   * (descriptor = `undefined`) is provided by default.
+   * However, some tests or cases need particular nonGuaranteedFeatures to be enabled.
+   * Call this function with a descriptor or feature name (or `undefined`) to select a
+   * GPUDevice with matching capabilities.
+   *
+   * If the request descriptor can't be supported, throws an exception to skip the entire test case.
+   */
   async selectDeviceOrSkipTestCase(
   descriptor)
 
@@ -217,9 +217,9 @@ export class GPUTest extends Fixture {
   }
 
   /**
-     * Create device with texture format(s) required feature(s).
-     * If the device creation fails, then skip the test for that format(s).
-     */
+   * Create device with texture format(s) required feature(s).
+   * If the device creation fails, then skip the test for that format(s).
+   */
   async selectDeviceForTextureFormatOrSkipTestCase(
   formats)
   {
@@ -237,16 +237,16 @@ export class GPUTest extends Fixture {
   }
 
   /**
-     * Create device with query type(s) required feature(s).
-     * If the device creation fails, then skip the test for that type(s).
-     */
+   * Create device with query type(s) required feature(s).
+   * If the device creation fails, then skip the test for that type(s).
+   */
   async selectDeviceForQueryTypeOrSkipTestCase(
   types)
   {
     if (!Array.isArray(types)) {
       types = [types];
     }
-    const features = types.map(t => kQueryTypeInfo[t].feature);
+    const features = types.map((t) => kQueryTypeInfo[t].feature);
     await this.selectDeviceOrSkipTestCase(features);
   }
 
@@ -269,12 +269,12 @@ export class GPUTest extends Fixture {
   }
 
   /**
-     * Offset and size passed to createCopyForMapRead must be divisible by 4. For that
-     * we might need to copy more bytes from the buffer than we want to map.
-     * begin and end values represent the part of the copied buffer that stores the contents
-     * we initially wanted to map.
-     * The copy will not cause an OOB error because the buffer size must be 4-aligned.
-     */
+   * Offset and size passed to createCopyForMapRead must be divisible by 4. For that
+   * we might need to copy more bytes from the buffer than we want to map.
+   * begin and end values represent the part of the copied buffer that stores the contents
+   * we initially wanted to map.
+   * The copy will not cause an OOB error because the buffer size must be 4-aligned.
+   */
   createAlignedCopyForMapRead(
   src,
   size,
@@ -288,9 +288,9 @@ export class GPUTest extends Fixture {
   }
 
   /**
-     * Snapshot the current contents of a range of a GPUBuffer, and return them as a TypedArray.
-     * Also provides a cleanup() function to unmap and destroy the staging buffer.
-     */
+   * Snapshot the current contents of a range of a GPUBuffer, and return them as a TypedArray.
+   * Also provides a cleanup() function to unmap and destroy the staging buffer.
+   */
   async readGPUBufferRangeTyped(
   src,
   {
@@ -346,10 +346,10 @@ export class GPUTest extends Fixture {
   }
 
   /**
-     * Expect a GPUBuffer's contents to pass the provided check.
-     *
-     * A library of checks can be found in {@link webgpu/util/check_contents}.
-     */
+   * Expect a GPUBuffer's contents to pass the provided check.
+   *
+   * A library of checks can be found in {@link webgpu/util/check_contents}.
+   */
   expectGPUBufferValuesPassCheck(
   src,
   check,
@@ -373,7 +373,7 @@ export class GPUTest extends Fixture {
       typedLength,
       method });
 
-    this.eventualAsyncExpectation(async niceStack => {
+    this.eventualAsyncExpectation(async (niceStack) => {
       const readback = await readbackPromise;
       this.expectOK(check(readback.data), { mode, niceStack });
       readback.cleanup();
@@ -381,15 +381,15 @@ export class GPUTest extends Fixture {
   }
 
   /**
-     * Expect a GPUBuffer's contents to equal the values in the provided TypedArray.
-     */
+   * Expect a GPUBuffer's contents to equal the values in the provided TypedArray.
+   */
   expectGPUBufferValuesEqual(
   src,
   expected,
   srcByteOffset = 0,
   { method = 'copy', mode = 'fail' } = {})
   {
-    this.expectGPUBufferValuesPassCheck(src, a => checkElementsEqual(a, expected), {
+    this.expectGPUBufferValuesPassCheck(src, (a) => checkElementsEqual(a, expected), {
       srcByteOffset,
       type: expected.constructor,
       typedLength: expected.length,
@@ -399,11 +399,11 @@ export class GPUTest extends Fixture {
   }
 
   /**
-     * Expect a buffer to consist exclusively of rows of some repeated expected value. The size of
-     * `expectedValue` must be 1, 2, or any multiple of 4 bytes. Rows in the buffer are expected to be
-     * zero-padded out to `bytesPerRow`. `minBytesPerRow` is the number of bytes per row that contain
-     * actual (non-padding) data and must be an exact multiple of the byte-length of `expectedValue`.
-     */
+   * Expect a buffer to consist exclusively of rows of some repeated expected value. The size of
+   * `expectedValue` must be 1, 2, or any multiple of 4 bytes. Rows in the buffer are expected to be
+   * zero-padded out to `bytesPerRow`. `minBytesPerRow` is the number of bytes per row that contain
+   * actual (non-padding) data and must be an exact multiple of the byte-length of `expectedValue`.
+   */
   expectGPUBufferRepeatsSingleValue(
   buffer,
   {
@@ -432,7 +432,7 @@ export class GPUTest extends Fixture {
       const rowValues = new Array(minBytesPerRow / valueSize).fill(valueBytes);
       const rowBytes = new Uint8Array([].concat(...rowValues));
       const expectedContents = new Uint8Array(bufferSize);
-      range(numRows, row => expectedContents.set(rowBytes, row * bytesPerRow));
+      range(numRows, (row) => expectedContents.set(rowBytes, row * bytesPerRow));
       this.expectGPUBufferValuesEqual(buffer, expectedContents);
       return;
     }
@@ -616,11 +616,11 @@ export class GPUTest extends Fixture {
   }
 
   /**
-     * Expect a single pixel of a 2D texture to have a particular byte representation.
-     *
-     * MAINENANCE_TODO: Add check for values of depth/stencil, probably through sampling of shader
-     * MAINENANCE_TODO: Can refactor this and expectSingleColor to use a similar base expect
-     */
+   * Expect a single pixel of a 2D texture to have a particular byte representation.
+   *
+   * MAINENANCE_TODO: Add check for values of depth/stencil, probably through sampling of shader
+   * MAINENANCE_TODO: Can refactor this and expectSingleColor to use a similar base expect
+   */
   expectSinglePixelIn2DTexture(
   src,
   format,
@@ -644,10 +644,10 @@ export class GPUTest extends Fixture {
   }
 
   /**
-     * Take a single pixel of a 2D texture, interpret it using a TypedArray of the `expected` type,
-     * and expect each value in that array to be between the corresponding "expected" values
-     * (either `a[i] <= actual[i] <= b[i]` or `a[i] >= actual[i] => b[i]`).
-     */
+   * Take a single pixel of a 2D texture, interpret it using a TypedArray of the `expected` type,
+   * and expect each value in that array to be between the corresponding "expected" values
+   * (either `a[i] <= actual[i] <= b[i]` or `a[i] >= actual[i] => b[i]`).
+   */
   expectSinglePixelBetweenTwoValuesIn2DTexture(
   src,
   format,
@@ -657,7 +657,7 @@ export class GPUTest extends Fixture {
     slice = 0,
     layout,
     generateWarningOnly = false,
-    checkElementsBetweenFn = (act, [a, b]) => checkElementsBetween(act, [i => a[i], i => b[i]]) })
+    checkElementsBetweenFn = (act, [a, b]) => checkElementsBetween(act, [(i) => a[i], (i) => b[i]]) })
 
 
 
@@ -675,7 +675,7 @@ export class GPUTest extends Fixture {
     const typedLength = exp[0].length;
 
     const buffer = this.readSinglePixelFrom2DTexture(src, format, { x, y }, { slice, layout });
-    this.expectGPUBufferValuesPassCheck(buffer, a => checkElementsBetweenFn(a, exp), {
+    this.expectGPUBufferValuesPassCheck(buffer, (a) => checkElementsBetweenFn(a, exp), {
       type: constructor,
       typedLength,
       mode: generateWarningOnly ? 'warn' : 'fail' });
@@ -683,9 +683,9 @@ export class GPUTest extends Fixture {
   }
 
   /**
-     * Equivalent to {@link expectSinglePixelBetweenTwoValuesIn2DTexture} but uses a special check func
-     * to interpret incoming values as float16
-     */
+   * Equivalent to {@link expectSinglePixelBetweenTwoValuesIn2DTexture} but uses a special check func
+   * to interpret incoming values as float16
+   */
   expectSinglePixelBetweenTwoValuesFloat16In2DTexture(
   src,
   format,
@@ -717,8 +717,8 @@ export class GPUTest extends Fixture {
   }
 
   /**
-     * Expect the specified WebGPU error to be generated when running the provided function.
-     */
+   * Expect the specified WebGPU error to be generated when running the provided function.
+   */
   expectGPUError(filter, fn, shouldError = true) {
     // If no error is expected, we let the scope surrounding the test catch it.
     if (!shouldError) {
@@ -729,7 +729,7 @@ export class GPUTest extends Fixture {
     const returnValue = fn();
     const promise = this.device.popErrorScope();
 
-    this.eventualAsyncExpectation(async niceStack => {
+    this.eventualAsyncExpectation(async (niceStack) => {
       const error = await promise;
 
       let failed = false;
@@ -758,10 +758,10 @@ export class GPUTest extends Fixture {
   }
 
   /**
-     * Expect a validation error inside the callback.
-     *
-     * Tests should always do just one WebGPU call in the callback, to make sure that's what's tested.
-     */
+   * Expect a validation error inside the callback.
+   *
+   * Tests should always do just one WebGPU call in the callback, to make sure that's what's tested.
+   */
   expectValidationError(fn, shouldError = true) {
     // If no error is expected, we let the scope surrounding the test catch it.
     if (shouldError) {
@@ -787,7 +787,7 @@ export class GPUTest extends Fixture {
     if (shouldError) {
       const promise = this.device.popErrorScope();
 
-      this.eventualAsyncExpectation(async niceStack => {
+      this.eventualAsyncExpectation(async (niceStack) => {
         const gpuValidationError = await promise;
         if (!gpuValidationError) {
           niceStack.message = 'Validation succeeded unexpectedly.';
@@ -801,17 +801,17 @@ export class GPUTest extends Fixture {
   }
 
   /**
-     * Create a GPUBuffer with the specified contents and usage.
-     *
-     * MAINTENANCE_TODO: Several call sites would be simplified if this took ArrayBuffer as well.
-     */
+   * Create a GPUBuffer with the specified contents and usage.
+   *
+   * MAINTENANCE_TODO: Several call sites would be simplified if this took ArrayBuffer as well.
+   */
   makeBufferWithContents(dataArray, usage) {
     return this.trackForCleanup(makeBufferWithContents(this.device, dataArray, usage));
   }
 
   /**
-     * Create a GPUTexture with multiple mip levels, each having the specified contents.
-     */
+   * Create a GPUTexture with multiple mip levels, each having the specified contents.
+   */
   createTexture2DWithMipmaps(mipmapDataArray) {
     const format = 'rgba8unorm';
     const mipLevelCount = mipmapDataArray.length;
@@ -862,29 +862,29 @@ export class GPUTest extends Fixture {
   }
 
   /**
-     * Returns a GPUCommandEncoder, GPUComputePassEncoder, GPURenderPassEncoder, or
-     * GPURenderBundleEncoder, and a `finish` method returning a GPUCommandBuffer.
-     * Allows testing methods which have the same signature across multiple encoder interfaces.
-     *
-     * @example
-     * ```
-     * g.test('popDebugGroup')
-     *   .params(u => u.combine('encoderType', kEncoderTypes))
-     *   .fn(t => {
-     *     const { encoder, finish } = t.createEncoder(t.params.encoderType);
-     *     encoder.popDebugGroup();
-     *   });
-     *
-     * g.test('writeTimestamp')
-     *   .params(u => u.combine('encoderType', ['non-pass', 'compute pass', 'render pass'] as const)
-     *   .fn(t => {
-     *     const { encoder, finish } = t.createEncoder(t.params.encoderType);
-     *     // Encoder type is inferred, so `writeTimestamp` can be used even though it doesn't exist
-     *     // on GPURenderBundleEncoder.
-     *     encoder.writeTimestamp(args);
-     *   });
-     * ```
-     */
+   * Returns a GPUCommandEncoder, GPUComputePassEncoder, GPURenderPassEncoder, or
+   * GPURenderBundleEncoder, and a `finish` method returning a GPUCommandBuffer.
+   * Allows testing methods which have the same signature across multiple encoder interfaces.
+   *
+   * @example
+   * ```
+   * g.test('popDebugGroup')
+   *   .params(u => u.combine('encoderType', kEncoderTypes))
+   *   .fn(t => {
+   *     const { encoder, finish } = t.createEncoder(t.params.encoderType);
+   *     encoder.popDebugGroup();
+   *   });
+   *
+   * g.test('writeTimestamp')
+   *   .params(u => u.combine('encoderType', ['non-pass', 'compute pass', 'render pass'] as const)
+   *   .fn(t => {
+   *     const { encoder, finish } = t.createEncoder(t.params.encoderType);
+   *     // Encoder type is inferred, so `writeTimestamp` can be used even though it doesn't exist
+   *     // on GPURenderBundleEncoder.
+   *     encoder.writeTimestamp(args);
+   *   });
+   * ```
+   */
   createEncoder(
   encoderType,
   {
@@ -916,7 +916,7 @@ export class GPUTest extends Fixture {
           const rbEncoder = device.createRenderBundleEncoder(fullAttachmentInfo);
           const pass = this.createEncoder('render pass', { attachmentInfo });
 
-          return new CommandBufferMaker(this, rbEncoder, shouldSucceed => {
+          return new CommandBufferMaker(this, rbEncoder, (shouldSucceed) => {
             // If !shouldSucceed, the resulting bundle should be invalid.
             const rb = this.expectGPUError('validation', () => rbEncoder.finish(), !shouldSucceed);
             pass.encoder.executeBundles([rb]);
@@ -928,7 +928,7 @@ export class GPUTest extends Fixture {
           const commandEncoder = this.device.createCommandEncoder();
           const encoder = commandEncoder.beginComputePass();
 
-          return new CommandBufferMaker(this, encoder, shouldSucceed => {
+          return new CommandBufferMaker(this, encoder, (shouldSucceed) => {
             encoder.end();
             return this.expectGPUError('validation', () => commandEncoder.finish(), !shouldSucceed);
           });
@@ -945,7 +945,7 @@ export class GPUTest extends Fixture {
           createView();
 
           const passDesc = {
-            colorAttachments: Array.from(fullAttachmentInfo.colorFormats, format => ({
+            colorAttachments: Array.from(fullAttachmentInfo.colorFormats, (format) => ({
               view: makeAttachmentView(format),
               clearValue: [0, 0, 0, 0],
               loadOp: 'clear',
@@ -968,7 +968,7 @@ export class GPUTest extends Fixture {
 
           const commandEncoder = this.device.createCommandEncoder();
           const encoder = commandEncoder.beginRenderPass(passDesc);
-          return new CommandBufferMaker(this, encoder, shouldSucceed => {
+          return new CommandBufferMaker(this, encoder, (shouldSucceed) => {
             encoder.end();
             return this.expectGPUError('validation', () => commandEncoder.finish(), !shouldSucceed);
           });

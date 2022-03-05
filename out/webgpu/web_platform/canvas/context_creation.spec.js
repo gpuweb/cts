@@ -22,7 +22,7 @@ u //
 beginSubcases().
 combine('attributes', [undefined, {}])).
 
-fn(async t => {
+fn(async (t) => {
   let canvas;
   if (t.params.offscreen) {
     if (typeof OffscreenCanvas === 'undefined') {

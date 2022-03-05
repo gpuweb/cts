@@ -78,8 +78,8 @@ Control case for createComputePipeline and createComputePipelineAsync.
 Call the API with valid compute shader and matching valid entryPoint, making sure that the test function working well.
 `).
 
-params(u => u.combine('isAsync', [true, false])).
-fn(async t => {
+params((u) => u.combine('isAsync', [true, false])).
+fn(async (t) => {
   const { isAsync } = t.params;
   t.doCreateComputePipelineTest(isAsync, true, {
     compute: { module: t.getShaderModule('compute', 'main'), entryPoint: 'main' } });
@@ -92,8 +92,8 @@ desc(
 Tests calling createComputePipeline(Async) with a invalid compute shader, and check that the APIs catch this error.
 `).
 
-params(u => u.combine('isAsync', [true, false])).
-fn(async t => {
+params((u) => u.combine('isAsync', [true, false])).
+fn(async (t) => {
   const { isAsync } = t.params;
   t.doCreateComputePipelineTest(isAsync, false, {
     compute: {
@@ -115,7 +115,7 @@ u //
 .combine('isAsync', [true, false]).
 combine('shaderModuleStage', ['compute', 'vertex', 'fragment'])).
 
-fn(async t => {
+fn(async (t) => {
   const { isAsync, shaderModuleStage } = t.params;
   const descriptor = {
     compute: {
@@ -159,7 +159,7 @@ u.combine('isAsync', [true, false]).combineWithParams([
 { shaderModuleEntryPoint: 'main_t12V3', stageEntryPoint: '_main_t12V3' }])).
 
 
-fn(async t => {
+fn(async (t) => {
   const { isAsync, shaderModuleEntryPoint, stageEntryPoint } = t.params;
   const descriptor = {
     compute: {
@@ -175,8 +175,8 @@ g.test('pipeline_layout,device_mismatch').
 desc(
 'Tests createComputePipeline(Async) cannot be called with a pipeline layout created from another device').
 
-paramsSubcasesOnly(u => u.combine('isAsync', [true, false]).combine('mismatched', [true, false])).
-fn(async t => {
+paramsSubcasesOnly((u) => u.combine('isAsync', [true, false]).combine('mismatched', [true, false])).
+fn(async (t) => {
   const { isAsync, mismatched } = t.params;
 
   if (mismatched) {
@@ -203,8 +203,8 @@ g.test('shader_module,device_mismatch').
 desc(
 'Tests createComputePipeline(Async) cannot be called with a shader module created from another device').
 
-paramsSubcasesOnly(u => u.combine('isAsync', [true, false]).combine('mismatched', [true, false])).
-fn(async t => {
+paramsSubcasesOnly((u) => u.combine('isAsync', [true, false]).combine('mismatched', [true, false])).
+fn(async (t) => {
   const { isAsync, mismatched } = t.params;
 
   if (mismatched) {

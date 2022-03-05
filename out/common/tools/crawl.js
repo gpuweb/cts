@@ -14,7 +14,7 @@ const specFileSuffix = __filename.endsWith('.ts') ? '.spec.ts' : '.spec.js';
 
 async function crawlFilesRecursively(dir) {
   const subpathInfo = await Promise.all(
-  (await fs.promises.readdir(dir)).map(async d => {
+  (await fs.promises.readdir(dir)).map(async (d) => {
     const p = path.join(dir, d);
     const stats = await fs.promises.stat(p);
     return {
@@ -33,12 +33,12 @@ async function crawlFilesRecursively(dir) {
   i.path.endsWith(`${path.sep}README.txt`) ||
   i.path === 'README.txt')).
 
-  map(i => i.path);
+  map((i) => i.path);
 
   return files.concat(
   await subpathInfo.
-  filter(i => i.isDirectory).
-  map(i => crawlFilesRecursively(i.path)).
+  filter((i) => i.isDirectory).
+  map((i) => crawlFilesRecursively(i.path)).
   reduce(async (a, b) => (await a).concat(await b), Promise.resolve([])));
 
 }
@@ -54,7 +54,7 @@ validate = true)
 
   // Crawl files and convert paths to be POSIX-style, relative to suiteDir.
   const filesToEnumerate = (await crawlFilesRecursively(suiteDir)).
-  map(f => path.relative(suiteDir, f).replace(/\\/g, '/')).
+  map((f) => path.relative(suiteDir, f).replace(/\\/g, '/')).
   sort();
 
   const entries = [];

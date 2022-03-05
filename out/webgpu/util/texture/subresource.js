@@ -21,9 +21,9 @@ function* rangeAsIterator(r) {
 }
 
 /**
-   * Represents a range of subresources of a single-plane texture:
-   * a min/max mip level and min/max array layer.
-   */
+ * Represents a range of subresources of a single-plane texture:
+ * a min/max mip level and min/max array layer.
+ */
 export class SubresourceRange {
 
 
@@ -43,8 +43,8 @@ export class SubresourceRange {
   }
 
   /**
-     * Iterates over the "rectangle" of { mip level, array layer } pairs represented by the range.
-     */
+   * Iterates over the "rectangle" of { mip level, array layer } pairs represented by the range.
+   */
   *each() {
     for (let level = this.mipRange.begin; level < this.mipRange.end; ++level) {
       for (let layer = this.layerRange.begin; layer < this.layerRange.end; ++layer) {
@@ -54,9 +54,9 @@ export class SubresourceRange {
   }
 
   /**
-     * Iterates over the mip levels represented by the range, each level including an iterator
-     * over the array layers at that level.
-     */
+   * Iterates over the mip levels represented by the range, each level including an iterator
+   * over the array layers at that level.
+   */
   *mipLevels() {
     for (let level = this.mipRange.begin; level < this.mipRange.end; ++level) {
       yield {

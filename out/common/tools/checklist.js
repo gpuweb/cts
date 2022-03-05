@@ -25,8 +25,8 @@ if (process.argv.length !== 3) usage(1);
 async function loadQueryListFromTextFile(filename) {
   const lines = (await fs.promises.readFile(filename, 'utf8')).split(/\r?\n/);
   const allQueries = lines.
-  filter(l => l).
-  map(l => {
+  filter((l) => l).
+  map((l) => {
     const [doneStr, q] = l.split(/\s+/);
     assert(doneStr === 'DONE' || doneStr === 'TODO', 'first column must be DONE or TODO');
     return { query: parseQuery(q), done: doneStr === 'DONE' };
@@ -102,7 +102,7 @@ matchQueries)
     throw new StacklessError(
     'Found done/todo mismatches:\n  ' +
     donenessMismatches.
-    map(q => `marked ${q.done ? 'DONE, but is TODO' : 'TODO, but is DONE'}: ${q.query}`).
+    map((q) => `marked ${q.done ? 'DONE, but is TODO' : 'TODO, but is DONE'}: ${q.query}`).
     join('\n  '));
 
   }
@@ -125,14 +125,14 @@ matchQueries)
     const tree = await loadTreeForQuery(
     loader,
     suiteQuery,
-    queriesInSuite.map(q => q.query));
+    queriesInSuite.map((q) => q.query));
 
     console.log('  Found no invalid queries in the checklist. Checking for unmatched tests...');
     const subtreeCount = checkForUnmatchedSubtreesAndDoneness(tree, queriesInSuite);
     console.log(`  No unmatched tests or done/todo mismatches among ${subtreeCount} subtrees!`);
   }
   console.log(`Checklist looks good!`);
-})().catch(ex => {
+})().catch((ex) => {
   console.log(ex.stack ?? ex.toString());
   process.exit(1);
 });

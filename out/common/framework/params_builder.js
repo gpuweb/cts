@@ -97,8 +97,8 @@
 
 
 /**
-     * Base class for `CaseParamsBuilder` and `SubcaseParamsBuilder`.
-     */
+ * Base class for `CaseParamsBuilder` and `SubcaseParamsBuilder`.
+ */
 export class ParamsBuilderBase {
 
 
@@ -107,14 +107,14 @@ export class ParamsBuilderBase {
   }
 
   /**
-     * Hidden from test files. Use `builderIterateCasesWithSubcases` to access this.
-     */}
+   * Hidden from test files. Use `builderIterateCasesWithSubcases` to access this.
+   */}
 
 
 
 /**
-          * Calls the (normally hidden) `iterateCasesWithSubcases()` method.
-          */
+ * Calls the (normally hidden) `iterateCasesWithSubcases()` method.
+ */
 export function builderIterateCasesWithSubcases(builder) {
 
 
@@ -124,13 +124,13 @@ export function builderIterateCasesWithSubcases(builder) {
 }
 
 /**
-   * Builder for combinatorial test **case** parameters.
-   *
-   * CaseParamsBuilder is immutable. Each method call returns a new, immutable object,
-   * modifying the list of cases according to the method called.
-   *
-   * This means, for example, that the `unit` passed into `TestBuilder.params()` can be reused.
-   */
+ * Builder for combinatorial test **case** parameters.
+ *
+ * CaseParamsBuilder is immutable. Each method call returns a new, immutable object,
+ * modifying the list of cases according to the method called.
+ *
+ * This means, for example, that the `unit` passed into `TestBuilder.params()` can be reused.
+ */
 export class CaseParamsBuilder extends
 ParamsBuilderBase
 {
@@ -188,14 +188,14 @@ ParamsBuilderBase
 
   /** @inheritdoc */
   unless(pred) {
-    return this.filter(x => !pred(x));
+    return this.filter((x) => !pred(x));
   }
 
   /**
-     * "Finalize" the list of cases and begin defining subcases.
-     * Returns a new SubcaseParamsBuilder. Methods called on SubcaseParamsBuilder
-     * generate new subcases instead of new cases.
-     */
+   * "Finalize" the list of cases and begin defining subcases.
+   * Returns a new SubcaseParamsBuilder. Methods called on SubcaseParamsBuilder
+   * generate new subcases instead of new cases.
+   */
   beginSubcases() {
     return new SubcaseParamsBuilder(
     () => this.cases(),
@@ -207,21 +207,21 @@ ParamsBuilderBase
 
 
 /**
-      * The unit CaseParamsBuilder, representing a single case with no params: `[ {} ]`.
-      *
-      * `punit` is passed to every `.params()`/`.paramsSubcasesOnly()` call, so `kUnitCaseParamsBuilder`
-      * is only explicitly needed if constructing a ParamsBuilder outside of a test builder.
-      */
+ * The unit CaseParamsBuilder, representing a single case with no params: `[ {} ]`.
+ *
+ * `punit` is passed to every `.params()`/`.paramsSubcasesOnly()` call, so `kUnitCaseParamsBuilder`
+ * is only explicitly needed if constructing a ParamsBuilder outside of a test builder.
+ */
 export const kUnitCaseParamsBuilder = new CaseParamsBuilder(function* () {
   yield {};
 });
 
 /**
-     * Builder for combinatorial test _subcase_ parameters.
-     *
-     * SubcaseParamsBuilder is immutable. Each method call returns a new, immutable object,
-     * modifying the list of subcases according to the method called.
-     */
+ * Builder for combinatorial test _subcase_ parameters.
+ *
+ * SubcaseParamsBuilder is immutable. Each method call returns a new, immutable object,
+ * modifying the list of subcases according to the method called.
+ */
 export class SubcaseParamsBuilder extends
 ParamsBuilderBase
 {
@@ -283,7 +283,7 @@ ParamsBuilderBase
 
   /** @inheritdoc */
   unless(pred) {
-    return this.filter(x => !pred(x));
+    return this.filter((x) => !pred(x));
   }}
 
 

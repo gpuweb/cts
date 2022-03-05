@@ -49,7 +49,7 @@ u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('width', [1, 2, 3, 4])).
 
-fn(async t => {
+fn(async (t) => {
   const cfg = t.params;
 
   const T = t.params.width === 1 ? TypeU32 : TypeVec(t.params.width, TypeU32);
@@ -212,7 +212,7 @@ u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('width', [1, 2, 3, 4])).
 
-fn(async t => {
+fn(async (t) => {
   const cfg = t.params;
 
   const T = t.params.width === 1 ? TypeI32 : TypeVec(t.params.width, TypeI32);

@@ -36,9 +36,9 @@ export class LogMessageWithStack extends Error {
 
 
 /**
-      * Returns a string, nicely indented, for debug logs.
-      * This is used in the cmdline and wpt runtimes. In WPT, it shows up in the `*-actual.txt` file.
-      */
+ * Returns a string, nicely indented, for debug logs.
+ * This is used in the cmdline and wpt runtimes. In WPT, it shows up in the `*-actual.txt` file.
+ */
 export function prettyPrintLog(log) {
   return '  - ' + log.toJSON().replace(/\n/g, '\n    ');
 }

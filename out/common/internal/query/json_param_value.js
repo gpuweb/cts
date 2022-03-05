@@ -56,8 +56,8 @@ export function stringifyParamValue(value) {
 }
 
 /**
-   * Like stringifyParamValue but sorts dictionaries by key, for hashing.
-   */
+ * Like stringifyParamValue but sorts dictionaries by key, for hashing.
+ */
 export function stringifyParamValueUniquely(value) {
   return JSON.stringify(value, (k, v) => {
     if (typeof v === 'object' && v !== null) {

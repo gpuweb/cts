@@ -451,10 +451,10 @@ u //
 combine('indirect', [false, true]).
 combine('primitiveRestart', [false, true]).
 unless(
-p => p.primitiveRestart && p.topology !== 'line-strip' && p.topology !== 'triangle-strip')).
+(p) => p.primitiveRestart && p.topology !== 'line-strip' && p.topology !== 'triangle-strip')).
 
 
-fn(t => {
+fn((t) => {
   t.run({
     ...t.params,
     testLocations: getDefaultTestLocations(t.params) });
@@ -488,7 +488,7 @@ expand('drawCount', function* (p) {
 
 })).
 
-fn(t => {
+fn((t) => {
   const testLocations = getDefaultTestLocations({ ...t.params, invalidateLastInList: true });
   t.run({
     ...t.params,

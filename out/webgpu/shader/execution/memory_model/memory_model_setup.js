@@ -104,20 +104,20 @@ const memStrideIndex = 10;
 const memLocationOffsetIndex = 11;
 
 /**
-                                    * All memory used in these consists of a four byte word, so this value is used to correctly set the byte size of buffers that
-                                    * are read to/written from during tests and for storing test results.
-                                    */
+ * All memory used in these consists of a four byte word, so this value is used to correctly set the byte size of buffers that
+ * are read to/written from during tests and for storing test results.
+ */
 const bytesPerWord = 4;
 
 /**
-                         * Implements setup code necessary to run a memory model test. A test consists of two parts:
-                         *  1.) A test shader that runs a specified memory model litmus test and attempts to reveal a weak (disallowed) behavior.
-                         *      At a high level, a test shader consists of a set of testing workgroups where every invocation executes the litmus test
-                         *      on a set of test locations, and a set of stressing workgroups where every invocation accesses a specified memory location
-                         *      in a random pattern.
-                         *  2.) A result shader that takes the output of the test shader, which consists of the memory locations accessed during the test
-                         *      and the results of any reads made during the test, and aggregate the results based on the possible behaviors of the test.
-                         */
+ * Implements setup code necessary to run a memory model test. A test consists of two parts:
+ *  1.) A test shader that runs a specified memory model litmus test and attempts to reveal a weak (disallowed) behavior.
+ *      At a high level, a test shader consists of a set of testing workgroups where every invocation executes the litmus test
+ *      on a set of test locations, and a set of stressing workgroups where every invocation accesses a specified memory location
+ *      in a random pattern.
+ *  2.) A result shader that takes the output of the test shader, which consists of the memory locations accessed during the test
+ *      and the results of any reads made during the test, and aggregate the results based on the possible behaviors of the test.
+ */
 export class MemoryModelTester {
 
 
@@ -317,9 +317,9 @@ export class MemoryModelTester {
   }
 
   /**
-     * Run the test for the specified number of iterations. Checks the testResults buffer on the weakIndex; if
-     * this value is not 0 then the test has failed.
-     */
+   * Run the test for the specified number of iterations. Checks the testResults buffer on the weakIndex; if
+   * this value is not 0 then the test has failed.
+   */
   async run(iterations, weakIndex) {
     for (let i = 0; i < iterations; i++) {
       const numWorkgroups = this.getRandomInRange(
@@ -375,10 +375,10 @@ export class MemoryModelTester {
   }
 
   /**
-     * Returns a function that checks whether the specified weak index's value is not equal to 0.
-     * If the weak index's value is not 0, it means the test has observed a behavior disallowed by the memory model and
-     * is considered a test failure.
-     */
+   * Returns a function that checks whether the specified weak index's value is not equal to 0.
+   * If the weak index's value is not 0, it means the test has observed a behavior disallowed by the memory model and
+   * is considered a test failure.
+   */
   checkResult(weakIndex) {
     return function (i, v) {
       if (i === weakIndex && v > 0) {
@@ -430,9 +430,9 @@ export class MemoryModelTester {
   }
 
   /**
-     * Shuffles the order of workgroup ids, so that threads operating on the same memory location are not always in
-     * consecutive workgroups.
-     */
+   * Shuffles the order of workgroup ids, so that threads operating on the same memory location are not always in
+   * consecutive workgroups.
+   */
   async setShuffledWorkgroups(numWorkgroups) {
     await this.buffers.shuffledWorkgroups.srcBuf.mapAsync(GPUMapMode.WRITE);
     const shuffledWorkgroupsBuffer = this.buffers.shuffledWorkgroups.srcBuf.getMappedRange();
@@ -587,12 +587,12 @@ const shaderMemStructures = `
 `;
 
 /**
-    * Structure to hold the counts of occurrences of the possible behaviors of a two-thread, four-instruction test.
-    * "seq0" means the first invocation's instructions are observed to have occurred before the second invocation's instructions.
-    * "seq1" means the second invocation's instructions are observed to have occurred before the first invocation's instructions.
-    * "interleaved" means there was an observation of some interleaving of instructions between the two invocations.
-    * "weak" means there was an observation of some ordering of instructions that is inconsistent with the WebGPU memory model.
-    */
+ * Structure to hold the counts of occurrences of the possible behaviors of a two-thread, four-instruction test.
+ * "seq0" means the first invocation's instructions are observed to have occurred before the second invocation's instructions.
+ * "seq1" means the second invocation's instructions are observed to have occurred before the first invocation's instructions.
+ * "interleaved" means there was an observation of some interleaving of instructions between the two invocations.
+ * "weak" means there was an observation of some ordering of instructions that is inconsistent with the WebGPU memory model.
+ */
 const fourBehaviorTestResultStructure = `
   struct TestResults {
     seq0: atomic<u32>;
@@ -603,11 +603,11 @@ const fourBehaviorTestResultStructure = `
 `;
 
 /**
-    * Defines the possible behaviors of a two instruction test. Used to test the behavior of non-atomic memory with barriers and
-    * one-thread coherence tests.
-    * "seq" means that the expected, sequential behavior occurred.
-    * "weak" means that an unexpected, inconsistent behavior occurred.
-    */
+ * Defines the possible behaviors of a two instruction test. Used to test the behavior of non-atomic memory with barriers and
+ * one-thread coherence tests.
+ * "seq" means that the expected, sequential behavior occurred.
+ * "weak" means that an unexpected, inconsistent behavior occurred.
+ */
 const twoBehaviorTestResultStructure = `
   struct TestResults {
     seq: atomic<u32>;
@@ -650,28 +650,28 @@ const resultShaderBindings = `
 `;
 
 /**
-    * For tests that operate on workgroup memory, include this definition. 3584 memory locations is
-    * large enough to accomodate the maximum memory size needed per workgroup for testing, which is
-    * 256 invocations per workgroup x 2 memory locations x 7 (memStride, or max stride between successive memory locations).
-    * Should change to a pipeline overridable constant when possible.
-    */
+ * For tests that operate on workgroup memory, include this definition. 3584 memory locations is
+ * large enough to accomodate the maximum memory size needed per workgroup for testing, which is
+ * 256 invocations per workgroup x 2 memory locations x 7 (memStride, or max stride between successive memory locations).
+ * Should change to a pipeline overridable constant when possible.
+ */
 const atomicWorkgroupMemory = `
   var<workgroup> wg_test_locations: array<atomic<u32>, 3584>;
 `;
 
 /**
-    * For tests that operate on non-atomic workgroup memory, include this definition. 3584 memory locations
-    * is large enough to accomodate the maximum memory size needed per workgroup for testing.
-    */
+ * For tests that operate on non-atomic workgroup memory, include this definition. 3584 memory locations
+ * is large enough to accomodate the maximum memory size needed per workgroup for testing.
+ */
 const nonAtomicWorkgroupMemory = `
   var<workgroup> wg_test_locations: array<u32, 3584>;
 `;
 
 /**
-    * Functions used to calculate memory locations for each invocation, for both testing and result aggregation.
-    * The permute function ensures a random permutation based on multiplying and modding by coprime numbers. The stripe
-    * workgroup function ensures that invocations coordinating on a test are spread out across different workgroups.
-    */
+ * Functions used to calculate memory locations for each invocation, for both testing and result aggregation.
+ * The permute function ensures a random permutation based on multiplying and modding by coprime numbers. The stripe
+ * workgroup function ensures that invocations coordinating on a test are spread out across different workgroups.
+ */
 const memoryLocationFunctions = `
   fn permute_id(id: u32, factor: u32, mask: u32) -> u32 {
     return (id * factor) % mask;
@@ -754,9 +754,9 @@ const testShaderFunctions = `
 `;
 
 /**
-    * Entry point to both test and result shaders. One-dimensional workgroup size is hardcoded to 256, until
-    * pipeline overrideable constants are supported.
-    */
+ * Entry point to both test and result shaders. One-dimensional workgroup size is hardcoded to 256, until
+ * pipeline overrideable constants are supported.
+ */
 const shaderEntryPoint = `
   // Change to pipeline overridable constant when possible.
   let workgroupXSize = 256u;
@@ -772,9 +772,9 @@ const testShaderCommonHeader = `
 `;
 
 /**
-    * All test shaders must calculate addresses for memory locations used in the test. Not all these addresses are
-    * used in every test, but no test uses more than these addresses.
-    */
+ * All test shaders must calculate addresses for memory locations used in the test. Not all these addresses are
+ * used in every test, but no test uses more than these addresses.
+ */
 const testShaderCommonCalculations = `
   let x_0 = id_0 * stress_params.mem_stride * 2u;
   let y_0 = permute_id(id_0, stress_params.permute_second, total_ids) * stress_params.mem_stride * 2u + stress_params.location_offset;
@@ -786,9 +786,9 @@ const testShaderCommonCalculations = `
 `;
 
 /**
-    * An inter-workgroup test calculates two sets of memory locations that are guaranteed to be in separate workgroups.
-    * If the bounded spin-loop barrier is called, it attempts to wait for all invocations in all workgroups.
-    */
+ * An inter-workgroup test calculates two sets of memory locations that are guaranteed to be in separate workgroups.
+ * If the bounded spin-loop barrier is called, it attempts to wait for all invocations in all workgroups.
+ */
 const interWorkgroupTestShaderCode = [
 `
   let total_ids = workgroupXSize * stress_params.testing_workgroups;
@@ -805,9 +805,9 @@ testShaderCommonCalculations,
 join('\n');
 
 /**
-             * An intra-workgroup test calculates two set of memory locations that are guaranteed to be in the same workgroup.
-             * If the bounded spin-loop barrier is called, it attempts to wait for all invocations in the same workgroup.
-             */
+ * An intra-workgroup test calculates two set of memory locations that are guaranteed to be in the same workgroup.
+ * If the bounded spin-loop barrier is called, it attempts to wait for all invocations in the same workgroup.
+ */
 const intraWorkgroupTestShaderCode = [
 `
   let total_ids = workgroupXSize;
@@ -831,9 +831,9 @@ const testShaderCommonFooter = `
 `;
 
 /**
-    * All result shaders must calculate memory locations used in the test. Not all these locations are
-    * used in every result shader, but no result shader uses more than these locations.
-    */
+ * All result shaders must calculate memory locations used in the test. Not all these locations are
+ * used in every result shader, but no result shader uses more than these locations.
+ */
 const resultShaderCommonCalculations = `
   let id_0 = workgroup_id[0] * workgroupXSize + local_invocation_id[0];
   let x_0 = id_0 * stress_params.mem_stride * 2u;
@@ -918,9 +918,9 @@ shaderEntryPoint].
 join('\n');
 
 /**
-             * Defines the types of possible memory a test is operating on. Used as part of the process of building shader code from
-             * its composite parts.
-             */
+ * Defines the types of possible memory a test is operating on. Used as part of the process of building shader code from
+ * its composite parts.
+ */
 export let MemoryType;
 
 
@@ -933,9 +933,9 @@ export let MemoryType;
 
 
 /**
-                        * Defines the relative positions of two invocations coordinating on a test. Used as part of the process of building shader
-                        * code from its composite parts.
-                        */(function (MemoryType) {MemoryType["AtomicStorageClass"] = "atomic_storage";MemoryType["NonAtomicStorageClass"] = "non_atomic_storage";MemoryType["AtomicWorkgroupClass"] = "atomic_workgroup";MemoryType["NonAtomicWorkgroupClass"] = "non_atomic_workgroup";})(MemoryType || (MemoryType = {}));
+ * Defines the relative positions of two invocations coordinating on a test. Used as part of the process of building shader
+ * code from its composite parts.
+ */(function (MemoryType) {MemoryType["AtomicStorageClass"] = "atomic_storage";MemoryType["NonAtomicStorageClass"] = "non_atomic_storage";MemoryType["AtomicWorkgroupClass"] = "atomic_workgroup";MemoryType["NonAtomicWorkgroupClass"] = "non_atomic_workgroup";})(MemoryType || (MemoryType = {}));
 export let TestType;
 
 
@@ -950,9 +950,9 @@ export let ResultType;
 
 
 /**
-                        * Given test code that performs the actual sequence of loads and stores, as well as a memory type and test type, returns
-                        * a complete test shader.
-                        */(function (ResultType) {ResultType[ResultType["TwoBehavior"] = 0] = "TwoBehavior";ResultType[ResultType["FourBehavior"] = 1] = "FourBehavior";})(ResultType || (ResultType = {}));
+ * Given test code that performs the actual sequence of loads and stores, as well as a memory type and test type, returns
+ * a complete test shader.
+ */(function (ResultType) {ResultType[ResultType["TwoBehavior"] = 0] = "TwoBehavior";ResultType[ResultType["FourBehavior"] = 1] = "FourBehavior";})(ResultType || (ResultType = {}));
 export function buildTestShader(
 testCode,
 memoryType,
@@ -984,9 +984,9 @@ testType)
 }
 
 /**
-   * Given result code that aggregates the possible behaviors of a test across all instances, as well as a test type and
-   * number of behaviors, returns a complete result shader.
-   */
+ * Given result code that aggregates the possible behaviors of a test across all instances, as well as a test type and
+ * number of behaviors, returns a complete result shader.
+ */
 export function buildResultShader(
 resultCode,
 testType,

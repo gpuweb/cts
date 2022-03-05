@@ -23,11 +23,11 @@ const kAdapterTypes = keysOf(kAdapterTypeOptions);
 
 class DeviceAllocationTests extends Fixture {
   /**
-                                              * Creates a device, a valid compute pipeline, valid resources for the pipeline, and
-                                              * ties them together into a set of compute commands ready to be submitted to the GPU
-                                              * queue. Does not submit the commands in order to make sure that all resources are
-                                              * kept alive until the device is destroyed.
-                                              */
+   * Creates a device, a valid compute pipeline, valid resources for the pipeline, and
+   * ties them together into a set of compute commands ready to be submitted to the GPU
+   * queue. Does not submit the commands in order to make sure that all resources are
+   * kept alive until the device is destroyed.
+   */
   async createDeviceAndComputeCommands(adapter) {
     // Constants are computed such that per run, this function should allocate roughly 2G
     // worth of data. This should be sufficient as we run these creation functions many
@@ -37,7 +37,7 @@ class DeviceAllocationTests extends Fixture {
     const kNumBufferElements =
     DefaultLimits.maxComputeWorkgroupSizeX * DefaultLimits.maxComputeWorkgroupSizeY;
     const kBufferSize = kNumBufferElements * 4;
-    const kBufferData = new Uint32Array([...iterRange(kNumBufferElements, x => x)]);
+    const kBufferData = new Uint32Array([...iterRange(kNumBufferElements, (x) => x)]);
 
     const device = await adapter.requestDevice();
     const commands = [];
@@ -88,11 +88,11 @@ class DeviceAllocationTests extends Fixture {
   }
 
   /**
-     * Creates a device, a valid render pipeline, valid resources for the pipeline, and
-     * ties them together into a set of render commands ready to be submitted to the GPU
-     * queue. Does not submit the commands in order to make sure that all resources are
-     * kept alive until the device is destroyed.
-     */
+   * Creates a device, a valid render pipeline, valid resources for the pipeline, and
+   * ties them together into a set of render commands ready to be submitted to the GPU
+   * queue. Does not submit the commands in order to make sure that all resources are
+   * kept alive until the device is destroyed.
+   */
   async createDeviceAndRenderCommands(adapter) {
     // Constants are computed such that per run, this function should allocate roughly 2G
     // worth of data. This should be sufficient as we run these creation functions many
@@ -100,7 +100,7 @@ class DeviceAllocationTests extends Fixture {
     const kNumPipelines = 128;
     const kNumBindgroups = 128;
     const kSize = 128;
-    const kBufferData = new Uint32Array([...iterRange(kSize * kSize, x => x)]);
+    const kBufferData = new Uint32Array([...iterRange(kSize * kSize, (x) => x)]);
 
     const device = await adapter.requestDevice();
     const commands = [];
@@ -186,9 +186,9 @@ class DeviceAllocationTests extends Fixture {
   }
 
   /**
-     * Creates a device and a large number of buffers which are immediately written to. The
-     * buffers are expected to be kept alive until they or the device are destroyed.
-     */
+   * Creates a device and a large number of buffers which are immediately written to. The
+   * buffers are expected to be kept alive until they or the device are destroyed.
+   */
   async createDeviceAndBuffers(adapter) {
     // Currently we just allocate 2G of memory using 512MB blocks. We may be able to
     // increase this to hit OOM instead, but on integrated GPUs on Metal, this can cause
@@ -217,8 +217,8 @@ export const g = makeTestGroup(DeviceAllocationTests);
 
 g.test('coexisting').
 desc(`Tests allocation of many coexisting GPUDevice objects.`).
-params(u => u.combine('adapterType', kAdapterTypes)).
-fn(async t => {
+params((u) => u.combine('adapterType', kAdapterTypes)).
+fn(async (t) => {
   const { adapterType } = t.params;
   const adapter = await getGPU().requestAdapter(kAdapterTypeOptions[adapterType]);
   assert(adapter !== null, 'Failed to get adapter.');
@@ -240,8 +240,8 @@ are sequentially requested with a series of device allocated objects created on 
 device. The devices are then destroyed to verify that the device and the device allocated
 objects are recycled over a very large number of iterations.`).
 
-params(u => u.combine('adapterType', kAdapterTypes)).
-fn(async t => {
+params((u) => u.combine('adapterType', kAdapterTypes)).
+fn(async (t) => {
   const { adapterType } = t.params;
   const adapter = await getGPU().requestAdapter(kAdapterTypeOptions[adapterType]);
   assert(adapter !== null, 'Failed to get adapter.');
@@ -272,8 +272,8 @@ sequentially requested and dropped for GC over a very large number of iterations
 that without destroy, we do not create device allocated objects because that will
 implicitly keep the device in scope.`).
 
-params(u => u.combine('adapterType', kAdapterTypes)).
-fn(async t => {
+params((u) => u.combine('adapterType', kAdapterTypes)).
+fn(async (t) => {
   const { adapterType } = t.params;
   const adapter = await getGPU().requestAdapter(kAdapterTypeOptions[adapterType]);
   assert(adapter !== null, 'Failed to get adapter.');

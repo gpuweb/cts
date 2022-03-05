@@ -404,7 +404,7 @@ class RunCaseSpecific {
   selfQuery,
   expectations)
   {
-    const getExpectedStatus = selfQueryWithSubParams => {
+    const getExpectedStatus = (selfQueryWithSubParams) => {
       let didSeeFail = false;
       for (const exp of expectations) {
         const ordering = compareQueries(exp.query, selfQueryWithSubParams);

@@ -125,7 +125,7 @@ promiseReactionJob@[native code]` },
     at async http://localhost:8080/out/common/runtime/standalone.js:102:7` }]).
 
 
-fn(t => {
+fn((t) => {
   const ex = new Error();
   ex.stack = t.params._stack;
   t.expect(ex.stack === t.params._stack);

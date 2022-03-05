@@ -29,7 +29,7 @@ export const g = makeTestGroup(F);
 
 g.test('invalid_buffer').
 desc(`Test that clearing an error buffer fails.`).
-fn(async t => {
+fn(async (t) => {
   const errorBuffer = t.getErrorBuffer();
 
   t.TestClearBuffer({
@@ -47,7 +47,7 @@ paramsSubcasesOnly([
 { offset: 4, size: undefined },
 { offset: undefined, size: 8 }]).
 
-fn(async t => {
+fn(async (t) => {
   const { offset, size } = t.params;
 
   const buffer = t.device.createBuffer({
@@ -69,7 +69,7 @@ paramsSubcasesOnly((u) =>
 u //
 .combine('usage', kBufferUsages)).
 
-fn(async t => {
+fn(async (t) => {
   const { usage } = t.params;
 
   const buffer = t.device.createBuffer({
@@ -104,7 +104,7 @@ paramsSubcasesOnly([
 { size: 20, _isSuccess: false },
 { size: undefined, _isSuccess: true }]).
 
-fn(async t => {
+fn(async (t) => {
   const { size, _isSuccess: isSuccess } = t.params;
 
   const buffer = t.device.createBuffer({
@@ -138,7 +138,7 @@ paramsSubcasesOnly([
 { offset: 20, _isSuccess: false },
 { offset: undefined, _isSuccess: true }]).
 
-fn(async t => {
+fn(async (t) => {
   const { offset, _isSuccess: isSuccess } = t.params;
 
   const buffer = t.device.createBuffer({
@@ -162,7 +162,7 @@ paramsSubcasesOnly([
 { offset: kMaxSafeMultipleOf8, size: 16 },
 { offset: kMaxSafeMultipleOf8, size: kMaxSafeMultipleOf8 }]).
 
-fn(async t => {
+fn(async (t) => {
   const { offset, size } = t.params;
 
   const buffer = t.device.createBuffer({
@@ -190,7 +190,7 @@ paramsSubcasesOnly([
 { offset: 20, size: 16 },
 { offset: 20, size: 12, _isSuccess: true }]).
 
-fn(async t => {
+fn(async (t) => {
   const { offset, size, _isSuccess = false } = t.params;
 
   const buffer = t.device.createBuffer({

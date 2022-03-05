@@ -86,7 +86,7 @@ class F extends GPUTest {
 
 export const g = makeTestGroup(F);
 
-const kTestData = range(16, i => i);
+const kTestData = range(16, (i) => i);
 
 g.test('array_types').
 desc('Tests that writeBuffer correctly handles different TypedArrays and ArrayBuffer.').
@@ -95,7 +95,7 @@ u //
 .combine('arrayType', kTypedArrays).
 combine('useArrayBuffer', [false, true])).
 
-fn(t => {
+fn((t) => {
   const { arrayType, useArrayBuffer } = t.params;
   const dataOffset = 1;
   const dataSize = 8;
@@ -230,7 +230,7 @@ paramsSubcasesOnly([
   // Expected [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5]
 }]).
 
-fn(t => {
+fn((t) => {
   t.testWriteBuffer(...t.params.writes);
 });
 //# sourceMappingURL=writeBuffer.spec.js.map

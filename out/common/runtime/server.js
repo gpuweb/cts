@@ -112,7 +112,7 @@ if (gpuProviderModule) {
           const result = await runTestcase(testcase);
           let message = '';
           if (result.logs !== undefined) {
-            message = result.logs.map(log => prettyPrintLog(log)).join('\n');
+            message = result.logs.map((log) => prettyPrintLog(log)).join('\n');
           }
           const status = result.status;
           const res = { status, message };
@@ -140,7 +140,7 @@ if (gpuProviderModule) {
     const address = server.address();
     console.log(`Server listening at [[${address.port}]]`);
   });
-})().catch(ex => {
+})().catch((ex) => {
   console.error(ex.stack ?? ex.toString());
   sys.exit(1);
 });

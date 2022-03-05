@@ -21,12 +21,12 @@ paramsSubcasesOnly((u) =>
 u //
 .combine('offset', [0, 4, 8, 16, undefined]).
 combine('size', [0, 4, 8, 16, undefined]).
-expand('bufferSize', p => [
+expand('bufferSize', (p) => [
 (p.offset ?? 0) + (p.size ?? 16),
 (p.offset ?? 0) + (p.size ?? 16) + 8])).
 
 
-fn(async t => {
+fn(async (t) => {
   const { offset, size, bufferSize } = t.params;
 
   const bufferData = new Uint8Array(bufferSize);

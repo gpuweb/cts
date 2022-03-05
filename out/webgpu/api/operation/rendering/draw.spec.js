@@ -47,10 +47,10 @@ combine('instance_count', [0, 1, 4]).
 combine('indexed', [false, true]).
 combine('indirect', [false, true]).
 combine('vertex_buffer_offset', [0, 32]).
-expand('index_buffer_offset', p => p.indexed ? [0, 16] : [undefined]).
-expand('base_vertex', p => p.indexed ? [0, 9] : [undefined])).
+expand('index_buffer_offset', (p) => p.indexed ? [0, 16] : [undefined]).
+expand('base_vertex', (p) => p.indexed ? [0, 9] : [undefined])).
 
-fn(async t => {
+fn(async (t) => {
   if (t.params.first_instance > 0 && t.params.indirect) {
     await t.selectDeviceOrSkipTestCase('indirect-first-instance');
   }
@@ -349,10 +349,10 @@ combine('vertex_attribute_count', [1, 4, 8, 16]).
 combine('vertex_buffer_count', [1, 4, 8]).
 combine('vertex_format', ['uint32', 'float32']).
 combine('step_mode', [undefined, 'vertex', 'instance', 'mixed']).
-unless(p => p.vertex_attribute_count < p.vertex_buffer_count).
-unless(p => p.step_mode === 'mixed' && p.vertex_buffer_count <= 1)).
+unless((p) => p.vertex_attribute_count < p.vertex_buffer_count).
+unless((p) => p.step_mode === 'mixed' && p.vertex_buffer_count <= 1)).
 
-fn(t => {
+fn((t) => {
   const vertexCount = 4;
   const instanceCount = 4;
 
@@ -522,13 +522,13 @@ fn(t => {
 struct Inputs {
   @builtin(vertex_index) vertexIndex : u32;
   @builtin(instance_index) instanceIndex : u32;
-${vertexInputShaderLocations.map(i => `  @location(${i}) attrib${i} : ${wgslFormat};`).join('\n')}
+${vertexInputShaderLocations.map((i) => `  @location(${i}) attrib${i} : ${wgslFormat};`).join('\n')}
 };
 
 struct Outputs {
   @builtin(position) Position : vec4<f32>;
 ${interStageScalarShaderLocations.
-        map(i => `  @location(${i}) @interpolate(flat) outAttrib${i} : ${wgslFormat};`).
+        map((i) => `  @location(${i}) @interpolate(flat) outAttrib${i} : ${wgslFormat};`).
         join('\n')}
   @location(${interStageScalarShaderLocations.length}) @interpolate(flat) primitiveId : u32;
 ${accumulateVariableDeclarationsInVertexShader}
@@ -536,7 +536,7 @@ ${accumulateVariableDeclarationsInVertexShader}
 
 @stage(vertex) fn main(input : Inputs) -> Outputs {
   var output : Outputs;
-${interStageScalarShaderLocations.map(i => `  output.outAttrib${i} = input.attrib${i};`).join('\n')}
+${interStageScalarShaderLocations.map((i) => `  output.outAttrib${i} = input.attrib${i};`).join('\n')}
 ${accumulateVariableAssignmentsInVertexShader}
 
   output.primitiveId = input.instanceIndex * ${instanceCount}u + input.vertexIndex;
@@ -553,14 +553,14 @@ ${accumulateVariableAssignmentsInVertexShader}
         code: `
 struct Inputs {
 ${interStageScalarShaderLocations.
-        map(i => `  @location(${i}) @interpolate(flat) attrib${i} : ${wgslFormat};`).
+        map((i) => `  @location(${i}) @interpolate(flat) attrib${i} : ${wgslFormat};`).
         join('\n')}
   @location(${interStageScalarShaderLocations.length}) @interpolate(flat) primitiveId : u32;
 ${accumulateVariableDeclarationsInFragmentShader}
 };
 
 struct OutPrimitive {
-${vertexInputShaderLocations.map(i => `  attrib${i} : ${wgslFormat};`).join('\n')}
+${vertexInputShaderLocations.map((i) => `  attrib${i} : ${wgslFormat};`).join('\n')}
 };
 struct OutBuffer {
   primitives : @stride(${vertexInputShaderLocations.length * 4}) array<OutPrimitive>;
@@ -569,7 +569,7 @@ struct OutBuffer {
 
 @stage(fragment) fn main(input : Inputs) {
 ${interStageScalarShaderLocations.
-        map(i => `  outBuffer.primitives[input.primitiveId].attrib${i} = input.attrib${i};`).
+        map((i) => `  outBuffer.primitives[input.primitiveId].attrib${i} = input.attrib${i};`).
         join('\n')}
 ${accumulateVariableAssignmentsInFragmentShader}
 }

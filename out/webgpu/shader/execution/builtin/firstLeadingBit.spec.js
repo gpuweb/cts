@@ -32,7 +32,7 @@ u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('vectorize', [undefined, 2, 3, 4])).
 
-fn(async t => {
+fn(async (t) => {
   const cfg = t.params;
   run(t, 'firstLeadingBit', [TypeU32], TypeU32, cfg, [
   // Zero
@@ -166,7 +166,7 @@ u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('vectorize', [undefined, 2, 3, 4])).
 
-fn(async t => {
+fn(async (t) => {
   const cfg = t.params;
   run(t, 'firstLeadingBit', [TypeI32], TypeI32, cfg, [
   // Zero

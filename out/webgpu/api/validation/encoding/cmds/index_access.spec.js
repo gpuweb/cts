@@ -121,7 +121,7 @@ combineWithParams([
 ]).
 combine('instanceCount', [1, 10000]) // normal and large instanceCount
 ).
-fn(t => {
+fn((t) => {
   const { indexCount, firstIndex, instanceCount } = t.params;
 
   const indexBuffer = t.createIndexBuffer([0, 1, 2, 3, 1, 2]);
@@ -151,7 +151,7 @@ combineWithParams([
 ]).
 combine('instanceCount', [1, 10000]) // normal and large instanceCount
 ).
-fn(t => {
+fn((t) => {
   const { indexCount, firstIndex, instanceCount } = t.params;
 
   const indexBuffer = t.createIndexBuffer([]);

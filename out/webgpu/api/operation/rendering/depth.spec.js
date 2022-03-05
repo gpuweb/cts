@@ -31,7 +31,7 @@ params((u) =>
 u.
 combine(
 'format',
-kDepthStencilFormats.filter(format => format !== 'stencil8')).
+kDepthStencilFormats.filter((format) => format !== 'stencil8')).
 
 combineWithParams([
 { depthCompare: 'never', depthClearValue: 1.0, _expected: backgroundColor },
@@ -60,7 +60,7 @@ combineWithParams([
 { depthCompare: 'always', depthClearValue: 0.0, _expected: triangleColor }])).
 
 
-fn(async t => {
+fn(async (t) => {
   const { depthCompare, depthClearValue, _expected, format } = t.params;
   await t.selectDeviceForTextureFormatOrSkipTestCase(format);
 
@@ -151,8 +151,8 @@ desc(
     Note that in real use case the depth range remapping is done by the modified projection matrix.
 (see https://developer.nvidia.com/content/depth-precision-visualized).`).
 
-params(u => u.combine('reversed', [false, true])).
-fn(async t => {
+params((u) => u.combine('reversed', [false, true])).
+fn(async (t) => {
   const colorAttachmentFormat = 'rgba8unorm';
   const colorAttachment = t.device.createTexture({
     format: colorAttachmentFormat,

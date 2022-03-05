@@ -64,7 +64,7 @@ desc(
     - Test that the compilation info for invalid shader modules contains at least one error.`).
 
 paramsSimple(kAllShaderSources).
-fn(async t => {
+fn(async (t) => {
   const { _code, valid } = t.params;
 
   const shaderModule = t.expectGPUError(
@@ -104,7 +104,7 @@ desc(
     - Test for shader modules containing only ASCII and those containing unicode characters.`).
 
 paramsSimple(kInvalidShaderSources).
-fn(async t => {
+fn(async (t) => {
   const { _code, _errorLine } = t.params;
 
   const shaderModule = t.expectGPUError('validation', () =>
@@ -146,7 +146,7 @@ desc(
     - Test for shader modules containing only ASCII and those containing unicode characters.`).
 
 paramsSimple(kAllShaderSources).
-fn(async t => {
+fn(async (t) => {
   const { _code, valid } = t.params;
 
   const shaderModule = t.expectGPUError(

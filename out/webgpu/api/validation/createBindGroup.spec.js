@@ -36,7 +36,7 @@ u //
 .combine('layoutEntryCount', [1, 2, 3]).
 combine('bindGroupEntryCount', [1, 2, 3])).
 
-fn(async t => {
+fn(async (t) => {
   const { layoutEntryCount, bindGroupEntryCount } = t.params;
 
   const layoutEntries = [];
@@ -75,7 +75,7 @@ u //
 .combine('layoutBinding', [0, 1, 2]).
 combine('binding', [0, 1, 2])).
 
-fn(async t => {
+fn(async (t) => {
   const { layoutBinding, binding } = t.params;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
@@ -104,7 +104,7 @@ u //
 .combine('resourceType', kBindableResources).
 combine('entry', allBindingEntries(false))).
 
-fn(t => {
+fn((t) => {
   const { resourceType, entry } = t.params;
   const info = bindingTypeInfo(entry);
 
@@ -145,7 +145,7 @@ unless(({ entry, usage }) => {
   return usage === GPUConst.TextureUsage.STORAGE_BINDING && info.resource === 'sampledTexMS';
 })).
 
-fn(async t => {
+fn(async (t) => {
   const { entry, usage } = t.params;
   const info = texBindingTypeInfo(entry);
 
@@ -177,8 +177,8 @@ desc(
     - Tests a compatible format for every sample type
     - Tests an incompatible format for every sample type`).
 
-params(u => u.combine('sampleType', ['float', 'sint', 'uint'])).
-fn(async t => {
+params((u) => u.combine('sampleType', ['float', 'sint', 'uint'])).
+fn(async (t) => {
   const { sampleType } = t.params;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
@@ -257,7 +257,7 @@ combine('viewDimension', kTextureViewDimensions).
 beginSubcases().
 combine('dimension', kTextureViewDimensions)).
 
-fn(async t => {
+fn(async (t) => {
   const { viewDimension, dimension } = t.params;
   const bindGroupLayout = t.device.createBindGroupLayout({
     entries: [
@@ -327,7 +327,7 @@ paramsSubcasesOnly([
 { offset: 0, size: 256 * 5, _success: false }, // size is OOB
 { offset: 1024, size: 1, _success: false } // offset+size is OOB
 ]).
-fn(async t => {
+fn(async (t) => {
   const { offset, size, _success } = t.params;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
@@ -371,7 +371,7 @@ minBindingSize !== undefined ?
 [4, 256])).
 
 
-fn(t => {
+fn((t) => {
   const { size, minBindingSize } = t.params;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
@@ -412,7 +412,7 @@ desc('Test bind group creation with various buffer resource states').
 paramsSubcasesOnly((u) =>
 u.combine('state', kResourceStates).combine('entry', bufferBindingEntries(true))).
 
-fn(t => {
+fn((t) => {
   const { state, entry } = t.params;
 
   assert(entry.buffer !== undefined);
@@ -455,7 +455,7 @@ u.
 combine('state', kResourceStates).
 combine('entry', sampledAndStorageBindingEntries(true, 'rgba8unorm'))).
 
-fn(t => {
+fn((t) => {
   const { state, entry } = t.params;
   const info = texBindingTypeInfo(entry);
 
@@ -498,8 +498,8 @@ g.test('bind_group_layout,device_mismatch').
 desc(
 'Tests createBindGroup cannot be called with a bind group layout created from another device').
 
-paramsSubcasesOnly(u => u.combine('mismatched', [true, false])).
-fn(async t => {
+paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
+fn(async (t) => {
   const mismatched = t.params.mismatched;
 
   if (mismatched) {
@@ -559,7 +559,7 @@ combineWithParams([
 { resource0Mismatched: false, resource1Mismatched: true }])).
 
 
-fn(async t => {
+fn(async (t) => {
   const { entry, resource0Mismatched, resource1Mismatched } = t.params;
 
   if (resource0Mismatched || resource1Mismatched) {

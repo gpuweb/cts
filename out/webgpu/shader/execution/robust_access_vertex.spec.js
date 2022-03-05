@@ -363,7 +363,7 @@ class F extends GPUTest {
       ${layoutStr}
 
       fn valid(f : f32) -> bool {
-        return ${validValues.map(v => `f == ${v}.0`).join(' || ')};
+        return ${validValues.map((v) => `f == ${v}.0`).join(' || ')};
       }
 
       fn validationFunc(v : ${typeInfo.wgslType}) -> bool {
@@ -375,7 +375,7 @@ class F extends GPUTest {
         attributes : Attributes
         ) -> @builtin(position) vec4<f32> {
         var attributesInBounds = ${attributeNames.
-    map(a => `validationFunc(attributes.${a})`).
+    map((a) => `validationFunc(attributes.${a})`).
     join(' && ')};
 
         var indexInBoundsCountFromBaseVertex =
@@ -548,9 +548,9 @@ combine('additionalBuffers', [0, 4]).
 combine('partialLastNumber', [false, true]).
 combine('offsetVertexBuffer', [false, true]).
 combine('errorScale', [0, 1, 4, 10 ** 2, 10 ** 4, 10 ** 6]).
-unless(p => p.drawCallTestParameter === 'instanceCount' && p.errorScale > 10 ** 4) // To avoid timeout
+unless((p) => p.drawCallTestParameter === 'instanceCount' && p.errorScale > 10 ** 4) // To avoid timeout
 ).
-fn(async t => {
+fn(async (t) => {
   const p = t.params;
   const typeInfo = typeInfoMap[p.type];
 

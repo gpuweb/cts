@@ -15,7 +15,7 @@ import { ValidationTest } from '../../validation_test.js';
 export const g = makeTestGroup(ValidationTest);
 
 const kOptionalTextureFormats = kAllTextureFormats.filter(
-t => kTextureFormatInfo[t].feature !== undefined);
+(t) => kTextureFormatInfo[t].feature !== undefined);
 
 
 g.test('texture_descriptor').
@@ -33,7 +33,7 @@ combine('format', kOptionalTextureFormats).
 beginSubcases().
 combine('enable_required_feature', [true, false])).
 
-fn(async t => {
+fn(async (t) => {
   const { format, enable_required_feature } = t.params;
 
   const formatInfo = kTextureFormatInfo[format];
@@ -62,11 +62,11 @@ desc(
 params((u) =>
 u.
 combine('format', kOptionalTextureFormats).
-filter(t => kTextureFormatInfo[t.format].storage).
+filter((t) => kTextureFormatInfo[t.format].storage).
 beginSubcases().
 combine('enable_required_feature', [true, false])).
 
-fn(async t => {
+fn(async (t) => {
   const { format, enable_required_feature } = t.params;
 
   const formatInfo = kTextureFormatInfo[format];
@@ -101,11 +101,11 @@ desc(
 params((u) =>
 u.
 combine('format', kOptionalTextureFormats).
-filter(t => kTextureFormatInfo[t.format].renderable && kTextureFormatInfo[t.format].color).
+filter((t) => kTextureFormatInfo[t.format].renderable && kTextureFormatInfo[t.format].color).
 beginSubcases().
 combine('enable_required_feature', [true, false])).
 
-fn(async t => {
+fn(async (t) => {
   const { format, enable_required_feature } = t.params;
 
   const formatInfo = kTextureFormatInfo[format];
@@ -158,7 +158,7 @@ kTextureFormatInfo[t.format].depth || kTextureFormatInfo[t.format].stencil)).
 beginSubcases().
 combine('enable_required_feature', [true, false])).
 
-fn(async t => {
+fn(async (t) => {
   const { format, enable_required_feature } = t.params;
 
   const formatInfo = kTextureFormatInfo[format];
@@ -208,11 +208,11 @@ desc(
 params((u) =>
 u.
 combine('format', kOptionalTextureFormats).
-filter(t => kTextureFormatInfo[t.format].renderable && kTextureFormatInfo[t.format].color).
+filter((t) => kTextureFormatInfo[t.format].renderable && kTextureFormatInfo[t.format].color).
 beginSubcases().
 combine('enable_required_feature', [true, false])).
 
-fn(async t => {
+fn(async (t) => {
   const { format, enable_required_feature } = t.params;
 
   const formatInfo = kTextureFormatInfo[format];
@@ -245,7 +245,7 @@ kTextureFormatInfo[t.format].depth || kTextureFormatInfo[t.format].stencil)).
 beginSubcases().
 combine('enable_required_feature', [true, false])).
 
-fn(async t => {
+fn(async (t) => {
   const { format, enable_required_feature } = t.params;
 
   const formatInfo = kTextureFormatInfo[format];

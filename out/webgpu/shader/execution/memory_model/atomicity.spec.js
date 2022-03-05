@@ -91,7 +91,7 @@ paramsSimple([
   _testCode: workgroupMemoryTestCode }]).
 
 
-fn(async t => {
+fn(async (t) => {
   const testShader = buildTestShader(t.params._testCode, t.params.memType, t.params.testType);
   const resultShader = buildResultShader(resultCode, t.params.testType, ResultType.FourBehavior);
   const memModelTester = new MemoryModelTester(

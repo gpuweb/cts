@@ -10,14 +10,14 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('base').
 desc(`Test that it is valid to destroy a texture.`).
-fn(t => {
+fn((t) => {
   const texture = t.getSampledTexture();
   texture.destroy();
 });
 
 g.test('twice').
 desc(`Test that it is valid to destroy a destroyed texture.`).
-fn(t => {
+fn((t) => {
   const texture = t.getSampledTexture();
   texture.destroy();
   texture.destroy();
@@ -44,7 +44,7 @@ combine('depthStencilTextureState', [
 'destroyedAfterEncode'])).
 
 
-fn(async t => {
+fn(async (t) => {
   const { colorTextureState, depthStencilTextureAspect, depthStencilTextureState } = t.params;
 
   const isSubmitSuccess = colorTextureState === 'valid' && depthStencilTextureState === 'valid';

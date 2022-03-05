@@ -27,14 +27,14 @@ u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('vectorize', [undefined, 2, 3, 4])).
 
-fn(async t => {
+fn(async (t) => {
   // [1]: Need to decide what the ground-truth is.
-  const truthFunc = x => {
+  const truthFunc = (x) => {
     return { input: f32(x), expected: f32(Math.cos(x)) };
   };
 
   // Spec defines accuracy on [-π, π]
-  const cases = linearRange(-Math.PI, Math.PI, 1000).map(x => truthFunc(x));
+  const cases = linearRange(-Math.PI, Math.PI, 1000).map((x) => truthFunc(x));
 
   const cfg = t.params;
   cfg.cmpFloats = absThreshold(2 ** -11);

@@ -49,7 +49,7 @@ combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('signed', [false, true]).
 combine('width', [1, 2, 3, 4])).
 
-fn(async t => {
+fn(async (t) => {
   const cfg = t.params;
   const scalarType = t.params.signed ? TypeI32 : TypeU32;
   const T = t.params.width === 1 ? scalarType : TypeVec(t.params.width, scalarType);

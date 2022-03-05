@@ -72,9 +72,9 @@ class TextureSyncTestHelper {
   }
 
   /**
-     * Perform a read operation on the test texture.
-     * @return GPUTexture copy containing the contents.
-     */
+   * Perform a read operation on the test texture.
+   * @return GPUTexture copy containing the contents.
+   */
   performReadOp({ op, in: context }) {
     this.ensureContext(context);
     switch (op) {
@@ -424,8 +424,8 @@ class TextureSyncTestHelper {
   }
 
   /**
-     * Execute/submit encoded GPURenderBundles or GPUCommandBuffers.
-     */
+   * Execute/submit encoded GPURenderBundles or GPUCommandBuffers.
+   */
   flushEncodedCommands() {
     if (this.encodedCommands.length > 0) {
       if (this.encodedCommands[0] instanceof GPURenderBundle) {
@@ -485,7 +485,7 @@ desc(
 params((u) =>
 u.
 combine('boundary', kOperationBoundaries).
-expand('_context', p => kBoundaryInfo[p.boundary].contexts).
+expand('_context', (p) => kBoundaryInfo[p.boundary].contexts).
 expandWithParams(function* ({ _context }) {
   for (const read of kAllReadOps) {
     for (const write of kAllWriteOps) {
@@ -499,7 +499,7 @@ expandWithParams(function* ({ _context }) {
   }
 })).
 
-fn(t => {
+fn((t) => {
   const helper = new TextureSyncTestHelper(t, {
     usage:
     GPUTextureUsage.COPY_DST |
@@ -538,7 +538,7 @@ desc(
 params((u) =>
 u.
 combine('boundary', kOperationBoundaries).
-expand('_context', p => kBoundaryInfo[p.boundary].contexts).
+expand('_context', (p) => kBoundaryInfo[p.boundary].contexts).
 expandWithParams(function* ({ _context }) {
   for (const read of kAllReadOps) {
     for (const write of kAllWriteOps) {
@@ -552,7 +552,7 @@ expandWithParams(function* ({ _context }) {
   }
 })).
 
-fn(t => {
+fn((t) => {
   const helper = new TextureSyncTestHelper(t, {
     usage: kOpInfo[t.params.read.op].readUsage | kOpInfo[t.params.write.op].writeUsage });
 
@@ -582,7 +582,7 @@ desc(
 params((u) =>
 u.
 combine('boundary', kOperationBoundaries).
-expand('_context', p => kBoundaryInfo[p.boundary].contexts).
+expand('_context', (p) => kBoundaryInfo[p.boundary].contexts).
 expandWithParams(function* ({ _context }) {
   for (const first of kAllWriteOps) {
     for (const second of kAllWriteOps) {
@@ -596,7 +596,7 @@ expandWithParams(function* ({ _context }) {
   }
 })).
 
-fn(t => {
+fn((t) => {
   const helper = new TextureSyncTestHelper(t, {
     usage:
     GPUTextureUsage.COPY_SRC |

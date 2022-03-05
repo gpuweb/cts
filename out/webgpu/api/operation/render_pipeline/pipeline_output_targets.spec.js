@@ -36,7 +36,7 @@ class F extends GPUTest {
         unreachable();}
 
 
-    const v = output.map(n => n.toFixed(fractionDigits));
+    const v = output.map((n) => n.toFixed(fractionDigits));
 
     let outputType;
     let result;
@@ -79,9 +79,9 @@ u.
 combine('format', kRenderableColorTextureFormats).
 beginSubcases().
 combine('componentCount', [1, 2, 3, 4]).
-filter(x => x.componentCount >= kTexelRepresentationInfo[x.format].componentOrder.length)).
+filter((x) => x.componentCount >= kTexelRepresentationInfo[x.format].componentOrder.length)).
 
-fn(async t => {
+fn(async (t) => {
   const { format, componentCount } = t.params;
   const info = kTextureFormatInfo[format];
   await t.selectDeviceOrSkipTestCase(info.feature);
@@ -285,9 +285,9 @@ beginSubcases()
   alphaDstFactor: 'dst-alpha' }]).
 
 
-filter(x => x.output.length >= kTexelRepresentationInfo[x.format].componentOrder.length)).
+filter((x) => x.output.length >= kTexelRepresentationInfo[x.format].componentOrder.length)).
 
-fn(async t => {
+fn(async (t) => {
   const {
     format,
     _result,

@@ -24,7 +24,7 @@ DefaultLimits.maxVertexBuffers - 1,
 DefaultLimits.maxVertexBuffers])).
 
 
-fn(t => {
+fn((t) => {
   const { encoderType, slot } = t.params;
   const vertexBuffer = t.createBufferWithState('valid', {
     size: 16,
@@ -43,7 +43,7 @@ Tests vertex buffer must be valid.
   `).
 
 paramsSubcasesOnly(kRenderEncodeTypeParams.combine('state', kResourceStates)).
-fn(t => {
+fn((t) => {
   const { encoderType, state } = t.params;
   const vertexBuffer = t.createBufferWithState(state, {
     size: 16,
@@ -73,7 +73,7 @@ GPUConst.BufferUsage.COPY_DST,
 GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.VERTEX])).
 
 
-fn(t => {
+fn((t) => {
   const { encoderType, usage } = t.params;
   const vertexBuffer = t.device.createBuffer({
     size: 16,
@@ -92,7 +92,7 @@ Tests offset must be a multiple of 4.
   `).
 
 paramsSubcasesOnly(kRenderEncodeTypeParams.combine('offset', [0, 2, 4])).
-fn(t => {
+fn((t) => {
   const { encoderType, offset } = t.params;
   const vertexBuffer = t.device.createBuffer({
     size: 16,
@@ -111,7 +111,7 @@ Tests offset and size cannot be larger than vertex buffer size.
   `).
 
 paramsSubcasesOnly(buildBufferOffsetAndSizeOOBTestParams(4, 256)).
-fn(t => {
+fn((t) => {
   const { encoderType, offset, size, _valid } = t.params;
   const vertexBuffer = t.device.createBuffer({
     size: 256,

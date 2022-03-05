@@ -71,7 +71,7 @@ u //
 beginSubcases().
 combine('aspect', ['all', 'depth-only', 'stencil-only'])).
 
-fn(async t => {
+fn(async (t) => {
   const { format, aspect } = t.params;
   await t.selectDeviceForTextureFormatOrSkipTestCase(format);
 
@@ -142,7 +142,7 @@ combine('copySize', [
 { width: 4, height: 4, depthOrArrayLayers: 3 }])).
 
 
-fn(async t => {
+fn(async (t) => {
   const { format, aspect, copyType, copySize } = t.params;
   await t.selectDeviceForTextureFormatOrSkipTestCase(format);
 
@@ -246,7 +246,7 @@ depthStencilBufferTextureCopySupported(param.copyType, param.format, param.aspec
 beginSubcases().
 combine('offset', [1, 2, 4, 6, 8])).
 
-fn(async t => {
+fn(async (t) => {
   const { format, aspect, copyType, offset } = t.params;
   await t.selectDeviceForTextureFormatOrSkipTestCase(format);
 

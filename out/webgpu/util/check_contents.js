@@ -28,22 +28,22 @@ import { float16BitsToFloat32 } from './conversion.js';
 
 
 /**
-                                                                                           * Check whether two `TypedArray`s have equal contents.
-                                                                                           * Returns `undefined` if the check passes, or an `Error` if not.
-                                                                                           */
+ * Check whether two `TypedArray`s have equal contents.
+ * Returns `undefined` if the check passes, or an `Error` if not.
+ */
 export function checkElementsEqual(
 actual,
 expected)
 {
   assert(actual.constructor === expected.constructor, 'TypedArray type mismatch');
   assert(actual.length === expected.length, 'size mismatch');
-  return checkElementsEqualGenerated(actual, i => expected[i]);
+  return checkElementsEqualGenerated(actual, (i) => expected[i]);
 }
 
 /**
-   * Check whether each value in a `TypedArray` is between the two corresponding "expected" values
-   * (either `a(i) <= actual[i] <= b(i)` or `a(i) >= actual[i] => b(i)`).
-   */
+ * Check whether each value in a `TypedArray` is between the two corresponding "expected" values
+ * (either `a(i) <= actual[i] <= b(i)` or `a(i) >= actual[i] => b(i)`).
+ */
 export function checkElementsBetween(
 actual,
 expected)
@@ -55,8 +55,8 @@ expected)
   value <= Math.max(expected[0](index), expected[1](index)),
   {
     predicatePrinter: [
-    { leftHeader: 'between', getValueForCell: index => expected[0](index) },
-    { leftHeader: 'and', getValueForCell: index => expected[1](index) }] });
+    { leftHeader: 'between', getValueForCell: (index) => expected[0](index) },
+    { leftHeader: 'and', getValueForCell: (index) => expected[1](index) }] });
 
 
 
@@ -65,8 +65,8 @@ expected)
 }
 
 /**
-   * Equivalent to {@link checkElementsBetween} but interpret values as float16 and convert to JS number before comparison.
-   */
+ * Equivalent to {@link checkElementsBetween} but interpret values as float16 and convert to JS number before comparison.
+ */
 export function checkElementsFloat16Between(
 actual,
 expected)
@@ -91,8 +91,8 @@ expected)
   value <= Math.max(expectedF32[0][index], expectedF32[1][index]),
   {
     predicatePrinter: [
-    { leftHeader: 'between', getValueForCell: index => expectedF32[0][index] },
-    { leftHeader: 'and', getValueForCell: index => expectedF32[1][index] }] });
+    { leftHeader: 'between', getValueForCell: (index) => expectedF32[0][index] },
+    { leftHeader: 'and', getValueForCell: (index) => expectedF32[1][index] }] });
 
 
 
@@ -101,9 +101,9 @@ expected)
 }
 
 /**
-   * Check whether each value in a `TypedArray` is equal to one of the two corresponding "expected"
-   * values (either `actual[i] === a[i]` or `actual[i] === b[i]`)
-   */
+ * Check whether each value in a `TypedArray` is equal to one of the two corresponding "expected"
+ * values (either `actual[i] === a[i]` or `actual[i] === b[i]`)
+ */
 export function checkElementsEqualEither(
 actual,
 expected)
@@ -113,8 +113,8 @@ expected)
   (index, value) => value === expected[0][index] || value === expected[1][index],
   {
     predicatePrinter: [
-    { leftHeader: 'either', getValueForCell: index => expected[0][index] },
-    { leftHeader: 'or', getValueForCell: index => expected[1][index] }] });
+    { leftHeader: 'either', getValueForCell: (index) => expected[0][index] },
+    { leftHeader: 'or', getValueForCell: (index) => expected[1][index] }] });
 
 
 
@@ -123,40 +123,40 @@ expected)
 }
 
 /**
-   * Check whether a `TypedArray`'s contents equal the values produced by a generator function.
-   * Returns `undefined` if the check passes, or an `Error` if not.
-   *
-   * ```text
-   * Array had unexpected contents at indices 2 through 19.
-   *  Starting at index 1:
-   *    actual == 0x: 00 fe ff 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 00
-   *    failed ->        xx xx    xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx
-   *  expected ==     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-   * ```
-   *
-   * ```text
-   * Array had unexpected contents at indices 2 through 29.
-   *  Starting at index 1:
-   *    actual ==  0.000 -2.000e+100 -1.000e+100 0.000 1.000e+100 2.000e+100 3.000e+100 4.000e+100 5.000e+100 6.000e+100 7.000e+100 ...
-   *    failed ->                 xx          xx               xx         xx         xx         xx         xx         xx         xx ...
-   *  expected ==  0.000       0.000       0.000 0.000      0.000      0.000      0.000      0.000      0.000      0.000      0.000 ...
-   * ```
-   */
+ * Check whether a `TypedArray`'s contents equal the values produced by a generator function.
+ * Returns `undefined` if the check passes, or an `Error` if not.
+ *
+ * ```text
+ * Array had unexpected contents at indices 2 through 19.
+ *  Starting at index 1:
+ *    actual == 0x: 00 fe ff 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 00
+ *    failed ->        xx xx    xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx
+ *  expected ==     00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+ * ```
+ *
+ * ```text
+ * Array had unexpected contents at indices 2 through 29.
+ *  Starting at index 1:
+ *    actual ==  0.000 -2.000e+100 -1.000e+100 0.000 1.000e+100 2.000e+100 3.000e+100 4.000e+100 5.000e+100 6.000e+100 7.000e+100 ...
+ *    failed ->                 xx          xx               xx         xx         xx         xx         xx         xx         xx ...
+ *  expected ==  0.000       0.000       0.000 0.000      0.000      0.000      0.000      0.000      0.000      0.000      0.000 ...
+ * ```
+ */
 export function checkElementsEqualGenerated(
 actual,
 generator)
 {
   const error = checkElementsPassPredicate(actual, (index, value) => value === generator(index), {
-    predicatePrinter: [{ leftHeader: 'expected ==', getValueForCell: index => generator(index) }] });
+    predicatePrinter: [{ leftHeader: 'expected ==', getValueForCell: (index) => generator(index) }] });
 
   // If there was an error, extend it with additional extras.
   return error ? new ErrorWithExtra(error, () => ({ generator })) : undefined;
 }
 
 /**
-   * Check whether a `TypedArray`'s values pass the provided predicate function.
-   * Returns `undefined` if the check passes, or an `Error` if not.
-   */
+ * Check whether a `TypedArray`'s values pass the provided predicate function.
+ * Returns `undefined` if the check passes, or an `Error` if not.
+ */
 export function checkElementsPassPredicate(
 actual,
 predicate,
@@ -188,8 +188,8 @@ predicate,
   const printElementsCount = printElementsEnd - printElementsStart;
 
   const numberToString = printAsFloat ?
-  n => n.toPrecision(4) :
-  n => intToPaddedHex(n, { byteLength: ctor.BYTES_PER_ELEMENT });
+  (n) => n.toPrecision(4) :
+  (n) => intToPaddedHex(n, { byteLength: ctor.BYTES_PER_ELEMENT });
   const numberPrefix = printAsFloat ? '' : '0x:';
 
   const printActual = actual.subarray(printElementsStart, printElementsEnd);
@@ -199,7 +199,7 @@ predicate,
       printExpected.push(
       function* () {
         yield* [leftHeader, ''];
-        yield* iterRange(printElementsCount, i => cell(printElementsStart + i));
+        yield* iterRange(printElementsCount, (i) => cell(printElementsStart + i));
       }());
 
     }
@@ -207,7 +207,7 @@ predicate,
 
   const printFailedValueMarkers = function* () {
     yield* ['failed ->', ''];
-    yield* range(printElementsCount, i => failedElements[printElementsStart + i] ? 'xx' : '');
+    yield* range(printElementsCount, (i) => failedElements[printElementsStart + i] ? 'xx' : '');
   }();
 
   const opts = {
@@ -238,35 +238,35 @@ function intToPaddedHex(number, { byteLength }) {
 }
 
 /**
-   * Pretty-prints a "table" of cell values (each being `number | string`), right-aligned.
-   * Each row may be any iterator, including lazily-generated (potentially infinite) rows.
-   *
-   * The first argument is the printing options:
-   *  - fillToWidth: Keep printing columns (as long as there is data) until this width is passed.
-   *    If there is more data, "..." is appended.
-   *  - numberToString: if a cell value is a number, this is used to stringify it.
-   *
-   * Each remaining argument provides one row for the table.
-   */
+ * Pretty-prints a "table" of cell values (each being `number | string`), right-aligned.
+ * Each row may be any iterator, including lazily-generated (potentially infinite) rows.
+ *
+ * The first argument is the printing options:
+ *  - fillToWidth: Keep printing columns (as long as there is data) until this width is passed.
+ *    If there is more data, "..." is appended.
+ *  - numberToString: if a cell value is a number, this is used to stringify it.
+ *
+ * Each remaining argument provides one row for the table.
+ */
 function generatePrettyTable(
 { fillToWidth, numberToString },
 rows)
 {
   const rowStrings = range(rows.length, () => '');
   let totalTableWidth = 0;
-  const iters = rows.map(row => row[Symbol.iterator]());
+  const iters = rows.map((row) => row[Symbol.iterator]());
 
   // Loop over columns
   for (;;) {
-    const cellsForColumn = iters.map(iter => {
+    const cellsForColumn = iters.map((iter) => {
       const r = iter.next(); // Advance the iterator for each row, in lock-step.
       return r.done ? undefined : typeof r.value === 'number' ? numberToString(r.value) : r.value;
     });
-    if (cellsForColumn.every(cell => cell === undefined)) break;
+    if (cellsForColumn.every((cell) => cell === undefined)) break;
 
     // Maximum width of any cell in this column, plus one for space between columns
     // (also inserts a space at the left of the first column).
-    const colWidth = Math.max(...cellsForColumn.map(c => c === undefined ? 0 : c.length)) + 1;
+    const colWidth = Math.max(...cellsForColumn.map((c) => c === undefined ? 0 : c.length)) + 1;
     for (let row = 0; row < rowStrings.length; ++row) {
       const cell = cellsForColumn[row];
       if (cell !== undefined) {

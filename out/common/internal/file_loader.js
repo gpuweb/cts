@@ -32,7 +32,7 @@ export class TestFileLoader {
     return loadTreeForQuery(
     this,
     query,
-    subqueriesToExpand.map(s => {
+    subqueriesToExpand.map((s) => {
       const q = parseQuery(s);
       assert(q.level >= 2, () => `subqueriesToExpand entries should not be multi-file:\n  ${q}`);
       return q;

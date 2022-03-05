@@ -16,7 +16,7 @@ export const kEncoderTypes = ['non-pass', ...kProgrammableEncoderTypes];
 
 
 /** See {@link webgpu/api/validation/validation_test.ValidationTest.createEncoder |
-                                                                          * GPUTest.createEncoder()}. */
+ * GPUTest.createEncoder()}. */
 export class CommandBufferMaker {
   /** `GPU___Encoder` for recording commands into. */
   // Look up the type of the encoder based on `T`. If `T` is a union, this will be too!
@@ -29,19 +29,19 @@ export class CommandBufferMaker {
 
 
   /**
-       * Finish the command buffer and submit it. Checks for validation errors in either the submit or
-       * the appropriate finish call, depending on the state of a resource used in the encoding.
-       */
+   * Finish the command buffer and submit it. Checks for validation errors in either the submit or
+   * the appropriate finish call, depending on the state of a resource used in the encoding.
+   */
 
 
 
 
 
   /**
-           * `validateFinishAndSubmit()` based on the state of a resource in the command encoder.
-           * - `finish()` should fail if the resource is 'invalid'.
-           * - Only `submit()` should fail if the resource is 'destroyed'.
-           */
+   * `validateFinishAndSubmit()` based on the state of a resource in the command encoder.
+   * - `finish()` should fail if the resource is 'invalid'.
+   * - Only `submit()` should fail if the resource is 'destroyed'.
+   */
 
 
   constructor(
@@ -66,7 +66,7 @@ export class CommandBufferMaker {
       }
     };
 
-    this.validateFinishAndSubmitGivenState = resourceState => {
+    this.validateFinishAndSubmitGivenState = (resourceState) => {
       this.validateFinishAndSubmit(resourceState !== 'invalid', resourceState !== 'destroyed');
     };
   }}

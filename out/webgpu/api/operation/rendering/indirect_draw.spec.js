@@ -146,7 +146,7 @@ params((u) =>
 u.
 combine('isIndexed', [true, false]).
 beginSubcases().
-expand('indirectOffset', p => {
+expand('indirectOffset', (p) => {
   const indirectDrawParametersSize = p.isIndexed ?
   kDrawIndexedIndirectParametersSize * Uint32Array.BYTES_PER_ELEMENT :
   kDrawIndirectParametersSize * Uint32Array.BYTES_PER_ELEMENT;
@@ -162,7 +162,7 @@ expand('indirectOffset', p => {
 
 })).
 
-fn(t => {
+fn((t) => {
   const { isIndexed, indirectOffset } = t.params;
 
   const vertexBuffer = t.MakeVertexBuffer(isIndexed);

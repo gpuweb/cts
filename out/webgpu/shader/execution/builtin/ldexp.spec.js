@@ -25,7 +25,7 @@ u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('vectorize', [undefined, 2, 3, 4])).
 
-fn(async t => {
+fn(async (t) => {
   const truthFunc = (e1, e2) => {
     const i32_e2 = i32(e2);
     const result = e1 * Math.pow(2, i32_e2.value);
@@ -52,13 +52,13 @@ fn(async t => {
 
   let e2_range = [];
   //  -127 < x <= 0, biased towards 0
-  e2_range = e2_range.concat(biasedRange(0, -127, 20).map(x => Math.round(x)));
+  e2_range = e2_range.concat(biasedRange(0, -127, 20).map((x) => Math.round(x)));
   //  0 <= x < 128, biased towards 0
-  e2_range = e2_range.concat(biasedRange(0, 128, 20).map(x => Math.round(x)));
+  e2_range = e2_range.concat(biasedRange(0, 128, 20).map((x) => Math.round(x)));
 
   let cases = [];
-  e1_range.forEach(e1 => {
-    e2_range.forEach(e2 => {
+  e1_range.forEach((e1) => {
+    e2_range.forEach((e2) => {
       const c = truthFunc(e1, e2);
       if (c !== undefined) {
         cases = cases.concat(c);

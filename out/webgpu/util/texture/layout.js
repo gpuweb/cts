@@ -15,8 +15,8 @@ export const kBytesPerRowAlignment = 256;
 export const kBufferCopyAlignment = 4;
 
 /**
-                                        * Overridable layout options for {@link getTextureCopyLayout}.
-                                        */
+ * Overridable layout options for {@link getTextureCopyLayout}.
+ */
 
 
 
@@ -43,11 +43,11 @@ const kDefaultLayoutOptions = { mipLevel: 0, bytesPerRow: undefined, rowsPerImag
 
 
 /**
-                                                           * Computes layout information for a copy of size `size` to/from a GPUTexture with the provided
-                                                           * `format` and `dimension`.
-                                                           *
-                                                           * Computes default values for `bytesPerRow` and `rowsPerImage` if not specified.
-                                                           */
+ * Computes layout information for a copy of size `size` to/from a GPUTexture with the provided
+ * `format` and `dimension`.
+ *
+ * Computes default values for `bytesPerRow` and `rowsPerImage` if not specified.
+ */
 export function getTextureCopyLayout(
 format,
 dimension,
@@ -96,12 +96,12 @@ options = kDefaultLayoutOptions)
 }
 
 /**
-   * Fill an ArrayBuffer with the linear-memory representation of a solid-color
-   * texture where every texel has the byte value `texelValue`.
-   * Preserves the contents of `outputBuffer` which are in "padding" space between image rows.
-   *
-   * Effectively emulates a copyTextureToBuffer from a solid-color texture to a buffer.
-   */
+ * Fill an ArrayBuffer with the linear-memory representation of a solid-color
+ * texture where every texel has the byte value `texelValue`.
+ * Preserves the contents of `outputBuffer` which are in "padding" space between image rows.
+ *
+ * Effectively emulates a copyTextureToBuffer from a solid-color texture to a buffer.
+ */
 export function fillTextureDataWithTexelValue(
 texelValue,
 format,
@@ -141,9 +141,9 @@ options = kDefaultLayoutOptions)
 }
 
 /**
-   * Create a `COPY_SRC` GPUBuffer containing the linear-memory representation of a solid-color
-   * texture where every texel has the byte value `texelValue`.
-   */
+ * Create a `COPY_SRC` GPUBuffer containing the linear-memory representation of a solid-color
+ * texture where every texel has the byte value `texelValue`.
+ */
 export function createTextureUploadBuffer(
 texelValue,
 device,
@@ -189,8 +189,8 @@ export const kImageCopyTypes = [
 
 
 /**
-             * Computes `bytesInACompleteRow` (as defined by the WebGPU spec) for image copies (B2T/T2B/writeTexture).
-             */
+ * Computes `bytesInACompleteRow` (as defined by the WebGPU spec) for image copies (B2T/T2B/writeTexture).
+ */
 export function bytesInACompleteRow(copyWidth, format) {
   const info = kTextureFormatInfo[format];
   assert(copyWidth % info.blockWidth === 0);
@@ -247,8 +247,8 @@ function validateRowsPerImage({
 
 
 /**
-   * Validate a copy and compute the number of bytes it needs. Throws if the copy is invalid.
-   */
+ * Validate a copy and compute the number of bytes it needs. Throws if the copy is invalid.
+ */
 export function dataBytesForCopyOrFail(args) {
   const { minDataSizeOrOverestimate, copyValid } = dataBytesForCopyOrOverestimate(args);
   assert(copyValid, 'copy was invalid');
@@ -256,11 +256,11 @@ export function dataBytesForCopyOrFail(args) {
 }
 
 /**
-   * Validate a copy and compute the number of bytes it needs. If the copy is invalid, attempts to
-   * "conservatively guess" (overestimate) the number of bytes that could be needed for a copy, even
-   * if the copy parameters turn out to be invalid. This hopes to avoid "buffer too small" validation
-   * errors when attempting to test other validation errors.
-   */
+ * Validate a copy and compute the number of bytes it needs. If the copy is invalid, attempts to
+ * "conservatively guess" (overestimate) the number of bytes that could be needed for a copy, even
+ * if the copy parameters turn out to be invalid. This hopes to avoid "buffer too small" validation
+ * errors when attempting to test other validation errors.
+ */
 export function dataBytesForCopyOrOverestimate({
   layout,
   format,

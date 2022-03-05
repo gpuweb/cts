@@ -17,7 +17,7 @@ class F extends Fixture {
 
 export const g = makeTestGroup(F);
 
-g.test('checkElementsEqual').fn(t => {
+g.test('checkElementsEqual').fn((t) => {
   t.shouldThrow('Error', () => checkElementsEqual(new Uint8Array(), new Uint16Array()));
   t.shouldThrow('Error', () => checkElementsEqual(new Uint32Array(), new Float32Array()));
   t.shouldThrow('Error', () => checkElementsEqual(new Uint8Array([]), new Uint8Array([0])));

@@ -18,7 +18,7 @@ Tests index buffer must be valid.
   `).
 
 paramsSubcasesOnly(kRenderEncodeTypeParams.combine('state', kResourceStates)).
-fn(t => {
+fn((t) => {
   const { encoderType, state } = t.params;
   const indexBuffer = t.createBufferWithState(state, {
     size: 16,
@@ -48,7 +48,7 @@ GPUConst.BufferUsage.COPY_DST,
 GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.INDEX])).
 
 
-fn(t => {
+fn((t) => {
   const { encoderType, usage } = t.params;
   const indexBuffer = t.device.createBuffer({
     size: 16,
@@ -69,11 +69,11 @@ Tests offset must be a multiple of index format’s byte size.
 paramsSubcasesOnly(
 kRenderEncodeTypeParams.
 combine('indexFormat', ['uint16', 'uint32']).
-expand('offset', p => {
+expand('offset', (p) => {
   return p.indexFormat === 'uint16' ? [0, 1, 2] : [0, 2, 4];
 })).
 
-fn(t => {
+fn((t) => {
   const { encoderType, indexFormat, offset } = t.params;
   const indexBuffer = t.device.createBuffer({
     size: 16,
@@ -95,7 +95,7 @@ Tests offset and size cannot be larger than index buffer size.
   `).
 
 paramsSubcasesOnly(buildBufferOffsetAndSizeOOBTestParams(4, 256)).
-fn(t => {
+fn((t) => {
   const { encoderType, offset, size, _valid } = t.params;
   const indexBuffer = t.device.createBuffer({
     size: 256,

@@ -41,7 +41,7 @@ factor)
     case 'src':
       return { ...src };
     case 'one-minus-src':
-      return mapColor(src, v => 1 - v);
+      return mapColor(src, (v) => 1 - v);
     case 'src-alpha':
       return mapColor(src, () => src.a);
     case 'one-minus-src-alpha':
@@ -49,7 +49,7 @@ factor)
     case 'dst':
       return { ...dst };
     case 'one-minus-dst':
-      return mapColor(dst, v => 1 - v);
+      return mapColor(dst, (v) => 1 - v);
     case 'dst-alpha':
       return mapColor(dst, () => dst.a);
     case 'one-minus-dst-alpha':
@@ -63,7 +63,7 @@ factor)
       return { ...blendColor };
     case 'one-minus-constant':
       assert(blendColor !== undefined);
-      return mapColor(blendColor, v => 1 - v);
+      return mapColor(blendColor, (v) => 1 - v);
     default:
       unreachable();}
 
@@ -110,7 +110,7 @@ u //
 combine('srcFactor', kBlendFactors).
 combine('dstFactor', kBlendFactors).
 combine('operation', kBlendOperations).
-filter(t => {
+filter((t) => {
   if (t.operation === 'min' || t.operation === 'max') {
     return t.srcFactor === 'one' && t.dstFactor === 'one';
   }
@@ -122,7 +122,7 @@ combine('dstColor', [
 { r: 0.51, g: 0.22, b: 0.71, a: 0.33 },
 { r: 0.09, g: 0.73, b: 0.93, a: 0.81 }]).
 
-expand('blendConstant', p => {
+expand('blendConstant', (p) => {
   const needsBlendConstant =
   p.srcFactor === 'one-minus-constant' ||
   p.srcFactor === 'constant' ||
@@ -131,7 +131,7 @@ expand('blendConstant', p => {
   return needsBlendConstant ? [{ r: 0.91, g: 0.82, b: 0.73, a: 0.64 }] : [undefined];
 })).
 
-fn(t => {
+fn((t) => {
   const textureFormat = 'rgba16float';
   const srcColor = t.params.srcColor;
   const dstColor = t.params.dstColor;
@@ -250,8 +250,8 @@ struct Uniform {
   t.device.queue.submit([commandEncoder.finish()]);
 
   const tolerance = 0.003;
-  const expectedLow = mapColor(expectedColor, v => v - tolerance);
-  const expectedHigh = mapColor(expectedColor, v => v + tolerance);
+  const expectedLow = mapColor(expectedColor, (v) => v - tolerance);
+  const expectedHigh = mapColor(expectedColor, (v) => v + tolerance);
 
   t.expectSinglePixelBetweenTwoValuesFloat16In2DTexture(
   renderTarget,

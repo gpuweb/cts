@@ -87,10 +87,10 @@ export class ImageCopyTest extends ValidationTest {
   }
 
   /**
-     * Creates a texture when all that is needed is an aligned texture given the format and desired
-     * dimensions/origin. The resultant texture guarantees that a copy with the same size and origin
-     * should be possible.
-     */
+   * Creates a texture when all that is needed is an aligned texture given the format and desired
+   * dimensions/origin. The resultant texture guarantees that a copy with the same size and origin
+   * should be possible.
+   */
   createAlignedTexture(
   format,
   size = {

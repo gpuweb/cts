@@ -258,7 +258,7 @@ export class BufferSyncTest extends GPUTest {
     bufferData2[0] = expectedValue2;
     this.expectGPUBufferValuesPassCheck(
     buffer,
-    a => checkElementsEqualEither(a, [bufferData1, bufferData2]),
+    (a) => checkElementsEqualEither(a, [bufferData1, bufferData2]),
     { type: Uint32Array, typedLength: 1 });
 
   }}

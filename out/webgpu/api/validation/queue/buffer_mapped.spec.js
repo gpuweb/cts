@@ -92,12 +92,12 @@ export const g = makeTestGroup(F);
 
 g.test('writeBuffer').
 desc(`Test that an outstanding mapping will prevent writeBuffer calls.`).
-fn(async t => {
+fn(async (t) => {
   const data = new Uint32Array([42]);
 
   await t.runBufferDependencyTest(
   GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-  buffer => {
+  (buffer) => {
     t.queue.writeBuffer(buffer, 0, data);
   });
 
@@ -109,7 +109,7 @@ desc(
   Test that an outstanding mapping will prevent copyBufferToTexture commands from submitting,
   both when used as the source and destination.`).
 
-fn(async t => {
+fn(async (t) => {
   const sourceBuffer = t.device.createBuffer({
     size: 8,
     usage: GPUBufferUsage.COPY_SRC });
@@ -122,7 +122,7 @@ fn(async t => {
 
   await t.runBufferDependencyTest(
   GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
-  buffer => {
+  (buffer) => {
     const commandEncoder = t.device.createCommandEncoder();
     commandEncoder.copyBufferToBuffer(buffer, 0, destBuffer, 0, 4);
     t.queue.submit([commandEncoder.finish()]);
@@ -131,7 +131,7 @@ fn(async t => {
 
   await t.runBufferDependencyTest(
   GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-  buffer => {
+  (buffer) => {
     const commandEncoder = t.device.createCommandEncoder();
     commandEncoder.copyBufferToBuffer(sourceBuffer, 0, buffer, 0, 4);
     t.queue.submit([commandEncoder.finish()]);
@@ -143,7 +143,7 @@ g.test('copyBufferToTexture').
 desc(
 `Test that an outstanding mapping will prevent copyBufferToTexture commands from submitting.`).
 
-fn(async t => {
+fn(async (t) => {
   const size = { width: 1, height: 1 };
 
   const texture = t.device.createTexture({
@@ -154,7 +154,7 @@ fn(async t => {
 
   await t.runBufferDependencyTest(
   GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
-  buffer => {
+  (buffer) => {
     const commandEncoder = t.device.createCommandEncoder();
     commandEncoder.copyBufferToTexture({ buffer }, { texture }, size);
     t.queue.submit([commandEncoder.finish()]);
@@ -166,7 +166,7 @@ g.test('copyTextureToBuffer').
 desc(
 `Test that an outstanding mapping will prevent copyTextureToBuffer commands from submitting.`).
 
-fn(async t => {
+fn(async (t) => {
   const size = { width: 1, height: 1 };
 
   const texture = t.device.createTexture({
@@ -177,7 +177,7 @@ fn(async t => {
 
   await t.runBufferDependencyTest(
   GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-  buffer => {
+  (buffer) => {
     const commandEncoder = t.device.createCommandEncoder();
     commandEncoder.copyTextureToBuffer({ texture }, { buffer }, size);
     t.queue.submit([commandEncoder.finish()]);
@@ -237,7 +237,7 @@ paramsSubcasesOnly([
 { order: ['record', 'finish', 'unmap', 'submit'], mappedAtCreation: true, _shouldError: false },
 { order: ['record', 'finish', 'submit', 'unmap'], mappedAtCreation: true, _shouldError: true }]).
 
-fn(async t => {
+fn(async (t) => {
   const { order, mappedAtCreation, _shouldError: shouldError } = t.params;
 
   const buffer = t.device.createBuffer({

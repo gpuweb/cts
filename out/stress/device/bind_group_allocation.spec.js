@@ -9,7 +9,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('coexisting').
 desc(`Tests allocation of many coexisting GPUBindGroup objects.`).
-fn(t => {
+fn((t) => {
   const kNumGroups = 1_000_000;
   const buffer = t.device.createBuffer({
     size: 64,
@@ -41,7 +41,7 @@ desc(
 Objects are sequentially created and dropped for GC over a very large number of
 iterations.`).
 
-fn(t => {
+fn((t) => {
   const kNumGroups = 5_000_000;
   const buffer = t.device.createBuffer({
     size: 64,

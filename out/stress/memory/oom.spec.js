@@ -10,7 +10,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('vram_oom').
 desc(`Tests that we can allocate buffers until we run out of VRAM.`).
-fn(async t => {
+fn(async (t) => {
   await exhaustVramUntilUnder64MB(t.device);
 });
 

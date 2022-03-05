@@ -10,10 +10,10 @@ import { kBigSeparator, kPathSeparator, kWildcard } from './separators.js';
 import { stringifyPublicParams } from './stringify_params.js';
 
 /**
-                                                                * Represents a test query of some level.
-                                                                *
-                                                                * TestQuery types are immutable.
-                                                                */
+ * Represents a test query of some level.
+ *
+ * TestQuery types are immutable.
+ */
 
 
 
@@ -34,10 +34,10 @@ import { stringifyPublicParams } from './stringify_params.js';
 
 
 /**
-                                                                    * A multi-file test query, like `s:*` or `s:a,b,*`.
-                                                                    *
-                                                                    * Immutable (makes copies of constructor args).
-                                                                    */
+ * A multi-file test query, like `s:*` or `s:a,b,*`.
+ *
+ * Immutable (makes copies of constructor args).
+ */
 export class TestQueryMultiFile {
   level = 1;
   isMultiFile = true;
@@ -63,10 +63,10 @@ export class TestQueryMultiFile {
 
 
 /**
-      * A multi-test test query, like `s:f:*` or `s:f:a,b,*`.
-      *
-      * Immutable (makes copies of constructor args).
-      */
+ * A multi-test test query, like `s:f:*` or `s:f:a,b,*`.
+ *
+ * Immutable (makes copies of constructor args).
+ */
 export class TestQueryMultiTest extends TestQueryMultiFile {
   level = 2;
   isMultiFile = false;
@@ -93,11 +93,11 @@ export class TestQueryMultiTest extends TestQueryMultiFile {
 
 
 /**
-      * A multi-case test query, like `s:f:t:*` or `s:f:t:a,b,*`.
-      *
-      * Immutable (makes copies of constructor args), except for param values
-      * (which aren't normally supposed to change; they're marked readonly in TestParams).
-      */
+ * A multi-case test query, like `s:f:t:*` or `s:f:t:a,b,*`.
+ *
+ * Immutable (makes copies of constructor args), except for param values
+ * (which aren't normally supposed to change; they're marked readonly in TestParams).
+ */
 export class TestQueryMultiCase extends TestQueryMultiTest {
   level = 3;
   isMultiTest = false;
@@ -125,10 +125,10 @@ export class TestQueryMultiCase extends TestQueryMultiTest {
 
 
 /**
-      * A multi-case test query, like `s:f:t:` or `s:f:t:a=1,b=1`.
-      *
-      * Immutable (makes copies of constructor args).
-      */
+ * A multi-case test query, like `s:f:t:` or `s:f:t:a=1,b=1`.
+ *
+ * Immutable (makes copies of constructor args).
+ */
 export class TestQuerySingleCase extends TestQueryMultiCase {
   level = 4;
   isMultiCase = false;
@@ -148,17 +148,17 @@ export class TestQuerySingleCase extends TestQueryMultiCase {
 
 
 /**
-      * Parse raw expectations input into TestQueryWithExpectation[], filtering so that only
-      * expectations that are relevant for the provided query and wptURL.
-      *
-      * `rawExpectations` should be @type {{ query: string, expectation: Expectation }[]}
-      *
-      * The `rawExpectations` are parsed and validated that they are in the correct format.
-      * If `wptURL` is passed, the query string should be of the full path format such
-      * as `path/to/cts.https.html?worker=0&q=suite:test_path:test_name:foo=1;bar=2;*`.
-      * If `wptURL` is `undefined`, the query string should be only the query
-      * `suite:test_path:test_name:foo=1;bar=2;*`.
-      */
+ * Parse raw expectations input into TestQueryWithExpectation[], filtering so that only
+ * expectations that are relevant for the provided query and wptURL.
+ *
+ * `rawExpectations` should be @type {{ query: string, expectation: Expectation }[]}
+ *
+ * The `rawExpectations` are parsed and validated that they are in the correct format.
+ * If `wptURL` is passed, the query string should be of the full path format such
+ * as `path/to/cts.https.html?worker=0&q=suite:test_path:test_name:foo=1;bar=2;*`.
+ * If `wptURL` is `undefined`, the query string should be only the query
+ * `suite:test_path:test_name:foo=1;bar=2;*`.
+ */
 export function parseExpectationsForTestQuery(
 rawExpectations,
 
@@ -238,9 +238,9 @@ Expectation should be of the form path/to/cts.https.html?worker=0&q=suite:test_p
 }
 
 /**
-   * For display purposes only, produces a "relative" query string from parent to child.
-   * Used in the wpt runtime to reduce the verbosity of logs.
-   */
+ * For display purposes only, produces a "relative" query string from parent to child.
+ * Used in the wpt runtime to reduce the verbosity of logs.
+ */
 export function relativeQueryString(parent, child) {
   const ordering = compareQueries(parent, child);
   if (ordering === Ordering.Equal) {

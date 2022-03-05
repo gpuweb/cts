@@ -83,7 +83,7 @@ beginSubcases().
 combine('indexFormat', ['uint16', 'uint32']).
 combine('useBundle', [false, true])).
 
-fn(t => {
+fn((t) => {
   const {
     indexFormat,
     bindingSizeInElements,

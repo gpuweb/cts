@@ -13,7 +13,7 @@ import { UnitTest } from './unit_test.js';
 
 export const g = makeTestGroup(UnitTest);
 
-g.test('construct').fn(t => {
+g.test('construct').fn((t) => {
   const mylog = new Logger({ overrideDebugMode: true });
   const [, res1] = mylog.record('one');
   const [, res2] = mylog.record('two');
@@ -28,7 +28,7 @@ g.test('construct').fn(t => {
   t.expect(res2.timems < 0);
 });
 
-g.test('empty').fn(t => {
+g.test('empty').fn((t) => {
   const mylog = new Logger({ overrideDebugMode: true });
   const [rec, res] = mylog.record('one');
 
@@ -40,7 +40,7 @@ g.test('empty').fn(t => {
   t.expect(res.timems >= 0);
 });
 
-g.test('pass').fn(t => {
+g.test('pass').fn((t) => {
   const mylog = new Logger({ overrideDebugMode: true });
   const [rec, res] = mylog.record('one');
 
@@ -53,7 +53,7 @@ g.test('pass').fn(t => {
   t.expect(res.timems >= 0);
 });
 
-g.test('skip').fn(t => {
+g.test('skip').fn((t) => {
   const mylog = new Logger({ overrideDebugMode: true });
   const [rec, res] = mylog.record('one');
 
@@ -66,7 +66,7 @@ g.test('skip').fn(t => {
   t.expect(res.timems >= 0);
 });
 
-g.test('warn').fn(t => {
+g.test('warn').fn((t) => {
   const mylog = new Logger({ overrideDebugMode: true });
   const [rec, res] = mylog.record('one');
 
@@ -79,7 +79,7 @@ g.test('warn').fn(t => {
   t.expect(res.timems >= 0);
 });
 
-g.test('fail,expectationFailed').fn(t => {
+g.test('fail,expectationFailed').fn((t) => {
   const mylog = new Logger({ overrideDebugMode: true });
   const [rec, res] = mylog.record('one');
 
@@ -93,7 +93,7 @@ g.test('fail,expectationFailed').fn(t => {
   t.expect(res.timems >= 0);
 });
 
-g.test('fail,validationFailed').fn(t => {
+g.test('fail,validationFailed').fn((t) => {
   const mylog = new Logger({ overrideDebugMode: true });
   const [rec, res] = mylog.record('one');
 
@@ -107,7 +107,7 @@ g.test('fail,validationFailed').fn(t => {
   t.expect(res.timems >= 0);
 });
 
-g.test('fail,threw').fn(t => {
+g.test('fail,threw').fn((t) => {
   const mylog = new Logger({ overrideDebugMode: true });
   const [rec, res] = mylog.record('one');
 
@@ -126,7 +126,7 @@ paramsSimple([
 { debug: true, _logsCount: 5 }, //
 { debug: false, _logsCount: 3 }]).
 
-fn(t => {
+fn((t) => {
   const { debug, _logsCount } = t.params;
 
   const mylog = new Logger({ overrideDebugMode: debug });

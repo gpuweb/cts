@@ -74,7 +74,7 @@ combine('target_stage', ['vertex', 'fragment', 'compute']).
 combine('target_io', ['in', 'out']).
 beginSubcases()).
 
-fn(t => {
+fn((t) => {
   const code = generateShader({
     attribute: `@builtin(${t.params.name})`,
     type: t.params.type,
@@ -105,7 +105,7 @@ combine('use_struct', [true, false]).
 combine('target_type', kTestTypes).
 beginSubcases()).
 
-fn(t => {
+fn((t) => {
   let code = '';
 
   if (t.params.target_type === 'MyStruct') {
@@ -142,7 +142,7 @@ combine('target_stage', ['fragment', '']).
 combine('target_io', ['in', 'out']).
 beginSubcases()).
 
-fn(t => {
+fn((t) => {
   // Generate a struct that contains a sample_mask builtin, nested inside another struct.
   let code = `
     struct Inner {
@@ -179,7 +179,7 @@ u
 combine('second', ['p2', 's1b', 's2b', 'rb']).
 beginSubcases()).
 
-fn(t => {
+fn((t) => {
   const p1 =
   t.params.first === 'p1' ? '@builtin(sample_mask)' : '@location(1) @interpolate(flat)';
   const p2 =
@@ -235,7 +235,7 @@ combine('use_struct', [true, false]).
 combine('attribute', ['@builtin(position)', '@location(0)']).
 beginSubcases()).
 
-fn(t => {
+fn((t) => {
   const code = `
     struct S {
       ${t.params.attribute} value : vec4<f32>;

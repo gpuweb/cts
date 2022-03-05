@@ -149,7 +149,7 @@ u //
 .combine('count', [0, 1, kMaxVertexBuffers, kMaxVertexBuffers + 1]).
 combine('lastEmpty', [false, true])).
 
-fn(t => {
+fn((t) => {
   const { count, lastEmpty } = t.params;
 
   const vertexBuffers = [];
@@ -179,7 +179,7 @@ u //
 .combine('attribCount', [0, 1, kMaxVertexAttributes, kMaxVertexAttributes + 1]).
 combine('attribsPerBuffer', [0, 1, 4])).
 
-fn(t => {
+fn((t) => {
   const { attribCount, attribsPerBuffer } = t.params;
 
   const vertexBuffers = [];
@@ -223,7 +223,7 @@ kMaxVertexBufferArrayStride,
 kMaxVertexBufferArrayStride + 4])).
 
 
-fn(t => {
+fn((t) => {
   const { vertexBufferIndex, arrayStride } = t.params;
 
   const vertexBuffers = [];
@@ -252,7 +252,7 @@ kMaxVertexBufferArrayStride - 2,
 kMaxVertexBufferArrayStride])).
 
 
-fn(t => {
+fn((t) => {
   const { vertexBufferIndex, arrayStride } = t.params;
 
   const vertexBuffers = [];
@@ -276,7 +276,7 @@ combine('extraAttributeCount', [0, 1, kMaxVertexAttributes - 1]).
 combine('testAttributeAtStart', [false, true]).
 combine('testShaderLocation', [0, 1, kMaxVertexAttributes - 1, kMaxVertexAttributes])).
 
-fn(t => {
+fn((t) => {
   const {
     vertexBufferIndex,
     extraAttributeCount,
@@ -316,7 +316,7 @@ combine('shaderLocationA', [0, 1, 7, kMaxVertexAttributes - 1]).
 combine('shaderLocationB', [0, 1, 7, kMaxVertexAttributes - 1]).
 combine('extraAttributeCount', [0, 4])).
 
-fn(t => {
+fn((t) => {
   const {
     vertexBufferIndexA,
     vertexBufferIndexB,
@@ -373,7 +373,7 @@ paramsSubcasesOnly((u) =>
 u //
 .combine('testLocation', [0, 1, kMaxVertexAttributes - 1, kMaxVertexAttributes, -1, 2 ** 32])).
 
-fn(t => {
+fn((t) => {
   const { testLocation } = t.params;
 
   const shader = t.generateTestVertexShader([
@@ -413,7 +413,7 @@ combine('extraAttributeCount', [0, 1, kMaxVertexAttributes - 1]).
 combine('testAttributeAtStart', [false, true]).
 combine('testShaderLocation', [0, 1, 4, 7, kMaxVertexAttributes - 1])).
 
-fn(t => {
+fn((t) => {
   const {
     vertexBufferIndex,
     extraAttributeCount,
@@ -460,14 +460,14 @@ u.
 combine('format', kVertexFormats).
 beginSubcases().
 combine('shaderBaseType', ['u32', 'i32', 'f32']).
-expand('shaderType', p => [
+expand('shaderType', (p) => [
 p.shaderBaseType,
 `vec2<${p.shaderBaseType}>`,
 `vec3<${p.shaderBaseType}>`,
 `vec4<${p.shaderBaseType}>`])).
 
 
-fn(t => {
+fn((t) => {
   const { format, shaderBaseType, shaderType } = t.params;
   const shader = t.generateTestVertexShader([
   {
@@ -510,7 +510,7 @@ params((u) =>
 u.
 combine('format', kVertexFormats).
 combine('arrayStride', [256, kMaxVertexBufferArrayStride]).
-expand('offset', p => {
+expand('offset', (p) => {
   const { bytesPerComponent, componentCount } = kVertexFormatInfo[p.format];
   const formatSize = bytesPerComponent * componentCount;
 
@@ -531,7 +531,7 @@ combine('vertexBufferIndex', [0, 1, kMaxVertexBuffers - 1]).
 combine('extraAttributeCount', [0, 1, kMaxVertexAttributes - 1]).
 combine('testAttributeAtStart', [false, true])).
 
-fn(t => {
+fn((t) => {
   const {
     format,
     arrayStride,
@@ -603,7 +603,7 @@ combine('vertexBufferIndex', [0, 1, kMaxVertexBuffers - 1]).
 combine('extraAttributeCount', [0, 1, kMaxVertexAttributes - 1]).
 combine('testAttributeAtStart', [false, true])).
 
-fn(t => {
+fn((t) => {
   const {
     format,
     arrayStride,
@@ -634,7 +634,7 @@ fn(t => {
 
 g.test('many_attributes_overlapping').
 desc(`Test that it is valid to have many vertex attributes overlap`).
-fn(async t => {
+fn(async (t) => {
   // Create many attributes, each of them intersects with at least 3 others.
   const attributes = [];
   const formats = ['float32x4', 'uint32x4', 'sint32x4'];

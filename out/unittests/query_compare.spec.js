@@ -59,7 +59,7 @@ export const g = makeTestGroup(F);
 // suite:a,b:*  >  suite:a,b:c,*  >  suite:a,b:c,d,*  >  suite:a,b:c,d:*
 // suite:a,b:c,d:*  >  suite:a,b:c,d:x=1;*  >  suite:a,b:c,d:x=1;y=2;*  >  suite:a,b:c,d:x=1;y=2
 // suite:a;* (unordered) suite:b;*
-g.test('well_ordered').fn(t => {
+g.test('well_ordered').fn((t) => {
   t.expectWellOrdered(
   new TestQueryMultiFile('suite', []),
   new TestQueryMultiFile('suite', ['a']),
@@ -84,7 +84,7 @@ g.test('well_ordered').fn(t => {
 
 });
 
-g.test('unordered').fn(t => {
+g.test('unordered').fn((t) => {
   t.expectUnordered(
   new TestQueryMultiFile('suite', ['a']), //
   new TestQueryMultiFile('suite', ['x']));

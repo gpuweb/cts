@@ -16,7 +16,7 @@ combineWithParams(kBuiltins).
 combine('use_struct', [true, false]).
 beginSubcases()).
 
-fn(t => {
+fn((t) => {
   const code = generateShader({
     attribute: `@builtin(${t.params.name}) @invariant`,
     type: t.params.type,
@@ -30,8 +30,8 @@ fn(t => {
 
 g.test('not_valid_on_user_defined_io').
 desc(`Test that the invariant attribute is not accepted on user-defined IO attributes.`).
-params(u => u.combine('use_invariant', [true, false]).beginSubcases()).
-fn(t => {
+params((u) => u.combine('use_invariant', [true, false]).beginSubcases()).
+fn((t) => {
   const invariant = t.params.use_invariant ? '@invariant' : '';
   const code = `
     struct VertexOut {
@@ -48,8 +48,8 @@ fn(t => {
 
 g.test('invalid_use_of_parameters').
 desc(`Test that no parameters are accepted for the invariant attribute`).
-params(u => u.combine('suffix', ['', '()', '(0)']).beginSubcases()).
-fn(t => {
+params((u) => u.combine('suffix', ['', '()', '(0)']).beginSubcases()).
+fn((t) => {
   const code = `
     struct VertexOut {
       @builtin(position) @invariant${t.params.suffix} position : vec4<f32>;

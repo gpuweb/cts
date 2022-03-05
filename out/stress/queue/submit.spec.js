@@ -14,9 +14,9 @@ desc(
 encoded by chaining together long sequences of compute passes, with expected
 results verified at the end of the test.`).
 
-fn(async t => {
+fn(async (t) => {
   const kNumElements = 64;
-  const data = new Uint32Array([...iterRange(kNumElements, x => x)]);
+  const data = new Uint32Array([...iterRange(kNumElements, (x) => x)]);
   const buffer = t.makeBufferWithContents(data, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
   const pipeline = t.device.createComputePipeline({
     compute: {
@@ -49,7 +49,7 @@ fn(async t => {
   t.device.queue.submit([encoder.finish()]);
   t.expectGPUBufferValuesEqual(
   buffer,
-  new Uint32Array([...iterRange(kNumElements, x => x + kNumIterations)]));
+  new Uint32Array([...iterRange(kNumElements, (x) => x + kNumIterations)]));
 
 });
 
@@ -58,9 +58,9 @@ desc(
 `Tests submission of a huge number of command buffers to a GPUQueue by a single
 submit() call.`).
 
-fn(async t => {
+fn(async (t) => {
   const kNumElements = 64;
-  const data = new Uint32Array([...iterRange(kNumElements, x => x)]);
+  const data = new Uint32Array([...iterRange(kNumElements, (x) => x)]);
   const buffer = t.makeBufferWithContents(data, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
   const pipeline = t.device.createComputePipeline({
     compute: {
@@ -95,7 +95,7 @@ fn(async t => {
   t.device.queue.submit(buffers);
   t.expectGPUBufferValuesEqual(
   buffer,
-  new Uint32Array([...iterRange(kNumElements, x => x + kNumIterations)]));
+  new Uint32Array([...iterRange(kNumElements, (x) => x + kNumIterations)]));
 
 });
 //# sourceMappingURL=submit.spec.js.map

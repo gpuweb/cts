@@ -27,9 +27,9 @@ u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('vectorize', [undefined, 2, 3, 4])).
 
-fn(async t => {
+fn(async (t) => {
   // [1]: Need to decide what the ground-truth is.
-  const truthFunc = x => {
+  const truthFunc = (x) => {
     return { input: f32(x), expected: f32(Math.atan(x)) };
   };
 
@@ -61,13 +61,13 @@ fn(async t => {
 
 
   //  -2^32 < x <= -1, biased towards -1
-  cases = cases.concat(biasedRange(-1, -(2 ** 32), 1000).map(x => truthFunc(x)));
+  cases = cases.concat(biasedRange(-1, -(2 ** 32), 1000).map((x) => truthFunc(x)));
   // -1 <= x < 0, linearly spread
-  cases = cases.concat(linearRange(-1, kValue.f32.negative.max, 100).map(x => truthFunc(x)));
+  cases = cases.concat(linearRange(-1, kValue.f32.negative.max, 100).map((x) => truthFunc(x)));
   // 0 < x <= 1, linearly spread
-  cases = cases.concat(linearRange(kValue.f32.positive.min, 1, 100).map(x => truthFunc(x)));
+  cases = cases.concat(linearRange(kValue.f32.positive.min, 1, 100).map((x) => truthFunc(x)));
   // 1 <= x < 2^32, biased towards 1
-  cases = cases.concat(biasedRange(1, 2 ** 32, 1000).map(x => truthFunc(x)));
+  cases = cases.concat(biasedRange(1, 2 ** 32, 1000).map((x) => truthFunc(x)));
 
   const cfg = t.params;
   cfg.cmpFloats = ulpThreshold(4096);

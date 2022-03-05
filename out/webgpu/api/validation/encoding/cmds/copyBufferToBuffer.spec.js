@@ -50,7 +50,7 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
-g.test('copy_with_invalid_buffer').fn(async t => {
+g.test('copy_with_invalid_buffer').fn(async (t) => {
   const validBuffer = t.device.createBuffer({
     size: 16,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
@@ -94,7 +94,7 @@ u //
 .combine('srcUsage', kBufferUsages).
 combine('dstUsage', kBufferUsages)).
 
-fn(async t => {
+fn(async (t) => {
   const { srcUsage, dstUsage } = t.params;
 
   const srcBuffer = t.device.createBuffer({
@@ -126,7 +126,7 @@ paramsSubcasesOnly([
 { copySize: 5, _isSuccess: false },
 { copySize: 8, _isSuccess: true }]).
 
-fn(async t => {
+fn(async (t) => {
   const { copySize, _isSuccess: isSuccess } = t.params;
 
   const srcBuffer = t.device.createBuffer({
@@ -161,7 +161,7 @@ paramsSubcasesOnly([
 { srcOffset: 0, dstOffset: 8, _isSuccess: true },
 { srcOffset: 4, dstOffset: 4, _isSuccess: true }]).
 
-fn(async t => {
+fn(async (t) => {
   const { srcOffset, dstOffset, _isSuccess: isSuccess } = t.params;
 
   const srcBuffer = t.device.createBuffer({
@@ -198,7 +198,7 @@ paramsSubcasesOnly([
   copySize: kMaxSafeMultipleOf8 }]).
 
 
-fn(async t => {
+fn(async (t) => {
   const { srcOffset, dstOffset, copySize } = t.params;
 
   const srcBuffer = t.device.createBuffer({
@@ -233,7 +233,7 @@ paramsSubcasesOnly([
 { srcOffset: 0, dstOffset: 20, copySize: 16 },
 { srcOffset: 0, dstOffset: 20, copySize: 12, _isSuccess: true }]).
 
-fn(async t => {
+fn(async (t) => {
   const { srcOffset, dstOffset, copySize, _isSuccess = false } = t.params;
 
   const srcBuffer = t.device.createBuffer({
@@ -262,7 +262,7 @@ paramsSubcasesOnly([
 { srcOffset: 0, dstOffset: 4, copySize: 8 },
 { srcOffset: 4, dstOffset: 0, copySize: 8 }]).
 
-fn(async t => {
+fn(async (t) => {
   const { srcOffset, dstOffset, copySize } = t.params;
 
   const buffer = t.device.createBuffer({

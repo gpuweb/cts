@@ -19,12 +19,12 @@ const kBufferUsageExp = {
   INDIRECT: 0x0100,
   QUERY_RESOLVE: 0x0200 };
 
-g.test('BufferUsage,count').fn(t => {
+g.test('BufferUsage,count').fn((t) => {
   t.assertMemberCount(GPUBufferUsage, kBufferUsageExp);
 });
 g.test('BufferUsage,values').
-params(u => u.combine('key', Object.keys(kBufferUsageExp))).
-fn(t => {
+params((u) => u.combine('key', Object.keys(kBufferUsageExp))).
+fn((t) => {
   const { key } = t.params;
   t.assertMember(GPUBufferUsage, kBufferUsageExp, key);
 });
@@ -36,12 +36,12 @@ const kTextureUsageExp = {
   STORAGE_BINDING: 0x08,
   RENDER_ATTACHMENT: 0x10 };
 
-g.test('TextureUsage,count').fn(t => {
+g.test('TextureUsage,count').fn((t) => {
   t.assertMemberCount(GPUTextureUsage, kTextureUsageExp);
 });
 g.test('TextureUsage,values').
-params(u => u.combine('key', Object.keys(kTextureUsageExp))).
-fn(t => {
+params((u) => u.combine('key', Object.keys(kTextureUsageExp))).
+fn((t) => {
   const { key } = t.params;
   t.assertMember(GPUTextureUsage, kTextureUsageExp, key);
 });
@@ -53,12 +53,12 @@ const kColorWriteExp = {
   ALPHA: 0x8,
   ALL: 0xf };
 
-g.test('ColorWrite,count').fn(t => {
+g.test('ColorWrite,count').fn((t) => {
   t.assertMemberCount(GPUColorWrite, kColorWriteExp);
 });
 g.test('ColorWrite,values').
-params(u => u.combine('key', Object.keys(kColorWriteExp))).
-fn(t => {
+params((u) => u.combine('key', Object.keys(kColorWriteExp))).
+fn((t) => {
   const { key } = t.params;
   t.assertMember(GPUColorWrite, kColorWriteExp, key);
 });
@@ -68,12 +68,12 @@ const kShaderStageExp = {
   FRAGMENT: 0x2,
   COMPUTE: 0x4 };
 
-g.test('ShaderStage,count').fn(t => {
+g.test('ShaderStage,count').fn((t) => {
   t.assertMemberCount(GPUShaderStage, kShaderStageExp);
 });
 g.test('ShaderStage,values').
-params(u => u.combine('key', Object.keys(kShaderStageExp))).
-fn(t => {
+params((u) => u.combine('key', Object.keys(kShaderStageExp))).
+fn((t) => {
   const { key } = t.params;
   t.assertMember(GPUShaderStage, kShaderStageExp, key);
 });

@@ -36,7 +36,7 @@ class T extends UnitTest {
 
 export const g = makeTestGroup(T);
 
-g.test('stringifyQuery,single_case').fn(t => {
+g.test('stringifyQuery,single_case').fn((t) => {
   t.expectQueryString(
   new TestQuerySingleCase('a', ['b_1', '2_c'], ['d_3', '4_e'], {
     f: 'g',
@@ -48,7 +48,7 @@ g.test('stringifyQuery,single_case').fn(t => {
 
 });
 
-g.test('stringifyQuery,single_case,json').fn(t => {
+g.test('stringifyQuery,single_case,json').fn((t) => {
   t.expectQueryString(
   new TestQuerySingleCase('a', ['b_1', '2_c'], ['d_3', '4_e'], {
     f: 'g',
@@ -58,7 +58,7 @@ g.test('stringifyQuery,single_case,json').fn(t => {
 
 });
 
-g.test('stringifyQuery,multi_case').fn(t => {
+g.test('stringifyQuery,multi_case').fn((t) => {
   t.expectQueryString(
   new TestQueryMultiCase('a', ['b_1', '2_c'], ['d_3', '4_e'], {
     f: 'g',
@@ -75,7 +75,7 @@ g.test('stringifyQuery,multi_case').fn(t => {
 
 });
 
-g.test('stringifyQuery,multi_test').fn(t => {
+g.test('stringifyQuery,multi_test').fn((t) => {
   t.expectQueryString(
   new TestQueryMultiTest('a', ['b_1', '2_c'], ['d_3', '4_e']),
   'a:b_1,2_c:d_3,4_e,*');
@@ -87,7 +87,7 @@ g.test('stringifyQuery,multi_test').fn(t => {
 
 });
 
-g.test('stringifyQuery,multi_file').fn(t => {
+g.test('stringifyQuery,multi_file').fn((t) => {
   t.expectQueryString(
   new TestQueryMultiFile('a', ['b_1', '2_c']), //
   'a:b_1,2_c,*');
@@ -99,7 +99,7 @@ g.test('stringifyQuery,multi_file').fn(t => {
 
 });
 
-g.test('relativeQueryString,equal_or_child').fn(t => {
+g.test('relativeQueryString,equal_or_child').fn((t) => {
   // Depth difference = 0
   t.expectRelativeQueryString(
   new TestQueryMultiFile('a', []), //
@@ -246,7 +246,7 @@ g.test('relativeQueryString,equal_or_child').fn(t => {
 
 });
 
-g.test('relativeQueryString,unrelated').fn(t => {
+g.test('relativeQueryString,unrelated').fn((t) => {
   t.shouldThrow('Error', () => {
     relativeQueryString(
     new TestQueryMultiFile('a', ['b', 'x']), //

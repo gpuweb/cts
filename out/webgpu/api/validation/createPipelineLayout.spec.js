@@ -26,7 +26,7 @@ u //
 .combine('visibility', [0, 2, 4, 6]).
 combine('type', kBufferBindingTypes)).
 
-fn(async t => {
+fn(async (t) => {
   const { type, visibility } = t.params;
   const { maxDynamic } = bufferBindingTypeInfo({ type }).perPipelineLimitClass;
 
@@ -73,7 +73,7 @@ fn(async t => {
   });
 });
 
-g.test('number_of_bind_group_layouts_exceeds_the_maximum_value').fn(async t => {
+g.test('number_of_bind_group_layouts_exceeds_the_maximum_value').fn(async (t) => {
   const bindGroupLayoutDescriptor = {
     entries: [] };
 
@@ -117,7 +117,7 @@ paramsSubcasesOnly([
 { layout0Mismatched: true, layout1Mismatched: false },
 { layout0Mismatched: false, layout1Mismatched: true }]).
 
-fn(async t => {
+fn(async (t) => {
   const { layout0Mismatched, layout1Mismatched } = t.params;
 
   const mismatched = layout0Mismatched || layout1Mismatched;

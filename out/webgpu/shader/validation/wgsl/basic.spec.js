@@ -9,7 +9,7 @@ export const g = makeTestGroup(ShaderValidationTest);
 
 g.test('trivial').
 desc(`A trivial correct and incorrect shader.`).
-fn(t => {
+fn((t) => {
   t.expectCompileResult(
   true,
   `@stage(vertex) fn main() -> @builtin(position) vec4<f32> {
@@ -21,7 +21,7 @@ fn(t => {
 
 g.test('nonsense').
 desc(`Pass short nonsense strings as WGSL.`).
-fn(t => {
+fn((t) => {
   t.expectCompileResult(false, `nonsense`);
 });
 //# sourceMappingURL=basic.spec.js.map

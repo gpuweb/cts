@@ -33,7 +33,7 @@ oomAndSizeParams //
 .beginSubcases().
 combine('write', [false, true])).
 
-fn(async t => {
+fn(async (t) => {
   const { oom, write, size } = t.params;
 
   const buffer = t.expectGPUError(
@@ -86,7 +86,7 @@ oomAndSizeParams //
 .beginSubcases().
 combine('usage', kBufferUsages)).
 
-fn(async t => {
+fn(async (t) => {
   const { oom, usage, size } = t.params;
 
   const buffer = t.expectGPUError(
@@ -126,7 +126,7 @@ oomAndSizeParams //
 .beginSubcases().
 combine('usage', kBufferUsages)).
 
-fn(async t => {
+fn(async (t) => {
   const { oom, usage, size } = t.params;
 
   const buffer = t.expectGPUError(

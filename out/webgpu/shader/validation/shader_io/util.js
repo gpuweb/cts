@@ -1,16 +1,16 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/ /**
-     * Generate an entry point that uses an entry point IO variable.
-     *
-     * @param {Object} params
-     * @param params.attribute The entry point IO attribute.
-     * @param params.type The type to use for the entry point IO variable.
-     * @param params.stage The shader stage.
-     * @param params.io An "in|out" string specifying whether the entry point IO is an input or an output.
-     * @param params.use_struct True to wrap the entry point IO in a struct.
-     * @returns The generated shader code.
-     */export function generateShader({ attribute,
+ * Generate an entry point that uses an entry point IO variable.
+ *
+ * @param {Object} params
+ * @param params.attribute The entry point IO attribute.
+ * @param params.type The type to use for the entry point IO variable.
+ * @param params.stage The shader stage.
+ * @param params.io An "in|out" string specifying whether the entry point IO is an input or an output.
+ * @param params.use_struct True to wrap the entry point IO in a struct.
+ * @returns The generated shader code.
+ */export function generateShader({ attribute,
   type,
   stage,
   io,

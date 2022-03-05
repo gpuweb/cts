@@ -27,9 +27,9 @@ u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('vectorize', [undefined, 2, 3, 4])).
 
-fn(async t => {
+fn(async (t) => {
   // [1]: Need to decide what the ground-truth is.
-  const truthFunc = x => {
+  const truthFunc = (x) => {
     const f32_x = f32(x);
     return { input: f32_x, expected: f32(Math.log2(f32_x.value)) };
   };
@@ -37,9 +37,9 @@ fn(async t => {
   // log2's accuracy is defined in three regions { [0, 0.5), [0.5, 2.0], (2.0, +∞] }
   let cases = [];
   cases = cases.concat({ input: f32(0), expected: f32Bits(kBit.f32.infinity.negative) });
-  cases = cases.concat(linearRange(kValue.f32.positive.min, 0.5, 20).map(x => truthFunc(x)));
-  cases = cases.concat(linearRange(0.5, 2.0, 20).map(x => truthFunc(x)));
-  cases = cases.concat(biasedRange(2.0, 2 ** 32, 1000).map(x => truthFunc(x)));
+  cases = cases.concat(linearRange(kValue.f32.positive.min, 0.5, 20).map((x) => truthFunc(x)));
+  cases = cases.concat(linearRange(0.5, 2.0, 20).map((x) => truthFunc(x)));
+  cases = cases.concat(biasedRange(2.0, 2 ** 32, 1000).map((x) => truthFunc(x)));
 
   const cfg = t.params;
   cfg.cmpFloats = (got, expected) => {

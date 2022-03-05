@@ -62,7 +62,7 @@ u //
 .combine('colorStoreOperation', kStoreOps).
 combine('depthStencilStoreOperation', kStoreOps)).
 
-fn(t => {
+fn((t) => {
   // Create a basic color attachment.
   const kColorFormat = 'rgba8unorm';
   const colorAttachment = t.device.createTexture({
@@ -155,7 +155,7 @@ beginSubcases().
 combine('mipLevel', kMipLevel).
 combine('arrayLayer', kArrayLayers)).
 
-fn(t => {
+fn((t) => {
   const colorAttachment = t.device.createTexture({
     format: t.params.colorFormat,
     size: { width: kWidth, height: kHeight, depthOrArrayLayers: t.params.arrayLayer + 1 },
@@ -215,7 +215,7 @@ combine('storeOperation2', kStoreOps).
 beginSubcases().
 combine('colorAttachments', kNumColorAttachments)).
 
-fn(t => {
+fn((t) => {
   const kColorFormat = 'rgba8unorm';
   const colorAttachments = [];
 
@@ -285,7 +285,7 @@ beginSubcases().
 combine('mipLevel', kMipLevel).
 combine('arrayLayer', kArrayLayers)).
 
-fn(t => {
+fn((t) => {
   const depthStencilAttachment = t.device.createTexture({
     format: t.params.depthStencilFormat,
     size: { width: kWidth, height: kHeight, depthOrArrayLayers: t.params.arrayLayer + 1 },

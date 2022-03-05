@@ -32,7 +32,7 @@ Also verifies that the specified data range:
   - Has a byte size which is a multiple of 4.
 `).
 
-fn(async t => {
+fn(async (t) => {
   const queue = t.device.queue;
 
   function runTest(arrayType, testBuffer) {
@@ -149,7 +149,7 @@ paramsSubcasesOnly([
 { usage: GPUConst.BufferUsage.STORAGE | GPUConst.BufferUsage.COPY_SRC, _valid: false }, // with other usage
 { usage: GPUConst.BufferUsage.STORAGE | GPUConst.BufferUsage.COPY_DST, _valid: true } // with COPY_DST usage
 ]).
-fn(async t => {
+fn(async (t) => {
   const { usage, _valid } = t.params;
   const buffer = t.device.createBuffer({ size: 16, usage });
   const data = new Uint8Array(16);
@@ -161,6 +161,6 @@ fn(async t => {
 
 g.test('buffer,device_mismatch').
 desc('Tests writeBuffer cannot be called with a buffer created from another device').
-paramsSubcasesOnly(u => u.combine('mismatched', [true, false])).
+paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
 unimplemented();
 //# sourceMappingURL=writeBuffer.spec.js.map

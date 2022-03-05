@@ -25,7 +25,7 @@ beginSubcases().
 combine('pushCount', [0, 1, 2]).
 combine('popCount', [0, 1, 2])).
 
-fn(t => {
+fn((t) => {
   const { encoder, validateFinishAndSubmit } = t.createEncoder(t.params.encoderType);
   for (let i = 0; i < t.params.pushCount; ++i) {
     encoder.pushDebugGroup(`${i}`);
@@ -43,7 +43,7 @@ u //
 beginSubcases().
 combine('label', ['', 'group'])).
 
-fn(t => {
+fn((t) => {
   const { encoder, validateFinishAndSubmit } = t.createEncoder(t.params.encoderType);
   encoder.pushDebugGroup(t.params.label);
   encoder.popDebugGroup();
@@ -57,7 +57,7 @@ u //
 beginSubcases().
 combine('label', ['', 'marker'])).
 
-fn(t => {
+fn((t) => {
   const { encoder, validateFinishAndSubmit } = t.createEncoder(t.params.encoderType);
   encoder.insertDebugMarker(t.params.label);
   validateFinishAndSubmit(true, true);

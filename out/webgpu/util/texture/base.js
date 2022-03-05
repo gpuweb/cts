@@ -4,8 +4,8 @@
 import { reifyExtent3D } from '../../util/unions.js';
 
 /**
-                                                       * Compute the maximum mip level count allowed for a given texture size and texture dimension.
-                                                       */
+ * Compute the maximum mip level count allowed for a given texture size and texture dimension.
+ */
 export function maxMipLevelCount({
   size,
   dimension = '2d' })
@@ -32,9 +32,9 @@ export function maxMipLevelCount({
 }
 
 /**
-   * Compute the "physical size" of a mip level: the size of the level, rounded up to a
-   * multiple of the texel block size.
-   */
+ * Compute the "physical size" of a mip level: the size of the level, rounded up to a
+ * multiple of the texel block size.
+ */
 export function physicalMipSize(
 baseSize,
 format,
@@ -81,14 +81,14 @@ level)
 }
 
 /**
-   * Compute the "virtual size" of a mip level of a texture (not accounting for texel block rounding).
-   */
+ * Compute the "virtual size" of a mip level of a texture (not accounting for texel block rounding).
+ */
 export function virtualMipSize(
 dimension,
 size,
 mipLevel)
 {
-  const shiftMinOne = n => Math.max(1, n >> mipLevel);
+  const shiftMinOne = (n) => Math.max(1, n >> mipLevel);
   switch (dimension) {
     case '1d':
       assert(size[2] === 1);
@@ -103,9 +103,9 @@ mipLevel)
 }
 
 /**
-   * Get texture dimension from view dimension in order to create an compatible texture for a given
-   * view dimension.
-   */
+ * Get texture dimension from view dimension in order to create an compatible texture for a given
+ * view dimension.
+ */
 export function getTextureDimensionFromView(viewDimension) {
   switch (viewDimension) {
     case '1d':
@@ -135,9 +135,9 @@ export function viewDimensionsForTextureDimension(textureDimension) {
 }
 
 /** Reifies the optional fields of `GPUTextureDescriptor`.
-   * MAINTENANCE_TODO: viewFormats should not be omitted here, but it seems likely that the
-   * @webgpu/types definition will have to change before we can include it again.
-   */
+ * MAINTENANCE_TODO: viewFormats should not be omitted here, but it seems likely that the
+ * @webgpu/types definition will have to change before we can include it again.
+ */
 export function reifyTextureDescriptor(
 desc)
 {

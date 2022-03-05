@@ -17,7 +17,7 @@ class DeviceLostTests extends Fixture {
   }
 
   expectDeviceDestroyed(device) {
-    this.eventualAsyncExpectation(async niceStack => {
+    this.eventualAsyncExpectation(async (niceStack) => {
       try {
         const lost = await this.getDeviceLostWithTimeout(device.lost);
         this.expect(lost.reason === 'destroyed', 'device was lost from destroy');
@@ -35,7 +35,7 @@ g.test('not_lost_on_gc').
 desc(
 `'lost' is never resolved by GPUDevice being garbage collected (with attemptGarbageCollection).`).
 
-fn(async t => {
+fn(async (t) => {
   // Wraps a lost promise object creation in a function scope so that the device has the best
   // chance of being gone and ready for GC before trying to resolve the lost promise.
   const { lost } = await (async () => {
@@ -51,7 +51,7 @@ fn(async t => {
 
 g.test('lost_on_destroy').
 desc(`'lost' is resolved, with reason='destroyed', on GPUDevice.destroy().`).
-fn(async t => {
+fn(async (t) => {
   const adapter = await getGPU().requestAdapter();
   assert(adapter !== null);
   const device = await adapter.requestDevice();
@@ -61,7 +61,7 @@ fn(async t => {
 
 g.test('same_object').
 desc(`'lost' provides the same Promise and GPUDeviceLostInfo objects each time it's accessed.`).
-fn(async t => {
+fn(async (t) => {
   const adapter = await getGPU().requestAdapter();
   assert(adapter !== null);
   const device = await adapter.requestDevice();

@@ -51,11 +51,11 @@ process.argv;
     // Prefixes sorted from longest to shortest
     const argsPrefixesFromFile = (await fs.readFile(argsPrefixesFile, 'utf8')).
     split(/\r?\n/).
-    filter(a => a.length).
+    filter((a) => a.length).
     sort((a, b) => b.length - a.length);
     if (argsPrefixesFromFile.length) argsPrefixes = argsPrefixesFromFile;
     expectationLines = new Set(
-    (await fs.readFile(expectationsFile, 'utf8')).split(/\r?\n/).filter(l => l.length));
+    (await fs.readFile(expectationsFile, 'utf8')).split(/\r?\n/).filter((l) => l.length));
 
   }
 
@@ -99,7 +99,7 @@ Try broadening suppressions to avoid long test variant names. ' +
     }
   }
   await generateFile(lines);
-})().catch(ex => {
+})().catch((ex) => {
   console.log(ex.stack ?? ex.toString());
   process.exit(1);
 });

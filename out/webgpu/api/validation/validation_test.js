@@ -2,13 +2,13 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { kMaxQueryCount } from '../../capability_info.js';import { GPUTest } from '../../gpu_test.js';
 /**
-                                                                                                           * Base fixture for WebGPU validation tests.
-                                                                                                           */
+ * Base fixture for WebGPU validation tests.
+ */
 export class ValidationTest extends GPUTest {
   /**
-                                              * Create a GPUTexture in the specified state.
-                                              * A `descriptor` may optionally be passed, which is used when `state` is not `'invalid'`.
-                                              */
+   * Create a GPUTexture in the specified state.
+   * A `descriptor` may optionally be passed, which is used when `state` is not `'invalid'`.
+   */
   createTextureWithState(
   state,
   descriptor)
@@ -38,9 +38,9 @@ export class ValidationTest extends GPUTest {
   }
 
   /**
-     * Create a GPUTexture in the specified state. A `descriptor` may optionally be passed;
-     * if `state` is `'invalid'`, it will be modified to add an invalid combination of usages.
-     */
+   * Create a GPUTexture in the specified state. A `descriptor` may optionally be passed;
+   * if `state` is `'invalid'`, it will be modified to add an invalid combination of usages.
+   */
   createBufferWithState(
   state,
   descriptor)
@@ -74,9 +74,9 @@ export class ValidationTest extends GPUTest {
   }
 
   /**
-     * Create a GPUQuerySet in the specified state.
-     * A `descriptor` may optionally be passed, which is used when `state` is not `'invalid'`.
-     */
+   * Create a GPUQuerySet in the specified state.
+   * A `descriptor` may optionally be passed, which is used when `state` is not `'invalid'`.
+   */
   createQuerySetWithState(
   state,
   desc)
@@ -127,8 +127,8 @@ export class ValidationTest extends GPUTest {
   }
 
   /**
-     * Return an arbitrarily-configured GPUTexture with the `TEXTURE_BINDING` usage and specified sampleCount.
-     */
+   * Return an arbitrarily-configured GPUTexture with the `TEXTURE_BINDING` usage and specified sampleCount.
+   */
   getSampledTexture(sampleCount = 1) {
     return this.trackForCleanup(
     this.device.createTexture({
@@ -184,9 +184,9 @@ export class ValidationTest extends GPUTest {
   }
 
   /**
-     * Return an arbitrary object of the specified {@link BindableResource} type
-     * (e.g. `'errorBuf'`, `'nonFiltSamp'`, `sampledTexMS`, etc.)
-     */
+   * Return an arbitrary object of the specified {@link BindableResource} type
+   * (e.g. `'errorBuf'`, `'nonFiltSamp'`, `sampledTexMS`, etc.)
+   */
   getBindingResource(bindingType) {
     switch (bindingType) {
       case 'errorBuf':

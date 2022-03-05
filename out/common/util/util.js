@@ -3,16 +3,16 @@
 **/import { Logger } from '../internal/logging/logger.js';import { timeout } from './timeout.js';
 
 /**
-                                                                                                   * Error with arbitrary `extra` data attached, for debugging.
-                                                                                                   * The extra data is omitted if not running the test in debug mode (`?debug=1`).
-                                                                                                   */
+ * Error with arbitrary `extra` data attached, for debugging.
+ * The extra data is omitted if not running the test in debug mode (`?debug=1`).
+ */
 export class ErrorWithExtra extends Error {
 
 
   /**
-                                            * `extra` function is only called if in debug mode.
-                                            * If an `ErrorWithExtra` is passed, its message is used and its extras are passed through.
-                                            */
+   * `extra` function is only called if in debug mode.
+   * If an `ErrorWithExtra` is passed, its message is used and its extras are passed through.
+   */
 
 
   constructor(baseOrMessage, newExtra) {
@@ -27,8 +27,8 @@ export class ErrorWithExtra extends Error {
 
 
 /**
-      * Asserts `condition` is true. Otherwise, throws an `Error` with the provided message.
-      */
+ * Asserts `condition` is true. Otherwise, throws an `Error` with the provided message.
+ */
 export function assert(condition, msg) {
   if (!condition) {
     throw new Error(msg && (typeof msg === 'string' ? msg : msg()));
@@ -44,8 +44,8 @@ export function assertOK(value) {
 }
 
 /**
-   * Resolves if the provided promise rejects; rejects if it does not.
-   */
+ * Resolves if the provided promise rejects; rejects if it does not.
+ */
 export async function assertReject(p, msg) {
   try {
     await p;
@@ -56,30 +56,30 @@ export async function assertReject(p, msg) {
 }
 
 /**
-   * Assert this code is unreachable. Unconditionally throws an `Error`.
-   */
+ * Assert this code is unreachable. Unconditionally throws an `Error`.
+ */
 export function unreachable(msg) {
   throw new Error(msg);
 }
 
 /**
-   * The `performance` interface.
-   * It is available in all browsers, but it is not in scope by default in Node.
-   */
+ * The `performance` interface.
+ * It is available in all browsers, but it is not in scope by default in Node.
+ */
 const perf = typeof performance !== 'undefined' ? performance : require('perf_hooks').performance;
 
 /**
-                                                                                                    * Calls the appropriate `performance.now()` depending on whether running in a browser or Node.
-                                                                                                    */
+ * Calls the appropriate `performance.now()` depending on whether running in a browser or Node.
+ */
 export function now() {
   return perf.now();
 }
 
 /**
-   * Returns a promise which resolves after the specified time.
-   */
+ * Returns a promise which resolves after the specified time.
+ */
 export function resolveOnTimeout(ms) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     timeout(() => {
       resolve();
     }, ms);
@@ -89,8 +89,8 @@ export function resolveOnTimeout(ms) {
 export class PromiseTimeoutError extends Error {}
 
 /**
-                                                   * Returns a promise which rejects after the specified time.
-                                                   */
+ * Returns a promise which rejects after the specified time.
+ */
 export function rejectOnTimeout(ms, msg) {
   return new Promise((_resolve, reject) => {
     timeout(() => {
@@ -100,9 +100,9 @@ export function rejectOnTimeout(ms, msg) {
 }
 
 /**
-   * Takes a promise `p`, and returns a new one which rejects if `p` takes too long,
-   * and otherwise passes the result through.
-   */
+ * Takes a promise `p`, and returns a new one which rejects if `p` takes too long,
+ * and otherwise passes the result through.
+ */
 export function raceWithRejectOnTimeout(p, ms, msg) {
   // Setup a promise that will reject after `ms` milliseconds. We cancel this timeout when
   // `p` is finalized, so the JavaScript VM doesn't hang around waiting for the timer to
@@ -117,8 +117,8 @@ export function raceWithRejectOnTimeout(p, ms, msg) {
 }
 
 /**
-   * Makes a copy of a JS `object`, with the keys reordered into sorted order.
-   */
+ * Makes a copy of a JS `object`, with the keys reordered into sorted order.
+ */
 export function sortObjectByKey(v) {
   const sortedObject = {};
   for (const k of Object.keys(v).sort()) {
@@ -128,8 +128,8 @@ export function sortObjectByKey(v) {
 }
 
 /**
-   * Determines whether two JS values are equal, recursing into objects and arrays.
-   */
+ * Determines whether two JS values are equal, recursing into objects and arrays.
+ */
 export function objectEquals(x, y) {
   if (typeof x !== 'object' || typeof y !== 'object') return x === y;
   if (x === null || y === null) return x === y;
@@ -145,19 +145,19 @@ export function objectEquals(x, y) {
   const x1 = x;
   const y1 = y;
   const p = Object.keys(x);
-  return Object.keys(y).every(i => p.indexOf(i) !== -1) && p.every(i => objectEquals(x1[i], y1[i]));
+  return Object.keys(y).every((i) => p.indexOf(i) !== -1) && p.every((i) => objectEquals(x1[i], y1[i]));
 }
 
 /**
-   * Generates a range of values `fn(0)..fn(n-1)`.
-   */
+ * Generates a range of values `fn(0)..fn(n-1)`.
+ */
 export function range(n, fn) {
   return [...new Array(n)].map((_, i) => fn(i));
 }
 
 /**
-   * Generates a range of values `fn(0)..fn(n-1)`.
-   */
+ * Generates a range of values `fn(0)..fn(n-1)`.
+ */
 export function* iterRange(n, fn) {
   for (let i = 0; i < n; ++i) {
     yield fn(i);
@@ -209,10 +209,10 @@ buf,
 }
 
 /**
-   * Copy a range of bytes from one ArrayBuffer or TypedArray to another.
-   *
-   * `start`/`length` are in elements (or in bytes, if ArrayBuffer).
-   */
+ * Copy a range of bytes from one ArrayBuffer or TypedArray to another.
+ *
+ * `start`/`length` are in elements (or in bytes, if ArrayBuffer).
+ */
 export function memcpy(
 src,
 dst)

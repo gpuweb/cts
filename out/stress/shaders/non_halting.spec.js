@@ -14,7 +14,7 @@ desc(
 This is expected to hang for a bit, but it should ultimately result in graceful
 device loss.`).
 
-fn(async t => {
+fn(async (t) => {
   const data = new Uint32Array([0]);
   const buffer = t.makeBufferWithContents(data, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
   const module = t.device.createShaderModule({
@@ -53,7 +53,7 @@ desc(
 This is expected to hang for a bit, but it should ultimately result in graceful
 device loss.`).
 
-fn(async t => {
+fn(async (t) => {
   const module = t.device.createShaderModule({
     code: `
         struct Data { counter: u32; increment: u32; };
@@ -124,7 +124,7 @@ desc(
 This is expected to hang for a bit, but it should ultimately result in graceful
 device loss.`).
 
-fn(async t => {
+fn(async (t) => {
   const module = t.device.createShaderModule({
     code: `
         struct Data { counter: u32; increment: u32; };

@@ -23,8 +23,8 @@ Tests that set occlusion query set with all types in render pass descriptor:
 - {undefined} for occlusion query set in render pass descriptor
   `).
 
-paramsSubcasesOnly(u => u.combine('type', [undefined, ...kQueryTypes])).
-fn(async t => {
+paramsSubcasesOnly((u) => u.combine('type', [undefined, ...kQueryTypes])).
+fn(async (t) => {
   const type = t.params.type;
 
   if (type) {
@@ -45,8 +45,8 @@ desc(
 Tests that begin occlusion query with a invalid query set that failed during creation.
   `).
 
-paramsSubcasesOnly(u => u.combine('querySetState', ['valid', 'invalid'])).
-fn(t => {
+paramsSubcasesOnly((u) => u.combine('querySetState', ['valid', 'invalid'])).
+fn((t) => {
   const occlusionQuerySet = t.createQuerySetWithState(t.params.querySetState);
 
   const encoder = t.createEncoder('render pass', { occlusionQuerySet });
@@ -62,8 +62,8 @@ Tests that begin occlusion query with query index:
 - queryIndex {in, out of} range for GPUQuerySet
   `).
 
-paramsSubcasesOnly(u => u.combine('queryIndex', [0, 2])).
-fn(t => {
+paramsSubcasesOnly((u) => u.combine('queryIndex', [0, 2])).
+fn((t) => {
   const occlusionQuerySet = createQuerySetWithType(t, 'occlusion', 2);
 
   const encoder = t.createEncoder('render pass', { occlusionQuerySet });
@@ -85,9 +85,9 @@ params((u) =>
 u.
 combine('type', kQueryTypes).
 beginSubcases().
-expand('queryIndex', p => p.type === 'timestamp' ? [0, 2] : [0])).
+expand('queryIndex', (p) => p.type === 'timestamp' ? [0, 2] : [0])).
 
-fn(async t => {
+fn(async (t) => {
   const { type, queryIndex } = t.params;
 
   await t.selectDeviceForQueryTypeOrSkipTestCase(type);
@@ -107,8 +107,8 @@ Tests that write timestamp to a invalid query set that failed during creation:
 - x= {non-pass} enconder
   `).
 
-paramsSubcasesOnly(u => u.combine('querySetState', ['valid', 'invalid'])).
-fn(async t => {
+paramsSubcasesOnly((u) => u.combine('querySetState', ['valid', 'invalid'])).
+fn(async (t) => {
   const { querySetState } = t.params;
   await t.selectDeviceForQueryTypeOrSkipTestCase('timestamp');
 
@@ -124,6 +124,6 @@ fn(async t => {
 
 g.test('timestamp_query,device_mismatch').
 desc('Tests writeTimestamp cannot be called with a query set created from another device').
-paramsSubcasesOnly(u => u.combine('mismatched', [true, false])).
+paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
 unimplemented();
 //# sourceMappingURL=general.spec.js.map

@@ -1,8 +1,8 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/ /**
-     * Reifies a `GPUExtent3D` into a `Required<GPUExtent3DDict>`.
-     */export function reifyExtent3D(val)
+ * Reifies a `GPUExtent3D` into a `Required<GPUExtent3DDict>`.
+ */export function reifyExtent3D(val)
 {
   // TypeScript doesn't seem to want to narrow the types here properly, so hack around it.
   if (typeof val[Symbol.iterator] === 'function') {

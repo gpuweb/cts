@@ -28,7 +28,7 @@ u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('vectorize', [undefined, 2, 3, 4])).
 
-fn(async t => {
+fn(async (t) => {
   // [1]: Need to decide what the ground-truth is.
   const truthFunc = (y, x) => {
     assert(x !== 0, 'atan2 is undefined for x = 0');
@@ -46,7 +46,7 @@ fn(async t => {
   numeric_range = numeric_range.concat(biasedRange(1.0, 2 ** 32, 20));
 
   let cases = [];
-  cases = cases.concat(numeric_range.map(x => truthFunc(0.0, x)));
+  cases = cases.concat(numeric_range.map((x) => truthFunc(0.0, x)));
   numeric_range.forEach((y, y_idx) => {
     numeric_range.forEach((x, x_idx) => {
       if (x_idx >= y_idx) {

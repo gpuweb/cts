@@ -25,7 +25,7 @@ paramsSubcasesOnly([
 { bundle0Mismatched: true, bundle1Mismatched: false },
 { bundle0Mismatched: false, bundle1Mismatched: true }]).
 
-fn(async t => {
+fn(async (t) => {
   const { bundle0Mismatched, bundle1Mismatched } = t.params;
   const mismatched = bundle0Mismatched || bundle1Mismatched;
 

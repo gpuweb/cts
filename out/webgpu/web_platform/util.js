@@ -1,14 +1,14 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { ErrorWithExtra, raceWithRejectOnTimeout } from '../../common/util/util.js'; /**
-                                                                                         * Starts playing a video and waits for it to be consumable.
-                                                                                         * Promise resolves after the callback has been called.
-                                                                                         *
-                                                                                         * @param video An HTML5 Video element.
-                                                                                         * @param callback Function to call when video is ready.
-                                                                                         *
-                                                                                         * Copied from https://github.com/KhronosGroup/WebGL/blob/main/sdk/tests/js/webgl-test-utils.js
-                                                                                         */
+ * Starts playing a video and waits for it to be consumable.
+ * Promise resolves after the callback has been called.
+ *
+ * @param video An HTML5 Video element.
+ * @param callback Function to call when video is ready.
+ *
+ * Copied from https://github.com/KhronosGroup/WebGL/blob/main/sdk/tests/js/webgl-test-utils.js
+ */
 export function startPlayingAndWaitForVideo(
 video,
 callback)
@@ -33,7 +33,7 @@ callback)
 
     video.addEventListener(
     'error',
-    event => reject(new ErrorWithExtra('Video received "error" event', () => ({ event }))),
+    (event) => reject(new ErrorWithExtra('Video received "error" event', () => ({ event }))),
     true);
 
 

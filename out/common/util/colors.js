@@ -63,20 +63,20 @@
 
 
 /**
-     * The interface used for formatting strings with color metadata.
-     *
-     * Currently Colors will use the 'ansi-colors' module if it can be loaded.
-     * If it cannot be loaded, then the Colors implementation is a straight pass-through.
-     *
-     * Colors may also be a no-op if the current environment does not support colors.
-     */
+ * The interface used for formatting strings with color metadata.
+ *
+ * Currently Colors will use the 'ansi-colors' module if it can be loaded.
+ * If it cannot be loaded, then the Colors implementation is a straight pass-through.
+ *
+ * Colors may also be a no-op if the current environment does not support colors.
+ */
 export let Colors;
 
 try {
 
   Colors = require('ansi-colors');
 } catch {
-  const passthrough = s => s;
+  const passthrough = (s) => s;
   passthrough.reset = passthrough;
   passthrough.bold = passthrough;
   passthrough.dim = passthrough;

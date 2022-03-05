@@ -15,7 +15,7 @@ export function run(
 format,
 targets)
 {
-  runRefTest(async t => {
+  runRefTest(async (t) => {
     let shaderValue = 0x7f / 0xff;
     let isOutputSrgb = false;
     switch (format) {

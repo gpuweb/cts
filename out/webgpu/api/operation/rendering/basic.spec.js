@@ -9,7 +9,7 @@ import { checkElementsEqual } from '../../../util/check_contents.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('clear').fn(async t => {
+g.test('clear').fn(async (t) => {
   const dst = t.device.createBuffer({
     size: 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
@@ -44,7 +44,7 @@ g.test('clear').fn(async t => {
   t.expectGPUBufferValuesEqual(dst, new Uint8Array([0x00, 0xff, 0x00, 0xff]));
 });
 
-g.test('fullscreen_quad').fn(async t => {
+g.test('fullscreen_quad').fn(async (t) => {
   const dst = t.device.createBuffer({
     size: 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
@@ -141,7 +141,7 @@ u //
 .combine('indexed', [true, false]).
 combine('indirect', [true, false])).
 
-fn(async t => {
+fn(async (t) => {
   const { indexed, indirect } = t.params;
 
   const kBytesPerRow = 256;
@@ -303,7 +303,7 @@ fn(async t => {
     const yellow = [0xff, 0xff, 0x00, 0xff];
     const allYellow = new Uint8Array([...yellow, ...yellow, ...yellow]);
     for (const row of [0, 1, 2]) {
-      t.expectGPUBufferValuesPassCheck(dst, data => checkElementsEqual(data, allYellow), {
+      t.expectGPUBufferValuesPassCheck(dst, (data) => checkElementsEqual(data, allYellow), {
         srcByteOffset: row * 256,
         type: Uint8Array,
         typedLength: 12 });

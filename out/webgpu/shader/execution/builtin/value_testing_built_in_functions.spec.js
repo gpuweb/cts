@@ -17,7 +17,7 @@ Please read the following guidelines before contributing:
 https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 `).
 
-params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3'])).
+params((u) => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3'])).
 unimplemented();
 
 g.test('value_testing_builtin_functions,isNormal').
@@ -32,7 +32,7 @@ Please read the following guidelines before contributing:
 https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 `).
 
-params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3'])).
+params((u) => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3'])).
 unimplemented();
 
 g.test('value_testing_builtin_functions,runtime_sized_array_length').
@@ -47,6 +47,6 @@ Please read the following guidelines before contributing:
 https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 `).
 
-params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3'])).
+params((u) => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3'])).
 unimplemented();
 //# sourceMappingURL=value_testing_built_in_functions.spec.js.map

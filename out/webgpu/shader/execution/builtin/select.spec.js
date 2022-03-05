@@ -68,7 +68,7 @@ combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('component', ['b', 'f', 'i', 'u']).
 combine('overload', ['scalar', 'vec2', 'vec3', 'vec4'])).
 
-fn(async t => {
+fn(async (t) => {
   const componentType = dataType[t.params.component].type;
   const cons = dataType[t.params.component].constructor;
 
@@ -78,7 +78,7 @@ fn(async t => {
   // Each boolean will select between c[k] and c[k+4].  Those values must
   // always compare as different.  The tricky case is boolean, where the parity
   // has to be different, i.e. c[k]-c[k+4] must be odd.
-  const c = [0, 1, 2, 3, 5, 6, 7, 8].map(i => cons(i));
+  const c = [0, 1, 2, 3, 5, 6, 7, 8].map((i) => cons(i));
   // Now form vectors that will have different components from each other.
   const v2a = vec2(c[0], c[1]);
   const v2b = vec2(c[4], c[5]);
@@ -147,7 +147,7 @@ combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('component', ['b', 'f', 'i', 'u']).
 combine('overload', ['vec2', 'vec3', 'vec4'])).
 
-fn(async t => {
+fn(async (t) => {
   const componentType = dataType[t.params.component].type;
   const cons = dataType[t.params.component].constructor;
 
@@ -156,7 +156,7 @@ fn(async t => {
   // Each boolean will select between c[k] and c[k+4].  Those values must
   // always compare as different.  The tricky case is boolean, where the parity
   // has to be different, i.e. c[k]-c[k+4] must be odd.
-  const c = [0, 1, 2, 3, 5, 6, 7, 8].map(i => cons(i));
+  const c = [0, 1, 2, 3, 5, 6, 7, 8].map((i) => cons(i));
   const T = True;
   const F = False;
 

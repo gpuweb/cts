@@ -120,7 +120,7 @@ u //
 .combine('format', kCanvasTextureFormats).
 combine('snapshotType', ['toDataURL', 'toBlob', 'imageBitmap'])).
 
-fn(async t => {
+fn(async (t) => {
   const canvas = await initCanvasContent(t, t.params.format, 'onscreen');
 
   let snapshot;
@@ -134,8 +134,8 @@ fn(async t => {
         break;
       }
     case 'toBlob':{
-        const blobFromCanvs = new Promise(resolve => {
-          canvas.toBlob(blob => resolve(blob));
+        const blobFromCanvs = new Promise((resolve) => {
+          canvas.toBlob((blob) => resolve(blob));
         });
         const blob = await blobFromCanvs;
         const url = URL.createObjectURL(blob);
@@ -170,7 +170,7 @@ u //
 .combine('format', kCanvasTextureFormats).
 combine('snapshotType', ['convertToBlob', 'transferToImageBitmap', 'imageBitmap'])).
 
-fn(async t => {
+fn(async (t) => {
   const offscreenCanvas = await initCanvasContent(
   t,
   t.params.format,
@@ -223,7 +223,7 @@ u //
 combine('webgl', ['webgl', 'webgl2']).
 combine('upload', ['texImage2D', 'texSubImage2D'])).
 
-fn(async t => {
+fn(async (t) => {
   const { format, webgl, upload } = t.params;
   const canvas = await initCanvasContent(t, format, 'onscreen');
 
@@ -283,7 +283,7 @@ u //
 combine('webgpuCanvasType', allCanvasTypes).
 combine('canvas2DType', allCanvasTypes)).
 
-fn(async t => {
+fn(async (t) => {
   const { format, webgpuCanvasType, canvas2DType } = t.params;
 
   const canvas = await initCanvasContent(t, format, webgpuCanvasType);

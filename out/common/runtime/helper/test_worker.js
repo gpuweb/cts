@@ -15,7 +15,7 @@ export class TestWorker {
     const selfPathDir = selfPath.substring(0, selfPath.lastIndexOf('/'));
     const workerPath = selfPathDir + '/test_worker-worker.js';
     this.worker = new Worker(workerPath, { type: 'module' });
-    this.worker.onmessage = ev => {
+    this.worker.onmessage = (ev) => {
       const query = ev.data.query;
       const result = ev.data.result;
       if (result.logs) {
@@ -36,7 +36,7 @@ export class TestWorker {
   expectations = [])
   {
     this.worker.postMessage({ query, expectations, debug: this.debug });
-    const workerResult = await new Promise(resolve => {
+    const workerResult = await new Promise((resolve) => {
       this.resolvers.set(query, resolve);
     });
     rec.injectResult(workerResult);

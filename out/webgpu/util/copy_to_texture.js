@@ -45,9 +45,9 @@ export class CopyToTextureUtils extends GPUTest {
   }
 
   /**
-     * If the destination format specifies a transfer function,
-     * copyExternalImageToTexture (like B2T/T2T copies) should ignore it.
-     */
+   * If the destination format specifies a transfer function,
+   * copyExternalImageToTexture (like B2T/T2T copies) should ignore it.
+   */
   formatForExpectedPixels(format) {
     return format === 'rgba8unorm-srgb' ?
     'rgba8unorm' :
@@ -144,7 +144,7 @@ export class CopyToTextureUtils extends GPUTest {
       typedLength: rowPitch * height });
 
 
-    this.eventualAsyncExpectation(async niceStack => {
+    this.eventualAsyncExpectation(async (niceStack) => {
       const readback = await readbackPromise;
       const check = this.checkBufferWithRowPitch(
       readback.data,
@@ -181,8 +181,8 @@ export class CopyToTextureUtils extends GPUTest {
       for (let y = 0; y < height; ++y) {
         const expRow = exp.subarray(y * bytesPerRow, bytesPerRow);
         const checkResult = checkElementsBetween(actual.subarray(y * rowPitch, bytesPerRow), [
-        i => expRow[i] > 0 ? expRow[i] - 1 : expRow[i],
-        i => expRow[i] + 1]);
+        (i) => expRow[i] > 0 ? expRow[i] - 1 : expRow[i],
+        (i) => expRow[i] + 1]);
 
         if (checkResult !== undefined) return `on row ${y}: ${checkResult}`;
       }

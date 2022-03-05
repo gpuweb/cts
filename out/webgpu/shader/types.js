@@ -46,8 +46,8 @@ export const kMatrixContainerTypes = keysOf(kMatrixContainerTypeInfo);
 
 
 /**
-                                                                        * Generate a bunch types (vec, mat, sized/unsized array) for testing.
-                                                                        */
+ * Generate a bunch types (vec, mat, sized/unsized array) for testing.
+ */
 export function* generateTypes({
   storageClass,
   baseType,

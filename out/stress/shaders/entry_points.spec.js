@@ -8,13 +8,13 @@ import { GPUTest } from '../../webgpu/gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-const makeCode = numEntryPoints => {
+const makeCode = (numEntryPoints) => {
   const kBaseCode = `
       struct Buffer { data: u32; };
       @group(0) @binding(0) var<storage, read_write> buffer: Buffer;
       fn main() { buffer.data = buffer.data + 1u;  }
       `;
-  const makeEntryPoint = i => `
+  const makeEntryPoint = (i) => `
       @stage(compute) @workgroup_size(1) fn computeMain${i}() { main(); }
       `;
   return kBaseCode + range(numEntryPoints, makeEntryPoint).join('');
@@ -27,7 +27,7 @@ desc(
 TODO: There may be a normative limit to the number of entry points allowed in
 a shader, in which case this would become a validation test instead.`).
 
-fn(async t => {
+fn(async (t) => {
   const data = new Uint32Array([0]);
   const buffer = t.makeBufferWithContents(data, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
 
@@ -57,7 +57,7 @@ fn(async t => {
 
 
   const encoder = t.device.createCommandEncoder();
-  range(kNumEntryPoints, i => {
+  range(kNumEntryPoints, (i) => {
     const pipeline = t.device.createComputePipeline({
       layout: pipelineLayout,
       compute: {

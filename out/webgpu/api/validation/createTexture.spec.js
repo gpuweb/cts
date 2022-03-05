@@ -44,7 +44,7 @@ combine('format', [
 // Filter out incompatible dimension type and format combinations.
 .filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format))).
 
-fn(async t => {
+fn(async (t) => {
   const { dimension, zeroArgument, format } = t.params;
   const info = kTextureFormatInfo[format];
   await t.selectDeviceOrSkipTestCase(info.feature);
@@ -94,7 +94,7 @@ combine('dimension', [undefined, ...kTextureDimensions]).
 beginSubcases().
 combine('format', kTextureFormats)).
 
-fn(async t => {
+fn(async (t) => {
   const { dimension, format } = t.params;
   const info = kTextureFormatInfo[format];
   await t.selectDeviceOrSkipTestCase(info.feature);
@@ -127,7 +127,7 @@ combine('mipLevelCount', [1, 2, 3, 6, 7])
 combine('largestDimension', [0, 1, 2]).
 unless(({ dimension, largestDimension }) => dimension === '1d' && largestDimension > 0)).
 
-fn(async t => {
+fn(async (t) => {
   const { dimension, format, mipLevelCount, largestDimension } = t.params;
   const info = kTextureFormatInfo[format];
   await t.selectDeviceOrSkipTestCase(info.feature);
@@ -200,7 +200,7 @@ size[0] % kTextureFormatInfo[format].blockWidth !== 0 ||
 size[1] % kTextureFormatInfo[format].blockHeight !== 0))).
 
 
-fn(async t => {
+fn(async (t) => {
   const { format, size, dimension } = t.params;
   await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 
@@ -224,7 +224,7 @@ fn(async t => {
 
 g.test('mipLevelCount,bound_check,bigger_than_integer_bit_width').
 desc(`Test mip level count bound check when mipLevelCount is bigger than integer bit width`).
-fn(async t => {
+fn(async (t) => {
   const descriptor = {
     size: [32, 32],
     mipLevelCount: 100,
@@ -248,7 +248,7 @@ beginSubcases().
 combine('sampleCount', [0, 1, 2, 4, 8, 16, 32, 256]).
 combine('format', kTextureFormats)).
 
-fn(async t => {
+fn(async (t) => {
   const { dimension, sampleCount, format } = t.params;
   await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
   const { blockWidth, blockHeight } = kTextureFormatInfo[format];
@@ -300,7 +300,7 @@ unless(({ sampleCount, usage, format, mipLevelCount, dimension }) => {
 
 })).
 
-fn(async t => {
+fn(async (t) => {
   const { dimension, sampleCount, format, mipLevelCount, arrayLayerCount, usage } = t.params;
   await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
   const { blockWidth, blockHeight } = kTextureFormatInfo[format];
@@ -348,7 +348,7 @@ combine('size', [[1], [1, 1], [1, 1, 1]])
 // Filter out incompatible dimension type and format combinations.
 .filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format))).
 
-fn(async t => {
+fn(async (t) => {
   const { dimension, format, size } = t.params;
   await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 
@@ -373,7 +373,7 @@ u
 .combine('dimension', [undefined, '2d']).
 beginSubcases().
 combine('format', kCompressedTextureFormats).
-expandWithParams(p => {
+expandWithParams((p) => {
   const { blockWidth, blockHeight } = kTextureFormatInfo[p.format];
   return [
   { size: [1], _success: false },
@@ -385,7 +385,7 @@ expandWithParams(p => {
 
 })).
 
-fn(async t => {
+fn(async (t) => {
   const { dimension, format, size, _success } = t.params;
   const info = kTextureFormatInfo[format];
   await t.selectDeviceOrSkipTestCase(info.feature);
@@ -416,7 +416,7 @@ DefaultLimits.maxTextureDimension1D + 1]).
 combine('height', [1, 2]).
 combine('depthOrArrayLayers', [1, 2])).
 
-fn(async t => {
+fn(async (t) => {
   const { format, width, height, depthOrArrayLayers } = t.params;
   await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 
@@ -456,7 +456,7 @@ combine('size', [
 [1, 1, DefaultLimits.maxTextureArrayLayers + 1]])).
 
 
-fn(async t => {
+fn(async (t) => {
   const { dimension, format, size } = t.params;
   await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 
@@ -483,7 +483,7 @@ params((u) =>
 u.
 combine('dimension', [undefined, '2d']).
 combine('format', kCompressedTextureFormats).
-expand('size', p => {
+expand('size', (p) => {
   const { blockWidth, blockHeight } = kTextureFormatInfo[p.format];
   return [
   // Test the bound of width
@@ -520,7 +520,7 @@ expand('size', p => {
 
 })).
 
-fn(async t => {
+fn(async (t) => {
   const { dimension, format, size } = t.params;
   const info = kTextureFormatInfo[format];
   await t.selectDeviceOrSkipTestCase(info.feature);
@@ -566,7 +566,7 @@ combine('size', [
 [1, 1, DefaultLimits.maxTextureDimension3D + 1]])).
 
 
-fn(async t => {
+fn(async (t) => {
   const { format, size } = t.params;
   await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 
@@ -592,7 +592,7 @@ desc(`Test texture size requirement for 3D texture with compressed format.`).
 paramsSubcasesOnly((u) =>
 u //
 .combine('format', kCompressedTextureFormats).
-expand('size', p => {
+expand('size', (p) => {
   const { blockWidth, blockHeight } = kTextureFormatInfo[p.format];
   return [
   // Test the bound of width
@@ -629,7 +629,7 @@ expand('size', p => {
 
 })).
 
-fn(async t => {
+fn(async (t) => {
   const { format, size } = t.params;
 
   // Compressed formats are not supported in 3D in WebGPU v1 because they are complicated but not very useful for now.
@@ -677,7 +677,7 @@ combine('usage1', kTextureUsages)
 // Filter out incompatible dimension type and format combinations.
 .filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format))).
 
-fn(async t => {
+fn(async (t) => {
   const { dimension, format, usage0, usage1 } = t.params;
   const info = kTextureFormatInfo[format];
   await t.selectDeviceOrSkipTestCase(info.feature);

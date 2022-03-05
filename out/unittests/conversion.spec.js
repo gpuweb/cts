@@ -21,15 +21,15 @@ const cases = [
 [0b1_10101_1001000000, -100]];
 
 
-g.test('conversion,float16BitsToFloat32').fn(t => {
-  cases.forEach(value => {
+g.test('conversion,float16BitsToFloat32').fn((t) => {
+  cases.forEach((value) => {
     // some loose check
     t.expect(Math.abs(float16BitsToFloat32(value[0]) - value[1]) <= 0.00001, value[0].toString(2));
   });
 });
 
-g.test('conversion,float32ToFloat16Bits').fn(t => {
-  cases.forEach(value => {
+g.test('conversion,float32ToFloat16Bits').fn((t) => {
+  cases.forEach((value) => {
     // some loose check
     // Does not handle clamping, underflow, overflow, or denormalized numbers.
     t.expect(Math.abs(float32ToFloat16Bits(value[1]) - value[0]) <= 1, value[1].toString());

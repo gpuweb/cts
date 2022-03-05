@@ -147,7 +147,7 @@ paramsSubcasesOnly([
 { x: 0, y: 0, w: -1, h: 0 },
 { x: 0, y: 0, w: 0, h: -1 }]).
 
-fn(t => {
+fn((t) => {
   const { x, y, w, h } = t.params;
   const success = x >= 0 && y >= 0 && w >= 0 && h >= 0;
   t.testViewportCall(success, { x, y, w, h, minDepth: 0, maxDepth: 1 });
@@ -182,7 +182,7 @@ combineWithParams([
 { dx: 0, dy: 0, dw: 0, dh: 1 }])).
 
 
-fn(t => {
+fn((t) => {
   const { attachmentWidth, attachmentHeight, dx, dy, dw, dh } = t.params;
   const x = dx;
   const y = dy;
@@ -213,7 +213,7 @@ paramsSubcasesOnly([
 { minDepth: 0, maxDepth: 1.1 },
 { minDepth: 0.5, maxDepth: 0.49999 }]).
 
-fn(t => {
+fn((t) => {
   const { minDepth, maxDepth } = t.params;
   const success =
   0 <= minDepth && minDepth <= 1 && 0 <= maxDepth && maxDepth <= 1 && minDepth <= maxDepth;
@@ -237,7 +237,7 @@ paramsSubcasesOnly([
 { x: 0, y: 0, w: -1, h: 0 },
 { x: 0, y: 0, w: 0, h: -1 }]).
 
-fn(t => {
+fn((t) => {
   const { x, y, w, h } = t.params;
   const success = x >= 0 && y >= 0 && w >= 0 && h >= 0;
   t.testScissorCall(success ? true : 'type-error', { x, y, w, h });
@@ -272,7 +272,7 @@ combineWithParams([
 { dx: 0, dy: 0, dw: 0, dh: 1 }])).
 
 
-fn(t => {
+fn((t) => {
   const { attachmentWidth, attachmentHeight, dx, dy, dw, dh } = t.params;
   const x = dx;
   const y = dy;
@@ -294,7 +294,7 @@ paramsSubcasesOnly([
 { r: -1.0, g: -1.0, b: -1.0, a: -1.0 },
 { r: Number.MAX_SAFE_INTEGER, g: Number.MIN_SAFE_INTEGER, b: -0, a: 100000 }]).
 
-fn(t => {
+fn((t) => {
   const { r, g, b, a } = t.params;
   const encoders = t.createDummyRenderPassEncoder();
   encoders.pass.setBlendConstant({ r, g, b, a });
@@ -310,7 +310,7 @@ paramsSubcasesOnly([
 { value: 1000 },
 { value: 0xffffffff }]).
 
-fn(t => {
+fn((t) => {
   const { value } = t.params;
   const encoders = t.createDummyRenderPassEncoder();
   encoders.pass.setStencilReference(value);

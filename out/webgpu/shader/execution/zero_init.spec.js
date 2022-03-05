@@ -30,7 +30,7 @@ function prettyPrint(t) {
         case 'array':
           return `array<${prettyPrint(t.elementType)}, ${t.length}>`;
         case 'struct':
-          return `struct { ${t.members.map(m => prettyPrint(m)).join(', ')} }`;
+          return `struct { ${t.members.map((m) => prettyPrint(m)).join(', ')} }`;
         default:
           return `${t.containerType}<${prettyPrint({
             type: 'scalar',
@@ -229,7 +229,7 @@ expandWithParams(function* (p) {
 })).
 
 batch(15).
-fn(async t => {
+fn(async (t) => {
   let moduleScope = `
       struct Output {
         failed : atomic<u32>;

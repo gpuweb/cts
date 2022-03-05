@@ -10,7 +10,7 @@ desc(`Test that an entry point without an IO attribute on one of its parameters 
 params((u) =>
 u.combine('target_stage', ['', 'vertex', 'fragment', 'compute']).beginSubcases()).
 
-fn(t => {
+fn((t) => {
   const vertex_attr = t.params.target_stage === 'vertex' ? '' : '@location(1)';
   const fragment_attr = t.params.target_stage === 'fragment' ? '' : '@location(1)';
   const compute_attr = t.params.target_stage === 'compute' ? '' : '@builtin(workgroup_id)';
@@ -44,7 +44,7 @@ desc(
 params((u) =>
 u.combine('target_stage', ['', 'vertex', 'fragment', 'compute']).beginSubcases()).
 
-fn(t => {
+fn((t) => {
   const vertex_attr = t.params.target_stage === 'vertex' ? '' : '@location(1)';
   const fragment_attr = t.params.target_stage === 'fragment' ? '' : '@location(1)';
   const compute_attr = t.params.target_stage === 'compute' ? '' : '@builtin(workgroup_id)';
@@ -83,8 +83,8 @@ fn comp_main(inputs : ComputeInputs) {
 
 g.test('missing_attribute_on_return_type').
 desc(`Test that an entry point without an IO attribute on its return type is rejected.`).
-params(u => u.combine('target_stage', ['', 'vertex', 'fragment']).beginSubcases()).
-fn(t => {
+params((u) => u.combine('target_stage', ['', 'vertex', 'fragment']).beginSubcases()).
+fn((t) => {
   const vertex_attr = t.params.target_stage === 'vertex' ? '' : '@builtin(position)';
   const fragment_attr = t.params.target_stage === 'fragment' ? '' : '@location(0)';
   const code = `
@@ -105,8 +105,8 @@ g.test('missing_attribute_on_return_type_struct').
 desc(
 `Test that an entry point struct return type without an IO attribute on one of its members is rejected.`).
 
-params(u => u.combine('target_stage', ['', 'vertex', 'fragment']).beginSubcases()).
-fn(t => {
+params((u) => u.combine('target_stage', ['', 'vertex', 'fragment']).beginSubcases()).
+fn((t) => {
   const vertex_attr = t.params.target_stage === 'vertex' ? '' : '@location(1)';
   const fragment_attr = t.params.target_stage === 'fragment' ? '' : '@location(1)';
   const code = `

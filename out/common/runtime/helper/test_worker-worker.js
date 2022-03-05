@@ -13,7 +13,7 @@ const loader = new DefaultTestFileLoader();
 
 setBaseResourcePath('../../../resources');
 
-self.onmessage = async ev => {
+self.onmessage = async (ev) => {
   const query = ev.data.query;
   const expectations = ev.data.expectations;
   const debug = ev.data.debug;

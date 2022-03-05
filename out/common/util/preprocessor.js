@@ -2,7 +2,7 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { assert } from './util.js'; // The state of the preprocessor is a stack of States.
 var
-State;(function (State) {State[State["Seeking"] = 0] = "Seeking";State[State["Passing"] = 1] = "Passing";State[State["Skipping"] = 2] = "Skipping";})(State || (State = {}));
+State;
 
 
 
@@ -13,7 +13,7 @@ State;(function (State) {State[State["Seeking"] = 0] = "Seeking";State[State["Pa
 // - Sibling else
 // - Sibling endif
 // - Child if
-class Directive {
+(function (State) {State[State["Seeking"] = 0] = "Seeking";State[State["Passing"] = 1] = "Passing";State[State["Skipping"] = 2] = "Skipping";})(State || (State = {}));class Directive {
 
 
   constructor(depth) {
@@ -88,25 +88,25 @@ class EndIf extends Directive {
 
 
 /**
-      * A simple template-based, non-line-based preprocessor implementing if/elif/else/endif.
-      *
-      * @example
-      * ```
-      *     const shader = pp`
-      * ${pp._if(expr)}
-      *   const x: ${type} = ${value};
-      * ${pp._elif(expr)}
-      * ${pp.__if(expr)}
-      * ...
-      * ${pp.__else}
-      * ...
-      * ${pp.__endif}
-      * ${pp._endif}`;
-      * ```
-      *
-      * @param strings - The array of constant string chunks of the template string.
-      * @param ...values - The array of interpolated ${} values within the template string.
-      */
+ * A simple template-based, non-line-based preprocessor implementing if/elif/else/endif.
+ *
+ * @example
+ * ```
+ *     const shader = pp`
+ * ${pp._if(expr)}
+ *   const x: ${type} = ${value};
+ * ${pp._elif(expr)}
+ * ${pp.__if(expr)}
+ * ...
+ * ${pp.__else}
+ * ...
+ * ${pp.__endif}
+ * ${pp._endif}`;
+ * ```
+ *
+ * @param strings - The array of constant string chunks of the template string.
+ * @param ...values - The array of interpolated ${} values within the template string.
+ */
 export function pp(
 strings,
 ...values)
@@ -134,16 +134,16 @@ strings,
 
   return result;
 }
-pp._if = predicate => new If(1, predicate);
-pp._elif = predicate => new ElseIf(1, predicate);
+pp._if = (predicate) => new If(1, predicate);
+pp._elif = (predicate) => new ElseIf(1, predicate);
 pp._else = new Else(1);
 pp._endif = new EndIf(1);
-pp.__if = predicate => new If(2, predicate);
-pp.__elif = predicate => new ElseIf(2, predicate);
+pp.__if = (predicate) => new If(2, predicate);
+pp.__elif = (predicate) => new ElseIf(2, predicate);
 pp.__else = new Else(2);
 pp.__endif = new EndIf(2);
-pp.___if = predicate => new If(3, predicate);
-pp.___elif = predicate => new ElseIf(3, predicate);
+pp.___if = (predicate) => new If(3, predicate);
+pp.___elif = (predicate) => new ElseIf(3, predicate);
 pp.___else = new Else(3);
 pp.___endif = new EndIf(3);
 // Add more if needed.

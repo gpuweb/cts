@@ -51,10 +51,10 @@ beginSubcases().
 combine('rowsPerImage', [undefined, 0, 1, 2, 1024]).
 combine('copyHeightInBlocks', [0, 1, 2]).
 combine('copyDepth', [1, 3]).
-unless(p => p.dimension === '1d' && p.copyHeightInBlocks !== 1).
-unless(p => p.copyDepth > p.size[2])).
+unless((p) => p.dimension === '1d' && p.copyHeightInBlocks !== 1).
+unless((p) => p.copyDepth > p.size[2])).
 
-fn(async t => {
+fn(async (t) => {
   const { rowsPerImage, copyHeightInBlocks, copyDepth, dimension, size, method } = t.params;
 
   const format = 'rgba8unorm';
@@ -99,7 +99,7 @@ combineWithParams([
 { bytesPerRow: 2 ** 31, rowsPerImage: 2 ** 31, depthOrArrayLayers: 16, _success: false } // bytesPerRow * rowsPerImage * (depthOrArrayLayers - 1) overflows.
 ])).
 
-fn(async t => {
+fn(async (t) => {
   const { method, bytesPerRow, rowsPerImage, depthOrArrayLayers, _success } = t.params;
 
   const texture = t.device.createTexture({
@@ -168,9 +168,9 @@ combineWithParams([
     copyWidthInBlocks > 0 && copyHeightInBlocks > 0 && copyDepth > 0);
 
 }).
-unless(p => p.dimension === '1d' && (p.copyHeightInBlocks > 1 || p.copyDepth > 1))).
+unless((p) => p.dimension === '1d' && (p.copyHeightInBlocks > 1 || p.copyDepth > 1))).
 
-fn(async t => {
+fn(async (t) => {
   const {
     offsetInBlocks,
     bytesPerRowPadding,
@@ -240,7 +240,7 @@ expand('rowsPerImage', texelBlockAlignmentTestExpanderForRowsPerImage)
 // Copy height is info.blockHeight, so rowsPerImage must be equal or greater than it.
 .filter(({ rowsPerImage, format }) => rowsPerImage >= kTextureFormatInfo[format].blockHeight)).
 
-fn(async t => {
+fn(async (t) => {
   const { rowsPerImage, format, method } = t.params;
   const info = kTextureFormatInfo[format];
   await t.selectDeviceOrSkipTestCase(info.feature);
@@ -279,7 +279,7 @@ filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension,
 beginSubcases().
 expand('offset', texelBlockAlignmentTestExpanderForOffset)).
 
-fn(async t => {
+fn(async (t) => {
   const { format, offset, method } = t.params;
   const info = kTextureFormatInfo[format];
   await t.selectDeviceOrSkipTestCase(info.feature);
@@ -328,8 +328,8 @@ filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension,
 beginSubcases().
 combine('copyHeightInBlocks', [1, 2]).
 combine('copyDepth', [1, 2]).
-unless(p => p.dimension === '1d' && (p.copyHeightInBlocks > 1 || p.copyDepth > 1)).
-expandWithParams(p => {
+unless((p) => p.dimension === '1d' && (p.copyHeightInBlocks > 1 || p.copyDepth > 1)).
+expandWithParams((p) => {
   const info = kTextureFormatInfo[p.format];
   // We currently have a built-in assumption that for all formats, 128 % bytesPerBlock === 0.
   // This assumption ensures that all division below results in integers.
@@ -380,7 +380,7 @@ expandWithParams(p => {
 
 })).
 
-fn(async t => {
+fn(async (t) => {
   const {
     method,
     format,
@@ -436,7 +436,7 @@ beginSubcases().
 combine('offsetInBlocks', [0, 1, 2]).
 combine('dataSizeInBlocks', [0, 1, 2])).
 
-fn(async t => {
+fn(async (t) => {
   const { offsetInBlocks, dataSizeInBlocks, method } = t.params;
 
   const format = 'rgba8unorm';

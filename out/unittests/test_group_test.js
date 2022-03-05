@@ -21,7 +21,7 @@ export class TestGroupTest extends UnitTest {
   expectCases(g, cases) {
     const gcases = [];
     for (const t of g.iterate()) {
-      gcases.push(...Array.from(t.iterate(), c => c.id));
+      gcases.push(...Array.from(t.iterate(), (c) => c.id));
     }
     this.expect(objectEquals(gcases, cases));
   }}

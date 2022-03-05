@@ -425,7 +425,7 @@ p.type1 === 'render-target' &&
 p.baseLevel1 !== BASE_LEVEL)).
 
 
-fn(async t => {
+fn(async (t) => {
   const {
     compute,
     binding0InBundle,
@@ -618,7 +618,7 @@ unless(
 p.compute && (p.binding0InBundle || p.binding1InBundle || p.type1 === 'render-target'))).
 
 
-fn(async t => {
+fn(async (t) => {
   const {
     compute,
     binding0InBundle,
@@ -751,7 +751,7 @@ unless(
 p.compute && Boolean(p.writeVisibility & GPUConst.ShaderStage.VERTEX))).
 
 
-fn(async t => {
+fn(async (t) => {
   const { compute, readVisibility, writeVisibility } = t.params;
 
   // writeonly-storage-texture binding type is not supported in vertex stage. So, this test
@@ -821,7 +821,7 @@ combine('entry', [
 { storageTexture: { access: 'write-only', format: 'rgba8unorm' } }])).
 
 
-fn(async t => {
+fn(async (t) => {
   const { compute, callDrawOrDispatch, entry } = t.params;
 
   const sampledView = t.createTexture().createView();
@@ -888,7 +888,7 @@ beginSubcases().
 combine('binding0InBundle', [false, true]).
 combine('binding1InBundle', [false, true]).
 expandWithParams(function* ({ type0, type1 }) {
-  const usageForType = type => {
+  const usageForType = (type) => {
     switch (type) {
       case 'multisampled-texture':
       case 'sampled-texture':
@@ -926,7 +926,7 @@ p.type0 === 'multisampled-texture' && p.type1 === 'sampled-texture' ||
 p.type0 === 'sampled-texture' && p.type1 === 'multisampled-texture')).
 
 
-fn(async t => {
+fn(async (t) => {
   const {
     binding0InBundle,
     binding1InBundle,
@@ -982,7 +982,7 @@ fn(async t => {
 
   pass.end();
 
-  const isReadOnly = t => {
+  const isReadOnly = (t) => {
     switch (t) {
       case 'sampled-texture':
       case 'multisampled-texture':
@@ -1017,7 +1017,7 @@ combine('setBindGroupsOrder', ['common', 'reversed']).
 combine('setPipeline', ['before', 'middle', 'after', 'none']).
 combine('callDrawOrDispatch', [false, true])).
 
-fn(async t => {
+fn(async (t) => {
   const {
     compute,
     useBindGroup0,
@@ -1126,8 +1126,8 @@ fn(async t => {
 });
 
 g.test('validation_scope,no_draw_or_dispatch').
-params(u => u.combine('compute', [false, true])).
-fn(async t => {
+params((u) => u.combine('compute', [false, true])).
+fn(async (t) => {
   const { compute } = t.params;
 
   const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope(compute);
@@ -1144,8 +1144,8 @@ fn(async t => {
 });
 
 g.test('validation_scope,same_draw_or_dispatch').
-params(u => u.combine('compute', [false, true])).
-fn(async t => {
+params((u) => u.combine('compute', [false, true])).
+fn(async (t) => {
   const { compute } = t.params;
 
   const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope(compute);
@@ -1161,8 +1161,8 @@ fn(async t => {
 });
 
 g.test('validation_scope,different_draws_or_dispatches').
-params(u => u.combine('compute', [false, true])).
-fn(async t => {
+params((u) => u.combine('compute', [false, true])).
+fn(async (t) => {
   const { compute } = t.params;
   const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope(compute);
   t.setPipeline(pass, pipeline, compute);
@@ -1182,8 +1182,8 @@ fn(async t => {
 });
 
 g.test('validation_scope,different_passes').
-params(u => u.combine('compute', [false, true])).
-fn(async t => {
+params((u) => u.combine('compute', [false, true])).
+fn(async (t) => {
   const { compute } = t.params;
   const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope(compute);
   t.setPipeline(pass, pipeline, compute);

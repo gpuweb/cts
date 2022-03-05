@@ -38,8 +38,8 @@ const watcher = chokidar.watch(srcDir, {
 
 
 /**
-                        * Handler to dirty the compile cache for changed .ts files.
-                        */
+ * Handler to dirty the compile cache for changed .ts files.
+ */
 function dirtyCompileCache(absPath, stats) {
   const relPath = path.relative(srcDir, absPath);
   if ((stats === undefined || stats.isFile()) && relPath.endsWith('.ts')) {
@@ -52,12 +52,12 @@ function dirtyCompileCache(absPath, stats) {
 }
 
 /**
-   * Handler to dirty the listing cache for:
-   *  - Directory changes
-   *  - .spec.ts changes
-   *  - README.txt changes
-   * Also dirties the compile cache for changed files.
-   */
+ * Handler to dirty the listing cache for:
+ *  - Directory changes
+ *  - .spec.ts changes
+ *  - README.txt changes
+ * Also dirties the compile cache for changed files.
+ */
 function dirtyListingAndCompileCache(absPath, stats) {
   const relPath = path.relative(srcDir, absPath);
 

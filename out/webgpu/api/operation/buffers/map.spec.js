@@ -81,7 +81,7 @@ combine('mapAsyncRegionRight', mapRegionBoundModes).
 beginSubcases().
 combineWithParams(kSubcases)).
 
-fn(async t => {
+fn(async (t) => {
   const { size, range } = t.params;
   const [rangeOffset, rangeSize] = reifyMapRange(size, range);
 
@@ -118,7 +118,7 @@ combineWithParams([
 { size: 32, range1: [8, 8], range2: [24, 4] }])).
 
 
-fn(async t => {
+fn(async (t) => {
   const { size, range1, range2, mappedAtCreation } = t.params;
   const [rangeOffset1, rangeSize1] = reifyMapRange(size, range1);
   const [rangeOffset2, rangeSize2] = reifyMapRange(size, range2);
@@ -182,7 +182,7 @@ combine('mapAsyncRegionRight', mapRegionBoundModes).
 beginSubcases().
 combineWithParams(kSubcases)).
 
-fn(async t => {
+fn(async (t) => {
   const { size, range } = t.params;
   const [rangeOffset, rangeSize] = reifyMapRange(size, range);
 
@@ -223,7 +223,7 @@ combineWithParams([
 { size: 160, range: [40] }])).
 
 
-fn(async t => {
+fn(async (t) => {
   const { size, range } = t.params;
   const [rangeOffset, rangeSize] = reifyMapRange(size, range);
 
@@ -302,7 +302,7 @@ u //
 beginSubcases().
 combineWithParams(kSubcases)).
 
-fn(async t => {
+fn(async (t) => {
   const { size, range, mappable } = t.params;
   const [, rangeSize] = reifyMapRange(size, range);
 
@@ -329,7 +329,7 @@ beginSubcases().
 combine('mappedAtCreation', [false, true]).
 combineWithParams(kSubcases)).
 
-fn(async t => {
+fn(async (t) => {
   const { size, range, mappedAtCreation } = t.params;
   const [rangeOffset, rangeSize] = reifyMapRange(size, range);
 

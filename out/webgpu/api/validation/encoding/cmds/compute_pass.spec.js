@@ -52,8 +52,8 @@ desc(
 setPipeline should generate an error iff using an 'invalid' pipeline.
 `).
 
-params(u => u.beginSubcases().combine('state', ['valid', 'invalid'])).
-fn(t => {
+params((u) => u.beginSubcases().combine('state', ['valid', 'invalid'])).
+fn((t) => {
   const { state } = t.params;
   const pipeline = t.createComputePipeline(state);
 
@@ -64,7 +64,7 @@ fn(t => {
 
 g.test('pipeline,device_mismatch').
 desc('Tests setPipeline cannot be called with a compute pipeline created from another device').
-paramsSubcasesOnly(u => u.combine('mismatched', [true, false])).
+paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
 unimplemented();
 
 const kMaxDispatch = DefaultLimits.maxComputeWorkgroupsPerDimension;
@@ -88,7 +88,7 @@ beginSubcases().
 combine('largeDimIndex', [0, 1, 2]).
 combine('smallDimValue', [0, 1])).
 
-fn(t => {
+fn((t) => {
   const { dispatchType, largeDimIndex, smallDimValue, largeDimValue } = t.params;
 
   const pipeline = t.createNoOpComputePipeline();
@@ -139,7 +139,7 @@ kBufferData.byteLength - 3 * Uint32Array.BYTES_PER_ELEMENT,
 kBufferData.byteLength - 2 * Uint32Array.BYTES_PER_ELEMENT])).
 
 
-fn(t => {
+fn((t) => {
   const { state, offset } = t.params;
   const pipeline = t.createNoOpComputePipeline();
   const buffer = t.createIndirectBuffer(state, kBufferData);
@@ -159,6 +159,6 @@ g.test('indirect_dispatch_buffer,device_mismatch').
 desc(
 'Tests dispatchIndirect cannot be called with an indirect buffer created from another device').
 
-paramsSubcasesOnly(u => u.combine('mismatched', [true, false])).
+paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
 unimplemented();
 //# sourceMappingURL=compute_pass.spec.js.map

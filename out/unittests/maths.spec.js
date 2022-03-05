@@ -33,10 +33,10 @@ function hexToFloat64(h32, l32) {
 }
 
 /**
-   * @returns true if arrays are equal, doing element-wise comparison as needed, and considering NaNs to be equal.
-   *
-   * Depends on the correctness of diffULP, which is tested in this file.
-   **/
+ * @returns true if arrays are equal, doing element-wise comparison as needed, and considering NaNs to be equal.
+ *
+ * Depends on the correctness of diffULP, which is tested in this file.
+ **/
 function compareArrayOfNumbers(got, expect) {
   return (
     got.length === expect.length &&
@@ -105,7 +105,7 @@ paramsSimple([
 { a: hexToF32(0x00800005), b: hexToF32(0x00000001), ulp: 6 }, // Just-above-Normal/Subnormal boundary
 { a: hexToF32(0x00800005), b: hexToF32(0x00000111), ulp: 6 } // Just-above-Normal/Subnormal boundary
 ]).
-fn(t => {
+fn((t) => {
   const a = t.params.a;
   const b = t.params.b;
   const got = diffULP(a, b);
@@ -169,7 +169,7 @@ paramsSubcasesOnly([
 { val: hexToF32(0x83800000), dir: true, result: f32Bits(0x837fffff) },
 { val: hexToF32(0x83800000), dir: false, result: f32Bits(0x83800001) }]).
 
-fn(t => {
+fn((t) => {
   const val = t.params.val;
   const dir = t.params.dir;
   const expect = t.params.result;
@@ -228,7 +228,7 @@ paramsSubcasesOnly([
 { val: hexToF32(0x83800000), dir: true, result: f32Bits(0x837fffff) },
 { val: hexToF32(0x83800000), dir: false, result: f32Bits(0x83800001) }]).
 
-fn(t => {
+fn((t) => {
   const val = t.params.val;
   const dir = t.params.dir;
   const expect = t.params.result;
@@ -441,7 +441,7 @@ paramsSubcasesOnly([
 
 { test_val: f32Bits(0xbf800001), target: hexToFloat64(0xbff00080, 0x00000002), is_correct: false }]).
 
-fn(t => {
+fn((t) => {
   const test_val = t.params.test_val;
   const target = t.params.target;
   const is_correct = t.params.is_correct;
@@ -647,7 +647,7 @@ paramsSubcasesOnly([
 
 { test_val: f32Bits(0xbf800001), target: hexToFloat64(0xbff00080, 0x00000002), is_correct: false }]).
 
-fn(t => {
+fn((t) => {
   const test_val = t.params.test_val;
   const target = t.params.target;
   const is_correct = t.params.is_correct;
@@ -853,7 +853,7 @@ paramsSubcasesOnly([
 
 { test_val: f32Bits(0xbf800001), target: hexToFloat64(0xbff00080, 0x00000002), is_correct: false }]).
 
-fn(t => {
+fn((t) => {
   const test_val = t.params.test_val;
   const target = t.params.target;
   const is_correct = t.params.is_correct;
@@ -1026,7 +1026,7 @@ paramsSimple([
 { a: 0.0, b: -1.0, t: 1.0, result: -1.0 },
 { a: 0.0, b: -1.0, t: 2.0, result: -2.0 }]).
 
-fn(test => {
+fn((test) => {
   const a = test.params.a;
   const b = test.params.b;
   const t = test.params.t;
@@ -1089,7 +1089,7 @@ paramsSimple([
 
 { a: 0.0, b: -1.0, num_steps: 11, result: [0.0, -0.1, -0.2, -0.3, -0.4, -0.5, -0.6, -0.7, -0.8, -0.9, -1.0] }]).
 
-fn(test => {
+fn((test) => {
   const a = test.params.a;
   const b = test.params.b;
   const num_steps = test.params.num_steps;
@@ -1145,7 +1145,7 @@ paramsSimple([
 
 { a: 0.0, b: -1.0, num_steps: 11, result: [0.0, -0.01, -0.04, -0.09, -0.16, -0.25, -0.36, -0.49, -0.64, -0.81, -1.0] }]).
 
-fn(test => {
+fn((test) => {
   const a = test.params.a;
   const b = test.params.b;
   const num_steps = test.params.num_steps;
@@ -1171,7 +1171,7 @@ paramsSimple([
 { bits: kBit.f32.negative.max, value: kValue.f32.negative.max },
 { bits: kBit.f32.negative.min, value: kValue.f32.negative.min }]).
 
-fn(test => {
+fn((test) => {
   const bits = test.params.bits;
   const value = test.params.value;
 

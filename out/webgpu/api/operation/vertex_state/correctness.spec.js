@@ -55,7 +55,7 @@ function mapStateAttribs(
 buffers,
 f)
 {
-  return buffers.map(b => mapBufferAttribs(b, f));
+  return buffers.map((b) => mapBufferAttribs(b, f));
 }
 
 
@@ -407,7 +407,7 @@ struct VSOutputs {
           return {
             shaderBaseType: 'f32',
             testComponentCount: data.length,
-            expectedData: new Float32Array(data.map(v => normalizedIntegerAsFloat(v, bitSize, true))).
+            expectedData: new Float32Array(data.map((v) => normalizedIntegerAsFloat(v, bitSize, true))).
             buffer,
             vertexData,
             floatTolerance: 0.1 * normalizedIntegerAsFloat(1, bitSize, true) };
@@ -432,7 +432,7 @@ struct VSOutputs {
           return {
             shaderBaseType: 'f32',
             testComponentCount: data.length,
-            expectedData: new Float32Array(data.map(v => normalizedIntegerAsFloat(v, bitSize, false))).
+            expectedData: new Float32Array(data.map((v) => normalizedIntegerAsFloat(v, bitSize, false))).
             buffer,
             vertexData: vertexData,
             floatTolerance: 0.1 * normalizedIntegerAsFloat(1, bitSize, false) };
@@ -613,7 +613,7 @@ beginSubcases().
 combine('slot', [0, 1, kMaxVertexBuffers - 1]).
 combine('shaderLocation', [0, 1, kMaxVertexAttributes - 1])).
 
-fn(t => {
+fn((t) => {
   const { format, shaderComponentCount, slot, shaderLocation } = t.params;
   t.runTest([
   {
@@ -645,7 +645,7 @@ u //
 beginSubcases().
 combine('vbOffset', [0, 4, 400, 1004]).
 combine('arrayStride', [128]).
-expand('offset', p => {
+expand('offset', (p) => {
   const formatInfo = kVertexFormatInfo[p.format];
   const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
   return new Set([
@@ -663,7 +663,7 @@ expand('offset', p => {
 
 })).
 
-fn(t => {
+fn((t) => {
   const { format, vbOffset, arrayStride, offset } = t.params;
   t.runTest([
   {
@@ -693,13 +693,13 @@ params((u) =>
 u //
 .combine('format', kVertexFormats).
 beginSubcases().
-expand('arrayStride', p => {
+expand('arrayStride', (p) => {
   const formatInfo = kVertexFormatInfo[p.format];
   const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
 
   return [align(formatSize, 4), align(formatSize, 4) + 4, kMaxVertexBufferArrayStride];
 }).
-expand('offset', p => {
+expand('offset', (p) => {
   const formatInfo = kVertexFormatInfo[p.format];
   const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
   return new Set(
@@ -711,11 +711,11 @@ expand('offset', p => {
   p.arrayStride - formatSize * 2,
   p.arrayStride - formatSize - 4,
   p.arrayStride - formatSize].
-  map(offset => clamp(offset, { min: 0, max: p.arrayStride - formatSize })));
+  map((offset) => clamp(offset, { min: 0, max: p.arrayStride - formatSize })));
 
 })).
 
-fn(t => {
+fn((t) => {
   const { format, arrayStride, offset } = t.params;
   t.runTest([
   {
@@ -747,7 +747,7 @@ u //
 ['vertex', 'instance', 'vertex', 'vertex']])).
 
 
-fn(t => {
+fn((t) => {
   const { stepModes } = t.params;
   const state = stepModes.map((stepMode, i) => ({
     slot: i,
@@ -777,7 +777,7 @@ beginSubcases().
 combine('vbCount', [2, 3, kMaxVertexBuffers]).
 combine('additionalVBOffset', [0, 4, 120])).
 
-fn(t => {
+fn((t) => {
   const { format, vbCount, additionalVBOffset } = t.params;
   const kVertexCount = 20;
   const kInstanceCount = 1;
@@ -876,7 +876,7 @@ beginSubcases().
 combine('vbCount', [2, 3, kMaxVertexBuffers]).
 combine('additionalVBOffset', [0, 4, 120])).
 
-fn(t => {
+fn((t) => {
   const { format, vbCount, additionalVBOffset } = t.params;
   const kVertexCount = 20;
   const kInstanceCount = 1;
@@ -948,8 +948,8 @@ desc(
   - For each format.
   `).
 
-params(u => u.combine('format', kVertexFormats)).
-fn(t => {
+params((u) => u.combine('format', kVertexFormats)).
+fn((t) => {
   const { format } = t.params;
   const attributesPerBuffer = Math.ceil(kMaxVertexAttributes / kMaxVertexBuffers);
   let attributesEmitted = 0;
@@ -982,7 +982,7 @@ u //
 .combine('format', kVertexFormats).
 beginSubcases().
 combine('stepMode', ['vertex', 'instance']).
-expand('offset', p => {
+expand('offset', (p) => {
   const formatInfo = kVertexFormatInfo[p.format];
   const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
   return new Set([
@@ -999,7 +999,7 @@ expand('offset', p => {
 
 })).
 
-fn(t => {
+fn((t) => {
   const { format, stepMode, offset } = t.params;
   const kCount = 10;
 
@@ -1060,7 +1060,7 @@ fn(t => {
 
 g.test('discontiguous_location_and_attribs').
 desc('Test that using far away slots / shaderLocations works as expected').
-fn(t => {
+fn((t) => {
   t.runTest([
   {
     slot: kMaxVertexBuffers - 1,
@@ -1086,8 +1086,8 @@ desc(
 `Test that overlapping attributes in the same vertex buffer works
    - Test for all formats`).
 
-params(u => u.combine('format', kVertexFormats)).
-fn(t => {
+params((u) => u.combine('format', kVertexFormats)).
+fn((t) => {
   const { format } = t.params;
 
   const attributes = [];

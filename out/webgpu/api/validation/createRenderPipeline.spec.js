@@ -176,8 +176,8 @@ export const g = makeTestGroup(F);
 
 g.test('basic_use_of_createRenderPipeline').
 desc(`TODO: review and add description; shorten name`).
-params(u => u.combine('isAsync', [false, true])).
-fn(async t => {
+params((u) => u.combine('isAsync', [false, true])).
+fn(async (t) => {
   const { isAsync } = t.params;
   const descriptor = t.getDescriptor();
 
@@ -203,7 +203,7 @@ combine('depthStencilFormat', [
 
 combine('haveColor', [false, true])).
 
-fn(async t => {
+fn(async (t) => {
   const { isAsync, depthStencilFormat, haveColor } = t.params;
 
   let depthStencilState;
@@ -226,8 +226,8 @@ fn(async t => {
 
 g.test('at_least_one_color_state_is_required_for_complete_pipeline').
 desc(`TODO: review and add description; shorten name`).
-params(u => u.combine('isAsync', [false, true])).
-fn(async t => {
+params((u) => u.combine('isAsync', [false, true])).
+fn(async (t) => {
   const { isAsync } = t.params;
 
   const goodDescriptor = t.getDescriptor({
@@ -247,8 +247,8 @@ fn(async t => {
 
 g.test('color_formats_must_be_renderable').
 desc(`TODO: review and add description; shorten name`).
-params(u => u.combine('isAsync', [false, true]).combine('format', kTextureFormats)).
-fn(async t => {
+params((u) => u.combine('isAsync', [false, true]).combine('format', kTextureFormats)).
+fn(async (t) => {
   const { isAsync, format } = t.params;
   const info = kTextureFormatInfo[format];
   await t.selectDeviceOrSkipTestCase(info.feature);
@@ -260,8 +260,8 @@ fn(async t => {
 
 g.test('depth_stencil_state,format').
 desc(`The texture format in depthStencilState must be a depth/stencil format`).
-params(u => u.combine('isAsync', [false, true]).combine('format', kTextureFormats)).
-fn(async t => {
+params((u) => u.combine('isAsync', [false, true]).combine('format', kTextureFormats)).
+fn(async (t) => {
   const { isAsync, format } = t.params;
   const info = kTextureFormatInfo[format];
   await t.selectDeviceOrSkipTestCase(info.feature);
@@ -281,7 +281,7 @@ combine('isAsync', [false, true]).
 combine('format', kDepthStencilFormats).
 combine('depthCompare', [undefined, ...kCompareFunctions])).
 
-fn(async t => {
+fn(async (t) => {
   const { isAsync, format, depthCompare } = t.params;
   const info = kTextureFormatInfo[format];
   await t.selectDeviceOrSkipTestCase(info.feature);
@@ -304,7 +304,7 @@ combine('isAsync', [false, true]).
 combine('format', kDepthStencilFormats).
 combine('depthWriteEnabled', [false, true])).
 
-fn(async t => {
+fn(async (t) => {
   const { isAsync, format, depthWriteEnabled } = t.params;
   const info = kTextureFormatInfo[format];
   await t.selectDeviceOrSkipTestCase(info.feature);
@@ -326,7 +326,7 @@ combine('format', kDepthStencilFormats).
 combine('face', ['front', 'back']).
 combine('compare', [undefined, ...kCompareFunctions])).
 
-fn(async t => {
+fn(async (t) => {
   const { isAsync, format, face, compare } = t.params;
   const info = kTextureFormatInfo[format];
   await t.selectDeviceOrSkipTestCase(info.feature);
@@ -360,7 +360,7 @@ combine('faceAndOpType', [
 
 combine('op', [undefined, ...kStencilOperations])).
 
-fn(async t => {
+fn(async (t) => {
   const { isAsync, format, faceAndOpType, op } = t.params;
   const info = kTextureFormatInfo[format];
   await t.selectDeviceOrSkipTestCase(info.feature);
@@ -407,7 +407,7 @@ u.combine('isAsync', [false, true]).combineWithParams([
 { sampleCount: 16, _success: false }])).
 
 
-fn(async t => {
+fn(async (t) => {
   const { isAsync, sampleCount, _success } = t.params;
 
   const descriptor = t.getDescriptor({ sampleCount });
@@ -433,7 +433,7 @@ beginSubcases().
 combine('sampleType', ['float', 'uint', 'sint']).
 combine('componentCount', [1, 2, 3, 4])).
 
-fn(async t => {
+fn(async (t) => {
   const { isAsync, format, sampleType, componentCount } = t.params;
   const info = kTextureFormatInfo[format];
   await t.selectDeviceOrSkipTestCase(info.feature);
@@ -518,7 +518,7 @@ combineWithParams([
 
 
 
-fn(async t => {
+fn(async (t) => {
   const sampleType = 'float';
   const {
     isAsync,
@@ -572,7 +572,7 @@ Tests if blending is used, the target's format must be blendable (support "float
 params((u) =>
 u.combine('isAsync', [false, true]).combine('format', kRenderableColorTextureFormats)).
 
-fn(async t => {
+fn(async (t) => {
   const { isAsync, format } = t.params;
   const info = kTextureFormatInfo[format];
   await t.selectDeviceOrSkipTestCase(info.feature);
@@ -619,7 +619,7 @@ combine('srcFactor', kBlendFactors).
 combine('dstFactor', kBlendFactors).
 combine('operation', kBlendOperations)).
 
-fn(async t => {
+fn(async (t) => {
   const { isAsync, component, srcFactor, dstFactor, operation } = t.params;
 
   const defaultBlendComponent = {
@@ -660,8 +660,8 @@ g.test('pipeline_layout,device_mismatch').
 desc(
 'Tests createRenderPipeline(Async) cannot be called with a pipeline layout created from another device').
 
-paramsSubcasesOnly(u => u.combine('isAsync', [true, false]).combine('mismatched', [true, false])).
-fn(async t => {
+paramsSubcasesOnly((u) => u.combine('isAsync', [true, false]).combine('mismatched', [true, false])).
+fn(async (t) => {
   const { isAsync, mismatched } = t.params;
 
   if (mismatched) {
@@ -706,7 +706,7 @@ u.combine('isAsync', [true, false]).combineWithParams([
 { vertex_mismatched: false, fragment_mismatched: true, _success: false }])).
 
 
-fn(async t => {
+fn(async (t) => {
   const { isAsync, vertex_mismatched, fragment_mismatched, _success } = t.params;
 
   if (vertex_mismatched || fragment_mismatched) {

@@ -241,7 +241,7 @@ export const kAllTextureFormats = keysOf(kAllTextureFormatInfo);
 
 // CompressedTextureFormat are unrenderable so filter from RegularTextureFormats for color targets is enough
 export const kRenderableColorTextureFormats = kRegularTextureFormats.filter(
-v => kColorTextureFormatInfo[v].renderable);
+(v) => kColorTextureFormatInfo[v].renderable);
 
 
 // The formats of GPUTextureFormat for canvas context.
@@ -406,8 +406,8 @@ const kDepthStencilFormatCapabilityInBufferTextureCopy = {
 
 
 /**
-                                                                   * Gets all copyable aspects for copies between texture and buffer for specified depth/stencil format and copy type, by spec.
-                                                                   */
+ * Gets all copyable aspects for copies between texture and buffer for specified depth/stencil format and copy type, by spec.
+ */
 export function depthStencilFormatCopyableAspects(
 type,
 format)
@@ -417,8 +417,8 @@ format)
 }
 
 /**
-   * Computes whether a copy between a depth/stencil texture aspect and a buffer is supported, by spec.
-   */
+ * Computes whether a copy between a depth/stencil texture aspect and a buffer is supported, by spec.
+ */
 export function depthStencilBufferTextureCopySupported(
 type,
 format,
@@ -432,9 +432,9 @@ aspect)
 }
 
 /**
-   * Returns the byte size of the depth or stencil aspect of the specified depth/stencil format,
-   * or -1 if none.
-   */
+ * Returns the byte size of the depth or stencil aspect of the specified depth/stencil format,
+ * or -1 if none.
+ */
 export function depthStencilFormatAspectSize(
 format,
 aspect)
@@ -446,9 +446,9 @@ aspect)
 }
 
 /**
-   * Returns true iff a texture can be created with the provided GPUTextureDimension
-   * (defaulting to 2d) and GPUTextureFormat, by spec.
-   */
+ * Returns true iff a texture can be created with the provided GPUTextureDimension
+ * (defaulting to 2d) and GPUTextureFormat, by spec.
+ */
 export function textureDimensionAndFormatCompatible(
 dimension,
 format)
@@ -640,8 +640,8 @@ export const kPerStageBindingLimits =
 
 
 /**
-                                                    * Default `PerPipelineLayout` binding limits, by spec.
-                                                    */
+ * Default `PerPipelineLayout` binding limits, by spec.
+ */
 export const kPerPipelineBindingLimits =
 
 
@@ -763,10 +763,10 @@ export function bindingTypeInfo(e) {
 }
 
 /**
-   * Generate a list of possible buffer-typed BGLEntry values.
-   *
-   * Note: Generates different `type` options, but not `hasDynamicOffset` options.
-   */
+ * Generate a list of possible buffer-typed BGLEntry values.
+ *
+ * Note: Generates different `type` options, but not `hasDynamicOffset` options.
+ */
 export function bufferBindingEntries(includeUndefined) {
   return [
   ...(includeUndefined ? [{ buffer: { type: undefined } }] : []),
@@ -785,10 +785,10 @@ export function samplerBindingEntries(includeUndefined) {
 
 }
 /**
-   * Generate a list of possible texture-typed BGLEntry values.
-   *
-   * Note: Generates different `multisampled` options, but not `sampleType` or `viewDimension` options.
-   */
+ * Generate a list of possible texture-typed BGLEntry values.
+ *
+ * Note: Generates different `multisampled` options, but not `sampleType` or `viewDimension` options.
+ */
 export function textureBindingEntries(includeUndefined) {
   return [
   ...(includeUndefined ? [{ texture: { multisampled: undefined } }] : []),
@@ -797,10 +797,10 @@ export function textureBindingEntries(includeUndefined) {
 
 }
 /**
-   * Generate a list of possible storageTexture-typed BGLEntry values.
-   *
-   * Note: Generates different `access` options, but not `format` or `viewDimension` options.
-   */
+ * Generate a list of possible storageTexture-typed BGLEntry values.
+ *
+ * Note: Generates different `access` options, but not `format` or `viewDimension` options.
+ */
 export function storageTextureBindingEntries(format) {
   return [{ storageTexture: { access: 'write-only', format } }];
 }
@@ -815,12 +815,12 @@ storageTextureFormat = 'rgba8unorm')
 
 }
 /**
-   * Generate a list of possible BGLEntry values of every type, but not variants with different:
-   * - buffer.hasDynamicOffset
-   * - texture.sampleType
-   * - texture.viewDimension
-   * - storageTexture.viewDimension
-   */
+ * Generate a list of possible BGLEntry values of every type, but not variants with different:
+ * - buffer.hasDynamicOffset
+ * - texture.sampleType
+ * - texture.viewDimension
+ * - storageTexture.viewDimension
+ */
 export function allBindingEntries(
 includeUndefined,
 storageTextureFormat = 'rgba8unorm')
@@ -844,10 +844,10 @@ GPUConst.ShaderStage.COMPUTE];
 export const kShaderStageCombinations = [0, 1, 2, 3, 4, 5, 6, 7];
 
 /**
-                                                                   * List of all possible texture sampleCount values.
-                                                                   *
-                                                                   * MAINTENANCE_TODO: Switch existing tests to use kTextureSampleCounts
-                                                                   */
+ * List of all possible texture sampleCount values.
+ *
+ * MAINTENANCE_TODO: Switch existing tests to use kTextureSampleCounts
+ */
 export const kTextureSampleCounts = [1, 4];
 
 // Blend factors and Blend components

@@ -56,14 +56,14 @@ t)
   @group(0) @binding(0) var tex : texture_2d<${shaderType}>;
 
   struct Output {
-    ${rep.componentOrder.map(C => `result${C} : ${shaderType};`).join('\n')}
+    ${rep.componentOrder.map((C) => `result${C} : ${shaderType};`).join('\n')}
   };
   @group(0) @binding(1) var<storage, read_write> output : Output;
 
   @stage(compute) @workgroup_size(1)
   fn main() {
       var texel : vec4<${shaderType}> = textureLoad(tex, vec2<i32>(0, 0), 0);
-      ${rep.componentOrder.map(C => `output.result${C} = texel.${C.toLowerCase()};`).join('\n')}
+      ${rep.componentOrder.map((C) => `output.result${C} = texel.${C.toLowerCase()};`).join('\n')}
       return;
   }`;
 
@@ -108,7 +108,7 @@ t)
   t.expectGPUBufferValuesEqual(
   outputBuffer,
   new ReadbackTypedArray(
-  rep.componentOrder.map(c => {
+  rep.componentOrder.map((c) => {
     const value = rep.decode(componentData)[c];
     assert(value !== undefined);
     return value;
@@ -145,14 +145,14 @@ filter(({ format }) => {
 }).
 beginSubcases().
 expand('componentData', ({ format }) => {
-  const max = bitLength => Math.pow(2, bitLength) - 1;
+  const max = (bitLength) => Math.pow(2, bitLength) - 1;
   return [
   // Test extrema
   makeParam(format, () => 0),
-  makeParam(format, bitLength => max(bitLength)),
+  makeParam(format, (bitLength) => max(bitLength)),
 
   // Test a middle value
-  makeParam(format, bitLength => Math.floor(max(bitLength) / 2)),
+  makeParam(format, (bitLength) => Math.floor(max(bitLength) / 2)),
 
   // Test mixed values
   makeParam(format, (bitLength, i) => {
@@ -177,16 +177,16 @@ filter(({ format }) => {
 }).
 beginSubcases().
 expand('componentData', ({ format }) => {
-  const max = bitLength => Math.pow(2, bitLength - 1) - 1;
+  const max = (bitLength) => Math.pow(2, bitLength - 1) - 1;
   return [
   // Test extrema
   makeParam(format, () => 0),
-  makeParam(format, bitLength => max(bitLength)),
-  makeParam(format, bitLength => -max(bitLength)),
-  makeParam(format, bitLength => -max(bitLength) - 1),
+  makeParam(format, (bitLength) => max(bitLength)),
+  makeParam(format, (bitLength) => -max(bitLength)),
+  makeParam(format, (bitLength) => -max(bitLength) - 1),
 
   // Test a middle value
-  makeParam(format, bitLength => Math.floor(max(bitLength) / 2)),
+  makeParam(format, (bitLength) => Math.floor(max(bitLength) / 2)),
 
   // Test mixed values
   makeParam(format, (bitLength, i) => {
@@ -212,14 +212,14 @@ filter(({ format }) => {
 }).
 beginSubcases().
 expand('componentData', ({ format }) => {
-  const max = bitLength => Math.pow(2, bitLength) - 1;
+  const max = (bitLength) => Math.pow(2, bitLength) - 1;
   return [
   // Test extrema
   makeParam(format, () => 0),
-  makeParam(format, bitLength => max(bitLength)),
+  makeParam(format, (bitLength) => max(bitLength)),
 
   // Test a middle value
-  makeParam(format, bitLength => Math.floor(max(bitLength) / 2)),
+  makeParam(format, (bitLength) => Math.floor(max(bitLength) / 2)),
 
   // Test mixed values
   makeParam(format, (bitLength, i) => {
@@ -244,15 +244,15 @@ filter(({ format }) => {
 }).
 beginSubcases().
 expand('componentData', ({ format }) => {
-  const max = bitLength => Math.pow(2, bitLength - 1) - 1;
+  const max = (bitLength) => Math.pow(2, bitLength - 1) - 1;
   return [
   // Test extrema
   makeParam(format, () => 0),
-  makeParam(format, bitLength => max(bitLength)),
-  makeParam(format, bitLength => -max(bitLength) - 1),
+  makeParam(format, (bitLength) => max(bitLength)),
+  makeParam(format, (bitLength) => -max(bitLength) - 1),
 
   // Test a middle value
-  makeParam(format, bitLength => Math.floor(max(bitLength) / 2)),
+  makeParam(format, (bitLength) => Math.floor(max(bitLength) / 2)),
 
   // Test mixed values
   makeParam(format, (bitLength, i) => {

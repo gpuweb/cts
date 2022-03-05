@@ -60,7 +60,7 @@ null,
 
 combine('primitiveTopology', ['triangle-list']) // [1]
 ).
-fn(t => {
+fn((t) => {
   const size = 4;
   const format = 'rgba8unorm';
 

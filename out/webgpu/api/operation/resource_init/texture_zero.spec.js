@@ -39,7 +39,7 @@ export let UninitializeMethod;(function (UninitializeMethod) {UninitializeMethod
 
 const kUninitializeMethods = Object.keys(UninitializeMethod);
 
-export let ReadMethod;(function (ReadMethod) {ReadMethod["Sample"] = "Sample";ReadMethod["CopyToBuffer"] = "CopyToBuffer";ReadMethod["CopyToTexture"] = "CopyToTexture";ReadMethod["DepthTest"] = "DepthTest";ReadMethod["StencilTest"] = "StencilTest";ReadMethod["ColorBlending"] = "ColorBlending";ReadMethod["Storage"] = "Storage";})(ReadMethod || (ReadMethod = {}));
+export let ReadMethod;
 
 
 
@@ -49,8 +49,8 @@ export let ReadMethod;(function (ReadMethod) {ReadMethod["Sample"] = "Sample";Re
 
 
 
-
-
+// Test with these mip level counts
+(function (ReadMethod) {ReadMethod["Sample"] = "Sample";ReadMethod["CopyToBuffer"] = "CopyToBuffer";ReadMethod["CopyToTexture"] = "CopyToTexture";ReadMethod["DepthTest"] = "DepthTest";ReadMethod["StencilTest"] = "StencilTest";ReadMethod["ColorBlending"] = "ColorBlending";ReadMethod["Storage"] = "Storage";})(ReadMethod || (ReadMethod = {}));
 const kMipLevelCounts = [1, 5];
 
 // For each mip level count, define the mip ranges to leave uninitialized.
@@ -188,7 +188,7 @@ export class TextureZeroInitTest extends GPUTest {
     super(rec, params);
     this.p = params;
 
-    const stateToTexelComponents = state => {
+    const stateToTexelComponents = (state) => {
       const [R, G, B, A] = initializedStateAsColor(state, this.p.format);
       return {
         R,
@@ -471,7 +471,7 @@ unless(({ readMethod, format, aspect }) => {
 }).
 combine('mipLevelCount', kMipLevelCounts)
 // 1D texture can only have a single mip level
-.unless(p => p.dimension === '1d' && p.mipLevelCount !== 1).
+.unless((p) => p.dimension === '1d' && p.mipLevelCount !== 1).
 combine('sampleCount', kSampleCounts).
 unless(
 ({ readMethod, sampleCount }) =>
@@ -552,15 +552,15 @@ const checkContentsImpl = {
   CopyToTexture: checkContentsByTextureCopy,
   DepthTest: checkContentsByDepthTest,
   StencilTest: checkContentsByStencilTest,
-  ColorBlending: t => t.skip('Not implemented'),
-  Storage: t => t.skip('Not implemented') };
+  ColorBlending: (t) => t.skip('Not implemented'),
+  Storage: (t) => t.skip('Not implemented') };
 
 
 export const g = makeTestGroup(TextureZeroInitTest);
 
 g.test('uninitialized_texture_is_zero').
 params(kTestParams).
-fn(async t => {
+fn(async (t) => {
   await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[t.params.format].feature);
 
   const usage = getRequiredTextureUsage(

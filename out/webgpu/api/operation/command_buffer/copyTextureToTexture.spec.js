@@ -663,7 +663,7 @@ textureDimensionAndFormatCompatible(dimension, srcFormat) &&
 textureDimensionAndFormatCompatible(dimension, dstFormat)).
 
 beginSubcases().
-expandWithParams(p => {
+expandWithParams((p) => {
   const params = [
   {
     srcTextureSize: { width: 32, height: 32, depthOrArrayLayers: 1 },
@@ -701,9 +701,9 @@ p.copyBoxOffsets.dstOffset.y !== 0)).
 
 combine('srcCopyLevel', [0, 3]).
 combine('dstCopyLevel', [0, 3]).
-unless(p => p.dimension === '1d' && (p.srcCopyLevel !== 0 || p.dstCopyLevel !== 0))).
+unless((p) => p.dimension === '1d' && (p.srcCopyLevel !== 0 || p.dstCopyLevel !== 0))).
 
-fn(async t => {
+fn(async (t) => {
   const {
     dimension,
     srcTextureSize,
@@ -778,7 +778,7 @@ combine('copyBoxOffsets', kCopyBoxOffsetsForWholeDepth).
 combine('srcCopyLevel', [0, 2]).
 combine('dstCopyLevel', [0, 2])).
 
-fn(async t => {
+fn(async (t) => {
   const {
     dimension,
     textureSizeInBlocks,
@@ -865,7 +865,7 @@ combine('copyBoxOffsets', kCopyBoxOffsetsFor2DArrayTextures).
 combine('srcCopyLevel', [0, 3]).
 combine('dstCopyLevel', [0, 3])).
 
-fn(async t => {
+fn(async (t) => {
   const {
     dimension,
     textureSize,
@@ -929,7 +929,7 @@ combine('copyBoxOffsets', kCopyBoxOffsetsFor2DArrayTextures).
 combine('srcCopyLevel', [0, 2]).
 combine('dstCopyLevel', [0, 2])).
 
-fn(async t => {
+fn(async (t) => {
   const {
     dimension,
     textureSizeInBlocks,
@@ -1050,9 +1050,9 @@ p.copyBoxOffset.dstOffset.y !== 0)).
 
 combine('srcCopyLevel', [0, 3]).
 combine('dstCopyLevel', [0, 3]).
-unless(p => p.dimension === '1d' && (p.srcCopyLevel !== 0 || p.dstCopyLevel !== 0))).
+unless((p) => p.dimension === '1d' && (p.srcCopyLevel !== 0 || p.dstCopyLevel !== 0))).
 
-fn(async t => {
+fn(async (t) => {
   const { dimension, textureSize, copyBoxOffset, srcCopyLevel, dstCopyLevel } = t.params;
 
   const srcFormat = 'rgba8unorm';
@@ -1102,14 +1102,14 @@ combine('srcCopyLevel', [0, 2]).
 combine('dstCopyLevel', [0, 2]).
 combine('srcCopyBaseArrayLayer', [0, 1]).
 combine('dstCopyBaseArrayLayer', [0, 1]).
-filter(t => {
+filter((t) => {
   return (
     t.srcTextureSize.depthOrArrayLayers > t.srcCopyBaseArrayLayer &&
     t.srcTextureSize.depthOrArrayLayers > t.dstCopyBaseArrayLayer);
 
 })).
 
-fn(async t => {
+fn(async (t) => {
   const {
     format,
     srcTextureSize,
@@ -1210,7 +1210,7 @@ desc(
     texture can only be 1.
   `).
 
-fn(async t => {
+fn(async (t) => {
   const textureSize = [32, 16, 1];
   const kColorFormat = 'rgba8unorm';
   const kSampleCount = 4;
@@ -1390,7 +1390,7 @@ desc(
     texture can only be 1.
   `).
 
-fn(async t => {
+fn(async (t) => {
   const textureSize = [32, 16, 1];
   const kDepthFormat = 'depth24plus';
   const kSampleCount = 4;

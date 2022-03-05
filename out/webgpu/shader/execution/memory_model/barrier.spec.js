@@ -72,7 +72,7 @@ paramsSimple([
   _testCode: workgroupMemoryBarrierStoreLoadTestCode }]).
 
 
-fn(async t => {
+fn(async (t) => {
   const resultCode = `
       if (r0 == 1u) {
         atomicAdd(&test_results.seq, 1u);

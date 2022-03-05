@@ -24,7 +24,7 @@ u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('vectorize', [undefined, 2, 3, 4])).
 
-fn(async t => {
+fn(async (t) => {
   const cfg = t.params;
   cfg.cmpFloats = correctlyRoundedThreshold();
   run(t, 'fract', [TypeF32], TypeF32, cfg, [

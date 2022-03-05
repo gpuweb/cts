@@ -37,7 +37,7 @@ export const g = makeTestGroup(ParamsTest);
 
 const u = kUnitCaseParamsBuilder;
 
-g.test('combine').fn(t => {
+g.test('combine').fn((t) => {
   t.expectParams(u.combine('hello', [1, 2, 3]), [
   [{ hello: 1 }, undefined],
   [{ hello: 2 }, undefined],
@@ -56,7 +56,7 @@ g.test('combine').fn(t => {
 
 });
 
-g.test('empty').fn(t => {
+g.test('empty').fn((t) => {
   t.expectParams(u, [
   [{}, undefined] //
   ]);
@@ -65,7 +65,7 @@ g.test('empty').fn(t => {
   ]);
 });
 
-g.test('combine,zeroes_and_ones').fn(t => {
+g.test('combine,zeroes_and_ones').fn((t) => {
   t.expectParams(u.combineWithParams([]).combineWithParams([]), []);
   t.expectParams(u.combineWithParams([]).combineWithParams([{}]), []);
   t.expectParams(u.combineWithParams([{}]).combineWithParams([]), []);
@@ -81,7 +81,7 @@ g.test('combine,zeroes_and_ones').fn(t => {
   ]);
 });
 
-g.test('combine,mixed').fn(t => {
+g.test('combine,mixed').fn((t) => {
   t.expectParams(
   u.
   combine('x', [1, 2]).
@@ -101,14 +101,14 @@ g.test('combine,mixed').fn(t => {
 
 });
 
-g.test('filter').fn(t => {
+g.test('filter').fn((t) => {
   t.expectParams(
   u.
   combineWithParams([
   { a: true, x: 1 },
   { a: false, y: 2 }]).
 
-  filter(p => p.a),
+  filter((p) => p.a),
   [
   [{ a: true, x: 1 }, undefined] //
   ]);
@@ -121,7 +121,7 @@ g.test('filter').fn(t => {
   { a: false, y: 2 }]).
 
   beginSubcases().
-  filter(p => p.a),
+  filter((p) => p.a),
   [
   [{ a: true, x: 1 }, [{}]] //
   // Case with no subcases is filtered out.
@@ -135,21 +135,21 @@ g.test('filter').fn(t => {
   { a: true, x: 1 },
   { a: false, y: 2 }]).
 
-  filter(p => p.a),
+  filter((p) => p.a),
   [
   [{}, [{ a: true, x: 1 }]] //
   ]);
 
 });
 
-g.test('unless').fn(t => {
+g.test('unless').fn((t) => {
   t.expectParams(
   u.
   combineWithParams([
   { a: true, x: 1 },
   { a: false, y: 2 }]).
 
-  unless(p => p.a),
+  unless((p) => p.a),
   [
   [{ a: false, y: 2 }, undefined] //
   ]);
@@ -162,7 +162,7 @@ g.test('unless').fn(t => {
   { a: false, y: 2 }]).
 
   beginSubcases().
-  unless(p => p.a),
+  unless((p) => p.a),
   [
   // Case with no subcases is filtered out.
   [{ a: false, y: 2 }, [{}]] //
@@ -176,14 +176,14 @@ g.test('unless').fn(t => {
   { a: true, x: 1 },
   { a: false, y: 2 }]).
 
-  unless(p => p.a),
+  unless((p) => p.a),
   [
   [{}, [{ a: false, y: 2 }]] //
   ]);
 
 });
 
-g.test('expandP').fn(t => {
+g.test('expandP').fn((t) => {
   // simple
   t.expectParams(
   u.expandWithParams(function* () {}),
@@ -269,7 +269,7 @@ g.test('expandP').fn(t => {
 
 });
 
-g.test('expand').fn(t => {
+g.test('expand').fn((t) => {
   // simple
   t.expectParams(
   u.expand('x', function* () {}),
@@ -333,7 +333,7 @@ g.test('expand').fn(t => {
 
 });
 
-g.test('invalid,shadowing').fn(t => {
+g.test('invalid,shadowing').fn((t) => {
   // Existing CaseP is shadowed by a new CaseP.
   {
     const p = u.
@@ -408,17 +408,17 @@ g.test('invalid,shadowing').fn(t => {
   }
 });
 
-g.test('undefined').fn(t => {
+g.test('undefined').fn((t) => {
   t.expect(!publicParamsEquals({ a: undefined }, {}));
   t.expect(!publicParamsEquals({}, { a: undefined }));
 });
 
-g.test('private').fn(t => {
+g.test('private').fn((t) => {
   t.expect(publicParamsEquals({ _a: 0 }, {}));
   t.expect(publicParamsEquals({}, { _a: 0 }));
 });
 
-g.test('value,array').fn(t => {
+g.test('value,array').fn((t) => {
   t.expectParams(u.combineWithParams([{ a: [1, 2] }]), [
   [{ a: [1, 2] }, undefined] //
   ]);
@@ -427,7 +427,7 @@ g.test('value,array').fn(t => {
   ]);
 });
 
-g.test('value,object').fn(t => {
+g.test('value,object').fn((t) => {
   t.expectParams(u.combineWithParams([{ a: { x: 1 } }]), [
   [{ a: { x: 1 } }, undefined] //
   ]);

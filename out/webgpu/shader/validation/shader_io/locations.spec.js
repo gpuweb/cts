@@ -52,7 +52,7 @@ combine('target_stage', ['vertex', 'fragment', 'compute']).
 combine('target_io', ['in', 'out']).
 beginSubcases()).
 
-fn(t => {
+fn((t) => {
   const code = generateShader({
     attribute: '@location(0)',
     type: 'f32',
@@ -77,7 +77,7 @@ combine('use_struct', [true, false]).
 combineWithParams(kTestTypes).
 beginSubcases()).
 
-fn(t => {
+fn((t) => {
   let code = '';
 
   if (t.params.type === 'MyStruct') {
@@ -107,7 +107,7 @@ combine('target_stage', ['vertex', 'fragment', '']).
 combine('target_io', ['in', 'out']).
 beginSubcases()).
 
-fn(t => {
+fn((t) => {
   let code = '';
 
   // Generate a struct that contains a valid type.
@@ -144,7 +144,7 @@ u
 combine('second', ['p2', 's1b', 's2b', 'rb']).
 beginSubcases()).
 
-fn(t => {
+fn((t) => {
   const p1 = t.params.first === 'p1' ? '0' : '1';
   const p2 = t.params.second === 'p2' ? '0' : '2';
   const s1a = t.params.first === 's1a' ? '0' : '3';

@@ -4,9 +4,9 @@
 import { clamp } from './math.js';
 
 /**
-                                    * Encodes a JS `number` into a "normalized" (unorm/snorm) integer representation with `bits` bits.
-                                    * Input must be between -1 and 1 if signed, or 0 and 1 if unsigned.
-                                    */
+ * Encodes a JS `number` into a "normalized" (unorm/snorm) integer representation with `bits` bits.
+ * Input must be between -1 and 1 if signed, or 0 and 1 if unsigned.
+ */
 export function floatAsNormalizedInteger(float, bits, signed) {
   if (signed) {
     assert(float >= -1 && float <= 1);
@@ -20,9 +20,9 @@ export function floatAsNormalizedInteger(float, bits, signed) {
 }
 
 /**
-   * Decodes a JS `number` from a "normalized" (unorm/snorm) integer representation with `bits` bits.
-   * Input must be an integer in the range of the specified unorm/snorm type.
-   */
+ * Decodes a JS `number` from a "normalized" (unorm/snorm) integer representation with `bits` bits.
+ * Input must be an integer in the range of the specified unorm/snorm type.
+ */
 export function normalizedIntegerAsFloat(integer, bits, signed) {
   assert(Number.isInteger(integer));
   if (signed) {
@@ -40,12 +40,12 @@ export function normalizedIntegerAsFloat(integer, bits, signed) {
 }
 
 /**
-   * Encodes a JS `number` into an IEEE754 floating point number with the specified number of
-   * sign, exponent, mantissa bits, and exponent bias.
-   * Returns the result as an integer-valued JS `number`.
-   *
-   * Does not handle clamping, underflow, overflow, or denormalized numbers.
-   */
+ * Encodes a JS `number` into an IEEE754 floating point number with the specified number of
+ * sign, exponent, mantissa bits, and exponent bias.
+ * Returns the result as an integer-valued JS `number`.
+ *
+ * Does not handle clamping, underflow, overflow, or denormalized numbers.
+ */
 export function float32ToFloatBits(
 n,
 signBits,
@@ -88,18 +88,18 @@ bias)
 }
 
 /**
-   * Encodes a JS `number` into an IEEE754 16 bit floating point number.
-   * Returns the result as an integer-valued JS `number`.
-   *
-   * Does not handle clamping, underflow, overflow, or denormalized numbers.
-   */
+ * Encodes a JS `number` into an IEEE754 16 bit floating point number.
+ * Returns the result as an integer-valued JS `number`.
+ *
+ * Does not handle clamping, underflow, overflow, or denormalized numbers.
+ */
 export function float32ToFloat16Bits(n) {
   return float32ToFloatBits(n, 1, 5, 10, 15);
 }
 
 /**
-   * Decodes an IEEE754 16 bit floating point number into a JS `number` and returns.
-   */
+ * Decodes an IEEE754 16 bit floating point number into a JS `number` and returns.
+ */
 export function float16BitsToFloat32(float16Bits) {
   const buf = new DataView(new ArrayBuffer(Float32Array.BYTES_PER_ELEMENT));
   // shift exponent and mantissa bits and fill with 0 on right, shift sign bit
@@ -109,21 +109,21 @@ export function float16BitsToFloat32(float16Bits) {
 }
 
 /**
-   * Encodes three JS `number` values into RGB9E5, returned as an integer-valued JS `number`.
-   *
-   * RGB9E5 represents three partial-precision floating-point numbers encoded into a single 32-bit
-   * value all sharing the same 5-bit exponent.
-   * There is no sign bit, and there is a shared 5-bit biased (15) exponent and a 9-bit
-   * mantissa for each channel. The mantissa does NOT have an implicit leading "1.",
-   * and instead has an implicit leading "0.".
-   */
+ * Encodes three JS `number` values into RGB9E5, returned as an integer-valued JS `number`.
+ *
+ * RGB9E5 represents three partial-precision floating-point numbers encoded into a single 32-bit
+ * value all sharing the same 5-bit exponent.
+ * There is no sign bit, and there is a shared 5-bit biased (15) exponent and a 9-bit
+ * mantissa for each channel. The mantissa does NOT have an implicit leading "1.",
+ * and instead has an implicit leading "0.".
+ */
 export function packRGB9E5UFloat(r, g, b) {
   for (const v of [r, g, b]) {
     assert(v >= 0 && v < Math.pow(2, 16));
   }
 
   const buf = new DataView(new ArrayBuffer(Float32Array.BYTES_PER_ELEMENT));
-  const extractMantissaAndExponent = n => {
+  const extractMantissaAndExponent = (n) => {
     const mantissaBits = 9;
     buf.setFloat32(0, n, true);
     const bits = buf.getUint32(0, true);
@@ -160,12 +160,12 @@ export function packRGB9E5UFloat(r, g, b) {
 }
 
 /**
-   * Asserts that a number is within the representable (inclusive) of the integer type with the
-   * specified number of bits and signedness.
-   *
-   * MAINTENANCE_TODO: Assert isInteger? Then this function "asserts that a number is representable"
-   * by the type.
-   */
+ * Asserts that a number is within the representable (inclusive) of the integer type with the
+ * specified number of bits and signedness.
+ *
+ * MAINTENANCE_TODO: Assert isInteger? Then this function "asserts that a number is representable"
+ * by the type.
+ */
 export function assertInIntegerRange(n, bits, signed) {
   if (signed) {
     const min = -Math.pow(2, bits - 1);
@@ -178,16 +178,16 @@ export function assertInIntegerRange(n, bits, signed) {
 }
 
 /**
-   * Converts a linear value into a "gamma"-encoded value using the sRGB-clamped transfer function.
-   */
+ * Converts a linear value into a "gamma"-encoded value using the sRGB-clamped transfer function.
+ */
 export function gammaCompress(n) {
   n = n <= 0.0031308 ? 323 * n / 25 : (211 * Math.pow(n, 5 / 12) - 11) / 200;
   return clamp(n, { min: 0, max: 1 });
 }
 
 /**
-   * Converts a "gamma"-encoded value into a linear value using the sRGB-clamped transfer function.
-   */
+ * Converts a "gamma"-encoded value into a linear value using the sRGB-clamped transfer function.
+ */
 export function gammaDecompress(n) {
   n = n <= 0.04045 ? n * 25 / 323 : Math.pow((200 * n + 11) / 211, 12 / 5);
   return clamp(n, { min: 0, max: 1 });
@@ -256,9 +256,9 @@ export class VectorType {
   }
 
   /**
-     * @returns a vector constructed from the values read from the buffer at the
-     * given byte offset
-     */
+   * @returns a vector constructed from the values read from the buffer at the
+   * given byte offset
+   */
   read(buf, offset) {
     const elements = [];
     for (let i = 0; i < this.width; i++) {
@@ -356,10 +356,10 @@ export class Scalar {
   }
 
   /**
-     * Copies the scalar value to the Uint8Array buffer at the provided byte offset.
-     * @param buffer the destination buffer
-     * @param offset the byte offset within buffer
-     */
+   * Copies the scalar value to the Uint8Array buffer at the provided byte offset.
+   * @param buffer the destination buffer
+   * @param offset the byte offset within buffer
+   */
   copyTo(buffer, offset) {
     for (let i = 0; i < this.bits.length; i++) {
       buffer[offset + i] = this.bits[i];
@@ -477,8 +477,8 @@ export const True = bool(true);
 export const False = bool(false);
 
 /**
-                                   * Class that encapsulates a vector value.
-                                   */
+ * Class that encapsulates a vector value.
+ */
 export class Vector {
 
 
@@ -501,10 +501,10 @@ export class Vector {
   }
 
   /**
-     * Copies the vector value to the Uint8Array buffer at the provided byte offset.
-     * @param buffer the destination buffer
-     * @param offset the byte offset within buffer
-     */
+   * Copies the vector value to the Uint8Array buffer at the provided byte offset.
+   * @param buffer the destination buffer
+   * @param offset the byte offset within buffer
+   */
   copyTo(buffer, offset) {
     for (const element of this.elements) {
       element.copyTo(buffer, offset);
@@ -513,7 +513,7 @@ export class Vector {
   }
 
   toString() {
-    return `${this.type}(${this.elements.map(e => e.toString()).join(', ')})`;
+    return `${this.type}(${this.elements.map((e) => e.toString()).join(', ')})`;
   }
 
   get x() {

@@ -1,6 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';import { assert, unreachable } from '../util/util.js';
+**/import { assert, unreachable } from '../util/util.js';
 
 export class SkipTestCase extends Error {}
 export class UnexpectedPassError extends Error {}
@@ -18,17 +18,17 @@ export { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
 
 
 /**
-                                                                                * A Fixture is a class used to instantiate each test sub/case at run time.
-                                                                                * A new instance of the Fixture is created for every single test subcase
-                                                                                * (i.e. every time the test function is run).
-                                                                                */
+ * A Fixture is a class used to instantiate each test sub/case at run time.
+ * A new instance of the Fixture is created for every single test subcase
+ * (i.e. every time the test function is run).
+ */
 export class Fixture {
 
   /**
-                       * Interface for recording logs and test status.
-                       *
-                       * @internal
-                       */
+   * Interface for recording logs and test status.
+   *
+   * @internal
+   */
 
   eventualExpectations = [];
   numOutstandingAsyncExpectations = 0;
@@ -41,8 +41,8 @@ export class Fixture {
   }
 
   /**
-     * Returns the (case+subcase) parameters for this test function invocation.
-     */
+   * Returns the (case+subcase) parameters for this test function invocation.
+   */
   get params() {
     return this._params;
   }
@@ -55,10 +55,10 @@ export class Fixture {
   async init() {}
 
   /**
-                   * Override this to do additional post-test-function work in a derived fixture.
-                   *
-                   * Called even if init was unsuccessful.
-                   */
+   * Override this to do additional post-test-function work in a derived fixture.
+   *
+   * Called even if init was unsuccessful.
+   */
   async finalize() {
     assert(
     this.numOutstandingAsyncExpectations === 0,
@@ -99,11 +99,11 @@ export class Fixture {
   }
 
   /**
-     * Tracks an object to be cleaned up after the test finishes.
-     *
-     * MAINTENANCE_TODO: Use this in more places. (Will be easier once .destroy() is allowed on
-     * invalid objects.)
-     */
+   * Tracks an object to be cleaned up after the test finishes.
+   *
+   * MAINTENANCE_TODO: Use this in more places. (Will be easier once .destroy() is allowed on
+   * invalid objects.)
+   */
   trackForCleanup(o) {
     this.objectsToCleanUp.push(o);
     return o;
@@ -145,9 +145,9 @@ export class Fixture {
   }
 
   /**
-     * Wraps an async function. Tracks its status to fail if the test tries to report a test status
-     * before the async work has finished.
-     */
+   * Wraps an async function. Tracks its status to fail if the test tries to report a test status
+   * before the async work has finished.
+   */
   async immediateAsyncExpectation(fn) {
     this.numOutstandingAsyncExpectations++;
     const ret = await fn();
@@ -156,9 +156,9 @@ export class Fixture {
   }
 
   /**
-     * Wraps an async function, passing it an `Error` object recording the original stack trace.
-     * The async work will be implicitly waited upon before reporting a test status.
-     */
+   * Wraps an async function, passing it an `Error` object recording the original stack trace.
+   * The async work will be implicitly waited upon before reporting a test status.
+   */
   eventualAsyncExpectation(fn) {
     const promise = fn(new Error());
     this.eventualExpectations.push(promise);
@@ -183,7 +183,7 @@ export class Fixture {
 
   /** Expect that the provided promise resolves (fulfills). */
   shouldResolve(p, msg) {
-    this.eventualAsyncExpectation(async niceStack => {
+    this.eventualAsyncExpectation(async (niceStack) => {
       const m = msg ? ': ' + msg : '';
       try {
         await p;
@@ -197,7 +197,7 @@ export class Fixture {
 
   /** Expect that the provided promise rejects, with the provided exception name. */
   shouldReject(expectedName, p, msg) {
-    this.eventualAsyncExpectation(async niceStack => {
+    this.eventualAsyncExpectation(async (niceStack) => {
       const m = msg ? ': ' + msg : '';
       try {
         await p;
@@ -211,9 +211,9 @@ export class Fixture {
   }
 
   /**
-     * Expect that the provided function throws.
-     * If an `expectedName` is provided, expect that the throw exception has that name.
-     */
+   * Expect that the provided function throws.
+   * If an `expectedName` is provided, expect that the throw exception has that name.
+   */
   shouldThrow(expectedError, fn, msg) {
     const m = msg ? ': ' + msg : '';
     try {

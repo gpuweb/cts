@@ -36,12 +36,12 @@ have unexpected values then get drawn to the color buffer, which is later checke
 params((u) =>
 u //
 .combine('format', kDepthStencilFormats).
-filter(p => kTextureFormatInfo[p.format].depth).
+filter((p) => kTextureFormatInfo[p.format].depth).
 combine('unclippedDepth', [undefined, false, true]).
 combine('writeDepth', [false, true]).
 combine('multisampled', [false, true])).
 
-fn(async t => {
+fn(async (t) => {
   const { format, unclippedDepth, writeDepth, multisampled } = t.params;
   await t.selectDeviceOrSkipTestCase([
   unclippedDepth ? 'depth-clip-control' : undefined,
@@ -302,21 +302,21 @@ fn(async t => {
 
   t.expectGPUBufferValuesPassCheck(
   fragInputZFailedBuffer,
-  a => checkElementsBetween(a, [() => -1e-5, () => 1e-5]),
+  (a) => checkElementsBetween(a, [() => -1e-5, () => 1e-5]),
   { type: Float32Array, typedLength: kNumTestPoints });
 
 
   const kCheckPassedValue = 0;
   const predicatePrinter = [
-  { leftHeader: 'expected ==', getValueForCell: index => kCheckPassedValue }];
+  { leftHeader: 'expected ==', getValueForCell: (index) => kCheckPassedValue }];
 
   if (dsActual && dsExpected && format === 'depth32float') {
     await Promise.all([dsActual.mapAsync(GPUMapMode.READ), dsExpected.mapAsync(GPUMapMode.READ)]);
     const act = new Float32Array(dsActual.getMappedRange());
     const exp = new Float32Array(dsExpected.getMappedRange());
     predicatePrinter.push(
-    { leftHeader: 'act ==', getValueForCell: index => act[index].toFixed(2) },
-    { leftHeader: 'exp ==', getValueForCell: index => exp[index].toFixed(2) });
+    { leftHeader: 'act ==', getValueForCell: (index) => act[index].toFixed(2) },
+    { leftHeader: 'exp ==', getValueForCell: (index) => exp[index].toFixed(2) });
 
   }
   t.expectGPUBufferValuesPassCheck(
@@ -346,11 +346,11 @@ to be empty.`).
 params((u) =>
 u //
 .combine('format', kDepthStencilFormats).
-filter(p => kTextureFormatInfo[p.format].depth).
+filter((p) => kTextureFormatInfo[p.format].depth).
 combine('unclippedDepth', [false, true]).
 combine('multisampled', [false, true])).
 
-fn(async t => {
+fn(async (t) => {
   const { format, unclippedDepth, multisampled } = t.params;
   await t.selectDeviceOrSkipTestCase([
   unclippedDepth ? 'depth-clip-control' : undefined,

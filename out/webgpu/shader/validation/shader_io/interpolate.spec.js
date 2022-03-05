@@ -32,7 +32,7 @@ combine('type', ['', 'flat', 'perspective', 'linear']).
 combine('sampling', ['', 'center', 'centroid', 'sample']).
 beginSubcases()).
 
-fn(t => {
+fn((t) => {
   if (t.params.stage === 'vertex' && t.params.use_struct === false) {
     t.skip('vertex output must include a position builtin, so must use a struct');
   }
@@ -65,7 +65,7 @@ combine('attribute', ['@location(0)', '@builtin(position)']).
 combine('use_struct', [true, false]).
 beginSubcases()).
 
-fn(t => {
+fn((t) => {
   if (
   t.params.stage === 'vertex' &&
   t.params.use_struct === false &&
@@ -94,7 +94,7 @@ combine('use_struct', [true, false]).
 combine('attribute', kValidInterpolationAttributes).
 beginSubcases()).
 
-fn(t => {
+fn((t) => {
   if (t.params.stage === 'vertex' && t.params.use_struct === false) {
     t.skip('vertex output must include a position builtin, so must use a struct');
   }

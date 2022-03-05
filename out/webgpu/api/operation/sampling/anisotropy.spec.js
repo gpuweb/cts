@@ -170,7 +170,7 @@ desc(
     same as the supported upper limit say 16.
     A similar webgl demo is at https://jsfiddle.net/yqnbez24`).
 
-fn(async t => {
+fn(async (t) => {
   // init texture with only a top level mipmap
   const textureSize = 32;
   const texture = t.device.createTexture({
@@ -282,7 +282,7 @@ paramsSimple([
   _generateWarningOnly: true }]).
 
 
-fn(async t => {
+fn(async (t) => {
   const texture = t.createTexture2DWithMipmaps(colors);
 
   const textureView = texture.createView();

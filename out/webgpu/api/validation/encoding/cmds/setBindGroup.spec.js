@@ -59,9 +59,9 @@ class F extends ValidationTest {
   }
 
   /**
-     * If state is 'invalid', creates an invalid bind group with valid resources.
-     * If state is 'destroyed', creates a valid bind group with destroyed resources.
-     */
+   * If state is 'invalid', creates an invalid bind group with valid resources.
+   * If state is 'destroyed', creates a valid bind group with destroyed resources.
+   */
   createBindGroup(
   state,
   resourceType,
@@ -74,7 +74,7 @@ class F extends ValidationTest {
     }
 
     const layout = this.device.createBindGroupLayout({
-      entries: indices.map(binding => ({
+      entries: indices.map((binding) => ({
         binding,
         visibility: this.encoderTypeToStageFlag(encoderType),
         ...(resourceType === 'buffer' ? { buffer: { type: 'storage' } } : { texture: {} }) })) });
@@ -82,7 +82,7 @@ class F extends ValidationTest {
 
     const bindGroup = this.device.createBindGroup({
       layout,
-      entries: indices.map(binding => ({
+      entries: indices.map((binding) => ({
         binding,
         resource: this.createBindingResourceWithState(
         resourceType,
@@ -108,7 +108,7 @@ combine('encoderType', kProgrammableEncoderTypes).
 combine('state', kResourceStates).
 combine('resourceType', ['buffer', 'texture'])).
 
-fn(async t => {
+fn(async (t) => {
   const { encoderType, state, resourceType } = t.params;
   const maxBindGroups = t.device.limits?.maxBindGroups ?? 4;
 
@@ -144,8 +144,8 @@ unimplemented();
 
 g.test('dynamic_offsets_passed_but_not_expected').
 desc('Tests that setBindGroup correctly errors on unexpected dynamicOffsets.').
-params(u => u.combine('encoderType', kProgrammableEncoderTypes)).
-fn(async t => {
+params((u) => u.combine('encoderType', kProgrammableEncoderTypes)).
+fn(async (t) => {
   const { encoderType } = t.params;
   const bindGroup = t.createBindGroup('valid', 'buffer', encoderType, []);
   const dynamicOffsets = [0];
@@ -181,7 +181,7 @@ combineWithParams([
 
 combine('useU32array', [false, true])).
 
-fn(async t => {
+fn(async (t) => {
   const kBindingSize = 9;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
@@ -282,12 +282,12 @@ paramsSubcasesOnly([
   _success: true }]).
 
 
-fn(t => {
+fn((t) => {
   const { offsets, dynamicOffsetsDataStart, dynamicOffsetsDataLength, _success } = t.params;
   const kBindingSize = 8;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
-    entries: range(dynamicOffsetsDataLength, i => ({
+    entries: range(dynamicOffsetsDataLength, (i) => ({
       binding: i,
       visibility: GPUShaderStage.FRAGMENT,
       buffer: {
@@ -299,7 +299,7 @@ fn(t => {
 
   const bindGroup = t.device.createBindGroup({
     layout: bindGroupLayout,
-    entries: range(dynamicOffsetsDataLength, i => ({
+    entries: range(dynamicOffsetsDataLength, (i) => ({
       binding: i,
       resource: {
         buffer: t.createBufferWithState('valid', {

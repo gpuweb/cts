@@ -12,7 +12,7 @@ format,
 compositingAlphaMode,
 writeCanvasMethod)
 {
-  runRefTest(async t => {
+  runRefTest(async (t) => {
     const ctx = cvs.getContext('webgpu');
     assert(ctx !== null, 'Failed to get WebGPU context from canvas');
 

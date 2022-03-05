@@ -82,8 +82,8 @@ export class DevicePool {
 
 
 /**
-      * Map from GPUDeviceDescriptor to DeviceHolder.
-      */
+ * Map from GPUDeviceDescriptor to DeviceHolder.
+ */
 class DescriptorToHolderMap {
   unsupported = new Set();
   holders = new Map();
@@ -99,11 +99,11 @@ class DescriptorToHolderMap {
   }
 
   /**
-     * Gets a DeviceHolder from the map if it exists; otherwise, calls create() to create one,
-     * inserts it, and returns it.
-     *
-     * Throws SkipTestCase if devices with this descriptor are unsupported.
-     */
+   * Gets a DeviceHolder from the map if it exists; otherwise, calls create() to create one,
+   * inserts it, and returns it.
+   *
+   * Throws SkipTestCase if devices with this descriptor are unsupported.
+   */
   async getOrCreate(
   uncanonicalizedDescriptor)
   {
@@ -176,10 +176,10 @@ class DescriptorToHolderMap {
 
 
 /**
-      * Make a stringified map-key from a GPUDeviceDescriptor.
-      * Tries to make sure all defaults are resolved, first - but it's okay if some are missed
-      * (it just means some GPUDevice objects won't get deduplicated).
-      */
+ * Make a stringified map-key from a GPUDeviceDescriptor.
+ * Tries to make sure all defaults are resolved, first - but it's okay if some are missed
+ * (it just means some GPUDevice objects won't get deduplicated).
+ */
 function canonicalizeDescriptor(
 desc)
 {
@@ -188,7 +188,7 @@ desc)
   [];
 
   /** Canonicalized version of the requested limits: in canonical order, with only values which are
-       * specified _and_ non-default. */
+   * specified _and_ non-default. */
   const limitsCanonicalized = {};
   if (desc.requiredLimits) {
     for (const [k, defaultValue] of Object.entries(DefaultLimits)) {
@@ -226,16 +226,16 @@ descriptor)
 }
 
 /**
-   * DeviceHolder has three states:
-   * - 'free': Free to be used for a new test.
-   * - 'reserved': Reserved by a running test, but has not had error scopes created yet.
-   * - 'acquired': Reserved by a running test, and has had error scopes created.
-   */
+ * DeviceHolder has three states:
+ * - 'free': Free to be used for a new test.
+ * - 'reserved': Reserved by a running test, but has not had error scopes created yet.
+ * - 'acquired': Reserved by a running test, and has had error scopes created.
+ */
 
 
 /**
-       * Holds a GPUDevice and tracks its state (free/reserved/acquired) and handles device loss.
-       */
+ * Holds a GPUDevice and tracks its state (free/reserved/acquired) and handles device loss.
+ */
 class DeviceHolder {
 
   state = 'free';
@@ -259,7 +259,7 @@ class DeviceHolder {
 
   constructor(device) {
     this.device = device;
-    this.device.lost.then(ev => {
+    this.device.lost.then((ev) => {
       this.lostInfo = ev;
     });
   }

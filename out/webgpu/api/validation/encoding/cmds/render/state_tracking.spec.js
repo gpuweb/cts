@@ -20,7 +20,7 @@ class F extends ValidationTest {
         module: this.device.createShaderModule({
           code: `
             struct Inputs {
-            ${range(bufferCount, i => `\n@location(${i}) a_position${i} : vec3<f32>;`).join('')}
+            ${range(bufferCount, (i) => `\n@location(${i}) a_position${i} : vec3<f32>;`).join('')}
             };
             @stage(vertex) fn main(input : Inputs
               ) -> @builtin(position) vec4<f32> {
@@ -31,7 +31,7 @@ class F extends ValidationTest {
         buffers: [
         {
           arrayStride: 3 * 4,
-          attributes: range(bufferCount, i => ({
+          attributes: range(bufferCount, (i) => ({
             format: 'float32x3',
             offset: 0,
             shaderLocation: i })) }] },
@@ -96,7 +96,7 @@ In this test we test that missing index buffer for a used slot will cause valida
 
 unimplemented();
 
-g.test('vertex_buffers_inherit_from_previous_pipeline').fn(async t => {
+g.test('vertex_buffers_inherit_from_previous_pipeline').fn(async (t) => {
   const pipeline1 = t.createRenderPipeline(1);
   const pipeline2 = t.createRenderPipeline(2);
 
@@ -131,7 +131,7 @@ g.test('vertex_buffers_inherit_from_previous_pipeline').fn(async t => {
   }
 });
 
-g.test('vertex_buffers_do_not_inherit_between_render_passes').fn(async t => {
+g.test('vertex_buffers_do_not_inherit_between_render_passes').fn(async (t) => {
   const pipeline1 = t.createRenderPipeline(1);
   const pipeline2 = t.createRenderPipeline(2);
 

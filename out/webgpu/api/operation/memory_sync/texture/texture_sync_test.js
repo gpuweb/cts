@@ -1,8 +1,8 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { GPUConst } from '../../../../constants.js'; /**
-                                                         * Boundary between the first operation, and the second operation.
-                                                         */
+ * Boundary between the first operation, and the second operation.
+ */
 export const kOperationBoundaries = [
 'queue-op', // Operations are performed in different queue operations (submit, writeTexture).
 'command-buffer', // Operations are in different command buffers.
@@ -15,10 +15,10 @@ export const kOperationBoundaries = [
 
 
 /**
-    * Context a particular operation is permitted in.
-    * These contexts should be sorted such that the first is the most top-level
-    * context, and the last is most nested (inside a render bundle, in a render pass, ...).
-    */
+ * Context a particular operation is permitted in.
+ * These contexts should be sorted such that the first is the most top-level
+ * context, and the last is most nested (inside a render bundle, in a render pass, ...).
+ */
 export const kOperationContexts = [
 'queue', // Operation occurs on the GPUQueue object
 'command-encoder', // Operation may be encoded in a GPUCommandEncoder.
@@ -48,14 +48,14 @@ bs)
 
 const queueContexts = combineContexts(kOperationContexts, kOperationContexts);
 const commandBufferContexts = combineContexts(
-kOperationContexts.filter(c => c !== 'queue'),
-kOperationContexts.filter(c => c !== 'queue'));
+kOperationContexts.filter((c) => c !== 'queue'),
+kOperationContexts.filter((c) => c !== 'queue'));
 
 
 /**
-                                                 * Mapping of OperationBoundary => to a set of OperationContext pairs.
-                                                 * The boundary is capable of separating operations in those two contexts.
-                                                 */
+ * Mapping of OperationBoundary => to a set of OperationContext pairs.
+ * The boundary is capable of separating operations in those two contexts.
+ */
 export const kBoundaryInfo =
 
 {
@@ -124,8 +124,8 @@ export const kAllReadOps = ['t2b-copy', 't2t-copy', 'storage', 'sample'];
 
 
 /**
-                                                                           * Mapping of Op to the OperationContext(s) it is valid in
-                                                                           */
+ * Mapping of Op to the OperationContext(s) it is valid in
+ */
 export const kOpInfo =
 
 {

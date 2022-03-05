@@ -58,7 +58,7 @@ beginSubcases().
 combine('lhsType', kTestTypes).
 combine('rhsType', kTestTypes)).
 
-fn(t => {
+fn((t) => {
   const { variableOrConstant, lhsType, rhsType } = t.params;
 
   const code = `
@@ -97,8 +97,8 @@ desc(
   - struct with bool component
   - struct with runtime array`).
 
-params(u => u.combine('storageClass', ['in', 'out', 'private']).combine('type', kTestTypes)).
-fn(t => {
+params((u) => u.combine('storageClass', ['in', 'out', 'private']).combine('type', kTestTypes)).
+fn((t) => {
   const { storageClass, type } = t.params;
 
   let code;
