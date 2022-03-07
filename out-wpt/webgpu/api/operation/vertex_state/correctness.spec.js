@@ -138,18 +138,6 @@ fn check(success : bool) {
 }
 
 fn floatsSimilar(a : f32, b : f32, tolerance : f32) -> bool {
-  if (isNan(a) && isNan(b)) {
-    return true;
-  }
-
-  if (isInf(a) && isInf(b) && sign(a) == sign(b)) {
-    return true;
-  }
-
-  if (isInf(a) || isInf(b)) {
-    return false;
-  }
-
   // TODO do we check for + and - 0?
   return abs(a - b) < tolerance;
 }
