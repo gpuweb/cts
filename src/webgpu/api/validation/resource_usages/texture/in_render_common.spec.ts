@@ -1,8 +1,12 @@
 export const description = `
 TODO:
 - 2 views:
-    - x= {upon the same subresource, or different subresources {mip level, array layer, aspect} of the same texture}
-    - x= possible binding types on each view: read = {sampled texture, readonly storage texture}, write = {storage texture, render target}
+    - x= {upon the same subresource, or different subresources {mip level, array layer, aspect} of
+         the same texture}
+    - x= possible resource usages on each view:
+         - both as render attachments
+         - both in bind group {texture_binding, storage_binding}
+         - one in bind group, and another as render attachment
     - x= different shader stages: {0, ..., 7}
         - maybe first view vis = {1, 2, 4}, second view vis = {0, ..., 7}
     - x= bindings are in {
@@ -27,7 +31,8 @@ class F extends ValidationTest {
 
     return {
       view,
-      loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+      clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+      loadOp: 'clear',
       storeOp: 'store',
     };
   }
