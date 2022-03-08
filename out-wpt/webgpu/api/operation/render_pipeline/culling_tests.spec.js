@@ -20,6 +20,7 @@ Use 2 triangles with different winding orders:
   - Some primitive topologies (triangle-list, TODO: triangle-strip)
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { kTextureFormatInfo } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 
 function faceIsCulled(face, frontFace, cullMode) {
@@ -71,13 +72,28 @@ TODO: check the contents of the depth and stencil outputs [2]
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     });
 
-    const depthTexture = t.params.depthStencilFormat
-      ? t.device.createTexture({
-          size: { width: size, height: size, depthOrArrayLayers: 1 },
-          format: t.params.depthStencilFormat,
-          usage: GPUTextureUsage.RENDER_ATTACHMENT,
-        })
-      : null;
+    let depthTexture = undefined;
+    let depthStencilAttachment = undefined;
+    if (t.params.depthStencilFormat) {
+      depthTexture = t.device.createTexture({
+        size: { width: size, height: size, depthOrArrayLayers: 1 },
+        format: t.params.depthStencilFormat,
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      });
+
+      depthStencilAttachment = {
+        view: depthTexture.createView(),
+        depthClearValue: 1.0,
+        depthLoadOp: 'clear',
+        depthStoreOp: 'store',
+      };
+
+      if (t.params.depthStencilFormat && kTextureFormatInfo[t.params.depthStencilFormat].stencil) {
+        depthStencilAttachment.stencilClearValue = 0;
+        depthStencilAttachment.stencilLoadOp = 'clear';
+        depthStencilAttachment.stencilStoreOp = 'store';
+      }
+    }
 
     const encoder = t.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
@@ -90,17 +106,7 @@ TODO: check the contents of the depth and stencil outputs [2]
         },
       ],
 
-      depthStencilAttachment: depthTexture
-        ? {
-            view: depthTexture.createView(),
-            depthClearValue: 1.0,
-            depthLoadOp: 'clear',
-            depthStoreOp: 'store',
-            stencilClearValue: 0,
-            stencilLoadOp: 'clear',
-            stencilStoreOp: 'store',
-          }
-        : undefined,
+      depthStencilAttachment,
     });
 
     // Draw two triangles with different winding orders:

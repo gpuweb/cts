@@ -677,10 +677,12 @@ fn(async (t) => {
     depthStencilAttachment: depthStencilFormat ?
     {
       view: view1,
-      depthStoreOp: 'discard',
-      depthLoadOp: 'load',
-      stencilStoreOp: 'discard',
-      stencilLoadOp: 'load' } :
+      depthStoreOp: kTextureFormatInfo[depthStencilFormat].depth ? 'discard' : undefined,
+      depthLoadOp: kTextureFormatInfo[depthStencilFormat].depth ? 'load' : undefined,
+      stencilStoreOp: kTextureFormatInfo[depthStencilFormat].stencil ?
+      'discard' :
+      undefined,
+      stencilLoadOp: kTextureFormatInfo[depthStencilFormat].stencil ? 'load' : undefined } :
 
     undefined });
 

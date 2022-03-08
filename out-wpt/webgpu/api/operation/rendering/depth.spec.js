@@ -4,7 +4,7 @@
 Test related to depth buffer, depth op, compare func, etc.
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { kDepthStencilFormats } from '../../../capability_info.js';
+import { kDepthStencilFormats, kTextureFormatInfo } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 
 const backgroundColor = [0x00, 0x00, 0x00, 0xff];
@@ -32,7 +32,7 @@ g.test('depth_compare_func')
     u
       .combine(
         'format',
-        kDepthStencilFormats.filter(format => format !== 'stencil8')
+        kDepthStencilFormats.filter(format => kTextureFormatInfo[format].depth)
       )
       .combineWithParams([
         { depthCompare: 'never', depthClearValue: 1.0, _expected: backgroundColor },
@@ -120,6 +120,18 @@ g.test('depth_compare_func')
     const pipeline = t.device.createRenderPipeline(pipelineDescriptor);
 
     const encoder = t.device.createCommandEncoder();
+    const depthStencilAttachment = {
+      view: depthTextureView,
+      depthClearValue,
+      depthLoadOp: 'clear',
+      depthStoreOp: 'store',
+    };
+
+    if (kTextureFormatInfo[format].stencil) {
+      depthStencilAttachment.stencilClearValue = 0;
+      depthStencilAttachment.stencilLoadOp = 'clear';
+      depthStencilAttachment.stencilStoreOp = 'store';
+    }
     const pass = encoder.beginRenderPass({
       colorAttachments: [
         {
@@ -130,16 +142,7 @@ g.test('depth_compare_func')
         },
       ],
 
-      depthStencilAttachment: {
-        view: depthTextureView,
-
-        depthClearValue,
-        depthLoadOp: 'clear',
-        depthStoreOp: 'store',
-        stencilClearValue: 0,
-        stencilLoadOp: 'clear',
-        stencilStoreOp: 'store',
-      },
+      depthStencilAttachment,
     });
 
     pass.setPipeline(pipeline);
@@ -260,9 +263,6 @@ g.test('reverse_depth')
         depthClearValue: t.params.reversed ? 0.0 : 1.0,
         depthLoadOp: 'clear',
         depthStoreOp: 'store',
-        stencilClearValue: 0,
-        stencilLoadOp: 'clear',
-        stencilStoreOp: 'store',
       },
     });
 

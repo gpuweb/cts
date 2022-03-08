@@ -4,7 +4,7 @@
 Destroying a texture more than once is allowed.
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { kTextureAspects } from '../../../capability_info.js';
+import { kTextureAspects, kTextureFormatInfo } from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);
@@ -77,6 +77,20 @@ that was destroyed {before, after} encoding finishes.
     }
 
     const commandEncoder = t.device.createCommandEncoder();
+    const depthStencilAttachment = {
+      view: depthStencilTexture.createView({ aspect: depthStencilTextureAspect }),
+    };
+
+    if (kTextureFormatInfo[depthStencilTextureFormat].depth) {
+      depthStencilAttachment.depthClearValue = 0;
+      depthStencilAttachment.depthLoadOp = 'clear';
+      depthStencilAttachment.depthStoreOp = 'discard';
+    }
+    if (kTextureFormatInfo[depthStencilTextureFormat].stencil) {
+      depthStencilAttachment.stencilClearValue = 0;
+      depthStencilAttachment.stencilLoadOp = 'clear';
+      depthStencilAttachment.stencilStoreOp = 'discard';
+    }
     const renderPass = commandEncoder.beginRenderPass({
       colorAttachments: [
         {
@@ -87,13 +101,7 @@ that was destroyed {before, after} encoding finishes.
         },
       ],
 
-      depthStencilAttachment: {
-        view: depthStencilTexture.createView({ aspect: depthStencilTextureAspect }),
-        depthLoadValue: 0,
-        depthStoreOp: 'discard',
-        stencilLoadValue: 0,
-        stencilStoreOp: 'discard',
-      },
+      depthStencilAttachment,
     });
 
     renderPass.end();

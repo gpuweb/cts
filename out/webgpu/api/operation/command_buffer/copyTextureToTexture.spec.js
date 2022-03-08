@@ -1446,10 +1446,7 @@ fn(async (t) => {
       view: sourceTexture.createView(),
       depthClearValue: 0.0,
       depthLoadOp: 'clear',
-      depthStoreOp: 'store',
-      stencilClearValue: 0,
-      stencilLoadOp: 'clear',
-      stencilStoreOp: 'store' } });
+      depthStoreOp: 'store' } });
 
 
   renderPassForInit.setPipeline(renderPipelineForInit);
@@ -1521,10 +1518,7 @@ fn(async (t) => {
     depthStencilAttachment: {
       view: destinationTexture.createView(),
       depthLoadOp: 'load',
-      depthStoreOp: 'store',
-      stencilClearValue: 0,
-      stencilLoadOp: 'clear',
-      stencilStoreOp: 'store' } });
+      depthStoreOp: 'store' } });
 
 
   renderPassForVerify.setPipeline(renderPipelineForVerify);

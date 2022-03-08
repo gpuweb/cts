@@ -1512,9 +1512,6 @@ g.test('copy_multisampled_depth')
         depthClearValue: 0.0,
         depthLoadOp: 'clear',
         depthStoreOp: 'store',
-        stencilClearValue: 0,
-        stencilLoadOp: 'clear',
-        stencilStoreOp: 'store',
       },
     });
 
@@ -1597,9 +1594,6 @@ g.test('copy_multisampled_depth')
         view: destinationTexture.createView(),
         depthLoadOp: 'load',
         depthStoreOp: 'store',
-        stencilClearValue: 0,
-        stencilLoadOp: 'clear',
-        stencilStoreOp: 'store',
       },
     });
 

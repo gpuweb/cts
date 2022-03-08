@@ -316,18 +316,23 @@ export class TextureZeroInitTest extends GPUTest {
 
         end();
       } else {
+        const depthStencilAttachment = {
+          view: texture.createView(viewDescriptor) };
+
+        if (kTextureFormatInfo[this.p.format].depth) {
+          depthStencilAttachment.depthClearValue = initializedStateAsDepth[state];
+          depthStencilAttachment.depthLoadOp = 'clear';
+          depthStencilAttachment.depthStoreOp = 'store';
+        }
+        if (kTextureFormatInfo[this.p.format].stencil) {
+          depthStencilAttachment.stencilClearValue = initializedStateAsStencil[state];
+          depthStencilAttachment.stencilLoadOp = 'clear';
+          depthStencilAttachment.stencilStoreOp = 'store';
+        }
         commandEncoder.
         beginRenderPass({
           colorAttachments: [],
-          depthStencilAttachment: {
-            view: texture.createView(viewDescriptor),
-            depthStoreOp: 'store',
-            depthClearValue: initializedStateAsDepth[state],
-            depthLoadOp: 'clear',
-            stencilStoreOp: 'store',
-            stencilClearValue: initializedStateAsStencil[state],
-            stencilLoadOp: 'clear' } }).
-
+          depthStencilAttachment }).
 
         end();
       }
@@ -420,16 +425,21 @@ export class TextureZeroInitTest extends GPUTest {
 
         end();
       } else {
+        const depthStencilAttachment = {
+          view: texture.createView(desc) };
+
+        if (kTextureFormatInfo[this.p.format].depth) {
+          depthStencilAttachment.depthLoadOp = 'load';
+          depthStencilAttachment.depthStoreOp = 'discard';
+        }
+        if (kTextureFormatInfo[this.p.format].stencil) {
+          depthStencilAttachment.stencilLoadOp = 'load';
+          depthStencilAttachment.stencilStoreOp = 'discard';
+        }
         commandEncoder.
         beginRenderPass({
           colorAttachments: [],
-          depthStencilAttachment: {
-            view: texture.createView(desc),
-            depthStoreOp: 'discard',
-            depthLoadOp: 'load',
-            stencilStoreOp: 'discard',
-            stencilLoadOp: 'load' } }).
-
+          depthStencilAttachment }).
 
         end();
       }

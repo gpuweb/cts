@@ -645,10 +645,12 @@ g.test('subresources_and_binding_types_combination_for_aspect')
           depthStencilAttachment: depthStencilFormat
             ? {
                 view: view1,
-                depthStoreOp: 'discard',
-                depthLoadOp: 'load',
-                stencilStoreOp: 'discard',
-                stencilLoadOp: 'load',
+                depthStoreOp: kTextureFormatInfo[depthStencilFormat].depth ? 'discard' : undefined,
+                depthLoadOp: kTextureFormatInfo[depthStencilFormat].depth ? 'load' : undefined,
+                stencilStoreOp: kTextureFormatInfo[depthStencilFormat].stencil
+                  ? 'discard'
+                  : undefined,
+                stencilLoadOp: kTextureFormatInfo[depthStencilFormat].stencil ? 'load' : undefined,
               }
             : undefined,
         });
