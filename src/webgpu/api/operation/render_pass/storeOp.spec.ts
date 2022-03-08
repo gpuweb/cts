@@ -82,7 +82,7 @@ g.test('render_pass_store_op,color_attachment_with_depth_stencil_attachment')
     });
 
     // Color load operation will clear to {1.0, 1.0, 1.0, 1.0}.
-    // Depth & stencil load operations will clear to 1.0.
+    // Depth operation will clear to 1.0.
     // Store operations are determined by test the params.
     const encoder = t.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
@@ -99,9 +99,6 @@ g.test('render_pass_store_op,color_attachment_with_depth_stencil_attachment')
         depthClearValue: 1.0,
         depthLoadOp: 'clear',
         depthStoreOp: t.params.depthStencilStoreOperation,
-        stencilClearValue: 1.0,
-        stencilLoadOp: 'clear',
-        stencilStoreOp: t.params.depthStencilStoreOperation,
       },
     });
     pass.end();
@@ -286,7 +283,7 @@ TODO: Also test unsized depth/stencil formats [1]
       .combine('arrayLayer', kArrayLayers)
   )
   .fn(t => {
-    const depthStencilAttachment = t.device.createTexture({
+    const depthStencilTexture = t.device.createTexture({
       format: t.params.depthStencilFormat,
       size: { width: kWidth, height: kHeight, depthOrArrayLayers: t.params.arrayLayer + 1 },
       mipLevelCount: kMipLevelCount,
@@ -300,22 +297,27 @@ TODO: Also test unsized depth/stencil formats [1]
       arrayLayerCount: 1,
     };
 
-    const depthStencilAttachmentView = depthStencilAttachment.createView(depthStencilViewDesc);
+    const depthStencilAttachmentView = depthStencilTexture.createView(depthStencilViewDesc);
 
     // Depth-stencil load operation will clear to depth = 1.0, stencil = 1.0.
     // Depth-stencil store operate is determined by test params.
     const encoder = t.device.createCommandEncoder();
+    const depthStencilAttachment: GPURenderPassDepthStencilAttachment = {
+      view: depthStencilAttachmentView,
+    };
+    if (kTextureFormatInfo[t.params.depthStencilFormat].depth) {
+      depthStencilAttachment.depthClearValue = 1.0;
+      depthStencilAttachment.depthLoadOp = 'clear';
+      depthStencilAttachment.depthStoreOp = t.params.storeOperation;
+    }
+    if (kTextureFormatInfo[t.params.depthStencilFormat].stencil) {
+      depthStencilAttachment.stencilClearValue = 1;
+      depthStencilAttachment.stencilLoadOp = 'clear';
+      depthStencilAttachment.stencilStoreOp = t.params.storeOperation;
+    }
     const pass = encoder.beginRenderPass({
       colorAttachments: [],
-      depthStencilAttachment: {
-        view: depthStencilAttachmentView,
-        depthClearValue: 1.0,
-        depthLoadOp: 'clear',
-        depthStoreOp: t.params.storeOperation,
-        stencilClearValue: 1.0,
-        stencilLoadOp: 'clear',
-        stencilStoreOp: t.params.storeOperation,
-      },
+      depthStencilAttachment,
     });
     pass.end();
     t.device.queue.submit([encoder.finish()]);
@@ -329,7 +331,7 @@ TODO: Also test unsized depth/stencil formats [1]
       expectedValue = { Depth: 1.0 };
     }
 
-    t.expectSingleColor(depthStencilAttachment, t.params.depthStencilFormat, {
+    t.expectSingleColor(depthStencilTexture, t.params.depthStencilFormat, {
       size: [kHeight, kWidth, 1],
       slice: t.params.arrayLayer,
       exp: expectedValue,
