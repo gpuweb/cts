@@ -55,7 +55,10 @@ export class DevicePool {
       // (Hopefully if the device was lost, it has been reported by the time endErrorScopes()
       // has finished (or timed out). If not, it could cause a finite number of extra test
       // failures following this one (but should recover eventually).)
-      assert(holder.lostInfo === undefined, `Device was unexpectedly lost: ${holder.lostInfo}`);
+      assert(
+        holder.lostInfo === undefined,
+        `Device was unexpectedly lost. Reason: ${holder.lostInfo?.reason}, Message: ${holder.lostInfo?.message}`
+      );
     } catch (ex) {
       // Any error that isn't explicitly TestFailedButDeviceReusable forces a new device to be
       // created for the next test.

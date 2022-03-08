@@ -84,7 +84,8 @@ that was destroyed {before, after} encoding finishes.
       colorAttachments: [
         {
           view: colorTexture.createView(),
-          loadValue: [0, 0, 0, 0],
+          clearValue: [0, 0, 0, 0],
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
@@ -96,7 +97,7 @@ that was destroyed {before, after} encoding finishes.
         stencilStoreOp: 'discard',
       },
     });
-    renderPass.endPass();
+    renderPass.end();
 
     const cmd = commandEncoder.finish();
 
