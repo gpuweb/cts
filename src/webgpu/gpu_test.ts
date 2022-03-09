@@ -139,46 +139,50 @@ export class GPUTest extends Fixture {
     await super.finalize();
 
     if (this.provider) {
-      let threw: undefined | Error;
+      let threw = false;
+      let thrownValue: unknown;
       {
         const provider = this.provider;
         this.provider = undefined;
         try {
           await devicePool.release(provider);
         } catch (ex) {
-          threw = ex;
+          threw = true;
+          thrownValue = ex;
         }
       }
       // The GPUDevice and GPUQueue should now have no outstanding references.
 
       if (threw) {
-        if (threw instanceof TestOOMedShouldAttemptGC) {
+        if (thrownValue instanceof TestOOMedShouldAttemptGC) {
           // Try to clean up, in case there are stray GPU resources in need of collection.
           await attemptGarbageCollection();
         }
-        throw threw;
+        throw thrownValue;
       }
     }
 
     if (this.mismatchedProvider) {
       // MAINTENANCE_TODO(kainino0x): Deduplicate this with code in GPUTest.finalize
-      let threw: undefined | Error;
+      let threw = false;
+      let thrownValue: unknown;
       {
         const provider = this.mismatchedProvider;
         this.mismatchedProvider = undefined;
         try {
           await mismatchedDevicePool.release(provider);
         } catch (ex) {
-          threw = ex;
+          threw = true;
+          thrownValue = ex;
         }
       }
 
       if (threw) {
-        if (threw instanceof TestOOMedShouldAttemptGC) {
+        if (thrownValue instanceof TestOOMedShouldAttemptGC) {
           // Try to clean up, in case there are stray GPU resources in need of collection.
           await attemptGarbageCollection();
         }
-        throw threw;
+        throw thrownValue;
       }
     }
   }

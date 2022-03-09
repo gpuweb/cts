@@ -55,7 +55,6 @@ Whenever a new generally-useful helper is added, it should be indexed here.
     Helper class for copyToTexture test suites for execution copy and check results.
 - {@link webgpu/util/create_elements}:
     Helpers for creating web elements like HTMLCanvasElement, OffscrrenCanvas, etc.
-- {@link webgpu/util/navigator_gpu}: Finds and returns the `navigator.gpu` object or equivalent.
 - {@link webgpu/util/texture/base}: General texture-related helpers.
 - {@link webgpu/util/texture/layout}: Helpers for working with linear image data
     (like in copyBufferToTexture, copyTextureToBuffer, writeTexture).
@@ -68,6 +67,7 @@ Whenever a new generally-useful helper is added, it should be indexed here.
 ### General Helpers
 
 - {@link common/framework/resources}: Provides the path to the `resources/` directory.
+- {@link common/util/navigator_gpu}: Finds and returns the `navigator.gpu` object or equivalent.
 - {@link common/util/util}: Miscellaneous utilities.
     - {@link common/util/util.assert | assert}: Assert a condition, otherwise throw an exception.
     - {@link common/util/util.unreachable | unreachable}: Assert unreachable code.
