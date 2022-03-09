@@ -50,7 +50,11 @@ class F extends CopyToTextureUtils {
   initGLCanvasContent({ canvasType, contextName, width, height, premultiplied, paintOpaqueRects }) {
     const canvas = createCanvas(this, canvasType, width, height);
 
-    const gl = canvas.getContext(contextName, { premultipliedAlpha: premultiplied });
+    // MAINTENANCE_TODO: Workaround for @types/offscreencanvas missing an overload of
+    // `OffscreenCanvas.getContext` that takes `string` or a union of context types.
+    const gl = canvas.getContext(contextName, {
+      premultipliedAlpha: premultiplied,
+    });
 
     if (gl === null) {
       this.skip(canvasType + ' canvas ' + contextName + ' context not available');

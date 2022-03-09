@@ -304,6 +304,8 @@ g.test('from_canvas')
     // Use putImageData to prevent color space conversion.
     imageCanvasContext.putImageData(imageData, 0, 0);
 
+    // MAINTENANCE_TODO: Workaround for @types/offscreencanvas missing an overload of
+    // `createImageBitmap` that takes `ImageBitmapOptions`.
     const imageBitmap = await createImageBitmap(imageCanvas, {
       premultiplyAlpha: 'premultiply',
       imageOrientation: orientation,

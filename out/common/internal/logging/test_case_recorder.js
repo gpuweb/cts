@@ -120,6 +120,7 @@ export class TestCaseRecorder {
   }
 
   logImpl(level, name, baseException) {
+    assert(baseException instanceof Error, 'test threw a non-Error object');
     const logMessage = new LogMessageWithStack(name, baseException);
 
     // Final case status should be the "worst" of all log entries.
