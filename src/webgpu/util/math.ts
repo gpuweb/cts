@@ -289,3 +289,26 @@ export function biasedRange(a: number, b: number, num_steps: number): Array<numb
     lerp(a, b, Math.pow(lerp(0, 1, i / (num_steps - 1)), c))
   );
 }
+
+/**
+ * @returns the result matrix in Array<Array<number>> type.
+ *
+ * Simple matrix (and vector) multiplication
+ * Warning: No error handling for incompatible dimensions!
+ * @author Lea Verou 2020 MIT License
+ */
+// A is m x n. B is n x p. product is m x p.
+export function multiplyMatrices(A: Array<Array<number>>, B: Array<Array<number>>) {
+  const B_cols = B[0].map((_, i) => B.map(x => x[i])); // transpose B
+  const product = A.map(row =>
+    B_cols.map(col => {
+      if (!Array.isArray(row)) {
+        return col.reduce((a, c) => a + c * row, 0);
+      }
+
+      return row.reduce((a, c, i) => a + c * (col[i] || 0), 0);
+    })
+  );
+
+  return product;
+}

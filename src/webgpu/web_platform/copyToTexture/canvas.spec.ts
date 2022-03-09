@@ -46,12 +46,66 @@ class F extends CopyToTextureUtils {
       this.skip('color space attr is not supported for canvas 2d context');
     }
 
-    // The rgb10a2unorm dst texture will have tiny errors when we compare actual and expectation.
-    // This is due to the convert from 8-bit to 10-bit combined with alpha value ops. So for
-    // rgb10a2unorm dst textures, we'll set alphaValue to 1.0 to test.
-    const alphaValue = paintOpaqueRects ? 1.0 : 0.6;
+    const SOURCE_PIXEL_BYTES = 4;
+    const imagePixels = new Uint8ClampedArray(SOURCE_PIXEL_BYTES * width * height);
+
+    const rectWidth = Math.floor(width / 2);
+    const rectHeight = Math.floor(height / 2);
+
+    const alphaValue = paintOpaqueRects ? 255 : 153;
+
+    let pixelStartPos = 0;
+    // Red;
+    for (let i = 0; i < rectHeight; ++i) {
+      for (let j = 0; j < rectWidth; ++j) {
+        pixelStartPos = (i * width + j) * SOURCE_PIXEL_BYTES;
+        imagePixels[pixelStartPos] = 255;
+        imagePixels[pixelStartPos + 1] = 0;
+        imagePixels[pixelStartPos + 2] = 0;
+        imagePixels[pixelStartPos + 3] = alphaValue;
+      }
+    }
+
+    // Lime;
+    for (let i = 0; i < rectHeight; ++i) {
+      for (let j = rectWidth; j < width; ++j) {
+        pixelStartPos = (i * width + j) * SOURCE_PIXEL_BYTES;
+        imagePixels[pixelStartPos] = 0;
+        imagePixels[pixelStartPos + 1] = 255;
+        imagePixels[pixelStartPos + 2] = 0;
+        imagePixels[pixelStartPos + 3] = alphaValue;
+      }
+    }
+
+    // Blue
+    for (let i = rectHeight; i < height; ++i) {
+      for (let j = 0; j < rectWidth; ++j) {
+        pixelStartPos = (i * width + j) * SOURCE_PIXEL_BYTES;
+        imagePixels[pixelStartPos] = 0;
+        imagePixels[pixelStartPos + 1] = 0;
+        imagePixels[pixelStartPos + 2] = 255;
+        imagePixels[pixelStartPos + 3] = alphaValue;
+      }
+    }
+
+    // Fuchsia
+    for (let i = rectHeight; i < height; ++i) {
+      for (let j = rectWidth; j < width; ++j) {
+        pixelStartPos = (i * width + j) * SOURCE_PIXEL_BYTES;
+        imagePixels[pixelStartPos] = 255;
+        imagePixels[pixelStartPos + 1] = 0;
+        imagePixels[pixelStartPos + 2] = 255;
+        imagePixels[pixelStartPos + 3] = alphaValue;
+      }
+    }
+
+    const imageData = new (ImageData as any)(imagePixels, width, height, { colorSpace });
+    if (typeof (imageData as any).colorSpace === 'undefined') {
+      this.skip('color space attr is not supported for ImageData');
+    }
+
     const ctx = canvasContext as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
-    this.paint2DCanvas(ctx, width, height, alphaValue);
+    ctx.putImageData(imageData, 0, 0);
 
     return { canvas, canvasContext };
   }
@@ -291,7 +345,7 @@ class F extends CopyToTextureUtils {
     height: number
   ): Uint8ClampedArray {
     // Always read back the raw data from canvas
-    return (context as any).getImageData(0, 0, width, height, { colorSpace: 'srgb' }).data;
+    return context.getImageData(0, 0, width, height).data;
   }
 
   getSourceCanvasGLContent(
@@ -761,11 +815,7 @@ g.test('color_space_conversion')
       .combine('dstPremultiplied', [true, false])
       .combine('srcDoFlipYDuringCopy', [true, false])
       .beginSubcases()
-      .combine('width', [
-        //1,
-        2,
-        //  4, 15, 255, 256
-      ])
+      .combine('width', [1, 2, 4, 15, 255, 256])
       .combine('height', [1, 2, 4, 15, 255, 256])
   )
   .fn(async t => {

@@ -1,45 +1,30 @@
 import { assert } from '../../common/util/util.js';
 
+import { multiplyMatrices } from './math.js';
+
 /**
  * The color space conversion function definations are fully aign with
  * CSS Color Module Level 4 Sample Code: https://drafts.csswg.org/css-color/#color-conversion-code
  */
 
 /**
- * Simple matrix (and vector) multiplication
- * Warning: No error handling for incompatible dimensions!
- * @author Lea Verou 2020 MIT License
+ *  Sample code for color conversions
+ * Conversion can also be done using ICC profiles and a Color Management System
+ * For clarity, a library is used for matrix multiplication (multiply-matrices.js)
  */
-// A is m x n. B is n x p. product is m x p.
-function multiplyMatrices(A: Array<Array<number>>, B: Array<Array<number>>) {
-  const B_cols = B[0].map((_, i) => B.map(x => x[i])); // transpose B
-  const product = A.map(row =>
-    B_cols.map(col => {
-      if (!Array.isArray(row)) {
-        return col.reduce((a, c) => a + c * row, 0);
-      }
-
-      return row.reduce((a, c, i) => a + c * (col[i] || 0), 0);
-    })
-  );
-
-  return product;
-}
-
-// Sample code for color conversions
-// Conversion can also be done using ICC profiles and a Color Management System
-// For clarity, a library is used for matrix multiplication (multiply-matrices.js)
 
 // sRGB-related functions
 
+/**
+ * convert an array of sRGB values
+ * where in-gamut values are in the range [0 - 1]
+ * to linear light (un-companded) form.
+ * https://en.wikipedia.org/wiki/SRGB
+ * Extended transfer function:
+ * for negative values,  linear portion is extended on reflection of axis,
+ * then reflected power function is used.
+ */
 function lin_sRGB(RGB: Array<number>) {
-  // convert an array of sRGB values
-  // where in-gamut values are in the range [0 - 1]
-  // to linear light (un-companded) form.
-  // https://en.wikipedia.org/wiki/SRGB
-  // Extended transfer function:
-  // for negative values,  linear portion is extended on reflection of axis,
-  // then reflected power function is used.
   return RGB.map(val => {
     const sign = val < 0 ? -1 : 1;
     const abs = Math.abs(val);
@@ -52,13 +37,15 @@ function lin_sRGB(RGB: Array<number>) {
   });
 }
 
+/**
+ * convert an array of linear-light sRGB values in the range 0.0-1.0
+ * to gamma corrected form
+ * https://en.wikipedia.org/wiki/SRGB
+ * Extended transfer function:
+ * For negative values, linear portion extends on reflection
+ * of axis, then uses reflected pow below that
+ */
 function gam_sRGB(RGB: Array<number>) {
-  // convert an array of linear-light sRGB values in the range 0.0-1.0
-  // to gamma corrected form
-  // https://en.wikipedia.org/wiki/SRGB
-  // Extended transfer function:
-  // For negative values, linear portion extends on reflection
-  // of axis, then uses reflected pow below that
   return RGB.map(val => {
     const sign = val < 0 ? -1 : 1;
     const abs = Math.abs(val);
@@ -71,10 +58,11 @@ function gam_sRGB(RGB: Array<number>) {
   });
 }
 
+/**
+ * convert an array of linear-light sRGB values to CIE XYZ
+ * using sRGB's own white, D65 (no chromatic adaptation)
+ */
 function lin_sRGB_to_XYZ(rgb: Array<Array<number>>) {
-  // convert an array of linear-light sRGB values to CIE XYZ
-  // using sRGB's own white, D65 (no chromatic adaptation)
-
   const M = [
     [0.41239079926595934, 0.357584339383878, 0.1804807884018343],
     [0.21263900587151027, 0.715168678767756, 0.07219231536073371],
@@ -83,9 +71,10 @@ function lin_sRGB_to_XYZ(rgb: Array<Array<number>>) {
   return multiplyMatrices(M, rgb);
 }
 
+/**
+ * convert XYZ to linear-light sRGB
+ */
 function XYZ_to_lin_sRGB(XYZ: Array<Array<number>>) {
-  // convert XYZ to linear-light sRGB
-
   const M = [
     [3.2409699419045226, -1.537383177570094, -0.4986107602930034],
     [-0.9692436362808796, 1.8759675015077202, 0.04155505740717559],
@@ -97,24 +86,28 @@ function XYZ_to_lin_sRGB(XYZ: Array<Array<number>>) {
 
 //  display-p3-related functions
 
+/**
+ * convert an array of display-p3 RGB values in the range 0.0 - 1.0
+ * to linear light (un-companded) form.
+ */
 function lin_P3(RGB: Array<number>) {
-  // convert an array of display-p3 RGB values in the range 0.0 - 1.0
-  // to linear light (un-companded) form.
-
   return lin_sRGB(RGB); // same as sRGB
 }
 
+/**
+ * convert an array of linear-light display-p3 RGB  in the range 0.0-1.0
+ * to gamma corrected form
+ */
 function gam_P3(RGB: Array<number>) {
-  // convert an array of linear-light display-p3 RGB  in the range 0.0-1.0
-  // to gamma corrected form
-
   return gam_sRGB(RGB); // same as sRGB
 }
 
+/**
+ * convert an array of linear-light display-p3 values to CIE XYZ
+ * using  D65 (no chromatic adaptation)
+ * http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
+ */
 function lin_P3_to_XYZ(rgb: Array<Array<number>>) {
-  // convert an array of linear-light display-p3 values to CIE XYZ
-  // using  D65 (no chromatic adaptation)
-  // http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
   const M = [
     [0.4865709486482162, 0.26566769316909306, 0.1982172852343625],
     [0.2289745640697488, 0.6917385218365064, 0.079286914093745],
@@ -125,8 +118,10 @@ function lin_P3_to_XYZ(rgb: Array<Array<number>>) {
   return multiplyMatrices(M, rgb);
 }
 
+/**
+ * convert XYZ to linear-light P3
+ */
 function XYZ_to_lin_P3(XYZ: Array<Array<number>>) {
-  // convert XYZ to linear-light P3
   const M = [
     [2.493496911941425, -0.9313836179191239, -0.40271078445071684],
     [-0.8294889695615747, 1.7626640603183463, 0.023624685841943577],
@@ -136,9 +131,13 @@ function XYZ_to_lin_P3(XYZ: Array<Array<number>>) {
   return multiplyMatrices(M, XYZ);
 }
 
-// Follow conversion steps in CSS Color Module Level 4
-// https://drafts.csswg.org/css-color/#predefined-to-predefined
-// display-p3 and sRGB share the same white points.
+/**
+ * @returns the converted pixels in {R: number, G: number, B: number, A: number}.
+ *
+ * Follow conversion steps in CSS Color Module Level 4
+ * https://drafts.csswg.org/css-color/#predefined-to-predefined
+ * display-p3 and sRGB share the same white points.
+ */
 export function displayP3ToSrgb(pixel: {
   R: number;
   G: number;
@@ -163,7 +162,13 @@ export function displayP3ToSrgb(pixel: {
 
   return pixel;
 }
-
+/**
+ * @returns the converted pixels in {R: number, G: number, B: number, A: number}.
+ *
+ * Follow conversion steps in CSS Color Module Level 4
+ * https://drafts.csswg.org/css-color/#predefined-to-predefined
+ * display-p3 and sRGB share the same white points.
+ */
 export function srgbToDisplayP3(pixel: {
   R: number;
   G: number;
