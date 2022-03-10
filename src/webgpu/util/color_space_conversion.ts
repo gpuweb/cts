@@ -2,7 +2,7 @@ import { assert } from '../../common/util/util.js';
 
 import { multiplyMatrices } from './math.js';
 
-// The color space conversion function definations copies directly from
+// These color space conversion function definitions are copied directly from
 // CSS Color Module Level 4 Sample Code: https://drafts.csswg.org/css-color/#color-conversion-code
 
 // Sample code for color conversions

@@ -112,7 +112,7 @@ export class CopyToTextureUtils extends GPUTest {
     srcPremultiplied: boolean,
     dstPremultiplied: boolean,
     isFlipY: boolean,
-    srcColorSpace: GPUPredefinedColorSpace | 'display-p3' = 'srgb',
+    srcColorSpace: PredefinedColorSpace = 'srgb',
     dstColorSpace: GPUPredefinedColorSpace = 'srgb'
   ): Uint8ClampedArray {
     const bytesPerPixel = kTextureFormatInfo[format].bytesPerBlock;
