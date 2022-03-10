@@ -1,4 +1,4 @@
-import { memcpy, TypedArrayBufferView, unreachable } from '../../common/util/util.js';
+import { assert, memcpy, TypedArrayBufferView, unreachable } from '../../common/util/util.js';
 import { RegularTextureFormat, kTextureFormatInfo } from '../capability_info.js';
 import { GPUTest } from '../gpu_test.js';
 
@@ -102,6 +102,8 @@ export class CopyToTextureUtils extends GPUTest {
     );
   }
 
+  // MAINTENANCE_TODO: type GPUPredefinedColorSpace only have 'srgb', remove the
+  // 'display-p3' type after it is included in GPUPredefinedColorSpace.
   getExpectedPixels(
     sourcePixels: Uint8ClampedArray,
     width: number,
@@ -110,8 +112,8 @@ export class CopyToTextureUtils extends GPUTest {
     srcPremultiplied: boolean,
     dstPremultiplied: boolean,
     isFlipY: boolean,
-    srcColorSpace: 'display-p3' | 'srgb' = 'srgb',
-    dstColorSpace: 'srgb' = 'srgb'
+    srcColorSpace: GPUPredefinedColorSpace | 'display-p3' = 'srgb',
+    dstColorSpace: GPUPredefinedColorSpace = 'srgb'
   ): Uint8ClampedArray {
     const bytesPerPixel = kTextureFormatInfo[format].bytesPerBlock;
 
@@ -140,9 +142,16 @@ export class CopyToTextureUtils extends GPUTest {
         };
 
         if (requireUnpremultiplyAlpha && rgba.A !== 0.0) {
-          rgba.R /= rgba.A;
-          rgba.G /= rgba.A;
-          rgba.B /= rgba.A;
+          if (rgba.A !== 0.0) {
+            rgba.R /= rgba.A;
+            rgba.G /= rgba.A;
+            rgba.B /= rgba.A;
+          } else {
+            assert(
+              rgba.R === 0.0 && rgba.G === 0.0 && rgba.B === 0.0 && rgba.A === 0.0,
+              'Unpremultiply ops with alpha value 0.0 requires all channels equals to 0.0'
+            );
+          }
         }
 
         if (requireColorSpaceConversion) {
@@ -241,64 +250,69 @@ export class CopyToTextureUtils extends GPUTest {
     // (e.g. CC vs CD) if there needs some alpha ops (if alpha channel is not 0.0 or 1.0). Suspect it is errors when
     // doing encoding. We check fp16 dst texture format with 1-bit ULP tolerance.
     if (isFp16Format(dstFormat)) {
-      const exp = new Uint16Array(
+      const expF16bits = new Uint16Array(
         expected.buffer,
         expected.byteOffset / Uint16Array.BYTES_PER_ELEMENT,
         expected.byteLength / Uint16Array.BYTES_PER_ELEMENT
       );
-      const check = new Uint16Array(
+      const checkF16bits = new Uint16Array(
         actual.buffer,
         actual.byteOffset / Uint16Array.BYTES_PER_ELEMENT,
         actual.byteLength / Uint16Array.BYTES_PER_ELEMENT
       );
 
       for (let y = 0; y < height; ++y) {
-        const expRow = exp.subarray(
-          (y * bytesPerRow) / exp.BYTES_PER_ELEMENT,
-          bytesPerRow / exp.BYTES_PER_ELEMENT
+        const expRowF16bits = expF16bits.subarray(
+          (y * bytesPerRow) / expF16bits.BYTES_PER_ELEMENT,
+          bytesPerRow / expF16bits.BYTES_PER_ELEMENT
         );
-        const checkRow = check.subarray(
-          (y * bytesPerRow) / check.BYTES_PER_ELEMENT,
-          bytesPerRow / check.BYTES_PER_ELEMENT
+
+        const checkRowF16bits = checkF16bits.subarray(
+          (y * bytesPerRow) / checkF16bits.BYTES_PER_ELEMENT,
+          bytesPerRow / checkF16bits.BYTES_PER_ELEMENT
         );
-        const expRowF32 = new Float32Array(expRow.length);
-        const checkRowF32 = new Float32Array(checkRow.length);
-        checkRow.forEach((v: number, i: number) => {
-          checkRowF32[i] = float16BitsToFloat32(v);
-        });
-        expRow.forEach((v: number, i: number) => {
-          expRowF32[i] = float16BitsToFloat32(v);
-        });
-        const checkResult = checkElementsBetween(checkRowF32, [
-          i => expRowF32[i] - 0.001,
-          i => expRow[i] + 0.001,
+
+        const expRowF32bits = new Float32Array(expRowF16bits.length);
+        const checkRowF32bits = new Float32Array(checkRowF16bits.length);
+
+        for (const [i, v] of checkRowF16bits.entries()) {
+          checkRowF32bits[i] = float16BitsToFloat32(v);
+        }
+
+        for (const [i, v] of expF16bits.entries()) {
+          expRowF32bits[i] = float16BitsToFloat32(v);
+        }
+
+        const checkResult = checkElementsBetween(checkRowF32bits, [
+          i => expRowF32bits[i] - 0.001,
+          i => expRowF32bits[i] + 0.001,
         ]);
         if (checkResult !== undefined) return `on row ${y}: ${checkResult}`;
       }
     } else if (isFp32Format(dstFormat)) {
-      const exp = new Float32Array(
+      const expF32bits = new Float32Array(
         expected.buffer,
         expected.byteOffset / Float32Array.BYTES_PER_ELEMENT,
         expected.byteLength / Float32Array.BYTES_PER_ELEMENT
       );
-      const check = new Float32Array(
+      const checkF32bits = new Float32Array(
         actual.buffer,
         actual.byteOffset / Float32Array.BYTES_PER_ELEMENT,
         actual.byteLength / Float32Array.BYTES_PER_ELEMENT
       );
 
       for (let y = 0; y < height; ++y) {
-        const expRow = exp.subarray(
-          (y * bytesPerRow) / exp.BYTES_PER_ELEMENT,
-          bytesPerRow / exp.BYTES_PER_ELEMENT
+        const expRowF32bits = expF32bits.subarray(
+          (y * bytesPerRow) / expF32bits.BYTES_PER_ELEMENT,
+          bytesPerRow / expF32bits.BYTES_PER_ELEMENT
         );
-        const checkRow = check.subarray(
-          (y * bytesPerRow) / check.BYTES_PER_ELEMENT,
-          bytesPerRow / check.BYTES_PER_ELEMENT
+        const checkRowF32bits = checkF32bits.subarray(
+          (y * bytesPerRow) / checkF32bits.BYTES_PER_ELEMENT,
+          bytesPerRow / checkF32bits.BYTES_PER_ELEMENT
         );
-        const checkResult = checkElementsBetween(checkRow, [
-          i => expRow[i] - 0.001,
-          i => expRow[i] + 0.001,
+        const checkResult = checkElementsBetween(checkRowF32bits, [
+          i => expRowF32bits[i] - 0.001,
+          i => expRowF32bits[i] + 0.001,
         ]);
         if (checkResult !== undefined) return `on row ${y}: ${checkResult}`;
       }

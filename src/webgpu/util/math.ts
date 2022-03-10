@@ -293,22 +293,27 @@ export function biasedRange(a: number, b: number, num_steps: number): Array<numb
 /**
  * @returns the result matrix in Array<Array<number>> type.
  *
- * Simple matrix (and vector) multiplication
- * Warning: No error handling for incompatible dimensions!
- * @author Lea Verou 2020 MIT License
+ * Matrix multiplication. A is m x n and B is n x p. Returns
+ * m x p result.
  */
 // A is m x n. B is n x p. product is m x p.
-export function multiplyMatrices(A: Array<Array<number>>, B: Array<Array<number>>) {
-  const B_cols = B[0].map((_, i) => B.map(x => x[i])); // transpose B
-  const product = A.map(row =>
-    B_cols.map(col => {
-      if (!Array.isArray(row)) {
-        return col.reduce((a, c) => a + c * row, 0);
-      }
+export function multiplyMatrices(
+  A: Array<Array<number>>,
+  B: Array<Array<number>>
+): Array<Array<number>> {
+  assert(A.length > 0 && B.length > 0 && B[0].length > 0 && A[0].length === B.length);
+  const product = new Array<Array<number>>(A.length);
+  for (let i = 0; i < product.length; ++i) {
+    product[i] = new Array<number>(B[0].length).fill(0);
+  }
 
-      return row.reduce((a, c, i) => a + c * (col[i] || 0), 0);
-    })
-  );
+  for (let m = 0; m < A.length; ++m) {
+    for (let p = 0; p < B[0].length; ++p) {
+      for (let n = 0; n < B.length; ++n) {
+        product[m][p] += A[m][n] * B[n][p];
+      }
+    }
+  }
 
   return product;
 }

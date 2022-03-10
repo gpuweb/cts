@@ -2,16 +2,12 @@ import { assert } from '../../common/util/util.js';
 
 import { multiplyMatrices } from './math.js';
 
-/**
- * The color space conversion function definations are fully aign with
- * CSS Color Module Level 4 Sample Code: https://drafts.csswg.org/css-color/#color-conversion-code
- */
+// The color space conversion function definations copies directly from
+// CSS Color Module Level 4 Sample Code: https://drafts.csswg.org/css-color/#color-conversion-code
 
-/**
- *  Sample code for color conversions
- * Conversion can also be done using ICC profiles and a Color Management System
- * For clarity, a library is used for matrix multiplication (multiply-matrices.js)
- */
+// Sample code for color conversions
+// Conversion can also be done using ICC profiles and a Color Management System
+// For clarity, a library is used for matrix multiplication (multiply-matrices.js)
 
 // sRGB-related functions
 
@@ -73,6 +69,7 @@ function lin_sRGB_to_XYZ(rgb: Array<Array<number>>) {
 
 /**
  * convert XYZ to linear-light sRGB
+ * using sRGB's own white, D65 (no chromatic adaptation)
  */
 function XYZ_to_lin_sRGB(XYZ: Array<Array<number>>) {
   const M = [
@@ -104,7 +101,7 @@ function gam_P3(RGB: Array<number>) {
 
 /**
  * convert an array of linear-light display-p3 values to CIE XYZ
- * using  D65 (no chromatic adaptation)
+ * using display-p3's D65 (no chromatic adaptation)
  * http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
  */
 function lin_P3_to_XYZ(rgb: Array<Array<number>>) {
@@ -120,6 +117,7 @@ function lin_P3_to_XYZ(rgb: Array<Array<number>>) {
 
 /**
  * convert XYZ to linear-light P3
+ * using display-p3's own white, D65 (no chromatic adaptation)
  */
 function XYZ_to_lin_P3(XYZ: Array<Array<number>>) {
   const M = [

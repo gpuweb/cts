@@ -40,8 +40,8 @@ class F extends CopyToTextureUtils {
     }
 
     if (
-      typeof (canvasContext as any).getContextAttributes === 'undefined' ||
-      typeof (canvasContext as any).getContextAttributes().colorSpace === 'undefined'
+      typeof canvasContext.getContextAttributes === 'undefined' ||
+      typeof canvasContext.getContextAttributes().colorSpace === 'undefined'
     ) {
       this.skip('color space attr is not supported for canvas 2d context');
     }
@@ -99,7 +99,9 @@ class F extends CopyToTextureUtils {
       }
     }
 
-    const imageData = new (ImageData as any)(imagePixels, width, height, { colorSpace });
+    const imageData = new ImageData(imagePixels, width, height, { colorSpace });
+    // MAINTENANCE_TODO: Remove as any when tsc support imageData.colorSpace
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     if (typeof (imageData as any).colorSpace === 'undefined') {
       this.skip('color space attr is not supported for ImageData');
     }
@@ -424,8 +426,8 @@ g.test('copy_contents_from_2d_context_canvas')
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the canvas contents.
 
-  Do premultiply alpha in advance if 'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
-  is set to 'ture' and do unpremultiply alpha if it is set to 'false'.
+  Provide premultiplied input if 'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
+  is set to 'true' and unpremultiplied input if it is set to 'false'.
 
   If 'flipY' in 'GPUImageCopyExternalImage' is set to 'true', copy will ensure the result
   is flipped.
@@ -539,8 +541,8 @@ g.test('copy_contents_from_gl_context_canvas')
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the canvas contents.
 
-  Do premultiply alpha during copy if  'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
-  is set to 'ture' and do unpremultiply alpha if it is set to 'false'.
+  Provide premultiplied input if 'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
+  is set to 'true' and unpremultiplied input if it is set to 'false'.
 
   If 'flipY' in 'GPUImageCopyExternalImage' is set to 'true', copy will ensure the result
   is flipped.
@@ -660,8 +662,8 @@ g.test('copy_contents_from_gpu_context_canvas')
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the canvas contents.
 
-  Do premultiply alpha during copy if  'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
-  is set to 'ture' and do unpremultiply alpha if it is set to 'false'.
+  Provide premultiplied input if 'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
+  is set to 'true' and unpremultiplied input if it is set to 'false'.
 
   If 'flipY' in 'GPUImageCopyExternalImage' is set to 'true', copy will ensure the result
   is flipped.
@@ -789,8 +791,8 @@ g.test('color_space_conversion')
     Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
     of dst texture, and read the contents out to compare with the canvas contents.
   
-    Do premultiply alpha in advance if 'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
-    is set to 'ture' and do unpremultiply alpha if it is set to 'false'.
+    Provide premultiplied input if 'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
+    is set to 'true' and unpremultiplied input if it is set to 'false'.
   
     If 'flipY' in 'GPUImageCopyExternalImage' is set to 'true', copy will ensure the result
     is flipped.
