@@ -176,8 +176,7 @@ export function checkOpsValidForContext(
   context: [OperationContext, OperationContext]
 ) {
   const valid =
-    kOpInfo[ops[0]].contexts.indexOf(context[0]) !== -1 &&
-    kOpInfo[ops[1]].contexts.indexOf(context[1]) !== -1;
+    kOpInfo[ops[0]].contexts.includes(context[0]) && kOpInfo[ops[1]].contexts.includes(context[1]);
   if (!valid) return false;
 
   if (
