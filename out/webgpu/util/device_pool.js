@@ -297,6 +297,9 @@ class DeviceHolder {
     let gpuValidationError;
     let gpuOutOfMemoryError;
 
+    // Submit to the queue to attempt to force a GPU flush.
+    this.device.queue.submit([]);
+
     try {
       // May reject if the device was lost.
       gpuValidationError = await this.device.popErrorScope();
@@ -307,6 +310,11 @@ class DeviceHolder {
       'popErrorScope failed; should only happen if device has been lost');
 
       throw ex;
+    }
+
+    // Attempt to wait for the queue to be idle.
+    if (this.device.queue.onSubmittedWorkDone) {
+      await this.device.queue.onSubmittedWorkDone();
     }
 
     await assertReject(
