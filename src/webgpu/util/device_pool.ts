@@ -313,7 +313,9 @@ class DeviceHolder implements DeviceProvider {
     }
 
     // Attempt to wait for the queue to be idle.
-    await this.device.queue.onSubmittedWorkDone();
+    if (this.device.queue.onSubmittedWorkDone) {
+      await this.device.queue.onSubmittedWorkDone();
+    }
 
     await assertReject(
       this.device.popErrorScope(),
