@@ -4,7 +4,6 @@ import { GPUTest } from '../gpu_test.js';
 
 import { checkElementsEqual, checkElementsBetween } from './check_contents.js';
 import { displayP3ToSrgb } from './color_space_conversion.js';
-import { float16BitsToFloat32 } from './conversion.js';
 import { align } from './math.js';
 import { kBytesPerRowAlignment } from './texture/layout.js';
 import { kTexelRepresentationInfo } from './texture/texel_data.js';
@@ -102,8 +101,6 @@ export class CopyToTextureUtils extends GPUTest {
     );
   }
 
-  // MAINTENANCE_TODO: type GPUPredefinedColorSpace only have 'srgb', remove the
-  // 'display-p3' type after it is included in GPUPredefinedColorSpace.
   getExpectedPixels(
     sourcePixels: Uint8ClampedArray,
     width: number,
@@ -141,7 +138,7 @@ export class CopyToTextureUtils extends GPUTest {
           A: orientedPixels[pixelPos * 4 + 3] / divide,
         };
 
-        if (requireUnpremultiplyAlpha && rgba.A !== 0.0) {
+        if (requireUnpremultiplyAlpha) {
           if (rgba.A !== 0.0) {
             rgba.R /= rgba.A;
             rgba.G /= rgba.A;
@@ -207,7 +204,6 @@ export class CopyToTextureUtils extends GPUTest {
     bytesPerPixel: number,
     dstFormat: RegularTextureFormat
   ): void {
-    //const exp = new Uint8Array(expected.buffer, expected.byteOffset, expected.byteLength);
     const rowPitch = align(width * bytesPerPixel, kBytesPerRowAlignment);
 
     const readbackPromise = this.readGPUBufferRangeTyped(src, {
@@ -246,9 +242,6 @@ export class CopyToTextureUtils extends GPUTest {
   ): string | undefined {
     const bytesPerRow = width * bytesPerPixel;
 
-    // When dst format is fp16 formats, the expectation and real result always has 1 bit difference in the ending
-    // (e.g. CC vs CD) if there needs some alpha ops (if alpha channel is not 0.0 or 1.0). Suspect it is errors when
-    // doing encoding. We check fp16 dst texture format with 1-bit ULP tolerance.
     if (isFp16Format(dstFormat)) {
       const expF16bits = new Uint16Array(
         expected.buffer,
@@ -272,47 +265,38 @@ export class CopyToTextureUtils extends GPUTest {
           bytesPerRow / checkF16bits.BYTES_PER_ELEMENT
         );
 
-        const expRowF32bits = new Float32Array(expRowF16bits.length);
-        const checkRowF32bits = new Float32Array(checkRowF16bits.length);
-
-        for (const [i, v] of checkRowF16bits.entries()) {
-          checkRowF32bits[i] = float16BitsToFloat32(v);
-        }
-
-        for (const [i, v] of expF16bits.entries()) {
-          expRowF32bits[i] = float16BitsToFloat32(v);
-        }
-
-        const checkResult = checkElementsBetween(checkRowF32bits, [
-          i => expRowF32bits[i] - 0.001,
-          i => expRowF32bits[i] + 0.001,
+        // 2701 is 0.0002 in float16. If the result is smaller than this, we
+        // treat the value as 0;
+        const checkResult = checkElementsBetween(checkRowF16bits, [
+          i => (expRowF16bits[i] === 0 ? 0 : expRowF16bits[i] - 1),
+          i => (expRowF16bits[i] === 0 ? 2701 : expRowF16bits[i] + 1),
         ]);
         if (checkResult !== undefined) return `on row ${y}: ${checkResult}`;
       }
     } else if (isFp32Format(dstFormat)) {
-      const expF32bits = new Float32Array(
+      const expF32 = new Float32Array(
         expected.buffer,
         expected.byteOffset / Float32Array.BYTES_PER_ELEMENT,
         expected.byteLength / Float32Array.BYTES_PER_ELEMENT
       );
-      const checkF32bits = new Float32Array(
+      const checkF32 = new Float32Array(
         actual.buffer,
         actual.byteOffset / Float32Array.BYTES_PER_ELEMENT,
         actual.byteLength / Float32Array.BYTES_PER_ELEMENT
       );
 
       for (let y = 0; y < height; ++y) {
-        const expRowF32bits = expF32bits.subarray(
-          (y * bytesPerRow) / expF32bits.BYTES_PER_ELEMENT,
-          bytesPerRow / expF32bits.BYTES_PER_ELEMENT
+        const expRowF32 = expF32.subarray(
+          (y * bytesPerRow) / expF32.BYTES_PER_ELEMENT,
+          bytesPerRow / expF32.BYTES_PER_ELEMENT
         );
-        const checkRowF32bits = checkF32bits.subarray(
-          (y * bytesPerRow) / checkF32bits.BYTES_PER_ELEMENT,
-          bytesPerRow / checkF32bits.BYTES_PER_ELEMENT
+        const checkRowF32 = checkF32.subarray(
+          (y * bytesPerRow) / checkF32.BYTES_PER_ELEMENT,
+          bytesPerRow / checkF32.BYTES_PER_ELEMENT
         );
-        const checkResult = checkElementsBetween(checkRowF32bits, [
-          i => expRowF32bits[i] - 0.001,
-          i => expRowF32bits[i] + 0.001,
+        const checkResult = checkElementsBetween(checkRowF32, [
+          i => expRowF32[i] - 0.001,
+          i => expRowF32[i] + 0.001,
         ]);
         if (checkResult !== undefined) return `on row ${y}: ${checkResult}`;
       }
