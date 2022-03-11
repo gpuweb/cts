@@ -53,13 +53,20 @@ class F extends ValidationTest {
   format,
   sampleCount)
   {
-    return {
-      view: this.createAttachmentTextureView(format, sampleCount),
-      depthClearValue: 0,
-      depthStoreOp: 'discard',
-      stencilClearValue: 1,
-      stencilStoreOp: 'discard' };
+    const attachment = {
+      view: this.createAttachmentTextureView(format, sampleCount) };
 
+    if (kTextureFormatInfo[format].depth) {
+      attachment.depthClearValue = 0;
+      attachment.depthLoadOp = 'clear';
+      attachment.depthStoreOp = 'discard';
+    }
+    if (kTextureFormatInfo[format].stencil) {
+      attachment.stencilClearValue = 1;
+      attachment.stencilLoadOp = 'clear';
+      attachment.stencilStoreOp = 'discard';
+    }
+    return attachment;
   }
 
   createRenderPipeline(

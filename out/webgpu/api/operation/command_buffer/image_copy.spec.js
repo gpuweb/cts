@@ -905,6 +905,23 @@ class ImageCopyTest extends GPUTest {
     ++stencilTextureLayer)
     {
       const encoder = this.device.createCommandEncoder();
+      const depthStencilAttachment = {
+        view: stencilTexture.createView({
+          baseMipLevel: stencilTextureMipLevel,
+          mipLevelCount: 1,
+          baseArrayLayer: stencilTextureLayer,
+          arrayLayerCount: 1 }) };
+
+
+      if (kTextureFormatInfo[stencilTextureFormat].depth) {
+        depthStencilAttachment.depthClearValue = 0;
+        depthStencilAttachment.depthLoadOp = 'clear';
+        depthStencilAttachment.depthStoreOp = 'store';
+      }
+      if (kTextureFormatInfo[stencilTextureFormat].stencil) {
+        depthStencilAttachment.stencilLoadOp = 'load';
+        depthStencilAttachment.stencilStoreOp = 'store';
+      }
       const renderPass = encoder.beginRenderPass({
         colorAttachments: [
         {
@@ -914,18 +931,7 @@ class ImageCopyTest extends GPUTest {
           storeOp: 'store' }],
 
 
-        depthStencilAttachment: {
-          view: stencilTexture.createView({
-            baseMipLevel: stencilTextureMipLevel,
-            mipLevelCount: 1,
-            baseArrayLayer: stencilTextureLayer,
-            arrayLayerCount: 1 }),
-
-          stencilLoadOp: 'load',
-          stencilStoreOp: 'store',
-          depthClearValue: 0,
-          depthStoreOp: 'store' } });
-
+        depthStencilAttachment });
 
 
       for (let stencilBitIndex = 0; stencilBitIndex < stencilBitCount; ++stencilBitIndex) {
@@ -1046,20 +1052,26 @@ class ImageCopyTest extends GPUTest {
 
     const encoder = this.device.createCommandEncoder();
     for (let z = 0; z < copySize[2]; ++z) {
+      const depthStencilAttachment = {
+        view: depthTexture.createView({
+          baseArrayLayer: z,
+          arrayLayerCount: 1,
+          baseMipLevel: copyMipLevel,
+          mipLevelCount: 1 }) };
+
+
+      if (kTextureFormatInfo[depthFormat].depth) {
+        depthStencilAttachment.depthClearValue = 0.0;
+        depthStencilAttachment.depthLoadOp = 'clear';
+        depthStencilAttachment.depthStoreOp = 'store';
+      }
+      if (kTextureFormatInfo[depthFormat].stencil) {
+        depthStencilAttachment.stencilLoadOp = 'load';
+        depthStencilAttachment.stencilStoreOp = 'store';
+      }
       const renderPass = encoder.beginRenderPass({
         colorAttachments: [],
-        depthStencilAttachment: {
-          view: depthTexture.createView({
-            baseArrayLayer: z,
-            arrayLayerCount: 1,
-            baseMipLevel: copyMipLevel,
-            mipLevelCount: 1 }),
-
-          depthClearValue: 0.0,
-          depthStoreOp: 'store',
-          stencilLoadOp: 'load',
-          stencilStoreOp: 'store' } });
-
+        depthStencilAttachment });
 
       renderPass.setPipeline(renderPipeline);
 
