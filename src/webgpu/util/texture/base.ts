@@ -36,48 +36,19 @@ export function maxMipLevelCount({
  * multiple of the texel block size.
  */
 export function physicalMipSize(
-  baseSize: Required<GPUExtent3DDict>,
+  baseSize: GPUExtent3D,
   format: GPUTextureFormat,
   dimension: GPUTextureDimension,
-  level: number
+  mipLevel: number
 ): Required<GPUExtent3DDict> {
-  switch (dimension) {
-    case '1d':
-      assert(level === 0 && baseSize.height === 1 && baseSize.depthOrArrayLayers === 1);
-      return { width: baseSize.width, height: 1, depthOrArrayLayers: 1 };
+  const info = kTextureFormatInfo[format];
+  const virtualSize = virtualMipSize(dimension, baseSize, mipLevel);
 
-    case '2d': {
-      assert(Math.max(baseSize.width, baseSize.height) >> level > 0);
-
-      const virtualWidthAtLevel = Math.max(baseSize.width >> level, 1);
-      const virtualHeightAtLevel = Math.max(baseSize.height >> level, 1);
-      const physicalWidthAtLevel = align(
-        virtualWidthAtLevel,
-        kTextureFormatInfo[format].blockWidth
-      );
-      const physicalHeightAtLevel = align(
-        virtualHeightAtLevel,
-        kTextureFormatInfo[format].blockHeight
-      );
-      return {
-        width: physicalWidthAtLevel,
-        height: physicalHeightAtLevel,
-        depthOrArrayLayers: baseSize.depthOrArrayLayers,
-      };
-    }
-
-    case '3d': {
-      assert(Math.max(baseSize.width, baseSize.height, baseSize.depthOrArrayLayers) >> level > 0);
-      assert(
-        kTextureFormatInfo[format].blockWidth === 1 && kTextureFormatInfo[format].blockHeight === 1
-      );
-      return {
-        width: Math.max(baseSize.width >> level, 1),
-        height: Math.max(baseSize.height >> level, 1),
-        depthOrArrayLayers: Math.max(baseSize.depthOrArrayLayers >> level, 1),
-      };
-    }
-  }
+  return {
+    width: align(virtualSize[0], info.blockWidth),
+    height: align(virtualSize[1], info.blockHeight),
+    depthOrArrayLayers: virtualSize[2],
+  };
 }
 
 /**
@@ -85,18 +56,23 @@ export function physicalMipSize(
  */
 export function virtualMipSize(
   dimension: GPUTextureDimension,
-  size: readonly [number, number, number],
+  size: GPUExtent3D,
   mipLevel: number
 ): [number, number, number] {
+  const sz = reifyExtent3D(size);
+
   const shiftMinOne = (n: number) => Math.max(1, n >> mipLevel);
   switch (dimension) {
     case '1d':
-      assert(size[2] === 1);
-      return [shiftMinOne(size[0]), size[1], size[2]];
+      assert(sz.width >> mipLevel > 0);
+      assert(sz.depthOrArrayLayers === 1 && sz.height === 1);
+      return [shiftMinOne(sz.width), 1, 1];
     case '2d':
-      return [shiftMinOne(size[0]), shiftMinOne(size[1]), size[2]];
+      assert(Math.max(sz.width, sz.height) >> mipLevel > 0);
+      return [shiftMinOne(sz.width), shiftMinOne(sz.height), sz.depthOrArrayLayers];
     case '3d':
-      return [shiftMinOne(size[0]), shiftMinOne(size[1]), shiftMinOne(size[2])];
+      assert(Math.max(sz.width, sz.height, sz.depthOrArrayLayers) >> mipLevel > 0);
+      return [shiftMinOne(sz.width), shiftMinOne(sz.height), shiftMinOne(sz.depthOrArrayLayers)];
     default:
       unreachable();
   }
