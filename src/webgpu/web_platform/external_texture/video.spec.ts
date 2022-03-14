@@ -101,14 +101,17 @@ g.test('importExternalTexture,sample')
 Tests that we can import an HTMLVideoElement into a GPUExternalTexture, sample from it for all
 supported video formats {vp8, vp9, ogg, mp4}, and ensure the GPUExternalTexture is destroyed by
 a microtask.
-TODO: Multiplanar scenarios
 `
   )
   .params(u =>
     u //
+      .combine('multiPlanarFormats', [false, true])
       .combine('videoSource', kVideoSources)
   )
   .fn(async t => {
+    if (t.params.multiPlanarFormats) {
+      await t.selectDeviceOrSkipTestCase('multi-planar-formats');
+    }
     const videoUrl = getResourcePath(t.params.videoSource);
     const video = document.createElement('video');
     video.src = videoUrl;
