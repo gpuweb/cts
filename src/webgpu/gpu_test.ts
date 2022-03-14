@@ -952,13 +952,21 @@ export class GPUTest extends Fixture {
         if (fullAttachmentInfo.depthStencilFormat !== undefined) {
           depthStencilAttachment = {
             view: makeAttachmentView(fullAttachmentInfo.depthStencilFormat),
+            depthReadOnly: fullAttachmentInfo.depthReadOnly,
+            stencilReadOnly: fullAttachmentInfo.stencilReadOnly,
           };
-          if (kTextureFormatInfo[fullAttachmentInfo.depthStencilFormat].depth) {
+          if (
+            kTextureFormatInfo[fullAttachmentInfo.depthStencilFormat].depth &&
+            !fullAttachmentInfo.depthReadOnly
+          ) {
             depthStencilAttachment.depthClearValue = 0;
             depthStencilAttachment.depthLoadOp = 'clear';
             depthStencilAttachment.depthStoreOp = 'discard';
           }
-          if (kTextureFormatInfo[fullAttachmentInfo.depthStencilFormat].stencil) {
+          if (
+            kTextureFormatInfo[fullAttachmentInfo.depthStencilFormat].stencil &&
+            !fullAttachmentInfo.stencilReadOnly
+          ) {
             depthStencilAttachment.stencilClearValue = 1;
             depthStencilAttachment.stencilLoadOp = 'clear';
             depthStencilAttachment.stencilStoreOp = 'discard';
