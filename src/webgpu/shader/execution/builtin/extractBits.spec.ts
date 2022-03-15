@@ -15,8 +15,7 @@ import {
   vec4,
   TypeVec,
 } from '../../../util/conversion.js';
-
-import { Config, run } from './builtin.js';
+import { builtin, Config, run } from '../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -82,7 +81,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
       0b00000000001010101010100000000000
     );
 
-    run(t, 'extractBits', [T, TypeU32, TypeU32], T, cfg, [
+    run(t, builtin('extractBits'), [T, TypeU32, TypeU32], T, cfg, [
       { input: [all_0, u32(0), u32(32)], expected: all_0 },
       { input: [all_0, u32(1), u32(10)], expected: all_0 },
       { input: [all_0, u32(2), u32(5)], expected: all_0 },
@@ -245,7 +244,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
       0b00000000001010101010100000000000
     );
 
-    run(t, 'extractBits', [T, TypeU32, TypeU32], T, cfg, [
+    run(t, builtin('extractBits'), [T, TypeU32, TypeU32], T, cfg, [
       { input: [all_0, u32(0), u32(32)], expected: all_0 },
       { input: [all_0, u32(1), u32(10)], expected: all_0 },
       { input: [all_0, u32(2), u32(5)], expected: all_0 },

@@ -4,10 +4,11 @@
 Execution Tests for the 'log' builtin function
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
+import { absThreshold, ulpThreshold } from '../../../util/compare.js';
+import { kBit, kValue } from '../../../util/constants.js';
 import { f32, f32Bits, TypeF32 } from '../../../util/conversion.js';
 import { biasedRange, linearRange } from '../../../util/math.js';
-
-import { absThreshold, kBit, kValue, run, ulpThreshold } from './builtin.js';
+import { builtin, run } from '../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -50,6 +51,6 @@ fn(async (t) => {
     }
     return ulpThreshold(3)(got, expected);
   };
-  run(t, 'log', [TypeF32], TypeF32, cfg, cases);
+  run(t, builtin('log'), [TypeF32], TypeF32, cfg, cases);
 });
 //# sourceMappingURL=log.spec.js.map

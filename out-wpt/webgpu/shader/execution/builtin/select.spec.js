@@ -19,8 +19,7 @@ import {
   vec3,
   vec4,
 } from '../../../util/conversion.js';
-
-import { run } from './builtin.js';
+import { run, builtin } from '../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -125,7 +124,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
     run(
       t,
-      'select',
+      builtin('select'),
       [overload.type, overload.type, TypeBool],
       overload.type,
       t.params,
@@ -235,7 +234,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 
     run(
       t,
-      'select',
+      builtin('select'),
       [tests.dataType, tests.dataType, tests.boolType],
       tests.dataType,
       t.params,

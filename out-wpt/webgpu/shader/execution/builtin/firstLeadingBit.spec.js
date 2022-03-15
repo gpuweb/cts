@@ -6,8 +6,7 @@ Execution Tests for the 'firstLeadingBit' builtin function
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { i32, i32Bits, TypeI32, u32, TypeU32, u32Bits } from '../../../util/conversion.js';
-
-import { run } from './builtin.js';
+import { builtin, run } from '../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -35,7 +34,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   )
   .fn(async t => {
     const cfg = t.params;
-    run(t, 'firstLeadingBit', [TypeU32], TypeU32, cfg, [
+    run(t, builtin('firstLeadingBit'), [TypeU32], TypeU32, cfg, [
       // Zero
       { input: u32Bits(0b00000000000000000000000000000000), expected: u32(-1) },
 
@@ -169,7 +168,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   )
   .fn(async t => {
     const cfg = t.params;
-    run(t, 'firstLeadingBit', [TypeI32], TypeI32, cfg, [
+    run(t, builtin('firstLeadingBit'), [TypeI32], TypeI32, cfg, [
       // Zero
       { input: i32Bits(0b00000000000000000000000000000000), expected: i32(-1) },
 

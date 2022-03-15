@@ -4,6 +4,8 @@
 Execution Tests for the 'min' builtin function
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
+import { anyOf, correctlyRoundedThreshold } from '../../../util/compare.js';
+import { kBit } from '../../../util/constants.js';
 import {
 f32,
 f32Bits,
@@ -16,8 +18,7 @@ TypeU32,
 u32 } from
 '../../../util/conversion.js';
 import { isSubnormalScalar } from '../../../util/math.js';
-
-import { anyOf, correctlyRoundedThreshold, kBit, run } from './builtin.js';
+import { builtin, run } from '../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -68,7 +69,7 @@ fn(async (t) => {
   u32(0xffffffff)];
 
 
-  run(t, 'min', [TypeU32, TypeU32], TypeU32, cfg, generateTestCases(test_values));
+  run(t, builtin('min'), [TypeU32, TypeU32], TypeU32, cfg, generateTestCases(test_values));
 });
 
 g.test('integer_builtin_functions,signed_min').
@@ -104,7 +105,7 @@ fn(async (t) => {
   i32Bits(0x70000000)];
 
 
-  run(t, 'min', [TypeI32, TypeI32], TypeI32, cfg, generateTestCases(test_values));
+  run(t, builtin('min'), [TypeI32, TypeI32], TypeI32, cfg, generateTestCases(test_values));
 });
 
 g.test('float_builtin_functions,min').
@@ -148,6 +149,6 @@ fn(async (t) => {
   f32Bits(kBit.f32.infinity.positive)];
 
 
-  run(t, 'min', [TypeF32, TypeF32], TypeF32, cfg, generateTestCases(test_values));
+  run(t, builtin('min'), [TypeF32, TypeF32], TypeF32, cfg, generateTestCases(test_values));
 });
 //# sourceMappingURL=min.spec.js.map

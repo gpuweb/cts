@@ -4,10 +4,11 @@
 Execution Tests for the 'ldexp' builtin function
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
+import { correctlyRoundedThreshold } from '../../../util/compare.js';
+import { kValue } from '../../../util/constants.js';
 import { f32, i32, TypeF32, TypeI32 } from '../../../util/conversion.js';
 import { biasedRange, linearRange } from '../../../util/math.js';
-
-import { correctlyRoundedThreshold, kValue, run } from './builtin.js';
+import { builtin, run } from '../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -67,6 +68,6 @@ fn(async (t) => {
   });
   const cfg = t.params;
   cfg.cmpFloats = correctlyRoundedThreshold();
-  run(t, 'ldexp', [TypeF32, TypeI32], TypeF32, cfg, cases);
+  run(t, builtin('ldexp'), [TypeF32, TypeI32], TypeF32, cfg, cases);
 });
 //# sourceMappingURL=ldexp.spec.js.map

@@ -20,8 +20,7 @@ vec2,
 vec3,
 vec4 } from
 '../../../util/conversion.js';
-
-import { run } from './builtin.js';
+import { run, builtin } from '../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -121,7 +120,7 @@ fn(async (t) => {
 
   run(
   t,
-  'select',
+  builtin('select'),
   [overload.type, overload.type, TypeBool],
   overload.type,
   t.params,
@@ -228,7 +227,7 @@ fn(async (t) => {
 
   run(
   t,
-  'select',
+  builtin('select'),
   [tests.dataType, tests.dataType, tests.boolType],
   tests.dataType,
   t.params,

@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { assert } from '../../common/util/util.js';
-import { kBit } from '../shader/execution/builtin/builtin.js';
+import { kBit } from './constants.js';
 import { f32, f32Bits } from './conversion.js';
 
 /**

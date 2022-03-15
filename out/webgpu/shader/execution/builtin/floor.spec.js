@@ -4,9 +4,10 @@
 Execution Tests for the 'floor' builtin function
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
+import { correctlyRoundedThreshold, anyOf } from '../../../util/compare.js';
+import { kBit, kValue } from '../../../util/constants.js';
 import { f32, f32Bits, TypeF32 } from '../../../util/conversion.js';
-
-import { anyOf, correctlyRoundedThreshold, kBit, kValue, run } from './builtin.js';
+import { builtin, run } from '../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -28,7 +29,7 @@ fn(async (t) => {
   const cfg = t.params;
   cfg.cmpFloats = correctlyRoundedThreshold();
 
-  run(t, 'floor', [TypeF32], TypeF32, cfg, [
+  run(t, builtin('floor'), [TypeF32], TypeF32, cfg, [
   // Small positive numbers
   { input: f32(0.1), expected: f32(0.0) },
   { input: f32(0.9), expected: f32(0.0) },

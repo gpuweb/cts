@@ -5,10 +5,11 @@ Execution Tests for the 'atan2' builtin function
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
+import { ulpThreshold } from '../../../util/compare.js';
+import { kValue } from '../../../util/constants.js';
 import { f32, TypeF32 } from '../../../util/conversion.js';
 import { biasedRange, linearRange } from '../../../util/math.js';
-
-import { Case, Config, kValue, run, ulpThreshold } from './builtin.js';
+import { builtin, Case, Config, run } from '../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -56,5 +57,5 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
     });
     const cfg: Config = t.params;
     cfg.cmpFloats = ulpThreshold(4096);
-    run(t, 'atan2', [TypeF32, TypeF32], TypeF32, cfg, cases);
+    run(t, builtin('atan2'), [TypeF32, TypeF32], TypeF32, cfg, cases);
   });

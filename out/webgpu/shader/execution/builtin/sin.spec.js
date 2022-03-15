@@ -4,10 +4,10 @@
 Execution Tests for the 'sin' builtin function
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
+import { absThreshold } from '../../../util/compare.js';
 import { f32, TypeF32 } from '../../../util/conversion.js';
 import { linearRange } from '../../../util/math.js';
-
-import { absThreshold, run } from './builtin.js';
+import { builtin, run } from '../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -38,6 +38,6 @@ fn(async (t) => {
 
   const cfg = t.params;
   cfg.cmpFloats = absThreshold(2 ** -11);
-  run(t, 'sin', [TypeF32], TypeF32, cfg, cases);
+  run(t, builtin('sin'), [TypeF32], TypeF32, cfg, cases);
 });
 //# sourceMappingURL=sin.spec.js.map

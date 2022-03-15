@@ -4,6 +4,8 @@
 Execution Tests for the 'abs' builtin function
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
+import { anyOf, correctlyRoundedThreshold } from '../../../util/compare.js';
+import { kBit, kValue } from '../../../util/constants.js';
 import {
 f32,
 f32Bits,
@@ -13,8 +15,7 @@ TypeI32,
 TypeU32,
 u32Bits } from
 '../../../util/conversion.js';
-
-import { anyOf, correctlyRoundedThreshold, kBit, kValue, run } from './builtin.js';
+import { builtin, run } from '../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -36,7 +37,7 @@ combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
 combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
-  run(t, 'abs', [TypeU32], TypeU32, t.params, [
+  run(t, builtin('abs'), [TypeU32], TypeU32, t.params, [
   // Min and Max u32
   { input: u32Bits(kBit.u32.min), expected: u32Bits(kBit.u32.min) },
   { input: u32Bits(kBit.u32.max), expected: u32Bits(kBit.u32.max) },
@@ -98,7 +99,7 @@ fn(async (t) => {
   const cfg = t.params;
   cfg.cmpFloats = correctlyRoundedThreshold();
 
-  run(t, 'abs', [TypeI32], TypeI32, cfg, [
+  run(t, builtin('abs'), [TypeI32], TypeI32, cfg, [
   // Min and max i32
   // If e evaluates to the largest negative value, then the result is e.
   { input: i32Bits(kBit.i32.negative.min), expected: i32Bits(kBit.i32.negative.min) },
@@ -164,7 +165,7 @@ fn(async (t) => {
   const cfg = t.params;
   cfg.cmpFloats = correctlyRoundedThreshold();
 
-  run(t, 'abs', [TypeF32], TypeF32, cfg, [
+  run(t, builtin('abs'), [TypeF32], TypeF32, cfg, [
   // Min and Max f32
   { input: f32Bits(kBit.f32.negative.max), expected: f32Bits(0x0080_0000) },
   { input: f32Bits(kBit.f32.negative.min), expected: f32Bits(0x7f7f_ffff) },

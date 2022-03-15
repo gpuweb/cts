@@ -3,7 +3,7 @@ Util math unit tests.
 `;
 
 import { makeTestGroup } from '../common/framework/test_group.js';
-import { kBit, kValue } from '../webgpu/shader/execution/builtin/builtin.js';
+import { kBit, kValue } from '../webgpu/util/constants.js';
 import { f32, f32Bits, float32ToUint32, Scalar } from '../webgpu/util/conversion.js';
 import {
   biasedRange,
