@@ -20,7 +20,9 @@ import {
   vec3,
   vec4,
 } from '../../../../../util/conversion.js';
-import { run, CaseList, builtin } from '../../expression.js';
+import { run, CaseList } from '../../expression.js';
+
+import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 

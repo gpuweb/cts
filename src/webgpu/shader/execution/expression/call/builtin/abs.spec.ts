@@ -15,7 +15,9 @@ import {
   TypeU32,
   u32Bits,
 } from '../../../../../util/conversion.js';
-import { builtin, Config, run } from '../../expression.js';
+import { Config, run } from '../../expression.js';
+
+import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 

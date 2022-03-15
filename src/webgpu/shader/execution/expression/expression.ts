@@ -100,11 +100,6 @@ export interface ExpressionBuilder {
   (values: Array<string>): string;
 }
 
-/* @returns an ExpressionBuilder that calls the builtin with the given name */
-export function builtin(name: string): ExpressionBuilder {
-  return values => `${name}(${values.join(', ')})`;
-}
-
 /**
  * Runs the list of expression tests, possibly splitting the tests into multiple
  * dispatches to keep the input data within the buffer binding limits.

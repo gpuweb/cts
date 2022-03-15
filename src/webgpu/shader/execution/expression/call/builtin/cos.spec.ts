@@ -7,7 +7,9 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { absThreshold } from '../../../../../util/compare.js';
 import { f32, TypeF32 } from '../../../../../util/conversion.js';
 import { linearRange } from '../../../../../util/math.js';
-import { builtin, Case, Config, run } from '../../expression.js';
+import { Case, Config, run } from '../../expression.js';
+
+import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 

@@ -8,7 +8,9 @@ import { correctlyRoundedThreshold } from '../../../../../util/compare.js';
 import { kValue } from '../../../../../util/constants.js';
 import { f32, i32, TypeF32, TypeI32 } from '../../../../../util/conversion.js';
 import { biasedRange, linearRange } from '../../../../../util/math.js';
-import { builtin, Case, Config, run } from '../../expression.js';
+import { Case, Config, run } from '../../expression.js';
+
+import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 

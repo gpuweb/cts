@@ -18,7 +18,9 @@ import {
   u32,
 } from '../../../../../util/conversion.js';
 import { isSubnormalScalar } from '../../../../../util/math.js';
-import { builtin, Case, Config, run } from '../../expression.js';
+import { Case, Config, run } from '../../expression.js';
+
+import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 

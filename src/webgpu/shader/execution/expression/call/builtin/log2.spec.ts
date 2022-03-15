@@ -8,7 +8,9 @@ import { absThreshold, FloatMatch, ulpThreshold } from '../../../../../util/comp
 import { kValue } from '../../../../../util/constants.js';
 import { f32, TypeF32 } from '../../../../../util/conversion.js';
 import { biasedRange, linearRange } from '../../../../../util/math.js';
-import { builtin, Case, CaseList, Config, run } from '../../expression.js';
+import { Case, CaseList, Config, run } from '../../expression.js';
+
+import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
