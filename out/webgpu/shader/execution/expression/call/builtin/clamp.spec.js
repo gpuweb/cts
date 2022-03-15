@@ -53,7 +53,7 @@ function generateTestCases(test_values) {
   return cases;
 }
 
-g.test('integer_builtin_functions,unsigned_clamp').
+g.test('u32').
 uniqueId('386458e12e52645b').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions').
 desc(
@@ -95,7 +95,7 @@ fn(async (t) => {
 
 });
 
-g.test('integer_builtin_functions,signed_clamp').
+g.test('i32').
 uniqueId('da51d3c8cc902ab2').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions').
 desc(
@@ -139,7 +139,7 @@ fn(async (t) => {
 
 });
 
-g.test('float_builtin_functions,clamp').
+g.test('f32').
 uniqueId('88e39c61e6dbd26f').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions').
 desc(

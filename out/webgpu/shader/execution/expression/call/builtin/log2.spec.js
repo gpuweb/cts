@@ -14,7 +14,7 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('float_builtin_functions,log2').
+g.test('f32').
 uniqueId('9ed120de1990296a').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions').
 desc(

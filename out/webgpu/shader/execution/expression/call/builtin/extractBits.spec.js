@@ -21,7 +21,7 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('integer_builtin_functions,extractBits_unsigned').
+g.test('u32').
 uniqueId('xxxxxxxxxxxxxxxx').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions').
 desc(
@@ -184,7 +184,7 @@ fn(async (t) => {
 
 });
 
-g.test('integer_builtin_functions,extractBits_signed').
+g.test('i32').
 uniqueId('xxxxxxxxxxxxxxxx').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions').
 desc(

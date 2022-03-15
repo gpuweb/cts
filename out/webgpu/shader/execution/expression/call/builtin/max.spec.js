@@ -39,7 +39,7 @@ function generateTestCases(test_values) {
   return cases;
 }
 
-g.test('integer_builtin_functions,unsigned_max').
+g.test('u32').
 uniqueId('2cce54f65e71b3a3').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions').
 desc(
@@ -74,7 +74,7 @@ fn(async (t) => {
   run(t, builtin('max'), [TypeU32, TypeU32], TypeU32, cfg, generateTestCases(test_values));
 });
 
-g.test('integer_builtin_functions,signed_max').
+g.test('i32').
 uniqueId('ef8c37107946a69e').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions').
 desc(
@@ -110,7 +110,7 @@ fn(async (t) => {
   run(t, builtin('max'), [TypeI32, TypeI32], TypeI32, cfg, generateTestCases(test_values));
 });
 
-g.test('float_builtin_functions,max').
+g.test('f32').
 uniqueId('bcb6c69b4ec703b1').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions').
 desc(

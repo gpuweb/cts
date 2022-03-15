@@ -13,7 +13,7 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('float_builtin_functions,ceil').
+g.test('f32').
 uniqueId('38d65728ea728bc5').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions').
 desc(

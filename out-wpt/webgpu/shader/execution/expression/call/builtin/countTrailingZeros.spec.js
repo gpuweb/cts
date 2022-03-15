@@ -12,7 +12,7 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('integer_builtin_functions,countTrailingZeros_unsigned')
+g.test('u32')
   .uniqueId('xxxxxxxxxxxxxxxx')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
@@ -142,7 +142,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
     ]);
   });
 
-g.test('integer_builtin_functions,countTrailingZeros_signed')
+g.test('i32')
   .uniqueId('xxxxxxxxxxxxxxxx')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
