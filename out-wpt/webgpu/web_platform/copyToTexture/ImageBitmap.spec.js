@@ -14,7 +14,7 @@ TODO: Test zero-sized copies from all sources (just make sure params cover it) (
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { unreachable } from '../../../common/util/util.js';
 import { kTextureFormatInfo, kValidTextureFormatsForCopyE2T } from '../../capability_info.js';
-import { CopyToTextureUtils, isFp16Format } from '../../util/copy_to_texture.js';
+import { CopyToTextureUtils } from '../../util/copy_to_texture.js';
 import { kTexelRepresentationInfo } from '../../util/texture/texel_data.js';
 var Color;
 
@@ -212,7 +212,7 @@ g.test('from_ImageData')
       { width: imageBitmap.width, height: imageBitmap.height, depthOrArrayLayers: 1 },
       dstBytesPerPixel,
       expectedPixels,
-      isFp16Format(dstColorFormat)
+      dstColorFormat
     );
   });
 
@@ -357,6 +357,6 @@ g.test('from_canvas')
       { width: imageBitmap.width, height: imageBitmap.height, depthOrArrayLayers: 1 },
       dstBytesPerPixel,
       expectedPixels,
-      isFp16Format(dstColorFormat)
+      dstColorFormat
     );
   });
