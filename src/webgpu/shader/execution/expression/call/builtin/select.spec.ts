@@ -51,7 +51,7 @@ const dataType = {
   },
 };
 
-g.test('logical_builtin_functions,scalar_select')
+g.test('boolean')
   .uniqueId('50b1f627c11098a1')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
   .desc(
@@ -130,7 +130,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
     );
   });
 
-g.test('logical_builtin_functions,vector_select')
+g.test('vector')
   .uniqueId('8b7bb7f58ee1e479')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
   .desc(

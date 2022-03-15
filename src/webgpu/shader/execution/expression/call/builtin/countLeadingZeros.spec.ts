@@ -11,7 +11,7 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('integer_builtin_functions,countLeadingZeros_unsigned')
+g.test('unsigned')
   .uniqueId('xxxxxxxxxxxxxxxx')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
@@ -141,7 +141,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
     ]);
   });
 
-g.test('integer_builtin_functions,countLeadingZeros_signed')
+g.test('signed')
   .uniqueId('xxxxxxxxxxxxxxxx')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
