@@ -51,7 +51,7 @@ const dataType = {
   },
 };
 
-g.test('boolean')
+g.test('bool')
   .uniqueId('50b1f627c11098a1')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
   .desc(

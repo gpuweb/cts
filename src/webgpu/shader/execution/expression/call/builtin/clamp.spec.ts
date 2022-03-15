@@ -53,7 +53,7 @@ function generateTestCases(test_values: Array<Scalar>): Array<Case> {
   return cases;
 }
 
-g.test('unsigned')
+g.test('u32')
   .uniqueId('386458e12e52645b')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
@@ -95,7 +95,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
     );
   });
 
-g.test('signed')
+g.test('i32')
   .uniqueId('da51d3c8cc902ab2')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
@@ -139,7 +139,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
     );
   });
 
-g.test('float')
+g.test('f32')
   .uniqueId('88e39c61e6dbd26f')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
