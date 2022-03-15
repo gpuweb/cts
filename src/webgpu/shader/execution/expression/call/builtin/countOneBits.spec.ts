@@ -11,7 +11,7 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('unsigned')
+g.test('u32')
   .uniqueId('xxxxxxxxxxxxxxxx')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
@@ -134,7 +134,7 @@ T is i32, u32, vecN<i32>, or vecN<u32> countOneBits(e: T ) -> T The number of 1 
     ]);
   });
 
-g.test('signed')
+g.test('i32')
   .uniqueId('xxxxxxxxxxxxxxxx')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
