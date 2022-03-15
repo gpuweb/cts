@@ -1146,6 +1146,17 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "binary",
+      "bitwise"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
       "builtin",
       "abs"
     ]
@@ -1154,6 +1165,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "all"
     ]
@@ -1162,6 +1175,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "any"
     ]
@@ -1170,6 +1185,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "atan"
     ]
@@ -1178,6 +1195,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "atan2"
     ]
@@ -1186,6 +1205,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "ceil"
     ]
@@ -1194,6 +1215,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "clamp"
     ]
@@ -1202,6 +1225,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "cos"
     ]
@@ -1210,6 +1235,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "countLeadingZeros"
     ]
@@ -1218,6 +1245,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "countOneBits"
     ]
@@ -1226,6 +1255,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "countTrailingZeros"
     ]
@@ -1234,6 +1265,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "extractBits"
     ]
@@ -1242,6 +1275,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "firstLeadingBit"
     ]
@@ -1250,6 +1285,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "firstTrailingBit"
     ]
@@ -1258,6 +1295,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "float_built_functions"
     ]
@@ -1266,6 +1305,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "floor"
     ]
@@ -1274,6 +1315,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "fract"
     ]
@@ -1282,6 +1325,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "insertBits"
     ]
@@ -1290,6 +1335,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "integer_built_in_functions"
     ]
@@ -1298,6 +1345,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "inversesqrt"
     ]
@@ -1306,6 +1355,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "ldexp"
     ]
@@ -1314,6 +1365,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "log"
     ]
@@ -1322,6 +1375,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "log2"
     ]
@@ -1330,6 +1385,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "logical_built_in_functions"
     ]
@@ -1338,6 +1395,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "max"
     ]
@@ -1346,6 +1405,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "min"
     ]
@@ -1354,6 +1415,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "select"
     ]
@@ -1362,6 +1425,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "sin"
     ]
@@ -1370,6 +1435,8 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "call",
       "builtin",
       "value_testing_built_in_functions"
     ]
