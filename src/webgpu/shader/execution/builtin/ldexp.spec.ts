@@ -4,10 +4,11 @@ Execution Tests for the 'ldexp' builtin function
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
+import { correctlyRoundedThreshold } from '../../../util/compare.js';
+import { kValue } from '../../../util/constants.js';
 import { f32, i32, TypeF32, TypeI32 } from '../../../util/conversion.js';
 import { biasedRange, linearRange } from '../../../util/math.js';
-
-import { Case, Config, correctlyRoundedThreshold, kValue, run } from './builtin.js';
+import { builtin, Case, Config, run } from '../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -67,5 +68,5 @@ T is f32 or vecN<f32> I is i32 or vecN<i32>, where I is a scalar if T is a scala
     });
     const cfg: Config = t.params;
     cfg.cmpFloats = correctlyRoundedThreshold();
-    run(t, 'ldexp', [TypeF32, TypeI32], TypeF32, cfg, cases);
+    run(t, builtin('ldexp'), [TypeF32, TypeI32], TypeF32, cfg, cases);
   });

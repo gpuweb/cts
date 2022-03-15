@@ -1,6 +1,6 @@
 import { assert } from '../../common/util/util.js';
-import { kBit } from '../shader/execution/builtin/builtin.js';
 
+import { kBit } from './constants.js';
 import { f32, f32Bits, Scalar } from './conversion.js';
 
 /**
