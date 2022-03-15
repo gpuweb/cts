@@ -1219,6 +1219,14 @@ export const listing = [
       "shader",
       "execution",
       "builtin",
+      "countOneBits"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "builtin",
       "countTrailingZeros"
     ]
   },
