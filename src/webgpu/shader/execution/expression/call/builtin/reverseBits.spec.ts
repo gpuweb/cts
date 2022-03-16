@@ -4,7 +4,7 @@ Execution Tests for the 'reversBits' builtin function
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeU32, u32Bits, u32, TypeI32, i32Bits, i32 } from '../../../../../util/conversion.js';
+import { TypeU32, u32Bits, TypeI32, i32Bits } from '../../../../../util/conversion.js';
 import { Config, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
