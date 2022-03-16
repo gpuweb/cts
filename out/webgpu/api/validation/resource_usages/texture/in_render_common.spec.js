@@ -78,16 +78,16 @@ fn(async (t) => {
     const renderPass = encoder.beginRenderPass({
       colorAttachments: [colorAttachment1, colorAttachment2] });
 
-    renderPass.endPass();
+    renderPass.end();
   } else {
     const renderPass1 = encoder.beginRenderPass({
       colorAttachments: [colorAttachment1] });
 
-    renderPass1.endPass();
+    renderPass1.end();
     const renderPass2 = encoder.beginRenderPass({
       colorAttachments: [colorAttachment2] });
 
-    renderPass2.endPass();
+    renderPass2.end();
   }
 
   const success = inSamePass ? baseLayer0 !== baseLayer1 : true;
