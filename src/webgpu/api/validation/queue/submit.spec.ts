@@ -24,4 +24,19 @@ g.test('command_buffer,device_mismatch')
     { cb0Mismatched: true, cb1Mismatched: false },
     { cb0Mismatched: false, cb1Mismatched: true },
   ])
-  .unimplemented();
+  .fn(async t => {
+    const { cb0Mismatched, cb1Mismatched } = t.params;
+
+    const mismatched = cb0Mismatched || cb1Mismatched;
+
+    const encoder0 = cb0Mismatched
+      ? t.mismatchedDevice.createCommandEncoder()
+      : t.device.createCommandEncoder();
+    const encoder1 = cb1Mismatched
+      ? t.mismatchedDevice.createCommandEncoder()
+      : t.device.createCommandEncoder();
+
+    t.expectValidationError(() => {
+      t.device.queue.submit([encoder0.finish(), encoder1.finish()]);
+    }, mismatched);
+  });

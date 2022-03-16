@@ -33,7 +33,21 @@ Tests index buffer must be valid.
 g.test('index_buffer,device_mismatch')
   .desc('Tests setIndexBuffer cannot be called with an index buffer created from another device')
   .paramsSubcasesOnly(kRenderEncodeTypeParams.combine('mismatched', [true, false]))
-  .unimplemented();
+  .fn(async t => {
+    const { encoderType, mismatched } = t.params;
+
+    const descriptor: GPUBufferDescriptor = {
+      size: 16,
+      usage: GPUBufferUsage.INDEX,
+    };
+    const indexBuffer = mismatched
+      ? t.getDeviceMismatchedBuffer(descriptor)
+      : t.createBufferWithState('valid', descriptor);
+
+    const { encoder, validateFinish } = t.createEncoder(encoderType);
+    encoder.setIndexBuffer(indexBuffer, 'uint32');
+    validateFinish(!mismatched);
+  });
 
 g.test('index_buffer_usage')
   .desc(

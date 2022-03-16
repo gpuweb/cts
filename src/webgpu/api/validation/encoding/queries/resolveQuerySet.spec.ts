@@ -149,4 +149,29 @@ g.test('query_set_buffer,device_mismatch')
     { querySetMismatched: true, bufferMismatched: false },
     { querySetMismatched: false, bufferMismatched: true },
   ] as const)
-  .unimplemented();
+  .fn(async t => {
+    const { querySetMismatched, bufferMismatched } = t.params;
+
+    const mismatched = querySetMismatched || bufferMismatched;
+
+    const queryCout = 1;
+    const querySetDescriptor: GPUQuerySetDescriptor = {
+      type: 'occlusion',
+      count: queryCout,
+    };
+    const querySet = querySetMismatched
+      ? t.getDeviceMismatchedQuerySet(querySetDescriptor)
+      : t.createQuerySetWithState('valid', querySetDescriptor);
+
+    const bufferDescriptor: GPUBufferDescriptor = {
+      size: queryCout * 8,
+      usage: GPUBufferUsage.QUERY_RESOLVE,
+    };
+    const buffer = bufferMismatched
+      ? t.getDeviceMismatchedBuffer(bufferDescriptor)
+      : t.createBufferWithState('valid', bufferDescriptor);
+
+    const encoder = t.createEncoder('non-pass');
+    encoder.encoder.resolveQuerySet(querySet, 0, queryCout, buffer, 0);
+    encoder.validateFinish(!mismatched);
+  });

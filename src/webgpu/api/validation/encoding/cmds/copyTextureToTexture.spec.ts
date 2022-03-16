@@ -117,7 +117,38 @@ g.test('texture,device_mismatch')
     { srcMismatched: true, dstMismatched: false },
     { srcMismatched: false, dstMismatched: true },
   ] as const)
-  .unimplemented();
+  .fn(async t => {
+    const { srcMismatched, dstMismatched } = t.params;
+
+    const mismatched = srcMismatched || dstMismatched;
+
+    const kFormat = 'rgba8unorm';
+
+    const srcDescriptor: GPUTextureDescriptor = {
+      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
+      format: kFormat,
+      usage: GPUTextureUsage.COPY_SRC,
+    };
+    const srcTexture = srcMismatched
+      ? t.getDeviceMismatchedTexture(srcDescriptor)
+      : t.createTextureWithState('valid', srcDescriptor);
+
+    const dstDescriptor: GPUTextureDescriptor = {
+      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
+      format: kFormat,
+      usage: GPUTextureUsage.COPY_DST,
+    };
+    const dstTexture = dstMismatched
+      ? t.getDeviceMismatchedTexture(dstDescriptor)
+      : t.createTextureWithState('valid', dstDescriptor);
+
+    t.TestCopyTextureToTexture(
+      { texture: srcTexture },
+      { texture: dstTexture },
+      { width: 1, height: 1, depthOrArrayLayers: 1 },
+      mismatched ? 'FinishError' : 'Success'
+    );
+  });
 
 g.test('mipmap_level')
   .desc(

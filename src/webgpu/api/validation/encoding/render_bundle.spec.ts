@@ -38,10 +38,6 @@ g.test('device_mismatch')
     const { bundle0Mismatched, bundle1Mismatched } = t.params;
     const mismatched = bundle0Mismatched || bundle1Mismatched;
 
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
-
     const descriptor: GPURenderBundleEncoderDescriptor = {
       colorFormats: ['rgba8unorm'],
     };

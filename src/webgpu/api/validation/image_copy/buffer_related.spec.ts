@@ -56,6 +56,37 @@ Test that the buffer must be valid and not destroyed.
     );
   });
 
+g.test('buffer,device_mismatch')
+  .desc('Tests the image copies cannot be called with a buffer created from another device')
+  .paramsSubcasesOnly(u =>
+    u.combine('method', ['CopyB2T', 'CopyT2B'] as const).combine('mismatched', [true, false])
+  )
+  .fn(async t => {
+    const { method, mismatched } = t.params;
+
+    const descriptor: GPUBufferDescriptor = {
+      size: 16,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    };
+    const buffer = mismatched
+      ? t.getDeviceMismatchedBuffer(descriptor)
+      : t.device.createBuffer(descriptor);
+
+    const texture = t.device.createTexture({
+      size: { width: 2, height: 2, depthOrArrayLayers: 1 },
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+    });
+
+    t.testBuffer(
+      buffer,
+      texture,
+      { bytesPerRow: 0 },
+      { width: 0, height: 0, depthOrArrayLayers: 0 },
+      { dataSize: 16, method, success: !mismatched }
+    );
+  });
+
 g.test('usage')
   .desc(
     `

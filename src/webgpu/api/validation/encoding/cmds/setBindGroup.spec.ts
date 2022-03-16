@@ -96,6 +96,37 @@ class F extends ValidationTest {
     }
     return bindGroup;
   }
+
+  createBindGroupForMismatch(
+    device: GPUDevice,
+    encoderType: ProgrammableEncoderType,
+    hasDynamicOffset: boolean
+  ) {
+    const buffer = device.createBuffer({
+      size: 4,
+      usage: GPUBufferUsage.STORAGE,
+    });
+
+    const layout = device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: this.encoderTypeToStageFlag(encoderType),
+          buffer: { type: 'storage', hasDynamicOffset },
+        },
+      ],
+    });
+
+    return device.createBindGroup({
+      layout,
+      entries: [
+        {
+          binding: 0,
+          resource: { buffer },
+        },
+      ],
+    });
+  }
 }
 
 export const g = makeTestGroup(F);
@@ -140,7 +171,21 @@ g.test('bind_group,device_mismatch')
       .combine('useU32Array', [true, false])
       .combine('mismatched', [true, false])
   )
-  .unimplemented();
+  .fn(async t => {
+    const { encoderType, useU32Array, mismatched } = t.params;
+
+    const bindGroup = mismatched
+      ? t.createBindGroupForMismatch(t.mismatchedDevice, encoderType, useU32Array)
+      : t.createBindGroupForMismatch(t.device, encoderType, useU32Array);
+
+    const { encoder, validateFinish } = t.createEncoder(encoderType);
+    if (useU32Array) {
+      encoder.setBindGroup(0, bindGroup, new Uint32Array([0]), 0, 1);
+    } else {
+      encoder.setBindGroup(0, bindGroup);
+    }
+    validateFinish(!mismatched);
+  });
 
 g.test('dynamic_offsets_passed_but_not_expected')
   .desc('Tests that setBindGroup correctly errors on unexpected dynamicOffsets.')

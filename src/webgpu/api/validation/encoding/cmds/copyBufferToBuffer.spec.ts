@@ -86,7 +86,34 @@ g.test('buffer,device_mismatch')
     { srcMismatched: true, dstMismatched: false },
     { srcMismatched: false, dstMismatched: true },
   ] as const)
-  .unimplemented();
+  .fn(async t => {
+    const { srcMismatched, dstMismatched } = t.params;
+
+    const srcDescriptor: GPUBufferDescriptor = {
+      size: 16,
+      usage: GPUBufferUsage.COPY_SRC,
+    };
+    const srcBuffer = srcMismatched
+      ? t.getDeviceMismatchedBuffer(srcDescriptor)
+      : t.createBufferWithState('valid', srcDescriptor);
+
+    const dstDescriptor: GPUBufferDescriptor = {
+      size: 16,
+      usage: GPUBufferUsage.COPY_DST,
+    };
+    const dstBuffer = dstMismatched
+      ? t.getDeviceMismatchedBuffer(dstDescriptor)
+      : t.createBufferWithState('valid', dstDescriptor);
+
+    t.TestCopyBufferToBuffer({
+      srcBuffer,
+      srcOffset: 0,
+      dstBuffer,
+      dstOffset: 0,
+      copySize: 8,
+      isSuccess: !srcMismatched && !dstMismatched,
+    });
+  });
 
 g.test('buffer_usage')
   .paramsSubcasesOnly(u =>

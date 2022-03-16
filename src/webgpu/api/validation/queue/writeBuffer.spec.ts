@@ -162,4 +162,20 @@ Tests calling writeBuffer with the buffer missed COPY_DST usage.
 g.test('buffer,device_mismatch')
   .desc('Tests writeBuffer cannot be called with a buffer created from another device')
   .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
-  .unimplemented();
+  .fn(async t => {
+    const { mismatched } = t.params;
+
+    const descriptor: GPUBufferDescriptor = {
+      size: 16,
+      usage: GPUBufferUsage.COPY_DST,
+    };
+    const buffer = mismatched
+      ? t.getDeviceMismatchedBuffer(descriptor)
+      : t.createBufferWithState('valid', descriptor);
+
+    const data = new Uint8Array(16);
+
+    t.expectValidationError(() => {
+      t.device.queue.writeBuffer(buffer, 0, data, 0, data.length);
+    }, mismatched);
+  });

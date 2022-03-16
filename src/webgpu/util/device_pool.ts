@@ -4,7 +4,7 @@ import { assert, raceWithRejectOnTimeout, assertReject } from '../../common/util
 import { DefaultLimits } from '../constants.js';
 
 export interface DeviceProvider {
-  acquire(): GPUDevice;
+  acquire(): GPUDevice[];
 }
 
 class TestFailedButDeviceReusable extends Error {}
@@ -66,10 +66,13 @@ export class DevicePool {
         if (holder === this.defaultHolder) {
           this.defaultHolder = 'uninitialized';
         } else {
-          this.nonDefaultHolders.deleteByDevice(holder.device);
+          this.nonDefaultHolders.deleteByDevice(holder.devices[0]);
         }
-        if ('destroy' in holder.device) {
-          holder.device.destroy();
+
+        for (const device of holder.devices) {
+          if ('destroy' in device) {
+            device.destroy();
+          }
         }
       }
       throw ex;
@@ -91,7 +94,7 @@ class DescriptorToHolderMap {
   /** Deletes an item from the map by GPUDevice value. */
   deleteByDevice(device: GPUDevice): void {
     for (const [k, v] of this.holders) {
-      if (v.device === device) {
+      if (v.devices[0] === device) {
         this.holders.delete(k);
         return;
       }
@@ -234,42 +237,55 @@ function supportsFeature(
 type DeviceHolderState = 'free' | 'reserved' | 'acquired';
 
 /**
- * Holds a GPUDevice and tracks its state (free/reserved/acquired) and handles device loss.
+ * Holds GPUDevice with same descriptor and tracks device state (free/reserved/acquired) and handles device loss.
+ * All the devices must be free/reserved/acquired together.
  */
 class DeviceHolder implements DeviceProvider {
-  readonly device: GPUDevice;
+  readonly devices: GPUDevice[];
   state: DeviceHolderState = 'free';
   // initially undefined; becomes set when the device is lost
   lostInfo?: GPUDeviceLostInfo;
 
-  // Gets a device and creates a DeviceHolder.
+  // Gets devices and creates a DeviceHolder.
+  // Creates one more device by default for device mismatch validation tests.
   // If the device is lost, DeviceHolder.lost gets set.
-  static async create(descriptor: CanonicalDeviceDescriptor | undefined): Promise<DeviceHolder> {
+  static async create(
+    descriptor: CanonicalDeviceDescriptor | undefined,
+    deviceCount: GPUSize32 = 2
+  ): Promise<DeviceHolder> {
     const gpu = getGPU();
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null, 'requestAdapter returned null');
     if (!supportsFeature(adapter, descriptor)) {
       throw new FeaturesNotSupported('One or more features are not supported');
     }
-    const device = await adapter.requestDevice(descriptor);
-    assert(device !== null, 'requestDevice returned null');
+    const devices: GPUDevice[] = new Array(deviceCount);
+    for (let i = 0; i < deviceCount; i++) {
+      const device = await adapter.requestDevice(descriptor);
+      assert(device !== null, 'requestDevice returned null');
+      devices[i] = device;
+    }
 
-    return new DeviceHolder(device);
+    return new DeviceHolder(devices);
   }
 
-  private constructor(device: GPUDevice) {
-    this.device = device;
-    this.device.lost.then(ev => {
-      this.lostInfo = ev;
-    });
+  private constructor(devices: GPUDevice[]) {
+    this.devices = devices;
+    for (const device of this.devices) {
+      device.lost.then(ev => {
+        this.lostInfo = ev;
+      });
+    }
   }
 
-  acquire(): GPUDevice {
+  acquire(): GPUDevice[] {
     assert(this.state === 'reserved');
     this.state = 'acquired';
-    this.device.pushErrorScope('out-of-memory');
-    this.device.pushErrorScope('validation');
-    return this.device;
+    for (const device of this.devices) {
+      device.pushErrorScope('out-of-memory');
+      device.pushErrorScope('validation');
+    }
+    return this.devices;
   }
 
   async ensureRelease(): Promise<void> {
@@ -297,42 +313,44 @@ class DeviceHolder implements DeviceProvider {
     let gpuValidationError: GPUValidationError | GPUOutOfMemoryError | null;
     let gpuOutOfMemoryError: GPUValidationError | GPUOutOfMemoryError | null;
 
-    // Submit to the queue to attempt to force a GPU flush.
-    this.device.queue.submit([]);
+    for (const device of this.devices) {
+      // Submit to the queue to attempt to force a GPU flush.
+      device.queue.submit([]);
 
-    try {
-      // May reject if the device was lost.
-      gpuValidationError = await this.device.popErrorScope();
-      gpuOutOfMemoryError = await this.device.popErrorScope();
-    } catch (ex) {
-      assert(
-        this.lostInfo !== undefined,
-        'popErrorScope failed; should only happen if device has been lost'
+      try {
+        // May reject if the device was lost.
+        gpuValidationError = await device.popErrorScope();
+        gpuOutOfMemoryError = await device.popErrorScope();
+      } catch (ex) {
+        assert(
+          this.lostInfo !== undefined,
+          'popErrorScope failed; should only happen if device has been lost'
+        );
+        throw ex;
+      }
+
+      // Attempt to wait for the queue to be idle.
+      if (device.queue.onSubmittedWorkDone) {
+        await device.queue.onSubmittedWorkDone();
+      }
+
+      await assertReject(
+        device.popErrorScope(),
+        'There was an extra error scope on the stack after a test'
       );
-      throw ex;
-    }
 
-    // Attempt to wait for the queue to be idle.
-    if (this.device.queue.onSubmittedWorkDone) {
-      await this.device.queue.onSubmittedWorkDone();
-    }
-
-    await assertReject(
-      this.device.popErrorScope(),
-      'There was an extra error scope on the stack after a test'
-    );
-
-    if (gpuValidationError !== null) {
-      assert(gpuValidationError instanceof GPUValidationError);
-      // Allow the device to be reused.
-      throw new TestFailedButDeviceReusable(
-        `Unexpected validation error occurred: ${gpuValidationError.message}`
-      );
-    }
-    if (gpuOutOfMemoryError !== null) {
-      assert(gpuOutOfMemoryError instanceof GPUOutOfMemoryError);
-      // Don't allow the device to be reused; unexpected OOM could break the device.
-      throw new TestOOMedShouldAttemptGC('Unexpected out-of-memory error occurred');
+      if (gpuValidationError !== null) {
+        assert(gpuValidationError instanceof GPUValidationError);
+        // Allow the device to be reused.
+        throw new TestFailedButDeviceReusable(
+          `Unexpected validation error occurred: ${gpuValidationError.message}`
+        );
+      }
+      if (gpuOutOfMemoryError !== null) {
+        assert(gpuOutOfMemoryError instanceof GPUOutOfMemoryError);
+        // Don't allow the device to be reused; unexpected OOM could break the device.
+        throw new TestOOMedShouldAttemptGC('Unexpected out-of-memory error occurred');
+      }
     }
   }
 }

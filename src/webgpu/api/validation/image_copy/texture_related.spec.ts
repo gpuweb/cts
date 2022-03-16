@@ -70,14 +70,25 @@ g.test('texture,device_mismatch')
   .paramsSubcasesOnly(u =>
     u.combine('method', kImageCopyTypes).combine('mismatched', [true, false])
   )
-  .unimplemented();
+  .fn(async t => {
+    const { method, mismatched } = t.params;
 
-g.test('buffer,device_mismatch')
-  .desc('Tests the image copies cannot be called with a buffer created from another device')
-  .paramsSubcasesOnly(u =>
-    u.combine('method', ['CopyB2T', 'CopyT2B'] as const).combine('mismatched', [true, false])
-  )
-  .unimplemented();
+    const descriptor: GPUTextureDescriptor = {
+      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+    };
+    const texture = mismatched
+      ? t.getDeviceMismatchedTexture(descriptor)
+      : t.device.createTexture(descriptor);
+
+    t.testRun(
+      { texture },
+      { bytesPerRow: 0 },
+      { width: 0, height: 0, depthOrArrayLayers: 0 },
+      { dataSize: 1, method, success: !mismatched }
+    );
+  });
 
 g.test('usage')
   .desc(
