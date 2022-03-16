@@ -835,6 +835,14 @@ export const listing = [
       "api",
       "validation",
       "encoding",
+      "createRenderBundleEncoder"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "encoding",
       "encoder_state"
     ]
   },
