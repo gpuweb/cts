@@ -1338,16 +1338,6 @@ export const listing = [
       "expression",
       "call",
       "builtin",
-      "integer_built_in_functions"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "execution",
-      "expression",
-      "call",
-      "builtin",
       "inversesqrt"
     ]
   },
@@ -1409,6 +1399,16 @@ export const listing = [
       "call",
       "builtin",
       "min"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
+      "reverseBits"
     ]
   },
   {
