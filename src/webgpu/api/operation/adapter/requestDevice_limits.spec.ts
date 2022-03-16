@@ -17,7 +17,7 @@ export const g = makeTestGroup(Fixture);
 g.test('unknown_limits')
   .desc(
     `
-    Test that specifiying limits that aren't part of the supported limit set causes
+    Test that specifying limits that aren't part of the supported limit set causes
     requestDevice to reject.`
   )
   .fn(async t => {

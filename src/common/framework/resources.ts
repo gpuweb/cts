@@ -1,6 +1,6 @@
 /**
  * Base path for resources. The default value is correct for non-worker WPT, but standalone and
- * workers must access resources using a different base path, so tihs is overridden in
+ * workers must access resources using a different base path, so this is overridden in
  * `test_worker-worker.ts` and `standalone.ts`.
  */
 let baseResourcePath = './resources';

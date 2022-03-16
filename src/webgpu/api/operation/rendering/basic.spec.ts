@@ -119,7 +119,7 @@ g.test('large_draw')
   Tests that draw calls behave reasonably with large vertex counts for
   non-indexed draws, large index counts for indexed draws, and large instance
   counts in both cases. Various combinations of these counts are tested with
-  both direct and indrect draw calls.
+  both direct and indirect draw calls.
 
   Draw call sizes are increased incrementally over these parameters until we the
   run out of values or completion of a draw call exceeds a fixed time limit of

@@ -213,7 +213,7 @@ class F extends CopyToTextureUtils {
     // For webgl/webgl2 context canvas, if the context created with premultipliedAlpha attributes,
     // it means that the value in drawing buffer is premultiplied or not. So we should set
     // premultipliedAlpha value for premultipliedAlpha true gl context and unpremultipliedAlpha value
-    // for the premulitpliedAlpha false gl context.
+    // for the premultipliedAlpha false gl context.
     gl.enable(gl.SCISSOR_TEST);
     gl.scissor(0, 0, rectWidth, rectHeight);
     gl.clearColor(colorValue, 0.0, 0.0, alphaValue);
@@ -662,8 +662,8 @@ g.test('copy_contents_from_gpu_context_canvas')
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the canvas contents.
 
-  Provide premultiplied input if 'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
-  is set to 'true' and unpremultiplied input if it is set to 'false'.
+  Do premultiply alpha during copy if  'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
+  is set to 'true' and do unpremultiply alpha if it is set to 'false'.
 
   If 'flipY' in 'GPUImageCopyExternalImage' is set to 'true', copy will ensure the result
   is flipped.

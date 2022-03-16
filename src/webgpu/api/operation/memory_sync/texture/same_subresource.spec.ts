@@ -561,7 +561,7 @@ class TextureSyncTestHelper {
     }
   }
 
-  // Ensure that all encoded commands are finished and subitted.
+  // Ensure that all encoded commands are finished and submitted.
   ensureSubmit() {
     this.ensureContext('queue');
     this.flushCommandBuffers();

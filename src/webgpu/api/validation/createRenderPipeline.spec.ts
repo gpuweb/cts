@@ -422,7 +422,7 @@ g.test('pipeline_output_targets')
   - The componentCount of the fragment output (e.g. f32, vec2, vec3, vec4) must not have fewer
     channels than that of the color attachment texture formats. Extra components are allowed and are discarded.
 
-  MAINTAINENCE_TODO: update this test after the WebGPU SPEC ISSUE 50 "define what 'compatible' means
+  MAINTENANCE_TODO: update this test after the WebGPU SPEC ISSUE 50 "define what 'compatible' means
   for render target formats" is resolved.`
   )
   .params(u =>
