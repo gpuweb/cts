@@ -939,6 +939,10 @@ g.test('test,math,f32LimitsEquivalency')
     { bits: kBit.f32.positive.min, value: kValue.f32.positive.min },
     { bits: kBit.f32.negative.max, value: kValue.f32.negative.max },
     { bits: kBit.f32.negative.min, value: kValue.f32.negative.min },
+    { bits: kBit.f32.subnormal.positive.max, value: kValue.f32.subnormal.positive.max },
+    { bits: kBit.f32.subnormal.positive.min, value: kValue.f32.subnormal.positive.min },
+    { bits: kBit.f32.subnormal.negative.max, value: kValue.f32.subnormal.negative.max },
+    { bits: kBit.f32.subnormal.negative.min, value: kValue.f32.subnormal.negative.min },
   ])
   .fn(test => {
     const bits = test.params.bits;

@@ -249,7 +249,7 @@ function correctlyRoundedImpl(test_value: Scalar, target: number, flush: boolean
  *
  * Numerical stable version is adapted from http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0811r2.html
  */
-export function lerp(a: number, b: number, t: number) {
+export function lerp(a: number, b: number, t: number): number {
   if (!Number.isFinite(a) || !Number.isFinite(b)) {
     return Number.NaN;
   }
