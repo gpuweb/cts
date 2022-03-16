@@ -30,6 +30,7 @@ combine('vectorize', [undefined, 2, 3, 4])).
 fn(async (t) => {
   const cfg = t.params;
   cfg.cmpFloats = correctlyRoundedThreshold();
+
   run(t, builtin('fract'), [TypeF32], TypeF32, cfg, [
   // Zeroes
   { input: f32Bits(kBit.f32.positive.zero), expected: f32(0) },
@@ -64,15 +65,11 @@ fn(async (t) => {
   { input: f32Bits(kBit.f32.negative.min), expected: f32(0) },
 
   // Subnormal f32
-
   { input: f32Bits(kBit.f32.subnormal.positive.max), expected: anyOf(f32(0), f32Bits(kBit.f32.subnormal.positive.max)) },
-
   { input: f32Bits(kBit.f32.subnormal.positive.min), expected: anyOf(f32(0), f32Bits(kBit.f32.subnormal.positive.min)) },
   // Similar to above when these values are not immediately flushed to zero, how the back end internally calculates
   // the value will dictate if the end value is 1 or very close to 1.
-
   { input: f32Bits(kBit.f32.subnormal.negative.max), expected: anyOf(f32(0), f32Bits(0x3f7fffff), f32(1)) },
-
   { input: f32Bits(kBit.f32.subnormal.negative.min), expected: anyOf(f32(0), f32Bits(0x3f7fffff), f32(1)) }]);
 
 });
