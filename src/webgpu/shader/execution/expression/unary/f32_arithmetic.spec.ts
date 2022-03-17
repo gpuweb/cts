@@ -32,7 +32,7 @@ Accuracy: Correctly rounded
     const cfg: Config = t.params;
     cfg.cmpFloats = correctlyRoundedThreshold();
 
-    const truthFunc = (x: number): Case => {
+    const makeCase = (x: number): Case => {
       const f32_x = f32(x).value as number;
       return { input: [f32(x)], expected: f32(-f32_x) };
     };
@@ -49,7 +49,7 @@ Accuracy: Correctly rounded
     );
     numeric_range.concat(biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, 100));
     numeric_range.forEach(x => {
-      cases = cases.concat(truthFunc(x));
+      cases = cases.concat(makeCase(x));
     });
 
     run(t, prefix('-'), [TypeF32], TypeF32, cfg, cases);

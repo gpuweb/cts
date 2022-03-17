@@ -7,7 +7,7 @@ import { GPUTest } from '../../../../gpu_test.js';
 import { correctlyRoundedThreshold, ulpThreshold } from '../../../../util/compare.js';
 import { kValue } from '../../../../util/constants.js';
 import { f32, TypeF32 } from '../../../../util/conversion.js';
-import { biasedRange, linearRange } from '../../../../util/math.js';
+import { biasedRange, linearRange, quantizeToF32 } from '../../../../util/math.js';
 import { Case, Config, run } from '../expression.js';
 
 import { binary } from './binary.js';
@@ -47,9 +47,9 @@ Accuracy: Correctly rounded
     const cfg: Config = t.params;
     cfg.cmpFloats = correctlyRoundedThreshold();
 
-    const truthFunc = (lhs: number, rhs: number): Case => {
-      const f32_lhs = f32(lhs).value as number;
-      const f32_rhs = f32(rhs).value as number;
+    const makeCase = (lhs: number, rhs: number): Case => {
+      const f32_lhs = quantizeToF32(lhs);
+      const f32_rhs = quantizeToF32(rhs);
       return { input: [f32(lhs), f32(rhs)], expected: f32(f32_lhs + f32_rhs) };
     };
 
@@ -57,7 +57,7 @@ Accuracy: Correctly rounded
     const numeric_range = fullNumericRange();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
-        cases = cases.concat(truthFunc(lhs, rhs));
+        cases = cases.concat(makeCase(lhs, rhs));
       });
     });
 
@@ -82,9 +82,9 @@ Accuracy: Correctly rounded
     const cfg: Config = t.params;
     cfg.cmpFloats = correctlyRoundedThreshold();
 
-    const truthFunc = (lhs: number, rhs: number): Case => {
-      const f32_lhs = f32(lhs).value as number;
-      const f32_rhs = f32(rhs).value as number;
+    const makeCase = (lhs: number, rhs: number): Case => {
+      const f32_lhs = quantizeToF32(lhs);
+      const f32_rhs = quantizeToF32(rhs);
       return { input: [f32(lhs), f32(rhs)], expected: f32(f32_lhs - f32_rhs) };
     };
 
@@ -92,7 +92,7 @@ Accuracy: Correctly rounded
     const numeric_range = fullNumericRange();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
-        cases = cases.concat(truthFunc(lhs, rhs));
+        cases = cases.concat(makeCase(lhs, rhs));
       });
     });
 
@@ -117,9 +117,9 @@ Accuracy: Correctly rounded
     const cfg: Config = t.params;
     cfg.cmpFloats = correctlyRoundedThreshold();
 
-    const truthFunc = (lhs: number, rhs: number): Case => {
-      const f32_lhs = f32(lhs).value as number;
-      const f32_rhs = f32(rhs).value as number;
+    const makeCase = (lhs: number, rhs: number): Case => {
+      const f32_lhs = quantizeToF32(lhs);
+      const f32_rhs = quantizeToF32(rhs);
       return { input: [f32(lhs), f32(rhs)], expected: f32(f32_lhs * f32_rhs) };
     };
 
@@ -127,7 +127,7 @@ Accuracy: Correctly rounded
     const numeric_range = fullNumericRange();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
-        cases = cases.concat(truthFunc(lhs, rhs));
+        cases = cases.concat(makeCase(lhs, rhs));
       });
     });
 
@@ -152,9 +152,9 @@ Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
     const cfg: Config = t.params;
     cfg.cmpFloats = ulpThreshold(2.5);
 
-    const truthFunc = (lhs: number, rhs: number): Case => {
-      const f32_lhs = f32(lhs).value as number;
-      const f32_rhs = f32(rhs).value as number;
+    const makeCase = (lhs: number, rhs: number): Case => {
+      const f32_lhs = quantizeToF32(lhs);
+      const f32_rhs = quantizeToF32(rhs);
       return { input: [f32(lhs), f32(rhs)], expected: f32(f32_lhs / f32_rhs) };
     };
 
@@ -163,7 +163,7 @@ Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
     const rhs_numeric_range = biasedRange(2 ** -126, 2 ** 126, 200);
     lhs_numeric_range.forEach(lhs => {
       rhs_numeric_range.forEach(rhs => {
-        cases = cases.concat(truthFunc(lhs, rhs));
+        cases = cases.concat(makeCase(lhs, rhs));
       });
     });
 

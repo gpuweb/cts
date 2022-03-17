@@ -7,7 +7,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { correctlyRoundedThreshold } from '../../../../../util/compare.js';
 import { kValue } from '../../../../../util/constants.js';
 import { f32, i32, TypeF32, TypeI32 } from '../../../../../util/conversion.js';
-import { biasedRange, linearRange } from '../../../../../util/math.js';
+import { biasedRange, linearRange, quantizeToI32 } from '../../../../../util/math.js';
 import { Case, Config, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -30,8 +30,8 @@ T is f32 or vecN<f32> I is i32 or vecN<i32>, where I is a scalar if T is a scala
   )
   .fn(async t => {
     const truthFunc = (e1: number, e2: number): Case | undefined => {
-      const i32_e2 = i32(e2);
-      const result = e1 * Math.pow(2, i32_e2.value as number);
+      const i32_e2 = quantizeToI32(e2);
+      const result = e1 * Math.pow(2, i32_e2);
       // Unclear what the expected behaviour for values that overflow f32 bounds, see https://github.com/gpuweb/gpuweb/issues/2631
       if (!Number.isFinite(result)) {
         return undefined;
@@ -40,7 +40,7 @@ T is f32 or vecN<f32> I is i32 or vecN<i32>, where I is a scalar if T is a scala
       } else if (result < kValue.f32.positive.min) {
         return undefined;
       }
-      return { input: [f32(e1), i32_e2], expected: f32(result) };
+      return { input: [f32(e1), i32(e2)], expected: f32(result) };
     };
 
     let e1_range: Array<number> = [];

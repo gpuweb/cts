@@ -1,7 +1,7 @@
 import { assert } from '../../common/util/util.js';
 
 import { kBit } from './constants.js';
-import { f32, f32Bits, Scalar } from './conversion.js';
+import { f32, f32Bits, i32, Scalar } from './conversion.js';
 
 /**
  * A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).
@@ -316,4 +316,14 @@ export function multiplyMatrices(
   }
 
   return product;
+}
+
+/** @returns the closest 32-bit floating point value to the input */
+export function quantizeToF32(num: number): number {
+  return f32(num).value as number;
+}
+
+/** @returns the closest 32-bit signed integer value to the input */
+export function quantizeToI32(num: number): number {
+  return i32(num).value as number;
 }
