@@ -246,9 +246,9 @@ export class Fixture {
     return cond;
   }
 
-  /** If the argument is an Error, fail (or warn). Otherwise, no-op. */
+  /** If the argument is an `Error`, fail (or warn). If it's `undefined`, no-op. */
   expectOK(
-    error: Error | unknown,
+    error: Error | undefined,
     { mode = 'fail', niceStack }: { mode?: 'fail' | 'warn'; niceStack?: Error } = {}
   ): void {
     if (error instanceof Error) {
@@ -263,5 +263,14 @@ export class Fixture {
         unreachable();
       }
     }
+  }
+
+  eventualExpectOK(
+    error: Promise<Error | undefined>,
+    { mode = 'fail' }: { mode?: 'fail' | 'warn' } = {}
+  ) {
+    this.eventualAsyncExpectation(async niceStack => {
+      this.expectOK(await error, { mode, niceStack });
+    });
   }
 }
