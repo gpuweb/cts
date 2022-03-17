@@ -7,10 +7,10 @@ import { GPUTest } from '../../../../gpu_test.js';
 import { correctlyRoundedThreshold } from '../../../../util/compare.js';
 import { kValue } from '../../../../util/constants.js';
 import { f32, TypeF32 } from '../../../../util/conversion.js';
-import { biasedRange, linearRange } from '../../../../util/math.js';
+import { biasedRange, linearRange, quantizeToF32 } from '../../../../util/math.js';
 import { Case, Config, run } from '../expression.js';
 
-import { prefix } from './unary.js';
+import { unary } from './unary.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -33,7 +33,7 @@ Accuracy: Correctly rounded
     cfg.cmpFloats = correctlyRoundedThreshold();
 
     const makeCase = (x: number): Case => {
-      const f32_x = f32(x).value as number;
+      const f32_x = quantizeToF32(x);
       return { input: [f32(x)], expected: f32(-f32_x) };
     };
 
@@ -52,5 +52,5 @@ Accuracy: Correctly rounded
       cases = cases.concat(makeCase(x));
     });
 
-    run(t, prefix('-'), [TypeF32], TypeF32, cfg, cases);
+    run(t, unary('-'), [TypeF32], TypeF32, cfg, cases);
   });
