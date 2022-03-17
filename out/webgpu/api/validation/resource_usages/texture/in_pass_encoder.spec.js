@@ -849,7 +849,7 @@ fn(async (t) => {
     layout: t.device.createBindGroupLayout({ entries: bglEntries0 }) });
 
 
-  // Create bindGroup1. It has one binding, which use the same view/subresoure of a binding in
+  // Create bindGroup1. It has one binding, which use the same view/subresource of a binding in
   // bindGroup0. So it may or may not conflicts with that binding in bindGroup0.
   const bindGroup1 = t.createBindGroup(0, sampledStorageView, 'sampled-texture', '2d', undefined);
 

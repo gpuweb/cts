@@ -54,7 +54,7 @@ In this test we test that a small buffer bound to unused buffer slot won't cause
 g.test(`index_buffer_OOB`)
   .desc(
     `
-In this test we test that index buffer OOB is catched as validation error in drawIndexed, but not in
+In this test we test that index buffer OOB is caught as a validation error in drawIndexed, but not in
 drawIndexedIndirect as it is GPU-validated.
 - Issue an indexed draw call, with the following index buffer states, for {all index formats}:
     - range and GPUBuffer are exactly the required size for the draw call

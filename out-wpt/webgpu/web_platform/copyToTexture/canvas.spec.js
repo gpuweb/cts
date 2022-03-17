@@ -159,7 +159,7 @@ class F extends CopyToTextureUtils {
     // For webgl/webgl2 context canvas, if the context created with premultipliedAlpha attributes,
     // it means that the value in drawing buffer is premultiplied or not. So we should set
     // premultipliedAlpha value for premultipliedAlpha true gl context and unpremultipliedAlpha value
-    // for the premulitpliedAlpha false gl context.
+    // for the premultipliedAlpha false gl context.
     gl.enable(gl.SCISSOR_TEST);
     gl.scissor(0, 0, rectWidth, rectHeight);
     gl.clearColor(colorValue, 0.0, 0.0, alphaValue);

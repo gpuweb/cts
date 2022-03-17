@@ -17,7 +17,7 @@ export const description = `writeTexture + copyBufferToTexture + copyTextureToBu
  as [number, number, number] instead of GPUExtent3DDict.
 
 * copy_various_mip_levels: test that copying various mip levels works for all formats. Also covers special code paths:
-  - the physical size of the subresouce is not equal to the logical size
+  - the physical size of the subresource is not equal to the logical size
   - bufferSize - offset < bytesPerImage * copyExtent.depthOrArrayLayers and copyExtent needs to be clamped
 
 * copy_with_no_image_or_slice_padding_and_undefined_values: test that when copying a single row we can set any bytesPerRow value and when copying a single\
@@ -747,12 +747,12 @@ class ImageCopyTest extends GPUTest {
     const expectedData = new Uint8Array(outputBufferSize);
     for (let z = 0; z < copySize[2]; ++z) {
       const baseExpectedOffset = offset + z * bytesPerRow * rowsPerImage;
-      const baseInitialiDataOffset = z * copySize[0] * copySize[1];
+      const baseInitialDataOffset = z * copySize[0] * copySize[1];
       for (let y = 0; y < copySize[1]; ++y) {
         memcpy(
           {
             src: initialData,
-            start: baseInitialiDataOffset + y * copySize[0],
+            start: baseInitialDataOffset + y * copySize[0],
             length: copySize[0],
           },
           { dst: expectedData, start: baseExpectedOffset + y * bytesPerRow }
@@ -1169,12 +1169,12 @@ class ImageCopyTest extends GPUTest {
     const expectedData = new Uint8Array(destinationBufferSize);
     for (let z = 0; z < copySize[2]; ++z) {
       const baseExpectedOffset = z * bytesPerRow * rowsPerImage + offset;
-      const baseInitialiDataOffset = z * copySize[0] * copySize[1];
+      const baseInitialDataOffset = z * copySize[0] * copySize[1];
       for (let y = 0; y < copySize[1]; ++y) {
         memcpy(
           {
             src: initialData,
-            start: baseInitialiDataOffset + y * copySize[0],
+            start: baseInitialDataOffset + y * copySize[0],
             length: copySize[0],
           },
           { dst: expectedData, start: baseExpectedOffset + y * bytesPerRow }

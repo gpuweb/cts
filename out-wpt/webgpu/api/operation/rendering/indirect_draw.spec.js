@@ -31,7 +31,7 @@ class F extends GPUTest {
   }
 
   MakeVertexBuffer(isIndexed) {
-    const vextices = isIndexed
+    const vertices = isIndexed
       ? [-1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0]
       : [
           // The bottom left triangle
@@ -51,7 +51,7 @@ class F extends GPUTest {
           1.0,
         ];
 
-    return this.makeBufferWithContents(new Float32Array(vextices), GPUBufferUsage.VERTEX);
+    return this.makeBufferWithContents(new Float32Array(vertices), GPUBufferUsage.VERTEX);
   }
 
   MakeIndirectBuffer(isIndexed, indirectOffset) {

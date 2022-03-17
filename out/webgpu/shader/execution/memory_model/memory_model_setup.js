@@ -651,7 +651,7 @@ const resultShaderBindings = `
 
 /**
  * For tests that operate on workgroup memory, include this definition. 3584 memory locations is
- * large enough to accomodate the maximum memory size needed per workgroup for testing, which is
+ * large enough to accommodate the maximum memory size needed per workgroup for testing, which is
  * 256 invocations per workgroup x 2 memory locations x 7 (memStride, or max stride between successive memory locations).
  * Should change to a pipeline overridable constant when possible.
  */
@@ -661,7 +661,7 @@ const atomicWorkgroupMemory = `
 
 /**
  * For tests that operate on non-atomic workgroup memory, include this definition. 3584 memory locations
- * is large enough to accomodate the maximum memory size needed per workgroup for testing.
+ * is large enough to accommodate the maximum memory size needed per workgroup for testing.
  */
 const nonAtomicWorkgroupMemory = `
   var<workgroup> wg_test_locations: array<u32, 3584>;
@@ -755,7 +755,7 @@ const testShaderFunctions = `
 
 /**
  * Entry point to both test and result shaders. One-dimensional workgroup size is hardcoded to 256, until
- * pipeline overrideable constants are supported.
+ * pipeline overridable constants are supported.
  */
 const shaderEntryPoint = `
   // Change to pipeline overridable constant when possible.

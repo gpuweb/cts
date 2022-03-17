@@ -28,7 +28,7 @@ export const g = makeTestGroup(ValidationTest);
 g.test('color_attachments,device_mismatch')
   .desc(
     `
-    Tests beginRenderPass cannot be called with color attachments whose texure view or resolve target is created from another device
+    Tests beginRenderPass cannot be called with color attachments whose texture view or resolve target is created from another device
     The 'view' and 'resolveTarget' are:
     - created from same device in ColorAttachment0 and ColorAttachment1
     - created from different device in ColorAttachment0 and ColorAttachment1
@@ -114,7 +114,7 @@ g.test('color_attachments,device_mismatch')
 
 g.test('depth_stencil_attachment,device_mismatch')
   .desc(
-    'Tests beginRenderPass cannot be called with a depth stencil attachment whose texure view is created from another device'
+    'Tests beginRenderPass cannot be called with a depth stencil attachment whose texture view is created from another device'
   )
   .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
   .fn(async t => {

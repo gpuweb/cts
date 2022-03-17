@@ -23,7 +23,7 @@ export const description = `API Operation Tests for RenderPass StoreOp.
       - mip level set to {'0', mip > '0'}
       - array layer set to {'0', layer > '1'} for 2D textures
       TODO: test depth24plus and depth24plus-stencil8 formats
-      TODO: test that depth and stencil aspects are set seperately
+      TODO: test that depth and stencil aspects are set separately
       TODO: depth slice set to {'0', slice > '0'} for 3D textures
       TODO: test with more interesting loadOp values`;
 

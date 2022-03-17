@@ -124,7 +124,7 @@ desc(
 `
 Test copyTextureToTexture must specify mipLevels that are in range.
 - for various dimensions
-- for varioues mip level count in the texture
+- for various mip level count in the texture
 - for various copy target mip level (in range and not in range)
 `).
 

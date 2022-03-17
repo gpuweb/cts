@@ -935,7 +935,7 @@ g.test('max_buffers_and_attribs')
 
 g.test('array_stride_zero')
   .desc(
-    `Test that arrayStride 0 correctly uses the same data for all vertex/instances, while another test vertex buffer with arrayStrude != 0 gets different data.
+    `Test that arrayStride 0 correctly uses the same data for all vertex/instances, while another test vertex buffer with arrayStride != 0 gets different data.
   - Test for all formats
   - Test for both step modes`
   )

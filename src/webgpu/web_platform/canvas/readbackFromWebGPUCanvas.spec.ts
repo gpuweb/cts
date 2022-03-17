@@ -134,10 +134,10 @@ g.test('onscreenCanvas,snapshot')
         break;
       }
       case 'toBlob': {
-        const blobFromCanvs = new Promise(resolve => {
+        const blobFromCanvas = new Promise(resolve => {
           canvas.toBlob(blob => resolve(blob));
         });
-        const blob = (await blobFromCanvs) as Blob;
+        const blob = (await blobFromCanvas) as Blob;
         const url = URL.createObjectURL(blob);
         const img = new Image(canvas.width, canvas.height);
         img.src = url;

@@ -375,7 +375,7 @@ Test that the copy size must be aligned to the texture's format's block size.
 - for various copy methods
 - for all formats (depth-stencil formats require a full copy)
 - for all texture dimensions
-- for the size's parameters to test (width / height / dpeth)
+- for the size's parameters to test (width / height / depth)
 - for various values for that copy size parameters, depending on the block size
 `).
 

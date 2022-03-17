@@ -176,7 +176,7 @@ g.test('source_canvas,contexts')
     `
   Test HTMLCanvasElement as source image with different contexts.
 
-  Call HTMLCanvasElment.getContext() with different context type.
+  Call HTMLCanvasElement.getContext() with different context type.
   Only '2d', 'experimental-webgl', 'webgl', 'webgl2' is valid context
   type.
 

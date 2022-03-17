@@ -1,6 +1,6 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ export const description = `copyTexturetoTexture operation tests`;
+ **/ export const description = `copyTextureToTexture operation tests`;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, memcpy } from '../../../../common/util/util.js';
 import {
@@ -249,7 +249,7 @@ class F extends GPUTest {
       }
     }
 
-    // Verify the content of the whole subresouce of dstTexture at dstCopyLevel (in dstBuffer) is expected.
+    // Verify the content of the whole subresource of dstTexture at dstCopyLevel (in dstBuffer) is expected.
     this.expectGPUBufferValuesEqual(dstBuffer, expectedUint8DataWithPadding);
   }
 
@@ -471,7 +471,7 @@ class F extends GPUTest {
     copySize
   ) {
     // Prepare a renderPipeline with depthCompareFunction == 'equal' and depthWriteEnabled == false
-    // for the comparations of the depth attachment.
+    // for the comparison of the depth attachment.
     const bindGroupLayout = this.GetBindGroupLayoutForT2TCopyWithDepthTests();
     const renderPipeline = this.GetRenderPipelineForT2TCopyWithDepthTests(bindGroupLayout, true, {
       format: depthFormat,
@@ -1124,7 +1124,7 @@ g.test('copy_depth_stencil')
   For all the texture formats with depth aspect:
   - Initialize the depth aspect of the source texture with a draw call
   - Copy the depth aspect from the source texture into the destination texture
-  - Validate the content in the destination texture with the depth comparation function 'equal'
+  - Validate the content in the destination texture with the depth comparison function 'equal'
   `
   )
   .params(u =>
@@ -1447,7 +1447,7 @@ g.test('copy_multisampled_depth')
 
   - Initialize the source texture with a triangle in a render pass.
   - Copy from the source texture into the destination texture with CopyTextureToTexture().
-  - Validate the content in the destination texture with the depth comparation function 'equal'.
+  - Validate the content in the destination texture with the depth comparison function 'equal'.
   - Note that in current WebGPU SPEC the mipmap level count and array layer count of a multisampled
     texture can only be 1.
   `

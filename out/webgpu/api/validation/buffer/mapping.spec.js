@@ -440,7 +440,7 @@ fn(async (t) => {
 
 g.test('getMappedRange,subrange,mappedAtCreation').
 desc(
-`Test that old getMappedRange returned arrybuffer does not exist after unmap and newly returned
+`Test that old getMappedRange returned arraybuffer does not exist after unmap and newly returned
     arraybuffer after new map has correct subrange`).
 
 fn(async (t) => {

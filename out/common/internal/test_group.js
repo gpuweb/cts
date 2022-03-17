@@ -413,7 +413,7 @@ class RunCaseSpecific {
         }
 
         switch (exp.expectation) {
-          // Skip takes precendence. If there is any expectation indicating a skip,
+          // Skip takes precedence. If there is any expectation indicating a skip,
           // signal it immediately.
           case 'skip':
             return 'skip';

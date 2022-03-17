@@ -360,7 +360,7 @@ desc(
   The GPUBufferBindingLayout bindings configure should be exactly
   same in PipelineLayout and bindgroup.
   - TODO: test more draw functions, e.g. indirect
-  - TODO: test more visibilities, e.g. vetex
+  - TODO: test more visibilities, e.g. vertex
   - TODO: bind group should be created with different layout
   `).
 
@@ -418,7 +418,7 @@ desc(
   The GPUSamplerBindingLayout bindings configure should be exactly
   same in PipelineLayout and bindgroup.
   - TODO: test more draw functions, e.g. indirect
-  - TODO: test more visibilities, e.g. vetex
+  - TODO: test more visibilities, e.g. vertex
   `).
 
 params((u) =>

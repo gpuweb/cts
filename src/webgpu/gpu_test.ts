@@ -622,8 +622,8 @@ export class GPUTest extends Fixture {
   /**
    * Expect a single pixel of a 2D texture to have a particular byte representation.
    *
-   * MAINENANCE_TODO: Add check for values of depth/stencil, probably through sampling of shader
-   * MAINENANCE_TODO: Can refactor this and expectSingleColor to use a similar base expect
+   * MAINTENANCE_TODO: Add check for values of depth/stencil, probably through sampling of shader
+   * MAINTENANCE_TODO: Can refactor this and expectSingleColor to use a similar base expect
    */
   expectSinglePixelIn2DTexture(
     src: GPUTexture,

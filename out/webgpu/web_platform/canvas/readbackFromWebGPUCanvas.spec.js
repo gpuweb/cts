@@ -134,10 +134,10 @@ fn(async (t) => {
         break;
       }
     case 'toBlob':{
-        const blobFromCanvs = new Promise((resolve) => {
+        const blobFromCanvas = new Promise((resolve) => {
           canvas.toBlob((blob) => resolve(blob));
         });
-        const blob = await blobFromCanvs;
+        const blob = await blobFromCanvas;
         const url = URL.createObjectURL(blob);
         const img = new Image(canvas.width, canvas.height);
         img.src = url;

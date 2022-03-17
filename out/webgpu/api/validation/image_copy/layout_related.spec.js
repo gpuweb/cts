@@ -123,13 +123,13 @@ fn(async (t) => {
 g.test('required_bytes_in_copy').
 desc(
 `
-Test the computation of requiredBytesInCopy by computing the minumum data size for the copy and checking success/error at the boundary.
+Test the computation of requiredBytesInCopy by computing the minimum data size for the copy and checking success/error at the boundary.
 - for various copy methods
 - for all formats
 - for all dimensions
-- for various extra bytesPerRow/rowsPerIamge
+- for various extra bytesPerRow/rowsPerImage
 - for various copy sizes
-- for various offets in the linear data
+- for various offsets in the linear data
 `).
 
 params((u) =>

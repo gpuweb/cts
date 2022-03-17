@@ -475,7 +475,7 @@ remaining part of it will be initialized to 0.`
 
     t.queue.submit([encoder.finish()]);
 
-    // Check if the contents of the destination bufer are what we expect.
+    // Check if the contents of the destination buffer are what we expect.
     const expectedData = new Uint8Array(dstBufferSize);
     for (let layer = 0; layer < arrayLayerCount; ++layer) {
       for (let y = 0; y < layout.mipSize[1]; ++y) {
