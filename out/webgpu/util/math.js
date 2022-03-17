@@ -1,7 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { assert } from '../../common/util/util.js';import { kBit } from './constants.js';
-import { f32, f32Bits } from './conversion.js';
+import { f32, f32Bits, i32 } from './conversion.js';
 
 /**
  * A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).
@@ -325,5 +325,15 @@ B)
 export function signExtend(n, bits) {
   const shift = 32 - bits;
   return n << shift >> shift;
+}
+
+/** @returns the closest 32-bit floating point value to the input */
+export function quantizeToF32(num) {
+  return f32(num).value;
+}
+
+/** @returns the closest 32-bit signed integer value to the input */
+export function quantizeToI32(num) {
+  return i32(num).value;
 }
 //# sourceMappingURL=math.js.map

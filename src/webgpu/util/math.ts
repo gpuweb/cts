@@ -1,7 +1,7 @@
 import { assert } from '../../common/util/util.js';
 
 import { kBit } from './constants.js';
-import { f32, f32Bits, Scalar } from './conversion.js';
+import { f32, f32Bits, i32, Scalar } from './conversion.js';
 
 /**
  * A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).
@@ -252,7 +252,7 @@ function correctlyRoundedImpl(test_value: Scalar, target: number, flush: boolean
  *
  * Numerical stable version is adapted from http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0811r2.html
  */
-export function lerp(a: number, b: number, t: number) {
+export function lerp(a: number, b: number, t: number): number {
   if (!Number.isFinite(a) || !Number.isFinite(b)) {
     return Number.NaN;
   }
@@ -325,4 +325,14 @@ export function multiplyMatrices(
 export function signExtend(n: number, bits: number): number {
   const shift = 32 - bits;
   return (n << shift) >> shift;
+}
+
+/** @returns the closest 32-bit floating point value to the input */
+export function quantizeToF32(num: number): number {
+  return f32(num).value as number;
+}
+
+/** @returns the closest 32-bit signed integer value to the input */
+export function quantizeToI32(num: number): number {
+  return i32(num).value as number;
 }

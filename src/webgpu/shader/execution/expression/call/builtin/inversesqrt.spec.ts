@@ -33,7 +33,7 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   )
   .fn(async t => {
     // [1]: Need to decide what the ground-truth is.
-    const truthFunc = (x: number): Case => {
+    const makeCase = (x: number): Case => {
       return { input: f32(x), expected: f32(1 / Math.sqrt(x)) };
     };
 
@@ -44,9 +44,9 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
     ];
 
     // 0 < x <= 1 linearly spread
-    cases = cases.concat(linearRange(kValue.f32.positive.min, 1, 100).map(x => truthFunc(x)));
+    cases = cases.concat(linearRange(kValue.f32.positive.min, 1, 100).map(x => makeCase(x)));
     // 1 <= x < 2^32, biased towards 1
-    cases = cases.concat(biasedRange(1, 2 ** 32, 1000).map(x => truthFunc(x)));
+    cases = cases.concat(biasedRange(1, 2 ** 32, 1000).map(x => makeCase(x)));
 
     const cfg: Config = t.params;
     cfg.cmpFloats = ulpThreshold(2);

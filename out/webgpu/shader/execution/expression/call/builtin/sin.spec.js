@@ -31,12 +31,12 @@ combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
   // [1]: Need to decide what the ground-truth is.
-  const truthFunc = (x) => {
+  const makeCase = (x) => {
     return { input: f32(x), expected: f32(Math.sin(x)) };
   };
 
   // Spec defines accuracy on [-π, π]
-  const cases = linearRange(-Math.PI, Math.PI, 1000).map((x) => truthFunc(x));
+  const cases = linearRange(-Math.PI, Math.PI, 1000).map((x) => makeCase(x));
 
   const cfg = t.params;
   cfg.cmpFloats = absThreshold(2 ** -11);

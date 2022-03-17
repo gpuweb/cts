@@ -1164,6 +1164,15 @@ export const listing = [
       "shader",
       "execution",
       "expression",
+      "binary",
+      "f32_arithmetic"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
       "call",
       "builtin",
       "abs"
@@ -1447,6 +1456,15 @@ export const listing = [
       "call",
       "builtin",
       "value_testing_built_in_functions"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "unary",
+      "f32_arithmetic"
     ]
   },
   {

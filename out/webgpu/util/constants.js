@@ -238,7 +238,17 @@ export const kValue = {
 
     negative: {
       max: hexToF32(kBit.f32.negative.max),
-      min: hexToF32(kBit.f32.negative.min) } },
+      min: hexToF32(kBit.f32.negative.min) },
+
+    subnormal: {
+      positive: {
+        min: hexToF32(kBit.f32.subnormal.positive.min),
+        max: hexToF32(kBit.f32.subnormal.positive.max) },
+
+      negative: {
+        max: hexToF32(kBit.f32.subnormal.negative.max),
+        min: hexToF32(kBit.f32.subnormal.negative.min) } } },
+
 
 
 

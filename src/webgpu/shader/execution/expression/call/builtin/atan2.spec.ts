@@ -33,7 +33,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
   )
   .fn(async t => {
     // [1]: Need to decide what the ground-truth is.
-    const truthFunc = (y: number, x: number): Case => {
+    const makeCase = (y: number, x: number): Case => {
       assert(x !== 0, 'atan2 is undefined for x = 0');
       return { input: [f32(y), f32(x)], expected: f32(Math.atan2(y, x)) };
     };
@@ -49,11 +49,11 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
     numeric_range = numeric_range.concat(biasedRange(1.0, 2 ** 32, 20));
 
     let cases: Array<Case> = [];
-    cases = cases.concat(numeric_range.map(x => truthFunc(0.0, x)));
+    cases = cases.concat(numeric_range.map(x => makeCase(0.0, x)));
     numeric_range.forEach((y, y_idx) => {
       numeric_range.forEach((x, x_idx) => {
         if (x_idx >= y_idx) {
-          cases = cases.concat(truthFunc(y, x));
+          cases = cases.concat(makeCase(y, x));
         }
       });
     });

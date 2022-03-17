@@ -7,7 +7,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { absThreshold, FloatMatch, ulpThreshold } from '../../../../../util/compare.js';
 import { kValue } from '../../../../../util/constants.js';
 import { f32, TypeF32 } from '../../../../../util/conversion.js';
-import { biasedRange, linearRange } from '../../../../../util/math.js';
+import { biasedRange, linearRange, quantizeToF32 } from '../../../../../util/math.js';
 import { Case, CaseList, Config, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -33,9 +33,9 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
   )
   .fn(async t => {
     // [1]: Need to decide what the ground-truth is.
-    const truthFunc = (x: number): Case => {
-      const f32_x = f32(x);
-      return { input: f32_x, expected: f32(Math.log(f32_x.value as number)) };
+    const makeCase = (x: number): Case => {
+      const f32_x = quantizeToF32(x);
+      return { input: f32(x), expected: f32(Math.log(f32_x)) };
     };
 
     const runRange = (match: FloatMatch, cases: CaseList) => {
@@ -49,19 +49,19 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
       case 'low': // [0, 0.5)
         runRange(
           ulpThreshold(3),
-          linearRange(kValue.f32.positive.min, 0.5, 20).map(x => truthFunc(x))
+          linearRange(kValue.f32.positive.min, 0.5, 20).map(x => makeCase(x))
         );
         break;
       case 'mid': // [0.5, 2.0]
         runRange(
           absThreshold(2 ** -21),
-          linearRange(0.5, 2.0, 20).map(x => truthFunc(x))
+          linearRange(0.5, 2.0, 20).map(x => makeCase(x))
         );
         break;
       case 'high': // (2.0, +∞]
         runRange(
           ulpThreshold(3),
-          biasedRange(2.0, 2 ** 32, 1000).map(x => truthFunc(x))
+          biasedRange(2.0, 2 ** 32, 1000).map(x => makeCase(x))
         );
         break;
     }
