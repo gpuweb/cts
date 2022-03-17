@@ -34,8 +34,11 @@ export function clamp(n: number, { min, max }: { min: number; max: number }): nu
 }
 
 /**
- * @returns the Units of Last Place difference between the numbers a and b.
- * If either `a` or `b` are not finite numbers, then diffULP() returns Infinity.
+ * @returns the (absolute) Units of Last Place difference between the float32 numbers a and b, taken
+ * as JS doubles. If either `a` or `b` are not finite numbers, then diffULP() returns Infinity.
+ *
+ * Subnormal numbers are skipped, so 0 is one ULP from the minimum normal number.
+ * Subnormal values are rounded to 0.
  */
 export function diffULP(a: number, b: number): number {
   if (!Number.isFinite(a) || !Number.isFinite(b)) {
@@ -316,4 +319,10 @@ export function multiplyMatrices(
   }
 
   return product;
+}
+
+/** Sign-extend the `bits`-bit number `n` to a 32-bit signed integer. */
+export function signExtend(n: number, bits: number): number {
+  const shift = 32 - bits;
+  return (n << shift) >> shift;
 }

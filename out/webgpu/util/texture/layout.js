@@ -25,7 +25,10 @@ export const kBufferCopyAlignment = 4;
 
 const kDefaultLayoutOptions = { mipLevel: 0, bytesPerRow: undefined, rowsPerImage: undefined };
 
-/** The info returned by {@link getTextureCopyLayout}. */
+/** The info returned by {@link getTextureSubCopyLayout}. */
+
+
+
 
 
 
@@ -43,29 +46,55 @@ const kDefaultLayoutOptions = { mipLevel: 0, bytesPerRow: undefined, rowsPerImag
 
 
 /**
- * Computes layout information for a copy of size `size` to/from a GPUTexture with the provided
- * `format` and `dimension`.
+ * Computes layout information for a copy of the whole subresource at `mipLevel` of a GPUTexture
+ * of size `baseSize` with the provided `format` and `dimension`.
  *
  * Computes default values for `bytesPerRow` and `rowsPerImage` if not specified.
  */
 export function getTextureCopyLayout(
 format,
 dimension,
-size,
-options = kDefaultLayoutOptions)
+baseSize,
+{ mipLevel, bytesPerRow, rowsPerImage } = kDefaultLayoutOptions)
 {
-  const { mipLevel } = options;
-  let { bytesPerRow, rowsPerImage } = options;
+  const mipSize = virtualMipSize(dimension, baseSize, mipLevel);
 
-  const mipSize = virtualMipSize(dimension, size, mipLevel);
+  const layout = getTextureSubCopyLayout(format, mipSize, { bytesPerRow, rowsPerImage });
+  return { ...layout, mipSize };
+}
 
+/**
+ * Computes layout information for a copy of size `copySize` to/from a GPUTexture with the provided
+ * `format`.
+ *
+ * Computes default values for `bytesPerRow` and `rowsPerImage` if not specified.
+ */
+export function getTextureSubCopyLayout(
+format,
+copySize,
+{
+  bytesPerRow,
+  rowsPerImage } =
+{})
+{
   const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
 
-  // We align mipSize to be the physical size of the texture subresource.
-  mipSize[0] = align(mipSize[0], blockWidth);
-  mipSize[1] = align(mipSize[1], blockHeight);
+  const copySize_ = reifyExtent3D(copySize);
+  assert(
+  copySize_.width > 0 && copySize_.height > 0 && copySize_.depthOrArrayLayers > 0,
+  'not implemented for empty copySize');
 
-  const minBytesPerRow = bytesInACompleteRow(mipSize[0], format);
+  assert(
+  copySize_.width % blockWidth === 0 && copySize_.height % blockHeight === 0,
+  'copySize must be a multiple of the block size');
+
+  const copySizeBlocks = {
+    width: copySize_.width / blockWidth,
+    height: copySize_.height / blockHeight,
+    depthOrArrayLayers: copySize_.depthOrArrayLayers };
+
+
+  const minBytesPerRow = copySizeBlocks.width * bytesPerBlock;
   const alignedMinBytesPerRow = align(minBytesPerRow, kBytesPerRowAlignment);
   if (bytesPerRow !== undefined) {
     assert(bytesPerRow >= alignedMinBytesPerRow);
@@ -75,23 +104,22 @@ options = kDefaultLayoutOptions)
   }
 
   if (rowsPerImage !== undefined) {
-    assert(rowsPerImage >= mipSize[1]);
+    assert(rowsPerImage >= copySizeBlocks.height);
   } else {
-    rowsPerImage = mipSize[1];
+    rowsPerImage = copySizeBlocks.height;
   }
 
   const bytesPerSlice = bytesPerRow * rowsPerImage;
   const sliceSize =
-  bytesPerRow * (mipSize[1] / blockHeight - 1) + bytesPerBlock * (mipSize[0] / blockWidth);
-  const byteLength = bytesPerSlice * (mipSize[2] - 1) + sliceSize;
+  bytesPerRow * (copySizeBlocks.height - 1) + bytesPerBlock * copySizeBlocks.width;
+  const byteLength = bytesPerSlice * (copySizeBlocks.depthOrArrayLayers - 1) + sliceSize;
 
   return {
     bytesPerBlock,
     byteLength: align(byteLength, kBufferCopyAlignment),
     minBytesPerRow,
     bytesPerRow,
-    rowsPerImage,
-    mipSize };
+    rowsPerImage };
 
 }
 
