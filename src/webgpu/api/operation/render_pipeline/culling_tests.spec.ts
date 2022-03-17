@@ -1,4 +1,4 @@
-export const description = `Test culling and rasterizaion state.
+export const description = `Test culling and rasterization state.
 
 Test coverage:
 Test all culling combinations of GPUFrontFace and GPUCullMode show the correct output.

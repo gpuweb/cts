@@ -111,7 +111,7 @@ class IndexFormatTest extends GPUTest {
     primitiveTopology: GPUPrimitiveTopology = 'triangle-list'
   ): GPUBuffer {
     let pipeline: GPURenderPipeline;
-    // The indexFormat must be set in render pipeline descriptor that specifys a strip primitive
+    // The indexFormat must be set in render pipeline descriptor that specifies a strip primitive
     // topology for primitive restart testing
     if (primitiveTopology === 'line-strip' || primitiveTopology === 'triangle-strip') {
       pipeline = this.MakeRenderPipeline(primitiveTopology, indexFormat);
