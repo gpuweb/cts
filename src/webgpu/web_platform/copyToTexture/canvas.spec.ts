@@ -662,7 +662,6 @@ g.test('copy_contents_from_gpu_context_canvas')
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the canvas contents.
 
-  Do premultiply alpha during copy if  'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
   Provide premultiplied input if 'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
   is set to 'true' and unpremultiplied input if it is set to 'false'.
 
