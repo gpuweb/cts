@@ -11,6 +11,7 @@
   "exclude": [
     "src/common/runtime/wpt.ts",
     "src/common/runtime/standalone.ts",
-    "src/common/runtime/helper/test_worker.ts"
+    "src/common/runtime/helper/test_worker.ts",
+    "src/webgpu/web_platform/worker/worker_launcher.ts"
   ]
 }
