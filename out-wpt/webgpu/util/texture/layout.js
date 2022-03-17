@@ -5,7 +5,7 @@ import { kTextureFormatInfo } from '../../capability_info.js';
 import { align } from '../math.js';
 import { reifyExtent3D } from '../unions.js';
 
-import { virtualMipSize } from './base.js';
+import { physicalMipSize, virtualMipSize } from './base.js';
 
 /** The minimum `bytesPerRow` alignment, per spec. */
 export const kBytesPerRowAlignment = 256;
@@ -25,6 +25,8 @@ const kDefaultLayoutOptions = { mipLevel: 0, bytesPerRow: undefined, rowsPerImag
  * of size `baseSize` with the provided `format` and `dimension`.
  *
  * Computes default values for `bytesPerRow` and `rowsPerImage` if not specified.
+ *
+ * MAINTENANCE_TODO: Change input/output to Required<GPUExtent3DDict> for consistency.
  */
 export function getTextureCopyLayout(
   format,
@@ -32,10 +34,15 @@ export function getTextureCopyLayout(
   baseSize,
   { mipLevel, bytesPerRow, rowsPerImage } = kDefaultLayoutOptions
 ) {
-  const mipSize = virtualMipSize(dimension, baseSize, mipLevel);
+  const mipSize = physicalMipSize(
+    { width: baseSize[0], height: baseSize[1], depthOrArrayLayers: baseSize[2] },
+    format,
+    dimension,
+    mipLevel
+  );
 
   const layout = getTextureSubCopyLayout(format, mipSize, { bytesPerRow, rowsPerImage });
-  return { ...layout, mipSize };
+  return { ...layout, mipSize: [mipSize.width, mipSize.height, mipSize.depthOrArrayLayers] };
 }
 
 /**
