@@ -111,6 +111,20 @@ export const kFloat32Format = { signed: 1, exponentBits: 8, mantissaBits: 23, bi
 /** FloatFormat defining IEEE754 16-bit float. */
 export const kFloat16Format = { signed: 1, exponentBits: 5, mantissaBits: 10, bias: 15 } as const;
 
+const workingData = new ArrayBuffer(4);
+const workingDataU32 = new Uint32Array(workingData);
+const workingDataF32 = new Float32Array(workingData);
+/** Bitcast u32 (represented as integer Number) to f32 (represented as floating-point Number). */
+export function float32BitsToNumber(bits: number): number {
+  workingDataU32[0] = bits;
+  return workingDataF32[0];
+}
+/** Bitcast f32 (represented as floating-point Number) to u32 (represented as integer Number). */
+export function numberToFloat32Bits(number: number): number {
+  workingDataF32[0] = number;
+  return workingDataU32[0];
+}
+
 /**
  * Decodes an IEEE754 float with the supplied format specification into a JS number.
  *
