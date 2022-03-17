@@ -82,6 +82,8 @@ export function physicalMipSize(
 
 /**
  * Compute the "virtual size" of a mip level of a texture (not accounting for texel block rounding).
+ *
+ * MAINTENANCE_TODO: Change input/output to Required<GPUExtent3DDict> for consistency.
  */
 export function virtualMipSize(
   dimension: GPUTextureDimension,
