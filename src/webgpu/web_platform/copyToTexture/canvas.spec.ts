@@ -663,7 +663,8 @@ g.test('copy_contents_from_gpu_context_canvas')
   of dst texture, and read the contents out to compare with the canvas contents.
 
   Do premultiply alpha during copy if  'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
-  is set to 'true' and do unpremultiply alpha if it is set to 'false'.
+  Provide premultiplied input if 'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
+  is set to 'true' and unpremultiplied input if it is set to 'false'.
 
   If 'flipY' in 'GPUImageCopyExternalImage' is set to 'true', copy will ensure the result
   is flipped.
