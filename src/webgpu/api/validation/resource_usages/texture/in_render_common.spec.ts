@@ -4,9 +4,7 @@ TODO:
     - x= {upon the same subresource, or different subresources {mip level, array layer, aspect} of
          the same texture}
     - x= possible resource usages on each view:
-         - both as render attachments
          - both in bind group {texture_binding, storage_binding}
-         - one in bind group, and another as render attachment
     - x= different shader stages: {0, ..., 7}
         - maybe first view vis = {1, 2, 4}, second view vis = {0, ..., 7}
     - x= bindings are in {
@@ -45,10 +43,13 @@ const kTextureSize = 16;
 const kTextureLevels = 3;
 const kTextureLayers = 3;
 
-// Test that the different subresource of the same texture are allowed to be used as color
-// attachments in same / different render pass encoder, while the same subresource is only allowed
-// to be used as different color attachments in different render pass encoders.
 g.test('subresources_from_same_texture_as_color_attachments')
+  .desc(
+    `
+  Test that the different subresource of the same texture are allowed to be used as color
+  attachments in same / different render pass encoder, while the same subresource is only allowed
+  to be used as different color attachments in different render pass encoders.`
+  )
   .params(u =>
     u
       .combine('baseLayer0', [0, 1])
@@ -102,31 +103,35 @@ g.test('subresources_from_same_texture_as_color_attachments')
     }, !success);
   });
 
-// Test that when one subresource of a texture is used as a color attachment, it cannot be used in a
-// bind group simultaneously in the same render pass encoder. It is allowed when the bind group is
-// used in another render pass encoder instead of the same one.
 g.test('subresources_from_same_texture_as_color_attachment_and_in_bind_group')
+  .desc(
+    `
+  Test that when one subresource of a texture is used as a color attachment, it cannot be used in a
+  bind group simultaneously in the same render pass encoder. It is allowed when the bind group is
+  used in another render pass encoder instead of the same one.`
+  )
   .params(u =>
     u
-      .combine('colorAttachmentBaseLevel', [0, 1])
-      .combine('colorAttachmentBaseLayer', [0, 1])
-      .combine('bindGroupViewBaseLevel', [0, 1, 2])
-      .combine('bindGroupViewLevelCount', [1, 2])
-      .combine('bindGroupViewBaseLayer', [0, 1, 2])
-      .combine('bindGroupViewLayerCount', [1, 2])
+      .combine('colorAttachmentLevel', [0, 1])
+      .combine('colorAttachmentLayer', [0, 1])
+      .combineWithParams([
+        { bindGroupViewBaseLevel: 0, bindGroupViewLevelCount: 1 },
+        { bindGroupViewBaseLevel: 1, bindGroupViewLevelCount: 1 },
+        { bindGroupViewBaseLevel: 1, bindGroupViewLevelCount: 2 },
+      ])
+      .combineWithParams([
+        { bindGroupViewBaseLayer: 0, bindGroupViewLayerCount: 1 },
+        { bindGroupViewBaseLayer: 1, bindGroupViewLayerCount: 1 },
+        { bindGroupViewBaseLayer: 1, bindGroupViewLayerCount: 2 },
+      ])
       .combine('bindGroupUsage', ['texture', 'storage'])
-      .unless(
-        t =>
-          t.bindGroupViewBaseLevel + t.bindGroupViewLevelCount >= kTextureLevels ||
-          t.bindGroupViewBaseLayer + t.bindGroupViewLayerCount >= kTextureLayers ||
-          (t.bindGroupUsage === 'storage' && t.bindGroupViewLevelCount > 0)
-      )
+      .unless(t => t.bindGroupUsage === 'storage' && t.bindGroupViewLevelCount > 0)
       .combine('inSamePass', [true, false])
   )
   .fn(async t => {
     const {
-      colorAttachmentBaseLevel,
-      colorAttachmentBaseLayer,
+      colorAttachmentLevel,
+      colorAttachmentLayer,
       bindGroupViewBaseLevel,
       bindGroupViewLevelCount,
       bindGroupViewBaseLayer,
@@ -182,9 +187,9 @@ g.test('subresources_from_same_texture_as_color_attachment_and_in_bind_group')
     });
 
     const colorAttachment = t.getColorAttachment(texture, {
-      baseArrayLayer: colorAttachmentBaseLayer,
+      baseArrayLayer: colorAttachmentLayer,
       arrayLayerCount: 1,
-      baseMipLevel: colorAttachmentBaseLevel,
+      baseMipLevel: colorAttachmentLevel,
       mipLevelCount: 1,
     });
 
@@ -212,16 +217,15 @@ g.test('subresources_from_same_texture_as_color_attachment_and_in_bind_group')
       renderPass2.end();
     }
 
-    const colorAttachmentBaseLevelSuccess =
-      colorAttachmentBaseLevel < bindGroupViewBaseLevel ||
-      colorAttachmentBaseLevel >= bindGroupViewBaseLevel + bindGroupViewLevelCount;
-    const colorAttachmentBaseLayerSuccess =
-      colorAttachmentBaseLayer < bindGroupViewBaseLayer ||
-      colorAttachmentBaseLayer >= bindGroupViewBaseLayer + bindGroupViewLayerCount;
+    const isMipLevelOverlapped =
+      colorAttachmentLevel >= bindGroupViewBaseLevel &&
+      colorAttachmentLevel < bindGroupViewBaseLevel + bindGroupViewLevelCount;
+    const isArrayLayerOverlapped =
+      colorAttachmentLayer >= bindGroupViewBaseLayer &&
+      colorAttachmentLayer < bindGroupViewBaseLayer + bindGroupViewLayerCount;
+    const isOverlapped = isMipLevelOverlapped && isArrayLayerOverlapped;
 
-    const success = inSamePass
-      ? colorAttachmentBaseLevelSuccess || colorAttachmentBaseLayerSuccess
-      : true;
+    const success = inSamePass ? !isOverlapped : true;
     t.expectValidationError(() => {
       encoder.finish();
     }, !success);
