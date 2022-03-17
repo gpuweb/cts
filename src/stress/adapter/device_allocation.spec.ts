@@ -223,7 +223,7 @@ g.test('coexisting')
     const adapter = await getGPU().requestAdapter(kAdapterTypeOptions[adapterType]);
     assert(adapter !== null, 'Failed to get adapter.');
 
-    // Based on Vulkan comformance test requirement to be able to create multiple devices.
+    // Based on Vulkan conformance test requirement to be able to create multiple devices.
     const kNumDevices = 5;
 
     const devices = [];

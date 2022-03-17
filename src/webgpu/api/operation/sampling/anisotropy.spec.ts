@@ -6,7 +6,7 @@ Note that anisotropic filtering is never guaranteed to occur, but we might be ab
 things. If there are no guarantees we can issue warnings instead of failures. Ideas:
   - No *more* than the provided maxAnisotropy samples are used, by testing how many unique
     sample values come out of the sample operation.
-  - Check anisotropy is done in the correct direciton (by having a 2D gradient and checking we get
+  - Check anisotropy is done in the correct direction (by having a 2D gradient and checking we get
     more of the color in the correct direction).
 `;
 
