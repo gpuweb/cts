@@ -485,9 +485,11 @@ g.test('copy_contents_from_2d_context_canvas')
       width,
       height,
       expFormat,
-      false,
-      dstPremultiplied,
-      srcDoFlipYDuringCopy
+      srcDoFlipYDuringCopy,
+      {
+        srcPremultiplied: false,
+        dstPremultiplied,
+      }
     );
 
     t.doTestAndCheckResult(
@@ -598,9 +600,11 @@ g.test('copy_contents_from_gl_context_canvas')
       width,
       height,
       expFormat,
-      srcPremultiplied,
-      dstPremultiplied,
-      srcDoFlipYDuringCopy
+      srcDoFlipYDuringCopy,
+      {
+        srcPremultiplied,
+        dstPremultiplied,
+      }
     );
 
     t.doTestAndCheckResult(
@@ -731,9 +735,11 @@ g.test('copy_contents_from_gpu_context_canvas')
       width,
       height,
       expFormat,
-      srcPremultiplied,
-      dstPremultiplied,
-      srcDoFlipYDuringCopy
+      srcDoFlipYDuringCopy,
+      {
+        srcPremultiplied,
+        dstPremultiplied,
+      }
     );
 
     t.doTestAndCheckResult(
@@ -829,11 +835,13 @@ g.test('color_space_conversion')
       width,
       height,
       dstColorFormat,
-      false,
-      dstPremultiplied,
       srcDoFlipYDuringCopy,
-      srcColorSpace,
-      dstColorSpace
+      {
+        srcPremultiplied: false,
+        dstPremultiplied,
+        srcColorSpace,
+        dstColorSpace,
+      }
     );
 
     const texelCompareOptions: TexelCompareOptions = {
