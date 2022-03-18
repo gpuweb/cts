@@ -87,7 +87,7 @@ g.test('valid_texture_formats')
 
         break;
       }
-      case 'depthSencil': {
+      case 'depthStencil': {
         t.expectValidationError(() => {
           t.device.createRenderBundleEncoder({
             colorFormats: [],
