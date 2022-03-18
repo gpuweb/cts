@@ -29,6 +29,7 @@ setBaseResourcePath('../out/resources');
 
 const worker = optionEnabled('worker') ? new TestWorker(debug) : undefined;
 
+const autoCloseOnPass = document.getElementById('autoCloseOnPass');
 const resultsVis = document.getElementById('resultsVis');
 
 
@@ -240,6 +241,9 @@ function makeSubtreeHTML(n, parentLevel) {
         status += 'fail';
       }
       div.setAttribute('data-status', status);
+      if (autoCloseOnPass.checked && status === 'pass') {
+        div.firstElementChild.removeAttribute('open');
+      }
     };
 
     updateRenderedResult();
