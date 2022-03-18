@@ -9,11 +9,11 @@ import { clamp } from './math.js';
  */
 export function floatAsNormalizedInteger(float: number, bits: number, signed: boolean): number {
   if (signed) {
-    assert(float >= -1 && float <= 1);
+    assert(float >= -1 && float <= 1, () => `${float} out of bounds of snorm`);
     const max = Math.pow(2, bits - 1) - 1;
     return Math.round(float * max);
   } else {
-    assert(float >= 0 && float <= 1);
+    assert(float >= 0 && float <= 1, () => `${float} out of bounds of unorm`);
     const max = Math.pow(2, bits) - 1;
     return Math.round(float * max);
   }
