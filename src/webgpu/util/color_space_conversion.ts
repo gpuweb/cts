@@ -1,4 +1,4 @@
-import { assert } from '../../common/util/util.js';
+import { assert, unreachable } from '../../common/util/util.js';
 
 import { multiplyMatrices } from './math.js';
 
@@ -193,4 +193,69 @@ export function srgbToDisplayP3(pixel: {
   pixel.B = rgbVec[2];
 
   return pixel;
+}
+
+type InPlaceColorConversion = (rgba: {
+  R: number;
+  G: number;
+  B: number;
+  readonly A: number; // Alpha never changes during a conversion.
+}) => void;
+
+/**
+ * Returns a function which applies the specified colorspace/premultiplication conversion.
+ * Does not clamp, so may return values outside of the `dstColorSpace` gamut, due to either
+ * color space conversion or alpha premultiplication.
+ */
+export function makeInPlaceColorConversion({
+  srcPremultiplied,
+  dstPremultiplied,
+  srcColorSpace = 'srgb',
+  dstColorSpace = 'srgb',
+}: {
+  srcPremultiplied: boolean;
+  dstPremultiplied: boolean;
+  srcColorSpace?: PredefinedColorSpace;
+  dstColorSpace?: GPUPredefinedColorSpace;
+}): InPlaceColorConversion {
+  const requireColorSpaceConversion = srcColorSpace !== dstColorSpace;
+  const requireUnpremultiplyAlpha =
+    srcPremultiplied && (requireColorSpaceConversion || srcPremultiplied !== dstPremultiplied);
+  const requirePremultiplyAlpha =
+    dstPremultiplied && (requireColorSpaceConversion || srcPremultiplied !== dstPremultiplied);
+
+  return rgba => {
+    assert(rgba.A >= 0.0 && rgba.A <= 1.0, 'rgba.A out of bounds');
+
+    if (requireUnpremultiplyAlpha) {
+      if (rgba.A !== 0.0) {
+        rgba.R /= rgba.A;
+        rgba.G /= rgba.A;
+        rgba.B /= rgba.A;
+      } else {
+        assert(
+          rgba.R === 0.0 && rgba.G === 0.0 && rgba.B === 0.0 && rgba.A === 0.0,
+          'Unpremultiply ops with alpha value 0.0 requires all channels equals to 0.0'
+        );
+      }
+    }
+    // It's possible RGB are now > 1.
+    // This technically represents colors outside the src gamut, so no clamping yet.
+
+    if (requireColorSpaceConversion) {
+      // WebGPU currently only supports dstColorSpace = 'srgb'.
+      if (srcColorSpace === 'display-p3' && dstColorSpace === 'srgb') {
+        rgba = displayP3ToSrgb(rgba);
+      } else {
+        unreachable();
+      }
+    }
+    // Now RGB may also be negative if the src gamut is larger than the dst gamut.
+
+    if (requirePremultiplyAlpha) {
+      rgba.R *= rgba.A;
+      rgba.G *= rgba.A;
+      rgba.B *= rgba.A;
+    }
+  };
 }
