@@ -70,6 +70,7 @@ g.test('valid_texture_formats')
   )
   .fn(async t => {
     const { format, attachment } = t.params;
+    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
 
     const colorRenderable =
       kTextureFormatInfo[format].renderable && kTextureFormatInfo[format].color;
@@ -117,6 +118,7 @@ g.test('depth_stencil_readonly')
   )
   .fn(async t => {
     const { depthStencilFormat, depthReadOnly, stencilReadOnly } = t.params;
+    await t.selectDeviceForTextureFormatOrSkipTestCase(depthStencilFormat);
 
     let shouldError = false;
     if (
