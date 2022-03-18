@@ -9,7 +9,10 @@ type WriteCanvasMethod =
   | 'copyExternalImageToTexture'
   | 'DrawTextureSample'
   | 'DrawVertexColor'
-  | 'DrawFragcoord';
+  | 'DrawFragcoord'
+  | 'FragmentTextureStore'
+  | 'ComputeWorkgroup1x1TextureStore'
+  | 'ComputeWorkgroup2x2TextureStore';
 
 export function run(
   format: GPUTextureFormat,
@@ -21,6 +24,7 @@ export function run(
     switch (format) {
       case 'bgra8unorm':
       case 'rgba8unorm':
+      case 'rgba16float':
         break;
       case 'bgra8unorm-srgb':
       case 'rgba8unorm-srgb':
@@ -63,6 +67,63 @@ export function run(
             data.set(new Uint8Array([0x00, 0x7f, 0x00, 0xff]), 4); // green
             data.set(new Uint8Array([0x00, 0x00, 0x7f, 0xff]), 256 + 0); // blue
             data.set(new Uint8Array([0x7f, 0x7f, 0x00, 0xff]), 256 + 4); // yellow
+          }
+          break;
+        case 'rgba16float':
+          {
+            // ref: http://stackoverflow.com/questions/32633585/how-do-you-convert-to-half-floats-in-javascript
+            const toHalf = (val: number) => {
+              /* This method is faster than the OpenEXR implementation (very often
+               * used, eg. in Ogre), with the additional benefit of rounding, inspired
+               * by James Tursa?s half-precision code. */
+              const floatView = new Float32Array(1);
+              const int32View = new Int32Array(floatView.buffer);
+
+              floatView[0] = val;
+              const x = int32View[0];
+
+              let bits = (x >> 16) & 0x8000; /* Get the sign */
+              let m = (x >> 12) & 0x07ff; /* Keep one extra bit for rounding */
+              const e = (x >> 23) & 0xff; /* Using int is faster here */
+
+              /* If zero, or denormal, or exponent underflows too much for a denormal
+               * half, return signed zero. */
+              if (e < 103) {
+                return bits;
+              }
+
+              /* If NaN, return NaN. If Inf or exponent overflow, return Inf. */
+              if (e > 142) {
+                bits |= 0x7c00;
+                /* If exponent was 0xff and one mantissa bit was set, it means NaN,
+                 * not Inf, so make sure we set one mantissa bit too. */
+                bits |= (e === 255 ? 0 : 1) && x & 0x007fffff;
+                return bits;
+              }
+
+              /* If exponent underflows but not too much, return a denormal */
+              if (e < 113) {
+                m |= 0x0800;
+                /* Extra rounding may overflow and set mantissa to 0 and exponent
+                 * to 1, which is OK. */
+                bits |= (m >> (114 - e)) + ((m >> (113 - e)) & 1);
+                return bits;
+              }
+
+              bits |= ((e - 112) << 10) | (m >> 1);
+              /* Extra rounding. An overflow will set mantissa to 0 and increment
+               * the exponent, which is OK. */
+              bits += m & 1;
+              return bits;
+            };
+
+            const data = new Uint16Array(mapping);
+            data.set(new Uint16Array([toHalf(0.5), toHalf(0.0), toHalf(0.0), toHalf(1.0)]), 0); // red
+            data.set(new Uint16Array([toHalf(0.0), toHalf(0.5), toHalf(0.0), toHalf(1.0)]), 4); // green
+            // prettier-ignore
+            data.set(new Uint16Array([toHalf(0.0), toHalf(0.0), toHalf(0.5), toHalf(1.0)]), 128 + 0); // blue
+            // prettier-ignore
+            data.set(new Uint16Array([toHalf(0.5), toHalf(0.5), toHalf(0.0), toHalf(1.0)]), 128 + 4); // yellow
           }
           break;
       }
@@ -413,14 +474,191 @@ fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
       t.device.queue.submit([commandEncoder.finish()]);
     }
 
+    function FragmentTextureStore(ctx: GPUCanvasContext) {
+      const pipeline = t.device.createRenderPipeline({
+        vertex: {
+          module: t.device.createShaderModule({
+            code: `
+struct VertexOutput {
+  @builtin(position) Position : vec4<f32>;
+};
+
+@stage(vertex)
+fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
+  var pos = array<vec2<f32>, 6>(
+      vec2<f32>( 1.0,  1.0),
+      vec2<f32>( 1.0, -1.0),
+      vec2<f32>(-1.0, -1.0),
+      vec2<f32>( 1.0,  1.0),
+      vec2<f32>(-1.0, -1.0),
+      vec2<f32>(-1.0,  1.0));
+
+  var output : VertexOutput;
+  output.Position = vec4<f32>(pos[VertexIndex], 0.0, 1.0);
+  return output;
+}
+            `,
+          }),
+          entryPoint: 'main',
+        },
+        fragment: {
+          module: t.device.createShaderModule({
+            code: `
+@group(0) @binding(0) var outImage : texture_storage_2d<${format}, write>;
+
+@stage(fragment)
+fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
+  var coord = vec2<u32>(floor(fragcoord.xy));
+  var color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+  if (coord.x == 0u) {
+    if (coord.y == 0u) {
+      color.r = ${shaderValueStr};
+    } else {
+      color.b = ${shaderValueStr};
+    }
+  } else {
+    if (coord.y == 0u) {
+      color.g = ${shaderValueStr};
+    } else {
+      color.r = ${shaderValueStr};
+      color.g = ${shaderValueStr};
+    }
+  }
+  textureStore(outImage, vec2<i32>(coord), color);
+  return color;
+}
+            `,
+          }),
+          entryPoint: 'main',
+          targets: [{ format }],
+        },
+        primitive: {
+          topology: 'triangle-list',
+        },
+      });
+
+      const bg = t.device.createBindGroup({
+        entries: [{ binding: 0, resource: ctx.getCurrentTexture().createView() }],
+        layout: pipeline.getBindGroupLayout(0),
+      });
+
+      const outputTexture = t.device.createTexture({
+        format,
+        size: [ctx.canvas.width, ctx.canvas.height, 1],
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      });
+
+      const renderPassDescriptor: GPURenderPassDescriptor = {
+        colorAttachments: [
+          {
+            view: outputTexture.createView(),
+
+            loadValue: { r: 0.5, g: 0.5, b: 0.5, a: 1.0 },
+            storeOp: 'store',
+          },
+        ],
+      };
+
+      const commandEncoder = t.device.createCommandEncoder();
+      const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+      passEncoder.setPipeline(pipeline);
+      passEncoder.setBindGroup(0, bg);
+      passEncoder.draw(6, 1, 0, 0);
+      passEncoder.endPass();
+      t.device.queue.submit([commandEncoder.finish()]);
+    }
+
+    function ComputeWorkgroup1x1TextureStore(ctx: GPUCanvasContext) {
+      const pipeline = t.device.createComputePipeline({
+        compute: {
+          module: t.device.createShaderModule({
+            code: `
+              @group(0) @binding(0) var outImage : texture_storage_2d<${format}, write>;
+
+              @stage(compute) @workgroup_size(1) fn main() {
+                textureStore(outImage, vec2<i32>(0, 0), vec4<f32>(0.5, 0.0, 0.0, 1.0));
+                textureStore(outImage, vec2<i32>(1, 0), vec4<f32>(0.0, 0.5, 0.0, 1.0));
+                textureStore(outImage, vec2<i32>(0, 1), vec4<f32>(0.0, 0.0, 0.5, 1.0));
+                textureStore(outImage, vec2<i32>(1, 1), vec4<f32>(0.5, 0.5, 0.0, 1.0));
+                return;
+              }
+            `,
+          }),
+          entryPoint: 'main',
+        },
+      });
+
+      const bg = t.device.createBindGroup({
+        entries: [{ binding: 0, resource: ctx.getCurrentTexture().createView() }],
+        layout: pipeline.getBindGroupLayout(0),
+      });
+
+      const encoder = t.device.createCommandEncoder();
+      const pass = encoder.beginComputePass();
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, bg);
+      pass.dispatch(1);
+      pass.endPass();
+      t.device.queue.submit([encoder.finish()]);
+    }
+
+    function ComputeWorkgroup2x2TextureStore(ctx: GPUCanvasContext) {
+      const pipeline = t.device.createComputePipeline({
+        compute: {
+          module: t.device.createShaderModule({
+            code: `
+              @group(0) @binding(0) var outImage : texture_storage_2d<${format}, write>;
+
+              @stage(compute) @workgroup_size(2, 2, 1)
+              fn main(
+                @builtin(local_invocation_id) LocalInvocationID : vec3<u32>,
+                @builtin(local_invocation_index) LocalInvocationIndex : u32
+              ) {
+                var color = array<vec4<f32>, 4>(
+                  vec4<f32>( 0.5, 0.0, 0.0, 1.0),
+                  vec4<f32>( 0.0, 0.5, 0.0, 1.0),
+                  vec4<f32>( 0.0, 0.0, 0.5, 1.0),
+                  vec4<f32>( 0.5, 0.5, 0.0, 1.0));
+                textureStore(outImage, vec2<i32>(LocalInvocationID.xy), color[LocalInvocationIndex]);
+                return;
+              }
+            `,
+          }),
+          entryPoint: 'main',
+        },
+      });
+
+      const bg = t.device.createBindGroup({
+        entries: [{ binding: 0, resource: ctx.getCurrentTexture().createView() }],
+        layout: pipeline.getBindGroupLayout(0),
+      });
+
+      const encoder = t.device.createCommandEncoder();
+      const pass = encoder.beginComputePass();
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, bg);
+      pass.dispatch(1);
+      pass.endPass();
+      t.device.queue.submit([encoder.finish()]);
+    }
+
     for (const { cvs, writeCanvasMethod } of targets) {
       const ctx = cvs.getContext('webgpu');
       assert(ctx !== null, 'Failed to get WebGPU context from canvas');
 
+      let usage = GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT;
+      switch (format) {
+        case 'rgba8unorm':
+        case 'rgba16float':
+          usage |= GPUTextureUsage.STORAGE_BINDING;
+          break;
+        default:
+      }
+
       ctx.configure({
         device: t.device,
         format,
-        usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+        usage,
       });
 
       switch (writeCanvasMethod) {
@@ -441,6 +679,15 @@ fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
           break;
         case 'DrawFragcoord':
           DrawFragcoord(ctx);
+          break;
+        case 'FragmentTextureStore':
+          FragmentTextureStore(ctx);
+          break;
+        case 'ComputeWorkgroup1x1TextureStore':
+          ComputeWorkgroup1x1TextureStore(ctx);
+          break;
+        case 'ComputeWorkgroup2x2TextureStore':
+          ComputeWorkgroup2x2TextureStore(ctx);
           break;
         default:
           unreachable();
