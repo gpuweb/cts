@@ -14,7 +14,7 @@ const kColorAttachmentFormat = 'rgba32float';
 const kDX = 0.1; // Desired partial derivative in x
 const kDY = 0.2; // Desired partial derivative in y
 
-// renders a two-triagnle quad with uvs mapped a specific way so that dpdx/dpdy return expected values
+// renders a two-triangle quad with uvs mapped a specific way so that dpdx/dpdy return expected values
 class DerivativesTest extends GPUTest {
   copyRenderTargetToBuffer(rt) {
     const byteLength = kRTSize * kBytesPerRow;

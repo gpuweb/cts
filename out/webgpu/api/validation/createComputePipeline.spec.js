@@ -126,7 +126,7 @@ fn(async (t) => {
   t.doCreateComputePipelineTest(isAsync, shaderModuleStage === 'compute', descriptor);
 });
 
-g.test('enrty_point_name_must_match').
+g.test('entry_point_name_must_match').
 desc(
 `
 Tests calling createComputePipeline(Async) with valid compute stage shader and different entryPoint,

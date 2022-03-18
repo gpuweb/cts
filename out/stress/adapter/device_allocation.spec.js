@@ -284,7 +284,7 @@ fn(async (t) => {
       t.expect((await adapter.requestDevice()) !== null, 'unexpected null device');
     })();
     if (i % 10 === 0) {
-      // We need to occassionally wait for GC to clear out stale devices.
+      // We need to occasionally wait for GC to clear out stale devices.
       await attemptGarbageCollection();
     }
   }

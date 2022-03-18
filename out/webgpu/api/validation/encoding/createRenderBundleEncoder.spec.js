@@ -87,7 +87,7 @@ fn(async (t) => {
 
         break;
       }
-    case 'depthSencil':{
+    case 'depthStencil':{
         t.expectValidationError(() => {
           t.device.createRenderBundleEncoder({
             colorFormats: [],

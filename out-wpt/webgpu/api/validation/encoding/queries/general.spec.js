@@ -105,7 +105,7 @@ g.test('timestamp_query,invalid_query_set')
   .desc(
     `
 Tests that write timestamp to a invalid query set that failed during creation:
-- x= {non-pass} enconder
+- x= {non-pass} encoder
   `
   )
   .paramsSubcasesOnly(u => u.combine('querySetState', ['valid', 'invalid']))
