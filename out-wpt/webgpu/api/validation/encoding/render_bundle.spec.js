@@ -144,6 +144,7 @@ g.test('depth_stencil_formats_mismatch')
   )
   .fn(async t => {
     const { bundleFormat, passFormat } = t.params;
+    await t.selectDeviceForTextureFormatOrSkipTestCase([bundleFormat, passFormat]);
 
     const compatible = bundleFormat === passFormat;
 
@@ -254,6 +255,7 @@ g.test('depth_stencil_readonly_mismatch')
       passDepthReadOnly,
       passStencilReadOnly,
     } = t.params;
+    await t.selectDeviceForTextureFormatOrSkipTestCase(depthStencilFormat);
 
     let compatible =
       bundleDepthReadOnly === passDepthReadOnly && bundleStencilReadOnly === passStencilReadOnly;
