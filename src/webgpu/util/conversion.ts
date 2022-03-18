@@ -44,7 +44,8 @@ export function normalizedIntegerAsFloat(integer: number, bits: number, signed: 
  * sign, exponent, mantissa bits, and exponent bias.
  * Returns the result as an integer-valued JS `number`.
  *
- * Does not handle clamping, underflow, overflow, or denormalized numbers.
+ * Does not handle clamping, overflow, or denormal inputs.
+ * On underflow (result is subnormal), rounds to (signed) zero.
  */
 export function float32ToFloatBits(
   n: number,
@@ -80,18 +81,24 @@ export function float32ToFloatBits(
 
   // Convert to the new biased exponent.
   const newBiasedExp = bias + exp;
-  assert(newBiasedExp >= 0 && newBiasedExp < 1 << exponentBits);
+  assert(newBiasedExp < 1 << exponentBits, () => `input number ${n} overflows target type`);
 
-  // Mask only the mantissa, and discard the lower bits.
-  const newMantissa = (bits & 0x7fffff) >> mantissaBitsToDiscard;
-  return (sign << (exponentBits + mantissaBits)) | (newBiasedExp << mantissaBits) | newMantissa;
+  if (newBiasedExp <= 0) {
+    // Result is subnormal or zero. Round to (signed) zero.
+    return sign << (exponentBits + mantissaBits);
+  } else {
+    // Mask only the mantissa, and discard the lower bits.
+    const newMantissa = (bits & 0x7fffff) >> mantissaBitsToDiscard;
+    return (sign << (exponentBits + mantissaBits)) | (newBiasedExp << mantissaBits) | newMantissa;
+  }
 }
 
 /**
  * Encodes a JS `number` into an IEEE754 16 bit floating point number.
  * Returns the result as an integer-valued JS `number`.
  *
- * Does not handle clamping, underflow, overflow, or denormalized numbers.
+ * Does not handle clamping, overflow, or denormal inputs.
+ * On underflow (result is subnormal), rounds to (signed) zero.
  */
 export function float32ToFloat16Bits(n: number) {
   return float32ToFloatBits(n, 1, 5, 10, 15);

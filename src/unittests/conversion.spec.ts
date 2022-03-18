@@ -30,18 +30,34 @@ const cases = [
 ];
 
 g.test('float16BitsToFloat32').fn(t => {
-  cases.forEach(value => {
-    // some loose check
-    t.expect(Math.abs(float16BitsToFloat32(value[0]) - value[1]) <= 0.00001, value[0].toString(2));
-  });
+  for (const [bits, number] of [
+    ...cases,
+    [0b1_00000_0000000000, -0], // (resulting sign is not actually tested)
+    [0b0_00000_1111111111, 0.00006104], // subnormal f16 input
+    [0b1_00000_1111111111, -0.00006104],
+  ]) {
+    const actual = float16BitsToFloat32(bits);
+    t.expect(
+      // some loose check
+      Math.abs(actual - number) <= 0.00001,
+      `for ${bits.toString(2)}, expected ${number}, got ${actual}`
+    );
+  }
 });
 
 g.test('float32ToFloat16Bits').fn(t => {
-  cases.forEach(value => {
+  for (const [bits, number] of [
+    ...cases,
+    [0b0_00000_0000000000, 0.00001], // input that becomes subnormal in f16 is rounded to 0
+    [0b1_00000_0000000000, -0.00001], // and sign is preserved
+  ]) {
     // some loose check
-    // Does not handle clamping, underflow, overflow, or denormalized numbers.
-    t.expect(Math.abs(float32ToFloat16Bits(value[1]) - value[0]) <= 1, value[1].toString());
-  });
+    const actual = float32ToFloat16Bits(number);
+    t.expect(
+      Math.abs(actual - bits) <= 1,
+      `for ${number}, expected ${bits.toString(2)}, got ${actual.toString(2)}`
+    );
+  }
 });
 
 g.test('float32ToFloatBits_floatBitsToNumber')
