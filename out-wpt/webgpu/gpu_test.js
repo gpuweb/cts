@@ -14,7 +14,7 @@ import {
 import { CommandBufferMaker } from './util/command_buffer_maker.js';
 import { DevicePool, TestOOMedShouldAttemptGC } from './util/device_pool.js';
 import { align, roundDown } from './util/math.js';
-import { getTextureCopyLayout } from './util/texture/layout.js';
+import { getTextureCopyLayout, getTextureSubCopyLayout } from './util/texture/layout.js';
 import { kTexelRepresentationInfo } from './util/texture/texel_data.js';
 
 const devicePool = new DevicePool();
@@ -507,13 +507,7 @@ export class GPUTest extends Fixture {
 
   /** Return a GPUBuffer that data are going to be written into. */
   readSinglePixelFrom2DTexture(src, format, { x, y }, { slice = 0, layout }) {
-    const { byteLength, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
-      format,
-      '2d',
-      [1, 1, 1],
-      layout
-    );
-
+    const { byteLength, bytesPerRow, rowsPerImage } = getTextureSubCopyLayout(format, [1, 1]);
     const buffer = this.device.createBuffer({
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
@@ -525,7 +519,7 @@ export class GPUTest extends Fixture {
     commandEncoder.copyTextureToBuffer(
       { texture: src, mipLevel: layout?.mipLevel, origin: { x, y, z: slice } },
       { buffer, bytesPerRow, rowsPerImage },
-      mipSize
+      [1, 1]
     );
 
     this.queue.submit([commandEncoder.finish()]);

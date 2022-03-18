@@ -30,6 +30,7 @@ import {
 import { align, roundDown } from './util/math.js';
 import {
   getTextureCopyLayout,
+  getTextureSubCopyLayout,
   LayoutOptions as TextureLayoutOptions,
 } from './util/texture/layout.js';
 import { PerTexelComponent, kTexelRepresentationInfo } from './util/texture/texel_data.js';
@@ -596,12 +597,7 @@ export class GPUTest extends Fixture {
     { x, y }: { x: number; y: number },
     { slice = 0, layout }: { slice?: number; layout?: TextureLayoutOptions }
   ): GPUBuffer {
-    const { byteLength, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
-      format,
-      '2d',
-      [1, 1, 1],
-      layout
-    );
+    const { byteLength, bytesPerRow, rowsPerImage } = getTextureSubCopyLayout(format, [1, 1]);
     const buffer = this.device.createBuffer({
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
@@ -612,7 +608,7 @@ export class GPUTest extends Fixture {
     commandEncoder.copyTextureToBuffer(
       { texture: src, mipLevel: layout?.mipLevel, origin: { x, y, z: slice } },
       { buffer, bytesPerRow, rowsPerImage },
-      mipSize
+      [1, 1]
     );
     this.queue.submit([commandEncoder.finish()]);
 

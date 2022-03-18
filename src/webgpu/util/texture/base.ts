@@ -43,11 +43,15 @@ export function physicalMipSize(
 ): Required<GPUExtent3DDict> {
   switch (dimension) {
     case '1d':
-      assert(level === 0 && baseSize.height === 1 && baseSize.depthOrArrayLayers === 1);
+      assert(level === 0, '1d textures cannot be mipmapped');
+      assert(baseSize.height === 1 && baseSize.depthOrArrayLayers === 1, '1d texture not Wx1x1');
       return { width: baseSize.width, height: 1, depthOrArrayLayers: 1 };
 
     case '2d': {
-      assert(Math.max(baseSize.width, baseSize.height) >> level > 0);
+      assert(
+        Math.max(baseSize.width, baseSize.height) >> level > 0,
+        () => `level (${level}) too large for base size (${baseSize.width}x${baseSize.height})`
+      );
 
       const virtualWidthAtLevel = Math.max(baseSize.width >> level, 1);
       const virtualHeightAtLevel = Math.max(baseSize.height >> level, 1);
@@ -67,9 +71,14 @@ export function physicalMipSize(
     }
 
     case '3d': {
-      assert(Math.max(baseSize.width, baseSize.height, baseSize.depthOrArrayLayers) >> level > 0);
       assert(
-        kTextureFormatInfo[format].blockWidth === 1 && kTextureFormatInfo[format].blockHeight === 1
+        Math.max(baseSize.width, baseSize.height, baseSize.depthOrArrayLayers) >> level > 0,
+        () =>
+          `level (${level}) too large for base size (${baseSize.width}x${baseSize.height}x${baseSize.depthOrArrayLayers})`
+      );
+      assert(
+        kTextureFormatInfo[format].blockWidth === 1 && kTextureFormatInfo[format].blockHeight === 1,
+        'not implemented for 3d block formats'
       );
       return {
         width: Math.max(baseSize.width >> level, 1),
