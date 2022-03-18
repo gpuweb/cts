@@ -19,17 +19,53 @@ export interface SpecFile {
   readonly g: IterableTestGroup;
 }
 
+export interface ImportInfo {
+  url: string;
+}
+
+interface TestFileLoaderEventMap {
+  import: MessageEvent<ImportInfo>;
+  finish: MessageEvent<void>;
+}
+
+export interface TestFileLoader extends EventTarget {
+  addEventListener<K extends keyof TestFileLoaderEventMap>(
+    type: K,
+    listener: (this: TestFileLoader, ev: TestFileLoaderEventMap[K]) => void,
+    options?: boolean | AddEventListenerOptions
+  ): void;
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions
+  ): void;
+  removeEventListener<K extends keyof TestFileLoaderEventMap>(
+    type: K,
+    listener: (this: TestFileLoader, ev: TestFileLoaderEventMap[K]) => void,
+    options?: boolean | EventListenerOptions
+  ): void;
+  removeEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | EventListenerOptions
+  ): void;
+}
+
 // Base class for DefaultTestFileLoader and FakeTestFileLoader.
-export abstract class TestFileLoader {
+export abstract class TestFileLoader extends EventTarget {
   abstract listing(suite: string): Promise<TestSuiteListing>;
   protected abstract import(path: string): Promise<SpecFile>;
 
   importSpecFile(suite: string, path: string[]): Promise<SpecFile> {
-    return this.import(`${suite}/${path.join('/')}.spec.js`);
+    const url = `${suite}/${path.join('/')}.spec.js`;
+    this.dispatchEvent(
+      new MessageEvent<ImportInfo>('import', { data: { url } })
+    );
+    return this.import(url);
   }
 
   async loadTree(query: TestQuery, subqueriesToExpand: string[] = []): Promise<TestTree> {
-    return loadTreeForQuery(
+    const tree = await loadTreeForQuery(
       this,
       query,
       subqueriesToExpand.map(s => {
@@ -38,6 +74,8 @@ export abstract class TestFileLoader {
         return q;
       })
     );
+    this.dispatchEvent(new MessageEvent<void>('finish'));
+    return tree;
   }
 
   async loadCases(query: TestQuery): Promise<IterableIterator<TestTreeLeaf>> {
