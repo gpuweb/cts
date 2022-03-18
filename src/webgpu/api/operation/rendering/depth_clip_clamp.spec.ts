@@ -340,7 +340,7 @@ the default viewport). These expected values are clamped by the shader to [0.25,
 
 Then, run another pass with the viewport depth set to [0.25,0.75], and output various (unclamped)
 frag_depth values from its fragment shader with depthCompare:'not-equal'. These should get clamped;
-any fragments that have unexpected valeus then get drawn to the color buffer, which is later checked
+any fragments that have unexpected values then get drawn to the color buffer, which is later checked
 to be empty.`
   )
   .params(u =>

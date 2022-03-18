@@ -28,7 +28,7 @@ class F extends GPUTest {
 
   MakeVertexBuffer(isIndexed: boolean): GPUBuffer {
     /* prettier-ignore */
-    const vextices = isIndexed
+    const vertices = isIndexed
       ? [
           -1.0, -1.0,
           -1.0,  1.0,
@@ -46,7 +46,7 @@ class F extends GPUTest {
            1.0, -1.0,
            1.0,  1.0,
         ];
-    return this.makeBufferWithContents(new Float32Array(vextices), GPUBufferUsage.VERTEX);
+    return this.makeBufferWithContents(new Float32Array(vertices), GPUBufferUsage.VERTEX);
   }
 
   MakeIndirectBuffer(isIndexed: boolean, indirectOffset: number): GPUBuffer {

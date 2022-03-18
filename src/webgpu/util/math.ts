@@ -1,7 +1,7 @@
 import { assert } from '../../common/util/util.js';
-import { kBit } from '../shader/execution/builtin/builtin.js';
 
-import { f32, f32Bits, Scalar } from './conversion.js';
+import { kBit } from './constants.js';
+import { f32, f32Bits, i32, Scalar } from './conversion.js';
 
 /**
  * A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).
@@ -34,8 +34,11 @@ export function clamp(n: number, { min, max }: { min: number; max: number }): nu
 }
 
 /**
- * @returns the Units of Last Place difference between the numbers a and b.
- * If either `a` or `b` are not finite numbers, then diffULP() returns Infinity.
+ * @returns the (absolute) Units of Last Place difference between the float32 numbers a and b, taken
+ * as JS doubles. If either `a` or `b` are not finite numbers, then diffULP() returns Infinity.
+ *
+ * Subnormal numbers are skipped, so 0 is one ULP from the minimum normal number.
+ * Subnormal values are rounded to 0.
  */
 export function diffULP(a: number, b: number): number {
   if (!Number.isFinite(a) || !Number.isFinite(b)) {
@@ -249,7 +252,7 @@ function correctlyRoundedImpl(test_value: Scalar, target: number, flush: boolean
  *
  * Numerical stable version is adapted from http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0811r2.html
  */
-export function lerp(a: number, b: number, t: number) {
+export function lerp(a: number, b: number, t: number): number {
   if (!Number.isFinite(a) || !Number.isFinite(b)) {
     return Number.NaN;
   }
@@ -288,4 +291,48 @@ export function biasedRange(a: number, b: number, num_steps: number): Array<numb
   return Array.from(Array(num_steps).keys()).map(i =>
     lerp(a, b, Math.pow(lerp(0, 1, i / (num_steps - 1)), c))
   );
+}
+
+/**
+ * @returns the result matrix in Array<Array<number>> type.
+ *
+ * Matrix multiplication. A is m x n and B is n x p. Returns
+ * m x p result.
+ */
+// A is m x n. B is n x p. product is m x p.
+export function multiplyMatrices(
+  A: Array<Array<number>>,
+  B: Array<Array<number>>
+): Array<Array<number>> {
+  assert(A.length > 0 && B.length > 0 && B[0].length > 0 && A[0].length === B.length);
+  const product = new Array<Array<number>>(A.length);
+  for (let i = 0; i < product.length; ++i) {
+    product[i] = new Array<number>(B[0].length).fill(0);
+  }
+
+  for (let m = 0; m < A.length; ++m) {
+    for (let p = 0; p < B[0].length; ++p) {
+      for (let n = 0; n < B.length; ++n) {
+        product[m][p] += A[m][n] * B[n][p];
+      }
+    }
+  }
+
+  return product;
+}
+
+/** Sign-extend the `bits`-bit number `n` to a 32-bit signed integer. */
+export function signExtend(n: number, bits: number): number {
+  const shift = 32 - bits;
+  return (n << shift) >> shift;
+}
+
+/** @returns the closest 32-bit floating point value to the input */
+export function quantizeToF32(num: number): number {
+  return f32(num).value as number;
+}
+
+/** @returns the closest 32-bit signed integer value to the input */
+export function quantizeToI32(num: number): number {
+  return i32(num).value as number;
 }

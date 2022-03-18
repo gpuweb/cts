@@ -874,7 +874,7 @@ g.test('vertex_buffer_used_multiple_times_interleaved')
     const alignedFormatByteSize = align(formatByteSize, 4);
 
     // Create data for a single vertex buffer with many attributes, that will be split between
-    // many vertexbuffers set at different offsets.
+    // many vertex buffers set at different offsets.
 
     // In this test we want to test using the same vertex buffer for multiple different attributes.
     // For example if vbCount is 3, we will create a vertex buffer containing the following data:
@@ -961,7 +961,7 @@ g.test('max_buffers_and_attribs')
 
 g.test('array_stride_zero')
   .desc(
-    `Test that arrayStride 0 correctly uses the same data for all vertex/instances, while another test vertex buffer with arrayStrude != 0 gets different data.
+    `Test that arrayStride 0 correctly uses the same data for all vertex/instances, while another test vertex buffer with arrayStride != 0 gets different data.
   - Test for all formats
   - Test for both step modes`
   )
