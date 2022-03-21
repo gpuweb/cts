@@ -92,7 +92,7 @@ const kValidIdentifiers = new Set(['foo', 'Foo', '_foo0', '_0foo', 'foo__0']);
 const kInvalidIdentifiers = new Set([
   '_', // Single underscore is a syntactic token for phony assignment.
   '__foo', // Leading double underscore is reserved.
-  '0foo', // Must start with single underscore or alpha-numeric.
+  '0foo', // Must start with single underscore or a letter.
   // No punctuation:
   'foo.bar',
   'foo-bar',
