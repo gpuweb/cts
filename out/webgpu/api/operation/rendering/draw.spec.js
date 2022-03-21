@@ -563,7 +563,7 @@ struct OutPrimitive {
 ${vertexInputShaderLocations.map((i) => `  attrib${i} : ${wgslFormat};`).join('\n')}
 };
 struct OutBuffer {
-  primitives : @stride(${vertexInputShaderLocations.length * 4}) array<OutPrimitive>;
+  primitives : array<OutPrimitive>;
 };
 @group(0) @binding(0) var<storage, read_write> outBuffer : OutBuffer;
 

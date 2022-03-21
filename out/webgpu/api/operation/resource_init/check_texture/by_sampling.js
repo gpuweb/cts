@@ -64,7 +64,7 @@ subresourceRange) =>
             @group(0) @binding(1) var myTexture : texture${_multisampled}${_xd}<${shaderType}>;
 
             struct Result {
-              values : @stride(4) array<${shaderType}>;
+              values : array<${shaderType}>;
             };
             @group(0) @binding(3) var<storage, read_write> result : Result;
 

@@ -310,7 +310,13 @@ fn(async (t) => {
         switch (access) {
           case 'read':
             {
-              const exprLoadElement = isAtomic ? `atomicLoad(&${exprElement})` : exprElement;
+              let exprLoadElement = isAtomic ? `atomicLoad(&${exprElement})` : exprElement;
+              if (storageClass === 'uniform' && containerType === 'array') {
+                // Scalar types will be wrapped in a vec4 to satisfy array element size
+                // requirements for the uniform address space, so we need an additional index
+                // accessor expression.
+                exprLoadElement += '[0]';
+              }
               let condition = `${exprLoadElement} != ${exprZeroElement}`;
               if (containerType === 'matrix') condition = `any(${condition})`;
               testFunctionSource += `
