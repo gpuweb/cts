@@ -300,7 +300,7 @@ export class ValidationTest extends GPUTest {
       case 'FRAGMENT':
         return `@stage(fragment) fn main() {}`;
       case 'COMPUTE':
-        return `'@stage(compute) @workgroup_size(1) fn main() {}`;
+        return `@stage(compute) @workgroup_size(1) fn main() {}`;
     }
   }
 

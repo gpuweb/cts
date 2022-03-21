@@ -1,7 +1,7 @@
 export const description = `
-Validation tests for device lost induced via destroy.
+Tests for device lost induced via destroy.
   - Tests that prior to device destruction, valid APIs do not generate errors (control case).
-  - Tests that after device destruction, the same APIs generate validation errors (failure case).
+  - After device destruction, runs the same APIs. No expected observable results, so test crash or future failures are the only current failure indicators.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
@@ -28,11 +28,11 @@ import { ValidationTest } from '../../validation_test.js';
 
 class DeviceDestroyTests extends ValidationTest {
   /**
-   * Expects that `fn` does not produce any errors before the device is destroyed, and that `fn`
-   * produces a validation error after the device is destroyed. If `awaitLost` is true, we also
-   * wait for device.lost to resolve before executing `fn` in the destroy case.
+   * Expects that `fn` does not produce any errors before the device is destroyed, and then calls
+   * `fn` after the device is destroyed without any specific expectation. If `awaitLost` is true, we
+   * also wait for device.lost to resolve before executing `fn` in the destroy case.
    */
-  async expectValidationErrorAfterDestroy(fn: () => void, awaitLost: boolean): Promise<void> {
+  async executeAfterDestroy(fn: () => void, awaitLost: boolean): Promise<void> {
     this.expectDeviceLost('destroyed');
 
     this.expectValidationError(fn, false);
@@ -41,7 +41,7 @@ class DeviceDestroyTests extends ValidationTest {
       const lostInfo = await this.device.lost;
       this.expect(lostInfo.reason === 'destroyed');
     }
-    this.expectValidationError(fn);
+    fn();
   }
 }
 
@@ -77,7 +77,7 @@ Tests creating buffers on destroyed device fails. Tests valid combinations of:
   )
   .fn(async t => {
     const { awaitLost, usageType, usageCopy, mappedAtCreation } = t.params;
-    await t.expectValidationErrorAfterDestroy(() => {
+    await t.executeAfterDestroy(() => {
       t.device.createBuffer({
         size: 16,
         usage: kBufferUsageInfo[usageType] | kBufferUsageCopyInfo[usageCopy],
@@ -112,7 +112,7 @@ Tests creating 2d uncompressed textures on destroyed device fails. Tests valid c
   .fn(async t => {
     const { awaitLost, format, usageType, usageCopy } = t.params;
     const { blockWidth, blockHeight } = kTextureFormatInfo[format];
-    await t.expectValidationErrorAfterDestroy(() => {
+    await t.executeAfterDestroy(() => {
       t.device.createTexture({
         size: { width: blockWidth, height: blockHeight },
         usage: kTextureUsageTypeInfo[usageType] | kTextureUsageCopyInfo[usageCopy],
@@ -148,7 +148,7 @@ Tests creating 2d compressed textures on destroyed device fails. Tests valid com
     const { awaitLost, format, usageType, usageCopy } = t.params;
     const { blockWidth, blockHeight, feature } = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(feature);
-    await t.expectValidationErrorAfterDestroy(() => {
+    await t.executeAfterDestroy(() => {
       t.device.createTexture({
         size: { width: blockWidth, height: blockHeight },
         usage: kTextureUsageTypeInfo[usageType] | kTextureUsageCopyInfo[usageCopy],
@@ -188,7 +188,7 @@ Tests creating texture views on 2d uncompressed textures from destroyed device f
       usage: kTextureUsageTypeInfo[usageType] | kTextureUsageCopyInfo[usageCopy],
       format,
     });
-    await t.expectValidationErrorAfterDestroy(() => {
+    await t.executeAfterDestroy(() => {
       texture.createView({ format });
     }, awaitLost);
   });
@@ -225,7 +225,7 @@ Tests creating texture views on 2d compressed textures from destroyed device fai
       usage: kTextureUsageTypeInfo[usageType] | kTextureUsageCopyInfo[usageCopy],
       format,
     });
-    await t.expectValidationErrorAfterDestroy(() => {
+    await t.executeAfterDestroy(() => {
       texture.createView({ format });
     }, awaitLost);
   });
@@ -239,7 +239,7 @@ Tests creating samplers on destroyed device fails.
   .params(u => u.beginSubcases().combine('awaitLost', [true, false]))
   .fn(async t => {
     const { awaitLost } = t.params;
-    await t.expectValidationErrorAfterDestroy(() => {
+    await t.executeAfterDestroy(() => {
       t.device.createSampler();
     }, awaitLost);
   });
@@ -258,7 +258,7 @@ Tests creating bind group layouts on destroyed device fails. Tests valid combina
   .fn(async t => {
     const { awaitLost, entry } = t.params;
     const visibility = bindingTypeInfo(entry).validStages;
-    await t.expectValidationErrorAfterDestroy(() => {
+    await t.executeAfterDestroy(() => {
       t.device.createBindGroupLayout({
         entries: [{ binding: 0, visibility, ...entry }],
       });
@@ -302,7 +302,7 @@ Tests creating bind group on destroyed device fails. Tests valid combinations of
       entries: [{ binding: 0, visibility, ...entry }],
     });
     const resource = t.getBindingResource(resourceType);
-    await t.expectValidationErrorAfterDestroy(() => {
+    await t.executeAfterDestroy(() => {
       t.device.createBindGroup({ layout, entries: [{ binding: 0, resource }] });
     }, awaitLost);
   });
@@ -324,7 +324,7 @@ Tests creating pipeline layouts on destroyed device fails. Tests valid combinati
     const bindGroupLayout = t.device.createBindGroupLayout({
       entries: [{ binding: 0, visibility, ...entry }],
     });
-    await t.expectValidationErrorAfterDestroy(() => {
+    await t.executeAfterDestroy(() => {
       t.device.createPipelineLayout({
         bindGroupLayouts: [bindGroupLayout],
       });
@@ -343,7 +343,7 @@ Tests creating shader modules on destroyed device fails.
   )
   .fn(async t => {
     const { awaitLost, stage } = t.params;
-    await t.expectValidationErrorAfterDestroy(() => {
+    await t.executeAfterDestroy(() => {
       t.device.createShaderModule({ code: t.getNoOpShaderCode(stage) });
     }, awaitLost);
   });
@@ -359,7 +359,7 @@ Tests creating compute pipeline on destroyed device fails.
   .fn(async t => {
     const { awaitLost } = t.params;
     const cShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('COMPUTE') });
-    await t.expectValidationErrorAfterDestroy(() => {
+    await t.executeAfterDestroy(() => {
       t.device.createComputePipeline({
         compute: { module: cShader, entryPoint: 'main' },
       });
@@ -378,7 +378,7 @@ Tests creating render pipeline on destroyed device fails.
     const { awaitLost } = t.params;
     const vShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('VERTEX') });
     const fShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('FRAGMENT') });
-    await t.expectValidationErrorAfterDestroy(() => {
+    await t.executeAfterDestroy(() => {
       t.device.createRenderPipeline({
         vertex: { module: vShader, entryPoint: 'main' },
         fragment: {
@@ -399,7 +399,7 @@ Tests creating command encoders on destroyed device fails.
   .params(u => u.beginSubcases().combine('awaitLost', [true, false]))
   .fn(async t => {
     const { awaitLost } = t.params;
-    await t.expectValidationErrorAfterDestroy(() => {
+    await t.executeAfterDestroy(() => {
       t.device.createCommandEncoder();
     }, awaitLost);
   });
@@ -419,7 +419,7 @@ Tests creating render bundle encoders on destroyed device fails.
   )
   .fn(async t => {
     const { awaitLost, format } = t.params;
-    await t.expectValidationErrorAfterDestroy(() => {
+    await t.executeAfterDestroy(() => {
       t.device.createRenderBundleEncoder({ colorFormats: [format] });
     }, awaitLost);
   });
@@ -435,7 +435,7 @@ Tests creating query sets on destroyed device fails.
   .fn(async t => {
     const { awaitLost, type } = t.params;
     await t.selectDeviceForQueryTypeOrSkipTestCase(type);
-    await t.expectValidationErrorAfterDestroy(() => {
+    await t.executeAfterDestroy(() => {
       t.device.createQuerySet({ type, count: 4 });
     }, awaitLost);
   });
