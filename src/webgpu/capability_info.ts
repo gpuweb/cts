@@ -64,7 +64,8 @@ export const kAllBufferUsageBits = kBufferUsages.reduce(
 // Definitions for use locally. To access the table entries, use `kTextureFormatInfo`.
 
 // Note that we repeat the header multiple times in order to make it easier to read.
-const kRegularTextureFormatInfo = /* prettier-ignore */ makeTable(
+/* prettier-ignore */
+const kRegularTextureFormatInfo = makeTable(
                            ['renderable', 'multisample', 'resolve', 'color', 'depth', 'stencil', 'storage', 'copySrc', 'copyDst', 'sampleType', 'bytesPerBlock', 'blockWidth', 'blockHeight',                'feature', 'baseFormat'] as const,
                            [            ,              ,          ,    true,   false,     false,          ,      true,      true,             ,                ,            1,             1,                         ,   undefined ] as const, {
   // 8-bit formats
@@ -112,7 +113,8 @@ const kRegularTextureFormatInfo = /* prettier-ignore */ makeTable(
 } as const);
 /* prettier-ignore */
 const kTexFmtInfoHeader =  ['renderable', 'multisample', 'resolve', 'color', 'depth', 'stencil', 'storage', 'copySrc', 'copyDst', 'sampleType', 'bytesPerBlock', 'blockWidth', 'blockHeight',                'feature', 'baseFormat'] as const;
-const kSizedDepthStencilFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
+/* prettier-ignore */
+const kSizedDepthStencilFormatInfo = makeTable(kTexFmtInfoHeader,
                            [        true,          true,     false,   false,        ,          ,     false,     false,     false,             ,                ,            1,             1,                         ,   undefined ] as const, {
   'depth32float':          [            ,              ,          ,        ,    true,     false,          ,          ,          ,      'depth',               4],
   'depth16unorm':          [            ,              ,          ,        ,    true,     false,          ,          ,          ,      'depth',               2],
@@ -120,7 +122,8 @@ const kSizedDepthStencilFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfo
 } as const);
 
 // Multi aspect sample type are now set to their first aspect
-const kUnsizedDepthStencilFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
+/* prettier-ignore */
+const kUnsizedDepthStencilFormatInfo = makeTable(kTexFmtInfoHeader,
                            [        true,          true,     false,   false,        ,          ,     false,     false,     false,             ,       undefined,            1,             1,                         ,   undefined ] as const, {
   'depth24plus':           [            ,              ,          ,        ,    true,     false,          ,          ,          ,      'depth'],
   'depth24plus-stencil8':  [            ,              ,          ,        ,    true,      true,          ,          ,          ,      'depth'],
@@ -130,7 +133,8 @@ const kUnsizedDepthStencilFormatInfo = /* prettier-ignore */ makeTable(kTexFmtIn
 } as const);
 
 // Separated compressed formats by type
-const kBCTextureFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
+/* prettier-ignore */
+const kBCTextureFormatInfo = makeTable(kTexFmtInfoHeader,
                            [       false,         false,     false,    true,   false,     false,     false,      true,      true,             ,                ,            4,             4,                         ,  undefined ] as const, {
   // Block Compression (BC) formats
   'bc1-rgba-unorm':        [            ,              ,          ,        ,        ,          ,          ,          ,          ,      'float',               8,            4,             4, 'texture-compression-bc', 'bc1-rgba-unorm'],
@@ -148,7 +152,8 @@ const kBCTextureFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
   'bc7-rgba-unorm':        [            ,              ,          ,        ,        ,          ,          ,          ,          ,      'float',              16,            4,             4, 'texture-compression-bc', 'bc7-rgba-unorm'],
   'bc7-rgba-unorm-srgb':   [            ,              ,          ,        ,        ,          ,          ,          ,          ,      'float',              16,            4,             4, 'texture-compression-bc', 'bc7-rgba-unorm'],
 } as const);
-const kETC2TextureFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
+/* prettier-ignore */
+const kETC2TextureFormatInfo = makeTable(kTexFmtInfoHeader,
                            [       false,         false,     false,    true,   false,     false,     false,      true,      true,             ,                ,            4,             4,                          , undefined ] as const, {
   // Ericsson Compression (ETC2) formats
   'etc2-rgb8unorm':        [            ,              ,          ,        ,        ,          ,          ,          ,          ,      'float',               8,            4,             4, 'texture-compression-etc2',  'etc2-rgb8unorm'],
@@ -162,7 +167,8 @@ const kETC2TextureFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader
   'eac-rg11unorm':         [            ,              ,          ,        ,        ,          ,          ,          ,          ,      'float',              16,            4,             4, 'texture-compression-etc2'],
   'eac-rg11snorm':         [            ,              ,          ,        ,        ,          ,          ,          ,          ,      'float',              16,            4,             4, 'texture-compression-etc2'],
 } as const);
-const kASTCTextureFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
+/* prettier-ignore */
+const kASTCTextureFormatInfo = makeTable(kTexFmtInfoHeader,
                            [       false,         false,     false,    true,   false,     false,     false,      true,      true,             ,                ,             ,              ,                           , undefined] as const, {
   // Adaptable Scalable Compression (ASTC) formats
   'astc-4x4-unorm':        [            ,              ,          ,        ,        ,          ,          ,          ,          ,      'float',              16,            4,             4, 'texture-compression-astc', 'astc-4x4-unorm'],
