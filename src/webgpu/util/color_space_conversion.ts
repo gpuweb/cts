@@ -4,10 +4,11 @@ import { multiplyMatrices } from './math.js';
 
 // These color space conversion function definitions are copied directly from
 // CSS Color Module Level 4 Sample Code: https://drafts.csswg.org/css-color/#color-conversion-code
-// *EXCEPT* the conversion matrices are replaced with exact rational forms computed using
-// this Rust crate: https://crates.io/crates/rgb_derivation
-// as described for sRGB on this page: https://mina86.com/2019/srgb-xyz-matrix/
-// but using the numbers from the CSS spec: https://github.com/kainino0x/exact_css_xyz_matrices
+// *EXCEPT* the conversion matrices are replaced with exact rational forms computed here:
+// https://github.com/kainino0x/exact_css_xyz_matrices
+//   using this Rust crate: https://crates.io/crates/rgb_derivation
+//   as described for sRGB on this page: https://mina86.com/2019/srgb-xyz-matrix/
+//   but using the numbers from the CSS spec: https://www.w3.org/TR/css-color-4/#predefined
 
 // Sample code for color conversions
 // Conversion can also be done using ICC profiles and a Color Management System
