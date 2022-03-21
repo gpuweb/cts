@@ -70,12 +70,11 @@ Params:
     // |   \
     // |______\
     // Unit triangle shaped like this. 0-1 Y-down.
-    const triangleVertices =
-      /* prettier-ignore */ [
-        0.0, 0.0,
-        0.0, 1.0,
-        1.0, 1.0,
-      ];
+    const triangleVertices = /* prettier-ignore */ [
+      0.0, 0.0,
+      0.0, 1.0,
+      1.0, 1.0,
+    ];
 
     const renderTarget = t.device.createTexture({
       size: renderTargetSize,
