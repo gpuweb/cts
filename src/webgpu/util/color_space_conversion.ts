@@ -109,7 +109,7 @@ function gam_P3(RGB: Array<number>) {
  * using display-p3's D65 (no chromatic adaptation)
  */
 function lin_P3_to_XYZ(rgb: Array<Array<number>>) {
-  const M = [
+  const M = /* prettier-ignore */ [
     [608311 / 1250200, 189793 / 714400,  198249 / 1000160],
     [ 35783 /  156275, 247089 / 357200,  198249 / 2500400],
     [     0 /       1,  32229 / 714400, 5220557 / 5000800],
@@ -123,7 +123,7 @@ function lin_P3_to_XYZ(rgb: Array<Array<number>>) {
  * using display-p3's own white, D65 (no chromatic adaptation)
  */
 function XYZ_to_lin_P3(XYZ: Array<Array<number>>) {
-  const M = [
+  const M = /* prettier-ignore */ [
     [446124 / 178915, -333277 / 357830, -72051 / 178915],
     [-14852 /  17905,   63121 /  35810,    423 /  17905],
     [ 11844 / 330415,  -50337 / 660830, 316169 / 330415],
