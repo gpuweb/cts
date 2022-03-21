@@ -14,7 +14,7 @@ Test Plan:
 * copy offsets
   - sourceOffset is not a multiple of 4
   - destinationOffset is not a multiple of 4
-* Arthimetic overflow
+* Arithmetic overflow
   - (sourceOffset + copySize) is overflow
   - (destinationOffset + copySize) is overflow
 * Out of bounds

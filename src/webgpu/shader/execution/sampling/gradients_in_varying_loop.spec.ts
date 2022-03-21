@@ -13,7 +13,7 @@ const kColorAttachmentFormat = 'rgba32float';
 const kDX = 0.1; // Desired partial derivative in x
 const kDY = 0.2; // Desired partial derivative in y
 
-// renders a two-triagnle quad with uvs mapped a specific way so that dpdx/dpdy return expected values
+// renders a two-triangle quad with uvs mapped a specific way so that dpdx/dpdy return expected values
 class DerivativesTest extends GPUTest {
   copyRenderTargetToBuffer(rt: GPUTexture): GPUBuffer {
     const byteLength = kRTSize * kBytesPerRow;
@@ -159,14 +159,15 @@ class DerivativesTest extends GPUTest {
         {
           view: colorAttachmentView,
           storeOp: 'store',
-          loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+          clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+          loadOp: 'clear',
         },
       ],
     });
     pass.setPipeline(this.pipeline);
     pass.setBindGroup(0, bindGroup);
     pass.draw(6);
-    pass.endPass();
+    pass.end();
     this.device.queue.submit([encoder.finish()]);
 
     return colorAttachment;

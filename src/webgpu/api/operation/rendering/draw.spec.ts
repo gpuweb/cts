@@ -172,7 +172,8 @@ struct Output {
       colorAttachments: [
         {
           view: renderTarget.createView(),
-          loadValue: [0, 0, 0, 0],
+          clearValue: [0, 0, 0, 0],
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
@@ -276,7 +277,7 @@ struct Output {
       }
     }
 
-    renderPass.endPass();
+    renderPass.end();
     t.queue.submit([commandEncoder.finish()]);
 
     const green = new Uint8Array([0, 255, 0, 255]);
@@ -562,7 +563,7 @@ struct OutPrimitive {
 ${vertexInputShaderLocations.map(i => `  attrib${i} : ${wgslFormat};`).join('\n')}
 };
 struct OutBuffer {
-  primitives : @stride(${vertexInputShaderLocations.length * 4}) array<OutPrimitive>;
+  primitives : array<OutPrimitive>;
 };
 @group(0) @binding(0) var<storage, read_write> outBuffer : OutBuffer;
 
@@ -617,7 +618,8 @@ ${accumulateVariableAssignmentsInFragmentShader}
               format: 'rgba8unorm',
             })
             .createView(),
-          loadValue: [0, 0, 0, 0],
+          clearValue: [0, 0, 0, 0],
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
@@ -629,7 +631,7 @@ ${accumulateVariableAssignmentsInFragmentShader}
       renderPass.setVertexBuffer(i, vertexBuffers[i]);
     }
     renderPass.draw(vertexCount, instanceCount);
-    renderPass.endPass();
+    renderPass.end();
     t.device.queue.submit([commandEncoder.finish()]);
 
     t.expectGPUBufferValuesEqual(resultBuffer, expectedData);

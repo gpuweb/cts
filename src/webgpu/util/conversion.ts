@@ -101,11 +101,76 @@ export function float32ToFloat16Bits(n: number) {
  * Decodes an IEEE754 16 bit floating point number into a JS `number` and returns.
  */
 export function float16BitsToFloat32(float16Bits: number): number {
-  const buf = new DataView(new ArrayBuffer(Float32Array.BYTES_PER_ELEMENT));
-  // shift exponent and mantissa bits and fill with 0 on right, shift sign bit
-  buf.setUint32(0, ((float16Bits & 0x7fff) << 13) | ((float16Bits & 0x8000) << 16), true);
-  // shifting for bias different: f16 uses a bias of 15, f32 uses a bias of 127
-  return buf.getFloat32(0, true) * 2 ** (127 - 15);
+  return floatBitsToNumber(float16Bits, kFloat16Format);
+}
+
+type FloatFormat = { signed: 0 | 1; exponentBits: number; mantissaBits: number; bias: number };
+
+/** FloatFormat defining IEEE754 32-bit float. */
+export const kFloat32Format = { signed: 1, exponentBits: 8, mantissaBits: 23, bias: 127 } as const;
+/** FloatFormat defining IEEE754 16-bit float. */
+export const kFloat16Format = { signed: 1, exponentBits: 5, mantissaBits: 10, bias: 15 } as const;
+
+const workingData = new ArrayBuffer(4);
+const workingDataU32 = new Uint32Array(workingData);
+const workingDataF32 = new Float32Array(workingData);
+/** Bitcast u32 (represented as integer Number) to f32 (represented as floating-point Number). */
+export function float32BitsToNumber(bits: number): number {
+  workingDataU32[0] = bits;
+  return workingDataF32[0];
+}
+/** Bitcast f32 (represented as floating-point Number) to u32 (represented as integer Number). */
+export function numberToFloat32Bits(number: number): number {
+  workingDataF32[0] = number;
+  return workingDataU32[0];
+}
+
+/**
+ * Decodes an IEEE754 float with the supplied format specification into a JS number.
+ *
+ * The format MUST be no larger than a 32-bit float.
+ */
+export function floatBitsToNumber(bits: number, fmt: FloatFormat): number {
+  // Pad the provided bits out to f32, then convert to a `number` with the wrong bias.
+  // E.g. for f16 to f32:
+  // - f16: S    EEEEE MMMMMMMMMM
+  //        ^ 000^^^^^ ^^^^^^^^^^0000000000000
+  // - f32: S eeeEEEEE MMMMMMMMMMmmmmmmmmmmmmm
+
+  const kNonSignBits = fmt.exponentBits + fmt.mantissaBits;
+  const kNonSignBitsMask = (1 << kNonSignBits) - 1;
+  const expAndMantBits = bits & kNonSignBitsMask;
+  let f32BitsWithWrongBias = expAndMantBits << (kFloat32Format.mantissaBits - fmt.mantissaBits);
+  f32BitsWithWrongBias |= (bits << (31 - kNonSignBits)) & 0x8000_0000;
+  const numberWithWrongBias = float32BitsToNumber(f32BitsWithWrongBias);
+  return numberWithWrongBias * 2 ** (kFloat32Format.bias - fmt.bias);
+}
+
+/**
+ * Given a floating point number (as an integer representing its bits), computes how many ULPs it is
+ * from zero.
+ *
+ * Subnormal numbers are skipped, so that 0 is one ULP from the minimum normal number.
+ * Subnormal values are flushed to 0.
+ * Positive and negative 0 are both considered to be 0 ULPs from 0.
+ */
+export function floatBitsToNormalULPFromZero(bits: number, fmt: FloatFormat): number {
+  const mask_sign = fmt.signed << (fmt.exponentBits + fmt.mantissaBits);
+  const mask_expt = ((1 << fmt.exponentBits) - 1) << fmt.mantissaBits;
+  const mask_mant = (1 << fmt.mantissaBits) - 1;
+  const mask_rest = mask_expt | mask_mant;
+
+  assert(fmt.exponentBits + fmt.mantissaBits <= 31);
+
+  const sign = bits & mask_sign ? -1 : 1;
+  const rest = bits & mask_rest;
+  const subnormal_or_zero = (bits & mask_expt) === 0;
+  const infinity_or_nan = (bits & mask_expt) === mask_expt;
+  assert(!infinity_or_nan, 'no ulp representation for infinity/nan');
+
+  // The first normal number is mask_mant+1, so subtract mask_mant to make min_normal - zero = 1ULP.
+  const abs_ulp_from_zero = subnormal_or_zero ? 0 : rest - mask_mant;
+  return sign * abs_ulp_from_zero;
 }
 
 /**
@@ -317,6 +382,30 @@ export const TypeU8 = new ScalarType('u8', 1, (buf: Uint8Array, offset: number) 
 export const TypeBool = new ScalarType('bool', 4, (buf: Uint8Array, offset: number) =>
   bool(new Uint32Array(buf.buffer, offset)[0] !== 0)
 );
+
+/** @returns the ScalarType from the ScalarKind */
+export function scalarType(kind: ScalarKind): ScalarType {
+  switch (kind) {
+    case 'f32':
+      return TypeF32;
+    case 'f16':
+      return TypeF16;
+    case 'u32':
+      return TypeU32;
+    case 'u16':
+      return TypeU16;
+    case 'u8':
+      return TypeU8;
+    case 'i32':
+      return TypeI32;
+    case 'i16':
+      return TypeI16;
+    case 'i8':
+      return TypeI8;
+    case 'bool':
+      return TypeBool;
+  }
+}
 
 /** @returns the number of scalar (element) types of the given Type */
 export function numElementsOf(ty: Type): number {

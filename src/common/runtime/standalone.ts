@@ -29,6 +29,7 @@ setBaseResourcePath('../out/resources');
 
 const worker = optionEnabled('worker') ? new TestWorker(debug) : undefined;
 
+const autoCloseOnPass = document.getElementById('autoCloseOnPass') as HTMLInputElement;
 const resultsVis = document.getElementById('resultsVis')!;
 
 interface SubtreeResult {
@@ -240,6 +241,9 @@ function makeSubtreeHTML(n: TestSubtree, parentLevel: TestQueryLevel): Visualize
         status += 'fail';
       }
       div.setAttribute('data-status', status);
+      if (autoCloseOnPass.checked && status === 'pass') {
+        div.firstElementChild!.removeAttribute('open');
+      }
     };
 
     updateRenderedResult();
@@ -405,6 +409,12 @@ let lastQueryLevelToExpand: TestQueryLevel = 2;
   if (rootQuery.level > lastQueryLevelToExpand) {
     lastQueryLevelToExpand = rootQuery.level;
   }
+  loader.addEventListener('import', ev => {
+    $('#info')[0].textContent = `loading: ${ev.data.url}`;
+  });
+  loader.addEventListener('finish', () => {
+    $('#info')[0].textContent = '';
+  });
   const tree = await loader.loadTree(rootQuery);
 
   tree.dissolveSingleChildTrees();

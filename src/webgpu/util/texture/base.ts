@@ -41,22 +41,58 @@ export function physicalMipSize(
   dimension: GPUTextureDimension,
   level: number
 ): Required<GPUExtent3DDict> {
-  assert(dimension === '2d');
-  assert(Math.max(baseSize.width, baseSize.height) >> level > 0);
+  switch (dimension) {
+    case '1d':
+      assert(level === 0, '1d textures cannot be mipmapped');
+      assert(baseSize.height === 1 && baseSize.depthOrArrayLayers === 1, '1d texture not Wx1x1');
+      return { width: baseSize.width, height: 1, depthOrArrayLayers: 1 };
 
-  const virtualWidthAtLevel = Math.max(baseSize.width >> level, 1);
-  const virtualHeightAtLevel = Math.max(baseSize.height >> level, 1);
-  const physicalWidthAtLevel = align(virtualWidthAtLevel, kTextureFormatInfo[format].blockWidth);
-  const physicalHeightAtLevel = align(virtualHeightAtLevel, kTextureFormatInfo[format].blockHeight);
-  return {
-    width: physicalWidthAtLevel,
-    height: physicalHeightAtLevel,
-    depthOrArrayLayers: baseSize.depthOrArrayLayers,
-  };
+    case '2d': {
+      assert(
+        Math.max(baseSize.width, baseSize.height) >> level > 0,
+        () => `level (${level}) too large for base size (${baseSize.width}x${baseSize.height})`
+      );
+
+      const virtualWidthAtLevel = Math.max(baseSize.width >> level, 1);
+      const virtualHeightAtLevel = Math.max(baseSize.height >> level, 1);
+      const physicalWidthAtLevel = align(
+        virtualWidthAtLevel,
+        kTextureFormatInfo[format].blockWidth
+      );
+      const physicalHeightAtLevel = align(
+        virtualHeightAtLevel,
+        kTextureFormatInfo[format].blockHeight
+      );
+      return {
+        width: physicalWidthAtLevel,
+        height: physicalHeightAtLevel,
+        depthOrArrayLayers: baseSize.depthOrArrayLayers,
+      };
+    }
+
+    case '3d': {
+      assert(
+        Math.max(baseSize.width, baseSize.height, baseSize.depthOrArrayLayers) >> level > 0,
+        () =>
+          `level (${level}) too large for base size (${baseSize.width}x${baseSize.height}x${baseSize.depthOrArrayLayers})`
+      );
+      assert(
+        kTextureFormatInfo[format].blockWidth === 1 && kTextureFormatInfo[format].blockHeight === 1,
+        'not implemented for 3d block formats'
+      );
+      return {
+        width: Math.max(baseSize.width >> level, 1),
+        height: Math.max(baseSize.height >> level, 1),
+        depthOrArrayLayers: Math.max(baseSize.depthOrArrayLayers >> level, 1),
+      };
+    }
+  }
 }
 
 /**
  * Compute the "virtual size" of a mip level of a texture (not accounting for texel block rounding).
+ *
+ * MAINTENANCE_TODO: Change input/output to Required<GPUExtent3DDict> for consistency.
  */
 export function virtualMipSize(
   dimension: GPUTextureDimension,
@@ -109,10 +145,13 @@ export function viewDimensionsForTextureDimension(textureDimension: GPUTextureDi
   }
 }
 
-/** Reifies the optional fields of `GPUTextureDescriptor`. */
+/** Reifies the optional fields of `GPUTextureDescriptor`.
+ * MAINTENANCE_TODO: viewFormats should not be omitted here, but it seems likely that the
+ * @webgpu/types definition will have to change before we can include it again.
+ */
 export function reifyTextureDescriptor(
   desc: Readonly<GPUTextureDescriptor>
-): Required<Omit<GPUTextureDescriptor, 'label'>> {
+): Required<Omit<GPUTextureDescriptor, 'label' | 'viewFormats'>> {
   return { dimension: '2d' as const, mipLevelCount: 1, sampleCount: 1, ...desc };
 }
 

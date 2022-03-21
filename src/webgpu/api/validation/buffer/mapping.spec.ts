@@ -30,6 +30,7 @@ class F extends ValidationTest {
         await p!;
         assert(rejectName === null, 'mapAsync unexpectedly passed');
       } catch (ex) {
+        assert(ex instanceof Error, 'mapAsync rejected with non-error');
         assert(rejectName === ex.name, `mapAsync rejected unexpectedly with: ${ex}`);
       }
     }
@@ -439,7 +440,7 @@ g.test('getMappedRange,subrange,mapped')
 
 g.test('getMappedRange,subrange,mappedAtCreation')
   .desc(
-    `Test that old getMappedRange returned arrybuffer does not exist after unmap and newly returned
+    `Test that old getMappedRange returned arraybuffer does not exist after unmap and newly returned
     arraybuffer after new map has correct subrange`
   )
   .fn(async t => {

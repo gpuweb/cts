@@ -27,6 +27,7 @@ class F extends GPUTest {
         suffix = 'u';
         break;
       case 'float':
+      case 'unfilterable-float':
         fragColorType = 'f32';
         suffix = '';
         fractionDigits = 4;
@@ -128,13 +129,14 @@ g.test('color,component_count')
         {
           view: renderTarget.createView(),
           storeOp: 'store',
-          loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          loadOp: 'clear',
         },
       ],
     });
     pass.setPipeline(pipeline);
     pass.draw(3);
-    pass.endPass();
+    pass.end();
     t.device.queue.submit([encoder.finish()]);
 
     t.expectSingleColor(renderTarget, format, {
@@ -354,13 +356,14 @@ The attachment has a load value of [1, 0, 0, 1]
         {
           view: renderTarget.createView(),
           storeOp: 'store',
-          loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          loadOp: 'clear',
         },
       ],
     });
     pass.setPipeline(pipeline);
     pass.draw(3);
-    pass.endPass();
+    pass.end();
     t.device.queue.submit([encoder.finish()]);
 
     t.expectSingleColor(renderTarget, format, {

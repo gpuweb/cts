@@ -28,7 +28,7 @@ class F extends GPUTest {
 
   MakeVertexBuffer(isIndexed: boolean): GPUBuffer {
     /* prettier-ignore */
-    const vextices = isIndexed
+    const vertices = isIndexed
       ? [
           -1.0, -1.0,
           -1.0,  1.0,
@@ -46,7 +46,7 @@ class F extends GPUTest {
            1.0, -1.0,
            1.0,  1.0,
         ];
-    return this.makeBufferWithContents(new Float32Array(vextices), GPUBufferUsage.VERTEX);
+    return this.makeBufferWithContents(new Float32Array(vertices), GPUBufferUsage.VERTEX);
   }
 
   MakeIndirectBuffer(isIndexed: boolean, indirectOffset: number): GPUBuffer {
@@ -215,7 +215,8 @@ Params:
       colorAttachments: [
         {
           view: renderTarget.createView(),
-          loadValue: [0, 0, 0, 0],
+          clearValue: [0, 0, 0, 0],
+          loadOp: 'clear',
           storeOp: 'store',
         },
       ],
@@ -229,7 +230,7 @@ Params:
     } else {
       renderPass.drawIndirect(indirectBuffer, indirectOffset);
     }
-    renderPass.endPass();
+    renderPass.end();
     t.queue.submit([commandEncoder.finish()]);
 
     // The bottom left area is filled

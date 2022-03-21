@@ -62,7 +62,7 @@ g.test('usage')
 Test the buffer must have the appropriate COPY_SRC/COPY_DST usage.
 TODO update such that it tests
 - for all buffer source usages
-- for all buffer destintation usages
+- for all buffer destination usages
 `
   )
   .params(u =>
@@ -165,7 +165,7 @@ Test that bytesPerRow must be a multiple of 256 for CopyB2T and CopyT2B if it is
     if (method === 'WriteTexture') success = true;
     // If the copy height <= 1, bytesPerRow is not required.
     if (copyHeightInBlocks <= 1 && bytesPerRow === undefined) success = true;
-    // If bytesPerRow > 0 and it is a multiple of 256, it will succeeed if other parameters are valid.
+    // If bytesPerRow > 0 and it is a multiple of 256, it will succeed if other parameters are valid.
     if (bytesPerRow !== undefined && bytesPerRow > 0 && bytesPerRow % 256 === 0) success = true;
 
     const size = [info.blockWidth, _textureHeightInBlocks * info.blockHeight, 1];

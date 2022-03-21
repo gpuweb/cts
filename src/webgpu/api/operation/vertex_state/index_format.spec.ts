@@ -111,7 +111,7 @@ class IndexFormatTest extends GPUTest {
     primitiveTopology: GPUPrimitiveTopology = 'triangle-list'
   ): GPUBuffer {
     let pipeline: GPURenderPipeline;
-    // The indexFormat must be set in render pipeline descriptor that specifys a strip primitive
+    // The indexFormat must be set in render pipeline descriptor that specifies a strip primitive
     // topology for primitive restart testing
     if (primitiveTopology === 'line-strip' || primitiveTopology === 'triangle-strip') {
       pipeline = this.MakeRenderPipeline(primitiveTopology, indexFormat);
@@ -133,13 +133,18 @@ class IndexFormatTest extends GPUTest {
     const encoder = this.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
       colorAttachments: [
-        { view: colorAttachment.createView(), loadValue: [0, 0, 0, 0], storeOp: 'store' },
+        {
+          view: colorAttachment.createView(),
+          clearValue: [0, 0, 0, 0],
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
       ],
     });
     pass.setPipeline(pipeline);
     pass.setIndexBuffer(indexBuffer, indexFormat, indexOffset);
     pass.drawIndexed(indexCount);
-    pass.endPass();
+    pass.end();
     encoder.copyTextureToBuffer(
       { texture: colorAttachment },
       { buffer: result, bytesPerRow, rowsPerImage },

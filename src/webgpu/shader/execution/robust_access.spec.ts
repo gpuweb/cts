@@ -55,7 +55,7 @@ function runShaderTest(
 
     @stage(compute) @workgroup_size(1)
     fn main() {
-      ignore(constants.zero); // Ensure constants buffer is statically-accessed
+      _ = constants.zero; // Ensure constants buffer is statically-accessed
       result.value = runTest();
     }`;
 
@@ -85,7 +85,7 @@ function runShaderTest(
   pass.setBindGroup(0, testGroup, dynamicOffsets);
   pass.setBindGroup(1, group);
   pass.dispatch(1);
-  pass.endPass();
+  pass.end();
 
   t.queue.submit([encoder.finish()]);
 
@@ -310,7 +310,13 @@ g.test('linear_memory')
           switch (access) {
             case 'read':
               {
-                const exprLoadElement = isAtomic ? `atomicLoad(&${exprElement})` : exprElement;
+                let exprLoadElement = isAtomic ? `atomicLoad(&${exprElement})` : exprElement;
+                if (storageClass === 'uniform' && containerType === 'array') {
+                  // Scalar types will be wrapped in a vec4 to satisfy array element size
+                  // requirements for the uniform address space, so we need an additional index
+                  // accessor expression.
+                  exprLoadElement += '[0]';
+                }
                 let condition = `${exprLoadElement} != ${exprZeroElement}`;
                 if (containerType === 'matrix') condition = `any(${condition})`;
                 testFunctionSource += `

@@ -27,12 +27,13 @@ g.test('clear').fn(async t => {
     colorAttachments: [
       {
         view: colorAttachmentView,
-        loadValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+        clearValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+        loadOp: 'clear',
         storeOp: 'store',
       },
     ],
   });
-  pass.endPass();
+  pass.end();
   encoder.copyTextureToBuffer(
     { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
     { buffer: dst, bytesPerRow: 256 },
@@ -93,13 +94,14 @@ g.test('fullscreen_quad').fn(async t => {
       {
         view: colorAttachmentView,
         storeOp: 'store',
-        loadValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+        clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+        loadOp: 'clear',
       },
     ],
   });
   pass.setPipeline(pipeline);
   pass.draw(3);
-  pass.endPass();
+  pass.end();
   encoder.copyTextureToBuffer(
     { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
     { buffer: dst, bytesPerRow: 256 },
@@ -117,7 +119,7 @@ g.test('large_draw')
   Tests that draw calls behave reasonably with large vertex counts for
   non-indexed draws, large index counts for indexed draws, and large instance
   counts in both cases. Various combinations of these counts are tested with
-  both direct and indrect draw calls.
+  both direct and indirect draw calls.
 
   Draw call sizes are increased incrementally over these parameters until we the
   run out of values or completion of a draw call exceeds a fixed time limit of
@@ -261,7 +263,8 @@ g.test('large_draw')
           {
             view: colorAttachmentView,
             storeOp: 'store',
-            loadValue: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
+            clearValue: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
+            loadOp: 'clear',
           },
         ],
       });
@@ -286,7 +289,7 @@ g.test('large_draw')
           pass.draw(numVertices, numInstances);
         }
       }
-      pass.endPass();
+      pass.end();
       encoder.copyTextureToBuffer(
         { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
         { buffer: dst, bytesPerRow: kBytesPerRow },
