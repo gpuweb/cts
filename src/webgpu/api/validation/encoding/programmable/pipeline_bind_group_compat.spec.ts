@@ -488,8 +488,15 @@ g.test('bgl_binding_mismatch')
       .combine('useU32Array', [false, true])
   )
   .fn(t => {
-    const { encoderType, call, callWithZero, bgBindings, plBindings, _success, useU32Array } =
-      t.params;
+    const {
+      encoderType,
+      call,
+      callWithZero,
+      bgBindings,
+      plBindings,
+      _success,
+      useU32Array,
+    } = t.params;
     const visibility =
       encoderType === 'compute pass' ? GPUShaderStage.COMPUTE : GPUShaderStage.VERTEX;
 
@@ -600,8 +607,14 @@ g.test('bgl_resource_type_mismatch')
       .expand('useU32Array', p => (p.bgResourceType === 'uniformBuf' ? [true, false] : [false]))
   )
   .fn(t => {
-    const { encoderType, call, callWithZero, bgResourceType, plResourceType, useU32Array } =
-      t.params;
+    const {
+      encoderType,
+      call,
+      callWithZero,
+      bgResourceType,
+      plResourceType,
+      useU32Array,
+    } = t.params;
 
     const bglEntries: Array<GPUBindGroupLayoutEntry> = [
       t.createBindGroupLayoutEntry(encoderType, bgResourceType, useU32Array),

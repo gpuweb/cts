@@ -455,8 +455,14 @@ g.test('copy_contents_from_2d_context_canvas')
       .combine('height', [1, 2, 4, 15, 255, 256])
   )
   .fn(async t => {
-    const { width, height, canvasType, dstColorFormat, dstPremultiplied, srcDoFlipYDuringCopy } =
-      t.params;
+    const {
+      width,
+      height,
+      canvasType,
+      dstColorFormat,
+      dstPremultiplied,
+      srcDoFlipYDuringCopy,
+    } = t.params;
 
     // When dst texture format is rgb10a2unorm, the generated expected value of the result
     // may have tiny errors compared to the actual result when the channel value is

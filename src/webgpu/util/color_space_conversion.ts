@@ -136,12 +136,12 @@ function XYZ_to_lin_P3(XYZ: Array<Array<number>>) {
  * https://drafts.csswg.org/css-color/#predefined-to-predefined
  * display-p3 and sRGB share the same white points.
  */
-export function displayP3ToSrgb(pixel: { R: number; G: number; B: number; A: number }): {
+export function displayP3ToSrgb(pixel: {
   R: number;
   G: number;
   B: number;
   A: number;
-} {
+}): { R: number; G: number; B: number; A: number } {
   assert(
     pixel.R !== undefined && pixel.G !== undefined && pixel.B !== undefined,
     'color space conversion requires all of R, G and B components'
@@ -167,12 +167,12 @@ export function displayP3ToSrgb(pixel: { R: number; G: number; B: number; A: num
  * https://drafts.csswg.org/css-color/#predefined-to-predefined
  * display-p3 and sRGB share the same white points.
  */
-export function srgbToDisplayP3(pixel: { R: number; G: number; B: number; A: number }): {
+export function srgbToDisplayP3(pixel: {
   R: number;
   G: number;
   B: number;
   A: number;
-} {
+}): { R: number; G: number; B: number; A: number } {
   assert(
     pixel.R !== undefined && pixel.G !== undefined && pixel.B !== undefined,
     'color space conversion requires all of R, G and B components'

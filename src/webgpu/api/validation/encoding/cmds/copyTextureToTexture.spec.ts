@@ -388,8 +388,14 @@ Note: this is only tested for 2D textures as it is the only dimension compatible
       .combine('dstCopyLevel', [0, 1])
   )
   .fn(async t => {
-    const { format, copyBoxOffsets, srcTextureSize, dstTextureSize, srcCopyLevel, dstCopyLevel } =
-      t.params;
+    const {
+      format,
+      copyBoxOffsets,
+      srcTextureSize,
+      dstTextureSize,
+      srcCopyLevel,
+      dstCopyLevel,
+    } = t.params;
     await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 
     const kMipLevelCount = 3;

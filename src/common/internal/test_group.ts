@@ -107,7 +107,7 @@ export class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
 
     const test = new TestBuilder(parts, this.fixture, testCreationStack);
     this.tests.push(test);
-    return test as unknown as TestBuilderWithName<F>;
+    return (test as unknown) as TestBuilderWithName<F>;
   }
 
   validate(): void {

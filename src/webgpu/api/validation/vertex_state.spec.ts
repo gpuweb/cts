@@ -277,8 +277,12 @@ g.test('vertex_attribute_shaderLocation_limit')
       .combine('testShaderLocation', [0, 1, kMaxVertexAttributes - 1, kMaxVertexAttributes])
   )
   .fn(t => {
-    const { vertexBufferIndex, extraAttributeCount, testShaderLocation, testAttributeAtStart } =
-      t.params;
+    const {
+      vertexBufferIndex,
+      extraAttributeCount,
+      testShaderLocation,
+      testAttributeAtStart,
+    } = t.params;
 
     const attributes: GPUVertexAttribute[] = [];
     addTestAttributes(attributes, {
@@ -410,8 +414,12 @@ g.test('vertex_shader_input_location_in_vertex_state')
       .combine('testShaderLocation', [0, 1, 4, 7, kMaxVertexAttributes - 1])
   )
   .fn(t => {
-    const { vertexBufferIndex, extraAttributeCount, testAttributeAtStart, testShaderLocation } =
-      t.params;
+    const {
+      vertexBufferIndex,
+      extraAttributeCount,
+      testAttributeAtStart,
+      testShaderLocation,
+    } = t.params;
     // We have a shader using `testShaderLocation`.
     const shader = t.generateTestVertexShader([
       {
