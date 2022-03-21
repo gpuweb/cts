@@ -25,7 +25,7 @@ export const g = makeTestGroup(BufferSyncTest);
 g.test('ww')
   .desc(
     `
-    Perform a 'first' write operation on a texture subresource, followed by a 'second' write operation.
+    Perform a 'first' write operation on a buffer, followed by a 'second' write operation.
     Operations are separated by a 'boundary' (pass, encoder, queue-op, etc.).
     Test that the results are synchronized.
     The second write should overwrite the contents of the first.`
@@ -52,8 +52,8 @@ g.test('ww')
     const helper = new OperationContextHelper(t);
 
     const buffer = await t.createBufferWithValue(0);
-    await t.createBuffersAndTexturesForWriteOp(writeOps[0], 0, 1);
-    await t.createBuffersAndTexturesForWriteOp(writeOps[1], 1, 2);
+    await t.createIntermediateBuffersAndTexturesForWriteOp(writeOps[0], 0, 1);
+    await t.createIntermediateBuffersAndTexturesForWriteOp(writeOps[1], 1, 2);
 
     t.encodeWriteOp(helper, writeOps[0], contexts[0], buffer, 0, 1);
     helper.ensureBoundary(boundary);

@@ -1,4 +1,4 @@
-import { assert } from '../../../../../common/util/util.js';
+import { assert, unreachable } from '../../../../../common/util/util.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { checkElementsEqualEither } from '../../../../util/check_contents.js';
 import { OperationContext, OperationContextHelper } from '../operation_context_helper.js';
@@ -146,7 +146,11 @@ export class BufferSyncTest extends GPUTest {
   tmpValueTextures: (GPUTexture | undefined)[] = [undefined, undefined];
 
   // Create extra buffers/textures needed by write operation
-  async createBuffersAndTexturesForWriteOp(writeOp: WriteOp, slot: number, value: number) {
+  async createIntermediateBuffersAndTexturesForWriteOp(
+    writeOp: WriteOp,
+    slot: number,
+    value: number
+  ) {
     switch (writeOp) {
       case 'b2b-copy':
         this.tmpValueBuffers[slot] = await this.createBufferWithValue(value);
@@ -160,16 +164,27 @@ export class BufferSyncTest extends GPUTest {
   }
 
   // Create extra buffers/textures needed by read operation
-  async createBuffersAndTexturesForReadOp(readOp: ReadOp) {
+  async createBuffersForReadOp(readOp: ReadOp, srcValue: number, opValue: number) {
+    // This helps create values that will be written into dst buffer by the readop
     switch (readOp) {
       case 'input-index':
-        this.vertexBuffer = await this.createBufferWithValues([0, 1]);
+        // The index buffer will be the src buffer of the read op.
+        // The src value for readOp will be 0
+        // If the index buffer value is 0, the src value is written into the dst buffer.
+        // If the index buffer value is 1, the op value is written into the dst buffer.
+        this.vertexBuffer = await this.createBufferWithValues([srcValue, opValue]);
         break;
       case 'input-indirect':
-        this.vertexBuffer = await this.createBufferWithValues([1]);
+        // The indirect buffer for the draw cmd will be the src buffer of the read op.
+        // If the first value in the indirect buffer is 1, then the op value in vertex buffer will be written into dst buffer.
+        // If the first value in indirect buffer is 0, then nothing will be write into dst buffer.
+        this.vertexBuffer = await this.createBufferWithValues([opValue]);
         break;
       case 'input-indirect-index':
-        this.vertexBuffer = await this.createBufferWithValues([1]);
+        // The indirect buffer for draw indexed cmd will be the src buffer of the read op.
+        // If the first value in the indirect buffer is 1, then the opValue in vertex buffer will be written into dst buffer.
+        // If the first value in indirect buffer is 0, then nothing will be write into dst buffer.
+        this.vertexBuffer = await this.createBufferWithValues([opValue]);
         this.indexBuffer = await this.createBufferWithValues([0]);
         break;
       default:
@@ -183,7 +198,7 @@ export class BufferSyncTest extends GPUTest {
         // instanceCount = 1
         // firstVertex = 0
         // firstInstance = 0
-        srcBuffer = await this.createBufferWithValues([0, 1, 0, 0]);
+        srcBuffer = await this.createBufferWithValues([srcValue, 1, 0, 0]);
         break;
       case 'input-indirect-index':
         // indexCount = {0, 1}
@@ -191,20 +206,32 @@ export class BufferSyncTest extends GPUTest {
         // firstIndex = 0
         // baseVertex = 0
         // firstInstance = 0
-        srcBuffer = await this.createBufferWithValues([0, 1, 0, 0, 0]);
+        srcBuffer = await this.createBufferWithValues([srcValue, 1, 0, 0, 0]);
         break;
       case 'input-indirect-dispatch':
         // workgroupCountX = {0, 1}
         // workgroupCountY = 1
         // workgroupCountZ = 1
-        srcBuffer = await this.createBufferWithValues([0, 1, 1]);
+        srcBuffer = await this.createBufferWithValues([srcValue, 1, 1]);
         break;
       default:
-        srcBuffer = await this.createBufferWithValue(0);
+        srcBuffer = await this.createBufferWithValue(srcValue);
         break;
     }
 
-    const dstBuffer = await this.createBufferWithValue(0);
+    const dstBuffer = this.trackForCleanup(
+      await this.device.createBuffer({
+        size: Uint32Array.BYTES_PER_ELEMENT,
+        usage:
+          GPUBufferUsage.COPY_SRC |
+          GPUBufferUsage.COPY_DST |
+          GPUBufferUsage.STORAGE |
+          GPUBufferUsage.VERTEX |
+          GPUBufferUsage.INDEX |
+          GPUBufferUsage.INDIRECT |
+          GPUBufferUsage.UNIFORM,
+      })
+    );
 
     return { srcBuffer, dstBuffer };
   }
@@ -248,9 +275,7 @@ export class BufferSyncTest extends GPUTest {
       })
     );
     const bufferView = new Uint32Array(buffer.getMappedRange());
-    for (let i = 0, len = initValues.length; i < len; i++) {
-      bufferView[i] = initValues[i];
-    }
+    bufferView.set(initValues);
     buffer.unmap();
     await this.queue.onSubmittedWorkDone();
     return buffer;
@@ -296,7 +321,6 @@ export class BufferSyncTest extends GPUTest {
       @group(0) @binding(0) var<storage, read_write> data : Data;
       @stage(compute) @workgroup_size(1) fn main() {
         data.a = ${value}u;
-        return;
       }
     `;
 
@@ -341,7 +365,7 @@ export class BufferSyncTest extends GPUTest {
       @group(0) @binding(0) var<storage, read_write> data : Data;
       @stage(fragment) fn frag_main() -> @location(0) vec4<f32> {
         data.a = ${value}u;
-        return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+        return vec4<f32>();  // result does't matter
       }
     `,
     };
@@ -452,7 +476,7 @@ export class BufferSyncTest extends GPUTest {
             this.encodeWriteAsStorageBufferInComputePass(helper.computePassEncoder, buffer, value);
             break;
           default:
-            assert(false);
+            unreachable();
         }
         break;
       case 'b2b-copy':
@@ -464,7 +488,7 @@ export class BufferSyncTest extends GPUTest {
         this.encodeWriteByT2BCopy(helper.commandEncoder, buffer, writeOpSlot);
         break;
       default:
-        assert(false);
+        unreachable();
     }
   }
 
@@ -480,7 +504,6 @@ export class BufferSyncTest extends GPUTest {
 
       @stage(compute) @workgroup_size(1) fn main() {
         dstData.a = srcData.a;
-        return;
       }
     `;
 
@@ -533,7 +556,7 @@ export class BufferSyncTest extends GPUTest {
       
       @stage(fragment) fn frag_main(@location(0) @interpolate(flat) input : u32) -> @location(0) vec4<f32> {
         data.a = input;
-        return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+        return vec4<f32>();  // result does't matter
       }
       `,
     };
@@ -582,7 +605,7 @@ export class BufferSyncTest extends GPUTest {
       
       @stage(fragment) fn frag_main() -> @location(0) vec4<f32> {
         data.a = constant.a;
-        return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+        return vec4<f32>();  // result does't matter
       }
       `,
     };
@@ -604,7 +627,7 @@ export class BufferSyncTest extends GPUTest {
 
         @stage(fragment) fn frag_main() -> @location(0) vec4<f32> {
           dstData.a = srcData.a;
-          return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+          return vec4<f32>();  // result does't matter
         }
       `,
     };
@@ -872,7 +895,7 @@ export class BufferSyncTest extends GPUTest {
             this.encodeReadAsStorageBufferInComputePass(computePass, srcBuffer, dstBuffer);
             break;
           default:
-            assert(false);
+            unreachable();
         }
         break;
       case 'b2b-copy':
@@ -884,7 +907,7 @@ export class BufferSyncTest extends GPUTest {
         this.encodeReadByB2TCopy(helper.commandEncoder, srcBuffer, dstBuffer);
         break;
       default:
-        assert(false);
+        unreachable();
     }
   }
 

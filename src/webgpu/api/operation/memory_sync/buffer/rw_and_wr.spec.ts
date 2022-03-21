@@ -29,12 +29,17 @@ import {
   checkOpsValidForContext,
 } from './buffer_sync_test.js';
 
+// The src value is what stores in the src buffer before any operation.
+const kSrcValue = 0;
+// The op value is what the read/write operation write into the target buffer.
+const kOpValue = 1;
+
 export const g = makeTestGroup(BufferSyncTest);
 
 g.test('rw')
   .desc(
     `
-    Perform a 'read' operations on a texture subresource, followed by a 'write' operation.
+    Perform a 'read' operations on a buffer, followed by a 'write' operation.
     Operations are separated by a 'boundary' (pass, encoder, queue-op, etc.).
     Test that the results are synchronized.
     The read should not see the contents written by the subsequent write.`
@@ -62,21 +67,24 @@ g.test('rw')
     const { readContext, readOp, writeContext, writeOp, boundary } = t.params;
     const helper = new OperationContextHelper(t);
 
-    const { srcBuffer, dstBuffer } = await t.createBuffersAndTexturesForReadOp(readOp);
-    await t.createBuffersAndTexturesForWriteOp(writeOp, 0, 1);
+    const { srcBuffer, dstBuffer } = await t.createBuffersForReadOp(readOp, kSrcValue, kOpValue);
+    await t.createIntermediateBuffersAndTexturesForWriteOp(writeOp, 0, kOpValue);
 
+    // The read op will read from src buffer and write to dst buffer based on what it reads.
+    // The write op will write the given op value into src buffer as well.
+    // The write op happens after read op. So we are expecting the src value to be in the dst buffer.
     t.encodeReadOp(helper, readOp, readContext, srcBuffer, dstBuffer);
     helper.ensureBoundary(boundary);
-    t.encodeWriteOp(helper, writeOp, writeContext, srcBuffer, 0, 1);
+    t.encodeWriteOp(helper, writeOp, writeContext, srcBuffer, 0, kOpValue);
     helper.ensureSubmit();
     // Only verify the value of the first element of the dstBuffer
-    t.verifyData(dstBuffer, 0);
+    t.verifyData(dstBuffer, kSrcValue);
   });
 
 g.test('wr')
   .desc(
     `
-    Perform a 'write' operation on a texture subresource, followed by a 'read' operation.
+    Perform a 'write' operation on a buffer, followed by a 'read' operation.
     Operations are separated by a 'boundary' (pass, encoder, queue-op, etc.).
     Test that the results are synchronized.
     The read should see exactly the contents written by the previous write.`
@@ -104,13 +112,16 @@ g.test('wr')
     const { readContext, readOp, writeContext, writeOp, boundary } = t.params;
     const helper = new OperationContextHelper(t);
 
-    const { srcBuffer, dstBuffer } = await t.createBuffersAndTexturesForReadOp(readOp);
-    await t.createBuffersAndTexturesForWriteOp(writeOp, 0, 1);
+    const { srcBuffer, dstBuffer } = await t.createBuffersForReadOp(readOp, kSrcValue, kOpValue);
+    await t.createIntermediateBuffersAndTexturesForWriteOp(writeOp, 0, kOpValue);
 
-    t.encodeWriteOp(helper, writeOp, writeContext, srcBuffer, 0, 1);
+    // The write op will write the given op value into src buffer.
+    // The read op will read from src buffer and write to dst buffer based on what it reads.
+    // The write op happens before read op. So we are expecting the op value to be in the dst buffer.
+    t.encodeWriteOp(helper, writeOp, writeContext, srcBuffer, 0, kOpValue);
     helper.ensureBoundary(boundary);
     t.encodeReadOp(helper, readOp, readContext, srcBuffer, dstBuffer);
     helper.ensureSubmit();
     // Only verify the value of the first element of the dstBuffer
-    t.verifyData(dstBuffer, 1);
+    t.verifyData(dstBuffer, kOpValue);
   });
