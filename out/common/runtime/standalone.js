@@ -409,6 +409,12 @@ let lastQueryLevelToExpand = 2;
   if (rootQuery.level > lastQueryLevelToExpand) {
     lastQueryLevelToExpand = rootQuery.level;
   }
+  loader.addEventListener('import', (ev) => {
+    $('#info')[0].textContent = `loading: ${ev.data.url}`;
+  });
+  loader.addEventListener('finish', () => {
+    $('#info')[0].textContent = '';
+  });
   const tree = await loader.loadTree(rootQuery);
 
   tree.dissolveSingleChildTrees();

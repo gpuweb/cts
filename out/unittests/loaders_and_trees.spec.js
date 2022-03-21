@@ -110,10 +110,21 @@ class FakeTestFileLoader extends TestFileLoader {
 
 
 class LoadingTest extends UnitTest {
-  static loader = new FakeTestFileLoader();
+  loader = new FakeTestFileLoader();
+  events = [];
+  isListenersAdded = false;
+
+  collectEvents() {
+    this.events = [];
+    if (!this.isListenersAdded) {
+      this.isListenersAdded = true;
+      this.loader.addEventListener('import', (ev) => this.events.push(ev.data.url));
+      this.loader.addEventListener('finish', (ev) => this.events.push(null));
+    }
+  }
 
   async load(query) {
-    return Array.from(await LoadingTest.loader.loadCases(parseQuery(query)));
+    return Array.from(await this.loader.loadCases(parseQuery(query)));
   }
 
   async loadNames(query) {
@@ -129,16 +140,39 @@ g.test('suite').fn(async (t) => {
 });
 
 g.test('group').fn(async (t) => {
+  t.collectEvents();
   t.expect((await t.load('suite1:*')).length === 8);
+  t.expect(
+  objectEquals(t.events, [
+  'suite1/foo.spec.js',
+  'suite1/bar/biz.spec.js',
+  'suite1/bar/buzz/buzz.spec.js',
+  'suite1/baz.spec.js',
+  null]));
+
+
+
+  t.collectEvents();
   t.expect((await t.load('suite1:foo,*')).length === 3); // x:foo,* matches x:foo:
+  t.expect(objectEquals(t.events, ['suite1/foo.spec.js', null]));
+
+  t.collectEvents();
   t.expect((await t.load('suite1:bar,*')).length === 1);
+  t.expect(
+  objectEquals(t.events, ['suite1/bar/biz.spec.js', 'suite1/bar/buzz/buzz.spec.js', null]));
+
+
+  t.collectEvents();
   t.expect((await t.load('suite1:bar,buzz,buzz,*')).length === 1);
+  t.expect(objectEquals(t.events, ['suite1/bar/buzz/buzz.spec.js', null]));
 
   t.shouldReject('Error', t.load('suite1:f*'));
 
   {
     const s = new TestQueryMultiFile('suite1', ['bar', 'buzz']).toString();
+    t.collectEvents();
     t.expect((await t.load(s)).length === 1);
+    t.expect(objectEquals(t.events, ['suite1/bar/buzz/buzz.spec.js', null]));
   }
 });
 
@@ -652,10 +686,7 @@ expectedResult,
 includeEmptySubtrees = false)
 {
   t.debug(`expandThrough=${alwaysExpandThroughLevel} expectations=${expectations}`);
-  const treePromise = LoadingTest.loader.loadTree(
-  new TestQueryMultiFile('suite1', []),
-  expectations);
-
+  const treePromise = t.loader.loadTree(new TestQueryMultiFile('suite1', []), expectations);
   if (expectedResult === 'throws') {
     t.shouldReject('Error', treePromise, 'loadTree should have thrown Error');
     return;
@@ -679,8 +710,8 @@ ${tree.toString()}`);
   }
 }
 
-g.test('print').fn(async () => {
-  const tree = await LoadingTest.loader.loadTree(new TestQueryMultiFile('suite1', []));
+g.test('print').fn(async (t) => {
+  const tree = await t.loader.loadTree(new TestQueryMultiFile('suite1', []));
   tree.toString();
 });
 
