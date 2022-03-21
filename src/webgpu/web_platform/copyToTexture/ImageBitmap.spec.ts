@@ -273,14 +273,8 @@ g.test('from_canvas')
       .combine('height', [1, 2, 4, 15, 255, 256])
   )
   .fn(async t => {
-    const {
-      width,
-      height,
-      orientation,
-      dstColorFormat,
-      dstPremultiplied,
-      srcDoFlipYDuringCopy,
-    } = t.params;
+    const { width, height, orientation, dstColorFormat, dstPremultiplied, srcDoFlipYDuringCopy } =
+      t.params;
 
     // CTS sometimes runs on worker threads, where document is not available.
     // In this case, OffscreenCanvas can be used instead of <canvas>.

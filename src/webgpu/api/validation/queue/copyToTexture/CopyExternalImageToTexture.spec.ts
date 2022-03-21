@@ -264,7 +264,7 @@ g.test('source_offscreenCanvas,contexts')
 
     // MAINTENANCE_TODO: Workaround for @types/offscreencanvas missing an overload of
     // `OffscreenCanvas.getContext` that takes `string` or a union of context types.
-    const ctx = ((canvas as unknown) as HTMLCanvasElement).getContext(contextType);
+    const ctx = (canvas as unknown as HTMLCanvasElement).getContext(contextType);
 
     if (ctx === null) {
       t.skip('Failed to get context for canvas element');

@@ -118,7 +118,7 @@ export class Fixture {
         o instanceof WebGLRenderingContext ||
         o instanceof WebGL2RenderingContext
       ) {
-        this.objectsToCleanUp.push((o as unknown) as DestroyableObject);
+        this.objectsToCleanUp.push(o as unknown as DestroyableObject);
       }
     }
     return o;

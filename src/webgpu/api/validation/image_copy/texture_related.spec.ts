@@ -332,14 +332,8 @@ Test that the texture copy origin must be aligned to the format's block size.
       .expand('valueToCoordinate', texelBlockAlignmentTestExpanderForValueToCoordinate)
   )
   .fn(async t => {
-    const {
-      valueToCoordinate,
-      coordinateToTest,
-      format,
-      method,
-      depthOrArrayLayers,
-      dimension,
-    } = t.params;
+    const { valueToCoordinate, coordinateToTest, format, method, depthOrArrayLayers, dimension } =
+      t.params;
     const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 

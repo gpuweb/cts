@@ -1887,15 +1887,8 @@ copyTextureToBuffer() with depth aspect.
       .combine('mipLevel', [0, 2])
   )
   .fn(async t => {
-    const {
-      format,
-      copyMethod,
-      aspect,
-      offsetInBlocks,
-      dataPaddingInBytes,
-      copyDepth,
-      mipLevel,
-    } = t.params;
+    const { format, copyMethod, aspect, offsetInBlocks, dataPaddingInBytes, copyDepth, mipLevel } =
+      t.params;
     await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 
     const bytesPerBlock = depthStencilFormatAspectSize(format, aspect);

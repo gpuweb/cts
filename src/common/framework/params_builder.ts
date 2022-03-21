@@ -120,7 +120,7 @@ export function builderIterateCasesWithSubcases(builder: ParamsBuilderBase<{}, {
     iterateCasesWithSubcases(): CaseSubcaseIterable<{}, {}>;
   }
 
-  return ((builder as unknown) as IterableParamsBuilder).iterateCasesWithSubcases();
+  return (builder as unknown as IterableParamsBuilder).iterateCasesWithSubcases();
 }
 
 /**
@@ -133,7 +133,8 @@ export function builderIterateCasesWithSubcases(builder: ParamsBuilderBase<{}, {
  */
 export class CaseParamsBuilder<CaseP extends {}>
   extends ParamsBuilderBase<CaseP, {}>
-  implements Iterable<CaseP>, ParamsBuilder {
+  implements Iterable<CaseP>, ParamsBuilder
+{
   *iterateCasesWithSubcases(): CaseSubcaseIterable<CaseP, {}> {
     for (const a of this.cases()) {
       yield [a, undefined];
@@ -224,7 +225,8 @@ export const kUnitCaseParamsBuilder = new CaseParamsBuilder(function* () {
  */
 export class SubcaseParamsBuilder<CaseP extends {}, SubcaseP extends {}>
   extends ParamsBuilderBase<CaseP, SubcaseP>
-  implements ParamsBuilder {
+  implements ParamsBuilder
+{
   protected readonly subcases: (_: CaseP) => Generator<SubcaseP>;
 
   constructor(cases: () => Generator<CaseP>, generator: (_: CaseP) => Generator<SubcaseP>) {

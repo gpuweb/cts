@@ -236,13 +236,8 @@ g.test('mip_levels')
       })
   )
   .fn(t => {
-    const {
-      textureDimension,
-      viewDimension,
-      textureLevels,
-      baseMipLevel,
-      mipLevelCount,
-    } = t.params;
+    const { textureDimension, viewDimension, textureLevels, baseMipLevel, mipLevelCount } =
+      t.params;
 
     const textureDescriptor: GPUTextureDescriptor = {
       format: 'rgba8unorm',

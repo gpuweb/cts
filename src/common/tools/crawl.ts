@@ -14,7 +14,9 @@ const specFileSuffix = __filename.endsWith('.ts') ? '.spec.ts' : '.spec.js';
 
 async function crawlFilesRecursively(dir: string): Promise<string[]> {
   const subpathInfo = await Promise.all(
-    (await fs.promises.readdir(dir)).map(async d => {
+    (
+      await fs.promises.readdir(dir)
+    ).map(async d => {
       const p = path.join(dir, d);
       const stats = await fs.promises.stat(p);
       return {

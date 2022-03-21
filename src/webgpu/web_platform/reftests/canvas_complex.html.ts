@@ -69,11 +69,11 @@ export function run(
       buffer.unmap();
 
       const encoder = t.device.createCommandEncoder();
-      encoder.copyBufferToTexture({ buffer, bytesPerRow }, { texture: ctx.getCurrentTexture() }, [
-        2,
-        2,
-        1,
-      ]);
+      encoder.copyBufferToTexture(
+        { buffer, bytesPerRow },
+        { texture: ctx.getCurrentTexture() },
+        [2, 2, 1]
+      );
       t.device.queue.submit([encoder.finish()]);
     }
 
