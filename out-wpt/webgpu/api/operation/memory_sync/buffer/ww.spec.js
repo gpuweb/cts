@@ -13,69 +13,55 @@ Wait on another fence, then call expectContents to verify the written buffer.
   - if not single pass, x= writes in {same cmdbuf, separate cmdbufs, separate submits, separate queues}
 `;
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import {
+  kOperationBoundaries,
+  kBoundaryInfo,
+  OperationContextHelper,
+} from '../operation_context_helper.js';
 
-import { kAllWriteOps, BufferSyncTest } from './buffer_sync_test.js';
+import { kAllWriteOps, BufferSyncTest, checkOpsValidForContext } from './buffer_sync_test.js';
 
 export const g = makeTestGroup(BufferSyncTest);
 
-g.test('same_cmdbuf')
-  .desc('Test write-after-write operations in the same command buffer.')
-  .paramsSubcasesOnly(u =>
+g.test('ww')
+  .desc(
+    `
+    Perform a 'first' write operation on a buffer, followed by a 'second' write operation.
+    Operations are separated by a 'boundary' (pass, encoder, queue-op, etc.).
+    Test that the results are synchronized.
+    The second write should overwrite the contents of the first.`
+  )
+  .params(u =>
     u //
-      .combine('firstWriteOp', kAllWriteOps)
-      .combine('secondWriteOp', kAllWriteOps)
+      .combine('boundary', kOperationBoundaries)
+      .expand('_context', p => kBoundaryInfo[p.boundary].contexts)
+      .expandWithParams(function* ({ _context }) {
+        for (const firstWriteOp of kAllWriteOps) {
+          for (const secondWriteOp of kAllWriteOps) {
+            if (checkOpsValidForContext([firstWriteOp, secondWriteOp], _context)) {
+              yield {
+                writeOps: [firstWriteOp, secondWriteOp],
+                contexts: _context,
+              };
+            }
+          }
+        }
+      })
   )
   .fn(async t => {
-    const { firstWriteOp, secondWriteOp } = t.params;
+    const { writeOps, contexts, boundary } = t.params;
+    const helper = new OperationContextHelper(t);
+
     const buffer = await t.createBufferWithValue(0);
+    await t.createIntermediateBuffersAndTexturesForWriteOp(writeOps[0], 0, 1);
+    await t.createIntermediateBuffersAndTexturesForWriteOp(writeOps[1], 1, 2);
 
-    const encoder = t.device.createCommandEncoder();
-    await t.encodeWriteOp(encoder, firstWriteOp, buffer, 1);
-    await t.encodeWriteOp(encoder, secondWriteOp, buffer, 2);
-    t.device.queue.submit([encoder.finish()]);
-
+    t.encodeWriteOp(helper, writeOps[0], contexts[0], buffer, 0, 1);
+    helper.ensureBoundary(boundary);
+    t.encodeWriteOp(helper, writeOps[1], contexts[1], buffer, 1, 2);
+    helper.ensureSubmit();
     t.verifyData(buffer, 2);
   });
-
-g.test('separate_cmdbufs')
-  .desc('Test write-after-write operations in separate command buffers via the same submit.')
-  .paramsSubcasesOnly(u =>
-    u //
-      .combine('firstWriteOp', kAllWriteOps)
-      .combine('secondWriteOp', kAllWriteOps)
-  )
-  .fn(async t => {
-    const { firstWriteOp, secondWriteOp } = t.params;
-    const buffer = await t.createBufferWithValue(0);
-
-    const command_buffers = [];
-    command_buffers.push(await t.createCommandBufferWithWriteOp(firstWriteOp, buffer, 1));
-    command_buffers.push(await t.createCommandBufferWithWriteOp(secondWriteOp, buffer, 2));
-    t.device.queue.submit(command_buffers);
-
-    t.verifyData(buffer, 2);
-  });
-
-g.test('separate_submits')
-  .desc('Test write-after-write operations via separate submits in the same queue.')
-  .paramsSubcasesOnly(u =>
-    u //
-      .combine('firstWriteOp', ['write-buffer', ...kAllWriteOps])
-      .combine('secondWriteOp', ['write-buffer', ...kAllWriteOps])
-  )
-  .fn(async t => {
-    const { firstWriteOp, secondWriteOp } = t.params;
-    const buffer = await t.createBufferWithValue(0);
-
-    await t.submitWriteOp(firstWriteOp, buffer, 1);
-    await t.submitWriteOp(secondWriteOp, buffer, 2);
-
-    t.verifyData(buffer, 2);
-  });
-
-g.test('separate_queues')
-  .desc('Test write-after-write operations in separate queues.')
-  .unimplemented();
 
 g.test('two_draws_in_the_same_render_pass')
   .desc(

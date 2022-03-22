@@ -16,18 +16,19 @@ import {
   kTexelRepresentationInfo,
   PerTexelComponent,
 } from '../../../../util/texture/texel_data.js';
-
 import {
   kOperationBoundaries,
+  OperationContext,
   kBoundaryInfo,
+  OperationContextHelper,
+} from '../operation_context_helper.js';
+
+import {
   kAllReadOps,
   kAllWriteOps,
   checkOpsValidForContext,
   Op,
-  OperationBoundary,
-  OperationContext,
   kOpInfo,
-  kOperationContexts,
 } from './texture_sync_test.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -52,23 +53,8 @@ const fullscreenQuadWGSL = `
   }
 `;
 
-class TextureSyncTestHelper {
-  // We start at the queue context which is top-level.
-  private currentContext: OperationContext = 'queue';
-
-  // Set based on the current context.
-  private queue: GPUQueue;
-  private commandEncoder?: GPUCommandEncoder;
-  private computePassEncoder?: GPUComputePassEncoder;
-  private renderPassEncoder?: GPURenderPassEncoder;
-  private renderBundleEncoder?: GPURenderBundleEncoder;
-
-  private t: GPUTest;
-  private device: GPUDevice;
+class TextureSyncTestHelper extends OperationContextHelper {
   private texture: GPUTexture;
-
-  private commandBuffers: GPUCommandBuffer[] = [];
-  private renderBundles: GPURenderBundle[] = [];
 
   public readonly kTextureSize = [4, 4] as const;
   public readonly kTextureFormat: EncodableTextureFormat = 'rgba8unorm';
@@ -79,9 +65,7 @@ class TextureSyncTestHelper {
       usage: GPUTextureUsageFlags;
     }
   ) {
-    this.t = t;
-    this.device = t.device;
-    this.queue = t.device.queue;
+    super(t);
     this.texture = t.trackForCleanup(
       t.device.createTexture({
         size: this.kTextureSize,
@@ -558,208 +542,6 @@ class TextureSyncTestHelper {
       case 't2b-copy':
       case 'sample':
         unreachable();
-    }
-  }
-
-  // Ensure that all encoded commands are finished and submitted.
-  ensureSubmit() {
-    this.ensureContext('queue');
-    this.flushCommandBuffers();
-  }
-
-  private popContext(): GPURenderBundle | GPUCommandBuffer | null {
-    switch (this.currentContext) {
-      case 'queue':
-        unreachable();
-        break;
-      case 'command-encoder': {
-        assert(this.commandEncoder !== undefined);
-        const commandBuffer = this.commandEncoder.finish();
-        this.commandEncoder = undefined;
-        this.currentContext = 'queue';
-        return commandBuffer;
-      }
-      case 'compute-pass-encoder':
-        assert(this.computePassEncoder !== undefined);
-        this.computePassEncoder.end();
-        this.computePassEncoder = undefined;
-        this.currentContext = 'command-encoder';
-        break;
-      case 'render-pass-encoder':
-        assert(this.renderPassEncoder !== undefined);
-        this.renderPassEncoder.end();
-        this.renderPassEncoder = undefined;
-        this.currentContext = 'command-encoder';
-        break;
-      case 'render-bundle-encoder': {
-        assert(this.renderBundleEncoder !== undefined);
-        const renderBundle = this.renderBundleEncoder.finish();
-        this.renderBundleEncoder = undefined;
-        this.currentContext = 'render-pass-encoder';
-        return renderBundle;
-      }
-    }
-    return null;
-  }
-
-  private makeDummyAttachment(): GPURenderPassColorAttachment {
-    const texture = this.t.trackForCleanup(
-      this.device.createTexture({
-        format: this.kTextureFormat,
-        size: this.kTextureSize,
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
-      })
-    );
-    return {
-      view: texture.createView(),
-      loadOp: 'load',
-      storeOp: 'store',
-    };
-  }
-
-  private ensureContext(context: OperationContext) {
-    // Find the common ancestor. So we can transition from currentContext -> context.
-    const ancestorContext =
-      kOperationContexts[
-        Math.min(
-          kOperationContexts.indexOf(context),
-          kOperationContexts.indexOf(this.currentContext)
-        )
-      ];
-
-    // Pop the context until we're at the common ancestor.
-    while (this.currentContext !== ancestorContext) {
-      // About to pop the render pass encoder. Execute any outstanding render bundles.
-      if (this.currentContext === 'render-pass-encoder') {
-        this.flushRenderBundles();
-      }
-
-      const result = this.popContext();
-      if (result) {
-        if (result instanceof GPURenderBundle) {
-          this.renderBundles.push(result);
-        } else {
-          this.commandBuffers.push(result);
-        }
-      }
-    }
-
-    if (this.currentContext === context) {
-      return;
-    }
-
-    switch (context) {
-      case 'queue':
-        unreachable();
-        break;
-      case 'command-encoder':
-        assert(this.currentContext === 'queue');
-        this.commandEncoder = this.device.createCommandEncoder();
-        break;
-      case 'compute-pass-encoder':
-        switch (this.currentContext) {
-          case 'queue':
-            this.commandEncoder = this.device.createCommandEncoder();
-          // fallthrough
-          case 'command-encoder':
-            assert(this.commandEncoder !== undefined);
-            this.computePassEncoder = this.commandEncoder.beginComputePass();
-            break;
-          case 'compute-pass-encoder':
-          case 'render-bundle-encoder':
-          case 'render-pass-encoder':
-            unreachable();
-        }
-        break;
-      case 'render-pass-encoder':
-        switch (this.currentContext) {
-          case 'queue':
-            this.commandEncoder = this.device.createCommandEncoder();
-          // fallthrough
-          case 'command-encoder':
-            assert(this.commandEncoder !== undefined);
-            this.renderPassEncoder = this.commandEncoder.beginRenderPass({
-              colorAttachments: [this.makeDummyAttachment()],
-            });
-            break;
-          case 'render-pass-encoder':
-          case 'render-bundle-encoder':
-          case 'compute-pass-encoder':
-            unreachable();
-        }
-        break;
-      case 'render-bundle-encoder':
-        switch (this.currentContext) {
-          case 'queue':
-            this.commandEncoder = this.device.createCommandEncoder();
-          // fallthrough
-          case 'command-encoder':
-            assert(this.commandEncoder !== undefined);
-            this.renderPassEncoder = this.commandEncoder.beginRenderPass({
-              colorAttachments: [this.makeDummyAttachment()],
-            });
-          // fallthrough
-          case 'render-pass-encoder':
-            this.renderBundleEncoder = this.device.createRenderBundleEncoder({
-              colorFormats: [this.kTextureFormat],
-            });
-            break;
-          case 'render-bundle-encoder':
-          case 'compute-pass-encoder':
-            unreachable();
-        }
-        break;
-    }
-    this.currentContext = context;
-  }
-
-  private flushRenderBundles() {
-    assert(this.renderPassEncoder !== undefined);
-    if (this.renderBundles.length) {
-      this.renderPassEncoder.executeBundles(this.renderBundles);
-      this.renderBundles = [];
-    }
-  }
-
-  private flushCommandBuffers() {
-    if (this.commandBuffers.length) {
-      this.queue.submit(this.commandBuffers);
-      this.commandBuffers = [];
-    }
-  }
-
-  ensureBoundary(boundary: OperationBoundary) {
-    switch (boundary) {
-      case 'command-buffer':
-        this.ensureContext('queue');
-        break;
-      case 'queue-op':
-        this.ensureContext('queue');
-        // Submit any GPUCommandBuffers so the next one is in a separate submit.
-        this.flushCommandBuffers();
-        break;
-      case 'dispatch':
-        // Nothing to do to separate dispatches.
-        assert(this.currentContext === 'compute-pass-encoder');
-        break;
-      case 'draw':
-        // Nothing to do to separate draws.
-        assert(
-          this.currentContext === 'render-pass-encoder' ||
-            this.currentContext === 'render-bundle-encoder'
-        );
-        break;
-      case 'pass':
-        this.ensureContext('command-encoder');
-        break;
-      case 'render-bundle':
-        this.ensureContext('render-pass-encoder');
-        break;
-      case 'execute-bundles':
-        this.ensureContext('render-pass-encoder');
-        // Execute any GPURenderBundles so the next one is in a separate executeBundles.
-        this.flushRenderBundles();
-        break;
     }
   }
 }
