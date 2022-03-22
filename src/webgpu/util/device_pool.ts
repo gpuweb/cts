@@ -5,6 +5,7 @@ import { DefaultLimits } from '../constants.js';
 
 export interface DeviceProvider {
   acquire(): GPUDevice;
+  expectDeviceLost(reason: GPUDeviceLostReason): void;
 }
 
 class TestFailedButDeviceReusable extends Error {}
@@ -72,7 +73,17 @@ export class DevicePool {
           holder.device.destroy();
         }
       }
-      throw ex;
+      // In the try block, we may throw an error if the device is lost in order to force device
+      // reinitialization, however, if the device lost was expected we want to suppress the error
+      // The device lost is expected when `holder.expectedLostReason` is equal to
+      // `holder.lostInfo.reason`.
+      const expectedDeviceLost =
+        holder.expectedLostReason !== undefined &&
+        holder.lostInfo !== undefined &&
+        holder.expectedLostReason === holder.lostInfo.reason;
+      if (!expectedDeviceLost) {
+        throw ex;
+      }
     } finally {
       // Mark the holder as free. (This only has an effect if the pool still has the holder.)
       // This could be done at the top but is done here to guard against async-races during release.
@@ -241,6 +252,8 @@ class DeviceHolder implements DeviceProvider {
   state: DeviceHolderState = 'free';
   // initially undefined; becomes set when the device is lost
   lostInfo?: GPUDeviceLostInfo;
+  // Set if the device is expected to be lost.
+  expectedLostReason?: GPUDeviceLostReason;
 
   // Gets a device and creates a DeviceHolder.
   // If the device is lost, DeviceHolder.lost gets set.
@@ -270,6 +283,10 @@ class DeviceHolder implements DeviceProvider {
     this.device.pushErrorScope('out-of-memory');
     this.device.pushErrorScope('validation');
     return this.device;
+  }
+
+  expectDeviceLost(reason: GPUDeviceLostReason) {
+    this.expectedLostReason = reason;
   }
 
   async ensureRelease(): Promise<void> {

@@ -1108,6 +1108,15 @@ export const listing = [
     "file": [
       "api",
       "validation",
+      "state",
+      "device_lost",
+      "destroy"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
       "texture",
       "destroy"
     ]

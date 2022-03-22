@@ -1,6 +1,11 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { kMaxQueryCount } from '../../capability_info.js';import { GPUTest } from '../../gpu_test.js';
+**/import {
+kMaxQueryCount } from
+
+'../../capability_info.js';
+import { GPUTest } from '../../gpu_test.js';
+
 /**
  * Base fixture for WebGPU validation tests.
  */
@@ -283,6 +288,22 @@ export class ValidationTest extends GPUTest {
 
   }
 
+  /** Return a no-op shader code snippet for the specified shader stage. */
+  getNoOpShaderCode(stage) {
+    switch (stage) {
+      case 'VERTEX':
+        return `
+          @stage(vertex) fn main() -> @builtin(position) vec4<f32> {
+            return vec4<f32>();
+          }
+        `;
+      case 'FRAGMENT':
+        return `@stage(fragment) fn main() {}`;
+      case 'COMPUTE':
+        return `@stage(compute) @workgroup_size(1) fn main() {}`;}
+
+  }
+
   /** Create a GPURenderPipeline in the specified state. */
   createRenderPipelineWithState(state) {
     return state === 'valid' ? this.createNoOpRenderPipeline() : this.createErrorRenderPipeline();
@@ -293,15 +314,13 @@ export class ValidationTest extends GPUTest {
     return this.device.createRenderPipeline({
       vertex: {
         module: this.device.createShaderModule({
-          code: `@stage(vertex) fn main() -> @builtin(position) vec4<f32> {
-  return vec4<f32>();
-}` }),
+          code: this.getNoOpShaderCode('VERTEX') }),
 
         entryPoint: 'main' },
 
       fragment: {
         module: this.device.createShaderModule({
-          code: '@stage(fragment) fn main() {}' }),
+          code: this.getNoOpShaderCode('FRAGMENT') }),
 
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm', writeMask: 0 }] },
@@ -331,7 +350,7 @@ export class ValidationTest extends GPUTest {
       layout,
       compute: {
         module: this.device.createShaderModule({
-          code: '@stage(compute) @workgroup_size(1) fn main() {}' }),
+          code: this.getNoOpShaderCode('COMPUTE') }),
 
         entryPoint: 'main' } });
 

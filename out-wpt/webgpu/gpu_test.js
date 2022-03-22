@@ -684,6 +684,18 @@ export class GPUTest extends Fixture {
   }
 
   /**
+   * Expects that the device should be lost for a particular reason at the teardown of the test.
+   */
+  expectDeviceLost(reason) {
+    assert(
+      this.provider !== undefined,
+      'No provider available right now; did you "await" selectDeviceOrSkipTestCase?'
+    );
+
+    this.provider.expectDeviceLost(reason);
+  }
+
+  /**
    * Create a GPUBuffer with the specified contents and usage.
    *
    * MAINTENANCE_TODO: Several call sites would be simplified if this took ArrayBuffer as well.
