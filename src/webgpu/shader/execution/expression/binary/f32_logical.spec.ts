@@ -165,10 +165,7 @@ Accuracy: Correct result
   )
   .fn(async t => {
     const truthFunc = (lhs: Scalar, rhs: Scalar): boolean => {
-      return (
-        (lhs.value as number) < (rhs.value as number) ||
-        (lhs.value as number) === (rhs.value as number)
-      );
+      return (lhs.value as number) <= (rhs.value as number);
     };
 
     let cases: Array<Case> = [];
@@ -228,10 +225,7 @@ Accuracy: Correct result
   )
   .fn(async t => {
     const truthFunc = (lhs: Scalar, rhs: Scalar): boolean => {
-      return (
-        (lhs.value as number) > (rhs.value as number) ||
-        (lhs.value as number) === (rhs.value as number)
-      );
+      return (lhs.value as number) >= (rhs.value as number);
     };
 
     let cases: Array<Case> = [];
