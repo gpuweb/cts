@@ -1173,6 +1173,15 @@ export const listing = [
       "shader",
       "execution",
       "expression",
+      "binary",
+      "f32_logical"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
       "call",
       "builtin",
       "abs"

@@ -89,7 +89,7 @@ function flushSubnormalBits(val: number): number {
 /**
  * @returns 0 if |val| is a subnormal f32 number, otherwise returns |val|
  */
-function flushSubnormalScalar(val: Scalar): Scalar {
+export function flushSubnormalScalar(val: Scalar): Scalar {
   return isSubnormalScalar(val) ? f32(0) : val;
 }
 
