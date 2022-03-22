@@ -119,8 +119,11 @@ g.test('texture,device_mismatch')
   ] as const)
   .fn(async t => {
     const { srcMismatched, dstMismatched } = t.params;
-
     const mismatched = srcMismatched || dstMismatched;
+
+    if (mismatched) {
+      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+    }
 
     const kFormat = 'rgba8unorm';
 

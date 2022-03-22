@@ -36,6 +36,10 @@ g.test('index_buffer,device_mismatch')
   .fn(async t => {
     const { encoderType, mismatched } = t.params;
 
+    if (mismatched) {
+      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+    }
+
     const descriptor: GPUBufferDescriptor = {
       size: 16,
       usage: GPUBufferUsage.INDEX,

@@ -88,6 +88,11 @@ g.test('buffer,device_mismatch')
   ] as const)
   .fn(async t => {
     const { srcMismatched, dstMismatched } = t.params;
+    const mismatched = srcMismatched || dstMismatched;
+
+    if (mismatched) {
+      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+    }
 
     const srcDescriptor: GPUBufferDescriptor = {
       size: 16,
@@ -111,7 +116,7 @@ g.test('buffer,device_mismatch')
       dstBuffer,
       dstOffset: 0,
       copySize: 8,
-      isSuccess: !srcMismatched && !dstMismatched,
+      isSuccess: !mismatched,
     });
   });
 

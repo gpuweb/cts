@@ -151,8 +151,11 @@ g.test('query_set_buffer,device_mismatch')
   ] as const)
   .fn(async t => {
     const { querySetMismatched, bufferMismatched } = t.params;
-
     const mismatched = querySetMismatched || bufferMismatched;
+
+    if (mismatched) {
+      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+    }
 
     const queryCout = 1;
     const querySetDescriptor: GPUQuerySetDescriptor = {

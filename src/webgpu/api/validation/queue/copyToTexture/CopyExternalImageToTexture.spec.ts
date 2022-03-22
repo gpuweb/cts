@@ -619,6 +619,10 @@ g.test('destination_texture,device_mismatch')
   .fn(async t => {
     const { mismatched } = t.params;
 
+    if (mismatched) {
+      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+    }
+
     const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
 
     const copySize = { width: 1, height: 1, depthOrArrayLayers: 1 };

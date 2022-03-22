@@ -502,6 +502,10 @@ g.test('bind_group_layout,device_mismatch')
   .fn(async t => {
     const mismatched = t.params.mismatched;
 
+    if (mismatched) {
+      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+    }
+
     const descriptor = {
       entries: [
         {
@@ -557,6 +561,10 @@ g.test('binding_resources,device_mismatch')
   )
   .fn(async t => {
     const { entry, resource0Mismatched, resource1Mismatched } = t.params;
+
+    if (resource0Mismatched || resource1Mismatched) {
+      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+    }
 
     const info = bindingTypeInfo(entry);
 

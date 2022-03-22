@@ -130,6 +130,10 @@ g.test('timestamp_query,device_mismatch')
 
     await t.selectDeviceForQueryTypeOrSkipTestCase('timestamp');
 
+    if (mismatched) {
+      await t.selectMismatchedDeviceOrSkipTestCase('timestamp-query');
+    }
+
     const descriptor: GPUQuerySetDescriptor = {
       type: 'timestamp',
       count: 2,

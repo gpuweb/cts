@@ -179,6 +179,10 @@ g.test('pipeline_layout,device_mismatch')
   .fn(async t => {
     const { isAsync, mismatched } = t.params;
 
+    if (mismatched) {
+      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+    }
+
     const layoutDescriptor = { bindGroupLayouts: [] };
     const layout = mismatched
       ? t.mismatchedDevice.createPipelineLayout(layoutDescriptor)
@@ -202,6 +206,10 @@ g.test('shader_module,device_mismatch')
   .paramsSubcasesOnly(u => u.combine('isAsync', [true, false]).combine('mismatched', [true, false]))
   .fn(async t => {
     const { isAsync, mismatched } = t.params;
+
+    if (mismatched) {
+      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+    }
 
     const code = '@stage(compute) @workgroup_size(1) fn main() {}';
     const module = mismatched

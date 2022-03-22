@@ -37,6 +37,10 @@ import { PerTexelComponent, kTexelRepresentationInfo } from './util/texture/texe
 
 const devicePool = new DevicePool();
 
+// MAINTENANCE_TODO: When DevicePool becomes able to provide multiple devices at once, use the
+// usual one instead of a new one.
+const mismatchedDevicePool = new DevicePool();
+
 const kResourceStateValues = ['valid', 'invalid', 'destroyed'] as const;
 export type ResourceState = typeof kResourceStateValues[number];
 export const kResourceStates: readonly ResourceState[] = kResourceStateValues;
@@ -61,7 +65,13 @@ export function initUncanonicalizedDeviceDescriptor(
 export class GPUTest extends Fixture {
   private provider: DeviceProvider | undefined;
   /** Must not be replaced once acquired. */
-  private acquiredDevices: GPUDevice[] | undefined;
+  private acquiredDevice: GPUDevice | undefined;
+
+  // Some tests(e.g. Device mismatched validation) require another GPUDevice
+  // different from the default GPUDevice of GPUTest. It is only used to
+  //create device mismatched objects.
+  private mismatchedProvider: DeviceProvider | undefined;
+  private mismatchedAcquiredDevice: GPUDevice | undefined;
 
   /** GPUDevice for the test to use. */
   get device(): GPUDevice {
@@ -69,10 +79,10 @@ export class GPUTest extends Fixture {
       this.provider !== undefined,
       'No provider available right now; did you "await" selectDeviceOrSkipTestCase?'
     );
-    if (!this.acquiredDevices) {
-      this.acquiredDevices = this.provider.acquire();
+    if (!this.acquiredDevice) {
+      this.acquiredDevice = this.provider.acquire();
     }
-    return this.acquiredDevices[0];
+    return this.acquiredDevice;
   }
 
   /** GPUDevice for tests requires another device from default one.
@@ -81,13 +91,38 @@ export class GPUTest extends Fixture {
    */
   get mismatchedDevice(): GPUDevice {
     assert(
-      this.provider !== undefined,
-      'No provider available right now; did you "await" selectDeviceOrSkipTestCase?'
+      this.mismatchedProvider !== undefined,
+      'No provider available right now; did you "await" selectMismatchedDeviceOrSkipTestCase?'
     );
-    if (!this.acquiredDevices) {
-      this.acquiredDevices = this.provider.acquire();
+    if (!this.mismatchedAcquiredDevice) {
+      this.mismatchedAcquiredDevice = this.mismatchedProvider.acquire();
     }
-    return this.acquiredDevices[1];
+    return this.mismatchedAcquiredDevice;
+  }
+
+  /**
+   * Create other device different with current test device, which could be got by `.mismatchedDevice`.
+   * A `descriptor` may be undefined, which returns a `default` mismatched device.
+   * If the request descriptor or feature name can't be supported, throws an exception to skip the entire test case.
+   */
+  async selectMismatchedDeviceOrSkipTestCase(
+    descriptor:
+      | UncanonicalizedDeviceDescriptor
+      | GPUFeatureName
+      | undefined
+      | Array<GPUFeatureName | undefined>
+  ): Promise<void> {
+    assert(
+      this.mismatchedProvider === undefined,
+      "Can't selectMismatchedDeviceOrSkipTestCase() multiple times"
+    );
+
+    this.mismatchedProvider =
+      descriptor === undefined
+        ? await mismatchedDevicePool.reserve()
+        : await mismatchedDevicePool.reserve(initUncanonicalizedDeviceDescriptor(descriptor));
+
+    this.mismatchedAcquiredDevice = this.mismatchedProvider.acquire();
   }
 
   /** GPUQueue for the test to use. (Same as `t.device.queue`.) */
@@ -127,6 +162,30 @@ export class GPUTest extends Fixture {
         throw thrownValue;
       }
     }
+
+    if (this.mismatchedProvider) {
+      // MAINTENANCE_TODO(kainino0x): Deduplicate this with code in GPUTest.finalize
+      let threw = false;
+      let thrownValue: unknown;
+      {
+        const provider = this.mismatchedProvider;
+        this.mismatchedProvider = undefined;
+        try {
+          await mismatchedDevicePool.release(provider);
+        } catch (ex) {
+          threw = true;
+          thrownValue = ex;
+        }
+      }
+
+      if (threw) {
+        if (thrownValue instanceof TestOOMedShouldAttemptGC) {
+          // Try to clean up, in case there are stray GPU resources in need of collection.
+          await attemptGarbageCollection();
+        }
+        throw thrownValue;
+      }
+    }
   }
 
   /**
@@ -150,7 +209,7 @@ export class GPUTest extends Fixture {
     assert(this.provider !== undefined);
     // Make sure the device isn't replaced after it's been retrieved once.
     assert(
-      !this.acquiredDevices,
+      !this.acquiredDevice,
       "Can't selectDeviceOrSkipTestCase() after the device has been used"
     );
 
@@ -159,7 +218,7 @@ export class GPUTest extends Fixture {
     await devicePool.release(oldProvider);
 
     this.provider = await devicePool.reserve(initUncanonicalizedDeviceDescriptor(descriptor));
-    this.acquiredDevices = this.provider.acquire();
+    this.acquiredDevice = this.provider.acquire();
   }
 
   /**

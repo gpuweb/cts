@@ -73,6 +73,10 @@ g.test('texture,device_mismatch')
   .fn(async t => {
     const { method, mismatched } = t.params;
 
+    if (mismatched) {
+      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+    }
+
     const descriptor: GPUTextureDescriptor = {
       size: { width: 4, height: 4, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
