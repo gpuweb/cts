@@ -214,19 +214,18 @@ export class ValidationTest extends GPUTest {
     }
   }
 
-  /** Return a GPUBuffer with descriptor from mismatched device. */
-  getDeviceMismatchedBuffer(descriptor: GPUBufferDescriptor): GPUBuffer {
-    return this.trackForCleanup(this.mismatchedDevice.createBuffer(descriptor));
-  }
-
   /** Create an arbitrarily-sized GPUBuffer with the STORAGE usage from mismatched device. */
   getDeviceMismatchedStorageBuffer(): GPUBuffer {
-    return this.getDeviceMismatchedBuffer({ size: 4, usage: GPUBufferUsage.STORAGE });
+    return this.trackForCleanup(
+      this.mismatchedDevice.createBuffer({ size: 4, usage: GPUBufferUsage.STORAGE })
+    );
   }
 
   /** Create an arbitrarily-sized GPUBuffer with the UNIFORM usage from mismatched device. */
   getDeviceMismatchedUniformBuffer(): GPUBuffer {
-    return this.getDeviceMismatchedBuffer({ size: 4, usage: GPUBufferUsage.UNIFORM });
+    return this.trackForCleanup(
+      this.mismatchedDevice.createBuffer({ size: 4, usage: GPUBufferUsage.UNIFORM })
+    );
   }
 
   /** Return a GPUTexture with descriptor from mismatched device. */
@@ -261,11 +260,6 @@ export class ValidationTest extends GPUTest {
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
       sampleCount,
     });
-  }
-
-  /** Return a GPUQuerySet with descriptor from mismatched device. */
-  getDeviceMismatchedQuerySet(descriptor: GPUQuerySetDescriptor): GPUQuerySet {
-    return this.trackForCleanup(this.mismatchedDevice.createQuerySet(descriptor));
   }
 
   getDeviceMismatchedBindingResource(bindingType: ValidBindableResource): GPUBindingResource {
