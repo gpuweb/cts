@@ -65,13 +65,13 @@ g.test('vertex_buffer,device_mismatch')
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
 
-    const descriptor: GPUBufferDescriptor = {
+    const device = mismatched ? t.mismatchedDevice : t.device;
+
+    const vertexBuffer = device.createBuffer({
       size: 16,
       usage: GPUBufferUsage.VERTEX,
-    };
-    const vertexBuffer = mismatched
-      ? t.getDeviceMismatchedBuffer(descriptor)
-      : t.createBufferWithState('valid', descriptor);
+    });
+    t.trackForCleanup(vertexBuffer);
 
     const { encoder, validateFinish } = t.createEncoder(encoderType);
     encoder.setVertexBuffer(0, vertexBuffer);

@@ -623,17 +623,16 @@ g.test('destination_texture,device_mismatch')
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
 
-    const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
-
+    const device = mismatched ? t.mismatchedDevice : t.device;
     const copySize = { width: 1, height: 1, depthOrArrayLayers: 1 };
-    const descriptor: GPUTextureDescriptor = {
+
+    const texture = device.createTexture({
       size: copySize,
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-    };
-    const texture = mismatched
-      ? t.getDeviceMismatchedTexture(descriptor)
-      : t.createTextureWithState('valid', descriptor);
+    });
+
+    const imageBitmap = await createImageBitmap(t.getImageData(1, 1));
 
     t.runTest({ source: imageBitmap }, { texture }, copySize, !mismatched);
   });

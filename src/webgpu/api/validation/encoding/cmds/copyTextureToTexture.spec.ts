@@ -125,25 +125,23 @@ g.test('texture,device_mismatch')
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
 
-    const kFormat = 'rgba8unorm';
+    const device = mismatched ? t.mismatchedDevice : t.device;
+    const size = { width: 4, height: 4, depthOrArrayLayers: 1 };
+    const format = 'rgba8unorm';
 
-    const srcDescriptor: GPUTextureDescriptor = {
-      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
-      format: kFormat,
+    const srcTexture = device.createTexture({
+      size,
+      format,
       usage: GPUTextureUsage.COPY_SRC,
-    };
-    const srcTexture = srcMismatched
-      ? t.getDeviceMismatchedTexture(srcDescriptor)
-      : t.createTextureWithState('valid', srcDescriptor);
+    });
+    t.trackForCleanup(srcTexture);
 
-    const dstDescriptor: GPUTextureDescriptor = {
-      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
-      format: kFormat,
+    const dstTexture = device.createTexture({
+      size,
+      format,
       usage: GPUTextureUsage.COPY_DST,
-    };
-    const dstTexture = dstMismatched
-      ? t.getDeviceMismatchedTexture(dstDescriptor)
-      : t.createTextureWithState('valid', dstDescriptor);
+    });
+    t.trackForCleanup(dstTexture);
 
     t.TestCopyTextureToTexture(
       { texture: srcTexture },

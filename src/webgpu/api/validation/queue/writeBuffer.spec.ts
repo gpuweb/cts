@@ -169,13 +169,13 @@ g.test('buffer,device_mismatch')
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
 
-    const descriptor: GPUBufferDescriptor = {
+    const device = mismatched ? t.mismatchedDevice : t.device;
+
+    const buffer = device.createBuffer({
       size: 16,
       usage: GPUBufferUsage.COPY_DST,
-    };
-    const buffer = mismatched
-      ? t.getDeviceMismatchedBuffer(descriptor)
-      : t.createBufferWithState('valid', descriptor);
+    });
+    t.trackForCleanup(buffer);
 
     const data = new Uint8Array(16);
 

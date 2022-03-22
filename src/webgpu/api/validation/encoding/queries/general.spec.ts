@@ -134,13 +134,13 @@ g.test('timestamp_query,device_mismatch')
       await t.selectMismatchedDeviceOrSkipTestCase('timestamp-query');
     }
 
-    const descriptor: GPUQuerySetDescriptor = {
+    const device = mismatched ? t.mismatchedDevice : t.device;
+
+    const querySet = device.createQuerySet({
       type: 'timestamp',
       count: 2,
-    };
-    const querySet = mismatched
-      ? t.getDeviceMismatchedQuerySet(descriptor)
-      : t.createQuerySetWithState('valid', descriptor);
+    });
+    t.trackForCleanup(querySet);
 
     const encoder = t.createEncoder('non-pass');
     encoder.encoder.writeTimestamp(querySet, 0);

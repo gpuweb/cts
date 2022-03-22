@@ -8,28 +8,7 @@ import { ValidationTest } from '../../../validation_test.js';
 
 import { kRenderEncodeTypeParams } from './render.js';
 
-class F extends ValidationTest {
-  createRenderPipelineForMismatch(device: GPUDevice) {
-    return device.createRenderPipeline({
-      vertex: {
-        module: device.createShaderModule({
-          code: `@stage(vertex) fn main() -> @builtin(position) vec4<f32> { return vec4<f32>(); }`,
-        }),
-        entryPoint: 'main',
-      },
-      fragment: {
-        module: device.createShaderModule({
-          code: '@stage(fragment) fn main() {}',
-        }),
-        entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm', writeMask: 0 }],
-      },
-      primitive: { topology: 'triangle-list' },
-    });
-  }
-}
-
-export const g = makeTestGroup(F);
+export const g = makeTestGroup(ValidationTest);
 
 g.test('invalid_pipeline')
   .desc(
@@ -59,9 +38,24 @@ g.test('pipeline,device_mismatch')
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
 
-    const pipeline = mismatched
-      ? t.createRenderPipelineForMismatch(t.mismatchedDevice)
-      : t.createRenderPipelineForMismatch(t.device);
+    const device = mismatched ? t.mismatchedDevice : t.device;
+
+    const pipeline = device.createRenderPipeline({
+      vertex: {
+        module: device.createShaderModule({
+          code: `@stage(vertex) fn main() -> @builtin(position) vec4<f32> { return vec4<f32>(); }`,
+        }),
+        entryPoint: 'main',
+      },
+      fragment: {
+        module: device.createShaderModule({
+          code: '@stage(fragment) fn main() {}',
+        }),
+        entryPoint: 'main',
+        targets: [{ format: 'rgba8unorm', writeMask: 0 }],
+      },
+      primitive: { topology: 'triangle-list' },
+    });
 
     const { encoder, validateFinish } = t.createEncoder(encoderType);
     encoder.setPipeline(pipeline);

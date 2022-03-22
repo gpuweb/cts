@@ -62,13 +62,13 @@ g.test('indirect_buffer,device_mismatch')
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
 
-    const descriptor: GPUBufferDescriptor = {
+    const device = mismatched ? t.mismatchedDevice : t.device;
+
+    const indirectBuffer = device.createBuffer({
       size: 256,
       usage: GPUBufferUsage.INDIRECT,
-    };
-    const indirectBuffer = mismatched
-      ? t.getDeviceMismatchedBuffer(descriptor)
-      : t.createBufferWithState('valid', descriptor);
+    });
+    t.trackForCleanup(indirectBuffer);
 
     const { encoder, validateFinish } = t.createEncoder(encoderType);
     encoder.setPipeline(t.createNoOpRenderPipeline());

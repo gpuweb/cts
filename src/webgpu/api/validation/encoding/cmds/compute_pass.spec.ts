@@ -18,17 +18,6 @@ class F extends ValidationTest {
     return this.createErrorComputePipeline();
   }
 
-  createComputePipelineForMismatch(device: GPUDevice) {
-    return device.createComputePipeline({
-      compute: {
-        module: device.createShaderModule({
-          code: '@stage(compute) @workgroup_size(1) fn main() {}',
-        }),
-        entryPoint: 'main',
-      },
-    });
-  }
-
   createIndirectBuffer(state: ResourceState, data: Uint32Array): GPUBuffer {
     const descriptor: GPUBufferDescriptor = {
       size: data.byteLength,
@@ -83,9 +72,16 @@ g.test('pipeline,device_mismatch')
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
 
-    const pipeline = mismatched
-      ? t.createComputePipelineForMismatch(t.mismatchedDevice)
-      : t.createComputePipelineForMismatch(t.device);
+    const device = mismatched ? t.mismatchedDevice : t.device;
+
+    const pipeline = device.createComputePipeline({
+      compute: {
+        module: device.createShaderModule({
+          code: '@stage(compute) @workgroup_size(1) fn main() {}',
+        }),
+        entryPoint: 'main',
+      },
+    });
 
     const { encoder, validateFinish } = t.createEncoder('compute pass');
     encoder.setPipeline(pipeline);
@@ -194,13 +190,13 @@ g.test('indirect_dispatch_buffer,device_mismatch')
 
     const pipeline = t.createNoOpComputePipeline();
 
-    const descriptor: GPUBufferDescriptor = {
+    const device = mismatched ? t.mismatchedDevice : t.device;
+
+    const buffer = device.createBuffer({
       size: 16,
       usage: GPUBufferUsage.INDIRECT,
-    };
-    const buffer = mismatched
-      ? t.getDeviceMismatchedBuffer(descriptor)
-      : t.createBufferWithState('valid', descriptor);
+    });
+    t.trackForCleanup(buffer);
 
     const { encoder, validateFinish } = t.createEncoder('compute pass');
     encoder.setPipeline(pipeline);

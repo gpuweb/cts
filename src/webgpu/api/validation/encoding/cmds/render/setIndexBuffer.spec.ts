@@ -40,13 +40,13 @@ g.test('index_buffer,device_mismatch')
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
 
-    const descriptor: GPUBufferDescriptor = {
+    const device = mismatched ? t.mismatchedDevice : t.device;
+
+    const indexBuffer = device.createBuffer({
       size: 16,
       usage: GPUBufferUsage.INDEX,
-    };
-    const indexBuffer = mismatched
-      ? t.getDeviceMismatchedBuffer(descriptor)
-      : t.createBufferWithState('valid', descriptor);
+    });
+    t.trackForCleanup(indexBuffer);
 
     const { encoder, validateFinish } = t.createEncoder(encoderType);
     encoder.setIndexBuffer(indexBuffer, 'uint32');

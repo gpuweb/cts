@@ -96,37 +96,6 @@ class F extends ValidationTest {
     }
     return bindGroup;
   }
-
-  createBindGroupForMismatch(
-    device: GPUDevice,
-    encoderType: ProgrammableEncoderType,
-    hasDynamicOffset: boolean
-  ) {
-    const buffer = device.createBuffer({
-      size: 4,
-      usage: GPUBufferUsage.STORAGE,
-    });
-
-    const layout = device.createBindGroupLayout({
-      entries: [
-        {
-          binding: 0,
-          visibility: this.encoderTypeToStageFlag(encoderType),
-          buffer: { type: 'storage', hasDynamicOffset },
-        },
-      ],
-    });
-
-    return device.createBindGroup({
-      layout,
-      entries: [
-        {
-          binding: 0,
-          resource: { buffer },
-        },
-      ],
-    });
-  }
 }
 
 export const g = makeTestGroup(F);
@@ -178,9 +147,32 @@ g.test('bind_group,device_mismatch')
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
 
-    const bindGroup = mismatched
-      ? t.createBindGroupForMismatch(t.mismatchedDevice, encoderType, useU32Array)
-      : t.createBindGroupForMismatch(t.device, encoderType, useU32Array);
+    const device = mismatched ? t.mismatchedDevice : t.device;
+
+    const buffer = device.createBuffer({
+      size: 4,
+      usage: GPUBufferUsage.STORAGE,
+    });
+
+    const layout = device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: t.encoderTypeToStageFlag(encoderType),
+          buffer: { type: 'storage', hasDynamicOffset: useU32Array },
+        },
+      ],
+    });
+
+    const bindGroup = device.createBindGroup({
+      layout,
+      entries: [
+        {
+          binding: 0,
+          resource: { buffer },
+        },
+      ],
+    });
 
     const { encoder, validateFinish } = t.createEncoder(encoderType);
     if (useU32Array) {

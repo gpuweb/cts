@@ -35,11 +35,14 @@ g.test('command_buffer,device_mismatch')
     const encoder0 = cb0Mismatched
       ? t.mismatchedDevice.createCommandEncoder()
       : t.device.createCommandEncoder();
+    const cb0 = encoder0.finish();
+
     const encoder1 = cb1Mismatched
       ? t.mismatchedDevice.createCommandEncoder()
       : t.device.createCommandEncoder();
+    const cb1 = encoder1.finish();
 
     t.expectValidationError(() => {
-      t.device.queue.submit([encoder0.finish(), encoder1.finish()]);
+      t.device.queue.submit([cb0, cb1]);
     }, mismatched);
   });

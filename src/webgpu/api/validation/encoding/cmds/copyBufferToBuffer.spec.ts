@@ -94,21 +94,19 @@ g.test('buffer,device_mismatch')
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
 
-    const srcDescriptor: GPUBufferDescriptor = {
+    const device = mismatched ? t.mismatchedDevice : t.device;
+
+    const srcBuffer = device.createBuffer({
       size: 16,
       usage: GPUBufferUsage.COPY_SRC,
-    };
-    const srcBuffer = srcMismatched
-      ? t.getDeviceMismatchedBuffer(srcDescriptor)
-      : t.createBufferWithState('valid', srcDescriptor);
+    });
+    t.trackForCleanup(srcBuffer);
 
-    const dstDescriptor: GPUBufferDescriptor = {
+    const dstBuffer = device.createBuffer({
       size: 16,
       usage: GPUBufferUsage.COPY_DST,
-    };
-    const dstBuffer = dstMismatched
-      ? t.getDeviceMismatchedBuffer(dstDescriptor)
-      : t.createBufferWithState('valid', dstDescriptor);
+    });
+    t.trackForCleanup(dstBuffer);
 
     t.TestCopyBufferToBuffer({
       srcBuffer,
