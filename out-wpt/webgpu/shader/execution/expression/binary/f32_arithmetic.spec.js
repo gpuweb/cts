@@ -17,18 +17,24 @@ export const g = makeTestGroup(GPUTest);
 
 /* Generates an array of numbers spread over the entire range of 32-bit floats */
 function fullNumericRange() {
-  const numeric_range = Array();
-  numeric_range.concat(biasedRange(kValue.f32.negative.max, kValue.f32.negative.min, 100));
-  numeric_range.concat(
-    linearRange(kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max, 100)
+  let numeric_range = Array();
+  numeric_range = numeric_range.concat(
+    biasedRange(kValue.f32.negative.max, kValue.f32.negative.min, 50)
   );
 
-  numeric_range.concat(0.0);
-  numeric_range.concat(
-    linearRange(kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, 100)
+  numeric_range = numeric_range.concat(
+    linearRange(kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max, 10)
   );
 
-  numeric_range.concat(biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, 100));
+  numeric_range = numeric_range.concat(0.0);
+  numeric_range = numeric_range.concat(
+    linearRange(kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, 10)
+  );
+
+  numeric_range = numeric_range.concat(
+    biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, 50)
+  );
+
   return numeric_range;
 }
 
