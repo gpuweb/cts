@@ -46,6 +46,8 @@ export function normalizedIntegerAsFloat(integer: number, bits: number, signed: 
  *
  * Does not handle clamping, overflow, or denormal inputs.
  * On underflow (result is subnormal), rounds to (signed) zero.
+ *
+ * MAINTENANCE_TODO: Replace usages of this with numberToFloatBits.
  */
 export function float32ToFloatBits(
   n: number,
@@ -151,6 +153,17 @@ export function floatBitsToNumber(bits: number, fmt: FloatFormat): number {
   f32BitsWithWrongBias |= (bits << (31 - kNonSignBits)) & 0x8000_0000;
   const numberWithWrongBias = float32BitsToNumber(f32BitsWithWrongBias);
   return numberWithWrongBias * 2 ** (kFloat32Format.bias - fmt.bias);
+}
+
+/**
+ * Encodes a JS `number` into an IEEE754 floating point number with the specified format.
+ * Returns the result as an integer-valued JS `number`.
+ *
+ * Does not handle clamping, overflow, or denormal inputs.
+ * On underflow (result is subnormal), rounds to (signed) zero.
+ */
+export function numberToFloatBits(number: number, fmt: FloatFormat): number {
+  return float32ToFloatBits(number, fmt.signed, fmt.exponentBits, fmt.mantissaBits, fmt.bias);
 }
 
 /**
