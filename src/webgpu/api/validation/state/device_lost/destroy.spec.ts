@@ -50,7 +50,7 @@ export const g = makeTestGroup(DeviceDestroyTests);
 g.test('createBuffer')
   .desc(
     `
-Tests creating buffers on destroyed device fails. Tests valid combinations of:
+Tests creating buffers on destroyed device. Tests valid combinations of:
   - Various usages
   - Mapped at creation or not
   `
@@ -89,7 +89,7 @@ Tests creating buffers on destroyed device fails. Tests valid combinations of:
 g.test('createTexture,2d,uncompressed_format')
   .desc(
     `
-Tests creating 2d uncompressed textures on destroyed device fails. Tests valid combinations of:
+Tests creating 2d uncompressed textures on destroyed device. Tests valid combinations of:
   - Various uncompressed texture formats
   - Various usages
   `
@@ -124,7 +124,7 @@ Tests creating 2d uncompressed textures on destroyed device fails. Tests valid c
 g.test('createTexture,2d,compressed_format')
   .desc(
     `
-Tests creating 2d compressed textures on destroyed device fails. Tests valid combinations of:
+Tests creating 2d compressed textures on destroyed device. Tests valid combinations of:
   - Various compressed texture formats
   - Various usages
   `
@@ -160,7 +160,7 @@ Tests creating 2d compressed textures on destroyed device fails. Tests valid com
 g.test('createView,2d,uncompressed_format')
   .desc(
     `
-Tests creating texture views on 2d uncompressed textures from destroyed device fails. Tests valid combinations of:
+Tests creating texture views on 2d uncompressed textures from destroyed device. Tests valid combinations of:
   - Various uncompressed texture formats
   - Various usages
   `
@@ -196,7 +196,7 @@ Tests creating texture views on 2d uncompressed textures from destroyed device f
 g.test('createView,2d,compressed_format')
   .desc(
     `
-Tests creating texture views on 2d compressed textures from destroyed device fails. Tests valid combinations of:
+Tests creating texture views on 2d compressed textures from destroyed device. Tests valid combinations of:
   - Various compressed texture formats
   - Various usages
   `
@@ -233,7 +233,7 @@ Tests creating texture views on 2d compressed textures from destroyed device fai
 g.test('createSampler')
   .desc(
     `
-Tests creating samplers on destroyed device fails.
+Tests creating samplers on destroyed device.
   `
   )
   .params(u => u.beginSubcases().combine('awaitLost', [true, false]))
@@ -247,7 +247,7 @@ Tests creating samplers on destroyed device fails.
 g.test('createBindGroupLayout')
   .desc(
     `
-Tests creating bind group layouts on destroyed device fails. Tests valid combinations of:
+Tests creating bind group layouts on destroyed device. Tests valid combinations of:
   - Various valid binding entries
   - Maximum set of visibility for each binding entry
   `
@@ -268,7 +268,7 @@ Tests creating bind group layouts on destroyed device fails. Tests valid combina
 g.test('createBindGroup')
   .desc(
     `
-Tests creating bind group on destroyed device fails. Tests valid combinations of:
+Tests creating bind group on destroyed device. Tests valid combinations of:
   - Various binded resource types
   - Various valid binding entries
   - Maximum set of visibility for each binding entry
@@ -310,7 +310,7 @@ Tests creating bind group on destroyed device fails. Tests valid combinations of
 g.test('createPipelineLayout')
   .desc(
     `
-Tests creating pipeline layouts on destroyed device fails. Tests valid combinations of:
+Tests creating pipeline layouts on destroyed device. Tests valid combinations of:
   - Various bind groups with valid binding entries
   - Maximum set of visibility for each binding entry
   `
@@ -334,7 +334,7 @@ Tests creating pipeline layouts on destroyed device fails. Tests valid combinati
 g.test('createShaderModule')
   .desc(
     `
-Tests creating shader modules on destroyed device fails.
+Tests creating shader modules on destroyed device.
   - Tests all shader stages: vertex, fragment, compute
   `
   )
@@ -351,7 +351,7 @@ Tests creating shader modules on destroyed device fails.
 g.test('createComputePipeline')
   .desc(
     `
-Tests creating compute pipeline on destroyed device fails.
+Tests creating compute pipeline on destroyed device.
   - Tests with a valid no-op compute shader
   `
   )
@@ -369,7 +369,7 @@ Tests creating compute pipeline on destroyed device fails.
 g.test('createRenderPipeline')
   .desc(
     `
-Tests creating render pipeline on destroyed device fails.
+Tests creating render pipeline on destroyed device.
   - Tests with valid no-op vertex and fragment shaders
   `
   )
@@ -393,7 +393,7 @@ Tests creating render pipeline on destroyed device fails.
 g.test('createCommandEncoder')
   .desc(
     `
-Tests creating command encoders on destroyed device fails.
+Tests creating command encoders on destroyed device.
   `
   )
   .params(u => u.beginSubcases().combine('awaitLost', [true, false]))
@@ -407,7 +407,7 @@ Tests creating command encoders on destroyed device fails.
 g.test('createRenderBundleEncoder')
   .desc(
     `
-Tests creating render bundle encoders on destroyed device fails.
+Tests creating render bundle encoders on destroyed device.
   - Tests various renderable texture color formats
   `
   )
@@ -427,7 +427,7 @@ Tests creating render bundle encoders on destroyed device fails.
 g.test('createQuerySet')
   .desc(
     `
-Tests creating query sets on destroyed device fails.
+Tests creating query sets on destroyed device.
   - Tests various query set types
   `
   )
