@@ -16,6 +16,7 @@ import {
   kFloat16Format,
   numberToFloat32Bits,
   float32BitsToNumber,
+  numberToFloatBits,
 } from '../conversion.js';
 import { clamp, signExtend } from '../math.js';
 
@@ -684,9 +685,9 @@ export const kTexelRepresentationInfo: {
       },
       unpackBits: (data: Uint8Array) => unpackComponentsBits(kRGB, data, { R: 11, G: 11, B: 10 }),
       numberToBits: components => ({
-        R: float32ToFloatBits(components.R ?? unreachable(), 0, 5, 6, 15),
-        G: float32ToFloatBits(components.G ?? unreachable(), 0, 5, 6, 15),
-        B: float32ToFloatBits(components.B ?? unreachable(), 0, 5, 5, 15),
+        R: numberToFloatBits(components.R ?? unreachable(), kFloat11Format),
+        G: numberToFloatBits(components.G ?? unreachable(), kFloat11Format),
+        B: numberToFloatBits(components.B ?? unreachable(), kFloat10Format),
       }),
       bitsToNumber: components => ({
         R: floatBitsToNumber(components.R!, kFloat11Format),
