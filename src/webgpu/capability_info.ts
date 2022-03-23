@@ -37,23 +37,29 @@ export const kQueryTypes = keysOf(kQueryTypeInfo);
 /** Required alignment of a GPUBuffer size, by spec. */
 export const kBufferSizeAlignment = 4;
 
-/** Per-GPUBufferUsage info. */
-export const kBufferUsageInfo: {
-  readonly [k in valueof<typeof GPUConst.BufferUsage>]: {};
+/** Per-GPUBufferUsage copy info. */
+export const kBufferUsageCopyInfo: {
+  readonly [name: string]: GPUBufferUsageFlags;
 } = /* prettier-ignore */ {
-  [GPUConst.BufferUsage.MAP_READ]:      {},
-  [GPUConst.BufferUsage.MAP_WRITE]:     {},
-  [GPUConst.BufferUsage.COPY_SRC]:      {},
-  [GPUConst.BufferUsage.COPY_DST]:      {},
-  [GPUConst.BufferUsage.INDEX]:         {},
-  [GPUConst.BufferUsage.VERTEX]:        {},
-  [GPUConst.BufferUsage.UNIFORM]:       {},
-  [GPUConst.BufferUsage.STORAGE]:       {},
-  [GPUConst.BufferUsage.INDIRECT]:      {},
-  [GPUConst.BufferUsage.QUERY_RESOLVE]: {},
+  'COPY_NONE':    0,
+  'COPY_SRC':     GPUConst.BufferUsage.COPY_SRC,
+  'COPY_DST':     GPUConst.BufferUsage.COPY_DST,
+  'COPY_SRC_DST': GPUConst.BufferUsage.COPY_SRC | GPUConst.BufferUsage.COPY_DST,
 };
+/** List of all GPUBufferUsage copy values. */
+export const kBufferUsageCopy = keysOf(kBufferUsageCopyInfo);
+
+/** Per-GPUBufferUsage keys and info. */
+type BufferUsageKey = keyof typeof GPUConst.BufferUsage;
+export const kBufferUsageKeys = keysOf(GPUConst.BufferUsage);
+export const kBufferUsageInfo: {
+  readonly [k in BufferUsageKey]: GPUBufferUsageFlags;
+} = {
+  ...GPUConst.BufferUsage,
+};
+
 /** List of all GPUBufferUsage values. */
-export const kBufferUsages = numericKeysOf<GPUBufferUsageFlags>(kBufferUsageInfo);
+export const kBufferUsages = Object.values(GPUConst.BufferUsage);
 export const kAllBufferUsageBits = kBufferUsages.reduce(
   (previousSet, currentUsage) => previousSet | currentUsage,
   0
@@ -460,6 +466,29 @@ export function textureDimensionAndFormatCompatible(
   );
 }
 
+/** Per-GPUTextureUsage type info. */
+export const kTextureUsageTypeInfo: {
+  readonly [name: string]: number;
+} = /* prettier-ignore */ {
+  'texture': Number(GPUConst.TextureUsage.TEXTURE_BINDING),
+  'storage': Number(GPUConst.TextureUsage.STORAGE_BINDING),
+  'render':  Number(GPUConst.TextureUsage.RENDER_ATTACHMENT),
+};
+/** List of all GPUTextureUsage type values. */
+export const kTextureUsageType = keysOf(kTextureUsageTypeInfo);
+
+/** Per-GPUTextureUsage copy info. */
+export const kTextureUsageCopyInfo: {
+  readonly [name: string]: number;
+} = /* prettier-ignore */ {
+  'none':     0,
+  'src':      Number(GPUConst.TextureUsage.COPY_SRC),
+  'dst':      Number(GPUConst.TextureUsage.COPY_DST),
+  'src-dest': Number(GPUConst.TextureUsage.COPY_SRC) | Number(GPUConst.TextureUsage.COPY_DST),
+};
+/** List of all GPUTextureUsage copy values. */
+export const kTextureUsageCopy = keysOf(kTextureUsageCopyInfo);
+
 /** Per-GPUTextureUsage info. */
 export const kTextureUsageInfo: {
   readonly [k in valueof<typeof GPUConst.TextureUsage>]: {};
@@ -835,6 +864,8 @@ export function allBindingEntries(
 // Shader stages
 
 /** List of all GPUShaderStage values. */
+export type ShaderStageKey = keyof typeof GPUConst.ShaderStage;
+export const kShaderStageKeys = Object.keys(GPUConst.ShaderStage) as ShaderStageKey[];
 export const kShaderStages: readonly GPUShaderStageFlags[] = [
   GPUConst.ShaderStage.VERTEX,
   GPUConst.ShaderStage.FRAGMENT,
