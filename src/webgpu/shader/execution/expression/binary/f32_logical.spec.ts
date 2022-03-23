@@ -16,20 +16,16 @@ export const g = makeTestGroup(GPUTest);
 
 /* Generates an array of numbers spread over the entire range of 32-bit floats */
 function fullNumericRange(): Array<number> {
-  let numeric_range: Array<number> = [];
-  numeric_range = numeric_range.concat(
-    biasedRange(kValue.f32.negative.max, kValue.f32.negative.min, 50)
+  const numeric_range: Array<number> = [];
+  numeric_range.push(...biasedRange(kValue.f32.negative.max, kValue.f32.negative.min, 50));
+  numeric_range.push(
+    ...linearRange(kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max, 10)
   );
-  numeric_range = numeric_range.concat(
-    linearRange(kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max, 10)
+  numeric_range.push(0.0);
+  numeric_range.push(
+    ...linearRange(kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, 10)
   );
-  numeric_range = numeric_range.concat(0.0);
-  numeric_range = numeric_range.concat(
-    linearRange(kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, 10)
-  );
-  numeric_range = numeric_range.concat(
-    biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, 50)
-  );
+  numeric_range.push(...biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, 50));
   return numeric_range;
 }
 
@@ -46,12 +42,12 @@ function makeCase(
   const f32_rhs = f32(rhs);
   const lhs_options = new Set([f32_lhs, flushSubnormalScalar(f32_lhs)]);
   const rhs_options = new Set([f32_rhs, flushSubnormalScalar(f32_rhs)]);
-  let expected: Array<Scalar> = [];
+  const expected: Array<Scalar> = [];
   lhs_options.forEach(l => {
     rhs_options.forEach(r => {
       const result = bool(truthFunc(l, r));
       if (!expected.includes(result)) {
-        expected = expected.concat(result);
+        expected.push(result);
       }
     });
   });
@@ -78,11 +74,11 @@ Accuracy: Correct result
       return (lhs.value as number) === (rhs.value as number);
     };
 
-    let cases: Array<Case> = [];
+    const cases: Array<Case> = [];
     const numeric_range = fullNumericRange();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
-        cases = cases.concat(makeCase(lhs, rhs, truthFunc));
+        cases.push(makeCase(lhs, rhs, truthFunc));
       });
     });
 
@@ -108,11 +104,11 @@ Accuracy: Correct result
       return (lhs.value as number) !== (rhs.value as number);
     };
 
-    let cases: Array<Case> = [];
+    const cases: Array<Case> = [];
     const numeric_range = fullNumericRange();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
-        cases = cases.concat(makeCase(lhs, rhs, truthFunc));
+        cases.push(makeCase(lhs, rhs, truthFunc));
       });
     });
 
@@ -138,11 +134,11 @@ Accuracy: Correct result
       return (lhs.value as number) < (rhs.value as number);
     };
 
-    let cases: Array<Case> = [];
+    const cases: Array<Case> = [];
     const numeric_range = fullNumericRange();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
-        cases = cases.concat(makeCase(lhs, rhs, truthFunc));
+        cases.push(makeCase(lhs, rhs, truthFunc));
       });
     });
 
@@ -168,11 +164,11 @@ Accuracy: Correct result
       return (lhs.value as number) <= (rhs.value as number);
     };
 
-    let cases: Array<Case> = [];
+    const cases: Array<Case> = [];
     const numeric_range = fullNumericRange();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
-        cases = cases.concat(makeCase(lhs, rhs, truthFunc));
+        cases.push(makeCase(lhs, rhs, truthFunc));
       });
     });
 
@@ -198,11 +194,11 @@ Accuracy: Correct result
       return (lhs.value as number) > (rhs.value as number);
     };
 
-    let cases: Array<Case> = [];
+    const cases: Array<Case> = [];
     const numeric_range = fullNumericRange();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
-        cases = cases.concat(makeCase(lhs, rhs, truthFunc));
+        cases.push(makeCase(lhs, rhs, truthFunc));
       });
     });
 
@@ -228,11 +224,11 @@ Accuracy: Correct result
       return (lhs.value as number) >= (rhs.value as number);
     };
 
-    let cases: Array<Case> = [];
+    const cases: Array<Case> = [];
     const numeric_range = fullNumericRange();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
-        cases = cases.concat(makeCase(lhs, rhs, truthFunc));
+        cases.push(makeCase(lhs, rhs, truthFunc));
       });
     });
 

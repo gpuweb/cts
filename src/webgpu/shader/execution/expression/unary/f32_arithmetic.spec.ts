@@ -37,23 +37,20 @@ Accuracy: Correctly rounded
       return { input: [f32(x)], expected: f32(-f32_x) };
     };
 
-    let cases: Array<Case> = [];
-    let numeric_range = Array<number>();
-    numeric_range = numeric_range.concat(
-      biasedRange(kValue.f32.negative.max, kValue.f32.negative.min, 50)
+    const cases: Array<Case> = [];
+    const numeric_range = Array<number>();
+    numeric_range.push(...biasedRange(kValue.f32.negative.max, kValue.f32.negative.min, 50));
+    numeric_range.push(
+      ...linearRange(kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max, 10)
     );
-    numeric_range = numeric_range.concat(
-      linearRange(kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max, 10)
+    numeric_range.push(0.0);
+    numeric_range.push(
+      ...linearRange(kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, 10)
     );
-    numeric_range = numeric_range.concat(0.0);
-    numeric_range = numeric_range.concat(
-      linearRange(kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, 10)
-    );
-    numeric_range = numeric_range.concat(
-      biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, 10)
-    );
+    numeric_range.push(...biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, 10));
+
     numeric_range.forEach(x => {
-      cases = cases.concat(makeCase(x));
+      cases.push(makeCase(x));
     });
 
     run(t, unary('-'), [TypeF32], TypeF32, cfg, cases);
