@@ -640,7 +640,6 @@ g.test('copy_contents_from_gpu_context_canvas')
     let device: GPUDevice;
 
     if (!srcAndDstInSameGPUDevice) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
       device = t.mismatchedDevice;
     } else {
       device = t.device;

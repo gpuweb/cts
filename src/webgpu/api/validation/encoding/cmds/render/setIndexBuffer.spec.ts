@@ -36,10 +36,6 @@ g.test('index_buffer,device_mismatch')
   .fn(async t => {
     const { encoderType, mismatched } = t.params;
 
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
-
     const device = mismatched ? t.mismatchedDevice : t.device;
 
     const indexBuffer = device.createBuffer({

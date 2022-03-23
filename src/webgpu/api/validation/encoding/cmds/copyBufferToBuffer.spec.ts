@@ -106,10 +106,6 @@ g.test('buffer,device_mismatch')
     const { srcMismatched, dstMismatched } = t.params;
     const mismatched = srcMismatched || dstMismatched;
 
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
-
     const device = mismatched ? t.mismatchedDevice : t.device;
 
     const srcBuffer = device.createBuffer({

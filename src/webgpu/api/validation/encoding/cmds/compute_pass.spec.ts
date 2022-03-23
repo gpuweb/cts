@@ -68,10 +68,6 @@ g.test('pipeline,device_mismatch')
   .fn(async t => {
     const { mismatched } = t.params;
 
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
-
     const device = mismatched ? t.mismatchedDevice : t.device;
 
     const pipeline = device.createComputePipeline({
@@ -183,10 +179,6 @@ g.test('indirect_dispatch_buffer,device_mismatch')
   .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
   .fn(async t => {
     const { mismatched } = t.params;
-
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
 
     const pipeline = t.createNoOpComputePipeline();
 

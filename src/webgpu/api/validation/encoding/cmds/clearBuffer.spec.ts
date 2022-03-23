@@ -60,10 +60,6 @@ g.test('buffer,device_mismatch')
   .fn(async t => {
     const { mismatched } = t.params;
 
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
-
     const device = mismatched ? t.mismatchedDevice : t.device;
     const size = 8;
 

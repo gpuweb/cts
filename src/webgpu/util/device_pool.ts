@@ -17,31 +17,47 @@ export class DevicePool {
   private defaultHolder: DeviceHolder | 'uninitialized' | 'failed' = 'uninitialized';
   /** Devices with descriptors. */
   private nonDefaultHolders = new DescriptorToHolderMap();
+  /** Device with no descriptor for device mismatch validation. */
+  private mismatchedDefaultHolder: DeviceHolder | 'uninitialized' | 'failed' = 'uninitialized';
+  /** Devices with descriptors for device mismatch validation. */
+  private mismatchedNonDefaultHolders = new DescriptorToHolderMap();
 
   /** Request a device from the pool. */
-  async reserve(descriptor?: UncanonicalizedDeviceDescriptor): Promise<DeviceProvider> {
+  async reserve(
+    descriptor?: UncanonicalizedDeviceDescriptor,
+    mismatched: boolean = false
+  ): Promise<DeviceProvider> {
     // Always attempt to initialize default device, to see if it succeeds.
     let errorMessage = '';
-    if (this.defaultHolder === 'uninitialized') {
+    let defaultHolder = mismatched ? this.mismatchedDefaultHolder : this.defaultHolder;
+    if (defaultHolder === 'uninitialized') {
       try {
-        this.defaultHolder = await DeviceHolder.create(undefined);
+        defaultHolder = await DeviceHolder.create(undefined);
       } catch (ex) {
-        this.defaultHolder = 'failed';
+        defaultHolder = 'failed';
         if (ex instanceof Error) {
           errorMessage = ` with ${ex.name} "${ex.message}"`;
         }
       }
     }
+
+    if (mismatched) {
+      this.mismatchedDefaultHolder = defaultHolder;
+    } else {
+      this.defaultHolder = defaultHolder;
+    }
     assert(
-      this.defaultHolder !== 'failed',
+      defaultHolder !== 'failed',
       `WebGPU device failed to initialize${errorMessage}; not retrying`
     );
 
     let holder;
     if (descriptor === undefined) {
-      holder = this.defaultHolder;
+      holder = defaultHolder;
     } else {
-      holder = await this.nonDefaultHolders.getOrCreate(descriptor);
+      holder = mismatched
+        ? await this.mismatchedNonDefaultHolders.getOrCreate(descriptor)
+        : await this.nonDefaultHolders.getOrCreate(descriptor);
     }
 
     assert(holder.state === 'free', 'Device was in use on DevicePool.acquire');
@@ -51,8 +67,9 @@ export class DevicePool {
 
   // When a test is done using a device, it's released back into the pool.
   // This waits for error scopes, checks their results, and checks for various error conditions.
-  async release(holder: DeviceProvider): Promise<void> {
-    assert(this.defaultHolder instanceof DeviceHolder);
+  async release(holder: DeviceProvider, mismatched: boolean = false): Promise<void> {
+    const defaultHolder = mismatched ? this.mismatchedDefaultHolder : this.defaultHolder;
+    assert(defaultHolder instanceof DeviceHolder);
     assert(holder instanceof DeviceHolder);
 
     assert(holder.state !== 'free', 'trying to release a device while already released');
@@ -73,8 +90,13 @@ export class DevicePool {
       if (!(ex instanceof TestFailedButDeviceReusable)) {
         if (holder === this.defaultHolder) {
           this.defaultHolder = 'uninitialized';
+        } else if (holder === this.mismatchedDefaultHolder) {
+          this.mismatchedDefaultHolder = 'uninitialized';
         } else {
-          this.nonDefaultHolders.deleteByDevice(holder.device);
+          const nonDefaultHolders = mismatched
+            ? this.mismatchedNonDefaultHolders
+            : this.nonDefaultHolders;
+          nonDefaultHolders.deleteByDevice(holder.device);
         }
         if ('destroy' in holder.device) {
           holder.device.destroy();
