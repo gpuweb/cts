@@ -318,6 +318,7 @@
 <meta name=variant content='webgpu:api,validation,encoding,cmds,buffer_texture_copies:depth_stencil_format,copy_buffer_size:*'>
 <meta name=variant content='webgpu:api,validation,encoding,cmds,buffer_texture_copies:depth_stencil_format,copy_buffer_offset:*'>
 <meta name=variant content='webgpu:api,validation,encoding,cmds,clearBuffer:invalid_buffer:*'>
+<meta name=variant content='webgpu:api,validation,encoding,cmds,clearBuffer:buffer,device_mismatch:*'>
 <meta name=variant content='webgpu:api,validation,encoding,cmds,clearBuffer:default_args:*'>
 <meta name=variant content='webgpu:api,validation,encoding,cmds,clearBuffer:buffer_usage:*'>
 <meta name=variant content='webgpu:api,validation,encoding,cmds,clearBuffer:size_alignment:*'>
@@ -432,6 +433,7 @@
 <meta name=variant content='webgpu:api,validation,error_scope:push,popping_sibling_error_scopes_must_be_balanced:*'>
 <meta name=variant content='webgpu:api,validation,error_scope:push,popping_nested_error_scopes_must_be_balanced:*'>
 <meta name=variant content='webgpu:api,validation,image_copy,buffer_related:valid:*'>
+<meta name=variant content='webgpu:api,validation,image_copy,buffer_related:buffer,device_mismatch:*'>
 <meta name=variant content='webgpu:api,validation,image_copy,buffer_related:usage:*'>
 <meta name=variant content='webgpu:api,validation,image_copy,buffer_related:bytes_per_row_alignment:*'>
 <meta name=variant content='webgpu:api,validation,image_copy,layout_related:bound_on_rows_per_image:*'>
@@ -443,7 +445,6 @@
 <meta name=variant content='webgpu:api,validation,image_copy,layout_related:bound_on_offset:*'>
 <meta name=variant content='webgpu:api,validation,image_copy,texture_related:valid:*'>
 <meta name=variant content='webgpu:api,validation,image_copy,texture_related:texture,device_mismatch:*'>
-<meta name=variant content='webgpu:api,validation,image_copy,texture_related:buffer,device_mismatch:*'>
 <meta name=variant content='webgpu:api,validation,image_copy,texture_related:usage:*'>
 <meta name=variant content='webgpu:api,validation,image_copy,texture_related:sample_count:*'>
 <meta name=variant content='webgpu:api,validation,image_copy,texture_related:mip_level:*'>

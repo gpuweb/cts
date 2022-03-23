@@ -43,17 +43,15 @@ g.test('device_mismatch')
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
 
+    const device = mismatched ? t.mismatchedDevice : t.device;
+
     const descriptor = {
       colorFormats: ['rgba8unorm'],
     };
 
-    const bundle0Encoder = mismatched
-      ? t.mismatchedDevice.createRenderBundleEncoder(descriptor)
-      : t.device.createRenderBundleEncoder(descriptor);
+    const bundle0Encoder = device.createRenderBundleEncoder(descriptor);
     const bundle0 = bundle0Encoder.finish();
-    const bundle1Encoder = mismatched
-      ? t.mismatchedDevice.createRenderBundleEncoder(descriptor)
-      : t.device.createRenderBundleEncoder(descriptor);
+    const bundle1Encoder = device.createRenderBundleEncoder(descriptor);
     const bundle1 = bundle1Encoder.finish();
 
     const encoder = t.createEncoder('render pass');

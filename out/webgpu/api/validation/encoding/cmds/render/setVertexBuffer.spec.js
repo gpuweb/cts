@@ -58,7 +58,25 @@ fn((t) => {
 g.test('vertex_buffer,device_mismatch').
 desc('Tests setVertexBuffer cannot be called with a vertex buffer created from another device').
 paramsSubcasesOnly(kRenderEncodeTypeParams.combine('mismatched', [true, false])).
-unimplemented();
+fn(async (t) => {
+  const { encoderType, mismatched } = t.params;
+
+  if (mismatched) {
+    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+  }
+
+  const device = mismatched ? t.mismatchedDevice : t.device;
+
+  const vertexBuffer = device.createBuffer({
+    size: 16,
+    usage: GPUBufferUsage.VERTEX });
+
+  t.trackForCleanup(vertexBuffer);
+
+  const { encoder, validateFinish } = t.createEncoder(encoderType);
+  encoder.setVertexBuffer(0, vertexBuffer);
+  validateFinish(!mismatched);
+});
 
 g.test('vertex_buffer_usage').
 desc(

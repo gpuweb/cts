@@ -158,14 +158,13 @@ fn(async (t) => {
     await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   }
 
-  const descriptor = {
+  const device = mismatched ? t.mismatchedDevice : t.device;
+
+  const occlusionQuerySet = device.createQuerySet({
     type: 'occlusion',
-    count: 1 };
+    count: 1 });
 
-
-  const occlusionQuerySet = mismatched ?
-  t.mismatchedDevice.createQuerySet(descriptor) :
-  t.device.createQuerySet(descriptor);
+  t.trackForCleanup(occlusionQuerySet);
 
   const encoder = t.createEncoder('render pass', { occlusionQuerySet });
   encoder.validateFinish(!mismatched);

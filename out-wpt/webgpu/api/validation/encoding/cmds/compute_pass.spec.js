@@ -66,7 +66,29 @@ setPipeline should generate an error iff using an 'invalid' pipeline.
 g.test('pipeline,device_mismatch')
   .desc('Tests setPipeline cannot be called with a compute pipeline created from another device')
   .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
-  .unimplemented();
+  .fn(async t => {
+    const { mismatched } = t.params;
+
+    if (mismatched) {
+      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+    }
+
+    const device = mismatched ? t.mismatchedDevice : t.device;
+
+    const pipeline = device.createComputePipeline({
+      compute: {
+        module: device.createShaderModule({
+          code: '@stage(compute) @workgroup_size(1) fn main() {}',
+        }),
+
+        entryPoint: 'main',
+      },
+    });
+
+    const { encoder, validateFinish } = t.createEncoder('compute pass');
+    encoder.setPipeline(pipeline);
+    validateFinish(!mismatched);
+  });
 
 const kMaxDispatch = DefaultLimits.maxComputeWorkgroupsPerDimension;
 g.test('dispatch_sizes')
@@ -161,4 +183,26 @@ g.test('indirect_dispatch_buffer,device_mismatch')
     'Tests dispatchIndirect cannot be called with an indirect buffer created from another device'
   )
   .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
-  .unimplemented();
+  .fn(async t => {
+    const { mismatched } = t.params;
+
+    if (mismatched) {
+      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+    }
+
+    const pipeline = t.createNoOpComputePipeline();
+
+    const device = mismatched ? t.mismatchedDevice : t.device;
+
+    const buffer = device.createBuffer({
+      size: 16,
+      usage: GPUBufferUsage.INDIRECT,
+    });
+
+    t.trackForCleanup(buffer);
+
+    const { encoder, validateFinish } = t.createEncoder('compute pass');
+    encoder.setPipeline(pipeline);
+    encoder.dispatchIndirect(buffer, 0);
+    validateFinish(!mismatched);
+  });

@@ -86,7 +86,37 @@ g.test('buffer,device_mismatch')
     { srcMismatched: true, dstMismatched: false },
     { srcMismatched: false, dstMismatched: true },
   ] as const)
-  .unimplemented();
+  .fn(async t => {
+    const { srcMismatched, dstMismatched } = t.params;
+    const mismatched = srcMismatched || dstMismatched;
+
+    if (mismatched) {
+      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+    }
+
+    const device = mismatched ? t.mismatchedDevice : t.device;
+
+    const srcBuffer = device.createBuffer({
+      size: 16,
+      usage: GPUBufferUsage.COPY_SRC,
+    });
+    t.trackForCleanup(srcBuffer);
+
+    const dstBuffer = device.createBuffer({
+      size: 16,
+      usage: GPUBufferUsage.COPY_DST,
+    });
+    t.trackForCleanup(dstBuffer);
+
+    t.TestCopyBufferToBuffer({
+      srcBuffer,
+      srcOffset: 0,
+      dstBuffer,
+      dstOffset: 0,
+      copySize: 8,
+      isSuccess: !mismatched,
+    });
+  });
 
 g.test('buffer_usage')
   .paramsSubcasesOnly(u =>

@@ -33,7 +33,25 @@ fn((t) => {
 g.test('index_buffer,device_mismatch').
 desc('Tests setIndexBuffer cannot be called with an index buffer created from another device').
 paramsSubcasesOnly(kRenderEncodeTypeParams.combine('mismatched', [true, false])).
-unimplemented();
+fn(async (t) => {
+  const { encoderType, mismatched } = t.params;
+
+  if (mismatched) {
+    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+  }
+
+  const device = mismatched ? t.mismatchedDevice : t.device;
+
+  const indexBuffer = device.createBuffer({
+    size: 16,
+    usage: GPUBufferUsage.INDEX });
+
+  t.trackForCleanup(indexBuffer);
+
+  const { encoder, validateFinish } = t.createEncoder(encoderType);
+  encoder.setIndexBuffer(indexBuffer, 'uint32');
+  validateFinish(!mismatched);
+});
 
 g.test('index_buffer_usage').
 desc(

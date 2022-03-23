@@ -183,10 +183,9 @@ fn(async (t) => {
     await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   }
 
-  const layoutDescriptor = { bindGroupLayouts: [] };
-  const layout = mismatched ?
-  t.mismatchedDevice.createPipelineLayout(layoutDescriptor) :
-  t.device.createPipelineLayout(layoutDescriptor);
+  const device = mismatched ? t.mismatchedDevice : t.device;
+
+  const layout = device.createPipelineLayout({ bindGroupLayouts: [] });
 
   const descriptor = {
     layout,
@@ -211,10 +210,11 @@ fn(async (t) => {
     await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   }
 
-  const code = '@stage(compute) @workgroup_size(1) fn main() {}';
-  const module = mismatched ?
-  t.mismatchedDevice.createShaderModule({ code }) :
-  t.device.createShaderModule({ code });
+  const device = mismatched ? t.mismatchedDevice : t.device;
+
+  const module = device.createShaderModule({
+    code: '@stage(compute) @workgroup_size(1) fn main() {}' });
+
 
   const descriptor = {
     compute: {

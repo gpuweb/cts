@@ -506,19 +506,17 @@ fn(async (t) => {
     await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   }
 
-  const descriptor = {
+  const device = mismatched ? t.mismatchedDevice : t.device;
+
+  const bgl = device.createBindGroupLayout({
     entries: [
     {
       binding: 0,
       visibility: GPUConst.ShaderStage.VERTEX,
-      buffer: {} }] };
+      buffer: {} }] });
 
 
 
-
-  const bgl = mismatched ?
-  t.mismatchedDevice.createBindGroupLayout(descriptor) :
-  t.device.createBindGroupLayout(descriptor);
 
   t.expectValidationError(() => {
     t.device.createBindGroup({

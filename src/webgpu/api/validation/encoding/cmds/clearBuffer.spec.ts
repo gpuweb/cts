@@ -40,6 +40,33 @@ g.test('invalid_buffer')
     });
   });
 
+g.test('buffer,device_mismatch')
+  .desc(`Tests clearBuffer cannot be called with buffer created from another device.`)
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .fn(async t => {
+    const { mismatched } = t.params;
+
+    if (mismatched) {
+      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+    }
+
+    const device = mismatched ? t.mismatchedDevice : t.device;
+    const size = 8;
+
+    const buffer = device.createBuffer({
+      size,
+      usage: GPUBufferUsage.COPY_DST,
+    });
+    t.trackForCleanup(buffer);
+
+    t.TestClearBuffer({
+      buffer,
+      offset: 0,
+      size,
+      isSuccess: !mismatched,
+    });
+  });
+
 g.test('default_args')
   .desc(`Test that calling clearBuffer with a default offset and size is valid.`)
   .paramsSubcasesOnly([
