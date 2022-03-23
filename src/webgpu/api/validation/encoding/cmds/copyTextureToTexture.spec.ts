@@ -121,10 +121,6 @@ g.test('texture,device_mismatch')
     const { srcMismatched, dstMismatched } = t.params;
     const mismatched = srcMismatched || dstMismatched;
 
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
-
     const device = mismatched ? t.mismatchedDevice : t.device;
     const size = { width: 4, height: 4, depthOrArrayLayers: 1 };
     const format = 'rgba8unorm';

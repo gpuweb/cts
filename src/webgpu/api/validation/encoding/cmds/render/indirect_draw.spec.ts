@@ -58,10 +58,6 @@ g.test('indirect_buffer,device_mismatch')
   .fn(async t => {
     const { encoderType, indexed, mismatched } = t.params;
 
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
-
     const device = mismatched ? t.mismatchedDevice : t.device;
 
     const indirectBuffer = device.createBuffer({

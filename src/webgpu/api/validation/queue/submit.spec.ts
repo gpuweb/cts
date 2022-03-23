@@ -28,10 +28,6 @@ g.test('command_buffer,device_mismatch')
     const { cb0Mismatched, cb1Mismatched } = t.params;
     const mismatched = cb0Mismatched || cb1Mismatched;
 
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
-
     const encoder0 = cb0Mismatched
       ? t.mismatchedDevice.createCommandEncoder()
       : t.device.createCommandEncoder();

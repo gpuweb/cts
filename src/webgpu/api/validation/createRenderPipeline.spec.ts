@@ -664,10 +664,6 @@ g.test('pipeline_layout,device_mismatch')
   .fn(async t => {
     const { isAsync, mismatched } = t.params;
 
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
-
     const device = mismatched ? t.mismatchedDevice : t.device;
 
     const layout = device.createPipelineLayout({ bindGroupLayouts: [] });
@@ -707,10 +703,6 @@ g.test('shader_module,device_mismatch')
   )
   .fn(async t => {
     const { isAsync, vertex_mismatched, fragment_mismatched, _success } = t.params;
-
-    if (vertex_mismatched || fragment_mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
 
     const code = `
       @stage(vertex) fn main() -> @builtin(position) vec4<f32> {

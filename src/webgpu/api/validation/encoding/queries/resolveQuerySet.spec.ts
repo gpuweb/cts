@@ -157,10 +157,6 @@ g.test('query_set_buffer,device_mismatch')
     const { querySetMismatched, bufferMismatched } = t.params;
     const mismatched = querySetMismatched || bufferMismatched;
 
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
-
     const device = mismatched ? t.mismatchedDevice : t.device;
     const queryCout = 1;
 
