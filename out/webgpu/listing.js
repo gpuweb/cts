@@ -1163,6 +1163,13 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "evaluation_order"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
       "expression",
       "binary",
       "bitwise"
