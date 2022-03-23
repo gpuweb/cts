@@ -128,7 +128,7 @@ g.test('subresources_from_same_texture_as_color_attachment_and_in_bind_group')
         { bindGroupViewBaseLayer: 1, bindGroupViewLayerCount: 2 },
       ])
       .combine('bindGroupUsage', ['texture', 'storage'])
-      .unless(t => t.bindGroupUsage === 'storage' && t.bindGroupViewLevelCount > 0)
+      .unless(t => t.bindGroupUsage === 'storage' && t.bindGroupViewLevelCount > 1)
       .combine('inSamePass', [true, false])
   )
   .fn(async t => {
@@ -149,17 +149,16 @@ g.test('subresources_from_same_texture_as_color_attachment_and_in_bind_group')
     };
 
     let textureUsage = GPUTextureUsage.RENDER_ATTACHMENT;
-    const viewDimension = bindGroupViewLayerCount > 1 ? '2d-array' : '2d';
     switch (bindGroupUsage) {
       case 'texture':
-        bindGroupLayoutEntry.texture = { viewDimension };
+        bindGroupLayoutEntry.texture = { viewDimension: '2d-array' };
         textureUsage |= GPUTextureUsage.TEXTURE_BINDING;
         break;
       case 'storage':
         bindGroupLayoutEntry.storageTexture = {
           access: 'write-only',
           format: 'rgba8unorm',
-          viewDimension,
+          viewDimension: '2d-array',
         };
 
         textureUsage |= GPUTextureUsage.STORAGE_BINDING;
@@ -177,7 +176,7 @@ g.test('subresources_from_same_texture_as_color_attachment_and_in_bind_group')
     });
 
     const bindGroupView = texture.createView({
-      dimension: bindGroupViewLayerCount > 1 ? '2d-array' : '2d',
+      dimension: '2d-array',
       baseArrayLayer: bindGroupViewBaseLayer,
       arrayLayerCount: bindGroupViewLayerCount,
       baseMipLevel: bindGroupViewBaseLevel,
@@ -236,6 +235,137 @@ g.test('subresources_from_same_texture_as_color_attachment_and_in_bind_group')
     const isOverlapped = isMipLevelOverlapped && isArrayLayerOverlapped;
 
     const success = inSamePass ? !isOverlapped : true;
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, !success);
+  });
+
+g.test('subresources_from_same_texture_as_depth_stencil_attachment_and_in_bind_group')
+  .desc(
+    `
+  Test that when one subresource of a texture is used as a depth stencil attachment, it cannot be
+  used in a bind group simultaneously in the same render pass encoder. It is allowed when the bind
+  group is used in another render pass encoder instead of the same one.`
+  )
+  .params(u =>
+    u
+      .combine('depthStencilAttachmentLevel', [0, 1])
+      .combine('depthStencilAttachmentLayer', [0, 1])
+      .combineWithParams([
+        { bindGroupViewBaseLevel: 0, bindGroupViewLevelCount: 1 },
+        { bindGroupViewBaseLevel: 1, bindGroupViewLevelCount: 1 },
+        { bindGroupViewBaseLevel: 1, bindGroupViewLevelCount: 2 },
+      ])
+      .combineWithParams([
+        { bindGroupViewBaseLayer: 0, bindGroupViewLayerCount: 1 },
+        { bindGroupViewBaseLayer: 1, bindGroupViewLayerCount: 1 },
+        { bindGroupViewBaseLayer: 1, bindGroupViewLayerCount: 2 },
+      ])
+      .combine('depthStencilReadOnly', [true, false])
+      .combine('bindGroupAspect', ['depth-only', 'stencil-only'])
+      .combine('inSamePass', [true, false])
+  )
+  .fn(async t => {
+    const {
+      depthStencilAttachmentLevel,
+      depthStencilAttachmentLayer,
+      bindGroupViewBaseLevel,
+      bindGroupViewLevelCount,
+      bindGroupViewBaseLayer,
+      bindGroupViewLayerCount,
+      depthStencilReadOnly,
+      bindGroupAspect,
+      inSamePass,
+    } = t.params;
+
+    const bindGroupLayoutEntry = {
+      binding: 0,
+      visibility: GPUShaderStage.FRAGMENT,
+      texture: {
+        viewDimension: '2d-array',
+        sampleType: bindGroupAspect === 'depth-only' ? 'depth' : 'uint',
+      },
+    };
+
+    const texture = t.device.createTexture({
+      format: 'depth24plus-stencil8',
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+      size: [kTextureSize, kTextureSize, kTextureLayers],
+      mipLevelCount: kTextureLevels,
+    });
+
+    const bindGroupView = texture.createView({
+      dimension: '2d-array',
+      baseArrayLayer: bindGroupViewBaseLayer,
+      arrayLayerCount: bindGroupViewLayerCount,
+      baseMipLevel: bindGroupViewBaseLevel,
+      mipLevelCount: bindGroupViewLevelCount,
+      aspect: bindGroupAspect,
+    });
+
+    const bindGroupLayout = t.device.createBindGroupLayout({
+      entries: [bindGroupLayoutEntry],
+    });
+
+    const bindGroup = t.device.createBindGroup({
+      layout: bindGroupLayout,
+      entries: [{ binding: 0, resource: bindGroupView }],
+    });
+
+    const attachmentView = texture.createView({
+      baseArrayLayer: depthStencilAttachmentLayer,
+      arrayLayerCount: 1,
+      baseMipLevel: depthStencilAttachmentLevel,
+      mipLevelCount: 1,
+    });
+
+    const depthStencilAttachment = {
+      view: attachmentView,
+      depthReadOnly: depthStencilReadOnly,
+      depthLoadOp: 'load',
+      depthStoreOp: 'store',
+      stencilReadOnly: depthStencilReadOnly,
+      stencilLoadOp: 'load',
+      stencilStoreOp: 'store',
+    };
+
+    const encoder = t.device.createCommandEncoder();
+    const renderPass = encoder.beginRenderPass({
+      colorAttachments: [],
+      depthStencilAttachment,
+    });
+
+    if (inSamePass) {
+      renderPass.setBindGroup(0, bindGroup);
+      renderPass.end();
+    } else {
+      renderPass.end();
+
+      const texture2 = t.device.createTexture({
+        format: 'rgba8unorm',
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        size: [kTextureSize, kTextureSize, 1],
+        mipLevelCount: 1,
+      });
+
+      const colorAttachment2 = t.getColorAttachment(texture2);
+      const renderPass2 = encoder.beginRenderPass({
+        colorAttachments: [colorAttachment2],
+      });
+
+      renderPass2.setBindGroup(0, bindGroup);
+      renderPass2.end();
+    }
+
+    const isMipLevelOverlapped =
+      depthStencilAttachmentLevel >= bindGroupViewBaseLevel &&
+      depthStencilAttachmentLevel < bindGroupViewBaseLevel + bindGroupViewLevelCount;
+    const isArrayLayerOverlapped =
+      depthStencilAttachmentLayer >= bindGroupViewBaseLayer &&
+      depthStencilAttachmentLayer < bindGroupViewBaseLayer + bindGroupViewLayerCount;
+    const isOverlapped = isMipLevelOverlapped && isArrayLayerOverlapped;
+
+    const success = !inSamePass || !isOverlapped || depthStencilReadOnly;
     t.expectValidationError(() => {
       encoder.finish();
     }, !success);
