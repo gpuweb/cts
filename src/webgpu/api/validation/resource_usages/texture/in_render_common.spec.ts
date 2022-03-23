@@ -145,17 +145,16 @@ g.test('subresources_from_same_texture_as_color_attachment_and_in_bind_group')
       visibility: GPUShaderStage.FRAGMENT,
     };
     let textureUsage = GPUTextureUsage.RENDER_ATTACHMENT;
-    const viewDimension = bindGroupViewLayerCount > 1 ? '2d-array' : '2d';
     switch (bindGroupUsage) {
       case 'texture':
-        bindGroupLayoutEntry.texture = { viewDimension };
+        bindGroupLayoutEntry.texture = { viewDimension: '2d-array' };
         textureUsage |= GPUTextureUsage.TEXTURE_BINDING;
         break;
       case 'storage':
         bindGroupLayoutEntry.storageTexture = {
           access: 'write-only',
           format: 'rgba8unorm',
-          viewDimension,
+          viewDimension: '2d-array',
         };
         textureUsage |= GPUTextureUsage.STORAGE_BINDING;
         break;
@@ -171,7 +170,7 @@ g.test('subresources_from_same_texture_as_color_attachment_and_in_bind_group')
       mipLevelCount: kTextureLevels,
     });
     const bindGroupView = texture.createView({
-      dimension: bindGroupViewLayerCount > 1 ? '2d-array' : '2d',
+      dimension: '2d-array',
       baseArrayLayer: bindGroupViewBaseLayer,
       arrayLayerCount: bindGroupViewLayerCount,
       baseMipLevel: bindGroupViewBaseLevel,
@@ -269,12 +268,14 @@ g.test('subresources_from_same_texture_as_depth_stencil_attachment_and_in_bind_g
       inSamePass,
     } = t.params;
 
-    const viewDimension = bindGroupViewLayerCount > 1 ? '2d-array' : '2d';
-    const bindGroupLayoutEntry: GPUBindGroupLayoutEntry = {
+    const bindGroupLayoutEntry = {
       binding: 0,
       visibility: GPUShaderStage.FRAGMENT,
-      texture: { viewDimension, sampleType: bindGroupAspect === 'depth-only' ? 'depth' : 'uint' },
-    };
+      texture: {
+        viewDimension: '2d-array',
+        sampleType: bindGroupAspect === 'depth-only' ? 'depth' : 'uint',
+      },
+    } as const;
     const texture = t.device.createTexture({
       format: 'depth24plus-stencil8',
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
@@ -282,7 +283,7 @@ g.test('subresources_from_same_texture_as_depth_stencil_attachment_and_in_bind_g
       mipLevelCount: kTextureLevels,
     });
     const bindGroupView = texture.createView({
-      dimension: bindGroupViewLayerCount > 1 ? '2d-array' : '2d',
+      dimension: '2d-array',
       baseArrayLayer: bindGroupViewBaseLayer,
       arrayLayerCount: bindGroupViewLayerCount,
       baseMipLevel: bindGroupViewBaseLevel,
