@@ -797,19 +797,19 @@ Tests writeBuffer on queue on destroyed device.
     u
       .combine('arrayType', kTypedArrayBufferViewKeys)
       .beginSubcases()
+      .combine('numElements', [4, 8, 16])
       .combine('awaitLost', [true, false])
   )
   .fn(async t => {
-    const { arrayType, awaitLost } = t.params;
-    const kNumElements = 16;
+    const { arrayType, numElements, awaitLost } = t.params;
     const array = kTypedArrayBufferViews[arrayType];
     const elementSize = array.BYTES_PER_ELEMENT;
-    const bufferSize = kNumElements * elementSize;
+    const bufferSize = numElements * elementSize;
     const buffer = t.device.createBuffer({
       size: bufferSize,
       usage: GPUBufferUsage.COPY_DST,
     });
-    const data = new array(kNumElements);
+    const data = new array(numElements);
     await t.executeAfterDestroy(() => {
       t.device.queue.writeBuffer(buffer, 0, data);
     }, awaitLost);
