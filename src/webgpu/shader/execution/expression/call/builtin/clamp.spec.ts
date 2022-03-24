@@ -35,9 +35,7 @@ export const g = makeTestGroup(GPUTest);
  * @returns the index of the clamped value
  */
 function calculateMinMaxClamp(ei: number, fi: number, gi: number): number {
-  let idx = ei >= fi ? ei : fi;
-  idx = idx <= gi ? idx : gi;
-  return idx;
+  return Math.min(Math.max(ei, fi), gi);
 }
 
 /**
