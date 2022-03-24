@@ -350,14 +350,6 @@ g.test('assignment')
     },
 
     {
-      name: 'ToArray4D',
-      _body:
-        'arr3D_zero[mul(&a, 2)][mul(&a, 2)][mul(&a, 2)] = mul(&a, 2);' +
-        'return arr3D_zero[8][16][32];',
-      _result: 4,
-    },
-
-    {
       name: 'ToArrayFromArray',
       _body:
         'arr2D_zero[4][8] = 123;' +
