@@ -6,10 +6,6 @@ Tests for device lost induced via destroy.
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import {
-  kTypedArrayBufferViewKeys,
-  kTypedArrayBufferViews,
-} from '../../../../../common/util/util.js';
-import {
   allBindingEntries,
   bindingTypeInfo,
   kBindableResources,
@@ -794,22 +790,15 @@ Tests writeBuffer on queue on destroyed device.
   `
   )
   .params(u =>
-    u
-      .combine('arrayType', kTypedArrayBufferViewKeys)
-      .beginSubcases()
-      .combine('numElements', [4, 8, 16])
-      .combine('awaitLost', [true, false])
+    u.combine('numElements', [4, 8, 16]).beginSubcases().combine('awaitLost', [true, false])
   )
   .fn(async t => {
-    const { arrayType, numElements, awaitLost } = t.params;
-    const array = kTypedArrayBufferViews[arrayType];
-    const elementSize = array.BYTES_PER_ELEMENT;
-    const bufferSize = numElements * elementSize;
+    const { numElements, awaitLost } = t.params;
     const buffer = t.device.createBuffer({
-      size: bufferSize,
+      size: numElements,
       usage: GPUBufferUsage.COPY_DST,
     });
-    const data = new array(numElements);
+    const data = new Uint8Array(numElements);
     await t.executeAfterDestroy(() => {
       t.device.queue.writeBuffer(buffer, 0, data);
     }, awaitLost);

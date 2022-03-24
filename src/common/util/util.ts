@@ -165,7 +165,7 @@ export function* iterRange<T>(n: number, fn: (i: number) => T): Iterable<T> {
   }
 }
 
-const TypedArrayBufferViewTypes = [
+const TypedArrayBufferViewInstances = [
   new Uint8Array(),
   new Uint8ClampedArray(),
   new Uint16Array(),
@@ -177,7 +177,7 @@ const TypedArrayBufferViewTypes = [
   new Float64Array(),
 ] as const;
 
-export type TypedArrayBufferView = typeof TypedArrayBufferViewTypes[number];
+export type TypedArrayBufferView = typeof TypedArrayBufferViewInstances[number];
 
 export type TypedArrayBufferViewConstructor<
   A extends TypedArrayBufferView = TypedArrayBufferView
@@ -206,7 +206,7 @@ export const kTypedArrayBufferViews: {
   ...(() => {
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     const result: { [k: string]: any } = {};
-    for (const v of TypedArrayBufferViewTypes) {
+    for (const v of TypedArrayBufferViewInstances) {
       result[v.constructor.name] = v.constructor;
     }
     return result;
