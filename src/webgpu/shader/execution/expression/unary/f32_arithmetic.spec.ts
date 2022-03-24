@@ -37,21 +37,14 @@ Accuracy: Correctly rounded
       return { input: [f32(x)], expected: f32(-f32_x) };
     };
 
-    const cases: Array<Case> = [];
-    const numeric_range = Array<number>();
-    numeric_range.push(...biasedRange(kValue.f32.negative.max, kValue.f32.negative.min, 50));
-    numeric_range.push(
-      ...linearRange(kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max, 10)
-    );
-    numeric_range.push(0.0);
-    numeric_range.push(
-      ...linearRange(kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, 10)
-    );
-    numeric_range.push(...biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, 10));
-
-    numeric_range.forEach(x => {
-      cases.push(makeCase(x));
-    });
+    const numeric_range = [
+      ...biasedRange(kValue.f32.negative.max, kValue.f32.negative.min, 50),
+      ...linearRange(kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max, 10),
+      0.0,
+      ...linearRange(kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, 10),
+      ...biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, 10),
+    ];
+    const cases = numeric_range.map(x => makeCase(x));
 
     run(t, unary('-'), [TypeF32], TypeF32, cfg, cases);
   });

@@ -38,15 +38,16 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
       return { input: [f32(y), f32(x)], expected: f32(Math.atan2(y, x)) };
     };
 
-    const numeric_range: Array<number> = [];
-    //  -2^32 < x <= -1, biased towards -1
-    numeric_range.push(...biasedRange(-1.0, -(2 ** 32), 50));
-    // -1 <= x < 0, linearly spread
-    numeric_range.push(...linearRange(-1.0, kValue.f32.negative.max, 20));
-    // 0 < x < -1, linearly spread
-    numeric_range.push(...linearRange(kValue.f32.positive.min, 1.0, 20));
-    // 1 <= x < 2^32, biased towards 1
-    numeric_range.push(...biasedRange(1.0, 2 ** 32, 20));
+    const numeric_range = [
+      //  -2^32 < x <= -1, biased towards -1
+      ...biasedRange(-1.0, -(2 ** 32), 50),
+      // -1 <= x < 0, linearly spread
+      ...linearRange(-1.0, kValue.f32.negative.max, 20),
+      // 0 < x < -1, linearly spread
+      ...linearRange(kValue.f32.positive.min, 1.0, 20),
+      // 1 <= x < 2^32, biased towards 1
+      ...biasedRange(1.0, 2 ** 32, 20),
+    ];
 
     const cases: Array<Case> = [];
     cases.push(...numeric_range.map(x => makeCase(0.0, x)));
