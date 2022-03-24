@@ -49,8 +49,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
       ...biasedRange(1.0, 2 ** 32, 20),
     ];
 
-    const cases: Array<Case> = [];
-    cases.push(...numeric_range.map(x => makeCase(0.0, x)));
+    const cases: Array<Case> = numeric_range.map(x => makeCase(0.0, x));
     numeric_range.forEach((y, y_idx) => {
       numeric_range.forEach((x, x_idx) => {
         if (x_idx >= y_idx) {
