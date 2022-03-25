@@ -7,7 +7,7 @@ Note: destroyed buffer is tested in destroyed/.
 Note: buffer map state is tested in ./buffer_mapped.spec.ts.
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-
+import { kTypedArrayBufferViewConstructors } from '../../../../common/util/util.js';
 import { GPUConst } from '../../../constants.js';
 import { ValidationTest } from '../validation_test.js';
 
@@ -108,21 +108,9 @@ Also verifies that the specified data range:
       t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, undefined, 12));
     }
 
-    const arrayTypes = [
-      Uint8Array,
-      Uint8ClampedArray,
-      Int8Array,
-      Uint16Array,
-      Int16Array,
-      Uint32Array,
-      Int32Array,
-      Float32Array,
-      Float64Array,
-    ];
-
     runTest(Uint8Array, true);
 
-    for (const arrayType of arrayTypes) {
+    for (const arrayType of kTypedArrayBufferViewConstructors) {
       runTest(arrayType, false);
     }
   });

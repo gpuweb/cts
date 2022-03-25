@@ -14,6 +14,7 @@ kBufferUsageInfo,
 kBufferUsageCopy,
 kBufferUsageCopyInfo,
 kCompressedTextureFormats,
+kQueryTypes,
 kTextureUsageType,
 kTextureUsageTypeInfo,
 kTextureUsageCopy,
@@ -21,10 +22,19 @@ kTextureUsageCopyInfo,
 kRegularTextureFormats,
 kRenderableColorTextureFormats,
 kShaderStageKeys,
-kTextureFormatInfo,
-kQueryTypes } from
+kTextureFormatInfo } from
 '../../../../capability_info.js';
+
+import {
+canCopyFromCanvasContext,
+createCanvas,
+kAllCanvasTypes,
+kValidCanvasContextIds } from
+'../../../../util/create_elements.js';
 import { ValidationTest } from '../../validation_test.js';
+
+const kCommandValidationStages = ['finish', 'submit'];
+
 
 class DeviceDestroyTests extends ValidationTest {
   /**
@@ -42,6 +52,46 @@ class DeviceDestroyTests extends ValidationTest {
       this.expect(lostInfo.reason === 'destroyed');
     }
     fn();
+  }
+
+  /**
+   * Expects that encoders can finish and submit the resulting commands before the device is
+   * destroyed, then repeats the same process after the device is destroyed without any specific
+   * expectations.
+   * There are two valid stages: 'finish' and 'submit'.
+   *   'finish': Tests [encode, finish] and [encoder, destroy, finish]
+   *   'submit': Tests [encoder, finish, submit] and [encoder, finish, destroy, submit]
+   */
+  async executeCommandsAfterDestroy(
+  stage,
+  awaitLost,
+  encoderType,
+  fn)
+  {
+    this.expectDeviceLost('destroyed');
+
+    switch (stage) {
+      case 'finish':{
+          // Control case
+          fn(this.createEncoder(encoderType)).validateFinish(true);
+          // Validation case
+          const encoder = fn(this.createEncoder(encoderType));
+          await this.executeAfterDestroy(() => {
+            encoder.finish();
+          }, awaitLost);
+          break;
+        }
+      case 'submit':{
+          // Control case
+          fn(this.createEncoder(encoderType)).validateFinishAndSubmit(true, true);
+          // Validation case
+          const commands = fn(this.createEncoder(encoderType)).validateFinish(true);
+          await this.executeAfterDestroy(() => {
+            this.queue.submit([commands]);
+          }, awaitLost);
+          break;
+        }}
+
   }}
 
 
@@ -443,127 +493,440 @@ fn(async (t) => {
 g.test('command,copyBufferToBuffer').
 desc(
 `
-Tests copyBufferToBuffer command on destroyed device fails.
-  - Tests that finishing encoding fails on destroyed device
-  - Tests that submitting command fails on destroyed device
+Tests copyBufferToBuffer command with various uncompressed formats on destroyed device.
   `).
 
-unimplemented();
+params((u) =>
+u.beginSubcases().combine('stage', kCommandValidationStages).combine('awaitLost', [true, false])).
+
+fn(async (t) => {
+  const { stage, awaitLost } = t.params;
+  const kBufferSize = 16;
+  const src = t.device.createBuffer({
+    size: kBufferSize,
+    usage: GPUBufferUsage.COPY_SRC });
+
+  const dst = t.device.createBuffer({
+    size: kBufferSize,
+    usage: GPUBufferUsage.COPY_DST });
+
+  await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', (maker) => {
+    maker.encoder.copyBufferToBuffer(src, 0, dst, 0, kBufferSize);
+    return maker;
+  });
+});
 
 g.test('command,copyBufferToTexture').
 desc(
 `
-Tests copyBufferToTexture command on destroyed device fails.
-  - Tests that finishing encoding fails on destroyed device
-  - Tests that submitting command fails on destroyed device
+Tests copyBufferToTexture command on destroyed device.
+  - Tests finishing encoding on destroyed device
+  - Tests submitting command on destroyed device
   `).
 
-unimplemented();
+params((u) =>
+u.beginSubcases().combine('stage', kCommandValidationStages).combine('awaitLost', [true, false])).
+
+fn(async (t) => {
+  const { stage, awaitLost } = t.params;
+  const format = 'rgba32uint';
+  const { bytesPerBlock, blockWidth, blockHeight } = kTextureFormatInfo[format];
+  const src = {
+    buffer: t.device.createBuffer({
+      size: bytesPerBlock,
+      usage: GPUBufferUsage.COPY_SRC }) };
+
+
+  const dst = {
+    texture: t.device.createTexture({
+      size: { width: blockWidth, height: blockHeight },
+      usage: GPUTextureUsage.COPY_DST,
+      format }) };
+
+
+  const copySize = { width: blockWidth, height: blockHeight };
+  await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', (maker) => {
+    maker.encoder.copyBufferToTexture(src, dst, copySize);
+    return maker;
+  });
+});
 
 g.test('command,copyTextureToBuffer').
 desc(
 `
-Tests copyTextureToBuffer command on destroyed device fails.
-  - Tests that finishing encoding fails on destroyed device
-  - Tests that submitting command fails on destroyed device
+Tests copyTextureToBuffer command on destroyed device.
+  - Tests finishing encoding on destroyed device
+  - Tests submitting command on destroyed device
   `).
 
-unimplemented();
+params((u) =>
+u.beginSubcases().combine('stage', kCommandValidationStages).combine('awaitLost', [true, false])).
+
+fn(async (t) => {
+  const { stage, awaitLost } = t.params;
+  const format = 'rgba32uint';
+  const { bytesPerBlock, blockWidth, blockHeight } = kTextureFormatInfo[format];
+  const src = {
+    texture: t.device.createTexture({
+      size: { width: blockWidth, height: blockHeight },
+      usage: GPUTextureUsage.COPY_SRC,
+      format }) };
+
+
+  const dst = {
+    buffer: t.device.createBuffer({
+      size: bytesPerBlock,
+      usage: GPUBufferUsage.COPY_DST }) };
+
+
+  const copySize = { width: blockWidth, height: blockHeight };
+  await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', (maker) => {
+    maker.encoder.copyTextureToBuffer(src, dst, copySize);
+    return maker;
+  });
+});
 
 g.test('command,copyTextureToTexture').
 desc(
 `
-Tests copyTextureToTexture command on destroyed device fails.
-  - Tests that finishing encoding fails on destroyed device
-  - Tests that submitting command fails on destroyed device
+Tests copyTextureToTexture command on destroyed device.
+  - Tests finishing encoding on destroyed device
+  - Tests submitting command on destroyed device
   `).
 
-unimplemented();
+params((u) =>
+u.beginSubcases().combine('stage', kCommandValidationStages).combine('awaitLost', [true, false])).
+
+fn(async (t) => {
+  const { stage, awaitLost } = t.params;
+  const format = 'rgba32uint';
+  const { blockWidth, blockHeight } = kTextureFormatInfo[format];
+  const src = {
+    texture: t.device.createTexture({
+      size: { width: blockWidth, height: blockHeight },
+      usage: GPUTextureUsage.COPY_SRC,
+      format }) };
+
+
+  const dst = {
+    texture: t.device.createTexture({
+      size: { width: blockWidth, height: blockHeight },
+      usage: GPUBufferUsage.COPY_DST,
+      format }) };
+
+
+  const copySize = { width: blockWidth, height: blockHeight };
+  await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', (maker) => {
+    maker.encoder.copyTextureToTexture(src, dst, copySize);
+    return maker;
+  });
+});
 
 g.test('command,clearBuffer').
 desc(
 `
-Tests encoding and finishing a clearBuffer command on destroyed device fails.
-  - Tests that finishing encoding fails on destroyed device
-  - Tests that submitting command fails on destroyed device
+Tests encoding and finishing a clearBuffer command on destroyed device.
+  - Tests finishing encoding on destroyed device
+  - Tests submitting command on destroyed device
   `).
 
-unimplemented();
+params((u) =>
+u.beginSubcases().combine('stage', kCommandValidationStages).combine('awaitLost', [true, false])).
+
+fn(async (t) => {
+  const { stage, awaitLost } = t.params;
+  const kBufferSize = 16;
+  const buffer = t.device.createBuffer({
+    size: kBufferSize,
+    usage: GPUBufferUsage.COPY_SRC });
+
+  await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', (maker) => {
+    maker.encoder.clearBuffer(buffer, 0, kBufferSize);
+    return maker;
+  });
+});
 
 g.test('command,writeTimestamp').
 desc(
 `
-Tests encoding and finishing a writeTimestamp command on destroyed device fails.
-  - Tests that finishing encoding fails on destroyed device
-  - Tests that submitting command fails on destroyed device
+Tests encoding and finishing a writeTimestamp command on destroyed device.
+  - Tests finishing encoding on destroyed device
+  - Tests submitting command on destroyed device
   `).
 
-unimplemented();
+params((u) =>
+u.
+combine('type', kQueryTypes).
+beginSubcases().
+combine('stage', kCommandValidationStages).
+combine('awaitLost', [true, false])).
+
+fn(async (t) => {
+  const { type, stage, awaitLost } = t.params;
+  await t.selectDeviceForQueryTypeOrSkipTestCase(type);
+  const querySet = t.device.createQuerySet({ type, count: 2 });
+  await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', (maker) => {
+    maker.encoder.writeTimestamp(querySet, 0);
+    return maker;
+  });
+});
 
 g.test('command,resolveQuerySet').
 desc(
 `
-Tests encoding and finishing a resolveQuerySet command on destroyed device fails.
-  - Tests that finishing encoding fails on destroyed device
-  - Tests that submitting command fails on destroyed device
+Tests encoding and finishing a resolveQuerySet command on destroyed device.
+  - Tests finishing encoding on destroyed device
+  - Tests submitting command on destroyed device
   `).
 
-unimplemented();
+params((u) =>
+u.beginSubcases().combine('stage', kCommandValidationStages).combine('awaitLost', [true, false])).
+
+fn(async (t) => {
+  const { stage, awaitLost } = t.params;
+  const kQueryCount = 2;
+  const querySet = t.createQuerySetWithState('valid');
+  const destination = t.createBufferWithState('valid', {
+    size: kQueryCount * 8,
+    usage: GPUBufferUsage.QUERY_RESOLVE });
+
+  await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', (maker) => {
+    maker.encoder.resolveQuerySet(querySet, 0, 1, destination, 0);
+    return maker;
+  });
+});
 
 g.test('command,computePass,dispatch').
 desc(
 `
-Tests encoding and dispatching a simple valid compute pass on destroyed device fails.
+Tests encoding and dispatching a simple valid compute pass on destroyed device.
   - Binds valid pipeline and bindgroups, then dispatches
-  - Tests that finishing encoding fails on destroyed device
-  - Tests that submitting command fails on destroyed device
+  - Tests finishing encoding on destroyed device
+  - Tests submitting command on destroyed device
   `).
 
-unimplemented();
+params((u) =>
+u.beginSubcases().combine('stage', kCommandValidationStages).combine('awaitLost', [true, false])).
+
+fn(async (t) => {
+  const { stage, awaitLost } = t.params;
+  const cShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('COMPUTE') });
+  const pipeline = t.device.createComputePipeline({
+    compute: { module: cShader, entryPoint: 'main' } });
+
+  await t.executeCommandsAfterDestroy(stage, awaitLost, 'compute pass', (maker) => {
+    maker.encoder.setPipeline(pipeline);
+    maker.encoder.dispatch(1);
+    return maker;
+  });
+});
 
 g.test('command,renderPass,draw').
 desc(
 `
-Tests encoding and finishing a simple valid render pass on destroyed device fails.
+Tests encoding and finishing a simple valid render pass on destroyed device.
   - Binds valid pipeline and bindgroups, then draws
-  - Tests that finishing encoding fails on destroyed device
-  - Tests that submitting command fails on destroyed device
+  - Tests finishing encoding on destroyed device
+  - Tests submitting command on destroyed device
   `).
 
-unimplemented();
+params((u) =>
+u.beginSubcases().combine('stage', kCommandValidationStages).combine('awaitLost', [true, false])).
+
+fn(async (t) => {
+  const { stage, awaitLost } = t.params;
+  const vShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('VERTEX') });
+  const fShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('FRAGMENT') });
+  const pipeline = t.device.createRenderPipeline({
+    vertex: { module: vShader, entryPoint: 'main' },
+    fragment: {
+      module: fShader,
+      entryPoint: 'main',
+      targets: [{ format: 'rgba8unorm', writeMask: 0 }] } });
+
+
+  await t.executeCommandsAfterDestroy(stage, awaitLost, 'render pass', (maker) => {
+    maker.encoder.setPipeline(pipeline);
+    maker.encoder.draw(0);
+    return maker;
+  });
+});
 
 g.test('command,renderPass,renderBundle').
 desc(
 `
-Tests encoding and drawing a render pass including a render bundle on destroyed device fails.
+Tests encoding and drawing a render pass including a render bundle on destroyed device.
   - Binds valid pipeline and bindgroups, executes render bundle, then draws
-  - Tests that finishing encoding fails on destroyed device
-  - Tests that submitting command fails on destroyed device
+  - Tests finishing encoding on destroyed device
+  - Tests submitting command on destroyed device
   `).
 
-unimplemented();
+params((u) =>
+u.beginSubcases().combine('stage', kCommandValidationStages).combine('awaitLost', [true, false])).
+
+fn(async (t) => {
+  const { stage, awaitLost } = t.params;
+  const vShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('VERTEX') });
+  const fShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('FRAGMENT') });
+  const pipeline = t.device.createRenderPipeline({
+    vertex: { module: vShader, entryPoint: 'main' },
+    fragment: {
+      module: fShader,
+      entryPoint: 'main',
+      targets: [{ format: 'rgba8unorm', writeMask: 0 }] } });
+
+
+  await t.executeCommandsAfterDestroy(stage, awaitLost, 'render bundle', (maker) => {
+    maker.encoder.setPipeline(pipeline);
+    maker.encoder.draw(0);
+    return maker;
+  });
+});
 
 g.test('queue,writeBuffer').
 desc(
 `
-Tests writeBuffer on queue on destroyed device fails.
+Tests writeBuffer on queue on destroyed device.
   `).
 
-unimplemented();
+params((u) =>
+u.combine('numElements', [4, 8, 16]).beginSubcases().combine('awaitLost', [true, false])).
 
-g.test('queue,writeTexture').
+fn(async (t) => {
+  const { numElements, awaitLost } = t.params;
+  const buffer = t.device.createBuffer({
+    size: numElements,
+    usage: GPUBufferUsage.COPY_DST });
+
+  const data = new Uint8Array(numElements);
+  await t.executeAfterDestroy(() => {
+    t.device.queue.writeBuffer(buffer, 0, data);
+  }, awaitLost);
+});
+
+g.test('queue,writeTexture,2d,uncompressed_format').
 desc(
 `
-Tests writeTexture on queue on destroyed device fails.
+Tests writeTexture on queue on destroyed device with uncompressed formats.
   `).
 
-unimplemented();
+params((u) =>
+u.combine('format', kRegularTextureFormats).beginSubcases().combine('awaitLost', [true, false])).
 
-g.test('queue,copyExternalImageToTexture').
+fn(async (t) => {
+  const { format, awaitLost } = t.params;
+  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
+  const data = new Uint8Array(bytesPerBlock);
+  const texture = t.device.createTexture({
+    size: { width: blockWidth, height: blockHeight },
+    usage: GPUTextureUsage.COPY_DST,
+    format });
+
+  await t.executeAfterDestroy(() => {
+    t.device.queue.writeTexture(
+    { texture },
+    data,
+    {},
+    { width: blockWidth, height: blockHeight });
+
+  }, awaitLost);
+});
+
+g.test('queue,writeTexture,2d,compressed_format').
 desc(
 `
-Tests copyExternalImageToTexture on queue on destroyed device fails.
+Tests writeTexture on queue on destroyed device with compressed formats.
   `).
 
-unimplemented();
+params((u) =>
+u.
+combine('format', kCompressedTextureFormats).
+beginSubcases().
+combine('awaitLost', [true, false])).
+
+fn(async (t) => {
+  const { format, awaitLost } = t.params;
+  const { blockWidth, blockHeight, bytesPerBlock, feature } = kTextureFormatInfo[format];
+  await t.selectDeviceOrSkipTestCase(feature);
+  const data = new Uint8Array(bytesPerBlock);
+  const texture = t.device.createTexture({
+    size: { width: blockWidth, height: blockHeight },
+    usage: GPUTextureUsage.COPY_DST,
+    format });
+
+  await t.executeAfterDestroy(() => {
+    t.device.queue.writeTexture(
+    { texture },
+    data,
+    {},
+    { width: blockWidth, height: blockHeight });
+
+  }, awaitLost);
+});
+
+g.test('queue,copyExternalImageToTexture,canvas').
+desc(
+`
+Tests copyExternalImageToTexture from canvas on queue on destroyed device.
+  `).
+
+params((u) =>
+u.
+combine('canvasType', kAllCanvasTypes).
+combine('contextType', kValidCanvasContextIds).
+filter(({ contextType }) => {
+  return canCopyFromCanvasContext(contextType);
+}).
+beginSubcases().
+combine('awaitLost', [true, false])).
+
+fn(async (t) => {
+  const { canvasType, contextType, awaitLost } = t.params;
+  const canvas = createCanvas(t, canvasType, 1, 1);
+  const texture = t.device.createTexture({
+    size: { width: 1, height: 1 },
+    format: 'bgra8unorm',
+    usage: GPUTextureUsage.COPY_DST });
+
+
+  const ctx = canvas.getContext(contextType);
+  if (ctx === null) {
+    t.skip('Failed to get context for canvas element');
+    return;
+  }
+  t.tryTrackForCleanup(ctx);
+
+  await t.executeAfterDestroy(() => {
+    t.device.queue.copyExternalImageToTexture(
+    { source: canvas },
+    { texture },
+    { width: 1, height: 1 });
+
+  }, awaitLost);
+});
+
+g.test('queue,copyExternalImageToTexture,imageBitmap').
+desc(
+`
+Tests copyExternalImageToTexture from canvas on queue on destroyed device.
+  `).
+
+params((u) => u.beginSubcases().combine('awaitLost', [true, false])).
+fn(async (t) => {
+  const { awaitLost } = t.params;
+  const imageBitmap = await createImageBitmap(new ImageData(new Uint8ClampedArray(4), 1, 1));
+  const texture = t.device.createTexture({
+    size: { width: 1, height: 1 },
+    format: 'bgra8unorm',
+    usage: GPUTextureUsage.COPY_DST });
+
+
+  await t.executeAfterDestroy(() => {
+    t.device.queue.copyExternalImageToTexture(
+    { source: imageBitmap },
+    { texture },
+    { width: 1, height: 1 });
+
+  }, awaitLost);
+});
 //# sourceMappingURL=destroy.spec.js.map

@@ -8,7 +8,7 @@ import { kCanvasTextureFormats } from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 import { checkElementsEqual } from '../../util/check_contents.js';
 import {
-allCanvasTypes,
+kAllCanvasTypes,
 
 createCanvas,
 createOnscreenCanvas } from
@@ -280,8 +280,8 @@ desc(
 params((u) =>
 u //
 .combine('format', kCanvasTextureFormats).
-combine('webgpuCanvasType', allCanvasTypes).
-combine('canvas2DType', allCanvasTypes)).
+combine('webgpuCanvasType', kAllCanvasTypes).
+combine('canvas2DType', kAllCanvasTypes)).
 
 fn(async (t) => {
   const { format, webgpuCanvasType, canvas2DType } = t.params;

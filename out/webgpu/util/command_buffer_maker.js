@@ -23,6 +23,12 @@ export class CommandBufferMaker {
 
 
   /**
+   * Finish any passes, finish and record any bundles, and finish/return the command buffer. Any
+   * errors are ignored and the GPUCommandBuffer (which may be an error buffer) is returned.
+   */
+
+
+  /**
    * Finish any passes, finish and record any bundles, and finish/return the command buffer.
    * Checks for validation errors in (only) the appropriate finish call.
    */
@@ -51,16 +57,22 @@ export class CommandBufferMaker {
   {
     // TypeScript introduces an intersection type here where we don't want one.
     this.encoder = encoder;
-    this.validateFinish = finish;
+    this.finish = finish;
 
     // Define extra methods like this, otherwise they get unbound when destructured, e.g.:
-    // const { encoder, validateFinishAndSubmit } = t.createEncoder(type);
+    //   const { encoder, validateFinishAndSubmit } = t.createEncoder(type);
+    // Alternatively, do not destructure, and call member functions, e.g.:
+    //   const encoder = t.createEncoder(type);
+    //   encoder.validateFinish(true);
+    this.validateFinish = (shouldSucceed) => {
+      return t.expectGPUError('validation', this.finish, !shouldSucceed);
+    };
 
     this.validateFinishAndSubmit = (
     shouldBeValid,
     submitShouldSucceedIfValid) =>
     {
-      const commandBuffer = finish(shouldBeValid);
+      const commandBuffer = this.validateFinish(shouldBeValid);
       if (shouldBeValid) {
         t.expectValidationError(() => t.queue.submit([commandBuffer]), !submitShouldSucceedIfValid);
       }

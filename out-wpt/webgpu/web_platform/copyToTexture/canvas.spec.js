@@ -10,7 +10,7 @@ import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { unreachable } from '../../../common/util/util.js';
 import { kTextureFormatInfo, kValidTextureFormatsForCopyE2T } from '../../capability_info.js';
 import { CopyToTextureUtils } from '../../util/copy_to_texture.js';
-import { allCanvasTypes, createCanvas } from '../../util/create_elements.js';
+import { kAllCanvasTypes, createCanvas } from '../../util/create_elements.js';
 
 class F extends CopyToTextureUtils {
   init2DCanvasContentWithColorSpace({ width, height, paintOpaqueRects, colorSpace }) {
@@ -359,7 +359,7 @@ g.test('copy_contents_from_2d_context_canvas')
   )
   .params(u =>
     u
-      .combine('canvasType', allCanvasTypes)
+      .combine('canvasType', kAllCanvasTypes)
       .combine('dstColorFormat', kValidTextureFormatsForCopyE2T)
       .combine('dstPremultiplied', [true, false])
       .combine('srcDoFlipYDuringCopy', [true, false])
@@ -477,7 +477,7 @@ g.test('copy_contents_from_gl_context_canvas')
   )
   .params(u =>
     u
-      .combine('canvasType', allCanvasTypes)
+      .combine('canvasType', kAllCanvasTypes)
       .combine('contextName', ['webgl', 'webgl2'])
       .combine('dstColorFormat', kValidTextureFormatsForCopyE2T)
       .combine('srcPremultiplied', [true, false])
@@ -600,7 +600,7 @@ g.test('copy_contents_from_gpu_context_canvas')
   )
   .params(u =>
     u
-      .combine('canvasType', allCanvasTypes)
+      .combine('canvasType', kAllCanvasTypes)
       .combine('srcAndDstInSameGPUDevice', [true, false])
       .combine('dstColorFormat', kValidTextureFormatsForCopyE2T)
       .combine('srcPremultiplied', [true])

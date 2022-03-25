@@ -14,9 +14,11 @@ kValidTextureFormatsForCopyE2T } from
 import { kResourceStates } from '../../../../gpu_test.js';
 import {
 
+canCopyFromCanvasContext,
 createCanvas,
 createOnscreenCanvas,
-createOffscreenCanvas } from
+createOffscreenCanvas,
+kValidCanvasContextIds } from
 '../../../../util/create_elements.js';
 import { ValidationTest } from '../../validation_test.js';
 
@@ -25,11 +27,6 @@ const kDefaultWidth = 32;
 const kDefaultHeight = 32;
 const kDefaultDepth = 1;
 const kDefaultMipLevelCount = 6;
-
-/** Valid contextId for HTMLCanvasElement/OffscreenCanvas,
- *  spec: https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-getcontext
- */
-export const kValidContextId = ['2d', 'bitmaprenderer', 'webgl', 'webgl2', 'webgpu'];
 
 function computeMipMapSize(width, height, mipLevel) {
   return {
@@ -123,18 +120,6 @@ function generateCopySizeForDstOOB({ mipLevel, dstOrigin }) {
   ];
 }
 
-function canCopyFromContextType(contextName) {
-  switch (contextName) {
-    case '2d':
-    case 'webgl':
-    case 'webgl2':
-    case 'webgpu':
-      return true;
-    default:
-      return false;}
-
-}
-
 class CopyExternalImageToTextureTest extends ValidationTest {
   getImageData(width, height) {
     const pixelSize = kDefaultBytesPerPixel * width * height;
@@ -201,7 +186,7 @@ desc(
 
 params((u) =>
 u //
-.combine('contextType', kValidContextId).
+.combine('contextType', kValidCanvasContextIds).
 beginSubcases().
 combine('copySize', [
 { width: 0, height: 0, depthOrArrayLayers: 0 },
@@ -229,7 +214,7 @@ fn(async (t) => {
   { texture: dstTexture },
   copySize,
   true, // No validation errors.
-  canCopyFromContextType(contextType) ? '' : 'OperationError');
+  canCopyFromCanvasContext(contextType) ? '' : 'OperationError');
 
 });
 
@@ -246,7 +231,7 @@ desc(
 
 params((u) =>
 u //
-.combine('contextType', kValidContextId).
+.combine('contextType', kValidCanvasContextIds).
 beginSubcases().
 combine('copySize', [
 { width: 0, height: 0, depthOrArrayLayers: 0 },
@@ -277,7 +262,7 @@ fn(async (t) => {
   { texture: dstTexture },
   copySize,
   true, // No validation errors.
-  canCopyFromContextType(contextType) ? '' : 'OperationError');
+  canCopyFromCanvasContext(contextType) ? '' : 'OperationError');
 
 });
 

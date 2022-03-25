@@ -13,7 +13,7 @@ kTextureFormatInfo,
 kValidTextureFormatsForCopyE2T } from
 '../../capability_info.js';
 import { CopyToTextureUtils } from '../../util/copy_to_texture.js';
-import { allCanvasTypes, createCanvas } from '../../util/create_elements.js';
+import { kAllCanvasTypes, createCanvas } from '../../util/create_elements.js';
 
 class F extends CopyToTextureUtils {
   init2DCanvasContentWithColorSpace({
@@ -446,7 +446,7 @@ desc(
 
 params((u) =>
 u.
-combine('canvasType', allCanvasTypes).
+combine('canvasType', kAllCanvasTypes).
 combine('dstColorFormat', kValidTextureFormatsForCopyE2T).
 combine('dstPremultiplied', [true, false]).
 combine('srcDoFlipYDuringCopy', [true, false]).
@@ -562,7 +562,7 @@ desc(
 
 params((u) =>
 u.
-combine('canvasType', allCanvasTypes).
+combine('canvasType', kAllCanvasTypes).
 combine('contextName', ['webgl', 'webgl2']).
 combine('dstColorFormat', kValidTextureFormatsForCopyE2T).
 combine('srcPremultiplied', [true, false]).
@@ -683,7 +683,7 @@ desc(
 
 params((u) =>
 u.
-combine('canvasType', allCanvasTypes).
+combine('canvasType', kAllCanvasTypes).
 combine('srcAndDstInSameGPUDevice', [true, false]).
 combine('dstColorFormat', kValidTextureFormatsForCopyE2T).
 combine('srcPremultiplied', [true]).

@@ -1,5 +1,6 @@
 import { Logger } from '../internal/logging/logger.js';
 
+import { keysOf } from './data_tables.js';
 import { timeout } from './timeout.js';
 
 /**
@@ -164,16 +165,19 @@ export function* iterRange<T>(n: number, fn: (i: number) => T): Iterable<T> {
   }
 }
 
-export type TypedArrayBufferView =
-  | Uint8Array
-  | Uint8ClampedArray
-  | Uint16Array
-  | Uint32Array
-  | Int8Array
-  | Int16Array
-  | Int32Array
-  | Float32Array
-  | Float64Array;
+const TypedArrayBufferViewInstances = [
+  new Uint8Array(),
+  new Uint8ClampedArray(),
+  new Uint16Array(),
+  new Uint32Array(),
+  new Int8Array(),
+  new Int16Array(),
+  new Int32Array(),
+  new Float32Array(),
+  new Float64Array(),
+] as const;
+
+export type TypedArrayBufferView = typeof TypedArrayBufferViewInstances[number];
 
 export type TypedArrayBufferViewConstructor<
   A extends TypedArrayBufferView = TypedArrayBufferView
@@ -195,6 +199,21 @@ export type TypedArrayBufferViewConstructor<
   from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): A;
   of(...items: number[]): A;
 };
+
+export const kTypedArrayBufferViews: {
+  readonly [k: string]: TypedArrayBufferViewConstructor;
+} = {
+  ...(() => {
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    const result: { [k: string]: any } = {};
+    for (const v of TypedArrayBufferViewInstances) {
+      result[v.constructor.name] = v.constructor;
+    }
+    return result;
+  })(),
+};
+export const kTypedArrayBufferViewKeys = keysOf(kTypedArrayBufferViews);
+export const kTypedArrayBufferViewConstructors = Object.values(kTypedArrayBufferViews);
 
 function subarrayAsU8(
   buf: ArrayBuffer | TypedArrayBufferView,

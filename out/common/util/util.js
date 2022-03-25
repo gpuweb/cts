@@ -1,6 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { Logger } from '../internal/logging/logger.js';import { timeout } from './timeout.js';
+**/import { Logger } from '../internal/logging/logger.js';import { keysOf } from './data_tables.js';
+import { timeout } from './timeout.js';
 
 /**
  * Error with arbitrary `extra` data attached, for debugging.
@@ -164,6 +165,16 @@ export function* iterRange(n, fn) {
   }
 }
 
+const TypedArrayBufferViewInstances = [
+new Uint8Array(),
+new Uint8ClampedArray(),
+new Uint16Array(),
+new Uint32Array(),
+new Int8Array(),
+new Int16Array(),
+new Int32Array(),
+new Float32Array(),
+new Float64Array()];
 
 
 
@@ -189,12 +200,20 @@ export function* iterRange(n, fn) {
 
 
 
+export const kTypedArrayBufferViews =
 
+{
+  ...(() => {
 
+    const result = {};
+    for (const v of TypedArrayBufferViewInstances) {
+      result[v.constructor.name] = v.constructor;
+    }
+    return result;
+  })() };
 
-
-
-
+export const kTypedArrayBufferViewKeys = keysOf(kTypedArrayBufferViews);
+export const kTypedArrayBufferViewConstructors = Object.values(kTypedArrayBufferViews);
 
 function subarrayAsU8(
 buf,
