@@ -47,7 +47,9 @@ function calculateMinMaxClamp(ei: number, fi: number, gi: number): number {
  * @returns the index of the clamped value
  */
 function calculateMedianClamp(ei: number, fi: number, gi: number): number {
-  return [ei, fi, gi].sort()[1];
+  return [ei, fi, gi].sort((a, b) => {
+    return a - b;
+  })[1];
 }
 
 /** @returns a set of clamp test cases from an ascending list of integer values */
