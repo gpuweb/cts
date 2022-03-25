@@ -1,8 +1,33 @@
 import { Fixture } from '../../common/framework/fixture.js';
 import { unreachable } from '../../common/util/util.js';
 
-export const allCanvasTypes = ['onscreen', 'offscreen'] as const;
-export type canvasTypes = 'onscreen' | 'offscreen';
+export const kAllCanvasTypes = ['onscreen', 'offscreen'] as const;
+export type CanvasType = typeof kAllCanvasTypes[number];
+
+/** Valid contextId for HTMLCanvasElement/OffscreenCanvas,
+ *  spec: https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-getcontext
+ */
+export const kValidCanvasContextIds = [
+  '2d',
+  'bitmaprenderer',
+  'webgl',
+  'webgl2',
+  'webgpu',
+] as const;
+export type CanvasContext = typeof kValidCanvasContextIds[number];
+
+/** Helper(s) to determine if context is copyable. */
+export function canCopyFromCanvasContext(contextName: CanvasContext) {
+  switch (contextName) {
+    case '2d':
+    case 'webgl':
+    case 'webgl2':
+    case 'webgpu':
+      return true;
+    default:
+      return false;
+  }
+}
 
 /** Create HTMLCanvas/OffscreenCanvas. */
 export function createCanvas(
