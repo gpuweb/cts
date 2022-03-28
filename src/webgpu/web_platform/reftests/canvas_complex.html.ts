@@ -1,5 +1,7 @@
 import { assert, unreachable } from '../../../common/util/util.js';
+import { kTextureFormatInfo } from '../../capability_info.js';
 import { gammaDecompress, float32ToFloat16Bits } from '../../util/conversion.js';
+import { align } from '../../util/math.js';
 
 import { runRefTest } from './gpu_ref_test.js';
 
@@ -12,14 +14,14 @@ type WriteCanvasMethod =
   | 'DrawFragcoord'
   | 'FragmentTextureStore'
   | 'ComputeWorkgroup1x1TextureStore'
-  | 'ComputeWorkgroup2x2TextureStore';
+  | 'ComputeWorkgroup16x16TextureStore';
 
 export function run(
   format: GPUTextureFormat,
   targets: { cvs: HTMLCanvasElement; writeCanvasMethod: WriteCanvasMethod }[]
 ) {
   runRefTest(async t => {
-    let shaderValue: number = 0x7f / 0xff;
+    let shaderValue: number = 0x66 / 0xff;
     let isOutputSrgb = false;
     switch (format) {
       case 'bgra8unorm':
@@ -40,99 +42,128 @@ export function run(
     const shaderValueStr = shaderValue.toFixed(5);
 
     function copyBufferToTexture(ctx: GPUCanvasContext) {
-      const rows = 2;
-      const bytesPerRow = 256;
+      const rows = ctx.canvas.height;
+      const bytesPerPixel = kTextureFormatInfo[format].bytesPerBlock;
+      if (bytesPerPixel === undefined) {
+        unreachable();
+      }
+      const bytesPerRow = align(bytesPerPixel * ctx.canvas.width, 256);
+      const componentsPerPixel = 4;
+
       const buffer = t.device.createBuffer({
         mappedAtCreation: true,
         size: rows * bytesPerRow,
         usage: GPUBufferUsage.COPY_SRC,
       });
+      let red: Uint8Array | Uint16Array;
+      let green: Uint8Array | Uint16Array;
+      let blue: Uint8Array | Uint16Array;
+      let yellow: Uint8Array | Uint16Array;
+
       const mapping = buffer.getMappedRange();
+      let data: Uint8Array | Uint16Array;
       switch (format) {
         case 'bgra8unorm':
         case 'bgra8unorm-srgb':
           {
-            const data = new Uint8Array(mapping);
-            data.set(new Uint8Array([0x00, 0x00, 0x7f, 0xff]), 0); // red
-            data.set(new Uint8Array([0x00, 0x7f, 0x00, 0xff]), 4); // green
-            data.set(new Uint8Array([0x7f, 0x00, 0x00, 0xff]), 256 + 0); // blue
-            data.set(new Uint8Array([0x00, 0x7f, 0x7f, 0xff]), 256 + 4); // yellow
+            data = new Uint8Array(mapping);
+            red = new Uint8Array([0x00, 0x00, 0x66, 0xff]);
+            green = new Uint8Array([0x00, 0x66, 0x00, 0xff]);
+            blue = new Uint8Array([0x66, 0x00, 0x00, 0xff]);
+            yellow = new Uint8Array([0x00, 0x66, 0x66, 0xff]);
           }
           break;
         case 'rgba8unorm':
         case 'rgba8unorm-srgb':
           {
-            const data = new Uint8Array(mapping);
-            data.set(new Uint8Array([0x7f, 0x00, 0x00, 0xff]), 0); // red
-            data.set(new Uint8Array([0x00, 0x7f, 0x00, 0xff]), 4); // green
-            data.set(new Uint8Array([0x00, 0x00, 0x7f, 0xff]), 256 + 0); // blue
-            data.set(new Uint8Array([0x7f, 0x7f, 0x00, 0xff]), 256 + 4); // yellow
+            data = new Uint8Array(mapping);
+            red = new Uint8Array([0x66, 0x00, 0x00, 0xff]);
+            green = new Uint8Array([0x00, 0x66, 0x00, 0xff]);
+            blue = new Uint8Array([0x00, 0x00, 0x66, 0xff]);
+            yellow = new Uint8Array([0x66, 0x66, 0x00, 0xff]);
           }
           break;
         case 'rgba16float':
           {
-            const data = new Uint16Array(mapping);
-            data.set(
-              new Uint16Array([
-                float32ToFloat16Bits(0.5),
-                float32ToFloat16Bits(0.0),
-                float32ToFloat16Bits(0.0),
-                float32ToFloat16Bits(1.0),
-              ]),
-              0
-            ); // red
-            data.set(
-              new Uint16Array([
-                float32ToFloat16Bits(0.0),
-                float32ToFloat16Bits(0.5),
-                float32ToFloat16Bits(0.0),
-                float32ToFloat16Bits(1.0),
-              ]),
-              4
-            ); // green
-            data.set(
-              new Uint16Array([
-                float32ToFloat16Bits(0.0),
-                float32ToFloat16Bits(0.0),
-                float32ToFloat16Bits(0.5),
-                float32ToFloat16Bits(1.0),
-              ]),
-              128 + 0
-            ); // blue
-            data.set(
-              new Uint16Array([
-                float32ToFloat16Bits(0.5),
-                float32ToFloat16Bits(0.5),
-                float32ToFloat16Bits(0.0),
-                float32ToFloat16Bits(1.0),
-              ]),
-              128 + 4
-            ); // yellow
+            data = new Uint16Array(mapping);
+            red = new Uint16Array([
+              float32ToFloat16Bits(0.4),
+              float32ToFloat16Bits(0.0),
+              float32ToFloat16Bits(0.0),
+              float32ToFloat16Bits(1.0),
+            ]);
+            green = new Uint16Array([
+              float32ToFloat16Bits(0.0),
+              float32ToFloat16Bits(0.4),
+              float32ToFloat16Bits(0.0),
+              float32ToFloat16Bits(1.0),
+            ]);
+            blue = new Uint16Array([
+              float32ToFloat16Bits(0.0),
+              float32ToFloat16Bits(0.0),
+              float32ToFloat16Bits(0.4),
+              float32ToFloat16Bits(1.0),
+            ]);
+            yellow = new Uint16Array([
+              float32ToFloat16Bits(0.4),
+              float32ToFloat16Bits(0.4),
+              float32ToFloat16Bits(0.0),
+              float32ToFloat16Bits(1.0),
+            ]);
           }
           break;
+        default:
+          unreachable();
       }
+      for (let i = 0; i < ctx.canvas.width; ++i)
+        for (let j = 0; j < ctx.canvas.height; ++j) {
+          let pixel: Uint8Array | Uint16Array;
+          if (i < ctx.canvas.width / 2) {
+            if (j < ctx.canvas.height / 2) {
+              pixel = red;
+            } else {
+              pixel = blue;
+            }
+          } else {
+            if (j < ctx.canvas.height / 2) {
+              pixel = green;
+            } else {
+              pixel = yellow;
+            }
+          }
+          data.set(pixel, (i + j * (bytesPerRow / bytesPerPixel)) * componentsPerPixel);
+        }
       buffer.unmap();
 
       const encoder = t.device.createCommandEncoder();
       encoder.copyBufferToTexture({ buffer, bytesPerRow }, { texture: ctx.getCurrentTexture() }, [
-        2,
-        2,
+        ctx.canvas.width,
+        ctx.canvas.height,
         1,
       ]);
       t.device.queue.submit([encoder.finish()]);
     }
 
-    function getImageBitmap(): Promise<ImageBitmap> {
-      const imageData = new ImageData(
-        /* prettier-ignore */ new Uint8ClampedArray([
-          0x7f, 0x00, 0x00, 0xff,
-          0x00, 0x7f, 0x00, 0xff,
-          0x00, 0x00, 0x7f, 0xff,
-          0x7f, 0x7f, 0x00, 0xff,
-        ]),
-        2,
-        2
-      );
+    function getImageBitmap(ctx: GPUCanvasContext): Promise<ImageBitmap> {
+      const data = new Uint8ClampedArray(ctx.canvas.width * ctx.canvas.height * 4);
+      for (let i = 0; i < ctx.canvas.width; ++i)
+        for (let j = 0; j < ctx.canvas.height; ++j) {
+          const offset = (i + j * ctx.canvas.width) * 4;
+          if (i < ctx.canvas.width / 2) {
+            if (j < ctx.canvas.height / 2) {
+              data.set([0x66, 0x00, 0x00, 0xff], offset);
+            } else {
+              data.set([0x00, 0x00, 0x66, 0xff], offset);
+            }
+          } else {
+            if (j < ctx.canvas.height / 2) {
+              data.set([0x00, 0x66, 0x00, 0xff], offset);
+            } else {
+              data.set([0x66, 0x66, 0x00, 0xff], offset);
+            }
+          }
+        }
+      const imageData = new ImageData(data, ctx.canvas.width, ctx.canvas.height);
       return createImageBitmap(imageData);
     }
 
@@ -155,7 +186,7 @@ export function run(
     }
 
     async function copyExternalImageToTexture(ctx: GPUCanvasContext) {
-      const imageBitmap = await getImageBitmap();
+      const imageBitmap = await getImageBitmap(ctx);
       t.device.queue.copyExternalImageToTexture(
         { source: imageBitmap },
         { texture: ctx.getCurrentTexture() },
@@ -164,7 +195,7 @@ export function run(
     }
 
     async function copyTextureToTexture(ctx: GPUCanvasContext) {
-      const imageBitmap = await getImageBitmap();
+      const imageBitmap = await getImageBitmap(ctx);
       const srcTexture = setupSrcTexture(imageBitmap);
 
       const encoder = t.device.createCommandEncoder();
@@ -177,7 +208,7 @@ export function run(
     }
 
     async function DrawTextureSample(ctx: GPUCanvasContext) {
-      const imageBitmap = await getImageBitmap();
+      const imageBitmap = await getImageBitmap(ctx);
       const srcTexture = setupSrcTexture(imageBitmap);
 
       const pipeline = t.device.createRenderPipeline({
@@ -376,6 +407,8 @@ fn main(@location(0) fragColor: vec4<f32>) -> @location(0) vec4<f32> {
     }
 
     function DrawFragcoord(ctx: GPUCanvasContext) {
+      const halfCanvasWidthStr = (ctx.canvas.width / 2).toFixed();
+      const halfCanvasHeightStr = (ctx.canvas.height / 2).toFixed();
       const pipeline = t.device.createRenderPipeline({
         vertex: {
           module: t.device.createShaderModule({
@@ -412,14 +445,14 @@ fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
 fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
   var coord = vec2<u32>(floor(fragcoord.xy));
   var color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
-  if (coord.x == 0u) {
-    if (coord.y == 0u) {
+  if (coord.x < ${halfCanvasWidthStr}u) {
+    if (coord.y < ${halfCanvasHeightStr}u) {
       color.r = ${shaderValueStr};
     } else {
       color.b = ${shaderValueStr};
     }
   } else {
-    if (coord.y == 0u) {
+    if (coord.y < ${halfCanvasHeightStr}u) {
       color.g = ${shaderValueStr};
     } else {
       color.r = ${shaderValueStr};
@@ -459,6 +492,8 @@ fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
     }
 
     function FragmentTextureStore(ctx: GPUCanvasContext) {
+      const halfCanvasWidthStr = (ctx.canvas.width / 2).toFixed();
+      const halfCanvasHeightStr = (ctx.canvas.height / 2).toFixed();
       const pipeline = t.device.createRenderPipeline({
         vertex: {
           module: t.device.createShaderModule({
@@ -494,14 +529,14 @@ fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
 fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
   var coord = vec2<u32>(floor(fragcoord.xy));
   var color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
-  if (coord.x == 0u) {
-    if (coord.y == 0u) {
+  if (coord.x < ${halfCanvasWidthStr}u) {
+    if (coord.y < ${halfCanvasHeightStr}u) {
       color.r = ${shaderValueStr};
     } else {
       color.b = ${shaderValueStr};
     }
   } else {
-    if (coord.y == 0u) {
+    if (coord.y < ${halfCanvasHeightStr}u) {
       color.g = ${shaderValueStr};
     } else {
       color.r = ${shaderValueStr};
@@ -549,25 +584,40 @@ fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
       passEncoder.setPipeline(pipeline);
       passEncoder.setBindGroup(0, bg);
       passEncoder.draw(6, 1, 0, 0);
-      passEncoder.endPass();
+      passEncoder.end();
       t.device.queue.submit([commandEncoder.finish()]);
     }
 
     function ComputeWorkgroup1x1TextureStore(ctx: GPUCanvasContext) {
+      const halfCanvasWidthStr = (ctx.canvas.width / 2).toFixed();
+      const halfCanvasHeightStr = (ctx.canvas.height / 2).toFixed();
       const pipeline = t.device.createComputePipeline({
         compute: {
           module: t.device.createShaderModule({
             code: `
-              @group(0) @binding(0) var outImage : texture_storage_2d<${format}, write>;
+@group(0) @binding(0) var outImage : texture_storage_2d<${format}, write>;
 
-              @stage(compute) @workgroup_size(1) fn main() {
-                textureStore(outImage, vec2<i32>(0, 0), vec4<f32>(0.5, 0.0, 0.0, 1.0));
-                textureStore(outImage, vec2<i32>(1, 0), vec4<f32>(0.0, 0.5, 0.0, 1.0));
-                textureStore(outImage, vec2<i32>(0, 1), vec4<f32>(0.0, 0.0, 0.5, 1.0));
-                textureStore(outImage, vec2<i32>(1, 1), vec4<f32>(0.5, 0.5, 0.0, 1.0));
-                return;
-              }
-            `,
+@stage(compute) @workgroup_size(1, 1, 1)
+fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
+  var color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+  if (GlobalInvocationID.x < ${halfCanvasWidthStr}u) {
+    if (GlobalInvocationID.y < ${halfCanvasHeightStr}u) {
+      color.r = ${shaderValueStr};
+    } else {
+      color.b = ${shaderValueStr};
+    }
+  } else {
+    if (GlobalInvocationID.y < ${halfCanvasHeightStr}u) {
+      color.g = ${shaderValueStr};
+    } else {
+      color.r = ${shaderValueStr};
+      color.g = ${shaderValueStr};
+    }
+  }
+  textureStore(outImage, vec2<i32>(GlobalInvocationID.xy), color);
+  return;
+}
+          `,
           }),
           entryPoint: 'main',
         },
@@ -582,31 +632,46 @@ fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
       const pass = encoder.beginComputePass();
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, bg);
-      pass.dispatch(1);
-      pass.endPass();
+      pass.dispatch(ctx.canvas.width, ctx.canvas.height, 1);
+      pass.end();
       t.device.queue.submit([encoder.finish()]);
     }
 
-    function ComputeWorkgroup2x2TextureStore(ctx: GPUCanvasContext) {
+    function ComputeWorkgroup16x16TextureStore(ctx: GPUCanvasContext) {
+      const canvasWidthStr = ctx.canvas.width.toFixed();
+      const canvasHeightStr = ctx.canvas.height.toFixed();
+      const halfCanvasWidthStr = (ctx.canvas.width / 2).toFixed();
+      const halfCanvasHeightStr = (ctx.canvas.height / 2).toFixed();
       const pipeline = t.device.createComputePipeline({
         compute: {
           module: t.device.createShaderModule({
             code: `
-              @group(0) @binding(0) var outImage : texture_storage_2d<${format}, write>;
+@group(0) @binding(0) var outImage : texture_storage_2d<${format}, write>;
 
-              @stage(compute) @workgroup_size(2, 2, 1)
-              fn main(
-                @builtin(local_invocation_id) LocalInvocationID : vec3<u32>,
-                @builtin(local_invocation_index) LocalInvocationIndex : u32
-              ) {
-                var color = array<vec4<f32>, 4>(
-                  vec4<f32>( 0.5, 0.0, 0.0, 1.0),
-                  vec4<f32>( 0.0, 0.5, 0.0, 1.0),
-                  vec4<f32>( 0.0, 0.0, 0.5, 1.0),
-                  vec4<f32>( 0.5, 0.5, 0.0, 1.0));
-                textureStore(outImage, vec2<i32>(LocalInvocationID.xy), color[LocalInvocationIndex]);
-                return;
-              }
+@stage(compute) @workgroup_size(16, 16, 1)
+fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
+  if (GlobalInvocationID.x >= ${canvasWidthStr}u ||
+      GlobalInvocationID.y >= ${canvasHeightStr}u) {
+        return;
+  }
+  var color = vec4<f32>(0.0, 0.0, 0.0, 1.0);
+  if (GlobalInvocationID.x < ${halfCanvasWidthStr}u) {
+    if (GlobalInvocationID.y < ${halfCanvasHeightStr}u) {
+      color.r = ${shaderValueStr};
+    } else {
+      color.b = ${shaderValueStr};
+    }
+  } else {
+    if (GlobalInvocationID.y < ${halfCanvasHeightStr}u) {
+      color.g = ${shaderValueStr};
+    } else {
+      color.r = ${shaderValueStr};
+      color.g = ${shaderValueStr};
+    }
+  }
+  textureStore(outImage, vec2<i32>(GlobalInvocationID.xy), color);
+  return;
+}
             `,
           }),
           entryPoint: 'main',
@@ -622,8 +687,8 @@ fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
       const pass = encoder.beginComputePass();
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, bg);
-      pass.dispatch(1);
-      pass.endPass();
+      pass.dispatch(align(ctx.canvas.width, 16) / 16, align(ctx.canvas.height, 16) / 16, 1);
+      pass.end();
       t.device.queue.submit([encoder.finish()]);
     }
 
@@ -671,8 +736,8 @@ fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
         case 'ComputeWorkgroup1x1TextureStore':
           ComputeWorkgroup1x1TextureStore(ctx);
           break;
-        case 'ComputeWorkgroup2x2TextureStore':
-          ComputeWorkgroup2x2TextureStore(ctx);
+        case 'ComputeWorkgroup16x16TextureStore':
+          ComputeWorkgroup16x16TextureStore(ctx);
           break;
         default:
           unreachable();
