@@ -13,3 +13,4 @@ TODO(#921): Why is there sometimes a difference of 1 (e.g. 3f vs 40) in canvas_s
 And why does chromium's image_diff show diffs on other pixels that don't seem to have diffs?
 TODO(#1093): Test rgba16float values which are out of gamut of the canvas but under SDR luminance.
 TODO(#1093): Test rgba16float values which are above SDR luminance.
+TODO(#1116): Test canvas scaling.
