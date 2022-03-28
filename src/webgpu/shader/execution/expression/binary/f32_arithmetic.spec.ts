@@ -16,21 +16,13 @@ export const g = makeTestGroup(GPUTest);
 
 /* Generates an array of numbers spread over the entire range of 32-bit floats */
 function fullNumericRange(): Array<number> {
-  let numeric_range = Array<number>();
-  numeric_range = numeric_range.concat(
-    biasedRange(kValue.f32.negative.max, kValue.f32.negative.min, 50)
-  );
-  numeric_range = numeric_range.concat(
-    linearRange(kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max, 10)
-  );
-  numeric_range = numeric_range.concat(0.0);
-  numeric_range = numeric_range.concat(
-    linearRange(kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, 10)
-  );
-  numeric_range = numeric_range.concat(
-    biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, 50)
-  );
-  return numeric_range;
+  return [
+    ...biasedRange(kValue.f32.negative.max, kValue.f32.negative.min, 50),
+    ...linearRange(kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max, 10),
+    0.0,
+    ...linearRange(kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, 10),
+    ...biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, 50),
+  ];
 }
 
 g.test('addition')
@@ -57,11 +49,11 @@ Accuracy: Correctly rounded
       return { input: [f32(lhs), f32(rhs)], expected: f32(f32_lhs + f32_rhs) };
     };
 
-    let cases: Array<Case> = [];
+    const cases: Array<Case> = [];
     const numeric_range = fullNumericRange();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
-        cases = cases.concat(makeCase(lhs, rhs));
+        cases.push(makeCase(lhs, rhs));
       });
     });
 
@@ -92,11 +84,11 @@ Accuracy: Correctly rounded
       return { input: [f32(lhs), f32(rhs)], expected: f32(f32_lhs - f32_rhs) };
     };
 
-    let cases: Array<Case> = [];
+    const cases: Array<Case> = [];
     const numeric_range = fullNumericRange();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
-        cases = cases.concat(makeCase(lhs, rhs));
+        cases.push(makeCase(lhs, rhs));
       });
     });
 
@@ -127,11 +119,11 @@ Accuracy: Correctly rounded
       return { input: [f32(lhs), f32(rhs)], expected: f32(f32_lhs * f32_rhs) };
     };
 
-    let cases: Array<Case> = [];
+    const cases: Array<Case> = [];
     const numeric_range = fullNumericRange();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
-        cases = cases.concat(makeCase(lhs, rhs));
+        cases.push(makeCase(lhs, rhs));
       });
     });
 
@@ -162,12 +154,12 @@ Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
       return { input: [f32(lhs), f32(rhs)], expected: f32(f32_lhs / f32_rhs) };
     };
 
-    let cases: Array<Case> = [];
+    const cases: Array<Case> = [];
     const lhs_numeric_range = fullNumericRange();
     const rhs_numeric_range = biasedRange(2 ** -126, 2 ** 126, 200);
     lhs_numeric_range.forEach(lhs => {
       rhs_numeric_range.forEach(rhs => {
-        cases = cases.concat(makeCase(lhs, rhs));
+        cases.push(makeCase(lhs, rhs));
       });
     });
 
