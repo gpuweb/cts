@@ -37,24 +37,14 @@ fn(async (t) => {
     return { input: [f32(x)], expected: f32(-f32_x) };
   };
 
-  let cases = [];
-  let numeric_range = Array();
-  numeric_range = numeric_range.concat(
-  biasedRange(kValue.f32.negative.max, kValue.f32.negative.min, 50));
+  const numeric_range = [
+  ...biasedRange(kValue.f32.negative.max, kValue.f32.negative.min, 50),
+  ...linearRange(kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max, 10),
+  0.0,
+  ...linearRange(kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, 10),
+  ...biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, 10)];
 
-  numeric_range = numeric_range.concat(
-  linearRange(kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max, 10));
-
-  numeric_range = numeric_range.concat(0.0);
-  numeric_range = numeric_range.concat(
-  linearRange(kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, 10));
-
-  numeric_range = numeric_range.concat(
-  biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, 10));
-
-  numeric_range.forEach((x) => {
-    cases = cases.concat(makeCase(x));
-  });
+  const cases = numeric_range.map((x) => makeCase(x));
 
   run(t, unary('-'), [TypeF32], TypeF32, cfg, cases);
 });

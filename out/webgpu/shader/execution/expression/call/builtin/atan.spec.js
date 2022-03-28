@@ -37,7 +37,7 @@ fn(async (t) => {
   };
 
   // Well defined/border cases
-  let cases = [
+  const cases = [
   { input: f32Bits(kBit.f32.infinity.negative), expected: f32(-Math.PI / 2) },
   { input: f32(-Math.sqrt(3)), expected: f32(-Math.PI / 3) },
   { input: f32(-1), expected: f32(-Math.PI / 4) },
@@ -60,17 +60,16 @@ fn(async (t) => {
   { input: f32Bits(kBit.f32.positive.zero), expected: f32Bits(kBit.f32.positive.zero) },
   { input: f32Bits(kBit.f32.negative.zero), expected: f32Bits(kBit.f32.negative.zero) },
   { input: f32Bits(kBit.f32.positive.zero), expected: f32Bits(kBit.f32.negative.zero) },
-  { input: f32Bits(kBit.f32.negative.zero), expected: f32Bits(kBit.f32.positive.zero) }];
-
-
+  { input: f32Bits(kBit.f32.negative.zero), expected: f32Bits(kBit.f32.positive.zero) },
   //  -2^32 < x <= -1, biased towards -1
-  cases = cases.concat(biasedRange(-1, -(2 ** 32), 1000).map((x) => makeCase(x)));
+  ...biasedRange(-1, -(2 ** 32), 1000).map((x) => makeCase(x)),
   // -1 <= x < 0, linearly spread
-  cases = cases.concat(linearRange(-1, kValue.f32.negative.max, 100).map((x) => makeCase(x)));
+  ...linearRange(-1, kValue.f32.negative.max, 100).map((x) => makeCase(x)),
   // 0 < x <= 1, linearly spread
-  cases = cases.concat(linearRange(kValue.f32.positive.min, 1, 100).map((x) => makeCase(x)));
+  ...linearRange(kValue.f32.positive.min, 1, 100).map((x) => makeCase(x)),
   // 1 <= x < 2^32, biased towards 1
-  cases = cases.concat(biasedRange(1, 2 ** 32, 1000).map((x) => makeCase(x)));
+  ...biasedRange(1, 2 ** 32, 1000).map((x) => makeCase(x))];
+
 
   const cfg = t.params;
   cfg.cmpFloats = ulpThreshold(4096);
