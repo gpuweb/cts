@@ -173,77 +173,25 @@ g.test('depth_stencil_readonly_mismatch')
     `
   )
   .params(u =>
-    u.combine('depthStencilFormat', kDepthStencilFormats).combineWithParams([
-      {
-        bundleDepthReadOnly: false,
-        bundleStencilReadOnly: false,
-        passDepthReadOnly: false,
-        passStencilReadOnly: false,
-      },
-
-      {
-        bundleDepthReadOnly: true,
-        bundleStencilReadOnly: false,
-        passDepthReadOnly: true,
-        passStencilReadOnly: false,
-      },
-
-      {
-        bundleDepthReadOnly: false,
-        bundleStencilReadOnly: true,
-        passDepthReadOnly: false,
-        passStencilReadOnly: true,
-      },
-
-      {
-        bundleDepthReadOnly: true,
-        bundleStencilReadOnly: true,
-        passDepthReadOnly: true,
-        passStencilReadOnly: true,
-      },
-
-      {
-        bundleDepthReadOnly: true,
-        bundleStencilReadOnly: false,
-        passDepthReadOnly: true,
-        passStencilReadOnly: true,
-      },
-
-      {
-        bundleDepthReadOnly: false,
-        bundleStencilReadOnly: true,
-        passDepthReadOnly: true,
-        passStencilReadOnly: true,
-      },
-
-      {
-        bundleDepthReadOnly: false,
-        bundleStencilReadOnly: false,
-        passDepthReadOnly: true,
-        passStencilReadOnly: true,
-      },
-
-      {
-        bundleDepthReadOnly: true,
-        bundleStencilReadOnly: true,
-        passDepthReadOnly: false,
-        passStencilReadOnly: true,
-      },
-
-      {
-        bundleDepthReadOnly: true,
-        bundleStencilReadOnly: true,
-        passDepthReadOnly: true,
-        passStencilReadOnly: false,
-      },
-
-      {
-        bundleDepthReadOnly: true,
-        bundleStencilReadOnly: true,
-        passDepthReadOnly: false,
-        passStencilReadOnly: false,
-      },
-    ])
+    u
+      .combine('depthStencilFormat', kDepthStencilFormats)
+      .beginSubcases()
+      .combine('bundleDepthReadOnly', [false, true])
+      .combine('bundleStencilReadOnly', [false, true])
+      .combine('passDepthReadOnly', [false, true])
+      .combine('passStencilReadOnly', [false, true])
+      .filter(p => {
+        // For combined depth/stencil formats the depth and stencil read only state must match
+        // in order to create a valid render bundle or render pass.
+        const depthStencilInfo = kTextureFormatInfo[p.depthStencilFormat];
+        if (depthStencilInfo.depth && depthStencilInfo.stencil) {
+          return (
+            p.passDepthReadOnly === p.passStencilReadOnly &&
+            p.bundleDepthReadOnly === p.bundleStencilReadOnly
+          );
+        }
+        return true;
+      })
   )
   .fn(async t => {
     const {
@@ -255,13 +203,9 @@ g.test('depth_stencil_readonly_mismatch')
     } = t.params;
     await t.selectDeviceForTextureFormatOrSkipTestCase(depthStencilFormat);
 
-    let compatible =
-      bundleDepthReadOnly === passDepthReadOnly && bundleStencilReadOnly === passStencilReadOnly;
-
-    const depthStencilInfo = kTextureFormatInfo[depthStencilFormat];
-    if (depthStencilInfo.depth && depthStencilInfo.stencil) {
-      compatible = compatible && bundleDepthReadOnly === bundleStencilReadOnly;
-    }
+    const compatible =
+      (!passDepthReadOnly || bundleDepthReadOnly === passDepthReadOnly) &&
+      (!passStencilReadOnly || bundleStencilReadOnly === passStencilReadOnly);
 
     const bundleEncoder = t.device.createRenderBundleEncoder({
       colorFormats: [],
