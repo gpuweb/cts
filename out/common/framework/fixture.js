@@ -246,7 +246,7 @@ export class Fixture {
     return cond;
   }
 
-  /** If the argument is an Error, fail (or warn). Otherwise, no-op. */
+  /** If the argument is an `Error`, fail (or warn). If it's `undefined`, no-op. */
   expectOK(
   error,
   { mode = 'fail', niceStack } = {})
@@ -263,5 +263,14 @@ export class Fixture {
         unreachable();
       }
     }
+  }
+
+  eventualExpectOK(
+  error,
+  { mode = 'fail' } = {})
+  {
+    this.eventualAsyncExpectation(async (niceStack) => {
+      this.expectOK(await error, { mode, niceStack });
+    });
   }}
 //# sourceMappingURL=fixture.js.map

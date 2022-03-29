@@ -702,7 +702,7 @@ class ImageCopyTest extends GPUTest {
     this.expectGPUBufferValuesEqual(outputBuffer, expectedData);
   }
 
-  // MAINTENANCE_TODO(crbug.com/dawn/868): Revisit this when consolidating texture helpers.
+  // MAINTENANCE_TODO(#881): Migrate this into the texture_ok helpers.
   async checkStencilTextureContent(
     stencilTexture,
     stencilTextureSize,
@@ -935,7 +935,7 @@ class ImageCopyTest extends GPUTest {
     }
   }
 
-  // MAINTENANCE_TODO(crbug.com/dawn/868): Revisit this when consolidating texture helpers.
+  // MAINTENANCE_TODO(#881): Consider if this can be simplified/encapsulated using TexelView.
   initializeDepthAspectWithRendering(
     depthTexture,
     depthFormat,

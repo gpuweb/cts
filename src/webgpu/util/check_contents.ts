@@ -1,3 +1,9 @@
+// MAINTENANCE_TODO: The "checkThingTrue" naming is confusing; these must be used with `expectOK`
+// or the result is dropped on the floor. Rename these to things like `typedArrayIsOK`(??) to
+// make it clearer.
+// MAINTENANCE_TODO: Also, audit to make sure we aren't dropping any on the floor. Consider a
+// no-ignored-return lint check if we can find one that we can use.
+
 import {
   assert,
   ErrorWithExtra,

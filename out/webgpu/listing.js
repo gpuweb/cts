@@ -1654,6 +1654,13 @@ export const listing = [
   },
   {
     "file": [
+      "util",
+      "texture",
+      "texture_ok"
+    ]
+  },
+  {
+    "file": [
       "web_platform"
     ],
     "readme": "Tests for Web platform-specific interactions like GPUCanvasContext and canvas, WebXR,\nImageBitmaps, and video APIs.\n\nTODO(#922): Also hopefully tests for user-initiated readbacks from WebGPU canvases\n(printing, save image as, etc.)"
