@@ -111,6 +111,11 @@ export function isSubnormalScalar(val) {
   return (u32_val & 0x7f800000) === 0;
 }
 
+/** Utility to pass TS numbers into |isSubnormalNumber| */
+export function isSubnormalNumber(val) {
+  return isSubnormalScalar(f32(val));
+}
+
 /**
  * @returns the next single precision floating point value after |val|,
  * towards +inf if |dir| is true, otherwise towards -inf.
