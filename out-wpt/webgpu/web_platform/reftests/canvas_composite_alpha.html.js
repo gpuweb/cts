@@ -15,6 +15,7 @@ export function run(format, compositingAlphaMode, writeCanvasMethod) {
       case 'bgra8unorm-srgb':
       case 'rgba8unorm':
       case 'rgba8unorm-srgb':
+      case 'rgba16float':
         break;
       default:
         unreachable();
@@ -66,10 +67,10 @@ vec2<f32>(-0.25, -0.25),
 vec2<f32>( 0.25,  -0.25));
 
 var color = array<vec4<f32>, 4>(
-    vec4<f32>(0.49804, 0.0, 0.0, ${a}),
-    vec4<f32>(0.0, 0.49804, 0.0, ${a}),
-    vec4<f32>(0.0, 0.0, 0.49804, ${a}),
-    vec4<f32>(0.49804, 0.49804, 0.0, ${a})); // 0.49804 -> 0x7f
+    vec4<f32>(0.4, 0.0, 0.0, ${a}),
+    vec4<f32>(0.0, 0.4, 0.0, ${a}),
+    vec4<f32>(0.0, 0.0, 0.4, ${a}),
+    vec4<f32>(0.4, 0.4, 0.0, ${a})); // 0.4 -> 0x66
 
 var output : VertexOutput;
 output.Position = vec4<f32>(pos[VertexIndex % 6u] + offset[VertexIndex / 6u], 0.0, 1.0);
