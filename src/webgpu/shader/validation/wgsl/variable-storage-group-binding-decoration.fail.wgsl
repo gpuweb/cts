@@ -2,7 +2,7 @@
 # decoration.
 
 struct PositionBuffer {
-  pos: vec2<f32>;
+  pos: vec2<f32>
 };
 
 var<storage> s : PositionBuffer;

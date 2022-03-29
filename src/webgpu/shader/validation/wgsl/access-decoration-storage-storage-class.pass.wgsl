@@ -2,7 +2,7 @@
 // 'particles', which is in 'storage' storage class.
 
 struct Particles {
-  particles : array<f32, 4>;
+  particles : array<f32, 4>
 };
 
 @group(1) @binding(0) var<storage, read_write> particles : Particles;

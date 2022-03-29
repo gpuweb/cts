@@ -2,7 +2,7 @@
 # decoration.
 
 struct Params {
-  count: i32;
+  count: i32
 };
 
 var<uniform> u : Params;

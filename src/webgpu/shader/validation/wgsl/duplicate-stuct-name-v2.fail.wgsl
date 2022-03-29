@@ -2,7 +2,7 @@
 // the same name |Foo|.
 
 struct Foo {
-  b : f32;
+  b : f32
 };
 
 fn Foo() {

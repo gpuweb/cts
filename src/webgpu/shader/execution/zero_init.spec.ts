@@ -232,7 +232,7 @@ g.test('compute,zero_init')
   .fn(async t => {
     let moduleScope = `
       struct Output {
-        failed : atomic<u32>;
+        failed : atomic<u32>
       };
       @group(0) @binding(0) var <storage, read_write> output : Output;
     `;
@@ -264,7 +264,7 @@ g.test('compute,zero_init')
                     `${typeName}_Member${i}`,
                     member,
                     depth + 1
-                  )};`;
+                  )},`;
                 })
                 .join('');
               declaredStructTypes.set(type, typeName);
