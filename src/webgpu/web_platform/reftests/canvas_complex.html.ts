@@ -697,12 +697,18 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
       assert(ctx !== null, 'Failed to get WebGPU context from canvas');
 
       let usage = GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT;
-      switch (format) {
-        case 'rgba8unorm':
-        case 'rgba16float':
-          usage |= GPUTextureUsage.STORAGE_BINDING;
-          break;
-        default:
+      if (
+        writeCanvasMethod === 'FragmentTextureStore' ||
+        writeCanvasMethod === 'ComputeWorkgroup1x1TextureStore' ||
+        writeCanvasMethod === 'ComputeWorkgroup16x16TextureStore'
+      ) {
+        switch (format) {
+          case 'rgba8unorm':
+          case 'rgba16float':
+            usage |= GPUTextureUsage.STORAGE_BINDING;
+            break;
+          default:
+        }
       }
 
       ctx.configure({
