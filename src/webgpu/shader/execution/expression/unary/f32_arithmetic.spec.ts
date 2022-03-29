@@ -4,10 +4,15 @@ Execution Tests for the f32 arithmetic unary expression operations
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { correctlyRoundedThreshold } from '../../../../util/compare.js';
+import { anyOf, correctlyRoundedThreshold } from '../../../../util/compare.js';
 import { kValue } from '../../../../util/constants.js';
 import { f32, TypeF32 } from '../../../../util/conversion.js';
-import { biasedRange, linearRange, quantizeToF32 } from '../../../../util/math.js';
+import {
+  biasedRange,
+  isSubnormalNumber,
+  linearRange,
+  quantizeToF32,
+} from '../../../../util/math.js';
 import { Case, Config, run } from '../expression.js';
 
 import { unary } from './unary.js';
@@ -34,7 +39,11 @@ Accuracy: Correctly rounded
 
     const makeCase = (x: number): Case => {
       const f32_x = quantizeToF32(x);
-      return { input: [f32(x)], expected: f32(-f32_x) };
+      if (isSubnormalNumber(f32_x)) {
+        return { input: [f32(x)], expected: anyOf(f32(-f32_x), f32(0.0)) };
+      } else {
+        return { input: [f32(x)], expected: f32(-f32_x) };
+      }
     };
 
     const numeric_range = [
