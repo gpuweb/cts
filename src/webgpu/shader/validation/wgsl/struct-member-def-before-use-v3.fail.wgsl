@@ -2,7 +2,7 @@
 // have a member `s.z`.
 
 struct goo {
-  s : vec2<i32>;
+  s : vec2<i32>
 };
 
 fn Foo() -> goo {

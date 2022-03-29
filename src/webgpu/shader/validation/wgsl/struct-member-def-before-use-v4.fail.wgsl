@@ -2,8 +2,8 @@
 // is used.
 
 struct foo {
-  b : f32;
-  a : array<f32>;
+  b : f32
+  a : array<f32>
 };
 
 @stage(fragment)
