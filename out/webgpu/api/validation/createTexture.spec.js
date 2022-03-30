@@ -10,9 +10,10 @@ kTextureDimensions,
 kTextureUsages,
 kUncompressedTextureFormats,
 kRegularTextureFormats,
-textureDimensionAndFormatCompatible } from
+textureDimensionAndFormatCompatible,
+kLimitInfo } from
 '../../capability_info.js';
-import { DefaultLimits, GPUConst } from '../../constants.js';
+import { GPUConst } from '../../constants.js';
 import { maxMipLevelCount } from '../../util/texture/base.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -409,9 +410,9 @@ u //
 // Compressed and depth-stencil textures are invalid for 1D.
 .combine('format', kRegularTextureFormats).
 combine('width', [
-DefaultLimits.maxTextureDimension1D - 1,
-DefaultLimits.maxTextureDimension1D,
-DefaultLimits.maxTextureDimension1D + 1]).
+kLimitInfo.maxTextureDimension1D.default - 1,
+kLimitInfo.maxTextureDimension1D.default,
+kLimitInfo.maxTextureDimension1D.default + 1]).
 
 combine('height', [1, 2]).
 combine('depthOrArrayLayers', [1, 2])).
@@ -428,7 +429,7 @@ fn(async (t) => {
 
 
   const success =
-  width <= DefaultLimits.maxTextureDimension1D && height === 1 && depthOrArrayLayers === 1;
+  width <= kLimitInfo.maxTextureDimension1D.default && height === 1 && depthOrArrayLayers === 1;
 
   t.expectValidationError(() => {
     t.device.createTexture(descriptor);
@@ -443,17 +444,17 @@ combine('dimension', [undefined, '2d']).
 combine('format', kUncompressedTextureFormats).
 combine('size', [
 // Test the bound of width
-[DefaultLimits.maxTextureDimension2D - 1, 1, 1],
-[DefaultLimits.maxTextureDimension2D, 1, 1],
-[DefaultLimits.maxTextureDimension2D + 1, 1, 1],
+[kLimitInfo.maxTextureDimension2D.default - 1, 1, 1],
+[kLimitInfo.maxTextureDimension2D.default, 1, 1],
+[kLimitInfo.maxTextureDimension2D.default + 1, 1, 1],
 // Test the bound of height
-[1, DefaultLimits.maxTextureDimension2D - 1, 1],
-[1, DefaultLimits.maxTextureDimension2D, 1],
-[1, DefaultLimits.maxTextureDimension2D + 1, 1],
+[1, kLimitInfo.maxTextureDimension2D.default - 1, 1],
+[1, kLimitInfo.maxTextureDimension2D.default, 1],
+[1, kLimitInfo.maxTextureDimension2D.default + 1, 1],
 // Test the bound of array layers
-[1, 1, DefaultLimits.maxTextureArrayLayers - 1],
-[1, 1, DefaultLimits.maxTextureArrayLayers],
-[1, 1, DefaultLimits.maxTextureArrayLayers + 1]])).
+[1, 1, kLimitInfo.maxTextureArrayLayers.default - 1],
+[1, 1, kLimitInfo.maxTextureArrayLayers.default],
+[1, 1, kLimitInfo.maxTextureArrayLayers.default + 1]])).
 
 
 fn(async (t) => {
@@ -468,9 +469,9 @@ fn(async (t) => {
 
 
   const success =
-  size[0] <= DefaultLimits.maxTextureDimension2D &&
-  size[1] <= DefaultLimits.maxTextureDimension2D &&
-  size[2] <= DefaultLimits.maxTextureArrayLayers;
+  size[0] <= kLimitInfo.maxTextureDimension2D.default &&
+  size[1] <= kLimitInfo.maxTextureDimension2D.default &&
+  size[2] <= kLimitInfo.maxTextureArrayLayers.default;
 
   t.expectValidationError(() => {
     t.device.createTexture(descriptor);
@@ -487,36 +488,36 @@ expand('size', (p) => {
   const { blockWidth, blockHeight } = kTextureFormatInfo[p.format];
   return [
   // Test the bound of width
-  [DefaultLimits.maxTextureDimension2D - 1, 1, 1],
-  [DefaultLimits.maxTextureDimension2D - blockWidth, 1, 1],
-  [DefaultLimits.maxTextureDimension2D - blockWidth, blockHeight, 1],
-  [DefaultLimits.maxTextureDimension2D, 1, 1],
-  [DefaultLimits.maxTextureDimension2D, blockHeight, 1],
-  [DefaultLimits.maxTextureDimension2D + 1, 1, 1],
-  [DefaultLimits.maxTextureDimension2D + blockWidth, 1, 1],
-  [DefaultLimits.maxTextureDimension2D + blockWidth, blockHeight, 1],
+  [kLimitInfo.maxTextureDimension2D.default - 1, 1, 1],
+  [kLimitInfo.maxTextureDimension2D.default - blockWidth, 1, 1],
+  [kLimitInfo.maxTextureDimension2D.default - blockWidth, blockHeight, 1],
+  [kLimitInfo.maxTextureDimension2D.default, 1, 1],
+  [kLimitInfo.maxTextureDimension2D.default, blockHeight, 1],
+  [kLimitInfo.maxTextureDimension2D.default + 1, 1, 1],
+  [kLimitInfo.maxTextureDimension2D.default + blockWidth, 1, 1],
+  [kLimitInfo.maxTextureDimension2D.default + blockWidth, blockHeight, 1],
   // Test the bound of height
-  [1, DefaultLimits.maxTextureDimension2D - 1, 1],
-  [1, DefaultLimits.maxTextureDimension2D - blockHeight, 1],
-  [blockWidth, DefaultLimits.maxTextureDimension2D - blockHeight, 1],
-  [1, DefaultLimits.maxTextureDimension2D, 1],
-  [blockWidth, DefaultLimits.maxTextureDimension2D, 1],
-  [1, DefaultLimits.maxTextureDimension2D + 1, 1],
-  [1, DefaultLimits.maxTextureDimension2D + blockWidth, 1],
-  [blockWidth, DefaultLimits.maxTextureDimension2D + blockHeight, 1],
+  [1, kLimitInfo.maxTextureDimension2D.default - 1, 1],
+  [1, kLimitInfo.maxTextureDimension2D.default - blockHeight, 1],
+  [blockWidth, kLimitInfo.maxTextureDimension2D.default - blockHeight, 1],
+  [1, kLimitInfo.maxTextureDimension2D.default, 1],
+  [blockWidth, kLimitInfo.maxTextureDimension2D.default, 1],
+  [1, kLimitInfo.maxTextureDimension2D.default + 1, 1],
+  [1, kLimitInfo.maxTextureDimension2D.default + blockWidth, 1],
+  [blockWidth, kLimitInfo.maxTextureDimension2D.default + blockHeight, 1],
   // Test the bound of array layers
-  [1, 1, DefaultLimits.maxTextureArrayLayers - 1],
-  [blockWidth, 1, DefaultLimits.maxTextureArrayLayers - 1],
-  [1, blockHeight, DefaultLimits.maxTextureArrayLayers - 1],
-  [blockWidth, blockHeight, DefaultLimits.maxTextureArrayLayers - 1],
-  [1, 1, DefaultLimits.maxTextureArrayLayers],
-  [blockWidth, 1, DefaultLimits.maxTextureArrayLayers],
-  [1, blockHeight, DefaultLimits.maxTextureArrayLayers],
-  [blockWidth, blockHeight, DefaultLimits.maxTextureArrayLayers],
-  [1, 1, DefaultLimits.maxTextureArrayLayers + 1],
-  [blockWidth, 1, DefaultLimits.maxTextureArrayLayers + 1],
-  [1, blockHeight, DefaultLimits.maxTextureArrayLayers + 1],
-  [blockWidth, blockHeight, DefaultLimits.maxTextureArrayLayers + 1]];
+  [1, 1, kLimitInfo.maxTextureArrayLayers.default - 1],
+  [blockWidth, 1, kLimitInfo.maxTextureArrayLayers.default - 1],
+  [1, blockHeight, kLimitInfo.maxTextureArrayLayers.default - 1],
+  [blockWidth, blockHeight, kLimitInfo.maxTextureArrayLayers.default - 1],
+  [1, 1, kLimitInfo.maxTextureArrayLayers.default],
+  [blockWidth, 1, kLimitInfo.maxTextureArrayLayers.default],
+  [1, blockHeight, kLimitInfo.maxTextureArrayLayers.default],
+  [blockWidth, blockHeight, kLimitInfo.maxTextureArrayLayers.default],
+  [1, 1, kLimitInfo.maxTextureArrayLayers.default + 1],
+  [blockWidth, 1, kLimitInfo.maxTextureArrayLayers.default + 1],
+  [1, blockHeight, kLimitInfo.maxTextureArrayLayers.default + 1],
+  [blockWidth, blockHeight, kLimitInfo.maxTextureArrayLayers.default + 1]];
 
 })).
 
@@ -535,9 +536,9 @@ fn(async (t) => {
   const success =
   size[0] % info.blockWidth === 0 &&
   size[1] % info.blockHeight === 0 &&
-  size[0] <= DefaultLimits.maxTextureDimension2D &&
-  size[1] <= DefaultLimits.maxTextureDimension2D &&
-  size[2] <= DefaultLimits.maxTextureArrayLayers;
+  size[0] <= kLimitInfo.maxTextureDimension2D.default &&
+  size[1] <= kLimitInfo.maxTextureDimension2D.default &&
+  size[2] <= kLimitInfo.maxTextureArrayLayers.default;
 
   t.expectValidationError(() => {
     t.device.createTexture(descriptor);
@@ -553,17 +554,17 @@ u //
 .combine('format', kRegularTextureFormats).
 combine('size', [
 // Test the bound of width
-[DefaultLimits.maxTextureDimension3D - 1, 1, 1],
-[DefaultLimits.maxTextureDimension3D, 1, 1],
-[DefaultLimits.maxTextureDimension3D + 1, 1, 1],
+[kLimitInfo.maxTextureDimension3D.default - 1, 1, 1],
+[kLimitInfo.maxTextureDimension3D.default, 1, 1],
+[kLimitInfo.maxTextureDimension3D.default + 1, 1, 1],
 // Test the bound of height
-[1, DefaultLimits.maxTextureDimension3D - 1, 1],
-[1, DefaultLimits.maxTextureDimension3D, 1],
-[1, DefaultLimits.maxTextureDimension3D + 1, 1],
+[1, kLimitInfo.maxTextureDimension3D.default - 1, 1],
+[1, kLimitInfo.maxTextureDimension3D.default, 1],
+[1, kLimitInfo.maxTextureDimension3D.default + 1, 1],
 // Test the bound of depth
-[1, 1, DefaultLimits.maxTextureDimension3D - 1],
-[1, 1, DefaultLimits.maxTextureDimension3D],
-[1, 1, DefaultLimits.maxTextureDimension3D + 1]])).
+[1, 1, kLimitInfo.maxTextureDimension3D.default - 1],
+[1, 1, kLimitInfo.maxTextureDimension3D.default],
+[1, 1, kLimitInfo.maxTextureDimension3D.default + 1]])).
 
 
 fn(async (t) => {
@@ -578,9 +579,9 @@ fn(async (t) => {
 
 
   const success =
-  size[0] <= DefaultLimits.maxTextureDimension3D &&
-  size[1] <= DefaultLimits.maxTextureDimension3D &&
-  size[2] <= DefaultLimits.maxTextureDimension3D;
+  size[0] <= kLimitInfo.maxTextureDimension3D.default &&
+  size[1] <= kLimitInfo.maxTextureDimension3D.default &&
+  size[2] <= kLimitInfo.maxTextureDimension3D.default;
 
   t.expectValidationError(() => {
     t.device.createTexture(descriptor);
@@ -596,36 +597,36 @@ expand('size', (p) => {
   const { blockWidth, blockHeight } = kTextureFormatInfo[p.format];
   return [
   // Test the bound of width
-  [DefaultLimits.maxTextureDimension3D - 1, 1, 1],
-  [DefaultLimits.maxTextureDimension3D - blockWidth, 1, 1],
-  [DefaultLimits.maxTextureDimension3D - blockWidth, blockHeight, 1],
-  [DefaultLimits.maxTextureDimension3D, 1, 1],
-  [DefaultLimits.maxTextureDimension3D, blockHeight, 1],
-  [DefaultLimits.maxTextureDimension3D + 1, 1, 1],
-  [DefaultLimits.maxTextureDimension3D + blockWidth, 1, 1],
-  [DefaultLimits.maxTextureDimension3D + blockWidth, blockHeight, 1],
+  [kLimitInfo.maxTextureDimension3D.default - 1, 1, 1],
+  [kLimitInfo.maxTextureDimension3D.default - blockWidth, 1, 1],
+  [kLimitInfo.maxTextureDimension3D.default - blockWidth, blockHeight, 1],
+  [kLimitInfo.maxTextureDimension3D.default, 1, 1],
+  [kLimitInfo.maxTextureDimension3D.default, blockHeight, 1],
+  [kLimitInfo.maxTextureDimension3D.default + 1, 1, 1],
+  [kLimitInfo.maxTextureDimension3D.default + blockWidth, 1, 1],
+  [kLimitInfo.maxTextureDimension3D.default + blockWidth, blockHeight, 1],
   // Test the bound of height
-  [1, DefaultLimits.maxTextureDimension3D - 1, 1],
-  [1, DefaultLimits.maxTextureDimension3D - blockHeight, 1],
-  [blockWidth, DefaultLimits.maxTextureDimension3D - blockHeight, 1],
-  [1, DefaultLimits.maxTextureDimension3D, 1],
-  [blockWidth, DefaultLimits.maxTextureDimension3D, 1],
-  [1, DefaultLimits.maxTextureDimension3D + 1, 1],
-  [1, DefaultLimits.maxTextureDimension3D + blockWidth, 1],
-  [blockWidth, DefaultLimits.maxTextureDimension3D + blockHeight, 1],
+  [1, kLimitInfo.maxTextureDimension3D.default - 1, 1],
+  [1, kLimitInfo.maxTextureDimension3D.default - blockHeight, 1],
+  [blockWidth, kLimitInfo.maxTextureDimension3D.default - blockHeight, 1],
+  [1, kLimitInfo.maxTextureDimension3D.default, 1],
+  [blockWidth, kLimitInfo.maxTextureDimension3D.default, 1],
+  [1, kLimitInfo.maxTextureDimension3D.default + 1, 1],
+  [1, kLimitInfo.maxTextureDimension3D.default + blockWidth, 1],
+  [blockWidth, kLimitInfo.maxTextureDimension3D.default + blockHeight, 1],
   // Test the bound of depth
-  [1, 1, DefaultLimits.maxTextureDimension3D - 1],
-  [blockWidth, 1, DefaultLimits.maxTextureDimension3D - 1],
-  [1, blockHeight, DefaultLimits.maxTextureDimension3D - 1],
-  [blockWidth, blockHeight, DefaultLimits.maxTextureDimension3D - 1],
-  [1, 1, DefaultLimits.maxTextureDimension3D],
-  [blockWidth, 1, DefaultLimits.maxTextureDimension3D],
-  [1, blockHeight, DefaultLimits.maxTextureDimension3D],
-  [blockWidth, blockHeight, DefaultLimits.maxTextureDimension3D],
-  [1, 1, DefaultLimits.maxTextureDimension3D + 1],
-  [blockWidth, 1, DefaultLimits.maxTextureDimension3D + 1],
-  [1, blockHeight, DefaultLimits.maxTextureDimension3D + 1],
-  [blockWidth, blockHeight, DefaultLimits.maxTextureDimension3D + 1]];
+  [1, 1, kLimitInfo.maxTextureDimension3D.default - 1],
+  [blockWidth, 1, kLimitInfo.maxTextureDimension3D.default - 1],
+  [1, blockHeight, kLimitInfo.maxTextureDimension3D.default - 1],
+  [blockWidth, blockHeight, kLimitInfo.maxTextureDimension3D.default - 1],
+  [1, 1, kLimitInfo.maxTextureDimension3D.default],
+  [blockWidth, 1, kLimitInfo.maxTextureDimension3D.default],
+  [1, blockHeight, kLimitInfo.maxTextureDimension3D.default],
+  [blockWidth, blockHeight, kLimitInfo.maxTextureDimension3D.default],
+  [1, 1, kLimitInfo.maxTextureDimension3D.default + 1],
+  [blockWidth, 1, kLimitInfo.maxTextureDimension3D.default + 1],
+  [1, blockHeight, kLimitInfo.maxTextureDimension3D.default + 1],
+  [blockWidth, blockHeight, kLimitInfo.maxTextureDimension3D.default + 1]];
 
 })).
 
@@ -639,8 +640,8 @@ fn(async (t) => {
   await t.selectDeviceOrSkipTestCase(info.feature);
 
   assert(
-  DefaultLimits.maxTextureDimension3D % info.blockWidth === 0 &&
-  DefaultLimits.maxTextureDimension3D % info.blockHeight === 0);
+  kLimitInfo.maxTextureDimension3D.default % info.blockWidth === 0 &&
+  kLimitInfo.maxTextureDimension3D.default % info.blockHeight === 0);
 
 
   const descriptor = {
@@ -653,9 +654,9 @@ fn(async (t) => {
   const success =
   size[0] % info.blockWidth === 0 &&
   size[1] % info.blockHeight === 0 &&
-  size[0] <= DefaultLimits.maxTextureDimension3D &&
-  size[1] <= DefaultLimits.maxTextureDimension3D &&
-  size[2] <= DefaultLimits.maxTextureDimension3D;
+  size[0] <= kLimitInfo.maxTextureDimension3D.default &&
+  size[1] <= kLimitInfo.maxTextureDimension3D.default &&
+  size[2] <= kLimitInfo.maxTextureDimension3D.default;
 
   t.expectValidationError(() => {
     t.device.createTexture(descriptor);

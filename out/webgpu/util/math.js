@@ -341,4 +341,12 @@ export function quantizeToF32(num) {
 export function quantizeToI32(num) {
   return i32(num).value;
 }
+
+/** @returns whether the number is an integer and a power of two */
+export function isPowerOfTwo(n) {
+  if (!Number.isInteger(n)) {
+    return false;
+  }
+  return n !== 0 && (n & n - 1) === 0;
+}
 //# sourceMappingURL=math.js.map

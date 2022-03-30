@@ -4,16 +4,16 @@
 Basic command buffer compute tests.
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { DefaultLimits } from '../../../constants.js';
+import { kLimitInfo } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { checkElementsEqualGenerated } from '../../../util/check_contents.js';
 
 export const g = makeTestGroup(GPUTest);
 
 const kMaxComputeWorkgroupSize = [
-  DefaultLimits.maxComputeWorkgroupSizeX,
-  DefaultLimits.maxComputeWorkgroupSizeY,
-  DefaultLimits.maxComputeWorkgroupSizeZ,
+  kLimitInfo.maxComputeWorkgroupSizeX.default,
+  kLimitInfo.maxComputeWorkgroupSizeY.default,
+  kLimitInfo.maxComputeWorkgroupSizeZ.default,
 ];
 
 g.test('memcpy').fn(async t => {
@@ -79,7 +79,7 @@ g.test('large_dispatch')
         315,
         628,
         2179,
-        DefaultLimits.maxComputeWorkgroupsPerDimension,
+        kLimitInfo.maxComputeWorkgroupsPerDimension.default,
       ])
 
       // Test some reasonable workgroup sizes.

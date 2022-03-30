@@ -6,7 +6,7 @@ API validation test for compute pass
 Does **not** test usage scopes (resource_usages/) or programmable pass stuff (programmable_pass).
 `;
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { DefaultLimits } from '../../../../constants.js';
+import { kLimitInfo } from '../../../../capability_info.js';
 import { kResourceStates } from '../../../../gpu_test.js';
 import { ValidationTest } from '../../validation_test.js';
 
@@ -90,7 +90,7 @@ g.test('pipeline,device_mismatch')
     validateFinish(!mismatched);
   });
 
-const kMaxDispatch = DefaultLimits.maxComputeWorkgroupsPerDimension;
+const kMaxDispatch = kLimitInfo.maxComputeWorkgroupsPerDimension.default;
 g.test('dispatch_sizes')
   .desc(
     `Test 'direct' and 'indirect' dispatch with various sizes.

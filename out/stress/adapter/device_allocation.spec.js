@@ -8,7 +8,7 @@ import { attemptGarbageCollection } from '../../common/util/collect_garbage.js';
 import { keysOf } from '../../common/util/data_tables.js';
 import { getGPU } from '../../common/util/navigator_gpu.js';
 import { assert, iterRange } from '../../common/util/util.js';
-import { DefaultLimits } from '../../webgpu/constants.js';
+import { kLimitInfo } from '../../webgpu/capability_info.js';
 
 /** Adapter preference identifier to option. */
 const kAdapterTypeOptions =
@@ -35,7 +35,7 @@ class DeviceAllocationTests extends Fixture {
     const kNumPipelines = 64;
     const kNumBindgroups = 128;
     const kNumBufferElements =
-    DefaultLimits.maxComputeWorkgroupSizeX * DefaultLimits.maxComputeWorkgroupSizeY;
+    kLimitInfo.maxComputeWorkgroupSizeX.default * kLimitInfo.maxComputeWorkgroupSizeY.default;
     const kBufferSize = kNumBufferElements * 4;
     const kBufferData = new Uint32Array([...iterRange(kNumBufferElements, (x) => x)]);
 
@@ -52,8 +52,8 @@ class DeviceAllocationTests extends Fixture {
               @group(0) @binding(0) var<storage, read_write> buffer: Buffer;
               @stage(compute) @workgroup_size(1) fn main(
                   @builtin(global_invocation_id) id: vec3<u32>) {
-                buffer.data[id.x * ${DefaultLimits.maxComputeWorkgroupSizeX}u + id.y] =
-                  buffer.data[id.x * ${DefaultLimits.maxComputeWorkgroupSizeX}u + id.y] +
+                buffer.data[id.x * ${kLimitInfo.maxComputeWorkgroupSizeX.default}u + id.y] =
+                  buffer.data[id.x * ${kLimitInfo.maxComputeWorkgroupSizeX.default}u + id.y] +
                     ${pipelineIndex}u;
               }
             ` }),
@@ -77,8 +77,8 @@ class DeviceAllocationTests extends Fixture {
         pass.setPipeline(pipeline);
         pass.setBindGroup(0, bindgroup);
         pass.dispatch(
-        DefaultLimits.maxComputeWorkgroupSizeX,
-        DefaultLimits.maxComputeWorkgroupSizeY);
+        kLimitInfo.maxComputeWorkgroupSizeX.default,
+        kLimitInfo.maxComputeWorkgroupSizeY.default);
 
         pass.end();
         commands.push(encoder.finish());

@@ -1,7 +1,7 @@
 import { SkipTestCase } from '../../common/framework/fixture.js';
 import { getGPU } from '../../common/util/navigator_gpu.js';
 import { assert, raceWithRejectOnTimeout, assertReject } from '../../common/util/util.js';
-import { DefaultLimits } from '../constants.js';
+import { kLimitInfo, kLimits } from '../capability_info.js';
 
 export interface DeviceProvider {
   acquire(): GPUDevice;
@@ -202,11 +202,12 @@ function canonicalizeDescriptor(
    * specified _and_ non-default. */
   const limitsCanonicalized: Record<string, number> = {};
   if (desc.requiredLimits) {
-    for (const [k, defaultValue] of Object.entries(DefaultLimits)) {
-      const requestedValue = desc.requiredLimits[k];
+    for (const limit of kLimits) {
+      const requestedValue = desc.requiredLimits[limit];
+      const defaultValue = kLimitInfo[limit].default;
       // Skip adding a limit to limitsCanonicalized if it is the same as the default.
       if (requestedValue !== undefined && requestedValue !== defaultValue) {
-        limitsCanonicalized[k] = requestedValue;
+        limitsCanonicalized[limit] = requestedValue;
       }
     }
   }
