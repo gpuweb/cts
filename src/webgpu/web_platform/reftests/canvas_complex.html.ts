@@ -696,19 +696,27 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
       const ctx = cvs.getContext('webgpu');
       assert(ctx !== null, 'Failed to get WebGPU context from canvas');
 
-      let usage = GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT;
-      if (
-        writeCanvasMethod === 'FragmentTextureStore' ||
-        writeCanvasMethod === 'ComputeWorkgroup1x1TextureStore' ||
-        writeCanvasMethod === 'ComputeWorkgroup16x16TextureStore'
-      ) {
-        switch (format) {
-          case 'rgba8unorm':
-          case 'rgba16float':
-            usage |= GPUTextureUsage.STORAGE_BINDING;
-            break;
-          default:
-        }
+      let usage: GPUTextureUsageFlags;
+      switch (writeCanvasMethod) {
+        case 'copyBufferToTexture':
+        case 'copyTextureToTexture':
+          usage = GPUTextureUsage.COPY_DST;
+          break;
+        case 'copyExternalImageToTexture':
+          usage = GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT;
+          break;
+        case 'DrawTextureSample':
+        case 'DrawVertexColor':
+        case 'DrawFragcoord':
+          usage = GPUTextureUsage.RENDER_ATTACHMENT;
+          break;
+        case 'FragmentTextureStore':
+        case 'ComputeWorkgroup1x1TextureStore':
+        case 'ComputeWorkgroup16x16TextureStore':
+          usage = GPUTextureUsage.STORAGE_BINDING;
+          break;
+        default:
+          unreachable();
       }
 
       ctx.configure({
