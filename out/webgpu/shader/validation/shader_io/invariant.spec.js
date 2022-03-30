@@ -35,8 +35,8 @@ fn((t) => {
   const invariant = t.params.use_invariant ? '@invariant' : '';
   const code = `
     struct VertexOut {
-      @location(0) ${invariant} loc0 : vec4<f32>;
-      @builtin(position) position : vec4<f32>;
+      @location(0) ${invariant} loc0 : vec4<f32>,
+      @builtin(position) position : vec4<f32>,
     };
     @stage(vertex)
     fn main() -> VertexOut {
@@ -52,7 +52,7 @@ params((u) => u.combine('suffix', ['', '()', '(0)']).beginSubcases()).
 fn((t) => {
   const code = `
     struct VertexOut {
-      @builtin(position) @invariant${t.params.suffix} position : vec4<f32>;
+      @builtin(position) @invariant${t.params.suffix} position : vec4<f32>
     };
     @stage(vertex)
     fn main() -> VertexOut {

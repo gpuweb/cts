@@ -31,7 +31,7 @@ export const g = makeTestGroup(GPUTest);
 
 const fullscreenQuadWGSL = `
   struct VertexOutput {
-    @builtin(position) Position : vec4<f32>;
+    @builtin(position) Position : vec4<f32>
   };
 
   @stage(vertex) fn vert_main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {

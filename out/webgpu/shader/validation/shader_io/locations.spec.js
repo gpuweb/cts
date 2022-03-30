@@ -83,7 +83,7 @@ fn((t) => {
   if (t.params.type === 'MyStruct') {
     // Generate a struct that contains a valid type.
     code += 'struct MyStruct {\n';
-    code += `  value : f32;\n`;
+    code += `  value : f32\n`;
     code += '};\n\n';
   }
 
@@ -112,10 +112,10 @@ fn((t) => {
 
   // Generate a struct that contains a valid type.
   code += 'struct Inner {\n';
-  code += `  @location(0) value : f32;\n`;
+  code += `  @location(0) value : f32\n`;
   code += '};\n\n';
   code += 'struct Outer {\n';
-  code += `  inner : Inner;\n`;
+  code += `  inner : Inner\n`;
   code += '};\n\n';
 
   code += generateShader({
@@ -155,16 +155,16 @@ fn((t) => {
   const rb = t.params.second === 'rb' ? '0' : '2';
   const code = `
     struct S1 {
-      @location(${s1a}) a : f32;
-      @location(${s1b}) b : f32;
+      @location(${s1a}) a : f32,
+      @location(${s1b}) b : f32,
     };
     struct S2 {
-      @location(${s2a}) a : f32;
-      @location(${s2b}) b : f32;
+      @location(${s2a}) a : f32,
+      @location(${s2b}) b : f32,
     };
     struct R {
-      @location(${ra}) a : f32;
-      @location(${rb}) b : f32;
+      @location(${ra}) a : f32,
+      @location(${rb}) b : f32,
     };
     @stage(fragment)
     fn main(@location(${p1}) p1 : f32,

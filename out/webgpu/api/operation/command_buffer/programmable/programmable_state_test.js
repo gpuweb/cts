@@ -62,7 +62,7 @@ export class ProgrammableStateTest extends GPUTest {
     switch (encoderType) {
       case 'compute pass':{
           const wgsl = `struct Data {
-            value : i32;
+            value : i32
           };
 
           @group(${groups.a}) @binding(0) var<storage> a : Data;
@@ -98,7 +98,7 @@ export class ProgrammableStateTest extends GPUTest {
 
             fragment: `
             struct Data {
-              value : i32;
+              value : i32
             };
 
             @group(${groups.a}) @binding(0) var<storage> a : Data;

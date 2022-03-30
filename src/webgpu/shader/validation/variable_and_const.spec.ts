@@ -105,7 +105,7 @@ g.test('io_shareable_type')
     if (`${storageClass}` === 'in') {
       code = `
         struct MyInputs {
-          @location(0) @interpolate(flat) a : ${type};
+          @location(0) @interpolate(flat) a : ${type}
         };
 
         @stage(fragment)
@@ -115,7 +115,7 @@ g.test('io_shareable_type')
     } else if (`${storageClass}` === 'out') {
       code = `
         struct MyOutputs {
-          @location(0) a : ${type};
+          @location(0) a : ${type}
         };
 
         @stage(fragment)

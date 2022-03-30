@@ -176,8 +176,8 @@ fn(async (t) => {
       module: t.device.createShaderModule({
         code: `
             struct Output {
-              @builtin(position) Position : vec4<f32>;
-              @location(0) color : vec4<f32>;
+              @builtin(position) Position : vec4<f32>,
+              @location(0) color : vec4<f32>,
             };
 
             @stage(vertex) fn main(

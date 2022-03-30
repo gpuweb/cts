@@ -34,9 +34,9 @@ var<private> arr3D_zero : array<array<array<i32, 50>, 50>, 50>;
 var<private> vec4_zero : vec4<i32>;
 
 struct S {
-  x : i32;
-  y : i32;
-  z : i32;
+  x : i32,
+  y : i32,
+  z : i32,
 }
 
 fn mul(p1 : ptr<private, i32>, multiplicand : i32) -> i32 {

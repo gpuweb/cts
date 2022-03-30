@@ -31,8 +31,8 @@ function getDepthTestEqualPipeline(t, format, sampleCount, expected) {
       module: t.device.createShaderModule({
         code: `
         struct Outputs {
-          @builtin(frag_depth) FragDepth : f32;
-          @location(0) outSuccess : f32;
+          @builtin(frag_depth) FragDepth : f32,
+          @location(0) outSuccess : f32,
         };
 
         @stage(fragment)

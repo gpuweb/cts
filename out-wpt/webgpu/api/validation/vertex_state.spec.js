@@ -113,7 +113,7 @@ class F extends ValidationTest {
 
     let count = 0;
     for (const input of inputs) {
-      interfaces += `@location(${input.location}) input${count} : ${input.type};\n`;
+      interfaces += `@location(${input.location}) input${count} : ${input.type},\n`;
       body += `var i${count} : ${input.type} = input.input${count};\n`;
       count++;
     }

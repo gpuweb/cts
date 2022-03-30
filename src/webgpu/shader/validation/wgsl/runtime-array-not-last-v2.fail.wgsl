@@ -2,8 +2,8 @@
 
 type RTArr = array<vec4<f32>>;
 struct S {
-  data : RTArr;
-  b : f32;
+  data : RTArr,
+  b : f32,
 };
 
 @stage(fragment)

@@ -42,12 +42,12 @@ dynamicOffsets)
 
   const source = `
     struct Constants {
-      zero: u32;
+      zero: u32
     };
     @group(1) @binding(0) var<uniform> constants: Constants;
 
     struct Result {
-      value: u32;
+      value: u32
     };
     @group(1) @binding(1) var<storage, write> result: Result;
 
@@ -196,9 +196,9 @@ fn(async (t) => {
   // in the global scope or inside the test function itself.
   const structDecl = `
       struct S {
-        startCanary: array<u32, 10>;
-        data: ${type};
-        endCanary: array<u32, 10>;
+        startCanary: array<u32, 10>,
+        data: ${type},
+        endCanary: array<u32, 10>,
       };`;
 
   const testGroupBGLEntires = [];
@@ -212,7 +212,7 @@ fn(async (t) => {
         const qualifiers = storageClass === 'storage' ? `storage, ${storageMode}` : storageClass;
         globalSource += `
           struct TestData {
-            data: ${type};
+            data: ${type},
           };
           @group(0) @binding(0) var<${qualifiers}> s: TestData;`;
 

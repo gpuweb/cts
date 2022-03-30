@@ -507,7 +507,7 @@ g.test('uniform_buffer')
     const computeShaderModule = t.device.createShaderModule({
       code: `
   struct UBO {
-      value : vec4<u32>;
+      value : vec4<u32>
   };
   @group(0) @binding(0) var<uniform> ubo : UBO;
   @group(0) @binding(1) var outImage : texture_storage_2d<rgba8unorm, write>;
@@ -542,7 +542,7 @@ g.test('readonly_storage_buffer')
     const computeShaderModule = t.device.createShaderModule({
       code: `
     struct SSBO {
-        value : vec4<u32>;
+        value : vec4<u32>
     };
     @group(0) @binding(0) var<storage, read> ssbo : SSBO;
     @group(0) @binding(1) var outImage : texture_storage_2d<rgba8unorm, write>;
@@ -577,7 +577,7 @@ g.test('storage_buffer')
     const computeShaderModule = t.device.createShaderModule({
       code: `
     struct SSBO {
-        value : vec4<u32>;
+        value : vec4<u32>
     };
     @group(0) @binding(0) var<storage, read_write> ssbo : SSBO;
     @group(0) @binding(1) var outImage : texture_storage_2d<rgba8unorm, write>;
@@ -608,8 +608,8 @@ g.test('vertex_buffer')
       t.device.createShaderModule({
         code: `
       struct VertexOut {
-        @location(0) color : vec4<f32>;
-        @builtin(position) position : vec4<f32>;
+        @location(0) color : vec4<f32>,
+        @builtin(position) position : vec4<f32>,
       };
 
       @stage(vertex) fn main(@location(0) pos : vec4<f32>) -> VertexOut {
@@ -671,8 +671,8 @@ GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
       t.device.createShaderModule({
         code: `
     struct VertexOut {
-      @location(0) color : vec4<f32>;
-      @builtin(position) position : vec4<f32>;
+      @location(0) color : vec4<f32>,
+      @builtin(position) position : vec4<f32>,
     };
 
     @stage(vertex)
@@ -739,8 +739,8 @@ have been initialized to 0.`
       t.device.createShaderModule({
         code: `
     struct VertexOut {
-      @location(0) color : vec4<f32>;
-      @builtin(position) position : vec4<f32>;
+      @location(0) color : vec4<f32>,
+      @builtin(position) position : vec4<f32>,
     };
 
     @stage(vertex) fn main() -> VertexOut {

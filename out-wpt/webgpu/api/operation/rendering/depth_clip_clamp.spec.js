@@ -83,8 +83,8 @@ have unexpected values then get drawn to the color buffer, which is later checke
       //////// "Test" entry points
 
       struct VFTest {
-        @builtin(position) pos: vec4<f32>;
-        @location(0) @interpolate(flat) vertexIndex: u32;
+        @builtin(position) pos: vec4<f32>,
+        @location(0) @interpolate(flat) vertexIndex: u32,
       };
 
       @stage(vertex)
@@ -98,7 +98,7 @@ have unexpected values then get drawn to the color buffer, which is later checke
       struct Output {
         // Each fragment (that didn't get clipped) writes into one element of this output.
         // (Anything that doesn't get written is already zero.)
-        fragInputZDiff: array<f32, ${kNumTestPoints}>;
+        fragInputZDiff: array<f32, ${kNumTestPoints}>
       };
       @group(0) @binding(0) var <storage, read_write> output: Output;
 
@@ -120,8 +120,8 @@ have unexpected values then get drawn to the color buffer, which is later checke
       //////// "Check" entry points
 
       struct VFCheck {
-        @builtin(position) pos: vec4<f32>;
-        @location(0) @interpolate(flat) vertexIndex: u32;
+        @builtin(position) pos: vec4<f32>,
+        @location(0) @interpolate(flat) vertexIndex: u32,
       };
 
       @stage(vertex)
@@ -134,8 +134,8 @@ have unexpected values then get drawn to the color buffer, which is later checke
       }
 
       struct FCheck {
-        @builtin(frag_depth) depth: f32;
-        @location(0) color: f32;
+        @builtin(frag_depth) depth: f32,
+        @location(0) color: f32,
       };
 
       @stage(fragment)
@@ -382,8 +382,8 @@ to be empty.`
       }
 
       struct VF {
-        @builtin(position) pos: vec4<f32>;
-        @location(0) @interpolate(flat) vertexIndex: u32;
+        @builtin(position) pos: vec4<f32>,
+        @location(0) @interpolate(flat) vertexIndex: u32,
       };
 
       @stage(vertex)
@@ -402,8 +402,8 @@ to be empty.`
       }
 
       struct FTest {
-        @builtin(frag_depth) depth: f32;
-        @location(0) color: f32;
+        @builtin(frag_depth) depth: f32,
+        @location(0) color: f32,
       };
 
       @stage(fragment)
