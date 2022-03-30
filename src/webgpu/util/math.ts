@@ -341,3 +341,11 @@ export function quantizeToF32(num: number): number {
 export function quantizeToI32(num: number): number {
   return i32(num).value as number;
 }
+
+/** @returns whether the number is an integer and a power of two */
+export function isPowerOfTwo(n: number): boolean {
+  if (!Number.isInteger(n)) {
+    return false;
+  }
+  return n !== 0 && (n & (n - 1)) === 0;
+}

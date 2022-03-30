@@ -7,7 +7,7 @@ import { keysOf, makeTable, numericKeysOf, valueof } from '../common/util/data_t
 import { assertTypeTrue, TypeEqual } from '../common/util/types.js';
 import { assert, unreachable } from '../common/util/util.js';
 
-import { GPUConst } from './constants.js';
+import { GPUConst, kMaxUnsignedLongValue, kMaxUnsignedLongLongValue } from './constants.js';
 import { ImageCopyType } from './util/texture/layout.js';
 
 // Base device limits can be found in constants.ts.
@@ -924,3 +924,42 @@ export const kMaxVertexBufferArrayStride = 2048;
 export const kDrawIndirectParametersSize = 4;
 /** The size of indirect drawIndexed parameters in the indirectBuffer of drawIndexedIndirect */
 export const kDrawIndexedIndirectParametersSize = 5;
+
+/** Info for each entry of GPUSupportedLimits */
+export const kLimitInfo = /* prettier-ignore */ makeTable(
+                                               [    'class', 'default',            'maximumValue'] as const,
+                                               [  'maximum',          ,     kMaxUnsignedLongValue] as const, {
+  'maxTextureDimension1D':                     [           ,      8192,                          ],
+  'maxTextureDimension2D':                     [           ,      8192,                          ],
+  'maxTextureDimension3D':                     [           ,      2048,                          ],
+  'maxTextureArrayLayers':                     [           ,       256,                          ],
+
+  'maxBindGroups':                             [           ,         4,                          ],
+  'maxDynamicUniformBuffersPerPipelineLayout': [           ,         8,                          ],
+  'maxDynamicStorageBuffersPerPipelineLayout': [           ,         4,                          ],
+  'maxSampledTexturesPerShaderStage':          [           ,        16,                          ],
+  'maxSamplersPerShaderStage':                 [           ,        16,                          ],
+  'maxStorageBuffersPerShaderStage':           [           ,         8,                          ],
+  'maxStorageTexturesPerShaderStage':          [           ,         4,                          ],
+  'maxUniformBuffersPerShaderStage':           [           ,        12,                          ],
+
+  'maxUniformBufferBindingSize':               [           ,     65536, kMaxUnsignedLongLongValue],
+  'maxStorageBufferBindingSize':               [           , 134217728, kMaxUnsignedLongLongValue],
+  'minUniformBufferOffsetAlignment':           ['alignment',       256,                          ],
+  'minStorageBufferOffsetAlignment':           ['alignment',       256,                          ],
+
+  'maxVertexBuffers':                          [           ,         8,                          ],
+  'maxVertexAttributes':                       [           ,        16,                          ],
+  'maxVertexBufferArrayStride':                [           ,      2048,                          ],
+  'maxInterStageShaderComponents':             [           ,        60,                          ],
+
+  'maxComputeWorkgroupStorageSize':            [           ,     16352,                          ],
+  'maxComputeInvocationsPerWorkgroup':         [           ,       256,                          ],
+  'maxComputeWorkgroupSizeX':                  [           ,       256,                          ],
+  'maxComputeWorkgroupSizeY':                  [           ,       256,                          ],
+  'maxComputeWorkgroupSizeZ':                  [           ,        64,                          ],
+  'maxComputeWorkgroupsPerDimension':          [           ,     65535,                          ],
+} as const);
+
+/** List of all entries of GPUSupportedLimits. */
+export const kLimits = keysOf(kLimitInfo);
