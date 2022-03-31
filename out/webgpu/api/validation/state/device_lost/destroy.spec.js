@@ -914,7 +914,11 @@ Tests copyExternalImageToTexture from canvas on queue on destroyed device.
 params((u) => u.beginSubcases().combine('awaitLost', [true, false])).
 fn(async (t) => {
   const { awaitLost } = t.params;
+  if (typeof createImageBitmap === 'undefined') {
+    t.skip('Creating ImageBitmaps is not supported.');
+  }
   const imageBitmap = await createImageBitmap(new ImageData(new Uint8ClampedArray(4), 1, 1));
+
   const texture = t.device.createTexture({
     size: { width: 1, height: 1 },
     format: 'bgra8unorm',

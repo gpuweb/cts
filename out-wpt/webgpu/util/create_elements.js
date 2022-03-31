@@ -31,7 +31,11 @@ export function createCanvas(test, canvasType, width, height) {
       test.skip('Cannot create HTMLCanvasElement');
     }
   } else if (canvasType === 'offscreen') {
-    canvas = createOffscreenCanvas(test, width, height);
+    if (typeof OffscreenCanvas !== 'undefined') {
+      canvas = createOffscreenCanvas(test, width, height);
+    } else {
+      test.skip('Cannot create an OffscreenCanvas');
+    }
   } else {
     unreachable();
   }
