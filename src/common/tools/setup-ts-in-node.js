@@ -22,6 +22,12 @@ Module._resolveFilename = (request, parentModule, isMain) => {
         "Avoid the name `index.js`; we don't have Node-style path resolution: " + request
       );
     }
+
+    // Import of Node addon modules are valid and should pass through.
+    if (request.endsWith('.node')) {
+      return resolveFilename.call(this, request, parentModule, isMain);
+    }
+
     if (!request.endsWith('.js')) {
       throw new Error('All relative imports must end in .js: ' + request);
     }
