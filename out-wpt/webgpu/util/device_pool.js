@@ -18,14 +18,21 @@ export class DevicePool {
   /** Request a device from the pool. */
   async reserve(descriptor) {
     // Always attempt to initialize default device, to see if it succeeds.
+    let errorMessage = '';
     if (this.defaultHolder === 'uninitialized') {
       try {
         this.defaultHolder = await DeviceHolder.create(undefined);
       } catch (ex) {
         this.defaultHolder = 'failed';
+        if (ex instanceof Error) {
+          errorMessage = ` with ${ex.name} "${ex.message}"`;
+        }
       }
     }
-    assert(this.defaultHolder !== 'failed', 'WebGPU device failed to initialize; not retrying');
+    assert(
+      this.defaultHolder !== 'failed',
+      `WebGPU device failed to initialize${errorMessage}; not retrying`
+    );
 
     let holder;
     if (descriptor === undefined) {
