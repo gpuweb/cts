@@ -1,7 +1,6 @@
 export const description = `
 Tests writeBuffer validation.
 
-Note: destroyed buffer is tested in destroyed/.
 Note: buffer map state is tested in ./buffer_mapped.spec.ts.
 `;
 
