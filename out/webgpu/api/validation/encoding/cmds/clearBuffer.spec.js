@@ -4,6 +4,7 @@
 API validation tests for clearBuffer.
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { kBufferUsages } from '../../../../capability_info.js';
+import { kResourceStates } from '../../../../gpu_test.js';
 import { kMaxSafeMultipleOf8 } from '../../../../util/math.js';
 import { ValidationTest } from '../../validation_test.js';
 
@@ -27,17 +28,30 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
-g.test('invalid_buffer').
-desc(`Test that clearing an error buffer fails.`).
+g.test('buffer_state').
+desc(`Test that clearing an invalid or destroyed buffer fails.`).
+params((u) => u.combine('bufferState', kResourceStates)).
 fn(async (t) => {
-  const errorBuffer = t.getErrorBuffer();
+  const { bufferState } = t.params;
 
-  t.TestClearBuffer({
-    buffer: errorBuffer,
-    offset: 0,
+  const buffer = t.createBufferWithState(bufferState, {
     size: 8,
-    isSuccess: false });
+    usage: GPUBufferUsage.COPY_DST });
 
+
+  const commandEncoder = t.device.createCommandEncoder();
+  commandEncoder.clearBuffer(buffer, 0, 8);
+
+  if (bufferState === 'invalid') {
+    t.expectValidationError(() => {
+      commandEncoder.finish();
+    });
+  } else {
+    const cmd = commandEncoder.finish();
+    t.expectValidationError(() => {
+      t.device.queue.submit([cmd]);
+    }, bufferState === 'destroyed');
+  }
 });
 
 g.test('buffer,device_mismatch').

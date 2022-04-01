@@ -11,7 +11,7 @@ import { kRenderEncodeTypeParams, buildBufferOffsetAndSizeOOBTestParams } from '
 
 export const g = makeTestGroup(ValidationTest);
 
-g.test('index_buffer').
+g.test('index_buffer_state').
 desc(
 `
 Tests index buffer must be valid.

@@ -23,7 +23,7 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
-g.test('indirect_buffer')
+g.test('indirect_buffer_state')
   .desc(
     `
 Tests indirect buffer must be valid.

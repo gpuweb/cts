@@ -3,15 +3,41 @@
  **/ export const description = `
 Tests writeBuffer validation.
 
-Note: destroyed buffer is tested in destroyed/.
 Note: buffer map state is tested in ./buffer_mapped.spec.ts.
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { kTypedArrayBufferViewConstructors } from '../../../../common/util/util.js';
 import { GPUConst } from '../../../constants.js';
+import { kResourceStates } from '../../../gpu_test.js';
 import { ValidationTest } from '../validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);
+
+g.test('buffer_state')
+  .desc(
+    `
+Test that the buffer used for GPUQueue.writeBuffer() must be valid. Tests calling writeBuffer
+with {valid, invalid, destroyed} buffer.
+  `
+  )
+  .params(u =>
+    u //
+      .combine('bufferState', kResourceStates)
+  )
+  .fn(async t => {
+    const { bufferState } = t.params;
+    const buffer = t.createBufferWithState(bufferState, {
+      size: 16,
+      usage: GPUBufferUsage.COPY_DST,
+    });
+
+    const data = new Uint8Array(16);
+    const _valid = bufferState === 'valid';
+
+    t.expectValidationError(() => {
+      t.device.queue.writeBuffer(buffer, 0, data, 0, data.length);
+    }, !_valid);
+  });
 
 g.test('ranges')
   .desc(

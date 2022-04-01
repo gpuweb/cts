@@ -25,6 +25,7 @@ Test Plan:
 * Source buffer and destination buffer are the same buffer
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { kBufferUsages } from '../../../../capability_info.js';
+import { kResourceStates } from '../../../../gpu_test.js';
 import { kMaxSafeMultipleOf8 } from '../../../../util/math.js';
 import { ValidationTest } from '../../validation_test.js';
 
@@ -37,43 +38,58 @@ class F extends ValidationTest {
 
 
   {
-    const { srcBuffer, srcOffset, dstBuffer, dstOffset, copySize, isSuccess } = options;
+    const { srcBuffer, srcOffset, dstBuffer, dstOffset, copySize, expectation } = options;
 
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyBufferToBuffer(srcBuffer, srcOffset, dstBuffer, dstOffset, copySize);
 
-    this.expectValidationError(() => {
-      commandEncoder.finish();
-    }, !isSuccess);
+    if (expectation === 'FinishError') {
+      this.expectValidationError(() => {
+        commandEncoder.finish();
+      });
+    } else {
+      const cmd = commandEncoder.finish();
+      this.expectValidationError(() => {
+        this.device.queue.submit([cmd]);
+      }, expectation === 'SubmitError');
+    }
   }}
 
 
 export const g = makeTestGroup(F);
 
-g.test('copy_with_invalid_buffer').fn(async (t) => {
-  const validBuffer = t.device.createBuffer({
+g.test('buffer_state').
+params((u) =>
+u //
+.combine('srcBufferState', kResourceStates).
+combine('dstBufferState', kResourceStates)).
+
+fn(async (t) => {
+  const { srcBufferState, dstBufferState } = t.params;
+  const srcBuffer = t.createBufferWithState(srcBufferState, {
+    size: 16,
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
+
+  const dstBuffer = t.createBufferWithState(dstBufferState, {
     size: 16,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
 
 
-  const errorBuffer = t.getErrorBuffer();
+  const shouldFinishError = srcBufferState === 'invalid' || dstBufferState === 'invalid';
+  const shouldSubmitSuccess = srcBufferState === 'valid' && dstBufferState === 'valid';
+  const expectation = shouldSubmitSuccess ?
+  'Success' :
+  shouldFinishError ?
+  'FinishError' :
+  'SubmitError';
 
   t.TestCopyBufferToBuffer({
-    srcBuffer: errorBuffer,
+    srcBuffer,
     srcOffset: 0,
-    dstBuffer: validBuffer,
+    dstBuffer,
     dstOffset: 0,
     copySize: 8,
-    isSuccess: false });
-
-
-  t.TestCopyBufferToBuffer({
-    srcBuffer: validBuffer,
-    srcOffset: 0,
-    dstBuffer: errorBuffer,
-    dstOffset: 0,
-    copySize: 8,
-    isSuccess: false });
+    expectation });
 
 });
 
@@ -114,7 +130,7 @@ fn(async (t) => {
     dstBuffer,
     dstOffset: 0,
     copySize: 8,
-    isSuccess: !mismatched });
+    expectation: mismatched ? 'FinishError' : 'Success' });
 
 });
 
@@ -137,6 +153,7 @@ fn(async (t) => {
 
 
   const isSuccess = srcUsage === GPUBufferUsage.COPY_SRC && dstUsage === GPUBufferUsage.COPY_DST;
+  const expectation = isSuccess ? 'Success' : 'FinishError';
 
   t.TestCopyBufferToBuffer({
     srcBuffer,
@@ -144,7 +161,7 @@ fn(async (t) => {
     dstBuffer,
     dstOffset: 0,
     copySize: 8,
-    isSuccess });
+    expectation });
 
 });
 
@@ -174,7 +191,7 @@ fn(async (t) => {
     dstBuffer,
     dstOffset: 0,
     copySize,
-    isSuccess });
+    expectation: isSuccess ? 'Success' : 'FinishError' });
 
 });
 
@@ -209,7 +226,7 @@ fn(async (t) => {
     dstBuffer,
     dstOffset,
     copySize: 8,
-    isSuccess });
+    expectation: isSuccess ? 'Success' : 'FinishError' });
 
 });
 
@@ -246,7 +263,7 @@ fn(async (t) => {
     dstBuffer,
     dstOffset,
     copySize,
-    isSuccess: false });
+    expectation: 'FinishError' });
 
 });
 
@@ -281,7 +298,7 @@ fn(async (t) => {
     dstBuffer,
     dstOffset,
     copySize,
-    isSuccess: _isSuccess });
+    expectation: _isSuccess ? 'Success' : 'FinishError' });
 
 });
 
@@ -306,7 +323,7 @@ fn(async (t) => {
     dstBuffer: buffer,
     dstOffset,
     copySize,
-    isSuccess: false });
+    expectation: 'FinishError' });
 
 });
 //# sourceMappingURL=copyBufferToBuffer.spec.js.map

@@ -136,7 +136,7 @@ g.test('dispatch_sizes')
   });
 
 const kBufferData = new Uint32Array(6).fill(1);
-g.test('indirect_dispatch_buffer')
+g.test('indirect_dispatch_buffer_state')
   .desc(
     `
 Test dispatchIndirect validation by submitting various dispatches with a no-op pipeline and an

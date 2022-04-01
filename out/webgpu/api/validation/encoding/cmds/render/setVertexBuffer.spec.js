@@ -37,7 +37,7 @@ fn((t) => {
   validateFinish(slot < kLimitInfo.maxVertexBuffers.default);
 });
 
-g.test('vertex_buffer').
+g.test('vertex_buffer_state').
 desc(
 `
 Tests vertex buffer must be valid.
