@@ -37,7 +37,7 @@ Tests slot must be less than the maxVertexBuffers in device limits.
     validateFinish(slot < kLimitInfo.maxVertexBuffers.default);
   });
 
-g.test('vertex_buffer')
+g.test('vertex_buffer_state')
   .desc(
     `
 Tests vertex buffer must be valid.

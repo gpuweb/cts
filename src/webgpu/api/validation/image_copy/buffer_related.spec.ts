@@ -15,7 +15,7 @@ import { ImageCopyTest, formatCopyableWithMethod } from './image_copy.js';
 
 export const g = makeTestGroup(ImageCopyTest);
 
-g.test('valid')
+g.test('buffer_state')
   .desc(
     `
 Test that the buffer must be valid and not destroyed.

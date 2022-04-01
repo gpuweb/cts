@@ -10,10 +10,10 @@ export const g = makeTestGroup(ValidationTest);
 
 export const kQueryCount = 2;
 
-g.test('valid')
+g.test('queryset_and_destination_buffer_state')
   .desc(
     `
-Tests that resolve query set must be with valid object.
+Tests that resolve query set must be with valid query set and destination buffer.
 - {invalid, destroyed} GPUQuerySet results in validation error.
 - {invalid, destroyed} destination buffer results in validation error.
   `

@@ -58,7 +58,7 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
-g.test('valid')
+g.test('buffer_state')
   .params(u =>
     u //
       .combine('srcBufferState', kResourceStates)

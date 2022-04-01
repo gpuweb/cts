@@ -16,7 +16,7 @@ import { ValidationTest } from '../validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);
 
-g.test('valid')
+g.test('buffer_state')
   .desc(
     `
 Test that the buffer used for GPUQueue.writeBuffer() must be valid. Tests calling writeBuffer

@@ -28,7 +28,7 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
-g.test('valid')
+g.test('buffer_state')
   .desc(`Test that clearing an invalid or destroyed buffer fails.`)
   .params(u => u.combine('bufferState', kResourceStates))
   .fn(async t => {
