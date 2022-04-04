@@ -101,16 +101,7 @@ fn(async (t) => {
   {
     const success = depthStencilBufferTextureCopySupported('WriteTexture', format, aspect);
     const uploadData = new Uint8Array(uploadBufferSize);
-    t.testWriteTexture(
-    { texture, aspect },
-    uploadData,
-    {
-      bytesPerRow: textureSize.width,
-      rowsPerImage: textureSize.height },
-
-    textureSize,
-    success);
-
+    t.testWriteTexture({ texture, aspect }, uploadData, {}, textureSize, success);
   }
 });
 
