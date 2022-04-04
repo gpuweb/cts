@@ -138,6 +138,7 @@ The entryPoint assigned in descriptor include:
 - Empty string
 - Mistyping
 - Containing invalid char, including space and control codes (Null character)
+- Unicode entrypoints and their ASCIIfied version
 `
   )
   .params(u =>
@@ -157,6 +158,8 @@ The entryPoint assigned in descriptor include:
       { shaderModuleEntryPoint: 'main_t12V3', stageEntryPoint: 'main_t12V3' },
       { shaderModuleEntryPoint: 'main_t12V3', stageEntryPoint: 'main_t12V5' },
       { shaderModuleEntryPoint: 'main_t12V3', stageEntryPoint: '_main_t12V3' },
+      { shaderModuleEntryPoint: 'séquençage', stageEntryPoint: 'séquençage' },
+      { shaderModuleEntryPoint: 'séquençage', stageEntryPoint: 'sequencage' },
     ])
   )
   .fn(async t => {
