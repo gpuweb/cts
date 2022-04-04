@@ -13,7 +13,7 @@ import {
   kTextureDimensions,
 } from '../../../../capability_info.js';
 import { kResourceStates } from '../../../../gpu_test.js';
-import { align } from '../../../../util/math.js';
+import { align, lcm } from '../../../../util/math.js';
 import { ValidationTest } from '../../validation_test.js';
 
 class F extends ValidationTest {
@@ -356,16 +356,20 @@ Test the formats of textures in copyTextureToTexture must be copy-compatible.
     const dstFormatInfo = kTextureFormatInfo[dstFormat];
     await t.selectDeviceOrSkipTestCase([srcFormatInfo.feature, dstFormatInfo.feature]);
 
-    const kTextureSize = { width: 16, height: 16, depthOrArrayLayers: 1 };
+    const textureSize = {
+      width: lcm(srcFormatInfo.blockWidth, dstFormatInfo.blockWidth),
+      height: lcm(srcFormatInfo.blockHeight, dstFormatInfo.blockHeight),
+      depthOrArrayLayers: 1,
+    };
 
     const srcTexture = t.device.createTexture({
-      size: kTextureSize,
+      size: textureSize,
       format: srcFormat,
       usage: GPUTextureUsage.COPY_SRC,
     });
 
     const dstTexture = t.device.createTexture({
-      size: kTextureSize,
+      size: textureSize,
       format: dstFormat,
       usage: GPUTextureUsage.COPY_DST,
     });
@@ -378,7 +382,7 @@ Test the formats of textures in copyTextureToTexture must be copy-compatible.
     t.TestCopyTextureToTexture(
       { texture: srcTexture },
       { texture: dstTexture },
-      kTextureSize,
+      textureSize,
       isSuccess ? 'Success' : 'FinishError'
     );
   });
