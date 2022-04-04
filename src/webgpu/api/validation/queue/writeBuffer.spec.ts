@@ -106,7 +106,7 @@ Also verifies that the specified data range:
       t.expectValidationError(() => queue.writeBuffer(buffer, 8, arrayMd));
 
       // Writing the full buffer with a unaligned offset.
-      t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 3, arraySm));
+      t.expectValidationError(() => queue.writeBuffer(buffer, 3, arraySm));
 
       // Writing remainder of buffer from offset.
       queue.writeBuffer(buffer, 0, arraySm, 4);
