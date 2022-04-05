@@ -139,7 +139,7 @@ class CopyExternalImageToTextureTest extends ValidationTest {
     if (typeof createImageBitmap === 'undefined') {
       this.skip('Creating ImageBitmaps is not supported.');
     }
-    return this.createImageBitmap(image);
+    return createImageBitmap(image);
   }
 
   runTest(imageBitmapCopyView, textureCopyView, copySize, validationScopeSuccess, exceptionName) {
