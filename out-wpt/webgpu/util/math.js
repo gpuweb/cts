@@ -347,3 +347,22 @@ export function isPowerOfTwo(n) {
   }
   return n !== 0 && (n & (n - 1)) === 0;
 }
+
+/** @returns the Greatest Common Divisor (GCD) of the inputs */
+export function gcd(a, b) {
+  assert(Number.isInteger(a) && a > 0);
+  assert(Number.isInteger(b) && b > 0);
+
+  while (b !== 0) {
+    const bTemp = b;
+    b = a % b;
+    a = bTemp;
+  }
+
+  return a;
+}
+
+/** @returns the Least Common Multiplier (LCM) of the inputs */
+export function lcm(a, b) {
+  return (a * b) / gcd(a, b);
+}
