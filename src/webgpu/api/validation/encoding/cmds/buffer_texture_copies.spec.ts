@@ -221,9 +221,10 @@ g.test('depth_stencil_format,copy_buffer_size')
 g.test('depth_stencil_format,copy_buffer_offset')
   .desc(
     `
-    Validate for every depth stencil formats the buffer offset must be a multiple of 4 in
-    copyBufferToTexture() and copyTextureToBuffer(), but the offset in writeTexture() doesn't always
-    need to be a multiple of 4.
+    Validate for every depth stencil formats the buffer offset must be a multiple of the block size
+    in copyBufferToTexture() and copyTextureToBuffer(), but the offset in writeTexture() doesn't
+    always need to be a multiple of the block size.
+    TODO: test copying to aspects of depth-stencil formats.
     `
   )
   .params(u =>
@@ -265,7 +266,7 @@ g.test('depth_stencil_format,copy_buffer_offset')
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
 
-    const isSuccess = copyType === 'WriteTexture' ? true : offset % 4 === 0;
+    const isSuccess = copyType === 'WriteTexture' ? true : offset % texelAspectSize === 0;
 
     if (copyType === 'CopyB2T') {
       t.testCopyBufferToTexture(

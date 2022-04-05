@@ -262,7 +262,7 @@ Test that rowsPerImage has no alignment constraints.
 g.test('offset_alignment')
   .desc(
     `
-Test the alignment requirement on the linear data offset (block size, or 4 for depth-stencil).
+Test the block size alignment requirement on the linear data offset.
 - for various copy methods
 - for all sized formats
 - for all dimensions
@@ -293,11 +293,7 @@ Test the alignment requirement on the linear data offset (block size, or 4 for d
 
     let success = false;
     if (method === 'WriteTexture') success = true;
-    if (info.depth || info.stencil) {
-      if (offset % 4 === 0) success = true;
-    } else {
-      if (offset % info.bytesPerBlock === 0) success = true;
-    }
+    if (offset % info.bytesPerBlock === 0) success = true;
 
     t.testRun({ texture }, { offset, bytesPerRow: 256 }, size, {
       dataSize: offset + info.bytesPerBlock,
