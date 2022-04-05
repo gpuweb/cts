@@ -648,9 +648,6 @@ assertTypeTrue();
 /** Dynamic buffer offsets require offset to be divisible by 256, by spec. */
 export const kMinDynamicBufferOffsetAlignment = 256;
 
-/** Maximum number of bindings per GPUBindGroup(Layout), by spec. */
-export const kMaxBindingsPerBindGroup = 16;
-
 /** Default `PerShaderStage` binding limits, by spec. */
 export const kPerStageBindingLimits =
 
