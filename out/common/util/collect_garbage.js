@@ -10,7 +10,7 @@
  */
 export async function attemptGarbageCollection() {
 
-  const w = self;
+  const w = globalThis;
   if (w.GCController) {
     w.GCController.collect();
     return;
