@@ -963,3 +963,7 @@ export const kLimitInfo = /* prettier-ignore */ makeTable(
 
 /** List of all entries of GPUSupportedLimits. */
 export const kLimits = keysOf(kLimitInfo);
+
+export function viewCompatible(a: GPUTextureFormat, b: GPUTextureFormat): boolean {
+  return a === b || a + '-srgb' === b || b + '-srgb' === a;
+}

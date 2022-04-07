@@ -23,7 +23,6 @@ g.test('format')
 - x= every texture format
 - x= every valid view format (including same)
 - x= sampleCount {1, 4} if valid
-- x= every possible view read method (see above)
 `
   )
   .unimplemented();
@@ -36,7 +35,6 @@ g.test('dimension')
 - x= {every texture dimension} x {every valid view dimension}
   (per gpuweb#79 no dimension-count reinterpretations, like 2d-array <-> 3d, are possible)
 - x= sampleCount {1, 4} if valid
-- x= every possible view read method (see above)
 `
   )
   .unimplemented();
@@ -48,7 +46,6 @@ g.test('aspect')
 - x= every depth/stencil format
 - x= {"all", "stencil-only", "depth-only"} where valid for the format
 - x= sampleCount {1, 4} if valid
-- x= every possible view read method (see above)
 `
   )
   .unimplemented();

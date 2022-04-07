@@ -8,6 +8,7 @@ import {
   kTextureFormatInfo,
   kRenderableColorTextureFormats,
   kRegularTextureFormats,
+  viewCompatible,
 } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
@@ -29,10 +30,6 @@ const kColors = [
 ];
 
 const kTextureSize = 16;
-
-function supportsReinterpretation(a: GPUTextureFormat, b: GPUTextureFormat) {
-  return a + '-srgb' === b || b + '-srgb' === a;
-}
 
 function makeInputTexelView(format: EncodableTextureFormat) {
   return TexelView.fromTexelsAsColors(
@@ -98,12 +95,14 @@ function makeBlitPipeline(
 }
 
 g.test('texture_binding')
-  .desc(`Test that a regular texture allocated as 'format' may be sampled as 'viewFormat'.`)
+  .desc(`Test that a regular texture allocated as 'format' is correctly sampled as 'viewFormat'.`)
   .params(u =>
     u //
       .combine('format', kRegularTextureFormats)
       .combine('viewFormat', kRegularTextureFormats)
-      .filter(({ format, viewFormat }) => supportsReinterpretation(format, viewFormat))
+      .filter(
+        ({ format, viewFormat }) => format !== viewFormat && viewCompatible(format, viewFormat)
+      )
   )
   .fn(async t => {
     const { format, viewFormat } = t.params;
@@ -207,71 +206,57 @@ g.test('texture_binding')
     t.expectOK(result);
   });
 
-g.test('render_or_resolve_attachment')
+g.test('render_and_resolve_attachment')
   .desc(
-    `Test that a color render attachment allocated as 'renderFormat' may be rendered to as 'renderViewFormat',
-and resolved to an attachment allocated as 'resolveFormat' viewed as 'resolveViewFormat'.`
+    `Test that a color render attachment allocated as 'format' is correctly rendered to as 'viewFormat',
+and resolved to an attachment allocated as 'format' viewed as 'viewFormat'.`
   )
   .params(u =>
     u //
-      .combine('renderFormat', kRenderableColorTextureFormats)
-      .combine('renderViewFormat', kRenderableColorTextureFormats)
+      .combine('format', kRenderableColorTextureFormats)
+      .combine('viewFormat', kRenderableColorTextureFormats)
       .filter(
-        ({ renderFormat, renderViewFormat }) =>
-          // Allow formats to be the same since reinterpretation may instead occur for the resolve format.
-          renderFormat === renderViewFormat ||
-          supportsReinterpretation(renderFormat, renderViewFormat)
+        ({ format, viewFormat }) => format !== viewFormat && viewCompatible(format, viewFormat)
       )
-      .combine('resolveFormat', [undefined, ...kRenderableColorTextureFormats])
-      .combine('resolveViewFormat', [undefined, ...kRenderableColorTextureFormats])
-      .filter(
-        ({ renderFormat, renderViewFormat, resolveFormat, resolveViewFormat }) =>
-          (renderViewFormat === resolveViewFormat || resolveViewFormat === undefined) && // Required by validation to match.
-          // At least one of the views should be reinterpreted.
-          (renderFormat !== renderViewFormat || resolveFormat !== resolveViewFormat) &&
-          // Allow formats to be the same since reinterpretation may occur for the render format.
-          (resolveFormat === resolveViewFormat ||
-            supportsReinterpretation(resolveFormat!, resolveViewFormat!))
-      )
+      .combine('sampleCount', [1, 4])
   )
   .fn(async t => {
-    const { renderFormat, renderViewFormat, resolveFormat, resolveViewFormat } = t.params;
+    const { format, viewFormat, sampleCount } = t.params;
 
     // Make an input texel view.
-    const inputTexelView = makeInputTexelView(renderFormat);
+    const inputTexelView = makeInputTexelView(format);
 
-    const sampleCount = resolveFormat !== undefined ? 4 : 1;
-
-    // Create the renderTexture as |renderFormat|.
+    // Create the renderTexture as |format|.
     const renderTexture = t.device.createTexture({
-      format: renderFormat,
+      format,
       size: [kTextureSize, kTextureSize],
       usage:
         GPUTextureUsage.RENDER_ATTACHMENT |
         (sampleCount > 1 ? GPUTextureUsage.TEXTURE_BINDING : GPUTextureUsage.COPY_SRC),
-      viewFormats: [renderViewFormat],
+      viewFormats: [viewFormat],
       sampleCount,
     });
 
     const resolveTexture =
-      resolveFormat &&
-      t.device.createTexture({
-        format: resolveFormat,
-        size: [kTextureSize, kTextureSize],
-        usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
-        viewFormats: [resolveViewFormat!],
-      });
+      sampleCount === 1
+        ? undefined
+        : t.device.createTexture({
+            format,
+            size: [kTextureSize, kTextureSize],
+            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+            viewFormats: [viewFormat],
+          });
 
-    // Also create the sample source as |renderFormat|. We will sample this texture
+    // Also create the sample source as |format|. We will sample this texture
     // into |renderTexture|. Using the same format keeps the same number of bits of precision.
     const sampleSource = t.device.createTexture({
-      format: renderFormat,
+      format,
       size: [kTextureSize, kTextureSize],
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     });
 
     // Write data out to bytes.
-    const inputTexelSize = kTextureFormatInfo[renderFormat].bytesPerBlock;
+    const inputTexelSize = kTextureFormatInfo[format].bytesPerBlock;
     const inputTextureData = new Uint8ClampedArray(inputTexelSize * kTextureSize * kTextureSize);
     inputTexelView.writeTextureData(inputTextureData, {
       bytesPerRow: inputTexelSize * kTextureSize,
@@ -290,13 +275,13 @@ and resolved to an attachment allocated as 'resolveFormat' viewed as 'resolveVie
       [kTextureSize, kTextureSize]
     );
 
-    // Reinterpret the renderTexture as |renderViewFormat|.
-    const reinterpretedRenderView = renderTexture.createView({ format: renderViewFormat });
+    // Reinterpret the renderTexture as |viewFormat|.
+    const reinterpretedRenderView = renderTexture.createView({ format: viewFormat });
     const reinterpretedResolveView =
-      resolveTexture && resolveTexture.createView({ format: resolveViewFormat });
+      resolveTexture && resolveTexture.createView({ format: viewFormat });
 
     // Create a pipeline to blit a src texture to the render attachment.
-    const pipeline = makeBlitPipeline(t.device, renderViewFormat, {
+    const pipeline = makeBlitPipeline(t.device, viewFormat, {
       sample: 1,
       render: sampleCount,
     });
@@ -333,7 +318,7 @@ and resolved to an attachment allocated as 'resolveFormat' viewed as 'resolveVie
     // the contents.
     const singleSampleRenderTexture = resolveTexture
       ? t.device.createTexture({
-          format: renderFormat,
+          format,
           size: [kTextureSize, kTextureSize],
           usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
         })
@@ -343,7 +328,7 @@ and resolved to an attachment allocated as 'resolveFormat' viewed as 'resolveVie
       // Create a pipeline to blit the multisampled render texture to a non-multisample texture.
       // We are basically performing a manual resolve step to the same format as the original
       // render texture to check its contents.
-      const pipeline = makeBlitPipeline(t.device, renderFormat, { sample: sampleCount, render: 1 });
+      const pipeline = makeBlitPipeline(t.device, format, { sample: sampleCount, render: 1 });
       const pass = commandEncoder.beginRenderPass({
         colorAttachments: [
           {
@@ -374,7 +359,7 @@ and resolved to an attachment allocated as 'resolveFormat' viewed as 'resolveVie
     t.device.queue.submit([commandEncoder.finish()]);
 
     // Check the rendered contents.
-    const renderViewTexels = TexelView.fromTexelsAsColors(renderViewFormat, inputTexelView.color, {
+    const renderViewTexels = TexelView.fromTexelsAsColors(viewFormat, inputTexelView.color, {
       clampToFormatRange: true,
     });
     t.expectOK(
@@ -389,23 +374,15 @@ and resolved to an attachment allocated as 'resolveFormat' viewed as 'resolveVie
 
     // Check the resolved contents.
     if (resolveTexture) {
-      // Vulkan behavior:
-      // const renderView = TexelView.fromTexelsAsBytes(renderFormat, renderViewTexels.bytes);
-      // const expTexelView = TexelView.fromTexelsAsColors(resolveFormat!, renderTexels.color, {
-      //   clampToFormatRange: true,
-      // });
-
-      // Metal behavior:
-      const resolveView = TexelView.fromTexelsAsColors(resolveViewFormat!, renderViewTexels.color, {
+      const resolveView = TexelView.fromTexelsAsColors(viewFormat, renderViewTexels.color, {
         clampToFormatRange: true,
       });
-      const expTexelView = TexelView.fromTexelsAsBytes(resolveFormat!, resolveView.bytes);
 
       const result = await textureContentIsOKByT2B(
         t,
         { texture: resolveTexture },
         [kTextureSize, kTextureSize],
-        { expTexelView },
+        { expTexelView: resolveView },
         { maxDiffULPsForNormFormat: 2 }
       );
       t.expectOK(result);
