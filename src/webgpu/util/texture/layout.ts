@@ -2,6 +2,7 @@ import { assert, memcpy } from '../../../common/util/util.js';
 import {
   EncodableTextureFormat,
   kTextureFormatInfo,
+  resolvePerAspectFormat,
   SizedTextureFormat,
 } from '../../capability_info.js';
 import { align } from '../math.js';
@@ -21,9 +22,15 @@ export interface LayoutOptions {
   mipLevel: number;
   bytesPerRow?: number;
   rowsPerImage?: number;
+  aspect?: GPUTextureAspect;
 }
 
-const kDefaultLayoutOptions = { mipLevel: 0, bytesPerRow: undefined, rowsPerImage: undefined };
+const kDefaultLayoutOptions = {
+  mipLevel: 0,
+  bytesPerRow: undefined,
+  rowsPerImage: undefined,
+  aspect: 'all' as const,
+};
 
 /** The info returned by {@link getTextureSubCopyLayout}. */
 export interface TextureSubCopyLayout {
@@ -54,10 +61,10 @@ export interface TextureCopyLayout extends TextureSubCopyLayout {
  * MAINTENANCE_TODO: Change input/output to Required<GPUExtent3DDict> for consistency.
  */
 export function getTextureCopyLayout(
-  format: SizedTextureFormat,
+  format: GPUTextureFormat,
   dimension: GPUTextureDimension,
   baseSize: readonly [number, number, number],
-  { mipLevel, bytesPerRow, rowsPerImage }: LayoutOptions = kDefaultLayoutOptions
+  { mipLevel, bytesPerRow, rowsPerImage, aspect }: LayoutOptions = kDefaultLayoutOptions
 ): TextureCopyLayout {
   const mipSize = physicalMipSize(
     { width: baseSize[0], height: baseSize[1], depthOrArrayLayers: baseSize[2] },
@@ -66,7 +73,7 @@ export function getTextureCopyLayout(
     mipLevel
   );
 
-  const layout = getTextureSubCopyLayout(format, mipSize, { bytesPerRow, rowsPerImage });
+  const layout = getTextureSubCopyLayout(format, mipSize, { bytesPerRow, rowsPerImage, aspect });
   return { ...layout, mipSize: [mipSize.width, mipSize.height, mipSize.depthOrArrayLayers] };
 }
 
@@ -77,14 +84,21 @@ export function getTextureCopyLayout(
  * Computes default values for `bytesPerRow` and `rowsPerImage` if not specified.
  */
 export function getTextureSubCopyLayout(
-  format: SizedTextureFormat,
+  format: GPUTextureFormat,
   copySize: GPUExtent3D,
   {
     bytesPerRow,
     rowsPerImage,
-  }: { readonly bytesPerRow?: number; readonly rowsPerImage?: number } = {}
+    aspect = 'all' as const,
+  }: {
+    readonly bytesPerRow?: number;
+    readonly rowsPerImage?: number;
+    readonly aspect?: GPUTextureAspect;
+  } = {}
 ): TextureSubCopyLayout {
+  format = resolvePerAspectFormat(format, aspect);
   const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
+  assert(bytesPerBlock !== undefined);
 
   const copySize_ = reifyExtent3D(copySize);
   assert(
@@ -101,7 +115,7 @@ export function getTextureSubCopyLayout(
     depthOrArrayLayers: copySize_.depthOrArrayLayers,
   };
 
-  const minBytesPerRow = copySizeBlocks.width * bytesPerBlock;
+  const minBytesPerRow = copySizeBlocks.width * bytesPerBlock!;
   const alignedMinBytesPerRow = align(minBytesPerRow, kBytesPerRowAlignment);
   if (bytesPerRow !== undefined) {
     assert(bytesPerRow >= alignedMinBytesPerRow);
@@ -118,11 +132,11 @@ export function getTextureSubCopyLayout(
 
   const bytesPerSlice = bytesPerRow * rowsPerImage;
   const sliceSize =
-    bytesPerRow * (copySizeBlocks.height - 1) + bytesPerBlock * copySizeBlocks.width;
+    bytesPerRow * (copySizeBlocks.height - 1) + bytesPerBlock! * copySizeBlocks.width;
   const byteLength = bytesPerSlice * (copySizeBlocks.depthOrArrayLayers - 1) + sliceSize;
 
   return {
-    bytesPerBlock,
+    bytesPerBlock: bytesPerBlock!,
     byteLength: align(byteLength, kBufferCopyAlignment),
     minBytesPerRow,
     bytesPerRow,

@@ -1,4 +1,5 @@
 import { assert } from '../../../../../common/util/util.js';
+import { resolvePerAspectFormat } from '../../../../capability_info.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { virtualMipSize } from '../../../../util/texture/base.js';
 import { CheckContents } from '../texture_zero.spec.js';
@@ -149,13 +150,14 @@ const checkContents: (type: 'depth' | 'stencil', ...args: Parameters<CheckConten
       },
     });
 
+    const pipelineDSFormat = resolvePerAspectFormat(params.format, params.aspect);
     switch (type) {
       case 'depth': {
         const expectedDepth = t.stateToTexelComponents[state].Depth;
         assert(expectedDepth !== undefined);
 
         pass.setPipeline(
-          getDepthTestEqualPipeline(t, params.format, params.sampleCount, expectedDepth)
+          getDepthTestEqualPipeline(t, pipelineDSFormat, params.sampleCount, expectedDepth)
         );
         break;
       }
@@ -164,7 +166,7 @@ const checkContents: (type: 'depth' | 'stencil', ...args: Parameters<CheckConten
         const expectedStencil = t.stateToTexelComponents[state].Stencil;
         assert(expectedStencil !== undefined);
 
-        pass.setPipeline(getStencilTestEqualPipeline(t, params.format, params.sampleCount));
+        pass.setPipeline(getStencilTestEqualPipeline(t, pipelineDSFormat, params.sampleCount));
         pass.setStencilReference(expectedStencil);
         break;
       }
