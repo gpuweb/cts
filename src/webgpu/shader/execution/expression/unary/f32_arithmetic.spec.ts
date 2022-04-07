@@ -5,14 +5,8 @@ Execution Tests for the f32 arithmetic unary expression operations
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { anyOf, correctlyRoundedThreshold } from '../../../../util/compare.js';
-import { kValue } from '../../../../util/constants.js';
 import { f32, TypeF32 } from '../../../../util/conversion.js';
-import {
-  biasedRange,
-  isSubnormalNumber,
-  linearRange,
-  quantizeToF32,
-} from '../../../../util/math.js';
+import { fullF32Range, isSubnormalNumber, quantizeToF32 } from '../../../../util/math.js';
 import { Case, Config, run } from '../expression.js';
 
 import { unary } from './unary.js';
@@ -46,14 +40,7 @@ Accuracy: Correctly rounded
       }
     };
 
-    const numeric_range = [
-      ...biasedRange(kValue.f32.negative.max, kValue.f32.negative.min, 50),
-      ...linearRange(kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max, 10),
-      0.0,
-      ...linearRange(kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, 10),
-      ...biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, 10),
-    ];
-    const cases = numeric_range.map(x => makeCase(x));
+    const cases = fullF32Range(250, 20, 20, 250).map(x => makeCase(x));
 
     run(t, unary('-'), [TypeF32], TypeF32, cfg, cases);
   });
