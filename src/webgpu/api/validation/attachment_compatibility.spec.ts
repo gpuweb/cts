@@ -18,6 +18,60 @@ import {
 import { ValidationTest } from './validation_test.js';
 
 const kColorAttachmentCounts = range(kMaxColorAttachments, i => i + 1);
+const kColorAttachments = kColorAttachmentCounts
+  .map(count => {
+    // generate cases with 0..1 null attachments at different location
+    // e.g. count == 2
+    // [
+    //    [1, 1],
+    //    [0, 1],
+    //    [1, 0],
+    // ]
+    // 0 means null attachment, 1 means non-null attachment, at the slot
+
+    // Special cases: we need at least a color attachment, when we don't have depth stencil attachment
+    if (count === 1) {
+      return [[1]];
+    }
+    if (count === 2) {
+      return [
+        [1, 1],
+        [0, 1],
+        [1, 0],
+      ];
+    }
+
+    // [1, 1, ..., 1]: all color attachment are used
+    let result = [new Array<number>(count).fill(1)];
+
+    // [1, 0, 1, ..., 1]: generate cases with one null attachment at different locations
+    result = result.concat(
+      range(count, i => {
+        const r = new Array<number>(count).fill(1);
+        r[i] = 0;
+        return r;
+      })
+    );
+
+    // [1, 0, 1, ..., 0, 1]: generate cases with two null attachments at different locations
+    result = result.concat(
+      range(count - 1, i => {
+        const cases = [] as number[][];
+        for (let j = i + 1; j < count; j++) {
+          const r = new Array<number>(count).fill(1);
+          r[i] = 0;
+          r[j] = 0;
+          cases.push(r);
+        }
+
+        return cases;
+      }).flat()
+    );
+
+    return result;
+  })
+  .flat() as number[][];
+
 const kDepthStencilAttachmentFormats = [
   undefined,
   ...kSizedDepthStencilFormats,
@@ -38,15 +92,17 @@ class F extends ValidationTest {
   }
 
   createColorAttachment(
-    format: GPUTextureFormat,
+    format: GPUTextureFormat | undefined,
     sampleCount?: number
-  ): GPURenderPassColorAttachment {
-    return {
-      view: this.createAttachmentTextureView(format, sampleCount),
-      clearValue: [0, 0, 0, 0],
-      loadOp: 'clear',
-      storeOp: 'store',
-    };
+  ): GPURenderPassColorAttachment | undefined {
+    return format === undefined
+      ? undefined
+      : {
+          view: this.createAttachmentTextureView(format, sampleCount),
+          clearValue: [0, 0, 0, 0],
+          loadOp: 'clear',
+          storeOp: 'store',
+        };
   }
 
   createDepthAttachment(
@@ -70,7 +126,7 @@ class F extends ValidationTest {
   }
 
   createRenderPipeline(
-    targets: Iterable<GPUColorTargetState>,
+    targets: Iterable<GPUColorTargetState | undefined>,
     depthStencil?: GPUDepthStencilState,
     sampleCount?: number
   ) {
@@ -132,8 +188,6 @@ g.test('render_pass_and_bundle,color_count')
   .desc(
     `
   Test that the number of color attachments in render passes and bundles must match.
-
-  TODO: Add sparse color attachment compatibility test when defined by specification
   `
   )
   .paramsSubcasesOnly(u =>
@@ -155,6 +209,48 @@ g.test('render_pass_and_bundle,color_count')
     pass.executeBundles([bundle]);
     pass.end();
     validateFinishAndSubmit(passCount === bundleCount, true);
+  });
+
+g.test('render_pass_and_bundle,color_sparse')
+  .desc(
+    `
+  Test that each of color attachments in render passes and bundles must match.
+  `
+  )
+  .params(u =>
+    u //
+      // introduce attachmentCount to make it easier to split the test
+      .combine('attachmentCount', kColorAttachmentCounts)
+      .beginSubcases()
+      .combine('passAttachments', kColorAttachments)
+      .combine('bundleAttachments', kColorAttachments)
+      .filter(
+        p =>
+          p.attachmentCount === p.passAttachments.length &&
+          p.attachmentCount === p.bundleAttachments.length
+      )
+  )
+  .fn(t => {
+    const { passAttachments, bundleAttachments } = t.params;
+    const colorFormats = bundleAttachments.map(i => (i === 1 ? 'rgba8unorm' : undefined));
+    const bundleEncoder = t.device.createRenderBundleEncoder({
+      colorFormats,
+    });
+    const bundle = bundleEncoder.finish();
+
+    const { encoder, validateFinishAndSubmit } = t.createEncoder('non-pass');
+    const colorAttachments = passAttachments.map(i =>
+      t.createColorAttachment(i === 1 ? 'rgba8unorm' : undefined)
+    );
+    const pass = encoder.beginRenderPass({
+      colorAttachments,
+    });
+    pass.executeBundles([bundle]);
+    pass.end();
+    validateFinishAndSubmit(
+      passAttachments.every((v, i) => v === bundleAttachments[i]),
+      true
+    );
   });
 
 g.test('render_pass_and_bundle,depth_format')
@@ -237,8 +333,6 @@ g.test('render_pass_or_bundle_and_pipeline,color_count')
     `
 Test that the number of color attachments in render passes or bundles match the pipeline color
 count.
-
-TODO: Add sparse color attachment compatibility test when defined by specification
 `
   )
   .params(u =>
@@ -259,6 +353,45 @@ TODO: Add sparse color attachment compatibility test when defined by specificati
     });
     encoder.setPipeline(pipeline);
     validateFinishAndSubmit(encoderCount === pipelineCount, true);
+  });
+
+g.test('render_pass_or_bundle_and_pipeline,color_sparse')
+  .desc(
+    `
+Test that each of color attachments in render passes or bundles match that of the pipeline.
+`
+  )
+  .params(u =>
+    u
+      .combine('encoderType', ['render pass', 'render bundle'] as const)
+      // introduce attachmentCount to make it easier to split the test
+      .combine('attachmentCount', kColorAttachmentCounts)
+      .beginSubcases()
+      .combine('encoderAttachments', kColorAttachments)
+      .combine('pipelineAttachments', kColorAttachments)
+      .filter(
+        p =>
+          p.attachmentCount === p.encoderAttachments.length &&
+          p.attachmentCount === p.pipelineAttachments.length
+      )
+  )
+  .fn(t => {
+    const { encoderType, encoderAttachments, pipelineAttachments } = t.params;
+
+    const colorTargets = pipelineAttachments.map(i =>
+      i === 1 ? ({ format: 'rgba8unorm', writeMask: 0 } as GPUColorTargetState) : undefined
+    );
+    const pipeline = t.createRenderPipeline(colorTargets);
+
+    const colorFormats = encoderAttachments.map(i => (i === 1 ? 'rgba8unorm' : undefined));
+    const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType, {
+      attachmentInfo: { colorFormats },
+    });
+    encoder.setPipeline(pipeline);
+    validateFinishAndSubmit(
+      encoderAttachments.every((v, i) => v === pipelineAttachments[i]),
+      true
+    );
   });
 
 g.test('render_pass_or_bundle_and_pipeline,depth_format')
