@@ -123,6 +123,8 @@ const checkContents = (type, t, params, texture, state, subresourceRange) => {
     }
 
     const commandEncoder = t.device.createCommandEncoder();
+    commandEncoder.pushDebugGroup('checkContentsWithDepthStencil');
+
     const pass = commandEncoder.beginRenderPass({
       colorAttachments: [
         {
@@ -136,10 +138,10 @@ const checkContents = (type, t, params, texture, state, subresourceRange) => {
 
       depthStencilAttachment: {
         view: texture.createView(viewDescriptor),
-        depthStoreOp: 'store',
-        depthLoadOp: 'load',
-        stencilStoreOp: 'store',
-        stencilLoadOp: 'load',
+        depthStoreOp: type === 'depth' ? 'store' : undefined,
+        depthLoadOp: type === 'depth' ? 'load' : undefined,
+        stencilStoreOp: type === 'stencil' ? 'store' : undefined,
+        stencilLoadOp: type === 'stencil' ? 'load' : undefined,
       },
     });
 
@@ -168,6 +170,7 @@ const checkContents = (type, t, params, texture, state, subresourceRange) => {
     pass.draw(3);
     pass.end();
 
+    commandEncoder.popDebugGroup();
     t.queue.submit([commandEncoder.finish()]);
 
     t.expectSingleColor(resolveTexture || renderTexture, 'r8unorm', {

@@ -130,6 +130,8 @@ subresourceRange) =>
     }
 
     const commandEncoder = t.device.createCommandEncoder();
+    commandEncoder.pushDebugGroup('checkContentsWithDepthStencil');
+
     const pass = commandEncoder.beginRenderPass({
       colorAttachments: [
       {
@@ -142,10 +144,10 @@ subresourceRange) =>
 
       depthStencilAttachment: {
         view: texture.createView(viewDescriptor),
-        depthStoreOp: 'store',
-        depthLoadOp: 'load',
-        stencilStoreOp: 'store',
-        stencilLoadOp: 'load' } });
+        depthStoreOp: type === 'depth' ? 'store' : undefined,
+        depthLoadOp: type === 'depth' ? 'load' : undefined,
+        stencilStoreOp: type === 'stencil' ? 'store' : undefined,
+        stencilLoadOp: type === 'stencil' ? 'load' : undefined } });
 
 
 
@@ -173,6 +175,7 @@ subresourceRange) =>
     pass.draw(3);
     pass.end();
 
+    commandEncoder.popDebugGroup();
     t.queue.submit([commandEncoder.finish()]);
 
     t.expectSingleColor(resolveTexture || renderTexture, 'r8unorm', {
