@@ -40,12 +40,12 @@ have unexpected values then get drawn to the color buffer, which is later checke
   )
   .fn(async t => {
     const { format, unclippedDepth, writeDepth, multisampled } = t.params;
+    const info = kTextureFormatInfo[format];
+
     await t.selectDeviceOrSkipTestCase([
       unclippedDepth ? 'depth-clip-control' : undefined,
-      kTextureFormatInfo[format].feature,
+      info.feature,
     ]);
-
-    const info = kTextureFormatInfo[format];
 
     /** Number of depth values to test for both vertex output and frag_depth output. */
     const kNumDepthValues = 8;
@@ -254,9 +254,9 @@ have unexpected values then get drawn to the color buffer, which is later checke
           depthClearValue: 0.5, // Will see this depth value if the fragment was clipped.
           depthLoadOp: 'clear',
           depthStoreOp: 'store',
-          stencilClearValue: 0,
-          stencilLoadOp: 'clear',
-          stencilStoreOp: 'discard',
+          stencilClearValue: info.stencil ? 0 : undefined,
+          stencilLoadOp: info.stencil ? 'clear' : undefined,
+          stencilStoreOp: info.stencil ? 'discard' : undefined,
         },
       });
 
@@ -288,9 +288,9 @@ have unexpected values then get drawn to the color buffer, which is later checke
           view: dsTextureView,
           depthLoadOp: 'load',
           depthStoreOp: 'store',
-          stencilClearValue: 0,
-          stencilLoadOp: 'clear',
-          stencilStoreOp: 'discard',
+          stencilClearValue: info.stencil ? 0 : undefined,
+          stencilLoadOp: info.stencil ? 'clear' : undefined,
+          stencilStoreOp: info.stencil ? 'discard' : undefined,
         },
       });
 
@@ -359,9 +359,11 @@ to be empty.`
   )
   .fn(async t => {
     const { format, unclippedDepth, multisampled } = t.params;
+    const info = kTextureFormatInfo[format];
+
     await t.selectDeviceOrSkipTestCase([
       unclippedDepth ? 'depth-clip-control' : undefined,
-      kTextureFormatInfo[format].feature,
+      info.feature,
     ]);
 
     const kNumDepthValues = 8;
@@ -504,9 +506,9 @@ to be empty.`
           view: dsTextureView,
           depthLoadOp: 'load',
           depthStoreOp: 'store',
-          stencilClearValue: 0,
-          stencilLoadOp: 'clear',
-          stencilStoreOp: 'discard',
+          stencilClearValue: info.stencil ? 0 : undefined,
+          stencilLoadOp: info.stencil ? 'clear' : undefined,
+          stencilStoreOp: info.stencil ? 'discard' : undefined,
         },
       });
 
