@@ -1,22 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ export const description = `
-TODO:
-- 2 views:
-    - x= {upon the same subresource, or different subresources {mip level, array layer, aspect} of
-         the same texture}
-    - x= possible resource usages on each view:
-         - both in bind group {texture_binding, storage_binding}
-    - x= different shader stages: {0, ..., 7}
-        - maybe first view vis = {1, 2, 4}, second view vis = {0, ..., 7}
-    - x= bindings are in {
-        - same draw call
-        - same pass, different draw call
-        - different pass
-        - }
-(It's probably not necessary to test EVERY possible combination of options in this whole
-block, so we could break it down into a few smaller ones (one for different types of
-subresources, one for same draw/same pass/different pass, one for visibilities).)
+Texture Usages Validation Tests in Same or Different Render Pass Encoders.
 `;
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { assert, unreachable } from '../../../../../common/util/util.js';
@@ -515,4 +500,116 @@ g.test('subresources_from_same_color_texture_in_bind_groups')
     t.expectValidationError(() => {
       encoder.finish();
     }, !success);
+  });
+
+g.test('subresources_from_same_depth_stencil_texture_in_bind_groups')
+  .desc(
+    `
+  Test that when one depth stencil texture subresource is bound to different bind groups, we can
+  always bind these two bind groups in either the same or different render pass encoder as the depth
+  stencil texture can only be bound as TEXTURE_BINDING in the bind group.`
+  )
+  .params(u =>
+    u
+      .combineWithParams([
+        { bindGroupView0BaseLevel: 0, bindGroupView0LevelCount: 1 },
+        { bindGroupView0BaseLevel: 1, bindGroupView0LevelCount: 1 },
+        { bindGroupView0BaseLevel: 1, bindGroupView0LevelCount: 2 },
+      ])
+      .combineWithParams([
+        { bindGroupView0BaseLayer: 0, bindGroupView0LayerCount: 1 },
+        { bindGroupView0BaseLayer: 1, bindGroupView0LayerCount: 1 },
+        { bindGroupView0BaseLayer: 1, bindGroupView0LayerCount: 2 },
+      ])
+      .combineWithParams([
+        { bindGroupView1BaseLevel: 0, bindGroupView1LevelCount: 1 },
+        { bindGroupView1BaseLevel: 1, bindGroupView1LevelCount: 1 },
+        { bindGroupView1BaseLevel: 1, bindGroupView1LevelCount: 2 },
+      ])
+      .combineWithParams([
+        { bindGroupView1BaseLayer: 0, bindGroupView1LayerCount: 1 },
+        { bindGroupView1BaseLayer: 1, bindGroupView1LayerCount: 1 },
+        { bindGroupView1BaseLayer: 1, bindGroupView1LayerCount: 2 },
+      ])
+      .combine('bindGroupAspect0', ['depth-only', 'stencil-only'])
+      .combine('bindGroupAspect1', ['depth-only', 'stencil-only'])
+      .combine('inSamePass', [true, false])
+  )
+  .fn(async t => {
+    const {
+      bindGroupView0BaseLevel,
+      bindGroupView0LevelCount,
+      bindGroupView0BaseLayer,
+      bindGroupView0LayerCount,
+      bindGroupView1BaseLevel,
+      bindGroupView1LevelCount,
+      bindGroupView1BaseLayer,
+      bindGroupView1LayerCount,
+      bindGroupAspect0,
+      bindGroupAspect1,
+      inSamePass,
+    } = t.params;
+
+    const texture = t.device.createTexture({
+      format: 'depth24plus-stencil8',
+      usage: GPUTextureUsage.TEXTURE_BINDING,
+      size: [kTextureSize, kTextureSize, kTextureLayers],
+      mipLevelCount: kTextureLevels,
+    });
+
+    const bindGroupView0 = texture.createView({
+      dimension: '2d-array',
+      baseArrayLayer: bindGroupView0BaseLayer,
+      arrayLayerCount: bindGroupView0LayerCount,
+      baseMipLevel: bindGroupView0BaseLevel,
+      mipLevelCount: bindGroupView0LevelCount,
+      aspect: bindGroupAspect0,
+    });
+
+    const bindGroupView1 = texture.createView({
+      dimension: '2d-array',
+      baseArrayLayer: bindGroupView1BaseLayer,
+      arrayLayerCount: bindGroupView1LayerCount,
+      baseMipLevel: bindGroupView1BaseLevel,
+      mipLevelCount: bindGroupView1LevelCount,
+      aspect: bindGroupAspect1,
+    });
+
+    const sampleType0 = bindGroupAspect0 === 'depth-only' ? 'depth' : 'uint';
+    const sampleType1 = bindGroupAspect1 === 'depth-only' ? 'depth' : 'uint';
+    const bindGroup0 = t.createBindGroupForTest(bindGroupView0, 'texture', sampleType0);
+    const bindGroup1 = t.createBindGroupForTest(bindGroupView1, 'texture', sampleType1);
+
+    const colorTexture = t.device.createTexture({
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      size: [kTextureSize, kTextureSize, 1],
+      mipLevelCount: 1,
+    });
+
+    const colorAttachment = t.getColorAttachment(colorTexture);
+    const encoder = t.device.createCommandEncoder();
+    const renderPass = encoder.beginRenderPass({
+      colorAttachments: [colorAttachment],
+    });
+
+    if (inSamePass) {
+      renderPass.setBindGroup(0, bindGroup0);
+      renderPass.setBindGroup(1, bindGroup1);
+      renderPass.end();
+    } else {
+      renderPass.setBindGroup(0, bindGroup0);
+      renderPass.end();
+
+      const renderPass2 = encoder.beginRenderPass({
+        colorAttachments: [colorAttachment],
+      });
+
+      renderPass2.setBindGroup(1, bindGroup1);
+      renderPass2.end();
+    }
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, false);
   });
