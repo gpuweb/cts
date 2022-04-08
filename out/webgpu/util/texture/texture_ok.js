@@ -162,7 +162,9 @@ source,
 copySize,
 { format })
 {
-  const { byteLength, bytesPerRow, rowsPerImage } = getTextureSubCopyLayout(format, copySize);
+  const { byteLength, bytesPerRow, rowsPerImage } = getTextureSubCopyLayout(format, copySize, {
+    aspect: source.aspect });
+
 
   const buffer = t.device.createBuffer({
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,

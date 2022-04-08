@@ -1,7 +1,8 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { assert, memcpy } from '../../../common/util/util.js';import {
-kTextureFormatInfo } from
+kTextureFormatInfo,
+resolvePerAspectFormat } from
 
 '../../capability_info.js';
 import { align } from '../math.js';
@@ -23,7 +24,13 @@ export const kBufferCopyAlignment = 4;
 
 
 
-const kDefaultLayoutOptions = { mipLevel: 0, bytesPerRow: undefined, rowsPerImage: undefined };
+
+const kDefaultLayoutOptions = {
+  mipLevel: 0,
+  bytesPerRow: undefined,
+  rowsPerImage: undefined,
+  aspect: 'all' };
+
 
 /** The info returned by {@link getTextureSubCopyLayout}. */
 
@@ -57,7 +64,7 @@ export function getTextureCopyLayout(
 format,
 dimension,
 baseSize,
-{ mipLevel, bytesPerRow, rowsPerImage } = kDefaultLayoutOptions)
+{ mipLevel, bytesPerRow, rowsPerImage, aspect } = kDefaultLayoutOptions)
 {
   const mipSize = physicalMipSize(
   { width: baseSize[0], height: baseSize[1], depthOrArrayLayers: baseSize[2] },
@@ -66,7 +73,7 @@ baseSize,
   mipLevel);
 
 
-  const layout = getTextureSubCopyLayout(format, mipSize, { bytesPerRow, rowsPerImage });
+  const layout = getTextureSubCopyLayout(format, mipSize, { bytesPerRow, rowsPerImage, aspect });
   return { ...layout, mipSize: [mipSize.width, mipSize.height, mipSize.depthOrArrayLayers] };
 }
 
@@ -81,10 +88,17 @@ format,
 copySize,
 {
   bytesPerRow,
-  rowsPerImage } =
+  rowsPerImage,
+  aspect = 'all' } =
+
+
+
+
 {})
 {
+  format = resolvePerAspectFormat(format, aspect);
   const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
+  assert(bytesPerBlock !== undefined);
 
   const copySize_ = reifyExtent3D(copySize);
   assert(
@@ -122,7 +136,7 @@ copySize,
   const byteLength = bytesPerSlice * (copySizeBlocks.depthOrArrayLayers - 1) + sliceSize;
 
   return {
-    bytesPerBlock,
+    bytesPerBlock: bytesPerBlock,
     byteLength: align(byteLength, kBufferCopyAlignment),
     minBytesPerRow,
     bytesPerRow,

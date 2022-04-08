@@ -4,7 +4,7 @@
 import { attemptGarbageCollection } from '../common/util/collect_garbage.js';
 import { assert, range, unreachable } from '../common/util/util.js';
 
-import { kTextureFormatInfo, kQueryTypeInfo } from './capability_info.js';
+import { kTextureFormatInfo, kQueryTypeInfo, resolvePerAspectFormat } from './capability_info.js';
 import { makeBufferWithContents } from './util/buffer.js';
 import {
   checkElementsEqual,
@@ -471,6 +471,7 @@ export class GPUTest extends Fixture {
    * Expect a whole GPUTexture to have the single provided color.
    */
   expectSingleColor(src, format, { size, exp, dimension = '2d', slice = 0, layout }) {
+    format = resolvePerAspectFormat(format, layout?.aspect);
     const { byteLength, minBytesPerRow, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
       format,
       dimension,
@@ -490,7 +491,13 @@ export class GPUTest extends Fixture {
 
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyTextureToBuffer(
-      { texture: src, mipLevel: layout?.mipLevel, origin: { x: 0, y: 0, z: slice } },
+      {
+        texture: src,
+        mipLevel: layout?.mipLevel,
+        origin: { x: 0, y: 0, z: slice },
+        aspect: layout?.aspect,
+      },
+
       { buffer, bytesPerRow, rowsPerImage },
       mipSize
     );
@@ -507,7 +514,12 @@ export class GPUTest extends Fixture {
 
   /** Return a GPUBuffer that data are going to be written into. */
   readSinglePixelFrom2DTexture(src, format, { x, y }, { slice = 0, layout }) {
-    const { byteLength, bytesPerRow, rowsPerImage } = getTextureSubCopyLayout(format, [1, 1]);
+    const { byteLength, bytesPerRow, rowsPerImage } = getTextureSubCopyLayout(
+      format,
+      [1, 1],
+      layout
+    );
+
     const buffer = this.device.createBuffer({
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,

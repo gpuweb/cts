@@ -119,10 +119,10 @@ const kRegularTextureFormatInfo = makeTable(
 
 const kTexFmtInfoHeader = ['renderable', 'multisample', 'resolve', 'color', 'depth', 'stencil', 'storage', 'copySrc', 'copyDst', 'sampleType', 'bytesPerBlock', 'blockWidth', 'blockHeight', 'feature', 'baseFormat'];
 const kSizedDepthStencilFormatInfo = makeTable(kTexFmtInfoHeader,
-[true, true, false, false,,, false, false, false,,, 1, 1,, undefined], {
-  'depth32float': [,,,, true, false,,,, 'depth', 4],
-  'depth16unorm': [,,,, true, false,,,, 'depth', 2],
-  'stencil8': [,,,, false, true,,,, 'uint', 1] });
+[true, true, false, false,,, false,,,,, 1, 1,, undefined], {
+  'depth32float': [,,,, true, false,, true, false, 'depth', 4],
+  'depth16unorm': [,,,, true, false,, true, true, 'depth', 2],
+  'stencil8': [,,,, false, true,, true, true, 'uint', 1] });
 
 
 // Multi aspect sample type are now set to their first aspect
@@ -458,6 +458,28 @@ export const kDepthStencilFormatResolvedAspect =
     'stencil-only': 'stencil8' } };
 
 
+
+/**
+ * @returns the GPUTextureFormat corresponding to the @param aspect of @param format.
+ * This allows choosing the correct format for depth-stencil aspects when creating pipelines that
+ * will have to match the resolved format of views, or to get per-aspect information like the
+ * `blockByteSize`.
+ *
+ * Many helpers use an `undefined` `aspect` to means `'all'` so this is also the default for this
+ * function.
+ */
+export function resolvePerAspectFormat(
+format,
+aspect)
+{
+  if (aspect === 'all' || aspect === undefined) {
+    return format;
+  }
+  assert(kTextureFormatInfo[format].depth || kTextureFormatInfo[format].stencil);
+  const resolved = kDepthStencilFormatResolvedAspect[format][aspect ?? 'all'];
+  assert(resolved !== undefined);
+  return resolved;
+}
 
 /**
  * Gets all copyable aspects for copies between texture and buffer for specified depth/stencil format and copy type, by spec.

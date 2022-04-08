@@ -12,7 +12,8 @@ import {
 
 
 kTextureFormatInfo,
-kQueryTypeInfo } from
+kQueryTypeInfo,
+resolvePerAspectFormat } from
 './capability_info.js';
 import { makeBufferWithContents } from './util/buffer.js';
 import {
@@ -559,11 +560,13 @@ export class GPUTest extends Fixture {
 
 
   {
+    format = resolvePerAspectFormat(format, layout?.aspect);
     const { byteLength, minBytesPerRow, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
     format,
     dimension,
     size,
     layout);
+
 
     const rep = kTexelRepresentationInfo[format];
     const expectedTexelData = rep.pack(rep.encode(exp));
@@ -576,7 +579,12 @@ export class GPUTest extends Fixture {
 
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyTextureToBuffer(
-    { texture: src, mipLevel: layout?.mipLevel, origin: { x: 0, y: 0, z: slice } },
+    {
+      texture: src,
+      mipLevel: layout?.mipLevel,
+      origin: { x: 0, y: 0, z: slice },
+      aspect: layout?.aspect },
+
     { buffer, bytesPerRow, rowsPerImage },
     mipSize);
 
@@ -597,7 +605,11 @@ export class GPUTest extends Fixture {
   { x, y },
   { slice = 0, layout })
   {
-    const { byteLength, bytesPerRow, rowsPerImage } = getTextureSubCopyLayout(format, [1, 1]);
+    const { byteLength, bytesPerRow, rowsPerImage } = getTextureSubCopyLayout(
+    format,
+    [1, 1],
+    layout);
+
     const buffer = this.device.createBuffer({
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
