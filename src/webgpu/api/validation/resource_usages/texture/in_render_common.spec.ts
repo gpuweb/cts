@@ -69,7 +69,7 @@ const kTextureSize = 16;
 const kTextureLevels = 3;
 const kTextureLayers = 3;
 
-g.test('subresources_from_same_texture_as_color_attachments')
+g.test('subresources,color_attachments')
   .desc(
     `
   Test that the different subresource of the same texture are allowed to be used as color
@@ -78,15 +78,15 @@ g.test('subresources_from_same_texture_as_color_attachments')
   )
   .params(u =>
     u
-      .combine('baseLayer0', [0, 1])
-      .combine('baseLevel0', [0, 1])
-      .combine('baseLayer1', [0, 1])
-      .combine('baseLevel1', [0, 1])
+      .combine('layer0', [0, 1])
+      .combine('level0', [0, 1])
+      .combine('layer1', [0, 1])
+      .combine('level1', [0, 1])
       .combine('inSamePass', [true, false])
-      .unless(t => t.inSamePass && t.baseLevel0 !== t.baseLevel1)
+      .unless(t => t.inSamePass && t.level0 !== t.level1)
   )
   .fn(async t => {
-    const { baseLayer0, baseLevel0, baseLayer1, baseLevel1, inSamePass } = t.params;
+    const { layer0, level0, layer1, level1, inSamePass } = t.params;
 
     const texture = t.device.createTexture({
       format: 'rgba8unorm',
@@ -96,14 +96,14 @@ g.test('subresources_from_same_texture_as_color_attachments')
     });
 
     const colorAttachment1 = t.getColorAttachment(texture, {
-      baseArrayLayer: baseLayer0,
+      baseArrayLayer: layer0,
       arrayLayerCount: 1,
-      baseMipLevel: baseLevel0,
+      baseMipLevel: level0,
       mipLevelCount: 1,
     });
     const colorAttachment2 = t.getColorAttachment(texture, {
-      baseArrayLayer: baseLayer1,
-      baseMipLevel: baseLevel1,
+      baseArrayLayer: layer1,
+      baseMipLevel: level1,
       mipLevelCount: 1,
     });
     const encoder = t.device.createCommandEncoder();
@@ -123,13 +123,13 @@ g.test('subresources_from_same_texture_as_color_attachments')
       renderPass2.end();
     }
 
-    const success = inSamePass ? baseLayer0 !== baseLayer1 : true;
+    const success = inSamePass ? layer0 !== layer1 : true;
     t.expectValidationError(() => {
       encoder.finish();
     }, !success);
   });
 
-g.test('subresources_from_same_texture_as_color_attachment_and_in_bind_group')
+g.test('subresources,color_attachment_and_bind_group')
   .desc(
     `
   Test that when one subresource of a texture is used as a color attachment, it cannot be used in a
@@ -141,28 +141,28 @@ g.test('subresources_from_same_texture_as_color_attachment_and_in_bind_group')
       .combine('colorAttachmentLevel', [0, 1])
       .combine('colorAttachmentLayer', [0, 1])
       .combineWithParams([
-        { bindGroupViewBaseLevel: 0, bindGroupViewLevelCount: 1 },
-        { bindGroupViewBaseLevel: 1, bindGroupViewLevelCount: 1 },
-        { bindGroupViewBaseLevel: 1, bindGroupViewLevelCount: 2 },
+        { bgLevel: 0, bgLevelCount: 1 },
+        { bgLevel: 1, bgLevelCount: 1 },
+        { bgLevel: 1, bgLevelCount: 2 },
       ])
       .combineWithParams([
-        { bindGroupViewBaseLayer: 0, bindGroupViewLayerCount: 1 },
-        { bindGroupViewBaseLayer: 1, bindGroupViewLayerCount: 1 },
-        { bindGroupViewBaseLayer: 1, bindGroupViewLayerCount: 2 },
+        { bgLayer: 0, bgLayerCount: 1 },
+        { bgLayer: 1, bgLayerCount: 1 },
+        { bgLayer: 1, bgLayerCount: 2 },
       ])
-      .combine('bindGroupUsage', ['texture', 'storage'] as const)
-      .unless(t => t.bindGroupUsage === 'storage' && t.bindGroupViewLevelCount > 1)
+      .combine('bgUsage', ['texture', 'storage'] as const)
+      .unless(t => t.bgUsage === 'storage' && t.bgLevelCount > 1)
       .combine('inSamePass', [true, false])
   )
   .fn(async t => {
     const {
       colorAttachmentLevel,
       colorAttachmentLayer,
-      bindGroupViewBaseLevel,
-      bindGroupViewLevelCount,
-      bindGroupViewBaseLayer,
-      bindGroupViewLayerCount,
-      bindGroupUsage,
+      bgLevel,
+      bgLevelCount,
+      bgLayer,
+      bgLayerCount,
+      bgUsage,
       inSamePass,
     } = t.params;
 
@@ -177,12 +177,12 @@ g.test('subresources_from_same_texture_as_color_attachment_and_in_bind_group')
     });
     const bindGroupView = texture.createView({
       dimension: '2d-array',
-      baseArrayLayer: bindGroupViewBaseLayer,
-      arrayLayerCount: bindGroupViewLayerCount,
-      baseMipLevel: bindGroupViewBaseLevel,
-      mipLevelCount: bindGroupViewLevelCount,
+      baseArrayLayer: bgLayer,
+      arrayLayerCount: bgLayerCount,
+      baseMipLevel: bgLevel,
+      mipLevelCount: bgLevelCount,
     });
-    const bindGroup = t.createBindGroupForTest(bindGroupView, bindGroupUsage, 'float');
+    const bindGroup = t.createBindGroupForTest(bindGroupView, bgUsage, 'float');
 
     const colorAttachment = t.getColorAttachment(texture, {
       baseArrayLayer: colorAttachmentLayer,
@@ -218,14 +218,14 @@ g.test('subresources_from_same_texture_as_color_attachment_and_in_bind_group')
     const isMipLevelNotOverlapped = t.isRangeNotOverlapped(
       colorAttachmentLevel,
       colorAttachmentLevel,
-      bindGroupViewBaseLevel,
-      bindGroupViewBaseLevel + bindGroupViewLevelCount - 1
+      bgLevel,
+      bgLevel + bgLevelCount - 1
     );
     const isArrayLayerNotOverlapped = t.isRangeNotOverlapped(
       colorAttachmentLayer,
       colorAttachmentLayer,
-      bindGroupViewBaseLayer,
-      bindGroupViewBaseLayer + bindGroupViewLayerCount - 1
+      bgLayer,
+      bgLayer + bgLayerCount - 1
     );
     const isNotOverlapped = isMipLevelNotOverlapped || isArrayLayerNotOverlapped;
 
@@ -235,7 +235,7 @@ g.test('subresources_from_same_texture_as_color_attachment_and_in_bind_group')
     }, !success);
   });
 
-g.test('subresources_from_same_texture_as_depth_stencil_attachment_and_in_bind_group')
+g.test('subresources,depth_stencil_attachment_and_bind_group')
   .desc(
     `
   Test that when one subresource of a texture is used as a depth stencil attachment, it cannot be
@@ -245,32 +245,32 @@ g.test('subresources_from_same_texture_as_depth_stencil_attachment_and_in_bind_g
   )
   .params(u =>
     u
-      .combine('depthStencilAttachmentLevel', [0, 1])
-      .combine('depthStencilAttachmentLayer', [0, 1])
+      .combine('dsLevel', [0, 1])
+      .combine('dsLayer', [0, 1])
       .combineWithParams([
-        { bindGroupViewBaseLevel: 0, bindGroupViewLevelCount: 1 },
-        { bindGroupViewBaseLevel: 1, bindGroupViewLevelCount: 1 },
-        { bindGroupViewBaseLevel: 1, bindGroupViewLevelCount: 2 },
+        { bgLevel: 0, bgLevelCount: 1 },
+        { bgLevel: 1, bgLevelCount: 1 },
+        { bgLevel: 1, bgLevelCount: 2 },
       ])
       .combineWithParams([
-        { bindGroupViewBaseLayer: 0, bindGroupViewLayerCount: 1 },
-        { bindGroupViewBaseLayer: 1, bindGroupViewLayerCount: 1 },
-        { bindGroupViewBaseLayer: 1, bindGroupViewLayerCount: 2 },
+        { bgLayer: 0, bgLayerCount: 1 },
+        { bgLayer: 1, bgLayerCount: 1 },
+        { bgLayer: 1, bgLayerCount: 2 },
       ])
-      .combine('depthStencilReadOnly', [true, false])
-      .combine('bindGroupAspect', ['depth-only', 'stencil-only'] as const)
+      .combine('dsReadOnly', [true, false])
+      .combine('bgAspect', ['depth-only', 'stencil-only'] as const)
       .combine('inSamePass', [true, false])
   )
   .fn(async t => {
     const {
-      depthStencilAttachmentLevel,
-      depthStencilAttachmentLayer,
-      bindGroupViewBaseLevel,
-      bindGroupViewLevelCount,
-      bindGroupViewBaseLayer,
-      bindGroupViewLayerCount,
-      depthStencilReadOnly,
-      bindGroupAspect,
+      dsLevel,
+      dsLayer,
+      bgLevel,
+      bgLevelCount,
+      bgLayer,
+      bgLayerCount,
+      dsReadOnly,
+      bgAspect,
       inSamePass,
     } = t.params;
 
@@ -282,27 +282,27 @@ g.test('subresources_from_same_texture_as_depth_stencil_attachment_and_in_bind_g
     });
     const bindGroupView = texture.createView({
       dimension: '2d-array',
-      baseArrayLayer: bindGroupViewBaseLayer,
-      arrayLayerCount: bindGroupViewLayerCount,
-      baseMipLevel: bindGroupViewBaseLevel,
-      mipLevelCount: bindGroupViewLevelCount,
-      aspect: bindGroupAspect,
+      baseArrayLayer: bgLayer,
+      arrayLayerCount: bgLayerCount,
+      baseMipLevel: bgLevel,
+      mipLevelCount: bgLevelCount,
+      aspect: bgAspect,
     });
-    const sampleType = bindGroupAspect === 'depth-only' ? 'depth' : 'uint';
+    const sampleType = bgAspect === 'depth-only' ? 'depth' : 'uint';
     const bindGroup = t.createBindGroupForTest(bindGroupView, 'texture', sampleType);
 
     const attachmentView = texture.createView({
-      baseArrayLayer: depthStencilAttachmentLayer,
+      baseArrayLayer: dsLayer,
       arrayLayerCount: 1,
-      baseMipLevel: depthStencilAttachmentLevel,
+      baseMipLevel: dsLevel,
       mipLevelCount: 1,
     });
     const depthStencilAttachment: GPURenderPassDepthStencilAttachment = {
       view: attachmentView,
-      depthReadOnly: depthStencilReadOnly,
+      depthReadOnly: dsReadOnly,
       depthLoadOp: 'load',
       depthStoreOp: 'store',
-      stencilReadOnly: depthStencilReadOnly,
+      stencilReadOnly: dsReadOnly,
       stencilLoadOp: 'load',
       stencilStoreOp: 'store',
     };
@@ -333,26 +333,26 @@ g.test('subresources_from_same_texture_as_depth_stencil_attachment_and_in_bind_g
     }
 
     const isMipLevelNotOverlapped = t.isRangeNotOverlapped(
-      depthStencilAttachmentLevel,
-      depthStencilAttachmentLevel,
-      bindGroupViewBaseLevel,
-      bindGroupViewBaseLevel + bindGroupViewLevelCount - 1
+      dsLevel,
+      dsLevel,
+      bgLevel,
+      bgLevel + bgLevelCount - 1
     );
     const isArrayLayerNotOverlapped = t.isRangeNotOverlapped(
-      depthStencilAttachmentLayer,
-      depthStencilAttachmentLayer,
-      bindGroupViewBaseLayer,
-      bindGroupViewBaseLayer + bindGroupViewLayerCount - 1
+      dsLayer,
+      dsLayer,
+      bgLayer,
+      bgLayer + bgLayerCount - 1
     );
     const isNotOverlapped = isMipLevelNotOverlapped || isArrayLayerNotOverlapped;
 
-    const success = !inSamePass || isNotOverlapped || depthStencilReadOnly;
+    const success = !inSamePass || isNotOverlapped || dsReadOnly;
     t.expectValidationError(() => {
       encoder.finish();
     }, !success);
   });
 
-g.test('subresources_from_same_color_texture_in_bind_groups')
+g.test('subresources,multiple_bind_groups')
   .desc(
     `
   Test that when one color texture subresource is bound to different bind groups, its list of
@@ -364,46 +364,46 @@ g.test('subresources_from_same_color_texture_in_bind_groups')
   .params(u =>
     u
       .combineWithParams([
-        { bindGroupView0BaseLevel: 0, bindGroupView0LevelCount: 1 },
-        { bindGroupView0BaseLevel: 1, bindGroupView0LevelCount: 1 },
-        { bindGroupView0BaseLevel: 1, bindGroupView0LevelCount: 2 },
+        { bg0BaseLevel: 0, bg0LevelCount: 1 },
+        { bg0BaseLevel: 1, bg0LevelCount: 1 },
+        { bg0BaseLevel: 1, bg0LevelCount: 2 },
       ])
       .combineWithParams([
-        { bindGroupView0BaseLayer: 0, bindGroupView0LayerCount: 1 },
-        { bindGroupView0BaseLayer: 1, bindGroupView0LayerCount: 1 },
-        { bindGroupView0BaseLayer: 1, bindGroupView0LayerCount: 2 },
+        { bg0BaseLayer: 0, bg0LayerCount: 1 },
+        { bg0BaseLayer: 1, bg0LayerCount: 1 },
+        { bg0BaseLayer: 1, bg0LayerCount: 2 },
       ])
       .combineWithParams([
-        { bindGroupView1BaseLevel: 0, bindGroupView1LevelCount: 1 },
-        { bindGroupView1BaseLevel: 1, bindGroupView1LevelCount: 1 },
-        { bindGroupView1BaseLevel: 1, bindGroupView1LevelCount: 2 },
+        { bg1BaseLevel: 0, bg1LevelCount: 1 },
+        { bg1BaseLevel: 1, bg1LevelCount: 1 },
+        { bg1BaseLevel: 1, bg1LevelCount: 2 },
       ])
       .combineWithParams([
-        { bindGroupView1BaseLayer: 0, bindGroupView1LayerCount: 1 },
-        { bindGroupView1BaseLayer: 1, bindGroupView1LayerCount: 1 },
-        { bindGroupView1BaseLayer: 1, bindGroupView1LayerCount: 2 },
+        { bg1BaseLayer: 0, bg1LayerCount: 1 },
+        { bg1BaseLayer: 1, bg1LayerCount: 1 },
+        { bg1BaseLayer: 1, bg1LayerCount: 2 },
       ])
-      .combine('bindGroupUsage0', ['texture', 'storage'] as const)
-      .combine('bindGroupUsage1', ['texture', 'storage'] as const)
+      .combine('bgUsage0', ['texture', 'storage'] as const)
+      .combine('bgUsage1', ['texture', 'storage'] as const)
       .unless(
         t =>
-          (t.bindGroupUsage0 === 'storage' && t.bindGroupView0LevelCount > 1) ||
-          (t.bindGroupUsage1 === 'storage' && t.bindGroupView1LevelCount > 1)
+          (t.bgUsage0 === 'storage' && t.bg0LevelCount > 1) ||
+          (t.bgUsage1 === 'storage' && t.bg1LevelCount > 1)
       )
       .combine('inSamePass', [true, false])
   )
   .fn(async t => {
     const {
-      bindGroupView0BaseLevel,
-      bindGroupView0LevelCount,
-      bindGroupView0BaseLayer,
-      bindGroupView0LayerCount,
-      bindGroupView1BaseLevel,
-      bindGroupView1LevelCount,
-      bindGroupView1BaseLayer,
-      bindGroupView1LayerCount,
-      bindGroupUsage0,
-      bindGroupUsage1,
+      bg0BaseLevel,
+      bg0LevelCount,
+      bg0BaseLayer,
+      bg0LayerCount,
+      bg1BaseLevel,
+      bg1LevelCount,
+      bg1BaseLayer,
+      bg1LayerCount,
+      bgUsage0,
+      bgUsage1,
       inSamePass,
     } = t.params;
 
@@ -413,22 +413,22 @@ g.test('subresources_from_same_color_texture_in_bind_groups')
       size: [kTextureSize, kTextureSize, kTextureLayers],
       mipLevelCount: kTextureLevels,
     });
-    const bindGroupView0 = texture.createView({
+    const bg0 = texture.createView({
       dimension: '2d-array',
-      baseArrayLayer: bindGroupView0BaseLayer,
-      arrayLayerCount: bindGroupView0LayerCount,
-      baseMipLevel: bindGroupView0BaseLevel,
-      mipLevelCount: bindGroupView0LevelCount,
+      baseArrayLayer: bg0BaseLayer,
+      arrayLayerCount: bg0LayerCount,
+      baseMipLevel: bg0BaseLevel,
+      mipLevelCount: bg0LevelCount,
     });
-    const bindGroupView1 = texture.createView({
+    const bg1 = texture.createView({
       dimension: '2d-array',
-      baseArrayLayer: bindGroupView1BaseLayer,
-      arrayLayerCount: bindGroupView1LayerCount,
-      baseMipLevel: bindGroupView1BaseLevel,
-      mipLevelCount: bindGroupView1LevelCount,
+      baseArrayLayer: bg1BaseLayer,
+      arrayLayerCount: bg1LayerCount,
+      baseMipLevel: bg1BaseLevel,
+      mipLevelCount: bg1LevelCount,
     });
-    const bindGroup0 = t.createBindGroupForTest(bindGroupView0, bindGroupUsage0, 'float');
-    const bindGroup1 = t.createBindGroupForTest(bindGroupView1, bindGroupUsage1, 'float');
+    const bindGroup0 = t.createBindGroupForTest(bg0, bgUsage0, 'float');
+    const bindGroup1 = t.createBindGroupForTest(bg1, bgUsage1, 'float');
 
     const colorTexture = t.device.createTexture({
       format: 'rgba8unorm',
@@ -457,20 +457,20 @@ g.test('subresources_from_same_color_texture_in_bind_groups')
     }
 
     const isMipLevelNotOverlapped = t.isRangeNotOverlapped(
-      bindGroupView0BaseLevel,
-      bindGroupView0BaseLevel + bindGroupView0LevelCount - 1,
-      bindGroupView1BaseLevel,
-      bindGroupView1BaseLevel + bindGroupView1LevelCount - 1
+      bg0BaseLevel,
+      bg0BaseLevel + bg0LevelCount - 1,
+      bg1BaseLevel,
+      bg1BaseLevel + bg1LevelCount - 1
     );
     const isArrayLayerNotOverlapped = t.isRangeNotOverlapped(
-      bindGroupView0BaseLayer,
-      bindGroupView0BaseLayer + bindGroupView0LayerCount - 1,
-      bindGroupView1BaseLayer,
-      bindGroupView1BaseLayer + bindGroupView1LayerCount - 1
+      bg0BaseLayer,
+      bg0BaseLayer + bg0LayerCount - 1,
+      bg1BaseLayer,
+      bg1BaseLayer + bg1LayerCount - 1
     );
     const isNotOverlapped = isMipLevelNotOverlapped || isArrayLayerNotOverlapped;
 
-    const success = !inSamePass || isNotOverlapped || bindGroupUsage0 === bindGroupUsage1;
+    const success = !inSamePass || isNotOverlapped || bgUsage0 === bgUsage1;
     t.expectValidationError(() => {
       encoder.finish();
     }, !success);
