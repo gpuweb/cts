@@ -1110,9 +1110,9 @@ class ImageCopyTest extends GPUTest {
     // [2]: need to convert the float32 values in initialData into the ones compatible
     // to the depth aspect of depthFormats when depth16unorm and depth24unorm-stencil8 are supported
     // by the browsers.
-    assert(format !== 'depth16unorm' && format !== 'depth24unorm-stencil8');
+    assert(format !== 'depth24unorm-stencil8');
 
-    // Generate the initial depth data
+    // Generate the initial depth data uploaded to the texture as float32.
     const initialData = new Float32Array(copySize[0] * copySize[1] * copySize[2]);
     for (let i = 0; i < initialData.length; ++i) {
       const baseValue = 0.05 * i;
@@ -1120,6 +1120,20 @@ class ImageCopyTest extends GPUTest {
       // We expect there are both 1's and 0's in initialData.
       initialData[i] = i % 40 === 0 ? 1 : baseValue - Math.floor(baseValue);
       assert(initialData[i] >= 0 && initialData[i] <= 1);
+    }
+
+    // The data uploaded to the texture, using the byte pattern of the format.
+    let formatInitialData = initialData;
+
+    // For unorm depth formats, replace the uploaded depth data with quantized data to avoid
+    // rounding issues when converting from 32float to 16unorm.
+    if (format === 'depth16unorm') {
+      const u16Data = new Uint16Array(initialData.length);
+      for (let i = 0; i < initialData.length; i++) {
+        u16Data[i] = initialData[i] * 65535;
+        initialData[i] = u16Data[i] / 65535.0;
+      }
+      formatInitialData = u16Data;
     }
 
     // Initialize the depth aspect of the source texture
@@ -1175,7 +1189,7 @@ class ImageCopyTest extends GPUTest {
       for (let y = 0; y < copySize[1]; ++y) {
         memcpy(
         {
-          src: initialData,
+          src: formatInitialData,
           start: baseInitialDataOffset + y * copySize[0],
           length: copySize[0] },
 
