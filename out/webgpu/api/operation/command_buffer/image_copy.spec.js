@@ -1625,14 +1625,14 @@ combineWithParams([
   copySizeInBlocks: { width: 5, height: 4, depthOrArrayLayers: 2 },
   originInBlocks: { x: 3, y: 2, z: 1 },
   _mipSizeInBlocks: { width: 9, height: 7, depthOrArrayLayers: 3 },
-  mipLevel: 5 },
+  mipLevel: 4 },
 
 // origin + copySize < texturePhysicalSizeAtMipLevel for all coordinates
 {
   copySizeInBlocks: { width: 5, height: 4, depthOrArrayLayers: 2 },
   originInBlocks: { x: 3, y: 2, z: 1 },
   _mipSizeInBlocks: { width: 9, height: 7, depthOrArrayLayers: 4 },
-  mipLevel: 6 }]).
+  mipLevel: 4 }]).
 
 
 expand('textureSize', generateTestTextureSizes)).
