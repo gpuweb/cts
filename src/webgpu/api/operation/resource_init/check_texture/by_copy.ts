@@ -18,7 +18,7 @@ export const checkContentsByBufferCopy: CheckContents = (
       size: [t.textureWidth, t.textureHeight, t.textureDepth],
       dimension: params.dimension,
       slice: layer,
-      layout: { mipLevel },
+      layout: { mipLevel, aspect: params.aspect },
       exp: t.stateToTexelComponents[state],
     });
   }
@@ -59,6 +59,7 @@ export const checkContentsByTextureCopy: CheckContents = (
     t.expectSingleColor(dst, format, {
       size: [width, height, depth],
       exp: t.stateToTexelComponents[state],
+      layout: { mipLevel: 0, aspect: params.aspect },
     });
   }
 };

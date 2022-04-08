@@ -13,6 +13,7 @@ import {
   SizedTextureFormat,
   kTextureFormatInfo,
   kQueryTypeInfo,
+  resolvePerAspectFormat,
 } from './capability_info.js';
 import { makeBufferWithContents } from './util/buffer.js';
 import {
@@ -544,7 +545,7 @@ export class GPUTest extends Fixture {
    */
   expectSingleColor(
     src: GPUTexture,
-    format: EncodableTextureFormat,
+    format: GPUTextureFormat,
     {
       size,
       exp,
@@ -559,13 +560,15 @@ export class GPUTest extends Fixture {
       layout?: TextureLayoutOptions;
     }
   ): void {
+    format = resolvePerAspectFormat(format, layout?.aspect);
     const { byteLength, minBytesPerRow, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
       format,
       dimension,
       size,
       layout
     );
-    const rep = kTexelRepresentationInfo[format];
+
+    const rep = kTexelRepresentationInfo[format as EncodableTextureFormat];
     const expectedTexelData = rep.pack(rep.encode(exp));
 
     const buffer = this.device.createBuffer({
@@ -576,7 +579,12 @@ export class GPUTest extends Fixture {
 
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyTextureToBuffer(
-      { texture: src, mipLevel: layout?.mipLevel, origin: { x: 0, y: 0, z: slice } },
+      {
+        texture: src,
+        mipLevel: layout?.mipLevel,
+        origin: { x: 0, y: 0, z: slice },
+        aspect: layout?.aspect,
+      },
       { buffer, bytesPerRow, rowsPerImage },
       mipSize
     );
@@ -597,7 +605,11 @@ export class GPUTest extends Fixture {
     { x, y }: { x: number; y: number },
     { slice = 0, layout }: { slice?: number; layout?: TextureLayoutOptions }
   ): GPUBuffer {
-    const { byteLength, bytesPerRow, rowsPerImage } = getTextureSubCopyLayout(format, [1, 1]);
+    const { byteLength, bytesPerRow, rowsPerImage } = getTextureSubCopyLayout(
+      format,
+      [1, 1],
+      layout
+    );
     const buffer = this.device.createBuffer({
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
