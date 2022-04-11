@@ -1,7 +1,5 @@
 export const description = `
 Validation for attachment compatibility between render passes, bundles, and pipelines
-
-TODO: Add sparse color attachment compatibility test when defined by specification
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
@@ -92,11 +90,11 @@ class F extends ValidationTest {
   }
 
   createColorAttachment(
-    format: GPUTextureFormat | undefined,
+    format: GPUTextureFormat | null,
     sampleCount?: number
-  ): GPURenderPassColorAttachment | undefined {
-    return format === undefined
-      ? undefined
+  ): GPURenderPassColorAttachment | null {
+    return format === null
+      ? null
       : {
           view: this.createAttachmentTextureView(format, sampleCount),
           clearValue: [0, 0, 0, 0],
@@ -126,7 +124,7 @@ class F extends ValidationTest {
   }
 
   createRenderPipeline(
-    targets: Iterable<GPUColorTargetState | undefined>,
+    targets: Iterable<GPUColorTargetState | null>,
     depthStencil?: GPUDepthStencilState,
     sampleCount?: number
   ) {
@@ -232,7 +230,7 @@ g.test('render_pass_and_bundle,color_sparse')
   )
   .fn(t => {
     const { passAttachments, bundleAttachments } = t.params;
-    const colorFormats = bundleAttachments.map(i => (i === 1 ? 'rgba8unorm' : undefined));
+    const colorFormats = bundleAttachments.map(i => (i === 1 ? 'rgba8unorm' : null));
     const bundleEncoder = t.device.createRenderBundleEncoder({
       colorFormats,
     });
@@ -240,7 +238,7 @@ g.test('render_pass_and_bundle,color_sparse')
 
     const { encoder, validateFinishAndSubmit } = t.createEncoder('non-pass');
     const colorAttachments = passAttachments.map(i =>
-      t.createColorAttachment(i === 1 ? 'rgba8unorm' : undefined)
+      t.createColorAttachment(i === 1 ? 'rgba8unorm' : null)
     );
     const pass = encoder.beginRenderPass({
       colorAttachments,
@@ -379,11 +377,11 @@ Test that each of color attachments in render passes or bundles match that of th
     const { encoderType, encoderAttachments, pipelineAttachments } = t.params;
 
     const colorTargets = pipelineAttachments.map(i =>
-      i === 1 ? ({ format: 'rgba8unorm', writeMask: 0 } as GPUColorTargetState) : undefined
+      i === 1 ? ({ format: 'rgba8unorm', writeMask: 0 } as GPUColorTargetState) : null
     );
     const pipeline = t.createRenderPipeline(colorTargets);
 
-    const colorFormats = encoderAttachments.map(i => (i === 1 ? 'rgba8unorm' : undefined));
+    const colorFormats = encoderAttachments.map(i => (i === 1 ? 'rgba8unorm' : null));
     const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType, {
       attachmentInfo: { colorFormats },
     });
