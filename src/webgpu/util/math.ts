@@ -34,42 +34,6 @@ export function clamp(n: number, { min, max }: { min: number; max: number }): nu
 }
 
 /**
- * @returns the (absolute) Units of Last Place difference between the float32 numbers a and b, taken
- * as JS doubles. If either `a` or `b` are not finite numbers, then diffULP() returns Infinity.
- *
- * Subnormal numbers are skipped, so 0 is one ULP from the minimum normal number.
- * Subnormal values are rounded to 0.
- */
-export function diffULP(a: number, b: number): number {
-  if (!Number.isFinite(a) || !Number.isFinite(b)) {
-    return Infinity;
-  }
-
-  const arr = new Uint32Array(new Float32Array([a, b]).buffer);
-  const u32_a = arr[0];
-  const u32_b = arr[1];
-
-  const sign_a = (u32_a & 0x80000000) !== 0;
-  const sign_b = (u32_b & 0x80000000) !== 0;
-  const masked_a = u32_a & 0x7fffffff;
-  const masked_b = u32_b & 0x7fffffff;
-  const subnormal_or_zero_a = (u32_a & 0x7f800000) === 0;
-  const subnormal_or_zero_b = (u32_b & 0x7f800000) === 0;
-
-  // If the number is subnormal, then reduce it to 0 for ULP comparison.
-  // If the number is normal then reduce its bits-representation so to that we
-  // can pretend that the subnormal numbers don't exist, for the purposes of
-  // counting ULP steps from zero (or any subnormal) to any of the normal numbers.
-  const bits_a = subnormal_or_zero_a ? 0 : masked_a - 0x7fffff;
-  const bits_b = subnormal_or_zero_b ? 0 : masked_b - 0x7fffff;
-
-  if (sign_a === sign_b) {
-    return Math.max(bits_a, bits_b) - Math.min(bits_a, bits_b);
-  }
-  return bits_a + bits_b;
-}
-
-/**
  * @returns 0 if |val| is a subnormal f32 number, otherwise returns |val|
  */
 function flushSubnormalNumber(val: number): number {
@@ -123,7 +87,7 @@ export function isSubnormalNumber(val: number): boolean {
  * If |flush| is false, the next subnormal will be calculated when appropriate,
  * and for -/+0 the nextAfter will be the closest subnormal in the correct
  * direction.
- * |val| must be expressible as a f32.
+ * val needs to be in [min f32, max f32]
  */
 export function nextAfter(val: number, dir: boolean = true, flush: boolean): Scalar {
   if (Number.isNaN(val)) {
@@ -138,6 +102,11 @@ export function nextAfter(val: number, dir: boolean = true, flush: boolean): Sca
     return f32Bits(kBit.f32.infinity.negative);
   }
 
+  assert(
+    val <= kValue.f32.positive.max && val >= kValue.f32.negative.min,
+    `${val} is not in the range of float32`
+  );
+
   val = flush ? flushSubnormalNumber(val) : val;
 
   // -/+0 === 0 returns true
@@ -149,29 +118,98 @@ export function nextAfter(val: number, dir: boolean = true, flush: boolean): Sca
     }
   }
 
-  // number is float64 internally, so need to test if value is expressible as a float32.
   const converted: number = new Float32Array([val])[0];
-  assert(val === converted, `${val} is not expressible as a f32.`);
-
-  const u32_val = new Uint32Array(new Float32Array([val]).buffer)[0];
-  const is_positive = (u32_val & 0x80000000) === 0;
-  let result = u32_val;
-  if (dir === is_positive) {
-    result += 1;
+  let u32_result: number;
+  if (val === converted) {
+    // val is expressible precisely as a float32
+    let u32_val: number = new Uint32Array(new Float32Array([val]).buffer)[0];
+    const is_positive = (u32_val & 0x80000000) === 0;
+    if (dir === is_positive) {
+      u32_val += 1;
+    } else {
+      u32_val -= 1;
+    }
+    u32_result = flush ? flushSubnormalBits(u32_val) : u32_val;
   } else {
-    result -= 1;
+    // val had to be rounded to be expressed as a float32
+    if (dir === converted > val) {
+      // Rounding was in the direction requested
+      u32_result = new Uint32Array(new Float32Array([converted]).buffer)[0];
+    } else {
+      // Round was opposite of the direction requested, so need nextAfter in the requested direction.
+      // This will not recurse since converted is guaranteed to be a float32 due to the conversion above.
+      const next = nextAfter(converted, dir, flush).value.valueOf() as number;
+      u32_result = new Uint32Array(new Float32Array([next]).buffer)[0];
+    }
   }
-  result = flush ? flushSubnormalBits(result) : result;
 
   // Checking for overflow
-  if ((result & 0x7f800000) === 0x7f800000) {
+  if ((u32_result & 0x7f800000) === 0x7f800000) {
     if (dir) {
       return f32Bits(kBit.f32.infinity.positive);
     } else {
       return f32Bits(kBit.f32.infinity.negative);
     }
   }
-  return f32Bits(result);
+
+  return f32Bits(u32_result);
+}
+
+/**
+ * @returns ulp(x), the unit of least precision for a specific number as a 32-bit float
+ *
+ * ulp(x) is the distance between the two floating point numbers nearest x.
+ * This value is also called unit of last place, ULP, and 1 ULP.
+ * See the WGSL spec and http://www.ens-lyon.fr/LIP/Pub/Rapports/RR/RR2005/RR2005-09.pdf
+ * for a more detailed/nuanced discussion of the definition of ulp(x).
+ *
+ * @param target number to calculate ULP for
+ * @param flush should subnormals be flushed to zero
+ */
+export function oneULP(target: number, flush: boolean): number {
+  if (Number.isNaN(target)) {
+    return Number.NaN;
+  }
+
+  // For values at the edge of the range or beyond ulp(x) is defined as
+  // the distance between the two nearest representable numbers to the
+  // appropriate edge.
+  if (target === Number.POSITIVE_INFINITY || target >= kValue.f32.positive.max) {
+    return kValue.f32.positive.max - kValue.f32.positive.nearest_max;
+  } else if (target === Number.NEGATIVE_INFINITY || target <= kValue.f32.negative.min) {
+    return kValue.f32.negative.nearest_min - kValue.f32.negative.min;
+  } else {
+    const b = nextAfter(target, true, flush).value.valueOf() as number;
+    const a = nextAfter(target, false, flush).value.valueOf() as number;
+    return b - a;
+  }
+}
+
+/**
+ * @returns if a number is within N * ulp(x) of a target value
+ * @param val number to test
+ * @param target expected number
+ * @param n acceptance range
+ * @param flush should subnormals be flushed to zero
+ */
+export function withinULP(val: number, target: number, n: number = 1) {
+  if (Number.isNaN(val) || Number.isNaN(target)) {
+    return false;
+  }
+
+  const ulp_flush = oneULP(target, true);
+  const ulp_noflush = oneULP(target, false);
+  if (Number.isNaN(ulp_flush) || Number.isNaN(ulp_noflush)) {
+    return false;
+  }
+
+  if (val === target) {
+    return true;
+  }
+
+  const ulp = Math.max(ulp_flush, ulp_noflush);
+  const diff = val > target ? val - target : target - val;
+  return diff <= n * ulp;
 }
 
 /**
