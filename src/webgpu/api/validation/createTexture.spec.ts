@@ -294,7 +294,8 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
       .unless(({ sampleCount, usage, format, mipLevelCount, dimension }) => {
         const info = kTextureFormatInfo[format];
         return (
-          ((usage & GPUConst.TextureUsage.RENDER_ATTACHMENT) !== 0 && (!info.renderable || dimension !== '2d')) ||
+          ((usage & GPUConst.TextureUsage.RENDER_ATTACHMENT) !== 0 &&
+            (!info.renderable || dimension !== '2d')) ||
           ((usage & GPUConst.TextureUsage.STORAGE_BINDING) !== 0 && !info.storage) ||
           (mipLevelCount !== 1 && dimension === '1d') ||
           (sampleCount > 1 && !info.multisample)
@@ -697,7 +698,11 @@ g.test('texture_usage')
     // if (!info.copySrc && (usage & GPUTextureUsage.COPY_SRC) !== 0) success = false;
     // if (!info.copyDst && (usage & GPUTextureUsage.COPY_DST) !== 0) success = false;
     if (!info.storage && (usage & GPUTextureUsage.STORAGE_BINDING) !== 0) success = false;
-    if (!info.renderable && (usage & GPUTextureUsage.RENDER_ATTACHMENT) !== 0) success = false;
+    if (
+      (!info.renderable || dimension !== '2d') &&
+      (usage & GPUTextureUsage.RENDER_ATTACHMENT) !== 0
+    )
+      success = false;
 
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);
