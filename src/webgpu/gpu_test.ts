@@ -28,12 +28,14 @@ import {
   UncanonicalizedDeviceDescriptor,
 } from './util/device_pool.js';
 import { align, roundDown } from './util/math.js';
+import { makeTextureWithContents } from './util/texture.js';
 import {
   getTextureCopyLayout,
   getTextureSubCopyLayout,
   LayoutOptions as TextureLayoutOptions,
 } from './util/texture/layout.js';
 import { PerTexelComponent, kTexelRepresentationInfo } from './util/texture/texel_data.js';
+import { TexelView } from './util/texture/texel_view.js';
 
 const devicePool = new DevicePool();
 
@@ -818,6 +820,16 @@ export class GPUTest extends Fixture {
    */
   makeBufferWithContents(dataArray: TypedArrayBufferView, usage: GPUBufferUsageFlags): GPUBuffer {
     return this.trackForCleanup(makeBufferWithContents(this.device, dataArray, usage));
+  }
+
+  /**
+   * Creates a texture with the contents of a TexelView.
+   */
+  makeTextureWithContents(
+    texelView: TexelView,
+    desc: Omit<GPUTextureDescriptor, 'format'>
+  ): GPUTexture {
+    return this.trackForCleanup(makeTextureWithContents(this.device, texelView, desc));
   }
 
   /**

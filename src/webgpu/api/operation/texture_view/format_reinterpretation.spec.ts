@@ -5,7 +5,6 @@ Test texture views can reinterpret the format of the original texture.
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
   EncodableTextureFormat,
-  kTextureFormatInfo,
   kRenderableColorTextureFormats,
   kRegularTextureFormats,
   viewCompatible,
@@ -110,32 +109,12 @@ g.test('texture_binding')
     // Make an input texel view.
     const inputTexelView = makeInputTexelView(format);
 
-    // Write data out to bytes.
-    const texelSize = kTextureFormatInfo[format].bytesPerBlock;
-    const textureData = new Uint8ClampedArray(texelSize * kTextureSize * kTextureSize);
-    inputTexelView.writeTextureData(textureData, {
-      bytesPerRow: texelSize * kTextureSize,
-      rowsPerImage: kTextureSize,
-      subrectOrigin: [0, 0],
-      subrectSize: [kTextureSize, kTextureSize],
-    });
-
-    // Create and upload data to the texture.
-    const texture = t.device.createTexture({
-      format,
+    // Create the initial texture with the contents if the input texel view.
+    const texture = t.makeTextureWithContents(inputTexelView, {
       size: [kTextureSize, kTextureSize],
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+      usage: GPUTextureUsage.TEXTURE_BINDING,
       viewFormats: [viewFormat],
     });
-
-    t.device.queue.writeTexture(
-      { texture },
-      textureData,
-      {
-        bytesPerRow: texelSize * kTextureSize,
-      },
-      [kTextureSize, kTextureSize]
-    );
 
     // Reinterepret the texture as the view format.
     // Make a texel view of the format that also reinterprets the data.
@@ -161,11 +140,13 @@ g.test('texture_binding')
     });
 
     // Create an rgba8unorm output texture.
-    const outputTexture = t.device.createTexture({
-      format: 'rgba8unorm',
-      size: [kTextureSize, kTextureSize],
-      usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_SRC,
-    });
+    const outputTexture = t.trackForCleanup(
+      t.device.createTexture({
+        format: 'rgba8unorm',
+        size: [kTextureSize, kTextureSize],
+        usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_SRC,
+      })
+    );
 
     // Execute a compute pass to load data from the reinterpreted view and
     // write out to the rgba8unorm texture.
@@ -209,7 +190,10 @@ g.test('texture_binding')
 g.test('render_and_resolve_attachment')
   .desc(
     `Test that a color render attachment allocated as 'format' is correctly rendered to as 'viewFormat',
-and resolved to an attachment allocated as 'format' viewed as 'viewFormat'.`
+and resolved to an attachment allocated as 'format' viewed as 'viewFormat'.
+
+Other combinations aren't possible because the render and resolve targets must both match
+in view format and match in base format.`
   )
   .params(u =>
     u //
@@ -227,53 +211,37 @@ and resolved to an attachment allocated as 'format' viewed as 'viewFormat'.`
     const inputTexelView = makeInputTexelView(format);
 
     // Create the renderTexture as |format|.
-    const renderTexture = t.device.createTexture({
-      format,
-      size: [kTextureSize, kTextureSize],
-      usage:
-        GPUTextureUsage.RENDER_ATTACHMENT |
-        (sampleCount > 1 ? GPUTextureUsage.TEXTURE_BINDING : GPUTextureUsage.COPY_SRC),
-      viewFormats: [viewFormat],
-      sampleCount,
-    });
+    const renderTexture = t.trackForCleanup(
+      t.device.createTexture({
+        format,
+        size: [kTextureSize, kTextureSize],
+        usage:
+          GPUTextureUsage.RENDER_ATTACHMENT |
+          (sampleCount > 1 ? GPUTextureUsage.TEXTURE_BINDING : GPUTextureUsage.COPY_SRC),
+        viewFormats: [viewFormat],
+        sampleCount,
+      })
+    );
 
     const resolveTexture =
       sampleCount === 1
         ? undefined
-        : t.device.createTexture({
-            format,
-            size: [kTextureSize, kTextureSize],
-            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
-            viewFormats: [viewFormat],
-          });
+        : t.trackForCleanup(
+            t.device.createTexture({
+              format,
+              size: [kTextureSize, kTextureSize],
+              usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+              viewFormats: [viewFormat],
+            })
+          );
 
-    // Also create the sample source as |format|. We will sample this texture
-    // into |renderTexture|. Using the same format keeps the same number of bits of precision.
-    const sampleSource = t.device.createTexture({
-      format,
+    // Create the sample source with the contents of the input texel view.
+    // We will sample this texture into |renderTexture|. It uses the same format to keep the same
+    // number of bits of precision.
+    const sampleSource = t.makeTextureWithContents(inputTexelView, {
       size: [kTextureSize, kTextureSize],
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+      usage: GPUTextureUsage.TEXTURE_BINDING,
     });
-
-    // Write data out to bytes.
-    const inputTexelSize = kTextureFormatInfo[format].bytesPerBlock;
-    const inputTextureData = new Uint8ClampedArray(inputTexelSize * kTextureSize * kTextureSize);
-    inputTexelView.writeTextureData(inputTextureData, {
-      bytesPerRow: inputTexelSize * kTextureSize,
-      rowsPerImage: kTextureSize,
-      subrectOrigin: [0, 0],
-      subrectSize: [kTextureSize, kTextureSize],
-    });
-
-    // Upload into the sample source.
-    t.device.queue.writeTexture(
-      { texture: sampleSource },
-      inputTextureData,
-      {
-        bytesPerRow: inputTexelSize * kTextureSize,
-      },
-      [kTextureSize, kTextureSize]
-    );
 
     // Reinterpret the renderTexture as |viewFormat|.
     const reinterpretedRenderView = renderTexture.createView({ format: viewFormat });
@@ -317,11 +285,13 @@ and resolved to an attachment allocated as 'format' viewed as 'viewFormat'.`
     // If the render target is multisampled, we'll manually resolve it to check
     // the contents.
     const singleSampleRenderTexture = resolveTexture
-      ? t.device.createTexture({
-          format,
-          size: [kTextureSize, kTextureSize],
-          usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
-        })
+      ? t.trackForCleanup(
+          t.device.createTexture({
+            format,
+            size: [kTextureSize, kTextureSize],
+            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+          })
+        )
       : renderTexture;
 
     if (resolveTexture) {

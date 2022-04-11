@@ -32,7 +32,6 @@ g.test('format')
   .params(u =>
     u
       .combine('textureFormat', kTextureFormats)
-      // If undefined, should default to textureFormat.
       .beginSubcases()
       .combine('viewFormat', [undefined, ...kTextureFormats])
       .combine('useViewFormatList', [false, true])

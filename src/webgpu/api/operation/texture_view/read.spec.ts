@@ -8,6 +8,9 @@ All x= every possible view read method: {
   - depth comparison
   - stencil comparison
 }
+
+Format reinterpretation is not tested here. It is in format_reinterpretation.spec.ts.
+
 TODO: Write helper for this if not already available (see resource_init, buffer_sync_test for related code).
 `;
 
@@ -21,8 +24,8 @@ g.test('format')
     `Views of every allowed format.
 
 - x= every texture format
-- x= every valid view format (including same)
 - x= sampleCount {1, 4} if valid
+- x= every possible view read method (see above)
 `
   )
   .unimplemented();
@@ -35,6 +38,7 @@ g.test('dimension')
 - x= {every texture dimension} x {every valid view dimension}
   (per gpuweb#79 no dimension-count reinterpretations, like 2d-array <-> 3d, are possible)
 - x= sampleCount {1, 4} if valid
+- x= every possible view read method (see above)
 `
   )
   .unimplemented();
@@ -46,6 +50,7 @@ g.test('aspect')
 - x= every depth/stencil format
 - x= {"all", "stencil-only", "depth-only"} where valid for the format
 - x= sampleCount {1, 4} if valid
+- x= every possible view read method (see above)
 `
   )
   .unimplemented();
