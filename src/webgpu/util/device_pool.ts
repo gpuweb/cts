@@ -223,6 +223,7 @@ function canonicalizeDescriptor(
   const descriptorCanonicalized: CanonicalDeviceDescriptor = {
     requiredFeatures: featuresCanonicalized,
     requiredLimits: limitsCanonicalized,
+    defaultQueue: {},
   };
   return [descriptorCanonicalized, JSON.stringify(descriptorCanonicalized)];
 }

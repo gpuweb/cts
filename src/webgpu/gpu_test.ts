@@ -997,7 +997,7 @@ export class GPUTest extends Fixture {
                   loadOp: 'clear',
                   storeOp: 'store',
                 }
-              : undefined
+              : null
           ),
           depthStencilAttachment,
           occlusionQuerySet,
