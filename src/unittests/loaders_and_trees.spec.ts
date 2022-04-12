@@ -123,6 +123,13 @@ class LoadingTest extends UnitTest {
     }
   }
 
+  expectEvents(expected: (string | null)[]) {
+    if (globalThis.EventTarget) {
+      // This won't work if EventTarget isn't present (in old Node versions) because we stub it out.
+      this.expect(objectEquals(this.events, expected));
+    }
+  }
+
   async load(query: string): Promise<TestTreeLeaf[]> {
     return Array.from(await this.loader.loadCases(parseQuery(query)));
   }
@@ -142,29 +149,25 @@ g.test('suite').fn(async t => {
 g.test('group').fn(async t => {
   t.collectEvents();
   t.expect((await t.load('suite1:*')).length === 8);
-  t.expect(
-    objectEquals(t.events, [
-      'suite1/foo.spec.js',
-      'suite1/bar/biz.spec.js',
-      'suite1/bar/buzz/buzz.spec.js',
-      'suite1/baz.spec.js',
-      null,
-    ])
-  );
+  t.expectEvents([
+    'suite1/foo.spec.js',
+    'suite1/bar/biz.spec.js',
+    'suite1/bar/buzz/buzz.spec.js',
+    'suite1/baz.spec.js',
+    null,
+  ]);
 
   t.collectEvents();
   t.expect((await t.load('suite1:foo,*')).length === 3); // x:foo,* matches x:foo:
-  t.expect(objectEquals(t.events, ['suite1/foo.spec.js', null]));
+  t.expectEvents(['suite1/foo.spec.js', null]);
 
   t.collectEvents();
   t.expect((await t.load('suite1:bar,*')).length === 1);
-  t.expect(
-    objectEquals(t.events, ['suite1/bar/biz.spec.js', 'suite1/bar/buzz/buzz.spec.js', null])
-  );
+  t.expectEvents(['suite1/bar/biz.spec.js', 'suite1/bar/buzz/buzz.spec.js', null]);
 
   t.collectEvents();
   t.expect((await t.load('suite1:bar,buzz,buzz,*')).length === 1);
-  t.expect(objectEquals(t.events, ['suite1/bar/buzz/buzz.spec.js', null]));
+  t.expectEvents(['suite1/bar/buzz/buzz.spec.js', null]);
 
   t.shouldReject('Error', t.load('suite1:f*'));
 
@@ -172,7 +175,7 @@ g.test('group').fn(async t => {
     const s = new TestQueryMultiFile('suite1', ['bar', 'buzz']).toString();
     t.collectEvents();
     t.expect((await t.load(s)).length === 1);
-    t.expect(objectEquals(t.events, ['suite1/bar/buzz/buzz.spec.js', null]));
+    t.expectEvents(['suite1/bar/buzz/buzz.spec.js', null]);
   }
 });
 

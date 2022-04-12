@@ -28,7 +28,20 @@ interface TestFileLoaderEventMap {
   finish: MessageEvent<void>;
 }
 
-export interface TestFileLoader extends EventTarget {
+/** Stub implementation of EventTarget for runtimes that don't implement EventTarget. */
+class FakeEventTarget implements EventTarget {
+  addEventListener(...args: unknown[]): void {}
+  dispatchEvent(event: Event): boolean {
+    return false;
+  }
+  removeEventListener(...args: unknown[]): void {}
+}
+
+type MaybeEventTarget = EventTarget;
+/** If EventTarget isn't defined (like on Node 12.x), uses a stub instead. */
+const MaybeEventTarget = globalThis.EventTarget ?? FakeEventTarget;
+
+export interface TestFileLoader extends MaybeEventTarget {
   addEventListener<K extends keyof TestFileLoaderEventMap>(
     type: K,
     listener: (this: TestFileLoader, ev: TestFileLoaderEventMap[K]) => void,
@@ -52,15 +65,17 @@ export interface TestFileLoader extends EventTarget {
 }
 
 // Base class for DefaultTestFileLoader and FakeTestFileLoader.
-export abstract class TestFileLoader extends EventTarget {
+export abstract class TestFileLoader extends MaybeEventTarget {
   abstract listing(suite: string): Promise<TestSuiteListing>;
   protected abstract import(path: string): Promise<SpecFile>;
 
   importSpecFile(suite: string, path: string[]): Promise<SpecFile> {
     const url = `${suite}/${path.join('/')}.spec.js`;
-    this.dispatchEvent(
-      new MessageEvent<ImportInfo>('import', { data: { url } })
-    );
+    if (globalThis.MessageEvent) {
+      this.dispatchEvent(
+        new MessageEvent<ImportInfo>('import', { data: { url } })
+      );
+    }
     return this.import(url);
   }
 
@@ -74,7 +89,9 @@ export abstract class TestFileLoader extends EventTarget {
         return q;
       })
     );
-    this.dispatchEvent(new MessageEvent<void>('finish'));
+    if (globalThis.MessageEvent) {
+      this.dispatchEvent(new MessageEvent<void>('finish'));
+    }
     return tree;
   }
 
