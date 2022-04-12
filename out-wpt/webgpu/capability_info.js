@@ -1667,3 +1667,12 @@ export const kLimitInfo = makeTable(
 
 /** List of all entries of GPUSupportedLimits. */
 export const kLimits = keysOf(kLimitInfo);
+
+/**
+ * Check if two formats are view format compatible.
+ *
+ * This function may need to be generalized to use `baseFormat` from `kTextureFormatInfo`.
+ */
+export function viewCompatible(a, b) {
+  return a === b || a + '-srgb' === b || b + '-srgb' === a;
+}

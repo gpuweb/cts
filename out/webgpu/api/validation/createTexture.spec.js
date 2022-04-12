@@ -11,7 +11,8 @@ kTextureUsages,
 kUncompressedTextureFormats,
 kRegularTextureFormats,
 textureDimensionAndFormatCompatible,
-kLimitInfo } from
+kLimitInfo,
+viewCompatible } from
 '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 import { maxMipLevelCount } from '../../util/texture/base.js';
@@ -707,5 +708,50 @@ fn(async (t) => {
   t.expectValidationError(() => {
     t.device.createTexture(descriptor);
   }, !success);
+});
+
+g.test('viewFormats').
+desc(
+`Test creating a texture with viewFormats list for all {texture format}x{view format}. Only compatible view formats should be valid.`).
+
+params((u) =>
+u.combine('format', kTextureFormats).beginSubcases().combine('viewFormat', kTextureFormats)).
+
+fn(async (t) => {
+  const { format, viewFormat } = t.params;
+  await t.selectDeviceForTextureFormatOrSkipTestCase([format, viewFormat]);
+  const { blockWidth, blockHeight } = kTextureFormatInfo[format];
+
+  const compatible = viewCompatible(format, viewFormat);
+
+  // Test the viewFormat in the list.
+  t.expectValidationError(() => {
+    t.device.createTexture({
+      format,
+      size: [blockWidth, blockHeight],
+      usage: GPUTextureUsage.TEXTURE_BINDING,
+      viewFormats: [viewFormat] });
+
+  }, !compatible);
+
+  // Test the viewFormat and the texture format in the list.
+  t.expectValidationError(() => {
+    t.device.createTexture({
+      format,
+      size: [blockWidth, blockHeight],
+      usage: GPUTextureUsage.TEXTURE_BINDING,
+      viewFormats: [viewFormat, format] });
+
+  }, !compatible);
+
+  // Test the viewFormat multiple times in the list.
+  t.expectValidationError(() => {
+    t.device.createTexture({
+      format,
+      size: [blockWidth, blockHeight],
+      usage: GPUTextureUsage.TEXTURE_BINDING,
+      viewFormats: [viewFormat, viewFormat] });
+
+  }, !compatible);
 });
 //# sourceMappingURL=createTexture.spec.js.map

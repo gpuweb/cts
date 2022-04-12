@@ -14,6 +14,7 @@ import {
 import { CommandBufferMaker } from './util/command_buffer_maker.js';
 import { DevicePool, TestOOMedShouldAttemptGC } from './util/device_pool.js';
 import { align, roundDown } from './util/math.js';
+import { makeTextureWithContents } from './util/texture.js';
 import { getTextureCopyLayout, getTextureSubCopyLayout } from './util/texture/layout.js';
 import { kTexelRepresentationInfo } from './util/texture/texel_data.js';
 
@@ -714,6 +715,13 @@ export class GPUTest extends Fixture {
    */
   makeBufferWithContents(dataArray, usage) {
     return this.trackForCleanup(makeBufferWithContents(this.device, dataArray, usage));
+  }
+
+  /**
+   * Creates a texture with the contents of a TexelView.
+   */
+  makeTextureWithContents(texelView, desc) {
+    return this.trackForCleanup(makeTextureWithContents(this.device, texelView, desc));
   }
 
   /**

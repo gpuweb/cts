@@ -45,6 +45,7 @@ Whenever a new generally-useful helper is added, it should be indexed here.
 - {@link webgpu/constants}:
     Constant values (needed anytime a WebGPU constant is needed outside of a test function).
 - {@link webgpu/util/buffer}: Helpers for GPUBuffers.
+- {@link webgpu/util/texture}: Helpers for GPUTextures.
 - {@link webgpu/util/unions}: Helpers for various union typedefs in the WebGPU spec.
 - {@link webgpu/util/math}: Helpers for common math operations.
 - {@link webgpu/util/check_contents}: Check the contents of TypedArrays, with nice messages.
@@ -63,6 +64,8 @@ Whenever a new generally-useful helper is added, it should be indexed here.
     (like in copyBufferToTexture, copyTextureToBuffer, writeTexture).
 - {@link webgpu/util/texture/subresource}: Helpers for working with texture subresource ranges.
 - {@link webgpu/util/texture/texel_data}: Helpers encoding/decoding texel formats.
+- {@link webgpu/util/texture/texel_view}: Helper class to create and view texture data through various representations.
+- {@link webgpu/util/texture/texture_ok}: Helpers for checking texture contents.
 - {@link webgpu/shader/types}: Helpers for WGSL data types.
 - {@link webgpu/shader/execution/expression/expression}: Helpers for WGSL expression execution tests.
 - {@link webgpu/web_platform/util}: Helpers for web platform features (e.g. video elements).

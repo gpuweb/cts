@@ -468,6 +468,14 @@ export const listing = [
       "api",
       "operation",
       "texture_view",
+      "format_reinterpretation"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
+      "texture_view",
       "read"
     ]
   },

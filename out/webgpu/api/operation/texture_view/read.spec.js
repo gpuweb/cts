@@ -10,6 +10,9 @@ All x= every possible view read method: {
   - depth comparison
   - stencil comparison
 }
+
+Format reinterpretation is not tested here. It is in format_reinterpretation.spec.ts.
+
 TODO: Write helper for this if not already available (see resource_init, buffer_sync_test for related code).
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
@@ -21,7 +24,6 @@ desc(
 `Views of every allowed format.
 
 - x= every texture format
-- x= every valid view format (including same)
 - x= sampleCount {1, 4} if valid
 - x= every possible view read method (see above)
 `).
