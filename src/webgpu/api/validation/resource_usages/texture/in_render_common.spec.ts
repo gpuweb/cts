@@ -363,49 +363,37 @@ g.test('subresources,multiple_bind_groups')
   )
   .params(u =>
     u
-      .combineWithParams([
-        { bg0BaseLevel: 0, bg0LevelCount: 1 },
-        { bg0BaseLevel: 1, bg0LevelCount: 1 },
-        { bg0BaseLevel: 1, bg0LevelCount: 2 },
+      .combine('bg0Levels', [
+        { base: 0, count: 1 },
+        { base: 1, count: 1 },
+        { base: 1, count: 2 },
       ])
-      .combineWithParams([
-        { bg0BaseLayer: 0, bg0LayerCount: 1 },
-        { bg0BaseLayer: 1, bg0LayerCount: 1 },
-        { bg0BaseLayer: 1, bg0LayerCount: 2 },
+      .combine('bg0Layers', [
+        { base: 0, count: 1 },
+        { base: 1, count: 1 },
+        { base: 1, count: 2 },
       ])
-      .combineWithParams([
-        { bg1BaseLevel: 0, bg1LevelCount: 1 },
-        { bg1BaseLevel: 1, bg1LevelCount: 1 },
-        { bg1BaseLevel: 1, bg1LevelCount: 2 },
+      .combine('bg1Levels', [
+        { base: 0, count: 1 },
+        { base: 1, count: 1 },
+        { base: 1, count: 2 },
       ])
-      .combineWithParams([
-        { bg1BaseLayer: 0, bg1LayerCount: 1 },
-        { bg1BaseLayer: 1, bg1LayerCount: 1 },
-        { bg1BaseLayer: 1, bg1LayerCount: 2 },
+      .combine('bg1Layers', [
+        { base: 0, count: 1 },
+        { base: 1, count: 1 },
+        { base: 1, count: 2 },
       ])
       .combine('bgUsage0', ['texture', 'storage'] as const)
       .combine('bgUsage1', ['texture', 'storage'] as const)
       .unless(
         t =>
-          (t.bgUsage0 === 'storage' && t.bg0LevelCount > 1) ||
-          (t.bgUsage1 === 'storage' && t.bg1LevelCount > 1)
+          (t.bgUsage0 === 'storage' && t.bg0Levels.count > 1) ||
+          (t.bgUsage1 === 'storage' && t.bg1Levels.count > 1)
       )
       .combine('inSamePass', [true, false])
   )
   .fn(async t => {
-    const {
-      bg0BaseLevel,
-      bg0LevelCount,
-      bg0BaseLayer,
-      bg0LayerCount,
-      bg1BaseLevel,
-      bg1LevelCount,
-      bg1BaseLayer,
-      bg1LayerCount,
-      bgUsage0,
-      bgUsage1,
-      inSamePass,
-    } = t.params;
+    const { bg0Levels, bg0Layers, bg1Levels, bg1Layers, bgUsage0, bgUsage1, inSamePass } = t.params;
 
     const texture = t.device.createTexture({
       format: 'rgba8unorm',
@@ -415,17 +403,17 @@ g.test('subresources,multiple_bind_groups')
     });
     const bg0 = texture.createView({
       dimension: '2d-array',
-      baseArrayLayer: bg0BaseLayer,
-      arrayLayerCount: bg0LayerCount,
-      baseMipLevel: bg0BaseLevel,
-      mipLevelCount: bg0LevelCount,
+      baseArrayLayer: bg0Layers.base,
+      arrayLayerCount: bg0Layers.count,
+      baseMipLevel: bg0Levels.base,
+      mipLevelCount: bg0Levels.count,
     });
     const bg1 = texture.createView({
       dimension: '2d-array',
-      baseArrayLayer: bg1BaseLayer,
-      arrayLayerCount: bg1LayerCount,
-      baseMipLevel: bg1BaseLevel,
-      mipLevelCount: bg1LevelCount,
+      baseArrayLayer: bg1Layers.base,
+      arrayLayerCount: bg1Layers.count,
+      baseMipLevel: bg1Levels.base,
+      mipLevelCount: bg1Levels.count,
     });
     const bindGroup0 = t.createBindGroupForTest(bg0, bgUsage0, 'float');
     const bindGroup1 = t.createBindGroupForTest(bg1, bgUsage1, 'float');
@@ -457,16 +445,16 @@ g.test('subresources,multiple_bind_groups')
     }
 
     const isMipLevelNotOverlapped = t.isRangeNotOverlapped(
-      bg0BaseLevel,
-      bg0BaseLevel + bg0LevelCount - 1,
-      bg1BaseLevel,
-      bg1BaseLevel + bg1LevelCount - 1
+      bg0Levels.base,
+      bg0Levels.base + bg0Levels.count - 1,
+      bg1Levels.base,
+      bg1Levels.base + bg1Levels.count - 1
     );
     const isArrayLayerNotOverlapped = t.isRangeNotOverlapped(
-      bg0BaseLayer,
-      bg0BaseLayer + bg0LayerCount - 1,
-      bg1BaseLayer,
-      bg1BaseLayer + bg1LayerCount - 1
+      bg0Layers.base,
+      bg0Layers.base + bg0Layers.count - 1,
+      bg1Layers.base,
+      bg1Layers.base + bg1Layers.count - 1
     );
     const isNotOverlapped = isMipLevelNotOverlapped || isArrayLayerNotOverlapped;
 
@@ -476,7 +464,7 @@ g.test('subresources,multiple_bind_groups')
     }, !success);
   });
 
-g.test('subresources_from_same_depth_stencil_texture_in_bind_groups')
+g.test('subresources,depth_stencil_texture_in_bind_groups')
   .desc(
     `
   Test that when one depth stencil texture subresource is bound to different bind groups, we can
@@ -485,42 +473,38 @@ g.test('subresources_from_same_depth_stencil_texture_in_bind_groups')
   )
   .params(u =>
     u
-      .combineWithParams([
-        { bindGroupView0BaseLevel: 0, bindGroupView0LevelCount: 1 },
-        { bindGroupView0BaseLevel: 1, bindGroupView0LevelCount: 1 },
-        { bindGroupView0BaseLevel: 1, bindGroupView0LevelCount: 2 },
+      .combine('view0Levels', [
+        { base: 0, count: 1 },
+        { base: 1, count: 1 },
+        { base: 1, count: 2 },
       ])
-      .combineWithParams([
-        { bindGroupView0BaseLayer: 0, bindGroupView0LayerCount: 1 },
-        { bindGroupView0BaseLayer: 1, bindGroupView0LayerCount: 1 },
-        { bindGroupView0BaseLayer: 1, bindGroupView0LayerCount: 2 },
+      .combine('view0Layers', [
+        { base: 0, count: 1 },
+        { base: 1, count: 1 },
+        { base: 1, count: 2 },
       ])
-      .combineWithParams([
-        { bindGroupView1BaseLevel: 0, bindGroupView1LevelCount: 1 },
-        { bindGroupView1BaseLevel: 1, bindGroupView1LevelCount: 1 },
-        { bindGroupView1BaseLevel: 1, bindGroupView1LevelCount: 2 },
+      .combine('view1Levels', [
+        { base: 0, count: 1 },
+        { base: 1, count: 1 },
+        { base: 1, count: 2 },
       ])
-      .combineWithParams([
-        { bindGroupView1BaseLayer: 0, bindGroupView1LayerCount: 1 },
-        { bindGroupView1BaseLayer: 1, bindGroupView1LayerCount: 1 },
-        { bindGroupView1BaseLayer: 1, bindGroupView1LayerCount: 2 },
+      .combine('view1Layers', [
+        { base: 0, count: 1 },
+        { base: 1, count: 1 },
+        { base: 1, count: 2 },
       ])
-      .combine('bindGroupAspect0', ['depth-only', 'stencil-only'] as const)
-      .combine('bindGroupAspect1', ['depth-only', 'stencil-only'] as const)
+      .combine('aspect0', ['depth-only', 'stencil-only'] as const)
+      .combine('aspect1', ['depth-only', 'stencil-only'] as const)
       .combine('inSamePass', [true, false])
   )
   .fn(async t => {
     const {
-      bindGroupView0BaseLevel,
-      bindGroupView0LevelCount,
-      bindGroupView0BaseLayer,
-      bindGroupView0LayerCount,
-      bindGroupView1BaseLevel,
-      bindGroupView1LevelCount,
-      bindGroupView1BaseLayer,
-      bindGroupView1LayerCount,
-      bindGroupAspect0,
-      bindGroupAspect1,
+      view0Levels,
+      view0Layers,
+      view1Levels,
+      view1Layers,
+      aspect0,
+      aspect1,
       inSamePass,
     } = t.params;
 
@@ -532,23 +516,23 @@ g.test('subresources_from_same_depth_stencil_texture_in_bind_groups')
     });
     const bindGroupView0 = texture.createView({
       dimension: '2d-array',
-      baseArrayLayer: bindGroupView0BaseLayer,
-      arrayLayerCount: bindGroupView0LayerCount,
-      baseMipLevel: bindGroupView0BaseLevel,
-      mipLevelCount: bindGroupView0LevelCount,
-      aspect: bindGroupAspect0,
+      baseArrayLayer: view0Layers.base,
+      arrayLayerCount: view0Layers.count,
+      baseMipLevel: view0Levels.base,
+      mipLevelCount: view0Levels.count,
+      aspect: aspect0,
     });
     const bindGroupView1 = texture.createView({
       dimension: '2d-array',
-      baseArrayLayer: bindGroupView1BaseLayer,
-      arrayLayerCount: bindGroupView1LayerCount,
-      baseMipLevel: bindGroupView1BaseLevel,
-      mipLevelCount: bindGroupView1LevelCount,
-      aspect: bindGroupAspect1,
+      baseArrayLayer: view1Layers.base,
+      arrayLayerCount: view1Layers.count,
+      baseMipLevel: view1Levels.base,
+      mipLevelCount: view1Levels.count,
+      aspect: aspect1,
     });
 
-    const sampleType0 = bindGroupAspect0 === 'depth-only' ? 'depth' : 'uint';
-    const sampleType1 = bindGroupAspect1 === 'depth-only' ? 'depth' : 'uint';
+    const sampleType0 = aspect0 === 'depth-only' ? 'depth' : 'uint';
+    const sampleType1 = aspect1 === 'depth-only' ? 'depth' : 'uint';
     const bindGroup0 = t.createBindGroupForTest(bindGroupView0, 'texture', sampleType0);
     const bindGroup1 = t.createBindGroupForTest(bindGroupView1, 'texture', sampleType1);
 
