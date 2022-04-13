@@ -124,3 +124,57 @@ g.test('subresources,set_bind_group_on_same_index_color_texture')
       encoder.finish();
     }, true);
   });
+
+g.test('subresources,set_bind_group_on_same_index_depth_stencil_texture')
+  .desc(
+    `
+  Test that when one depth stencil texture subresource is bound to different bind groups, whether
+  the conflicted bind groups are reset by another compatible ones or not, its list of internal
+  usages within one usage scope can only be a compatible usage list.`
+  )
+  .params(u => u.combine('bindAspect', ['depth-only', 'stencil-only'] as const))
+  .fn(async t => {
+    const { bindAspect } = t.params;
+    const depthStencilTexture = t.device.createTexture({
+      format: 'depth24plus-stencil8',
+      usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT,
+      size: [kTextureSize, kTextureSize, 1],
+    });
+
+    const conflictedbindGroup = t.createBindGroupForTest(
+      depthStencilTexture.createView({
+        dimension: '2d-array',
+        aspect: bindAspect,
+      }),
+      'texture',
+      bindAspect === 'depth-only' ? 'depth' : 'uint'
+    );
+
+    const colorTexture = t.device.createTexture({
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING,
+      size: [kTextureSize, kTextureSize, 1],
+    });
+    const validBindGroup = t.createBindGroupForTest(
+      colorTexture.createView({
+        dimension: '2d-array',
+      }),
+      'texture',
+      'float'
+    );
+
+    const encoder = t.device.createCommandEncoder();
+    const renderPassEncoder = encoder.beginRenderPass({
+      colorAttachments: [],
+      depthStencilAttachment: {
+        view: depthStencilTexture.createView(),
+      },
+    });
+    renderPassEncoder.setBindGroup(0, conflictedbindGroup);
+    renderPassEncoder.setBindGroup(0, validBindGroup);
+    renderPassEncoder.end();
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, true);
+  });
