@@ -61,7 +61,9 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
       { input: f32Bits(kBit.f32.negative.zero), expected: f32Bits(kBit.f32.negative.zero) },
       { input: f32Bits(kBit.f32.positive.zero), expected: f32Bits(kBit.f32.negative.zero) },
       { input: f32Bits(kBit.f32.negative.zero), expected: f32Bits(kBit.f32.positive.zero) },
-      ...fullF32Range(1000, 100, 100, 1000).map(x => makeCase(x)),
+      ...fullF32Range({ neg_norm: 1000, neg_sub: 100, pos_sub: 100, pos_norm: 1000 }).map(x =>
+        makeCase(x)
+      ),
     ];
 
     const cfg: Config = t.params;

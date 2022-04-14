@@ -40,7 +40,9 @@ Accuracy: Correctly rounded
       }
     };
 
-    const cases = fullF32Range(250, 20, 20, 250).map(x => makeCase(x));
+    const cases = fullF32Range({ neg_norm: 250, neg_sub: 20, pos_sub: 20, pos_norm: 250 }).map(x =>
+      makeCase(x)
+    );
 
     run(t, unary('-'), [TypeF32], TypeF32, cfg, cases);
   });

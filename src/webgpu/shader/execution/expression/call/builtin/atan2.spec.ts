@@ -37,7 +37,12 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
       return { input: [f32(y), f32(x)], expected: f32(Math.atan2(y, x)) };
     };
 
-    const numeric_range = fullF32Range(1000, 100, 100, 1000).filter(x => {
+    const numeric_range = fullF32Range({
+      neg_norm: 1000,
+      neg_sub: 100,
+      pos_sub: 100,
+      pos_norm: 1000,
+    }).filter(x => {
       return x !== 0;
     });
 
