@@ -2,7 +2,6 @@ export const description = `
 TODO:
 - 2 views: upon the same subresource, or different subresources of the same texture
     - texture usages in copies and in render pass
-    - unused bind groups
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
@@ -10,15 +9,16 @@ import { unreachable } from '../../../../../common/util/util.js';
 import { ValidationTest } from '../../validation_test.js';
 
 class F extends ValidationTest {
-  createBindGroupForTest(
-    textureView: GPUTextureView,
+  createBindGroupLayoutForTest(
     textureUsage: 'texture' | 'storage',
-    sampleType: 'float' | 'depth' | 'uint'
-  ) {
+    sampleType: 'float' | 'depth' | 'uint',
+    visibility: GPUShaderStage['FRAGMENT'] | GPUShaderStage['COMPUTE'] = GPUShaderStage['FRAGMENT']
+  ): GPUBindGroupLayout {
     const bindGroupLayoutEntry: GPUBindGroupLayoutEntry = {
       binding: 0,
-      visibility: GPUShaderStage.FRAGMENT,
+      visibility,
     };
+
     switch (textureUsage) {
       case 'texture':
         bindGroupLayoutEntry.texture = { viewDimension: '2d-array', sampleType };
@@ -34,11 +34,19 @@ class F extends ValidationTest {
         unreachable();
         break;
     }
-    const layout = this.device.createBindGroupLayout({
+    return this.device.createBindGroupLayout({
       entries: [bindGroupLayoutEntry],
     });
+  }
+
+  createBindGroupForTest(
+    textureView: GPUTextureView,
+    textureUsage: 'texture' | 'storage',
+    sampleType: 'float' | 'depth' | 'uint',
+    visibility: GPUShaderStage['FRAGMENT'] | GPUShaderStage['COMPUTE'] = GPUShaderStage['FRAGMENT']
+  ) {
     return this.device.createBindGroup({
-      layout,
+      layout: this.createBindGroupLayoutForTest(textureUsage, sampleType, visibility),
       entries: [{ binding: 0, resource: textureView }],
     });
   }
@@ -52,9 +60,9 @@ const kTextureLayers = 3;
 g.test('subresources,set_bind_group_on_same_index_color_texture')
   .desc(
     `
-  Test that when one color texture subresource is bound to different bind groups, whether the
-  conflicted bind groups are reset by another compatible ones or not, its list of internal usages
-  within one usage scope can only be a compatible usage list.`
+  Test that when one color texture subresource is bound to different bind groups, whether the bind
+  groups are reset by another compatible ones or not, its list of internal usages within one usage
+  scope can only be a compatible usage list.`
   )
   .params(u =>
     u
@@ -135,8 +143,8 @@ g.test('subresources,set_bind_group_on_same_index_depth_stencil_texture')
   .desc(
     `
   Test that when one depth stencil texture subresource is bound to different bind groups, whether
-  the conflicted bind groups are reset by another compatible ones or not, its list of internal
-  usages within one usage scope can only be a compatible usage list.`
+  the bind groups are reset by another compatible ones or not, its list of internal usages within
+  one usage scope can only be a compatible usage list.`
   )
   .params(u =>
     u
@@ -189,4 +197,119 @@ g.test('subresources,set_bind_group_on_same_index_depth_stencil_texture')
     t.expectValidationError(() => {
       encoder.finish();
     }, !depthStencilReadOnly);
+  });
+
+g.test('subresources,set_unused_bind_group')
+  .desc(
+    `
+  Test that when one texture subresource is bound to different bind groups and the bind groups are
+  used in the same render or compute pass encoder, its list of internal usages within one usage
+  scope can only be a compatible usage list.`
+  )
+  .params(u => u.combine('inRenderPass', [true, false]).combine('hasConflict', [true, false]))
+  .fn(async t => {
+    const { inRenderPass, hasConflict } = t.params;
+
+    const texture0 = t.device.createTexture({
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING,
+      size: [kTextureSize, kTextureSize, kTextureLayers],
+    });
+    // We always bind the first layer of the texture to bindGroup0.
+    const textureView0 = texture0.createView({
+      dimension: '2d-array',
+      baseArrayLayer: 0,
+      arrayLayerCount: 1,
+    });
+    const visibility = inRenderPass ? GPUShaderStage.FRAGMENT : GPUShaderStage.COMPUTE;
+    // bindGroup0 is used by the pipelines, and bindGroup1 is not used by the pipelines.
+    const textureUsage0 = inRenderPass ? 'texture' : 'storage';
+    const textureUsage1 = hasConflict ? (inRenderPass ? 'storage' : 'texture') : textureUsage0;
+    const bindGroup0 = t.createBindGroupForTest(textureView0, textureUsage0, 'float', visibility);
+    const bindGroup1 = t.createBindGroupForTest(textureView0, textureUsage1, 'float', visibility);
+
+    const encoder = t.device.createCommandEncoder();
+    const colorTexture = t.device.createTexture({
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      size: [kTextureSize, kTextureSize, 1],
+    });
+    const pipelineLayout = t.device.createPipelineLayout({
+      bindGroupLayouts: [t.createBindGroupLayoutForTest(textureUsage0, 'float', visibility)],
+    });
+    if (inRenderPass) {
+      const renderPipeline = t.device.createRenderPipeline({
+        layout: pipelineLayout,
+        vertex: {
+          module: t.device.createShaderModule({
+            code: t.getNoOpShaderCode('VERTEX'),
+          }),
+          entryPoint: 'main',
+        },
+        fragment: {
+          module: t.device.createShaderModule({
+            code: `
+              @group(0) @binding(0) var texture0 : texture_2d_array<f32>;
+              @stage(fragment) fn main()
+                -> @location(0) vec4<f32> {
+                  return textureLoad(texture0, vec2<i32>(), 0, 0);
+              }`,
+          }),
+          entryPoint: 'main',
+          targets: [{ format: 'rgba8unorm' }],
+        },
+      });
+
+      const renderPassEncoder = encoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: colorTexture.createView(),
+            loadOp: 'load',
+            storeOp: 'store',
+          },
+        ],
+      });
+      renderPassEncoder.setBindGroup(0, bindGroup0);
+      renderPassEncoder.setBindGroup(1, bindGroup1);
+      renderPassEncoder.setPipeline(renderPipeline);
+      renderPassEncoder.draw(1);
+      renderPassEncoder.end();
+    } else {
+      const computePipeline = t.device.createComputePipeline({
+        layout: pipelineLayout,
+        compute: {
+          module: t.device.createShaderModule({
+            code: `
+            @group(0) @binding(0) var texture0 : texture_storage_2d_array<rgba8unorm, write>;
+            @stage(compute) @workgroup_size(1)
+            fn main() {
+              textureStore(texture0, vec2<i32>(), 0, vec4<f32>());
+            }`,
+          }),
+          entryPoint: 'main',
+        },
+      });
+      const computePassEncoder = encoder.beginComputePass();
+      computePassEncoder.setBindGroup(0, bindGroup0);
+      computePassEncoder.setBindGroup(1, bindGroup1);
+      computePassEncoder.setPipeline(computePipeline);
+      computePassEncoder.dispatch(1);
+      computePassEncoder.end();
+    }
+
+    // In WebGPU SPEC (Chapter 3.4.5, Synchronization):
+    // This specification defines the following usage scopes:
+    // - In a compute pass, each dispatch command (dispatchWorkgroups() or
+    //   dispatchWorkgroupsIndirect()) is one usage scope. A subresource is "used" in the usage
+    //   scope if it is potentially accessible by the command. State-setting compute pass commands,
+    //   like setBindGroup(index, bindGroup, dynamicOffsets), do not contribute directly to a usage
+    //   scope.
+    // - One render pass is one usage scope. A subresource is "used" in the usage scope if it’s
+    //   referenced by any (state-setting or non-state-setting) command. For example, in
+    //   setBindGroup(index, bindGroup, dynamicOffsets), every subresource in bindGroup is "used" in
+    //   the render pass’s usage scope.
+    const success = !inRenderPass || !hasConflict;
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, !success);
   });
