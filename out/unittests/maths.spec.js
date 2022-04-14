@@ -9,6 +9,7 @@ import {
 biasedRange,
 correctlyRounded,
 diffULP,
+fullF32Range,
 lerp,
 linearRange,
 nextAfter } from
@@ -42,6 +43,7 @@ function compareArrayOfNumbers(got, expect) {
     got.length === expect.length &&
     got.every((value, index) => {
       const expected = expect[index];
+      // This will need to be revisited when fixing https://github.com/gpuweb/cts/issues/1148
       return 1 >= diffULP(value, expected) || Number.isNaN(value && Number.isNaN(expected));
     }));
 
@@ -924,6 +926,45 @@ fn((test) => {
   test.expect(
   compareArrayOfNumbers(got, expect),
   `biasedRange(${a}, ${b}, ${num_steps}) returned ${got}. Expected ${expect}`);
+
+});
+
+
+
+
+
+
+
+
+
+g.test('test,math,fullF32RangeCase').
+paramsSimple(
+
+[
+{ neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [0.0] },
+{ neg_norm: 1, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [kValue.f32.negative.max, 0.0] },
+{ neg_norm: 2, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [kValue.f32.negative.max, kValue.f32.negative.min, 0.0] },
+{ neg_norm: 0, neg_sub: 1, pos_sub: 0, pos_norm: 0, expect: [kValue.f32.subnormal.negative.max, 0.0] },
+{ neg_norm: 0, neg_sub: 2, pos_sub: 0, pos_norm: 0, expect: [kValue.f32.subnormal.negative.max, kValue.f32.subnormal.negative.min, 0.0] },
+{ neg_norm: 0, neg_sub: 0, pos_sub: 1, pos_norm: 0, expect: [0.0, kValue.f32.subnormal.positive.min] },
+{ neg_norm: 0, neg_sub: 0, pos_sub: 2, pos_norm: 0, expect: [0.0, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max] },
+{ neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 1, expect: [0.0, kValue.f32.positive.min] },
+{ neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 2, expect: [0.0, kValue.f32.positive.min, kValue.f32.positive.max] },
+{ neg_norm: 1, neg_sub: 1, pos_sub: 1, pos_norm: 1, expect: [kValue.f32.negative.max, kValue.f32.subnormal.negative.max, 0.0, kValue.f32.subnormal.positive.min, kValue.f32.positive.min] },
+{ neg_norm: 2, neg_sub: 2, pos_sub: 2, pos_norm: 2, expect: [kValue.f32.negative.max, kValue.f32.negative.min, kValue.f32.subnormal.negative.max, kValue.f32.subnormal.negative.min, 0.0, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, kValue.f32.positive.min, kValue.f32.positive.max] }]).
+
+
+fn((test) => {
+  const neg_norm = test.params.neg_norm;
+  const neg_sub = test.params.neg_sub;
+  const pos_sub = test.params.pos_sub;
+  const pos_norm = test.params.pos_norm;
+  const got = fullF32Range({ neg_norm, neg_sub, pos_sub, pos_norm });
+  const expect = test.params.expect;
+
+  test.expect(
+  compareArrayOfNumbers(got, expect),
+  `fullF32Range(${neg_norm}, ${neg_sub}, ${pos_sub}, ${pos_norm}) returned ${got}. Expected ${expect}`);
 
 });
 

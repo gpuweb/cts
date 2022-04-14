@@ -6,25 +6,13 @@ Execution Tests for the f32 logical binary expression operations
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { anyOf } from '../../../../util/compare.js';
-import { kValue } from '../../../../util/constants.js';
 import { bool, f32, TypeBool, TypeF32 } from '../../../../util/conversion.js';
-import { biasedRange, flushSubnormalScalar, linearRange } from '../../../../util/math.js';
+import { flushSubnormalScalar, fullF32Range } from '../../../../util/math.js';
 import { run } from '../expression.js';
 
 import { binary } from './binary.js';
 
 export const g = makeTestGroup(GPUTest);
-
-/* Generates an array of numbers spread over the entire range of 32-bit floats */
-function fullNumericRange() {
-  return [
-    ...biasedRange(kValue.f32.negative.max, kValue.f32.negative.min, 50),
-    ...linearRange(kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max, 10),
-    0.0,
-    ...linearRange(kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, 10),
-    ...biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, 50),
-  ];
-}
 
 /**
  * @returns a test case for the provided left hand & right hand values and truth function.
@@ -68,7 +56,7 @@ Accuracy: Correct result
     };
 
     const cases = [];
-    const numeric_range = fullNumericRange();
+    const numeric_range = fullF32Range();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
         cases.push(makeCase(lhs, rhs, truthFunc));
@@ -98,7 +86,7 @@ Accuracy: Correct result
     };
 
     const cases = [];
-    const numeric_range = fullNumericRange();
+    const numeric_range = fullF32Range();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
         cases.push(makeCase(lhs, rhs, truthFunc));
@@ -128,7 +116,7 @@ Accuracy: Correct result
     };
 
     const cases = [];
-    const numeric_range = fullNumericRange();
+    const numeric_range = fullF32Range();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
         cases.push(makeCase(lhs, rhs, truthFunc));
@@ -158,7 +146,7 @@ Accuracy: Correct result
     };
 
     const cases = [];
-    const numeric_range = fullNumericRange();
+    const numeric_range = fullF32Range();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
         cases.push(makeCase(lhs, rhs, truthFunc));
@@ -188,7 +176,7 @@ Accuracy: Correct result
     };
 
     const cases = [];
-    const numeric_range = fullNumericRange();
+    const numeric_range = fullF32Range();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
         cases.push(makeCase(lhs, rhs, truthFunc));
@@ -218,7 +206,7 @@ Accuracy: Correct result
     };
 
     const cases = [];
-    const numeric_range = fullNumericRange();
+    const numeric_range = fullF32Range();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
         cases.push(makeCase(lhs, rhs, truthFunc));
