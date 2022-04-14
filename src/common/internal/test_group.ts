@@ -363,7 +363,9 @@ class RunCaseSpecific implements RunCase {
     params: {},
     throwSkip: boolean,
     expectedStatus: Expectation
-  ): Promise<void> {
+  ): Promise<Promise<void>> {
+    let finalizePromise = Promise.resolve();
+
     try {
       rec.beginSubCase();
       if (expectedStatus === 'skip') {
@@ -376,27 +378,34 @@ class RunCaseSpecific implements RunCase {
         await this.fn(inst as Fixture & { params: {} });
       } finally {
         // Runs as long as constructor succeeded, even if initialization or the test failed.
-        await inst.doFinalize();
+        // Don't await so we can defer finalization of all subcases to the end of the testcase.
+        finalizePromise = inst.doFinalize();
+
+        // An error from finalize may have been an eventualAsyncExpectation failure
+        // or unexpected validation/OOM error from the GPUDevice.
+        finalizePromise = finalizePromise.catch(ex => rec.threw(ex));
       }
     } catch (ex) {
-      // There was an exception from constructor, init, test, or finalize.
+      // There was an exception from constructor, init, or test.
       // An error from init or test may have been a SkipTestCase.
-      // An error from finalize may have been an eventualAsyncExpectation failure
-      // or unexpected validation/OOM error from the GPUDevice.
       if (throwSkip && ex instanceof SkipTestCase) {
         throw ex;
       }
       rec.threw(ex);
     } finally {
-      try {
-        rec.endSubCase(expectedStatus);
-      } catch (ex) {
-        assert(ex instanceof UnexpectedPassError);
-        ex.message = `Testcase passed unexpectedly.`;
-        ex.stack = this.testCreationStack.stack;
-        rec.warn(ex);
-      }
+      // Record the end of the subcase after finalization.
+      finalizePromise.finally(() => {
+        try {
+          rec.endSubCase(expectedStatus);
+        } catch (ex) {
+          assert(ex instanceof UnexpectedPassError);
+          ex.message = `Testcase passed unexpectedly.`;
+          ex.stack = this.testCreationStack.stack;
+          rec.warn(ex);
+        }
+      });
     }
+    return finalizePromise;
   }
 
   async run(
@@ -432,8 +441,32 @@ class RunCaseSpecific implements RunCase {
     if (this.subcases) {
       let totalCount = 0;
       let skipCount = 0;
+
+      const recActions: (() => void)[][] = [];
+      const subcaseFinalizePromises: Promise<void>[] = [];
       for (const subParams of this.subcases) {
-        rec.info(new Error('subcase: ' + stringifyPublicParams(subParams)));
+        const recActionsForSubcase: (() => void)[] = [];
+        recActions.push(recActionsForSubcase);
+
+        // Make a recorder that will defer all calls until `recActionsForSubcase` is flushed.
+        // We'll defer subcase finalization until later so that GPU process round trips occur
+        // batched at the end of the entire testcase, instead of at the end of every subcase.
+        // `recActionsForSubcase` is an array inside a larger array `recActions` so that all
+        // recorder actions for the one subcase appear before subsequent subcases.
+        const deferredRec = new Proxy(rec, {
+          get: (target, prop) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const f = (target as any)[prop];
+            assert(f instanceof Function);
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return function (...args: any[]) {
+              recActionsForSubcase.push(() => f.apply(target, args));
+            };
+          },
+        });
+
+        deferredRec.info(new Error('subcase: ' + stringifyPublicParams(subParams)));
         try {
           const params = mergeParams(this.params, subParams);
           const subcaseQuery = new TestQuerySingleCase(
@@ -442,20 +475,28 @@ class RunCaseSpecific implements RunCase {
             selfQuery.testPathParts,
             params
           );
-          await this.runTest(rec, params, true, getExpectedStatus(subcaseQuery));
+          await this.runTest(deferredRec, params, true, getExpectedStatus(subcaseQuery)).then(p => {
+            subcaseFinalizePromises.push(p);
+          });
+          // await this.runTest(deferredRec, params, true, getExpectedStatus(subcaseQuery));
         } catch (ex) {
           if (ex instanceof SkipTestCase) {
             // Convert SkipTestCase to info messages
             ex.message = 'subcase skipped: ' + ex.message;
-            rec.info(ex);
+            deferredRec.info(ex);
             ++skipCount;
           } else {
             // Since we are catching all error inside runTest(), this should never happen
-            rec.threw(ex);
+            deferredRec.threw(ex);
           }
         }
         ++totalCount;
       }
+
+      // Wait for all subcases to finalize and flush all deferred recording of the subcase results.
+      await Promise.all(subcaseFinalizePromises);
+      recActions.forEach(recActionsForSubcase => recActionsForSubcase.forEach(a => a()));
+
       if (skipCount === totalCount) {
         rec.skipped(new SkipTestCase('all subcases were skipped'));
       }
