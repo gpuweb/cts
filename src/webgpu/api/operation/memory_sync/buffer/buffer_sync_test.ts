@@ -145,6 +145,8 @@ export class BufferSyncTest extends GPUTest {
   tmpValueBuffers: (GPUBuffer | undefined)[] = [undefined, undefined];
   tmpValueTextures: (GPUTexture | undefined)[] = [undefined, undefined];
 
+  // These intermediate buffers/textures are created before any read/write op
+  // to avoid extra memory synchronization between ops introduced by await on buffer/texture creations.
   // Create extra buffers/textures needed by write operation
   async createIntermediateBuffersAndTexturesForWriteOp(
     writeOp: WriteOp,
