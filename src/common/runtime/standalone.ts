@@ -21,6 +21,7 @@ let haveSomeResults = false;
 
 const runnow = optionEnabled('runnow');
 const debug = optionEnabled('debug');
+const parallelSubcases = optionEnabled('parallelSubcases');
 
 Logger.globalDebugMode = debug;
 const logger = new Logger();
@@ -113,9 +114,9 @@ function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
     const [rec, res] = logger.record(name);
     caseResult = res;
     if (worker) {
-      await worker.run(rec, name);
+      await worker.run(rec, name, { expectations: [], parallelSubcases });
     } else {
-      await t.run(rec);
+      await t.run(rec, { expectations: [], parallelSubcases });
     }
 
     result.total++;
@@ -313,7 +314,9 @@ function makeTreeNodeHeaderHTML(
     onChange(true);
   };
 
-  const href = `?${worker ? 'worker&' : ''}${debug ? 'debug&' : ''}q=${n.query.toString()}`;
+  const href = `?${worker ? 'worker&' : ''}${debug ? 'debug&' : ''}${
+    parallelSubcases ? 'parallelSubcases&' : ''
+  }q=${n.query.toString()}`;
   if (onChange) {
     div.on('toggle', function (this) {
       onChange((this as HTMLDetailsElement).open);
@@ -398,6 +401,7 @@ let lastQueryLevelToExpand: TestQueryLevel = 2;
         ['runnow', runnow ? '1' : '0'],
         ['worker', worker ? '1' : '0'],
         ['debug', debug ? '1' : '0'],
+        ['parallelSubcases', parallelSubcases ? '1' : '0'],
       ]).toString() +
       '&' +
       qs.map(q => 'q=' + q).join('&');

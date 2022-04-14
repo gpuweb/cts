@@ -1,7 +1,7 @@
+import { ExecutionContext } from '../../framework/execution_context.js';
 import { LogMessageWithStack } from '../../internal/logging/log_message.js';
 import { TransferredTestCaseResult, LiveTestCaseResult } from '../../internal/logging/result.js';
 import { TestCaseRecorder } from '../../internal/logging/test_case_recorder.js';
-import { TestQueryWithExpectation } from '../../internal/query/query.js';
 
 export class TestWorker {
   private readonly debug: boolean;
@@ -30,12 +30,8 @@ export class TestWorker {
     };
   }
 
-  async run(
-    rec: TestCaseRecorder,
-    query: string,
-    expectations: TestQueryWithExpectation[] = []
-  ): Promise<void> {
-    this.worker.postMessage({ query, expectations, debug: this.debug });
+  async run(rec: TestCaseRecorder, query: string, ctx: ExecutionContext): Promise<void> {
+    this.worker.postMessage({ query, ctx, debug: this.debug });
     const workerResult = await new Promise<LiveTestCaseResult>(resolve => {
       this.resolvers.set(query, resolve);
     });

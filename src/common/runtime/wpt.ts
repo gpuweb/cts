@@ -61,9 +61,9 @@ setup({
     const wpt_fn = async () => {
       const [rec, res] = log.record(name);
       if (worker) {
-        await worker.run(rec, name, expectations);
+        await worker.run(rec, name, { expectations, parallelSubcases: false });
       } else {
-        await testcase.run(rec, expectations);
+        await testcase.run(rec, { expectations, parallelSubcases: false });
       }
 
       // Unfortunately, it seems not possible to surface any logs for warn/skip.

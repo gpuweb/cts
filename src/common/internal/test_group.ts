@@ -1,3 +1,4 @@
+import { ExecutionContext } from '../framework/execution_context.js';
 import { Fixture, SkipTestCase, TestParams, UnexpectedPassError } from '../framework/fixture.js';
 import {
   CaseParamsBuilder,
@@ -10,7 +11,7 @@ import { Expectation } from '../internal/logging/result.js';
 import { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
 import { extractPublicParams, Merged, mergeParams } from '../internal/params_utils.js';
 import { compareQueries, Ordering } from '../internal/query/compare.js';
-import { TestQuerySingleCase, TestQueryWithExpectation } from '../internal/query/query.js';
+import { TestQuerySingleCase } from '../internal/query/query.js';
 import { kPathSeparator } from '../internal/query/separators.js';
 import {
   stringifyPublicParams,
@@ -19,10 +20,7 @@ import {
 import { validQueryPart } from '../internal/query/validQueryPart.js';
 import { assert, unreachable } from '../util/util.js';
 
-export type RunFn = (
-  rec: TestCaseRecorder,
-  expectations?: TestQueryWithExpectation[]
-) => Promise<void>;
+export type RunFn = (rec: TestCaseRecorder, ctx: ExecutionContext) => Promise<void>;
 
 export interface TestCaseID {
   readonly test: readonly string[];
@@ -31,11 +29,7 @@ export interface TestCaseID {
 
 export interface RunCase {
   readonly id: TestCaseID;
-  run(
-    rec: TestCaseRecorder,
-    selfQuery: TestQuerySingleCase,
-    expectations: TestQueryWithExpectation[]
-  ): Promise<void>;
+  run(rec: TestCaseRecorder, selfQuery: TestQuerySingleCase, ctx: ExecutionContext): Promise<void>;
 }
 
 // Interface for defining tests
@@ -402,7 +396,7 @@ class RunCaseSpecific implements RunCase {
   async run(
     rec: TestCaseRecorder,
     selfQuery: TestQuerySingleCase,
-    expectations: TestQueryWithExpectation[]
+    { expectations, parallelSubcases }: ExecutionContext
   ): Promise<void> {
     const getExpectedStatus = (selfQueryWithSubParams: TestQuerySingleCase) => {
       let didSeeFail = false;
@@ -432,30 +426,69 @@ class RunCaseSpecific implements RunCase {
     if (this.subcases) {
       let totalCount = 0;
       let skipCount = 0;
+
+      const recActions: (() => void)[][] = [];
+      const subcasePromises: Promise<void>[] = [];
       for (const subParams of this.subcases) {
-        rec.info(new Error('subcase: ' + stringifyPublicParams(subParams)));
-        try {
-          const params = mergeParams(this.params, subParams);
-          const subcaseQuery = new TestQuerySingleCase(
-            selfQuery.suite,
-            selfQuery.filePathParts,
-            selfQuery.testPathParts,
-            params
-          );
-          await this.runTest(rec, params, true, getExpectedStatus(subcaseQuery));
-        } catch (ex) {
-          if (ex instanceof SkipTestCase) {
-            // Convert SkipTestCase to info messages
-            ex.message = 'subcase skipped: ' + ex.message;
-            rec.info(ex);
-            ++skipCount;
-          } else {
-            // Since we are catching all error inside runTest(), this should never happen
-            rec.threw(ex);
+        const recActionsForSubcase: (() => void)[] = [];
+        recActions.push(recActionsForSubcase);
+
+        // Make a recorder that will defer all calls until `recActionsForSubcase` is flushed.
+        // We'll defer flushing these until later so that the recorded results look as if
+        // the tests executed serially. In practice, multiple async subcases
+        // may execute in an interleaved manner if `parallelSubcases` is true.
+        // `recActionsForSubcase` is an array inside a larger array `recActions` so that all
+        // recorder actions for the one subcase are executed before subsequent subcases.
+        const deferredRec = new Proxy(rec, {
+          get: (target, prop) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const f = (target as any)[prop];
+            assert(f instanceof Function);
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return function (...args: any[]) {
+              recActionsForSubcase.push(() => f.apply(target, args));
+            };
+          },
+        });
+
+        deferredRec.info(new Error('subcase: ' + stringifyPublicParams(subParams)));
+
+        const p = (async () => {
+          try {
+            const params = mergeParams(this.params, subParams);
+            const subcaseQuery = new TestQuerySingleCase(
+              selfQuery.suite,
+              selfQuery.filePathParts,
+              selfQuery.testPathParts,
+              params
+            );
+            await this.runTest(deferredRec, params, true, getExpectedStatus(subcaseQuery));
+          } catch (ex) {
+            if (ex instanceof SkipTestCase) {
+              // Convert SkipTestCase to info messages
+              ex.message = 'subcase skipped: ' + ex.message;
+              deferredRec.info(ex);
+              ++skipCount;
+            } else {
+              // Since we are catching all error inside runTest(), this should never happen
+              deferredRec.threw(ex);
+            }
           }
-        }
+        })();
+
         ++totalCount;
+        if (parallelSubcases) {
+          subcasePromises.push(p);
+        } else {
+          await p;
+        }
       }
+
+      // Wait for all subcases and flush all deferred recording of the subcase results.
+      await Promise.all(subcasePromises);
+      recActions.forEach(recActionsForSubcase => recActionsForSubcase.forEach(a => a()));
+
       if (skipCount === totalCount) {
         rec.skipped(new SkipTestCase('all subcases were skipped'));
       }

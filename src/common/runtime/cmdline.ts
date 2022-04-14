@@ -36,6 +36,7 @@ let verbose = false;
 let listTestcases = false;
 let debug = false;
 let printJSON = false;
+let parallelSubcases = false;
 let loadWebGPUExpectations: Promise<unknown> | undefined = undefined;
 let gpuProviderModule: GPUProviderModule | undefined = undefined;
 
@@ -55,6 +56,8 @@ for (let i = 0; i < sys.args.length; ++i) {
     } else if (a === '--expectations') {
       const expectationsFile = new URL(sys.args[++i], `file://${sys.cwd()}`).pathname;
       loadWebGPUExpectations = import(expectationsFile).then(m => m.expectations);
+    } else if (a === '--parallelSubcases') {
+      parallelSubcases = true;
     } else if (a === '--gpu-provider') {
       const modulePath = sys.args[++i];
       gpuProviderModule = require(modulePath);
@@ -105,7 +108,7 @@ if (queries.length === 0) {
     }
 
     const [rec, res] = log.record(name);
-    await testcase.run(rec, expectations);
+    await testcase.run(rec, { expectations, parallelSubcases });
 
     if (verbose) {
       printResults([[name, res]]);

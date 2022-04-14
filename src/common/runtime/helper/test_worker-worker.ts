@@ -1,8 +1,8 @@
+import { ExecutionContext } from '../../framework/execution_context.js';
 import { setBaseResourcePath } from '../../framework/resources.js';
 import { DefaultTestFileLoader } from '../../internal/file_loader.js';
 import { Logger } from '../../internal/logging/logger.js';
 import { parseQuery } from '../../internal/query/parseQuery.js';
-import { TestQueryWithExpectation } from '../../internal/query/query.js';
 import { assert } from '../../util/util.js';
 
 // Should be DedicatedWorkerGlobalScope, but importing lib "webworker" conflicts with lib "dom".
@@ -15,7 +15,7 @@ setBaseResourcePath('../../../resources');
 
 self.onmessage = async (ev: MessageEvent) => {
   const query: string = ev.data.query;
-  const expectations: TestQueryWithExpectation[] = ev.data.expectations;
+  const ctx: ExecutionContext = ev.data.ctx;
   const debug: boolean = ev.data.debug;
 
   Logger.globalDebugMode = debug;
@@ -26,7 +26,7 @@ self.onmessage = async (ev: MessageEvent) => {
 
   const testcase = testcases[0];
   const [rec, result] = log.record(testcase.query.toString());
-  await testcase.run(rec, expectations);
+  await testcase.run(rec, ctx);
 
   self.postMessage({ query, result });
 };

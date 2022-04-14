@@ -251,7 +251,7 @@ async function runTestcase(
   t.expect(objectEquals(testcases[i].query, query));
   const name = testcases[i].query.toString();
   const [rec, res] = log.record(name);
-  await testcases[i].run(rec, expectations);
+  await testcases[i].run(rec, { expectations, parallelSubcases: false });
 
   t.expect(log.results.get(name) === res);
   t.expect(res.status === status);

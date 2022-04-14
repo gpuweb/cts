@@ -46,6 +46,7 @@ if (!sys.existsSync('src/common/runtime/cmdline.ts')) {
 
 let debug = false;
 let gpuProviderModule: GPUProviderModule | undefined = undefined;
+let parallelSubcases = false;
 
 const gpuProviderFlags: string[] = [];
 for (let i = 0; i < sys.args.length; ++i) {
@@ -54,6 +55,8 @@ for (let i = 0; i < sys.args.length; ++i) {
     if (a === '--gpu-provider') {
       const modulePath = sys.args[++i];
       gpuProviderModule = require(modulePath);
+    } else if (a === '--parallelSubcases') {
+      parallelSubcases = true;
     } else if (a === '--gpu-provider-flag') {
       gpuProviderFlags.push(sys.args[++i]);
     } else if (a === '--help') {
@@ -90,7 +93,7 @@ if (gpuProviderModule) {
   ): Promise<LiveTestCaseResult> {
     const name = testcase.query.toString();
     const [rec, res] = log.record(name);
-    await testcase.run(rec, expectations);
+    await testcase.run(rec, { expectations, parallelSubcases });
     return res;
   }
 
