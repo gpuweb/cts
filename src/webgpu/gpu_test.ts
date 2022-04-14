@@ -1001,12 +1001,16 @@ export class GPUTest extends Fixture {
           }
         }
         const passDesc: GPURenderPassDescriptor = {
-          colorAttachments: Array.from(fullAttachmentInfo.colorFormats, format => ({
-            view: makeAttachmentView(format),
-            clearValue: [0, 0, 0, 0],
-            loadOp: 'clear',
-            storeOp: 'store',
-          })),
+          colorAttachments: Array.from(fullAttachmentInfo.colorFormats, format =>
+            format
+              ? {
+                  view: makeAttachmentView(format),
+                  clearValue: [0, 0, 0, 0],
+                  loadOp: 'clear',
+                  storeOp: 'store',
+                }
+              : null
+          ),
           depthStencilAttachment,
           occlusionQuerySet,
         };
