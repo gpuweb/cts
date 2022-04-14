@@ -121,7 +121,7 @@ class F extends ValidationTest {
     return attachment;
   }
 
-  createRenderPipeline(targets, depthStencil, sampleCount) {
+  createRenderPipeline(targets, depthStencil, sampleCount, cullMode) {
     return this.device.createRenderPipeline({
       vertex: {
         module: this.device.createShaderModule({
@@ -143,7 +143,7 @@ class F extends ValidationTest {
         targets,
       },
 
-      primitive: { topology: 'triangle-list' },
+      primitive: { topology: 'triangle-list', cullMode },
       depthStencil,
       multisample: { count: sampleCount },
     });
@@ -433,6 +433,130 @@ Test that the depth attachment format in render passes or bundles match the pipe
 
     encoder.setPipeline(pipeline);
     validateFinishAndSubmit(encoderFormat === pipelineFormat, true);
+  });
+
+const kStencilFaceStates = [
+  { failOp: 'keep', depthFailOp: 'keep', passOp: 'keep' },
+  { failOp: 'zero', depthFailOp: 'zero', passOp: 'zero' },
+];
+
+g.test('render_pass_or_bundle_and_pipeline,depth_stencil_read_only_write_state')
+  .desc(
+    `
+Test that the depth stencil read only state in render passes or bundles is compatible with the depth stencil write state of the pipeline.
+`
+  )
+  .params(u =>
+    u
+      .combine('encoderType', ['render pass', 'render bundle'])
+      .combine('format', kDepthStencilAttachmentFormats)
+      .beginSubcases()
+      // pass/bundle state
+      .combine('depthReadOnly', [false, true])
+      .combine('stencilReadOnly', [false, true])
+      .combine('stencilFront', kStencilFaceStates)
+      .combine('stencilBack', kStencilFaceStates)
+      // pipeline state
+      .combine('depthWriteEnabled', [false, true])
+      .combine('stencilWriteMask', [0, 0xffffffff])
+      .combine('cullMode', ['none', 'front', 'back'])
+      .filter(p => {
+        if (p.format) {
+          const depthStencilInfo = kTextureFormatInfo[p.format];
+          // For combined depth/stencil formats the depth and stencil read only state must match
+          // in order to create a valid render bundle or render pass.
+          if (depthStencilInfo.depth && depthStencilInfo.stencil) {
+            if (p.depthReadOnly !== p.stencilReadOnly) {
+              return false;
+            }
+          }
+          // If the format has no depth aspect, the depthReadOnly, depthWriteEnabled of the pipeline must not be true
+          // in order to create a valid render pipeline.
+          if (!depthStencilInfo.depth && p.depthWriteEnabled) {
+            return false;
+          }
+          // If the format has no stencil aspect, the stencil state operation must be 'keep'
+          // in order to create a valid render pipeline.
+          if (
+            !depthStencilInfo.stencil &&
+            (p.stencilFront.failOp !== 'keep' || p.stencilBack.failOp !== 'keep')
+          ) {
+            return false;
+          }
+        }
+        // No depthStencil attachment
+        return true;
+      })
+  )
+  .fn(async t => {
+    const {
+      encoderType,
+      format,
+      depthReadOnly,
+      stencilReadOnly,
+      depthWriteEnabled,
+      stencilWriteMask,
+      cullMode,
+      stencilFront,
+      stencilBack,
+    } = t.params;
+    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
+
+    const pipeline = t.createRenderPipeline(
+      [{ format: 'rgba8unorm', writeMask: 0 }],
+      format === undefined
+        ? undefined
+        : {
+            format,
+            depthWriteEnabled,
+            stencilWriteMask,
+            stencilFront,
+            stencilBack,
+          },
+
+      1,
+      cullMode
+    );
+
+    const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType, {
+      attachmentInfo: { colorFormats: ['rgba8unorm'], depthStencilFormat: format },
+    });
+
+    encoder.setPipeline(pipeline);
+
+    let writesDepth = false;
+    let writesStencil = false;
+    if (format) {
+      writesDepth = depthWriteEnabled;
+      if (stencilWriteMask !== 0) {
+        if (
+          cullMode !== 'front' &&
+          (stencilFront.passOp !== 'keep' ||
+            stencilFront.depthFailOp !== 'keep' ||
+            stencilFront.failOp !== 'keep')
+        ) {
+          writesStencil = true;
+        }
+        if (
+          cullMode !== 'back' &&
+          (stencilBack.passOp !== 'keep' ||
+            stencilBack.depthFailOp !== 'keep' ||
+            stencilBack.failOp !== 'keep')
+        ) {
+          writesStencil = true;
+        }
+      }
+    }
+
+    let isValid = true;
+    if (writesDepth) {
+      isValid &&= !depthReadOnly;
+    }
+    if (writesStencil) {
+      isValid &&= !stencilReadOnly;
+    }
+
+    validateFinishAndSubmit(isValid, true);
   });
 
 g.test('render_pass_or_bundle_and_pipeline,sample_count')
