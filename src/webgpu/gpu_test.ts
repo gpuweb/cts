@@ -1,4 +1,4 @@
-import { Fixture } from '../common/framework/fixture.js';
+import { Fixture, FixtureSharedState, TestParams } from '../common/framework/fixture.js';
 import { attemptGarbageCollection } from '../common/util/collect_garbage.js';
 import {
   assert,
@@ -62,10 +62,7 @@ export function initUncanonicalizedDeviceDescriptor(
   }
 }
 
-/**
- * Base fixture for WebGPU tests.
- */
-export class GPUTest extends Fixture {
+export class GPUTestSharedState extends FixtureSharedState {
   private provider: DeviceProvider | undefined;
   /** Must not be replaced once acquired. */
   private acquiredDevice: GPUDevice | undefined;
@@ -126,11 +123,6 @@ export class GPUTest extends Fixture {
         : await mismatchedDevicePool.reserve(initUncanonicalizedDeviceDescriptor(descriptor));
 
     this.mismatchedAcquiredDevice = this.mismatchedProvider.acquire();
-  }
-
-  /** GPUQueue for the test to use. (Same as `t.device.queue`.) */
-  get queue(): GPUQueue {
-    return this.device.queue;
   }
 
   protected async init(): Promise<void> {
@@ -256,6 +248,44 @@ export class GPUTest extends Fixture {
     }
     const features = types.map(t => kQueryTypeInfo[t].feature);
     await this.selectDeviceOrSkipTestCase(features);
+  }
+
+  /**
+   * Expects that the device should be lost for a particular reason at the teardown of the test.
+   */
+  expectDeviceLost(reason: GPUDeviceLostReason): void {
+    assert(
+      this.provider !== undefined,
+      'No provider available right now; did you "await" selectDeviceOrSkipTestCase?'
+    );
+    this.provider.expectDeviceLost(reason);
+  }
+}
+
+/**
+ * Base fixture for WebGPU tests.
+ */
+export class GPUTest extends Fixture<GPUTestSharedState> {
+  public static MakeSharedState(params: TestParams): GPUTestSharedState {
+    return new GPUTestSharedState(params);
+  }
+
+  /** GPUDevice for the test to use. */
+  get device(): GPUDevice {
+    return this.sharedState.device;
+  }
+
+  /** GPUDevice for tests requires another device from default one.
+   *  e.g. creating objects required creating mismatched objects required
+   * by device mismatched validation tests.
+   */
+  get mismatchedDevice(): GPUDevice {
+    return this.sharedState.mismatchedDevice;
+  }
+
+  /** GPUQueue for the test to use. (Same as `t.device.queue`.) */
+  get queue(): GPUQueue {
+    return this.device.queue;
   }
 
   /** Snapshot a GPUBuffer's contents, returning a new GPUBuffer with the `MAP_READ` usage. */
@@ -818,11 +848,7 @@ export class GPUTest extends Fixture {
    * Expects that the device should be lost for a particular reason at the teardown of the test.
    */
   expectDeviceLost(reason: GPUDeviceLostReason): void {
-    assert(
-      this.provider !== undefined,
-      'No provider available right now; did you "await" selectDeviceOrSkipTestCase?'
-    );
-    this.provider.expectDeviceLost(reason);
+    this.sharedState.expectDeviceLost(reason);
   }
 
   /**
