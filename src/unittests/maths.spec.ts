@@ -369,7 +369,7 @@ g.test('test,math,correctlyRounded')
   ]
   )
   .fn(t => {
-    const test_val = t.params.test_val;
+    const test_val = t.params.test_val as Scalar;
     const target = t.params.target;
     const is_correct = t.params.is_correct;
 
@@ -510,7 +510,7 @@ g.test('test,math,correctlyRoundedNoFlushOnly')
   ]
   )
   .fn(t => {
-    const test_val = t.params.test_val;
+    const test_val = t.params.test_val as Scalar;
     const target = t.params.target;
     const is_correct = t.params.is_correct;
 
@@ -651,7 +651,7 @@ g.test('test,math,correctlyRoundedFlushToZeroOnly')
   ]
   )
   .fn(t => {
-    const test_val = t.params.test_val;
+    const test_val = t.params.test_val as Scalar;
     const target = t.params.target;
     const is_correct = t.params.is_correct;
 

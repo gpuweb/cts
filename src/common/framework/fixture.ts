@@ -41,7 +41,8 @@ export class Fixture {
   }
 
   /**
-   * Returns the (case+subcase) parameters for this test function invocation.
+   * In a test function invocation, returns the (case+subcase) parameters for the test.
+   * In a before function invocation, returns only the case parameters for the test.
    */
   get params(): unknown {
     return this._params;

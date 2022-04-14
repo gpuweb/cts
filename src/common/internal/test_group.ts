@@ -70,11 +70,12 @@ export type FixtureClass<F extends Fixture = Fixture> = new (
   params: TestParams
 ) => F;
 type TestFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
+type BeforeFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
 
 export class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
   private fixture: FixtureClass;
   private seen: Set<string> = new Set();
-  private tests: Array<TestBuilder> = [];
+  private tests: Array<TestBuilder<F>> = [];
 
   constructor(fixture: FixtureClass) {
     this.fixture = fixture;
@@ -118,7 +119,7 @@ export class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
   }
 }
 
-interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F, {}> {
+interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F, {}, {}> {
   desc(description: string): this;
   /**
    * A noop function to associate a test with the relevant part of the specification.
@@ -135,7 +136,7 @@ interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F
    */
   params<CaseP extends {}, SubcaseP extends {}>(
     cases: (unit: CaseParamsBuilder<{}>) => ParamsBuilderBase<CaseP, SubcaseP>
-  ): TestBuilderWithParams<F, Merged<CaseP, SubcaseP>>;
+  ): TestBuilderWithParams<F, CaseP, SubcaseP>;
   /**
    * Parameterize the test, generating multiple cases, each possibly having subcases.
    *
@@ -143,17 +144,17 @@ interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F
    */
   params<CaseP extends {}, SubcaseP extends {}>(
     cases: ParamsBuilderBase<CaseP, SubcaseP>
-  ): TestBuilderWithParams<F, Merged<CaseP, SubcaseP>>;
+  ): TestBuilderWithParams<F, CaseP, SubcaseP>;
 
   /**
    * Parameterize the test, generating multiple cases, without subcases.
    */
-  paramsSimple<P extends {}>(cases: Iterable<P>): TestBuilderWithParams<F, P>;
+  paramsSimple<P extends {}>(cases: Iterable<P>): TestBuilderWithParams<F, P, {}>;
 
   /**
    * Parameterize the test, generating one case with multiple subcases.
    */
-  paramsSubcasesOnly<P extends {}>(subcases: Iterable<P>): TestBuilderWithParams<F, P>;
+  paramsSubcasesOnly<P extends {}>(subcases: Iterable<P>): TestBuilderWithParams<F, {}, P>;
   /**
    * Parameterize the test, generating one case with multiple subcases.
    *
@@ -162,16 +163,17 @@ interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F
    */
   paramsSubcasesOnly<P extends {}>(
     subcases: (unit: SubcaseParamsBuilder<{}, {}>) => SubcaseParamsBuilder<{}, P>
-  ): TestBuilderWithParams<F, P>;
+  ): TestBuilderWithParams<F, {}, P>;
 }
 
-interface TestBuilderWithParams<F extends Fixture, P extends {}> {
+interface TestBuilderWithParams<F extends Fixture, CaseP extends {}, SubcaseP extends {}> {
   batch(b: number): this;
-  fn(fn: TestFn<F, P>): void;
+  before(fn: BeforeFn<F, CaseP>): this;
+  fn(fn: TestFn<F, Merged<CaseP, SubcaseP>>): void;
   unimplemented(): void;
 }
 
-class TestBuilder {
+class TestBuilder<F extends Fixture> {
   readonly testPath: string[];
   isUnimplemented: boolean;
   description: string | undefined;
@@ -179,6 +181,7 @@ class TestBuilder {
 
   private readonly fixture: FixtureClass;
   private testFn: TestFn<Fixture, {}> | undefined;
+  private beforeFn: BeforeFn<Fixture, {}> | undefined;
   private testCases?: ParamsBuilderBase<{}, {}> = undefined;
   private batchSize: number = 0;
 
@@ -195,6 +198,12 @@ class TestBuilder {
   }
 
   specURL(url: string): this {
+    return this;
+  }
+
+  before(fn: BeforeFn<Fixture, {}>): this {
+    assert(this.beforeFn === undefined);
+    this.beforeFn = fn;
     return this;
   }
 
@@ -260,7 +269,7 @@ class TestBuilder {
 
   params(
     cases: ((unit: CaseParamsBuilder<{}>) => ParamsBuilderBase<{}, {}>) | ParamsBuilderBase<{}, {}>
-  ): TestBuilder {
+  ): TestBuilder<F> {
     assert(this.testCases === undefined, 'test case is already parameterized');
     if (cases instanceof Function) {
       this.testCases = cases(kUnitCaseParamsBuilder);
@@ -270,7 +279,7 @@ class TestBuilder {
     return this;
   }
 
-  paramsSimple(cases: Iterable<{}>): TestBuilder {
+  paramsSimple(cases: Iterable<{}>): TestBuilder<F> {
     assert(this.testCases === undefined, 'test case is already parameterized');
     this.testCases = kUnitCaseParamsBuilder.combineWithParams(cases);
     return this;
@@ -278,7 +287,7 @@ class TestBuilder {
 
   paramsSubcasesOnly(
     subcases: Iterable<{}> | ((unit: SubcaseParamsBuilder<{}, {}>) => SubcaseParamsBuilder<{}, {}>)
-  ): TestBuilder {
+  ): TestBuilder<F> {
     if (subcases instanceof Function) {
       return this.params(subcases(kUnitCaseParamsBuilder.beginSubcases()));
     } else {
@@ -298,6 +307,7 @@ class TestBuilder {
           subcases,
           this.fixture,
           this.testFn,
+          this.beforeFn,
           this.testCreationStack
         );
       } else {
@@ -310,6 +320,7 @@ class TestBuilder {
             subcaseArray,
             this.fixture,
             this.testFn,
+            this.beforeFn,
             this.testCreationStack
           );
         } else {
@@ -321,6 +332,7 @@ class TestBuilder {
               subcaseArray.slice(i, Math.min(subcaseArray.length, i + this.batchSize)),
               this.fixture,
               this.testFn,
+              this.beforeFn,
               this.testCreationStack
             );
           }
@@ -338,6 +350,7 @@ class RunCaseSpecific implements RunCase {
   private readonly subcases: Iterable<{}> | undefined;
   private readonly fixture: FixtureClass;
   private readonly fn: TestFn<Fixture, {}>;
+  private readonly beforeFn?: BeforeFn<Fixture, {}>;
   private readonly testCreationStack: Error;
 
   constructor(
@@ -347,6 +360,7 @@ class RunCaseSpecific implements RunCase {
     subcases: Iterable<{}> | undefined,
     fixture: FixtureClass,
     fn: TestFn<Fixture, {}>,
+    beforeFn: BeforeFn<Fixture, {}> | undefined,
     testCreationStack: Error
   ) {
     this.id = { test: testPath, params: extractPublicParams(params) };
@@ -355,6 +369,7 @@ class RunCaseSpecific implements RunCase {
     this.subcases = subcases;
     this.fixture = fixture;
     this.fn = fn;
+    this.beforeFn = beforeFn;
     this.testCreationStack = testCreationStack;
   }
 
@@ -373,6 +388,9 @@ class RunCaseSpecific implements RunCase {
 
       try {
         await inst.doInit();
+        if (this.beforeFn) {
+          await this.beforeFn(inst as Fixture & { params: {} });
+        }
         await this.fn(inst as Fixture & { params: {} });
       } finally {
         // Runs as long as constructor succeeded, even if initialization or the test failed.
