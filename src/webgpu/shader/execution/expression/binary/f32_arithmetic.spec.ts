@@ -5,12 +5,11 @@ Execution Tests for the f32 arithmetic binary expression operations
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { anyOf, correctlyRoundedThreshold, ulpThreshold } from '../../../../util/compare.js';
-import { kValue } from '../../../../util/constants.js';
 import { f32, Scalar, TypeF32 } from '../../../../util/conversion.js';
 import {
   biasedRange,
+  fullF32Range,
   isSubnormalNumber,
-  linearRange,
   quantizeToF32,
 } from '../../../../util/math.js';
 import { Case, Config, run } from '../expression.js';
@@ -18,17 +17,6 @@ import { Case, Config, run } from '../expression.js';
 import { binary } from './binary.js';
 
 export const g = makeTestGroup(GPUTest);
-
-/* Generates an array of numbers spread over the entire range of 32-bit floats */
-function fullNumericRange(): Array<number> {
-  return [
-    ...biasedRange(kValue.f32.negative.max, kValue.f32.negative.min, 50),
-    ...linearRange(kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max, 10),
-    0.0,
-    ...linearRange(kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, 10),
-    ...biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, 50),
-  ];
-}
 
 /**
  * Produces all of the results for a binary op and a specific pair of params, accounting for if subnormal results can be
@@ -110,7 +98,7 @@ Accuracy: Correctly rounded
     };
 
     const cases: Array<Case> = [];
-    const numeric_range = fullNumericRange();
+    const numeric_range = fullF32Range();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
         cases.push(makeCase(lhs, rhs));
@@ -145,7 +133,7 @@ Accuracy: Correctly rounded
     };
 
     const cases: Array<Case> = [];
-    const numeric_range = fullNumericRange();
+    const numeric_range = fullF32Range();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
         cases.push(makeCase(lhs, rhs));
@@ -180,7 +168,7 @@ Accuracy: Correctly rounded
     };
 
     const cases: Array<Case> = [];
-    const numeric_range = fullNumericRange();
+    const numeric_range = fullF32Range();
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
         cases.push(makeCase(lhs, rhs));
@@ -220,7 +208,7 @@ Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
     };
 
     const cases: Array<Case> = [];
-    const lhs_numeric_range = fullNumericRange();
+    const lhs_numeric_range = fullF32Range();
     const rhs_numeric_range = biasedRange(2 ** -126, 2 ** 126, 200).filter(value => {
       return value !== 0.0;
     });
