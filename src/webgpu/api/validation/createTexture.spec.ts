@@ -695,12 +695,13 @@ g.test('texture_usage')
     };
 
     let success = true;
+    const appliedDimension = dimension === undefined ? '2d' : dimension;
     // Note that we unconditionally test copy usages for all formats. We don't check copySrc/copyDst in kTextureFormatInfo in capability_info.js
     // if (!info.copySrc && (usage & GPUTextureUsage.COPY_SRC) !== 0) success = false;
     // if (!info.copyDst && (usage & GPUTextureUsage.COPY_DST) !== 0) success = false;
     if (!info.storage && (usage & GPUTextureUsage.STORAGE_BINDING) !== 0) success = false;
     if (
-      (!info.renderable || dimension !== '2d') &&
+      (!info.renderable || appliedDimension !== '2d') &&
       (usage & GPUTextureUsage.RENDER_ATTACHMENT) !== 0
     )
       success = false;
