@@ -25,7 +25,7 @@ const kColorAttachments = kColorAttachmentCounts
     //    [0, 1],
     //    [1, 0],
     // ]
-    // 0 means null attachment, 1 means non-null attachment, at the slot
+    // 0 (false) means null attachment, 1 (true) means non-null attachment, at the slot
 
     // Special cases: we need at least a color attachment, when we don't have depth stencil attachment
     if (count === 1) {
@@ -40,35 +40,37 @@ const kColorAttachments = kColorAttachmentCounts
     }
 
     // [1, 1, ..., 1]: all color attachment are used
-    let result = [new Array<number>(count).fill(1)];
+    let result = [new Array<boolean>(count).fill(true)];
 
     // [1, 0, 1, ..., 1]: generate cases with one null attachment at different locations
     result = result.concat(
       range(count, i => {
-        const r = new Array<number>(count).fill(1);
-        r[i] = 0;
+        const r = new Array<boolean>(count).fill(true);
+        r[i] = false;
         return r;
       })
     );
 
     // [1, 0, 1, ..., 0, 1]: generate cases with two null attachments at different locations
-    result = result.concat(
-      range(count - 1, i => {
-        const cases = [] as number[][];
-        for (let j = i + 1; j < count; j++) {
-          const r = new Array<number>(count).fill(1);
-          r[i] = 0;
-          r[j] = 0;
-          cases.push(r);
-        }
-
-        return cases;
-      }).flat()
-    );
+    // To reduce test run time, limit the attachment count to <= 4
+    if (count <= 4) {
+      result = result.concat(
+        range(count - 1, i => {
+          const cases = [] as boolean[][];
+          for (let j = i + 1; j < count; j++) {
+            const r = new Array<boolean>(count).fill(true);
+            r[i] = false;
+            r[j] = false;
+            cases.push(r);
+          }
+          return cases;
+        }).flat()
+      );
+    }
 
     return result;
   })
-  .flat() as number[][];
+  .flat() as boolean[][];
 
 const kDepthStencilAttachmentFormats = [
   undefined,
@@ -230,7 +232,7 @@ g.test('render_pass_and_bundle,color_sparse')
   )
   .fn(t => {
     const { passAttachments, bundleAttachments } = t.params;
-    const colorFormats = bundleAttachments.map(i => (i === 1 ? 'rgba8unorm' : null));
+    const colorFormats = bundleAttachments.map(i => (i ? 'rgba8unorm' : null));
     const bundleEncoder = t.device.createRenderBundleEncoder({
       colorFormats,
     });
@@ -238,7 +240,7 @@ g.test('render_pass_and_bundle,color_sparse')
 
     const { encoder, validateFinishAndSubmit } = t.createEncoder('non-pass');
     const colorAttachments = passAttachments.map(i =>
-      t.createColorAttachment(i === 1 ? 'rgba8unorm' : null)
+      t.createColorAttachment(i ? 'rgba8unorm' : null)
     );
     const pass = encoder.beginRenderPass({
       colorAttachments,
@@ -377,11 +379,11 @@ Test that each of color attachments in render passes or bundles match that of th
     const { encoderType, encoderAttachments, pipelineAttachments } = t.params;
 
     const colorTargets = pipelineAttachments.map(i =>
-      i === 1 ? ({ format: 'rgba8unorm', writeMask: 0 } as GPUColorTargetState) : null
+      i ? ({ format: 'rgba8unorm', writeMask: 0 } as GPUColorTargetState) : null
     );
     const pipeline = t.createRenderPipeline(colorTargets);
 
-    const colorFormats = encoderAttachments.map(i => (i === 1 ? 'rgba8unorm' : null));
+    const colorFormats = encoderAttachments.map(i => (i ? 'rgba8unorm' : null));
     const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType, {
       attachmentInfo: { colorFormats },
     });
