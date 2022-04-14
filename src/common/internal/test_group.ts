@@ -1,4 +1,10 @@
-import { Fixture, SkipTestCase, TestParams, UnexpectedPassError } from '../framework/fixture.js';
+import {
+  Fixture,
+  FixtureSharedState,
+  SkipTestCase,
+  TestParams,
+  UnexpectedPassError,
+} from '../framework/fixture.js';
 import {
   CaseParamsBuilder,
   builderIterateCasesWithSubcases,
@@ -7,7 +13,7 @@ import {
   SubcaseParamsBuilder,
 } from '../framework/params_builder.js';
 import { Expectation } from '../internal/logging/result.js';
-import { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
+import { CaseRecorder, TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
 import { extractPublicParams, Merged, mergeParams } from '../internal/params_utils.js';
 import { compareQueries, Ordering } from '../internal/query/compare.js';
 import { TestQuerySingleCase, TestQueryWithExpectation } from '../internal/query/query.js';
@@ -40,11 +46,13 @@ export interface RunCase {
 }
 
 // Interface for defining tests
-export interface TestGroupBuilder<F extends Fixture> {
-  test(name: string): TestBuilderWithName<F>;
+export interface TestGroupBuilder<S extends FixtureSharedState, F extends Fixture<S>> {
+  test(name: string): TestBuilderWithName<S, F>;
 }
-export function makeTestGroup<F extends Fixture>(fixture: FixtureClass<F>): TestGroupBuilder<F> {
-  return new TestGroup(fixture);
+export function makeTestGroup<S extends FixtureSharedState, F extends Fixture<S>>(
+  fixture: FixtureClass<S, F>
+): TestGroupBuilder<S, F> {
+  return new TestGroup((fixture as unknown) as FixtureClass);
 }
 
 // Interfaces for running tests
@@ -60,22 +68,27 @@ export interface IterableTest {
 }
 
 export function makeTestGroupForUnitTesting<F extends Fixture>(
-  fixture: FixtureClass<F>
-): TestGroup<F> {
+  fixture: FixtureClass<FixtureSharedState, F>
+): TestGroup<FixtureSharedState, F> {
   return new TestGroup(fixture);
 }
 
-export type FixtureClass<F extends Fixture = Fixture> = new (
-  log: TestCaseRecorder,
-  params: TestParams
-) => F;
+export type FixtureClass<
+  S extends FixtureSharedState = FixtureSharedState,
+  F extends Fixture<S> = Fixture<S>
+> = (new (sharedState: S, log: CaseRecorder, params: TestParams) => F) & {
+  MakeSharedState: (params: TestParams) => S;
+};
 type TestFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
-type BeforeFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
+type BeforeFn<S extends FixtureSharedState, P extends {}> = (
+  s: S & { params: P }
+) => Promise<void> | void;
 
-export class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
+export class TestGroup<S extends FixtureSharedState, F extends Fixture<S>>
+  implements TestGroupBuilder<S, F> {
   private fixture: FixtureClass;
   private seen: Set<string> = new Set();
-  private tests: Array<TestBuilder<F>> = [];
+  private tests: Array<TestBuilder<S, F>> = [];
 
   constructor(fixture: FixtureClass) {
     this.fixture = fixture;
@@ -97,7 +110,7 @@ export class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
     this.seen.add(name);
   }
 
-  test(name: string): TestBuilderWithName<F> {
+  test(name: string): TestBuilderWithName<S, F> {
     const testCreationStack = new Error(`Test created: ${name}`);
 
     this.checkName(name);
@@ -109,7 +122,7 @@ export class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
 
     const test = new TestBuilder(parts, this.fixture, testCreationStack);
     this.tests.push(test);
-    return (test as unknown) as TestBuilderWithName<F>;
+    return (test as unknown) as TestBuilderWithName<S, F>;
   }
 
   validate(): void {
@@ -119,7 +132,8 @@ export class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
   }
 }
 
-interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F, {}, {}> {
+interface TestBuilderWithName<S extends FixtureSharedState, F extends Fixture<S>>
+  extends TestBuilderWithParams<S, F, {}, {}> {
   desc(description: string): this;
   /**
    * A noop function to associate a test with the relevant part of the specification.
@@ -136,7 +150,7 @@ interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F
    */
   params<CaseP extends {}, SubcaseP extends {}>(
     cases: (unit: CaseParamsBuilder<{}>) => ParamsBuilderBase<CaseP, SubcaseP>
-  ): TestBuilderWithParams<F, CaseP, SubcaseP>;
+  ): TestBuilderWithParams<S, F, CaseP, SubcaseP>;
   /**
    * Parameterize the test, generating multiple cases, each possibly having subcases.
    *
@@ -144,17 +158,17 @@ interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F
    */
   params<CaseP extends {}, SubcaseP extends {}>(
     cases: ParamsBuilderBase<CaseP, SubcaseP>
-  ): TestBuilderWithParams<F, CaseP, SubcaseP>;
+  ): TestBuilderWithParams<S, F, CaseP, SubcaseP>;
 
   /**
    * Parameterize the test, generating multiple cases, without subcases.
    */
-  paramsSimple<P extends {}>(cases: Iterable<P>): TestBuilderWithParams<F, P, {}>;
+  paramsSimple<P extends {}>(cases: Iterable<P>): TestBuilderWithParams<S, F, P, {}>;
 
   /**
    * Parameterize the test, generating one case with multiple subcases.
    */
-  paramsSubcasesOnly<P extends {}>(subcases: Iterable<P>): TestBuilderWithParams<F, {}, P>;
+  paramsSubcasesOnly<P extends {}>(subcases: Iterable<P>): TestBuilderWithParams<S, F, {}, P>;
   /**
    * Parameterize the test, generating one case with multiple subcases.
    *
@@ -163,17 +177,22 @@ interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F
    */
   paramsSubcasesOnly<P extends {}>(
     subcases: (unit: SubcaseParamsBuilder<{}, {}>) => SubcaseParamsBuilder<{}, P>
-  ): TestBuilderWithParams<F, {}, P>;
+  ): TestBuilderWithParams<S, F, {}, P>;
 }
 
-interface TestBuilderWithParams<F extends Fixture, CaseP extends {}, SubcaseP extends {}> {
+interface TestBuilderWithParams<
+  S extends FixtureSharedState,
+  F extends Fixture<S>,
+  CaseP extends {},
+  SubcaseP extends {}
+> {
   batch(b: number): this;
-  before(fn: BeforeFn<F, CaseP>): this;
+  before(fn: BeforeFn<S, CaseP>): this;
   fn(fn: TestFn<F, Merged<CaseP, SubcaseP>>): void;
   unimplemented(): void;
 }
 
-class TestBuilder<F extends Fixture> {
+class TestBuilder<S extends FixtureSharedState, F extends Fixture> {
   readonly testPath: string[];
   isUnimplemented: boolean;
   description: string | undefined;
@@ -181,7 +200,7 @@ class TestBuilder<F extends Fixture> {
 
   private readonly fixture: FixtureClass;
   private testFn: TestFn<Fixture, {}> | undefined;
-  private beforeFn: BeforeFn<Fixture, {}> | undefined;
+  private beforeFn: BeforeFn<FixtureSharedState, {}> | undefined;
   private testCases?: ParamsBuilderBase<{}, {}> = undefined;
   private batchSize: number = 0;
 
@@ -201,7 +220,7 @@ class TestBuilder<F extends Fixture> {
     return this;
   }
 
-  before(fn: BeforeFn<Fixture, {}>): this {
+  before(fn: BeforeFn<FixtureSharedState, {}>): this {
     assert(this.beforeFn === undefined);
     this.beforeFn = fn;
     return this;
@@ -269,7 +288,7 @@ class TestBuilder<F extends Fixture> {
 
   params(
     cases: ((unit: CaseParamsBuilder<{}>) => ParamsBuilderBase<{}, {}>) | ParamsBuilderBase<{}, {}>
-  ): TestBuilder<F> {
+  ): TestBuilder<S, F> {
     assert(this.testCases === undefined, 'test case is already parameterized');
     if (cases instanceof Function) {
       this.testCases = cases(kUnitCaseParamsBuilder);
@@ -279,7 +298,7 @@ class TestBuilder<F extends Fixture> {
     return this;
   }
 
-  paramsSimple(cases: Iterable<{}>): TestBuilder<F> {
+  paramsSimple(cases: Iterable<{}>): TestBuilder<S, F> {
     assert(this.testCases === undefined, 'test case is already parameterized');
     this.testCases = kUnitCaseParamsBuilder.combineWithParams(cases);
     return this;
@@ -287,7 +306,7 @@ class TestBuilder<F extends Fixture> {
 
   paramsSubcasesOnly(
     subcases: Iterable<{}> | ((unit: SubcaseParamsBuilder<{}, {}>) => SubcaseParamsBuilder<{}, {}>)
-  ): TestBuilder<F> {
+  ): TestBuilder<S, F> {
     if (subcases instanceof Function) {
       return this.params(subcases(kUnitCaseParamsBuilder.beginSubcases()));
     } else {
@@ -350,7 +369,7 @@ class RunCaseSpecific implements RunCase {
   private readonly subcases: Iterable<{}> | undefined;
   private readonly fixture: FixtureClass;
   private readonly fn: TestFn<Fixture, {}>;
-  private readonly beforeFn?: BeforeFn<Fixture, {}>;
+  private readonly beforeFn?: BeforeFn<FixtureSharedState, {}>;
   private readonly testCreationStack: Error;
 
   constructor(
@@ -360,7 +379,7 @@ class RunCaseSpecific implements RunCase {
     subcases: Iterable<{}> | undefined,
     fixture: FixtureClass,
     fn: TestFn<Fixture, {}>,
-    beforeFn: BeforeFn<Fixture, {}> | undefined,
+    beforeFn: BeforeFn<FixtureSharedState, {}> | undefined,
     testCreationStack: Error
   ) {
     this.id = { test: testPath, params: extractPublicParams(params) };
@@ -375,26 +394,27 @@ class RunCaseSpecific implements RunCase {
 
   async runTest(
     rec: TestCaseRecorder,
-    params: {},
+    sharedState: FixtureSharedState,
+    params: TestParams,
     throwSkip: boolean,
-    expectedStatus: Expectation
+    expectedStatus: Expectation,
+    finalizePromises: Promise<void>[]
   ): Promise<void> {
+    const subcaseRec = rec.recordSubCase();
+    let finalizePromise = Promise.resolve();
     try {
-      rec.beginSubCase();
       if (expectedStatus === 'skip') {
         throw new SkipTestCase('Skipped by expectations');
       }
-      const inst = new this.fixture(rec, params);
-
+      const inst = new this.fixture(sharedState, subcaseRec, params);
       try {
         await inst.doInit();
-        if (this.beforeFn) {
-          await this.beforeFn(inst as Fixture & { params: {} });
-        }
         await this.fn(inst as Fixture & { params: {} });
       } finally {
         // Runs as long as constructor succeeded, even if initialization or the test failed.
-        await inst.doFinalize();
+        // Asynchronously run finalization work so that subsequent subcases
+        // can begin running without waiting for these results.
+        finalizePromise = inst.doFinalize();
       }
     } catch (ex) {
       // There was an exception from constructor, init, test, or finalize.
@@ -404,16 +424,26 @@ class RunCaseSpecific implements RunCase {
       if (throwSkip && ex instanceof SkipTestCase) {
         throw ex;
       }
-      rec.threw(ex);
+      subcaseRec.threw(ex);
     } finally {
-      try {
-        rec.endSubCase(expectedStatus);
-      } catch (ex) {
-        assert(ex instanceof UnexpectedPassError);
-        ex.message = `Testcase passed unexpectedly.`;
-        ex.stack = this.testCreationStack.stack;
-        rec.warn(ex);
-      }
+      // Push the promise into a list so that we can wait for all subcases
+      // to complete.
+      finalizePromises.push(
+        finalizePromise
+          .catch(ex => {
+            subcaseRec.threw(ex);
+          })
+          .finally(() => {
+            try {
+              subcaseRec.finishSubCase(expectedStatus);
+            } catch (ex) {
+              assert(ex instanceof UnexpectedPassError);
+              ex.message = `Testcase passed unexpectedly.`;
+              ex.stack = this.testCreationStack.stack;
+              subcaseRec.warn(ex);
+            }
+          })
+      );
     }
   }
 
@@ -446,40 +476,83 @@ class RunCaseSpecific implements RunCase {
       return didSeeFail ? 'fail' : 'pass';
     };
 
-    rec.start();
-    if (this.subcases) {
-      let totalCount = 0;
-      let skipCount = 0;
-      for (const subParams of this.subcases) {
-        rec.info(new Error('subcase: ' + stringifyPublicParams(subParams)));
-        try {
-          const params = mergeParams(this.params, subParams);
-          const subcaseQuery = new TestQuerySingleCase(
-            selfQuery.suite,
-            selfQuery.filePathParts,
-            selfQuery.testPathParts,
-            params
-          );
-          await this.runTest(rec, params, true, getExpectedStatus(subcaseQuery));
-        } catch (ex) {
-          if (ex instanceof SkipTestCase) {
-            // Convert SkipTestCase to info messages
-            ex.message = 'subcase skipped: ' + ex.message;
-            rec.info(ex);
-            ++skipCount;
-          } else {
-            // Since we are catching all error inside runTest(), this should never happen
-            rec.threw(ex);
-          }
+    try {
+      rec.start();
+      const sharedState = this.fixture.MakeSharedState(this.params);
+      try {
+        await sharedState.doInit();
+        if (this.beforeFn) {
+          await this.beforeFn(sharedState);
         }
-        ++totalCount;
+
+        const finalizePromises: Promise<void>[] = [];
+        if (this.subcases) {
+          let totalCount = 0;
+          let skipCount = 0;
+          for (const subParams of this.subcases) {
+            rec.info(new Error('subcase: ' + stringifyPublicParams(subParams)));
+            try {
+              const params = mergeParams(this.params, subParams);
+              const subcaseQuery = new TestQuerySingleCase(
+                selfQuery.suite,
+                selfQuery.filePathParts,
+                selfQuery.testPathParts,
+                params
+              );
+              await this.runTest(
+                rec,
+                sharedState,
+                params,
+                /* throwSkip */ true,
+                getExpectedStatus(subcaseQuery),
+                finalizePromises
+              );
+            } catch (ex) {
+              if (ex instanceof SkipTestCase) {
+                // Convert SkipTestCase to info messages
+                ex.message = 'subcase skipped: ' + ex.message;
+                rec.info(ex);
+                ++skipCount;
+              } else {
+                // Since we are catching all error inside runTest(), this should never happen
+                rec.threw(ex);
+              }
+            }
+            ++totalCount;
+
+            // Wait to ensure there aren't too many in-flight subcases.
+            const kMaxPendingEventualExpectations = 500;
+            while (sharedState.numPendingEventualExpectations > kMaxPendingEventualExpectations) {
+              await sharedState.makeEventualExpectationDecrementedPromisePromise();
+            }
+          }
+          if (skipCount === totalCount) {
+            rec.skipped(new SkipTestCase('all subcases were skipped'));
+          }
+        } else {
+          await this.runTest(
+            rec,
+            sharedState,
+            this.params,
+            /* throwSkip */ false,
+            getExpectedStatus(selfQuery),
+            finalizePromises
+          );
+        }
+        // Wait for all subcases to finalize.
+        await Promise.all(finalizePromises);
+      } finally {
+        // Runs as long as the shared state constructor succeeded, even if initialization or a test failed.
+        await sharedState.doFinalize();
       }
-      if (skipCount === totalCount) {
-        rec.skipped(new SkipTestCase('all subcases were skipped'));
-      }
-    } else {
-      await this.runTest(rec, this.params, false, getExpectedStatus(selfQuery));
+    } catch (ex) {
+      // There was an exception from sharedState/fixture constructor, init, beforeFn, or test.
+      // An error from beforeFn may have been SkipTestCase.
+      // An error from finalize may have been an eventualAsyncExpectation failure
+      // or unexpected validation/OOM error from the GPUDevice.
+      rec.threw(ex);
+    } finally {
+      rec.finish();
     }
-    rec.finish();
   }
 }

@@ -16,74 +16,17 @@ enum LogSeverity {
 const kMaxLogStacks = 2;
 const kMinSeverityForStack = LogSeverity.Warn;
 
-/** Holds onto a LiveTestCaseResult owned by the Logger, and writes the results into it. */
-export class TestCaseRecorder {
-  private result: LiveTestCaseResult;
-  private inSubCase: boolean = false;
-  private subCaseStatus = LogSeverity.Pass;
-  private finalCaseStatus = LogSeverity.Pass;
-  private hideStacksBelowSeverity = kMinSeverityForStack;
-  private startTime = -1;
-  private logs: LogMessageWithStack[] = [];
-  private logLinesAtCurrentSeverity = 0;
-  private debugging = false;
-  /** Used to dedup log messages which have identical stacks. */
-  private messagesForPreviouslySeenStacks = new Map<string, LogMessageWithStack>();
+export class CaseRecorder {
+  protected inSubCase: boolean = false;
+  protected finalStatus = LogSeverity.Pass;
+  protected hideStacksBelowSeverity = kMinSeverityForStack;
+  protected logLinesAtCurrentSeverity = 0;
+  protected debugging = false;
+  protected logs: (LogMessageWithStack | LogMessageWithStack[])[];
 
-  constructor(result: LiveTestCaseResult, debugging: boolean) {
-    this.result = result;
+  constructor(debugging: boolean, logs: LogMessageWithStack[]) {
     this.debugging = debugging;
-  }
-
-  start(): void {
-    assert(this.startTime < 0, 'TestCaseRecorder cannot be reused');
-    this.startTime = now();
-  }
-
-  finish(): void {
-    assert(this.startTime >= 0, 'finish() before start()');
-
-    const timeMilliseconds = now() - this.startTime;
-    // Round to next microsecond to avoid storing useless .xxxx00000000000002 in results.
-    this.result.timems = Math.ceil(timeMilliseconds * 1000) / 1000;
-
-    // Convert numeric enum back to string (but expose 'exception' as 'fail')
-    this.result.status =
-      this.finalCaseStatus === LogSeverity.Pass
-        ? 'pass'
-        : this.finalCaseStatus === LogSeverity.Skip
-        ? 'skip'
-        : this.finalCaseStatus === LogSeverity.Warn
-        ? 'warn'
-        : 'fail'; // Everything else is an error
-
-    this.result.logs = this.logs;
-  }
-
-  beginSubCase() {
-    this.subCaseStatus = LogSeverity.Pass;
-    this.inSubCase = true;
-  }
-
-  endSubCase(expectedStatus: Expectation) {
-    try {
-      if (expectedStatus === 'fail') {
-        if (this.subCaseStatus <= LogSeverity.Warn) {
-          throw new UnexpectedPassError();
-        } else {
-          this.subCaseStatus = LogSeverity.Pass;
-        }
-      }
-    } finally {
-      this.inSubCase = false;
-      if (this.subCaseStatus > this.finalCaseStatus) {
-        this.finalCaseStatus = this.subCaseStatus;
-      }
-    }
-  }
-
-  injectResult(injectedResult: LiveTestCaseResult): void {
-    Object.assign(this.result, injectedResult);
+    this.logs = logs;
   }
 
   debug(ex: Error): void {
@@ -119,16 +62,17 @@ export class TestCaseRecorder {
     this.logImpl(LogSeverity.ThrewException, 'EXCEPTION', ex);
   }
 
+  /** @internal */
+  updateStatus(level: LogSeverity) {
+    // Final case status should be the "worst" of all log entries.
+    if (level > this.finalStatus) this.finalStatus = level;
+  }
+
   private logImpl(level: LogSeverity, name: string, baseException: unknown): void {
     assert(baseException instanceof Error, 'test threw a non-Error object');
     const logMessage = new LogMessageWithStack(name, baseException);
 
-    // Final case status should be the "worst" of all log entries.
-    if (this.inSubCase) {
-      if (level > this.subCaseStatus) this.subCaseStatus = level;
-    } else {
-      if (level > this.finalCaseStatus) this.finalCaseStatus = level;
-    }
+    this.updateStatus(level);
 
     // setFirstLineOnly for all logs except `kMaxLogStacks` stacks at the highest severity
     if (level > this.hideStacksBelowSeverity) {
@@ -137,7 +81,9 @@ export class TestCaseRecorder {
 
       // Go back and setFirstLineOnly for everything of a lower log level
       for (const log of this.logs) {
-        log.setStackHidden('below max severity');
+        if (!(log instanceof Array)) {
+          log.setStackHidden('below max severity');
+        }
       }
     }
     if (level === this.hideStacksBelowSeverity) {
@@ -152,5 +98,74 @@ export class TestCaseRecorder {
     }
 
     this.logs.push(logMessage);
+  }
+}
+
+export class SubCaseRecorder extends CaseRecorder {
+  private parent: CaseRecorder;
+
+  constructor(parent: CaseRecorder, debugging: boolean, logs: LogMessageWithStack[] = []) {
+    super(debugging, logs);
+    this.parent = parent;
+  }
+
+  finishSubCase(expectedStatus: Expectation) {
+    try {
+      if (expectedStatus === 'fail') {
+        if (this.finalStatus <= LogSeverity.Warn) {
+          throw new UnexpectedPassError();
+        } else {
+          this.finalStatus = LogSeverity.Pass;
+        }
+      }
+    } finally {
+      this.parent.updateStatus(this.finalStatus);
+    }
+  }
+}
+
+/** Holds onto a LiveTestCaseResult owned by the Logger, and writes the results into it. */
+export class TestCaseRecorder extends CaseRecorder {
+  private result: LiveTestCaseResult;
+  private startTime = -1;
+
+  constructor(result: LiveTestCaseResult, debugging: boolean) {
+    super(debugging, []);
+    this.result = result;
+  }
+
+  start(): void {
+    assert(this.startTime < 0, 'TestCaseRecorder cannot be reused');
+    this.startTime = now();
+  }
+
+  finish(): void {
+    assert(this.startTime >= 0, 'finish() before start()');
+
+    const timeMilliseconds = now() - this.startTime;
+    // Round to next microsecond to avoid storing useless .xxxx00000000000002 in results.
+    this.result.timems = Math.ceil(timeMilliseconds * 1000) / 1000;
+
+    // Convert numeric enum back to string (but expose 'exception' as 'fail')
+    this.result.status =
+      this.finalStatus === LogSeverity.Pass
+        ? 'pass'
+        : this.finalStatus === LogSeverity.Skip
+        ? 'skip'
+        : this.finalStatus === LogSeverity.Warn
+        ? 'warn'
+        : 'fail'; // Everything else is an error
+
+    this.result.logs = this.logs.reduce((acc: LogMessageWithStack[], val) => acc.concat(val), []);
+  }
+
+  injectResult(injectedResult: LiveTestCaseResult): void {
+    Object.assign(this.result, injectedResult);
+  }
+
+  recordSubCase(): SubCaseRecorder {
+    const logs: LogMessageWithStack[] = [];
+    this.logs.push(logs);
+    return new SubCaseRecorder(this, this.debugging, logs);
   }
 }

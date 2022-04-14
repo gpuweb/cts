@@ -1,11 +1,11 @@
-import { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
+import { CaseRecorder } from '../internal/logging/test_case_recorder.js';
 import { JSONWithUndefined } from '../internal/params_utils.js';
 import { assert, unreachable } from '../util/util.js';
 
 export class SkipTestCase extends Error {}
 export class UnexpectedPassError extends Error {}
 
-export { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
+export { CaseRecorder } from '../internal/logging/test_case_recorder.js';
 
 /** The fully-general type for params passed to a test function invocation. */
 export type TestParams = {
@@ -17,25 +17,81 @@ type DestroyableObject =
   | { close(): void }
   | { getExtension(extensionName: 'WEBGL_lose_context'): WEBGL_lose_context };
 
+export class FixtureSharedState {
+  private _params: TestParams;
+  private _numPendingEventualExpectations: number = 0;
+  private _onEventualExpectationDecrementedPromiseCallbacks: Set<() => void> = new Set();
+
+  constructor(params: TestParams) {
+    this._params = params;
+  }
+
+  get params(): TestParams {
+    return this._params;
+  }
+
+  /** @internal */
+  doInit(): Promise<void> {
+    return this.init();
+  }
+
+  /** @internal */
+  doFinalize(): Promise<void> {
+    return this.finalize();
+  }
+
+  protected async init() {}
+  protected async finalize() {}
+
+  get numPendingEventualExpectations() {
+    return this._numPendingEventualExpectations;
+  }
+
+  incrementPendingEventualExpectationCount() {
+    this._numPendingEventualExpectations += 1;
+  }
+
+  decrementPendingEventualExpectationCount() {
+    this._numPendingEventualExpectations -= 1;
+    const callbacks = this._onEventualExpectationDecrementedPromiseCallbacks;
+    this._onEventualExpectationDecrementedPromiseCallbacks = new Set();
+    for (const cb of callbacks) {
+      cb();
+    }
+  }
+
+  makeEventualExpectationDecrementedPromisePromise() {
+    return new Promise<void>(resolve => {
+      this._onEventualExpectationDecrementedPromiseCallbacks.add(resolve);
+    });
+  }
+}
+
 /**
  * A Fixture is a class used to instantiate each test sub/case at run time.
  * A new instance of the Fixture is created for every single test subcase
  * (i.e. every time the test function is run).
  */
-export class Fixture {
+export class Fixture<S extends FixtureSharedState = FixtureSharedState> {
   private _params: unknown;
   /**
    * Interface for recording logs and test status.
    *
    * @internal
    */
-  protected rec: TestCaseRecorder;
-  private eventualExpectations: Array<Promise<unknown>> = [];
+  protected sharedState: S;
+  protected rec: CaseRecorder;
+  private eventualExpectations: Promise<unknown>[] = [];
   private numOutstandingAsyncExpectations = 0;
   private objectsToCleanUp: DestroyableObject[] = [];
 
+  public static MakeSharedState(params: TestParams): FixtureSharedState {
+    return new FixtureSharedState(params);
+  }
+
   /** @internal */
-  constructor(rec: TestCaseRecorder, params: TestParams) {
+  constructor(sharedState: S, rec: CaseRecorder, params: TestParams) {
+    this.sharedState = sharedState;
     this.rec = rec;
     this._params = params;
   }
@@ -66,26 +122,32 @@ export class Fixture {
       'there were outstanding immediateAsyncExpectations (e.g. expectUncapturedError) at the end of the test'
     );
 
-    // Loop to exhaust the eventualExpectations in case they chain off each other.
-    while (this.eventualExpectations.length) {
-      const p = this.eventualExpectations.shift()!;
-      try {
-        await p;
-      } catch (ex) {
-        this.rec.threw(ex);
+    try {
+      // Loop to exhaust the eventualExpectations in case they chain off each other.
+      while (this.eventualExpectations.length) {
+        const p = this.eventualExpectations.shift()!;
+        try {
+          await p;
+        } catch (ex) {
+          this.rec.threw(ex);
+        }
       }
-    }
 
-    // And clean up any objects now that they're done being used.
-    for (const o of this.objectsToCleanUp) {
-      if ('getExtension' in o) {
-        const WEBGL_lose_context = o.getExtension('WEBGL_lose_context');
-        if (WEBGL_lose_context) WEBGL_lose_context.loseContext();
-      } else if ('destroy' in o) {
-        o.destroy();
-      } else {
-        o.close();
+      // And clean up any objects now that they're done being used.
+      // This is done after expectations have settled since expectations may
+      // be using some of the objects.
+      for (const o of this.objectsToCleanUp) {
+        if ('getExtension' in o) {
+          const WEBGL_lose_context = o.getExtension('WEBGL_lose_context');
+          if (WEBGL_lose_context) WEBGL_lose_context.loseContext();
+        } else if ('destroy' in o) {
+          o.destroy();
+        } else {
+          o.close();
+        }
       }
+    } catch (err) {
+      this.rec.threw(err);
     }
   }
 
@@ -161,7 +223,11 @@ export class Fixture {
    * The async work will be implicitly waited upon before reporting a test status.
    */
   protected eventualAsyncExpectation<T>(fn: (niceStack: Error) => Promise<T>): Promise<T> {
+    this.sharedState.incrementPendingEventualExpectationCount();
     const promise = fn(new Error());
+    promise
+      .catch(_ => {}) // Ignore errors. They should be handled when this.eventualExpectations are processed.
+      .finally(() => this.sharedState.decrementPendingEventualExpectationCount());
     this.eventualExpectations.push(promise);
     return promise;
   }
