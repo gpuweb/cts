@@ -1001,11 +1001,15 @@ export class GPUTest extends Fixture {
             }
           }
           const passDesc = {
-            colorAttachments: Array.from(fullAttachmentInfo.colorFormats, (format) => ({
+            colorAttachments: Array.from(fullAttachmentInfo.colorFormats, (format) =>
+            format ?
+            {
               view: makeAttachmentView(format),
               clearValue: [0, 0, 0, 0],
               loadOp: 'clear',
-              storeOp: 'store' })),
+              storeOp: 'store' } :
+
+            null),
 
             depthStencilAttachment,
             occlusionQuerySet };

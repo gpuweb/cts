@@ -200,6 +200,7 @@ function canonicalizeDescriptor(desc) {
   const descriptorCanonicalized = {
     requiredFeatures: featuresCanonicalized,
     requiredLimits: limitsCanonicalized,
+    defaultQueue: {},
   };
 
   return [descriptorCanonicalized, JSON.stringify(descriptorCanonicalized)];

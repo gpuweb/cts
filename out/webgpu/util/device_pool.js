@@ -222,7 +222,8 @@ desc)
   // Type ensures every field is carried through.
   const descriptorCanonicalized = {
     requiredFeatures: featuresCanonicalized,
-    requiredLimits: limitsCanonicalized };
+    requiredLimits: limitsCanonicalized,
+    defaultQueue: {} };
 
   return [descriptorCanonicalized, JSON.stringify(descriptorCanonicalized)];
 }
