@@ -929,48 +929,42 @@ g.test('test,math,biasedRange')
     );
   });
 
-interface fullF32Range {
-  neg_num: number;
-  neg_sub_num: number;
-  pos_sub_num: number;
-  pos_num: number;
-  result: Array<Array<number>>; // Expected to contain 4 arrays, one for each region, does not contain 0.0
+interface fullF32RangeCase {
+  neg_norm: number;
+  neg_sub: number;
+  pos_sub: number;
+  pos_norm: number;
+  expect: Array<number>;
 }
 
-g.test('test,math,fullF32Range')
-  .paramsSimple<fullF32Range>(
+g.test('test,math,fullF32RangeCase')
+  .paramsSimple<fullF32RangeCase>(
     // prettier-ignore
     [
-        { neg_num: 0, neg_sub_num: 0, pos_sub_num: 0, pos_num: 0, result: [[], [], [], []] },
-        { neg_num: 1, neg_sub_num: 0, pos_sub_num: 0, pos_num: 0, result: [[ kValue.f32.negative.max ], [], [], []] },
-        { neg_num: 2, neg_sub_num: 0, pos_sub_num: 0, pos_num: 0, result: [[ kValue.f32.negative.max, kValue.f32.negative.min ], [], [], []] },
-        { neg_num: 0, neg_sub_num: 1, pos_sub_num: 0, pos_num: 0, result: [[], [ kValue.f32.subnormal.negative.max ], [], []] },
-        { neg_num: 0, neg_sub_num: 2, pos_sub_num: 0, pos_num: 0, result: [[], [ kValue.f32.subnormal.negative.max, kValue.f32.subnormal.negative.min ], [], [], []] },
-        { neg_num: 0, neg_sub_num: 0, pos_sub_num: 1, pos_num: 0, result: [[], [], [ kValue.f32.subnormal.positive.min ], []] },
-        { neg_num: 0, neg_sub_num: 0, pos_sub_num: 2, pos_num: 0, result: [[], [], [ kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max ], []] },
-        { neg_num: 0, neg_sub_num: 0, pos_sub_num: 0, pos_num: 1, result: [[], [], [], [ kValue.f32.positive.min ]] },
-        { neg_num: 0, neg_sub_num: 0, pos_sub_num: 0, pos_num: 2, result: [[], [], [], [ kValue.f32.positive.min, kValue.f32.positive.max ]] },
-        { neg_num: 1, neg_sub_num: 1, pos_sub_num: 1, pos_num: 1, result: [[ kValue.f32.negative.max ], [ kValue.f32.subnormal.negative.max ], [ kValue.f32.subnormal.positive.min ], [ kValue.f32.positive.min ]] },
-        { neg_num: 2, neg_sub_num: 2, pos_sub_num: 2, pos_num: 2, result: [[ kValue.f32.negative.max, kValue.f32.negative.min ], [ kValue.f32.subnormal.negative.max, kValue.f32.subnormal.negative.min ], [ kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max ], [ kValue.f32.positive.min, kValue.f32.positive.max ]] },
+        { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ 0.0 ] },
+        { neg_norm: 1, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ kValue.f32.negative.max, 0.0] },
+        { neg_norm: 2, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ kValue.f32.negative.max, kValue.f32.negative.min, 0.0 ] },
+        { neg_norm: 0, neg_sub: 1, pos_sub: 0, pos_norm: 0, expect: [ kValue.f32.subnormal.negative.max, 0.0 ] },
+        { neg_norm: 0, neg_sub: 2, pos_sub: 0, pos_norm: 0, expect: [ kValue.f32.subnormal.negative.max, kValue.f32.subnormal.negative.min, 0.0 ] },
+        { neg_norm: 0, neg_sub: 0, pos_sub: 1, pos_norm: 0, expect: [ 0.0, kValue.f32.subnormal.positive.min ] },
+        { neg_norm: 0, neg_sub: 0, pos_sub: 2, pos_norm: 0, expect: [ 0.0, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max ] },
+        { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 1, expect: [ 0.0, kValue.f32.positive.min ] },
+        { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 2, expect: [ 0.0, kValue.f32.positive.min, kValue.f32.positive.max ] },
+        { neg_norm: 1, neg_sub: 1, pos_sub: 1, pos_norm: 1, expect: [ kValue.f32.negative.max, kValue.f32.subnormal.negative.max, 0.0, kValue.f32.subnormal.positive.min, kValue.f32.positive.min ] },
+        { neg_norm: 2, neg_sub: 2, pos_sub: 2, pos_norm: 2, expect: [ kValue.f32.negative.max, kValue.f32.negative.min, kValue.f32.subnormal.negative.max, kValue.f32.subnormal.negative.min, 0.0, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, kValue.f32.positive.min, kValue.f32.positive.max ] },
     ]
   )
   .fn(test => {
-    const neg_num = test.params.neg_num;
-    const neg_sub_num = test.params.neg_sub_num;
-    const pos_sub_num = test.params.pos_sub_num;
-    const pos_num = test.params.pos_num;
-    const got = fullF32Range(neg_num, neg_sub_num, pos_sub_num, pos_num);
-    const expect = Array<number>().concat(
-      test.params.result[0],
-      test.params.result[1],
-      [0.0],
-      test.params.result[2],
-      test.params.result[3]
-    );
+    const neg_norm = test.params.neg_norm;
+    const neg_sub = test.params.neg_sub;
+    const pos_sub = test.params.pos_sub;
+    const pos_norm = test.params.pos_norm;
+    const got = fullF32Range({ neg_norm, neg_sub, pos_sub, pos_norm });
+    const expect = test.params.expect;
 
     test.expect(
       compareArrayOfNumbers(got, expect),
-      `fullF32Range(${neg_num}, ${neg_sub_num}, ${pos_sub_num}, ${pos_num}) returned ${got}. Expected ${expect}`
+      `fullF32Range(${neg_norm}, ${neg_sub}, ${pos_sub}, ${pos_norm}) returned ${got}. Expected ${expect}`
     );
   });
 

@@ -318,31 +318,32 @@ export function biasedRange(a: number, b: number, num_steps: number): Array<numb
  * Numbers are divided into 4 regions: negative normals, negative subnormals, positive subnormals & positive normals.
  * Zero is included. The normal number regions are biased towards zero, and the subnormal regions are linearly spread.
  *
- * @param neg_count number of numbers to generate in the negative normals region
- * @param neg_sub_count number of numbers to generate in the negative subnormals region
- * @param pos_sub_count number of numbers to generate in the positive subnormals region
- * @param pos_count number of numbers to generate in the positive normals region
+ * @param counts structure param with 4 entries indicating the number of entries to be generated each region, values must be 0 or greater.
  */
 export function fullF32Range(
-  neg_count: number = 50,
-  neg_sub_count: number = 10,
-  pos_sub_count: number = 10,
-  pos_count: number = 50
+  counts: {
+    neg_norm?: number;
+    neg_sub?: number;
+    pos_sub: number;
+    pos_norm: number;
+  } = { pos_sub: 10, pos_norm: 50 }
 ): Array<number> {
+  counts.neg_norm = counts.neg_norm === undefined ? counts.pos_norm : (counts.neg_norm as number);
+  counts.neg_sub = counts.neg_sub === undefined ? counts.pos_sub : (counts.neg_sub as number);
   return [
-    ...biasedRange(kValue.f32.negative.max, kValue.f32.negative.min, neg_count),
+    ...biasedRange(kValue.f32.negative.max, kValue.f32.negative.min, counts.neg_norm),
     ...linearRange(
       kValue.f32.subnormal.negative.min,
       kValue.f32.subnormal.negative.max,
-      neg_sub_count
+      counts.neg_sub
     ),
     0.0,
     ...linearRange(
       kValue.f32.subnormal.positive.min,
       kValue.f32.subnormal.positive.max,
-      pos_sub_count
+      counts.pos_sub
     ),
-    ...biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, pos_count),
+    ...biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, counts.pos_norm),
   ];
 }
 
