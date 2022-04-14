@@ -219,7 +219,7 @@ export const listing = [
       "operation",
       "memory_sync",
       "buffer",
-      "rw_and_wr"
+      "multiple_buffers"
     ]
   },
   {
@@ -228,7 +228,7 @@ export const listing = [
       "operation",
       "memory_sync",
       "buffer",
-      "ww"
+      "single_buffer"
     ]
   },
   {
