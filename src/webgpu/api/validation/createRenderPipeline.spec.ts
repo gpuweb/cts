@@ -446,12 +446,15 @@ g.test('pipeline_output_targets')
   - The componentCount of the fragment output (e.g. f32, vec2, vec3, vec4) must not have fewer
     channels than that of the color attachment texture formats. Extra components are allowed and are discarded.
 
+  Otherwise, color state write mask must be 0.
+
   MAINTENANCE_TODO: update this test after the WebGPU SPEC ISSUE 50 "define what 'compatible' means
   for render target formats" is resolved.`
   )
   .params(u =>
     u
       .combine('isAsync', [false, true])
+      .combine('writeMask', [0, 0xf])
       .combine('format', kRenderableColorTextureFormats)
       .beginSubcases()
       .combine('sampleType', ['float', 'uint', 'sint'] as const)
@@ -463,11 +466,11 @@ g.test('pipeline_output_targets')
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
-    const { isAsync, format, sampleType, componentCount } = t.params;
+    const { isAsync, writeMask, format, sampleType, componentCount } = t.params;
     const info = kTextureFormatInfo[format];
 
     const descriptor = t.getDescriptor({
-      targets: [{ format }],
+      targets: [{ format, writeMask }],
       fragmentShaderCode: t.getFragmentShaderCode(sampleType, componentCount),
     });
 
@@ -477,7 +480,9 @@ g.test('pipeline_output_targets')
         : info.sampleType === sampleType;
 
     const _success =
-      sampleTypeSuccess && componentCount >= kTexelRepresentationInfo[format].componentOrder.length;
+      writeMask === 0 ||
+      (sampleTypeSuccess &&
+        componentCount >= kTexelRepresentationInfo[format].componentOrder.length);
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
