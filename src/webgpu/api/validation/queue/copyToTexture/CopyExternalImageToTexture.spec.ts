@@ -636,36 +636,6 @@ g.test('destination_texture,device_mismatch')
     t.runTest({ source: imageBitmap }, { texture }, copySize, !mismatched);
   });
 
-g.test('destination_texture,dimension')
-  .desc(
-    `
-  Test dst texture dimension is [1d, 2d, 3d].
-
-  Check that an error is generated when texture is not '2d' dimension.
-  `
-  )
-  .params(u =>
-    u //
-      .combine('dimension', ['1d', '2d', '3d'] as const)
-      .beginSubcases()
-      .combine('copySize', [
-        { width: 0, height: 0, depthOrArrayLayers: 0 },
-        { width: 1, height: 1, depthOrArrayLayers: 1 },
-      ])
-  )
-  .fn(async t => {
-    const { dimension, copySize } = t.params;
-    const imageBitmap = await t.createImageBitmap(t.getImageData(1, 1));
-    const dstTexture = t.device.createTexture({
-      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-      format: 'rgba8unorm',
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-      dimension,
-    });
-
-    t.runTest({ source: imageBitmap }, { texture: dstTexture }, copySize, dimension === '2d');
-  });
-
 g.test('destination_texture,usage')
   .desc(
     `
