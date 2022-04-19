@@ -88,7 +88,8 @@ g.test('subresources,buffer_usage_in_render_pass_encoder')
     `
 Test that when one buffer is used in one render pass encoder, its list of internal usages within one
 usage scope can only be a compatible usage list; while there is no such restriction when it is used
-in different render pass encoders.`
+in different render pass encoders. The usage scope rules are not related to the buffer offset or the
+bind group layout visibility.`
   )
   .params(u =>
     u
