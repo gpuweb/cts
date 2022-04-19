@@ -63,8 +63,8 @@ function IsBufferUsageInBindGroup(
     | 'read-only-storage'
     | 'vertex'
     | 'index'
-    | 'drawIndirect'
-    | 'drawIndexedIndirect'
+    | 'indirect'
+    | 'indexedIndirect'
 ): boolean {
   switch (bufferUsage) {
     case 'uniform':
@@ -73,8 +73,8 @@ function IsBufferUsageInBindGroup(
       return true;
     case 'vertex':
     case 'index':
-    case 'drawIndirect':
-    case 'drawIndexedIndirect':
+    case 'indirect':
+    case 'indexedIndirect':
       return false;
     default:
       unreachable();
@@ -83,7 +83,7 @@ function IsBufferUsageInBindGroup(
 
 export const g = makeTestGroup(F);
 
-g.test('subresources,buffer_usage_in_render_pass_encoder')
+g.test('subresources,buffer_usage_in_render_pass')
   .desc(
     `
 Test that when one buffer is used in one render pass encoder, its list of internal usages within one
@@ -93,47 +93,43 @@ bind group layout visibility.`
   )
   .params(u =>
     u
-      .combine('bufferUsage0', [
+      .combine('usage0', [
         'uniform',
         'storage',
         'read-only-storage',
         'vertex',
         'index',
-        'drawIndirect',
-        'drawIndexedIndirect',
+        'indirect',
+        'indexedIndirect',
       ] as const)
-      .combine('bindGroupVisibility0', ['compute', 'fragment'] as const)
-      .unless(
-        t => t.bindGroupVisibility0 === 'compute' && !IsBufferUsageInBindGroup(t.bufferUsage0)
-      )
-      .combine('bufferUsage1', [
+      .combine('visibility0', ['compute', 'fragment'] as const)
+      .unless(t => t.visibility0 === 'compute' && !IsBufferUsageInBindGroup(t.usage0))
+      .combine('usage1', [
         'uniform',
         'storage',
         'read-only-storage',
         'vertex',
         'index',
-        'drawIndirect',
-        'drawIndexedIndirect',
+        'indirect',
+        'indexedIndirect',
       ] as const)
-      .combine('bindGroupVisibility1', ['compute', 'fragment'] as const)
+      .combine('visibility1', ['compute', 'fragment'] as const)
+      // The situation that the index buffer is reset by another setIndexBuffer call will be tested
+      // in another test case.
       .unless(
-        t => t.bindGroupVisibility1 === 'compute' && !IsBufferUsageInBindGroup(t.bufferUsage1)
+        t =>
+          (t.visibility1 === 'compute' && !IsBufferUsageInBindGroup(t.usage1)) ||
+          (t.usage0 === 'index' && t.usage1 === 'index')
       )
       .combine('inSamePass', [true, false])
       .combine('hasOverlap', [true, false])
   )
   .fn(async t => {
-    const {
-      bufferUsage0,
-      bindGroupVisibility0,
-      bufferUsage1,
-      bindGroupVisibility1,
-      inSamePass,
-      hasOverlap,
-    } = t.params;
+    const { usage0, visibility0, usage1, visibility1, inSamePass, hasOverlap } = t.params;
 
     const UseBufferOnRenderPassEncoder = (
       buffer: GPUBuffer,
+      index: number,
       offset: number,
       type:
         | 'uniform'
@@ -141,8 +137,8 @@ bind group layout visibility.`
         | 'read-only-storage'
         | 'vertex'
         | 'index'
-        | 'drawIndirect'
-        | 'drawIndexedIndirect',
+        | 'indirect'
+        | 'indexedIndirect',
       bindGroupVisibility: 'compute' | 'fragment',
       renderPassEncoder: GPURenderPassEncoder
     ) => {
@@ -151,24 +147,24 @@ bind group layout visibility.`
         case 'storage':
         case 'read-only-storage': {
           const bindGroup = t.createBindGroupForTest(buffer, offset, type, bindGroupVisibility);
-          renderPassEncoder.setBindGroup(0, bindGroup);
+          renderPassEncoder.setBindGroup(index, bindGroup);
           break;
         }
         case 'vertex': {
-          renderPassEncoder.setVertexBuffer(0, buffer, offset, kBoundBufferSize);
+          renderPassEncoder.setVertexBuffer(index, buffer, offset, kBoundBufferSize);
           break;
         }
         case 'index': {
           renderPassEncoder.setIndexBuffer(buffer, 'uint16', offset, kBoundBufferSize);
           break;
         }
-        case 'drawIndirect': {
+        case 'indirect': {
           const renderPipeline = t.createNoOpRenderPipeline();
           renderPassEncoder.setPipeline(renderPipeline);
           renderPassEncoder.drawIndirect(buffer, offset);
           break;
         }
-        case 'drawIndexedIndirect': {
+        case 'indexedIndirect': {
           const renderPipeline = t.createNoOpRenderPipeline();
           renderPassEncoder.setPipeline(renderPipeline);
           const indexBuffer = t.device.createBuffer({
@@ -195,31 +191,22 @@ bind group layout visibility.`
     const encoder = t.device.createCommandEncoder();
     const renderPassEncoder = t.beginSimpleRenderPass(encoder);
     const offset0 = 0;
-    UseBufferOnRenderPassEncoder(
-      buffer,
-      offset0,
-      bufferUsage0,
-      bindGroupVisibility0,
-      renderPassEncoder
-    );
+    const index0 = 0;
+    UseBufferOnRenderPassEncoder(buffer, index0, offset0, usage0, visibility0, renderPassEncoder);
     const offset1 = hasOverlap ? offset0 : kBoundBufferSize;
+    const index1 = 1;
     if (inSamePass) {
-      UseBufferOnRenderPassEncoder(
-        buffer,
-        offset1,
-        bufferUsage1,
-        bindGroupVisibility1,
-        renderPassEncoder
-      );
+      UseBufferOnRenderPassEncoder(buffer, index1, offset1, usage1, visibility1, renderPassEncoder);
       renderPassEncoder.end();
     } else {
       renderPassEncoder.end();
       const anotherRenderPassEncoder = t.beginSimpleRenderPass(encoder);
       UseBufferOnRenderPassEncoder(
         buffer,
+        index1,
         offset1,
-        bufferUsage1,
-        bindGroupVisibility1,
+        usage1,
+        visibility1,
         anotherRenderPassEncoder
       );
       anotherRenderPassEncoder.end();
@@ -227,8 +214,8 @@ bind group layout visibility.`
 
     const fail =
       inSamePass &&
-      ((bufferUsage0 === 'storage' && bufferUsage1 !== 'storage') ||
-        (bufferUsage0 !== 'storage' && bufferUsage1 === 'storage'));
+      ((usage0 === 'storage' && usage1 !== 'storage') ||
+        (usage0 !== 'storage' && usage1 === 'storage'));
     t.expectValidationError(() => {
       encoder.finish();
     }, fail);
