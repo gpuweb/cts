@@ -93,6 +93,9 @@ bind group layout visibility.`
   )
   .params(u =>
     u
+      .combine('inSamePass', [true, false])
+      .combine('hasOverlap', [true, false])
+      .beginSubcases()
       .combine('usage0', [
         'uniform',
         'storage',
@@ -121,8 +124,6 @@ bind group layout visibility.`
           (t.visibility1 === 'compute' && !IsBufferUsageInBindGroup(t.usage1)) ||
           (t.usage0 === 'index' && t.usage1 === 'index')
       )
-      .combine('inSamePass', [true, false])
-      .combine('hasOverlap', [true, false])
   )
   .fn(async t => {
     const { usage0, visibility0, usage1, visibility1, inSamePass, hasOverlap } = t.params;
