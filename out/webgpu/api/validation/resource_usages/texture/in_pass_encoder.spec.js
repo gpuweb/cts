@@ -643,6 +643,7 @@ fn(async (t) => {
 
 
   const view0 = texture.createView({
+    dimension: '2d',
     baseMipLevel: BASE_LEVEL,
     mipLevelCount: 1,
     baseArrayLayer: BASE_LAYER,
@@ -651,6 +652,7 @@ fn(async (t) => {
 
 
   const view1 = texture.createView({
+    dimension: '2d',
     baseMipLevel: baseLevel,
     mipLevelCount: 1,
     baseArrayLayer: baseLayer,

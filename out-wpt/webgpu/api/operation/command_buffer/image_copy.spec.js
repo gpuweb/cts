@@ -1013,6 +1013,7 @@ class ImageCopyTest extends GPUTest {
     for (let z = 0; z < copySize[2]; ++z) {
       const depthStencilAttachment = {
         view: depthTexture.createView({
+          dimension: '2d',
           baseArrayLayer: z,
           arrayLayerCount: 1,
           baseMipLevel: copyMipLevel,
@@ -1042,6 +1043,7 @@ class ImageCopyTest extends GPUTest {
           {
             binding: 0,
             resource: inputTexture.createView({
+              dimension: '2d',
               baseArrayLayer: z,
               arrayLayerCount: 1,
               baseMipLevel: 0,

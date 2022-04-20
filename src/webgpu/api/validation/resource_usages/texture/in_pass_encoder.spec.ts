@@ -643,6 +643,7 @@ g.test('subresources_and_binding_types_combination_for_aspect')
     });
 
     const view0 = texture.createView({
+      dimension: '2d',
       baseMipLevel: BASE_LEVEL,
       mipLevelCount: 1,
       baseArrayLayer: BASE_LAYER,
@@ -651,6 +652,7 @@ g.test('subresources_and_binding_types_combination_for_aspect')
     });
 
     const view1 = texture.createView({
+      dimension: '2d',
       baseMipLevel: baseLevel,
       mipLevelCount: 1,
       baseArrayLayer: baseLayer,
