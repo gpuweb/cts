@@ -147,13 +147,18 @@ export function viewDimensionsForTextureDimension(textureDimension: GPUTextureDi
 
 /** Returns the default view dimension for a given texture descriptor. */
 export function defaultViewDimensionsForTexture(textureDescriptor: Readonly<GPUTextureDescriptor>) {
-  if (textureDescriptor.dimension == '2d') {
-    const sizeDict = reifyExtent3D(textureDescriptor.size);
-    if (sizeDict.depthOrArrayLayers > 1) {
-      return '2d-array';
+  switch (textureDescriptor.dimension) {
+    case '1d':
+      return '1d';
+    case '2d': {
+      const sizeDict = reifyExtent3D(textureDescriptor.size);
+      return sizeDict.depthOrArrayLayers > 1 ? '2d-array' : '2d';
     }
+    case '3d':
+      return '3d';
+    default:
+      unreachable();
   }
-  return textureDescriptor.dimension;
 }
 
 /** Reifies the optional fields of `GPUTextureDescriptor`.
