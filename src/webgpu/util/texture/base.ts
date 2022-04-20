@@ -145,6 +145,17 @@ export function viewDimensionsForTextureDimension(textureDimension: GPUTextureDi
   }
 }
 
+/** Returns the default view dimension for a given texture descriptor. */
+export function defaultViewDimensionsForTexture(textureDescriptor: Readonly<GPUTextureDescriptor>) {
+  if (textureDescriptor.dimension == '2d') {
+    const sizeDict = reifyExtent3D(textureDescriptor.size);
+    if (sizeDict.depthOrArrayLayers > 1) {
+      return '2d-array';
+    }
+  }
+  return textureDescriptor.dimension;
+}
+
 /** Reifies the optional fields of `GPUTextureDescriptor`.
  * MAINTENANCE_TODO: viewFormats should not be omitted here, but it seems likely that the
  * @webgpu/types definition will have to change before we can include it again.
@@ -172,7 +183,7 @@ export function reifyTextureViewDescriptor(
 
   const format = view.format ?? texture.format;
   const mipLevelCount = view.mipLevelCount ?? texture.mipLevelCount - baseMipLevel;
-  const dimension = view.dimension ?? texture.dimension;
+  const dimension = view.dimension ?? defaultViewDimensionsForTexture(texture);
 
   let arrayLayerCount = view.arrayLayerCount;
   if (arrayLayerCount === undefined) {
