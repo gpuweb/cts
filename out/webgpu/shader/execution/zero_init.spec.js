@@ -79,7 +79,7 @@ expand('workgroupSize', ({ storageClass }) => {
 
 }).
 beginSubcases()
-// Fewer subases: Only 0 and 2. If double-nested containers work, single-nested should too.
+// Fewer subcases: Only 0 and 2. If double-nested containers work, single-nested should too.
 .combine('_containerDepth', [0, 2]).
 expandWithParams(function* (p) {
   const kElementCounts = [
