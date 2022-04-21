@@ -4,9 +4,8 @@ Positive and negative validation tests for variable and const.
 TODO: Find a better way to test arrays than using a single arbitrary size. [1]
 `;
 
-import { makeTestGroup } from '../../../common/framework/test_group.js';
-
-import { ShaderValidationTest } from './shader_validation_test.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { ShaderValidationTest } from '../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
@@ -42,35 +41,6 @@ const kTestTypes = [
   'array<u32, 12>',
   'array<bool, 12>',
 ] as const;
-
-g.test('initializer_type')
-  .desc(
-    `
-  If present, the initializer's type must match the store type of the variable.
-  Testing scalars, vectors, and matrices of every dimension and type.
-  TODO: add test for: structs - arrays of vectors and matrices - arrays of different length
-`
-  )
-  .params(u =>
-    u
-      .combine('variableOrConstant', ['var', 'let'])
-      .beginSubcases()
-      .combine('lhsType', kTestTypes)
-      .combine('rhsType', kTestTypes)
-  )
-  .fn(t => {
-    const { variableOrConstant, lhsType, rhsType } = t.params;
-
-    const code = `
-      @stage(fragment)
-      fn main() {
-        ${variableOrConstant} a : ${lhsType} = ${rhsType}();
-      }
-    `;
-
-    const expectation = lhsType === rhsType;
-    t.expectCompileResult(expectation, code);
-  });
 
 g.test('io_shareable_type')
   .desc(
