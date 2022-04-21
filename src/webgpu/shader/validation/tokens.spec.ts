@@ -12,6 +12,12 @@ g.test('empty')
     t.expectCompileResult(true, '');
   });
 
+g.test('invalid_content')
+  .desc(`Tests that a file which doesn't match the grammar fails.`)
+  .fn(t => {
+    t.expectCompileResult(false, 'not_valid');
+  });
+
 g.test('null_characters')
   .desc(`Test that WGSL source containing a null character is rejected.`)
   .params(u =>
