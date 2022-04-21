@@ -1647,14 +1647,6 @@ export const listing = [
   },
   {
     "file": [
-      "shader",
-      "validation",
-      "wgsl",
-      "basic"
-    ]
-  },
-  {
-    "file": [
       "util",
       "texture",
       "texel_data"
