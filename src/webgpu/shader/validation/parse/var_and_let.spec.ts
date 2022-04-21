@@ -5,7 +5,6 @@ TODO: Find a better way to test arrays than using a single arbitrary size. [1]
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
