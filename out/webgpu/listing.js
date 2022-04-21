@@ -1595,6 +1595,46 @@ export const listing = [
     "file": [
       "shader",
       "validation",
+      "parse",
+      "comments"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "parse",
+      "identifiers"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "parse",
+      "source"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "parse",
+      "var_and_let"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "parse",
+      "whitespace"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
       "shader_io",
       "builtins"
     ]
@@ -1635,14 +1675,8 @@ export const listing = [
     "file": [
       "shader",
       "validation",
-      "tokens"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "validation",
-      "variable_and_const"
+      "shader_io",
+      "shareable_types"
     ]
   },
   {
