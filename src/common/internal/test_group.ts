@@ -85,7 +85,7 @@ export class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
 
   private checkName(name: string): void {
     assert(
-      // Shouldn't happen due to the rule above. Just makes sure that treated
+      // Shouldn't happen due to the rule above. Just makes sure that treating
       // unencoded strings as encoded strings is OK.
       name === decodeURIComponent(name),
       `Not decodeURIComponent-idempotent: ${name} !== ${decodeURIComponent(name)}`
