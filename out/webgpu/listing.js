@@ -1596,6 +1596,14 @@ export const listing = [
       "shader",
       "validation",
       "parse",
+      "blankspace"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "parse",
       "comments"
     ]
   },
@@ -1621,14 +1629,6 @@ export const listing = [
       "validation",
       "parse",
       "var_and_let"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "validation",
-      "parse",
-      "whitespace"
     ]
   },
   {

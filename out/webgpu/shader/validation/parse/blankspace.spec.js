@@ -1,6 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/export const description = `Validation tests for whitespace handling`;import { makeTestGroup } from '../../../../common/framework/test_group.js';
+**/export const description = `Validation tests for blankspace handling`;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -25,17 +25,27 @@ fn((t) => {
   t.expectCompileResult(!t.params.contains_null, code);
 });
 
-g.test('whitespace').
-desc(`Test that all whitespace characters act as delimiters.`).
+g.test('blankspace').
+desc(`Test that all blankspace characters act as delimiters.`).
+params((u) =>
+u.
+combine('blankspace', [
+['\u0020', 'space'],
+['\u0009', 'horizontal_tab'],
+['\u000a', 'line_feed'],
+['\u000b', 'vertical_tab'],
+['\u000c', 'form_feed'],
+['\u000d', 'carriage_return'],
+['\u0085', 'next_line'],
+['\u200e', 'left_to_right_mark'],
+['\u200f', 'right_to_left_mark'],
+['\u2028', 'line_separator'],
+['\u2029', 'paragraph_separator']]).
+
+beginSubcases()).
+
 fn((t) => {
-  const code = `
-let space:i32=0;
-let\thorizontal_tab:i32=0;
-let\nlinefeed:i32=0;
-let\vvertical_tab:i32=0;
-let\fformfeed:i32=0;
-let\rcarriage_return:i32=0;
-`;
+  const code = `let${t.params.blankspace[0]}ident : i32 = 0;`;
   t.expectCompileResult(true, code);
 });
-//# sourceMappingURL=whitespace.spec.js.map
+//# sourceMappingURL=blankspace.spec.js.map
