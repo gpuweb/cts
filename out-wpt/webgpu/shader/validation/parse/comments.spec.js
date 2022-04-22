@@ -28,11 +28,26 @@ parameters
 
 g.test('line_comment_terminators')
   .desc(`Test that line comments are terminated by any blankspace other than space and \t`)
-  .params(u => u.combine('blankspace', [' ', '\t', '\n', '\v', '\f', '\r']).beginSubcases())
+  .params(u =>
+    u
+      .combine('blankspace', [
+        [' ', 'space'],
+        ['\t', 'tab'],
+        ['\u000a', 'line_feed'],
+        ['\u000b', 'vertical_tab'],
+        ['\u000c', 'form_feed'],
+        ['\u000d', 'carriage_return'],
+        ['\u000d\u000a', 'carriage_return_line_feed'],
+        ['\u0085', 'next_line'],
+        ['\u2028', 'line_separator'],
+        ['\u2029', 'paragraph_separator'],
+      ])
+      .beginSubcases()
+  )
   .fn(t => {
-    const code = `// Line comment${t.params.blankspace}let invalid_outside_comment = should_fail`;
+    const code = `// Line comment${t.params.blankspace[0]}let invalid_outside_comment = should_fail`;
 
-    t.expectCompileResult([' ', '\t'].includes(t.params.blankspace), code);
+    t.expectCompileResult([' ', '\t'].includes(t.params.blankspace[0]), code);
   });
 
 g.test('unterminated_block_comment')
