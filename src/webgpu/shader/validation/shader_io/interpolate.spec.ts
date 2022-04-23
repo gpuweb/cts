@@ -15,16 +15,10 @@ const kValidInterpolationAttributes = new Set([
   '@interpolate(perspective, center)',
   '@interpolate(perspective, centroid)',
   '@interpolate(perspective, sample)',
-  '@interpolate(perspective,center)',
-  '@interpolate(perspective,centroid)',
-  '@interpolate(perspective,sample)',
   '@interpolate(linear)',
   '@interpolate(linear, center)',
   '@interpolate(linear, centroid)',
   '@interpolate(linear, sample)',
-  '@interpolate(linear,center)',
-  '@interpolate(linear,centroid)',
-  '@interpolate(linear,sample)',
 ]);
 
 g.test('type_and_sampling')
@@ -36,15 +30,11 @@ g.test('type_and_sampling')
       .combine('use_struct', [true, false] as const)
       .combine('type', ['', 'flat', 'perspective', 'linear'] as const)
       .combine('sampling', ['', 'center', 'centroid', 'sample'] as const)
-      .combine('space', [true, false])
       .beginSubcases()
   )
   .fn(t => {
     if (t.params.stage === 'vertex' && t.params.use_struct === false) {
       t.skip('vertex output must include a position builtin, so must use a struct');
-    }
-    if (t.params.space && t.params.sampling === '') {
-      t.skip('space only valid with sampling');
     }
 
     let interpolate = '';
@@ -54,11 +44,7 @@ g.test('type_and_sampling')
         interpolate += `${t.params.type}`;
       }
       if (t.params.sampling !== '') {
-        interpolate += `,`;
-        if (t.params.space) {
-          interpolate += ' ';
-        }
-        interpolate += `${t.params.sampling}`;
+        interpolate += `, ${t.params.sampling}`;
       }
       interpolate += `)`;
     }
