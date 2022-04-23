@@ -41,9 +41,12 @@ fn((t) => {
   if (t.params.type !== '' || t.params.sampling !== '') {
     interpolate = '@interpolate(';
     if (t.params.type !== '') {
-      interpolate += `${t.params.type}, `;
+      interpolate += `${t.params.type}`;
     }
-    interpolate += `${t.params.sampling})`;
+    if (t.params.sampling !== '') {
+      interpolate += `, ${t.params.sampling}`;
+    }
+    interpolate += `)`;
   }
   const code = generateShader({
     attribute: '@location(0)' + interpolate,
