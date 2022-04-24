@@ -473,3 +473,11 @@ g.test('identifiers')
     const code = `var<private> ${t.params.ident} : i32;`;
     t.expectCompileResult(kValidIdentifiers.has(t.params.ident), code);
   });
+
+g.test('non_normalized')
+  .desc(`Test that identifiers are not unicode normalized`)
+  .fn(t => {
+    const code = `var<private> \u212b : i32;
+var<private> \u00c5 : i32;`;
+    t.expectCompileResult(true, code);
+  });
