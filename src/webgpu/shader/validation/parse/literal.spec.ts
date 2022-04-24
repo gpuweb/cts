@@ -86,6 +86,10 @@ g.test('bools')
     '0x.p2', // Hex float no value
     '0x1p', // Hex float missing exponent
     '0x1p^', // Hex float invalid exponent
+    '1.2h', // fp16 enxtension not enabled, so this is an error
+    '1.0e+999999999999f', // Too big
+    '0x1.0p+999999999999f', // Too big hex
+    '0x1.00000001pf0', // Mantissa too big
   ]);
 
   g.test('float')
@@ -115,6 +119,8 @@ g.test('bools')
     '1.1eh', // Missing exponent value
     '1.1e%2h', // Invalid exponent sign
     '1.1e+h', // Missing exponent with sign
+    '1.0e+999999h', // Too large
+    '0x1.0p+999999h', // Too large hex
   ]);
   g.test('half_float')
     .desc(
