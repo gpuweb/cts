@@ -59,6 +59,47 @@ g.test('type_and_sampling')
     t.expectCompileResult(kValidInterpolationAttributes.has(interpolate), code);
   });
 
+g.test('reversed_type_and_sampling')
+  .desc(`Test that type must come before sampling.`)
+  .params(u =>
+    u
+      .combine('stage', ['vertex', 'fragment'] as const)
+      .combine('io', ['in', 'out'] as const)
+      .combine('use_struct', [true, false] as const)
+      .combine('type', ['', 'flat', 'perspective', 'linear'] as const)
+      .combine('sampling', ['', 'center', 'centroid', 'sample'] as const)
+      .beginSubcases()
+  )
+  .fn(t => {
+    if (t.params.stage === 'vertex' && t.params.use_struct === false) {
+      t.skip('vertex output must include a position builtin, so must use a struct');
+    }
+    if (t.params.type === '' && t.params.sampling === '') {
+      t.skip('both blank is valid');
+    }
+
+    let interpolate = '';
+    if (t.params.type !== '' || t.params.sampling !== '') {
+      interpolate = '@interpolate(';
+      if (t.params.sampling !== '') {
+        interpolate += `${t.params.sampling}`;
+      }
+      if (t.params.type !== '') {
+        interpolate += `, ${t.params.type}`;
+      }
+      interpolate += `)`;
+    }
+    const code = generateShader({
+      attribute: '@location(0)' + interpolate,
+      type: 'f32',
+      stage: t.params.stage,
+      io: t.params.io,
+      use_struct: t.params.use_struct,
+    });
+
+    t.expectCompileResult(false, code);
+  });
+
 g.test('require_location')
   .desc(`Test that the interpolate attribute is only accepted with user-defined IO.`)
   .params(u =>
@@ -111,4 +152,17 @@ g.test('integral_types')
     });
 
     t.expectCompileResult(t.params.attribute === '@interpolate(flat)', code);
+  });
+
+g.test('duplicate')
+  .desc(`Test that the interpolate attribute can only be applied once.`)
+  .fn(t => {
+    const code = generateShader({
+      attribute: `@location(0) @interpolate(flat) @interpolate(flat)`,
+      type: 'vec4<f32>',
+      stage: 'fragment',
+      io: 'in',
+      use_struct: false,
+    });
+    t.expectCompileResult(false, code);
   });
