@@ -20,7 +20,6 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('bool')
-  .uniqueId('d140d173a2acf981')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
   .desc(
     `

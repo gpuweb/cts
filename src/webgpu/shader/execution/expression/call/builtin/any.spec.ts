@@ -20,15 +20,11 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('bool')
-  .uniqueId('ac2b3a100379d70f')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
   .desc(
     `
 vector any:
 e: vecN<bool> any(e): bool Returns true if any component of e is true. (OpAny)
-
-Please read the following guidelines before contributing:
-https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 `
   )
   .params(u =>
