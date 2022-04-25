@@ -25,6 +25,7 @@ function usage(rc: number): never {
   console.log('  --expectations       Path to expectations file.');
   console.log('  --gpu-provider       Path to node module that provides the GPU implementation.');
   console.log('  --gpu-provider-flag  Flag to set on the gpu-provider as <flag>=<value>');
+  console.log('  --quiet              Suppress summary information in output');
   return sys.exit(rc);
 }
 
@@ -36,6 +37,7 @@ let verbose = false;
 let listTestcases = false;
 let debug = false;
 let printJSON = false;
+let quiet = false;
 let loadWebGPUExpectations: Promise<unknown> | undefined = undefined;
 let gpuProviderModule: GPUProviderModule | undefined = undefined;
 
@@ -60,6 +62,8 @@ for (let i = 0; i < sys.args.length; ++i) {
       gpuProviderModule = require(modulePath);
     } else if (a === '--gpu-provider-flag') {
       gpuProviderFlags.push(sys.args[++i]);
+    } else if (a === '--quiet') {
+      quiet = true;
     } else {
       console.log('unrecognized flag: ', a);
       usage(1);
@@ -140,34 +144,36 @@ if (queries.length === 0) {
     console.log(log.asJSON(2));
   }
 
-  if (skipped.length) {
-    console.log('');
-    console.log('** Skipped **');
-    printResults(skipped);
-  }
-  if (warned.length) {
-    console.log('');
-    console.log('** Warnings **');
-    printResults(warned);
-  }
-  if (failed.length) {
-    console.log('');
-    console.log('** Failures **');
-    printResults(failed);
-  }
+  if (!quiet) {
+    if (skipped.length) {
+      console.log('');
+      console.log('** Skipped **');
+      printResults(skipped);
+    }
+    if (warned.length) {
+      console.log('');
+      console.log('** Warnings **');
+      printResults(warned);
+    }
+    if (failed.length) {
+      console.log('');
+      console.log('** Failures **');
+      printResults(failed);
+    }
 
-  const passed = total - warned.length - failed.length - skipped.length;
-  const pct = (x: number) => ((100 * x) / total).toFixed(2);
-  const rpt = (x: number) => {
-    const xs = x.toString().padStart(1 + Math.log10(total), ' ');
-    return `${xs} / ${total} = ${pct(x).padStart(6, ' ')}%`;
-  };
-  console.log('');
-  console.log(`** Summary **
+    const passed = total - warned.length - failed.length - skipped.length;
+    const pct = (x: number) => ((100 * x) / total).toFixed(2);
+    const rpt = (x: number) => {
+      const xs = x.toString().padStart(1 + Math.log10(total), ' ');
+      return `${xs} / ${total} = ${pct(x).padStart(6, ' ')}%`;
+    };
+    console.log('');
+    console.log(`** Summary **
 Passed  w/o warnings = ${rpt(passed)}
 Passed with warnings = ${rpt(warned.length)}
 Skipped              = ${rpt(skipped.length)}
 Failed               = ${rpt(failed.length)}`);
+  }
 
   if (failed.length || warned.length) {
     sys.exit(1);
