@@ -120,12 +120,6 @@ export class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
 interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F, {}> {
   desc(description: string): this;
   /**
-   * A noop function with the purpose of highlighting value `id`.
-   *
-   * @param id a token uniquely assigned to this test.
-   */
-  uniqueId(id: string): this;
-  /**
    * A noop function to associate a test with the relevant part of the specification.
    *
    * @param url a link to the spec where test is extracted from.
@@ -194,10 +188,6 @@ class TestBuilder {
 
   desc(description: string): this {
     this.description = description.trim();
-    return this;
-  }
-
-  uniqueId(id: string): this {
     return this;
   }
 

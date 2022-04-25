@@ -14,7 +14,6 @@ import { unary } from './unary.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('negation').
-uniqueId('xxxxxxxxx').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
 `

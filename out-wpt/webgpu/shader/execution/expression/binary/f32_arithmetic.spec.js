@@ -66,7 +66,6 @@ function makeCaseImpl(lhs, rhs, op, skip_rhs_zero_flush = false) {
 }
 
 g.test('addition')
-  .uniqueId('xxxxxxxxx')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `
@@ -101,7 +100,6 @@ Accuracy: Correctly rounded
   });
 
 g.test('subtraction')
-  .uniqueId('xxxxxxxxx')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `
@@ -136,7 +134,6 @@ Accuracy: Correctly rounded
   });
 
 g.test('multiplication')
-  .uniqueId('xxxxxxxxx')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `
@@ -171,7 +168,6 @@ Accuracy: Correctly rounded
   });
 
 g.test('division')
-  .uniqueId('xxxxxxxxx')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `
@@ -215,7 +211,6 @@ Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
 
 // Will be implemented as part larger derived accuracy task
 g.test('modulus')
-  .uniqueId('xxxxxxxxx')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `

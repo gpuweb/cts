@@ -74,7 +74,6 @@ skip_rhs_zero_flush = false)
 }
 
 g.test('addition').
-uniqueId('xxxxxxxxx').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
 `
@@ -109,7 +108,6 @@ fn(async (t) => {
 });
 
 g.test('subtraction').
-uniqueId('xxxxxxxxx').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
 `
@@ -144,7 +142,6 @@ fn(async (t) => {
 });
 
 g.test('multiplication').
-uniqueId('xxxxxxxxx').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
 `
@@ -179,7 +176,6 @@ fn(async (t) => {
 });
 
 g.test('division').
-uniqueId('xxxxxxxxx').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
 `
@@ -223,7 +219,6 @@ fn(async (t) => {
 
 // Will be implemented as part larger derived accuracy task
 g.test('modulus').
-uniqueId('xxxxxxxxx').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
 `

@@ -12,7 +12,6 @@ import { binary } from './binary.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('bitwise_or').
-uniqueId('xxxxxxxxx').
 specURL('https://www.w3.org/TR/WGSL/#bit-expr').
 desc(
 `
@@ -77,7 +76,6 @@ fn(async (t) => {
 });
 
 g.test('bitwise_and').
-uniqueId('xxxxxxxxx').
 specURL('https://www.w3.org/TR/WGSL/#bit-expr').
 desc(
 `
@@ -150,7 +148,6 @@ fn(async (t) => {
 });
 
 g.test('bitwise_exclusive_or').
-uniqueId('xxxxxxxxx').
 specURL('https://www.w3.org/TR/WGSL/#bit-expr').
 desc(
 `

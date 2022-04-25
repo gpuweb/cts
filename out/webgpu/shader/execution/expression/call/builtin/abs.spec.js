@@ -22,7 +22,6 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('u32').
-uniqueId('59ff84968a839124').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions').
 desc(
 `
@@ -80,7 +79,6 @@ fn(async (t) => {
 });
 
 g.test('i32').
-uniqueId('d8fc581d17db6ae8').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions').
 desc(
 `
@@ -145,7 +143,6 @@ fn(async (t) => {
 });
 
 g.test('f32').
-uniqueId('2c1782b6a8dec8cb').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions').
 desc(
 `

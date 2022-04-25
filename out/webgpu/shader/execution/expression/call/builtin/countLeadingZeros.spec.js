@@ -12,7 +12,6 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('u32').
-uniqueId('xxxxxxxxxxxxxxxx').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions').
 desc(
 `
@@ -22,9 +21,6 @@ T is i32, u32, vecN<i32>, or vecN<u32> countLeadingZeros(e: T) -> T
 The number of consecutive 0 bits starting from the most significant bit of e, when T is a scalar type.
 Component-wise when T is a vector.
 Also known as "clz" in some languages.
-
-Please read the following guidelines before contributing:
-https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 `).
 
 params((u) =>
@@ -142,7 +138,6 @@ fn(async (t) => {
 });
 
 g.test('i32').
-uniqueId('xxxxxxxxxxxxxxxx').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions').
 desc(
 `
@@ -152,9 +147,6 @@ T is i32, u32, vecN<i32>, or vecN<u32> countLeadingZeros(e: T) -> T
 The number of consecutive 0 bits starting from the most significant bit of e, when T is a scalar type.
 Component-wise when T is a vector.
 Also known as "clz" in some languages.
-
-Please read the following guidelines before contributing:
-https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 `).
 
 params((u) =>

@@ -170,12 +170,6 @@ export class TestGroup {
 
 
 
-
-
-
-
-
-
 class TestBuilder {
 
 
@@ -194,10 +188,6 @@ class TestBuilder {
 
   desc(description) {
     this.description = description.trim();
-    return this;
-  }
-
-  uniqueId(id) {
     return this;
   }
 

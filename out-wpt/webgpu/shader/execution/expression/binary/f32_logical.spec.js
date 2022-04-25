@@ -37,7 +37,6 @@ function makeCase(lhs, rhs, truthFunc) {
 }
 
 g.test('equals')
-  .uniqueId('xxxxxxxxx')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `
@@ -67,7 +66,6 @@ Accuracy: Correct result
   });
 
 g.test('not_equals')
-  .uniqueId('xxxxxxxxx')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `
@@ -97,7 +95,6 @@ Accuracy: Correct result
   });
 
 g.test('less_than')
-  .uniqueId('xxxxxxxxx')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `
@@ -127,7 +124,6 @@ Accuracy: Correct result
   });
 
 g.test('less_equals')
-  .uniqueId('xxxxxxxxx')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `
@@ -157,7 +153,6 @@ Accuracy: Correct result
   });
 
 g.test('greater_than')
-  .uniqueId('xxxxxxxxx')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `
@@ -187,7 +182,6 @@ Accuracy: Correct result
   });
 
 g.test('greater_equals')
-  .uniqueId('xxxxxxxxx')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `

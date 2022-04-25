@@ -13,7 +13,6 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('unsigned')
-  .uniqueId('xxxxxxxxxxxxxxxx')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `
@@ -419,7 +418,6 @@ T is i32, u32, vecN<i32>, or vecN<u32> reverseBits(e: T ) -> T Reverses the bits
   });
 
 g.test('signed')
-  .uniqueId('xxxxxxxxxxxxxxxx')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `

@@ -22,7 +22,6 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('integer').
-uniqueId('xxxxxxxxxxxxxxxx').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions').
 desc(
 `
@@ -39,9 +38,6 @@ When T is a scalar type, then:
 * The result is e if c is 0.
 * Otherwise, bits o..o+c-1 of the result are copied from bits 0..c-1 of newbits. Other bits of the result are copied from e.
 Component-wise when T is a vector.
-
-Please read the following guidelines before contributing:
-https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 `).
 
 params((u) =>

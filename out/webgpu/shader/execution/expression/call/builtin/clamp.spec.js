@@ -107,15 +107,11 @@ function generateFloatTestCases(test_values) {
 }
 
 g.test('u32').
-uniqueId('386458e12e52645b').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions').
 desc(
 `
 unsigned clamp:
 T is u32 or vecN<u32> clamp(e: T , low: T, high: T) -> T Returns min(max(e, low), high). Component-wise when T is a vector. (GLSLstd450UClamp)
-
-Please read the following guidelines before contributing:
-https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 `).
 
 params((u) =>
@@ -146,15 +142,11 @@ fn(async (t) => {
 });
 
 g.test('i32').
-uniqueId('da51d3c8cc902ab2').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions').
 desc(
 `
 signed clamp:
 T is i32 or vecN<i32> clamp(e: T , low: T, high: T) -> T Returns min(max(e, low), high). Component-wise when T is a vector. (GLSLstd450SClamp)
-
-Please read the following guidelines before contributing:
-https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 `).
 
 params((u) =>
@@ -187,7 +179,6 @@ fn(async (t) => {
 });
 
 g.test('f32').
-uniqueId('88e39c61e6dbd26f').
 specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions').
 desc(
 `
