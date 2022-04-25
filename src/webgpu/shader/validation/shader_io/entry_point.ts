@@ -1,4 +1,4 @@
-export const description = `Validation tests for general usage of entry point IO`;
+export const description = `Validation tests for attributes and entry point requirements`;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
