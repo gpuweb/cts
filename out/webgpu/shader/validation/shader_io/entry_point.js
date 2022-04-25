@@ -1,6 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/export const description = `Validation tests for general usage of entry point IO`;import { makeTestGroup } from '../../../../common/framework/test_group.js';
+**/export const description = `Validation tests for attributes and entry point requirements`;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -133,4 +133,4 @@ fn frag_main() -> FragmentOutputs {
 `;
   t.expectCompileResult(t.params.target_stage === '', code);
 });
-//# sourceMappingURL=generic.spec.js.map
+//# sourceMappingURL=entry_point.js.map

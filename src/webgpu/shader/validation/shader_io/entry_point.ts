@@ -1,6 +1,5 @@
-/**
- * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ export const description = `Validation tests for general usage of entry point IO`;
+export const description = `Validation tests for attributes and entry point requirements`;
+
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
@@ -8,7 +7,9 @@ export const g = makeTestGroup(ShaderValidationTest);
 
 g.test('missing_attribute_on_param')
   .desc(`Test that an entry point without an IO attribute on one of its parameters is rejected.`)
-  .params(u => u.combine('target_stage', ['', 'vertex', 'fragment', 'compute']).beginSubcases())
+  .params(u =>
+    u.combine('target_stage', ['', 'vertex', 'fragment', 'compute'] as const).beginSubcases()
+  )
   .fn(t => {
     const vertex_attr = t.params.target_stage === 'vertex' ? '' : '@location(1)';
     const fragment_attr = t.params.target_stage === 'fragment' ? '' : '@location(1)';
@@ -40,7 +41,9 @@ g.test('missing_attribute_on_param_struct')
   .desc(
     `Test that an entry point struct parameter without an IO attribute on one of its members is rejected.`
   )
-  .params(u => u.combine('target_stage', ['', 'vertex', 'fragment', 'compute']).beginSubcases())
+  .params(u =>
+    u.combine('target_stage', ['', 'vertex', 'fragment', 'compute'] as const).beginSubcases()
+  )
   .fn(t => {
     const vertex_attr = t.params.target_stage === 'vertex' ? '' : '@location(1)';
     const fragment_attr = t.params.target_stage === 'fragment' ? '' : '@location(1)';
@@ -80,7 +83,7 @@ fn comp_main(inputs : ComputeInputs) {
 
 g.test('missing_attribute_on_return_type')
   .desc(`Test that an entry point without an IO attribute on its return type is rejected.`)
-  .params(u => u.combine('target_stage', ['', 'vertex', 'fragment']).beginSubcases())
+  .params(u => u.combine('target_stage', ['', 'vertex', 'fragment'] as const).beginSubcases())
   .fn(t => {
     const vertex_attr = t.params.target_stage === 'vertex' ? '' : '@builtin(position)';
     const fragment_attr = t.params.target_stage === 'fragment' ? '' : '@location(0)';
@@ -102,7 +105,7 @@ g.test('missing_attribute_on_return_type_struct')
   .desc(
     `Test that an entry point struct return type without an IO attribute on one of its members is rejected.`
   )
-  .params(u => u.combine('target_stage', ['', 'vertex', 'fragment']).beginSubcases())
+  .params(u => u.combine('target_stage', ['', 'vertex', 'fragment'] as const).beginSubcases())
   .fn(t => {
     const vertex_attr = t.params.target_stage === 'vertex' ? '' : '@location(1)';
     const fragment_attr = t.params.target_stage === 'fragment' ? '' : '@location(1)';
