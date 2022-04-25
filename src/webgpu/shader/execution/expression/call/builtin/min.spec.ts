@@ -40,15 +40,11 @@ function generateTestCases(test_values: Array<Scalar>): Array<Case> {
 }
 
 g.test('u32')
-  .uniqueId('29aba7ede5b93cdd')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `
 unsigned min:
 T is u32 or vecN<u32> min(e1: T ,e2: T) -> T Returns e1 if e1 is less than e2, and e2 otherwise. Component-wise when T is a vector. (GLSLstd450UMin)
-
-Please read the following guidelines before contributing:
-https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 `
   )
   .params(u =>
@@ -75,15 +71,11 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   });
 
 g.test('i32')
-  .uniqueId('60c8ecdf409b45fc')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `
 signed min:
 T is i32 or vecN<i32> min(e1: T ,e2: T) -> T Returns e1 if e1 is less than e2, and e2 otherwise. Component-wise when T is a vector. (GLSLstd45SUMin)
-
-Please read the following guidelines before contributing:
-https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 `
   )
   .params(u =>
@@ -111,15 +103,11 @@ https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
   });
 
 g.test('f32')
-  .uniqueId('53efc46faad0f380')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
   .desc(
     `
 min:
 T is f32 or vecN<f32> min(e1: T ,e2: T ) -> T Returns e2 if e2 is less than e1, and e1 otherwise. If one operand is a NaN, the other is returned. If both operands are NaNs, a NaN is returned. Component-wise when T is a vector. (GLSLstd450NMin)
-
-Please read the following guidelines before contributing:
-https://github.com/gpuweb/cts/blob/main/docs/plan_autogen.md
 `
   )
   .params(u =>
