@@ -39,10 +39,10 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
     };
 
     const numeric_range = fullF32Range({
-      neg_norm: 1000,
-      neg_sub: 100,
-      pos_sub: 100,
-      pos_norm: 1000,
+      neg_norm: 100,
+      neg_sub: 10,
+      pos_sub: 10,
+      pos_norm: 100,
     }).filter(x => {
       return x !== 0;
     });
