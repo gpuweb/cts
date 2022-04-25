@@ -477,7 +477,7 @@ g.test('identifiers')
 g.test('non_normalized')
   .desc(`Test that identifiers are not unicode normalized`)
   .fn(t => {
-    const code = `var<private> \u212b : i32;
+    const code = `var<private> \u212b : i32;  // \u212b normalizes with NFC to \u00c5
 var<private> \u00c5 : i32;`;
     t.expectCompileResult(true, code);
   });
