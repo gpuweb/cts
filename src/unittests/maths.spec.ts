@@ -161,7 +161,7 @@ g.test('test,math,nextAfterNoFlush')
     { val: hexToF32(0x03800000), dir: true, result: f32Bits(0x03800001) },
     { val: hexToF32(0x03800000), dir: false, result: f32Bits(0x037fffff) },
     { val: hexToF32(0x83800000), dir: true, result: f32Bits(0x837fffff) },
-   { val: hexToF32(0x83800000), dir: false, result: f32Bits(0x83800001) },
+    { val: hexToF32(0x83800000), dir: false, result: f32Bits(0x83800001) },
 
     // Not precisely expressible as float32
     { val: 0.001, dir: true, result: f32Bits(0x3a83126f) }, // positive normal
