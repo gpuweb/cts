@@ -1348,16 +1348,6 @@ export const listing = [
       "expression",
       "call",
       "builtin",
-      "float_built_functions"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "execution",
-      "expression",
-      "call",
-      "builtin",
       "floor"
     ]
   },
