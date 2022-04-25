@@ -1,5 +1,5 @@
 export const description = `
-Execution Tests for the 'countOneBits' builtin function
+Execution tests for the 'countOneBits' builtin function
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -12,11 +12,14 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('u32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
   .desc(
     `
-count 1 bits:
-T is i32, u32, vecN<i32>, or vecN<u32> countOneBits(e: T ) -> T The number of 1 bits in the representation of e. Also known as "population count". Component-wise when T is a vector. (SPIR-V OpBitCount)
+T is i32, u32, vecN<i32>, or vecN<u32>
+@const fn countOneBits(e: T ) -> T
+The number of 1 bits in the representation of e.
+Also known as "population count".
+Component-wise when T is a vector.
 `
   )
   .params(u =>
@@ -134,11 +137,14 @@ T is i32, u32, vecN<i32>, or vecN<u32> countOneBits(e: T ) -> T The number of 1 
   });
 
 g.test('i32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
   .desc(
     `
-count 1 bits:
-T is i32, u32, vecN<i32>, or vecN<u32> countOneBits(e: T ) -> T The number of 1 bits in the representation of e. Also known as "population count". Component-wise when T is a vector. (SPIR-V OpBitCount)
+T is i32, u32, vecN<i32>, or vecN<u32>
+@const fn countOneBits(e: T ) -> T
+The number of 1 bits in the representation of e.
+Also known as "population count".
+Component-wise when T is a vector.
 `
   )
   .params(u =>

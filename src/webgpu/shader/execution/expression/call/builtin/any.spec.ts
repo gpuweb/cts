@@ -1,5 +1,5 @@
 export const description = `
-Execution Tests for the 'any' builtin function
+Execution tests for the 'any' builtin function
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -20,11 +20,17 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('bool')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
+  .specURL('https://www.w3.org/TR/WGSL/#logical-builtin-functions')
   .desc(
     `
-vector any:
-e: vecN<bool> any(e): bool Returns true if any component of e is true. (OpAny)
+# scalar
+e: bool
+@const fn all(e) -> bool
+Returns e.
+
+# vector
+@const fn any(e: vecN<bool>) -> bool
+Returns true if any component of e is true.
 `
   )
   .params(u =>

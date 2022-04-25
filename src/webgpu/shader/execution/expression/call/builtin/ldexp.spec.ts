@@ -1,5 +1,5 @@
 export const description = `
-Execution Tests for the 'ldexp' builtin function
+Execution tests for the 'ldexp' builtin function
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -14,12 +14,33 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('f32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+g.test('abstract_float')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
     `
-ldexp:
-T is f32 or vecN<f32> I is i32 or vecN<i32>, where I is a scalar if T is a scalar, or a vector when T is a vector ldexp(e1: T ,e2: I ) -> T Returns e1 * 2e2. Component-wise when T is a vector. (GLSLstd450Ldexp)
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+I is AbstractInt, i32, vecN<AbstractInt>, or vecN<i32>, where
+  I is a scalar if T is a scalar, or a vector when T is a vector
+@const fn ldexp(e1: T ,e2: I ) -> T
+Returns e1 * 2^e2. Component-wise when T is a vector.
+`
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
+  )
+  .unimplemented();
+
+g.test('f32')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
+  .desc(
+    `
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+I is AbstractInt, i32, vecN<AbstractInt>, or vecN<i32>, where
+  I is a scalar if T is a scalar, or a vector when T is a vector
+@const fn ldexp(e1: T ,e2: I ) -> T
+Returns e1 * 2^e2. Component-wise when T is a vector.
 `
   )
   .params(u =>
@@ -73,3 +94,21 @@ T is f32 or vecN<f32> I is i32 or vecN<i32>, where I is a scalar if T is a scala
     cfg.cmpFloats = correctlyRoundedThreshold();
     run(t, builtin('ldexp'), [TypeF32, TypeI32], TypeF32, cfg, cases);
   });
+
+g.test('f16')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
+  .desc(
+    `
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+I is AbstractInt, i32, vecN<AbstractInt>, or vecN<i32>, where
+  I is a scalar if T is a scalar, or a vector when T is a vector
+@const fn ldexp(e1: T ,e2: I ) -> T
+Returns e1 * 2^e2. Component-wise when T is a vector.
+`
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
+  )
+  .unimplemented();

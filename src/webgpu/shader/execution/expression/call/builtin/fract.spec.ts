@@ -1,5 +1,5 @@
 export const description = `
-Execution Tests for the 'fract' builtin function
+Execution tests for the 'fract' builtin function
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -13,12 +13,31 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('f32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+g.test('abstract_float')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
     `
-fract:
-T is f32 or vecN<f32> fract(e: T ) -> T Returns the fractional bits of e (e.g. e - floor(e)). Component-wise when T is a vector. (GLSLstd450Fract)
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+@const fn fract(e: T ) -> T
+Returns the fractional part of e, computed as e - floor(e).
+Component-wise when T is a vector.
+`
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
+  )
+  .unimplemented();
+
+g.test('f32')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
+  .desc(
+    `
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+@const fn fract(e: T ) -> T
+Returns the fractional part of e, computed as e - floor(e).
+Component-wise when T is a vector.
 `
   )
   .params(u =>
@@ -72,3 +91,20 @@ T is f32 or vecN<f32> fract(e: T ) -> T Returns the fractional bits of e (e.g. e
       { input: f32Bits(kBit.f32.subnormal.negative.min), expected: anyOf(f32(0), f32Bits(0x3f7fffff), f32(1)) },
     ]);
   });
+
+g.test('f16')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
+  .desc(
+    `
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+@const fn fract(e: T ) -> T
+Returns the fractional part of e, computed as e - floor(e).
+Component-wise when T is a vector.
+`
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
+  )
+  .unimplemented();

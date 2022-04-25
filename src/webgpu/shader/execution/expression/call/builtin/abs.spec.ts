@@ -1,5 +1,5 @@
 export const description = `
-Execution Tests for the 'abs' builtin function
+Execution tests for the 'abs' builtin function
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -21,15 +21,35 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('u32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+g.test('abstract_int')
+  .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
   .desc(
     `
-scalar case, unsigned abs:
-abs(e: T ) -> T
-T is u32 or vecN<u32>. Result is e.
-This is provided for symmetry with abs for signed integers.
-Component-wise when T is a vector.
+S is AbstractInt, i32, or u32
+T is S or vecN<S>
+@const fn abs(e: T ) -> T
+The absolute value of e. Component-wise when T is a vector. If e is a signed
+integral scalar type and evaluates to the largest negative value, then the
+result is e. If e is an unsigned integral type, then the result is e.
+`
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
+  )
+  .unimplemented();
+
+g.test('u32')
+  .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
+  .desc(
+    `
+S is AbstractInt, i32, or u32
+T is S or vecN<S>
+@const fn abs(e: T ) -> T
+The absolute value of e. Component-wise when T is a vector. If e is a signed
+integral scalar type and evaluates to the largest negative value, then the
+result is e. If e is an unsigned integral type, then the result is e.
 `
   )
   .params(u =>
@@ -79,15 +99,15 @@ Component-wise when T is a vector.
   });
 
 g.test('i32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
   .desc(
     `
-signed abs:
-abs(e: T ) -> T
-T is i32 or vecN<i32>. The result is the absolute value of e.
-Component-wise when T is a vector.
-If e evaluates to the largest negative value, then the result is e.
-(GLSLstd450SAbs)
+S is AbstractInt, i32, or u32
+T is S or vecN<S>
+@const fn abs(e: T ) -> T
+The absolute value of e. Component-wise when T is a vector. If e is a signed
+integral scalar type and evaluates to the largest negative value, then the
+result is e. If e is an unsigned integral type, then the result is e.
 `
   )
   .params(u =>
@@ -143,16 +163,13 @@ If e evaluates to the largest negative value, then the result is e.
   });
 
 g.test('f32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
     `
-float abs:
-abs(e: T ) -> T
-T is f32 or vecN<f32>
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+@const fn abs(e: T ) -> T
 Returns the absolute value of e (e.g. e with a positive sign bit).
-Component-wise when T is a vector. (GLSLstd450Fabs)
-
-TODO(sarahM0): Check if this is needed (or if it has to fail). If yes add other values. [1]
+Component-wise when T is a vector.
 `
   )
   .params(u =>
@@ -172,7 +189,6 @@ TODO(sarahM0): Check if this is needed (or if it has to fail). If yes add other 
       { input: f32Bits(kBit.f32.positive.max), expected: f32Bits(kBit.f32.positive.max) },
 
       // Subnormal f32
-      // [1] If needed add other values.
       {
         input: f32Bits(kBit.f32.subnormal.positive.max),
         expected: anyOf(f32Bits(kBit.f32.subnormal.positive.max), f32(0)),
