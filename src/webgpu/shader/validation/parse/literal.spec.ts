@@ -70,7 +70,7 @@ g.test('bools')
     '.1e-2', // Exponent without leading number
     '1e-4f', // Exponennt without decimal point
     '0x.3', // Hex float, lowercase X
-    '0X.3', // Hex float, uppercase X'
+    '0X.3', // Hex float, uppercase X
     '0xa.fp+2', // Hex float, lowercase p
     '0xa.fP+2', // Hex float, uppercase p
     '0xE.fp+2', // Uppercase E (as hex, but matches non hex exponent char)

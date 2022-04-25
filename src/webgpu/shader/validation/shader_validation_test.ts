@@ -59,7 +59,7 @@ export class ShaderValidationTest extends GPUTest {
    *
    * @example
    * ```ts
-   * t.wrapInEntryPoint(`var i = 0;`);g
+   * t.wrapInEntryPoint(`var i = 0;`);
    * ```
    */
   wrapInEntryPoint(code: string) {
