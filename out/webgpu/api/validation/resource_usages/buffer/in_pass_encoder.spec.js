@@ -3,15 +3,13 @@
 **/export const description = `
 Buffer Usages Validation Tests in Render Pass and Compute Pass.
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { unreachable } from '../../../../../common/util/util.js';
+import { assert, unreachable } from '../../../../../common/util/util.js';
 import { ValidationTest } from '../../validation_test.js';
 
 const kBoundBufferSize = 256;
 
 class F extends ValidationTest {
-  createBindGroupForTest(
-  buffer,
-  offset,
+  createBindGroupLayoutForTest(
   type,
   resourceVisibility)
   {
@@ -23,12 +21,19 @@ class F extends ValidationTest {
         type } };
 
 
-    const bindGroupLayout = this.device.createBindGroupLayout({
+    return this.device.createBindGroupLayout({
       entries: [bindGroupLayoutEntry] });
 
+  }
 
+  createBindGroupForTest(
+  buffer,
+  offset,
+  type,
+  resourceVisibility)
+  {
     return this.device.createBindGroup({
-      layout: bindGroupLayout,
+      layout: this.createBindGroupLayoutForTest(type, resourceVisibility),
       entries: [
       {
         binding: 0,
@@ -87,9 +92,9 @@ g.test('subresources,buffer_usage_in_render_pass').
 desc(
 `
 Test that when one buffer is used in one render pass encoder, its list of internal usages within one
-usage scope can only be a compatible usage list; while there is no such restriction when it is used
-in different render pass encoders. The usage scope rules are not related to the buffer offset or the
-bind group layout visibility.`).
+usage scope (all the commands in the whole render pass) can only be a compatible usage list; while
+there is no such restriction when it is used in different render pass encoders. The usage scope
+rules are not related to the buffer offset or the bind group layout visibilities.`).
 
 params((u) =>
 u.
@@ -126,7 +131,7 @@ t.usage0 === 'index' && t.usage1 === 'index')).
 
 
 fn(async (t) => {
-  const { usage0, visibility0, usage1, visibility1, inSamePass, hasOverlap } = t.params;
+  const { inSamePass, hasOverlap, usage0, visibility0, usage1, visibility1 } = t.params;
 
   const UseBufferOnRenderPassEncoder = (
   buffer,
@@ -220,5 +225,310 @@ fn(async (t) => {
   t.expectValidationError(() => {
     encoder.finish();
   }, fail);
+});
+
+g.test('subresources,buffer_usage_in_one_compute_pass_with_no_dispatch').
+desc(
+`
+Test that it is always allowed to set multiple bind groups with same buffer in a compute pass
+encoder without any dispatch calls as state-setting compute pass commands, like setBindGroup(index,
+bindGroup, dynamicOffsets), do not contribute directly to a usage scope.`).
+
+params((u) =>
+u.
+combine('usage0', ['uniform', 'storage', 'read-only-storage']).
+combine('usage1', ['uniform', 'storage', 'read-only-storage']).
+beginSubcases().
+combine('visibility0', ['compute', 'fragment']).
+combine('visibility1', ['compute', 'fragment']).
+combine('hasOverlap', [true, false])).
+
+fn(async (t) => {
+  const { usage0, usage1, visibility0, visibility1, hasOverlap } = t.params;
+
+  const buffer = t.device.createBuffer({
+    size: kBoundBufferSize * 2,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.STORAGE });
+
+
+  const encoder = t.device.createCommandEncoder();
+  const computePassEncoder = encoder.beginComputePass();
+
+  const offset0 = 0;
+  const bindGroup0 = t.createBindGroupForTest(buffer, offset0, usage0, visibility0);
+  computePassEncoder.setBindGroup(0, bindGroup0);
+
+  const offset1 = hasOverlap ? offset0 : kBoundBufferSize;
+  const bindGroup1 = t.createBindGroupForTest(buffer, offset1, usage1, visibility1);
+  computePassEncoder.setBindGroup(1, bindGroup1);
+
+  computePassEncoder.end();
+
+  t.expectValidationError(() => {
+    encoder.finish();
+  }, false);
+});
+
+g.test('subresources,buffer_usage_in_one_compute_pass_with_one_dispatch').
+desc(
+`
+Test that when one buffer is used in one compute pass encoder, its list of internal usages within
+one usage scope can only be a compatible usage list. According to WebGPU SPEC, within one dispatch,
+for each bind group slot that is used by the current GPUComputePipeline's layout, every subresource
+referenced by that bind group is "used" in the usage scope. `).
+
+params((u) =>
+u.
+combine('usage0AccessibleInDispatch', [true, false]).
+combine('usage1AccessibleInDispatch', [true, false]).
+combine('dispatchBeforeUsage1', [true, false]).
+beginSubcases().
+combine('usage0', ['uniform', 'storage', 'read-only-storage', 'indirect']).
+combine('visibility0', ['compute', 'fragment']).
+filter((t) => {
+  // The buffer with `indirect` usage is always accessible in the dispatch call.
+  if (
+  t.usage0 === 'indirect' && (
+  !t.usage0AccessibleInDispatch || t.visibility0 !== 'compute' || !t.dispatchBeforeUsage1))
+  {
+    return false;
+  }
+  if (t.usage0AccessibleInDispatch && t.visibility0 !== 'compute') {
+    return false;
+  }
+  if (t.dispatchBeforeUsage1 && t.usage1AccessibleInDispatch) {
+    return false;
+  }
+  return true;
+}).
+combine('usage1', ['uniform', 'storage', 'read-only-storage', 'indirect']).
+combine('visibility1', ['compute', 'fragment']).
+filter((t) => {
+  if (
+  t.usage1 === 'indirect' && (
+  !t.usage1AccessibleInDispatch || t.visibility1 !== 'compute' || t.dispatchBeforeUsage1))
+  {
+    return false;
+  }
+  // When the first buffer usage is `indirect`, there has already been one dispatch call, so
+  // in this test we always make the second usage inaccessible in the dispatch call.
+  if (
+  t.usage1AccessibleInDispatch && (
+  t.visibility1 !== 'compute' || t.usage0 === 'indirect'))
+  {
+    return false;
+  }
+  return true;
+}).
+combine('hasOverlap', [true, false])).
+
+fn(async (t) => {
+  const {
+    usage0AccessibleInDispatch,
+    usage1AccessibleInDispatch,
+    dispatchBeforeUsage1,
+    usage0,
+    visibility0,
+    usage1,
+    visibility1,
+    hasOverlap } =
+  t.params;
+
+  const buffer = t.device.createBuffer({
+    size: kBoundBufferSize * 2,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.STORAGE | GPUBufferUsage.INDIRECT });
+
+
+  const encoder = t.device.createCommandEncoder();
+  const computePassEncoder = encoder.beginComputePass();
+
+  const offset0 = 0;
+  switch (usage0) {
+    case 'uniform':
+    case 'storage':
+    case 'read-only-storage':{
+        const bindGroup0 = t.createBindGroupForTest(buffer, offset0, usage0, visibility0);
+        computePassEncoder.setBindGroup(0, bindGroup0);
+
+        /*
+         * setBindGroup(bindGroup0);
+         * dispatch();
+         * setBindGroup(bindGroup1);
+         */
+        if (dispatchBeforeUsage1) {
+          let pipelineLayout = undefined;
+          if (usage0AccessibleInDispatch) {
+            const bindGroupLayout0 = t.createBindGroupLayoutForTest(usage0, visibility0);
+            pipelineLayout = t.device.createPipelineLayout({
+              bindGroupLayouts: [bindGroupLayout0] });
+
+          }
+          const computePipeline = t.createNoOpComputePipeline(pipelineLayout);
+          computePassEncoder.setPipeline(computePipeline);
+          computePassEncoder.dispatch(1);
+        }
+        break;
+      }
+    case 'indirect':{
+        /*
+         * dispatchIndirect(buffer);
+         * setBindGroup(bindGroup1);
+         */
+        assert(dispatchBeforeUsage1);
+        const computePipeline = t.createNoOpComputePipeline();
+        computePassEncoder.setPipeline(computePipeline);
+        computePassEncoder.dispatchIndirect(buffer, offset0);
+        break;
+      }}
+
+
+  const offset1 = hasOverlap ? offset0 : kBoundBufferSize;
+  switch (usage1) {
+    case 'uniform':
+    case 'storage':
+    case 'read-only-storage':{
+        const bindGroup1 = t.createBindGroupForTest(buffer, offset1, usage1, visibility1);
+        const bindGroupIndex = usage0AccessibleInDispatch ? 1 : 0;
+        computePassEncoder.setBindGroup(bindGroupIndex, bindGroup1);
+
+        /*
+         * setBindGroup(bindGroup0);
+         * setBindGroup(bindGroup1);
+         * dispatch();
+         */
+        if (!dispatchBeforeUsage1) {
+          const bindGroupLayouts = [];
+          if (usage0AccessibleInDispatch && usage0 !== 'indirect') {
+            const bindGroupLayout0 = t.createBindGroupLayoutForTest(usage0, visibility0);
+            bindGroupLayouts.push(bindGroupLayout0);
+          }
+          if (usage1AccessibleInDispatch) {
+            const bindGroupLayout1 = t.createBindGroupLayoutForTest(usage1, visibility1);
+            bindGroupLayouts.push(bindGroupLayout1);
+          }
+          const pipelineLayout = bindGroupLayouts ?
+          t.device.createPipelineLayout({
+            bindGroupLayouts }) :
+
+          undefined;
+          const computePipeline = t.createNoOpComputePipeline(pipelineLayout);
+          computePassEncoder.setPipeline(computePipeline);
+          computePassEncoder.dispatch(1);
+        }
+        break;
+      }
+    case 'indirect':{
+        /*
+         * setBindGroup(bindGroup0);
+         * dispatchIndirect(buffer);
+         */
+        assert(!dispatchBeforeUsage1);
+        let pipelineLayout = undefined;
+        if (usage0AccessibleInDispatch) {
+          assert(usage0 !== 'indirect');
+          pipelineLayout = t.device.createPipelineLayout({
+            bindGroupLayouts: [t.createBindGroupLayoutForTest(usage0, visibility0)] });
+
+        }
+        const computePipeline = t.createNoOpComputePipeline(pipelineLayout);
+        computePassEncoder.setPipeline(computePipeline);
+        computePassEncoder.dispatchIndirect(buffer, offset1);
+        break;
+      }}
+
+  computePassEncoder.end();
+
+  const usageHasConflict =
+  usage0 === 'storage' && usage1 !== 'storage' ||
+  usage0 !== 'storage' && usage1 === 'storage';
+  const fail =
+  usageHasConflict &&
+  visibility0 === 'compute' &&
+  visibility1 === 'compute' &&
+  usage0AccessibleInDispatch &&
+  usage1AccessibleInDispatch;
+  t.expectValidationError(() => {
+    encoder.finish();
+  }, fail);
+});
+
+g.test('subresources,buffer_usage_in_compute_pass_with_two_dispatches').
+desc(
+`
+Test that it is always allowed to use one buffer in different dispatch calls as in WebGPU SPEC,
+within one dispatch, for each bind group slot that is used by the current GPUComputePipeline's
+layout, every subresource referenced by that bind group is "used" in the usage scope, and different
+dispatch calls refer to different usage scopes.`).
+
+params((u) =>
+u.
+combine('usage0', ['uniform', 'storage', 'read-only-storage', 'indirect']).
+combine('usage1', ['uniform', 'storage', 'read-only-storage', 'indirect']).
+beginSubcases().
+combine('inSamePass', [true, false]).
+combine('hasOverlap', [true, false])).
+
+fn(async (t) => {
+  const { usage0, usage1, inSamePass, hasOverlap } = t.params;
+
+  const UseBufferOnComputePassEncoder = (
+  computePassEncoder,
+  buffer,
+  usage,
+  offset) =>
+  {
+    switch (usage) {
+      case 'uniform':
+      case 'storage':
+      case 'read-only-storage':{
+          const bindGroup = t.createBindGroupForTest(buffer, offset, usage, 'compute');
+          computePassEncoder.setBindGroup(0, bindGroup);
+
+          const bindGroupLayout = t.createBindGroupLayoutForTest(usage, 'compute');
+          const pipelineLayout = t.device.createPipelineLayout({
+            bindGroupLayouts: [bindGroupLayout] });
+
+          const computePipeline = t.createNoOpComputePipeline(pipelineLayout);
+          computePassEncoder.setPipeline(computePipeline);
+          computePassEncoder.dispatch(1);
+          break;
+        }
+      case 'indirect':{
+          const computePipeline = t.createNoOpComputePipeline();
+          computePassEncoder.setPipeline(computePipeline);
+          computePassEncoder.dispatchIndirect(buffer, offset);
+          break;
+        }
+      default:
+        unreachable();
+        break;}
+
+  };
+
+  const buffer = t.device.createBuffer({
+    size: kBoundBufferSize * 2,
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.STORAGE | GPUBufferUsage.INDIRECT });
+
+
+  const encoder = t.device.createCommandEncoder();
+  const computePassEncoder = encoder.beginComputePass();
+
+  const offset0 = 0;
+  const offset1 = hasOverlap ? offset0 : kBoundBufferSize;
+  UseBufferOnComputePassEncoder(computePassEncoder, buffer, usage0, offset0);
+
+  if (inSamePass) {
+    UseBufferOnComputePassEncoder(computePassEncoder, buffer, usage1, offset1);
+    computePassEncoder.end();
+  } else {
+    computePassEncoder.end();
+    const anotherComputePassEncoder = encoder.beginComputePass();
+    UseBufferOnComputePassEncoder(anotherComputePassEncoder, buffer, usage1, offset1);
+    anotherComputePassEncoder.end();
+  }
+
+  t.expectValidationError(() => {
+    encoder.finish();
+  }, false);
 });
 //# sourceMappingURL=in_pass_encoder.spec.js.map
