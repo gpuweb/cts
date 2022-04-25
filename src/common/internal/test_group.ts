@@ -31,6 +31,7 @@ export interface TestCaseID {
 
 export interface RunCase {
   readonly id: TestCaseID;
+  readonly isUnimplemented: boolean;
   run(
     rec: TestCaseRecorder,
     selfQuery: TestQuerySingleCase,
@@ -178,6 +179,7 @@ interface TestBuilderWithParams<F extends Fixture, P extends {}> {
 
 class TestBuilder {
   readonly testPath: string[];
+  isUnimplemented: boolean;
   description: string | undefined;
   readonly testCreationStack: Error;
 
@@ -188,6 +190,7 @@ class TestBuilder {
 
   constructor(testPath: string[], fixture: FixtureClass, testCreationStack: Error) {
     this.testPath = testPath;
+    this.isUnimplemented = false;
     this.fixture = fixture;
     this.testCreationStack = testCreationStack;
   }
@@ -224,6 +227,7 @@ class TestBuilder {
 
     this.description =
       (this.description ? this.description + '\n\n' : '') + 'TODO: .unimplemented()';
+    this.isUnimplemented = true;
 
     this.testFn = () => {
       throw new SkipTestCase('test unimplemented');
@@ -300,6 +304,7 @@ class TestBuilder {
         yield new RunCaseSpecific(
           this.testPath,
           caseParams,
+          this.isUnimplemented,
           subcases,
           this.fixture,
           this.testFn,
@@ -311,6 +316,7 @@ class TestBuilder {
           yield new RunCaseSpecific(
             this.testPath,
             caseParams,
+            this.isUnimplemented,
             subcaseArray,
             this.fixture,
             this.testFn,
@@ -321,6 +327,7 @@ class TestBuilder {
             yield new RunCaseSpecific(
               this.testPath,
               { ...caseParams, batch__: i / this.batchSize },
+              this.isUnimplemented,
               subcaseArray.slice(i, Math.min(subcaseArray.length, i + this.batchSize)),
               this.fixture,
               this.testFn,
@@ -335,6 +342,7 @@ class TestBuilder {
 
 class RunCaseSpecific implements RunCase {
   readonly id: TestCaseID;
+  readonly isUnimplemented: boolean;
 
   private readonly params: {};
   private readonly subcases: Iterable<{}> | undefined;
@@ -345,12 +353,14 @@ class RunCaseSpecific implements RunCase {
   constructor(
     testPath: string[],
     params: {},
+    isUnimplemented: boolean,
     subcases: Iterable<{}> | undefined,
     fixture: FixtureClass,
     fn: TestFn<Fixture, {}>,
     testCreationStack: Error
   ) {
     this.id = { test: testPath, params: extractPublicParams(params) };
+    this.isUnimplemented = isUnimplemented;
     this.params = params;
     this.subcases = subcases;
     this.fixture = fixture;
