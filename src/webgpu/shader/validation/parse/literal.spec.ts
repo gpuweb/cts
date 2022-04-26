@@ -86,7 +86,7 @@ g.test('bools')
     '0x.p2', // Hex float no value
     '0x1p', // Hex float missing exponent
     '0x1p^', // Hex float invalid exponent
-    '1.2h', // fp16 enxtension not enabled, so this is an error
+    '1.2h', // fp16 extension not enabled, so this is an error
     '1.0e+999999999999f', // Too big
     '0x1.0p+999999999999f', // Too big hex
     '0x1.00000001pf0', // Mantissa too big
