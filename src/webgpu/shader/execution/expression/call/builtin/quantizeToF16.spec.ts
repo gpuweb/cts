@@ -8,7 +8,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('f32')
-  .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
     `
 T is f32 or vecN<f32>
