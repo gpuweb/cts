@@ -34,7 +34,7 @@ g.test('color_attachments,device_mismatch')
     - created from same device in ColorAttachment0, but from different device in ColorAttachment1
     `
   )
-  .paramsSubcasesOnly([
+  .paramsSimple([
     {
       view0Mismatched: false,
       target0Mismatched: false,
@@ -60,7 +60,7 @@ g.test('color_attachments,device_mismatch')
       target1Mismatched: true,
     },
   ])
-  .fn(async t => {
+  .before(async t => {
     const { view0Mismatched, target0Mismatched, view1Mismatched, target1Mismatched } = t.params;
 
     const mismatched = view0Mismatched || target0Mismatched || view1Mismatched || target1Mismatched;
@@ -68,6 +68,10 @@ g.test('color_attachments,device_mismatch')
     if (mismatched) {
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
+  })
+  .fn(async t => {
+    const { view0Mismatched, target0Mismatched, view1Mismatched, target1Mismatched } = t.params;
+    const mismatched = view0Mismatched || target0Mismatched || view1Mismatched || target1Mismatched;
 
     const view0Texture = view0Mismatched
       ? t.getDeviceMismatchedRenderTexture(4)
@@ -110,13 +114,14 @@ g.test('depth_stencil_attachment,device_mismatch')
   .desc(
     'Tests beginRenderPass cannot be called with a depth stencil attachment whose texture view is created from another device'
   )
-  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
-  .fn(async t => {
-    const { mismatched } = t.params;
-
-    if (mismatched) {
+  .params(u => u.combine('mismatched', [true, false]))
+  .before(async t => {
+    if (t.params.mismatched) {
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
+  })
+  .fn(async t => {
+    const { mismatched } = t.params;
 
     const descriptor: GPUTextureDescriptor = {
       size: { width: 4, height: 4, depthOrArrayLayers: 1 },
@@ -150,14 +155,14 @@ g.test('occlusion_query_set,device_mismatch')
   .desc(
     'Tests beginRenderPass cannot be called with an occlusion query set created from another device'
   )
-  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
-  .fn(async t => {
-    const { mismatched } = t.params;
-
-    if (mismatched) {
+  .params(u => u.combine('mismatched', [true, false]))
+  .before(async t => {
+    if (t.params.mismatched) {
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
-
+  })
+  .fn(async t => {
+    const { mismatched } = t.params;
     const device = mismatched ? t.mismatchedDevice : t.device;
 
     const occlusionQuerySet = device.createQuerySet({

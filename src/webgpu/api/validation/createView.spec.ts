@@ -32,13 +32,16 @@ g.test('format')
   .params(u =>
     u
       .combine('textureFormat', kTextureFormats)
-      .beginSubcases()
       .combine('viewFormat', [undefined, ...kTextureFormats])
+      .beginSubcases()
       .combine('useViewFormatList', [false, true])
   )
+  .before(async t => {
+    const { textureFormat, viewFormat } = t.params;
+    await t.selectDeviceForTextureFormatOrSkipTestCase([textureFormat, viewFormat]);
+  })
   .fn(async t => {
     const { textureFormat, viewFormat, useViewFormatList } = t.params;
-    await t.selectDeviceForTextureFormatOrSkipTestCase([textureFormat, viewFormat]);
     const { blockWidth, blockHeight } = kTextureFormatInfo[textureFormat];
 
     const compatible = viewFormat === undefined || viewCompatible(textureFormat, viewFormat);
@@ -108,9 +111,12 @@ g.test('aspect')
       .combine('format', kTextureFormats)
       .combine('aspect', kTextureAspects)
   )
+  .before(async t => {
+    const { format } = t.params;
+    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
+  })
   .fn(async t => {
     const { format, aspect } = t.params;
-    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
     const info = kTextureFormatInfo[format];
 
     const texture = t.device.createTexture({

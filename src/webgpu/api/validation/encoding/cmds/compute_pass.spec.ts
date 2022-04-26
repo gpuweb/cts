@@ -64,14 +64,14 @@ setPipeline should generate an error iff using an 'invalid' pipeline.
 
 g.test('pipeline,device_mismatch')
   .desc('Tests setPipeline cannot be called with a compute pipeline created from another device')
-  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
-  .fn(async t => {
-    const { mismatched } = t.params;
-
-    if (mismatched) {
+  .params(u => u.combine('mismatched', [true, false]))
+  .before(async t => {
+    if (t.params.mismatched) {
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
-
+  })
+  .fn(async t => {
+    const { mismatched } = t.params;
     const device = mismatched ? t.mismatchedDevice : t.device;
 
     const pipeline = device.createComputePipeline({
@@ -180,13 +180,14 @@ g.test('indirect_dispatch_buffer,device_mismatch')
   .desc(
     'Tests dispatchIndirect cannot be called with an indirect buffer created from another device'
   )
-  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
-  .fn(async t => {
-    const { mismatched } = t.params;
-
-    if (mismatched) {
+  .params(u => u.combine('mismatched', [true, false]))
+  .before(async t => {
+    if (t.params.mismatched) {
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
+  })
+  .fn(async t => {
+    const { mismatched } = t.params;
 
     const pipeline = t.createNoOpComputePipeline();
 

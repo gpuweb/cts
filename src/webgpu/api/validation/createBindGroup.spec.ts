@@ -498,13 +498,14 @@ g.test('bind_group_layout,device_mismatch')
   .desc(
     'Tests createBindGroup cannot be called with a bind group layout created from another device'
   )
-  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
-  .fn(async t => {
-    const mismatched = t.params.mismatched;
-
-    if (mismatched) {
+  .params(u => u.combine('mismatched', [true, false]))
+  .before(async t => {
+    if (t.params.mismatched) {
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
+  })
+  .fn(async t => {
+    const mismatched = t.params.mismatched;
 
     const device = mismatched ? t.mismatchedDevice : t.device;
 
@@ -550,19 +551,21 @@ g.test('binding_resources,device_mismatch')
         { texture: { multisampled: false } },
         { storageTexture: { access: 'write-only', format: 'rgba8unorm' } },
       ] as const)
-      .beginSubcases()
       .combineWithParams([
         { resource0Mismatched: false, resource1Mismatched: false }, //control case
         { resource0Mismatched: true, resource1Mismatched: false },
         { resource0Mismatched: false, resource1Mismatched: true },
       ])
   )
-  .fn(async t => {
-    const { entry, resource0Mismatched, resource1Mismatched } = t.params;
+  .before(async t => {
+    const { resource0Mismatched, resource1Mismatched } = t.params;
 
     if (resource0Mismatched || resource1Mismatched) {
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
+  })
+  .fn(async t => {
+    const { entry, resource0Mismatched, resource1Mismatched } = t.params;
 
     const info = bindingTypeInfo(entry);
 

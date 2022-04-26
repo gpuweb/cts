@@ -256,14 +256,17 @@ g.test('render_pass_and_bundle,color_sparse')
 
 g.test('render_pass_and_bundle,depth_format')
   .desc('Test that the depth attachment format in render passes and bundles must match.')
-  .paramsSubcasesOnly(u =>
+  .params(u =>
     u //
       .combine('passFormat', kDepthStencilAttachmentFormats)
       .combine('bundleFormat', kDepthStencilAttachmentFormats)
   )
-  .fn(async t => {
+  .before(async t => {
     const { passFormat, bundleFormat } = t.params;
     await t.selectDeviceForTextureFormatOrSkipTestCase([passFormat, bundleFormat]);
+  })
+  .fn(async t => {
+    const { passFormat, bundleFormat } = t.params;
 
     const bundleEncoder = t.device.createRenderBundleEncoder({
       colorFormats: ['rgba8unorm'],
@@ -404,13 +407,15 @@ Test that the depth attachment format in render passes or bundles match the pipe
   .params(u =>
     u
       .combine('encoderType', ['render pass', 'render bundle'] as const)
-      .beginSubcases()
       .combine('encoderFormat', kDepthStencilAttachmentFormats)
       .combine('pipelineFormat', kDepthStencilAttachmentFormats)
   )
+  .before(async t => {
+    const { encoderFormat, pipelineFormat } = t.params;
+    await t.selectDeviceForTextureFormatOrSkipTestCase([encoderFormat, pipelineFormat]);
+  })
   .fn(async t => {
     const { encoderType, encoderFormat, pipelineFormat } = t.params;
-    await t.selectDeviceForTextureFormatOrSkipTestCase([encoderFormat, pipelineFormat]);
 
     const pipeline = t.createRenderPipeline(
       [{ format: 'rgba8unorm', writeMask: 0 }],
@@ -477,6 +482,9 @@ Test that the depth stencil read only state in render passes or bundles is compa
         return true;
       })
   )
+  .before(async t => {
+    await t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  })
   .fn(async t => {
     const {
       encoderType,
@@ -489,7 +497,6 @@ Test that the depth stencil read only state in render passes or bundles is compa
       stencilFront,
       stencilBack,
     } = t.params;
-    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
 
     const pipeline = t.createRenderPipeline(
       [{ format: 'rgba8unorm', writeMask: 0 }],

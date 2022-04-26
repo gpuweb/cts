@@ -58,14 +58,14 @@ Tests vertex buffer must be valid.
 
 g.test('vertex_buffer,device_mismatch')
   .desc('Tests setVertexBuffer cannot be called with a vertex buffer created from another device')
-  .paramsSubcasesOnly(kRenderEncodeTypeParams.combine('mismatched', [true, false]))
-  .fn(async t => {
-    const { encoderType, mismatched } = t.params;
-
-    if (mismatched) {
+  .params(u => u.combine('mismatched', [true, false]).combineWithParams(kRenderEncodeTypeParams))
+  .before(async t => {
+    if (t.params.mismatched) {
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
-
+  })
+  .fn(async t => {
+    const { encoderType, mismatched } = t.params;
     const device = mismatched ? t.mismatchedDevice : t.device;
 
     const vertexBuffer = device.createBuffer({
