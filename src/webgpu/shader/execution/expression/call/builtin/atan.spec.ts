@@ -87,7 +87,6 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
     run(t, builtin('atan'), [TypeF32], TypeF32, cfg, cases);
   });
 
-
 g.test('f16')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
