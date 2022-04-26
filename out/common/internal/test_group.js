@@ -42,6 +42,7 @@ import { assert, unreachable } from '../util/util.js';
 
 
 
+
 export function makeTestGroup(fixture) {
   return new TestGroup(fixture);
 }
@@ -177,11 +178,13 @@ class TestBuilder {
 
 
 
+
   testCases = undefined;
   batchSize = 0;
 
   constructor(testPath, fixture, testCreationStack) {
     this.testPath = testPath;
+    this.isUnimplemented = false;
     this.fixture = fixture;
     this.testCreationStack = testCreationStack;
   }
@@ -214,6 +217,7 @@ class TestBuilder {
 
     this.description =
     (this.description ? this.description + '\n\n' : '') + 'TODO: .unimplemented()';
+    this.isUnimplemented = true;
 
     this.testFn = () => {
       throw new SkipTestCase('test unimplemented');
@@ -290,6 +294,7 @@ class TestBuilder {
         yield new RunCaseSpecific(
         this.testPath,
         caseParams,
+        this.isUnimplemented,
         subcases,
         this.fixture,
         this.testFn,
@@ -301,6 +306,7 @@ class TestBuilder {
           yield new RunCaseSpecific(
           this.testPath,
           caseParams,
+          this.isUnimplemented,
           subcaseArray,
           this.fixture,
           this.testFn,
@@ -311,6 +317,7 @@ class TestBuilder {
             yield new RunCaseSpecific(
             this.testPath,
             { ...caseParams, batch__: i / this.batchSize },
+            this.isUnimplemented,
             subcaseArray.slice(i, Math.min(subcaseArray.length, i + this.batchSize)),
             this.fixture,
             this.testFn,
@@ -332,15 +339,18 @@ class RunCaseSpecific {
 
 
 
+
   constructor(
   testPath,
   params,
+  isUnimplemented,
   subcases,
   fixture,
   fn,
   testCreationStack)
   {
     this.id = { test: testPath, params: extractPublicParams(params) };
+    this.isUnimplemented = isUnimplemented;
     this.params = params;
     this.subcases = subcases;
     this.fixture = fixture;

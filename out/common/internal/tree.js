@@ -75,6 +75,7 @@ import { StacklessError } from './util.js';
 
 
 
+
 export class TestTree {
   /**
    * The `queryToLoad` that this test tree was created for.
@@ -530,7 +531,8 @@ function insertLeaf(parent, query, t) {
   const leaf = {
     readableRelativeName: readableNameForCase(query),
     query,
-    run: (rec, expectations) => t.run(rec, query, expectations || []) };
+    run: (rec, expectations) => t.run(rec, query, expectations || []),
+    isUnimplemented: t.isUnimplemented };
 
   assert(!parent.children.has(key));
   parent.children.set(key, leaf);

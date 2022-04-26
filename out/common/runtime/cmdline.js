@@ -33,8 +33,10 @@ function usage(rc) {
 
 
 
+
+
 let verbose = false;
-let listTestcases = false;
+let listMode = 'none';
 let debug = false;
 let printJSON = false;
 let quiet = false;
@@ -49,7 +51,9 @@ for (let i = 0; i < sys.args.length; ++i) {
     if (a === '--verbose') {
       verbose = true;
     } else if (a === '--list') {
-      listTestcases = true;
+      listMode = 'cases';
+    } else if (a === '--list-unimplemented') {
+      listMode = 'unimplemented';
     } else if (a === '--debug') {
       debug = true;
     } else if (a === '--print-json') {
@@ -103,10 +107,18 @@ if (queries.length === 0) {
 
   for (const testcase of testcases) {
     const name = testcase.query.toString();
-    if (listTestcases) {
-      console.log(name);
-      continue;
-    }
+    switch (listMode) {
+      case 'cases':
+        console.log(name);
+        continue;
+      case 'unimplemented':
+        if (testcase.isUnimplemented) {
+          console.log(name);
+        }
+        continue;
+      default:
+        break;}
+
 
     const [rec, res] = log.record(name);
     await testcase.run(rec, expectations);
@@ -133,7 +145,7 @@ if (queries.length === 0) {
 
   }
 
-  if (listTestcases) {
+  if (listMode !== 'none') {
     return;
   }
 
