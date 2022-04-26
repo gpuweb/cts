@@ -1,5 +1,5 @@
 export const description = `
-Execution Tests for the 'reversBits' builtin function
+Execution tests for the 'reversBits' builtin function
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -11,12 +11,14 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('unsigned')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+g.test('u32')
+  .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
   .desc(
     `
-bit reversal:
-T is i32, u32, vecN<i32>, or vecN<u32> reverseBits(e: T ) -> T Reverses the bits in e: The bit at position k of the result equals the bit at position 31-k of e. Component-wise when T is a vector. (SPIR-V OpBitReverse)
+T is i32, u32, vecN<i32>, or vecN<u32>
+@const fn reverseBits(e: T ) -> T
+Reverses the bits in e: The bit at position k of the result equals the bit at position 31-k of e.
+Component-wise when T is a vector.
 `
   )
   .params(u =>
@@ -134,12 +136,14 @@ T is i32, u32, vecN<i32>, or vecN<u32> reverseBits(e: T ) -> T Reverses the bits
     ]);
   });
 
-g.test('signed')
+g.test('i32')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
   .desc(
     `
-bit reversal:
-T is i32, u32, vecN<i32>, or vecN<u32> reverseBits(e: T ) -> T Reverses the bits in e: The bit at position k of the result equals the bit at position 31-k of e. Component-wise when T is a vector. (SPIR-V OpBitReverse)
+T is i32, u32, vecN<i32>, or vecN<u32>
+@const fn reverseBits(e: T ) -> T
+Reverses the bits in e: The bit at position k of the result equals the bit at position 31-k of e.
+Component-wise when T is a vector.
 `
   )
   .params(u =>

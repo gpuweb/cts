@@ -1,4 +1,6 @@
-export const description = `WGSL execution test. Section: Logical built-in functions Function: select`;
+export const description = `
+Execution tests for the 'select' builtin function
+`;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
@@ -51,12 +53,13 @@ const dataType = {
   },
 };
 
-g.test('bool')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
+g.test('scalar')
+  .specURL('https://www.w3.org/TR/WGSL/#logical-builtin-functions')
   .desc(
     `
-scalar select:
-T is a scalar or a vector select(f:T,t:T,cond: bool): T Returns t when cond is true, and f otherwise. (OpSelect)
+T is scalar, abstract numeric type, or vector
+@const fn select(f: T, t: T, cond: bool) -> T
+Returns t when cond is true, and f otherwise.
 `
   )
   .params(u =>
@@ -127,11 +130,12 @@ T is a scalar or a vector select(f:T,t:T,cond: bool): T Returns t when cond is t
   });
 
 g.test('vector')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
+  .specURL('https://www.w3.org/TR/WGSL/#logical-builtin-functions')
   .desc(
     `
-vector select:
-T is a scalar select(f: vecN<T>,t: vecN<T>,cond: vecN<bool>) Component-wise selection. Result component i is evaluated as select(f[i],t[i],cond[i]). (OpSelect)
+T is scalar or abstract numeric type
+@const fn select(f: vecN<T>, t: vecN<T>, cond: vecN<bool>) -> vecN<T>
+Component-wise selection. Result component i is evaluated as select(f[i],t[i],cond[i]).
 `
   )
   .params(u =>
