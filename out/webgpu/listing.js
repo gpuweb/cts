@@ -1358,7 +1358,27 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "exp2"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "extractBits"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
+      "faceForward"
     ]
   },
   {
@@ -1389,6 +1409,16 @@ export const listing = [
       "call",
       "builtin",
       "floor"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
+      "fma"
     ]
   },
   {
