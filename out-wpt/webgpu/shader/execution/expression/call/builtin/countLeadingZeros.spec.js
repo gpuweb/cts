@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ export const description = `
-Execution Tests for the 'countLeadingZeros' builtin function
+Execution tests for the 'countLeadingZeros' builtin function
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
@@ -13,13 +13,13 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('u32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
   .desc(
     `
-countLeadingZeros:
-T is i32, u32, vecN<i32>, or vecN<u32> countLeadingZeros(e: T) -> T
-
-The number of consecutive 0 bits starting from the most significant bit of e, when T is a scalar type.
+T is i32, u32, vecN<i32>, or vecN<u32>
+@const fn countLeadingZeros(e: T ) -> T
+The number of consecutive 0 bits starting from the most significant bit of e,
+when T is a scalar type.
 Component-wise when T is a vector.
 Also known as "clz" in some languages.
 `
@@ -139,13 +139,13 @@ Also known as "clz" in some languages.
   });
 
 g.test('i32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
   .desc(
     `
-countLeadingZeros:
-T is i32, u32, vecN<i32>, or vecN<u32> countLeadingZeros(e: T) -> T
-
-The number of consecutive 0 bits starting from the most significant bit of e, when T is a scalar type.
+T is i32, u32, vecN<i32>, or vecN<u32>
+@const fn countLeadingZeros(e: T ) -> T
+The number of consecutive 0 bits starting from the most significant bit of e,
+when T is a scalar type.
 Component-wise when T is a vector.
 Also known as "clz" in some languages.
 `

@@ -1,7 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/export const description = `
-Execution Tests for the 'countTrailingZeros' builtin function
+Execution tests for the 'countTrailingZeros' builtin function
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { i32, i32Bits, TypeI32, u32, TypeU32, u32Bits } from '../../../../../util/conversion.js';
@@ -12,13 +12,13 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('u32').
-specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions').
+specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
 desc(
 `
-countTrailingZeros:
-T is i32, u32, vecN<i32>, or vecN<u32> countTrailingZeros(e: T) -> T
-
-The number of consecutive 0 bits starting from the least significant bit of e, when T is a scalar type.
+T is i32, u32, vecN<i32>, or vecN<u32>
+@const fn countTrailingZeros(e: T ) -> T
+The number of consecutive 0 bits starting from the least significant bit of e,
+when T is a scalar type.
 Component-wise when T is a vector.
 Also known as "ctz" in some languages.
 `).
@@ -138,13 +138,13 @@ fn(async (t) => {
 });
 
 g.test('i32').
-specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions').
+specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
 desc(
 `
-countTrailingZeros:
-T is i32, u32, vecN<i32>, or vecN<u32> countTrailingZeros(e: T) -> T
-
-The number of consecutive 0 bits starting from the least significant bit of e, when T is a scalar type.
+T is i32, u32, vecN<i32>, or vecN<u32>
+@const fn countTrailingZeros(e: T ) -> T
+The number of consecutive 0 bits starting from the least significant bit of e,
+when T is a scalar type.
 Component-wise when T is a vector.
 Also known as "ctz" in some languages.
 `).

@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ export const description = `
-Execution Tests for the 'atan' builtin function
+Execution tests for the 'atan' builtin function
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
@@ -15,12 +15,29 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('f32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+g.test('abstract_float')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
     `
-atan:
-T is f32 or vecN<f32> atan(e: T ) -> T Returns the arc tangent of e. Component-wise when T is a vector. (GLSLstd450Atan)
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+@const fn atan(e: T ) -> T
+Returns the arc tangent of e. Component-wise when T is a vector.
+`
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'])
+      .combine('vectorize', [undefined, 2, 3, 4])
+  )
+  .unimplemented();
+
+g.test('f32')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
+  .desc(
+    `
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+@const fn atan(e: T ) -> T
+Returns the arc tangent of e. Component-wise when T is a vector.
 
 TODO(#792): Decide what the ground-truth is for these tests. [1]
 `
@@ -70,3 +87,21 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
     cfg.cmpFloats = ulpThreshold(4096);
     run(t, builtin('atan'), [TypeF32], TypeF32, cfg, cases);
   });
+
+g.test('f16')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
+  .desc(
+    `
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+@const fn atan(e: T ) -> T
+Returns the arc tangent of e. Component-wise when T is a vector.
+
+TODO(#792): Decide what the ground-truth is for these tests. [1]
+`
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'])
+      .combine('vectorize', [undefined, 2, 3, 4])
+  )
+  .unimplemented();

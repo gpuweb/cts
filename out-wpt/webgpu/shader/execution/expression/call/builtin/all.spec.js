@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ export const description = `
-Execution Tests for the 'all' builtin function
+Execution tests for the 'all' builtin function
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
@@ -21,11 +21,17 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('bool')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#logical-builtin-functions')
+  .specURL('https://www.w3.org/TR/WGSL/#logical-builtin-functions')
   .desc(
     `
-vector all:
-e: vecN<bool> all(e): bool Returns true if each component of e is true. (OpAll)
+# scalar
+e: bool
+@const fn all(e) -> bool
+Returns e.
+
+# vector
+@const fn all(e: vecN<bool>) -> bool
+Returns true if each component of e is true.
 `
   )
   .params(u =>

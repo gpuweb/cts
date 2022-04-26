@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ export const description = `
-Execution Tests for the 'firstTrailingBit' builtin function
+Execution tests for the 'firstTrailingBit' builtin function
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
@@ -13,15 +13,13 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('u32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
   .desc(
     `
-firstTrailingBit:
-T is i32, u32, vecN<i32>, or vecN<u32> firstTrailingBit(e: T) -> T
-
-For scalar T, the result is:
-* T(-1) if e is zero.
-* Otherwise the position of the least significant 1 bit in e.
+T is i32, u32, vecN<i32>, or vecN<u32>
+@const fn firstTrailingBit(e: T ) -> T
+For scalar T, the result is: T(-1) if e is zero.
+Otherwise the position of the least significant 1 bit in e.
 Component-wise when T is a vector.
 `
   )
@@ -140,15 +138,13 @@ Component-wise when T is a vector.
   });
 
 g.test('i32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
   .desc(
     `
-firstTrailingBit:
-T is i32, u32, vecN<i32>, or vecN<u32> firstTrailingBit(e: T) -> T
-
-For scalar T, the result is:
-* T(-1) if e is zero.
-* Otherwise the position of the least significant 1 bit in e.
+T is i32, u32, vecN<i32>, or vecN<u32>
+@const fn firstTrailingBit(e: T ) -> T
+For scalar T, the result is: T(-1) if e is zero.
+Otherwise the position of the least significant 1 bit in e.
 Component-wise when T is a vector.
 `
   )

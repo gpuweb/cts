@@ -1,7 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/export const description = `
-Execution Tests for the 'extractBits' builtin function
+Execution tests for the 'extractBits' builtin function
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import {
@@ -22,22 +22,24 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('u32').
-specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions').
+specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
 desc(
 `
-extractBits:
-T is u32 or vecN<u32> extractBits(e: T, offset: u32, count: u32) -> T
-
+T is u32 or vecN<u32>
+@const fn extractBits(
+  e: T,
+  offset: u32,
+  count: u32) -> T
 Reads bits from an integer, without sign extension.
 
 When T is a scalar type, then:
+  w is the bit width of T
+  o = min(offset,w)
+  c = min(count, w - o)
 
-* w is the bit width of T
-* o = min(offset,w)
-* c = min(count, w - o)
-* The result is 0 if c is 0.
-* Otherwise, bits 0..c-1 of the result are copied from bits o..o+c-1 of e. Other bits of the result are 0.
-
+The result is 0 if c is 0.
+Otherwise, bits 0..c-1 of the result are copied from bits o..o+c-1 of e.
+Other bits of the result are 0.
 Component-wise when T is a vector.
 `).
 
@@ -181,22 +183,24 @@ fn(async (t) => {
 });
 
 g.test('i32').
-specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions').
+specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
 desc(
 `
-extractBits:
-T is i32 or vecN<i32> extractBits(e: T, offset: u32, count: u32) -> T
-
+T is i32 or vecN<i32>
+@const fn extractBits(
+  e: T,
+  offset: u32,
+  count: u32) -> T
 Reads bits from an integer, with sign extension.
 
 When T is a scalar type, then:
+  w is the bit width of T
+  o = min(offset,w)
+  c = min(count, w - o)
 
-* w is the bit width of T
-* o = min(offset,w)
-* c = min(count, w - o)
-* The result is 0 if c is 0.
-* Otherwise, bits 0..c-1 of the result are copied from bits o..o+c-1 of e. Other bits of the result are the same as bit c-1 of the result.
-
+The result is 0 if c is 0.
+Otherwise, bits 0..c-1 of the result are copied from bits o..o+c-1 of e.
+Other bits of the result are the same as bit c-1 of the result.
 Component-wise when T is a vector.
 `).
 

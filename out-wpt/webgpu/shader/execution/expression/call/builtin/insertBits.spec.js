@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ export const description = `
-Execution Tests for the 'insertBits' builtin function
+Execution tests for the 'insertBits' builtin function
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
@@ -23,21 +23,24 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('integer')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
   .desc(
     `
-insertBits:
-T is i32, u32, vecN<i32>, or vecN<u32> insertBits(e: T, newbits:T, offset: u32, count: u32) -> T
-
-Sets bits in an integer.
+T is i32, u32, vecN<i32>, or vecN<u32>
+@const fn insertBits(
+  e: T,
+  newbits:T,
+  offset: u32,
+  count: u32) -> T	Sets bits in an integer.
 
 When T is a scalar type, then:
+  w is the bit width of T
+  o = min(offset,w)
+  c = min(count, w - o)
 
-* w is the bit width of T
-* o = min(offset,w)
-* c = min(count, w - o)
-* The result is e if c is 0.
-* Otherwise, bits o..o+c-1 of the result are copied from bits 0..c-1 of newbits. Other bits of the result are copied from e.
+The result is e if c is 0.
+Otherwise, bits o..o+c-1 of the result are copied from bits 0..c-1 of newbits.
+Other bits of the result are copied from e.
 Component-wise when T is a vector.
 `
   )

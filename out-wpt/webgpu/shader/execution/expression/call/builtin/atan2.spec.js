@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ export const description = `
-Execution Tests for the 'atan2' builtin function
+Execution tests for the 'atan2' builtin function
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { assert } from '../../../../../../common/util/util.js';
@@ -15,12 +15,33 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('f32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+g.test('abstract_float')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
     `
 atan2:
-T is f32 or vecN<f32> atan2(e1: T ,e2: T ) -> T Returns the arc tangent of e1 over e2. Component-wise when T is a vector. (GLSLstd450Atan2)
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+@const fn atan2(e1: T ,e2: T ) -> T
+Returns the arc tangent of e1 over e2. Component-wise when T is a vector.
+
+TODO(#792): Decide what the ground-truth is for these tests. [1]
+`
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'])
+      .combine('vectorize', [undefined, 2, 3, 4])
+  )
+  .unimplemented();
+
+g.test('f32')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
+  .desc(
+    `
+atan2:
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+@const fn atan2(e1: T ,e2: T ) -> T
+Returns the arc tangent of e1 over e2. Component-wise when T is a vector.
 
 TODO(#792): Decide what the ground-truth is for these tests. [1]
 `
@@ -58,3 +79,22 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
     cfg.cmpFloats = ulpThreshold(4096);
     run(t, builtin('atan2'), [TypeF32, TypeF32], TypeF32, cfg, cases);
   });
+
+g.test('f16')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
+  .desc(
+    `
+atan2:
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+@const fn atan2(e1: T ,e2: T ) -> T
+Returns the arc tangent of e1 over e2. Component-wise when T is a vector.
+
+TODO(#792): Decide what the ground-truth is for these tests. [1]
+`
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'])
+      .combine('vectorize', [undefined, 2, 3, 4])
+  )
+  .unimplemented();

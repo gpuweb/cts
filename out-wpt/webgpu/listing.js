@@ -1238,6 +1238,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "arrayLength"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "atan"
     ]
   },
@@ -1418,16 +1428,6 @@ export const listing = [
       "expression",
       "call",
       "builtin",
-      "logical_built_in_functions"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "execution",
-      "expression",
-      "call",
-      "builtin",
       "max"
     ]
   },
@@ -1469,16 +1469,6 @@ export const listing = [
       "call",
       "builtin",
       "sin"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "execution",
-      "expression",
-      "call",
-      "builtin",
-      "value_testing_built_in_functions"
     ]
   },
   {

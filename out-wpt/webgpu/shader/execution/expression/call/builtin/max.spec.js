@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ export const description = `
-Execution Tests for the 'max' builtin function
+Execution tests for the 'max' builtin function
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
@@ -39,12 +39,31 @@ function generateTestCases(test_values) {
   return cases;
 }
 
-g.test('u32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+g.test('abstract_int')
+  .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
   .desc(
     `
-unsigned max:
-T is u32 or vecN<u32> max(e1: T ,e2: T) -> T Returns e2 if e1 is less than e2, and e1 otherwise. Component-wise when T is a vector. (GLSLstd450UMax)
+S is AbstractInt, i32, or u32
+T is S or vecN<S>
+@const fn max(e1: T ,e2: T) -> T
+Returns e2 if e1 is less than e2, and e1 otherwise. Component-wise when T is a vector.
+`
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'])
+      .combine('vectorize', [undefined, 2, 3, 4])
+  )
+  .unimplemented();
+
+g.test('u32')
+  .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
+  .desc(
+    `
+S is AbstractInt, i32, or u32
+T is S or vecN<S>
+@const fn max(e1: T ,e2: T) -> T
+Returns e2 if e1 is less than e2, and e1 otherwise. Component-wise when T is a vector.
 `
   )
   .params(u =>
@@ -64,11 +83,13 @@ T is u32 or vecN<u32> max(e1: T ,e2: T) -> T Returns e2 if e1 is less than e2, a
   });
 
 g.test('i32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
   .desc(
     `
-signed max:
-T is i32 or vecN<i32> max(e1: T ,e2: T) -> T Returns e2 if e1 is less than e2, and e1 otherwise. Component-wise when T is a vector. (GLSLstd450SMax)
+S is AbstractInt, i32, or u32
+T is S or vecN<S>
+@const fn max(e1: T ,e2: T) -> T
+Returns e2 if e1 is less than e2, and e1 otherwise. Component-wise when T is a vector.
 `
   )
   .params(u =>
@@ -95,12 +116,35 @@ T is i32 or vecN<i32> max(e1: T ,e2: T) -> T Returns e2 if e1 is less than e2, a
     run(t, builtin('max'), [TypeI32, TypeI32], TypeI32, cfg, generateTestCases(test_values));
   });
 
-g.test('f32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+g.test('abstract_float')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
     `
-max:
-T is f32 or vecN<f32> max(e1: T ,e2: T ) -> T Returns e2 if e1 is less than e2, and e1 otherwise. If one operand is a NaN, the other is returned. If both operands are NaNs, a NaN is returned. Component-wise when T is a vector. (GLSLstd450NMax)
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+@const fn max(e1: T ,e2: T ) -> T
+Returns e2 if e1 is less than e2, and e1 otherwise.
+If one operand is a NaN, the other is returned.
+If both operands are NaNs, a NaN is returned.
+Component-wise when T is a vector.
+`
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'])
+      .combine('vectorize', [undefined, 2, 3, 4])
+  )
+  .unimplemented();
+
+g.test('f32')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
+  .desc(
+    `
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+@const fn max(e1: T ,e2: T ) -> T
+Returns e2 if e1 is less than e2, and e1 otherwise.
+If one operand is a NaN, the other is returned.
+If both operands are NaNs, a NaN is returned.
+Component-wise when T is a vector.
 `
   )
   .params(u =>
@@ -134,3 +178,22 @@ T is f32 or vecN<f32> max(e1: T ,e2: T ) -> T Returns e2 if e1 is less than e2, 
 
     run(t, builtin('max'), [TypeF32, TypeF32], TypeF32, cfg, generateTestCases(test_values));
   });
+
+g.test('f16')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
+  .desc(
+    `
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+@const fn max(e1: T ,e2: T ) -> T
+Returns e2 if e1 is less than e2, and e1 otherwise.
+If one operand is a NaN, the other is returned.
+If both operands are NaNs, a NaN is returned.
+Component-wise when T is a vector.
+`
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'])
+      .combine('vectorize', [undefined, 2, 3, 4])
+  )
+  .unimplemented();
