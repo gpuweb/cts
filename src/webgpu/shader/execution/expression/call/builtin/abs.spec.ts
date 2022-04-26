@@ -162,6 +162,23 @@ result is e. If e is an unsigned integral type, then the result is e.
     ]);
   });
 
+g.test('abstract_float')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
+  .desc(
+    `
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+@const fn abs(e: T ) -> T
+Returns the absolute value of e (e.g. e with a positive sign bit).
+Component-wise when T is a vector.
+`
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
+  )
+  .unimplemented();
+
 g.test('f32')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
@@ -269,3 +286,20 @@ Component-wise when T is a vector.
       { input: f32(kValue.negPowTwo.to31), expected: f32(kValue.powTwo.to31) },
     ]);
   });
+
+g.test('f16')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
+  .desc(
+    `
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+@const fn abs(e: T ) -> T
+Returns the absolute value of e (e.g. e with a positive sign bit).
+Component-wise when T is a vector.
+`
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
+  )
+  .unimplemented();
