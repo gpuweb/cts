@@ -35,7 +35,7 @@ function hexToFloat64(h32: number, l32: number): number {
 }
 
 /**
- * @returns true if arrays are equal withing 1ULP, doing element-wise comparison as needed, and considering NaNs to be equal.
+ * @returns true if arrays are equal within 1ULP, doing element-wise comparison as needed, and considering NaNs to be equal.
  *
  * Depends on the correctness of withinULP, which is tested in this file.
  **/
