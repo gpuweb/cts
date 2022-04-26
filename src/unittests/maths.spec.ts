@@ -35,7 +35,7 @@ function hexToFloat64(h32: number, l32: number): number {
 }
 
 /**
- * @returns true if arrays are equal, doing element-wise comparison as needed, and considering NaNs to be equal.
+ * @returns true if arrays are equal withing 1ULP, doing element-wise comparison as needed, and considering NaNs to be equal.
  *
  * Depends on the correctness of withinULP, which is tested in this file.
  **/
@@ -200,26 +200,30 @@ g.test('test,math,oneULPFlushToZero')
     { target: Number.NEGATIVE_INFINITY, expect: hexToF32(0x73800000) },
 
     // Zeroes
-    { target: +0, expect: hexToF32(0x01000000) },
-    { target: -0, expect: hexToF32(0x01000000) },
+    { target: +0, expect: hexToF32(0x00800000) },
+    { target: -0, expect: hexToF32(0x00800000) },
 
     // Subnormals
-    { target: hexToF32(kBit.f32.subnormal.positive.min), expect: hexToF32(0x01000000) },
-    { target: hexToF32(kBit.f32.subnormal.positive.max), expect: hexToF32(0x01000000) },
-    { target: hexToF32(kBit.f32.subnormal.negative.min), expect: hexToF32(0x01000000) },
-    { target: hexToF32(kBit.f32.subnormal.negative.max), expect: hexToF32(0x01000000) },
+    { target: hexToF32(kBit.f32.subnormal.positive.min), expect: hexToF32(0x00800000) },
+    { target: hexToF32(kBit.f32.subnormal.positive.max), expect: hexToF32(0x00800000) },
+    { target: hexToF32(kBit.f32.subnormal.negative.min), expect: hexToF32(0x00800000) },
+    { target: hexToF32(kBit.f32.subnormal.negative.max), expect: hexToF32(0x00800000) },
 
     // Normals
     { target: hexToF32(kBit.f32.positive.max), expect: hexToF32(0x73800000) },
-    { target: hexToF32(kBit.f32.positive.min), expect: hexToF32(0x00800001) },
-    { target: hexToF32(kBit.f32.negative.max), expect: hexToF32(0x00800001) },
+    { target: hexToF32(kBit.f32.positive.min), expect: hexToF32(0x00800000) },
+    { target: hexToF32(kBit.f32.negative.max), expect: hexToF32(0x00800000) },
     { target: hexToF32(kBit.f32.negative.min), expect: hexToF32(0x73800000) },
-    { target: 1, expect: hexToF32(0x34400000) },
-    { target: 2, expect: hexToF32(0x34c00000) },
-    { target: 4, expect: hexToF32(0x35400000) },
-    { target: -1, expect: hexToF32(0x34400000) },
-    { target: -2, expect: hexToF32(0x34c00000) },
-    { target: -4, expect: hexToF32(0x35400000) },
+    { target: 1, expect: hexToF32(0x33800000) },
+    { target: 2, expect: hexToF32(0x34000000) },
+    { target: 4, expect: hexToF32(0x34800000) },
+    { target: -1, expect: hexToF32(0x33800000) },
+    { target: -2, expect: hexToF32(0x34000000) },
+    { target: -4, expect: hexToF32(0x34800000) },
+
+    // Non-f32 expressible
+    { target: 1.1, expect: hexToF32(0x34000000) },
+    { target: -1.1, expect: hexToF32(0x34000000) },
   ])
   .fn(t => {
     const target = t.params.target;
@@ -239,26 +243,26 @@ g.test('test,math,oneULPNoFlush')
     { target: Number.NEGATIVE_INFINITY, expect: hexToF32(0x73800000) },
 
     // Zeroes
-    { target: +0, expect: hexToF32(0x00000002) },
-    { target: -0, expect: hexToF32(0x00000002) },
+    { target: +0, expect: hexToF32(0x00000001) },
+    { target: -0, expect: hexToF32(0x00000001) },
 
     // Subnormals
-    { target: hexToF32(kBit.f32.subnormal.positive.min), expect: hexToF32(0x00000002) },
-    { target: hexToF32(kBit.f32.subnormal.positive.max), expect: hexToF32(0x00000002) },
-    { target: hexToF32(kBit.f32.subnormal.negative.min), expect: hexToF32(0x00000002) },
-    { target: hexToF32(kBit.f32.subnormal.negative.max), expect: hexToF32(0x00000002) },
+    { target: hexToF32(kBit.f32.subnormal.positive.min), expect: hexToF32(0x00000001) },
+    { target: hexToF32(kBit.f32.subnormal.positive.max), expect: hexToF32(0x00000001) },
+    { target: hexToF32(kBit.f32.subnormal.negative.min), expect: hexToF32(0x00000001) },
+    { target: hexToF32(kBit.f32.subnormal.negative.max), expect: hexToF32(0x00000001) },
 
     // Normals
-    { target: hexToF32(kBit.f32.positive.max), expect: hexToF32(0x73800000) },
-    { target: hexToF32(kBit.f32.positive.min), expect: hexToF32(0x00000002) },
-    { target: hexToF32(kBit.f32.negative.max), expect: hexToF32(0x00000002) },
-    { target: hexToF32(kBit.f32.negative.min), expect: hexToF32(0x73800000) },
-    { target: 1, expect: hexToF32(0x34400000) },
-    { target: 2, expect: hexToF32(0x34c00000) },
-    { target: 4, expect: hexToF32(0x35400000) },
-    { target: -1, expect: hexToF32(0x34400000) },
-    { target: -2, expect: hexToF32(0x34c00000) },
-    { target: -4, expect: hexToF32(0x35400000) },
+    { target: 1, expect: hexToF32(0x33800000) },
+    { target: 2, expect: hexToF32(0x34000000) },
+    { target: 4, expect: hexToF32(0x34800000) },
+    { target: -1, expect: hexToF32(0x33800000) },
+    { target: -2, expect: hexToF32(0x34000000) },
+    { target: -4, expect: hexToF32(0x34800000) },
+
+    // Non-f32 expressible
+    { target: 1.1, expect: hexToF32(0x34000000) },
+    { target: -1.1, expect: hexToF32(0x34000000) },
   ])
   .fn(t => {
     const target = t.params.target;

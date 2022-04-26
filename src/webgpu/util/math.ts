@@ -171,17 +171,37 @@ export function oneULP(target: number, flush: boolean): number {
     return Number.NaN;
   }
 
-  // For values at the edge of the range or beyond ulp(x) is defined as
-  // the distance between the two nearest representable numbers to the
-  // appropriate edge.
+  if (flush) {
+    target = flushSubnormalNumber(target);
+  }
+
+  // For values at the edge of the range or beyond ulp(x) is defined as  the distance between the two nearest
+  // representable numbers to the appropriate edge.
   if (target === Number.POSITIVE_INFINITY || target >= kValue.f32.positive.max) {
     return kValue.f32.positive.max - kValue.f32.positive.nearest_max;
   } else if (target === Number.NEGATIVE_INFINITY || target <= kValue.f32.negative.min) {
     return kValue.f32.negative.nearest_min - kValue.f32.negative.min;
   } else {
-    const b = nextAfter(target, true, flush).value.valueOf() as number;
-    const a = nextAfter(target, false, flush).value.valueOf() as number;
-    return b - a;
+    const converted: number = new Float32Array([target])[0];
+    if (converted === target) {
+      // |target| is precisely representable as a f32 so taking distance between it and the nearest neighbour in the
+      // direction of 0.
+      if (target > 0) {
+        const a = nextAfter(target, false, flush).value.valueOf() as number;
+        return target - a;
+      } else if (target < 0) {
+        const b = nextAfter(target, true, flush).value.valueOf() as number;
+        return b - target;
+      } else {
+        // For 0 both neighbours should be the same distance, so just using the positive value and simplifying.
+        return nextAfter(target, true, flush).value.valueOf() as number;
+      }
+    } else {
+      // |target| is not precisely representable as a f32 so taking distance of neighbouring f32s.
+      const b = nextAfter(target, true, flush).value.valueOf() as number;
+      const a = nextAfter(target, false, flush).value.valueOf() as number;
+      return b - a;
+    }
   }
 }
 
