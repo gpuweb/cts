@@ -30,14 +30,14 @@ Tests setPipeline should generate an error iff using an 'invalid' pipeline.
 
 g.test('pipeline,device_mismatch')
   .desc('Tests setPipeline cannot be called with a render pipeline created from another device')
-  .paramsSubcasesOnly(kRenderEncodeTypeParams.combine('mismatched', [true, false]))
-  .fn(async t => {
-    const { encoderType, mismatched } = t.params;
-
-    if (mismatched) {
+  .params(u => u.combine('mismatched', [true, false]).combineWithParams(kRenderEncodeTypeParams))
+  .before(async t => {
+    if (t.params.mismatched) {
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
-
+  })
+  .fn(async t => {
+    const { encoderType, mismatched } = t.params;
     const device = mismatched ? t.mismatchedDevice : t.device;
 
     const pipeline = device.createRenderPipeline({

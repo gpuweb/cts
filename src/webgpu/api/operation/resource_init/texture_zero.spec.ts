@@ -10,7 +10,7 @@ TODO:
 // MAINTENANCE_TODO: This is a test file, it probably shouldn't export anything.
 // Everything that's exported should be moved to another file.
 
-import { TestCaseRecorder, TestParams } from '../../../../common/framework/fixture.js';
+import { CaseRecorder, TestParams } from '../../../../common/framework/fixture.js';
 import {
   kUnitCaseParamsBuilder,
   ParamTypeOf,
@@ -27,7 +27,7 @@ import {
   kTextureDimensions,
 } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
-import { GPUTest } from '../../../gpu_test.js';
+import { GPUTest, GPUTestSharedState } from '../../../gpu_test.js';
 import { virtualMipSize } from '../../../util/texture/base.js';
 import { createTextureUploadBuffer } from '../../../util/texture/layout.js';
 import { BeginEndRange, SubresourceRange } from '../../../util/texture/subresource.js';
@@ -184,8 +184,8 @@ export class TextureZeroInitTest extends GPUTest {
   readonly stateToTexelComponents: { [k in InitializedState]: PerTexelComponent<number> };
 
   private p: TextureZeroParams;
-  constructor(rec: TestCaseRecorder, params: TestParams) {
-    super(rec, params);
+  constructor(sharedState: GPUTestSharedState, rec: CaseRecorder, params: TestParams) {
+    super(sharedState, rec, params);
     this.p = params as TextureZeroParams;
 
     const stateToTexelComponents = (state: InitializedState) => {
@@ -577,9 +577,10 @@ export const g = makeTestGroup(TextureZeroInitTest);
 
 g.test('uninitialized_texture_is_zero')
   .params(kTestParams)
-  .fn(async t => {
+  .before(async t => {
     await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[t.params.format].feature);
-
+  })
+  .fn(async t => {
     const usage = getRequiredTextureUsage(
       t.params.format,
       t.params.sampleCount,

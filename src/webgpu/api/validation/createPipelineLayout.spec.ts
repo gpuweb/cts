@@ -112,12 +112,12 @@ g.test('bind_group_layouts,device_mismatch')
     - layout0 and layout1 from different device
     `
   )
-  .paramsSubcasesOnly([
+  .paramsSimple([
     { layout0Mismatched: false, layout1Mismatched: false }, // control case
     { layout0Mismatched: true, layout1Mismatched: false },
     { layout0Mismatched: false, layout1Mismatched: true },
   ])
-  .fn(async t => {
+  .before(async t => {
     const { layout0Mismatched, layout1Mismatched } = t.params;
 
     const mismatched = layout0Mismatched || layout1Mismatched;
@@ -125,6 +125,11 @@ g.test('bind_group_layouts,device_mismatch')
     if (mismatched) {
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
+  })
+  .fn(async t => {
+    const { layout0Mismatched, layout1Mismatched } = t.params;
+
+    const mismatched = layout0Mismatched || layout1Mismatched;
 
     const bglDescriptor: GPUBindGroupLayoutDescriptor = {
       entries: [],

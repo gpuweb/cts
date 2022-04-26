@@ -59,16 +59,19 @@ Test that the buffer must be valid and not destroyed.
 
 g.test('buffer,device_mismatch')
   .desc('Tests the image copies cannot be called with a buffer created from another device')
-  .paramsSubcasesOnly(u =>
-    u.combine('method', ['CopyB2T', 'CopyT2B'] as const).combine('mismatched', [true, false])
+  .params(u =>
+    u
+      .combine('mismatched', [true, false])
+      .beginSubcases()
+      .combine('method', ['CopyB2T', 'CopyT2B'] as const)
   )
-  .fn(async t => {
-    const { method, mismatched } = t.params;
-
-    if (mismatched) {
+  .before(async t => {
+    if (t.params.mismatched) {
       await t.selectMismatchedDeviceOrSkipTestCase(undefined);
     }
-
+  })
+  .fn(async t => {
+    const { method, mismatched } = t.params;
     const device = mismatched ? t.mismatchedDevice : t.device;
 
     const buffer = device.createBuffer({
@@ -182,6 +185,10 @@ Test that bytesPerRow must be a multiple of 256 for CopyB2T and CopyT2B if it is
           (bytesPerRow !== undefined && bytesPerRow >= kTextureFormatInfo[format].bytesPerBlock)
       )
   )
+  .before(async t => {
+    const info = kTextureFormatInfo[t.params.format];
+    await t.selectDeviceOrSkipTestCase(info.feature);
+  })
   .fn(async t => {
     const {
       method,
@@ -193,7 +200,6 @@ Test that bytesPerRow must be a multiple of 256 for CopyB2T and CopyT2B if it is
     } = t.params;
 
     const info = kTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
 
     const buffer = t.device.createBuffer({
       size: 512 * 8 * 16,
