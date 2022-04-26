@@ -68,6 +68,7 @@ g.test('duplicate')
     u
       .combineWithParams(kBuiltins)
       .combine('use_struct', [true, false] as const)
+      .combine('attr', ['', '@invariant'] as const)
       .beginSubcases()
   )
   .fn(t => {
@@ -76,12 +77,12 @@ g.test('duplicate')
     }
 
     const code = generateShader({
-      attribute: `@builtin(${t.params.name}) @invariant @invariant`,
+      attribute: `@builtin(${t.params.name}) @invariant ${t.params.attr}`,
       type: t.params.type,
       stage: t.params.stage,
       io: t.params.io,
       use_struct: t.params.use_struct,
     });
 
-    t.expectCompileResult(false, code);
+    t.expectCompileResult(t.params.attr === '', code);
   });
