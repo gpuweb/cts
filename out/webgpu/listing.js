@@ -1448,6 +1448,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "frexp"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "insertBits"
     ]
   },
