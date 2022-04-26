@@ -94,8 +94,6 @@ g.test('f16')
 T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
 @const fn atan(e: T ) -> T
 Returns the arc tangent of e. Component-wise when T is a vector.
-
-TODO(#792): Decide what the ground-truth is for these tests. [1]
 `
   )
   .params(u =>

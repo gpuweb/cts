@@ -1218,6 +1218,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "acos"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "all"
     ]
   },
