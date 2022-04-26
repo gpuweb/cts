@@ -60,19 +60,25 @@ g.test('invalid_use_of_parameters')
 
 g.test('duplicate')
   .desc(`Test that the invariant attribute can only be applied once.`)
-  .params(u => u.combineWithParams(kBuiltins).combine('use_struct', [true, false]).beginSubcases())
+  .params(u =>
+    u
+      .combineWithParams(kBuiltins)
+      .combine('use_struct', [true, false])
+      .combine('attr', ['', '@invariant'])
+      .beginSubcases()
+  )
   .fn(t => {
     if (t.params.name !== 'position') {
       t.skip('only valid with position');
     }
 
     const code = generateShader({
-      attribute: `@builtin(${t.params.name}) @invariant @invariant`,
+      attribute: `@builtin(${t.params.name}) @invariant ${t.params.attr}`,
       type: t.params.type,
       stage: t.params.stage,
       io: t.params.io,
       use_struct: t.params.use_struct,
     });
 
-    t.expectCompileResult(false, code);
+    t.expectCompileResult(t.params.attr === '', code);
   });
