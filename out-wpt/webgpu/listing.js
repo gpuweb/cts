@@ -1348,6 +1348,26 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "exp"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
+      "exp2"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "extractBits"
     ]
   },
