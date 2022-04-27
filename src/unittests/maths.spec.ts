@@ -217,13 +217,19 @@ g.test('test,math,oneULPFlushToZero')
     { target: 1, expect: hexToF32(0x33800000) },
     { target: 2, expect: hexToF32(0x34000000) },
     { target: 4, expect: hexToF32(0x34800000) },
+    { target: 1000000, expect: hexToF32(0x3d800000) },
     { target: -1, expect: hexToF32(0x33800000) },
     { target: -2, expect: hexToF32(0x34000000) },
     { target: -4, expect: hexToF32(0x34800000) },
+    { target: -1000000, expect: hexToF32(0x3d800000) },
 
-    // Non-f32 expressible
-    { target: 1.1, expect: hexToF32(0x34000000) },
-    { target: -1.1, expect: hexToF32(0x34000000) },
+    // Not precisely expressible as float32
+    { target: 2.82e-40, expect: hexToF32(0x00800000) }, // positive subnormal
+    { target: -2.82e-40, expect: hexToF32(0x00800000) }, // negative subnormal
+    { target: 0.001, expect: hexToF32(0x2f000000) }, // positive normal
+    { target: -0.001, expect: hexToF32(0x2f000000) }, // negative normal
+    { target: 1e40, expect: hexToF32(0x73800000) }, // positive out of range
+    { target: -1e40, expect: hexToF32(0x73800000) }, // negative out of range
   ])
   .fn(t => {
     const target = t.params.target;
@@ -256,13 +262,19 @@ g.test('test,math,oneULPNoFlush')
     { target: 1, expect: hexToF32(0x33800000) },
     { target: 2, expect: hexToF32(0x34000000) },
     { target: 4, expect: hexToF32(0x34800000) },
+    { target: 1000000, expect: hexToF32(0x3d800000) },
     { target: -1, expect: hexToF32(0x33800000) },
     { target: -2, expect: hexToF32(0x34000000) },
     { target: -4, expect: hexToF32(0x34800000) },
+    { target: -1000000, expect: hexToF32(0x3d800000) },
 
     // Non-f32 expressible
-    { target: 1.1, expect: hexToF32(0x34000000) },
-    { target: -1.1, expect: hexToF32(0x34000000) },
+    { target: 2.82e-40, expect: hexToF32(0x00000001) }, // positive subnormal
+    { target: -2.82e-40, expect: hexToF32(0x00000001) }, // negative subnormal
+    { target: 0.001, expect: hexToF32(0x2f000000) }, // positive normal
+    { target: -0.001, expect: hexToF32(0x2f000000) }, // negative normal
+    { target: 1e40, expect: hexToF32(0x73800000) }, // positive out of range
+    { target: -1e40, expect: hexToF32(0x73800000) }, // negative out of range
   ])
   .fn(t => {
     const target = t.params.target;
