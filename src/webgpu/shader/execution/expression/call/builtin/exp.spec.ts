@@ -47,13 +47,12 @@ Returns the natural exponentiation of e1 (e.g. e^e1). Component-wise when T is a
         const cmp = compare(got, target, ulpMatch);
         if (cmp.matched) {
           return cmp;
-        } else {
-          return {
-            matched: false,
-            got: got.toString(),
-            expected: `within 3 + 2 * |${x}| ULP of ${target}`,
-          };
         }
+        return {
+          matched: false,
+          got: got.toString(),
+          expected: `within 3 + 2 * |${x}| ULP of ${target}`,
+        };
       };
     };
 
