@@ -55,7 +55,7 @@ interface nextAfterCase {
   result: Scalar;
 }
 
-g.test('test,math,nextAfterFlushToZero')
+g.test('nextAfterFlushToZero')
   .paramsSubcasesOnly<nextAfterCase>(
     // prettier-ignore
     [
@@ -121,7 +121,7 @@ g.test('test,math,nextAfterFlushToZero')
     );
   });
 
-g.test('test,math,nextAfterNoFlush')
+g.test('nextAfterNoFlush')
   .paramsSubcasesOnly<nextAfterCase>(
     // prettier-ignore
     [
@@ -192,7 +192,7 @@ interface OneULPCase {
   expect: number;
 }
 
-g.test('test,math,oneULPFlushToZero')
+g.test('oneULPFlushToZero')
   .paramsSimple<OneULPCase>([
     // Edge Cases
     { target: Number.NaN, expect: Number.NaN },
@@ -241,7 +241,7 @@ g.test('test,math,oneULPFlushToZero')
     );
   });
 
-g.test('test,math,oneULPNoFlush')
+g.test('oneULPNoFlush')
   .paramsSimple<OneULPCase>([
     // Edge Cases
     { target: Number.NaN, expect: Number.NaN },
@@ -291,7 +291,7 @@ interface withinULPCase {
   target: number;
   expect: boolean;
 }
-g.test('test,math,withinULP')
+g.test('withinULP')
   .paramsSubcasesOnly<withinULPCase>(
     // prettier-ignore
     [
@@ -353,7 +353,7 @@ interface correctlyRoundedCase {
   is_correct: boolean;
 }
 
-g.test('test,math,correctlyRounded')
+g.test('correctlyRounded')
   .paramsSubcasesOnly<correctlyRoundedCase>(
     // prettier-ignore
     [
@@ -494,7 +494,7 @@ g.test('test,math,correctlyRounded')
     );
   });
 
-g.test('test,math,correctlyRoundedNoFlushOnly')
+g.test('correctlyRoundedNoFlushOnly')
   .paramsSubcasesOnly<correctlyRoundedCase>(
     // prettier-ignore
     [
@@ -635,7 +635,7 @@ g.test('test,math,correctlyRoundedNoFlushOnly')
     );
   });
 
-g.test('test,math,correctlyRoundedFlushToZeroOnly')
+g.test('correctlyRoundedFlushToZeroOnly')
   .paramsSubcasesOnly<correctlyRoundedCase>(
     // prettier-ignore
     [
@@ -783,7 +783,7 @@ interface lerpCase {
   result: number;
 }
 
-g.test('test,math,lerp')
+g.test('lerp')
   .paramsSimple<lerpCase>([
     // Infinite cases
     { a: 0.0, b: Number.POSITIVE_INFINITY, t: 0.5, result: Number.NaN },
@@ -957,7 +957,7 @@ interface rangeCase {
   result: Array<number>;
 }
 
-g.test('test,math,linearRange')
+g.test('linearRange')
   .paramsSimple<rangeCase>(
     // prettier-ignore
     [
@@ -1000,7 +1000,7 @@ g.test('test,math,linearRange')
     );
   });
 
-g.test('test,math,biasedRange')
+g.test('biasedRange')
   .paramsSimple<rangeCase>(
     // prettier-ignore
     [
@@ -1051,7 +1051,7 @@ interface fullF32RangeCase {
   expect: Array<number>;
 }
 
-g.test('test,math,fullF32RangeCase')
+g.test('fullF32RangeCase')
   .paramsSimple<fullF32RangeCase>(
     // prettier-ignore
     [
@@ -1088,7 +1088,7 @@ interface limitsCase {
 }
 
 // Test to confirm kBit and kValue constants are equivalent for f32
-g.test('test,math,f32LimitsEquivalency')
+g.test('f32LimitsEquivalency')
   .paramsSimple<limitsCase>([
     { bits: kBit.f32.positive.max, value: kValue.f32.positive.max },
     { bits: kBit.f32.positive.min, value: kValue.f32.positive.min },
