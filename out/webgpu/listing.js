@@ -1268,6 +1268,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "asinh"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "atan"
     ]
   },
