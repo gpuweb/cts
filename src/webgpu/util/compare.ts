@@ -1,7 +1,7 @@
 import { Colors } from '../../common/util/colors.js';
 
 import { f32, Scalar, Value, Vector } from './conversion.js';
-import { correctlyRounded, diffULP } from './math.js';
+import { correctlyRounded, withinULP } from './math.js';
 
 /** Comparison describes the result of a Comparator function. */
 export interface Comparison {
@@ -45,7 +45,7 @@ export function ulpThreshold(ulp: number): FloatMatch {
     if (got === expected) {
       return true;
     }
-    return diffULP(got, expected) <= ulp;
+    return withinULP(got, expected, ulp);
   };
 }
 
