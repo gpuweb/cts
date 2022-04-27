@@ -1388,6 +1388,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "distance"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "exp"
     ]
   },
