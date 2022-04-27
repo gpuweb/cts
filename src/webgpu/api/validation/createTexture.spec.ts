@@ -11,9 +11,11 @@ import {
   kTextureUsages,
   kUncompressedTextureFormats,
   kRegularTextureFormats,
+  kFeaturesForFormats,
   textureDimensionAndFormatCompatible,
   kLimitInfo,
   viewCompatible,
+  filterFormatsByFeature,
 } from '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 import { maxMipLevelCount } from '../../util/texture/base.js';
@@ -771,10 +773,21 @@ g.test('viewFormats')
   .desc(
     `Test creating a texture with viewFormats list for all {texture format}x{view format}. Only compatible view formats should be valid.`
   )
-  .params(u => u.combine('format', kTextureFormats).combine('viewFormat', kTextureFormats))
+  .params(u =>
+    u
+      .combine('formatFeature', kFeaturesForFormats)
+      .combine('viewFormatFeature', kFeaturesForFormats)
+      .beginSubcases()
+      .expand('format', ({ formatFeature }) =>
+        filterFormatsByFeature(formatFeature, kTextureFormats)
+      )
+      .expand('viewFormat', ({ viewFormatFeature }) =>
+        filterFormatsByFeature(viewFormatFeature, kTextureFormats)
+      )
+  )
   .before(async t => {
-    const { format, viewFormat } = t.params;
-    await t.selectDeviceForTextureFormatOrSkipTestCase([format, viewFormat]);
+    const { formatFeature, viewFormatFeature } = t.params;
+    await t.selectDeviceOrSkipTestCase([formatFeature, viewFormatFeature]);
   })
   .fn(async t => {
     const { format, viewFormat } = t.params;
