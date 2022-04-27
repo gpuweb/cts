@@ -26,13 +26,13 @@ g.test('bools')
     '2147483647u', // max signed int
     '-2147483648', // min signed int
     '-2147483648i', // min signed int
-    '4294967295', // will be deduced to unsigned
     '4294967295u', // max unsigned int
   ]);
   const kInvalidIntegers = new Set([
     '0123', // Integer does not start with zero
     '2147483648i', // max signed int + 1
     '-2147483649i', // min signed int - 1
+    '4294967295', // a untyped lhs will be i32, so this is too big
     '4294967295i', // max unsigned int with i suffix
     '4294967296u', // max unsigned int + 1
     '-1u', // negative unsigned
@@ -45,6 +45,63 @@ g.test('bools')
     .fn(t => {
       const code = `var test = ${t.params.val};`;
       t.expectCompileResult(kValidIntegers.has(t.params.val), t.wrapInEntryPoint(code));
+    });
+}
+
+{
+  const kValidI32 = new Set([
+    '0x123', // hex number
+    '123', // signed number, no suffix
+    '94i', // signed number
+    '1u', // unsigned number
+    '0', // zero
+    '0x3f', // hex with 'f' as last character
+    '2147483647', // max signed int
+    '2147483647i', // max signed int
+    '2147483647u', // max signed int
+    '-2147483648', // min signed int
+    '-2147483648i', // min signed int
+  ]);
+  const kInvalidI32 = new Set([
+    '2147483648', // max signed int + 1
+    '2147483648i', // max signed int + 1
+    '-2147483649', // min signed int - 1
+    '-2147483649i', // min signed int - 1
+  ]);
+  g.test('i32')
+    .desc(`Test that valid signed integers are accepted, and invalid signed integers are rejected.`)
+    .params(u => u.combine('val', new Set([...kValidI32, ...kInvalidI32])).beginSubcases())
+    .fn(t => {
+      const code = `var test: i32 = ${t.params.val};`;
+      t.expectCompileResult(kValidI32.has(t.params.val), t.wrapInEntryPoint(code));
+    });
+}
+
+{
+  const kValidU32 = new Set([
+    '0x123', // hex number
+    '123', // signed number, no suffix
+    '94i', // signed number
+    '1u', // unsigned number
+    '0', // zero
+    '0x3f', // hex with 'f' as last character
+    '4294967295', // max unsigned
+    '4294967295u', // max unsigned int
+  ]);
+  const kInvalidU32 = new Set([
+    '4294967296', // max unsigned int + 1
+    '4294967296u', // min unsigned int - 1
+    '-1', // min unsigned int - 1
+    '-1i', // min unsigned int - 1
+  ]);
+  g.test('u32')
+    .desc(
+      `Test that valid unsigned integers are accepted, and invalid unsigned integers are rejected.`
+    )
+    .params(u => u.combine('val', new Set([...kValidU32, ...kInvalidU32])).beginSubcases())
+    .fn(t => {
+      const code = `var test: u32 = ${t.params.val};`;
+      t.expectCompileResult(kValidU32.has(t.params.val), t.wrapInEntryPoint(code));
     });
 }
 
