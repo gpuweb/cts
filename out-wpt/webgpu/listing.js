@@ -1298,6 +1298,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "atanh"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "ceil"
     ]
   },
@@ -1499,6 +1509,16 @@ export const listing = [
       "call",
       "builtin",
       "ldexp"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
+      "length"
     ]
   },
   {
