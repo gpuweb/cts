@@ -53,12 +53,10 @@ g.test('bools')
     '0x123', // hex number
     '123', // signed number, no suffix
     '94i', // signed number
-    '1u', // unsigned number
     '0', // zero
     '0x3f', // hex with 'f' as last character
     '2147483647', // max signed int
     '2147483647i', // max signed int
-    '2147483647u', // max signed int
     '-2147483648', // min signed int
     '-2147483648i', // min signed int
   ]);
@@ -67,6 +65,10 @@ g.test('bools')
     '2147483648i', // max signed int + 1
     '-2147483649', // min signed int - 1
     '-2147483649i', // min signed int - 1
+    '1u', // no conversion of unsigned number
+    '1.0', // no conversion from float
+    '1.0f', // no conversion from float
+    '1.0h', // no conversion from float
   ]);
   g.test('i32')
     .desc(`Test that valid signed integers are accepted, and invalid signed integers are rejected.`)
@@ -81,7 +83,6 @@ g.test('bools')
   const kValidU32 = new Set([
     '0x123', // hex number
     '123', // signed number, no suffix
-    '94i', // signed number
     '1u', // unsigned number
     '0', // zero
     '0x3f', // hex with 'f' as last character
@@ -93,6 +94,10 @@ g.test('bools')
     '4294967296u', // min unsigned int - 1
     '-1', // min unsigned int - 1
     '-1i', // min unsigned int - 1
+    '1i', // no conversion of signed number
+    '1.0', // no conversion from float
+    '1.0f', // no conversion from float
+    '1.0h', // no conversion from float
   ]);
   g.test('u32')
     .desc(
@@ -148,6 +153,14 @@ g.test('bools')
     '0x1.0p+999999999999f', // Too big hex
     '0x1.00000001pf0', // Mantissa too big
   ]);
+  const kValidConvertFloats = new Set([
+    '1', // AbstractInt
+  ]);
+  const kInvalidConvertFloats = new Set([
+    '1u', // unsigned
+    '1i', // signed
+    '1h', // half float
+  ]);
 
   g.test('float')
     .desc(`Test that valid floats are accepted, and invalid floats are rejected`)
@@ -155,6 +168,29 @@ g.test('bools')
     .fn(t => {
       const code = `var test = ${t.params.val};`;
       t.expectCompileResult(kValidFloats.has(t.params.val), t.wrapInEntryPoint(code));
+    });
+
+  g.test('float_convert')
+    .desc(`Test that valid floats are accepted, and invalid floats are rejected`)
+    .params(u =>
+      u
+        .combine(
+          'val',
+          new Set([
+            ...kValidFloats,
+            ...kValidConvertFloats,
+            ...kInvalidFloats,
+            ...kInvalidConvertFloats,
+          ])
+        )
+        .beginSubcases()
+    )
+    .fn(t => {
+      const code = `var test: f32 = ${t.params.val};`;
+      t.expectCompileResult(
+        kValidFloats.has(t.params.val) || kValidConvertFloats.has(t.params.val),
+        t.wrapInEntryPoint(code)
+      );
     });
 }
 
@@ -189,6 +225,38 @@ TODO: Need to inject the 'enable fp16' into the shader to enable the parsing.
     )
     .params(u =>
       u.combine('val', new Set([...kValidHalfFloats, ...kInvalidHalfFloats])).beginSubcases()
+    )
+    .unimplemented();
+
+  const kValidConvertHalfFloats = new Set([
+    '1', // AbstractInt
+  ]);
+  const kInvalidConvertHalfFloats = new Set([
+    '1i', // signed int
+    '1u', // unsigned int
+    '1f', // no conversion from f32 to f16
+  ]);
+
+  g.test('half_float_convert')
+    .desc(
+      `
+Test that valid half floats are accepted, and invalid half floats are rejected
+
+TODO: Need to inject the 'enable fp16' into the shader to enable the parsing.
+`
+    )
+    .params(u =>
+      u
+        .combine(
+          'val',
+          new Set([
+            ...kValidHalfFloats,
+            ...kValidConvertHalfFloats,
+            ...kInvalidHalfFloats,
+            ...kInvalidConvertHalfFloats,
+          ])
+        )
+        .beginSubcases()
     )
     .unimplemented();
 }
