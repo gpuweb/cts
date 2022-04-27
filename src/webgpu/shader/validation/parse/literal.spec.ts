@@ -13,21 +13,29 @@ g.test('bools')
     t.expectCompileResult(true, t.wrapInEntryPoint(code));
   });
 
+const kAbstractInt = new Set([
+  '0x123', // hex number
+  '123', // signed number, no suffix
+  '0', // zero
+  '0x3f', // hex with 'f' as last character
+  '2147483647', // max signed int
+  '-2147483648', // min signed int
+]);
+
+const kI32 = new Set([
+  '94i', // signed number
+  '2147483647i', // max signed int
+  '-2147483648i', // min signed int
+]);
+
+const kU32 = new Set([
+  '42u', // unsigned number
+  '0u', // min unsigned int
+  '4294967295u', // max unsigned int
+]);
+
 {
-  const kValidIntegers = new Set([
-    '0x123', // hex number
-    '123', // signed number, no suffix
-    '94i', // signed number
-    '1u', // unsigned number
-    '0', // zero
-    '0x3f', // hex with 'f' as last character
-    '2147483647', // max signed int
-    '2147483647i', // max signed int
-    '2147483647u', // max signed int
-    '-2147483648', // min signed int
-    '-2147483648i', // min signed int
-    '4294967295u', // max unsigned int
-  ]);
+  const kValidIntegers = new Set([...kAbstractInt, ...kI32, ...kU32]);
   const kInvalidIntegers = new Set([
     '0123', // Integer does not start with zero
     '2147483648i', // max signed int + 1
@@ -49,23 +57,13 @@ g.test('bools')
 }
 
 {
-  const kValidI32 = new Set([
-    '0x123', // hex number
-    '123', // signed number, no suffix
-    '94i', // signed number
-    '0', // zero
-    '0x3f', // hex with 'f' as last character
-    '2147483647', // max signed int
-    '2147483647i', // max signed int
-    '-2147483648', // min signed int
-    '-2147483648i', // min signed int
-  ]);
+  const kValidI32 = new Set([...kAbstractInt, ...kI32]);
   const kInvalidI32 = new Set([
+    ...kU32,
     '2147483648', // max signed int + 1
     '2147483648i', // max signed int + 1
     '-2147483649', // min signed int - 1
     '-2147483649i', // min signed int - 1
-    '1u', // no conversion of unsigned number
     '1.0', // no conversion from float
     '1.0f', // no conversion from float
     '1.0h', // no conversion from float
@@ -81,20 +79,15 @@ g.test('bools')
 
 {
   const kValidU32 = new Set([
-    '0x123', // hex number
-    '123', // signed number, no suffix
-    '1u', // unsigned number
-    '0', // zero
-    '0x3f', // hex with 'f' as last character
+    ...kAbstractInt,
+    ...kU32,
     '4294967295', // max unsigned
-    '4294967295u', // max unsigned int
   ]);
   const kInvalidU32 = new Set([
+    ...kI32,
     '4294967296', // max unsigned int + 1
     '4294967296u', // min unsigned int - 1
     '-1', // min unsigned int - 1
-    '-1i', // min unsigned int - 1
-    '1i', // no conversion of signed number
     '1.0', // no conversion from float
     '1.0f', // no conversion from float
     '1.0h', // no conversion from float
@@ -110,46 +103,54 @@ g.test('bools')
     });
 }
 
+const kF32 = new Set([
+  '0f', // Zero float
+  '0.0f', // Zero float
+  '12.223f', // float value
+  '12.f', // .f
+  '.12f', // No leading number with a f
+  '2.4e+4f', // Positive exponent with f suffix
+  '2.4e-2f', // Negative exponent with f suffix
+  '2.e+4f', // Exponent without decimals
+  '1e-4f', // Exponennt without decimal point
+  '0x1P+4f', // Hex float no decimal
+]);
+
+const kF16 = new Set([
+  '0h', // Zero half
+  '1h', // Half no decimal
+  '.1h', // Half no leading value
+  '1.1e2h', // Exponent half no sign
+  '1.1E+2h', // Exponent half, plus (uppercase E)
+  '2.4e-2h', // Exponent half, negative
+  '0X3h', // Hexfloat half no exponent
+  '0xep2h', // Hexfloat half lower case p
+  '0xEp-2h', // Hexfloat uppcase hex value
+  '0x3p+2h', // Hex float half positive exponent
+  '0x3.2p+2h', // Hex float with decimal half
+]);
+
+const kAbstractFloat = new Set([
+  '0.0', // Zero float without suffix
+  '.0', // Zero float without leading value
+  '12.', // No decimal points
+  '00012.', // Leading zeros allowed
+  '.12', // No leading digits
+  '1.2e2', // Exponent without sign (lowercase e)
+  '1.2E2', // Exponent without sign (uppercase e)
+  '1.2e+2', // positive exponent
+  '2.4e-2', // Negative exponent
+  '.1e-2', // Exponent without leading number
+  '0x.3', // Hex float, lowercase X
+  '0X.3', // Hex float, uppercase X
+  '0xa.fp+2', // Hex float, lowercase p
+  '0xa.fP+2', // Hex float, uppercase p
+  '0xE.fp+2', // Uppercase E (as hex, but matches non hex exponent char)
+  '0X1.fp-4', // Hex float negative exponent
+]);
+
 {
-  const kValidFloats = new Set([
-    '0f', // Zero float
-    '0.0f', // Zero float
-    '0.0', // Zero float without suffix
-    '.0', // Zero float without leading value
-    '12.223f', // float value
-    '12.', // No decimal points
-    '00012.', // Leading zeros allowed
-    '.12', // No leading digits
-    '12.f', // .f
-    '.12f', // No leading number with a f
-    '1.2e2', // Exponent without sign (lowercase e)
-    '1.2E2', // Exponent without sign (uppercase e)
-    '1.2e+2', // positive exponent
-    '2.4e+4f', // Positive exponent with f suffix
-    '2.4e-2', // Negative exponent
-    '2.4e-2f', // Negative exponent with f suffix
-    '2.e+4f', // Exponent without decimals
-    '.1e-2', // Exponent without leading number
-    '1e-4f', // Exponennt without decimal point
-    '0x.3', // Hex float, lowercase X
-    '0X.3', // Hex float, uppercase X
-    '0xa.fp+2', // Hex float, lowercase p
-    '0xa.fP+2', // Hex float, uppercase p
-    '0xE.fp+2', // Uppercase E (as hex, but matches non hex exponent char)
-    '0x1P+4f', // Hex float no decimal
-    '0X1.fp-4', // Hex float negative exponent
-    '0h', // Zero half
-    '1h', // Half no decimal
-    '.1h', // Half no leading value
-    '1.1e2h', // Exponent half no sign
-    '1.1E+2h', // Exponent half, plus (uppercase E)
-    '2.4e-2h', // Exponent half, negative
-    '0X3h', // Hexfloat half no exponent
-    '0xep2h', // Hexfloat half lower case p
-    '0xEp-2h', // Hexfloat uppcase hex value
-    '0x3p+2h', // Hex float half positive exponent
-    '0x3.2p+2h', // Hex float with decimal half
-  ]);
+  const kValidFloats = new Set([...kF32, ...kF16, ...kAbstractFloat]);
   const kInvalidFloats = new Set([
     '.f', // Must have a number
     '.e-2', // Exponent without leading values
@@ -181,36 +182,13 @@ g.test('bools')
 
 {
   const kValidF32 = new Set([
-    '0f', // Zero float
-    '0.0f', // Zero float
-    '0.0', // Zero float without suffix
-    '.0', // Zero float without leading value
-    '12.223f', // float value
-    '12.', // No decimal points
-    '00012.', // Leading zeros allowed
-    '.12', // No leading digits
-    '12.f', // .f
-    '.12f', // No leading number with a f
-    '1.2e2', // Exponent without sign (lowercase e)
-    '1.2E2', // Exponent without sign (uppercase e)
-    '1.2e+2', // positive exponent
-    '2.4e+4f', // Positive exponent with f suffix
-    '2.4e-2', // Negative exponent
-    '2.4e-2f', // Negative exponent with f suffix
-    '2.e+4f', // Exponent without decimals
-    '.1e-2', // Exponent without leading number
-    '1e-4f', // Exponennt without decimal point
-    '0x.3', // Hex float, lowercase X
-    '0X.3', // Hex float, uppercase X
-    '0xa.fp+2', // Hex float, lowercase p
-    '0xa.fP+2', // Hex float, uppercase p
-    '0xE.fp+2', // Uppercase E (as hex, but matches non hex exponent char)
-    '0x1P+4f', // Hex float no decimal
-    '0X1.fp-4', // Hex float negative exponent
-    '1.f', // f32
+    ...kF32,
+    ...kAbstractFloat,
     '1', // AbstractInt
+    '-1', // AbstractInt
   ]);
   const kInvalidF32 = new Set([
+    ...kF16, // no conversion
     '1u', // unsigned
     '1i', // signed
     '1h', // half float
@@ -222,7 +200,6 @@ g.test('bools')
     '0x.p2', // Hex float no value
     '0x1p', // Hex float missing exponent
     '0x1p^', // Hex float invalid exponent
-    '1.2h', // fp16 extension not enabled, so this is an error
     '1.0e+999999999999f', // Too big
     '0x1.0p+999999999999f', // Too big hex
     '0x1.00000001pf0', // Mantissa too big
@@ -239,37 +216,13 @@ g.test('bools')
 
 {
   const kValidF16 = new Set([
-    '1.h', // half float
-    '0.0', // Zero float without suffix
-    '.0', // Zero float without leading value
-    '12.', // No decimal points
-    '00012.', // Leading zeros allowed
-    '.12', // No leading digits
-    '1.2e2', // Exponent without sign (lowercase e)
-    '1.2E2', // Exponent without sign (uppercase e)
-    '1.2e+2', // positive exponent
-    '2.4e-2', // Negative exponent
-    '.1e-2', // Exponent without leading number
-    '0x.3', // Hex float, lowercase X
-    '0X.3', // Hex float, uppercase X
-    '0xa.fp+2', // Hex float, lowercase p
-    '0xa.fP+2', // Hex float, uppercase p
-    '0xE.fp+2', // Uppercase E (as hex, but matches non hex exponent char)
-    '0X1.fp-4', // Hex float negative exponent
+    ...kF16,
+    ...kAbstractFloat,
     '1', // AbstractInt
-    '0h', // Zero half
-    '1h', // Half no decimal
-    '.1h', // Half no leading value
-    '1.1e2h', // Exponent half no sign
-    '1.1E+2h', // Exponent half, plus (uppercase E)
-    '2.4e-2h', // Exponent half, negative
-    '0X3h', // Hexfloat half no exponent
-    '0xep2h', // Hexfloat half lower case p
-    '0xEp-2h', // Hexfloat uppcase hex value
-    '0x3p+2h', // Hex float half positive exponent
-    '0x3.2p+2h', // Hex float with decimal half
+    '-1', // AbstractInt
   ]);
   const kInvalidF16 = new Set([
+    ...kF32,
     '1i', // signed int
     '1u', // unsigned int
     '1f', // no conversion from f32 to f16
