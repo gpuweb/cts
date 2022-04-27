@@ -9,7 +9,9 @@ import {
   kTextureFormatInfo,
   kTextureFormats,
   kTextureViewDimensions,
+  kFeaturesForFormats,
   viewCompatible,
+  filterFormatsByFeature,
 } from '../../capability_info.js';
 import { kResourceStates } from '../../gpu_test.js';
 import {
@@ -31,14 +33,20 @@ g.test('format')
   )
   .params(u =>
     u
-      .combine('textureFormat', kTextureFormats)
-      .combine('viewFormat', [undefined, ...kTextureFormats])
+      .combine('textureFormatFeature', kFeaturesForFormats)
+      .combine('viewFormatFeature', kFeaturesForFormats)
       .beginSubcases()
+      .expand('textureFormat', ({ textureFormatFeature }) =>
+        filterFormatsByFeature(textureFormatFeature, kTextureFormats)
+      )
+      .expand('viewFormat', ({ viewFormatFeature }) =>
+        filterFormatsByFeature(viewFormatFeature, [undefined, ...kTextureFormats])
+      )
       .combine('useViewFormatList', [false, true])
   )
   .before(async t => {
-    const { textureFormat, viewFormat } = t.params;
-    await t.selectDeviceForTextureFormatOrSkipTestCase([textureFormat, viewFormat]);
+    const { textureFormatFeature, viewFormatFeature } = t.params;
+    await t.selectDeviceOrSkipTestCase([textureFormatFeature, viewFormatFeature]);
   })
   .fn(async t => {
     const { textureFormat, viewFormat, useViewFormatList } = t.params;

@@ -11,6 +11,8 @@ import {
   kTextureSampleCounts,
   kMaxColorAttachments,
   kTextureFormatInfo,
+  getFeaturesForFormats,
+  filterFormatsByFeature,
 } from '../../capability_info.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -77,6 +79,11 @@ const kDepthStencilAttachmentFormats = [
   ...kSizedDepthStencilFormats,
   ...kUnsizedDepthStencilFormats,
 ] as const;
+
+const kFeaturesForDepthStencilAttachmentFormats = getFeaturesForFormats([
+  ...kSizedDepthStencilFormats,
+  ...kUnsizedDepthStencilFormats,
+]);
 
 class F extends ValidationTest {
   createAttachmentTextureView(format: GPUTextureFormat, sampleCount?: number) {
@@ -258,12 +265,19 @@ g.test('render_pass_and_bundle,depth_format')
   .desc('Test that the depth attachment format in render passes and bundles must match.')
   .params(u =>
     u //
-      .combine('passFormat', kDepthStencilAttachmentFormats)
-      .combine('bundleFormat', kDepthStencilAttachmentFormats)
+      .combine('passFeature', kFeaturesForDepthStencilAttachmentFormats)
+      .combine('bundleFeature', kFeaturesForDepthStencilAttachmentFormats)
+      .beginSubcases()
+      .expand('passFormat', ({ passFeature }) =>
+        filterFormatsByFeature(passFeature, kDepthStencilAttachmentFormats)
+      )
+      .expand('bundleFormat', ({ bundleFeature }) =>
+        filterFormatsByFeature(bundleFeature, kDepthStencilAttachmentFormats)
+      )
   )
   .before(async t => {
-    const { passFormat, bundleFormat } = t.params;
-    await t.selectDeviceForTextureFormatOrSkipTestCase([passFormat, bundleFormat]);
+    const { passFeature, bundleFeature } = t.params;
+    await t.selectDeviceOrSkipTestCase([passFeature, bundleFeature]);
   })
   .fn(async t => {
     const { passFormat, bundleFormat } = t.params;
@@ -407,12 +421,19 @@ Test that the depth attachment format in render passes or bundles match the pipe
   .params(u =>
     u
       .combine('encoderType', ['render pass', 'render bundle'] as const)
-      .combine('encoderFormat', kDepthStencilAttachmentFormats)
-      .combine('pipelineFormat', kDepthStencilAttachmentFormats)
+      .combine('encoderFormatFeature', kFeaturesForDepthStencilAttachmentFormats)
+      .combine('pipelineFormatFeature', kFeaturesForDepthStencilAttachmentFormats)
+      .beginSubcases()
+      .expand('encoderFormat', ({ encoderFormatFeature }) =>
+        filterFormatsByFeature(encoderFormatFeature, kDepthStencilAttachmentFormats)
+      )
+      .expand('pipelineFormat', ({ pipelineFormatFeature }) =>
+        filterFormatsByFeature(pipelineFormatFeature, kDepthStencilAttachmentFormats)
+      )
   )
   .before(async t => {
-    const { encoderFormat, pipelineFormat } = t.params;
-    await t.selectDeviceForTextureFormatOrSkipTestCase([encoderFormat, pipelineFormat]);
+    const { encoderFormatFeature, pipelineFormatFeature } = t.params;
+    await t.selectDeviceOrSkipTestCase([encoderFormatFeature, pipelineFormatFeature]);
   })
   .fn(async t => {
     const { encoderType, encoderFormat, pipelineFormat } = t.params;

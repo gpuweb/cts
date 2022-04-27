@@ -11,6 +11,8 @@ import {
   kTextureUsages,
   textureDimensionAndFormatCompatible,
   kTextureDimensions,
+  kFeaturesForFormats,
+  filterFormatsByFeature,
 } from '../../../../capability_info.js';
 import { kResourceStates } from '../../../../gpu_test.js';
 import { align, lcm } from '../../../../util/math.js';
@@ -350,15 +352,20 @@ Test the formats of textures in copyTextureToTexture must be copy-compatible.
 `
   )
   .params(u =>
-    u //
-      .combine('srcFormat', kTextureFormats)
-      .combine('dstFormat', kTextureFormats)
+    u
+      .combine('srcFormatFeature', kFeaturesForFormats)
+      .combine('dstFormatFeature', kFeaturesForFormats)
+      .beginSubcases()
+      .expand('srcFormat', ({ srcFormatFeature }) =>
+        filterFormatsByFeature(srcFormatFeature, kTextureFormats)
+      )
+      .expand('dstFormat', ({ dstFormatFeature }) =>
+        filterFormatsByFeature(dstFormatFeature, kTextureFormats)
+      )
   )
   .before(async t => {
-    const { srcFormat, dstFormat } = t.params;
-    const srcFormatInfo = kTextureFormatInfo[srcFormat];
-    const dstFormatInfo = kTextureFormatInfo[dstFormat];
-    await t.selectDeviceOrSkipTestCase([srcFormatInfo.feature, dstFormatInfo.feature]);
+    const { srcFormatFeature, dstFormatFeature } = t.params;
+    await t.selectDeviceOrSkipTestCase([srcFormatFeature, dstFormatFeature]);
   })
   .fn(async t => {
     const { srcFormat, dstFormat } = t.params;
