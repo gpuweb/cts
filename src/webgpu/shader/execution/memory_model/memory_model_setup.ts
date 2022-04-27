@@ -822,6 +822,27 @@ const intraWorkgroupTestShaderCode = [
 `,
 ].join('\n');
 
+/**
+ * Tests that operate on storage memory and communicate with invocations in the same workgroup must offset their locations
+ * relative to global memory.
+ */
+const storageIntraWorkgroupTestShaderCode = `
+  let total_ids = workgroupXSize;
+  let id_0 = local_invocation_id[0];
+  let id_1 = permute_id(local_invocation_id[0], stress_params.permute_first, workgroupXSize);
+  let x_0 = (shuffled_workgroup * workgroupXSize + id_0) * stress_params.mem_stride * 2u;
+  let y_0 = (shuffled_workgroup * workgroupXSize + permute_id(id_0, stress_params.permute_second, total_ids)) * stress_params.mem_stride * 2u + stress_params.location_offset;
+  let x_1 = (shuffled_workgroup * workgroupXSize + id_1) * stress_params.mem_stride * 2u;
+  let y_1 = (shuffled_workgroup * workgroupXSize + permute_id(id_1, stress_params.permute_second, total_ids)) * stress_params.mem_stride * 2u + stress_params.location_offset;
+  if (stress_params.pre_stress == 1u) {
+    do_stress(stress_params.pre_stress_iterations, stress_params.pre_stress_pattern, shuffled_workgroup);
+  }
+  if (stress_params.do_barrier == 1u) {
+    spin(workgroupXSize);
+  }
+`;
+
+
 /** All test shaders may perform stress with non-testing threads. */
 const testShaderCommonFooter = `
     } else if (stress_params.mem_stress == 1u) {
@@ -959,12 +980,15 @@ export function buildTestShader(
   testType: TestType
 ): string {
   let memoryTypeCode;
+  let isStorageClass = false;
   switch (memoryType) {
     case MemoryType.AtomicStorageClass:
       memoryTypeCode = storageMemoryAtomicTestShaderCode;
+      isStorageClass = true;
       break;
     case MemoryType.NonAtomicStorageClass:
       memoryTypeCode = storageMemoryNonAtomicTestShaderCode;
+      isStorageClass = true;
       break;
     case MemoryType.AtomicWorkgroupClass:
       memoryTypeCode = workgroupMemoryAtomicTestShaderCode;
@@ -978,7 +1002,11 @@ export function buildTestShader(
       testTypeCode = interWorkgroupTestShaderCode;
       break;
     case TestType.IntraWorkgroup:
-      testTypeCode = intraWorkgroupTestShaderCode;
+      if (isStorageClass) {
+        testTypeCode = storageIntraWorkgroupTestShaderCode;
+      } else {
+        testTypeCode = intraWorkgroupTestShaderCode;
+      }
   }
   return [memoryTypeCode, testTypeCode, testCode, testShaderCommonFooter].join('\n');
 }
