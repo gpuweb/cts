@@ -1228,6 +1228,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "acosh"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "all"
     ]
   },
@@ -1388,6 +1398,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "distance"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "exp"
     ]
   },
@@ -1509,6 +1529,16 @@ export const listing = [
       "call",
       "builtin",
       "ldexp"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
+      "length"
     ]
   },
   {

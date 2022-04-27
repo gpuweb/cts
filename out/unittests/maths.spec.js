@@ -55,7 +55,7 @@ function compareArrayOfNumbers(got, expect) {
 
 
 
-g.test('test,math,nextAfterFlushToZero').
+g.test('nextAfterFlushToZero').
 paramsSubcasesOnly(
 
 [
@@ -121,7 +121,7 @@ fn((t) => {
 
 });
 
-g.test('test,math,nextAfterNoFlush').
+g.test('nextAfterNoFlush').
 paramsSubcasesOnly(
 
 [
@@ -192,7 +192,7 @@ fn((t) => {
 
 
 
-g.test('test,math,oneULPFlushToZero').
+g.test('oneULPFlushToZero').
 paramsSimple([
 // Edge Cases
 { target: Number.NaN, expect: Number.NaN },
@@ -241,7 +241,7 @@ fn((t) => {
 
 });
 
-g.test('test,math,oneULPNoFlush').
+g.test('oneULPNoFlush').
 paramsSimple([
 // Edge Cases
 { target: Number.NaN, expect: Number.NaN },
@@ -291,7 +291,7 @@ fn((t) => {
 
 
 
-g.test('test,math,withinULP').
+g.test('withinULP').
 paramsSubcasesOnly(
 
 [
@@ -353,7 +353,7 @@ fn((t) => {
 
 
 
-g.test('test,math,correctlyRounded').
+g.test('correctlyRounded').
 paramsSubcasesOnly(
 
 [
@@ -494,7 +494,7 @@ fn((t) => {
 
 });
 
-g.test('test,math,correctlyRoundedNoFlushOnly').
+g.test('correctlyRoundedNoFlushOnly').
 paramsSubcasesOnly(
 
 [
@@ -635,7 +635,7 @@ fn((t) => {
 
 });
 
-g.test('test,math,correctlyRoundedFlushToZeroOnly').
+g.test('correctlyRoundedFlushToZeroOnly').
 paramsSubcasesOnly(
 
 [
@@ -783,7 +783,7 @@ fn((t) => {
 
 
 
-g.test('test,math,lerp').
+g.test('lerp').
 paramsSimple([
 // Infinite cases
 { a: 0.0, b: Number.POSITIVE_INFINITY, t: 0.5, result: Number.NaN },
@@ -957,7 +957,7 @@ fn((test) => {
 
 
 
-g.test('test,math,linearRange').
+g.test('linearRange').
 paramsSimple(
 
 [
@@ -1000,7 +1000,7 @@ fn((test) => {
 
 });
 
-g.test('test,math,biasedRange').
+g.test('biasedRange').
 paramsSimple(
 
 [
@@ -1051,7 +1051,7 @@ fn((test) => {
 
 
 
-g.test('test,math,fullF32RangeCase').
+g.test('fullF32RangeCase').
 paramsSimple(
 
 [
@@ -1088,7 +1088,7 @@ fn((test) => {
 
 
 // Test to confirm kBit and kValue constants are equivalent for f32
-g.test('test,math,f32LimitsEquivalency').
+g.test('f32LimitsEquivalency').
 paramsSimple([
 { bits: kBit.f32.positive.max, value: kValue.f32.positive.max },
 { bits: kBit.f32.positive.min, value: kValue.f32.positive.min },
