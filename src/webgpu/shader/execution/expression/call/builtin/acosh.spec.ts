@@ -1,15 +1,9 @@
 export const description = `
-Execution tests for the 'sin' builtin function
+Execution tests for the 'acosh' builtin function
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { absThreshold } from '../../../../../util/compare.js';
-import { f32, TypeF32 } from '../../../../../util/conversion.js';
-import { linearRange } from '../../../../../util/math.js';
-import { Case, Config, run } from '../../expression.js';
-
-import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -18,8 +12,11 @@ g.test('abstract_float')
   .desc(
     `
 T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-@const fn sin(e: T ) -> T
-Returns the sine of e. Component-wise when T is a vector.
+@const fn acosh(e: T ) -> T
+Returns the hyperbolic arc cosine of e. The result is 0 when e < 1.
+Computes the non-negative functional inverse of cosh.
+Component-wise when T is a vector.
+Note: The result is not mathematically meaningful when e < 1.
 `
   )
   .params(u =>
@@ -34,10 +31,11 @@ g.test('f32')
   .desc(
     `
 T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-@const fn sin(e: T ) -> T
-Returns the sine of e. Component-wise when T is a vector.
-
-TODO(#792): Decide what the ground-truth is for these tests. [1]
+@const fn acosh(e: T ) -> T
+Returns the hyperbolic arc cosine of e. The result is 0 when e < 1.
+Computes the non-negative functional inverse of cosh.
+Component-wise when T is a vector.
+Note: The result is not mathematically meaningful when e < 1.
 `
   )
   .params(u =>
@@ -45,29 +43,18 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
-  .fn(async t => {
-    // [1]: Need to decide what the ground-truth is.
-    const makeCase = (x: number): Case => {
-      return { input: f32(x), expected: f32(Math.sin(x)) };
-    };
-
-    // Spec defines accuracy on [-π, π]
-    const cases = linearRange(-Math.PI, Math.PI, 1000).map(x => makeCase(x));
-
-    const cfg: Config = t.params;
-    cfg.cmpFloats = absThreshold(2 ** -11);
-    run(t, builtin('sin'), [TypeF32], TypeF32, cfg, cases);
-  });
+  .unimplemented();
 
 g.test('f16')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
     `
 T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-@const fn sin(e: T ) -> T
-Returns the sine of e. Component-wise when T is a vector.
-
-TODO(#792): Decide what the ground-truth is for these tests. [1]
+@const fn acosh(e: T ) -> T
+Returns the hyperbolic arc cosine of e. The result is 0 when e < 1.
+Computes the non-negative functional inverse of cosh.
+Component-wise when T is a vector.
+Note: The result is not mathematically meaningful when e < 1.
 `
   )
   .params(u =>

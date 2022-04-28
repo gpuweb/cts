@@ -1,5 +1,5 @@
 export const description = `
-Execution Tests for the 'clamp' builtin function
+Execution tests for the 'clamp' builtin function
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -106,12 +106,31 @@ function generateFloatTestCases(test_values: Array<Scalar>): Array<Case> {
   return cases;
 }
 
-g.test('u32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+g.test('abstract_int')
+  .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
   .desc(
     `
-unsigned clamp:
-T is u32 or vecN<u32> clamp(e: T , low: T, high: T) -> T Returns min(max(e, low), high). Component-wise when T is a vector. (GLSLstd450UClamp)
+S is AbstractInt, i32, or u32
+T is S or vecN<S>
+@const fn clamp(e: T , low: T, high: T) -> T
+Returns min(max(e,low),high). Component-wise when T is a vector.
+`
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
+  )
+  .unimplemented();
+
+g.test('u32')
+  .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
+  .desc(
+    `
+S is AbstractInt, i32, or u32
+T is S or vecN<S>
+@const fn clamp(e: T , low: T, high: T) -> T
+Returns min(max(e,low),high). Component-wise when T is a vector.
 `
   )
   .params(u =>
@@ -142,11 +161,13 @@ T is u32 or vecN<u32> clamp(e: T , low: T, high: T) -> T Returns min(max(e, low)
   });
 
 g.test('i32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
+  .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
   .desc(
     `
-signed clamp:
-T is i32 or vecN<i32> clamp(e: T , low: T, high: T) -> T Returns min(max(e, low), high). Component-wise when T is a vector. (GLSLstd450SClamp)
+S is AbstractInt, i32, or u32
+T is S or vecN<S>
+@const fn clamp(e: T , low: T, high: T) -> T
+Returns min(max(e,low),high). Component-wise when T is a vector.
 `
   )
   .params(u =>
@@ -178,12 +199,31 @@ T is i32 or vecN<i32> clamp(e: T , low: T, high: T) -> T Returns min(max(e, low)
     );
   });
 
-g.test('f32')
-  .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#float-builtin-functions')
+g.test('abstract_float')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
     `
-clamp:
-T is f32 or vecN<f32> clamp(e: T , low: T, high: T) -> T Returns either min(max(e,low),high), or the median of the three values e, low, high. Component-wise when T is a vector.
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+clamp(e: T , low: T , high: T) -> T
+Returns either min(max(e,low),high), or the median of the three values e, low, high.
+Component-wise when T is a vector.
+`
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
+  )
+  .unimplemented();
+
+g.test('f32')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
+  .desc(
+    `
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+clamp(e: T , low: T , high: T) -> T
+Returns either min(max(e,low),high), or the median of the three values e, low, high.
+Component-wise when T is a vector.
 `
   )
   .params(u =>
@@ -224,3 +264,20 @@ T is f32 or vecN<f32> clamp(e: T , low: T, high: T) -> T Returns either min(max(
       generateFloatTestCases(test_values)
     );
   });
+
+g.test('f16')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
+  .desc(
+    `
+T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+clamp(e: T , low: T , high: T) -> T
+Returns either min(max(e,low),high), or the median of the three values e, low, high.
+Component-wise when T is a vector.
+`
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
+  )
+  .unimplemented();
