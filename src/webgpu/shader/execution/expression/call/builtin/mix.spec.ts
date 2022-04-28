@@ -55,8 +55,6 @@ Returns the linear blend of e1 and e2 (e.g. e1*(1-e3)+e2*e3). Component-wise whe
   )
   .unimplemented();
 
-
-
 g.test('vector_abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
