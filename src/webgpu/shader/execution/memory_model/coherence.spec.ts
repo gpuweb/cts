@@ -268,7 +268,12 @@ g.test('cowr')
     `;
     const testShader = buildTestShader(t.params._testCode, t.params.memType, t.params.testType);
     const resultShader = buildResultShader(resultCode, t.params.testType, ResultType.FourBehavior);
-    const memModelTester = new MemoryModelTester(t, memoryModelTestParams, testShader, resultShader);
+    const memModelTester = new MemoryModelTester(
+      t,
+      memoryModelTestParams,
+      testShader,
+      resultShader
+    );
     await memModelTester.run(60, 3);
   });
 
@@ -328,12 +333,7 @@ g.test('corw1')
       ...memoryModelTestParams,
       numBehaviors: 2,
     };
-    const memModelTester = new MemoryModelTester(
-      t,
-      params,
-      testShader,
-      resultShader
-    );
+    const memModelTester = new MemoryModelTester(t, params, testShader, resultShader);
     await memModelTester.run(60, 1);
   });
 
@@ -412,6 +412,11 @@ g.test('corw2')
     `;
     const testShader = buildTestShader(t.params._testCode, t.params.memType, t.params.testType);
     const resultShader = buildResultShader(resultCode, t.params.testType, ResultType.FourBehavior);
-    const memModelTester = new MemoryModelTester(t, memoryModelTestParams, testShader, resultShader);
+    const memModelTester = new MemoryModelTester(
+      t,
+      memoryModelTestParams,
+      testShader,
+      resultShader
+    );
     await memModelTester.run(60, 3);
   });
