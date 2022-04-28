@@ -468,9 +468,9 @@ to be empty.`
           depthClearValue: 1.0,
           depthLoadOp: 'clear',
           depthStoreOp: 'store',
-          stencilClearValue: 0,
-          stencilLoadOp: 'clear',
-          stencilStoreOp: 'discard',
+          stencilClearValue: info.stencil ? 0 : undefined,
+          stencilLoadOp: info.stencil ? 'clear' : undefined,
+          stencilStoreOp: info.stencil ? 'discard' : undefined,
         },
       });
       pass.setPipeline(initPipeline);
