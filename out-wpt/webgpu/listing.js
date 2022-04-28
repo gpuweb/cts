@@ -1608,6 +1608,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "modf"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "quantizeToF16"
     ]
   },
