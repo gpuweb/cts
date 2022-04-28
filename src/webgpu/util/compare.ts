@@ -142,10 +142,10 @@ export function anyOf(...values: Value[]): Comparator {
   };
 }
 
-/** @returns a Comparator that checks whether a result is within N * ULP of a target value, where N is a defined by a function
+/** @returns a Comparator that checks whether a result is within N * ULP of a target value, where N is defined by a function
  *
  * N is n(x), where x is the input into the function under test, not the result of the function.
- * For a function f(x) = X that is being tested, the acceptable interval is defined as within X +/- n(x) * ulp(X).
+ * For a function f(x) = X that is being tested, the acceptance interval is defined as within X +/- n(x) * ulp(X).
  */
 export function ulpCmp(x: number, target: Scalar, n: (x: number) => number): Comparator {
   const c = n(x);
