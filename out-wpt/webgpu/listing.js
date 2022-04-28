@@ -1628,26 +1628,6 @@ export const listing = [
       "expression",
       "call",
       "builtin",
-      "reflect"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "execution",
-      "expression",
-      "call",
-      "builtin",
-      "refract"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "execution",
-      "expression",
-      "call",
-      "builtin",
       "reverseBits"
     ]
   },
