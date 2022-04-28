@@ -143,10 +143,6 @@ g.test('bind_group,device_mismatch')
   .fn(async t => {
     const { encoderType, useU32Array, mismatched } = t.params;
 
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
-
     const device = mismatched ? t.mismatchedDevice : t.device;
 
     const buffer = device.createBuffer({

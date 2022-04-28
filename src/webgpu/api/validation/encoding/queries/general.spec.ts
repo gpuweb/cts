@@ -128,7 +128,7 @@ g.test('timestamp_query,device_mismatch')
   .fn(async t => {
     const { mismatched } = t.params;
 
-    await t.selectDeviceForQueryTypeOrSkipTestCase('timestamp');
+    await t.selectDeviceOrSkipTestCase('timestamp-query');
 
     if (mismatched) {
       await t.selectMismatchedDeviceOrSkipTestCase('timestamp-query');

@@ -34,10 +34,6 @@ g.test('pipeline,device_mismatch')
   .fn(async t => {
     const { encoderType, mismatched } = t.params;
 
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
-
     const device = mismatched ? t.mismatchedDevice : t.device;
 
     const pipeline = device.createRenderPipeline({

@@ -73,10 +73,6 @@ g.test('texture,device_mismatch')
   .fn(async t => {
     const { method, mismatched } = t.params;
 
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
-
     const device = mismatched ? t.mismatchedDevice : t.device;
 
     const texture = device.createTexture({

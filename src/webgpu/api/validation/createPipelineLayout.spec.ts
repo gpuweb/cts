@@ -122,10 +122,6 @@ g.test('bind_group_layouts,device_mismatch')
 
     const mismatched = layout0Mismatched || layout1Mismatched;
 
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
-
     const bglDescriptor: GPUBindGroupLayoutDescriptor = {
       entries: [],
     };
