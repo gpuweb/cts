@@ -1618,26 +1618,6 @@ export const listing = [
       "expression",
       "call",
       "builtin",
-      "normalize"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "execution",
-      "expression",
-      "call",
-      "builtin",
-      "pow"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "execution",
-      "expression",
-      "call",
-      "builtin",
       "quantizeToF16"
     ]
   },
