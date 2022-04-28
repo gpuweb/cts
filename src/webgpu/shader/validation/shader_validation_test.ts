@@ -53,4 +53,20 @@ export class ShaderValidationTest extends GPUTest {
       }
     });
   }
+
+  /**
+   * Wraps the code fragment into an entry point.
+   *
+   * @example
+   * ```ts
+   * t.wrapInEntryPoint(`var i = 0;`);
+   * ```
+   */
+  wrapInEntryPoint(code: string) {
+    return `
+      @stage(compute) @workgroup_size(1)
+      fn main() {
+        ${code}
+      }`;
+  }
 }

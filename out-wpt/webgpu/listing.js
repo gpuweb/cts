@@ -1760,6 +1760,14 @@ export const listing = [
       "shader",
       "validation",
       "parse",
+      "literal"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "parse",
       "source"
     ]
   },
