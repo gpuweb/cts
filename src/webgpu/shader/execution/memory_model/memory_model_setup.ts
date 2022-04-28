@@ -50,13 +50,15 @@ export type MemoryModelTestParams = {
   memStride: number;
   /** For tests that access one memory location, but use dynamic addresses to avoid compiler optimization, aliased memory should be set to true. */
   aliasedMemory: boolean;
-  /** The number of memory locations accessed by this test. */
-  numMemLocations: number;
-  /** The number of read outputs per test that need to be analyzed in the result aggregation shader. */
-  numReadOutputs: number;
   /** The number of possible behaviors that a test can have. */
   numBehaviors: number;
 };
+
+/** The number of memory locations accessed by a test. Currently, only tests with up to 2 memory locations are supported. */
+const numMemLocations = 2;
+
+/** The number of read outputs per test that need to be analyzed in the result aggregation shader. Currently, only tests with up to 2 read outputs are supported. */
+const numReadOutputs = 2;
 
 /** Represents a device buffer and a utility buffer for resetting memory and copying parameters. */
 type BufferWithSource = {
@@ -135,7 +137,7 @@ export class MemoryModelTester {
     // set up buffers
     const testingThreads = this.params.workgroupSize * this.params.testingWorkgroups;
     const testLocationsSize =
-      testingThreads * this.params.numMemLocations * this.params.memStride * bytesPerWord;
+      testingThreads * numMemLocations * this.params.memStride * bytesPerWord;
     const testLocationsBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: testLocationsSize,
@@ -148,7 +150,7 @@ export class MemoryModelTester {
       size: testLocationsSize,
     };
 
-    const readResultsSize = testingThreads * this.params.numReadOutputs * bytesPerWord;
+    const readResultsSize = testingThreads * numReadOutputs * bytesPerWord;
     const readResultsBuffer: BufferWithSource = {
       deviceBuf: this.test.device.createBuffer({
         size: readResultsSize,
@@ -318,7 +320,9 @@ export class MemoryModelTester {
 
   /**
    * Run the test for the specified number of iterations. Checks the testResults buffer on the weakIndex; if
-   * this value is not 0 then the test has failed.
+   * this value is not 0 then the test has failed. The number of iterations is chosen per test so that the
+   * full set of tests meets some time budget while still being reasonably effective at uncovering issues.
+   * Currently, we aim for each test to complete in under one second.
    */
   async run(iterations: number, weakIndex: number): Promise<void> {
     for (let i = 0; i < iterations; i++) {
@@ -841,7 +845,6 @@ const storageIntraWorkgroupTestShaderCode = `
     spin(workgroupXSize);
   }
 `;
-
 
 /** All test shaders may perform stress with non-testing threads. */
 const testShaderCommonFooter = `

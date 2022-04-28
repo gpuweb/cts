@@ -21,28 +21,26 @@ export const g = makeTestGroup(GPUTest);
 // A reasonable parameter set, determined heuristically.
 const memoryModelTestParams: MemoryModelTestParams = {
   workgroupSize: 256,
-  testingWorkgroups: 512,
-  maxWorkgroups: 1024,
-  shufflePct: 100,
-  barrierPct: 100,
-  memStressPct: 100,
+  testingWorkgroups: 739,
+  maxWorkgroups: 885,
+  shufflePct: 0,
+  barrierPct: 0,
+  memStressPct: 0,
   memStressIterations: 1024,
   memStressStoreFirstPct: 50,
   memStressStoreSecondPct: 50,
   preStressPct: 100,
-  preStressIterations: 1024,
-  preStressStoreFirstPct: 50,
-  preStressStoreSecondPct: 50,
-  scratchMemorySize: 2048,
-  stressLineSize: 64,
-  stressTargetLines: 2,
-  stressStrategyBalancePct: 50,
+  preStressIterations: 33,
+  preStressStoreFirstPct: 0,
+  preStressStoreSecondPct: 100,
+  scratchMemorySize: 1408,
+  stressLineSize: 4,
+  stressTargetLines: 11,
+  stressStrategyBalancePct: 0,
   permuteFirst: 109,
   permuteSecond: 419,
-  memStride: 4,
+  memStride: 2,
   aliasedMemory: false,
-  numMemLocations: 2,
-  numReadOutputs: 2,
   numBehaviors: 4,
 };
 
@@ -68,7 +66,7 @@ const storageMemoryMessagePassingTestCode = `
   atomicStore(&results.value[shuffled_workgroup * u32(workgroupXSize) + id_1].r1, r1);
 `;
 
-g.test('message_passing_workgroup_memory')
+g.test('message_passing')
   .desc(
     `Checks whether two reads on one thread can observe two writes in another thread in a way
     that is inconsistent with sequential consistency. In the message passing litmus test, one
@@ -109,7 +107,7 @@ g.test('message_passing_workgroup_memory')
       testShader,
       messagePassingResultShader
     );
-    await memModelTester.run(20, 3);
+    await memModelTester.run(40, 3);
   });
 
 const workgroupMemoryStoreTestCode = `
@@ -134,7 +132,7 @@ const storageMemoryStoreTestCode = `
   atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r0, r0);
 `;
 
-g.test('store_workgroup_memory')
+g.test('store')
   .desc(
     `In the store litmus test, one thread writes 2 to some memory location x and then 1 to some memory location
      y. A second thread reads the value of y and then writes 1 to x. If the read on the second thread returns 1,
@@ -173,7 +171,7 @@ g.test('store_workgroup_memory')
       testShader,
       messagePassingResultShader
     );
-    await memModelTester.run(20, 3);
+    await memModelTester.run(40, 3);
   });
 
 const workgroupMemoryLoadBufferTestCode = `
@@ -198,7 +196,7 @@ const storageMemoryLoadBufferTestCode = `
   atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r1, r1);
 `;
 
-g.test('load_buffer_workgroup_memory')
+g.test('load_buffer')
   .desc(
     `In the load buffer litmus test, one thread reads from memory location y and then writes 1 to memory location x.
      A second thread reads from x and then writes 1 to y. If both threads read the value 0, then the loads have been
@@ -236,7 +234,7 @@ g.test('load_buffer_workgroup_memory')
       testShader,
       messagePassingResultShader
     );
-    await memModelTester.run(20, 3);
+    await memModelTester.run(40, 3);
   });
 
 const workgroupMemoryReadTestCode = `
@@ -261,7 +259,7 @@ const storageMemoryReadTestCode = `
   atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r0, r0);
 `;
 
-g.test('read_workgroup_memory')
+g.test('read')
   .desc(
     `In the read litmus test, one thread writes 1 to memory location x and then 1 to memory location y. A second thread
      first writes 2 to y and then reads from x. If the value read by the second thread is 0 but the value in memory of y
@@ -301,7 +299,7 @@ g.test('read_workgroup_memory')
       testShader,
       messagePassingResultShader
     );
-    await memModelTester.run(20, 3);
+    await memModelTester.run(40, 3);
   });
 
 const workgroupMemoryStoreBufferTestCode = `
@@ -326,8 +324,7 @@ const storageMemoryStoreBufferTestCode = `
   atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r1, r1);
 `;
 
-
-g.test('store_buffer_workgroup_memory')
+g.test('store_buffer')
   .desc(
     `In the store buffer litmus test, one thread writes 1 to memory location x and then reads from memory location
      y. A second thread writes 1 to y and then reads from x. If both reads return 0, then stores have been buffered
@@ -366,7 +363,7 @@ g.test('store_buffer_workgroup_memory')
       testShader,
       messagePassingResultShader
     );
-    await memModelTester.run(20, 3);
+    await memModelTester.run(40, 3);
   });
 
 const workgroupMemory2P2WTestCode = `
@@ -390,7 +387,7 @@ const storageMemory2P2WTestCode = `
   atomicStore(&test_locations.value[x_1], 1u);
 `;
 
-g.test('2_plus_2_write_workgroup_memory')
+g.test('2_plus_2_write')
   .desc(
     `In the 2+2 write litmus test, one thread stores 2 to memory location x and then 1 to memory location y.
      A second thread stores 2 to y and then 1 to x. If at the end of the test both memory locations are set to 2,
@@ -428,5 +425,5 @@ g.test('2_plus_2_write_workgroup_memory')
       testShader,
       messagePassingResultShader
     );
-    await memModelTester.run(20, 3);
+    await memModelTester.run(40, 3);
   });

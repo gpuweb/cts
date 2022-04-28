@@ -39,8 +39,6 @@ const memoryModelTestParams: MemoryModelTestParams = {
   permuteSecond: 419,
   memStride: 4,
   aliasedMemory: false,
-  numMemLocations: 2,
-  numReadOutputs: 2,
   numBehaviors: 2,
 };
 
@@ -96,7 +94,7 @@ g.test('workgroup_barrier_store_load')
       testShader,
       resultShader
     );
-    await memModelTester.run(20, 1);
+    await memModelTester.run(15, 1);
   });
 
 const storageMemoryBarrierLoadStoreTestCode = `
@@ -124,7 +122,7 @@ g.test('workgroup_barrier_load_store')
     { memType: MemoryType.NonAtomicStorageClass, _testCode: storageMemoryBarrierLoadStoreTestCode },
     {
       memType: MemoryType.NonAtomicWorkgroupClass,
-      _testCode: workgroupMemoryBarrierLoadStoreTestCode
+      _testCode: workgroupMemoryBarrierLoadStoreTestCode,
     },
   ])
   .fn(async t => {
@@ -151,14 +149,14 @@ g.test('workgroup_barrier_load_store')
       testShader,
       resultShader
     );
-    await memModelTester.run(20, 1);
+    await memModelTester.run(12, 1);
   });
 
 const storageMemoryBarrierStoreStoreTestCode = `
   test_locations.value[x_0] = 1u;
   storageBarrier();
   test_locations.value[x_1] = 2u;
-`
+`;
 
 const workgroupMemoryBarrierStoreStoreTestCode = `
   wg_test_locations[x_0] = 1u;
@@ -176,10 +174,13 @@ g.test('workgroup_barrier_store_store')
     `
   )
   .paramsSimple([
-    { memType: MemoryType.NonAtomicStorageClass, _testCode: storageMemoryBarrierStoreStoreTestCode },
+    {
+      memType: MemoryType.NonAtomicStorageClass,
+      _testCode: storageMemoryBarrierStoreStoreTestCode,
+    },
     {
       memType: MemoryType.NonAtomicWorkgroupClass,
-      _testCode: workgroupMemoryBarrierStoreStoreTestCode
+      _testCode: workgroupMemoryBarrierStoreStoreTestCode,
     },
   ])
   .fn(async t => {
@@ -206,5 +207,5 @@ g.test('workgroup_barrier_store_store')
       testShader,
       resultShader
     );
-    await memModelTester.run(20, 1);
+    await memModelTester.run(10, 1);
   });

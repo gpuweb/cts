@@ -21,15 +21,15 @@ export const g = makeTestGroup(GPUTest);
 // A reasonable parameter set, determined heuristically.
 const memoryModelTestParams: MemoryModelTestParams = {
   workgroupSize: 256,
-  testingWorkgroups: 512,
-  maxWorkgroups: 1024,
-  shufflePct: 100,
-  barrierPct: 100,
-  memStressPct: 100,
+  testingWorkgroups: 39,
+  maxWorkgroups: 952,
+  shufflePct: 0,
+  barrierPct: 0,
+  memStressPct: 0,
   memStressIterations: 1024,
   memStressStoreFirstPct: 50,
   memStressStoreSecondPct: 50,
-  preStressPct: 100,
+  preStressPct: 0,
   preStressIterations: 1024,
   preStressStoreFirstPct: 50,
   preStressStoreSecondPct: 50,
@@ -39,10 +39,8 @@ const memoryModelTestParams: MemoryModelTestParams = {
   stressStrategyBalancePct: 50,
   permuteFirst: 109,
   permuteSecond: 1,
-  memStride: 4,
+  memStride: 1,
   aliasedMemory: true,
-  numMemLocations: 2,
-  numReadOutputs: 2,
   numBehaviors: 4,
 };
 
@@ -91,11 +89,11 @@ g.test('corr')
       testType: TestType.InterWorkgroup,
       _testCode: storageMemoryCorrTestCode,
     },
-   {
+    {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.InterWorkgroup,
       _testCode: corrRMWTestCode,
-      extraFlags: "rmw_variant"
+      extraFlags: 'rmw_variant',
     },
     {
       memType: MemoryType.AtomicStorageClass,
@@ -121,18 +119,14 @@ g.test('corr')
       }
     `;
     const testShader = buildTestShader(t.params._testCode, t.params.memType, t.params.testType);
-    const resultShader = buildResultShader(
-      resultCode,
-      t.params.testType,
-      ResultType.FourBehavior
-    );
+    const resultShader = buildResultShader(resultCode, t.params.testType, ResultType.FourBehavior);
     const memModelTester = new MemoryModelTester(
       t,
       memoryModelTestParams,
       testShader,
       resultShader
     );
-    await memModelTester.run(20, 3);
+    await memModelTester.run(60, 3);
   });
 
 const storageMemoryCowwTestCode = `
@@ -165,11 +159,11 @@ g.test('coww')
       testType: TestType.InterWorkgroup,
       _testCode: storageMemoryCowwTestCode,
     },
-   {
+    {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.InterWorkgroup,
       _testCode: cowwRMWTestCode,
-      extraFlags: "rmw_variant",
+      extraFlags: 'rmw_variant',
     },
     {
       memType: MemoryType.AtomicStorageClass,
@@ -191,22 +185,13 @@ g.test('coww')
       }
     `;
     const testShader = buildTestShader(t.params._testCode, t.params.memType, t.params.testType);
-    const resultShader = buildResultShader(
-      resultCode,
-      t.params.testType,
-      ResultType.TwoBehavior,
-    );
+    const resultShader = buildResultShader(resultCode, t.params.testType, ResultType.TwoBehavior);
     const params = {
       ...memoryModelTestParams,
       numBehaviors: 2,
     };
-    const memModelTester = new MemoryModelTester(
-      t,
-      params,
-      testShader,
-      resultShader
-    );
-    await memModelTester.run(20, 1);
+    const memModelTester = new MemoryModelTester(t, params, testShader, resultShader);
+    await memModelTester.run(60, 1);
   });
 
 const storageMemoryCowrTestCode = `
@@ -252,11 +237,11 @@ g.test('cowr')
       testType: TestType.InterWorkgroup,
       _testCode: storageMemoryCowrTestCode,
     },
-   {
+    {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.InterWorkgroup,
       _testCode: cowrRMWTestCode,
-      extraFlags: "rmw_variant",
+      extraFlags: 'rmw_variant',
     },
     {
       memType: MemoryType.AtomicStorageClass,
@@ -282,22 +267,9 @@ g.test('cowr')
       }
     `;
     const testShader = buildTestShader(t.params._testCode, t.params.memType, t.params.testType);
-    const resultShader = buildResultShader(
-      resultCode,
-      t.params.testType,
-      ResultType.FourBehavior,
-    );
-    const params = {
-      ...memoryModelTestParams,
-      numBehaviors: 4,
-    };
-    const memModelTester = new MemoryModelTester(
-      t,
-      params,
-      testShader,
-      resultShader
-    );
-    await memModelTester.run(20, 3);
+    const resultShader = buildResultShader(resultCode, t.params.testType, ResultType.FourBehavior);
+    const memModelTester = new MemoryModelTester(t, memoryModelTestParams, testShader, resultShader);
+    await memModelTester.run(60, 3);
   });
 
 const storageMemoryCorw1TestCode = `
@@ -351,22 +323,18 @@ g.test('corw1')
       }
     `;
     const testShader = buildTestShader(t.params._testCode, t.params.memType, t.params.testType);
-    const resultShader = buildResultShader(
-      resultCode,
-      t.params.testType,
-      ResultType.TwoBehavior,
-    );
+    const resultShader = buildResultShader(resultCode, t.params.testType, ResultType.TwoBehavior);
     const params = {
       ...memoryModelTestParams,
       numBehaviors: 2,
     };
     const memModelTester = new MemoryModelTester(
       t,
-      memoryModelTestParams,
+      params,
       testShader,
       resultShader
     );
-    await memModelTester.run(20, 1);
+    await memModelTester.run(60, 1);
   });
 
 const storageMemoryCorw2TestCode = `
@@ -413,11 +381,11 @@ g.test('corw2')
       testType: TestType.InterWorkgroup,
       _testCode: storageMemoryCorw2TestCode,
     },
-   {
+    {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.InterWorkgroup,
       _testCode: corw2RMWTestCode,
-      extraFlags: "rmw_variant",
+      extraFlags: 'rmw_variant',
     },
     {
       memType: MemoryType.AtomicStorageClass,
@@ -443,20 +411,7 @@ g.test('corw2')
       }
     `;
     const testShader = buildTestShader(t.params._testCode, t.params.memType, t.params.testType);
-    const resultShader = buildResultShader(
-      resultCode,
-      t.params.testType,
-      ResultType.FourBehavior,
-    );
-    const params = {
-      ...memoryModelTestParams,
-      numBehaviors: 4,
-    };
-    const memModelTester = new MemoryModelTester(
-      t,
-      params,
-      testShader,
-      resultShader
-    );
-    await memModelTester.run(20, 3);
+    const resultShader = buildResultShader(resultCode, t.params.testType, ResultType.FourBehavior);
+    const memModelTester = new MemoryModelTester(t, memoryModelTestParams, testShader, resultShader);
+    await memModelTester.run(60, 3);
   });
