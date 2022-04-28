@@ -4,9 +4,9 @@ Execution tests for the 'exp' builtin function
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { Comparator, compare, ulpThreshold } from '../../../../../util/compare.js';
+import { ulpCmp } from '../../../../../util/compare.js';
 import { kBit, kValue } from '../../../../../util/constants.js';
-import { f32, f32Bits, Scalar, TypeF32 } from '../../../../../util/conversion.js';
+import { f32, f32Bits, TypeF32 } from '../../../../../util/conversion.js';
 import { biasedRange } from '../../../../../util/math.js';
 import { Case, run } from '../../expression.js';
 
@@ -40,28 +40,16 @@ Returns the natural exponentiation of e1 (e.g. e^e1). Component-wise when T is a
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cmp = (x: number, target: Scalar): Comparator => {
-      return (got, _) => {
-        const c = 3 + 2 * Math.abs(x);
-        const ulpMatch = ulpThreshold(c);
-        const cmp = compare(got, target, ulpMatch);
-        if (cmp.matched) {
-          return cmp;
-        }
-        return {
-          matched: false,
-          got: got.toString(),
-          expected: `within 3 + 2 * |${x}| ULP of ${target}`,
-        };
-      };
+    const n = (x: number): number => {
+      return 3 + 2 * Math.abs(x);
     };
 
     const makeCase = (x: number): Case => {
       const expected = f32(Math.exp(x));
-      return { input: f32(x), expected: cmp(x, expected) };
+      return { input: f32(x), expected: ulpCmp(x, expected, n) };
     };
 
-    // ln(max f32 value) ~ 88, so exp(88) will be within range of a f32, but exp(89) will not
+    // floor(ln(max f32 value)) = 88, so exp(88) will be within range of a f32, but exp(89) will not
     const cases: Array<Case> = [
       makeCase(0), // Returns 1 by definition
       makeCase(-89), // Returns subnormal value

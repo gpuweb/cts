@@ -2,7 +2,7 @@
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { Colors } from '../../common/util/colors.js';
 import { f32, Scalar, Vector } from './conversion.js';
-import { correctlyRounded, withinULP } from './math.js';
+import { correctlyRounded, oneULP, withinULP } from './math.js';
 
 /** Comparison describes the result of a Comparator function. */
 
@@ -123,5 +123,28 @@ export function anyOf(...values) {
       failed.push(cmp.expected);
     }
     return { matched: false, got: got.toString(), expected: failed.join(' or ') };
+  };
+}
+
+/** @returns a Comparator that checks whether a result is within N * ULP of a target value, where N is defined by a function
+ *
+ * N is n(x), where x is the input into the function under test, not the result of the function.
+ * For a function f(x) = X that is being tested, the acceptance interval is defined as within X +/- n(x) * ulp(X).
+ */
+export function ulpCmp(x, target, n) {
+  const c = n(x);
+  const ulpMatch = ulpThreshold(c);
+  return (got, _) => {
+    const cmp = compare(got, target, ulpMatch);
+    if (cmp.matched) {
+      return cmp;
+    }
+    const ulp = Math.max(oneULP(target.value, true), oneULP(target.value, false));
+
+    return {
+      matched: false,
+      got: got.toString(),
+      expected: `within ${c} * ULP (${ulp}) of ${target}`,
+    };
   };
 }
