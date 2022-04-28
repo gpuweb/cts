@@ -101,7 +101,6 @@ desc(
   - Valid dest alphaMode
   - Valid 'flipY' config in 'GPUImageCopyExternalImage' (named 'srcDoFlipYDuringCopy' in cases)
   - TODO(#913): color space tests need to be added
-  - TODO: Add error tolerance for rgb10a2unorm dst texture format
 
   And the expected results are all passed.
   `).
@@ -180,7 +179,9 @@ fn(async (t) => {
 
   texelViewExpected,
   { width, height, depthOrArrayLayers: 1 },
-  { maxDiffULPsForFloatFormat: 0, maxDiffULPsForNormFormat: 0 });
+  // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
+  // allow diffs of 1ULP since that's the generally-appropriate threshold.
+  { maxDiffULPsForFloatFormat: 1, maxDiffULPsForNormFormat: 1 });
 
 });
 
@@ -210,7 +211,6 @@ desc(
   - Valid dest alphaMode
   - Valid 'flipY' config in 'GPUImageCopyExternalImage' (named 'srcDoFlipYDuringCopy' in cases)
   - TODO(#913): color space tests need to be added
-  - TODO: Add error tolerance for rgb10a2unorm dst texture format
 
   And the expected results are all passed.
   `).
@@ -315,7 +315,9 @@ fn(async (t) => {
 
   texelViewExpected,
   { width, height, depthOrArrayLayers: 1 },
-  { maxDiffULPsForFloatFormat: 0, maxDiffULPsForNormFormat: 0 });
+  // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
+  // allow diffs of 1ULP since that's the generally-appropriate threshold.
+  { maxDiffULPsForFloatFormat: 1, maxDiffULPsForNormFormat: 1 });
 
 });
 //# sourceMappingURL=ImageBitmap.spec.js.map
