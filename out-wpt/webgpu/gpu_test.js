@@ -458,7 +458,7 @@ export class GPUTest extends Fixture {
     const pass = commandEncoder.beginComputePass();
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
-    pass.dispatch(numRows);
+    pass.dispatchWorkgroups(numRows);
     pass.end();
     this.device.queue.submit([commandEncoder.finish()]);
 

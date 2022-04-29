@@ -411,7 +411,7 @@ export class BufferSyncTest extends GPUTest {
     const bindGroup = this.createBindGroup(pipeline, buffer);
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
-    pass.dispatch(1);
+    pass.dispatchWorkgroups(1);
   }
 
   // Write buffer via BufferToBuffer copy.
@@ -524,7 +524,7 @@ export class BufferSyncTest extends GPUTest {
         @builtin(position) position : vec4<f32>,
         @location(0) @interpolate(flat) data : u32,
       };
-      
+
       @stage(vertex) fn vert_main(@location(0) input: u32) -> VertexOutput {
         var output : VertexOutput;
         output.position = vec4<f32>(0.5, 0.5, 0.0, 1.0);
@@ -536,9 +536,9 @@ export class BufferSyncTest extends GPUTest {
       struct Data {
         a : u32
       };
-      
+
       @group(0) @binding(0) var<storage, read_write> data : Data;
-      
+
       @stage(fragment) fn frag_main(@location(0) @interpolate(flat) input : u32) -> @location(0) vec4<f32> {
         data.a = input;
         return vec4<f32>();  // result does't matter
@@ -588,10 +588,10 @@ export class BufferSyncTest extends GPUTest {
       struct Data {
         a : u32
       };
-      
+
       @group(0) @binding(0) var<uniform> constant: Data;
       @group(0) @binding(1) var<storage, read_write> data : Data;
-      
+
       @stage(fragment) fn frag_main() -> @location(0) vec4<f32> {
         data.a = constant.a;
         return vec4<f32>();  // result does't matter
@@ -649,16 +649,16 @@ export class BufferSyncTest extends GPUTest {
     const bindGroup = this.createBindGroupSrcDstBuffer(pipeline, srcBuffer, dstBuffer);
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
-    pass.dispatch(1);
+    pass.dispatchWorkgroups(1);
   }
 
-  // Write buffer via dispatchIndirect call in compute pass.
+  // Write buffer via dispatchWorkgroupsIndirect call in compute pass.
   encodeReadAsIndirectBufferInComputePass(pass, srcBuffer, dstBuffer, value) {
     const pipeline = this.createStorageWriteComputePipeline(value);
     const bindGroup = this.createBindGroup(pipeline, dstBuffer);
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
-    pass.dispatchIndirect(srcBuffer, 0);
+    pass.dispatchWorkgroupsIndirect(srcBuffer, 0);
   }
 
   // Read as vertex input and write buffer via draw call in render pass. Use bundle if needed.

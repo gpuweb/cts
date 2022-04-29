@@ -278,13 +278,13 @@ export class MemoryModelTester {
       const testPass = encoder.beginComputePass();
       testPass.setPipeline(this.testPipeline);
       testPass.setBindGroup(0, this.testBindGroup);
-      testPass.dispatch(numWorkgroups);
+      testPass.dispatchWorkgroups(numWorkgroups);
       testPass.end();
 
       const resultPass = encoder.beginComputePass();
       resultPass.setPipeline(this.resultPipeline);
       resultPass.setBindGroup(0, this.resultBindGroup);
-      resultPass.dispatch(this.params.testingWorkgroups);
+      resultPass.dispatchWorkgroups(this.params.testingWorkgroups);
       resultPass.end();
 
       this.test.device.queue.submit([encoder.finish()]);

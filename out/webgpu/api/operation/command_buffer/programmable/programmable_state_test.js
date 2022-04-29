@@ -147,7 +147,7 @@ export class ProgrammableStateTest extends GPUTest {
 
   dispatchOrDraw(pass) {
     if (pass instanceof GPUComputePassEncoder) {
-      pass.dispatch(1);
+      pass.dispatchWorkgroups(1);
     } else if (pass instanceof GPURenderPassEncoder) {
       pass.draw(1);
     } else if (pass instanceof GPURenderBundleEncoder) {

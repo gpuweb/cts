@@ -291,7 +291,7 @@ fn(async (t) => {
     computePassEncoder.setBindGroup(0, bindGroup0);
     computePassEncoder.setBindGroup(1, bindGroup1);
     computePassEncoder.setPipeline(computePipeline);
-    computePassEncoder.dispatch(1);
+    computePassEncoder.dispatchWorkgroups(1);
     computePassEncoder.end();
   }
 

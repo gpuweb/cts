@@ -334,7 +334,7 @@ referenced by that bind group is "used" in the usage scope. `
 
         /*
          * setBindGroup(bindGroup0);
-         * dispatch();
+         * dispatchWorkgroups();
          * setBindGroup(bindGroup1);
          */
         if (dispatchBeforeUsage1) {
@@ -347,19 +347,19 @@ referenced by that bind group is "used" in the usage scope. `
           }
           const computePipeline = t.createNoOpComputePipeline(pipelineLayout);
           computePassEncoder.setPipeline(computePipeline);
-          computePassEncoder.dispatch(1);
+          computePassEncoder.dispatchWorkgroups(1);
         }
         break;
       }
       case 'indirect': {
         /*
-         * dispatchIndirect(buffer);
+         * dispatchWorkgroupsIndirect(buffer);
          * setBindGroup(bindGroup1);
          */
         assert(dispatchBeforeUsage1);
         const computePipeline = t.createNoOpComputePipeline();
         computePassEncoder.setPipeline(computePipeline);
-        computePassEncoder.dispatchIndirect(buffer, offset0);
+        computePassEncoder.dispatchWorkgroupsIndirect(buffer, offset0);
         break;
       }
     }
@@ -376,7 +376,7 @@ referenced by that bind group is "used" in the usage scope. `
         /*
          * setBindGroup(bindGroup0);
          * setBindGroup(bindGroup1);
-         * dispatch();
+         * dispatchWorkgroups();
          */
         if (!dispatchBeforeUsage1) {
           const bindGroupLayouts = [];
@@ -395,14 +395,14 @@ referenced by that bind group is "used" in the usage scope. `
             : undefined;
           const computePipeline = t.createNoOpComputePipeline(pipelineLayout);
           computePassEncoder.setPipeline(computePipeline);
-          computePassEncoder.dispatch(1);
+          computePassEncoder.dispatchWorkgroups(1);
         }
         break;
       }
       case 'indirect': {
         /*
          * setBindGroup(bindGroup0);
-         * dispatchIndirect(buffer);
+         * dispatchWorkgroupsIndirect(buffer);
          */
         assert(!dispatchBeforeUsage1);
         let pipelineLayout = undefined;
@@ -414,7 +414,7 @@ referenced by that bind group is "used" in the usage scope. `
         }
         const computePipeline = t.createNoOpComputePipeline(pipelineLayout);
         computePassEncoder.setPipeline(computePipeline);
-        computePassEncoder.dispatchIndirect(buffer, offset1);
+        computePassEncoder.dispatchWorkgroupsIndirect(buffer, offset1);
         break;
       }
     }
@@ -469,13 +469,13 @@ dispatch calls refer to different usage scopes.`
 
           const computePipeline = t.createNoOpComputePipeline(pipelineLayout);
           computePassEncoder.setPipeline(computePipeline);
-          computePassEncoder.dispatch(1);
+          computePassEncoder.dispatchWorkgroups(1);
           break;
         }
         case 'indirect': {
           const computePipeline = t.createNoOpComputePipeline();
           computePassEncoder.setPipeline(computePipeline);
-          computePassEncoder.dispatchIndirect(buffer, offset);
+          computePassEncoder.dispatchWorkgroupsIndirect(buffer, offset);
           break;
         }
         default:

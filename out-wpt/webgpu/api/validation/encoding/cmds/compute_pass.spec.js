@@ -123,9 +123,12 @@ g.test('dispatch_sizes')
     encoder.setPipeline(pipeline);
     if (dispatchType === 'direct') {
       const [x, y, z] = workSizes;
-      encoder.dispatch(x, y, z);
+      encoder.dispatchWorkgroups(x, y, z);
     } else if (dispatchType === 'indirect') {
-      encoder.dispatchIndirect(t.createIndirectBuffer('valid', new Uint32Array(workSizes)), 0);
+      encoder.dispatchWorkgroupsIndirect(
+        t.createIndirectBuffer('valid', new Uint32Array(workSizes)),
+        0
+      );
     }
 
     const shouldError =
@@ -139,8 +142,8 @@ const kBufferData = new Uint32Array(6).fill(1);
 g.test('indirect_dispatch_buffer_state')
   .desc(
     `
-Test dispatchIndirect validation by submitting various dispatches with a no-op pipeline and an
-indirectBuffer with 6 elements.
+Test dispatchWorkgroupsIndirect validation by submitting various dispatches with a no-op pipeline
+and an indirectBuffer with 6 elements.
 - indirectBuffer: {'valid', 'invalid', 'destroyed'}
 - indirectOffset:
   - valid, within the buffer: {beginning, middle, end} of the buffer
@@ -169,7 +172,7 @@ indirectBuffer with 6 elements.
 
     const { encoder, validateFinishAndSubmit } = t.createEncoder('compute pass');
     encoder.setPipeline(pipeline);
-    encoder.dispatchIndirect(buffer, offset);
+    encoder.dispatchWorkgroupsIndirect(buffer, offset);
 
     const finishShouldError =
       state === 'invalid' ||
@@ -180,7 +183,7 @@ indirectBuffer with 6 elements.
 
 g.test('indirect_dispatch_buffer,device_mismatch')
   .desc(
-    'Tests dispatchIndirect cannot be called with an indirect buffer created from another device'
+    `Tests dispatchWorkgroupsIndirect cannot be called with an indirect buffer created from another device`
   )
   .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
   .fn(async t => {
@@ -203,6 +206,6 @@ g.test('indirect_dispatch_buffer,device_mismatch')
 
     const { encoder, validateFinish } = t.createEncoder('compute pass');
     encoder.setPipeline(pipeline);
-    encoder.dispatchIndirect(buffer, 0);
+    encoder.dispatchWorkgroupsIndirect(buffer, 0);
     validateFinish(!mismatched);
   });

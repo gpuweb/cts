@@ -248,7 +248,7 @@ fn(async (t) => {
     const bindGroup = t.createBindGroup(pipeline, buffer);
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
-    pass.dispatch(1);
+    pass.dispatchWorkgroups(1);
   }
 
   pass.end();

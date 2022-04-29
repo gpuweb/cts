@@ -77,7 +77,7 @@ class F extends GPUTest {
     const computePass = encoder.beginComputePass();
     computePass.setBindGroup(0, bindGroup);
     computePass.setPipeline(computePipeline);
-    computePass.dispatch(1);
+    computePass.dispatchWorkgroups(1);
     computePass.end();
     this.queue.submit([encoder.finish()]);
 
@@ -811,8 +811,9 @@ have been initialized to 0.`
 
 g.test('indirect_buffer_for_dispatch_indirect')
   .desc(
-    `Verify when we use a GPUBuffer as an indirect buffer for dispatchIndirect() just after the
-creation of that GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
+    `Verify when we use a GPUBuffer as an indirect buffer for dispatchWorkgroupsIndirect() just
+    after the creation of that GPUBuffer, all the contents in that GPUBuffer have been initialized
+    to 0.`
   )
   .paramsSubcasesOnly(u => u.combine('bufferOffset', [0, 16]))
   .fn(async t => {
@@ -868,7 +869,7 @@ creation of that GPUBuffer, all the contents in that GPUBuffer have been initial
     const computePass = encoder.beginComputePass();
     computePass.setBindGroup(0, bindGroup);
     computePass.setPipeline(computePipeline);
-    computePass.dispatchIndirect(indirectBuffer, bufferOffset);
+    computePass.dispatchWorkgroupsIndirect(indirectBuffer, bufferOffset);
     computePass.end();
     t.queue.submit([encoder.finish()]);
 

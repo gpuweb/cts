@@ -129,7 +129,7 @@ export const checkContentsBySampling = (t, params, texture, state, subresourceRa
       const pass = commandEncoder.beginComputePass();
       pass.setPipeline(computePipeline);
       pass.setBindGroup(0, bindGroup);
-      pass.dispatch(width, height, depth);
+      pass.dispatchWorkgroups(width, height, depth);
       pass.end();
       t.queue.submit([commandEncoder.finish()]);
       ubo.destroy();

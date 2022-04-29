@@ -90,7 +90,7 @@ function doTest(t) {
   const pass = encoder.beginComputePass();
   pass.setPipeline(pipeline);
   pass.setBindGroup(0, bindGroup);
-  pass.dispatch(1);
+  pass.dispatchWorkgroups(1);
   pass.end();
   t.device.queue.submit([encoder.finish()]);
 

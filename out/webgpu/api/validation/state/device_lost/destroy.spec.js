@@ -716,7 +716,7 @@ fn(async (t) => {
 
   await t.executeCommandsAfterDestroy(stage, awaitLost, 'compute pass', (maker) => {
     maker.encoder.setPipeline(pipeline);
-    maker.encoder.dispatch(1);
+    maker.encoder.dispatchWorkgroups(1);
     return maker;
   });
 });
