@@ -139,7 +139,7 @@ g.test('color,attachments')
     const info = kTextureFormatInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
-    const writeValue = { R: 1, G: 1, B: 1, A: 1 };
+    const writeValue = { R: 0.125, G: 0.25, B: 0.5, A: 1 };
 
     const renderTargets = range(attachmentCount, () =>
       t.device.createTexture({
