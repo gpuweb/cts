@@ -454,7 +454,7 @@ g.test('pipeline_output_targets')
   .params(u =>
     u
       .combine('isAsync', [false, true])
-      .combine('writeMask', [0, 0xf])
+      .combine('writeMask', [0, 0x1, 0x2, 0x4, 0x8, 0xf])
       .combine('format', kRenderableColorTextureFormats)
       .beginSubcases()
       .combine('sampleType', ['float', 'uint', 'sint'] as const)
