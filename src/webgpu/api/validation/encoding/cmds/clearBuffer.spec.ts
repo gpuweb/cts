@@ -56,11 +56,9 @@ g.test('buffer_state')
 
 g.test('buffer,device_mismatch')
   .desc(`Tests clearBuffer cannot be called with buffer created from another device.`)
-  .params(u => u.combine('mismatched', [true, false]))
-  .before(async t => {
-    if (t.params.mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .beforeSubcases(async t => {
+    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {
     const { mismatched } = t.params;

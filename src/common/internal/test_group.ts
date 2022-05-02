@@ -1,6 +1,6 @@
 import {
   Fixture,
-  FixtureSharedState,
+  SubcaseBatchState,
   SkipTestCase,
   TestParams,
   UnexpectedPassError,
@@ -46,10 +46,10 @@ export interface RunCase {
 }
 
 // Interface for defining tests
-export interface TestGroupBuilder<S extends FixtureSharedState, F extends Fixture<S>> {
+export interface TestGroupBuilder<S extends SubcaseBatchState, F extends Fixture<S>> {
   test(name: string): TestBuilderWithName<S, F>;
 }
-export function makeTestGroup<S extends FixtureSharedState, F extends Fixture<S>>(
+export function makeTestGroup<S extends SubcaseBatchState, F extends Fixture<S>>(
   fixture: FixtureClass<S, F>
 ): TestGroupBuilder<S, F> {
   return new TestGroup((fixture as unknown) as FixtureClass);
@@ -68,23 +68,24 @@ export interface IterableTest {
 }
 
 export function makeTestGroupForUnitTesting<F extends Fixture>(
-  fixture: FixtureClass<FixtureSharedState, F>
-): TestGroup<FixtureSharedState, F> {
+  fixture: FixtureClass<SubcaseBatchState, F>
+): TestGroup<SubcaseBatchState, F> {
   return new TestGroup(fixture);
 }
 
 export type FixtureClass<
-  S extends FixtureSharedState = FixtureSharedState,
+  S extends SubcaseBatchState = SubcaseBatchState,
   F extends Fixture<S> = Fixture<S>
-> = (new (sharedState: S, log: TestCaseRecorder, params: TestParams) => F) & {
-  MakeSharedState: (params: TestParams) => S;
+> = {
+  new (sharedState: S, log: TestCaseRecorder, params: TestParams): F;
+  MakeSharedState(params: TestParams): S;
 };
 type TestFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
-type BeforeFn<S extends FixtureSharedState, P extends {}> = (
+type BeforeSubcasesFn<S extends SubcaseBatchState, P extends {}> = (
   s: S & { params: P }
 ) => Promise<void> | void;
 
-export class TestGroup<S extends FixtureSharedState, F extends Fixture<S>>
+export class TestGroup<S extends SubcaseBatchState, F extends Fixture<S>>
   implements TestGroupBuilder<S, F> {
   private fixture: FixtureClass;
   private seen: Set<string> = new Set();
@@ -132,7 +133,7 @@ export class TestGroup<S extends FixtureSharedState, F extends Fixture<S>>
   }
 }
 
-interface TestBuilderWithName<S extends FixtureSharedState, F extends Fixture<S>>
+interface TestBuilderWithName<S extends SubcaseBatchState, F extends Fixture<S>>
   extends TestBuilderWithParams<S, F, {}, {}> {
   desc(description: string): this;
   /**
@@ -181,18 +182,43 @@ interface TestBuilderWithName<S extends FixtureSharedState, F extends Fixture<S>
 }
 
 interface TestBuilderWithParams<
-  S extends FixtureSharedState,
+  S extends SubcaseBatchState,
   F extends Fixture<S>,
   CaseP extends {},
   SubcaseP extends {}
 > {
+  /**
+   * Limit subcases to a maximum number of per testcase.
+   * @param b the maximum number of subcases per testcase.
+   *
+   * If the number of subcases exceeds `b`, add an internal
+   * numeric, incrementing `batch__` param to split subcases
+   * into groups of at most `b` subcases.
+   */
   batch(b: number): this;
-  before(fn: BeforeFn<S, CaseP>): this;
+  /**
+   * Run a function on shared subcase batch state before each
+   * batch of subcases.
+   * @param fn the function to run. It is called with the test
+   * fixture's shared subcase batch state.
+   *
+   * Generally, this function should be careful to avoid mutating
+   * any state on the shared subcase batch state which could result
+   * in unexpected order-dependent test behavior.
+   */
+  beforeSubcases(fn: BeforeSubcasesFn<S, CaseP>): this;
+  /**
+   * Set the test function.
+   * @param fn the test function.
+   */
   fn(fn: TestFn<F, Merged<CaseP, SubcaseP>>): void;
+  /**
+   * Mark the test as unimplemented.
+   */
   unimplemented(): void;
 }
 
-class TestBuilder<S extends FixtureSharedState, F extends Fixture> {
+class TestBuilder<S extends SubcaseBatchState, F extends Fixture> {
   readonly testPath: string[];
   isUnimplemented: boolean;
   description: string | undefined;
@@ -200,7 +226,7 @@ class TestBuilder<S extends FixtureSharedState, F extends Fixture> {
 
   private readonly fixture: FixtureClass;
   private testFn: TestFn<Fixture, {}> | undefined;
-  private beforeFn: BeforeFn<FixtureSharedState, {}> | undefined;
+  private beforeFn: BeforeSubcasesFn<SubcaseBatchState, {}> | undefined;
   private testCases?: ParamsBuilderBase<{}, {}> = undefined;
   private batchSize: number = 0;
 
@@ -220,7 +246,7 @@ class TestBuilder<S extends FixtureSharedState, F extends Fixture> {
     return this;
   }
 
-  before(fn: BeforeFn<FixtureSharedState, {}>): this {
+  beforeSubcases(fn: BeforeSubcasesFn<SubcaseBatchState, {}>): this {
     assert(this.beforeFn === undefined);
     this.beforeFn = fn;
     return this;
@@ -369,7 +395,7 @@ class RunCaseSpecific implements RunCase {
   private readonly subcases: Iterable<{}> | undefined;
   private readonly fixture: FixtureClass;
   private readonly fn: TestFn<Fixture, {}>;
-  private readonly beforeFn?: BeforeFn<FixtureSharedState, {}>;
+  private readonly beforeFn?: BeforeSubcasesFn<SubcaseBatchState, {}>;
   private readonly testCreationStack: Error;
 
   constructor(
@@ -379,7 +405,7 @@ class RunCaseSpecific implements RunCase {
     subcases: Iterable<{}> | undefined,
     fixture: FixtureClass,
     fn: TestFn<Fixture, {}>,
-    beforeFn: BeforeFn<FixtureSharedState, {}> | undefined,
+    beforeFn: BeforeSubcasesFn<SubcaseBatchState, {}> | undefined,
     testCreationStack: Error
   ) {
     this.id = { test: testPath, params: extractPublicParams(params) };
@@ -394,7 +420,7 @@ class RunCaseSpecific implements RunCase {
 
   async runTest(
     rec: TestCaseRecorder,
-    sharedState: FixtureSharedState,
+    sharedState: SubcaseBatchState,
     params: TestParams,
     throwSkip: boolean,
     expectedStatus: Expectation

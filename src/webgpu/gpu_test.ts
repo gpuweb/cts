@@ -1,4 +1,4 @@
-import { Fixture, FixtureSharedState, TestParams } from '../common/framework/fixture.js';
+import { Fixture, SubcaseBatchState, TestParams } from '../common/framework/fixture.js';
 import { attemptGarbageCollection } from '../common/util/collect_garbage.js';
 import {
   assert,
@@ -62,7 +62,7 @@ export function initUncanonicalizedDeviceDescriptor(
   }
 }
 
-export class GPUTestSharedState extends FixtureSharedState {
+export class GPUTestSubcaseBatchState extends SubcaseBatchState {
   private provider: DeviceProvider | undefined;
   /** Must not be replaced once acquired. */
   private acquiredDevice: GPUDevice | undefined;
@@ -104,6 +104,10 @@ export class GPUTestSharedState extends FixtureSharedState {
    * Create other device different with current test device, which could be got by `.mismatchedDevice`.
    * A `descriptor` may be undefined, which returns a `default` mismatched device.
    * If the request descriptor or feature name can't be supported, throws an exception to skip the entire test case.
+   *
+   * MAINTENANCE_TODO: These device selection methods may not have to be async.
+   * They could be enqueued and then await'ed automatically after `beforeSubcases`
+   * runs.
    */
   async selectMismatchedDeviceOrSkipTestCase(
     descriptor:
@@ -265,9 +269,9 @@ export class GPUTestSharedState extends FixtureSharedState {
 /**
  * Base fixture for WebGPU tests.
  */
-export class GPUTest extends Fixture<GPUTestSharedState> {
-  public static MakeSharedState(params: TestParams): GPUTestSharedState {
-    return new GPUTestSharedState(params);
+export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
+  public static MakeSharedState(params: TestParams): GPUTestSubcaseBatchState {
+    return new GPUTestSubcaseBatchState(params);
   }
 
   /** GPUDevice for the test to use. */

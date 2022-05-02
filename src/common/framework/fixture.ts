@@ -17,7 +17,7 @@ type DestroyableObject =
   | { close(): void }
   | { getExtension(extensionName: 'WEBGL_lose_context'): WEBGL_lose_context };
 
-export class FixtureSharedState {
+export class SubcaseBatchState {
   private _params: TestParams;
 
   constructor(params: TestParams) {
@@ -51,7 +51,7 @@ export class FixtureSharedState {
  * A new instance of the Fixture is created for every single test subcase
  * (i.e. every time the test function is run).
  */
-export class Fixture<S extends FixtureSharedState = FixtureSharedState> {
+export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
   private _params: unknown;
   private _sharedState: S;
   /**
@@ -64,8 +64,8 @@ export class Fixture<S extends FixtureSharedState = FixtureSharedState> {
   private numOutstandingAsyncExpectations = 0;
   private objectsToCleanUp: DestroyableObject[] = [];
 
-  public static MakeSharedState(params: TestParams): FixtureSharedState {
-    return new FixtureSharedState(params);
+  public static MakeSharedState(params: TestParams): SubcaseBatchState {
+    return new SubcaseBatchState(params);
   }
 
   /** @internal */

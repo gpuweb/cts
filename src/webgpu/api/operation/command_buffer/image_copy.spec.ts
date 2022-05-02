@@ -1287,7 +1287,7 @@ bytes in copy works for every format.
         return kRowsPerImageAndBytesPerRowParams.copySizes;
       })
   )
-  .before(async t => {
+  .beforeSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
     await t.selectDeviceOrSkipTestCase(info.feature);
   })
@@ -1383,7 +1383,7 @@ works for every format with 2d and 2d-array textures.
       .combine('copyDepth', kOffsetsAndSizesParams.copyDepth) // 2d and 2d-array textures
       .unless(p => p.dimension === '1d' && p.copyDepth !== 1)
   )
-  .before(async t => {
+  .beforeSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
     await t.selectDeviceOrSkipTestCase(info.feature);
   })
@@ -1462,7 +1462,7 @@ for all formats. We pass origin and copyExtent as [number, number, number].`
       .combine('coordinateToTest', [0, 1, 2] as const)
       .unless(p => p.dimension === '1d' && p.coordinateToTest !== 0)
   )
-  .before(async t => {
+  .beforeSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
     await t.selectDeviceOrSkipTestCase(info.feature);
   })
@@ -1661,7 +1661,7 @@ TODO: Make a variant for depth-stencil formats.
       ])
       .expand('textureSize', generateTestTextureSizes)
   )
-  .before(async t => {
+  .beforeSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
     await t.selectDeviceOrSkipTestCase(info.feature);
   })
@@ -1828,7 +1828,7 @@ aspect and copyTextureToBuffer() with depth aspect.
       })
       .combine('mipLevel', [0, 2])
   )
-  .before(async t => {
+  .beforeSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
     await t.selectDeviceOrSkipTestCase(info.feature);
   })
@@ -1919,7 +1919,7 @@ copyTextureToBuffer() with depth aspect.
       .combine('copyDepth', kOffsetsAndSizesParams.copyDepth)
       .combine('mipLevel', [0, 2])
   )
-  .before(async t => {
+  .beforeSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
     await t.selectDeviceOrSkipTestCase(info.feature);
   })

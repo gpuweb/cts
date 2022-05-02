@@ -27,7 +27,7 @@ import {
   kTextureDimensions,
 } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
-import { GPUTest, GPUTestSharedState } from '../../../gpu_test.js';
+import { GPUTest, GPUTestSubcaseBatchState } from '../../../gpu_test.js';
 import { virtualMipSize } from '../../../util/texture/base.js';
 import { createTextureUploadBuffer } from '../../../util/texture/layout.js';
 import { BeginEndRange, SubresourceRange } from '../../../util/texture/subresource.js';
@@ -184,7 +184,7 @@ export class TextureZeroInitTest extends GPUTest {
   readonly stateToTexelComponents: { [k in InitializedState]: PerTexelComponent<number> };
 
   private p: TextureZeroParams;
-  constructor(sharedState: GPUTestSharedState, rec: TestCaseRecorder, params: TestParams) {
+  constructor(sharedState: GPUTestSubcaseBatchState, rec: TestCaseRecorder, params: TestParams) {
     super(sharedState, rec, params);
     this.p = params as TextureZeroParams;
 
@@ -577,7 +577,7 @@ export const g = makeTestGroup(TextureZeroInitTest);
 
 g.test('uninitialized_texture_is_zero')
   .params(kTestParams)
-  .before(async t => {
+  .beforeSubcases(async t => {
     await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[t.params.format].feature);
   })
   .fn(async t => {

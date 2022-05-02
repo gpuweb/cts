@@ -148,18 +148,13 @@ g.test('query_set_buffer,device_mismatch')
   .desc(
     'Tests resolveQuerySet cannot be called with a query set or destination buffer created from another device'
   )
-  .paramsSimple([
+  .paramsSubcasesOnly([
     { querySetMismatched: false, bufferMismatched: false }, // control case
     { querySetMismatched: true, bufferMismatched: false },
     { querySetMismatched: false, bufferMismatched: true },
   ] as const)
-  .before(async t => {
-    const { querySetMismatched, bufferMismatched } = t.params;
-    const mismatched = querySetMismatched || bufferMismatched;
-
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
+  .beforeSubcases(async t => {
+    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {
     const { querySetMismatched, bufferMismatched } = t.params;

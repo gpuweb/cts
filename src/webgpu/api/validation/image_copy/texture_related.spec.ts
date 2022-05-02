@@ -70,10 +70,8 @@ g.test('texture,device_mismatch')
   .paramsSubcasesOnly(u =>
     u.combine('method', kImageCopyTypes).combine('mismatched', [true, false])
   )
-  .before(async t => {
-    if (t.params.mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
+  .beforeSubcases(async t => {
+    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {
     const { method, mismatched } = t.params;
@@ -257,7 +255,7 @@ Test the copy must be a full subresource if the texture's format is depth/stenci
       // need to examine depth dimension via copyDepthModifier to determine whether it is a full copy for a 3D texture.
       .expand('copyDepthModifier', ({ dimension: d }) => (d === '3d' ? [0, -1] : [0]))
   )
-  .before(async t => {
+  .beforeSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
     await t.selectDeviceOrSkipTestCase(info.feature);
   })
@@ -347,7 +345,7 @@ Test that the texture copy origin must be aligned to the format's block size.
       .unless(p => p.dimension === '1d' && p.coordinateToTest !== 'x')
       .expand('valueToCoordinate', texelBlockAlignmentTestExpanderForValueToCoordinate)
   )
-  .before(async t => {
+  .beforeSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
     await t.selectDeviceOrSkipTestCase(info.feature);
   })
@@ -410,7 +408,7 @@ Test that the copy size must be aligned to the texture's format's block size.
       .unless(p => p.dimension === '1d' && p.coordinateToTest !== 'width')
       .expand('valueToCoordinate', texelBlockAlignmentTestExpanderForValueToCoordinate)
   )
-  .before(async t => {
+  .beforeSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
     await t.selectDeviceOrSkipTestCase(info.feature);
   })

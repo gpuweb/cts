@@ -97,18 +97,13 @@ g.test('buffer,device_mismatch')
   .desc(
     'Tests copyBufferToBuffer cannot be called with src buffer or dst buffer created from another device'
   )
-  .paramsSimple([
+  .paramsSubcasesOnly([
     { srcMismatched: false, dstMismatched: false }, // control case
     { srcMismatched: true, dstMismatched: false },
     { srcMismatched: false, dstMismatched: true },
   ] as const)
-  .before(async t => {
-    const { srcMismatched, dstMismatched } = t.params;
-    const mismatched = srcMismatched || dstMismatched;
-
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
+  .beforeSubcases(async t => {
+    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {
     const { srcMismatched, dstMismatched } = t.params;

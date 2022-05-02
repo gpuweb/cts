@@ -34,7 +34,7 @@ g.test('color_attachments,device_mismatch')
     - created from same device in ColorAttachment0, but from different device in ColorAttachment1
     `
   )
-  .paramsSimple([
+  .paramsSubcasesOnly([
     {
       view0Mismatched: false,
       target0Mismatched: false,
@@ -60,14 +60,8 @@ g.test('color_attachments,device_mismatch')
       target1Mismatched: true,
     },
   ])
-  .before(async t => {
-    const { view0Mismatched, target0Mismatched, view1Mismatched, target1Mismatched } = t.params;
-
-    const mismatched = view0Mismatched || target0Mismatched || view1Mismatched || target1Mismatched;
-
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
+  .beforeSubcases(async t => {
+    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {
     const { view0Mismatched, target0Mismatched, view1Mismatched, target1Mismatched } = t.params;
@@ -114,11 +108,9 @@ g.test('depth_stencil_attachment,device_mismatch')
   .desc(
     'Tests beginRenderPass cannot be called with a depth stencil attachment whose texture view is created from another device'
   )
-  .params(u => u.combine('mismatched', [true, false]))
-  .before(async t => {
-    if (t.params.mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .beforeSubcases(async t => {
+    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {
     const { mismatched } = t.params;
@@ -155,11 +147,9 @@ g.test('occlusion_query_set,device_mismatch')
   .desc(
     'Tests beginRenderPass cannot be called with an occlusion query set created from another device'
   )
-  .params(u => u.combine('mismatched', [true, false]))
-  .before(async t => {
-    if (t.params.mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .beforeSubcases(async t => {
+    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {
     const { mismatched } = t.params;

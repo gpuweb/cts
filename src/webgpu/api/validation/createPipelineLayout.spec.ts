@@ -112,19 +112,13 @@ g.test('bind_group_layouts,device_mismatch')
     - layout0 and layout1 from different device
     `
   )
-  .paramsSimple([
+  .paramsSubcasesOnly([
     { layout0Mismatched: false, layout1Mismatched: false }, // control case
     { layout0Mismatched: true, layout1Mismatched: false },
     { layout0Mismatched: false, layout1Mismatched: true },
   ])
-  .before(async t => {
-    const { layout0Mismatched, layout1Mismatched } = t.params;
-
-    const mismatched = layout0Mismatched || layout1Mismatched;
-
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
+  .beforeSubcases(async t => {
+    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {
     const { layout0Mismatched, layout1Mismatched } = t.params;

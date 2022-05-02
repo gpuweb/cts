@@ -619,7 +619,7 @@ g.test('subresources_and_binding_types_combination_for_aspect')
           p.compute && (p.binding0InBundle || p.binding1InBundle || p.type1 === 'render-target')
       )
   )
-  .before(async t => {
+  .beforeSubcases(async t => {
     const { format } = t.params;
     await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
   })

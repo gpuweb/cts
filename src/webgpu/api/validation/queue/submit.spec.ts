@@ -19,18 +19,13 @@ g.test('command_buffer,device_mismatch')
     - cb0 and cb1 from different device
     `
   )
-  .paramsSimple([
+  .paramsSubcasesOnly([
     { cb0Mismatched: false, cb1Mismatched: false }, // control case
     { cb0Mismatched: true, cb1Mismatched: false },
     { cb0Mismatched: false, cb1Mismatched: true },
   ])
-  .before(async t => {
-    const { cb0Mismatched, cb1Mismatched } = t.params;
-    const mismatched = cb0Mismatched || cb1Mismatched;
-
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
+  .beforeSubcases(async t => {
+    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {
     const { cb0Mismatched, cb1Mismatched } = t.params;

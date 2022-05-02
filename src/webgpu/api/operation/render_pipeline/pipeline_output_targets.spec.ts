@@ -81,7 +81,7 @@ g.test('color,component_count')
       .combine('componentCount', [1, 2, 3, 4])
       .filter(x => x.componentCount >= kTexelRepresentationInfo[x.format].componentOrder.length)
   )
-  .before(async t => {
+  .beforeSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
     await t.selectDeviceOrSkipTestCase(info.feature);
   })
@@ -290,7 +290,7 @@ The attachment has a load value of [1, 0, 0, 1]
       ] as const)
       .filter(x => x.output.length >= kTexelRepresentationInfo[x.format].componentOrder.length)
   )
-  .before(async t => {
+  .beforeSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
     await t.selectDeviceOrSkipTestCase(info.feature);
   })

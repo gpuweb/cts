@@ -24,7 +24,7 @@ Tests that set occlusion query set with all types in render pass descriptor:
   `
   )
   .params(u => u.combine('type', [undefined, ...kQueryTypes]))
-  .before(async t => {
+  .beforeSubcases(async t => {
     const { type } = t.params;
     if (type) {
       await t.selectDeviceForQueryTypeOrSkipTestCase(type);
@@ -88,7 +88,7 @@ Tests that write timestamp to all types of query set on all possible encoders:
       .beginSubcases()
       .expand('queryIndex', p => (p.type === 'timestamp' ? [0, 2] : [0]))
   )
-  .before(async t => {
+  .beforeSubcases(async t => {
     const { type } = t.params;
     if (type) {
       await t.selectDeviceForQueryTypeOrSkipTestCase(type);
@@ -113,7 +113,7 @@ Tests that write timestamp to a invalid query set that failed during creation:
   `
   )
   .paramsSubcasesOnly(u => u.combine('querySetState', ['valid', 'invalid'] as const))
-  .before(async t => {
+  .beforeSubcases(async t => {
     await t.selectDeviceForQueryTypeOrSkipTestCase('timestamp');
   })
   .fn(async t => {
@@ -131,13 +131,10 @@ Tests that write timestamp to a invalid query set that failed during creation:
 
 g.test('timestamp_query,device_mismatch')
   .desc('Tests writeTimestamp cannot be called with a query set created from another device')
-  .params(u => u.combine('mismatched', [true, false]))
-  .before(async t => {
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .beforeSubcases(async t => {
     await t.selectDeviceForQueryTypeOrSkipTestCase('timestamp');
-
-    if (t.params.mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase('timestamp-query');
-    }
+    await t.selectMismatchedDeviceOrSkipTestCase('timestamp-query');
   })
   .fn(async t => {
     const { mismatched } = t.params;

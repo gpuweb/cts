@@ -114,18 +114,13 @@ g.test('texture,device_mismatch')
   .desc(
     'Tests copyTextureToTexture cannot be called with src texture or dst texture created from another device.'
   )
-  .paramsSimple([
+  .paramsSubcasesOnly([
     { srcMismatched: false, dstMismatched: false }, // control case
     { srcMismatched: true, dstMismatched: false },
     { srcMismatched: false, dstMismatched: true },
   ] as const)
-  .before(async t => {
-    const { srcMismatched, dstMismatched } = t.params;
-    const mismatched = srcMismatched || dstMismatched;
-
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
+  .beforeSubcases(async t => {
+    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {
     const { srcMismatched, dstMismatched } = t.params;
@@ -363,7 +358,7 @@ Test the formats of textures in copyTextureToTexture must be copy-compatible.
         filterFormatsByFeature(dstFormatFeature, kTextureFormats)
       )
   )
-  .before(async t => {
+  .beforeSubcases(async t => {
     const { srcFormatFeature, dstFormatFeature } = t.params;
     await t.selectDeviceOrSkipTestCase([srcFormatFeature, dstFormatFeature]);
   })
@@ -439,7 +434,7 @@ Note: this is only tested for 2D textures as it is the only dimension compatible
       .combine('srcCopyLevel', [1, 2])
       .combine('dstCopyLevel', [0, 1])
   )
-  .before(async t => {
+  .beforeSubcases(async t => {
     const { format } = t.params;
     await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
   })
@@ -701,7 +696,7 @@ Test the validations on the member 'aspect' of GPUImageCopyTexture in CopyTextur
       .combine('sourceAspect', ['all', 'depth-only', 'stencil-only'] as const)
       .combine('destinationAspect', ['all', 'depth-only', 'stencil-only'] as const)
   )
-  .before(async t => {
+  .beforeSubcases(async t => {
     const { format } = t.params;
     await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
   })
@@ -781,7 +776,7 @@ TODO: Express the offsets in "block size" so as to be able to test non-4x4 compr
       .combine('srcCopyLevel', [0, 1, 2])
       .combine('dstCopyLevel', [0, 1, 2])
   )
-  .before(async t => {
+  .beforeSubcases(async t => {
     const { format } = t.params;
     await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
   })
