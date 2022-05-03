@@ -1,7 +1,7 @@
 import { Colors } from '../../common/util/colors.js';
 
 import { f32, Scalar, Value, Vector } from './conversion.js';
-import { correctlyRounded, diffULP } from './math.js';
+import { correctlyRounded, oneULP, withinULP } from './math.js';
 
 /** Comparison describes the result of a Comparator function. */
 export interface Comparison {
@@ -45,7 +45,7 @@ export function ulpThreshold(ulp: number): FloatMatch {
     if (got === expected) {
       return true;
     }
-    return diffULP(got, expected) <= ulp;
+    return withinULP(got, expected, ulp);
   };
 }
 
@@ -139,5 +139,30 @@ export function anyOf(...values: Value[]): Comparator {
       failed.push(cmp.expected);
     }
     return { matched: false, got: got.toString(), expected: failed.join(' or ') };
+  };
+}
+
+/** @returns a Comparator that checks whether a result is within N * ULP of a target value, where N is defined by a function
+ *
+ * N is n(x), where x is the input into the function under test, not the result of the function.
+ * For a function f(x) = X that is being tested, the acceptance interval is defined as within X +/- n(x) * ulp(X).
+ */
+export function ulpCmp(x: number, target: Scalar, n: (x: number) => number): Comparator {
+  const c = n(x);
+  const ulpMatch = ulpThreshold(c);
+  return (got, _) => {
+    const cmp = compare(got, target, ulpMatch);
+    if (cmp.matched) {
+      return cmp;
+    }
+    const ulp = Math.max(
+      oneULP(target.value as number, true),
+      oneULP(target.value as number, false)
+    );
+    return {
+      matched: false,
+      got: got.toString(),
+      expected: `within ${c} * ULP (${ulp}) of ${target}`,
+    };
   };
 }
