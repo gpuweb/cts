@@ -129,13 +129,13 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     this.mismatchedAcquiredDevice = this.mismatchedProvider.acquire();
   }
 
-  protected async init(): Promise<void> {
+  async init(): Promise<void> {
     await super.init();
 
     this.provider = await devicePool.reserve();
   }
 
-  protected async finalize(): Promise<void> {
+  async finalize(): Promise<void> {
     await super.finalize();
 
     if (this.provider) {

@@ -433,11 +433,11 @@ class RunCaseSpecific implements RunCase {
 
       const inst = new this.fixture(sharedState, rec, params);
       try {
-        await inst.doInit();
+        await inst.init();
         await this.fn(inst as Fixture & { params: {} });
       } finally {
         // Runs as long as constructor succeeded, even if initialization or the test failed.
-        await inst.doFinalize();
+        await inst.finalize();
       }
     } catch (ex) {
       // There was an exception from constructor, init, test, or finalize.
@@ -493,7 +493,7 @@ class RunCaseSpecific implements RunCase {
       rec.start();
       const sharedState = this.fixture.MakeSharedState(this.params);
       try {
-        await sharedState.doInit();
+        await sharedState.init();
         if (this.beforeFn) {
           await this.beforeFn(sharedState);
         }
@@ -545,7 +545,7 @@ class RunCaseSpecific implements RunCase {
         }
       } finally {
         // Runs as long as the shared state constructor succeeded, even if initialization or a test failed.
-        await sharedState.doFinalize();
+        await sharedState.finalize();
       }
     } catch (ex) {
       // There was an exception from sharedState/fixture constructor, init, beforeFn, or test.
