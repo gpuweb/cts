@@ -221,25 +221,6 @@ g.test('color,attachments')
     pass.end();
     t.device.queue.submit([encoder.finish()]);
 
-    // for (let i = 0; i < attachmentCount; i++) {
-    //   if (i === emptyAttachmentId) {
-    //     continue;
-    //   }
-    //   const result = await textureContentIsOKByT2B(
-    //     t,
-    //     { texture: renderTargets[i] },
-    //     [1, 1, 1],
-    //     {
-    //       expTexelView: TexelView.fromTexelsAsColors(format, coords => writeValues[i]),
-    //     },
-    //     {
-    //     maxIntDiff: 0,
-    //     maxDiffULPsForNormFormat: 1,
-    //     maxDiffULPsForFloatFormat: 1,
-    //   });
-    //   t.expectOK(result);
-    // }
-
     const promises = range(attachmentCount, i => {
       if (i === emptyAttachmentId) {
         return undefined;
