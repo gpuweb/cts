@@ -7,6 +7,9 @@ import { clamp } from './math.js';
 /**
  * Encodes a JS `number` into a "normalized" (unorm/snorm) integer representation with `bits` bits.
  * Input must be between -1 and 1 if signed, or 0 and 1 if unsigned.
+ *
+ * MAINTENANCE_TODO: See if performance of texel_data improves if this function is pre-specialized
+ * for a particular `bits`/`signed`.
  */
 export function floatAsNormalizedInteger(float, bits, signed) {
   if (signed) {
