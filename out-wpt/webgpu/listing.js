@@ -1708,7 +1708,27 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "sign"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "sin"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
+      "sinh"
     ]
   },
   {
