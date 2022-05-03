@@ -32,18 +32,10 @@ export class SubcaseBatchState {
     return this._params;
   }
 
-  /** @internal */
-  doInit(): Promise<void> {
-    return this.init();
-  }
-
-  /** @internal */
-  doFinalize(): Promise<void> {
-    return this.finalize();
-  }
-
-  protected async init() {}
-  protected async finalize() {}
+  /** @internal MAINTENANCE_TODO: Make this not visible to test code? */
+  async init() {}
+  /** @internal MAINTENANCE_TODO: Make this not visible to test code? */
+  async finalize() {}
 }
 
 /**
@@ -90,19 +82,23 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
     return this._sharedState;
   }
 
-  // This has to be a member function instead of an async `createFixture` function, because
-  // we need to be able to ergonomically override it in subclasses.
   /**
    * Override this to do additional pre-test-function work in a derived fixture.
+   * This has to be a member function instead of an async `createFixture` function, because
+   * we need to be able to ergonomically override it in subclasses.
+   *
+   * @internal MAINTENANCE_TODO: Make this not visible to test code?
    */
-  protected async init(): Promise<void> {}
+  async init(): Promise<void> {}
 
   /**
    * Override this to do additional post-test-function work in a derived fixture.
    *
    * Called even if init was unsuccessful.
+   *
+   * @internal MAINTENANCE_TODO: Make this not visible to test code?
    */
-  protected async finalize(): Promise<void> {
+  async finalize(): Promise<void> {
     assert(
       this.numOutstandingAsyncExpectations === 0,
       'there were outstanding immediateAsyncExpectations (e.g. expectUncapturedError) at the end of the test'
@@ -129,16 +125,6 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
         o.close();
       }
     }
-  }
-
-  /** @internal */
-  doInit(): Promise<void> {
-    return this.init();
-  }
-
-  /** @internal */
-  doFinalize(): Promise<void> {
-    return this.finalize();
   }
 
   /**

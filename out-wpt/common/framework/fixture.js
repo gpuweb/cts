@@ -22,17 +22,9 @@ export class SubcaseBatchState {
     return this._params;
   }
 
-  /** @internal */
-  doInit() {
-    return this.init();
-  }
-
-  /** @internal */
-  doFinalize() {
-    return this.finalize();
-  }
-
+  /** @internal MAINTENANCE_TODO: Make this not visible to test code? */
   async init() {}
+  /** @internal MAINTENANCE_TODO: Make this not visible to test code? */
   async finalize() {}
 }
 
@@ -78,10 +70,12 @@ export class Fixture {
     return this._sharedState;
   }
 
-  // This has to be a member function instead of an async `createFixture` function, because
-  // we need to be able to ergonomically override it in subclasses.
   /**
    * Override this to do additional pre-test-function work in a derived fixture.
+   * This has to be a member function instead of an async `createFixture` function, because
+   * we need to be able to ergonomically override it in subclasses.
+   *
+   * @internal MAINTENANCE_TODO: Make this not visible to test code?
    */
   async init() {}
 
@@ -89,6 +83,8 @@ export class Fixture {
    * Override this to do additional post-test-function work in a derived fixture.
    *
    * Called even if init was unsuccessful.
+   *
+   * @internal MAINTENANCE_TODO: Make this not visible to test code?
    */
   async finalize() {
     assert(
@@ -117,16 +113,6 @@ export class Fixture {
         o.close();
       }
     }
-  }
-
-  /** @internal */
-  doInit() {
-    return this.init();
-  }
-
-  /** @internal */
-  doFinalize() {
-    return this.finalize();
   }
 
   /**
