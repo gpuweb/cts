@@ -1,5 +1,4 @@
 import { Fixture, SubcaseBatchState, TestParams } from '../common/framework/fixture.js';
-import { attemptGarbageCollection } from '../common/util/collect_garbage.js';
 import {
   assert,
   range,
@@ -22,12 +21,7 @@ import {
   checkElementsFloat16Between,
 } from './util/check_contents.js';
 import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js';
-import {
-  DevicePool,
-  DeviceProvider,
-  TestOOMedShouldAttemptGC,
-  UncanonicalizedDeviceDescriptor,
-} from './util/device_pool.js';
+import { DevicePool, DeviceProvider, UncanonicalizedDeviceDescriptor } from './util/device_pool.js';
 import { align, roundDown } from './util/math.js';
 import { makeTextureWithContents } from './util/texture.js';
 import {
@@ -139,51 +133,11 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     await super.finalize();
 
     if (this.provider) {
-      let threw = false;
-      let thrownValue: unknown;
-      {
-        const provider = this.provider;
-        this.provider = undefined;
-        try {
-          await devicePool.release(provider);
-        } catch (ex) {
-          threw = true;
-          thrownValue = ex;
-        }
-      }
-      // The GPUDevice and GPUQueue should now have no outstanding references.
-
-      if (threw) {
-        if (thrownValue instanceof TestOOMedShouldAttemptGC) {
-          // Try to clean up, in case there are stray GPU resources in need of collection.
-          await attemptGarbageCollection();
-        }
-        throw thrownValue;
-      }
+      await devicePool.release(await this.provider);
     }
 
     if (this.mismatchedProvider) {
-      // MAINTENANCE_TODO(kainino0x): Deduplicate this with code in GPUTest.finalize
-      let threw = false;
-      let thrownValue: unknown;
-      {
-        const provider = this.mismatchedProvider;
-        this.mismatchedProvider = undefined;
-        try {
-          await mismatchedDevicePool.release(provider);
-        } catch (ex) {
-          threw = true;
-          thrownValue = ex;
-        }
-      }
-
-      if (threw) {
-        if (thrownValue instanceof TestOOMedShouldAttemptGC) {
-          // Try to clean up, in case there are stray GPU resources in need of collection.
-          await attemptGarbageCollection();
-        }
-        throw thrownValue;
-      }
+      await devicePool.release(await this.mismatchedProvider);
     }
   }
 
