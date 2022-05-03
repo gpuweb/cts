@@ -48,9 +48,16 @@ const kResourceStateValues = ['valid', 'invalid', 'destroyed'] as const;
 export type ResourceState = typeof kResourceStateValues[number];
 export const kResourceStates: readonly ResourceState[] = kResourceStateValues;
 
+/** Various "convenient" shorthands for GPUDeviceDescriptors for selectDevice functions. */
+type DeviceSelectionDescriptor =
+  | UncanonicalizedDeviceDescriptor
+  | GPUFeatureName
+  | undefined
+  | Array<GPUFeatureName | undefined>;
+
 export function initUncanonicalizedDeviceDescriptor(
-  descriptor: UncanonicalizedDeviceDescriptor | GPUFeatureName | Array<GPUFeatureName | undefined>
-): UncanonicalizedDeviceDescriptor {
+  descriptor: DeviceSelectionDescriptor
+): UncanonicalizedDeviceDescriptor | undefined {
   if (typeof descriptor === 'string') {
     return { requiredFeatures: [descriptor] };
   } else if (descriptor instanceof Array) {
@@ -109,22 +116,15 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
    * They could be enqueued and then await'ed automatically after `beforeAllSubcases`
    * runs.
    */
-  async selectMismatchedDeviceOrSkipTestCase(
-    descriptor:
-      | UncanonicalizedDeviceDescriptor
-      | GPUFeatureName
-      | undefined
-      | Array<GPUFeatureName | undefined>
-  ): Promise<void> {
+  async selectMismatchedDeviceOrSkipTestCase(descriptor: DeviceSelectionDescriptor): Promise<void> {
     assert(
       this.mismatchedProvider === undefined,
       "Can't selectMismatchedDeviceOrSkipTestCase() multiple times"
     );
 
-    this.mismatchedProvider =
-      descriptor === undefined
-        ? await mismatchedDevicePool.reserve()
-        : await mismatchedDevicePool.reserve(initUncanonicalizedDeviceDescriptor(descriptor));
+    this.mismatchedProvider = await mismatchedDevicePool.reserve(
+      initUncanonicalizedDeviceDescriptor(descriptor)
+    );
 
     this.mismatchedAcquiredDevice = this.mismatchedProvider.acquire();
   }
@@ -196,13 +196,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
    *
    * If the request descriptor can't be supported, throws an exception to skip the entire test case.
    */
-  async selectDeviceOrSkipTestCase(
-    descriptor:
-      | UncanonicalizedDeviceDescriptor
-      | GPUFeatureName
-      | undefined
-      | Array<GPUFeatureName | undefined>
-  ): Promise<void> {
+  async selectDeviceOrSkipTestCase(descriptor: DeviceSelectionDescriptor): Promise<void> {
     if (descriptor === undefined) return;
 
     assert(this.provider !== undefined);
