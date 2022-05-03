@@ -2,8 +2,6 @@ export const description = `
 - Test pipeline outputs with different color attachment number, formats, component counts, etc.
 `;
 
-import { assert } from 'console';
-
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { range, unreachable } from '../../../../common/util/util.js';
 import { kRenderableColorTextureFormats, kTextureFormatInfo } from '../../../capability_info.js';
