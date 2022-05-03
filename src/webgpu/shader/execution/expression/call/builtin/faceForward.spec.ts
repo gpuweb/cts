@@ -16,6 +16,11 @@ T is vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
 Returns e1 if dot(e2,e3) is negative, and -e1 otherwise.
 `
   )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('vectorize', [2, 3, 4] as const)
+  )
   .unimplemented();
 
 g.test('f32')
@@ -27,6 +32,11 @@ T is vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
 Returns e1 if dot(e2,e3) is negative, and -e1 otherwise.
 `
   )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('vectorize', [2, 3, 4] as const)
+  )
   .unimplemented();
 
 g.test('f16')
@@ -37,5 +47,10 @@ T is vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
 @const fn faceForward(e1: T ,e2: T ,e3: T ) -> T
 Returns e1 if dot(e2,e3) is negative, and -e1 otherwise.
 `
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('vectorize', [2, 3, 4] as const)
   )
   .unimplemented();
