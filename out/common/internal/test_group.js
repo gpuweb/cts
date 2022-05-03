@@ -13,7 +13,7 @@ kUnitCaseParamsBuilder } from
 
 '../framework/params_builder.js';
 
-
+import { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
 import { extractPublicParams, mergeParams } from '../internal/params_utils.js';
 import { compareQueries, Ordering } from '../internal/query/compare.js';
 import { TestQuerySingleCase } from '../internal/query/query.js';
@@ -498,39 +498,100 @@ class RunCaseSpecific {
           await this.beforeFn(sharedState);
         }
 
+        let allPreviousSubcasesFinalizedPromise = Promise.resolve();
         if (this.subcases) {
           let totalCount = 0;
           let skipCount = 0;
+
+          // Maximum number of subcases in flight. If there are too many in flight,
+          // starting the next subcase will register `resolvePromiseBlockingSubcase`
+          // and wait until `subcaseFinishedCallback` is called.
+          const kMaxSubcasesInFlight = 500;
+          let subcasesInFlight = 0;
+          let resolvePromiseBlockingSubcase = undefined;
+          const subcaseFinishedCallback = () => {
+            subcasesInFlight -= 1;
+            // If there is any subcase waiting on a previous subcase to finish,
+            // unblock it now, and clear the resolve callback.
+            if (resolvePromiseBlockingSubcase) {
+              resolvePromiseBlockingSubcase();
+              resolvePromiseBlockingSubcase = undefined;
+            }
+          };
+
           for (const subParams of this.subcases) {
-            rec.info(new Error('subcase: ' + stringifyPublicParams(subParams)));
-            try {
-              const params = mergeParams(this.params, subParams);
-              const subcaseQuery = new TestQuerySingleCase(
-              selfQuery.suite,
-              selfQuery.filePathParts,
-              selfQuery.testPathParts,
-              params);
+            // Make a recorder that will defer all calls until `allPreviousSubcasesFinalizedPromise`
+            // resolves. Waiting on `allPreviousSubcasesFinalizedPromise` ensures that
+            // logs from all the previous subcases have been flushed before flushing new logs.
+            const subRec = new Proxy(rec, {
+              get: (target, k) => {
+                const prop = TestCaseRecorder.prototype[k];
+                if (typeof prop === 'function') {
+                  return function (...args) {
+                    allPreviousSubcasesFinalizedPromise.then(() => {
 
-              await this.runTest(
-              rec,
-              sharedState,
-              params,
-              /* throwSkip */true,
-              getExpectedStatus(subcaseQuery));
+                      const rv = prop.apply(target, args);
+                      // Because this proxy executes functions in a deferred manner,
+                      // it should never be used for functions that need to return a value.
+                      assert(rv === undefined);
+                    });
+                  };
+                }
+                return prop;
+              } });
 
-            } catch (ex) {
+
+            subRec.info(new Error('subcase: ' + stringifyPublicParams(subParams)));
+
+            const params = mergeParams(this.params, subParams);
+            const subcaseQuery = new TestQuerySingleCase(
+            selfQuery.suite,
+            selfQuery.filePathParts,
+            selfQuery.testPathParts,
+            params);
+
+
+            // Limit the maximum number of subcases in flight.
+            if (subcasesInFlight >= kMaxSubcasesInFlight) {
+              await new Promise((resolve) => {
+                // There should only be one subcase waiting at a time.
+                assert(resolvePromiseBlockingSubcase === undefined);
+                resolvePromiseBlockingSubcase = resolve;
+              });
+            }
+
+            subcasesInFlight += 1;
+            // Runs async without waiting so that subsequent subcases can start.
+            // All finalization steps will be waited on at the end of the testcase.
+            const finalizePromise = this.runTest(
+            subRec,
+            sharedState,
+            params,
+            /* throwSkip */true,
+            getExpectedStatus(subcaseQuery)).
+
+            catch((ex) => {
               if (ex instanceof SkipTestCase) {
                 // Convert SkipTestCase to info messages
                 ex.message = 'subcase skipped: ' + ex.message;
-                rec.info(ex);
+                subRec.info(ex);
                 ++skipCount;
               } else {
                 // Since we are catching all error inside runTest(), this should never happen
-                rec.threw(ex);
+                subRec.threw(ex);
               }
-            }
+            }).
+            finally(subcaseFinishedCallback);
+
+            allPreviousSubcasesFinalizedPromise = allPreviousSubcasesFinalizedPromise.then(
+            () => finalizePromise);
+
             ++totalCount;
           }
+
+          // Wait for all subcases to finalize and report their results.
+          await allPreviousSubcasesFinalizedPromise;
+
           if (skipCount === totalCount) {
             rec.skipped(new SkipTestCase('all subcases were skipped'));
           }
