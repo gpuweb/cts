@@ -194,7 +194,7 @@ Tests creating 2d compressed textures on destroyed device. Tests valid combinati
         );
       })
   )
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     const { format } = t.params;
     await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
   })
@@ -269,7 +269,7 @@ Tests creating texture views on 2d compressed textures from destroyed device. Te
         );
       })
   )
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     const { format } = t.params;
     await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
   })
@@ -488,7 +488,7 @@ Tests creating query sets on destroyed device.
   `
   )
   .params(u => u.combine('type', kQueryTypes).beginSubcases().combine('awaitLost', [true, false]))
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     const { type } = t.params;
     await t.selectDeviceForQueryTypeOrSkipTestCase(type);
   })
@@ -670,7 +670,7 @@ Tests encoding and finishing a writeTimestamp command on destroyed device.
       .combine('stage', kCommandValidationStages)
       .combine('awaitLost', [true, false])
   )
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     const { type } = t.params;
     await t.selectDeviceForQueryTypeOrSkipTestCase(type);
   })
@@ -856,7 +856,7 @@ Tests writeTexture on queue on destroyed device with compressed formats.
       .beginSubcases()
       .combine('awaitLost', [true, false])
   )
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     const { format } = t.params;
     await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
   })

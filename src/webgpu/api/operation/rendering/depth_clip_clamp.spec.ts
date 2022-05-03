@@ -41,7 +41,7 @@ have unexpected values then get drawn to the color buffer, which is later checke
       .combine('writeDepth', [false, true])
       .combine('multisampled', [false, true])
   )
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
 
     await t.selectDeviceOrSkipTestCase([
@@ -354,7 +354,7 @@ to be empty.`
       .combine('unclippedDepth', [false, true])
       .combine('multisampled', [false, true])
   )
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
 
     await t.selectDeviceOrSkipTestCase([

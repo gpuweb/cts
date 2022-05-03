@@ -106,7 +106,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
    * If the request descriptor or feature name can't be supported, throws an exception to skip the entire test case.
    *
    * MAINTENANCE_TODO: These device selection methods may not have to be async.
-   * They could be enqueued and then await'ed automatically after `beforeSubcases`
+   * They could be enqueued and then await'ed automatically after `beforeAllSubcases`
    * runs.
    */
   async selectMismatchedDeviceOrSkipTestCase(

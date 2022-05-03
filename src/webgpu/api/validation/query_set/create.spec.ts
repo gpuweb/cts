@@ -22,7 +22,7 @@ Tests that create query set with the count for all query types:
       .beginSubcases()
       .combine('count', [0, kMaxQueryCount, kMaxQueryCount + 1])
   )
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     await t.selectDeviceForQueryTypeOrSkipTestCase(t.params.type);
   })
   .fn(async t => {

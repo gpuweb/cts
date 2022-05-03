@@ -179,7 +179,7 @@ g.test('pipeline_layout,device_mismatch')
     'Tests createComputePipeline(Async) cannot be called with a pipeline layout created from another device'
   )
   .paramsSubcasesOnly(u => u.combine('isAsync', [true, false]).combine('mismatched', [true, false]))
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {
@@ -204,7 +204,7 @@ g.test('shader_module,device_mismatch')
     'Tests createComputePipeline(Async) cannot be called with a shader module created from another device'
   )
   .paramsSubcasesOnly(u => u.combine('isAsync', [true, false]).combine('mismatched', [true, false]))
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {

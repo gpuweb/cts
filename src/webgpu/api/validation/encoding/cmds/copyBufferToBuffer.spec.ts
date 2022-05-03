@@ -102,7 +102,7 @@ g.test('buffer,device_mismatch')
     { srcMismatched: true, dstMismatched: false },
     { srcMismatched: false, dstMismatched: true },
   ] as const)
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {

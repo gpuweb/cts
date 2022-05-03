@@ -177,7 +177,7 @@ Test the computation of requiredBytesInCopy by computing the minimum data size f
         return [p._offsetMultiplier * info.bytesPerBlock];
       })
   )
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
     await t.selectDeviceOrSkipTestCase(info.feature);
   })
@@ -249,7 +249,7 @@ Test that rowsPerImage has no alignment constraints.
       // Copy height is info.blockHeight, so rowsPerImage must be equal or greater than it.
       .filter(({ rowsPerImage, format }) => rowsPerImage >= kTextureFormatInfo[format].blockHeight)
   )
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
     await t.selectDeviceOrSkipTestCase(info.feature);
   })
@@ -291,7 +291,7 @@ Test the alignment requirement on the linear data offset (block size, or 4 for d
       .beginSubcases()
       .expand('offset', texelBlockAlignmentTestExpanderForOffset)
   )
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
     await t.selectDeviceOrSkipTestCase(info.feature);
   })
@@ -395,7 +395,7 @@ Test that bytesPerRow, if specified must be big enough for a full copy row.
         ];
       })
   )
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
     await t.selectDeviceOrSkipTestCase(info.feature);
   })

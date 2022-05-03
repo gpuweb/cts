@@ -499,7 +499,7 @@ g.test('bind_group_layout,device_mismatch')
     'Tests createBindGroup cannot be called with a bind group layout created from another device'
   )
   .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {
@@ -556,7 +556,7 @@ g.test('binding_resources,device_mismatch')
         { resource0Mismatched: false, resource1Mismatched: true },
       ])
   )
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {

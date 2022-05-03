@@ -31,7 +31,7 @@ Tests setPipeline should generate an error iff using an 'invalid' pipeline.
 g.test('pipeline,device_mismatch')
   .desc('Tests setPipeline cannot be called with a render pipeline created from another device')
   .paramsSubcasesOnly(kRenderEncodeTypeParams.combine('mismatched', [true, false]))
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {

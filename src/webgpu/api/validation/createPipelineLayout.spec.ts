@@ -117,7 +117,7 @@ g.test('bind_group_layouts,device_mismatch')
     { layout0Mismatched: true, layout1Mismatched: false },
     { layout0Mismatched: false, layout1Mismatched: true },
   ])
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {

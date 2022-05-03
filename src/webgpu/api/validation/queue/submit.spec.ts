@@ -24,7 +24,7 @@ g.test('command_buffer,device_mismatch')
     { cb0Mismatched: true, cb1Mismatched: false },
     { cb0Mismatched: false, cb1Mismatched: true },
   ])
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {

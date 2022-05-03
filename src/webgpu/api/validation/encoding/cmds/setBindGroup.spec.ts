@@ -140,7 +140,7 @@ g.test('bind_group,device_mismatch')
       .combine('useU32Array', [true, false])
       .combine('mismatched', [true, false])
   )
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {

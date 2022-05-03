@@ -76,7 +76,7 @@ g.test('depth_compare_func')
         { depthCompare: 'always', depthClearValue: 0.0, _expected: triangleColor },
       ] as const)
   )
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     await t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
   .fn(async t => {

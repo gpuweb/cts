@@ -607,7 +607,7 @@ g.test('depth_stencil_attachment')
       .combine('setDepthLoadStoreOp', [false, true])
       .combine('setStencilLoadStoreOp', [false, true])
   )
-  .beforeSubcases(async t => {
+  .beforeAllSubcases(async t => {
     await t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
   .fn(async t => {

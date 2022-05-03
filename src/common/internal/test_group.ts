@@ -81,7 +81,7 @@ export type FixtureClass<
   MakeSharedState(params: TestParams): S;
 };
 type TestFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
-type BeforeSubcasesFn<S extends SubcaseBatchState, P extends {}> = (
+type BeforeAllSubcasesFn<S extends SubcaseBatchState, P extends {}> = (
   s: S & { params: P }
 ) => Promise<void> | void;
 
@@ -206,7 +206,7 @@ interface TestBuilderWithParams<
    * any state on the shared subcase batch state which could result
    * in unexpected order-dependent test behavior.
    */
-  beforeSubcases(fn: BeforeSubcasesFn<S, CaseP>): this;
+  beforeAllSubcases(fn: BeforeAllSubcasesFn<S, CaseP>): this;
   /**
    * Set the test function.
    * @param fn the test function.
@@ -226,7 +226,7 @@ class TestBuilder<S extends SubcaseBatchState, F extends Fixture> {
 
   private readonly fixture: FixtureClass;
   private testFn: TestFn<Fixture, {}> | undefined;
-  private beforeFn: BeforeSubcasesFn<SubcaseBatchState, {}> | undefined;
+  private beforeFn: BeforeAllSubcasesFn<SubcaseBatchState, {}> | undefined;
   private testCases?: ParamsBuilderBase<{}, {}> = undefined;
   private batchSize: number = 0;
 
@@ -246,7 +246,7 @@ class TestBuilder<S extends SubcaseBatchState, F extends Fixture> {
     return this;
   }
 
-  beforeSubcases(fn: BeforeSubcasesFn<SubcaseBatchState, {}>): this {
+  beforeAllSubcases(fn: BeforeAllSubcasesFn<SubcaseBatchState, {}>): this {
     assert(this.beforeFn === undefined);
     this.beforeFn = fn;
     return this;
@@ -395,7 +395,7 @@ class RunCaseSpecific implements RunCase {
   private readonly subcases: Iterable<{}> | undefined;
   private readonly fixture: FixtureClass;
   private readonly fn: TestFn<Fixture, {}>;
-  private readonly beforeFn?: BeforeSubcasesFn<SubcaseBatchState, {}>;
+  private readonly beforeFn?: BeforeAllSubcasesFn<SubcaseBatchState, {}>;
   private readonly testCreationStack: Error;
 
   constructor(
@@ -405,7 +405,7 @@ class RunCaseSpecific implements RunCase {
     subcases: Iterable<{}> | undefined,
     fixture: FixtureClass,
     fn: TestFn<Fixture, {}>,
-    beforeFn: BeforeSubcasesFn<SubcaseBatchState, {}> | undefined,
+    beforeFn: BeforeAllSubcasesFn<SubcaseBatchState, {}> | undefined,
     testCreationStack: Error
   ) {
     this.id = { test: testPath, params: extractPublicParams(params) };
