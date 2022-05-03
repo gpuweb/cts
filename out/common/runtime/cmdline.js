@@ -6,6 +6,7 @@ import { Logger } from '../internal/logging/logger.js';
 
 import { parseQuery } from '../internal/query/parseQuery.js';
 import { parseExpectationsForTestQuery } from '../internal/query/query.js';
+import { Colors } from '../util/colors.js';
 import { setGPUProvider } from '../util/navigator_gpu.js';
 import { assert, unreachable } from '../util/util.js';
 
@@ -16,6 +17,7 @@ function usage(rc) {
   console.log(`  tools/run_${sys.type} [OPTIONS...] QUERIES...`);
   console.log(`  tools/run_${sys.type} 'unittests:*' 'webgpu:buffers,*'`);
   console.log('Options:');
+  console.log('  --colors             Enable ANSI colors in output.');
   console.log('  --verbose            Print result/log of every test as it runs.');
   console.log(
   '  --list               Print all testcase names that match the given query and exit.');
@@ -35,6 +37,8 @@ function usage(rc) {
 
 
 
+Colors.enabled = false;
+
 let verbose = false;
 let listMode = 'none';
 let debug = false;
@@ -48,7 +52,9 @@ const gpuProviderFlags = [];
 for (let i = 0; i < sys.args.length; ++i) {
   const a = sys.args[i];
   if (a.startsWith('-')) {
-    if (a === '--verbose') {
+    if (a === '--colors') {
+      Colors.enabled = true;
+    } else if (a === '--verbose') {
       verbose = true;
     } else if (a === '--list') {
       listMode = 'cases';
