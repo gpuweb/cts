@@ -22,11 +22,6 @@ T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
 Returns the cosine of e. Component-wise when T is a vector.
 `).
 
-params((u) =>
-u.
-combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
-combine('vectorize', [undefined, 2, 3, 4])).
-
 unimplemented();
 
 g.test('f32').
@@ -67,11 +62,6 @@ T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
 @const fn cos(e: T ) -> T
 Returns the cosine of e. Component-wise when T is a vector.
 `).
-
-params((u) =>
-u.
-combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
-combine('vectorize', [undefined, 2, 3, 4])).
 
 unimplemented();
 //# sourceMappingURL=cos.spec.js.map

@@ -17,7 +17,6 @@ T is AbstractFloat, f32, or f16
 Returns the cross product of e1 and e2.
 `
   )
-  .params(u => u.combine('storageClass', ['uniform', 'storage_r', 'storage_rw']))
   .unimplemented();
 
 g.test('f32')
@@ -29,7 +28,6 @@ T is AbstractFloat, f32, or f16
 Returns the cross product of e1 and e2.
 `
   )
-  .params(u => u.combine('storageClass', ['uniform', 'storage_r', 'storage_rw']))
   .unimplemented();
 
 g.test('f16')
@@ -41,5 +39,4 @@ T is AbstractFloat, f32, or f16
 Returns the cross product of e1 and e2.
 `
   )
-  .params(u => u.combine('storageClass', ['uniform', 'storage_r', 'storage_rw']))
   .unimplemented();

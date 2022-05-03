@@ -23,11 +23,6 @@ T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
 Returns the natural exponentiation of e1 (e.g. e^e1). Component-wise when T is a vector.
 `).
 
-params((u) =>
-u.
-combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
-combine('vectorize', [undefined, 2, 3, 4])).
-
 unimplemented();
 
 g.test('f32').
@@ -75,11 +70,6 @@ T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
 @const fn exp(e1: T ) -> T
 Returns the natural exponentiation of e1 (e.g. e^e1). Component-wise when T is a vector.
 `).
-
-params((u) =>
-u.
-combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
-combine('vectorize', [undefined, 2, 3, 4])).
 
 unimplemented();
 //# sourceMappingURL=exp.spec.js.map

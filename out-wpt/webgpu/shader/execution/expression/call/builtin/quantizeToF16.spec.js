@@ -19,9 +19,4 @@ binary16 value, and then converted back to a IEEE 754 binary32 value.
 Component-wise when T is a vector.
 `
   )
-  .params(u =>
-    u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'])
-      .combine('vectorize', [undefined, 2, 3, 4])
-  )
   .unimplemented();
