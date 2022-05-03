@@ -5,9 +5,9 @@ Execution tests for the 'atan2' builtin function
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { assert } from '../../../../../../common/util/util.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { ulpThreshold } from '../../../../../util/compare.js';
+import { anyOf, ulpThreshold } from '../../../../../util/compare.js';
 import { f32, TypeF32 } from '../../../../../util/conversion.js';
-import { fullF32Range } from '../../../../../util/math.js';
+import { flushSubnormalNumber, fullF32Range } from '../../../../../util/math.js';
 import { run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -54,23 +54,25 @@ fn(async (t) => {
   // [1]: Need to decide what the ground-truth is.
   const makeCase = (y, x) => {
     assert(x !== 0, 'atan2 is undefined for x = 0');
-    return { input: [f32(y), f32(x)], expected: f32(Math.atan2(y, x)) };
+    // Subnormals are already excluded from the x values, so do not need to test x being flushed.
+    const expected = [f32(Math.atan2(y, x)), f32(Math.atan2(flushSubnormalNumber(y), x))];
+    return { input: [f32(y), f32(x)], expected: anyOf(...expected) };
   };
 
   const numeric_range = fullF32Range({
     neg_norm: 100,
     neg_sub: 10,
     pos_sub: 10,
-    pos_norm: 100 }).
-  filter((x) => {
-    return x !== 0;
-  });
+    pos_norm: 100 });
 
-  const cases = numeric_range.map((x) => makeCase(0.0, x));
+
+  const cases = [];
   numeric_range.forEach((y, y_idx) => {
     numeric_range.forEach((x, x_idx) => {
-      if (x_idx >= y_idx) {
-        cases.push(makeCase(y, x));
+      if (flushSubnormalNumber(x) !== 0) {
+        if (x_idx >= y_idx) {
+          cases.push(makeCase(y, x));
+        }
       }
     });
   });

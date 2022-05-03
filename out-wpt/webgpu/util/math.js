@@ -34,10 +34,8 @@ export function clamp(n, { min, max }) {
   return Math.min(Math.max(n, min), max);
 }
 
-/**
- * @returns 0 if |val| is a subnormal f32 number, otherwise returns |val|
- */
-function flushSubnormalNumber(val) {
+/** @returns 0 if |val| is a subnormal f32 number, otherwise returns |val| */
+export function flushSubnormalNumber(val) {
   const u32_val = new Uint32Array(new Float32Array([val]).buffer)[0];
   return (u32_val & 0x7f800000) === 0 ? 0 : val;
 }
@@ -51,9 +49,7 @@ function flushSubnormalBits(val) {
   return (val & 0x7f800000) === 0 ? 0 : val;
 }
 
-/**
- * @returns 0 if |val| is a subnormal f32 number, otherwise returns |val|
- */
+/** @returns 0 if |val| is a subnormal f32 number, otherwise returns |val| */
 export function flushSubnormalScalar(val) {
   return isSubnormalScalar(val) ? f32(0) : val;
 }
