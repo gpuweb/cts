@@ -619,6 +619,10 @@ g.test('subresources_and_binding_types_combination_for_aspect')
           p.compute && (p.binding0InBundle || p.binding1InBundle || p.type1 === 'render-target')
       )
   )
+  .beforeAllSubcases(async t => {
+    const { format } = t.params;
+    await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
+  })
   .fn(async t => {
     const {
       compute,
@@ -634,7 +638,6 @@ g.test('subresources_and_binding_types_combination_for_aspect')
       _resourceSuccess,
       _usageSuccess,
     } = t.params;
-    await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 
     const texture = t.createTexture({
       arrayLayerCount: TOTAL_LAYERS,
