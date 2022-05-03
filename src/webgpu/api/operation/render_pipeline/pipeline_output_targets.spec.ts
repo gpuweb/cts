@@ -3,12 +3,14 @@ export const description = `
 `;
 
 import { assert } from 'console';
+
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { range, unreachable } from '../../../../common/util/util.js';
 import { kRenderableColorTextureFormats, kTextureFormatInfo } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { floatAsNormalizedInteger, floatBitsToNumber, kFloat16Format, kFloat32Format, normalizedIntegerAsFloat, numberToFloatBits } from '../../../util/conversion.js';
 import { kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
+import { TexelView } from '../../../util/texture/texel_view.js';
+import { textureContentIsOKByT2B } from '../../../util/texture/texture_ok.js';
 
 const kVertexShader = `
 @stage(vertex) fn main(
@@ -126,7 +128,21 @@ class F extends GPUTest {
 
 export const g = makeTestGroup(F);
 
-
+// Values to write into each attachment
+// We make values different for each attachment index and each channel
+// to make sure they didn't get mixed up
+const attachmentsIntWriteValues = [
+  { R: 1, G: 2, B: 3, A: 4 },
+  { R: 5, G: 6, B: 7, A: 8 },
+  { R: 9, G: 10, B: 11, A: 12 },
+  { R: 13, G: 14, B: 15, A: 16 },
+];
+const attachmentsFloatWriteValues = [
+  { R: 0.12, G: 0.34, B: 0.56, A: 0 },
+  { R: 0.78, G: 0.9, B: 0.19, A: 1 },
+  { R: 0.28, G: 0.37, B: 0.46, A: 0.3 },
+  { R: 0.55, G: 0.64, B: 0.73, A: 1 },
+];
 
 g.test('color,attachments')
   .desc(`Test that pipeline with sparse color attachments write values correctly.`)
@@ -141,57 +157,12 @@ g.test('color,attachments')
     const { format, attachmentCount, emptyAttachmentId } = t.params;
     const componentCount = kTexelRepresentationInfo[format].componentOrder.length;
     const info = kTextureFormatInfo[format];
-    const repr = kTexelRepresentationInfo[format];
     await t.selectDeviceOrSkipTestCase(info.feature);
 
-    // Values to write into each attachment
-  // We make values different for each attachment index and each channel
-  // to make sure they didn't get mixed up
-
-  const attachmentsIntWriteValues = [
-    { R: 1, G: 2, B: 3, A: 4 },
-    { R: 5, G: 6, B: 7, A: 8 },
-    { R: 9, G: 10, B: 11, A: 12 },
-    { R: 13, G: 14, B: 15, A: 16 },
-  ];
-
-  // These values are selected to avoid precision issue for different formats
-  const attachmentsFloatWriteValues = [
-    { R: 0.2, G: 0.6, B: 0.8, A: 1 },
-    { R: 0.12, G: 0.34, B: 0.56, A: 0 },
-    { R: 0.1, G: 0.3, B: 0.5, A: 1 },
-    { R: 0.2, G: 0.6, B: 0.8, A: 0 },
-  ];
-
     const writeValues =
-      info.sampleType === 'float' ? attachmentsFloatWriteValues : attachmentsIntWriteValues;
-    
-    if (info.sampleType === 'float') {
-      if (format.includes('unorm')) {
-        const bits = format === 'rgb10a2unorm' ? 10 : 8;
-        for (let i = 0, len = writeValues.length; i < len; i++) {
-          writeValues[i].R = normalizedIntegerAsFloat(floatAsNormalizedInteger(writeValues[i].R, bits, false), bits, false);
-          writeValues[i].G = normalizedIntegerAsFloat(floatAsNormalizedInteger(writeValues[i].G, bits, false), bits, false);
-          writeValues[i].B = normalizedIntegerAsFloat(floatAsNormalizedInteger(writeValues[i].B, bits, false), bits, false);
-          // writeValues[i].A = normalizedIntegerAsFloat(floatAsNormalizedInteger(writeValues[i].A, 8, false), 8, false);
-        }
-      } else {
-        const floatFormat = format.includes('16float') ? kFloat16Format : kFloat32Format;
-        
-        for (let i = 0, len = writeValues.length; i < len; i++) {
-          const c = repr.bitsToNumber(repr.numberToBits(writeValues[i]));
-          writeValues[i].R = c.R ?? writeValues[i].R;
-          writeValues[i].G = c.G ?? writeValues[i].G;
-          writeValues[i].B = c.B ?? writeValues[i].B;
-          // writeValues[i].R = floatBitsToNumber(numberToFloatBits(writeValues[i].R, floatFormat), floatFormat);
-          // writeValues[i].G = floatBitsToNumber(numberToFloatBits(writeValues[i].G, floatFormat), floatFormat);
-          // writeValues[i].B = floatBitsToNumber(numberToFloatBits(writeValues[i].B, floatFormat), floatFormat);
-          // writeValues[i].A = floatBitsToNumber(numberToFloatBits(writeValues[i].A, floatFormat), floatFormat);
-        }
-
-        console.log(writeValues[2].G);
-      }
-    }
+      info.sampleType === 'sint' || info.sampleType === 'uint'
+        ? attachmentsIntWriteValues
+        : attachmentsFloatWriteValues;
 
     const renderTargets = range(attachmentCount, () =>
       t.device.createTexture({
@@ -214,7 +185,12 @@ g.test('color,attachments')
               i === emptyAttachmentId
                 ? null
                 : {
-                    values: [writeValues[i].R, writeValues[i].G, writeValues[i].B, writeValues[i].A],
+                    values: [
+                      writeValues[i].R,
+                      writeValues[i].G,
+                      writeValues[i].B,
+                      writeValues[i].A,
+                    ],
                     sampleType: info.sampleType,
                     componentCount,
                   }
@@ -245,14 +221,46 @@ g.test('color,attachments')
     pass.end();
     t.device.queue.submit([encoder.finish()]);
 
-    for (let i = 0; i < attachmentCount; i++) {
+    // for (let i = 0; i < attachmentCount; i++) {
+    //   if (i === emptyAttachmentId) {
+    //     continue;
+    //   }
+    //   const result = await textureContentIsOKByT2B(
+    //     t,
+    //     { texture: renderTargets[i] },
+    //     [1, 1, 1],
+    //     {
+    //       expTexelView: TexelView.fromTexelsAsColors(format, coords => writeValues[i]),
+    //     },
+    //     {
+    //     maxIntDiff: 0,
+    //     maxDiffULPsForNormFormat: 1,
+    //     maxDiffULPsForFloatFormat: 1,
+    //   });
+    //   t.expectOK(result);
+    // }
+
+    const promises = range(attachmentCount, i => {
       if (i === emptyAttachmentId) {
-        continue;
+        return undefined;
       }
-      t.expectSingleColor(renderTargets[i], format, {
-        size: [1, 1, 1],
-        exp: writeValues[i],
-      });
+      return textureContentIsOKByT2B(
+        t,
+        { texture: renderTargets[i] },
+        [1, 1, 1],
+        {
+          expTexelView: TexelView.fromTexelsAsColors(format, coords => writeValues[i]),
+        },
+        {
+          maxIntDiff: 0,
+          maxDiffULPsForNormFormat: 1,
+          maxDiffULPsForFloatFormat: 1,
+        }
+      );
+    });
+    const results = await Promise.all(promises);
+    for (let i = 0; i < results.length; i++) {
+      t.expectOK(results[i]);
     }
   });
 
