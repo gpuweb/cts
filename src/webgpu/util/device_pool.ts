@@ -64,7 +64,7 @@ export class DevicePool {
       // Any error that isn't explicitly TestFailedButDeviceReusable forces a new device to be
       // created for the next test.
       if (!(ex instanceof TestFailedButDeviceReusable)) {
-        this.holders.deleteByDevice(holder.device);
+        this.holders.delete(holder);
         if ('destroy' in holder.device) {
           holder.device.destroy();
         }
@@ -96,10 +96,10 @@ class DescriptorToHolderMap {
   private unsupported: Set<string> = new Set();
   private holders: Map<string, DeviceHolder> = new Map();
 
-  /** Deletes an item from the map by GPUDevice value. */
-  deleteByDevice(device: GPUDevice): void {
+  /** Deletes an item from the map by DeviceHolder value. */
+  delete(device: DeviceHolder): void {
     for (const [k, v] of this.holders) {
-      if (v.device === device) {
+      if (v === device) {
         this.holders.delete(k);
         return;
       }
