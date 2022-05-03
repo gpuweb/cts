@@ -133,11 +133,14 @@ g.test('color,attachments')
       .combine('attachmentCount', [2, 3, 4])
       .expand('emptyAttachmentId', p => range(p.attachmentCount, i => i))
   )
+  .beforeAllSubcases(async t => {
+    const info = kTextureFormatInfo[t.params.format];
+    await t.selectDeviceOrSkipTestCase(info.feature);
+  })
   .fn(async t => {
     const { format, attachmentCount, emptyAttachmentId } = t.params;
     const componentCount = kTexelRepresentationInfo[format].componentOrder.length;
     const info = kTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
 
     const writeValue =
       info.sampleType === 'float' ? { R: 0.2, G: 0.6, B: 0.8, A: 1 } : { R: 2, G: 4, B: 8, A: 16 };
