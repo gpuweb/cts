@@ -1458,6 +1458,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "dpdxFine"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "exp"
     ]
   },
