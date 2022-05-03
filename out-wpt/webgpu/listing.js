@@ -1478,6 +1478,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "dpdyCoarse"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "exp"
     ]
   },
