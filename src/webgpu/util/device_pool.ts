@@ -1,4 +1,5 @@
 import { SkipTestCase } from '../../common/framework/fixture.js';
+import { attemptGarbageCollection } from '../../common/util/collect_garbage.js';
 import { getGPU } from '../../common/util/navigator_gpu.js';
 import { assert, raceWithRejectOnTimeout, assertReject } from '../../common/util/util.js';
 import { kLimitInfo, kLimits } from '../capability_info.js';
@@ -67,6 +68,14 @@ export class DevicePool {
         this.holders.delete(holder);
         if ('destroy' in holder.device) {
           holder.device.destroy();
+        }
+
+        // Release the (hopefully only) ref to the GPUDevice.
+        holder.releaseGPUDevice();
+
+        // Try to clean up, in case there are stray GPU resources in need of collection.
+        if (ex instanceof TestOOMedShouldAttemptGC) {
+          await attemptGarbageCollection();
         }
       }
       // In the try block, we may throw an error if the device is lost in order to force device
@@ -258,11 +267,13 @@ type DeviceHolderState = 'free' | 'reserved' | 'acquired';
  * Holds a GPUDevice and tracks its state (free/reserved/acquired) and handles device loss.
  */
 class DeviceHolder implements DeviceProvider {
-  readonly device: GPUDevice;
+  /** The device. Will be cleared during cleanup if there were unexpected errors. */
+  private _device: GPUDevice | undefined;
+  /** Whether the device is in use by a test or not. */
   state: DeviceHolderState = 'free';
-  // initially undefined; becomes set when the device is lost
+  /** initially undefined; becomes set when the device is lost */
   lostInfo?: GPUDeviceLostInfo;
-  // Set if the device is expected to be lost.
+  /** Set if the device is expected to be lost. */
   expectedLostReason?: GPUDeviceLostReason;
 
   // Gets a device and creates a DeviceHolder.
@@ -281,10 +292,15 @@ class DeviceHolder implements DeviceProvider {
   }
 
   private constructor(device: GPUDevice) {
-    this.device = device;
-    this.device.lost.then(ev => {
+    this._device = device;
+    this._device.lost.then(ev => {
       this.lostInfo = ev;
     });
+  }
+
+  get device() {
+    assert(this._device !== undefined);
+    return this._device;
   }
 
   acquire(): GPUDevice {
@@ -361,5 +377,13 @@ class DeviceHolder implements DeviceProvider {
       // Don't allow the device to be reused; unexpected OOM could break the device.
       throw new TestOOMedShouldAttemptGC('Unexpected out-of-memory error occurred');
     }
+  }
+
+  /**
+   * Release the ref to the GPUDevice. This should be the only ref held by the DevicePool or
+   * GPUTest, so in theory it can get garbage collected.
+   */
+  releaseGPUDevice(): void {
+    this._device = undefined;
   }
 }
