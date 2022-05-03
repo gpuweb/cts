@@ -8,6 +8,8 @@ import { range, unreachable } from '../../../../common/util/util.js';
 import { kRenderableColorTextureFormats, kTextureFormatInfo } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
+import { TexelView } from '../../../util/texture/texel_view.js';
+import { textureContentIsOKByT2B } from '../../../util/texture/texture_ok.js';
 
 const kVertexShader = `
 @stage(vertex) fn main(
@@ -120,8 +122,25 @@ class F extends GPUTest {
 
 export const g = makeTestGroup(F);
 
+// Values to write into each attachment
+// We make values different for each attachment index and each channel
+// to make sure they didn't get mixed up
+const attachmentsIntWriteValues = [
+  { R: 1, G: 2, B: 3, A: 4 },
+  { R: 5, G: 6, B: 7, A: 8 },
+  { R: 9, G: 10, B: 11, A: 12 },
+  { R: 13, G: 14, B: 15, A: 16 },
+];
+
+const attachmentsFloatWriteValues = [
+  { R: 0.12, G: 0.34, B: 0.56, A: 0 },
+  { R: 0.78, G: 0.9, B: 0.19, A: 1 },
+  { R: 0.28, G: 0.37, B: 0.46, A: 0.3 },
+  { R: 0.55, G: 0.64, B: 0.73, A: 1 },
+];
+
 g.test('color,attachments')
-  .desc(`Test that pipeline with  sparse color attachments write values correctly.`)
+  .desc(`Test that pipeline with sparse color attachments write values correctly.`)
   .params(u =>
     u
       .combine('format', kRenderableColorTextureFormats)
@@ -138,8 +157,10 @@ g.test('color,attachments')
     const componentCount = kTexelRepresentationInfo[format].componentOrder.length;
     const info = kTextureFormatInfo[format];
 
-    const writeValue =
-      info.sampleType === 'float' ? { R: 0.2, G: 0.6, B: 0.8, A: 1 } : { R: 2, G: 4, B: 8, A: 16 };
+    const writeValues =
+      info.sampleType === 'sint' || info.sampleType === 'uint'
+        ? attachmentsIntWriteValues
+        : attachmentsFloatWriteValues;
 
     const renderTargets = range(attachmentCount, () =>
       t.device.createTexture({
@@ -165,7 +186,13 @@ g.test('color,attachments')
               i === emptyAttachmentId
                 ? null
                 : {
-                    values: [writeValue.R, writeValue.G, writeValue.B, writeValue.A],
+                    values: [
+                      writeValues[i].R,
+                      writeValues[i].G,
+                      writeValues[i].B,
+                      writeValues[i].A,
+                    ],
+
                     sampleType: info.sampleType,
                     componentCount,
                   }
@@ -199,14 +226,28 @@ g.test('color,attachments')
     pass.end();
     t.device.queue.submit([encoder.finish()]);
 
-    for (let i = 0; i < attachmentCount; i++) {
+    const promises = range(attachmentCount, i => {
       if (i === emptyAttachmentId) {
-        continue;
+        return undefined;
       }
-      t.expectSingleColor(renderTargets[i], format, {
-        size: [1, 1, 1],
-        exp: writeValue,
-      });
+      return textureContentIsOKByT2B(
+        t,
+        { texture: renderTargets[i] },
+        [1, 1, 1],
+        {
+          expTexelView: TexelView.fromTexelsAsColors(format, coords => writeValues[i]),
+        },
+
+        {
+          maxIntDiff: 0,
+          maxDiffULPsForNormFormat: 1,
+          maxDiffULPsForFloatFormat: 1,
+        }
+      );
+    });
+    const results = await Promise.all(promises);
+    for (let i = 0; i < results.length; i++) {
+      t.expectOK(results[i]);
     }
   });
 
