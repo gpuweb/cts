@@ -229,13 +229,15 @@ g.test('gpu,with_texture_compression,bc')
 Tests that a BC format passes validation iff the feature is enabled.`
   )
   .params(u => u.combine('textureCompressionBC', [false, true]))
-  .fn(async t => {
+  .beforeAllSubcases(async t => {
     const { textureCompressionBC } = t.params;
 
     if (textureCompressionBC) {
       await t.selectDeviceOrSkipTestCase('texture-compression-bc');
     }
-
+  })
+  .fn(async t => {
+    const { textureCompressionBC } = t.params;
     const shouldError = !textureCompressionBC;
     t.expectGPUError(
       'validation',
@@ -256,12 +258,15 @@ g.test('gpu,with_texture_compression,etc2')
 Tests that an ETC2 format passes validation iff the feature is enabled.`
   )
   .params(u => u.combine('textureCompressionETC2', [false, true]))
-  .fn(async t => {
+  .beforeAllSubcases(async t => {
     const { textureCompressionETC2 } = t.params;
 
     if (textureCompressionETC2) {
       await t.selectDeviceOrSkipTestCase('texture-compression-etc2');
     }
+  })
+  .fn(async t => {
+    const { textureCompressionETC2 } = t.params;
 
     const shouldError = !textureCompressionETC2;
     t.expectGPUError(

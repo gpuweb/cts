@@ -80,9 +80,11 @@ g.test('depth_compare_func')
         { depthCompare: 'always', depthClearValue: 0.0, _expected: triangleColor },
       ])
   )
+  .beforeAllSubcases(async t => {
+    await t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  })
   .fn(async t => {
     const { depthCompare, depthClearValue, _expected, format } = t.params;
-    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
 
     const colorAttachmentFormat = 'rgba8unorm';
     const colorAttachment = t.device.createTexture({

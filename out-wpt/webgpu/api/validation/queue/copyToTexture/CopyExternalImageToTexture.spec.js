@@ -599,13 +599,11 @@ g.test('destination_texture,device_mismatch')
     'Tests copyExternalImageToTexture cannot be called with a destination texture created from another device'
   )
   .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .beforeAllSubcases(async t => {
+    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+  })
   .fn(async t => {
     const { mismatched } = t.params;
-
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
-
     const device = mismatched ? t.mismatchedDevice : t.device;
     const copySize = { width: 1, height: 1, depthOrArrayLayers: 1 };
 
@@ -736,9 +734,12 @@ g.test('destination_texture,format')
         { width: 1, height: 1, depthOrArrayLayers: 1 },
       ])
   )
+  .beforeAllSubcases(async t => {
+    const { format } = t.params;
+    await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
+  })
   .fn(async t => {
     const { format, copySize } = t.params;
-    await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 
     const imageBitmap = await t.createImageBitmap(t.getImageData(1, 1));
 

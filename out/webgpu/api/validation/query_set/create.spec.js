@@ -22,10 +22,11 @@ combine('type', kQueryTypes).
 beginSubcases().
 combine('count', [0, kMaxQueryCount, kMaxQueryCount + 1])).
 
+beforeAllSubcases(async (t) => {
+  await t.selectDeviceForQueryTypeOrSkipTestCase(t.params.type);
+}).
 fn(async (t) => {
   const { type, count } = t.params;
-
-  await t.selectDeviceForQueryTypeOrSkipTestCase(type);
 
   t.expectValidationError(() => {
     t.device.createQuerySet({ type, count });

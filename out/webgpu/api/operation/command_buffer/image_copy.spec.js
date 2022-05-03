@@ -1287,6 +1287,10 @@ expandWithParams((p) => {
   return kRowsPerImageAndBytesPerRowParams.copySizes;
 })).
 
+beforeAllSubcases(async (t) => {
+  const info = kTextureFormatInfo[t.params.format];
+  await t.selectDeviceOrSkipTestCase(info.feature);
+}).
 fn(async (t) => {
   const {
     bytesPerRowPadding,
@@ -1300,8 +1304,6 @@ fn(async (t) => {
     checkMethod } =
   t.params;
   const info = kTextureFormatInfo[format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
-
   // For CopyB2T and CopyT2B we need to have bytesPerRow 256-aligned,
   // to make this happen we align the bytesInACompleteRow value and multiply
   // bytesPerRowPadding by 256.
@@ -1381,6 +1383,10 @@ combineWithParams(kOffsetsAndSizesParams.offsetsAndPaddings).
 combine('copyDepth', kOffsetsAndSizesParams.copyDepth) // 2d and 2d-array textures
 .unless((p) => p.dimension === '1d' && p.copyDepth !== 1)).
 
+beforeAllSubcases(async (t) => {
+  const info = kTextureFormatInfo[t.params.format];
+  await t.selectDeviceOrSkipTestCase(info.feature);
+}).
 fn(async (t) => {
   const {
     offsetInBlocks,
@@ -1392,7 +1398,6 @@ fn(async (t) => {
     checkMethod } =
   t.params;
   const info = kTextureFormatInfo[format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
 
   const offset = offsetInBlocks * info.bytesPerBlock;
   const copySize = {
@@ -1457,6 +1462,10 @@ p.copySizeValueInBlocks + p.originValueInBlocks + p.textureSizePaddingValueInBlo
 combine('coordinateToTest', [0, 1, 2]).
 unless((p) => p.dimension === '1d' && p.coordinateToTest !== 0)).
 
+beforeAllSubcases(async (t) => {
+  const info = kTextureFormatInfo[t.params.format];
+  await t.selectDeviceOrSkipTestCase(info.feature);
+}).
 fn(async (t) => {
   const {
     originValueInBlocks,
@@ -1468,7 +1477,6 @@ fn(async (t) => {
     checkMethod } =
   t.params;
   const info = kTextureFormatInfo[format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
 
   let originBlocks = [1, 1, 1];
   let copySizeBlocks = [2, 2, 2];
@@ -1653,6 +1661,10 @@ combineWithParams([
 
 expand('textureSize', generateTestTextureSizes)).
 
+beforeAllSubcases(async (t) => {
+  const info = kTextureFormatInfo[t.params.format];
+  await t.selectDeviceOrSkipTestCase(info.feature);
+}).
 fn(async (t) => {
   const {
     copySizeInBlocks,
@@ -1665,7 +1677,6 @@ fn(async (t) => {
     checkMethod } =
   t.params;
   const info = kTextureFormatInfo[format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
 
   const origin = {
     x: originInBlocks.x * info.blockWidth,
@@ -1817,6 +1828,10 @@ filter((t) => {
 }).
 combine('mipLevel', [0, 2])).
 
+beforeAllSubcases(async (t) => {
+  const info = kTextureFormatInfo[t.params.format];
+  await t.selectDeviceOrSkipTestCase(info.feature);
+}).
 fn(async (t) => {
   const {
     format,
@@ -1829,9 +1844,6 @@ fn(async (t) => {
     copyDepth,
     mipLevel } =
   t.params;
-
-  await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
-
   const bytesPerBlock = depthStencilFormatAspectSize(format, aspect);
   const rowsPerImage = copyHeightInBlocks + rowsPerImagePadding;
 
@@ -1907,6 +1919,10 @@ filter((t) => t.offsetInBlocks % 4 === 0).
 combine('copyDepth', kOffsetsAndSizesParams.copyDepth).
 combine('mipLevel', [0, 2])).
 
+beforeAllSubcases(async (t) => {
+  const info = kTextureFormatInfo[t.params.format];
+  await t.selectDeviceOrSkipTestCase(info.feature);
+}).
 fn(async (t) => {
   const {
     format,
@@ -1917,8 +1933,6 @@ fn(async (t) => {
     copyDepth,
     mipLevel } =
   t.params;
-  await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
-
   const bytesPerBlock = depthStencilFormatAspectSize(format, aspect);
   const initialDataOffset = offsetInBlocks * bytesPerBlock;
   const copySize = [3, 3, copyDepth];

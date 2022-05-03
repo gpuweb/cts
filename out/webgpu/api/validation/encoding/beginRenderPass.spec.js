@@ -60,14 +60,12 @@ paramsSubcasesOnly([
   target1Mismatched: true }]).
 
 
+beforeAllSubcases(async (t) => {
+  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+}).
 fn(async (t) => {
   const { view0Mismatched, target0Mismatched, view1Mismatched, target1Mismatched } = t.params;
-
   const mismatched = view0Mismatched || target0Mismatched || view1Mismatched || target1Mismatched;
-
-  if (mismatched) {
-    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-  }
 
   const view0Texture = view0Mismatched ?
   t.getDeviceMismatchedRenderTexture(4) :
@@ -111,12 +109,11 @@ desc(
 'Tests beginRenderPass cannot be called with a depth stencil attachment whose texture view is created from another device').
 
 paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
+beforeAllSubcases(async (t) => {
+  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+}).
 fn(async (t) => {
   const { mismatched } = t.params;
-
-  if (mismatched) {
-    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-  }
 
   const descriptor = {
     size: { width: 4, height: 4, depthOrArrayLayers: 1 },
@@ -151,13 +148,11 @@ desc(
 'Tests beginRenderPass cannot be called with an occlusion query set created from another device').
 
 paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
+beforeAllSubcases(async (t) => {
+  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+}).
 fn(async (t) => {
   const { mismatched } = t.params;
-
-  if (mismatched) {
-    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-  }
-
   const device = mismatched ? t.mismatchedDevice : t.device;
 
   const occlusionQuerySet = device.createQuerySet({

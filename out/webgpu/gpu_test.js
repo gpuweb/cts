@@ -1,6 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { Fixture } from '../common/framework/fixture.js';import { attemptGarbageCollection } from '../common/util/collect_garbage.js';import {
+**/import { Fixture, SubcaseBatchState } from '../common/framework/fixture.js';import { attemptGarbageCollection } from '../common/util/collect_garbage.js';import {
 assert,
 range,
 
@@ -62,10 +62,7 @@ descriptor)
   }
 }
 
-/**
- * Base fixture for WebGPU tests.
- */
-export class GPUTest extends Fixture {
+export class GPUTestSubcaseBatchState extends SubcaseBatchState {
 
   /** Must not be replaced once acquired. */
 
@@ -107,6 +104,10 @@ export class GPUTest extends Fixture {
    * Create other device different with current test device, which could be got by `.mismatchedDevice`.
    * A `descriptor` may be undefined, which returns a `default` mismatched device.
    * If the request descriptor or feature name can't be supported, throws an exception to skip the entire test case.
+   *
+   * MAINTENANCE_TODO: These device selection methods may not have to be async.
+   * They could be enqueued and then await'ed automatically after `beforeAllSubcases`
+   * runs.
    */
   async selectMismatchedDeviceOrSkipTestCase(
   descriptor)
@@ -126,11 +127,6 @@ export class GPUTest extends Fixture {
     await mismatchedDevicePool.reserve(initUncanonicalizedDeviceDescriptor(descriptor));
 
     this.mismatchedAcquiredDevice = this.mismatchedProvider.acquire();
-  }
-
-  /** GPUQueue for the test to use. (Same as `t.device.queue`.) */
-  get queue() {
-    return this.device.queue;
   }
 
   async init() {
@@ -256,6 +252,44 @@ export class GPUTest extends Fixture {
     }
     const features = types.map((t) => kQueryTypeInfo[t].feature);
     await this.selectDeviceOrSkipTestCase(features);
+  }
+
+  /**
+   * Expects that the device should be lost for a particular reason at the teardown of the test.
+   */
+  expectDeviceLost(reason) {
+    assert(
+    this.provider !== undefined,
+    'No provider available right now; did you "await" selectDeviceOrSkipTestCase?');
+
+    this.provider.expectDeviceLost(reason);
+  }}
+
+
+/**
+ * Base fixture for WebGPU tests.
+ */
+export class GPUTest extends Fixture {
+  static MakeSharedState(params) {
+    return new GPUTestSubcaseBatchState(params);
+  }
+
+  /** GPUDevice for the test to use. */
+  get device() {
+    return this.sharedState.device;
+  }
+
+  /** GPUDevice for tests requires another device from default one.
+   *  e.g. creating objects required creating mismatched objects required
+   * by device mismatched validation tests.
+   */
+  get mismatchedDevice() {
+    return this.sharedState.mismatchedDevice;
+  }
+
+  /** GPUQueue for the test to use. (Same as `t.device.queue`.) */
+  get queue() {
+    return this.device.queue;
   }
 
   /** Snapshot a GPUBuffer's contents, returning a new GPUBuffer with the `MAP_READ` usage. */
@@ -818,11 +852,7 @@ export class GPUTest extends Fixture {
    * Expects that the device should be lost for a particular reason at the teardown of the test.
    */
   expectDeviceLost(reason) {
-    assert(
-    this.provider !== undefined,
-    'No provider available right now; did you "await" selectDeviceOrSkipTestCase?');
-
-    this.provider.expectDeviceLost(reason);
+    this.sharedState.expectDeviceLost(reason);
   }
 
   /**

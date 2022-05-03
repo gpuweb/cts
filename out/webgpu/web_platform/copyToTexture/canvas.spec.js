@@ -625,6 +625,9 @@ beginSubcases().
 combine('width', [1, 2, 4, 15, 255, 256]).
 combine('height', [1, 2, 4, 15, 255, 256])).
 
+beforeAllSubcases(async (t) => {
+  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+}).
 fn(async (t) => {
   const {
     width,
@@ -637,14 +640,7 @@ fn(async (t) => {
     srcDoFlipYDuringCopy } =
   t.params;
 
-  let device;
-
-  if (!srcAndDstInSameGPUDevice) {
-    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    device = t.mismatchedDevice;
-  } else {
-    device = t.device;
-  }
+  const device = srcAndDstInSameGPUDevice ? t.device : t.mismatchedDevice;
 
   const { canvas } = t.initGPUCanvasContent({
     device,

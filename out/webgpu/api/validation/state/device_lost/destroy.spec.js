@@ -194,10 +194,13 @@ filter(({ format, usageType }) => {
 
 })).
 
+beforeAllSubcases(async (t) => {
+  const { format } = t.params;
+  await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
+}).
 fn(async (t) => {
   const { awaitLost, format, usageType, usageCopy } = t.params;
-  const { blockWidth, blockHeight, feature } = kTextureFormatInfo[format];
-  await t.selectDeviceOrSkipTestCase(feature);
+  const { blockWidth, blockHeight } = kTextureFormatInfo[format];
   await t.executeAfterDestroy(() => {
     t.device.createTexture({
       size: { width: blockWidth, height: blockHeight },
@@ -266,10 +269,13 @@ filter(({ format, usageType }) => {
 
 })).
 
+beforeAllSubcases(async (t) => {
+  const { format } = t.params;
+  await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
+}).
 fn(async (t) => {
   const { awaitLost, format, usageType, usageCopy } = t.params;
-  const { blockWidth, blockHeight, feature } = kTextureFormatInfo[format];
-  await t.selectDeviceOrSkipTestCase(feature);
+  const { blockWidth, blockHeight } = kTextureFormatInfo[format];
   const texture = t.device.createTexture({
     size: { width: blockWidth, height: blockHeight },
     usage: kTextureUsageTypeInfo[usageType] | kTextureUsageCopyInfo[usageCopy],
@@ -482,9 +488,12 @@ Tests creating query sets on destroyed device.
   `).
 
 params((u) => u.combine('type', kQueryTypes).beginSubcases().combine('awaitLost', [true, false])).
+beforeAllSubcases(async (t) => {
+  const { type } = t.params;
+  await t.selectDeviceForQueryTypeOrSkipTestCase(type);
+}).
 fn(async (t) => {
   const { awaitLost, type } = t.params;
-  await t.selectDeviceForQueryTypeOrSkipTestCase(type);
   await t.executeAfterDestroy(() => {
     t.device.createQuerySet({ type, count: 4 });
   }, awaitLost);
@@ -661,9 +670,12 @@ beginSubcases().
 combine('stage', kCommandValidationStages).
 combine('awaitLost', [true, false])).
 
+beforeAllSubcases(async (t) => {
+  const { type } = t.params;
+  await t.selectDeviceForQueryTypeOrSkipTestCase(type);
+}).
 fn(async (t) => {
   const { type, stage, awaitLost } = t.params;
-  await t.selectDeviceForQueryTypeOrSkipTestCase(type);
   const querySet = t.device.createQuerySet({ type, count: 2 });
   await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', (maker) => {
     maker.encoder.writeTimestamp(querySet, 0);
@@ -844,10 +856,13 @@ combine('format', kCompressedTextureFormats).
 beginSubcases().
 combine('awaitLost', [true, false])).
 
+beforeAllSubcases(async (t) => {
+  const { format } = t.params;
+  await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
+}).
 fn(async (t) => {
   const { format, awaitLost } = t.params;
-  const { blockWidth, blockHeight, bytesPerBlock, feature } = kTextureFormatInfo[format];
-  await t.selectDeviceOrSkipTestCase(feature);
+  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
   const data = new Uint8Array(bytesPerBlock);
   const texture = t.device.createTexture({
     size: { width: blockWidth, height: blockHeight },

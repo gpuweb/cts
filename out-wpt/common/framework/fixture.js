@@ -9,6 +9,33 @@ export { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
 
 /** The fully-general type for params passed to a test function invocation. */
 
+export class SubcaseBatchState {
+  constructor(params) {
+    this._params = params;
+  }
+
+  /**
+   * Returns the case parameters for this test fixture shared state. Subcase params
+   * are not included.
+   */
+  get params() {
+    return this._params;
+  }
+
+  /** @internal */
+  doInit() {
+    return this.init();
+  }
+
+  /** @internal */
+  doFinalize() {
+    return this.finalize();
+  }
+
+  async init() {}
+  async finalize() {}
+}
+
 /**
  * A Fixture is a class used to instantiate each test sub/case at run time.
  * A new instance of the Fixture is created for every single test subcase
@@ -25,8 +52,13 @@ export class Fixture {
   numOutstandingAsyncExpectations = 0;
   objectsToCleanUp = [];
 
+  static MakeSharedState(params) {
+    return new SubcaseBatchState(params);
+  }
+
   /** @internal */
-  constructor(rec, params) {
+  constructor(sharedState, rec, params) {
+    this._sharedState = sharedState;
     this.rec = rec;
     this._params = params;
   }
@@ -36,6 +68,14 @@ export class Fixture {
    */
   get params() {
     return this._params;
+  }
+
+  /**
+   * Gets the test fixture's shared state. This object is shared between subcases
+   * within the same testcase.
+   */
+  get sharedState() {
+    return this._sharedState;
   }
 
   // This has to be a member function instead of an async `createFixture` function, because

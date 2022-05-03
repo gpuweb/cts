@@ -34,13 +34,12 @@ paramsSubcasesOnly([
 { bundle0Mismatched: true, bundle1Mismatched: false },
 { bundle0Mismatched: false, bundle1Mismatched: true }]).
 
+beforeAllSubcases(async (t) => {
+  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+}).
 fn(async (t) => {
   const { bundle0Mismatched, bundle1Mismatched } = t.params;
   const mismatched = bundle0Mismatched || bundle1Mismatched;
-
-  if (mismatched) {
-    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-  }
 
   const device = mismatched ? t.mismatchedDevice : t.device;
 
@@ -132,10 +131,12 @@ u.combineWithParams([
 { bundleFormat: 'stencil8', passFormat: 'depth24plus-stencil8' }])).
 
 
-fn(async (t) => {
+beforeAllSubcases(async (t) => {
   const { bundleFormat, passFormat } = t.params;
   await t.selectDeviceForTextureFormatOrSkipTestCase([bundleFormat, passFormat]);
-
+}).
+fn(async (t) => {
+  const { bundleFormat, passFormat } = t.params;
   const compatible = bundleFormat === passFormat;
 
   const bundleEncoder = t.device.createRenderBundleEncoder({
@@ -183,6 +184,9 @@ filter((p) => {
   return true;
 })).
 
+beforeAllSubcases(async (t) => {
+  await t.selectDeviceForTextureFormatOrSkipTestCase(t.params.depthStencilFormat);
+}).
 fn(async (t) => {
   const {
     depthStencilFormat,
@@ -191,7 +195,6 @@ fn(async (t) => {
     passDepthReadOnly,
     passStencilReadOnly } =
   t.params;
-  await t.selectDeviceForTextureFormatOrSkipTestCase(depthStencilFormat);
 
   const compatible =
   (!passDepthReadOnly || bundleDepthReadOnly === passDepthReadOnly) && (

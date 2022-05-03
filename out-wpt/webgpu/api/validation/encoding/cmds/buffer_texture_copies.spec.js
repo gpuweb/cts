@@ -56,9 +56,12 @@ g.test('depth_stencil_format,copy_usage_and_aspect')
       .beginSubcases()
       .combine('aspect', ['all', 'depth-only', 'stencil-only'])
   )
+  .beforeAllSubcases(async t => {
+    const { format } = t.params;
+    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
+  })
   .fn(async t => {
     const { format, aspect } = t.params;
-    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
 
     const textureSize = { width: 1, height: 1, depthOrArrayLayers: 1 };
     const texture = t.device.createTexture({
@@ -118,9 +121,12 @@ g.test('depth_stencil_format,copy_buffer_size')
         { width: 4, height: 4, depthOrArrayLayers: 3 },
       ])
   )
+  .beforeAllSubcases(async t => {
+    const { format } = t.params;
+    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
+  })
   .fn(async t => {
     const { format, aspect, copyType, copySize } = t.params;
-    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
 
     const texture = t.device.createTexture({
       size: copySize,
@@ -227,9 +233,12 @@ g.test('depth_stencil_format,copy_buffer_offset')
       .beginSubcases()
       .combine('offset', [1, 2, 4, 6, 8])
   )
+  .beforeAllSubcases(async t => {
+    const { format } = t.params;
+    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
+  })
   .fn(async t => {
     const { format, aspect, copyType, offset } = t.params;
-    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
 
     const textureSize = { width: 4, height: 4, depthOrArrayLayers: 1 };
 

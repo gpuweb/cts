@@ -38,14 +38,17 @@ have unexpected values then get drawn to the color buffer, which is later checke
       .combine('writeDepth', [false, true])
       .combine('multisampled', [false, true])
   )
+  .beforeAllSubcases(async t => {
+    const info = kTextureFormatInfo[t.params.format];
+
+    await t.selectDeviceOrSkipTestCase([
+      t.params.unclippedDepth ? 'depth-clip-control' : undefined,
+      info.feature,
+    ]);
+  })
   .fn(async t => {
     const { format, unclippedDepth, writeDepth, multisampled } = t.params;
     const info = kTextureFormatInfo[format];
-
-    await t.selectDeviceOrSkipTestCase([
-      unclippedDepth ? 'depth-clip-control' : undefined,
-      info.feature,
-    ]);
 
     /** Number of depth values to test for both vertex output and frag_depth output. */
     const kNumDepthValues = 8;
@@ -357,14 +360,17 @@ to be empty.`
       .combine('unclippedDepth', [false, true])
       .combine('multisampled', [false, true])
   )
+  .beforeAllSubcases(async t => {
+    const info = kTextureFormatInfo[t.params.format];
+
+    await t.selectDeviceOrSkipTestCase([
+      t.params.unclippedDepth ? 'depth-clip-control' : undefined,
+      info.feature,
+    ]);
+  })
   .fn(async t => {
     const { format, unclippedDepth, multisampled } = t.params;
     const info = kTextureFormatInfo[format];
-
-    await t.selectDeviceOrSkipTestCase([
-      unclippedDepth ? 'depth-clip-control' : undefined,
-      info.feature,
-    ]);
 
     const kNumDepthValues = 8;
     const kViewportMinDepth = 0.25;

@@ -25,13 +25,12 @@ g.test('command_buffer,device_mismatch')
     { cb0Mismatched: true, cb1Mismatched: false },
     { cb0Mismatched: false, cb1Mismatched: true },
   ])
+  .beforeAllSubcases(async t => {
+    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+  })
   .fn(async t => {
     const { cb0Mismatched, cb1Mismatched } = t.params;
     const mismatched = cb0Mismatched || cb1Mismatched;
-
-    if (mismatched) {
-      await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-    }
 
     const encoder0 = cb0Mismatched
       ? t.mismatchedDevice.createCommandEncoder()

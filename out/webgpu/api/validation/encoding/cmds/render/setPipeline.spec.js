@@ -31,13 +31,11 @@ fn((t) => {
 g.test('pipeline,device_mismatch').
 desc('Tests setPipeline cannot be called with a render pipeline created from another device').
 paramsSubcasesOnly(kRenderEncodeTypeParams.combine('mismatched', [true, false])).
+beforeAllSubcases(async (t) => {
+  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+}).
 fn(async (t) => {
   const { encoderType, mismatched } = t.params;
-
-  if (mismatched) {
-    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-  }
-
   const device = mismatched ? t.mismatchedDevice : t.device;
 
   const pipeline = device.createRenderPipeline({

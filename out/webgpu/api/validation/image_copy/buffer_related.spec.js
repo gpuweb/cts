@@ -62,13 +62,11 @@ desc('Tests the image copies cannot be called with a buffer created from another
 paramsSubcasesOnly((u) =>
 u.combine('method', ['CopyB2T', 'CopyT2B']).combine('mismatched', [true, false])).
 
+beforeAllSubcases(async (t) => {
+  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+}).
 fn(async (t) => {
   const { method, mismatched } = t.params;
-
-  if (mismatched) {
-    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-  }
-
   const device = mismatched ? t.mismatchedDevice : t.device;
 
   const buffer = device.createBuffer({
@@ -182,6 +180,10 @@ bytesPerRow === undefined && copyHeightInBlocks <= 1 ||
 bytesPerRow !== undefined && bytesPerRow >= kTextureFormatInfo[format].bytesPerBlock)).
 
 
+beforeAllSubcases(async (t) => {
+  const info = kTextureFormatInfo[t.params.format];
+  await t.selectDeviceOrSkipTestCase(info.feature);
+}).
 fn(async (t) => {
   const {
     method,
@@ -193,7 +195,6 @@ fn(async (t) => {
   t.params;
 
   const info = kTextureFormatInfo[format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
 
   const buffer = t.device.createBuffer({
     size: 512 * 8 * 16,

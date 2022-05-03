@@ -801,6 +801,13 @@ g.test('color_textures,compressed,non_array')
       .combine('srcCopyLevel', [0, 2])
       .combine('dstCopyLevel', [0, 2])
   )
+  .beforeAllSubcases(async t => {
+    const { srcFormat, dstFormat } = t.params;
+    await t.selectDeviceOrSkipTestCase([
+      kTextureFormatInfo[srcFormat].feature,
+      kTextureFormatInfo[dstFormat].feature,
+    ]);
+  })
   .fn(async t => {
     const {
       dimension,
@@ -811,11 +818,6 @@ g.test('color_textures,compressed,non_array')
       srcCopyLevel,
       dstCopyLevel,
     } = t.params;
-    await t.selectDeviceOrSkipTestCase([
-      kTextureFormatInfo[srcFormat].feature,
-      kTextureFormatInfo[dstFormat].feature,
-    ]);
-
     const srcBlockWidth = kTextureFormatInfo[srcFormat].blockWidth;
     const srcBlockHeight = kTextureFormatInfo[srcFormat].blockHeight;
     const dstBlockWidth = kTextureFormatInfo[dstFormat].blockWidth;
@@ -956,6 +958,14 @@ g.test('color_textures,compressed,array')
       .combine('srcCopyLevel', [0, 2])
       .combine('dstCopyLevel', [0, 2])
   )
+  .beforeAllSubcases(async t => {
+    const { srcFormat, dstFormat } = t.params;
+
+    await t.selectDeviceOrSkipTestCase([
+      kTextureFormatInfo[srcFormat].feature,
+      kTextureFormatInfo[dstFormat].feature,
+    ]);
+  })
   .fn(async t => {
     const {
       dimension,
@@ -966,11 +976,6 @@ g.test('color_textures,compressed,array')
       srcCopyLevel,
       dstCopyLevel,
     } = t.params;
-    await t.selectDeviceOrSkipTestCase([
-      kTextureFormatInfo[srcFormat].feature,
-      kTextureFormatInfo[dstFormat].feature,
-    ]);
-
     const srcBlockWidth = kTextureFormatInfo[srcFormat].blockWidth;
     const srcBlockHeight = kTextureFormatInfo[srcFormat].blockHeight;
     const dstBlockWidth = kTextureFormatInfo[dstFormat].blockWidth;
@@ -1147,6 +1152,10 @@ g.test('copy_depth_stencil')
         );
       })
   )
+  .beforeAllSubcases(async t => {
+    const { format } = t.params;
+    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
+  })
   .fn(async t => {
     const {
       format,
@@ -1156,7 +1165,6 @@ g.test('copy_depth_stencil')
       srcCopyBaseArrayLayer,
       dstCopyBaseArrayLayer,
     } = t.params;
-    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
 
     const copySize = [
       srcTextureSize.width >> srcCopyLevel,

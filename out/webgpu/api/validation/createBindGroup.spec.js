@@ -499,12 +499,11 @@ desc(
 'Tests createBindGroup cannot be called with a bind group layout created from another device').
 
 paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
+beforeAllSubcases(async (t) => {
+  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+}).
 fn(async (t) => {
   const mismatched = t.params.mismatched;
-
-  if (mismatched) {
-    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-  }
 
   const device = mismatched ? t.mismatchedDevice : t.device;
 
@@ -557,12 +556,11 @@ combineWithParams([
 { resource0Mismatched: false, resource1Mismatched: true }])).
 
 
+beforeAllSubcases(async (t) => {
+  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+}).
 fn(async (t) => {
   const { entry, resource0Mismatched, resource1Mismatched } = t.params;
-
-  if (resource0Mismatched || resource1Mismatched) {
-    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-  }
 
   const info = bindingTypeInfo(entry);
 

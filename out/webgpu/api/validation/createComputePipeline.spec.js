@@ -179,13 +179,11 @@ desc(
 'Tests createComputePipeline(Async) cannot be called with a pipeline layout created from another device').
 
 paramsSubcasesOnly((u) => u.combine('isAsync', [true, false]).combine('mismatched', [true, false])).
+beforeAllSubcases(async (t) => {
+  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+}).
 fn(async (t) => {
   const { isAsync, mismatched } = t.params;
-
-  if (mismatched) {
-    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-  }
-
   const device = mismatched ? t.mismatchedDevice : t.device;
 
   const layout = device.createPipelineLayout({ bindGroupLayouts: [] });
@@ -206,12 +204,11 @@ desc(
 'Tests createComputePipeline(Async) cannot be called with a shader module created from another device').
 
 paramsSubcasesOnly((u) => u.combine('isAsync', [true, false]).combine('mismatched', [true, false])).
+beforeAllSubcases(async (t) => {
+  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+}).
 fn(async (t) => {
   const { isAsync, mismatched } = t.params;
-
-  if (mismatched) {
-    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
-  }
 
   const device = mismatched ? t.mismatchedDevice : t.device;
 

@@ -1,6 +1,12 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { SkipTestCase, UnexpectedPassError } from '../framework/fixture.js';import {
+**/import {
+SkipTestCase,
+
+UnexpectedPassError } from
+'../framework/fixture.js';
+import {
+
 builderIterateCasesWithSubcases,
 kUnitCaseParamsBuilder } from
 
@@ -43,7 +49,9 @@ import { assert, unreachable } from '../util/util.js';
 
 
 
-export function makeTestGroup(fixture) {
+export function makeTestGroup(
+fixture)
+{
   return new TestGroup(fixture);
 }
 
@@ -71,7 +79,14 @@ fixture)
 
 
 
-export class TestGroup {
+
+
+
+
+
+
+export class TestGroup
+{
 
   seen = new Set();
   tests = [];
@@ -171,7 +186,40 @@ export class TestGroup {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class TestBuilder {
+
 
 
 
@@ -195,6 +243,12 @@ class TestBuilder {
   }
 
   specURL(url) {
+    return this;
+  }
+
+  beforeAllSubcases(fn) {
+    assert(this.beforeFn === undefined);
+    this.beforeFn = fn;
     return this;
   }
 
@@ -298,6 +352,7 @@ class TestBuilder {
         subcases,
         this.fixture,
         this.testFn,
+        this.beforeFn,
         this.testCreationStack);
 
       } else {
@@ -310,6 +365,7 @@ class TestBuilder {
           subcaseArray,
           this.fixture,
           this.testFn,
+          this.beforeFn,
           this.testCreationStack);
 
         } else {
@@ -321,6 +377,7 @@ class TestBuilder {
             subcaseArray.slice(i, Math.min(subcaseArray.length, i + this.batchSize)),
             this.fixture,
             this.testFn,
+            this.beforeFn,
             this.testCreationStack);
 
           }
@@ -340,6 +397,7 @@ class RunCaseSpecific {
 
 
 
+
   constructor(
   testPath,
   params,
@@ -347,6 +405,7 @@ class RunCaseSpecific {
   subcases,
   fixture,
   fn,
+  beforeFn,
   testCreationStack)
   {
     this.id = { test: testPath, params: extractPublicParams(params) };
@@ -355,11 +414,13 @@ class RunCaseSpecific {
     this.subcases = subcases;
     this.fixture = fixture;
     this.fn = fn;
+    this.beforeFn = beforeFn;
     this.testCreationStack = testCreationStack;
   }
 
   async runTest(
   rec,
+  sharedState,
   params,
   throwSkip,
   expectedStatus)
@@ -369,8 +430,8 @@ class RunCaseSpecific {
       if (expectedStatus === 'skip') {
         throw new SkipTestCase('Skipped by expectations');
       }
-      const inst = new this.fixture(rec, params);
 
+      const inst = new this.fixture(sharedState, rec, params);
       try {
         await inst.doInit();
         await this.fn(inst);
@@ -428,40 +489,72 @@ class RunCaseSpecific {
       return didSeeFail ? 'fail' : 'pass';
     };
 
-    rec.start();
-    if (this.subcases) {
-      let totalCount = 0;
-      let skipCount = 0;
-      for (const subParams of this.subcases) {
-        rec.info(new Error('subcase: ' + stringifyPublicParams(subParams)));
-        try {
-          const params = mergeParams(this.params, subParams);
-          const subcaseQuery = new TestQuerySingleCase(
-          selfQuery.suite,
-          selfQuery.filePathParts,
-          selfQuery.testPathParts,
-          params);
-
-          await this.runTest(rec, params, true, getExpectedStatus(subcaseQuery));
-        } catch (ex) {
-          if (ex instanceof SkipTestCase) {
-            // Convert SkipTestCase to info messages
-            ex.message = 'subcase skipped: ' + ex.message;
-            rec.info(ex);
-            ++skipCount;
-          } else {
-            // Since we are catching all error inside runTest(), this should never happen
-            rec.threw(ex);
-          }
+    try {
+      rec.start();
+      const sharedState = this.fixture.MakeSharedState(this.params);
+      try {
+        await sharedState.doInit();
+        if (this.beforeFn) {
+          await this.beforeFn(sharedState);
         }
-        ++totalCount;
+
+        if (this.subcases) {
+          let totalCount = 0;
+          let skipCount = 0;
+          for (const subParams of this.subcases) {
+            rec.info(new Error('subcase: ' + stringifyPublicParams(subParams)));
+            try {
+              const params = mergeParams(this.params, subParams);
+              const subcaseQuery = new TestQuerySingleCase(
+              selfQuery.suite,
+              selfQuery.filePathParts,
+              selfQuery.testPathParts,
+              params);
+
+              await this.runTest(
+              rec,
+              sharedState,
+              params,
+              /* throwSkip */true,
+              getExpectedStatus(subcaseQuery));
+
+            } catch (ex) {
+              if (ex instanceof SkipTestCase) {
+                // Convert SkipTestCase to info messages
+                ex.message = 'subcase skipped: ' + ex.message;
+                rec.info(ex);
+                ++skipCount;
+              } else {
+                // Since we are catching all error inside runTest(), this should never happen
+                rec.threw(ex);
+              }
+            }
+            ++totalCount;
+          }
+          if (skipCount === totalCount) {
+            rec.skipped(new SkipTestCase('all subcases were skipped'));
+          }
+        } else {
+          await this.runTest(
+          rec,
+          sharedState,
+          this.params,
+          /* throwSkip */false,
+          getExpectedStatus(selfQuery));
+
+        }
+      } finally {
+        // Runs as long as the shared state constructor succeeded, even if initialization or a test failed.
+        await sharedState.doFinalize();
       }
-      if (skipCount === totalCount) {
-        rec.skipped(new SkipTestCase('all subcases were skipped'));
-      }
-    } else {
-      await this.runTest(rec, this.params, false, getExpectedStatus(selfQuery));
+    } catch (ex) {
+      // There was an exception from sharedState/fixture constructor, init, beforeFn, or test.
+      // An error from beforeFn may have been SkipTestCase.
+      // An error from finalize may have been an eventualAsyncExpectation failure
+      // or unexpected validation/OOM error from the GPUDevice.
+      rec.threw(ex);
+    } finally {
+      rec.finish();
     }
-    rec.finish();
   }}
 //# sourceMappingURL=test_group.js.map

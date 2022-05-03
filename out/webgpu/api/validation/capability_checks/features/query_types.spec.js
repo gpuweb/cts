@@ -25,8 +25,8 @@ u.
 combine('type', ['occlusion', 'timestamp']).
 combine('timestampQueryEnable', [false, true])).
 
-fn(async (t) => {
-  const { type, timestampQueryEnable } = t.params;
+beforeAllSubcases(async (t) => {
+  const { timestampQueryEnable } = t.params;
 
   const requiredFeatures = [];
   if (timestampQueryEnable) {
@@ -34,6 +34,9 @@ fn(async (t) => {
   }
 
   await t.selectDeviceOrSkipTestCase({ requiredFeatures });
+}).
+fn(async (t) => {
+  const { type, timestampQueryEnable } = t.params;
 
   const count = 1;
   const shouldError = type === 'timestamp' && !timestampQueryEnable;

@@ -1039,4 +1039,19 @@ export const kLimits = keysOf(kLimitInfo);
 export function viewCompatible(a, b) {
   return a === b || a + '-srgb' === b || b + '-srgb' === a;
 }
+
+export function getFeaturesForFormats(
+formats)
+{
+  return Array.from(new Set(formats.map((f) => f ? kTextureFormatInfo[f].feature : undefined)));
+}
+
+export function filterFormatsByFeature(
+feature,
+formats)
+{
+  return formats.filter((f) => f === undefined || kTextureFormatInfo[f].feature === feature);
+}
+
+export const kFeaturesForFormats = getFeaturesForFormats(kTextureFormats);
 //# sourceMappingURL=capability_info.js.map
