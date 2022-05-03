@@ -1608,6 +1608,26 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "fwidthCoarse"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
+      "fwidthFine"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "insertBits"
     ]
   },
