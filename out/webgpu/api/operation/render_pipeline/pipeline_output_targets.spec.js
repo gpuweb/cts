@@ -151,9 +151,9 @@ beginSubcases().
 combine('attachmentCount', [2, 3, 4]).
 expand('emptyAttachmentId', (p) => range(p.attachmentCount, (i) => i))).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
+  t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn(async (t) => {
   const { format, attachmentCount, emptyAttachmentId } = t.params;
@@ -254,9 +254,9 @@ beginSubcases().
 combine('componentCount', [1, 2, 3, 4]).
 filter((x) => x.componentCount >= kTexelRepresentationInfo[x.format].componentOrder.length)).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
+  t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn(async (t) => {
   const { format, componentCount } = t.params;
@@ -459,9 +459,9 @@ beginSubcases()
 
 filter((x) => x.output.length >= kTexelRepresentationInfo[x.format].componentOrder.length)).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
+  t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn(async (t) => {
   const {

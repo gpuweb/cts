@@ -25,7 +25,7 @@ u.
 combine('type', ['occlusion', 'timestamp']).
 combine('timestampQueryEnable', [false, true])).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { timestampQueryEnable } = t.params;
 
   const requiredFeatures = [];
@@ -33,7 +33,7 @@ beforeAllSubcases(async (t) => {
     requiredFeatures.push('timestamp-query');
   }
 
-  await t.selectDeviceOrSkipTestCase({ requiredFeatures });
+  t.selectDeviceOrSkipTestCase({ requiredFeatures });
 }).
 fn(async (t) => {
   const { type, timestampQueryEnable } = t.params;

@@ -577,8 +577,8 @@ export const g = makeTestGroup(TextureZeroInitTest);
 
 g.test('uninitialized_texture_is_zero').
 params(kTestParams).
-beforeAllSubcases(async (t) => {
-  await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[t.params.format].feature);
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase(kTextureFormatInfo[t.params.format].feature);
 }).
 fn(async (t) => {
   const usage = getRequiredTextureUsage(

@@ -70,8 +70,8 @@ desc('Tests the image copies cannot be called with a texture created from anothe
 paramsSubcasesOnly((u) =>
 u.combine('method', kImageCopyTypes).combine('mismatched', [true, false])).
 
-beforeAllSubcases(async (t) => {
-  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+beforeAllSubcases((t) => {
+  t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
 fn(async (t) => {
   const { method, mismatched } = t.params;
@@ -255,9 +255,9 @@ combine('copyHeightModifier', [0, -1])
 // need to examine depth dimension via copyDepthModifier to determine whether it is a full copy for a 3D texture.
 .expand('copyDepthModifier', ({ dimension: d }) => d === '3d' ? [0, -1] : [0])).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
+  t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn(async (t) => {
   const {
@@ -345,9 +345,9 @@ combine('coordinateToTest', ['x', 'y', 'z']).
 unless((p) => p.dimension === '1d' && p.coordinateToTest !== 'x').
 expand('valueToCoordinate', texelBlockAlignmentTestExpanderForValueToCoordinate)).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
+  t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn(async (t) => {
   const {
@@ -408,9 +408,9 @@ combine('coordinateToTest', ['width', 'height', 'depthOrArrayLayers']).
 unless((p) => p.dimension === '1d' && p.coordinateToTest !== 'width').
 expand('valueToCoordinate', texelBlockAlignmentTestExpanderForValueToCoordinate)).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
+  t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn(async (t) => {
   const { valueToCoordinate, coordinateToTest, dimension, format, method } = t.params;

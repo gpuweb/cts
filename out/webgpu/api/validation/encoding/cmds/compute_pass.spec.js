@@ -65,8 +65,8 @@ fn((t) => {
 g.test('pipeline,device_mismatch').
 desc('Tests setPipeline cannot be called with a compute pipeline created from another device').
 paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
-beforeAllSubcases(async (t) => {
-  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+beforeAllSubcases((t) => {
+  t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
 fn(async (t) => {
   const { mismatched } = t.params;
@@ -182,8 +182,8 @@ desc(
 `Tests dispatchWorkgroupsIndirect cannot be called with an indirect buffer created from another device`).
 
 paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
-beforeAllSubcases(async (t) => {
-  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+beforeAllSubcases((t) => {
+  t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
 fn(async (t) => {
   const { mismatched } = t.params;

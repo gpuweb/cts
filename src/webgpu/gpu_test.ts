@@ -1,5 +1,4 @@
 import { Fixture, SubcaseBatchState, TestParams } from '../common/framework/fixture.js';
-import { attemptGarbageCollection } from '../common/util/collect_garbage.js';
 import {
   assert,
   range,
@@ -22,12 +21,7 @@ import {
   checkElementsFloat16Between,
 } from './util/check_contents.js';
 import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js';
-import {
-  DevicePool,
-  DeviceProvider,
-  TestOOMedShouldAttemptGC,
-  UncanonicalizedDeviceDescriptor,
-} from './util/device_pool.js';
+import { DevicePool, DeviceProvider, UncanonicalizedDeviceDescriptor } from './util/device_pool.js';
 import { align, roundDown } from './util/math.js';
 import { makeTextureWithContents } from './util/texture.js';
 import {
@@ -48,9 +42,16 @@ const kResourceStateValues = ['valid', 'invalid', 'destroyed'] as const;
 export type ResourceState = typeof kResourceStateValues[number];
 export const kResourceStates: readonly ResourceState[] = kResourceStateValues;
 
+/** Various "convenient" shorthands for GPUDeviceDescriptors for selectDevice functions. */
+type DeviceSelectionDescriptor =
+  | UncanonicalizedDeviceDescriptor
+  | GPUFeatureName
+  | undefined
+  | Array<GPUFeatureName | undefined>;
+
 export function initUncanonicalizedDeviceDescriptor(
-  descriptor: UncanonicalizedDeviceDescriptor | GPUFeatureName | Array<GPUFeatureName | undefined>
-): UncanonicalizedDeviceDescriptor {
+  descriptor: DeviceSelectionDescriptor
+): UncanonicalizedDeviceDescriptor | undefined {
   if (typeof descriptor === 'string') {
     return { requiredFeatures: [descriptor] };
   } else if (descriptor instanceof Array) {
@@ -63,170 +64,56 @@ export function initUncanonicalizedDeviceDescriptor(
 }
 
 export class GPUTestSubcaseBatchState extends SubcaseBatchState {
-  private provider: DeviceProvider | undefined;
-  /** Must not be replaced once acquired. */
-  private acquiredDevice: GPUDevice | undefined;
-
-  // Some tests(e.g. Device mismatched validation) require another GPUDevice
-  // different from the default GPUDevice of GPUTest. It is only used to
-  //create device mismatched objects.
-  private mismatchedProvider: DeviceProvider | undefined;
-  private mismatchedAcquiredDevice: GPUDevice | undefined;
-
-  /** GPUDevice for the test to use. */
-  get device(): GPUDevice {
-    assert(
-      this.provider !== undefined,
-      'No provider available right now; did you "await" selectDeviceOrSkipTestCase?'
-    );
-    if (!this.acquiredDevice) {
-      this.acquiredDevice = this.provider.acquire();
-    }
-    return this.acquiredDevice;
-  }
-
-  /** GPUDevice for tests requires another device from default one.
-   *  e.g. creating objects required creating mismatched objects required
-   * by device mismatched validation tests.
-   */
-  get mismatchedDevice(): GPUDevice {
-    assert(
-      this.mismatchedProvider !== undefined,
-      'No provider available right now; did you "await" selectMismatchedDeviceOrSkipTestCase?'
-    );
-    if (!this.mismatchedAcquiredDevice) {
-      this.mismatchedAcquiredDevice = this.mismatchedProvider.acquire();
-    }
-    return this.mismatchedAcquiredDevice;
-  }
-
-  /**
-   * Create other device different with current test device, which could be got by `.mismatchedDevice`.
-   * A `descriptor` may be undefined, which returns a `default` mismatched device.
-   * If the request descriptor or feature name can't be supported, throws an exception to skip the entire test case.
-   *
-   * MAINTENANCE_TODO: These device selection methods may not have to be async.
-   * They could be enqueued and then await'ed automatically after `beforeAllSubcases`
-   * runs.
-   */
-  async selectMismatchedDeviceOrSkipTestCase(
-    descriptor:
-      | UncanonicalizedDeviceDescriptor
-      | GPUFeatureName
-      | undefined
-      | Array<GPUFeatureName | undefined>
-  ): Promise<void> {
-    assert(
-      this.mismatchedProvider === undefined,
-      "Can't selectMismatchedDeviceOrSkipTestCase() multiple times"
-    );
-
-    this.mismatchedProvider =
-      descriptor === undefined
-        ? await mismatchedDevicePool.reserve()
-        : await mismatchedDevicePool.reserve(initUncanonicalizedDeviceDescriptor(descriptor));
-
-    this.mismatchedAcquiredDevice = this.mismatchedProvider.acquire();
-  }
-
-  async init(): Promise<void> {
-    await super.init();
-
-    this.provider = await devicePool.reserve();
-  }
+  /** Provider for default device. Should never reject. */
+  private provider: Promise<DeviceProvider | Error> | undefined;
+  /** Provider for mismatched device. Should never reject. */
+  private mismatchedProvider: Promise<DeviceProvider | Error> = Promise.resolve(
+    new Error('selectMismatchedDeviceOrSkipTestCase was not called in beforeAllSubcases')
+  );
 
   async finalize(): Promise<void> {
     await super.finalize();
 
-    if (this.provider) {
-      let threw = false;
-      let thrownValue: unknown;
-      {
-        const provider = this.provider;
-        this.provider = undefined;
-        try {
-          await devicePool.release(provider);
-        } catch (ex) {
-          threw = true;
-          thrownValue = ex;
-        }
-      }
-      // The GPUDevice and GPUQueue should now have no outstanding references.
-
-      if (threw) {
-        if (thrownValue instanceof TestOOMedShouldAttemptGC) {
-          // Try to clean up, in case there are stray GPU resources in need of collection.
-          await attemptGarbageCollection();
-        }
-        throw thrownValue;
-      }
-    }
-
-    if (this.mismatchedProvider) {
-      // MAINTENANCE_TODO(kainino0x): Deduplicate this with code in GPUTest.finalize
-      let threw = false;
-      let thrownValue: unknown;
-      {
-        const provider = this.mismatchedProvider;
-        this.mismatchedProvider = undefined;
-        try {
-          await mismatchedDevicePool.release(provider);
-        } catch (ex) {
-          threw = true;
-          thrownValue = ex;
-        }
-      }
-
-      if (threw) {
-        if (thrownValue instanceof TestOOMedShouldAttemptGC) {
-          // Try to clean up, in case there are stray GPU resources in need of collection.
-          await attemptGarbageCollection();
-        }
-        throw thrownValue;
-      }
-    }
+    // Ensure devicePool.release is called for both providers even if one rejects.
+    await Promise.all([
+      this.provider?.then(x => ('device' in x ? devicePool.release(x) : undefined)),
+      this.mismatchedProvider.then(x => ('device' in x ? devicePool.release(x) : undefined)),
+    ]);
   }
 
-  /**
-   * When a GPUTest test accesses `.device` for the first time, a "default" GPUDevice
-   * (descriptor = `undefined`) is provided by default.
-   * However, some tests or cases need particular nonGuaranteedFeatures to be enabled.
-   * Call this function with a descriptor or feature name (or `undefined`) to select a
-   * GPUDevice with matching capabilities.
-   *
-   * If the request descriptor can't be supported, throws an exception to skip the entire test case.
-   */
-  async selectDeviceOrSkipTestCase(
-    descriptor:
-      | UncanonicalizedDeviceDescriptor
-      | GPUFeatureName
-      | undefined
-      | Array<GPUFeatureName | undefined>
-  ): Promise<void> {
-    if (descriptor === undefined) return;
-
+  /** @internal MAINTENANCE_TODO: Make this not visible to test code? */
+  acquireProvider(): Promise<DeviceProvider | Error> {
+    if (this.provider === undefined) {
+      this.selectDeviceOrSkipTestCase(undefined);
+    }
     assert(this.provider !== undefined);
-    // Make sure the device isn't replaced after it's been retrieved once.
-    assert(
-      !this.acquiredDevice,
-      "Can't selectDeviceOrSkipTestCase() after the device has been used"
-    );
-
-    const oldProvider = this.provider;
-    this.provider = undefined;
-    await devicePool.release(oldProvider);
-
-    this.provider = await devicePool.reserve(initUncanonicalizedDeviceDescriptor(descriptor));
-    this.acquiredDevice = this.provider.acquire();
+    return this.provider;
   }
 
   /**
-   * Create device with texture format(s) required feature(s).
-   * If the device creation fails, then skip the test for that format(s).
+   * Some tests or cases need particular feature flags or limits to be enabled.
+   * Call this function with a descriptor or feature name (or `undefined`) to select a
+   * GPUDevice with matching capabilities. If this isn't called, a default device is provided.
+   *
+   * If the request isn't supported, throws a SkipTestCase exception to skip the entire test case.
    */
-  async selectDeviceForTextureFormatOrSkipTestCase(
+  selectDeviceOrSkipTestCase(descriptor: DeviceSelectionDescriptor): void {
+    assert(this.provider === undefined, "Can't selectDeviceOrSkipTestCase() multiple times");
+    this.provider = devicePool.acquire(initUncanonicalizedDeviceDescriptor(descriptor)).then(
+      x => x,
+      // Must catch rejections here to avoid an uncaught promise rejection.
+      (x: Error) => x
+    );
+  }
+
+  /**
+   * Convenience function for {@link selectDeviceOrSkipTestCase}.
+   * Select a device with the features required by these texture format(s).
+   * If the device creation fails, then skip the test case.
+   */
+  selectDeviceForTextureFormatOrSkipTestCase(
     formats: GPUTextureFormat | undefined | (GPUTextureFormat | undefined)[]
-  ): Promise<void> {
+  ): void {
     if (!Array.isArray(formats)) {
       formats = [formats];
     }
@@ -237,32 +124,47 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
       }
     }
 
-    await this.selectDeviceOrSkipTestCase(Array.from(features));
+    this.selectDeviceOrSkipTestCase(Array.from(features));
   }
 
   /**
-   * Create device with query type(s) required feature(s).
-   * If the device creation fails, then skip the test for that type(s).
+   * Convenience function for {@link selectDeviceOrSkipTestCase}.
+   * Select a device with the features required by these query type(s).
+   * If the device creation fails, then skip the test case.
    */
-  async selectDeviceForQueryTypeOrSkipTestCase(
-    types: GPUQueryType | GPUQueryType[]
-  ): Promise<void> {
+  selectDeviceForQueryTypeOrSkipTestCase(types: GPUQueryType | GPUQueryType[]): void {
     if (!Array.isArray(types)) {
       types = [types];
     }
     const features = types.map(t => kQueryTypeInfo[t].feature);
-    await this.selectDeviceOrSkipTestCase(features);
+    this.selectDeviceOrSkipTestCase(features);
+  }
+
+  /** @internal MAINTENANCE_TODO: Make this not visible to test code? */
+  acquireMismatchedProvider(): Promise<DeviceProvider | Error> {
+    return this.mismatchedProvider;
   }
 
   /**
-   * Expects that the device should be lost for a particular reason at the teardown of the test.
+   * Some tests need a second device which is different from the first.
+   * This requests a second device so it will be available during the test. If it is not called,
+   * no second device will be available.
+   *
+   * If the request isn't supported, throws a SkipTestCase exception to skip the entire test case.
    */
-  expectDeviceLost(reason: GPUDeviceLostReason): void {
+  selectMismatchedDeviceOrSkipTestCase(descriptor: DeviceSelectionDescriptor): void {
     assert(
-      this.provider !== undefined,
-      'No provider available right now; did you "await" selectDeviceOrSkipTestCase?'
+      this.mismatchedProvider === undefined,
+      "Can't selectMismatchedDeviceOrSkipTestCase() multiple times"
     );
-    this.provider.expectDeviceLost(reason);
+
+    this.mismatchedProvider = mismatchedDevicePool
+      .acquire(initUncanonicalizedDeviceDescriptor(descriptor))
+      .then(
+        x => x,
+        // Must catch rejections here to avoid an uncaught promise rejection.
+        (x: Error) => x
+      );
   }
 }
 
@@ -274,17 +176,31 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
     return new GPUTestSubcaseBatchState(params);
   }
 
-  /** GPUDevice for the test to use. */
-  get device(): GPUDevice {
-    return this.sharedState.device;
+  private provider: DeviceProvider | Error = new Error('GPUTest not initialized?');
+  private mismatchedProvider: DeviceProvider | Error = new Error('GPUTest not initialized?');
+
+  async init() {
+    await super.init();
+
+    this.provider = await this.sharedState.acquireProvider();
+    this.mismatchedProvider = await this.sharedState.acquireMismatchedProvider();
   }
 
-  /** GPUDevice for tests requires another device from default one.
-   *  e.g. creating objects required creating mismatched objects required
-   * by device mismatched validation tests.
+  /**
+   * GPUDevice for the test to use.
+   */
+  get device(): GPUDevice {
+    if (!('device' in this.provider)) throw this.provider;
+    return this.provider.device;
+  }
+
+  /**
+   * GPUDevice for tests requiring a second device different from the default one,
+   * e.g. for creating objects for by device_mismatch validation tests.
    */
   get mismatchedDevice(): GPUDevice {
-    return this.sharedState.mismatchedDevice;
+    if (!('device' in this.mismatchedProvider)) throw this.mismatchedProvider;
+    return this.mismatchedProvider.device;
   }
 
   /** GPUQueue for the test to use. (Same as `t.device.queue`.) */
@@ -852,7 +768,8 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
    * Expects that the device should be lost for a particular reason at the teardown of the test.
    */
   expectDeviceLost(reason: GPUDeviceLostReason): void {
-    this.sharedState.expectDeviceLost(reason);
+    assert('device' in this.provider);
+    this.provider.expectDeviceLost(reason);
   }
 
   /**

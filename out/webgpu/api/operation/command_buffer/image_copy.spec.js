@@ -1287,9 +1287,9 @@ expandWithParams((p) => {
   return kRowsPerImageAndBytesPerRowParams.copySizes;
 })).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
+  t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn(async (t) => {
   const {
@@ -1383,9 +1383,9 @@ combineWithParams(kOffsetsAndSizesParams.offsetsAndPaddings).
 combine('copyDepth', kOffsetsAndSizesParams.copyDepth) // 2d and 2d-array textures
 .unless((p) => p.dimension === '1d' && p.copyDepth !== 1)).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
+  t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn(async (t) => {
   const {
@@ -1462,9 +1462,9 @@ p.copySizeValueInBlocks + p.originValueInBlocks + p.textureSizePaddingValueInBlo
 combine('coordinateToTest', [0, 1, 2]).
 unless((p) => p.dimension === '1d' && p.coordinateToTest !== 0)).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
+  t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn(async (t) => {
   const {
@@ -1661,9 +1661,9 @@ combineWithParams([
 
 expand('textureSize', generateTestTextureSizes)).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
+  t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn(async (t) => {
   const {
@@ -1828,9 +1828,9 @@ filter((t) => {
 }).
 combine('mipLevel', [0, 2])).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
+  t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn(async (t) => {
   const {
@@ -1919,9 +1919,9 @@ filter((t) => t.offsetInBlocks % 4 === 0).
 combine('copyDepth', kOffsetsAndSizesParams.copyDepth).
 combine('mipLevel', [0, 2])).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
+  t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn(async (t) => {
   const {

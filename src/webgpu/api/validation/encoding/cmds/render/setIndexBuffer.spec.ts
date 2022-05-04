@@ -33,8 +33,8 @@ Tests index buffer must be valid.
 g.test('index_buffer,device_mismatch')
   .desc('Tests setIndexBuffer cannot be called with an index buffer created from another device')
   .paramsSubcasesOnly(kRenderEncodeTypeParams.combine('mismatched', [true, false]))
-  .beforeAllSubcases(async t => {
-    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+  .beforeAllSubcases(t => {
+    t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {
     const { encoderType, mismatched } = t.params;

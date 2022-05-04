@@ -30,12 +30,12 @@ desc(
 params((u) =>
 u.combine('format', kOptionalTextureFormats).combine('enable_required_feature', [true, false])).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { format, enable_required_feature } = t.params;
 
   const formatInfo = kTextureFormatInfo[format];
   if (enable_required_feature) {
-    await t.selectDeviceOrSkipTestCase(formatInfo.feature);
+    t.selectDeviceOrSkipTestCase(formatInfo.feature);
   }
 }).
 fn(async (t) => {
@@ -66,12 +66,12 @@ combine('format', kOptionalTextureFormats).
 filter((t) => kTextureFormatInfo[t.format].storage).
 combine('enable_required_feature', [true, false])).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { format, enable_required_feature } = t.params;
 
   const formatInfo = kTextureFormatInfo[format];
   if (enable_required_feature) {
-    await t.selectDeviceOrSkipTestCase(formatInfo.feature);
+    t.selectDeviceOrSkipTestCase(formatInfo.feature);
   }
 }).
 fn(async (t) => {
@@ -107,12 +107,12 @@ combine('format', kOptionalTextureFormats).
 filter((t) => kTextureFormatInfo[t.format].renderable && kTextureFormatInfo[t.format].color).
 combine('enable_required_feature', [true, false])).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { format, enable_required_feature } = t.params;
 
   const formatInfo = kTextureFormatInfo[format];
   if (enable_required_feature) {
-    await t.selectDeviceOrSkipTestCase(formatInfo.feature);
+    t.selectDeviceOrSkipTestCase(formatInfo.feature);
   }
 }).
 fn(async (t) => {
@@ -162,12 +162,12 @@ kTextureFormatInfo[t.format].depth || kTextureFormatInfo[t.format].stencil)).
 
 combine('enable_required_feature', [true, false])).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { format, enable_required_feature } = t.params;
 
   const formatInfo = kTextureFormatInfo[format];
   if (enable_required_feature) {
-    await t.selectDeviceOrSkipTestCase(formatInfo.feature);
+    t.selectDeviceOrSkipTestCase(formatInfo.feature);
   }
 }).
 fn(async (t) => {
@@ -218,12 +218,12 @@ combine('format', kOptionalTextureFormats).
 filter((t) => kTextureFormatInfo[t.format].renderable && kTextureFormatInfo[t.format].color).
 combine('enable_required_feature', [true, false])).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { format, enable_required_feature } = t.params;
 
   const formatInfo = kTextureFormatInfo[format];
   if (enable_required_feature) {
-    await t.selectDeviceOrSkipTestCase(formatInfo.feature);
+    t.selectDeviceOrSkipTestCase(formatInfo.feature);
   }
 }).
 fn(async (t) => {
@@ -253,12 +253,12 @@ kTextureFormatInfo[t.format].depth || kTextureFormatInfo[t.format].stencil)).
 
 combine('enable_required_feature', [true, false])).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { format, enable_required_feature } = t.params;
 
   const formatInfo = kTextureFormatInfo[format];
   if (enable_required_feature) {
-    await t.selectDeviceOrSkipTestCase(formatInfo.feature);
+    t.selectDeviceOrSkipTestCase(formatInfo.feature);
   }
 }).
 fn(async (t) => {

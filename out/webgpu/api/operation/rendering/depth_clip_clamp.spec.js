@@ -41,10 +41,10 @@ combine('unclippedDepth', [undefined, false, true]).
 combine('writeDepth', [false, true]).
 combine('multisampled', [false, true])).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
 
-  await t.selectDeviceOrSkipTestCase([
+  t.selectDeviceOrSkipTestCase([
   t.params.unclippedDepth ? 'depth-clip-control' : undefined,
   info.feature]);
 
@@ -354,10 +354,10 @@ filter((p) => kTextureFormatInfo[p.format].depth).
 combine('unclippedDepth', [false, true]).
 combine('multisampled', [false, true])).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
 
-  await t.selectDeviceOrSkipTestCase([
+  t.selectDeviceOrSkipTestCase([
   t.params.unclippedDepth ? 'depth-clip-control' : undefined,
   info.feature]);
 

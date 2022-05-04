@@ -275,9 +275,9 @@ expand('bundleFormat', ({ bundleFeature }) =>
 filterFormatsByFeature(bundleFeature, kDepthStencilAttachmentFormats))).
 
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { passFeature, bundleFeature } = t.params;
-  await t.selectDeviceOrSkipTestCase([passFeature, bundleFeature]);
+  t.selectDeviceOrSkipTestCase([passFeature, bundleFeature]);
 }).
 fn(async (t) => {
   const { passFormat, bundleFormat } = t.params;
@@ -431,9 +431,9 @@ expand('pipelineFormat', ({ pipelineFormatFeature }) =>
 filterFormatsByFeature(pipelineFormatFeature, kDepthStencilAttachmentFormats))).
 
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { encoderFormatFeature, pipelineFormatFeature } = t.params;
-  await t.selectDeviceOrSkipTestCase([encoderFormatFeature, pipelineFormatFeature]);
+  t.selectDeviceOrSkipTestCase([encoderFormatFeature, pipelineFormatFeature]);
 }).
 fn(async (t) => {
   const { encoderType, encoderFormat, pipelineFormat } = t.params;
@@ -503,8 +503,8 @@ filter((p) => {
   return true;
 })).
 
-beforeAllSubcases(async (t) => {
-  await t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+beforeAllSubcases((t) => {
+  t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
 fn(async (t) => {
   const {

@@ -68,9 +68,9 @@ u //
 beginSubcases().
 combine('attachment', ['color', 'depthStencil'])).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { format } = t.params;
-  await t.selectDeviceForTextureFormatOrSkipTestCase(format);
+  t.selectDeviceForTextureFormatOrSkipTestCase(format);
 }).
 fn(async (t) => {
   const { format, attachment } = t.params;
@@ -119,9 +119,9 @@ beginSubcases().
 combine('depthReadOnly', [false, true]).
 combine('stencilReadOnly', [false, true])).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { depthStencilFormat } = t.params;
-  await t.selectDeviceForTextureFormatOrSkipTestCase(depthStencilFormat);
+  t.selectDeviceForTextureFormatOrSkipTestCase(depthStencilFormat);
 }).
 fn(async (t) => {
   const { depthStencilFormat, depthReadOnly, stencilReadOnly } = t.params;

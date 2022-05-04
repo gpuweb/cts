@@ -228,11 +228,11 @@ desc(
 Tests that a BC format passes validation iff the feature is enabled.`).
 
 params((u) => u.combine('textureCompressionBC', [false, true])).
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { textureCompressionBC } = t.params;
 
   if (textureCompressionBC) {
-    await t.selectDeviceOrSkipTestCase('texture-compression-bc');
+    t.selectDeviceOrSkipTestCase('texture-compression-bc');
   }
 }).
 fn(async (t) => {
@@ -257,11 +257,11 @@ desc(
 Tests that an ETC2 format passes validation iff the feature is enabled.`).
 
 params((u) => u.combine('textureCompressionETC2', [false, true])).
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { textureCompressionETC2 } = t.params;
 
   if (textureCompressionETC2) {
-    await t.selectDeviceOrSkipTestCase('texture-compression-etc2');
+    t.selectDeviceOrSkipTestCase('texture-compression-etc2');
   }
 }).
 fn(async (t) => {
