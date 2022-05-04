@@ -240,10 +240,7 @@ fn(async (t) => {
 
 
   });
-  const results = await Promise.all(promises);
-  for (let i = 0; i < results.length; i++) {
-    t.expectOK(results[i]);
-  }
+  t.eventualExpectOK(Promise.all(promises));
 });
 
 g.test('color,component_count').

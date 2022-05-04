@@ -263,19 +263,32 @@ export class Fixture {
     return cond;
   }
 
-  /** If the argument is an `Error`, fail (or warn). If it's `undefined`, no-op. */
+  /**
+   * If the argument is an `Error`, fail (or warn). If it's `undefined`, no-op.
+   * If the argument is an array, apply the above behavior on each of elements.
+   */
   expectOK(error, { mode = 'fail', niceStack } = {}) {
-    if (error instanceof Error) {
-      if (niceStack) {
-        error.stack = niceStack.stack;
+    const handleError = error => {
+      if (error instanceof Error) {
+        if (niceStack) {
+          error.stack = niceStack.stack;
+        }
+        if (mode === 'fail') {
+          this.rec.expectationFailed(error);
+        } else if (mode === 'warn') {
+          this.rec.warn(error);
+        } else {
+          unreachable();
+        }
       }
-      if (mode === 'fail') {
-        this.rec.expectationFailed(error);
-      } else if (mode === 'warn') {
-        this.rec.warn(error);
-      } else {
-        unreachable();
+    };
+
+    if (Array.isArray(error)) {
+      for (const e of error) {
+        handleError(e);
       }
+    } else {
+      handleError(error);
     }
   }
 
