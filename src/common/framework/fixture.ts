@@ -275,27 +275,40 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
     return cond;
   }
 
-  /** If the argument is an `Error`, fail (or warn). If it's `undefined`, no-op. */
+  /**
+   * If the argument is an `Error`, fail (or warn). If it's `undefined`, no-op.
+   * If the argument is an array, apply the above behavior on each of elements.
+   */
   expectOK(
-    error: Error | undefined,
+    error: Error | undefined | (Error | undefined)[],
     { mode = 'fail', niceStack }: { mode?: 'fail' | 'warn'; niceStack?: Error } = {}
   ): void {
-    if (error instanceof Error) {
-      if (niceStack) {
-        error.stack = niceStack.stack;
+    const handleError = (error: Error | undefined) => {
+      if (error instanceof Error) {
+        if (niceStack) {
+          error.stack = niceStack.stack;
+        }
+        if (mode === 'fail') {
+          this.rec.expectationFailed(error);
+        } else if (mode === 'warn') {
+          this.rec.warn(error);
+        } else {
+          unreachable();
+        }
       }
-      if (mode === 'fail') {
-        this.rec.expectationFailed(error);
-      } else if (mode === 'warn') {
-        this.rec.warn(error);
-      } else {
-        unreachable();
+    };
+
+    if (Array.isArray(error)) {
+      for (const e of error) {
+        handleError(e);
       }
+    } else {
+      handleError(error);
     }
   }
 
   eventualExpectOK(
-    error: Promise<Error | undefined>,
+    error: Promise<Error | undefined | (Error | undefined)[]>,
     { mode = 'fail' }: { mode?: 'fail' | 'warn' } = {}
   ) {
     this.eventualAsyncExpectation(async niceStack => {
