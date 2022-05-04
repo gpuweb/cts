@@ -7,7 +7,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { correctlyRoundedThreshold } from '../../../../../util/compare.js';
 import { kBit } from '../../../../../util/constants.js';
 import { f32, f32Bits, TypeF32 } from '../../../../../util/conversion.js';
-import { fullF32Range } from '../../../../../util/math';
+import { fullF32Range } from '../../../../../util/math.js';
 import { Case, Config, makeUnaryF32Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
