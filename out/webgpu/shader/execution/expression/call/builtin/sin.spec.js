@@ -5,9 +5,9 @@ Execution tests for the 'sin' builtin function
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { absThreshold } from '../../../../../util/compare.js';
-import { f32, TypeF32 } from '../../../../../util/conversion.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
 import { linearRange } from '../../../../../util/math.js';
-import { run } from '../../expression.js';
+import { makeUnaryF32Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -48,7 +48,7 @@ combine('vectorize', [undefined, 2, 3, 4])).
 fn(async (t) => {
   // [1]: Need to decide what the ground-truth is.
   const makeCase = (x) => {
-    return { input: f32(x), expected: f32(Math.sin(x)) };
+    return makeUnaryF32Case(x, Math.sin);
   };
 
   // Spec defines accuracy on [-π, π]

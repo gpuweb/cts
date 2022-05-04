@@ -26,6 +26,7 @@ struct __frexp_result {
 The magnitude of the significand is in the range of [0.5, 1.0) or 0.
 `).
 
+params((u) => u.combine('storageClass', ['uniform', 'storage_r', 'storage_rw'])).
 unimplemented();
 
 g.test('scalar_f16').
@@ -47,6 +48,7 @@ struct __frexp_result_f16 {
 The magnitude of the significand is in the range of [0.5, 1.0) or 0.
 `).
 
+params((u) => u.combine('storageClass', ['uniform', 'storage_r', 'storage_rw'])).
 unimplemented();
 
 g.test('vector_f32').
@@ -68,6 +70,11 @@ struct __frexp_result_vecN {
 The magnitude of each component of the significand is in the range of [0.5, 1.0) or 0.
 `).
 
+params((u) =>
+u.
+combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
+combine('vectorize', [2, 3, 4])).
+
 unimplemented();
 
 g.test('vector_f16').
@@ -88,6 +95,11 @@ struct __frexp_result_vecN_f16 {
 
 The magnitude of each component of the significand is in the range of [0.5, 1.0) or 0.
 `).
+
+params((u) =>
+u.
+combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
+combine('vectorize', [2, 3, 4])).
 
 unimplemented();
 //# sourceMappingURL=frexp.spec.js.map

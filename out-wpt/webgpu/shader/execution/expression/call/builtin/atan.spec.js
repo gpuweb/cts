@@ -9,7 +9,7 @@ import { ulpThreshold } from '../../../../../util/compare.js';
 import { kBit } from '../../../../../util/constants.js';
 import { f32, f32Bits, TypeF32 } from '../../../../../util/conversion.js';
 import { fullF32Range } from '../../../../../util/math.js';
-import { run } from '../../expression.js';
+import { makeUnaryF32Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -50,10 +50,8 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
   .fn(async t => {
     // [1]: Need to decide what the ground-truth is.
     const makeCase = x => {
-      return { input: f32(x), expected: f32(Math.atan(x)) };
+      return makeUnaryF32Case(x, Math.atan);
     };
-
-    // Well defined/border cases
     const cases = [
       { input: f32Bits(kBit.f32.infinity.negative), expected: f32(-Math.PI / 2) },
       { input: f32(-Math.sqrt(3)), expected: f32(-Math.PI / 3) },

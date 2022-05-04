@@ -6,9 +6,9 @@ Execution tests for the 'cos' builtin function
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { absThreshold } from '../../../../../util/compare.js';
-import { f32, TypeF32 } from '../../../../../util/conversion.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
 import { linearRange } from '../../../../../util/math.js';
-import { run } from '../../expression.js';
+import { makeUnaryF32Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -22,6 +22,11 @@ T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
 @const fn cos(e: T ) -> T
 Returns the cosine of e. Component-wise when T is a vector.
 `
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'])
+      .combine('vectorize', [undefined, 2, 3, 4])
   )
   .unimplemented();
 
@@ -44,7 +49,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
   .fn(async t => {
     // [1]: Need to decide what the ground-truth is.
     const makeCase = x => {
-      return { input: f32(x), expected: f32(Math.cos(x)) };
+      return makeUnaryF32Case(x, Math.cos);
     };
 
     // Spec defines accuracy on [-π, π]
@@ -63,5 +68,10 @@ T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
 @const fn cos(e: T ) -> T
 Returns the cosine of e. Component-wise when T is a vector.
 `
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'])
+      .combine('vectorize', [undefined, 2, 3, 4])
   )
   .unimplemented();

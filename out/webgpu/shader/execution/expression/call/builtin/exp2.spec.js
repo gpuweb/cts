@@ -23,6 +23,11 @@ T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
 Returns 2 raised to the power e (e.g. 2^e). Component-wise when T is a vector.
 `).
 
+params((u) =>
+u.
+combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
+combine('vectorize', [undefined, 2, 3, 4])).
+
 unimplemented();
 
 g.test('f32').
@@ -70,6 +75,11 @@ T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
 @const fn exp2(e: T ) -> T
 Returns 2 raised to the power e (e.g. 2^e). Component-wise when T is a vector.
 `).
+
+params((u) =>
+u.
+combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
+combine('vectorize', [undefined, 2, 3, 4])).
 
 unimplemented();
 //# sourceMappingURL=exp2.spec.js.map

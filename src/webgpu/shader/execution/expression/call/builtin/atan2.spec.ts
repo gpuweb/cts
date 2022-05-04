@@ -3,12 +3,11 @@ Execution tests for the 'atan2' builtin function
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
-import { assert } from '../../../../../../common/util/util.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { anyOf, ulpThreshold } from '../../../../../util/compare.js';
-import { f32, TypeF32 } from '../../../../../util/conversion.js';
+import { ulpThreshold } from '../../../../../util/compare.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
 import { flushSubnormalNumber, fullF32Range } from '../../../../../util/math.js';
-import { Case, Config, run } from '../../expression.js';
+import { Case, Config, makeBinaryF32Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -51,12 +50,12 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
+    const cfg: Config = t.params;
+    cfg.cmpFloats = ulpThreshold(4096);
+
     // [1]: Need to decide what the ground-truth is.
     const makeCase = (y: number, x: number): Case => {
-      assert(x !== 0, 'atan2 is undefined for x = 0');
-      // Subnormals are already excluded from the x values, so do not need to test x being flushed.
-      const expected = [f32(Math.atan2(y, x)), f32(Math.atan2(flushSubnormalNumber(y), x))];
-      return { input: [f32(y), f32(x)], expected: anyOf(...expected) };
+      return makeBinaryF32Case(y, x, Math.atan2, true);
     };
 
     const numeric_range = fullF32Range({
@@ -69,6 +68,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
     const cases: Array<Case> = [];
     numeric_range.forEach((y, y_idx) => {
       numeric_range.forEach((x, x_idx) => {
+        // atan2(y, 0) is not well defined, so skipping those cases
         if (flushSubnormalNumber(x) !== 0) {
           if (x_idx >= y_idx) {
             cases.push(makeCase(y, x));
@@ -76,8 +76,6 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
         }
       });
     });
-    const cfg: Config = t.params;
-    cfg.cmpFloats = ulpThreshold(4096);
     run(t, builtin('atan2'), [TypeF32, TypeF32], TypeF32, cfg, cases);
   });
 

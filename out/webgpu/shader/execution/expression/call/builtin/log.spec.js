@@ -6,9 +6,9 @@ Execution tests for the 'log' builtin function
 import { GPUTest } from '../../../../../gpu_test.js';
 import { absThreshold, ulpThreshold } from '../../../../../util/compare.js';
 import { kValue } from '../../../../../util/constants.js';
-import { f32, TypeF32 } from '../../../../../util/conversion.js';
-import { biasedRange, linearRange, quantizeToF32 } from '../../../../../util/math.js';
-import { run } from '../../expression.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
+import { biasedRange, linearRange } from '../../../../../util/math.js';
+import { makeUnaryF32Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -51,8 +51,7 @@ combine('range', ['low', 'mid', 'high'])).
 fn(async (t) => {
   // [1]: Need to decide what the ground-truth is.
   const makeCase = (x) => {
-    const f32_x = quantizeToF32(x);
-    return { input: f32(x), expected: f32(Math.log(f32_x)) };
+    return makeUnaryF32Case(x, Math.log);
   };
 
   const runRange = (match, cases) => {

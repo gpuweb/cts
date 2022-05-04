@@ -1,7 +1,8 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { compare } from '../../../util/compare.js';
-import { ScalarType, TypeVec, TypeU32, Vector, VectorType } from '../../../util/conversion.js';
+ **/ import { compare, anyOf } from '../../../util/compare.js';
+import { ScalarType, TypeVec, TypeU32, Vector, VectorType, f32 } from '../../../util/conversion.js';
+import { flushSubnormalNumber, isSubnormalNumber, quantizeToF32 } from '../../../util/math.js';
 
 // Helper for converting Values to Comparators.
 function toComparator(input) {
@@ -328,4 +329,56 @@ function packScalarsToVector(parameterTypes, returnType, cases, vectorWidth) {
     parameterTypes: packedParameterTypes,
     returnType: packedReturnType,
   };
+}
+
+/** @returns a set of flushed and non-flushed f32 results for a given number. */
+function calculateFlushedResults(value) {
+  return new Set([f32(value), f32(flushSubnormalNumber(value))]);
+}
+
+/**
+ * Generates a Case for the param and unary op provide.
+ * The Case will use either exact matching or the test level Comparator.
+ * @param param the parameter to pass into the operation
+ * @param op callback that implements the truth function for the unary operation
+ */
+export function makeUnaryF32Case(param, op) {
+  const f32_param = quantizeToF32(param);
+  const expected = calculateFlushedResults(op(f32_param));
+  return { input: [f32(param)], expected: anyOf(...expected) };
+}
+
+/**
+ * Generates a Case for the params and binary op provide.
+ * The Case will use either exact matching or the test level Comparator.
+ * @param param0 the first param or left hand side to pass into the binary operation
+ * @param param1 the second param or rhs hand side to pass into the binary operation
+ * @param op callback that implements the truth function for the binary operation
+ * @param skip_param1_zero_flush should the builder skip cases where the param1 would be flushed to 0,
+ *                               this is to avoid performing division by 0, other invalid operations.
+ *                               The caller is responsible for making sure the initial param1 isn't 0.
+ */
+export function makeBinaryF32Case(param0, param1, op, skip_param1_zero_flush = false) {
+  const f32_param0 = quantizeToF32(param0);
+  const f32_param1 = quantizeToF32(param1);
+  const is_param0_subnormal = isSubnormalNumber(f32_param0);
+  const is_param1_subnormal = isSubnormalNumber(f32_param1);
+  const expected = calculateFlushedResults(op(f32_param0, f32_param1));
+  if (is_param0_subnormal) {
+    calculateFlushedResults(op(0, f32_param1)).forEach(value => {
+      expected.add(value);
+    });
+  }
+  if (!skip_param1_zero_flush && is_param1_subnormal) {
+    calculateFlushedResults(op(f32_param0, 0)).forEach(value => {
+      expected.add(value);
+    });
+  }
+  if (!skip_param1_zero_flush && is_param0_subnormal && is_param1_subnormal) {
+    calculateFlushedResults(op(0, 0)).forEach(value => {
+      expected.add(value);
+    });
+  }
+
+  return { input: [f32(param0), f32(param1)], expected: anyOf(...expected) };
 }

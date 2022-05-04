@@ -6,9 +6,9 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { absThreshold, FloatMatch, ulpThreshold } from '../../../../../util/compare.js';
 import { kValue } from '../../../../../util/constants.js';
-import { f32, TypeF32 } from '../../../../../util/conversion.js';
-import { biasedRange, linearRange, quantizeToF32 } from '../../../../../util/math.js';
-import { Case, CaseList, Config, run } from '../../expression.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
+import { biasedRange, linearRange } from '../../../../../util/math.js';
+import { Case, CaseList, Config, makeUnaryF32Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -22,6 +22,12 @@ T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
 @const fn log2(e: T ) -> T
 Returns the base-2 logarithm of e. Component-wise when T is a vector.
 `
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
+      .combine('range', ['low', 'mid', 'high'] as const)
   )
   .unimplemented();
 
@@ -45,8 +51,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
   .fn(async t => {
     // [1]: Need to decide what the ground-truth is.
     const makeCase = (x: number): Case => {
-      const f32_x = quantizeToF32(x);
-      return { input: f32(x), expected: f32(Math.log2(f32_x)) };
+      return makeUnaryF32Case(x, Math.log2);
     };
 
     const runRange = (match: FloatMatch, cases: CaseList) => {
@@ -86,5 +91,11 @@ T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
 @const fn log2(e: T ) -> T
 Returns the base-2 logarithm of e. Component-wise when T is a vector.
 `
+  )
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
+      .combine('range', ['low', 'mid', 'high'] as const)
   )
   .unimplemented();
