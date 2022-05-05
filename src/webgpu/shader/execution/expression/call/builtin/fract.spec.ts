@@ -4,7 +4,7 @@ Execution tests for the 'fract' builtin function
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { correctlyRoundedThreshold, anyOf } from '../../../../../util/compare.js';
+import { correctlyRoundedMatch, anyOf } from '../../../../../util/compare.js';
 import { kBit, kValue } from '../../../../../util/constants.js';
 import { f32, f32Bits, TypeF32 } from '../../../../../util/conversion.js';
 import { Case, Config, makeUnaryF32Case, run } from '../../expression.js';
@@ -47,7 +47,7 @@ Component-wise when T is a vector.
   )
   .fn(async t => {
     const cfg: Config = t.params;
-    cfg.cmpFloats = correctlyRoundedThreshold();
+    cfg.cmpFloats = correctlyRoundedMatch();
 
     const makeCase = (x: number): Case => {
       const result = x - Math.floor(x);
