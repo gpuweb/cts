@@ -94,6 +94,7 @@ g.test('subresources,color_attachments')
     });
 
     const colorAttachment1 = t.getColorAttachment(texture, {
+      dimension: '2d',
       baseArrayLayer: layer0,
       arrayLayerCount: 1,
       baseMipLevel: level0,
@@ -101,6 +102,7 @@ g.test('subresources,color_attachments')
     });
 
     const colorAttachment2 = t.getColorAttachment(texture, {
+      dimension: '2d',
       baseArrayLayer: layer1,
       baseMipLevel: level1,
       mipLevelCount: 1,
@@ -190,6 +192,7 @@ g.test('subresources,color_attachment_and_bind_group')
     const bindGroup = t.createBindGroupForTest(bindGroupView, bgUsage, 'float');
 
     const colorAttachment = t.getColorAttachment(texture, {
+      dimension: '2d',
       baseArrayLayer: colorAttachmentLayer,
       arrayLayerCount: 1,
       baseMipLevel: colorAttachmentLevel,
@@ -304,6 +307,7 @@ g.test('subresources,depth_stencil_attachment_and_bind_group')
     const bindGroup = t.createBindGroupForTest(bindGroupView, 'texture', sampleType);
 
     const attachmentView = texture.createView({
+      dimension: '2d',
       baseArrayLayer: dsLayer,
       arrayLayerCount: 1,
       baseMipLevel: dsLevel,
