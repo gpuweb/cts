@@ -171,13 +171,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('texture_type', [
-        'texture_depth_2d',
-        'texture_depth_2d_array',
-        'texture_depth_cube',
-        'texture_depth_cube_array',
-        '',
-      ])
+      .combine('texture_type', ['texture_depth_2d_array', 'texture_depth_cube_array'])
       .combine('C', ['i32', 'u32'] as const)
       .combine('coords', [
         /* less then min value, */ [0, 0],
