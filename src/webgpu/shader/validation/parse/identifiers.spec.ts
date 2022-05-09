@@ -167,6 +167,7 @@ const kInvalidIdentifiers = new Set([
   'await',
   'become',
   'bf16',
+  'binding_array',
   'cast',
   'catch',
   'cbuffer',
