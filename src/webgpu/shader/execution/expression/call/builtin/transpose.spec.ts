@@ -12,7 +12,7 @@ g.test('abstract_float')
   .desc(
     `
 T is AbstractFloat, f32, or f16
-transpose(e: matRxC<T> ) -> matCxR<T>
+@const transpose(e: matRxC<T> ) -> matCxR<T>
 Returns the transpose of e.
 `
   )
@@ -29,7 +29,7 @@ g.test('f32')
   .desc(
     `
 T is AbstractFloat, f32, or f16
-transpose(e: matRxC<T> ) -> matCxR<T>
+@const transpose(e: matRxC<T> ) -> matCxR<T>
 Returns the transpose of e.
 `
   )
@@ -46,7 +46,7 @@ g.test('f16')
   .desc(
     `
 T is AbstractFloat, f32, or f16
-transpose(e: matRxC<T> ) -> matCxR<T>
+@const transpose(e: matRxC<T> ) -> matCxR<T>
 Returns the transpose of e.
 `
   )
