@@ -13,7 +13,7 @@ g.test('abstract_float')
   .desc(
     `
 T is AbstractFloat, f32, or f16
-determinant(e: matCxC<T> ) -> T
+@const determinant(e: matCxC<T> ) -> T
 Returns the determinant of e.
 `
   )
@@ -29,7 +29,7 @@ g.test('f32')
   .desc(
     `
 T is AbstractFloat, f32, or f16
-determinant(e: matCxC<T> ) -> T
+@const determinant(e: matCxC<T> ) -> T
 Returns the determinant of e.
 `
   )
@@ -45,7 +45,7 @@ g.test('f16')
   .desc(
     `
 T is AbstractFloat, f32, or f16
-determinant(e: matCxC<T> ) -> T
+@const determinant(e: matCxC<T> ) -> T
 Returns the determinant of e.
 `
   )

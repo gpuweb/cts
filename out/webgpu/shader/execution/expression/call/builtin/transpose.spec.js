@@ -12,7 +12,7 @@ specURL('https://www.w3.org/TR/WGSL/#matrix-builtin-functions').
 desc(
 `
 T is AbstractFloat, f32, or f16
-transpose(e: matRxC<T> ) -> matCxR<T>
+@const transpose(e: matRxC<T> ) -> matCxR<T>
 Returns the transpose of e.
 `).
 
@@ -29,7 +29,7 @@ specURL('https://www.w3.org/TR/WGSL/#matrix-builtin-functions').
 desc(
 `
 T is AbstractFloat, f32, or f16
-transpose(e: matRxC<T> ) -> matCxR<T>
+@const transpose(e: matRxC<T> ) -> matCxR<T>
 Returns the transpose of e.
 `).
 
@@ -46,7 +46,7 @@ specURL('https://www.w3.org/TR/WGSL/#matrix-builtin-functions').
 desc(
 `
 T is AbstractFloat, f32, or f16
-transpose(e: matRxC<T> ) -> matCxR<T>
+@const transpose(e: matRxC<T> ) -> matCxR<T>
 Returns the transpose of e.
 `).
 

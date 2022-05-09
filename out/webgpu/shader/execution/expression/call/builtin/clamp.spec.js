@@ -204,7 +204,7 @@ specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(
 `
 T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-clamp(e: T , low: T , high: T) -> T
+@const clamp(e: T , low: T , high: T) -> T
 Returns either min(max(e,low),high), or the median of the three values e, low, high.
 Component-wise when T is a vector.
 `).
@@ -221,7 +221,7 @@ specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(
 `
 T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-clamp(e: T , low: T , high: T) -> T
+@const clamp(e: T , low: T , high: T) -> T
 Returns either min(max(e,low),high), or the median of the three values e, low, high.
 Component-wise when T is a vector.
 `).
@@ -270,7 +270,7 @@ specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(
 `
 T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-clamp(e: T , low: T , high: T) -> T
+@const clamp(e: T , low: T , high: T) -> T
 Returns either min(max(e,low),high), or the median of the three values e, low, high.
 Component-wise when T is a vector.
 `).

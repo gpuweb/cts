@@ -12,7 +12,7 @@ specURL('https://www.w3.org/TR/WGSL/#matrix-builtin-functions').
 desc(
 `
 T is AbstractFloat, f32, or f16
-determinant(e: matCxC<T> ) -> T
+@const determinant(e: matCxC<T> ) -> T
 Returns the determinant of e.
 `).
 
@@ -28,7 +28,7 @@ specURL('https://www.w3.org/TR/WGSL/#matrix-builtin-functions').
 desc(
 `
 T is AbstractFloat, f32, or f16
-determinant(e: matCxC<T> ) -> T
+@const determinant(e: matCxC<T> ) -> T
 Returns the determinant of e.
 `).
 
@@ -44,7 +44,7 @@ specURL('https://www.w3.org/TR/WGSL/#matrix-builtin-functions').
 desc(
 `
 T is AbstractFloat, f32, or f16
-determinant(e: matCxC<T> ) -> T
+@const determinant(e: matCxC<T> ) -> T
 Returns the determinant of e.
 `).
 
