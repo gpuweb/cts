@@ -2,6 +2,7 @@ import { Fixture, SubcaseBatchState, TestParams } from '../common/framework/fixt
 import {
   assert,
   range,
+  rejectWithoutUncaught,
   TypedArrayBufferView,
   TypedArrayBufferViewConstructor,
   unreachable,
@@ -64,10 +65,10 @@ export function initUncanonicalizedDeviceDescriptor(
 }
 
 export class GPUTestSubcaseBatchState extends SubcaseBatchState {
-  /** Provider for default device. Should never reject. */
-  private provider: Promise<DeviceProvider | Error> | undefined;
-  /** Provider for mismatched device. Should never reject. */
-  private mismatchedProvider: Promise<DeviceProvider | Error> = Promise.resolve(
+  /** Provider for default device. */
+  private provider: Promise<DeviceProvider> | undefined;
+  /** Provider for mismatched device. */
+  private mismatchedProvider: Promise<DeviceProvider> = rejectWithoutUncaught(
     new Error('selectMismatchedDeviceOrSkipTestCase was not called in beforeAllSubcases')
   );
 
@@ -82,7 +83,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
   }
 
   /** @internal MAINTENANCE_TODO: Make this not visible to test code? */
-  acquireProvider(): Promise<DeviceProvider | Error> {
+  acquireProvider(): Promise<DeviceProvider> {
     if (this.provider === undefined) {
       this.selectDeviceOrSkipTestCase(undefined);
     }
@@ -99,11 +100,9 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
    */
   selectDeviceOrSkipTestCase(descriptor: DeviceSelectionDescriptor): void {
     assert(this.provider === undefined, "Can't selectDeviceOrSkipTestCase() multiple times");
-    this.provider = devicePool.acquire(initUncanonicalizedDeviceDescriptor(descriptor)).then(
-      x => x,
-      // Must catch rejections here to avoid an uncaught promise rejection.
-      (x: Error) => x
-    );
+    this.provider = devicePool.acquire(initUncanonicalizedDeviceDescriptor(descriptor));
+    // Suppress uncaught promise rejection (we'll catch it later).
+    this.provider.catch(() => {});
   }
 
   /**
@@ -141,7 +140,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
   }
 
   /** @internal MAINTENANCE_TODO: Make this not visible to test code? */
-  acquireMismatchedProvider(): Promise<DeviceProvider | Error> {
+  acquireMismatchedProvider(): Promise<DeviceProvider> {
     return this.mismatchedProvider;
   }
 
@@ -158,13 +157,11 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
       "Can't selectMismatchedDeviceOrSkipTestCase() multiple times"
     );
 
-    this.mismatchedProvider = mismatchedDevicePool
-      .acquire(initUncanonicalizedDeviceDescriptor(descriptor))
-      .then(
-        x => x,
-        // Must catch rejections here to avoid an uncaught promise rejection.
-        (x: Error) => x
-      );
+    this.mismatchedProvider = mismatchedDevicePool.acquire(
+      initUncanonicalizedDeviceDescriptor(descriptor)
+    );
+    // Suppress uncaught promise rejection (we'll catch it later).
+    this.mismatchedProvider.catch(() => {});
   }
 }
 
@@ -176,8 +173,9 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
     return new GPUTestSubcaseBatchState(params);
   }
 
-  private provider: DeviceProvider | Error = new Error('GPUTest not initialized?');
-  private mismatchedProvider: DeviceProvider | Error = new Error('GPUTest not initialized?');
+  // Should never be undefined in a test. If it is, init() must not have run/finished.
+  private provider: DeviceProvider = undefined!;
+  private mismatchedProvider: DeviceProvider = undefined!;
 
   async init() {
     await super.init();
@@ -190,7 +188,6 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
    * GPUDevice for the test to use.
    */
   get device(): GPUDevice {
-    if (!('device' in this.provider)) throw this.provider;
     return this.provider.device;
   }
 
@@ -199,7 +196,6 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
    * e.g. for creating objects for by device_mismatch validation tests.
    */
   get mismatchedDevice(): GPUDevice {
-    if (!('device' in this.mismatchedProvider)) throw this.mismatchedProvider;
     return this.mismatchedProvider.device;
   }
 
