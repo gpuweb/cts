@@ -118,6 +118,17 @@ export function raceWithRejectOnTimeout(p, ms, msg) {
 }
 
 /**
+ * Returns a `Promise.reject()`, but also registers a dummy `.catch()` handler so it doesn't count
+ * as an uncaught promise rejection in the runtime.
+ */
+export function rejectWithoutUncaught(err) {
+  const p = Promise.reject(err);
+  // Suppress uncaught promise rejection.
+  p.catch(() => {});
+  return p;
+}
+
+/**
  * Makes a copy of a JS `object`, with the keys reordered into sorted order.
  */
 export function sortObjectByKey(v) {

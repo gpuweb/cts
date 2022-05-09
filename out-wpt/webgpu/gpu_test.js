@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { Fixture, SubcaseBatchState } from '../common/framework/fixture.js';
-import { assert, range, unreachable } from '../common/util/util.js';
+import { assert, range, rejectWithoutUncaught, unreachable } from '../common/util/util.js';
 
 import { kTextureFormatInfo, kQueryTypeInfo, resolvePerAspectFormat } from './capability_info.js';
 import { makeBufferWithContents } from './util/buffer.js';
@@ -42,12 +42,17 @@ export function initUncanonicalizedDeviceDescriptor(descriptor) {
 }
 
 export class GPUTestSubcaseBatchState extends SubcaseBatchState {
-  /** Provider for default device. Should never reject. */
+  /** Provider for default device. */
 
-  /** Provider for mismatched device. Should never reject. */
-  mismatchedProvider = Promise.resolve(
+  /** Provider for mismatched device. */
+  mismatchedProvider = rejectWithoutUncaught(
     new Error('selectMismatchedDeviceOrSkipTestCase was not called in beforeAllSubcases')
   );
+
+  async postInit() {
+    // Skip all subcases if there's no device.
+    await this.acquireProvider();
+  }
 
   async finalize() {
     await super.finalize();
@@ -77,11 +82,9 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
    */
   selectDeviceOrSkipTestCase(descriptor) {
     assert(this.provider === undefined, "Can't selectDeviceOrSkipTestCase() multiple times");
-    this.provider = devicePool.acquire(initUncanonicalizedDeviceDescriptor(descriptor)).then(
-      x => x,
-      // Must catch rejections here to avoid an uncaught promise rejection.
-      x => x
-    );
+    this.provider = devicePool.acquire(initUncanonicalizedDeviceDescriptor(descriptor));
+    // Suppress uncaught promise rejection (we'll catch it later).
+    this.provider.catch(() => {});
   }
 
   /**
@@ -134,13 +137,12 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
       "Can't selectMismatchedDeviceOrSkipTestCase() multiple times"
     );
 
-    this.mismatchedProvider = mismatchedDevicePool
-      .acquire(initUncanonicalizedDeviceDescriptor(descriptor))
-      .then(
-        x => x,
-        // Must catch rejections here to avoid an uncaught promise rejection.
-        x => x
-      );
+    this.mismatchedProvider = mismatchedDevicePool.acquire(
+      initUncanonicalizedDeviceDescriptor(descriptor)
+    );
+
+    // Suppress uncaught promise rejection (we'll catch it later).
+    this.mismatchedProvider.catch(() => {});
   }
 }
 
@@ -152,8 +154,9 @@ export class GPUTest extends Fixture {
     return new GPUTestSubcaseBatchState(params);
   }
 
-  provider = new Error('GPUTest not initialized?');
-  mismatchedProvider = new Error('GPUTest not initialized?');
+  // Should never be undefined in a test. If it is, init() must not have run/finished.
+  provider = undefined;
+  mismatchedProvider = undefined;
 
   async init() {
     await super.init();
@@ -166,7 +169,6 @@ export class GPUTest extends Fixture {
    * GPUDevice for the test to use.
    */
   get device() {
-    if (!('device' in this.provider)) throw this.provider;
     return this.provider.device;
   }
 
@@ -175,7 +177,6 @@ export class GPUTest extends Fixture {
    * e.g. for creating objects for by device_mismatch validation tests.
    */
   get mismatchedDevice() {
-    if (!('device' in this.mismatchedProvider)) throw this.mismatchedProvider;
     return this.mismatchedProvider.device;
   }
 
