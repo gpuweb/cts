@@ -13,7 +13,9 @@ g.test('scalar_f32')
     `
 T is f32
 @const fn modf(e:T) -> __modf_result
-Splits e into fractional and whole number parts. Returns the __modf_result built-in structure, defined as follows:
+Splits |e| into fractional and whole number parts.
+The whole part is (|e| % 1.0), and the fractional part is |e| minus the whole part.
+Returns the __modf_result built-in structure, defined as follows:
 struct __modf_result {
   fract : f32, // fractional part
   whole : f32  // whole part
@@ -29,7 +31,9 @@ g.test('scalar_f16')
     `
 T is f16
 @const fn modf(e:T) -> __modf_result_f16
-Splits e into fractional and whole number parts. Returns the __modf_result_f16 built-in structure, defined as if as follows:
+Splits |e| into fractional and whole number parts.
+The whole part is (|e| % 1.0), and the fractional part is |e| minus the whole part.
+Returns the __modf_result_f16 built-in structure, defined as if as follows:
 struct __modf_result_f16 {
   fract : f16, // fractional part
   whole : f16  // whole part
@@ -45,7 +49,9 @@ g.test('vector_f32')
     `
 T is vecN<f32>
 @const fn modf(e:T) -> __modf_result_vecN
-Splits the components of e into fractional and whole number parts. Returns the __modf_result_vecN built-in structure, defined as follows:
+Splits the components of |e| into fractional and whole number parts.
+The |i|'th component of the whole and fractional parts equal the whole and fractional parts of modf(e[i]).
+Returns the __modf_result_vecN built-in structure, defined as follows:
 struct __modf_result_vecN {
   fract : vecN<f32>, // fractional part
   whole : vecN<f32>  // whole part
@@ -65,7 +71,9 @@ g.test('vector_f16')
     `
 T is vecN<f16>
 @const fn modf(e:T) -> __modf_result_vecN_f16
-Splits the components of e into fractional and whole number parts. Returns the __modf_result_vecN_f16 built-in structure, defined as if as follows:
+Splits the components of |e| into fractional and whole number parts.
+The |i|'th component of the whole and fractional parts equal the whole and fractional parts of modf(e[i]).
+Returns the __modf_result_vecN_f16 built-in structure, defined as if as follows:
 struct __modf_result_vecN_f16 {
   fract : vecN<f16>, // fractional part
   whole : vecN<f16>  // whole part
