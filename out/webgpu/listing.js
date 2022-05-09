@@ -1908,6 +1908,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "textureGather"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "textureGatherCompare"
     ]
   },
