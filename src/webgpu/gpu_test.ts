@@ -72,6 +72,11 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     new Error('selectMismatchedDeviceOrSkipTestCase was not called in beforeAllSubcases')
   );
 
+  async postInit(): Promise<void> {
+    // Skip all subcases if there's no device.
+    await this.acquireProvider();
+  }
+
   async finalize(): Promise<void> {
     await super.finalize();
 
