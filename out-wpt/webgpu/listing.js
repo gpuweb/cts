@@ -1898,6 +1898,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "textureDimension"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "textureGatherCompare"
     ]
   },
