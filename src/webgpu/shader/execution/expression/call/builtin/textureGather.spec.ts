@@ -64,10 +64,7 @@ Parameters:
         /* less then min value, */ [0, 0],
         ['max', 'max'] /* greater then max value */,
       ] as const)
-      .combine('offset', [
-        undefined,
-        /* less then min, min, */ [0, 0] /* max, greater than max */,
-      ] as const)
+      .combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]] as const)
   )
   .unimplemented();
 
@@ -109,15 +106,12 @@ Parameters:
         /* less then min value, */ [0, 0],
         ['max', 'max'] /* greater then max value */,
       ] as const)
-      .combine('offset', [
-        undefined,
-        /* less then min, min, */ [0, 0] /* max, greater than max */,
-      ] as const)
       .combine('array_index', [
         /* one less then min */ -1,
         0,
         1 /* max, one more then max */,
       ] as const)
+      .combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]] as const)
   )
   .unimplemented();
 
@@ -148,10 +142,7 @@ Parameters:
         /* less then min value, */ [0, 0],
         ['max', 'max'] /* greater then max value */,
       ] as const)
-      .combine('offset', [
-        undefined,
-        /* less then min, min, */ [0, 0] /* max, greater than max */,
-      ] as const)
+      .combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]] as const)
   )
   .unimplemented();
 
@@ -192,14 +183,11 @@ Parameters:
         /* less then min value, */ [0, 0],
         ['max', 'max'] /* greater then max value */,
       ] as const)
-      .combine('offset', [
-        undefined,
-        /* less then min, min, */ [0, 0] /* max, greater than max */,
-      ] as const)
       .combine('array_index', [
         /* one less then min, */ -1,
         0,
         1 /* max, one more then max */,
       ] as const)
+      .combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]] as const)
   )
   .unimplemented();
