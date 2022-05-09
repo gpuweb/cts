@@ -62,7 +62,7 @@ g.test('vector_abstract_float')
     `
 T is AbstractFloat, f32, or f16
 T2 is vecN<T>
-@const fn mix(e1: T2 ,e2: T2 ,e3: f32 ) -> T
+@const fn mix(e1: T2 ,e2: T2 ,e3: T) -> T2
 Returns the component-wise linear blend of e1 and e2, using scalar blending factor e3 for each component.
 Same as mix(e1,e2,T2(e3)).
 `
@@ -80,7 +80,7 @@ g.test('vector_f32')
     `
 T is AbstractFloat, f32, or f16
 T2 is vecN<T>
-@const fn mix(e1: T2 ,e2: T2 ,e3: f32 ) -> T
+@const fn mix(e1: T2 ,e2: T2 ,e3: T) -> T2
 Returns the component-wise linear blend of e1 and e2, using scalar blending factor e3 for each component.
 Same as mix(e1,e2,T2(e3)).
 `
@@ -98,7 +98,7 @@ g.test('vector_f16')
     `
 T is AbstractFloat, f32, or f16
 T2 is vecN<T>
-@const fn mix(e1: T2 ,e2: T2 ,e3: f32 ) -> T
+@const fn mix(e1: T2 ,e2: T2 ,e3: T) -> T2
 Returns the component-wise linear blend of e1 and e2, using scalar blending factor e3 for each component.
 Same as mix(e1,e2,T2(e3)).
 `
