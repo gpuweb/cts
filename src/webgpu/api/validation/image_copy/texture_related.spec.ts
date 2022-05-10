@@ -70,8 +70,8 @@ g.test('texture,device_mismatch')
   .paramsSubcasesOnly(u =>
     u.combine('method', kImageCopyTypes).combine('mismatched', [true, false])
   )
-  .beforeAllSubcases(async t => {
-    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+  .beforeAllSubcases(t => {
+    t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {
     const { method, mismatched } = t.params;
@@ -255,9 +255,9 @@ Test the copy must be a full subresource if the texture's format is depth/stenci
       // need to examine depth dimension via copyDepthModifier to determine whether it is a full copy for a 3D texture.
       .expand('copyDepthModifier', ({ dimension: d }) => (d === '3d' ? [0, -1] : [0]))
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
+    t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const {
@@ -345,9 +345,9 @@ Test that the texture copy origin must be aligned to the format's block size.
       .unless(p => p.dimension === '1d' && p.coordinateToTest !== 'x')
       .expand('valueToCoordinate', texelBlockAlignmentTestExpanderForValueToCoordinate)
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
+    t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const {
@@ -408,9 +408,9 @@ Test that the copy size must be aligned to the texture's format's block size.
       .unless(p => p.dimension === '1d' && p.coordinateToTest !== 'width')
       .expand('valueToCoordinate', texelBlockAlignmentTestExpanderForValueToCoordinate)
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
+    t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const { valueToCoordinate, coordinateToTest, dimension, format, method } = t.params;
