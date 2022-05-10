@@ -72,14 +72,13 @@ export function compare(got: Value, expected: Value, cmpFloats: FloatMatch): Com
     // Check types
     const gTy = got.type;
     const eTy = expected.type;
-    if (gTy !== eTy) {
-      if (!isFloatValue(got) || !isFloatValue(expected)) {
-        return {
-          matched: false,
-          got: `${Colors.red(gTy.toString())}(${got})`,
-          expected: `${Colors.red(eTy.toString())}(${expected})`,
-        };
-      }
+    const bothFloatTypes = isFloatValue(got) && isFloatValue(expected);
+    if (gTy !== eTy && !bothFloatTypes) {
+      return {
+        matched: false,
+        got: `${Colors.red(gTy.toString())}(${got})`,
+        expected: `${Colors.red(eTy.toString())}(${expected})`,
+      };
     }
   }
 
