@@ -55,7 +55,12 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
 
     // [1]: Need to decide what the ground-truth is.
     const makeCase = (y: number, x: number): Case => {
-      return makeBinaryF32Case(y, x, Math.atan2, true);
+      // If y is subnormal, expect possible results of atan2(0, x)
+      let extra_cases: Array<number> = [];
+      if (flushSubnormalNumber(y) === 0.0) {
+        extra_cases = [0.0, Math.PI, -Math.PI];
+      }
+      return makeBinaryF32Case(y, x, Math.atan2, true, extra_cases);
     };
 
     const numeric_range = fullF32Range({
