@@ -53,9 +53,16 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
     const cfg: Config = t.params;
     cfg.cmpFloats = ulpMatch(4096);
 
+    const extra_cases = (result: number): Array<number> => {
+      if (result === 0 || result === Math.PI || result === -Math.PI) {
+        return [0, Math.PI, -Math.PI];
+      }
+      return [];
+    };
+
     // [1]: Need to decide what the ground-truth is.
     const makeCase = (y: number, x: number): Case => {
-      return makeBinaryF32Case(y, x, Math.atan2, true);
+      return makeBinaryF32Case(y, x, Math.atan2, true, extra_cases);
     };
 
     const numeric_range = fullF32Range({

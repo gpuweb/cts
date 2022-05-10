@@ -404,12 +404,15 @@ export function makeUnaryF32Case(param: number, op: (p: number) => number): Case
  * @param skip_param1_zero_flush should the builder skip cases where the param1 would be flushed to 0,
  *                               this is to avoid performing division by 0, other invalid operations.
  *                               The caller is responsible for making sure the initial param1 isn't 0.
+ * @param extra_cases callback that generates additional cases that should be expected for special
+ *                    results. This is specifically used to handle periodic cases in trig functions.
  */
 export function makeBinaryF32Case(
   param0: number,
   param1: number,
   op: (p0: number, p1: number) => number,
-  skip_param1_zero_flush: boolean = false
+  skip_param1_zero_flush: boolean = false,
+  extra_cases?: (result: number) => Array<number>
 ): Case {
   const f32_param0 = quantizeToF32(param0);
   const f32_param1 = quantizeToF32(param1);
@@ -430,6 +433,17 @@ export function makeBinaryF32Case(
     calculateFlushedResults(op(0, 0)).forEach(value => {
       expected.add(value);
     });
+  }
+
+  if (extra_cases !== undefined) {
+    // Need to store new cases to a separate container to avoid modifying |expected| while iterating it
+    const new_cases = new Set<Scalar>();
+    expected.forEach(e => {
+      extra_cases(e.value as number)
+        .map(f64)
+        .forEach(x => new_cases.add(x));
+    });
+    new_cases.forEach(x => expected.add(x));
   }
 
   return { input: [f32(param0), f32(param1)], expected: anyOf(...expected) };
