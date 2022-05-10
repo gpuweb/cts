@@ -1,7 +1,12 @@
 import { SkipTestCase } from '../../common/framework/fixture.js';
 import { attemptGarbageCollection } from '../../common/util/collect_garbage.js';
 import { getGPU } from '../../common/util/navigator_gpu.js';
-import { assert, raceWithRejectOnTimeout, assertReject } from '../../common/util/util.js';
+import {
+  assert,
+  raceWithRejectOnTimeout,
+  assertReject,
+  unreachable,
+} from '../../common/util/util.js';
 import { kLimitInfo, kLimits } from '../capability_info.js';
 
 export interface DeviceProvider {
@@ -63,9 +68,6 @@ export class DevicePool {
         holder.lostInfo === undefined,
         `Device was unexpectedly lost. Reason: ${holder.lostInfo?.reason}, Message: ${holder.lostInfo?.message}`
       );
-
-      // If all that succeeded, mark the holder as free.
-      holder.state = 'free';
     } catch (ex) {
       // Any error that isn't explicitly TestFailedButDeviceReusable forces a new device to be
       // created for the next test.
@@ -94,6 +96,9 @@ export class DevicePool {
       if (!expectedDeviceLost) {
         throw ex;
       }
+    } finally {
+      // Mark the holder as free so the device can be reused (if it's still in this.devices).
+      holder.state = 'free';
     }
   }
 }
@@ -107,13 +112,14 @@ class DescriptorToHolderMap {
   private holders: Map<string, DeviceHolder> = new Map();
 
   /** Deletes an item from the map by DeviceHolder value. */
-  delete(device: DeviceHolder): void {
+  delete(holder: DeviceHolder): void {
     for (const [k, v] of this.holders) {
-      if (v === device) {
+      if (v === holder) {
         this.holders.delete(k);
         return;
       }
     }
+    unreachable("internal error: couldn't find DeviceHolder to delete");
   }
 
   /**
