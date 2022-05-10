@@ -9,7 +9,8 @@ TypeU32,
 
 Vector,
 VectorType,
-f32 } from
+f32,
+f64 } from
 '../../../util/conversion.js';
 import { flushSubnormalNumber, isSubnormalNumber, quantizeToF32 } from '../../../util/math.js';
 
@@ -377,9 +378,9 @@ vectorWidth)
 
 }
 
-/** @returns a set of flushed and non-flushed f32 results for a given number. */
+/** @returns a set of flushed and non-flushed floating point results for a given number. */
 function calculateFlushedResults(value) {
-  return new Set([f32(value), f32(flushSubnormalNumber(value))]);
+  return new Set([f64(value), f64(flushSubnormalNumber(value))]);
 }
 
 /**

@@ -4,7 +4,7 @@
 Execution tests for the 'abs' builtin function
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { correctlyRoundedThreshold } from '../../../../../util/compare.js';
+import { correctlyRoundedMatch } from '../../../../../util/compare.js';
 import { kBit } from '../../../../../util/constants.js';
 import {
 f32Bits,
@@ -117,7 +117,7 @@ combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
   const cfg = t.params;
-  cfg.cmpFloats = correctlyRoundedThreshold();
+  cfg.cmpFloats = correctlyRoundedMatch();
 
   run(t, builtin('abs'), [TypeI32], TypeI32, cfg, [
   // Min and max i32
@@ -196,7 +196,7 @@ combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
   const cfg = t.params;
-  cfg.cmpFloats = correctlyRoundedThreshold();
+  cfg.cmpFloats = correctlyRoundedMatch();
 
   const makeCase = (x) => {
     return makeUnaryF32Case(x, Math.abs);

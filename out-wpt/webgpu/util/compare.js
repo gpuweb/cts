@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { Colors } from '../../common/util/colors.js';
-import { f32, Scalar, Vector } from './conversion.js';
+import { f32, isFloatValue, Scalar, Vector } from './conversion.js';
 import { correctlyRounded, oneULP, withinULP } from './math.js';
 
 /** Comparison describes the result of a Comparator function. */
@@ -10,7 +10,7 @@ import { correctlyRounded, oneULP, withinULP } from './math.js';
  * @returns a FloatMatch that returns true iff the two numbers are equal to, or
  * less than the specified absolute error threshold.
  */
-export function absThreshold(diff) {
+export function absMatch(diff) {
   return (got, expected) => {
     if (got === expected) {
       return true;
@@ -26,7 +26,7 @@ export function absThreshold(diff) {
  * @returns a FloatMatch that returns true iff the two numbers are within or
  * equal to the specified ULP threshold value.
  */
-export function ulpThreshold(ulp) {
+export function ulpMatch(ulp) {
   return (got, expected) => {
     if (got === expected) {
       return true;
@@ -40,7 +40,7 @@ export function ulpThreshold(ulp) {
  * to |got|.
  * |got| must be expressible as a float32.
  */
-export function correctlyRoundedThreshold() {
+export function correctlyRoundedMatch() {
   return (got, expected) => {
     return correctlyRounded(f32(got), expected);
   };
@@ -58,7 +58,8 @@ export function compare(got, expected, cmpFloats) {
     // Check types
     const gTy = got.type;
     const eTy = expected.type;
-    if (gTy !== eTy) {
+    const bothFloatTypes = isFloatValue(got) && isFloatValue(expected);
+    if (gTy !== eTy && !bothFloatTypes) {
       return {
         matched: false,
         got: `${Colors.red(gTy.toString())}(${got})`,
@@ -70,7 +71,7 @@ export function compare(got, expected, cmpFloats) {
   if (got instanceof Scalar) {
     const g = got;
     const e = expected;
-    const isFloat = g.type.kind === 'f32';
+    const isFloat = g.type.kind === 'f64' || g.type.kind === 'f32' || g.type.kind === 'f16';
     const matched = (isFloat && cmpFloats(g.value, e.value)) || (!isFloat && g.value === e.value);
     return {
       matched,
@@ -131,11 +132,11 @@ export function anyOf(...values) {
  * N is n(x), where x is the input into the function under test, not the result of the function.
  * For a function f(x) = X that is being tested, the acceptance interval is defined as within X +/- n(x) * ulp(X).
  */
-export function ulpCmp(x, target, n) {
+export function ulpComparator(x, target, n) {
   const c = n(x);
-  const ulpMatch = ulpThreshold(c);
+  const match = ulpMatch(c);
   return (got, _) => {
-    const cmp = compare(got, target, ulpMatch);
+    const cmp = compare(got, target, match);
     if (cmp.matched) {
       return cmp;
     }

@@ -4,7 +4,7 @@ Execution tests for the 'atan2' builtin function
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { ulpThreshold } from '../../../../../util/compare.js';
+import { ulpMatch } from '../../../../../util/compare.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { flushSubnormalNumber, fullF32Range } from '../../../../../util/math.js';
 import { Case, Config, makeBinaryF32Case, run } from '../../expression.js';
@@ -51,7 +51,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
   )
   .fn(async t => {
     const cfg: Config = t.params;
-    cfg.cmpFloats = ulpThreshold(4096);
+    cfg.cmpFloats = ulpMatch(4096);
 
     // [1]: Need to decide what the ground-truth is.
     const makeCase = (y: number, x: number): Case => {

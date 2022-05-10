@@ -5,7 +5,7 @@ Execution tests for the 'log2' builtin function
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { absThreshold, ulpThreshold } from '../../../../../util/compare.js';
+import { absMatch, ulpMatch } from '../../../../../util/compare.js';
 import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { biasedRange, linearRange } from '../../../../../util/math.js';
@@ -65,21 +65,21 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
     switch (t.params.range) {
       case 'low': // [0, 0.5)
         runRange(
-          ulpThreshold(3),
+          ulpMatch(3),
           linearRange(kValue.f32.positive.min, 0.5, 20).map(x => makeCase(x))
         );
 
         break;
       case 'mid': // [0.5, 2.0]
         runRange(
-          absThreshold(2 ** -21),
+          absMatch(2 ** -21),
           linearRange(0.5, 2.0, 20).map(x => makeCase(x))
         );
 
         break;
       case 'high': // (2.0, +∞]
         runRange(
-          ulpThreshold(3),
+          ulpMatch(3),
           biasedRange(2.0, 2 ** 32, 1000).map(x => makeCase(x))
         );
 

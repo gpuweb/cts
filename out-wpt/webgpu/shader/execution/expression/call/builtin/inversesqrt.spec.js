@@ -5,7 +5,7 @@ Execution tests for the 'inverseSqrt' builtin function
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { ulpThreshold } from '../../../../../util/compare.js';
+import { ulpMatch } from '../../../../../util/compare.js';
 import { kBit, kValue } from '../../../../../util/constants.js';
 import { f32, f32Bits, TypeF32 } from '../../../../../util/conversion.js';
 import { biasedRange, linearRange } from '../../../../../util/math.js';
@@ -62,7 +62,7 @@ Returns the reciprocal of sqrt(e). Component-wise when T is a vector.
     ];
 
     const cfg = t.params;
-    cfg.cmpFloats = ulpThreshold(2);
+    cfg.cmpFloats = ulpMatch(2);
     run(t, builtin('inverseSqrt'), [TypeF32], TypeF32, cfg, cases);
   });
 

@@ -5,7 +5,7 @@ Execution tests for the 'sin' builtin function
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { absThreshold } from '../../../../../util/compare.js';
+import { absMatch } from '../../../../../util/compare.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { linearRange } from '../../../../../util/math.js';
 import { makeUnaryF32Case, run } from '../../expression.js';
@@ -56,7 +56,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
     const cases = linearRange(-Math.PI, Math.PI, 1000).map(x => makeCase(x));
 
     const cfg = t.params;
-    cfg.cmpFloats = absThreshold(2 ** -11);
+    cfg.cmpFloats = absMatch(2 ** -11);
     run(t, builtin('sin'), [TypeF32], TypeF32, cfg, cases);
   });
 

@@ -4,7 +4,7 @@ Execution tests for the 'exp2' builtin function
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { ulpCmp } from '../../../../../util/compare.js';
+import { ulpComparator } from '../../../../../util/compare.js';
 import { kBit, kValue } from '../../../../../util/constants.js';
 import { f32, f32Bits, TypeF32 } from '../../../../../util/conversion.js';
 import { biasedRange } from '../../../../../util/math.js';
@@ -51,7 +51,7 @@ Returns 2 raised to the power e (e.g. 2^e). Component-wise when T is a vector.
 
     const makeCase = (x: number): Case => {
       const expected = f32(Math.pow(2, x));
-      return { input: f32(x), expected: ulpCmp(x, expected, n) };
+      return { input: f32(x), expected: ulpComparator(x, expected, n) };
     };
 
     // floor(log2(max f32 value)) = 127, so exp2(127) will be within range of a f32, but exp2(128) will not

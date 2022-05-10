@@ -5,7 +5,7 @@ Execution Tests for the f32 arithmetic binary expression operations
 `;
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { correctlyRoundedThreshold, ulpThreshold } from '../../../../util/compare.js';
+import { correctlyRoundedMatch, ulpMatch } from '../../../../util/compare.js';
 import { TypeF32 } from '../../../../util/conversion.js';
 import { biasedRange, fullF32Range } from '../../../../util/math.js';
 import { makeBinaryF32Case, run } from '../expression.js';
@@ -29,7 +29,7 @@ Accuracy: Correctly rounded
   )
   .fn(async t => {
     const cfg = t.params;
-    cfg.cmpFloats = correctlyRoundedThreshold();
+    cfg.cmpFloats = correctlyRoundedMatch();
 
     const makeCase = (lhs, rhs) => {
       return makeBinaryF32Case(lhs, rhs, (l, r) => {
@@ -63,7 +63,7 @@ Accuracy: Correctly rounded
   )
   .fn(async t => {
     const cfg = t.params;
-    cfg.cmpFloats = correctlyRoundedThreshold();
+    cfg.cmpFloats = correctlyRoundedMatch();
 
     const makeCase = (lhs, rhs) => {
       return makeBinaryF32Case(lhs, rhs, (l, r) => {
@@ -97,7 +97,7 @@ Accuracy: Correctly rounded
   )
   .fn(async t => {
     const cfg = t.params;
-    cfg.cmpFloats = correctlyRoundedThreshold();
+    cfg.cmpFloats = correctlyRoundedMatch();
 
     const makeCase = (lhs, rhs) => {
       return makeBinaryF32Case(lhs, rhs, (l, r) => {
@@ -131,7 +131,7 @@ Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
   )
   .fn(async t => {
     const cfg = t.params;
-    cfg.cmpFloats = ulpThreshold(2.5);
+    cfg.cmpFloats = ulpMatch(2.5);
 
     const makeCase = (lhs, rhs) => {
       return makeBinaryF32Case(

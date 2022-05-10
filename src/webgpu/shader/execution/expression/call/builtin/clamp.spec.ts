@@ -4,7 +4,7 @@ Execution tests for the 'clamp' builtin function
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { anyOf, correctlyRoundedThreshold } from '../../../../../util/compare.js';
+import { anyOf, correctlyRoundedMatch } from '../../../../../util/compare.js';
 import { kBit } from '../../../../../util/constants.js';
 import {
   f32,
@@ -233,7 +233,7 @@ Component-wise when T is a vector.
   )
   .fn(async t => {
     const cfg: Config = t.params;
-    cfg.cmpFloats = correctlyRoundedThreshold();
+    cfg.cmpFloats = correctlyRoundedMatch();
 
     // This array must be strictly increasing, since that ordering determines
     // the expected values.

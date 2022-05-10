@@ -5,7 +5,7 @@ Execution tests for the 'min' builtin function
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { correctlyRoundedThreshold } from '../../../../../util/compare.js';
+import { correctlyRoundedMatch } from '../../../../../util/compare.js';
 import { kBit, kValue } from '../../../../../util/constants.js';
 import {
   i32,
@@ -66,7 +66,7 @@ Returns e1 if e1 is less than e2, and e2 otherwise. Component-wise when T is a v
   )
   .fn(async t => {
     const cfg = t.params;
-    cfg.cmpFloats = correctlyRoundedThreshold();
+    cfg.cmpFloats = correctlyRoundedMatch();
 
     const makeCase = (x, y) => {
       return { input: [u32(x), u32(y)], expected: u32(Math.min(x, y)) };
@@ -95,7 +95,7 @@ Returns e1 if e1 is less than e2, and e2 otherwise. Component-wise when T is a v
   )
   .fn(async t => {
     const cfg = t.params;
-    cfg.cmpFloats = correctlyRoundedThreshold();
+    cfg.cmpFloats = correctlyRoundedMatch();
 
     const makeCase = (x, y) => {
       return { input: [i32(x), i32(y)], expected: i32(Math.min(x, y)) };
@@ -145,7 +145,7 @@ Component-wise when T is a vector.
   )
   .fn(async t => {
     const cfg = t.params;
-    cfg.cmpFloats = correctlyRoundedThreshold();
+    cfg.cmpFloats = correctlyRoundedMatch();
 
     const makeCase = (x, y) => {
       return makeBinaryF32Case(x, y, Math.min);

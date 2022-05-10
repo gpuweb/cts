@@ -4,7 +4,7 @@ Execution tests for the 'floor' builtin function
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { correctlyRoundedThreshold } from '../../../../../util/compare.js';
+import { correctlyRoundedMatch } from '../../../../../util/compare.js';
 import { kBit } from '../../../../../util/constants.js';
 import { f32, f32Bits, TypeF32 } from '../../../../../util/conversion.js';
 import { fullF32Range } from '../../../../../util/math.js';
@@ -46,7 +46,7 @@ Returns the floor of e. Component-wise when T is a vector.
   )
   .fn(async t => {
     const cfg: Config = t.params;
-    cfg.cmpFloats = correctlyRoundedThreshold();
+    cfg.cmpFloats = correctlyRoundedMatch();
 
     const makeCase = (x: number): Case => {
       return makeUnaryF32Case(x, Math.floor);
