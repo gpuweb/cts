@@ -25,7 +25,7 @@ As of this writing, the spec needs to be fixed as well.
       .combine('type', ['occlusion', 'timestamp'] as const)
       .combine('timestampQueryEnable', [false, true])
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const { timestampQueryEnable } = t.params;
 
     const requiredFeatures: GPUFeatureName[] = [];
@@ -33,7 +33,7 @@ As of this writing, the spec needs to be fixed as well.
       requiredFeatures.push('timestamp-query');
     }
 
-    t.selectDeviceOrSkipTestCase({ requiredFeatures });
+    await t.selectDeviceOrSkipTestCase({ requiredFeatures });
   })
   .fn(async t => {
     const { type, timestampQueryEnable } = t.params;
