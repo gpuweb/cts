@@ -435,7 +435,7 @@ export function makeBinaryF32Case(
     });
   }
 
-  if (extra_cases !== undefined) {
+  if (typeof extra_cases !== 'undefined') {
     // Need to store new cases to a separate container to avoid modifying |expected| while iterating it
     const new_cases = new Set<Scalar>();
     expected.forEach(e => {
