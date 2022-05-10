@@ -60,7 +60,7 @@ const workgroupStorageMemoryCorrTestCode = `
   atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r1, r1);
 `;
 
-const corrRMWTestCode = `
+const storageMemoryCorrRMWTestCode = `
   atomicExchange(&test_locations.value[x_0], 1u);
   let r0 = atomicLoad(&test_locations.value[x_1]);
   let r1 = atomicAdd(&test_locations.value[y_1], 0u);
@@ -68,10 +68,26 @@ const corrRMWTestCode = `
   atomicStore(&results.value[id_1].r1, r1);
 `;
 
+const workgroupStorageMemoryCorrRMWTestCode = `
+  atomicExchange(&test_locations.value[x_0], 1u);
+  let r0 = atomicLoad(&test_locations.value[x_1]);
+  let r1 = atomicAdd(&test_locations.value[y_1], 0u);
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r0, r0);
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r1, r1);
+`;
+
 const workgroupMemoryCorrTestCode = `
   atomicStore(&wg_test_locations[x_0], 1u);
   let r0 = atomicLoad(&wg_test_locations[x_1]);
   let r1 = atomicLoad(&wg_test_locations[y_1]);
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r0, r0);
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r1, r1);
+`;
+
+const workgroupMemoryCorrRMWTestCode = `
+  atomicExchange(&wg_test_locations[x_0], 1u);
+  let r0 = atomicLoad(&wg_test_locations[x_1]);
+  let r1 = atomicAdd(&wg_test_locations[y_1], 0u);
   atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r0, r0);
   atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r1, r1);
 `;
@@ -92,7 +108,7 @@ g.test('corr')
     {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.InterWorkgroup,
-      _testCode: corrRMWTestCode,
+      _testCode: storageMemoryCorrRMWTestCode,
       extraFlags: 'rmw_variant',
     },
     {
@@ -101,9 +117,21 @@ g.test('corr')
       _testCode: workgroupStorageMemoryCorrTestCode,
     },
     {
+      memType: MemoryType.AtomicStorageClass,
+      testType: TestType.IntraWorkgroup,
+      _testCode: workgroupStorageMemoryCorrRMWTestCode,
+      extraFlags: 'rmw_variant',
+    },
+    {
       memType: MemoryType.AtomicWorkgroupClass,
       testType: TestType.IntraWorkgroup,
       _testCode: workgroupMemoryCorrTestCode,
+    },
+    {
+      memType: MemoryType.AtomicWorkgroupClass,
+      testType: TestType.IntraWorkgroup,
+      _testCode: workgroupMemoryCorrRMWTestCode,
+      extraFlags: 'rmw_variant',
     },
   ])
   .fn(async t => {
@@ -134,13 +162,20 @@ const storageMemoryCowwTestCode = `
   atomicStore(&test_locations.value[y_0], 2u);
 `;
 
-const cowwRMWTestCode = `
+const storageMemoryCowwRMWTestCode = `
   atomicExchange(&test_locations.value[x_0], 1u);
   atomicStore(&test_locations.value[y_0], 2u);
 `;
 
 const workgroupMemoryCowwTestCode = `
   atomicStore(&wg_test_locations[x_0], 1u);
+  atomicStore(&wg_test_locations[y_0], 2u);
+  workgroupBarrier();
+  atomicStore(&test_locations.value[shuffled_workgroup * workgroupXSize * stress_params.mem_stride * 2u + x_0], atomicLoad(&wg_test_locations[x_0]));
+`;
+
+const workgroupMemoryCowwRMWTestCode = `
+  atomicExchange(&wg_test_locations[x_0], 1u);
   atomicStore(&wg_test_locations[y_0], 2u);
   workgroupBarrier();
   atomicStore(&test_locations.value[shuffled_workgroup * workgroupXSize * stress_params.mem_stride * 2u + x_0], atomicLoad(&wg_test_locations[x_0]));
@@ -162,7 +197,7 @@ g.test('coww')
     {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.InterWorkgroup,
-      _testCode: cowwRMWTestCode,
+      _testCode: storageMemoryCowwRMWTestCode,
       extraFlags: 'rmw_variant',
     },
     {
@@ -171,9 +206,21 @@ g.test('coww')
       _testCode: storageMemoryCowwTestCode,
     },
     {
+      memType: MemoryType.AtomicStorageClass,
+      testType: TestType.IntraWorkgroup,
+      _testCode: storageMemoryCowwRMWTestCode,
+      extraFlags: 'rmw_variant',
+    },
+    {
       memType: MemoryType.AtomicWorkgroupClass,
       testType: TestType.IntraWorkgroup,
       _testCode: workgroupMemoryCowwTestCode,
+    },
+    {
+      memType: MemoryType.AtomicWorkgroupClass,
+      testType: TestType.IntraWorkgroup,
+      _testCode: workgroupMemoryCowwRMWTestCode,
+      extraFlags: 'rmw_variant',
     },
   ])
   .fn(async t => {
@@ -208,17 +255,33 @@ const workgroupStorageMemoryCowrTestCode = `
   atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_0].r0, r0);
 `;
 
-const cowrRMWTestCode = `
+const storageMemoryCowrRMWTestCode = `
   atomicExchange(&test_locations.value[x_0], 1u);
   let r0 = atomicAdd(&test_locations.value[y_0], 0u);
   atomicExchange(&test_locations.value[x_1], 2u);
   atomicStore(&results.value[id_0].r0, r0);
 `;
 
+const workgroupStorageMemoryCowrRMWTestCode = `
+  atomicExchange(&test_locations.value[x_0], 1u);
+  let r0 = atomicAdd(&test_locations.value[y_0], 0u);
+  atomicExchange(&test_locations.value[x_1], 2u);
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_0].r0, r0);
+`;
+
 const workgroupMemoryCowrTestCode = `
   atomicStore(&wg_test_locations[x_0], 1u);
   let r0 = atomicLoad(&wg_test_locations[y_0]);
   atomicStore(&wg_test_locations[x_1], 2u);
+  workgroupBarrier();
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_0].r0, r0);
+  atomicStore(&test_locations.value[shuffled_workgroup * workgroupXSize * stress_params.mem_stride * 2u + x_1], atomicLoad(&wg_test_locations[x_1]));
+`;
+
+const workgroupMemoryCowrRMWTestCode = `
+  atomicExchange(&wg_test_locations[x_0], 1u);
+  let r0 = atomicAdd(&wg_test_locations[y_0], 0u);
+  atomicExchange(&wg_test_locations[x_1], 2u);
   workgroupBarrier();
   atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_0].r0, r0);
   atomicStore(&test_locations.value[shuffled_workgroup * workgroupXSize * stress_params.mem_stride * 2u + x_1], atomicLoad(&wg_test_locations[x_1]));
@@ -240,7 +303,7 @@ g.test('cowr')
     {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.InterWorkgroup,
-      _testCode: cowrRMWTestCode,
+      _testCode: storageMemoryCowrRMWTestCode,
       extraFlags: 'rmw_variant',
     },
     {
@@ -249,9 +312,21 @@ g.test('cowr')
       _testCode: workgroupStorageMemoryCowrTestCode,
     },
     {
+      memType: MemoryType.AtomicStorageClass,
+      testType: TestType.IntraWorkgroup,
+      _testCode: workgroupStorageMemoryCowrRMWTestCode,
+      extraFlags: 'rmw_variant',
+    },
+    {
       memType: MemoryType.AtomicWorkgroupClass,
       testType: TestType.IntraWorkgroup,
       _testCode: workgroupMemoryCowrTestCode,
+    },
+    {
+      memType: MemoryType.AtomicWorkgroupClass,
+      testType: TestType.IntraWorkgroup,
+      _testCode: workgroupMemoryCowrRMWTestCode,
+      extraFlags: 'rmw_variant',
     },
   ])
   .fn(async t => {
@@ -351,17 +426,33 @@ const workgroupStorageMemoryCorw2TestCode = `
   atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_0].r0, r0);
 `;
 
-const corw2RMWTestCode = `
+const storageMemoryCorw2RMWTestCode = `
   let r0 = atomicLoad(&test_locations.value[x_0]);
   atomicStore(&test_locations.value[y_0], 1u);
   atomicExchange(&test_locations.value[x_1], 2u);
   atomicStore(&results.value[id_0].r0, r0);
 `;
 
+const workgroupStorageMemoryCorw2RMWTestCode = `
+  let r0 = atomicLoad(&test_locations.value[x_0]);
+  atomicStore(&test_locations.value[y_0], 1u);
+  atomicExchange(&test_locations.value[x_1], 2u);
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_0].r0, r0);
+`;
+
 const workgroupMemoryCorw2TestCode = `
   let r0 = atomicLoad(&wg_test_locations[x_0]);
   atomicStore(&wg_test_locations[y_0], 1u);
   atomicStore(&wg_test_locations[x_1], 2u);
+  workgroupBarrier();
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_0].r0, r0);
+  atomicStore(&test_locations.value[shuffled_workgroup * workgroupXSize * stress_params.mem_stride * 2u + x_1], atomicLoad(&wg_test_locations[x_1]));
+`;
+
+const workgroupMemoryCorw2RMWTestCode = `
+  let r0 = atomicLoad(&wg_test_locations[x_0]);
+  atomicStore(&wg_test_locations[y_0], 1u);
+  atomicExchange(&wg_test_locations[x_1], 2u);
   workgroupBarrier();
   atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_0].r0, r0);
   atomicStore(&test_locations.value[shuffled_workgroup * workgroupXSize * stress_params.mem_stride * 2u + x_1], atomicLoad(&wg_test_locations[x_1]));
@@ -384,7 +475,7 @@ g.test('corw2')
     {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.InterWorkgroup,
-      _testCode: corw2RMWTestCode,
+      _testCode: storageMemoryCorw2RMWTestCode,
       extraFlags: 'rmw_variant',
     },
     {
@@ -393,9 +484,21 @@ g.test('corw2')
       _testCode: workgroupStorageMemoryCorw2TestCode,
     },
     {
+      memType: MemoryType.AtomicStorageClass,
+      testType: TestType.IntraWorkgroup,
+      _testCode: workgroupStorageMemoryCorw2RMWTestCode,
+      extraFlags: 'rmw_variant',
+    },
+    {
       memType: MemoryType.AtomicWorkgroupClass,
       testType: TestType.IntraWorkgroup,
       _testCode: workgroupMemoryCorw2TestCode,
+    },
+    {
+      memType: MemoryType.AtomicWorkgroupClass,
+      testType: TestType.IntraWorkgroup,
+      _testCode: workgroupMemoryCorw2RMWTestCode,
+      extraFlags: 'rmw_variant',
     },
   ])
   .fn(async t => {

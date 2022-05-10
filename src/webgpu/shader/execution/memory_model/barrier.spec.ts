@@ -108,7 +108,7 @@ const workgroupMemoryBarrierLoadStoreTestCode = `
   let r0 = wg_test_locations[x_0];
   workgroupBarrier();
   wg_test_locations[x_1] = 1u;
-  atomicStore(&results.value[shuffled_workgroup * u32(workgroupXSize) + id_0].r0, r0);
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_0].r0, r0);
 `;
 
 g.test('workgroup_barrier_load_store')
@@ -163,7 +163,7 @@ const workgroupMemoryBarrierStoreStoreTestCode = `
   workgroupBarrier();
   wg_test_locations[x_1] = 2u;
   workgroupBarrier();
-  test_locations.value[shuffled_workgroup * u32(workgroupXSize) * stress_params.mem_stride * 2u + x_1] = wg_test_locations[x_1];
+  test_locations.value[shuffled_workgroup * workgroupXSize * stress_params.mem_stride * 2u + x_1] = wg_test_locations[x_1];
 `;
 
 g.test('workgroup_barrier_store_store')

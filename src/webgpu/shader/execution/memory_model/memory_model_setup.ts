@@ -983,15 +983,15 @@ export function buildTestShader(
   testType: TestType
 ): string {
   let memoryTypeCode;
-  let isStorageClass = false;
+  let isStorageAS = false;
   switch (memoryType) {
     case MemoryType.AtomicStorageClass:
       memoryTypeCode = storageMemoryAtomicTestShaderCode;
-      isStorageClass = true;
+      isStorageAS = true;
       break;
     case MemoryType.NonAtomicStorageClass:
       memoryTypeCode = storageMemoryNonAtomicTestShaderCode;
-      isStorageClass = true;
+      isStorageAS = true;
       break;
     case MemoryType.AtomicWorkgroupClass:
       memoryTypeCode = workgroupMemoryAtomicTestShaderCode;
@@ -1005,7 +1005,7 @@ export function buildTestShader(
       testTypeCode = interWorkgroupTestShaderCode;
       break;
     case TestType.IntraWorkgroup:
-      if (isStorageClass) {
+      if (isStorageAS) {
         testTypeCode = storageIntraWorkgroupTestShaderCode;
       } else {
         testTypeCode = intraWorkgroupTestShaderCode;
