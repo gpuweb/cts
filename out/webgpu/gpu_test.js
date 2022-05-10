@@ -2,7 +2,6 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { Fixture, SubcaseBatchState } from '../common/framework/fixture.js';import { assert,
 range,
-rejectWithoutUncaught,
 
 
 unreachable } from
@@ -68,8 +67,6 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
   /** Provider for default device. */
 
   /** Provider for mismatched device. */
-  mismatchedProvider = rejectWithoutUncaught(
-  new Error('selectMismatchedDeviceOrSkipTestCase was not called in beforeAllSubcases'));
 
 
   async postInit() {
@@ -83,7 +80,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     // Ensure devicePool.release is called for both providers even if one rejects.
     await Promise.all([
     this.provider?.then((x) => 'device' in x ? devicePool.release(x) : undefined),
-    this.mismatchedProvider.then((x) => 'device' in x ? devicePool.release(x) : undefined)]);
+    this.mismatchedProvider?.then((x) => 'device' in x ? devicePool.release(x) : undefined)]);
 
   }
 
@@ -179,8 +176,8 @@ export class GPUTest extends Fixture {
   }
 
   // Should never be undefined in a test. If it is, init() must not have run/finished.
-  provider = undefined;
-  mismatchedProvider = undefined;
+
+
 
   async init() {
     await super.init();
@@ -193,6 +190,7 @@ export class GPUTest extends Fixture {
    * GPUDevice for the test to use.
    */
   get device() {
+    assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
     return this.provider.device;
   }
 
@@ -201,6 +199,10 @@ export class GPUTest extends Fixture {
    * e.g. for creating objects for by device_mismatch validation tests.
    */
   get mismatchedDevice() {
+    assert(
+    this.mismatchedProvider !== undefined,
+    'selectMismatchedDeviceOrSkipTestCase was not called in beforeAllSubcases');
+
     return this.mismatchedProvider.device;
   }
 
@@ -769,7 +771,7 @@ export class GPUTest extends Fixture {
    * Expects that the device should be lost for a particular reason at the teardown of the test.
    */
   expectDeviceLost(reason) {
-    assert('device' in this.provider);
+    assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
     this.provider.expectDeviceLost(reason);
   }
 

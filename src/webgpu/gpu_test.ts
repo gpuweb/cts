@@ -2,7 +2,6 @@ import { Fixture, SubcaseBatchState, TestParams } from '../common/framework/fixt
 import {
   assert,
   range,
-  rejectWithoutUncaught,
   TypedArrayBufferView,
   TypedArrayBufferViewConstructor,
   unreachable,
@@ -68,9 +67,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
   /** Provider for default device. */
   private provider: Promise<DeviceProvider> | undefined;
   /** Provider for mismatched device. */
-  private mismatchedProvider: Promise<DeviceProvider> = rejectWithoutUncaught(
-    new Error('selectMismatchedDeviceOrSkipTestCase was not called in beforeAllSubcases')
-  );
+  private mismatchedProvider: Promise<DeviceProvider> | undefined;
 
   async postInit(): Promise<void> {
     // Skip all subcases if there's no device.
@@ -83,7 +80,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     // Ensure devicePool.release is called for both providers even if one rejects.
     await Promise.all([
       this.provider?.then(x => ('device' in x ? devicePool.release(x) : undefined)),
-      this.mismatchedProvider.then(x => ('device' in x ? devicePool.release(x) : undefined)),
+      this.mismatchedProvider?.then(x => ('device' in x ? devicePool.release(x) : undefined)),
     ]);
   }
 
@@ -145,7 +142,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
   }
 
   /** @internal MAINTENANCE_TODO: Make this not visible to test code? */
-  acquireMismatchedProvider(): Promise<DeviceProvider> {
+  acquireMismatchedProvider(): Promise<DeviceProvider> | undefined {
     return this.mismatchedProvider;
   }
 
@@ -179,8 +176,8 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
   }
 
   // Should never be undefined in a test. If it is, init() must not have run/finished.
-  private provider: DeviceProvider = undefined!;
-  private mismatchedProvider: DeviceProvider = undefined!;
+  private provider: DeviceProvider | undefined;
+  private mismatchedProvider: DeviceProvider | undefined;
 
   async init() {
     await super.init();
@@ -193,6 +190,7 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
    * GPUDevice for the test to use.
    */
   get device(): GPUDevice {
+    assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
     return this.provider.device;
   }
 
@@ -201,6 +199,10 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
    * e.g. for creating objects for by device_mismatch validation tests.
    */
   get mismatchedDevice(): GPUDevice {
+    assert(
+      this.mismatchedProvider !== undefined,
+      'selectMismatchedDeviceOrSkipTestCase was not called in beforeAllSubcases'
+    );
     return this.mismatchedProvider.device;
   }
 
@@ -769,7 +771,7 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
    * Expects that the device should be lost for a particular reason at the teardown of the test.
    */
   expectDeviceLost(reason: GPUDeviceLostReason): void {
-    assert('device' in this.provider);
+    assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
     this.provider.expectDeviceLost(reason);
   }
 
