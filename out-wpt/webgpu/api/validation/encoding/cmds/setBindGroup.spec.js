@@ -132,8 +132,8 @@ g.test('bind_group,device_mismatch')
       .combine('useU32Array', [true, false])
       .combine('mismatched', [true, false])
   )
-  .beforeAllSubcases(t => {
-    t.selectMismatchedDeviceOrSkipTestCase(undefined);
+  .beforeAllSubcases(async t => {
+    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {
     const { encoderType, useU32Array, mismatched } = t.params;

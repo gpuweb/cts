@@ -778,9 +778,9 @@ combine('copyBoxOffsets', kCopyBoxOffsetsForWholeDepth).
 combine('srcCopyLevel', [0, 2]).
 combine('dstCopyLevel', [0, 2])).
 
-beforeAllSubcases((t) => {
+beforeAllSubcases(async (t) => {
   const { srcFormat, dstFormat } = t.params;
-  t.selectDeviceOrSkipTestCase([
+  await t.selectDeviceOrSkipTestCase([
   kTextureFormatInfo[srcFormat].feature,
   kTextureFormatInfo[dstFormat].feature]);
 
@@ -932,10 +932,10 @@ combine('copyBoxOffsets', kCopyBoxOffsetsFor2DArrayTextures).
 combine('srcCopyLevel', [0, 2]).
 combine('dstCopyLevel', [0, 2])).
 
-beforeAllSubcases((t) => {
+beforeAllSubcases(async (t) => {
   const { srcFormat, dstFormat } = t.params;
 
-  t.selectDeviceOrSkipTestCase([
+  await t.selectDeviceOrSkipTestCase([
   kTextureFormatInfo[srcFormat].feature,
   kTextureFormatInfo[dstFormat].feature]);
 
@@ -1116,9 +1116,9 @@ filter((t) => {
 
 })).
 
-beforeAllSubcases((t) => {
+beforeAllSubcases(async (t) => {
   const { format } = t.params;
-  t.selectDeviceForTextureFormatOrSkipTestCase(format);
+  await t.selectDeviceForTextureFormatOrSkipTestCase(format);
 }).
 fn(async (t) => {
   const {

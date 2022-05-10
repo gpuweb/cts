@@ -119,8 +119,8 @@ paramsSubcasesOnly([
 { srcMismatched: true, dstMismatched: false },
 { srcMismatched: false, dstMismatched: true }]).
 
-beforeAllSubcases((t) => {
-  t.selectMismatchedDeviceOrSkipTestCase(undefined);
+beforeAllSubcases(async (t) => {
+  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
 fn(async (t) => {
   const { srcMismatched, dstMismatched } = t.params;
@@ -358,9 +358,9 @@ expand('dstFormat', ({ dstFormatFeature }) =>
 filterFormatsByFeature(dstFormatFeature, kTextureFormats))).
 
 
-beforeAllSubcases((t) => {
+beforeAllSubcases(async (t) => {
   const { srcFormatFeature, dstFormatFeature } = t.params;
-  t.selectDeviceOrSkipTestCase([srcFormatFeature, dstFormatFeature]);
+  await t.selectDeviceOrSkipTestCase([srcFormatFeature, dstFormatFeature]);
 }).
 fn(async (t) => {
   const { srcFormat, dstFormat } = t.params;
@@ -434,9 +434,9 @@ combine('dstTextureSize', [
 combine('srcCopyLevel', [1, 2]).
 combine('dstCopyLevel', [0, 1])).
 
-beforeAllSubcases((t) => {
+beforeAllSubcases(async (t) => {
   const { format } = t.params;
-  t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
+  await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 }).
 fn(async (t) => {
   const {
@@ -696,9 +696,9 @@ beginSubcases().
 combine('sourceAspect', ['all', 'depth-only', 'stencil-only']).
 combine('destinationAspect', ['all', 'depth-only', 'stencil-only'])).
 
-beforeAllSubcases((t) => {
+beforeAllSubcases(async (t) => {
   const { format } = t.params;
-  t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
+  await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 }).
 fn(async (t) => {
   const { format, sourceAspect, destinationAspect } = t.params;
@@ -776,9 +776,9 @@ combine('copyBoxOffsets', [
 combine('srcCopyLevel', [0, 1, 2]).
 combine('dstCopyLevel', [0, 1, 2])).
 
-beforeAllSubcases((t) => {
+beforeAllSubcases(async (t) => {
   const { format } = t.params;
-  t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
+  await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 }).
 fn(async (t) => {
   const { format, dimension, copyBoxOffsets, srcCopyLevel, dstCopyLevel } = t.params;

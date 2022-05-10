@@ -63,8 +63,8 @@ g.test('buffer,device_mismatch')
   .paramsSubcasesOnly(u =>
     u.combine('method', ['CopyB2T', 'CopyT2B']).combine('mismatched', [true, false])
   )
-  .beforeAllSubcases(t => {
-    t.selectMismatchedDeviceOrSkipTestCase(undefined);
+  .beforeAllSubcases(async t => {
+    await t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {
     const { method, mismatched } = t.params;
@@ -182,9 +182,9 @@ Test that bytesPerRow must be a multiple of 256 for CopyB2T and CopyT2B if it is
           (bytesPerRow !== undefined && bytesPerRow >= kTextureFormatInfo[format].bytesPerBlock)
       )
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
-    t.selectDeviceOrSkipTestCase(info.feature);
+    await t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const {

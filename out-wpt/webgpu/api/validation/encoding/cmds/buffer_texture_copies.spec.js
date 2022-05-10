@@ -56,9 +56,9 @@ g.test('depth_stencil_format,copy_usage_and_aspect')
       .beginSubcases()
       .combine('aspect', ['all', 'depth-only', 'stencil-only'])
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const { format } = t.params;
-    t.selectDeviceForTextureFormatOrSkipTestCase(format);
+    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
   })
   .fn(async t => {
     const { format, aspect } = t.params;
@@ -121,9 +121,9 @@ g.test('depth_stencil_format,copy_buffer_size')
         { width: 4, height: 4, depthOrArrayLayers: 3 },
       ])
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const { format } = t.params;
-    t.selectDeviceForTextureFormatOrSkipTestCase(format);
+    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
   })
   .fn(async t => {
     const { format, aspect, copyType, copySize } = t.params;
@@ -233,9 +233,9 @@ g.test('depth_stencil_format,copy_buffer_offset')
       .beginSubcases()
       .combine('offset', [1, 2, 4, 6, 8])
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const { format } = t.params;
-    t.selectDeviceForTextureFormatOrSkipTestCase(format);
+    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
   })
   .fn(async t => {
     const { format, aspect, copyType, offset } = t.params;

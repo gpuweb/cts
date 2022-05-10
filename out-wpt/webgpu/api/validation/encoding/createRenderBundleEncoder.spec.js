@@ -69,9 +69,9 @@ g.test('valid_texture_formats')
       .beginSubcases()
       .combine('attachment', ['color', 'depthStencil'])
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const { format } = t.params;
-    t.selectDeviceForTextureFormatOrSkipTestCase(format);
+    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
   })
   .fn(async t => {
     const { format, attachment } = t.params;
@@ -120,9 +120,9 @@ g.test('depth_stencil_readonly')
       .combine('depthReadOnly', [false, true])
       .combine('stencilReadOnly', [false, true])
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const { depthStencilFormat } = t.params;
-    t.selectDeviceForTextureFormatOrSkipTestCase(depthStencilFormat);
+    await t.selectDeviceForTextureFormatOrSkipTestCase(depthStencilFormat);
   })
   .fn(async t => {
     const { depthStencilFormat, depthReadOnly, stencilReadOnly } = t.params;

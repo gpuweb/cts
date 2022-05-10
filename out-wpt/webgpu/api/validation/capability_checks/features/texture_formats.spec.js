@@ -31,12 +31,12 @@ g.test('texture_descriptor')
   .params(u =>
     u.combine('format', kOptionalTextureFormats).combine('enable_required_feature', [true, false])
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const { format, enable_required_feature } = t.params;
 
     const formatInfo = kTextureFormatInfo[format];
     if (enable_required_feature) {
-      t.selectDeviceOrSkipTestCase(formatInfo.feature);
+      await t.selectDeviceOrSkipTestCase(formatInfo.feature);
     }
   })
   .fn(async t => {
@@ -67,12 +67,12 @@ g.test('storage_texture_binding_layout')
       .filter(t => kTextureFormatInfo[t.format].storage)
       .combine('enable_required_feature', [true, false])
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const { format, enable_required_feature } = t.params;
 
     const formatInfo = kTextureFormatInfo[format];
     if (enable_required_feature) {
-      t.selectDeviceOrSkipTestCase(formatInfo.feature);
+      await t.selectDeviceOrSkipTestCase(formatInfo.feature);
     }
   })
   .fn(async t => {
@@ -108,12 +108,12 @@ g.test('color_target_state')
       .filter(t => kTextureFormatInfo[t.format].renderable && kTextureFormatInfo[t.format].color)
       .combine('enable_required_feature', [true, false])
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const { format, enable_required_feature } = t.params;
 
     const formatInfo = kTextureFormatInfo[format];
     if (enable_required_feature) {
-      t.selectDeviceOrSkipTestCase(formatInfo.feature);
+      await t.selectDeviceOrSkipTestCase(formatInfo.feature);
     }
   })
   .fn(async t => {
@@ -166,12 +166,12 @@ g.test('depth_stencil_state')
       )
       .combine('enable_required_feature', [true, false])
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const { format, enable_required_feature } = t.params;
 
     const formatInfo = kTextureFormatInfo[format];
     if (enable_required_feature) {
-      t.selectDeviceOrSkipTestCase(formatInfo.feature);
+      await t.selectDeviceOrSkipTestCase(formatInfo.feature);
     }
   })
   .fn(async t => {
@@ -226,12 +226,12 @@ g.test('render_bundle_encoder_descriptor_color_format')
       .filter(t => kTextureFormatInfo[t.format].renderable && kTextureFormatInfo[t.format].color)
       .combine('enable_required_feature', [true, false])
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const { format, enable_required_feature } = t.params;
 
     const formatInfo = kTextureFormatInfo[format];
     if (enable_required_feature) {
-      t.selectDeviceOrSkipTestCase(formatInfo.feature);
+      await t.selectDeviceOrSkipTestCase(formatInfo.feature);
     }
   })
   .fn(async t => {
@@ -261,12 +261,12 @@ g.test('render_bundle_encoder_descriptor_depth_stencil_format')
       )
       .combine('enable_required_feature', [true, false])
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const { format, enable_required_feature } = t.params;
 
     const formatInfo = kTextureFormatInfo[format];
     if (enable_required_feature) {
-      t.selectDeviceOrSkipTestCase(formatInfo.feature);
+      await t.selectDeviceOrSkipTestCase(formatInfo.feature);
     }
   })
   .fn(async t => {

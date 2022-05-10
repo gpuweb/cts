@@ -153,8 +153,8 @@ paramsSubcasesOnly([
 { querySetMismatched: true, bufferMismatched: false },
 { querySetMismatched: false, bufferMismatched: true }]).
 
-beforeAllSubcases((t) => {
-  t.selectMismatchedDeviceOrSkipTestCase(undefined);
+beforeAllSubcases(async (t) => {
+  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
 fn(async (t) => {
   const { querySetMismatched, bufferMismatched } = t.params;

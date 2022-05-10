@@ -117,8 +117,8 @@ paramsSubcasesOnly([
 { layout0Mismatched: true, layout1Mismatched: false },
 { layout0Mismatched: false, layout1Mismatched: true }]).
 
-beforeAllSubcases((t) => {
-  t.selectMismatchedDeviceOrSkipTestCase(undefined);
+beforeAllSubcases(async (t) => {
+  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
 fn(async (t) => {
   const { layout0Mismatched, layout1Mismatched } = t.params;

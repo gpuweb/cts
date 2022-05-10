@@ -801,9 +801,9 @@ g.test('color_textures,compressed,non_array')
       .combine('srcCopyLevel', [0, 2])
       .combine('dstCopyLevel', [0, 2])
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const { srcFormat, dstFormat } = t.params;
-    t.selectDeviceOrSkipTestCase([
+    await t.selectDeviceOrSkipTestCase([
       kTextureFormatInfo[srcFormat].feature,
       kTextureFormatInfo[dstFormat].feature,
     ]);
@@ -958,10 +958,10 @@ g.test('color_textures,compressed,array')
       .combine('srcCopyLevel', [0, 2])
       .combine('dstCopyLevel', [0, 2])
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const { srcFormat, dstFormat } = t.params;
 
-    t.selectDeviceOrSkipTestCase([
+    await t.selectDeviceOrSkipTestCase([
       kTextureFormatInfo[srcFormat].feature,
       kTextureFormatInfo[dstFormat].feature,
     ]);
@@ -1152,9 +1152,9 @@ g.test('copy_depth_stencil')
         );
       })
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const { format } = t.params;
-    t.selectDeviceForTextureFormatOrSkipTestCase(format);
+    await t.selectDeviceForTextureFormatOrSkipTestCase(format);
   })
   .fn(async t => {
     const {

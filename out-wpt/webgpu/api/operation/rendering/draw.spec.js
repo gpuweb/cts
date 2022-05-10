@@ -47,9 +47,9 @@ Params:
       .expand('index_buffer_offset', p => (p.indexed ? [0, 16] : [undefined]))
       .expand('base_vertex', p => (p.indexed ? [0, 9] : [undefined]))
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     if (t.params.first_instance > 0 && t.params.indirect) {
-      t.selectDeviceOrSkipTestCase('indirect-first-instance');
+      await t.selectDeviceOrSkipTestCase('indirect-first-instance');
     }
   })
   .fn(async t => {

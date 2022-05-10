@@ -1255,9 +1255,9 @@ bytes in copy works for every format.
         return kRowsPerImageAndBytesPerRowParams.copySizes;
       })
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
-    t.selectDeviceOrSkipTestCase(info.feature);
+    await t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const {
@@ -1351,9 +1351,9 @@ works for every format with 2d and 2d-array textures.
       .combine('copyDepth', kOffsetsAndSizesParams.copyDepth) // 2d and 2d-array textures
       .unless(p => p.dimension === '1d' && p.copyDepth !== 1)
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
-    t.selectDeviceOrSkipTestCase(info.feature);
+    await t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const {
@@ -1432,9 +1432,9 @@ for all formats. We pass origin and copyExtent as [number, number, number].`
       .combine('coordinateToTest', [0, 1, 2])
       .unless(p => p.dimension === '1d' && p.coordinateToTest !== 0)
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
-    t.selectDeviceOrSkipTestCase(info.feature);
+    await t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const {
@@ -1629,9 +1629,9 @@ TODO: Make a variant for depth-stencil formats.
       ])
       .expand('textureSize', generateTestTextureSizes)
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
-    t.selectDeviceOrSkipTestCase(info.feature);
+    await t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const {
@@ -1794,9 +1794,9 @@ aspect and copyTextureToBuffer() with depth aspect.
       })
       .combine('mipLevel', [0, 2])
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
-    t.selectDeviceOrSkipTestCase(info.feature);
+    await t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const {
@@ -1883,9 +1883,9 @@ copyTextureToBuffer() with depth aspect.
       .combine('copyDepth', kOffsetsAndSizesParams.copyDepth)
       .combine('mipLevel', [0, 2])
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const info = kTextureFormatInfo[t.params.format];
-    t.selectDeviceOrSkipTestCase(info.feature);
+    await t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const {

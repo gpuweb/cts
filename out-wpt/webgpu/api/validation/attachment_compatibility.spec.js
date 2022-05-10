@@ -277,9 +277,9 @@ g.test('render_pass_and_bundle,depth_format')
         filterFormatsByFeature(bundleFeature, kDepthStencilAttachmentFormats)
       )
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const { passFeature, bundleFeature } = t.params;
-    t.selectDeviceOrSkipTestCase([passFeature, bundleFeature]);
+    await t.selectDeviceOrSkipTestCase([passFeature, bundleFeature]);
   })
   .fn(async t => {
     const { passFormat, bundleFormat } = t.params;
@@ -441,9 +441,9 @@ Test that the depth attachment format in render passes or bundles match the pipe
         filterFormatsByFeature(pipelineFormatFeature, kDepthStencilAttachmentFormats)
       )
   )
-  .beforeAllSubcases(t => {
+  .beforeAllSubcases(async t => {
     const { encoderFormatFeature, pipelineFormatFeature } = t.params;
-    t.selectDeviceOrSkipTestCase([encoderFormatFeature, pipelineFormatFeature]);
+    await t.selectDeviceOrSkipTestCase([encoderFormatFeature, pipelineFormatFeature]);
   })
   .fn(async t => {
     const { encoderType, encoderFormat, pipelineFormat } = t.params;
@@ -514,8 +514,8 @@ Test that the depth stencil read only state in render passes or bundles is compa
         return true;
       })
   )
-  .beforeAllSubcases(t => {
-    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  .beforeAllSubcases(async t => {
+    await t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
   .fn(async t => {
     const {
