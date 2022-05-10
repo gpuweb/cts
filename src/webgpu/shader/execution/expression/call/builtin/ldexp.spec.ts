@@ -4,7 +4,7 @@ Execution tests for the 'ldexp' builtin function
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { correctlyRoundedThreshold } from '../../../../../util/compare.js';
+import { correctlyRoundedMatch } from '../../../../../util/compare.js';
 import { kValue } from '../../../../../util/constants.js';
 import { f32, i32, TypeF32, TypeI32 } from '../../../../../util/conversion.js';
 import { biasedRange, linearRange, quantizeToI32 } from '../../../../../util/math.js';
@@ -91,7 +91,7 @@ Returns e1 * 2^e2. Component-wise when T is a vector.
       });
     });
     const cfg: Config = t.params;
-    cfg.cmpFloats = correctlyRoundedThreshold();
+    cfg.cmpFloats = correctlyRoundedMatch();
     run(t, builtin('ldexp'), [TypeF32, TypeI32], TypeF32, cfg, cases);
   });
 
