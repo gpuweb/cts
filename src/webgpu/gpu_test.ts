@@ -176,8 +176,8 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
   }
 
   // Should never be undefined in a test. If it is, init() must not have run/finished.
-  private provider: DeviceProvider = undefined!;
-  private mismatchedProvider: DeviceProvider | undefined = undefined;
+  private provider: DeviceProvider | undefined;
+  private mismatchedProvider: DeviceProvider | undefined;
 
   async init() {
     await super.init();
@@ -190,6 +190,7 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
    * GPUDevice for the test to use.
    */
   get device(): GPUDevice {
+    assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
     return this.provider.device;
   }
 
@@ -770,7 +771,7 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
    * Expects that the device should be lost for a particular reason at the teardown of the test.
    */
   expectDeviceLost(reason: GPUDeviceLostReason): void {
-    assert('device' in this.provider);
+    assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
     this.provider.expectDeviceLost(reason);
   }
 
