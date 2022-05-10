@@ -79,8 +79,8 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
 
     // Ensure devicePool.release is called for both providers even if one rejects.
     await Promise.all([
-    this.provider?.then((x) => 'device' in x ? devicePool.release(x) : undefined),
-    this.mismatchedProvider?.then((x) => 'device' in x ? devicePool.release(x) : undefined)]);
+    this.provider?.then((x) => devicePool.release(x)),
+    this.mismatchedProvider?.then((x) => devicePool.release(x))]);
 
   }
 
