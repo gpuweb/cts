@@ -128,12 +128,19 @@ export function compare(got: Value, expected: Value, cmpFloats: FloatMatch): Com
   throw new Error(`unhandled type '${typeof got}`);
 }
 
-/** @returns a Comparator that checks whether a test value matches any of the provided values */
-export function anyOf(...values: Value[]): Comparator {
+/** @returns a Comparator that checks whether a test value matches any of the provided options */
+export function anyOf(...expectations: (Value | Comparator)[]): Comparator {
   return (got, cmpFloats) => {
     const failed: Array<string> = [];
-    for (const e of values) {
-      const cmp = compare(got, e, cmpFloats);
+    for (const e of expectations) {
+      let cmp: Comparison;
+      if ((e as Value).type !== undefined) {
+        const v = e as Value;
+        cmp = compare(got, v, cmpFloats);
+      } else {
+        const c = e as Comparator;
+        cmp = c(got, cmpFloats);
+      }
       if (cmp.matched) {
         return cmp;
       }
