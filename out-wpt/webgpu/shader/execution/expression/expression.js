@@ -366,7 +366,7 @@ export function makeUnaryF32Case(param, op) {
  *                               this is to avoid performing division by 0, other invalid operations.
  *                               The caller is responsible for making sure the initial param1 isn't 0.
  */
-export function makeBinaryF32Case(param0, param1, op, skip_param1_zero_flush = false) {
+export function makeBinaryF32Case(param0, param1, op, skip_param1_zero_flush = false, extra_cases) {
   const f32_param0 = quantizeToF32(param0);
   const f32_param1 = quantizeToF32(param1);
   const is_param0_subnormal = isSubnormalNumber(f32_param0);
@@ -386,6 +386,9 @@ export function makeBinaryF32Case(param0, param1, op, skip_param1_zero_flush = f
     calculateFlushedResults(op(0, 0)).forEach(value => {
       expected.add(value);
     });
+  }
+  if (typeof extra_cases !== 'undefined') {
+    extra_cases.forEach(x => calculateFlushedResults(x).forEach(xx => expected.add(xx)));
   }
 
   return { input: [f32(param0), f32(param1)], expected: anyOf(...expected) };
