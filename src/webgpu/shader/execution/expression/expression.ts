@@ -409,8 +409,7 @@ export function makeBinaryF32Case(
   param0: number,
   param1: number,
   op: (p0: number, p1: number) => number,
-  skip_param1_zero_flush: boolean = false,
-  extra_cases?: Array<number>
+  skip_param1_zero_flush: boolean = false
 ): Case {
   const f32_param0 = quantizeToF32(param0);
   const f32_param1 = quantizeToF32(param1);
@@ -431,9 +430,6 @@ export function makeBinaryF32Case(
     calculateFlushedResults(op(0, 0)).forEach(value => {
       expected.add(value);
     });
-  }
-  if (typeof extra_cases !== 'undefined') {
-    extra_cases.forEach(x => calculateFlushedResults(x).forEach(xx => expected.add(xx)));
   }
 
   return { input: [f32(param0), f32(param1)], expected: anyOf(...expected) };

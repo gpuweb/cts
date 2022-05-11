@@ -4,8 +4,8 @@
 Execution tests for the 'atan2' builtin function
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { ulpMatch } from '../../../../../util/compare.js';
-import { TypeF32 } from '../../../../../util/conversion.js';
+import { anyOf, ulpMatch } from '../../../../../util/compare.js';
+import { f64, TypeF32 } from '../../../../../util/conversion.js';
 import { flushSubnormalNumber, fullF32Range } from '../../../../../util/math.js';
 import { makeBinaryF32Case, run } from '../../expression.js';
 
@@ -55,12 +55,12 @@ fn(async (t) => {
 
   // [1]: Need to decide what the ground-truth is.
   const makeCase = (y, x) => {
-    // If y is subnormal, expect possible results of atan2(0, x)
-    let extra_cases = [];
+    const c = makeBinaryF32Case(y, x, Math.atan2, true);
     if (flushSubnormalNumber(y) === 0.0) {
-      extra_cases = [0.0, Math.PI, -Math.PI];
+      // If y is subnormal, also expect possible results of atan2(0, x)
+      c.expected = anyOf(c.expected, f64(0), f64(Math.PI), f64(-Math.PI));
     }
-    return makeBinaryF32Case(y, x, Math.atan2, true, extra_cases);
+    return c;
   };
 
   const numeric_range = fullF32Range({
