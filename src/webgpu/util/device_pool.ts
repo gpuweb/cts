@@ -1,11 +1,16 @@
 import { SkipTestCase } from '../../common/framework/fixture.js';
 import { attemptGarbageCollection } from '../../common/util/collect_garbage.js';
 import { getGPU } from '../../common/util/navigator_gpu.js';
-import { assert, raceWithRejectOnTimeout, assertReject } from '../../common/util/util.js';
+import {
+  assert,
+  raceWithRejectOnTimeout,
+  assertReject,
+  unreachable,
+} from '../../common/util/util.js';
 import { kLimitInfo, kLimits } from '../capability_info.js';
 
 export interface DeviceProvider {
-  acquire(): GPUDevice;
+  readonly device: GPUDevice;
   expectDeviceLost(reason: GPUDeviceLostReason): void;
 }
 
@@ -16,8 +21,8 @@ export class TestOOMedShouldAttemptGC extends Error {}
 export class DevicePool {
   private holders: 'uninitialized' | 'failed' | DescriptorToHolderMap = 'uninitialized';
 
-  /** Request a device from the pool. */
-  async reserve(descriptor?: UncanonicalizedDeviceDescriptor): Promise<DeviceProvider> {
+  /** Acquire a device from the pool and begin the error scopes. */
+  async acquire(descriptor?: UncanonicalizedDeviceDescriptor): Promise<DeviceProvider> {
     let errorMessage = '';
     if (this.holders === 'uninitialized') {
       this.holders = new DescriptorToHolderMap();
@@ -39,20 +44,22 @@ export class DevicePool {
     const holder = await this.holders.getOrCreate(descriptor);
 
     assert(holder.state === 'free', 'Device was in use on DevicePool.acquire');
-    holder.state = 'reserved';
+    holder.state = 'acquired';
+    holder.beginTestScope();
     return holder;
   }
 
-  // When a test is done using a device, it's released back into the pool.
-  // This waits for error scopes, checks their results, and checks for various error conditions.
+  /**
+   * End the error scopes and check for errors.
+   * Then, if the device seems reusable, release it back into the pool. Otherwise, drop it.
+   */
   async release(holder: DeviceProvider): Promise<void> {
     assert(this.holders instanceof DescriptorToHolderMap, 'DevicePool got into a bad state');
     assert(holder instanceof DeviceHolder, 'DeviceProvider should always be a DeviceHolder');
 
-    assert(holder.state !== 'free', 'trying to release a device while already released');
-
+    assert(holder.state === 'acquired', 'trying to release a device while already released');
     try {
-      await holder.ensureRelease();
+      await holder.endTestScope();
 
       // (Hopefully if the device was lost, it has been reported by the time endErrorScopes()
       // has finished (or timed out). If not, it could cause a finite number of extra test
@@ -90,8 +97,7 @@ export class DevicePool {
         throw ex;
       }
     } finally {
-      // Mark the holder as free. (This only has an effect if the pool still has the holder.)
-      // This could be done at the top but is done here to guard against async-races during release.
+      // Mark the holder as free so the device can be reused (if it's still in this.devices).
       holder.state = 'free';
     }
   }
@@ -106,13 +112,14 @@ class DescriptorToHolderMap {
   private holders: Map<string, DeviceHolder> = new Map();
 
   /** Deletes an item from the map by DeviceHolder value. */
-  delete(device: DeviceHolder): void {
+  delete(holder: DeviceHolder): void {
     for (const [k, v] of this.holders) {
-      if (v === device) {
+      if (v === holder) {
         this.holders.delete(k);
         return;
       }
     }
+    unreachable("internal error: couldn't find DeviceHolder to delete");
   }
 
   /**
@@ -258,13 +265,12 @@ function supportsFeature(
 /**
  * DeviceHolder has three states:
  * - 'free': Free to be used for a new test.
- * - 'reserved': Reserved by a running test, but has not had error scopes created yet.
- * - 'acquired': Reserved by a running test, and has had error scopes created.
+ * - 'acquired': In use by a running test.
  */
-type DeviceHolderState = 'free' | 'reserved' | 'acquired';
+type DeviceHolderState = 'free' | 'acquired';
 
 /**
- * Holds a GPUDevice and tracks its state (free/reserved/acquired) and handles device loss.
+ * Holds a GPUDevice and tracks its state (free/acquired) and handles device loss.
  */
 class DeviceHolder implements DeviceProvider {
   /** The device. Will be cleared during cleanup if there were unexpected errors. */
@@ -303,40 +309,37 @@ class DeviceHolder implements DeviceProvider {
     return this._device;
   }
 
-  acquire(): GPUDevice {
-    assert(this.state === 'reserved');
-    this.state = 'acquired';
+  /** Push error scopes that surround test execution. */
+  beginTestScope(): void {
+    assert(this.state === 'acquired');
     this.device.pushErrorScope('out-of-memory');
     this.device.pushErrorScope('validation');
-    return this.device;
   }
 
+  /** Mark the DeviceHolder as expecting a device loss when the test scope ends. */
   expectDeviceLost(reason: GPUDeviceLostReason) {
+    assert(this.state === 'acquired');
     this.expectedLostReason = reason;
   }
 
-  async ensureRelease(): Promise<void> {
-    const kPopErrorScopeTimeoutMS = 5000;
+  /**
+   * Attempt to end test scopes: Check that there are no extra error scopes, and that no
+   * otherwise-uncaptured errors occurred during the test. Time out if it takes too long.
+   */
+  endTestScope(): Promise<void> {
+    assert(this.state === 'acquired');
+    const kTimeout = 5000;
 
-    assert(this.state !== 'free');
-    try {
-      if (this.state === 'acquired') {
-        // Time out if popErrorScope never completes. This could happen due to a browser bug - e.g.,
-        // as of this writing, on Chrome GPU process crash, popErrorScope just hangs.
-        await raceWithRejectOnTimeout(
-          this.release(),
-          kPopErrorScopeTimeoutMS,
-          'finalization popErrorScope timed out'
-        );
-      }
-    } finally {
-      this.state = 'free';
-    }
+    // Time out if attemptEndTestScope (popErrorScope or onSubmittedWorkDone) never completes. If
+    // this rejects, the device won't be reused, so it's OK that popErrorScope calls may not have
+    // finished.
+    //
+    // This could happen due to a browser bug - e.g.,
+    // as of this writing, on Chrome GPU process crash, popErrorScope just hangs.
+    return raceWithRejectOnTimeout(this.attemptEndTestScope(), kTimeout, 'endTestScope timed out');
   }
 
-  private async release(): Promise<void> {
-    // End the whole-test error scopes. Check that there are no extra error scopes, and that no
-    // otherwise-uncaptured errors occurred during the test.
+  private async attemptEndTestScope(): Promise<void> {
     let gpuValidationError: GPUValidationError | GPUOutOfMemoryError | null;
     let gpuOutOfMemoryError: GPUValidationError | GPUOutOfMemoryError | null;
 
@@ -345,13 +348,12 @@ class DeviceHolder implements DeviceProvider {
 
     try {
       // May reject if the device was lost.
-      gpuValidationError = await this.device.popErrorScope();
-      gpuOutOfMemoryError = await this.device.popErrorScope();
+      [gpuValidationError, gpuOutOfMemoryError] = await Promise.all([
+        this.device.popErrorScope(),
+        this.device.popErrorScope(),
+      ]);
     } catch (ex) {
-      assert(
-        this.lostInfo !== undefined,
-        'popErrorScope failed; should only happen if device has been lost'
-      );
+      assert(this.lostInfo !== undefined, 'popErrorScope failed; did beginTestScope get missed?');
       throw ex;
     }
 
