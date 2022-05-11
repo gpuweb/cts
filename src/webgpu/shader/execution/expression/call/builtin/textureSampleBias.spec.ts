@@ -18,7 +18,7 @@ g.test('stage')
 Tests that 'textureSampleBias' can only be called in 'fragment' shaders.
 `
   )
-  .params(u =>  u.combine('stage', ['fragment', 'vertex', 'compute'] as const))
+  .params(u => u.combine('stage', ['fragment', 'vertex', 'compute'] as const))
   .unimplemented();
 
 g.test('control_flow')
@@ -28,7 +28,7 @@ g.test('control_flow')
 Tests that 'textureSampleBias' can only be called in uniform control flow.
 `
   )
-  .params(u =>  u.combine('stage', ['fragment', 'vertex', 'compute'] as const))
+  .params(u => u.combine('stage', ['fragment', 'vertex', 'compute'] as const))
   .unimplemented();
 
 g.test('sampled')
@@ -56,21 +56,18 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('texture_type', [
-        'texture_2d',
-        'texture_3d',
-        'texture_cube',
-      ] as const)
+      .combine('texture_type', ['texture_2d', 'texture_3d', 'texture_cube'] as const)
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', [
         'left-wrap',
         'right-wrap',
         'bottom-wrap',
         'top-wrap',
-        'in-bounds'] as const)
+        'in-bounds',
+      ] as const)
       .combine('bias', [-16.1, -16, 0, 1, 15.99, 16] as const)
       .combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]] as const)
-    )
+  )
   .unimplemented();
 
 g.test('arrayed')
@@ -99,20 +96,18 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('texture_type', [
-        'texture_2d_array',
-        'texture_cube_array',
-      ] as const)
+      .combine('texture_type', ['texture_2d_array', 'texture_cube_array'] as const)
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', [
         'left-wrap',
         'right-wrap',
         'bottom-wrap',
         'top-wrap',
-        'in-bounds'] as const)
+        'in-bounds',
+      ] as const)
       .combine('C', ['i32', 'u32'] as const)
       .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
-       /* array_index not param'd as out-of-bounds is implementation specific */
+      /* array_index not param'd as out-of-bounds is implementation specific */
       .combine('bias', [-16.1, -16, 0, 1, 15.99, 16] as const)
       .combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]] as const)
   )
