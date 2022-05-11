@@ -13,7 +13,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('f32')
   .specURL('https://www.w3.org/TR/WGSL/#derivative-builtin-functions')
-  .desc( `f32 tests`)
+  .desc(`f32 tests`)
   .params(u =>
     u
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
