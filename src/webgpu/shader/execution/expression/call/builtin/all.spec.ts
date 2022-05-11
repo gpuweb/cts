@@ -1,5 +1,11 @@
 export const description = `
 Execution tests for the 'all' builtin function
+
+S is a bool
+T is S or vecN<S>
+@const fn all(e: T) -> bool
+Returns e if e is scalar.
+Returns true if each component of e is true if e is a vector.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -21,18 +27,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('bool')
   .specURL('https://www.w3.org/TR/WGSL/#logical-builtin-functions')
-  .desc(
-    `
-# scalar
-e: bool
-@const fn all(e) -> bool
-Returns e.
-
-# vector
-@const fn all(e: vecN<bool>) -> bool
-Returns true if each component of e is true.
-`
-  )
+  .desc(`bool tests`)
   .params(u =>
     u
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
