@@ -2,6 +2,16 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/export const description = `
 Execution tests for the 'ldexp' builtin function
+
+S is AbstractFloat, f32, f16
+T is S or vecN<S>
+
+K is AbstractInt, i32
+I is K or vecN<K>, where
+  I is a scalar if T is a scalar, or a vector when T is a vector
+
+@const fn ldexp(e1: T ,e2: I ) -> T
+Returns e1 * 2^e2. Component-wise when T is a vector.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { correctlyRoundedMatch } from '../../../../../util/compare.js';
@@ -18,11 +28,6 @@ g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(
 `
-T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-I is AbstractInt, i32, vecN<AbstractInt>, or vecN<i32>, where
-  I is a scalar if T is a scalar, or a vector when T is a vector
-@const fn ldexp(e1: T ,e2: I ) -> T
-Returns e1 * 2^e2. Component-wise when T is a vector.
 `).
 
 params((u) =>
@@ -34,15 +39,7 @@ unimplemented();
 
 g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
-desc(
-`
-T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-I is AbstractInt, i32, vecN<AbstractInt>, or vecN<i32>, where
-  I is a scalar if T is a scalar, or a vector when T is a vector
-@const fn ldexp(e1: T ,e2: I ) -> T
-Returns e1 * 2^e2. Component-wise when T is a vector.
-`).
-
+desc(`f32 tests`).
 params((u) =>
 u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
@@ -97,15 +94,7 @@ fn(async (t) => {
 
 g.test('f16').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
-desc(
-`
-T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-I is AbstractInt, i32, vecN<AbstractInt>, or vecN<i32>, where
-  I is a scalar if T is a scalar, or a vector when T is a vector
-@const fn ldexp(e1: T ,e2: I ) -> T
-Returns e1 * 2^e2. Component-wise when T is a vector.
-`).
-
+desc(`f16 tests`).
 params((u) =>
 u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).

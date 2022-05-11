@@ -2,6 +2,12 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/export const description = `
 Execution tests for the 'fract' builtin function
+
+S is AbstractFloat, f32, f16
+T is S or vecN<S>
+@const fn fract(e: T ) -> T
+Returns the fractional part of e, computed as e - floor(e).
+Component-wise when T is a vector.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { correctlyRoundedMatch, anyOf } from '../../../../../util/compare.js';
@@ -15,14 +21,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
-desc(
-`
-T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-@const fn fract(e: T ) -> T
-Returns the fractional part of e, computed as e - floor(e).
-Component-wise when T is a vector.
-`).
-
+desc(`abstract float tests`).
 params((u) =>
 u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
@@ -32,14 +31,7 @@ unimplemented();
 
 g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
-desc(
-`
-T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-@const fn fract(e: T ) -> T
-Returns the fractional part of e, computed as e - floor(e).
-Component-wise when T is a vector.
-`).
-
+desc(`f32 tests`).
 params((u) =>
 u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
@@ -103,14 +95,7 @@ fn(async (t) => {
 
 g.test('f16').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
-desc(
-`
-T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-@const fn fract(e: T ) -> T
-Returns the fractional part of e, computed as e - floor(e).
-Component-wise when T is a vector.
-`).
-
+desc(`f16 tests`).
 params((u) =>
 u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).

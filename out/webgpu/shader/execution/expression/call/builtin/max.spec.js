@@ -2,6 +2,20 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/export const description = `
 Execution tests for the 'max' builtin function
+
+S is AbstractInt, i32, or u32
+T is S or vecN<S>
+@const fn max(e1: T ,e2: T) -> T
+Returns e2 if e1 is less than e2, and e1 otherwise. Component-wise when T is a vector.
+
+S is AbstractFloat, f32, f16
+T is vecN<S>
+@const fn max(e1: T ,e2: T) -> T
+Returns e2 if e1 is less than e2, and e1 otherwise.
+If one operand is a NaN, the other is returned.
+If both operands are NaNs, a NaN is returned.
+Component-wise when T is a vector.
+
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { correctlyRoundedMatch } from '../../../../../util/compare.js';
@@ -36,14 +50,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('abstract_int').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
-desc(
-`
-S is AbstractInt, i32, or u32
-T is S or vecN<S>
-@const fn max(e1: T ,e2: T) -> T
-Returns e2 if e1 is less than e2, and e1 otherwise. Component-wise when T is a vector.
-`).
-
+desc(`abstract int tests`).
 params((u) =>
 u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
@@ -53,14 +60,7 @@ unimplemented();
 
 g.test('u32').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
-desc(
-`
-S is AbstractInt, i32, or u32
-T is S or vecN<S>
-@const fn max(e1: T ,e2: T) -> T
-Returns e2 if e1 is less than e2, and e1 otherwise. Component-wise when T is a vector.
-`).
-
+desc(`u32 tests`).
 params((u) =>
 u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
@@ -82,14 +82,7 @@ fn(async (t) => {
 
 g.test('i32').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
-desc(
-`
-S is AbstractInt, i32, or u32
-T is S or vecN<S>
-@const fn max(e1: T ,e2: T) -> T
-Returns e2 if e1 is less than e2, and e1 otherwise. Component-wise when T is a vector.
-`).
-
+desc(`i32 tests`).
 params((u) =>
 u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
@@ -111,16 +104,7 @@ fn(async (t) => {
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
-desc(
-`
-T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-@const fn max(e1: T ,e2: T ) -> T
-Returns e2 if e1 is less than e2, and e1 otherwise.
-If one operand is a NaN, the other is returned.
-If both operands are NaNs, a NaN is returned.
-Component-wise when T is a vector.
-`).
-
+desc(`abstract float tests`).
 params((u) =>
 u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
@@ -130,16 +114,7 @@ unimplemented();
 
 g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
-desc(
-`
-T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-@const fn max(e1: T ,e2: T ) -> T
-Returns e2 if e1 is less than e2, and e1 otherwise.
-If one operand is a NaN, the other is returned.
-If both operands are NaNs, a NaN is returned.
-Component-wise when T is a vector.
-`).
-
+desc(`f32 tests`).
 params((u) =>
 u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
@@ -177,16 +152,7 @@ fn(async (t) => {
 
 g.test('f16').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
-desc(
-`
-T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-@const fn max(e1: T ,e2: T ) -> T
-Returns e2 if e1 is less than e2, and e1 otherwise.
-If one operand is a NaN, the other is returned.
-If both operands are NaNs, a NaN is returned.
-Component-wise when T is a vector.
-`).
-
+desc(`f16 tests`).
 params((u) =>
 u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).

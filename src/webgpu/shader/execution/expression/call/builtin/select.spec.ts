@@ -1,5 +1,13 @@
 export const description = `
 Execution tests for the 'select' builtin function
+
+T is scalar, abstract numeric type, or vector
+@const fn select(f: T, t: T, cond: bool) -> T
+Returns t when cond is true, and f otherwise.
+
+T is scalar or abstract numeric type
+@const fn select(f: vecN<T>, t: vecN<T>, cond: vecN<bool>) -> vecN<T>
+Component-wise selection. Result component i is evaluated as select(f[i],t[i],cond[i]).
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -55,13 +63,7 @@ const dataType = {
 
 g.test('scalar')
   .specURL('https://www.w3.org/TR/WGSL/#logical-builtin-functions')
-  .desc(
-    `
-T is scalar, abstract numeric type, or vector
-@const fn select(f: T, t: T, cond: bool) -> T
-Returns t when cond is true, and f otherwise.
-`
-  )
+  .desc(`scalar tests`)
   .params(u =>
     u
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
@@ -131,13 +133,7 @@ Returns t when cond is true, and f otherwise.
 
 g.test('vector')
   .specURL('https://www.w3.org/TR/WGSL/#logical-builtin-functions')
-  .desc(
-    `
-T is scalar or abstract numeric type
-@const fn select(f: vecN<T>, t: vecN<T>, cond: vecN<bool>) -> vecN<T>
-Component-wise selection. Result component i is evaluated as select(f[i],t[i],cond[i]).
-`
-  )
+  .desc(`vector tests`)
   .params(u =>
     u
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)

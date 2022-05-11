@@ -1,5 +1,10 @@
 export const description = `
 Execution tests for the 'sin' builtin function
+
+S is AbstractFloat, f32, f16
+T is S or vecN<S>
+@const fn sin(e: T ) -> T
+Returns the sine of e. Component-wise when T is a vector.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -15,13 +20,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
-T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-@const fn sin(e: T ) -> T
-Returns the sine of e. Component-wise when T is a vector.
-`
-  )
+  .desc(`abstract float tests`)
   .params(u =>
     u
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
@@ -33,9 +32,7 @@ g.test('f32')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
     `
-T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-@const fn sin(e: T ) -> T
-Returns the sine of e. Component-wise when T is a vector.
+f32 tests
 
 TODO(#792): Decide what the ground-truth is for these tests. [1]
 `
@@ -61,15 +58,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
 
 g.test('f16')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
-T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-@const fn sin(e: T ) -> T
-Returns the sine of e. Component-wise when T is a vector.
-
-TODO(#792): Decide what the ground-truth is for these tests. [1]
-`
-  )
+  .desc(`f16 tests`)
   .params(u =>
     u
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)

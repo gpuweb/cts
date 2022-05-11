@@ -2,6 +2,13 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/export const description = `
 Execution tests for the 'countOneBits' builtin function
+
+S is i32 or u32
+T is S or vecN<S>
+@const fn countOneBits(e: T ) -> T
+The number of 1 bits in the representation of e.
+Also known as "population count".
+Component-wise when T is a vector.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeU32, u32Bits, u32, TypeI32, i32Bits, i32 } from '../../../../../util/conversion.js';
@@ -13,15 +20,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('u32').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
-desc(
-`
-T is i32, u32, vecN<i32>, or vecN<u32>
-@const fn countOneBits(e: T ) -> T
-The number of 1 bits in the representation of e.
-Also known as "population count".
-Component-wise when T is a vector.
-`).
-
+desc(`u32 tests`).
 params((u) =>
 u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
@@ -138,15 +137,7 @@ fn(async (t) => {
 
 g.test('i32').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
-desc(
-`
-T is i32, u32, vecN<i32>, or vecN<u32>
-@const fn countOneBits(e: T ) -> T
-The number of 1 bits in the representation of e.
-Also known as "population count".
-Component-wise when T is a vector.
-`).
-
+desc(`i32 tests`).
 params((u) =>
 u.
 combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
