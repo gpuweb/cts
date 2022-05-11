@@ -3,11 +3,7 @@ Execution tests for the 'insertBits' builtin function
 
 S is i32 or u32
 T is S or vecN<S>
-@const fn insertBits(
-  e: T,
-  newbits:T,
-  offset: u32,
-  count: u32) -> T  Sets bits in an integer.
+@const fn insertBits(e: T, newbits:T, offset: u32, count: u32) -> T  Sets bits in an integer.
 
 When T is a scalar type, then:
   w is the bit width of T
