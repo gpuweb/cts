@@ -55,8 +55,8 @@ desc(
 'Tests draw(Indexed)Indirect cannot be called with an indirect buffer created from another device').
 
 paramsSubcasesOnly(kIndirectDrawTestParams.combine('mismatched', [true, false])).
-beforeAllSubcases(async (t) => {
-  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+beforeAllSubcases((t) => {
+  t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
 fn(async (t) => {
   const { encoderType, indexed, mismatched } = t.params;

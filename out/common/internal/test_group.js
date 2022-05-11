@@ -497,6 +497,7 @@ class RunCaseSpecific {
         if (this.beforeFn) {
           await this.beforeFn(sharedState);
         }
+        await sharedState.postInit();
 
         let allPreviousSubcasesFinalizedPromise = Promise.resolve();
         if (this.subcases) {

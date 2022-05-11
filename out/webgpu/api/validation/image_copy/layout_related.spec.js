@@ -177,9 +177,9 @@ expand('bufferOffset', (p) => {
   return [p._offsetMultiplier * info.bytesPerBlock];
 })).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
+  t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn(async (t) => {
   const {
@@ -249,9 +249,9 @@ expand('rowsPerImage', texelBlockAlignmentTestExpanderForRowsPerImage)
 // Copy height is info.blockHeight, so rowsPerImage must be equal or greater than it.
 .filter(({ rowsPerImage, format }) => rowsPerImage >= kTextureFormatInfo[format].blockHeight)).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
+  t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn(async (t) => {
   const { rowsPerImage, format, method } = t.params;
@@ -291,9 +291,9 @@ filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension,
 beginSubcases().
 expand('offset', texelBlockAlignmentTestExpanderForOffset)).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
+  t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn(async (t) => {
   const { format, offset, method } = t.params;
@@ -395,9 +395,9 @@ expandWithParams((p) => {
 
 })).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  await t.selectDeviceOrSkipTestCase(info.feature);
+  t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn(async (t) => {
   const {

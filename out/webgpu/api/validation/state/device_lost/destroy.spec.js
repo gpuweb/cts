@@ -194,9 +194,9 @@ filter(({ format, usageType }) => {
 
 })).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { format } = t.params;
-  await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
+  t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 }).
 fn(async (t) => {
   const { awaitLost, format, usageType, usageCopy } = t.params;
@@ -269,9 +269,9 @@ filter(({ format, usageType }) => {
 
 })).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { format } = t.params;
-  await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
+  t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 }).
 fn(async (t) => {
   const { awaitLost, format, usageType, usageCopy } = t.params;
@@ -488,9 +488,9 @@ Tests creating query sets on destroyed device.
   `).
 
 params((u) => u.combine('type', kQueryTypes).beginSubcases().combine('awaitLost', [true, false])).
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { type } = t.params;
-  await t.selectDeviceForQueryTypeOrSkipTestCase(type);
+  t.selectDeviceForQueryTypeOrSkipTestCase(type);
 }).
 fn(async (t) => {
   const { awaitLost, type } = t.params;
@@ -670,9 +670,9 @@ beginSubcases().
 combine('stage', kCommandValidationStages).
 combine('awaitLost', [true, false])).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { type } = t.params;
-  await t.selectDeviceForQueryTypeOrSkipTestCase(type);
+  t.selectDeviceForQueryTypeOrSkipTestCase(type);
 }).
 fn(async (t) => {
   const { type, stage, awaitLost } = t.params;
@@ -856,9 +856,9 @@ combine('format', kCompressedTextureFormats).
 beginSubcases().
 combine('awaitLost', [true, false])).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { format } = t.params;
-  await t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
+  t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
 }).
 fn(async (t) => {
   const { format, awaitLost } = t.params;

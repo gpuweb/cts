@@ -44,9 +44,9 @@ filterFormatsByFeature(viewFormatFeature, [undefined, ...kTextureFormats])).
 
 combine('useViewFormatList', [false, true])).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { textureFormatFeature, viewFormatFeature } = t.params;
-  await t.selectDeviceOrSkipTestCase([textureFormatFeature, viewFormatFeature]);
+  t.selectDeviceOrSkipTestCase([textureFormatFeature, viewFormatFeature]);
 }).
 fn(async (t) => {
   const { textureFormat, viewFormat, useViewFormatList } = t.params;
@@ -119,9 +119,9 @@ u //
 .combine('format', kTextureFormats).
 combine('aspect', kTextureAspects)).
 
-beforeAllSubcases(async (t) => {
+beforeAllSubcases((t) => {
   const { format } = t.params;
-  await t.selectDeviceForTextureFormatOrSkipTestCase(format);
+  t.selectDeviceForTextureFormatOrSkipTestCase(format);
 }).
 fn(async (t) => {
   const { format, aspect } = t.params;

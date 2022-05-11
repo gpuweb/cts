@@ -40,10 +40,10 @@ g.test('zero_size')
       // Filter out incompatible dimension type and format combinations.
       .filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format))
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
+    t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const { dimension, zeroArgument, format } = t.params;
@@ -91,10 +91,10 @@ g.test('dimension_type_and_format_compatibility')
   .params(u =>
     u.combine('dimension', [undefined, ...kTextureDimensions]).combine('format', kTextureFormats)
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
+    t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const { dimension, format } = t.params;
@@ -128,10 +128,10 @@ g.test('mipLevelCount,format')
       .combine('largestDimension', [0, 1, 2])
       .unless(({ dimension, largestDimension }) => dimension === '1d' && largestDimension > 0)
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
+    t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const { dimension, format, mipLevelCount, largestDimension } = t.params;
@@ -207,10 +207,10 @@ g.test('mipLevelCount,bound_check')
             size[1] % kTextureFormatInfo[format].blockHeight !== 0)
       )
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
+    t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const { format, size, dimension } = t.params;
@@ -259,10 +259,10 @@ g.test('sampleCount,various_sampleCount_with_all_formats')
       .beginSubcases()
       .combine('sampleCount', [0, 1, 2, 4, 8, 16, 32, 256])
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
+    t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const { dimension, sampleCount, format } = t.params;
@@ -316,10 +316,10 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
         );
       })
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
+    t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const { dimension, sampleCount, format, mipLevelCount, arrayLayerCount, usage } = t.params;
@@ -368,10 +368,10 @@ g.test('texture_size,default_value_and_smallest_size,uncompressed_format')
       // Filter out incompatible dimension type and format combinations.
       .filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format))
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
+    t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const { dimension, format, size } = t.params;
@@ -409,10 +409,10 @@ g.test('texture_size,default_value_and_smallest_size,compressed_format')
         ];
       })
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
+    t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const { dimension, format, size, _success } = t.params;
@@ -444,10 +444,10 @@ g.test('texture_size,1d_texture')
       .combine('height', [1, 2])
       .combine('depthOrArrayLayers', [1, 2])
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
+    t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const { format, width, height, depthOrArrayLayers } = t.params;
@@ -488,10 +488,10 @@ g.test('texture_size,2d_texture,uncompressed_format')
         [1, 1, kLimitInfo.maxTextureArrayLayers.default + 1],
       ])
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
+    t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const { dimension, format, size } = t.params;
@@ -556,10 +556,10 @@ g.test('texture_size,2d_texture,compressed_format')
         ];
       })
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
+    t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const { dimension, format, size } = t.params;
@@ -607,10 +607,10 @@ g.test('texture_size,3d_texture,uncompressed_format')
         [1, 1, kLimitInfo.maxTextureDimension3D.default + 1],
       ])
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
+    t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const { format, size } = t.params;
@@ -675,13 +675,13 @@ g.test('texture_size,3d_texture,compressed_format')
         ];
       })
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     // Compressed formats are not supported in 3D in WebGPU v1 because they are complicated but not very useful for now.
     throw new SkipTestCase('Compressed 3D texture is not supported');
 
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
+    t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const { format, size } = t.params;
@@ -726,10 +726,10 @@ g.test('texture_usage')
       // Filter out incompatible dimension type and format combinations.
       .filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format))
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
-    await t.selectDeviceOrSkipTestCase(info.feature);
+    t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
     const { dimension, format, usage0, usage1 } = t.params;
@@ -777,9 +777,9 @@ g.test('viewFormats')
         filterFormatsByFeature(viewFormatFeature, kTextureFormats)
       )
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const { formatFeature, viewFormatFeature } = t.params;
-    await t.selectDeviceOrSkipTestCase([formatFeature, viewFormatFeature]);
+    t.selectDeviceOrSkipTestCase([formatFeature, viewFormatFeature]);
   })
   .fn(async t => {
     const { format, viewFormat } = t.params;

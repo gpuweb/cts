@@ -140,8 +140,8 @@ beginSubcases().
 combine('useU32Array', [true, false]).
 combine('mismatched', [true, false])).
 
-beforeAllSubcases(async (t) => {
-  await t.selectMismatchedDeviceOrSkipTestCase(undefined);
+beforeAllSubcases((t) => {
+  t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
 fn(async (t) => {
   const { encoderType, useU32Array, mismatched } = t.params;

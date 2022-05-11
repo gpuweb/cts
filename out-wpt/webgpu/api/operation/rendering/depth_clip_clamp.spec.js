@@ -38,10 +38,10 @@ have unexpected values then get drawn to the color buffer, which is later checke
       .combine('writeDepth', [false, true])
       .combine('multisampled', [false, true])
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
 
-    await t.selectDeviceOrSkipTestCase([
+    t.selectDeviceOrSkipTestCase([
       t.params.unclippedDepth ? 'depth-clip-control' : undefined,
       info.feature,
     ]);
@@ -360,10 +360,10 @@ to be empty.`
       .combine('unclippedDepth', [false, true])
       .combine('multisampled', [false, true])
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
 
-    await t.selectDeviceOrSkipTestCase([
+    t.selectDeviceOrSkipTestCase([
       t.params.unclippedDepth ? 'depth-clip-control' : undefined,
       info.feature,
     ]);

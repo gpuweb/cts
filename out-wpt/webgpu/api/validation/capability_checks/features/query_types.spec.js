@@ -24,7 +24,7 @@ As of this writing, the spec needs to be fixed as well.
   .params(u =>
     u.combine('type', ['occlusion', 'timestamp']).combine('timestampQueryEnable', [false, true])
   )
-  .beforeAllSubcases(async t => {
+  .beforeAllSubcases(t => {
     const { timestampQueryEnable } = t.params;
 
     const requiredFeatures = [];
@@ -32,7 +32,7 @@ As of this writing, the spec needs to be fixed as well.
       requiredFeatures.push('timestamp-query');
     }
 
-    await t.selectDeviceOrSkipTestCase({ requiredFeatures });
+    t.selectDeviceOrSkipTestCase({ requiredFeatures });
   })
   .fn(async t => {
     const { type, timestampQueryEnable } = t.params;

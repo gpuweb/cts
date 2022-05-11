@@ -22,9 +22,20 @@ export class SubcaseBatchState {
     return this._params;
   }
 
-  /** @internal MAINTENANCE_TODO: Make this not visible to test code? */
+  /**
+   * Runs before the `.before()` function.
+   * @internal MAINTENANCE_TODO: Make this not visible to test code?
+   */
   async init() {}
-  /** @internal MAINTENANCE_TODO: Make this not visible to test code? */
+  /**
+   * Runs between the `.before()` function and the subcases.
+   * @internal MAINTENANCE_TODO: Make this not visible to test code?
+   */
+  async postInit() {}
+  /**
+   * Runs after all subcases finish.
+   * @internal MAINTENANCE_TODO: Make this not visible to test code?
+   */
   async finalize() {}
 }
 
