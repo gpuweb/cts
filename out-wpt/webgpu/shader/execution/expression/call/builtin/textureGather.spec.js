@@ -59,12 +59,10 @@ Parameters:
     u
       .combine('texture_type', ['texture_2d', 'texture_cube'])
       .combine('T', ['f32', 'i32', 'u32'])
+      .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'])
       .combine('C_value', [-1, 0, 1, 2, 3, 4])
-      .combine('coords', [
-        /* less then min value, */ [0, 0],
-        ['max', 'max'] /* greater then max value */,
-      ])
+      .combine('coords', ['left-wrap', 'right-wrap', 'bottom-wrap', 'top-wrap', 'in-bounds'])
       .combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]])
   )
   .unimplemented();
@@ -101,14 +99,20 @@ Parameters:
     u
       .combine('texture_type', ['texture_2d_array', 'texture_cube_array'])
       .combine('T', ['f32', 'i32', 'u32'])
+      .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'])
       .combine('C_value', [-1, 0, 1, 2, 3, 4])
-      .combine('coords', [
-        /* less then min value, */ [0, 0],
-        ['max', 'max'] /* greater then max value */,
+      .combine('coords', ['left-wrap', 'right-wrap', 'bottom-wrap', 'top-wrap', 'in-bounds'])
+
+      /* array_index not param'd as out-of-bounds is implementation specific */ .combine('offset', [
+        undefined,
+        [-9, -9],
+        [-8, -8],
+        [0, 0],
+        [1, 2],
+        [7, 7],
+        [8, 8],
       ])
-      .combine('array_index', [/* one less then min */ -1, 0, 1 /* max, one more then max */])
-      .combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]])
   )
   .unimplemented();
 
@@ -135,10 +139,8 @@ Parameters:
   .params(u =>
     u
       .combine('texture_type', ['texture_depth_2d', 'texture_depth_cube'])
-      .combine('coords', [
-        /* less then min value, */ [0, 0],
-        ['max', 'max'] /* greater then max value */,
-      ])
+      .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
+      .combine('coords', ['left-wrap', 'right-wrap', 'bottom-wrap', 'top-wrap', 'in-bounds'])
       .combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]])
   )
   .unimplemented();
@@ -169,12 +171,18 @@ Parameters:
   .params(u =>
     u
       .combine('texture_type', ['texture_depth_2d_array', 'texture_depth_cube_array'])
+      .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'])
-      .combine('coords', [
-        /* less then min value, */ [0, 0],
-        ['max', 'max'] /* greater then max value */,
+      .combine('coords', ['left-wrap', 'right-wrap', 'bottom-wrap', 'top-wrap', 'in-bounds'])
+
+      /* array_index not param'd as out-of-bounds is implementation specific */ .combine('offset', [
+        undefined,
+        [-9, -9],
+        [-8, -8],
+        [0, 0],
+        [1, 2],
+        [7, 7],
+        [8, 8],
       ])
-      .combine('array_index', [/* one less then min, */ -1, 0, 1 /* max, one more then max */])
-      .combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]])
   )
   .unimplemented();
