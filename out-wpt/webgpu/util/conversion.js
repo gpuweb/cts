@@ -2,7 +2,7 @@
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { Colors } from '../../common/util/colors.js';
 import { assert } from '../../common/util/util.js';
-import { clamp } from './math.js';
+import { clamp, isSubnormalNumber } from './math.js';
 
 /**
  * Encodes a JS `number` into a "normalized" (unorm/snorm) integer representation with `bits` bits.
@@ -491,8 +491,16 @@ export class Scalar {
       case Infinity:
       case -Infinity:
         return Colors.bold(this.value.toString());
-      default:
-        return Colors.bold(this.value.toString()) + ' (0x' + this.value.toString(16) + ')';
+      default: {
+        const n = this.value;
+        if (n !== null) {
+          return (
+            Colors.bold(this.value.toString()) +
+            `(0x${this.value.toString(16)}, subnormal: ${isSubnormalNumber(n.valueOf())})`
+          );
+        }
+        return Colors.bold(this.value.toString()) + `(0x${this.value.toString(16)})`;
+      }
     }
   }
 }
