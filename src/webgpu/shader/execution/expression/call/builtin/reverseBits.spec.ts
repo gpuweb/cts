@@ -1,5 +1,11 @@
 export const description = `
 Execution tests for the 'reversBits' builtin function
+
+S is i32, u32
+T is S or vecN<S>
+@const fn reverseBits(e: T ) -> T
+Reverses the bits in e: The bit at position k of the result equals the bit at position 31-k of e.
+Component-wise when T is a vector.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -13,14 +19,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('u32')
   .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
-  .desc(
-    `
-T is i32, u32, vecN<i32>, or vecN<u32>
-@const fn reverseBits(e: T ) -> T
-Reverses the bits in e: The bit at position k of the result equals the bit at position 31-k of e.
-Component-wise when T is a vector.
-`
-  )
+  .desc(`u32 tests`)
   .params(u =>
     u
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
@@ -138,14 +137,7 @@ Component-wise when T is a vector.
 
 g.test('i32')
   .specURL('https://www.w3.org/TR/2021/WD-WGSL-20210929/#integer-builtin-functions')
-  .desc(
-    `
-T is i32, u32, vecN<i32>, or vecN<u32>
-@const fn reverseBits(e: T ) -> T
-Reverses the bits in e: The bit at position k of the result equals the bit at position 31-k of e.
-Component-wise when T is a vector.
-`
-  )
+  .desc(`i32 tests`)
   .params(u =>
     u
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)

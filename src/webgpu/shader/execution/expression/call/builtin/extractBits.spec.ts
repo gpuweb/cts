@@ -1,5 +1,34 @@
 export const description = `
 Execution tests for the 'extractBits' builtin function
+
+T is u32 or vecN<u32>
+@const fn extractBits(e: T, offset: u32, count: u32) -> T
+Reads bits from an integer, without sign extension.
+
+When T is a scalar type, then:
+  w is the bit width of T
+  o = min(offset,w)
+  c = min(count, w - o)
+
+The result is 0 if c is 0.
+Otherwise, bits 0..c-1 of the result are copied from bits o..o+c-1 of e.
+Other bits of the result are 0.
+Component-wise when T is a vector.
+
+
+T is i32 or vecN<i32>
+@const fn extractBits(e: T, offset: u32, count: u32) -> T
+Reads bits from an integer, with sign extension.
+
+When T is a scalar type, then:
+  w is the bit width of T
+  o = min(offset,w)
+  c = min(count, w - o)
+
+The result is 0 if c is 0.
+Otherwise, bits 0..c-1 of the result are copied from bits o..o+c-1 of e.
+Other bits of the result are the same as bit c-1 of the result.
+Component-wise when T is a vector.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -23,26 +52,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('u32')
   .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
-  .desc(
-    `
-T is u32 or vecN<u32>
-@const fn extractBits(
-  e: T,
-  offset: u32,
-  count: u32) -> T
-Reads bits from an integer, without sign extension.
-
-When T is a scalar type, then:
-  w is the bit width of T
-  o = min(offset,w)
-  c = min(count, w - o)
-
-The result is 0 if c is 0.
-Otherwise, bits 0..c-1 of the result are copied from bits o..o+c-1 of e.
-Other bits of the result are 0.
-Component-wise when T is a vector.
-`
-  )
+  .desc(`u32 tests`)
   .params(u =>
     u
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
@@ -184,26 +194,7 @@ Component-wise when T is a vector.
 
 g.test('i32')
   .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
-  .desc(
-    `
-T is i32 or vecN<i32>
-@const fn extractBits(
-  e: T,
-  offset: u32,
-  count: u32) -> T
-Reads bits from an integer, with sign extension.
-
-When T is a scalar type, then:
-  w is the bit width of T
-  o = min(offset,w)
-  c = min(count, w - o)
-
-The result is 0 if c is 0.
-Otherwise, bits 0..c-1 of the result are copied from bits o..o+c-1 of e.
-Other bits of the result are the same as bit c-1 of the result.
-Component-wise when T is a vector.
-`
-  )
+  .desc(`i32 tests`)
   .params(u =>
     u
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)

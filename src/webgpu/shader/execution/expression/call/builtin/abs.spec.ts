@@ -1,5 +1,18 @@
 export const description = `
 Execution tests for the 'abs' builtin function
+
+S is AbstractInt, i32, or u32
+T is S or vecN<S>
+@const fn abs(e: T ) -> T
+The absolute value of e. Component-wise when T is a vector. If e is a signed
+integral scalar type and evaluates to the largest negative value, then the
+result is e. If e is an unsigned integral type, then the result is e.
+
+S is AbstractFloat, f32, f16
+T is S or vecN<S>
+@const fn abs(e: T ) -> T
+Returns the absolute value of e (e.g. e with a positive sign bit).
+Component-wise when T is a vector.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -23,16 +36,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('abstract_int')
   .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
-  .desc(
-    `
-S is AbstractInt, i32, or u32
-T is S or vecN<S>
-@const fn abs(e: T ) -> T
-The absolute value of e. Component-wise when T is a vector. If e is a signed
-integral scalar type and evaluates to the largest negative value, then the
-result is e. If e is an unsigned integral type, then the result is e.
-`
-  )
+  .desc(`abstract int tests`)
   .params(u =>
     u
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
@@ -42,16 +46,7 @@ result is e. If e is an unsigned integral type, then the result is e.
 
 g.test('u32')
   .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
-  .desc(
-    `
-S is AbstractInt, i32, or u32
-T is S or vecN<S>
-@const fn abs(e: T ) -> T
-The absolute value of e. Component-wise when T is a vector. If e is a signed
-integral scalar type and evaluates to the largest negative value, then the
-result is e. If e is an unsigned integral type, then the result is e.
-`
-  )
+  .desc(`unsigned int tests`)
   .params(u =>
     u
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
@@ -100,16 +95,7 @@ result is e. If e is an unsigned integral type, then the result is e.
 
 g.test('i32')
   .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
-  .desc(
-    `
-S is AbstractInt, i32, or u32
-T is S or vecN<S>
-@const fn abs(e: T ) -> T
-The absolute value of e. Component-wise when T is a vector. If e is a signed
-integral scalar type and evaluates to the largest negative value, then the
-result is e. If e is an unsigned integral type, then the result is e.
-`
-  )
+  .desc(`signed int tests`)
   .params(u =>
     u
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
@@ -164,14 +150,7 @@ result is e. If e is an unsigned integral type, then the result is e.
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
-T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-@const fn abs(e: T ) -> T
-Returns the absolute value of e (e.g. e with a positive sign bit).
-Component-wise when T is a vector.
-`
-  )
+  .desc(`abstract float tests`)
   .params(u =>
     u
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
@@ -181,14 +160,7 @@ Component-wise when T is a vector.
 
 g.test('f32')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
-T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-@const fn abs(e: T ) -> T
-Returns the absolute value of e (e.g. e with a positive sign bit).
-Component-wise when T is a vector.
-`
-  )
+  .desc(`float 32 tests`)
   .params(u =>
     u
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
@@ -213,14 +185,7 @@ Component-wise when T is a vector.
 
 g.test('f16')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
-T is AbstractFloat, f32, f16, vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
-@const fn abs(e: T ) -> T
-Returns the absolute value of e (e.g. e with a positive sign bit).
-Component-wise when T is a vector.
-`
-  )
+  .desc(`f16 tests`)
   .params(u =>
     u
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
