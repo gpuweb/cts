@@ -352,7 +352,13 @@ function calculateFlushedResults(value) {
  */
 export function makeUnaryF32Case(param, op) {
   const f32_param = quantizeToF32(param);
+  const is_param_subnormal = isSubnormalNumber(f32_param);
   const expected = calculateFlushedResults(op(f32_param));
+  if (is_param_subnormal) {
+    calculateFlushedResults(op(0)).forEach(value => {
+      expected.add(value);
+    });
+  }
   return { input: [f32(param)], expected: anyOf(...expected) };
 }
 
