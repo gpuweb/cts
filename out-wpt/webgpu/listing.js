@@ -1948,6 +1948,26 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "textureNumLevels"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
+      "textureNumSamples"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "textureSampleBias"
     ]
   },
