@@ -9,6 +9,13 @@ Returns the tangent of e. Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
+import { intervalComparator } from '../../../../../util/compare.js';
+import { f32, TypeF32 } from '../../../../../util/conversion.js';
+import { TanFPIntervalBuilder } from '../../../../../util/fp_interval.js';
+import { fullF32Range, quantizeToF32 } from '../../../../../util/math.js';
+import { Case, run } from '../../expression.js';
+
+import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -30,7 +37,17 @@ g.test('f32')
       .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
-  .unimplemented();
+  .fn(async t => {
+    const builder = new TanFPIntervalBuilder();
+    const makeCase = (x: number): Case => {
+      x = quantizeToF32(x); // HACK: need to support both rounding modes over in the IntervalBuilders
+      const interval = builder.singular(x);
+      return { input: f32(x), expected: intervalComparator(interval) };
+    };
+
+    const cases: Array<Case> = fullF32Range().map(makeCase);
+    run(t, builtin('tan'), [TypeF32], TypeF32, t.params, cases);
+  });
 
 g.test('f16')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
