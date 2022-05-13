@@ -535,7 +535,12 @@ fn(async (t) => {
 
 
   const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType, {
-    attachmentInfo: { colorFormats: ['rgba8unorm'], depthStencilFormat: format } });
+    attachmentInfo: {
+      colorFormats: ['rgba8unorm'],
+      depthStencilFormat: format,
+      depthReadOnly,
+      stencilReadOnly } });
+
 
   encoder.setPipeline(pipeline);
 
