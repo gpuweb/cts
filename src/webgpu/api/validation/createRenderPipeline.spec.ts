@@ -35,7 +35,7 @@ import {
   kBlendFactors,
   kBlendOperations,
 } from '../../capability_info.js';
-import { getFragmentShaderCodeWithOutput } from '../../util/shader.js';
+import { getFragmentShaderCodeWithOutput, getPlainTypeInfo } from '../../util/shader.js';
 import { kTexelRepresentationInfo } from '../../util/texture/texel_data.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -61,7 +61,9 @@ class F extends ValidationTest {
       fragmentShaderCode = getFragmentShaderCodeWithOutput([
         {
           values,
-          sampleType: kTextureFormatInfo[targets[0] ? targets[0].format : 'rgba8unorm'].sampleType,
+          plainType: getPlainTypeInfo(
+            kTextureFormatInfo[targets[0] ? targets[0].format : 'rgba8unorm'].sampleType
+          ),
           componentCount: 4,
         },
       ]),
@@ -395,11 +397,6 @@ g.test('sample_count_must_be_valid')
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
-const kRenderableColorTextureFormatsExtend = [
-  undefined,
-  ...kRenderableColorTextureFormats,
-] as const;
-
 g.test('pipeline_output_targets')
   .desc(
     `Pipeline fragment output types must be compatible with target color state format
@@ -416,7 +413,7 @@ g.test('pipeline_output_targets')
     u
       .combine('isAsync', [false, true])
       .combine('writeMask', [0, 0x1, 0x2, 0x4, 0x8, 0xf])
-      .combine('format', kRenderableColorTextureFormatsExtend)
+      .combine('format', [undefined, ...kRenderableColorTextureFormats] as const)
       .beginSubcases()
       .combine('hasShaderOutput', [false, true])
       .filter(p => p.format === undefined || p.hasShaderOutput === true)
@@ -439,7 +436,7 @@ g.test('pipeline_output_targets')
       // To have a dummy depthStencil attachment to avoid having no attachment at all which is invalid
       depthStencil: { format: 'depth24plus' },
       fragmentShaderCode: getFragmentShaderCodeWithOutput(
-        hasShaderOutput ? [{ values, sampleType, componentCount }] : []
+        hasShaderOutput ? [{ values, plainType: getPlainTypeInfo(sampleType), componentCount }] : []
       ),
     });
 
@@ -565,7 +562,9 @@ g.test('pipeline_output_targets,blend')
           },
         },
       ],
-      fragmentShaderCode: getFragmentShaderCodeWithOutput([{ values, sampleType, componentCount }]),
+      fragmentShaderCode: getFragmentShaderCodeWithOutput([
+        { values, plainType: getPlainTypeInfo(sampleType), componentCount },
+      ]),
     });
 
     const colorBlendReadsSrcAlpha =
@@ -617,7 +616,7 @@ Tests if blending is used, the target's format must be blendable (support "float
           },
         ],
         fragmentShaderCode: getFragmentShaderCodeWithOutput([
-          { values, sampleType: 'float', componentCount: 4 },
+          { values, plainType: getPlainTypeInfo(info.sampleType), componentCount: 4 },
         ]),
       })
     );
@@ -653,10 +652,10 @@ g.test('pipeline_output_targets,blend_min_max')
       dstFactor,
       operation,
     };
-    const fragmentShaderCode = getFragmentShaderCodeWithOutput([
-      { values, sampleType: 'float', componentCount: 4 },
-    ]);
     const format = 'rgba8unorm';
+    const fragmentShaderCode = getFragmentShaderCodeWithOutput([
+      { values, plainType: 'f32', componentCount: 4 },
+    ]);
 
     const descriptor = t.getDescriptor({
       targets: [
@@ -694,6 +693,7 @@ g.test('pipeline_layout,device_mismatch')
 
     const layout = device.createPipelineLayout({ bindGroupLayouts: [] });
 
+    const format = 'rgba8unorm';
     const descriptor = {
       layout,
       vertex: {
@@ -708,12 +708,10 @@ g.test('pipeline_layout,device_mismatch')
       },
       fragment: {
         module: t.device.createShaderModule({
-          code: getFragmentShaderCodeWithOutput([
-            { values, sampleType: 'float', componentCount: 4 },
-          ]),
+          code: getFragmentShaderCodeWithOutput([{ values, plainType: 'f32', componentCount: 4 }]),
         }),
         entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm' }] as const,
+        targets: [{ format }] as const,
       },
     };
 
@@ -754,12 +752,12 @@ g.test('shader_module,device_mismatch')
         module: fragment_mismatched
           ? t.mismatchedDevice.createShaderModule({
               code: getFragmentShaderCodeWithOutput([
-                { values, sampleType: 'float', componentCount: 4 },
+                { values, plainType: 'f32', componentCount: 4 },
               ]),
             })
           : t.device.createShaderModule({
               code: getFragmentShaderCodeWithOutput([
-                { values, sampleType: 'float', componentCount: 4 },
+                { values, plainType: 'f32', componentCount: 4 },
               ]),
             }),
         entryPoint: 'main',

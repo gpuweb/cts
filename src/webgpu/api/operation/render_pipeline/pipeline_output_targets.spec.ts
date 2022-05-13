@@ -6,7 +6,7 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { range } from '../../../../common/util/util.js';
 import { kRenderableColorTextureFormats, kTextureFormatInfo } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { getFragmentShaderCodeWithOutput } from '../../../util/shader.js';
+import { getFragmentShaderCodeWithOutput, getPlainTypeInfo } from '../../../util/shader.js';
 import { kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
 import { textureContentIsOKByT2B } from '../../../util/texture/texture_ok.js';
@@ -91,7 +91,7 @@ g.test('color,attachments')
                       writeValues[i].B,
                       writeValues[i].A,
                     ],
-                    sampleType: info.sampleType,
+                    plainType: getPlainTypeInfo(info.sampleType),
                     componentCount,
                   }
             )
@@ -183,7 +183,7 @@ g.test('color,component_count')
           code: getFragmentShaderCodeWithOutput([
             {
               values,
-              sampleType: info.sampleType,
+              plainType: getPlainTypeInfo(info.sampleType),
               componentCount,
             },
           ]),
@@ -393,7 +393,7 @@ The attachment has a load value of [1, 0, 0, 1]
           code: getFragmentShaderCodeWithOutput([
             {
               values: output,
-              sampleType: info.sampleType,
+              plainType: getPlainTypeInfo(info.sampleType),
               componentCount,
             },
           ]),
