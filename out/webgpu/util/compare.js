@@ -131,7 +131,7 @@ export function compare(got, expected, cmpFloats) {
 /** @returns a Comparator that checks whether a test value matches any of the provided options */
 export function anyOf(...expectations) {
   return (got, cmpFloats) => {
-    const failed = [];
+    const failed = new Set();
     for (const e of expectations) {
       let cmp;
       if (e.type !== undefined) {
@@ -144,9 +144,9 @@ export function anyOf(...expectations) {
       if (cmp.matched) {
         return cmp;
       }
-      failed.push(cmp.expected);
+      failed.add(cmp.expected);
     }
-    return { matched: false, got: got.toString(), expected: failed.join(' or ') };
+    return { matched: false, got: got.toString(), expected: [...failed].join(' or ') };
   };
 }
 

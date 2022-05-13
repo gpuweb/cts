@@ -380,7 +380,7 @@ vectorWidth)
 
 /** @returns a set of flushed and non-flushed floating point results for a given number. */
 function calculateFlushedResults(value) {
-  return new Set([f64(value), f64(flushSubnormalNumber(value))]);
+  return [f64(value), f64(flushSubnormalNumber(value))];
 }
 
 /**
@@ -395,7 +395,7 @@ export function makeUnaryF32Case(param, op) {
   const expected = calculateFlushedResults(op(f32_param));
   if (is_param_subnormal) {
     calculateFlushedResults(op(0)).forEach((value) => {
-      expected.add(value);
+      expected.push(value);
     });
   }
   return { input: [f32(param)], expected: anyOf(...expected) };
@@ -424,17 +424,17 @@ skip_param1_zero_flush = false)
   const expected = calculateFlushedResults(op(f32_param0, f32_param1));
   if (is_param0_subnormal) {
     calculateFlushedResults(op(0, f32_param1)).forEach((value) => {
-      expected.add(value);
+      expected.push(value);
     });
   }
   if (!skip_param1_zero_flush && is_param1_subnormal) {
     calculateFlushedResults(op(f32_param0, 0)).forEach((value) => {
-      expected.add(value);
+      expected.push(value);
     });
   }
   if (!skip_param1_zero_flush && is_param0_subnormal && is_param1_subnormal) {
     calculateFlushedResults(op(0, 0)).forEach((value) => {
-      expected.add(value);
+      expected.push(value);
     });
   }
 
