@@ -5,8 +5,21 @@ and parameters as expect.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { kVertexFormatInfo } from '../../../../../capability_info.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { ValidationTest } from '../../../validation_test.js';
+
+type VertexAttrib<A> = A & { shaderLocation: number };
+type VertexBuffer<V, A> = V & {
+  slot: number;
+  attributes: VertexAttrib<A>[];
+};
+type VertexState<V, A> = VertexBuffer<V, A>[];
+
+type VertexLayoutState<V, A> = VertexState<
+  { stepMode: GPUVertexStepMode; arrayStride: number } & V,
+  { format: GPUVertexFormat; offset: number } & A
+>;
 
 interface DrawIndexedParameter {
   indexCount: number;
@@ -48,7 +61,42 @@ function callDrawIndexed(
   }
 }
 
-export const g = makeTestGroup(ValidationTest);
+class F extends ValidationTest {
+  makeTestPipeline(
+    buffers: VertexState<
+      { stepMode: GPUVertexStepMode; arrayStride: number },
+      {
+        offset: number;
+        format: GPUVertexFormat;
+      }
+    >
+  ): GPURenderPipeline {
+    const bufferLayouts: GPUVertexBufferLayout[] = [];
+    for (const b of buffers) {
+      bufferLayouts[b.slot] = b;
+    }
+
+    return this.device.createRenderPipeline({
+      vertex: {
+        module: this.device.createShaderModule({
+          code: this.getNoOpShaderCode('VERTEX'),
+        }),
+        entryPoint: 'main',
+        buffers: bufferLayouts,
+      },
+      fragment: {
+        module: this.device.createShaderModule({
+          code: this.getNoOpShaderCode('FRAGMENT'),
+        }),
+        entryPoint: 'main',
+        targets: [{ format: 'rgba8unorm', writeMask: 0 }],
+      },
+      primitive: { topology: 'triangle-list' },
+    });
+  }
+}
+
+export const g = makeTestGroup(F);
 
 g.test(`unused_buffer_bound`)
   .desc(
@@ -166,6 +214,149 @@ expected. Such set of buffer parameters should include cases like weird offset v
 `
   )
   .unimplemented();
+
+g.test(`vertex_buffer_OOB,vertex_step_mode`)
+  .desc(
+    `
+In this test we test the vertex buffer OOB validation in draw calls. Specifically, only vertex step
+mode buffer OOB in draw and instance step mode buffer OOB in draw and drawIndexed are CPU-validated.
+Other cases are handled by robust access and no validation error occurs.
+- Test that:
+    - Draw call needs to read {=, >} any bound vertex buffer range, with GPUBuffer that is {large
+      enough, exactly the size of bound range}
+        - Binding size = 0 (ensure it's not treated as a special case)
+        - x= weird buffer offset values
+        - x= weird attribute offset values
+        - x= weird arrayStride values
+        - x= {render pass, render bundle}
+- For vertex step mode vertex buffer,
+    - Test that:
+        - vertexCount largeish
+        - firstVertex {=, >} 0
+        - arrayStride is 0 and bound buffer size too small
+    - Validation error occurs in:
+        - draw
+        - drawIndexed with a zero array stride vertex step mode buffer OOB
+    - Otherwise no validation error in drawIndexed, draIndirect and drawIndexedIndirect
+
+In this test, we use a a render pipeline requiring one vertex step mode and one instance step mode
+vertex buffer. Then for a given drawing parameter set (e.g., vertexCount, instanceCount, firstVertex,
+indexCount), we calculate the exactly required size for vertex step mode vertex buffer, instance
+step mode vertex buffer and index buffer. Then, we generate buffer parameters (i.e. GPU buffer size,
+binding offset and binding size) for all buffers, covering both (bound size == required size),
+(bound size == required size - 1), and (bound size == 0), and test that draw and drawIndexed will
+success/error asexpected. Such set of buffer parameters should include cases like weird offset values.
+`
+  )
+  .beforeAllSubcases(t => {
+    t.selectMismatchedDeviceOrSkipTestCase(undefined);
+  })
+  .params(u =>
+    u //
+      // .combine('zeroArrayStride', [false, true])  // must be a multiple of 4
+      .combine('arrayStrideState', ['zero', 'exact', 'oversize'] as const) // must be a multiple of 4
+      .combine('firstVertex', [0, 10])
+      .combine('vertexCount', [0, 10, 10000])
+      .combine('vertexFormat', ['snorm8x2', 'float32', 'float16x4'] as GPUVertexFormat[])
+      .combine('attributeOffsetFactor', [0, 1, 2, 7]) // the offset of attribute will be factor * MIN(4, sizeof(vertexFormatt))
+      .beginSubcases()
+      .combine('useBundle', [false, true])
+      .combine('setBufferOffset', [0, 4, 200]) // must be a multiple of 4
+      .combine('boundBufferSizeState', ['zero', 'exile', 'enough'] as const)
+  )
+  .fn(t => {
+    const {
+      setBufferOffset,
+      arrayStrideState,
+      firstVertex,
+      vertexCount,
+      vertexFormat,
+      attributeOffsetFactor,
+      useBundle,
+      boundBufferSizeState,
+    } = t.params;
+
+    /*
+  const indexElementSize = indexFormat === 'uint16' ? 2 : 4;
+  const bindingSize = bindingSizeInElements * indexElementSize;
+  const bufferSize = bufferSizeInElements * indexElementSize;
+
+  const desc: GPUBufferDescriptor = {
+    size: bufferSize,
+    usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
+  };
+  const indexBuffer = t.device.createBuffer(desc);
+
+  const drawCallParam: DrawIndexedParameter = {
+    indexCount: drawIndexCount,
+  };
+  */
+
+    const vertexFormatInfo = kVertexFormatInfo[vertexFormat];
+    const formatSize = vertexFormatInfo.bytesPerComponent * vertexFormatInfo.componentCount;
+    const attributeOffset = attributeOffsetFactor * Math.min(4, formatSize);
+    const lastStride = attributeOffset + formatSize;
+    let arrayStride = 0;
+    if (arrayStrideState !== 'zero') {
+      arrayStride = lastStride;
+      if (arrayStrideState === 'oversize') {
+        arrayStride = arrayStride + 20;
+      }
+      arrayStride = arrayStride + (-arrayStride & 3); // Make sure arrayStride is a multiple of 4
+    }
+
+    const strideCountForVertexBuffer = firstVertex + vertexCount;
+    const requiredBufferSize = arrayStride * (strideCountForVertexBuffer - 1) + lastStride;
+    let setBufferSize: number;
+    switch (boundBufferSizeState) {
+      case 'zero': {
+        setBufferSize = 0;
+        break;
+      }
+      case 'exile': {
+        setBufferSize = requiredBufferSize - 1;
+        break;
+      }
+      case 'enough': {
+        setBufferSize = requiredBufferSize;
+        break;
+      }
+    }
+    const bufferSize = setBufferOffset + setBufferSize;
+
+    const buffer = t.createBufferWithState('valid', {
+      size: bufferSize,
+      usage: GPUBufferUsage.VERTEX,
+    });
+
+    const vertexBufferLayouts: VertexLayoutState<{}, {}> = [
+      {
+        slot: 1,
+        stepMode: 'vertex',
+        arrayStride,
+        attributes: [
+          {
+            shaderLocation: 2,
+            format: vertexFormat,
+            offset: attributeOffset,
+          },
+        ],
+      },
+    ];
+
+    // const renderPipeline = t.createNoOpRenderPipeline();
+    const renderPipeline = t.makeTestPipeline(vertexBufferLayouts);
+
+    const commandBufferMaker = t.createEncoder(useBundle ? 'render bundle' : 'render pass');
+    const renderEncoder = commandBufferMaker.encoder;
+
+    renderEncoder.setPipeline(renderPipeline);
+    renderEncoder.setVertexBuffer(1, buffer, setBufferOffset, setBufferSize);
+
+    // callDrawIndexed(t, renderEncoder, drawType, drawCallParam);
+    const isFinishSuccess = true;
+    commandBufferMaker.validateFinishAndSubmit(isFinishSuccess, true);
+  });
 
 g.test(`last_buffer_setting_take_account`)
   .desc(
