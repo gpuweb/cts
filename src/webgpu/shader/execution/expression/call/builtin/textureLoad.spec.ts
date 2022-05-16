@@ -19,7 +19,7 @@ If an out of bounds access occurs, the built-in function returns one of:
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 
-import { generateCoordBoundaries } from './utils';
+import { generateCoordBoundaries } from './utils.js';
 
 export const g = makeTestGroup(GPUTest);
 

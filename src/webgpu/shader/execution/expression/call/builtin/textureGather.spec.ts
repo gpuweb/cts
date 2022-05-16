@@ -25,7 +25,7 @@ A texture gather operation reads from a 2D, 2D array, cube, or cube array textur
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 
-import { generateCoordBoundaries } from './utils';
+import { generateCoordBoundaries } from './utils.js';
 
 export const g = makeTestGroup(GPUTest);
 
