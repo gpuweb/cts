@@ -18,6 +18,7 @@ If an out of bounds access occurs, the built-in function returns one of:
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
+import { generateCoordBoundaries } from './utils';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -38,7 +39,7 @@ Parameters:
   .params(u =>
     u
       .combine('C', ['i32', 'u32'] as const)
-      .combine('coords', [-1, 0, `dimension-1`, `dimension`] as const)
+      .combine('coords', generateCoordBoundaries(1))
       .combine('level', [-1, 0, `numlevels-1`, `numlevels`] as const)
   )
   .unimplemented();
@@ -60,8 +61,7 @@ Parameters:
   .params(u =>
     u
       .combine('C', ['i32', 'u32'] as const)
-      .combine('coords_0', [-1, 0, `dimensions-1`, `dimension`] as const)
-      .combine('coords_1', [-1, 0, `dimensions-1`, `dimension`] as const)
+      .combine('coords', generateCoordBoundaries(2))
       .combine('level', [-1, 0, `numlevels-1`, `numlevels`] as const)
   )
   .unimplemented();
@@ -83,9 +83,7 @@ Parameters:
   .params(u =>
     u
       .combine('C', ['i32', 'u32'] as const)
-      .combine('coords_0', [-1, 0, `dimensions-1`, `dimension`] as const)
-      .combine('coords_1', [-1, 0, `dimensions-1`, `dimension`] as const)
-      .combine('coords_2', [-1, 0, `dimensions-1`, `dimension`] as const)
+      .combine('coords', generateCoordBoundaries(3))
       .combine('level', [-1, 0, `numlevels-1`, `numlevels`] as const)
   )
   .unimplemented();
@@ -112,8 +110,7 @@ Parameters:
         'texture_depth_multisampled_2d',
       ] as const)
       .combine('C', ['i32', 'u32'] as const)
-      .combine('coords_0', [-1, 0, `dimensions-1`, `dimension`] as const)
-      .combine('coords_1', [-1, 0, `dimensions-1`, `dimension`] as const)
+      .combine('coords', generateCoordBoundaries(2))
       .combine('sample_index', [-1, 0, `sampleCount-1`, `sampleCount`] as const)
   )
   .unimplemented();
@@ -135,8 +132,7 @@ Parameters:
   .params(u =>
     u
       .combine('C', ['i32', 'u32'] as const)
-      .combine('coords_0', [-1, 0, `dimensions-1`, `dimension`] as const)
-      .combine('coords_1', [-1, 0, `dimensions-1`, `dimension`] as const)
+      .combine('coords', generateCoordBoundaries(2))
       .combine('level', [-1, 0, `numlevels-1`, `numlevels`] as const)
   )
   .unimplemented();
@@ -157,8 +153,7 @@ Parameters:
   .params(u =>
     u
       .combine('C', ['i32', 'u32'] as const)
-      .combine('coords_0', [-1, 0, `dimensions-1`, `dimension`] as const)
-      .combine('coords_1', [-1, 0, `dimensions-1`, `dimension`] as const)
+      .combine('coords', generateCoordBoundaries(2))
   )
   .unimplemented();
 
@@ -182,8 +177,7 @@ Parameters:
     u
       .combine('texture_type', ['texture_2d_array', 'texture_depth_2d_array'] as const)
       .combine('C', ['i32', 'u32'] as const)
-      .combine('coords_0', [-1, 0, `dimensions-1`, `dimension`] as const)
-      .combine('coords_1', [-1, 0, `dimensions-1`, `dimension`] as const)
+      .combine('coords', generateCoordBoundaries(2))
       .combine('array_index', [-1, 0, `numlayers-1`, `numlayers`] as const)
       .combine('level', [-1, 0, `numlevels-1`, `numlevels`] as const)
   )
