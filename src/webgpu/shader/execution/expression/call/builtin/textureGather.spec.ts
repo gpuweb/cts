@@ -25,7 +25,7 @@ A texture gather operation reads from a 2D, 2D array, cube, or cube array textur
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 
-import { generateCoordBoundaries } from './utils.js';
+import { generateCoordBoundaries, generateOffsets } from './utils.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -62,7 +62,7 @@ Parameters:
       .combine('C', ['i32', 'u32'] as const)
       .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
       .combine('coords', generateCoordBoundaries(2))
-      .combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]] as const)
+      .combine('offset', generateOffsets(2))
   )
   .unimplemented();
 
@@ -130,7 +130,7 @@ Parameters:
       .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
       .combine('coords', generateCoordBoundaries(2))
       /* array_index not param'd as out-of-bounds is implementation specific */
-      .combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]] as const)
+      .combine('offset', generateOffsets(2))
   )
   .unimplemented();
 
@@ -189,7 +189,7 @@ Parameters:
     u
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(2))
-      .combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]] as const)
+      .combine('offset', generateOffsets(2))
   )
   .unimplemented();
 
@@ -240,7 +240,7 @@ Parameters:
       .combine('C', ['i32', 'u32'] as const)
       .combine('coords', generateCoordBoundaries(2))
       /* array_index not param'd as out-of-bounds is implementation specific */
-      .combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]] as const)
+      .combine('offset', generateOffsets(2))
   )
   .unimplemented();
 
