@@ -18,6 +18,7 @@ If an out of bounds access occurs, the built-in function returns one of:
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
+
 import { generateCoordBoundaries } from './utils';
 
 export const g = makeTestGroup(GPUTest);
@@ -151,9 +152,7 @@ Parameters:
 `
   )
   .params(u =>
-    u
-      .combine('C', ['i32', 'u32'] as const)
-      .combine('coords', generateCoordBoundaries(2))
+    u.combine('C', ['i32', 'u32'] as const).combine('coords', generateCoordBoundaries(2))
   )
   .unimplemented();
 

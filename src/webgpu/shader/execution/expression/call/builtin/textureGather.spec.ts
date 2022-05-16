@@ -24,6 +24,7 @@ A texture gather operation reads from a 2D, 2D array, cube, or cube array textur
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
+
 import { generateCoordBoundaries } from './utils';
 
 export const g = makeTestGroup(GPUTest);
@@ -64,7 +65,6 @@ Parameters:
       .combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]] as const)
   )
   .unimplemented();
-
 
 g.test('sampled_3d_coords')
   .specURL('https://www.w3.org/TR/WGSL/#texturegather')
@@ -154,14 +154,15 @@ Parameters:
  * array_index: The 0-based texture array index
 `
   )
-  .params(u =>
-    u
-      .combine('T', ['f32', 'i32', 'u32'] as const)
-      .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
-      .combine('C', ['i32', 'u32'] as const)
-      .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
-      .combine('coords', generateCoordBoundaries(3))
-      /* array_index not param'd as out-of-bounds is implementation specific */
+  .params(
+    u =>
+      u
+        .combine('T', ['f32', 'i32', 'u32'] as const)
+        .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
+        .combine('C', ['i32', 'u32'] as const)
+        .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
+        .combine('coords', generateCoordBoundaries(3))
+    /* array_index not param'd as out-of-bounds is implementation specific */
   )
   .unimplemented();
 
@@ -258,11 +259,12 @@ Parameters:
  * array_index: The 0-based texture array index
 `
   )
-  .params(u =>
-    u
-      .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
-      .combine('C', ['i32', 'u32'] as const)
-      .combine('coords', generateCoordBoundaries(3))
-      /* array_index not param'd as out-of-bounds is implementation specific */
+  .params(
+    u =>
+      u
+        .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
+        .combine('C', ['i32', 'u32'] as const)
+        .combine('coords', generateCoordBoundaries(3))
+    /* array_index not param'd as out-of-bounds is implementation specific */
   )
   .unimplemented();

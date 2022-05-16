@@ -8,6 +8,7 @@ Must only be invoked in uniform control flow.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
+
 import { generateCoordBoundaries } from './utils';
 
 export const g = makeTestGroup(GPUTest);

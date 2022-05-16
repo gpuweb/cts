@@ -18,6 +18,7 @@ A texture gather compare operation performs a depth comparison on four texels in
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
+
 import { generateCoordBoundaries } from './utils';
 
 export const g = makeTestGroup(GPUTest);
