@@ -12,7 +12,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { intervalComparator } from '../../../../../util/compare.js';
 import { f32, TypeF32 } from '../../../../../util/conversion.js';
 import { TanFPIntervalBuilder } from '../../../../../util/fp_interval.js';
-import { fullF32Range, quantizeToF32 } from '../../../../../util/math.js';
+import { linearRange, quantizeToF32 } from '../../../../../util/math.js';
 import { Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -45,7 +45,7 @@ g.test('f32')
       return { input: f32(x), expected: intervalComparator(interval) };
     };
 
-    const cases: Array<Case> = fullF32Range().map(makeCase);
+    const cases: Array<Case> = linearRange(-Math.PI, Math.PI, 1000).map(makeCase);
     run(t, builtin('tan'), [TypeF32], TypeF32, t.params, cases);
   });
 
