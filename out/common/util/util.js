@@ -176,6 +176,17 @@ export function* iterRange(n, fn) {
   }
 }
 
+/** Creates a (reusable) iterable object that maps `f` over `xs`, lazily. */
+export function mapLazy(xs, f) {
+  return {
+    *[Symbol.iterator]() {
+      for (const x of xs) {
+        yield f(x);
+      }
+    } };
+
+}
+
 const TypedArrayBufferViewInstances = [
 new Uint8Array(),
 new Uint8ClampedArray(),

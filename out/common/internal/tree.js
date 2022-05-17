@@ -527,14 +527,16 @@ createSubtree)
 }
 
 function insertLeaf(parent, query, t) {
-  const key = '';
   const leaf = {
     readableRelativeName: readableNameForCase(query),
     query,
     run: (rec, expectations) => t.run(rec, query, expectations || []),
     isUnimplemented: t.isUnimplemented };
 
-  assert(!parent.children.has(key));
+
+  // This is a leaf (e.g. s:f:t:x=1;* -> s:f:t:x=1). The key is always ''.
+  const key = '';
+  assert(!parent.children.has(key), `Duplicate testcase: ${query}`);
   parent.children.set(key, leaf);
 }
 

@@ -1,6 +1,10 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { mergeParams } from '../internal/params_utils.js'; // ================================================================
+ **/ import { mergeParams } from '../internal/params_utils.js';
+import { stringifyPublicParams } from '../internal/query/stringify_params.js';
+import { assert, mapLazy } from '../util/util.js';
+
+// ================================================================
 // "Public" ParamsBuilder API / Documentation
 // ================================================================
 
@@ -58,7 +62,6 @@ export class CaseParamsBuilder extends ParamsBuilderBase {
   expand(key, expander) {
     return this.expandWithParams(function* (p) {
       for (const value of expander(p)) {
-        // TypeScript doesn't know here that NewPKey is always a single literal string type.
         yield { [key]: value };
       }
     });
@@ -66,12 +69,22 @@ export class CaseParamsBuilder extends ParamsBuilderBase {
 
   /** @inheritdoc */
   combineWithParams(newParams) {
+    assertNotGenerator(newParams);
+    const seenValues = new Set();
+    for (const params of newParams) {
+      const paramsStr = stringifyPublicParams(params);
+      assert(!seenValues.has(paramsStr), `Duplicate entry in combine[WithParams]: ${paramsStr}`);
+      seenValues.add(paramsStr);
+    }
+
     return this.expandWithParams(() => newParams);
   }
 
   /** @inheritdoc */
   combine(key, values) {
-    return this.expand(key, () => values);
+    assertNotGenerator(values);
+    const mapped = mapLazy(values, v => ({ [key]: v }));
+    return this.combineWithParams(mapped);
   }
 
   /** @inheritdoc */
@@ -148,11 +161,13 @@ export class SubcaseParamsBuilder extends ParamsBuilderBase {
 
   /** @inheritdoc */
   combineWithParams(newParams) {
+    assertNotGenerator(newParams);
     return this.expandWithParams(() => newParams);
   }
 
   /** @inheritdoc */
   combine(key, values) {
+    assertNotGenerator(values);
     return this.expand(key, () => values);
   }
 
@@ -185,4 +200,14 @@ function filterGenerator(baseGenerator, pred) {
       }
     }
   };
+}
+
+/** Assert an object is not a Generator (a thing returned from a generator function). */
+function assertNotGenerator(x) {
+  if ('constructor' in x) {
+    assert(
+      x.constructor !== (function* () {})().constructor,
+      'Argument must not be a generator, as generators are not reusable'
+    );
+  }
 }
