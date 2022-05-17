@@ -2138,16 +2138,6 @@ export const listing = [
       "expression",
       "call",
       "builtin",
-      "textureSampleLevel"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "execution",
-      "expression",
-      "call",
-      "builtin",
       "transpose"
     ]
   },
