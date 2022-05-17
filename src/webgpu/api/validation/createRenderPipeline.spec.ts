@@ -441,21 +441,16 @@ g.test('pipeline_output_targets')
     });
 
     let _success = true;
-    if (hasShaderOutput) {
-      if (info) {
-        // there is a target correspond to the pipeline output
-        assert(format !== undefined);
-        const sampleTypeSuccess =
-          info.sampleType === 'float' || info.sampleType === 'unfilterable-float'
-            ? sampleType === 'float'
-            : info.sampleType === sampleType;
-        _success =
-          sampleTypeSuccess &&
-          componentCount >= kTexelRepresentationInfo[format].componentOrder.length;
-      } else {
-        // there is no target correspond to the pipeline output
-        _success = writeMask === 0;
-      }
+    if (hasShaderOutput && info) {
+      // there is a target correspond to the pipeline output
+      assert(format !== undefined);
+      const sampleTypeSuccess =
+        info.sampleType === 'float' || info.sampleType === 'unfilterable-float'
+          ? sampleType === 'float'
+          : info.sampleType === sampleType;
+      _success =
+        sampleTypeSuccess &&
+        componentCount >= kTexelRepresentationInfo[format].componentOrder.length;
     }
 
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
