@@ -19,7 +19,7 @@ A texture gather compare operation performs a depth comparison on four texels in
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 
-import { generateCoordBoundaries } from './utils.js';
+import { generateCoordBoundaries, generateOffsets } from './utils.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -53,7 +53,7 @@ combine('C', ['i32', 'u32']).
 combine('C_value', [-1, 0, 1, 2, 3, 4]).
 combine('coords', generateCoordBoundaries(2)).
 combine('depth_ref', [-1 /* smaller ref */, 0 /* equal ref */, 1 /* larger ref */]).
-combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]])).
+combine('offset', generateOffsets(2))).
 
 unimplemented();
 
@@ -108,7 +108,7 @@ u.
 combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('coords', generateCoordBoundaries(2)).
 combine('depth_ref', [-1 /* smaller ref */, 0 /* equal ref */, 1 /* larger ref */]).
-combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]])).
+combine('offset', generateOffsets(2))).
 
 unimplemented();
 

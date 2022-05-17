@@ -10,7 +10,7 @@ Must only be invoked in uniform control flow.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 
-import { generateCoordBoundaries } from './utils.js';
+import { generateCoordBoundaries, generateOffsets } from './utils.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -59,7 +59,7 @@ Parameters:
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(2))
       .combine('bias', [-16.1, -16, 0, 1, 15.99, 16])
-      .combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]])
+      .combine('offset', generateOffsets(2))
   )
   .unimplemented();
 
@@ -90,7 +90,7 @@ Parameters:
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(3))
       .combine('bias', [-16.1, -16, 0, 1, 15.99, 16])
-      .combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]])
+      .combine('offset', generateOffsets(3))
   )
   .unimplemented();
 
@@ -131,7 +131,7 @@ Parameters:
         15.99,
         16,
       ])
-      .combine('offset', [undefined, [-9, -9], [-8, -8], [0, 0], [1, 2], [7, 7], [8, 8]])
+      .combine('offset', generateOffsets(2))
   )
   .unimplemented();
 
