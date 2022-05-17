@@ -48,6 +48,7 @@
     "@typescript-eslint/restrict-plus-operands": "warn",
     "@typescript-eslint/triple-slash-reference": "warn",
     "@typescript-eslint/unbound-method": "warn",
+    "@typescript-eslint/no-unnecessary-type-assertion": "warn",
 
     // Plugin: ban
     "ban/ban": [

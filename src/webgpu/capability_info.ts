@@ -478,7 +478,7 @@ export function resolvePerAspectFormat(
   assert(kTextureFormatInfo[format].depth || kTextureFormatInfo[format].stencil);
   const resolved = kDepthStencilFormatResolvedAspect[format as DepthStencilFormat][aspect ?? 'all'];
   assert(resolved !== undefined);
-  return resolved!;
+  return resolved;
 }
 
 /**
