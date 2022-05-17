@@ -1,7 +1,7 @@
 import { Colors } from '../../common/util/colors.js';
 
 import { f32, f64, isFloatValue, Scalar, Value, Vector } from './conversion.js';
-import { FPInterval } from './fp_interval.js';
+import { F32Interval } from './f32_interval.js';
 import { correctlyRounded, oneULP, withinULP } from './math.js';
 
 /** Comparison describes the result of a Comparator function. */
@@ -61,7 +61,7 @@ export function correctlyRoundedMatch(): FloatMatch {
   };
 }
 
-export function intervalMatch(i: FPInterval): FloatMatch {
+export function intervalMatch(i: F32Interval): FloatMatch {
   return (got, _) => {
     return i.contains(got);
   };
@@ -182,7 +182,7 @@ export function ulpComparator(x: number, target: Scalar, n: (x: number) => numbe
   };
 }
 
-export function intervalComparator(i: FPInterval): Comparator {
+export function intervalComparator(i: F32Interval): Comparator {
   const match = intervalMatch(i);
   return (got, _) => {
     const cmp = compare(got, f64(0.0), match);

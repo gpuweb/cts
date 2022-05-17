@@ -11,9 +11,9 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { intervalComparator } from '../../../../../util/compare.js';
 import { f32, TypeF32 } from '../../../../../util/conversion.js';
-import { linearRange } from '../../../../../util/math.js';
+import { sinInterval } from '../../../../../util/f32_interval.js';
+import { fullF32Range, linearRange, quantizeToF32 } from '../../../../../util/math.js';
 import { Case, run } from '../../expression.js';
-import { SinFPIntervalBuilder } from '../../../../../util/fp_interval.js';
 
 import { builtin } from './builtin.js';
 
@@ -44,13 +44,18 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const builder = new SinFPIntervalBuilder();
     const makeCase = (x: number): Case => {
-      const interval = builder.singular(x);
+      x = quantizeToF32(x);
+      const interval = sinInterval(x);
       return { input: f32(x), expected: intervalComparator(interval) };
     };
 
-    const cases: Array<Case> = linearRange(-Math.PI, Math.PI, 1000).map(makeCase);
+    const cases: Array<Case> = [
+      // Defined accuracy range
+      ...linearRange(-Math.PI, Math.PI, 1000).filter(x => x !== Math.PI / 2 && x !== -Math.PI / 2),
+      // Undefined accuracy range
+      ...fullF32Range(),
+    ].map(makeCase);
     run(t, builtin('sin'), [TypeF32], TypeF32, t.params, cases);
   });
 

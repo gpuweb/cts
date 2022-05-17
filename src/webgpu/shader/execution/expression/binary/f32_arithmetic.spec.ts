@@ -1,15 +1,15 @@
-
 export const description = `
 Execution Tests for the f32 arithmetic binary expression operations
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { correctlyRoundedMatch, intervalComparator} from '../../../../util/compare.js';
+import { correctlyRoundedMatch, intervalComparator } from '../../../../util/compare.js';
+import { kValue } from '../../../../util/constants.js';
 import { f32, TypeF32 } from '../../../../util/conversion.js';
-import { biasedRange, fullF32Range, quantizeToF32 } from '../../../../util/math.js';
+import { divInterval } from '../../../../util/f32_interval';
+import { biasedRange, fullF32Range, linearRange, quantizeToF32 } from '../../../../util/math.js';
 import { Case, Config, makeBinaryF32Case, run } from '../expression.js';
-import { DivisionFPIntervalBuilder } from '../../../../util/fp_interval';
 
 import { binary } from './binary.js';
 
@@ -125,26 +125,36 @@ Expression: x / y
 Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
 `
   )
-  .params(u =>
-    u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
-      .combine('vectorize', [undefined, 2, 3, 4] as const)
+  .params(
+    u => u.combine('storageClass', ['uniform'] as const)
+    // u
+    //   .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+    //   .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const builder = new DivisionFPIntervalBuilder();
     const makeCase = (lhs: number, rhs: number): Case => {
-      lhs = quantizeToF32(lhs); // HACK: need to support both rounding modes over in the IntervalBuilders
-      rhs = quantizeToF32(rhs); // HACK: need to support both rounding modes over in the IntervalBuilders
-      const interval = builder.singular(lhs, rhs);
+      lhs = quantizeToF32(lhs);
+      rhs = quantizeToF32(rhs);
+      const interval = divInterval(lhs, rhs);
       return { input: [f32(lhs), f32(rhs)], expected: intervalComparator(interval) };
     };
 
     const cases: Array<Case> = [];
 
+    const range_lower = 2 ** -126;
+    const range_upper = 2 ** 126;
+
     const lhs_numeric_range = fullF32Range();
-    const rhs_numeric_range = biasedRange(2 ** -126, 2 ** 126, 200).filter(value => {
-      return value !== 0.0;
-    });
+    const rhs_numeric_range = [
+      // Defined accuracy range
+      ...biasedRange(-range_upper, -range_lower, 100),
+      ...biasedRange(range_lower, range_upper, 100),
+      // Undefined accuracy range
+      ...biasedRange(kValue.f32.negative.min, -range_upper, 100),
+      ...biasedRange(range_upper, kValue.f32.positive.max, 100),
+      ...linearRange(-range_lower, range_lower, 100),
+    ];
+
     lhs_numeric_range.forEach(lhs => {
       rhs_numeric_range.forEach(rhs => {
         cases.push(makeCase(lhs, rhs));

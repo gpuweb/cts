@@ -11,8 +11,8 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { intervalComparator } from '../../../../../util/compare.js';
 import { f32, TypeF32 } from '../../../../../util/conversion.js';
-import { TanFPIntervalBuilder } from '../../../../../util/fp_interval.js';
-import { linearRange, quantizeToF32 } from '../../../../../util/math.js';
+import { tanInterval } from '../../../../../util/f32_interval.js';
+import { fullF32Range, linearRange, quantizeToF32 } from '../../../../../util/math.js';
 import { Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -38,14 +38,20 @@ g.test('f32')
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const builder = new TanFPIntervalBuilder();
     const makeCase = (x: number): Case => {
-      x = quantizeToF32(x); // HACK: need to support both rounding modes over in the IntervalBuilders
-      const interval = builder.singular(x);
+      x = quantizeToF32(x);
+      const interval = tanInterval(x);
       return { input: f32(x), expected: intervalComparator(interval) };
     };
 
-    const cases: Array<Case> = linearRange(-Math.PI, Math.PI, 1000).map(makeCase);
+    const cases: Array<Case> = [
+      // Defined accuracy range
+      ...linearRange(-Math.PI, Math.PI, 1000).filter(x => x !== Math.PI / 2 && x !== -Math.PI / 2),
+      // Undefined accuracy range
+      -Math.PI / 2,
+      Math.PI / 2,
+      ...fullF32Range(),
+    ].map(makeCase);
     run(t, builtin('tan'), [TypeF32], TypeF32, t.params, cases);
   });
 
