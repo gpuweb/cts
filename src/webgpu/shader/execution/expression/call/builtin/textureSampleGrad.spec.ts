@@ -30,10 +30,11 @@ Parameters:
       Values outside of this range will result in a shader-creation error.
 `
   )
-  .params(u => u
-    .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
-    .combine('coords', generateCoordBoundaries(2))
-    .combine('offset', generateOffsets(2))
+  .params(u =>
+    u
+      .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
+      .combine('coords', generateCoordBoundaries(2))
+      .combine('offset', generateOffsets(2))
   )
   .unimplemented();
 
@@ -59,10 +60,11 @@ Parameters:
       Values outside of this range will result in a shader-creation error.
 `
   )
-  .params(u => u
-    .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
-    .combine('coords', generateCoordBoundaries(3))
-    .combine('offset', generateOffsets(3))
+  .params(u =>
+    u
+      .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
+      .combine('coords', generateCoordBoundaries(3))
+      .combine('offset', generateOffsets(3))
   )
   .unimplemented();
 
@@ -90,13 +92,14 @@ Parameters:
       Values outside of this range will result in a shader-creation error.
 `
   )
-  .params(u => u
-    .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
-    .combine('C', ['i32', 'u32'] as const)
-    .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
-    .combine('coords', generateCoordBoundaries(2))
-    /* array_index not param'd as out-of-bounds is implementation specific */
-    .combine('offset', generateOffsets(2))
+  .params(u =>
+    u
+      .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
+      .combine('C', ['i32', 'u32'] as const)
+      .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
+      .combine('coords', generateCoordBoundaries(2))
+      /* array_index not param'd as out-of-bounds is implementation specific */
+      .combine('offset', generateOffsets(2))
   )
   .unimplemented();
 
@@ -123,11 +126,11 @@ Parameters:
       Values outside of this range will result in a shader-creation error.
 `
   )
-  .params(u => u
-    .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
-    .combine('C', ['i32', 'u32'] as const)
-    .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
-    .combine('coords', generateCoordBoundaries(3))
+  .params(u =>
+    u
+      .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
+      .combine('C', ['i32', 'u32'] as const)
+      .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
+      .combine('coords', generateCoordBoundaries(3))
   )
   .unimplemented();
-
