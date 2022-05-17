@@ -15,8 +15,8 @@ If an out-of-bounds access occurs, the built-in function may do any of the follo
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-
 import { TexelFormats } from '../../../../types.js';
+
 import { generateCoordBoundaries } from './utils.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -83,13 +83,14 @@ Parameters:
  * value The new texel value
 `
   )
-  .params(u =>
-    u
-      .combine('F', TexelFormats)
-      .combine('coords', generateCoordBoundaries(2))
-      .combine('C', ['i32', 'u32'] as const)
-      .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
-      /* array_index not param'd as out-of-bounds is implementation specific */
+  .params(
+    u =>
+      u
+        .combine('F', TexelFormats)
+        .combine('coords', generateCoordBoundaries(2))
+        .combine('C', ['i32', 'u32'] as const)
+        .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
+    /* array_index not param'd as out-of-bounds is implementation specific */
   )
   .unimplemented();
 
