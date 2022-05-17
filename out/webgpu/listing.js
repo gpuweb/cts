@@ -1988,6 +1988,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "storageBarrier"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "tan"
     ]
   },
@@ -2128,6 +2138,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "textureSampleLevel"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "transpose"
     ]
   },
@@ -2139,6 +2159,16 @@ export const listing = [
       "call",
       "builtin",
       "trunc"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
+      "workgroupBarrier"
     ]
   },
   {
