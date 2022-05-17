@@ -25,7 +25,7 @@ TODO: review existing tests, write descriptions, and make sure tests are complet
 
 `;
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { unreachable } from '../../../common/util/util.js';
+import { assert, unreachable } from '../../../common/util/util.js';
 import {
   kTextureFormats,
   kRenderableColorTextureFormats,
@@ -36,60 +36,13 @@ import {
   kBlendFactors,
   kBlendOperations,
 } from '../../capability_info.js';
+import { getFragmentShaderCodeWithOutput, getPlainTypeInfo } from '../../util/shader.js';
 import { kTexelRepresentationInfo } from '../../util/texture/texel_data.js';
 
 import { ValidationTest } from './validation_test.js';
 
+const values = [0, 1, 0, 1];
 class F extends ValidationTest {
-  getFragmentShaderCode(sampleType, componentCount) {
-    const v = ['0', '1', '0', '1'];
-
-    let fragColorType;
-    let suffix;
-    switch (sampleType) {
-      case 'sint':
-        fragColorType = 'i32';
-        suffix = '';
-        break;
-      case 'uint':
-        fragColorType = 'u32';
-        suffix = 'u';
-        break;
-      default:
-        fragColorType = 'f32';
-        suffix = '.0';
-        break;
-    }
-
-    let outputType;
-    let result;
-    switch (componentCount) {
-      case 1:
-        outputType = fragColorType;
-        result = `${v[0]}${suffix}`;
-        break;
-      case 2:
-        outputType = `vec2<${fragColorType}>`;
-        result = `${outputType}(${v[0]}${suffix}, ${v[1]}${suffix})`;
-        break;
-      case 3:
-        outputType = `vec3<${fragColorType}>`;
-        result = `${outputType}(${v[0]}${suffix}, ${v[1]}${suffix}, ${v[2]}${suffix})`;
-        break;
-      case 4:
-        outputType = `vec4<${fragColorType}>`;
-        result = `${outputType}(${v[0]}${suffix}, ${v[1]}${suffix}, ${v[2]}${suffix}, ${v[3]}${suffix})`;
-        break;
-      default:
-        unreachable();
-    }
-
-    return `
-    @stage(fragment) fn main() -> @location(0) ${outputType} {
-      return ${result};
-    }`;
-  }
-
   getDescriptor(options = {}) {
     const defaultTargets = [{ format: 'rgba8unorm' }];
     const {
@@ -97,10 +50,16 @@ class F extends ValidationTest {
       targets = defaultTargets,
       sampleCount = 1,
       depthStencil,
-      fragmentShaderCode = this.getFragmentShaderCode(
-        kTextureFormatInfo[targets[0] ? targets[0].format : 'rgba8unorm'].sampleType,
-        4
-      ),
+      fragmentShaderCode = getFragmentShaderCodeWithOutput([
+        {
+          values,
+          plainType: getPlainTypeInfo(
+            kTextureFormatInfo[targets[0] ? targets[0].format : 'rgba8unorm'].sampleType
+          ),
+
+          componentCount: 4,
+        },
+      ]),
 
       noFragment = false,
     } = options;
@@ -436,38 +395,55 @@ g.test('pipeline_output_targets')
   - The componentCount of the fragment output (e.g. f32, vec2, vec3, vec4) must not have fewer
     channels than that of the color attachment texture formats. Extra components are allowed and are discarded.
 
+  Otherwise, color state write mask must be 0.
+
   MAINTENANCE_TODO: update this test after the WebGPU SPEC ISSUE 50 "define what 'compatible' means
   for render target formats" is resolved.`
   )
   .params(u =>
     u
       .combine('isAsync', [false, true])
-      .combine('format', kRenderableColorTextureFormats)
+      .combine('writeMask', [0, 0x1, 0x2, 0x4, 0x8, 0xf])
+      .combine('format', [undefined, ...kRenderableColorTextureFormats])
       .beginSubcases()
+      .combine('hasShaderOutput', [false, true])
+      .filter(p => p.format === undefined || p.hasShaderOutput === true)
       .combine('sampleType', ['float', 'uint', 'sint'])
       .combine('componentCount', [1, 2, 3, 4])
   )
   .beforeAllSubcases(t => {
     const { format } = t.params;
-    const info = kTextureFormatInfo[format];
-    t.selectDeviceOrSkipTestCase(info.feature);
+    if (format) {
+      const info = kTextureFormatInfo[format];
+      t.selectDeviceOrSkipTestCase(info.feature);
+    }
   })
   .fn(async t => {
-    const { isAsync, format, sampleType, componentCount } = t.params;
-    const info = kTextureFormatInfo[format];
+    const { isAsync, writeMask, format, hasShaderOutput, sampleType, componentCount } = t.params;
+    const info = format ? kTextureFormatInfo[format] : null;
 
     const descriptor = t.getDescriptor({
-      targets: [{ format }],
-      fragmentShaderCode: t.getFragmentShaderCode(sampleType, componentCount),
+      targets: format ? [{ format, writeMask }] : [],
+      // To have a dummy depthStencil attachment to avoid having no attachment at all which is invalid
+      depthStencil: { format: 'depth24plus' },
+      fragmentShaderCode: getFragmentShaderCodeWithOutput(
+        hasShaderOutput ? [{ values, plainType: getPlainTypeInfo(sampleType), componentCount }] : []
+      ),
     });
 
-    const sampleTypeSuccess =
-      info.sampleType === 'float' || info.sampleType === 'unfilterable-float'
-        ? sampleType === 'float'
-        : info.sampleType === sampleType;
+    let _success = true;
+    if (hasShaderOutput && info) {
+      // there is a target correspond to the pipeline output
+      assert(format !== undefined);
+      const sampleTypeSuccess =
+        info.sampleType === 'float' || info.sampleType === 'unfilterable-float'
+          ? sampleType === 'float'
+          : info.sampleType === sampleType;
+      _success =
+        sampleTypeSuccess &&
+        componentCount >= kTexelRepresentationInfo[format].componentOrder.length;
+    }
 
-    const _success =
-      sampleTypeSuccess && componentCount >= kTexelRepresentationInfo[format].componentOrder.length;
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
@@ -581,7 +557,9 @@ g.test('pipeline_output_targets,blend')
         },
       ],
 
-      fragmentShaderCode: t.getFragmentShaderCode(sampleType, componentCount),
+      fragmentShaderCode: getFragmentShaderCodeWithOutput([
+        { values, plainType: getPlainTypeInfo(sampleType), componentCount },
+      ]),
     });
 
     const colorBlendReadsSrcAlpha =
@@ -634,7 +612,9 @@ Tests if blending is used, the target's format must be blendable (support "float
           },
         ],
 
-        fragmentShaderCode: t.getFragmentShaderCode('float', 4),
+        fragmentShaderCode: getFragmentShaderCodeWithOutput([
+          { values, plainType: getPlainTypeInfo(info.sampleType), componentCount: 4 },
+        ]),
       })
     );
   });
@@ -671,8 +651,10 @@ g.test('pipeline_output_targets,blend_min_max')
       operation,
     };
 
-    const fragmentShaderCode = t.getFragmentShaderCode('float', 4);
     const format = 'rgba8unorm';
+    const fragmentShaderCode = getFragmentShaderCodeWithOutput([
+      { values, plainType: 'f32', componentCount: 4 },
+    ]);
 
     const descriptor = t.getDescriptor({
       targets: [
@@ -711,6 +693,7 @@ g.test('pipeline_layout,device_mismatch')
 
     const layout = device.createPipelineLayout({ bindGroupLayouts: [] });
 
+    const format = 'rgba8unorm';
     const descriptor = {
       layout,
       vertex: {
@@ -726,9 +709,12 @@ g.test('pipeline_layout,device_mismatch')
       },
 
       fragment: {
-        module: t.device.createShaderModule({ code: t.getFragmentShaderCode('float', 4) }),
+        module: t.device.createShaderModule({
+          code: getFragmentShaderCodeWithOutput([{ values, plainType: 'f32', componentCount: 4 }]),
+        }),
+
         entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm' }],
+        targets: [{ format }],
       },
     };
 
@@ -768,8 +754,17 @@ g.test('shader_module,device_mismatch')
 
       fragment: {
         module: fragment_mismatched
-          ? t.mismatchedDevice.createShaderModule({ code: t.getFragmentShaderCode('float', 4) })
-          : t.device.createShaderModule({ code: t.getFragmentShaderCode('float', 4) }),
+          ? t.mismatchedDevice.createShaderModule({
+              code: getFragmentShaderCodeWithOutput([
+                { values, plainType: 'f32', componentCount: 4 },
+              ]),
+            })
+          : t.device.createShaderModule({
+              code: getFragmentShaderCodeWithOutput([
+                { values, plainType: 'f32', componentCount: 4 },
+              ]),
+            }),
+
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
