@@ -1328,16 +1328,6 @@ export const listing = [
       "expression",
       "call",
       "builtin",
-      "atomicStore"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "execution",
-      "expression",
-      "call",
-      "builtin",
       "ceil"
     ]
   },
