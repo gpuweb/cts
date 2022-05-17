@@ -170,6 +170,7 @@ export class CaseParamsBuilder<CaseP extends {}>
   combineWithParams<NewP extends {}>(
     newParams: Iterable<NewP>
   ): CaseParamsBuilder<Merged<CaseP, NewP>> {
+    assertNotGenerator(newParams);
     const seenValues = new Set<string>();
     for (const params of newParams) {
       const paramsStr = stringifyPublicParams(params);
@@ -185,6 +186,7 @@ export class CaseParamsBuilder<CaseP extends {}>
     key: NewPKey,
     values: Iterable<NewPValue>
   ): CaseParamsBuilder<Merged<CaseP, { [name in NewPKey]: NewPValue }>> {
+    assertNotGenerator(values);
     const mapped = mapLazy(values, v => ({ [key]: v } as { [name in NewPKey]: NewPValue }));
     return this.combineWithParams(mapped);
   }
@@ -274,6 +276,7 @@ export class SubcaseParamsBuilder<CaseP extends {}, SubcaseP extends {}>
   combineWithParams<NewP extends {}>(
     newParams: Iterable<NewP>
   ): SubcaseParamsBuilder<CaseP, Merged<SubcaseP, NewP>> {
+    assertNotGenerator(newParams);
     return this.expandWithParams(() => newParams);
   }
 
@@ -282,6 +285,7 @@ export class SubcaseParamsBuilder<CaseP extends {}, SubcaseP extends {}>
     key: NewPKey,
     values: Iterable<NewPValue>
   ): SubcaseParamsBuilder<CaseP, Merged<SubcaseP, { [name in NewPKey]: NewPValue }>> {
+    assertNotGenerator(values);
     return this.expand(key, () => values);
   }
 
@@ -320,4 +324,14 @@ function filterGenerator<Base, A>(
       }
     }
   };
+}
+
+/** Assert an object is not a Generator (a thing returned from a generator function). */
+function assertNotGenerator(x: object) {
+  if ('constructor' in x) {
+    assert(
+      x.constructor !== (function* () {})().constructor,
+      'Argument must not be a generator, as generators are not reusable'
+    );
+  }
 }
