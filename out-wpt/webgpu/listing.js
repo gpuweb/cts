@@ -2098,6 +2098,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "textureSampleCompare"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "transpose"
     ]
   },
