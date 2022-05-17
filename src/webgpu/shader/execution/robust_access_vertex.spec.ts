@@ -303,9 +303,9 @@ class F extends GPUTest {
   generateVertexBufferDescriptors(
     bufferCount: number,
     attributesPerBuffer: number,
-    type: GPUVertexFormat
+    format: GPUVertexFormat
   ) {
-    const typeInfo = typeInfoMap[type];
+    const typeInfo = typeInfoMap[format];
     // Vertex buffer descriptors
     const buffers: GPUVertexBufferLayout[] = [];
     {
@@ -319,7 +319,7 @@ class F extends GPUTest {
             .map((_, i) => ({
               shaderLocation: currAttribute++,
               offset: i * typeInfo.sizeInBytes,
-              format: type as GPUVertexFormat,
+              format,
             })),
         });
       }

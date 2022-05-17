@@ -119,16 +119,13 @@ class F extends CopyToTextureUtils {
     const canvas = createCanvas(this, canvasType, width, height);
 
     let canvasContext = null;
-    canvasContext = canvas.getContext('2d') as
-      | CanvasRenderingContext2D
-      | OffscreenCanvasRenderingContext2D
-      | null;
+    canvasContext = canvas.getContext('2d');
 
     if (canvasContext === null) {
       this.skip(canvasType + ' canvas 2d context not available');
     }
 
-    const ctx = canvasContext as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+    const ctx = canvasContext;
     this.paint2DCanvas(ctx, width, height, 0.6);
 
     return { canvas, canvasContext };
@@ -283,7 +280,7 @@ class F extends CopyToTextureUtils {
   } {
     const canvas = createCanvas(this, canvasType, width, height);
 
-    const gpuContext = canvas.getContext('webgpu') as GPUCanvasContext | null;
+    const gpuContext = canvas.getContext('webgpu');
 
     if (gpuContext === null) {
       this.skip(canvasType + ' canvas webgpu context not available');
