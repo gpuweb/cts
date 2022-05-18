@@ -752,7 +752,7 @@ g.test('destination_texture,format')
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    t.device.popErrorScope();
+    void t.device.popErrorScope();
 
     const success = kValidTextureFormatsForCopyE2T.includes(format);
 

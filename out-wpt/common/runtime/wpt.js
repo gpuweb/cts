@@ -19,7 +19,7 @@ setup({
   explicit_done: true,
 });
 
-(async () => {
+void (async () => {
   const workerEnabled = optionEnabled('worker');
   const worker = workerEnabled ? new TestWorker(false) : undefined;
 

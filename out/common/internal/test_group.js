@@ -529,7 +529,7 @@ class RunCaseSpecific {
                 const prop = TestCaseRecorder.prototype[k];
                 if (typeof prop === 'function') {
                   return function (...args) {
-                    allPreviousSubcasesFinalizedPromise.then(() => {
+                    void allPreviousSubcasesFinalizedPromise.then(() => {
 
                       const rv = prop.apply(target, args);
                       // Because this proxy executes functions in a deferred manner,

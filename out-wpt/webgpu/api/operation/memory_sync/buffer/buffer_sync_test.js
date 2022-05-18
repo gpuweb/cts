@@ -216,7 +216,7 @@ export class BufferSyncTest extends GPUTest {
     }
 
     const dstBuffer = this.trackForCleanup(
-      await this.device.createBuffer({
+      this.device.createBuffer({
         size: Uint32Array.BYTES_PER_ELEMENT,
         usage:
           GPUBufferUsage.COPY_SRC |

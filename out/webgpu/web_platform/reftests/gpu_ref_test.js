@@ -7,20 +7,22 @@
 
 
 
-export async function runRefTest(fn) {
-  assert(
-  typeof navigator !== 'undefined' && navigator.gpu !== undefined,
-  'No WebGPU implementation found');
+export function runRefTest(fn) {
+  void (async () => {
+    assert(
+    typeof navigator !== 'undefined' && navigator.gpu !== undefined,
+    'No WebGPU implementation found');
 
 
-  const adapter = await navigator.gpu.requestAdapter();
-  assert(adapter !== null);
-  const device = await adapter.requestDevice();
-  assert(device !== null);
-  const queue = device.queue;
+    const adapter = await navigator.gpu.requestAdapter();
+    assert(adapter !== null);
+    const device = await adapter.requestDevice();
+    assert(device !== null);
+    const queue = device.queue;
 
-  await fn({ device, queue });
+    await fn({ device, queue });
 
-  takeScreenshotDelayed(50);
+    takeScreenshotDelayed(50);
+  })();
 }
 //# sourceMappingURL=gpu_ref_test.js.map

@@ -274,7 +274,7 @@ g.test('large_draw')
       primitive: { topology: 'point-list' },
     });
 
-    const runPipeline = async (numVertices, numInstances) => {
+    const runPipeline = (numVertices, numInstances) => {
       const encoder = t.device.createCommandEncoder();
       const pass = encoder.beginRenderPass({
         colorAttachments: [

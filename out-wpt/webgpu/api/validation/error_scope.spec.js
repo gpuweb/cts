@@ -30,7 +30,7 @@ class F extends Fixture {
   }
 
   async init() {
-    super.init();
+    await super.init();
     const gpu = getGPU();
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);

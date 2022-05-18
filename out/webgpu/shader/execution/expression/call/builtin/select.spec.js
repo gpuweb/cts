@@ -14,7 +14,6 @@ Component-wise selection. Result component i is evaluated as select(f[i],t[i],co
 import { GPUTest } from '../../../../../gpu_test.js';
 import {
 
-
 TypeVec,
 TypeBool,
 TypeF32,

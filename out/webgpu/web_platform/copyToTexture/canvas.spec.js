@@ -121,9 +121,6 @@ class F extends CopyToTextureUtils {
     let canvasContext = null;
     canvasContext = canvas.getContext('2d');
 
-
-
-
     if (canvasContext === null) {
       this.skip(canvasType + ' canvas 2d context not available');
     }

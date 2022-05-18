@@ -327,7 +327,7 @@ function packScalarsToVector(
 
   const packedCases: Array<Case> = [];
   const packedParameterTypes = parameterTypes.map(p => TypeVec(vectorWidth, p as ScalarType));
-  const packedReturnType = new VectorType(vectorWidth, returnType as ScalarType);
+  const packedReturnType = new VectorType(vectorWidth, returnType);
 
   const clampCaseIdx = (idx: number) => Math.min(idx, cases.length - 1);
 

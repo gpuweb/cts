@@ -13,15 +13,15 @@
 export function startPlayingAndWaitForVideo(video, callback) {
   return raceWithRejectOnTimeout(
     new Promise((resolve, reject) => {
-      const callbackAndResolve = async () => {
-        try {
-          await callback();
-          resolve();
-        } catch (ex) {
-          reject();
-        }
-      };
-
+      const callbackAndResolve = () =>
+        void (async () => {
+          try {
+            await callback();
+            resolve();
+          } catch (ex) {
+            reject();
+          }
+        })();
       if (video.error) {
         reject(
           new ErrorWithExtra('Video.error: ' + video.error.message, () => ({ error: video.error }))

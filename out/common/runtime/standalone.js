@@ -331,9 +331,7 @@ onChange)
   addClass(isLeaf ? 'leafrun' : 'subtreerun').
   attr('alt', runtext).
   attr('title', runtext).
-  on('click', async () => {
-    runSubtree();
-  }).
+  on('click', () => void runSubtree()).
   appendTo(header);
   $('<a>').
   addClass('nodelink').
@@ -380,7 +378,7 @@ onChange)
 // Collapse s:f:t:* or s:f:t:c by default.
 let lastQueryLevelToExpand = 2;
 
-(async () => {
+void (async () => {
   const loader = new DefaultTestFileLoader();
 
   // MAINTENANCE_TODO: start populating page before waiting for everything to load?
@@ -427,11 +425,11 @@ let lastQueryLevelToExpand = 2;
   });
 
   document.getElementById('copyResultsJSON').addEventListener('click', () => {
-    navigator.clipboard.writeText(logger.asJSON(2));
+    void navigator.clipboard.writeText(logger.asJSON(2));
   });
 
   if (runnow) {
-    runSubtree();
+    void runSubtree();
   }
 })();
 //# sourceMappingURL=standalone.js.map

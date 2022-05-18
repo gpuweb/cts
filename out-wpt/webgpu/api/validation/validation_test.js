@@ -59,7 +59,7 @@ export class ValidationTest extends GPUTest {
           usage: descriptor.usage | GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_SRC,
         });
 
-        this.device.popErrorScope();
+        void this.device.popErrorScope();
         return buffer;
       }
       case 'destroyed': {
@@ -116,7 +116,7 @@ export class ValidationTest extends GPUTest {
   getErrorSampler() {
     this.device.pushErrorScope('validation');
     const sampler = this.device.createSampler({ lodMinClamp: -1 });
-    this.device.popErrorScope();
+    void this.device.popErrorScope();
     return sampler;
   }
 
@@ -166,7 +166,7 @@ export class ValidationTest extends GPUTest {
       usage: GPUTextureUsage.TEXTURE_BINDING,
     });
 
-    this.device.popErrorScope();
+    void this.device.popErrorScope();
     return texture;
   }
 
@@ -174,7 +174,7 @@ export class ValidationTest extends GPUTest {
   getErrorTextureView() {
     this.device.pushErrorScope('validation');
     const view = this.getErrorTexture().createView();
-    this.device.popErrorScope();
+    void this.device.popErrorScope();
     return view;
   }
 
@@ -336,7 +336,7 @@ export class ValidationTest extends GPUTest {
       },
     });
 
-    this.device.popErrorScope();
+    void this.device.popErrorScope();
     return pipeline;
   }
 
@@ -367,7 +367,7 @@ export class ValidationTest extends GPUTest {
       },
     });
 
-    this.device.popErrorScope();
+    void this.device.popErrorScope();
     return pipeline;
   }
 }

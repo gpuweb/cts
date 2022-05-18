@@ -256,7 +256,7 @@ fn(async (t) => {
     primitive: { topology: 'point-list' } });
 
 
-  const runPipeline = async (numVertices, numInstances) => {
+  const runPipeline = (numVertices, numInstances) => {
     const encoder = t.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
       colorAttachments: [

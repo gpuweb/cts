@@ -2,7 +2,7 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { DefaultTestFileLoader } from '../internal/file_loader.js';import { parseQuery } from '../internal/query/parseQuery.js';import { assert } from '../util/util.js';
 
-(async () => {
+void (async () => {
   for (const suite of ['unittests', 'webgpu']) {
     const loader = new DefaultTestFileLoader();
     const filterQuery = parseQuery(`${suite}:*`);

@@ -299,7 +299,7 @@ class DeviceHolder {
 
   constructor(device) {
     this._device = device;
-    this._device.lost.then((ev) => {
+    void this._device.lost.then((ev) => {
       this.lostInfo = ev;
     });
   }

@@ -202,11 +202,11 @@ g.test('derivative_in_varying_loop')
 
     t.expect(
       almostEqual(result.data[0], expected_x),
-      'Render results with numIterations * dx is ' + result.data[0] + ', expected: ' + expected_x
+      `Render results with numIterations * dx is ${result.data[0]}, expected: ${expected_x}`
     );
     t.expect(
       almostEqual(result.data[1], expected_y),
-      'Render results with numIterations * dy is ' + result.data[1] + ', expected: ' + expected_y
+      `Render results with numIterations * dy is ${result.data[1]}, expected: ${expected_y}`
     );
 
     result.cleanup();

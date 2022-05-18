@@ -202,7 +202,6 @@ export class Fixture {
   eventualAsyncExpectation(fn) {
     const promise = fn(new Error());
     this.eventualExpectations.push(promise);
-    return promise;
   }
 
   expectErrorValue(expectedError, ex, niceStack) {

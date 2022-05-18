@@ -46,7 +46,7 @@ class F extends ValidationTest {
     this.device.pushErrorScope('validation');
     const code = 'deadbeaf'; // Something make nonsense
     const shaderModule = this.device.createShaderModule({ code });
-    this.device.popErrorScope();
+    void this.device.popErrorScope();
     return shaderModule;
   }
 
