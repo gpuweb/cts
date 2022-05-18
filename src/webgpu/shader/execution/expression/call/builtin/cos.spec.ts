@@ -10,11 +10,10 @@ Returns the cosine of e. Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { intervalComparator } from '../../../../../util/compare.js';
-import { f32, TypeF32 } from '../../../../../util/conversion.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
 import { cosInterval } from '../../../../../util/f32_interval.js';
-import { fullF32Range, linearRange, quantizeToF32 } from '../../../../../util/math.js';
-import { Case, run } from '../../expression.js';
+import { fullF32Range, linearRange } from '../../../../../util/math.js';
+import { Case, makeUnaryF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -45,10 +44,8 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const makeCase = (x: number): Case => {
-      x = quantizeToF32(x);
-      const interval = cosInterval(x);
-      return { input: f32(x), expected: intervalComparator(interval) };
+    const makeCase = (n: number): Case => {
+      return makeUnaryF32IntervalCase(n, cosInterval);
     };
 
     const cases: Array<Case> = [

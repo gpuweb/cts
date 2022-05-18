@@ -9,11 +9,11 @@ Returns the natural exponentiation of e1 (e.g. e^e1). Component-wise when T is a
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { ulpComparator } from '../../../../../util/compare.js';
-import { kBit, kValue } from '../../../../../util/constants.js';
-import { f32, f32Bits, TypeF32 } from '../../../../../util/conversion.js';
+import { kValue } from '../../../../../util/constants.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
+import { expInterval } from '../../../../../util/f32_interval.js';
 import { biasedRange } from '../../../../../util/math.js';
-import { Case, run } from '../../expression.js';
+import { Case, makeUnaryF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -38,24 +38,19 @@ g.test('f32')
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const n = (x: number): number => {
-      return 3 + 2 * Math.abs(x);
-    };
-
     const makeCase = (x: number): Case => {
-      const expected = f32(Math.exp(x));
-      return { input: f32(x), expected: ulpComparator(x, expected, n) };
+      return makeUnaryF32IntervalCase(x, expInterval);
     };
 
     // floor(ln(max f32 value)) = 88, so exp(88) will be within range of a f32, but exp(89) will not
     const cases: Array<Case> = [
-      makeCase(0), // Returns 1 by definition
-      makeCase(-89), // Returns subnormal value
-      makeCase(kValue.f32.negative.min), // Closest to returning 0 as possible
-      { input: f32(89), expected: f32Bits(kBit.f32.infinity.positive) }, // Overflows
-      ...biasedRange(kValue.f32.negative.max, -88, 100).map(x => makeCase(x)),
-      ...biasedRange(kValue.f32.positive.min, 88, 100).map(x => makeCase(x)),
-    ];
+      0, // Returns 1 by definition
+      -89, // Returns subnormal value
+      kValue.f32.negative.min, // Closest to returning 0 as possible
+      89, // Overflows
+      ...biasedRange(kValue.f32.negative.max, -88, 100),
+      ...biasedRange(kValue.f32.positive.min, 88, 100),
+    ].map(x => makeCase(x));
 
     run(t, builtin('exp'), [TypeF32], TypeF32, t.params, cases);
   });

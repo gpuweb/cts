@@ -9,10 +9,11 @@ Returns the arc tangent of e1 over e2. Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { anyOf, ulpMatch } from '../../../../../util/compare.js';
+import { anyOf } from '../../../../../util/compare.js';
 import { f64, TypeF32 } from '../../../../../util/conversion.js';
+import { atan2Interval } from '../../../../../util/f32_interval.js';
 import { fullF32Range, isSubnormalNumber } from '../../../../../util/math.js';
-import { Case, Config, makeBinaryF32Case, run } from '../../expression.js';
+import { Case, makeBinaryF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -43,12 +44,9 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cfg: Config = t.params;
-    cfg.cmpFloats = ulpMatch(4096);
-
     // [1]: Need to decide what the ground-truth is.
     const makeCase = (y: number, x: number): Case => {
-      const c = makeBinaryF32Case(y, x, Math.atan2, true);
+      const c = makeBinaryF32IntervalCase(y, x, atan2Interval);
       if (isSubnormalNumber(y)) {
         // If y is subnormal, also expect possible results of atan2(0, x)
         c.expected = anyOf(c.expected, f64(0), f64(Math.PI), f64(-Math.PI));
@@ -66,15 +64,12 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
     const cases: Array<Case> = [];
     numeric_range.forEach((y, y_idx) => {
       numeric_range.forEach((x, x_idx) => {
-        // atan2(y, 0) is not well defined, so skipping those cases
-        if (!isSubnormalNumber(x)) {
-          if (x_idx >= y_idx) {
-            cases.push(makeCase(y, x));
-          }
+        if (x_idx >= y_idx) {
+          cases.push(makeCase(y, x));
         }
       });
     });
-    run(t, builtin('atan2'), [TypeF32, TypeF32], TypeF32, cfg, cases);
+    run(t, builtin('atan2'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('f16')

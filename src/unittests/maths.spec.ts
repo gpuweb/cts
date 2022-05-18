@@ -1093,6 +1093,7 @@ g.test('f32LimitsEquivalency')
     { bits: kBit.f32.positive.max, value: kValue.f32.positive.max },
     { bits: kBit.f32.positive.min, value: kValue.f32.positive.min },
     { bits: kBit.f32.positive.nearest_max, value: kValue.f32.positive.nearest_max },
+    { bits: kBit.f32.positive.below_one, value: kValue.f32.positive.below_one },
     { bits: kBit.f32.negative.max, value: kValue.f32.negative.max },
     { bits: kBit.f32.negative.min, value: kValue.f32.negative.min },
     { bits: kBit.f32.negative.nearest_min, value: kValue.f32.negative.nearest_min },
@@ -1100,6 +1101,8 @@ g.test('f32LimitsEquivalency')
     { bits: kBit.f32.subnormal.positive.min, value: kValue.f32.subnormal.positive.min },
     { bits: kBit.f32.subnormal.negative.max, value: kValue.f32.subnormal.negative.max },
     { bits: kBit.f32.subnormal.negative.min, value: kValue.f32.subnormal.negative.min },
+    { bits: kBit.f32.infinity.positive, value: kValue.f32.infinity.positive },
+    { bits: kBit.f32.infinity.negative, value: kValue.f32.infinity.negative },
   ])
   .fn(test => {
     const bits = test.params.bits;

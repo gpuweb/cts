@@ -4,12 +4,16 @@ Execution Tests for the f32 arithmetic binary expression operations
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { correctlyRoundedMatch, intervalComparator } from '../../../../util/compare.js';
 import { kValue } from '../../../../util/constants.js';
-import { f32, TypeF32 } from '../../../../util/conversion.js';
-import { divInterval } from '../../../../util/f32_interval';
-import { biasedRange, fullF32Range, linearRange, quantizeToF32 } from '../../../../util/math.js';
-import { Case, Config, makeBinaryF32Case, run } from '../expression.js';
+import { TypeF32 } from '../../../../util/conversion.js';
+import {
+  addInterval,
+  divInterval,
+  multInterval,
+  subInterval,
+} from '../../../../util/f32_interval.js';
+import { biasedRange, fullF32Range, linearRange } from '../../../../util/math.js';
+import { Case, makeBinaryF32IntervalCase, run } from '../expression.js';
 
 import { binary } from './binary.js';
 
@@ -29,13 +33,8 @@ Accuracy: Correctly rounded
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cfg: Config = t.params;
-    cfg.cmpFloats = correctlyRoundedMatch();
-
     const makeCase = (lhs: number, rhs: number): Case => {
-      return makeBinaryF32Case(lhs, rhs, (l: number, r: number): number => {
-        return l + r;
-      });
+      return makeBinaryF32IntervalCase(lhs, rhs, addInterval);
     };
 
     const cases: Array<Case> = [];
@@ -46,7 +45,7 @@ Accuracy: Correctly rounded
       });
     });
 
-    run(t, binary('+'), [TypeF32, TypeF32], TypeF32, cfg, cases);
+    run(t, binary('+'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('subtraction')
@@ -63,13 +62,8 @@ Accuracy: Correctly rounded
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cfg: Config = t.params;
-    cfg.cmpFloats = correctlyRoundedMatch();
-
     const makeCase = (lhs: number, rhs: number): Case => {
-      return makeBinaryF32Case(lhs, rhs, (l: number, r: number): number => {
-        return l - r;
-      });
+      return makeBinaryF32IntervalCase(lhs, rhs, subInterval);
     };
 
     const cases: Array<Case> = [];
@@ -80,7 +74,7 @@ Accuracy: Correctly rounded
       });
     });
 
-    run(t, binary('-'), [TypeF32, TypeF32], TypeF32, cfg, cases);
+    run(t, binary('-'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('multiplication')
@@ -97,13 +91,8 @@ Accuracy: Correctly rounded
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cfg: Config = t.params;
-    cfg.cmpFloats = correctlyRoundedMatch();
-
     const makeCase = (lhs: number, rhs: number): Case => {
-      return makeBinaryF32Case(lhs, rhs, (l: number, r: number): number => {
-        return l * r;
-      });
+      return makeBinaryF32IntervalCase(lhs, rhs, multInterval);
     };
 
     const cases: Array<Case> = [];
@@ -114,7 +103,7 @@ Accuracy: Correctly rounded
       });
     });
 
-    run(t, binary('*'), [TypeF32, TypeF32], TypeF32, cfg, cases);
+    run(t, binary('*'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('division')
@@ -125,18 +114,14 @@ Expression: x / y
 Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
 `
   )
-  .params(
-    u => u.combine('storageClass', ['uniform'] as const)
-    // u
-    //   .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
-    //   .combine('vectorize', [undefined, 2, 3, 4] as const)
+  .params(u =>
+    u
+      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
     const makeCase = (lhs: number, rhs: number): Case => {
-      lhs = quantizeToF32(lhs);
-      rhs = quantizeToF32(rhs);
-      const interval = divInterval(lhs, rhs);
-      return { input: [f32(lhs), f32(rhs)], expected: intervalComparator(interval) };
+      return makeBinaryF32IntervalCase(lhs, rhs, divInterval);
     };
 
     const cases: Array<Case> = [];

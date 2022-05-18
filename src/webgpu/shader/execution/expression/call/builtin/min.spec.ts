@@ -27,7 +27,8 @@ import {
   u32,
   uint32ToFloat32,
 } from '../../../../../util/conversion.js';
-import { Case, Config, makeBinaryF32Case, run } from '../../expression.js';
+import { minInterval } from '../../../../../util/f32_interval.js';
+import { Case, Config, makeBinaryF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -120,11 +121,8 @@ g.test('f32')
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cfg: Config = t.params;
-    cfg.cmpFloats = correctlyRoundedMatch();
-
     const makeCase = (x: number, y: number): Case => {
-      return makeBinaryF32Case(x, y, Math.min);
+      return makeBinaryF32IntervalCase(x, y, minInterval);
     };
 
     const test_values: Array<number> = [
@@ -146,7 +144,7 @@ g.test('f32')
     ];
     const cases = generateTestCases(test_values, makeCase);
 
-    run(t, builtin('min'), [TypeF32, TypeF32], TypeF32, cfg, cases);
+    run(t, builtin('min'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('f16')

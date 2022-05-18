@@ -15,11 +15,9 @@ Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { anyOf, correctlyRoundedMatch } from '../../../../../util/compare.js';
-import { kBit } from '../../../../../util/constants.js';
+import { anyOf } from '../../../../../util/compare.js';
+import { kBit, kValue } from '../../../../../util/constants.js';
 import {
-  f32,
-  f32Bits,
   i32,
   i32Bits,
   Scalar,
@@ -28,9 +26,11 @@ import {
   TypeU32,
   u32,
   u32Bits,
+  uint32ToFloat32,
 } from '../../../../../util/conversion.js';
-import { isSubnormalScalar } from '../../../../../util/math.js';
-import { Case, Config, run } from '../../expression.js';
+import { clampInterval } from '../../../../../util/f32_interval.js';
+import { quantizeToF32 } from '../../../../../util/math.js';
+import { Case, makeTernaryF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -49,68 +49,17 @@ function calculateMinMaxClamp(ei: number, fi: number, gi: number): number {
   return Math.min(Math.max(ei, fi), gi);
 }
 
-/**
- * Calculates clamp as the median of three numbers
- *
- * Operates on indices of an ascending sorted array, instead of the actual
- * values to avoid rounding issues.
- *
- * @returns the index of the clamped value
- */
-function calculateMedianClamp(ei: number, fi: number, gi: number): number {
-  return [ei, fi, gi].sort((a, b) => {
-    return a - b;
-  })[1];
-}
-
 /** @returns a set of clamp test cases from an ascending list of integer values */
 function generateIntegerTestCases(test_values: Array<Scalar>): Array<Case> {
   const cases = new Array<Case>();
   test_values.forEach((e, ei) => {
     test_values.forEach((f, fi) => {
       test_values.forEach((g, gi) => {
-        const expected_idx = calculateMinMaxClamp(ei, fi, gi);
-        const precise_expected = test_values[expected_idx];
-        const expected = isSubnormalScalar(precise_expected)
-          ? anyOf(precise_expected, f32(0.0))
-          : precise_expected;
-        cases.push({ input: [e, f, g], expected });
-      });
-    });
-  });
-  return cases;
-}
-
-/** @returns a set of clamp test cases from an ascending list of floating point values */
-function generateFloatTestCases(test_values: Array<Scalar>): Array<Case> {
-  const cases = new Array<Case>();
-  test_values.forEach((e, ei) => {
-    test_values.forEach((f, fi) => {
-      test_values.forEach((g, gi) => {
-        // Spec allows backends for floats to either return the min-max formula or median of 3 numbers
-        const expected_values: Array<Scalar> = [];
-        {
-          const expected_idx = calculateMinMaxClamp(ei, fi, gi);
-          const precise_expected = test_values[expected_idx];
-          if (!expected_values.includes(precise_expected)) {
-            expected_values.push(precise_expected);
-          }
-        }
-        {
-          const expected_idx = calculateMedianClamp(ei, fi, gi);
-          const precise_expected = test_values[expected_idx];
-          if (!expected_values.includes(precise_expected)) {
-            expected_values.push(precise_expected);
-          }
-        }
-        const contains_subnormals =
-          expected_values.filter(x => {
-            return isSubnormalScalar(x);
-          }).length > 0;
-        if (contains_subnormals) {
-          expected_values.push(f32(0.0));
-        }
-        cases.push({ input: [e, f, g], expected: anyOf(...expected_values) });
+        const minmax_idx = calculateMinMaxClamp(ei, fi, gi);
+        cases.push({
+          input: [e, f, g],
+          expected: anyOf(test_values[minmax_idx]),
+        });
       });
     });
   });
@@ -208,37 +157,41 @@ g.test('f32')
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cfg: Config = t.params;
-    cfg.cmpFloats = correctlyRoundedMatch();
+    const makeCase = (param0: number, param1: number, param2: number): Case => {
+      param0 = quantizeToF32(param0);
+      param1 = quantizeToF32(param1);
+      param2 = quantizeToF32(param2);
+      return makeTernaryF32IntervalCase(param0, param1, param2, clampInterval);
+    };
 
-    // This array must be strictly increasing, since that ordering determines
-    // the expected values.
-    const test_values: Array<Scalar> = [
-      f32Bits(kBit.f32.infinity.negative),
-      f32Bits(kBit.f32.negative.min),
-      f32(-10.0),
-      f32(-1.0),
-      f32Bits(kBit.f32.negative.max),
-      f32Bits(kBit.f32.subnormal.negative.min),
-      f32Bits(kBit.f32.subnormal.negative.max),
-      f32(0.0),
-      f32Bits(kBit.f32.subnormal.positive.min),
-      f32Bits(kBit.f32.subnormal.positive.max),
-      f32Bits(kBit.f32.positive.min),
-      f32(1.0),
-      f32(10.0),
-      f32Bits(kBit.f32.positive.max),
-      f32Bits(kBit.f32.infinity.positive),
+    const values: Array<number> = [
+      uint32ToFloat32(kBit.f32.infinity.negative),
+      kValue.f32.negative.min,
+      -10.0,
+      -1.0,
+      kValue.f32.negative.max,
+      kValue.f32.subnormal.negative.min,
+      kValue.f32.subnormal.negative.max,
+      0.0,
+      kValue.f32.subnormal.positive.min,
+      kValue.f32.subnormal.positive.max,
+      kValue.f32.positive.min,
+      1.0,
+      10.0,
+      kValue.f32.positive.max,
+      uint32ToFloat32(kBit.f32.infinity.positive),
     ];
 
-    run(
-      t,
-      builtin('clamp'),
-      [TypeF32, TypeF32, TypeF32],
-      TypeF32,
-      cfg,
-      generateFloatTestCases(test_values)
-    );
+    const cases: Array<Case> = [];
+    values.forEach(x => {
+      values.forEach(y => {
+        values.forEach(z => {
+          cases.push(makeCase(x, y, z));
+        });
+      });
+    });
+
+    run(t, builtin('clamp'), [TypeF32, TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('f16')

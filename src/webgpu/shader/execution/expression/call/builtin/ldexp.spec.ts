@@ -14,11 +14,16 @@ Returns e1 * 2^e2. Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { correctlyRoundedMatch } from '../../../../../util/compare.js';
-import { kValue } from '../../../../../util/constants.js';
+import { intervalComparator } from '../../../../../util/compare.js';
 import { f32, i32, TypeF32, TypeI32 } from '../../../../../util/conversion.js';
-import { biasedRange, linearRange, quantizeToI32 } from '../../../../../util/math.js';
-import { Case, Config, run } from '../../expression.js';
+import { ldexpInterval } from '../../../../../util/f32_interval.js';
+import {
+  biasedRange,
+  linearRange,
+  quantizeToF32,
+  quantizeToI32,
+} from '../../../../../util/math.js';
+import { Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -46,18 +51,17 @@ g.test('f32')
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const truthFunc = (e1: number, e2: number): Case | undefined => {
-      const i32_e2 = quantizeToI32(e2);
-      const result = e1 * Math.pow(2, i32_e2);
-      // Unclear what the expected behaviour for values that overflow f32 bounds, see https://github.com/gpuweb/gpuweb/issues/2631
+    const makeCase = (e1: number, e2: number): Case | undefined => {
+      // Intentionally not using makeBinaryF32IntervalCase, b/c the parameter types are heterogeneous
+      e1 = quantizeToF32(e1);
+      e2 = quantizeToI32(e2);
+      const result = e1 * Math.pow(2, e2);
+      // Guard against overflowing number (f64)
       if (!Number.isFinite(result)) {
         return undefined;
-      } else if (result > kValue.f32.positive.max) {
-        return undefined;
-      } else if (result < kValue.f32.positive.min) {
-        return undefined;
       }
-      return { input: [f32(e1), i32(e2)], expected: f32(result) };
+      const interval = ldexpInterval(e1, e2);
+      return { input: [f32(e1), i32(e2)], expected: intervalComparator(interval) };
     };
 
     const e1_range: Array<number> = [
@@ -81,15 +85,14 @@ g.test('f32')
     const cases: Array<Case> = [];
     e1_range.forEach(e1 => {
       e2_range.forEach(e2 => {
-        const c = truthFunc(e1, e2);
+        const c = makeCase(e1, e2);
         if (c !== undefined) {
           cases.push(c);
         }
       });
     });
-    const cfg: Config = t.params;
-    cfg.cmpFloats = correctlyRoundedMatch();
-    run(t, builtin('ldexp'), [TypeF32, TypeI32], TypeF32, cfg, cases);
+
+    run(t, builtin('ldexp'), [TypeF32, TypeI32], TypeF32, t.params, cases);
   });
 
 g.test('f16')

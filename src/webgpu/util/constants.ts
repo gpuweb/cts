@@ -29,6 +29,7 @@ export const kBit = {
       max: 0x7f7f_ffff,
       zero: 0x0000_0000,
       nearest_max: 0x7f7f_fffe,
+      below_one: 0x3f7f_ffff,
     },
     negative: {
       max: 0x8080_0000,
@@ -238,6 +239,7 @@ export const kValue = {
       min: hexToF32(kBit.f32.positive.min),
       max: hexToF32(kBit.f32.positive.max),
       nearest_max: hexToF32(kBit.f32.positive.nearest_max),
+      below_one: hexToF32(kBit.f32.positive.below_one),
     },
     negative: {
       max: hexToF32(kBit.f32.negative.max),
@@ -253,6 +255,10 @@ export const kValue = {
         max: hexToF32(kBit.f32.subnormal.negative.max),
         min: hexToF32(kBit.f32.subnormal.negative.min),
       },
+    },
+    infinity: {
+      positive: hexToF32(kBit.f32.infinity.positive),
+      negative: hexToF32(kBit.f32.infinity.negative),
     },
   },
 
