@@ -499,14 +499,14 @@ g.test('vertex_attributes,basic')
     // The remaining 3 vertex attributes
     if (t.params.vertex_attribute_count === 16) {
       accumulateVariableDeclarationsInVertexShader = `
-        @location(13) @interpolate(flat) outAttrib13 : vec4<${wgslFormat}>;
+        @location(13) @interpolate(flat) outAttrib13 : vec4<${wgslFormat}>,
       `;
       accumulateVariableAssignmentsInVertexShader = `
       output.outAttrib13 =
           vec4<${wgslFormat}>(input.attrib12, input.attrib13, input.attrib14, input.attrib15);
       `;
       accumulateVariableDeclarationsInFragmentShader = `
-      @location(13) @interpolate(flat) attrib13 : vec4<${wgslFormat}>;
+      @location(13) @interpolate(flat) attrib13 : vec4<${wgslFormat}>,
       `;
       accumulateVariableAssignmentsInFragmentShader = `
       outBuffer.primitives[input.primitiveId].attrib12 = input.attrib13.x;

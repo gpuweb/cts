@@ -618,6 +618,15 @@ g.test('subresources_and_binding_types_combination_for_aspect')
           // 'render-target'
           p.compute && (p.binding0InBundle || p.binding1InBundle || p.type1 === 'render-target')
       )
+      .unless(
+        p =>
+          // Depth-stencil attachment views must encompass all aspects of the texture. Invalid
+          // cases are for depth-stencil textures when the aspect is not 'all'.
+          p.type1 === 'render-target' &&
+          kTextureFormatInfo[p.format].depth &&
+          kTextureFormatInfo[p.format].stencil &&
+          p.aspect1 !== 'all'
+      )
   )
   .beforeAllSubcases(t => {
     const { format } = t.params;
