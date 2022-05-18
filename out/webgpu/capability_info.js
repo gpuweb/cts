@@ -1020,7 +1020,7 @@ export const kLimitInfo = makeTable(
   'maxVertexBufferArrayStride': [, 2048],
   'maxInterStageShaderComponents': [, 60],
 
-  'maxComputeWorkgroupStorageSize': [, 16352],
+  'maxComputeWorkgroupStorageSize': [, 16384],
   'maxComputeInvocationsPerWorkgroup': [, 256],
   'maxComputeWorkgroupSizeX': [, 256],
   'maxComputeWorkgroupSizeY': [, 256],
