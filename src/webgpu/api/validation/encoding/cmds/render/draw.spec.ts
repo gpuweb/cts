@@ -60,43 +60,78 @@ function callDrawIndexed(
     }
   }
 }
+interface DrawParameter {
+  vertexCount: number;
+  instanceCount?: number;
+  firstVertex?: number;
+  firstInstance?: number;
+}
 
-class F extends ValidationTest {
-  makeTestPipeline(
-    buffers: VertexState<
-      { stepMode: GPUVertexStepMode; arrayStride: number },
-      {
-        offset: number;
-        format: GPUVertexFormat;
-      }
-    >
-  ): GPURenderPipeline {
-    const bufferLayouts: GPUVertexBufferLayout[] = [];
-    for (const b of buffers) {
-      bufferLayouts[b.slot] = b;
+function callDraw(
+  test: GPUTest,
+  encoder: GPURenderCommandsMixin,
+  drawType: 'draw' | 'drawIndirect',
+  param: DrawParameter
+) {
+  switch (drawType) {
+    case 'draw': {
+      encoder.draw(
+        param.vertexCount,
+        param.instanceCount ?? 1,
+        param.firstVertex ?? 0,
+        param.firstInstance ?? 0
+      );
+      break;
     }
-
-    return this.device.createRenderPipeline({
-      vertex: {
-        module: this.device.createShaderModule({
-          code: this.getNoOpShaderCode('VERTEX'),
-        }),
-        entryPoint: 'main',
-        buffers: bufferLayouts,
-      },
-      fragment: {
-        module: this.device.createShaderModule({
-          code: this.getNoOpShaderCode('FRAGMENT'),
-        }),
-        entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm', writeMask: 0 }],
-      },
-      primitive: { topology: 'triangle-list' },
-    });
+    case 'drawIndirect': {
+      const indirectArray = new Int32Array([
+        param.vertexCount,
+        param.instanceCount ?? 1,
+        param.firstVertex ?? 0,
+        param.firstInstance ?? 0,
+      ]);
+      const indirectBuffer = test.makeBufferWithContents(indirectArray, GPUBufferUsage.INDIRECT);
+      encoder.drawIndirect(indirectBuffer, 0);
+      break;
+    }
   }
 }
 
-export const g = makeTestGroup(F);
+function makeTestPipeline(
+  test: ValidationTest,
+  buffers: VertexState<
+    { stepMode: GPUVertexStepMode; arrayStride: number },
+    {
+      offset: number;
+      format: GPUVertexFormat;
+    }
+  >
+): GPURenderPipeline {
+  const bufferLayouts: GPUVertexBufferLayout[] = [];
+  for (const b of buffers) {
+    bufferLayouts[b.slot] = b;
+  }
+
+  return test.device.createRenderPipeline({
+    vertex: {
+      module: test.device.createShaderModule({
+        code: test.getNoOpShaderCode('VERTEX'),
+      }),
+      entryPoint: 'main',
+      buffers: bufferLayouts,
+    },
+    fragment: {
+      module: test.device.createShaderModule({
+        code: test.getNoOpShaderCode('FRAGMENT'),
+      }),
+      entryPoint: 'main',
+      targets: [{ format: 'rgba8unorm', writeMask: 0 }],
+    },
+    primitive: { topology: 'triangle-list' },
+  });
+}
+
+export const g = makeTestGroup(ValidationTest);
 
 g.test(`unused_buffer_bound`)
   .desc(
@@ -131,7 +166,7 @@ drawIndexedIndirect as it is GPU-validated.
       .combine('indexFormat', ['uint16', 'uint32'] as const)
       .combine('useBundle', [false, true])
   )
-  .fn(t => {
+  .fn(async t => {
     const {
       indexFormat,
       bindingSizeInElements,
@@ -174,47 +209,6 @@ drawIndexedIndirect as it is GPU-validated.
     commandBufferMaker.validateFinishAndSubmit(isFinishSuccess, true);
   });
 
-g.test(`vertex_buffer_OOB`)
-  .desc(
-    `
-In this test we test the vertex buffer OOB validation in draw calls. Specifically, only vertex step
-mode buffer OOB in draw and instance step mode buffer OOB in draw and drawIndexed are CPU-validated.
-Other cases are handled by robust access and no validation error occurs.
-- Test that:
-    - Draw call needs to read {=, >} any bound vertex buffer range, with GPUBuffer that is {large
-      enough, exactly the size of bound range}
-        - Binding size = 0 (ensure it's not treated as a special case)
-        - x= weird offset values
-        - x= weird arrayStride values
-        - x= {render pass, render bundle}
-- For vertex step mode vertex buffer,
-    - Test that:
-        - vertexCount largeish
-        - firstVertex {=, >} 0
-        - arrayStride is 0 and bound buffer size too small
-    - Validation error occurs in:
-        - draw
-        - drawIndexed with a zero array stride vertex step mode buffer OOB
-    - Otherwise no validation error in drawIndexed, draIndirect and drawIndexedIndirect
-- For instance step mode vertex buffer,
-    - Test with draw and drawIndexed:
-        - instanceCount largeish
-        - firstInstance {=, >} 0
-        - arrayStride is 0 and bound buffer size too small
-    - Validation error occurs in draw and drawIndexed
-    - No validation error in drawIndirect and drawIndexedIndirect
-
-In this test, we use a a render pipeline requiring one vertex step mode and one instance step mode
-vertex buffer. Then for a given drawing parameter set (e.g., vertexCount, instanceCount, firstVertex,
-indexCount), we calculate the exactly required size for vertex step mode vertex buffer, instance
-step mode vertex buffer and index buffer. Then, we generate buffer parameters (i.e. GPU buffer size,
-binding offset and binding size) for all three buffer, covering both (bound size == required size)
-and (bound size == required size - 1), and test that draw and drawIndexed will success/error as
-expected. Such set of buffer parameters should include cases like weird offset values.
-`
-  )
-  .unimplemented();
-
 g.test(`vertex_buffer_OOB,vertex_step_mode`)
   .desc(
     `
@@ -234,63 +228,57 @@ Other cases are handled by robust access and no validation error occurs.
         - vertexCount largeish
         - firstVertex {=, >} 0
         - arrayStride is 0 and bound buffer size too small
+        - (vertexCount + firstVertex) is zero
     - Validation error occurs in:
         - draw
         - drawIndexed with a zero array stride vertex step mode buffer OOB
     - Otherwise no validation error in drawIndexed, draIndirect and drawIndexedIndirect
 
-In this test, we use a a render pipeline requiring one vertex step mode and one instance step mode
-vertex buffer. Then for a given drawing parameter set (e.g., vertexCount, instanceCount, firstVertex,
-indexCount), we calculate the exactly required size for vertex step mode vertex buffer, instance
-step mode vertex buffer and index buffer. Then, we generate buffer parameters (i.e. GPU buffer size,
+In this test, we use a a render pipeline requiring one vertex step mode with different vertex buffer
+layout (attribute offset, array stride, vertex format). Then for a given drawing parameter set (e.g.,
+vertexCount, instanceCount, firstVertex, indexCount), we calculate the exactly required size for
+vertex step mode vertex buffer. Then, we generate buffer parameters (i.e. GPU buffer size,
 binding offset and binding size) for all buffers, covering both (bound size == required size),
 (bound size == required size - 1), and (bound size == 0), and test that draw and drawIndexed will
 success/error asexpected. Such set of buffer parameters should include cases like weird offset values.
 `
   )
-  .beforeAllSubcases(t => {
-    t.selectMismatchedDeviceOrSkipTestCase(undefined);
-  })
   .params(u =>
     u //
-      // .combine('zeroArrayStride', [false, true])  // must be a multiple of 4
-      .combine('arrayStrideState', ['zero', 'exact', 'oversize'] as const) // must be a multiple of 4
-      .combine('firstVertex', [0, 10])
-      .combine('vertexCount', [0, 10, 10000])
-      .combine('vertexFormat', ['snorm8x2', 'float32', 'float16x4'] as GPUVertexFormat[])
-      .combine('attributeOffsetFactor', [0, 1, 2, 7]) // the offset of attribute will be factor * MIN(4, sizeof(vertexFormatt))
+      .combine('drawType', ['draw', 'drawIndirect', 'drawIndexed', 'drawIndexedIndirect'] as const)
+      .combine('zeroVertexStrideCount', [false, true] as const)
+      .combine('arrayStrideState', ['zero', 'exact', 'oversize'] as const)
+      .combine('attributeOffsetFactor', [0, 1, 2, 7]) // the offset of attribute will be factor * MIN(4, sizeof(vertexFormat))
       .beginSubcases()
-      .combine('useBundle', [false, true])
-      .combine('setBufferOffset', [0, 4, 200]) // must be a multiple of 4
       .combine('boundBufferSizeState', ['zero', 'exile', 'enough'] as const)
+      .combine('setBufferOffset', [0, 4, 200]) // must be a multiple of 4
+      .combine('vertexFormat', ['snorm8x2', 'float32', 'float16x4'] as GPUVertexFormat[])
+      .combine('firstVertex', [0, 10, 10000])
+      .combine('vertexCount', [0, 10, 10000])
+      .filter(p => {
+        return p.zeroVertexStrideCount === (p.firstVertex + p.vertexCount === 0);
+      })
+      .combine('instanceCount', [0, 1])
+      .combine('firstInstance', [0, 1])
+      .combine('setBufferBeforePipeline', [false, true])
+      .combine('useBundle', [false, true])
   )
-  .fn(t => {
+  .fn(async t => {
     const {
-      setBufferOffset,
+      drawType,
+      zeroVertexStrideCount,
       arrayStrideState,
-      firstVertex,
-      vertexCount,
-      vertexFormat,
       attributeOffsetFactor,
-      useBundle,
       boundBufferSizeState,
+      setBufferOffset,
+      vertexFormat,
+      vertexCount,
+      instanceCount,
+      firstVertex,
+      firstInstance,
+      setBufferBeforePipeline,
+      useBundle,
     } = t.params;
-
-    /*
-  const indexElementSize = indexFormat === 'uint16' ? 2 : 4;
-  const bindingSize = bindingSizeInElements * indexElementSize;
-  const bufferSize = bufferSizeInElements * indexElementSize;
-
-  const desc: GPUBufferDescriptor = {
-    size: bufferSize,
-    usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
-  };
-  const indexBuffer = t.device.createBuffer(desc);
-
-  const drawCallParam: DrawIndexedParameter = {
-    indexCount: drawIndexCount,
-  };
-  */
 
     const vertexFormatInfo = kVertexFormatInfo[vertexFormat];
     const formatSize = vertexFormatInfo.bytesPerComponent * vertexFormatInfo.componentCount;
@@ -306,7 +294,13 @@ success/error asexpected. Such set of buffer parameters should include cases lik
     }
 
     const strideCountForVertexBuffer = firstVertex + vertexCount;
-    const requiredBufferSize = arrayStride * (strideCountForVertexBuffer - 1) + lastStride;
+    let requiredBufferSize: number;
+    if (strideCountForVertexBuffer > 0) {
+      requiredBufferSize = arrayStride * (strideCountForVertexBuffer - 1) + lastStride;
+    } else {
+      // Spec do not validate bounded buffer size if strideCount == 0.
+      requiredBufferSize = lastStride;
+    }
     let setBufferSize: number;
     switch (boundBufferSizeState) {
       case 'zero': {
@@ -324,7 +318,7 @@ success/error asexpected. Such set of buffer parameters should include cases lik
     }
     const bufferSize = setBufferOffset + setBufferSize;
 
-    const buffer = t.createBufferWithState('valid', {
+    const buffer = t.device.createBuffer({
       size: bufferSize,
       usage: GPUBufferUsage.VERTEX,
     });
@@ -344,19 +338,94 @@ success/error asexpected. Such set of buffer parameters should include cases lik
       },
     ];
 
-    // const renderPipeline = t.createNoOpRenderPipeline();
-    const renderPipeline = t.makeTestPipeline(vertexBufferLayouts);
+    const renderPipeline = makeTestPipeline(t, vertexBufferLayouts);
 
     const commandBufferMaker = t.createEncoder(useBundle ? 'render bundle' : 'render pass');
     const renderEncoder = commandBufferMaker.encoder;
 
+    if (setBufferBeforePipeline) {
+      renderEncoder.setVertexBuffer(1, buffer, setBufferOffset, setBufferSize);
+    }
     renderEncoder.setPipeline(renderPipeline);
-    renderEncoder.setVertexBuffer(1, buffer, setBufferOffset, setBufferSize);
+    if (!setBufferBeforePipeline) {
+      renderEncoder.setVertexBuffer(1, buffer, setBufferOffset, setBufferSize);
+    }
 
-    // callDrawIndexed(t, renderEncoder, drawType, drawCallParam);
-    const isFinishSuccess = true;
+    if (drawType === 'draw' || drawType === 'drawIndirect') {
+      const drawParam: DrawParameter = {
+        vertexCount,
+        instanceCount,
+        firstVertex,
+        firstInstance,
+      };
+
+      callDraw(t, renderEncoder, drawType, drawParam);
+    } else {
+      const indexFormat = 'uint16';
+      const indexElementSize = 2;
+      const indexCount = 12;
+      const indexBufferSize = indexElementSize * indexCount;
+
+      const desc: GPUBufferDescriptor = {
+        size: indexBufferSize,
+        usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
+      };
+      const indexBuffer = t.device.createBuffer(desc);
+
+      const drawParam: DrawIndexedParameter = {
+        indexCount,
+        instanceCount,
+        firstIndex: 0,
+        baseVertex: firstVertex,
+        firstInstance,
+      };
+
+      renderEncoder.setIndexBuffer(indexBuffer, indexFormat, 0, indexBufferSize);
+      callDrawIndexed(t, renderEncoder, drawType, drawParam);
+    }
+
+    const isFinishSuccess =
+      boundBufferSizeState === 'enough' ||
+      drawType !== 'draw' || // drawIndirect, drawIndexed, and drawIndexedIndirect do not validate vertex step mode buffer
+      zeroVertexStrideCount; // vertex step mode buffer never OOB if stride count = 0
     commandBufferMaker.validateFinishAndSubmit(isFinishSuccess, true);
   });
+
+g.test(`vertex_buffer_OOB,instance_step_mode`)
+  .desc(
+    `
+TODO: merge this test into vertex_buffer_OOB,vertex_step_mode.
+
+In this test we test the vertex buffer OOB validation in draw calls. Specifically, only vertex step
+mode buffer OOB in draw and instance step mode buffer OOB in draw and drawIndexed are CPU-validated.
+Other cases are handled by robust access and no validation error occurs.
+- Test that:
+    - Draw call needs to read {=, >} any bound vertex buffer range, with GPUBuffer that is {large
+      enough, exactly the size of bound range}
+        - Binding size = 0 (ensure it's not treated as a special case)
+        - x= weird buffer offset values
+        - x= weird attribute offset values
+        - x= weird arrayStride values
+        - x= {render pass, render bundle}
+- For instance step mode vertex buffer,
+    - Test with draw and drawIndexed:
+        - instanceCount largeish
+        - firstInstance {=, >} 0
+        - arrayStride is 0 and bound buffer size too small
+        - (instanceCount + firstInstance) is zero
+    - Validation error occurs in draw and drawIndexed
+    - No validation error in drawIndirect and drawIndexedIndirect
+
+In this test, we use a a render pipeline requiring one instance step mode with different vertex buffer
+layout (attribute offset, array stride, vertex format). Then for a given drawing parameter set (e.g.,
+vertexCount, instanceCount, firstVertex, indexCount), we calculate the exactly required size for
+vertex step mode vertex buffer. Then, we generate buffer parameters (i.e. GPU buffer size,
+binding offset and binding size) for all buffers, covering both (bound size == required size),
+(bound size == required size - 1), and (bound size == 0), and test that draw and drawIndexed will
+success/error as expected. Such set of buffer parameters should include cases like weird offset values.
+`
+  )
+  .unimplemented();
 
 g.test(`last_buffer_setting_take_account`)
   .desc(
