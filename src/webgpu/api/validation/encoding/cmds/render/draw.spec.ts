@@ -235,12 +235,12 @@ Other cases are handled by robust access and no validation error occurs.
     - Otherwise no validation error in drawIndexed, draIndirect and drawIndexedIndirect
 
 In this test, we use a a render pipeline requiring one vertex step mode with different vertex buffer
-layout (attribute offset, array stride, vertex format). Then for a given drawing parameter set (e.g.,
+layouts (attribute offset, array stride, vertex format). Then for a given drawing parameter set (e.g.,
 vertexCount, instanceCount, firstVertex, indexCount), we calculate the exactly required size for
 vertex step mode vertex buffer. Then, we generate buffer parameters (i.e. GPU buffer size,
 binding offset and binding size) for all buffers, covering both (bound size == required size),
 (bound size == required size - 1), and (bound size == 0), and test that draw and drawIndexed will
-success/error asexpected. Such set of buffer parameters should include cases like weird offset values.
+success/error as expected. Such set of buffer parameters should include cases like weird offset values.
 `
   )
   .params(u =>
@@ -417,7 +417,7 @@ Other cases are handled by robust access and no validation error occurs.
     - No validation error in drawIndirect and drawIndexedIndirect
 
 In this test, we use a a render pipeline requiring one instance step mode with different vertex buffer
-layout (attribute offset, array stride, vertex format). Then for a given drawing parameter set (e.g.,
+layouts (attribute offset, array stride, vertex format). Then for a given drawing parameter set (e.g.,
 vertexCount, instanceCount, firstVertex, indexCount), we calculate the exactly required size for
 vertex step mode vertex buffer. Then, we generate buffer parameters (i.e. GPU buffer size,
 binding offset and binding size) for all buffers, covering both (bound size == required size),
