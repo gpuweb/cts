@@ -245,21 +245,22 @@ success/error as expected. Such set of buffer parameters should include cases li
   )
   .params(u =>
     u //
-      .combine('drawType', ['draw', 'drawIndirect', 'drawIndexed', 'drawIndexedIndirect'] as const)
+      .combine('drawType', ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect'] as const)
       .combine('zeroVertexStrideCount', [false, true] as const)
+      .combine('zeroInstanceStrideCount', [false, true] as const)
       .combine('arrayStrideState', ['zero', 'exact', 'oversize'] as const)
       .combine('attributeOffsetFactor', [0, 1, 2, 7]) // the offset of attribute will be factor * MIN(4, sizeof(vertexFormat))
+      .combine('boundVertexBufferSizeState', ['zero', 'exile', 'enough'] as const)
       .beginSubcases()
-      .combine('boundBufferSizeState', ['zero', 'exile', 'enough'] as const)
-      .combine('setBufferOffset', [0, 4, 200]) // must be a multiple of 4
-      .combine('vertexFormat', ['snorm8x2', 'float32', 'float16x4'] as GPUVertexFormat[])
-      .combine('firstVertex', [0, 10, 10000])
+      .combine('setBufferOffset', [0, 200]) // must be a multiple of 4
+      .combine('attributeFormat', ['snorm8x2', 'float32', 'float16x4'] as GPUVertexFormat[])
       .combine('vertexCount', [0, 10, 10000])
-      .filter(p => {
-        return p.zeroVertexStrideCount === (p.firstVertex + p.vertexCount === 0);
-      })
-      .combine('instanceCount', [0, 1])
-      .combine('firstInstance', [0, 1])
+      .combine('firstVertex', [0, 10000])
+      .filter(p => p.zeroVertexStrideCount === (p.firstVertex + p.vertexCount === 0))
+      .combine('instanceCount', [0, 10, 10000])
+      .combine('firstInstance', [0, 10000])
+      .filter(p => p.zeroInstanceStrideCount === (p.firstInstance + p.instanceCount === 0))
+      .unless(p => p.vertexCount === 10000 && p.instanceCount === 10000)
       .combine('setBufferBeforePipeline', [false, true])
       .combine('useBundle', [false, true])
   )
@@ -269,9 +270,9 @@ success/error as expected. Such set of buffer parameters should include cases li
       zeroVertexStrideCount,
       arrayStrideState,
       attributeOffsetFactor,
-      boundBufferSizeState,
+      boundVertexBufferSizeState,
       setBufferOffset,
-      vertexFormat,
+      attributeFormat,
       vertexCount,
       instanceCount,
       firstVertex,
@@ -280,8 +281,8 @@ success/error as expected. Such set of buffer parameters should include cases li
       useBundle,
     } = t.params;
 
-    const vertexFormatInfo = kVertexFormatInfo[vertexFormat];
-    const formatSize = vertexFormatInfo.bytesPerComponent * vertexFormatInfo.componentCount;
+    const attributeFormatInfo = kVertexFormatInfo[attributeFormat];
+    const formatSize = attributeFormatInfo.bytesPerComponent * attributeFormatInfo.componentCount;
     const attributeOffset = attributeOffsetFactor * Math.min(4, formatSize);
     const lastStride = attributeOffset + formatSize;
     let arrayStride = 0;
@@ -293,33 +294,44 @@ success/error as expected. Such set of buffer parameters should include cases li
       arrayStride = arrayStride + (-arrayStride & 3); // Make sure arrayStride is a multiple of 4
     }
 
-    const strideCountForVertexBuffer = firstVertex + vertexCount;
-    let requiredBufferSize: number;
-    if (strideCountForVertexBuffer > 0) {
-      requiredBufferSize = arrayStride * (strideCountForVertexBuffer - 1) + lastStride;
-    } else {
-      // Spec do not validate bounded buffer size if strideCount == 0.
-      requiredBufferSize = lastStride;
-    }
-    let setBufferSize: number;
-    switch (boundBufferSizeState) {
-      case 'zero': {
-        setBufferSize = 0;
-        break;
+    const calcSetBufferSize = (
+      boundBufferSizeState: 'zero' | 'exile' | 'enough',
+      strideCount: number
+    ): number => {
+      let requiredBufferSize: number;
+      if (strideCount > 0) {
+        requiredBufferSize = arrayStride * (strideCount - 1) + lastStride;
+      } else {
+        // Spec do not validate bounded buffer size if strideCount == 0.
+        requiredBufferSize = lastStride;
       }
-      case 'exile': {
-        setBufferSize = requiredBufferSize - 1;
-        break;
+      let setBufferSize: number;
+      switch (boundBufferSizeState) {
+        case 'zero': {
+          setBufferSize = 0;
+          break;
+        }
+        case 'exile': {
+          setBufferSize = requiredBufferSize - 1;
+          break;
+        }
+        case 'enough': {
+          setBufferSize = requiredBufferSize;
+          break;
+        }
       }
-      case 'enough': {
-        setBufferSize = requiredBufferSize;
-        break;
-      }
-    }
-    const bufferSize = setBufferOffset + setBufferSize;
+      return setBufferSize;
+    };
 
-    const buffer = t.device.createBuffer({
-      size: bufferSize,
+    const strideCountForVertexBuffer = firstVertex + vertexCount;
+    const setVertexBufferSize = calcSetBufferSize(
+      boundVertexBufferSizeState,
+      strideCountForVertexBuffer
+    );
+    const vertexBufferSize = setBufferOffset + setVertexBufferSize;
+
+    const vertexBuffer = t.device.createBuffer({
+      size: vertexBufferSize,
       usage: GPUBufferUsage.VERTEX,
     });
 
@@ -331,7 +343,7 @@ success/error as expected. Such set of buffer parameters should include cases li
         attributes: [
           {
             shaderLocation: 2,
-            format: vertexFormat,
+            format: attributeFormat,
             offset: attributeOffset,
           },
         ],
@@ -344,11 +356,11 @@ success/error as expected. Such set of buffer parameters should include cases li
     const renderEncoder = commandBufferMaker.encoder;
 
     if (setBufferBeforePipeline) {
-      renderEncoder.setVertexBuffer(1, buffer, setBufferOffset, setBufferSize);
+      renderEncoder.setVertexBuffer(1, vertexBuffer, setBufferOffset, setVertexBufferSize);
     }
     renderEncoder.setPipeline(renderPipeline);
     if (!setBufferBeforePipeline) {
-      renderEncoder.setVertexBuffer(1, buffer, setBufferOffset, setBufferSize);
+      renderEncoder.setVertexBuffer(1, vertexBuffer, setBufferOffset, setVertexBufferSize);
     }
 
     if (drawType === 'draw' || drawType === 'drawIndirect') {
@@ -384,10 +396,12 @@ success/error as expected. Such set of buffer parameters should include cases li
       callDrawIndexed(t, renderEncoder, drawType, drawParam);
     }
 
-    const isFinishSuccess =
-      boundBufferSizeState === 'enough' ||
-      drawType !== 'draw' || // drawIndirect, drawIndexed, and drawIndexedIndirect do not validate vertex step mode buffer
-      zeroVertexStrideCount; // vertex step mode buffer never OOB if stride count = 0
+    const isVertexBufferOOB =
+      boundVertexBufferSizeState !== 'enough' &&
+      drawType === 'draw' && // drawIndirect, drawIndexed, and drawIndexedIndirect do not validate vertex step mode buffer
+      !zeroVertexStrideCount; // vertex step mode buffer never OOB if stride count = 0
+    const isFinishSuccess = !isVertexBufferOOB;
+
     commandBufferMaker.validateFinishAndSubmit(isFinishSuccess, true);
   });
 
