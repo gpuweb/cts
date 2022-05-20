@@ -114,7 +114,8 @@ subresourceRange) =>
           binding: 1,
           resource: texture.createView({
             baseArrayLayer: layer,
-            arrayLayerCount: 1 }) },
+            arrayLayerCount: 1,
+            dimension: params.dimension }) },
 
 
         {

@@ -113,6 +113,7 @@ export const checkContentsBySampling = (t, params, texture, state, subresourceRa
             resource: texture.createView({
               baseArrayLayer: layer,
               arrayLayerCount: 1,
+              dimension: params.dimension,
             }),
           },
 
