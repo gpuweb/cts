@@ -149,7 +149,7 @@ drawIndexedIndirect as it is GPU-validated.
       usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
     };
 
-    const indexBuffer = t.device.createBuffer(desc);
+    const indexBuffer = t.createBufferWithState('valid', desc);
 
     const drawCallParam = {
       indexCount: drawIndexCount,
@@ -294,7 +294,7 @@ success/error as expected. Such set of buffer parameters should include cases li
 
     const vertexBufferSize = setBufferOffset + setVertexBufferSize;
 
-    const vertexBuffer = t.device.createBuffer({
+    const vertexBuffer = t.createBufferWithState('valid', {
       size: vertexBufferSize,
       usage: GPUBufferUsage.VERTEX,
     });
@@ -347,7 +347,7 @@ success/error as expected. Such set of buffer parameters should include cases li
         usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
       };
 
-      const indexBuffer = t.device.createBuffer(desc);
+      const indexBuffer = t.createBufferWithState('valid', desc);
 
       const drawParam = {
         indexCount,

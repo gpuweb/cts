@@ -184,7 +184,7 @@ fn(async (t) => {
     size: bufferSize,
     usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST };
 
-  const indexBuffer = t.device.createBuffer(desc);
+  const indexBuffer = t.createBufferWithState('valid', desc);
 
   const drawCallParam = {
     indexCount: drawIndexCount };
@@ -330,7 +330,7 @@ fn(async (t) => {
 
   const vertexBufferSize = setBufferOffset + setVertexBufferSize;
 
-  const vertexBuffer = t.device.createBuffer({
+  const vertexBuffer = t.createBufferWithState('valid', {
     size: vertexBufferSize,
     usage: GPUBufferUsage.VERTEX });
 
@@ -382,7 +382,7 @@ fn(async (t) => {
       size: indexBufferSize,
       usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST };
 
-    const indexBuffer = t.device.createBuffer(desc);
+    const indexBuffer = t.createBufferWithState('valid', desc);
 
     const drawParam = {
       indexCount,
