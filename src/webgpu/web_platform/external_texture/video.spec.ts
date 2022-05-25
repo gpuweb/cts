@@ -4,6 +4,7 @@ Tests for external textures from HTMLVideoElement (and other video-type sources?
 - videos with various encodings, color spaces, metadata
 
 TODO: consider whether external_texture and copyToTexture video tests should be in the same file
+TODO: add a test configuration for red-green.mp4 to the importExternalTexture Sample test once the infrastructure can load it succesfully.
 `;
 
 import { getResourcePath } from '../../../common/framework/resources.js';
@@ -14,11 +15,38 @@ import { startPlayingAndWaitForVideo } from '../../web_platform/util.js';
 const kHeight = 16;
 const kWidth = 16;
 const kFormat = 'rgba8unorm';
-const kVideoSources: string[] = [
-  'red-green.webmvp8.webm',
-  'red-green.bt601.vp9.webm',
-  'red-green.mp4',
-  'red-green.theora.ogv',
+
+interface VideoExpectations {
+  video: string;
+  redExpectation: Uint8Array;
+  greenExpectation: Uint8Array;
+}
+const kVideoExpectations: VideoExpectations[] = [
+  {
+    video: 'red-green.webmvp8.webm',
+    redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
+    greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
+  },
+  {
+    video: 'red-green.theora.ogv',
+    redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
+    greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
+  },
+  {
+    video: 'red-green.bt601.vp9.webm',
+    redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
+    greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
+  },
+  {
+    video: 'red-green.bt709.vp9.webm',
+    redExpectation: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
+    greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff]),
+  },
+  {
+    video: 'red-green.bt2020.vp9.webm',
+    redExpectation: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
+    greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff]),
+  },
 ];
 
 export const g = makeTestGroup(GPUTest);
@@ -99,17 +127,16 @@ g.test('importExternalTexture,sample')
   .desc(
     `
 Tests that we can import an HTMLVideoElement into a GPUExternalTexture, sample from it for all
-supported video formats {vp8, vp9, ogg, mp4}, and ensure the GPUExternalTexture is destroyed by
-a microtask.
-TODO: Multiplanar scenarios
+supported video formats {vp8, vp9, ogg}, common source colorspaces {bt.601, bt.709, bt.2020}, 
+and to ensure the GPUExternalTexture is destroyed by a microtask.
 `
   )
   .params(u =>
     u //
-      .combine('videoSource', kVideoSources)
+      .combine('videoExpectations', kVideoExpectations)
   )
   .fn(async t => {
-    const videoUrl = getResourcePath(t.params.videoSource);
+    const videoUrl = getResourcePath(t.params.videoExpectations.video);
     const video = document.createElement('video');
     video.src = videoUrl;
 
@@ -146,9 +173,9 @@ TODO: Multiplanar scenarios
       t.expectSinglePixelIn2DTexture(
         colorAttachment,
         kFormat,
-        { x: 2, y: 2 },
+        { x: 5, y: 5 },
         {
-          exp: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
+          exp: t.params.videoExpectations.redExpectation,
         }
       );
 
@@ -157,9 +184,9 @@ TODO: Multiplanar scenarios
       t.expectSinglePixelIn2DTexture(
         colorAttachment,
         kFormat,
-        { x: kWidth - 3, y: kHeight - 3 },
+        { x: kWidth - 5, y: kHeight - 5 },
         {
-          exp: new Uint8Array([0x00, 0xff, 0x00, 0xff]),
+          exp: t.params.videoExpectations.greenExpectation,
         }
       );
     });
@@ -242,7 +269,7 @@ Tests that we can import an HTMLVideoElement into a GPUExternalTexture and use i
 `
   )
   .fn(async t => {
-    const videoUrl = getResourcePath('red-green.webmvp8.webm');
+    const videoUrl = getResourcePath(kVideoExpectations[0].video);
     const video = document.createElement('video');
     video.src = videoUrl;
 
@@ -300,7 +327,7 @@ Tests that we can import an HTMLVideoElement into a GPUExternalTexture and use i
         kFormat,
         { x: 0, y: 0 },
         {
-          exp: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
+          exp: kVideoExpectations[0].redExpectation,
         }
       );
 
@@ -310,7 +337,7 @@ Tests that we can import an HTMLVideoElement into a GPUExternalTexture and use i
         kFormat,
         { x: 1, y: 0 },
         {
-          exp: new Uint8Array([0x00, 0xff, 0x00, 0xff]),
+          exp: kVideoExpectations[0].greenExpectation,
         }
       );
     });
