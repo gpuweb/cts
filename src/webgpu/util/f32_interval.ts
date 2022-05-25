@@ -462,6 +462,19 @@ export function fractInterval(n: number): F32Interval {
   return runPointImpl(toInterval(n), impl);
 }
 
+/** Calculate an acceptance interval of inverseSqrt(x) */
+export function inverseSqrtInterval(n: number | F32Interval): F32Interval {
+  const impl = (impl_n: number): F32Interval => {
+    if (impl_n <= 0) {
+      // 1 / sqrt(n) for n <= 0 is not meaningfully defined for real f32
+      return F32Interval.infinite();
+    }
+    return ulpInterval(1 / Math.sqrt(impl_n), 2);
+  };
+
+  return runPointImpl(toInterval(n), impl);
+}
+
 /** Calculate an acceptance interval of ldexp(e1, e2) */
 export function ldexpInterval(e1: number, e2: number): F32Interval {
   const impl = (impl_e1: number, impl_e2: number): F32Interval => {
