@@ -131,6 +131,42 @@ function makeTestPipeline(
   });
 }
 
+function makeTestPipelineWithVertexAndInstanceBuffer(
+  test: ValidationTest,
+  arrayStride: number,
+  attributeFormat: GPUVertexFormat,
+  attributeOffset: number = 0
+): GPURenderPipeline {
+  const vertexBufferLayouts: VertexLayoutState<{}, {}> = [
+    {
+      slot: 1,
+      stepMode: 'vertex',
+      arrayStride,
+      attributes: [
+        {
+          shaderLocation: 2,
+          format: attributeFormat,
+          offset: attributeOffset,
+        },
+      ],
+    },
+    {
+      slot: 7,
+      stepMode: 'instance',
+      arrayStride,
+      attributes: [
+        {
+          shaderLocation: 6,
+          format: attributeFormat,
+          offset: attributeOffset,
+        },
+      ],
+    },
+  ];
+
+  return makeTestPipeline(test, vertexBufferLayouts);
+}
+
 export const g = makeTestGroup(ValidationTest);
 
 g.test(`unused_buffer_bound`)
@@ -142,7 +178,96 @@ In this test we test that a small buffer bound to unused buffer slot won't cause
     call)
 `
   )
-  .unimplemented();
+  .params(u =>
+    u //
+      .combine('smallIndexBuffer', [false, true])
+      .combine('smallVertexBuffer', [false, true])
+      .combine('smallInstanceBuffer', [false, true])
+      .beginSubcases()
+      .combine('drawType', ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect'] as const)
+      .unless(
+        // Always provide index buffer of enough size if it is used by indexed draw
+        p =>
+          p.smallIndexBuffer &&
+          (p.drawType === 'drawIndexed' || p.drawType === 'drawIndexedIndirect')
+      )
+      .combine('bufferOffset', [0, 4])
+      .combine('boundSize', [0, 1])
+  )
+  .fn(async t => {
+    const {
+      smallIndexBuffer,
+      smallVertexBuffer,
+      smallInstanceBuffer,
+      drawType,
+      bufferOffset,
+      boundSize,
+    } = t.params;
+    const renderPipeline = t.createNoOpRenderPipeline();
+    const bufferSize = bufferOffset + boundSize;
+    const smallBuffer = t.createBufferWithState('valid', {
+      size: bufferSize,
+      usage: GPUBufferUsage.INDEX | GPUBufferUsage.VERTEX,
+    });
+    // An index buffer of enough size, used if smallIndexBuffer === false
+    const indexBuffer = t.createBufferWithState('valid', {
+      size: 200,
+      usage: GPUBufferUsage.INDEX,
+    });
+
+    for (const useBundle of [false, true]) {
+      for (const setBufferBeforePipeline of [false, true]) {
+        const commandBufferMaker = t.createEncoder(useBundle ? 'render bundle' : 'render pass');
+        const renderEncoder = commandBufferMaker.encoder;
+
+        if (!setBufferBeforePipeline) {
+          renderEncoder.setPipeline(renderPipeline);
+        }
+
+        if (drawType === 'drawIndexed' || drawType === 'drawIndexedIndirect') {
+          // Always use large enough index buffer for indexed draw. Index buffer OOB validation is
+          // tested in index_buffer_OOB.
+          renderEncoder.setIndexBuffer(indexBuffer, 'uint16', 0, 200);
+        } else if (smallIndexBuffer) {
+          renderEncoder.setIndexBuffer(smallBuffer, 'uint16', bufferOffset, boundSize);
+        }
+        if (smallVertexBuffer) {
+          renderEncoder.setVertexBuffer(1, smallBuffer, bufferOffset, boundSize);
+        }
+        if (smallInstanceBuffer) {
+          renderEncoder.setVertexBuffer(7, smallBuffer, bufferOffset, boundSize);
+        }
+
+        if (setBufferBeforePipeline) {
+          renderEncoder.setPipeline(renderPipeline);
+        }
+
+        if (drawType === 'draw' || drawType === 'drawIndirect') {
+          const drawParam: DrawParameter = {
+            vertexCount: 100,
+            instanceCount: 100,
+            firstVertex: 100,
+            firstInstance: 100,
+          };
+
+          callDraw(t, renderEncoder, drawType, drawParam);
+        } else {
+          const drawParam: DrawIndexedParameter = {
+            indexCount: 100,
+            instanceCount: 100,
+            firstIndex: 0,
+            baseVertex: 100,
+            firstInstance: 100,
+          };
+
+          callDrawIndexed(t, renderEncoder, drawType, drawParam);
+        }
+
+        // Binding a unused small index/vertex buffer will never cause validation error.
+        commandBufferMaker.validateFinishAndSubmit(true, true);
+      }
+    }
+  });
 
 g.test(`index_buffer_OOB`)
   .desc(
@@ -352,48 +477,25 @@ success/error as expected. Such set of buffer parameters should include cases li
       usage: GPUBufferUsage.VERTEX,
     });
 
-    const vertexBufferLayouts: VertexLayoutState<{}, {}> = [
-      {
-        slot: 1,
-        stepMode: 'vertex',
-        arrayStride,
-        attributes: [
-          {
-            shaderLocation: 2,
-            format: attributeFormat,
-            offset: attributeOffset,
-          },
-        ],
-      },
-      {
-        slot: 7,
-        stepMode: 'instance',
-        arrayStride,
-        attributes: [
-          {
-            shaderLocation: 6,
-            format: attributeFormat,
-            offset: attributeOffset,
-          },
-        ],
-      },
-    ];
-
-    const renderPipeline = makeTestPipeline(t, vertexBufferLayouts);
+    const renderPipeline = makeTestPipelineWithVertexAndInstanceBuffer(
+      t,
+      arrayStride,
+      attributeFormat,
+      attributeOffset
+    );
 
     for (const useBundle of [false, true]) {
       for (const setBufferBeforePipeline of [false, true]) {
         const commandBufferMaker = t.createEncoder(useBundle ? 'render bundle' : 'render pass');
         const renderEncoder = commandBufferMaker.encoder;
 
-        if (setBufferBeforePipeline) {
-          renderEncoder.setVertexBuffer(1, vertexBuffer, setBufferOffset, setVertexBufferSize);
-          renderEncoder.setVertexBuffer(7, instanceBuffer, setBufferOffset, setInstanceBufferSize);
-        }
-        renderEncoder.setPipeline(renderPipeline);
         if (!setBufferBeforePipeline) {
-          renderEncoder.setVertexBuffer(1, vertexBuffer, setBufferOffset, setVertexBufferSize);
-          renderEncoder.setVertexBuffer(7, instanceBuffer, setBufferOffset, setInstanceBufferSize);
+          renderEncoder.setPipeline(renderPipeline);
+        }
+        renderEncoder.setVertexBuffer(1, vertexBuffer, setBufferOffset, setVertexBufferSize);
+        renderEncoder.setVertexBuffer(7, instanceBuffer, setBufferOffset, setInstanceBufferSize);
+        if (setBufferBeforePipeline) {
+          renderEncoder.setPipeline(renderPipeline);
         }
 
         if (drawType === 'draw' || drawType === 'drawIndirect') {
@@ -444,6 +546,154 @@ success/error as expected. Such set of buffer parameters should include cases li
     }
   });
 
+g.test(`buffer_binding_overlap`)
+  .desc(
+    `
+In this test we test that binding one GPU buffer to multiple vertex buffer slot or both vertex
+buffer slot and index buffer will cause no validation error, with completely/partial overlap.
+    - x= all draw types
+`
+  )
+  .params(u =>
+    u //
+      .combine('drawType', ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect'] as const)
+      .beginSubcases()
+      .combine('vertexBoundOffestFactor', [0, 0.5, 1, 1.5, 2])
+      .combine('instanceBoundOffestFactor', [0, 0.5, 1, 1.5, 2])
+      .combine('indexBoundOffestFactor', [0, 0.5, 1, 1.5, 2])
+      .combine('arrayStrideState', ['zero', 'exact', 'oversize'] as const)
+  )
+  .fn(async t => {
+    const {
+      drawType,
+      vertexBoundOffestFactor,
+      instanceBoundOffestFactor,
+      indexBoundOffestFactor,
+      arrayStrideState,
+    } = t.params;
+
+    const attributeFormat = 'float32x4';
+    const indexFormat = 'uint16';
+    const indexElementSize = 2;
+    const indexCount = 100;
+    const vertexCount = 100;
+    const instanceCount = 100;
+    const firstVertex = 100;
+    const firstInstance = 100;
+
+    const attributeFormatInfo = kVertexFormatInfo[attributeFormat];
+    const formatSize = attributeFormatInfo.bytesPerComponent * attributeFormatInfo.componentCount;
+    const attributeOffset = 0;
+    const lastStride = attributeOffset + formatSize;
+    let arrayStride = 0;
+    if (arrayStrideState !== 'zero') {
+      arrayStride = lastStride;
+      if (arrayStrideState === 'oversize') {
+        arrayStride = arrayStride + 20;
+      }
+      arrayStride = arrayStride + (-arrayStride & 3); // Make sure arrayStride is a multiple of 4
+    }
+
+    const calcAttributeBufferSize = (strideCount: number): number => {
+      let requiredBufferSize: number;
+      if (strideCount > 0) {
+        requiredBufferSize = arrayStride * (strideCount - 1) + lastStride;
+      } else {
+        // Spec do not validate bounded buffer size if strideCount == 0.
+        requiredBufferSize = lastStride;
+      }
+      return requiredBufferSize;
+    };
+
+    const calcSetBufferOffset = (requiredSetBufferSize: number, offsetFactor: number): number => {
+      const offset = Math.ceil(requiredSetBufferSize * offsetFactor);
+      const alignedOffset = offset + (-offset & 3); // Make sure offset is a multiple of 4
+      return alignedOffset;
+    };
+
+    const strideCountForVertexBuffer = firstVertex + vertexCount;
+    const setVertexBufferSize = calcAttributeBufferSize(strideCountForVertexBuffer);
+    const setVertexBufferOffset = calcSetBufferOffset(setVertexBufferSize, vertexBoundOffestFactor);
+    let requiredBufferSize = setVertexBufferOffset + setVertexBufferSize;
+
+    const strideCountForInstanceBuffer = firstInstance + instanceCount;
+    const setInstanceBufferSize = calcAttributeBufferSize(strideCountForInstanceBuffer);
+    const setInstanceBufferOffset = calcSetBufferOffset(
+      setInstanceBufferSize,
+      instanceBoundOffestFactor
+    );
+    requiredBufferSize = Math.max(
+      requiredBufferSize,
+      setInstanceBufferOffset + setInstanceBufferSize
+    );
+
+    const setIndexBufferSize = indexCount * indexElementSize;
+    const setIndexBufferOffset = calcSetBufferOffset(setIndexBufferSize, indexBoundOffestFactor);
+    requiredBufferSize = Math.max(requiredBufferSize, setIndexBufferOffset + setIndexBufferSize);
+
+    const sharedBuffer = t.createBufferWithState('valid', {
+      size: requiredBufferSize,
+      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.INDEX,
+    });
+
+    const renderPipeline = makeTestPipelineWithVertexAndInstanceBuffer(
+      t,
+      arrayStride,
+      attributeFormat
+    );
+
+    for (const useBundle of [false, true]) {
+      for (const setBufferBeforePipeline of [false, true]) {
+        const commandBufferMaker = t.createEncoder(useBundle ? 'render bundle' : 'render pass');
+        const renderEncoder = commandBufferMaker.encoder;
+
+        if (!setBufferBeforePipeline) {
+          renderEncoder.setPipeline(renderPipeline);
+        }
+        renderEncoder.setVertexBuffer(1, sharedBuffer, setVertexBufferOffset, setVertexBufferSize);
+        renderEncoder.setVertexBuffer(
+          7,
+          sharedBuffer,
+          setInstanceBufferOffset,
+          setInstanceBufferSize
+        );
+        renderEncoder.setIndexBuffer(
+          sharedBuffer,
+          indexFormat,
+          setIndexBufferOffset,
+          setIndexBufferSize
+        );
+        if (setBufferBeforePipeline) {
+          renderEncoder.setPipeline(renderPipeline);
+        }
+
+        if (drawType === 'draw' || drawType === 'drawIndirect') {
+          const drawParam: DrawParameter = {
+            vertexCount,
+            instanceCount,
+            firstVertex,
+            firstInstance,
+          };
+
+          callDraw(t, renderEncoder, drawType, drawParam);
+        } else {
+          const drawParam: DrawIndexedParameter = {
+            indexCount,
+            instanceCount,
+            firstIndex: 0,
+            baseVertex: firstVertex,
+            firstInstance,
+          };
+
+          callDrawIndexed(t, renderEncoder, drawType, drawParam);
+        }
+
+        // Since all bound buffer are of enough size, draw call should always succeed.
+        commandBufferMaker.validateFinishAndSubmit(true, true);
+      }
+    }
+  });
+
 g.test(`last_buffer_setting_take_account`)
   .desc(
     `
@@ -451,16 +701,6 @@ In this test we test that only the last setting for a buffer slot take account.
 - All (non/indexed, in/direct) draw commands
   - setPl, setVB, setIB, draw, {setPl,setVB,setIB,nothing (control)}, then a larger draw that
     wouldn't have been valid before that
-`
-  )
-  .unimplemented();
-
-g.test(`buffer_binding_overlap`)
-  .desc(
-    `
-In this test we test that binding one GPU buffer to multiple vertex buffer slot or both vertex
-buffer slot and index buffer will cause no validation error, with completely/partial overlap.
-    - x= all draw types
 `
   )
   .unimplemented();
