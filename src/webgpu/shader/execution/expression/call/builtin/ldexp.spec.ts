@@ -14,7 +14,6 @@ Returns e1 * 2^e2. Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { intervalComparator } from '../../../../../util/compare.js';
 import { f32, i32, TypeF32, TypeI32 } from '../../../../../util/conversion.js';
 import { ldexpInterval } from '../../../../../util/f32_interval.js';
 import {
@@ -61,7 +60,7 @@ g.test('f32')
         return undefined;
       }
       const interval = ldexpInterval(e1, e2);
-      return { input: [f32(e1), i32(e2)], expected: intervalComparator(interval) };
+      return { input: [f32(e1), i32(e2)], expected: interval };
     };
 
     const e1_range: Array<number> = [

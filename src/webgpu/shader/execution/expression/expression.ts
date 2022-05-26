@@ -1,5 +1,5 @@
 import { GPUTest } from '../../../gpu_test.js';
-import { compare, Comparator, anyOf, intervalComparator } from '../../../util/compare.js';
+import { compare, Comparator, anyOf } from '../../../util/compare.js';
 import {
   ScalarType,
   Scalar,
@@ -14,14 +14,22 @@ import {
 } from '../../../util/conversion.js';
 import {
   BinaryToInterval,
+  F32Interval,
   PointToInterval,
   TernaryToInterval,
 } from '../../../util/f32_interval.js';
 import { flushSubnormalNumber, isSubnormalNumber, quantizeToF32 } from '../../../util/math.js';
 
-// Helper for converting Values to Comparators.
-function toComparator(input: Value | Comparator): Comparator {
-  if ((input as Value).type !== undefined) {
+export type Expectation = Value | F32Interval | Comparator;
+
+/** Is this expectation actually a  Comparator */
+function isComparator(e: Expectation): boolean {
+  return !(e instanceof F32Interval || e instanceof Scalar || e instanceof Vector);
+}
+
+/** Helper for converting Values to Comparators. */
+export function toComparator(input: Expectation): Comparator {
+  if (!isComparator(input)) {
     return got => compare(got, input as Value);
   }
   return input as Comparator;
@@ -31,8 +39,8 @@ function toComparator(input: Value | Comparator): Comparator {
 export type Case = {
   // The input value(s)
   input: Value | Array<Value>;
-  // The expected value, or comparator
-  expected: Value | Comparator;
+  // The expected result, or function to check the result
+  expected: Expectation;
 };
 
 /** CaseList is a list of Cases */
@@ -436,10 +444,10 @@ export function makeBinaryF32Case(
  * @param param the param to pass into the unary operation
  * @param op callback that implements generating an acceptance interval for a unary operation
  */
-export function makeUnaryF32IntervalCase(param: number, op: PointToInterval) {
+export function makeUnaryF32IntervalCase(param: number, op: PointToInterval): Case {
   param = quantizeToF32(param);
   const interval = op(param);
-  return { input: [f32(param)], expected: intervalComparator(interval) };
+  return { input: [f32(param)], expected: interval };
 }
 
 /**
@@ -449,11 +457,15 @@ export function makeUnaryF32IntervalCase(param: number, op: PointToInterval) {
  * @param param1 the second param or rhs hand side to pass into the binary operation
  * @param op callback that implements generating an acceptance interval for a binary operation
  */
-export function makeBinaryF32IntervalCase(param0: number, param1: number, op: BinaryToInterval) {
+export function makeBinaryF32IntervalCase(
+  param0: number,
+  param1: number,
+  op: BinaryToInterval
+): Case {
   param0 = quantizeToF32(param0);
   param1 = quantizeToF32(param1);
   const interval = op(param0, param1);
-  return { input: [f32(param0), f32(param1)], expected: intervalComparator(interval) };
+  return { input: [f32(param0), f32(param1)], expected: interval };
 }
 
 /**
@@ -469,10 +481,10 @@ export function makeTernaryF32IntervalCase(
   param1: number,
   param2: number,
   op: TernaryToInterval
-) {
+): Case {
   param0 = quantizeToF32(param0);
   param1 = quantizeToF32(param1);
   param2 = quantizeToF32(param2);
   const interval = op(param0, param1, param2);
-  return { input: [f32(param0), f32(param1), f32(param2)], expected: intervalComparator(interval) };
+  return { input: [f32(param0), f32(param1), f32(param2)], expected: interval };
 }

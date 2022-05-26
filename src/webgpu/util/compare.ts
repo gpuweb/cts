@@ -1,4 +1,5 @@
 import { Colors } from '../../common/util/colors.js';
+import { Expectation, toComparator } from '../shader/execution/expression/expression.js';
 
 import { isFloatValue, Scalar, Value, Vector } from './conversion.js';
 import { F32Interval } from './f32_interval.js';
@@ -16,13 +17,12 @@ export interface Comparator {
 }
 
 /**
- * compare() compares 'got' to 'expected', returning the Comparison information.
- * @param got the value obtained from the test
- * @param expected the expected value
- * @param cmpFloats the FloatMatch used to compare floating point values
+ * compares 'got' Value  to 'expected' Value, returning the Comparison information.
+ * @param got the Value obtained from the test
+ * @param expected the expected Value
  * @returns the comparison results
  */
-export function compare(got: Value, expected: Value): Comparison {
+function compareValue(got: Value, expected: Value): Comparison {
   {
     // Check types
     const gTy = got.type;
@@ -49,6 +49,7 @@ export function compare(got: Value, expected: Value): Comparison {
       expected: matched ? Colors.green(e.toString()) : Colors.red(e.toString()),
     };
   }
+
   if (got instanceof Vector) {
     const gLen = got.elements.length;
     const eLen = (expected as Vector).elements.length;
@@ -82,42 +83,63 @@ export function compare(got: Value, expected: Value): Comparison {
   throw new Error(`unhandled type '${typeof got}`);
 }
 
+/**
+ * Tests it a 'got' Value is contained in 'expected' interval, returning the Comparison information.
+ * @param got the Value obtained from the test
+ * @param expected the expected F32Interval
+ * @returns the comparison results
+ */
+function compareInterval(got: Value, expected: F32Interval): Comparison {
+  {
+    // Check type
+    const gTy = got.type;
+    if (!isFloatValue(got)) {
+      return {
+        matched: false,
+        got: `${Colors.red(gTy.toString())}(${got})`,
+        expected: `floating point value`,
+      };
+    }
+  }
+
+  if (got instanceof Scalar) {
+    const g = got.value as number;
+    const matched = expected.contains(g);
+    return {
+      matched,
+      got: g.toString(),
+      expected: matched ? Colors.green(expected.toString()) : Colors.red(expected.toString()),
+    };
+  }
+
+  // Vector results are currently not handled
+  throw new Error(`unhandled type '${typeof got}`);
+}
+
+/**
+ * compare() compares 'got' to 'expected', returning the Comparison information.
+ * @param got the result obtained from the test
+ * @param expected the expected result
+ * @returns the comparison results
+ */
+export function compare(got: Value, expected: Value | F32Interval): Comparison {
+  if (expected instanceof F32Interval) {
+    return compareInterval(got, expected as F32Interval);
+  }
+  return compareValue(got, expected as Value);
+}
+
 /** @returns a Comparator that checks whether a test value matches any of the provided options */
-export function anyOf(...expectations: (Value | Comparator)[]): Comparator {
+export function anyOf(...expectations: Expectation[]): Comparator {
   return got => {
     const failed = new Set<string>();
     for (const e of expectations) {
-      let cmp: Comparison;
-      if ((e as Value).type !== undefined) {
-        const v = e as Value;
-        cmp = compare(got, v);
-      } else {
-        const c = e as Comparator;
-        cmp = c(got);
-      }
+      const cmp = toComparator(e)(got);
       if (cmp.matched) {
         return cmp;
       }
       failed.add(cmp.expected);
     }
     return { matched: false, got: got.toString(), expected: [...failed].join(' or ') };
-  };
-}
-
-export function intervalComparator(i: F32Interval): Comparator {
-  return got => {
-    let matched: boolean = false;
-    const v = got as Scalar;
-    if (v !== undefined && isFloatValue(got)) {
-      if (i.contains(v.value as number)) {
-        matched = true;
-      }
-    }
-
-    return {
-      matched,
-      got: got.toString(),
-      expected: `within ${i}`,
-    };
   };
 }
