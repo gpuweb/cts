@@ -4,7 +4,6 @@ Tests for external textures from HTMLVideoElement (and other video-type sources?
 - videos with various encodings, color spaces, metadata
 
 TODO: consider whether external_texture and copyToTexture video tests should be in the same file
-TODO: add a test configuration for red-green.mp4 to the importExternalTexture Sample test once the infrastructure can load it succesfully.
 `;
 
 import { getResourcePath } from '../../../common/framework/resources.js';
@@ -24,6 +23,11 @@ const kVideoExpectations = [
   },
   {
     videoSource: 'red-green.theora.ogv',
+    _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
+    _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
+  },
+  {
+    videoSource: 'red-green.mp4',
     _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
   },
@@ -122,8 +126,7 @@ g.test('importExternalTexture,sample')
   .desc(
     `
 Tests that we can import an HTMLVideoElement into a GPUExternalTexture, sample from it for all
-supported video formats {vp8, vp9, ogg}, common source colorspaces {bt.601, bt.709, bt.2020},
-and to ensure the GPUExternalTexture is destroyed by a microtask.
+supported video formats {vp8, vp9, ogg, mp4} and common source colorspaces {bt.601, bt.709, bt.2020}.
 `
   )
   .params(u =>
@@ -265,7 +268,7 @@ Tests that we can import an HTMLVideoElement into a GPUExternalTexture and use i
   )
   .params(u =>
     u //
-      .combineWithParams([kVideoExpectations[0]])
+      .combineWithParams(kVideoExpectations)
   )
   .fn(async t => {
     const videoUrl = getResourcePath(t.params.videoSource);
