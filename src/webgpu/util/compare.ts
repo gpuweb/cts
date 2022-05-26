@@ -1,8 +1,7 @@
 import { Colors } from '../../common/util/colors.js';
 
-import { f32, f64, isFloatValue, Scalar, Value, Vector } from './conversion.js';
+import { isFloatValue, Scalar, Value, Vector } from './conversion.js';
 import { F32Interval } from './f32_interval.js';
-import { correctlyRounded, oneULP, withinULP } from './math.js';
 
 /** Comparison describes the result of a Comparator function. */
 export interface Comparison {
@@ -11,60 +10,9 @@ export interface Comparison {
   expected: string; // The string representation of the 'expected' value (possibly with markup)
 }
 
-/** FloatMatch is a function that compares whether the two floating point numbers match. */
-export interface FloatMatch {
-  (got: number, expected: number): boolean;
-}
-
 /** Comparator is a function that compares whether the provided value matches an expectation. */
 export interface Comparator {
-  (got: Value, cmpFloats: FloatMatch): Comparison;
-}
-
-/**
- * @returns a FloatMatch that returns true iff the two numbers are equal to, or
- * less than the specified absolute error threshold.
- */
-export function absMatch(diff: number): FloatMatch {
-  return (got, expected) => {
-    if (got === expected) {
-      return true;
-    }
-    if (!Number.isFinite(got) || !Number.isFinite(expected)) {
-      return false;
-    }
-    return Math.abs(got - expected) <= diff;
-  };
-}
-
-/**
- * @returns a FloatMatch that returns true iff the two numbers are within or
- * equal to the specified ULP threshold value.
- */
-export function ulpMatch(ulp: number): FloatMatch {
-  return (got, expected) => {
-    if (got === expected) {
-      return true;
-    }
-    return withinULP(got, expected, ulp);
-  };
-}
-
-/**
- * @returns a FloatMatch that returns true iff |expected| is a correctly round
- * to |got|.
- * |got| must be expressible as a float32.
- */
-export function correctlyRoundedMatch(): FloatMatch {
-  return (got, expected) => {
-    return correctlyRounded(f32(got), expected);
-  };
-}
-
-export function intervalMatch(i: F32Interval): FloatMatch {
-  return (got, _) => {
-    return i.contains(got);
-  };
+  (got: Value): Comparison;
 }
 
 /**
@@ -74,7 +22,7 @@ export function intervalMatch(i: F32Interval): FloatMatch {
  * @param cmpFloats the FloatMatch used to compare floating point values
  * @returns the comparison results
  */
-export function compare(got: Value, expected: Value, cmpFloats: FloatMatch): Comparison {
+export function compare(got: Value, expected: Value): Comparison {
   {
     // Check types
     const gTy = got.type;
@@ -94,8 +42,7 @@ export function compare(got: Value, expected: Value, cmpFloats: FloatMatch): Com
     const e = expected as Scalar;
     const isFloat = g.type.kind === 'f64' || g.type.kind === 'f32' || g.type.kind === 'f16';
     const matched =
-      (isFloat && cmpFloats(g.value as number, e.value as number)) ||
-      (!isFloat && g.value === e.value);
+      (isFloat && (g.value as number) === (e.value as number)) || (!isFloat && g.value === e.value);
     return {
       matched,
       got: g.toString(),
@@ -112,7 +59,7 @@ export function compare(got: Value, expected: Value, cmpFloats: FloatMatch): Com
       if (i < gLen && i < eLen) {
         const g = got.elements[i];
         const e = (expected as Vector).elements[i];
-        const cmp = compare(g, e, cmpFloats);
+        const cmp = compare(g, e);
         matched = matched && cmp.matched;
         gElements[i] = cmp.got;
         eElements[i] = cmp.expected;
@@ -137,16 +84,16 @@ export function compare(got: Value, expected: Value, cmpFloats: FloatMatch): Com
 
 /** @returns a Comparator that checks whether a test value matches any of the provided options */
 export function anyOf(...expectations: (Value | Comparator)[]): Comparator {
-  return (got, cmpFloats) => {
+  return got => {
     const failed = new Set<string>();
     for (const e of expectations) {
       let cmp: Comparison;
       if ((e as Value).type !== undefined) {
         const v = e as Value;
-        cmp = compare(got, v, cmpFloats);
+        cmp = compare(got, v);
       } else {
         const c = e as Comparator;
-        cmp = c(got, cmpFloats);
+        cmp = c(got);
       }
       if (cmp.matched) {
         return cmp;
@@ -157,40 +104,18 @@ export function anyOf(...expectations: (Value | Comparator)[]): Comparator {
   };
 }
 
-/** @returns a Comparator that checks whether a result is within N * ULP of a target value, where N is defined by a function
- *
- * N is n(x), where x is the input into the function under test, not the result of the function.
- * For a function f(x) = X that is being tested, the acceptance interval is defined as within X +/- n(x) * ulp(X).
- */
-export function ulpComparator(x: number, target: Scalar, n: (x: number) => number): Comparator {
-  const c = n(x);
-  const match = ulpMatch(c);
-  return (got, _) => {
-    const cmp = compare(got, target, match);
-    if (cmp.matched) {
-      return cmp;
-    }
-    const ulp = Math.max(
-      oneULP(target.value as number, true),
-      oneULP(target.value as number, false)
-    );
-    return {
-      matched: false,
-      got: got.toString(),
-      expected: `within ${c} * ULP (${ulp}) of ${target}`,
-    };
-  };
-}
-
 export function intervalComparator(i: F32Interval): Comparator {
-  const match = intervalMatch(i);
-  return (got, _) => {
-    const cmp = compare(got, f64(0.0), match);
-    if (cmp.matched) {
-      return cmp;
+  return got => {
+    let matched: boolean = false;
+    const v = got as Scalar;
+    if (v !== undefined && isFloatValue(got)) {
+      if (i.contains(v.value as number)) {
+        matched = true;
+      }
     }
+
     return {
-      matched: false,
+      matched,
       got: got.toString(),
       expected: `within ${i}`,
     };

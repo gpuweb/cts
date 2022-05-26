@@ -1,11 +1,5 @@
 import { GPUTest } from '../../../gpu_test.js';
-import {
-  compare,
-  Comparator,
-  FloatMatch,
-  anyOf,
-  intervalComparator,
-} from '../../../util/compare.js';
+import { compare, Comparator, anyOf, intervalComparator } from '../../../util/compare.js';
 import {
   ScalarType,
   Scalar,
@@ -28,7 +22,7 @@ import { flushSubnormalNumber, isSubnormalNumber, quantizeToF32 } from '../../..
 // Helper for converting Values to Comparators.
 function toComparator(input: Value | Comparator): Comparator {
   if ((input as Value).type !== undefined) {
-    return (got, cmpFloats) => compare(got, input as Value, cmpFloats);
+    return got => compare(got, input as Value);
   }
   return input as Comparator;
 }
@@ -58,9 +52,6 @@ export type Config = {
   // If the number of test cases is not a multiple of the vector width, then the
   // last scalar value is repeated to fill the last vector value.
   vectorize?: number;
-  // The FloatMatch to use when comparing floating point numbers.
-  // If undefined, floating point numbers must match exactly.
-  cmpFloats?: FloatMatch;
 };
 
 // Helper for returning the WGSL storage type for the given Type.
@@ -134,9 +125,6 @@ export function run(
   cfg: Config = { storageClass: 'storage_r' },
   cases: CaseList
 ) {
-  const cmpFloats =
-    cfg.cmpFloats !== undefined ? cfg.cmpFloats : (got: number, expect: number) => got === expect;
-
   // If the 'vectorize' config option was provided, pack the cases into vectors.
   if (cfg.vectorize !== undefined) {
     const packed = packScalarsToVector(parameterTypes, returnType, cases, cfg.vectorize);
@@ -154,15 +142,7 @@ export function run(
   const casesPerBatch = Math.floor(maxInputSize / (parameterTypes.length * kValueStride));
   for (let i = 0; i < cases.length; i += casesPerBatch) {
     const batchCases = cases.slice(i, Math.min(i + casesPerBatch, cases.length));
-    runBatch(
-      t,
-      expressionBuilder,
-      parameterTypes,
-      returnType,
-      batchCases,
-      cfg.storageClass,
-      cmpFloats
-    );
+    runBatch(t, expressionBuilder, parameterTypes, returnType, batchCases, cfg.storageClass);
   }
 }
 
@@ -175,7 +155,6 @@ export function run(
  * @param returnType the return type for the expression overload
  * @param cases list of test cases that fit within the binding limits of the device
  * @param storageClass the storage class to use for the input buffer
- * @param cmpFloats the method to compare floating point numbers
  */
 function runBatch(
   t: GPUTest,
@@ -183,8 +162,7 @@ function runBatch(
   parameterTypes: Array<Type>,
   returnType: Type,
   cases: CaseList,
-  storageClass: StorageClass,
-  cmpFloats: FloatMatch
+  storageClass: StorageClass
 ) {
   // returns the WGSL expression to load the ith parameter of the given type from the input buffer
   const paramExpr = (ty: Type, i: number) => fromStorage(ty, `inputs[i].param${i}`);
@@ -291,7 +269,7 @@ fn main() {
     for (let caseIdx = 0; caseIdx < cases.length; caseIdx++) {
       const c = cases[caseIdx];
       const got = outputs[caseIdx];
-      const cmp = toComparator(c.expected)(got, cmpFloats);
+      const cmp = toComparator(c.expected)(got);
       if (!cmp.matched) {
         errs.push(`(${c.input instanceof Array ? c.input.join(', ') : c.input})
     returned: ${cmp.got}
@@ -360,12 +338,12 @@ function packScalarsToVector(
     for (let i = 0; i < vectorWidth; i++) {
       comparators[i] = toComparator(cases[clampCaseIdx(caseIdx + i)].expected);
     }
-    const packedComparator = (got: Value, cmpFloats: FloatMatch) => {
+    const packedComparator = (got: Value) => {
       let matched = true;
       const gElements = new Array<string>(vectorWidth);
       const eElements = new Array<string>(vectorWidth);
       for (let i = 0; i < vectorWidth; i++) {
-        const d = comparators[i]((got as Vector).elements[i], cmpFloats);
+        const d = comparators[i]((got as Vector).elements[i]);
         matched = matched && d.matched;
         gElements[i] = d.got;
         eElements[i] = d.expected;

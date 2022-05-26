@@ -18,7 +18,6 @@ Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { correctlyRoundedMatch } from '../../../../../util/compare.js';
 import { kBit, kValue } from '../../../../../util/constants.js';
 import {
   i32,
@@ -29,7 +28,7 @@ import {
   uint32ToFloat32,
 } from '../../../../../util/conversion.js';
 import { maxInterval } from '../../../../../util/f32_interval.js';
-import { Case, Config, makeBinaryF32IntervalCase, run } from '../../expression.js';
+import { Case, makeBinaryF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -68,9 +67,6 @@ g.test('u32')
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cfg: Config = t.params;
-    cfg.cmpFloats = correctlyRoundedMatch();
-
     const makeCase = (x: number, y: number): Case => {
       return { input: [u32(x), u32(y)], expected: u32(Math.max(x, y)) };
     };
@@ -78,7 +74,7 @@ g.test('u32')
     const test_values: Array<number> = [0, 1, 2, 0x70000000, 0x80000000, 0xffffffff];
     const cases = generateTestCases(test_values, makeCase);
 
-    run(t, builtin('max'), [TypeU32, TypeU32], TypeU32, cfg, cases);
+    run(t, builtin('max'), [TypeU32, TypeU32], TypeU32, t.params, cases);
   });
 
 g.test('i32')
@@ -90,9 +86,6 @@ g.test('i32')
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cfg: Config = t.params;
-    cfg.cmpFloats = correctlyRoundedMatch();
-
     const makeCase = (x: number, y: number): Case => {
       return { input: [i32(x), i32(y)], expected: i32(Math.max(x, y)) };
     };
@@ -100,7 +93,7 @@ g.test('i32')
     const test_values: Array<number> = [-0x70000000, -2, -1, 0, 1, 2, 0x70000000];
     const cases = generateTestCases(test_values, makeCase);
 
-    run(t, builtin('max'), [TypeI32, TypeI32], TypeI32, cfg, cases);
+    run(t, builtin('max'), [TypeI32, TypeI32], TypeI32, t.params, cases);
   });
 
 g.test('abstract_float')

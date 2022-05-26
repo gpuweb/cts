@@ -151,6 +151,46 @@ export function nextAfter(val: number, dir: boolean = true, flush: boolean): Sca
   return f32Bits(u32_result);
 }
 
+/** Calculate the valid roundings for quantization to f32 */
+export function correctlyRounded(x: number): number[] {
+  assert(!Number.isNaN(x), `correctlyRounded not defined for NaN`);
+  // Above f32 range
+  if (x === Number.POSITIVE_INFINITY || x > kValue.f32.positive.max) {
+    return [kValue.f32.positive.max, Number.POSITIVE_INFINITY];
+  }
+
+  // Below f32 range
+  if (x === Number.NEGATIVE_INFINITY || x < kValue.f32.negative.min) {
+    return [Number.NEGATIVE_INFINITY, kValue.f32.negative.min];
+  }
+
+  // At edge of f32 include the edge and next nearest value
+  if (x === kValue.f32.positive.max) {
+    return [kValue.f32.positive.nearest_max, kValue.f32.positive.max];
+  }
+
+  if (x === kValue.f32.negative.min) {
+    return [kValue.f32.negative.min, kValue.f32.negative.nearest_min];
+  }
+
+  const x_32 = new Float32Array([x])[0];
+  const converted: number = x_32;
+  if (x === converted) {
+    // x is precisely expressible as a f32, so should not be rounded
+    return [x];
+  }
+
+  if (converted > x) {
+    // x_32 rounded towards +inf, so is after x
+    const other = nextAfter(x_32, false, false).value as number;
+    return [other, converted];
+  } else {
+    // x_32 rounded towards -inf, so is before x
+    const other = nextAfter(x_32, true, false).value as number;
+    return [converted, other];
+  }
+}
+
 /**
  * @returns ulp(x), the unit of least precision for a specific number as a 32-bit float
  *
@@ -226,81 +266,6 @@ export function withinULP(val: number, target: number, n: number = 1) {
   const ulp = Math.max(ulp_flush, ulp_noflush);
   const diff = val > target ? val - target : target - val;
   return diff <= n * ulp;
-}
-
-/**
- * @returns if a test value is correctly rounded to an target value. Only
- * defined for |test_values| being a float32. target values may be any number.
- *
- * Correctly rounded means that if the target value is precisely expressible
- * as a float32, then |test_value| === |target|.
- * Otherwise |test_value| needs to be either the closest expressible number
- * greater or less than |target|.
- *
- * By default internally tests with both subnormals being flushed to 0 and not
- * being flushed, but |accept_to_zero| and |accept_no_flush| can be used to
- * control that behaviour. At least one accept flag must be true.
- */
-export function correctlyRounded(
-  test_value: Scalar,
-  target: number,
-  accept_to_zero: boolean = true,
-  accept_no_flush: boolean = true
-): boolean {
-  assert(
-    accept_to_zero || accept_no_flush,
-    `At least one of |accept_to_zero| & |accept_no_flush| must be true`
-  );
-
-  let result: boolean = false;
-  if (accept_to_zero) {
-    result = result || correctlyRoundedImpl(test_value, target, true);
-  }
-  if (accept_no_flush) {
-    result = result || correctlyRoundedImpl(test_value, target, false);
-  }
-  return result;
-}
-
-function correctlyRoundedImpl(test_value: Scalar, target: number, flush: boolean): boolean {
-  assert(test_value.type.kind === 'f32', `${test_value} is expected to be a 'f32'`);
-
-  if (Number.isNaN(target)) {
-    return Number.isNaN(test_value.value.valueOf() as number);
-  }
-
-  if (target === Number.POSITIVE_INFINITY) {
-    return test_value.value === f32Bits(kBit.f32.infinity.positive).value;
-  }
-
-  if (target === Number.NEGATIVE_INFINITY) {
-    return test_value.value === f32Bits(kBit.f32.infinity.negative).value;
-  }
-
-  test_value = flush ? flushSubnormalScalar(test_value) : test_value;
-  target = flush ? flushSubnormalNumber(target) : target;
-
-  const target32 = new Float32Array([target])[0];
-  const converted: number = target32;
-  if (target === converted) {
-    // expected is precisely expressible in float32
-    return test_value.value === f32(target32).value;
-  }
-
-  let after_target: Scalar;
-  let before_target: Scalar;
-
-  if (converted > target) {
-    // target32 is rounded towards +inf, so is after_target
-    after_target = f32(target32);
-    before_target = nextAfter(target32, false, flush);
-  } else {
-    // target32 is rounded towards -inf, so is before_target
-    after_target = nextAfter(target32, true, flush);
-    before_target = f32(target32);
-  }
-
-  return test_value.value === before_target.value || test_value.value === after_target.value;
 }
 
 /**

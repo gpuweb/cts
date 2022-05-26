@@ -1,7 +1,7 @@
 import { assert } from '../../common/util/util.js';
 
 import { kValue } from './constants.js';
-import { flushSubnormalNumber, isSubnormalNumber, nextAfter, oneULP } from './math.js';
+import { correctlyRounded, flushSubnormalNumber, isSubnormalNumber, oneULP } from './math.js';
 
 /** Represents a closed interval in the f32 range */
 export class F32Interval {
@@ -113,41 +113,10 @@ export interface TernaryToInterval {
   (x: number, y: number, z: number): F32Interval;
 }
 
-/** Calculate the valid roundings for quantization to f32 */
-function roundedF32Values(x: number): number[] {
-  assert(!Number.isNaN(x), `correctly rounded not defined for NaN`);
-  // Above f32 range
-  if (x === Number.POSITIVE_INFINITY || x > kValue.f32.positive.max) {
-    return [kValue.f32.positive.max, Number.POSITIVE_INFINITY];
-  }
-
-  // Below f32 range
-  if (x === Number.NEGATIVE_INFINITY || x < kValue.f32.negative.min) {
-    return [Number.NEGATIVE_INFINITY, kValue.f32.negative.min];
-  }
-
-  const x_32 = new Float32Array([x])[0];
-  const converted: number = x_32;
-  if (x === converted) {
-    // x is precisely expressible as a f32, so should not be rounded
-    return [x];
-  }
-
-  if (converted > x) {
-    // x_32 rounded towards +inf, so is after x
-    const other = nextAfter(x_32, false, false).value as number;
-    return [other, converted];
-  } else {
-    // x_32 rounded towards -inf, so is before x
-    const other = nextAfter(x_32, true, false).value as number;
-    return [converted, other];
-  }
-}
-
 /** Convert a point to an interval of valid rounded values, both flushed and not flushed */
 function roundAndFlushPointToInterval(n: number, fn: PointToInterval) {
   assert(!Number.isNaN(n), `flush not defined for NaN`);
-  const values = roundedF32Values(n);
+  const values = correctlyRounded(n);
   const inputs = new Set<number>([...values, ...values.map(flushSubnormalNumber)]);
   const results = new Set<F32Interval>([...inputs].map(fn));
   return F32Interval.span(...results);
@@ -157,8 +126,8 @@ function roundAndFlushPointToInterval(n: number, fn: PointToInterval) {
 function roundAndFlushBinaryToInterval(x: number, y: number, fn: BinaryToInterval): F32Interval {
   assert(!Number.isNaN(x), `flush not defined for NaN`);
   assert(!Number.isNaN(y), `flush not defined for NaN`);
-  const x_values = roundedF32Values(x);
-  const y_values = roundedF32Values(y);
+  const x_values = correctlyRounded(x);
+  const y_values = correctlyRounded(y);
   const x_inputs = new Set<number>([...x_values, ...x_values.map(flushSubnormalNumber)]);
   const y_inputs = new Set<number>([...y_values, ...y_values.map(flushSubnormalNumber)]);
   const intervals = new Set<F32Interval>();
@@ -180,9 +149,9 @@ function roundAndFlushTernaryToInterval(
   assert(!Number.isNaN(x), `flush not defined for NaN`);
   assert(!Number.isNaN(y), `flush not defined for NaN`);
   assert(!Number.isNaN(z), `flush not defined for NaN`);
-  const x_values = roundedF32Values(x);
-  const y_values = roundedF32Values(y);
-  const z_values = roundedF32Values(z);
+  const x_values = correctlyRounded(x);
+  const y_values = correctlyRounded(y);
+  const z_values = correctlyRounded(z);
   const x_inputs = new Set<number>([...x_values, ...x_values.map(flushSubnormalNumber)]);
   const y_inputs = new Set<number>([...y_values, ...y_values.map(flushSubnormalNumber)]);
   const z_inputs = new Set<number>([...z_values, ...z_values.map(flushSubnormalNumber)]);
