@@ -167,6 +167,28 @@ function makeTestPipelineWithVertexAndInstanceBuffer(
   return makeTestPipeline(test, vertexBufferLayouts);
 }
 
+// Default parameters for all kind of draw call, arbitrary non-zero values that is not very large.
+const kDefaultParameterForDraw = {
+  instanceCount: 100,
+  firstInstance: 100,
+};
+
+// Default parameters for non-indexed draw, arbitrary non-zero values that is not very large.
+const kDefaultParameterForNonIndexedDraw = {
+  vertexCount: 100,
+  firstVertex: 100,
+};
+
+// Default parameters for indexed draw call and required index buffer, arbitrary non-zero values
+// that is not very large.
+const kDefaultParameterForIndexedDraw = {
+  indexCount: 100,
+  firstIndex: 100,
+  baseVertex: 100,
+  indexFormat: 'uint16' as GPUIndexFormat,
+  indexBufferSize: 2 * 200, // exact required bound size for index buffer
+};
+
 export const g = makeTestGroup(ValidationTest);
 
 g.test(`unused_buffer_bound`)
@@ -209,27 +231,29 @@ In this test we test that a small buffer bound to unused buffer slot won't cause
       size: bufferSize,
       usage: GPUBufferUsage.INDEX | GPUBufferUsage.VERTEX,
     });
+
     // An index buffer of enough size, used if smallIndexBuffer === false
+    const { indexFormat, indexBufferSize } = kDefaultParameterForIndexedDraw;
     const indexBuffer = t.createBufferWithState('valid', {
-      size: 200,
+      size: indexBufferSize,
       usage: GPUBufferUsage.INDEX,
     });
 
-    for (const useBundle of [false, true]) {
-      for (const setBufferBeforePipeline of [false, true]) {
-        const commandBufferMaker = t.createEncoder(useBundle ? 'render bundle' : 'render pass');
+    for (const encoderType of ['render bundle', 'render pass'] as const) {
+      for (const setPipelineBeforeBuffer of [false, true]) {
+        const commandBufferMaker = t.createEncoder(encoderType);
         const renderEncoder = commandBufferMaker.encoder;
 
-        if (!setBufferBeforePipeline) {
+        if (setPipelineBeforeBuffer) {
           renderEncoder.setPipeline(renderPipeline);
         }
 
         if (drawType === 'drawIndexed' || drawType === 'drawIndexedIndirect') {
           // Always use large enough index buffer for indexed draw. Index buffer OOB validation is
           // tested in index_buffer_OOB.
-          renderEncoder.setIndexBuffer(indexBuffer, 'uint16', 0, 200);
+          renderEncoder.setIndexBuffer(indexBuffer, indexFormat, 0, indexBufferSize);
         } else if (smallIndexBuffer) {
-          renderEncoder.setIndexBuffer(smallBuffer, 'uint16', bufferOffset, boundSize);
+          renderEncoder.setIndexBuffer(smallBuffer, indexFormat, bufferOffset, boundSize);
         }
         if (smallVertexBuffer) {
           renderEncoder.setVertexBuffer(1, smallBuffer, bufferOffset, boundSize);
@@ -238,28 +262,21 @@ In this test we test that a small buffer bound to unused buffer slot won't cause
           renderEncoder.setVertexBuffer(7, smallBuffer, bufferOffset, boundSize);
         }
 
-        if (setBufferBeforePipeline) {
+        if (!setPipelineBeforeBuffer) {
           renderEncoder.setPipeline(renderPipeline);
         }
 
         if (drawType === 'draw' || drawType === 'drawIndirect') {
           const drawParam: DrawParameter = {
-            vertexCount: 100,
-            instanceCount: 100,
-            firstVertex: 100,
-            firstInstance: 100,
+            ...kDefaultParameterForDraw,
+            ...kDefaultParameterForNonIndexedDraw,
           };
-
           callDraw(t, renderEncoder, drawType, drawParam);
         } else {
           const drawParam: DrawIndexedParameter = {
-            indexCount: 100,
-            instanceCount: 100,
-            firstIndex: 0,
-            baseVertex: 100,
-            firstInstance: 100,
+            ...kDefaultParameterForDraw,
+            ...kDefaultParameterForIndexedDraw,
           };
-
           callDrawIndexed(t, renderEncoder, drawType, drawParam);
         }
 
@@ -288,8 +305,7 @@ drawIndexedIndirect as it is GPU-validated.
       .combine('drawIndexCount', [10, 11])
       .combine('drawType', ['drawIndexed', 'drawIndexedIndirect'] as const)
       .beginSubcases()
-      .combine('indexFormat', ['uint16', 'uint32'] as const)
-      .combine('useBundle', [false, true])
+      .combine('indexFormat', ['uint16', 'uint32'] as GPUIndexFormat[])
   )
   .fn(async t => {
     const {
@@ -298,7 +314,6 @@ drawIndexedIndirect as it is GPU-validated.
       bufferSizeInElements,
       drawIndexCount,
       drawType,
-      useBundle,
     } = t.params;
 
     const indexElementSize = indexFormat === 'uint16' ? 2 : 4;
@@ -322,16 +337,24 @@ drawIndexedIndirect as it is GPU-validated.
 
     const renderPipeline = t.createNoOpRenderPipeline();
 
-    const commandBufferMaker = t.createEncoder(useBundle ? 'render bundle' : 'render pass');
-    const renderEncoder = commandBufferMaker.encoder;
+    for (const encoderType of ['render bundle', 'render pass'] as const) {
+      for (const setPipelineBeforeBuffer of [false, true]) {
+        const commandBufferMaker = t.createEncoder(encoderType);
+        const renderEncoder = commandBufferMaker.encoder;
 
-    renderEncoder.setIndexBuffer(indexBuffer, indexFormat, 0, bindingSize);
+        if (setPipelineBeforeBuffer) {
+          renderEncoder.setPipeline(renderPipeline);
+        }
+        renderEncoder.setIndexBuffer(indexBuffer, indexFormat, 0, bindingSize);
+        if (!setPipelineBeforeBuffer) {
+          renderEncoder.setPipeline(renderPipeline);
+        }
 
-    renderEncoder.setPipeline(renderPipeline);
+        callDrawIndexed(t, renderEncoder, drawType, drawCallParam);
 
-    callDrawIndexed(t, renderEncoder, drawType, drawCallParam);
-
-    commandBufferMaker.validateFinishAndSubmit(isFinishSuccess, true);
+        commandBufferMaker.validateFinishAndSubmit(isFinishSuccess, true);
+      }
+    }
   });
 
 g.test(`vertex_buffer_OOB`)
@@ -421,6 +444,7 @@ success/error as expected. Such set of buffer parameters should include cases li
     if (arrayStrideState !== 'zero') {
       arrayStride = lastStride;
       if (arrayStrideState === 'oversize') {
+        // Add an arbitrary number to array stride to make it larger than required by attributes
         arrayStride = arrayStride + 20;
       }
       arrayStride = arrayStride + (-arrayStride & 3); // Make sure arrayStride is a multiple of 4
@@ -484,17 +508,17 @@ success/error as expected. Such set of buffer parameters should include cases li
       attributeOffset
     );
 
-    for (const useBundle of [false, true]) {
-      for (const setBufferBeforePipeline of [false, true]) {
-        const commandBufferMaker = t.createEncoder(useBundle ? 'render bundle' : 'render pass');
+    for (const encoderType of ['render bundle', 'render pass'] as const) {
+      for (const setPipelineBeforeBuffer of [false, true]) {
+        const commandBufferMaker = t.createEncoder(encoderType);
         const renderEncoder = commandBufferMaker.encoder;
 
-        if (!setBufferBeforePipeline) {
+        if (setPipelineBeforeBuffer) {
           renderEncoder.setPipeline(renderPipeline);
         }
         renderEncoder.setVertexBuffer(1, vertexBuffer, setBufferOffset, setVertexBufferSize);
         renderEncoder.setVertexBuffer(7, instanceBuffer, setBufferOffset, setInstanceBufferSize);
-        if (setBufferBeforePipeline) {
+        if (!setPipelineBeforeBuffer) {
           renderEncoder.setPipeline(renderPipeline);
         }
 
@@ -508,10 +532,12 @@ success/error as expected. Such set of buffer parameters should include cases li
 
           callDraw(t, renderEncoder, drawType, drawParam);
         } else {
-          const indexFormat = 'uint16';
-          const indexElementSize = 2;
-          const indexCount = 12;
-          const indexBufferSize = indexElementSize * indexCount;
+          const {
+            indexFormat,
+            indexCount,
+            firstIndex,
+            indexBufferSize,
+          } = kDefaultParameterForIndexedDraw;
 
           const desc: GPUBufferDescriptor = {
             size: indexBufferSize,
@@ -522,7 +548,7 @@ success/error as expected. Such set of buffer parameters should include cases li
           const drawParam: DrawIndexedParameter = {
             indexCount,
             instanceCount,
-            firstIndex: 0,
+            firstIndex,
             baseVertex: firstVertex,
             firstInstance,
           };
@@ -572,15 +598,8 @@ buffer slot and index buffer will cause no validation error, with completely/par
       arrayStrideState,
     } = t.params;
 
+    // Compute the array stride for vertex step mode and instance step mode attribute
     const attributeFormat = 'float32x4';
-    const indexFormat = 'uint16';
-    const indexElementSize = 2;
-    const indexCount = 100;
-    const vertexCount = 100;
-    const instanceCount = 100;
-    const firstVertex = 100;
-    const firstInstance = 100;
-
     const attributeFormatInfo = kVertexFormatInfo[attributeFormat];
     const formatSize = attributeFormatInfo.bytesPerComponent * attributeFormatInfo.componentCount;
     const attributeOffset = 0;
@@ -589,6 +608,7 @@ buffer slot and index buffer will cause no validation error, with completely/par
     if (arrayStrideState !== 'zero') {
       arrayStride = lastStride;
       if (arrayStrideState === 'oversize') {
+        // Add an arbitrary number to array stride
         arrayStride = arrayStride + 20;
       }
       arrayStride = arrayStride + (-arrayStride & 3); // Make sure arrayStride is a multiple of 4
@@ -611,11 +631,15 @@ buffer slot and index buffer will cause no validation error, with completely/par
       return alignedOffset;
     };
 
+    // Compute required bound range for all vertex and index buffer to ensure the shared GPU buffer
+    // has enough size.
+    const { vertexCount, firstVertex } = kDefaultParameterForNonIndexedDraw;
     const strideCountForVertexBuffer = firstVertex + vertexCount;
     const setVertexBufferSize = calcAttributeBufferSize(strideCountForVertexBuffer);
     const setVertexBufferOffset = calcSetBufferOffset(setVertexBufferSize, vertexBoundOffestFactor);
     let requiredBufferSize = setVertexBufferOffset + setVertexBufferSize;
 
+    const { instanceCount, firstInstance } = kDefaultParameterForDraw;
     const strideCountForInstanceBuffer = firstInstance + instanceCount;
     const setInstanceBufferSize = calcAttributeBufferSize(strideCountForInstanceBuffer);
     const setInstanceBufferOffset = calcSetBufferOffset(
@@ -627,10 +651,11 @@ buffer slot and index buffer will cause no validation error, with completely/par
       setInstanceBufferOffset + setInstanceBufferSize
     );
 
-    const setIndexBufferSize = indexCount * indexElementSize;
+    const { indexBufferSize: setIndexBufferSize, indexFormat } = kDefaultParameterForIndexedDraw;
     const setIndexBufferOffset = calcSetBufferOffset(setIndexBufferSize, indexBoundOffestFactor);
     requiredBufferSize = Math.max(requiredBufferSize, setIndexBufferOffset + setIndexBufferSize);
 
+    // Create the shared GPU buffer with both vertetx and index usage
     const sharedBuffer = t.createBufferWithState('valid', {
       size: requiredBufferSize,
       usage: GPUBufferUsage.VERTEX | GPUBufferUsage.INDEX,
@@ -642,12 +667,12 @@ buffer slot and index buffer will cause no validation error, with completely/par
       attributeFormat
     );
 
-    for (const useBundle of [false, true]) {
-      for (const setBufferBeforePipeline of [false, true]) {
-        const commandBufferMaker = t.createEncoder(useBundle ? 'render bundle' : 'render pass');
+    for (const encoderType of ['render bundle', 'render pass'] as const) {
+      for (const setPipelineBeforeBuffer of [false, true]) {
+        const commandBufferMaker = t.createEncoder(encoderType);
         const renderEncoder = commandBufferMaker.encoder;
 
-        if (!setBufferBeforePipeline) {
+        if (setPipelineBeforeBuffer) {
           renderEncoder.setPipeline(renderPipeline);
         }
         renderEncoder.setVertexBuffer(1, sharedBuffer, setVertexBufferOffset, setVertexBufferSize);
@@ -663,28 +688,21 @@ buffer slot and index buffer will cause no validation error, with completely/par
           setIndexBufferOffset,
           setIndexBufferSize
         );
-        if (setBufferBeforePipeline) {
+        if (!setPipelineBeforeBuffer) {
           renderEncoder.setPipeline(renderPipeline);
         }
 
         if (drawType === 'draw' || drawType === 'drawIndirect') {
           const drawParam: DrawParameter = {
-            vertexCount,
-            instanceCount,
-            firstVertex,
-            firstInstance,
+            ...kDefaultParameterForDraw,
+            ...kDefaultParameterForNonIndexedDraw,
           };
-
           callDraw(t, renderEncoder, drawType, drawParam);
         } else {
           const drawParam: DrawIndexedParameter = {
-            indexCount,
-            instanceCount,
-            firstIndex: 0,
-            baseVertex: firstVertex,
-            firstInstance,
+            ...kDefaultParameterForDraw,
+            ...kDefaultParameterForIndexedDraw,
           };
-
           callDrawIndexed(t, renderEncoder, drawType, drawParam);
         }
 
