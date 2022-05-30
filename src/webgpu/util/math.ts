@@ -152,41 +152,41 @@ export function nextAfter(val: number, dir: boolean = true, flush: boolean): Sca
 }
 
 /** Calculate the valid roundings for quantization to f32 */
-export function correctlyRounded(x: number): number[] {
-  assert(!Number.isNaN(x), `correctlyRounded not defined for NaN`);
+export function correctlyRounded(n: number): number[] {
+  assert(!Number.isNaN(n), `correctlyRounded not defined for NaN`);
   // Above f32 range
-  if (x === Number.POSITIVE_INFINITY || x > kValue.f32.positive.max) {
+  if (n === Number.POSITIVE_INFINITY || n > kValue.f32.positive.max) {
     return [kValue.f32.positive.max, Number.POSITIVE_INFINITY];
   }
 
   // Below f32 range
-  if (x === Number.NEGATIVE_INFINITY || x < kValue.f32.negative.min) {
+  if (n === Number.NEGATIVE_INFINITY || n < kValue.f32.negative.min) {
     return [Number.NEGATIVE_INFINITY, kValue.f32.negative.min];
   }
 
   // At edge of f32 include the edge and next nearest value
-  if (x === kValue.f32.positive.max) {
+  if (n === kValue.f32.positive.max) {
     return [kValue.f32.positive.nearest_max, kValue.f32.positive.max];
   }
 
-  if (x === kValue.f32.negative.min) {
+  if (n === kValue.f32.negative.min) {
     return [kValue.f32.negative.min, kValue.f32.negative.nearest_min];
   }
 
-  const x_32 = new Float32Array([x])[0];
-  const converted: number = x_32;
-  if (x === converted) {
-    // x is precisely expressible as a f32, so should not be rounded
-    return [x];
+  const n_32 = new Float32Array([n])[0];
+  const converted: number = n_32;
+  if (n === converted) {
+    // n is precisely expressible as a f32, so should not be rounded
+    return [n];
   }
 
-  if (converted > x) {
+  if (converted > n) {
     // x_32 rounded towards +inf, so is after x
-    const other = nextAfter(x_32, false, false).value as number;
+    const other = nextAfter(n_32, false, false).value as number;
     return [other, converted];
   } else {
     // x_32 rounded towards -inf, so is before x
-    const other = nextAfter(x_32, true, false).value as number;
+    const other = nextAfter(n_32, true, false).value as number;
     return [converted, other];
   }
 }
@@ -246,7 +246,6 @@ export function oneULP(target: number, flush: boolean): number {
  * @param val number to test
  * @param target expected number
  * @param n acceptance range
- * @param flush should subnormals be flushed to zero
  */
 export function withinULP(val: number, target: number, n: number = 1) {
   if (Number.isNaN(val) || Number.isNaN(target)) {

@@ -9,10 +9,9 @@ Returns the arc tangent of e1 over e2. Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { anyOf } from '../../../../../util/compare.js';
-import { f64, TypeF32 } from '../../../../../util/conversion.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
 import { atan2Interval } from '../../../../../util/f32_interval.js';
-import { fullF32Range, isSubnormalNumber } from '../../../../../util/math.js';
+import { fullF32Range } from '../../../../../util/math.js';
 import { Case, makeBinaryF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -46,12 +45,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
   .fn(async t => {
     // [1]: Need to decide what the ground-truth is.
     const makeCase = (y: number, x: number): Case => {
-      const c = makeBinaryF32IntervalCase(y, x, atan2Interval);
-      if (isSubnormalNumber(y)) {
-        // If y is subnormal, also expect possible results of atan2(0, x)
-        c.expected = anyOf(c.expected, f64(0), f64(Math.PI), f64(-Math.PI));
-      }
-      return c;
+      return makeBinaryF32IntervalCase(y, x, atan2Interval);
     };
 
     const numeric_range = fullF32Range({
