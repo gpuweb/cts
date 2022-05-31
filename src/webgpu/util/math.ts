@@ -75,6 +75,12 @@ export function isSubnormalNumber(val: number): boolean {
   return isSubnormalScalar(f32(val));
 }
 
+/** @returns if number is in the finite range of f32 */
+// eslint-disable-next-line no-unused-vars
+export function isF32Finite(n: number) {
+  return n >= kValue.f32.negative.min && n <= kValue.f32.positive.max;
+}
+
 /**
  * @returns the next single precision floating point value after |val|,
  * towards +inf if |dir| is true, otherwise towards -inf.
@@ -228,6 +234,7 @@ export function withinULP(val: number, target: number, n: number = 1) {
   return diff <= n * ulp;
 }
 
+// Remove once new FP testing framework is landed
 /**
  * @returns if a test value is correctly rounded to an target value. Only
  * defined for |test_values| being a float32. target values may be any number.
@@ -262,6 +269,7 @@ export function correctlyRounded(
   return result;
 }
 
+// Remove once new FP testing framework is landed
 function correctlyRoundedImpl(test_value: Scalar, target: number, flush: boolean): boolean {
   assert(test_value.type.kind === 'f32', `${test_value} is expected to be a 'f32'`);
 
@@ -301,6 +309,55 @@ function correctlyRoundedImpl(test_value: Scalar, target: number, flush: boolean
   }
 
   return test_value.value === before_target.value || test_value.value === after_target.value;
+}
+
+/**
+ * Calculate the valid roundings when quantizing to 32-bit floats
+ *
+ * TS/JS's number type is internally a f64, so quantization needs to occur when
+ * converting to f32 for WGSL. WGSL does not specify a specific rounding mode,
+ * so if there if a number is not precisely representable in 32-bits, but in the
+ * range, there are two possible valid quantizations. If it is precisely
+ * representable, there is only one valid quantization. This function calculates
+ * the valid roundings and returns them in an array.
+ *
+ * This function does not consider flushing mode, so subnormals are maintained.
+ * The caller is responsible to flushing before and after as appropriate.
+ *
+ * Out of range values return the appropriate infinity and edge value.
+ *
+ * @param n number to be quantized
+ * @returns all of the acceptable roundings for quantizing to 32-bits in
+ *          ascending order.
+ */
+export function correctlyRoundedF32(n: number): number[] {
+  assert(!Number.isNaN(n), `correctlyRoundedF32 not defined for NaN`);
+  // Above f32 range
+  if (n === Number.POSITIVE_INFINITY || n > kValue.f32.positive.max) {
+    return [kValue.f32.positive.max, Number.POSITIVE_INFINITY];
+  }
+
+  // Below f32 range
+  if (n === Number.NEGATIVE_INFINITY || n < kValue.f32.negative.min) {
+    return [Number.NEGATIVE_INFINITY, kValue.f32.negative.min];
+  }
+
+  const n_32 = new Float32Array([n])[0];
+  const converted: number = n_32;
+  if (n === converted) {
+    // n is precisely expressible as a f32, so should not be rounded
+    return [n];
+  }
+
+  if (converted > n) {
+    // x_32 rounded towards +inf, so is after x
+    const other = nextAfter(n_32, false, false).value as number;
+    return [other, converted];
+  } else {
+    // x_32 rounded towards -inf, so is before x
+    const other = nextAfter(n_32, true, false).value as number;
+    return [converted, other];
+  }
 }
 
 /**
@@ -470,4 +527,18 @@ export function gcd(a: number, b: number): number {
 /** @returns the Least Common Multiplier (LCM) of the inputs */
 export function lcm(a: number, b: number): number {
   return (a * b) / gcd(a, b);
+}
+
+/** Converts a 32-bit hex values to a 32-bit float value */
+export function hexToF32(hex: number): number {
+  return new Float32Array(new Uint32Array([hex]).buffer)[0];
+}
+
+/** Converts two 32-bit hex values to a 64-bit float value */
+export function hexToF64(h32: number, l32: number): number {
+  const u32Arr = new Uint32Array(2);
+  u32Arr[0] = l32;
+  u32Arr[1] = h32;
+  const f64Arr = new Float64Array(u32Arr.buffer);
+  return f64Arr[0];
 }
