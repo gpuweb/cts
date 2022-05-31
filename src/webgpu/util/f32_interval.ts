@@ -105,9 +105,13 @@ export interface PointToInterval {
 
 /** Operation used to implement a PointToInterval  */
 interface PointToIntervalOp {
-  /** @returns acceptance interval at x */
+  /** @returns acceptance interval for a function at point x */
   impl: (x: number) => F32Interval;
-  /** Calculates where in x the min/max extrema of impl occur and returns the span of them.
+  /**
+   * Calculates where in domain defined by x the min/max extrema of impl occur
+   * and returns a span of those points to be used as the domain instead.
+   *
+   * If not defined the ends of the existing domain are assumed to be the extrema.
    *
    * This is only implemented for functions that meet all of the following criteria:
    * a) non-monotonic
@@ -124,14 +128,18 @@ export interface BinaryToInterval {
 
 /** Operation used to implement a BinaryToInterval  */
 interface BinaryToIntervalOp {
-  /** @returns acceptance at (x, y) */
+  /** @returns acceptance interval for a function at point (x, y) */
   impl: (x: number, y: number) => F32Interval;
-  /** Calculates where in (x, y) the min/max extrema of impl occur and returns the span of them.
+  /**
+   * Calculates where in domain defined by x & y the min/max extrema of impl
+   * occur and returns spans of those points to be used as the domain instead.
    *
-   * This is only implemented for function that meet all of the following criteria:
+   * If not defined the ends of the existing domain are assumed to be the extrema.
+   *
+   * This is only implemented for functions that meet all of the following criteria:
    * a) non-monotonic
    * b) used in inherited accuracy calculations
-   * c) need to take in intervals for b)
+   * c) need to take in an interval for b) (i.e. fooInterval takes in x: number | F32Interval, not x: number)
    */
   extrema?: (x: F32Interval, y: F32Interval) => [F32Interval, F32Interval];
 }
@@ -350,23 +358,23 @@ export function atan2Interval(y: number | F32Interval, x: number | F32Interval):
   const op: BinaryToIntervalOp = {
     impl: (impl_y: number, impl_x: number): F32Interval => {
       const numULP = 4096;
-      if (impl_y !== 0) {
-        return ulpInterval(Math.atan2(impl_y, impl_x), numULP);
-      } else {
-        return F32Interval.span(
-          ulpInterval(-Math.PI, numULP),
-          ulpInterval(0, numULP),
-          ulpInterval(Math.PI, numULP)
-        );
+      if (impl_y === 0) {
+        if (impl_x === 0) {
+          return F32Interval.infinite();
+        } else {
+          return F32Interval.span(ulpInterval(-Math.PI, numULP), ulpInterval(Math.PI, numULP));
+        }
       }
+      return ulpInterval(Math.atan2(impl_y, impl_x), numULP);
     },
     extrema: (y: F32Interval, x: F32Interval): [F32Interval, F32Interval] => {
-      // atan2 is monotonic except at y === 0 where it has a triple value.
-      if (!y.contains(0)) {
-        return [y, x];
-      } else {
+      if (y.contains(0)) {
+        if (x.contains(0)) {
+          return [toInterval(0), toInterval(0)];
+        }
         return [toInterval(0), x];
       }
+      return [y, x];
     },
   };
 
