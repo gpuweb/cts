@@ -184,7 +184,7 @@ rules are not related to the buffer offset or the bind group layout visibilities
       }
     };
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferWithState('valid', {
       size: kBoundBufferSize * 2,
       usage:
         GPUBufferUsage.UNIFORM |
@@ -246,7 +246,7 @@ bindGroup, dynamicOffsets), do not contribute directly to a usage scope.`
   .fn(async t => {
     const { usage0, usage1, visibility0, visibility1, hasOverlap } = t.params;
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferWithState('valid', {
       size: kBoundBufferSize * 2,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.STORAGE,
     });
@@ -334,7 +334,7 @@ referenced by that bind group is "used" in the usage scope. `
       hasOverlap,
     } = t.params;
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferWithState('valid', {
       size: kBoundBufferSize * 2,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.STORAGE | GPUBufferUsage.INDIRECT,
     });
@@ -505,7 +505,7 @@ dispatch calls refer to different usage scopes.`
       }
     };
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferWithState('valid', {
       size: kBoundBufferSize * 2,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.STORAGE | GPUBufferUsage.INDIRECT,
     });
@@ -580,7 +580,7 @@ there is no draw call in the render pass.
       }
     };
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferWithState('valid', {
       size: kBoundBufferSize * 2,
       usage:
         GPUBufferUsage.UNIFORM |
@@ -597,9 +597,7 @@ there is no draw call in the render pass.
     UseBufferOnRenderPassEncoder(buffer, offset1, usage1, visibility1, renderPassEncoder);
     renderPassEncoder.end();
 
-    const fail =
-      (usage0 === 'storage' && usage1 !== 'storage') ||
-      (usage0 !== 'storage' && usage1 === 'storage');
+    const fail = (usage0 === 'storage') !== (usage1 === 'storage');
     t.expectValidationError(() => {
       encoder.finish();
     }, fail);
