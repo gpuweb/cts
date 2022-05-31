@@ -364,7 +364,7 @@ fn(async (t) => {
   {
     switch (usage) {
       case 'copy-src':{
-          const buffer = t.device.createBuffer({
+          const buffer = t.createBufferWithState('valid', {
             size: 4,
             usage: GPUBufferUsage.COPY_DST });
 
@@ -372,7 +372,7 @@ fn(async (t) => {
           break;
         }
       case 'copy-dst':{
-          const buffer = t.device.createBuffer({
+          const buffer = t.createBufferWithState('valid', {
             size: 4,
             usage: GPUBufferUsage.COPY_SRC });
 

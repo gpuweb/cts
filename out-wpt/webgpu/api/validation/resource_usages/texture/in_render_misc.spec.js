@@ -366,7 +366,7 @@ g.test('subresources,texture_usages_in_copy_and_render_pass')
     const UseTextureOnCommandEncoder = (texture, usage, encoder) => {
       switch (usage) {
         case 'copy-src': {
-          const buffer = t.device.createBuffer({
+          const buffer = t.createBufferWithState('valid', {
             size: 4,
             usage: GPUBufferUsage.COPY_DST,
           });
@@ -375,7 +375,7 @@ g.test('subresources,texture_usages_in_copy_and_render_pass')
           break;
         }
         case 'copy-dst': {
-          const buffer = t.device.createBuffer({
+          const buffer = t.createBufferWithState('valid', {
             size: 4,
             usage: GPUBufferUsage.COPY_SRC,
           });
