@@ -184,7 +184,7 @@ rules are not related to the buffer offset or the bind group layout visibilities
       }
     };
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferWithState('valid', {
       size: kBoundBufferSize * 2,
       usage:
         GPUBufferUsage.UNIFORM |
@@ -246,7 +246,7 @@ bindGroup, dynamicOffsets), do not contribute directly to a usage scope.`
   .fn(async t => {
     const { usage0, usage1, visibility0, visibility1, hasOverlap } = t.params;
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferWithState('valid', {
       size: kBoundBufferSize * 2,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.STORAGE,
     });
@@ -334,7 +334,7 @@ referenced by that bind group is "used" in the usage scope. `
       hasOverlap,
     } = t.params;
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferWithState('valid', {
       size: kBoundBufferSize * 2,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.STORAGE | GPUBufferUsage.INDIRECT,
     });
@@ -505,7 +505,7 @@ dispatch calls refer to different usage scopes.`
       }
     };
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferWithState('valid', {
       size: kBoundBufferSize * 2,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.STORAGE | GPUBufferUsage.INDIRECT,
     });
@@ -530,4 +530,75 @@ dispatch calls refer to different usage scopes.`
     t.expectValidationError(() => {
       encoder.finish();
     }, false);
+  });
+
+g.test('subresources,buffer_usage_in_one_render_pass_with_no_draw')
+  .desc(
+    `
+Test that when one buffer is used in one render pass encoder, its list of internal usages within one
+usage scope (all the commands in the whole render pass) can only be a compatible usage list even if
+there is no draw call in the render pass.
+    `
+  )
+  .params(u =>
+    u
+      .combine('usage0', ['uniform', 'storage', 'read-only-storage', 'vertex', 'index'] as const)
+      .combine('usage1', ['uniform', 'storage', 'read-only-storage', 'vertex', 'index'] as const)
+      .beginSubcases()
+      .combine('hasOverlap', [true, false])
+      .combine('visibility0', ['compute', 'fragment'] as const)
+      .unless(t => t.visibility0 === 'compute' && !IsBufferUsageInBindGroup(t.usage0))
+      .combine('visibility1', ['compute', 'fragment'] as const)
+      .unless(t => t.visibility1 === 'compute' && !IsBufferUsageInBindGroup(t.usage1))
+  )
+  .fn(async t => {
+    const { usage0, usage1, hasOverlap, visibility0, visibility1 } = t.params;
+
+    const UseBufferOnRenderPassEncoder = (
+      buffer: GPUBuffer,
+      offset: number,
+      type: 'uniform' | 'storage' | 'read-only-storage' | 'vertex' | 'index',
+      bindGroupVisibility: 'compute' | 'fragment',
+      renderPassEncoder: GPURenderPassEncoder
+    ) => {
+      switch (type) {
+        case 'uniform':
+        case 'storage':
+        case 'read-only-storage': {
+          const bindGroup = t.createBindGroupForTest(buffer, offset, type, bindGroupVisibility);
+          renderPassEncoder.setBindGroup(0, bindGroup);
+          break;
+        }
+        case 'vertex': {
+          renderPassEncoder.setVertexBuffer(0, buffer, offset, kBoundBufferSize);
+          break;
+        }
+        case 'index': {
+          renderPassEncoder.setIndexBuffer(buffer, 'uint16', offset, kBoundBufferSize);
+          break;
+        }
+      }
+    };
+
+    const buffer = t.createBufferWithState('valid', {
+      size: kBoundBufferSize * 2,
+      usage:
+        GPUBufferUsage.UNIFORM |
+        GPUBufferUsage.STORAGE |
+        GPUBufferUsage.VERTEX |
+        GPUBufferUsage.INDEX,
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    const renderPassEncoder = t.beginSimpleRenderPass(encoder);
+    const offset0 = 0;
+    UseBufferOnRenderPassEncoder(buffer, offset0, usage0, visibility0, renderPassEncoder);
+    const offset1 = hasOverlap ? offset0 : kBoundBufferSize;
+    UseBufferOnRenderPassEncoder(buffer, offset1, usage1, visibility1, renderPassEncoder);
+    renderPassEncoder.end();
+
+    const fail = (usage0 === 'storage') !== (usage1 === 'storage');
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, fail);
   });
