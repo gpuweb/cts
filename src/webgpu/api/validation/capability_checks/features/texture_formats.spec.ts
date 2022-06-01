@@ -8,7 +8,6 @@ TODO(#902): test GPUCanvasConfiguration.format (it doesn't allow any optional fo
 TODO(#920): test GPUTextureDescriptor.viewFormats (if/when it takes formats)
 `;
 
-import { assert } from '../../../../../common/util/util.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { kAllTextureFormats, kTextureFormatInfo } from '../../../../capability_info.js';
 import { ValidationTest } from '../../validation_test.js';

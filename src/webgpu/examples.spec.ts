@@ -5,7 +5,6 @@ Start here when looking for examples of basic framework usage.
 `;
 
 import { makeTestGroup } from '../common/framework/test_group.js';
-import { assert } from '../common/util/util.js';
 
 import { GPUTest } from './gpu_test.js';
 
