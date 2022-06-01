@@ -238,17 +238,13 @@ beforeAllSubcases((t) => {
 fn(async (t) => {
   const { textureCompressionBC } = t.params;
   const shouldError = !textureCompressionBC;
-  t.expectGPUError(
-  'validation',
-  () => {
+  t.shouldThrow(shouldError ? 'TypeError' : false, () => {
     t.device.createTexture({
       format: 'bc1-rgba-unorm',
       size: [4, 4, 1],
       usage: GPUTextureUsage.TEXTURE_BINDING });
 
-  },
-  shouldError);
-
+  });
 });
 
 g.test('gpu,with_texture_compression,etc2').
@@ -268,16 +264,12 @@ fn(async (t) => {
   const { textureCompressionETC2 } = t.params;
 
   const shouldError = !textureCompressionETC2;
-  t.expectGPUError(
-  'validation',
-  () => {
+  t.shouldThrow(shouldError ? 'TypeError' : false, () => {
     t.device.createTexture({
       format: 'etc2-rgb8unorm',
       size: [4, 4, 1],
       usage: GPUTextureUsage.TEXTURE_BINDING });
 
-  },
-  shouldError);
-
+  });
 });
 //# sourceMappingURL=examples.spec.js.map
