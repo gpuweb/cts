@@ -667,9 +667,11 @@ layout visibilities.`
           return false;
         }
 
+        // As usage0 is accessible in the draw call, visibility0 can only be 'fragment'.
         if (t.usage0AccessibleInDraw && t.visibility0 !== 'fragment') {
           return false;
         }
+        // As usage1 is accssible in the draw call, the draw call cannot be before usage1.
         if (t.drawBeforeUsage1 && t.usage1AccessibleInDraw) {
           return false;
         }
@@ -709,8 +711,13 @@ layout visibilities.`
   )
   .fn(async t => {
     const {
+      // Buffer with usage0 will be "used" in the draw call if this value is true.
       usage0AccessibleInDraw,
+      // Buffer with usage1 will be "used" in the draw call if this value is true.
       usage1AccessibleInDraw,
+      // Whether we will have the draw call before setting the buffer usage as "usage1" or not.
+      // If it is true: set-usage0 -> draw -> set-usage1 or indirect-draw -> set-usage1
+      // Otherwise: set-usage0 -> set-usage1 -> draw or set-usage0 -> indirect-draw
       drawBeforeUsage1,
       usage0,
       visibility0,
@@ -743,6 +750,8 @@ layout visibilities.`
         case 'read-only-storage': {
           const bindGroup = t.createBindGroupForTest(buffer, offset, usage, bindGroupVisibility);
           renderPassEncoder.setBindGroup(bufferIndex, bindGroup);
+          // To "use" the bind group we will set the corresponding bind group layout in the
+          // pipeline layout when creating the render pipeline.
           if (bufferAccessibleInDraw && bindGroupVisibility === 'fragment') {
             usedBindGroupLayouts.push(t.createBindGroupLayoutForTest(usage, bindGroupVisibility));
           }
@@ -758,6 +767,7 @@ layout visibilities.`
         }
         case 'indirect':
         case 'indexedIndirect': {
+          // We will handle the indirect draw calls later.
           break;
         }
       }
@@ -800,7 +810,6 @@ layout visibilities.`
     const offset0 = 0;
     // Invisible bind groups or vertex buffers are all bound to the slot 1.
     const bufferIndex0 = visibility0 === 'fragment' ? 0 : 1;
-    let vertexBufferCount = 0;
     const usedBindGroupLayouts: GPUBindGroupLayout[] = [];
 
     UseBufferOnRenderPassEncoder(
@@ -813,11 +822,15 @@ layout visibilities.`
       usedBindGroupLayouts
     );
 
+    let vertexBufferCount = 0;
+
     // Set pipeline and do draw call if drawBeforeUsage1 === true
     if (drawBeforeUsage1) {
       const pipelineLayout = t.device.createPipelineLayout({
         bindGroupLayouts: usedBindGroupLayouts,
       });
+      // To "use" the vertex buffer we need to set the corresponding vertex buffer layout when
+      // creating the render pipeline.
       if (usage0 === 'vertex' && usage0AccessibleInDraw) {
         ++vertexBufferCount;
       }
@@ -862,6 +875,8 @@ layout visibilities.`
         bindGroupLayouts: usedBindGroupLayouts,
       });
       if (usage1 === 'vertex' && usage1AccessibleInDraw) {
+        // To "use" the vertex buffer we need to set the corresponding vertex buffer layout when
+        // creating the render pipeline.
         ++vertexBufferCount;
       }
       const pipeline = t.createRenderPipelineForTest(pipelineLayout, vertexBufferCount);
@@ -876,6 +891,8 @@ layout visibilities.`
         MakeDrawCallWithOneUsage(usage1, offset1, renderPassEncoder);
       } else {
         if (usage1 === 'indexedIndirect') {
+          // If the index buffer has already been set (as usage0), we won't need to set another
+          // index buffer.
           if (usage0 !== 'index') {
             const indexBuffer = t.createBufferWithState('valid', {
               size: 4,
@@ -888,6 +905,7 @@ layout visibilities.`
           assert(usage0 !== 'index');
           renderPassEncoder.drawIndirect(buffer, offset1);
         } else if (usage0 === 'index' || usage1 === 'index') {
+          // We need to call drawIndexed to "use" the index buffer (as usage0 or usage1).
           renderPassEncoder.drawIndexed(1);
         } else {
           renderPassEncoder.draw(1);
