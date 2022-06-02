@@ -15,12 +15,6 @@ export class F32Interval {
    * infinity values, so that all values above/below the f32 range are lumped
    * together.
    *
-   * The edge values map out to the infinities due to:
-   *   If an allowable return value for any operation is greater in magnitude
-   *   than the largest representable finite floating-point value, then that
-   *   operation may additionally return either the infinity with the same sign
-   *   or the largest finite value with the same sign.
-   *
    * @param begin number indicating the lower bound of the interval
    * @param end number indicating the upper bound of the interval
    */
@@ -28,17 +22,17 @@ export class F32Interval {
     assert(!Number.isNaN(begin) && !Number.isNaN(end), `bounds need to be non-NaN`);
     assert(begin <= end, `begin (${begin}) must be equal or before end (${end})`);
 
-    if (begin === Number.NEGATIVE_INFINITY || begin <= kValue.f32.negative.min) {
+    if (begin === Number.NEGATIVE_INFINITY || begin < kValue.f32.negative.min) {
       this.begin = Number.NEGATIVE_INFINITY;
-    } else if (begin === Number.POSITIVE_INFINITY || begin >= kValue.f32.positive.max) {
+    } else if (begin === Number.POSITIVE_INFINITY || begin > kValue.f32.positive.max) {
       this.begin = kValue.f32.positive.max;
     } else {
       this.begin = begin;
     }
 
-    if (end === Number.POSITIVE_INFINITY || end >= kValue.f32.positive.max) {
+    if (end === Number.POSITIVE_INFINITY || end > kValue.f32.positive.max) {
       this.end = Number.POSITIVE_INFINITY;
-    } else if (end === Number.NEGATIVE_INFINITY || end <= kValue.f32.negative.min) {
+    } else if (end === Number.NEGATIVE_INFINITY || end < kValue.f32.negative.min) {
       this.end = kValue.f32.negative.min;
     } else {
       this.end = end;
@@ -47,11 +41,10 @@ export class F32Interval {
 
   /** @returns if a point or interval is completely contained by this interval
    *
-   * Due to the fact backends may clamp out of range values to the min/max f32
-   * values, which is represented in the implementation by extending the
-   * begin/end values as appropriate, there some unintuitive behaviours here.
-   * For example:
-   *   [0, max f32].contains(+∞) will return true.
+   * Due to values that are above/below the f32 range being indistinguishable
+   * from other values out of range in the same way, there some unintuitive
+   * behaviours here, for example:
+   *   [0, max f32 +1].contains(+∞) will return true.
    * */
   public contains(n: number | F32Interval): boolean {
     if (Number.isNaN(n)) {
@@ -283,8 +276,6 @@ function roundAndFlushTernaryToInterval(
  * @param op operation defining the function being run
  * @returns a span over all of the outputs of op.impl
  */
-// Will be used in test implementations
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function runPointOp(x: F32Interval, op: PointToIntervalOp): F32Interval {
   if (x.isPoint()) {
     return roundAndFlushPointToInterval(x.begin, op);
@@ -406,4 +397,15 @@ export function ulpInterval(n: number, numULP: number): F32Interval {
       );
     },
   });
+}
+
+/** Calculate an acceptance interval for abs(n) */
+export function absInterval(n: number): F32Interval {
+  const op: PointToIntervalOp = {
+    impl: (impl_n: number): F32Interval => {
+      return correctlyRoundedInterval(Math.abs(impl_n));
+    },
+  };
+
+  return runPointOp(toInterval(n), op);
 }
