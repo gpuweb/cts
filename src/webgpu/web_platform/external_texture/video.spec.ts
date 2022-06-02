@@ -190,11 +190,12 @@ supported video formats {vp8, vp9, ogg, mp4} and common source colorspaces {bt.6
     });
   });
 
-g.test('importExternalTexture,destroy')
+g.test('importExternalTexture,expired')
   .desc(
     `
-Tests that a GPUExternalTexture is destroyed by a microtask and that using it after it has been
-destroyed results in an error.
+Tests that GPUExternalTexture.expired is false when video frame is not updated
+from imported HTMLVideoElement and will be changed to true when video frame is
+updated. Using expired GPUExternalTexture results in an error.
 `
   )
   .fn(async t => {
@@ -231,32 +232,44 @@ destroyed results in an error.
       return commandEncoder.finish();
     };
 
+    let externalTexture: GPUExternalTexture;
     await startPlayingAndWaitForVideo(video, async () => {
       // 1. Enqueue a microtask which uses the GPUExternalTexture. This should happen immediately
-      // after the current microtask - before the GPUExternalTexture is destroyed.
+      // after the current microtask.
       const microtask1 = Promise.resolve().then(() => {
         const commandBuffer = useExternalTexture();
         t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), false);
+        t.expect(!externalTexture.expired);
       });
 
-      // 2. importExternalTexture enqueues a microtask that destroys the GPUExternalTexture.
-      const externalTexture = t.device.importExternalTexture({ source: video });
+      // 2. importExternalTexture which should stay active if video frame is not updated.
+      externalTexture = t.device.importExternalTexture({ source: video });
       // Set `bindGroup` here, which will then be used in microtask1 and microtask3.
       bindGroup = t.device.createBindGroup({
         layout: bindGroupLayout,
         entries: [{ binding: 0, resource: externalTexture }],
       });
 
-      // 3. Enqueue a microtask which uses the GPUExternalTexture. This should happen immediately
-      // after the microtask which destroys the GPUExternalTexture.
+      // 3. Enqueue a microtask which uses the GPUExternalTexture. The GPUExternalTexture
+      // should still keep alive.
       const microtask3 = Promise.resolve().then(() => {
         const commandBuffer = useExternalTexture();
-        t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), true);
+        t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), false);
+        t.expect(!externalTexture.expired);
       });
 
       // Now make sure the test doesn't end before all of those microtasks complete.
       await microtask1;
       await microtask3;
+    });
+
+    // Update new video frame.
+    await startPlayingAndWaitForVideo(video, async () => {
+      // 4. VideoFrame is updated. GPUExternalTexture should be expired. Using the
+      // GPUExternalTexture should result in an error.
+      const commandBuffer = useExternalTexture();
+      t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), true);
+      t.expect(externalTexture.expired);
     });
   });
 
