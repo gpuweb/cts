@@ -140,122 +140,6 @@ function IsBufferUsageInBindGroup(bufferUsage: BufferUsage): boolean {
 
 export const g = makeTestGroup(F);
 
-g.test('subresources,buffer_usage_in_render_pass')
-  .desc(
-    `
-Test that when one buffer is used in one render pass encoder, its list of internal usages within one
-usage scope (all the commands in the whole render pass) can only be a compatible usage list; while
-there is no such restriction when it is used in different render pass encoders. The usage scope
-rules are not related to the buffer offset or the bind group layout visibilities.`
-  )
-  .params(u =>
-    u
-      .combine('inSamePass', [true, false])
-      .combine('hasOverlap', [true, false])
-      .beginSubcases()
-      .combine('usage0', kAllBufferUsages)
-      .combine('visibility0', ['compute', 'fragment'] as const)
-      .unless(t => t.visibility0 === 'compute' && !IsBufferUsageInBindGroup(t.usage0))
-      .combine('usage1', kAllBufferUsages)
-      .combine('visibility1', ['compute', 'fragment'] as const)
-      // The situation that the index buffer is reset by another setIndexBuffer call will be tested
-      // in another test case.
-      .unless(
-        t =>
-          (t.visibility1 === 'compute' && !IsBufferUsageInBindGroup(t.usage1)) ||
-          (t.usage0 === 'index' && t.usage1 === 'index')
-      )
-  )
-  .fn(async t => {
-    const { inSamePass, hasOverlap, usage0, visibility0, usage1, visibility1 } = t.params;
-
-    const UseBufferOnRenderPassEncoder = (
-      buffer: GPUBuffer,
-      index: number,
-      offset: number,
-      type: BufferUsage,
-      bindGroupVisibility: 'compute' | 'fragment',
-      renderPassEncoder: GPURenderPassEncoder
-    ) => {
-      switch (type) {
-        case 'uniform':
-        case 'storage':
-        case 'read-only-storage': {
-          const bindGroup = t.createBindGroupForTest(buffer, offset, type, bindGroupVisibility);
-          renderPassEncoder.setBindGroup(index, bindGroup);
-          break;
-        }
-        case 'vertex': {
-          renderPassEncoder.setVertexBuffer(index, buffer, offset, kBoundBufferSize);
-          break;
-        }
-        case 'index': {
-          renderPassEncoder.setIndexBuffer(buffer, 'uint16', offset, kBoundBufferSize);
-          break;
-        }
-        case 'indirect': {
-          const renderPipeline = t.createNoOpRenderPipeline();
-          renderPassEncoder.setPipeline(renderPipeline);
-          renderPassEncoder.drawIndirect(buffer, offset);
-          break;
-        }
-        case 'indexedIndirect': {
-          const renderPipeline = t.createNoOpRenderPipeline();
-          renderPassEncoder.setPipeline(renderPipeline);
-          const indexBuffer = t.createBufferWithState('valid', {
-            size: 4,
-            usage: GPUBufferUsage.INDEX,
-          });
-          renderPassEncoder.setIndexBuffer(indexBuffer, 'uint16');
-          renderPassEncoder.drawIndexedIndirect(buffer, offset);
-          break;
-        }
-      }
-    };
-
-    const buffer = t.createBufferWithState('valid', {
-      size: kBoundBufferSize * 2,
-      usage:
-        GPUBufferUsage.UNIFORM |
-        GPUBufferUsage.STORAGE |
-        GPUBufferUsage.VERTEX |
-        GPUBufferUsage.INDEX |
-        GPUBufferUsage.INDIRECT,
-    });
-
-    const encoder = t.device.createCommandEncoder();
-    const renderPassEncoder = t.beginSimpleRenderPass(encoder);
-    const offset0 = 0;
-    const index0 = 0;
-    UseBufferOnRenderPassEncoder(buffer, index0, offset0, usage0, visibility0, renderPassEncoder);
-    const offset1 = hasOverlap ? offset0 : kBoundBufferSize;
-    const index1 = 1;
-    if (inSamePass) {
-      UseBufferOnRenderPassEncoder(buffer, index1, offset1, usage1, visibility1, renderPassEncoder);
-      renderPassEncoder.end();
-    } else {
-      renderPassEncoder.end();
-      const anotherRenderPassEncoder = t.beginSimpleRenderPass(encoder);
-      UseBufferOnRenderPassEncoder(
-        buffer,
-        index1,
-        offset1,
-        usage1,
-        visibility1,
-        anotherRenderPassEncoder
-      );
-      anotherRenderPassEncoder.end();
-    }
-
-    const fail =
-      inSamePass &&
-      ((usage0 === 'storage' && usage1 !== 'storage') ||
-        (usage0 !== 'storage' && usage1 === 'storage'));
-    t.expectValidationError(() => {
-      encoder.finish();
-    }, fail);
-  });
-
 g.test('subresources,buffer_usage_in_one_compute_pass_with_no_dispatch')
   .desc(
     `
@@ -915,6 +799,111 @@ layout visibilities.`
     renderPassEncoder.end();
 
     const fail = (usage0 === 'storage') !== (usage1 === 'storage');
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, fail);
+  });
+
+g.test('subresources,buffer_usage_in_one_render_pass_with_two_draws')
+  .desc(
+    `
+Test that when one buffer is used in different draw calls in one render pass, its list of internal
+usages within one usage scope (all the commands in the whole render pass) can only be a compatible
+usage list, and the usage scope rules are not related to the buffer offset, while the draw calls in
+different render pass encoders belong to different usage scopes.`
+  )
+  .params(u =>
+    u
+      .combine('usage0', kAllBufferUsages)
+      .combine('usage1', kAllBufferUsages)
+      .beginSubcases()
+      .combine('inSamePass', [true, false])
+      .combine('hasOverlap', [true, false])
+  )
+  .fn(async t => {
+    const { usage0, usage1, inSamePass, hasOverlap } = t.params;
+    const buffer = t.createBufferWithState('valid', {
+      size: kBoundBufferSize * 2,
+      usage:
+        GPUBufferUsage.UNIFORM |
+        GPUBufferUsage.STORAGE |
+        GPUBufferUsage.VERTEX |
+        GPUBufferUsage.INDEX |
+        GPUBufferUsage.INDIRECT,
+    });
+    const UseBufferOnRenderPassEncoderInDrawCall = (
+      offset: number,
+      usage: BufferUsage,
+      renderPassEncoder: GPURenderPassEncoder
+    ) => {
+      switch (usage) {
+        case 'uniform':
+        case 'storage':
+        case 'read-only-storage': {
+          const bindGroupLayout = t.createBindGroupLayoutForTest(usage, 'fragment');
+          const pipelineLayout = t.device.createPipelineLayout({
+            bindGroupLayouts: [bindGroupLayout],
+          });
+          const pipeline = t.createRenderPipelineForTest(pipelineLayout, 0);
+          renderPassEncoder.setPipeline(pipeline);
+          const bindGroup = t.createBindGroupForTest(buffer, offset, usage, 'fragment');
+          renderPassEncoder.setBindGroup(0, bindGroup);
+          renderPassEncoder.draw(1);
+          break;
+        }
+        case 'vertex': {
+          const kVertexBufferCount = 1;
+          const pipeline = t.createRenderPipelineForTest(undefined, kVertexBufferCount);
+          renderPassEncoder.setPipeline(pipeline);
+          renderPassEncoder.setVertexBuffer(0, buffer, offset);
+          renderPassEncoder.draw(1);
+          break;
+        }
+        case 'index': {
+          const pipeline = t.createRenderPipelineForTest(undefined, 0);
+          renderPassEncoder.setPipeline(pipeline);
+          renderPassEncoder.setIndexBuffer(buffer, 'uint16', offset);
+          renderPassEncoder.drawIndexed(1);
+          break;
+        }
+        case 'indirect': {
+          const pipeline = t.createRenderPipelineForTest(undefined, 0);
+          renderPassEncoder.setPipeline(pipeline);
+          renderPassEncoder.drawIndirect(buffer, offset);
+          break;
+        }
+        case 'indexedIndirect': {
+          const pipeline = t.createRenderPipelineForTest(undefined, 0);
+          renderPassEncoder.setPipeline(pipeline);
+          const indexBuffer = t.createBufferWithState('valid', {
+            size: 4,
+            usage: GPUBufferUsage.INDEX,
+          });
+          renderPassEncoder.setIndexBuffer(indexBuffer, 'uint16');
+          renderPassEncoder.drawIndexedIndirect(buffer, offset);
+          break;
+        }
+      }
+    };
+
+    const encoder = t.device.createCommandEncoder();
+    const renderPassEncoder = t.beginSimpleRenderPass(encoder);
+
+    const offset0 = 0;
+    UseBufferOnRenderPassEncoderInDrawCall(offset0, usage0, renderPassEncoder);
+
+    const offset1 = hasOverlap ? offset0 : kBoundBufferSize;
+    if (inSamePass) {
+      UseBufferOnRenderPassEncoderInDrawCall(offset1, usage1, renderPassEncoder);
+      renderPassEncoder.end();
+    } else {
+      renderPassEncoder.end();
+      const anotherRenderPassEncoder = t.beginSimpleRenderPass(encoder);
+      UseBufferOnRenderPassEncoderInDrawCall(offset1, usage1, anotherRenderPassEncoder);
+      anotherRenderPassEncoder.end();
+    }
+
+    const fail = inSamePass && (usage0 === 'storage') !== (usage1 === 'storage');
     t.expectValidationError(() => {
       encoder.finish();
     }, fail);
