@@ -169,8 +169,8 @@ g.test('importExternalTexture,expired')
   .desc(
     `
 Tests that GPUExternalTexture.expired is false when video frame is not updated
-from imported HTMLVideoElement and change to true when video frame is updated.
-Using expired GPUExternalTextures result in an error.
+from imported HTMLVideoElement and will be changed to true when video frame is
+updated. Using expired GPUExternalTexture results in an error.
 `
   )
   .fn(async t => {
@@ -241,7 +241,7 @@ Using expired GPUExternalTextures result in an error.
     // Update new video frame.
     await startPlayingAndWaitForVideo(video, async () => {
       // 4. VideoFrame is updated. GPUExternalTexture should be expired. Using the
-      // GPUExternalTexture should result an error.
+      // GPUExternalTexture should result in an error.
       const commandBuffer = useExternalTexture();
       t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), true);
       t.expect(externalTexture.expired);
