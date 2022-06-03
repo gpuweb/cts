@@ -27,6 +27,7 @@ function getDepthTestEqualPipeline(
   expected: number
 ): GPURenderPipeline {
   return t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       entryPoint: 'main',
       module: makeFullscreenVertexModule(t.device),
@@ -66,6 +67,7 @@ function getStencilTestEqualPipeline(
   sampleCount: number
 ): GPURenderPipeline {
   return t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       entryPoint: 'main',
       module: makeFullscreenVertexModule(t.device),

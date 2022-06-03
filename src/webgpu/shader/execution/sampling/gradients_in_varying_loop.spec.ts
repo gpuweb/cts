@@ -38,6 +38,7 @@ class DerivativesTest extends GPUTest {
     await super.init();
 
     this.pipeline = this.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: this.device.createShaderModule({
           code: `

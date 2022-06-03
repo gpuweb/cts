@@ -340,8 +340,8 @@ class DeviceHolder implements DeviceProvider {
   }
 
   private async attemptEndTestScope(): Promise<void> {
-    let gpuValidationError: GPUValidationError | GPUOutOfMemoryError | null;
-    let gpuOutOfMemoryError: GPUValidationError | GPUOutOfMemoryError | null;
+    let gpuValidationError: GPUError | null;
+    let gpuOutOfMemoryError: GPUError | null;
 
     // Submit to the queue to attempt to force a GPU flush.
     this.device.queue.submit([]);

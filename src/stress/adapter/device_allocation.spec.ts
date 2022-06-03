@@ -45,6 +45,7 @@ async function createDeviceAndComputeCommands(adapter: GPUAdapter) {
 
   for (let pipelineIndex = 0; pipelineIndex < kNumPipelines; ++pipelineIndex) {
     const pipeline = device.createComputePipeline({
+      layout: 'auto',
       compute: {
         module: device.createShaderModule({
           code: `
