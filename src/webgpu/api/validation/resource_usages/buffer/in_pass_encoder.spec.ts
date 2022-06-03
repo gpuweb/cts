@@ -546,7 +546,7 @@ layout visibilities.`
         ) {
           return false;
         }
-        // The bufer usages `vertex` and `index` do nothing with shader visibilities.
+        // The buffer usages `vertex` and `index` do nothing with shader visibilities.
         if ((t.usage0 === 'vertex' || t.usage0 === 'index') && t.visibility0 !== 'fragment') {
           return false;
         }
@@ -555,7 +555,7 @@ layout visibilities.`
         if (t.usage0AccessibleInDraw && t.visibility0 !== 'fragment') {
           return false;
         }
-        // As usage1 is accssible in the draw call, the draw call cannot be before usage1.
+        // As usage1 is accessible in the draw call, the draw call cannot be before usage1.
         if (t.drawBeforeUsage1 && t.usage1AccessibleInDraw) {
           return false;
         }

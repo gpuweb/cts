@@ -116,7 +116,7 @@ g.test('texture_binding')
       viewFormats: [viewFormat],
     });
 
-    // Reinterepret the texture as the view format.
+    // Reinterpret the texture as the view format.
     // Make a texel view of the format that also reinterprets the data.
     const reinterpretedView = texture.createView({ format: viewFormat });
     const reinterpretedTexelView = TexelView.fromTexelsAsBytes(viewFormat, inputTexelView.bytes);
