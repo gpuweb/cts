@@ -10,6 +10,7 @@ async function basicTest() {
 
   const kOffset = 1230000;
   const pipeline = device.createComputePipeline({
+    layout: 'auto',
     compute: {
       module: device.createShaderModule({
         code: `

@@ -80,7 +80,7 @@ class F extends ValidationTest {
   }
 
   createRenderPipelineForTest(
-    pipelineLayout: GPUPipelineLayout | undefined,
+    pipelineLayout: GPUPipelineLayout | GPUAutoLayoutMode,
     vertexBufferCount: number
   ): GPURenderPipeline {
     const vertexBuffers: GPUVertexBufferLayout[] = [];
@@ -853,27 +853,27 @@ different render pass encoders belong to different usage scopes.`
         }
         case 'vertex': {
           const kVertexBufferCount = 1;
-          const pipeline = t.createRenderPipelineForTest(undefined, kVertexBufferCount);
+          const pipeline = t.createRenderPipelineForTest('auto', kVertexBufferCount);
           renderPassEncoder.setPipeline(pipeline);
           renderPassEncoder.setVertexBuffer(0, buffer, offset);
           renderPassEncoder.draw(1);
           break;
         }
         case 'index': {
-          const pipeline = t.createRenderPipelineForTest(undefined, 0);
+          const pipeline = t.createRenderPipelineForTest('auto', 0);
           renderPassEncoder.setPipeline(pipeline);
           renderPassEncoder.setIndexBuffer(buffer, 'uint16', offset);
           renderPassEncoder.drawIndexed(1);
           break;
         }
         case 'indirect': {
-          const pipeline = t.createRenderPipelineForTest(undefined, 0);
+          const pipeline = t.createRenderPipelineForTest('auto', 0);
           renderPassEncoder.setPipeline(pipeline);
           renderPassEncoder.drawIndirect(buffer, offset);
           break;
         }
         case 'indexedIndirect': {
-          const pipeline = t.createRenderPipelineForTest(undefined, 0);
+          const pipeline = t.createRenderPipelineForTest('auto', 0);
           renderPassEncoder.setPipeline(pipeline);
           const indexBuffer = t.createBufferWithState('valid', {
             size: 4,

@@ -47,6 +47,7 @@ function makeBlitPipeline(
   multisample: { sample: number; render: number }
 ) {
   return device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       module: device.createShaderModule({
         code: `
@@ -123,6 +124,7 @@ g.test('texture_binding')
 
     // Create a pipeline to write data out to rgba8unorm.
     const pipeline = t.device.createComputePipeline({
+      layout: 'auto',
       compute: {
         module: t.device.createShaderModule({
           code: `
