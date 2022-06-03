@@ -130,6 +130,7 @@ class F extends ValidationTest {
 
   createRenderPipeline(targets, depthStencil, sampleCount, cullMode) {
     return this.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: this.device.createShaderModule({
           code: `

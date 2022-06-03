@@ -75,6 +75,7 @@ g.test('color,attachments')
     );
 
     const pipeline = t.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: t.device.createShaderModule({
           code: kVertexShader,
@@ -182,6 +183,7 @@ g.test('color,component_count')
     });
 
     const pipeline = t.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: t.device.createShaderModule({
           code: kVertexShader,
@@ -411,6 +413,7 @@ The attachment has a load value of [1, 0, 0, 1]
     });
 
     const pipeline = t.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: t.device.createShaderModule({
           code: kVertexShader,

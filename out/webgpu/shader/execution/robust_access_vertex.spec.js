@@ -416,6 +416,7 @@ class F extends GPUTest {
 
   {
     const pipeline = this.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: this.device.createShaderModule({
           code: this.generateVertexShaderCode({

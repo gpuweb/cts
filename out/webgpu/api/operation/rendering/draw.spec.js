@@ -124,6 +124,7 @@ struct Output {
 
 
   const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       module: vertexModule,
       entryPoint: 'vert_main',
@@ -517,6 +518,7 @@ fn((t) => {
   }
 
   const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
         code: `

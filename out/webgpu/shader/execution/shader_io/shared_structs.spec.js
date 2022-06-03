@@ -49,6 +49,7 @@ fn(async (t) => {
     `;
 
   const pipeline = t.device.createComputePipeline({
+    layout: 'auto',
     compute: {
       module: t.device.createShaderModule({ code: wgsl }),
       entryPoint: 'main' } });
@@ -149,6 +150,7 @@ fn(async (t) => {
   // Set up the render pipeline.
   const module = t.device.createShaderModule({ code: wgsl });
   const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       module,
       entryPoint: 'vert_main' },
@@ -269,6 +271,7 @@ fn(async (t) => {
   // Set up the render pipeline.
   const module = t.device.createShaderModule({ code: wgsl });
   const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       module,
       entryPoint: 'vert_main',

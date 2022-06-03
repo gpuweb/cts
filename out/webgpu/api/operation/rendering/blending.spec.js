@@ -160,6 +160,7 @@ fn((t) => {
 
 
   const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
     fragment: {
       targets: [
       {

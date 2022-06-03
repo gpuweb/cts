@@ -117,6 +117,7 @@ struct Output {
     });
 
     const pipeline = t.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: vertexModule,
         entryPoint: 'vert_main',
@@ -526,6 +527,7 @@ g.test('vertex_attributes,basic')
     }
 
     const pipeline = t.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: t.device.createShaderModule({
           code: `

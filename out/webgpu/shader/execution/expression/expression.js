@@ -246,6 +246,7 @@ fn main() {
 
   const module = t.device.createShaderModule({ code: source });
   const pipeline = t.device.createComputePipeline({
+    layout: 'auto',
     compute: { module, entryPoint: 'main' } });
 
 

@@ -31,6 +31,7 @@ fn(async (t) => {
     ` });
 
   const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: { module, entryPoint: 'vmain', buffers: [] },
     primitive: { topology: 'point-list' },
     fragment: {
@@ -120,6 +121,7 @@ fn(async (t) => {
   const encoder = t.device.createCommandEncoder();
   range(kWidth * kHeight, (i) => {
     const pipeline = t.device.createRenderPipeline({
+      layout: 'auto',
       vertex: { module, entryPoint: 'vmain', buffers: [] },
       primitive: { topology: 'point-list' },
       depthStencil: {
@@ -253,6 +255,7 @@ fn(async (t) => {
     ` });
 
   const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: { module, entryPoint: 'vmain', buffers: [] },
     primitive: { topology: 'point-list' },
     fragment: {
@@ -313,6 +316,7 @@ fn(async (t) => {
     ` });
 
   const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: { module, entryPoint: 'vmain', buffers: [] },
     primitive: { topology: 'point-list' },
     fragment: {

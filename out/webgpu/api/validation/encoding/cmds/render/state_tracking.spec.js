@@ -16,6 +16,7 @@ class F extends ValidationTest {
 
   createRenderPipeline(bufferCount) {
     return this.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: this.device.createShaderModule({
           code: `

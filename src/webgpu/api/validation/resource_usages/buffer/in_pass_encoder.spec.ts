@@ -80,7 +80,7 @@ class F extends ValidationTest {
   }
 
   createRenderPipelineForTest(
-    pipelineLayout: GPUPipelineLayout | undefined,
+    pipelineLayout: GPUPipelineLayout | GPUAutoLayoutMode,
     vertexBufferCount: number
   ): GPURenderPipeline {
     const vertexBuffers: GPUVertexBufferLayout[] = [];
@@ -546,7 +546,7 @@ layout visibilities.`
         ) {
           return false;
         }
-        // The bufer usages `vertex` and `index` do nothing with shader visibilities.
+        // The buffer usages `vertex` and `index` do nothing with shader visibilities.
         if ((t.usage0 === 'vertex' || t.usage0 === 'index') && t.visibility0 !== 'fragment') {
           return false;
         }
@@ -555,7 +555,7 @@ layout visibilities.`
         if (t.usage0AccessibleInDraw && t.visibility0 !== 'fragment') {
           return false;
         }
-        // As usage1 is accssible in the draw call, the draw call cannot be before usage1.
+        // As usage1 is accessible in the draw call, the draw call cannot be before usage1.
         if (t.drawBeforeUsage1 && t.usage1AccessibleInDraw) {
           return false;
         }
@@ -853,27 +853,27 @@ different render pass encoders belong to different usage scopes.`
         }
         case 'vertex': {
           const kVertexBufferCount = 1;
-          const pipeline = t.createRenderPipelineForTest(undefined, kVertexBufferCount);
+          const pipeline = t.createRenderPipelineForTest('auto', kVertexBufferCount);
           renderPassEncoder.setPipeline(pipeline);
           renderPassEncoder.setVertexBuffer(0, buffer, offset);
           renderPassEncoder.draw(1);
           break;
         }
         case 'index': {
-          const pipeline = t.createRenderPipelineForTest(undefined, 0);
+          const pipeline = t.createRenderPipelineForTest('auto', 0);
           renderPassEncoder.setPipeline(pipeline);
           renderPassEncoder.setIndexBuffer(buffer, 'uint16', offset);
           renderPassEncoder.drawIndexed(1);
           break;
         }
         case 'indirect': {
-          const pipeline = t.createRenderPipelineForTest(undefined, 0);
+          const pipeline = t.createRenderPipelineForTest('auto', 0);
           renderPassEncoder.setPipeline(pipeline);
           renderPassEncoder.drawIndirect(buffer, offset);
           break;
         }
         case 'indexedIndirect': {
-          const pipeline = t.createRenderPipelineForTest(undefined, 0);
+          const pipeline = t.createRenderPipelineForTest('auto', 0);
           renderPassEncoder.setPipeline(pipeline);
           const indexBuffer = t.createBufferWithState('valid', {
             size: 4,

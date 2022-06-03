@@ -22,6 +22,7 @@ function makeFullscreenVertexModule(device) {
 
 function getDepthTestEqualPipeline(t, format, sampleCount, expected) {
   return t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       entryPoint: 'main',
       module: makeFullscreenVertexModule(t.device),
@@ -61,6 +62,7 @@ function getDepthTestEqualPipeline(t, format, sampleCount, expected) {
 
 function getStencilTestEqualPipeline(t, format, sampleCount) {
   return t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       entryPoint: 'main',
       module: makeFullscreenVertexModule(t.device),

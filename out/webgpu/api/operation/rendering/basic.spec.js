@@ -58,6 +58,7 @@ g.test('fullscreen_quad').fn(async (t) => {
   const colorAttachmentView = colorAttachment.createView();
 
   const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
         code: `

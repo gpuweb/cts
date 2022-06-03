@@ -72,6 +72,7 @@ fn(async (t) => {
 
 
   const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
         code: kVertexShader }),
@@ -172,6 +173,7 @@ fn(async (t) => {
 
 
   const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
         code: kVertexShader }),
@@ -382,6 +384,7 @@ fn(async (t) => {
 
 
   const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
         code: kVertexShader }),

@@ -42,6 +42,7 @@ export function run(format, compositingAlphaMode, writeCanvasMethod) {
     });
 
     const pipeline = t.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: t.device.createShaderModule({
           code: `

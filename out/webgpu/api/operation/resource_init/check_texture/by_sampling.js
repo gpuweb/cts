@@ -52,6 +52,7 @@ subresourceRange) =>
     'i32(GlobalInvocationID.x)' :
     unreachable();
     const computePipeline = t.device.createComputePipeline({
+      layout: 'auto',
       compute: {
         entryPoint: 'main',
         module: t.device.createShaderModule({

@@ -49,6 +49,7 @@ fn((t) => {
   // well as a line between the portions that contain the midpoint color due to the multisample
   // resolve.
   const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
         code: `

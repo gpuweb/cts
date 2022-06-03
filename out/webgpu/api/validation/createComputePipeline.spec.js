@@ -82,6 +82,7 @@ params((u) => u.combine('isAsync', [true, false])).
 fn(async (t) => {
   const { isAsync } = t.params;
   t.doCreateComputePipelineTest(isAsync, true, {
+    layout: 'auto',
     compute: { module: t.getShaderModule('compute', 'main'), entryPoint: 'main' } });
 
 });
@@ -96,6 +97,7 @@ params((u) => u.combine('isAsync', [true, false])).
 fn(async (t) => {
   const { isAsync } = t.params;
   t.doCreateComputePipelineTest(isAsync, false, {
+    layout: 'auto',
     compute: {
       module: t.getInvalidShaderModule(),
       entryPoint: 'main' } });
@@ -118,6 +120,7 @@ combine('shaderModuleStage', ['compute', 'vertex', 'fragment'])).
 fn(async (t) => {
   const { isAsync, shaderModuleStage } = t.params;
   const descriptor = {
+    layout: 'auto',
     compute: {
       module: t.getShaderModule(shaderModuleStage, 'main'),
       entryPoint: 'main' } };
@@ -165,6 +168,7 @@ u.combine('isAsync', [true, false]).combineWithParams([
 fn(async (t) => {
   const { isAsync, shaderModuleEntryPoint, stageEntryPoint } = t.params;
   const descriptor = {
+    layout: 'auto',
     compute: {
       module: t.getShaderModule('compute', shaderModuleEntryPoint),
       entryPoint: stageEntryPoint } };
@@ -217,6 +221,7 @@ fn(async (t) => {
 
 
   const descriptor = {
+    layout: 'auto',
     compute: {
       module,
       entryPoint: 'main' } };

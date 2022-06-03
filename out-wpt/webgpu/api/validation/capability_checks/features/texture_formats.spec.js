@@ -119,6 +119,7 @@ g.test('color_target_state')
 
     t.expectValidationError(() => {
       t.device.createRenderPipeline({
+        layout: 'auto',
         vertex: {
           module: t.device.createShaderModule({
             code: `
@@ -177,6 +178,7 @@ g.test('depth_stencil_state')
 
     t.expectValidationError(() => {
       t.device.createRenderPipeline({
+        layout: 'auto',
         vertex: {
           module: t.device.createShaderModule({
             code: `

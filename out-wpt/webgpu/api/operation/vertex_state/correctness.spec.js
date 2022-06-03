@@ -189,6 +189,7 @@ struct VSOutputs {
     }
 
     return this.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module,
         entryPoint: 'vsMain',

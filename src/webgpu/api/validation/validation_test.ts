@@ -312,6 +312,7 @@ export class ValidationTest extends GPUTest {
   /** Return a GPURenderPipeline with default options and no-op vertex and fragment shaders. */
   createNoOpRenderPipeline(): GPURenderPipeline {
     return this.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: this.device.createShaderModule({
           code: this.getNoOpShaderCode('VERTEX'),
@@ -333,6 +334,7 @@ export class ValidationTest extends GPUTest {
   createErrorRenderPipeline(): GPURenderPipeline {
     this.device.pushErrorScope('validation');
     const pipeline = this.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: this.device.createShaderModule({
           code: '',
@@ -345,7 +347,9 @@ export class ValidationTest extends GPUTest {
   }
 
   /** Return a GPUComputePipeline with a no-op shader. */
-  createNoOpComputePipeline(layout?: GPUPipelineLayout): GPUComputePipeline {
+  createNoOpComputePipeline(
+    layout: GPUPipelineLayout | GPUAutoLayoutMode = 'auto'
+  ): GPUComputePipeline {
     return this.device.createComputePipeline({
       layout,
       compute: {
@@ -361,6 +365,7 @@ export class ValidationTest extends GPUTest {
   createErrorComputePipeline(): GPUComputePipeline {
     this.device.pushErrorScope('validation');
     const pipeline = this.device.createComputePipeline({
+      layout: 'auto',
       compute: {
         module: this.device.createShaderModule({
           code: '',

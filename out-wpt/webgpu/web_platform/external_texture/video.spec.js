@@ -58,6 +58,7 @@ export const g = makeTestGroup(GPUTest);
 
 function createExternalTextureSamplingTestPipeline(t) {
   const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
         code: `
@@ -308,6 +309,7 @@ Tests that we can import an HTMLVideoElement into a GPUExternalTexture and use i
       });
 
       const pipeline = t.device.createComputePipeline({
+        layout: 'auto',
         compute: {
           // Shader will load a pixel near the upper left and lower right corners, which are then
           // stored in storage texture.

@@ -55,6 +55,7 @@ function addTestAttributes(
 class F extends ValidationTest {
   getDescriptor(buffers, vertexShaderCode) {
     const descriptor = {
+      layout: 'auto',
       vertex: {
         module: this.device.createShaderModule({ code: vertexShaderCode }),
         entryPoint: 'main',
@@ -90,6 +91,7 @@ class F extends ValidationTest {
 
     this.expectValidationError(() => {
       this.device.createRenderPipeline({
+        layout: 'auto',
         vertex: {
           module: vsModule,
           entryPoint: 'main',

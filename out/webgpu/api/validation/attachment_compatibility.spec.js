@@ -139,6 +139,7 @@ class F extends ValidationTest {
   cullMode)
   {
     return this.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: this.device.createShaderModule({
           code: `

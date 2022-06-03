@@ -98,6 +98,7 @@ fn(async (t) => {
   const depthTextureView = depthTexture.createView();
 
   const pipelineDescriptor = {
+    layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
         code: `
@@ -190,6 +191,7 @@ fn(async (t) => {
   const depthTextureView = depthTexture.createView();
 
   const pipelineDescriptor = {
+    layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
         code: `

@@ -47,6 +47,7 @@ export const checkContentsBySampling = (t, params, texture, state, subresourceRa
         ? 'i32(GlobalInvocationID.x)'
         : unreachable();
     const computePipeline = t.device.createComputePipeline({
+      layout: 'auto',
       compute: {
         entryPoint: 'main',
         module: t.device.createShaderModule({

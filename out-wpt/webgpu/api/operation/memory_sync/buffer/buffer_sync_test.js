@@ -322,6 +322,7 @@ export class BufferSyncTest extends GPUTest {
     `;
 
     return this.device.createComputePipeline({
+      layout: 'auto',
       compute: {
         module: this.device.createShaderModule({
           code: wgslCompute,
@@ -334,6 +335,7 @@ export class BufferSyncTest extends GPUTest {
 
   createTrivialRenderPipeline(wgslShaders) {
     return this.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: this.device.createShaderModule({
           code: wgslShaders.vertex,
@@ -496,6 +498,7 @@ export class BufferSyncTest extends GPUTest {
     `;
 
     return this.device.createComputePipeline({
+      layout: 'auto',
       compute: {
         module: this.device.createShaderModule({
           code: wgslCompute,
@@ -547,6 +550,7 @@ export class BufferSyncTest extends GPUTest {
     };
 
     return this.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: this.device.createShaderModule({
           code: wgslShaders.vertex,
@@ -622,6 +626,7 @@ export class BufferSyncTest extends GPUTest {
     };
 
     return this.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: this.device.createShaderModule({
           code: wgslShaders.vertex,

@@ -73,6 +73,7 @@ fn(async (t) => {
   const device = mismatched ? t.mismatchedDevice : t.device;
 
   const pipeline = device.createComputePipeline({
+    layout: 'auto',
     compute: {
       module: device.createShaderModule({
         code: '@stage(compute) @workgroup_size(1) fn main() {}' }),

@@ -73,6 +73,7 @@ function makeTestPipeline(test, buffers) {
   }
 
   return test.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       module: test.device.createShaderModule({
         code: test.getNoOpShaderCode('VERTEX'),

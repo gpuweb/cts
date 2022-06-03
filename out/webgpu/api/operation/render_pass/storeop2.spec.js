@@ -27,6 +27,7 @@ fn(async (t) => {
 
   // create render pipeline
   const renderPipeline = t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
         code: `

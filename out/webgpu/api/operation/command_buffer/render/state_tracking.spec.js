@@ -11,6 +11,7 @@ import { GPUTest } from '../../../../gpu_test.js';
 class VertexAndIndexStateTrackingTest extends GPUTest {
   GetRenderPipelineForTest(arrayStride) {
     return this.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: this.device.createShaderModule({
           code: `
@@ -408,6 +409,7 @@ fn(async (t) => {
 
   // Create renderPipeline1 that uses both positionBuffer and colorBuffer.
   const renderPipeline1 = t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
         code: `
@@ -459,6 +461,7 @@ fn(async (t) => {
 
 
   const renderPipeline2 = t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
         code: `

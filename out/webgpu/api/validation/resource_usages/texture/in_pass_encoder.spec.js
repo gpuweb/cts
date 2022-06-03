@@ -1079,6 +1079,7 @@ fn(async (t) => {
 
   const pipeline = compute ?
   t.device.createComputePipeline({
+    layout: 'auto',
     compute: {
       module: t.device.createShaderModule({
         code: wgslCompute }),
@@ -1087,6 +1088,7 @@ fn(async (t) => {
 
 
   t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
         code: wgslVertex }),

@@ -416,6 +416,7 @@ Tests creating compute pipeline on destroyed device.
     const cShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('COMPUTE') });
     await t.executeAfterDestroy(() => {
       t.device.createComputePipeline({
+        layout: 'auto',
         compute: { module: cShader, entryPoint: 'main' },
       });
     }, awaitLost);
@@ -435,6 +436,7 @@ Tests creating render pipeline on destroyed device.
     const fShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('FRAGMENT') });
     await t.executeAfterDestroy(() => {
       t.device.createRenderPipeline({
+        layout: 'auto',
         vertex: { module: vShader, entryPoint: 'main' },
         fragment: {
           module: fShader,
@@ -733,6 +735,7 @@ Tests encoding and dispatching a simple valid compute pass on destroyed device.
     const { stage, awaitLost } = t.params;
     const cShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('COMPUTE') });
     const pipeline = t.device.createComputePipeline({
+      layout: 'auto',
       compute: { module: cShader, entryPoint: 'main' },
     });
 
@@ -760,6 +763,7 @@ Tests encoding and finishing a simple valid render pass on destroyed device.
     const vShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('VERTEX') });
     const fShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('FRAGMENT') });
     const pipeline = t.device.createRenderPipeline({
+      layout: 'auto',
       vertex: { module: vShader, entryPoint: 'main' },
       fragment: {
         module: fShader,
@@ -792,6 +796,7 @@ Tests encoding and drawing a render pass including a render bundle on destroyed 
     const vShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('VERTEX') });
     const fShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('FRAGMENT') });
     const pipeline = t.device.createRenderPipeline({
+      layout: 'auto',
       vertex: { module: vShader, entryPoint: 'main' },
       fragment: {
         module: fShader,

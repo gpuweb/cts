@@ -27,6 +27,7 @@ sampleCount,
 expected)
 {
   return t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       entryPoint: 'main',
       module: makeFullscreenVertexModule(t.device) },
@@ -66,6 +67,7 @@ format,
 sampleCount)
 {
   return t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: {
       entryPoint: 'main',
       module: makeFullscreenVertexModule(t.device) },

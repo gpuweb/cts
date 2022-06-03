@@ -210,6 +210,7 @@ export function run(format, targets) {
       const srcTexture = setupSrcTexture(imageBitmap);
 
       const pipeline = t.device.createRenderPipeline({
+        layout: 'auto',
         vertex: {
           module: t.device.createShaderModule({
             code: `
@@ -333,6 +334,7 @@ fn linearMain(@location(0) fragUV: vec2<f32>) -> @location(0) vec4<f32> {
 
     function DrawVertexColor(ctx) {
       const pipeline = t.device.createRenderPipeline({
+        layout: 'auto',
         vertex: {
           module: t.device.createShaderModule({
             code: `
@@ -417,6 +419,7 @@ fn main(@location(0) fragColor: vec4<f32>) -> @location(0) vec4<f32> {
       const halfCanvasWidthStr = (ctx.canvas.width / 2).toFixed();
       const halfCanvasHeightStr = (ctx.canvas.height / 2).toFixed();
       const pipeline = t.device.createRenderPipeline({
+        layout: 'auto',
         vertex: {
           module: t.device.createShaderModule({
             code: `
@@ -506,6 +509,7 @@ fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
       const halfCanvasWidthStr = (ctx.canvas.width / 2).toFixed();
       const halfCanvasHeightStr = (ctx.canvas.height / 2).toFixed();
       const pipeline = t.device.createRenderPipeline({
+        layout: 'auto',
         vertex: {
           module: t.device.createShaderModule({
             code: `
@@ -607,6 +611,7 @@ fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
       const halfCanvasWidthStr = (ctx.canvas.width / 2).toFixed();
       const halfCanvasHeightStr = (ctx.canvas.height / 2).toFixed();
       const pipeline = t.device.createComputePipeline({
+        layout: 'auto',
         compute: {
           module: t.device.createShaderModule({
             code: `
@@ -659,6 +664,7 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
       const halfCanvasWidthStr = (ctx.canvas.width / 2).toFixed();
       const halfCanvasHeightStr = (ctx.canvas.height / 2).toFixed();
       const pipeline = t.device.createComputePipeline({
+        layout: 'auto',
         compute: {
           module: t.device.createShaderModule({
             code: `

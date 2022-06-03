@@ -118,6 +118,7 @@ fn(async (t) => {
 
   t.expectValidationError(() => {
     t.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: t.device.createShaderModule({
           code: `
@@ -173,6 +174,7 @@ fn(async (t) => {
 
   t.expectValidationError(() => {
     t.device.createRenderPipeline({
+      layout: 'auto',
       vertex: {
         module: t.device.createShaderModule({
           code: `

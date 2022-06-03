@@ -417,6 +417,7 @@ fn(async (t) => {
   const cShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('COMPUTE') });
   await t.executeAfterDestroy(() => {
     t.device.createComputePipeline({
+      layout: 'auto',
       compute: { module: cShader, entryPoint: 'main' } });
 
   }, awaitLost);
@@ -436,6 +437,7 @@ fn(async (t) => {
   const fShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('FRAGMENT') });
   await t.executeAfterDestroy(() => {
     t.device.createRenderPipeline({
+      layout: 'auto',
       vertex: { module: vShader, entryPoint: 'main' },
       fragment: {
         module: fShader,
@@ -724,6 +726,7 @@ fn(async (t) => {
   const { stage, awaitLost } = t.params;
   const cShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('COMPUTE') });
   const pipeline = t.device.createComputePipeline({
+    layout: 'auto',
     compute: { module: cShader, entryPoint: 'main' } });
 
   await t.executeCommandsAfterDestroy(stage, awaitLost, 'compute pass', (maker) => {
@@ -750,6 +753,7 @@ fn(async (t) => {
   const vShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('VERTEX') });
   const fShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('FRAGMENT') });
   const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: { module: vShader, entryPoint: 'main' },
     fragment: {
       module: fShader,
@@ -781,6 +785,7 @@ fn(async (t) => {
   const vShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('VERTEX') });
   const fShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('FRAGMENT') });
   const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
     vertex: { module: vShader, entryPoint: 'main' },
     fragment: {
       module: fShader,

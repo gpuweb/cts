@@ -1053,6 +1053,7 @@ g.test('unused_bindings_in_pipeline')
 
     const pipeline = compute
       ? t.device.createComputePipeline({
+          layout: 'auto',
           compute: {
             module: t.device.createShaderModule({
               code: wgslCompute,
@@ -1062,6 +1063,7 @@ g.test('unused_bindings_in_pipeline')
           },
         })
       : t.device.createRenderPipeline({
+          layout: 'auto',
           vertex: {
             module: t.device.createShaderModule({
               code: wgslVertex,
