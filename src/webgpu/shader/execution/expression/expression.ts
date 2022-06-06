@@ -454,12 +454,13 @@ export function makeBinaryF32Case(
 
 /**
  * Generates a Case for the param and unary interval generator provided.
- * The Case will use use an IntervalComparator for matching results.
+ * The Case will use use an interval comparator for matching results.
  * @param param the param to pass into the unary operation
  * @param op callback that implements generating an acceptance interval for a unary operation
  */
+// Will be used in test implementations
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function makeUnaryF32IntervalCase(param: number, op: PointToInterval) {
+export function makeUnaryF32IntervalCase(param: number, op: PointToInterval): Case {
   param = quantizeToF32(param);
   const interval = op(param);
   return { input: [f32(param)], expected: intervalComparator(interval) };
@@ -467,13 +468,18 @@ export function makeUnaryF32IntervalCase(param: number, op: PointToInterval) {
 
 /**
  * Generates a Case for the params and binary interval generator provided.
- * The Case will use use an IntervalComparator for matching results.
+ * The Case will use use an interval comparator for matching results.
  * @param param0 the first param or left hand side to pass into the binary operation
  * @param param1 the second param or rhs hand side to pass into the binary operation
  * @param op callback that implements generating an acceptance interval for a binary operation
  */
+// Will be used in test implementations
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function makeBinaryF32IntervalCase(param0: number, param1: number, op: BinaryToInterval) {
+export function makeBinaryF32IntervalCase(
+  param0: number,
+  param1: number,
+  op: BinaryToInterval
+): Case {
   param0 = quantizeToF32(param0);
   param1 = quantizeToF32(param1);
   const interval = op(param0, param1);
@@ -482,19 +488,20 @@ export function makeBinaryF32IntervalCase(param0: number, param1: number, op: Bi
 
 /**
  * Generates a Case for the params and ternary interval generator provided.
- * The Case will use use an IntervalComparator for matching results.
+ * The Case will use use an interval comparator for matching results.
  * @param param0 the first param to pass into the ternary operation
  * @param param1 the second param to pass into the ternary operation
  * @param param2 the third param to pass into the ternary operation
  * @param op callback that implements generating an acceptance interval for a ternary operation
  */
+// Will be used in test implementations
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function makeTernaryF32IntervalCase(
   param0: number,
   param1: number,
   param2: number,
   op: TernaryToInterval
-) {
+): Case {
   param0 = quantizeToF32(param0);
   param1 = quantizeToF32(param1);
   param2 = quantizeToF32(param2);

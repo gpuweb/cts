@@ -39,15 +39,6 @@ export function flushSubnormalNumber(val: number): number {
   return (u32_val & 0x7f800000) === 0 ? 0 : val;
 }
 
-/**
- * @returns 0 if |val| is a bit field for a subnormal f32 number, otherwise
- * returns |val|
- * |val| is assumed to be a u32 value representing a f32
- */
-function flushSubnormalBits(val: number): number {
-  return (val & 0x7f800000) === 0 ? 0 : val;
-}
-
 /** @returns 0 if |val| is a subnormal f32 number, otherwise returns |val| */
 export function flushSubnormalScalar(val: Scalar): Scalar {
   return isSubnormalScalar(val) ? f32(0) : val;
@@ -124,14 +115,13 @@ export function nextAfter(val: number, dir: boolean = true, flush: boolean): Sca
   let u32_result: number;
   if (val === converted) {
     // val is expressible precisely as a float32
-    let u32_val: number = new Uint32Array(new Float32Array([val]).buffer)[0];
-    const is_positive = (u32_val & 0x80000000) === 0;
+    u32_result = new Uint32Array(new Float32Array([val]).buffer)[0];
+    const is_positive = (u32_result & 0x80000000) === 0;
     if (dir === is_positive) {
-      u32_val += 1;
+      u32_result += 1;
     } else {
-      u32_val -= 1;
+      u32_result -= 1;
     }
-    u32_result = flush ? flushSubnormalBits(u32_val) : u32_val;
   } else {
     // val had to be rounded to be expressed as a float32
     if (dir === converted > val) {
@@ -154,7 +144,8 @@ export function nextAfter(val: number, dir: boolean = true, flush: boolean): Sca
     }
   }
 
-  return f32Bits(u32_result);
+  const f32_result = f32Bits(u32_result);
+  return flush ? flushSubnormalScalar(f32_result) : f32_result;
 }
 
 /**
@@ -173,37 +164,26 @@ export function oneULP(target: number, flush: boolean): number {
     return Number.NaN;
   }
 
-  if (flush) {
-    target = flushSubnormalNumber(target);
-  }
+  target = flush ? flushSubnormalNumber(target) : target;
 
-  // For values at the edge of the range or beyond ulp(x) is defined as  the distance between the two nearest
-  // representable numbers to the appropriate edge.
+  // For values at the edge of the range or beyond ulp(x) is defined as the distance between the two nearest
+  // f32 representable numbers to the appropriate edge.
   if (target === Number.POSITIVE_INFINITY || target >= kValue.f32.positive.max) {
     return kValue.f32.positive.max - kValue.f32.positive.nearest_max;
   } else if (target === Number.NEGATIVE_INFINITY || target <= kValue.f32.negative.min) {
     return kValue.f32.negative.nearest_min - kValue.f32.negative.min;
+  }
+
+  // ulp(x) is min(b-a), where a <= x <= b, a =/= b, a and b are f32 representable
+  const b = nextAfter(target, true, flush).value.valueOf() as number;
+  const a = nextAfter(target, false, flush).value.valueOf() as number;
+  const converted: number = new Float32Array([target])[0];
+  if (converted === target) {
+    // |target| is f32 representable, so either either a or b will be x
+    return Math.min(target - a, b - target);
   } else {
-    const converted: number = new Float32Array([target])[0];
-    if (converted === target) {
-      // |target| is precisely representable as a f32 so taking distance between it and the nearest neighbour in the
-      // direction of 0.
-      if (target > 0) {
-        const a = nextAfter(target, false, flush).value.valueOf() as number;
-        return target - a;
-      } else if (target < 0) {
-        const b = nextAfter(target, true, flush).value.valueOf() as number;
-        return b - target;
-      } else {
-        // For 0 both neighbours should be the same distance, so just using the positive value and simplifying.
-        return nextAfter(target, true, flush).value.valueOf() as number;
-      }
-    } else {
-      // |target| is not precisely representable as a f32 so taking distance of neighbouring f32s.
-      const b = nextAfter(target, true, flush).value.valueOf() as number;
-      const a = nextAfter(target, false, flush).value.valueOf() as number;
-      return b - a;
-    }
+    // |target| is not f32 representable so taking distance of neighbouring f32s.
+    return b - a;
   }
 }
 

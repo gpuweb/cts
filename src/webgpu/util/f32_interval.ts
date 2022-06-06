@@ -45,7 +45,14 @@ export class F32Interval {
     }
   }
 
-  /** @returns if a point or interval is completely contained by this interval */
+  /** @returns if a point or interval is completely contained by this interval
+   *
+   * Due to the fact backends may clamp out of range values to the min/max f32
+   * values, which is represented in the implementation by extending the
+   * begin/end values as appropriate, there some unintuitive behaviours here.
+   * For example:
+   *   [0, max f32].contains(+∞) will return true.
+   * */
   public contains(n: number | F32Interval): boolean {
     if (Number.isNaN(n)) {
       // Being the infinite interval indicates that the accuracy is not defined
@@ -100,7 +107,7 @@ function toInterval(n: number | F32Interval): F32Interval {
 }
 
 /**
- * A function that converts a point to an interval of valid results.
+ * A function that converts a point to an acceptance interval.
  * This is the public facing API for builtin implementations that is called
  * from tests.
  */
@@ -131,7 +138,7 @@ interface PointToIntervalOp {
 }
 
 /**
- * A function that converts a pair of points to an interval of valid results.
+ * A function that converts a pair of points to an acceptance interval.
  * This is the public facing API for builtin implementations that is called
  * from tests.
  */
@@ -160,7 +167,7 @@ interface BinaryToIntervalOp {
 }
 
 /**
- * A function that converts a triplet of points to an interval of valid results.
+ * A function that converts a triplet of points to an acceptance interval.
  * This is the public facing API for builtin implementations that is called
  * from tests.
  */
@@ -177,7 +184,7 @@ interface TernaryToIntervalOp {
   // pattern for symmetry with the other operations
 }
 
-/** Convert a point to an interval valid results, using a specific function
+/** Converts a point to an acceptance interval, using a specific function
  *
  * This handles correctly rounding and flushing inputs as needed.
  * Duplicate inputs are pruned before invoking op.impl.
@@ -195,7 +202,7 @@ function roundAndFlushPointToInterval(n: number, op: PointToIntervalOp) {
   return F32Interval.span(...results);
 }
 
-/** Convert a pair to an interval valid results, using a specific function
+/** Converts a pair to an acceptance interval, using a specific function
  *
  * This handles correctly rounding and flushing inputs as needed.
  * Duplicate inputs are pruned before invoking op.impl.
@@ -223,7 +230,7 @@ function roundAndFlushBinaryToInterval(x: number, y: number, op: BinaryToInterva
   return F32Interval.span(...intervals);
 }
 
-/** Convert a triplet to an interval valid results, using a specific function
+/** Converts a triplet to an acceptance interval, using a specific function
  *
  * This handles correctly rounding and flushing inputs as needed.
  * Duplicate inputs are pruned before invoking op.impl.
@@ -276,6 +283,7 @@ function roundAndFlushTernaryToInterval(
  * @param op operation defining the function being run
  * @returns a span over all of the outputs of op.impl
  */
+// Will be used in test implementations
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function runPointOp(x: F32Interval, op: PointToIntervalOp): F32Interval {
   if (x.isPoint()) {
@@ -301,6 +309,7 @@ function runPointOp(x: F32Interval, op: PointToIntervalOp): F32Interval {
  * @param op operation defining the function being run
  * @returns a span over all of the outputs of op.impl
  */
+// Will be used in test implementations
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function runBinaryOp(x: F32Interval, y: F32Interval, op: BinaryToIntervalOp): F32Interval {
   if (op.extrema !== undefined) {
@@ -330,6 +339,7 @@ function runBinaryOp(x: F32Interval, y: F32Interval, op: BinaryToIntervalOp): F3
  * @param op operation defining the function being run
  * @returns a span over all of the outputs of op.impl
  */
+// Will be used in test implementations
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function runTernaryOp(
   x: F32Interval,
@@ -388,7 +398,12 @@ export function ulpInterval(n: number, numULP: number): F32Interval {
       const ulp_flush = oneULP(impl_n, true);
       const ulp_noflush = oneULP(impl_n, false);
       const ulp = Math.max(ulp_flush, ulp_noflush);
-      return new F32Interval(impl_n - numULP * ulp, impl_n + numULP * ulp);
+      const begin = impl_n - numULP * ulp;
+      const end = impl_n + numULP * ulp;
+      return new F32Interval(
+        Math.min(begin, flushSubnormalNumber(begin)),
+        Math.max(end, flushSubnormalNumber(end))
+      );
     },
   });
 }

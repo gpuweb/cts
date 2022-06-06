@@ -201,8 +201,8 @@ g.test('oneULPFlushToZero')
 
     // Normals
     { target: hexToF32(kBit.f32.positive.max), expect: hexToF32(0x73800000) },
-    { target: hexToF32(kBit.f32.positive.min), expect: hexToF32(0x00800000) },
-    { target: hexToF32(kBit.f32.negative.max), expect: hexToF32(0x00800000) },
+    { target: hexToF32(kBit.f32.positive.min), expect: hexToF32(0x00000001) },
+    { target: hexToF32(kBit.f32.negative.max), expect: hexToF32(0x00000001) },
     { target: hexToF32(kBit.f32.negative.min), expect: hexToF32(0x73800000) },
     { target: 1, expect: hexToF32(0x33800000) },
     { target: 2, expect: hexToF32(0x34000000) },
