@@ -10,6 +10,7 @@ import {
   absoluteErrorInterval,
   atanInterval,
   correctlyRoundedInterval,
+  cosInterval,
   F32Interval,
   ulpInterval,
 } from '../webgpu/util/f32_interval.js';
@@ -624,5 +625,36 @@ g.test('atanInterval')
     t.expect(
       objectEquals(expected, got),
       `atanInterval(${input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('cosInterval')
+  .paramsSubcasesOnly<PointToIntervalCase>(
+    // prettier-ignore
+    [
+      // This test does not include some common cases. i.e. f(x = π/2) = 0, because the difference between true x
+      // and x as a f32 is sufficiently large, such that the high slope of f @ x causes the results to be substantially
+      // different, so instead of getting 0 you get a value on the order of 10^-8 away from 0, thus difficult to express
+      // in a human readable manner.
+      { input: Number.NEGATIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.negative.min, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.negative.pi.whole, expected: [-1, plusOneULP(-1)] },
+      { input: kValue.f32.negative.pi.third, expected: [minusOneULP(1/2), 1/2] },
+      { input: 0, expected: [1, 1] },
+      { input: kValue.f32.positive.pi.third, expected: [minusOneULP(1/2), 1/2] },
+      { input: kValue.f32.positive.pi.whole, expected: [-1, plusOneULP(-1)] },
+      { input: kValue.f32.positive.max, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: Number.POSITIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+    ]
+  )
+  .fn(t => {
+    const error = 2 ** -11;
+    const input = t.params.input;
+    const [begin, end] = t.params.expected;
+    const expected = arrayToInterval([begin - error, end + error]);
+    const got = cosInterval(input);
+    t.expect(
+      objectEquals(expected, got),
+      `cosInterval(${input}) returned ${got}. Expected ${expected}`
     );
   });

@@ -419,3 +419,16 @@ export function atanInterval(n: number): F32Interval {
 
   return runPointOp(toInterval(n), op);
 }
+
+/** Calculate an acceptance interval of cos(x) */
+export function cosInterval(n: number): F32Interval {
+  const op: PointToIntervalOp = {
+    impl: (impl_n: number): F32Interval => {
+      return kValue.f32.negative.pi.whole <= impl_n && impl_n <= kValue.f32.positive.pi.whole
+        ? absoluteErrorInterval(Math.cos(impl_n), 2 ** -11)
+        : F32Interval.infinite();
+    },
+  };
+
+  return runPointOp(toInterval(n), op);
+}
