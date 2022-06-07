@@ -723,7 +723,6 @@ Test the validations on the member 'aspect' of GPUImageCopyTexture in CopyTextur
       // kUnsizedDepthStencilFormats
       depth24plus: ['all', 'depth-only'],
       'depth24plus-stencil8': ['all'],
-      'depth24unorm-stencil8': ['all'],
       'depth32float-stencil8': ['all'],
 
       // kSizedDepthStencilFormats
