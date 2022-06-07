@@ -1081,6 +1081,15 @@ export const listing = [
       "api",
       "validation",
       "resource_usages",
+      "buffer",
+      "in_pass_misc"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "resource_usages",
       "texture",
       "in_pass_encoder"
     ]
