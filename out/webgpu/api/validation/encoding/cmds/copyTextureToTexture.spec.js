@@ -723,7 +723,6 @@ fn(async (t) => {
     // kUnsizedDepthStencilFormats
     depth24plus: ['all', 'depth-only'],
     'depth24plus-stencil8': ['all'],
-    'depth24unorm-stencil8': ['all'],
     'depth32float-stencil8': ['all'],
 
     // kSizedDepthStencilFormats

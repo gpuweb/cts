@@ -29,7 +29,7 @@
   - add another initMethod which renders the texture [3]
   - test copyT2B with buffer size not divisible by 4 (not done because expectContents 4-byte alignment)
   - Convert the float32 values in initialData into the ones compatible to the depth aspect of
-    depthFormats when depth16unorm and depth24unorm-stencil8 are supported by the browsers in
+    depthFormats when depth16unorm is supported by the browsers in
     DoCopyTextureToBufferWithDepthAspectTest().
 
 TODO: Expand tests of GPUExtent3D [1]
@@ -1072,9 +1072,7 @@ class ImageCopyTest extends GPUTest {
     mipLevel
   ) {
     // [2]: need to convert the float32 values in initialData into the ones compatible
-    // to the depth aspect of depthFormats when depth16unorm and depth24unorm-stencil8 are supported
-    // by the browsers.
-    assert(format !== 'depth24unorm-stencil8');
+    // to the depth aspect of depthFormats when depth16unorm is supported by the browsers.
 
     // Generate the initial depth data uploaded to the texture as float32.
     const initialData = new Float32Array(copySize[0] * copySize[1] * copySize[2]);

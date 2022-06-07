@@ -161,7 +161,6 @@ const kUnsizedDepthStencilFormatInfo = makeTable(
     depth24plus: [, , , , true, false, , , , 'depth'],
     'depth24plus-stencil8': [, , , , true, true, , , , 'depth'],
     // MAINTENANCE_TODO: These should really be sized formats; see below MAINTENANCE_TODO about multi-aspect formats.
-    'depth24unorm-stencil8': [, , , , true, true, , , , 'depth', , , , 'depth24unorm-stencil8'],
     'depth32float-stencil8': [, , , , true, true, , , , 'depth', , , , 'depth32float-stencil8'],
   }
 );
@@ -974,7 +973,7 @@ export const kCanvasTextureFormats = ['bgra8unorm', 'rgba8unorm', 'rgba16float']
 // Exists just for documentation. Otherwise could be inferred by `makeTable`.
 // MAINTENANCE_TODO: Refactor this to separate per-aspect data for multi-aspect formats. In particular:
 // - bytesPerBlock only makes sense on a per-aspect basis. But this table can't express that.
-//   So we put depth24unorm-stencil8 and depth32float-stencil8 to be unsized formats for now.
+//   So we put depth32float-stencil8 to be an unsized format for now.
 
 /** Per-GPUTextureFormat info. */
 export const kTextureFormatInfo = kAllTextureFormatInfo;
@@ -1075,12 +1074,6 @@ const kDepthStencilFormatCapabilityInBufferTextureCopy = {
     texelAspectSize: { 'depth-only': 4, 'stencil-only': -1 },
   },
 
-  'depth24unorm-stencil8': {
-    CopyB2T: ['stencil-only'],
-    CopyT2B: ['stencil-only'],
-    texelAspectSize: { 'depth-only': -1, 'stencil-only': 1 },
-  },
-
   'depth32float-stencil8': {
     CopyB2T: ['stencil-only'],
     CopyT2B: ['depth-only', 'stencil-only'],
@@ -1122,12 +1115,6 @@ export const kDepthStencilFormatResolvedAspect = {
     all: 'depth32float',
     'depth-only': 'depth32float',
     'stencil-only': undefined,
-  },
-
-  'depth24unorm-stencil8': {
-    all: 'depth24unorm-stencil8',
-    'depth-only': 'depth24plus', // Should this be depth24unorm? See https://github.com/gpuweb/gpuweb/issues/2732
-    'stencil-only': 'stencil8',
   },
 
   'depth32float-stencil8': {
