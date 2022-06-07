@@ -52,7 +52,7 @@ async function createDeviceAndComputeCommands(adapter: GPUAdapter) {
               struct Buffer { data: array<u32>; };
 
               @group(0) @binding(0) var<storage, read_write> buffer: Buffer;
-              @stage(compute) @workgroup_size(1) fn main(
+              @compute @workgroup_size(1) fn main(
                   @builtin(global_invocation_id) id: vec3<u32>) {
                 buffer.data[id.x * ${kLimitInfo.maxComputeWorkgroupSizeX.default}u + id.y] =
                   buffer.data[id.x * ${kLimitInfo.maxComputeWorkgroupSizeX.default}u + id.y] +
@@ -113,7 +113,7 @@ async function createDeviceAndRenderCommands(adapter: GPUAdapter) {
           struct Buffer { data: array<vec4<u32>, ${(kSize * kSize) / 4}>; };
 
           @group(0) @binding(0) var<uniform> buffer: Buffer;
-          @stage(vertex) fn vmain(
+          @vertex fn vmain(
             @builtin(vertex_index) vertexIndex: u32
           ) -> @builtin(position) vec4<f32> {
             let index = buffer.data[vertexIndex / 4u][vertexIndex % 4u];
@@ -124,7 +124,7 @@ async function createDeviceAndRenderCommands(adapter: GPUAdapter) {
             return vec4<f32>(fma(position, a, b), 0.0, 1.0);
           }
 
-          @stage(fragment) fn fmain() -> @location(0) vec4<f32> {
+          @fragment fn fmain() -> @location(0) vec4<f32> {
             return vec4<f32>(${pipelineIndex}.0 / ${kNumPipelines}.0, 0.0, 0.0, 1.0);
           }
         `,
