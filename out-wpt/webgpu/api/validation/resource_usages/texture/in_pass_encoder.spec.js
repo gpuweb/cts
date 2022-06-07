@@ -928,9 +928,13 @@ g.test('bindings_in_bundle')
     } = t.params;
 
     // Two bindings are attached to the same texture view.
+    const usage =
+      _sampleCount === 4
+        ? GPUTextureUsage[_usage0] | GPUTextureUsage[_usage1] | GPUTextureUsage.RENDER_ATTACHMENT
+        : GPUTextureUsage[_usage0] | GPUTextureUsage[_usage1];
     const view = t
       .createTexture({
-        usage: GPUTextureUsage[_usage0] | GPUTextureUsage[_usage1],
+        usage,
         sampleCount: _sampleCount,
       })
       .createView();

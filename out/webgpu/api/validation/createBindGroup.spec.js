@@ -153,15 +153,19 @@ fn(async (t) => {
     entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, ...entry }] });
 
 
+  // The `RENDER_ATTACHMENT` usage must be specified if sampleCount > 1 according to WebGPU SPEC.
+  const appliedUsage =
+  info.resource === 'sampledTexMS' ? usage | GPUConst.TextureUsage.RENDER_ATTACHMENT : usage;
+
   const descriptor = {
     size: { width: 16, height: 16, depthOrArrayLayers: 1 },
     format: 'rgba8unorm',
-    usage,
+    usage: appliedUsage,
     sampleCount: info.resource === 'sampledTexMS' ? 4 : 1 };
 
   const resource = t.device.createTexture(descriptor).createView();
 
-  const shouldError = usage !== info.usage;
+  const shouldError = (usage & info.usage) === 0;
   t.expectValidationError(() => {
     t.device.createBindGroup({
       entries: [{ binding: 0, resource }],
@@ -469,8 +473,12 @@ fn((t) => {
 
 
 
+  // The `RENDER_ATTACHMENT` usage must be specified if sampleCount > 1 according to WebGPU SPEC.
+  const usage = entry.texture?.multisampled ?
+  info.usage | GPUConst.TextureUsage.RENDER_ATTACHMENT :
+  info.usage;
   const texture = t.createTextureWithState(state, {
-    usage: info.usage,
+    usage,
     size: [1, 1],
     format: 'rgba8unorm',
     sampleCount: entry.texture?.multisampled ? 4 : 1 });

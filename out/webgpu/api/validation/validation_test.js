@@ -132,14 +132,20 @@ export class ValidationTest extends GPUTest {
   }
 
   /**
-   * Return an arbitrarily-configured GPUTexture with the `TEXTURE_BINDING` usage and specified sampleCount.
+   * Return an arbitrarily-configured GPUTexture with the `TEXTURE_BINDING` usage and specified
+   * sampleCount. The `RENDER_ATTACHMENT` usage will also be specified if sampleCount > 1 as is
+   * required by WebGPU SPEC.
    */
   getSampledTexture(sampleCount = 1) {
+    const usage =
+    sampleCount > 1 ?
+    GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT :
+    GPUTextureUsage.TEXTURE_BINDING;
     return this.trackForCleanup(
     this.device.createTexture({
       size: { width: 16, height: 16, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
-      usage: GPUTextureUsage.TEXTURE_BINDING,
+      usage,
       sampleCount }));
 
 

@@ -1237,7 +1237,10 @@ fn(async (t) => {
   const destinationTexture = t.device.createTexture({
     format: kColorFormat,
     size: textureSize,
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+    usage:
+    GPUTextureUsage.COPY_DST |
+    GPUTextureUsage.TEXTURE_BINDING |
+    GPUTextureUsage.RENDER_ATTACHMENT,
     sampleCount: kSampleCount });
 
 
