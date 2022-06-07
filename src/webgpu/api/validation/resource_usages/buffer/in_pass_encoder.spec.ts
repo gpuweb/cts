@@ -8,7 +8,7 @@ import { ValidationTest } from '../../validation_test.js';
 
 const kBoundBufferSize = 256;
 
-type BufferUsage =
+export type BufferUsage =
   | 'uniform'
   | 'storage'
   | 'read-only-storage'
@@ -17,7 +17,7 @@ type BufferUsage =
   | 'indirect'
   | 'indexedIndirect';
 
-const kAllBufferUsages: BufferUsage[] = [
+export const kAllBufferUsages: BufferUsage[] = [
   'uniform',
   'storage',
   'read-only-storage',
@@ -27,7 +27,7 @@ const kAllBufferUsages: BufferUsage[] = [
   'indexedIndirect',
 ];
 
-class F extends ValidationTest {
+export class BufferResourceUsageTest extends ValidationTest {
   createBindGroupLayoutForTest(
     type: 'uniform' | 'storage' | 'read-only-storage',
     resourceVisibility: 'compute' | 'fragment'
@@ -138,7 +138,7 @@ function IsBufferUsageInBindGroup(bufferUsage: BufferUsage): boolean {
   }
 }
 
-export const g = makeTestGroup(F);
+export const g = makeTestGroup(BufferResourceUsageTest);
 
 g.test('subresources,buffer_usage_in_one_compute_pass_with_no_dispatch')
   .desc(
