@@ -74,7 +74,7 @@ class F extends ValidationTest {
       vertex: {
         module: this.device.createShaderModule({
           code: `
-            @stage(vertex) fn main() -> @builtin(position) vec4<f32> {
+            @vertex fn main() -> @builtin(position) vec4<f32> {
               return vec4<f32>(0.0, 0.0, 0.0, 1.0);
             }`,
         }),
@@ -694,7 +694,7 @@ g.test('pipeline_layout,device_mismatch')
       vertex: {
         module: t.device.createShaderModule({
           code: `
-        @stage(vertex) fn main() -> @builtin(position) vec4<f32> {
+        @vertex fn main() -> @builtin(position) vec4<f32> {
           return vec4<f32>(0.0, 0.0, 0.0, 1.0);
         }
       `,
@@ -731,7 +731,7 @@ g.test('shader_module,device_mismatch')
     const { isAsync, vertex_mismatched, fragment_mismatched, _success } = t.params;
 
     const code = `
-      @stage(vertex) fn main() -> @builtin(position) vec4<f32> {
+      @vertex fn main() -> @builtin(position) vec4<f32> {
         return vec4<f32>(0.0, 0.0, 0.0, 1.0);
       }
     `;
