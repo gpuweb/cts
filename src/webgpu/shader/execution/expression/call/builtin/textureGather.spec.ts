@@ -57,6 +57,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('T', ['f32', 'i32', 'u32'] as const)
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'] as const)
@@ -87,6 +88,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('T', ['f32', 'i32', 'u32'] as const)
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'] as const)
@@ -124,6 +126,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('T', ['f32', 'i32', 'u32'] as const)
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'] as const)
@@ -157,6 +160,7 @@ Parameters:
   .params(
     u =>
       u
+        .beginSubcases()
         .combine('T', ['f32', 'i32', 'u32'] as const)
         .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
         .combine('C', ['i32', 'u32'] as const)
@@ -187,6 +191,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(2))
       .combine('offset', generateOffsets(2))
@@ -207,6 +212,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(3))
   )
@@ -236,6 +242,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'] as const)
       .combine('coords', generateCoordBoundaries(2))
@@ -262,6 +269,7 @@ Parameters:
   .params(
     u =>
       u
+        .beginSubcases()
         .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
         .combine('C', ['i32', 'u32'] as const)
         .combine('coords', generateCoordBoundaries(3))

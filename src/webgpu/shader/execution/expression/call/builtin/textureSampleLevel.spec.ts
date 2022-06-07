@@ -38,6 +38,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(2))
       .combine('offset', generateOffsets(2))
@@ -74,6 +75,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'] as const)
       .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
@@ -112,6 +114,7 @@ Parameters:
   .params(u =>
     u
       .combine('texture_type', ['texture_3d', 'texture_cube'] as const)
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(3))
       .combine('offset', generateOffsets(3))
@@ -147,6 +150,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'] as const)
       .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
@@ -185,6 +189,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'] as const)
       .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
@@ -223,6 +228,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'] as const)
       .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
@@ -262,6 +268,7 @@ Parameters:
   .params(u =>
     u
       .combine('texture_type', ['texture_depth_cube', 'texture_depth_cube_array'] as const)
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'] as const)
       .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
@@ -285,6 +292,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(2))
   )

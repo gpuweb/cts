@@ -110,6 +110,7 @@ Parameters:
         'texture_multisampled_2d',
         'texture_depth_multisampled_2d',
       ] as const)
+      .beginSubcases()
       .combine('C', ['i32', 'u32'] as const)
       .combine('coords', generateCoordBoundaries(2))
       .combine('sample_index', [-1, 0, `sampleCount-1`, `sampleCount`] as const)
@@ -132,6 +133,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('C', ['i32', 'u32'] as const)
       .combine('coords', generateCoordBoundaries(2))
       .combine('level', [-1, 0, `numlevels-1`, `numlevels`] as const)
@@ -152,7 +154,10 @@ Parameters:
 `
   )
   .params(u =>
-    u.combine('C', ['i32', 'u32'] as const).combine('coords', generateCoordBoundaries(2))
+    u
+      .beginSubcases()
+      .combine('C', ['i32', 'u32'] as const)
+      .combine('coords', generateCoordBoundaries(2))
   )
   .unimplemented();
 
@@ -175,6 +180,7 @@ Parameters:
   .params(u =>
     u
       .combine('texture_type', ['texture_2d_array', 'texture_depth_2d_array'] as const)
+      .beginSubcases()
       .combine('C', ['i32', 'u32'] as const)
       .combine('coords', generateCoordBoundaries(2))
       .combine('array_index', [-1, 0, `numlayers-1`, `numlayers`] as const)

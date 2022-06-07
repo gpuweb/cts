@@ -58,6 +58,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(2))
       .combine('depth_ref', [-1 /* smaller ref */, 0 /* equal ref */, 1 /* larger ref */] as const)
@@ -80,6 +81,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(3))
       .combine('depth_ref', [-1 /* smaller ref */, 0 /* equal ref */, 1 /* larger ref */] as const)
@@ -111,6 +113,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(2))
       .combine('C', ['i32', 'u32'] as const)
@@ -139,6 +142,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(3))
       .combine('C', ['i32', 'u32'] as const)

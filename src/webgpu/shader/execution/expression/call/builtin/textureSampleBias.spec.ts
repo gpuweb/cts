@@ -55,6 +55,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(2))
       .combine('bias', [-16.1, -16, 0, 1, 15.99, 16] as const)
@@ -86,6 +87,7 @@ Parameters:
   .params(u =>
     u
       .combine('texture_type', ['texture_3d', 'texture_cube'] as const)
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(3))
       .combine('bias', [-16.1, -16, 0, 1, 15.99, 16] as const)
@@ -118,6 +120,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(2))
       .combine('C', ['i32', 'u32'] as const)
@@ -152,6 +155,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(3))
       .combine('C', ['i32', 'u32'] as const)

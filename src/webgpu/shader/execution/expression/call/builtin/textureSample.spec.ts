@@ -46,6 +46,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('coords', generateCoordBoundaries(1))
   )
@@ -72,6 +73,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('coords', generateCoordBoundaries(2))
       .combine('offset', generateOffsets(2))
@@ -101,6 +103,7 @@ Parameters:
   .params(u =>
     u
       .combine('texture_type', ['texture_3d', 'texture_cube'] as const)
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('coords', generateCoordBoundaries(3))
       .combine('offset', generateOffsets(3))
@@ -128,6 +131,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('coords', generateCoordBoundaries(2))
       .combine('offset', generateOffsets(2))
@@ -158,6 +162,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('C', ['i32', 'u32'] as const)
       .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
@@ -185,6 +190,7 @@ Parameters:
   .params(
     u =>
       u
+        .beginSubcases()
         .combine('C', ['i32', 'u32'] as const)
         .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
         .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
@@ -207,6 +213,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('coords', generateCoordBoundaries(3))
   )
@@ -236,6 +243,7 @@ Parameters:
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('C', ['i32', 'u32'] as const)
       .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
@@ -263,6 +271,7 @@ Parameters:
   .params(
     u =>
       u
+        .beginSubcases()
         .combine('C', ['i32', 'u32'] as const)
         .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
         .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
