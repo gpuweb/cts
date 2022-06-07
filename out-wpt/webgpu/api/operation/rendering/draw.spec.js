@@ -84,7 +84,7 @@ struct Inputs {
   @location(0) vertexPosition : vec2<f32>,
 };
 
-@stage(vertex) fn vert_main(input : Inputs
+@vertex fn vert_main(input : Inputs
   ) -> @builtin(position) vec4<f32> {
   // 3u is the number of points in a triangle to convert from index
   // to id.
@@ -109,7 +109,7 @@ struct Output {
 
 @group(0) @binding(0) var<storage, read_write> output : Output;
 
-@stage(fragment) fn frag_main() -> @location(0) vec4<f32> {
+@fragment fn frag_main() -> @location(0) vec4<f32> {
   output.value = 1u;
   return vec4<f32>(0.0, 1.0, 0.0, 1.0);
 }
@@ -546,7 +546,7 @@ ${interStageScalarShaderLocations
 ${accumulateVariableDeclarationsInVertexShader}
 };
 
-@stage(vertex) fn main(input : Inputs) -> Outputs {
+@vertex fn main(input : Inputs) -> Outputs {
   var output : Outputs;
 ${interStageScalarShaderLocations.map(i => `  output.outAttrib${i} = input.attrib${i};`).join('\n')}
 ${accumulateVariableAssignmentsInVertexShader}
@@ -581,7 +581,7 @@ struct OutBuffer {
 };
 @group(0) @binding(0) var<storage, read_write> outBuffer : OutBuffer;
 
-@stage(fragment) fn main(input : Inputs) {
+@fragment fn main(input : Inputs) {
 ${interStageScalarShaderLocations
   .map(i => `  outBuffer.primitives[input.primitiveId].attrib${i} = input.attrib${i};`)
   .join('\n')}

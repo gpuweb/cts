@@ -122,7 +122,7 @@ fn(async (t) => {
       vertex: {
         module: t.device.createShaderModule({
           code: `
-              @stage(vertex)
+              @vertex
               fn main()-> @builtin(position) vec4<f32> {
                 return vec4<f32>(0.0, 0.0, 0.0, 1.0);
               }` }),
@@ -132,7 +132,7 @@ fn(async (t) => {
       fragment: {
         module: t.device.createShaderModule({
           code: `
-              @stage(fragment)
+              @fragment
               fn main() -> @location(0) vec4<f32> {
                 return vec4<f32>(0.0, 1.0, 0.0, 1.0);
               }` }),
@@ -178,7 +178,7 @@ fn(async (t) => {
       vertex: {
         module: t.device.createShaderModule({
           code: `
-              @stage(vertex)
+              @vertex
               fn main()-> @builtin(position) vec4<f32> {
                 return vec4<f32>(0.0, 0.0, 0.0, 1.0);
               }` }),
@@ -191,7 +191,7 @@ fn(async (t) => {
       fragment: {
         module: t.device.createShaderModule({
           code: `
-              @stage(fragment)
+              @fragment
               fn main() -> @location(0) vec4<f32> {
                 return vec4<f32>(0.0, 1.0, 0.0, 1.0);
               }` }),

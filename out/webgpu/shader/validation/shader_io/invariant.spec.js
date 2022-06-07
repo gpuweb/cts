@@ -38,7 +38,7 @@ fn((t) => {
       @location(0) ${invariant} loc0 : vec4<f32>,
       @builtin(position) position : vec4<f32>,
     };
-    @stage(vertex)
+    @vertex
     fn main() -> VertexOut {
       return VertexOut();
     }
@@ -54,7 +54,7 @@ fn((t) => {
     struct VertexOut {
       @builtin(position) @invariant${t.params.suffix} position : vec4<f32>
     };
-    @stage(vertex)
+    @vertex
     fn main() -> VertexOut {
       return VertexOut();
     }

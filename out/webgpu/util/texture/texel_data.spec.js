@@ -60,7 +60,7 @@ t)
   };
   @group(0) @binding(1) var<storage, read_write> output : Output;
 
-  @stage(compute) @workgroup_size(1)
+  @compute @workgroup_size(1)
   fn main() {
       var texel : vec4<${shaderType}> = textureLoad(tex, vec2<i32>(0, 0), 0);
       ${rep.componentOrder.map((C) => `output.result${C} = texel.${C.toLowerCase()};`).join('\n')}

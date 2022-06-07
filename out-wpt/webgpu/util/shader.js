@@ -60,7 +60,7 @@ export function getPlainTypeInfo(sampleType) {
  *     @location(0) o1 : vec4<f32>;
  *     @location(2) o3 : vec2<u32>;
  * }
- * @stage(fragment) fn main() -> Outputs {
+ * @fragment fn main() -> Outputs {
  *     return Outputs(vec4<f32>(1.0, 0.0, 1.0, 1.0), vec4<u32>(1, 2));
  * }
  * @param outputs the shader outputs for each location attribute
@@ -69,7 +69,7 @@ export function getPlainTypeInfo(sampleType) {
 export function getFragmentShaderCodeWithOutput(outputs) {
   if (outputs.length === 0) {
     return `
-        @stage(fragment) fn main() {
+        @fragment fn main() {
         }`;
   }
 
@@ -119,7 +119,7 @@ export function getFragmentShaderCodeWithOutput(outputs) {
       ${outputStructString}
     }
 
-    @stage(fragment) fn main() -> Outputs {
+    @fragment fn main() -> Outputs {
         return Outputs(${resultStrings.join(',')});
     }`;
 }

@@ -118,7 +118,7 @@ TODO: check the contents of the depth and stencil outputs [2]
         vertex: {
           module: t.device.createShaderModule({
             code: `
-              @stage(vertex) fn main(
+              @vertex fn main(
                 @builtin(vertex_index) VertexIndex : u32
                 ) -> @builtin(position) vec4<f32> {
                 var pos : array<vec2<f32>, 6> = array<vec2<f32>, 6>(
@@ -138,7 +138,7 @@ TODO: check the contents of the depth and stencil outputs [2]
         fragment: {
           module: t.device.createShaderModule({
             code: `
-              @stage(fragment) fn main(
+              @fragment fn main(
                 @builtin(front_facing) FrontFacing : bool
                 ) -> @location(0) vec4<f32> {
                 var color : vec4<f32>;

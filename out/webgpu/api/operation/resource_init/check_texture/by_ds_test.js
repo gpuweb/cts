@@ -7,7 +7,7 @@ import { virtualMipSize } from '../../../../util/texture/base.js';
 function makeFullscreenVertexModule(device) {
   return device.createShaderModule({
     code: `
-    @stage(vertex)
+    @vertex
     fn main(@builtin(vertex_index) VertexIndex : u32)
          -> @builtin(position) vec4<f32> {
       var pos : array<vec2<f32>, 3> = array<vec2<f32>, 3>(
@@ -41,7 +41,7 @@ expected)
           @location(0) outSuccess : f32,
         };
 
-        @stage(fragment)
+        @fragment
         fn main() -> Outputs {
           var output : Outputs;
           output.FragDepth = f32(${expected});
@@ -76,7 +76,7 @@ sampleCount)
       entryPoint: 'main',
       module: t.device.createShaderModule({
         code: `
-        @stage(fragment)
+        @fragment
         fn main() -> @location(0) f32 {
           return 1.0;
         }

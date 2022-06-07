@@ -76,7 +76,7 @@ fn(async (t) => {
     layout: 'auto',
     compute: {
       module: device.createShaderModule({
-        code: '@stage(compute) @workgroup_size(1) fn main() {}' }),
+        code: '@compute @workgroup_size(1) fn main() {}' }),
 
       entryPoint: 'main' } });
 

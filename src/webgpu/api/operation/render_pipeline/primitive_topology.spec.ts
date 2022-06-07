@@ -334,7 +334,7 @@ class PrimitiveTopologyTest extends GPUTest {
         vertex: {
           module: this.device.createShaderModule({
             code: `
-              @stage(vertex) fn main(
+              @vertex fn main(
                 @location(0) pos : vec4<f32>
                 ) -> @builtin(position) vec4<f32> {
                 return pos;
@@ -357,7 +357,7 @@ class PrimitiveTopologyTest extends GPUTest {
         fragment: {
           module: this.device.createShaderModule({
             code: `
-              @stage(fragment) fn main() -> @location(0) vec4<f32> {
+              @fragment fn main() -> @location(0) vec4<f32> {
                 return vec4<f32>(0.0, 1.0, 0.0, 1.0);
               }`,
           }),

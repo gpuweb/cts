@@ -94,7 +94,7 @@ export class BufferResourceUsageTest extends ValidationTest {
       fragment: {
         module: this.device.createShaderModule({
           code: `
-              @stage(fragment) fn main()
+              @fragment fn main()
                 -> @location(0) vec4<f32> {
                   return vec4<f32>(0.0, 0.0, 0.0, 1.0);
               }`,

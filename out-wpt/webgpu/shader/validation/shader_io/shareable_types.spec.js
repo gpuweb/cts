@@ -79,7 +79,7 @@ g.test('io_shareable_type')
           @location(0) @interpolate(flat) a : ${type}
         };
 
-        @stage(fragment)
+        @fragment
         fn main(inputs : MyInputs) {
         }
       `;
@@ -89,7 +89,7 @@ g.test('io_shareable_type')
           @location(0) a : ${type}
         };
 
-        @stage(fragment)
+        @fragment
         fn main() -> MyOutputs {
           return MyOutputs();
         }
@@ -98,7 +98,7 @@ g.test('io_shareable_type')
       code = `
       var<${storageClass}> a : ${type} = ${type}();
 
-      @stage(fragment)
+      @fragment
       fn main() {
       }
       `;

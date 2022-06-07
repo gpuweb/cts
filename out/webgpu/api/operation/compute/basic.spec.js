@@ -37,7 +37,7 @@ g.test('memcpy').fn(async (t) => {
           @group(0) @binding(0) var<storage, read> src : Data;
           @group(0) @binding(1) var<storage, read_write> dst : Data;
 
-          @stage(compute) @workgroup_size(1) fn main() {
+          @compute @workgroup_size(1) fn main() {
             dst.value = src.value;
             return;
           }
@@ -115,7 +115,7 @@ fn(async (t) => {
 
             @group(0) @binding(0) var<storage, read_write> dst : OutputBuffer;
 
-            @stage(compute) @workgroup_size(${wgSizes[0]}, ${wgSizes[1]}, ${wgSizes[2]})
+            @compute @workgroup_size(${wgSizes[0]}, ${wgSizes[1]}, ${wgSizes[2]})
             fn main(
               @builtin(global_invocation_id) GlobalInvocationID : vec3<u32>
             ) {

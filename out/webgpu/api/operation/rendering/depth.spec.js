@@ -102,7 +102,7 @@ fn(async (t) => {
     vertex: {
       module: t.device.createShaderModule({
         code: `
-            @stage(vertex) fn main(
+            @vertex fn main(
               @builtin(vertex_index) VertexIndex : u32) -> @builtin(position) vec4<f32> {
               return vec4<f32>(0.5, 0.5, ${kMiddleDepthValue}, 1.0);
             }
@@ -113,7 +113,7 @@ fn(async (t) => {
     fragment: {
       module: t.device.createShaderModule({
         code: `
-            @stage(fragment) fn main() -> @location(0) vec4<f32> {
+            @fragment fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(1.0, 1.0, 1.0, 1.0);
             }
             ` }),
@@ -200,7 +200,7 @@ fn(async (t) => {
               @location(0) color : vec4<f32>,
             };
 
-            @stage(vertex) fn main(
+            @vertex fn main(
               @builtin(vertex_index) VertexIndex : u32,
               @builtin(instance_index) InstanceIndex : u32) -> Output {
               // TODO: remove workaround for Tint unary array access broke
@@ -229,7 +229,7 @@ fn(async (t) => {
     fragment: {
       module: t.device.createShaderModule({
         code: `
-            @stage(fragment) fn main(
+            @fragment fn main(
               @location(0) color : vec4<f32>
               ) -> @location(0) vec4<f32> {
               return color;

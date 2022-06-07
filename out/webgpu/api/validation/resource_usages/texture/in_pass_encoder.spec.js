@@ -1058,7 +1058,7 @@ fn(async (t) => {
     format: 'rgba8unorm' });
 
 
-  const wgslVertex = `@stage(vertex) fn main() -> @builtin(position) vec4<f32> {
+  const wgslVertex = `@vertex fn main() -> @builtin(position) vec4<f32> {
   return vec4<f32>();
 }`;
   const wgslFragment = pp`
@@ -1068,7 +1068,7 @@ fn(async (t) => {
       ${pp._if(useBindGroup1)}
       @group(1) @binding(0) var image1 : texture_storage_2d<rgba8unorm, write>;
       ${pp._endif}
-      @stage(fragment) fn main() {}
+      @fragment fn main() {}
     `;
 
   const wgslCompute = pp`
@@ -1078,7 +1078,7 @@ fn(async (t) => {
       ${pp._if(useBindGroup1)}
       @group(1) @binding(0) var image1 : texture_storage_2d<rgba8unorm, write>;
       ${pp._endif}
-      @stage(compute) @workgroup_size(1) fn main() {}
+      @compute @workgroup_size(1) fn main() {}
     `;
 
   const pipeline = compute ?

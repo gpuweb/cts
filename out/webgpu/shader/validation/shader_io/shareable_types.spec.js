@@ -78,7 +78,7 @@ fn((t) => {
           @location(0) @interpolate(flat) a : ${type}
         };
 
-        @stage(fragment)
+        @fragment
         fn main(inputs : MyInputs) {
         }
       `;
@@ -88,7 +88,7 @@ fn((t) => {
           @location(0) a : ${type}
         };
 
-        @stage(fragment)
+        @fragment
         fn main() -> MyOutputs {
           return MyOutputs();
         }
@@ -97,7 +97,7 @@ fn((t) => {
     code = `
       var<${storageClass}> a : ${type} = ${type}();
 
-      @stage(fragment)
+      @fragment
       fn main() {
       }
       `;

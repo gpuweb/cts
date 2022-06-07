@@ -389,7 +389,7 @@ fn(async (t) => {
 
   const wgsl = `
       ${moduleScope}
-      @stage(compute) @workgroup_size(${t.params.workgroupSize})
+      @compute @workgroup_size(${t.params.workgroupSize})
       fn main() {
         ${functionScope}
         ${checkZeroCode}

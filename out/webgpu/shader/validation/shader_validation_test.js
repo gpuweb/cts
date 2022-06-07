@@ -64,7 +64,7 @@ export class ShaderValidationTest extends GPUTest {
    */
   wrapInEntryPoint(code) {
     return `
-      @stage(compute) @workgroup_size(1)
+      @compute @workgroup_size(1)
       fn main() {
         ${code}
       }`;

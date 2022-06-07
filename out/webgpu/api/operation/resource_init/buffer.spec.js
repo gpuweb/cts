@@ -103,7 +103,7 @@ class F extends GPUTest {
       fragment: {
         module: this.device.createShaderModule({
           code: `
-        @stage(fragment)
+        @fragment
         fn main(@location(0) i_color : vec4<f32>) -> @location(0) vec4<f32> {
             return i_color;
         }` }),
@@ -514,7 +514,7 @@ fn(async (t) => {
   @group(0) @binding(0) var<uniform> ubo : UBO;
   @group(0) @binding(1) var outImage : texture_storage_2d<rgba8unorm, write>;
 
-  @stage(compute) @workgroup_size(1) fn main() {
+  @compute @workgroup_size(1) fn main() {
       if (all(ubo.value == vec4<u32>(0u, 0u, 0u, 0u))) {
           textureStore(outImage, vec2<i32>(0, 0), vec4<f32>(0.0, 1.0, 0.0, 1.0));
       } else {
@@ -549,7 +549,7 @@ fn(async (t) => {
     @group(0) @binding(0) var<storage, read> ssbo : SSBO;
     @group(0) @binding(1) var outImage : texture_storage_2d<rgba8unorm, write>;
 
-    @stage(compute) @workgroup_size(1) fn main() {
+    @compute @workgroup_size(1) fn main() {
         if (all(ssbo.value == vec4<u32>(0u, 0u, 0u, 0u))) {
             textureStore(outImage, vec2<i32>(0, 0), vec4<f32>(0.0, 1.0, 0.0, 1.0));
         } else {
@@ -584,7 +584,7 @@ fn(async (t) => {
     @group(0) @binding(0) var<storage, read_write> ssbo : SSBO;
     @group(0) @binding(1) var outImage : texture_storage_2d<rgba8unorm, write>;
 
-    @stage(compute) @workgroup_size(1) fn main() {
+    @compute @workgroup_size(1) fn main() {
         if (all(ssbo.value == vec4<u32>(0u, 0u, 0u, 0u))) {
             textureStore(outImage, vec2<i32>(0, 0), vec4<f32>(0.0, 1.0, 0.0, 1.0));
         } else {
@@ -614,7 +614,7 @@ fn(async (t) => {
         @builtin(position) position : vec4<f32>,
       };
 
-      @stage(vertex) fn main(@location(0) pos : vec4<f32>) -> VertexOut {
+      @vertex fn main(@location(0) pos : vec4<f32>) -> VertexOut {
         var output : VertexOut;
         if (all(pos == vec4<f32>(0.0, 0.0, 0.0, 0.0))) {
           output.color = vec4<f32>(0.0, 1.0, 0.0, 1.0);
@@ -677,7 +677,7 @@ fn(async (t) => {
       @builtin(position) position : vec4<f32>,
     };
 
-    @stage(vertex)
+    @vertex
     fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOut {
       var output : VertexOut;
       if (VertexIndex == 0u) {
@@ -745,7 +745,7 @@ fn(async (t) => {
       @builtin(position) position : vec4<f32>,
     };
 
-    @stage(vertex) fn main() -> VertexOut {
+    @vertex fn main() -> VertexOut {
       var output : VertexOut;
       output.color = vec4<f32>(1.0, 0.0, 0.0, 1.0);
       output.position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
@@ -822,7 +822,7 @@ fn(async (t) => {
         code: `
         @group(0) @binding(0) var outImage : texture_storage_2d<rgba8unorm, write>;
 
-        @stage(compute) @workgroup_size(1) fn main() {
+        @compute @workgroup_size(1) fn main() {
           textureStore(outImage, vec2<i32>(0, 0), vec4<f32>(1.0, 0.0, 0.0, 1.0));
         }` }),
 

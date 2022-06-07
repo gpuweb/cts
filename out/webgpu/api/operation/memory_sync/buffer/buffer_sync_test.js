@@ -128,7 +128,7 @@ context)
 }
 
 const kDummyVertexShader = `
-@stage(vertex) fn vert_main() -> @builtin(position) vec4<f32> {
+@vertex fn vert_main() -> @builtin(position) vec4<f32> {
   return vec4<f32>(0.5, 0.5, 0.0, 1.0);
 }
 `;
@@ -321,7 +321,7 @@ export class BufferSyncTest extends GPUTest {
       };
 
       @group(0) @binding(0) var<storage, read_write> data : Data;
-      @stage(compute) @workgroup_size(1) fn main() {
+      @compute @workgroup_size(1) fn main() {
         data.a = ${value}u;
       }
     `;
@@ -367,7 +367,7 @@ export class BufferSyncTest extends GPUTest {
       };
 
       @group(0) @binding(0) var<storage, read_write> data : Data;
-      @stage(fragment) fn frag_main() -> @location(0) vec4<f32> {
+      @fragment fn frag_main() -> @location(0) vec4<f32> {
         data.a = ${value}u;
         return vec4<f32>();  // result does't matter
       }
@@ -506,7 +506,7 @@ export class BufferSyncTest extends GPUTest {
       @group(0) @binding(0) var<storage, read> srcData : Data;
       @group(0) @binding(1) var<storage, read_write> dstData : Data;
 
-      @stage(compute) @workgroup_size(1) fn main() {
+      @compute @workgroup_size(1) fn main() {
         dstData.a = srcData.a;
       }
     `;
@@ -545,7 +545,7 @@ export class BufferSyncTest extends GPUTest {
         @location(0) @interpolate(flat) data : u32,
       };
 
-      @stage(vertex) fn vert_main(@location(0) input: u32) -> VertexOutput {
+      @vertex fn vert_main(@location(0) input: u32) -> VertexOutput {
         var output : VertexOutput;
         output.position = vec4<f32>(0.5, 0.5, 0.0, 1.0);
         output.data = input;
@@ -559,7 +559,7 @@ export class BufferSyncTest extends GPUTest {
 
       @group(0) @binding(0) var<storage, read_write> data : Data;
 
-      @stage(fragment) fn frag_main(@location(0) @interpolate(flat) input : u32) -> @location(0) vec4<f32> {
+      @fragment fn frag_main(@location(0) @interpolate(flat) input : u32) -> @location(0) vec4<f32> {
         data.a = input;
         return vec4<f32>();  // result does't matter
       }
@@ -609,7 +609,7 @@ export class BufferSyncTest extends GPUTest {
       @group(0) @binding(0) var<uniform> constant: Data;
       @group(0) @binding(1) var<storage, read_write> data : Data;
 
-      @stage(fragment) fn frag_main() -> @location(0) vec4<f32> {
+      @fragment fn frag_main() -> @location(0) vec4<f32> {
         data.a = constant.a;
         return vec4<f32>();  // result does't matter
       }
@@ -631,7 +631,7 @@ export class BufferSyncTest extends GPUTest {
         @group(0) @binding(0) var<storage, read> srcData : Data;
         @group(0) @binding(1) var<storage, read_write> dstData : Data;
 
-        @stage(fragment) fn frag_main() -> @location(0) vec4<f32> {
+        @fragment fn frag_main() -> @location(0) vec4<f32> {
           dstData.a = srcData.a;
           return vec4<f32>();  // result does't matter
         }

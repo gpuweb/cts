@@ -47,7 +47,7 @@ function runShaderTest(t, stage, testSource, layout, testBindings, dynamicOffset
 
     ${testSource}
 
-    @stage(compute) @workgroup_size(1)
+    @compute @workgroup_size(1)
     fn main() {
       _ = constants.zero; // Ensure constants buffer is statically-accessed
       result.value = runTest();

@@ -120,7 +120,7 @@ g.test('inputs')
       let group_height = ${t.params.groupSize.y}u;
       let group_depth = ${t.params.groupSize.z}u;
 
-      @stage(compute) @workgroup_size(group_width, group_height, group_depth)
+      @compute @workgroup_size(group_width, group_height, group_depth)
       fn main(
         ${params}
         ) {

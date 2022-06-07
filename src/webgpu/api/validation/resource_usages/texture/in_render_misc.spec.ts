@@ -248,7 +248,7 @@ g.test('subresources,set_unused_bind_group')
           module: t.device.createShaderModule({
             code: `
               @group(0) @binding(0) var texture0 : texture_2d_array<f32>;
-              @stage(fragment) fn main()
+              @fragment fn main()
                 -> @location(0) vec4<f32> {
                   return textureLoad(texture0, vec2<i32>(), 0, 0);
               }`,
@@ -279,7 +279,7 @@ g.test('subresources,set_unused_bind_group')
           module: t.device.createShaderModule({
             code: `
             @group(0) @binding(0) var texture0 : texture_storage_2d_array<rgba8unorm, write>;
-            @stage(compute) @workgroup_size(1)
+            @compute @workgroup_size(1)
             fn main() {
               textureStore(texture0, vec2<i32>(), 0, vec4<f32>());
             }`,

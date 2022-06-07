@@ -23,7 +23,7 @@ class VertexAndIndexStateTrackingTest extends GPUTest {
           @builtin(position) position : vec4<f32>,
           @location(0) color : vec4<f32>,
         };
-        @stage(vertex)
+        @vertex
         fn main(input : Inputs)-> Outputs {
           var outputs : Outputs;
           outputs.position =
@@ -57,7 +57,7 @@ class VertexAndIndexStateTrackingTest extends GPUTest {
         struct Input {
           @location(0) color : vec4<f32>
         };
-        @stage(fragment)
+        @fragment
         fn main(input : Input) -> @location(0) vec4<f32> {
           return input.color;
         }` }),
@@ -398,7 +398,7 @@ fn(async (t) => {
       struct Input {
         @location(0) color : vec4<f32>
       };
-      @stage(fragment)
+      @fragment
       fn main(input : Input) -> @location(0) vec4<f32> {
         return input.color;
       }` }),
@@ -421,7 +421,7 @@ fn(async (t) => {
           @builtin(position) position : vec4<f32>,
           @location(0) color : vec4<f32>,
         };
-        @stage(vertex)
+        @vertex
         fn main(input : Inputs)-> Outputs {
           var outputs : Outputs;
           outputs.position =
@@ -473,7 +473,7 @@ fn(async (t) => {
           @builtin(position) position : vec4<f32>,
           @location(0) color : vec4<f32>,
         };
-        @stage(vertex)
+        @vertex
         fn main(input : Inputs)-> Outputs {
           var kPositions = array<f32, 2> (0.25, 0.75);
           var outputs : Outputs;

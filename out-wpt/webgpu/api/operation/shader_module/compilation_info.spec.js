@@ -14,7 +14,7 @@ const kValidShaderSources = [
     valid: true,
     unicode: false,
     _code: `
-      @stage(vertex) fn main() -> @builtin(position) vec4<f32> {
+      @vertex fn main() -> @builtin(position) vec4<f32> {
         return vec4<f32>(0.0, 0.0, 0.0, 1.0);
       }`,
   },
@@ -24,7 +24,7 @@ const kValidShaderSources = [
     unicode: true,
     _code: `
       // 頂点シェーダー 👩‍💻
-      @stage(vertex) fn main() -> @builtin(position) vec4<f32> {
+      @vertex fn main() -> @builtin(position) vec4<f32> {
         return vec4<f32>(0.0, 0.0, 0.0, 1.0);
       }`,
   },
@@ -36,7 +36,7 @@ const kInvalidShaderSources = [
     unicode: false,
     _errorLine: 4,
     _code: `
-      @stage(vertex) fn main() -> @builtin(position) vec4<f32> {
+      @vertex fn main() -> @builtin(position) vec4<f32> {
         // Expected Error: unknown function 'unknown'
         return unknown(0.0, 0.0, 0.0, 1.0);
       }`,
@@ -48,7 +48,7 @@ const kInvalidShaderSources = [
     _errorLine: 5,
     _code: `
       // 頂点シェーダー 👩‍💻
-      @stage(vertex) fn main() -> @builtin(position) vec4<f32> {
+      @vertex fn main() -> @builtin(position) vec4<f32> {
         // Expected Error: unknown function 'unknown'
         return unknown(0.0, 0.0, 0.0, 1.0);
       }`,

@@ -299,14 +299,14 @@ export class ValidationTest extends GPUTest {
     switch (stage) {
       case 'VERTEX':
         return `
-          @stage(vertex) fn main() -> @builtin(position) vec4<f32> {
+          @vertex fn main() -> @builtin(position) vec4<f32> {
             return vec4<f32>();
           }
         `;
       case 'FRAGMENT':
-        return `@stage(fragment) fn main() {}`;
+        return `@fragment fn main() {}`;
       case 'COMPUTE':
-        return `@stage(compute) @workgroup_size(1) fn main() {}`;}
+        return `@compute @workgroup_size(1) fn main() {}`;}
 
   }
 

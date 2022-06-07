@@ -43,7 +43,7 @@ g.test('pipeline,device_mismatch')
       layout: 'auto',
       vertex: {
         module: device.createShaderModule({
-          code: `@stage(vertex) fn main() -> @builtin(position) vec4<f32> { return vec4<f32>(); }`,
+          code: `@vertex fn main() -> @builtin(position) vec4<f32> { return vec4<f32>(); }`,
         }),
 
         entryPoint: 'main',
@@ -51,7 +51,7 @@ g.test('pipeline,device_mismatch')
 
       fragment: {
         module: device.createShaderModule({
-          code: '@stage(fragment) fn main() {}',
+          code: '@fragment fn main() {}',
         }),
 
         entryPoint: 'main',

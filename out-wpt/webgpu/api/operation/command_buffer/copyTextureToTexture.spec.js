@@ -340,7 +340,7 @@ class F extends GPUTest {
               copyLayer: f32
             };
             @group(0) @binding(0) var<uniform> param: Params;
-            @stage(vertex)
+            @vertex
             fn main(@builtin(vertex_index) VertexIndex : u32)-> @builtin(position) vec4<f32> {
               var depthValue = 0.5 + 0.2 * sin(param.copyLayer);
               var pos : array<vec3<f32>, 6> = array<vec3<f32>, 6>(
@@ -364,7 +364,7 @@ class F extends GPUTest {
       renderPipelineDescriptor.fragment = {
         module: this.device.createShaderModule({
           code: `
-            @stage(fragment)
+            @fragment
             fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
             }`,
@@ -1293,7 +1293,7 @@ g.test('copy_multisampled_color')
       vertex: {
         module: t.device.createShaderModule({
           code: `
-            @stage(vertex)
+            @vertex
             fn main(@builtin(vertex_index) VertexIndex : u32) -> @builtin(position) vec4<f32> {
               var pos = array<vec2<f32>, 3>(
                   vec2<f32>(-1.0,  1.0),
@@ -1310,7 +1310,7 @@ g.test('copy_multisampled_color')
       fragment: {
         module: t.device.createShaderModule({
           code: `
-            @stage(fragment)
+            @fragment
             fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(0.3, 0.5, 0.8, 1.0);
             }`,
@@ -1365,7 +1365,7 @@ g.test('copy_multisampled_color')
       vertex: {
         module: t.device.createShaderModule({
           code: `
-          @stage(vertex)
+          @vertex
           fn main(@builtin(vertex_index) VertexIndex : u32) -> @builtin(position) vec4<f32> {
             var pos = array<vec2<f32>, 6>(
               vec2<f32>(-1.0,  1.0),
@@ -1386,7 +1386,7 @@ g.test('copy_multisampled_color')
           code: `
           @group(0) @binding(0) var sourceTexture : texture_multisampled_2d<f32>;
           @group(0) @binding(1) var destinationTexture : texture_multisampled_2d<f32>;
-          @stage(fragment)
+          @fragment
           fn main(@builtin(position) coord_in: vec4<f32>) -> @location(0) vec4<f32> {
             var coord_in_vec2 = vec2<i32>(i32(coord_in.x), i32(coord_in.y));
             for (var sampleIndex = 0; sampleIndex < ${kSampleCount};
@@ -1487,7 +1487,7 @@ g.test('copy_multisampled_depth')
     const vertexState = {
       module: t.device.createShaderModule({
         code: `
-          @stage(vertex)
+          @vertex
           fn main(@builtin(vertex_index) VertexIndex : u32)-> @builtin(position) vec4<f32> {
             var pos : array<vec3<f32>, 6> = array<vec3<f32>, 6>(
                 vec3<f32>(-1.0,  1.0, 0.5),
@@ -1559,7 +1559,7 @@ g.test('copy_multisampled_depth')
       fragment: {
         module: t.device.createShaderModule({
           code: `
-          @stage(fragment)
+          @fragment
           fn main() -> @location(0) vec4<f32> {
             return vec4<f32>(0.0, 1.0, 0.0, 1.0);
           }`,

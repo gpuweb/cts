@@ -13,7 +13,7 @@ import { TexelView } from '../../../util/texture/texel_view.js';
 import { textureContentIsOKByT2B } from '../../../util/texture/texture_ok.js';
 
 const kVertexShader = `
-@stage(vertex) fn main(
+@vertex fn main(
 @builtin(vertex_index) VertexIndex : u32
 ) -> @builtin(position) vec4<f32> {
   var pos : array<vec2<f32>, 3> = array<vec2<f32>, 3>(

@@ -23,7 +23,7 @@ class F extends ValidationTest {
             struct Inputs {
             ${range(bufferCount, i => `\n@location(${i}) a_position${i} : vec3<f32>,`).join('')}
             };
-            @stage(vertex) fn main(input : Inputs
+            @vertex fn main(input : Inputs
               ) -> @builtin(position) vec4<f32> {
               return vec4<f32>(0.0, 0.0, 0.0, 1.0);
             }`,
@@ -43,7 +43,7 @@ class F extends ValidationTest {
       fragment: {
         module: this.device.createShaderModule({
           code: `
-            @stage(fragment) fn main() -> @location(0) vec4<f32> {
+            @fragment fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
             }`,
         }),

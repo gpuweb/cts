@@ -61,7 +61,7 @@ fn((t) => {
   const { variableOrConstant, lhsType, rhsType } = t.params;
 
   const code = `
-      @stage(fragment)
+      @fragment
       fn main() {
         ${variableOrConstant} a : ${lhsType} = ${rhsType}();
       }

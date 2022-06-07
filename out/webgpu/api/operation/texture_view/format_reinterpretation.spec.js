@@ -51,7 +51,7 @@ multisample)
     vertex: {
       module: device.createShaderModule({
         code: `
-          @stage(vertex) fn main(@builtin(vertex_index) VertexIndex : u32) -> @builtin(position) vec4<f32> {
+          @vertex fn main(@builtin(vertex_index) VertexIndex : u32) -> @builtin(position) vec4<f32> {
             var pos = array<vec2<f32>, 6>(
                                         vec2<f32>(-1.0, -1.0),
                                         vec2<f32>(-1.0,  1.0),
@@ -70,7 +70,7 @@ multisample)
       device.createShaderModule({
         code: `
             @group(0) @binding(0) var src: texture_multisampled_2d<f32>;
-            @stage(fragment) fn main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
+            @fragment fn main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
               var result : vec4<f32>;
               for (var i = 0; i < ${multisample.sample}; i = i + 1) {
                 result = result + textureLoad(src, vec2<i32>(coord.xy), i);
@@ -81,7 +81,7 @@ multisample)
       device.createShaderModule({
         code: `
             @group(0) @binding(0) var src: texture_2d<f32>;
-            @stage(fragment) fn main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
+            @fragment fn main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
               return textureLoad(src, vec2<i32>(coord.xy), 0);
             }` }),
 
@@ -130,7 +130,7 @@ fn(async (t) => {
         code: `
           @group(0) @binding(0) var src: texture_2d<f32>;
           @group(0) @binding(1) var dst: texture_storage_2d<rgba8unorm, write>;
-          @stage(compute) @workgroup_size(1, 1) fn main(
+          @compute @workgroup_size(1, 1) fn main(
             @builtin(global_invocation_id) global_id: vec3<u32>,
           ) {
             var coord = vec2<i32>(global_id.xy);

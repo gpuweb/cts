@@ -12,7 +12,7 @@ kVertexFormatInfo } from
 import { ValidationTest } from './validation_test.js';
 
 const VERTEX_SHADER_CODE_WITH_NO_INPUT = `
-  @stage(vertex) fn main() -> @builtin(position) vec4<f32> {
+  @vertex fn main() -> @builtin(position) vec4<f32> {
     return vec4<f32>(0.0, 0.0, 0.0, 0.0);
   }
 `;
@@ -71,7 +71,7 @@ class F extends ValidationTest {
       fragment: {
         module: this.device.createShaderModule({
           code: `
-            @stage(fragment) fn main() -> @location(0) vec4<f32> {
+            @fragment fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
             }` }),
 
@@ -91,7 +91,7 @@ class F extends ValidationTest {
     const vsModule = this.device.createShaderModule({ code: vertexShader });
     const fsModule = this.device.createShaderModule({
       code: `
-        @stage(fragment) fn main() -> @location(0) vec4<f32> {
+        @fragment fn main() -> @location(0) vec4<f32> {
           return vec4<f32>(0.0, 1.0, 0.0, 1.0);
         }` });
 
@@ -129,7 +129,7 @@ class F extends ValidationTest {
       struct Inputs {
         ${interfaces}
       };
-      @stage(vertex) fn main(input : Inputs) -> @builtin(position) vec4<f32> {
+      @vertex fn main(input : Inputs) -> @builtin(position) vec4<f32> {
         ${body}
         return vec4<f32>(0.0, 0.0, 0.0, 0.0);
       }

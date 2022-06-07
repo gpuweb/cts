@@ -26,7 +26,7 @@
 
   if (stage !== '') {
     // Generate the entry point attributes.
-    code += `@stage(${stage})`;
+    code += `@${stage}`;
     if (stage === 'compute') {
       code += ' @workgroup_size(1)';
     }
