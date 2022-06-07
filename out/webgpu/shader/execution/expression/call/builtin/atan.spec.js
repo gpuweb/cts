@@ -67,8 +67,6 @@ fn(async (t) => {
   { input: f32Bits(kBit.f32.negative.zero), expected: f32(0) },
   { input: f32Bits(kBit.f32.positive.min), expected: f32Bits(kBit.f32.positive.min) },
   { input: f32Bits(kBit.f32.negative.max), expected: f32Bits(kBit.f32.negative.max) },
-  { input: f32Bits(kBit.f32.positive.min), expected: f32Bits(kBit.f32.negative.max) },
-  { input: f32Bits(kBit.f32.negative.max), expected: f32Bits(kBit.f32.positive.min) },
   { input: f32Bits(kBit.f32.positive.zero), expected: f32Bits(kBit.f32.positive.zero) },
   { input: f32Bits(kBit.f32.negative.zero), expected: f32Bits(kBit.f32.negative.zero) },
   { input: f32Bits(kBit.f32.positive.zero), expected: f32Bits(kBit.f32.negative.zero) },

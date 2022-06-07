@@ -1,6 +1,12 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { compare, anyOf } from '../../../util/compare.js';import {
+**/import { compare,
+
+
+anyOf,
+intervalComparator } from
+'../../../util/compare.js';
+import {
 ScalarType,
 
 
@@ -12,6 +18,11 @@ VectorType,
 f32,
 f64 } from
 '../../../util/conversion.js';
+
+
+
+
+
 import { flushSubnormalNumber, isSubnormalNumber, quantizeToF32 } from '../../../util/math.js';
 
 // Helper for converting Values to Comparators.
@@ -440,5 +451,62 @@ skip_param1_zero_flush = false)
   }
 
   return { input: [f32(param0), f32(param1)], expected: anyOf(...expected) };
+}
+
+/**
+ * Generates a Case for the param and unary interval generator provided.
+ * The Case will use use an interval comparator for matching results.
+ * @param param the param to pass into the unary operation
+ * @param op callback that implements generating an acceptance interval for a unary operation
+ */
+// Will be used in test implementations
+
+export function makeUnaryF32IntervalCase(param, op) {
+  param = quantizeToF32(param);
+  const interval = op(param);
+  return { input: [f32(param)], expected: intervalComparator(interval) };
+}
+
+/**
+ * Generates a Case for the params and binary interval generator provided.
+ * The Case will use use an interval comparator for matching results.
+ * @param param0 the first param or left hand side to pass into the binary operation
+ * @param param1 the second param or rhs hand side to pass into the binary operation
+ * @param op callback that implements generating an acceptance interval for a binary operation
+ */
+// Will be used in test implementations
+
+export function makeBinaryF32IntervalCase(
+param0,
+param1,
+op)
+{
+  param0 = quantizeToF32(param0);
+  param1 = quantizeToF32(param1);
+  const interval = op(param0, param1);
+  return { input: [f32(param0), f32(param1)], expected: intervalComparator(interval) };
+}
+
+/**
+ * Generates a Case for the params and ternary interval generator provided.
+ * The Case will use use an interval comparator for matching results.
+ * @param param0 the first param to pass into the ternary operation
+ * @param param1 the second param to pass into the ternary operation
+ * @param param2 the third param to pass into the ternary operation
+ * @param op callback that implements generating an acceptance interval for a ternary operation
+ */
+// Will be used in test implementations
+
+export function makeTernaryF32IntervalCase(
+param0,
+param1,
+param2,
+op)
+{
+  param0 = quantizeToF32(param0);
+  param1 = quantizeToF32(param1);
+  param2 = quantizeToF32(param2);
+  const interval = op(param0, param1, param2);
+  return { input: [f32(param0), f32(param1), f32(param2)], expected: intervalComparator(interval) };
 }
 //# sourceMappingURL=expression.js.map
