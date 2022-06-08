@@ -8,7 +8,7 @@ import { GPUTest } from '../../../../gpu_test.js';
 import { correctlyRoundedMatch } from '../../../../util/compare.js';
 import { TypeF32 } from '../../../../util/conversion.js';
 import { fullF32Range } from '../../../../util/math.js';
-import { makeUnaryF32Case, run } from '../expression.js';
+import { allInputSources, makeUnaryF32Case, run } from '../expression.js';
 
 import { unary } from './unary.js';
 
@@ -22,11 +22,7 @@ Expression: -x
 Accuracy: Correctly rounded
 `
   )
-  .params(u =>
-    u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'])
-      .combine('vectorize', [undefined, 2, 3, 4])
-  )
+  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
     const cfg = t.params;
     cfg.cmpFloats = correctlyRoundedMatch();

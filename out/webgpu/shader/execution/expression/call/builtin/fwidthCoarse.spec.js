@@ -8,6 +8,7 @@ fn fwidthCoarse(e:T) ->T
 Returns abs(dpdxCoarse(e)) + abs(dpdyCoarse(e)).
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
+import { allInputSources } from '../../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -15,9 +16,7 @@ g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#derivative-builtin-functions').
 desc(`f32 tests`).
 params((u) =>
-u.
-combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
-combine('vectorize', [undefined, 2, 3, 4])).
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 unimplemented();
 //# sourceMappingURL=fwidthCoarse.spec.js.map

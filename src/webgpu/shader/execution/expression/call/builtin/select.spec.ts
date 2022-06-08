@@ -29,7 +29,7 @@ import {
   vec3,
   vec4,
 } from '../../../../../util/conversion.js';
-import { run, CaseList } from '../../expression.js';
+import { run, CaseList, allInputSources } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -65,7 +65,7 @@ g.test('scalar')
   .desc(`scalar tests`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', allInputSources)
       .combine('component', ['b', 'f', 'i', 'u'] as const)
       .combine('overload', ['scalar', 'vec2', 'vec3', 'vec4'] as const)
   )
@@ -135,7 +135,7 @@ g.test('vector')
   .desc(`vector tests`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', allInputSources)
       .combine('component', ['b', 'f', 'i', 'u'] as const)
       .combine('overload', ['vec2', 'vec3', 'vec4'] as const)
   )

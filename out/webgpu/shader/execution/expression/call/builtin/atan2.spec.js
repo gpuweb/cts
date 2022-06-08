@@ -12,7 +12,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { anyOf, ulpMatch } from '../../../../../util/compare.js';
 import { f64, TypeF32 } from '../../../../../util/conversion.js';
 import { fullF32Range, isSubnormalNumber } from '../../../../../util/math.js';
-import { makeBinaryF32Case, run } from '../../expression.js';
+import { allInputSources, makeBinaryF32Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -22,9 +22,7 @@ g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`abstract float tests`).
 params((u) =>
-u.
-combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
-combine('vectorize', [undefined, 2, 3, 4])).
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 unimplemented();
 
@@ -38,9 +36,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
 `).
 
 params((u) =>
-u.
-combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
-combine('vectorize', [undefined, 2, 3, 4])).
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
   const cfg = t.params;
@@ -81,9 +77,7 @@ g.test('f16').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`f16 tests`).
 params((u) =>
-u.
-combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
-combine('vectorize', [undefined, 2, 3, 4])).
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 unimplemented();
 //# sourceMappingURL=atan2.spec.js.map

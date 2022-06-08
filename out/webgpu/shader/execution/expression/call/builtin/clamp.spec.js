@@ -30,7 +30,7 @@ u32,
 u32Bits } from
 '../../../../../util/conversion.js';
 import { isSubnormalScalar } from '../../../../../util/math.js';
-import { run } from '../../expression.js';
+import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -121,9 +121,7 @@ g.test('abstract_int').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
 desc(`abstract int tests`).
 params((u) =>
-u.
-combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
-combine('vectorize', [undefined, 2, 3, 4])).
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 unimplemented();
 
@@ -131,9 +129,7 @@ g.test('u32').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
 desc(`u32 tests`).
 params((u) =>
-u.
-combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
-combine('vectorize', [undefined, 2, 3, 4])).
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
   // This array must be strictly increasing, since that ordering determines
@@ -161,9 +157,7 @@ g.test('i32').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
 desc(`i32 tests`).
 params((u) =>
-u.
-combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
-combine('vectorize', [undefined, 2, 3, 4])).
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
   // This array must be strictly increasing, since that ordering determines
@@ -193,9 +187,7 @@ g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`abstract float tests`).
 params((u) =>
-u.
-combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
-combine('vectorize', [undefined, 2, 3, 4])).
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 unimplemented();
 
@@ -203,9 +195,7 @@ g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`f32 tests`).
 params((u) =>
-u.
-combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
-combine('vectorize', [undefined, 2, 3, 4])).
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
   const cfg = t.params;
@@ -245,9 +235,7 @@ g.test('f16').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`f16 tests`).
 params((u) =>
-u.
-combine('storageClass', ['uniform', 'storage_r', 'storage_rw']).
-combine('vectorize', [undefined, 2, 3, 4])).
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 unimplemented();
 //# sourceMappingURL=clamp.spec.js.map

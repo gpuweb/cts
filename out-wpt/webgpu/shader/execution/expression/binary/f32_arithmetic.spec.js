@@ -8,7 +8,7 @@ import { GPUTest } from '../../../../gpu_test.js';
 import { correctlyRoundedMatch, ulpMatch } from '../../../../util/compare.js';
 import { TypeF32 } from '../../../../util/conversion.js';
 import { biasedRange, fullF32Range } from '../../../../util/math.js';
-import { makeBinaryF32Case, run } from '../expression.js';
+import { allInputSources, makeBinaryF32Case, run } from '../expression.js';
 
 import { binary } from './binary.js';
 
@@ -22,11 +22,7 @@ Expression: x + y
 Accuracy: Correctly rounded
 `
   )
-  .params(u =>
-    u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'])
-      .combine('vectorize', [undefined, 2, 3, 4])
-  )
+  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
     const cfg = t.params;
     cfg.cmpFloats = correctlyRoundedMatch();
@@ -56,11 +52,7 @@ Expression: x - y
 Accuracy: Correctly rounded
 `
   )
-  .params(u =>
-    u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'])
-      .combine('vectorize', [undefined, 2, 3, 4])
-  )
+  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
     const cfg = t.params;
     cfg.cmpFloats = correctlyRoundedMatch();
@@ -90,11 +82,7 @@ Expression: x * y
 Accuracy: Correctly rounded
 `
   )
-  .params(u =>
-    u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'])
-      .combine('vectorize', [undefined, 2, 3, 4])
-  )
+  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
     const cfg = t.params;
     cfg.cmpFloats = correctlyRoundedMatch();
@@ -124,11 +112,7 @@ Expression: x / y
 Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
 `
   )
-  .params(u =>
-    u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'])
-      .combine('vectorize', [undefined, 2, 3, 4])
-  )
+  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
     const cfg = t.params;
     cfg.cmpFloats = ulpMatch(2.5);
