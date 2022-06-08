@@ -493,6 +493,47 @@ export class Scalar {
     }
   }
 
+  /**
+   * @returns the WGSL representation of this scalar value
+   */
+  public wgsl(): string {
+    const withPoint = (x: number) => {
+      const str = `${x}`;
+      return str.indexOf('.') > 0 || str.indexOf('e') > 0 ? str : `${str}.0`;
+    };
+    if (isFinite(this.value as number)) {
+      switch (this.type.kind) {
+        case 'f32':
+          return `${withPoint(this.value as number)}f`;
+        case 'f16':
+          return `${withPoint(this.value as number)}h`;
+        case 'u32':
+          return `${this.value}u`;
+        case 'i32':
+          return `${this.value}i`;
+        case 'bool':
+          return `${this.value}`;
+      }
+    } else if (this.value === Number.POSITIVE_INFINITY) {
+      switch (this.type.kind) {
+        case 'f32':
+          return `f32(1.0/0.0)`;
+        case 'f16':
+          return `f16(1.0/0.0)`;
+      }
+    } else if (this.value === Number.NEGATIVE_INFINITY) {
+      switch (this.type.kind) {
+        case 'f32':
+          return `f32(-1.0/0.0)`;
+        case 'f16':
+          return `f16(-1.0/0.0)`;
+      }
+    }
+    throw new Error(
+      `scalar of value ${this.value} and type ${this.type} has no WGSL representation`
+    );
+  }
+
   public toString(): string {
     if (this.type.kind === 'bool') {
       return Colors.bold(this.value.toString());
@@ -650,6 +691,14 @@ export class Vector {
       element.copyTo(buffer, offset);
       offset += this.type.elementType.size;
     }
+  }
+
+  /**
+   * @returns the WGSL representation of this vector value
+   */
+  public wgsl(): string {
+    const els = this.elements.map(v => v.wgsl()).join(', ');
+    return `vec${this.type.width}(${els})`;
   }
 
   public toString(): string {
