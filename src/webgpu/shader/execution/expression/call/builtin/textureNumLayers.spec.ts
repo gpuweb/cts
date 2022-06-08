@@ -77,7 +77,6 @@ Parameters
   .params(u =>
     u
       .beginSubcases()
-
       .combine('texel_format', [
         'rgba8unorm',
         'rgba8snorm',
