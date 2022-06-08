@@ -47,22 +47,22 @@ export type StorageClass = 'storage' | 'uniform' | 'private' | 'function' | 'wor
 
 /** List of texel formats and their shader representation */
 export const TexelFormats = [
-  ['rgba8unorm', 'f32'],
-  ['rgba8snorm', 'f32'],
-  ['rgba8uint', 'u32'],
-  ['rgba8sint', 'i32'],
-  ['rgba16uint', 'u32'],
-  ['rgba16sint', 'i32'],
-  ['rgba16float', 'f32'],
-  ['r32uint', 'u32'],
-  ['r32sint', 'i32'],
-  ['r32float', 'f32'],
-  ['rg32uint', 'u32'],
-  ['rg32sint', 'i32'],
-  ['rg32float', 'f32'],
-  ['rgba32uint', 'i32'],
-  ['rgba32sint', 'i32'],
-  ['rgba32float', 'f32'],
+  { format: 'rgba8unorm', _shaderType: 'f32' },
+  { format: 'rgba8snorm', _shaderType: 'f32' },
+  { format: 'rgba8uint', _shaderType: 'u32' },
+  { format: 'rgba8sint', _shaderType: 'i32' },
+  { format: 'rgba16uint', _shaderType: 'u32' },
+  { format: 'rgba16sint', _shaderType: 'i32' },
+  { format: 'rgba16float', _shaderType: 'f32' },
+  { format: 'r32uint', _shaderType: 'u32' },
+  { format: 'r32sint', _shaderType: 'i32' },
+  { format: 'r32float', _shaderType: 'f32' },
+  { format: 'rg32uint', _shaderType: 'u32' },
+  { format: 'rg32sint', _shaderType: 'i32' },
+  { format: 'rg32float', _shaderType: 'f32' },
+  { format: 'rgba32uint', _shaderType: 'i32' },
+  { format: 'rgba32sint', _shaderType: 'i32' },
+  { format: 'rgba32float', _shaderType: 'f32' },
 ] as const;
 
 /**

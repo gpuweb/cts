@@ -25,6 +25,7 @@ Parameters
   .params(u =>
     u
       .combine('texture_type', ['texture_2d_array', 'texture_cube_array'] as const)
+      .beginSubcases()
       .combine('sampled_type', ['f32', 'i32', 'u32'] as const)
   )
   .unimplemented();
@@ -75,6 +76,7 @@ Parameters
   )
   .params(u =>
     u
+      .beginSubcases()
       .combine('texel_format', [
         'rgba8unorm',
         'rgba8snorm',
