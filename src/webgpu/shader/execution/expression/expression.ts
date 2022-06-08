@@ -50,6 +50,9 @@ export type InputSource =
   | 'storage_r' // Read-only storage buffer
   | 'storage_rw'; // Read-write storage buffer
 
+/** All possible input sources */
+export const allInputSources: InputSource[] = ['uniform', 'storage_r', 'storage_rw'];
+
 /** Configuration for running a expression test */
 export type Config = {
   // Where the input values are read from
