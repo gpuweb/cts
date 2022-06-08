@@ -44,9 +44,8 @@ Parameters:
  * coords The texture coordinates used for sampling.
 `
   )
-  .params(u =>
+  .paramsSubcasesOnly(u =>
     u
-      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('coords', generateCoordBoundaries(1))
   )
@@ -71,9 +70,8 @@ Parameters:
       Values outside of this range will result in a shader-creation error.
 `
   )
-  .params(u =>
+  .paramsSubcasesOnly(u =>
     u
-      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('coords', generateCoordBoundaries(2))
       .combine('offset', generateOffsets(2))
@@ -129,9 +127,8 @@ Parameters:
       Values outside of this range will result in a shader-creation error.
 `
   )
-  .params(u =>
+  .paramsSubcasesOnly(u =>
     u
-      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('coords', generateCoordBoundaries(2))
       .combine('offset', generateOffsets(2))
@@ -160,9 +157,8 @@ Parameters:
       Values outside of this range will result in a shader-creation error.
 `
   )
-  .params(u =>
+  .paramsSubcasesOnly(u =>
     u
-      .beginSubcases()
       .combine('C', ['i32', 'u32'] as const)
       .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
@@ -187,10 +183,9 @@ Parameters:
  * array_index The 0-based texture array index to sample.
 `
   )
-  .params(
+  .paramsSubcasesOnly(
     u =>
       u
-        .beginSubcases()
         .combine('C', ['i32', 'u32'] as const)
         .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
         .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
@@ -211,9 +206,8 @@ Parameters:
  * coords The texture coordinates used for sampling.
 `
   )
-  .params(u =>
+  .paramsSubcasesOnly(u =>
     u
-      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('coords', generateCoordBoundaries(3))
   )
@@ -241,9 +235,8 @@ Parameters:
       Values outside of this range will result in a shader-creation error.
 `
   )
-  .params(u =>
+  .paramsSubcasesOnly(u =>
     u
-      .beginSubcases()
       .combine('C', ['i32', 'u32'] as const)
       .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
@@ -268,10 +261,9 @@ Parameters:
  * array_index The 0-based texture array index to sample.
 `
   )
-  .params(
+  .paramsSubcasesOnly(
     u =>
       u
-        .beginSubcases()
         .combine('C', ['i32', 'u32'] as const)
         .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
         .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)

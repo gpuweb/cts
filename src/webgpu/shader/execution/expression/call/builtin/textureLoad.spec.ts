@@ -131,9 +131,8 @@ Parameters:
  * level: The mip level, with level 0 containing a full size version of the texture
 `
   )
-  .params(u =>
+  .paramsSubcasesOnly(u =>
     u
-      .beginSubcases()
       .combine('C', ['i32', 'u32'] as const)
       .combine('coords', generateCoordBoundaries(2))
       .combine('level', [-1, 0, `numlevels-1`, `numlevels`] as const)
@@ -153,11 +152,8 @@ Parameters:
  * coords: The 0-based texel coordinate
 `
   )
-  .params(u =>
-    u
-      .beginSubcases()
-      .combine('C', ['i32', 'u32'] as const)
-      .combine('coords', generateCoordBoundaries(2))
+  .paramsSubcasesOnly(u =>
+    u.combine('C', ['i32', 'u32'] as const).combine('coords', generateCoordBoundaries(2))
   )
   .unimplemented();
 

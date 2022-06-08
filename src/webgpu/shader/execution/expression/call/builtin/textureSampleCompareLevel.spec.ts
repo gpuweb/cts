@@ -56,9 +56,8 @@ Parameters:
       Values outside of this range will result in a shader-creation error.
 `
   )
-  .params(u =>
+  .paramsSubcasesOnly(u =>
     u
-      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(2))
       .combine('depth_ref', [-1 /* smaller ref */, 0 /* equal ref */, 1 /* larger ref */] as const)
@@ -79,9 +78,8 @@ Parameters:
  * depth_ref The reference value to compare the sampled depth value against.
 `
   )
-  .params(u =>
+  .paramsSubcasesOnly(u =>
     u
-      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(3))
       .combine('depth_ref', [-1 /* smaller ref */, 0 /* equal ref */, 1 /* larger ref */] as const)
@@ -111,9 +109,8 @@ Parameters:
       Values outside of this range will result in a shader-creation error.
 `
   )
-  .params(u =>
+  .paramsSubcasesOnly(u =>
     u
-      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(2))
       .combine('C', ['i32', 'u32'] as const)
@@ -140,9 +137,8 @@ Parameters:
  * depth_ref The reference value to compare the sampled depth value against.
 `
   )
-  .params(u =>
+  .paramsSubcasesOnly(u =>
     u
-      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(3))
       .combine('C', ['i32', 'u32'] as const)

@@ -30,9 +30,8 @@ Parameters:
       Values outside of this range will result in a shader-creation error.
 `
   )
-  .params(u =>
+  .paramsSubcasesOnly(u =>
     u
-      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(2))
       .combine('offset', generateOffsets(2))
@@ -61,9 +60,8 @@ Parameters:
       Values outside of this range will result in a shader-creation error.
 `
   )
-  .params(u =>
+  .paramsSubcasesOnly(u =>
     u
-      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('coords', generateCoordBoundaries(3))
       .combine('offset', generateOffsets(3))
@@ -94,9 +92,8 @@ Parameters:
       Values outside of this range will result in a shader-creation error.
 `
   )
-  .params(u =>
+  .paramsSubcasesOnly(u =>
     u
-      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'] as const)
       .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
@@ -129,9 +126,8 @@ Parameters:
       Values outside of this range will result in a shader-creation error.
 `
   )
-  .params(u =>
+  .paramsSubcasesOnly(u =>
     u
-      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'] as const)
       .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
