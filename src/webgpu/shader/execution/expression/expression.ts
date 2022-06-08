@@ -1,3 +1,4 @@
+import { assert } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 import {
   compare,
@@ -46,12 +47,13 @@ export type CaseList = Array<Case>;
 
 /** The input value source */
 export type InputSource =
+  | 'const' // Shader creation time constant values (@const)
   | 'uniform' // Uniform buffer
   | 'storage_r' // Read-only storage buffer
   | 'storage_rw'; // Read-write storage buffer
 
 /** All possible input sources */
-export const allInputSources: InputSource[] = ['uniform', 'storage_r', 'storage_rw'];
+export const allInputSources: InputSource[] = ['const', 'uniform', 'storage_r', 'storage_rw'];
 
 /** Configuration for running a expression test */
 export type Config = {
@@ -151,13 +153,24 @@ export function run(
     returnType = packed.returnType;
   }
 
-  // The size of the input buffer max exceed the maximum buffer binding size,
+  // The size of the input buffer may exceed the maximum buffer binding size,
   // so chunk the tests up into batches that fit into the limits.
-  const maxInputSize =
-    cfg.inputSource === 'uniform'
-      ? t.device.limits.maxUniformBufferBindingSize
-      : t.device.limits.maxStorageBufferBindingSize;
-  const casesPerBatch = Math.floor(maxInputSize / (parameterTypes.length * kValueStride));
+  const casesPerBatch = (function () {
+    switch (cfg.inputSource) {
+      case 'const':
+        return 256; // Arbitrary limit, to ensure shaders aren't too large
+      case 'uniform':
+        return Math.floor(
+          t.device.limits.maxUniformBufferBindingSize / (parameterTypes.length * kValueStride)
+        );
+      case 'storage_r':
+      case 'storage_rw':
+        return Math.floor(
+          t.device.limits.maxStorageBufferBindingSize / (parameterTypes.length * kValueStride)
+        );
+    }
+  })();
+
   for (let i = 0; i < cases.length; i += casesPerBatch) {
     const batchCases = cases.slice(i, Math.min(i + casesPerBatch, cases.length));
     runBatch(
@@ -249,6 +262,20 @@ function runBatch(
 }
 
 /**
+ * @param v either an array of T or a single element of type T
+ * @param i the value index to
+ * @returns the i'th value of v, if v is an array, otherwise v (i must be 0)
+ */
+function ith<T>(v: T | T[], i: number): T {
+  if (v instanceof Array) {
+    assert(i < v.length);
+    return v[i];
+  }
+  assert(i === 0);
+  return v;
+}
+
+/**
  * Constructs and returns a GPUComputePipeline and GPUBindGroup for running a
  * batch of test cases.
  * @param t the GPUTest
@@ -277,10 +304,50 @@ struct Output {
 `;
 
   switch (inputSource) {
-    // Input values come from a buffer.
+    case 'const': {
+      //////////////////////////////////////////////////////////////////////////
+      // Input values are constant values in the WGSL shader
+      //////////////////////////////////////////////////////////////////////////
+      const wgslCases = cases.map((c, caseIdx) => {
+        const args = parameterTypes.map((_, i) => `(${ith(c.input, i).wgsl()})`);
+        return `outputs[${caseIdx}].value = ${toStorage(returnType, expressionBuilder(args))};`;
+      });
+
+      // the full WGSL shader source
+      const source = `
+${wgslOutputs}
+
+@compute @workgroup_size(1)
+fn main() {
+  ${wgslCases.join('\n   ')}
+}
+`;
+
+      // build the shader module
+      const module = t.device.createShaderModule({ code: source });
+
+      // build the pipeline
+      const pipeline = t.device.createComputePipeline({
+        layout: 'auto',
+        compute: { module, entryPoint: 'main' },
+      });
+
+      // build the bind group
+      const group = t.device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [{ binding: 0, resource: { buffer: outputBuffer } }],
+      });
+
+      return [pipeline, group];
+    }
+
     case 'uniform':
     case 'storage_r':
     case 'storage_rw': {
+      //////////////////////////////////////////////////////////////////////////
+      // Input values come from a uniform or storage buffer
+      //////////////////////////////////////////////////////////////////////////
+
       // returns the WGSL expression to load the ith parameter of the given type from the input buffer
       const paramExpr = (ty: Type, i: number) => fromStorage(ty, `inputs[i].param${i}`);
 
