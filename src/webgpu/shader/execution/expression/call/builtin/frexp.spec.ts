@@ -30,7 +30,7 @@ struct __frexp_result {
 }
 `
   )
-  .params(u => u.combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const))
+  .params(u => u.combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const))
   .unimplemented();
 
 g.test('scalar_f16')
@@ -45,7 +45,7 @@ struct __frexp_result_f16 {
 }
 `
   )
-  .params(u => u.combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const))
+  .params(u => u.combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const))
   .unimplemented();
 
 g.test('vector_f32')
@@ -62,7 +62,7 @@ struct __frexp_result_vecN {
   )
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [2, 3, 4] as const)
   )
   .unimplemented();
@@ -81,7 +81,7 @@ struct __frexp_result_vecN_f16 {
   )
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [2, 3, 4] as const)
   )
   .unimplemented();

@@ -24,7 +24,7 @@ Bitwise-or. Component-wise when T is a vector.
   .params(u =>
     u
       .combine('type', ['i32', 'u32'] as const)
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
@@ -88,7 +88,7 @@ Bitwise-and. Component-wise when T is a vector.
   .params(u =>
     u
       .combine('type', ['i32', 'u32'] as const)
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
@@ -160,7 +160,7 @@ Bitwise-exclusive-or. Component-wise when T is a vector.
   .params(u =>
     u
       .combine('type', ['i32', 'u32'] as const)
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {

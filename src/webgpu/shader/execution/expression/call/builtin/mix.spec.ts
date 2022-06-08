@@ -24,7 +24,7 @@ g.test('matching_abstract_float')
   .desc(`abstract float tests with matching params`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .unimplemented();
@@ -34,7 +34,7 @@ g.test('matching_f32')
   .desc(`f32 test with matching third param`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .unimplemented();
@@ -44,7 +44,7 @@ g.test('scalar_f16')
   .desc(`f16 tests with matching third param`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .unimplemented();
@@ -54,7 +54,7 @@ g.test('nonmatching_abstract_float')
   .desc(`abstract float tests with vector params and scalar third param`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [2, 3, 4] as const)
   )
   .unimplemented();
@@ -64,7 +64,7 @@ g.test('nonmatching_f32')
   .desc(`f32 tests with vector params and scalar third param`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [2, 3, 4] as const)
   )
   .unimplemented();
@@ -74,7 +74,7 @@ g.test('monmatching_f16')
   .desc(`f16 tests with vector params and scalar third param`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [2, 3, 4] as const)
   )
   .unimplemented();
