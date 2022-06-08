@@ -487,19 +487,24 @@ export class Scalar {
       return Colors.bold(this.value.toString());
     }
     switch (this.value) {
-      case 0:
       case Infinity:
       case -Infinity:
         return Colors.bold(this.value.toString());
       default: {
+        // Uint8Array.map returns a Uint8Array, so cannot use .map directly
+        const hex = Array.from(this.bits)
+          .reverse()
+          .map(x => x.toString(16).padStart(2, '0'))
+          .join('');
         const n = this.value;
-        if (n !== null) {
-          return (
-            Colors.bold(this.value.toString()) +
-            `(0x${this.value.toString(16)}, subnormal: ${isSubnormalNumber(n.valueOf())})`
-          );
+        if (n !== null && isFloatValue(this)) {
+          let str = this.value.toString();
+          str = str.indexOf('.') > 0 || str.indexOf('e') > 0 ? str : `${str}.0`;
+          return isSubnormalNumber(n.valueOf())
+            ? `${Colors.bold(str)} (0x${hex} subnormal)`
+            : `${Colors.bold(str)} (0x${hex})`;
         }
-        return Colors.bold(this.value.toString()) + `(0x${this.value.toString(16)})`;
+        return `${Colors.bold(this.value.toString())} (0x${hex})`;
       }
     }
   }
@@ -684,7 +689,7 @@ export function vec4(x, y, z, w) {
 export function isFloatValue(v) {
   if (v instanceof Scalar) {
     const s = v;
-    return s.type.kind === s.type.kind || s.type.kind === 'f32' || s.type.kind === 'f16';
+    return s.type.kind === 'f64' || s.type.kind === 'f32' || s.type.kind === 'f16';
   }
   return false;
 }
