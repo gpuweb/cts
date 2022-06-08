@@ -39,7 +39,7 @@ g.test('abstract_int')
   .desc(`abstract int tests`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .unimplemented();
@@ -49,7 +49,7 @@ g.test('u32')
   .desc(`unsigned int tests`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
@@ -98,7 +98,7 @@ g.test('i32')
   .desc(`signed int tests`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
@@ -153,7 +153,7 @@ g.test('abstract_float')
   .desc(`abstract float tests`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .unimplemented();
@@ -163,7 +163,7 @@ g.test('f32')
   .desc(`float 32 tests`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
@@ -188,7 +188,7 @@ g.test('f16')
   .desc(`f16 tests`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .unimplemented();

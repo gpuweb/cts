@@ -24,7 +24,7 @@ g.test('u32')
   .desc(`u32 tests`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
@@ -141,7 +141,7 @@ g.test('i32')
   .desc(`i32 tests`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {

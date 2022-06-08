@@ -44,13 +44,16 @@ export type Case = {
 /** CaseList is a list of Cases */
 export type CaseList = Array<Case>;
 
-/** The storage class to use on test input buffers */
-export type StorageClass = 'uniform' | 'storage_r' | 'storage_rw';
+/** The input value source */
+export type InputSource =
+  | 'uniform' // Uniform buffer
+  | 'storage_r' // Read-only storage buffer
+  | 'storage_rw'; // Read-write storage buffer
 
 /** Configuration for running a expression test */
 export type Config = {
   // Where the input values are read from
-  storageClass: StorageClass;
+  inputSource: InputSource;
   // If defined, scalar test cases will be packed into vectors of the given
   // width, which must be 2, 3 or 4.
   // Requires that all parameters of the expression overload are of a scalar
@@ -131,7 +134,7 @@ export function run(
   expressionBuilder: ExpressionBuilder,
   parameterTypes: Array<Type>,
   returnType: Type,
-  cfg: Config = { storageClass: 'storage_r' },
+  cfg: Config = { inputSource: 'storage_r' },
   cases: CaseList
 ) {
   const cmpFloats =
@@ -148,7 +151,7 @@ export function run(
   // The size of the input buffer max exceed the maximum buffer binding size,
   // so chunk the tests up into batches that fit into the limits.
   const maxInputSize =
-    cfg.storageClass === 'uniform'
+    cfg.inputSource === 'uniform'
       ? t.device.limits.maxUniformBufferBindingSize
       : t.device.limits.maxStorageBufferBindingSize;
   const casesPerBatch = Math.floor(maxInputSize / (parameterTypes.length * kValueStride));
@@ -160,7 +163,7 @@ export function run(
       parameterTypes,
       returnType,
       batchCases,
-      cfg.storageClass,
+      cfg.inputSource,
       cmpFloats
     );
   }
@@ -168,13 +171,13 @@ export function run(
 
 /**
  * Runs the list of expression tests. The input data must fit within the buffer
- * binding limits of the given storageClass.
+ * binding limits of the given inputSource.
  * @param t the GPUTest
  * @param expressionBuilder the expression builder function
  * @param parameterTypes the list of expression parameter types
  * @param returnType the return type for the expression overload
  * @param cases list of test cases that fit within the binding limits of the device
- * @param storageClass the storage class to use for the input buffer
+ * @param inputSource the source of the input values
  * @param cmpFloats the method to compare floating point numbers
  */
 function runBatch(
@@ -183,71 +186,9 @@ function runBatch(
   parameterTypes: Array<Type>,
   returnType: Type,
   cases: CaseList,
-  storageClass: StorageClass,
+  inputSource: InputSource,
   cmpFloats: FloatMatch
 ) {
-  // returns the WGSL expression to load the ith parameter of the given type from the input buffer
-  const paramExpr = (ty: Type, i: number) => fromStorage(ty, `inputs[i].param${i}`);
-
-  // resolves to the expression that calls the builtin
-  const expr = toStorage(returnType, expressionBuilder(parameterTypes.map(paramExpr)));
-
-  const storage = storageClass === 'storage_r' ? 'read' : 'read_write';
-
-  // the full WGSL shader source
-  const source = `
-struct Input {
-${parameterTypes
-  .map((ty, i) => `  @size(${kValueStride}) param${i} : ${storageType(ty)},`)
-  .join('\n')}
-};
-
-struct Output {
-  @size(${kValueStride}) value : ${storageType(returnType)}
-};
-
-@group(0) @binding(0)
-${
-  storageClass === 'uniform'
-    ? `var<uniform> inputs : array<Input, ${cases.length}>;`
-    : `var<storage, ${storage}> inputs : array<Input, ${cases.length}>;`
-}
-@group(0) @binding(1) var<storage, write> outputs : array<Output, ${cases.length}>;
-
-@compute @workgroup_size(1)
-fn main() {
-  for(var i = 0; i < ${cases.length}; i = i + 1) {
-    outputs[i].value = ${expr};
-  }
-}
-`;
-  const inputSize = cases.length * parameterTypes.length * kValueStride;
-
-  // Holds all the parameter values for all cases
-  const inputData = new Uint8Array(inputSize);
-
-  // Pack all the input parameter values into the inputData buffer
-  {
-    const caseStride = kValueStride * parameterTypes.length;
-    for (let caseIdx = 0; caseIdx < cases.length; caseIdx++) {
-      const caseBase = caseIdx * caseStride;
-      for (let paramIdx = 0; paramIdx < parameterTypes.length; paramIdx++) {
-        const offset = caseBase + paramIdx * kValueStride;
-        const params = cases[caseIdx].input;
-        if (params instanceof Array) {
-          params[paramIdx].copyTo(inputData, offset);
-        } else {
-          params.copyTo(inputData, offset);
-        }
-      }
-    }
-  }
-  const inputBuffer = t.makeBufferWithContents(
-    inputData,
-    GPUBufferUsage.COPY_SRC |
-      (storageClass === 'uniform' ? GPUBufferUsage.UNIFORM : GPUBufferUsage.STORAGE)
-  );
-
   // Construct a buffer to hold the results of the expression tests
   const outputBufferSize = cases.length * kValueStride;
   const outputBuffer = t.device.createBuffer({
@@ -255,20 +196,15 @@ fn main() {
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
   });
 
-  const module = t.device.createShaderModule({ code: source });
-  const pipeline = t.device.createComputePipeline({
-    layout: 'auto',
-    compute: { module, entryPoint: 'main' },
-  });
-
-  const group = t.device.createBindGroup({
-    layout: pipeline.getBindGroupLayout(0),
-    entries: [
-      { binding: 0, resource: { buffer: inputBuffer } },
-      { binding: 1, resource: { buffer: outputBuffer } },
-    ],
-  });
-
+  const [pipeline, group] = buildPipeline(
+    t,
+    expressionBuilder,
+    parameterTypes,
+    returnType,
+    cases,
+    inputSource,
+    outputBuffer
+  );
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginComputePass();
   pass.setPipeline(pipeline);
@@ -307,6 +243,131 @@ fn main() {
     type: Uint8Array,
     typedLength: outputBufferSize,
   });
+}
+
+/**
+ * Constructs and returns a GPUComputePipeline and GPUBindGroup for running a
+ * batch of test cases.
+ * @param t the GPUTest
+ * @param expressionBuilder the expression builder function
+ * @param parameterTypes the list of expression parameter types
+ * @param returnType the return type for the expression overload
+ * @param cases list of test cases that fit within the binding limits of the device
+ * @param inputSource the source of the input values
+ * @param outputBuffer the buffer that will hold the output values of the tests
+ */
+function buildPipeline(
+  t: GPUTest,
+  expressionBuilder: ExpressionBuilder,
+  parameterTypes: Array<Type>,
+  returnType: Type,
+  cases: CaseList,
+  inputSource: InputSource,
+  outputBuffer: GPUBuffer
+): [GPUComputePipeline, GPUBindGroup] {
+  // wgsl declaration of output buffer and binding
+  const wgslOutputs = `
+struct Output {
+  @size(${kValueStride}) value : ${storageType(returnType)}
+};
+@group(0) @binding(0) var<storage, write> outputs : array<Output, ${cases.length}>;
+`;
+
+  switch (inputSource) {
+    // Input values come from a buffer.
+    case 'uniform':
+    case 'storage_r':
+    case 'storage_rw': {
+      // returns the WGSL expression to load the ith parameter of the given type from the input buffer
+      const paramExpr = (ty: Type, i: number) => fromStorage(ty, `inputs[i].param${i}`);
+
+      // resolves to the expression that calls the builtin
+      const expr = toStorage(returnType, expressionBuilder(parameterTypes.map(paramExpr)));
+
+      // input binding var<...> declaration
+      const wgslInputVar = (function () {
+        switch (inputSource) {
+          case 'storage_r':
+            return 'var<storage, read>';
+          case 'storage_rw':
+            return 'var<storage, read_write>';
+          case 'uniform':
+            return 'var<uniform>';
+        }
+      })();
+
+      // the full WGSL shader source
+      const source = `
+struct Input {
+${parameterTypes
+  .map((ty, i) => `  @size(${kValueStride}) param${i} : ${storageType(ty)},`)
+  .join('\n')}
+};
+
+${wgslOutputs}
+
+@group(0) @binding(1)
+${wgslInputVar} inputs : array<Input, ${cases.length}>;
+
+@compute @workgroup_size(1)
+fn main() {
+  for(var i = 0; i < ${cases.length}; i++) {
+    outputs[i].value = ${expr};
+  }
+}
+`;
+
+      // size in bytes of the input buffer
+      const inputSize = cases.length * parameterTypes.length * kValueStride;
+
+      // Holds all the parameter values for all cases
+      const inputData = new Uint8Array(inputSize);
+
+      // Pack all the input parameter values into the inputData buffer
+      {
+        const caseStride = kValueStride * parameterTypes.length;
+        for (let caseIdx = 0; caseIdx < cases.length; caseIdx++) {
+          const caseBase = caseIdx * caseStride;
+          for (let paramIdx = 0; paramIdx < parameterTypes.length; paramIdx++) {
+            const offset = caseBase + paramIdx * kValueStride;
+            const params = cases[caseIdx].input;
+            if (params instanceof Array) {
+              params[paramIdx].copyTo(inputData, offset);
+            } else {
+              params.copyTo(inputData, offset);
+            }
+          }
+        }
+      }
+
+      // build the input buffer
+      const inputBuffer = t.makeBufferWithContents(
+        inputData,
+        GPUBufferUsage.COPY_SRC |
+          (inputSource === 'uniform' ? GPUBufferUsage.UNIFORM : GPUBufferUsage.STORAGE)
+      );
+
+      // build the shader module
+      const module = t.device.createShaderModule({ code: source });
+
+      // build the pipeline
+      const pipeline = t.device.createComputePipeline({
+        layout: 'auto',
+        compute: { module, entryPoint: 'main' },
+      });
+
+      // build the bind group
+      const group = t.device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [
+          { binding: 0, resource: { buffer: outputBuffer } },
+          { binding: 1, resource: { buffer: inputBuffer } },
+        ],
+      });
+
+      return [pipeline, group];
+    }
+  }
 }
 
 /**

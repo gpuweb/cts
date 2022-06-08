@@ -20,7 +20,7 @@ g.test('abstract_float')
   .desc(`abstract float tests`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [2, 3, 4] as const)
   )
   .unimplemented();
@@ -30,7 +30,7 @@ g.test('f32')
   .desc(`f32 tests`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [2, 3, 4] as const)
   )
   .unimplemented();
@@ -40,7 +40,7 @@ g.test('f16')
   .desc(`f16 tests`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('vectorize', [2, 3, 4] as const)
   )
   .unimplemented();

@@ -40,7 +40,7 @@ g.test('integer')
   .desc(`integer tests`)
   .params(u =>
     u
-      .combine('storageClass', ['uniform', 'storage_r', 'storage_rw'] as const)
+      .combine('inputSource', ['uniform', 'storage_r', 'storage_rw'] as const)
       .combine('signed', [false, true])
       .combine('width', [1, 2, 3, 4])
   )
