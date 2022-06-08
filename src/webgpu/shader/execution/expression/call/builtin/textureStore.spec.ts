@@ -38,7 +38,8 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('F', TexelFormats)
+      .combineWithParams(TexelFormats)
+      .beginSubcases()
       .combine('coords', generateCoordBoundaries(1))
       .combine('C', ['i32', 'u32'] as const)
   )
@@ -61,7 +62,8 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('F', TexelFormats)
+      .combineWithParams(TexelFormats)
+      .beginSubcases()
       .combine('coords', generateCoordBoundaries(2))
       .combine('C', ['i32', 'u32'] as const)
   )
@@ -86,7 +88,8 @@ Parameters:
   .params(
     u =>
       u
-        .combine('F', TexelFormats)
+        .combineWithParams(TexelFormats)
+        .beginSubcases()
         .combine('coords', generateCoordBoundaries(2))
         .combine('C', ['i32', 'u32'] as const)
         .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
@@ -111,7 +114,8 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('F', TexelFormats)
+      .combineWithParams(TexelFormats)
+      .beginSubcases()
       .combine('coords', generateCoordBoundaries(3))
       .combine('C', ['i32', 'u32'] as const)
   )

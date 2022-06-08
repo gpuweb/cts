@@ -110,6 +110,7 @@ combine('texture_type', [
 'texture_multisampled_2d',
 'texture_depth_multisampled_2d']).
 
+beginSubcases().
 combine('C', ['i32', 'u32']).
 combine('coords', generateCoordBoundaries(2)).
 combine('sample_index', [-1, 0, `sampleCount-1`, `sampleCount`])).
@@ -130,7 +131,7 @@ Parameters:
  * level: The mip level, with level 0 containing a full size version of the texture
 `).
 
-params((u) =>
+paramsSubcasesOnly((u) =>
 u.
 combine('C', ['i32', 'u32']).
 combine('coords', generateCoordBoundaries(2)).
@@ -151,7 +152,7 @@ Parameters:
  * coords: The 0-based texel coordinate
 `).
 
-params((u) =>
+paramsSubcasesOnly((u) =>
 u.combine('C', ['i32', 'u32']).combine('coords', generateCoordBoundaries(2))).
 
 unimplemented();
@@ -175,6 +176,7 @@ Parameters:
 params((u) =>
 u.
 combine('texture_type', ['texture_2d_array', 'texture_depth_2d_array']).
+beginSubcases().
 combine('C', ['i32', 'u32']).
 combine('coords', generateCoordBoundaries(2)).
 combine('array_index', [-1, 0, `numlayers-1`, `numlayers`]).

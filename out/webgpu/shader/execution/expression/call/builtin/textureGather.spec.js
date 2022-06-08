@@ -55,7 +55,7 @@ Parameters:
       Values outside of this range will result in a shader-creation error.
 `).
 
-params((u) =>
+paramsSubcasesOnly((u) =>
 u.
 combine('T', ['f32', 'i32', 'u32']).
 combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
@@ -85,7 +85,7 @@ Parameters:
  * coords: The texture coordinates
 `).
 
-params((u) =>
+paramsSubcasesOnly((u) =>
 u.
 combine('T', ['f32', 'i32', 'u32']).
 combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
@@ -122,7 +122,7 @@ Parameters:
       Values outside of this range will result in a shader-creation error.
 `).
 
-params((u) =>
+paramsSubcasesOnly((u) =>
 u.
 combine('T', ['f32', 'i32', 'u32']).
 combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
@@ -154,7 +154,7 @@ Parameters:
  * array_index: The 0-based texture array index
 `).
 
-params(
+paramsSubcasesOnly(
 (u) =>
 u.
 combine('T', ['f32', 'i32', 'u32']).
@@ -185,7 +185,7 @@ Parameters:
       Values outside of this range will result in a shader-creation error.
 `).
 
-params((u) =>
+paramsSubcasesOnly((u) =>
 u.
 combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('coords', generateCoordBoundaries(2)).
@@ -205,7 +205,7 @@ Parameters:
  * coords: The texture coordinates
 `).
 
-params((u) =>
+paramsSubcasesOnly((u) =>
 u.
 combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('coords', generateCoordBoundaries(3))).
@@ -234,7 +234,7 @@ Parameters:
       Values outside of this range will result in a shader-creation error.
 `).
 
-params((u) =>
+paramsSubcasesOnly((u) =>
 u.
 combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('C', ['i32', 'u32']).
@@ -259,7 +259,7 @@ Parameters:
  * array_index: The 0-based texture array index
 `).
 
-params(
+paramsSubcasesOnly(
 (u) =>
 u.
 combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat']).

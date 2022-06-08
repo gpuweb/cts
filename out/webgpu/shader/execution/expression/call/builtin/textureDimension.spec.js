@@ -50,6 +50,7 @@ combine('texture_type', [
 'texture_cube_array',
 'texture_multisampled_2d']).
 
+beginSubcases().
 combine('sampled_type', ['f32', 'i32', 'u32']).
 combine('level', [undefined, 0, 1, 'textureNumLevels', 'textureNumLevels+1'])).
 
@@ -85,6 +86,7 @@ combine('texture_type', [
 'texture_depth_cube_array',
 'texture_depth_multisampled_2d']).
 
+beginSubcases().
 combine('level', [undefined, 0, 1, 'textureNumLevels', 'textureNumLevels+1'])).
 
 unimplemented();
@@ -140,6 +142,7 @@ combine('texel_format', [
 'rgba32sint',
 'rgba32float']).
 
+beginSubcases().
 combine('access_mode', ['read', 'write', 'read_write'])).
 
 unimplemented();
