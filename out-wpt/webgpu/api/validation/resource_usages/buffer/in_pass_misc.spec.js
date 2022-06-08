@@ -4,6 +4,7 @@
 Test other buffer usage validation rules that are not tests in ./in_pass_encoder.spec.js.
 `;
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { unreachable } from '../../../../../common/util/util.js';
 
 import { BufferResourceUsageTest, kAllBufferUsages } from './in_pass_encoder.spec.js';
 
@@ -218,4 +219,193 @@ still contribute directly to the usage scope of the draw call.`
     t.expectValidationError(() => {
       encoder.finish();
     }, fail);
+  });
+
+g.test('subresources,buffer_usages_in_copy_and_pass')
+  .desc(
+    `
+  Test that using one buffer in a copy command, a render or compute pass encoder is always allowed
+  as WebGPU SPEC (chapter 3.4.5) defines that out of any pass encoder, each command belongs to one
+  separated usage scope.`
+  )
+  .params(u =>
+    u
+      .combine('usage0', [
+        'copy-src',
+        'copy-dst',
+        'uniform',
+        'storage',
+        'read-only-storage',
+        'vertex',
+        'index',
+        'indirect',
+        'indexedIndirect',
+      ])
+      .combine('usage1', [
+        'copy-src',
+        'copy-dst',
+        'uniform',
+        'storage',
+        'read-only-storage',
+        'vertex',
+        'index',
+        'indirect',
+        'indexedIndirect',
+      ])
+      .combine('pass', ['render', 'compute'])
+      .unless(({ usage0, usage1, pass }) => {
+        const IsCopy = usage => {
+          return usage === 'copy-src' || usage === 'copy-dst';
+        };
+        // We intend to test copy usages in this test.
+        if (!IsCopy(usage0) && !IsCopy(usage1)) {
+          return true;
+        }
+        // When both usage0 and usage1 are copy usages, 'pass' is meaningless so in such situation
+        // we just need to reserve one value as 'pass'.
+        if (IsCopy(usage0) && IsCopy(usage1)) {
+          return pass === 'compute';
+        }
+
+        const IsValidComputeUsage = usage => {
+          switch (usage) {
+            case 'vertex':
+            case 'index':
+            case 'indexedIndirect':
+              return false;
+            default:
+              return true;
+          }
+        };
+        if (pass === 'compute') {
+          return !IsValidComputeUsage(usage0) || !IsValidComputeUsage(usage1);
+        }
+
+        return false;
+      })
+  )
+  .fn(async t => {
+    const { usage0, usage1, pass } = t.params;
+
+    const kUsages =
+      GPUBufferUsage.COPY_SRC |
+      GPUBufferUsage.COPY_DST |
+      GPUBufferUsage.UNIFORM |
+      GPUBufferUsage.STORAGE |
+      GPUBufferUsage.INDIRECT |
+      GPUBufferUsage.VERTEX |
+      GPUBufferUsage.INDEX;
+    const buffer = t.createBufferWithState('valid', {
+      size: kBufferSize,
+      usage: kUsages,
+    });
+
+    const UseBufferOnCommandEncoder = (
+      usage,
+
+      encoder
+    ) => {
+      switch (usage) {
+        case 'copy-src': {
+          const destinationBuffer = t.createBufferWithState('valid', {
+            size: 4,
+            usage: GPUBufferUsage.COPY_DST,
+          });
+
+          encoder.copyBufferToBuffer(buffer, 0, destinationBuffer, 0, 4);
+          break;
+        }
+        case 'copy-dst': {
+          const sourceBuffer = t.createBufferWithState('valid', {
+            size: 4,
+            usage: GPUBufferUsage.COPY_SRC,
+          });
+
+          encoder.copyBufferToBuffer(sourceBuffer, 0, buffer, 0, 4);
+          break;
+        }
+        case 'uniform':
+        case 'storage':
+        case 'read-only-storage': {
+          const bindGroup = t.createBindGroupForTest(buffer, 0, usage, 'fragment');
+          switch (pass) {
+            case 'render': {
+              const renderPassEncoder = t.beginSimpleRenderPass(encoder);
+              renderPassEncoder.setBindGroup(0, bindGroup);
+              renderPassEncoder.end();
+              break;
+            }
+            case 'compute': {
+              const computePassEncoder = encoder.beginComputePass();
+              computePassEncoder.setBindGroup(0, bindGroup);
+              computePassEncoder.end();
+              break;
+            }
+            default:
+              unreachable();
+          }
+
+          break;
+        }
+        case 'vertex': {
+          const renderPassEncoder = t.beginSimpleRenderPass(encoder);
+          renderPassEncoder.setVertexBuffer(0, buffer);
+          renderPassEncoder.end();
+          break;
+        }
+        case 'index': {
+          const renderPassEncoder = t.beginSimpleRenderPass(encoder);
+          renderPassEncoder.setIndexBuffer(buffer, 'uint16');
+          renderPassEncoder.end();
+          break;
+        }
+        case 'indirect': {
+          switch (pass) {
+            case 'render': {
+              const renderPassEncoder = t.beginSimpleRenderPass(encoder);
+              const renderPipeline = t.createNoOpRenderPipeline();
+              renderPassEncoder.setPipeline(renderPipeline);
+              renderPassEncoder.drawIndirect(buffer, 0);
+              renderPassEncoder.end();
+              break;
+            }
+            case 'compute': {
+              const computePassEncoder = encoder.beginComputePass();
+              const computePipeline = t.createNoOpComputePipeline();
+              computePassEncoder.setPipeline(computePipeline);
+              computePassEncoder.dispatchWorkgroupsIndirect(buffer, 0);
+              computePassEncoder.end();
+              break;
+            }
+            default:
+              unreachable();
+          }
+
+          break;
+        }
+        case 'indexedIndirect': {
+          const renderPassEncoder = t.beginSimpleRenderPass(encoder);
+          const renderPipeline = t.createNoOpRenderPipeline();
+          renderPassEncoder.setPipeline(renderPipeline);
+          const indexBuffer = t.createBufferWithState('valid', {
+            size: 4,
+            usage: GPUBufferUsage.INDEX,
+          });
+
+          renderPassEncoder.setIndexBuffer(indexBuffer, 'uint16');
+          renderPassEncoder.drawIndexedIndirect(buffer, 0);
+          renderPassEncoder.end();
+          break;
+        }
+        default:
+          unreachable();
+      }
+    };
+
+    const encoder = t.device.createCommandEncoder();
+    UseBufferOnCommandEncoder(usage0, encoder);
+    UseBufferOnCommandEncoder(usage1, encoder);
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, false);
   });
