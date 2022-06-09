@@ -35,8 +35,7 @@ export function clamp(n, { min, max }) {
 
 /** @returns 0 if |val| is a subnormal f32 number, otherwise returns |val| */
 export function flushSubnormalNumber(val) {
-  const u32_val = new Uint32Array(new Float32Array([val]).buffer)[0];
-  return (u32_val & 0x7f800000) === 0 ? 0 : val;
+  return val > kValue.f32.negative.max && val < kValue.f32.positive.min ? 0 : val;
 }
 
 /** @returns 0 if |val| is a subnormal f32 number, otherwise returns |val| */
@@ -67,7 +66,6 @@ export function isSubnormalNumber(val) {
 }
 
 /** @returns if number is in the finite range of f32 */
-
 export function isF32Finite(n) {
   return n >= kValue.f32.negative.min && n <= kValue.f32.positive.max;
 }

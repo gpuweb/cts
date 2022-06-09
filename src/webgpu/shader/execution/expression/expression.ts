@@ -590,8 +590,6 @@ export function makeBinaryF32Case(
  * @param param the param to pass into the unary operation
  * @param op callback that implements generating an acceptance interval for a unary operation
  */
-// Will be used in test implementations
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function makeUnaryF32IntervalCase(param: number, op: PointToInterval): Case {
   param = quantizeToF32(param);
   const interval = op(param);

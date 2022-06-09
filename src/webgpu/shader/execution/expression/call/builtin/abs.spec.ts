@@ -17,18 +17,11 @@ Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { correctlyRoundedMatch } from '../../../../../util/compare.js';
 import { kBit } from '../../../../../util/constants.js';
-import {
-  f32Bits,
-  i32Bits,
-  TypeF32,
-  TypeI32,
-  TypeU32,
-  u32Bits,
-} from '../../../../../util/conversion.js';
+import { i32Bits, TypeF32, TypeI32, TypeU32, u32Bits } from '../../../../../util/conversion.js';
+import { absInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../../util/math.js';
-import { allInputSources, Case, Config, makeUnaryF32Case, run } from '../../expression.js';
+import { allInputSources, Case, makeUnaryF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -96,10 +89,7 @@ g.test('i32')
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cfg: Config = t.params;
-    cfg.cmpFloats = correctlyRoundedMatch();
-
-    run(t, builtin('abs'), [TypeI32], TypeI32, cfg, [
+    run(t, builtin('abs'), [TypeI32], TypeI32, t.params, [
       // Min and max i32
       // If e evaluates to the largest negative value, then the result is e.
       { input: i32Bits(kBit.i32.negative.min), expected: i32Bits(kBit.i32.negative.min) },
@@ -157,20 +147,17 @@ g.test('f32')
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cfg: Config = t.params;
-    cfg.cmpFloats = correctlyRoundedMatch();
-
     const makeCase = (x: number): Case => {
-      return makeUnaryF32Case(x, Math.abs);
+      return makeUnaryF32IntervalCase(x, absInterval);
     };
 
     const cases: Array<Case> = [
-      { input: f32Bits(kBit.f32.infinity.negative), expected: f32Bits(kBit.f32.infinity.positive) },
-      { input: f32Bits(kBit.f32.infinity.positive), expected: f32Bits(kBit.f32.infinity.positive) },
-      ...fullF32Range().map(x => makeCase(x)),
-    ];
+      Number.NEGATIVE_INFINITY,
+      ...fullF32Range(),
+      Number.POSITIVE_INFINITY,
+    ].map(x => makeCase(x));
 
-    run(t, builtin('abs'), [TypeF32], TypeF32, cfg, cases);
+    run(t, builtin('abs'), [TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('f16')

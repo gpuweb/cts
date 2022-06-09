@@ -590,8 +590,6 @@ skip_param1_zero_flush = false)
  * @param param the param to pass into the unary operation
  * @param op callback that implements generating an acceptance interval for a unary operation
  */
-// Will be used in test implementations
-
 export function makeUnaryF32IntervalCase(param, op) {
   param = quantizeToF32(param);
   const interval = op(param);
