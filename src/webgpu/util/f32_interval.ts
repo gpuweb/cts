@@ -44,8 +44,8 @@ export class F32Interval {
    * Due to values that are above/below the f32 range being indistinguishable
    * from other values out of range in the same way, there some unintuitive
    * behaviours here, for example:
-   *   [0, max f32 +1].contains(+∞) will return true.
-   * */
+   *   [0, greater than max f32].contains(+∞) will return true.
+   */
   public contains(n: number | F32Interval): boolean {
     if (Number.isNaN(n)) {
       // Being the infinite interval indicates that the accuracy is not defined
