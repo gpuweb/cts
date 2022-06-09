@@ -36,8 +36,8 @@ TODO: move isAsync to the last subcases?
 
 `;
 
-import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { assert, unreachable, range } from '../../../common/util/util.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { assert, unreachable, range } from '../../../../common/util/util.js';
 import {
   kTextureFormats,
   kRenderableColorTextureFormats,
@@ -49,11 +49,11 @@ import {
   kBlendOperations,
   kPrimitiveTopology,
   kIndexFormat,
-} from '../../capability_info.js';
-import { getFragmentShaderCodeWithOutput, getPlainTypeInfo } from '../../util/shader.js';
-import { kTexelRepresentationInfo } from '../../util/texture/texel_data.js';
+} from '../../../capability_info.js';
+import { getFragmentShaderCodeWithOutput, getPlainTypeInfo } from '../../../util/shader.js';
+import { kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
 
-import { ValidationTest } from './validation_test.js';
+import { ValidationTest } from '../validation_test.js';
 
 const values = [0, 1, 0, 1];
 class F extends ValidationTest {

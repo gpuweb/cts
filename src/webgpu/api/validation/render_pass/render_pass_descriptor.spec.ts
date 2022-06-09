@@ -5,14 +5,14 @@ TODO: per-test descriptions, make test names more succinct
 TODO: review for completeness
 `;
 
-import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
   kDepthStencilFormats,
   kRenderableColorTextureFormats,
   kTextureFormatInfo,
-} from '../../capability_info.js';
+} from '../../../capability_info.js';
 
-import { ValidationTest } from './validation_test.js';
+import { ValidationTest } from '../validation_test.js';
 
 class F extends ValidationTest {
   createTexture(

@@ -2,16 +2,16 @@ export const description = `
 This test dedicatedly tests validation of GPUVertexState of createRenderPipeline.
 `;
 
-import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
   kMaxVertexAttributes,
   kMaxVertexBufferArrayStride,
   kMaxVertexBuffers,
   kVertexFormats,
   kVertexFormatInfo,
-} from '../../capability_info.js';
+} from '../../../capability_info.js';
 
-import { ValidationTest } from './validation_test.js';
+import { ValidationTest } from '../validation_test.js';
 
 const VERTEX_SHADER_CODE_WITH_NO_INPUT = `
   @vertex fn main() -> @builtin(position) vec4<f32> {

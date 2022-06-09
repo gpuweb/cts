@@ -2,8 +2,8 @@ export const description = `
 Validation for attachment compatibility between render passes, bundles, and pipelines
 `;
 
-import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { range } from '../../../common/util/util.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { range } from '../../../../common/util/util.js';
 import {
   kRegularTextureFormats,
   kSizedDepthStencilFormats,
@@ -13,9 +13,9 @@ import {
   kTextureFormatInfo,
   getFeaturesForFormats,
   filterFormatsByFeature,
-} from '../../capability_info.js';
+} from '../../../capability_info.js';
 
-import { ValidationTest } from './validation_test.js';
+import { ValidationTest } from '../validation_test.js';
 
 const kColorAttachmentCounts = range(kMaxColorAttachments, i => i + 1);
 const kColorAttachments = kColorAttachmentCounts
