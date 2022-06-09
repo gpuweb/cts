@@ -6,6 +6,7 @@ import { makeTestGroup } from '../common/framework/test_group.js';
 import { objectEquals } from '../common/util/util.js';
 import { kValue } from '../webgpu/util/constants.js';
 import {
+  absInterval,
   absoluteErrorInterval,
   correctlyRoundedInterval,
   F32Interval,
@@ -26,6 +27,50 @@ function arrayToInterval(bounds: [number, number]): F32Interval {
   const [begin, end] = bounds;
   return new F32Interval(begin, end);
 }
+
+interface ConstructorCase {
+  input: [number, number];
+  expected: [number, number];
+}
+
+g.test('constructor')
+  .paramsSubcasesOnly<ConstructorCase>(
+    // prettier-ignore
+    [
+      // Common cases
+      { input: [0, 10], expected: [0, 10]},
+      { input: [-5, 0], expected: [-5, 0]},
+      { input: [-5, 10], expected: [-5, 10]},
+      { input: [0, 0], expected: [0, 0]},
+      { input: [10, 10], expected: [10, 10]},
+      { input: [-5, -5], expected: [-5, -5]},
+
+      // Edges
+      { input: [0, kValue.f32.positive.max], expected: [0, kValue.f32.positive.max]},
+      { input: [kValue.f32.negative.min, 0], expected: [kValue.f32.negative.min, 0]},
+      { input: [kValue.f32.negative.min, kValue.f32.positive.max], expected: [kValue.f32.negative.min, kValue.f32.positive.max]},
+
+      // Out of range
+      { input: [0, 2 * kValue.f32.positive.max], expected: [0, Number.POSITIVE_INFINITY]},
+      { input: [2 * kValue.f32.negative.min, 0], expected: [Number.NEGATIVE_INFINITY, 0]},
+      { input: [2 * kValue.f32.negative.min, 2 * kValue.f32.positive.max], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]},
+
+      // Infinities
+      { input: [0, kValue.f32.infinity.positive], expected: [0, Number.POSITIVE_INFINITY]},
+      { input: [kValue.f32.infinity.negative, 0], expected: [Number.NEGATIVE_INFINITY, 0]},
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]},
+    ]
+  )
+  .fn(t => {
+    const [input_begin, input_end] = t.params.input;
+    const [expected_begin, expected_end] = t.params.expected;
+
+    const i = new F32Interval(input_begin, input_end);
+    t.expect(
+      i.begin === expected_begin && i.end === expected_end,
+      `F32Interval(${input_begin}, ${input_end}) returned ${i}. Expected [${expected_begin}, ${expected_end}`
+    );
+  });
 
 interface ContainsNumberCase {
   bounds: [number, number];
@@ -64,43 +109,59 @@ g.test('contains_number')
     // Upper infinity
     { bounds: [0, kValue.f32.infinity.positive], value: kValue.f32.positive.min, expected: true },
     { bounds: [0, kValue.f32.infinity.positive], value: kValue.f32.positive.max, expected: true },
-    { bounds: [0, kValue.f32.infinity.positive], value: kValue.f32.infinity.positive, expected: true },
+    { bounds: [0, kValue.f32.infinity.positive], value: Number.POSITIVE_INFINITY, expected: true },
     { bounds: [0, kValue.f32.infinity.positive], value: kValue.f32.negative.min, expected: false },
     { bounds: [0, kValue.f32.infinity.positive], value: kValue.f32.negative.max, expected: false },
-    { bounds: [0, kValue.f32.infinity.positive], value: kValue.f32.infinity.negative, expected: false },
+    { bounds: [0, kValue.f32.infinity.positive], value: Number.NEGATIVE_INFINITY, expected: false },
 
     // Lower infinity
     { bounds: [kValue.f32.infinity.negative, 0], value: kValue.f32.positive.min, expected: false },
     { bounds: [kValue.f32.infinity.negative, 0], value: kValue.f32.positive.max, expected: false },
-    { bounds: [kValue.f32.infinity.negative, 0], value: kValue.f32.infinity.positive, expected: false },
+    { bounds: [kValue.f32.infinity.negative, 0], value: Number.POSITIVE_INFINITY, expected: false },
     { bounds: [kValue.f32.infinity.negative, 0], value: kValue.f32.negative.min, expected: true },
     { bounds: [kValue.f32.infinity.negative, 0], value: kValue.f32.negative.max, expected: true },
-    { bounds: [kValue.f32.infinity.negative, 0], value: kValue.f32.infinity.negative, expected: true },
+    { bounds: [kValue.f32.infinity.negative, 0], value: Number.NEGATIVE_INFINITY, expected: true },
 
     // Full infinity
     { bounds: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], value: kValue.f32.positive.min, expected: true },
     { bounds: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], value: kValue.f32.positive.max, expected: true },
-    { bounds: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], value: kValue.f32.infinity.positive, expected: true },
+    { bounds: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], value: Number.POSITIVE_INFINITY, expected: true },
     { bounds: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], value: kValue.f32.negative.min, expected: true },
     { bounds: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], value: kValue.f32.negative.max, expected: true },
-    { bounds: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], value: kValue.f32.infinity.negative, expected: true },
+    { bounds: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], value: Number.NEGATIVE_INFINITY, expected: true },
     { bounds: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], value: Number.NaN, expected: true },
 
     // Maximum f32 boundary
     { bounds: [0, kValue.f32.positive.max], value: kValue.f32.positive.min, expected: true },
     { bounds: [0, kValue.f32.positive.max], value: kValue.f32.positive.max, expected: true },
-    { bounds: [0, kValue.f32.positive.max], value: kValue.f32.infinity.positive, expected: true },
+    { bounds: [0, kValue.f32.positive.max], value: Number.POSITIVE_INFINITY, expected: false },
     { bounds: [0, kValue.f32.positive.max], value: kValue.f32.negative.min, expected: false },
     { bounds: [0, kValue.f32.positive.max], value: kValue.f32.negative.max, expected: false },
-    { bounds: [0, kValue.f32.positive.max], value: kValue.f32.infinity.negative, expected: false },
+    { bounds: [0, kValue.f32.positive.max], value: Number.NEGATIVE_INFINITY, expected: false },
 
     // Minimum f32 boundary
     { bounds: [kValue.f32.negative.min, 0], value: kValue.f32.positive.min, expected: false },
     { bounds: [kValue.f32.negative.min, 0], value: kValue.f32.positive.max, expected: false },
-    { bounds: [kValue.f32.negative.min, 0], value: kValue.f32.infinity.positive, expected: false },
+    { bounds: [kValue.f32.negative.min, 0], value: Number.POSITIVE_INFINITY, expected: false },
     { bounds: [kValue.f32.negative.min, 0], value: kValue.f32.negative.min, expected: true },
     { bounds: [kValue.f32.negative.min, 0], value: kValue.f32.negative.max, expected: true },
-    { bounds: [kValue.f32.negative.min, 0], value: kValue.f32.infinity.negative, expected: true },
+    { bounds: [kValue.f32.negative.min, 0], value: Number.NEGATIVE_INFINITY, expected: false },
+
+    // Out of range high
+    { bounds: [0, 2 * kValue.f32.positive.max], value: kValue.f32.positive.min, expected: true },
+    { bounds: [0, 2 * kValue.f32.positive.max], value: kValue.f32.positive.max, expected: true },
+    { bounds: [0, 2 * kValue.f32.positive.max], value: Number.POSITIVE_INFINITY, expected: true },
+    { bounds: [0, 2 * kValue.f32.positive.max], value: kValue.f32.negative.min, expected: false },
+    { bounds: [0, 2 * kValue.f32.positive.max], value: kValue.f32.negative.max, expected: false },
+    { bounds: [0, 2 * kValue.f32.positive.max], value: Number.NEGATIVE_INFINITY, expected: false },
+
+    // Out of range low
+    { bounds: [2 * kValue.f32.negative.min, 0], value: kValue.f32.positive.min, expected: false },
+    { bounds: [2 * kValue.f32.negative.min, 0], value: kValue.f32.positive.max, expected: false },
+    { bounds: [2 * kValue.f32.negative.min, 0], value: Number.POSITIVE_INFINITY, expected: false },
+    { bounds: [2 * kValue.f32.negative.min, 0], value: kValue.f32.negative.min, expected: true },
+    { bounds: [2 * kValue.f32.negative.min, 0], value: kValue.f32.negative.max, expected: true },
+    { bounds: [2 * kValue.f32.negative.min, 0], value: Number.NEGATIVE_INFINITY, expected: true },
 
     // Subnormals
     { bounds: [0, kValue.f32.positive.min], value: kValue.f32.subnormal.positive.min, expected: true },
@@ -155,46 +216,64 @@ g.test('contains_interval')
       { lhs: [0, kValue.f32.infinity.positive], rhs: [-1, 0], expected: false},
       { lhs: [0, kValue.f32.infinity.positive], rhs: [0, 1], expected: true},
       { lhs: [0, kValue.f32.infinity.positive], rhs: [0, kValue.f32.positive.max], expected: true},
-      { lhs: [0, kValue.f32.infinity.positive], rhs: [0, kValue.f32.infinity.positive], expected: true},
-      { lhs: [0, kValue.f32.infinity.positive], rhs: [100, kValue.f32.infinity.positive], expected: true},
-      { lhs: [0, kValue.f32.infinity.positive], rhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: false},
+      { lhs: [0, kValue.f32.infinity.positive], rhs: [0, Number.POSITIVE_INFINITY], expected: true},
+      { lhs: [0, kValue.f32.infinity.positive], rhs: [100, Number.POSITIVE_INFINITY], expected: true},
+      { lhs: [0, kValue.f32.infinity.positive], rhs: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY], expected: false},
 
       // Lower infinity
       { lhs: [kValue.f32.infinity.negative, 0], rhs: [0, 0], expected: true},
       { lhs: [kValue.f32.infinity.negative, 0], rhs: [-1, 0], expected: true},
       { lhs: [kValue.f32.infinity.negative, 0], rhs: [kValue.f32.negative.min, 0], expected: true},
       { lhs: [kValue.f32.infinity.negative, 0], rhs: [0, 1], expected: false},
-      { lhs: [kValue.f32.infinity.negative, 0], rhs: [kValue.f32.infinity.negative, 0], expected: true},
-      { lhs: [kValue.f32.infinity.negative, 0], rhs: [kValue.f32.infinity.negative, -100 ], expected: true},
-      { lhs: [kValue.f32.infinity.negative, 0], rhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: false},
+      { lhs: [kValue.f32.infinity.negative, 0], rhs: [Number.NEGATIVE_INFINITY, 0], expected: true},
+      { lhs: [kValue.f32.infinity.negative, 0], rhs: [Number.NEGATIVE_INFINITY, -100 ], expected: true},
+      { lhs: [kValue.f32.infinity.negative, 0], rhs: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY], expected: false},
 
       // Full infinity
       { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [0, 0], expected: true},
       { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [-1, 0], expected: true},
       { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [0, 1], expected: true},
-      { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [0, kValue.f32.infinity.positive], expected: true},
-      { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [100, kValue.f32.infinity.positive], expected: true},
-      { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [kValue.f32.infinity.negative, 0], expected: true},
-      { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [kValue.f32.infinity.negative, -100 ], expected: true},
-      { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: true},
+      { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [0, Number.POSITIVE_INFINITY], expected: true},
+      { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [100, Number.POSITIVE_INFINITY], expected: true},
+      { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [Number.NEGATIVE_INFINITY, 0], expected: true},
+      { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [Number.NEGATIVE_INFINITY, -100 ], expected: true},
+      { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY], expected: true},
 
       // Maximum f32 boundary
       { lhs: [0, kValue.f32.positive.max], rhs: [0, 0], expected: true},
       { lhs: [0, kValue.f32.positive.max], rhs: [-1, 0], expected: false},
       { lhs: [0, kValue.f32.positive.max], rhs: [0, 1], expected: true},
       { lhs: [0, kValue.f32.positive.max], rhs: [0, kValue.f32.positive.max], expected: true},
-      { lhs: [0, kValue.f32.positive.max], rhs: [0, kValue.f32.infinity.positive], expected: true},
-      { lhs: [0, kValue.f32.positive.max], rhs: [100, kValue.f32.infinity.positive], expected: true},
-      { lhs: [0, kValue.f32.positive.max], rhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: false},
+      { lhs: [0, kValue.f32.positive.max], rhs: [0, Number.POSITIVE_INFINITY], expected: false},
+      { lhs: [0, kValue.f32.positive.max], rhs: [100, Number.POSITIVE_INFINITY], expected: false},
+      { lhs: [0, kValue.f32.positive.max], rhs: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY], expected: false},
 
       // Minimum f32 boundary
       { lhs: [kValue.f32.negative.min, 0], rhs: [0, 0], expected: true},
       { lhs: [kValue.f32.negative.min, 0], rhs: [-1, 0], expected: true},
       { lhs: [kValue.f32.negative.min, 0], rhs: [kValue.f32.negative.min, 0], expected: true},
       { lhs: [kValue.f32.negative.min, 0], rhs: [0, 1], expected: false},
-      { lhs: [kValue.f32.negative.min, 0], rhs: [kValue.f32.infinity.negative, 0], expected: true},
-      { lhs: [kValue.f32.negative.min, 0], rhs: [kValue.f32.infinity.negative, -100 ], expected: true},
-      { lhs: [kValue.f32.negative.min, 0], rhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: false},
+      { lhs: [kValue.f32.negative.min, 0], rhs: [Number.NEGATIVE_INFINITY, 0], expected: false},
+      { lhs: [kValue.f32.negative.min, 0], rhs: [Number.NEGATIVE_INFINITY, -100 ], expected: false},
+      { lhs: [kValue.f32.negative.min, 0], rhs: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY], expected: false},
+
+      // Out of range high
+      { lhs: [0, 2 * kValue.f32.positive.max], rhs: [0, 0], expected: true},
+      { lhs: [0, 2 * kValue.f32.positive.max], rhs: [-1, 0], expected: false},
+      { lhs: [0, 2 * kValue.f32.positive.max], rhs: [0, 1], expected: true},
+      { lhs: [0, 2 * kValue.f32.positive.max], rhs: [0, kValue.f32.positive.max], expected: true},
+      { lhs: [0, 2 * kValue.f32.positive.max], rhs: [0, Number.POSITIVE_INFINITY], expected: true},
+      { lhs: [0, 2 * kValue.f32.positive.max], rhs: [100, Number.POSITIVE_INFINITY], expected: true},
+      { lhs: [0, 2 * kValue.f32.positive.max], rhs: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY], expected: false},
+
+      // Out of range low
+      { lhs: [2 * kValue.f32.negative.min, 0], rhs: [0, 0], expected: true},
+      { lhs: [2 * kValue.f32.negative.min, 0], rhs: [-1, 0], expected: true},
+      { lhs: [2 * kValue.f32.negative.min, 0], rhs: [kValue.f32.negative.min, 0], expected: true},
+      { lhs: [2 * kValue.f32.negative.min, 0], rhs: [0, 1], expected: false},
+      { lhs: [2 * kValue.f32.negative.min, 0], rhs: [Number.NEGATIVE_INFINITY, 0], expected: true},
+      { lhs: [2 * kValue.f32.negative.min, 0], rhs: [Number.NEGATIVE_INFINITY, -100 ], expected: true},
+      { lhs: [2 * kValue.f32.negative.min, 0], rhs: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY], expected: false},
     ]
   )
   .fn(t => {
@@ -217,19 +296,19 @@ g.test('span')
     [
       // Single Intervals
       { intervals: [[0, 10]], expected: [0, 10]},
-      { intervals: [[0, kValue.f32.positive.max]], expected: [0, kValue.f32.infinity.positive]},
+      { intervals: [[0, kValue.f32.positive.max]], expected: [0, kValue.f32.positive.max]},
       { intervals: [[0, kValue.f32.positive.nearest_max]], expected: [0, kValue.f32.positive.nearest_max]},
-      { intervals: [[0, kValue.f32.infinity.positive]], expected: [0, kValue.f32.infinity.positive]},
+      { intervals: [[0, kValue.f32.infinity.positive]], expected: [0, Number.POSITIVE_INFINITY]},
       { intervals: [[kValue.f32.negative.min, 0]], expected: [kValue.f32.negative.min, 0]},
       { intervals: [[kValue.f32.negative.nearest_min, 0]], expected: [kValue.f32.negative.nearest_min, 0]},
-      { intervals: [[kValue.f32.infinity.negative, 0]], expected: [kValue.f32.infinity.negative, 0]},
+      { intervals: [[kValue.f32.infinity.negative, 0]], expected: [Number.NEGATIVE_INFINITY, 0]},
 
       // Double Intervals
       { intervals: [[0, 1], [2, 5]], expected: [0, 5]},
       { intervals: [[2, 5], [0, 1]], expected: [0, 5]},
       { intervals: [[0, 2], [1, 5]], expected: [0, 5]},
       { intervals: [[0, 5], [1, 2]], expected: [0, 5]},
-      { intervals: [[kValue.f32.infinity.negative, 0], [0, kValue.f32.infinity.positive]], expected: [kValue.f32.infinity.negative, kValue.f32.infinity.positive]},
+      { intervals: [[kValue.f32.infinity.negative, 0], [0, kValue.f32.infinity.positive]], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]},
 
       // Multiple Intervals
       { intervals: [[0, 1], [2, 3], [4, 5]], expected: [0, 5]},
@@ -323,15 +402,15 @@ g.test('absoluteErrorInterval')
       { value: kValue.f32.infinity.negative, error: 0, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
       { value: kValue.f32.infinity.negative, error: 2 ** -11, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
       { value: kValue.f32.infinity.negative, error: 1, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { value: kValue.f32.positive.max, error: 0, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { value: kValue.f32.positive.max, error: 2 ** -11, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { value: kValue.f32.positive.max, error: 1, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.positive.max, error: 0, expected: [kValue.f32.positive.max, kValue.f32.positive.max] },
+      { value: kValue.f32.positive.max, error: 2 ** -11, expected: [kValue.f32.positive.max, kValue.f32.positive.max] },
+      { value: kValue.f32.positive.max, error: kValue.f32.positive.max, expected: [0, Number.POSITIVE_INFINITY] },
       { value: kValue.f32.positive.min, error: 0, expected: [kValue.f32.positive.min,  kValue.f32.positive.min] },
       { value: kValue.f32.positive.min, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
       { value: kValue.f32.positive.min, error: 1, expected: [-1, 1] },
-      { value: kValue.f32.negative.min, error: 0, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { value: kValue.f32.negative.min, error: 2 ** -11, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { value: kValue.f32.negative.min, error: 1, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+      { value: kValue.f32.negative.min, error: 0, expected: [kValue.f32.negative.min, kValue.f32.negative.min] },
+      { value: kValue.f32.negative.min, error: 2 ** -11, expected: [kValue.f32.negative.min, kValue.f32.negative.min] },
+      { value: kValue.f32.negative.min, error: kValue.f32.positive.max, expected: [Number.NEGATIVE_INFINITY, 0] },
       { value: kValue.f32.negative.max, error: 0, expected: [kValue.f32.negative.max, kValue.f32.negative.max] },
       { value: kValue.f32.negative.max, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
       { value: kValue.f32.negative.max, error: 1, expected: [-1, 1] },
@@ -399,7 +478,7 @@ g.test('ulpInterval')
       { value: kValue.f32.infinity.negative, num_ulp: 0, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
       { value: kValue.f32.infinity.negative, num_ulp: 1, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
       { value: kValue.f32.infinity.negative, num_ulp: 4096, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { value: kValue.f32.positive.max, num_ulp: 0, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.positive.max, num_ulp: 0, expected: [kValue.f32.positive.max, kValue.f32.positive.max] },
       { value: kValue.f32.positive.max, num_ulp: 1, expected: [kValue.f32.positive.nearest_max, Number.POSITIVE_INFINITY] },
       { value: kValue.f32.positive.max, num_ulp: 4096, expected: [hexToF32(0x7f7fefff), Number.POSITIVE_INFINITY] },
       { value: kValue.f32.positive.min, num_ulp: 0, expected: [ kValue.f32.positive.min,  kValue.f32.positive.min] },
@@ -455,5 +534,53 @@ g.test('ulpInterval')
     t.expect(
       objectEquals(expected, got),
       `ulpInterval(${value}, ${num_ulp}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+interface PointToIntervalCase {
+  input: number;
+  expected: [number, number];
+}
+
+g.test('absInterval')
+  .paramsSubcasesOnly<PointToIntervalCase>(
+    // prettier-ignore
+    [
+      // Common usages
+      { input: 1, expected: [1, 1] },
+      { input: -1, expected: [1, 1] },
+      { input: 0.1, expected: [hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)] },
+      { input: -0.1, expected: [hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)] },
+
+      // Edge cases
+      { input: kValue.f32.infinity.positive, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.infinity.negative, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.positive.max, expected: [kValue.f32.positive.max, kValue.f32.positive.max] },
+      { input: kValue.f32.positive.min, expected: [kValue.f32.positive.min, kValue.f32.positive.min] },
+      { input: kValue.f32.negative.min, expected: [kValue.f32.positive.max, kValue.f32.positive.max] },
+      { input: kValue.f32.negative.max, expected: [kValue.f32.positive.min, kValue.f32.positive.min] },
+
+      // 32-bit subnormals
+      { input: kValue.f32.subnormal.positive.max, expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: kValue.f32.subnormal.positive.min, expected: [0, kValue.f32.subnormal.positive.min] },
+      { input: kValue.f32.subnormal.negative.min, expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: kValue.f32.subnormal.negative.max, expected: [0, kValue.f32.subnormal.positive.min] },
+
+      // 64-bit subnormals
+      { input: hexToF64(0x00000000, 0x00000001), expected: [0, kValue.f32.subnormal.positive.min] },
+      { input: hexToF64(0x800fffff, 0xffffffff), expected: [0, kValue.f32.subnormal.positive.min] },
+
+      // Zero
+      { input: 0, expected: [0, 0]},
+    ]
+  )
+  .fn(t => {
+    const input = t.params.input;
+    const expected = arrayToInterval(t.params.expected);
+
+    const got = absInterval(input);
+    t.expect(
+      objectEquals(expected, got),
+      `absInterval(${input}) returned ${got}. Expected ${expected}`
     );
   });
