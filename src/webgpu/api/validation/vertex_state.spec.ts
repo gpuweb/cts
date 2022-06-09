@@ -1,4 +1,6 @@
-export const description = `vertexState validation tests.`;
+export const description = `
+This test dedicatedly tests validation of GPUVertexState of createRenderPipeline.
+`;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import {

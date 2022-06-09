@@ -8,23 +8,36 @@ TODO: review existing tests, write descriptions, and make sure tests are complet
 > - interface matching between vertex and fragment shader
 >     - superset, subset, etc.
 >
-> - vertex stage {valid, invalid}
-> - fragment stage {valid, invalid}
-> - primitive topology all possible values
-> - rasterizationState various values
-> - multisample count {0, 1, 3, 4, 8, 16, 1024}
-> - multisample mask {0, 0xFFFFFFFF}
-> - alphaToCoverage:
+> - ☑ vertex state {valid, invalid} (vertex_state.spec.ts) 
+> - fragment state {valid, invalid} (TODO: split to fragment_state.spec.ts?)
+>    - ☑ targets length {0, 1, 2, 8, 16, 1024} must be <= device.limits.maxColorAttachments
+>    - For each non-null color state |target|
+>        - ☑ target.format must has render attachment capability
+>        - If target.blend is not undefined
+>            - ☑ target.format must be filterable
+>            - ☑ target.blend.color {valid, invalid}
+>            - ☑ target.blend.alpha {valid, invalid}
+>        - ☑ target.writeMask must be < 16
+>        - ☑ pipeline output and format compatibility (pipeline_output_targets)
+> - ☑ primitive state
+> - ☑ depth stencil state
+> - ☑ rasterizationState various values (dynamic_state.spec.ts)
+> - ☑ multisample state
+>   - count {0, 1, 3, 4, 8, 16, 1024}
+>   - sample mask {0, 0xFFFFFFFF}
+>   - alphaToCoverage:
 >     - alphaToCoverageEnabled is { true, false } and sampleCount { = 1, = 4 }.
 >       The only failing case is (true, 1).
->     - output SV_Coverage semantics is statically used by fragmentStage and
+>     - sample_mask builtin is a pipeline output of fragment and
 >       alphaToCoverageEnabled is { true (fails), false (passes) }.
 >     - sampleMask is being used and alphaToCoverageEnabled is { true (fails), false (passes) }.
+
+TODO: move isAsync to the last subcases?
 
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { assert, unreachable } from '../../../common/util/util.js';
+import { assert, unreachable, range } from '../../../common/util/util.js';
 import {
   kTextureFormats,
   kRenderableColorTextureFormats,
@@ -34,6 +47,8 @@ import {
   kStencilOperations,
   kBlendFactors,
   kBlendOperations,
+  kPrimitiveTopology,
+  kIndexFormat,
 } from '../../capability_info.js';
 import { getFragmentShaderCodeWithOutput, getPlainTypeInfo } from '../../util/shader.js';
 import { kTexelRepresentationInfo } from '../../util/texture/texel_data.js';
@@ -44,9 +59,10 @@ const values = [0, 1, 0, 1];
 class F extends ValidationTest {
   getDescriptor(
     options: {
-      topology?: GPUPrimitiveTopology;
+      // topology?: GPUPrimitiveTopology;
+      primitive?: GPUPrimitiveState;
       targets?: GPUColorTargetState[];
-      sampleCount?: number;
+      multisample?: GPUMultisampleState;
       depthStencil?: GPUDepthStencilState;
       fragmentShaderCode?: string;
       noFragment?: boolean;
@@ -54,9 +70,9 @@ class F extends ValidationTest {
   ): GPURenderPipelineDescriptor {
     const defaultTargets: GPUColorTargetState[] = [{ format: 'rgba8unorm' }];
     const {
-      topology = 'triangle-list',
+      primitive = {},
       targets = defaultTargets,
-      sampleCount = 1,
+      multisample = {},
       depthStencil,
       fragmentShaderCode = getFragmentShaderCodeWithOutput([
         {
@@ -90,25 +106,14 @@ class F extends ValidationTest {
             targets,
           },
       layout: this.getPipelineLayout(),
-      primitive: { topology },
-      multisample: { count: sampleCount },
+      primitive,
+      multisample,
       depthStencil,
     };
   }
 
   getPipelineLayout(): GPUPipelineLayout {
     return this.device.createPipelineLayout({ bindGroupLayouts: [] });
-  }
-
-  createTexture(params: { format: GPUTextureFormat; sampleCount: number }): GPUTexture {
-    const { format, sampleCount } = params;
-
-    return this.device.createTexture({
-      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
-      format,
-      sampleCount,
-    });
   }
 
   doCreateRenderPipelineTest(
@@ -132,8 +137,8 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
-g.test('basic_use_of_createRenderPipeline')
-  .desc(`TODO: review and add description; shorten name`)
+g.test('basic')
+  .desc(`Test basic usage of createRenderPipeline.`)
   .params(u => u.combine('isAsync', [false, true]))
   .fn(async t => {
     const { isAsync } = t.params;
@@ -142,12 +147,10 @@ g.test('basic_use_of_createRenderPipeline')
     t.doCreateRenderPipelineTest(isAsync, true, descriptor);
   });
 
-g.test('create_vertex_only_pipeline_with_without_depth_stencil_state')
+g.test('vertex_state_only')
   .desc(
-    `Test creating vertex-only render pipeline. A vertex-only render pipeline have no fragment
-state (and thus have no color state), and can be create with or without depth stencil state.
-
-TODO: review and shorten name`
+    `Tests creating vertex-state-only render pipeline. A vertex-only render pipeline has no fragment
+state (and thus has no color state), and can be created with or without depth stencil state.`
   )
   .params(u =>
     u
@@ -159,10 +162,10 @@ TODO: review and shorten name`
         'depth32float',
         '',
       ] as const)
-      .combine('haveColor', [false, true])
+      .combine('hasColor', [false, true])
   )
   .fn(async t => {
-    const { isAsync, depthStencilFormat, haveColor } = t.params;
+    const { isAsync, depthStencilFormat, hasColor } = t.params;
 
     let depthStencilState: GPUDepthStencilState | undefined;
     if (depthStencilFormat === '') {
@@ -176,14 +179,14 @@ TODO: review and shorten name`
     const descriptor = t.getDescriptor({
       noFragment: true,
       depthStencil: depthStencilState,
-      targets: haveColor ? [{ format: 'rgba8unorm' }] : [],
+      targets: hasColor ? [{ format: 'rgba8unorm' }] : [],
     });
 
     t.doCreateRenderPipelineTest(isAsync, true, descriptor);
   });
 
-g.test('at_least_one_color_state_is_required_for_complete_pipeline')
-  .desc(`TODO: review and add description; shorten name`)
+g.test('fragment_state,color_target_exists')
+  .desc(`Tests creating a complete render pipeline requires at least one color target state.`)
   .params(u => u.combine('isAsync', [false, true]))
   .fn(async t => {
     const { isAsync } = t.params;
@@ -203,8 +206,29 @@ g.test('at_least_one_color_state_is_required_for_complete_pipeline')
     t.doCreateRenderPipelineTest(isAsync, false, badDescriptor);
   });
 
-g.test('color_formats_must_be_renderable')
-  .desc(`TODO: review and add description; shorten name`)
+g.test('fragment_state,max_color_attachments_limit')
+  .desc(
+    `Tests that color state targets length must not be larger than device.limits.maxColorAttachments`
+  )
+  .params(u => u.combine('isAsync', [false, true]).combine('targetsLength', [1, 8, 16, 99]))
+  .fn(async t => {
+    const { isAsync, targetsLength } = t.params;
+
+    const descriptor = t.getDescriptor({
+      targets: range(targetsLength, () => {
+        return { format: 'rgba8unorm' };
+      }),
+    });
+
+    t.doCreateRenderPipelineTest(
+      isAsync,
+      targetsLength <= t.device.limits.maxColorAttachments,
+      descriptor
+    );
+  });
+
+g.test('fragment_state,targets_format_renderable')
+  .desc(`Tests that color target state format must have RENDER_ATTACHMENT capability.`)
   .params(u => u.combine('isAsync', [false, true]).combine('format', kTextureFormats))
   .beforeAllSubcases(t => {
     const { format } = t.params;
@@ -220,8 +244,204 @@ g.test('color_formats_must_be_renderable')
     t.doCreateRenderPipelineTest(isAsync, info.renderable && info.color, descriptor);
   });
 
+g.test('fragment_state,targets_format_filterable')
+  .desc(`Tests that color target state format must be filterable if blend is not undefined.`)
+  .params(u =>
+    u
+      .combine('isAsync', [false, true])
+      .combine('format', kRenderableColorTextureFormats)
+      .beginSubcases()
+      .combine('hasBlend', [false, true])
+  )
+  .beforeAllSubcases(t => {
+    const { format } = t.params;
+    const info = kTextureFormatInfo[format];
+    t.selectDeviceOrSkipTestCase(info.feature);
+  })
+  .fn(async t => {
+    const { isAsync, format, hasBlend } = t.params;
+    const info = kTextureFormatInfo[format];
+
+    const descriptor = t.getDescriptor({
+      targets: [
+        {
+          format,
+          blend: hasBlend ? { color: {}, alpha: {} } : undefined,
+        },
+      ],
+    });
+
+    t.doCreateRenderPipelineTest(isAsync, !hasBlend || info.sampleType === 'float', descriptor);
+  });
+
+g.test('fragment_state,targets_blend')
+  .desc(
+    `
+  For the blend components on either GPUBlendState.color or GPUBlendState.alpha:
+  - Tests if the combination of 'srcFactor', 'dstFactor' and 'operation' is valid (if the blend
+    operation is "min" or "max", srcFactor and dstFactor must be "one").
+  `
+  )
+  .params(u =>
+    u
+      .combine('isAsync', [false, true])
+      .combine('component', ['color', 'alpha'] as const)
+      .beginSubcases()
+      .combine('srcFactor', kBlendFactors)
+      .combine('dstFactor', kBlendFactors)
+      .combine('operation', kBlendOperations)
+  )
+  .fn(async t => {
+    const { isAsync, component, srcFactor, dstFactor, operation } = t.params;
+
+    const defaultBlendComponent = {
+      srcFactor: 'src-alpha',
+      dstFactor: 'dst-alpha',
+      operation: 'add',
+    };
+    const blendComponentToTest = {
+      srcFactor,
+      dstFactor,
+      operation,
+    };
+    const format = 'rgba8unorm';
+
+    const descriptor = t.getDescriptor({
+      targets: [
+        {
+          format,
+          blend: {
+            color: component === 'color' ? blendComponentToTest : defaultBlendComponent,
+            alpha: component === 'alpha' ? blendComponentToTest : defaultBlendComponent,
+          },
+        },
+      ],
+    });
+
+    if (operation === 'min' || operation === 'max') {
+      const _success = srcFactor === 'one' && dstFactor === 'one';
+      t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+    } else {
+      t.doCreateRenderPipelineTest(isAsync, true, descriptor);
+    }
+  });
+
+g.test('fragment_state,targets_write_mask')
+  .desc(`Tests that color target state write mask must be < 16.`)
+  .params(u =>
+    u
+      .combine('isAsync', [false, true])
+      .combine('writeMask', [0, 0x1, 0x2, 0x7, 0x8, 0xf, 0x10, 0xff])
+  )
+  .fn(async t => {
+    const { isAsync, writeMask } = t.params;
+
+    const descriptor = t.getDescriptor({
+      targets: [
+        {
+          format: 'rgba8unorm',
+          writeMask,
+        },
+      ],
+    });
+
+    t.doCreateRenderPipelineTest(isAsync, writeMask < 16, descriptor);
+  });
+
+g.test('primitive_state,strip_index_format')
+  .desc(
+    `If primitive.topology is not "line-strip" or "triangle-strip", primitive.stripIndexFormat must be undefined.`
+  )
+  .params(u =>
+    u
+      .combine('isAsync', [false, true])
+      .combine('topology', [undefined, ...kPrimitiveTopology] as const)
+      .combine('stripIndexFormat', [undefined, ...kIndexFormat] as const)
+  )
+  .fn(async t => {
+    const { isAsync, topology, stripIndexFormat } = t.params;
+
+    const descriptor = t.getDescriptor({ primitive: { topology, stripIndexFormat } });
+
+    const _success =
+      topology === 'line-strip' || topology === 'triangle-strip' || stripIndexFormat === undefined;
+    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+  });
+
+g.test('primitive_state,unclipped_depth')
+  .desc(`If primitive.unclippedDepth is true, features must contain "depth-clip-control".`)
+  .params(u => u.combine('isAsync', [false, true]).combine('unclippedDepth', [false, true]))
+  .fn(async t => {
+    const { isAsync, unclippedDepth } = t.params;
+
+    const descriptor = t.getDescriptor({ primitive: { unclippedDepth } });
+
+    const _success = !unclippedDepth || t.device.features.has('depth-clip-control');
+    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+  });
+
+g.test('multisample_state,count')
+  .desc(
+    `If multisample.alphaToCoverageEnabled is true, multisample.count must be greater than 1. Sample count must either be 1 or 4.`
+  )
+  .params(u =>
+    u
+      .combine('isAsync', [false, true])
+      .combine('alphaToCoverageEnabled', [false, true])
+      .beginSubcases()
+      .combine('count', [0, 1, 2, 3, 4, 8, 16, 1024])
+  )
+  .fn(async t => {
+    const { isAsync, alphaToCoverageEnabled, count } = t.params;
+
+    const descriptor = t.getDescriptor({ multisample: { count, alphaToCoverageEnabled } });
+
+    const _success = alphaToCoverageEnabled ? count === 4 : count === 1 || count === 4;
+    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+  });
+
+g.test('multisample_state,alpha_to_coverage_enabled')
+  .desc(
+    `If sample_mask builtin is a pipeline output of fragment or if multisample.mask is not 0xFFFFFFFF, multisample.alphaToCoverageEnabled should be false.`
+  )
+  .params(u =>
+    u
+      .combine('isAsync', [false, true])
+      .combine('alphaToCoverageEnabled', [false, true])
+      .beginSubcases()
+      .combine('hasSampleMaskOutput', [false, true])
+      .combine('mask', [0, 0x1, 0x2, 0xffffffff])
+  )
+  .fn(async t => {
+    const { isAsync, alphaToCoverageEnabled, mask, hasSampleMaskOutput } = t.params;
+
+    const descriptor = t.getDescriptor({
+      multisample: { mask, alphaToCoverageEnabled, count: 4 },
+      fragmentShaderCode: hasSampleMaskOutput
+        ? `
+      struct Output {
+        @builtin(sample_mask) mask_out: u32,
+        @location(0) color : vec4<f32>,
+      };
+      @fragment fn main() -> Output {
+        var o: Output;
+        o.mask_out = 0x1u;
+        o.color = vec4<f32>(1.0, 1.0, 1.0, 1.0);
+        return o;
+      }`
+        : `
+      @fragment fn main() -> @location(0) vec4<f32>  {
+        return vec4<f32>(1.0, 1.0, 1.0, 1.0);
+      }`,
+    });
+
+    const _success =
+      !(hasSampleMaskOutput || mask !== 0xffffffff) || alphaToCoverageEnabled === false;
+    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+  });
+
 g.test('depth_stencil_state,format')
-  .desc(`The texture format in depthStencilState must be a depth/stencil format`)
+  .desc(`The texture format in depthStencilState must be a depth/stencil format.`)
   .params(u => u.combine('isAsync', [false, true]).combine('format', kTextureFormats))
   .beforeAllSubcases(t => {
     const { format } = t.params;
@@ -237,7 +457,7 @@ g.test('depth_stencil_state,format')
     t.doCreateRenderPipelineTest(isAsync, info.depth || info.stencil, descriptor);
   });
 
-g.test('depth_stencil_state,depth_aspect,depth_test')
+g.test('depth_stencil_state,depth_test')
   .desc(
     `Depth aspect must be contained in the format if depth test is enabled in depthStencilState.`
   )
@@ -264,7 +484,7 @@ g.test('depth_stencil_state,depth_aspect,depth_test')
     t.doCreateRenderPipelineTest(isAsync, !depthTestEnabled || info.depth, descriptor);
   });
 
-g.test('depth_stencil_state,depth_aspect,depth_write')
+g.test('depth_stencil_state,depth_write')
   .desc(
     `Depth aspect must be contained in the format if depth write is enabled in depthStencilState.`
   )
@@ -289,7 +509,7 @@ g.test('depth_stencil_state,depth_aspect,depth_write')
     t.doCreateRenderPipelineTest(isAsync, !depthWriteEnabled || info.depth, descriptor);
   });
 
-g.test('depth_stencil_state,stencil_aspect,stencil_test')
+g.test('depth_stencil_state,stencil_test')
   .desc(
     `Stencil aspect must be contained in the format if stencil test is enabled in depthStencilState.`
   )
@@ -320,7 +540,7 @@ g.test('depth_stencil_state,stencil_aspect,stencil_test')
     t.doCreateRenderPipelineTest(isAsync, !stencilTestEnabled || info.stencil, descriptor);
   });
 
-g.test('depth_stencil_state,stencil_aspect,stencil_write')
+g.test('depth_stencil_state,stencil_write')
   .desc(
     `Stencil aspect must be contained in the format if stencil write is enabled in depthStencilState.`
   )
@@ -376,28 +596,7 @@ g.test('depth_stencil_state,stencil_aspect,stencil_write')
     t.doCreateRenderPipelineTest(isAsync, !stencilWriteEnabled || info.stencil, descriptor);
   });
 
-g.test('sample_count_must_be_valid')
-  .desc(`TODO: review and add description; shorten name`)
-  .params(u =>
-    u.combine('isAsync', [false, true]).combineWithParams([
-      { sampleCount: 0, _success: false },
-      { sampleCount: 1, _success: true },
-      { sampleCount: 2, _success: false },
-      { sampleCount: 3, _success: false },
-      { sampleCount: 4, _success: true },
-      { sampleCount: 8, _success: false },
-      { sampleCount: 16, _success: false },
-    ])
-  )
-  .fn(async t => {
-    const { isAsync, sampleCount, _success } = t.params;
-
-    const descriptor = t.getDescriptor({ sampleCount });
-
-    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
-  });
-
-g.test('pipeline_output_targets')
+g.test('fragment_state,pipeline_output_targets')
   .desc(
     `Pipeline fragment output types must be compatible with target color state format
   - The scalar type (f32, i32, or u32) must match the sample type of the format.
@@ -456,7 +655,7 @@ g.test('pipeline_output_targets')
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
-g.test('pipeline_output_targets,blend')
+g.test('fragment_state,pipeline_output_targets,blend')
   .desc(
     `On top of requirements from pipeline_output_targets, when blending is enabled and alpha channel is read indicated by any blend factor, an extra requirement is added:
   - fragment output must be vec4.
@@ -572,107 +771,6 @@ g.test('pipeline_output_targets,blend')
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
-g.test('pipeline_output_targets,format_blendable')
-  .desc(
-    `
-Tests if blending is used, the target's format must be blendable (support "float" sample type).
-- For all the formats, test that blending can be enabled if and only if the format is blendable.`
-  )
-  .params(u =>
-    u.combine('isAsync', [false, true]).combine('format', kRenderableColorTextureFormats)
-  )
-  .beforeAllSubcases(t => {
-    const { format } = t.params;
-    const info = kTextureFormatInfo[format];
-    t.selectDeviceOrSkipTestCase(info.feature);
-  })
-  .fn(async t => {
-    const { isAsync, format } = t.params;
-    const info = kTextureFormatInfo[format];
-
-    const _success = info.sampleType === 'float';
-
-    const blendComponent: GPUBlendComponent = {
-      srcFactor: 'src-alpha',
-      dstFactor: 'dst-alpha',
-      operation: 'add',
-    };
-    t.doCreateRenderPipelineTest(
-      isAsync,
-      _success,
-      t.getDescriptor({
-        targets: [
-          {
-            format,
-            blend: {
-              color: blendComponent,
-              alpha: blendComponent,
-            },
-          },
-        ],
-        fragmentShaderCode: getFragmentShaderCodeWithOutput([
-          { values, plainType: getPlainTypeInfo(info.sampleType), componentCount: 4 },
-        ]),
-      })
-    );
-  });
-
-g.test('pipeline_output_targets,blend_min_max')
-  .desc(
-    `
-  For the blend components on either GPUBlendState.color or GPUBlendState.alpha:
-  - Tests if the combination of 'srcFactor', 'dstFactor' and 'operation' is valid (if the blend
-    operation is "min" or "max", srcFactor and dstFactor must be "one").
-  `
-  )
-  .params(u =>
-    u
-      .combine('isAsync', [false, true])
-      .combine('component', ['color', 'alpha'] as const)
-      .beginSubcases()
-      .combine('srcFactor', kBlendFactors)
-      .combine('dstFactor', kBlendFactors)
-      .combine('operation', kBlendOperations)
-  )
-  .fn(async t => {
-    const { isAsync, component, srcFactor, dstFactor, operation } = t.params;
-
-    const defaultBlendComponent: GPUBlendComponent = {
-      srcFactor: 'src-alpha',
-      dstFactor: 'dst-alpha',
-      operation: 'add',
-    };
-    const blendComponentToTest = {
-      srcFactor,
-      dstFactor,
-      operation,
-    };
-    const format = 'rgba8unorm';
-    const fragmentShaderCode = getFragmentShaderCodeWithOutput([
-      { values, plainType: 'f32', componentCount: 4 },
-    ]);
-
-    const descriptor = t.getDescriptor({
-      targets: [
-        {
-          format,
-          blend: {
-            color: component === 'color' ? blendComponentToTest : defaultBlendComponent,
-            alpha: component === 'alpha' ? blendComponentToTest : defaultBlendComponent,
-          },
-        },
-      ],
-      fragmentShaderCode,
-    });
-
-    if (operation === 'min' || operation === 'max') {
-      const _success = srcFactor === 'one' && dstFactor === 'one';
-      t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
-    } else {
-      t.doCreateRenderPipelineTest(isAsync, true, descriptor);
-    }
-  });
-
 g.test('pipeline_layout,device_mismatch')
   .desc(
     'Tests createRenderPipeline(Async) cannot be called with a pipeline layout created from another device'
@@ -763,6 +861,10 @@ g.test('shader_module,device_mismatch')
 
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
+
+g.test('shader_module,input_output').desc(``).unimplemented();
+
+g.test('shader_module,inter_stage').desc(``).unimplemented();
 
 g.test('entry_point_name_must_match')
   .desc(

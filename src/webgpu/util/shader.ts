@@ -119,7 +119,7 @@ export function getFragmentShaderCodeWithOutput(
   return `
     struct Outputs {
       ${outputStructString}
-    }
+    };
 
     @fragment fn main() -> Outputs {
         return Outputs(${resultStrings.join(',')});

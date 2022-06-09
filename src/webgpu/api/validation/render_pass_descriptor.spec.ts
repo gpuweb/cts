@@ -108,6 +108,47 @@ g.test('a_render_pass_with_only_one_depth_attachment_is_ok').fn(t => {
   t.tryRenderPass(true, descriptor);
 });
 
+g.test('color_targets_null')
+  .desc(
+    `Tests that when colorAttachments has all values be null or the sequence is empty, the depthStencilAttachment must not be null.`
+  )
+  .paramsSubcasesOnly(u =>
+    u
+      .combine('colorAttachments', [
+        [],
+        [undefined],
+        [undefined, undefined],
+        new Array(8),
+        [{ format: 'rgba8unorm' }],
+      ])
+      .combine('hasDepthStencilAttachment', [false, true])
+  )
+  .unimplemented();
+// .fn(async t => {
+//   const { isAsync, targets, hasDepthStencilAttachment } = t.params;
+
+//   const descriptor = t.getDescriptor({
+//     targets,
+//     depthStencil: hasDepthStencilAttachment ? { format: 'depth24plus' } : undefined,
+//     fragmentShaderCode: getFragmentShaderCodeWithOutput(
+//       [{ values: [1, 1, 1, 1], plainType: 'f32', componentCount: 4 }]
+//     ),
+//   });
+
+//   function IsEmptyColorTargets() {
+//     let isEmpty = true;
+//     for (const i of targets) {
+//       if (i !== undefined) {
+//         isEmpty = false;
+//         break;
+//       }
+//     }
+//     return isEmpty;
+//   }
+
+//   t.doCreateRenderPipelineTest(isAsync, hasDepthStencilAttachment || !IsEmptyColorTargets(), descriptor);
+// });
+
 g.test('OOB_color_attachment_indices_are_handled')
   .paramsSimple([
     { colorAttachmentsCount: 8, _success: true }, // Control case
