@@ -17,6 +17,7 @@ import {
   linearRange,
   nextAfter,
   oneULP,
+  oneULPImpl,
   withinULP,
 } from '../webgpu/util/math.js';
 
@@ -182,7 +183,7 @@ interface OneULPCase {
   expect: number;
 }
 
-g.test('oneULPFlushToZero')
+g.test('oneULPImplFlushToZero')
   .paramsSimple<OneULPCase>([
     // Edge Cases
     { target: Number.NaN, expect: Number.NaN },
@@ -195,27 +196,27 @@ g.test('oneULPFlushToZero')
 
     // Subnormals
     { target: hexToF32(kBit.f32.subnormal.positive.min), expect: hexToF32(0x00800000) },
+    { target: 2.82e-40, expect: hexToF32(0x00800000) }, // positive subnormal
     { target: hexToF32(kBit.f32.subnormal.positive.max), expect: hexToF32(0x00800000) },
     { target: hexToF32(kBit.f32.subnormal.negative.min), expect: hexToF32(0x00800000) },
+    { target: -2.82e-40, expect: hexToF32(0x00800000) }, // negative subnormal
     { target: hexToF32(kBit.f32.subnormal.negative.max), expect: hexToF32(0x00800000) },
 
     // Normals
-    { target: hexToF32(kBit.f32.positive.max), expect: hexToF32(0x73800000) },
     { target: hexToF32(kBit.f32.positive.min), expect: hexToF32(0x00000001) },
-    { target: hexToF32(kBit.f32.negative.max), expect: hexToF32(0x00000001) },
-    { target: hexToF32(kBit.f32.negative.min), expect: hexToF32(0x73800000) },
     { target: 1, expect: hexToF32(0x33800000) },
     { target: 2, expect: hexToF32(0x34000000) },
     { target: 4, expect: hexToF32(0x34800000) },
     { target: 1000000, expect: hexToF32(0x3d800000) },
+    { target: hexToF32(kBit.f32.positive.max), expect: hexToF32(0x73800000) },
+    { target: hexToF32(kBit.f32.negative.max), expect: hexToF32(0x00000001) },
     { target: -1, expect: hexToF32(0x33800000) },
     { target: -2, expect: hexToF32(0x34000000) },
     { target: -4, expect: hexToF32(0x34800000) },
     { target: -1000000, expect: hexToF32(0x3d800000) },
+    { target: hexToF32(kBit.f32.negative.min), expect: hexToF32(0x73800000) },
 
-    // Not precisely expressible as float32
-    { target: 2.82e-40, expect: hexToF32(0x00800000) }, // positive subnormal
-    { target: -2.82e-40, expect: hexToF32(0x00800000) }, // negative subnormal
+    // No precise f32 value
     { target: 0.001, expect: hexToF32(0x2f000000) }, // positive normal
     { target: -0.001, expect: hexToF32(0x2f000000) }, // negative normal
     { target: 1e40, expect: hexToF32(0x73800000) }, // positive out of range
@@ -223,15 +224,15 @@ g.test('oneULPFlushToZero')
   ])
   .fn(t => {
     const target = t.params.target;
-    const got = oneULP(target, true);
+    const got = oneULPImpl(target, true);
     const expect = t.params.expect;
     t.expect(
       got === expect || (Number.isNaN(got) && Number.isNaN(expect)),
-      `oneULP(${target}, true) returned ${got}. Expected ${expect}`
+      `oneULPImpl(${target}, true) returned ${got}. Expected ${expect}`
     );
   });
 
-g.test('oneULPNoFlush')
+g.test('oneULPImplNoFlush')
   .paramsSimple<OneULPCase>([
     // Edge Cases
     { target: Number.NaN, expect: Number.NaN },
@@ -244,23 +245,27 @@ g.test('oneULPNoFlush')
 
     // Subnormals
     { target: hexToF32(kBit.f32.subnormal.positive.min), expect: hexToF32(0x00000001) },
+    { target: -2.82e-40, expect: hexToF32(0x00000001) }, // negative subnormal
     { target: hexToF32(kBit.f32.subnormal.positive.max), expect: hexToF32(0x00000001) },
     { target: hexToF32(kBit.f32.subnormal.negative.min), expect: hexToF32(0x00000001) },
+    { target: 2.82e-40, expect: hexToF32(0x00000001) }, // positive subnormal
     { target: hexToF32(kBit.f32.subnormal.negative.max), expect: hexToF32(0x00000001) },
 
     // Normals
+    { target: hexToF32(kBit.f32.positive.min), expect: hexToF32(0x00000001) },
     { target: 1, expect: hexToF32(0x33800000) },
     { target: 2, expect: hexToF32(0x34000000) },
     { target: 4, expect: hexToF32(0x34800000) },
     { target: 1000000, expect: hexToF32(0x3d800000) },
+    { target: hexToF32(kBit.f32.positive.max), expect: hexToF32(0x73800000) },
+    { target: hexToF32(kBit.f32.negative.max), expect: hexToF32(0x00000001) },
     { target: -1, expect: hexToF32(0x33800000) },
     { target: -2, expect: hexToF32(0x34000000) },
     { target: -4, expect: hexToF32(0x34800000) },
     { target: -1000000, expect: hexToF32(0x3d800000) },
+    { target: hexToF32(kBit.f32.negative.min), expect: hexToF32(0x73800000) },
 
-    // Non-f32 expressible
-    { target: 2.82e-40, expect: hexToF32(0x00000001) }, // positive subnormal
-    { target: -2.82e-40, expect: hexToF32(0x00000001) }, // negative subnormal
+    // No precise f32 value
     { target: 0.001, expect: hexToF32(0x2f000000) }, // positive normal
     { target: -0.001, expect: hexToF32(0x2f000000) }, // negative normal
     { target: 1e40, expect: hexToF32(0x73800000) }, // positive out of range
@@ -268,11 +273,60 @@ g.test('oneULPNoFlush')
   ])
   .fn(t => {
     const target = t.params.target;
-    const got = oneULP(target, false);
+    const got = oneULPImpl(target, false);
     const expect = t.params.expect;
     t.expect(
       got === expect || (Number.isNaN(got) && Number.isNaN(expect)),
-      `oneULP(${target}, true) returned ${got}. Expected ${expect}`
+      `oneULPImpl(${target}, true) returned ${got}. Expected ${expect}`
+    );
+  });
+
+g.test('oneULP')
+  .paramsSimple<OneULPCase>([
+    // Edge Cases
+    { target: Number.NaN, expect: Number.NaN },
+    { target: Number.NEGATIVE_INFINITY, expect: hexToF32(0x73800000) },
+    { target: Number.POSITIVE_INFINITY, expect: hexToF32(0x73800000) },
+
+    // Zeroes
+    { target: +0, expect: hexToF32(0x00800000) },
+    { target: -0, expect: hexToF32(0x00800000) },
+
+    // Subnormals
+    { target: hexToF32(kBit.f32.subnormal.negative.max), expect: hexToF32(0x00800000) },
+    { target: -2.82e-40, expect: hexToF32(0x00800000) },
+    { target: hexToF32(kBit.f32.subnormal.negative.min), expect: hexToF32(0x00800000) },
+    { target: hexToF32(kBit.f32.subnormal.positive.max), expect: hexToF32(0x00800000) },
+    { target: 2.82e-40, expect: hexToF32(0x00800000) },
+    { target: hexToF32(kBit.f32.subnormal.positive.min), expect: hexToF32(0x00800000) },
+
+    // Normals
+    { target: hexToF32(kBit.f32.positive.min), expect: hexToF32(0x00000001) },
+    { target: 1, expect: hexToF32(0x33800000) },
+    { target: 2, expect: hexToF32(0x34000000) },
+    { target: 4, expect: hexToF32(0x34800000) },
+    { target: 1000000, expect: hexToF32(0x3d800000) },
+    { target: hexToF32(kBit.f32.positive.max), expect: hexToF32(0x73800000) },
+    { target: hexToF32(kBit.f32.negative.max), expect: hexToF32(0x000000001) },
+    { target: -1, expect: hexToF32(0x33800000) },
+    { target: -2, expect: hexToF32(0x34000000) },
+    { target: -4, expect: hexToF32(0x34800000) },
+    { target: -1000000, expect: hexToF32(0x3d800000) },
+    { target: hexToF32(kBit.f32.negative.min), expect: hexToF32(0x73800000) },
+
+    // No precise f32 value
+    { target: -0.001, expect: hexToF32(0x2f000000) }, // negative normal
+    { target: -1e40, expect: hexToF32(0x73800000) }, // negative out of range
+    { target: 0.001, expect: hexToF32(0x2f000000) }, // positive normal
+    { target: 1e40, expect: hexToF32(0x73800000) }, // positive out of range
+  ])
+  .fn(t => {
+    const target = t.params.target;
+    const got = oneULP(target);
+    const expect = t.params.expect;
+    t.expect(
+      got === expect || (Number.isNaN(got) && Number.isNaN(expect)),
+      `oneULP(${target}) returned ${got}. Expected ${expect}`
     );
   });
 

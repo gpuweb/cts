@@ -1,7 +1,7 @@
 import { assert } from '../../common/util/util.js';
 
 import { kBit, kValue } from './constants.js';
-import { f32, f32Bits, i32, Scalar } from './conversion.js';
+import { f32, f32Bits, f64, i32, Scalar } from './conversion.js';
 
 /**
  * A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).
@@ -147,17 +147,16 @@ export function nextAfter(val: number, dir: boolean = true, flush: boolean): Sca
 }
 
 /**
- * @returns ulp(x), the unit of least precision for a specific number as a 32-bit float
+ * @returns ulp(x) for a specific flushing mode
  *
- * ulp(x) is the distance between the two floating point numbers nearest x.
- * This value is also called unit of last place, ULP, and 1 ULP.
- * See the WGSL spec and http://www.ens-lyon.fr/LIP/Pub/Rapports/RR/RR2005/RR2005-09.pdf
- * for a more detailed/nuanced discussion of the definition of ulp(x).
+ * This is the main implementation of oneULP, which is normally what should be
+ * used. This should only be called directly if a specific flushing mode is
+ * required.
  *
  * @param target number to calculate ULP for
  * @param flush should subnormals be flushed to zero
  */
-export function oneULP(target: number, flush: boolean): number {
+export function oneULPImpl(target: number, flush: boolean): number {
   if (Number.isNaN(target)) {
     return Number.NaN;
   }
@@ -186,6 +185,21 @@ export function oneULP(target: number, flush: boolean): number {
 }
 
 /**
+ * @returns ulp(x), the unit of least precision for a specific number as a 32-bit float
+ *
+ * ulp(x) is the distance between the two floating point numbers nearest x.
+ * This value is also called unit of last place, ULP, and 1 ULP.
+ * See the WGSL spec and http://www.ens-lyon.fr/LIP/Pub/Rapports/RR/RR2005/RR2005-09.pdf
+ * for a more detailed/nuanced discussion of the definition of ulp(x).
+ *
+ * @param target number to calculate ULP for
+ *
+ */
+export function oneULP(target: number): number {
+  return Math.max(oneULPImpl(target, false), oneULPImpl(target, true));
+}
+
+/**
  * @returns if a number is within N * ulp(x) of a target value
  * @param val number to test
  * @param target expected number
@@ -197,9 +211,8 @@ export function withinULP(val: number, target: number, n: number = 1) {
     return false;
   }
 
-  const ulp_flush = oneULP(target, true);
-  const ulp_noflush = oneULP(target, false);
-  if (Number.isNaN(ulp_flush) || Number.isNaN(ulp_noflush)) {
+  const ulp = oneULP(target);
+  if (Number.isNaN(ulp)) {
     return false;
   }
 
@@ -207,7 +220,6 @@ export function withinULP(val: number, target: number, n: number = 1) {
     return true;
   }
 
-  const ulp = Math.max(ulp_flush, ulp_noflush);
   const diff = val > target ? val - target : target - val;
   return diff <= n * ulp;
 }
