@@ -107,7 +107,7 @@ g.test('a_render_pass_with_only_one_depth_attachment_is_ok').fn(t => {
   t.tryRenderPass(true, descriptor);
 });
 
-g.test('color_targets_null')
+g.test('color_attachments_empty')
   .desc(
     `Tests that when colorAttachments has all values be null or the sequence is empty, the depthStencilAttachment must not be null.`
   )
@@ -122,31 +122,26 @@ g.test('color_targets_null')
       ])
       .combine('hasDepthStencilAttachment', [false, true])
   )
-  .unimplemented();
-// .fn(async t => {
-//   const { isAsync, targets, hasDepthStencilAttachment } = t.params;
+  .fn(async t => {
+    const { colorAttachments, hasDepthStencilAttachment } = t.params;
 
-//   const descriptor = t.getDescriptor({
-//     targets,
-//     depthStencil: hasDepthStencilAttachment ? { format: 'depth24plus' } : undefined,
-//     fragmentShaderCode: getFragmentShaderCodeWithOutput(
-//       [{ values: [1, 1, 1, 1], plainType: 'f32', componentCount: 4 }]
-//     ),
-//   });
+    let isEmptyColorTargets = true;
+    for (let i = 0; i < colorAttachments.length; i++) {
+      if (colorAttachments[i] !== undefined) {
+        isEmptyColorTargets = false;
+        const colorTexture = t.createTexture();
+        colorAttachments[i] = t.getColorAttachment(colorTexture);
+      }
+    }
 
-//   function IsEmptyColorTargets() {
-//     let isEmpty = true;
-//     for (const i of targets) {
-//       if (i !== undefined) {
-//         isEmpty = false;
-//         break;
-//       }
-//     }
-//     return isEmpty;
-//   }
-
-//   t.doCreateRenderPipelineTest(isAsync, hasDepthStencilAttachment || !IsEmptyColorTargets(), descriptor);
-// });
+    const _success = !isEmptyColorTargets || hasDepthStencilAttachment;
+    t.tryRenderPass(_success, {
+      colorAttachments,
+      depthStencilAttachment: hasDepthStencilAttachment
+        ? t.getDepthStencilAttachment(t.createTexture({ format: 'depth24plus-stencil8' }))
+        : undefined,
+    });
+  });
 
 g.test('OOB_color_attachment_indices_are_handled')
   .paramsSimple([
