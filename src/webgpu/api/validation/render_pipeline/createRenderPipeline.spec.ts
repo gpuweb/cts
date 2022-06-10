@@ -1,28 +1,21 @@
 export const description = `
 createRenderPipeline and createRenderPipelineAsync validation tests.
 
-TODO: review existing tests, write descriptions, and make sure tests are complete.
-      Make sure the following is covered. Consider splitting the file if too large/disjointed.
-> - various attachment problems
->
-> - TODO: interface matching between vertex and fragment shader
->     - superset, subset, etc.
->
-> - ☑ vertex state {valid, invalid} (vertex_state.spec.ts) 
-> - fragment state {valid, invalid} (TODO: split to fragment_state.spec.ts?)
->    - ☑ targets length {0, 1, 2, 8, 16, 1024} must be <= device.limits.maxColorAttachments
+> - vertex state {valid, invalid} (in vertex_state.spec.ts) 
+> - fragment state {valid, invalid}
+>    - targets length {0, 1, 2, 8, 16, 1024} must be <= device.limits.maxColorAttachments
 >    - For each non-null color state |target|
->        - ☑ target.format must has render attachment capability
+>        - target.format must has render attachment capability
 >        - If target.blend is not undefined
->            - ☑ target.format must be filterable
->            - ☑ target.blend.color {valid, invalid}
->            - ☑ target.blend.alpha {valid, invalid}
->        - ☑ target.writeMask must be < 16
->        - ☑ pipeline output and format compatibility (pipeline_output_targets)
-> - ☑ primitive state
-> - ☑ depth stencil state
-> - ☑ rasterizationState various values (dynamic_state.spec.ts)
-> - ☑ multisample state
+>            - target.format must be filterable
+>            - target.blend.color {valid, invalid}
+>            - target.blend.alpha {valid, invalid}
+>        - target.writeMask must be < 16
+>        - pipeline output and format compatibility (pipeline_output_targets)
+> - primitive state
+> - depth stencil state
+> - rasterizationState various values (dynamic_state.spec.ts)
+> - multisample state
 >   - count {0, 1, 3, 4, 8, 16, 1024}
 >   - sample mask {0, 0xFFFFFFFF}
 >   - alphaToCoverage:
@@ -31,9 +24,8 @@ TODO: review existing tests, write descriptions, and make sure tests are complet
 >     - sample_mask builtin is a pipeline output of fragment and
 >       alphaToCoverageEnabled is { true (fails), false (passes) }.
 >     - sampleMask is being used and alphaToCoverageEnabled is { true (fails), false (passes) }.
-
-TODO: move isAsync to the last subcases?
-
+> - TODO: interface matching between vertex and fragment shader
+>     - superset, subset, etc.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
