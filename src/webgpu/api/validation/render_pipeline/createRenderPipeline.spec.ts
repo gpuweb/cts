@@ -5,7 +5,7 @@ TODO: review existing tests, write descriptions, and make sure tests are complet
       Make sure the following is covered. Consider splitting the file if too large/disjointed.
 > - various attachment problems
 >
-> - interface matching between vertex and fragment shader
+> - TODO: interface matching between vertex and fragment shader
 >     - superset, subset, etc.
 >
 > - ☑ vertex state {valid, invalid} (vertex_state.spec.ts) 
@@ -50,16 +50,24 @@ import {
   kPrimitiveTopology,
   kIndexFormat,
 } from '../../../capability_info.js';
-import { getFragmentShaderCodeWithOutput, getPlainTypeInfo } from '../../../util/shader.js';
+import {
+  getFragmentShaderCodeWithOutput,
+  getPlainTypeInfo,
+  getShaderWithEntryPoint,
+} from '../../../util/shader.js';
 import { kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
-
 import { ValidationTest } from '../validation_test.js';
+
+const kDefaultVertexShaderCode = `
+@vertex fn main() -> @builtin(position) vec4<f32> {
+  return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+}
+`;
 
 const values = [0, 1, 0, 1];
 class F extends ValidationTest {
   getDescriptor(
     options: {
-      // topology?: GPUPrimitiveTopology;
       primitive?: GPUPrimitiveState;
       targets?: GPUColorTargetState[];
       multisample?: GPUMultisampleState;
@@ -89,10 +97,7 @@ class F extends ValidationTest {
     return {
       vertex: {
         module: this.device.createShaderModule({
-          code: `
-            @vertex fn main() -> @builtin(position) vec4<f32> {
-              return vec4<f32>(0.0, 0.0, 0.0, 1.0);
-            }`,
+          code: kDefaultVertexShaderCode,
         }),
         entryPoint: 'main',
       },
@@ -110,6 +115,14 @@ class F extends ValidationTest {
       multisample,
       depthStencil,
     };
+  }
+
+  getInvalidShaderModule(): GPUShaderModule {
+    this.device.pushErrorScope('validation');
+    const code = 'deadbeaf'; // Something make nonsense
+    const shaderModule = this.device.createShaderModule({ code });
+    void this.device.popErrorScope();
+    return shaderModule;
   }
 
   getPipelineLayout(): GPUPipelineLayout {
@@ -862,12 +875,120 @@ g.test('shader_module,device_mismatch')
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
-g.test('shader_module,input_output').desc(``).unimplemented();
+g.test('shader_module,invalid,vertex')
+  .desc(`Tests shader module must be valid.`)
+  .params(u => u.combine('isAsync', [true, false]))
+  .fn(async t => {
+    const { isAsync } = t.params;
+    t.doCreateRenderPipelineTest(isAsync, false, {
+      layout: 'auto',
+      vertex: {
+        module: t.getInvalidShaderModule(),
+        entryPoint: 'main',
+      },
+    });
+  });
 
-g.test('shader_module,inter_stage').desc(``).unimplemented();
+g.test('shader_module,invalid,fragment')
+  .desc(`Tests shader module must be valid.`)
+  .params(u => u.combine('isAsync', [true, false]))
+  .fn(async t => {
+    const { isAsync } = t.params;
+    t.doCreateRenderPipelineTest(isAsync, false, {
+      layout: 'auto',
+      vertex: {
+        module: t.device.createShaderModule({
+          code: kDefaultVertexShaderCode,
+        }),
+        entryPoint: 'main',
+      },
+      fragment: {
+        module: t.getInvalidShaderModule(),
+        entryPoint: 'main',
+        targets: [{ format: 'rgba8unorm' }],
+      },
+    });
+  });
 
-g.test('entry_point_name_must_match')
+const kEntryPointTestCases = [
+  { shaderModuleEntryPoint: 'main', stageEntryPoint: 'main' },
+  { shaderModuleEntryPoint: 'main', stageEntryPoint: '' },
+  { shaderModuleEntryPoint: 'main', stageEntryPoint: 'main\0' },
+  { shaderModuleEntryPoint: 'main', stageEntryPoint: 'main\0a' },
+  { shaderModuleEntryPoint: 'main', stageEntryPoint: 'mian' },
+  { shaderModuleEntryPoint: 'main', stageEntryPoint: 'main ' },
+  { shaderModuleEntryPoint: 'main', stageEntryPoint: 'ma in' },
+  { shaderModuleEntryPoint: 'main', stageEntryPoint: 'main\n' },
+  { shaderModuleEntryPoint: 'mian', stageEntryPoint: 'mian' },
+  { shaderModuleEntryPoint: 'mian', stageEntryPoint: 'main' },
+  { shaderModuleEntryPoint: 'mainmain', stageEntryPoint: 'mainmain' },
+  { shaderModuleEntryPoint: 'mainmain', stageEntryPoint: 'foo' },
+  { shaderModuleEntryPoint: 'main_t12V3', stageEntryPoint: 'main_t12V3' },
+  { shaderModuleEntryPoint: 'main_t12V3', stageEntryPoint: 'main_t12V5' },
+  { shaderModuleEntryPoint: 'main_t12V3', stageEntryPoint: '_main_t12V3' },
+  { shaderModuleEntryPoint: 'séquençage', stageEntryPoint: 'séquençage' },
+  { shaderModuleEntryPoint: 'séquençage', stageEntryPoint: 'sequencage' },
+];
+
+g.test('shader_module,entry_point,vertex')
   .desc(
-    'TODO: Test the matching of entrypoint names for vertex and fragment (see the equivalent test for createComputePipeline).'
+    `
+Tests calling createRenderPipeline(Async) with valid vertex stage shader and different entryPoints,
+and check that the APIs only accept matching entryPoint.
+
+The entryPoint in shader module include standard "main" and others.
+The entryPoint assigned in descriptor include:
+- Matching case (control case)
+- Empty string
+- Mistyping
+- Containing invalid char, including space and control codes (Null character)
+- Unicode entrypoints and their ASCIIfied version
+`
   )
-  .unimplemented();
+  .params(u => u.combine('isAsync', [true, false]).combineWithParams(kEntryPointTestCases))
+  .fn(async t => {
+    const { isAsync, shaderModuleEntryPoint, stageEntryPoint } = t.params;
+    const descriptor = {
+      layout: 'auto',
+      vertex: {
+        module: t.device.createShaderModule({
+          code: getShaderWithEntryPoint('vertex', shaderModuleEntryPoint),
+        }),
+        entryPoint: stageEntryPoint,
+      },
+    };
+    const _success = shaderModuleEntryPoint === stageEntryPoint;
+    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+  });
+
+g.test('shader_module,entry_point,fragment')
+  .desc(
+    `
+Tests calling createRenderPipeline(Async) with valid fragment stage shader and different entryPoints,
+and check that the APIs only accept matching entryPoint.
+`
+  )
+  .params(u => u.combine('isAsync', [true, false]).combineWithParams(kEntryPointTestCases))
+  .fn(async t => {
+    const { isAsync, shaderModuleEntryPoint, stageEntryPoint } = t.params;
+    const descriptor = {
+      layout: 'auto',
+      vertex: {
+        module: t.device.createShaderModule({
+          code: kDefaultVertexShaderCode,
+        }),
+        entryPoint: 'main',
+      },
+      fragment: {
+        module: t.device.createShaderModule({
+          code: getShaderWithEntryPoint('fragment', shaderModuleEntryPoint),
+        }),
+        entryPoint: stageEntryPoint,
+        targets: [{ format: 'rgba8unorm' }],
+      },
+    };
+    const _success = shaderModuleEntryPoint === stageEntryPoint;
+    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+  });
+
+g.test('inter_stage').desc(``).unimplemented();

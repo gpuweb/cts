@@ -125,3 +125,41 @@ export function getFragmentShaderCodeWithOutput(
         return Outputs(${resultStrings.join(',')});
     }`;
 }
+
+export type TShaderStage = 'compute' | 'vertex' | 'fragment' | 'empty';
+
+/**
+ *
+ * @param shaderStage
+ * @param entryPoint
+ * @returns
+ */
+export function getShaderWithEntryPoint(shaderStage: TShaderStage, entryPoint: string): string {
+  let code;
+  switch (shaderStage) {
+    case 'compute': {
+      code = `@compute @workgroup_size(1) fn ${entryPoint}() {}`;
+      break;
+    }
+    case 'vertex': {
+      code = `
+      @vertex fn ${entryPoint}() -> @builtin(position) vec4<f32> {
+        return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+      }`;
+      break;
+    }
+    case 'fragment': {
+      code = `
+      @fragment fn ${entryPoint}() -> @location(0) vec4<f32> {
+        return vec4<f32>(0.0, 1.0, 0.0, 1.0);
+      }`;
+      break;
+    }
+    case 'empty':
+    default: {
+      code = '';
+      break;
+    }
+  }
+  return code;
+}

@@ -3,43 +3,18 @@ createComputePipeline and createComputePipelineAsync validation tests.
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { TShaderStage, getShaderWithEntryPoint } from '../../util/shader.js';
 
 import { ValidationTest } from './validation_test.js';
-
-type TShaderStage = 'compute' | 'vertex' | 'fragment' | 'empty';
 
 class F extends ValidationTest {
   getShaderModule(
     shaderStage: TShaderStage = 'compute',
     entryPoint: string = 'main'
   ): GPUShaderModule {
-    let code;
-    switch (shaderStage) {
-      case 'compute': {
-        code = `@compute @workgroup_size(1) fn ${entryPoint}() {}`;
-        break;
-      }
-      case 'vertex': {
-        code = `
-        @vertex fn ${entryPoint}() -> @builtin(position) vec4<f32> {
-          return vec4<f32>(0.0, 0.0, 0.0, 1.0);
-        }`;
-        break;
-      }
-      case 'fragment': {
-        code = `
-        @fragment fn ${entryPoint}() -> @location(0) vec4<i32> {
-          return vec4<i32>(0, 1, 0, 1);
-        }`;
-        break;
-      }
-      case 'empty':
-      default: {
-        code = '';
-        break;
-      }
-    }
-    return this.device.createShaderModule({ code });
+    return this.device.createShaderModule({
+      code: getShaderWithEntryPoint(shaderStage, entryPoint),
+    });
   }
 
   getInvalidShaderModule(): GPUShaderModule {

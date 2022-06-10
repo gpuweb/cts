@@ -14,7 +14,6 @@ import {
   getFeaturesForFormats,
   filterFormatsByFeature,
 } from '../../../capability_info.js';
-
 import { ValidationTest } from '../validation_test.js';
 
 const kColorAttachmentCounts = range(kMaxColorAttachments, i => i + 1);

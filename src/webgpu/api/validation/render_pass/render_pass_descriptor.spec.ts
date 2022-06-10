@@ -11,7 +11,6 @@ import {
   kRenderableColorTextureFormats,
   kTextureFormatInfo,
 } from '../../../capability_info.js';
-
 import { ValidationTest } from '../validation_test.js';
 
 class F extends ValidationTest {

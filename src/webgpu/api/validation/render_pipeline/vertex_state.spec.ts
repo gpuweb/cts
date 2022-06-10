@@ -10,7 +10,6 @@ import {
   kVertexFormats,
   kVertexFormatInfo,
 } from '../../../capability_info.js';
-
 import { ValidationTest } from '../validation_test.js';
 
 const VERTEX_SHADER_CODE_WITH_NO_INPUT = `
