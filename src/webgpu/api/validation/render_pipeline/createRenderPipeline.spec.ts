@@ -299,12 +299,12 @@ g.test('fragment_state,targets_blend')
   .fn(async t => {
     const { isAsync, component, srcFactor, dstFactor, operation } = t.params;
 
-    const defaultBlendComponent = {
+    const defaultBlendComponent: GPUBlendComponent = {
       srcFactor: 'src-alpha',
       dstFactor: 'dst-alpha',
       operation: 'add',
     };
-    const blendComponentToTest = {
+    const blendComponentToTest: GPUBlendComponent = {
       srcFactor,
       dstFactor,
       operation,
@@ -940,7 +940,7 @@ The entryPoint assigned in descriptor include:
   .params(u => u.combine('isAsync', [true, false]).combineWithParams(kEntryPointTestCases))
   .fn(async t => {
     const { isAsync, shaderModuleEntryPoint, stageEntryPoint } = t.params;
-    const descriptor = {
+    const descriptor: GPURenderPipelineDescriptor = {
       layout: 'auto',
       vertex: {
         module: t.device.createShaderModule({
@@ -963,7 +963,7 @@ and check that the APIs only accept matching entryPoint.
   .params(u => u.combine('isAsync', [true, false]).combineWithParams(kEntryPointTestCases))
   .fn(async t => {
     const { isAsync, shaderModuleEntryPoint, stageEntryPoint } = t.params;
-    const descriptor = {
+    const descriptor: GPURenderPipelineDescriptor = {
       layout: 'auto',
       vertex: {
         module: t.device.createShaderModule({
