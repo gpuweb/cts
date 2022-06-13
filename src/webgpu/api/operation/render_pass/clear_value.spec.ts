@@ -125,6 +125,11 @@ g.test('stencil_clear_value')
     const stencilAspectSizeInBytes = depthStencilFormatAspectSize(stencilFormat, 'stencil-only');
     assert(stencilAspectSizeInBytes > 0);
     const expectedStencilValue = stencilClearValue & ((stencilAspectSizeInBytes << 8) - 1);
+
+    // StencilReference used in setStencilReference will also be masked to the lowest valid bits, so
+    // no matter what we set in the rest high bits that will be masked out (different or same
+    // between stencilClearValue and stencilReference), the test will pass if and only if the valid
+    // lowest bits are the same.
     const stencilReference = applyStencilClearValueAsStencilReferenceValue
       ? stencilClearValue
       : expectedStencilValue;
