@@ -1,7 +1,7 @@
 import { assert } from '../../common/util/util.js';
 
 import { kBit, kValue } from './constants.js';
-import { f32, f32Bits, f64, i32, Scalar } from './conversion.js';
+import { f32, f32Bits, i32, Scalar } from './conversion.js';
 
 /**
  * A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).
