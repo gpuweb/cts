@@ -117,7 +117,7 @@ g.test('color_attachments_empty')
         [],
         [undefined],
         [undefined, undefined],
-        new Array(8),
+        new Array(8).fill(undefined),
         [{ format: 'rgba8unorm' }],
       ])
       .combine('hasDepthStencilAttachment', [false, true])
