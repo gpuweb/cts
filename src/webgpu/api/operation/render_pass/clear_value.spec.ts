@@ -50,6 +50,7 @@ g.test('stencil_clear_value')
     u
       .combine('stencilFormat', kDepthStencilFormats)
       .combine('stencilClearValue', [0, 1, 0xff, 0x100 + 2, 0x10000 + 3])
+      .combine('applyStencilClearValueAsStencilReferenceValue', [true, false])
       .filter(t => kTextureFormatInfo[t.stencilFormat].stencil)
   )
   .beforeAllSubcases(t => {
@@ -58,14 +59,18 @@ g.test('stencil_clear_value')
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(async t => {
-    const { stencilFormat, stencilClearValue } = t.params;
+    const {
+      stencilFormat,
+      stencilClearValue,
+      applyStencilClearValueAsStencilReferenceValue,
+    } = t.params;
 
     const kSize = [1, 1, 1] as const;
     const colorFormat = 'rgba8unorm';
     const stencilTexture = t.device.createTexture({
       format: stencilFormat,
       size: kSize,
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     });
     const colorTexture = t.device.createTexture({
       format: colorFormat,
@@ -119,7 +124,10 @@ g.test('stencil_clear_value')
 
     const stencilAspectSizeInBytes = depthStencilFormatAspectSize(stencilFormat, 'stencil-only');
     assert(stencilAspectSizeInBytes > 0);
-    const stencilReference = stencilClearValue & ((stencilAspectSizeInBytes << 8) - 1);
+    const expectedStencilValue = stencilClearValue & ((stencilAspectSizeInBytes << 8) - 1);
+    const stencilReference = applyStencilClearValueAsStencilReferenceValue
+      ? stencilClearValue
+      : expectedStencilValue;
 
     const encoder = t.device.createCommandEncoder();
 
@@ -150,9 +158,27 @@ g.test('stencil_clear_value')
     renderPassEncoder.draw(6);
     renderPassEncoder.end();
 
+    const destinationBuffer = t.device.createBuffer({
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+      size: 4,
+    });
+    t.trackForCleanup(destinationBuffer);
+    encoder.copyTextureToBuffer(
+      {
+        texture: stencilTexture,
+        aspect: 'stencil-only',
+      },
+      {
+        buffer: destinationBuffer,
+      },
+      [1, 1, 1]
+    );
+
     t.queue.submit([encoder.finish()]);
+
     t.expectSingleColor(colorTexture, colorFormat, {
       size: [1, 1, 1],
       exp: { R: 0, G: 1, B: 0, A: 1 },
     });
+    t.expectGPUBufferValuesEqual(destinationBuffer, new Uint8Array([expectedStencilValue]));
   });
