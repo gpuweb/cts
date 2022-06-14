@@ -18,7 +18,7 @@ export const g = makeTestGroup(CreateRenderPipelineValidationTest);
 
 const values = [0, 1, 0, 1];
 
-g.test('shader_module,device_mismatch')
+g.test('device_mismatch')
   .desc(
     'Tests createRenderPipeline(Async) cannot be called with a shader module created from another device'
   )
@@ -69,7 +69,7 @@ g.test('shader_module,device_mismatch')
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
-g.test('shader_module,invalid,vertex')
+g.test('invalid,vertex')
   .desc(`Tests shader module must be valid.`)
   .params(u => u.combine('isAsync', [true, false]).combine('isVertexShaderValid', [true, false]))
   .fn(async t => {
@@ -87,7 +87,7 @@ g.test('shader_module,invalid,vertex')
     });
   });
 
-g.test('shader_module,invalid,fragment')
+g.test('invalid,fragment')
   .desc(`Tests shader module must be valid.`)
   .params(u => u.combine('isAsync', [true, false]).combine('isFragmentShaderValid', [true, false]))
   .fn(async t => {
@@ -132,7 +132,7 @@ const kEntryPointTestCases = [
   { shaderModuleEntryPoint: 'séquençage', stageEntryPoint: 'sequencage' },
 ];
 
-g.test('shader_module,entry_point,vertex')
+g.test('entry_point,vertex')
   .desc(
     `
 Tests calling createRenderPipeline(Async) with valid vertex stage shader and different entryPoints,
@@ -167,7 +167,7 @@ TODO:
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
-g.test('shader_module,entry_point,fragment')
+g.test('entry_point,fragment')
   .desc(
     `
 Tests calling createRenderPipeline(Async) with valid fragment stage shader and different entryPoints,
