@@ -9,7 +9,7 @@ import { CreateRenderPipelineValidationTest } from './common.js';
 
 export const g = makeTestGroup(CreateRenderPipelineValidationTest);
 
-g.test('primitive_state,strip_index_format')
+g.test('strip_index_format')
   .desc(
     `If primitive.topology is not "line-strip" or "triangle-strip", primitive.stripIndexFormat must be undefined.`
   )
@@ -29,7 +29,7 @@ g.test('primitive_state,strip_index_format')
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
-g.test('primitive_state,unclipped_depth')
+g.test('unclipped_depth')
   .desc(`If primitive.unclippedDepth is true, features must contain "depth-clip-control".`)
   .params(u => u.combine('isAsync', [false, true]).combine('unclippedDepth', [false, true]))
   .fn(async t => {

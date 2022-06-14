@@ -16,7 +16,7 @@ import { CreateRenderPipelineValidationTest } from './common.js';
 
 export const g = makeTestGroup(CreateRenderPipelineValidationTest);
 
-g.test('depth_stencil_state,format')
+g.test('format')
   .desc(`The texture format in depthStencilState must be a depth/stencil format.`)
   .params(u => u.combine('isAsync', [false, true]).combine('format', kTextureFormats))
   .beforeAllSubcases(t => {
@@ -33,7 +33,7 @@ g.test('depth_stencil_state,format')
     t.doCreateRenderPipelineTest(isAsync, info.depth || info.stencil, descriptor);
   });
 
-g.test('depth_stencil_state,depth_test')
+g.test('depth_test')
   .desc(
     `Depth aspect must be contained in the format if depth test is enabled in depthStencilState.`
   )
@@ -60,7 +60,7 @@ g.test('depth_stencil_state,depth_test')
     t.doCreateRenderPipelineTest(isAsync, !depthTestEnabled || info.depth, descriptor);
   });
 
-g.test('depth_stencil_state,depth_write')
+g.test('depth_write')
   .desc(
     `Depth aspect must be contained in the format if depth write is enabled in depthStencilState.`
   )
@@ -85,7 +85,7 @@ g.test('depth_stencil_state,depth_write')
     t.doCreateRenderPipelineTest(isAsync, !depthWriteEnabled || info.depth, descriptor);
   });
 
-g.test('depth_stencil_state,stencil_test')
+g.test('stencil_test')
   .desc(
     `Stencil aspect must be contained in the format if stencil test is enabled in depthStencilState.`
   )
@@ -116,7 +116,7 @@ g.test('depth_stencil_state,stencil_test')
     t.doCreateRenderPipelineTest(isAsync, !stencilTestEnabled || info.stencil, descriptor);
   });
 
-g.test('depth_stencil_state,stencil_write')
+g.test('stencil_write')
   .desc(
     `Stencil aspect must be contained in the format if stencil write is enabled in depthStencilState.`
   )

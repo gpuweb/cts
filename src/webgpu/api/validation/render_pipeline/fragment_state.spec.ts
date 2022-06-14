@@ -185,7 +185,7 @@ g.test('targets_write_mask')
     t.doCreateRenderPipelineTest(isAsync, writeMask < 16, descriptor);
   });
 
-g.test('fragment_state,pipeline_output_targets')
+g.test('pipeline_output_targets')
   .desc(
     `Pipeline fragment output types must be compatible with target color state format
   - The scalar type (f32, i32, or u32) must match the sample type of the format.
@@ -244,7 +244,7 @@ g.test('fragment_state,pipeline_output_targets')
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
-g.test('fragment_state,pipeline_output_targets,blend')
+g.test('pipeline_output_targets,blend')
   .desc(
     `On top of requirements from pipeline_output_targets, when blending is enabled and alpha channel is read indicated by any blend factor, an extra requirement is added:
   - fragment output must be vec4.

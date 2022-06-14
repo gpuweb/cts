@@ -9,7 +9,7 @@ import { CreateRenderPipelineValidationTest } from './common.js';
 
 export const g = makeTestGroup(CreateRenderPipelineValidationTest);
 
-g.test('multisample_state,count')
+g.test('count')
   .desc(`If multisample.count must either be 1 or 4.`)
   .params(u =>
     u
@@ -26,7 +26,7 @@ g.test('multisample_state,count')
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
-g.test('multisample_state,alpha_to_coverage,count')
+g.test('alpha_to_coverage,count')
   .desc(
     `If multisample.alphaToCoverageEnabled is true, multisample.count must be greater than 1, e.g. it can only be 4.`
   )
@@ -46,7 +46,7 @@ g.test('multisample_state,alpha_to_coverage,count')
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
-g.test('multisample_state,alpha_to_coverage,sample_mask')
+g.test('alpha_to_coverage,sample_mask')
   .desc(
     `If sample_mask builtin is a pipeline output of fragment or if multisample.mask is not 0xFFFFFFFF, multisample.alphaToCoverageEnabled should be false.`
   )
