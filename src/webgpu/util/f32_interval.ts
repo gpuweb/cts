@@ -389,6 +389,7 @@ export function ulpInterval(n: number, numULP: number): F32Interval {
       const ulp = oneULP(impl_n);
       const begin = impl_n - numULP * ulp;
       const end = impl_n + numULP * ulp;
+
       return new F32Interval(
         Math.min(begin, flushSubnormalNumber(begin)),
         Math.max(end, flushSubnormalNumber(end))
@@ -402,6 +403,17 @@ export function absInterval(n: number): F32Interval {
   const op: PointToIntervalOp = {
     impl: (impl_n: number): F32Interval => {
       return correctlyRoundedInterval(Math.abs(impl_n));
+    },
+  };
+
+  return runPointOp(toInterval(n), op);
+}
+
+/** Calculate an acceptance interval of atan(x) */
+export function atanInterval(n: number): F32Interval {
+  const op: PointToIntervalOp = {
+    impl: (impl_n: number): F32Interval => {
+      return ulpInterval(Math.atan(impl_n), 4096);
     },
   };
 

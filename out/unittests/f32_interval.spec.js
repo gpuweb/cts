@@ -8,11 +8,12 @@ import { kValue } from '../webgpu/util/constants.js';
 import {
 absInterval,
 absoluteErrorInterval,
+atanInterval,
 correctlyRoundedInterval,
 F32Interval,
 ulpInterval } from
 '../webgpu/util/f32_interval.js';
-import { hexToF32, hexToF64 } from '../webgpu/util/math.js';
+import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
 import { UnitTest } from './unit_test.js';
 
@@ -26,6 +27,16 @@ export const g = makeTestGroup(UnitTest);
 function arrayToInterval(bounds) {
   const [begin, end] = bounds;
   return new F32Interval(begin, end);
+}
+
+/** @returns a number one ULP greater than the provided number */
+function plusOneULP(n) {
+  return n + oneULP(n);
+}
+
+/** @returns a number one ULP less than the provided number */
+function minusOneULP(n) {
+  return n - oneULP(n);
 }
 
 
@@ -582,6 +593,37 @@ fn((t) => {
   t.expect(
   objectEquals(expected, got),
   `absInterval(${input}) returned ${got}. Expected ${expected}`);
+
+});
+
+g.test('atanInterval').
+paramsSubcasesOnly(
+
+[
+{ input: Number.NEGATIVE_INFINITY, expected: [kValue.f32.negative.pi.half, plusOneULP(kValue.f32.negative.pi.half)] },
+{ input: hexToF32(0xbfddb3d7), expected: [kValue.f32.negative.pi.third, plusOneULP(kValue.f32.negative.pi.third)] }, // x = -√3
+{ input: -1, expected: [kValue.f32.negative.pi.quarter, plusOneULP(kValue.f32.negative.pi.quarter)] },
+{ input: hexToF32(0xbf13cd3a), expected: [kValue.f32.negative.pi.sixth, plusOneULP(kValue.f32.negative.pi.sixth)] }, // x = -1/√3
+{ input: 0, expected: [0, 0] },
+{ input: hexToF32(0x3f13cd3a), expected: [minusOneULP(kValue.f32.positive.pi.sixth), kValue.f32.positive.pi.sixth] }, // x = 1/√3
+{ input: 1, expected: [minusOneULP(kValue.f32.positive.pi.quarter), kValue.f32.positive.pi.quarter] },
+{ input: hexToF32(0x3fddb3d7), expected: [minusOneULP(kValue.f32.positive.pi.third), kValue.f32.positive.pi.third] }, // x = √3
+{ input: Number.POSITIVE_INFINITY, expected: [minusOneULP(kValue.f32.positive.pi.half), kValue.f32.positive.pi.half] }]).
+
+
+fn((t) => {
+  const error = (x) => {
+    return 4096 * oneULP(x);
+  };
+
+  const input = t.params.input;
+  const [begin, end] = t.params.expected;
+  const expected = arrayToInterval([begin - error(begin), end + error(end)]);
+
+  const got = atanInterval(input);
+  t.expect(
+  objectEquals(expected, got),
+  `atanInterval(${input}) returned ${got}. Expected ${expected}`);
 
 });
 //# sourceMappingURL=f32_interval.spec.js.map
