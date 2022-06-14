@@ -43,11 +43,11 @@ fn(async (t) => {
 
   }
 
-  t.expectValidationError(() => {
+  t.shouldThrow(_valid ? false : 'TypeError', () => {
     t.device.createBindGroupLayout({
       entries });
 
-  }, !_valid);
+  });
 });
 
 g.test('visibility').
@@ -69,11 +69,11 @@ fn(async (t) => {
 
   const success = (visibility & ~info.validStages) === 0;
 
-  t.expectValidationError(() => {
+  t.shouldThrow(success ? false : 'TypeError', () => {
     t.device.createBindGroupLayout({
       entries: [{ binding: 0, visibility, ...entry }] });
 
-  }, !success);
+  });
 });
 
 g.test('multisampled_validation').
@@ -87,7 +87,7 @@ fn(async (t) => {
 
   const success = viewDimension === '2d' || viewDimension === undefined;
 
-  t.expectValidationError(() => {
+  t.shouldThrow(success ? false : 'TypeError', () => {
     t.device.createBindGroupLayout({
       entries: [
       {
@@ -97,7 +97,7 @@ fn(async (t) => {
 
 
 
-  }, !success);
+  });
 });
 
 g.test('max_dynamic_buffers').
@@ -142,9 +142,9 @@ fn(async (t) => {
     entries };
 
 
-  t.expectValidationError(() => {
+  t.shouldThrow(extraDynamicBuffers > 0 ? 'TypeError' : false, () => {
     t.device.createBindGroupLayout(descriptor);
-  }, extraDynamicBuffers > 0);
+  });
 });
 
 /**
@@ -227,9 +227,9 @@ fn(async (t) => {
   (maxedVisibility & extraVisibility) !== 0 &&
   maxedTypeInfo.perStageLimitClass.class === extraTypeInfo.perStageLimitClass.class;
 
-  t.expectValidationError(() => {
+  t.shouldThrow(newBindingCountsTowardSamePerStageLimit ? 'TypeError' : false, () => {
     t.device.createBindGroupLayout(newDescriptor);
-  }, newBindingCountsTowardSamePerStageLimit);
+  });
 });
 
 // One pipeline layout can have a maximum number of each type of binding *per stage* (which is

@@ -76,7 +76,7 @@ g.test('storage_texture_binding_layout')
   .fn(async t => {
     const { format, enable_required_feature } = t.params;
 
-    t.expectValidationError(() => {
+    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
       t.device.createBindGroupLayout({
         entries: [
           {
@@ -88,7 +88,7 @@ g.test('storage_texture_binding_layout')
           },
         ],
       });
-    }, !enable_required_feature);
+    });
   });
 
 g.test('color_target_state')
