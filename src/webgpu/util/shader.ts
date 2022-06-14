@@ -119,7 +119,7 @@ export function getFragmentShaderCodeWithOutput(
   return `
     struct Outputs {
       ${outputStructString}
-    };
+    }
 
     @fragment fn main() -> Outputs {
         return Outputs(${resultStrings.join(',')});
@@ -129,10 +129,10 @@ export function getFragmentShaderCodeWithOutput(
 export type TShaderStage = 'compute' | 'vertex' | 'fragment' | 'empty';
 
 /**
- *
+ * Return a foo shader of the given stage with the given entry point
  * @param shaderStage
  * @param entryPoint
- * @returns
+ * @returns the shader string
  */
 export function getShaderWithEntryPoint(shaderStage: TShaderStage, entryPoint: string): string {
   let code;

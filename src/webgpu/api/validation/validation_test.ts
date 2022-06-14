@@ -382,4 +382,13 @@ export class ValidationTest extends GPUTest {
     void this.device.popErrorScope();
     return pipeline;
   }
+
+  /** Return an invalid GPUShaderModule. */
+  createInvalidShaderModule(): GPUShaderModule {
+    this.device.pushErrorScope('validation');
+    const code = 'deadbeaf'; // Something make no sense
+    const shaderModule = this.device.createShaderModule({ code });
+    void this.device.popErrorScope();
+    return shaderModule;
+  }
 }

@@ -109,7 +109,7 @@ g.test('a_render_pass_with_only_one_depth_attachment_is_ok').fn(t => {
 
 g.test('color_attachments_empty')
   .desc(
-    `Tests that when colorAttachments has all values be null or the sequence is empty, the depthStencilAttachment must not be null.`
+    `Tests that when colorAttachments has all values be 'undefined' or the sequence is empty, the depthStencilAttachment must not be 'undefined'.`
   )
   .paramsSubcasesOnly(u =>
     u

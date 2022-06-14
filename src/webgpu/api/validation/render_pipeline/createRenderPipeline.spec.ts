@@ -1,31 +1,8 @@
 export const description = `
 createRenderPipeline and createRenderPipelineAsync validation tests.
 
-> - vertex state {valid, invalid} (in vertex_state.spec.ts) 
-> - fragment state {valid, invalid}
->    - targets length {0, 1, 2, 8, 16, 1024} must be <= device.limits.maxColorAttachments
->    - For each non-null color state |target|
->        - target.format must has render attachment capability
->        - If target.blend is not undefined
->            - target.format must be filterable
->            - target.blend.color {valid, invalid}
->            - target.blend.alpha {valid, invalid}
->        - target.writeMask must be < 16
->        - pipeline output and format compatibility (pipeline_output_targets)
-> - primitive state
-> - depth stencil state
-> - rasterizationState various values (dynamic_state.spec.ts)
-> - multisample state
->   - count {0, 1, 3, 4, 8, 16, 1024}
->   - sample mask {0, 0xFFFFFFFF}
->   - alphaToCoverage:
->     - alphaToCoverageEnabled is { true, false } and sampleCount { = 1, = 4 }.
->       The only failing case is (true, 1).
->     - sample_mask builtin is a pipeline output of fragment and
->       alphaToCoverageEnabled is { true (fails), false (passes) }.
->     - sampleMask is being used and alphaToCoverageEnabled is { true (fails), false (passes) }.
-> - TODO: interface matching between vertex and fragment shader
->     - superset, subset, etc.
+- TODO: interface matching between vertex and fragment shader
+    - superset, subset, etc.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
@@ -55,6 +32,11 @@ const kDefaultVertexShaderCode = `
   return vec4<f32>(0.0, 0.0, 0.0, 1.0);
 }
 `;
+
+const kDefaultFragmentShadercode = `
+@fragment fn main() -> @location(0) vec4<f32>  {
+  return vec4<f32>(1.0, 1.0, 1.0, 1.0);
+}`;
 
 const values = [0, 1, 0, 1];
 class F extends ValidationTest {
@@ -107,14 +89,6 @@ class F extends ValidationTest {
       multisample,
       depthStencil,
     };
-  }
-
-  getInvalidShaderModule(): GPUShaderModule {
-    this.device.pushErrorScope('validation');
-    const code = 'deadbeaf'; // Something make nonsense
-    const shaderModule = this.device.createShaderModule({ code });
-    void this.device.popErrorScope();
-    return shaderModule;
   }
 
   getPipelineLayout(): GPUPipelineLayout {
@@ -213,9 +187,9 @@ g.test('fragment_state,color_target_exists')
 
 g.test('fragment_state,max_color_attachments_limit')
   .desc(
-    `Tests that color state targets length must not be larger than device.limits.maxColorAttachments`
+    `Tests that color state targets length must not be larger than device.limits.maxColorAttachments.`
   )
-  .params(u => u.combine('isAsync', [false, true]).combine('targetsLength', [1, 8, 16, 99]))
+  .params(u => u.combine('isAsync', [false, true]).combine('targetsLength', [8, 9]))
   .fn(async t => {
     const { isAsync, targetsLength } = t.params;
 
@@ -333,11 +307,7 @@ g.test('fragment_state,targets_blend')
 
 g.test('fragment_state,targets_write_mask')
   .desc(`Tests that color target state write mask must be < 16.`)
-  .params(u =>
-    u
-      .combine('isAsync', [false, true])
-      .combine('writeMask', [0, 0x1, 0x2, 0x7, 0x8, 0xf, 0x10, 0xff])
-  )
+  .params(u => u.combine('isAsync', [false, true]).combine('writeMask', [0, 0xf, 0x10, 0x80000001]))
   .fn(async t => {
     const { isAsync, writeMask } = t.params;
 
@@ -386,15 +356,32 @@ g.test('primitive_state,unclipped_depth')
   });
 
 g.test('multisample_state,count')
+  .desc(`If multisample.count must either be 1 or 4.`)
+  .params(u =>
+    u
+      .combine('isAsync', [false, true])
+      .beginSubcases()
+      .combine('count', [0, 1, 2, 3, 4, 8, 16, 1024])
+  )
+  .fn(async t => {
+    const { isAsync, count } = t.params;
+
+    const descriptor = t.getDescriptor({ multisample: { count, alphaToCoverageEnabled: false } });
+
+    const _success = count === 1 || count === 4;
+    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+  });
+
+g.test('multisample_state,alpha_to_coverage,count')
   .desc(
-    `If multisample.alphaToCoverageEnabled is true, multisample.count must be greater than 1. Sample count must either be 1 or 4.`
+    `If multisample.alphaToCoverageEnabled is true, multisample.count must be greater than 1, e.g. it can only be 4.`
   )
   .params(u =>
     u
       .combine('isAsync', [false, true])
       .combine('alphaToCoverageEnabled', [false, true])
       .beginSubcases()
-      .combine('count', [0, 1, 2, 3, 4, 8, 16, 1024])
+      .combine('count', [1, 4])
   )
   .fn(async t => {
     const { isAsync, alphaToCoverageEnabled, count } = t.params;
@@ -405,7 +392,7 @@ g.test('multisample_state,count')
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
-g.test('multisample_state,alpha_to_coverage_enabled')
+g.test('multisample_state,alpha_to_coverage,sample_mask')
   .desc(
     `If sample_mask builtin is a pipeline output of fragment or if multisample.mask is not 0xFFFFFFFF, multisample.alphaToCoverageEnabled should be false.`
   )
@@ -427,17 +414,15 @@ g.test('multisample_state,alpha_to_coverage_enabled')
       struct Output {
         @builtin(sample_mask) mask_out: u32,
         @location(0) color : vec4<f32>,
-      };
+      }
       @fragment fn main() -> Output {
         var o: Output;
-        o.mask_out = 0x1u;
+        // We need to make sure this sample_mask isn't optimized out even its value equals "no op".
+        o.mask_out = 0xFFFFFFFFu;
         o.color = vec4<f32>(1.0, 1.0, 1.0, 1.0);
         return o;
       }`
-        : `
-      @fragment fn main() -> @location(0) vec4<f32>  {
-        return vec4<f32>(1.0, 1.0, 1.0, 1.0);
-      }`,
+        : kDefaultFragmentShadercode,
     });
 
     const _success =
@@ -869,13 +854,17 @@ g.test('shader_module,device_mismatch')
 
 g.test('shader_module,invalid,vertex')
   .desc(`Tests shader module must be valid.`)
-  .params(u => u.combine('isAsync', [true, false]))
+  .params(u => u.combine('isAsync', [true, false]).combine('isVertexShaderValid', [true, false]))
   .fn(async t => {
-    const { isAsync } = t.params;
-    t.doCreateRenderPipelineTest(isAsync, false, {
+    const { isAsync, isVertexShaderValid } = t.params;
+    t.doCreateRenderPipelineTest(isAsync, isVertexShaderValid, {
       layout: 'auto',
       vertex: {
-        module: t.getInvalidShaderModule(),
+        module: isVertexShaderValid
+          ? t.device.createShaderModule({
+              code: kDefaultVertexShaderCode,
+            })
+          : t.createInvalidShaderModule(),
         entryPoint: 'main',
       },
     });
@@ -883,10 +872,10 @@ g.test('shader_module,invalid,vertex')
 
 g.test('shader_module,invalid,fragment')
   .desc(`Tests shader module must be valid.`)
-  .params(u => u.combine('isAsync', [true, false]))
+  .params(u => u.combine('isAsync', [true, false]).combine('isFragmentShaderValid', [true, false]))
   .fn(async t => {
-    const { isAsync } = t.params;
-    t.doCreateRenderPipelineTest(isAsync, false, {
+    const { isAsync, isFragmentShaderValid } = t.params;
+    t.doCreateRenderPipelineTest(isAsync, isFragmentShaderValid, {
       layout: 'auto',
       vertex: {
         module: t.device.createShaderModule({
@@ -895,7 +884,11 @@ g.test('shader_module,invalid,fragment')
         entryPoint: 'main',
       },
       fragment: {
-        module: t.getInvalidShaderModule(),
+        module: isFragmentShaderValid
+          ? t.device.createShaderModule({
+              code: kDefaultFragmentShadercode,
+            })
+          : t.createInvalidShaderModule(),
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
@@ -935,6 +928,10 @@ The entryPoint assigned in descriptor include:
 - Mistyping
 - Containing invalid char, including space and control codes (Null character)
 - Unicode entrypoints and their ASCIIfied version
+
+TODO:
+- Test unicode normalization (gpuweb/gpuweb#1160)
+- Fine-tune test cases to reduce number by removing trivially similiar cases
 `
   )
   .params(u => u.combine('isAsync', [true, false]).combineWithParams(kEntryPointTestCases))
