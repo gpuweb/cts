@@ -179,10 +179,8 @@ export function ulpComparator(x: number, target: Scalar, n: (x: number) => numbe
     if (cmp.matched) {
       return cmp;
     }
-    const ulp = Math.max(
-      oneULP(target.value as number, true),
-      oneULP(target.value as number, false)
-    );
+
+    const ulp = oneULP(target.value as number);
     return {
       matched: false,
       got: got.toString(),
