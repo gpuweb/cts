@@ -10,11 +10,10 @@ Returns the arc tangent of e. Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { ulpMatch } from '../../../../../util/compare.js';
-import { kBit } from '../../../../../util/constants.js';
-import { f32, f32Bits, TypeF32 } from '../../../../../util/conversion.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
+import { atanInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../../util/math.js';
-import { allInputSources, Case, Config, makeUnaryF32Case, run } from '../../expression.js';
+import { allInputSources, Case, makeUnaryF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -41,40 +40,25 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    // [1]: Need to decide what the ground-truth is.
     const makeCase = (x: number): Case => {
-      return makeUnaryF32Case(x, Math.atan);
+      return makeUnaryF32IntervalCase(x, atanInterval);
     };
     const cases: Array<Case> = [
-      { input: f32Bits(kBit.f32.infinity.negative), expected: f32(-Math.PI / 2) },
-      { input: f32(-Math.sqrt(3)), expected: f32(-Math.PI / 3) },
-      { input: f32(-1), expected: f32(-Math.PI / 4) },
-      { input: f32(-Math.sqrt(3) / 3), expected: f32(-Math.PI / 6) },
-      { input: f32(Math.sqrt(3) / 3), expected: f32(Math.PI / 6) },
-      { input: f32(1), expected: f32(Math.PI / 4) },
-      { input: f32(Math.sqrt(3)), expected: f32(Math.PI / 3) },
-      { input: f32Bits(kBit.f32.infinity.positive), expected: f32(Math.PI / 2) },
+      // Known values
+      Number.NEGATIVE_INFINITY,
+      -Math.sqrt(3),
+      -1,
+      -1 / Math.sqrt(3),
+      0,
+      1,
+      1 / Math.sqrt(3),
+      Math.sqrt(3),
+      Number.POSITIVE_INFINITY,
 
-      // Zero-like cases
-      { input: f32(0), expected: f32(0) },
-      { input: f32Bits(kBit.f32.positive.min), expected: f32(0) },
-      { input: f32Bits(kBit.f32.negative.max), expected: f32(0) },
-      { input: f32Bits(kBit.f32.positive.zero), expected: f32(0) },
-      { input: f32Bits(kBit.f32.negative.zero), expected: f32(0) },
-      { input: f32Bits(kBit.f32.positive.min), expected: f32Bits(kBit.f32.positive.min) },
-      { input: f32Bits(kBit.f32.negative.max), expected: f32Bits(kBit.f32.negative.max) },
-      { input: f32Bits(kBit.f32.positive.zero), expected: f32Bits(kBit.f32.positive.zero) },
-      { input: f32Bits(kBit.f32.negative.zero), expected: f32Bits(kBit.f32.negative.zero) },
-      { input: f32Bits(kBit.f32.positive.zero), expected: f32Bits(kBit.f32.negative.zero) },
-      { input: f32Bits(kBit.f32.negative.zero), expected: f32Bits(kBit.f32.positive.zero) },
-      ...fullF32Range({ neg_norm: 1000, neg_sub: 100, pos_sub: 100, pos_norm: 1000 }).map(x =>
-        makeCase(x)
-      ),
-    ];
+      ...fullF32Range(),
+    ].map(x => makeCase(x));
 
-    const cfg: Config = t.params;
-    cfg.cmpFloats = ulpMatch(4096);
-    run(t, builtin('atan'), [TypeF32], TypeF32, cfg, cases);
+    run(t, builtin('atan'), [TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('f16')
