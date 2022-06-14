@@ -301,9 +301,7 @@ export function ulpInterval(n, numULP) {
         return toInterval(n);
       }
 
-      const ulp_flush = oneULP(impl_n, true);
-      const ulp_noflush = oneULP(impl_n, false);
-      const ulp = Math.max(ulp_flush, ulp_noflush);
+      const ulp = oneULP(impl_n);
       const begin = impl_n - numULP * ulp;
       const end = impl_n + numULP * ulp;
       return new F32Interval(

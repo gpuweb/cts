@@ -163,8 +163,8 @@ export function ulpComparator(x, target, n) {
     if (cmp.matched) {
       return cmp;
     }
-    const ulp = Math.max(oneULP(target.value, true), oneULP(target.value, false));
 
+    const ulp = oneULP(target.value);
     return {
       matched: false,
       got: got.toString(),

@@ -148,17 +148,16 @@ export function nextAfter(val, dir = true, flush) {
 }
 
 /**
- * @returns ulp(x), the unit of least precision for a specific number as a 32-bit float
+ * @returns ulp(x) for a specific flushing mode
  *
- * ulp(x) is the distance between the two floating point numbers nearest x.
- * This value is also called unit of last place, ULP, and 1 ULP.
- * See the WGSL spec and http://www.ens-lyon.fr/LIP/Pub/Rapports/RR/RR2005/RR2005-09.pdf
- * for a more detailed/nuanced discussion of the definition of ulp(x).
+ * This is the main implementation of oneULP, which is normally what should be
+ * used. This should only be called directly if a specific flushing mode is
+ * required.
  *
  * @param target number to calculate ULP for
  * @param flush should subnormals be flushed to zero
  */
-export function oneULP(target, flush) {
+function oneULPImpl(target, flush) {
   if (Number.isNaN(target)) {
     return Number.NaN;
   }
@@ -187,6 +186,26 @@ export function oneULP(target, flush) {
 }
 
 /**
+ * @returns ulp(x), the unit of least precision for a specific number as a 32-bit float
+ *
+ * ulp(x) is the distance between the two floating point numbers nearest x.
+ * This value is also called unit of last place, ULP, and 1 ULP.
+ * See the WGSL spec and http://www.ens-lyon.fr/LIP/Pub/Rapports/RR/RR2005/RR2005-09.pdf
+ * for a more detailed/nuanced discussion of the definition of ulp(x).
+ *
+ * @param target number to calculate ULP for
+ * @param flush should subnormals be flushed to zero, if not set both flushed
+ *              and non-flush values are considered.
+ */
+export function oneULP(target, flush) {
+  if (flush === undefined) {
+    return Math.max(oneULPImpl(target, false), oneULPImpl(target, true));
+  }
+
+  return oneULPImpl(target, flush);
+}
+
+/**
  * @returns if a number is within N * ulp(x) of a target value
  * @param val number to test
  * @param target expected number
@@ -198,9 +217,8 @@ export function withinULP(val, target, n = 1) {
     return false;
   }
 
-  const ulp_flush = oneULP(target, true);
-  const ulp_noflush = oneULP(target, false);
-  if (Number.isNaN(ulp_flush) || Number.isNaN(ulp_noflush)) {
+  const ulp = oneULP(target);
+  if (Number.isNaN(ulp)) {
     return false;
   }
 
@@ -208,7 +226,6 @@ export function withinULP(val, target, n = 1) {
     return true;
   }
 
-  const ulp = Math.max(ulp_flush, ulp_noflush);
   const diff = val > target ? val - target : target - val;
   return diff <= n * ulp;
 }
