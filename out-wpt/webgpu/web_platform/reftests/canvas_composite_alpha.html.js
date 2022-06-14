@@ -47,9 +47,9 @@ export function run(format, compositingAlphaMode, writeCanvasMethod) {
         module: t.device.createShaderModule({
           code: `
 struct VertexOutput {
-@builtin(position) Position : vec4<f32>,
-@location(0) fragColor : vec4<f32>,
-}
+@builtin(position) Position : vec4<f32>;
+@location(0) fragColor : vec4<f32>;
+};
 
 @vertex
 fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
