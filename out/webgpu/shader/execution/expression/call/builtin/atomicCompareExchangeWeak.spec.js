@@ -38,8 +38,8 @@ T is i32 or u32
 fn atomicCompareExchangeWeak(atomic_ptr: ptr<SC, atomic<T>, read_write>, cmp: T, v: T) -> __atomic_compare_exchange_result<T>
 
 struct __atomic_compare_exchange_result<T> {
-  old_value : T;    // old value stored in the atomic
-  exchanged : bool; // true if the exchange was done
+  old_value : T,    // old value stored in the atomic
+  exchanged : bool, // true if the exchange was done
 }
 `).
 

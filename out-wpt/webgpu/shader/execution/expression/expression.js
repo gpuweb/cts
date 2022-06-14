@@ -250,7 +250,7 @@ function buildPipeline(
 struct Output {
   @size(${kValueStride}) value : ${storageType(returnType)}
 };
-@group(0) @binding(0) var<storage, write> outputs : array<Output, ${cases.length}>;
+@group(0) @binding(0) var<storage, read_write> outputs : array<Output, ${cases.length}>;
 `;
 
   switch (inputSource) {

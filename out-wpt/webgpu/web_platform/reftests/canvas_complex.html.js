@@ -215,9 +215,9 @@ export function run(format, targets) {
           module: t.device.createShaderModule({
             code: `
 struct VertexOutput {
-  @builtin(position) Position : vec4<f32>;
-  @location(0) fragUV : vec2<f32>;
-};
+  @builtin(position) Position : vec4<f32>,
+  @location(0) fragUV : vec2<f32>,
+}
 
 @vertex
 fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
@@ -339,9 +339,9 @@ fn linearMain(@location(0) fragUV: vec2<f32>) -> @location(0) vec4<f32> {
           module: t.device.createShaderModule({
             code: `
 struct VertexOutput {
-  @builtin(position) Position : vec4<f32>;
-  @location(0) fragColor : vec4<f32>;
-};
+  @builtin(position) Position : vec4<f32>,
+  @location(0) fragColor : vec4<f32>,
+}
 
 @vertex
 fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
@@ -424,8 +424,8 @@ fn main(@location(0) fragColor: vec4<f32>) -> @location(0) vec4<f32> {
           module: t.device.createShaderModule({
             code: `
 struct VertexOutput {
-  @builtin(position) Position : vec4<f32>;
-};
+  @builtin(position) Position : vec4<f32>
+}
 
 @vertex
 fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
@@ -514,8 +514,8 @@ fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
           module: t.device.createShaderModule({
             code: `
 struct VertexOutput {
-  @builtin(position) Position : vec4<f32>;
-};
+  @builtin(position) Position : vec4<f32>
+}
 
 @vertex
 fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
