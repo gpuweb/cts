@@ -11,7 +11,11 @@ import {
   kBlendFactors,
   kBlendOperations,
 } from '../../../capability_info.js';
-import { getFragmentShaderCodeWithOutput, getPlainTypeInfo } from '../../../util/shader.js';
+import {
+  getFragmentShaderCodeWithOutput,
+  getPlainTypeInfo,
+  kDefaultFragmentShaderCode,
+} from '../../../util/shader.js';
 import { kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
 
 import { CreateRenderPipelineValidationTest } from './common.js';
@@ -50,9 +54,11 @@ g.test('max_color_attachments_limit')
     const { isAsync, targetsLength } = t.params;
 
     const descriptor = t.getDescriptor({
-      targets: range(targetsLength, () => {
-        return { format: 'rgba8unorm' };
+      targets: range(targetsLength, i => {
+        // Set writeMask to 0 for attachments without fragment output
+        return { format: 'rgba8unorm', writeMask: i === 0 ? 0xf : 0 };
       }),
+      fragmentShaderCode: kDefaultFragmentShaderCode,
     });
 
     t.doCreateRenderPipelineTest(
