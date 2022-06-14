@@ -17,7 +17,6 @@ import {
   linearRange,
   nextAfter,
   oneULP,
-  oneULPImpl,
   withinULP,
 } from '../webgpu/util/math.js';
 
@@ -183,7 +182,7 @@ interface OneULPCase {
   expect: number;
 }
 
-g.test('oneULPImplFlushToZero')
+g.test('oneULPFlushToZero')
   .paramsSimple<OneULPCase>([
     // Edge Cases
     { target: Number.NaN, expect: Number.NaN },
@@ -224,15 +223,15 @@ g.test('oneULPImplFlushToZero')
   ])
   .fn(t => {
     const target = t.params.target;
-    const got = oneULPImpl(target, true);
+    const got = oneULP(target, true);
     const expect = t.params.expect;
     t.expect(
       got === expect || (Number.isNaN(got) && Number.isNaN(expect)),
-      `oneULPImpl(${target}, true) returned ${got}. Expected ${expect}`
+      `oneULP(${target}, true) returned ${got}. Expected ${expect}`
     );
   });
 
-g.test('oneULPImplNoFlush')
+g.test('oneULPNoFlush')
   .paramsSimple<OneULPCase>([
     // Edge Cases
     { target: Number.NaN, expect: Number.NaN },
@@ -273,11 +272,11 @@ g.test('oneULPImplNoFlush')
   ])
   .fn(t => {
     const target = t.params.target;
-    const got = oneULPImpl(target, false);
+    const got = oneULP(target, false);
     const expect = t.params.expect;
     t.expect(
       got === expect || (Number.isNaN(got) && Number.isNaN(expect)),
-      `oneULPImpl(${target}, true) returned ${got}. Expected ${expect}`
+      `oneULPImpl(${target}, false) returned ${got}. Expected ${expect}`
     );
   });
 

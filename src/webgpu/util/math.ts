@@ -156,7 +156,7 @@ export function nextAfter(val: number, dir: boolean = true, flush: boolean): Sca
  * @param target number to calculate ULP for
  * @param flush should subnormals be flushed to zero
  */
-export function oneULPImpl(target: number, flush: boolean): number {
+function oneULPImpl(target: number, flush: boolean): number {
   if (Number.isNaN(target)) {
     return Number.NaN;
   }
@@ -193,10 +193,15 @@ export function oneULPImpl(target: number, flush: boolean): number {
  * for a more detailed/nuanced discussion of the definition of ulp(x).
  *
  * @param target number to calculate ULP for
- *
+ * @param flush should subnormals be flushed to zero, if not set both flushed
+ *              and non-flush values are considered.
  */
-export function oneULP(target: number): number {
-  return Math.max(oneULPImpl(target, false), oneULPImpl(target, true));
+export function oneULP(target: number, flush?: boolean): number {
+  if (flush === undefined) {
+    return Math.max(oneULPImpl(target, false), oneULPImpl(target, true));
+  }
+
+  return oneULPImpl(target, flush);
 }
 
 /**
