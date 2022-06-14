@@ -508,7 +508,7 @@ g.test('uniform_buffer')
     const computeShaderModule = t.device.createShaderModule({
       code: `
   struct UBO {
-      value : vec4<u32>
+    value : vec4<u32>
   };
   @group(0) @binding(0) var<uniform> ubo : UBO;
   @group(0) @binding(1) var outImage : texture_storage_2d<rgba8unorm, write>;
@@ -543,7 +543,7 @@ g.test('readonly_storage_buffer')
     const computeShaderModule = t.device.createShaderModule({
       code: `
     struct SSBO {
-        value : vec4<u32>
+      value : vec4<u32>
     };
     @group(0) @binding(0) var<storage, read> ssbo : SSBO;
     @group(0) @binding(1) var outImage : texture_storage_2d<rgba8unorm, write>;
@@ -578,7 +578,7 @@ g.test('storage_buffer')
     const computeShaderModule = t.device.createShaderModule({
       code: `
     struct SSBO {
-        value : vec4<u32>
+      value : vec4<u32>
     };
     @group(0) @binding(0) var<storage, read_write> ssbo : SSBO;
     @group(0) @binding(1) var outImage : texture_storage_2d<rgba8unorm, write>;
