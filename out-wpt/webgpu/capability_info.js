@@ -1598,6 +1598,20 @@ export const kBlendOperations = [
   'max',
 ];
 
+// Primitive topologies
+export const kPrimitiveTopology = [
+  'point-list',
+  'line-list',
+  'line-strip',
+  'triangle-list',
+  'triangle-strip',
+];
+
+assertTypeTrue();
+
+export const kIndexFormat = ['uint16', 'uint32'];
+assertTypeTrue();
+
 // Pipeline limits
 
 /** Maximum number of color attachments to a render pass, by spec. */

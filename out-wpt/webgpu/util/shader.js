@@ -1,6 +1,17 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { unreachable } from '../../common/util/util.js';
+export const kDefaultVertexShaderCode = `
+@vertex fn main() -> @builtin(position) vec4<f32> {
+  return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+}
+`;
+
+export const kDefaultFragmentShaderCode = `
+@fragment fn main() -> @location(0) vec4<f32>  {
+  return vec4<f32>(1.0, 1.0, 1.0, 1.0);
+}`;
+
 const kPlainTypeInfo = {
   i32: {
     suffix: '',
@@ -122,4 +133,41 @@ export function getFragmentShaderCodeWithOutput(outputs) {
     @fragment fn main() -> Outputs {
         return Outputs(${resultStrings.join(',')});
     }`;
+}
+
+/**
+ * Return a foo shader of the given stage with the given entry point
+ * @param shaderStage
+ * @param entryPoint
+ * @returns the shader string
+ */
+export function getShaderWithEntryPoint(shaderStage, entryPoint) {
+  let code;
+  switch (shaderStage) {
+    case 'compute': {
+      code = `@compute @workgroup_size(1) fn ${entryPoint}() {}`;
+      break;
+    }
+    case 'vertex': {
+      code = `
+      @vertex fn ${entryPoint}() -> @builtin(position) vec4<f32> {
+        return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+      }`;
+      break;
+    }
+    case 'fragment': {
+      code = `
+      @fragment fn ${entryPoint}() -> @location(0) vec4<f32> {
+        return vec4<f32>(0.0, 1.0, 0.0, 1.0);
+      }`;
+      break;
+    }
+    case 'empty':
+    default: {
+      code = '';
+      break;
+    }
+  }
+
+  return code;
 }

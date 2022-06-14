@@ -324,14 +324,6 @@ export const listing = [
       "api",
       "operation",
       "render_pipeline",
-      "entry_point_name"
-    ]
-  },
-  {
-    "file": [
-      "api",
-      "operation",
-      "render_pipeline",
       "pipeline_output_targets"
     ]
   },
@@ -536,13 +528,6 @@ export const listing = [
     "file": [
       "api",
       "validation",
-      "attachment_compatibility"
-    ]
-  },
-  {
-    "file": [
-      "api",
-      "validation",
       "buffer",
       "create"
     ]
@@ -579,15 +564,6 @@ export const listing = [
       "features"
     ],
     "readme": "Test every method or option that shouldn't be allowed without a feature enabled.\nIf the feature is not enabled, any use of an enum value added by a feature must be an\n*exception*, per <https://github.com/gpuweb/gpuweb/blob/main/design/ErrorConventions.md>.\n\n- x= that feature {enabled, disabled}\n\nGenerally one file for each feature name, but some may be grouped (e.g. one file for all optional\nquery types, one file for all optional texture formats).\n\nTODO: implement"
-  },
-  {
-    "file": [
-      "api",
-      "validation",
-      "capability_checks",
-      "features",
-      "depth_clip_control"
-    ]
   },
   {
     "file": [
@@ -648,13 +624,6 @@ export const listing = [
     "file": [
       "api",
       "validation",
-      "createRenderPipeline"
-    ]
-  },
-  {
-    "file": [
-      "api",
-      "validation",
       "createSampler"
     ]
   },
@@ -670,13 +639,6 @@ export const listing = [
       "api",
       "validation",
       "createView"
-    ]
-  },
-  {
-    "file": [
-      "api",
-      "validation",
-      "create_pipeline"
     ]
   },
   {
@@ -1040,6 +1002,22 @@ export const listing = [
       "api",
       "validation",
       "render_pass",
+      "attachment_compatibility"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "render_pass",
+      "render_pass_descriptor"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "render_pass",
       "resolve"
     ]
   },
@@ -1055,7 +1033,64 @@ export const listing = [
     "file": [
       "api",
       "validation",
-      "render_pass_descriptor"
+      "render_pipeline",
+      "depth_stencil_state"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "render_pipeline",
+      "fragment_state"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "render_pipeline",
+      "inter_stage"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "render_pipeline",
+      "misc"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "render_pipeline",
+      "multisample_state"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "render_pipeline",
+      "primitive_state"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "render_pipeline",
+      "shader_module"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "render_pipeline",
+      "vertex_state"
     ]
   },
   {
@@ -1116,6 +1151,14 @@ export const listing = [
     "file": [
       "api",
       "validation",
+      "shader_module",
+      "entry_point"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
       "state",
       "device_lost"
     ],
@@ -1136,13 +1179,6 @@ export const listing = [
       "validation",
       "texture",
       "destroy"
-    ]
-  },
-  {
-    "file": [
-      "api",
-      "validation",
-      "vertex_state"
     ]
   },
   {

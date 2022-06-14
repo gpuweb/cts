@@ -382,4 +382,51 @@ export class ValidationTest extends GPUTest {
     void this.device.popErrorScope();
     return pipeline;
   }
+
+  /** Return an invalid GPUShaderModule. */
+  createInvalidShaderModule(): GPUShaderModule {
+    this.device.pushErrorScope('validation');
+    const code = 'deadbeaf'; // Something make no sense
+    const shaderModule = this.device.createShaderModule({ code });
+    void this.device.popErrorScope();
+    return shaderModule;
+  }
+
+  /** Helper for testing createRenderPipeline(Async) validation */
+  doCreateRenderPipelineTest(
+    isAsync: boolean,
+    _success: boolean,
+    descriptor: GPURenderPipelineDescriptor
+  ) {
+    if (isAsync) {
+      if (_success) {
+        this.shouldResolve(this.device.createRenderPipelineAsync(descriptor));
+      } else {
+        this.shouldReject('OperationError', this.device.createRenderPipelineAsync(descriptor));
+      }
+    } else {
+      this.expectValidationError(() => {
+        this.device.createRenderPipeline(descriptor);
+      }, !_success);
+    }
+  }
+
+  /** Helper for testing createComputePipeline(Async) validation */
+  doCreateComputePipelineTest(
+    isAsync: boolean,
+    _success: boolean,
+    descriptor: GPUComputePipelineDescriptor
+  ) {
+    if (isAsync) {
+      if (_success) {
+        this.shouldResolve(this.device.createComputePipelineAsync(descriptor));
+      } else {
+        this.shouldReject('OperationError', this.device.createComputePipelineAsync(descriptor));
+      }
+    } else {
+      this.expectValidationError(() => {
+        this.device.createComputePipeline(descriptor);
+      }, !_success);
+    }
+  }
 }

@@ -3,69 +3,18 @@
 **/export const description = `
 createComputePipeline and createComputePipelineAsync validation tests.
 `;import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { getShaderWithEntryPoint } from '../../util/shader.js';
 
 import { ValidationTest } from './validation_test.js';
-
-
 
 class F extends ValidationTest {
   getShaderModule(
   shaderStage = 'compute',
   entryPoint = 'main')
   {
-    let code;
-    switch (shaderStage) {
-      case 'compute':{
-          code = `@compute @workgroup_size(1) fn ${entryPoint}() {}`;
-          break;
-        }
-      case 'vertex':{
-          code = `
-        @vertex fn ${entryPoint}() -> @builtin(position) vec4<f32> {
-          return vec4<f32>(0.0, 0.0, 0.0, 1.0);
-        }`;
-          break;
-        }
-      case 'fragment':{
-          code = `
-        @fragment fn ${entryPoint}() -> @location(0) vec4<i32> {
-          return vec4<i32>(0, 1, 0, 1);
-        }`;
-          break;
-        }
-      case 'empty':
-      default:{
-          code = '';
-          break;
-        }}
+    return this.device.createShaderModule({
+      code: getShaderWithEntryPoint(shaderStage, entryPoint) });
 
-    return this.device.createShaderModule({ code });
-  }
-
-  getInvalidShaderModule() {
-    this.device.pushErrorScope('validation');
-    const code = 'deadbeaf'; // Something make nonsense
-    const shaderModule = this.device.createShaderModule({ code });
-    void this.device.popErrorScope();
-    return shaderModule;
-  }
-
-  doCreateComputePipelineTest(
-  isAsync,
-  _success,
-  descriptor)
-  {
-    if (isAsync) {
-      if (_success) {
-        this.shouldResolve(this.device.createComputePipelineAsync(descriptor));
-      } else {
-        this.shouldReject('OperationError', this.device.createComputePipelineAsync(descriptor));
-      }
-    } else {
-      this.expectValidationError(() => {
-        this.device.createComputePipeline(descriptor);
-      }, !_success);
-    }
   }}
 
 
@@ -99,7 +48,7 @@ fn(async (t) => {
   t.doCreateComputePipelineTest(isAsync, false, {
     layout: 'auto',
     compute: {
-      module: t.getInvalidShaderModule(),
+      module: t.createInvalidShaderModule(),
       entryPoint: 'main' } });
 
 
