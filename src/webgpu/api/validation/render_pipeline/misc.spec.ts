@@ -3,12 +3,9 @@ misc createRenderPipeline and createRenderPipelineAsync validation tests.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { kDefaultVertexShaderCode, kDefaultFragmentShaderCode } from '../../../util/shader.js';
 
-import {
-  CreateRenderPipelineValidationTest,
-  kDefaultVertexShaderCode,
-  kDefaultFragmentShaderCode,
-} from './common.js';
+import { CreateRenderPipelineValidationTest } from './common.js';
 
 export const g = makeTestGroup(CreateRenderPipelineValidationTest);
 

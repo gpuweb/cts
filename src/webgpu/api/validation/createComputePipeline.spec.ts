@@ -16,32 +16,6 @@ class F extends ValidationTest {
       code: getShaderWithEntryPoint(shaderStage, entryPoint),
     });
   }
-
-  getInvalidShaderModule(): GPUShaderModule {
-    this.device.pushErrorScope('validation');
-    const code = 'deadbeaf'; // Something make nonsense
-    const shaderModule = this.device.createShaderModule({ code });
-    void this.device.popErrorScope();
-    return shaderModule;
-  }
-
-  doCreateComputePipelineTest(
-    isAsync: boolean,
-    _success: boolean,
-    descriptor: GPUComputePipelineDescriptor
-  ) {
-    if (isAsync) {
-      if (_success) {
-        this.shouldResolve(this.device.createComputePipelineAsync(descriptor));
-      } else {
-        this.shouldReject('OperationError', this.device.createComputePipelineAsync(descriptor));
-      }
-    } else {
-      this.expectValidationError(() => {
-        this.device.createComputePipeline(descriptor);
-      }, !_success);
-    }
-  }
 }
 
 export const g = makeTestGroup(F);
@@ -74,7 +48,7 @@ Tests calling createComputePipeline(Async) with a invalid compute shader, and ch
     t.doCreateComputePipelineTest(isAsync, false, {
       layout: 'auto',
       compute: {
-        module: t.getInvalidShaderModule(),
+        module: t.createInvalidShaderModule(),
         entryPoint: 'main',
       },
     });

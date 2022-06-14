@@ -1,15 +1,18 @@
 export const description = `
 This test dedicatedly tests createRenderPipeline validation issues related to the shader modules.
+
+Note: entry point matching tests are in ../shader_module/entry_point.spec.ts
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { getFragmentShaderCodeWithOutput, getShaderWithEntryPoint } from '../../../util/shader.js';
-
 import {
-  CreateRenderPipelineValidationTest,
+  getFragmentShaderCodeWithOutput,
+  getShaderWithEntryPoint,
   kDefaultVertexShaderCode,
   kDefaultFragmentShaderCode,
-} from './common.js';
+} from '../../../util/shader.js';
+
+import { CreateRenderPipelineValidationTest } from './common.js';
 
 export const g = makeTestGroup(CreateRenderPipelineValidationTest);
 

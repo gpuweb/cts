@@ -1,17 +1,10 @@
 import { kTextureFormatInfo } from '../../../capability_info.js';
-import { getFragmentShaderCodeWithOutput, getPlainTypeInfo } from '../../../util/shader.js';
+import {
+  getFragmentShaderCodeWithOutput,
+  getPlainTypeInfo,
+  kDefaultVertexShaderCode,
+} from '../../../util/shader.js';
 import { ValidationTest } from '../validation_test.js';
-
-export const kDefaultVertexShaderCode = `
-@vertex fn main() -> @builtin(position) vec4<f32> {
-  return vec4<f32>(0.0, 0.0, 0.0, 1.0);
-}
-`;
-
-export const kDefaultFragmentShaderCode = `
-@fragment fn main() -> @location(0) vec4<f32>  {
-  return vec4<f32>(1.0, 1.0, 1.0, 1.0);
-}`;
 
 const values = [0, 1, 0, 1];
 export class CreateRenderPipelineValidationTest extends ValidationTest {
@@ -68,23 +61,5 @@ export class CreateRenderPipelineValidationTest extends ValidationTest {
 
   getPipelineLayout(): GPUPipelineLayout {
     return this.device.createPipelineLayout({ bindGroupLayouts: [] });
-  }
-
-  doCreateRenderPipelineTest(
-    isAsync: boolean,
-    _success: boolean,
-    descriptor: GPURenderPipelineDescriptor
-  ) {
-    if (isAsync) {
-      if (_success) {
-        this.shouldResolve(this.device.createRenderPipelineAsync(descriptor));
-      } else {
-        this.shouldReject('OperationError', this.device.createRenderPipelineAsync(descriptor));
-      }
-    } else {
-      this.expectValidationError(() => {
-        this.device.createRenderPipeline(descriptor);
-      }, !_success);
-    }
   }
 }
