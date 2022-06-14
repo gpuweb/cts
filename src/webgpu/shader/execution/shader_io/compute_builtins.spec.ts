@@ -104,11 +104,11 @@ g.test('inputs')
       struct V {
         data : array<vec3<u32>>
       };
-      @group(0) @binding(0) var<storage, write> local_id_out : V;
-      @group(0) @binding(1) var<storage, write> local_index_out : S;
-      @group(0) @binding(2) var<storage, write> global_id_out : V;
-      @group(0) @binding(3) var<storage, write> group_id_out : V;
-      @group(0) @binding(4) var<storage, write> num_groups_out : V;
+      @group(0) @binding(0) var<storage, read_write> local_id_out : V;
+      @group(0) @binding(1) var<storage, read_write> local_index_out : S;
+      @group(0) @binding(2) var<storage, read_write> global_id_out : V;
+      @group(0) @binding(3) var<storage, read_write> group_id_out : V;
+      @group(0) @binding(4) var<storage, read_write> num_groups_out : V;
 
       ${structures}
 

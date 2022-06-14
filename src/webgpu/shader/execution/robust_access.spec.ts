@@ -49,7 +49,7 @@ function runShaderTest(
     struct Result {
       value: u32
     };
-    @group(1) @binding(1) var<storage, write> result: Result;
+    @group(1) @binding(1) var<storage, read_write> result: Result;
 
     ${testSource}
 
