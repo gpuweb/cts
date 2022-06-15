@@ -52,7 +52,8 @@ g.test('texture_descriptor')
 g.test('texture_view_descriptor')
   .desc(
     `
-  Test creating a texture view with all texture formats will fail if the required optional feature is not enabled.
+  Test creating a texture view with all texture formats will fail if the required optional feature
+  is not enabled.
   `
   )
   .params(u =>
@@ -158,7 +159,7 @@ g.test('color_target_state')
   .fn(async t => {
     const { format, enable_required_feature } = t.params;
 
-    t.expectValidationError(() => {
+    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
       t.device.createRenderPipeline({
         layout: 'auto',
         vertex: {
@@ -186,7 +187,7 @@ g.test('color_target_state')
           targets: [{ format }],
         },
       });
-    }, !enable_required_feature);
+    });
   });
 
 g.test('depth_stencil_state')
@@ -217,7 +218,7 @@ g.test('depth_stencil_state')
   .fn(async t => {
     const { format, enable_required_feature } = t.params;
 
-    t.expectValidationError(() => {
+    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
       t.device.createRenderPipeline({
         layout: 'auto',
         vertex: {
@@ -249,7 +250,7 @@ g.test('depth_stencil_state')
           targets: [{ format: 'rgba8unorm' }],
         },
       });
-    }, !enable_required_feature);
+    });
   });
 
 g.test('render_bundle_encoder_descriptor_color_format')
