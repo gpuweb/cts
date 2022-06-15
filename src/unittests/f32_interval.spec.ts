@@ -12,6 +12,7 @@ import {
   ceilInterval,
   correctlyRoundedInterval,
   cosInterval,
+  exp2Interval,
   F32Interval,
   ulpInterval,
 } from '../webgpu/util/f32_interval.js';
@@ -727,5 +728,37 @@ g.test('cosInterval')
     t.expect(
       objectEquals(expected, got),
       `cosInterval(${input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('exp2Interval')
+  .paramsSubcasesOnly<PointToIntervalCase>(
+    // prettier-ignore
+    [
+      { input: Number.NEGATIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: 0, expected: [1,1] },
+      { input: 1, expected: [2, 2] },
+      { input: 128, expected: arrayToInterval([kValue.f32.positive.max, Number.POSITIVE_INFINITY]) },
+    ]
+  )
+  .fn(t => {
+    const error = (input: number, result: number): number => {
+      const n = 3 + 2 * Math.abs(input);
+      return n * oneULP(result);
+    };
+
+    const input = t.params.input;
+    let expected: F32Interval;
+    if (t.params.expected instanceof Array) {
+      const [begin, end] = t.params.expected;
+      expected = arrayToInterval([begin - error(input, begin), end + error(input, end)]);
+    } else {
+      expected = t.params.expected;
+    }
+
+    const got = exp2Interval(input);
+    t.expect(
+      objectEquals(expected, got),
+      `exp2Interval(${input}) returned ${got}. Expected ${expected}`
     );
   });
