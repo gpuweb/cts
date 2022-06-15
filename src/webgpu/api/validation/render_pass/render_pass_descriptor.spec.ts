@@ -5,14 +5,13 @@ TODO: per-test descriptions, make test names more succinct
 TODO: review for completeness
 `;
 
-import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
   kDepthStencilFormats,
   kRenderableColorTextureFormats,
   kTextureFormatInfo,
-} from '../../capability_info.js';
-
-import { ValidationTest } from './validation_test.js';
+} from '../../../capability_info.js';
+import { ValidationTest } from '../validation_test.js';
 
 class F extends ValidationTest {
   createTexture(
@@ -107,6 +106,42 @@ g.test('a_render_pass_with_only_one_depth_attachment_is_ok').fn(t => {
 
   t.tryRenderPass(true, descriptor);
 });
+
+g.test('color_attachments_empty')
+  .desc(
+    `Tests that when colorAttachments has all values be 'undefined' or the sequence is empty, the depthStencilAttachment must not be 'undefined'.`
+  )
+  .paramsSubcasesOnly(u =>
+    u
+      .combine('colorAttachments', [
+        [],
+        [undefined],
+        [undefined, undefined],
+        new Array(8).fill(undefined),
+        [{ format: 'rgba8unorm' }],
+      ])
+      .combine('hasDepthStencilAttachment', [false, true])
+  )
+  .fn(async t => {
+    const { colorAttachments, hasDepthStencilAttachment } = t.params;
+
+    let isEmptyColorTargets = true;
+    for (let i = 0; i < colorAttachments.length; i++) {
+      if (colorAttachments[i] !== undefined) {
+        isEmptyColorTargets = false;
+        const colorTexture = t.createTexture();
+        colorAttachments[i] = t.getColorAttachment(colorTexture);
+      }
+    }
+
+    const _success = !isEmptyColorTargets || hasDepthStencilAttachment;
+    t.tryRenderPass(_success, {
+      colorAttachments,
+      depthStencilAttachment: hasDepthStencilAttachment
+        ? t.getDepthStencilAttachment(t.createTexture({ format: 'depth24plus-stencil8' }))
+        : undefined,
+    });
+  });
 
 g.test('OOB_color_attachment_indices_are_handled')
   .paramsSimple([

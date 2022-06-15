@@ -420,6 +420,17 @@ export function atanInterval(n: number): F32Interval {
   return runPointOp(toInterval(n), op);
 }
 
+/** Calculate an acceptance interval of ceil(x) */
+export function ceilInterval(n: number): F32Interval {
+  const op: PointToIntervalOp = {
+    impl: (impl_n: number): F32Interval => {
+      return correctlyRoundedInterval(Math.ceil(impl_n));
+    },
+  };
+
+  return runPointOp(toInterval(n), op);
+}
+
 /** Calculate an acceptance interval of cos(x) */
 export function cosInterval(n: number): F32Interval {
   const op: PointToIntervalOp = {

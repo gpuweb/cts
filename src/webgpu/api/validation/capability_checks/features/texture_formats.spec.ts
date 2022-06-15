@@ -1,7 +1,6 @@
 export const description = `
 Tests for capability checking for features enabling optional texture formats.
 
-TODO(#902): test GPUTextureViewDescriptor.format
 TODO(#902): test GPUCanvasConfiguration.format (it doesn't allow any optional formats today but the
   error might still be different - exception instead of validation.
 
@@ -49,6 +48,46 @@ g.test('texture_descriptor')
     });
   });
 
+g.test('texture_view_descriptor')
+  .desc(
+    `
+  Test creating a texture view with all texture formats will fail if the required optional feature is not enabled.
+  `
+  )
+  .params(u =>
+    u.combine('format', kOptionalTextureFormats).combine('enable_required_feature', [true, false])
+  )
+  .beforeAllSubcases(t => {
+    const { format, enable_required_feature } = t.params;
+
+    const formatInfo = kTextureFormatInfo[format];
+    if (enable_required_feature) {
+      t.selectDeviceOrSkipTestCase(formatInfo.feature);
+    }
+  })
+  .fn(async t => {
+    const { format, enable_required_feature } = t.params;
+
+    const formatInfo = kTextureFormatInfo[format];
+    const testTexture = t.device.createTexture({
+      format,
+      size: [formatInfo.blockWidth, formatInfo.blockHeight, 1] as const,
+      usage: GPUTextureUsage.TEXTURE_BINDING,
+    });
+    const testViewDesc: GPUTextureViewDescriptor = {
+      format,
+      dimension: '2d',
+      aspect: 'all',
+      arrayLayerCount: 1,
+      baseMipLevel: 0,
+      mipLevelCount: 1,
+      baseArrayLayer: 0,
+    };
+    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
+      testTexture.createView(testViewDesc);
+    });
+  });
+
 g.test('storage_texture_binding_layout')
   .desc(
     `
@@ -75,7 +114,7 @@ g.test('storage_texture_binding_layout')
   .fn(async t => {
     const { format, enable_required_feature } = t.params;
 
-    t.expectValidationError(() => {
+    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
       t.device.createBindGroupLayout({
         entries: [
           {
@@ -87,7 +126,7 @@ g.test('storage_texture_binding_layout')
           },
         ],
       });
-    }, !enable_required_feature);
+    });
   });
 
 g.test('color_target_state')

@@ -31,7 +31,7 @@ g.test('memcpy').fn(async t => {
       module: t.device.createShaderModule({
         code: `
           struct Data {
-              value : u32
+            value : u32
           };
 
           @group(0) @binding(0) var<storage, read> src : Data;

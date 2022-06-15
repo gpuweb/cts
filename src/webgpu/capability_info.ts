@@ -965,6 +965,19 @@ export const kBlendOperations: readonly GPUBlendOperation[] = [
   'max',
 ];
 
+// Primitive topologies
+export const kPrimitiveTopology: readonly GPUPrimitiveTopology[] = [
+  'point-list',
+  'line-list',
+  'line-strip',
+  'triangle-list',
+  'triangle-strip',
+];
+assertTypeTrue<TypeEqual<GPUPrimitiveTopology, typeof kPrimitiveTopology[number]>>();
+
+export const kIndexFormat: readonly GPUIndexFormat[] = ['uint16', 'uint32'];
+assertTypeTrue<TypeEqual<GPUIndexFormat, typeof kIndexFormat[number]>>();
+
 // Pipeline limits
 
 /** Maximum number of color attachments to a render pass, by spec. */
