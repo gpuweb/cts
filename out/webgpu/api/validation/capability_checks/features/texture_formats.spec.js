@@ -268,11 +268,11 @@ beforeAllSubcases((t) => {
 fn(async (t) => {
   const { format, enable_required_feature } = t.params;
 
-  t.expectValidationError(() => {
+  t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
     t.device.createRenderBundleEncoder({
       colorFormats: [format] });
 
-  }, !enable_required_feature);
+  });
 });
 
 g.test('render_bundle_encoder_descriptor_depth_stencil_format').
@@ -303,11 +303,11 @@ beforeAllSubcases((t) => {
 fn(async (t) => {
   const { format, enable_required_feature } = t.params;
 
-  t.expectValidationError(() => {
+  t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
     t.device.createRenderBundleEncoder({
       colorFormats: ['rgba8unorm'],
       depthStencilFormat: format });
 
-  }, !enable_required_feature);
+  });
 });
 //# sourceMappingURL=texture_formats.spec.js.map
