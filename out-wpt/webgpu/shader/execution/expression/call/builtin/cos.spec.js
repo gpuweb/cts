@@ -11,10 +11,10 @@ Returns the cosine of e. Component-wise when T is a vector.
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { absMatch } from '../../../../../util/compare.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
-import { linearRange } from '../../../../../util/math.js';
-import { allInputSources, makeUnaryF32Case, run } from '../../expression.js';
+import { cosInterval } from '../../../../../util/f32_interval.js';
+import { fullF32Range, linearRange } from '../../../../../util/math.js';
+import { allInputSources, makeUnaryF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -37,17 +37,17 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
   )
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
-    // [1]: Need to decide what the ground-truth is.
-    const makeCase = x => {
-      return makeUnaryF32Case(x, Math.cos);
+    const makeCase = n => {
+      return makeUnaryF32IntervalCase(n, cosInterval);
     };
 
-    // Spec defines accuracy on [-π, π]
-    const cases = linearRange(-Math.PI, Math.PI, 1000).map(x => makeCase(x));
+    const cases = [
+      // Well defined accuracy range
+      ...linearRange(-Math.PI, Math.PI, 1000),
 
-    const cfg = t.params;
-    cfg.cmpFloats = absMatch(2 ** -11);
-    run(t, builtin('cos'), [TypeF32], TypeF32, cfg, cases);
+      ...fullF32Range(),
+    ].map(makeCase);
+    run(t, builtin('cos'), [TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('f16')

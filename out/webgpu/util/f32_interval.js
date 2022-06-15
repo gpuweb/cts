@@ -430,4 +430,17 @@ export function ceilInterval(n) {
 
   return runPointOp(toInterval(n), op);
 }
+
+/** Calculate an acceptance interval of cos(x) */
+export function cosInterval(n) {
+  const op = {
+    impl: (impl_n) => {
+      return kValue.f32.negative.pi.whole <= impl_n && impl_n <= kValue.f32.positive.pi.whole ?
+      absoluteErrorInterval(Math.cos(impl_n), 2 ** -11) :
+      F32Interval.infinite();
+    } };
+
+
+  return runPointOp(toInterval(n), op);
+}
 //# sourceMappingURL=f32_interval.js.map
