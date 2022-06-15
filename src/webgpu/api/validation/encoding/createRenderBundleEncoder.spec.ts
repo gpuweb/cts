@@ -46,12 +46,12 @@ g.test('attachment_state')
       shouldError = true;
     }
 
-    t.expectValidationError(() => {
+    t.shouldThrow(shouldError ? 'TypeError' : false, () => {
       t.device.createRenderBundleEncoder({
         colorFormats: Array(colorFormatCount).fill(colorFormat),
         depthStencilFormat,
       });
-    }, shouldError);
+    });
   });
 
 g.test('valid_texture_formats')
@@ -82,21 +82,21 @@ g.test('valid_texture_formats')
 
     switch (attachment) {
       case 'color': {
-        t.expectValidationError(() => {
+        t.shouldThrow(colorRenderable ? false : 'TypeError', () => {
           t.device.createRenderBundleEncoder({
             colorFormats: [format],
           });
-        }, !colorRenderable);
+        });
 
         break;
       }
       case 'depthStencil': {
-        t.expectValidationError(() => {
+        t.shouldThrow(depthStencil ? false : 'TypeError', () => {
           t.device.createRenderBundleEncoder({
             colorFormats: [],
             depthStencilFormat: format,
           });
-        }, !depthStencil);
+        });
 
         break;
       }
@@ -135,14 +135,14 @@ g.test('depth_stencil_readonly')
       shouldError = true;
     }
 
-    t.expectValidationError(() => {
+    t.shouldThrow(shouldError ? 'TypeError' : false, () => {
       t.device.createRenderBundleEncoder({
         colorFormats: [],
         depthStencilFormat,
         depthReadOnly,
         stencilReadOnly,
       });
-    }, shouldError);
+    });
   });
 
 g.test('depth_stencil_readonly_with_undefined_depth')
