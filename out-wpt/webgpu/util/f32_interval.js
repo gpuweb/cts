@@ -334,3 +334,14 @@ export function atanInterval(n) {
 
   return runPointOp(toInterval(n), op);
 }
+
+/** Calculate an acceptance interval of ceil(x) */
+export function ceilInterval(n) {
+  const op = {
+    impl: impl_n => {
+      return correctlyRoundedInterval(Math.ceil(impl_n));
+    },
+  };
+
+  return runPointOp(toInterval(n), op);
+}

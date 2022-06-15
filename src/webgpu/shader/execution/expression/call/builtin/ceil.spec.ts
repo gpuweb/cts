@@ -10,11 +10,10 @@ Returns the ceiling of e. Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { correctlyRoundedMatch } from '../../../../../util/compare.js';
-import { kBit } from '../../../../../util/constants.js';
-import { f32, f32Bits, TypeF32 } from '../../../../../util/conversion.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
+import { ceilInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../../util/math.js';
-import { allInputSources, Case, Config, makeUnaryF32Case, run } from '../../expression.js';
+import { allInputSources, Case, makeUnaryF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -35,39 +34,27 @@ g.test('f32')
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cfg: Config = t.params;
-    cfg.cmpFloats = correctlyRoundedMatch();
-
     const makeCase = (x: number): Case => {
-      return makeUnaryF32Case(x, Math.ceil);
+      return makeUnaryF32IntervalCase(x, ceilInterval);
     };
 
     const cases: Array<Case> = [
       // Small positive numbers
-      { input: f32(0.1), expected: f32(1.0) },
-      { input: f32(0.9), expected: f32(1.0) },
-      { input: f32(1.1), expected: f32(2.0) },
-      { input: f32(1.9), expected: f32(2.0) },
-
+      0.1,
+      0.9,
+      1.0,
+      1.1,
+      1.9,
       // Small negative numbers
-      { input: f32(-0.1), expected: f32(0.0) },
-      { input: f32(-0.9), expected: f32(0.0) },
-      { input: f32(-1.1), expected: f32(-1.0) },
-      { input: f32(-1.9), expected: f32(-1.0) },
+      -0.1,
+      -0.9,
+      -1.0,
+      -1.1,
+      -1.9,
+      ...fullF32Range(),
+    ].map(x => makeCase(x));
 
-      // Min and Max f32
-      { input: f32Bits(kBit.f32.negative.max), expected: f32(0.0) },
-      { input: f32Bits(kBit.f32.negative.min), expected: f32Bits(kBit.f32.negative.min) },
-      { input: f32Bits(kBit.f32.positive.min), expected: f32(1.0) },
-      { input: f32Bits(kBit.f32.positive.max), expected: f32Bits(kBit.f32.positive.max) },
-
-      // Infinity f32
-      { input: f32Bits(kBit.f32.infinity.negative), expected: f32Bits(kBit.f32.infinity.negative) },
-      { input: f32Bits(kBit.f32.infinity.positive), expected: f32Bits(kBit.f32.infinity.positive) },
-      ...fullF32Range().map(x => makeCase(x)),
-    ];
-
-    run(t, builtin('ceil'), [TypeF32], TypeF32, cfg, cases);
+    run(t, builtin('ceil'), [TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('f16')
