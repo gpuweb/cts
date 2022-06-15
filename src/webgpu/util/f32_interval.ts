@@ -465,3 +465,14 @@ export function exp2Interval(x: number | F32Interval): F32Interval {
 
   return runPointOp(toInterval(x), op);
 }
+
+/** Calculate an acceptance interval of floor(x) */
+export function floorInterval(n: number): F32Interval {
+  const op: PointToIntervalOp = {
+    impl: (impl_n: number): F32Interval => {
+      return correctlyRoundedInterval(Math.floor(impl_n));
+    },
+  };
+
+  return runPointOp(toInterval(n), op);
+}
