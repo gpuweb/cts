@@ -1199,6 +1199,7 @@ g.test('f32LimitsEquivalency')
     { bits: kBit.f32.positive.pi.third, value: kValue.f32.positive.pi.third },
     { bits: kBit.f32.positive.pi.quarter, value: kValue.f32.positive.pi.quarter },
     { bits: kBit.f32.positive.pi.sixth, value: kValue.f32.positive.pi.sixth },
+    { bits: kBit.f32.positive.e, value: kValue.f32.positive.e },
     { bits: kBit.f32.negative.max, value: kValue.f32.negative.max },
     { bits: kBit.f32.negative.min, value: kValue.f32.negative.min },
     { bits: kBit.f32.negative.nearest_min, value: kValue.f32.negative.nearest_min },
