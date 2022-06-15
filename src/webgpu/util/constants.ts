@@ -36,6 +36,7 @@ export const kBit = {
         quarter: 0x3f49_0fdb,
         sixth: 0x3f06_0a92,
       },
+      e: 0x402d_f854,
     },
     negative: {
       max: 0x8080_0000,
@@ -259,6 +260,7 @@ export const kValue = {
         quarter: hexToF32(kBit.f32.positive.pi.quarter),
         sixth: hexToF32(kBit.f32.positive.pi.sixth),
       },
+      e: hexToF32(kBit.f32.positive.e),
     },
     negative: {
       max: hexToF32(kBit.f32.negative.max),
