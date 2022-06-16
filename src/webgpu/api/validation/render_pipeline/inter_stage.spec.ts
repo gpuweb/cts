@@ -1,24 +1,13 @@
 export const description = `
-TODO: interface matching between vertex and fragment shader validation for createRenderPipeline:
-    - superset, subset, etc.
+Interface matching between vertex and fragment shader validation for createRenderPipeline:
+
+[1] TODO(dawn:1448) replace with t.device.limits.maxInterStageShaderVariables
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, range } from '../../../../common/util/util.js';
 
 import { CreateRenderPipelineValidationTest } from './common.js';
-
-// const kScalarTypes = ['i32', 'u32', 'f32'];
-// const kInterpolationTypes = ['perspective', 'linear', 'flat'];
-// const kInterpolationSamplings = ['center', 'centroid', 'sample'];
-
-// type InterStageVariable = {
-//   location: number,
-//   type: 'i32' | 'u32' | 'f32',
-//   scalarCount: number,
-//   interpolationType: 'perspective' | 'linear' | 'flat',
-//   interpolationSampling: 'center' | 'centroid' | 'sample',
-// };
 
 class InterStageMatchingValidationTest extends CreateRenderPipelineValidationTest {
   getVertexStateWithOutputs(outputs: string[]): GPUVertexState {
@@ -227,7 +216,31 @@ g.test('interpolation_sampling')
     t.doCreateRenderPipelineTest(isAsync, _success ?? output === input, descriptor);
   });
 
-// g.test('max_shader_variables,output')
+g.test('max_shader_variable_location')
+  .desc(
+    `Tests that validation should fail when there is location of user-defined output/input variable >= device.limits.maxInterStageShaderVariables`
+  )
+  .params(u =>
+    u
+      .combine('isAsync', [false, true])
+      // user defined variable location = maxInterStageShaderVariables - locationDelta
+      .combine('locationDelta', [0, -1])
+  )
+  .fn(async t => {
+    const { isAsync, locationDelta } = t.params;
+    const location = t.device.limits.maxInterStageShaderVariables - locationDelta;
+
+    const descriptor = t.getDescriptorWithStates(
+      t.getVertexStateWithOutputs([`@location(${location}) vout0: f32`]),
+      t.getFragmentStateWithInputs([`@location(${location}) fin0: f32`])
+    );
+
+    t.doCreateRenderPipelineTest(
+      isAsync,
+      location < t.device.limits.maxInterStageShaderVariables,
+      descriptor
+    );
+  });
 
 g.test('max_components_count,output')
   .desc(
@@ -251,7 +264,7 @@ g.test('max_components_count,output')
     const numVec4 = Math.floor(numScalarComponents / 4);
     const numTrialingScalars = numScalarComponents % 4;
     const numUserDefinedInterStageVariables = numTrialingScalars === 0 ? numVec4 + 1 : numVec4;
-    // TODO(dawn:1448) replace with t.device.limits.maxInterStageShaderVariables
+    // [1]
     assert(numUserDefinedInterStageVariables < 16);
 
     const outputs = range(numVec4, i => `@location(${i}) vout${i}: vec4<f32>`);
@@ -274,7 +287,7 @@ g.test('max_components_count,output')
 
 g.test('max_components_count,input')
   .desc(
-    `Tests that validation should fail when scalar components of all user-defined outputs > max vertex shader output components.`
+    `Tests that validation should fail when scalar components of all user-defined inputs > max vertex shader output components.`
   )
   .params(u =>
     u.combine('isAsync', [false, true]).combineWithParams([
@@ -295,7 +308,7 @@ g.test('max_components_count,input')
     const numVec4 = Math.floor(numScalarComponents / 4);
     const numTrialingScalars = numScalarComponents % 4;
     const numUserDefinedInterStageVariables = numTrialingScalars === 0 ? numVec4 + 1 : numVec4;
-    // TODO(dawn:1448) replace with t.device.limits.maxInterStageShaderVariables
+    // [1]
     assert(numUserDefinedInterStageVariables < 16);
 
     const outputs = range(numVec4, i => `@location(${i}) vout${i}: vec4<f32>`);
