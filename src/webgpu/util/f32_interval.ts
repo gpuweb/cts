@@ -477,6 +477,20 @@ export function floorInterval(n: number): F32Interval {
   return runPointOp(toInterval(n), op);
 }
 
+/** Calculate an acceptance interval of log(x) */
+export function logInterval(x: number | F32Interval): F32Interval {
+  const op: PointToIntervalOp = {
+    impl: (impl_x: number): F32Interval => {
+      if (x >= 0.5 && x <= 2.0) {
+        return absoluteErrorInterval(Math.log(impl_x), 2 ** -21);
+      }
+      return ulpInterval(Math.log(impl_x), 3);
+    },
+  };
+
+  return runPointOp(toInterval(x), op);
+}
+
 /** Calculate an acceptance interval of -x */
 export function negationInterval(n: number): F32Interval {
   const op: PointToIntervalOp = {
