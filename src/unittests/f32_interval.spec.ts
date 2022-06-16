@@ -552,7 +552,19 @@ g.test('ulpInterval')
 
 interface PointToIntervalCase {
   input: number;
-  expected: [number, number];
+  // If expected is an Array of two values, the test should interpret them as
+  // human readable begin/end values that need to be adjusted for the error
+  // calculation specific to the function being tested.
+  // This is to facilitate writing tests in a fluent manner, i.e. being able to
+  // express a expectation as `plusOneULP(π/2)` instead of
+  // `π/2 + ULP(π/2) + 4096 * ULP(π/2 + ULP(π/2))`
+  //
+  // If expected is an F32Interval, it is to be interpreted as an exact value,
+  // with no additional processing. This is to allow for expressing specific
+  // cases with human readable values that would require effectively
+  // implementing the entire interval system under test to accommodate them in
+  // the test error calculation.
+  expected: [number, number] | F32Interval;
 }
 
 g.test('absInterval')
@@ -589,7 +601,8 @@ g.test('absInterval')
   )
   .fn(t => {
     const input = t.params.input;
-    const expected = arrayToInterval(t.params.expected);
+    const expected =
+      t.params.expected instanceof Array ? arrayToInterval(t.params.expected) : t.params.expected;
 
     const got = absInterval(input);
     t.expect(
@@ -619,8 +632,13 @@ g.test('atanInterval')
     };
 
     const input = t.params.input;
-    const [begin, end] = t.params.expected;
-    const expected = arrayToInterval([begin - error(begin), end + error(end)]);
+    let expected: F32Interval;
+    if (t.params.expected instanceof Array) {
+      const [begin, end] = t.params.expected;
+      expected = arrayToInterval([begin - error(begin), end + error(end)]);
+    } else {
+      expected = t.params.expected;
+    }
 
     const got = atanInterval(input);
     t.expect(
@@ -660,12 +678,12 @@ g.test('ceilInterval')
       { input: kValue.f32.subnormal.positive.min, expected: [0, 1] },
       { input: kValue.f32.subnormal.negative.min, expected: [0, 0] },
       { input: kValue.f32.subnormal.negative.max, expected: [0, 0] },
-
     ]
   )
   .fn(t => {
     const input = t.params.input;
-    const expected = arrayToInterval(t.params.expected);
+    const expected =
+      t.params.expected instanceof Array ? arrayToInterval(t.params.expected) : t.params.expected;
 
     const got = ceilInterval(input);
     t.expect(
@@ -695,9 +713,16 @@ g.test('cosInterval')
   )
   .fn(t => {
     const error = 2 ** -11;
+
     const input = t.params.input;
-    const [begin, end] = t.params.expected;
-    const expected = arrayToInterval([begin - error, end + error]);
+    let expected: F32Interval;
+    if (t.params.expected instanceof Array) {
+      const [begin, end] = t.params.expected;
+      expected = arrayToInterval([begin - error, end + error]);
+    } else {
+      expected = t.params.expected;
+    }
+
     const got = cosInterval(input);
     t.expect(
       objectEquals(expected, got),
