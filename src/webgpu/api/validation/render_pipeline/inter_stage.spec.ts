@@ -223,12 +223,12 @@ g.test('max_shader_variable_location')
   .params(u =>
     u
       .combine('isAsync', [false, true])
-      // user defined variable location = maxInterStageShaderVariables - locationDelta
+      // user defined variable location = maxInterStageShaderVariables + locationDelta
       .combine('locationDelta', [0, -1])
   )
   .fn(async t => {
     const { isAsync, locationDelta } = t.params;
-    const location = t.device.limits.maxInterStageShaderVariables - locationDelta;
+    const location = t.device.limits.maxInterStageShaderVariables + locationDelta;
 
     const descriptor = t.getDescriptorWithStates(
       t.getVertexStateWithOutputs([`@location(${location}) vout0: f32`]),
@@ -291,7 +291,7 @@ g.test('max_components_count,input')
   )
   .params(u =>
     u.combine('isAsync', [false, true]).combineWithParams([
-      // Number of user-defined input scalar components in test shader = device.limits.maxInterStageShaderComponents + numScalarDelta - 4.
+      // Number of user-defined input scalar components in test shader = device.limits.maxInterStageShaderComponents + numScalarDelta - 4. (builtin position output counts for space as well)
       { numScalarDelta: 0, useExtraBuiltinInputs: false, _success: true },
       { numScalarDelta: 1, useExtraBuiltinInputs: false, _success: false },
       { numScalarDelta: 0, useExtraBuiltinInputs: true, _success: false },
