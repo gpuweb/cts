@@ -23,6 +23,14 @@ export const listing = [
       "api",
       "operation",
       "adapter",
+      "requestAdapterInfo"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
+      "adapter",
       "requestDevice"
     ]
   },
