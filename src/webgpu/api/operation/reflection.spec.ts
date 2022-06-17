@@ -3,21 +3,29 @@ Tests that object attributes which reflect the object's creation properties are 
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { GPUConst } from '../../constants.js';
 import { GPUTest } from '../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
 g.test('buffer_reflection_attributes')
   .desc(`For every buffer attribute, the corresponding descriptor value is carried over.`)
-  .params(u =>
-    u.beginSubcases().combine('descriptor', [
-      { size: 4, usage: GPUBufferUsage.VERTEX },
+  .paramsSubcasesOnly(u =>
+    u.combine('descriptor', [
+      { size: 4, usage: GPUConst.BufferUsage.VERTEX },
       {
         size: 16,
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.UNIFORM,
+        usage:
+          GPUConst.BufferUsage.STORAGE |
+          GPUConst.BufferUsage.COPY_SRC |
+          GPUConst.BufferUsage.UNIFORM,
       },
-      { size: 32, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST },
-      { size: 32, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.MAP_WRITE, invalid: true },
+      { size: 32, usage: GPUConst.BufferUsage.MAP_READ | GPUConst.BufferUsage.COPY_DST },
+      {
+        size: 32,
+        usage: GPUConst.BufferUsage.MAP_READ | GPUConst.BufferUsage.MAP_WRITE,
+        invalid: true,
+      },
     ] as const)
   )
   .fn(async t => {
@@ -33,41 +41,46 @@ g.test('buffer_reflection_attributes')
 
 g.test('texture_reflection_attributes')
   .desc(`For every texture attribute, the corresponding descriptor value is carried over.`)
-  .params(u =>
-    u.beginSubcases().combine('descriptor', [
+  .paramsSubcasesOnly(u =>
+    u.combine('descriptor', [
       {
         size: { width: 4, height: 4 },
         format: 'rgba8unorm',
-        usage: GPUTextureUsage.TEXTURE_BINDING,
+        usage: GPUConst.TextureUsage.TEXTURE_BINDING,
       },
       {
         size: { width: 8, height: 8, depthOrArrayLayers: 8 },
         format: 'bgra8unorm',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+        usage: GPUConst.TextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.COPY_SRC,
       },
       {
         size: [4, 4],
         format: 'rgba8unorm',
-        usage: GPUTextureUsage.TEXTURE_BINDING,
+        usage: GPUConst.TextureUsage.TEXTURE_BINDING,
         mipLevelCount: 2,
       },
       {
         size: [16, 16, 16],
         format: 'rgba8unorm',
-        usage: GPUTextureUsage.TEXTURE_BINDING,
+        usage: GPUConst.TextureUsage.TEXTURE_BINDING,
         dimension: '3d',
       },
-      { size: [32], format: 'rgba8unorm', usage: GPUTextureUsage.TEXTURE_BINDING, dimension: '1d' },
+      {
+        size: [32],
+        format: 'rgba8unorm',
+        usage: GPUConst.TextureUsage.TEXTURE_BINDING,
+        dimension: '1d',
+      },
       {
         size: { width: 4, height: 4 },
         format: 'rgba8unorm',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        usage: GPUConst.TextureUsage.RENDER_ATTACHMENT,
         sampleCount: 4,
       },
       {
         size: { width: 4, height: 4 },
         format: 'rgba8unorm',
-        usage: GPUTextureUsage.TEXTURE_BINDING,
+        usage: GPUConst.TextureUsage.TEXTURE_BINDING,
         sampleCount: 4,
         invalid: true,
       },
@@ -105,8 +118,8 @@ g.test('texture_reflection_attributes')
 
 g.test('query_set_reflection_attributes')
   .desc(`For every queue attribute, the corresponding descriptor value is carried over.`)
-  .params(u =>
-    u.beginSubcases().combine('descriptor', [
+  .paramsSubcasesOnly(u =>
+    u.combine('descriptor', [
       { type: 'occlusion', count: 4 },
       { type: 'occlusion', count: 16 },
       { type: 'occlusion', count: 8193, invalid: true },
