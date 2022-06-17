@@ -27,7 +27,6 @@ g.test('adapter_info')
     assert(adapter !== null);
 
     const adapterInfo = await adapter.requestAdapterInfo();
-    assert(adapterInfo !== null);
 
     t.expect(
       normalizedIdentifierRegex.test(adapterInfo.vendor),
