@@ -5,8 +5,6 @@ Tests for capability checking for features enabling optional texture formats.
 
 TODO(#902): test GPUCanvasConfiguration.format (it doesn't allow any optional formats today but the
   error might still be different - exception instead of validation.
-
-TODO(#920): test GPUTextureDescriptor.viewFormats (if/when it takes formats)
 `;
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { kAllTextureFormats, kTextureFormatInfo } from '../../../../capability_info.js';
@@ -45,6 +43,38 @@ g.test('texture_descriptor')
         format,
         size: [formatInfo.blockWidth, formatInfo.blockHeight, 1],
         usage: GPUTextureUsage.TEXTURE_BINDING,
+      });
+    });
+  });
+
+g.test('texture_descriptor_view_formats')
+  .desc(
+    `
+  Test creating a texture with view formats that have an optional texture format will fail if the
+  required optional feature is not enabled.
+  `
+  )
+  .params(u =>
+    u.combine('format', kOptionalTextureFormats).combine('enable_required_feature', [true, false])
+  )
+  .beforeAllSubcases(t => {
+    const { format, enable_required_feature } = t.params;
+
+    const formatInfo = kTextureFormatInfo[format];
+    if (enable_required_feature) {
+      t.selectDeviceOrSkipTestCase(formatInfo.feature);
+    }
+  })
+  .fn(async t => {
+    const { format, enable_required_feature } = t.params;
+
+    const formatInfo = kTextureFormatInfo[format];
+    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
+      t.device.createTexture({
+        format,
+        size: [formatInfo.blockWidth, formatInfo.blockHeight, 1],
+        usage: GPUTextureUsage.TEXTURE_BINDING,
+        viewFormats: [format],
       });
     });
   });
