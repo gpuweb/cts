@@ -98,9 +98,16 @@ g.test('texture_view_descriptor')
   .fn(async t => {
     const { format, enable_required_feature } = t.params;
 
+    // If the required feature isn't enabled then the texture will fail to create and we won't be
+    // able to test createView, so pick and alternate guaranteed format instead. This will almost
+    // certainly not be view-compatible with the format being tested, but that doesn't matter since
+    // createView should throw an exception due to the format feature not being enabled before it
+    // has a chance to validate that the view and texture formats aren't compatible.
+    const textureFormat = enable_required_feature ? format : 'rgba8unorm';
+
     const formatInfo = kTextureFormatInfo[format];
     const testTexture = t.device.createTexture({
-      format,
+      format: textureFormat,
       size: [formatInfo.blockWidth, formatInfo.blockHeight, 1] as const,
       usage: GPUTextureUsage.TEXTURE_BINDING,
     });
