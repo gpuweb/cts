@@ -604,6 +604,13 @@ export const listing = [
     "file": [
       "api",
       "validation",
+      "compute_pipeline"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
       "createBindGroup"
     ]
   },
@@ -612,13 +619,6 @@ export const listing = [
       "api",
       "validation",
       "createBindGroupLayout"
-    ]
-  },
-  {
-    "file": [
-      "api",
-      "validation",
-      "createComputePipeline"
     ]
   },
   {
