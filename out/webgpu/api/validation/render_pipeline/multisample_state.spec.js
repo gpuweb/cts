@@ -48,21 +48,20 @@ fn(async (t) => {
 
 g.test('alpha_to_coverage,sample_mask').
 desc(
-`If sample_mask builtin is a pipeline output of fragment or if multisample.mask is not 0xFFFFFFFF, multisample.alphaToCoverageEnabled should be false.`).
+`If sample_mask builtin is a pipeline output of fragment, multisample.alphaToCoverageEnabled should be false.`).
 
 params((u) =>
 u.
 combine('isAsync', [false, true]).
 combine('alphaToCoverageEnabled', [false, true]).
 beginSubcases().
-combine('hasSampleMaskOutput', [false, true]).
-combine('mask', [0, 0x1, 0x2, 0xffffffff])).
+combine('hasSampleMaskOutput', [false, true])).
 
 fn(async (t) => {
-  const { isAsync, alphaToCoverageEnabled, mask, hasSampleMaskOutput } = t.params;
+  const { isAsync, alphaToCoverageEnabled, hasSampleMaskOutput } = t.params;
 
   const descriptor = t.getDescriptor({
-    multisample: { mask, alphaToCoverageEnabled, count: 4 },
+    multisample: { alphaToCoverageEnabled, count: 4 },
     fragmentShaderCode: hasSampleMaskOutput ?
     `
       struct Output {
@@ -79,8 +78,7 @@ fn(async (t) => {
     kDefaultFragmentShaderCode });
 
 
-  const _success =
-  !(hasSampleMaskOutput || mask !== 0xffffffff) || alphaToCoverageEnabled === false;
+  const _success = !hasSampleMaskOutput || !alphaToCoverageEnabled;
   t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
 });
 //# sourceMappingURL=multisample_state.spec.js.map

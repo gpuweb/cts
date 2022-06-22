@@ -49,7 +49,7 @@ g.test('alpha_to_coverage,count')
 
 g.test('alpha_to_coverage,sample_mask')
   .desc(
-    `If sample_mask builtin is a pipeline output of fragment or if multisample.mask is not 0xFFFFFFFF, multisample.alphaToCoverageEnabled should be false.`
+    `If sample_mask builtin is a pipeline output of fragment, multisample.alphaToCoverageEnabled should be false.`
   )
   .params(u =>
     u
@@ -57,13 +57,12 @@ g.test('alpha_to_coverage,sample_mask')
       .combine('alphaToCoverageEnabled', [false, true])
       .beginSubcases()
       .combine('hasSampleMaskOutput', [false, true])
-      .combine('mask', [0, 0x1, 0x2, 0xffffffff])
   )
   .fn(async t => {
-    const { isAsync, alphaToCoverageEnabled, mask, hasSampleMaskOutput } = t.params;
+    const { isAsync, alphaToCoverageEnabled, hasSampleMaskOutput } = t.params;
 
     const descriptor = t.getDescriptor({
-      multisample: { mask, alphaToCoverageEnabled, count: 4 },
+      multisample: { alphaToCoverageEnabled, count: 4 },
       fragmentShaderCode: hasSampleMaskOutput
         ? `
       struct Output {
@@ -80,7 +79,6 @@ g.test('alpha_to_coverage,sample_mask')
         : kDefaultFragmentShaderCode,
     });
 
-    const _success =
-      !(hasSampleMaskOutput || mask !== 0xffffffff) || alphaToCoverageEnabled === false;
+    const _success = !hasSampleMaskOutput || !alphaToCoverageEnabled;
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
