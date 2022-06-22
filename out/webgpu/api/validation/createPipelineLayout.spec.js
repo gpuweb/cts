@@ -78,7 +78,16 @@ fn(async (t) => {
   });
 });
 
-g.test('number_of_bind_group_layouts_exceeds_the_maximum_value').fn(async (t) => {
+g.test('number_of_bind_group_layouts_exceeds_the_maximum_value').
+desc(
+`
+    Test that creating a pipeline layout fails with a validation error if the number of bind group
+    layouts exceeds the maximum value in the pipeline layout.
+    - Test that creation of a pipeline using the maximum number of bind groups added a bind group
+      fails.
+  `).
+
+fn(async (t) => {
   const bindGroupLayoutDescriptor = {
     entries: [] };
 
