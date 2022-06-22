@@ -1,9 +1,10 @@
 export const description = `
 createComputePipeline and createComputePipelineAsync validation tests.
+
+Note: entry point matching tests are in shader_module/entry_point.spec.ts
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { unreachable } from '../../../common/util/util.js';
 import { TShaderStage, getShaderWithEntryPoint } from '../../util/shader.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -142,26 +143,15 @@ Tests calling createComputePipeline(Async) validation for compute using <= devic
     u //
       .combine('isAsync', [true, false])
       .combineWithParams([
-        { type: 'vec4<f32>', countDeltaFromLimit: 0 },
-        { type: 'vec4<f32>', countDeltaFromLimit: 1 },
-        { type: 'mat4x4<f32>', countDeltaFromLimit: 0 },
-        { type: 'mat4x4<f32>', countDeltaFromLimit: 1 },
+        { type: 'vec4<f32>', _typeSize: 16 },
+        { type: 'mat4x4<f32>', _typeSize: 64 },
       ])
+      .beginSubcases()
+      .combine('countDeltaFromLimit', [0, 1])
   )
   .fn(async t => {
-    const { isAsync, type, countDeltaFromLimit } = t.params;
-    let countAtLimit = 0;
-    switch (type) {
-      case 'vec4<f32>':
-        countAtLimit = Math.floor(t.device.limits.maxComputeWorkgroupStorageSize / 16);
-        break;
-      case 'mat4x4<f32>':
-        countAtLimit = Math.floor(t.device.limits.maxComputeWorkgroupStorageSize / 64);
-        break;
-      default:
-        unreachable();
-    }
-
+    const { isAsync, type, _typeSize, countDeltaFromLimit } = t.params;
+    const countAtLimit = Math.floor(t.device.limits.maxComputeWorkgroupStorageSize / _typeSize);
     const count = countAtLimit + countDeltaFromLimit;
 
     const descriptor = {
@@ -191,9 +181,13 @@ Tests calling createComputePipeline(Async) validation for compute using <= devic
     u //
       .combine('isAsync', [true, false])
       .combine('size', [
-        // Assume maxComputeWorkgroupSizeX >= 256
-        [256, 1, 1],
-        [256, 2, 1],
+        // Assume maxComputeWorkgroupSizeX/Y >= 129, maxComputeWorkgroupSizeZ >= 33
+        [128, 1, 2],
+        [129, 1, 2],
+        [2, 128, 1],
+        [2, 129, 1],
+        [1, 8, 32],
+        [1, 8, 33],
       ])
   )
   .fn(async t => {
@@ -233,6 +227,8 @@ Tests calling createComputePipeline(Async) validation for compute workgroup_size
         [64],
         [256, 1, 1],
         [257, 1, 1],
+        [1, 256, 1],
+        [1, 257, 1],
         [1, 1, 63],
         [1, 1, 64],
         [1, 1, 65],
