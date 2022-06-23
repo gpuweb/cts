@@ -663,15 +663,6 @@ export const listing = [
       "validation",
       "encoding",
       "cmds",
-      "buffer_texture_copies"
-    ]
-  },
-  {
-    "file": [
-      "api",
-      "validation",
-      "encoding",
-      "cmds",
       "clearBuffer"
     ]
   },
@@ -898,6 +889,14 @@ export const listing = [
       "validation",
       "image_copy",
       "buffer_related"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "image_copy",
+      "buffer_texture_copies"
     ]
   },
   {

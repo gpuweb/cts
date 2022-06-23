@@ -3,20 +3,17 @@
  **/ export const description = `
 copyTextureToBuffer and copyBufferToTexture validation tests not covered by
 the general image_copy tests, or by destroyed,*.
-
-TODO:
-- Move all the tests here to image_copy/.
 `;
-import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { assert, unreachable } from '../../../../../common/util/util.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { assert, unreachable } from '../../../../common/util/util.js';
 import {
   kDepthStencilFormats,
   depthStencilBufferTextureCopySupported,
   depthStencilFormatAspectSize,
-} from '../../../../capability_info.js';
-import { align } from '../../../../util/math.js';
-import { kBufferCopyAlignment, kBytesPerRowAlignment } from '../../../../util/texture/layout.js';
-import { ValidationTest } from '../../validation_test.js';
+} from '../../../capability_info.js';
+import { align } from '../../../util/math.js';
+import { kBufferCopyAlignment, kBytesPerRowAlignment } from '../../../util/texture/layout.js';
+import { ValidationTest } from '../validation_test.js';
 
 class ImageCopyTest extends ValidationTest {
   testCopyBufferToTexture(source, destination, copySize, isSuccess) {
@@ -48,7 +45,7 @@ g.test('depth_stencil_format,copy_usage_and_aspect')
   Validate the combination of usage and aspect of each depth stencil format in copyBufferToTexture,
   copyTextureToBuffer and writeTexture. See https://gpuweb.github.io/gpuweb/#depth-formats for more
   details.
-`
+  `
   )
   .params(u =>
     u //
@@ -104,7 +101,7 @@ g.test('depth_stencil_format,copy_buffer_size')
   - if the copy can be successfully executed with the minimum required buffer size.
   - if the copy fails with a validation error when the buffer size is less than the minimum
   required buffer size.
-`
+  `
   )
   .params(u =>
     u
