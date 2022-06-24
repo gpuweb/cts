@@ -1,0 +1,44 @@
+<html>
+  <title>WebGPU canvas_use_as_image_source_opaque (ref)</title>
+  <meta charset="utf-8" />
+  <link rel="help" href="https://gpuweb.github.io/gpuweb/" />
+  <canvas id="src" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <canvas id="dst_draw_image" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <canvas id="dst_data_url" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <canvas id="dst_blob" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <canvas id="dst_create_image_bitmap" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <canvas id="dst_tex_image_2d" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <canvas id="dst_tex_sub_image_2d" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <script type="module">
+    import { 
+      useAsImageSource2dDrawImage,
+      useAsImageSourceToDataURL,
+      useAsImageSourceToBlob,
+      useAsImageSourceCreateImageBitmap,
+      useAsImageSourceWebGLTexImage2D,
+      useAsImageSourceWebGLTexSubImage2D,
+    } from './canvas_use_as_image_source_utils.html.js'
+
+    function draw(ctx) {
+      ctx.globalAlpha = 1.0;
+      ctx.fillStyle = '#660000';
+      ctx.fillRect(0, 0, 10, 10);
+      ctx.fillStyle = '#006600';
+      ctx.fillRect(10, 0, 10, 10);
+      ctx.fillStyle = '#000066';
+      ctx.fillRect(0, 10, 10, 10);
+      ctx.fillStyle = '#666600';
+      ctx.fillRect(10, 10, 10, 10);
+    }
+
+    draw(src.getContext('2d'));
+
+    useAsImageSource2dDrawImage(src, dst_draw_image);
+    useAsImageSourceToDataURL(src, dst_data_url);
+    useAsImageSourceToBlob(src, dst_blob);
+    useAsImageSourceCreateImageBitmap(src, dst_create_image_bitmap);
+    useAsImageSourceWebGLTexImage2D(src, dst_tex_image_2d);
+    useAsImageSourceWebGLTexSubImage2D(src, dst_tex_sub_image_2d);
+    
+  </script>
+</html>

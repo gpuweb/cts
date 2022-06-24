@@ -296,7 +296,7 @@ class F extends CopyToTextureUtils {
       device,
       format: 'bgra8unorm',
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
-      compositingAlphaMode: alphaMode,
+      alphaMode,
     });
 
     // BGRA8Unorm texture
@@ -352,7 +352,7 @@ class F extends CopyToTextureUtils {
 
     // The source canvas has bgra8unorm back resource. We
     // swizzle the channels to align with 2d/webgl canvas and
-    // clear alpha to opaque when context compositingAlphaMode
+    // clear alpha to opaque when context alphaMode
     // is set to opaque (follow webgpu spec).
     for (let i = 0; i < height; ++i) {
       for (let j = 0; j < width; ++j) {
@@ -556,7 +556,7 @@ g.test('copy_contents_from_gpu_context_canvas')
 
   TODO: Actually test alphaMode = opaque.
   And do premultiply alpha in advance if the webgpu context is created
-  with compositingAlphaMode="premultiplied".
+  with alphaMode="premultiplied".
 
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the canvas contents.

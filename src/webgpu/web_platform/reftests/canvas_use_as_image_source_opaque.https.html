@@ -1,0 +1,32 @@
+<html class="reftest-wait">
+  <title>WebGPU canvas_use_as_image_source_opaque</title>
+  <meta charset="utf-8" />
+  <link rel="help" href="https://gpuweb.github.io/gpuweb/" />
+  <meta
+    name="assert"
+    content="WebGPU canvas should copy the image applying the correct alpha mode."
+  />
+  <link rel="match" href="./ref/canvas_use_as_image_source_opaque-ref.html" />
+
+  <canvas id="src" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <canvas id="dst_draw_image" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <canvas id="dst_data_url" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <canvas id="dst_blob" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <canvas id="dst_create_image_bitmap" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <canvas id="dst_tex_image_2d" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <canvas id="dst_tex_sub_image_2d" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+
+  <script src="/common/reftest-wait.js"></script>
+  <script type="module">
+    import { run } from './canvas_use_as_image_source.html.js';
+    run('opaque',
+      src,
+      dst_draw_image,
+      dst_data_url,
+      dst_blob,
+      dst_create_image_bitmap,
+      dst_tex_image_2d,
+      dst_tex_sub_image_2d,
+    );
+  </script>
+</html>
