@@ -17,9 +17,14 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('number_of_dynamic_buffers_exceeds_the_maximum_value')
   .desc(
-    `TODO: describe
+    `
+    Test that creating a pipeline layout fails with a validation error if the number of dynamic
+    buffers exceeds the maximum value in the pipeline layout.
+    - Test that creation of a pipeline using the maximum number of dynamic buffers added a dynamic
+      buffer fails.
 
-TODO(#230): Update to enforce per-stage and per-pipeline-layout limits on BGLs as well.`
+    TODO(#230): Update to enforce per-stage and per-pipeline-layout limits on BGLs as well.
+  `
   )
   .paramsSubcasesOnly(u =>
     u //
@@ -73,35 +78,44 @@ TODO(#230): Update to enforce per-stage and per-pipeline-layout limits on BGLs a
     });
   });
 
-g.test('number_of_bind_group_layouts_exceeds_the_maximum_value').fn(async t => {
-  const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
-    entries: [],
-  };
+g.test('number_of_bind_group_layouts_exceeds_the_maximum_value')
+  .desc(
+    `
+    Test that creating a pipeline layout fails with a validation error if the number of bind group
+    layouts exceeds the maximum value in the pipeline layout.
+    - Test that creation of a pipeline using the maximum number of bind groups added a bind group
+      fails.
+  `
+  )
+  .fn(async t => {
+    const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
+      entries: [],
+    };
 
-  // 4 is the maximum number of bind group layouts.
-  const maxBindGroupLayouts = [1, 2, 3, 4].map(() =>
-    t.device.createBindGroupLayout(bindGroupLayoutDescriptor)
-  );
+    // 4 is the maximum number of bind group layouts.
+    const maxBindGroupLayouts = [1, 2, 3, 4].map(() =>
+      t.device.createBindGroupLayout(bindGroupLayoutDescriptor)
+    );
 
-  const goodPipelineLayoutDescriptor = {
-    bindGroupLayouts: maxBindGroupLayouts,
-  };
+    const goodPipelineLayoutDescriptor = {
+      bindGroupLayouts: maxBindGroupLayouts,
+    };
 
-  // Control case
-  t.device.createPipelineLayout(goodPipelineLayoutDescriptor);
+    // Control case
+    t.device.createPipelineLayout(goodPipelineLayoutDescriptor);
 
-  // Check bind group layouts exceed maximum in pipeline layout.
-  const badPipelineLayoutDescriptor = {
-    bindGroupLayouts: [
-      ...maxBindGroupLayouts,
-      t.device.createBindGroupLayout(bindGroupLayoutDescriptor),
-    ],
-  };
+    // Check bind group layouts exceed maximum in pipeline layout.
+    const badPipelineLayoutDescriptor = {
+      bindGroupLayouts: [
+        ...maxBindGroupLayouts,
+        t.device.createBindGroupLayout(bindGroupLayoutDescriptor),
+      ],
+    };
 
-  t.expectValidationError(() => {
-    t.device.createPipelineLayout(badPipelineLayoutDescriptor);
+    t.expectValidationError(() => {
+      t.device.createPipelineLayout(badPipelineLayoutDescriptor);
+    });
   });
-});
 
 g.test('bind_group_layouts,device_mismatch')
   .desc(

@@ -1,14 +1,11 @@
 export const description = `
 Tests for capability checking for features enabling optional texture formats.
-
-TODO(#902): test GPUCanvasConfiguration.format (it doesn't allow any optional formats today but the
-  error might still be different - exception instead of validation.
-
-TODO(#920): test GPUTextureDescriptor.viewFormats (if/when it takes formats)
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { assert } from '../../../../../common/util/util.js';
 import { kAllTextureFormats, kTextureFormatInfo } from '../../../../capability_info.js';
+import { kAllCanvasTypes, createCanvas } from '../../../../util/create_elements.js';
 import { ValidationTest } from '../../validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);
@@ -48,6 +45,38 @@ g.test('texture_descriptor')
     });
   });
 
+g.test('texture_descriptor_view_formats')
+  .desc(
+    `
+  Test creating a texture with view formats that have an optional texture format will fail if the
+  required optional feature is not enabled.
+  `
+  )
+  .params(u =>
+    u.combine('format', kOptionalTextureFormats).combine('enable_required_feature', [true, false])
+  )
+  .beforeAllSubcases(t => {
+    const { format, enable_required_feature } = t.params;
+
+    const formatInfo = kTextureFormatInfo[format];
+    if (enable_required_feature) {
+      t.selectDeviceOrSkipTestCase(formatInfo.feature);
+    }
+  })
+  .fn(async t => {
+    const { format, enable_required_feature } = t.params;
+
+    const formatInfo = kTextureFormatInfo[format];
+    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
+      t.device.createTexture({
+        format,
+        size: [formatInfo.blockWidth, formatInfo.blockHeight, 1] as const,
+        usage: GPUTextureUsage.TEXTURE_BINDING,
+        viewFormats: [format],
+      });
+    });
+  });
+
 g.test('texture_view_descriptor')
   .desc(
     `
@@ -69,9 +98,16 @@ g.test('texture_view_descriptor')
   .fn(async t => {
     const { format, enable_required_feature } = t.params;
 
+    // If the required feature isn't enabled then the texture will fail to create and we won't be
+    // able to test createView, so pick and alternate guaranteed format instead. This will almost
+    // certainly not be view-compatible with the format being tested, but that doesn't matter since
+    // createView should throw an exception due to the format feature not being enabled before it
+    // has a chance to validate that the view and texture formats aren't compatible.
+    const textureFormat = enable_required_feature ? format : 'rgba8unorm';
+
     const formatInfo = kTextureFormatInfo[format];
     const testTexture = t.device.createTexture({
-      format,
+      format: textureFormat,
       size: [formatInfo.blockWidth, formatInfo.blockHeight, 1] as const,
       usage: GPUTextureUsage.TEXTURE_BINDING,
     });
@@ -87,6 +123,52 @@ g.test('texture_view_descriptor')
     t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
       testTexture.createView(testViewDesc);
     });
+  });
+
+g.test('canvas_configuration')
+  .desc(
+    `
+  Test configuring a canvas with optional texture formats will throw an exception if the required
+  optional feature is not enabled. Otherwise, a validation error should be generated instead of
+  throwing an exception.
+  `
+  )
+  .params(u =>
+    u
+      .combine('format', kOptionalTextureFormats)
+      .combine('canvasType', kAllCanvasTypes)
+      .combine('enable_required_feature', [true, false])
+  )
+  .beforeAllSubcases(t => {
+    const { format, enable_required_feature } = t.params;
+
+    const formatInfo = kTextureFormatInfo[format];
+    if (enable_required_feature) {
+      t.selectDeviceOrSkipTestCase(formatInfo.feature);
+    }
+  })
+  .fn(async t => {
+    const { format, canvasType, enable_required_feature } = t.params;
+
+    const canvas = createCanvas(t, canvasType, 2, 2);
+    const ctx = canvas.getContext('webgpu' as const);
+    assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+
+    const canvasConf = {
+      device: t.device,
+      format,
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+    };
+
+    if (enable_required_feature) {
+      t.expectValidationError(() => {
+        ctx.configure(canvasConf);
+      });
+    } else {
+      t.shouldThrow('TypeError', () => {
+        ctx.configure(canvasConf);
+      });
+    }
   });
 
 g.test('storage_texture_binding_layout')
