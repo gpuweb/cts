@@ -65,8 +65,8 @@ export function getPlainTypeInfo(sampleType: GPUTextureSampleType): keyof typeof
  *
  * return:
  * struct Outputs {
- *     @location(0) o1 : vec4<f32>;
- *     @location(2) o3 : vec2<u32>;
+ *     @location(0) o1 : vec4<f32>,
+ *     @location(2) o3 : vec2<u32>,
  * }
  * @fragment fn main() -> Outputs {
  *     return Outputs(vec4<f32>(1.0, 0.0, 1.0, 1.0), vec4<u32>(1, 2));

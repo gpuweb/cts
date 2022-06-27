@@ -22,7 +22,7 @@ GPUComputePipeline.`
       compute: {
         module: t.device.createShaderModule({
           code: `
-            struct Buffer { data: array<u32>; };
+            struct Buffer { data: array<u32>, };
             @group(0) @binding(0) var<storage, read_write> buffer: Buffer;
             @compute @workgroup_size(1) fn main(
                 @builtin(global_invocation_id) id: vec3<u32>) {
@@ -67,7 +67,7 @@ GPUComputePipeline.`
     const stages = iterRange(kNumIterations, i => ({
       module: t.device.createShaderModule({
         code: `
-        struct Buffer { data: u32; };
+        struct Buffer { data: u32, };
         @group(0) @binding(0) var<storage, read_write> buffer: Buffer;
         @compute @workgroup_size(1) fn main${i}() {
           buffer.data = buffer.data + 1u;
@@ -111,7 +111,7 @@ groups.`
     );
     const module = t.device.createShaderModule({
       code: `
-        struct Buffer { data: array<u32>; };
+        struct Buffer { data: array<u32>, };
         @group(0) @binding(0) var<storage, read_write> buffer1: Buffer;
         @group(0) @binding(1) var<storage, read_write> buffer2: Buffer;
         @compute @workgroup_size(1) fn main(
@@ -163,7 +163,7 @@ g.test('many_dispatches')
     const buffer = t.makeBufferWithContents(data, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
     const module = t.device.createShaderModule({
       code: `
-        struct Buffer { data: array<u32>; };
+        struct Buffer { data: array<u32>, };
         @group(0) @binding(0) var<storage, read_write> buffer: Buffer;
         @compute @workgroup_size(1) fn main(
             @builtin(global_invocation_id) id: vec3<u32>) {
@@ -208,7 +208,7 @@ g.test('huge_dispatches')
     const buffer = t.makeBufferWithContents(data, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
     const module = t.device.createShaderModule({
       code: `
-        struct Buffer { data: array<u32>; };
+        struct Buffer { data: array<u32>, };
         @group(0) @binding(0) var<storage, read_write> buffer: Buffer;
         @compute @workgroup_size(1) fn main(
             @builtin(global_invocation_id) id: vec3<u32>) {
