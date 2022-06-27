@@ -443,3 +443,14 @@ export function cosInterval(n: number): F32Interval {
 
   return runPointOp(toInterval(n), op);
 }
+
+/** Calculate an acceptance interval for exp(x) */
+export function expInterval(x: number | F32Interval): F32Interval {
+  const op: PointToIntervalOp = {
+    impl: (impl_x: number): F32Interval => {
+      return ulpInterval(Math.exp(impl_x), 3 + 2 * Math.abs(impl_x));
+    },
+  };
+
+  return runPointOp(toInterval(x), op);
+}

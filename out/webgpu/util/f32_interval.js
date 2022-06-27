@@ -443,4 +443,15 @@ export function cosInterval(n) {
 
   return runPointOp(toInterval(n), op);
 }
+
+/** Calculate an acceptance interval for exp(x) */
+export function expInterval(x) {
+  const op = {
+    impl: (impl_x) => {
+      return ulpInterval(Math.exp(impl_x), 3 + 2 * Math.abs(impl_x));
+    } };
+
+
+  return runPointOp(toInterval(x), op);
+}
 //# sourceMappingURL=f32_interval.js.map

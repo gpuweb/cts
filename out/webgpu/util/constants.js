@@ -34,8 +34,9 @@ export const kBit = { // Limits of int32
         half: 0x3fc9_0fdb,
         third: 0x3f86_0a92,
         quarter: 0x3f49_0fdb,
-        sixth: 0x3f06_0a92 } },
+        sixth: 0x3f06_0a92 },
 
+      e: 0x402d_f854 },
 
     negative: {
       max: 0x8080_0000,
@@ -257,8 +258,9 @@ export const kValue = {
         half: hexToF32(kBit.f32.positive.pi.half),
         third: hexToF32(kBit.f32.positive.pi.third),
         quarter: hexToF32(kBit.f32.positive.pi.quarter),
-        sixth: hexToF32(kBit.f32.positive.pi.sixth) } },
+        sixth: hexToF32(kBit.f32.positive.pi.sixth) },
 
+      e: hexToF32(kBit.f32.positive.e) },
 
     negative: {
       max: hexToF32(kBit.f32.negative.max),

@@ -12,6 +12,7 @@ atanInterval,
 ceilInterval,
 correctlyRoundedInterval,
 cosInterval,
+expInterval,
 F32Interval,
 ulpInterval } from
 '../webgpu/util/f32_interval.js';
@@ -555,6 +556,18 @@ fn((t) => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 g.test('absInterval').
 paramsSubcasesOnly(
 
@@ -589,7 +602,8 @@ paramsSubcasesOnly(
 
 fn((t) => {
   const input = t.params.input;
-  const expected = arrayToInterval(t.params.expected);
+  const expected =
+  t.params.expected instanceof Array ? arrayToInterval(t.params.expected) : t.params.expected;
 
   const got = absInterval(input);
   t.expect(
@@ -619,8 +633,13 @@ fn((t) => {
   };
 
   const input = t.params.input;
-  const [begin, end] = t.params.expected;
-  const expected = arrayToInterval([begin - error(begin), end + error(end)]);
+  let expected;
+  if (t.params.expected instanceof Array) {
+    const [begin, end] = t.params.expected;
+    expected = arrayToInterval([begin - error(begin), end + error(end)]);
+  } else {
+    expected = t.params.expected;
+  }
 
   const got = atanInterval(input);
   t.expect(
@@ -662,10 +681,10 @@ paramsSubcasesOnly(
 { input: kValue.f32.subnormal.negative.max, expected: [0, 0] }]).
 
 
-
 fn((t) => {
   const input = t.params.input;
-  const expected = arrayToInterval(t.params.expected);
+  const expected =
+  t.params.expected instanceof Array ? arrayToInterval(t.params.expected) : t.params.expected;
 
   const got = ceilInterval(input);
   t.expect(
@@ -695,13 +714,52 @@ paramsSubcasesOnly(
 
 fn((t) => {
   const error = 2 ** -11;
+
   const input = t.params.input;
-  const [begin, end] = t.params.expected;
-  const expected = arrayToInterval([begin - error, end + error]);
+  let expected;
+  if (t.params.expected instanceof Array) {
+    const [begin, end] = t.params.expected;
+    expected = arrayToInterval([begin - error, end + error]);
+  } else {
+    expected = t.params.expected;
+  }
+
   const got = cosInterval(input);
   t.expect(
   objectEquals(expected, got),
   `cosInterval(${input}) returned ${got}. Expected ${expected}`);
+
+});
+
+g.test('expInterval').
+paramsSubcasesOnly(
+
+[
+{ input: Number.NEGATIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+{ input: 0, expected: [1, 1] },
+{ input: 1, expected: [kValue.f32.positive.e, plusOneULP(kValue.f32.positive.e)] },
+{ input: 89, expected: arrayToInterval([kValue.f32.positive.max, Number.POSITIVE_INFINITY]) }]).
+
+
+fn((t) => {
+  const error = (input, result) => {
+    const n = 3 + 2 * Math.abs(input);
+    return n * oneULP(result);
+  };
+
+  const input = t.params.input;
+  let expected;
+  if (t.params.expected instanceof Array) {
+    const [begin, end] = t.params.expected;
+    expected = arrayToInterval([begin - error(input, begin), end + error(input, end)]);
+  } else {
+    expected = t.params.expected;
+  }
+
+  const got = expInterval(input);
+  t.expect(
+  objectEquals(expected, got),
+  `expInterval(${input}) returned ${got}. Expected ${expected}`);
 
 });
 //# sourceMappingURL=f32_interval.spec.js.map
