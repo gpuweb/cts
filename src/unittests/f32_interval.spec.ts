@@ -763,7 +763,7 @@ g.test('expInterval')
       `expInterval(${input}) returned ${got}. Expected ${expected}`
     );
   });
-      
+
 g.test('exp2Interval')
   .paramsSubcasesOnly<PointToIntervalCase>(
     // prettier-ignore
