@@ -25,17 +25,26 @@ import { ValidationTest } from './validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);
 
-g.test('zero_size')
+g.test('zero_size_and_usage')
   .desc(
     `Test texture creation with zero or nonzero size of
-    width, height, depthOrArrayLayers and mipLevelCount for every dimension, and representative formats.`
+    width, height, depthOrArrayLayers and mipLevelCount, usage for every dimension, and
+    representative formats.
+  `
   )
   .params(u =>
     u
       .combine('dimension', [undefined, ...kTextureDimensions])
       .combine('format', ['rgba8unorm', 'rgb10a2unorm', 'bc1-rgba-unorm', 'depth24plus-stencil8'])
       .beginSubcases()
-      .combine('zeroArgument', ['none', 'width', 'height', 'depthOrArrayLayers', 'mipLevelCount'])
+      .combine('zeroArgument', [
+        'none',
+        'width',
+        'height',
+        'depthOrArrayLayers',
+        'mipLevelCount',
+        'usage',
+      ])
 
       // Filter out incompatible dimension type and format combinations.
       .filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format))
@@ -51,6 +60,7 @@ g.test('zero_size')
 
     const size = [info.blockWidth, info.blockHeight, 1];
     let mipLevelCount = 1;
+    let usage = GPUTextureUsage.TEXTURE_BINDING;
 
     switch (zeroArgument) {
       case 'width':
@@ -65,6 +75,9 @@ g.test('zero_size')
       case 'mipLevelCount':
         mipLevelCount = 0;
         break;
+      case 'usage':
+        usage = 0;
+        break;
       default:
         break;
     }
@@ -74,7 +87,7 @@ g.test('zero_size')
       mipLevelCount,
       dimension,
       format,
-      usage: GPUTextureUsage.TEXTURE_BINDING,
+      usage,
     };
 
     const success = zeroArgument === 'none';
