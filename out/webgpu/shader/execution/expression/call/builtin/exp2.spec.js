@@ -9,11 +9,11 @@ T is S or vecN<S>
 Returns 2 raised to the power e (e.g. 2^e). Component-wise when T is a vector.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { ulpComparator } from '../../../../../util/compare.js';
-import { kBit, kValue } from '../../../../../util/constants.js';
-import { f32, f32Bits, TypeF32 } from '../../../../../util/conversion.js';
-import { biasedRange } from '../../../../../util/math.js';
-import { allInputSources, run } from '../../expression.js';
+import { kValue } from '../../../../../util/constants.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
+import { exp2Interval } from '../../../../../util/f32_interval.js';
+import { biasedRange, linearRange } from '../../../../../util/math.js';
+import { allInputSources, makeUnaryF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -34,24 +34,20 @@ params((u) =>
 u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
-  const n = (x) => {
-    return 3 + 2 * Math.abs(x);
-  };
-
   const makeCase = (x) => {
-    const expected = f32(Math.pow(2, x));
-    return { input: f32(x), expected: ulpComparator(x, expected, n) };
+    return makeUnaryF32IntervalCase(x, exp2Interval);
   };
 
   // floor(log2(max f32 value)) = 127, so exp2(127) will be within range of a f32, but exp2(128) will not
+  // floor(ln(max f64 value)) = 1023, so exp2(1023) can be handled by the testing framework, but exp2(1024) will misbehave
   const cases = [
-  makeCase(0), // Returns 1 by definition
-  makeCase(-127), // Returns subnormal value
-  makeCase(kValue.f32.negative.min), // Closest to returning 0 as possible
-  { input: f32(128), expected: f32Bits(kBit.f32.infinity.positive) }, // Overflows
-  ...biasedRange(kValue.f32.negative.max, -127, 100).map((x) => makeCase(x)),
-  ...biasedRange(kValue.f32.positive.min, 127, 100).map((x) => makeCase(x))];
-
+  0, // Returns 1 by definition
+  -128, // Returns subnormal value
+  kValue.f32.negative.min, // Closest to returning 0 as possible
+  ...biasedRange(kValue.f32.negative.max, -127, 100),
+  ...biasedRange(kValue.f32.positive.min, 127, 100),
+  ...linearRange(128, 1023, 10) // Overflows f32, but not f64
+  ].map((x) => makeCase(x));
 
   run(t, builtin('exp2'), [TypeF32], TypeF32, t.params, cases);
 });
