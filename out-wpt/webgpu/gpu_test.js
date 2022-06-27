@@ -384,7 +384,7 @@ export class GPUTest extends Fixture {
 
     const readsPerRow = Math.ceil(minBytesPerRow / expectedDataSize);
     const reducer = `
-    struct Buffer { data: array<u32>; };
+    struct Buffer { data: array<u32>, };
     @group(0) @binding(0) var<storage, read> expected: Buffer;
     @group(0) @binding(1) var<storage, read> in: Buffer;
     @group(0) @binding(2) var<storage, read_write> out: Buffer;

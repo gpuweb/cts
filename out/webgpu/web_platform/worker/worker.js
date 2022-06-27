@@ -14,7 +14,7 @@ async function basicTest() {
     compute: {
       module: device.createShaderModule({
         code: `
-          struct Buffer { data: array<u32>; };
+          struct Buffer { data: array<u32>, };
 
           @group(0) @binding(0) var<storage, read_write> buffer: Buffer;
           @compute @workgroup_size(1u) fn main(

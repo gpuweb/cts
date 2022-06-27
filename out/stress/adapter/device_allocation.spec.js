@@ -49,7 +49,7 @@ async function createDeviceAndComputeCommands(adapter) {
       compute: {
         module: device.createShaderModule({
           code: `
-              struct Buffer { data: array<u32>; };
+              struct Buffer { data: array<u32>, };
 
               @group(0) @binding(0) var<storage, read_write> buffer: Buffer;
               @compute @workgroup_size(1) fn main(
@@ -110,7 +110,7 @@ async function createDeviceAndRenderCommands(adapter) {
   for (let pipelineIndex = 0; pipelineIndex < kNumPipelines; ++pipelineIndex) {
     const module = device.createShaderModule({
       code: `
-          struct Buffer { data: array<vec4<u32>, ${kSize * kSize / 4}>; };
+          struct Buffer { data: array<vec4<u32>, ${kSize * kSize / 4}>, };
 
           @group(0) @binding(0) var<uniform> buffer: Buffer;
           @vertex fn vmain(
