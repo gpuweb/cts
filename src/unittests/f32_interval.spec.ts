@@ -15,6 +15,7 @@ import {
   expInterval,
   exp2Interval,
   F32Interval,
+  floorInterval,
   ulpInterval,
 } from '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
@@ -793,5 +794,50 @@ g.test('exp2Interval')
     t.expect(
       objectEquals(expected, got),
       `exp2Interval(${input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('floorInterval')
+  .paramsSubcasesOnly<PointToIntervalCase>(
+    // prettier-ignore
+    [
+      { input: 0, expected: [0, 0] },
+      { input: 0.1, expected: [0, 0] },
+      { input: 0.9, expected: [0, 0] },
+      { input: 1.0, expected: [1, 1] },
+      { input: 1.1, expected: [1, 1] },
+      { input: 1.9, expected: [1, 1] },
+      { input: -0.1, expected: [-1, -1] },
+      { input: -0.9, expected: [-1, -1] },
+      { input: -1.0, expected: [-1, -1] },
+      { input: -1.1, expected: [-2, -2] },
+      { input: -1.9, expected: [-2, -2] },
+
+      // Edge cases
+      { input: Number.POSITIVE_INFINITY, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
+      { input: Number.NEGATIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+      { input: kValue.f32.positive.max, expected: [kValue.f32.positive.max, kValue.f32.positive.max] },
+      { input: kValue.f32.positive.min, expected: [0, 0] },
+      { input: kValue.f32.negative.min, expected: [kValue.f32.negative.min, kValue.f32.negative.min] },
+      { input: kValue.f32.negative.max, expected: [-1, -1] },
+      { input: kValue.powTwo.to30, expected: [kValue.powTwo.to30, kValue.powTwo.to30] },
+      { input: -kValue.powTwo.to30, expected: [-kValue.powTwo.to30, -kValue.powTwo.to30] },
+
+      // 32-bit subnormals
+      { input: kValue.f32.subnormal.positive.max, expected: [0, 0] },
+      { input: kValue.f32.subnormal.positive.min, expected: [0, 0] },
+      { input: kValue.f32.subnormal.negative.min, expected: [-1, 0] },
+      { input: kValue.f32.subnormal.negative.max, expected: [-1, 0] },
+    ]
+  )
+  .fn(t => {
+    const input = t.params.input;
+    const expected =
+      t.params.expected instanceof Array ? arrayToInterval(t.params.expected) : t.params.expected;
+
+    const got = floorInterval(input);
+    t.expect(
+      objectEquals(expected, got),
+      `floorInterval(${input}) returned ${got}. Expected ${expected}`
     );
   });
