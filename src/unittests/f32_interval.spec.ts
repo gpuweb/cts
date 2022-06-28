@@ -18,6 +18,7 @@ import {
   floorInterval,
   ulpInterval,
   negationInterval,
+  sinInterval,
 } from '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -879,5 +880,41 @@ g.test('negationInterval')
     t.expect(
       objectEquals(expected, got),
       `negationInterval(${input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('sinInterval')
+  .paramsSubcasesOnly<PointToIntervalCase>(
+    // prettier-ignore
+    [
+      // This test does not include some common cases, i.e. f(x = -π|π) = 0, because the difference between true x and x
+      // as a f32 is sufficiently large, such that the high slope of f @ x causes the results to be substantially
+      // different, so instead of getting 0 you get a value on the order of 10^-8 away from it, thus difficult to
+      // express in a human readable manner.
+      { input: Number.NEGATIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.negative.min, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.negative.pi.half, expected: [-1, plusOneULP(-1)] },
+      { input: 0, expected: [0, 0] },
+      { input: kValue.f32.positive.pi.half, expected: [minusOneULP(1), 1] },
+      { input: kValue.f32.positive.max, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: Number.POSITIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+    ]
+  )
+  .fn(t => {
+    const error = 2 ** -11;
+
+    const input = t.params.input;
+    let expected: F32Interval;
+    if (t.params.expected instanceof Array) {
+      const [begin, end] = t.params.expected;
+      expected = arrayToInterval([begin - error, end + error]);
+    } else {
+      expected = t.params.expected;
+    }
+
+    const got = sinInterval(input);
+    t.expect(
+      objectEquals(expected, got),
+      `sinInterval(${input}) returned ${got}. Expected ${expected}`
     );
   });
