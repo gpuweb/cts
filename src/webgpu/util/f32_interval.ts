@@ -476,3 +476,14 @@ export function floorInterval(n: number): F32Interval {
 
   return runPointOp(toInterval(n), op);
 }
+
+/** Calculate an acceptance interval of -x */
+export function negationInterval(n: number): F32Interval {
+  const op: PointToIntervalOp = {
+    impl: (impl_n: number): F32Interval => {
+      return correctlyRoundedInterval(-impl_n);
+    },
+  };
+
+  return runPointOp(toInterval(n), op);
+}
