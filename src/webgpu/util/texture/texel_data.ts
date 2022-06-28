@@ -122,6 +122,9 @@ export function makeClampToRange(format: EncodableTextureFormat): ComponentMapFn
   return applyEach(x => clamp(x, repr.numericRange!), repr.componentOrder);
 }
 
+// MAINTENANCE_TODO: Look into exposing this map to the test fixture so that it can be GCed at the
+// end of each test group. That would allow for caching of larger buffers (though it's unclear how
+// ofter larger buffers are used by packComponents.)
 const smallComponentDataViews = new Map();
 function getComponentDataView(byteLength: number): DataView {
   if (byteLength > 32) {

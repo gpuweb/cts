@@ -248,15 +248,13 @@ function subarrayAsU8(
     if (start === 0 && (length === undefined || length === buf.byteLength)) {
       return buf;
     }
-    return buf.subarray(start, length !== undefined ? start + length : undefined);
-  } else {
-    const byteOffset = buf.byteOffset + start * buf.BYTES_PER_ELEMENT;
-    const byteLength =
-      length !== undefined
-        ? byteOffset + length * buf.BYTES_PER_ELEMENT
-        : buf.byteLength - (byteOffset - buf.byteOffset);
-    return new Uint8Array(buf.buffer, byteOffset, byteLength);
   }
+  const byteOffset = buf.byteOffset + start * buf.BYTES_PER_ELEMENT;
+  const byteLength =
+    length !== undefined
+      ? byteOffset + length * buf.BYTES_PER_ELEMENT
+      : buf.byteLength - (byteOffset - buf.byteOffset);
+  return new Uint8Array(buf.buffer, byteOffset, byteLength);
 }
 
 /**
