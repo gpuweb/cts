@@ -409,6 +409,38 @@ export function absInterval(n: number): F32Interval {
   return runPointOp(toInterval(n), op);
 }
 
+/** Calculate an acceptance interval of x + y */
+export function additionInterval(x: number | F32Interval, y: number | F32Interval): F32Interval {
+  const inner_op = {
+    impl: (inner_x: number, inner_y: number): F32Interval => {
+      if (!isF32Finite(inner_x) && isF32Finite(inner_y)) {
+        return correctlyRoundedInterval(inner_x);
+      }
+
+      if (isF32Finite(inner_x) && !isF32Finite(inner_y)) {
+        return correctlyRoundedInterval(inner_y);
+      }
+
+      if (!isF32Finite(inner_x) && !isF32Finite(inner_y)) {
+        if (Math.sign(inner_x) === Math.sign(inner_y)) {
+          return correctlyRoundedInterval(inner_x);
+        } else {
+          return F32Interval.infinite();
+        }
+      }
+      return correctlyRoundedInterval(inner_x + inner_y);
+    },
+  };
+
+  const op: BinaryToIntervalOp = {
+    impl: (impl_x: number, impl_y: number): F32Interval => {
+      return roundAndFlushBinaryToInterval(impl_x, impl_y, inner_op);
+    },
+  };
+
+  return runBinaryOp(toInterval(x), toInterval(y), op);
+}
+
 /** Calculate an acceptance interval of atan(x) */
 export function atanInterval(n: number): F32Interval {
   const op: PointToIntervalOp = {
