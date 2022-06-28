@@ -402,3 +402,16 @@ export function negationInterval(n) {
 
   return runPointOp(toInterval(n), op);
 }
+
+/** Calculate an acceptance interval of sin(x) */
+export function sinInterval(n) {
+  const op = {
+    impl: impl_n => {
+      return kValue.f32.negative.pi.whole <= impl_n && impl_n <= kValue.f32.positive.pi.whole
+        ? absoluteErrorInterval(Math.sin(impl_n), 2 ** -11)
+        : F32Interval.infinite();
+    },
+  };
+
+  return runPointOp(toInterval(n), op);
+}
