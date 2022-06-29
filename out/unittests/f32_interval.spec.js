@@ -17,9 +17,10 @@ exp2Interval,
 F32Interval,
 floorInterval,
 logInterval,
-ulpInterval,
+log2Interval,
 negationInterval,
-sinInterval } from
+sinInterval,
+ulpInterval } from
 '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -876,6 +877,40 @@ fn((t) => {
   t.expect(
   objectEquals(expected, got),
   `logInterval(${input}) returned ${got}. Expected ${expected}`);
+
+});
+
+g.test('log2Interval').
+paramsSubcasesOnly(
+
+[
+{ input: 0, expected: arrayToInterval([Number.NEGATIVE_INFINITY, kValue.f32.negative.min]) },
+{ input: 1, expected: [0, 0] },
+{ input: 2, expected: [1, 1] },
+{ input: kValue.f32.positive.max, expected: [minusOneULP(128), 128] }]).
+
+
+fn((t) => {
+  const error = (input, result) => {
+    if (input >= 0.5 && input <= 2.0) {
+      return 2 ** -21;
+    }
+    return 3 * oneULP(result);
+  };
+
+  const input = t.params.input;
+  let expected;
+  if (t.params.expected instanceof Array) {
+    const [begin, end] = t.params.expected;
+    expected = arrayToInterval([begin - error(input, begin), end + error(input, end)]);
+  } else {
+    expected = t.params.expected;
+  }
+
+  const got = log2Interval(input);
+  t.expect(
+  objectEquals(expected, got),
+  `log2Interval(${input}) returned ${got}. Expected ${expected}`);
 
 });
 

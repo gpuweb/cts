@@ -406,6 +406,20 @@ export function logInterval(x) {
   return runPointOp(toInterval(x), op);
 }
 
+/** Calculate an acceptance interval of log2(x) */
+export function log2Interval(x) {
+  const op = {
+    impl: impl_x => {
+      if (x >= 0.5 && x <= 2.0) {
+        return absoluteErrorInterval(Math.log2(impl_x), 2 ** -21);
+      }
+      return ulpInterval(Math.log2(impl_x), 3);
+    },
+  };
+
+  return runPointOp(toInterval(x), op);
+}
+
 /** Calculate an acceptance interval of -x */
 export function negationInterval(n) {
   const op = {
