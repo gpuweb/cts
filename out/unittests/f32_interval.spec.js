@@ -16,6 +16,7 @@ expInterval,
 exp2Interval,
 F32Interval,
 floorInterval,
+logInterval,
 ulpInterval,
 negationInterval,
 sinInterval } from
@@ -841,6 +842,40 @@ fn((t) => {
   t.expect(
   objectEquals(expected, got),
   `floorInterval(${input}) returned ${got}. Expected ${expected}`);
+
+});
+
+g.test('logInterval').
+paramsSubcasesOnly(
+
+[
+{ input: 0, expected: arrayToInterval([Number.NEGATIVE_INFINITY, kValue.f32.negative.min]) },
+{ input: 1, expected: [0, 0] },
+{ input: kValue.f32.positive.e, expected: [minusOneULP(1), 1] },
+{ input: kValue.f32.positive.max, expected: [minusOneULP(hexToF32(0x42b17218)), hexToF32(0x42b17218)] } // ~88.72...
+]).
+
+fn((t) => {
+  const error = (input, result) => {
+    if (input >= 0.5 && input <= 2.0) {
+      return 2 ** -21;
+    }
+    return 3 * oneULP(result);
+  };
+
+  const input = t.params.input;
+  let expected;
+  if (t.params.expected instanceof Array) {
+    const [begin, end] = t.params.expected;
+    expected = arrayToInterval([begin - error(input, begin), end + error(input, end)]);
+  } else {
+    expected = t.params.expected;
+  }
+
+  const got = logInterval(input);
+  t.expect(
+  objectEquals(expected, got),
+  `logInterval(${input}) returned ${got}. Expected ${expected}`);
 
 });
 
