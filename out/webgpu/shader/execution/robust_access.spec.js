@@ -127,7 +127,6 @@ params((u) =>
 u.
 combineWithParams([
 { storageClass: 'storage', storageMode: 'read', access: 'read', dynamicOffset: false },
-{ storageClass: 'storage', storageMode: 'write', access: 'write', dynamicOffset: false },
 {
   storageClass: 'storage',
   storageMode: 'read_write',
@@ -141,7 +140,6 @@ combineWithParams([
   dynamicOffset: false },
 
 { storageClass: 'storage', storageMode: 'read', access: 'read', dynamicOffset: true },
-{ storageClass: 'storage', storageMode: 'write', access: 'write', dynamicOffset: true },
 { storageClass: 'storage', storageMode: 'read_write', access: 'read', dynamicOffset: true },
 {
   storageClass: 'storage',
