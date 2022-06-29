@@ -42,4 +42,36 @@ fn(async (t) => {
     t.device.createQuerySet({ type, count });
   });
 });
+
+g.test('writeTimestamp').
+desc(
+`
+  Tests that writing a timestamp throws a type error exception if the features don't contain
+  'timestamp-query'.
+  `).
+
+params((u) => u.combine('featureContainsTimestampQuery', [false, true])).
+beforeAllSubcases((t) => {
+  const { featureContainsTimestampQuery } = t.params;
+
+  const requiredFeatures = [];
+  if (featureContainsTimestampQuery) {
+    requiredFeatures.push('timestamp-query');
+  }
+
+  t.selectDeviceOrSkipTestCase({ requiredFeatures });
+}).
+fn(async (t) => {
+  const { featureContainsTimestampQuery } = t.params;
+
+  const querySet = t.device.createQuerySet({
+    type: featureContainsTimestampQuery ? 'timestamp' : 'occlusion',
+    count: 1 });
+
+  const encoder = t.createEncoder('non-pass');
+
+  t.shouldThrow(featureContainsTimestampQuery ? false : 'TypeError', () => {
+    encoder.encoder.writeTimestamp(querySet, 0);
+  });
+});
 //# sourceMappingURL=query_types.spec.js.map
