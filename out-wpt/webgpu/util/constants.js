@@ -33,6 +33,7 @@ export const kBit = {
       nearest_max: 0x7f7f_fffe,
       pi: {
         whole: 0x404_90fdb,
+        three_quarters: 0x4016_cbe4,
         half: 0x3fc9_0fdb,
         third: 0x3f86_0a92,
         quarter: 0x3f49_0fdb,
@@ -49,6 +50,7 @@ export const kBit = {
       nearest_min: 0xff7f_fffe,
       pi: {
         whole: 0xc04_90fdb,
+        three_quarters: 0xc016_cbe4,
         half: 0xbfc90fdb,
         third: 0xbf860a92,
         quarter: 0xbf49_0fdb,
@@ -265,6 +267,7 @@ export const kValue = {
       nearest_max: hexToF32(kBit.f32.positive.nearest_max),
       pi: {
         whole: hexToF32(kBit.f32.positive.pi.whole),
+        three_quarters: hexToF32(kBit.f32.positive.pi.three_quarters),
         half: hexToF32(kBit.f32.positive.pi.half),
         third: hexToF32(kBit.f32.positive.pi.third),
         quarter: hexToF32(kBit.f32.positive.pi.quarter),
@@ -280,6 +283,7 @@ export const kValue = {
       nearest_min: hexToF32(kBit.f32.negative.nearest_min),
       pi: {
         whole: hexToF32(kBit.f32.negative.pi.whole),
+        three_quarters: hexToF32(kBit.f32.negative.pi.three_quarters),
         half: hexToF32(kBit.f32.negative.pi.half),
         third: hexToF32(kBit.f32.negative.pi.third),
         quarter: hexToF32(kBit.f32.negative.pi.quarter),

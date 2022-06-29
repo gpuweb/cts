@@ -367,6 +367,37 @@ export function atanInterval(n) {
   return runPointOp(toInterval(n), op);
 }
 
+/** Calculate an acceptance interval of atan2(y, x) */
+export function atan2Interval(y, x) {
+  const op = {
+    impl: (impl_y, impl_x) => {
+      const numULP = 4096;
+      if (impl_y === 0) {
+        if (impl_x === 0) {
+          return F32Interval.infinite();
+        } else {
+          return F32Interval.span(
+            ulpInterval(kValue.f32.negative.pi.whole, numULP),
+            ulpInterval(kValue.f32.positive.pi.whole, numULP)
+          );
+        }
+      }
+      return ulpInterval(Math.atan2(impl_y, impl_x), numULP);
+    },
+    extrema: (y, x) => {
+      if (y.contains(0)) {
+        if (x.contains(0)) {
+          return [toInterval(0), toInterval(0)];
+        }
+        return [toInterval(0), x];
+      }
+      return [y, x];
+    },
+  };
+
+  return runBinaryOp(toInterval(y), toInterval(x), op);
+}
+
 /** Calculate an acceptance interval of ceil(x) */
 export function ceilInterval(n) {
   const op = {
