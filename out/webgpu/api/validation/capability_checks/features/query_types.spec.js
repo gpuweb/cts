@@ -10,39 +10,36 @@ export const g = makeTestGroup(ValidationTest);
 g.test('createQuerySet').
 desc(
 `
-Tests that creating query set shouldn't be valid without the required feature enabled.
-- createQuerySet
-  - type {occlusion, timestamp}
-  - x= {pipeline statistics, timestamp} query {enable, disable}
-
-TODO: This test should expect *synchronous* exceptions, not validation errors, per
-<https://github.com/gpuweb/gpuweb/blob/main/design/ErrorConventions.md>.
-As of this writing, the spec needs to be fixed as well.
+  Tests that creating a query set throws a type error exception if the features don't contain
+  'timestamp-query'.
+    - createQuerySet
+      - type {occlusion, timestamp}
+      - x= {pipeline statistics, timestamp} query {enable, disable}
   `).
 
 params((u) =>
 u.
 combine('type', ['occlusion', 'timestamp']).
-combine('timestampQueryEnable', [false, true])).
+combine('featureContainsTimestampQuery', [false, true])).
 
 beforeAllSubcases((t) => {
-  const { timestampQueryEnable } = t.params;
+  const { featureContainsTimestampQuery } = t.params;
 
   const requiredFeatures = [];
-  if (timestampQueryEnable) {
+  if (featureContainsTimestampQuery) {
     requiredFeatures.push('timestamp-query');
   }
 
   t.selectDeviceOrSkipTestCase({ requiredFeatures });
 }).
 fn(async (t) => {
-  const { type, timestampQueryEnable } = t.params;
+  const { type, featureContainsTimestampQuery } = t.params;
 
   const count = 1;
-  const shouldError = type === 'timestamp' && !timestampQueryEnable;
+  const shouldException = type === 'timestamp' && !featureContainsTimestampQuery;
 
-  t.expectValidationError(() => {
+  t.shouldThrow(shouldException ? 'TypeError' : false, () => {
     t.device.createQuerySet({ type, count });
-  }, shouldError);
+  });
 });
 //# sourceMappingURL=query_types.spec.js.map
