@@ -252,7 +252,7 @@ function subarrayAsU8(
   const byteOffset = buf.byteOffset + start * buf.BYTES_PER_ELEMENT;
   const byteLength =
     length !== undefined
-      ? byteOffset + length * buf.BYTES_PER_ELEMENT
+      ? length * buf.BYTES_PER_ELEMENT
       : buf.byteLength - (byteOffset - buf.byteOffset);
   return new Uint8Array(buf.buffer, byteOffset, byteLength);
 }
