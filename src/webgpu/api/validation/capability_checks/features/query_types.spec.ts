@@ -65,7 +65,7 @@ g.test('writeTimestamp')
     const { featureContainsTimestampQuery } = t.params;
 
     const querySet = t.device.createQuerySet({
-      type: 'timestamp',
+      type: featureContainsTimestampQuery ? 'timestamp' : 'occlusion',
       count: 1,
     });
     const encoder = t.createEncoder('non-pass');
