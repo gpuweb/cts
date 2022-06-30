@@ -14,16 +14,17 @@ import {
   ceilInterval,
   correctlyRoundedInterval,
   cosInterval,
+  divisionInterval,
   expInterval,
   exp2Interval,
   F32Interval,
   floorInterval,
   logInterval,
   log2Interval,
+  maxInterval,
   negationInterval,
   sinInterval,
   ulpInterval,
-  maxInterval,
 } from '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -1067,7 +1068,7 @@ g.test('additionInterval')
     const got = additionInterval(x, y);
     t.expect(
       objectEquals(expected, got),
-      `additionInterval([${x}, ${y}]) returned ${got}. Expected ${expected}`
+      `additionInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -1127,7 +1128,64 @@ g.test('atan2Interval')
     const got = atan2Interval(y, x);
     t.expect(
       objectEquals(expected, got),
-      `atan2Interval([${x}, ${y}]) returned ${got}. Expected ${expected}`
+      `atan2Interval(${x}, ${y}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('divisionInterval')
+  .paramsSubcasesOnly<BinaryToIntervalCase>(
+    // prettier-ignore
+    [
+      // 32-bit normals
+      { input: [0, 1], expected: [0, 0] },
+      { input: [0, -1], expected: [0, 0] },
+      { input: [1, 1], expected: [1, 1] },
+      { input: [1, -1], expected: [-1, -1] },
+      { input: [-1, 1], expected: [-1, -1] },
+      { input: [-1, -1], expected: [1, 1] },
+      { input: [4, 2], expected: [2, 2] },
+      { input: [-4, 2], expected: [-2, -2] },
+      { input: [4, -2], expected: [-2, -2] },
+      { input: [-4, -2], expected: [2, 2] },
+
+      // 64-bit normals
+      { input: [0, 0.1], expected: [0, 0] },
+      { input: [0, -0.1], expected: [0, 0] },
+      { input: [1, 0.1], expected: [minusOneULP(10), plusOneULP(10)] },
+      { input: [-1, 0.1], expected: [minusOneULP(-10), plusOneULP(-10)] },
+      { input: [1, -0.1], expected: [minusOneULP(-10), plusOneULP(-10)] },
+      { input: [-1, -0.1], expected: [minusOneULP(10), plusOneULP(10)] },
+
+      // Denominator out of range
+      { input: [1, Number.POSITIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [1, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [1, kValue.f32.positive.max], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [1, kValue.f32.negative.min], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [1, 0], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [1, kValue.f32.subnormal.positive.max], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+    ]
+  )
+  .fn(t => {
+    const error = (x: number): number => {
+      return 2.5 * oneULP(x);
+    };
+
+    const [x, y] = t.params.input;
+    let expected: F32Interval;
+    if (t.params.expected instanceof Array) {
+      const [begin, end] = t.params.expected;
+      expected = arrayToInterval([begin - error(begin), end + error(end)]);
+    } else {
+      expected = t.params.expected;
+    }
+
+    const got = divisionInterval(x, y);
+    t.expect(
+      objectEquals(expected, got),
+      `divisionInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
     );
   });
 
