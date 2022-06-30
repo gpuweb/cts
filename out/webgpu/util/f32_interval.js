@@ -1,7 +1,13 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { assert } from '../../common/util/util.js';import { kValue } from './constants.js';
-import { correctlyRoundedF32, flushSubnormalNumber, isF32Finite, oneULP } from './math.js';
+import {
+correctlyRoundedF32,
+flushSubnormalNumber,
+isF32Finite,
+isSubnormalNumber,
+oneULP } from
+'./math.js';
 
 /** Represents a closed interval in the f32 range */
 export class F32Interval {
@@ -505,6 +511,34 @@ export function cosInterval(n) {
 
 
   return runPointOp(toInterval(n), op);
+}
+
+/** Calculate an acceptance interval of x / y */
+export function divisionInterval(x, y) {
+  const op = {
+    impl: (impl_x, impl_y) => {
+      assert(
+      !isSubnormalNumber(impl_y),
+      `divisionInterval impl should never receive y === 0 or flush(y) === 0`);
+
+      return ulpInterval(impl_x / impl_y, 2.5);
+    } };
+
+
+  {
+    const Y = toInterval(y);
+    const lower_bound = 2 ** -126;
+    const upper_bound = 2 ** 126;
+    // division accuracy is not defined outside of |denominator| on [2 ** -126, 2 ** 126]
+    if (
+    !new F32Interval(-upper_bound, -lower_bound).contains(Y) &&
+    !new F32Interval(lower_bound, upper_bound).contains(Y))
+    {
+      return F32Interval.infinite();
+    }
+  }
+
+  return runBinaryOp(toInterval(x), toInterval(y), op);
 }
 
 /** Calculate an acceptance interval for exp(x) */
