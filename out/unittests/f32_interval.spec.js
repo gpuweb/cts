@@ -22,10 +22,11 @@ floorInterval,
 logInterval,
 log2Interval,
 maxInterval,
+minInterval,
+multiplicationInterval,
 negationInterval,
 sinInterval,
-ulpInterval,
-multiplicationInterval } from
+ulpInterval } from
 '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -1256,6 +1257,65 @@ fn((t) => {
   t.expect(
   objectEquals(expected, got),
   `maxInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
+
+});
+
+g.test('minInterval').
+paramsSubcasesOnly(
+
+[
+// 32-bit normals
+{ input: [0, 0], expected: [0, 0] },
+{ input: [1, 0], expected: [0, 0] },
+{ input: [0, 1], expected: [0, 0] },
+{ input: [-1, 0], expected: [-1, -1] },
+{ input: [0, -1], expected: [-1, -1] },
+{ input: [1, 1], expected: [1, 1] },
+{ input: [1, -1], expected: [-1, -1] },
+{ input: [-1, 1], expected: [-1, -1] },
+{ input: [-1, -1], expected: [-1, -1] },
+
+// 64-bit normals
+{ input: [0.1, 0], expected: [0, 0] },
+{ input: [0, 0.1], expected: [0, 0] },
+{ input: [-0.1, 0], expected: [hexToF32(0xbdcccccd), plusOneULP(hexToF32(0xbdcccccd))] }, // ~-0.1
+{ input: [0, -0.1], expected: [hexToF32(0xbdcccccd), plusOneULP(hexToF32(0xbdcccccd))] }, // ~-0.1
+{ input: [0.1, 0.1], expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
+{ input: [0.1, -0.1], expected: [hexToF32(0xbdcccccd), plusOneULP(hexToF32(0xbdcccccd))] }, // ~-0.1
+{ input: [-0.1, 0.1], expected: [hexToF32(0xbdcccccd), plusOneULP(hexToF32(0xbdcccccd))] }, // ~-0.1
+{ input: [-0.1, -0.1], expected: [hexToF32(0xbdcccccd), plusOneULP(hexToF32(0xbdcccccd))] }, // ~-0.1
+
+// 32-bit normals
+{ input: [kValue.f32.subnormal.positive.max, 0], expected: [0, 0] },
+{ input: [0, kValue.f32.subnormal.positive.max], expected: [0, 0] },
+{ input: [kValue.f32.subnormal.positive.min, 0], expected: [0, 0] },
+{ input: [0, kValue.f32.subnormal.positive.min], expected: [0, 0] },
+{ input: [kValue.f32.subnormal.negative.max, 0], expected: [kValue.f32.subnormal.negative.max, 0] },
+{ input: [0, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.max, 0] },
+{ input: [kValue.f32.subnormal.negative.min, 0], expected: [kValue.f32.subnormal.negative.min, 0] },
+{ input: [0, kValue.f32.subnormal.negative.min], expected: [kValue.f32.subnormal.negative.min, 0] },
+
+// Infinities
+{ input: [0, Number.POSITIVE_INFINITY], expected: [0, 0] },
+{ input: [Number.POSITIVE_INFINITY, 0], expected: [0, 0] },
+{ input: [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
+{ input: [0, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+{ input: [Number.NEGATIVE_INFINITY, 0], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+{ input: [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+{ input: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+{ input: [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] }]).
+
+
+fn((t) => {
+  const [x, y] = t.params.input;
+
+  const expected =
+  t.params.expected instanceof Array ? arrayToInterval(t.params.expected) : t.params.expected;
+
+  const got = minInterval(x, y);
+  t.expect(
+  objectEquals(expected, got),
+  `minInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
 
 });
 

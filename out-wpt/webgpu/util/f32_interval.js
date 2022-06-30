@@ -529,6 +529,17 @@ export function maxInterval(x, y) {
   return runBinaryOp(toInterval(x), toInterval(y), op);
 }
 
+/** Calculate an acceptance interval of min(x, y) */
+export function minInterval(x, y) {
+  const op = {
+    impl: (impl_x, impl_y) => {
+      return correctlyRoundedInterval(Math.min(impl_x, impl_y));
+    },
+  };
+
+  return runBinaryOp(toInterval(x), toInterval(y), op);
+}
+
 /** Calculate an acceptance interval of x * y */
 export function multiplicationInterval(x, y) {
   const inner_op = {

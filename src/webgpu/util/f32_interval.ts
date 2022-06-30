@@ -613,6 +613,17 @@ export function maxInterval(x: number | F32Interval, y: number | F32Interval): F
   return runBinaryOp(toInterval(x), toInterval(y), op);
 }
 
+/** Calculate an acceptance interval of min(x, y) */
+export function minInterval(x: number | F32Interval, y: number | F32Interval): F32Interval {
+  const op: BinaryToIntervalOp = {
+    impl: (impl_x: number, impl_y: number): F32Interval => {
+      return correctlyRoundedInterval(Math.min(impl_x, impl_y));
+    },
+  };
+
+  return runBinaryOp(toInterval(x), toInterval(y), op);
+}
+
 /** Calculate an acceptance interval of x * y */
 export function multiplicationInterval(
   x: number | F32Interval,
