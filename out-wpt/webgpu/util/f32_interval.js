@@ -529,6 +529,36 @@ export function maxInterval(x, y) {
   return runBinaryOp(toInterval(x), toInterval(y), op);
 }
 
+/** Calculate an acceptance interval of x * y */
+export function multiplicationInterval(x, y) {
+  const inner_op = {
+    impl: (inner_x, inner_y) => {
+      if (inner_x === 0 || inner_y === 0) {
+        return correctlyRoundedInterval(0);
+      }
+
+      const appropriate_infinity =
+        Math.sign(inner_x) === Math.sign(inner_y)
+          ? Number.POSITIVE_INFINITY
+          : Number.NEGATIVE_INFINITY;
+
+      if (!isF32Finite(inner_x) || !isF32Finite(inner_y)) {
+        return correctlyRoundedInterval(appropriate_infinity);
+      }
+
+      return correctlyRoundedInterval(inner_x * inner_y);
+    },
+  };
+
+  const op = {
+    impl: (impl_x, impl_y) => {
+      return roundAndFlushBinaryToInterval(impl_x, impl_y, inner_op);
+    },
+  };
+
+  return runBinaryOp(toInterval(x), toInterval(y), op);
+}
+
 /** Calculate an acceptance interval of -x */
 export function negationInterval(n) {
   const op = {

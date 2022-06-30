@@ -6,7 +6,11 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { correctlyRoundedMatch } from '../../../../util/compare.js';
 import { TypeF32 } from '../../../../util/conversion.js';
-import { additionInterval, divisionInterval } from '../../../../util/f32_interval.js';
+import {
+  additionInterval,
+  divisionInterval,
+  multiplicationInterval,
+} from '../../../../util/f32_interval.js';
 import { biasedRange, fullF32Range } from '../../../../util/math.js';
 import {
   allInputSources,
@@ -92,13 +96,8 @@ Accuracy: Correctly rounded
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cfg: Config = t.params;
-    cfg.cmpFloats = correctlyRoundedMatch();
-
     const makeCase = (lhs: number, rhs: number): Case => {
-      return makeBinaryF32Case(lhs, rhs, (l: number, r: number): number => {
-        return l * r;
-      });
+      return makeBinaryF32IntervalCase(lhs, rhs, multiplicationInterval);
     };
 
     const cases: Array<Case> = [];
@@ -109,7 +108,7 @@ Accuracy: Correctly rounded
       });
     });
 
-    run(t, binary('*'), [TypeF32, TypeF32], TypeF32, cfg, cases);
+    run(t, binary('*'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('division')
