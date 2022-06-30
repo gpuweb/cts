@@ -568,6 +568,17 @@ export function log2Interval(x: number | F32Interval): F32Interval {
   return runPointOp(toInterval(x), op);
 }
 
+/** Calculate an acceptance interval of max(x, y) */
+export function maxInterval(x: number | F32Interval, y: number | F32Interval): F32Interval {
+  const op: BinaryToIntervalOp = {
+    impl: (impl_x: number, impl_y: number): F32Interval => {
+      return correctlyRoundedInterval(Math.max(impl_x, impl_y));
+    },
+  };
+
+  return runBinaryOp(toInterval(x), toInterval(y), op);
+}
+
 /** Calculate an acceptance interval of -x */
 export function negationInterval(n: number): F32Interval {
   const op: PointToIntervalOp = {

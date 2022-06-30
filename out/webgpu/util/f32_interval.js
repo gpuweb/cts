@@ -568,6 +568,17 @@ export function log2Interval(x) {
   return runPointOp(toInterval(x), op);
 }
 
+/** Calculate an acceptance interval of max(x, y) */
+export function maxInterval(x, y) {
+  const op = {
+    impl: (impl_x, impl_y) => {
+      return correctlyRoundedInterval(Math.max(impl_x, impl_y));
+    } };
+
+
+  return runBinaryOp(toInterval(x), toInterval(y), op);
+}
+
 /** Calculate an acceptance interval of -x */
 export function negationInterval(n) {
   const op = {
