@@ -673,8 +673,15 @@ Tests encoding and finishing a writeTimestamp command on destroyed device.
       .combine('awaitLost', [true, false])
   )
   .beforeAllSubcases(t => {
+    const { type } = t.params;
+
     // writeTimestamp is only available for devices that enable the 'timestamp-query' feature.
-    t.selectDeviceForQueryTypeOrSkipTestCase('timestamp');
+    const queryTypes: GPUQueryType[] = ['timestamp'];
+    if (type !== 'timestamp') {
+      queryTypes.push(type);
+    }
+
+    t.selectDeviceForQueryTypeOrSkipTestCase(queryTypes);
   })
   .fn(async t => {
     const { type, stage, awaitLost } = t.params;
