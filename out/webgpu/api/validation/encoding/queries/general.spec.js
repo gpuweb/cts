@@ -90,9 +90,14 @@ expand('queryIndex', (p) => p.type === 'timestamp' ? [0, 2] : [0])).
 
 beforeAllSubcases((t) => {
   const { type } = t.params;
-  if (type) {
-    t.selectDeviceForQueryTypeOrSkipTestCase(type);
+
+  // writeTimestamp is only available for devices that enable the 'timestamp-query' feature.
+  const queryTypes = ['timestamp'];
+  if (type !== 'timestamp') {
+    queryTypes.push(type);
   }
+
+  t.selectDeviceForQueryTypeOrSkipTestCase(queryTypes);
 }).
 fn(async (t) => {
   const { type, queryIndex } = t.params;

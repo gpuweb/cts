@@ -90,9 +90,14 @@ Tests that write timestamp to all types of query set on all possible encoders:
   )
   .beforeAllSubcases(t => {
     const { type } = t.params;
-    if (type) {
-      t.selectDeviceForQueryTypeOrSkipTestCase(type);
+
+    // writeTimestamp is only available for devices that enable the 'timestamp-query' feature.
+    const queryTypes: GPUQueryType[] = ['timestamp'];
+    if (type !== 'timestamp') {
+      queryTypes.push(type);
     }
+
+    t.selectDeviceForQueryTypeOrSkipTestCase(queryTypes);
   })
   .fn(async t => {
     const { type, queryIndex } = t.params;

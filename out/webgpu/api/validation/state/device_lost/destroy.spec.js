@@ -674,7 +674,14 @@ combine('awaitLost', [true, false])).
 
 beforeAllSubcases((t) => {
   const { type } = t.params;
-  t.selectDeviceForQueryTypeOrSkipTestCase(type);
+
+  // writeTimestamp is only available for devices that enable the 'timestamp-query' feature.
+  const queryTypes = ['timestamp'];
+  if (type !== 'timestamp') {
+    queryTypes.push(type);
+  }
+
+  t.selectDeviceForQueryTypeOrSkipTestCase(queryTypes);
 }).
 fn(async (t) => {
   const { type, stage, awaitLost } = t.params;
