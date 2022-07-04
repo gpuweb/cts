@@ -574,6 +574,21 @@ export function floorInterval(n: number): F32Interval {
   return runPointOp(toInterval(n), op);
 }
 
+/** Calculate an acceptance interval of inverseSqrt(x) */
+export function inverseSqrtInterval(n: number | F32Interval): F32Interval {
+  const op: PointToIntervalOp = {
+    impl: (impl_n: number): F32Interval => {
+      if (impl_n <= 0) {
+        // 1 / sqrt(n) for n <= 0 is not meaningfully defined for real f32
+        return F32Interval.infinite();
+      }
+      return ulpInterval(1 / Math.sqrt(impl_n), 2);
+    },
+  };
+
+  return runPointOp(toInterval(n), op);
+}
+
 /** Calculate an acceptance interval of log(x) */
 export function logInterval(x: number | F32Interval): F32Interval {
   const op: PointToIntervalOp = {
@@ -679,6 +694,39 @@ export function sinInterval(n: number): F32Interval {
   };
 
   return runPointOp(toInterval(n), op);
+}
+
+/** Calculate an acceptance interval of x - y */
+export function subtractionInterval(x: number | F32Interval, y: number | F32Interval): F32Interval {
+  const inner_op: BinaryToIntervalOp = {
+    impl: (inner_x: number, inner_y: number): F32Interval => {
+      if (!isF32Finite(inner_x) && isF32Finite(inner_y)) {
+        return correctlyRoundedInterval(inner_x);
+      }
+
+      if (isF32Finite(inner_x) && !isF32Finite(inner_y)) {
+        const result = Math.sign(inner_y) > 0 ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+        return correctlyRoundedInterval(result);
+      }
+
+      if (!isF32Finite(inner_x) && !isF32Finite(inner_y)) {
+        if (Math.sign(inner_x) === -Math.sign(inner_y)) {
+          return correctlyRoundedInterval(inner_x);
+        } else {
+          return F32Interval.infinite();
+        }
+      }
+      return correctlyRoundedInterval(inner_x - inner_y);
+    },
+  };
+
+  const op: BinaryToIntervalOp = {
+    impl: (impl_x: number, impl_y: number): F32Interval => {
+      return roundAndFlushBinaryToInterval(impl_x, impl_y, inner_op);
+    },
+  };
+
+  return runBinaryOp(toInterval(x), toInterval(y), op);
 }
 
 /** Calculate an acceptance interval of tan(x) */
