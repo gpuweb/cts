@@ -574,6 +574,21 @@ export function floorInterval(n) {
   return runPointOp(toInterval(n), op);
 }
 
+/** Calculate an acceptance interval of inverseSqrt(x) */
+export function inverseSqrtInterval(n) {
+  const op = {
+    impl: (impl_n) => {
+      if (impl_n <= 0) {
+        // 1 / sqrt(n) for n <= 0 is not meaningfully defined for real f32
+        return F32Interval.infinite();
+      }
+      return ulpInterval(1 / Math.sqrt(impl_n), 2);
+    } };
+
+
+  return runPointOp(toInterval(n), op);
+}
+
 /** Calculate an acceptance interval of log(x) */
 export function logInterval(x) {
   const op = {

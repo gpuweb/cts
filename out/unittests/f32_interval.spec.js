@@ -19,6 +19,7 @@ expInterval,
 exp2Interval,
 F32Interval,
 floorInterval,
+inverseSqrtInterval,
 logInterval,
 log2Interval,
 maxInterval,
@@ -26,8 +27,8 @@ minInterval,
 multiplicationInterval,
 negationInterval,
 sinInterval,
-ulpInterval,
-subtractionInterval } from
+subtractionInterval,
+ulpInterval } from
 '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -860,6 +861,40 @@ fn((t) => {
   t.expect(
   objectEquals(expected, got),
   `floorInterval(${input}) returned ${got}. Expected ${expected}`);
+
+});
+
+g.test('inverseSqrtInterval').
+paramsSubcasesOnly(
+
+[
+{ input: -1, expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
+{ input: 0, expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
+{ input: 0.04, expected: [minusOneULP(5), plusOneULP(5)] },
+{ input: 1, expected: [1, 1] },
+{ input: 100, expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
+{ input: kValue.f32.positive.max, expected: [hexToF32(0x1f800000), plusNULP(hexToF32(0x1f800000), 2)] }, // ~5.421...e-20, i.e. 1/√max f32
+{ input: Number.POSITIVE_INFINITY, expected: [0, plusNULP(hexToF32(0x1f800000), 2)] }]).
+
+
+fn((t) => {
+  const error = (input, result) => {
+    return 2 * oneULP(result);
+  };
+
+  const input = t.params.input;
+  let expected;
+  if (t.params.expected instanceof Array) {
+    const [begin, end] = t.params.expected;
+    expected = arrayToInterval([begin - error(input, begin), end + error(input, end)]);
+  } else {
+    expected = t.params.expected;
+  }
+
+  const got = inverseSqrtInterval(input);
+  t.expect(
+  objectEquals(expected, got),
+  `inverseSqrtInterval(${input}) returned ${got}. Expected ${expected}`);
 
 });
 
