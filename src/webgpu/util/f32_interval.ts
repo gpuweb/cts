@@ -728,3 +728,14 @@ export function subtractionInterval(x: number | F32Interval, y: number | F32Inte
 
   return runBinaryOp(toInterval(x), toInterval(y), op);
 }
+
+/** Calculate an acceptance interval of tan(x) */
+export function tanInterval(n: number): F32Interval {
+  const op: PointToIntervalOp = {
+    impl: (impl_n: number): F32Interval => {
+      return divisionInterval(sinInterval(impl_n), cosInterval(impl_n));
+    },
+  };
+
+  return runPointOp(toInterval(n), op);
+}
