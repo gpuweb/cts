@@ -402,33 +402,40 @@ success/error as expected. Such set of buffer parameters should include cases li
   )
   .params(u =>
     u
-      .combine('drawType', ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect'] as const)
-      .combine('boundVertexBufferSizeState', ['zero', 'exile', 'enough'] as const)
-      .combine('boundInstanceBufferSizeState', ['zero', 'exile', 'enough'] as const)
-      .combine('zeroVertexStrideCount', [false, true] as const)
-      .combine('zeroInstanceStrideCount', [false, true] as const)
-      .combine('arrayStrideState', ['zero', 'exact', 'oversize'] as const)
-      .combine('attributeOffsetFactor', [0, 1, 2, 7]) // the offset of attribute will be factor * MIN(4, sizeof(vertexFormat))
+      // type of draw call
+      .combine('type', ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect'] as const)
+      // the state of vertex step mode vertex buffer bound size
+      .combine('VBSize', ['zero', 'exile', 'enough'] as const)
+      // the state of instance step mode vertex buffer bound size
+      .combine('IBSize', ['zero', 'exile', 'enough'] as const)
+      // is the vertex stride count zero
+      .combine('VStride0', [false, true] as const)
+      // is the instance stride count zero
+      .combine('IStride0', [false, true] as const)
+      // the state of array stride
+      .combine('AStride', ['zero', 'exact', 'oversize'] as const)
+      // ther factor for offset of attributes in vertex layout
+      .combine('offset', [0, 1, 2, 7]) // the offset of attribute will be factor * MIN(4, sizeof(vertexFormat))
       .beginSubcases()
       .combine('setBufferOffset', [0, 200]) // must be a multiple of 4
       .combine('attributeFormat', ['snorm8x2', 'float32', 'float16x4'] as GPUVertexFormat[])
       .combine('vertexCount', [0, 1, 10000])
       .combine('firstVertex', [0, 10000])
-      .filter(p => p.zeroVertexStrideCount === (p.firstVertex + p.vertexCount === 0))
+      .filter(p => p.VStride0 === (p.firstVertex + p.vertexCount === 0))
       .combine('instanceCount', [0, 1, 10000])
       .combine('firstInstance', [0, 10000])
-      .filter(p => p.zeroInstanceStrideCount === (p.firstInstance + p.instanceCount === 0))
+      .filter(p => p.IStride0 === (p.firstInstance + p.instanceCount === 0))
       .unless(p => p.vertexCount === 10000 && p.instanceCount === 10000)
   )
   .fn(async t => {
     const {
-      drawType,
-      boundVertexBufferSizeState,
-      boundInstanceBufferSizeState,
-      zeroVertexStrideCount,
-      zeroInstanceStrideCount,
-      arrayStrideState,
-      attributeOffsetFactor,
+      type: drawType,
+      VBSize: boundVertexBufferSizeState,
+      IBSize: boundInstanceBufferSizeState,
+      VStride0: zeroVertexStrideCount,
+      IStride0: zeroInstanceStrideCount,
+      AStride: arrayStrideState,
+      offset: attributeOffsetFactor,
       setBufferOffset,
       attributeFormat,
       vertexCount,
