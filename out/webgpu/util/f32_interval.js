@@ -680,4 +680,37 @@ export function sinInterval(n) {
 
   return runPointOp(toInterval(n), op);
 }
+
+/** Calculate an acceptance interval of x - y */
+export function subtractionInterval(x, y) {
+  const inner_op = {
+    impl: (inner_x, inner_y) => {
+      if (!isF32Finite(inner_x) && isF32Finite(inner_y)) {
+        return correctlyRoundedInterval(inner_x);
+      }
+
+      if (isF32Finite(inner_x) && !isF32Finite(inner_y)) {
+        const result = Math.sign(inner_y) > 0 ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+        return correctlyRoundedInterval(result);
+      }
+
+      if (!isF32Finite(inner_x) && !isF32Finite(inner_y)) {
+        if (Math.sign(inner_x) === -Math.sign(inner_y)) {
+          return correctlyRoundedInterval(inner_x);
+        } else {
+          return F32Interval.infinite();
+        }
+      }
+      return correctlyRoundedInterval(inner_x - inner_y);
+    } };
+
+
+  const op = {
+    impl: (impl_x, impl_y) => {
+      return roundAndFlushBinaryToInterval(impl_x, impl_y, inner_op);
+    } };
+
+
+  return runBinaryOp(toInterval(x), toInterval(y), op);
+}
 //# sourceMappingURL=f32_interval.js.map

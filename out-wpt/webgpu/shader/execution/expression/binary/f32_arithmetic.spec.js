@@ -5,20 +5,15 @@ Execution Tests for the f32 arithmetic binary expression operations
 `;
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { correctlyRoundedMatch } from '../../../../util/compare.js';
 import { TypeF32 } from '../../../../util/conversion.js';
 import {
   additionInterval,
   divisionInterval,
   multiplicationInterval,
+  subtractionInterval,
 } from '../../../../util/f32_interval.js';
 import { biasedRange, fullF32Range } from '../../../../util/math.js';
-import {
-  allInputSources,
-  makeBinaryF32Case,
-  makeBinaryF32IntervalCase,
-  run,
-} from '../expression.js';
+import { allInputSources, makeBinaryF32IntervalCase, run } from '../expression.js';
 
 import { binary } from './binary.js';
 
@@ -59,13 +54,8 @@ Accuracy: Correctly rounded
   )
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
-    const cfg = t.params;
-    cfg.cmpFloats = correctlyRoundedMatch();
-
     const makeCase = (lhs, rhs) => {
-      return makeBinaryF32Case(lhs, rhs, (l, r) => {
-        return l - r;
-      });
+      return makeBinaryF32IntervalCase(lhs, rhs, subtractionInterval);
     };
 
     const cases = [];
@@ -76,7 +66,7 @@ Accuracy: Correctly rounded
       });
     });
 
-    run(t, binary('-'), [TypeF32, TypeF32], TypeF32, cfg, cases);
+    run(t, binary('-'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('multiplication')
