@@ -240,13 +240,21 @@ export const kTypedArrayBufferViewConstructors = Object.values(kTypedArrayBuffer
 function subarrayAsU8(
   buf: ArrayBuffer | TypedArrayBufferView,
   { start = 0, length }: { start?: number; length?: number }
-): Uint8Array {
+): Uint8Array | Uint8ClampedArray {
   if (buf instanceof ArrayBuffer) {
     return new Uint8Array(buf, start, length);
-  } else {
-    const sub = buf.subarray(start, length !== undefined ? start + length : undefined);
-    return new Uint8Array(sub.buffer, sub.byteOffset, sub.byteLength);
+  } else if (buf instanceof Uint8Array || buf instanceof Uint8ClampedArray) {
+    // Don't wrap in new views if we don't need to.
+    if (start === 0 && (length === undefined || length === buf.byteLength)) {
+      return buf;
+    }
   }
+  const byteOffset = buf.byteOffset + start * buf.BYTES_PER_ELEMENT;
+  const byteLength =
+    length !== undefined
+      ? length * buf.BYTES_PER_ELEMENT
+      : buf.byteLength - (byteOffset - buf.byteOffset);
+  return new Uint8Array(buf.buffer, byteOffset, byteLength);
 }
 
 /**

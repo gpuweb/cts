@@ -1,45 +1,5 @@
 export const description = `
 Texture Usages Validation Tests in Render Pass and Compute Pass.
-
-TODO: update for new binding structure.
-
-TODO: description per test
-
-Test Coverage:
-  - For each combination of two texture usages:
-    - For various subresource ranges (different mip levels or array layers) that overlap a given
-      subresources or not for color formats:
-      - For various places that resources are used, for example, used in bundle or used in render
-        pass directly.
-        - Check that an error is generated when read-write or write-write usages are binding to the
-          same texture subresource. Otherwise, no error should be generated. One exception is race
-          condition upon two writeonly-storage-texture usages, which is valid.
-
-  - For each combination of two texture usages:
-    - For various aspects (all, depth-only, stencil-only) that overlap a given subresources or not
-      for depth/stencil formats:
-      - Check that an error is generated when read-write or write-write usages are binding to the
-        same aspect. Otherwise, no error should be generated.
-
-  - Test combinations of two shader stages:
-    - Texture usages in bindings with invisible shader stages should be validated. Invisible shader
-      stages include shader stage with visibility none, compute shader stage in render pass, and
-      vertex/fragment shader stage in compute pass.
-
-  - Tests replaced bindings:
-    - Texture usages via bindings replaced by another setBindGroup() upon the same bindGroup index
-      in render pass should be validated. However, replaced bindings should not be validated in
-      compute pass.
-
-  - Test texture usages in bundle:
-    - Texture usages in bundle should be validated if that bundle is executed in the current scope.
-
-  - Test texture usages with unused bindings:
-    - Texture usages should be validated even its bindings is not used in pipeline.
-
-  - Test texture usages validation scope:
-    - Texture usages should be validated per each render pass. And they should be validated per each
-      dispatch call in compute.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
@@ -253,8 +213,16 @@ const BASE_LAYER = 1;
 const TOTAL_LAYERS = 6;
 const SLICE_COUNT = 2;
 
-// For all tests below, we test compute pass if 'compute' is true, and test render pass otherwise.
 g.test('subresources_and_binding_types_combination_for_color')
+  .desc(
+    `
+    Test the resource usage rules by using two views of the same GPUTexture in a usage scope. Tests
+    various combinations of {sampled, storage, render target} usages, mip-level ranges, and
+    array-layer ranges, in {compute pass, render pass, render pass via bundle}.
+      - Error if a subresource (level/layer) is used as read+write or write+write in the scope,
+        except when both usages are writeonly-storage-texture which is allowed.
+  `
+  )
   .params(u =>
     u
       .combine('compute', [false, true])
@@ -316,7 +284,8 @@ g.test('subresources_and_binding_types_combination_for_color')
           _resourceSuccess: true,
         },
 
-        // The second texture usage contains the whole mip chain where the first texture usage is using.
+        // The second texture usage contains the whole mip chain where the first texture usage is
+        // using.
         {
           levelCount0: 1,
           layerCount0: 1,
@@ -338,7 +307,8 @@ g.test('subresources_and_binding_types_combination_for_color')
           _resourceSuccess: false,
         },
 
-        // The second texture usage contains all subresources where the first texture usage is using.
+        // The second texture usage contains all subresources where the first texture usage is
+        // using.
         {
           levelCount0: 1,
           layerCount0: 1,
@@ -371,7 +341,8 @@ g.test('subresources_and_binding_types_combination_for_color')
           _resourceSuccess: false,
         },
 
-        // Both of the two usages access a few array layers on the same level but they don't overlap.
+        // Both of the two usages access a few array layers on the same level but they don't
+        // overlap.
         {
           levelCount0: 1,
           layerCount0: SLICE_COUNT,
@@ -551,6 +522,15 @@ g.test('subresources_and_binding_types_combination_for_color')
   });
 
 g.test('subresources_and_binding_types_combination_for_aspect')
+  .desc(
+    `
+    Test the resource usage rules by using two views of the same GPUTexture in a usage scope. Tests
+    various combinations of {sampled, render target} usages, {all, depth-only, stencil-only} aspects
+    that overlap a given subresources in {compute pass, render pass, render pass via bundle}.
+      - Error if a subresource (level/layer/aspect) is used as read+write or write+write in the
+        scope.
+  `
+  )
   .params(u =>
     u
       .combine('compute', [false, true])
@@ -756,6 +736,17 @@ g.test('subresources_and_binding_types_combination_for_aspect')
   });
 
 g.test('shader_stages_and_visibility')
+  .desc(
+    `
+    Test that stage visibility doesn't affect resource usage validation.
+      - Test the writeonly-storage-texture binding type is not supported in vertex stage.
+      - Test invisible shader stages include shader stage with visibility none, compute shader
+        stage in render pass, and vertex/fragment shader stage in compute pass.
+
+    TODO: Try to add a control case to keep this test from breaking.
+    Ensure description is up to date with the code.
+  `
+  )
   .params(u =>
     u
       .combine('compute', [false, true])
@@ -826,10 +817,16 @@ g.test('shader_stages_and_visibility')
     });
   });
 
-// We should validate the texture usages in bindings which are replaced by another setBindGroup()
-// call site upon the same index in the same render pass. However, replaced bindings in compute
-// should not be validated.
 g.test('replaced_binding')
+  .desc(
+    `
+    Test whether a binding that's been replaced by another setBindGroup call can still
+    cause validation to fail (with a write/write conflict).
+      - In render pass, all setBindGroup calls contribute to the validation even if they're
+        shadowed.
+      - In compute pass, only the bindings visible at dispatchWorkgroups() contribute to validation.
+  `
+  )
   .params(u =>
     u
       .combine('compute', [false, true])
@@ -885,8 +882,9 @@ g.test('replaced_binding')
     pass.setBindGroup(0, bindGroup1);
     pass.end();
 
-    // MAINTENANCE_TODO: If the Compatible Usage List (https://gpuweb.github.io/gpuweb/#compatible-usage-list)
-    // gets programmatically defined in capability_info, use it here, instead of this logic, for clarity.
+    // MAINTENANCE_TODO: If the Compatible Usage List
+    // (https://gpuweb.github.io/gpuweb/#compatible-usage-list) gets programmatically defined in
+    // capability_info, use it here, instead of this logic, for clarity.
     let success = entry.storageTexture?.access !== 'write-only';
     // Replaced bindings should not be validated in compute pass, because validation only occurs
     // inside dispatchWorkgroups() which only looks at the current resource usages.
@@ -898,6 +896,12 @@ g.test('replaced_binding')
   });
 
 g.test('bindings_in_bundle')
+  .desc(
+    `
+    Test the texture usages in bundles by using two bindings of the same texture with various
+    combination of {sampled, storage, render target} usages.
+  `
+  )
   .params(u =>
     u
       .combine('type0', ['render-target', ...kTextureBindingTypes] as const)
@@ -939,7 +943,8 @@ g.test('bindings_in_bundle')
           (p._sampleCount !== undefined &&
             p._sampleCount > 1 &&
             (p._usage0 === 'STORAGE_BINDING' || p._usage1 === 'STORAGE_BINDING')) ||
-          // If both are sampled, we create two views of the same texture, so both must be multisampled.
+          // If both are sampled, we create two views of the same texture, so both must be
+          // multisampled.
           (p.type0 === 'multisampled-texture' && p.type1 === 'sampled-texture') ||
           (p.type0 === 'sampled-texture' && p.type1 === 'multisampled-texture')
       )
@@ -1030,6 +1035,13 @@ g.test('bindings_in_bundle')
   });
 
 g.test('unused_bindings_in_pipeline')
+  .desc(
+    `
+    Test that for compute pipelines with 'auto' layout, only bindings used by the pipeline count
+    toward the usage scope. For render passes, test the pipeline doesn't matter because only the
+    calls to setBindGroup count toward the usage scope.
+  `
+  )
   .params(u =>
     u
       .combine('compute', [false, true])
@@ -1150,6 +1162,12 @@ g.test('unused_bindings_in_pipeline')
   });
 
 g.test('validation_scope,no_draw_or_dispatch')
+  .desc(
+    `
+    Test usage scope validation with two conflicting bind groups but no draw/dispatch call.
+      - In compute pass, no validation error should be generated.
+  `
+  )
   .params(u => u.combine('compute', [false, true]))
   .fn(async t => {
     const { compute } = t.params;
@@ -1168,6 +1186,12 @@ g.test('validation_scope,no_draw_or_dispatch')
   });
 
 g.test('validation_scope,same_draw_or_dispatch')
+  .desc(
+    `
+    Test usage scope validation with two conflicting bind groups both used in the same
+    draw/dispatch.
+  `
+  )
   .params(u => u.combine('compute', [false, true]))
   .fn(async t => {
     const { compute } = t.params;
@@ -1185,6 +1209,14 @@ g.test('validation_scope,same_draw_or_dispatch')
   });
 
 g.test('validation_scope,different_draws_or_dispatches')
+  .desc(
+    `
+    Test usage scope validation with two conflicting bind groups used in two different draw/dispatch
+    calls.
+
+    TODO: This test is failing validation due to a different thing that it intends to test.
+  `
+  )
   .params(u => u.combine('compute', [false, true]))
   .fn(async t => {
     const { compute } = t.params;
@@ -1206,6 +1238,12 @@ g.test('validation_scope,different_draws_or_dispatches')
   });
 
 g.test('validation_scope,different_passes')
+  .desc(
+    `
+    Test usage scope validation with two conflicting bind groups used in two entirely different
+    passes. No validation error should be generated.
+  `
+  )
   .params(u => u.combine('compute', [false, true]))
   .fn(async t => {
     const { compute } = t.params;
