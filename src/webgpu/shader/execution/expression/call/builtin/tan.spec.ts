@@ -9,7 +9,12 @@ Returns the tangent of e. Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { allInputSources } from '../../expression.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
+import { tanInterval } from '../../../../../util/f32_interval.js';
+import { fullF32Range, linearRange } from '../../../../../util/math.js';
+import { allInputSources, Case, makeUnaryF32IntervalCase, run } from '../../expression.js';
+
+import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -27,7 +32,18 @@ g.test('f32')
   .params(u =>
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
-  .unimplemented();
+  .fn(async t => {
+    const makeCase = (n: number): Case => {
+      return makeUnaryF32IntervalCase(n, tanInterval);
+    };
+
+    const cases: Array<Case> = [
+      // Defined accuracy range
+      ...linearRange(-Math.PI, Math.PI, 100),
+      ...fullF32Range(),
+    ].map(makeCase);
+    run(t, builtin('tan'), [TypeF32], TypeF32, t.params, cases);
+  });
 
 g.test('f16')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')

@@ -680,3 +680,14 @@ export function sinInterval(n: number): F32Interval {
 
   return runPointOp(toInterval(n), op);
 }
+
+/** Calculate an acceptance interval of tan(x) */
+export function tanInterval(n: number): F32Interval {
+  const op: PointToIntervalOp = {
+    impl: (impl_n: number): F32Interval => {
+      return divisionInterval(sinInterval(impl_n), cosInterval(impl_n));
+    },
+  };
+
+  return runPointOp(toInterval(n), op);
+}

@@ -3,7 +3,7 @@ F32Interval unit tests.
 `;
 
 import { makeTestGroup } from '../common/framework/test_group.js';
-import { objectEquals } from '../common/util/util.js';
+import { assert, objectEquals } from '../common/util/util.js';
 import { kValue } from '../webgpu/util/constants.js';
 import {
   absInterval,
@@ -25,6 +25,7 @@ import {
   minInterval,
   multiplicationInterval,
   negationInterval,
+  tanInterval,
   sinInterval,
   ulpInterval,
 } from '../webgpu/util/f32_interval.js';
@@ -1002,6 +1003,44 @@ g.test('sinInterval')
     t.expect(
       objectEquals(expected, got),
       `sinInterval(${input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('tanInterval')
+  .paramsSubcasesOnly<PointToIntervalCase>(
+    // prettier-ignore
+    [
+      // All of these are hard coded, since the error intervals are difficult to express in a closed human readable
+      // form. Some easy looking cases like f(x = -π|π) = 0 are actually quite difficult. This is because the interval
+      // is calculated from the results of sin(x)/cos(x), which becomes very messy at x = -π|π, since π is irrational,
+      // thus does not have an exact representation as a f32.
+      // Even at 0, which has a precise f32 value, there is still the problem that result of sin(0) and cos(0) will be
+      // intervals due to the inherited nature of errors, so the proper interval will be an interval calculated from
+      // dividing an interval by another interval and applying an error function to that. This complexity is why the
+      // entire interval framework was developed.
+      // The examples here have been manually traced to confirm the expectation values are correct.
+      { input: Number.NEGATIVE_INFINITY, expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
+      { input: kValue.f32.negative.min, expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
+      { input: kValue.f32.negative.pi.whole, expected: arrayToInterval([hexToF64(0xbf4002bc, 0x90000000), hexToF64(0x3f400144, 0xf0000000)]) },  // ~0.0
+      { input: kValue.f32.negative.pi.half, expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
+      { input: 0, expected: arrayToInterval([hexToF64(0xbf400200, 0xb0000000), hexToF64(0x3f400200, 0xb0000000)]) },  // ~0.0
+      { input: kValue.f32.positive.pi.half, expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
+      { input: kValue.f32.positive.pi.whole, expected: arrayToInterval([hexToF64(0xbf400144, 0xf0000000), hexToF64(0x3f4002bc, 0x90000000)]) },  // ~0.0
+      { input: kValue.f32.positive.max, expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
+      { input: Number.POSITIVE_INFINITY, expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
+    ]
+  )
+  .fn(t => {
+    const input = t.params.input;
+    assert(
+      !(t.params.expected instanceof Array),
+      'Expectations for tanInterval must be expressed precisely as F32Intervals'
+    );
+    const expected: F32Interval = t.params.expected;
+    const got = tanInterval(input);
+    t.expect(
+      objectEquals(expected, got),
+      `tanInterval(${input}) returned ${got}. Expected ${expected}`
     );
   });
 
