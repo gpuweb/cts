@@ -723,3 +723,24 @@ In this test we test that only the last setting for a buffer slot take account.
 `
   )
   .unimplemented();
+
+g.test(`max_draw_count`)
+  .desc(
+    `
+In this test we test that draw count which exceeds GPURenderPassDescriptor.maxDrawCount
+causes validation error on GPUCommandEncoder.finish(). The test sets specified maxDrawCount,
+calls specified draw call specified times, and checks whether GPUCommandEncoder.finish()
+causes a validation error.
+    - x= all draw types
+    - draw count {0, 1, 2, 10}
+    - max draw count {0, 1, 2, 10}
+TODO: Missing test case Bundle
+`
+  )
+  .params(u =>
+    u
+      .combine('drawType', ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect', 'all'])
+      .combine('drawCount', [0, 1, 2, 10])
+      .combine('maxDrawCount', [0, 1, 2, 10])
+  )
+  .unimplemented();
