@@ -133,3 +133,17 @@ fn frag_main() -> FragmentOutputs {
 `;
     t.expectCompileResult(t.params.target_stage === '', code);
   });
+
+g.test('missing_entry_point')
+  .desc(
+    `Test that a shader without an entry point is rejected.`
+  )
+  .params(u => u.combine('stage', ['', '@fragment'] as const).beginSubcases())
+  .fn(t => {
+    const code = `
+${t.params.stage}
+fn main() {
+}
+`;
+    t.expectCompileResult(t.params.stage !== '', code);
+  });
