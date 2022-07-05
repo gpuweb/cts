@@ -2501,6 +2501,14 @@ export const listing = [
       "shader",
       "validation",
       "shader_io",
+      "entry_point"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "shader_io",
       "interpolate"
     ]
   },

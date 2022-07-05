@@ -133,4 +133,4 @@ fn frag_main() -> FragmentOutputs {
 `;
   t.expectCompileResult(t.params.target_stage === '', code);
 });
-//# sourceMappingURL=entry_point.js.map
+//# sourceMappingURL=entry_point.spec.js.map
