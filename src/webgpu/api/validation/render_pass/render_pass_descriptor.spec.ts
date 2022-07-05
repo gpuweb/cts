@@ -713,3 +713,26 @@ g.test('multisample_render_target_formats_support_resolve')
       colorAttachments: [colorAttachment],
     });
   });
+
+g.test('occlusion_query_set_type')
+  .desc('Test that occlusion query set only works if the type is occlusion')
+  .paramsSimple([
+    { querySetState: 'valid' as const, queryType: 'occlusion', _success: true },
+    { querySetState: 'invalid' as const, queryType: 'timestamp', _success: false },
+  ])
+  .fn(async t => {
+    const { querySetState, queryType, _success } = t.params;
+
+    const querySet = t.createQuerySetWithState(querySetState, {
+      type: queryType as GPUQueryType,
+      count: 2,
+    });
+
+    const colorTexture = t.createTexture({ format: 'rgba8unorm' });
+    const descriptor = {
+      colorAttachments: [t.getColorAttachment(colorTexture)],
+      occlusionQuerySet: querySet,
+    };
+
+    t.tryRenderPass(_success, descriptor);
+  });
