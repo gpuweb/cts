@@ -408,13 +408,13 @@ success/error as expected. Such set of buffer parameters should include cases li
       .combine('VBSize', ['zero', 'exile', 'enough'] as const)
       // the state of instance step mode vertex buffer bound size
       .combine('IBSize', ['zero', 'exile', 'enough'] as const)
-      // is the vertex stride count zero
+      // should the vertex stride count be zero
       .combine('VStride0', [false, true] as const)
-      // is the instance stride count zero
+      // should the instance stride count be zero
       .combine('IStride0', [false, true] as const)
-      // the state of array stride
+      // the state of array stridegit status
       .combine('AStride', ['zero', 'exact', 'oversize'] as const)
-      // ther factor for offset of attributes in vertex layout
+      // the factor for offset of attributes in vertex layout
       .combine('offset', [0, 1, 2, 7]) // the offset of attribute will be factor * MIN(4, sizeof(vertexFormat))
       .beginSubcases()
       .combine('setBufferOffset', [0, 200]) // must be a multiple of 4
