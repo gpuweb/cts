@@ -401,34 +401,41 @@ success/error as expected. Such set of buffer parameters should include cases li
 `).
 
 params((u) =>
-u.
-combine('drawType', ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect']).
-combine('boundVertexBufferSizeState', ['zero', 'exile', 'enough']).
-combine('boundInstanceBufferSizeState', ['zero', 'exile', 'enough']).
-combine('zeroVertexStrideCount', [false, true]).
-combine('zeroInstanceStrideCount', [false, true]).
-combine('arrayStrideState', ['zero', 'exact', 'oversize']).
-combine('attributeOffsetFactor', [0, 1, 2, 7]) // the offset of attribute will be factor * MIN(4, sizeof(vertexFormat))
+u
+// type of draw call
+.combine('type', ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect'])
+// the state of vertex step mode vertex buffer bound size
+.combine('VBSize', ['zero', 'exile', 'enough'])
+// the state of instance step mode vertex buffer bound size
+.combine('IBSize', ['zero', 'exile', 'enough'])
+// should the vertex stride count be zero
+.combine('VStride0', [false, true])
+// should the instance stride count be zero
+.combine('IStride0', [false, true])
+// the state of array stride
+.combine('AStride', ['zero', 'exact', 'oversize'])
+// the factor for offset of attributes in vertex layout
+.combine('offset', [0, 1, 2, 7]) // the offset of attribute will be factor * MIN(4, sizeof(vertexFormat))
 .beginSubcases().
 combine('setBufferOffset', [0, 200]) // must be a multiple of 4
 .combine('attributeFormat', ['snorm8x2', 'float32', 'float16x4']).
 combine('vertexCount', [0, 1, 10000]).
 combine('firstVertex', [0, 10000]).
-filter((p) => p.zeroVertexStrideCount === (p.firstVertex + p.vertexCount === 0)).
+filter((p) => p.VStride0 === (p.firstVertex + p.vertexCount === 0)).
 combine('instanceCount', [0, 1, 10000]).
 combine('firstInstance', [0, 10000]).
-filter((p) => p.zeroInstanceStrideCount === (p.firstInstance + p.instanceCount === 0)).
+filter((p) => p.IStride0 === (p.firstInstance + p.instanceCount === 0)).
 unless((p) => p.vertexCount === 10000 && p.instanceCount === 10000)).
 
 fn(async (t) => {
   const {
-    drawType,
-    boundVertexBufferSizeState,
-    boundInstanceBufferSizeState,
-    zeroVertexStrideCount,
-    zeroInstanceStrideCount,
-    arrayStrideState,
-    attributeOffsetFactor,
+    type: drawType,
+    VBSize: boundVertexBufferSizeState,
+    IBSize: boundInstanceBufferSizeState,
+    VStride0: zeroVertexStrideCount,
+    IStride0: zeroInstanceStrideCount,
+    AStride: arrayStrideState,
+    offset: attributeOffsetFactor,
     setBufferOffset,
     attributeFormat,
     vertexCount,
