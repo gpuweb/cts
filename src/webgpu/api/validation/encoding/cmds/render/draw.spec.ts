@@ -412,7 +412,7 @@ success/error as expected. Such set of buffer parameters should include cases li
       .combine('VStride0', [false, true] as const)
       // should the instance stride count be zero
       .combine('IStride0', [false, true] as const)
-      // the state of array stridegit status
+      // the state of array stride
       .combine('AStride', ['zero', 'exact', 'oversize'] as const)
       // the factor for offset of attributes in vertex layout
       .combine('offset', [0, 1, 2, 7]) // the offset of attribute will be factor * MIN(4, sizeof(vertexFormat))
