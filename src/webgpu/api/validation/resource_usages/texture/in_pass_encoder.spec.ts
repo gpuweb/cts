@@ -173,13 +173,12 @@ class TextureUsageTracking extends ValidationTest {
       : this.beginSimpleRenderPass(encoder, this.createTexture().createView());
 
     // Create pipeline. Note that bindings unused in pipeline should be validated too.
+    const pipelineLayout = this.device.createPipelineLayout({
+      bindGroupLayouts,
+    });
     const pipeline = compute
-      ? this.createNoOpComputePipeline(
-          this.device.createPipelineLayout({
-            bindGroupLayouts,
-          })
-        )
-      : this.createNoOpRenderPipeline();
+      ? this.createNoOpComputePipeline(pipelineLayout)
+      : this.createNoOpRenderPipeline(pipelineLayout);
     return {
       bindGroup0: bindGroups[0],
       bindGroup1: bindGroups[1],
@@ -802,22 +801,25 @@ g.test('shader_stages_and_visibility')
     });
 
     const encoder = t.device.createCommandEncoder();
-    const pass = compute
-      ? encoder.beginComputePass()
-      : t.beginSimpleRenderPass(
-          encoder,
-          writeHasVertexStage ? view : t.createTexture().createView()
-        );
-    pass.setBindGroup(0, bindGroup);
     if (compute) {
+      const pass = encoder.beginComputePass();
+      pass.setBindGroup(0, bindGroup);
+
       t.setComputePipelineAndCallDispatch(
-        pass as GPUComputePassEncoder,
+        pass,
         t.device.createPipelineLayout({
           bindGroupLayouts: [bgl],
         })
       );
+      pass.end();
+    } else {
+      const pass = t.beginSimpleRenderPass(
+        encoder,
+        writeHasVertexStage ? view : t.createTexture().createView()
+      );
+      pass.setBindGroup(0, bindGroup);
+      pass.end();
     }
-    pass.end();
 
     // Texture usages in bindings with invisible shader stages should be validated. Invisible shader
     // stages include shader stage with visibility none, compute shader stage in render pass, and
@@ -1171,106 +1173,167 @@ g.test('unused_bindings_in_pipeline')
     }, !success);
   });
 
-g.test('validation_scope,no_draw_or_dispatch')
+g.test('scope,dispatch')
   .desc(
     `
-    Test usage scope validation with two conflicting bind groups but no draw/dispatch call.
-      - In compute pass, no validation error should be generated.
+    Tests that in a compute pass, no usage validation occurs without a dispatch call.
+    {Sets,skips} each of two conflicting bind groups in a pass {with,without} a dispatch call.
+    If both are set, AND there is a dispatch call, validation should fail.
   `
   )
-  .params(u => u.combine('compute', [false, true]))
-  .fn(t => {
-    const { compute } = t.params;
-
-    const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope(compute);
-    t.setPipeline(pass, pipeline);
-    pass.setBindGroup(0, bindGroup0);
-    pass.setBindGroup(1, bindGroup1);
-    pass.end();
-
-    // Resource usage validation scope is defined by dispatch calls. If dispatch is not called,
-    // we don't need to do resource usage validation and no validation error to be reported.
-    t.expectValidationError(() => {
-      encoder.finish();
-    }, !compute);
-  });
-
-g.test('validation_scope,same_draw_or_dispatch')
-  .desc(
-    `
-    Test usage scope validation with two conflicting bind groups both used in the same
-    draw/dispatch.
-  `
+  .params(u =>
+    u
+      .combine('dispatch', ['none', 'direct', 'indirect'])
+      .beginSubcases()
+      .expand('setBindGroup0', p => (p.dispatch ? [true] : [false, true]))
+      .expand('setBindGroup1', p => (p.dispatch ? [true] : [false, true]))
   )
-  .params(u => u.combine('compute', [false, true]))
   .fn(t => {
-    const { compute } = t.params;
+    const { dispatch, setBindGroup0, setBindGroup1 } = t.params;
 
-    const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope(compute);
+    const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope(true);
+    assert(pass instanceof GPUComputePassEncoder);
     t.setPipeline(pass, pipeline);
-    pass.setBindGroup(0, bindGroup0);
-    pass.setBindGroup(1, bindGroup1);
-    t.issueDrawOrDispatch(pass);
+
+    if (setBindGroup0) pass.setBindGroup(0, bindGroup0);
+    if (setBindGroup1) pass.setBindGroup(1, bindGroup1);
+
+    switch (dispatch) {
+      case 'direct':
+        pass.dispatchWorkgroups(1);
+        break;
+      case 'indirect':
+        {
+          const indirectBuffer = t.device.createBuffer({ size: 4, usage: GPUBufferUsage.INDIRECT });
+          pass.dispatchWorkgroupsIndirect(indirectBuffer, 0);
+        }
+        break;
+    }
+
     pass.end();
 
     t.expectValidationError(() => {
       encoder.finish();
-    });
+    }, dispatch !== 'none' && setBindGroup0 && setBindGroup1);
   });
 
-g.test('validation_scope,different_draws_or_dispatches')
+g.test('scope,basic,render')
   .desc(
     `
-    Test usage scope validation with two conflicting bind groups used in two different draw/dispatch
-    calls.
-
-    TODO: This test is failing validation due to a different thing that it intends to test.
+    Tests that in a render pass, validation occurs even without a pipeline or draw call.
+    {Set,skip} each of two conflicting bind groups. If both are set, validation should fail.
   `
   )
-  .params(u => u.combine('compute', [false, true]))
+  .paramsSubcasesOnly(u =>
+    u //
+      .combine('setBindGroup0', [false, true])
+      .combine('setBindGroup1', [false, true])
+  )
   .fn(t => {
-    const { compute } = t.params;
-    const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope(compute);
-    t.setPipeline(pass, pipeline);
+    const { setBindGroup0, setBindGroup1 } = t.params;
 
-    pass.setBindGroup(0, bindGroup0);
-    t.issueDrawOrDispatch(pass);
+    const { bindGroup0, bindGroup1, encoder, pass } = t.testValidationScope(false);
+    assert(pass instanceof GPURenderPassEncoder);
 
-    pass.setBindGroup(1, bindGroup1);
-    t.issueDrawOrDispatch(pass);
+    if (setBindGroup0) pass.setBindGroup(0, bindGroup0);
+    if (setBindGroup1) pass.setBindGroup(1, bindGroup1);
 
     pass.end();
 
-    // Note that bindGroup0 will be inherited in the second draw/dispatch.
     t.expectValidationError(() => {
       encoder.finish();
-    });
+    }, setBindGroup0 && setBindGroup1);
   });
 
-g.test('validation_scope,different_passes')
+g.test('scope,pass_boundary,compute')
   .desc(
     `
-    Test usage scope validation with two conflicting bind groups used in two entirely different
-    passes. No validation error should be generated.
-  `
+    Test using two conflicting bind groups in separate dispatch calls, {with,without} a pass
+    boundary in between. This should always be valid.
+    `
   )
-  .params(u => u.combine('compute', [false, true]))
+  .paramsSubcasesOnly(u => u.combine('splitPass', [false, true]))
   .fn(t => {
-    const { compute } = t.params;
-    const { bindGroup0, bindGroup1, encoder, pass, pipeline } = t.testValidationScope(compute);
-    t.setPipeline(pass, pipeline);
-    pass.setBindGroup(0, bindGroup0);
-    if (compute) t.setComputePipelineAndCallDispatch(pass as GPUComputePassEncoder);
+    const { splitPass } = t.params;
+
+    const { bindGroupLayouts, bindGroups } = t.makeConflictingBindGroups();
+
+    const encoder = t.device.createCommandEncoder();
+
+    const pipelineUsingBG0 = t.createNoOpComputePipeline(
+      t.device.createPipelineLayout({
+        bindGroupLayouts: [bindGroupLayouts[0]],
+      })
+    );
+    const pipelineUsingBG1 = t.createNoOpComputePipeline(
+      t.device.createPipelineLayout({
+        bindGroupLayouts: [bindGroupLayouts[1]],
+      })
+    );
+
+    let pass = encoder.beginComputePass();
+    pass.setPipeline(pipelineUsingBG0);
+    pass.setBindGroup(0, bindGroups[0]);
+    pass.dispatchWorkgroups(1);
+    if (splitPass) {
+      pass.end();
+      pass = encoder.beginComputePass();
+    }
+    pass.setPipeline(pipelineUsingBG1);
+    pass.setBindGroup(0, bindGroups[1]);
+    pass.dispatchWorkgroups(1);
     pass.end();
 
-    const pass1 = compute
-      ? encoder.beginComputePass()
-      : t.beginSimpleRenderPass(encoder, t.createTexture().createView());
-    t.setPipeline(pass1, pipeline);
-    pass1.setBindGroup(1, bindGroup1);
-    if (compute) t.setComputePipelineAndCallDispatch(pass1 as GPUComputePassEncoder);
-    pass1.end();
-
-    // No validation error.
+    // Always valid
     encoder.finish();
+  });
+
+g.test('scope,pass_boundary,render')
+  .desc(
+    `
+    Test using two conflicting bind groups in separate draw calls, {with,without} a pass
+    boundary in between. This should be valid only if there is a pass boundary.
+    `
+  )
+  .paramsSubcasesOnly(u =>
+    u //
+      .combine('splitPass', [false, true])
+      .combine('draw', [false, true])
+  )
+  .fn(t => {
+    const { splitPass, draw } = t.params;
+
+    const { bindGroupLayouts, bindGroups } = t.makeConflictingBindGroups();
+
+    const encoder = t.device.createCommandEncoder();
+
+    const pipelineUsingBG0 = t.createNoOpRenderPipeline(
+      t.device.createPipelineLayout({
+        bindGroupLayouts: [bindGroupLayouts[0]],
+      })
+    );
+    const pipelineUsingBG1 = t.createNoOpRenderPipeline(
+      t.device.createPipelineLayout({
+        bindGroupLayouts: [bindGroupLayouts[1]],
+      })
+    );
+
+    const attachment = t.createTexture().createView();
+
+    let pass = t.beginSimpleRenderPass(encoder, attachment);
+    pass.setPipeline(pipelineUsingBG0);
+    pass.setBindGroup(0, bindGroups[0]);
+    if (draw) pass.draw(3);
+    if (splitPass) {
+      pass.end();
+      pass = t.beginSimpleRenderPass(encoder, attachment);
+    }
+    pass.setPipeline(pipelineUsingBG1);
+    pass.setBindGroup(0, bindGroups[1]);
+    if (draw) pass.draw(3);
+    pass.end();
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, !splitPass);
   });
