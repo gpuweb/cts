@@ -171,6 +171,56 @@ g.test('canvas_configuration')
     }
   });
 
+g.test('canvas_configuration_view_formats')
+  .desc(
+    `
+  Test that configuring a canvas with view formats throws an exception if the required optional
+  feature is not enabled. Otherwise, a validation error should be generated instead of throwing an
+  exception.
+  `
+  )
+  .params(u =>
+    u
+      .combine('viewFormats', [
+        ...kOptionalTextureFormats.map(format => [format]),
+        ['bgra8unorm', 'bc1-rgba-unorm'],
+        ['bc1-rgba-unorm', 'bgra8unorm'],
+      ])
+      .combine('canvasType', kAllCanvasTypes)
+      .combine('enable_required_feature', [true, false])
+  )
+  .beforeAllSubcases(t => {
+    const { viewFormats, enable_required_feature } = t.params;
+
+    if (enable_required_feature) {
+      t.selectDeviceForTextureFormatOrSkipTestCase(viewFormats as GPUTextureFormat[]);
+    }
+  })
+  .fn(async t => {
+    const { viewFormats, canvasType, enable_required_feature } = t.params;
+
+    const canvas = createCanvas(t, canvasType, 2, 2);
+    const ctx = canvas.getContext('webgpu' as const);
+    assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+
+    const canvasConf = {
+      device: t.device,
+      format: 'bgra8unorm' as const,
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+      viewFormats: viewFormats as GPUTextureFormat[],
+    };
+
+    if (enable_required_feature) {
+      t.expectValidationError(() => {
+        ctx.configure(canvasConf);
+      });
+    } else {
+      t.shouldThrow('TypeError', () => {
+        ctx.configure(canvasConf);
+      });
+    }
+  });
+
 g.test('storage_texture_binding_layout')
   .desc(
     `
