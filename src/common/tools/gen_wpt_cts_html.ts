@@ -9,7 +9,7 @@ function printUsageAndExit(rc: number): void {
 Usage:
   tools/gen_wpt_cts_html OUTPUT_FILE TEMPLATE_FILE [ARGUMENTS_PREFIXES_FILE EXPECTATIONS_FILE EXPECTATIONS_PREFIX [SUITE]]
   tools/gen_wpt_cts_html out-wpt/cts.https.html templates/cts.https.html
-  tools/gen_wpt_cts_html my/path/to/cts.https.html templates/cts.https.html arguments.txt myexpectations.txt 'path/to/cts.https.html' cts
+  tools/gen_wpt_cts_html my/path/to/cts.https.html templates/cts.https.html arguments.txt myexpectations.txt 'path/to/cts.https.html' unittests
 
 where arguments.txt is a file containing a list of arguments prefixes to both generate and expect
 in the expectations. The entire variant list generation runs *once per prefix*, so this

@@ -20,32 +20,37 @@ declare function promise_test(f: (t: WptTestObject) => Promise<void>, name: stri
 declare function done(): void;
 declare function assert_unreached(description: string): void;
 
-declare const loadWebGPUExpectations: Promise<unknown> | undefined;
-declare const shouldWebGPUCTSFailOnWarnings: Promise<boolean> | undefined;
-
 setup({
   // It's convenient for us to asynchronously add tests to the page. Prevent done() from being
   // called implicitly when the page is finished loading.
   explicit_done: true,
 });
 
-void (async () => {
+export async function main(opts: {
+  loadWebGPUExpectations?: Promise<unknown>;
+  shouldWebGPUCTSFailOnWarnings?: Promise<boolean>;
+  testQueriesOverride?: string[];
+}) {
   const workerEnabled = optionEnabled('worker');
   const worker = workerEnabled ? new TestWorker(false) : undefined;
 
-  const failOnWarnings =
-    typeof shouldWebGPUCTSFailOnWarnings !== 'undefined' && (await shouldWebGPUCTSFailOnWarnings);
+  const failOnWarnings = (await opts.shouldWebGPUCTSFailOnWarnings) ?? false;
 
   const loader = new DefaultTestFileLoader();
-  const qs = new URLSearchParams(window.location.search).getAll('q');
+  let qs = new URLSearchParams(window.location.search).getAll('q');
+  if (opts.testQueriesOverride !== undefined) {
+    assert(qs.length === 0, 'cannot use testQueriesOverride with');
+    qs = opts.testQueriesOverride;
+  }
+
   assert(qs.length === 1, 'currently, there must be exactly one ?q=');
   const filterQuery = parseQuery(qs[0]);
   const testcases = await loader.loadCases(filterQuery);
 
   const expectations =
-    typeof loadWebGPUExpectations !== 'undefined'
+    typeof opts.loadWebGPUExpectations !== 'undefined'
       ? parseExpectationsForTestQuery(
-          await loadWebGPUExpectations,
+          await opts.loadWebGPUExpectations,
           filterQuery,
           new URL(window.location.href)
         )
@@ -77,4 +82,4 @@ void (async () => {
   }
 
   done();
-})();
+}

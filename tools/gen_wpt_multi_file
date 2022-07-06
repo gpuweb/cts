@@ -1,0 +1,7 @@
+#!/usr/bin/env node
+
+// Generate one .https.html file for each *test* (multiple per .spec.ts file), for WPT runners
+// that don't support test variants.
+
+require('../src/common/tools/setup-ts-in-node.js');
+require('../src/common/tools/gen_wpt_multi_file.ts');

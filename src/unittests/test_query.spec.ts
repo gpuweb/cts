@@ -109,6 +109,11 @@ g.test('toString').fn(t => {
     's:a:b:c="_undef_"'
   );
   t.expectToString(new TestQuerySingleCase('s', ['a'], ['b'], { c: -0 }), 's:a:b:c="_negzero_"');
+
+  // Test that ` gets encoded correctly, so it can be templated into JS code like `{{test_query}}`.
+  t.expectToString(new TestQuerySingleCase('s', ['a'], ['b'], { c: '`' }), 's:a:b:c="%60"');
+  // Same for \ backslash
+  t.expectToString(new TestQuerySingleCase('s', ['a'], ['b'], { c: '\\' }), 's:a:b:c="%5C%5C"');
 });
 
 g.test('parseQuery').fn(t => {
