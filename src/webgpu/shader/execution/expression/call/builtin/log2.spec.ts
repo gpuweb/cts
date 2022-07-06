@@ -23,8 +23,7 @@ g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(`abstract float tests`)
   .params(u =>
-    // u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
-    u.combine('inputSource', [allInputSources[1]])
+    u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .unimplemented();
 
