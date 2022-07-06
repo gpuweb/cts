@@ -316,9 +316,11 @@ export class ValidationTest extends GPUTest {
   }
 
   /** Return a GPURenderPipeline with default options and no-op vertex and fragment shaders. */
-  createNoOpRenderPipeline(): GPURenderPipeline {
+  createNoOpRenderPipeline(
+    layout: GPUPipelineLayout | GPUAutoLayoutMode = 'auto'
+  ): GPURenderPipeline {
     return this.device.createRenderPipeline({
-      layout: 'auto',
+      layout,
       vertex: {
         module: this.device.createShaderModule({
           code: this.getNoOpShaderCode('VERTEX'),
