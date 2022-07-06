@@ -512,56 +512,56 @@ g.test('ulpInterval')
     [
       // Edge Cases
       { value: kValue.f32.infinity.positive, num_ulp: 0, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { value: kValue.f32.infinity.positive, num_ulp: 1, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { value: kValue.f32.infinity.positive, num_ulp: 4096, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.infinity.positive, num_ulp: 1, expected: [minusOneULP(kValue.f32.positive.max), Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.infinity.positive, num_ulp: 4096, expected: [minusNULP(kValue.f32.positive.max, 4096), Number.POSITIVE_INFINITY] },
       { value: kValue.f32.infinity.negative, num_ulp: 0, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { value: kValue.f32.infinity.negative, num_ulp: 1, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { value: kValue.f32.infinity.negative, num_ulp: 4096, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+      { value: kValue.f32.infinity.negative, num_ulp: 1, expected: [Number.NEGATIVE_INFINITY, plusOneULP(kValue.f32.negative.min)] },
+      { value: kValue.f32.infinity.negative, num_ulp: 4096, expected: [Number.NEGATIVE_INFINITY, plusNULP(kValue.f32.negative.min, 4096)] },
       { value: kValue.f32.positive.max, num_ulp: 0, expected: [kValue.f32.positive.max, kValue.f32.positive.max] },
-      { value: kValue.f32.positive.max, num_ulp: 1, expected: [kValue.f32.positive.nearest_max, Number.POSITIVE_INFINITY] },
-      { value: kValue.f32.positive.max, num_ulp: 4096, expected: [hexToF32(0x7f7fefff), Number.POSITIVE_INFINITY] },
-      { value: kValue.f32.positive.min, num_ulp: 0, expected: [ kValue.f32.positive.min,  kValue.f32.positive.min] },
-      { value: kValue.f32.positive.min, num_ulp: 1, expected: [0, hexToF32(0x00800001)] },
-      { value: kValue.f32.positive.min, num_ulp: 4096, expected: [0, hexToF32(0x00801000)] },
+      { value: kValue.f32.positive.max, num_ulp: 1, expected: [minusOneULP(kValue.f32.positive.max), Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.positive.max, num_ulp: 4096, expected: [minusNULP(kValue.f32.positive.max, 4096), Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.positive.min, num_ulp: 0, expected: [kValue.f32.positive.min, kValue.f32.positive.min] },
+      { value: kValue.f32.positive.min, num_ulp: 1, expected: [0, plusOneULP(kValue.f32.positive.min)] },
+      { value: kValue.f32.positive.min, num_ulp: 4096, expected: [0, plusNULP(kValue.f32.positive.min, 4096)] },
       { value: kValue.f32.negative.min, num_ulp: 0, expected: [kValue.f32.negative.min, kValue.f32.negative.min] },
-      { value: kValue.f32.negative.min, num_ulp: 1, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.nearest_min] },
-      { value: kValue.f32.negative.min, num_ulp: 4096, expected: [Number.NEGATIVE_INFINITY, hexToF32(0xff7fefff)] },
+      { value: kValue.f32.negative.min, num_ulp: 1, expected: [Number.NEGATIVE_INFINITY, plusOneULP(kValue.f32.negative.min)] },
+      { value: kValue.f32.negative.min, num_ulp: 4096, expected: [Number.NEGATIVE_INFINITY, plusNULP(kValue.f32.negative.min, 4096)] },
       { value: kValue.f32.negative.max, num_ulp: 0, expected: [kValue.f32.negative.max, kValue.f32.negative.max] },
-      { value: kValue.f32.negative.max, num_ulp: 1, expected: [hexToF32(0x80800001), 0] },
-      { value: kValue.f32.negative.max, num_ulp: 4096, expected: [hexToF32(0x80801000), 0] },
+      { value: kValue.f32.negative.max, num_ulp: 1, expected: [minusOneULP(kValue.f32.negative.max), 0] },
+      { value: kValue.f32.negative.max, num_ulp: 4096, expected: [minusNULP(kValue.f32.negative.max, 4096), 0] },
 
       // 32-bit subnormals
       { value: kValue.f32.subnormal.positive.max, num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.max] },
-      { value: kValue.f32.subnormal.positive.max, num_ulp: 1, expected: [kValue.f32.negative.max, hexToF32(0x00ffffff)] },
-      { value: kValue.f32.subnormal.positive.max, num_ulp: 4096, expected: [hexToF32(0x86800000), hexToF64(0x38d000ff, 0xfffe0000)] },
+      { value: kValue.f32.subnormal.positive.max, num_ulp: 1, expected: [minusOneULP(0), plusOneULP(kValue.f32.subnormal.positive.max)] },
+      { value: kValue.f32.subnormal.positive.max, num_ulp: 4096, expected: [minusNULP(0, 4096), plusNULP(kValue.f32.subnormal.positive.max, 4096)] },
       { value: kValue.f32.subnormal.positive.min, num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: kValue.f32.subnormal.positive.min, num_ulp: 1, expected: [kValue.f32.negative.max, hexToF32(0x00800001)] },
-      { value: kValue.f32.subnormal.positive.min, num_ulp: 4096, expected: [hexToF32(0x86800000), hexToF64(0x38d00000, 0x00020000)] },
+      { value: kValue.f32.subnormal.positive.min, num_ulp: 1, expected: [minusOneULP(0), plusOneULP(kValue.f32.subnormal.positive.min)] },
+      { value: kValue.f32.subnormal.positive.min, num_ulp: 4096, expected: [minusNULP(0, 4096), plusNULP(kValue.f32.subnormal.positive.min, 4096)] },
       { value: kValue.f32.subnormal.negative.min, num_ulp: 0, expected: [kValue.f32.subnormal.negative.min, 0] },
-      { value: kValue.f32.subnormal.negative.min, num_ulp: 1, expected: [hexToF32(0x80ffffff), kValue.f32.positive.min] },
-      { value: kValue.f32.subnormal.negative.min, num_ulp: 4096, expected: [hexToF64(0xb8d000ff, 0xfffe0000), hexToF32(0x06800000)] },
+      { value: kValue.f32.subnormal.negative.min, num_ulp: 1, expected: [minusOneULP(kValue.f32.subnormal.negative.min), plusOneULP(0)] },
+      { value: kValue.f32.subnormal.negative.min, num_ulp: 4096, expected: [minusNULP(kValue.f32.subnormal.negative.min, 4096), plusNULP(0, 4096)] },
       { value: kValue.f32.subnormal.negative.max, num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: kValue.f32.subnormal.negative.max, num_ulp: 1, expected: [hexToF32(0x80800001), kValue.f32.positive.min] },
-      { value: kValue.f32.subnormal.negative.max, num_ulp: 4096, expected: [hexToF64(0xb8d00000, 0x00020000), hexToF32(0x06800000)] },
+      { value: kValue.f32.subnormal.negative.max, num_ulp: 1, expected: [minusOneULP(kValue.f32.subnormal.negative.max), plusOneULP(0)] },
+      { value: kValue.f32.subnormal.negative.max, num_ulp: 4096, expected: [minusNULP(kValue.f32.subnormal.negative.max, 4096), plusNULP(0, 4096)] },
 
       // 64-bit subnormals
       { value: hexToF64(0x00000000, 0x00000001), num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: hexToF64(0x00000000, 0x00000001), num_ulp: 1, expected: [kValue.f32.negative.max, hexToF32(0x00800001)] },
-      { value: hexToF64(0x00000000, 0x00000001), num_ulp: 4096, expected: [hexToF32(0x86800000), hexToF64(0x38d00000, 0x00020000)] },
+      { value: hexToF64(0x00000000, 0x00000001), num_ulp: 1, expected: [minusOneULP(0), plusOneULP(kValue.f32.subnormal.positive.min)] },
+      { value: hexToF64(0x00000000, 0x00000001), num_ulp: 4096, expected: [minusNULP(0, 4096), plusNULP(kValue.f32.subnormal.positive.min, 4096)] },
       { value: hexToF64(0x00000000, 0x00000002), num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: hexToF64(0x00000000, 0x00000002), num_ulp: 1, expected: [kValue.f32.negative.max, hexToF32(0x00800001)] },
-      { value: hexToF64(0x00000000, 0x00000002), num_ulp: 4096, expected: [hexToF32(0x86800000), hexToF64(0x38d00000, 0x00020000)] },
+      { value: hexToF64(0x00000000, 0x00000002), num_ulp: 1, expected: [minusOneULP(0), plusOneULP(kValue.f32.subnormal.positive.min)] },
+      { value: hexToF64(0x00000000, 0x00000002), num_ulp: 4096, expected: [minusNULP(0, 4096), plusNULP(kValue.f32.subnormal.positive.min, 4096)] },
       { value: hexToF64(0x800fffff, 0xffffffff), num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: hexToF64(0x800fffff, 0xffffffff), num_ulp: 1, expected: [hexToF32(0x80800001), kValue.f32.positive.min] },
-      { value: hexToF64(0x800fffff, 0xffffffff), num_ulp: 4096, expected: [hexToF64(0xb8d00000, 0x00020000), hexToF32(0x06800000)] },
+      { value: hexToF64(0x800fffff, 0xffffffff), num_ulp: 1, expected: [minusOneULP(kValue.f32.subnormal.negative.max), plusOneULP(0)] },
+      { value: hexToF64(0x800fffff, 0xffffffff), num_ulp: 4096, expected: [minusNULP(kValue.f32.subnormal.negative.max, 4096), plusNULP(0, 4096)] },
       { value: hexToF64(0x800fffff, 0xfffffffe), num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: hexToF64(0x800fffff, 0xfffffffe), num_ulp: 1, expected: [hexToF32(0x80800001), kValue.f32.positive.min] },
-      { value: hexToF64(0x800fffff, 0xfffffffe), num_ulp: 4096, expected: [hexToF64(0xb8d00000, 0x00020000), hexToF32(0x06800000)] },
+      { value: hexToF64(0x800fffff, 0xfffffffe), num_ulp: 1, expected: [minusOneULP(kValue.f32.subnormal.negative.max), plusOneULP(0)] },
+      { value: hexToF64(0x800fffff, 0xfffffffe), num_ulp: 4096, expected: [minusNULP(kValue.f32.subnormal.negative.max, 4096), plusNULP(0, 4096)] },
 
       // Zero
       { value: 0, num_ulp: 0, expected: [0, 0] },
-      { value: 0, num_ulp: 1, expected: [kValue.f32.negative.max, kValue.f32.positive.min] },
-      { value: 0, num_ulp: 4096, expected: [hexToF32(0x86800000), hexToF32(0x06800000)] },
+      { value: 0, num_ulp: 1, expected: [minusOneULP(0), plusOneULP(0)] },
+      { value: 0, num_ulp: 4096, expected: [minusNULP(0, 4096), plusNULP(0, 4096)] },
     ]
   )
   .fn(t => {
@@ -763,7 +763,7 @@ g.test('expInterval')
       { input: Number.NEGATIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { input: 0, expected: [1,1] },
       { input: 1, expected: [kValue.f32.positive.e, plusOneULP(kValue.f32.positive.e)] },
-      { input: 89, expected: arrayToInterval([kValue.f32.positive.max, Number.POSITIVE_INFINITY]) },
+      { input: 89, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
     ]
   )
   .fn(t => {
@@ -795,7 +795,7 @@ g.test('exp2Interval')
       { input: Number.NEGATIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { input: 0, expected: [1,1] },
       { input: 1, expected: [2, 2] },
-      { input: 128, expected: arrayToInterval([kValue.f32.positive.max, Number.POSITIVE_INFINITY]) },
+      { input: 128, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
     ]
   )
   .fn(t => {
@@ -903,7 +903,7 @@ g.test('logInterval')
   .paramsSubcasesOnly<PointToIntervalCase>(
     // prettier-ignore
     [
-      { input: 0, expected: arrayToInterval([Number.NEGATIVE_INFINITY, kValue.f32.negative.min]) },
+      { input: 0, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
       { input: 1, expected: [0, 0] },
       { input: kValue.f32.positive.e, expected: [minusOneULP(1), 1] },
       { input: kValue.f32.positive.max, expected: [minusOneULP(hexToF32(0x42b17218)), hexToF32(0x42b17218)] },  // ~88.72...
@@ -937,7 +937,7 @@ g.test('log2Interval')
   .paramsSubcasesOnly<PointToIntervalCase>(
     // prettier-ignore
     [
-      { input: 0, expected: arrayToInterval([Number.NEGATIVE_INFINITY, kValue.f32.negative.min]) },
+      { input: 0, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
       { input: 1, expected: [0, 0] },
       { input: 2, expected: [1, 1] },
       { input: kValue.f32.positive.max, expected: [minusOneULP(128), 128] },
