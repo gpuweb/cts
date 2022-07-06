@@ -10,11 +10,10 @@ Returns the fractional part of e, computed as e - floor(e).
 Component-wise when T is a vector.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { correctlyRoundedMatch, anyOf } from '../../../../../util/compare.js';
-import { kBit, kValue } from '../../../../../util/constants.js';
-import { f32, f32Bits, TypeF32 } from '../../../../../util/conversion.js';
-import { isSubnormalNumber } from '../../../../../util/math.js';
-import { allInputSources, makeUnaryF32Case, run } from '../../expression.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
+import { fractInterval } from '../../../../../util/f32_interval.js';
+import { fullF32Range } from '../../../../../util/math.js';
+import { allInputSources, makeUnaryF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -35,59 +34,29 @@ params((u) =>
 u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
-  const cfg = t.params;
-  cfg.cmpFloats = correctlyRoundedMatch();
-
   const makeCase = (x) => {
-    const result = x - Math.floor(x);
-    if (result < 1.0 || isSubnormalNumber(x)) {
-      return makeUnaryF32Case(x, (x) => x - Math.floor(x));
-    }
-    // Very small negative numbers can lead to catastrophic cancellation, thus calculating a fract of 1.0, which is
-    // technically not a fractional part.
-    // Some platforms return the nearest number less than 1, and others 1.0.
-    // https://github.com/gpuweb/gpuweb/issues/2822 has been filed to clarify.
-    return { input: f32(x), expected: anyOf(f32(1.0), f32Bits(0x3f7f_ffff)) };
+    return makeUnaryF32IntervalCase(x, fractInterval);
   };
 
   const cases = [
-  // Zeroes
-  { input: f32Bits(kBit.f32.positive.zero), expected: f32(0) },
-  { input: f32Bits(kBit.f32.negative.zero), expected: f32(0) },
-
-  // Positive numbers
-  makeCase(0.1), // ~0.1 -> ~0.1
-  makeCase(0.5), // 0.5 -> 0.5
-  makeCase(0.9), // ~0.9 -> ~0.9
-  makeCase(1), // 1 -> 0
-  makeCase(2), // 2 -> 0
-  makeCase(1.11), // ~1.11 -> ~0.11
-  makeCase(10.0001), // ~10.0001 -> ~0.0001
-
-  // Negative numbers
-  makeCase(-0.1), // ~-0.1 -> ~0.9
-  makeCase(-0.5), // -0.5 -> 0.5
-  makeCase(-0.9), // ~-0.9 -> ~0.1
-  makeCase(-1), // -1 -> 0
-  makeCase(-2), // -2 -> 0
-  makeCase(-1.11), // ~-1.11 -> ~0.89
-  makeCase(-10.0001), // -10.0001 -> ~0.9999
-
-  // Min and Max f32
-  makeCase(kValue.f32.positive.min),
-  makeCase(kValue.f32.positive.max),
-  makeCase(kValue.f32.negative.max),
-  makeCase(kValue.f32.negative.min),
-
-  // Subnormal f32
-  makeCase(kValue.f32.subnormal.positive.min),
-  makeCase(kValue.f32.subnormal.positive.max),
-  makeCase(kValue.f32.subnormal.negative.max),
-  makeCase(kValue.f32.subnormal.negative.min)];
+  0.5, // 0.5 -> 0.5
+  0.9, // ~0.9 -> ~0.9
+  1, // 1 -> 0
+  2, // 2 -> 0
+  1.11, // ~1.11 -> ~0.11
+  10.0001, // ~10.0001 -> ~0.0001
+  -0.1, // ~-0.1 -> ~0.9
+  -0.5, // -0.5 -> 0.5
+  -0.9, // ~-0.9 -> ~0.1
+  -1, // -1 -> 0
+  -2, // -2 -> 0
+  -1.11, // ~-1.11 -> ~0.89
+  -10.0001, // -10.0001 -> ~0.9999
+  ...fullF32Range()].
+  map(makeCase);
 
 
-
-  run(t, builtin('fract'), [TypeF32], TypeF32, cfg, cases);
+  run(t, builtin('fract'), [TypeF32], TypeF32, t.params, cases);
 });
 
 g.test('f16').

@@ -1194,6 +1194,7 @@ paramsSimple([
 { bits: kBit.f32.positive.max, value: kValue.f32.positive.max },
 { bits: kBit.f32.positive.min, value: kValue.f32.positive.min },
 { bits: kBit.f32.positive.nearest_max, value: kValue.f32.positive.nearest_max },
+{ bits: kBit.f32.positive.less_than_one, value: kValue.f32.positive.less_than_one },
 { bits: kBit.f32.positive.pi.whole, value: kValue.f32.positive.pi.whole },
 { bits: kBit.f32.positive.pi.three_quarters, value: kValue.f32.positive.pi.three_quarters },
 { bits: kBit.f32.positive.pi.half, value: kValue.f32.positive.pi.half },

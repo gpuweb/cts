@@ -19,6 +19,7 @@ import {
   exp2Interval,
   F32Interval,
   floorInterval,
+  fractInterval,
   inverseSqrtInterval,
   logInterval,
   log2Interval,
@@ -862,6 +863,41 @@ g.test('floorInterval')
     t.expect(
       objectEquals(expected, got),
       `floorInterval(${input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('fractInterval')
+  .paramsSubcasesOnly<PointToIntervalCase>(
+    // prettier-ignore
+    [
+      { input: 0, expected: [0, 0] },
+      { input: 0.1, expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
+      { input: 0.9, expected: [hexToF32(0x3f666666), plusOneULP(hexToF32(0x3f666666))] },  // ~0.9
+      { input: 1.0, expected: [0.0, 0.0] },
+      { input: 1.1, expected: [hexToF64(0x3fb99998, 0x00000000), hexToF64(0x3fb9999a, 0x00000000)] }, // ~0.1
+      { input: -0.1, expected: [hexToF32(0x3f666666), plusOneULP(hexToF32(0x3f666666))] },  // ~0.9
+      { input: -0.9, expected: [hexToF64(0x3fb99999, 0x00000000), hexToF64(0x3fb9999a, 0x00000000)] }, // ~0.1
+      { input: -1.0, expected: [0.0, 0.0] },
+      { input: -1.1, expected: [hexToF64(0x3feccccc, 0xc0000000), hexToF64(0x3feccccd, 0x00000000), ] }, // ~0.9
+
+      // Edge cases
+      { input: Number.POSITIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: Number.NEGATIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]  },
+      { input: kValue.f32.positive.max, expected: [0, 0] },
+      { input: kValue.f32.positive.min, expected: [kValue.f32.positive.min, kValue.f32.positive.min] },
+      { input: kValue.f32.negative.min, expected: [0, 0] },
+      { input: kValue.f32.negative.max, expected: [kValue.f32.positive.less_than_one, 1.0] },
+    ]
+  )
+  .fn(t => {
+    const input = t.params.input;
+    const expected =
+      t.params.expected instanceof Array ? arrayToInterval(t.params.expected) : t.params.expected;
+
+    const got = fractInterval(input);
+    t.expect(
+      objectEquals(expected, got),
+      `fractInterval(${input}) returned ${got}. Expected ${expected}`
     );
   });
 

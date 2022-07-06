@@ -588,6 +588,27 @@ export function floorInterval(n) {
   return runPointOp(toInterval(n), FloorIntervalOp);
 }
 
+const FractIntervalOp = {
+  impl: (n) => {
+    // fract(x) = x - floor(x) is defined in the spec.
+    // For people coming from a non-graphics background this will cause some unintuitive results. For example,
+    // fract(-1.1) is not 0.1 or -0.1, but instead 0.9.
+    // This is how other shading languages operate and allows for a desirable wrap around in graphics programming.
+    const result = subtractionInterval(n, floorInterval(n));
+    if (result.contains(1)) {
+      // Very small negative numbers can lead to catastrophic cancellation, thus calculating a fract of 1.0, which is
+      // technically not a fractional part, so some implementations clamp the result to next nearest number.
+      return F32Interval.span(result, toInterval(kValue.f32.positive.less_than_one));
+    }
+    return result;
+  } };
+
+
+/** Calculate an acceptance interval of fract(x) */
+export function fractInterval(n) {
+  return runPointOp(toInterval(n), FractIntervalOp);
+}
+
 const InverseSqrtIntervalOp = {
   impl: (n) => {
     if (n <= 0) {
