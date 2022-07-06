@@ -205,7 +205,7 @@ g.test('canvas_configuration_view_formats')
 
     const canvasConf = {
       device: t.device,
-      format: 'bgra8unorm' as GPUTextureFormat,
+      format: 'bgra8unorm' as const,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
       viewFormats: viewFormats as GPUTextureFormat[],
     };
