@@ -605,6 +605,11 @@ export function inverseSqrtInterval(n: number | F32Interval): F32Interval {
 
 const LogIntervalOp: PointToIntervalOp = {
   impl: (x: number): F32Interval => {
+    // log is not defined in the real plane for x <= 0
+    if (x <= 0.0) {
+      return F32Interval.infinite();
+    }
+
     if (x >= 0.5 && x <= 2.0) {
       return absoluteErrorInterval(Math.log(x), 2 ** -21);
     }
@@ -619,6 +624,11 @@ export function logInterval(x: number | F32Interval): F32Interval {
 
 const Log2IntervalOp: PointToIntervalOp = {
   impl: (x: number): F32Interval => {
+    // log2 is not defined in the real plane for x <= 0
+    if (x <= 0.0) {
+      return F32Interval.infinite();
+    }
+
     if (x >= 0.5 && x <= 2.0) {
       return absoluteErrorInterval(Math.log2(x), 2 ** -21);
     }

@@ -12,7 +12,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { logInterval } from '../../../../../util/f32_interval.js';
-import { biasedRange, linearRange } from '../../../../../util/math.js';
+import { biasedRange, fullF32Range, linearRange } from '../../../../../util/math.js';
 import { allInputSources, makeUnaryF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -45,11 +45,12 @@ fn(async (t) => {
     return makeUnaryF32IntervalCase(x, logInterval);
   };
 
-  // log's accuracy is defined in three regions { [0, 0.5), [0.5, 2.0], (2.0, +∞] }
   const cases = [
+  // log's accuracy is defined in three regions { [0, 0.5), [0.5, 2.0], (2.0, +∞] }
   ...linearRange(kValue.f32.positive.min, 0.5, 20),
   ...linearRange(0.5, 2.0, 20),
-  ...biasedRange(2.0, 2 ** 32, 1000)].
+  ...biasedRange(2.0, 2 ** 32, 1000),
+  ...fullF32Range()].
   map((x) => makeCase(x));
 
   run(t, builtin('log'), [TypeF32], TypeF32, t.params, cases);

@@ -903,7 +903,8 @@ g.test('logInterval').
 paramsSubcasesOnly(
 
 [
-{ input: 0, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+{ input: -1, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+{ input: 0, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
 { input: 1, expected: [0, 0] },
 { input: kValue.f32.positive.e, expected: [minusOneULP(1), 1] },
 { input: kValue.f32.positive.max, expected: [minusOneULP(hexToF32(0x42b17218)), hexToF32(0x42b17218)] } // ~88.72...
@@ -937,7 +938,8 @@ g.test('log2Interval').
 paramsSubcasesOnly(
 
 [
-{ input: 0, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+{ input: -1, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+{ input: 0, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
 { input: 1, expected: [0, 0] },
 { input: 2, expected: [1, 1] },
 { input: kValue.f32.positive.max, expected: [minusOneULP(128), 128] }]).
