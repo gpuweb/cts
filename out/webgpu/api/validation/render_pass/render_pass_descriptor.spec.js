@@ -88,7 +88,9 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
-g.test('a_render_pass_with_only_one_color_is_ok').fn((t) => {
+g.test('one_color_attachment').
+desc(`Test that a render pass works with only one color attachment.`).
+fn((t) => {
   const colorTexture = t.createTexture({ format: 'rgba8unorm' });
   const descriptor = {
     colorAttachments: [t.getColorAttachment(colorTexture)] };
@@ -97,7 +99,9 @@ g.test('a_render_pass_with_only_one_color_is_ok').fn((t) => {
   t.tryRenderPass(true, descriptor);
 });
 
-g.test('a_render_pass_with_only_one_depth_attachment_is_ok').fn((t) => {
+g.test('one_depth_stencil_attachment').
+desc(`Test that a render pass works with only one depthStencil attachment.`).
+fn((t) => {
   const depthStencilTexture = t.createTexture({ format: 'depth24plus-stencil8' });
   const descriptor = {
     colorAttachments: [],
@@ -109,7 +113,10 @@ g.test('a_render_pass_with_only_one_depth_attachment_is_ok').fn((t) => {
 
 g.test('color_attachments_empty').
 desc(
-`Tests that when colorAttachments has all values be 'undefined' or the sequence is empty, the depthStencilAttachment must not be 'undefined'.`).
+`
+  Test that when colorAttachments has all values be 'undefined' or the sequence is empty, the
+  depthStencilAttachment must not be 'undefined'.
+  `).
 
 paramsSubcasesOnly((u) =>
 u.
@@ -143,7 +150,13 @@ fn(async (t) => {
 
 });
 
-g.test('OOB_color_attachment_indices_are_handled').
+g.test('out_of_bounds_color_attachments').
+desc(
+`
+  Test that the out of bound of color attachment indexes are handled.
+    - a validation error is generated when color attachments exceed the maximum limit(8).
+  `).
+
 paramsSimple([
 { colorAttachmentsCount: 8, _success: true }, // Control case
 { colorAttachmentsCount: 9, _success: false } // Out of bounds
@@ -160,7 +173,16 @@ fn(async (t) => {
   t.tryRenderPass(_success, { colorAttachments });
 });
 
-g.test('attachments_must_have_the_same_size').fn(async (t) => {
+g.test('attachments_same_size').
+desc(
+`
+  Test that attachments have the same size. Otherwise, a validation error should be generated.
+    - Succeed if all attachments have the same size.
+    - Fail if one of the color attachments has a different size.
+    - Fail if the depth stencil attachment has a different size.
+  `).
+
+fn(async (t) => {
   const colorTexture1x1A = t.createTexture({ width: 1, height: 1, format: 'rgba8unorm' });
   const colorTexture1x1B = t.createTexture({ width: 1, height: 1, format: 'rgba8unorm' });
   const colorTexture2x2 = t.createTexture({ width: 2, height: 2, format: 'rgba8unorm' });
