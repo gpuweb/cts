@@ -2,6 +2,7 @@ export const description = `
 Tests for GPUCanvasContext.getCurrentTexture.
 `;
 
+import { SkipTestCase } from '../../../common/framework/fixture.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert, unreachable } from '../../../common/util/util.js';
 import { GPUTest } from '../../gpu_test.js';
@@ -26,7 +27,10 @@ class GPUContextTest extends GPUTest {
 export const g = makeTestGroup(GPUContextTest);
 
 g.test('configured')
-  .desc(`Checks that the value of getCurrentTexture is consistent within a single frame.`)
+  .desc(
+    `Checks that calling getCurrentTexture requires the context to be configured first, and
+  that each call to configure causes getCurrentTexture to return a new texture.`
+  )
   .params(u =>
     u //
       .combine('canvasType', kAllCanvasTypes)
@@ -127,12 +131,18 @@ g.test('multiple_frames')
       .beginSubcases()
       .combine('clearTexture', [true, false])
   )
+  .beforeAllSubcases(t => {
+    const { canvasType } = t.params;
+    if (canvasType === 'offscreen' && !('transferToImageBitmap' in OffscreenCanvas.prototype)) {
+      throw new SkipTestCase('transferToImageBitmap not supported');
+    }
+  })
   .fn(async t => {
     const { canvasType, clearTexture } = t.params;
 
     return new Promise(resolve => {
       const ctx = t.initCanvasContext(canvasType);
-      let prevTexture: GPUTexture;
+      let prevTexture: GPUTexture | undefined;
       let frameCount = 0;
 
       async function frameCheck() {
@@ -176,6 +186,8 @@ g.test('multiple_frames')
               break;
             case 'offscreen': {
               (ctx.canvas as OffscreenCanvas).transferToImageBitmap();
+              // The beginning of frameCheck runs immediately (in the same task), so this
+              // verifies the state has changed synchronously.
               void frameCheck();
               break;
             }
@@ -210,6 +222,10 @@ g.test('resize')
     t.expect(prevTexture !== currentTexture);
     t.expect(currentTexture.width === ctx.canvas.width);
     t.expect(currentTexture.height === ctx.canvas.height);
+
+    // The width and height of the previous texture should remain unchanged.
+    t.expect(prevTexture.width === 2);
+    t.expect(prevTexture.height === 2);
     prevTexture = currentTexture;
 
     // Ensure that texture contents are transparent black.
@@ -226,6 +242,8 @@ g.test('resize')
     t.expect(prevTexture !== currentTexture);
     t.expect(currentTexture.width === ctx.canvas.width);
     t.expect(currentTexture.height === ctx.canvas.height);
+    t.expect(prevTexture.width === 4);
+    t.expect(prevTexture.height === 2);
     prevTexture = currentTexture;
 
     // Ensure that texture contents are transparent black.

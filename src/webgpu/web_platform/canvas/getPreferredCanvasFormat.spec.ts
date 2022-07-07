@@ -1,5 +1,5 @@
 export const description = `
-Tests for GPUCanvasContext.getPreferredFormat.
+Tests for navigator.gpu.getPreferredCanvasFormat.
 `;
 
 import { Fixture } from '../../../common/framework/fixture.js';
