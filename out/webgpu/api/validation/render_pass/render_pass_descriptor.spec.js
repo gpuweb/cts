@@ -88,7 +88,7 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
-g.test('one_color_attachment').
+g.test('attachments,one_color_attachment').
 desc(`Test that a render pass works with only one color attachment.`).
 fn((t) => {
   const colorTexture = t.createTexture({ format: 'rgba8unorm' });
@@ -99,7 +99,7 @@ fn((t) => {
   t.tryRenderPass(true, descriptor);
 });
 
-g.test('one_depth_stencil_attachment').
+g.test('attachments,one_depth_stencil_attachment').
 desc(`Test that a render pass works with only one depthStencil attachment.`).
 fn((t) => {
   const depthStencilTexture = t.createTexture({ format: 'depth24plus-stencil8' });
@@ -111,7 +111,7 @@ fn((t) => {
   t.tryRenderPass(true, descriptor);
 });
 
-g.test('color_attachments_empty').
+g.test('color_attachments,empty').
 desc(
 `
   Test that when colorAttachments has all values be 'undefined' or the sequence is empty, the
@@ -150,7 +150,7 @@ fn(async (t) => {
 
 });
 
-g.test('out_of_bounds_color_attachments').
+g.test('color_attachments,out_of_bounds').
 desc(
 `
   Test that the out of bound of color attachment indexes are handled.
@@ -173,7 +173,7 @@ fn(async (t) => {
   t.tryRenderPass(_success, { colorAttachments });
 });
 
-g.test('attachments_same_size').
+g.test('attachments,same_size').
 desc(
 `
   Test that attachments have the same size. Otherwise, a validation error should be generated.
@@ -234,7 +234,9 @@ fn(async (t) => {
   }
 });
 
-g.test('attachments_must_match_whether_they_are_used_for_color_or_depth_stencil').fn(async (t) => {
+g.test('attachments,color_depth_mismatch').
+desc(`Test that attachments match whether they are used for color or depth stencil.`).
+fn(async (t) => {
   const colorTexture = t.createTexture({ format: 'rgba8unorm' });
   const depthStencilTexture = t.createTexture({ format: 'depth24plus-stencil8' });
 
@@ -257,12 +259,20 @@ g.test('attachments_must_match_whether_they_are_used_for_color_or_depth_stencil'
   }
 });
 
-g.test('check_layer_count_for_color_or_depth_stencil').
+g.test('attachments,layer_count').
+desc(
+`
+  Test the layer counts for color or depth stencil.
+    - Fail if using 2D array texture view with arrayLayerCount > 1.
+    - Succeed if using 2D array texture view that covers the first layer of the texture.
+    - Succeed if using 2D array texture view that covers the last layer for depth stencil.
+  `).
+
 paramsSimple([
-{ arrayLayerCount: 5, baseArrayLayer: 0, _success: false }, // using 2D array texture view with arrayLayerCount > 1 is not allowed
-{ arrayLayerCount: 1, baseArrayLayer: 0, _success: true }, // using 2D array texture view that covers the first layer of the texture is OK
-{ arrayLayerCount: 1, baseArrayLayer: 9, _success: true } // using 2D array texture view that covers the last layer is OK for depth stencil
-]).
+{ arrayLayerCount: 5, baseArrayLayer: 0, _success: false },
+{ arrayLayerCount: 1, baseArrayLayer: 0, _success: true },
+{ arrayLayerCount: 1, baseArrayLayer: 9, _success: true }]).
+
 fn(async (t) => {
   const { arrayLayerCount, baseArrayLayer, _success } = t.params;
 
@@ -326,12 +336,20 @@ fn(async (t) => {
   }
 });
 
-g.test('check_mip_level_count_for_color_or_depth_stencil').
+g.test('attachments,mip_level_count').
+desc(
+`
+  Test the mip level count for color or depth stencil.
+    - Fail if using 2D texture view with mipLevelCount > 1.
+    - Succeed if using 2D texture view that covers the first level of the texture.
+    - Succeed if using 2D texture view that covers the last level of the texture.
+  `).
+
 paramsSimple([
-{ mipLevelCount: 2, baseMipLevel: 0, _success: false }, // using 2D texture view with mipLevelCount > 1 is not allowed
-{ mipLevelCount: 1, baseMipLevel: 0, _success: true }, // using 2D texture view that covers the first level of the texture is OK
-{ mipLevelCount: 1, baseMipLevel: 3, _success: true } // using 2D texture view that covers the last level of the texture is OK
-]).
+{ mipLevelCount: 2, baseMipLevel: 0, _success: false },
+{ mipLevelCount: 1, baseMipLevel: 0, _success: true },
+{ mipLevelCount: 1, baseMipLevel: 3, _success: true }]).
+
 fn(async (t) => {
   const { mipLevelCount, baseMipLevel, _success } = t.params;
 
@@ -395,8 +413,13 @@ fn(async (t) => {
   }
 });
 
-g.test('it_is_invalid_to_set_resolve_target_if_color_attachment_is_non_multisampled').fn(
-async (t) => {
+g.test('color_attachments,non_multisampled').
+desc(
+`
+  Test that setting a resolve target is invalid if the color attachments is non multisampled.
+  `).
+
+fn(async (t) => {
   const colorTexture = t.createTexture({ sampleCount: 1 });
   const resolveTargetTexture = t.createTexture({ sampleCount: 1 });
 
@@ -415,8 +438,15 @@ async (t) => {
   t.tryRenderPass(false, descriptor);
 });
 
+g.test('color_attachments,sample_count').
+desc(
+`
+  Test the usages of multisampled textures for color attachments.
+    - Succeed if using a multisampled color attachment without setting a resolve target.
+    - Fail if using multiple color attachments with different sample counts.
+  `).
 
-g.test('check_the_use_of_multisampled_textures_as_color_attachments').fn(async (t) => {
+fn(async (t) => {
   const colorTexture = t.createTexture({ sampleCount: 1 });
   const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
 
@@ -440,7 +470,13 @@ g.test('check_the_use_of_multisampled_textures_as_color_attachments').fn(async (
   }
 });
 
-g.test('it_is_invalid_to_use_a_multisampled_resolve_target').fn(async (t) => {
+g.test('resolveTarget,sample_count').
+desc(
+`
+  Test that using multisampled resolve target is invalid for color attachments.
+  `).
+
+fn(async (t) => {
   const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
   const multisampledResolveTargetTexture = t.createTexture({ sampleCount: 4 });
 
@@ -454,8 +490,14 @@ g.test('it_is_invalid_to_use_a_multisampled_resolve_target').fn(async (t) => {
   t.tryRenderPass(false, descriptor);
 });
 
-g.test('it_is_invalid_to_use_a_resolve_target_with_array_layer_count_greater_than_1').fn(
-async (t) => {
+g.test('resolveTarget,array_layer_count').
+desc(
+`
+  Test that using a resolve target with array layer count is greater than 1 is invalid for color
+  attachments.
+  `).
+
+fn(async (t) => {
   const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
   const resolveTargetTexture = t.createTexture({ arrayLayerCount: 2 });
 
@@ -469,9 +511,14 @@ async (t) => {
   t.tryRenderPass(false, descriptor);
 });
 
+g.test('resolveTarget,mipmap_level_count').
+desc(
+`
+  Test that using a resolve target with that mipmap level count is greater than 1 is invalid for
+  color attachments.
+  `).
 
-g.test('it_is_invalid_to_use_a_resolve_target_with_mipmap_level_count_greater_than_1').fn(
-async (t) => {
+fn(async (t) => {
   const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
   const resolveTargetTexture = t.createTexture({ mipLevelCount: 2 });
 
@@ -485,8 +532,16 @@ async (t) => {
   t.tryRenderPass(false, descriptor);
 });
 
+g.test('resolveTarget,usage').
+desc(
+`
+  Test that using a resolve target whose usage is not RENDER_ATTACHMENT is invalid for color
+  attachments.
 
-g.test('it_is_invalid_to_use_a_resolve_target_whose_usage_is_not_RENDER_ATTACHMENT').fn(async (t) => {
+  TODO: Add a control case (include vs exclude RENDER_ATTACHMENT usage)
+  `).
+
+fn(async (t) => {
   const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
   const resolveTargetTexture = t.createTexture({
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
