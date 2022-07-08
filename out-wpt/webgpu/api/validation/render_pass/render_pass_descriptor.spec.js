@@ -709,6 +709,35 @@ g.test('depth_stencil_attachment')
     t.tryRenderPass(isValid, descriptor);
   });
 
+g.test('depth_stencil_attachment,depth_clear_value')
+  .desc(
+    `
+  Test that depthClearValue is invalid if the value is out of the range(0.0 and 1.0) when
+  depthLoadOp is 'clear'.
+  `
+  )
+  .paramsSimple([
+    { depthClearValue: -1.0 },
+    { depthClearValue: 0.0 },
+    { depthClearValue: 0.5 },
+    { depthClearValue: 1.0 },
+    { depthClearValue: 1.5 },
+  ])
+  .fn(t => {
+    const { depthClearValue } = t.params;
+
+    const depthStencilTexture = t.createTexture({ format: 'depth24plus-stencil8' });
+    const depthStencilAttachment = t.getDepthStencilAttachment(depthStencilTexture);
+    depthStencilAttachment.depthClearValue = depthClearValue;
+
+    const descriptor = {
+      colorAttachments: [t.getColorAttachment(t.createTexture())],
+      depthStencilAttachment,
+    };
+
+    t.tryRenderPass(depthClearValue >= 0.0 && depthClearValue <= 1.0, descriptor);
+  });
+
 g.test('multisample_render_target_formats_support_resolve')
   .params(u =>
     u
