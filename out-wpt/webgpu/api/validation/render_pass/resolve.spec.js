@@ -23,7 +23,7 @@ Test various validation behaviors when a resolveTarget is provided.
 - resolve target must have exactly one subresource:
     - base mip level {0, >0}, mip level count {1, >1}.
     - base array layer {0, >0}, array layer count {1, >1}.
-    - TODO: test zero subresources
+- resolve target GPUTextureView is invalid
 - resolve source and target have different formats.
     - rgba8unorm -> {bgra8unorm, rgba8unorm-srgb}
     - {bgra8unorm, rgba8unorm-srgb} -> rgba8unorm
@@ -48,6 +48,8 @@ Test various validation behaviors when a resolveTarget is provided.
       _valid: true,
     },
 
+    // a validation error should be created when resolveTarget is invalid.
+    { resolveTargetInvalid: true, _valid: false },
     // a validation error should be created when mip count > 1
     { resolveTargetViewMipCount: 2, _valid: false },
     {
@@ -84,6 +86,7 @@ Test various validation behaviors when a resolveTarget is provided.
       colorAttachmentSamples = 4,
       resolveTargetSamples = 1,
       resolveTargetUsage = GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+      resolveTargetInvalid = false,
       resolveTargetViewMipCount = 1,
       resolveTargetViewBaseMipLevel = 0,
       resolveTargetViewArrayLayerCount = 1,
@@ -104,8 +107,8 @@ Test various validation behaviors when a resolveTarget is provided.
         colorAttachmentSlot < kNumColorAttachments;
         colorAttachmentSlot++
       ) {
-        // resolveSlot === colorAttachmentSlot denotes the color attachment slot that contains the color attachment with resolve
-        // target.
+        // resolveSlot === colorAttachmentSlot denotes the color attachment slot that contains the
+        // color attachment with resolve target.
         if (resolveSlot === colorAttachmentSlot) {
           // Create the color attachment with resolve target with the configurable parameters.
           const resolveSourceColorAttachment = t.device.createTexture({
@@ -138,13 +141,15 @@ Test various validation behaviors when a resolveTarget is provided.
             view: resolveSourceColorAttachment.createView(),
             loadOp: 'load',
             storeOp: 'discard',
-            resolveTarget: resolveTarget.createView({
-              dimension: resolveTargetViewArrayLayerCount === 1 ? '2d' : '2d-array',
-              mipLevelCount: resolveTargetViewMipCount,
-              arrayLayerCount: resolveTargetViewArrayLayerCount,
-              baseMipLevel: resolveTargetViewBaseMipLevel,
-              baseArrayLayer: resolveTargetViewBaseArrayLayer,
-            }),
+            resolveTarget: resolveTargetInvalid
+              ? t.getErrorTextureView()
+              : resolveTarget.createView({
+                  dimension: resolveTargetViewArrayLayerCount === 1 ? '2d' : '2d-array',
+                  mipLevelCount: resolveTargetViewMipCount,
+                  arrayLayerCount: resolveTargetViewArrayLayerCount,
+                  baseMipLevel: resolveTargetViewBaseMipLevel,
+                  baseArrayLayer: resolveTargetViewBaseArrayLayer,
+                }),
           });
         } else {
           // Create a basic texture to fill other color attachment slots. This texture's dimensions
