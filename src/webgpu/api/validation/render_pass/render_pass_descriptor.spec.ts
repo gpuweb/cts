@@ -744,7 +744,7 @@ g.test('timestamp_writes_location')
       location: locationB,
     };
 
-    const isValid = locationA === locationB ? false : true;
+    const isValid = locationA !== locationB;
 
     const colorTexture = t.createTexture({ format: 'rgba8unorm' });
     const descriptor = {
