@@ -532,11 +532,13 @@ g.test('resolveTarget,mipmap_level_count')
     t.tryRenderPass(false, descriptor);
   });
 
-g.test('color_attachments,resolveTarget_usage')
+g.test('resolveTarget,usage')
   .desc(
     `
   Test that using a resolve target whose usage is not RENDER_ATTACHMENT is invalid for color
   attachments.
+
+  TODO: Add a control case (include vs exclude RENDER_ATTACHMENT usage)
   `
   )
   .fn(async t => {
