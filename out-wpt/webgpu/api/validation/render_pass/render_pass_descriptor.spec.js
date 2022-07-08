@@ -756,3 +756,44 @@ g.test('multisample_render_target_formats_support_resolve')
       colorAttachments: [colorAttachment],
     });
   });
+
+g.test('timestamp_writes_location')
+  .desc('Test that entries in timestampWrites do not have the same location.')
+  .params(u =>
+    u //
+      .combine('locationA', ['beginning', 'end'])
+      .combine('locationB', ['beginning', 'end'])
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase(['timestamp-query']);
+  })
+  .fn(async t => {
+    const { locationA, locationB } = t.params;
+
+    const querySet = t.device.createQuerySet({
+      type: 'timestamp',
+      count: 1,
+    });
+
+    const timestampWriteA = {
+      querySet,
+      queryIndex: 0,
+      location: locationA,
+    };
+
+    const timestampWriteB = {
+      querySet,
+      queryIndex: 1,
+      location: locationB,
+    };
+
+    const isValid = locationA !== locationB;
+
+    const colorTexture = t.createTexture({ format: 'rgba8unorm' });
+    const descriptor = {
+      colorAttachments: [t.getColorAttachment(colorTexture)],
+      timestampWrites: [timestampWriteA, timestampWriteB],
+    };
+
+    t.tryRenderPass(isValid, descriptor);
+  });
