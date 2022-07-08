@@ -9,7 +9,6 @@ import {
   kDepthStencilFormats,
   kDepthStencilFormatResolvedAspect,
   kTextureFormatInfo,
-  kShaderStages,
 } from '../../../../capability_info.js';
 import { GPUConst } from '../../../../constants.js';
 import { ValidationTest } from '../../validation_test.js';
@@ -744,60 +743,52 @@ g.test('subresources_and_binding_types_combination_for_aspect')
     }, !success);
   });
 
-g.test('shader_stages_and_visibility')
+g.test('shader_stages_and_visibility,storage_write')
   .desc(
     `
     Test that stage visibility doesn't affect resource usage validation.
-      - Test the writeonly-storage-texture binding type is not supported in vertex stage.
-      - Test invisible shader stages include shader stage with visibility none, compute shader
-        stage in render pass, and vertex/fragment shader stage in compute pass.
+    - Use a texture as sampled, with 'readVisibility' {0,VERTEX,FRAGMENT,COMPUTE}
+    - Use a {same,different} texture as storage, with 'writeVisibility' {0,FRAGMENT,COMPUTE}
 
-    TODO: Try to add a control case to keep this test from breaking.
-    Ensure description is up to date with the code.
+    There should be a validation error IFF the same texture was used.
   `
   )
   .params(u =>
     u
       .combine('compute', [false, true])
-      .combine('readVisibility', [0, ...kShaderStages])
-      .combine('writeVisibility', [0, ...kShaderStages])
-      .unless(
-        p =>
-          // Writeonly-storage-texture binding type is not supported in vertex stage. But it is the
-          // only way to write into texture in compute. So there is no means to successfully create
-          // a binding which attempt to write into stage(s) with vertex stage in compute pass.
-          p.compute && Boolean(p.writeVisibility & GPUConst.ShaderStage.VERTEX)
-      )
+      .beginSubcases()
+      .combine('secondUseConflicts', [false, true])
+      .combine('readVisibility', [
+        0,
+        GPUConst.ShaderStage.VERTEX,
+        GPUConst.ShaderStage.FRAGMENT,
+        GPUConst.ShaderStage.COMPUTE,
+      ])
+      .combine('writeVisibility', [0, GPUConst.ShaderStage.FRAGMENT, GPUConst.ShaderStage.COMPUTE])
   )
   .fn(t => {
-    const { compute, readVisibility, writeVisibility } = t.params;
+    const { compute, readVisibility, writeVisibility, secondUseConflicts } = t.params;
 
-    // writeonly-storage-texture binding type is not supported in vertex stage. So, this test
-    // uses writeonly-storage-texture binding as writable binding upon the same subresource if
-    // vertex stage is not included. Otherwise, it uses output attachment instead.
-    const writeHasVertexStage = Boolean(writeVisibility & GPUShaderStage.VERTEX);
-    const texUsage = writeHasVertexStage
-      ? GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
-      : GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING;
+    const usage = GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING;
+    const view = t.createTexture({ usage }).createView();
+    const view2 = secondUseConflicts ? view : t.createTexture({ usage }).createView();
 
-    const texture = t.createTexture({ usage: texUsage });
-    const view = texture.createView();
-    const bglEntries: GPUBindGroupLayoutEntry[] = [
-      { binding: 0, visibility: readVisibility, texture: {} },
-    ];
-    const bgEntries: GPUBindGroupEntry[] = [{ binding: 0, resource: view }];
-    if (!writeHasVertexStage) {
-      bglEntries.push({
-        binding: 1,
-        visibility: writeVisibility,
-        storageTexture: { access: 'write-only', format: 'rgba8unorm' },
-      });
-      bgEntries.push({ binding: 1, resource: view });
-    }
-    const bgl = t.device.createBindGroupLayout({ entries: bglEntries });
+    const bgl = t.device.createBindGroupLayout({
+      entries: [
+        { binding: 0, visibility: readVisibility, texture: {} },
+        {
+          binding: 1,
+          visibility: writeVisibility,
+          storageTexture: { access: 'write-only', format: 'rgba8unorm' },
+        },
+      ],
+    });
     const bindGroup = t.device.createBindGroup({
-      entries: bgEntries,
       layout: bgl,
+      entries: [
+        { binding: 0, resource: view },
+        { binding: 1, resource: view2 },
+      ],
     });
 
     const encoder = t.device.createCommandEncoder();
@@ -813,20 +804,66 @@ g.test('shader_stages_and_visibility')
       );
       pass.end();
     } else {
-      const pass = t.beginSimpleRenderPass(
-        encoder,
-        writeHasVertexStage ? view : t.createTexture().createView()
-      );
+      const pass = t.beginSimpleRenderPass(encoder, t.createTexture().createView());
       pass.setBindGroup(0, bindGroup);
       pass.end();
     }
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, secondUseConflicts);
+  });
+
+g.test('shader_stages_and_visibility,attachment_write')
+  .desc(
+    `
+    Test that stage visibility doesn't affect resource usage validation.
+    - Use a texture as sampled, with 'readVisibility' {0,VERTEX,FRAGMENT,COMPUTE}
+    - Use a {same,different} texture as a render pass attachment
+
+    There should be a validation error IFF the same texture was used.
+  `
+  )
+  .params(u =>
+    u
+      .beginSubcases()
+      .combine('secondUseConflicts', [false, true])
+      .combine('readVisibility', [
+        0,
+        GPUConst.ShaderStage.VERTEX,
+        GPUConst.ShaderStage.FRAGMENT,
+        GPUConst.ShaderStage.COMPUTE,
+      ])
+  )
+  .fn(t => {
+    const { readVisibility, secondUseConflicts } = t.params;
+
+    // writeonly-storage-texture binding type is not supported in vertex stage. So, this test
+    // uses writeonly-storage-texture binding as writable binding upon the same subresource if
+    // vertex stage is not included. Otherwise, it uses output attachment instead.
+    const usage = GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT;
+
+    const view = t.createTexture({ usage }).createView();
+    const view2 = secondUseConflicts ? view : t.createTexture({ usage }).createView();
+    const bgl = t.device.createBindGroupLayout({
+      entries: [{ binding: 0, visibility: readVisibility, texture: {} }],
+    });
+    const bindGroup = t.device.createBindGroup({
+      layout: bgl,
+      entries: [{ binding: 0, resource: view }],
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    const pass = t.beginSimpleRenderPass(encoder, view2);
+    pass.setBindGroup(0, bindGroup);
+    pass.end();
 
     // Texture usages in bindings with invisible shader stages should be validated. Invisible shader
     // stages include shader stage with visibility none, compute shader stage in render pass, and
     // vertex/fragment shader stage in compute pass.
     t.expectValidationError(() => {
       encoder.finish();
-    });
+    }, secondUseConflicts);
   });
 
 g.test('replaced_binding')
