@@ -11,7 +11,6 @@ import { assert } from '../../../common/util/util.js';
 import {
   kAllTextureFormats,
   kCanvasTextureFormats,
-  kTextureFormatInfo,
   kTextureUsages,
 } from '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
@@ -115,9 +114,7 @@ g.test('format')
       .combine('format', kAllTextureFormats)
   )
   .beforeAllSubcases(t => {
-    const { format } = t.params;
-    const formatInfo = kTextureFormatInfo[format];
-    t.selectDeviceOrSkipTestCase(formatInfo.feature);
+    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
   .fn(async t => {
     const { canvasType, format } = t.params;
@@ -125,7 +122,14 @@ g.test('format')
     const ctx = canvas.getContext('webgpu' as const);
     assert(ctx !== null, 'Failed to get WebGPU context from canvas');
 
-    const validFormat = kCanvasTextureFormats.includes(format);
+    // Would prefer to use kCanvasTextureFormats.includes(format), but that's giving TS errors.
+    let validFormat = false;
+    for (const canvasFormat of kCanvasTextureFormats) {
+      if (format === canvasFormat) {
+        validFormat = true;
+        break;
+      }
+    }
 
     t.expectValidationError(() => {
       ctx.configure({
@@ -144,9 +148,7 @@ g.test('format')
 g.test('usage')
   .desc(
     `
-    Ensure that only valid texture usage combinations are allowed when calling configure.
-
-    TODO: Verify STORAGE_BINDING, COPY_SRC, and COPY_DST binding usages.
+    Ensure that getCurrentTexture returns a texture with the configured usages.
     `
   )
   .params(u =>
