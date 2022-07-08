@@ -129,6 +129,33 @@ class TextureUsageTracking extends ValidationTest {
     });
   }
 
+  /**
+   * Create two bind groups. Resource usages conflict between these two bind groups. But resource
+   * usage inside each bind group doesn't conflict.
+   */
+  makeConflictingBindGroups() {
+    const view = this.createTexture({
+      usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING,
+    }).createView();
+    const bindGroupLayouts = [
+      this.createBindGroupLayout(0, 'sampled-texture', '2d'),
+      this.createBindGroupLayout(0, 'writeonly-storage-texture', '2d', { format: 'rgba8unorm' }),
+    ];
+    return {
+      bindGroupLayouts,
+      bindGroups: [
+        this.device.createBindGroup({
+          layout: bindGroupLayouts[0],
+          entries: [{ binding: 0, resource: view }],
+        }),
+        this.device.createBindGroup({
+          layout: bindGroupLayouts[1],
+          entries: [{ binding: 0, resource: view }],
+        }),
+      ],
+    };
+  }
+
   testValidationScope(
     compute: boolean
   ): {
@@ -138,23 +165,7 @@ class TextureUsageTracking extends ValidationTest {
     pass: GPURenderPassEncoder | GPUComputePassEncoder;
     pipeline: GPURenderPipeline | GPUComputePipeline;
   } {
-    // Create two bind groups. Resource usages conflict between these two bind groups. But resource
-    // usage inside each bind group doesn't conflict.
-    const view = this.createTexture({
-      usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING,
-    }).createView();
-    const bindGroupLayouts = [
-      this.createBindGroupLayout(0, 'sampled-texture', '2d'),
-      this.createBindGroupLayout(0, 'writeonly-storage-texture', '2d', { format: 'rgba8unorm' }),
-    ];
-    const bindGroup0 = this.device.createBindGroup({
-      layout: bindGroupLayouts[0],
-      entries: [{ binding: 0, resource: view }],
-    });
-    const bindGroup1 = this.device.createBindGroup({
-      layout: bindGroupLayouts[1],
-      entries: [{ binding: 0, resource: view }],
-    });
+    const { bindGroupLayouts, bindGroups } = this.makeConflictingBindGroups();
 
     const encoder = this.device.createCommandEncoder();
     const pass = compute
@@ -170,8 +181,8 @@ class TextureUsageTracking extends ValidationTest {
         )
       : this.createNoOpRenderPipeline();
     return {
-      bindGroup0,
-      bindGroup1,
+      bindGroup0: bindGroups[0],
+      bindGroup1: bindGroups[1],
       encoder,
       pass,
       pipeline,
