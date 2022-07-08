@@ -2588,7 +2588,7 @@ export const listing = [
     "file": [
       "web_platform",
       "canvas",
-      "getPreferredFormat"
+      "getPreferredCanvasFormat"
     ]
   },
   {
