@@ -48,17 +48,22 @@ export function correctlyRoundedMatch() {
 }
 
 /**
- * @returns a FloatMatch that return true iff |got| is contained in the interval |i|.
+ * @returns a FloatMatch that return true iff |got| is contained in any of the intervals.
  *
  * The standard |expected| parameter is ignored.
  *
  * NB: This will be removed at the end of transition to the new FP testing framework.
  *
- * @param i interval to test the |got| value against.
+ * @param intervals array of intervals to test the |got| value against.
  */
-export function intervalMatch(i) {
+export function intervalMatch(...intervals) {
   return (got, _) => {
-    return i.contains(got);
+    for (const i of intervals) {
+      if (i.contains(got)) {
+        return true;
+      }
+    }
+    return false;
   };
 }
 
@@ -173,12 +178,12 @@ export function ulpComparator(x, target, n) {
   };
 }
 
-/** @returns a Comparator that checks whether a result is contained within a target interval
+/** @returns a Comparator that checks whether a result is contained within the target intervals
  *
  * NB: This will be removed at the end of transition to the new FP testing framework.
  */
-export function intervalComparator(i) {
-  const match = intervalMatch(i);
+export function intervalComparator(...intervals) {
+  const match = intervalMatch(...intervals);
   return (got, _) => {
     // The second param is ignored by match
     const cmp = compare(got, f32(0.0), match);
@@ -188,7 +193,7 @@ export function intervalComparator(i) {
     return {
       matched: false,
       got: got.toString(),
-      expected: `within ${i}`,
+      expected: `within ${intervals}`,
     };
   };
 }

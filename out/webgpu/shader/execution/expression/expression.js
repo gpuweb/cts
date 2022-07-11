@@ -24,6 +24,7 @@ f64 } from
 
 
 
+
 import { flushSubnormalNumber, isSubnormalNumber, quantizeToF32 } from '../../../util/math.js';
 
 // Helper for converting Values to Comparators.
@@ -588,12 +589,15 @@ skip_param1_zero_flush = false)
  * Generates a Case for the param and unary interval generator provided.
  * The Case will use use an interval comparator for matching results.
  * @param param the param to pass into the unary operation
- * @param op callback that implements generating an acceptance interval for a unary operation
+ * @param ops callbacks that implement generating an acceptance interval for a unary operation
  */
-export function makeUnaryF32IntervalCase(param, op) {
+export function makeUnaryF32IntervalCase(param, ...ops) {
   param = quantizeToF32(param);
-  const interval = op(param);
-  return { input: [f32(param)], expected: intervalComparator(interval) };
+  const intervals = new Array();
+  for (const op of ops) {
+    intervals.push(op(param));
+  }
+  return { input: [f32(param)], expected: intervalComparator(...intervals) };
 }
 
 /**
@@ -601,19 +605,22 @@ export function makeUnaryF32IntervalCase(param, op) {
  * The Case will use use an interval comparator for matching results.
  * @param param0 the first param or left hand side to pass into the binary operation
  * @param param1 the second param or rhs hand side to pass into the binary operation
- * @param op callback that implements generating an acceptance interval for a binary operation
+ * @param ops callbacks that implement generating an acceptance interval for a binary operation
  */
 // Will be used in test implementations
 
 export function makeBinaryF32IntervalCase(
 param0,
 param1,
-op)
+...ops)
 {
   param0 = quantizeToF32(param0);
   param1 = quantizeToF32(param1);
-  const interval = op(param0, param1);
-  return { input: [f32(param0), f32(param1)], expected: intervalComparator(interval) };
+  const intervals = new Array();
+  for (const op of ops) {
+    intervals.push(op(param0, param1));
+  }
+  return { input: [f32(param0), f32(param1)], expected: intervalComparator(...intervals) };
 }
 
 /**
@@ -622,7 +629,8 @@ op)
  * @param param0 the first param to pass into the ternary operation
  * @param param1 the second param to pass into the ternary operation
  * @param param2 the third param to pass into the ternary operation
- * @param op callback that implements generating an acceptance interval for a ternary operation
+ * @param ops callbacks that implement generating an acceptance interval for a
+ *           ternary operation.
  */
 // Will be used in test implementations
 
@@ -630,12 +638,18 @@ export function makeTernaryF32IntervalCase(
 param0,
 param1,
 param2,
-op)
+...ops)
 {
   param0 = quantizeToF32(param0);
   param1 = quantizeToF32(param1);
   param2 = quantizeToF32(param2);
-  const interval = op(param0, param1, param2);
-  return { input: [f32(param0), f32(param1), f32(param2)], expected: intervalComparator(interval) };
+  const intervals = new Array();
+  for (const op of ops) {
+    intervals.push(op(param0, param1, param2));
+  }
+  return {
+    input: [f32(param0), f32(param1), f32(param2)],
+    expected: intervalComparator(...intervals) };
+
 }
 //# sourceMappingURL=expression.js.map
