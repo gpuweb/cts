@@ -514,6 +514,48 @@ export function ceilInterval(n: number): F32Interval {
   return runPointOp(toInterval(n), CeilIntervalOp);
 }
 
+const ClampMedianIntervalOp: TernaryToIntervalOp = {
+  impl: (x: number, y: number, z: number): F32Interval => {
+    return correctlyRoundedInterval(
+      // Default sort is string sort, so have to implement numeric comparison.
+      // Cannot use the b-a one liner, because that assumes no infinities.
+      [x, y, z].sort((a, b) => {
+        if (a < b) {
+          return -1;
+        }
+        if (a > b) {
+          return 1;
+        }
+        return 0;
+      })[1]
+    );
+  },
+};
+
+/** Calculate an acceptance interval of clamp(x, y, z) via median(x, y, z) */
+export function clampMedianInterval(
+  x: number | F32Interval,
+  y: number | F32Interval,
+  z: number | F32Interval
+): F32Interval {
+  return runTernaryOp(toInterval(x), toInterval(y), toInterval(z), ClampMedianIntervalOp);
+}
+
+const ClampMinMaxIntervalOp: TernaryToIntervalOp = {
+  impl: (x: number, low: number, high: number): F32Interval => {
+    return correctlyRoundedInterval(Math.min(Math.max(x, low), high));
+  },
+};
+
+/** Calculate an acceptance interval of clamp(x, high, low) via min(max(x, low), high) */
+export function clampMinMaxInterval(
+  x: number | F32Interval,
+  low: number | F32Interval,
+  high: number | F32Interval
+): F32Interval {
+  return runTernaryOp(toInterval(x), toInterval(low), toInterval(high), ClampMinMaxIntervalOp);
+}
+
 const CosIntervalOp: PointToIntervalOp = {
   impl: (n: number): F32Interval => {
     return kValue.f32.negative.pi.whole <= n && n <= kValue.f32.positive.pi.whole
