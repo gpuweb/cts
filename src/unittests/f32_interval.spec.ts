@@ -93,9 +93,9 @@ g.test('constructor')
       { input: [kValue.f32.negative.min, kValue.f32.positive.max], expected: [kValue.f32.negative.min, kValue.f32.positive.max]},
 
       // Out of range
-      { input: [0, 2 * kValue.f32.positive.max], expected: [0, Number.POSITIVE_INFINITY]},
-      { input: [2 * kValue.f32.negative.min, 0], expected: [Number.NEGATIVE_INFINITY, 0]},
-      { input: [2 * kValue.f32.negative.min, 2 * kValue.f32.positive.max], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]},
+      { input: [0, 2 * kValue.f32.positive.max], expected: [0, 2 * kValue.f32.positive.max]},
+      { input: [2 * kValue.f32.negative.min, 0], expected: [2 * kValue.f32.negative.min, 0]},
+      { input: [2 * kValue.f32.negative.min, 2 * kValue.f32.positive.max], expected: [2 * kValue.f32.negative.min, 2 * kValue.f32.positive.max]},
 
       // Infinities
       { input: [0, kValue.f32.infinity.positive], expected: [0, Number.POSITIVE_INFINITY]},
@@ -192,7 +192,7 @@ g.test('contains_number')
     // Out of range high
     { bounds: [0, 2 * kValue.f32.positive.max], value: kValue.f32.positive.min, expected: true },
     { bounds: [0, 2 * kValue.f32.positive.max], value: kValue.f32.positive.max, expected: true },
-    { bounds: [0, 2 * kValue.f32.positive.max], value: Number.POSITIVE_INFINITY, expected: true },
+    { bounds: [0, 2 * kValue.f32.positive.max], value: Number.POSITIVE_INFINITY, expected: false },
     { bounds: [0, 2 * kValue.f32.positive.max], value: kValue.f32.negative.min, expected: false },
     { bounds: [0, 2 * kValue.f32.positive.max], value: kValue.f32.negative.max, expected: false },
     { bounds: [0, 2 * kValue.f32.positive.max], value: Number.NEGATIVE_INFINITY, expected: false },
@@ -203,7 +203,7 @@ g.test('contains_number')
     { bounds: [2 * kValue.f32.negative.min, 0], value: Number.POSITIVE_INFINITY, expected: false },
     { bounds: [2 * kValue.f32.negative.min, 0], value: kValue.f32.negative.min, expected: true },
     { bounds: [2 * kValue.f32.negative.min, 0], value: kValue.f32.negative.max, expected: true },
-    { bounds: [2 * kValue.f32.negative.min, 0], value: Number.NEGATIVE_INFINITY, expected: true },
+    { bounds: [2 * kValue.f32.negative.min, 0], value: Number.NEGATIVE_INFINITY, expected: false },
 
     // Subnormals
     { bounds: [0, kValue.f32.positive.min], value: kValue.f32.subnormal.positive.min, expected: true },
@@ -304,8 +304,8 @@ g.test('contains_interval')
       { lhs: [0, 2 * kValue.f32.positive.max], rhs: [-1, 0], expected: false},
       { lhs: [0, 2 * kValue.f32.positive.max], rhs: [0, 1], expected: true},
       { lhs: [0, 2 * kValue.f32.positive.max], rhs: [0, kValue.f32.positive.max], expected: true},
-      { lhs: [0, 2 * kValue.f32.positive.max], rhs: [0, Number.POSITIVE_INFINITY], expected: true},
-      { lhs: [0, 2 * kValue.f32.positive.max], rhs: [100, Number.POSITIVE_INFINITY], expected: true},
+      { lhs: [0, 2 * kValue.f32.positive.max], rhs: [0, Number.POSITIVE_INFINITY], expected: false},
+      { lhs: [0, 2 * kValue.f32.positive.max], rhs: [100, Number.POSITIVE_INFINITY], expected: false},
       { lhs: [0, 2 * kValue.f32.positive.max], rhs: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY], expected: false},
 
       // Out of range low
@@ -313,8 +313,8 @@ g.test('contains_interval')
       { lhs: [2 * kValue.f32.negative.min, 0], rhs: [-1, 0], expected: true},
       { lhs: [2 * kValue.f32.negative.min, 0], rhs: [kValue.f32.negative.min, 0], expected: true},
       { lhs: [2 * kValue.f32.negative.min, 0], rhs: [0, 1], expected: false},
-      { lhs: [2 * kValue.f32.negative.min, 0], rhs: [Number.NEGATIVE_INFINITY, 0], expected: true},
-      { lhs: [2 * kValue.f32.negative.min, 0], rhs: [Number.NEGATIVE_INFINITY, -100 ], expected: true},
+      { lhs: [2 * kValue.f32.negative.min, 0], rhs: [Number.NEGATIVE_INFINITY, 0], expected: false},
+      { lhs: [2 * kValue.f32.negative.min, 0], rhs: [Number.NEGATIVE_INFINITY, -100 ], expected: false},
       { lhs: [2 * kValue.f32.negative.min, 0], rhs: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY], expected: false},
     ]
   )
@@ -379,8 +379,8 @@ g.test('correctlyRoundedInterval')
     // prettier-ignore
     [
       // Edge Cases
-      { value: kValue.f32.infinity.positive, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { value: kValue.f32.infinity.negative, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+      { value: kValue.f32.infinity.positive, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.infinity.negative, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { value: kValue.f32.positive.max, expected: [kValue.f32.positive.max, kValue.f32.positive.max] },
       { value: kValue.f32.negative.min, expected: [kValue.f32.negative.min, kValue.f32.negative.min] },
       { value: kValue.f32.positive.min, expected: [kValue.f32.positive.min, kValue.f32.positive.min] },
@@ -438,21 +438,21 @@ g.test('absoluteErrorInterval')
     // prettier-ignore
     [
       // Edge Cases
-      { value: kValue.f32.infinity.positive, error: 0, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { value: kValue.f32.infinity.positive, error: 2 ** -11, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { value: kValue.f32.infinity.positive, error: 1, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { value: kValue.f32.infinity.negative, error: 0, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { value: kValue.f32.infinity.negative, error: 2 ** -11, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { value: kValue.f32.infinity.negative, error: 1, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+      { value: kValue.f32.infinity.positive, error: 0, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.infinity.positive, error: 2 ** -11, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.infinity.positive, error: 1, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.infinity.negative, error: 0, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.infinity.negative, error: 2 ** -11, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.infinity.negative, error: 1, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { value: kValue.f32.positive.max, error: 0, expected: [kValue.f32.positive.max, kValue.f32.positive.max] },
       { value: kValue.f32.positive.max, error: 2 ** -11, expected: [kValue.f32.positive.max, kValue.f32.positive.max] },
-      { value: kValue.f32.positive.max, error: kValue.f32.positive.max, expected: [0, Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.positive.max, error: kValue.f32.positive.max, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { value: kValue.f32.positive.min, error: 0, expected: [kValue.f32.positive.min,  kValue.f32.positive.min] },
       { value: kValue.f32.positive.min, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
       { value: kValue.f32.positive.min, error: 1, expected: [-1, 1] },
       { value: kValue.f32.negative.min, error: 0, expected: [kValue.f32.negative.min, kValue.f32.negative.min] },
       { value: kValue.f32.negative.min, error: 2 ** -11, expected: [kValue.f32.negative.min, kValue.f32.negative.min] },
-      { value: kValue.f32.negative.min, error: kValue.f32.positive.max, expected: [Number.NEGATIVE_INFINITY, 0] },
+      { value: kValue.f32.negative.min, error: kValue.f32.positive.max, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { value: kValue.f32.negative.max, error: 0, expected: [kValue.f32.negative.max, kValue.f32.negative.max] },
       { value: kValue.f32.negative.max, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
       { value: kValue.f32.negative.max, error: 1, expected: [-1, 1] },
@@ -514,21 +514,21 @@ g.test('ulpInterval')
     // prettier-ignore
     [
       // Edge Cases
-      { value: kValue.f32.infinity.positive, num_ulp: 0, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { value: kValue.f32.infinity.positive, num_ulp: 1, expected: [minusOneULP(kValue.f32.positive.max), Number.POSITIVE_INFINITY] },
-      { value: kValue.f32.infinity.positive, num_ulp: 4096, expected: [minusNULP(kValue.f32.positive.max, 4096), Number.POSITIVE_INFINITY] },
-      { value: kValue.f32.infinity.negative, num_ulp: 0, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { value: kValue.f32.infinity.negative, num_ulp: 1, expected: [Number.NEGATIVE_INFINITY, plusOneULP(kValue.f32.negative.min)] },
-      { value: kValue.f32.infinity.negative, num_ulp: 4096, expected: [Number.NEGATIVE_INFINITY, plusNULP(kValue.f32.negative.min, 4096)] },
+      { value: kValue.f32.infinity.positive, num_ulp: 0, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.infinity.positive, num_ulp: 1, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.infinity.positive, num_ulp: 4096, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.infinity.negative, num_ulp: 0, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.infinity.negative, num_ulp: 1, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.infinity.negative, num_ulp: 4096, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { value: kValue.f32.positive.max, num_ulp: 0, expected: [kValue.f32.positive.max, kValue.f32.positive.max] },
-      { value: kValue.f32.positive.max, num_ulp: 1, expected: [minusOneULP(kValue.f32.positive.max), Number.POSITIVE_INFINITY] },
-      { value: kValue.f32.positive.max, num_ulp: 4096, expected: [minusNULP(kValue.f32.positive.max, 4096), Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.positive.max, num_ulp: 1, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.positive.max, num_ulp: 4096, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { value: kValue.f32.positive.min, num_ulp: 0, expected: [kValue.f32.positive.min, kValue.f32.positive.min] },
       { value: kValue.f32.positive.min, num_ulp: 1, expected: [0, plusOneULP(kValue.f32.positive.min)] },
       { value: kValue.f32.positive.min, num_ulp: 4096, expected: [0, plusNULP(kValue.f32.positive.min, 4096)] },
       { value: kValue.f32.negative.min, num_ulp: 0, expected: [kValue.f32.negative.min, kValue.f32.negative.min] },
-      { value: kValue.f32.negative.min, num_ulp: 1, expected: [Number.NEGATIVE_INFINITY, plusOneULP(kValue.f32.negative.min)] },
-      { value: kValue.f32.negative.min, num_ulp: 4096, expected: [Number.NEGATIVE_INFINITY, plusNULP(kValue.f32.negative.min, 4096)] },
+      { value: kValue.f32.negative.min, num_ulp: 1, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.negative.min, num_ulp: 4096, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { value: kValue.f32.negative.max, num_ulp: 0, expected: [kValue.f32.negative.max, kValue.f32.negative.max] },
       { value: kValue.f32.negative.max, num_ulp: 1, expected: [minusOneULP(kValue.f32.negative.max), 0] },
       { value: kValue.f32.negative.max, num_ulp: 4096, expected: [minusNULP(kValue.f32.negative.max, 4096), 0] },
@@ -607,8 +607,8 @@ g.test('absInterval')
       { input: -0.1, expected: [hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)] },
 
       // Edge cases
-      { input: kValue.f32.infinity.positive, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: kValue.f32.infinity.negative, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.infinity.positive, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.infinity.negative, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { input: kValue.f32.positive.max, expected: [kValue.f32.positive.max, kValue.f32.positive.max] },
       { input: kValue.f32.positive.min, expected: [kValue.f32.positive.min, kValue.f32.positive.min] },
       { input: kValue.f32.negative.min, expected: [kValue.f32.positive.max, kValue.f32.positive.max] },
@@ -644,7 +644,7 @@ g.test('atanInterval')
   .paramsSubcasesOnly<PointToIntervalCase>(
     // prettier-ignore
     [
-      { input: Number.NEGATIVE_INFINITY, expected: [kValue.f32.negative.pi.half, plusOneULP(kValue.f32.negative.pi.half)] },
+      { input: kValue.f32.infinity.negative, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { input: hexToF32(0xbfddb3d7), expected: [kValue.f32.negative.pi.third, plusOneULP(kValue.f32.negative.pi.third)] }, // x = -√3
       { input: -1, expected: [kValue.f32.negative.pi.quarter, plusOneULP(kValue.f32.negative.pi.quarter)] },
       { input: hexToF32(0xbf13cd3a), expected: [kValue.f32.negative.pi.sixth, plusOneULP(kValue.f32.negative.pi.sixth)] },  // x = -1/√3
@@ -652,7 +652,7 @@ g.test('atanInterval')
       { input: hexToF32(0x3f13cd3a), expected: [minusOneULP(kValue.f32.positive.pi.sixth), kValue.f32.positive.pi.sixth] },  // x = 1/√3
       { input: 1, expected: [minusOneULP(kValue.f32.positive.pi.quarter), kValue.f32.positive.pi.quarter] },
       { input: hexToF32(0x3fddb3d7), expected: [minusOneULP(kValue.f32.positive.pi.third), kValue.f32.positive.pi.third] }, // x = √3
-      { input: Number.POSITIVE_INFINITY, expected: [minusOneULP(kValue.f32.positive.pi.half), kValue.f32.positive.pi.half] },
+      { input: kValue.f32.infinity.positive, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
     ]
   )
   .fn(t => {
@@ -693,8 +693,8 @@ g.test('ceilInterval')
       { input: -1.9, expected: [-1, -1] },
 
       // Edge cases
-      { input: Number.POSITIVE_INFINITY, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: Number.NEGATIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+      { input: kValue.f32.infinity.positive, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.infinity.negative, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { input: kValue.f32.positive.max, expected: [kValue.f32.positive.max, kValue.f32.positive.max] },
       { input: kValue.f32.positive.min, expected: [1, 1] },
       { input: kValue.f32.negative.min, expected: [kValue.f32.negative.min, kValue.f32.negative.min] },
@@ -729,7 +729,7 @@ g.test('cosInterval')
       // and x as a f32 is sufficiently large, such that the high slope of f @ x causes the results to be substantially
       // different, so instead of getting 0 you get a value on the order of 10^-8 away from 0, thus difficult to express
       // in a human readable manner.
-      { input: Number.NEGATIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.infinity.negative, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { input: kValue.f32.negative.min, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { input: kValue.f32.negative.pi.whole, expected: [-1, plusOneULP(-1)] },
       { input: kValue.f32.negative.pi.third, expected: [minusOneULP(1/2), 1/2] },
@@ -737,7 +737,7 @@ g.test('cosInterval')
       { input: kValue.f32.positive.pi.third, expected: [minusOneULP(1/2), 1/2] },
       { input: kValue.f32.positive.pi.whole, expected: [-1, plusOneULP(-1)] },
       { input: kValue.f32.positive.max, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
-      { input: Number.POSITIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.infinity.positive, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
     ]
   )
   .fn(t => {
@@ -763,10 +763,10 @@ g.test('expInterval')
   .paramsSubcasesOnly<PointToIntervalCase>(
     // prettier-ignore
     [
-      { input: Number.NEGATIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.infinity.negative, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { input: 0, expected: [1,1] },
       { input: 1, expected: [kValue.f32.positive.e, plusOneULP(kValue.f32.positive.e)] },
-      { input: 89, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
+      { input: 89, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
     ]
   )
   .fn(t => {
@@ -795,10 +795,10 @@ g.test('exp2Interval')
   .paramsSubcasesOnly<PointToIntervalCase>(
     // prettier-ignore
     [
-      { input: Number.NEGATIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.infinity.negative, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { input: 0, expected: [1,1] },
       { input: 1, expected: [2, 2] },
-      { input: 128, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
+      { input: 128, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
     ]
   )
   .fn(t => {
@@ -840,8 +840,8 @@ g.test('floorInterval')
       { input: -1.9, expected: [-2, -2] },
 
       // Edge cases
-      { input: Number.POSITIVE_INFINITY, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: Number.NEGATIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+      { input: kValue.f32.infinity.positive, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.infinity.negative, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { input: kValue.f32.positive.max, expected: [kValue.f32.positive.max, kValue.f32.positive.max] },
       { input: kValue.f32.positive.min, expected: [0, 0] },
       { input: kValue.f32.negative.min, expected: [kValue.f32.negative.min, kValue.f32.negative.min] },
@@ -883,8 +883,8 @@ g.test('fractInterval')
       { input: -1.1, expected: [hexToF64(0x3feccccc, 0xc0000000), hexToF64(0x3feccccd, 0x00000000), ] }, // ~0.9
 
       // Edge cases
-      { input: Number.POSITIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
-      { input: Number.NEGATIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]  },
+      { input: kValue.f32.infinity.positive, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.infinity.negative, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { input: kValue.f32.positive.max, expected: [0, 0] },
       { input: kValue.f32.positive.min, expected: [kValue.f32.positive.min, kValue.f32.positive.min] },
       { input: kValue.f32.negative.min, expected: [0, 0] },
@@ -913,7 +913,7 @@ g.test('inverseSqrtInterval')
       { input: 1, expected: [1, 1] },
       { input: 100, expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
       { input: kValue.f32.positive.max, expected: [hexToF32(0x1f800000), plusNULP(hexToF32(0x1f800000), 2)] },  // ~5.421...e-20, i.e. 1/√max f32
-      { input: Number.POSITIVE_INFINITY, expected: [0, plusNULP(hexToF32(0x1f800000), 2)] },
+      { input: kValue.f32.infinity.positive, expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
     ]
   )
   .fn(t => {
@@ -1020,8 +1020,8 @@ g.test('negationInterval')
       { input: -1.9, expected: [minusOneULP(hexToF32(0x3ff33334)), hexToF32(0x3ff33334)] },  // ~1.9
 
       // Edge cases
-      { input: Number.POSITIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { input: Number.NEGATIVE_INFINITY, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.infinity.positive, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.infinity.negative, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { input: kValue.f32.positive.max, expected: [kValue.f32.negative.min, kValue.f32.negative.min] },
       { input: kValue.f32.positive.min, expected: [kValue.f32.negative.max, kValue.f32.negative.max] },
       { input: kValue.f32.negative.min, expected: [kValue.f32.positive.max, kValue.f32.positive.max] },
@@ -1054,13 +1054,13 @@ g.test('sinInterval')
       // as a f32 is sufficiently large, such that the high slope of f @ x causes the results to be substantially
       // different, so instead of getting 0 you get a value on the order of 10^-8 away from it, thus difficult to
       // express in a human readable manner.
-      { input: Number.NEGATIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.infinity.negative, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { input: kValue.f32.negative.min, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { input: kValue.f32.negative.pi.half, expected: [-1, plusOneULP(-1)] },
       { input: 0, expected: [0, 0] },
       { input: kValue.f32.positive.pi.half, expected: [minusOneULP(1), 1] },
       { input: kValue.f32.positive.max, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
-      { input: Number.POSITIVE_INFINITY, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: kValue.f32.infinity.positive, expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
     ]
   )
   .fn(t => {
@@ -1095,7 +1095,7 @@ g.test('tanInterval')
       // dividing an interval by another interval and applying an error function to that. This complexity is why the
       // entire interval framework was developed.
       // The examples here have been manually traced to confirm the expectation values are correct.
-      { input: Number.NEGATIVE_INFINITY, expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
+      { input: kValue.f32.infinity.negative, expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
       { input: kValue.f32.negative.min, expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
       { input: kValue.f32.negative.pi.whole, expected: arrayToInterval([hexToF64(0xbf4002bc, 0x90000000), hexToF64(0x3f400144, 0xf0000000)]) },  // ~0.0
       { input: kValue.f32.negative.pi.half, expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
@@ -1103,7 +1103,7 @@ g.test('tanInterval')
       { input: kValue.f32.positive.pi.half, expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
       { input: kValue.f32.positive.pi.whole, expected: arrayToInterval([hexToF64(0xbf400144, 0xf0000000), hexToF64(0x3f4002bc, 0x90000000)]) },  // ~0.0
       { input: kValue.f32.positive.max, expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
-      { input: Number.POSITIVE_INFINITY, expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
+      { input: kValue.f32.infinity.positive, expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
     ]
   )
   .fn(t => {
@@ -1176,14 +1176,14 @@ g.test('additionInterval')
       { input: [0, kValue.f32.subnormal.negative.min], expected: [kValue.f32.subnormal.negative.min, 0] },
 
       // Infinities
-      { input: [0, Number.POSITIVE_INFINITY], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [Number.POSITIVE_INFINITY, 0], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [0, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { input: [Number.NEGATIVE_INFINITY, 0], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { input: [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { input: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
-      { input: [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [0, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.positive, 0], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]},
+      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [0, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, 0], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
     ]
   )
   .fn(t => {
@@ -1212,19 +1212,19 @@ g.test('atan2Interval')
       { input: [1, hexToF32(0x3fddb3d7)], expected: [minusOneULP(kValue.f32.positive.pi.sixth), kValue.f32.positive.pi.sixth] },  // x = √3
       { input: [1, 1], expected: [minusOneULP(kValue.f32.positive.pi.quarter), kValue.f32.positive.pi.quarter] },
       { input: [hexToF32(0x3fddb3d7), 1], expected: [minusOneULP(kValue.f32.positive.pi.third), kValue.f32.positive.pi.third] },  // y = √3
-      { input: [Number.POSITIVE_INFINITY, 1], expected: [minusOneULP(kValue.f32.positive.pi.half), kValue.f32.positive.pi.half] },
+      { input: [Number.POSITIVE_INFINITY, 1], expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
 
       // positive y, negative x
       { input: [1, -1], expected: [minusOneULP(kValue.f32.positive.pi.three_quarters), kValue.f32.positive.pi.three_quarters] },
-      { input: [Number.POSITIVE_INFINITY, -1], expected: [minusOneULP(kValue.f32.positive.pi.half), kValue.f32.positive.pi.half] },
+      { input: [Number.POSITIVE_INFINITY, -1], expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
 
       // negative y, negative x
       { input: [-1, -1], expected: [kValue.f32.negative.pi.three_quarters, plusOneULP(kValue.f32.negative.pi.three_quarters)] },
-      { input: [Number.NEGATIVE_INFINITY, -1], expected: [kValue.f32.negative.pi.half, plusOneULP(kValue.f32.negative.pi.half)] },
+      { input: [Number.NEGATIVE_INFINITY, -1], expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
 
       // negative y, positive x
       { input: [-1, 1], expected: [kValue.f32.negative.pi.quarter, plusOneULP(kValue.f32.negative.pi.quarter)] },
-      { input: [Number.NEGATIVE_INFINITY, 1], expected: [kValue.f32.negative.pi.half, plusOneULP(kValue.f32.negative.pi.half)] },
+      { input: [Number.NEGATIVE_INFINITY, 1], expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
 
       // Discontinuity @ y = 0
       { input: [0, 0], expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
@@ -1234,8 +1234,8 @@ g.test('atan2Interval')
       { input: [0, kValue.f32.negative.max], expected: [kValue.f32.negative.pi.whole, kValue.f32.positive.pi.whole] },
       { input: [0, kValue.f32.positive.max], expected: [kValue.f32.negative.pi.whole, kValue.f32.positive.pi.whole] },
       { input: [0, kValue.f32.negative.min], expected: [kValue.f32.negative.pi.whole, kValue.f32.positive.pi.whole] },
-      { input: [0, Number.POSITIVE_INFINITY], expected: [kValue.f32.negative.pi.whole, kValue.f32.positive.pi.whole] },
-      { input: [0, Number.NEGATIVE_INFINITY], expected: [kValue.f32.negative.pi.whole, kValue.f32.positive.pi.whole] },
+      { input: [0, kValue.f32.infinity.positive], expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
+      { input: [0, kValue.f32.infinity.negative], expected: arrayToInterval([Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY]) },
     ]
   )
   .fn(t => {
@@ -1284,11 +1284,11 @@ g.test('divisionInterval')
       { input: [-1, -0.1], expected: [minusOneULP(10), plusOneULP(10)] },
 
       // Denominator out of range
-      { input: [1, Number.POSITIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
-      { input: [1, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
-      { input: [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
-      { input: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
-      { input: [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [1, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [1, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { input: [1, kValue.f32.positive.max], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { input: [1, kValue.f32.negative.min], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
       { input: [1, 0], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
@@ -1352,14 +1352,14 @@ g.test('maxInterval')
       { input: [0, kValue.f32.subnormal.negative.min], expected: [0, 0] },
 
       // Infinities
-      { input: [0, Number.POSITIVE_INFINITY], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [Number.POSITIVE_INFINITY, 0], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [0, Number.NEGATIVE_INFINITY], expected: [0, 0] },
-      { input: [Number.NEGATIVE_INFINITY, 0], expected: [0, 0] },
-      { input: [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { input: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
+      { input: [0, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.positive, 0], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [0, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, 0], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
     ]
   )
   .fn(t => {
@@ -1411,14 +1411,14 @@ g.test('minInterval')
       { input: [0, kValue.f32.subnormal.negative.min], expected: [kValue.f32.subnormal.negative.min, 0] },
 
       // Infinities
-      { input: [0, Number.POSITIVE_INFINITY], expected: [0, 0] },
-      { input: [Number.POSITIVE_INFINITY, 0], expected: [0, 0] },
-      { input: [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [0, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { input: [Number.NEGATIVE_INFINITY, 0], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { input: [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { input: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { input: [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+      { input: [0, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.positive, 0], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [0, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, 0], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
     ]
   )
   .fn(t => {
@@ -1468,22 +1468,22 @@ g.test('multiplicationInterval')
       { input: [-0.1, -0.1], expected: [minusNULP(hexToF32(0x3c23d70a), 2), plusOneULP(hexToF32(0x3c23d70a))] },  // ~0.01
 
       // Infinities
-      { input: [0, Number.POSITIVE_INFINITY], expected: [0, 0] },
-      { input: [1, Number.POSITIVE_INFINITY], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [-1, Number.POSITIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { input: [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [0, Number.NEGATIVE_INFINITY], expected: [0, 0] },
-      { input: [1, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { input: [-1, Number.NEGATIVE_INFINITY], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { input: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+      { input: [0, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [1, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [-1, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [0, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [1, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [-1, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
 
       // Edge of f32
-      { input: [kValue.f32.positive.max, kValue.f32.positive.max], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [kValue.f32.negative.min, kValue.f32.negative.min], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [kValue.f32.positive.max, kValue.f32.negative.min], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { input: [kValue.f32.negative.min, kValue.f32.positive.max], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+      { input: [kValue.f32.positive.max, kValue.f32.positive.max], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.negative.min, kValue.f32.negative.min], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.positive.max, kValue.f32.negative.min], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.negative.min, kValue.f32.positive.max], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
     ]
   )
   .fn(t => {
@@ -1535,14 +1535,14 @@ g.test('subtractionInterval')
       { input: [0, kValue.f32.subnormal.negative.min], expected: [0, kValue.f32.subnormal.positive.max] },
 
       // Infinities
-      { input: [0, Number.POSITIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { input: [Number.POSITIVE_INFINITY, 0], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
-      { input: [0, Number.NEGATIVE_INFINITY], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [Number.NEGATIVE_INFINITY, 0], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { input: [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
-      { input: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
-      { input: [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
+      { input: [0, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.positive, 0], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [0, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, 0], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
     ]
   )
   .fn(t => {
@@ -1597,10 +1597,10 @@ g.test('clampMedianInterval')
       { input: [kValue.f32.positive.max, kValue.f32.positive.max, kValue.f32.subnormal.positive.min], expected: [kValue.f32.positive.max, kValue.f32.positive.max] },
 
       // Infinities
-      { input: [0, 1, Number.POSITIVE_INFINITY], expected: [1, 1] },
-      { input: [0, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+      { input: [0, 1, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [0, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
     ]
   )
   .fn(t => {
@@ -1649,10 +1649,10 @@ g.test('clampMinMaxInterval')
       { input: [kValue.f32.positive.max, kValue.f32.positive.max, kValue.f32.subnormal.positive.min], expected: [0, kValue.f32.subnormal.positive.min] },
 
       // Infinities
-      { input: [0, 1, Number.POSITIVE_INFINITY], expected: [1, 1] },
-      { input: [0, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY], expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-      { input: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY], expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+      { input: [0, 1, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [0, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY] },
     ]
   )
   .fn(t => {
