@@ -429,6 +429,40 @@ export function ceilInterval(n) {
   return runPointOp(toInterval(n), CeilIntervalOp);
 }
 
+const ClampMedianIntervalOp = {
+  impl: (x, y, z) => {
+    return correctlyRoundedInterval(
+      // Default sort is string sort, so have to implement numeric comparison.
+      // Cannot use the b-a one liner, because that assumes no infinities.
+      [x, y, z].sort((a, b) => {
+        if (a < b) {
+          return -1;
+        }
+        if (a > b) {
+          return 1;
+        }
+        return 0;
+      })[1]
+    );
+  },
+};
+
+/** Calculate an acceptance interval of clamp(x, y, z) via median(x, y, z) */
+export function clampMedianInterval(x, y, z) {
+  return runTernaryOp(toInterval(x), toInterval(y), toInterval(z), ClampMedianIntervalOp);
+}
+
+const ClampMinMaxIntervalOp = {
+  impl: (x, low, high) => {
+    return correctlyRoundedInterval(Math.min(Math.max(x, low), high));
+  },
+};
+
+/** Calculate an acceptance interval of clamp(x, high, low) via min(max(x, low), high) */
+export function clampMinMaxInterval(x, low, high) {
+  return runTernaryOp(toInterval(x), toInterval(low), toInterval(high), ClampMinMaxIntervalOp);
+}
+
 const CosIntervalOp = {
   impl: n => {
     return kValue.f32.negative.pi.whole <= n && n <= kValue.f32.positive.pi.whole
