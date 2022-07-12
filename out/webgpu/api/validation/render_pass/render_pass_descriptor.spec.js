@@ -3,7 +3,6 @@
 **/export const description = `
 render pass descriptor validation tests.
 
-TODO: per-test descriptions, make test names more succinct
 TODO: review for completeness
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
@@ -557,7 +556,9 @@ fn(async (t) => {
   t.tryRenderPass(false, descriptor);
 });
 
-g.test('it_is_invalid_to_use_a_resolve_target_in_error_state').fn(async (t) => {
+g.test('resolveTarget,error_state').
+desc(`Test that a resolve target that has a error is invalid for color attachments.`).
+fn(async (t) => {
   const ARRAY_LAYER_COUNT = 1;
 
   const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
@@ -579,8 +580,14 @@ g.test('it_is_invalid_to_use_a_resolve_target_in_error_state').fn(async (t) => {
   t.tryRenderPass(false, descriptor);
 });
 
-g.test('use_of_multisampled_attachment_and_non_multisampled_resolve_target_is_allowed').fn(
-async (t) => {
+g.test('resolveTarget,single_sample_count').
+desc(
+`
+  Test that a resolve target that has multi sample color attachment and a single resolve target is
+  valid.
+  `).
+
+fn(async (t) => {
   const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
   const resolveTargetTexture = t.createTexture({ sampleCount: 1 });
 
@@ -594,9 +601,9 @@ async (t) => {
   t.tryRenderPass(true, descriptor);
 });
 
-
-g.test('use_a_resolve_target_in_a_format_different_than_the_attachment_is_not_allowed').fn(
-async (t) => {
+g.test('resolveTarget,different_format').
+desc(`Test that a resolve target that has a different format is invalid.`).
+fn(async (t) => {
   const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
   const resolveTargetTexture = t.createTexture({ format: 'bgra8unorm' });
 
@@ -610,8 +617,13 @@ async (t) => {
   t.tryRenderPass(false, descriptor);
 });
 
+g.test('resolveTarget,different_size').
+desc(
+`
+  Test that a resolve target that has a different size with the color attachment is invalid.
+  `).
 
-g.test('size_of_the_resolve_target_must_be_the_same_as_the_color_attachment').fn(async (t) => {
+fn(async (t) => {
   const size = 16;
   const multisampledColorTexture = t.createTexture({ width: size, height: size, sampleCount: 4 });
   const resolveTargetTexture = t.createTexture({
@@ -649,15 +661,22 @@ g.test('size_of_the_resolve_target_must_be_the_same_as_the_color_attachment').fn
   }
 });
 
-g.test('check_depth_stencil_attachment_sample_counts_mismatch').fn(async (t) => {
+g.test('depth_stencil_attachment,sample_counts_mismatch').
+desc(
+`
+  Test that the depth stencil attachment that has different number of samples with the color
+  attachment is invalid.
+  `).
+
+fn(async (t) => {
   const multisampledDepthStencilTexture = t.createTexture({
     sampleCount: 4,
     format: 'depth24plus-stencil8' });
 
 
   {
-    // It is not allowed to use a depth stencil attachment whose sample count is different from the
-    // one of the color attachment
+    // It is not allowed to use a depth stencil attachment whose sample count is different from
+    // the one of the color attachment.
     const depthStencilTexture = t.createTexture({
       sampleCount: 1,
       format: 'depth24plus-stencil8' });
@@ -691,7 +710,7 @@ g.test('check_depth_stencil_attachment_sample_counts_mismatch').fn(async (t) => 
     t.tryRenderPass(true, descriptor);
   }
   {
-    // It is allowed to use a multisampled depth stencil attachment with no color attachment
+    // It is allowed to use a multisampled depth stencil attachment with no color attachment.
     const descriptor = {
       colorAttachments: [],
       depthStencilAttachment: t.getDepthStencilAttachment(multisampledDepthStencilTexture) };
@@ -705,9 +724,11 @@ g.test('depth_stencil_attachment').
 desc(
 `
   Test GPURenderPassDepthStencilAttachment Usage:
-  - depthReadOnly and stencilReadOnly must match if the format is a combined depth-stencil format.
-  - depthLoadOp and depthStoreOp must be provided iff the format has a depth aspect and depthReadOnly is not true.
-  - stencilLoadOp and stencilStoreOp must be provided iff the format has a stencil aspect and stencilReadOnly is not true.
+    - depthReadOnly and stencilReadOnly must match if the format is a combined depth-stencil format.
+    - depthLoadOp and depthStoreOp must be provided iff the format has a depth aspect and
+      depthReadOnly is not true.
+    - stencilLoadOp and stencilStoreOp must be provided iff the format has a stencil aspect and
+      stencilReadOnly is not true.
   `).
 
 params((u) =>
@@ -801,7 +822,13 @@ fn((t) => {
   t.tryRenderPass(depthClearValue >= 0.0 && depthClearValue <= 1.0, descriptor);
 });
 
-g.test('multisample_render_target_formats_support_resolve').
+g.test('resolveTarget,format_supports_resolve').
+desc(
+`
+  For all formats that support 'multisample', test that they can be used as a resolveTarget
+  if and only if they support 'resolve'.
+  `).
+
 params((u) =>
 u.
 combine('format', kRenderableColorTextureFormats).
