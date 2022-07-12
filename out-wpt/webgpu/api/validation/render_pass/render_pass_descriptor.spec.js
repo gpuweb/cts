@@ -8,6 +8,7 @@ TODO: review for completeness
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
   kDepthStencilFormats,
+  kQueryTypes,
   kRenderableColorTextureFormats,
   kTextureFormatInfo,
 } from '../../../capability_info.js';
@@ -877,5 +878,31 @@ g.test('timestamp_writes_location')
       timestampWrites: [timestampWriteA, timestampWriteB],
     };
 
+    t.tryRenderPass(isValid, descriptor);
+  });
+
+g.test('occlusionQuerySet,query_set_type')
+  .desc(`Test that occlusionQuerySet must have type 'occlusion'.`)
+  .params(u => u.combine('queryType', kQueryTypes))
+  .beforeAllSubcases(t => {
+    if (t.params.queryType === 'timestamp') {
+      t.selectDeviceOrSkipTestCase(['timestamp-query']);
+    }
+  })
+  .fn(async t => {
+    const { queryType } = t.params;
+
+    const querySet = t.device.createQuerySet({
+      type: queryType,
+      count: 1,
+    });
+
+    const colorTexture = t.createTexture();
+    const descriptor = {
+      colorAttachments: [t.getColorAttachment(colorTexture)],
+      occlusionQuerySet: querySet,
+    };
+
+    const isValid = queryType === 'occlusion';
     t.tryRenderPass(isValid, descriptor);
   });
