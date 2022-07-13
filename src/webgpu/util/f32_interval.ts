@@ -13,16 +13,16 @@ import {
 export class F32Interval {
   public readonly begin: number;
   public readonly end: number;
-  private static _undefined: F32Interval;
+  private static _any: F32Interval;
 
   /** Constructor
    *
-   * @param begin number indicating the lower bound of the interval
-   * @param end number indicating the upper bound of the interval
+   * @param bounds a pair of numbers indicating the beginning then the end of the interval
    */
-  public constructor(begin: number, end: number) {
+  public constructor(...bounds: [number, number]) {
+    const [begin, end] = bounds;
     assert(!Number.isNaN(begin) && !Number.isNaN(end), `bounds need to be non-NaN`);
-    assert(begin <= end, `begin (${begin}) must be equal or before end (${end})`);
+    assert(begin <= end, `bounds[0] (${begin}) must be less than or equal to bounds[1]  (${end})`);
 
     this.begin = begin;
     this.end = end;
@@ -73,15 +73,15 @@ export class F32Interval {
     return `[${this.begin}, ${this.end}]`;
   }
 
-  /** @returns a singleton for the undefined interval
+  /** @returns a singleton for interval of all possible values
    * This interval is used in situations where accuracy is not defined, so any
    * result is valid.
    */
-  public static undefined(): F32Interval {
-    if (this._undefined === undefined) {
-      this._undefined = new F32Interval(Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY);
+  public static any(): F32Interval {
+    if (this._any === undefined) {
+      this._any = new F32Interval(Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY);
     }
-    return this._undefined;
+    return this._any;
   }
 }
 
@@ -111,10 +111,11 @@ export interface PointToIntervalOp {
    * Calculates where in the domain defined by x the min/max extrema of impl
    * occur and returns a span of those points to be used as the domain instead.
    *
-   * If the result is not defined the ends of the existing domain are assumed to
-   * be the extrema.
+   * Used by runPointOp before invoking impl.
+   * If not defined, the bounds of the existing domain are assumed to be the
+   * extrema.
    *
-   * This is only implemented for subclasses that meet all of the following
+   * This is only implemented for operations that meet all of the following
    * criteria:
    *   a) non-monotonic
    *   b) used in inherited accuracy calculations
@@ -123,7 +124,13 @@ export interface PointToIntervalOp {
    */
   extrema?: (x: F32Interval) => F32Interval;
 
-  /** @returns an additional interval that inputs need to be within. If not defined, they are only tested for being finite. */
+  /**
+   * @returns additional intervals for runPointOp to test that inputs are
+   * contained by.
+   * If not defined, inputs are only tested that they are finite.
+   * If an input fails testing, execution is short circuited and the any()
+   * interval is returned to indicate an undefined value.
+   */
   domain?: F32Interval;
 }
 
@@ -144,7 +151,8 @@ interface BinaryToIntervalOp {
    * Calculates where in domain defined by x & y the min/max extrema of impl
    * occur and returns spans of those points to be used as the domain instead.
    *
-   * If not defined the ends of the existing domain are assumed to be the
+   * Used by runBinaryOp before invoking impl.
+   * If not defined, the bounds of the existing domain are assumed to be the
    * extrema.
    *
    * This is only implemented for functions that meet all of the following
@@ -155,7 +163,13 @@ interface BinaryToIntervalOp {
    */
   extrema?: (x: F32Interval, y: F32Interval) => [F32Interval, F32Interval];
 
-  /** @returns additional intervals that inputs need to be within. If not defined, they are only tested for being finite. */
+  /**
+   * @returns additional intervals for runBinaryOp to test that inputs are
+   * contained by.
+   * If not defined, inputs are only tested that they are finite.
+   * If an input fails testing, execution is short circuited and the any()
+   * interval is returned to indicate an undefined value.
+   */
   domain?: { x: F32Interval[]; y: F32Interval[] };
 }
 
@@ -170,14 +184,14 @@ export interface TernaryToInterval {
 
 /** Operation used to implement a TernaryToInterval */
 interface TernaryToIntervalOp {
+  // Re-using the *Op interface pattern for symmetry with the other operations.
   /** @returns acceptance interval for a function at point (x, y, z) */
   impl: (x: number, y: number, z: number) => F32Interval;
-  // All current ternary operations that are used in inheritance (clamp*) are
-  // monotonic, so extrema calculation isn't needed. Re-using the Op interface
-  // pattern for symmetry with the other operations
 
-  // All current ternary operations have a domain of the full f32 space, so a domain? override is not currently
-  // provided.
+  // All current ternary operations that are used in inheritance (clamp*) are
+  // monotonic, so extrema property is not needed.
+  // All current ternary operations have a domain of the finite f32 space, so a
+  // domain property is not needed.
 }
 
 /** Converts a point to an acceptance interval, using a specific function
@@ -282,7 +296,7 @@ function roundAndFlushTernaryToInterval(
  */
 function runPointOp(x: F32Interval, op: PointToIntervalOp): F32Interval {
   if (!x.isFinite()) {
-    return F32Interval.undefined();
+    return F32Interval.any();
   }
 
   if (op.extrema !== undefined) {
@@ -291,7 +305,7 @@ function runPointOp(x: F32Interval, op: PointToIntervalOp): F32Interval {
 
   if (op.domain !== undefined) {
     if (!op.domain.contains(x)) {
-      return F32Interval.undefined();
+      return F32Interval.any();
     }
   }
 
@@ -299,7 +313,7 @@ function runPointOp(x: F32Interval, op: PointToIntervalOp): F32Interval {
     roundAndFlushPointToInterval(x.begin, op),
     roundAndFlushPointToInterval(x.end, op)
   );
-  return result.isFinite() ? result : F32Interval.undefined();
+  return result.isFinite() ? result : F32Interval.any();
 }
 
 /** Calculate the acceptance interval for a binary function over an interval
@@ -314,7 +328,7 @@ function runPointOp(x: F32Interval, op: PointToIntervalOp): F32Interval {
  */
 function runBinaryOp(x: F32Interval, y: F32Interval, op: BinaryToIntervalOp): F32Interval {
   if (!x.isFinite() || !y.isFinite()) {
-    return F32Interval.undefined();
+    return F32Interval.any();
   }
 
   if (op.extrema !== undefined) {
@@ -323,7 +337,7 @@ function runBinaryOp(x: F32Interval, y: F32Interval, op: BinaryToIntervalOp): F3
 
   if (op.domain !== undefined) {
     if (!op.domain.x.some(d => d.contains(x)) || !op.domain.y.some(d => d.contains(y))) {
-      return F32Interval.undefined();
+      return F32Interval.any();
     }
   }
 
@@ -338,7 +352,7 @@ function runBinaryOp(x: F32Interval, y: F32Interval, op: BinaryToIntervalOp): F3
   });
 
   const result = F32Interval.span(...outputs);
-  return result.isFinite() ? result : F32Interval.undefined();
+  return result.isFinite() ? result : F32Interval.any();
 }
 
 /** Calculate the acceptance interval for a ternary function over an interval
@@ -356,7 +370,7 @@ function runTernaryOp(
   op: TernaryToIntervalOp
 ): F32Interval {
   if (!x.isFinite() || !y.isFinite() || !z.isFinite()) {
-    return F32Interval.undefined();
+    return F32Interval.any();
   }
 
   const x_values = new Set<number>([x.begin, x.end]);
@@ -372,7 +386,7 @@ function runTernaryOp(
   });
 
   const result = F32Interval.span(...outputs);
-  return result.isFinite() ? result : F32Interval.undefined();
+  return result.isFinite() ? result : F32Interval.any();
 }
 
 /** Defines a PointToIntervalOp for an interval of the correctly rounded values around the point */
@@ -392,7 +406,7 @@ export function correctlyRoundedInterval(n: number): F32Interval {
 function AbsoluteErrorIntervalOp(error_range: number): PointToIntervalOp {
   const op: PointToIntervalOp = {
     impl: (_: number) => {
-      return F32Interval.undefined();
+      return F32Interval.any();
     },
   };
 
@@ -416,7 +430,7 @@ export function absoluteErrorInterval(n: number, error_range: number): F32Interv
 function ULPIntervalOp(numULP: number): PointToIntervalOp {
   const op: PointToIntervalOp = {
     impl: (_: number) => {
-      return F32Interval.undefined();
+      return F32Interval.any();
     },
   };
 
@@ -482,7 +496,7 @@ const Atan2IntervalOp: BinaryToIntervalOp = {
     const numULP = 4096;
     if (y === 0) {
       if (x === 0) {
-        return F32Interval.undefined();
+        return F32Interval.any();
       } else {
         return F32Interval.span(
           ulpInterval(kValue.f32.negative.pi.whole, numULP),
