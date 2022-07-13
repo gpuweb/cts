@@ -889,6 +889,34 @@ g.test('timestamp_writes_location')
     t.tryRenderPass(isValid, descriptor);
   });
 
+g.test('timestampWrite,query_index')
+  .desc(`Test that querySet.count should be greater than timestampWrite.queryIndex.`)
+  .params(u => u.combine('queryIndex', [0, 1, 2, 3]))
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase(['timestamp-query']);
+  })
+  .fn(async t => {
+    const { queryIndex } = t.params;
+
+    const querySetCount = 2;
+
+    const timestampWrite = {
+      querySet: t.device.createQuerySet({ type: 'timestamp', count: querySetCount }),
+      queryIndex,
+      location: 'beginning' as const,
+    };
+
+    const isValid = queryIndex < querySetCount;
+
+    const colorTexture = t.createTexture();
+    const descriptor = {
+      colorAttachments: [t.getColorAttachment(colorTexture)],
+      timestampWrites: [timestampWrite],
+    };
+
+    t.tryRenderPass(isValid, descriptor);
+  });
+
 g.test('occlusionQuerySet,query_set_type')
   .desc(`Test that occlusionQuerySet must have type 'occlusion'.`)
   .params(u => u.combine('queryType', kQueryTypes))
