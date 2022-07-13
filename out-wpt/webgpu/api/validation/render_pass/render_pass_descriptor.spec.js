@@ -840,6 +840,47 @@ g.test('resolveTarget,format_supports_resolve')
     });
   });
 
+g.test('timestampWrites,query_set_type')
+  .desc(
+    `
+  Test that all entries of the timestampWrites must have type 'timestamp'. If all query types are
+  not 'timestamp', a validation error should be generated.
+  `
+  )
+  .params(u =>
+    u //
+      .combine('queryTypeA', kQueryTypes)
+      .combine('queryTypeB', kQueryTypes)
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase(['timestamp-query']);
+  })
+  .fn(async t => {
+    const { queryTypeA, queryTypeB } = t.params;
+
+    const timestampWriteA = {
+      querySet: t.device.createQuerySet({ type: queryTypeA, count: 1 }),
+      queryIndex: 0,
+      location: 'beginning',
+    };
+
+    const timestampWriteB = {
+      querySet: t.device.createQuerySet({ type: queryTypeB, count: 1 }),
+      queryIndex: 0,
+      location: 'end',
+    };
+
+    const isValid = queryTypeA === 'timestamp' && queryTypeB === 'timestamp';
+
+    const colorTexture = t.createTexture();
+    const descriptor = {
+      colorAttachments: [t.getColorAttachment(colorTexture)],
+      timestampWrites: [timestampWriteA, timestampWriteB],
+    };
+
+    t.tryRenderPass(isValid, descriptor);
+  });
+
 g.test('timestamp_writes_location')
   .desc('Test that entries in timestampWrites do not have the same location.')
   .params(u =>
