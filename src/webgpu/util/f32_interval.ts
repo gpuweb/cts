@@ -93,7 +93,7 @@ const kNegPiToPiInterval = new F32Interval(
   kValue.f32.positive.pi.whole
 );
 
-/** F32Interval of values greater than 0 */
+/** F32Interval of values greater than 0 and less than or equal to f32 max */
 const kGreaterThanZeroInterval = new F32Interval(
   kValue.f32.subnormal.positive.min,
   kValue.f32.positive.max
