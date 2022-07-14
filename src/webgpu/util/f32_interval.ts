@@ -1,48 +1,25 @@
 import { assert } from '../../common/util/util.js';
 
 import { kValue } from './constants.js';
-import {
-  correctlyRoundedF32,
-  flushSubnormalNumber,
-  isF32Finite,
-  isSubnormalNumber,
-  oneULP,
-} from './math.js';
+import { correctlyRoundedF32, flushSubnormalNumber, isF32Finite, oneULP } from './math.js';
 
 /** Represents a closed interval in the f32 range */
 export class F32Interval {
   public readonly begin: number;
   public readonly end: number;
-  private static _infinite: F32Interval;
+  private static _any: F32Interval;
 
   /** Constructor
    *
-   * Bounds that are out of range for F32 are converted to appropriate edge or
-   * infinity values, so that all values above/below the f32 range are lumped
-   * together.
-   *
-   * @param begin number indicating the lower bound of the interval
-   * @param end number indicating the upper bound of the interval
+   * @param bounds a pair of numbers indicating the beginning then the end of the interval
    */
-  public constructor(begin: number, end: number) {
+  public constructor(...bounds: [number, number]) {
+    const [begin, end] = bounds;
     assert(!Number.isNaN(begin) && !Number.isNaN(end), `bounds need to be non-NaN`);
-    assert(begin <= end, `begin (${begin}) must be equal or before end (${end})`);
+    assert(begin <= end, `bounds[0] (${begin}) must be less than or equal to bounds[1]  (${end})`);
 
-    if (begin === Number.NEGATIVE_INFINITY || begin < kValue.f32.negative.min) {
-      this.begin = Number.NEGATIVE_INFINITY;
-    } else if (begin === Number.POSITIVE_INFINITY || begin > kValue.f32.positive.max) {
-      this.begin = kValue.f32.positive.max;
-    } else {
-      this.begin = begin;
-    }
-
-    if (end === Number.POSITIVE_INFINITY || end > kValue.f32.positive.max) {
-      this.end = Number.POSITIVE_INFINITY;
-    } else if (end === Number.NEGATIVE_INFINITY || end < kValue.f32.negative.min) {
-      this.end = kValue.f32.negative.min;
-    } else {
-      this.end = end;
-    }
+    this.begin = begin;
+    this.end = end;
   }
 
   /** @returns if a point or interval is completely contained by this interval
@@ -54,7 +31,7 @@ export class F32Interval {
    */
   public contains(n: number | F32Interval): boolean {
     if (Number.isNaN(n)) {
-      // Being the infinite interval indicates that the accuracy is not defined
+      // Being the undefined interval indicates that the accuracy is not defined
       // for this test, so the test is just checking that this input doesn't
       // cause the implementation to misbehave, so NaN is acceptable.
       return this.begin === Number.NEGATIVE_INFINITY && this.end === Number.POSITIVE_INFINITY;
@@ -66,6 +43,11 @@ export class F32Interval {
   /** @returns if this interval contains a single point */
   public isPoint(): boolean {
     return this.begin === this.end;
+  }
+
+  /** @returns if this interval only contains f32 finite values */
+  public isFinite(): boolean {
+    return isF32Finite(this.begin) && isF32Finite(this.end);
   }
 
   /** @returns an interval with the tightest bounds that includes all provided intervals */
@@ -85,15 +67,15 @@ export class F32Interval {
     return `[${this.begin}, ${this.end}]`;
   }
 
-  /** @returns a singleton for the infinite interval
+  /** @returns a singleton for interval of all possible values
    * This interval is used in situations where accuracy is not defined, so any
    * result is valid.
    */
-  public static infinite(): F32Interval {
-    if (this._infinite === undefined) {
-      this._infinite = new F32Interval(Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY);
+  public static any(): F32Interval {
+    if (this._any === undefined) {
+      this._any = new F32Interval(Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY);
     }
-    return this._infinite;
+    return this._any;
   }
 }
 
@@ -105,6 +87,18 @@ function toInterval(n: number | F32Interval): F32Interval {
   return new F32Interval(n, n);
 }
 
+/** F32Interval of [-π, π] */
+const kNegPiToPiInterval = new F32Interval(
+  kValue.f32.negative.pi.whole,
+  kValue.f32.positive.pi.whole
+);
+
+/** F32Interval of values greater than 0 and less than or equal to f32 max */
+const kGreaterThanZeroInterval = new F32Interval(
+  kValue.f32.subnormal.positive.min,
+  kValue.f32.positive.max
+);
+
 /**
  * A function that converts a point to an acceptance interval.
  * This is the public facing API for builtin implementations that is called
@@ -115,18 +109,19 @@ export interface PointToInterval {
 }
 
 /** Operation used to implement a PointToInterval */
-interface PointToIntervalOp {
+export interface PointToIntervalOp {
   /** @returns acceptance interval for a function at point x */
-  impl: (x: number) => F32Interval;
+  impl: PointToInterval;
 
   /**
    * Calculates where in the domain defined by x the min/max extrema of impl
    * occur and returns a span of those points to be used as the domain instead.
    *
-   * If not defined the ends of the existing domain are assumed to be the
+   * Used by runPointOp before invoking impl.
+   * If not defined, the bounds of the existing domain are assumed to be the
    * extrema.
    *
-   * This is only implemented for functions that meet all of the following
+   * This is only implemented for operations that meet all of the following
    * criteria:
    *   a) non-monotonic
    *   b) used in inherited accuracy calculations
@@ -134,6 +129,22 @@ interface PointToIntervalOp {
    *      i.e. fooInterval takes in x: number | F32Interval, not x: number
    */
   extrema?: (x: F32Interval) => F32Interval;
+}
+
+/**
+ * Restrict the inputs to an PointToInterval operation
+ *
+ * Only used for operations that have tighter domain requirements than 'must be
+ * f32 finite'.
+ *
+ * @param domain interval to restrict inputs to
+ * @param impl operation implementation to run if input is within the required domain
+ * @returns a PointToInterval that calls impl if domain contains the input,
+ *          otherwise it returns the any() interval */
+function limitPointToIntervalDomain(domain: F32Interval, impl: PointToInterval): PointToInterval {
+  return (n: number): F32Interval => {
+    return domain.contains(n) ? impl(n) : F32Interval.any();
+  };
 }
 
 /**
@@ -148,12 +159,13 @@ export interface BinaryToInterval {
 /** Operation used to implement a BinaryToInterval */
 interface BinaryToIntervalOp {
   /** @returns acceptance interval for a function at point (x, y) */
-  impl: (x: number, y: number) => F32Interval;
+  impl: BinaryToInterval;
   /**
    * Calculates where in domain defined by x & y the min/max extrema of impl
    * occur and returns spans of those points to be used as the domain instead.
    *
-   * If not defined the ends of the existing domain are assumed to be the
+   * Used by runBinaryOp before invoking impl.
+   * If not defined, the bounds of the existing domain are assumed to be the
    * extrema.
    *
    * This is only implemented for functions that meet all of the following
@@ -163,6 +175,40 @@ interface BinaryToIntervalOp {
    *   c) need to take in an interval for b)
    */
   extrema?: (x: F32Interval, y: F32Interval) => [F32Interval, F32Interval];
+}
+
+/** Domain for a BinaryToInterval implementation */
+interface BinaryToIntervalDomain {
+  x: F32Interval;
+  // y is an array to support handling domains composed of discrete intervals
+  y: F32Interval[];
+}
+
+/**
+ * Restrict the inputs to an BinaryToInterval
+ *
+ * Only used for operations that have tighter domain requirements than 'must be
+ * f32 finite'.
+ *
+ * @param domain set of intervals to restrict inputs to
+ * @param impl operation implementation to run if input is within the required domain
+ * @returns a BinaryToInterval that calls impl if domain contains the input,
+ *          otherwise it returns the any() interval */
+function limitBinaryToIntervalDomain(
+  domain: BinaryToIntervalDomain,
+  impl: BinaryToInterval
+): BinaryToInterval {
+  return (x: number, y: number): F32Interval => {
+    if (!domain.x.contains(x)) {
+      return F32Interval.any();
+    }
+
+    if (!domain.y.some(d => d.contains(y))) {
+      return F32Interval.any();
+    }
+
+    return impl(x, y);
+  };
 }
 
 /**
@@ -176,11 +222,9 @@ export interface TernaryToInterval {
 
 /** Operation used to implement a TernaryToInterval */
 interface TernaryToIntervalOp {
+  // Re-using the *Op interface pattern for symmetry with the other operations.
   /** @returns acceptance interval for a function at point (x, y, z) */
-  impl: (x: number, y: number, z: number) => F32Interval;
-  // All current ternary operations that are used in inheritance (clamp*) are
-  // monotonic, so extrema calculation isn't needed. Re-using the Op interface
-  // pattern for symmetry with the other operations
+  impl: TernaryToInterval;
 }
 
 /** Converts a point to an acceptance interval, using a specific function
@@ -188,6 +232,7 @@ interface TernaryToIntervalOp {
  * This handles correctly rounding and flushing inputs as needed.
  * Duplicate inputs are pruned before invoking op.impl.
  * op.extrema is invoked before this point in the call stack.
+ * op.domain is tested before this point in the call stack.
  *
  * @param n value to flush & round then invoke op.impl on
  * @param op operation defining the function being run
@@ -207,6 +252,7 @@ function roundAndFlushPointToInterval(n: number, op: PointToIntervalOp) {
  * Duplicate inputs are pruned before invoking op.impl.
  * All unique combinations of x & y are run.
  * op.extrema is invoked before this point in the call stack.
+ * op.domain is tested before this point in the call stack.
  *
  * @param x first param to flush & round then invoke op.impl on
  * @param y second param to flush & round then invoke op.impl on
@@ -234,7 +280,6 @@ function roundAndFlushBinaryToInterval(x: number, y: number, op: BinaryToInterva
  * This handles correctly rounding and flushing inputs as needed.
  * Duplicate inputs are pruned before invoking op.impl.
  * All unique combinations of x, y & z are run.
- * op.extrema is invoked before this point in the call stack.
  *
  * @param x first param to flush & round then invoke op.impl on
  * @param y second param to flush & round then invoke op.impl on
@@ -283,17 +328,19 @@ function roundAndFlushTernaryToInterval(
  * @returns a span over all of the outputs of op.impl
  */
 function runPointOp(x: F32Interval, op: PointToIntervalOp): F32Interval {
-  if (x.isPoint()) {
-    return roundAndFlushPointToInterval(x.begin, op);
+  if (!x.isFinite()) {
+    return F32Interval.any();
   }
 
   if (op.extrema !== undefined) {
     x = op.extrema(x);
   }
-  return F32Interval.span(
+
+  const result = F32Interval.span(
     roundAndFlushPointToInterval(x.begin, op),
     roundAndFlushPointToInterval(x.end, op)
   );
+  return result.isFinite() ? result : F32Interval.any();
 }
 
 /** Calculate the acceptance interval for a binary function over an interval
@@ -306,29 +353,30 @@ function runPointOp(x: F32Interval, op: PointToIntervalOp): F32Interval {
  * @param op operation defining the function being run
  * @returns a span over all of the outputs of op.impl
  */
-// Will be used in test implementations
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function runBinaryOp(x: F32Interval, y: F32Interval, op: BinaryToIntervalOp): F32Interval {
+  if (!x.isFinite() || !y.isFinite()) {
+    return F32Interval.any();
+  }
+
   if (op.extrema !== undefined) {
     [x, y] = op.extrema(x, y);
   }
+
   const x_values = new Set<number>([x.begin, x.end]);
   const y_values = new Set<number>([y.begin, y.end]);
 
-  const results = new Set<F32Interval>();
+  const outputs = new Set<F32Interval>();
   x_values.forEach(inner_x => {
     y_values.forEach(inner_y => {
-      results.add(roundAndFlushBinaryToInterval(inner_x, inner_y, op));
+      outputs.add(roundAndFlushBinaryToInterval(inner_x, inner_y, op));
     });
   });
 
-  return F32Interval.span(...results);
+  const result = F32Interval.span(...outputs);
+  return result.isFinite() ? result : F32Interval.any();
 }
 
 /** Calculate the acceptance interval for a ternary function over an interval
- *
- * The provided domain intervals may be adjusted if the operation defines an
- * extrema function.
  *
  * @param x first input domain interval
  * @param y second input domain interval
@@ -336,29 +384,33 @@ function runBinaryOp(x: F32Interval, y: F32Interval, op: BinaryToIntervalOp): F3
  * @param op operation defining the function being run
  * @returns a span over all of the outputs of op.impl
  */
-// Will be used in test implementations
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function runTernaryOp(
   x: F32Interval,
   y: F32Interval,
   z: F32Interval,
   op: TernaryToIntervalOp
 ): F32Interval {
+  if (!x.isFinite() || !y.isFinite() || !z.isFinite()) {
+    return F32Interval.any();
+  }
+
   const x_values = new Set<number>([x.begin, x.end]);
   const y_values = new Set<number>([y.begin, y.end]);
   const z_values = new Set<number>([z.begin, z.end]);
-  const results = new Set<F32Interval>();
+  const outputs = new Set<F32Interval>();
   x_values.forEach(inner_x => {
     y_values.forEach(inner_y => {
       z_values.forEach(inner_z => {
-        results.add(roundAndFlushTernaryToInterval(inner_x, inner_y, inner_z, op));
+        outputs.add(roundAndFlushTernaryToInterval(inner_x, inner_y, inner_z, op));
       });
     });
   });
 
-  return F32Interval.span(...results);
+  const result = F32Interval.span(...outputs);
+  return result.isFinite() ? result : F32Interval.any();
 }
 
+/** Defines a PointToIntervalOp for an interval of the correctly rounded values around the point */
 const CorrectlyRoundedIntervalOp: PointToIntervalOp = {
   impl: (n: number) => {
     assert(!Number.isNaN(n), `absolute not defined for NaN`);
@@ -368,37 +420,44 @@ const CorrectlyRoundedIntervalOp: PointToIntervalOp = {
 
 /** @returns an interval of the correctly rounded values around the point */
 export function correctlyRoundedInterval(n: number): F32Interval {
-  return roundAndFlushPointToInterval(n, CorrectlyRoundedIntervalOp);
+  return runPointOp(toInterval(n), CorrectlyRoundedIntervalOp);
 }
 
 /** @returns a PointToIntervalOp for [n - error_range, n + error_range] */
 function AbsoluteErrorIntervalOp(error_range: number): PointToIntervalOp {
-  return {
-    impl: (n: number) => {
-      if (!isF32Finite(n)) {
-        return toInterval(n);
-      }
-
-      assert(!Number.isNaN(n), `absolute not defined for NaN`);
-      return new F32Interval(n - error_range, n + error_range);
+  const op: PointToIntervalOp = {
+    impl: (_: number) => {
+      return F32Interval.any();
     },
   };
+
+  if (isF32Finite(error_range)) {
+    op.impl = (n: number) => {
+      assert(!Number.isNaN(n), `absolute error not defined for NaN`);
+      return new F32Interval(n - error_range, n + error_range);
+    };
+  }
+
+  return op;
 }
 
 /** @returns an interval of the absolute error around the point */
 export function absoluteErrorInterval(n: number, error_range: number): F32Interval {
   error_range = Math.abs(error_range);
-  return roundAndFlushPointToInterval(n, AbsoluteErrorIntervalOp(error_range));
+  return runPointOp(toInterval(n), AbsoluteErrorIntervalOp(error_range));
 }
 
 /** @returns a PointToIntervalOp for [n - numULP * ULP(n), n + numULP * ULP(n)] */
 function ULPIntervalOp(numULP: number): PointToIntervalOp {
-  return {
-    impl: (n: number) => {
-      if (!isF32Finite(n)) {
-        assert(!Number.isNaN(n), `ULP not defined for NaN`);
-        return toInterval(n);
-      }
+  const op: PointToIntervalOp = {
+    impl: (_: number) => {
+      return F32Interval.any();
+    },
+  };
+
+  if (isF32Finite(numULP)) {
+    op.impl = (n: number) => {
+      assert(!Number.isNaN(n), `ULP error not defined for NaN`);
 
       const ulp = oneULP(n);
       const begin = n - numULP * ulp;
@@ -408,18 +467,20 @@ function ULPIntervalOp(numULP: number): PointToIntervalOp {
         Math.min(begin, flushSubnormalNumber(begin)),
         Math.max(end, flushSubnormalNumber(end))
       );
-    },
-  };
+    };
+  }
+
+  return op;
 }
 
 /** @returns an interval of N * ULP around the point */
 export function ulpInterval(n: number, numULP: number): F32Interval {
   numULP = Math.abs(numULP);
-  return roundAndFlushPointToInterval(n, ULPIntervalOp(numULP));
+  return runPointOp(toInterval(n), ULPIntervalOp(numULP));
 }
 
 const AbsIntervalOp: PointToIntervalOp = {
-  impl: (n: number): F32Interval => {
+  impl: (n: number) => {
     return correctlyRoundedInterval(Math.abs(n));
   },
 };
@@ -429,30 +490,9 @@ export function absInterval(n: number): F32Interval {
   return runPointOp(toInterval(n), AbsIntervalOp);
 }
 
-const AdditionInnerOp = {
-  impl: (x: number, y: number): F32Interval => {
-    if (!isF32Finite(x) && isF32Finite(y)) {
-      return correctlyRoundedInterval(x);
-    }
-
-    if (isF32Finite(x) && !isF32Finite(y)) {
-      return correctlyRoundedInterval(y);
-    }
-
-    if (!isF32Finite(x) && !isF32Finite(y)) {
-      if (Math.sign(x) === Math.sign(y)) {
-        return correctlyRoundedInterval(x);
-      } else {
-        return F32Interval.infinite();
-      }
-    }
-    return correctlyRoundedInterval(x + y);
-  },
-};
-
 const AdditionIntervalOp: BinaryToIntervalOp = {
   impl: (x: number, y: number): F32Interval => {
-    return roundAndFlushBinaryToInterval(x, y, AdditionInnerOp);
+    return correctlyRoundedInterval(x + y);
   },
 };
 
@@ -462,7 +502,7 @@ export function additionInterval(x: number | F32Interval, y: number | F32Interva
 }
 
 const AtanIntervalOp: PointToIntervalOp = {
-  impl: (n: number): F32Interval => {
+  impl: (n: number) => {
     return ulpInterval(Math.atan(n), 4096);
   },
 };
@@ -477,7 +517,7 @@ const Atan2IntervalOp: BinaryToIntervalOp = {
     const numULP = 4096;
     if (y === 0) {
       if (x === 0) {
-        return F32Interval.infinite();
+        return F32Interval.any();
       } else {
         return F32Interval.span(
           ulpInterval(kValue.f32.negative.pi.whole, numULP),
@@ -557,11 +597,12 @@ export function clampMinMaxInterval(
 }
 
 const CosIntervalOp: PointToIntervalOp = {
-  impl: (n: number): F32Interval => {
-    return kValue.f32.negative.pi.whole <= n && n <= kValue.f32.positive.pi.whole
-      ? absoluteErrorInterval(Math.cos(n), 2 ** -11)
-      : F32Interval.infinite();
-  },
+  impl: limitPointToIntervalDomain(
+    kNegPiToPiInterval,
+    (n: number): F32Interval => {
+      return absoluteErrorInterval(Math.cos(n), 2 ** -11);
+    }
+  ),
 };
 
 /** Calculate an acceptance interval of cos(x) */
@@ -570,36 +611,35 @@ export function cosInterval(n: number): F32Interval {
 }
 
 const DivisionIntervalOp: BinaryToIntervalOp = {
-  impl: (x: number, y: number): F32Interval => {
-    assert(
-      !isSubnormalNumber(y),
-      `divisionInterval impl should never receive y === 0 or flush(y) === 0`
-    );
-    return ulpInterval(x / y, 2.5);
+  impl: limitBinaryToIntervalDomain(
+    {
+      x: new F32Interval(kValue.f32.negative.min, kValue.f32.positive.max),
+      y: [new F32Interval(-(2 ** 126), -(2 ** -126)), new F32Interval(2 ** -126, 2 ** 126)],
+    },
+    (x: number, y: number): F32Interval => {
+      if (y === 0) {
+        return F32Interval.any();
+      }
+      return ulpInterval(x / y, 2.5);
+    }
+  ),
+  extrema: (x: F32Interval, y: F32Interval): [F32Interval, F32Interval] => {
+    // division has a discontinuity at y = 0.
+    if (y.contains(0)) {
+      y = toInterval(0);
+    }
+    return [x, y];
   },
 };
 
 /** Calculate an acceptance interval of x / y */
 export function divisionInterval(x: number | F32Interval, y: number | F32Interval): F32Interval {
-  {
-    const Y = toInterval(y);
-    const lower_bound = 2 ** -126;
-    const upper_bound = 2 ** 126;
-    // division accuracy is not defined outside of |denominator| on [2 ** -126, 2 ** 126]
-    if (
-      !new F32Interval(-upper_bound, -lower_bound).contains(Y) &&
-      !new F32Interval(lower_bound, upper_bound).contains(Y)
-    ) {
-      return F32Interval.infinite();
-    }
-  }
-
   return runBinaryOp(toInterval(x), toInterval(y), DivisionIntervalOp);
 }
 
 const ExpIntervalOp: PointToIntervalOp = {
-  impl: (x: number): F32Interval => {
-    return ulpInterval(Math.exp(x), 3 + 2 * Math.abs(x));
+  impl: (n: number): F32Interval => {
+    return ulpInterval(Math.exp(n), 3 + 2 * Math.abs(n));
   },
 };
 
@@ -609,8 +649,8 @@ export function expInterval(x: number | F32Interval): F32Interval {
 }
 
 const Exp2IntervalOp: PointToIntervalOp = {
-  impl: (x: number): F32Interval => {
-    return ulpInterval(Math.pow(2, x), 3 + 2 * Math.abs(x));
+  impl: (n: number): F32Interval => {
+    return ulpInterval(Math.pow(2, n), 3 + 2 * Math.abs(n));
   },
 };
 
@@ -652,13 +692,12 @@ export function fractInterval(n: number): F32Interval {
 }
 
 const InverseSqrtIntervalOp: PointToIntervalOp = {
-  impl: (n: number): F32Interval => {
-    if (n <= 0) {
-      // 1 / sqrt(n) for n <= 0 is not meaningfully defined for real f32
-      return F32Interval.infinite();
+  impl: limitPointToIntervalDomain(
+    kGreaterThanZeroInterval,
+    (n: number): F32Interval => {
+      return ulpInterval(1 / Math.sqrt(n), 2);
     }
-    return ulpInterval(1 / Math.sqrt(n), 2);
-  },
+  ),
 };
 
 /** Calculate an acceptance interval of inverseSqrt(x) */
@@ -667,17 +706,15 @@ export function inverseSqrtInterval(n: number | F32Interval): F32Interval {
 }
 
 const LogIntervalOp: PointToIntervalOp = {
-  impl: (x: number): F32Interval => {
-    // log is not defined in the real plane for x <= 0
-    if (x <= 0.0) {
-      return F32Interval.infinite();
+  impl: limitPointToIntervalDomain(
+    kGreaterThanZeroInterval,
+    (n: number): F32Interval => {
+      if (n >= 0.5 && n <= 2.0) {
+        return absoluteErrorInterval(Math.log(n), 2 ** -21);
+      }
+      return ulpInterval(Math.log(n), 3);
     }
-
-    if (x >= 0.5 && x <= 2.0) {
-      return absoluteErrorInterval(Math.log(x), 2 ** -21);
-    }
-    return ulpInterval(Math.log(x), 3);
-  },
+  ),
 };
 
 /** Calculate an acceptance interval of log(x) */
@@ -686,17 +723,15 @@ export function logInterval(x: number | F32Interval): F32Interval {
 }
 
 const Log2IntervalOp: PointToIntervalOp = {
-  impl: (x: number): F32Interval => {
-    // log2 is not defined in the real plane for x <= 0
-    if (x <= 0.0) {
-      return F32Interval.infinite();
+  impl: limitPointToIntervalDomain(
+    kGreaterThanZeroInterval,
+    (n: number): F32Interval => {
+      if (n >= 0.5 && n <= 2.0) {
+        return absoluteErrorInterval(Math.log2(n), 2 ** -21);
+      }
+      return ulpInterval(Math.log2(n), 3);
     }
-
-    if (x >= 0.5 && x <= 2.0) {
-      return absoluteErrorInterval(Math.log2(x), 2 ** -21);
-    }
-    return ulpInterval(Math.log2(x), 3);
-  },
+  ),
 };
 
 /** Calculate an acceptance interval of log2(x) */
@@ -728,17 +763,6 @@ export function minInterval(x: number | F32Interval, y: number | F32Interval): F
 
 const MultiplicationInnerOp = {
   impl: (x: number, y: number): F32Interval => {
-    if (x === 0 || y === 0) {
-      return correctlyRoundedInterval(0);
-    }
-
-    const appropriate_infinity =
-      Math.sign(x) === Math.sign(y) ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
-
-    if (!isF32Finite(x) || !isF32Finite(y)) {
-      return correctlyRoundedInterval(appropriate_infinity);
-    }
-
     return correctlyRoundedInterval(x * y);
   },
 };
@@ -769,11 +793,12 @@ export function negationInterval(n: number): F32Interval {
 }
 
 const SinIntervalOp: PointToIntervalOp = {
-  impl: (n: number): F32Interval => {
-    return kValue.f32.negative.pi.whole <= n && n <= kValue.f32.positive.pi.whole
-      ? absoluteErrorInterval(Math.sin(n), 2 ** -11)
-      : F32Interval.infinite();
-  },
+  impl: limitPointToIntervalDomain(
+    kNegPiToPiInterval,
+    (n: number): F32Interval => {
+      return absoluteErrorInterval(Math.sin(n), 2 ** -11);
+    }
+  ),
 };
 
 /** Calculate an acceptance interval of sin(x) */
@@ -783,22 +808,6 @@ export function sinInterval(n: number): F32Interval {
 
 const SubtractionInnerOp: BinaryToIntervalOp = {
   impl: (x: number, y: number): F32Interval => {
-    if (!isF32Finite(x) && isF32Finite(y)) {
-      return correctlyRoundedInterval(x);
-    }
-
-    if (isF32Finite(x) && !isF32Finite(y)) {
-      const result = Math.sign(y) > 0 ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
-      return correctlyRoundedInterval(result);
-    }
-
-    if (!isF32Finite(x) && !isF32Finite(y)) {
-      if (Math.sign(x) === -Math.sign(y)) {
-        return correctlyRoundedInterval(x);
-      } else {
-        return F32Interval.infinite();
-      }
-    }
     return correctlyRoundedInterval(x - y);
   },
 };
