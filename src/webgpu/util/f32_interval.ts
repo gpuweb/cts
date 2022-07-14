@@ -93,6 +93,18 @@ function toInterval(n: number | F32Interval): F32Interval {
   return new F32Interval(n, n);
 }
 
+/** F32Interval of [-π, π] */
+const kNegPiToPiInterval = new F32Interval(
+  kValue.f32.negative.pi.whole,
+  kValue.f32.positive.pi.whole
+);
+
+/** F32Interval of values greater than 0 */
+const kGreaterThanZeroInterval = new F32Interval(
+  kValue.f32.subnormal.positive.min,
+  kValue.f32.positive.max
+);
+
 /**
  * A function that converts a point to an acceptance interval.
  * This is the public facing API for builtin implementations that is called
@@ -123,15 +135,22 @@ export interface PointToIntervalOp {
    *      i.e. fooInterval takes in x: number | F32Interval, not x: number
    */
   extrema?: (x: F32Interval) => F32Interval;
+}
 
-  /**
-   * @returns additional intervals for runPointOp to test that inputs are
-   * contained by.
-   * If not defined, inputs are only tested that they are finite.
-   * If an input fails testing, execution is short circuited and the any()
-   * interval is returned to indicate an undefined value.
-   */
-  domain?: F32Interval;
+/**
+ * Restrict the inputs to an PointToInterval operation
+ *
+ * Only used for operations that have tighter domain requirements than 'must be
+ * f32 finite'.
+ *
+ * @param domain interval to restrict inputs to
+ * @param impl operation implementation to run if input is within the required domain
+ * @returns a PointToInterval that calls impl if domain contains the input,
+ *          otherwise it returns the any() interval */
+function limitPointToIntervalDomain(domain: F32Interval, impl: PointToInterval): PointToInterval {
+  return (n: number): F32Interval => {
+    return domain.contains(n) ? impl(n) : F32Interval.any();
+  };
 }
 
 /**
@@ -146,7 +165,7 @@ export interface BinaryToInterval {
 /** Operation used to implement a BinaryToInterval */
 interface BinaryToIntervalOp {
   /** @returns acceptance interval for a function at point (x, y) */
-  impl: (x: number, y: number) => F32Interval;
+  impl: BinaryToInterval;
   /**
    * Calculates where in domain defined by x & y the min/max extrema of impl
    * occur and returns spans of those points to be used as the domain instead.
@@ -162,15 +181,40 @@ interface BinaryToIntervalOp {
    *   c) need to take in an interval for b)
    */
   extrema?: (x: F32Interval, y: F32Interval) => [F32Interval, F32Interval];
+}
 
-  /**
-   * @returns additional intervals for runBinaryOp to test that inputs are
-   * contained by.
-   * If not defined, inputs are only tested that they are finite.
-   * If an input fails testing, execution is short circuited and the any()
-   * interval is returned to indicate an undefined value.
-   */
-  domain?: { x: F32Interval[]; y: F32Interval[] };
+/** Domain for a BinaryToInterval implementation */
+interface BinaryToIntervalDomain {
+  x: F32Interval;
+  // y is an array to support handling domains composed of discrete intervals
+  y: F32Interval[];
+}
+
+/**
+ * Restrict the inputs to an BinaryToInterval
+ *
+ * Only used for operations that have tighter domain requirements than 'must be
+ * f32 finite'.
+ *
+ * @param domain set of intervals to restrict inputs to
+ * @param impl operation implementation to run if input is within the required domain
+ * @returns a BinaryToInterval that calls impl if domain contains the input,
+ *          otherwise it returns the any() interval */
+function limitBinaryToIntervalDomain(
+  domain: BinaryToIntervalDomain,
+  impl: BinaryToInterval
+): BinaryToInterval {
+  return (x: number, y: number): F32Interval => {
+    if (!domain.x.contains(x)) {
+      return F32Interval.any();
+    }
+
+    if (!domain.y.some(d => d.contains(y))) {
+      return F32Interval.any();
+    }
+
+    return impl(x, y);
+  };
 }
 
 /**
@@ -186,12 +230,7 @@ export interface TernaryToInterval {
 interface TernaryToIntervalOp {
   // Re-using the *Op interface pattern for symmetry with the other operations.
   /** @returns acceptance interval for a function at point (x, y, z) */
-  impl: (x: number, y: number, z: number) => F32Interval;
-
-  // All current ternary operations that are used in inheritance (clamp*) are
-  // monotonic, so extrema property is not needed.
-  // All current ternary operations have a domain of the finite f32 space, so a
-  // domain property is not needed.
+  impl: TernaryToInterval;
 }
 
 /** Converts a point to an acceptance interval, using a specific function
@@ -303,12 +342,6 @@ function runPointOp(x: F32Interval, op: PointToIntervalOp): F32Interval {
     x = op.extrema(x);
   }
 
-  if (op.domain !== undefined) {
-    if (!op.domain.contains(x)) {
-      return F32Interval.any();
-    }
-  }
-
   const result = F32Interval.span(
     roundAndFlushPointToInterval(x.begin, op),
     roundAndFlushPointToInterval(x.end, op)
@@ -333,12 +366,6 @@ function runBinaryOp(x: F32Interval, y: F32Interval, op: BinaryToIntervalOp): F3
 
   if (op.extrema !== undefined) {
     [x, y] = op.extrema(x, y);
-  }
-
-  if (op.domain !== undefined) {
-    if (!op.domain.x.some(d => d.contains(x)) || !op.domain.y.some(d => d.contains(y))) {
-      return F32Interval.any();
-    }
   }
 
   const x_values = new Set<number>([x.begin, x.end]);
@@ -576,10 +603,12 @@ export function clampMinMaxInterval(
 }
 
 const CosIntervalOp: PointToIntervalOp = {
-  impl: (n: number): F32Interval => {
-    return absoluteErrorInterval(Math.cos(n), 2 ** -11);
-  },
-  domain: new F32Interval(kValue.f32.negative.pi.whole, kValue.f32.positive.pi.whole),
+  impl: limitPointToIntervalDomain(
+    kNegPiToPiInterval,
+    (n: number): F32Interval => {
+      return absoluteErrorInterval(Math.cos(n), 2 ** -11);
+    }
+  ),
 };
 
 /** Calculate an acceptance interval of cos(x) */
@@ -588,17 +617,19 @@ export function cosInterval(n: number): F32Interval {
 }
 
 const DivisionIntervalOp: BinaryToIntervalOp = {
-  impl: (x: number, y: number): F32Interval => {
-    assert(
-      !isSubnormalNumber(y),
-      `DivisionIntervalOp.impl should never receive y === 0 or flush(y) === 0`
-    );
-    return ulpInterval(x / y, 2.5);
-  },
-  domain: {
-    x: [new F32Interval(kValue.f32.negative.min, kValue.f32.positive.max)],
-    y: [new F32Interval(-(2 ** 126), -(2 ** -126)), new F32Interval(2 ** -126, 2 ** 126)],
-  },
+  impl: limitBinaryToIntervalDomain(
+    {
+      x: new F32Interval(kValue.f32.negative.min, kValue.f32.positive.max),
+      y: [new F32Interval(-(2 ** 126), -(2 ** -126)), new F32Interval(2 ** -126, 2 ** 126)],
+    },
+    (x: number, y: number): F32Interval => {
+      assert(
+        !isSubnormalNumber(y),
+        `DivisionIntervalOp.impl should never receive y === 0 or flush(y) === 0`
+      );
+      return ulpInterval(x / y, 2.5);
+    }
+  ),
 };
 
 /** Calculate an acceptance interval of x / y */
@@ -661,11 +692,12 @@ export function fractInterval(n: number): F32Interval {
 }
 
 const InverseSqrtIntervalOp: PointToIntervalOp = {
-  impl: (n: number): F32Interval => {
-    return ulpInterval(1 / Math.sqrt(n), 2);
-  },
-  // 1/sqrt(x) is not defined for x <= 0
-  domain: new F32Interval(kValue.f32.subnormal.positive.min, kValue.f32.positive.max),
+  impl: limitPointToIntervalDomain(
+    kGreaterThanZeroInterval,
+    (n: number): F32Interval => {
+      return ulpInterval(1 / Math.sqrt(n), 2);
+    }
+  ),
 };
 
 /** Calculate an acceptance interval of inverseSqrt(x) */
@@ -674,14 +706,15 @@ export function inverseSqrtInterval(n: number | F32Interval): F32Interval {
 }
 
 const LogIntervalOp: PointToIntervalOp = {
-  impl: (n: number): F32Interval => {
-    if (n >= 0.5 && n <= 2.0) {
-      return absoluteErrorInterval(Math.log(n), 2 ** -21);
+  impl: limitPointToIntervalDomain(
+    kGreaterThanZeroInterval,
+    (n: number): F32Interval => {
+      if (n >= 0.5 && n <= 2.0) {
+        return absoluteErrorInterval(Math.log(n), 2 ** -21);
+      }
+      return ulpInterval(Math.log(n), 3);
     }
-    return ulpInterval(Math.log(n), 3);
-  },
-  // log(x) is not defined for x <= 0
-  domain: new F32Interval(kValue.f32.subnormal.positive.min, kValue.f32.positive.max),
+  ),
 };
 
 /** Calculate an acceptance interval of log(x) */
@@ -690,14 +723,15 @@ export function logInterval(x: number | F32Interval): F32Interval {
 }
 
 const Log2IntervalOp: PointToIntervalOp = {
-  impl: (n: number): F32Interval => {
-    if (n >= 0.5 && n <= 2.0) {
-      return absoluteErrorInterval(Math.log2(n), 2 ** -21);
+  impl: limitPointToIntervalDomain(
+    kGreaterThanZeroInterval,
+    (n: number): F32Interval => {
+      if (n >= 0.5 && n <= 2.0) {
+        return absoluteErrorInterval(Math.log2(n), 2 ** -21);
+      }
+      return ulpInterval(Math.log2(n), 3);
     }
-    return ulpInterval(Math.log2(n), 3);
-  },
-  // log2(x) is not defined for x <= 0
-  domain: new F32Interval(kValue.f32.subnormal.positive.min, kValue.f32.positive.max),
+  ),
 };
 
 /** Calculate an acceptance interval of log2(x) */
@@ -759,10 +793,12 @@ export function negationInterval(n: number): F32Interval {
 }
 
 const SinIntervalOp: PointToIntervalOp = {
-  impl: (n: number): F32Interval => {
-    return absoluteErrorInterval(Math.sin(n), 2 ** -11);
-  },
-  domain: new F32Interval(kValue.f32.negative.pi.whole, kValue.f32.positive.pi.whole),
+  impl: limitPointToIntervalDomain(
+    kNegPiToPiInterval,
+    (n: number): F32Interval => {
+      return absoluteErrorInterval(Math.sin(n), 2 ** -11);
+    }
+  ),
 };
 
 /** Calculate an acceptance interval of sin(x) */
