@@ -958,6 +958,51 @@ g.test('timestampWrite,query_index')
     t.tryRenderPass(isValid, descriptor);
   });
 
+g.test('timestampWrite,same_query_index')
+  .desc(
+    `
+  Test that timestampWrites is invalid if each entry has the same queryIndex in the same querySet.
+  `
+  )
+  .params(u =>
+    u //
+      .combine('queryIndexA', [0, 1])
+      .combine('queryIndexB', [0, 1])
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase(['timestamp-query']);
+  })
+  .fn(async t => {
+    const { queryIndexA, queryIndexB } = t.params;
+
+    const querySet = t.device.createQuerySet({
+      type: 'timestamp',
+      count: 2,
+    });
+
+    const timestampWriteA = {
+      querySet,
+      queryIndex: queryIndexA,
+      location: 'beginning' as const,
+    };
+
+    const timestampWriteB = {
+      querySet,
+      queryIndex: queryIndexB,
+      location: 'end' as const,
+    };
+
+    const isValid = queryIndexA !== queryIndexB;
+
+    const colorTexture = t.createTexture();
+    const descriptor = {
+      colorAttachments: [t.getColorAttachment(colorTexture)],
+      timestampWrites: [timestampWriteA, timestampWriteB],
+    };
+
+    t.tryRenderPass(isValid, descriptor);
+  });
+
 g.test('occlusionQuerySet,query_set_type')
   .desc(`Test that occlusionQuerySet must have type 'occlusion'.`)
   .params(u => u.combine('queryType', kQueryTypes))
