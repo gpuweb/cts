@@ -1,13 +1,7 @@
 import { assert } from '../../common/util/util.js';
 
 import { kValue } from './constants.js';
-import {
-  correctlyRoundedF32,
-  flushSubnormalNumber,
-  isF32Finite,
-  isSubnormalNumber,
-  oneULP,
-} from './math.js';
+import { correctlyRoundedF32, flushSubnormalNumber, isF32Finite, oneULP } from './math.js';
 
 /** Represents a closed interval in the f32 range */
 export class F32Interval {
@@ -623,13 +617,19 @@ const DivisionIntervalOp: BinaryToIntervalOp = {
       y: [new F32Interval(-(2 ** 126), -(2 ** -126)), new F32Interval(2 ** -126, 2 ** 126)],
     },
     (x: number, y: number): F32Interval => {
-      assert(
-        !isSubnormalNumber(y),
-        `DivisionIntervalOp.impl should never receive y === 0 or flush(y) === 0`
-      );
+      if (y === 0) {
+        return F32Interval.any();
+      }
       return ulpInterval(x / y, 2.5);
     }
   ),
+  extrema: (x: F32Interval, y: F32Interval): [F32Interval, F32Interval] => {
+    // division has a discontinuity at y = 0.
+    if (y.contains(0)) {
+      y = toInterval(0);
+    }
+    return [x, y];
+  },
 };
 
 /** Calculate an acceptance interval of x / y */

@@ -2,7 +2,7 @@ import { range } from '../../common/util/util.js';
 
 /**
  * Pretty-prints a "table" of cell values (each being `number | string`), right-aligned.
- * Each row may be any iterator, including lazily-generated (potentially undefined) rows.
+ * Each row may be any iterator, including lazily-generated (potentially infinite) rows.
  *
  * The first argument is the printing options:
  *  - fillToWidth: Keep printing columns (as long as there is data) until this width is passed.
