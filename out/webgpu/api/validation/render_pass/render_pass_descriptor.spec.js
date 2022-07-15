@@ -11,6 +11,7 @@ kQueryTypes,
 kRenderableColorTextureFormats,
 kTextureFormatInfo } from
 '../../../capability_info.js';
+import { GPUConst } from '../../../constants.js';
 import { ValidationTest } from '../validation_test.js';
 
 class F extends ValidationTest {
@@ -537,15 +538,19 @@ desc(
 `
   Test that using a resolve target whose usage is not RENDER_ATTACHMENT is invalid for color
   attachments.
-
-  TODO: Add a control case (include vs exclude RENDER_ATTACHMENT usage)
   `).
 
-fn(async (t) => {
-  const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
-  const resolveTargetTexture = t.createTexture({
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
+paramsSimple([
+{ usage: GPUConst.TextureUsage.COPY_SRC | GPUConst.TextureUsage.COPY_DST },
+{ usage: GPUConst.TextureUsage.STORAGE_BINDING | GPUConst.TextureUsage.TEXTURE_BINDING },
+{ usage: GPUConst.TextureUsage.STORAGE_BINDING | GPUConst.TextureUsage.STORAGE },
+{ usage: GPUConst.TextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.TEXTURE_BINDING }]).
 
+fn(async (t) => {
+  const { usage } = t.params;
+
+  const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
+  const resolveTargetTexture = t.createTexture({ usage });
 
   const colorAttachment = t.getColorAttachment(multisampledColorTexture);
   colorAttachment.resolveTarget = resolveTargetTexture.createView();
@@ -554,7 +559,8 @@ fn(async (t) => {
     colorAttachments: [colorAttachment] };
 
 
-  t.tryRenderPass(false, descriptor);
+  const isValid = usage & GPUConst.TextureUsage.RENDER_ATTACHMENT ? true : false;
+  t.tryRenderPass(isValid, descriptor);
 });
 
 g.test('resolveTarget,error_state').
