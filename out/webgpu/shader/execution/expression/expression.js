@@ -607,8 +607,6 @@ export function makeUnaryF32IntervalCase(param, ...ops) {
  * @param param1 the second param or rhs hand side to pass into the binary operation
  * @param ops callbacks that implement generating an acceptance interval for a binary operation
  */
-// Will be used in test implementations
-
 export function makeBinaryF32IntervalCase(
 param0,
 param1,
@@ -632,8 +630,6 @@ param1,
  * @param ops callbacks that implement generating an acceptance interval for a
  *           ternary operation.
  */
-// Will be used in test implementations
-
 export function makeTernaryF32IntervalCase(
 param0,
 param1,

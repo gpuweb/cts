@@ -705,6 +705,35 @@ export function inverseSqrtInterval(n) {
   return runPointOp(toInterval(n), InverseSqrtIntervalOp);
 }
 
+const LdexpIntervalOp = {
+  impl: limitBinaryToIntervalDomain(
+  // Implementing SPIR-V's more restrictive domain until
+  // https://github.com/gpuweb/gpuweb/issues/3134 is resolved
+  {
+    x: new F32Interval(kValue.f32.negative.min, kValue.f32.positive.max),
+    y: [new F32Interval(-126, 128)] },
+
+  (e1, e2) => {
+    // Though the spec says the result of ldexp(e1, e2) = e1 * 2 ^ e2, the
+    // accuracy is listed as correctly rounded to the true value, so the
+    // inheritance framework does not need to be invoked to determine bounds.
+    // Instead the value at a higher precision is calculated and passed to
+    // correctlyRoundedInterval.
+    const result = e1 * 2 ** e2;
+    if (Number.isNaN(result)) {
+      // Overflowed TS's number type, so definitely out of bounds for f32
+      return F32Interval.any();
+    }
+    return correctlyRoundedInterval(result);
+  }) };
+
+
+
+/** Calculate an acceptance interval of ldexp(e1, e2) */
+export function ldexpInterval(e1, e2) {
+  return roundAndFlushBinaryToInterval(e1, e2, LdexpIntervalOp);
+}
+
 const LogIntervalOp = {
   impl: limitPointToIntervalDomain(
   kGreaterThanZeroInterval,

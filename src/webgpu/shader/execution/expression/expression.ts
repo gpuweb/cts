@@ -607,8 +607,6 @@ export function makeUnaryF32IntervalCase(param: number, ...ops: PointToInterval[
  * @param param1 the second param or rhs hand side to pass into the binary operation
  * @param ops callbacks that implement generating an acceptance interval for a binary operation
  */
-// Will be used in test implementations
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function makeBinaryF32IntervalCase(
   param0: number,
   param1: number,
@@ -632,8 +630,6 @@ export function makeBinaryF32IntervalCase(
  * @param ops callbacks that implement generating an acceptance interval for a
  *           ternary operation.
  */
-// Will be used in test implementations
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function makeTernaryF32IntervalCase(
   param0: number,
   param1: number,

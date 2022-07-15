@@ -454,6 +454,28 @@ counts =
 }
 
 /**
+ * @returns an ascending sorted array of numbers spread over the entire range of 32-bit signed ints
+ *
+ * Numbers are divided into 2 regions: negatives, and positives, with their spreads biased towards 0
+ * Zero is included in range.
+ *
+ * @param counts structure param with 2 entries indicating the number of entries to be generated each region, values must be 0 or greater.
+ */
+export function fullI32Range(
+counts =
+
+
+{ positive: 50 })
+{
+  counts.negative = counts.negative === undefined ? counts.positive : counts.negative;
+  return [
+  ...biasedRange(kValue.i32.negative.max, kValue.i32.negative.min, counts.negative),
+  0,
+  ...biasedRange(kValue.i32.positive.min, kValue.i32.positive.max, counts.positive)];
+
+}
+
+/**
  * @returns the result matrix in Array<Array<number>> type.
  *
  * Matrix multiplication. A is m x n and B is n x p. Returns
