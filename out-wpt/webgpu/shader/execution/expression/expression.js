@@ -128,9 +128,11 @@ export function run(
     }
   })();
 
+  // Submit all the batches, then check the results.
+  const checkResults = [];
   for (let i = 0; i < cases.length; i += casesPerBatch) {
     const batchCases = cases.slice(i, Math.min(i + casesPerBatch, cases.length));
-    runBatch(
+    const checkResult = submitBatch(
       t,
       expressionBuilder,
       parameterTypes,
@@ -139,12 +141,16 @@ export function run(
       cfg.inputSource,
       cmpFloats
     );
+
+    checkResults.push(checkResult);
   }
+
+  checkResults.forEach(f => f());
 }
 
 /**
- * Runs the list of expression tests. The input data must fit within the buffer
- * binding limits of the given inputSource.
+ * Submits the list of expression tests. The input data must fit within the
+ * buffer binding limits of the given inputSource.
  * @param t the GPUTest
  * @param expressionBuilder the expression builder function
  * @param parameterTypes the list of expression parameter types
@@ -152,8 +158,17 @@ export function run(
  * @param cases list of test cases that fit within the binding limits of the device
  * @param inputSource the source of the input values
  * @param cmpFloats the method to compare floating point numbers
+ * @returns a function that checks the results are as expected
  */
-function runBatch(t, expressionBuilder, parameterTypes, returnType, cases, inputSource, cmpFloats) {
+function submitBatch(
+  t,
+  expressionBuilder,
+  parameterTypes,
+  returnType,
+  cases,
+  inputSource,
+  cmpFloats
+) {
   // Construct a buffer to hold the results of the expression tests
   const outputBufferSize = cases.length * kValueStride;
   const outputBuffer = t.device.createBuffer({
@@ -180,35 +195,38 @@ function runBatch(t, expressionBuilder, parameterTypes, returnType, cases, input
 
   t.queue.submit([encoder.finish()]);
 
-  const checkExpectation = outputData => {
-    // Read the outputs from the output buffer
-    const outputs = new Array(cases.length);
-    for (let i = 0; i < cases.length; i++) {
-      outputs[i] = returnType.read(outputData, i * kValueStride);
-    }
+  // Return a function that can check the results of the shader
+  return () => {
+    const checkExpectation = outputData => {
+      // Read the outputs from the output buffer
+      const outputs = new Array(cases.length);
+      for (let i = 0; i < cases.length; i++) {
+        outputs[i] = returnType.read(outputData, i * kValueStride);
+      }
 
-    // The list of expectation failures
-    const errs = [];
+      // The list of expectation failures
+      const errs = [];
 
-    // For each case...
-    for (let caseIdx = 0; caseIdx < cases.length; caseIdx++) {
-      const c = cases[caseIdx];
-      const got = outputs[caseIdx];
-      const cmp = toComparator(c.expected)(got, cmpFloats);
-      if (!cmp.matched) {
-        errs.push(`(${c.input instanceof Array ? c.input.join(', ') : c.input})
+      // For each case...
+      for (let caseIdx = 0; caseIdx < cases.length; caseIdx++) {
+        const c = cases[caseIdx];
+        const got = outputs[caseIdx];
+        const cmp = toComparator(c.expected)(got, cmpFloats);
+        if (!cmp.matched) {
+          errs.push(`(${c.input instanceof Array ? c.input.join(', ') : c.input})
     returned: ${cmp.got}
     expected: ${cmp.expected}`);
+        }
       }
-    }
 
-    return errs.length > 0 ? new Error(errs.join('\n\n')) : undefined;
+      return errs.length > 0 ? new Error(errs.join('\n\n')) : undefined;
+    };
+
+    t.expectGPUBufferValuesPassCheck(outputBuffer, checkExpectation, {
+      type: Uint8Array,
+      typedLength: outputBufferSize,
+    });
   };
-
-  t.expectGPUBufferValuesPassCheck(outputBuffer, checkExpectation, {
-    type: Uint8Array,
-    typedLength: outputBufferSize,
-  });
 }
 
 /**
