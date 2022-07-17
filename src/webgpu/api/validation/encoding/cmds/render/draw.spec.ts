@@ -727,20 +727,22 @@ In this test we test that only the last setting for a buffer slot take account.
 g.test(`max_draw_count`)
   .desc(
     `
-In this test we test that draw count which exceeds GPURenderPassDescriptor.maxDrawCount
-causes validation error on GPUCommandEncoder.finish(). The test sets specified maxDrawCount,
-calls specified draw call specified times, and checks whether GPUCommandEncoder.finish()
-causes a validation error.
-    - x= all draw types
-    - draw count {0, 1, 2, 10}
-    - max draw count {0, 1, 2, 10}
-TODO: Missing test case Bundle
+In this test we test that draw count which exceeds
+GPURenderPassDescriptor.maxDrawCount causes validation error on
+GPUCommandEncoder.finish(). The test sets specified maxDrawCount,
+calls specified draw call specified times with or without bundles,
+and checks whether GPUCommandEncoder.finish() causes a validation error.
+    - x= whether use bundles for first/second draw calls
+    - x= several different draw counts
+    - x= several different maxDrawCounts
 `
   )
   .params(u =>
     u
-      .combine('drawType', ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect', 'all'])
-      .combine('drawCount', [0, 1, 2, 10])
-      .combine('maxDrawCount', [0, 1, 2, 10])
+      .combine('bundleFirstHalf', [false, true])
+      .combine('bundleSecondHalf', [false, true])
+      .combine('maxDrawCount', [0, 1, 4, 16])
+      .beginSubcases()
+      .expand('drawCount', p => [p.maxDrawCount, p.maxDrawCount + 1])
   )
   .unimplemented();
