@@ -1,36 +1,36 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { assert } from '../../../../common/util/util.js';import {
-compare,
-
-
-anyOf,
-intervalComparator } from
-'../../../util/compare.js';
+**/import { assert } from '../../../../common/util/util.js';import { compare, anyOf } from '../../../util/compare.js';
 import {
 ScalarType,
-
+Scalar,
 
 TypeVec,
 TypeU32,
 
 Vector,
 VectorType,
-f32,
-f64 } from
+f32 } from
 '../../../util/conversion.js';
+import {
+
+F32Interval } from
+
+
+'../../../util/f32_interval.js';
+import { quantizeToF32 } from '../../../util/math.js';
 
 
 
+/** Is this expectation actually a Comparator */
+function isComparator(e) {
+  return !(e instanceof F32Interval || e instanceof Scalar || e instanceof Vector);
+}
 
-
-
-import { flushSubnormalNumber, isSubnormalNumber, quantizeToF32 } from '../../../util/math.js';
-
-// Helper for converting Values to Comparators.
-function toComparator(input) {
-  if (input.type !== undefined) {
-    return (got, cmpFloats) => compare(got, input, cmpFloats);
+/** Helper for converting Values to Comparators */
+export function toComparator(input) {
+  if (!isComparator(input)) {
+    return (got) => compare(got, input);
   }
   return input;
 }
@@ -57,9 +57,6 @@ function toComparator(input) {
 export const allInputSources = ['const', 'uniform', 'storage_r', 'storage_rw'];
 
 /** Configuration for running a expression test */
-
-
-
 
 
 
@@ -143,9 +140,6 @@ returnType,
 cfg = { inputSource: 'storage_r' },
 cases)
 {
-  const cmpFloats =
-  cfg.cmpFloats !== undefined ? cfg.cmpFloats : (got, expect) => got === expect;
-
   // If the 'vectorize' config option was provided, pack the cases into vectors.
   if (cfg.vectorize !== undefined) {
     const packed = packScalarsToVector(parameterTypes, returnType, cases, cfg.vectorize);
@@ -182,8 +176,7 @@ cases)
     parameterTypes,
     returnType,
     batchCases,
-    cfg.inputSource,
-    cmpFloats);
+    cfg.inputSource);
 
     checkResults.push(checkResult);
   }
@@ -200,7 +193,6 @@ cases)
  * @param returnType the return type for the expression overload
  * @param cases list of test cases that fit within the binding limits of the device
  * @param inputSource the source of the input values
- * @param cmpFloats the method to compare floating point numbers
  * @returns a function that checks the results are as expected
  */
 function submitBatch(
@@ -209,8 +201,7 @@ expressionBuilder,
 parameterTypes,
 returnType,
 cases,
-inputSource,
-cmpFloats)
+inputSource)
 {
   // Construct a buffer to hold the results of the expression tests
   const outputBufferSize = cases.length * kValueStride;
@@ -253,7 +244,7 @@ cmpFloats)
       for (let caseIdx = 0; caseIdx < cases.length; caseIdx++) {
         const c = cases[caseIdx];
         const got = outputs[caseIdx];
-        const cmp = toComparator(c.expected)(got, cmpFloats);
+        const cmp = toComparator(c.expected)(got);
         if (!cmp.matched) {
           errs.push(`(${c.input instanceof Array ? c.input.join(', ') : c.input})
     returned: ${cmp.got}
@@ -502,12 +493,12 @@ vectorWidth)
     for (let i = 0; i < vectorWidth; i++) {
       comparators[i] = toComparator(cases[clampCaseIdx(caseIdx + i)].expected);
     }
-    const packedComparator = (got, cmpFloats) => {
+    const packedComparator = (got) => {
       let matched = true;
       const gElements = new Array(vectorWidth);
       const eElements = new Array(vectorWidth);
       for (let i = 0; i < vectorWidth; i++) {
-        const d = comparators[i](got.elements[i], cmpFloats);
+        const d = comparators[i](got.elements[i]);
         matched = matched && d.matched;
         gElements[i] = d.got;
         eElements[i] = d.expected;
@@ -531,69 +522,6 @@ vectorWidth)
 
 }
 
-/** @returns a set of flushed and non-flushed floating point results for a given number. */
-function calculateFlushedResults(value) {
-  return [f64(value), f64(flushSubnormalNumber(value))];
-}
-
-/**
- * Generates a Case for the param and unary op provide.
- * The Case will use either exact matching or the test level Comparator.
- * @param param the parameter to pass into the operation
- * @param op callback that implements the truth function for the unary operation
- */
-export function makeUnaryF32Case(param, op) {
-  const f32_param = quantizeToF32(param);
-  const is_param_subnormal = isSubnormalNumber(f32_param);
-  const expected = calculateFlushedResults(op(f32_param));
-  if (is_param_subnormal) {
-    calculateFlushedResults(op(0)).forEach((value) => {
-      expected.push(value);
-    });
-  }
-  return { input: [f32(param)], expected: anyOf(...expected) };
-}
-
-/**
- * Generates a Case for the params and binary op provide.
- * The Case will use either exact matching or the test level Comparator.
- * @param param0 the first param or left hand side to pass into the binary operation
- * @param param1 the second param or rhs hand side to pass into the binary operation
- * @param op callback that implements the truth function for the binary operation
- * @param skip_param1_zero_flush should the builder skip cases where the param1 would be flushed to 0,
- *                               this is to avoid performing division by 0, other invalid operations.
- *                               The caller is responsible for making sure the initial param1 isn't 0.
- */
-export function makeBinaryF32Case(
-param0,
-param1,
-op,
-skip_param1_zero_flush = false)
-{
-  const f32_param0 = quantizeToF32(param0);
-  const f32_param1 = quantizeToF32(param1);
-  const is_param0_subnormal = isSubnormalNumber(f32_param0);
-  const is_param1_subnormal = isSubnormalNumber(f32_param1);
-  const expected = calculateFlushedResults(op(f32_param0, f32_param1));
-  if (is_param0_subnormal) {
-    calculateFlushedResults(op(0, f32_param1)).forEach((value) => {
-      expected.push(value);
-    });
-  }
-  if (!skip_param1_zero_flush && is_param1_subnormal) {
-    calculateFlushedResults(op(f32_param0, 0)).forEach((value) => {
-      expected.push(value);
-    });
-  }
-  if (!skip_param1_zero_flush && is_param0_subnormal && is_param1_subnormal) {
-    calculateFlushedResults(op(0, 0)).forEach((value) => {
-      expected.push(value);
-    });
-  }
-
-  return { input: [f32(param0), f32(param1)], expected: anyOf(...expected) };
-}
-
 /**
  * Generates a Case for the param and unary interval generator provided.
  * The Case will use use an interval comparator for matching results.
@@ -606,7 +534,7 @@ export function makeUnaryF32IntervalCase(param, ...ops) {
   for (const op of ops) {
     intervals.push(op(param));
   }
-  return { input: [f32(param)], expected: intervalComparator(...intervals) };
+  return { input: [f32(param)], expected: anyOf(...intervals) };
 }
 
 /**
@@ -627,7 +555,7 @@ param1,
   for (const op of ops) {
     intervals.push(op(param0, param1));
   }
-  return { input: [f32(param0), f32(param1)], expected: intervalComparator(...intervals) };
+  return { input: [f32(param0), f32(param1)], expected: anyOf(...intervals) };
 }
 
 /**
@@ -654,7 +582,7 @@ param2,
   }
   return {
     input: [f32(param0), f32(param1), f32(param2)],
-    expected: intervalComparator(...intervals) };
+    expected: anyOf(...intervals) };
 
 }
 //# sourceMappingURL=expression.js.map

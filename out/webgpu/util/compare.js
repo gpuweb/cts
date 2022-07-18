@@ -1,8 +1,8 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { Colors } from '../../common/util/colors.js';import { f32, isFloatValue, Scalar, Vector } from './conversion.js';
-
-import { correctlyRounded, oneULP, withinULP } from './math.js';
+**/import { Colors } from '../../common/util/colors.js';import { toComparator } from '../shader/execution/expression/expression.js';
+import { isFloatValue, Scalar, Vector } from './conversion.js';
+import { F32Interval } from './f32_interval.js';
 
 /** Comparison describes the result of a Comparator function. */
 
@@ -16,79 +16,13 @@ import { correctlyRounded, oneULP, withinULP } from './math.js';
 
 
 
-
-
-
-
-
 /**
- * @returns a FloatMatch that returns true iff the two numbers are equal to, or
- * less than the specified absolute error threshold.
- */
-export function absMatch(diff) {
-  return (got, expected) => {
-    if (got === expected) {
-      return true;
-    }
-    if (!Number.isFinite(got) || !Number.isFinite(expected)) {
-      return false;
-    }
-    return Math.abs(got - expected) <= diff;
-  };
-}
-
-/**
- * @returns a FloatMatch that returns true iff the two numbers are within or
- * equal to the specified ULP threshold value.
- */
-export function ulpMatch(ulp) {
-  return (got, expected) => {
-    if (got === expected) {
-      return true;
-    }
-    return withinULP(got, expected, ulp);
-  };
-}
-
-/**
- * @returns a FloatMatch that returns true iff |expected| is a correctly round
- * to |got|.
- * |got| must be expressible as a float32.
- */
-export function correctlyRoundedMatch() {
-  return (got, expected) => {
-    return correctlyRounded(f32(got), expected);
-  };
-}
-
-/**
- * @returns a FloatMatch that return true iff |got| is contained in any of the intervals.
- *
- * The standard |expected| parameter is ignored.
- *
- * NB: This will be removed at the end of transition to the new FP testing framework.
- *
- * @param intervals array of intervals to test the |got| value against.
- */
-export function intervalMatch(...intervals) {
-  return (got, _) => {
-    for (const i of intervals) {
-      if (i.contains(got)) {
-        return true;
-      }
-    }
-    return false;
-  };
-}
-
-/**
- * compare() compares 'got' to 'expected', returning the Comparison information.
- * @param got the value obtained from the test
- * @param expected the expected value
- * @param cmpFloats the FloatMatch used to compare floating point values
+ * compares 'got' Value  to 'expected' Value, returning the Comparison information.
+ * @param got the Value obtained from the test
+ * @param expected the expected Value
  * @returns the comparison results
  */
-export function compare(got, expected, cmpFloats) {
+function compareValue(got, expected) {
   {
     // Check types
     const gTy = got.type;
@@ -108,14 +42,14 @@ export function compare(got, expected, cmpFloats) {
     const e = expected;
     const isFloat = g.type.kind === 'f64' || g.type.kind === 'f32' || g.type.kind === 'f16';
     const matched =
-    isFloat && cmpFloats(g.value, e.value) ||
-    !isFloat && g.value === e.value;
+    isFloat && g.value === e.value || !isFloat && g.value === e.value;
     return {
       matched,
       got: g.toString(),
       expected: matched ? Colors.green(e.toString()) : Colors.red(e.toString()) };
 
   }
+
   if (got instanceof Vector) {
     const gLen = got.elements.length;
     const eLen = expected.elements.length;
@@ -126,7 +60,7 @@ export function compare(got, expected, cmpFloats) {
       if (i < gLen && i < eLen) {
         const g = got.elements[i];
         const e = expected.elements[i];
-        const cmp = compare(g, e, cmpFloats);
+        const cmp = compare(g, e);
         matched = matched && cmp.matched;
         gElements[i] = cmp.got;
         eElements[i] = cmp.expected;
@@ -149,68 +83,64 @@ export function compare(got, expected, cmpFloats) {
   throw new Error(`unhandled type '${typeof got}`);
 }
 
+/**
+ * Tests it a 'got' Value is contained in 'expected' interval, returning the Comparison information.
+ * @param got the Value obtained from the test
+ * @param expected the expected F32Interval
+ * @returns the comparison results
+ */
+function compareInterval(got, expected) {
+  {
+    // Check type
+    const gTy = got.type;
+    if (!isFloatValue(got)) {
+      return {
+        matched: false,
+        got: `${Colors.red(gTy.toString())}(${got})`,
+        expected: `floating point value` };
+
+    }
+  }
+
+  if (got instanceof Scalar) {
+    const g = got.value;
+    const matched = expected.contains(g);
+    return {
+      matched,
+      got: g.toString(),
+      expected: matched ? Colors.green(expected.toString()) : Colors.red(expected.toString()) };
+
+  }
+
+  // Vector results are currently not handled
+  throw new Error(`unhandled type '${typeof got}`);
+}
+
+/**
+ * compare() compares 'got' to 'expected', returning the Comparison information.
+ * @param got the result obtained from the test
+ * @param expected the expected result
+ * @returns the comparison results
+ */
+export function compare(got, expected) {
+  if (expected instanceof F32Interval) {
+    return compareInterval(got, expected);
+  }
+  return compareValue(got, expected);
+}
+
 /** @returns a Comparator that checks whether a test value matches any of the provided options */
 export function anyOf(...expectations) {
-  return (got, cmpFloats) => {
+  return (got) => {
     const failed = new Set();
     for (const e of expectations) {
-      let cmp;
-      if (e.type !== undefined) {
-        const v = e;
-        cmp = compare(got, v, cmpFloats);
-      } else {
-        const c = e;
-        cmp = c(got, cmpFloats);
-      }
+      const cmp = toComparator(e)(got);
       if (cmp.matched) {
         return cmp;
       }
       failed.add(cmp.expected);
     }
     return { matched: false, got: got.toString(), expected: [...failed].join(' or ') };
-  };
-}
-
-/** @returns a Comparator that checks whether a result is within N * ULP of a target value, where N is defined by a function
- *
- * N is n(x), where x is the input into the function under test, not the result of the function.
- * For a function f(x) = X that is being tested, the acceptance interval is defined as within X +/- n(x) * ulp(X).
- */
-export function ulpComparator(x, target, n) {
-  const c = n(x);
-  const match = ulpMatch(c);
-  return (got, _) => {
-    const cmp = compare(got, target, match);
-    if (cmp.matched) {
-      return cmp;
-    }
-
-    const ulp = oneULP(target.value);
-    return {
-      matched: false,
-      got: got.toString(),
-      expected: `within ${c} * ULP (${ulp}) of ${target}` };
-
-  };
-}
-
-/** @returns a Comparator that checks whether a result is contained within the target intervals
- *
- * NB: This will be removed at the end of transition to the new FP testing framework.
- */
-export function intervalComparator(...intervals) {
-  const match = intervalMatch(...intervals);
-  return (got, _) => {
-    // The second param is ignored by match
-    const cmp = compare(got, f32(0.0), match);
-    if (cmp.matched) {
-      return cmp;
-    }
-    return {
-      matched: false,
-      got: got.toString(),
-      expected: `within ${intervals}` };
-
   };
 }
 //# sourceMappingURL=compare.js.map

@@ -14,7 +14,6 @@ I is K or vecN<K>, where
 Returns e1 * 2^e2. Component-wise when T is a vector.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { intervalComparator } from '../../../../../util/compare.js';
 import { f32, i32, TypeF32, TypeI32 } from '../../../../../util/conversion.js';
 import { ldexpInterval } from '../../../../../util/f32_interval.js';
 import {
@@ -53,7 +52,7 @@ fn(async (t) => {
     e1 = quantizeToF32(e1);
     e2 = quantizeToI32(e2);
     const expected = ldexpInterval(e1, e2);
-    return { input: [f32(e1), i32(e2)], expected: intervalComparator(expected) };
+    return { input: [f32(e1), i32(e2)], expected };
   };
 
   const cases = [];
