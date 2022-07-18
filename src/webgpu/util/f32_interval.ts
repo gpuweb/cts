@@ -610,6 +610,17 @@ export function cosInterval(n: number): F32Interval {
   return runPointOp(toInterval(n), CosIntervalOp);
 }
 
+const DegreesIntervalOp: PointToIntervalOp = {
+  impl: (n: number): F32Interval => {
+    return multiplicationInterval(n, 57.295779513082322865);
+  },
+};
+
+/** Calculate an acceptance interval of degrees(x) */
+export function degreesInterval(n: number): F32Interval {
+  return runPointOp(toInterval(n), DegreesIntervalOp);
+}
+
 const DivisionIntervalOp: BinaryToIntervalOp = {
   impl: limitBinaryToIntervalDomain(
     {
