@@ -9,7 +9,7 @@ type WriteCanvasMethod = 'draw' | 'copy';
 
 export function run(
   format: GPUTextureFormat,
-  compositingAlphaMode: GPUCanvasCompositingAlphaMode,
+  alphaMode: GPUCanvasAlphaMode,
   writeCanvasMethod: WriteCanvasMethod
 ) {
   runRefTest(async t => {
@@ -28,7 +28,7 @@ export function run(
     }
 
     // This is mimic globalAlpha in 2d context blending behavior
-    const a = compositingAlphaMode === 'opaque' ? (1.0).toFixed(1) : (0.5).toFixed(1);
+    const a = alphaMode === 'opaque' ? (1.0).toFixed(1) : (0.5).toFixed(1);
 
     let usage = 0;
     switch (writeCanvasMethod) {
@@ -43,7 +43,7 @@ export function run(
       device: t.device,
       format,
       usage,
-      compositingAlphaMode,
+      alphaMode,
     });
 
     const pipeline = t.device.createRenderPipeline({
@@ -101,7 +101,7 @@ return fragColor;
           {
             format,
             blend:
-              compositingAlphaMode === 'opaque'
+              alphaMode === 'opaque'
                 ? undefined
                 : {
                     // The blending behavior here is to mimic 2d context blending behavior
