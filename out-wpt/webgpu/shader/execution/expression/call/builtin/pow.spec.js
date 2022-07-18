@@ -10,7 +10,12 @@ Returns e1 raised to the power e2. Component-wise when T is a vector.
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { allInputSources } from '../../expression.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
+import { powInterval } from '../../../../../util/f32_interval.js';
+import { fullF32Range } from '../../../../../util/math.js';
+import { allInputSources, makeBinaryF32IntervalCase, run } from '../../expression.js';
+
+import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -24,7 +29,21 @@ g.test('f32')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(`f32 tests`)
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
-  .unimplemented();
+  .fn(async t => {
+    const makeCase = (x, y) => {
+      return makeBinaryF32IntervalCase(x, y, powInterval);
+    };
+
+    const cases = [];
+    const numeric_range = fullF32Range();
+    numeric_range.forEach(x => {
+      numeric_range.forEach(y => {
+        cases.push(makeCase(x, y));
+      });
+    });
+
+    run(t, builtin('pow'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+  });
 
 g.test('f16')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')

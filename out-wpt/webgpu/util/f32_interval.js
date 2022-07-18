@@ -719,6 +719,20 @@ export function negationInterval(n) {
   return runPointOp(toInterval(n), NegationIntervalOp);
 }
 
+const PowIntervalOp = {
+  // pow(x, y) has no explicit domain restrictions, but inherits the x <= 0
+  // domain restriction from log2(x). Invoking log2Interval(x) in impl will
+  // enforce this, so there is no need to wrap the impl call here.
+  impl: (x, y) => {
+    return exp2Interval(multiplicationInterval(y, log2Interval(x)));
+  },
+};
+
+/** Calculate an acceptance interval of pow(x, y) */
+export function powInterval(x, y) {
+  return runBinaryOp(toInterval(x), toInterval(y), PowIntervalOp);
+}
+
 const SinIntervalOp = {
   impl: limitPointToIntervalDomain(kNegPiToPiInterval, n => {
     return absoluteErrorInterval(Math.sin(n), 2 ** -11);
