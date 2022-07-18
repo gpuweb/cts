@@ -821,6 +821,20 @@ export function negationInterval(n: number): F32Interval {
   return runPointOp(toInterval(n), NegationIntervalOp);
 }
 
+const PowIntervalOp: BinaryToIntervalOp = {
+  // pow(x, y) has no explicit domain restrictions, but inherits the x <= 0
+  // domain restriction from log2(x). Invoking log2Interval(x) in impl will
+  // enforce this, so there is no need to wrap the impl call here.
+  impl: (x: number, y: number): F32Interval => {
+    return exp2Interval(multiplicationInterval(y, log2Interval(x)));
+  },
+};
+
+/** Calculate an acceptance interval of pow(x, y) */
+export function powInterval(x: number | F32Interval, y: number | F32Interval): F32Interval {
+  return runBinaryOp(toInterval(x), toInterval(y), PowIntervalOp);
+}
+
 const SinIntervalOp: PointToIntervalOp = {
   impl: limitPointToIntervalDomain(
     kNegPiToPiInterval,

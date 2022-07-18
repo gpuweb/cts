@@ -23,17 +23,18 @@ import {
   floorInterval,
   fractInterval,
   inverseSqrtInterval,
+  ldexpInterval,
   logInterval,
   log2Interval,
   maxInterval,
   minInterval,
   multiplicationInterval,
   negationInterval,
+  powInterval,
   tanInterval,
   sinInterval,
   subtractionInterval,
   ulpInterval,
-  ldexpInterval,
 } from '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -1478,6 +1479,39 @@ g.test('multiplicationInterval')
     t.expect(
       objectEquals(expected, got),
       `multiplicationInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('powInterval')
+  .paramsSubcasesOnly<BinaryToIntervalCase>(
+    // prettier-ignore
+    [
+      // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
+      // form due to the inherited nature of the errors.
+      { input: [-1, 0], expected: kAny },
+      { input: [0, 0], expected: kAny },
+      { input: [1, 0], expected: [minusNULP(1, 3), hexToF64(0x3ff00000, 0x30000000)] },  // ~1
+      { input: [2, 0], expected: [minusNULP(1, 3), hexToF64(0x3ff00000, 0x30000000)] },  // ~1
+      { input: [kValue.f32.positive.max, 0], expected: [minusNULP(1, 3), hexToF64(0x3ff00000, 0x30000000)] },  // ~1
+      { input: [0, 1], expected: kAny },
+      { input: [1, 1], expected: [hexToF64(0x3feffffe, 0xdffffe00), hexToF64(0x3ff00000, 0xc0000200)] },  // ~1
+      { input: [1, 100], expected: [hexToF64(0x3fefffba, 0x3fff3800), hexToF64(0x3ff00023, 0x2000c800)] },  // ~1
+      { input: [1, kValue.f32.positive.max], expected: kAny },
+      { input: [2, 1], expected: [hexToF64(0x3ffffffe, 0xa0000200), hexToF64(0x40000001, 0x00000200)] },  // ~2
+      { input: [2, 2], expected: [hexToF64(0x400ffffd, 0xa0000400), hexToF64(0x40100001, 0xa0000400)] },  // ~4
+      { input: [10, 10], expected: [hexToF64(0x4202a04f, 0x51f77000), hexToF64(0x4202a070, 0xee08e000)] },  // ~10000000000
+      { input: [10, 1], expected: [hexToF64(0x4023fffe, 0x0b658b00), hexToF64(0x40240002, 0x149a7c00)] },  // ~10
+      { input: [kValue.f32.positive.max, 1], expected: kAny },
+    ]
+  )
+  .fn(t => {
+    const [x, y] = t.params.input;
+    const expected = new F32Interval(...t.params.expected);
+
+    const got = powInterval(x, y);
+    t.expect(
+      objectEquals(expected, got),
+      `powInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
     );
   });
 
