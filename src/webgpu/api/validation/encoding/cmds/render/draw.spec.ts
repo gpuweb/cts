@@ -732,7 +732,8 @@ GPURenderPassDescriptor.maxDrawCount causes validation error on
 GPUCommandEncoder.finish(). The test sets specified maxDrawCount,
 calls specified draw call specified times with or without bundles,
 and checks whether GPUCommandEncoder.finish() causes a validation error.
-    - x= whether use bundles for first/second draw calls
+    - x= whether to use a bundle for the first half of the draw calls
+    - x= whether to use a bundle for the second half of the draw calls
     - x= several different draw counts
     - x= several different maxDrawCounts
 `
@@ -743,6 +744,6 @@ and checks whether GPUCommandEncoder.finish() causes a validation error.
       .combine('bundleSecondHalf', [false, true])
       .combine('maxDrawCount', [0, 1, 4, 16])
       .beginSubcases()
-      .expand('drawCount', p => [p.maxDrawCount, p.maxDrawCount + 1])
+      .expand('drawCount', p => [0, p.maxDrawCount, p.maxDrawCount + 1])
   )
   .unimplemented();
