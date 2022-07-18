@@ -517,6 +517,17 @@ export function cosInterval(n) {
   return runPointOp(toInterval(n), CosIntervalOp);
 }
 
+const DegreesIntervalOp = {
+  impl: n => {
+    return multiplicationInterval(n, 57.295779513082322865);
+  },
+};
+
+/** Calculate an acceptance interval of degrees(x) */
+export function degreesInterval(n) {
+  return runPointOp(toInterval(n), DegreesIntervalOp);
+}
+
 const DivisionIntervalOp = {
   impl: limitBinaryToIntervalDomain(
     {

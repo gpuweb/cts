@@ -16,6 +16,7 @@ clampMedianInterval,
 clampMinMaxInterval,
 correctlyRoundedInterval,
 cosInterval,
+degreesInterval,
 divisionInterval,
 expInterval,
 exp2Interval,
@@ -733,6 +734,40 @@ fn((t) => {
   t.expect(
   objectEquals(expected, got),
   `cosInterval(${input}) returned ${got}. Expected ${expected}`);
+
+});
+
+g.test('degreesInterval').
+paramsSubcasesOnly(
+
+[
+{ input: kValue.f32.infinity.negative, expected: kAny },
+{ input: kValue.f32.negative.min, expected: kAny },
+{ input: kValue.f32.negative.pi.whole, expected: [minusOneULP(-180), plusOneULP(-180)] },
+{ input: kValue.f32.negative.pi.three_quarters, expected: [minusOneULP(-135), plusOneULP(-135)] },
+{ input: kValue.f32.negative.pi.half, expected: [minusOneULP(-90), plusOneULP(-90)] },
+{ input: kValue.f32.negative.pi.third, expected: [minusOneULP(-60), plusOneULP(-60)] },
+{ input: kValue.f32.negative.pi.quarter, expected: [minusOneULP(-45), plusOneULP(-45)] },
+{ input: kValue.f32.negative.pi.sixth, expected: [minusOneULP(-30), plusOneULP(-30)] },
+{ input: 0, expected: [0, 0] },
+{ input: kValue.f32.positive.pi.sixth, expected: [minusOneULP(30), plusOneULP(30)] },
+{ input: kValue.f32.positive.pi.quarter, expected: [minusOneULP(45), plusOneULP(45)] },
+{ input: kValue.f32.positive.pi.third, expected: [minusOneULP(60), plusOneULP(60)] },
+{ input: kValue.f32.positive.pi.half, expected: [minusOneULP(90), plusOneULP(90)] },
+{ input: kValue.f32.positive.pi.three_quarters, expected: [minusOneULP(135), plusOneULP(135)] },
+{ input: kValue.f32.positive.pi.whole, expected: [minusOneULP(180), plusOneULP(180)] },
+{ input: kValue.f32.positive.max, expected: kAny },
+{ input: kValue.f32.infinity.positive, expected: kAny }]).
+
+
+fn((t) => {
+  const input = t.params.input;
+  const expected = new F32Interval(...t.params.expected);
+
+  const got = degreesInterval(input);
+  t.expect(
+  objectEquals(expected, got),
+  `degreesInterval(${input}) returned ${got}. Expected ${expected}`);
 
 });
 

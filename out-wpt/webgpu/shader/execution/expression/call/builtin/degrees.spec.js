@@ -10,7 +10,12 @@ Converts radians to degrees, approximating e1 × 180 ÷ π. Component-wise when 
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { allInputSources } from '../../expression.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
+import { degreesInterval } from '../../../../../util/f32_interval.js';
+import { fullF32Range } from '../../../../../util/math.js';
+import { allInputSources, makeUnaryF32IntervalCase, run } from '../../expression.js';
+
+import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -24,7 +29,14 @@ g.test('f32')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(`f32 tests`)
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
-  .unimplemented();
+  .fn(async t => {
+    const makeCase = n => {
+      return makeUnaryF32IntervalCase(n, degreesInterval);
+    };
+
+    const cases = fullF32Range().map(makeCase);
+    run(t, builtin('degrees'), [TypeF32], TypeF32, t.params, cases);
+  });
 
 g.test('f16')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
