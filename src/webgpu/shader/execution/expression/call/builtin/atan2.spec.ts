@@ -45,9 +45,11 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
 
     const numeric_range = fullF32Range();
     const cases: Array<Case> = [];
-    numeric_range.forEach(y => {
-      numeric_range.forEach(x => {
-        cases.push(makeCase(y, x));
+    numeric_range.forEach((y, y_idx) => {
+      numeric_range.forEach((x, x_idx) => {
+        if (x_idx >= y_idx) {
+          cases.push(makeCase(y, x));
+        }
       });
     });
 

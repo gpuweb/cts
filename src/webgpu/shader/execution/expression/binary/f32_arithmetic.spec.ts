@@ -95,6 +95,7 @@ Accuracy: Correctly rounded
         cases.push(makeCase(lhs, rhs));
       });
     });
+
     run(t, binary('*'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
