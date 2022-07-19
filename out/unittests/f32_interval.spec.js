@@ -1232,7 +1232,7 @@ fn((t) => {
   const got = atan2Interval(y, x);
   t.expect(
   objectEquals(expected, got),
-  `atan2Interval(${x}, ${y}) returned ${got}. Expected ${expected}`);
+  `atan2Interval(${y}, ${x}) returned ${got}. Expected ${expected}`);
 
 });
 
