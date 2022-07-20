@@ -744,6 +744,6 @@ and checks whether GPUCommandEncoder.finish() causes a validation error.
       .combine('bundleSecondHalf', [false, true])
       .combine('maxDrawCount', [0, 1, 4, 16])
       .beginSubcases()
-      .expand('drawCount', p => [0, p.maxDrawCount, p.maxDrawCount + 1])
+      .expand('drawCount', p => new Set([0, p.maxDrawCount, p.maxDrawCount + 1]))
   )
   .unimplemented();
