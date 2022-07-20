@@ -868,6 +868,24 @@ export function saturateInterval(n: number): F32Interval {
   return runTernaryOp(toInterval(n), toInterval(0.0), toInterval(1.0), ClampMinMaxIntervalOp);
 }
 
+const SignIntervalOp: PointToIntervalOp = {
+  impl: (n: number): F32Interval => {
+    if (n > 0.0) {
+      return correctlyRoundedInterval(1.0);
+    }
+    if (n < 0.0) {
+      return correctlyRoundedInterval(-1.0);
+    }
+
+    return correctlyRoundedInterval(0.0);
+  },
+};
+
+/** Calculate an acceptance interval of sin(x) */
+export function signInterval(n: number): F32Interval {
+  return runPointOp(toInterval(n), SignIntervalOp);
+}
+
 const SinIntervalOp: PointToIntervalOp = {
   impl: limitPointToIntervalDomain(
     kNegPiToPiInterval,
