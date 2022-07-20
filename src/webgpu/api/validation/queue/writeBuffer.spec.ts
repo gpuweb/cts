@@ -133,7 +133,7 @@ g.test('ranges')
       // Writing with a data offset that is out of range of data size.
       t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, 9, 0));
 
-      // Writing with a data offset that is out of range of data size with undefined size.
+      // Writing with a data offset that is out of range of data size with implicit copy size.
       t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, 9, undefined));
 
       // A data offset of undefined should be treated as 0.
