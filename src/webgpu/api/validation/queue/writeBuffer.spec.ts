@@ -19,14 +19,11 @@ export const g = makeTestGroup(ValidationTest);
 g.test('buffer_state')
   .desc(
     `
-Test that the buffer used for GPUQueue.writeBuffer() must be valid. Tests calling writeBuffer
-with {valid, invalid, destroyed} buffer.
+  Test that the buffer used for GPUQueue.writeBuffer() must be valid. Tests calling writeBuffer
+  with {valid, invalid, destroyed} buffer.
   `
   )
-  .params(u =>
-    u //
-      .combine('bufferState', kResourceStates)
-  )
+  .params(u => u.combine('bufferState', kResourceStates))
   .fn(async t => {
     const { bufferState } = t.params;
     const buffer = t.createBufferWithState(bufferState, {
@@ -44,19 +41,17 @@ with {valid, invalid, destroyed} buffer.
 g.test('ranges')
   .desc(
     `
-Tests that the data ranges given to GPUQueue.writeBuffer() are properly validated. Tests calling
-writeBuffer with both TypedArrays and ArrayBuffers and checks that the data offset and size is
-interpreted correctly for both.
+  Tests that the data ranges given to GPUQueue.writeBuffer() are properly validated. Tests calling
+  writeBuffer with both TypedArrays and ArrayBuffers and checks that the data offset and size is
+  interpreted correctly for both.
+    - When passing a TypedArray the data offset and size is given in elements.
+    - When passing an ArrayBuffer the data offset and size is given in bytes.
 
-  - When passing a TypedArray the data offset and size is given in elements.
-  - When passing an ArrayBuffer the data offset and size is given in bytes.
-
-Also verifies that the specified data range:
-
-  - Describes a valid range of the destination buffer and source buffer.
-  - Fits fully within the destination buffer.
-  - Has a byte size which is a multiple of 4.
-`
+  Also verifies that the specified data range:
+    - Describes a valid range of the destination buffer and source buffer.
+    - Fits fully within the destination buffer.
+    - Has a byte size which is a multiple of 4.
+  `
   )
   .fn(async t => {
     const queue = t.device.queue;
@@ -126,19 +121,22 @@ Also verifies that the specified data range:
       // Writing with a size that is 4-byte aligned but an offset that is not.
       queue.writeBuffer(buffer, 0, arraySm, 3, 4);
 
-      // Writing zero bytes at the end of the buffer
+      // Writing zero bytes at the end of the buffer.
       queue.writeBuffer(buffer, bufferSize, arraySm, 0, 0);
 
-      // Writing with a buffer offset that is out of range of buffer size
+      // Writing with a buffer offset that is out of range of buffer size.
       t.expectValidationError(() => queue.writeBuffer(buffer, bufferSize + 4, arraySm, 0, 0));
 
-      // Writing zero bytes from the end of the data
+      // Writing zero bytes from the end of the data.
       queue.writeBuffer(buffer, 0, arraySm, 8, 0);
 
-      // Writing with a data offset that is out of range of data size
+      // Writing with a data offset that is out of range of data size.
       t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, 9, 0));
 
-      // A data offset of undefined should be treated as 0
+      // Writing with a data offset that is out of range of data size with implicit copy size.
+      t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, 9, undefined));
+
+      // A data offset of undefined should be treated as 0.
       queue.writeBuffer(buffer, 0, arraySm, undefined, 8);
       t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, undefined, 12));
     }
@@ -153,9 +151,9 @@ Also verifies that the specified data range:
 g.test('usages')
   .desc(
     `
-Tests calling writeBuffer with the buffer missed COPY_DST usage.
-- buffer {with, without} COPY DST usage
-`
+  Tests calling writeBuffer with the buffer missed COPY_DST usage.
+    - buffer {with, without} COPY DST usage
+  `
   )
   .paramsSubcasesOnly([
     { usage: GPUConst.BufferUsage.COPY_DST, _valid: true }, // control case
@@ -174,7 +172,7 @@ Tests calling writeBuffer with the buffer missed COPY_DST usage.
   });
 
 g.test('buffer,device_mismatch')
-  .desc('Tests writeBuffer cannot be called with a buffer created from another device')
+  .desc('Tests writeBuffer cannot be called with a buffer created from another device.')
   .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
