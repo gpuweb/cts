@@ -63,3 +63,20 @@ export function startPlayingAndWaitForVideo(
     'Video never became ready'
   );
 }
+
+// Add captureStream() support for HTMLMediaElement from
+// https://w3c.github.io/mediacapture-fromelement/#dom-htmlmediaelement-capturestream
+declare global {
+  interface HTMLMediaElement {
+    captureStream(): MediaStream;
+  }
+}
+
+export async function getVideoFrameFromVideoElement(
+  video: HTMLVideoElement
+): Promise<VideoFrame | null> {
+  const track = video.captureStream().getVideoTracks()[0];
+  const reader = new MediaStreamTrackProcessor({ track }).readable.getReader();
+  const result = await reader.read();
+  return result.value ?? null;
+}
