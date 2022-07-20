@@ -1007,6 +1007,14 @@ export const listing = [
     "file": [
       "api",
       "validation",
+      "queue",
+      "writeTexture"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
       "render_pass"
     ],
     "readme": "Render pass stuff other than commands (which are in encoding/cmds/)."
