@@ -17,7 +17,7 @@ g.test('while_mapped')
     Test that a mapped buffers are able to properly detach.
     - Tests {mappable, unmappable mapAtCreation, mappable mapAtCreation}
     - Tests while {mapped, mapped at creation, mapped at creation then unmapped and mapped again}
-    - When {unmap, destroy, unmap && destory, device.destroy} is called`
+    - When {unmap, destroy, unmap && destroy, device.destroy} is called`
   )
   .paramsSubcasesOnly(u =>
     u
