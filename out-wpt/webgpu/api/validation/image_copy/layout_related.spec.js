@@ -170,7 +170,7 @@ Test the computation of requiredBytesInCopy by computing the minimum data size f
         );
       })
       .unless(p => p.dimension === '1d' && (p.copyHeightInBlocks > 1 || p.copyDepth > 1))
-      .expand('bufferOffset', p => {
+      .expand('offset', p => {
         const info = kTextureFormatInfo[p.format];
         if (info.depth || info.stencil) {
           return [p._offsetMultiplier * 4];
@@ -184,7 +184,7 @@ Test the computation of requiredBytesInCopy by computing the minimum data size f
   })
   .fn(async t => {
     const {
-      bufferOffset,
+      offset,
       bytesPerRowPadding,
       rowsPerImagePaddingInBlocks,
       copyWidthInBlocks,
@@ -208,7 +208,7 @@ Test the computation of requiredBytesInCopy by computing the minimum data size f
       bytesPerRowPadding * bytesPerRowAlignment;
     const copySize = { width: copyWidth, height: copyHeight, depthOrArrayLayers: copyDepth };
 
-    const layout = { bufferOffset, bytesPerRow, rowsPerImage };
+    const layout = { offset, bytesPerRow, rowsPerImage };
     const minDataSize = dataBytesForCopyOrFail({ layout, format, copySize, method });
 
     const texture = t.createAlignedTexture(format, copySize, undefined, dimension);

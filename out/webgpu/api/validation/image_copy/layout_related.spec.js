@@ -169,7 +169,7 @@ combineWithParams([
 
 }).
 unless((p) => p.dimension === '1d' && (p.copyHeightInBlocks > 1 || p.copyDepth > 1)).
-expand('bufferOffset', (p) => {
+expand('offset', (p) => {
   const info = kTextureFormatInfo[p.format];
   if (info.depth || info.stencil) {
     return [p._offsetMultiplier * 4];
@@ -183,7 +183,7 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const {
-    bufferOffset,
+    offset,
     bytesPerRowPadding,
     rowsPerImagePaddingInBlocks,
     copyWidthInBlocks,
@@ -207,7 +207,7 @@ fn(async (t) => {
   bytesPerRowPadding * bytesPerRowAlignment;
   const copySize = { width: copyWidth, height: copyHeight, depthOrArrayLayers: copyDepth };
 
-  const layout = { bufferOffset, bytesPerRow, rowsPerImage };
+  const layout = { offset, bytesPerRow, rowsPerImage };
   const minDataSize = dataBytesForCopyOrFail({ layout, format, copySize, method });
 
   const texture = t.createAlignedTexture(format, copySize, undefined, dimension);
