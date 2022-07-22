@@ -56,4 +56,31 @@ fn(async (t) => {
     t.device.queue.writeTexture({ texture }, data, {}, size);
   }, !isValid);
 });
+
+g.test('sample_count').
+desc(
+`
+  Test that the texture sample count. Check that a validation error is generated if sample count is
+  not 1.
+  `).
+
+params((u) => u.combine('sampleCount', [1, 4])).
+fn(async (t) => {
+  const { sampleCount } = t.params;
+  const texture = t.device.createTexture({
+    size: { width: 16, height: 16 },
+    sampleCount,
+    format: 'bgra8unorm',
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
+
+
+  const data = new Uint8Array(16);
+  const size = [1, 1];
+
+  const isValid = sampleCount === 1;
+
+  t.expectValidationError(() => {
+    t.device.queue.writeTexture({ texture }, data, {}, size);
+  }, !isValid);
+});
 //# sourceMappingURL=writeTexture.spec.js.map
