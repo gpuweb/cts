@@ -151,10 +151,8 @@ supported video formats {vp8, vp9, ogg, mp4} and common source colorspaces {bt.6
     video.src = videoUrl;
 
     await startPlayingAndWaitForVideo(video, async () => {
-      let source: HTMLVideoElement | VideoFrame = video;
-      if (sourceType === 'VideoFrame') {
-        source = await getVideoFrameFromVideoElement(video);
-      }
+      const source =
+        sourceType === 'VideoFrame' ? await getVideoFrameFromVideoElement(video) : video;
 
       const colorAttachment = t.device.createTexture({
         format: kFormat,
@@ -261,12 +259,9 @@ GPUExternalTexture results in an error.
     };
 
     let externalTexture: GPUExternalTexture;
-    let source: HTMLVideoElement | VideoFrame;
     await startPlayingAndWaitForVideo(video, async () => {
-      source = video;
-      if (sourceType === 'VideoFrame') {
-        source = await getVideoFrameFromVideoElement(video);
-      }
+      const source =
+        sourceType === 'VideoFrame' ? await getVideoFrameFromVideoElement(video) : video;
       externalTexture = t.device.importExternalTexture({
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         source: source as any,
@@ -325,10 +320,8 @@ Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTextur
     video.src = videoUrl;
 
     await startPlayingAndWaitForVideo(video, async () => {
-      let source: HTMLVideoElement | VideoFrame = video;
-      if (sourceType === 'VideoFrame') {
-        source = await getVideoFrameFromVideoElement(video);
-      }
+      const source =
+        sourceType === 'VideoFrame' ? await getVideoFrameFromVideoElement(video) : video;
       const externalTexture = t.device.importExternalTexture({
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         source: source as any,
