@@ -1,4 +1,4 @@
-import { ErrorWithExtra, raceWithRejectOnTimeout } from '../../common/util/util.js';
+import { assert, ErrorWithExtra, raceWithRejectOnTimeout } from '../../common/util/util.js';
 
 /**
  * Starts playing a video and waits for it to be consumable.
@@ -71,11 +71,10 @@ declare global {
   }
 }
 
-export async function getVideoFrameFromVideoElement(
-  video: HTMLVideoElement
-): Promise<VideoFrame | null> {
+export async function getVideoFrameFromVideoElement(video: HTMLVideoElement): Promise<VideoFrame> {
   const track = video.captureStream().getVideoTracks()[0];
   const reader = new MediaStreamTrackProcessor({ track }).readable.getReader();
-  const result = await reader.read();
-  return result.value ?? null;
+  const videoFrame = (await reader.read()).value;
+  assert(videoFrame !== undefined, 'unable to get a VideoFrame from track 0');
+  return videoFrame;
 }

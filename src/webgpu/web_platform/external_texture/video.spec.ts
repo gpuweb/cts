@@ -8,7 +8,6 @@ TODO: consider whether external_texture and copyToTexture video tests should be 
 
 import { getResourcePath } from '../../../common/framework/resources.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { assert } from '../../../common/util/util.js';
 import { GPUTest } from '../../gpu_test.js';
 import {
   startPlayingAndWaitForVideo,
@@ -154,9 +153,7 @@ supported video formats {vp8, vp9, ogg, mp4} and common source colorspaces {bt.6
     await startPlayingAndWaitForVideo(video, async () => {
       let source: HTMLVideoElement | VideoFrame = video;
       if (sourceType === 'VideoFrame') {
-        const videoFrame = await getVideoFrameFromVideoElement(video);
-        assert(videoFrame !== null);
-        source = videoFrame;
+        source = await getVideoFrameFromVideoElement(video);
       }
 
       const colorAttachment = t.device.createTexture({
@@ -264,12 +261,11 @@ GPUExternalTexture results in an error.
     };
 
     let externalTexture: GPUExternalTexture;
-    let source: HTMLVideoElement | VideoFrame | null;
+    let source: HTMLVideoElement | VideoFrame;
     await startPlayingAndWaitForVideo(video, async () => {
       source = video;
       if (sourceType === 'VideoFrame') {
         source = await getVideoFrameFromVideoElement(video);
-        assert(source !== null);
       }
       externalTexture = t.device.importExternalTexture({
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -329,10 +325,9 @@ Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTextur
     video.src = videoUrl;
 
     await startPlayingAndWaitForVideo(video, async () => {
-      let source: HTMLVideoElement | VideoFrame | null = video;
+      let source: HTMLVideoElement | VideoFrame = video;
       if (sourceType === 'VideoFrame') {
         source = await getVideoFrameFromVideoElement(video);
-        assert(source !== null);
       }
       const externalTexture = t.device.importExternalTexture({
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
