@@ -107,9 +107,10 @@ function createExternalTextureSamplingTestBindGroup(
 ): GPUBindGroup {
   const linearSampler = t.device.createSampler();
 
-  const externalTextureDescriptor = { source };
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  const externalTexture = t.device.importExternalTexture(externalTextureDescriptor as any);
+  const externalTexture = t.device.importExternalTexture({
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    source: source as any,
+  });
 
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
@@ -151,10 +152,11 @@ supported video formats {vp8, vp9, ogg, mp4} and common source colorspaces {bt.6
     video.src = videoUrl;
 
     await startPlayingAndWaitForVideo(video, async () => {
-      let source: HTMLVideoElement | VideoFrame | null = video;
+      let source: HTMLVideoElement | VideoFrame = video;
       if (sourceType === 'VideoFrame') {
-        source = await getVideoFrameFromVideoElement(video);
-        assert(source !== null);
+        const videoFrame = await getVideoFrameFromVideoElement(video);
+        assert(videoFrame !== null);
+        source = videoFrame;
       }
 
       const colorAttachment = t.device.createTexture({
@@ -269,8 +271,10 @@ GPUExternalTexture results in an error.
         source = await getVideoFrameFromVideoElement(video);
         assert(source !== null);
       }
-      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-      externalTexture = t.device.importExternalTexture({ source } as any);
+      externalTexture = t.device.importExternalTexture({
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        source: source as any,
+      });
       // Set `bindGroup` here, which will then be used in microtask1 and microtask3.
       bindGroup = t.device.createBindGroup({
         layout: bindGroupLayout,
@@ -330,9 +334,10 @@ Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTextur
         source = await getVideoFrameFromVideoElement(video);
         assert(source !== null);
       }
-      const externalTextureDescriptor = { source };
-      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-      const externalTexture = t.device.importExternalTexture(externalTextureDescriptor as any);
+      const externalTexture = t.device.importExternalTexture({
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        source: source as any,
+      });
 
       const outputTexture = t.device.createTexture({
         format: 'rgba8unorm',
