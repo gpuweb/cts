@@ -307,20 +307,17 @@ g.test('importExternalTexture,compute')
     `
 Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTexture and use it in a
 compute shader, for several combinations of video format and color space.
+
+TODO: add 'VideoFrame' as an additional 'sourceType'
 `
   )
   .params(u =>
     u //
-      .combine('sourceType', ['VideoElement', 'VideoFrame'])
+      .combine('sourceType', ['VideoElement'])
       .combineWithParams(kVideoExpectations)
   )
   .fn(async t => {
     const sourceType = t.params.sourceType;
-
-    // VideoFrame as source fails the expectation. Skip these cases for now.
-    if (sourceType === 'VideoFrame') {
-      t.skip('Skip WebCodec test cases');
-    }
 
     const videoUrl = getResourcePath(t.params.videoSource);
     const videoElement = document.createElement('video');
