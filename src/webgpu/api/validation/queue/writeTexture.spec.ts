@@ -2,9 +2,31 @@ export const description = `Tests writeTexture validation.`;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUConst } from '../../../constants.js';
+import { kResourceStates } from '../../../gpu_test.js';
 import { ValidationTest } from '../validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);
+
+g.test('texture_state')
+  .desc(
+    `
+  Test that the texture used for GPUQueue.writeTexture() must be valid. Tests calling writeTexture
+  with {valid, invalid, destroyed} texture.
+  `
+  )
+  .params(u => u.combine('textureState', kResourceStates))
+  .fn(async t => {
+    const { textureState } = t.params;
+    const texture = t.createTextureWithState(textureState);
+    const data = new Uint8Array(16);
+    const size = [1, 1];
+
+    const isValid = textureState === 'valid';
+
+    t.expectValidationError(() => {
+      t.device.queue.writeTexture({ texture }, data, {}, size);
+    }, !isValid);
+  });
 
 g.test('usages')
   .desc(
