@@ -1,7 +1,9 @@
 export const description = `
 Tests for external textures from HTMLVideoElement (and other video-type sources?).
 
-- videos with various encodings, color spaces, metadata
+- videos with various encodings/formats (webm vp8, webm vp9, ogg theora, mp4), color spaces
+  (bt.601, bt.709, bt.2020)
+- TODO: enhance with more cases with crop, rotation, etc.
 
 TODO: consider whether external_texture and copyToTexture video tests should be in the same file
 `;
@@ -131,8 +133,8 @@ function createExternalTextureSamplingTestBindGroup(
 g.test('importExternalTexture,sample')
   .desc(
     `
-Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTexture, sample from it for all
-supported video formats {vp8, vp9, ogg, mp4} and common source colorspaces {bt.601, bt.709, bt.2020}.
+Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTexture, sample from it
+for several combinations of video format and color space.
 `
   )
   .params(u =>
@@ -303,7 +305,8 @@ GPUExternalTexture results in an error.
 g.test('importExternalTexture,compute')
   .desc(
     `
-Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTexture and use it in a compute shader.
+Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTexture and use it in a
+compute shader, for several combinations of video format and color space.
 `
   )
   .params(u =>
