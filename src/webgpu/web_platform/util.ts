@@ -38,8 +38,7 @@ export function startPlayingAndWaitForVideo(
       );
 
       if ('requestVideoFrameCallback' in video) {
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        (video as any).requestVideoFrameCallback(() => {
+        video.requestVideoFrameCallback(() => {
           callbackAndResolve();
         });
       } else {
