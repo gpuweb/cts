@@ -9,7 +9,9 @@ declare global {
   }
 
   interface HTMLVideoElement {
-    requestVideoFrameCallback(callback: (now: DOMHighResTimeStamp, metadata: unknown) => void): number;
+    requestVideoFrameCallback(
+      callback: (now: DOMHighResTimeStamp, metadata: unknown) => void
+    ): number;
   }
 }
 
@@ -127,7 +129,7 @@ export async function getVideoFrameFromVideoElement(
 function videoCallbackHelper(
   callback: () => unknown | Promise<unknown>,
   timeoutMessage: string
-): { promise: Promise<void>; callbackAndResolve(): void } {
+): { promise: Promise<void>; callbackAndResolve: () => void } {
   let callbackAndResolve: () => void;
 
   const promiseWithoutTimeout = new Promise<void>((resolve, reject) => {
