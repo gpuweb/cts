@@ -1,3 +1,4 @@
+import { Fixture } from '../../common/framework/fixture.js';
 import { assert, ErrorWithExtra, raceWithRejectOnTimeout } from '../../common/util/util.js';
 
 /**
@@ -63,16 +64,15 @@ export function startPlayingAndWaitForVideo(
   );
 }
 
-// Add captureStream() support for HTMLMediaElement from
-// https://w3c.github.io/mediacapture-fromelement/#dom-htmlmediaelement-capturestream
-declare global {
-  interface HTMLMediaElement {
-    captureStream(): MediaStream;
+export async function getVideoFrameFromVideoElement(
+  test: Fixture,
+  video: HTMLVideoElement
+): Promise<VideoFrame> {
+  if (!('captureStream' in (video as HTMLMediaElement))) {
+    test.skip('HTMLVideoElement.captureStream is not supported');
   }
-}
 
-export async function getVideoFrameFromVideoElement(video: HTMLVideoElement): Promise<VideoFrame> {
-  const track = video.captureStream().getVideoTracks()[0];
+  const track: MediaStreamVideoTrack = video.captureStream().getVideoTracks()[0];
   const reader = new MediaStreamTrackProcessor({ track }).readable.getReader();
   const videoFrame = (await reader.read()).value;
   assert(videoFrame !== undefined, 'unable to get a VideoFrame from track 0');

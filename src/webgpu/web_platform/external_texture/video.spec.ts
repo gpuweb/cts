@@ -155,7 +155,7 @@ for several combinations of video format and color space.
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
         sourceType === 'VideoFrame'
-          ? await getVideoFrameFromVideoElement(videoElement)
+          ? await getVideoFrameFromVideoElement(t, videoElement)
           : videoElement;
 
       const colorAttachment = t.device.createTexture({
@@ -235,7 +235,6 @@ GPUExternalTexture results in an error.
 
     if (!('requestVideoFrameCallback' in videoElement)) {
       t.skip('HTMLVideoElement.requestVideoFrameCallback is not supported');
-
     }
 
     const colorAttachment = t.device.createTexture({
@@ -271,7 +270,7 @@ GPUExternalTexture results in an error.
     await videoElement.requestVideoFrameCallback(async () => {
       const source =
         sourceType === 'VideoFrame'
-          ? await getVideoFrameFromVideoElement(videoElement)
+          ? await getVideoFrameFromVideoElement(t, videoElement)
           : videoElement;
       externalTexture = t.device.importExternalTexture({
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -331,7 +330,7 @@ TODO: add 'VideoFrame' as an additional 'sourceType'
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
         sourceType === 'VideoFrame'
-          ? await getVideoFrameFromVideoElement(videoElement)
+          ? await getVideoFrameFromVideoElement(t, videoElement)
           : videoElement;
       const externalTexture = t.device.importExternalTexture({
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
