@@ -14,6 +14,7 @@ import { GPUTest } from '../../gpu_test.js';
 import {
   startPlayingAndWaitForVideo,
   getVideoFrameFromVideoElement,
+  waitForNextFrame,
 } from '../../web_platform/util.js';
 
 const kHeight = 16;
@@ -267,7 +268,7 @@ GPUExternalTexture results in an error.
     };
 
     let externalTexture: GPUExternalTexture;
-    await videoElement.requestVideoFrameCallback(async () => {
+    await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
         sourceType === 'VideoFrame'
           ? await getVideoFrameFromVideoElement(t, videoElement)
@@ -296,7 +297,7 @@ GPUExternalTexture results in an error.
 
     if (sourceType === 'VideoElement') {
       // Update new video frame.
-      await videoElement.requestVideoFrameCallback(async () => {
+      await waitForNextFrame(videoElement, () => {
         // VideoFrame is updated. GPUExternalTexture imported from HTMLVideoElement should be expired.
         // Using the GPUExternalTexture should result in an error.
         const commandBuffer = useExternalTexture();
