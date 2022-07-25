@@ -233,6 +233,11 @@ GPUExternalTexture results in an error.
     const videoElement = document.createElement('video');
     videoElement.src = videoUrl;
 
+    if (!('requestVideoFrameCallback' in videoElement)) {
+      t.skip('HTMLVideoElement.requestVideoFrameCallback is not supported');
+
+    }
+
     const colorAttachment = t.device.createTexture({
       format: kFormat,
       size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
@@ -263,7 +268,7 @@ GPUExternalTexture results in an error.
     };
 
     let externalTexture: GPUExternalTexture;
-    await startPlayingAndWaitForVideo(videoElement, async () => {
+    await videoElement.requestVideoFrameCallback(async () => {
       const source =
         sourceType === 'VideoFrame'
           ? await getVideoFrameFromVideoElement(videoElement)
@@ -292,7 +297,7 @@ GPUExternalTexture results in an error.
 
     if (sourceType === 'VideoElement') {
       // Update new video frame.
-      await startPlayingAndWaitForVideo(videoElement, async () => {
+      await videoElement.requestVideoFrameCallback(async () => {
         // VideoFrame is updated. GPUExternalTexture imported from HTMLVideoElement should be expired.
         // Using the GPUExternalTexture should result in an error.
         const commandBuffer = useExternalTexture();
