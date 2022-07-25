@@ -7,12 +7,6 @@ declare global {
     // https://w3c.github.io/mediacapture-fromelement/#dom-htmlmediaelement-capturestream
     captureStream(): MediaStream;
   }
-
-  interface HTMLVideoElement {
-    requestVideoFrameCallback(
-      callback: (now: DOMHighResTimeStamp, metadata: unknown) => void
-    ): number;
-  }
 }
 
 /**

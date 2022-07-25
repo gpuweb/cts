@@ -11,8 +11,8 @@ import { kAllCanvasTypes, createCanvas, CanvasType } from '../../util/create_ele
 class GPUContextTest extends GPUTest {
   initCanvasContext(canvasType: CanvasType = 'onscreen'): GPUCanvasContext {
     const canvas = createCanvas(this, canvasType, 2, 2);
-    const ctx = canvas.getContext('webgpu' as const);
-    assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+    const ctx = canvas.getContext('webgpu');
+    assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
     ctx.configure({
       device: this.device,
@@ -37,8 +37,8 @@ g.test('configured')
   )
   .fn(async t => {
     const canvas = createCanvas(t, t.params.canvasType, 2, 2);
-    const ctx = canvas.getContext('webgpu' as const);
-    assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+    const ctx = canvas.getContext('webgpu');
+    assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
     // Calling getCurrentTexture prior to configuration should throw an exception.
     t.shouldThrow(true, () => {
