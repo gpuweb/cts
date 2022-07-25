@@ -69,8 +69,8 @@ export function startPlayingAndWaitForVideo(
  * Returns a promise which resolves after `callback` (which may be async) completes.
  *
  * MAINTENANCE_TODO: Find a way to implement this for browsers without requestVideoFrameCallback as
- * well, similar to the timeWatcher path in startPlayingAndWaitForVideo.
- * If that path works well, consider getting rid of the requestVideoFrameCallback path.
+ * well, similar to the timeWatcher path in startPlayingAndWaitForVideo. If that path is proven to
+ * work well, we can consider getting rid of the requestVideoFrameCallback path.
  */
 export function waitForNextFrame(
   video: HTMLVideoElement,

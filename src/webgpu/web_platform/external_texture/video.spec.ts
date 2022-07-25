@@ -218,6 +218,8 @@ Tests that GPUExternalTexture.expired is false when HTMLVideoElement is not upda
 or VideoFrame(webcodec) is alive. And it will be changed to true when imported
 HTMLVideoElement is updated or imported VideoFrame is closed. Using expired
 GPUExternalTexture results in an error.
+
+TODO: Make this test work without requestVideoFrameCallback support (in waitForNextFrame).
 `
   )
   .params(u =>
