@@ -1,6 +1,18 @@
 import { Fixture, SkipTestCase } from '../../common/framework/fixture.js';
 import { assert, ErrorWithExtra, raceWithRejectOnTimeout } from '../../common/util/util.js';
 
+declare global {
+  interface HTMLMediaElement {
+    // Add captureStream() support for HTMLMediaElement from
+    // https://w3c.github.io/mediacapture-fromelement/#dom-htmlmediaelement-capturestream
+    captureStream(): MediaStream;
+  }
+
+  interface HTMLVideoElement {
+    requestVideoFrameCallback(callback: (now: DOMHighResTimeStamp, metadata: unknown) => void): number;
+  }
+}
+
 /**
  * Starts playing a video and waits for it to be consumable.
  * Returns a promise which resolves after `callback` (which may be async) completes.
@@ -76,7 +88,10 @@ export function waitForNextFrame(
   video: HTMLVideoElement,
   callback: () => unknown | Promise<unknown>
 ): Promise<void> {
-  const { promise, callbackAndResolve } = videoCallbackHelper(callback, 'waitForNextFrame timed out');
+  const { promise, callbackAndResolve } = videoCallbackHelper(
+    callback,
+    'waitForNextFrame timed out'
+  );
 
   if ('requestVideoFrameCallback' in video) {
     video.requestVideoFrameCallback(() => {
@@ -87,14 +102,6 @@ export function waitForNextFrame(
   }
 
   return promise;
-}
-
-// Add captureStream() support for HTMLMediaElement from
-// https://w3c.github.io/mediacapture-fromelement/#dom-htmlmediaelement-capturestream
-declare global {
-  interface HTMLMediaElement {
-    captureStream?(): MediaStream;
-  }
 }
 
 export async function getVideoFrameFromVideoElement(
