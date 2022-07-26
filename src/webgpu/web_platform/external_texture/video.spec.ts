@@ -136,11 +136,13 @@ g.test('importExternalTexture,sample')
     `
 Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTexture, sample from it
 for several combinations of video format and color space.
+
+TODO: add 'VideoFrame' as an additional 'sourceType'
 `
   )
   .params(u =>
     u //
-      .combine('sourceType', ['VideoElement', 'VideoFrame'])
+      .combine('sourceType', ['VideoElement'])
       .combineWithParams(kVideoExpectations)
   )
   .fn(async t => {
