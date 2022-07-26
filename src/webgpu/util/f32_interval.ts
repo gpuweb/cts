@@ -860,6 +860,29 @@ export function sinInterval(n: number): F32Interval {
   return runPointOp(toInterval(n), SinIntervalOp);
 }
 
+const StepIntervalOp: BinaryToIntervalOp = {
+  impl: (edge: number, x: number): F32Interval => {
+    if (edge <= x) {
+      return correctlyRoundedInterval(1.0);
+    }
+    return correctlyRoundedInterval(0.0);
+  },
+};
+
+/** Calculate an acceptance 'interval' for step(edge, x)
+ *
+ * step only returns two possible values, so its interval requires special
+ * interpretation in CTS tests.
+ * This interval will be one of four values: [0, 0], [0, 1], [1, 1] & [-∞, +∞].
+ * [0, 0] and [1, 1] indicate that the correct answer in point they encapsulate.
+ * [0, 1] should not be treated as a span, i.e. 0.1 is acceptable, but instead
+ * indicate either 0.0 or 1.0 are acceptable answers.
+ * [-∞, +∞] is treated as the any interval, since an undefined or infinite value was passed in.
+ */
+export function stepInterval(edge: number, x: number): F32Interval {
+  return runBinaryOp(toInterval(edge), toInterval(x), StepIntervalOp);
+}
+
 const SubtractionInnerOp: BinaryToIntervalOp = {
   impl: (x: number, y: number): F32Interval => {
     return correctlyRoundedInterval(x - y);
