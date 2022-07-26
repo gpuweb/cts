@@ -3,13 +3,19 @@
 **/export const description = `
 Tests for external textures from HTMLVideoElement (and other video-type sources?).
 
-- videos with various encodings, color spaces, metadata
+- videos with various encodings/formats (webm vp8, webm vp9, ogg theora, mp4), color spaces
+  (bt.601, bt.709, bt.2020)
+- TODO: enhance with more cases with crop, rotation, etc.
 
 TODO: consider whether external_texture and copyToTexture video tests should be in the same file
 `;import { getResourcePath } from '../../../common/framework/resources.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { GPUTest } from '../../gpu_test.js';
-import { startPlayingAndWaitForVideo } from '../../web_platform/util.js';
+import {
+startPlayingAndWaitForVideo,
+getVideoFrameFromVideoElement,
+waitForNextFrame } from
+'../../web_platform/util.js';
 
 const kHeight = 16;
 const kWidth = 16;
@@ -98,13 +104,15 @@ function createExternalTextureSamplingTestPipeline(t) {
 
 function createExternalTextureSamplingTestBindGroup(
 t,
-video,
+source,
 pipeline)
 {
   const linearSampler = t.device.createSampler();
 
-  const externalTextureDescriptor = { source: video };
-  const externalTexture = t.device.importExternalTexture(externalTextureDescriptor);
+  const externalTexture = t.device.importExternalTexture({
+
+    source: source });
+
 
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
@@ -126,20 +134,33 @@ pipeline)
 g.test('importExternalTexture,sample').
 desc(
 `
-Tests that we can import an HTMLVideoElement into a GPUExternalTexture, sample from it for all
-supported video formats {vp8, vp9, ogg, mp4} and common source colorspaces {bt.601, bt.709, bt.2020}.
+Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTexture, sample from it
+for several combinations of video format and color space.
+
+TODO: add 'VideoFrame' as an additional 'sourceType'
 `).
 
 params((u) =>
 u //
-.combineWithParams(kVideoExpectations)).
+.combine('sourceType', ['VideoElement']).
+combineWithParams(kVideoExpectations)).
 
 fn(async (t) => {
-  const videoUrl = getResourcePath(t.params.videoSource);
-  const video = document.createElement('video');
-  video.src = videoUrl;
+  const sourceType = t.params.sourceType;
+  if (sourceType === 'VideoFrame' && typeof VideoFrame === 'undefined') {
+    t.skip('WebCodec is not supported');
+  }
 
-  await startPlayingAndWaitForVideo(video, () => {
+  const videoUrl = getResourcePath(t.params.videoSource);
+  const videoElement = document.createElement('video');
+  videoElement.src = videoUrl;
+
+  await startPlayingAndWaitForVideo(videoElement, async () => {
+    const source =
+    sourceType === 'VideoFrame' ?
+    await getVideoFrameFromVideoElement(t, videoElement) :
+    videoElement;
+
     const colorAttachment = t.device.createTexture({
       format: kFormat,
       size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
@@ -147,8 +168,7 @@ fn(async (t) => {
 
 
     const pipeline = createExternalTextureSamplingTestPipeline(t);
-
-    const bindGroup = createExternalTextureSamplingTestBindGroup(t, video, pipeline);
+    const bindGroup = createExternalTextureSamplingTestBindGroup(t, source, pipeline);
 
     const commandEncoder = t.device.createCommandEncoder();
     const passEncoder = commandEncoder.beginRenderPass({
@@ -188,21 +208,39 @@ fn(async (t) => {
       exp: t.params._greenExpectation });
 
 
+
+    if (sourceType === 'VideoFrame') source.close();
   });
 });
 
 g.test('importExternalTexture,expired').
 desc(
 `
-Tests that GPUExternalTexture.expired is false when video frame is not updated
-from imported HTMLVideoElement and will be changed to true when video frame is
-updated. Using expired GPUExternalTexture results in an error.
+Tests that GPUExternalTexture.expired is false when HTMLVideoElement is not updated
+or VideoFrame(webcodec) is alive. And it will be changed to true when imported
+HTMLVideoElement is updated or imported VideoFrame is closed. Using expired
+GPUExternalTexture results in an error.
+
+TODO: Make this test work without requestVideoFrameCallback support (in waitForNextFrame).
 `).
 
+params((u) =>
+u //
+.combine('sourceType', ['VideoElement', 'VideoFrame'])).
+
 fn(async (t) => {
+  const sourceType = t.params.sourceType;
+  if (sourceType === 'VideoFrame' && typeof VideoFrame === 'undefined') {
+    t.skip('WebCodec is not supported');
+  }
+
   const videoUrl = getResourcePath('red-green.webmvp8.webm');
-  const video = document.createElement('video');
-  video.src = videoUrl;
+  const videoElement = document.createElement('video');
+  videoElement.src = videoUrl;
+
+  if (!('requestVideoFrameCallback' in videoElement)) {
+    t.skip('HTMLVideoElement.requestVideoFrameCallback is not supported');
+  }
 
   const colorAttachment = t.device.createTexture({
     format: kFormat,
@@ -234,64 +272,75 @@ fn(async (t) => {
   };
 
   let externalTexture;
-  await startPlayingAndWaitForVideo(video, async () => {
-    // 1. Enqueue a microtask which uses the GPUExternalTexture. This should happen immediately
-    // after the current microtask.
-    const microtask1 = Promise.resolve().then(() => {
-      const commandBuffer = useExternalTexture();
-      t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), false);
-      t.expect(!externalTexture.expired);
-    });
+  await startPlayingAndWaitForVideo(videoElement, async () => {
+    const source =
+    sourceType === 'VideoFrame' ?
+    await getVideoFrameFromVideoElement(t, videoElement) :
+    videoElement;
+    externalTexture = t.device.importExternalTexture({
 
-    // 2. importExternalTexture which should stay active if video frame is not updated.
-    externalTexture = t.device.importExternalTexture({ source: video });
+      source: source });
+
     // Set `bindGroup` here, which will then be used in microtask1 and microtask3.
     bindGroup = t.device.createBindGroup({
       layout: bindGroupLayout,
       entries: [{ binding: 0, resource: externalTexture }] });
 
 
-    // 3. Enqueue a microtask which uses the GPUExternalTexture. The GPUExternalTexture
-    // should still keep alive.
-    const microtask3 = Promise.resolve().then(() => {
-      const commandBuffer = useExternalTexture();
-      t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), false);
-      t.expect(!externalTexture.expired);
-    });
-
-    // Now make sure the test doesn't end before all of those microtasks complete.
-    await microtask1;
-    await microtask3;
-  });
-
-  // Update new video frame.
-  await startPlayingAndWaitForVideo(video, async () => {
-    // 4. VideoFrame is updated. GPUExternalTexture should be expired. Using the
-    // GPUExternalTexture should result in an error.
     const commandBuffer = useExternalTexture();
-    t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), true);
-    t.expect(externalTexture.expired);
+    t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), false);
+    t.expect(!externalTexture.expired);
+
+    if (sourceType === 'VideoFrame') {
+      source.close();
+      const commandBuffer = useExternalTexture();
+      t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), true);
+      t.expect(externalTexture.expired);
+    }
   });
+
+  if (sourceType === 'VideoElement') {
+    // Update new video frame.
+    await waitForNextFrame(videoElement, () => {
+      // VideoFrame is updated. GPUExternalTexture imported from HTMLVideoElement should be expired.
+      // Using the GPUExternalTexture should result in an error.
+      const commandBuffer = useExternalTexture();
+      t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), true);
+      t.expect(externalTexture.expired);
+    });
+  }
 });
 
 g.test('importExternalTexture,compute').
 desc(
 `
-Tests that we can import an HTMLVideoElement into a GPUExternalTexture and use it in a compute shader.
+Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTexture and use it in a
+compute shader, for several combinations of video format and color space.
+
+TODO: add 'VideoFrame' as an additional 'sourceType'
 `).
 
 params((u) =>
 u //
-.combineWithParams(kVideoExpectations)).
+.combine('sourceType', ['VideoElement']).
+combineWithParams(kVideoExpectations)).
 
 fn(async (t) => {
-  const videoUrl = getResourcePath(t.params.videoSource);
-  const video = document.createElement('video');
-  video.src = videoUrl;
+  const sourceType = t.params.sourceType;
 
-  await startPlayingAndWaitForVideo(video, () => {
-    const externalTextureDescriptor = { source: video };
-    const externalTexture = t.device.importExternalTexture(externalTextureDescriptor);
+  const videoUrl = getResourcePath(t.params.videoSource);
+  const videoElement = document.createElement('video');
+  videoElement.src = videoUrl;
+
+  await startPlayingAndWaitForVideo(videoElement, async () => {
+    const source =
+    sourceType === 'VideoFrame' ?
+    await getVideoFrameFromVideoElement(t, videoElement) :
+    videoElement;
+    const externalTexture = t.device.importExternalTexture({
+
+      source: source });
+
 
     const outputTexture = t.device.createTexture({
       format: 'rgba8unorm',
@@ -357,6 +406,8 @@ fn(async (t) => {
       exp: t.params._greenExpectation });
 
 
+
+    if (sourceType === 'VideoFrame') source.close();
   });
 });
 //# sourceMappingURL=video.spec.js.map
