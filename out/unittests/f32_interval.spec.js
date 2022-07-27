@@ -33,6 +33,7 @@ multiplicationInterval,
 negationInterval,
 powInterval,
 radiansInterval,
+saturateInterval,
 sinInterval,
 subtractionInterval,
 tanInterval,
@@ -1075,6 +1076,46 @@ fn((t) => {
   t.expect(
   objectEquals(expected, got),
   `radiansInterval(${input}) returned ${got}. Expected ${expected}`);
+
+});
+
+g.test('saturateInterval').
+paramsSubcasesOnly(
+
+[
+// Normals
+{ input: 0, expected: [0, 0] },
+{ input: 1, expected: [1.0, 1.0] },
+{ input: -0.1, expected: [0, 0] },
+{ input: -1, expected: [0, 0] },
+{ input: -10, expected: [0, 0] },
+{ input: 0.1, expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
+{ input: 10, expected: [1.0, 1.0] },
+{ input: 11.1, expected: [1.0, 1.0] },
+{ input: kValue.f32.positive.max, expected: [1.0, 1.0] },
+{ input: kValue.f32.positive.min, expected: [kValue.f32.positive.min, kValue.f32.positive.min] },
+{ input: kValue.f32.negative.max, expected: [0.0, 0.0] },
+{ input: kValue.f32.negative.min, expected: [0.0, 0.0] },
+
+// Subnormals
+{ input: kValue.f32.subnormal.positive.max, expected: [0.0, kValue.f32.subnormal.positive.max] },
+{ input: kValue.f32.subnormal.positive.min, expected: [0.0, kValue.f32.subnormal.positive.min] },
+{ input: kValue.f32.subnormal.negative.min, expected: [0.0, 0.0] },
+{ input: kValue.f32.subnormal.negative.max, expected: [0.0, 0.0] },
+
+// Infinities
+{ input: kValue.f32.infinity.positive, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAny }]).
+
+
+fn((t) => {
+  const n = t.params.input;
+  const expected = new F32Interval(...t.params.expected);
+
+  const got = saturateInterval(n);
+  t.expect(
+  objectEquals(expected, got),
+  `saturationInterval(${n}) returned ${got}. Expected ${expected}`);
 
 });
 

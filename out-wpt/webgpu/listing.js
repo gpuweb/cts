@@ -2035,6 +2035,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "saturate"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "select"
     ]
   },

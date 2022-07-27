@@ -750,9 +750,20 @@ const RadiansIntervalOp = {
   },
 };
 
-/** Calculate an acceptance interval of degrees(x) */
+/** Calculate an acceptance interval of radians(x) */
 export function radiansInterval(n) {
   return runPointOp(toInterval(n), RadiansIntervalOp);
+}
+
+/**
+ * Calculate an acceptance interval of saturate(n) as clamp(n, 0.0, 1.0)
+ *
+ * The definition of saturate is such that both possible implementations of
+ * clamp will return the same value, so arbitrarily picking the minmax version
+ * to use.
+ */
+export function saturateInterval(n) {
+  return runTernaryOp(toInterval(n), toInterval(0.0), toInterval(1.0), ClampMinMaxIntervalOp);
 }
 
 const SinIntervalOp = {
