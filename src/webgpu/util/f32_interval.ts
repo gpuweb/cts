@@ -846,6 +846,17 @@ export function powInterval(x: number | F32Interval, y: number | F32Interval): F
   return runBinaryOp(toInterval(x), toInterval(y), PowIntervalOp);
 }
 
+const RadiansIntervalOp: PointToIntervalOp = {
+  impl: (n: number): F32Interval => {
+    return multiplicationInterval(n, 0.017453292519943295474);
+  },
+};
+
+/** Calculate an acceptance interval of radians(x) */
+export function radiansInterval(n: number): F32Interval {
+  return runPointOp(toInterval(n), RadiansIntervalOp);
+}
+
 /**
  * Calculate an acceptance interval of saturate(n) as clamp(n, 0.0, 1.0)
  *

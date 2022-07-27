@@ -803,30 +803,42 @@ g.test('depth_stencil_attachment')
 g.test('depth_stencil_attachment,depth_clear_value')
   .desc(
     `
-  Test that depthClearValue is invalid if the value is out of the range(0.0 and 1.0) when
+  Test that depthClearValue is invalid if the value is out of the range(0.0 and 1.0) only when
   depthLoadOp is 'clear'.
   `
   )
-  .paramsSimple([
-    { depthClearValue: -1.0 },
-    { depthClearValue: 0.0 },
-    { depthClearValue: 0.5 },
-    { depthClearValue: 1.0 },
-    { depthClearValue: 1.5 },
-  ])
+  .params(u =>
+    u
+      .combine('depthLoadOp', ['load', 'clear', undefined] as const)
+      .combineWithParams([
+        { depthClearValue: -1.0 },
+        { depthClearValue: 0.0 },
+        { depthClearValue: 0.5 },
+        { depthClearValue: 1.0 },
+        { depthClearValue: 1.5 },
+      ])
+  )
   .fn(t => {
-    const { depthClearValue } = t.params;
+    const { depthLoadOp, depthClearValue } = t.params;
 
-    const depthStencilTexture = t.createTexture({ format: 'depth24plus-stencil8' });
+    const depthStencilTexture = t.createTexture({
+      format: depthLoadOp === undefined ? 'stencil8' : 'depth24plus-stencil8',
+    });
     const depthStencilAttachment = t.getDepthStencilAttachment(depthStencilTexture);
     depthStencilAttachment.depthClearValue = depthClearValue;
+    depthStencilAttachment.depthLoadOp = depthLoadOp;
+    if (depthLoadOp === undefined) {
+      depthStencilAttachment.depthStoreOp = undefined;
+    }
 
     const descriptor = {
       colorAttachments: [t.getColorAttachment(t.createTexture())],
       depthStencilAttachment,
     };
 
-    t.tryRenderPass(depthClearValue >= 0.0 && depthClearValue <= 1.0, descriptor);
+    const isValid = !(depthLoadOp === 'clear' && (depthClearValue < 0.0 || depthClearValue > 1.0));
+
+    t.tryRenderPass(isValid, descriptor);
   });
 
 g.test('resolveTarget,format_supports_resolve')

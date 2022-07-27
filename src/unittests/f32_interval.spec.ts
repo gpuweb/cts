@@ -32,10 +32,12 @@ import {
   multiplicationInterval,
   negationInterval,
   powInterval,
+  radiansInterval,
   sinInterval,
   tanInterval,
   saturateInterval,
   subtractionInterval,
+  tanInterval,
   ulpInterval,
 } from '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
@@ -1043,6 +1045,38 @@ g.test('negationInterval')
     t.expect(
       objectEquals(expected, got),
       `negationInterval(${input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('radiansInterval')
+  .paramsSubcasesOnly<PointToIntervalCase>(
+    // prettier-ignore
+    [
+      { input: kValue.f32.infinity.negative, expected: kAny },
+      { input: -180, expected: [minusOneULP(kValue.f32.negative.pi.whole), plusOneULP(kValue.f32.negative.pi.whole)] },
+      { input: -135, expected: [minusOneULP(kValue.f32.negative.pi.three_quarters), plusOneULP(kValue.f32.negative.pi.three_quarters)] },
+      { input: -90, expected: [minusOneULP(kValue.f32.negative.pi.half), plusOneULP(kValue.f32.negative.pi.half)] },
+      { input: -60, expected: [minusOneULP(kValue.f32.negative.pi.third), plusOneULP(kValue.f32.negative.pi.third)] },
+      { input: -45, expected: [minusOneULP(kValue.f32.negative.pi.quarter), plusOneULP(kValue.f32.negative.pi.quarter)] },
+      { input: -30, expected: [minusOneULP(kValue.f32.negative.pi.sixth), plusOneULP(kValue.f32.negative.pi.sixth)] },
+      { input: 0, expected: [0, 0] },
+      { input: 30, expected: [minusOneULP(kValue.f32.positive.pi.sixth), plusOneULP(kValue.f32.positive.pi.sixth)] },
+      { input: 45, expected: [minusOneULP(kValue.f32.positive.pi.quarter), plusOneULP(kValue.f32.positive.pi.quarter)] },
+      { input: 60, expected: [minusOneULP(kValue.f32.positive.pi.third), plusOneULP(kValue.f32.positive.pi.third)] },
+      { input: 90, expected: [minusOneULP(kValue.f32.positive.pi.half), plusOneULP(kValue.f32.positive.pi.half)] },
+      { input: 135, expected: [minusOneULP(kValue.f32.positive.pi.three_quarters), plusOneULP(kValue.f32.positive.pi.three_quarters)] },
+      { input: 180, expected: [minusOneULP(kValue.f32.positive.pi.whole), plusOneULP(kValue.f32.positive.pi.whole)] },
+      { input: kValue.f32.infinity.positive, expected: kAny },
+    ]
+  )
+  .fn(t => {
+    const input = t.params.input;
+    const expected = new F32Interval(...t.params.expected);
+
+    const got = radiansInterval(input);
+    t.expect(
+      objectEquals(expected, got),
+      `radiansInterval(${input}) returned ${got}. Expected ${expected}`
     );
   });
 
