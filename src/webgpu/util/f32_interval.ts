@@ -857,6 +857,31 @@ export function radiansInterval(n: number): F32Interval {
   return runPointOp(toInterval(n), RadiansIntervalOp);
 }
 
+const RoundIntervalOp: PointToIntervalOp = {
+  impl: (n: number): F32Interval => {
+    const k = Math.floor(n);
+    const diff_before = n - k;
+    const diff_after = k + 1 - n;
+    if (diff_before < diff_after) {
+      return correctlyRoundedInterval(k);
+    } else if (diff_before > diff_after) {
+      return correctlyRoundedInterval(k + 1);
+    }
+
+    // n is in the middle of two integers.
+    // The tie breaking rule is 'k if k is even, k + 1 if k is odd'
+    if (k % 2 === 0) {
+      return correctlyRoundedInterval(k);
+    }
+    return correctlyRoundedInterval(k + 1);
+  },
+};
+
+/** Calculate an acceptance interval of round(x) */
+export function roundInterval(n: number): F32Interval {
+  return runPointOp(toInterval(n), RoundIntervalOp);
+}
+
 /**
  * Calculate an acceptance interval of saturate(n) as clamp(n, 0.0, 1.0)
  *
