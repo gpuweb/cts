@@ -846,6 +846,17 @@ export function powInterval(x, y) {
   return runBinaryOp(toInterval(x), toInterval(y), PowIntervalOp);
 }
 
+const RadiansIntervalOp = {
+  impl: (n) => {
+    return multiplicationInterval(n, 0.017453292519943295474);
+  } };
+
+
+/** Calculate an acceptance interval of degrees(x) */
+export function radiansInterval(n) {
+  return runPointOp(toInterval(n), RadiansIntervalOp);
+}
+
 const SinIntervalOp = {
   impl: limitPointToIntervalDomain(
   kNegPiToPiInterval,
