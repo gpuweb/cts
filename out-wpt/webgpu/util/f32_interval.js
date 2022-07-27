@@ -766,6 +766,24 @@ export function saturateInterval(n) {
   return runTernaryOp(toInterval(n), toInterval(0.0), toInterval(1.0), ClampMinMaxIntervalOp);
 }
 
+const SignIntervalOp = {
+  impl: n => {
+    if (n > 0.0) {
+      return correctlyRoundedInterval(1.0);
+    }
+    if (n < 0.0) {
+      return correctlyRoundedInterval(-1.0);
+    }
+
+    return correctlyRoundedInterval(0.0);
+  },
+};
+
+/** Calculate an acceptance interval of sin(x) */
+export function signInterval(n) {
+  return runPointOp(toInterval(n), SignIntervalOp);
+}
+
 const SinIntervalOp = {
   impl: limitPointToIntervalDomain(kNegPiToPiInterval, n => {
     return absoluteErrorInterval(Math.sin(n), 2 ** -11);
