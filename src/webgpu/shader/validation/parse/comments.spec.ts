@@ -56,7 +56,7 @@ g.test('line_comment_terminators')
       .beginSubcases()
   )
   .fn(t => {
-    const code = `// Line comment${t.params.blankspace[0]}let invalid_outside_comment = should_fail`;
+    const code = `// Line comment${t.params.blankspace[0]}const invalid_outside_comment = should_fail`;
 
     t.expectCompileResult([' ', '\t'].includes(t.params.blankspace[0]), code);
   });
