@@ -36,6 +36,7 @@ radiansInterval,
 saturateInterval,
 signInterval,
 sinInterval,
+stepInterval,
 subtractionInterval,
 tanInterval,
 ulpInterval } from
@@ -1656,6 +1657,83 @@ fn((t) => {
   t.expect(
   objectEquals(expected, got),
   `powInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
+
+});
+
+g.test('stepInterval').
+paramsSubcasesOnly(
+
+[
+// 32-bit normals
+{ input: [0, 0], expected: [1, 1] },
+{ input: [1, 1], expected: [1, 1] },
+{ input: [0, 1], expected: [1, 1] },
+{ input: [1, 0], expected: [0, 0] },
+{ input: [-1, -1], expected: [1, 1] },
+{ input: [0, -1], expected: [0, 0] },
+{ input: [-1, 0], expected: [1, 1] },
+{ input: [-1, 1], expected: [1, 1] },
+{ input: [1, -1], expected: [0, 0] },
+
+// 64-bit normals
+{ input: [0.1, 0.1], expected: [0, 1] },
+{ input: [0, 0.1], expected: [1, 1] },
+{ input: [0.1, 0], expected: [0, 0] },
+{ input: [0.1, 1], expected: [1, 1] },
+{ input: [1, 0.1], expected: [0, 0] },
+{ input: [-0.1, -0.1], expected: [0, 1] },
+{ input: [0, -0.1], expected: [0, 0] },
+{ input: [-0.1, 0], expected: [1, 1] },
+{ input: [-0.1, -1], expected: [0, 0] },
+{ input: [-1, -0.1], expected: [1, 1] },
+
+// Subnormals
+{ input: [0, kValue.f32.subnormal.positive.max], expected: [1, 1] },
+{ input: [0, kValue.f32.subnormal.positive.min], expected: [1, 1] },
+{ input: [0, kValue.f32.subnormal.negative.max], expected: [0, 1] },
+{ input: [0, kValue.f32.subnormal.negative.min], expected: [0, 1] },
+{ input: [1, kValue.f32.subnormal.positive.max], expected: [0, 0] },
+{ input: [1, kValue.f32.subnormal.positive.min], expected: [0, 0] },
+{ input: [1, kValue.f32.subnormal.negative.max], expected: [0, 0] },
+{ input: [1, kValue.f32.subnormal.negative.min], expected: [0, 0] },
+{ input: [-1, kValue.f32.subnormal.positive.max], expected: [1, 1] },
+{ input: [-1, kValue.f32.subnormal.positive.min], expected: [1, 1] },
+{ input: [-1, kValue.f32.subnormal.negative.max], expected: [1, 1] },
+{ input: [-1, kValue.f32.subnormal.negative.min], expected: [1, 1] },
+{ input: [kValue.f32.subnormal.positive.max, 0], expected: [0, 1] },
+{ input: [kValue.f32.subnormal.positive.min, 0], expected: [0, 1] },
+{ input: [kValue.f32.subnormal.negative.max, 0], expected: [1, 1] },
+{ input: [kValue.f32.subnormal.negative.min, 0], expected: [1, 1] },
+{ input: [kValue.f32.subnormal.positive.max, 1], expected: [1, 1] },
+{ input: [kValue.f32.subnormal.positive.min, 1], expected: [1, 1] },
+{ input: [kValue.f32.subnormal.negative.max, 1], expected: [1, 1] },
+{ input: [kValue.f32.subnormal.negative.min, 1], expected: [1, 1] },
+{ input: [kValue.f32.subnormal.positive.max, -1], expected: [0, 0] },
+{ input: [kValue.f32.subnormal.positive.min, -1], expected: [0, 0] },
+{ input: [kValue.f32.subnormal.negative.max, -1], expected: [0, 0] },
+{ input: [kValue.f32.subnormal.negative.min, -1], expected: [0, 0] },
+{ input: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max], expected: [1, 1] },
+{ input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.min], expected: [0, 1] },
+
+// Infinities
+{ input: [0, kValue.f32.infinity.positive], expected: kAny },
+{ input: [kValue.f32.infinity.positive, 0], expected: kAny },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAny },
+{ input: [0, kValue.f32.infinity.negative], expected: kAny },
+{ input: [kValue.f32.infinity.negative, 0], expected: kAny },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAny },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAny },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAny }]).
+
+
+fn((t) => {
+  const [edge, x] = t.params.input;
+  const expected = new F32Interval(...t.params.expected);
+
+  const got = stepInterval(edge, x);
+  t.expect(
+  objectEquals(expected, got),
+  `stepInterval(${edge}, ${x}) returned ${got}. Expected ${expected}`);
 
 });
 

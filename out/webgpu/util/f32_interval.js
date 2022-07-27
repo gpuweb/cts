@@ -900,6 +900,29 @@ export function sinInterval(n) {
   return runPointOp(toInterval(n), SinIntervalOp);
 }
 
+const StepIntervalOp = {
+  impl: (edge, x) => {
+    if (edge <= x) {
+      return correctlyRoundedInterval(1.0);
+    }
+    return correctlyRoundedInterval(0.0);
+  } };
+
+
+/** Calculate an acceptance 'interval' for step(edge, x)
+ *
+ * step only returns two possible values, so its interval requires special
+ * interpretation in CTS tests.
+ * This interval will be one of four values: [0, 0], [0, 1], [1, 1] & [-∞, +∞].
+ * [0, 0] and [1, 1] indicate that the correct answer in point they encapsulate.
+ * [0, 1] should not be treated as a span, i.e. 0.1 is acceptable, but instead
+ * indicate either 0.0 or 1.0 are acceptable answers.
+ * [-∞, +∞] is treated as the any interval, since an undefined or infinite value was passed in.
+ */
+export function stepInterval(edge, x) {
+  return runBinaryOp(toInterval(edge), toInterval(x), StepIntervalOp);
+}
+
 const SubtractionInnerOp = {
   impl: (x, y) => {
     return correctlyRoundedInterval(x - y);
