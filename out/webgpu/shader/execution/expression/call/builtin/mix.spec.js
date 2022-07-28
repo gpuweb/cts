@@ -16,7 +16,12 @@ Same as mix(e1,e2,T2(e3)).
 
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { allInputSources } from '../../expression.js';
+import { kValue } from '../../../../../util/constants.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
+import { mixImpreciseInterval, mixPreciseInterval } from '../../../../../util/f32_interval.js';
+import { allInputSources, makeTernaryF32IntervalCase, run } from '../../expression.js';
+
+import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -34,9 +39,42 @@ desc(`f32 test with matching third param`).
 params((u) =>
 u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
-unimplemented();
+fn(async (t) => {
+  const makeCase = (x, y, z) => {
+    // Testing against both precise and imprecise formulas, see https://github.com/gpuweb/gpuweb/issues/3260
+    return makeTernaryF32IntervalCase(x, y, z, mixPreciseInterval, mixImpreciseInterval);
+  };
 
-g.test('scalar_f16').
+  const values = [
+  Number.NEGATIVE_INFINITY,
+  kValue.f32.negative.min,
+  -10.0,
+  -1.0,
+  kValue.f32.negative.max,
+  kValue.f32.subnormal.negative.min,
+  kValue.f32.subnormal.negative.max,
+  0.0,
+  kValue.f32.subnormal.positive.min,
+  kValue.f32.subnormal.positive.max,
+  kValue.f32.positive.min,
+  1.0,
+  10.0,
+  kValue.f32.positive.max,
+  Number.POSITIVE_INFINITY];
+
+
+  const cases = [];
+  values.forEach((x) => {
+    values.forEach((y) => {
+      values.forEach((z) => {
+        cases.push(makeCase(x, y, z));
+      });
+    });
+  });
+  run(t, builtin('mix'), [TypeF32, TypeF32, TypeF32], TypeF32, t.params, cases);
+});
+
+g.test('matching_f16').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`f16 tests with matching third param`).
 params((u) =>
