@@ -257,9 +257,10 @@ function buildPipeline(
   outputBuffer
 ) {
   // wgsl declaration of output buffer and binding
+  const wgslStorageType = storageType(returnType);
   const wgslOutputs = `
 struct Output {
-  @size(${kValueStride}) value : ${storageType(returnType)}
+  @size(${kValueStride}) value : ${wgslStorageType}
 };
 @group(0) @binding(0) var<storage, read_write> outputs : array<Output, ${cases.length}>;
 `;
@@ -269,18 +270,24 @@ struct Output {
       //////////////////////////////////////////////////////////////////////////
       // Input values are constant values in the WGSL shader
       //////////////////////////////////////////////////////////////////////////
-      const wgslCases = cases.map((c, caseIdx) => {
+      const wgslValues = cases.map(c => {
         const args = parameterTypes.map((_, i) => `(${ith(c.input, i).wgsl()})`);
-        return `outputs[${caseIdx}].value = ${toStorage(returnType, expressionBuilder(args))};`;
+        return `${toStorage(returnType, expressionBuilder(args))}`;
       });
 
       // the full WGSL shader source
       const source = `
 ${wgslOutputs}
 
+const values = array<${wgslStorageType}, ${cases.length}>(
+  ${wgslValues.join(',\n  ')}
+);
+
 @compute @workgroup_size(1)
 fn main() {
-  ${wgslCases.join('\n   ')}
+  for (var i = 0u; i < ${cases.length}; i++) {
+    outputs[i].value = values[i];
+  }
 }
 `;
 
