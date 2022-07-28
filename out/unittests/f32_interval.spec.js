@@ -33,14 +33,15 @@ multiplicationInterval,
 negationInterval,
 powInterval,
 radiansInterval,
+roundInterval,
 saturateInterval,
 signInterval,
 sinInterval,
 stepInterval,
 subtractionInterval,
 tanInterval,
-ulpInterval,
-roundInterval } from
+truncInterval,
+ulpInterval } from
 '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -1270,6 +1271,48 @@ fn((t) => {
   t.expect(
   objectEquals(expected, got),
   `tanInterval(${input}) returned ${got}. Expected ${expected}`);
+
+});
+
+g.test('truncInterval').
+paramsSubcasesOnly(
+
+[
+{ input: 0, expected: [0, 0] },
+{ input: 0.1, expected: [0, 0] },
+{ input: 0.9, expected: [0, 0] },
+{ input: 1.0, expected: [1, 1] },
+{ input: 1.1, expected: [1, 1] },
+{ input: 1.9, expected: [1, 1] },
+{ input: -0.1, expected: [0, 0] },
+{ input: -0.9, expected: [0, 0] },
+{ input: -1.0, expected: [-1, -1] },
+{ input: -1.1, expected: [-1, -1] },
+{ input: -1.9, expected: [-1, -1] },
+
+// Edge cases
+{ input: kValue.f32.infinity.positive, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAny },
+{ input: kValue.f32.positive.max, expected: [kValue.f32.positive.max, kValue.f32.positive.max] },
+{ input: kValue.f32.positive.min, expected: [0, 0] },
+{ input: kValue.f32.negative.min, expected: [kValue.f32.negative.min, kValue.f32.negative.min] },
+{ input: kValue.f32.negative.max, expected: [0, 0] },
+
+// 32-bit subnormals
+{ input: kValue.f32.subnormal.positive.max, expected: [0, 0] },
+{ input: kValue.f32.subnormal.positive.min, expected: [0, 0] },
+{ input: kValue.f32.subnormal.negative.min, expected: [0, 0] },
+{ input: kValue.f32.subnormal.negative.max, expected: [0, 0] }]).
+
+
+fn((t) => {
+  const input = t.params.input;
+  const expected = new F32Interval(...t.params.expected);
+
+  const got = truncInterval(input);
+  t.expect(
+  objectEquals(expected, got),
+  `truncInterval(${input}) returned ${got}. Expected ${expected}`);
 
 });
 

@@ -975,3 +975,14 @@ const TanIntervalOp: PointToIntervalOp = {
 export function tanInterval(n: number): F32Interval {
   return runPointOp(toInterval(n), TanIntervalOp);
 }
+
+const TruncIntervalOp: PointToIntervalOp = {
+  impl: (n: number): F32Interval => {
+    return correctlyRoundedInterval(Math.trunc(n));
+  },
+};
+
+/** Calculate an acceptance interval of trunc(x) */
+export function truncInterval(n: number): F32Interval {
+  return runPointOp(toInterval(n), TruncIntervalOp);
+}

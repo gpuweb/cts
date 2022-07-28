@@ -870,3 +870,14 @@ const TanIntervalOp = {
 export function tanInterval(n) {
   return runPointOp(toInterval(n), TanIntervalOp);
 }
+
+const TruncIntervalOp = {
+  impl: n => {
+    return correctlyRoundedInterval(Math.trunc(n));
+  },
+};
+
+/** Calculate an acceptance interval of trunc(x) */
+export function truncInterval(n) {
+  return runPointOp(toInterval(n), TruncIntervalOp);
+}
