@@ -2014,6 +2014,9 @@ g.test('mixImpreciseInterval')
       { input: [1.0, 0.0, kValue.f32.infinity.negative], expected: kAny },
       { input: [0.0, 1.0, kValue.f32.infinity.positive], expected: kAny },
       { input: [1.0, 0.0, kValue.f32.infinity.positive], expected: kAny },
+
+      // Showing how precise and imprecise versions diff
+      { input: [kValue.f32.negative.min, 10.0, 1.0], expected: [0.0, 0.0]},
     ]
   )
   .fn(t => {
@@ -2089,6 +2092,9 @@ g.test('mixPreciseInterval')
       { input: [1.0, 0.0, kValue.f32.infinity.negative], expected: kAny },
       { input: [0.0, 1.0, kValue.f32.infinity.positive], expected: kAny },
       { input: [1.0, 0.0, kValue.f32.infinity.positive], expected: kAny },
+
+      // Showing how precise and imprecise versions diff
+      { input: [kValue.f32.negative.min, 10.0, 1.0], expected: [10.0, 10.0]},
     ]
   )
   .fn(t => {
