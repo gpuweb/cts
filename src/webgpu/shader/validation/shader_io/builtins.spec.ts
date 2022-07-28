@@ -71,7 +71,7 @@ g.test('stage_inout')
     u
       .combineWithParams(kBuiltins)
       .combine('use_struct', [true, false] as const)
-      .combine('target_stage', ['vertex', 'fragment', 'compute'] as const)
+      .combine('target_stage', ['', 'vertex', 'fragment', 'compute'] as const)
       .combine('target_io', ['in', 'out'] as const)
       .beginSubcases()
   )
@@ -88,8 +88,9 @@ g.test('stage_inout')
     const expectation = kBuiltins.some(
       x =>
         x.name === t.params.name &&
-        x.stage === t.params.target_stage &&
-        x.io === t.params.target_io &&
+        (x.stage === t.params.target_stage ||
+          (t.params.use_struct && t.params.target_stage === '')) &&
+        (x.io === t.params.target_io || t.params.target_stage === '') &&
         x.type === t.params.type
     );
     t.expectCompileResult(expectation, code);
