@@ -801,6 +801,35 @@ export function minInterval(x: number | F32Interval, y: number | F32Interval): F
   return runBinaryOp(toInterval(x), toInterval(y), MinIntervalOp);
 }
 
+const MixImpreciseIntervalOp: TernaryToIntervalOp = {
+  impl: (x: number, y: number, z: number): F32Interval => {
+    // x + (y - x) * z =
+    //  x + t, where t = (y - x) * z
+    const t = multiplicationInterval(subtractionInterval(y, x), z);
+    return additionInterval(x, t);
+  },
+};
+
+/** Calculate an acceptance interval of mix(x, y, z) using x + (y - x) * z */
+export function mixImpreciseInterval(x: number, y: number, z: number): F32Interval {
+  return runTernaryOp(toInterval(x), toInterval(y), toInterval(z), MixImpreciseIntervalOp);
+}
+
+const MixPreciseIntervalOp: TernaryToIntervalOp = {
+  impl: (x: number, y: number, z: number): F32Interval => {
+    // x * (1.0 - z) + y * z =
+    //   t + s, where t = x * (1.0 - z), s = y * z
+    const t = multiplicationInterval(x, subtractionInterval(1.0, z));
+    const s = multiplicationInterval(y, z);
+    return additionInterval(t, s);
+  },
+};
+
+/** Calculate an acceptance interval of mix(x, y, z) using x * (1.0 - z) + y * z */
+export function mixPreciseInterval(x: number, y: number, z: number): F32Interval {
+  return runTernaryOp(toInterval(x), toInterval(y), toInterval(z), MixPreciseIntervalOp);
+}
+
 const MultiplicationInnerOp = {
   impl: (x: number, y: number): F32Interval => {
     return correctlyRoundedInterval(x * y);

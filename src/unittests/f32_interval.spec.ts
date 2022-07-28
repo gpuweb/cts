@@ -29,6 +29,8 @@ import {
   log2Interval,
   maxInterval,
   minInterval,
+  mixImpreciseInterval,
+  mixPreciseInterval,
   multiplicationInterval,
   negationInterval,
   powInterval,
@@ -1990,5 +1992,161 @@ g.test('clampMinMaxInterval')
     t.expect(
       objectEquals(expected, got),
       `clampMinMaxInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('mixImpreciseInterval')
+  .paramsSubcasesOnly<TernaryToIntervalCase>(
+    // prettier-ignore
+    [
+      // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
+      // form due to the inherited nature of the errors.
+      // [0.0, 1.0] cases
+      { input: [0.0, 1.0, -1.0], expected: [-1.0, -1.0] },
+      { input: [0.0, 1.0, 0.0], expected: [0.0, 0.0] },
+      { input: [0.0, 1.0, 0.1], expected: [hexToF64(0x3fb99999,0x80000000), hexToF64(0x3fb99999,0xa0000000)] },  // ~0.1
+      { input: [0.0, 1.0, 0.5], expected: [0.5, 0.5] },
+      { input: [0.0, 1.0, 0.9], expected: [hexToF64(0x3feccccc,0xc0000000), hexToF64(0x3feccccc,0xe0000000)] },  // ~0.9
+      { input: [0.0, 1.0, 1.0], expected: [1.0, 1.0] },
+      { input: [0.0, 1.0, 2.0], expected: [2.0, 2.0] },
+
+      // [1.0, 0.0] cases
+      { input: [1.0, 0.0, -1.0], expected: [2.0, 2.0] },
+      { input: [1.0, 0.0, 0.0], expected: [1.0, 1.0] },
+      { input: [1.0, 0.0, 0.1], expected: [hexToF64(0x3feccccc,0xc0000000), hexToF64(0x3feccccc,0xe0000000)] },  // ~0.9
+      { input: [1.0, 0.0, 0.5], expected: [0.5, 0.5] },
+      { input: [1.0, 0.0, 0.9], expected: [hexToF64(0x3fb99999,0x00000000), hexToF64(0x3fb9999a,0x00000000)] },  // ~0.1
+      { input: [1.0, 0.0, 1.0], expected: [0.0, 0.0] },
+      { input: [1.0, 0.0, 2.0], expected: [-1.0, -1.0] },
+
+      // [0.0, 10.0] cases
+      { input: [0.0, 10.0, -1.0], expected: [-10.0, -10.0] },
+      { input: [0.0, 10.0, 0.0], expected: [0.0, 0.0] },
+      { input: [0.0, 10.0, 0.1], expected: [hexToF64(0x3fefffff,0xe0000000), hexToF64(0x3ff00000,0x20000000)] },  // ~1
+      { input: [0.0, 10.0, 0.5], expected: [5.0, 5.0] },
+      { input: [0.0, 10.0, 0.9], expected: [hexToF64(0x4021ffff,0xe0000000), hexToF64(0x40220000,0x20000000)] },  // ~9
+      { input: [0.0, 10.0, 1.0], expected: [10.0, 10.0] },
+      { input: [0.0, 10.0, 2.0], expected: [20.0, 20.0] },
+
+      // [2.0, 10.0] cases
+      { input: [2.0, 10.0, -1.0], expected: [-6.0, -6.0] },
+      { input: [2.0, 10.0, 0.0], expected: [2.0, 2.0] },
+      { input: [2.0, 10.0, 0.1], expected: [hexToF64(0x40066666,0x60000000), hexToF64(0x40066666,0x80000000)] },  // ~2.8
+      { input: [2.0, 10.0, 0.5], expected: [6.0, 6.0] },
+      { input: [2.0, 10.0, 0.9], expected: [hexToF64(0x40226666,0x60000000), hexToF64(0x40226666,0x80000000)] },  // ~9.2
+      { input: [2.0, 10.0, 1.0], expected: [10.0, 10.0] },
+      { input: [2.0, 10.0, 2.0], expected: [18.0, 18.0] },
+
+      // [-1.0, 1.0] cases
+      { input: [-1.0, 1.0, -2.0], expected: [-5.0, -5.0] },
+      { input: [-1.0, 1.0, 0.0], expected: [-1.0, -1.0] },
+      { input: [-1.0, 1.0, 0.1], expected: [hexToF64(0xbfe99999,0xa0000000), hexToF64(0xbfe99999,0x80000000)] },  // ~-0.8
+      { input: [-1.0, 1.0, 0.5], expected: [0.0, 0.0] },
+      { input: [-1.0, 1.0, 0.9], expected: [hexToF64(0x3fe99999,0x80000000), hexToF64(0x3fe99999,0xc0000000)] },  // ~0.8
+      { input: [-1.0, 1.0, 1.0], expected: [1.0, 1.0] },
+      { input: [-1.0, 1.0, 2.0], expected: [3.0, 3.0] },
+
+      // Infinities
+      { input: [0.0, kValue.f32.infinity.positive, 0.5], expected: kAny },
+      { input: [kValue.f32.infinity.positive, 0.0, 0.5], expected: kAny },
+      { input: [kValue.f32.infinity.negative, 1.0, 0.5], expected: kAny },
+      { input: [1.0, kValue.f32.infinity.negative, 0.5], expected: kAny },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, 0.5], expected: kAny },
+      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative, 0.5], expected: kAny },
+      { input: [0.0, 1.0, kValue.f32.infinity.negative], expected: kAny },
+      { input: [1.0, 0.0, kValue.f32.infinity.negative], expected: kAny },
+      { input: [0.0, 1.0, kValue.f32.infinity.positive], expected: kAny },
+      { input: [1.0, 0.0, kValue.f32.infinity.positive], expected: kAny },
+
+      // Showing how precise and imprecise versions diff
+      { input: [kValue.f32.negative.min, 10.0, 1.0], expected: [0.0, 0.0]},
+    ]
+  )
+  .fn(t => {
+    const [x, y, z] = t.params.input;
+    const expected = new F32Interval(...t.params.expected);
+
+    const got = mixImpreciseInterval(x, y, z);
+    t.expect(
+      objectEquals(expected, got),
+      `mixImpreciseInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('mixPreciseInterval')
+  .paramsSubcasesOnly<TernaryToIntervalCase>(
+    // prettier-ignore
+    [
+      // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
+      // form due to the inherited nature of the errors.
+      // [0.0, 1.0] cases
+      { input: [0.0, 1.0, -1.0], expected: [-1.0, -1.0] },
+      { input: [0.0, 1.0, 0.0], expected: [0.0, 0.0] },
+      { input: [0.0, 1.0, 0.1], expected: [hexToF64(0x3fb99999,0x80000000), hexToF64(0x3fb99999,0xa0000000)] },  // ~0.1
+      { input: [0.0, 1.0, 0.5], expected: [0.5, 0.5] },
+      { input: [0.0, 1.0, 0.9], expected: [hexToF64(0x3feccccc,0xc0000000), hexToF64(0x3feccccc,0xe0000000)] },  // ~0.9
+      { input: [0.0, 1.0, 1.0], expected: [1.0, 1.0] },
+      { input: [0.0, 1.0, 2.0], expected: [2.0, 2.0] },
+
+      // [1.0, 0.0] cases
+      { input: [1.0, 0.0, -1.0], expected: [2.0, 2.0] },
+      { input: [1.0, 0.0, 0.0], expected: [1.0, 1.0] },
+      { input: [1.0, 0.0, 0.1], expected: [hexToF64(0x3feccccc,0xc0000000), hexToF64(0x3feccccc,0xe0000000)] },  // ~0.9
+      { input: [1.0, 0.0, 0.5], expected: [0.5, 0.5] },
+      { input: [1.0, 0.0, 0.9], expected: [hexToF64(0x3fb99999,0x00000000), hexToF64(0x3fb9999a,0x00000000)] },  // ~0.1
+      { input: [1.0, 0.0, 1.0], expected: [0.0, 0.0] },
+      { input: [1.0, 0.0, 2.0], expected: [-1.0, -1.0] },
+
+      // [0.0, 10.0] cases
+      { input: [0.0, 10.0, -1.0], expected: [-10.0, -10.0] },
+      { input: [0.0, 10.0, 0.0], expected: [0.0, 0.0] },
+      { input: [0.0, 10.0, 0.1], expected: [hexToF64(0x3fefffff,0xe0000000), hexToF64(0x3ff00000,0x20000000)] },  // ~1
+      { input: [0.0, 10.0, 0.5], expected: [5.0, 5.0] },
+      { input: [0.0, 10.0, 0.9], expected: [hexToF64(0x4021ffff,0xe0000000), hexToF64(0x40220000,0x20000000)] },  // ~9
+      { input: [0.0, 10.0, 1.0], expected: [10.0, 10.0] },
+      { input: [0.0, 10.0, 2.0], expected: [20.0, 20.0] },
+
+      // [2.0, 10.0] cases
+      { input: [2.0, 10.0, -1.0], expected: [-6.0, -6.0] },
+      { input: [2.0, 10.0, 0.0], expected: [2.0, 2.0] },
+      { input: [2.0, 10.0, 0.1], expected: [hexToF64(0x40066666,0x40000000), hexToF64(0x40066666,0x80000000)] },  // ~2.8
+      { input: [2.0, 10.0, 0.5], expected: [6.0, 6.0] },
+      { input: [2.0, 10.0, 0.9], expected: [hexToF64(0x40226666,0x40000000), hexToF64(0x40226666,0xa0000000)] },  // ~9.2
+      { input: [2.0, 10.0, 1.0], expected: [10.0, 10.0] },
+      { input: [2.0, 10.0, 2.0], expected: [18.0, 18.0] },
+
+      // [-1.0, 1.0] cases
+      { input: [-1.0, 1.0, -2.0], expected: [-5.0, -5.0] },
+      { input: [-1.0, 1.0, 0.0], expected: [-1.0, -1.0] },
+      { input: [-1.0, 1.0, 0.1], expected: [hexToF64(0xbfe99999,0xc0000000), hexToF64(0xbfe99999,0x80000000)] },  // ~-0.8
+      { input: [-1.0, 1.0, 0.5], expected: [0.0, 0.0] },
+      { input: [-1.0, 1.0, 0.9], expected: [hexToF64(0x3fe99999,0x80000000), hexToF64(0x3fe99999,0xc0000000)] },  // ~0.8
+      { input: [-1.0, 1.0, 1.0], expected: [1.0, 1.0] },
+      { input: [-1.0, 1.0, 2.0], expected: [3.0, 3.0] },
+
+      // Infinities
+      { input: [0.0, kValue.f32.infinity.positive, 0.5], expected: kAny },
+      { input: [kValue.f32.infinity.positive, 0.0, 0.5], expected: kAny },
+      { input: [kValue.f32.infinity.negative, 1.0, 0.5], expected: kAny },
+      { input: [1.0, kValue.f32.infinity.negative, 0.5], expected: kAny },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, 0.5], expected: kAny },
+      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative, 0.5], expected: kAny },
+      { input: [0.0, 1.0, kValue.f32.infinity.negative], expected: kAny },
+      { input: [1.0, 0.0, kValue.f32.infinity.negative], expected: kAny },
+      { input: [0.0, 1.0, kValue.f32.infinity.positive], expected: kAny },
+      { input: [1.0, 0.0, kValue.f32.infinity.positive], expected: kAny },
+
+      // Showing how precise and imprecise versions diff
+      { input: [kValue.f32.negative.min, 10.0, 1.0], expected: [10.0, 10.0]},
+    ]
+  )
+  .fn(t => {
+    const [x, y, z] = t.params.input;
+    const expected = new F32Interval(...t.params.expected);
+
+    const got = mixPreciseInterval(x, y, z);
+    t.expect(
+      objectEquals(expected, got),
+      `mixPreciseInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`
     );
   });
