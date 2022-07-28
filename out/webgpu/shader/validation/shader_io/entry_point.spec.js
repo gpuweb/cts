@@ -133,4 +133,10 @@ fn frag_main() -> FragmentOutputs {
 `;
   t.expectCompileResult(t.params.target_stage === '', code);
 });
+
+g.test('no_entry_point_provided').
+desc(`Tests that a shader without an entry point is accepted`).
+fn((t) => {
+  t.expectCompileResult(true, 'fn main() {}');
+});
 //# sourceMappingURL=entry_point.spec.js.map
