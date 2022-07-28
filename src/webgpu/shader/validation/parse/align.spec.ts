@@ -11,6 +11,7 @@ const kValidAlign = new Set([
   '@align(4)',
   '@align(4i)',
   '@align(0x4)',
+  '@align(4,)',
   '@align(1073741824)',
   '@\talign\t(4)',
   '@/^comment^/align/^comment^/(4)',
@@ -28,7 +29,6 @@ const kInvalidAlign = new Set([
   '@align(4u)',
   '@align(4f)',
   '@align(4h)',
-  '@align(4,)',
   '@align',
   '@align(0)',
   '@align(-4)',
@@ -38,7 +38,7 @@ const kInvalidAlign = new Set([
 
 g.test('missing_attribute_on_param_struct')
   .desc(`Test that @align is parsed correctly.`)
-  .params(u => u.beginSubcases().combine('align', new Set([...kValidAlign, ...kInvalidAlign])))
+  .params(u => u.combine('align', new Set([...kValidAlign, ...kInvalidAlign])))
   .fn(t => {
     const v = t.params.align.replace(/\^/g, '*');
     const code = `
