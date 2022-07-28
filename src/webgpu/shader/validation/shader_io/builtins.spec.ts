@@ -251,3 +251,26 @@ g.test('missing_vertex_position')
     // Expect to pass only when using @builtin(position).
     t.expectCompileResult(t.params.attribute === '@builtin(position)', code);
   });
+
+g.test('reuse_builtin_name')
+  .desc(`Test that a builtin name can be used in different contexts`)
+  .params(u =>
+    u
+      .combineWithParams(kBuiltins)
+      .combine('use', ['type_name', 'struct', 'function', 'module-var', 'function-var'])
+  )
+  .fn(t => {
+    let code = '';
+    if (t.params.use === 'type_name') {
+      code += `type ${t.params.name} = i32;`;
+    } else if (t.params.use === `struct`) {
+      code += `struct ${t.params.name} { i: f32, }`;
+    } else if (t.params.use === `function`) {
+      code += `fn ${t.params.name}() {}`;
+    } else if (t.params.use === `module-var`) {
+      code += `const ${t.params.name} = 1;`;
+    } else if (t.params.use === `function-var`) {
+      code += `fn test() { let ${t.params.name} = 1; }`;
+    }
+    t.expectCompileResult(true, code);
+  });
