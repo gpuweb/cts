@@ -253,7 +253,7 @@ g.test('missing_vertex_position')
 
 g.test('reuse_builtin_name')
   .desc(`Test that a builtin name can be used in different contexts`)
-  .params( u =>
+  .params(u =>
     u
       .combineWithParams(kBuiltins)
       .combine('use', ['type_name', 'struct', 'function', 'module-var', 'function-var'])
@@ -269,7 +269,7 @@ g.test('reuse_builtin_name')
     } else if (t.params.use === `module-var`) {
       code += `const ${t.params.name} = 1;`;
     } else if (t.params.use === `function-var`) {
-      code += `fn test() { let ${t.params.name} = 1; }`
+      code += `fn test() { let ${t.params.name} = 1; }`;
     }
     t.expectCompileResult(true, code);
   });
