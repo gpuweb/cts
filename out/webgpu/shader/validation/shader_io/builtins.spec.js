@@ -16,6 +16,7 @@ export const kBuiltins = [
 { name: 'position', stage: 'vertex', io: 'out', type: 'vec4<f32>' },
 { name: 'position', stage: 'fragment', io: 'in', type: 'vec4<f32>' },
 { name: 'front_facing', stage: 'fragment', io: 'in', type: 'bool' },
+{ name: 'frag_depth', stage: 'fragment', io: 'out', type: 'f32' },
 { name: 'local_invocation_id', stage: 'compute', io: 'in', type: 'vec3<u32>' },
 { name: 'local_invocation_index', stage: 'compute', io: 'in', type: 'u32' },
 { name: 'global_invocation_id', stage: 'compute', io: 'in', type: 'vec3<u32>' },
