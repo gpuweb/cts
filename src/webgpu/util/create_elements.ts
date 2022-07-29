@@ -1,6 +1,12 @@
 import { Fixture } from '../../common/framework/fixture.js';
 import { unreachable } from '../../common/util/util.js';
 
+// TESTING_TODO: This should expand to more canvas types (which will enhance a bunch of tests):
+// - canvas element not in dom
+// - canvas element in dom
+// - offscreen canvas from transferControlToOffscreen from canvas not in dom
+// - offscreen canvas from transferControlToOffscreen from canvas in dom
+// - offscreen canvas from new OffscreenCanvas
 export const kAllCanvasTypes = ['onscreen', 'offscreen'] as const;
 export type CanvasType = typeof kAllCanvasTypes[number];
 

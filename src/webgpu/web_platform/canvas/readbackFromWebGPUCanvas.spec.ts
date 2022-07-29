@@ -1,12 +1,7 @@
 export const description = `
 Tests for readback from WebGPU Canvas.
 
-TODO: implement all canvas types:
-- canvas element not in dom
-- canvas element in dom
-- offscreen canvas from transferControlToOffscreen from canvas not in dom
-- offscreen canvas from transferControlToOffscreen from canvas in dom
-- offscreen canvas from new OffscreenCanvas
+TODO: implement all canvas types, see TODO on kCanvasTypes.
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
