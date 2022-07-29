@@ -11,7 +11,7 @@ TODO: implement all canvas types:
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert, raceWithRejectOnTimeout, unreachable } from '../../../common/util/util.js';
-import { kCanvasAlphaMode, kCanvasTextureFormats } from '../../capability_info.js';
+import { kCanvasAlphaModes, kCanvasTextureFormats } from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 import { checkElementsEqual } from '../../util/check_contents.js';
 import {
@@ -136,7 +136,7 @@ g.test('onscreenCanvas,snapshot')
   .params(u =>
     u //
       .combine('format', kCanvasTextureFormats)
-      .combine('alphaMode', kCanvasAlphaMode)
+      .combine('alphaMode', kCanvasAlphaModes)
       .combine('snapshotType', ['toDataURL', 'toBlob', 'imageBitmap'])
   )
   .fn(async t => {
@@ -187,7 +187,7 @@ g.test('offscreenCanvas,snapshot')
   .params(u =>
     u //
       .combine('format', kCanvasTextureFormats)
-      .combine('alphaMode', kCanvasAlphaMode)
+      .combine('alphaMode', kCanvasAlphaModes)
       .combine('snapshotType', ['convertToBlob', 'transferToImageBitmap', 'imageBitmap'])
   )
   .fn(async t => {
@@ -241,7 +241,7 @@ g.test('onscreenCanvas,uploadToWebGL')
   .params(u =>
     u //
       .combine('format', kCanvasTextureFormats)
-      .combine('alphaMode', kCanvasAlphaMode)
+      .combine('alphaMode', kCanvasAlphaModes)
       .combine('webgl', ['webgl', 'webgl2'])
       .combine('upload', ['texImage2D', 'texSubImage2D'])
   )
@@ -302,7 +302,7 @@ g.test('drawTo2DCanvas')
   .params(u =>
     u //
       .combine('format', kCanvasTextureFormats)
-      .combine('alphaMode', kCanvasAlphaMode)
+      .combine('alphaMode', kCanvasAlphaModes)
       .combine('webgpuCanvasType', kAllCanvasTypes)
       .combine('canvas2DType', kAllCanvasTypes)
   )

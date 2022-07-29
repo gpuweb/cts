@@ -253,7 +253,7 @@ export const kRenderableColorTextureFormats = kRegularTextureFormats.filter(
 export const kCanvasTextureFormats = ['bgra8unorm', 'rgba8unorm', 'rgba16float'] as const;
 
 // The alpha mode for canvas context.
-export const kCanvasAlphaMode = ['opaque', 'premultiplied'] as const;
+export const kCanvasAlphaModes = ['opaque', 'premultiplied'] as const;
 
 /** Per-GPUTextureFormat info. */
 // Exists just for documentation. Otherwise could be inferred by `makeTable`.
