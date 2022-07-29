@@ -23,8 +23,8 @@ export const g = makeTestGroup(GPUTest);
 // Given a pixel value of RGBA = (0x66, 0, 0, 0x66) in the source WebGPU canvas,
 // For alphaMode = opaque, the copy output should be RGBA = (0x66, 0, 0, 0xff)
 // For alphaMode = premultiplied, the copy output should be RGBA = (0xff, 0, 0, 0x66)
-const pixelValue = 0x66;
-const pixelValueFloat = 0x66 / 0xff; // 0.4
+const kPixelValue = 0x66;
+const kPixelValueFloat = 0x66 / 0xff; // 0.4
 
 // Use four pixels rectangle for the test:
 // blue: top-left;
@@ -34,17 +34,17 @@ const pixelValueFloat = 0x66 / 0xff; // 0.4
 const expect = {
   /* prettier-ignore */
   'opaque': new Uint8ClampedArray([
-    0, 0, pixelValue, 0xff, // blue
-    0, pixelValue, 0, 0xff, // green
-    pixelValue, 0, 0, 0xff, // red
-    pixelValue, pixelValue, 0, 0xff, // yellow
+    0, 0, kPixelValue, 0xff, // blue
+    0, kPixelValue, 0, 0xff, // green
+    kPixelValue, 0, 0, 0xff, // red
+    kPixelValue, kPixelValue, 0, 0xff, // yellow
   ]),
   /* prettier-ignore */
   'premultiplied': new Uint8ClampedArray([
-    0, 0, 0xff, pixelValue, // blue
-    0, 0xff, 0, pixelValue, // green
-    0xff, 0, 0, pixelValue, // red
-    0xff, 0xff, 0, pixelValue, // yellow
+    0, 0, 0xff, kPixelValue, // blue
+    0, 0xff, 0, kPixelValue, // green
+    0xff, 0, 0, kPixelValue, // red
+    0xff, 0xff, 0, kPixelValue, // yellow
   ]),
 };
 
@@ -88,10 +88,10 @@ async function initCanvasContent<T extends CanvasType>(
     );
   };
 
-  clearOnePixel([0, 0], [0, 0, pixelValueFloat, pixelValueFloat]);
-  clearOnePixel([1, 0], [0, pixelValueFloat, 0, pixelValueFloat]);
-  clearOnePixel([0, 1], [pixelValueFloat, 0, 0, pixelValueFloat]);
-  clearOnePixel([1, 1], [pixelValueFloat, pixelValueFloat, 0, pixelValueFloat]);
+  clearOnePixel([0, 0], [0, 0, kPixelValueFloat, kPixelValueFloat]);
+  clearOnePixel([1, 0], [0, kPixelValueFloat, 0, kPixelValueFloat]);
+  clearOnePixel([0, 1], [kPixelValueFloat, 0, 0, kPixelValueFloat]);
+  clearOnePixel([1, 1], [kPixelValueFloat, kPixelValueFloat, 0, kPixelValueFloat]);
 
   t.device.queue.submit([encoder.finish()]);
   tempTexture.destroy();
