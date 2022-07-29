@@ -122,7 +122,10 @@ function readPixelsFrom2DCanvasAndCompare(
 g.test('onscreenCanvas,snapshot')
   .desc(
     `
-    Ensure snapshot of canvas with WebGPU context is correct
+    Ensure snapshot of canvas with WebGPU context is correct with
+    - various WebGPU canvas texture formats
+    - WebGPU canvas alpha mode = {"opaque", "premultiplied"}
+    - snapshot methods = {convertToBlob, transferToImageBitmap, createImageBitmap}
 
     TODO: Snapshot canvas to jpeg, webp and other mime type and
           different quality. Maybe we should test them in reftest.
@@ -173,7 +176,10 @@ g.test('onscreenCanvas,snapshot')
 g.test('offscreenCanvas,snapshot')
   .desc(
     `
-    Ensure snapshot of offscreenCanvas with WebGPU context is correct
+    Ensure snapshot of offscreenCanvas with WebGPU context is correct with
+    - various WebGPU canvas texture formats
+    - WebGPU canvas alpha mode = {"opaque", "premultiplied"}
+    - snapshot methods = {convertToBlob, transferToImageBitmap, createImageBitmap}
 
     TODO: Snapshot offscreenCanvas to jpeg, webp and other mime type and
           different quality. Maybe we should test them in reftest.
@@ -230,7 +236,10 @@ g.test('offscreenCanvas,snapshot')
 g.test('onscreenCanvas,uploadToWebGL')
   .desc(
     `
-    Ensure upload WebGPU context canvas to webgl texture is correct.
+    Ensure upload WebGPU context canvas to webgl texture is correct with
+    - various WebGPU canvas texture formats
+    - WebGPU canvas alpha mode = {"opaque", "premultiplied"}
+    - upload methods = {texImage2D, texSubImage2D}
     `
   )
   .params(u =>
@@ -291,7 +300,11 @@ g.test('onscreenCanvas,uploadToWebGL')
 g.test('drawTo2DCanvas')
   .desc(
     `
-    Ensure draw WebGPU context canvas to 2d context canvas/offscreenCanvas is correct.
+    Ensure draw WebGPU context canvas to 2d context canvas/offscreenCanvas is correct with
+    - various WebGPU canvas texture formats
+    - WebGPU canvas alpha mode = {"opaque", "premultiplied"}
+    - WebGPU canvas type = {"onscreen", "offscreen"}
+    - 2d canvas type = {"onscreen", "offscreen"}
     `
   )
   .params(u =>
