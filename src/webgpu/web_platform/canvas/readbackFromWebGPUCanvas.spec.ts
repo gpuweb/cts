@@ -53,12 +53,12 @@ const expect = {
   ]),
 };
 
-async function initCanvasContent(
+async function initCanvasContent<T extends CanvasType>(
   t: GPUTest,
   format: GPUTextureFormat,
   alphaMode: GPUCanvasAlphaMode,
-  canvasType: CanvasType
-): Promise<HTMLCanvasElement | OffscreenCanvas> {
+  canvasType: T
+) {
   const canvas = createCanvas(t, canvasType, 2, 2);
   const ctx = canvas.getContext('webgpu' as const);
   assert(ctx !== null, 'Failed to get WebGPU context from canvas');
@@ -140,12 +140,7 @@ g.test('onscreenCanvas,snapshot')
       .combine('snapshotType', ['toDataURL', 'toBlob', 'imageBitmap'])
   )
   .fn(async t => {
-    const canvas = (await initCanvasContent(
-      t,
-      t.params.format,
-      t.params.alphaMode,
-      'onscreen'
-    )) as HTMLCanvasElement;
+    const canvas = await initCanvasContent(t, t.params.format, t.params.alphaMode, 'onscreen');
 
     let snapshot: HTMLImageElement | ImageBitmap;
     switch (t.params.snapshotType) {
@@ -196,12 +191,12 @@ g.test('offscreenCanvas,snapshot')
       .combine('snapshotType', ['convertToBlob', 'transferToImageBitmap', 'imageBitmap'])
   )
   .fn(async t => {
-    const offscreenCanvas = (await initCanvasContent(
+    const offscreenCanvas = await initCanvasContent(
       t,
       t.params.format,
       t.params.alphaMode,
       'offscreen'
-    )) as OffscreenCanvas;
+    );
 
     let snapshot: HTMLImageElement | ImageBitmap;
     switch (t.params.snapshotType) {
@@ -252,12 +247,7 @@ g.test('onscreenCanvas,uploadToWebGL')
   )
   .fn(async t => {
     const { format, webgl, upload } = t.params;
-    const canvas = (await initCanvasContent(
-      t,
-      format,
-      t.params.alphaMode,
-      'onscreen'
-    )) as HTMLCanvasElement;
+    const canvas = await initCanvasContent(t, format, t.params.alphaMode, 'onscreen');
 
     const expectCanvas: HTMLCanvasElement = createOnscreenCanvas(t, canvas.width, canvas.height);
     const gl = expectCanvas.getContext(webgl) as WebGLRenderingContext | WebGL2RenderingContext;

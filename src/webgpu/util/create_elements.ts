@@ -4,6 +4,11 @@ import { unreachable } from '../../common/util/util.js';
 export const kAllCanvasTypes = ['onscreen', 'offscreen'] as const;
 export type CanvasType = typeof kAllCanvasTypes[number];
 
+type CanvasForCanvasType<T extends CanvasType> = {
+  onscreen: HTMLCanvasElement;
+  offscreen: OffscreenCanvas;
+}[T];
+
 /** Valid contextId for HTMLCanvasElement/OffscreenCanvas,
  *  spec: https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-getcontext
  */
@@ -30,30 +35,27 @@ export function canCopyFromCanvasContext(contextName: CanvasContext) {
 }
 
 /** Create HTMLCanvas/OffscreenCanvas. */
-export function createCanvas(
+export function createCanvas<T extends CanvasType>(
   test: Fixture,
-  canvasType: 'onscreen' | 'offscreen',
+  canvasType: T,
   width: number,
   height: number
-): HTMLCanvasElement | OffscreenCanvas {
-  let canvas: HTMLCanvasElement | OffscreenCanvas;
+): CanvasForCanvasType<T> {
   if (canvasType === 'onscreen') {
     if (typeof document !== 'undefined') {
-      canvas = createOnscreenCanvas(test, width, height);
+      return createOnscreenCanvas(test, width, height) as CanvasForCanvasType<T>;
     } else {
       test.skip('Cannot create HTMLCanvasElement');
     }
   } else if (canvasType === 'offscreen') {
     if (typeof OffscreenCanvas !== 'undefined') {
-      canvas = createOffscreenCanvas(test, width, height);
+      return createOffscreenCanvas(test, width, height) as CanvasForCanvasType<T>;
     } else {
       test.skip('Cannot create an OffscreenCanvas');
     }
   } else {
     unreachable();
   }
-
-  return canvas;
 }
 
 /** Create HTMLCanvasElement. */

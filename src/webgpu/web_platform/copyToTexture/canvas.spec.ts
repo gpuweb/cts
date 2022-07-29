@@ -28,7 +28,7 @@ class F extends CopyToTextureUtils {
     const canvas = createCanvas(this, 'onscreen', width, height);
 
     let canvasContext = null;
-    canvasContext = canvas.getContext('2d', { colorSpace }) as CanvasRenderingContext2D | null;
+    canvasContext = canvas.getContext('2d', { colorSpace });
 
     if (canvasContext === null) {
       this.skip('onscreen canvas 2d context not available');
