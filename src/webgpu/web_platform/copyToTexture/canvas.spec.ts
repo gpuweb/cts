@@ -4,6 +4,7 @@ copyToTexture with HTMLCanvasElement and OffscreenCanvas sources.
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import {
+  kCanvasAlphaModes,
   kTextureFormatInfo,
   kValidTextureFormatsForCopyE2T,
   RegularTextureFormat,
@@ -218,12 +219,16 @@ class F extends CopyToTextureUtils {
     return { canvas, canvasContext: gl };
   }
 
-  getInitGPUCanvasData(width: number, height: number, premultiplied: boolean): Uint8ClampedArray {
+  getInitGPUCanvasData(
+    width: number,
+    height: number,
+    alphaMode: GPUCanvasAlphaMode
+  ): Uint8ClampedArray {
     const rectWidth = Math.floor(width / 2);
     const rectHeight = Math.floor(height / 2);
 
     const alphaValue = 153;
-    const colorValue = premultiplied ? alphaValue : 255;
+    const colorValue = alphaMode === 'premultiplied' ? alphaValue : 255;
 
     // BGRA8Unorm texture
     const initialData = new Uint8ClampedArray(4 * width * height);
@@ -272,13 +277,13 @@ class F extends CopyToTextureUtils {
     canvasType,
     width,
     height,
-    premultiplied,
+    alphaMode,
   }: {
     device: GPUDevice;
     canvasType: CanvasType;
     width: number;
     height: number;
-    premultiplied: boolean;
+    alphaMode: GPUCanvasAlphaMode;
   }): {
     canvas: HTMLCanvasElement | OffscreenCanvas;
   } {
@@ -290,8 +295,6 @@ class F extends CopyToTextureUtils {
       this.skip(canvasType + ' canvas webgpu context not available');
     }
 
-    const alphaMode = premultiplied ? 'premultiplied' : 'opaque';
-
     gpuContext.configure({
       device,
       format: 'bgra8unorm',
@@ -300,7 +303,7 @@ class F extends CopyToTextureUtils {
     });
 
     // BGRA8Unorm texture
-    const initialData = this.getInitGPUCanvasData(width, height, premultiplied);
+    const initialData = this.getInitGPUCanvasData(width, height, alphaMode);
     const canvasTexture = gpuContext.getCurrentTexture();
     device.queue.writeTexture(
       { texture: canvasTexture },
@@ -344,21 +347,21 @@ class F extends CopyToTextureUtils {
   calculateSourceContentOnCPU(
     width: number,
     height: number,
-    premultipliedAlpha: boolean
+    alphaMode: GPUCanvasAlphaMode
   ): Uint8ClampedArray {
     const bytesPerPixel = 4;
 
-    const rgbaPixels = this.getInitGPUCanvasData(width, height, premultipliedAlpha);
+    const rgbaPixels = this.getInitGPUCanvasData(width, height, alphaMode);
 
     // The source canvas has bgra8unorm back resource. We
     // swizzle the channels to align with 2d/webgl canvas and
-    // clear alpha to opaque when context alphaMode
+    // clear alpha to 255 (1.0) when context alphaMode
     // is set to opaque (follow webgpu spec).
     for (let i = 0; i < height; ++i) {
       for (let j = 0; j < width; ++j) {
         const pixelPos = i * width + j;
         const r = rgbaPixels[pixelPos * bytesPerPixel + 2];
-        if (!premultipliedAlpha) {
+        if (alphaMode === 'opaque') {
           rgbaPixels[pixelPos * bytesPerPixel + 3] = 255;
         }
 
@@ -464,14 +467,14 @@ g.test('copy_contents_from_2d_context_canvas')
     u
       .combine('canvasType', kAllCanvasTypes)
       .combine('dstColorFormat', kValidTextureFormatsForCopyE2T)
-      .combine('dstPremultiplied', [true, false])
+      .combine('dstAlphaMode', kCanvasAlphaModes)
       .combine('srcDoFlipYDuringCopy', [true, false])
       .beginSubcases()
       .combine('width', [1, 2, 4, 15])
       .combine('height', [1, 2, 4, 15])
   )
   .fn(async t => {
-    const { width, height, canvasType } = t.params;
+    const { width, height, canvasType, dstAlphaMode } = t.params;
 
     const { canvas, canvasContext } = t.init2DCanvasContent({
       canvasType,
@@ -480,7 +483,11 @@ g.test('copy_contents_from_2d_context_canvas')
     });
     const sourcePixels = t.getSourceCanvas2DContent(canvasContext, width, height);
 
-    t.doCopyContentsTest(canvas, sourcePixels, { srcPremultiplied: false, ...t.params });
+    t.doCopyContentsTest(canvas, sourcePixels, {
+      srcPremultiplied: false,
+      dstPremultiplied: dstAlphaMode === 'premultiplied',
+      ...t.params,
+    });
   });
 
 g.test('copy_contents_from_gl_context_canvas')
@@ -522,14 +529,14 @@ g.test('copy_contents_from_gl_context_canvas')
       .combine('contextName', ['webgl', 'webgl2'] as const)
       .combine('dstColorFormat', kValidTextureFormatsForCopyE2T)
       .combine('srcPremultiplied', [true, false])
-      .combine('dstPremultiplied', [true, false])
+      .combine('dstAlphaMode', kCanvasAlphaModes)
       .combine('srcDoFlipYDuringCopy', [true, false])
       .beginSubcases()
       .combine('width', [1, 2, 4, 15])
       .combine('height', [1, 2, 4, 15])
   )
   .fn(async t => {
-    const { width, height, canvasType, contextName, srcPremultiplied } = t.params;
+    const { width, height, canvasType, contextName, srcPremultiplied, dstAlphaMode } = t.params;
 
     const { canvas, canvasContext } = t.initGLCanvasContent({
       canvasType,
@@ -540,7 +547,10 @@ g.test('copy_contents_from_gl_context_canvas')
     });
     const sourcePixels = t.getSourceCanvasGLContent(canvasContext, width, height);
 
-    t.doCopyContentsTest(canvas, sourcePixels, t.params);
+    t.doCopyContentsTest(canvas, sourcePixels, {
+      dstPremultiplied: dstAlphaMode === 'premultiplied',
+      ...t.params,
+    });
   });
 
 g.test('copy_contents_from_gpu_context_canvas')
@@ -584,8 +594,9 @@ g.test('copy_contents_from_gpu_context_canvas')
       .combine('canvasType', kAllCanvasTypes)
       .combine('srcAndDstInSameGPUDevice', [true, false])
       .combine('dstColorFormat', kValidTextureFormatsForCopyE2T)
-      .combine('srcPremultiplied', [true])
-      .combine('dstPremultiplied', [true, false])
+      // .combine('srcAlphaMode', kCanvasAlphaModes)
+      .combine('srcAlphaMode', ['premultiplied'] as const)
+      .combine('dstAlphaMode', kCanvasAlphaModes)
       .combine('srcDoFlipYDuringCopy', [true, false])
       .beginSubcases()
       .combine('width', [1, 2, 4, 15])
@@ -595,7 +606,14 @@ g.test('copy_contents_from_gpu_context_canvas')
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {
-    const { width, height, canvasType, srcAndDstInSameGPUDevice, srcPremultiplied } = t.params;
+    const {
+      width,
+      height,
+      canvasType,
+      srcAndDstInSameGPUDevice,
+      srcAlphaMode,
+      dstAlphaMode,
+    } = t.params;
 
     const device = srcAndDstInSameGPUDevice ? t.device : t.mismatchedDevice;
     const { canvas } = t.initGPUCanvasContent({
@@ -603,11 +621,15 @@ g.test('copy_contents_from_gpu_context_canvas')
       canvasType,
       width,
       height,
-      premultiplied: srcPremultiplied,
+      alphaMode: srcAlphaMode,
     });
-    const sourcePixels = t.calculateSourceContentOnCPU(width, height, srcPremultiplied);
+    const sourcePixels = t.calculateSourceContentOnCPU(width, height, srcAlphaMode);
 
-    t.doCopyContentsTest(canvas, sourcePixels, t.params);
+    t.doCopyContentsTest(canvas, sourcePixels, {
+      srcPremultiplied: srcAlphaMode === 'premultiplied',
+      dstPremultiplied: dstAlphaMode === 'premultiplied',
+      ...t.params,
+    });
   });
 
 g.test('color_space_conversion')
