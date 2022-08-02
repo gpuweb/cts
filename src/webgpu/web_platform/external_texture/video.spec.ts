@@ -111,7 +111,7 @@ function createExternalTextureSamplingTestBindGroup(
 
   const externalTexture = t.device.importExternalTexture({
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    source,
+    source: source as any,
   });
 
   const bindGroup = t.device.createBindGroup({
@@ -279,7 +279,7 @@ TODO: Make this test work without requestVideoFrameCallback support (in waitForN
           : videoElement;
       externalTexture = t.device.importExternalTexture({
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        source,
+        source: source as any,
       });
       // Set `bindGroup` here, which will then be used in microtask1 and microtask3.
       bindGroup = t.device.createBindGroup({
@@ -339,7 +339,7 @@ TODO: add 'VideoFrame' as an additional 'sourceType'
           : videoElement;
       const externalTexture = t.device.importExternalTexture({
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        source,
+        source: source as any,
       });
 
       const outputTexture = t.device.createTexture({
