@@ -10,6 +10,7 @@ TODO: consider whether external_texture and copyToTexture video tests should be 
 
 import { getResourcePath } from '../../../common/framework/resources.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { unreachable } from '../../../common/util/util.js';
 import { GPUTest } from '../../gpu_test.js';
 import {
   startPlayingAndWaitForVideo,
@@ -24,31 +25,37 @@ const kFormat = 'rgba8unorm';
 const kVideoExpectations = [
   {
     videoSource: 'red-green.webmvp8.webm',
+    colorSpace: 'REC601',
     _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
   },
   {
     videoSource: 'red-green.theora.ogv',
+    colorSpace: 'REC601',
     _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
   },
   {
     videoSource: 'red-green.mp4',
+    colorSpace: 'REC601',
     _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
   },
   {
     videoSource: 'red-green.bt601.vp9.webm',
+    colorSpace: 'REC601',
     _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
   },
   {
     videoSource: 'red-green.bt709.vp9.webm',
+    colorSpace: 'REC709',
     _redExpectation: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff]),
   },
   {
     videoSource: 'red-green.bt2020.vp9.webm',
+    colorSpace: 'REC2020',
     _redExpectation: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff]),
   },
@@ -131,18 +138,36 @@ function createExternalTextureSamplingTestBindGroup(
   return bindGroup;
 }
 
+type VideoColorSpaceName = 'REC601' | 'REC709' | 'REC2020';
+
+function getVideoColorSpaceInit(colorSpaceName: VideoColorSpaceName): VideoColorSpaceInit {
+  switch (colorSpaceName) {
+    case 'REC601':
+      return {
+        primaries: 'smpte170m',
+        transfer: 'smpte170m',
+        matrix: 'smpte170m',
+        fullRange: false,
+      };
+    case 'REC709':
+      return { primaries: 'bt709', transfer: 'bt709', matrix: 'bt709', fullRange: false };
+    case 'REC2020':
+      return { primaries: 'bt709', transfer: 'iec61966-2-1', matrix: 'rgb', fullRange: true };
+    default:
+      unreachable();
+  }
+}
+
 g.test('importExternalTexture,sample')
   .desc(
     `
 Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTexture, sample from it
 for several combinations of video format and color space.
-
-TODO: add 'VideoFrame' as an additional 'sourceType'
 `
   )
   .params(u =>
     u //
-      .combine('sourceType', ['VideoElement'])
+      .combine('sourceType', ['VideoElement', 'VideoFrame'])
       .combineWithParams(kVideoExpectations)
   )
   .fn(async t => {
@@ -158,7 +183,11 @@ TODO: add 'VideoFrame' as an additional 'sourceType'
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
         sourceType === 'VideoFrame'
-          ? await getVideoFrameFromVideoElement(t, videoElement)
+          ? await getVideoFrameFromVideoElement(
+              t,
+              videoElement,
+              getVideoColorSpaceInit(t.params.colorSpace)
+            )
           : videoElement;
 
       const colorAttachment = t.device.createTexture({
@@ -316,13 +345,11 @@ g.test('importExternalTexture,compute')
     `
 Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTexture and use it in a
 compute shader, for several combinations of video format and color space.
-
-TODO: add 'VideoFrame' as an additional 'sourceType'
 `
   )
   .params(u =>
     u //
-      .combine('sourceType', ['VideoElement'])
+      .combine('sourceType', ['VideoElement', 'VideoFrame'])
       .combineWithParams(kVideoExpectations)
   )
   .fn(async t => {
@@ -335,7 +362,11 @@ TODO: add 'VideoFrame' as an additional 'sourceType'
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
         sourceType === 'VideoFrame'
-          ? await getVideoFrameFromVideoElement(t, videoElement)
+          ? await getVideoFrameFromVideoElement(
+              t,
+              videoElement,
+              getVideoColorSpaceInit(t.params.colorSpace)
+            )
           : videoElement;
       const externalTexture = t.device.importExternalTexture({
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
