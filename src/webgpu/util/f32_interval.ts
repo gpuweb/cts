@@ -954,6 +954,19 @@ export function sinInterval(n: number): F32Interval {
   return runPointOp(toInterval(n), SinIntervalOp);
 }
 
+const SinhIntervalOp: PointToIntervalOp = {
+  impl: (n: number): F32Interval => {
+    // sinh(x) = (exp(x) - exp(-x)) * 0.5
+    const minus_n = negationInterval(n);
+    return multiplicationInterval(subtractionInterval(expInterval(n), expInterval(minus_n)), 0.5);
+  },
+};
+
+/** Calculate an acceptance interval of sinh(x) */
+export function sinhInterval(n: number): F32Interval {
+  return runPointOp(toInterval(n), SinhIntervalOp);
+}
+
 const StepIntervalOp: BinaryToIntervalOp = {
   impl: (edge: number, x: number): F32Interval => {
     if (edge <= x) {
