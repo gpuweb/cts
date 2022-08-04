@@ -1042,6 +1042,17 @@ export function tanInterval(n: number): F32Interval {
   return runPointOp(toInterval(n), TanIntervalOp);
 }
 
+const TanhIntervalOp: PointToIntervalOp = {
+  impl: (n: number): F32Interval => {
+    return divisionInterval(sinhInterval(n), coshInterval(n));
+  },
+};
+
+/** Calculate an acceptance interval of tanh(x) */
+export function tanhInterval(n: number): F32Interval {
+  return runPointOp(toInterval(n), TanhIntervalOp);
+}
+
 const TruncIntervalOp: PointToIntervalOp = {
   impl: (n: number): F32Interval => {
     return correctlyRoundedInterval(Math.trunc(n));
