@@ -8,6 +8,8 @@ import { kValue } from '../webgpu/util/constants.js';
 import {
   absInterval,
   absoluteErrorInterval,
+  acoshAlternativeInterval,
+  acoshPrimaryInterval,
   additionInterval,
   atanInterval,
   atan2Interval,
@@ -16,6 +18,7 @@ import {
   clampMinMaxInterval,
   correctlyRoundedInterval,
   cosInterval,
+  coshInterval,
   degreesInterval,
   divisionInterval,
   expInterval,
@@ -46,7 +49,6 @@ import {
   tanInterval,
   truncInterval,
   ulpInterval,
-  coshInterval,
 } from '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -631,6 +633,62 @@ g.test('absInterval')
     t.expect(
       objectEquals(expected, got),
       `absInterval(${input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('acoshAlternativeInterval')
+  .paramsSubcasesOnly<PointToIntervalCase>(
+    // prettier-ignore
+    [
+      // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
+      // form due to the inherited nature of the errors.
+      { input: kValue.f32.infinity.negative, expected: kAny },
+      { input: kValue.f32.negative.min, expected: kAny },
+      { input: -1, expected: kAny },
+      { input: 0, expected: kAny },
+      { input: 1, expected: kAny },  // 1/0 occurs in inverseSqrt in this formulation
+      { input: 1.1, expected: [hexToF64(0x3fdc6368, 0x80000000), hexToF64(0x3fdc636f, 0x20000000)] },  // ~0.443..., differs from the primary in the later digits
+      { input: 10, expected: [hexToF64(0x4007f21e, 0x40000000), hexToF64(0x4007f21f, 0x60000000)] },  // ~2.993...
+      { input: kValue.f32.positive.max, expected: kAny },
+      { input: kValue.f32.infinity.positive, expected: kAny },
+    ]
+  )
+  .fn(t => {
+    const input = t.params.input;
+    const expected = new F32Interval(...t.params.expected);
+
+    const got = acoshAlternativeInterval(input);
+    t.expect(
+      objectEquals(expected, got),
+      `acoshInterval(${input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('acoshPrimaryInterval')
+  .paramsSubcasesOnly<PointToIntervalCase>(
+    // prettier-ignore
+    [
+      // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
+      // form due to the inherited nature of the errors.
+      { input: kValue.f32.infinity.negative, expected: kAny },
+      { input: kValue.f32.negative.min, expected: kAny },
+      { input: -1, expected: kAny },
+      { input: 0, expected: kAny },
+      { input: 1, expected: kAny },  // 1/0 occurs in inverseSqrt in this formulation
+      { input: 1.1, expected: [hexToF64(0x3fdc6368, 0x20000000), hexToF64(0x3fdc636f, 0x80000000)] }, // ~0.443..., differs from the alternative in the later digits
+      { input: 10, expected: [hexToF64(0x4007f21e, 0x40000000), hexToF64(0x4007f21f, 0x60000000)] },  // ~2.993...
+      { input: kValue.f32.positive.max, expected: kAny },
+      { input: kValue.f32.infinity.positive, expected: kAny },
+    ]
+  )
+  .fn(t => {
+    const input = t.params.input;
+    const expected = new F32Interval(...t.params.expected);
+
+    const got = acoshPrimaryInterval(input);
+    t.expect(
+      objectEquals(expected, got),
+      `acoshInterval(${input}) returned ${got}. Expected ${expected}`
     );
   });
 
