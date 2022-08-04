@@ -39,6 +39,7 @@ roundInterval,
 saturateInterval,
 signInterval,
 sinInterval,
+sqrtInterval,
 stepInterval,
 subtractionInterval,
 tanInterval,
@@ -1238,6 +1239,32 @@ fn((t) => {
   t.expect(
   objectEquals(expected, got),
   `sinInterval(${input}) returned ${got}. Expected ${expected}`);
+
+});
+
+g.test('sqrtInterval').
+paramsSubcasesOnly(
+
+[
+// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
+// form due to the inherited nature of the errors.
+{ input: -1, expected: kAny },
+{ input: 0, expected: kAny },
+{ input: 0.01, expected: [hexToF64(0x3fb99998, 0xb0000000), hexToF64(0x3fb9999a, 0x70000000)] }, // ~0.1
+{ input: 1, expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] }, // ~1
+{ input: 4, expected: [hexToF64(0x3fffffff, 0x70000000), hexToF64(0x40000000, 0x90000000)] }, // ~2
+{ input: 100, expected: [hexToF64(0x4023ffff, 0x70000000), hexToF64(0x40240000, 0xb0000000)] }, // ~10
+{ input: kValue.f32.infinity.positive, expected: kAny }]).
+
+
+fn((t) => {
+  const input = t.params.input;
+  const expected = new F32Interval(...t.params.expected);
+
+  const got = sqrtInterval(input);
+  t.expect(
+  objectEquals(expected, got),
+  `sqrtInterval(${input}) returned ${got}. Expected ${expected}`);
 
 });
 

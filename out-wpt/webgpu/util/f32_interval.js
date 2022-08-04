@@ -858,6 +858,17 @@ const StepIntervalOp = {
   },
 };
 
+const SqrtIntervalOp = {
+  impl: n => {
+    return divisionInterval(1.0, inverseSqrtInterval(n));
+  },
+};
+
+/** Calculate an acceptance interval of sqrt(x) */
+export function sqrtInterval(n) {
+  return runPointOp(toInterval(n), SqrtIntervalOp);
+}
+
 /** Calculate an acceptance 'interval' for step(edge, x)
  *
  * step only returns two possible values, so its interval requires special
