@@ -45,8 +45,7 @@ stepInterval,
 subtractionInterval,
 tanInterval,
 truncInterval,
-ulpInterval,
-coshInterval } from
+ulpInterval } from
 '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -745,32 +744,6 @@ fn((t) => {
   t.expect(
   objectEquals(expected, got),
   `cosInterval(${input}) returned ${got}. Expected ${expected}`);
-
-});
-
-g.test('coshInterval').
-paramsSubcasesOnly(
-
-[
-// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form due to the inherited nature of the errors.
-{ input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.negative.min, expected: kAny },
-{ input: -1, expected: [hexToF32(0x3fc583a4), hexToF32(0x3fc583b1)] }, // ~1.1543...
-{ input: 0, expected: [hexToF32(0x3f7ffffd), hexToF32(0x3f800002)] }, // ~1
-{ input: 1, expected: [hexToF32(0x3fc583a4), hexToF32(0x3fc583b1)] }, // ~1.1543...
-{ input: kValue.f32.positive.max, expected: kAny },
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
-
-
-fn((t) => {
-  const input = t.params.input;
-  const expected = new F32Interval(...t.params.expected);
-
-  const got = coshInterval(input);
-  t.expect(
-  objectEquals(expected, got),
-  `coshInterval(${input}) returned ${got}. Expected ${expected}`);
 
 });
 

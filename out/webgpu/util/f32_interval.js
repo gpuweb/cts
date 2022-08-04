@@ -610,19 +610,6 @@ export function cosInterval(n) {
   return runPointOp(toInterval(n), CosIntervalOp);
 }
 
-const CoshIntervalOp = {
-  impl: (n) => {
-    // cosh(x) = (exp(x) + exp(-x)) * 0.5
-    const minus_n = negationInterval(n);
-    return multiplicationInterval(additionInterval(expInterval(n), expInterval(minus_n)), 0.5);
-  } };
-
-
-/** Calculate an acceptance interval of cosh(x) */
-export function coshInterval(n) {
-  return runPointOp(toInterval(n), CoshIntervalOp);
-}
-
 const DegreesIntervalOp = {
   impl: (n) => {
     return multiplicationInterval(n, 57.295779513082322865);
