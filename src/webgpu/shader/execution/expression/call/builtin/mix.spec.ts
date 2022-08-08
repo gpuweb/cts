@@ -18,7 +18,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
-import { mixImpreciseInterval, mixPreciseInterval } from '../../../../../util/f32_interval.js';
+import { mixIntervals } from '../../../../../util/f32_interval.js';
 import { allInputSources, Case, makeTernaryF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -41,8 +41,7 @@ g.test('matching_f32')
   )
   .fn(async t => {
     const makeCase = (x: number, y: number, z: number): Case => {
-      // Testing against both precise and imprecise formulas, see https://github.com/gpuweb/gpuweb/issues/3260
-      return makeTernaryF32IntervalCase(x, y, z, mixPreciseInterval, mixImpreciseInterval);
+      return makeTernaryF32IntervalCase(x, y, z, ...mixIntervals);
     };
 
     const values: Array<number> = [
