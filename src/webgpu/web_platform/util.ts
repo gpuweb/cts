@@ -1,5 +1,10 @@
 import { Fixture, SkipTestCase } from '../../common/framework/fixture.js';
-import { assert, ErrorWithExtra, raceWithRejectOnTimeout } from '../../common/util/util.js';
+import {
+  assert,
+  ErrorWithExtra,
+  raceWithRejectOnTimeout,
+  unreachable,
+} from '../../common/util/util.js';
 
 declare global {
   interface HTMLMediaElement {
@@ -106,9 +111,30 @@ export function waitForNextFrame(
   return promise;
 }
 
+type VideoColorSpaceName = 'REC601' | 'REC709' | 'REC2020';
+
+export function getVideoColorSpaceInit(colorSpaceName: VideoColorSpaceName): VideoColorSpaceInit {
+  switch (colorSpaceName) {
+    case 'REC601':
+      return {
+        primaries: 'smpte170m',
+        transfer: 'smpte170m',
+        matrix: 'smpte170m',
+        fullRange: false,
+      };
+    case 'REC709':
+      return { primaries: 'bt709', transfer: 'bt709', matrix: 'bt709', fullRange: false };
+    case 'REC2020':
+      return { primaries: 'bt709', transfer: 'iec61966-2-1', matrix: 'rgb', fullRange: true };
+    default:
+      unreachable();
+  }
+}
+
 export async function getVideoFrameFromVideoElement(
   test: Fixture,
-  video: HTMLVideoElement
+  video: HTMLVideoElement,
+  colorSpace: VideoColorSpaceInit = getVideoColorSpaceInit('REC709')
 ): Promise<VideoFrame> {
   if (video.captureStream === undefined) {
     test.skip('HTMLVideoElement.captureStream is not supported');
@@ -118,7 +144,24 @@ export async function getVideoFrameFromVideoElement(
   const reader = new MediaStreamTrackProcessor({ track }).readable.getReader();
   const videoFrame = (await reader.read()).value;
   assert(videoFrame !== undefined, 'unable to get a VideoFrame from track 0');
-  return videoFrame;
+  assert(
+    videoFrame.format !== null && videoFrame.timestamp !== null,
+    'unable to get a valid VideoFrame from track 0'
+  );
+  // Apply color space info because the VideoFrame generated from captured stream
+  // doesn't have it.
+  const bufferSize = videoFrame.allocationSize();
+  const buffer = new ArrayBuffer(bufferSize);
+  const frameLayout = await videoFrame.copyTo(buffer);
+  const frameInit: VideoFrameBufferInit = {
+    format: videoFrame.format,
+    timestamp: videoFrame.timestamp,
+    codedWidth: videoFrame.codedWidth,
+    codedHeight: videoFrame.codedHeight,
+    colorSpace,
+    layout: frameLayout,
+  };
+  return new VideoFrame(buffer, frameInit);
 }
 
 /**
