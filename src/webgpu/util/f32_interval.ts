@@ -543,6 +543,21 @@ export function atan2Interval(y: number | F32Interval, x: number | F32Interval):
   return runBinaryOp(toInterval(y), toInterval(x), Atan2IntervalOp);
 }
 
+const AtanhIntervalOp: PointToIntervalOp = {
+  impl: (n: number) => {
+    // atanh(x) = log((1.0 + x) / (1.0 - x)) * 0.5
+    const numerator = additionInterval(1.0, n);
+    const denominator = subtractionInterval(1.0, n);
+    const log_interval = logInterval(divisionInterval(numerator, denominator));
+    return multiplicationInterval(log_interval, 0.5);
+  },
+};
+
+/** Calculate an acceptance interval of atanh(x) */
+export function atanhInterval(n: number): F32Interval {
+  return runPointOp(toInterval(n), AtanhIntervalOp);
+}
+
 const CeilIntervalOp: PointToIntervalOp = {
   impl: (n: number): F32Interval => {
     return correctlyRoundedInterval(Math.ceil(n));
