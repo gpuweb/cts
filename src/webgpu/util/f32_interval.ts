@@ -490,7 +490,7 @@ export function absInterval(n: number): F32Interval {
   return runPointOp(toInterval(n), AbsIntervalOp);
 }
 
-/** All acceptance interval functions foracosh(x) */
+/** All acceptance interval functions for acosh(x) */
 export const acoshIntervals: PointToInterval[] = [acoshAlternativeInterval, acoshPrimaryInterval];
 
 const AcoshAlternativeIntervalOp: PointToIntervalOp = {
