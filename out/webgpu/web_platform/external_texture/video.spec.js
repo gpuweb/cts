@@ -13,6 +13,7 @@ import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { GPUTest } from '../../gpu_test.js';
 import {
 startPlayingAndWaitForVideo,
+getVideoColorSpaceInit,
 getVideoFrameFromVideoElement,
 waitForNextFrame } from
 '../../web_platform/util.js';
@@ -24,31 +25,37 @@ const kFormat = 'rgba8unorm';
 const kVideoExpectations = [
 {
   videoSource: 'red-green.webmvp8.webm',
+  colorSpace: 'REC601',
   _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
   _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]) },
 
 {
   videoSource: 'red-green.theora.ogv',
+  colorSpace: 'REC601',
   _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
   _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]) },
 
 {
   videoSource: 'red-green.mp4',
+  colorSpace: 'REC601',
   _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
   _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]) },
 
 {
   videoSource: 'red-green.bt601.vp9.webm',
+  colorSpace: 'REC601',
   _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
   _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]) },
 
 {
   videoSource: 'red-green.bt709.vp9.webm',
+  colorSpace: 'REC709',
   _redExpectation: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
   _greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff]) },
 
 {
   videoSource: 'red-green.bt2020.vp9.webm',
+  colorSpace: 'REC2020',
   _redExpectation: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
   _greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff]) }];
 
@@ -136,13 +143,11 @@ desc(
 `
 Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTexture, sample from it
 for several combinations of video format and color space.
-
-TODO: add 'VideoFrame' as an additional 'sourceType'
 `).
 
 params((u) =>
 u //
-.combine('sourceType', ['VideoElement']).
+.combine('sourceType', ['VideoElement', 'VideoFrame']).
 combineWithParams(kVideoExpectations)).
 
 fn(async (t) => {
@@ -158,7 +163,11 @@ fn(async (t) => {
   await startPlayingAndWaitForVideo(videoElement, async () => {
     const source =
     sourceType === 'VideoFrame' ?
-    await getVideoFrameFromVideoElement(t, videoElement) :
+    await getVideoFrameFromVideoElement(
+    t,
+    videoElement,
+    getVideoColorSpaceInit(t.params.colorSpace)) :
+
     videoElement;
 
     const colorAttachment = t.device.createTexture({
@@ -316,13 +325,11 @@ desc(
 `
 Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTexture and use it in a
 compute shader, for several combinations of video format and color space.
-
-TODO: add 'VideoFrame' as an additional 'sourceType'
 `).
 
 params((u) =>
 u //
-.combine('sourceType', ['VideoElement']).
+.combine('sourceType', ['VideoElement', 'VideoFrame']).
 combineWithParams(kVideoExpectations)).
 
 fn(async (t) => {
@@ -335,7 +342,11 @@ fn(async (t) => {
   await startPlayingAndWaitForVideo(videoElement, async () => {
     const source =
     sourceType === 'VideoFrame' ?
-    await getVideoFrameFromVideoElement(t, videoElement) :
+    await getVideoFrameFromVideoElement(
+    t,
+    videoElement,
+    getVideoColorSpaceInit(t.params.colorSpace)) :
+
     videoElement;
     const externalTexture = t.device.importExternalTexture({
 
