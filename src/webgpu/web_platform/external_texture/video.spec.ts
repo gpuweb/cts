@@ -10,10 +10,10 @@ TODO: consider whether external_texture and copyToTexture video tests should be 
 
 import { getResourcePath } from '../../../common/framework/resources.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { unreachable } from '../../../common/util/util.js';
 import { GPUTest } from '../../gpu_test.js';
 import {
   startPlayingAndWaitForVideo,
+  getVideoColorSpaceInit,
   getVideoFrameFromVideoElement,
   waitForNextFrame,
 } from '../../web_platform/util.js';
@@ -136,26 +136,6 @@ function createExternalTextureSamplingTestBindGroup(
   });
 
   return bindGroup;
-}
-
-type VideoColorSpaceName = 'REC601' | 'REC709' | 'REC2020';
-
-function getVideoColorSpaceInit(colorSpaceName: VideoColorSpaceName): VideoColorSpaceInit {
-  switch (colorSpaceName) {
-    case 'REC601':
-      return {
-        primaries: 'smpte170m',
-        transfer: 'smpte170m',
-        matrix: 'smpte170m',
-        fullRange: false,
-      };
-    case 'REC709':
-      return { primaries: 'bt709', transfer: 'bt709', matrix: 'bt709', fullRange: false };
-    case 'REC2020':
-      return { primaries: 'bt709', transfer: 'iec61966-2-1', matrix: 'rgb', fullRange: true };
-    default:
-      unreachable();
-  }
 }
 
 g.test('importExternalTexture,sample')
