@@ -753,4 +753,110 @@ and checks whether GPUCommandEncoder.finish() causes a validation error.
       .beginSubcases()
       .expand('drawCount', p => new Set([0, p.maxDrawCount, p.maxDrawCount + 1]))
   )
-  .unimplemented();
+  .fn(async t => {
+    const { bundleFirstHalf, bundleSecondHalf, maxDrawCount, drawCount } = t.params;
+
+    const colorFormat = 'rgba8unorm';
+    const colorTexture = t.device.createTexture({
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+      format: colorFormat,
+      mipLevelCount: 1,
+      sampleCount: 1,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    const pipeline = t.device.createRenderPipeline({
+      layout: 'auto',
+      vertex: {
+        module: t.device.createShaderModule({
+          code: `
+            @vertex fn main() -> @builtin(position) vec4<f32> {
+              return vec4<f32>();
+            }
+          `,
+        }),
+        entryPoint: 'main',
+      },
+      fragment: {
+        module: t.device.createShaderModule({
+          code: `@fragment fn main() {}`,
+        }),
+        entryPoint: 'main',
+        targets: [{ format: colorFormat, writeMask: 0 }],
+      },
+    });
+
+    const indexBuffer = t.makeBufferWithContents(new Uint16Array([0, 0, 0]), GPUBufferUsage.INDEX);
+    const indirectBuffer = t.makeBufferWithContents(
+      new Uint32Array([3, 1, 0, 0]),
+      GPUBufferUsage.INDIRECT
+    );
+    const indexedIndirectBuffer = t.makeBufferWithContents(
+      new Uint32Array([3, 1, 0, 0, 0]),
+      GPUBufferUsage.INDIRECT
+    );
+
+    const commandEncoder = t.device.createCommandEncoder();
+    const renderPassEncoder = commandEncoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: colorTexture.createView(),
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
+      ],
+      maxDrawCount,
+    });
+
+    const firstHalfEncoder = bundleFirstHalf
+      ? t.device.createRenderBundleEncoder({
+          colorFormats: [colorFormat],
+        })
+      : renderPassEncoder;
+
+    const secondHalfEncoder = bundleSecondHalf
+      ? t.device.createRenderBundleEncoder({
+          colorFormats: [colorFormat],
+        })
+      : renderPassEncoder;
+
+    firstHalfEncoder.setPipeline(pipeline);
+    firstHalfEncoder.setIndexBuffer(indexBuffer, 'uint16');
+    secondHalfEncoder.setPipeline(pipeline);
+    secondHalfEncoder.setIndexBuffer(indexBuffer, 'uint16');
+
+    const halfDrawCount = Math.floor(drawCount / 2);
+    for (let i = 0; i < drawCount; i++) {
+      const encoder = i < halfDrawCount ? firstHalfEncoder : secondHalfEncoder;
+      if (i % 4 === 0) {
+        encoder.draw(3);
+      }
+      if (i % 4 === 1) {
+        encoder.drawIndexed(3);
+      }
+      if (i % 4 === 2) {
+        encoder.drawIndirect(indirectBuffer, 0);
+      }
+      if (i % 4 === 3) {
+        encoder.drawIndexedIndirect(indexedIndirectBuffer, 0);
+      }
+    }
+
+    const bundles = [];
+    if (bundleFirstHalf) {
+      bundles.push((firstHalfEncoder as GPURenderBundleEncoder).finish());
+    }
+    if (bundleSecondHalf) {
+      bundles.push((secondHalfEncoder as GPURenderBundleEncoder).finish());
+    }
+
+    if (bundles.length > 0) {
+      renderPassEncoder.executeBundles(bundles);
+    }
+
+    renderPassEncoder.end();
+
+    t.expectValidationError(() => {
+      commandEncoder.finish();
+    }, drawCount > maxDrawCount);
+  });
