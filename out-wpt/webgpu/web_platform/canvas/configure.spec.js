@@ -34,7 +34,7 @@ g.test('defaults')
     const { canvasType } = t.params;
     const canvas = createCanvas(t, canvasType, 2, 2);
     const ctx = canvas.getContext('webgpu');
-    assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+    assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
     ctx.configure({
       device: t.device,
@@ -66,7 +66,7 @@ g.test('device')
     const { canvasType } = t.params;
     const canvas = createCanvas(t, canvasType, 2, 2);
     const ctx = canvas.getContext('webgpu');
-    assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+    assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
     // Calling configure without a device should throw.
     t.shouldThrow(true, () => {
@@ -122,7 +122,7 @@ g.test('format')
     const { canvasType, format } = t.params;
     const canvas = createCanvas(t, canvasType, 2, 2);
     const ctx = canvas.getContext('webgpu');
-    assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+    assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
     // Would prefer to use kCanvasTextureFormats.includes(format), but that's giving TS errors.
     let validFormat = false;
@@ -171,7 +171,7 @@ g.test('usage')
     const { canvasType, usage } = t.params;
     const canvas = createCanvas(t, canvasType, 2, 2);
     const ctx = canvas.getContext('webgpu');
-    assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+    assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
     ctx.configure({
       device: t.device,
@@ -282,7 +282,7 @@ g.test('alpha_mode')
     const { canvasType, alphaMode } = t.params;
     const canvas = createCanvas(t, canvasType, 2, 2);
     const ctx = canvas.getContext('webgpu');
-    assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+    assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
     ctx.configure({
       device: t.device,

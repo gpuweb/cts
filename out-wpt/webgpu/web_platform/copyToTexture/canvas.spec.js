@@ -226,7 +226,7 @@ class F extends CopyToTextureUtils {
 
     const gpuContext = canvas.getContext('webgpu');
 
-    if (gpuContext === null) {
+    if (!(gpuContext instanceof GPUCanvasContext)) {
       this.skip(canvasType + ' canvas webgpu context not available');
     }
 

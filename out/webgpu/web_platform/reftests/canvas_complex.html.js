@@ -704,7 +704,7 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
 
     for (const { cvs, writeCanvasMethod } of targets) {
       const ctx = cvs.getContext('webgpu');
-      assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+      assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
       let usage;
       switch (writeCanvasMethod) {

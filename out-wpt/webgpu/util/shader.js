@@ -51,7 +51,8 @@ export function getPlainTypeInfo(sampleType) {
 
 /**
  * Build a fragment shader based on output value and types
- * e.g. write to color target 0 a vec4<f32>(1.0, 0.0, 1.0, 1.0) and color target 2 a vec2<u32>(1, 2)
+ * e.g. write to color target 0 a `vec4<f32>(1.0, 0.0, 1.0, 1.0)` and color target 2 a `vec2<u32>(1, 2)`
+ * ```
  * outputs: [
  *   {
  *     values: [1, 0, 1, 1],,
@@ -65,8 +66,10 @@ export function getPlainTypeInfo(sampleType) {
  *     componentCount: 2,
  *   },
  * ]
+ * ```
  *
  * return:
+ * ```
  * struct Outputs {
  *     @location(0) o1 : vec4<f32>,
  *     @location(2) o3 : vec2<u32>,
@@ -74,6 +77,7 @@ export function getPlainTypeInfo(sampleType) {
  * @fragment fn main() -> Outputs {
  *     return Outputs(vec4<f32>(1.0, 0.0, 1.0, 1.0), vec4<u32>(1, 2));
  * }
+ * ```
  * @param outputs the shader outputs for each location attribute
  * @returns the fragment shader string
  */

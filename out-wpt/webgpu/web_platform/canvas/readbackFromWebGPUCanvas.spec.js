@@ -70,7 +70,7 @@ const expect = {
 async function initCanvasContent(t, format, alphaMode, canvasType) {
   const canvas = createCanvas(t, canvasType, 2, 2);
   const ctx = canvas.getContext('webgpu');
-  assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+  assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
   ctx.configure({
     device: t.device,

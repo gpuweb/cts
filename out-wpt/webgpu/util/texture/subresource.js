@@ -30,7 +30,7 @@ export class SubresourceRange {
   }
 
   /**
-   * Iterates over the "rectangle" of { mip level, array layer } pairs represented by the range.
+   * Iterates over the "rectangle" of `{ level, layer }` pairs represented by the range.
    */
   *each() {
     for (let level = this.mipRange.begin; level < this.mipRange.end; ++level) {

@@ -146,7 +146,7 @@ ParamsBuilderBase
     return this.cases();
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   expandWithParams(
   expander)
   {
@@ -154,7 +154,7 @@ ParamsBuilderBase
     return new CaseParamsBuilder(() => newGenerator({}));
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   expand(
   key,
   expander)
@@ -166,7 +166,7 @@ ParamsBuilderBase
     });
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   combineWithParams(
   newParams)
   {
@@ -181,7 +181,7 @@ ParamsBuilderBase
     return this.expandWithParams(() => newParams);
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   combine(
   key,
   values)
@@ -191,13 +191,13 @@ ParamsBuilderBase
     return this.combineWithParams(mapped);
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   filter(pred) {
     const newGenerator = filterGenerator(this.cases, pred);
     return new CaseParamsBuilder(() => newGenerator({}));
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   unless(pred) {
     return this.filter((x) => !pred(x));
   }
@@ -252,14 +252,14 @@ ParamsBuilderBase
     }
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   expandWithParams(
   expander)
   {
     return new SubcaseParamsBuilder(this.cases, expanderGenerator(this.subcases, expander));
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   expand(
   key,
   expander)
@@ -272,7 +272,7 @@ ParamsBuilderBase
     });
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   combineWithParams(
   newParams)
   {
@@ -280,7 +280,7 @@ ParamsBuilderBase
     return this.expandWithParams(() => newParams);
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   combine(
   key,
   values)
@@ -289,12 +289,12 @@ ParamsBuilderBase
     return this.expand(key, () => values);
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   filter(pred) {
     return new SubcaseParamsBuilder(this.cases, filterGenerator(this.subcases, pred));
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   unless(pred) {
     return this.filter((x) => !pred(x));
   }}

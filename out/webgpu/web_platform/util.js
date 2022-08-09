@@ -14,12 +14,6 @@ unreachable } from
 
 
 
-
-
-
-
-
-
 /**
  * Starts playing a video and waits for it to be consumable.
  * Returns a promise which resolves after `callback` (which may be async) completes.

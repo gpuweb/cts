@@ -32,8 +32,8 @@ g.test('defaults')
   .fn(async t => {
     const { canvasType } = t.params;
     const canvas = createCanvas(t, canvasType, 2, 2);
-    const ctx = canvas.getContext('webgpu' as const);
-    assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+    const ctx = canvas.getContext('webgpu');
+    assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
     ctx.configure({
       device: t.device,
@@ -64,8 +64,8 @@ g.test('device')
   .fn(async t => {
     const { canvasType } = t.params;
     const canvas = createCanvas(t, canvasType, 2, 2);
-    const ctx = canvas.getContext('webgpu' as const);
-    assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+    const ctx = canvas.getContext('webgpu');
+    assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
     // Calling configure without a device should throw.
     t.shouldThrow(true, () => {
@@ -119,8 +119,8 @@ g.test('format')
   .fn(async t => {
     const { canvasType, format } = t.params;
     const canvas = createCanvas(t, canvasType, 2, 2);
-    const ctx = canvas.getContext('webgpu' as const);
-    assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+    const ctx = canvas.getContext('webgpu');
+    assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
     // Would prefer to use kCanvasTextureFormats.includes(format), but that's giving TS errors.
     let validFormat = false;
@@ -168,8 +168,8 @@ g.test('usage')
   .fn(async t => {
     const { canvasType, usage } = t.params;
     const canvas = createCanvas(t, canvasType, 2, 2);
-    const ctx = canvas.getContext('webgpu' as const);
-    assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+    const ctx = canvas.getContext('webgpu');
+    assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
     ctx.configure({
       device: t.device,
@@ -278,8 +278,8 @@ g.test('alpha_mode')
   .fn(async t => {
     const { canvasType, alphaMode } = t.params;
     const canvas = createCanvas(t, canvasType, 2, 2);
-    const ctx = canvas.getContext('webgpu' as const);
-    assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+    const ctx = canvas.getContext('webgpu');
+    assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
     ctx.configure({
       device: t.device,

@@ -52,13 +52,13 @@ export class CaseParamsBuilder extends ParamsBuilderBase {
     return this.cases();
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   expandWithParams(expander) {
     const newGenerator = expanderGenerator(this.cases, expander);
     return new CaseParamsBuilder(() => newGenerator({}));
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   expand(key, expander) {
     return this.expandWithParams(function* (p) {
       for (const value of expander(p)) {
@@ -67,7 +67,7 @@ export class CaseParamsBuilder extends ParamsBuilderBase {
     });
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   combineWithParams(newParams) {
     assertNotGenerator(newParams);
     const seenValues = new Set();
@@ -80,20 +80,20 @@ export class CaseParamsBuilder extends ParamsBuilderBase {
     return this.expandWithParams(() => newParams);
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   combine(key, values) {
     assertNotGenerator(values);
     const mapped = mapLazy(values, v => ({ [key]: v }));
     return this.combineWithParams(mapped);
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   filter(pred) {
     const newGenerator = filterGenerator(this.cases, pred);
     return new CaseParamsBuilder(() => newGenerator({}));
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   unless(pred) {
     return this.filter(x => !pred(x));
   }
@@ -144,12 +144,12 @@ export class SubcaseParamsBuilder extends ParamsBuilderBase {
     }
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   expandWithParams(expander) {
     return new SubcaseParamsBuilder(this.cases, expanderGenerator(this.subcases, expander));
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   expand(key, expander) {
     return this.expandWithParams(function* (p) {
       for (const value of expander(p)) {
@@ -159,24 +159,24 @@ export class SubcaseParamsBuilder extends ParamsBuilderBase {
     });
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   combineWithParams(newParams) {
     assertNotGenerator(newParams);
     return this.expandWithParams(() => newParams);
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   combine(key, values) {
     assertNotGenerator(values);
     return this.expand(key, () => values);
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   filter(pred) {
     return new SubcaseParamsBuilder(this.cases, filterGenerator(this.subcases, pred));
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   unless(pred) {
     return this.filter(x => !pred(x));
   }
