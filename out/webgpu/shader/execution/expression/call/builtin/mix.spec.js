@@ -18,7 +18,7 @@ Same as mix(e1,e2,T2(e3)).
 import { GPUTest } from '../../../../../gpu_test.js';
 import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
-import { mixImpreciseInterval, mixPreciseInterval } from '../../../../../util/f32_interval.js';
+import { mixIntervals } from '../../../../../util/f32_interval.js';
 import { allInputSources, makeTernaryF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -41,8 +41,7 @@ u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3,
 
 fn(async (t) => {
   const makeCase = (x, y, z) => {
-    // Testing against both precise and imprecise formulas, see https://github.com/gpuweb/gpuweb/issues/3260
-    return makeTernaryF32IntervalCase(x, y, z, mixPreciseInterval, mixImpreciseInterval);
+    return makeTernaryF32IntervalCase(x, y, z, ...mixIntervals);
   };
 
   const values = [

@@ -572,6 +572,9 @@ const ClampMedianIntervalOp = {
   } };
 
 
+/** All acceptance interval functions for clamp(x, y, z) */
+export const clampIntervals = [clampMinMaxInterval, clampMedianInterval];
+
 /** Calculate an acceptance interval of clamp(x, y, z) via median(x, y, z) */
 export function clampMedianInterval(
 x,
@@ -822,6 +825,9 @@ const MixImpreciseIntervalOp = {
     return additionInterval(x, t);
   } };
 
+
+/** All acceptance interval functions for mix(x, y, z) */
+export const mixIntervals = [mixImpreciseInterval, mixPreciseInterval];
 
 /** Calculate an acceptance interval of mix(x, y, z) using x + (y - x) * z */
 export function mixImpreciseInterval(x, y, z) {
