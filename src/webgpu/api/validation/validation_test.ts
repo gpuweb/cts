@@ -195,7 +195,7 @@ export class ValidationTest extends GPUTest {
   }
 
   /**
-   * Return an arbitrary object of the specified {@link BindableResource} type
+   * Return an arbitrary object of the specified {@link webgpu/capability_info!BindableResource} type
    * (e.g. `'errorBuf'`, `'nonFiltSamp'`, `sampledTexMS`, etc.)
    */
   getBindingResource(bindingType: BindableResource): GPUBindingResource {

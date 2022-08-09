@@ -105,7 +105,7 @@ class EndIf extends Directive {
  * ```
  *
  * @param strings - The array of constant string chunks of the template string.
- * @param ...values - The array of interpolated ${} values within the template string.
+ * @param ...values - The array of interpolated `${}` values within the template string.
  */
 export function pp(
   strings: TemplateStringsArray,

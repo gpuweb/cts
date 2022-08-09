@@ -146,7 +146,7 @@ export class CaseParamsBuilder<CaseP extends {}>
     return this.cases();
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   expandWithParams<NewP extends {}>(
     expander: (_: Merged<{}, CaseP>) => Iterable<NewP>
   ): CaseParamsBuilder<Merged<CaseP, NewP>> {
@@ -154,7 +154,7 @@ export class CaseParamsBuilder<CaseP extends {}>
     return new CaseParamsBuilder(() => newGenerator({}));
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   expand<NewPKey extends string, NewPValue>(
     key: NewPKey,
     expander: (_: Merged<{}, CaseP>) => Iterable<NewPValue>
@@ -166,7 +166,7 @@ export class CaseParamsBuilder<CaseP extends {}>
     });
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   combineWithParams<NewP extends {}>(
     newParams: Iterable<NewP>
   ): CaseParamsBuilder<Merged<CaseP, NewP>> {
@@ -181,7 +181,7 @@ export class CaseParamsBuilder<CaseP extends {}>
     return this.expandWithParams(() => newParams);
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   combine<NewPKey extends string, NewPValue>(
     key: NewPKey,
     values: Iterable<NewPValue>
@@ -191,13 +191,13 @@ export class CaseParamsBuilder<CaseP extends {}>
     return this.combineWithParams(mapped);
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   filter(pred: (_: Merged<{}, CaseP>) => boolean): CaseParamsBuilder<CaseP> {
     const newGenerator = filterGenerator(this.cases, pred);
     return new CaseParamsBuilder(() => newGenerator({}));
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   unless(pred: (_: Merged<{}, CaseP>) => boolean): CaseParamsBuilder<CaseP> {
     return this.filter(x => !pred(x));
   }
@@ -252,14 +252,14 @@ export class SubcaseParamsBuilder<CaseP extends {}, SubcaseP extends {}>
     }
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   expandWithParams<NewP extends {}>(
     expander: (_: Merged<CaseP, SubcaseP>) => Iterable<NewP>
   ): SubcaseParamsBuilder<CaseP, Merged<SubcaseP, NewP>> {
     return new SubcaseParamsBuilder(this.cases, expanderGenerator(this.subcases, expander));
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   expand<NewPKey extends string, NewPValue>(
     key: NewPKey,
     expander: (_: Merged<CaseP, SubcaseP>) => Iterable<NewPValue>
@@ -272,7 +272,7 @@ export class SubcaseParamsBuilder<CaseP extends {}, SubcaseP extends {}>
     });
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   combineWithParams<NewP extends {}>(
     newParams: Iterable<NewP>
   ): SubcaseParamsBuilder<CaseP, Merged<SubcaseP, NewP>> {
@@ -280,7 +280,7 @@ export class SubcaseParamsBuilder<CaseP extends {}, SubcaseP extends {}>
     return this.expandWithParams(() => newParams);
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   combine<NewPKey extends string, NewPValue>(
     key: NewPKey,
     values: Iterable<NewPValue>
@@ -289,12 +289,12 @@ export class SubcaseParamsBuilder<CaseP extends {}, SubcaseP extends {}>
     return this.expand(key, () => values);
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   filter(pred: (_: Merged<CaseP, SubcaseP>) => boolean): SubcaseParamsBuilder<CaseP, SubcaseP> {
     return new SubcaseParamsBuilder(this.cases, filterGenerator(this.subcases, pred));
   }
 
-  /** @inheritdoc */
+  /** @inheritDoc */
   unless(pred: (_: Merged<CaseP, SubcaseP>) => boolean): SubcaseParamsBuilder<CaseP, SubcaseP> {
     return this.filter(x => !pred(x));
   }

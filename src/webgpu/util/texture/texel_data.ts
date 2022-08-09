@@ -598,7 +598,7 @@ export type TexelRepresentationInfo = {
   /** Decode the data representation into the shader values. ex.) unorm8 255 -> float 1.0 */
   // MAINTENANCE_TODO: Replace with bitsToNumber?
   readonly decode: ComponentMapFn;
-  /** Pack texel component values into an ArrayBuffer. ex.) rg8unorm {r: 0, g: 255} -> 0xFF00 */
+  /** Pack texel component values into an ArrayBuffer. ex.) rg8unorm `{r: 0, g: 255}` -> 0xFF00 */
   // MAINTENANCE_TODO: Replace with packBits?
   readonly pack: ComponentPackFn;
 
