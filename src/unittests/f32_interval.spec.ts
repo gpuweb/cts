@@ -13,6 +13,7 @@ import {
   additionInterval,
   atanInterval,
   atan2Interval,
+  atanhInterval,
   ceilInterval,
   clampMedianInterval,
   clampMinMaxInterval,
@@ -724,6 +725,34 @@ g.test('atanInterval')
     t.expect(
       objectEquals(expected, got),
       `atanInterval(${input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('atanhInterval')
+  .paramsSubcasesOnly<PointToIntervalCase>(
+    // prettier-ignore
+    [
+      // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
+      // form due to the inherited nature of the errors.
+      { input: kValue.f32.infinity.negative, expected: kAny },
+      { input: kValue.f32.negative.min, expected: kAny },
+      { input: -1, expected: kAny },
+      { input: -0.1, expected: [hexToF64(0xbfb9af9a, 0x60000000), hexToF64(0xbfb9af8c, 0xc0000000)] },  // ~-0.1003...
+      { input: 0, expected: [hexToF64(0xbe960000, 0x20000000), hexToF64(0x3e980000, 0x00000000)] },  // ~0
+      { input: 0.1, expected: [hexToF64(0x3fb9af8b, 0x80000000), hexToF64(0x3fb9af9b, 0x00000000)] },  // ~0.1003...
+      { input: 1, expected: kAny },
+      { input: kValue.f32.positive.max, expected: kAny },
+      { input: kValue.f32.infinity.positive, expected: kAny },
+    ]
+  )
+  .fn(t => {
+    const input = t.params.input;
+    const expected = new F32Interval(...t.params.expected);
+
+    const got = atanhInterval(input);
+    t.expect(
+      objectEquals(expected, got),
+      `atanhInterval(${input}) returned ${got}. Expected ${expected}`
     );
   });
 
