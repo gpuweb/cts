@@ -13,7 +13,12 @@ Component-wise when T is a vector.
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { allInputSources } from '../../expression.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
+import { asinhInterval } from '../../../../../util/f32_interval.js';
+import { fullF32Range } from '../../../../../util/math.js';
+import { allInputSources, makeUnaryF32IntervalCase, run } from '../../expression.js';
+
+import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -27,7 +32,14 @@ g.test('f32')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(`f32 tests`)
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
-  .unimplemented();
+  .fn(async t => {
+    const makeCase = n => {
+      return makeUnaryF32IntervalCase(n, asinhInterval);
+    };
+
+    const cases = [...fullF32Range()].map(makeCase);
+    run(t, builtin('asinh'), [TypeF32], TypeF32, t.params, cases);
+  });
 
 g.test('f16')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')

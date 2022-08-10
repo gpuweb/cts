@@ -535,8 +535,22 @@ export function additionInterval(x: number | F32Interval, y: number | F32Interva
   return runBinaryOp(toInterval(x), toInterval(y), AdditionIntervalOp);
 }
 
+const AsinhIntervalOp: PointToIntervalOp = {
+  impl: (x: number): F32Interval => {
+    // asinh(x) = log(x + sqrt(x * x + 1.0))
+    const inner_value = additionInterval(multiplicationInterval(x, x), 1.0);
+    const sqrt_value = sqrtInterval(inner_value);
+    return logInterval(additionInterval(x, sqrt_value));
+  },
+};
+
+/** Calculate an acceptance interval of asinh(x) */
+export function asinhInterval(n: number): F32Interval {
+  return runPointOp(toInterval(n), AsinhIntervalOp);
+}
+
 const AtanIntervalOp: PointToIntervalOp = {
-  impl: (n: number) => {
+  impl: (n: number): F32Interval => {
     return ulpInterval(Math.atan(n), 4096);
   },
 };

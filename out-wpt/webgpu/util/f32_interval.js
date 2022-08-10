@@ -454,6 +454,20 @@ export function additionInterval(x, y) {
   return runBinaryOp(toInterval(x), toInterval(y), AdditionIntervalOp);
 }
 
+const AsinhIntervalOp = {
+  impl: x => {
+    // asinh(x) = log(x + sqrt(x * x + 1.0))
+    const inner_value = additionInterval(multiplicationInterval(x, x), 1.0);
+    const sqrt_value = sqrtInterval(inner_value);
+    return logInterval(additionInterval(x, sqrt_value));
+  },
+};
+
+/** Calculate an acceptance interval of asinh(x) */
+export function asinhInterval(n) {
+  return runPointOp(toInterval(n), AsinhIntervalOp);
+}
+
 const AtanIntervalOp = {
   impl: n => {
     return ulpInterval(Math.atan(n), 4096);
