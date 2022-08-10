@@ -577,6 +577,21 @@ export function atan2Interval(y, x) {
   return runBinaryOp(toInterval(y), toInterval(x), Atan2IntervalOp);
 }
 
+const AtanhIntervalOp = {
+  impl: (n) => {
+    // atanh(x) = log((1.0 + x) / (1.0 - x)) * 0.5
+    const numerator = additionInterval(1.0, n);
+    const denominator = subtractionInterval(1.0, n);
+    const log_interval = logInterval(divisionInterval(numerator, denominator));
+    return multiplicationInterval(log_interval, 0.5);
+  } };
+
+
+/** Calculate an acceptance interval of atanh(x) */
+export function atanhInterval(n) {
+  return runPointOp(toInterval(n), AtanhIntervalOp);
+}
+
 const CeilIntervalOp = {
   impl: (n) => {
     return correctlyRoundedInterval(Math.ceil(n));
