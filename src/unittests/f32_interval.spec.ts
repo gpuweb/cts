@@ -16,6 +16,7 @@ import {
   clampMinMaxInterval,
   correctlyRoundedInterval,
   cosInterval,
+  coshInterval,
   degreesInterval,
   divisionInterval,
   expInterval,
@@ -44,9 +45,9 @@ import {
   stepInterval,
   subtractionInterval,
   tanInterval,
+  tanhInterval,
   truncInterval,
   ulpInterval,
-  coshInterval,
 } from '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -1354,6 +1355,32 @@ g.test('tanInterval')
     t.expect(
       objectEquals(expected, got),
       `tanInterval(${input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('tanhInterval')
+  .paramsSubcasesOnly<PointToIntervalCase>(
+    // prettier-ignore
+    [
+      // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
+      // form due to the inherited nature of the errors.
+      { input: kValue.f32.infinity.negative, expected: kAny },
+      { input: kValue.f32.negative.min, expected: kAny },
+      { input: -1, expected: [hexToF64(0xbfe85efd, 0x10000000), hexToF64(0xbfe85ef8, 0x90000000)] },  // ~-0.7615...
+      { input: 0, expected: [hexToF64(0xbe8c0000, 0xb0000000), hexToF64(0x3e8c0000, 0xb0000000)] },  // ~0
+      { input: 1, expected: [hexToF64(0x3fe85ef8, 0x90000000), hexToF64(0x3fe85efd, 0x10000000)] },  // ~0.7615...
+      { input: kValue.f32.positive.max, expected: kAny },
+      { input: kValue.f32.infinity.positive, expected: kAny },
+    ]
+  )
+  .fn(t => {
+    const input = t.params.input;
+    const expected = new F32Interval(...t.params.expected);
+
+    const got = tanhInterval(input);
+    t.expect(
+      objectEquals(expected, got),
+      `tanhInterval(${input}) returned ${got}. Expected ${expected}`
     );
   });
 
