@@ -490,6 +490,40 @@ export function absInterval(n: number): F32Interval {
   return runPointOp(toInterval(n), AbsIntervalOp);
 }
 
+/** All acceptance interval functions for acosh(x) */
+export const acoshIntervals: PointToInterval[] = [acoshAlternativeInterval, acoshPrimaryInterval];
+
+const AcoshAlternativeIntervalOp: PointToIntervalOp = {
+  impl: (x: number): F32Interval => {
+    // acosh(x) = log(x + sqrt((x + 1.0f) * (x - 1.0)))
+    const inner_value = multiplicationInterval(
+      additionInterval(x, 1.0),
+      subtractionInterval(x, 1.0)
+    );
+    const sqrt_value = sqrtInterval(inner_value);
+    return logInterval(additionInterval(x, sqrt_value));
+  },
+};
+
+/** Calculate an acceptance interval of acosh(x) using log(x + sqrt((x + 1.0f) * (x - 1.0))) */
+export function acoshAlternativeInterval(x: number | F32Interval): F32Interval {
+  return runPointOp(toInterval(x), AcoshAlternativeIntervalOp);
+}
+
+const AcoshPrimaryIntervalOp: PointToIntervalOp = {
+  impl: (x: number): F32Interval => {
+    // acosh(x) = log(x + sqrt(x * x - 1.0))
+    const inner_value = subtractionInterval(multiplicationInterval(x, x), 1.0);
+    const sqrt_value = sqrtInterval(inner_value);
+    return logInterval(additionInterval(x, sqrt_value));
+  },
+};
+
+/** Calculate an acceptance interval of acosh(x) using log(x + sqrt(x * x - 1.0)) */
+export function acoshPrimaryInterval(x: number | F32Interval): F32Interval {
+  return runPointOp(toInterval(x), AcoshPrimaryIntervalOp);
+}
+
 const AdditionIntervalOp: BinaryToIntervalOp = {
   impl: (x: number, y: number): F32Interval => {
     return correctlyRoundedInterval(x + y);
@@ -1002,7 +1036,7 @@ const SqrtIntervalOp: PointToIntervalOp = {
 };
 
 /** Calculate an acceptance interval of sqrt(x) */
-export function sqrtInterval(n: number): F32Interval {
+export function sqrtInterval(n: number | F32Interval): F32Interval {
   return runPointOp(toInterval(n), SqrtIntervalOp);
 }
 
