@@ -587,6 +587,9 @@ const ClampMedianIntervalOp: TernaryToIntervalOp = {
   },
 };
 
+/** All acceptance interval functions for clamp(x, y, z) */
+export const clampIntervals: TernaryToInterval[] = [clampMinMaxInterval, clampMedianInterval];
+
 /** Calculate an acceptance interval of clamp(x, y, z) via median(x, y, z) */
 export function clampMedianInterval(
   x: number | F32Interval,
@@ -838,6 +841,9 @@ const MixImpreciseIntervalOp: TernaryToIntervalOp = {
   },
 };
 
+/** All acceptance interval functions for mix(x, y, z) */
+export const mixIntervals: TernaryToInterval[] = [mixImpreciseInterval, mixPreciseInterval];
+
 /** Calculate an acceptance interval of mix(x, y, z) using x + (y - x) * z */
 export function mixImpreciseInterval(x: number, y: number, z: number): F32Interval {
   return runTernaryOp(toInterval(x), toInterval(y), toInterval(z), MixImpreciseIntervalOp);
@@ -1055,6 +1061,17 @@ const TanIntervalOp: PointToIntervalOp = {
 /** Calculate an acceptance interval of tan(x) */
 export function tanInterval(n: number): F32Interval {
   return runPointOp(toInterval(n), TanIntervalOp);
+}
+
+const TanhIntervalOp: PointToIntervalOp = {
+  impl: (n: number): F32Interval => {
+    return divisionInterval(sinhInterval(n), coshInterval(n));
+  },
+};
+
+/** Calculate an acceptance interval of tanh(x) */
+export function tanhInterval(n: number): F32Interval {
+  return runPointOp(toInterval(n), TanhIntervalOp);
 }
 
 const TruncIntervalOp: PointToIntervalOp = {

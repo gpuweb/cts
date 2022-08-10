@@ -151,8 +151,8 @@ g.test('canvas_configuration')
     const { format, canvasType, enable_required_feature } = t.params;
 
     const canvas = createCanvas(t, canvasType, 2, 2);
-    const ctx = canvas.getContext('webgpu' as const);
-    assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+    const ctx = canvas.getContext('webgpu');
+    assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
     const canvasConf = {
       device: t.device,
@@ -200,8 +200,8 @@ g.test('canvas_configuration_view_formats')
     const { viewFormats, canvasType, enable_required_feature } = t.params;
 
     const canvas = createCanvas(t, canvasType, 2, 2);
-    const ctx = canvas.getContext('webgpu' as const);
-    assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+    const ctx = canvas.getContext('webgpu');
+    assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
     const canvasConf = {
       device: t.device,

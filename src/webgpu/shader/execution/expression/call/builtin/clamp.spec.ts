@@ -26,7 +26,7 @@ import {
   u32,
   u32Bits,
 } from '../../../../../util/conversion.js';
-import { clampMedianInterval, clampMinMaxInterval } from '../../../../../util/f32_interval.js';
+import { clampIntervals } from '../../../../../util/f32_interval.js';
 import { allInputSources, Case, makeTernaryF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -143,7 +143,7 @@ g.test('f32')
   )
   .fn(async t => {
     const makeCase = (x: number, y: number, z: number): Case => {
-      return makeTernaryF32IntervalCase(x, y, z, clampMedianInterval, clampMinMaxInterval);
+      return makeTernaryF32IntervalCase(x, y, z, ...clampIntervals);
     };
 
     const values: Array<number> = [

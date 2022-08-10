@@ -14,7 +14,7 @@ export function run(
 ) {
   runRefTest(async t => {
     const ctx = cvs.getContext('webgpu');
-    assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+    assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
     switch (format) {
       case 'bgra8unorm':

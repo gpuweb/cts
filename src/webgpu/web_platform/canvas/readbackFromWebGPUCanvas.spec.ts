@@ -55,8 +55,8 @@ async function initCanvasContent<T extends CanvasType>(
   canvasType: T
 ) {
   const canvas = createCanvas(t, canvasType, 2, 2);
-  const ctx = canvas.getContext('webgpu' as const);
-  assert(ctx !== null, 'Failed to get WebGPU context from canvas');
+  const ctx = canvas.getContext('webgpu');
+  assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
   ctx.configure({
     device: t.device,
