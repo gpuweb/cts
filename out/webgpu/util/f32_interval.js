@@ -1048,6 +1048,17 @@ export function tanInterval(n) {
   return runPointOp(toInterval(n), TanIntervalOp);
 }
 
+const TanhIntervalOp = {
+  impl: (n) => {
+    return divisionInterval(sinhInterval(n), coshInterval(n));
+  } };
+
+
+/** Calculate an acceptance interval of tanh(x) */
+export function tanhInterval(n) {
+  return runPointOp(toInterval(n), TanhIntervalOp);
+}
+
 const TruncIntervalOp = {
   impl: (n) => {
     return correctlyRoundedInterval(Math.trunc(n));
