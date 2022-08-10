@@ -408,6 +408,41 @@ export function absInterval(n) {
   return runPointOp(toInterval(n), AbsIntervalOp);
 }
 
+/** All acceptance interval functions for acosh(x) */
+export const acoshIntervals = [acoshAlternativeInterval, acoshPrimaryInterval];
+
+const AcoshAlternativeIntervalOp = {
+  impl: x => {
+    // acosh(x) = log(x + sqrt((x + 1.0f) * (x - 1.0)))
+    const inner_value = multiplicationInterval(
+      additionInterval(x, 1.0),
+      subtractionInterval(x, 1.0)
+    );
+
+    const sqrt_value = sqrtInterval(inner_value);
+    return logInterval(additionInterval(x, sqrt_value));
+  },
+};
+
+/** Calculate an acceptance interval of acosh(x) using log(x + sqrt((x + 1.0f) * (x - 1.0))) */
+export function acoshAlternativeInterval(x) {
+  return runPointOp(toInterval(x), AcoshAlternativeIntervalOp);
+}
+
+const AcoshPrimaryIntervalOp = {
+  impl: x => {
+    // acosh(x) = log(x + sqrt(x * x - 1.0))
+    const inner_value = subtractionInterval(multiplicationInterval(x, x), 1.0);
+    const sqrt_value = sqrtInterval(inner_value);
+    return logInterval(additionInterval(x, sqrt_value));
+  },
+};
+
+/** Calculate an acceptance interval of acosh(x) using log(x + sqrt(x * x - 1.0)) */
+export function acoshPrimaryInterval(x) {
+  return runPointOp(toInterval(x), AcoshPrimaryIntervalOp);
+}
+
 const AdditionIntervalOp = {
   impl: (x, y) => {
     return correctlyRoundedInterval(x + y);
