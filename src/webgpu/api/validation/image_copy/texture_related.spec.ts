@@ -115,6 +115,7 @@ The texture must have the appropriate COPY_SRC/COPY_DST usage.
       // a combined usage.
       .combine('usage0', kTextureUsages)
       .combine('usage1', kTextureUsages)
+      // RENDER_ATTACHMENT is not valid with 1d and 3d textures.
       .unless(
         ({ usage0, usage1, dimension }) =>
           ((usage0 | usage1) & GPUConst.TextureUsage.RENDER_ATTACHMENT) !== 0 &&
