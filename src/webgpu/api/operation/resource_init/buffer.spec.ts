@@ -179,6 +179,7 @@ the buffer, the remaining part of that buffer will be initialized to 0.`
       size: bufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
+    t.trackForCleanup(buffer);
 
     const copySize = 12;
     const writeData = new Uint8Array(copySize);
@@ -207,6 +208,7 @@ have already been initialized to 0.`
       size: bufferSize,
       usage: bufferUsage,
     });
+    t.trackForCleanup(buffer);
 
     await buffer.mapAsync(mapMode);
     const readData = new Uint8Array(buffer.getMappedRange());
@@ -236,6 +238,7 @@ already been initialized to 0.`
       size: bufferSize,
       usage: bufferUsage,
     });
+    t.trackForCleanup(buffer);
 
     const expectedData = new Uint8Array(bufferSize);
     {
@@ -270,6 +273,7 @@ array buffer of getMappedRange() and the GPUBuffer itself have all been initiali
       size: bufferSize,
       usage: bufferUsage,
     });
+    t.trackForCleanup(buffer);
 
     const mapped = new Uint8Array(buffer.getMappedRange());
     for (let i = 0; i < bufferSize; ++i) {
@@ -303,6 +307,7 @@ array buffer of getMappedRange() and the GPUBuffer itself have all been initiali
       size: bufferSize,
       usage: bufferUsage,
     });
+    t.trackForCleanup(buffer);
 
     const expectedData = new Uint8Array(bufferSize);
     {
@@ -332,6 +337,7 @@ CopyBufferToBuffer(), the contents of the GPUBuffer have already been initialize
       size: bufferSize,
       usage: bufferUsage,
     });
+    t.trackForCleanup(buffer);
 
     const expectedData = new Uint8Array(bufferSize);
     // copyBufferToBuffer() is called inside t.CheckGPUBufferContent().
@@ -354,6 +360,7 @@ CopyBufferToTexture(), the contents of the GPUBuffer have already been initializ
       format: dstTextureFormat,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
+    t.trackForCleanup(dstTexture);
     const layout = getTextureCopyLayout(dstTextureFormat, '2d', textureSize);
     const srcBufferSize = layout.byteLength + bufferOffset;
     const srcBufferUsage = GPUBufferUsage.COPY_SRC;
@@ -361,6 +368,7 @@ CopyBufferToTexture(), the contents of the GPUBuffer have already been initializ
       size: srcBufferSize,
       usage: srcBufferUsage,
     });
+    t.trackForCleanup(srcBuffer);
 
     const encoder = t.device.createCommandEncoder();
     encoder.copyBufferToTexture(
@@ -397,6 +405,7 @@ remaining part of it will be initialized to 0.`
       size: bufferSize,
       usage: bufferUsage,
     });
+    t.trackForCleanup(dstBuffer);
 
     const querySet = t.device.createQuerySet({ type: 'occlusion', count: 1 });
     const encoder = t.device.createCommandEncoder();
@@ -434,6 +443,7 @@ remaining part of it will be initialized to 0.`
       size: textureSize,
       mipLevelCount: copyMipLevel + 1,
     });
+    t.trackForCleanup(srcTexture);
 
     const bytesPerRow = 256;
     const layout = getTextureCopyLayout(srcTextureFormat, '2d', textureSize, {
@@ -447,6 +457,7 @@ remaining part of it will be initialized to 0.`
       size: dstBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
+    t.trackForCleanup(dstBuffer);
 
     const encoder = t.device.createCommandEncoder();
 
@@ -505,6 +516,7 @@ g.test('uniform_buffer')
       size: bufferOffset + boundBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.UNIFORM,
     });
+    t.trackForCleanup(buffer);
 
     const computeShaderModule = t.device.createShaderModule({
       code: `
@@ -540,6 +552,7 @@ g.test('readonly_storage_buffer')
       size: bufferOffset + boundBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
     });
+    t.trackForCleanup(buffer);
 
     const computeShaderModule = t.device.createShaderModule({
       code: `
@@ -575,6 +588,7 @@ g.test('storage_buffer')
       size: bufferOffset + boundBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
     });
+    t.trackForCleanup(buffer);
 
     const computeShaderModule = t.device.createShaderModule({
       code: `
@@ -633,12 +647,14 @@ g.test('vertex_buffer')
       size: bufferSize,
       usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_SRC,
     });
+    t.trackForCleanup(vertexBuffer);
 
     const outputTexture = t.device.createTexture({
       format: 'rgba8unorm',
       size: [1, 1, 1],
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
+    t.trackForCleanup(outputTexture);
 
     const encoder = t.device.createCommandEncoder();
     const renderPass = encoder.beginRenderPass({
@@ -698,12 +714,14 @@ GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
       size: bufferSize,
       usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_SRC,
     });
+    t.trackForCleanup(indexBuffer);
 
     const outputTexture = t.device.createTexture({
       format: 'rgba8unorm',
       size: [1, 1, 1],
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
+    t.trackForCleanup(outputTexture);
 
     const encoder = t.device.createCommandEncoder();
     const renderPass = encoder.beginRenderPass({
@@ -763,12 +781,14 @@ have been initialized to 0.`
       size: bufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.INDIRECT,
     });
+    t.trackForCleanup(indirectBuffer);
 
     const outputTexture = t.device.createTexture({
       format: 'rgba8unorm',
       size: [1, 1, 1],
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
+    t.trackForCleanup(outputTexture);
 
     // Initialize outputTexture to green.
     const encoder = t.device.createCommandEncoder();
@@ -791,6 +811,7 @@ have been initialized to 0.`
         size: 4,
         usage: GPUBufferUsage.INDEX,
       });
+      t.trackForCleanup(indexBuffer);
       renderPass.setIndexBuffer(indexBuffer, 'uint16');
       renderPass.drawIndexedIndirect(indirectBuffer, bufferOffset);
     } else {
@@ -836,6 +857,7 @@ g.test('indirect_buffer_for_dispatch_indirect')
       size: bufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.INDIRECT,
     });
+    t.trackForCleanup(indirectBuffer);
 
     const outputTexture = t.device.createTexture({
       format: 'rgba8unorm',
@@ -845,6 +867,7 @@ g.test('indirect_buffer_for_dispatch_indirect')
         GPUTextureUsage.RENDER_ATTACHMENT |
         GPUTextureUsage.STORAGE_BINDING,
     });
+    t.trackForCleanup(outputTexture);
 
     // Initialize outputTexture to green.
     const encoder = t.device.createCommandEncoder();
