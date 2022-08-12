@@ -61,6 +61,7 @@ class F extends GPUTest {
       size: [1, 1, 1],
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE_BINDING,
     });
+    this.trackForCleanup(outputTexture);
     const bindGroup = this.device.createBindGroup({
       layout: computePipeline.getBindGroupLayout(0),
       entries: [
