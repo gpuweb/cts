@@ -38,6 +38,7 @@ fn(async (t) => {
     size: dstBufferSize,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
 
+  t.trackForCleanup(dst);
 
   const encoder = t.device.createCommandEncoder();
   encoder.copyBufferToBuffer(src, srcOffset, dst, dstOffset, copySize);
@@ -95,6 +96,7 @@ fn(async (t) => {
     size: srcData.length * 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
 
+  t.trackForCleanup(dst);
 
   const encoder = t.device.createCommandEncoder();
   encoder.copyBufferToBuffer(src, 0, dst, 0, 16);

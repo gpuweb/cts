@@ -561,6 +561,8 @@ g.test('uninitialized_texture_is_zero')
       sampleCount: t.params.sampleCount,
     });
 
+    t.trackForCleanup(texture);
+
     if (t.params.canaryOnCreation) {
       // Initialize some subresources with canary values
       for (const subresourceRange of t.iterateInitializedSubresources()) {

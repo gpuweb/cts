@@ -37,6 +37,8 @@ export const checkContentsByTextureCopy = (t, params, texture, state, subresourc
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
     });
 
+    t.trackForCleanup(dst);
+
     const commandEncoder = t.device.createCommandEncoder();
     commandEncoder.copyTextureToTexture(
       { texture, mipLevel: level, origin: { x: 0, y: 0, z: layer } },

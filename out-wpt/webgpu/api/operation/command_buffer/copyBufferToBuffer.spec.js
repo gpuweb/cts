@@ -40,6 +40,8 @@ g.test('single')
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
 
+    t.trackForCleanup(dst);
+
     const encoder = t.device.createCommandEncoder();
     encoder.copyBufferToBuffer(src, srcOffset, dst, dstOffset, copySize);
     t.device.queue.submit([encoder.finish()]);
@@ -97,6 +99,8 @@ g.test('copy_order')
       size: srcData.length * 4,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
+
+    t.trackForCleanup(dst);
 
     const encoder = t.device.createCommandEncoder();
     encoder.copyBufferToBuffer(src, 0, dst, 0, 16);
