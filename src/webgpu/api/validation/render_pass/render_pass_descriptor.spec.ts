@@ -922,7 +922,7 @@ g.test('timestamp_writes_location')
 
     const querySet = t.device.createQuerySet({
       type: 'timestamp',
-      count: 1,
+      count: 2,
     });
 
     const timestampWriteA = {

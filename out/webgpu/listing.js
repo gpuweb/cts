@@ -661,6 +661,14 @@ export const listing = [
       "api",
       "validation",
       "encoding",
+      "beginComputePass"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "encoding",
       "beginRenderPass"
     ]
   },
