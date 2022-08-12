@@ -7,6 +7,7 @@ kColorTextureFormats,
 kSizedTextureFormats,
 kTextureDimensions,
 kTextureFormatInfo,
+kTextureUsages,
 textureDimensionAndFormatCompatible } from
 '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
@@ -98,8 +99,7 @@ The texture must have the appropriate COPY_SRC/COPY_DST usage.
 - for various copy methods
 - for various dimensions
 - for various usages
-
-TODO: update to test all texture usages`).
+`).
 
 params((u) =>
 u.
@@ -110,16 +110,22 @@ combineWithParams([
 { dimension: '2d', size: [4, 4, 3] },
 { dimension: '3d', size: [4, 4, 3] }]).
 
-beginSubcases().
-combine('usage', [
-GPUConst.TextureUsage.COPY_SRC | GPUConst.TextureUsage.TEXTURE_BINDING,
-GPUConst.TextureUsage.COPY_DST | GPUConst.TextureUsage.TEXTURE_BINDING,
-GPUConst.TextureUsage.COPY_SRC | GPUConst.TextureUsage.COPY_DST])).
+beginSubcases()
+// If usage0 and usage1 are the same, the usage being test is a single usage. Otherwise, it's
+// a combined usage.
+.combine('usage0', kTextureUsages).
+combine('usage1', kTextureUsages)
+// RENDER_ATTACHMENT is not valid with 1d and 3d textures.
+.unless(
+({ usage0, usage1, dimension }) =>
+((usage0 | usage1) & GPUConst.TextureUsage.RENDER_ATTACHMENT) !== 0 && (
+dimension === '1d' || dimension === '3d'))).
 
 
 fn(async (t) => {
-  const { usage, method, size, dimension } = t.params;
+  const { usage0, usage1, method, size, dimension } = t.params;
 
+  const usage = usage0 | usage1;
   const texture = t.device.createTexture({
     size,
     dimension,
