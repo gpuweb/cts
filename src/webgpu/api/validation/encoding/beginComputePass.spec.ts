@@ -105,3 +105,29 @@ g.test('timestampWrites,query_set_type')
 
     t.tryComputePass(isValid, descriptor);
   });
+
+g.test('timestampWrites,query_index_count')
+  .desc(`Test that querySet.count should be greater than timestampWrite.queryIndex.`)
+  .params(u => u.combine('queryIndex', [0, 1, 2, 3]))
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase(['timestamp-query']);
+  })
+  .fn(async t => {
+    const { queryIndex } = t.params;
+
+    const querySetCount = 2;
+
+    const timestampWrite = {
+      querySet: t.device.createQuerySet({ type: 'timestamp', count: querySetCount }),
+      queryIndex,
+      location: 'beginning' as const,
+    };
+
+    const isValid = queryIndex < querySetCount;
+
+    const descriptor = {
+      timestampWrites: [timestampWrite],
+    };
+
+    t.tryComputePass(isValid, descriptor);
+  });
