@@ -238,7 +238,7 @@ class F extends CopyToTextureUtils {
 
     const alphaValue = 153;
     // colorValue can just always = alphaValue now, because readback will clear it to
-    // 255 if opaque. Need to try this and verify it.
+    // 255 if opaque.
     const colorValue = alphaValue;
 
     // BGRA8Unorm texture
