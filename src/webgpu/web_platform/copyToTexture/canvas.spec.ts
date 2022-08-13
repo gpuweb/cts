@@ -237,15 +237,9 @@ class F extends CopyToTextureUtils {
     const rectHeight = Math.floor(height / 2);
 
     const alphaValue = 153;
-    // TODO: I think colorValue can just always = alphaValue now, because readback will clear it to
+    // colorValue can just always = alphaValue now, because readback will clear it to
     // 255 if opaque. Need to try this and verify it.
-    // (Prior to the compositingAlphaMode->alphaMode change, I think the coverage here was just
-    // not as good. Ideally we would have been testing the results of an 'opaque' canvas with
-    // transparent data in it, which then would have produced a transparent readback, and now will
-    // produce an opaque readback.)
-    //
-    // const colorValue = alphaValue;
-    const colorValue = { premultiplied: alphaValue, opaque: 255 }[alphaMode];
+    const colorValue = alphaValue;
 
     // BGRA8Unorm texture
     const initialData = new Uint8ClampedArray(4 * width * height);
