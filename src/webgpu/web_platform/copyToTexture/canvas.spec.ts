@@ -237,8 +237,10 @@ class F extends CopyToTextureUtils {
     const rectHeight = Math.floor(height / 2);
 
     const alphaValue = 153;
-    // colorValue can just always = alphaValue now, because readback will clear it to
-    // 255 if opaque.
+    // Always output [153, 153, 153, 153]. When the alphaMode is...
+    //   - premultiplied: the readback is CSS `rgba(255, 255, 255, 60%)`.
+    //   - opaque: the readback is CSS `rgba(153, 153, 153, 100%)`.
+    // getExpectedReadbackForWebGPUCanvas matches this.
     const colorValue = alphaValue;
 
     // BGRA8Unorm texture
