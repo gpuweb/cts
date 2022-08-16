@@ -5,7 +5,7 @@ import { runRefTest } from './gpu_ref_test.js';
 
 // <canvas> element from html page
 
-export function run(format, compositingAlphaMode, writeCanvasMethod) {
+export function run(format, alphaMode, writeCanvasMethod) {
   runRefTest(async t => {
     const ctx = cvs.getContext('webgpu');
     assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
@@ -22,7 +22,7 @@ export function run(format, compositingAlphaMode, writeCanvasMethod) {
     }
 
     // This is mimic globalAlpha in 2d context blending behavior
-    const a = compositingAlphaMode === 'opaque' ? (1.0).toFixed(1) : (0.5).toFixed(1);
+    const alphaFromShader = { premultiplied: '0.5', opaque: '1.0' }[alphaMode];
 
     let usage = 0;
     switch (writeCanvasMethod) {
@@ -38,8 +38,25 @@ export function run(format, compositingAlphaMode, writeCanvasMethod) {
       device: t.device,
       format,
       usage,
-      compositingAlphaMode,
+      alphaMode,
     });
+
+    // The blending behavior here is to mimic 2d context blending behavior
+    // of drawing rects in order
+    // https://drafts.fxtf.org/compositing/#porterduffcompositingoperators_srcover
+    const kBlendStateSourceOver = {
+      color: {
+        srcFactor: 'src-alpha',
+        dstFactor: 'one-minus-src-alpha',
+        operation: 'add',
+      },
+
+      alpha: {
+        srcFactor: 'one',
+        dstFactor: 'one-minus-src-alpha',
+        operation: 'add',
+      },
+    };
 
     const pipeline = t.device.createRenderPipeline({
       layout: 'auto',
@@ -68,10 +85,10 @@ vec2<f32>(-0.25, -0.25),
 vec2<f32>( 0.25,  -0.25));
 
 var color = array<vec4<f32>, 4>(
-    vec4<f32>(0.4, 0.0, 0.0, ${a}),
-    vec4<f32>(0.0, 0.4, 0.0, ${a}),
-    vec4<f32>(0.0, 0.0, 0.4, ${a}),
-    vec4<f32>(0.4, 0.4, 0.0, ${a})); // 0.4 -> 0x66
+    vec4<f32>(0.4, 0.0, 0.0, ${alphaFromShader}),
+    vec4<f32>(0.0, 0.4, 0.0, ${alphaFromShader}),
+    vec4<f32>(0.0, 0.0, 0.4, ${alphaFromShader}),
+    vec4<f32>(0.4, 0.4, 0.0, ${alphaFromShader})); // 0.4 -> 0x66
 
 var output : VertexOutput;
 output.Position = vec4<f32>(pos[VertexIndex % 6u] + offset[VertexIndex / 6u], 0.0, 1.0);
@@ -98,25 +115,7 @@ return fragColor;
         targets: [
           {
             format,
-            blend:
-              compositingAlphaMode === 'opaque'
-                ? undefined
-                : {
-                    // The blending behavior here is to mimic 2d context blending behavior
-                    // of drawing rects in order
-                    // https://drafts.fxtf.org/compositing/#porterduffcompositingoperators_srcover
-                    color: {
-                      srcFactor: 'src-alpha',
-                      dstFactor: 'one-minus-src-alpha',
-                      operation: 'add',
-                    },
-
-                    alpha: {
-                      srcFactor: 'one',
-                      dstFactor: 'one-minus-src-alpha',
-                      operation: 'add',
-                    },
-                  },
+            blend: { premultiplied: kBlendStateSourceOver, opaque: undefined }[alphaMode],
           },
         ],
       },

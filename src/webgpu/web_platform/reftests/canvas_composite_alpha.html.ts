@@ -9,7 +9,7 @@ type WriteCanvasMethod = 'draw' | 'copy';
 
 export function run(
   format: GPUTextureFormat,
-  compositingAlphaMode: GPUCanvasCompositingAlphaMode,
+  alphaMode: GPUCanvasAlphaMode,
   writeCanvasMethod: WriteCanvasMethod
 ) {
   runRefTest(async t => {
@@ -28,7 +28,7 @@ export function run(
     }
 
     // This is mimic globalAlpha in 2d context blending behavior
-    const a = compositingAlphaMode === 'opaque' ? (1.0).toFixed(1) : (0.5).toFixed(1);
+    const alphaFromShader = { premultiplied: '0.5', opaque: '1.0' }[alphaMode];
 
     let usage = 0;
     switch (writeCanvasMethod) {
@@ -43,8 +43,24 @@ export function run(
       device: t.device,
       format,
       usage,
-      compositingAlphaMode,
+      alphaMode,
     });
+
+    // The blending behavior here is to mimic 2d context blending behavior
+    // of drawing rects in order
+    // https://drafts.fxtf.org/compositing/#porterduffcompositingoperators_srcover
+    const kBlendStateSourceOver = {
+      color: {
+        srcFactor: 'src-alpha',
+        dstFactor: 'one-minus-src-alpha',
+        operation: 'add',
+      },
+      alpha: {
+        srcFactor: 'one',
+        dstFactor: 'one-minus-src-alpha',
+        operation: 'add',
+      },
+    } as const;
 
     const pipeline = t.device.createRenderPipeline({
       layout: 'auto',
@@ -73,10 +89,10 @@ vec2<f32>(-0.25, -0.25),
 vec2<f32>( 0.25,  -0.25));
 
 var color = array<vec4<f32>, 4>(
-    vec4<f32>(0.4, 0.0, 0.0, ${a}),
-    vec4<f32>(0.0, 0.4, 0.0, ${a}),
-    vec4<f32>(0.0, 0.0, 0.4, ${a}),
-    vec4<f32>(0.4, 0.4, 0.0, ${a})); // 0.4 -> 0x66
+    vec4<f32>(0.4, 0.0, 0.0, ${alphaFromShader}),
+    vec4<f32>(0.0, 0.4, 0.0, ${alphaFromShader}),
+    vec4<f32>(0.0, 0.0, 0.4, ${alphaFromShader}),
+    vec4<f32>(0.4, 0.4, 0.0, ${alphaFromShader})); // 0.4 -> 0x66
 
 var output : VertexOutput;
 output.Position = vec4<f32>(pos[VertexIndex % 6u] + offset[VertexIndex / 6u], 0.0, 1.0);
@@ -100,24 +116,7 @@ return fragColor;
         targets: [
           {
             format,
-            blend:
-              compositingAlphaMode === 'opaque'
-                ? undefined
-                : {
-                    // The blending behavior here is to mimic 2d context blending behavior
-                    // of drawing rects in order
-                    // https://drafts.fxtf.org/compositing/#porterduffcompositingoperators_srcover
-                    color: {
-                      srcFactor: 'src-alpha',
-                      dstFactor: 'one-minus-src-alpha',
-                      operation: 'add',
-                    },
-                    alpha: {
-                      srcFactor: 'one',
-                      dstFactor: 'one-minus-src-alpha',
-                      operation: 'add',
-                    },
-                  },
+            blend: { premultiplied: kBlendStateSourceOver, opaque: undefined }[alphaMode],
           },
         ],
       },
