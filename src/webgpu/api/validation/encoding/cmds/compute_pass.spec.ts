@@ -5,7 +5,8 @@ Does **not** test usage scopes (resource_usages/) or programmable pass stuff (pr
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { kLimitInfo } from '../../../../capability_info.js';
+import { kBufferUsages, kLimitInfo } from '../../../../capability_info.js';
+import { GPUConst } from '../../../../constants.js';
 import { kResourceStates, ResourceState } from '../../../../gpu_test.js';
 import { ValidationTest } from '../../validation_test.js';
 
@@ -203,4 +204,48 @@ g.test('indirect_dispatch_buffer,device_mismatch')
     encoder.setPipeline(pipeline);
     encoder.dispatchWorkgroupsIndirect(buffer, 0);
     validateFinish(!mismatched);
+  });
+
+g.test('indirect_dispatch_buffer,usage')
+  .desc(
+    `
+    Tests dispatchWorkgroupsIndirect generates a validation error if the buffer usage does not
+    contain INDIRECT usage.
+  `
+  )
+  .paramsSubcasesOnly(u =>
+    u
+      // If bufferUsage0 and bufferUsage1 are the same, the usage being test is a single usage.
+      // Otherwise, it's a combined usage.
+      .combine('bufferUsage0', kBufferUsages)
+      .combine('bufferUsage1', kBufferUsages)
+      .unless(
+        ({ bufferUsage0, bufferUsage1 }) =>
+          ((bufferUsage0 | bufferUsage1) &
+            (GPUConst.BufferUsage.MAP_READ | GPUConst.BufferUsage.MAP_WRITE)) !==
+          0
+      )
+  )
+  .fn(async t => {
+    const { bufferUsage0, bufferUsage1 } = t.params;
+
+    const bufferUsage = bufferUsage0 | bufferUsage1;
+
+    const layout = t.device.createPipelineLayout({ bindGroupLayouts: [] });
+    const pipeline = t.createNoOpComputePipeline(layout);
+
+    const buffer = t.device.createBuffer({
+      size: 16,
+      usage: bufferUsage,
+    });
+    t.trackForCleanup(buffer);
+
+    const isValid = GPUBufferUsage.INDIRECT | bufferUsage;
+
+    const { encoder } = t.createEncoder('compute pass');
+    encoder.setPipeline(pipeline);
+
+    t.expectValidationError(() => {
+      encoder.dispatchWorkgroupsIndirect(buffer, 0);
+    }, !isValid);
   });
