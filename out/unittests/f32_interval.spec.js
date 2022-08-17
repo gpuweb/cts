@@ -51,7 +51,8 @@ subtractionInterval,
 tanInterval,
 tanhInterval,
 truncInterval,
-ulpInterval } from
+ulpInterval,
+dotInterval } from
 '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -2370,6 +2371,54 @@ fn((t) => {
   t.expect(
   objectEquals(expected, got),
   `mixPreciseInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`);
+
+});
+
+
+
+
+
+
+g.test('dotInterval').
+paramsSubcasesOnly(
+
+[
+// vec2
+{ input: [[1.0, 0.0], [1.0, 0.0]], expected: [1.0, 1.0] },
+{ input: [[0.0, 1.0], [0.0, 1.0]], expected: [1.0, 1.0] },
+{ input: [[1.0, 1.0], [1.0, 1.0]], expected: [2.0, 2.0] },
+{ input: [[-1.0, -1.0], [-1.0, -1.0]], expected: [2.0, 2.0] },
+{ input: [[-1.0, 1.0], [1.0, -1.0]], expected: [-2.0, -2.0] },
+{ input: [[0.1, 0.0], [1.0, 0.0]], expected: [hexToF64(0x3fb99999, 0x80000000), hexToF64(0x3fb99999, 0xa0000000)] }, // ~0.1
+
+// vec3
+{ input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [1.0, 1.0] },
+{ input: [[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]], expected: [1.0, 1.0] },
+{ input: [[0.0, 0.0, 1.0], [0.0, 0.0, 1.0]], expected: [1.0, 1.0] },
+{ input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: [3.0, 3.0] },
+{ input: [[-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]], expected: [3.0, 3.0] },
+{ input: [[1.0, -1.0, -1.0], [-1.0, 1.0, -1.0]], expected: [-1.0, -1.0] },
+{ input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [hexToF64(0x3fb99999, 0x80000000), hexToF64(0x3fb99999, 0xa0000000)] }, // ~0.1
+
+// vec4
+{ input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [1.0, 1.0] },
+{ input: [[0.0, 1.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]], expected: [1.0, 1.0] },
+{ input: [[0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: [1.0, 1.0] },
+{ input: [[0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0, 1.0]], expected: [1.0, 1.0] },
+{ input: [[1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0]], expected: [4.0, 4.0] },
+{ input: [[-1.0, -1.0, -1.0, -1.0], [-1.0, -1.0, -1.0, -1.0]], expected: [4.0, 4.0] },
+{ input: [[-1.0, 1.0, -1.0, 1.0], [1.0, -1.0, 1.0, -1.0]], expected: [-4.0, -4.0] },
+{ input: [[0.1, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fb99999, 0x80000000), hexToF64(0x3fb99999, 0xa0000000)] } // ~0.1
+]).
+
+fn((t) => {
+  const [x, y] = t.params.input;
+  const expected = new F32Interval(...t.params.expected);
+
+  const got = dotInterval(x, y);
+  t.expect(
+  objectEquals(expected, got),
+  `dotInterval([${x}], [${y}]) returned ${got}. Expected ${expected}`);
 
 });
 //# sourceMappingURL=f32_interval.spec.js.map

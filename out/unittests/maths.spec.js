@@ -8,6 +8,7 @@ import { kBit, kValue } from '../webgpu/util/constants.js';
 import { f32, f32Bits, float32ToUint32 } from '../webgpu/util/conversion.js';
 import {
 biasedRange,
+cartesianProduct,
 correctlyRounded,
 correctlyRoundedF32,
 fullF32Range,
@@ -1227,6 +1228,36 @@ fn((test) => {
   test.expect(
   val_to_bits && bits_to_val,
   `bits = ${bits}, value = ${value}, returned val_to_bits as ${val_to_bits}, and bits_to_val as ${bits_to_val}, they are expected to be equivalent`);
+
+});
+
+
+
+
+
+
+g.test('cartesianProduct').
+paramsSimple(
+
+[
+{ inputs: [[0], [1]], result: [[0, 1]] },
+{ inputs: [[0, 1], [2]], result: [[0, 2], [1, 2]] },
+{ inputs: [[0], [1, 2]], result: [[0, 1], [0, 2]] },
+{ inputs: [[0, 1], [2, 3]], result: [[0, 2], [1, 2], [0, 3], [1, 3]] },
+{ inputs: [[0, 1, 2], [3, 4, 5]], result: [[0, 3], [1, 3], [2, 3], [0, 4], [1, 4], [2, 4], [0, 5], [1, 5], [2, 5]] },
+{ inputs: [[0, 1], [2, 3], [4, 5]], result: [[0, 2, 4], [1, 2, 4], [0, 3, 4], [1, 3, 4], [0, 2, 5], [1, 2, 5], [0, 3, 5], [1, 3, 5]] }]).
+
+
+fn((test) => {
+  const inputs = test.params.inputs;
+  const got = cartesianProduct(...inputs);
+  const expect = test.params.result;
+
+  test.expect(
+  objectEquals(got, expect),
+  `cartesianProduct([${inputs.map((i) => '[' + i.toString() + ']')}]) returned [${got.map(
+  (g) => '[' + g.toString() + ']')
+  }]. Expected ${expect.map((e) => '[' + e.toString() + ']')}`);
 
 });
 //# sourceMappingURL=maths.spec.js.map

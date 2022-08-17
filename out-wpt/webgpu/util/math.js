@@ -547,3 +547,43 @@ export function hexToF64(h32, l32) {
   const f64Arr = new Float64Array(u32Arr.buffer);
   return f64Arr[0];
 }
+
+/** @returns the cross of an array with the intermediate result of cartesianProduct
+ *
+ * @param elements array of values to cross with the intermediate result of
+ *                 cartesianProduct
+ * @param intermediate arrays of values representing the partial result of
+ *                     cartesianProduct
+ */
+function cartesianProductImpl(elements, intermediate) {
+  const result = [];
+  elements.forEach(e => {
+    if (intermediate.length > 0) {
+      intermediate.forEach(a => {
+        result.push(a.concat(e));
+      });
+    } else {
+      result.push([e]);
+    }
+  });
+  return result;
+}
+
+/** @returns the cartesian product (NxMx...) of a set of arrays
+ *
+ * This is implemented by calculating the cross of a single input against an
+ * intermediate result for each input to build up the final array of arrays.
+ *
+ * There are examples of doing this more succinctly using map & reduce online,
+ * but they are a bit more opaque to read.
+ *
+ * @param inputs arrays of numbers to calculate cartesian product over
+ */
+export function cartesianProduct(...inputs) {
+  let result = [];
+  inputs.forEach(i => {
+    result = cartesianProductImpl(i, result);
+  });
+
+  return result;
+}

@@ -1,17 +1,25 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { assert } from '../../common/util/util.js';
+ **/ import { assert, unreachable } from '../../common/util/util.js';
 import { kValue } from './constants.js';
-import { correctlyRoundedF32, flushSubnormalNumber, isF32Finite, oneULP } from './math.js';
+import {
+  cartesianProduct,
+  correctlyRoundedF32,
+  flushSubnormalNumber,
+  isF32Finite,
+  oneULP,
+} from './math.js';
 
 /** Represents a closed interval in the f32 range */
 export class F32Interval {
   /** Constructor
    *
-   * @param bounds a pair of numbers indicating the beginning then the end of the interval
+   * @param bounds either a pair of numbers indicating the beginning then the
+   *               end of the interval, or a single element array indicating the
+   *               interval is a point
    */
   constructor(...bounds) {
-    const [begin, end] = bounds;
+    const [begin, end] = bounds.length === 2 ? bounds : [bounds[0], bounds[0]];
     assert(!Number.isNaN(begin) && !Number.isNaN(end), `bounds need to be non-NaN`);
     assert(begin <= end, `bounds[0] (${begin}) must be less than or equal to bounds[1]  (${end})`);
 
@@ -19,21 +27,20 @@ export class F32Interval {
     this.end = end;
   }
 
-  /** @returns if a point or interval is completely contained by this interval
-   *
-   * Due to values that are above/below the f32 range being indistinguishable
-   * from other values out of range in the same way, there some unintuitive
-   * behaviours here, for example:
-   *   [0, greater than max f32].contains(+∞) will return true.
-   */
+  /** @returns begin and end if non-point interval, otherwise just begin */
+  bounds() {
+    return this.isPoint() ? [this.begin] : [this.begin, this.end];
+  }
+
+  /** @returns if a point or interval is completely contained by this interval */
   contains(n) {
     if (Number.isNaN(n)) {
-      // Being the undefined interval indicates that the accuracy is not defined
-      // for this test, so the test is just checking that this input doesn't
-      // cause the implementation to misbehave, so NaN is acceptable.
+      // Being the any interval indicates that accuracy is not defined for this
+      // test, so the test is just checking that this input doesn't cause the
+      // implementation to misbehave, so NaN is accepted.
       return this.begin === Number.NEGATIVE_INFINITY && this.end === Number.POSITIVE_INFINITY;
     }
-    const i = toInterval(n);
+    const i = toF32Interval(n);
     return this.begin <= i.begin && this.end >= i.end;
   }
 
@@ -61,7 +68,7 @@ export class F32Interval {
 
   /** @returns a string representation for logging purposes */
   toString() {
-    return `[${this.begin}, ${this.end}]`;
+    return `[${this.bounds()}]`;
   }
 
   /** @returns a singleton for interval of all possible values
@@ -77,7 +84,7 @@ export class F32Interval {
 }
 
 /** @returns an interval containing the point or the original interval */
-function toInterval(n) {
+function toF32Interval(n) {
   if (n instanceof F32Interval) {
     return n;
   }
@@ -95,6 +102,29 @@ const kGreaterThanZeroInterval = new F32Interval(
   kValue.f32.subnormal.positive.min,
   kValue.f32.positive.max
 );
+
+/** Representation of a vec2/3/4 of floating point intervals as an array of F32Intervals */
+
+/** Coerce F32Interval[] to F32Vector if possible */
+function isF32Vector(v) {
+  if (v[0] instanceof F32Interval) {
+    return v.length === 2 || v.length === 3 || v.length === 4;
+  }
+  return false;
+}
+
+/** @returns an F32Vector representation of an array fo F32Intervals if possible */
+function toF32Vector(v) {
+  if (isF32Vector(v)) {
+    return v;
+  }
+
+  const f = v.map(toF32Interval);
+  if (isF32Vector(f)) {
+    return f;
+  }
+  unreachable(`Cannot convert [${v}] to F32Vector`);
+}
 
 /**
  * A function that converts a point to an acceptance interval.
@@ -237,6 +267,46 @@ function roundAndFlushTernaryToInterval(x, y, z, op) {
   return F32Interval.span(...intervals);
 }
 
+/** Converts a pair of vectors to an acceptance interval, using a specific function
+ *
+ * This handles correctly rounding and flushing inputs as needed.
+ * Duplicate inputs are pruned before invoking op.impl.
+ * All unique combinations of x & y are run.
+ *
+ * @param x first param to flush & round then invoke op.impl on
+ * @param y second param to flush & round then invoke op.impl on
+ * @param op operation defining the function being run
+ * @returns a span over all of the outputs of op.impl
+ */
+function roundAndFlushVectorPairToInterval(x, y, op) {
+  assert(
+    x.every(e => !Number.isNaN(e)),
+    `flush not defined for NaN`
+  );
+
+  assert(
+    y.every(e => !Number.isNaN(e)),
+    `flush not defined for NaN`
+  );
+
+  const x_rounded = x.map(correctlyRoundedF32);
+  const y_rounded = y.map(correctlyRoundedF32);
+  const x_flushed = x_rounded.map(i => [...new Set([...i, ...i.map(flushSubnormalNumber)])]);
+
+  const y_flushed = y_rounded.map(i => [...new Set([...i, ...i.map(flushSubnormalNumber)])]);
+
+  const x_inputs = cartesianProduct(...x_flushed);
+  const y_inputs = cartesianProduct(...y_flushed);
+
+  const intervals = new Set();
+  x_inputs.forEach(inner_x => {
+    y_inputs.forEach(inner_y => {
+      intervals.add(op.impl(inner_x, inner_y));
+    });
+  });
+  return F32Interval.span(...intervals);
+}
+
 /** Calculate the acceptance interval for a unary function over an interval
  *
  * If the interval is actually a point, this just decays to
@@ -258,11 +328,7 @@ function runPointOp(x, op) {
     x = op.extrema(x);
   }
 
-  const result = F32Interval.span(
-    roundAndFlushPointToInterval(x.begin, op),
-    roundAndFlushPointToInterval(x.end, op)
-  );
-
+  const result = F32Interval.span(...x.bounds().map(b => roundAndFlushPointToInterval(b, op)));
   return result.isFinite() ? result : F32Interval.any();
 }
 
@@ -285,12 +351,9 @@ function runBinaryOp(x, y, op) {
     [x, y] = op.extrema(x, y);
   }
 
-  const x_values = new Set([x.begin, x.end]);
-  const y_values = new Set([y.begin, y.end]);
-
   const outputs = new Set();
-  x_values.forEach(inner_x => {
-    y_values.forEach(inner_y => {
+  x.bounds().forEach(inner_x => {
+    y.bounds().forEach(inner_y => {
       outputs.add(roundAndFlushBinaryToInterval(inner_x, inner_y, op));
     });
   });
@@ -312,15 +375,38 @@ function runTernaryOp(x, y, z, op) {
     return F32Interval.any();
   }
 
-  const x_values = new Set([x.begin, x.end]);
-  const y_values = new Set([y.begin, y.end]);
-  const z_values = new Set([z.begin, z.end]);
+  const outputs = new Set();
+  x.bounds().forEach(inner_x => {
+    y.bounds().forEach(inner_y => {
+      z.bounds().forEach(inner_z => {
+        outputs.add(roundAndFlushTernaryToInterval(inner_x, inner_y, inner_z, op));
+      });
+    });
+  });
+
+  const result = F32Interval.span(...outputs);
+  return result.isFinite() ? result : F32Interval.any();
+}
+
+/** Calculate the acceptance interval for a vector pair function over given intervals
+ *
+ * @param x first input domain intervals vector
+ * @param y second input domain intervals vector
+ * @param op operation defining the function being run
+ * @returns a span over all of the outputs of op.impl
+ */
+function runVectorPairBinaryOp(x, y, op) {
+  if (x.some(e => !e.isFinite()) || y.some(e => !e.isFinite())) {
+    return F32Interval.any();
+  }
+
+  const x_values = cartesianProduct(...x.map(e => e.bounds()));
+  const y_values = cartesianProduct(...y.map(e => e.bounds()));
+
   const outputs = new Set();
   x_values.forEach(inner_x => {
     y_values.forEach(inner_y => {
-      z_values.forEach(inner_z => {
-        outputs.add(roundAndFlushTernaryToInterval(inner_x, inner_y, inner_z, op));
-      });
+      outputs.add(roundAndFlushVectorPairToInterval(inner_x, inner_y, op));
     });
   });
 
@@ -332,13 +418,13 @@ function runTernaryOp(x, y, z, op) {
 const CorrectlyRoundedIntervalOp = {
   impl: n => {
     assert(!Number.isNaN(n), `absolute not defined for NaN`);
-    return toInterval(n);
+    return toF32Interval(n);
   },
 };
 
 /** @returns an interval of the correctly rounded values around the point */
 export function correctlyRoundedInterval(n) {
-  return runPointOp(toInterval(n), CorrectlyRoundedIntervalOp);
+  return runPointOp(toF32Interval(n), CorrectlyRoundedIntervalOp);
 }
 
 /** @returns a PointToIntervalOp for [n - error_range, n + error_range] */
@@ -362,7 +448,7 @@ function AbsoluteErrorIntervalOp(error_range) {
 /** @returns an interval of the absolute error around the point */
 export function absoluteErrorInterval(n, error_range) {
   error_range = Math.abs(error_range);
-  return runPointOp(toInterval(n), AbsoluteErrorIntervalOp(error_range));
+  return runPointOp(toF32Interval(n), AbsoluteErrorIntervalOp(error_range));
 }
 
 /** @returns a PointToIntervalOp for [n - numULP * ULP(n), n + numULP * ULP(n)] */
@@ -394,7 +480,7 @@ function ULPIntervalOp(numULP) {
 /** @returns an interval of N * ULP around the point */
 export function ulpInterval(n, numULP) {
   numULP = Math.abs(numULP);
-  return runPointOp(toInterval(n), ULPIntervalOp(numULP));
+  return runPointOp(toF32Interval(n), ULPIntervalOp(numULP));
 }
 
 const AbsIntervalOp = {
@@ -405,7 +491,7 @@ const AbsIntervalOp = {
 
 /** Calculate an acceptance interval for abs(n) */
 export function absInterval(n) {
-  return runPointOp(toInterval(n), AbsIntervalOp);
+  return runPointOp(toF32Interval(n), AbsIntervalOp);
 }
 
 /** All acceptance interval functions for acosh(x) */
@@ -426,7 +512,7 @@ const AcoshAlternativeIntervalOp = {
 
 /** Calculate an acceptance interval of acosh(x) using log(x + sqrt((x + 1.0f) * (x - 1.0))) */
 export function acoshAlternativeInterval(x) {
-  return runPointOp(toInterval(x), AcoshAlternativeIntervalOp);
+  return runPointOp(toF32Interval(x), AcoshAlternativeIntervalOp);
 }
 
 const AcoshPrimaryIntervalOp = {
@@ -440,7 +526,7 @@ const AcoshPrimaryIntervalOp = {
 
 /** Calculate an acceptance interval of acosh(x) using log(x + sqrt(x * x - 1.0)) */
 export function acoshPrimaryInterval(x) {
-  return runPointOp(toInterval(x), AcoshPrimaryIntervalOp);
+  return runPointOp(toF32Interval(x), AcoshPrimaryIntervalOp);
 }
 
 const AdditionIntervalOp = {
@@ -451,7 +537,7 @@ const AdditionIntervalOp = {
 
 /** Calculate an acceptance interval of x + y */
 export function additionInterval(x, y) {
-  return runBinaryOp(toInterval(x), toInterval(y), AdditionIntervalOp);
+  return runBinaryOp(toF32Interval(x), toF32Interval(y), AdditionIntervalOp);
 }
 
 const AsinhIntervalOp = {
@@ -465,7 +551,7 @@ const AsinhIntervalOp = {
 
 /** Calculate an acceptance interval of asinh(x) */
 export function asinhInterval(n) {
-  return runPointOp(toInterval(n), AsinhIntervalOp);
+  return runPointOp(toF32Interval(n), AsinhIntervalOp);
 }
 
 const AtanIntervalOp = {
@@ -476,7 +562,7 @@ const AtanIntervalOp = {
 
 /** Calculate an acceptance interval of atan(x) */
 export function atanInterval(n) {
-  return runPointOp(toInterval(n), AtanIntervalOp);
+  return runPointOp(toF32Interval(n), AtanIntervalOp);
 }
 
 const Atan2IntervalOp = {
@@ -497,9 +583,9 @@ const Atan2IntervalOp = {
   extrema: (y, x) => {
     if (y.contains(0)) {
       if (x.contains(0)) {
-        return [toInterval(0), toInterval(0)];
+        return [toF32Interval(0), toF32Interval(0)];
       }
-      return [toInterval(0), x];
+      return [toF32Interval(0), x];
     }
     return [y, x];
   },
@@ -507,7 +593,7 @@ const Atan2IntervalOp = {
 
 /** Calculate an acceptance interval of atan2(y, x) */
 export function atan2Interval(y, x) {
-  return runBinaryOp(toInterval(y), toInterval(x), Atan2IntervalOp);
+  return runBinaryOp(toF32Interval(y), toF32Interval(x), Atan2IntervalOp);
 }
 
 const AtanhIntervalOp = {
@@ -522,7 +608,7 @@ const AtanhIntervalOp = {
 
 /** Calculate an acceptance interval of atanh(x) */
 export function atanhInterval(n) {
-  return runPointOp(toInterval(n), AtanhIntervalOp);
+  return runPointOp(toF32Interval(n), AtanhIntervalOp);
 }
 
 const CeilIntervalOp = {
@@ -533,7 +619,7 @@ const CeilIntervalOp = {
 
 /** Calculate an acceptance interval of ceil(x) */
 export function ceilInterval(n) {
-  return runPointOp(toInterval(n), CeilIntervalOp);
+  return runPointOp(toF32Interval(n), CeilIntervalOp);
 }
 
 const ClampMedianIntervalOp = {
@@ -559,7 +645,7 @@ export const clampIntervals = [clampMinMaxInterval, clampMedianInterval];
 
 /** Calculate an acceptance interval of clamp(x, y, z) via median(x, y, z) */
 export function clampMedianInterval(x, y, z) {
-  return runTernaryOp(toInterval(x), toInterval(y), toInterval(z), ClampMedianIntervalOp);
+  return runTernaryOp(toF32Interval(x), toF32Interval(y), toF32Interval(z), ClampMedianIntervalOp);
 }
 
 const ClampMinMaxIntervalOp = {
@@ -570,7 +656,12 @@ const ClampMinMaxIntervalOp = {
 
 /** Calculate an acceptance interval of clamp(x, high, low) via min(max(x, low), high) */
 export function clampMinMaxInterval(x, low, high) {
-  return runTernaryOp(toInterval(x), toInterval(low), toInterval(high), ClampMinMaxIntervalOp);
+  return runTernaryOp(
+    toF32Interval(x),
+    toF32Interval(low),
+    toF32Interval(high),
+    ClampMinMaxIntervalOp
+  );
 }
 
 const CosIntervalOp = {
@@ -581,7 +672,7 @@ const CosIntervalOp = {
 
 /** Calculate an acceptance interval of cos(x) */
 export function cosInterval(n) {
-  return runPointOp(toInterval(n), CosIntervalOp);
+  return runPointOp(toF32Interval(n), CosIntervalOp);
 }
 
 const CoshIntervalOp = {
@@ -594,7 +685,7 @@ const CoshIntervalOp = {
 
 /** Calculate an acceptance interval of cosh(x) */
 export function coshInterval(n) {
-  return runPointOp(toInterval(n), CoshIntervalOp);
+  return runPointOp(toF32Interval(n), CoshIntervalOp);
 }
 
 const DegreesIntervalOp = {
@@ -605,7 +696,7 @@ const DegreesIntervalOp = {
 
 /** Calculate an acceptance interval of degrees(x) */
 export function degreesInterval(n) {
-  return runPointOp(toInterval(n), DegreesIntervalOp);
+  return runPointOp(toF32Interval(n), DegreesIntervalOp);
 }
 
 const DivisionIntervalOp = {
@@ -626,7 +717,7 @@ const DivisionIntervalOp = {
   extrema: (x, y) => {
     // division has a discontinuity at y = 0.
     if (y.contains(0)) {
-      y = toInterval(0);
+      y = toF32Interval(0);
     }
     return [x, y];
   },
@@ -634,7 +725,20 @@ const DivisionIntervalOp = {
 
 /** Calculate an acceptance interval of x / y */
 export function divisionInterval(x, y) {
-  return runBinaryOp(toInterval(x), toInterval(y), DivisionIntervalOp);
+  return runBinaryOp(toF32Interval(x), toF32Interval(y), DivisionIntervalOp);
+}
+
+const DotIntervalOp = {
+  impl: (x, y) => {
+    // dot(x, y) = sum of x[i] * y[i]
+    const multiplications = x.map((_, i) => multiplicationInterval(x[i], y[i]));
+    return multiplications.reduce((previous, current) => additionInterval(previous, current));
+  },
+};
+
+export function dotInterval(x, y) {
+  assert(x.length === y.length, `dot not defined for vectors with different lengths`);
+  return runVectorPairBinaryOp(toF32Vector(x), toF32Vector(y), DotIntervalOp);
 }
 
 const ExpIntervalOp = {
@@ -645,7 +749,7 @@ const ExpIntervalOp = {
 
 /** Calculate an acceptance interval for exp(x) */
 export function expInterval(x) {
-  return runPointOp(toInterval(x), ExpIntervalOp);
+  return runPointOp(toF32Interval(x), ExpIntervalOp);
 }
 
 const Exp2IntervalOp = {
@@ -656,7 +760,7 @@ const Exp2IntervalOp = {
 
 /** Calculate an acceptance interval for exp2(x) */
 export function exp2Interval(x) {
-  return runPointOp(toInterval(x), Exp2IntervalOp);
+  return runPointOp(toF32Interval(x), Exp2IntervalOp);
 }
 
 const FloorIntervalOp = {
@@ -667,7 +771,7 @@ const FloorIntervalOp = {
 
 /** Calculate an acceptance interval of floor(x) */
 export function floorInterval(n) {
-  return runPointOp(toInterval(n), FloorIntervalOp);
+  return runPointOp(toF32Interval(n), FloorIntervalOp);
 }
 
 const FractIntervalOp = {
@@ -680,7 +784,7 @@ const FractIntervalOp = {
     if (result.contains(1)) {
       // Very small negative numbers can lead to catastrophic cancellation, thus calculating a fract of 1.0, which is
       // technically not a fractional part, so some implementations clamp the result to next nearest number.
-      return F32Interval.span(result, toInterval(kValue.f32.positive.less_than_one));
+      return F32Interval.span(result, toF32Interval(kValue.f32.positive.less_than_one));
     }
     return result;
   },
@@ -688,7 +792,7 @@ const FractIntervalOp = {
 
 /** Calculate an acceptance interval of fract(x) */
 export function fractInterval(n) {
-  return runPointOp(toInterval(n), FractIntervalOp);
+  return runPointOp(toF32Interval(n), FractIntervalOp);
 }
 
 const InverseSqrtIntervalOp = {
@@ -699,7 +803,7 @@ const InverseSqrtIntervalOp = {
 
 /** Calculate an acceptance interval of inverseSqrt(x) */
 export function inverseSqrtInterval(n) {
-  return runPointOp(toInterval(n), InverseSqrtIntervalOp);
+  return runPointOp(toF32Interval(n), InverseSqrtIntervalOp);
 }
 
 const LdexpIntervalOp = {
@@ -743,7 +847,7 @@ const LogIntervalOp = {
 
 /** Calculate an acceptance interval of log(x) */
 export function logInterval(x) {
-  return runPointOp(toInterval(x), LogIntervalOp);
+  return runPointOp(toF32Interval(x), LogIntervalOp);
 }
 
 const Log2IntervalOp = {
@@ -757,7 +861,7 @@ const Log2IntervalOp = {
 
 /** Calculate an acceptance interval of log2(x) */
 export function log2Interval(x) {
-  return runPointOp(toInterval(x), Log2IntervalOp);
+  return runPointOp(toF32Interval(x), Log2IntervalOp);
 }
 
 const MaxIntervalOp = {
@@ -768,7 +872,7 @@ const MaxIntervalOp = {
 
 /** Calculate an acceptance interval of max(x, y) */
 export function maxInterval(x, y) {
-  return runBinaryOp(toInterval(x), toInterval(y), MaxIntervalOp);
+  return runBinaryOp(toF32Interval(x), toF32Interval(y), MaxIntervalOp);
 }
 
 const MinIntervalOp = {
@@ -779,7 +883,7 @@ const MinIntervalOp = {
 
 /** Calculate an acceptance interval of min(x, y) */
 export function minInterval(x, y) {
-  return runBinaryOp(toInterval(x), toInterval(y), MinIntervalOp);
+  return runBinaryOp(toF32Interval(x), toF32Interval(y), MinIntervalOp);
 }
 
 const MixImpreciseIntervalOp = {
@@ -796,7 +900,7 @@ export const mixIntervals = [mixImpreciseInterval, mixPreciseInterval];
 
 /** Calculate an acceptance interval of mix(x, y, z) using x + (y - x) * z */
 export function mixImpreciseInterval(x, y, z) {
-  return runTernaryOp(toInterval(x), toInterval(y), toInterval(z), MixImpreciseIntervalOp);
+  return runTernaryOp(toF32Interval(x), toF32Interval(y), toF32Interval(z), MixImpreciseIntervalOp);
 }
 
 const MixPreciseIntervalOp = {
@@ -811,7 +915,7 @@ const MixPreciseIntervalOp = {
 
 /** Calculate an acceptance interval of mix(x, y, z) using x * (1.0 - z) + y * z */
 export function mixPreciseInterval(x, y, z) {
-  return runTernaryOp(toInterval(x), toInterval(y), toInterval(z), MixPreciseIntervalOp);
+  return runTernaryOp(toF32Interval(x), toF32Interval(y), toF32Interval(z), MixPreciseIntervalOp);
 }
 
 const MultiplicationInnerOp = {
@@ -828,7 +932,7 @@ const MultiplicationIntervalOp = {
 
 /** Calculate an acceptance interval of x * y */
 export function multiplicationInterval(x, y) {
-  return runBinaryOp(toInterval(x), toInterval(y), MultiplicationIntervalOp);
+  return runBinaryOp(toF32Interval(x), toF32Interval(y), MultiplicationIntervalOp);
 }
 
 const NegationIntervalOp = {
@@ -839,7 +943,7 @@ const NegationIntervalOp = {
 
 /** Calculate an acceptance interval of -x */
 export function negationInterval(n) {
-  return runPointOp(toInterval(n), NegationIntervalOp);
+  return runPointOp(toF32Interval(n), NegationIntervalOp);
 }
 
 const PowIntervalOp = {
@@ -853,7 +957,7 @@ const PowIntervalOp = {
 
 /** Calculate an acceptance interval of pow(x, y) */
 export function powInterval(x, y) {
-  return runBinaryOp(toInterval(x), toInterval(y), PowIntervalOp);
+  return runBinaryOp(toF32Interval(x), toF32Interval(y), PowIntervalOp);
 }
 
 const RadiansIntervalOp = {
@@ -864,7 +968,7 @@ const RadiansIntervalOp = {
 
 /** Calculate an acceptance interval of radians(x) */
 export function radiansInterval(n) {
-  return runPointOp(toInterval(n), RadiansIntervalOp);
+  return runPointOp(toF32Interval(n), RadiansIntervalOp);
 }
 
 const RoundIntervalOp = {
@@ -889,7 +993,7 @@ const RoundIntervalOp = {
 
 /** Calculate an acceptance interval of round(x) */
 export function roundInterval(n) {
-  return runPointOp(toInterval(n), RoundIntervalOp);
+  return runPointOp(toF32Interval(n), RoundIntervalOp);
 }
 
 /**
@@ -900,7 +1004,12 @@ export function roundInterval(n) {
  * to use.
  */
 export function saturateInterval(n) {
-  return runTernaryOp(toInterval(n), toInterval(0.0), toInterval(1.0), ClampMinMaxIntervalOp);
+  return runTernaryOp(
+    toF32Interval(n),
+    toF32Interval(0.0),
+    toF32Interval(1.0),
+    ClampMinMaxIntervalOp
+  );
 }
 
 const SignIntervalOp = {
@@ -918,7 +1027,7 @@ const SignIntervalOp = {
 
 /** Calculate an acceptance interval of sin(x) */
 export function signInterval(n) {
-  return runPointOp(toInterval(n), SignIntervalOp);
+  return runPointOp(toF32Interval(n), SignIntervalOp);
 }
 
 const SinIntervalOp = {
@@ -929,7 +1038,7 @@ const SinIntervalOp = {
 
 /** Calculate an acceptance interval of sin(x) */
 export function sinInterval(n) {
-  return runPointOp(toInterval(n), SinIntervalOp);
+  return runPointOp(toF32Interval(n), SinIntervalOp);
 }
 
 const SinhIntervalOp = {
@@ -942,7 +1051,7 @@ const SinhIntervalOp = {
 
 /** Calculate an acceptance interval of sinh(x) */
 export function sinhInterval(n) {
-  return runPointOp(toInterval(n), SinhIntervalOp);
+  return runPointOp(toF32Interval(n), SinhIntervalOp);
 }
 
 const StepIntervalOp = {
@@ -962,7 +1071,7 @@ const SqrtIntervalOp = {
 
 /** Calculate an acceptance interval of sqrt(x) */
 export function sqrtInterval(n) {
-  return runPointOp(toInterval(n), SqrtIntervalOp);
+  return runPointOp(toF32Interval(n), SqrtIntervalOp);
 }
 
 /** Calculate an acceptance 'interval' for step(edge, x)
@@ -976,7 +1085,7 @@ export function sqrtInterval(n) {
  * [-∞, +∞] is treated as the any interval, since an undefined or infinite value was passed in.
  */
 export function stepInterval(edge, x) {
-  return runBinaryOp(toInterval(edge), toInterval(x), StepIntervalOp);
+  return runBinaryOp(toF32Interval(edge), toF32Interval(x), StepIntervalOp);
 }
 
 const SubtractionInnerOp = {
@@ -993,7 +1102,7 @@ const SubtractionIntervalOp = {
 
 /** Calculate an acceptance interval of x - y */
 export function subtractionInterval(x, y) {
-  return runBinaryOp(toInterval(x), toInterval(y), SubtractionIntervalOp);
+  return runBinaryOp(toF32Interval(x), toF32Interval(y), SubtractionIntervalOp);
 }
 
 const TanIntervalOp = {
@@ -1004,7 +1113,7 @@ const TanIntervalOp = {
 
 /** Calculate an acceptance interval of tan(x) */
 export function tanInterval(n) {
-  return runPointOp(toInterval(n), TanIntervalOp);
+  return runPointOp(toF32Interval(n), TanIntervalOp);
 }
 
 const TanhIntervalOp = {
@@ -1015,7 +1124,7 @@ const TanhIntervalOp = {
 
 /** Calculate an acceptance interval of tanh(x) */
 export function tanhInterval(n) {
-  return runPointOp(toInterval(n), TanhIntervalOp);
+  return runPointOp(toF32Interval(n), TanhIntervalOp);
 }
 
 const TruncIntervalOp = {
@@ -1026,5 +1135,5 @@ const TruncIntervalOp = {
 
 /** Calculate an acceptance interval of trunc(x) */
 export function truncInterval(n) {
-  return runPointOp(toInterval(n), TruncIntervalOp);
+  return runPointOp(toF32Interval(n), TruncIntervalOp);
 }
