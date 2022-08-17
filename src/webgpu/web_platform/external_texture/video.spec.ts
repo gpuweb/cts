@@ -26,36 +26,42 @@ const kVideoExpectations = [
   {
     videoSource: 'red-green.webmvp8.webm',
     colorSpace: 'REC601',
+    _mimeType: 'video/webm; codecs=vp8',
     _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
   },
   {
     videoSource: 'red-green.theora.ogv',
     colorSpace: 'REC601',
+    _mimeType: 'video/ogg; codecs=theora',
     _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
   },
   {
     videoSource: 'red-green.mp4',
     colorSpace: 'REC601',
+    _mimeType: 'video/mp4; codecs=avc1.4d400c',
     _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
   },
   {
     videoSource: 'red-green.bt601.vp9.webm',
     colorSpace: 'REC601',
+    _mimeType: 'video/webm; codecs=vp9',
     _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
   },
   {
     videoSource: 'red-green.bt709.vp9.webm',
     colorSpace: 'REC709',
+    _mimeType: 'video/webm; codecs=vp9',
     _redExpectation: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff]),
   },
   {
     videoSource: 'red-green.bt2020.vp9.webm',
     colorSpace: 'REC2020',
+    _mimeType: 'video/webm; codecs=vp9',
     _redExpectation: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff]),
   },
@@ -159,6 +165,9 @@ for several combinations of video format and color space.
     const videoUrl = getResourcePath(t.params.videoSource);
     const videoElement = document.createElement('video');
     videoElement.src = videoUrl;
+    if (videoElement.canPlayType(t.params._mimeType) === '') {
+      t.skip('Video codec is not supported');
+    }
 
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
@@ -246,6 +255,9 @@ TODO: Make this test work without requestVideoFrameCallback support (in waitForN
     const videoUrl = getResourcePath('red-green.webmvp8.webm');
     const videoElement = document.createElement('video');
     videoElement.src = videoUrl;
+    if (videoElement.canPlayType('video/webm; codecs=vp8') === '') {
+      t.skip('Video codec is not supported');
+    }
 
     if (!('requestVideoFrameCallback' in videoElement)) {
       t.skip('HTMLVideoElement.requestVideoFrameCallback is not supported');
@@ -338,6 +350,9 @@ compute shader, for several combinations of video format and color space.
     const videoUrl = getResourcePath(t.params.videoSource);
     const videoElement = document.createElement('video');
     videoElement.src = videoUrl;
+    if (videoElement.canPlayType(t.params._mimeType) === '') {
+      t.skip('Video codec is not supported');
+    }
 
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
