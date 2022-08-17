@@ -36,7 +36,7 @@ export function clamp(n, { min, max }) {
 
 /** @returns 0 if |val| is a subnormal f32 number, otherwise returns |val| */
 export function flushSubnormalNumber(val) {
-  return val > kValue.f32.negative.max && val < kValue.f32.positive.min ? 0 : val;
+  return isSubnormalNumber(val) ? 0 : val;
 }
 
 /** @returns 0 if |val| is a subnormal f32 number, otherwise returns |val| */
@@ -63,7 +63,7 @@ export function isSubnormalScalar(val) {
 
 /** Utility to pass TS numbers into |isSubnormalNumber| */
 export function isSubnormalNumber(val) {
-  return isSubnormalScalar(f32(val));
+  return val > kValue.f32.negative.max && val < kValue.f32.positive.min;
 }
 
 /** @returns if number is in the finite range of f32 */
