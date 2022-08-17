@@ -12,7 +12,8 @@ import { ValidationTest } from '../../validation_test.js';
 class F extends ValidationTest {
   createComputePipeline(state: 'valid' | 'invalid'): GPUComputePipeline {
     if (state === 'valid') {
-      return this.createNoOpComputePipeline();
+      const layout = this.device.createPipelineLayout({ bindGroupLayouts: [] });
+      return this.createNoOpComputePipeline(layout);
     }
 
     return this.createErrorComputePipeline();
@@ -49,8 +50,8 @@ export const g = makeTestGroup(F);
 g.test('set_pipeline')
   .desc(
     `
-setPipeline should generate an error iff using an 'invalid' pipeline.
-`
+  setPipeline should generate an error iff using an 'invalid' pipeline.
+  `
   )
   .params(u => u.beginSubcases().combine('state', ['valid', 'invalid'] as const))
   .fn(t => {
@@ -73,7 +74,7 @@ g.test('pipeline,device_mismatch')
     const device = mismatched ? t.mismatchedDevice : t.device;
 
     const pipeline = device.createComputePipeline({
-      layout: 'auto',
+      layout: device.createPipelineLayout({ bindGroupLayouts: [] }),
       compute: {
         module: device.createShaderModule({
           code: '@compute @workgroup_size(1) fn main() {}',
@@ -92,13 +93,13 @@ g.test('dispatch_sizes')
   .desc(
     `Test 'direct' and 'indirect' dispatch with various sizes.
 
-  Only direct dispatches can produce validation errors.
-  Workgroup sizes:
-    - valid: { zero, one, just under limit }
-    - invalid: { just over limit, way over limit }
+    Only direct dispatches can produce validation errors.
+    Workgroup sizes:
+      - valid: { zero, one, just under limit }
+      - invalid: { just over limit, way over limit }
 
-  TODO: Verify that the invalid cases don't execute any invocations at all.
-`
+    TODO: Verify that the invalid cases don't execute any invocations at all.
+   `
   )
   .params(u =>
     u
@@ -111,7 +112,8 @@ g.test('dispatch_sizes')
   .fn(t => {
     const { dispatchType, largeDimIndex, smallDimValue, largeDimValue } = t.params;
 
-    const pipeline = t.createNoOpComputePipeline();
+    const layout = t.device.createPipelineLayout({ bindGroupLayouts: [] });
+    const pipeline = t.createNoOpComputePipeline(layout);
 
     const workSizes = [smallDimValue, smallDimValue, smallDimValue];
     workSizes[largeDimIndex] = largeDimValue;
@@ -139,14 +141,14 @@ const kBufferData = new Uint32Array(6).fill(1);
 g.test('indirect_dispatch_buffer_state')
   .desc(
     `
-Test dispatchWorkgroupsIndirect validation by submitting various dispatches with a no-op pipeline
-and an indirectBuffer with 6 elements.
-- indirectBuffer: {'valid', 'invalid', 'destroyed'}
-- indirectOffset:
-  - valid, within the buffer: {beginning, middle, end} of the buffer
-  - invalid, non-multiple of 4
-  - invalid, the last element is outside the buffer
-`
+  Test dispatchWorkgroupsIndirect validation by submitting various dispatches with a no-op pipeline
+  and an indirectBuffer with 6 elements.
+  - indirectBuffer: {'valid', 'invalid', 'destroyed'}
+  - indirectOffset:
+    - valid, within the buffer: {beginning, middle, end} of the buffer
+    - invalid, non-multiple of 4
+    - invalid, the last element is outside the buffer
+  `
   )
   .paramsSubcasesOnly(u =>
     u //
@@ -164,7 +166,8 @@ and an indirectBuffer with 6 elements.
   )
   .fn(t => {
     const { state, offset } = t.params;
-    const pipeline = t.createNoOpComputePipeline();
+    const layout = t.device.createPipelineLayout({ bindGroupLayouts: [] });
+    const pipeline = t.createNoOpComputePipeline(layout);
     const buffer = t.createIndirectBuffer(state, kBufferData);
 
     const { encoder, validateFinishAndSubmit } = t.createEncoder('compute pass');
@@ -180,7 +183,10 @@ and an indirectBuffer with 6 elements.
 
 g.test('indirect_dispatch_buffer,device_mismatch')
   .desc(
-    `Tests dispatchWorkgroupsIndirect cannot be called with an indirect buffer created from another device`
+    `
+    Tests dispatchWorkgroupsIndirect cannot be called with an indirect buffer created from another
+    device
+  `
   )
   .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
   .beforeAllSubcases(t => {
@@ -189,7 +195,8 @@ g.test('indirect_dispatch_buffer,device_mismatch')
   .fn(async t => {
     const { mismatched } = t.params;
 
-    const pipeline = t.createNoOpComputePipeline();
+    const layout = t.device.createPipelineLayout({ bindGroupLayouts: [] });
+    const pipeline = t.createNoOpComputePipeline(layout);
 
     const device = mismatched ? t.mismatchedDevice : t.device;
 

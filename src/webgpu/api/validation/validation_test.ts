@@ -373,7 +373,7 @@ export class ValidationTest extends GPUTest {
   createErrorComputePipeline(): GPUComputePipeline {
     this.device.pushErrorScope('validation');
     const pipeline = this.device.createComputePipeline({
-      layout: 'auto',
+      layout: this.device.createPipelineLayout({ bindGroupLayouts: [] }),
       compute: {
         module: this.device.createShaderModule({
           code: '',
