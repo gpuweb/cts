@@ -131,3 +131,36 @@ g.test('timestampWrites,query_index_count')
 
     t.tryComputePass(isValid, descriptor);
   });
+
+g.test('timestamp_query_set,device_mismatch')
+  .desc(
+    `
+  Tests beginComputePass cannot be called with a timestamp query set created from another device.
+  `
+  )
+  .params(u => u.combine('mismatched', [true, false]))
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase(['timestamp-query']);
+    t.selectMismatchedDeviceOrSkipTestCase('timestamp-query');
+  })
+  .fn(async t => {
+    const { mismatched } = t.params;
+    const device = mismatched ? t.mismatchedDevice : t.device;
+
+    const timestampQuerySet = device.createQuerySet({
+      type: 'timestamp',
+      count: 1,
+    });
+
+    const timestampWrite = {
+      querySet: timestampQuerySet,
+      queryIndex: 0,
+      location: 'beginning' as const,
+    };
+
+    const descriptor = {
+      timestampWrites: [timestampWrite],
+    };
+
+    t.tryComputePass(!mismatched, descriptor);
+  });
