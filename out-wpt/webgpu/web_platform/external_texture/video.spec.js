@@ -11,6 +11,7 @@ TODO: consider whether external_texture and copyToTexture video tests should be 
 `;
 import { getResourcePath } from '../../../common/framework/resources.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { makeTable } from '../../../common/util/data_tables.js';
 import { GPUTest } from '../../gpu_test.js';
 import {
   startPlayingAndWaitForVideo,
@@ -23,45 +24,49 @@ const kHeight = 16;
 const kWidth = 16;
 const kFormat = 'rgba8unorm';
 
+const kVideoInfo = makeTable(['colorSpace', 'mimeType'], [undefined, undefined], {
+  // All video names
+  'red-green.webmvp8.webm': ['REC601', 'video/webm; codecs=vp8'],
+  'red-green.theora.ogv': ['REC601', 'video/ogg; codecs=theora'],
+  'red-green.mp4': ['REC601', 'video/mp4; codecs=avc1.4d400c'],
+  'red-green.bt601.vp9.webm': ['REC601', 'video/webm; codecs=vp9'],
+  'red-green.bt709.vp9.webm': ['REC709', 'video/webm; codecs=vp9'],
+  'red-green.bt2020.vp9.webm': ['REC2020', 'video/webm; codecs=vp9'],
+});
+
 const kVideoExpectations = [
   {
-    videoSource: 'red-green.webmvp8.webm',
-    colorSpace: 'REC601',
+    videoName: 'red-green.webmvp8.webm',
     _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
   },
 
   {
-    videoSource: 'red-green.theora.ogv',
-    colorSpace: 'REC601',
+    videoName: 'red-green.theora.ogv',
     _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
   },
 
   {
-    videoSource: 'red-green.mp4',
-    colorSpace: 'REC601',
+    videoName: 'red-green.mp4',
     _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
   },
 
   {
-    videoSource: 'red-green.bt601.vp9.webm',
-    colorSpace: 'REC601',
+    videoName: 'red-green.bt601.vp9.webm',
     _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
   },
 
   {
-    videoSource: 'red-green.bt709.vp9.webm',
-    colorSpace: 'REC709',
+    videoName: 'red-green.bt709.vp9.webm',
     _redExpectation: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff]),
   },
 
   {
-    videoSource: 'red-green.bt2020.vp9.webm',
-    colorSpace: 'REC2020',
+    videoName: 'red-green.bt2020.vp9.webm',
     _redExpectation: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff]),
   },
@@ -144,6 +149,24 @@ function createExternalTextureSamplingTestBindGroup(t, source, pipeline) {
   return bindGroup;
 }
 
+function getVideoElementAndInfo(t, sourceType, videoName) {
+  if (sourceType === 'VideoFrame' && typeof VideoFrame === 'undefined') {
+    t.skip('WebCodec is not supported');
+  }
+
+  const videoElement = document.createElement('video');
+  const videoInfo = kVideoInfo[videoName];
+
+  if (videoElement.canPlayType(videoInfo.mimeType) === '') {
+    t.skip('Video codec is not supported');
+  }
+
+  const videoUrl = getResourcePath(videoName);
+  videoElement.src = videoUrl;
+
+  return { videoElement, videoInfo };
+}
+
 g.test('importExternalTexture,sample')
   .desc(
     `
@@ -158,13 +181,7 @@ for several combinations of video format and color space.
   )
   .fn(async t => {
     const sourceType = t.params.sourceType;
-    if (sourceType === 'VideoFrame' && typeof VideoFrame === 'undefined') {
-      t.skip('WebCodec is not supported');
-    }
-
-    const videoUrl = getResourcePath(t.params.videoSource);
-    const videoElement = document.createElement('video');
-    videoElement.src = videoUrl;
+    const { videoElement, videoInfo } = getVideoElementAndInfo(t, sourceType, t.params.videoName);
 
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
@@ -172,7 +189,7 @@ for several combinations of video format and color space.
           ? await getVideoFrameFromVideoElement(
               t,
               videoElement,
-              getVideoColorSpaceInit(t.params.colorSpace)
+              getVideoColorSpaceInit(videoInfo.colorSpace)
             )
           : videoElement;
 
@@ -246,13 +263,7 @@ TODO: Make this test work without requestVideoFrameCallback support (in waitForN
   )
   .fn(async t => {
     const sourceType = t.params.sourceType;
-    if (sourceType === 'VideoFrame' && typeof VideoFrame === 'undefined') {
-      t.skip('WebCodec is not supported');
-    }
-
-    const videoUrl = getResourcePath('red-green.webmvp8.webm');
-    const videoElement = document.createElement('video');
-    videoElement.src = videoUrl;
+    const { videoElement } = getVideoElementAndInfo(t, sourceType, 'red-green.webmvp8.webm');
 
     if (!('requestVideoFrameCallback' in videoElement)) {
       t.skip('HTMLVideoElement.requestVideoFrameCallback is not supported');
@@ -342,10 +353,7 @@ compute shader, for several combinations of video format and color space.
   )
   .fn(async t => {
     const sourceType = t.params.sourceType;
-
-    const videoUrl = getResourcePath(t.params.videoSource);
-    const videoElement = document.createElement('video');
-    videoElement.src = videoUrl;
+    const { videoElement, videoInfo } = getVideoElementAndInfo(t, sourceType, t.params.videoName);
 
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
@@ -353,7 +361,7 @@ compute shader, for several combinations of video format and color space.
           ? await getVideoFrameFromVideoElement(
               t,
               videoElement,
-              getVideoColorSpaceInit(t.params.colorSpace)
+              getVideoColorSpaceInit(videoInfo.colorSpace)
             )
           : videoElement;
       const externalTexture = t.device.importExternalTexture({
