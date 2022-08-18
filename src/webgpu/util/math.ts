@@ -419,7 +419,7 @@ export function biasedRange(a: number, b: number, num_steps: number): Array<numb
 }
 
 /**
- * @returns a ascending sorted array of numbers spread over the entire range of 32-bit floats
+ * @returns an ascending sorted array of numbers spread over the entire range of 32-bit floats
  *
  * Numbers are divided into 4 regions: negative normals, negative subnormals, positive subnormals & positive normals.
  * Zero is included. The normal number regions are biased towards zero, and the subnormal regions are linearly spread.
