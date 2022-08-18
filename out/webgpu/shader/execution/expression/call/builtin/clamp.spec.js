@@ -15,7 +15,7 @@ Returns either min(max(e,low),high), or the median of the three values e, low, h
 Component-wise when T is a vector.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { kBit, kValue } from '../../../../../util/constants.js';
+import { kBit } from '../../../../../util/constants.js';
 import {
 i32,
 i32Bits,
@@ -27,6 +27,7 @@ u32,
 u32Bits } from
 '../../../../../util/conversion.js';
 import { clampIntervals } from '../../../../../util/f32_interval.js';
+import { sparseF32Range } from '../../../../../util/math.js';
 import { allInputSources, makeTernaryF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -146,25 +147,8 @@ fn(async (t) => {
     return makeTernaryF32IntervalCase(x, y, z, ...clampIntervals);
   };
 
-  const values = [
-  Number.NEGATIVE_INFINITY,
-  kValue.f32.negative.min,
-  -10.0,
-  -1.0,
-  kValue.f32.negative.max,
-  kValue.f32.subnormal.negative.min,
-  kValue.f32.subnormal.negative.max,
-  0.0,
-  kValue.f32.subnormal.positive.min,
-  kValue.f32.subnormal.positive.max,
-  kValue.f32.positive.min,
-  1.0,
-  10.0,
-  kValue.f32.positive.max,
-  Number.POSITIVE_INFINITY];
-
-
-  const cases = new Array();
+  const values = sparseF32Range();
+  const cases = [];
   values.forEach((x) => {
     values.forEach((y) => {
       values.forEach((z) => {

@@ -9,33 +9,14 @@ Returns the dot product of e1 and e2.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { kValue } from '../../../../../util/constants.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { dotInterval } from '../../../../../util/f32_interval.js';
+import { sparseF32Range } from '../../../../../util/math.js';
 import { allInputSources, Case, makeVectorPairF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
-
-/** Values of interest to test against */
-const kFloatTestValues: Array<number> = [
-  Number.NEGATIVE_INFINITY,
-  kValue.f32.negative.min,
-  -10.0,
-  -1.0,
-  kValue.f32.negative.max,
-  kValue.f32.subnormal.negative.min,
-  kValue.f32.subnormal.negative.max,
-  0.0,
-  kValue.f32.subnormal.positive.min,
-  kValue.f32.subnormal.positive.max,
-  kValue.f32.positive.min,
-  1.0,
-  10.0,
-  kValue.f32.positive.max,
-  Number.POSITIVE_INFINITY,
-];
 
 /**
  * Set of vectors, indexed by dimension, that contain interesting float values
@@ -49,16 +30,16 @@ const kFloatTestValues: Array<number> = [
  * number of cases being run substantially, but maintains coverage.
  */
 const kVectorTestValues = {
-  2: kFloatTestValues.flatMap(f => [
+  2: sparseF32Range().flatMap(f => [
     [f, 1.0],
     [1.0, f],
   ]),
-  3: kFloatTestValues.flatMap(f => [
+  3: sparseF32Range().flatMap(f => [
     [f, 1.0, 2.0],
     [1.0, f, 2.0],
     [1.0, 2.0, f],
   ]),
-  4: kFloatTestValues.flatMap(f => [
+  4: sparseF32Range().flatMap(f => [
     [f, 1.0, 2.0, 3.0],
     [1.0, f, 2.0, 3.0],
     [1.0, 2.0, f, 3.0],
@@ -128,7 +109,7 @@ g.test('f32_vec3')
 
 g.test('f32_vec4')
   .specURL('https://www.w3.org/TR/WGSL/#vector-builtin-functions')
-  .desc(`f32 tests using vec3s`)
+  .desc(`f32 tests using vec4s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
     const makeCase = (x: number[], y: number[]): Case => {

@@ -425,7 +425,11 @@ export function biasedRange(a, b, num_steps) {
  * Numbers are divided into 4 regions: negative normals, negative subnormals, positive subnormals & positive normals.
  * Zero is included. The normal number regions are biased towards zero, and the subnormal regions are linearly spread.
  *
- * @param counts structure param with 4 entries indicating the number of entries to be generated each region, values must be 0 or greater.
+ * This function is intended to provide dense coverage of the f32 range, for a minimal list of values to use to cover
+ * f32 behaviour, use sparseF32Range instead.
+ *
+ * @param counts structure param with 4 entries indicating the number of entries to be generated each region, entries
+ *               must be 0 or greater.
  */
 export function fullF32Range(counts = { pos_sub: 10, pos_norm: 50 }) {
   counts.neg_norm = counts.neg_norm === undefined ? counts.pos_norm : counts.neg_norm;
@@ -464,6 +468,41 @@ export function fullI32Range(counts = { positive: 50 }) {
     0,
     ...biasedRange(kValue.i32.positive.min, kValue.i32.positive.max, counts.positive),
   ];
+}
+
+/** Short list of f32 values of interest to test against */
+const kInterestingF32Values = [
+  Number.NEGATIVE_INFINITY,
+  kValue.f32.negative.min,
+  -10.0,
+  -1.0,
+  kValue.f32.negative.max,
+  kValue.f32.subnormal.negative.min,
+  kValue.f32.subnormal.negative.max,
+  0.0,
+  kValue.f32.subnormal.positive.min,
+  kValue.f32.subnormal.positive.max,
+  kValue.f32.positive.min,
+  1.0,
+  10.0,
+  kValue.f32.positive.max,
+  Number.POSITIVE_INFINITY,
+];
+
+/** @returns minimal f32 values that cover the entire range of f32 behaviours
+ *
+ * Has specially selected values that cover edge cases, normals, and subnormals.
+ * This is used instead of fullF32Range when the number of test cases being
+ * generated is a super linear function of the length of f32 values which is
+ * leading to time outs.
+ *
+ * These values have been chosen to attempt to test the widest range of f32
+ * behaviours in the lowest number of entries, so may potentially miss function
+ * specific values of interest. If there are known values of interest they
+ * should be appended to this list in the test generation code.
+ */
+export function sparseF32Range() {
+  return kInterestingF32Values;
 }
 
 /**
