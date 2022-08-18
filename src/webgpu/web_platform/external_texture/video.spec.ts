@@ -34,6 +34,8 @@ const kVideoInfo = /* prettier-ignore */ makeTable(
   'red-green.bt709.vp9.webm'  : [    'REC709',         'video/webm; codecs=vp9'],
   'red-green.bt2020.vp9.webm' : [   'REC2020',         'video/webm; codecs=vp9']
 } as const);
+type VideoName = keyof typeof kVideoInfo;
+type VideoInfo = valueof<typeof kVideoInfo>;
 
 const kVideoExpectations = [
   {
@@ -67,9 +69,6 @@ const kVideoExpectations = [
     _greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff]),
   },
 ] as const;
-
-type VideoName = keyof typeof kVideoInfo;
-type VideoInfo = valueof<typeof kVideoInfo>;
 
 export const g = makeTestGroup(GPUTest);
 
@@ -152,7 +151,7 @@ function getVideoElementAndInfo(
   t: GPUTest,
   sourceType: 'VideoElement' | 'VideoFrame',
   videoName: VideoName
-): [videoElement: HTMLVideoElement, videoInfo: VideoInfo] {
+): { videoElement: HTMLVideoElement; videoInfo: VideoInfo } {
   if (sourceType === 'VideoFrame' && typeof VideoFrame === 'undefined') {
     t.skip('WebCodec is not supported');
   }
@@ -167,7 +166,7 @@ function getVideoElementAndInfo(
   const videoUrl = getResourcePath(videoName);
   videoElement.src = videoUrl;
 
-  return [videoElement, videoInfo];
+  return { videoElement, videoInfo };
 }
 
 g.test('importExternalTexture,sample')
@@ -184,7 +183,7 @@ for several combinations of video format and color space.
   )
   .fn(async t => {
     const sourceType = t.params.sourceType;
-    const [videoElement, videoInfo] = getVideoElementAndInfo(t, sourceType, t.params.videoName);
+    const { videoElement, videoInfo } = getVideoElementAndInfo(t, sourceType, t.params.videoName);
 
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
@@ -265,7 +264,7 @@ TODO: Make this test work without requestVideoFrameCallback support (in waitForN
   )
   .fn(async t => {
     const sourceType = t.params.sourceType;
-    const [videoElement] = getVideoElementAndInfo(t, sourceType, 'red-green.webmvp8.webm');
+    const { videoElement } = getVideoElementAndInfo(t, sourceType, 'red-green.webmvp8.webm');
 
     if (!('requestVideoFrameCallback' in videoElement)) {
       t.skip('HTMLVideoElement.requestVideoFrameCallback is not supported');
@@ -354,7 +353,7 @@ compute shader, for several combinations of video format and color space.
   )
   .fn(async t => {
     const sourceType = t.params.sourceType;
-    const [videoElement, videoInfo] = getVideoElementAndInfo(t, sourceType, t.params.videoName);
+    const { videoElement, videoInfo } = getVideoElementAndInfo(t, sourceType, t.params.videoName);
 
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
