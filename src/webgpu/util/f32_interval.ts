@@ -1115,6 +1115,18 @@ export function radiansInterval(n: number): F32Interval {
   return runPointOp(toF32Interval(n), RadiansIntervalOp);
 }
 
+const RemainderIntervalOp: BinaryToIntervalOp = {
+  impl: (x: number, y: number): F32Interval => {
+    // x % y = x - y * trunc(x/y)
+    return subtractionInterval(x, multiplicationInterval(y, truncInterval(divisionInterval(x, y))));
+  },
+};
+
+/** Calculate an acceptance interval for x % y */
+export function remainderInterval(x: number, y: number): F32Interval {
+  return runBinaryOp(toF32Interval(x), toF32Interval(y), RemainderIntervalOp);
+}
+
 const RoundIntervalOp: PointToIntervalOp = {
   impl: (n: number): F32Interval => {
     const k = Math.floor(n);
@@ -1281,6 +1293,6 @@ const TruncIntervalOp: PointToIntervalOp = {
 };
 
 /** Calculate an acceptance interval of trunc(x) */
-export function truncInterval(n: number): F32Interval {
+export function truncInterval(n: number | F32Interval): F32Interval {
   return runPointOp(toF32Interval(n), TruncIntervalOp);
 }
