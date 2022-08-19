@@ -13,12 +13,19 @@ g.test('bools')
     t.expectCompileResult(true, t.wrapInEntryPoint(code));
   });
 
-const kAbstractInt = new Set([
+const kAbstractIntNonNegative = new Set([
   '0x123', // hex number
   '123', // signed number, no suffix
   '0', // zero
   '0x3f', // hex with 'f' as last character
   '2147483647', // max signed int
+]);
+
+const kAbstractIntNegative = new Set([
+  '-0x123', // hex number
+  '-123', // signed number, no suffix
+  '-0x3f', // hex with 'f' as last character
+  '-2147483647', // nagative of max signed int
   '-2147483648', // min signed int
 ]);
 
@@ -35,7 +42,12 @@ const kU32 = new Set([
 ]);
 
 {
-  const kValidIntegers = new Set([...kAbstractInt, ...kI32, ...kU32]);
+  const kValidIntegers = new Set([
+    ...kAbstractIntNonNegative,
+    ...kAbstractIntNegative,
+    ...kI32,
+    ...kU32,
+  ]);
   const kInvalidIntegers = new Set([
     '0123', // Integer does not start with zero
     '2147483648i', // max signed int + 1
@@ -57,7 +69,7 @@ const kU32 = new Set([
 }
 
 {
-  const kValidI32 = new Set([...kAbstractInt, ...kI32]);
+  const kValidI32 = new Set([...kAbstractIntNonNegative, ...kAbstractIntNegative, ...kI32]);
   const kInvalidI32 = new Set([
     ...kU32,
     '2147483648', // max signed int + 1
@@ -71,22 +83,30 @@ const kU32 = new Set([
   g.test('i32')
     .desc(`Test that valid signed integers are accepted, and invalid signed integers are rejected.`)
     .params(u => u.combine('val', new Set([...kValidI32, ...kInvalidI32])).beginSubcases())
+    .beforeAllSubcases(t => {
+      if (t.params.val.includes('h')) {
+        t.selectDeviceOrSkipTestCase('shader-f16');
+      }
+    })
     .fn(t => {
-      const code = `var test: i32 = ${t.params.val};`;
-      t.expectCompileResult(kValidI32.has(t.params.val), t.wrapInEntryPoint(code));
+      const { val } = t.params;
+      const code = `var test: i32 = ${val};`;
+      const extensionList = val.includes('h') ? ['f16'] : [];
+      t.expectCompileResult(kValidI32.has(val), t.wrapInEntryPoint(code, extensionList));
     });
 }
 
 {
   const kValidU32 = new Set([
-    ...kAbstractInt,
+    ...kAbstractIntNonNegative,
     ...kU32,
     '4294967295', // max unsigned
   ]);
   const kInvalidU32 = new Set([
+    ...kAbstractIntNegative,
     ...kI32,
     '4294967296', // max unsigned int + 1
-    '4294967296u', // min unsigned int - 1
+    '4294967296u', // min unsigned int + 1
     '-1', // min unsigned int - 1
     '1.0', // no conversion from float
     '1.0f', // no conversion from float
@@ -97,9 +117,16 @@ const kU32 = new Set([
       `Test that valid unsigned integers are accepted, and invalid unsigned integers are rejected.`
     )
     .params(u => u.combine('val', new Set([...kValidU32, ...kInvalidU32])).beginSubcases())
+    .beforeAllSubcases(t => {
+      if (t.params.val.includes('h')) {
+        t.selectDeviceOrSkipTestCase('shader-f16');
+      }
+    })
     .fn(t => {
-      const code = `var test: u32 = ${t.params.val};`;
-      t.expectCompileResult(kValidU32.has(t.params.val), t.wrapInEntryPoint(code));
+      const { val } = t.params;
+      const code = `var test: u32 = ${val};`;
+      const extensionList = val.includes('h') ? ['f16'] : [];
+      t.expectCompileResult(kValidU32.has(val), t.wrapInEntryPoint(code, extensionList));
     });
 }
 
@@ -160,10 +187,11 @@ const kAbstractFloat = new Set([
     '0x.p2', // Hex float no value
     '0x1p', // Hex float missing exponent
     '0x1p^', // Hex float invalid exponent
-    '1.2h', // fp16 extension not enabled, so this is an error
     '1.0e+999999999999f', // Too big
     '0x1.0p+999999999999f', // Too big hex
     '0x1.00000001pf0', // Mantissa too big
+  ]);
+  const kInvalidF16s = new Set([
     '1.1eh', // Missing exponent value
     '1.1e%2h', // Invalid exponent sign
     '1.1e+h', // Missing exponent with sign
@@ -173,10 +201,23 @@ const kAbstractFloat = new Set([
 
   g.test('abstract_float')
     .desc(`Test that valid floats are accepted, and invalid floats are rejected`)
-    .params(u => u.combine('val', new Set([...kValidFloats, ...kInvalidFloats])).beginSubcases())
+    .params(u =>
+      u
+        .combine('val', new Set([...kValidFloats, ...kInvalidFloats, ...kInvalidF16s]))
+        .beginSubcases()
+    )
+    .beforeAllSubcases(t => {
+      if (kF16.has(t.params.val) || kInvalidF16s.has(t.params.val)) {
+        t.selectDeviceOrSkipTestCase('shader-f16');
+      }
+    })
     .fn(t => {
       const code = `var test = ${t.params.val};`;
-      t.expectCompileResult(kValidFloats.has(t.params.val), t.wrapInEntryPoint(code));
+      const extensionList = kF16.has(t.params.val) || kInvalidF16s.has(t.params.val) ? ['f16'] : [];
+      t.expectCompileResult(
+        kValidFloats.has(t.params.val),
+        t.wrapInEntryPoint(code, extensionList)
+      );
     });
 }
 
@@ -208,9 +249,16 @@ const kAbstractFloat = new Set([
   g.test('f32')
     .desc(`Test that valid floats are accepted, and invalid floats are rejected`)
     .params(u => u.combine('val', new Set([...kValidF32, ...kInvalidF32])).beginSubcases())
+    .beforeAllSubcases(t => {
+      if (kF16.has(t.params.val)) {
+        t.selectDeviceOrSkipTestCase('shader-f16');
+      }
+    })
     .fn(t => {
-      const code = `var test: f32 = ${t.params.val};`;
-      t.expectCompileResult(kValidF32.has(t.params.val), t.wrapInEntryPoint(code));
+      const { val } = t.params;
+      const code = `var test: f32 = ${val};`;
+      const extensionList = kF16.has(val) ? ['f16'] : [];
+      t.expectCompileResult(kValidF32.has(val), t.wrapInEntryPoint(code, extensionList));
     });
 }
 
