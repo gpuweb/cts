@@ -89,8 +89,10 @@ const kU32 = new Set([
       }
     })
     .fn(t => {
-      const code = `var test: i32 = ${t.params.val};`;
-      t.expectCompileResult(kValidI32.has(t.params.val), t.wrapInEntryPoint(code));
+      const { val } = t.params;
+      const code = `var test: i32 = ${val};`;
+      const extensionList = val.includes('h') ? ['f16'] : [];
+      t.expectCompileResult(kValidI32.has(val), t.wrapInEntryPoint(code, extensionList));
     });
 }
 
@@ -121,8 +123,10 @@ const kU32 = new Set([
       }
     })
     .fn(t => {
-      const code = `var test: u32 = ${t.params.val};`;
-      t.expectCompileResult(kValidU32.has(t.params.val), t.wrapInEntryPoint(code));
+      const { val } = t.params;
+      const code = `var test: u32 = ${val};`;
+      const extensionList = val.includes('h') ? ['f16'] : [];
+      t.expectCompileResult(kValidU32.has(val), t.wrapInEntryPoint(code, extensionList));
     });
 }
 
@@ -209,7 +213,11 @@ const kAbstractFloat = new Set([
     })
     .fn(t => {
       const code = `var test = ${t.params.val};`;
-      t.expectCompileResult(kValidFloats.has(t.params.val), t.wrapInEntryPoint(code));
+      const extensionList = kF16.has(t.params.val) || kInvalidF16s.has(t.params.val) ? ['f16'] : [];
+      t.expectCompileResult(
+        kValidFloats.has(t.params.val),
+        t.wrapInEntryPoint(code, extensionList)
+      );
     });
 }
 
@@ -249,10 +257,8 @@ const kAbstractFloat = new Set([
     .fn(t => {
       const { val } = t.params;
       const code = `var test: f32 = ${val};`;
-      t.expectCompileResult(
-        kValidF32.has(val),
-        t.wrapInEntryPoint(code, kF16.has(val) ? ['f16'] : [])
-      );
+      const extensionList = kF16.has(val) ? ['f16'] : [];
+      t.expectCompileResult(kValidF32.has(val), t.wrapInEntryPoint(code, extensionList));
     });
 }
 
