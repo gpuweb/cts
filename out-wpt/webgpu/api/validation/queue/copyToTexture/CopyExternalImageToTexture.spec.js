@@ -39,14 +39,14 @@ function computeMipMapSize(width, height, mipLevel) {
 // Helper function to generate copySize for src OOB test
 function generateCopySizeForSrcOOB({ srcOrigin }) {
   // OOB origin fails even with no-op copy.
-  if (srcOrigin.x > kDefaultWidth || srcOrigin.y > kDefaultHeight || srcOrigin.z > kDefaultDepth) {
+  if (srcOrigin.x > kDefaultWidth || srcOrigin.y > kDefaultHeight) {
     return [{ width: 0, height: 0, depthOrArrayLayers: 0 }];
   }
 
   const justFitCopySize = {
     width: kDefaultWidth - srcOrigin.x,
     height: kDefaultHeight - srcOrigin.y,
-    depthOrArrayLayers: kDefaultDepth - srcOrigin.z,
+    depthOrArrayLayers: 1,
   };
 
   return [
@@ -816,14 +816,12 @@ g.test('OOB,source')
   .paramsSubcasesOnly(u =>
     u
       .combine('srcOrigin', [
-        { x: 0, y: 0, z: 0 }, // origin is on top-left
-        { x: kDefaultWidth - 1, y: 0, z: 0 }, // x near the border
-        { x: 0, y: kDefaultHeight - 1, z: 0 }, // y is near the border
-        { x: kDefaultWidth, y: kDefaultHeight, z: 0 }, // origin is on bottom-right
-        { x: 0, y: 0, z: kDefaultDepth },
-        { x: kDefaultWidth + 1, y: 0, z: 0 }, // x is too large
-        { x: 0, y: kDefaultHeight + 1, z: 0 }, // y is too large
-        { x: 0, y: 0, z: kDefaultDepth + 1 }, // z is too large
+        { x: 0, y: 0 }, // origin is on top-left
+        { x: kDefaultWidth - 1, y: 0 }, // x near the border
+        { x: 0, y: kDefaultHeight - 1 }, // y is near the border
+        { x: kDefaultWidth, y: kDefaultHeight }, // origin is on bottom-right
+        { x: kDefaultWidth + 1, y: 0 }, // x is too large
+        { x: 0, y: kDefaultHeight + 1 }, // y is too large
       ])
       .expand('copySize', generateCopySizeForSrcOOB)
   )
@@ -847,7 +845,7 @@ g.test('OOB,source')
     if (
       srcOrigin.x + copySize.width > kDefaultWidth ||
       srcOrigin.y + copySize.height > kDefaultHeight ||
-      srcOrigin.z + copySize.depthOrArrayLayers > 1
+      copySize.depthOrArrayLayers > 1
     ) {
       success = false;
     }
