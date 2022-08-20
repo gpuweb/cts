@@ -149,7 +149,7 @@ Tests that an error bubbles to the correct parent scope.
     `
   )
   .params(u =>
-    u.combine('errorFilter', kErrorScopeFilters).combine('stackDepth', [1, 10, 100, 1000, 100000])
+    u.combine('errorFilter', kErrorScopeFilters).combine('stackDepth', [1, 10, 100, 1000])
   )
   .fn(async t => {
     const { errorFilter, stackDepth } = t.params;
@@ -192,12 +192,9 @@ Tests that an error does not bubbles to parent scopes when local scope matches.
   .fn(async t => {
     const { errorFilter, stackDepth } = t.params;
 
-    // Push a bunch of error filters onto the stack (none that match errorFilter)
-    const unmatchedFilters = kErrorScopeFilters.filter(filter => {
-      return filter !== errorFilter;
-    });
+    // Push a bunch of error filters onto the stack
     for (let i = 0; i < stackDepth; i++) {
-      t.device.pushErrorScope(unmatchedFilters[i % unmatchedFilters.length]);
+      t.device.pushErrorScope(kErrorScopeFilters[i % kErrorScopeFilters.length]);
     }
 
     // Current scope should catch the error immediately.
@@ -225,7 +222,7 @@ Tests that sibling error scopes need to be balanced.
     `
   )
   .params(u =>
-    u.combine('errorFilter', kErrorScopeFilters).combine('numErrors', [1, 10, 100, 1000, 100000])
+    u.combine('errorFilter', kErrorScopeFilters).combine('numErrors', [1, 10, 100, 1000])
   )
   .fn(async t => {
     const { errorFilter, numErrors } = t.params;
@@ -235,14 +232,15 @@ Tests that sibling error scopes need to be balanced.
       t.device.pushErrorScope(errorFilter);
       promises.push(t.device.popErrorScope());
     }
-    const errors = await Promise.all(promises);
-    t.expect(errors.every(e => e === null));
 
     {
       // Trying to pop an additional non-exisiting scope should reject.
       const promise = t.device.popErrorScope();
       t.shouldReject('OperationError', promise);
     }
+
+    const errors = await Promise.all(promises);
+    t.expect(errors.every(e => e === null));
   });
 
 g.test('balanced_nesting')
@@ -255,7 +253,7 @@ Tests that nested error scopes need to be balanced.
     `
   )
   .params(u =>
-    u.combine('errorFilter', kErrorScopeFilters).combine('numErrors', [1, 10, 100, 1000, 100000])
+    u.combine('errorFilter', kErrorScopeFilters).combine('numErrors', [1, 10, 100, 1000])
   )
   .fn(async t => {
     const { errorFilter, numErrors } = t.params;
