@@ -76,6 +76,37 @@ fn(async (t) => {
   }, !success);
 });
 
+g.test('visibility,VERTEX_shader_stage_buffer_type').
+desc(
+`
+  Test that a validation error is generated if the buffer type is 'storage' when the
+  visibility of the entry includes VERTEX.
+  `).
+
+params((u) =>
+u //
+.combine('shaderStage', kShaderStageCombinations).
+beginSubcases().
+combine('type', kBufferBindingTypes)).
+
+fn(async (t) => {
+  const { shaderStage, type } = t.params;
+
+  const success = !(type === 'storage' && shaderStage & GPUShaderStage.VERTEX);
+
+  t.expectValidationError(() => {
+    t.device.createBindGroupLayout({
+      entries: [
+      {
+        binding: 0,
+        visibility: shaderStage,
+        buffer: { type } }] });
+
+
+
+  }, !success);
+});
+
 g.test('multisampled_validation').
 desc('Test that multisampling is only allowed with "2d" view dimensions.').
 paramsSubcasesOnly((u) =>
