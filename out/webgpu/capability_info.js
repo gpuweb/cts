@@ -65,6 +65,18 @@ export const kAllBufferUsageBits = kBufferUsages.reduce(
 0);
 
 
+// Errors
+
+/** Per-GPUErrorFilter info. */
+export const kErrorScopeFilterInfo =
+
+{
+  'out-of-memory': {},
+  'validation': {} };
+
+/** List of all GPUTextureAspect values. */
+export const kErrorScopeFilters = keysOf(kErrorScopeFilterInfo);
+
 // Textures
 
 // Definitions for use locally. To access the table entries, use `kTextureFormatInfo`.

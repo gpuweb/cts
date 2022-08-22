@@ -202,14 +202,6 @@ export const listing = [
     "file": [
       "api",
       "operation",
-      "error_scope"
-    ],
-    "readme": "TODO: plan and implement\n- test very deeply nested error scopes, make sure errors go to the right place, e.g.\n    - validation, ..., validation, out-of-memory\n    - out-of-memory, validation, ..., validation\n    - out-of-memory, ..., out-of-memory, validation\n    - validation, out-of-memory, ..., out-of-memory\n- use error scopes on two different threads and make sure errors go to the right place\n- unhandled errors always go to the \"original\" device object\n    - test they go nowhere if the original was dropped (attemptGarbageCollection to make sure)"
-  },
-  {
-    "file": [
-      "api",
-      "operation",
       "labels"
     ]
   },
