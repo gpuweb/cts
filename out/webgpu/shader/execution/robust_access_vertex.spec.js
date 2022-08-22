@@ -268,8 +268,8 @@ const typeInfoMap = {
   float32x4: {
     wgslType: 'vec4<f32>',
     sizeInBytes: 16,
-    validationFunc: `return valid(v.x) && valid(v.y) && valid(v.z) && valid(v.w) ||
-                            v.x == 0.0 && v.y == 0.0 && v.z == 0.0 && (v.w == 0.0 || v.w == 1.0);` } };
+    validationFunc: `return (valid(v.x) && valid(v.y) && valid(v.z) && valid(v.w)) ||
+                            (v.x == 0.0 && v.y == 0.0 && v.z == 0.0 && (v.w == 0.0 || v.w == 1.0));` } };
 
 
 
