@@ -22,7 +22,7 @@ import { kValue } from '../../../../../util/constants.js';
 import { i32, TypeF32, TypeI32, TypeU32, u32 } from '../../../../../util/conversion.js';
 import { maxInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../../util/math.js';
-import { allInputSources, Case, makeBinaryF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, Case, makeBinaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -100,7 +100,7 @@ g.test('f32')
   )
   .fn(async t => {
     const makeCase = (x: number, y: number): Case => {
-      return makeBinaryF32IntervalCase(x, y, maxInterval);
+      return makeBinaryToF32IntervalCase(x, y, maxInterval);
     };
 
     const cases: Array<Case> = [];

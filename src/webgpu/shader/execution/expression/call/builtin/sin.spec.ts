@@ -12,7 +12,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { sinInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range, linearRange } from '../../../../../util/math.js';
-import { allInputSources, Case, makeUnaryF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -40,7 +40,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
   )
   .fn(async t => {
     const makeCase = (n: number): Case => {
-      return makeUnaryF32IntervalCase(n, sinInterval);
+      return makeUnaryToF32IntervalCase(n, sinInterval);
     };
 
     const cases: Array<Case> = [
