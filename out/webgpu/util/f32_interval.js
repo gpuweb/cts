@@ -9,6 +9,14 @@ isF32Finite,
 oneULP } from
 './math.js';
 
+/**
+ * Representation of bounds for an interval as an array with either one or two
+ * elements. Single element indicates that the interval is a single point. For
+ * two elements, the first is the lower bound of the interval and the second is
+ * the upper bound.
+ */
+
+
 /** Represents a closed interval in the f32 range */
 export class F32Interval {
 

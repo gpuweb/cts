@@ -9,6 +9,14 @@ import {
   oneULP,
 } from './math.js';
 
+/**
+ * Representation of bounds for an interval as an array with either one or two
+ * elements. Single element indicates that the interval is a single point. For
+ * two elements, the first is the lower bound of the interval and the second is
+ * the upper bound.
+ */
+export type IntervalBounds = [number] | [number, number];
+
 /** Represents a closed interval in the f32 range */
 export class F32Interval {
   public readonly begin: number;
@@ -21,7 +29,7 @@ export class F32Interval {
    *               end of the interval, or a single element array indicating the
    *               interval is a point
    */
-  public constructor(...bounds: [number] | [number, number]) {
+  public constructor(...bounds: IntervalBounds) {
     const [begin, end] = bounds.length === 2 ? bounds : [bounds[0], bounds[0]];
     assert(!Number.isNaN(begin) && !Number.isNaN(end), `bounds need to be non-NaN`);
     assert(begin <= end, `bounds[0] (${begin}) must be less than or equal to bounds[1]  (${end})`);
@@ -31,7 +39,7 @@ export class F32Interval {
   }
 
   /** @returns begin and end if non-point interval, otherwise just begin */
-  public bounds(): [number] | [number, number] {
+  public bounds(): IntervalBounds {
     return this.isPoint() ? [this.begin] : [this.begin, this.end];
   }
 
