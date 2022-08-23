@@ -9,6 +9,7 @@ import { makeTestGroup } from '../../../common/framework/test_group.js';
 import {
 kShaderStages,
 kShaderStageCombinations,
+kStorageTextureAccessValues,
 kTextureViewDimensions,
 allBindingEntries,
 bindingTypeInfo,
@@ -101,6 +102,39 @@ fn(async (t) => {
         binding: 0,
         visibility: shaderStage,
         buffer: { type } }] });
+
+
+
+  }, !success);
+});
+
+g.test('visibility,VERTEX_shader_stage_storage_texture_access').
+desc(
+`
+  Test that a validation error is generated if the access value is 'write-only' when the
+  visibility of the entry includes VERTEX.
+  `).
+
+params((u) =>
+u //
+.combine('shaderStage', kShaderStageCombinations).
+beginSubcases().
+combine('access', [undefined, ...kStorageTextureAccessValues])).
+
+fn(async (t) => {
+  const { shaderStage, access } = t.params;
+
+  const success = !(
+  (access ?? 'write-only') === 'write-only' && shaderStage & GPUShaderStage.VERTEX);
+
+
+  t.expectValidationError(() => {
+    t.device.createBindGroupLayout({
+      entries: [
+      {
+        binding: 0,
+        visibility: shaderStage,
+        storageTexture: { access, format: 'rgba8unorm' } }] });
 
 
 
