@@ -133,7 +133,7 @@ export interface ExpressionBuilder {
  * @param cfg test configuration values
  * @param cases list of test cases
  */
-export async function run(
+export function run(
   t: GPUTest,
   expressionBuilder: ExpressionBuilder,
   parameterTypes: Array<Type>,
@@ -167,7 +167,9 @@ export async function run(
     }
   })();
 
-  // Submit all the batches
+  // Submit all the batches inside an error scope.
+  // Note: there is no async work between "push" and "pop" so this is safe to
+  // run concurrently with itself (in other subcases).
   t.device.pushErrorScope('validation');
 
   const checkResults: Array<() => void> = [];
@@ -178,15 +180,16 @@ export async function run(
     );
   }
 
-  // Check GPU validation (shader compilation, pipeline creation, etc) before checking the results
-  const error = await t.device.popErrorScope();
-  if (error !== null) {
-    t.fail(error.message);
-    return;
-  }
+  // Check GPU validation (shader compilation, pipeline creation, etc) before checking the results.
+  return t.device.popErrorScope().then(error => {
+    if (error !== null) {
+      t.fail(error.message);
+      return;
+    }
 
-  // Check the results
-  checkResults.forEach(f => f());
+    // Check the results
+    checkResults.forEach(f => f());
+  });
 }
 
 /**
