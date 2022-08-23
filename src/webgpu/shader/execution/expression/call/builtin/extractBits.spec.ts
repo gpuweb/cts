@@ -87,7 +87,7 @@ g.test('u32')
       0b00000000001010101010100000000000
     );
 
-    run(t, builtin('extractBits'), [T, TypeU32, TypeU32], T, cfg, [
+    await run(t, builtin('extractBits'), [T, TypeU32, TypeU32], T, cfg, [
       { input: [all_0, u32(0), u32(32)], expected: all_0 },
       { input: [all_0, u32(1), u32(10)], expected: all_0 },
       { input: [all_0, u32(2), u32(5)], expected: all_0 },
@@ -225,7 +225,7 @@ g.test('i32')
       0b00000000001010101010100000000000
     );
 
-    run(t, builtin('extractBits'), [T, TypeU32, TypeU32], T, cfg, [
+    await run(t, builtin('extractBits'), [T, TypeU32, TypeU32], T, cfg, [
       { input: [all_0, u32(0), u32(32)], expected: all_0 },
       { input: [all_0, u32(1), u32(10)], expected: all_0 },
       { input: [all_0, u32(2), u32(5)], expected: all_0 },

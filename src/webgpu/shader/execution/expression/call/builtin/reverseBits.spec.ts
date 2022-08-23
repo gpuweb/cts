@@ -26,7 +26,7 @@ g.test('u32')
   .fn(async t => {
     const cfg: Config = t.params;
     // prettier-ignore
-    run(t, builtin('reverseBits'), [TypeU32], TypeU32, cfg, [
+    await run(t, builtin('reverseBits'), [TypeU32], TypeU32, cfg, [
       // Zero
       { input: u32Bits(0b00000000000000000000000000000000), expected: u32Bits(0b00000000000000000000000000000000) },
 
@@ -142,7 +142,7 @@ g.test('i32')
   .fn(async t => {
     const cfg: Config = t.params;
     // prettier-ignore
-    run(t, builtin('reverseBits'), [TypeI32], TypeI32, cfg, [
+    await run(t, builtin('reverseBits'), [TypeI32], TypeI32, cfg, [
       // Zero
       { input: i32Bits(0b00000000000000000000000000000000), expected: i32Bits(0b00000000000000000000000000000000) },
 

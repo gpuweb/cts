@@ -120,7 +120,7 @@ g.test('scalar')
     };
     const overload = overloads[t.params.overload];
 
-    run(
+    await run(
       t,
       builtin('select'),
       [overload.type, overload.type, TypeBool],
@@ -218,7 +218,7 @@ g.test('vector')
       }
     }
 
-    run(
+    await run(
       t,
       builtin('select'),
       [tests.dataType, tests.dataType, tests.boolType],
