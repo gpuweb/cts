@@ -7,6 +7,7 @@ import {
   correctlyRoundedF32,
   flushSubnormalNumber,
   isF32Finite,
+  isSubnormalNumber,
   oneULP,
 } from './math.js';
 
@@ -134,6 +135,14 @@ function toF32Vector(v) {
 }
 
 /**
+ * @returns the input plus zero if any of the entries are subnormal, otherwise
+ * returns the input
+ */
+function addFlushedIfNeeded(values) {
+  return values.some(isSubnormalNumber) ? values.concat(0) : values;
+}
+
+/**
  * A function that converts a point to an acceptance interval.
  * This is the public facing API for builtin implementations that is called
  * from tests.
@@ -205,8 +214,8 @@ function limitBinaryToIntervalDomain(domain, impl) {
 function roundAndFlushPointToInterval(n, op) {
   assert(!Number.isNaN(n), `flush not defined for NaN`);
   const values = correctlyRoundedF32(n);
-  const inputs = new Set([...values, ...values.map(flushSubnormalNumber)]);
-  const results = new Set([...inputs].map(op.impl));
+  const inputs = addFlushedIfNeeded(values);
+  const results = new Set(inputs.map(op.impl));
   return F32Interval.span(...results);
 }
 
@@ -228,8 +237,8 @@ function roundAndFlushBinaryToInterval(x, y, op) {
   assert(!Number.isNaN(y), `flush not defined for NaN`);
   const x_values = correctlyRoundedF32(x);
   const y_values = correctlyRoundedF32(y);
-  const x_inputs = new Set([...x_values, ...x_values.map(flushSubnormalNumber)]);
-  const y_inputs = new Set([...y_values, ...y_values.map(flushSubnormalNumber)]);
+  const x_inputs = addFlushedIfNeeded(x_values);
+  const y_inputs = addFlushedIfNeeded(y_values);
   const intervals = new Set();
   x_inputs.forEach(inner_x => {
     y_inputs.forEach(inner_y => {
@@ -258,9 +267,9 @@ function roundAndFlushTernaryToInterval(x, y, z, op) {
   const x_values = correctlyRoundedF32(x);
   const y_values = correctlyRoundedF32(y);
   const z_values = correctlyRoundedF32(z);
-  const x_inputs = new Set([...x_values, ...x_values.map(flushSubnormalNumber)]);
-  const y_inputs = new Set([...y_values, ...y_values.map(flushSubnormalNumber)]);
-  const z_inputs = new Set([...z_values, ...z_values.map(flushSubnormalNumber)]);
+  const x_inputs = addFlushedIfNeeded(x_values);
+  const y_inputs = addFlushedIfNeeded(y_values);
+  const z_inputs = addFlushedIfNeeded(z_values);
   const intervals = new Set();
 
   x_inputs.forEach(inner_x => {
@@ -298,10 +307,8 @@ function roundAndFlushVectorPairToInterval(x, y, op) {
 
   const x_rounded = x.map(correctlyRoundedF32);
   const y_rounded = y.map(correctlyRoundedF32);
-  const x_flushed = x_rounded.map(i => [...new Set([...i, ...i.map(flushSubnormalNumber)])]);
-
-  const y_flushed = y_rounded.map(i => [...new Set([...i, ...i.map(flushSubnormalNumber)])]);
-
+  const x_flushed = x_rounded.map(addFlushedIfNeeded);
+  const y_flushed = y_rounded.map(addFlushedIfNeeded);
   const x_inputs = cartesianProduct(...x_flushed);
   const y_inputs = cartesianProduct(...y_flushed);
 
