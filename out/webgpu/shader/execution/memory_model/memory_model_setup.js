@@ -763,7 +763,7 @@ const testShaderFunctions = `
  */
 const shaderEntryPoint = `
   // Change to pipeline overridable constant when possible.
-  let workgroupXSize = 256u;
+  const workgroupXSize = 256u;
   @compute @workgroup_size(workgroupXSize) fn main(
     @builtin(local_invocation_id) local_invocation_id : vec3<u32>,
     @builtin(workgroup_id) workgroup_id : vec3<u32>) {

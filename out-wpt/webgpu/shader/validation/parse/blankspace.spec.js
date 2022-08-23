@@ -19,9 +19,9 @@ g.test('null_characters')
     if (t.params.placement === 'comment') {
       code = `// Here is a ${t.params.contains_null ? '\0' : 'Z'} character`;
     } else if (t.params.placement === 'delimiter') {
-      code = `let${t.params.contains_null ? '\0' : ' '}name : i32 = 0;`;
+      code = `const${t.params.contains_null ? '\0' : ' '}name : i32 = 0;`;
     } else if (t.params.placement === 'eol') {
-      code = `let name : i32 = 0;${t.params.contains_null ? '\0' : ''}`;
+      code = `const name : i32 = 0;${t.params.contains_null ? '\0' : ''}`;
     }
     t.expectCompileResult(!t.params.contains_null, code);
   });
@@ -46,6 +46,6 @@ g.test('blankspace')
       .beginSubcases()
   )
   .fn(t => {
-    const code = `let${t.params.blankspace[0]}ident : i32 = 0;`;
+    const code = `const${t.params.blankspace[0]}ident : i32 = 0;`;
     t.expectCompileResult(true, code);
   });

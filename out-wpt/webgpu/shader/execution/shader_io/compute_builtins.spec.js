@@ -116,9 +116,9 @@ g.test('inputs')
 
       ${structures}
 
-      let group_width = ${t.params.groupSize.x}u;
-      let group_height = ${t.params.groupSize.y}u;
-      let group_depth = ${t.params.groupSize.z}u;
+      const group_width = ${t.params.groupSize.x}u;
+      const group_height = ${t.params.groupSize.y}u;
+      const group_depth = ${t.params.groupSize.z}u;
 
       @compute @workgroup_size(group_width, group_height, group_depth)
       fn main(
