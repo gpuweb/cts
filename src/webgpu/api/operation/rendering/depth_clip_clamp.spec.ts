@@ -65,8 +65,8 @@ have unexpected values then get drawn to the color buffer, which is later checke
       var<private> kDepths: array<f32, ${kNumDepthValues}> = array<f32, ${kNumDepthValues}>(
           -1.0, -0.5, 0.0, 0.25, 0.75, 1.0, 1.5, 2.0);
 
-      let vpMin: f32 = ${kViewportMinDepth};
-      let vpMax: f32 = ${kViewportMaxDepth};
+      const vpMin: f32 = ${kViewportMinDepth};
+      const vpMax: f32 = ${kViewportMaxDepth};
 
       // Draw the points in a straight horizontal row, one per pixel.
       fn vertexX(idx: u32) -> f32 {
@@ -377,8 +377,8 @@ to be empty.`
       var<private> kDepths: array<f32, ${kNumDepthValues}> = array<f32, ${kNumDepthValues}>(
           -1.0, -0.5, 0.0, 0.25, 0.75, 1.0, 1.5, 2.0);
 
-      let vpMin: f32 = ${kViewportMinDepth};
-      let vpMax: f32 = ${kViewportMaxDepth};
+      const vpMin: f32 = ${kViewportMinDepth};
+      const vpMax: f32 = ${kViewportMaxDepth};
 
       // Draw the points in a straight horizontal row, one per pixel.
       fn vertexX(idx: u32) -> f32 {
