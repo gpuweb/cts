@@ -726,6 +726,31 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
   }
 
   /**
+   * Run the (non-async) callback `from` inside an error scope.
+   * Then, if there were no errors, run the (possibly-async) callback `then` to continue the test.
+   */
+  ifNoGPUError(
+    filter: GPUErrorFilter,
+    { from, then }: { from: () => void; then: () => void | Promise<void> }
+  ) {
+    this.device.pushErrorScope(filter);
+    from();
+    const asyncError = this.device.popErrorScope();
+
+    this.eventualAsyncExpectation(async niceStack => {
+      const error = await asyncError;
+
+      if (error !== null) {
+        niceStack.message = error.message;
+        this.rec.validationFailed(niceStack);
+        return;
+      }
+
+      then();
+    });
+  }
+
+  /**
    * Expect a validation error inside the callback.
    *
    * Tests should always do just one WebGPU call in the callback, to make sure that's what's tested.
