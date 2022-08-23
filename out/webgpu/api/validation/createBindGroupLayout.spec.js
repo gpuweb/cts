@@ -350,4 +350,32 @@ fn(async (t) => {
     t.device.createPipelineLayout({ bindGroupLayouts: [goodLayout, extraLayout] });
   }, newBindingCountsTowardSamePerStageLimit);
 });
+
+g.test('storage_texture,layout_dimension').
+desc(
+`
+  Test that viewDimension is not cube or cube-array if storageTextureLayout is not undefined.
+  `).
+
+params((u) =>
+u //
+.combine('viewDimension', [undefined, ...kTextureViewDimensions])).
+
+fn(async (t) => {
+  const { viewDimension } = t.params;
+
+  const success = viewDimension !== 'cube' && viewDimension !== `cube-array`;
+
+  t.expectValidationError(() => {
+    t.device.createBindGroupLayout({
+      entries: [
+      {
+        binding: 0,
+        visibility: GPUShaderStage.COMPUTE,
+        storageTexture: { format: 'rgba8unorm', viewDimension } }] });
+
+
+
+  }, !success);
+});
 //# sourceMappingURL=createBindGroupLayout.spec.js.map
