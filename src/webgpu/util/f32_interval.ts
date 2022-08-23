@@ -142,7 +142,10 @@ function toF32Vector(v: number[] | F32Vector): F32Vector {
   unreachable(`Cannot convert [${v}] to F32Vector`);
 }
 
-/** @returns the input + zero if any of the entries are subnormal, otherwise returns the input */
+/**
+ * @returns the input plus zero if any of the entries are subnormal, otherwise
+ * returns the input
+ */
 function addFlushedIfNeeded(values: number[]): number[] {
   return values.some(isSubnormalNumber) ? values.concat(0) : values;
 }
