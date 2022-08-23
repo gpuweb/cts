@@ -86,7 +86,14 @@ g.test('f32_vec2')
       });
     });
 
-    run(t, builtin('dot'), [TypeVec(2, TypeF32), TypeVec(2, TypeF32)], TypeF32, t.params, cases);
+    await run(
+      t,
+      builtin('dot'),
+      [TypeVec(2, TypeF32), TypeVec(2, TypeF32)],
+      TypeF32,
+      t.params,
+      cases
+    );
   });
 
 g.test('f32_vec3')
@@ -104,7 +111,14 @@ g.test('f32_vec3')
       });
     });
 
-    run(t, builtin('dot'), [TypeVec(3, TypeF32), TypeVec(3, TypeF32)], TypeF32, t.params, cases);
+    await run(
+      t,
+      builtin('dot'),
+      [TypeVec(3, TypeF32), TypeVec(3, TypeF32)],
+      TypeF32,
+      t.params,
+      cases
+    );
   });
 
 g.test('f32_vec4')
@@ -122,7 +136,14 @@ g.test('f32_vec4')
       });
     });
 
-    run(t, builtin('dot'), [TypeVec(4, TypeF32), TypeVec(4, TypeF32)], TypeF32, t.params, cases);
+    await run(
+      t,
+      builtin('dot'),
+      [TypeVec(4, TypeF32), TypeVec(4, TypeF32)],
+      TypeF32,
+      t.params,
+      cases
+    );
   });
 
 g.test('f16')

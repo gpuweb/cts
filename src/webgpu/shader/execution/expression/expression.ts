@@ -133,7 +133,7 @@ export interface ExpressionBuilder {
  * @param cfg test configuration values
  * @param cases list of test cases
  */
-export function run(
+export async function run(
   t: GPUTest,
   expressionBuilder: ExpressionBuilder,
   parameterTypes: Array<Type>,
@@ -167,21 +167,25 @@ export function run(
     }
   })();
 
-  // Submit all the batches, then check the results.
+  // Submit all the batches
+  t.device.pushErrorScope('validation');
+
   const checkResults: Array<() => void> = [];
   for (let i = 0; i < cases.length; i += casesPerBatch) {
     const batchCases = cases.slice(i, Math.min(i + casesPerBatch, cases.length));
-    const checkResult = submitBatch(
-      t,
-      expressionBuilder,
-      parameterTypes,
-      returnType,
-      batchCases,
-      cfg.inputSource
+    checkResults.push(
+      submitBatch(t, expressionBuilder, parameterTypes, returnType, batchCases, cfg.inputSource)
     );
-    checkResults.push(checkResult);
   }
 
+  // Check GPU validation (shader compilation, pipeline creation, etc) before checking the results
+  const error = await t.device.popErrorScope();
+  if (error !== null) {
+    t.fail(error.message);
+    return;
+  }
+
+  // Check the results
   checkResults.forEach(f => f());
 }
 
@@ -220,6 +224,7 @@ function submitBatch(
     inputSource,
     outputBuffer
   );
+
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginComputePass();
   pass.setPipeline(pipeline);

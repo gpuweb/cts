@@ -64,7 +64,7 @@ g.test('u32')
     const test_values: Array<number> = [0, 1, 2, 0x70000000, 0x80000000, 0xffffffff];
     const cases = generateTestCases(test_values, makeCase);
 
-    run(t, builtin('max'), [TypeU32, TypeU32], TypeU32, t.params, cases);
+    await run(t, builtin('max'), [TypeU32, TypeU32], TypeU32, t.params, cases);
   });
 
 g.test('i32')
@@ -81,7 +81,7 @@ g.test('i32')
     const test_values: Array<number> = [-0x70000000, -2, -1, 0, 1, 2, 0x70000000];
     const cases = generateTestCases(test_values, makeCase);
 
-    run(t, builtin('max'), [TypeI32, TypeI32], TypeI32, t.params, cases);
+    await run(t, builtin('max'), [TypeI32, TypeI32], TypeI32, t.params, cases);
   });
 
 g.test('abstract_float')
@@ -112,7 +112,7 @@ g.test('f32')
       });
     });
 
-    run(t, builtin('max'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(t, builtin('max'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('f16')
