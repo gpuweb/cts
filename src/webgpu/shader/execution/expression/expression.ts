@@ -536,7 +536,7 @@ function packScalarsToVector(
  * @param param the param to pass into the unary operation
  * @param ops callbacks that implement generating an acceptance interval for a unary operation
  */
-export function makeUnaryF32IntervalCase(param: number, ...ops: PointToInterval[]): Case {
+export function makeUnaryToF32IntervalCase(param: number, ...ops: PointToInterval[]): Case {
   param = quantizeToF32(param);
   const intervals: Array<F32Interval> = new Array<F32Interval>();
   for (const op of ops) {
@@ -552,7 +552,7 @@ export function makeUnaryF32IntervalCase(param: number, ...ops: PointToInterval[
  * @param param1 the second param or rhs hand side to pass into the binary operation
  * @param ops callbacks that implement generating an acceptance interval for a binary operation
  */
-export function makeBinaryF32IntervalCase(
+export function makeBinaryToF32IntervalCase(
   param0: number,
   param1: number,
   ...ops: BinaryToInterval[]
@@ -575,7 +575,7 @@ export function makeBinaryF32IntervalCase(
  * @param ops callbacks that implement generating an acceptance interval for a
  *           ternary operation.
  */
-export function makeTernaryF32IntervalCase(
+export function makeTernaryToF32IntervalCase(
   param0: number,
   param1: number,
   param2: number,
@@ -601,7 +601,7 @@ export function makeTernaryF32IntervalCase(
  * @param ops callbacks that implement generating an acceptance interval for a
  *            pair of vectors.
  */
-export function makeVectorPairF32IntervalCase(
+export function makeVectorPairToF32IntervalCase(
   param0: number[],
   param1: number[],
   ...ops: VectorPairToInterval[]

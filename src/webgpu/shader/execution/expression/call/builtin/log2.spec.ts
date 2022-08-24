@@ -13,7 +13,7 @@ import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { log2Interval } from '../../../../../util/f32_interval.js';
 import { biasedRange, fullF32Range, linearRange } from '../../../../../util/math.js';
-import { allInputSources, Case, makeUnaryF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -42,7 +42,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
   .fn(async t => {
     // [1]: Need to decide what the ground-truth is.
     const makeCase = (x: number): Case => {
-      return makeUnaryF32IntervalCase(x, log2Interval);
+      return makeUnaryToF32IntervalCase(x, log2Interval);
     };
 
     const cases: Array<Case> = [
