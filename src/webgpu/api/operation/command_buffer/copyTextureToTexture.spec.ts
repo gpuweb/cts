@@ -20,6 +20,7 @@ import { makeBufferWithContents } from '../../../util/buffer.js';
 import { align } from '../../../util/math.js';
 import { physicalMipSize } from '../../../util/texture/base.js';
 import { kBytesPerRowAlignment, dataBytesForCopyOrFail } from '../../../util/texture/layout.js';
+
 import { DataArrayGenerator } from './data_generation.js';
 
 const dataGenerator = new DataArrayGenerator();

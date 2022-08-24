@@ -9,7 +9,7 @@ export class DataArrayGenerator {
 
   // Find the nearest power of two greater than or equal to the input value.
   private nextPowerOfTwo(value: number) {
-    return 1 << 32 - Math.clz32(value-1);
+    return 1 << (32 - Math.clz32(value - 1));
   }
 
   private generateData(byteSize: number, start: number = 0, offset: number = 0) {
@@ -20,9 +20,9 @@ export class DataArrayGenerator {
       // enough to handle the new request.
       const newData = new Uint8Array(this.nextPowerOfTwo(byteSize));
 
-      if (this.lastOffset == offset && this.lastStart == start && this.lastByteSize) {
-          // Do a fast copy of any previous data that was generated.
-          newData.set(this.dataBuffer);
+      if (this.lastOffset === offset && this.lastStart === start && this.lastByteSize) {
+        // Do a fast copy of any previous data that was generated.
+        newData.set(this.dataBuffer);
       }
 
       this.dataBuffer = newData;
@@ -32,7 +32,7 @@ export class DataArrayGenerator {
     }
 
     // If the offset or start values have changed, the whole data range needs to be regenerated.
-    if (this.lastOffset != offset || this.lastStart != start) {
+    if (this.lastOffset !== offset || this.lastStart !== start) {
       this.lastByteSize = 0;
     }
 
@@ -53,7 +53,7 @@ export class DataArrayGenerator {
   generateView(byteSize: number, start: number = 0, offset: number = 0): Uint8Array {
     this.generateData(byteSize, start, offset);
 
-    if (this.dataBuffer.length == byteSize) {
+    if (this.dataBuffer.length === byteSize) {
       return this.dataBuffer;
     }
     return new Uint8Array(this.dataBuffer.buffer, 0, byteSize);
