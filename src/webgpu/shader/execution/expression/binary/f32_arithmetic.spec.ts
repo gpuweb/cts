@@ -9,6 +9,7 @@ import {
   additionInterval,
   divisionInterval,
   multiplicationInterval,
+  remainderInterval,
   subtractionInterval,
 } from '../../../../util/f32_interval.js';
 import { cartesianProduct, fullF32Range } from '../../../../util/math.js';
@@ -112,8 +113,7 @@ Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
     run(t, binary('/'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
-// Will be implemented as part larger derived accuracy task
-g.test('modulus')
+g.test('remainder')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `
@@ -121,5 +121,17 @@ Expression: x % y
 Accuracy: Derived from x - y * trunc(x/y)
 `
   )
-  .params(u => u.combine('placeHolder1', ['placeHolder2', 'placeHolder3']))
-  .unimplemented();
+  .params(u =>
+    u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
+  )
+  .fn(async t => {
+    const makeCase = (lhs: number, rhs: number): Case => {
+      return makeBinaryToF32IntervalCase(lhs, rhs, remainderInterval);
+    };
+
+    const cases = kTestValues.map((v: number[]) => {
+      return makeCase(v[0], v[1]);
+    });
+
+    run(t, binary('%'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+  });
