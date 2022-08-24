@@ -13,7 +13,7 @@ import {
   subtractionInterval,
 } from '../../../../util/f32_interval.js';
 import { cartesianProduct, fullF32Range } from '../../../../util/math.js';
-import { allInputSources, makeBinaryF32IntervalCase, run } from '../expression.js';
+import { allInputSources, makeBinaryToF32IntervalCase, run } from '../expression.js';
 
 import { binary } from './binary.js';
 
@@ -32,7 +32,7 @@ Accuracy: Correctly rounded
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
     const makeCase = (lhs, rhs) => {
-      return makeBinaryF32IntervalCase(lhs, rhs, additionInterval);
+      return makeBinaryToF32IntervalCase(lhs, rhs, additionInterval);
     };
 
     const cases = kTestValues.map(v => {
@@ -53,7 +53,7 @@ Accuracy: Correctly rounded
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
     const makeCase = (lhs, rhs) => {
-      return makeBinaryF32IntervalCase(lhs, rhs, subtractionInterval);
+      return makeBinaryToF32IntervalCase(lhs, rhs, subtractionInterval);
     };
 
     const cases = kTestValues.map(v => {
@@ -74,7 +74,7 @@ Accuracy: Correctly rounded
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
     const makeCase = (lhs, rhs) => {
-      return makeBinaryF32IntervalCase(lhs, rhs, multiplicationInterval);
+      return makeBinaryToF32IntervalCase(lhs, rhs, multiplicationInterval);
     };
 
     const cases = kTestValues.map(v => {
@@ -95,7 +95,7 @@ Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
     const makeCase = (lhs, rhs) => {
-      return makeBinaryF32IntervalCase(lhs, rhs, divisionInterval);
+      return makeBinaryToF32IntervalCase(lhs, rhs, divisionInterval);
     };
 
     const cases = kTestValues.map(v => {

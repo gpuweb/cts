@@ -48,7 +48,7 @@ u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3,
 fn(async (t) => {
   const makeCase = (e1, e2) => {
     // Due to the heterogeneous types of the params to ldexp (f32 & i32),
-    // makeBinaryF32IntervalCase cannot be used here.
+    // makeBinaryToF32IntervalCase cannot be used here.
     e1 = quantizeToF32(e1);
     e2 = quantizeToI32(e2);
     const expected = ldexpInterval(e1, e2);

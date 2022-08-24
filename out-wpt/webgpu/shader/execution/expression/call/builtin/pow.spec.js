@@ -13,7 +13,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { powInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../../util/math.js';
-import { allInputSources, makeBinaryF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, makeBinaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -31,7 +31,7 @@ g.test('f32')
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
     const makeCase = (x, y) => {
-      return makeBinaryF32IntervalCase(x, y, powInterval);
+      return makeBinaryToF32IntervalCase(x, y, powInterval);
     };
 
     const cases = [];

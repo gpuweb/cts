@@ -490,7 +490,7 @@ function packScalarsToVector(parameterTypes, returnType, cases, vectorWidth) {
  * @param param the param to pass into the unary operation
  * @param ops callbacks that implement generating an acceptance interval for a unary operation
  */
-export function makeUnaryF32IntervalCase(param, ...ops) {
+export function makeUnaryToF32IntervalCase(param, ...ops) {
   param = quantizeToF32(param);
   const intervals = new Array();
   for (const op of ops) {
@@ -506,7 +506,7 @@ export function makeUnaryF32IntervalCase(param, ...ops) {
  * @param param1 the second param or rhs hand side to pass into the binary operation
  * @param ops callbacks that implement generating an acceptance interval for a binary operation
  */
-export function makeBinaryF32IntervalCase(param0, param1, ...ops) {
+export function makeBinaryToF32IntervalCase(param0, param1, ...ops) {
   param0 = quantizeToF32(param0);
   param1 = quantizeToF32(param1);
   const intervals = new Array();
@@ -525,7 +525,7 @@ export function makeBinaryF32IntervalCase(param0, param1, ...ops) {
  * @param ops callbacks that implement generating an acceptance interval for a
  *           ternary operation.
  */
-export function makeTernaryF32IntervalCase(param0, param1, param2, ...ops) {
+export function makeTernaryToF32IntervalCase(param0, param1, param2, ...ops) {
   param0 = quantizeToF32(param0);
   param1 = quantizeToF32(param1);
   param2 = quantizeToF32(param2);
@@ -546,7 +546,7 @@ export function makeTernaryF32IntervalCase(param0, param1, param2, ...ops) {
  * @param ops callbacks that implement generating an acceptance interval for a
  *            pair of vectors.
  */
-export function makeVectorPairF32IntervalCase(param0, param1, ...ops) {
+export function makeVectorPairToF32IntervalCase(param0, param1, ...ops) {
   param0 = param0.map(quantizeToF32);
   param1 = param1.map(quantizeToF32);
   const param0_f32 = param0.map(f32);

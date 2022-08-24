@@ -12,7 +12,7 @@ import {
   subtractionInterval,
 } from '../../../../util/f32_interval.js';
 import { cartesianProduct, fullF32Range } from '../../../../util/math.js';
-import { allInputSources, Case, makeBinaryF32IntervalCase, run } from '../expression.js';
+import { allInputSources, Case, makeBinaryToF32IntervalCase, run } from '../expression.js';
 
 import { binary } from './binary.js';
 
@@ -33,7 +33,7 @@ Accuracy: Correctly rounded
   )
   .fn(async t => {
     const makeCase = (lhs: number, rhs: number): Case => {
-      return makeBinaryF32IntervalCase(lhs, rhs, additionInterval);
+      return makeBinaryToF32IntervalCase(lhs, rhs, additionInterval);
     };
 
     const cases = kTestValues.map((v: number[]) => {
@@ -56,7 +56,7 @@ Accuracy: Correctly rounded
   )
   .fn(async t => {
     const makeCase = (lhs: number, rhs: number): Case => {
-      return makeBinaryF32IntervalCase(lhs, rhs, subtractionInterval);
+      return makeBinaryToF32IntervalCase(lhs, rhs, subtractionInterval);
     };
 
     const cases = kTestValues.map((v: number[]) => {
@@ -79,7 +79,7 @@ Accuracy: Correctly rounded
   )
   .fn(async t => {
     const makeCase = (lhs: number, rhs: number): Case => {
-      return makeBinaryF32IntervalCase(lhs, rhs, multiplicationInterval);
+      return makeBinaryToF32IntervalCase(lhs, rhs, multiplicationInterval);
     };
 
     const cases = kTestValues.map((v: number[]) => {
@@ -102,7 +102,7 @@ Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
   )
   .fn(async t => {
     const makeCase = (lhs: number, rhs: number): Case => {
-      return makeBinaryF32IntervalCase(lhs, rhs, divisionInterval);
+      return makeBinaryToF32IntervalCase(lhs, rhs, divisionInterval);
     };
 
     const cases = kTestValues.map((v: number[]) => {

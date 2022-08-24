@@ -22,7 +22,7 @@ import { kBit } from '../../../../../util/constants.js';
 import { i32Bits, TypeF32, TypeI32, TypeU32, u32Bits } from '../../../../../util/conversion.js';
 import { absInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../../util/math.js';
-import { allInputSources, makeUnaryF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -139,7 +139,7 @@ g.test('f32')
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
     const makeCase = x => {
-      return makeUnaryF32IntervalCase(x, absInterval);
+      return makeUnaryToF32IntervalCase(x, absInterval);
     };
 
     const cases = [Number.NEGATIVE_INFINITY, ...fullF32Range(), Number.POSITIVE_INFINITY].map(x =>

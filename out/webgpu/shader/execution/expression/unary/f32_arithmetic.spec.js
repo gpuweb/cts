@@ -7,7 +7,7 @@ import { GPUTest } from '../../../../gpu_test.js';
 import { TypeF32 } from '../../../../util/conversion.js';
 import { negationInterval } from '../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../util/math.js';
-import { allInputSources, makeUnaryF32IntervalCase, run } from '../expression.js';
+import { allInputSources, makeUnaryToF32IntervalCase, run } from '../expression.js';
 
 import { unary } from './unary.js';
 
@@ -26,7 +26,7 @@ u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3,
 
 fn(async (t) => {
   const makeCase = (x) => {
-    return makeUnaryF32IntervalCase(x, negationInterval);
+    return makeUnaryToF32IntervalCase(x, negationInterval);
   };
 
   const cases = fullF32Range({ neg_norm: 250, neg_sub: 20, pos_sub: 20, pos_norm: 250 }).map((x) =>

@@ -12,7 +12,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { dotInterval } from '../../../../../util/f32_interval.js';
 import { sparseF32Range } from '../../../../../util/math.js';
-import { allInputSources, Case, makeVectorPairF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, Case, makeVectorPairToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -77,7 +77,7 @@ g.test('f32_vec2')
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
     const makeCase = (x: number[], y: number[]): Case => {
-      return makeVectorPairF32IntervalCase(x, y, dotInterval);
+      return makeVectorPairToF32IntervalCase(x, y, dotInterval);
     };
 
     const cases: Case[] = kVectorTestValues[2].flatMap(i => {
@@ -95,7 +95,7 @@ g.test('f32_vec3')
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
     const makeCase = (x: number[], y: number[]): Case => {
-      return makeVectorPairF32IntervalCase(x, y, dotInterval);
+      return makeVectorPairToF32IntervalCase(x, y, dotInterval);
     };
 
     const cases: Case[] = kVectorTestValues[3].flatMap(i => {
@@ -113,7 +113,7 @@ g.test('f32_vec4')
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
     const makeCase = (x: number[], y: number[]): Case => {
-      return makeVectorPairF32IntervalCase(x, y, dotInterval);
+      return makeVectorPairToF32IntervalCase(x, y, dotInterval);
     };
 
     const cases: Case[] = kVectorTestValues[4].flatMap(i => {

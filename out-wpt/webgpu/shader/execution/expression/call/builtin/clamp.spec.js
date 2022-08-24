@@ -28,7 +28,7 @@ import {
 } from '../../../../../util/conversion.js';
 import { clampIntervals } from '../../../../../util/f32_interval.js';
 import { sparseF32Range } from '../../../../../util/math.js';
-import { allInputSources, makeTernaryF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, makeTernaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -134,7 +134,7 @@ g.test('f32')
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
     const makeCase = (x, y, z) => {
-      return makeTernaryF32IntervalCase(x, y, z, ...clampIntervals);
+      return makeTernaryToF32IntervalCase(x, y, z, ...clampIntervals);
     };
 
     const values = sparseF32Range();

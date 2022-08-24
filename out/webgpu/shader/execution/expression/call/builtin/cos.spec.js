@@ -13,7 +13,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { cosInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range, linearRange } from '../../../../../util/math.js';
-import { allInputSources, makeUnaryF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -41,7 +41,7 @@ u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3,
 
 fn(async (t) => {
   const makeCase = (n) => {
-    return makeUnaryF32IntervalCase(n, cosInterval);
+    return makeUnaryToF32IntervalCase(n, cosInterval);
   };
 
   const cases = [

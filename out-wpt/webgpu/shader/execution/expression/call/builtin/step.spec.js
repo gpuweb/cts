@@ -35,7 +35,7 @@ g.test('f32')
     const oneInterval = new F32Interval(1, 1);
 
     // stepInterval's return value isn't always interpreted as an acceptance
-    // interval, so makeBinaryF32IntervalCase cannot be used here.
+    // interval, so makeBinaryToF32IntervalCase cannot be used here.
     // See the comment block on stepInterval for more details
     const makeCase = (edge, x) => {
       edge = quantizeToF32(edge);

@@ -13,7 +13,7 @@ import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { exp2Interval } from '../../../../../util/f32_interval.js';
 import { biasedRange, linearRange } from '../../../../../util/math.js';
-import { allInputSources, Case, makeUnaryF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -35,7 +35,7 @@ g.test('f32')
   )
   .fn(async t => {
     const makeCase = (x: number): Case => {
-      return makeUnaryF32IntervalCase(x, exp2Interval);
+      return makeUnaryToF32IntervalCase(x, exp2Interval);
     };
 
     // floor(log2(max f32 value)) = 127, so exp2(127) will be within range of a f32, but exp2(128) will not
