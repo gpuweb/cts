@@ -63,6 +63,7 @@ import {
   kBytesPerRowAlignment,
   TextureCopyLayout,
 } from '../../../util/texture/layout.js';
+
 import { DataArrayGenerator } from './data_generation.js';
 
 interface TextureCopyViewWithRequiredOrigin {
