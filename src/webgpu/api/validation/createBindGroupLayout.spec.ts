@@ -53,6 +53,39 @@ g.test('duplicate_bindings')
     }, !_valid);
   });
 
+// Need to use the maxBindingsPerBindGroup constant of GPUSupportedLimits instead of 640.
+const kMaxBindingNumber = 640;
+g.test('maximum_binding_limit')
+  .desc(
+    `
+  Test that a validation error is generated if the binding number exceeds the maximum binding limit.
+
+  TODO: Check if a higher maximum binding limit can be allowed. (e.g. 65535)
+  `
+  )
+  .paramsSubcasesOnly(u =>
+    u //
+      .combine('binding', [1, 4, 8, 256, kMaxBindingNumber - 1, kMaxBindingNumber])
+  )
+  .fn(async t => {
+    const { binding } = t.params;
+    const entries: Array<GPUBindGroupLayoutEntry> = [];
+
+    entries.push({
+      binding,
+      visibility: GPUShaderStage.COMPUTE,
+      buffer: { type: 'storage' as const },
+    });
+
+    const success = binding < kMaxBindingNumber;
+
+    t.expectValidationError(() => {
+      t.device.createBindGroupLayout({
+        entries,
+      });
+    }, !success);
+  });
+
 g.test('visibility')
   .desc(
     `
