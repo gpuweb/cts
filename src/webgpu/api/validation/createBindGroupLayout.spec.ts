@@ -7,9 +7,11 @@ TODO: make sure tests are complete.
 import { kUnitCaseParamsBuilder } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import {
+  kAllTextureFormats,
   kShaderStages,
   kShaderStageCombinations,
   kStorageTextureAccessValues,
+  kTextureFormatInfo,
   kTextureViewDimensions,
   allBindingEntries,
   bindingTypeInfo,
@@ -377,4 +379,33 @@ g.test('storage_texture,layout_dimension')
         ],
       });
     }, !success);
+  });
+
+g.test('storage_texture,formats')
+  .desc(
+    `
+  Test that a validation error is generated if the format doesn't support the storage usage.
+
+  TODO: Test "bgra8unorm" with the "bgra8unorm-storage" feature.
+  `
+  )
+  .params(u => u.combine('format', kAllTextureFormats))
+  .beforeAllSubcases(t => {
+    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  })
+  .fn(async t => {
+    const { format } = t.params;
+    const info = kTextureFormatInfo[format];
+
+    t.expectValidationError(() => {
+      t.device.createBindGroupLayout({
+        entries: [
+          {
+            binding: 0,
+            visibility: GPUShaderStage.COMPUTE,
+            storageTexture: { format },
+          },
+        ],
+      });
+    }, !info.storage);
   });
