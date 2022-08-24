@@ -23,6 +23,7 @@ cosInterval,
 coshInterval,
 degreesInterval,
 divisionInterval,
+dotInterval,
 expInterval,
 exp2Interval,
 F32Interval,
@@ -41,6 +42,7 @@ multiplicationInterval,
 negationInterval,
 powInterval,
 radiansInterval,
+remainderInterval,
 roundInterval,
 saturateInterval,
 signInterval,
@@ -52,8 +54,7 @@ subtractionInterval,
 tanInterval,
 tanhInterval,
 truncInterval,
-ulpInterval,
-dotInterval } from
+ulpInterval } from
 '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -1895,6 +1896,57 @@ fn((t) => {
   t.expect(
   objectEquals(expected, got),
   `multiplicationInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
+
+});
+
+g.test('remainderInterval').
+paramsSubcasesOnly(
+
+[
+// 32-bit normals
+{ input: [0, 1], expected: [0, 0] },
+{ input: [0, -1], expected: [0, 0] },
+{ input: [1, 1], expected: [0, 1] },
+{ input: [1, -1], expected: [0, 1] },
+{ input: [-1, 1], expected: [-1, 0] },
+{ input: [-1, -1], expected: [-1, 0] },
+{ input: [4, 2], expected: [0, 2] },
+{ input: [-4, 2], expected: [-2, 0] },
+{ input: [4, -2], expected: [0, 2] },
+{ input: [-4, -2], expected: [-2, 0] },
+{ input: [2, 4], expected: [2, 2] },
+{ input: [-2, 4], expected: [-2, -2] },
+{ input: [2, -4], expected: [2, 2] },
+{ input: [-2, -4], expected: [-2, -2] },
+
+// 64-bit normals
+{ input: [0, 0.1], expected: [0, 0] },
+{ input: [0, -0.1], expected: [0, 0] },
+{ input: [1, 0.1], expected: [hexToF32(0xb4000000), hexToF32(0x3dccccd8)] }, // ~[0, 0.1]
+{ input: [-1, 0.1], expected: [hexToF32(0xbdccccd8), hexToF32(0x34000000)] }, // ~[-0.1, 0]
+{ input: [1, -0.1], expected: [hexToF32(0xb4000000), hexToF32(0x3dccccd8)] }, // ~[0, 0.1]
+{ input: [-1, -0.1], expected: [hexToF32(0xbdccccd8), hexToF32(0x34000000)] }, // ~[-0.1, 0]
+
+// Denominator out of range
+{ input: [1, kValue.f32.infinity.positive], expected: kAny },
+{ input: [1, kValue.f32.infinity.negative], expected: kAny },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAny },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAny },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAny },
+{ input: [1, kValue.f32.positive.max], expected: kAny },
+{ input: [1, kValue.f32.negative.min], expected: kAny },
+{ input: [1, 0], expected: kAny },
+{ input: [1, kValue.f32.subnormal.positive.max], expected: kAny }]).
+
+
+fn((t) => {
+  const [x, y] = t.params.input;
+  const expected = new F32Interval(...t.params.expected);
+
+  const got = remainderInterval(x, y);
+  t.expect(
+  objectEquals(expected, got),
+  `remainderInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
 
 });
 
