@@ -422,7 +422,11 @@ export function biasedRange(a: number, b: number, num_steps: number): Array<numb
  * @returns an ascending sorted array of numbers spread over the entire range of 32-bit floats
  *
  * Numbers are divided into 4 regions: negative normals, negative subnormals, positive subnormals & positive normals.
- * Zero is included. The normal number regions are biased towards zero, and the subnormal regions are linearly spread.
+ * Zero is included.
+ *
+ * Numbers are generated via taking a linear spread of the bit field representations of the values in each region. This
+ * means that number of precise f32 values between each returned value in a region should be about the same. This allows
+ * for a wide range of magnitudes to be generated, instead of being extremely biased towards the edges of the f32 range.
  *
  * This function is intended to provide dense coverage of the f32 range, for a minimal list of values to use to cover
  * f32 behaviour, use sparseF32Range instead.
@@ -440,21 +444,26 @@ export function fullF32Range(
 ): Array<number> {
   counts.neg_norm = counts.neg_norm === undefined ? counts.pos_norm : counts.neg_norm;
   counts.neg_sub = counts.neg_sub === undefined ? counts.pos_sub : counts.neg_sub;
-  return [
-    ...biasedRange(kValue.f32.negative.max, kValue.f32.negative.min, counts.neg_norm),
+
+  // Generating bit fields first and then converting to f32, so that the spread across the possible f32 values is more
+  // even. Generating against the bounds of f32 values directly results in the values being extremely biased towards the
+  // extremes, since they are so much larger.
+  const bit_fields = [
+    ...linearRange(kBit.f32.negative.min, kBit.f32.negative.max, counts.neg_norm),
     ...linearRange(
-      kValue.f32.subnormal.negative.min,
-      kValue.f32.subnormal.negative.max,
+      kBit.f32.subnormal.negative.min,
+      kBit.f32.subnormal.negative.max,
       counts.neg_sub
     ),
-    0.0,
+    0,
     ...linearRange(
-      kValue.f32.subnormal.positive.min,
-      kValue.f32.subnormal.positive.max,
+      kBit.f32.subnormal.positive.min,
+      kBit.f32.subnormal.positive.max,
       counts.pos_sub
     ),
-    ...biasedRange(kValue.f32.positive.min, kValue.f32.positive.max, counts.pos_norm),
-  ];
+    ...linearRange(kBit.f32.positive.min, kBit.f32.positive.max, counts.pos_norm),
+  ].map(Math.trunc);
+  return bit_fields.map(hexToF32);
 }
 
 /**
@@ -473,7 +482,7 @@ export function fullI32Range(
 ): Array<number> {
   counts.negative = counts.negative === undefined ? counts.positive : counts.negative;
   return [
-    ...biasedRange(kValue.i32.negative.max, kValue.i32.negative.min, counts.negative),
+    ...biasedRange(kValue.i32.negative.max, kValue.i32.negative.min, counts.negative).reverse(),
     0,
     ...biasedRange(kValue.i32.positive.min, kValue.i32.positive.max, counts.positive),
   ];
