@@ -279,12 +279,12 @@ struct Output {
       const source = `
 ${wgslOutputs}
 
-const values = array<${wgslStorageType}, ${cases.length}>(
-  ${wgslValues.join(',\n  ')}
-);
-
 @compute @workgroup_size(1)
 fn main() {
+  let values = array<${wgslStorageType}, ${cases.length}>(
+    ${wgslValues.join(',\n    ')}
+  );
+
   for (var i = 0u; i < ${cases.length}; i++) {
     outputs[i].value = values[i];
   }
