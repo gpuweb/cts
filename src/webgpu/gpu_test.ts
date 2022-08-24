@@ -732,7 +732,7 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
   ifNoGPUError(
     filter: GPUErrorFilter,
     { from, then }: { from: () => void; then: () => void | Promise<void> }
-  ) {
+  ): void {
     this.device.pushErrorScope(filter);
     from();
     const asyncError = this.device.popErrorScope();
@@ -746,7 +746,7 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
         return;
       }
 
-      then();
+      void then();
     });
   }
 
