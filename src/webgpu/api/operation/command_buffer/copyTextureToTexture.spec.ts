@@ -21,15 +21,39 @@ import { align } from '../../../util/math.js';
 import { physicalMipSize } from '../../../util/texture/base.js';
 import { kBytesPerRowAlignment, dataBytesForCopyOrFail } from '../../../util/texture/layout.js';
 
-class F extends GPUTest {
-  GetInitialData(byteSize: number): Uint8Array {
-    const initialData = new Uint8Array(byteSize);
-    for (let i = 0; i < initialData.length; ++i) {
-      initialData[i] = ((i ** 3 + i) % 251) + 1; // Have all initialData be non zero.
+// Find the next square number that is greater than or equal to the given value.
+function nextSquare(value : number) {
+  const x = Math.ceil(Math.sqrt(value));
+  return x * x;
+}
+
+let initialData : Uint8Array;
+
+function GetInitialData(byteSize: number): Uint8Array {
+  const prevSize = initialData?.length ?? 0;
+
+  if (prevSize < byteSize) {
+    const newData = new Uint8Array(nextSquare(byteSize));
+
+    if (initialData) {
+        // Do a faster copy of any previous data that was generated.
+        newData.set(initialData);
     }
-    return initialData;
+
+    for (let i = prevSize; i < newData.length; ++i) {
+        newData[i] = ((i ** 3 + i) % 251) + 1; // Have all initialData be non zero.
+    }
+    initialData = newData;
   }
 
+  if (initialData.length == byteSize) {
+      return initialData;
+  }
+
+  return new Uint8Array(initialData.buffer, 0, byteSize);
+}
+
+class F extends GPUTest {
   GetInitialDataPerMipLevel(
     dimension: GPUTextureDimension,
     textureSize: Required<GPUExtent3DDict>,
@@ -45,7 +69,7 @@ class F extends GPUTest {
       (textureSizeAtLevel.height / blockHeightInTexel);
 
     const byteSize = bytesPerBlock * blocksPerSubresource * textureSizeAtLevel.depthOrArrayLayers;
-    return this.GetInitialData(byteSize);
+    return GetInitialData(byteSize);
   }
 
   GetInitialStencilDataPerMipLevel(
@@ -60,7 +84,7 @@ class F extends GPUTest {
       textureSizeAtLevel.width *
       textureSizeAtLevel.height *
       textureSizeAtLevel.depthOrArrayLayers;
-    return this.GetInitialData(byteSize);
+    return GetInitialData(byteSize);
   }
 
   DoCopyTextureToTextureTest(
