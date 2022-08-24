@@ -725,20 +725,29 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
     return returnValue;
   }
 
-  /**
-   * Run the (non-async) callback `from` inside an error scope.
-   * Then, if there were no errors, run the (possibly-async) callback `then` to continue the test.
-   */
-  ifNoGPUError(
-    filter: GPUErrorFilter,
-    { from, then }: { from: () => void; then: () => void | Promise<void> }
-  ): void {
+  /** Run a (non-async) callback inside an error scope, and return the result. */
+  withErrorScope(filter: GPUErrorFilter, fn: () => void): Promise<GPUError | null> {
     this.device.pushErrorScope(filter);
-    from();
-    const asyncError = this.device.popErrorScope();
+    let error;
+    try {
+      const ret = fn();
+      assert(ret === undefined, 'withErrorScope fn must not return a value or be async');
+    } finally {
+      error = this.device.popErrorScope();
+    }
+    return error;
+  }
 
+  /**
+   * Takes a promise returned by `popErrorScope()`, and expects it to return null. Then, if it
+   * does, then "eventually" run the (possibly-async) callback to continue the test.
+   */
+  eventuallyIfNoError(
+    errorPromise: Promise<GPUError | null>,
+    callback: () => void | Promise<void>
+  ): void {
     this.eventualAsyncExpectation(async niceStack => {
-      const error = await asyncError;
+      const error = await errorPromise;
 
       if (error !== null) {
         niceStack.message = error.message;
@@ -746,7 +755,7 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
         return;
       }
 
-      void then();
+      void callback();
     });
   }
 

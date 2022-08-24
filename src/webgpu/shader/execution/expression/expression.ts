@@ -167,21 +167,20 @@ export function run(
     }
   })();
 
+  // Submit all the batches inside the error scope
   const checkResults: Array<() => void> = [];
-  t.ifNoGPUError('validation', {
-    // Submit all the batches inside the error scope
-    from: () => {
-      for (let i = 0; i < cases.length; i += casesPerBatch) {
-        const batchCases = cases.slice(i, Math.min(i + casesPerBatch, cases.length));
-        checkResults.push(
-          submitBatch(t, expressionBuilder, parameterTypes, returnType, batchCases, cfg.inputSource)
-        );
-      }
-    },
-    // Check GPU validation (shader compilation, pipeline creation, etc) before checking the results
-    then: () => {
-      checkResults.forEach(f => f());
-    },
+  const errorPromise = t.withErrorScope('validation', () => {
+    for (let i = 0; i < cases.length; i += casesPerBatch) {
+      const batchCases = cases.slice(i, Math.min(i + casesPerBatch, cases.length));
+      checkResults.push(
+        submitBatch(t, expressionBuilder, parameterTypes, returnType, batchCases, cfg.inputSource)
+      );
+    }
+  });
+
+  // Check GPU validation (shader compilation, pipeline creation, etc) before checking the results
+  t.eventuallyIfNoError(errorPromise, () => {
+    checkResults.forEach(f => f());
   });
 }
 
