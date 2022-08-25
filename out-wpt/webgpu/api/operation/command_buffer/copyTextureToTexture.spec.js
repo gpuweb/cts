@@ -18,17 +18,12 @@ import { GPUTest } from '../../../gpu_test.js';
 import { makeBufferWithContents } from '../../../util/buffer.js';
 import { align } from '../../../util/math.js';
 import { physicalMipSize } from '../../../util/texture/base.js';
+import { DataArrayGenerator } from '../../../util/texture/data_generation.js';
 import { kBytesPerRowAlignment, dataBytesForCopyOrFail } from '../../../util/texture/layout.js';
 
-class F extends GPUTest {
-  GetInitialData(byteSize) {
-    const initialData = new Uint8Array(byteSize);
-    for (let i = 0; i < initialData.length; ++i) {
-      initialData[i] = ((i ** 3 + i) % 251) + 1; // Have all initialData be non zero.
-    }
-    return initialData;
-  }
+const dataGenerator = new DataArrayGenerator();
 
+class F extends GPUTest {
   GetInitialDataPerMipLevel(dimension, textureSize, format, mipLevel) {
     const textureSizeAtLevel = physicalMipSize(textureSize, format, dimension, mipLevel);
     const bytesPerBlock = kTextureFormatInfo[format].bytesPerBlock;
@@ -39,7 +34,7 @@ class F extends GPUTest {
       (textureSizeAtLevel.height / blockHeightInTexel);
 
     const byteSize = bytesPerBlock * blocksPerSubresource * textureSizeAtLevel.depthOrArrayLayers;
-    return this.GetInitialData(byteSize);
+    return dataGenerator.generateView(byteSize);
   }
 
   GetInitialStencilDataPerMipLevel(textureSize, format, mipLevel) {
@@ -50,7 +45,7 @@ class F extends GPUTest {
       textureSizeAtLevel.width *
       textureSizeAtLevel.height *
       textureSizeAtLevel.depthOrArrayLayers;
-    return this.GetInitialData(byteSize);
+    return dataGenerator.generateView(byteSize);
   }
 
   DoCopyTextureToTextureTest(

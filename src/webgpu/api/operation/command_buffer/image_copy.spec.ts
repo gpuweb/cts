@@ -56,6 +56,7 @@ import {
 import { GPUTest } from '../../../gpu_test.js';
 import { makeBufferWithContents } from '../../../util/buffer.js';
 import { align } from '../../../util/math.js';
+import { DataArrayGenerator } from '../../../util/texture/data_generation.js';
 import {
   bytesInACompleteRow,
   dataBytesForCopyOrFail,
@@ -121,6 +122,9 @@ const kExcludedFormats: Set<SizedTextureFormat> = new Set([
 ]);
 const kWorkingColorTextureFormats = kColorTextureFormats.filter(x => !kExcludedFormats.has(x));
 
+const dataGenerator = new DataArrayGenerator();
+const altDataGenerator = new DataArrayGenerator();
+
 class ImageCopyTest extends GPUTest {
   /** Offset for a particular texel in the linear texture data */
   getTexelOffsetInBytes(
@@ -168,14 +172,6 @@ class ImageCopyTest extends GPUTest {
         };
       }
     }
-  }
-
-  generateData(byteSize: number, start: number = 0, offset: number = 0): Uint8Array {
-    const arr = new Uint8Array(byteSize);
-    for (let i = 0; i < byteSize; ++i) {
-      arr[i + offset] = (i ** 3 + i + start) % 251;
-    }
-    return arr;
   }
 
   /**
@@ -386,7 +382,7 @@ class ImageCopyTest extends GPUTest {
     // The alignment is necessary because we need to copy and map data from this buffer.
     const bufferSize = align(expected.byteLength, 4);
     // The start value ensures generated data here doesn't match the expected data.
-    const bufferData = this.generateData(bufferSize, 17);
+    const bufferData = altDataGenerator.generateAndCopyView(bufferSize, 17);
 
     const buffer = this.makeBufferWithContents(
       bufferData,
@@ -565,7 +561,7 @@ class ImageCopyTest extends GPUTest {
     });
     this.trackForCleanup(texture);
 
-    const data = this.generateData(dataSize);
+    const data = dataGenerator.generateView(dataSize);
 
     switch (checkMethod) {
       case 'PartialCopyT2B': {
@@ -645,7 +641,7 @@ class ImageCopyTest extends GPUTest {
     this.trackForCleanup(srcTexture);
 
     const copySize = [textureSize[0] >> mipLevel, textureSize[1] >> mipLevel, textureSize[2]];
-    const initialData = this.generateData(
+    const initialData = dataGenerator.generateView(
       align(initialDataSize, kBufferSizeAlignment),
       0,
       initialDataOffset
@@ -714,7 +710,7 @@ class ImageCopyTest extends GPUTest {
 
     // Initialize srcTexture with queue.writeTexture()
     const copySize = [textureSize[0] >> mipLevel, textureSize[1] >> mipLevel, textureSize[2]];
-    const initialData = this.generateData(
+    const initialData = dataGenerator.generateView(
       align(copySize[0] * copySize[1] * copySize[2], kBufferSizeAlignment)
     );
     this.queue.writeTexture(
