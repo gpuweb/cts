@@ -72,7 +72,7 @@ Bitwise-or. Component-wise when T is a vector.
         });
       }
     }
-    run(t, binary('|'), [type, type], type, t.params, cases);
+    await run(t, binary('|'), [type, type], type, t.params, cases);
   });
 
 g.test('bitwise_and')
@@ -144,7 +144,7 @@ Bitwise-and. Component-wise when T is a vector.
         });
       }
     }
-    run(t, binary('&'), [type, type], type, t.params, cases);
+    await run(t, binary('&'), [type, type], type, t.params, cases);
   });
 
 g.test('bitwise_exclusive_or')
@@ -216,5 +216,5 @@ Bitwise-exclusive-or. Component-wise when T is a vector.
         });
       }
     }
-    run(t, binary('^'), [type, type], type, t.params, cases);
+    await run(t, binary('^'), [type, type], type, t.params, cases);
   });

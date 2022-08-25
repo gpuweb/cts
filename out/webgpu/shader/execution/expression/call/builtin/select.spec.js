@@ -120,7 +120,7 @@ fn(async (t) => {
 
   const overload = overloads[t.params.overload];
 
-  run(
+  await run(
   t,
   builtin('select'),
   [overload.type, overload.type, TypeBool],
@@ -218,7 +218,7 @@ fn(async (t) => {
       }}
 
 
-  run(
+  await run(
   t,
   builtin('select'),
   [tests.dataType, tests.dataType, tests.boolType],

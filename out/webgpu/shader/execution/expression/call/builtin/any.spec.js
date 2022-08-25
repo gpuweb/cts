@@ -88,6 +88,6 @@ fn(async (t) => {
 
   const overload = overloads[t.params.overload];
 
-  run(t, builtin('any'), [overload.type], TypeBool, t.params, overload.cases);
+  await run(t, builtin('any'), [overload.type], TypeBool, t.params, overload.cases);
 });
 //# sourceMappingURL=any.spec.js.map

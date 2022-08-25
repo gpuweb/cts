@@ -45,7 +45,7 @@ fn(async (t) => {
   ...biasedRange(1, 0.9, 20), // discontinuity at x = 1
   ...fullF32Range()].
   map(makeCase);
-  run(t, builtin('atanh'), [TypeF32], TypeF32, t.params, cases);
+  await run(t, builtin('atanh'), [TypeF32], TypeF32, t.params, cases);
 });
 
 g.test('f16').

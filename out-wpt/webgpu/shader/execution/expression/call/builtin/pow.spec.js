@@ -42,7 +42,7 @@ g.test('f32')
       });
     });
 
-    run(t, builtin('pow'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(t, builtin('pow'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('f16')

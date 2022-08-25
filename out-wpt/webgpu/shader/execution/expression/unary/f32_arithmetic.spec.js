@@ -32,5 +32,5 @@ Accuracy: Correctly rounded
       makeCase(x)
     );
 
-    run(t, unary('-'), [TypeF32], TypeF32, t.params, cases);
+    await run(t, unary('-'), [TypeF32], TypeF32, t.params, cases);
   });

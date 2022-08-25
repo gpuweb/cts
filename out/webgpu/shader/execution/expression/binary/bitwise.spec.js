@@ -72,7 +72,7 @@ fn(async (t) => {
 
     }
   }
-  run(t, binary('|'), [type, type], type, t.params, cases);
+  await run(t, binary('|'), [type, type], type, t.params, cases);
 });
 
 g.test('bitwise_and').
@@ -144,7 +144,7 @@ fn(async (t) => {
 
     }
   }
-  run(t, binary('&'), [type, type], type, t.params, cases);
+  await run(t, binary('&'), [type, type], type, t.params, cases);
 });
 
 g.test('bitwise_exclusive_or').
@@ -216,6 +216,6 @@ fn(async (t) => {
 
     }
   }
-  run(t, binary('^'), [type, type], type, t.params, cases);
+  await run(t, binary('^'), [type, type], type, t.params, cases);
 });
 //# sourceMappingURL=bitwise.spec.js.map

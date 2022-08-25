@@ -51,7 +51,7 @@ fn(async (t) => {
     });
   });
 
-  run(t, builtin('atan2'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+  await run(t, builtin('atan2'), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 
 g.test('f16').

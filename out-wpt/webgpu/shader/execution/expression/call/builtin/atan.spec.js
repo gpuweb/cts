@@ -55,7 +55,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
       ...fullF32Range(),
     ].map(x => makeCase(x));
 
-    run(t, builtin('atan'), [TypeF32], TypeF32, t.params, cases);
+    await run(t, builtin('atan'), [TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('f16')

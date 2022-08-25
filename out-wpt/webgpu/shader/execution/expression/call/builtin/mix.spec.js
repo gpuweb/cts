@@ -50,7 +50,7 @@ g.test('matching_f32')
         });
       });
     });
-    run(t, builtin('mix'), [TypeF32, TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(t, builtin('mix'), [TypeF32, TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('matching_f16')

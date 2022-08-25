@@ -36,7 +36,7 @@ g.test('f32')
     };
 
     const cases = fullF32Range().map(makeCase);
-    run(t, builtin('radians'), [TypeF32], TypeF32, t.params, cases);
+    await run(t, builtin('radians'), [TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('f16')

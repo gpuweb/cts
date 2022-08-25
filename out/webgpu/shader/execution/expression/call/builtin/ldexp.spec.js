@@ -61,7 +61,7 @@ fn(async (t) => {
       cases.push(makeCase(e1, e2));
     });
   });
-  run(t, builtin('ldexp'), [TypeF32, TypeI32], TypeF32, t.params, cases);
+  await run(t, builtin('ldexp'), [TypeF32, TypeI32], TypeF32, t.params, cases);
 });
 
 g.test('f16').

@@ -84,7 +84,7 @@ g.test('u32')
       u32Bits(kBit.u32.max),
     ];
 
-    run(
+    await run(
       t,
       builtin('clamp'),
       [TypeU32, TypeU32, TypeU32],
@@ -112,7 +112,7 @@ g.test('i32')
       i32Bits(kBit.i32.positive.max),
     ];
 
-    run(
+    await run(
       t,
       builtin('clamp'),
       [TypeI32, TypeI32, TypeI32],
@@ -147,7 +147,7 @@ g.test('f32')
       });
     });
 
-    run(t, builtin('clamp'), [TypeF32, TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(t, builtin('clamp'), [TypeF32, TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('f16')

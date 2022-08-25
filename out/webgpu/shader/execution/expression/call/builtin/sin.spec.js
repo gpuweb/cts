@@ -49,7 +49,7 @@ fn(async (t) => {
 
   ...fullF32Range()].
   map(makeCase);
-  run(t, builtin('sin'), [TypeF32], TypeF32, t.params, cases);
+  await run(t, builtin('sin'), [TypeF32], TypeF32, t.params, cases);
 });
 
 g.test('f16').

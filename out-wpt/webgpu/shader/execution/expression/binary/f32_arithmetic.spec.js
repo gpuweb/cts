@@ -40,7 +40,7 @@ Accuracy: Correctly rounded
       return makeCase(v[0], v[1]);
     });
 
-    run(t, binary('+'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(t, binary('+'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('subtraction')
@@ -61,7 +61,7 @@ Accuracy: Correctly rounded
       return makeCase(v[0], v[1]);
     });
 
-    run(t, binary('-'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(t, binary('-'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('multiplication')
@@ -82,7 +82,7 @@ Accuracy: Correctly rounded
       return makeCase(v[0], v[1]);
     });
 
-    run(t, binary('*'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(t, binary('*'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('division')
@@ -103,7 +103,7 @@ Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
       return makeCase(v[0], v[1]);
     });
 
-    run(t, binary('/'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(t, binary('/'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('remainder')
@@ -124,5 +124,5 @@ Accuracy: Derived from x - y * trunc(x/y)
       return makeCase(v[0], v[1]);
     });
 
-    run(t, binary('%'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(t, binary('%'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });

@@ -41,7 +41,7 @@ fn(async (t) => {
     return makeCase(v[0], v[1]);
   });
 
-  run(t, binary('+'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+  await run(t, binary('+'), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 
 g.test('subtraction').
@@ -64,7 +64,7 @@ fn(async (t) => {
     return makeCase(v[0], v[1]);
   });
 
-  run(t, binary('-'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+  await run(t, binary('-'), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 
 g.test('multiplication').
@@ -87,7 +87,7 @@ fn(async (t) => {
     return makeCase(v[0], v[1]);
   });
 
-  run(t, binary('*'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+  await run(t, binary('*'), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 
 g.test('division').
@@ -110,7 +110,7 @@ fn(async (t) => {
     return makeCase(v[0], v[1]);
   });
 
-  run(t, binary('/'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+  await run(t, binary('/'), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 
 g.test('remainder').
@@ -133,6 +133,6 @@ fn(async (t) => {
     return makeCase(v[0], v[1]);
   });
 
-  run(t, binary('%'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+  await run(t, binary('%'), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 //# sourceMappingURL=f32_arithmetic.spec.js.map

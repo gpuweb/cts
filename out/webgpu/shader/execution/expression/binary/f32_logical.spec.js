@@ -63,7 +63,7 @@ fn(async (t) => {
     });
   });
 
-  run(t, binary('=='), [TypeF32, TypeF32], TypeBool, t.params, cases);
+  await run(t, binary('=='), [TypeF32, TypeF32], TypeBool, t.params, cases);
 });
 
 g.test('not_equals').
@@ -90,7 +90,7 @@ fn(async (t) => {
     });
   });
 
-  run(t, binary('!='), [TypeF32, TypeF32], TypeBool, t.params, cases);
+  await run(t, binary('!='), [TypeF32, TypeF32], TypeBool, t.params, cases);
 });
 
 g.test('less_than').
@@ -117,7 +117,7 @@ fn(async (t) => {
     });
   });
 
-  run(t, binary('<'), [TypeF32, TypeF32], TypeBool, t.params, cases);
+  await run(t, binary('<'), [TypeF32, TypeF32], TypeBool, t.params, cases);
 });
 
 g.test('less_equals').
@@ -144,7 +144,7 @@ fn(async (t) => {
     });
   });
 
-  run(t, binary('<='), [TypeF32, TypeF32], TypeBool, t.params, cases);
+  await run(t, binary('<='), [TypeF32, TypeF32], TypeBool, t.params, cases);
 });
 
 g.test('greater_than').
@@ -171,7 +171,7 @@ fn(async (t) => {
     });
   });
 
-  run(t, binary('>'), [TypeF32, TypeF32], TypeBool, t.params, cases);
+  await run(t, binary('>'), [TypeF32, TypeF32], TypeBool, t.params, cases);
 });
 
 g.test('greater_equals').
@@ -198,6 +198,6 @@ fn(async (t) => {
     });
   });
 
-  run(t, binary('>='), [TypeF32, TypeF32], TypeBool, t.params, cases);
+  await run(t, binary('>='), [TypeF32, TypeF32], TypeBool, t.params, cases);
 });
 //# sourceMappingURL=f32_logical.spec.js.map

@@ -52,7 +52,7 @@ g.test('f32')
       ...fullF32Range(),
     ].map(makeCase);
 
-    run(t, builtin('fract'), [TypeF32], TypeF32, t.params, cases);
+    await run(t, builtin('fract'), [TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('f16')

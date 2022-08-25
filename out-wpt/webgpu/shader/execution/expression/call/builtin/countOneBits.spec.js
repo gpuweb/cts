@@ -25,7 +25,7 @@ g.test('u32')
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
     const cfg = t.params;
-    run(t, builtin('countOneBits'), [TypeU32], TypeU32, cfg, [
+    await run(t, builtin('countOneBits'), [TypeU32], TypeU32, cfg, [
       // Zero
       { input: u32Bits(0b00000000000000000000000000000000), expected: u32(0) },
 
@@ -138,7 +138,7 @@ g.test('i32')
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
     const cfg = t.params;
-    run(t, builtin('countOneBits'), [TypeI32], TypeI32, cfg, [
+    await run(t, builtin('countOneBits'), [TypeI32], TypeI32, cfg, [
       // Zero
       { input: i32Bits(0b00000000000000000000000000000000), expected: i32(0) },
 

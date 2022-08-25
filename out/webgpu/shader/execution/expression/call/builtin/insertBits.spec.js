@@ -92,7 +92,7 @@ fn(async (t) => {
   0b01010101010101010101010101010101);
 
 
-  run(t, builtin('insertBits'), [T, T, TypeU32, TypeU32], T, cfg, [
+  await run(t, builtin('insertBits'), [T, T, TypeU32, TypeU32], T, cfg, [
   { input: [all_0, all_0, u32(0), u32(32)], expected: all_0 },
   { input: [all_0, all_0, u32(1), u32(10)], expected: all_0 },
   { input: [all_0, all_0, u32(2), u32(5)], expected: all_0 },

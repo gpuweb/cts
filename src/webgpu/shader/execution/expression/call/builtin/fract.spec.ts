@@ -56,7 +56,7 @@ g.test('f32')
     ].map(makeCase);
 
     // prettier-ignore
-    run(t, builtin('fract'), [TypeF32], TypeF32, t.params, cases);
+    await run(t, builtin('fract'), [TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('f16')

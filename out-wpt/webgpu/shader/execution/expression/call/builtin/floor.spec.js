@@ -50,7 +50,7 @@ g.test('f32')
       ...fullF32Range(),
     ].map(x => makeCase(x));
 
-    run(t, builtin('floor'), [TypeF32], TypeF32, t.params, cases);
+    await run(t, builtin('floor'), [TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('f16')

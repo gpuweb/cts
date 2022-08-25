@@ -42,7 +42,7 @@ g.test('f32')
       ...biasedRange(1, 2 ** 32, 1000),
     ].map(x => makeCase(x));
 
-    run(t, builtin('inverseSqrt'), [TypeF32], TypeF32, t.params, cases);
+    await run(t, builtin('inverseSqrt'), [TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('f16')

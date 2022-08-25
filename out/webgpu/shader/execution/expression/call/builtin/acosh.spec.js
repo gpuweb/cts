@@ -45,7 +45,7 @@ fn(async (t) => {
   ...biasedRange(1, 2, 100), // x near 1 can be problematic to implement
   ...fullF32Range()].
   map(makeCase);
-  run(t, builtin('acosh'), [TypeF32], TypeF32, t.params, cases);
+  await run(t, builtin('acosh'), [TypeF32], TypeF32, t.params, cases);
 });
 
 g.test('f16').

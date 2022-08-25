@@ -171,16 +171,19 @@ function oneULPImpl(target, flush) {
     return kValue.f32.negative.nearest_min - kValue.f32.negative.min;
   }
 
-  // ulp(x) is min(b-a), where a <= x <= b, a =/= b, a and b are f32 representable
-  const b = nextAfter(target, true, flush).value.valueOf();
-  const a = nextAfter(target, false, flush).value.valueOf();
+  // ulp(x) is min(after - before), where
+  //     before <= x <= after
+  //     before =/= after
+  //     before and after are f32 representable
+  const before = nextAfter(target, false, flush).value.valueOf();
+  const after = nextAfter(target, true, flush).value.valueOf();
   const converted = new Float32Array([target])[0];
   if (converted === target) {
-    // |target| is f32 representable, so either either a or b will be x
-    return Math.min(target - a, b - target);
+    // |target| is f32 representable, so either before or after will be x
+    return Math.min(target - before, after - target);
   } else {
     // |target| is not f32 representable so taking distance of neighbouring f32s.
-    return b - a;
+    return after - before;
   }
 }
 

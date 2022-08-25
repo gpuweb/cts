@@ -41,7 +41,7 @@ fn(async (t) => {
   };
 
   const cases = [...fullF32Range()].map(makeCase);
-  run(t, builtin('asinh'), [TypeF32], TypeF32, t.params, cases);
+  await run(t, builtin('asinh'), [TypeF32], TypeF32, t.params, cases);
 });
 
 g.test('f16').

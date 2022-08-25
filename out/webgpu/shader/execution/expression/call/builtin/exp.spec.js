@@ -49,7 +49,7 @@ fn(async (t) => {
   ...linearRange(89, 709, 10) // Overflows f32, but not f64
   ].map((x) => makeCase(x));
 
-  run(t, builtin('exp'), [TypeF32], TypeF32, t.params, cases);
+  await run(t, builtin('exp'), [TypeF32], TypeF32, t.params, cases);
 });
 
 g.test('f16').
