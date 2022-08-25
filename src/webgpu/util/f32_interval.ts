@@ -4,9 +4,9 @@ import { kValue } from './constants.js';
 import {
   cartesianProduct,
   correctlyRoundedF32,
-  flushSubnormalNumber,
-  isF32Finite,
-  isSubnormalNumber,
+  flushSubnormalNumberF32,
+  isFiniteF32,
+  isSubnormalNumberF32,
   oneULP,
 } from './math.js';
 
@@ -63,7 +63,7 @@ export class F32Interval {
 
   /** @returns if this interval only contains f32 finite values */
   public isFinite(): boolean {
-    return isF32Finite(this.begin) && isF32Finite(this.end);
+    return isFiniteF32(this.begin) && isFiniteF32(this.end);
   }
 
   /** @returns an interval with the tightest bounds that includes all provided intervals */
@@ -147,7 +147,7 @@ function toF32Vector(v: number[] | F32Vector): F32Vector {
  * returns the input
  */
 function addFlushedIfNeeded(values: number[]): number[] {
-  return values.some(isSubnormalNumber) ? values.concat(0) : values;
+  return values.some(isSubnormalNumberF32) ? values.concat(0) : values;
 }
 
 /**
@@ -560,7 +560,7 @@ function AbsoluteErrorIntervalOp(error_range: number): PointToIntervalOp {
     },
   };
 
-  if (isF32Finite(error_range)) {
+  if (isFiniteF32(error_range)) {
     op.impl = (n: number) => {
       assert(!Number.isNaN(n), `absolute error not defined for NaN`);
       return new F32Interval(n - error_range, n + error_range);
@@ -584,7 +584,7 @@ function ULPIntervalOp(numULP: number): PointToIntervalOp {
     },
   };
 
-  if (isF32Finite(numULP)) {
+  if (isFiniteF32(numULP)) {
     op.impl = (n: number) => {
       assert(!Number.isNaN(n), `ULP error not defined for NaN`);
 
@@ -593,8 +593,8 @@ function ULPIntervalOp(numULP: number): PointToIntervalOp {
       const end = n + numULP * ulp;
 
       return new F32Interval(
-        Math.min(begin, flushSubnormalNumber(begin)),
-        Math.max(end, flushSubnormalNumber(end))
+        Math.min(begin, flushSubnormalNumberF32(begin)),
+        Math.max(end, flushSubnormalNumberF32(end))
       );
     };
   }
