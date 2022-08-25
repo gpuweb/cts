@@ -56,6 +56,7 @@ import {
 import { GPUTest } from '../../../gpu_test.js';
 import { makeBufferWithContents } from '../../../util/buffer.js';
 import { align } from '../../../util/math.js';
+import { DataArrayGenerator } from '../../../util/texture/data_generation.js';
 import {
   bytesInACompleteRow,
   dataBytesForCopyOrFail,
@@ -63,8 +64,6 @@ import {
   kBytesPerRowAlignment,
   TextureCopyLayout,
 } from '../../../util/texture/layout.js';
-
-import { DataArrayGenerator } from './data_generation.js';
 
 interface TextureCopyViewWithRequiredOrigin {
   texture: GPUTexture;
@@ -173,17 +172,6 @@ class ImageCopyTest extends GPUTest {
         };
       }
     }
-  }
-
-  generateData(byteSize: number, start: number = 0, offset: number = 0): Uint8Array {
-    return altDataGenerator.generateView(byteSize, start, offset);
-
-    const arr = new Uint8Array(byteSize);
-    arr.set(altDataGenerator.generateView(byteSize, start, offset));
-    /*for (let i = 0; i < byteSize; ++i) {
-      arr[i + offset] = (i ** 3 + i + start) % 251;
-    }*/
-    return arr;
   }
 
   /**

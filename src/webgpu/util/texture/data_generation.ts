@@ -1,5 +1,7 @@
-// A helper function that generates ranges of dummy data for buffer or texture operations
-// efficiently. Tries to minimize allocations and data updates.
+/**
+ * A helper class that generates ranges of dummy data for buffer or texture operations
+ * efficiently. Tries to minimize allocations and data updates.
+ */
 export class DataArrayGenerator {
   private dataBuffer = new Uint8Array(256);
 
@@ -7,7 +9,7 @@ export class DataArrayGenerator {
   private lastStart = 0;
   private lastByteSize = 0;
 
-  // Find the nearest power of two greater than or equal to the input value.
+  /** Find the nearest power of two greater than or equal to the input value. */
   private nextPowerOfTwo(value: number) {
     return 1 << (32 - Math.clz32(value - 1));
   }
@@ -48,8 +50,14 @@ export class DataArrayGenerator {
     }
   }
 
-  // Returns a new into the generated data that's the correct length. Because this is a view any
-  // previously returned views from the same generator will have their values overwritten as well.
+  /**
+   * Returns a new view into the generated data that's the correct length. Because this is a view
+   * previously returned views from the same generator will have their values overwritten as well.
+   * @param {number} byteSize - Number of bytes the returned view should contain.
+   * @param {number} [start] - The value of the first element generated in the view.
+   * @param {number} [offset] - Offset of the generated data within the view. Preceeding values will be 0.
+   * @returns {Uint8Array} A new Uint8Array view into the generated data.
+   */
   generateView(byteSize: number, start: number = 0, offset: number = 0): Uint8Array {
     this.generateData(byteSize, start, offset);
 
@@ -59,9 +67,15 @@ export class DataArrayGenerator {
     return new Uint8Array(this.dataBuffer.buffer, 0, byteSize);
   }
 
-  // Returns a copy of the generated data. Note that this still changes the underlying buffer, so
-  // any previously generated views will still be overwritten, but the returned copy won't reflect
-  // future generate* calls.
+  /**
+   * Returns a copy of the generated data. Note that this still changes the underlying buffer, so
+   * any previously generated views will still be overwritten, but the returned copy won't reflect
+   * future generate* calls.
+   * @param {number} byteSize - Number of bytes the returned array should contain.
+   * @param {number} [start] - The value of the first element generated in the view.
+   * @param {number} [offset] - Offset of the generated data within the view. Preceeding values will be 0.
+   * @returns {Uint8Array} A new Uint8Array copy of the generated data.
+   */
   generateAndCopyView(byteSize: number, start: number = 0, offset: number = 0) {
     this.generateData(byteSize, start, offset);
     return this.dataBuffer.slice(0, byteSize);
