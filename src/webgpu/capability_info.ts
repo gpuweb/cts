@@ -1048,6 +1048,19 @@ export const kLimitInfo = /* prettier-ignore */ makeTable(
 /** List of all entries of GPUSupportedLimits. */
 export const kLimits = keysOf(kLimitInfo);
 
+/** List of all GPUFeatureName values. */
+export const kFeatureNames: readonly GPUFeatureName[] = [
+  "depth-clip-control",
+  "depth32float-stencil8",
+  "texture-compression-bc",
+  "texture-compression-etc2",
+  "texture-compression-astc",
+  "timestamp-query",
+  "indirect-first-instance",
+  "shader-f16",
+  "bgra8unorm-storage",
+];
+
 /**
  * Check if two formats are view format compatible.
  *
