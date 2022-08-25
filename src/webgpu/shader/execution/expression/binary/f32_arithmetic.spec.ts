@@ -133,5 +133,5 @@ Accuracy: Derived from x - y * trunc(x/y)
       return makeCase(v[0], v[1]);
     });
 
-    run(t, binary('%'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(t, binary('%'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
