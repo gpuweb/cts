@@ -53,19 +53,21 @@ g.test('duplicate_bindings')
     }, !_valid);
   });
 
-// Need to use the maxBindingsPerBindGroup constant of GPUSupportedLimits instead of 640.
-const kMaxBindingNumber = 640;
+// MAINTENANCE_TODO: Move this into kLimits with the proper name after the spec PR lands.
+// https://github.com/gpuweb/gpuweb/pull/3318
+const kMaxBindingsPerBindGroup = 640;
+
 g.test('maximum_binding_limit')
   .desc(
     `
   Test that a validation error is generated if the binding number exceeds the maximum binding limit.
 
-  TODO: Check if a higher maximum binding limit can be allowed. (e.g. 65535)
+  TODO: Need to also test with higher limits enabled on the device, once we have a way to do that.
   `
   )
   .paramsSubcasesOnly(u =>
     u //
-      .combine('binding', [1, 4, 8, 256, kMaxBindingNumber - 1, kMaxBindingNumber])
+      .combine('binding', [1, 4, 8, 256, kMaxBindingsPerBindGroup - 1, kMaxBindingsPerBindGroup])
   )
   .fn(async t => {
     const { binding } = t.params;
@@ -77,7 +79,7 @@ g.test('maximum_binding_limit')
       buffer: { type: 'storage' as const },
     });
 
-    const success = binding < kMaxBindingNumber;
+    const success = binding < kMaxBindingsPerBindGroup;
 
     t.expectValidationError(() => {
       t.device.createBindGroupLayout({
