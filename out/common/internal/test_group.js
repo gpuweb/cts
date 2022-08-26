@@ -12,6 +12,7 @@ kUnitCaseParamsBuilder } from
 
 
 '../framework/params_builder.js';
+import { globalTestConfig } from '../framework/test_config.js';
 
 import { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
 import { extractPublicParams, mergeParams } from '../internal/params_utils.js';
@@ -489,6 +490,7 @@ class RunCaseSpecific {
       return didSeeFail ? 'fail' : 'pass';
     };
 
+    const { testHeartbeatCallback, maxSubcasesInFlight } = globalTestConfig;
     try {
       rec.start();
       const sharedState = this.fixture.MakeSharedState(this.params);
@@ -498,16 +500,15 @@ class RunCaseSpecific {
           await this.beforeFn(sharedState);
         }
         await sharedState.postInit();
+        testHeartbeatCallback();
 
         let allPreviousSubcasesFinalizedPromise = Promise.resolve();
         if (this.subcases) {
           let totalCount = 0;
           let skipCount = 0;
 
-          // Maximum number of subcases in flight. If there are too many in flight,
-          // starting the next subcase will register `resolvePromiseBlockingSubcase`
-          // and wait until `subcaseFinishedCallback` is called.
-          const kMaxSubcasesInFlight = 500;
+          // If there are too many subcases in flight, starting the next subcase will register
+          // `resolvePromiseBlockingSubcase` and wait until `subcaseFinishedCallback` is called.
           let subcasesInFlight = 0;
           let resolvePromiseBlockingSubcase = undefined;
           const subcaseFinishedCallback = () => {
@@ -528,6 +529,7 @@ class RunCaseSpecific {
               get: (target, k) => {
                 const prop = TestCaseRecorder.prototype[k];
                 if (typeof prop === 'function') {
+                  testHeartbeatCallback();
                   return function (...args) {
                     void allPreviousSubcasesFinalizedPromise.then(() => {
 
@@ -553,7 +555,7 @@ class RunCaseSpecific {
 
 
             // Limit the maximum number of subcases in flight.
-            if (subcasesInFlight >= kMaxSubcasesInFlight) {
+            if (subcasesInFlight >= maxSubcasesInFlight) {
               await new Promise((resolve) => {
                 // There should only be one subcase waiting at a time.
                 assert(resolvePromiseBlockingSubcase === undefined);
@@ -606,8 +608,10 @@ class RunCaseSpecific {
 
         }
       } finally {
+        testHeartbeatCallback();
         // Runs as long as the shared state constructor succeeded, even if initialization or a test failed.
         await sharedState.finalize();
+        testHeartbeatCallback();
       }
     } catch (ex) {
       // There was an exception from sharedState/fixture constructor, init, beforeFn, or test.
