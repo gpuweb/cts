@@ -304,4 +304,44 @@ fn(async (t) => {
     unreachable();
   }
 });
+
+g.test('sample_count').
+desc(
+`
+  Test that the texture sample count. Check that a validation error is generated if sample count is
+  not 1.
+  `).
+
+params((u) =>
+u //
+// writeTexture is handled by writeTexture.spec.ts.
+.combine('copyType', ['CopyB2T', 'CopyT2B']).
+beginSubcases().
+combine('sampleCount', [1, 4])).
+
+fn(async (t) => {
+  const { sampleCount, copyType } = t.params;
+  const texture = t.device.createTexture({
+    size: { width: 16, height: 16 },
+    sampleCount,
+    format: 'bgra8unorm',
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
+
+
+  const uploadBufferSize = 32;
+  const buffer = t.device.createBuffer({
+    size: uploadBufferSize,
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
+
+
+  const textureSize = { width: 1, height: 1, depthOrArrayLayers: 1 };
+
+  const isSuccess = sampleCount === 1;
+
+  if (copyType === 'CopyB2T') {
+    t.testCopyBufferToTexture({ buffer }, { texture }, textureSize, isSuccess);
+  } else if (copyType === 'CopyT2B') {
+    t.testCopyTextureToBuffer({ texture }, { buffer }, textureSize, isSuccess);
+  }
+});
 //# sourceMappingURL=buffer_texture_copies.spec.js.map
