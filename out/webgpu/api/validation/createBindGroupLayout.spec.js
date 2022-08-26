@@ -53,6 +53,41 @@ fn(async (t) => {
   }, !_valid);
 });
 
+// MAINTENANCE_TODO: Move this into kLimits with the proper name after the spec PR lands.
+// https://github.com/gpuweb/gpuweb/pull/3318
+const kMaxBindingsPerBindGroup = 640;
+
+g.test('maximum_binding_limit').
+desc(
+`
+  Test that a validation error is generated if the binding number exceeds the maximum binding limit.
+
+  TODO: Need to also test with higher limits enabled on the device, once we have a way to do that.
+  `).
+
+paramsSubcasesOnly((u) =>
+u //
+.combine('binding', [1, 4, 8, 256, kMaxBindingsPerBindGroup - 1, kMaxBindingsPerBindGroup])).
+
+fn(async (t) => {
+  const { binding } = t.params;
+  const entries = [];
+
+  entries.push({
+    binding,
+    visibility: GPUShaderStage.COMPUTE,
+    buffer: { type: 'storage' } });
+
+
+  const success = binding < kMaxBindingsPerBindGroup;
+
+  t.expectValidationError(() => {
+    t.device.createBindGroupLayout({
+      entries });
+
+  }, !success);
+});
+
 g.test('visibility').
 desc(
 `
