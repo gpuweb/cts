@@ -83,4 +83,29 @@ fn(async (t) => {
     t.device.queue.writeTexture({ texture }, data, {}, size);
   }, !isValid);
 });
+
+g.test('texture,device_mismatch').
+desc('Tests writeTexture cannot be called with a texture created from another device.').
+params((u) => u.combine('mismatched', [true, false])).
+beforeAllSubcases((t) => {
+  t.selectMismatchedDeviceOrSkipTestCase(undefined);
+}).
+fn(async (t) => {
+  const { mismatched } = t.params;
+  const device = mismatched ? t.mismatchedDevice : t.device;
+
+  const texture = device.createTexture({
+    size: { width: 16, height: 16 },
+    format: 'bgra8unorm',
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
+
+  t.trackForCleanup(texture);
+
+  const data = new Uint8Array(16);
+  const size = [1, 1];
+
+  t.expectValidationError(() => {
+    t.device.queue.writeTexture({ texture }, data, {}, size);
+  }, mismatched);
+});
 //# sourceMappingURL=writeTexture.spec.js.map
