@@ -7,9 +7,12 @@ the general image_copy tests, or by destroyed,*.
 import { assert, unreachable } from '../../../../common/util/util.js';
 import {
 kDepthStencilFormats,
+kBufferUsages,
+kTextureUsages,
 depthStencilBufferTextureCopySupported,
 depthStencilFormatAspectSize } from
 '../../../capability_info.js';
+import { GPUConst } from '../../../constants.js';
 import { align } from '../../../util/math.js';
 import { kBufferCopyAlignment, kBytesPerRowAlignment } from '../../../util/texture/layout.js';
 import { ValidationTest } from '../validation_test.js';
@@ -338,6 +341,58 @@ fn(async (t) => {
 
   const isSuccess = sampleCount === 1;
 
+  if (copyType === 'CopyB2T') {
+    t.testCopyBufferToTexture({ buffer }, { texture }, textureSize, isSuccess);
+  } else if (copyType === 'CopyT2B') {
+    t.testCopyTextureToBuffer({ texture }, { buffer }, textureSize, isSuccess);
+  }
+});
+
+const kRequiredTextureUsage = {
+  CopyT2B: GPUConst.TextureUsage.COPY_SRC,
+  CopyB2T: GPUConst.TextureUsage.COPY_DST };
+
+const kRequiredBufferUsage = {
+  CopyB2T: GPUConst.BufferUsage.COPY_SRC,
+  CopyT2B: GPUConst.BufferUsage.COPY_DST };
+
+
+g.test('texture_buffer_usages').
+desc(
+`
+  Tests calling copyTextureToBuffer or copyBufferToTexture with the texture and the buffer missed
+  COPY_SRC, COPY_DST usage respectively.
+    - texture and buffer {with, without} COPY_SRC and COPY_DST usage.
+  `).
+
+params((u) =>
+u //
+.combine('copyType', ['CopyB2T', 'CopyT2B']).
+beginSubcases().
+combine('textureUsage', kTextureUsages).
+expand('_textureUsageValid', (p) => [p.textureUsage === kRequiredTextureUsage[p.copyType]]).
+combine('bufferUsage', kBufferUsages).
+expand('_bufferUsageValid', (p) => [p.bufferUsage === kRequiredBufferUsage[p.copyType]]).
+filter((p) => p._textureUsageValid || p._bufferUsageValid)).
+
+fn(async (t) => {
+  const { copyType, textureUsage, _textureUsageValid, bufferUsage, _bufferUsageValid } = t.params;
+
+  const texture = t.device.createTexture({
+    size: { width: 16, height: 16 },
+    format: 'rgba8unorm',
+    usage: textureUsage });
+
+
+  const uploadBufferSize = 32;
+  const buffer = t.device.createBuffer({
+    size: uploadBufferSize,
+    usage: bufferUsage });
+
+
+  const textureSize = { width: 1, height: 1, depthOrArrayLayers: 1 };
+
+  const isSuccess = _textureUsageValid && _bufferUsageValid;
   if (copyType === 'CopyB2T') {
     t.testCopyBufferToTexture({ buffer }, { texture }, textureSize, isSuccess);
   } else if (copyType === 'CopyT2B') {
