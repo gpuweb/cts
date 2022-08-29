@@ -236,7 +236,7 @@ interface BinaryToIntervalDomain {
 }
 
 /**
- * Restrict the inputs to an BinaryToInterval
+ * Restrict the inputs to a BinaryToInterval
  *
  * Only used for operations that have tighter domain requirements than 'must be
  * f32 finite'.
@@ -1213,14 +1213,32 @@ export function sinhInterval(n: number): F32Interval {
   return runPointOp(toF32Interval(n), SinhIntervalOp);
 }
 
-const StepIntervalOp: BinaryToIntervalOp = {
-  impl: (edge: number, x: number): F32Interval => {
-    if (edge <= x) {
-      return correctlyRoundedInterval(1.0);
-    }
-    return correctlyRoundedInterval(0.0);
+const SmoothStepOp: TernaryToIntervalOp = {
+  impl: (low: number, high: number, x: number): F32Interval => {
+    // For clamp(foo, 0.0, 1.0) the different implementations of clamp provide
+    // the same value, so arbitrarily picking the minmax version to use.
+    // t = clamp((x - low) / (high - low), 0.0, 1.0)
+    // prettier-ignore
+    const t = clampMedianInterval(
+      divisionInterval(
+        subtractionInterval(x, low),
+        subtractionInterval(high, low)),
+      0.0,
+      1.0);
+    // Inherited from t * t * (3.0 - 2.0 * t)
+    // prettier-ignore
+    return multiplicationInterval(
+      t,
+      multiplicationInterval(t,
+        subtractionInterval(3.0,
+          multiplicationInterval(2.0, t))));
   },
 };
+
+/** Calculate an acceptance interval of smoothStep(low, high, x) */
+export function smoothStepInterval(low: number, high: number, x: number): F32Interval {
+  return runTernaryOp(toF32Interval(low), toF32Interval(high), toF32Interval(x), SmoothStepOp);
+}
 
 const SqrtIntervalOp: PointToIntervalOp = {
   impl: (n: number): F32Interval => {
@@ -1232,6 +1250,15 @@ const SqrtIntervalOp: PointToIntervalOp = {
 export function sqrtInterval(n: number | F32Interval): F32Interval {
   return runPointOp(toF32Interval(n), SqrtIntervalOp);
 }
+
+const StepIntervalOp: BinaryToIntervalOp = {
+  impl: (edge: number, x: number): F32Interval => {
+    if (edge <= x) {
+      return correctlyRoundedInterval(1.0);
+    }
+    return correctlyRoundedInterval(0.0);
+  },
+};
 
 /** Calculate an acceptance 'interval' for step(edge, x)
  *
