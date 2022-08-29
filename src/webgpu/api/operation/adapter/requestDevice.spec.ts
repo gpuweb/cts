@@ -30,8 +30,8 @@ g.test('default')
 
     // Default device should have no features.
     t.expect(device.features.size === 0, 'Default device should not have any features');
-    // All limits should be defaults 
-    for (var limit of kLimits) {
+    // All limits should be defaults.
+    for (const limit of kLimits) {
       t.expect(
         device.limits[limit] === kLimitInfo[limit].default,
         `Expected ${limit} == default: ${device.limits[limit]} != ${kLimitInfo[limit].default}`
@@ -57,8 +57,8 @@ g.test('undefined')
 
     // Device should have no features.
     t.expect(device.features.size === 0, 'Default device should not have any features');
-    // All limits should be defaults 
-    for (var limit of kLimits) {
+    // All limits should be defaults.
+    for (const limit of kLimits) {
       t.expect(
         device.limits[limit] === kLimitInfo[limit].default,
         `Expected ${limit} == default: ${device.limits[limit]} != ${kLimitInfo[limit].default}`
@@ -90,7 +90,7 @@ g.test('invalid')
 
     // The adapter should now be invalid since a device was lost. Requesting another device should
     // return an already lost device.
-    var kTimeoutMS = 1000;
+    const kTimeoutMS = 1000;
     const device = await adapter.requestDevice();
     const lost = await raceWithRejectOnTimeout(device.lost, kTimeoutMS, 'device was not lost');
     t.expect(lost.reason === undefined);
@@ -119,9 +119,7 @@ g.test('features,known')
     - Succeeds with device supporting feature if adapter supports the feature.
     - Rejects if the adapter does not support the feature.`
   )
-  .params(u =>
-    u.combine('feature', kFeatureNames)
-  )
+  .params(u => u.combine('feature', kFeatureNames))
   .fn(async t => {
     const { feature } = t.params;
 
@@ -129,7 +127,7 @@ g.test('features,known')
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
 
-    var promise = adapter.requestDevice({ requiredFeatures: [feature] });
+    const promise = adapter.requestDevice({ requiredFeatures: [feature] });
     if (adapter.features.has(feature)) {
       const device = await promise;
       t.expect(device.features.has(feature), 'Device should include the required feature');
