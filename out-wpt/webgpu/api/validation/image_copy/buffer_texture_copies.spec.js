@@ -315,11 +315,17 @@ g.test('sample_count')
   )
   .fn(async t => {
     const { sampleCount, copyType } = t.params;
+
+    let usage = GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST;
+    // WebGPU SPEC requires multisampled textures must have RENDER_ATTACHMENT usage.
+    if (sampleCount > 1) {
+      usage |= GPUTextureUsage.RENDER_ATTACHMENT;
+    }
     const texture = t.device.createTexture({
       size: { width: 16, height: 16 },
       sampleCount,
       format: 'bgra8unorm',
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+      usage,
     });
 
     const uploadBufferSize = 32;
