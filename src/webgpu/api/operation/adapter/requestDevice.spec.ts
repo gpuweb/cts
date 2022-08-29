@@ -25,7 +25,7 @@ g.test('default')
     const gpu = getGPU();
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
-    const device = await adapter.requestDevice(undefined);
+    const device = await adapter.requestDevice();
     assert(device !== null);
 
     // Default device should have no features.
@@ -92,8 +92,8 @@ g.test('invalid')
     // return an already lost device.
     var kTimeoutMS = 1000;
     const device = await adapter.requestDevice();
-    assert(device !== null);
-    t.shouldResolve(raceWithRejectOnTimeout(device.lost, kTimeoutMS, 'device was not lost'));
+    const lost = await raceWithRejectOnTimeout(device.lost, kTimeoutMS, 'device was not lost');
+    t.expect(lost.reason === undefined);
   });
 
 g.test('features,unknown')
@@ -106,10 +106,9 @@ g.test('features,unknown')
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
 
-    let feature: any = "unknown-feature";
     t.shouldReject(
       'TypeError',
-      adapter.requestDevice({ requiredFeatures: [feature] })
+      adapter.requestDevice({ requiredFeatures: ['unknown-feature' as GPUFeatureName] })
     );
   });
 
@@ -130,15 +129,12 @@ g.test('features,known')
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
 
+    var promise = adapter.requestDevice({ requiredFeatures: [feature] });
     if (adapter.features.has(feature)) {
-      const device = await adapter.requestDevice({ requiredFeatures: [feature] });
-      assert(device !== null);
+      const device = await promise;
       t.expect(device.features.has(feature), 'Device should include the required feature');
     } else {
-      t.shouldReject(
-        'TypeError',
-        adapter.requestDevice({ requiredFeatures: [feature] })
-      );
+      t.shouldReject('TypeError', promise);
     }
   });
 
