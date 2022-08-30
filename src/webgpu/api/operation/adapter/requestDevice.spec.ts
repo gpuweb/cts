@@ -17,15 +17,24 @@ export const g = makeTestGroup(Fixture);
 g.test('default')
   .desc(
     `
-    Test requesting the default device.
+    Test requesting the device with a variation of default paramters.
     - No features listed in default device
     - Default limits`
   )
+  .paramsSubcasesOnly(u =>
+    u.combine('args', [
+      [],
+      [undefined],
+      [{}],
+      [{ requiredFeatures: [], requiredLimits: {} }],
+    ] as const)
+  )
   .fn(async t => {
+    const { args } = t.params;
     const gpu = getGPU();
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
-    const device = await adapter.requestDevice();
+    const device = await adapter.requestDevice(...args);
     assert(device !== null);
 
     // Default device should have no features.
