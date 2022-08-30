@@ -298,6 +298,49 @@ g.test('texture_must_have_correct_dimension')
     }, shouldError);
   });
 
+g.test('multisampled_validation')
+  .desc(
+    `
+    Test that the sample count of the texture is greater than 1 if the BindGroup entry's
+    multisampled is true. Otherwise, the texture's sampleCount should be 1.
+  `
+  )
+  .params(u =>
+    u //
+      .combine('multisampled', [true, false])
+      .beginSubcases()
+      .combine('sampleCount', [1, 4])
+  )
+  .fn(async t => {
+    const { multisampled, sampleCount } = t.params;
+    const bindGroupLayout = t.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.FRAGMENT,
+          texture: { multisampled },
+        },
+      ],
+    });
+
+    const texture = t.device.createTexture({
+      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
+      format: 'rgba8unorm' as const,
+      usage: GPUTextureUsage.TEXTURE_BINDING,
+      sampleCount,
+    });
+
+    const isValid = (!multisampled && sampleCount === 1) || (multisampled && sampleCount > 1);
+
+    const textureView = texture.createView();
+    t.expectValidationError(() => {
+      t.device.createBindGroup({
+        entries: [{ binding: 0, resource: textureView }],
+        layout: bindGroupLayout,
+      });
+    }, !isValid);
+  });
+
 g.test('buffer_offset_and_size_for_bind_groups_match')
   .desc(
     `
