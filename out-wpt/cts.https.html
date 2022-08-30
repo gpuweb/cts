@@ -34,11 +34,14 @@
 
 <meta name=variant content='webgpu:api,operation,adapter,requestAdapterInfo:adapter_info:*'>
 <meta name=variant content='webgpu:api,operation,adapter,requestAdapterInfo:adapter_info_with_hints:*'>
-<meta name=variant content='webgpu:api,operation,adapter,requestDevice:request_default_after_error:*'>
-<meta name=variant content='webgpu:api,operation,adapter,requestDevice_limits:unknown_limits:*'>
-<meta name=variant content='webgpu:api,operation,adapter,requestDevice_limits:supported_limits:*'>
-<meta name=variant content='webgpu:api,operation,adapter,requestDevice_limits:better_than_supported:*'>
-<meta name=variant content='webgpu:api,operation,adapter,requestDevice_limits:worse_than_default:*'>
+<meta name=variant content='webgpu:api,operation,adapter,requestDevice:default:*'>
+<meta name=variant content='webgpu:api,operation,adapter,requestDevice:invalid:*'>
+<meta name=variant content='webgpu:api,operation,adapter,requestDevice:features,unknown:*'>
+<meta name=variant content='webgpu:api,operation,adapter,requestDevice:features,known:*'>
+<meta name=variant content='webgpu:api,operation,adapter,requestDevice:limits,unknown:*'>
+<meta name=variant content='webgpu:api,operation,adapter,requestDevice:limits,supported:*'>
+<meta name=variant content='webgpu:api,operation,adapter,requestDevice:limit,better_than_supported:*'>
+<meta name=variant content='webgpu:api,operation,adapter,requestDevice:limit,worse_than_default:*'>
 <meta name=variant content='webgpu:api,operation,buffers,map:mapAsync,write:*'>
 <meta name=variant content='webgpu:api,operation,buffers,map:mapAsync,write,unchanged_ranges_preserved:*'>
 <meta name=variant content='webgpu:api,operation,buffers,map:mapAsync,read:*'>
@@ -461,9 +464,6 @@
 <meta name=variant content='webgpu:api,validation,image_copy,texture_related:origin_alignment:*'>
 <meta name=variant content='webgpu:api,validation,image_copy,texture_related:size_alignment:*'>
 <meta name=variant content='webgpu:api,validation,image_copy,texture_related:copy_rectangle:*'>
-<meta name=variant content='webgpu:api,validation,initialization,requestDevice:features,nonexistent:*'>
-<meta name=variant content='webgpu:api,validation,initialization,requestDevice:features,known_but_unavailable:*'>
-<meta name=variant content='webgpu:api,validation,initialization,requestDevice:limits:*'>
 <meta name=variant content='webgpu:api,validation,query_set,create:count:*'>
 <meta name=variant content='webgpu:api,validation,query_set,destroy:twice:*'>
 <meta name=variant content='webgpu:api,validation,queue,buffer_mapped:writeBuffer:*'>

@@ -1683,6 +1683,22 @@ export const kLimitInfo = makeTable(
 /** List of all entries of GPUSupportedLimits. */
 export const kLimits = keysOf(kLimitInfo);
 
+/** Per-GPUFeatureName info. */
+export const kFeatureNameInfo = {
+  'depth-clip-control': {},
+  'depth32float-stencil8': {},
+  'texture-compression-bc': {},
+  'texture-compression-etc2': {},
+  'texture-compression-astc': {},
+  'timestamp-query': {},
+  'indirect-first-instance': {},
+  'shader-f16': {},
+  'bgra8unorm-storage': {},
+};
+
+/** List of all GPUFeatureName values. */
+export const kFeatureNames = keysOf(kFeatureNameInfo);
+
 /**
  * Check if two formats are view format compatible.
  *
