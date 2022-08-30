@@ -41,33 +41,6 @@ g.test('default')
     device.destroy();
   });
 
-g.test('undefined')
-  .desc(
-    `
-    Test that specifying undefined for the device descriptor should result in a default device.
-    - No features listed in device
-    - Default limits`
-  )
-  .fn(async t => {
-    const gpu = getGPU();
-    const adapter = await gpu.requestAdapter();
-    assert(adapter !== null);
-    const device = await adapter.requestDevice(undefined);
-    assert(device !== null);
-
-    // Device should have no features.
-    t.expect(device.features.size === 0, 'Default device should not have any features');
-    // All limits should be defaults.
-    for (const limit of kLimits) {
-      t.expect(
-        device.limits[limit] === kLimitInfo[limit].default,
-        `Expected ${limit} == default: ${device.limits[limit]} != ${kLimitInfo[limit].default}`
-      );
-    }
-
-    device.destroy();
-  });
-
 g.test('invalid')
   .desc(
     `
