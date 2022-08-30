@@ -405,3 +405,50 @@ g.test('texture_buffer_usages')
       t.testCopyTextureToBuffer({ texture }, { buffer }, textureSize, isSuccess);
     }
   });
+
+g.test('device_mismatch')
+  .desc(
+    `
+    Tests copyBufferToTexture and copyTextureToBuffer cannot be called with a buffer or a texture
+    created from another device.
+  `
+  )
+  .params(u =>
+    u //
+      .combine('copyType', ['CopyB2T', 'CopyT2B'] as const)
+      .beginSubcases()
+      .combineWithParams([
+        { bufMismatched: false, texMismatched: false }, // control case
+        { bufMismatched: true, texMismatched: false },
+        { bufMismatched: false, texMismatched: true },
+      ] as const)
+  )
+  .beforeAllSubcases(t => {
+    t.selectMismatchedDeviceOrSkipTestCase(undefined);
+  })
+  .fn(async t => {
+    const { copyType, bufMismatched, texMismatched } = t.params;
+
+    const uploadBufferSize = 32;
+    const buffer = (bufMismatched ? t.mismatchedDevice : t.device).createBuffer({
+      size: uploadBufferSize,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    });
+    t.trackForCleanup(buffer);
+
+    const textureSize = { width: 1, height: 1, depthOrArrayLayers: 1 };
+    const texture = (texMismatched ? t.mismatchedDevice : t.device).createTexture({
+      size: textureSize,
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+    });
+    t.trackForCleanup(texture);
+
+    const isValid = !bufMismatched && !texMismatched;
+
+    if (copyType === 'CopyB2T') {
+      t.testCopyBufferToTexture({ buffer }, { texture }, textureSize, isValid);
+    } else if (copyType === 'CopyT2B') {
+      t.testCopyTextureToBuffer({ texture }, { buffer }, textureSize, isValid);
+    }
+  });
