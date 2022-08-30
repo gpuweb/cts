@@ -89,5 +89,6 @@ export class CopyToTextureUtils extends GPUTest {
     texelCompareOptions);
 
     this.eventualExpectOK(resultPromise);
+    this.trackForCleanup(dstTextureCopyView.texture);
   }}
 //# sourceMappingURL=copy_to_texture.js.map

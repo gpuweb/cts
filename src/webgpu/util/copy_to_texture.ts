@@ -89,5 +89,6 @@ export class CopyToTextureUtils extends GPUTest {
       texelCompareOptions
     );
     this.eventualExpectOK(resultPromise);
+    this.trackForCleanup(dstTextureCopyView.texture);
   }
 }

@@ -75,5 +75,6 @@ export class CopyToTextureUtils extends GPUTest {
     );
 
     this.eventualExpectOK(resultPromise);
+    this.trackForCleanup(dstTextureCopyView.texture);
   }
 }
