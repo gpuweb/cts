@@ -6,7 +6,7 @@
     /* Output options */
     "noEmit": true,
     /* Strict type-checking options */
-    "allowJs": false,
+    "allowJs": true,
     "strict": true,
     /* tsc lint options */
     "noImplicitReturns": true,
@@ -19,7 +19,10 @@
     "esModuleInterop": false,
     "skipLibCheck": true,
   },
-  "include": ["src/**/*.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/external/**/*.js",
+  ],
   "typedocOptions": {
     "entryPointStrategy": "expand",
     "entryPoints": [
