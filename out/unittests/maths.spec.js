@@ -11,6 +11,7 @@ biasedRange,
 cartesianProduct,
 correctlyRoundedF32,
 fullF32Range,
+fullI32Range,
 hexToF32,
 hexToF64,
 lerp,
@@ -753,6 +754,39 @@ fn((test) => {
   test.expect(
   compareArrayOfNumbers(got, expect),
   `fullF32Range(${neg_norm}, ${neg_sub}, ${pos_sub}, ${pos_norm}) returned [${got}]. Expected [${expect}]`);
+
+});
+
+
+
+
+
+
+
+g.test('fullI32Range').
+paramsSimple(
+
+[
+{ neg_count: 0, pos_count: 0, expect: [0] },
+{ neg_count: 1, pos_count: 0, expect: [kValue.i32.negative.min, 0] },
+{ neg_count: 2, pos_count: 0, expect: [kValue.i32.negative.min, -1, 0] },
+{ neg_count: 3, pos_count: 0, expect: [kValue.i32.negative.min, -1610612736, -1, 0] },
+{ neg_count: 0, pos_count: 1, expect: [0, 1] },
+{ neg_count: 0, pos_count: 2, expect: [0, 1, kValue.i32.positive.max] },
+{ neg_count: 0, pos_count: 3, expect: [0, 1, 536870912, kValue.i32.positive.max] },
+{ neg_count: 1, pos_count: 1, expect: [kValue.i32.negative.min, 0, 1] },
+{ neg_count: 2, pos_count: 2, expect: [kValue.i32.negative.min, -1, 0, 1, kValue.i32.positive.max] }]).
+
+
+fn((test) => {
+  const neg_count = test.params.neg_count;
+  const pos_count = test.params.pos_count;
+  const got = fullI32Range({ negative: neg_count, positive: pos_count });
+  const expect = test.params.expect;
+
+  test.expect(
+  compareArrayOfNumbers(got, expect),
+  `fullI32Range(${neg_count}, ${pos_count}) returned [${got}]. Expected [${expect}]`);
 
 });
 

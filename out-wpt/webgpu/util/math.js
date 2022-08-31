@@ -399,10 +399,10 @@ export function fullF32Range(counts = { pos_sub: 10, pos_norm: 50 }) {
 export function fullI32Range(counts = { positive: 50 }) {
   counts.negative = counts.negative === undefined ? counts.positive : counts.negative;
   return [
-    ...biasedRange(kValue.i32.negative.max, kValue.i32.negative.min, counts.negative).reverse(),
+    ...biasedRange(kValue.i32.negative.min, -1, counts.negative),
     0,
-    ...biasedRange(kValue.i32.positive.min, kValue.i32.positive.max, counts.positive),
-  ];
+    ...biasedRange(1, kValue.i32.positive.max, counts.positive),
+  ].map(Math.trunc);
 }
 
 /** Short list of f32 values of interest to test against */
