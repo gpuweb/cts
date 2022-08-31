@@ -1,6 +1,7 @@
 import { assert, unreachable } from '../../common/util/util.js';
 
 import { kValue } from './constants.js';
+import { f64 } from './conversion.js';
 import {
   cartesianProduct,
   correctlyRoundedF32,
@@ -80,7 +81,8 @@ export class F32Interval {
 
   /** @returns a string representation for logging purposes */
   public toString(): string {
-    return `[${this.bounds()}]`;
+    // return `[${this.bounds()}]`;
+    return `[${this.bounds().map(f64)}]`;
   }
 
   /** @returns a singleton for interval of all possible values
@@ -279,6 +281,22 @@ interface TernaryToIntervalOp {
 }
 
 /**
+ * A function that converts a vector to an acceptance interval.
+ * This is the public facing API for builtin implementations that is called
+ * from tests.
+ */
+export interface VectorToInterval {
+  (x: number[]): F32Interval;
+}
+
+/** Operation used to implement a VectorToInterval */
+interface VectorToIntervalOp {
+  // Re-using the *Op interface pattern for symmetry with the other operations.
+  /** @returns acceptance interval for a function on vector x */
+  impl: VectorToInterval;
+}
+
+/**
  * A function that converts a pair of vectors to an acceptance interval.
  * This is the public facing API for builtin implementations that is called
  * from tests.
@@ -382,7 +400,33 @@ function roundAndFlushTernaryToInterval(
   return F32Interval.span(...intervals);
 }
 
-/** Converts a pair of vectors to an acceptance interval, using a specific function
+/** Converts a vector to an acceptance interval using a specific function
+ *
+ * This handles correctly rounding and flushing inputs as needed.
+ * Duplicate inputs are pruned before invoking op.impl.
+ *
+ * @param x param to flush & round then invoke op.impl on
+ * @param op operation defining the function being run
+ * @returns a span over all of the outputs of op.impl
+ */
+function roundAndFlushVectorToInterval(x: number[], op: VectorToIntervalOp): F32Interval {
+  assert(
+    x.every(e => !Number.isNaN(e)),
+    `flush not defined for NaN`
+  );
+
+  const x_rounded: number[][] = x.map(correctlyRoundedF32);
+  const x_flushed: number[][] = x_rounded.map(addFlushedIfNeeded);
+  const x_inputs = cartesianProduct<number>(...x_flushed);
+
+  const intervals = new Set<F32Interval>();
+  x_inputs.forEach(inner_x => {
+    intervals.add(op.impl(inner_x));
+  });
+  return F32Interval.span(...intervals);
+}
+
+/** Converts a pair of vectors to an acceptance interval using a specific function
  *
  * This handles correctly rounding and flushing inputs as needed.
  * Duplicate inputs are pruned before invoking op.impl.
@@ -509,6 +553,28 @@ function runTernaryOp(
   return result.isFinite() ? result : F32Interval.any();
 }
 
+/** Calculate the acceptance interval for a vector function over given intervals
+ *
+ * @param x input domain intervals vector
+ * @param op operation defining the function being run
+ * @returns a span over all of the outputs of op.impl
+ */
+function runVectorOp(x: F32Vector, op: VectorToIntervalOp): F32Interval {
+  if (x.some(e => !e.isFinite())) {
+    return F32Interval.any();
+  }
+
+  const x_values = cartesianProduct<number>(...x.map(e => e.bounds()));
+
+  const outputs = new Set<F32Interval>();
+  x_values.forEach(inner_x => {
+    outputs.add(roundAndFlushVectorToInterval(inner_x, op));
+  });
+
+  const result = F32Interval.span(...outputs);
+  return result.isFinite() ? result : F32Interval.any();
+}
+
 /** Calculate the acceptance interval for a vector pair function over given intervals
  *
  * @param x first input domain intervals vector
@@ -516,11 +582,7 @@ function runTernaryOp(
  * @param op operation defining the function being run
  * @returns a span over all of the outputs of op.impl
  */
-function runVectorPairBinaryOp(
-  x: F32Vector,
-  y: F32Vector,
-  op: VectorPairToIntervalOp
-): F32Interval {
+function runVectorPairOp(x: F32Vector, y: F32Vector, op: VectorPairToIntervalOp): F32Interval {
   if (x.some(e => !e.isFinite()) || y.some(e => !e.isFinite())) {
     return F32Interval.any();
   }
@@ -871,7 +933,7 @@ const DotIntervalOp: VectorPairToIntervalOp = {
 
 export function dotInterval(x: number[], y: number[]): F32Interval {
   assert(x.length === y.length, `dot not defined for vectors with different lengths`);
-  return runVectorPairBinaryOp(toF32Vector(x), toF32Vector(y), DotIntervalOp);
+  return runVectorPairOp(toF32Vector(x), toF32Vector(y), DotIntervalOp);
 }
 
 const ExpIntervalOp: PointToIntervalOp = {
@@ -969,6 +1031,17 @@ const LdexpIntervalOp: BinaryToIntervalOp = {
 /** Calculate an acceptance interval of ldexp(e1, e2) */
 export function ldexpInterval(e1: number, e2: number): F32Interval {
   return roundAndFlushBinaryToInterval(e1, e2, LdexpIntervalOp);
+}
+
+const LengthIntervalOp: VectorToIntervalOp = {
+  impl: (n: number[]): F32Interval => {
+    return sqrtInterval(dotInterval(n, n));
+  },
+};
+
+/** Calculate an acceptance interval of length(x) */
+export function lengthInterval(n: number[]): F32Interval {
+  return runVectorOp(toF32Vector(n), LengthIntervalOp);
 }
 
 const LogIntervalOp: PointToIntervalOp = {

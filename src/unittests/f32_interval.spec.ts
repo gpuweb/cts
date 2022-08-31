@@ -32,6 +32,7 @@ import {
   IntervalBounds,
   inverseSqrtInterval,
   ldexpInterval,
+  lengthInterval,
   logInterval,
   log2Interval,
   maxInterval,
@@ -2432,6 +2433,55 @@ g.test('smoothStepInterval')
     t.expect(
       objectEquals(expected, got),
       `smoothStepInterval(${low}, ${high}, ${x}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+interface VectorToIntervalCase {
+  input: number[];
+  expected: IntervalBounds;
+}
+
+g.test('lengthInterval')
+  .paramsSubcasesOnly<VectorToIntervalCase>(
+    // prettier-ignore
+    [
+      // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
+      // form due to the inherited nature of the errors.
+      // vec2
+      {input: [1.0, 0.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
+      {input: [0.0, 1.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
+      {input: [1.0, 1.0], expected: [hexToF64(0x3ff6a09d, 0xb0000000), hexToF64(0x3ff6a09f, 0x10000000)] },  // ~√2
+      {input: [-1.0, -1.0], expected: [hexToF64(0x3ff6a09d, 0xb0000000), hexToF64(0x3ff6a09f, 0x10000000)] },  // ~√2
+      {input: [-1.0, 1.0], expected: [hexToF64(0x3ff6a09d, 0xb0000000), hexToF64(0x3ff6a09f, 0x10000000)] },  // ~√2
+      {input: [0.1, 0.0], expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
+
+      // vec3
+      {input: [1.0, 0.0, 0.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
+      {input: [0.0, 1.0, 0.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
+      {input: [0.0, 0.0, 1.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
+      {input: [1.0, 1.0, 1.0], expected: [hexToF64(0x3ffbb67a, 0x10000000), hexToF64(0x3ffbb67b, 0xb0000000)] },  // ~√3
+      {input: [-1.0, -1.0, -1.0], expected: [hexToF64(0x3ffbb67a, 0x10000000), hexToF64(0x3ffbb67b, 0xb0000000)] },  // ~√3
+      {input: [1.0, -1.0, -1.0], expected: [hexToF64(0x3ffbb67a, 0x10000000), hexToF64(0x3ffbb67b, 0xb0000000)] },  // ~√3
+      {input: [0.1, 0.0, 0.0], expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
+
+      // vec4
+      {input: [1.0, 0.0, 0.0, 0.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
+      {input: [0.0, 1.0, 0.0, 0.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
+      {input: [0.0, 0.0, 1.0, 0.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
+      {input: [0.0, 0.0, 0.0, 1.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
+      {input: [1.0, 1.0, 1.0, 1.0], expected: [hexToF64(0x3fffffff, 0x70000000), hexToF64(0x40000000, 0x90000000)] },  // ~2
+      {input: [-1.0, -1.0, -1.0, -1.0], expected: [hexToF64(0x3fffffff, 0x70000000), hexToF64(0x40000000, 0x90000000)] },  // ~2
+      {input: [-1.0, 1.0, -1.0, 1.0], expected: [hexToF64(0x3fffffff, 0x70000000), hexToF64(0x40000000, 0x90000000)] },  // ~2
+      {input: [0.1, 0.0, 0.0, 0.0], expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
+    ]
+  )
+  .fn(t => {
+    const expected = new F32Interval(...t.params.expected);
+
+    const got = lengthInterval(t.params.input);
+    t.expect(
+      objectEquals(expected, got),
+      `lengthInterval([${t.params.input}]) returned ${got}. Expected ${expected}`
     );
   });
 
