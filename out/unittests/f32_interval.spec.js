@@ -48,6 +48,7 @@ saturateInterval,
 signInterval,
 sinInterval,
 sinhInterval,
+smoothStepInterval,
 sqrtInterval,
 stepInterval,
 subtractionInterval,
@@ -2377,6 +2378,60 @@ fn((t) => {
   t.expect(
   objectEquals(expected, got),
   `mixPreciseInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`);
+
+});
+
+g.test('smoothStepInterval').
+paramsSubcasesOnly(
+
+[
+// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
+// form due to the inherited nature of the errors.
+// Normals
+{ input: [0, 1, 0], expected: [0, kValue.f32.subnormal.positive.min] },
+{ input: [0, 1, 1], expected: [hexToF32(0x3f7ffffa), hexToF32(0x3f800003)] }, // ~1
+{ input: [0, 1, 10], expected: [1] },
+{ input: [0, 1, -10], expected: [0] },
+{ input: [0, 2, 1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] }, // ~0.5
+{ input: [0, 2, 0.5], expected: [hexToF32(0x3e1ffffb), hexToF32(0x3e200007)] }, // ~0.15625...
+{ input: [2, 0, 1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] }, // ~0.5
+{ input: [2, 0, 1.5], expected: [hexToF32(0x3e1ffffb), hexToF32(0x3e200007)] }, // ~0.15625...
+{ input: [0, 100, 50], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] }, // ~0.5
+{ input: [0, 100, 25], expected: [hexToF32(0x3e1ffffb), hexToF32(0x3e200007)] }, // ~0.15625...
+{ input: [0, -2, -1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] }, // ~0.5
+{ input: [0, -2, -0.5], expected: [hexToF32(0x3e1ffffb), hexToF32(0x3e200007)] }, // ~0.15625...
+
+// Subnormals
+{ input: [0, 2, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.min] },
+{ input: [0, 2, kValue.f32.subnormal.positive.min], expected: [0, kValue.f32.subnormal.positive.min] },
+{ input: [0, 2, kValue.f32.subnormal.negative.max], expected: [0, kValue.f32.subnormal.positive.min] },
+{ input: [0, 2, kValue.f32.subnormal.negative.min], expected: [0, kValue.f32.subnormal.positive.min] },
+{ input: [kValue.f32.subnormal.positive.max, 2, 1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] }, // ~0.5
+{ input: [kValue.f32.subnormal.positive.min, 2, 1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] }, // ~0.5
+{ input: [kValue.f32.subnormal.negative.max, 2, 1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] }, // ~0.5
+{ input: [kValue.f32.subnormal.negative.min, 2, 1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] }, // ~0.5
+{ input: [0, kValue.f32.subnormal.positive.max, 1], expected: kAny },
+{ input: [0, kValue.f32.subnormal.positive.min, 1], expected: kAny },
+{ input: [0, kValue.f32.subnormal.negative.max, 1], expected: kAny },
+{ input: [0, kValue.f32.subnormal.negative.min, 1], expected: kAny },
+
+// Infinities
+{ input: [0, 2, Number.POSITIVE_INFINITY], expected: kAny },
+{ input: [0, 2, Number.NEGATIVE_INFINITY], expected: kAny },
+{ input: [Number.POSITIVE_INFINITY, 2, 1], expected: kAny },
+{ input: [Number.NEGATIVE_INFINITY, 2, 1], expected: kAny },
+{ input: [0, Number.POSITIVE_INFINITY, 1], expected: kAny },
+{ input: [0, Number.NEGATIVE_INFINITY, 1], expected: kAny }]).
+
+
+fn((t) => {
+  const [low, high, x] = t.params.input;
+  const expected = new F32Interval(...t.params.expected);
+
+  const got = smoothStepInterval(low, high, x);
+  t.expect(
+  objectEquals(expected, got),
+  `smoothStepInterval(${low}, ${high}, ${x}) returned ${got}. Expected ${expected}`);
 
 });
 

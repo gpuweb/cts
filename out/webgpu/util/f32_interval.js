@@ -236,7 +236,7 @@ function limitPointToIntervalDomain(domain, impl) {
 
 
 /**
- * Restrict the inputs to an BinaryToInterval
+ * Restrict the inputs to a BinaryToInterval
  *
  * Only used for operations that have tighter domain requirements than 'must be
  * f32 finite'.
@@ -1213,14 +1213,32 @@ export function sinhInterval(n) {
   return runPointOp(toF32Interval(n), SinhIntervalOp);
 }
 
-const StepIntervalOp = {
-  impl: (edge, x) => {
-    if (edge <= x) {
-      return correctlyRoundedInterval(1.0);
-    }
-    return correctlyRoundedInterval(0.0);
+const SmoothStepOp = {
+  impl: (low, high, x) => {
+    // For clamp(foo, 0.0, 1.0) the different implementations of clamp provide
+    // the same value, so arbitrarily picking the minmax version to use.
+    // t = clamp((x - low) / (high - low), 0.0, 1.0)
+
+    const t = clampMedianInterval(
+    divisionInterval(
+    subtractionInterval(x, low),
+    subtractionInterval(high, low)),
+    0.0,
+    1.0);
+    // Inherited from t * t * (3.0 - 2.0 * t)
+
+    return multiplicationInterval(
+    t,
+    multiplicationInterval(t,
+    subtractionInterval(3.0,
+    multiplicationInterval(2.0, t))));
   } };
 
+
+/** Calculate an acceptance interval of smoothStep(low, high, x) */
+export function smoothStepInterval(low, high, x) {
+  return runTernaryOp(toF32Interval(low), toF32Interval(high), toF32Interval(x), SmoothStepOp);
+}
 
 const SqrtIntervalOp = {
   impl: (n) => {
@@ -1232,6 +1250,15 @@ const SqrtIntervalOp = {
 export function sqrtInterval(n) {
   return runPointOp(toF32Interval(n), SqrtIntervalOp);
 }
+
+const StepIntervalOp = {
+  impl: (edge, x) => {
+    if (edge <= x) {
+      return correctlyRoundedInterval(1.0);
+    }
+    return correctlyRoundedInterval(0.0);
+  } };
+
 
 /** Calculate an acceptance 'interval' for step(edge, x)
  *
