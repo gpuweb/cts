@@ -10,8 +10,8 @@ Filing new draft issues in the CTS project tracker is very lightweight.
 Anyone with access should do this eagerly, to ensure no testing ideas are forgotten.
 (And if you don't have access, just file a regular issue.)
 
-1. Enter a draft issue with "Status" "New (not in repo)" is in the
-    [CTS project tracker](https://github.com/orgs/gpuweb/projects/3) with any available info
+1. Enter a [draft issue](https://github.com/orgs/gpuweb/projects/3), with the Status
+    set to "New (not in repo)", and any available info included in the issue description
     (notes/plans to ensure full test coverage of the change). The source of this may be:
 
     - Anything in the spec/API that is found not to be covered by the CTS yet.
