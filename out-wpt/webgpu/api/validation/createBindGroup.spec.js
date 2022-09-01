@@ -660,3 +660,49 @@ g.test('binding_resources,device_mismatch')
       });
     }, resource0Mismatched || resource1Mismatched);
   });
+
+g.test('storage_texture,usage')
+  .desc(
+    `
+    Test that the texture usage contains STORAGE_BINDING if the BindGroup entry defines
+    storageTexture.
+  `
+  )
+  .params(u =>
+    u //
+      // If usage0 and usage1 are the same, the usage being test is a single usage. Otherwise, it's
+      // a combined usage.
+      .combine('usage0', kTextureUsages)
+      .combine('usage1', kTextureUsages)
+  )
+  .fn(async t => {
+    const { usage0, usage1 } = t.params;
+
+    const usage = usage0 | usage1;
+
+    const bindGroupLayout = t.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.FRAGMENT,
+          storageTexture: { access: 'write-only', format: 'rgba8unorm' },
+        },
+      ],
+    });
+
+    const texture = t.device.createTexture({
+      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
+      format: 'rgba8unorm',
+      usage,
+    });
+
+    const isValid = GPUTextureUsage.STORAGE_BINDING & usage;
+
+    const textureView = texture.createView();
+    t.expectValidationError(() => {
+      t.device.createBindGroup({
+        entries: [{ binding: 0, resource: textureView }],
+        layout: bindGroupLayout,
+      });
+    }, !isValid);
+  });
