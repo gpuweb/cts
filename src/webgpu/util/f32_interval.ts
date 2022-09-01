@@ -1040,8 +1040,12 @@ const LengthIntervalOp: VectorToIntervalOp = {
 };
 
 /** Calculate an acceptance interval of length(x) */
-export function lengthInterval(n: number[]): F32Interval {
-  return runVectorOp(toF32Vector(n), LengthIntervalOp);
+export function lengthInterval(n: number | number[]): F32Interval {
+  if (n instanceof Array) {
+    return runVectorOp(toF32Vector(n), LengthIntervalOp);
+  } else {
+    return absInterval(n);
+  }
 }
 
 const LogIntervalOp: PointToIntervalOp = {
