@@ -699,3 +699,47 @@ g.test('storage_texture,usage')
       });
     }, !isValid);
   });
+
+g.test('storage_texture,mip_level_count')
+  .desc(
+    `
+    Test that the mip level count of the resource of the BindGroup entry as a descriptor is 1 if the
+    BindGroup entry defines storageTexture. If the mip level count is not 1, a validation error
+    should be generated.
+  `
+  )
+  .params(u =>
+    u //
+      .combine('baseMipLevel', [1, 2])
+      .combine('mipLevelCount', [1, 2])
+  )
+  .fn(async t => {
+    const { baseMipLevel, mipLevelCount } = t.params;
+
+    const bindGroupLayout = t.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.FRAGMENT,
+          storageTexture: { access: 'write-only', format: 'rgba8unorm' },
+        },
+      ],
+    });
+
+    const MIP_LEVEL_COUNT = 4;
+    const texture = t.device.createTexture({
+      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
+      format: 'rgba8unorm' as const,
+      usage: GPUTextureUsage.STORAGE_BINDING,
+      mipLevelCount: MIP_LEVEL_COUNT,
+    });
+
+    const textureView = texture.createView({ baseMipLevel, mipLevelCount });
+
+    t.expectValidationError(() => {
+      t.device.createBindGroup({
+        entries: [{ binding: 0, resource: textureView }],
+        layout: bindGroupLayout,
+      });
+    }, mipLevelCount !== 1);
+  });
