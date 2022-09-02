@@ -240,13 +240,12 @@ fn(async (t) => {
 
   t.trackForCleanup(buffer);
 
-  const isValid = GPUBufferUsage.INDIRECT | bufferUsage;
+  const success = (GPUBufferUsage.INDIRECT & bufferUsage) !== 0;
 
-  const { encoder } = t.createEncoder('compute pass');
+  const { encoder, validateFinish } = t.createEncoder('compute pass');
   encoder.setPipeline(pipeline);
 
-  t.expectValidationError(() => {
-    encoder.dispatchWorkgroupsIndirect(buffer, 0);
-  }, !isValid);
+  encoder.dispatchWorkgroupsIndirect(buffer, 0);
+  validateFinish(success);
 });
 //# sourceMappingURL=compute_pass.spec.js.map
