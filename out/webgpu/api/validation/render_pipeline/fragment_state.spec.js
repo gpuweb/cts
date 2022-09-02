@@ -254,59 +254,14 @@ params((u) =>
 u.
 combine('isAsync', [false, true]).
 combine('format', ['r8unorm', 'rg8unorm', 'rgba8unorm', 'bgra8unorm']).
-beginSubcases().
 combine('componentCount', [1, 2, 3, 4]).
-combineWithParams([
-// extra requirement does not apply
-{
-  colorSrcFactor: 'one',
-  colorDstFactor: 'zero',
-  alphaSrcFactor: 'zero',
-  alphaDstFactor: 'zero' },
-
-{
-  colorSrcFactor: 'dst-alpha',
-  colorDstFactor: 'zero',
-  alphaSrcFactor: 'zero',
-  alphaDstFactor: 'zero' },
-
-// extra requirement applies, fragment output must be vec4 (contain alpha channel)
-{
-  colorSrcFactor: 'src-alpha',
-  colorDstFactor: 'one',
-  alphaSrcFactor: 'zero',
-  alphaDstFactor: 'zero' },
-
-{
-  colorSrcFactor: 'one',
-  colorDstFactor: 'one-minus-src-alpha',
-  alphaSrcFactor: 'zero',
-  alphaDstFactor: 'zero' },
-
-{
-  colorSrcFactor: 'src-alpha-saturated',
-  colorDstFactor: 'one',
-  alphaSrcFactor: 'zero',
-  alphaDstFactor: 'zero' },
-
-{
-  colorSrcFactor: 'one',
-  colorDstFactor: 'zero',
-  alphaSrcFactor: 'one',
-  alphaDstFactor: 'zero' },
-
-{
-  colorSrcFactor: 'one',
-  colorDstFactor: 'zero',
-  alphaSrcFactor: 'zero',
-  alphaDstFactor: 'src' },
-
-{
-  colorSrcFactor: 'one',
-  colorDstFactor: 'zero',
-  alphaSrcFactor: 'zero',
-  alphaDstFactor: 'src-alpha' }])).
-
+beginSubcases()
+// The default srcFactor and dstFactor are 'one' and 'zero'. Override just one at a time.
+.combineWithParams([
+...u.combine('colorSrcFactor', kBlendFactors),
+...u.combine('colorDstFactor', kBlendFactors),
+...u.combine('alphaSrcFactor', kBlendFactors),
+...u.combine('alphaDstFactor', kBlendFactors)])).
 
 
 beforeAllSubcases((t) => {
@@ -332,16 +287,8 @@ fn(async (t) => {
     {
       format,
       blend: {
-        color: {
-          srcFactor: colorSrcFactor,
-          dstFactor: colorDstFactor,
-          operation: 'add' },
-
-        alpha: {
-          srcFactor: alphaSrcFactor,
-          dstFactor: alphaDstFactor,
-          operation: 'add' } } }],
-
+        color: { srcFactor: colorSrcFactor, dstFactor: colorDstFactor },
+        alpha: { srcFactor: alphaSrcFactor, dstFactor: alphaDstFactor } } }],
 
 
 
@@ -351,7 +298,7 @@ fn(async (t) => {
 
 
   const colorBlendReadsSrcAlpha =
-  colorSrcFactor.includes('src-alpha') || colorDstFactor.includes('src-alpha');
+  colorSrcFactor?.includes('src-alpha') || colorDstFactor?.includes('src-alpha');
   const meetsExtraBlendingRequirement = !colorBlendReadsSrcAlpha || componentCount === 4;
   const _success =
   info.sampleType === sampleType &&
