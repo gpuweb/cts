@@ -3,7 +3,7 @@ This test dedicatedly tests validation of GPUFragmentState of createRenderPipeli
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert, range } from '../../../../common/util/util.js';
+import { range } from '../../../../common/util/util.js';
 import {
   kTextureFormats,
   kRenderableColorTextureFormats,
