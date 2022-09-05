@@ -12,6 +12,7 @@ import {
   bufferBindingEntries,
   bufferBindingTypeInfo,
   kBindableResources,
+  kBufferUsages,
   kTextureUsages,
   kTextureViewDimensions,
   sampledAndStorageBindingEntries,
@@ -742,4 +743,53 @@ g.test('storage_texture,mip_level_count')
         layout: bindGroupLayout,
       });
     }, mipLevelCount !== 1);
+  });
+
+g.test('buffer,usage')
+  .desc(
+    `
+    Test that the buffer usage contains 'uniform' if the BindGroup entry defines
+    buffer and it's type is 'uniform'.
+  `
+  )
+  .params(u =>
+    u //
+      // If usage0 and usage1 are the same, the usage being test is a single usage. Otherwise, it's
+      // a combined usage.
+      .combine('usage0', kBufferUsages)
+      .combine('usage1', kBufferUsages)
+      .unless(
+        ({ usage0, usage1 }) =>
+          ((usage0 | usage1) & (GPUConst.BufferUsage.MAP_READ | GPUConst.BufferUsage.MAP_WRITE)) !==
+          0
+      )
+  )
+  .fn(async t => {
+    const { usage0, usage1 } = t.params;
+
+    const usage = usage0 | usage1;
+
+    const bindGroupLayout = t.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.COMPUTE,
+          buffer: { type: 'uniform' },
+        },
+      ],
+    });
+
+    const buffer = t.device.createBuffer({
+      size: 4,
+      usage,
+    });
+
+    const isValid = GPUBufferUsage.UNIFORM & usage;
+
+    t.expectValidationError(() => {
+      t.device.createBindGroup({
+        entries: [{ binding: 0, resource: { buffer } }],
+        layout: bindGroupLayout,
+      });
+    }, !isValid);
   });
