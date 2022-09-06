@@ -1044,7 +1044,7 @@ export function lengthInterval(n: number | number[]): F32Interval {
   if (n instanceof Array) {
     return runVectorOp(toF32Vector(n), LengthIntervalOp);
   } else {
-    return absInterval(n);
+    return sqrtInterval(multiplicationInterval(n, n));
   }
 }
 

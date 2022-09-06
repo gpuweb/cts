@@ -41,7 +41,7 @@ g.test('f32')
   .specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions')
   .desc(`f32 tests`)
   .params(u =>
-    u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
+    u.combine('inputSource', allInputSources)
   )
   .fn(async t => {
     const makeCase = (x: number): Case => {
