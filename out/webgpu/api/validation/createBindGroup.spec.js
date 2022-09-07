@@ -12,7 +12,9 @@ bindingTypeInfo,
 bufferBindingEntries,
 bufferBindingTypeInfo,
 kBindableResources,
+kBufferBindingTypes,
 kBufferUsages,
+kLimitInfo,
 kTextureUsages,
 kTextureViewDimensions,
 sampledAndStorageBindingEntries,
@@ -789,6 +791,69 @@ fn(async (t) => {
   t.expectValidationError(() => {
     t.device.createBindGroup({
       entries: [{ binding: 0, resource: { buffer } }],
+      layout: bindGroupLayout });
+
+  }, !isValid);
+});
+
+g.test('buffer,resource_offset').
+desc(
+`
+    Test that the resource.offset of the BindGroup entry is a multiple of limits.
+    'minUniformBufferOffsetAlignment|minStorageBufferOffsetAlignment' if the BindGroup entry defines
+    buffer and the buffer type is 'uniform|storage|read-only-storage'.
+  `).
+
+params((u) =>
+u //
+.combine('type', kBufferBindingTypes).
+beginSubcases().
+expand('offset', ({ type }) =>
+type === 'uniform' ?
+[
+kLimitInfo.minUniformBufferOffsetAlignment.default,
+kLimitInfo.minUniformBufferOffsetAlignment.default * 0.5,
+kLimitInfo.minUniformBufferOffsetAlignment.default * 1.5,
+kLimitInfo.minUniformBufferOffsetAlignment.default + 2] :
+
+[
+kLimitInfo.minStorageBufferOffsetAlignment.default,
+kLimitInfo.minStorageBufferOffsetAlignment.default * 0.5,
+kLimitInfo.minStorageBufferOffsetAlignment.default * 1.5,
+kLimitInfo.minStorageBufferOffsetAlignment.default + 2])).
+
+
+
+fn(async (t) => {
+  const { type, offset } = t.params;
+
+  const bindGroupLayout = t.device.createBindGroupLayout({
+    entries: [
+    {
+      binding: 0,
+      visibility: GPUShaderStage.COMPUTE,
+      buffer: { type } }] });
+
+
+
+
+  let usage, isValid;
+  if (type === 'uniform') {
+    usage = GPUBufferUsage.UNIFORM;
+    isValid = offset % kLimitInfo.minUniformBufferOffsetAlignment.default === 0;
+  } else {
+    usage = GPUBufferUsage.STORAGE;
+    isValid = offset % kLimitInfo.minStorageBufferOffsetAlignment.default === 0;
+  }
+
+  const buffer = t.device.createBuffer({
+    size: 1024,
+    usage });
+
+
+  t.expectValidationError(() => {
+    t.device.createBindGroup({
+      entries: [{ binding: 0, resource: { buffer, offset } }],
       layout: bindGroupLayout });
 
   }, !isValid);
