@@ -41,23 +41,23 @@ dynamicOffsets)
 
 
   const source = `
-    struct Constants {
-      zero: u32
-    };
-    @group(1) @binding(0) var<uniform> constants: Constants;
+struct Constants {
+  zero: u32
+};
+@group(1) @binding(0) var<uniform> constants: Constants;
 
-    struct Result {
-      value: u32
-    };
-    @group(1) @binding(1) var<storage, read_write> result: Result;
+struct Result {
+  value: u32
+};
+@group(1) @binding(1) var<storage, read_write> result: Result;
 
-    ${testSource}
+${testSource}
 
-    @compute @workgroup_size(1)
-    fn main() {
-      _ = constants.zero; // Ensure constants buffer is statically-accessed
-      result.value = runTest();
-    }`;
+@compute @workgroup_size(1)
+fn main() {
+  _ = constants.zero; // Ensure constants buffer is statically-accessed
+  result.value = runTest();
+}`;
 
   t.debug(source);
   const module = t.device.createShaderModule({ code: source });
@@ -193,11 +193,11 @@ fn(async (t) => {
   // Declare the data that will be accessed to check robust access, as a buffer or a struct
   // in the global scope or inside the test function itself.
   const structDecl = `
-      struct S {
-        startCanary: array<u32, 10>,
-        data: ${type},
-        endCanary: array<u32, 10>,
-      };`;
+struct S {
+  startCanary: array<u32, 10>,
+  data: ${type},
+  endCanary: array<u32, 10>,
+};`;
 
   const testGroupBGLEntires = [];
   switch (storageClass) {
@@ -209,10 +209,10 @@ fn(async (t) => {
         bufferBindingSize = layout.size;
         const qualifiers = storageClass === 'storage' ? `storage, ${storageMode}` : storageClass;
         globalSource += `
-          struct TestData {
-            data: ${type},
-          };
-          @group(0) @binding(0) var<${qualifiers}> s: TestData;`;
+struct TestData {
+  data: ${type},
+};
+@group(0) @binding(0) var<${qualifiers}> s: TestData;`;
 
         testGroupBGLEntires.push({
           binding: 0,
@@ -249,10 +249,10 @@ fn(async (t) => {
   // If we use a local canary declared in the shader, initialize it.
   if (usesCanary) {
     testFunctionSource += `
-        for (var i = 0u; i < 10u; i = i + 1u) {
-          s.startCanary[i] = 0xFFFFFFFFu;
-          s.endCanary[i] = 0xFFFFFFFFu;
-        }`;
+  for (var i = 0u; i < 10u; i = i + 1u) {
+    s.startCanary[i] = 0xFFFFFFFFu;
+    s.endCanary[i] = 0xFFFFFFFFu;
+  }`;
   }
 
   /** Returns a different number each time, kind of like a `__LINE__` to ID the failing check. */
@@ -301,9 +301,11 @@ fn(async (t) => {
     ]) {
       // Produce the accesses to the variable.
       for (const indexToTest of indicesToTest) {
-        const exprIndex = `(${indexToTest})${exprIndexAddon}`;
+        testFunctionSource += `
+  {
+    let index = (${indexToTest})${exprIndexAddon};`;
         const exprZeroElement = `${_kTypeInfo.elementBaseType}()`;
-        const exprElement = `s.data[${exprIndex}]`;
+        const exprElement = `s.data[index]`;
 
         switch (access) {
           case 'read':
@@ -318,36 +320,37 @@ fn(async (t) => {
               let condition = `${exprLoadElement} != ${exprZeroElement}`;
               if (containerType === 'matrix') condition = `any(${condition})`;
               testFunctionSource += `
-                  if (${condition}) { return ${nextErrorReturnValue()}; }`;
+    if (${condition}) { return ${nextErrorReturnValue()}; }`;
             }
             break;
 
           case 'write':
             if (isAtomic) {
               testFunctionSource += `
-                  atomicStore(&s.data[${exprIndex}], ${exprZeroElement});`;
+    atomicStore(&s.data[index], ${exprZeroElement});`;
             } else {
               testFunctionSource += `
-                  s.data[${exprIndex}] = ${exprZeroElement};`;
+    s.data[index] = ${exprZeroElement};`;
             }
             break;}
 
+        testFunctionSource += `
+  }`;
       }
-      testFunctionSource += '\n';
     }
   }
 
   // Check that the canaries haven't been modified
   if (usesCanary) {
     testFunctionSource += `
-        for (var i = 0u; i < 10u; i = i + 1u) {
-          if (s.startCanary[i] != 0xFFFFFFFFu) {
-            return ${nextErrorReturnValue()};
-          }
-          if (s.endCanary[i] != 0xFFFFFFFFu) {
-            return ${nextErrorReturnValue()};
-          }
-        }`;
+  for (var i = 0u; i < 10u; i = i + 1u) {
+    if (s.startCanary[i] != 0xFFFFFFFFu) {
+      return ${nextErrorReturnValue()};
+    }
+    if (s.endCanary[i] != 0xFFFFFFFFu) {
+      return ${nextErrorReturnValue()};
+    }
+  }`;
   }
 
   // Run the test
@@ -356,10 +359,10 @@ fn(async (t) => {
   const testSource = `
       ${globalSource}
 
-      fn runTest() -> u32 {
-        ${testFunctionSource}
-        return 0u;
-      }`;
+fn runTest() -> u32 {
+  ${testFunctionSource}
+  return 0u;
+}`;
 
   const layout = t.device.createPipelineLayout({
     bindGroupLayouts: [
