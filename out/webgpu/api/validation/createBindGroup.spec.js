@@ -750,15 +750,18 @@ fn(async (t) => {
 g.test('buffer,usage').
 desc(
 `
-    Test that the buffer usage contains 'uniform' if the BindGroup entry defines
-    buffer and it's type is 'uniform'.
+    Test that the buffer usage contains 'UNIFORM' if the BindGroup entry defines buffer and it's
+    type is 'uniform', and the buffer usage contains 'STORAGE' if the BindGroup entry's buffer type
+    is 'storage'|read-only-storage'.
   `).
 
 params((u) =>
 u //
+.combine('type', kBufferBindingTypes)
 // If usage0 and usage1 are the same, the usage being test is a single usage. Otherwise, it's
 // a combined usage.
-.combine('usage0', kBufferUsages).
+.beginSubcases().
+combine('usage0', kBufferUsages).
 combine('usage1', kBufferUsages).
 unless(
 ({ usage0, usage1 }) =>
@@ -767,7 +770,7 @@ unless(
 
 
 fn(async (t) => {
-  const { usage0, usage1 } = t.params;
+  const { type, usage0, usage1 } = t.params;
 
   const usage = usage0 | usage1;
 
@@ -776,7 +779,7 @@ fn(async (t) => {
     {
       binding: 0,
       visibility: GPUShaderStage.COMPUTE,
-      buffer: { type: 'uniform' } }] });
+      buffer: { type } }] });
 
 
 
@@ -786,7 +789,12 @@ fn(async (t) => {
     usage });
 
 
-  const isValid = GPUBufferUsage.UNIFORM & usage;
+  let isValid = false;
+  if (type === 'uniform') {
+    isValid = GPUBufferUsage.UNIFORM & usage ? true : false;
+  } else if (type === 'storage' || type === 'read-only-storage') {
+    isValid = GPUBufferUsage.STORAGE & usage ? true : false;
+  }
 
   t.expectValidationError(() => {
     t.device.createBindGroup({
