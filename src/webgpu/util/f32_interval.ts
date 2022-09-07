@@ -3,6 +3,7 @@ import { assert, unreachable } from '../../common/util/util.js';
 import { kValue } from './constants.js';
 import {
   cartesianProduct,
+  correctlyRoundedF16,
   correctlyRoundedF32,
   flushSubnormalNumberF32,
   isFiniteF32,
@@ -1102,6 +1103,32 @@ const PowIntervalOp: BinaryToIntervalOp = {
 /** Calculate an acceptance interval of pow(x, y) */
 export function powInterval(x: number | F32Interval, y: number | F32Interval): F32Interval {
   return runBinaryOp(toF32Interval(x), toF32Interval(y), PowIntervalOp);
+}
+
+// Once a full implementation of F16Interval exists, the correctlyRounded for that can potentially be used instead of
+// having a bespoke operation implementation.
+const QuantizeToF16IntervalOp: PointToIntervalOp = {
+  impl: (n: number): F32Interval => {
+    // This will perform FTZ for f16, this might need to change depending on the outcome of
+    // https://github.com/gpuweb/gpuweb/issues/3421
+    const rounded = correctlyRoundedF16(n);
+    // All f16 values are representable as normal f32 values, so there is no need to handle flushing on the output of
+    // correctlyRoundedF16
+    if (rounded.length === 2) {
+      return new F32Interval(rounded[0], rounded[1]);
+    }
+    if (rounded.length === 1) {
+      return new F32Interval(rounded[0]);
+    }
+    unreachable(
+      `Result of correctlyRoundsF16(${n}) = [${rounded}] is expected to have 1 or 2 elements`
+    );
+  },
+};
+
+/** Calculate an acceptance interval of quanitizeToF16(x) */
+export function quantizeToF16Interval(n: number): F32Interval {
+  return runPointOp(toF32Interval(n), QuantizeToF16IntervalOp);
 }
 
 const RadiansIntervalOp: PointToIntervalOp = {
