@@ -1077,6 +1077,45 @@ g.test('inverseSqrtInterval')
     );
   });
 
+g.test('lengthIntervalScalar')
+  .paramsSubcasesOnly<PointToIntervalCase>(
+    // prettier-ignore
+    [
+      // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
+      // form due to the inherited nature of the errors.
+      {input: 0, expected: kAny },  // ~0
+      {input: 1.0, expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
+      {input: -1.0, expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
+      {input: 0.1, expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
+      {input: -0.1, expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
+      {input: 10.0, expected: [hexToF64(0x4023ffff, 0x70000000), hexToF64(0x40240000, 0xb0000000)] },  // ~10
+      {input: -10.0, expected: [hexToF64(0x4023ffff, 0x70000000), hexToF64(0x40240000, 0xb0000000)] },  // ~10
+
+      // Subnormal Cases
+      { input: kValue.f32.subnormal.negative.min, expected: kAny },
+      { input: kValue.f32.subnormal.negative.max, expected: kAny },
+      { input: kValue.f32.subnormal.positive.min, expected: kAny },
+      { input: kValue.f32.subnormal.positive.max, expected: kAny },
+
+      // Edge cases
+      { input: kValue.f32.infinity.positive, expected: kAny },
+      { input: kValue.f32.infinity.negative, expected: kAny },
+      { input: kValue.f32.negative.min, expected: kAny },
+      { input: kValue.f32.negative.max, expected: kAny },
+      { input: kValue.f32.positive.min, expected: kAny },
+      { input: kValue.f32.positive.max, expected: kAny },
+    ]
+  )
+  .fn(t => {
+    const expected = new F32Interval(...t.params.expected);
+
+    const got = lengthInterval(t.params.input);
+    t.expect(
+      objectEquals(expected, got),
+      `lengthInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
 g.test('logInterval')
   .paramsSubcasesOnly<PointToIntervalCase>(
     // prettier-ignore
@@ -2441,7 +2480,7 @@ interface VectorToIntervalCase {
   expected: IntervalBounds;
 }
 
-g.test('lengthInterval')
+g.test('lengthIntervalVector')
   .paramsSubcasesOnly<VectorToIntervalCase>(
     // prettier-ignore
     [
