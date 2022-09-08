@@ -1,3 +1,5 @@
+import { Float16Array } from '../../external/petamoriken/float16/float16.js';
+
 // MAINTENANCE_TODO(sarahM0): Perhaps instead of kBit and kValue tables we could have one table
 // where every value is a Scalar instead of either bits or value?
 // Then tests wouldn't need most of the Scalar.fromX calls,
@@ -77,6 +79,44 @@ export const kBit = {
     infinity: {
       positive: 0x7f80_0000,
       negative: 0xff80_0000,
+    },
+  },
+
+  // Limits of f16
+  f16: {
+    positive: {
+      min: 0x0400,
+      max: 0x7bff,
+      zero: 0x0000,
+    },
+    negative: {
+      max: 0x8400,
+      min: 0xfbff,
+      zero: 0x8000,
+    },
+    subnormal: {
+      positive: {
+        min: 0x0001,
+        max: 0x03ff,
+      },
+      negative: {
+        max: 0x8001,
+        min: 0x83ff,
+      },
+    },
+    nan: {
+      negative: {
+        s: 0xfc01,
+        q: 0xfe01,
+      },
+      positive: {
+        s: 0x7c01,
+        q: 0x7e01,
+      },
+    },
+    infinity: {
+      positive: 0x7c00,
+      negative: 0xfc00,
     },
   },
 
@@ -224,11 +264,21 @@ export const kBit = {
 /**
  * Converts a 32-bit hex value to a 32-bit float value
  *
- * Using a locally defined function here, instead of uint32ToFloat32 or f32Bits
- * functions, to avoid compile time dependency issues.
+ * Using a locally defined function here to avoid compile time dependency
+ * issues.
  * */
 function hexToF32(hex: number): number {
   return new Float32Array(new Uint32Array([hex]).buffer)[0];
+}
+
+/**
+ * Converts a 16-bit hex value to a 16-bit float value
+ *
+ * Using a locally defined function here to avoid compile time dependency
+ * issues.
+ * */
+function hexToF16(hex: number): number {
+  return new Float16Array(new Uint16Array([hex]).buffer)[0];
 }
 
 export const kValue = {
@@ -293,6 +343,34 @@ export const kValue = {
     infinity: {
       positive: hexToF32(kBit.f32.infinity.positive),
       negative: hexToF32(kBit.f32.infinity.negative),
+    },
+  },
+
+  // Limits of f16
+  f16: {
+    positive: {
+      min: hexToF16(kBit.f16.positive.min),
+      max: hexToF16(kBit.f16.positive.max),
+      zero: hexToF16(kBit.f16.positive.zero),
+    },
+    negative: {
+      max: hexToF16(kBit.f16.negative.max),
+      min: hexToF16(kBit.f16.negative.min),
+      zero: hexToF16(kBit.f16.negative.zero),
+    },
+    subnormal: {
+      positive: {
+        min: hexToF16(kBit.f16.subnormal.positive.min),
+        max: hexToF16(kBit.f16.subnormal.positive.max),
+      },
+      negative: {
+        max: hexToF16(kBit.f16.subnormal.negative.max),
+        min: hexToF16(kBit.f16.subnormal.negative.min),
+      },
+    },
+    infinity: {
+      positive: hexToF16(kBit.f16.infinity.positive),
+      negative: hexToF16(kBit.f16.infinity.negative),
     },
   },
 

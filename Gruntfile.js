@@ -32,7 +32,7 @@ module.exports = function (grunt) {
         cmd: 'node',
         args: [
           'node_modules/@babel/cli/bin/babel',
-          '--extensions=.ts',
+          '--extensions=.ts,.js',
           '--source-maps=true',
           '--out-dir=out/',
           'src/',
@@ -42,7 +42,7 @@ module.exports = function (grunt) {
         cmd: 'node',
         args: [
           'node_modules/@babel/cli/bin/babel',
-          '--extensions=.ts',
+          '--extensions=.ts,.js',
           '--source-maps=false',
           '--delete-dir-on-start',
           '--out-dir=out-wpt/',

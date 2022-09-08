@@ -112,7 +112,7 @@
           {
             "target": "./src/common",
             "from": "./src",
-            "except": ["./common"],
+            "except": ["./common", "./external"],
             "message": "Non common/ code imported from common/"
           }
         ]
