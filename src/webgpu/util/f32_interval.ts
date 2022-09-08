@@ -3,10 +3,11 @@ import { assert, unreachable } from '../../common/util/util.js';
 import { kValue } from './constants.js';
 import {
   cartesianProduct,
+  correctlyRoundedF16,
   correctlyRoundedF32,
-  flushSubnormalNumber,
-  isF32Finite,
-  isSubnormalNumber,
+  flushSubnormalNumberF32,
+  isFiniteF32,
+  isSubnormalNumberF32,
   oneULP,
 } from './math.js';
 
@@ -63,7 +64,7 @@ export class F32Interval {
 
   /** @returns if this interval only contains f32 finite values */
   public isFinite(): boolean {
-    return isF32Finite(this.begin) && isF32Finite(this.end);
+    return isFiniteF32(this.begin) && isFiniteF32(this.end);
   }
 
   /** @returns an interval with the tightest bounds that includes all provided intervals */
@@ -147,7 +148,7 @@ function toF32Vector(v: number[] | F32Vector): F32Vector {
  * returns the input
  */
 function addFlushedIfNeeded(values: number[]): number[] {
-  return values.some(isSubnormalNumber) ? values.concat(0) : values;
+  return values.some(isSubnormalNumberF32) ? values.concat(0) : values;
 }
 
 /**
@@ -560,7 +561,7 @@ function AbsoluteErrorIntervalOp(error_range: number): PointToIntervalOp {
     },
   };
 
-  if (isF32Finite(error_range)) {
+  if (isFiniteF32(error_range)) {
     op.impl = (n: number) => {
       assert(!Number.isNaN(n), `absolute error not defined for NaN`);
       return new F32Interval(n - error_range, n + error_range);
@@ -584,7 +585,7 @@ function ULPIntervalOp(numULP: number): PointToIntervalOp {
     },
   };
 
-  if (isF32Finite(numULP)) {
+  if (isFiniteF32(numULP)) {
     op.impl = (n: number) => {
       assert(!Number.isNaN(n), `ULP error not defined for NaN`);
 
@@ -593,8 +594,8 @@ function ULPIntervalOp(numULP: number): PointToIntervalOp {
       const end = n + numULP * ulp;
 
       return new F32Interval(
-        Math.min(begin, flushSubnormalNumber(begin)),
-        Math.max(end, flushSubnormalNumber(end))
+        Math.min(begin, flushSubnormalNumberF32(begin)),
+        Math.max(end, flushSubnormalNumberF32(end))
       );
     };
   }
@@ -1102,6 +1103,32 @@ const PowIntervalOp: BinaryToIntervalOp = {
 /** Calculate an acceptance interval of pow(x, y) */
 export function powInterval(x: number | F32Interval, y: number | F32Interval): F32Interval {
   return runBinaryOp(toF32Interval(x), toF32Interval(y), PowIntervalOp);
+}
+
+// Once a full implementation of F16Interval exists, the correctlyRounded for that can potentially be used instead of
+// having a bespoke operation implementation.
+const QuantizeToF16IntervalOp: PointToIntervalOp = {
+  impl: (n: number): F32Interval => {
+    // This will perform FTZ for f16, this might need to change depending on the outcome of
+    // https://github.com/gpuweb/gpuweb/issues/3421
+    const rounded = correctlyRoundedF16(n);
+    // All f16 values are representable as normal f32 values, so there is no need to handle flushing on the output of
+    // correctlyRoundedF16
+    if (rounded.length === 2) {
+      return new F32Interval(rounded[0], rounded[1]);
+    }
+    if (rounded.length === 1) {
+      return new F32Interval(rounded[0]);
+    }
+    unreachable(
+      `Result of correctlyRoundedF16(${n}) = [${rounded}] is expected to have 1 or 2 elements`
+    );
+  },
+};
+
+/** Calculate an acceptance interval of quanitizeToF16(x) */
+export function quantizeToF16Interval(n: number): F32Interval {
+  return runPointOp(toF32Interval(n), QuantizeToF16IntervalOp);
 }
 
 const RadiansIntervalOp: PointToIntervalOp = {

@@ -2,7 +2,9 @@
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { Colors } from '../../common/util/colors.js';
 import { assert } from '../../common/util/util.js';
-import { clamp, isSubnormalNumber } from './math.js';
+import { Float16Array } from '../../external/petamoriken/float16/float16.js';
+
+import { clamp, isSubnormalNumberF32 } from './math.js';
 
 /**
  * Encodes a JS `number` into a "normalized" (unorm/snorm) integer representation with `bits` bits.
@@ -306,6 +308,30 @@ export function uint32ToInt32(u32) {
   return i32Arr[0];
 }
 
+/** Converts a 16-bit float value to a 16-bit unsigned integer value */
+export function float16ToUint16(f16) {
+  const f16Arr = new Float16Array(1);
+  f16Arr[0] = f16;
+  const u16Arr = new Uint16Array(f16Arr.buffer);
+  return u16Arr[0];
+}
+
+/** Converts a 16-bit unsigned integer value to a 16-bit float value */
+export function uint16ToFloat16(u16) {
+  const u16Arr = new Uint16Array(1);
+  u16Arr[0] = u16;
+  const f16Arr = new Float16Array(u16Arr.buffer);
+  return f16Arr[0];
+}
+
+/** Converts a 16-bit float value to a 16-bit signed integer value */
+export function float16ToInt16(f16) {
+  const f16Arr = new Float16Array(1);
+  f16Arr[0] = f16;
+  const i16Arr = new Int16Array(f16Arr.buffer);
+  return i16Arr[0];
+}
+
 /** A type of number representable by Scalar. */
 
 /** ScalarType describes the type of WGSL Scalar. */
@@ -541,7 +567,7 @@ export class Scalar {
         if (n !== null && isFloatValue(this)) {
           let str = this.value.toString();
           str = str.indexOf('.') > 0 || str.indexOf('e') > 0 ? str : `${str}.0`;
-          return isSubnormalNumber(n.valueOf())
+          return isSubnormalNumberF32(n.valueOf())
             ? `${Colors.bold(str)} (0x${hex} subnormal)`
             : `${Colors.bold(str)} (0x${hex})`;
         }
@@ -561,6 +587,11 @@ export function f32(value) {
   const arr = new Float32Array([value]);
   return new Scalar(TypeF32, arr[0], arr);
 }
+/** Create an f16 from a numeric value, a JS `number`. */
+export function f16(value) {
+  const arr = new Float16Array([value]);
+  return new Scalar(TypeF16, arr[0], arr);
+}
 /** Create an f32 from a bit representation, a uint32 represented as a JS `number`. */
 export function f32Bits(bits) {
   const arr = new Uint32Array([bits]);
@@ -569,7 +600,7 @@ export function f32Bits(bits) {
 /** Create an f16 from a bit representation, a uint16 represented as a JS `number`. */
 export function f16Bits(bits) {
   const arr = new Uint16Array([bits]);
-  return new Scalar(TypeF16, float16BitsToFloat32(bits), arr);
+  return new Scalar(TypeF16, new Float16Array(arr.buffer)[0], arr);
 }
 
 /** Create an i32 from a numeric value, a JS `number`. */

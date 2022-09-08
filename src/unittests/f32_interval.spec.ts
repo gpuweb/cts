@@ -41,6 +41,7 @@ import {
   multiplicationInterval,
   negationInterval,
   powInterval,
+  quantizeToF16Interval,
   radiansInterval,
   remainderInterval,
   roundInterval,
@@ -1168,6 +1169,41 @@ g.test('negationInterval')
     t.expect(
       objectEquals(expected, got),
       `negationInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('quantizeToF16Interval')
+  .paramsSubcasesOnly<PointToIntervalCase>(
+    // prettier-ignore
+    [
+      { input: kValue.f32.infinity.negative, expected: kAny },
+      { input: kValue.f32.negative.min, expected: kAny },
+      { input: kValue.f16.negative.min, expected: [kValue.f16.negative.min] },
+      { input: -1, expected: [-1] },
+      { input: -0.1, expected: [hexToF32(0xbdcce000), hexToF32(0xbdccc000)] },  // ~-0.1
+      { input: kValue.f16.negative.max, expected: [kValue.f16.negative.max] },
+      { input: kValue.f16.subnormal.negative.min, expected: [kValue.f16.subnormal.negative.min] },
+      { input: kValue.f16.subnormal.negative.max, expected: [kValue.f16.subnormal.negative.max] },
+      { input: kValue.f32.subnormal.negative.max, expected: [kValue.f16.subnormal.negative.max, 0] },
+      { input: 0, expected: [0] },
+      { input: kValue.f32.subnormal.positive.min, expected: [0, kValue.f16.subnormal.positive.min] },
+      { input: kValue.f16.subnormal.positive.min, expected: [kValue.f16.subnormal.positive.min] },
+      { input: kValue.f16.subnormal.positive.max, expected: [kValue.f16.subnormal.positive.max] },
+      { input: kValue.f16.positive.min, expected: [kValue.f16.positive.min] },
+      { input: 0.1, expected: [hexToF32(0x3dccc000), hexToF32(0x3dcce000)] },  // ~0.1
+      { input: 1, expected: [1] },
+      { input: kValue.f16.positive.max, expected: [kValue.f16.positive.max] },
+      { input: kValue.f32.positive.max, expected: kAny },
+      { input: kValue.f32.infinity.positive, expected: kAny },
+    ]
+  )
+  .fn(t => {
+    const expected = new F32Interval(...t.params.expected);
+
+    const got = quantizeToF16Interval(t.params.input);
+    t.expect(
+      objectEquals(expected, got),
+      `quantizeToF16Interval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
