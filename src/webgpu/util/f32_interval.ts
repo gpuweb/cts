@@ -1121,7 +1121,7 @@ const QuantizeToF16IntervalOp: PointToIntervalOp = {
       return new F32Interval(rounded[0]);
     }
     unreachable(
-      `Result of correctlyRoundsF16(${n}) = [${rounded}] is expected to have 1 or 2 elements`
+      `Result of correctlyRoundedF16(${n}) = [${rounded}] is expected to have 1 or 2 elements`
     );
   },
 };

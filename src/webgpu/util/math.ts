@@ -71,9 +71,9 @@ export function isSubnormalScalarF32(val: Scalar): boolean {
   return (u32_val & 0x7f800000) === 0;
 }
 
-/** Utility to pass TS numbers into |isSubnormalNumber| */
-export function isSubnormalNumberF32(val: number): boolean {
-  return val > kValue.f32.negative.max && val < kValue.f32.positive.min;
+/** U/** @returns if number is within subnormal range of f32 */
+export function isSubnormalNumberF32(n: number): boolean {
+  return n > kValue.f32.negative.max && n < kValue.f32.positive.min;
 }
 
 /** @returns if number is in the finite range of f32 */
@@ -108,9 +108,9 @@ export function isSubnormalScalarF16(val: Scalar): boolean {
   return (u16_val & 0x7f800000) === 0;
 }
 
-/** Utility to pass TS numbers into |isSubnormalNumber| */
-export function isSubnormalNumberF16(val: number): boolean {
-  return val > kValue.f16.negative.max && val < kValue.f16.positive.min;
+/** @returns if number is within subnormal range of f16 */
+export function isSubnormalNumberF16(n: number): boolean {
+  return n > kValue.f16.negative.max && n < kValue.f16.positive.min;
 }
 
 /** @returns if number is in the finite range of f16 */
@@ -361,7 +361,7 @@ export function withinULP(val: number, target: number, n: number = 1) {
  *
  * TS/JS's number type is internally a f64, so quantization needs to occur when
  * converting to f32 for WGSL. WGSL does not specify a specific rounding mode,
- * so if there if a number is not precisely representable in 32-bits, but in the
+ * so if a number is not precisely representable in 32-bits, but in the
  * range, there are two possible valid quantizations. If it is precisely
  * representable, there is only one valid quantization. This function calculates
  * the valid roundings and returns them in an array.
@@ -395,11 +395,11 @@ export function correctlyRoundedF32(n: number): number[] {
   }
 
   if (converted > n) {
-    // x_32 rounded towards +inf, so is after x
+    // n_32 rounded towards +inf, so is after n
     const other = nextAfterF32(n_32, false, false).value as number;
     return [other, converted];
   } else {
-    // x_32 rounded towards -inf, so is before x
+    // n_32 rounded towards -inf, so is before n
     const other = nextAfterF32(n_32, true, false).value as number;
     return [converted, other];
   }
@@ -410,7 +410,7 @@ export function correctlyRoundedF32(n: number): number[] {
  *
  * TS/JS's number type is internally a f64, so quantization needs to occur when
  * converting to f16 for WGSL. WGSL does not specify a specific rounding mode,
- * so if there if a number is not precisely representable in 16-bits, but in the
+ * so if a number is not precisely representable in 16-bits, but in the
  * range, there are two possible valid quantizations. If it is precisely
  * representable, there is only one valid quantization. This function calculates
  * the valid roundings and returns them in an array.
@@ -444,11 +444,11 @@ export function correctlyRoundedF16(n: number): number[] {
   }
 
   if (converted > n) {
-    // x_16 rounded towards +inf, so is after x
+    // n_16 rounded towards +inf, so is after n
     const other = nextAfterF16(n_16, false, false).value as number;
     return [other, converted];
   } else {
-    // x_16 rounded towards -inf, so is before x
+    // n_16 rounded towards -inf, so is before n
     const other = nextAfterF16(n_16, true, false).value as number;
     return [converted, other];
   }
