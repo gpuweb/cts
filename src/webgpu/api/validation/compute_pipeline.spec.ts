@@ -263,7 +263,7 @@ Tests calling createComputePipeline(Async) validation for compute workgroup_size
 g.test('overrides,identifier')
   .desc(
     `
-Tests calling createComputePipeline(Async) validation for override constants identifiers.
+Tests calling createComputePipeline(Async) validation for overridable constants identifiers.
 `
   )
   .params(u =>
@@ -275,11 +275,11 @@ Tests calling createComputePipeline(Async) validation for override constants ide
         { constants: { c0: 0, c1: 1 }, _success: true },
         { constants: { c9: 0 }, _success: false },
         { constants: { 1: 0 }, _success: true },
+        { constants: { c3: 0 }, _success: false }, // pipeline constant id is specified for c3
         { constants: { 2: 0 }, _success: false },
         { constants: { 1000: 0 }, _success: true },
         { constants: { 9999: 0 }, _success: false },
-        { constants: { c10: 0 }, _success: false },
-        { constants: { 1000: 0, c10: 0 }, _success: false },
+        { constants: { 1000: 0, c2: 0 }, _success: false },
       ])
   )
   .fn(async t => {
@@ -314,7 +314,7 @@ Tests calling createComputePipeline(Async) validation for override constants ide
 g.test('overrides,uninitialized')
   .desc(
     `
-Tests calling createComputePipeline(Async) validation for uninitialized override constants.
+Tests calling createComputePipeline(Async) validation for uninitialized overridable constants.
 `
   )
   .params(u =>
@@ -382,7 +382,7 @@ override z: u32 = 1u;
 g.test('overrides,workgroup_size')
   .desc(
     `
-Tests calling createComputePipeline(Async) validation for override constants used for workgroup size.
+Tests calling createComputePipeline(Async) validation for overridable constants used for workgroup size.
 `
   )
   .params(u =>
@@ -414,7 +414,7 @@ Tests calling createComputePipeline(Async) validation for override constants use
 g.test('overrides,workgroup_size,limits')
   .desc(
     `
-Tests calling createComputePipeline(Async) validation for override constants for workgroupSize exceeds device limits.
+Tests calling createComputePipeline(Async) validation for overridable constants for workgroupSize exceeds device limits.
 `
   )
   .params(u =>
@@ -465,7 +465,7 @@ Tests calling createComputePipeline(Async) validation for override constants for
 g.test('overrides,workgroup_size,limits,workgroup_storage_size')
   .desc(
     `
-Tests calling createComputePipeline(Async) validation for override constants for workgroupStorageSize exceeds device limits.
+Tests calling createComputePipeline(Async) validation for overridable constants for workgroupStorageSize exceeds device limits.
 `
   )
   .params(u =>
