@@ -1,5 +1,5 @@
 export const description = `
-This test dedicatedly tests validation of Pipeline overridable constants of createRenderPipeline.
+This test dedicatedly tests validation of pipeline overridable constants of createRenderPipeline.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
@@ -37,13 +37,13 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
       vertex: {
         module: t.device.createShaderModule({
           code: `
-              override x: f32 = 0.0;
-              override y: f32 = 0.0;
-              @id(1) override z: f32 = 0.0;
-              @id(1000) override w: f32 = 1.0;
-              @vertex fn main() -> @builtin(position) vec4<f32> {
-                return vec4<f32>(x, y, z, w);
-              }`,
+            override x: f32 = 0.0;
+            override y: f32 = 0.0;
+            @id(1) override z: f32 = 0.0;
+            @id(1000) override w: f32 = 1.0;
+            @vertex fn main() -> @builtin(position) vec4<f32> {
+              return vec4<f32>(x, y, z, w);
+            }`,
         }),
         entryPoint: 'main',
         constants: vertexConstants,
@@ -80,7 +80,7 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
         { fragmentConstants: { 2: 1 }, _success: false },
         { fragmentConstants: { b: 1 }, _success: false }, // pipeline constant id is specified for b
         { fragmentConstants: { a: 1 }, _success: false }, // pipeline constant id is specified for a
-        { fragmentConstants: { 1: 1, b: 1 }, _success: false }, // pipeline constant id is specified for a
+        { fragmentConstants: { 1: 1, b: 1 }, _success: false }, // pipeline constant id is specified for b
       ])
   )
   .fn(async t => {
@@ -95,8 +95,7 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
         @fragment fn main()
             -> @location(0) vec4<f32> {
             return vec4<f32>(r, g, b, a);
-        }
-          `,
+        }`,
       fragmentConstants,
     });
 
@@ -127,13 +126,13 @@ Tests calling createComputePipeline(Async) validation for uninitialized overrida
       vertex: {
         module: t.device.createShaderModule({
           code: `
-              override x: f32;
-              override y: f32 = 0.0;
-              override z: f32;
-              override w: f32 = 1.0;
-              @vertex fn main() -> @builtin(position) vec4<f32> {
-                return vec4<f32>(x, y, z, w);
-              }`,
+            override x: f32;
+            override y: f32 = 0.0;
+            override z: f32;
+            override w: f32 = 1.0;
+            @vertex fn main() -> @builtin(position) vec4<f32> {
+              return vec4<f32>(x, y, z, w);
+            }`,
         }),
         entryPoint: 'main',
         constants: vertexConstants,

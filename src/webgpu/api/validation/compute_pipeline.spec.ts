@@ -290,18 +290,17 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
       compute: {
         module: t.device.createShaderModule({
           code: `
-          override c0: bool = true;      // type: bool
-          override c1: u32 = 0u;          // default override
-          @id(1000) override c2: u32 = 10u;  // default
-          @id(1) override c3: u32 = 11u;     // default
-          @compute @workgroup_size(1) fn main () {
-            // make sure the overridable constants are not optimized out
-            _ = u32(c0);
-            _ = u32(c1);
-            _ = u32(c2);
-            _ = u32(c3);
-          }
-          `,
+            override c0: bool = true;      // type: bool
+            override c1: u32 = 0u;          // default override
+            @id(1000) override c2: u32 = 10u;  // default
+            @id(1) override c3: u32 = 11u;     // default
+            @compute @workgroup_size(1) fn main () {
+              // make sure the overridable constants are not optimized out
+              _ = u32(c0);
+              _ = u32(c1);
+              _ = u32(c2);
+              _ = u32(c3);
+            }`,
         }),
         entryPoint: 'main',
         constants,
@@ -335,32 +334,31 @@ Tests calling createComputePipeline(Async) validation for uninitialized overrida
       compute: {
         module: t.device.createShaderModule({
           code: `
-          override c0: bool;              // type: bool
-          override c1: bool = false;      // default override
-          override c2: f32;               // type: float32
-          override c3: f32 = 0.0;         // default override
-          override c4: f32 = 4.0;         // default
-          override c5: i32;               // type: int32
-          override c6: i32 = 0;           // default override
-          override c7: i32 = 7;           // default
-          override c8: u32;               // type: uint32
-          override c9: u32 = 0u;          // default override
-          @id(1000) override c10: u32 = 10u;  // default
-          @compute @workgroup_size(1) fn main () {
-            // make sure the overridable constants are not optimized out
-            _ = u32(c0);
-            _ = u32(c1);
-            _ = u32(c2);
-            _ = u32(c3);
-            _ = u32(c4);
-            _ = u32(c5);
-            _ = u32(c6);
-            _ = u32(c7);
-            _ = u32(c8);
-            _ = u32(c9);
-            _ = u32(c10);
-          }
-          `,
+            override c0: bool;              // type: bool
+            override c1: bool = false;      // default override
+            override c2: f32;               // type: float32
+            override c3: f32 = 0.0;         // default override
+            override c4: f32 = 4.0;         // default
+            override c5: i32;               // type: int32
+            override c6: i32 = 0;           // default override
+            override c7: i32 = 7;           // default
+            override c8: u32;               // type: uint32
+            override c9: u32 = 0u;          // default override
+            @id(1000) override c10: u32 = 10u;  // default
+            @compute @workgroup_size(1) fn main () {
+              // make sure the overridable constants are not optimized out
+              _ = u32(c0);
+              _ = u32(c1);
+              _ = u32(c2);
+              _ = u32(c3);
+              _ = u32(c4);
+              _ = u32(c5);
+              _ = u32(c6);
+              _ = u32(c7);
+              _ = u32(c8);
+              _ = u32(c9);
+              _ = u32(c10);
+            }`,
         }),
         entryPoint: 'main',
         constants,
@@ -488,15 +486,14 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
         compute: {
           module: t.device.createShaderModule({
             code: `
-override a: u32;
-override b: u32;
-${vec4Count <= 0 ? '' : 'var<workgroup> vec4_data: array<vec4<f32>, a>;'}
-${mat4Count <= 0 ? '' : 'var<workgroup> mat4_data: array<mat4x4<f32>, b>;'}
-@compute @workgroup_size(1) fn main() {
-  ${vec4Count <= 0 ? '' : '_ = vec4_data;'}
-  ${vec4Count <= 0 ? '' : '_ = mat4_data;'}
-}
-          `,
+              override a: u32;
+              override b: u32;
+              ${vec4Count <= 0 ? '' : 'var<workgroup> vec4_data: array<vec4<f32>, a>;'}
+              ${mat4Count <= 0 ? '' : 'var<workgroup> mat4_data: array<mat4x4<f32>, b>;'}
+              @compute @workgroup_size(1) fn main() {
+                ${vec4Count <= 0 ? '' : '_ = vec4_data;'}
+                ${vec4Count <= 0 ? '' : '_ = mat4_data;'}
+              }`,
           }),
           entryPoint: 'main',
           constants: {
