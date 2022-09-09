@@ -27,12 +27,12 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
         { vertexConstants: { z: 1 }, _success: false }, // pipeline constant id is specified for z
         { vertexConstants: { w: 1 }, _success: false }, // pipeline constant id is specified for w
         { vertexConstants: { 1: 1, z: 1 }, _success: false }, // pipeline constant id is specified for z
-      ])
+      ] as { vertexConstants: Record<string, GPUPipelineConstantValue>; _success: boolean }[])
   )
   .fn(async t => {
     const { isAsync, vertexConstants, _success } = t.params;
 
-    const descriptor = {
+    t.doCreateRenderPipelineTest(isAsync, _success, {
       layout: 'auto',
       vertex: {
         module: t.device.createShaderModule({
@@ -57,9 +57,7 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
-    };
-
-    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+    });
   });
 
 g.test('identifier,fragment')
@@ -81,7 +79,7 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
         { fragmentConstants: { b: 1 }, _success: false }, // pipeline constant id is specified for b
         { fragmentConstants: { a: 1 }, _success: false }, // pipeline constant id is specified for a
         { fragmentConstants: { 1: 1, b: 1 }, _success: false }, // pipeline constant id is specified for b
-      ])
+      ] as { fragmentConstants: Record<string, GPUPipelineConstantValue>; _success: boolean }[])
   )
   .fn(async t => {
     const { isAsync, fragmentConstants, _success } = t.params;
@@ -116,12 +114,12 @@ Tests calling createComputePipeline(Async) validation for uninitialized overrida
         { vertexConstants: { x: 1, y: 1 }, _success: false }, // z is missing
         { vertexConstants: { x: 1, z: 1 }, _success: true },
         { vertexConstants: { x: 1, y: 1, z: 1, w: 1 }, _success: true },
-      ])
+      ] as { vertexConstants: Record<string, GPUPipelineConstantValue>; _success: boolean }[])
   )
   .fn(async t => {
     const { isAsync, vertexConstants, _success } = t.params;
 
-    const descriptor = {
+    t.doCreateRenderPipelineTest(isAsync, _success, {
       layout: 'auto',
       vertex: {
         module: t.device.createShaderModule({
@@ -146,9 +144,7 @@ Tests calling createComputePipeline(Async) validation for uninitialized overrida
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
-    };
-
-    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+    });
   });
 
 g.test('uninitialized,fragment')
@@ -165,7 +161,7 @@ Tests calling createComputePipeline(Async) validation for uninitialized overrida
         { fragmentConstants: { r: 1, g: 1 }, _success: false }, // b is missing
         { fragmentConstants: { r: 1, b: 1 }, _success: true },
         { fragmentConstants: { r: 1, g: 1, b: 1, a: 1 }, _success: true },
-      ])
+      ] as { fragmentConstants: Record<string, GPUPipelineConstantValue>; _success: boolean }[])
   )
   .fn(async t => {
     const { isAsync, fragmentConstants, _success } = t.params;

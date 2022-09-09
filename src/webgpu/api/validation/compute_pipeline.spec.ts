@@ -280,7 +280,7 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
         { constants: { 1000: 0 }, _success: true },
         { constants: { 9999: 0 }, _success: false },
         { constants: { 1000: 0, c2: 0 }, _success: false },
-      ])
+      ] as { constants: Record<string, GPUPipelineConstantValue>; _success: boolean }[])
   )
   .fn(async t => {
     const { isAsync, constants, _success } = t.params;
@@ -324,7 +324,7 @@ Tests calling createComputePipeline(Async) validation for uninitialized overrida
         { constants: { c0: 0, c2: 0, c8: 0 }, _success: false }, // c5 is missing
         { constants: { c0: 0, c2: 0, c5: 0, c8: 0 }, _success: true },
         { constants: { c0: 0, c2: 0, c5: 0, c8: 0, c1: 0 }, _success: true },
-      ])
+      ] as { constants: Record<string, GPUPipelineConstantValue>; _success: boolean }[])
   )
   .fn(async t => {
     const { isAsync, constants, _success } = t.params;
@@ -390,7 +390,7 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
         { constants: {}, _success: true },
         { constants: { x: 0, y: 0, z: 0 }, _success: false },
         { constants: { x: 16, y: 1, z: 1 }, _success: true },
-      ])
+      ] as { constants: Record<string, GPUPipelineConstantValue>; _success: boolean }[])
   )
   .fn(async t => {
     const { isAsync, constants, _success } = t.params;
