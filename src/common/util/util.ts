@@ -1,4 +1,3 @@
-import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 import { Logger } from '../internal/logging/logger.js';
 
 import { keysOf } from './data_tables.js';
@@ -196,7 +195,6 @@ const TypedArrayBufferViewInstances = [
   new Int8Array(),
   new Int16Array(),
   new Int32Array(),
-  new Float16Array(),
   new Float32Array(),
   new Float64Array(),
 ] as const;

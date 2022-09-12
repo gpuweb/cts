@@ -599,8 +599,17 @@ export function f32(value: number): Scalar {
 }
 /** Create an f16 from a numeric value, a JS `number`. */
 export function f16(value: number): Scalar {
-  const arr = new Float16Array([value]);
-  return new Scalar(TypeF16, arr[0], arr);
+  const float_16 = new Float16Array([value]);
+  // This is needed because Float16Array is not a 'real' JS TypedArray, so cannot be in the TypedArrayBufferView types.
+  // Those types are written out via GPUQueue.writeBuffer, so since it is not a TypeArray there is a type error when it
+  // is used.
+  //
+  // Currently no tests depend on reading/writing f16 values from/to the device, they are internally used as part of
+  // testing quantizeToF16, but that actually reads/writes f32 values.
+  //
+  // This hack will need to revisited one tests that write out f16 are needed.
+  const bits_16 = new Uint16Array(float_16[0]);
+  return new Scalar(TypeF16, float_16[0], bits_16);
 }
 /** Create an f32 from a bit representation, a uint32 represented as a JS `number`. */
 export function f32Bits(bits: number): Scalar {
