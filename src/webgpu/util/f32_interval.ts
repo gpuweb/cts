@@ -850,20 +850,41 @@ export function atanInterval(n: number): F32Interval {
 
 const Atan2IntervalOp: BinaryToIntervalOp = {
   impl: (y: number, x: number): F32Interval => {
-    const numULP = 4096;
-    if (y === 0) {
-      if (x === 0) {
-        return F32Interval.any();
-      } else {
-        return F32Interval.span(
-          ulpInterval(kValue.f32.negative.pi.whole, numULP),
-          ulpInterval(kValue.f32.positive.pi.whole, numULP)
-        );
-      }
+    if (x === 0) {
+      // atan2 is not defined meaningfully here
+      return F32Interval.any();
     }
-    return ulpInterval(Math.atan2(y, x), numULP);
+
+    // y/x == 0, [-π, π]
+    if (y === 0) {
+      // For x > 0 atan2 is supposed to be 0, and for x < 0 atan2 is -π or π depending on the direction y/x approaches
+      // 0.
+      // Because implementations will be be calculating this via numeric approximations that will vary slightly around
+      // 0 and subnormals, it is very difficult to write a rule for accuracy here without just dictating a specific
+      // implementation. Instead if the value is at y/x = 0, then the result should be in [-π, π], plus 4096 ULP from
+      // atan.
+      return F32Interval.span(
+        ulpInterval(kValue.f32.negative.pi.whole, 4096),
+        ulpInterval(kValue.f32.positive.pi.whole, 4096)
+      );
+    }
+
+    const atan_yx = atanInterval(divisionInterval(y, x));
+    // x > 0, atan(y/x)
+    if (x > 0) {
+      return atan_yx;
+    }
+
+    // x < 0, y > 0, atan(y/x) + π
+    if (y > 0) {
+      return additionInterval(atan_yx, kValue.f32.positive.pi.whole);
+    }
+
+    // x < 0, y < 0, atan(y/x) - π
+    return subtractionInterval(atan_yx, kValue.f32.positive.pi.whole);
   },
   extrema: (y: F32Interval, x: F32Interval): [F32Interval, F32Interval] => {
+    // There is discontinuity + undefined behaviour at y/x = 0 that will dominate the accuracy
     if (y.contains(0)) {
       if (x.contains(0)) {
         return [toF32Interval(0), toF32Interval(0)];

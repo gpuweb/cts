@@ -1649,47 +1649,44 @@ g.test('atan2Interval')
   .paramsSubcasesOnly<BinaryToIntervalCase>(
     // prettier-ignore
     [
-      // Not all of the common cases for each of the quadrants are iterated here, b/c π is not precisely expressible as
-      // a f32, so fractions like 5* π/6 require special constants for each value. Positive x & y are tested using
-      // values that already have constants, and then the other quadrants are spot checked.
+      // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
+      // form due to the inherited nature of the errors.
+
+      // The positive x & y quadrant is tested in more detail, and the other quadrants are spot checked that values are
+      // pointing in the right direction.
 
       // positive y, positive x
-      { input: [1, hexToF32(0x3fddb3d7)], expected: [minusOneULP(kValue.f32.positive.pi.sixth), kValue.f32.positive.pi.sixth] },  // x = √3
-      { input: [1, 1], expected: [minusOneULP(kValue.f32.positive.pi.quarter), kValue.f32.positive.pi.quarter] },
-      { input: [hexToF32(0x3fddb3d7), 1], expected: [minusOneULP(kValue.f32.positive.pi.third), kValue.f32.positive.pi.third] },  // y = √3
+      { input: [1, hexToF32(0x3fddb3d7)], expected: [hexToF64(0x3fe0bf51, 0xe0000000), hexToF64(0x3fe0c352, 0xa0000000)] },  // x = √3, expected = ~π/6
+      { input: [1, 1], expected: [hexToF64(0x3fe91ffb, 0x20000000), hexToF64(0x3fe923fb, 0xa0000000)] },  // expected = ~π/4
+      { input: [hexToF32(0x3fddb3d7), 1], expected: [hexToF64(0x3ff0bf52, 0x00000000), hexToF64(0x3ff0c352, 0x60000000)] },  // y = √3, expected = ~π/3
       { input: [Number.POSITIVE_INFINITY, 1], expected: kAny },
 
       // positive y, negative x
-      { input: [1, -1], expected: [minusOneULP(kValue.f32.positive.pi.three_quarters), kValue.f32.positive.pi.three_quarters] },
+      { input: [1, -1], expected: [hexToF64(0x4002d8fc, 0x60000000), hexToF64(0x4002d9fc, 0xa0000000)] },  // expected = ~3/4 * π
       { input: [Number.POSITIVE_INFINITY, -1], expected: kAny },
 
       // negative y, negative x
-      { input: [-1, -1], expected: [kValue.f32.negative.pi.three_quarters, plusOneULP(kValue.f32.negative.pi.three_quarters)] },
+      { input: [-1, -1], expected: [hexToF64(0xc002d9fc, 0xa0000000), hexToF64(0xc002d8fc, 0x60000000)] },  // expected = ~-3/4 * π
       { input: [Number.NEGATIVE_INFINITY, -1], expected: kAny },
 
       // negative y, positive x
-      { input: [-1, 1], expected: [kValue.f32.negative.pi.quarter, plusOneULP(kValue.f32.negative.pi.quarter)] },
+      { input: [-1, 1], expected: [hexToF64(0xbfe923fb, 0xa0000000), hexToF64(0xbfe91ffb, 0x20000000)] },  // expected = ~-π/4
       { input: [Number.NEGATIVE_INFINITY, 1], expected: kAny },
 
       // Discontinuity @ y = 0
       { input: [0, 0], expected: kAny },
       { input: [0, kValue.f32.subnormal.positive.max], expected: kAny },
       { input: [0, kValue.f32.subnormal.negative.min], expected: kAny },
-      { input: [0, kValue.f32.positive.min], expected: [kValue.f32.negative.pi.whole, kValue.f32.positive.pi.whole] },
-      { input: [0, kValue.f32.negative.max], expected: [kValue.f32.negative.pi.whole, kValue.f32.positive.pi.whole] },
-      { input: [0, kValue.f32.positive.max], expected: [kValue.f32.negative.pi.whole, kValue.f32.positive.pi.whole] },
-      { input: [0, kValue.f32.negative.min], expected: [kValue.f32.negative.pi.whole, kValue.f32.positive.pi.whole] },
+      { input: [0, kValue.f32.positive.min], expected: [hexToF64(0xc00923fb, 0x60000000), hexToF64(0x400923fb, 0x60000000)] },  // expected = [~-π, ~π]
+      { input: [0, kValue.f32.negative.max], expected: [hexToF64(0xc00923fb, 0x60000000), hexToF64(0x400923fb, 0x60000000)] },  // expected = [~-π, ~π]
+      { input: [0, kValue.f32.positive.max], expected: [hexToF64(0xc00923fb, 0x60000000), hexToF64(0x400923fb, 0x60000000)] },  // expected = [~-π, ~π]
+      { input: [0, kValue.f32.negative.min], expected: [hexToF64(0xc00923fb, 0x60000000), hexToF64(0x400923fb, 0x60000000)] },  // expected = [~-π, ~π]
       { input: [0, kValue.f32.infinity.positive], expected: kAny },
       { input: [0, kValue.f32.infinity.negative], expected: kAny },
     ]
   )
   .fn(t => {
-    const error = (n: number): number => {
-      return 4096 * oneULP(n);
-    };
-
     const [y, x] = t.params.input;
-    t.params.expected = applyError(t.params.expected, error);
     const expected = new F32Interval(...t.params.expected);
 
     const got = atan2Interval(y, x);
