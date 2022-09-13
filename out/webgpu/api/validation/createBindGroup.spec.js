@@ -11,10 +11,12 @@ allBindingEntries,
 bindingTypeInfo,
 bufferBindingEntries,
 bufferBindingTypeInfo,
+kAllTextureFormats,
 kBindableResources,
 kBufferBindingTypes,
 kBufferUsages,
 kLimitInfo,
+kTextureFormatInfo,
 kTextureUsages,
 kTextureViewDimensions,
 sampledAndStorageBindingEntries,
@@ -31,6 +33,8 @@ function clone(descriptor) {
 }
 
 export const g = makeTestGroup(ValidationTest);
+
+const kStorageTextureFormats = kAllTextureFormats.filter((f) => kTextureFormatInfo[f].storage);
 
 g.test('binding_count_mismatch').
 desc('Test that the number of entries must match the number of entries in the BindGroupLayout.').
@@ -745,6 +749,47 @@ fn(async (t) => {
       layout: bindGroupLayout });
 
   }, mipLevelCount !== 1);
+});
+
+g.test('storage_texture,format').
+desc(
+`
+    Test that the format of the storage texture is equal to resource's descriptor format if the
+    BindGroup entry defines storageTexture.
+  `).
+
+params((u) =>
+u //
+.combine('storageTextureFormat', kStorageTextureFormats).
+combine('resourceFormat', kStorageTextureFormats)).
+
+fn(async (t) => {
+  const { storageTextureFormat, resourceFormat } = t.params;
+
+  const bindGroupLayout = t.device.createBindGroupLayout({
+    entries: [
+    {
+      binding: 0,
+      visibility: GPUShaderStage.FRAGMENT,
+      storageTexture: { access: 'write-only', format: storageTextureFormat } }] });
+
+
+
+
+  const texture = t.device.createTexture({
+    size: { width: 16, height: 16, depthOrArrayLayers: 1 },
+    format: resourceFormat,
+    usage: GPUTextureUsage.STORAGE_BINDING });
+
+
+  const isValid = storageTextureFormat === resourceFormat;
+  const textureView = texture.createView({ format: resourceFormat });
+  t.expectValidationError(() => {
+    t.device.createBindGroup({
+      entries: [{ binding: 0, resource: textureView }],
+      layout: bindGroupLayout });
+
+  }, !isValid);
 });
 
 g.test('buffer,usage').
