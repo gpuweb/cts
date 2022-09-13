@@ -18,6 +18,7 @@ F32Interval } from
 
 
 
+
 '../../../util/f32_interval.js';
 import { quantizeToF32 } from '../../../util/math.js';
 
@@ -592,6 +593,23 @@ param2,
   const intervals = ops.map((o) => o(param0, param1, param2));
   return {
     input: [f32(param0), f32(param1), f32(param2)],
+    expected: anyOf(...intervals) };
+
+}
+
+/**
+ * Generates a Case for the param and vector interval generator provided.
+ * @param param the param to pass into the operation
+ * @param ops callbacks that implement generating an acceptance interval for a
+ *            vector.
+ */
+export function makeVectorToF32IntervalCase(param, ...ops) {
+  param = param.map(quantizeToF32);
+  const param_f32 = param.map(f32);
+
+  const intervals = ops.map((o) => o(param));
+  return {
+    input: [new Vector(param_f32)],
     expected: anyOf(...intervals) };
 
 }

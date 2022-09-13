@@ -540,6 +540,23 @@ export function makeTernaryToF32IntervalCase(param0, param1, param2, ...ops) {
 }
 
 /**
+ * Generates a Case for the param and vector interval generator provided.
+ * @param param the param to pass into the operation
+ * @param ops callbacks that implement generating an acceptance interval for a
+ *            vector.
+ */
+export function makeVectorToF32IntervalCase(param, ...ops) {
+  param = param.map(quantizeToF32);
+  const param_f32 = param.map(f32);
+
+  const intervals = ops.map(o => o(param));
+  return {
+    input: [new Vector(param_f32)],
+    expected: anyOf(...intervals),
+  };
+}
+
+/**
  * Generates a Case for the params and vector pair interval generator provided.
  * @param param0 the first param to pass into the operation
  * @param param1 the second param to pass into the operation

@@ -613,6 +613,46 @@ export function sparseF32Range() {
 }
 
 /**
+ * Set of vectors, indexed by dimension, that contain interesting float values
+ *
+ * The tests do not do the simple option for coverage of computing the cartesian
+ * product of all of the interesting float values N times for vecN tests,
+ * because that creates a huge number of tests for vec3 and vec4, leading to
+ * time outs.
+ * Instead they insert the interesting f32 values into each location of the
+ * vector to get a spread of testing over the entire range. This reduces the
+ * number of cases being run substantially, but maintains coverage.
+ */
+export const kVectorTestValues = {
+  2: sparseF32Range().flatMap(f => [
+    [f, 1.0],
+    [1.0, f],
+    [f, -1.0],
+    [-1.0, f],
+  ]),
+
+  3: sparseF32Range().flatMap(f => [
+    [f, 1.0, 2.0],
+    [1.0, f, 2.0],
+    [1.0, 2.0, f],
+    [f, -1.0, -2.0],
+    [-1.0, f, -2.0],
+    [-1.0, -2.0, f],
+  ]),
+
+  4: sparseF32Range().flatMap(f => [
+    [f, 1.0, 2.0, 3.0],
+    [1.0, f, 2.0, 3.0],
+    [1.0, 2.0, f, 3.0],
+    [1.0, 2.0, 3.0, f],
+    [f, -1.0, -2.0, -3.0],
+    [-1.0, f, -2.0, -3.0],
+    [-1.0, -2.0, f, -3.0],
+    [-1.0, -2.0, -3.0, f],
+  ]),
+};
+
+/**
  * @returns the result matrix in Array<Array<number>> type.
  *
  * Matrix multiplication. A is m x n and B is n x p. Returns
