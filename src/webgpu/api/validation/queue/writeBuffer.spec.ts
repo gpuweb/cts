@@ -1,5 +1,3 @@
-import { Float16Array } from "../../../../external/petamoriken/float16/float16";
-
 export const description = `
 Tests writeBuffer validation.
 
@@ -12,6 +10,7 @@ import {
   TypedArrayBufferView,
   TypedArrayBufferViewConstructor,
 } from '../../../../common/util/util.js';
+import { Float16Array } from '../../../../external/petamoriken/float16/float16.js';
 import { GPUConst } from '../../../constants.js';
 import { kResourceStates } from '../../../gpu_test.js';
 import { ValidationTest } from '../validation_test.js';
