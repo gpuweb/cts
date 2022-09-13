@@ -1,3 +1,4 @@
+import { globalTestConfig } from '../../../../common/framework/test_config.js';
 import { assert } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { compare, Comparator, anyOf } from '../../../util/compare.js';
@@ -236,6 +237,9 @@ function submitBatch(
   pass.dispatchWorkgroups(1);
   pass.end();
 
+  // Heartbeat to ensure CTS runners know we're alive.
+  globalTestConfig.testHeartbeatCallback();
+
   t.queue.submit([encoder.finish()]);
 
   // Return a function that can check the results of the shader
@@ -264,6 +268,9 @@ function submitBatch(
 
       return errs.length > 0 ? new Error(errs.join('\n\n')) : undefined;
     };
+
+    // Heartbeat to ensure CTS runners know we're alive.
+    globalTestConfig.testHeartbeatCallback();
 
     t.expectGPUBufferValuesPassCheck(outputBuffer, checkExpectation, {
       type: Uint8Array,
