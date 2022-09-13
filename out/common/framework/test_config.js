@@ -3,7 +3,9 @@
 **/
 
 
+
 export const globalTestConfig = {
   maxSubcasesInFlight: 500,
-  testHeartbeatCallback: () => {} };
+  testHeartbeatCallback: () => {},
+  noRaceWithRejectOnTimeout: false };
 //# sourceMappingURL=test_config.js.map
