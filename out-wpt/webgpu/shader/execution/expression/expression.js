@@ -498,10 +498,8 @@ function packScalarsToVector(parameterTypes, returnType, cases, vectorWidth) {
  */
 export function makeUnaryToF32IntervalCase(param, ...ops) {
   param = quantizeToF32(param);
-  const intervals = new Array();
-  for (const op of ops) {
-    intervals.push(op(param));
-  }
+
+  const intervals = ops.map(o => o(param));
   return { input: [f32(param)], expected: anyOf(...intervals) };
 }
 
@@ -515,10 +513,8 @@ export function makeUnaryToF32IntervalCase(param, ...ops) {
 export function makeBinaryToF32IntervalCase(param0, param1, ...ops) {
   param0 = quantizeToF32(param0);
   param1 = quantizeToF32(param1);
-  const intervals = new Array();
-  for (const op of ops) {
-    intervals.push(op(param0, param1));
-  }
+
+  const intervals = ops.map(o => o(param0, param1));
   return { input: [f32(param0), f32(param1)], expected: anyOf(...intervals) };
 }
 
@@ -535,10 +531,8 @@ export function makeTernaryToF32IntervalCase(param0, param1, param2, ...ops) {
   param0 = quantizeToF32(param0);
   param1 = quantizeToF32(param1);
   param2 = quantizeToF32(param2);
-  const intervals = new Array();
-  for (const op of ops) {
-    intervals.push(op(param0, param1, param2));
-  }
+
+  const intervals = ops.map(o => o(param0, param1, param2));
   return {
     input: [f32(param0), f32(param1), f32(param2)],
     expected: anyOf(...intervals),
