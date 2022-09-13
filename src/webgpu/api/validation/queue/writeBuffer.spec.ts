@@ -1,3 +1,5 @@
+import { Float16Array } from "../../../../external/petamoriken/float16/float16";
+
 export const description = `
 Tests writeBuffer validation.
 
@@ -144,6 +146,10 @@ g.test('ranges')
     runTest(Uint8Array, true);
 
     for (const arrayType of kTypedArrayBufferViewConstructors) {
+      if (arrayType === Float16Array) {
+        // Skip Float16Array since it is supplied by an external module, so there isn't an overload for it.
+        continue;
+      }
       runTest(arrayType, false);
     }
   });
