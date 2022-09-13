@@ -1,4 +1,5 @@
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
+import { globalTestConfig } from '../framework/test_config.js';
 import { Logger } from '../internal/logging/logger.js';
 
 import { keysOf } from './data_tables.js';
@@ -106,6 +107,9 @@ export function rejectOnTimeout(ms: number, msg: string): Promise<never> {
  * and otherwise passes the result through.
  */
 export function raceWithRejectOnTimeout<T>(p: Promise<T>, ms: number, msg: string): Promise<T> {
+  if (globalTestConfig.noRaceWithRejectOnTimeout) {
+    return p;
+  }
   // Setup a promise that will reject after `ms` milliseconds. We cancel this timeout when
   // `p` is finalized, so the JavaScript VM doesn't hang around waiting for the timer to
   // complete, once the test runner has finished executing the tests.
