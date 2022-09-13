@@ -1,7 +1,6 @@
 import { assert, unreachable } from '../../common/util/util.js';
 
 import { kValue } from './constants.js';
-import { f64 } from './conversion.js';
 import {
   cartesianProduct,
   correctlyRoundedF32,
@@ -81,8 +80,7 @@ export class F32Interval {
 
   /** @returns a string representation for logging purposes */
   public toString(): string {
-    // return `[${this.bounds()}]`;
-    return `[${this.bounds().map(f64)}]`;
+    return `[${this.bounds()}]`;
   }
 
   /** @returns a singleton for interval of all possible values
