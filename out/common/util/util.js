@@ -123,6 +123,27 @@ export function raceWithRejectOnTimeout(p, ms, msg) {
 }
 
 /**
+ * Takes a promise `p` and returns a new one which rejects if `p` resolves or rejects,
+ * and otherwise resolves after the specified time.
+ */
+export function assertNotSettledWithinTime(
+p,
+ms,
+msg)
+{
+  // Rejects regardless of whether p resolves or rejects.
+  const rejectWhenSettled = p.then(() => Promise.reject(new Error(msg)));
+  // Resolves after `ms` milliseconds.
+  const timeoutPromise = new Promise((resolve) => {
+    const handle = timeout(() => {
+      resolve(undefined);
+    }, ms);
+    p.finally(() => clearTimeout(handle));
+  });
+  return Promise.race([rejectWhenSettled, timeoutPromise]);
+}
+
+/**
  * Returns a `Promise.reject()`, but also registers a dummy `.catch()` handler so it doesn't count
  * as an uncaught promise rejection in the runtime.
  */
