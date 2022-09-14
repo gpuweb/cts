@@ -337,7 +337,7 @@ g.test('multisampled_validation')
     const texture = t.device.createTexture({
       size: { width: 16, height: 16, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
-      usage: GPUTextureUsage.TEXTURE_BINDING,
+      usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT,
       sampleCount,
     });
 
