@@ -1,6 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import * as os from 'os';import * as path from 'path';
+**/import * as fs from 'fs';import * as os from 'os';import * as path from 'path';
 
 import * as babel from '@babel/core';
 import * as chokidar from 'chokidar';
@@ -133,14 +133,19 @@ app.get('/out/:suite/listing.js', async (req, res, next) => {
 
 // Serve all other .js files by fetching the source .ts file and compiling it.
 app.get('/out/**/*.js', async (req, res, next) => {
-  const tsUrl = path.relative('/out', req.url).replace(/\.js$/, '.ts');
+  const jsUrl = path.relative('/out', req.url);
+  const tsUrl = jsUrl.replace(/\.js$/, '.ts');
   if (compileCache.has(tsUrl)) {
     res.setHeader('Content-Type', 'application/javascript');
     res.send(compileCache.get(tsUrl));
     return;
   }
 
-  const absPath = path.join(srcDir, tsUrl);
+  let absPath = path.join(srcDir, tsUrl);
+  if (!fs.existsSync(absPath)) {
+    // The .ts file doesn't exist. Try .js file in case this is a .js/.d.ts pair.
+    absPath = path.join(srcDir, jsUrl);
+  }
 
   try {
     const result = await babel.transformFileAsync(absPath, babelConfig);
