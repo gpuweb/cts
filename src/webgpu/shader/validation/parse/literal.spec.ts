@@ -150,7 +150,6 @@ const kF16 = new Set([
   '1.1e2h', // Exponent half no sign
   '1.1E+2h', // Exponent half, plus (uppercase E)
   '2.4e-2h', // Exponent half, negative
-  '0X3h', // Hexfloat half no exponent
   '0xep2h', // Hexfloat half lower case p
   '0xEp-2h', // Hexfloat uppcase hex value
   '0x3p+2h', // Hex float half positive exponent
@@ -197,6 +196,8 @@ const kAbstractFloat = new Set([
     '1.1e+h', // Missing exponent with sign
     '1.0e+999999h', // Too large
     '0x1.0p+999999h', // Too large hex
+    '0xf.h', // Having suffix "h" without "p" or "P"
+    '0x3h', // Having suffix "h" without "p" or "P"
   ]);
 
   g.test('abstract_float')
