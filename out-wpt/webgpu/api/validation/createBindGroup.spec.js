@@ -918,3 +918,66 @@ g.test('buffer,resource_offset')
       });
     }, !isValid);
   });
+
+g.test('buffer,resource_binding_size')
+  .desc(
+    `
+    Test that the buffer binding size of the BindGroup entry is equal to or less than limits.
+    'maxUniformBufferBindingSize|maxStorageBufferBindingSize' if the BindGroup entry defines
+    buffer and the buffer type is 'uniform|storage|read-only-storage'.
+  `
+  )
+  .params(u =>
+    u //
+      .combine('type', kBufferBindingTypes)
+      .beginSubcases()
+      // Test a size of 1 to ensure there's no alignment requirement,
+      // then values just within and just above the limit.
+      .expand('bindingSize', ({ type }) =>
+        type === 'uniform'
+          ? [
+              1,
+              kLimitInfo.maxUniformBufferBindingSize.default,
+              kLimitInfo.maxUniformBufferBindingSize.default + 1,
+            ]
+          : [
+              1,
+              kLimitInfo.maxStorageBufferBindingSize.default,
+              kLimitInfo.maxStorageBufferBindingSize.default + 1,
+            ]
+      )
+  )
+  .fn(async t => {
+    const { type, bindingSize } = t.params;
+
+    const bindGroupLayout = t.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.COMPUTE,
+          buffer: { type },
+        },
+      ],
+    });
+
+    let usage, isValid;
+    if (type === 'uniform') {
+      usage = GPUBufferUsage.UNIFORM;
+      isValid = bindingSize <= kLimitInfo.maxUniformBufferBindingSize.default;
+    } else {
+      usage = GPUBufferUsage.STORAGE;
+      isValid = bindingSize <= kLimitInfo.maxStorageBufferBindingSize.default;
+    }
+
+    const buffer = t.device.createBuffer({
+      size: kLimitInfo.maxStorageBufferBindingSize.default,
+      usage,
+    });
+
+    t.expectValidationError(() => {
+      t.device.createBindGroup({
+        entries: [{ binding: 0, resource: { buffer, size: bindingSize } }],
+        layout: bindGroupLayout,
+      });
+    }, !isValid);
+  });
