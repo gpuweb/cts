@@ -117,15 +117,80 @@ function compareInterval(got: Value, expected: F32Interval): Comparison {
 }
 
 /**
+ * Tests it a 'got' Value is contained in 'expected' vector, returning the Comparison information.
+ * @param got the Value obtained from the test, is expected to be a Vector
+ * @param expected the expected array of F32Intervals, one for each element of the vector
+ * @returns the comparison results
+ */
+function compareVector(got: Value, expected: F32Interval[]): Comparison {
+  // Check got type
+  if (!(got instanceof Vector)) {
+    return {
+      matched: false,
+      got: `${Colors.red((typeof got).toString())}(${got})`,
+      expected: `Vector`,
+    };
+  }
+
+  // Check element type
+  {
+    const gTy = got.type.elementType;
+    if (!isFloatValue(got.elements[0])) {
+      return {
+        matched: false,
+        got: `${Colors.red(gTy.toString())}(${got})`,
+        expected: `floating point elements`,
+      };
+    }
+  }
+
+  if (got.elements.length !== expected.length) {
+    return {
+      matched: false,
+      got: `Vector of ${got.elements.length} elements`,
+      expected: `${expected.length} elements`,
+    };
+  }
+
+  const results = got.elements.map((_, idx) => {
+    const g = got.elements[idx].value as number;
+    return { match: expected[idx].contains(g), index: idx };
+  });
+
+  const failures = results.filter(v => !v.match).map(v => v.index);
+  if (failures.length !== 0) {
+    const expected_string = expected.map((v, idx) =>
+      idx in failures ? Colors.red(`[${v}]`) : Colors.green(`[${v}]`)
+    );
+    return {
+      matched: false,
+      got: `[${got.elements}]`,
+      expected: `[${expected_string}]`,
+    };
+  }
+
+  return {
+    matched: true,
+    got: `[${got.elements}]`,
+    expected: `[${Colors.green(expected.toString())}]`,
+  };
+}
+
+/**
  * compare() compares 'got' to 'expected', returning the Comparison information.
  * @param got the result obtained from the test
  * @param expected the expected result
  * @returns the comparison results
  */
-export function compare(got: Value, expected: Value | F32Interval): Comparison {
+export function compare(got: Value, expected: Value | F32Interval | F32Interval[]): Comparison {
+  if (expected instanceof Array) {
+    return compareVector(got, expected);
+  }
+
   if (expected instanceof F32Interval) {
     return compareInterval(got, expected);
   }
+
   return compareValue(got, expected);
 }
 
