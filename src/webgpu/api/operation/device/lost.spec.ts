@@ -3,6 +3,7 @@ Tests for GPUDevice.lost.
 `;
 
 import { Fixture } from '../../../../common/framework/fixture.js';
+import { globalTestConfig } from '../../../../common/framework/test_config.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { attemptGarbageCollection } from '../../../../common/util/collect_garbage.js';
 import { getGPU } from '../../../../common/util/navigator_gpu.js';
@@ -13,7 +14,14 @@ class DeviceLostTests extends Fixture {
   readonly kDeviceLostTimeoutMS = 2000;
 
   getDeviceLostWithTimeout(lost: Promise<GPUDeviceLostInfo>): Promise<GPUDeviceLostInfo> {
-    return raceWithRejectOnTimeout(lost, this.kDeviceLostTimeoutMS, 'device was not lost');
+    // Set `noRaceWithRejectOnTimeout` to false, and then restore it after calling
+    // `raceWithRejectOnTimeout`. Here, it is used to ensure a Promise is not resolved, not
+    // to ensure a Promise must settle by some deadline.
+    const orig = globalTestConfig.noRaceWithRejectOnTimeout;
+    globalTestConfig.noRaceWithRejectOnTimeout = false;
+    const p = raceWithRejectOnTimeout(lost, this.kDeviceLostTimeoutMS, 'device was not lost');
+    globalTestConfig.noRaceWithRejectOnTimeout = orig;
+    return p;
   }
 
   expectDeviceDestroyed(device: GPUDevice): void {
