@@ -9,9 +9,16 @@ TODO:
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, unreachable } from '../../../../common/util/util.js';
-import { kBlendFactors, kBlendOperations } from '../../../capability_info.js';
+import {
+  kBlendFactors,
+  kBlendOperations,
+  kEncodableTextureFormats,
+  kTextureFormatInfo,
+} from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { float32ToFloat16Bits } from '../../../util/conversion.js';
+import { TexelView } from '../../../util/texture/texel_view.js';
+import { textureContentIsOKByT2B } from '../../../util/texture/texture_ok.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -274,12 +281,96 @@ struct Uniform {
     );
   });
 
+const kBlendableFormats = kEncodableTextureFormats.filter(f => {
+  const info = kTextureFormatInfo[f];
+  return info.renderable && info.sampleType === 'float';
+});
+
 g.test('formats')
   .desc(
     `Test blending results works for all formats that support it, and that blending is not applied
   for formats that do not. Blending should be done in linear space for srgb formats.`
   )
-  .unimplemented();
+  .params(u =>
+    u //
+      .combine('format', kBlendableFormats)
+  )
+  .fn(async t => {
+    const { format } = t.params;
+
+    const pipeline = t.device.createRenderPipeline({
+      layout: 'auto',
+      fragment: {
+        targets: [
+          {
+            format,
+            blend: {
+              color: { srcFactor: 'one', dstFactor: 'one', operation: 'add' },
+              alpha: { srcFactor: 'one', dstFactor: 'one', operation: 'add' },
+            },
+          },
+        ],
+        module: t.device.createShaderModule({
+          code: `
+@fragment fn main() -> @location(0) vec4<f32> {
+  return vec4<f32>(0.4, 0.4, 0.4, 0.4);
+}
+          `,
+        }),
+        entryPoint: 'main',
+      },
+      vertex: {
+        module: t.device.createShaderModule({
+          code: `
+@vertex fn main() -> @builtin(position) vec4<f32> {
+    return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+}
+          `,
+        }),
+        entryPoint: 'main',
+      },
+      primitive: {
+        topology: 'point-list',
+      },
+    });
+
+    const renderTarget = t.device.createTexture({
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+      size: [1, 1, 1],
+      format,
+    });
+
+    const commandEncoder = t.device.createCommandEncoder();
+    const renderPass = commandEncoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: renderTarget.createView(),
+          clearValue: { r: 0.2, g: 0.2, b: 0.2, a: 0.2 },
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
+      ],
+    });
+    renderPass.setPipeline(pipeline);
+    renderPass.draw(1);
+    renderPass.end();
+    t.device.queue.submit([commandEncoder.finish()]);
+
+    const expColor = { R: 0.6, G: 0.6, B: 0.6, A: 0.6 };
+    const expTexelView = TexelView.fromTexelsAsColors(format, coords => expColor);
+
+    const result = await textureContentIsOKByT2B(
+      t,
+      { texture: renderTarget },
+      [1, 1, 1],
+      { expTexelView },
+      {
+        maxDiffULPsForNormFormat: 1,
+        maxDiffULPsForFloatFormat: 1,
+      }
+    );
+    t.expectOK(result);
+  });
 
 g.test('clamp,blend_factor')
   .desc('For fixed-point formats, test that the blend factor is clamped in the blend equation.')
