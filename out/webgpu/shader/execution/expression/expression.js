@@ -20,6 +20,7 @@ F32Interval } from
 
 
 
+
 '../../../util/f32_interval.js';
 import { quantizeToF32 } from '../../../util/math.js';
 
@@ -27,7 +28,12 @@ import { quantizeToF32 } from '../../../util/math.js';
 
 /** Is this expectation actually a Comparator */
 function isComparator(e) {
-  return !(e instanceof F32Interval || e instanceof Scalar || e instanceof Vector);
+  return !(
+  e instanceof F32Interval ||
+  e instanceof Scalar ||
+  e instanceof Vector ||
+  e instanceof Array);
+
 }
 
 /** Helper for converting Values to Comparators */
@@ -641,6 +647,23 @@ param1,
   const intervals = ops.map((o) => o(param0, param1));
   return {
     input: [new Vector(param0_f32), new Vector(param1_f32)],
+    expected: anyOf(...intervals) };
+
+}
+
+/**
+ * Generates a Case for the param and vector of intervals generator provided.
+ * @param param the param to pass into the operation
+ * @param ops callbacks that implement generating an vector of acceptance intervals for a
+ *            vector.
+ */
+export function makeVectorToVectorIntervalCase(param, ...ops) {
+  param = param.map(quantizeToF32);
+  const param_f32 = param.map(f32);
+
+  const intervals = ops.map((o) => o(param));
+  return {
+    input: [new Vector(param_f32)],
     expected: anyOf(...intervals) };
 
 }
