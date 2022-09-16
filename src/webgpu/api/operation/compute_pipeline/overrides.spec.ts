@@ -354,9 +354,18 @@ g.test('multi_entry_points')
     }`,
     });
 
-    const expects = [new Uint32Array([1]), new Uint32Array([2]), new Uint32Array([3])];
+    const expects = [
+      new Uint32Array([1]),
+      new Uint32Array([2]),
+      new Uint32Array([3]),
+      new Uint32Array([4]),
+    ];
 
     const buffers = [
+      t.device.createBuffer({
+        size: Uint32Array.BYTES_PER_ELEMENT,
+        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
+      }),
       t.device.createBuffer({
         size: Uint32Array.BYTES_PER_ELEMENT,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
@@ -403,6 +412,17 @@ g.test('multi_entry_points')
           },
         },
       },
+      {
+        layout: 'auto',
+        compute: {
+          module,
+          entryPoint: 'main1',
+          constants: {
+            // assign a different value to c1
+            c1: 4,
+          },
+        },
+      },
     ];
 
     const promises = t.params.isAsync
@@ -410,11 +430,13 @@ g.test('multi_entry_points')
           t.device.createComputePipelineAsync(descriptors[0]),
           t.device.createComputePipelineAsync(descriptors[1]),
           t.device.createComputePipelineAsync(descriptors[2]),
+          t.device.createComputePipelineAsync(descriptors[3]),
         ])
       : Promise.resolve([
           t.device.createComputePipeline(descriptors[0]),
           t.device.createComputePipeline(descriptors[1]),
           t.device.createComputePipeline(descriptors[2]),
+          t.device.createComputePipeline(descriptors[3]),
         ]);
 
     const pipelines = await promises;
@@ -446,6 +468,15 @@ g.test('multi_entry_points')
         ],
         layout: pipelines[2].getBindGroupLayout(0),
       }),
+      t.device.createBindGroup({
+        entries: [
+          {
+            binding: 0,
+            resource: { buffer: buffers[3], offset: 0, size: Uint32Array.BYTES_PER_ELEMENT },
+          },
+        ],
+        layout: pipelines[3].getBindGroupLayout(0),
+      }),
     ];
 
     const encoder = t.device.createCommandEncoder();
@@ -459,10 +490,14 @@ g.test('multi_entry_points')
     pass.setPipeline(pipelines[2]);
     pass.setBindGroup(0, bindGroups[2]);
     pass.dispatchWorkgroups(1);
+    pass.setPipeline(pipelines[3]);
+    pass.setBindGroup(0, bindGroups[3]);
+    pass.dispatchWorkgroups(1);
     pass.end();
     t.device.queue.submit([encoder.finish()]);
 
     t.expectGPUBufferValuesEqual(buffers[0], expects[0]);
     t.expectGPUBufferValuesEqual(buffers[1], expects[1]);
     t.expectGPUBufferValuesEqual(buffers[2], expects[2]);
+    t.expectGPUBufferValuesEqual(buffers[3], expects[3]);
   });
