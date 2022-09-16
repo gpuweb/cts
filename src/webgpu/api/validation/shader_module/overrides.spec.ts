@@ -10,7 +10,7 @@ export const g = makeTestGroup(ValidationTest);
 g.test('id_conflict')
   .desc(
     `
-Tests that overrides explicit numeric identifier should not conflict.
+Tests that overrides' explicit numeric identifier should not conflict.
 `
   )
   .fn(async t => {
@@ -39,6 +39,56 @@ Tests that overrides explicit numeric identifier should not conflict.
   // make sure the overridable constants are not optimized out
   _ = c0;
   _ = c1;
+}
+          `,
+      });
+    }, true);
+  });
+
+g.test('name_conflict')
+  .desc(
+    `
+Tests that overrides' variable name should not conflict, regardless of their numeric identifiers.
+`
+  )
+  .fn(async t => {
+    t.expectValidationError(() => {
+      t.device.createShaderModule({
+        code: `
+override c0: u32;
+override c0: u32;
+
+@compute @workgroup_size(1) fn main() {
+  // make sure the overridable constants are not optimized out
+  _ = c0;
+}
+          `,
+      });
+    }, true);
+
+    t.expectValidationError(() => {
+      t.device.createShaderModule({
+        code: `
+@id(1) override c0: u32;
+override c0: u32;
+
+@compute @workgroup_size(1) fn main() {
+  // make sure the overridable constants are not optimized out
+  _ = c0;
+}
+          `,
+      });
+    }, true);
+
+    t.expectValidationError(() => {
+      t.device.createShaderModule({
+        code: `
+@id(1) override c0: u32;
+@id(2) override c0: u32;
+
+@compute @workgroup_size(1) fn main() {
+  // make sure the overridable constants are not optimized out
+  _ = c0;
 }
           `,
       });

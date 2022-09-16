@@ -368,14 +368,24 @@ Tests calling createComputePipeline(Async) validation for uninitialized overrida
     t.doCreateComputePipelineTest(isAsync, _success, descriptor);
   });
 
-const kOverridesWorkgroupSizeShaderCode = `
+const kOverridesWorkgroupSizeShaders = {
+  u32: `
 override x: u32 = 1u;
 override y: u32 = 1u;
 override z: u32 = 1u;
 @compute @workgroup_size(x, y, z) fn main () {
   _ = 0u;
 }
-`;
+`,
+  i32: `
+override x: i32 = 1;
+override y: i32 = 1;
+override z: i32 = 1;
+@compute @workgroup_size(x, y, z) fn main () {
+  _ = 0u;
+}
+`,
+};
 
 g.test('overrides,workgroup_size')
   .desc(
@@ -386,20 +396,23 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
   .params(u =>
     u //
       .combine('isAsync', [true, false])
+      .combine('type', ['u32', 'i32'] as const)
       .combineWithParams([
         { constants: {}, _success: true },
         { constants: { x: 0, y: 0, z: 0 }, _success: false },
+        { constants: { x: 1, y: -1, z: 1 }, _success: false },
+        { constants: { x: 1, y: 0, z: 0 }, _success: false },
         { constants: { x: 16, y: 1, z: 1 }, _success: true },
       ] as { constants: Record<string, GPUPipelineConstantValue>; _success: boolean }[])
   )
   .fn(async t => {
-    const { isAsync, constants, _success } = t.params;
+    const { isAsync, type, constants, _success } = t.params;
 
     const descriptor = {
       layout: 'auto' as const,
       compute: {
         module: t.device.createShaderModule({
-          code: kOverridesWorkgroupSizeShaderCode,
+          code: kOverridesWorkgroupSizeShaders[type],
         }),
         entryPoint: 'main',
         constants,
@@ -418,9 +431,10 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
   .params(u =>
     u //
       .combine('isAsync', [true, false])
+      .combine('type', ['u32', 'i32'] as const)
   )
   .fn(async t => {
-    const { isAsync } = t.params;
+    const { isAsync, type } = t.params;
 
     const limits = t.device.limits;
 
@@ -429,7 +443,7 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
         layout: 'auto' as const,
         compute: {
           module: t.device.createShaderModule({
-            code: kOverridesWorkgroupSizeShaderCode,
+            code: kOverridesWorkgroupSizeShaders[type],
           }),
           entryPoint: 'main',
           constants: {
