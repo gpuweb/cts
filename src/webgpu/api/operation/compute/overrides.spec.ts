@@ -7,7 +7,8 @@ import { range } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 
 class F extends GPUTest {
-  ExpectShaderOutputWithConstants(
+  async ExpectShaderOutputWithConstants(
+    isAsync: boolean,
     expected: Uint32Array | Float32Array,
     constants: Record<string, GPUPipelineConstantValue>,
     code: string
@@ -17,7 +18,7 @@ class F extends GPUTest {
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
     });
 
-    const pipeline = this.device.createComputePipeline({
+    const descriptor: GPUComputePipelineDescriptor = {
       layout: 'auto',
       compute: {
         module: this.device.createShaderModule({
@@ -26,8 +27,13 @@ class F extends GPUTest {
         entryPoint: 'main',
         constants,
       },
-    });
+    };
 
+    const promise = isAsync
+      ? this.device.createComputePipelineAsync(descriptor)
+      : Promise.resolve(this.device.createComputePipeline(descriptor));
+
+    const pipeline = await promise;
     const bindGroup = this.device.createBindGroup({
       entries: [{ binding: 0, resource: { buffer: dst, offset: 0, size: expected.byteLength } }],
       layout: pipeline.getBindGroupLayout(0),
@@ -48,10 +54,14 @@ class F extends GPUTest {
 export const g = makeTestGroup(F);
 
 g.test('basic')
-  .desc(`Test that correct constants override values or default values are used.`)
+  .desc(
+    `Test that either correct constants override values or default values when no constants override value are provided at pipeline creation time are used as the output to the storage buffer.`
+  )
+  .params(u => u.combine('isAsync', [true, false]))
   .fn(async t => {
     const count = 11;
-    t.ExpectShaderOutputWithConstants(
+    await t.ExpectShaderOutputWithConstants(
+      t.params.isAsync,
       new Uint32Array(range(count, i => i)),
       {
         c0: 0,
@@ -103,9 +113,13 @@ g.test('basic')
   });
 
 g.test('numeric_id')
-  .desc(`Test that correct values are used for constants with numeric id.`)
+  .desc(
+    `Test that correct values are used as output to the storage buffer for constants specified with numeric id instead of their names.`
+  )
+  .params(u => u.combine('isAsync', [true, false]))
   .fn(async t => {
-    t.ExpectShaderOutputWithConstants(
+    await t.ExpectShaderOutputWithConstants(
+      t.params.isAsync,
       new Uint32Array([1, 2, 3]),
       {
         1001: 1,
@@ -133,11 +147,16 @@ g.test('numeric_id')
   });
 
 g.test('precision')
-  .desc(`Test that float number precision is preserved for constants.`)
+  .desc(
+    `Test that float number precision is preserved for constants as they are used for compute shader output of the storage buffer.`
+  )
+  .params(u => u.combine('isAsync', [true, false]))
   .fn(async t => {
     const c1 = 3.14159;
     const c2 = 3.141592653589793238;
-    t.ExpectShaderOutputWithConstants(
+    await t.ExpectShaderOutputWithConstants(
+      t.params.isAsync,
+      // These values will get rounded to f32 and createComputePipeline, so the values coming out from the shader won't be the exact same one as shown here.
       new Float32Array([c1, c2]),
       {
         c1,
@@ -162,20 +181,27 @@ g.test('precision')
   });
 
 g.test('workgroup_size')
-  .desc(`Test that constants can be used as workgroup size correctly.`)
+  .desc(
+    `Test that constants can be used as workgroup size correctly, the compute shader should write the max local invocation id to the storage buffer which is equal to the workgroup size dimension given by the constant.`
+  )
   .params(u =>
     u //
-      .combine('x', [3, 16, 64])
+      .combine('isAsync', [true, false])
+      .combine('type', ['u32', 'i32'])
+      .combine('size', [3, 16, 64])
+      .combine('v', ['x', 'y', 'z'])
   )
   .fn(async t => {
-    const { x } = t.params;
-    t.ExpectShaderOutputWithConstants(
-      new Uint32Array([x]),
+    const { isAsync, type, size, v } = t.params;
+    const workgroup_size_str = v === 'x' ? 'd' : v === 'y' ? '1, d' : '1, 1, d';
+    await t.ExpectShaderOutputWithConstants(
+      isAsync,
+      new Uint32Array([size]),
       {
-        x,
+        d: size,
       },
       `
-        override x: u32;
+        override d: ${type};
 
         struct Buf {
             data : array<u32, 1>
@@ -183,11 +209,11 @@ g.test('workgroup_size')
         
         @group(0) @binding(0) var<storage, read_write> buf : Buf;
         
-        @compute @workgroup_size(x) fn main(
+        @compute @workgroup_size(${workgroup_size_str}) fn main(
             @builtin(local_invocation_id) local_invocation_id : vec3<u32>
         ) {
-            if (local_invocation_id.x >= x - 1) {
-                buf.data[0] = local_invocation_id.x + 1;
+            if (local_invocation_id.${v} >= u32(d - 1)) {
+                buf.data[0] = local_invocation_id.${v} + 1;
             }
         }
       `
@@ -196,8 +222,9 @@ g.test('workgroup_size')
 
 g.test('shared_shader_module')
   .desc(
-    `Test that when the same shader module is shared by different pipelines, the correct constant values are used.`
+    `Test that when the same shader module is shared by different pipelines, the correct constant values are used as output to the storage buffer. The constant value should not affect other pipeline sharing the same shader module.`
   )
+  .params(u => u.combine('isAsync', [true, false]))
   .fn(async t => {
     const module = t.device.createShaderModule({
       code: `
@@ -214,76 +241,93 @@ g.test('shared_shader_module')
       }`,
     });
 
-    const pipeline1 = t.device.createComputePipeline({
-      layout: 'auto',
-      compute: {
-        module,
-        entryPoint: 'main',
-        constants: {
-          a: 1,
+    const expects = [new Uint32Array([1]), new Uint32Array([2])];
+    const buffers = [
+      t.device.createBuffer({
+        size: Uint32Array.BYTES_PER_ELEMENT,
+        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
+      }),
+      t.device.createBuffer({
+        size: Uint32Array.BYTES_PER_ELEMENT,
+        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
+      }),
+    ];
+
+    const descriptors: GPUComputePipelineDescriptor[] = [
+      {
+        layout: 'auto',
+        compute: {
+          module,
+          entryPoint: 'main',
+          constants: {
+            a: 1,
+          },
         },
       },
-    });
-    const pipeline2 = t.device.createComputePipeline({
-      layout: 'auto',
-      compute: {
-        module,
-        entryPoint: 'main',
-        constants: {
-          a: 2,
+      {
+        layout: 'auto',
+        compute: {
+          module,
+          entryPoint: 'main',
+          constants: {
+            a: 2,
+          },
         },
       },
-    });
+    ];
 
-    const expected1 = new Uint32Array([1]);
-    const expected2 = new Uint32Array([2]);
+    const promises = t.params.isAsync
+      ? Promise.all([
+          t.device.createComputePipelineAsync(descriptors[0]),
+          t.device.createComputePipelineAsync(descriptors[1]),
+        ])
+      : Promise.resolve([
+          t.device.createComputePipeline(descriptors[0]),
+          t.device.createComputePipeline(descriptors[1]),
+        ]);
 
-    const buffer1 = t.device.createBuffer({
-      size: Uint32Array.BYTES_PER_ELEMENT,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
-    });
-
-    const buffer2 = t.device.createBuffer({
-      size: Uint32Array.BYTES_PER_ELEMENT,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
-    });
-
-    const bindGroup1 = t.device.createBindGroup({
-      entries: [
-        {
-          binding: 0,
-          resource: { buffer: buffer1, offset: 0, size: Uint32Array.BYTES_PER_ELEMENT },
-        },
-      ],
-      layout: pipeline1.getBindGroupLayout(0),
-    });
-    const bindGroup2 = t.device.createBindGroup({
-      entries: [
-        {
-          binding: 0,
-          resource: { buffer: buffer2, offset: 0, size: Uint32Array.BYTES_PER_ELEMENT },
-        },
-      ],
-      layout: pipeline2.getBindGroupLayout(0),
-    });
+    const pipelines = await promises;
+    const bindGroups = [
+      t.device.createBindGroup({
+        entries: [
+          {
+            binding: 0,
+            resource: { buffer: buffers[0], offset: 0, size: Uint32Array.BYTES_PER_ELEMENT },
+          },
+        ],
+        layout: pipelines[0].getBindGroupLayout(0),
+      }),
+      t.device.createBindGroup({
+        entries: [
+          {
+            binding: 0,
+            resource: { buffer: buffers[1], offset: 0, size: Uint32Array.BYTES_PER_ELEMENT },
+          },
+        ],
+        layout: pipelines[1].getBindGroupLayout(0),
+      }),
+    ];
 
     const encoder = t.device.createCommandEncoder();
     const pass = encoder.beginComputePass();
-    pass.setPipeline(pipeline1);
-    pass.setBindGroup(0, bindGroup1);
+    pass.setPipeline(pipelines[0]);
+    pass.setBindGroup(0, bindGroups[0]);
     pass.dispatchWorkgroups(1);
-    pass.setPipeline(pipeline2);
-    pass.setBindGroup(0, bindGroup2);
+    pass.setPipeline(pipelines[1]);
+    pass.setBindGroup(0, bindGroups[1]);
     pass.dispatchWorkgroups(1);
     pass.end();
     t.device.queue.submit([encoder.finish()]);
 
-    t.expectGPUBufferValuesEqual(buffer1, expected1);
-    t.expectGPUBufferValuesEqual(buffer2, expected2);
+    t.expectGPUBufferValuesEqual(buffers[0], expects[0]);
+    t.expectGPUBufferValuesEqual(buffers[1], expects[1]);
   });
 
 g.test('multi_entry_points')
-  .desc(`Test that constants used for different entry points are handled correctly.`)
+  .desc(
+    `Test that constants used for different entry points are used correctly as output to the storage buffer. They should have no impact for pipeline using entry points that doesn't reference them.`
+  )
+  .params(u => u.combine('isAsync', [true, false]))
   .fn(async t => {
     const module = t.device.createShaderModule({
       code: `
@@ -310,100 +354,115 @@ g.test('multi_entry_points')
     }`,
     });
 
-    const pipeline1 = t.device.createComputePipeline({
-      layout: 'auto',
-      compute: {
-        module,
-        entryPoint: 'main1',
-        constants: {
-          c1: 1,
+    const expects = [new Uint32Array([1]), new Uint32Array([2]), new Uint32Array([3])];
+
+    const buffers = [
+      t.device.createBuffer({
+        size: Uint32Array.BYTES_PER_ELEMENT,
+        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
+      }),
+      t.device.createBuffer({
+        size: Uint32Array.BYTES_PER_ELEMENT,
+        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
+      }),
+      t.device.createBuffer({
+        size: Uint32Array.BYTES_PER_ELEMENT,
+        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
+      }),
+    ];
+
+    const descriptors: GPUComputePipelineDescriptor[] = [
+      {
+        layout: 'auto',
+        compute: {
+          module,
+          entryPoint: 'main1',
+          constants: {
+            c1: 1,
+          },
         },
       },
-    });
-    const pipeline2 = t.device.createComputePipeline({
-      layout: 'auto',
-      compute: {
-        module,
-        entryPoint: 'main2',
-        constants: {
-          c2: 2,
+      {
+        layout: 'auto',
+        compute: {
+          module,
+          entryPoint: 'main2',
+          constants: {
+            c2: 2,
+          },
         },
       },
-    });
-    const pipeline3 = t.device.createComputePipeline({
-      layout: 'auto',
-      compute: {
-        module,
-        entryPoint: 'main3',
-        constants: {
-          // c3 is used as workgroup size
-          c3: 1,
+      {
+        layout: 'auto',
+        compute: {
+          module,
+          entryPoint: 'main3',
+          constants: {
+            // c3 is used as workgroup size
+            c3: 1,
+          },
         },
       },
-    });
+    ];
 
-    const expected1 = new Uint32Array([1]);
-    const expected2 = new Uint32Array([2]);
-    const expected3 = new Uint32Array([3]);
+    const promises = t.params.isAsync
+      ? Promise.all([
+          t.device.createComputePipelineAsync(descriptors[0]),
+          t.device.createComputePipelineAsync(descriptors[1]),
+          t.device.createComputePipelineAsync(descriptors[2]),
+        ])
+      : Promise.resolve([
+          t.device.createComputePipeline(descriptors[0]),
+          t.device.createComputePipeline(descriptors[1]),
+          t.device.createComputePipeline(descriptors[2]),
+        ]);
 
-    const buffer1 = t.device.createBuffer({
-      size: Uint32Array.BYTES_PER_ELEMENT,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
-    });
-
-    const buffer2 = t.device.createBuffer({
-      size: Uint32Array.BYTES_PER_ELEMENT,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
-    });
-
-    const buffer3 = t.device.createBuffer({
-      size: Uint32Array.BYTES_PER_ELEMENT,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
-    });
-
-    const bindGroup1 = t.device.createBindGroup({
-      entries: [
-        {
-          binding: 0,
-          resource: { buffer: buffer1, offset: 0, size: Uint32Array.BYTES_PER_ELEMENT },
-        },
-      ],
-      layout: pipeline1.getBindGroupLayout(0),
-    });
-    const bindGroup2 = t.device.createBindGroup({
-      entries: [
-        {
-          binding: 0,
-          resource: { buffer: buffer2, offset: 0, size: Uint32Array.BYTES_PER_ELEMENT },
-        },
-      ],
-      layout: pipeline2.getBindGroupLayout(0),
-    });
-    const bindGroup3 = t.device.createBindGroup({
-      entries: [
-        {
-          binding: 0,
-          resource: { buffer: buffer3, offset: 0, size: Uint32Array.BYTES_PER_ELEMENT },
-        },
-      ],
-      layout: pipeline3.getBindGroupLayout(0),
-    });
+    const pipelines = await promises;
+    const bindGroups = [
+      t.device.createBindGroup({
+        entries: [
+          {
+            binding: 0,
+            resource: { buffer: buffers[0], offset: 0, size: Uint32Array.BYTES_PER_ELEMENT },
+          },
+        ],
+        layout: pipelines[0].getBindGroupLayout(0),
+      }),
+      t.device.createBindGroup({
+        entries: [
+          {
+            binding: 0,
+            resource: { buffer: buffers[1], offset: 0, size: Uint32Array.BYTES_PER_ELEMENT },
+          },
+        ],
+        layout: pipelines[1].getBindGroupLayout(0),
+      }),
+      t.device.createBindGroup({
+        entries: [
+          {
+            binding: 0,
+            resource: { buffer: buffers[2], offset: 0, size: Uint32Array.BYTES_PER_ELEMENT },
+          },
+        ],
+        layout: pipelines[2].getBindGroupLayout(0),
+      }),
+    ];
 
     const encoder = t.device.createCommandEncoder();
     const pass = encoder.beginComputePass();
-    pass.setPipeline(pipeline1);
-    pass.setBindGroup(0, bindGroup1);
+    pass.setPipeline(pipelines[0]);
+    pass.setBindGroup(0, bindGroups[0]);
     pass.dispatchWorkgroups(1);
-    pass.setPipeline(pipeline2);
-    pass.setBindGroup(0, bindGroup2);
+    pass.setPipeline(pipelines[1]);
+    pass.setBindGroup(0, bindGroups[1]);
     pass.dispatchWorkgroups(1);
-    pass.setPipeline(pipeline3);
-    pass.setBindGroup(0, bindGroup3);
+    pass.setPipeline(pipelines[2]);
+    pass.setBindGroup(0, bindGroups[2]);
     pass.dispatchWorkgroups(1);
     pass.end();
     t.device.queue.submit([encoder.finish()]);
 
-    t.expectGPUBufferValuesEqual(buffer1, expected1);
-    t.expectGPUBufferValuesEqual(buffer2, expected2);
-    t.expectGPUBufferValuesEqual(buffer3, expected3);
+    t.expectGPUBufferValuesEqual(buffers[0], expects[0]);
+    t.expectGPUBufferValuesEqual(buffers[1], expects[1]);
+    t.expectGPUBufferValuesEqual(buffers[2], expects[2]);
   });
