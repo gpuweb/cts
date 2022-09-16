@@ -186,6 +186,14 @@ export const listing = [
     "file": [
       "api",
       "operation",
+      "compute_pipeline",
+      "overrides"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
       "device",
       "lost"
     ]
@@ -316,6 +324,14 @@ export const listing = [
       "operation",
       "render_pipeline",
       "culling_tests"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
+      "render_pipeline",
+      "overrides"
     ]
   },
   {
