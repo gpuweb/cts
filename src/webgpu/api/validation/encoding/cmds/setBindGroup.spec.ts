@@ -12,7 +12,11 @@ TODO: merge these notes and implement.
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { range, unreachable } from '../../../../../common/util/util.js';
-import { kMinDynamicBufferOffsetAlignment } from '../../../../capability_info.js';
+import {
+  kBufferBindingTypes,
+  kMinDynamicBufferOffsetAlignment,
+  kLimitInfo,
+} from '../../../../capability_info.js';
 import { kResourceStates, ResourceState } from '../../../../gpu_test.js';
 import {
   kProgrammableEncoderTypes,
@@ -370,4 +374,73 @@ g.test('u32array_start_and_length')
 
     // RangeError in setBindGroup does not cause the encoder to become invalid.
     validateFinish(true);
+  });
+
+g.test('buffer_dynamic_offsets')
+  .desc(
+    `
+    Test that the dynamic offsets of the BufferLayout is a multiple of
+    'minUniformBufferOffsetAlignment|minStorageBufferOffsetAlignment' if the BindGroup entry defines
+    buffer and the buffer type is 'uniform|storage|read-only-storage'.
+  `
+  )
+  .params(u =>
+    u //
+      .combine('type', kBufferBindingTypes)
+      .combine('encoderType', kProgrammableEncoderTypes)
+      .beginSubcases()
+      .expand('dynamicOffset', ({ type }) =>
+        type === 'uniform'
+          ? [
+              kLimitInfo.minUniformBufferOffsetAlignment.default,
+              kLimitInfo.minUniformBufferOffsetAlignment.default * 0.5,
+              kLimitInfo.minUniformBufferOffsetAlignment.default * 1.5,
+              kLimitInfo.minUniformBufferOffsetAlignment.default * 2,
+              kLimitInfo.minUniformBufferOffsetAlignment.default + 2,
+            ]
+          : [
+              kLimitInfo.minStorageBufferOffsetAlignment.default,
+              kLimitInfo.minStorageBufferOffsetAlignment.default * 0.5,
+              kLimitInfo.minStorageBufferOffsetAlignment.default * 1.5,
+              kLimitInfo.minStorageBufferOffsetAlignment.default * 2,
+              kLimitInfo.minStorageBufferOffsetAlignment.default + 2,
+            ]
+      )
+  )
+  .fn(async t => {
+    const { type, dynamicOffset, encoderType } = t.params;
+    const kBindingSize = 9;
+
+    const bindGroupLayout = t.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.COMPUTE,
+          buffer: { type, hasDynamicOffset: true },
+        },
+      ],
+    });
+
+    let usage, isValid;
+    if (type === 'uniform') {
+      usage = GPUBufferUsage.UNIFORM;
+      isValid = dynamicOffset % kLimitInfo.minUniformBufferOffsetAlignment.default === 0;
+    } else {
+      usage = GPUBufferUsage.STORAGE;
+      isValid = dynamicOffset % kLimitInfo.minStorageBufferOffsetAlignment.default === 0;
+    }
+
+    const buffer = t.device.createBuffer({
+      size: 3 * kMinDynamicBufferOffsetAlignment,
+      usage,
+    });
+
+    const bindGroup = t.device.createBindGroup({
+      entries: [{ binding: 0, resource: { buffer, size: kBindingSize } }],
+      layout: bindGroupLayout,
+    });
+
+    const { encoder, validateFinish } = t.createEncoder(encoderType);
+    encoder.setBindGroup(0, bindGroup, [dynamicOffset]);
+    validateFinish(isValid);
   });
