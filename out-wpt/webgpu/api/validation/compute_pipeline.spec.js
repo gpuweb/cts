@@ -262,3 +262,273 @@ Tests calling createComputePipeline(Async) validation for compute workgroup_size
       size[2] <= t.device.limits.maxComputeWorkgroupSizeZ;
     t.doCreateComputePipelineTest(isAsync, _success, descriptor);
   });
+
+g.test('overrides,identifier')
+  .desc(
+    `
+Tests calling createComputePipeline(Async) validation for overridable constants identifiers.
+`
+  )
+  .params(u =>
+    u //
+      .combine('isAsync', [true, false])
+      .combineWithParams([
+        { constants: {}, _success: true },
+        { constants: { c0: 0 }, _success: true },
+        { constants: { c0: 0, c1: 1 }, _success: true },
+        { constants: { c9: 0 }, _success: false },
+        { constants: { 1: 0 }, _success: true },
+        { constants: { c3: 0 }, _success: false }, // pipeline constant id is specified for c3
+        { constants: { 2: 0 }, _success: false },
+        { constants: { 1000: 0 }, _success: true },
+        { constants: { 9999: 0 }, _success: false },
+        { constants: { 1000: 0, c2: 0 }, _success: false },
+      ])
+  )
+  .fn(async t => {
+    const { isAsync, constants, _success } = t.params;
+
+    const descriptor = {
+      layout: 'auto',
+      compute: {
+        module: t.device.createShaderModule({
+          code: `
+            override c0: bool = true;      // type: bool
+            override c1: u32 = 0u;          // default override
+            @id(1000) override c2: u32 = 10u;  // default
+            @id(1) override c3: u32 = 11u;     // default
+            @compute @workgroup_size(1) fn main () {
+              // make sure the overridable constants are not optimized out
+              _ = u32(c0);
+              _ = u32(c1);
+              _ = u32(c2);
+              _ = u32(c3);
+            }`,
+        }),
+
+        entryPoint: 'main',
+        constants,
+      },
+    };
+
+    t.doCreateComputePipelineTest(isAsync, _success, descriptor);
+  });
+
+g.test('overrides,uninitialized')
+  .desc(
+    `
+Tests calling createComputePipeline(Async) validation for uninitialized overridable constants.
+`
+  )
+  .params(u =>
+    u //
+      .combine('isAsync', [true, false])
+      .combineWithParams([
+        { constants: {}, _success: false },
+        { constants: { c0: 0, c2: 0, c8: 0 }, _success: false }, // c5 is missing
+        { constants: { c0: 0, c2: 0, c5: 0, c8: 0 }, _success: true },
+        { constants: { c0: 0, c2: 0, c5: 0, c8: 0, c1: 0 }, _success: true },
+      ])
+  )
+  .fn(async t => {
+    const { isAsync, constants, _success } = t.params;
+
+    const descriptor = {
+      layout: 'auto',
+      compute: {
+        module: t.device.createShaderModule({
+          code: `
+            override c0: bool;              // type: bool
+            override c1: bool = false;      // default override
+            override c2: f32;               // type: float32
+            override c3: f32 = 0.0;         // default override
+            override c4: f32 = 4.0;         // default
+            override c5: i32;               // type: int32
+            override c6: i32 = 0;           // default override
+            override c7: i32 = 7;           // default
+            override c8: u32;               // type: uint32
+            override c9: u32 = 0u;          // default override
+            @id(1000) override c10: u32 = 10u;  // default
+            @compute @workgroup_size(1) fn main () {
+              // make sure the overridable constants are not optimized out
+              _ = u32(c0);
+              _ = u32(c1);
+              _ = u32(c2);
+              _ = u32(c3);
+              _ = u32(c4);
+              _ = u32(c5);
+              _ = u32(c6);
+              _ = u32(c7);
+              _ = u32(c8);
+              _ = u32(c9);
+              _ = u32(c10);
+            }`,
+        }),
+
+        entryPoint: 'main',
+        constants,
+      },
+    };
+
+    t.doCreateComputePipelineTest(isAsync, _success, descriptor);
+  });
+
+const kOverridesWorkgroupSizeShaders = {
+  u32: `
+override x: u32 = 1u;
+override y: u32 = 1u;
+override z: u32 = 1u;
+@compute @workgroup_size(x, y, z) fn main () {
+  _ = 0u;
+}
+`,
+  i32: `
+override x: i32 = 1;
+override y: i32 = 1;
+override z: i32 = 1;
+@compute @workgroup_size(x, y, z) fn main () {
+  _ = 0u;
+}
+`,
+};
+
+g.test('overrides,workgroup_size')
+  .desc(
+    `
+Tests calling createComputePipeline(Async) validation for overridable constants used for workgroup size.
+`
+  )
+  .params(u =>
+    u //
+      .combine('isAsync', [true, false])
+      .combine('type', ['u32', 'i32'])
+      .combineWithParams([
+        { constants: {}, _success: true },
+        { constants: { x: 0, y: 0, z: 0 }, _success: false },
+        { constants: { x: 1, y: -1, z: 1 }, _success: false },
+        { constants: { x: 1, y: 0, z: 0 }, _success: false },
+        { constants: { x: 16, y: 1, z: 1 }, _success: true },
+      ])
+  )
+  .fn(async t => {
+    const { isAsync, type, constants, _success } = t.params;
+
+    const descriptor = {
+      layout: 'auto',
+      compute: {
+        module: t.device.createShaderModule({
+          code: kOverridesWorkgroupSizeShaders[type],
+        }),
+
+        entryPoint: 'main',
+        constants,
+      },
+    };
+
+    t.doCreateComputePipelineTest(isAsync, _success, descriptor);
+  });
+
+g.test('overrides,workgroup_size,limits')
+  .desc(
+    `
+Tests calling createComputePipeline(Async) validation for overridable constants for workgroupSize exceeds device limits.
+`
+  )
+  .params(u =>
+    u //
+      .combine('isAsync', [true, false])
+      .combine('type', ['u32', 'i32'])
+  )
+  .fn(async t => {
+    const { isAsync, type } = t.params;
+
+    const limits = t.device.limits;
+
+    const testFn = (x, y, z, _success) => {
+      const descriptor = {
+        layout: 'auto',
+        compute: {
+          module: t.device.createShaderModule({
+            code: kOverridesWorkgroupSizeShaders[type],
+          }),
+
+          entryPoint: 'main',
+          constants: {
+            x,
+            y,
+            z,
+          },
+        },
+      };
+
+      t.doCreateComputePipelineTest(isAsync, _success, descriptor);
+    };
+
+    testFn(limits.maxComputeWorkgroupSizeX, 1, 1, true);
+    testFn(limits.maxComputeWorkgroupSizeX + 1, 1, 1, false);
+    testFn(1, limits.maxComputeWorkgroupSizeY, 1, true);
+    testFn(1, limits.maxComputeWorkgroupSizeY + 1, 1, false);
+    testFn(1, 1, limits.maxComputeWorkgroupSizeZ, true);
+    testFn(1, 1, limits.maxComputeWorkgroupSizeZ + 1, false);
+    testFn(
+      limits.maxComputeWorkgroupSizeX,
+      limits.maxComputeWorkgroupSizeY,
+      limits.maxComputeWorkgroupSizeZ,
+      limits.maxComputeWorkgroupSizeX *
+        limits.maxComputeWorkgroupSizeY *
+        limits.maxComputeWorkgroupSizeZ <=
+        limits.maxComputeInvocationsPerWorkgroup
+    );
+  });
+
+g.test('overrides,workgroup_size,limits,workgroup_storage_size')
+  .desc(
+    `
+Tests calling createComputePipeline(Async) validation for overridable constants for workgroupStorageSize exceeds device limits.
+`
+  )
+  .params(u =>
+    u //
+      .combine('isAsync', [true, false])
+  )
+  .fn(async t => {
+    const { isAsync } = t.params;
+
+    const limits = t.device.limits;
+
+    const kVec4Size = 16;
+    const maxVec4Count = limits.maxComputeWorkgroupStorageSize / kVec4Size;
+    const kMat4Size = 64;
+    const maxMat4Count = limits.maxComputeWorkgroupStorageSize / kMat4Size;
+
+    const testFn = (vec4Count, mat4Count, _success) => {
+      const descriptor = {
+        layout: 'auto',
+        compute: {
+          module: t.device.createShaderModule({
+            code: `
+              override a: u32;
+              override b: u32;
+              ${vec4Count <= 0 ? '' : 'var<workgroup> vec4_data: array<vec4<f32>, a>;'}
+              ${mat4Count <= 0 ? '' : 'var<workgroup> mat4_data: array<mat4x4<f32>, b>;'}
+              @compute @workgroup_size(1) fn main() {
+                ${vec4Count <= 0 ? '' : '_ = vec4_data;'}
+                ${vec4Count <= 0 ? '' : '_ = mat4_data;'}
+              }`,
+          }),
+
+          entryPoint: 'main',
+          constants: {
+            a: vec4Count,
+            b: mat4Count,
+          },
+        },
+      };
+
+      t.doCreateComputePipelineTest(isAsync, _success, descriptor);
+    };
+
+    testFn(1, 1, true);
+    testFn(maxVec4Count + 1, 0, false);
+    testFn(0, maxMat4Count + 1, false);
+  });

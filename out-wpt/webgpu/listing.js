@@ -1080,6 +1080,14 @@ export const listing = [
       "api",
       "validation",
       "render_pipeline",
+      "overrides"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "render_pipeline",
       "primitive_state"
     ]
   },
@@ -1159,6 +1167,14 @@ export const listing = [
       "validation",
       "shader_module",
       "entry_point"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "shader_module",
+      "overrides"
     ]
   },
   {

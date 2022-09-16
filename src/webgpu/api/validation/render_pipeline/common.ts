@@ -16,6 +16,7 @@ export class CreateRenderPipelineValidationTest extends ValidationTest {
       depthStencil?: GPUDepthStencilState;
       fragmentShaderCode?: string;
       noFragment?: boolean;
+      fragmentConstants?: Record<string, GPUPipelineConstantValue>;
     } = {}
   ): GPURenderPipelineDescriptor {
     const defaultTargets: GPUColorTargetState[] = [{ format: 'rgba8unorm' }];
@@ -34,6 +35,7 @@ export class CreateRenderPipelineValidationTest extends ValidationTest {
         },
       ]),
       noFragment = false,
+      fragmentConstants = {},
     } = options;
 
     return {
@@ -51,6 +53,7 @@ export class CreateRenderPipelineValidationTest extends ValidationTest {
             }),
             entryPoint: 'main',
             targets,
+            constants: fragmentConstants,
           },
       layout: this.getPipelineLayout(),
       primitive,

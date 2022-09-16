@@ -16,6 +16,7 @@ export class CreateRenderPipelineValidationTest extends ValidationTest {
 
 
 
+
   {})
   {
     const defaultTargets = [{ format: 'rgba8unorm' }];
@@ -33,7 +34,8 @@ export class CreateRenderPipelineValidationTest extends ValidationTest {
         componentCount: 4 }]),
 
 
-      noFragment = false } =
+      noFragment = false,
+      fragmentConstants = {} } =
     options;
 
     return {
@@ -50,7 +52,8 @@ export class CreateRenderPipelineValidationTest extends ValidationTest {
           code: fragmentShaderCode }),
 
         entryPoint: 'main',
-        targets },
+        targets,
+        constants: fragmentConstants },
 
       layout: this.getPipelineLayout(),
       primitive,

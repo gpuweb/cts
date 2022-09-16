@@ -29,6 +29,7 @@ export class CreateRenderPipelineValidationTest extends ValidationTest {
       ]),
 
       noFragment = false,
+      fragmentConstants = {},
     } = options;
 
     return {
@@ -49,6 +50,7 @@ export class CreateRenderPipelineValidationTest extends ValidationTest {
 
             entryPoint: 'main',
             targets,
+            constants: fragmentConstants,
           },
 
       layout: this.getPipelineLayout(),
