@@ -13,6 +13,7 @@ import {
   kShaderStageCombinations,
   kStorageTextureAccessValues,
   kTextureFormatInfo,
+  kTextureSampleTypes,
   kTextureViewDimensions,
   allBindingEntries,
   bindingTypeInfo,
@@ -179,15 +180,22 @@ g.test('visibility,VERTEX_shader_stage_storage_texture_access')
   });
 
 g.test('multisampled_validation')
-  .desc('Test that multisampling is only allowed with "2d" view dimensions.')
+  .desc(
+    `
+  Test that multisampling is only allowed if view dimensions is "2d" and the sampleType is not
+  "float".
+  `
+  )
   .paramsSubcasesOnly(u =>
     u //
       .combine('viewDimension', [undefined, ...kTextureViewDimensions])
+      .combine('sampleType', kTextureSampleTypes)
   )
   .fn(async t => {
-    const { viewDimension } = t.params;
+    const { viewDimension, sampleType } = t.params;
 
-    const success = viewDimension === '2d' || viewDimension === undefined;
+    const success =
+      (viewDimension === '2d' || viewDimension === undefined) && sampleType !== 'float';
 
     t.expectValidationError(() => {
       t.device.createBindGroupLayout({
@@ -195,7 +203,7 @@ g.test('multisampled_validation')
           {
             binding: 0,
             visibility: GPUShaderStage.COMPUTE,
-            texture: { multisampled: true, viewDimension },
+            texture: { multisampled: true, viewDimension, sampleType },
           },
         ],
       });
