@@ -37,7 +37,7 @@ of possible values over their range down to 32-bits of distinct points.
 This means that not all numbers in the range can be exactly represented as a f32.
 
 For example, the integer `1` is exactly represented as `0x3f800000`, but the next
-nearest number `0x3f800000` is `1.00000011920928955`. 
+nearest number `0x3f800001` is `1.00000011920928955`. 
 
 So any number between `1` and `1.00000011920928955` is not exactly represented
 as a f32 and instead is approximated as either `1` or `1.00000011920928955`.
