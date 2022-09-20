@@ -13,7 +13,7 @@ const kValidAlign = new Set([
   '@align(0x4)',
   '@align(4,)',
   '@align(i_val)',
-  '@align(i_val + 4 - 3)',
+  '@align(i_val + 4 - 6)',
   '@align(1073741824)',
   '@\talign\t(4)',
   '@/^comment^/align/^comment^/(4)',
