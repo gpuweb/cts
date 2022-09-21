@@ -37,7 +37,7 @@ of possible values over their range down to 32-bits of distinct points.
 This means that not all numbers in the range can be exactly represented as a f32.
 
 For example, the integer `1` is exactly represented as `0x3f800000`, but the next
-nearest number `0x3f800001` is `1.00000011920928955`. 
+nearest number `0x3f800001` is `1.00000011920928955`.
 
 So any number between `1` and `1.00000011920928955` is not exactly represented
 as a f32 and instead is approximated as either `1` or `1.00000011920928955`.
@@ -47,7 +47,7 @@ two neighbouring numbers that could reasonably represent X: the nearest f32
 value above X, and the nearest f32 value below X. Which of these values gets
 used is dictated by the rounding mode being used, which may be something like
 always round towards 0 or go to the nearest neighbour, or something else
-entirely. 
+entirely.
 
 The process of converting numbers between precisions, like non-f32 to f32, is
 called quantization. WGSL does not prescribe a specific rounding mode when
@@ -55,7 +55,7 @@ quantizing, so either of the neighbouring values is considered valid
 when converting a non-exactly representable value to f32. This has significant
 implications on the CTS that are discussed later.
 
-From here on, we assume you are familiar with the internal structure of a f32 
+From here on, we assume you are familiar with the internal structure of a f32
 value: a sign bit, a biased exponent, and a mantissa. For reference, see
 [float32 on Wikipedia](https://en.wikipedia.org/wiki/Single-precision_floating-point_format)
 
@@ -127,7 +127,7 @@ normally.
 ## Notation/Terminology
 
 When discussing floating point values in the CTS, there are a few terms used
-with precise meanings, which will be elaborated here. 
+with precise meanings, which will be elaborated here.
 
 Additionally, any specific notation used will be specified here to avoid
 confusion.
@@ -149,7 +149,7 @@ Operations have one or more inputs and an output. Being a f32 operation means
 that the primary space for input and output values is f32, but there is some
 flexibility in this definition. For example operations with values being
 restricted to a subset of integers that are representable as f32 are often
-referred to as being f32 based. 
+referred to as being f32 based.
 
 Values are generally floats, integers, booleans, vector, and matrices. Consult
 the WGSL spec for the exact list of types and their definitions.
@@ -184,8 +184,8 @@ and are called out explicitly when they occur.
 The convention in this doc and the CTS code is that `a <= b`, so `a` can be
 referred to as the beginning of the interval and `b` as the end of the interval.
 
-When talking about intervals, this doc and the code endeavours to avoid using 
-the term **range** to refer to the span of values that an interval covers, 
+When talking about intervals, this doc and the code endeavours to avoid using
+the term **range** to refer to the span of values that an interval covers,
 instead using the term bounds to avoid confusion of terminology around output of
 operations.
 
@@ -234,17 +234,17 @@ There are 5 different ways that accuracy requirements are defined in the spec:
    For the case that the true value is exactly representable as a f32, this is
    the equivalent of exactly from above. In the event that the true value is not
    exact, then the acceptable answer for most numbers is either the nearest f32
-   above or the nearest f32 below the true value. 
+   above or the nearest f32 below the true value.
 
    For values near the subnormal range, e.g. close to zero, this becomes more
-   complex, since an implementation may FTZ at any point. So if the exact 
+   complex, since an implementation may FTZ at any point. So if the exact
    solution is subnormal or either of the neighbours of the true value are
-   subnormal, zero becomes a possible result, thus the acceptance interval is 
+   subnormal, zero becomes a possible result, thus the acceptance interval is
    wider than naively expected.
 
 
 3. *Absolute Error*
-   
+
    This type of accuracy specifies an error value, ε, and the calculated result
    is expected to be within that distance from the true value, i.e.
    `[ X - ε, X + ε ]`.
@@ -260,9 +260,10 @@ There are 5 different ways that accuracy requirements are defined in the spec:
    The solution to the issue of not scaling with precision of floating point is
    to use units of least precision.
 
-   ULP(X) is min (b-a) over all pairs (a,b) of representable floating point 
-   numbers such that (a <= X <= b). For a more formal discussion of ULP see 
-   [On the definition of ulp(x)](https://hal.inria.fr/inria-00070503/document)
+   ULP(X) is min (b-a) over all pairs (a,b) of representable floating point
+   numbers such that (a <= X <= b and a =/= b). For a more formal discussion of
+   ULP see
+   [On the definition of ulp(x)](https://hal.inria.fr/inria-00070503/document).
 
    n * ULP or nULP means `[X - n * ULP @ X, X + n * ULP @ X]`.
 
@@ -283,7 +284,7 @@ implementations.
 
 The original implementation of the floating point framework did this as it was
 being built out, but ran into difficulties when defining the inherited
-accuracies. 
+accuracies.
 
 For examples, `tan(x) inherits from sin(x)/cos(x)`, one can take the defined
 rules and manually build up a bespoke solution for checking the results, but
@@ -306,12 +307,12 @@ in the range, that is the acceptable values an implementation may emit.
 The simple accuracies can be defined as follows:
 
 1. *Exact*
-   
+
    `f(x) => [X, X]`
 
 
 2. *Correctly Rounded*
-   
+
    If `X` is precisely defined as a f32
 
    `f(x) => [X, X]`
@@ -352,7 +353,7 @@ acceptance interval is the bounds of the possible outputs.
 In more precise terms:
 ```
   f(x) => X, x = [a, b] and X = [A, B]
-  
+
   X = [min(f(x)), max(f(x))]
   X = [min(f([a, b])), max(f([a, b]))]
   X = [f(m), f(M)]
@@ -363,11 +364,11 @@ for `f` on the interval, respectively.
 So how do we find the minima and maxima for our operation in the domain?
 
 The common general solution for this requires using calculus to calculate the
-derivative of `f`, `f'`, and then find the zeroes `f'` to find inflection 
-points of `f`. 
+derivative of `f`, `f'`, and then find the zeroes `f'` to find inflection
+points of `f`.
 
-This solution wouldn't be sufficient for all builtins, i.e. `step` which is not 
-differentiable at 'edge' values. 
+This solution wouldn't be sufficient for all builtins, i.e. `step` which is not
+differentiable at 'edge' values.
 
 Thankfully we do not need a general solution for the CTS, since all the builtin
 operations are defined in the spec, so `f` is from a known set of options.
@@ -376,7 +377,7 @@ These operations can be divided into two broad categories: monotonic, and
 non-monotonic, with respect to an interval.
 
 The monotonic operations are ones that preserve the order of inputs in their
-outputs (or reverse it). Their graph only ever decreases or increases, 
+outputs (or reverse it). Their graph only ever decreases or increases,
 never changing from one or the other, though it can have flat sections.
 
 The non-monotonic operations are ones whose graph would have both regions of
@@ -387,7 +388,7 @@ handle, since the extrema are guaranteed to be the ends of the domain, `a` and `
 
 So `f([a, b])` = `[f(a), f(b)]` or `[f(b), f(a)]`. We could figure out if `f` is
 increasing or decreasing beforehand to determine if it should be `[f(a), f(b)]`
-or `[f(b), f(a)]`. 
+or `[f(b), f(a)]`.
 
 It is simpler to just use min & max to have an implementation that is agnostic
 to the details of `f`.
@@ -396,13 +397,13 @@ to the details of `f`.
   X = [min(A, B), max(A, B)]
 ```
 
-The non-monotonic functions that we need to handle for interval-to-interval 
+The non-monotonic functions that we need to handle for interval-to-interval
 mappings are more complex. Thankfully are a small number of the overall
 operations that need to be handled, since they are only the operations that are
 used in an inherited accuracy and take in the output of another operation as
 part of that inherited accuracy.
 
-So in the CTS we just have bespoke implementations for each of them. 
+So in the CTS we just have bespoke implementations for each of them.
 
 Part of the operation definition in the CTS is a function that takes in the
 domain interval, and returns a sub-interval such that the subject function is
@@ -433,13 +434,13 @@ An example to illustrate inherited accuracies:
 
   sin(x) => [sin(x) - 2^-11, sin(x) + 2^-11]`
   cos(x) => [cos(x) - 2^-11, cos(x) + 2-11]
-  
-  x/y => [x/y - 2.5 * ULP(x/y), x/y + 2.5 * ULP(x/y)]  
+
+  x/y => [x/y - 2.5 * ULP(x/y), x/y + 2.5 * ULP(x/y)]
 ```
 
-`sin(x)` and `cos(x)` are non-monotonic, so calculating out a closed generic 
-form over an interval is a pain, since the min and max vary depending on the 
-value of x. Let's isolate this to a single point, so you don't have to read 
+`sin(x)` and `cos(x)` are non-monotonic, so calculating out a closed generic
+form over an interval is a pain, since the min and max vary depending on the
+value of x. Let's isolate this to a single point, so you don't have to read
 literally pages of expanded intervals.
 
 ```
@@ -470,7 +471,7 @@ re-using code between builtins.
 Instead, the CTS takes advantage of the fact in addition to testing
 implementations of `tan(x)` we are going to be testing implementations of
 `sin(x)`, `cos(x)` and `x/y`, so there should be functions to generate
-acceptance intervals for those operations. 
+acceptance intervals for those operations.
 
 The `tan(x)` acceptance interval can be constructed by generating the acceptance
 intervals for `sin(x)`, `cos(x)` and `x/y` via function calls and composing the
