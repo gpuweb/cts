@@ -12,6 +12,8 @@ const kValidAlign = new Set([
   '@align(4i)',
   '@align(0x4)',
   '@align(4,)',
+  '@align(i_val)',
+  '@align(i_val + 4 - 6)',
   '@align(1073741824)',
   '@\talign\t(4)',
   '@/^comment^/align/^comment^/(4)',
@@ -24,7 +26,8 @@ const kInvalidAlign = new Set([
   '@align(4, 2)',
   '@align(4,)',
   '@align(3)', // Not a power of 2
-  '@align(val)',
+  '@align(u_val)',
+  '@align(f_val)',
   '@align(1.0)',
   '@align(4u)',
   '@align(4f)',
@@ -42,7 +45,9 @@ g.test('missing_attribute_on_param_struct')
   .fn(t => {
     const v = t.params.align.replace(/\^/g, '*');
     const code = `
-const val: i32 = 4;
+const i_val: i32 = 4;
+const u_val: u32 = 4;
+const f_val: f32 = 4.2;
 struct B {
   ${v} a: i32,
 }
