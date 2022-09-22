@@ -542,16 +542,16 @@ export class Scalar {
     } else if (this.value === Number.POSITIVE_INFINITY) {
       switch (this.type.kind) {
         case 'f32':
-          return `f32(1.0/0.0)`;
+          return `(1.f/0.f)`;
         case 'f16':
-          return `f16(1.0/0.0)`;
+          return `(1.h/0.h)`;
       }
     } else if (this.value === Number.NEGATIVE_INFINITY) {
       switch (this.type.kind) {
         case 'f32':
-          return `f32(-1.0/0.0)`;
+          return `(-1.f/0.f)`;
         case 'f16':
-          return `f16(-1.0/0.0)`;
+          return `(-1.h/0.h)`;
       }
     }
     throw new Error(
