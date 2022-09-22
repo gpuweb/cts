@@ -27,9 +27,6 @@ export function run(
         unreachable();
     }
 
-    // This is mimic globalAlpha in 2d context blending behavior
-    const alphaFromShader = { premultiplied: '0.5', opaque: '1.0' }[alphaMode];
-
     let usage = 0;
     switch (writeCanvasMethod) {
       case 'draw':
@@ -88,11 +85,13 @@ vec2<f32>( 0.25, 0.25),
 vec2<f32>(-0.25, -0.25),
 vec2<f32>( 0.25,  -0.25));
 
+// Alpha channel value is set to 0.5 regardless of the canvas alpha mode.
+// For 'opaque' mode, it shouldn't affect the end result, as the alpha channel should always get cleared to 1.0.
 var color = array<vec4<f32>, 4>(
-    vec4<f32>(0.4, 0.0, 0.0, ${alphaFromShader}),
-    vec4<f32>(0.0, 0.4, 0.0, ${alphaFromShader}),
-    vec4<f32>(0.0, 0.0, 0.4, ${alphaFromShader}),
-    vec4<f32>(0.4, 0.4, 0.0, ${alphaFromShader})); // 0.4 -> 0x66
+    vec4<f32>(0.4, 0.0, 0.0, 0.5),
+    vec4<f32>(0.0, 0.4, 0.0, 0.5),
+    vec4<f32>(0.0, 0.0, 0.4, 0.5),
+    vec4<f32>(0.4, 0.4, 0.0, 0.5)); // 0.4 -> 0x66
 
 var output : VertexOutput;
 output.Position = vec4<f32>(pos[VertexIndex % 6u] + offset[VertexIndex / 6u], 0.0, 1.0);
