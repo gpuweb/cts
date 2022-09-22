@@ -260,23 +260,41 @@ g.test('texture_must_have_correct_dimension')
   .desc(
     `
     Test that bound texture views match the dimensions supplied in the BindGroupLayout
-    - Test for every GPUTextureViewDimension`
+      - Test for every GPUTextureViewDimension
+      - Test for both TEXTURE_BINDING and STORAGE_BINDING.
+  `
   )
   .params(u =>
     u
+      .combine('usage', [
+        GPUConst.TextureUsage.TEXTURE_BINDING,
+        GPUConst.TextureUsage.STORAGE_BINDING,
+      ])
       .combine('viewDimension', kTextureViewDimensions)
+      .unless(
+        p =>
+          p.usage === GPUConst.TextureUsage.STORAGE_BINDING &&
+          (p.viewDimension === 'cube' || p.viewDimension === 'cube-array')
+      )
       .beginSubcases()
       .combine('dimension', kTextureViewDimensions)
   )
   .fn(async t => {
-    const { viewDimension, dimension } = t.params;
+    const { usage, viewDimension, dimension } = t.params;
+
     const bindGroupLayout = t.device.createBindGroupLayout({
       entries: [
-        {
-          binding: 0,
-          visibility: GPUShaderStage.FRAGMENT,
-          texture: { viewDimension },
-        },
+        usage === GPUTextureUsage.TEXTURE_BINDING
+          ? {
+              binding: 0,
+              visibility: GPUShaderStage.FRAGMENT,
+              texture: { viewDimension },
+            }
+          : {
+              binding: 0,
+              visibility: GPUShaderStage.FRAGMENT,
+              storageTexture: { access: 'write-only', format: 'rgba8unorm', viewDimension },
+            },
       ],
     });
 
@@ -290,7 +308,7 @@ g.test('texture_must_have_correct_dimension')
     const texture = t.device.createTexture({
       size: { width: 16, height, depthOrArrayLayers },
       format: 'rgba8unorm' as const,
-      usage: GPUTextureUsage.TEXTURE_BINDING,
+      usage,
       dimension: getTextureDimensionFromView(dimension),
     });
 
