@@ -186,16 +186,18 @@ g.test('multisampled_validation')
   "float".
   `
   )
-  .paramsSubcasesOnly(u =>
+  .params(u =>
     u //
       .combine('viewDimension', [undefined, ...kTextureViewDimensions])
-      .combine('sampleType', kTextureSampleTypes)
+      .beginSubcases()
+      .combine('sampleType', [undefined, ...kTextureSampleTypes])
   )
   .fn(async t => {
     const { viewDimension, sampleType } = t.params;
 
     const success =
-      (viewDimension === '2d' || viewDimension === undefined) && sampleType !== 'float';
+      (viewDimension === '2d' || viewDimension === undefined) &&
+      (sampleType ?? 'float') !== 'float';
 
     t.expectValidationError(() => {
       t.device.createBindGroupLayout({
