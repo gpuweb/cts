@@ -102,7 +102,7 @@ const kValueStride = 16;
  * @param cfg test configuration values
  * @param cases list of test cases
  */
-export function run(
+export async function run(
   t,
   expressionBuilder,
   parameterTypes,
@@ -123,7 +123,7 @@ export function run(
   const casesPerBatch = (function () {
     switch (cfg.inputSource) {
       case 'const':
-        return 256; // Arbitrary limit, to ensure shaders aren't too large
+        return 64; // Arbitrary limit, to ensure shaders aren't too large
       case 'uniform':
         return Math.floor(
           t.device.limits.maxUniformBufferBindingSize / (parameterTypes.length * kValueStride)
@@ -137,29 +137,36 @@ export function run(
     }
   })();
 
-  // Submit all the batches inside an error scope.
-  // Note: there is no async work between "push" and "pop" so this is safe to
-  // run concurrently with itself (in other subcases).
-  t.device.pushErrorScope('validation');
-
+  // Submit all the cases in batches, each in a separate error scope.
   const checkResults = [];
   for (let i = 0; i < cases.length; i += casesPerBatch) {
     const batchCases = cases.slice(i, Math.min(i + casesPerBatch, cases.length));
+
+    t.device.pushErrorScope('validation');
+
+    const checkBatch = submitBatch(
+      t,
+      expressionBuilder,
+      parameterTypes,
+      returnType,
+      batchCases,
+      cfg.inputSource
+    );
+
     checkResults.push(
-      submitBatch(t, expressionBuilder, parameterTypes, returnType, batchCases, cfg.inputSource)
+      // Check GPU validation (shader compilation, pipeline creation, etc) before checking the batch results.
+      t.device.popErrorScope().then(error => {
+        if (error === null) {
+          checkBatch();
+        } else {
+          t.fail(error.message);
+        }
+      })
     );
   }
 
-  // Check GPU validation (shader compilation, pipeline creation, etc) before checking the results.
-  return t.device.popErrorScope().then(error => {
-    if (error !== null) {
-      t.fail(error.message);
-      return;
-    }
-
-    // Check the results
-    checkResults.forEach(f => f());
-  });
+  // Check the results
+  await Promise.all(checkResults);
 }
 
 /**
