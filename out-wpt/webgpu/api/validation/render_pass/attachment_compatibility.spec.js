@@ -328,6 +328,33 @@ g.test('render_pass_and_bundle,sample_count')
     validateFinishAndSubmit(renderSampleCount === bundleSampleCount, true);
   });
 
+g.test('render_pass_and_bundle,device_mismatch')
+  .desc('Test that render passes cannot be called with bundles created from another device.')
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
+  .beforeAllSubcases(t => {
+    t.selectMismatchedDeviceOrSkipTestCase(undefined);
+  })
+  .fn(t => {
+    const { mismatched } = t.params;
+    const device = mismatched ? t.mismatchedDevice : t.device;
+
+    const format = 'r16float';
+    const bundleEncoder = device.createRenderBundleEncoder({
+      colorFormats: [format],
+    });
+
+    const bundle = bundleEncoder.finish();
+
+    const { encoder, validateFinishAndSubmit } = t.createEncoder('non-pass');
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [t.createColorAttachment(format)],
+    });
+
+    pass.executeBundles([bundle]);
+    pass.end();
+    validateFinishAndSubmit(!mismatched, true);
+  });
+
 g.test('render_pass_or_bundle_and_pipeline,color_format')
   .desc(
     `
