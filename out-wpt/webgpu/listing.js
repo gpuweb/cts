@@ -2433,14 +2433,6 @@ export const listing = [
     "file": [
       "shader",
       "execution",
-      "sampling",
-      "gradients_in_varying_loop"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "execution",
       "shader_io",
       "compute_builtins"
     ]
