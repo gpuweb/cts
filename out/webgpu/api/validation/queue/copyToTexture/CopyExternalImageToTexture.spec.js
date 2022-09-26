@@ -2,11 +2,13 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/export const description = `
 copyExternalImageToTexture Validation Tests in Queue.
+Note that we don't need to add tests on the destination texture dimension as currently we require
+the destination texture should have RENDER_ATTACHMENT usage, which is only allowed to be used on 2D
+textures.
 `;import { getResourcePath } from '../../../../../common/framework/resources.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { raceWithRejectOnTimeout, unreachable, assert } from '../../../../../common/util/util.js';
 import {
-kTextureDimensions,
 kTextureFormatInfo,
 kTextureFormats,
 kTextureUsages,
@@ -709,36 +711,6 @@ fn(async (t) => {
 
 
   t.runTest({ source: imageBitmap }, { texture: dstTexture }, copySize, sampleCount === 1);
-});
-
-g.test('destination_texture,dimension').
-desc(
-`
-  Test dst texture dimension.
-
-  Check that an error is generated when dimension is not 2d.
-  `).
-
-params((u) =>
-u //
-.combine('dimension', kTextureDimensions).
-beginSubcases().
-combine('copySize', [
-{ width: 0, height: 0, depthOrArrayLayers: 0 },
-{ width: 1, height: 1, depthOrArrayLayers: 1 }])).
-
-
-fn(async (t) => {
-  const { dimension, copySize } = t.params;
-  const imageBitmap = await t.createImageBitmap(t.getImageData(1, 1));
-  const dstTexture = t.device.createTexture({
-    size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-    dimension,
-    format: 'bgra8unorm',
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
-
-
-  t.runTest({ source: imageBitmap }, { texture: dstTexture }, copySize, dimension === '2d');
 });
 
 g.test('destination_texture,mipLevel').
