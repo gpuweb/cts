@@ -225,6 +225,22 @@ g.test('binary_logical')
         'return i32(r);',
       _result: 1,
     },
+    {
+      name: 'NoShortCircuit_And',
+      _body:
+        // rhs should execute
+        'let t = (a != 2) & (mul(&a, 10) == 20);' + //
+        'return a;',
+      _result: 20,
+    },
+    {
+      name: 'NoShortCircuit_Or',
+      _body:
+        // rhs should execute
+        'let t = (a == 2) | (mul(&a, 10) == 20);' + //
+        'return a;',
+      _result: 20,
+    },
   ])
   .fn(t => run(t, t.params._body, t.params._result));
 
