@@ -1673,16 +1673,19 @@ g.test('atan2Interval')
       { input: [-1, 1], expected: [hexToF64(0xbfe923fb, 0xa0000000), hexToF64(0xbfe91ffb, 0x20000000)] },  // expected = ~-π/4
       { input: [Number.NEGATIVE_INFINITY, 1], expected: kAny },
 
-      // Discontinuity @ y = 0
+      // Discontinuity @ origin (0,0)
       { input: [0, 0], expected: kAny },
       { input: [0, kValue.f32.subnormal.positive.max], expected: kAny },
       { input: [0, kValue.f32.subnormal.negative.min], expected: kAny },
-      { input: [0, kValue.f32.positive.min], expected: [hexToF64(0xc00923fb, 0x60000000), hexToF64(0x400923fb, 0x60000000)] },  // expected = [~-π, ~π]
-      { input: [0, kValue.f32.negative.max], expected: [hexToF64(0xc00923fb, 0x60000000), hexToF64(0x400923fb, 0x60000000)] },  // expected = [~-π, ~π]
-      { input: [0, kValue.f32.positive.max], expected: [hexToF64(0xc00923fb, 0x60000000), hexToF64(0x400923fb, 0x60000000)] },  // expected = [~-π, ~π]
-      { input: [0, kValue.f32.negative.min], expected: [hexToF64(0xc00923fb, 0x60000000), hexToF64(0x400923fb, 0x60000000)] },  // expected = [~-π, ~π]
+      { input: [0, kValue.f32.positive.min], expected: kAny },
+      { input: [0, kValue.f32.negative.max], expected: kAny },
+      { input: [0, kValue.f32.positive.max], expected: kAny },
+      { input: [0, kValue.f32.negative.min], expected: kAny },
       { input: [0, kValue.f32.infinity.positive], expected: kAny },
       { input: [0, kValue.f32.infinity.negative], expected: kAny },
+      { input: [0, 1], expected: kAny },
+      { input: [kValue.f32.subnormal.positive.max, 1], expected: kAny },
+      { input: [kValue.f32.subnormal.negative.min, 1], expected: kAny },
     ]
   )
   .fn(t => {
