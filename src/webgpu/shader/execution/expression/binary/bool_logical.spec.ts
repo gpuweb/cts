@@ -11,6 +11,9 @@ import { binary } from './binary.js';
 
 export const g = makeTestGroup(GPUTest);
 
+// Short circuiting vs no short circuiting is not tested here, it is covered in
+// src/webgpu/shader/execution/evaluation_order.spec.ts
+
 g.test('and')
   .specURL('https://www.w3.org/TR/WGSL/#logical-expr')
   .desc(
@@ -33,7 +36,6 @@ Logical "and". Component-wise when T is a vector. Evaluates both e1 and e2.
     await run(t, binary('&'), [TypeBool, TypeBool], TypeBool, t.params, cases);
   });
 
-// Short circuiting behaviour is not tested here, it is covered in src/webgpu/shader/execution/evaluation_order.spec.ts
 g.test('and_short_circuit')
   .specURL('https://www.w3.org/TR/WGSL/#logical-expr')
   .desc(
