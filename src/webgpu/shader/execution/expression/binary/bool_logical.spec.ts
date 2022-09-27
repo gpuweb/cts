@@ -78,7 +78,6 @@ Logical "or". Component-wise when T is a vector. Evaluates both e1 and e2.
     await run(t, binary('|'), [TypeBool, TypeBool], TypeBool, t.params, cases);
   });
 
-// Short circuiting behaviour is not tested here, it is covered in src/webgpu/shader/execution/evaluation_order.spec.ts
 g.test('or_short_circuit')
   .specURL('https://www.w3.org/TR/WGSL/#logical-expr')
   .desc(
