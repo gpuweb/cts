@@ -992,3 +992,33 @@ g.test('buffer,resource_binding_size')
       });
     }, !isValid);
   });
+
+g.test('sampler,device_mismatch')
+  .desc(`Tests createBindGroup cannot be called with a sampler created from another device.`)
+  .params(u => u.combine('mismatched', [true, false]))
+  .beforeAllSubcases(t => {
+    t.selectMismatchedDeviceOrSkipTestCase(undefined);
+  })
+  .fn(async t => {
+    const { mismatched } = t.params;
+
+    const device = mismatched ? t.mismatchedDevice : t.device;
+
+    const bindGroupLayout = t.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.FRAGMENT,
+          sampler: { type: 'filtering' as const },
+        },
+      ],
+    });
+
+    const sampler = device.createSampler();
+    t.expectValidationError(() => {
+      t.device.createBindGroup({
+        entries: [{ binding: 0, resource: sampler }],
+        layout: bindGroupLayout,
+      });
+    }, mismatched);
+  });
