@@ -16,8 +16,23 @@ Wait on another fence, then call expectContents to verify the dst buffer value.
 
 TODO: Tests with more than one buffer to try to stress implementations a little bit more.
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import {
+kOperationBoundaries,
+kBoundaryInfo,
+OperationContextHelper } from
+'../operation_context_helper.js';
 
-import { BufferSyncTest } from './buffer_sync_test.js';
+import {
+kAllReadOps,
+kAllWriteOps,
+BufferSyncTest,
+checkOpsValidForContext } from
+'./buffer_sync_test.js';
+
+// The src value is what stores in the src buffer before any operation.
+const kSrcValue = 0;
+// The op value is what the read/write operation write into the target buffer.
+const kOpValue = 1;
 
 export const g = makeTestGroup(BufferSyncTest);
 
@@ -27,9 +42,65 @@ desc(
     Perform a 'read' operations on multiple buffers, followed by a 'write' operation.
     Operations are separated by a 'boundary' (pass, encoder, queue-op, etc.).
     Test that the results are synchronized.
-    The read should not see the contents written by the subsequent write.`).
+    The read should not see the contents written by the subsequent write.
+  `).
 
-unimplemented();
+params((u) =>
+u //
+.combine('boundary', kOperationBoundaries).
+expand('_context', (p) => kBoundaryInfo[p.boundary].contexts).
+expandWithParams(function* ({ _context }) {
+  for (const readOp of kAllReadOps) {
+    for (const writeOp of kAllWriteOps) {
+      if (checkOpsValidForContext([readOp, writeOp], _context)) {
+        yield {
+          readOp,
+          readContext: _context[0],
+          writeOp,
+          writeContext: _context[1] };
+
+      }
+    }
+  }
+})).
+
+fn(async (t) => {
+  const { readContext, readOp, writeContext, writeOp, boundary } = t.params;
+  const helper = new OperationContextHelper(t);
+
+  const srcBuffers = [];
+  const dstBuffers = [];
+
+  const kBufferCount = 4;
+  for (let i = 0; i < kBufferCount; i++) {
+    const { srcBuffer, dstBuffer } = await t.createBuffersForReadOp(readOp, kSrcValue, kOpValue);
+    srcBuffers.push(srcBuffer);
+    dstBuffers.push(dstBuffer);
+  }
+
+  await t.createIntermediateBuffersAndTexturesForWriteOp(writeOp, 0, kOpValue);
+
+  // The read op will read from src buffers and write to dst buffers based on what it reads.
+  // A boundary will separate multiple read and write operations. The write op will write the
+  // given op value into each src buffer as well. The write op happens after read op. So we are
+  // expecting each src value to be in the mapped dst buffer.
+  for (let i = 0; i < kBufferCount; i++) {
+    t.encodeReadOp(helper, readOp, readContext, srcBuffers[i], dstBuffers[i]);
+  }
+
+  helper.ensureBoundary(boundary);
+
+  for (let i = 0; i < kBufferCount; i++) {
+    t.encodeWriteOp(helper, writeOp, writeContext, srcBuffers[i], 0, kOpValue);
+  }
+
+  helper.ensureSubmit();
+
+  for (let i = 0; i < kBufferCount; i++) {
+    // Only verify the value of the first element of each dstBuffer.
+    t.verifyData(dstBuffers[i], kSrcValue);
+  }
+});
 
 g.test('wr').
 desc(
