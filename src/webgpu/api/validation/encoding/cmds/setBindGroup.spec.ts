@@ -149,14 +149,14 @@ g.test('bind_group,device_mismatch')
   })
   .fn(async t => {
     const { encoderType, useU32Array, mismatched } = t.params;
-    const device = mismatched ? t.mismatchedDevice : t.device;
+    const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const buffer = device.createBuffer({
+    const buffer = sourceDevice.createBuffer({
       size: 4,
       usage: GPUBufferUsage.STORAGE,
     });
 
-    const layout = device.createBindGroupLayout({
+    const layout = sourceDevice.createBindGroupLayout({
       entries: [
         {
           binding: 0,
@@ -166,7 +166,7 @@ g.test('bind_group,device_mismatch')
       ],
     });
 
-    const bindGroup = device.createBindGroup({
+    const bindGroup = sourceDevice.createBindGroup({
       layout,
       entries: [
         {

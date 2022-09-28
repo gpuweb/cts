@@ -155,9 +155,9 @@ g.test('occlusion_query_set,device_mismatch')
   })
   .fn(async t => {
     const { mismatched } = t.params;
-    const device = mismatched ? t.mismatchedDevice : t.device;
+    const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const occlusionQuerySet = device.createQuerySet({
+    const occlusionQuerySet = sourceDevice.createQuerySet({
       type: 'occlusion',
       count: 1,
     });
@@ -180,10 +180,10 @@ g.test('timestamp_query_set,device_mismatch')
   })
   .fn(async t => {
     const { mismatched } = t.params;
-    const device = mismatched ? t.mismatchedDevice : t.device;
+    const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
     const timestampWrite = {
-      querySet: device.createQuerySet({ type: 'timestamp', count: 1 }),
+      querySet: sourceDevice.createQuerySet({ type: 'timestamp', count: 1 }),
       queryIndex: 0,
       location: 'beginning' as const,
     };

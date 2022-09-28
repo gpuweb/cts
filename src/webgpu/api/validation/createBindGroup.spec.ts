@@ -583,9 +583,9 @@ g.test('bind_group_layout,device_mismatch')
   .fn(async t => {
     const mismatched = t.params.mismatched;
 
-    const device = mismatched ? t.mismatchedDevice : t.device;
+    const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const bgl = device.createBindGroupLayout({
+    const bgl = sourceDevice.createBindGroupLayout({
       entries: [
         {
           binding: 0,
@@ -1004,7 +1004,7 @@ g.test('sampler,device_mismatch')
   .fn(async t => {
     const { mismatched } = t.params;
 
-    const device = mismatched ? t.mismatchedDevice : t.device;
+    const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
     const bindGroupLayout = t.device.createBindGroupLayout({
       entries: [
@@ -1016,7 +1016,7 @@ g.test('sampler,device_mismatch')
       ],
     });
 
-    const sampler = device.createSampler();
+    const sampler = sourceDevice.createSampler();
     t.expectValidationError(() => {
       t.device.createBindGroup({
         entries: [{ binding: 0, resource: sampler }],
