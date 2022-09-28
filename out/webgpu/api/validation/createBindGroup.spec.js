@@ -15,7 +15,9 @@ kAllTextureFormats,
 kBindableResources,
 kBufferBindingTypes,
 kBufferUsages,
+kCompareFunctions,
 kLimitInfo,
+kSamplerBindingTypes,
 kTextureFormatInfo,
 kTextureUsages,
 kTextureViewDimensions,
@@ -988,6 +990,46 @@ fn(async (t) => {
   t.expectValidationError(() => {
     t.device.createBindGroup({
       entries: [{ binding: 0, resource: { buffer, size: bindingSize } }],
+      layout: bindGroupLayout });
+
+  }, !isValid);
+});
+
+g.test('sampler,compare_function_with_binding_type').
+desc(
+`
+  Test that the sampler of the BindGroup has a 'compareFunction' value if the sampler type of the
+  BindGroupLayout is 'comparison'. Other sampler types should not have 'compare' field in
+  the descriptor of the sampler.
+  `).
+
+params((u) =>
+u //
+.combine('bgType', kSamplerBindingTypes).
+beginSubcases().
+combine('compareFunction', [undefined, ...kCompareFunctions])).
+
+fn(async (t) => {
+  const { bgType, compareFunction } = t.params;
+
+  const bindGroupLayout = t.device.createBindGroupLayout({
+    entries: [
+    {
+      binding: 0,
+      visibility: GPUShaderStage.FRAGMENT,
+      sampler: { type: bgType } }] });
+
+
+
+
+  const isValid =
+  bgType === 'comparison' ? compareFunction !== undefined : compareFunction === undefined;
+
+  const sampler = t.device.createSampler({ compare: compareFunction });
+
+  t.expectValidationError(() => {
+    t.device.createBindGroup({
+      entries: [{ binding: 0, resource: sampler }],
       layout: bindGroupLayout });
 
   }, !isValid);
