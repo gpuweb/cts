@@ -997,7 +997,7 @@ g.test('buffer,resource_binding_size')
 
 g.test('sampler,device_mismatch')
   .desc(`Tests createBindGroup cannot be called with a sampler created from another device.`)
-  .params(u => u.combine('mismatched', [true, false]))
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })

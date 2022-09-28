@@ -173,7 +173,7 @@ g.test('timestamp_query_set,device_mismatch')
   Tests beginRenderPass cannot be called with a timestamp query set created from another device.
   `
   )
-  .params(u => u.combine('mismatched', [true, false]))
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase(['timestamp-query']);
     t.selectMismatchedDeviceOrSkipTestCase('timestamp-query');

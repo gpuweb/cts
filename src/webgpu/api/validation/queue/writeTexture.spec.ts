@@ -86,7 +86,7 @@ g.test('sample_count')
 
 g.test('texture,device_mismatch')
   .desc('Tests writeTexture cannot be called with a texture created from another device.')
-  .params(u => u.combine('mismatched', [true, false]))
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
