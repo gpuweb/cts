@@ -138,16 +138,16 @@ g.test('timestamp_query_set,device_mismatch')
   Tests beginComputePass cannot be called with a timestamp query set created from another device.
   `
   )
-  .params(u => u.combine('mismatched', [true, false]))
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase(['timestamp-query']);
     t.selectMismatchedDeviceOrSkipTestCase('timestamp-query');
   })
   .fn(async t => {
     const { mismatched } = t.params;
-    const device = mismatched ? t.mismatchedDevice : t.device;
+    const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const timestampQuerySet = device.createQuerySet({
+    const timestampQuerySet = sourceDevice.createQuerySet({
       type: 'timestamp',
       count: 1,
     });

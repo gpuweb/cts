@@ -155,9 +155,9 @@ g.test('occlusion_query_set,device_mismatch')
   })
   .fn(async t => {
     const { mismatched } = t.params;
-    const device = mismatched ? t.mismatchedDevice : t.device;
+    const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const occlusionQuerySet = device.createQuerySet({
+    const occlusionQuerySet = sourceDevice.createQuerySet({
       type: 'occlusion',
       count: 1,
     });
@@ -173,17 +173,17 @@ g.test('timestamp_query_set,device_mismatch')
   Tests beginRenderPass cannot be called with a timestamp query set created from another device.
   `
   )
-  .params(u => u.combine('mismatched', [true, false]))
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase(['timestamp-query']);
     t.selectMismatchedDeviceOrSkipTestCase('timestamp-query');
   })
   .fn(async t => {
     const { mismatched } = t.params;
-    const device = mismatched ? t.mismatchedDevice : t.device;
+    const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
     const timestampWrite = {
-      querySet: device.createQuerySet({ type: 'timestamp', count: 1 }),
+      querySet: sourceDevice.createQuerySet({ type: 'timestamp', count: 1 }),
       queryIndex: 0,
       location: 'beginning' as const,
     };

@@ -68,9 +68,9 @@ g.test('pipeline_layout,device_mismatch')
   .fn(async t => {
     const { isAsync, mismatched } = t.params;
 
-    const device = mismatched ? t.mismatchedDevice : t.device;
+    const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const layout = device.createPipelineLayout({ bindGroupLayouts: [] });
+    const layout = sourceDevice.createPipelineLayout({ bindGroupLayouts: [] });
 
     const format = 'rgba8unorm';
     const descriptor = {

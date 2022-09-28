@@ -143,9 +143,9 @@ g.test('timestamp_query,device_mismatch')
   })
   .fn(async t => {
     const { mismatched } = t.params;
-    const device = mismatched ? t.mismatchedDevice : t.device;
+    const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const querySet = device.createQuerySet({
+    const querySet = sourceDevice.createQuerySet({
       type: 'timestamp',
       count: 2,
     });

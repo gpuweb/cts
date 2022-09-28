@@ -86,15 +86,15 @@ g.test('sample_count')
 
 g.test('texture,device_mismatch')
   .desc('Tests writeTexture cannot be called with a texture created from another device.')
-  .params(u => u.combine('mismatched', [true, false]))
+  .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(async t => {
     const { mismatched } = t.params;
-    const device = mismatched ? t.mismatchedDevice : t.device;
+    const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const texture = device.createTexture({
+    const texture = sourceDevice.createTexture({
       size: { width: 16, height: 16 },
       format: 'bgra8unorm',
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
