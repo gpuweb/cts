@@ -124,20 +124,20 @@ g.test('texture,device_mismatch')
   })
   .fn(async t => {
     const { srcMismatched, dstMismatched } = t.params;
-    const mismatched = srcMismatched || dstMismatched;
 
-    const device = mismatched ? t.mismatchedDevice : t.device;
     const size = { width: 4, height: 4, depthOrArrayLayers: 1 };
     const format = 'rgba8unorm';
 
-    const srcTexture = device.createTexture({
+    const srcTextureDevice = srcMismatched ? t.mismatchedDevice : t.device;
+    const srcTexture = srcTextureDevice.createTexture({
       size,
       format,
       usage: GPUTextureUsage.COPY_SRC,
     });
     t.trackForCleanup(srcTexture);
 
-    const dstTexture = device.createTexture({
+    const dstTextureDevice = dstMismatched ? t.mismatchedDevice : t.device;
+    const dstTexture = dstTextureDevice.createTexture({
       size,
       format,
       usage: GPUTextureUsage.COPY_DST,
@@ -148,7 +148,7 @@ g.test('texture,device_mismatch')
       { texture: srcTexture },
       { texture: dstTexture },
       { width: 1, height: 1, depthOrArrayLayers: 1 },
-      mismatched ? 'FinishError' : 'Success'
+      srcMismatched || dstMismatched ? 'FinishError' : 'Success'
     );
   });
 

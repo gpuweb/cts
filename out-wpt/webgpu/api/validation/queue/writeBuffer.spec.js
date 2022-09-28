@@ -175,9 +175,9 @@ g.test('buffer,device_mismatch')
   })
   .fn(async t => {
     const { mismatched } = t.params;
-    const device = mismatched ? t.mismatchedDevice : t.device;
+    const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const buffer = device.createBuffer({
+    const buffer = sourceDevice.createBuffer({
       size: 16,
       usage: GPUBufferUsage.COPY_DST,
     });

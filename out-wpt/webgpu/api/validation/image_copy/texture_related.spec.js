@@ -77,9 +77,9 @@ g.test('texture,device_mismatch')
   })
   .fn(async t => {
     const { method, mismatched } = t.params;
-    const device = mismatched ? t.mismatchedDevice : t.device;
+    const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const texture = device.createTexture({
+    const texture = sourceDevice.createTexture({
       size: { width: 4, height: 4, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,

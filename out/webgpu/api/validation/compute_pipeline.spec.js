@@ -91,9 +91,9 @@ beforeAllSubcases((t) => {
 fn(async (t) => {
   const { isAsync, mismatched } = t.params;
 
-  const device = mismatched ? t.mismatchedDevice : t.device;
+  const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-  const module = device.createShaderModule({
+  const module = sourceDevice.createShaderModule({
     code: '@compute @workgroup_size(1) fn main() {}' });
 
 
@@ -118,9 +118,9 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const { isAsync, mismatched } = t.params;
-  const device = mismatched ? t.mismatchedDevice : t.device;
+  const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-  const layout = device.createPipelineLayout({ bindGroupLayouts: [] });
+  const layout = sourceDevice.createPipelineLayout({ bindGroupLayouts: [] });
 
   const descriptor = {
     layout,

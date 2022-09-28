@@ -107,17 +107,16 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const { srcMismatched, dstMismatched } = t.params;
-  const mismatched = srcMismatched || dstMismatched;
 
-  const device = mismatched ? t.mismatchedDevice : t.device;
-
-  const srcBuffer = device.createBuffer({
+  const srcBufferDevice = srcMismatched ? t.mismatchedDevice : t.device;
+  const srcBuffer = srcBufferDevice.createBuffer({
     size: 16,
     usage: GPUBufferUsage.COPY_SRC });
 
   t.trackForCleanup(srcBuffer);
 
-  const dstBuffer = device.createBuffer({
+  const dstBufferDevice = dstMismatched ? t.mismatchedDevice : t.device;
+  const dstBuffer = dstBufferDevice.createBuffer({
     size: 16,
     usage: GPUBufferUsage.COPY_DST });
 
@@ -129,7 +128,7 @@ fn(async (t) => {
     dstBuffer,
     dstOffset: 0,
     copySize: 8,
-    expectation: mismatched ? 'FinishError' : 'Success' });
+    expectation: srcMismatched || dstMismatched ? 'FinishError' : 'Success' });
 
 });
 

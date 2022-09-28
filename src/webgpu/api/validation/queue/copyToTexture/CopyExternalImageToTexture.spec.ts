@@ -635,10 +635,10 @@ g.test('destination_texture,device_mismatch')
   })
   .fn(async t => {
     const { mismatched } = t.params;
-    const device = mismatched ? t.mismatchedDevice : t.device;
+    const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
     const copySize = { width: 1, height: 1, depthOrArrayLayers: 1 };
 
-    const texture = device.createTexture({
+    const texture = sourceDevice.createTexture({
       size: copySize,
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,

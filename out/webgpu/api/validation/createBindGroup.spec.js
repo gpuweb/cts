@@ -583,9 +583,9 @@ beforeAllSubcases((t) => {
 fn(async (t) => {
   const mismatched = t.params.mismatched;
 
-  const device = mismatched ? t.mismatchedDevice : t.device;
+  const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-  const bgl = device.createBindGroupLayout({
+  const bgl = sourceDevice.createBindGroupLayout({
     entries: [
     {
       binding: 0,
@@ -997,14 +997,14 @@ fn(async (t) => {
 
 g.test('sampler,device_mismatch').
 desc(`Tests createBindGroup cannot be called with a sampler created from another device.`).
-params((u) => u.combine('mismatched', [true, false])).
+paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
 fn(async (t) => {
   const { mismatched } = t.params;
 
-  const device = mismatched ? t.mismatchedDevice : t.device;
+  const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
     entries: [
@@ -1016,7 +1016,7 @@ fn(async (t) => {
 
 
 
-  const sampler = device.createSampler();
+  const sampler = sourceDevice.createSampler();
   t.expectValidationError(() => {
     t.device.createBindGroup({
       entries: [{ binding: 0, resource: sampler }],

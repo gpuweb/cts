@@ -61,9 +61,9 @@ beforeAllSubcases((t) => {
 fn(async (t) => {
   const { encoderType, indexed, mismatched } = t.params;
 
-  const device = mismatched ? t.mismatchedDevice : t.device;
+  const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-  const indirectBuffer = device.createBuffer({
+  const indirectBuffer = sourceDevice.createBuffer({
     size: 256,
     usage: GPUBufferUsage.INDIRECT });
 

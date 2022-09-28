@@ -64,9 +64,9 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const { encoderType, mismatched } = t.params;
-  const device = mismatched ? t.mismatchedDevice : t.device;
+  const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-  const vertexBuffer = device.createBuffer({
+  const vertexBuffer = sourceDevice.createBuffer({
     size: 16,
     usage: GPUBufferUsage.VERTEX });
 

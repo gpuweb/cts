@@ -39,22 +39,21 @@ g.test('device_mismatch')
   })
   .fn(async t => {
     const { bundle0Mismatched, bundle1Mismatched } = t.params;
-    const mismatched = bundle0Mismatched || bundle1Mismatched;
-
-    const device = mismatched ? t.mismatchedDevice : t.device;
 
     const descriptor: GPURenderBundleEncoderDescriptor = {
       colorFormats: ['rgba8unorm'],
     };
-    const bundle0Encoder = device.createRenderBundleEncoder(descriptor);
-    const bundle0 = bundle0Encoder.finish();
-    const bundle1Encoder = device.createRenderBundleEncoder(descriptor);
-    const bundle1 = bundle1Encoder.finish();
+
+    const bundle0Device = bundle0Mismatched ? t.mismatchedDevice : t.device;
+    const bundle0 = bundle0Device.createRenderBundleEncoder(descriptor).finish();
+
+    const bundle1Device = bundle1Mismatched ? t.mismatchedDevice : t.device;
+    const bundle1 = bundle1Device.createRenderBundleEncoder(descriptor).finish();
 
     const encoder = t.createEncoder('render pass');
     encoder.encoder.executeBundles([bundle0, bundle1]);
 
-    encoder.validateFinish(!mismatched);
+    encoder.validateFinish(!(bundle0Mismatched || bundle1Mismatched));
   });
 
 g.test('color_formats_mismatch')

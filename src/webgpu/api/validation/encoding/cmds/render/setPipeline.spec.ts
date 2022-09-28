@@ -36,18 +36,18 @@ g.test('pipeline,device_mismatch')
   })
   .fn(async t => {
     const { encoderType, mismatched } = t.params;
-    const device = mismatched ? t.mismatchedDevice : t.device;
+    const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const pipeline = device.createRenderPipeline({
+    const pipeline = sourceDevice.createRenderPipeline({
       layout: 'auto',
       vertex: {
-        module: device.createShaderModule({
+        module: sourceDevice.createShaderModule({
           code: `@vertex fn main() -> @builtin(position) vec4<f32> { return vec4<f32>(); }`,
         }),
         entryPoint: 'main',
       },
       fragment: {
-        module: device.createShaderModule({
+        module: sourceDevice.createShaderModule({
           code: '@fragment fn main() {}',
         }),
         entryPoint: 'main',

@@ -330,10 +330,10 @@ beforeAllSubcases((t) => {
 }).
 fn((t) => {
   const { mismatched } = t.params;
-  const device = mismatched ? t.mismatchedDevice : t.device;
+  const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
   const format = 'r16float';
-  const bundleEncoder = device.createRenderBundleEncoder({
+  const bundleEncoder = sourceDevice.createRenderBundleEncoder({
     colorFormats: [format] });
 
   const bundle = bundleEncoder.finish();
