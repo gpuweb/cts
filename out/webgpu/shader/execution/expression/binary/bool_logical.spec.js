@@ -97,4 +97,48 @@ fn(async (t) => {
 
   await run(t, binary('||'), [TypeBool, TypeBool], TypeBool, t.params, cases);
 });
+
+g.test('equals').
+specURL('https://www.w3.org/TR/WGSL/#logical-expr').
+desc(
+`
+Expression: e1 == e2
+Equality. Component-wise when T is a vector.
+`).
+
+params((u) =>
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
+
+fn(async (t) => {
+  const cases = [
+  { input: [bool(false), bool(false)], expected: bool(true) },
+  { input: [bool(true), bool(false)], expected: bool(false) },
+  { input: [bool(false), bool(true)], expected: bool(false) },
+  { input: [bool(true), bool(true)], expected: bool(true) }];
+
+
+  await run(t, binary('=='), [TypeBool, TypeBool], TypeBool, t.params, cases);
+});
+
+g.test('not_equals').
+specURL('https://www.w3.org/TR/WGSL/#logical-expr').
+desc(
+`
+Expression: e1 != e2
+Equality. Component-wise when T is a vector.
+`).
+
+params((u) =>
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
+
+fn(async (t) => {
+  const cases = [
+  { input: [bool(false), bool(false)], expected: bool(false) },
+  { input: [bool(true), bool(false)], expected: bool(true) },
+  { input: [bool(false), bool(true)], expected: bool(true) },
+  { input: [bool(true), bool(true)], expected: bool(false) }];
+
+
+  await run(t, binary('!='), [TypeBool, TypeBool], TypeBool, t.params, cases);
+});
 //# sourceMappingURL=bool_logical.spec.js.map
