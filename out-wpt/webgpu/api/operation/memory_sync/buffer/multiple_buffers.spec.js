@@ -111,7 +111,64 @@ g.test('wr')
     Test that the results are synchronized.
     The read should see exactly the contents written by the previous write.`
   )
-  .unimplemented();
+  .params(u =>
+    u //
+      .combine('boundary', kOperationBoundaries)
+      .expand('_context', p => kBoundaryInfo[p.boundary].contexts)
+      .expandWithParams(function* ({ _context }) {
+        for (const readOp of kAllReadOps) {
+          for (const writeOp of kAllWriteOps) {
+            if (checkOpsValidForContext([readOp, writeOp], _context)) {
+              yield {
+                readOp,
+                readContext: _context[0],
+                writeOp,
+                writeContext: _context[1],
+              };
+            }
+          }
+        }
+      })
+  )
+  .fn(async t => {
+    const { readContext, readOp, writeContext, writeOp, boundary } = t.params;
+    const helper = new OperationContextHelper(t);
+
+    const srcBuffers = [];
+    const dstBuffers = [];
+
+    const kBufferCount = 4;
+
+    for (let i = 0; i < kBufferCount; i++) {
+      const { srcBuffer, dstBuffer } = await t.createBuffersForReadOp(readOp, kSrcValue, kOpValue);
+
+      srcBuffers.push(srcBuffer);
+      dstBuffers.push(dstBuffer);
+    }
+
+    await t.createIntermediateBuffersAndTexturesForWriteOp(writeOp, 0, kOpValue);
+
+    // The write op will write the given op value into src buffers.
+    // The read op will read from src buffers and write to dst buffers based on what it reads.
+    // The write op happens before read op. So we are expecting the op value to be in the dst
+    // buffers.
+    for (let i = 0; i < kBufferCount; i++) {
+      t.encodeWriteOp(helper, writeOp, writeContext, srcBuffers[i], 0, kOpValue);
+    }
+
+    helper.ensureBoundary(boundary);
+
+    for (let i = 0; i < kBufferCount; i++) {
+      t.encodeReadOp(helper, readOp, readContext, srcBuffers[i], dstBuffers[i]);
+    }
+
+    helper.ensureSubmit();
+
+    for (let i = 0; i < kBufferCount; i++) {
+      // Only verify the value of the first element of the dstBuffer
+      t.verifyData(dstBuffers[i], kOpValue);
+    }
+  });
 
 g.test('ww')
   .desc(
