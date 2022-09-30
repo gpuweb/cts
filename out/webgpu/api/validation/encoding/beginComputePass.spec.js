@@ -106,6 +106,33 @@ fn(async (t) => {
   t.tryComputePass(isValid, descriptor);
 });
 
+g.test('timestampWrites,invalid_query_set').
+desc(`Tests that timestampWrite that has an invalid query set generates a validation error.`).
+params((u) => u.combine('querySetState', ['valid', 'invalid'])).
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase(['timestamp-query']);
+}).
+fn(async (t) => {
+  const { querySetState } = t.params;
+
+  const querySet = t.createQuerySetWithState(querySetState, {
+    type: 'timestamp',
+    count: 1 });
+
+
+  const timestampWrite = {
+    querySet,
+    queryIndex: 0,
+    location: 'beginning' };
+
+
+  const descriptor = {
+    timestampWrites: [timestampWrite] };
+
+
+  t.tryComputePass(querySetState === 'valid', descriptor);
+});
+
 g.test('timestampWrites,query_index_count').
 desc(`Test that querySet.count should be greater than timestampWrite.queryIndex.`).
 params((u) => u.combine('queryIndex', [0, 1, 2, 3])).
