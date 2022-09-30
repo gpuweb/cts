@@ -11,7 +11,7 @@ export const g = makeTestGroup(GPUTest);
 const kValidShaderSources = [
   {
     valid: true,
-    unicode: false,
+    name: 'ascii',
     _code: `
       @vertex fn main() -> @builtin(position) vec4<f32> {
         return vec4<f32>(0.0, 0.0, 0.0, 1.0);
@@ -19,7 +19,7 @@ const kValidShaderSources = [
   },
   {
     valid: true,
-    unicode: true,
+    name: 'unicode',
     _code: `
       // 頂点シェーダー 👩‍💻
       @vertex fn main() -> @builtin(position) vec4<f32> {
@@ -31,7 +31,7 @@ const kValidShaderSources = [
 const kInvalidShaderSources = [
   {
     valid: false,
-    unicode: false,
+    name: 'ascii',
     _errorLine: 4,
     _code: `
       @vertex fn main() -> @builtin(position) vec4<f32> {
@@ -41,11 +41,24 @@ const kInvalidShaderSources = [
   },
   {
     valid: false,
-    unicode: true,
+    name: 'unicode',
     _errorLine: 5,
     _code: `
       // 頂点シェーダー 👩‍💻
       @vertex fn main() -> @builtin(position) vec4<f32> {
+        // Expected Error: unknown function 'unknown'
+        return unknown(0.0, 0.0, 0.0, 1.0);
+      }`,
+  },
+  {
+    valid: false,
+    name: 'carriage-return',
+    _errorLine: 4,
+    _code:
+      `
+      @vertex fn main() -> @builtin(position) vec4<f32> {` +
+      '\r\n' +
+      `
         // Expected Error: unknown function 'unknown'
         return unknown(0.0, 0.0, 0.0, 1.0);
       }`,
