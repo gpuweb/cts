@@ -177,4 +177,53 @@ g.test('ww')
     Test that the results are synchronized.
     The second write should overwrite the contents of the first.`
   )
-  .unimplemented();
+  .params(u =>
+    u //
+      .combine('boundary', kOperationBoundaries)
+      .expand('_context', p => kBoundaryInfo[p.boundary].contexts)
+      .expandWithParams(function* ({ _context }) {
+        for (const firstWriteOp of kAllWriteOps) {
+          for (const secondWriteOp of kAllWriteOps) {
+            if (checkOpsValidForContext([firstWriteOp, secondWriteOp], _context)) {
+              yield {
+                writeOps: [firstWriteOp, secondWriteOp],
+                contexts: _context,
+              };
+            }
+          }
+        }
+      })
+  )
+  .fn(async t => {
+    const { writeOps, contexts, boundary } = t.params;
+    const helper = new OperationContextHelper(t);
+
+    const buffers: GPUBuffer[] = [];
+
+    const kBufferCount = 4;
+
+    for (let i = 0; i < kBufferCount; i++) {
+      const buffer = await t.createBufferWithValue(0);
+
+      buffers.push(buffer);
+    }
+
+    await t.createIntermediateBuffersAndTexturesForWriteOp(writeOps[0], 0, 1);
+    await t.createIntermediateBuffersAndTexturesForWriteOp(writeOps[1], 1, 2);
+
+    for (let i = 0; i < kBufferCount; i++) {
+      t.encodeWriteOp(helper, writeOps[0], contexts[0], buffers[i], 0, 1);
+    }
+
+    helper.ensureBoundary(boundary);
+
+    for (let i = 0; i < kBufferCount; i++) {
+      t.encodeWriteOp(helper, writeOps[1], contexts[1], buffers[i], 1, 2);
+    }
+
+    helper.ensureSubmit();
+
+    for (let i = 0; i < kBufferCount; i++) {
+      t.verifyData(buffers[i], 2);
+    }
+  });
