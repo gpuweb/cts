@@ -1061,6 +1061,7 @@ export const kFeatureNameInfo: {
   'indirect-first-instance': {},
   'shader-f16': {},
   'bgra8unorm-storage': {},
+  'rg11b10ufloat-renderable': {},
 };
 /** List of all GPUFeatureName values. */
 export const kFeatureNames = keysOf(kFeatureNameInfo);
