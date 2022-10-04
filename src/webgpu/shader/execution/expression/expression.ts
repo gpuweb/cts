@@ -19,6 +19,7 @@ import {
   PointToInterval,
   TernaryToInterval,
   VectorPairToInterval,
+  VectorPairToVector,
   VectorToInterval,
   VectorToVector,
 } from '../../../util/f32_interval.js';
@@ -661,16 +662,40 @@ export function makeVectorPairToF32IntervalCase(
 /**
  * Generates a Case for the param and vector of intervals generator provided.
  * @param param the param to pass into the operation
- * @param ops callbacks that implement generating an vector of acceptance intervals for a
- *            vector.
+ * @param ops callbacks that implement generating an vector of acceptance
+ *            intervals for a vector.
  */
 export function makeVectorToVectorIntervalCase(param: number[], ...ops: VectorToVector[]): Case {
   param = param.map(quantizeToF32);
   const param_f32 = param.map(f32);
 
-  const intervals = ops.map(o => o(param));
+  const vectors = ops.map(o => o(param));
   return {
     input: [new Vector(param_f32)],
-    expected: anyOf(...intervals),
+    expected: anyOf(...vectors),
+  };
+}
+
+/**
+ * Generates a Case for the params and vector of intervals generator provided.
+ * @param param0 the first param to pass into the operation
+ * @param param1 the second param to pass into the operation
+ * @param ops callbacks that implement generating an vector of acceptance
+ *            intervals for a pair of vectors.
+ */
+export function makeVectorPairToVectorIntervalCase(
+  param0: number[],
+  param1: number[],
+  ...ops: VectorPairToVector[]
+): Case {
+  param0 = param0.map(quantizeToF32);
+  param1 = param1.map(quantizeToF32);
+  const param0_f32 = param0.map(f32);
+  const param1_f32 = param1.map(f32);
+
+  const vectors = ops.map(o => o(param0, param1));
+  return {
+    input: [new Vector(param0_f32), new Vector(param1_f32)],
+    expected: anyOf(...vectors),
   };
 }

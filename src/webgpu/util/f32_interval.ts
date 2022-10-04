@@ -97,10 +97,15 @@ export class F32Interval {
 }
 
 /** @returns an interval containing the point or the original interval */
-function toF32Interval(n: number | F32Interval): F32Interval {
+function toF32Interval(n: number | IntervalBounds | F32Interval): F32Interval {
   if (n instanceof F32Interval) {
     return n;
   }
+
+  if (n instanceof Array) {
+    return new F32Interval(...n);
+  }
+
   return new F32Interval(n, n);
 }
 
@@ -123,7 +128,7 @@ type F32Vector =
   | [F32Interval, F32Interval, F32Interval, F32Interval];
 
 /** Coerce F32Interval[] to F32Vector if possible */
-function isF32Vector(v: number[] | F32Interval[] | F32Vector): v is F32Vector {
+function isF32Vector(v: number[] | IntervalBounds[] | F32Interval[] | F32Vector): v is F32Vector {
   if (v[0] instanceof F32Interval) {
     return v.length === 2 || v.length === 3 || v.length === 4;
   }
@@ -131,7 +136,7 @@ function isF32Vector(v: number[] | F32Interval[] | F32Vector): v is F32Vector {
 }
 
 /** @returns an F32Vector representation of an array fo F32Intervals if possible */
-function toF32Vector(v: number[] | F32Interval[] | F32Vector): F32Vector {
+export function toF32Vector(v: number[] | IntervalBounds[] | F32Interval[] | F32Vector): F32Vector {
   if (isF32Vector(v)) {
     return v;
   }
@@ -350,6 +355,23 @@ interface VectorToVectorOp {
   impl: VectorToVector;
 }
 
+/**
+ * A function that converts a pair of vectors to a vector of acceptance
+ * intervals.
+ * This is the public facing API for builtin implementations that is called
+ * from tests.
+ */
+export interface VectorPairToVector {
+  (x: number[], y: number[]): F32Vector;
+}
+
+/** Operation used to implement a VectorPairToVector */
+interface VectorPairToVectorOp {
+  // Re-using the *Op interface pattern for symmetry with the other operations.
+  /** @returns a vector of acceptance intervals for a function on vectors (x, y) */
+  impl: VectorPairToVector;
+}
+
 /** Converts a point to an acceptance interval, using a specific function
  *
  * This handles correctly rounding and flushing inputs as needed.
@@ -533,6 +555,49 @@ function roundAndFlushVectorToVector(x: number[], op: VectorToVectorOp): F32Vect
   return spanF32Vector(...interval_vectors);
 }
 
+/**
+ * Converts a pair of vectors to a vector of acceptance intervals using a
+ * specific function
+ *
+ * This handles correctly rounding and flushing inputs as needed.
+ * Duplicate inputs are pruned before invoking op.impl.
+ *
+ * @param x first param to flush & round then invoke op.impl on
+ * @param x second param to flush & round then invoke op.impl on
+ * @param op operation defining the function being run
+ * @returns a vector of spans for each output of op.impl
+ */
+function roundAndFlushVectorPairToVector(
+  x: number[],
+  y: number[],
+  op: VectorPairToVectorOp
+): F32Vector {
+  assert(
+    x.every(e => !Number.isNaN(e)),
+    `flush not defined for NaN`
+  );
+  assert(
+    y.every(e => !Number.isNaN(e)),
+    `flush not defined for NaN`
+  );
+
+  const x_rounded: number[][] = x.map(correctlyRoundedF32);
+  const y_rounded: number[][] = y.map(correctlyRoundedF32);
+  const x_flushed: number[][] = x_rounded.map(addFlushedIfNeeded);
+  const y_flushed: number[][] = y_rounded.map(addFlushedIfNeeded);
+  const x_inputs = cartesianProduct<number>(...x_flushed);
+  const y_inputs = cartesianProduct<number>(...y_flushed);
+
+  const interval_vectors = new Set<F32Vector>();
+  x_inputs.forEach(inner_x => {
+    y_inputs.forEach(inner_y => {
+      interval_vectors.add(op.impl(inner_x, inner_y));
+    });
+  });
+
+  return spanF32Vector(...interval_vectors);
+}
+
 /** Calculate the acceptance interval for a unary function over an interval
  *
  * If the interval is actually a point, this just decays to
@@ -675,9 +740,10 @@ function runVectorPairToIntervalOp(
   return result.isFinite() ? result : F32Interval.any();
 }
 
-/** Calculate the vector of acceptance intervals for a vector function over
+/** Calculate the vector of acceptance intervals for a pair of vector function over
  * given intervals
  *
+ * @param x input domain intervals vector
  * @param x input domain intervals vector
  * @param op operation defining the function being run
  * @returns a vector of spans over all of the outputs of op.impl
@@ -692,6 +758,33 @@ function runVectorToVectorOp(x: F32Vector, op: VectorToVectorOp): F32Vector {
   const outputs = new Set<F32Vector>();
   x_values.forEach(inner_x => {
     outputs.add(roundAndFlushVectorToVector(inner_x, op));
+  });
+
+  const result = spanF32Vector(...outputs);
+  return result.every(e => e.isFinite()) ? result : toF32Vector(x.map(_ => F32Interval.any()));
+}
+
+/** Calculate the vector of acceptance intervals for a vector function over
+ * given intervals
+ *
+ * @param x first input domain intervals vector
+ * @param y second input domain intervals vector
+ * @param op operation defining the function being run
+ * @returns a vector of spans over all of the outputs of op.impl
+ */
+function runVectorPairToVectorOp(x: F32Vector, y: F32Vector, op: VectorPairToVectorOp): F32Vector {
+  if (x.some(e => !e.isFinite()) || y.some(e => !e.isFinite())) {
+    return toF32Vector(x.map(_ => F32Interval.any()));
+  }
+
+  const x_values = cartesianProduct<number>(...x.map(e => e.bounds()));
+  const y_values = cartesianProduct<number>(...y.map(e => e.bounds()));
+
+  const outputs = new Set<F32Vector>();
+  x_values.forEach(inner_x => {
+    y_values.forEach(inner_y => {
+      outputs.add(roundAndFlushVectorPairToVector(inner_x, inner_y, op));
+    });
   });
 
   const result = spanF32Vector(...outputs);
@@ -985,6 +1078,38 @@ const CoshIntervalOp: PointToIntervalOp = {
 /** Calculate an acceptance interval of cosh(x) */
 export function coshInterval(n: number): F32Interval {
   return runPointToIntervalOp(toF32Interval(n), CoshIntervalOp);
+}
+
+const CrossIntervalOp: VectorPairToVectorOp = {
+  impl: (x: number[], y: number[]): F32Vector => {
+    assert(x.length === 3, `CrossIntervalOp received x with ${x.length} instead of 3`);
+    assert(y.length === 3, `CrossIntervalOp received y with ${y.length} instead of 3`);
+
+    // cross(x, y) = r, where
+    //   r[0] = x[1] * y[2] - x[2] * y[1]
+    //   r[1] = x[2] * y[0] - x[0] * y[2]
+    //   r[2] = x[0] * y[1] - x[1] * y[0]
+
+    const r0 = subtractionInterval(
+      multiplicationInterval(x[1], y[2]),
+      multiplicationInterval(x[2], y[1])
+    );
+    const r1 = subtractionInterval(
+      multiplicationInterval(x[2], y[0]),
+      multiplicationInterval(x[0], y[2])
+    );
+    const r2 = subtractionInterval(
+      multiplicationInterval(x[0], y[1]),
+      multiplicationInterval(x[1], y[0])
+    );
+    return [r0, r1, r2];
+  },
+};
+
+export function crossInterval(x: number[], y: number[]): F32Vector {
+  assert(x.length === 3, `Cross is only defined for vec3`);
+  assert(y.length === 3, `Cross is only defined for vec3`);
+  return runVectorPairToVectorOp(toF32Vector(x), toF32Vector(y), CrossIntervalOp);
 }
 
 const DegreesIntervalOp: PointToIntervalOp = {
