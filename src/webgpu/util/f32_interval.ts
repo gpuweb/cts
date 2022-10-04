@@ -844,7 +844,7 @@ const AtanIntervalOp: PointToIntervalOp = {
 };
 
 /** Calculate an acceptance interval of atan(x) */
-export function atanInterval(n: number): F32Interval {
+export function atanInterval(n: number | F32Interval): F32Interval {
   return runPointToIntervalOp(toF32Interval(n), AtanIntervalOp);
 }
 
