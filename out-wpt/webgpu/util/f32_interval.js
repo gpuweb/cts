@@ -777,20 +777,32 @@ export function atanInterval(n) {
 
 const Atan2IntervalOp = {
   impl: (y, x) => {
-    const numULP = 4096;
-    if (y === 0) {
-      if (x === 0) {
-        return F32Interval.any();
-      } else {
-        return F32Interval.span(
-          ulpInterval(kValue.f32.negative.pi.whole, numULP),
-          ulpInterval(kValue.f32.positive.pi.whole, numULP)
-        );
-      }
+    // y/x is not defined meaningfully here
+    if (x === 0) {
+      return F32Interval.any();
     }
-    return ulpInterval(Math.atan2(y, x), numULP);
+
+    // atan2's accuracy is only defined if y is normal
+    if (isSubnormalNumberF32(y)) {
+      return F32Interval.any();
+    }
+
+    const atan_yx = atanInterval(divisionInterval(y, x));
+    // x > 0, atan(y/x)
+    if (x > 0) {
+      return atan_yx;
+    }
+
+    // x < 0, y > 0, atan(y/x) + π
+    if (y > 0) {
+      return additionInterval(atan_yx, kValue.f32.positive.pi.whole);
+    }
+
+    // x < 0, y < 0, atan(y/x) - π
+    return subtractionInterval(atan_yx, kValue.f32.positive.pi.whole);
   },
   extrema: (y, x) => {
+    // There is discontinuity + undefined behaviour at y/x = 0 that will dominate the accuracy
     if (y.contains(0)) {
       if (x.contains(0)) {
         return [toF32Interval(0), toF32Interval(0)];
