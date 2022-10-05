@@ -873,7 +873,7 @@ export function absInterval(n: number): F32Interval {
 
 const AcosIntervalOp: PointToIntervalOp = {
   impl: limitPointToIntervalDomain(toF32Interval([-1.0, 1.0]), (n: number) => {
-    // acos(x) = atan2(sqrt(1.0 - x * x), x)
+    // acos(n) = atan2(sqrt(1.0 - n * n), n)
     const y = sqrtInterval(subtractionInterval(1, multiplicationInterval(n, n)));
     return atan2Interval(y, n);
   }),
