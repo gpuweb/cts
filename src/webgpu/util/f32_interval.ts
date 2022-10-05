@@ -1,6 +1,7 @@
 import { assert, unreachable } from '../../common/util/util.js';
 
 import { kValue } from './constants.js';
+import { f32 } from './conversion.js';
 import {
   cartesianProduct,
   correctlyRoundedF16,
@@ -81,7 +82,8 @@ export class F32Interval {
 
   /** @returns a string representation for logging purposes */
   public toString(): string {
-    return `[${this.bounds()}]`;
+    // return `[${this.bounds()}]`;
+    return `[${this.bounds().map(f32)}]`;
   }
 
   /** @returns a singleton for interval of all possible values
@@ -927,6 +929,19 @@ const AdditionIntervalOp: BinaryToIntervalOp = {
 /** Calculate an acceptance interval of x + y */
 export function additionInterval(x: number | F32Interval, y: number | F32Interval): F32Interval {
   return runBinaryToIntervalOp(toF32Interval(x), toF32Interval(y), AdditionIntervalOp);
+}
+
+const AsinIntervalOp: PointToIntervalOp = {
+  impl: limitPointToIntervalDomain(toF32Interval([-1.0, 1.0]), (n: number) => {
+    // asin(n) = atan2(n, sqrt(1.0 - n * n))
+    const x = sqrtInterval(subtractionInterval(1, multiplicationInterval(n, n)));
+    return atan2Interval(n, x);
+  }),
+};
+
+/** Calculate an acceptance interval for asin(n) */
+export function asinInterval(n: number): F32Interval {
+  return runPointToIntervalOp(toF32Interval(n), AsinIntervalOp);
 }
 
 const AsinhIntervalOp: PointToIntervalOp = {
