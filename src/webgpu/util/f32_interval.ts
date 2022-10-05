@@ -871,6 +871,19 @@ export function absInterval(n: number): F32Interval {
   return runPointToIntervalOp(toF32Interval(n), AbsIntervalOp);
 }
 
+const AcosIntervalOp: PointToIntervalOp = {
+  impl: limitPointToIntervalDomain(toF32Interval([-1.0, 1.0]), (n: number) => {
+    // acos(x) = atan2(sqrt(1.0 - x * x), x)
+    const y = sqrtInterval(subtractionInterval(1, multiplicationInterval(n, n)));
+    return atan2Interval(y, n);
+  }),
+};
+
+/** Calculate an acceptance interval for acos(n) */
+export function acosInterval(n: number): F32Interval {
+  return runPointToIntervalOp(toF32Interval(n), AcosIntervalOp);
+}
+
 /** All acceptance interval functions for acosh(x) */
 export const acoshIntervals: PointToInterval[] = [acoshAlternativeInterval, acoshPrimaryInterval];
 
