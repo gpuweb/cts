@@ -62,7 +62,9 @@ class ErrorScopeTests extends Fixture {
       case 'out-of-memory':
         return error instanceof GPUOutOfMemoryError;
       case 'validation':
-        return error instanceof GPUValidationError;}
+        return error instanceof GPUValidationError;
+      case 'internal':
+        return error instanceof GPUInternalError;}
 
   }
 

@@ -62,6 +62,7 @@ export const kAllBufferUsageBits = kBufferUsages.reduce(
 export const kErrorScopeFilterInfo = {
   'out-of-memory': {},
   validation: {},
+  internal: {},
 };
 
 /** List of all GPUTextureAspect values. */
@@ -1694,6 +1695,7 @@ export const kFeatureNameInfo = {
   'indirect-first-instance': {},
   'shader-f16': {},
   'bgra8unorm-storage': {},
+  'rg11b10ufloat-renderable': {},
 };
 
 /** List of all GPUFeatureName values. */
