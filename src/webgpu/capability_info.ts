@@ -72,7 +72,8 @@ export const kErrorScopeFilterInfo: {
   readonly [k in GPUErrorFilter]: {};
 } = /* prettier-ignore */ {
   'out-of-memory': {},
-  'validation': {},
+  'validation':    {},
+  'internal':      {},
 };
 /** List of all GPUTextureAspect values. */
 export const kErrorScopeFilters = keysOf(kErrorScopeFilterInfo);
