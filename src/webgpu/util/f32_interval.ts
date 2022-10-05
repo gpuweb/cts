@@ -937,26 +937,38 @@ const AtanIntervalOp: PointToIntervalOp = {
 };
 
 /** Calculate an acceptance interval of atan(x) */
-export function atanInterval(n: number): F32Interval {
+export function atanInterval(n: number | F32Interval): F32Interval {
   return runPointToIntervalOp(toF32Interval(n), AtanIntervalOp);
 }
 
 const Atan2IntervalOp: BinaryToIntervalOp = {
   impl: (y: number, x: number): F32Interval => {
-    const numULP = 4096;
-    if (y === 0) {
-      if (x === 0) {
-        return F32Interval.any();
-      } else {
-        return F32Interval.span(
-          ulpInterval(kValue.f32.negative.pi.whole, numULP),
-          ulpInterval(kValue.f32.positive.pi.whole, numULP)
-        );
-      }
+    // y/x is not defined meaningfully here
+    if (x === 0) {
+      return F32Interval.any();
     }
-    return ulpInterval(Math.atan2(y, x), numULP);
+
+    // atan2's accuracy is only defined if y is normal
+    if (isSubnormalNumberF32(y)) {
+      return F32Interval.any();
+    }
+
+    const atan_yx = atanInterval(divisionInterval(y, x));
+    // x > 0, atan(y/x)
+    if (x > 0) {
+      return atan_yx;
+    }
+
+    // x < 0, y > 0, atan(y/x) + π
+    if (y > 0) {
+      return additionInterval(atan_yx, kValue.f32.positive.pi.whole);
+    }
+
+    // x < 0, y < 0, atan(y/x) - π
+    return subtractionInterval(atan_yx, kValue.f32.positive.pi.whole);
   },
   extrema: (y: F32Interval, x: F32Interval): [F32Interval, F32Interval] => {
+    // There is discontinuity + undefined behaviour at y/x = 0 that will dominate the accuracy
     if (y.contains(0)) {
       if (x.contains(0)) {
         return [toF32Interval(0), toF32Interval(0)];
