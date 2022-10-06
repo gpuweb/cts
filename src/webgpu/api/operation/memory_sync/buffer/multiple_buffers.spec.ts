@@ -227,3 +227,39 @@ g.test('ww')
       t.verifyData(buffers[i], 2);
     }
   });
+
+g.test('multiple_pairs_of_dispatches_in_one_compute_pass')
+  .desc(
+    `
+  Test write-after-write operations on multiple buffers via the one compute pass. The first write
+  will write the buffer index * 2 + 1 into all storage buffers. The second write will write the
+  buffer index * 2 + 2 into the all buffers in the same pass. Expected data in all buffers is the
+  buffer index * 2 + 2.
+  `
+  )
+  .fn(async t => {
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginComputePass();
+
+    const kBufferCount = 4;
+    const buffers: GPUBuffer[] = [];
+    for (let b = 0; b < kBufferCount; ++b) {
+      const buffer = await t.createBufferWithValue(0);
+      buffers.push(buffer);
+
+      for (let i = 0; i < 2; ++i) {
+        const pipeline = t.createStorageWriteComputePipeline(2 * b + i + 1);
+        const bindGroup = t.createBindGroup(pipeline, buffer);
+        pass.setPipeline(pipeline);
+        pass.setBindGroup(0, bindGroup);
+        pass.dispatchWorkgroups(1);
+      }
+    }
+
+    pass.end();
+
+    t.device.queue.submit([encoder.finish()]);
+    for (let b = 0; b < kBufferCount; ++b) {
+      t.verifyData(buffers[b], 2 * b + 2);
+    }
+  });
