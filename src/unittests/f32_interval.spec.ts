@@ -23,6 +23,7 @@ import {
   correctlyRoundedInterval,
   cosInterval,
   coshInterval,
+  crossInterval,
   degreesInterval,
   distanceInterval,
   divisionInterval,
@@ -30,6 +31,7 @@ import {
   expInterval,
   exp2Interval,
   F32Interval,
+  faceForwardIntervals,
   floorInterval,
   fractInterval,
   IntervalBounds,
@@ -48,6 +50,7 @@ import {
   powInterval,
   quantizeToF16Interval,
   radiansInterval,
+  reflectInterval,
   remainderInterval,
   roundInterval,
   saturateInterval,
@@ -60,11 +63,9 @@ import {
   subtractionInterval,
   tanInterval,
   tanhInterval,
+  toF32Vector,
   truncInterval,
   ulpInterval,
-  crossInterval,
-  toF32Vector,
-  reflectInterval,
 } from '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -2925,5 +2926,71 @@ g.test('reflectInterval')
     t.expect(
       objectEquals(expected, got),
       `reflectInterval([${x}], [${y}]) returned ${got}. Expected ${expected}`
+    );
+  });
+
+interface FaceForwardCase {
+  input: [number[], number[], number[]];
+  expected: IntervalBounds[][];
+}
+
+g.test('faceForwardIntervals')
+  .paramsSubcasesOnly<FaceForwardCase>(
+    // prettier-ignore
+    [
+      // vec2
+      { input: [[1.0, 0.0], [1.0, 0.0], [1.0, 0.0]], expected: [[[-1.0], [0.0]]] },
+      { input: [[-1.0, 0.0], [1.0, 0.0], [1.0, 0.0]], expected: [[[1.0], [0.0]]] },
+      { input: [[1.0, 0.0], [-1.0, 1.0], [1.0, -1.0]], expected: [[[1.0], [0.0]]] },
+      { input: [[-1.0, 0.0], [-1.0, 1.0], [1.0, -1.0]], expected: [[[-1.0], [0.0]]] },
+      { input: [[10.0, 0.0], [10.0, 0.0], [10.0, 0.0]], expected: [[[-10.0], [0.0]]] },
+      { input: [[-10.0, 0.0], [10.0, 0.0], [10.0, 0.0]], expected: [[[10.0], [0.0]]] },
+      { input: [[10.0, 0.0], [-10.0, 10.0], [10.0, -10.0]], expected: [[[10.0], [0.0]]] },
+      { input: [[-10.0, 0.0], [-10.0, 10.0], [10.0, -10.0]], expected: [[[-10.0], [0.0]]] },
+      { input: [[0.1, 0.0], [0.1, 0.0], [0.1, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], [0.0]]] },
+      { input: [[-0.1, 0.0], [0.1, 0.0], [0.1, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], [0.0]]] },
+      { input: [[0.1, 0.0], [-0.1, 0.1], [0.1, -0.1]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], [0.0]]] },
+      { input: [[-0.1, 0.0], [-0.1, 0.1], [0.1, -0.1]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], [0.0]]] },
+
+      // vec3
+      { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [[[-1.0], [0.0], [0.0]]] },
+      { input: [[-1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [[[1.0], [0.0], [0.0]]] },
+      { input: [[1.0, 0.0, 0.0], [-1.0, 1.0, 0.0], [1.0, -1.0, 0.0]], expected: [[[1.0], [0.0], [0.0]]] },
+      { input: [[-1.0, 0.0, 0.0], [-1.0, 1.0, 0.0], [1.0, -1.0, 0.0]], expected: [[[-1.0], [0.0], [0.0]]] },
+      { input: [[10.0, 0.0, 0.0], [10.0, 0.0, 0.0], [10.0, 0.0, 0.0]], expected: [[[-10.0], [0.0], [0.0]]] },
+      { input: [[-10.0, 0.0, 0.0], [10.0, 0.0, 0.0], [10.0, 0.0, 0.0]], expected: [[[10.0], [0.0], [0.0]]] },
+      { input: [[10.0, 0.0, 0.0], [-10.0, 10.0, 0.0], [10.0, -10.0, 0.0]], expected: [[[10.0], [0.0], [0.0]]] },
+      { input: [[-10.0, 0.0, 0.0], [-10.0, 10.0, 0.0], [10.0, -10.0, 0.0]], expected: [[[-10.0], [0.0], [0.0]]] },
+      { input: [[0.1, 0.0, 0.0], [0.1, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], [0.0], [0.0]]] },
+      { input: [[-0.1, 0.0, 0.0], [0.1, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], [0.0], [0.0]]] },
+      { input: [[0.1, 0.0, 0.0], [-0.1, 0.0, 0.0], [0.1, -0.0, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], [0.0], [0.0]]] },
+      { input: [[-0.1, 0.0, 0.0], [-0.1, 0.0, 0.0], [0.1, -0.0, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], [0.0], [0.0]]] },
+
+      // vec4
+      { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [[[-1.0], [0.0], [0.0], [0.0]]] },
+      { input: [[-1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [[[1.0], [0.0], [0.0], [0.0]]] },
+      { input: [[1.0, 0.0, 0.0, 0.0], [-1.0, 1.0, 0.0, 0.0], [1.0, -1.0, 0.0, 0.0]], expected: [[[1.0], [0.0], [0.0], [0.0]]] },
+      { input: [[-1.0, 0.0, 0.0, 0.0], [-1.0, 1.0, 0.0, 0.0], [1.0, -1.0, 0.0, 0.0]], expected: [[[-1.0], [0.0], [0.0], [0.0]]] },
+      { input: [[10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0]], expected: [[[-10.0], [0.0], [0.0], [0.0]]] },
+      { input: [[-10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0]], expected: [[[10.0], [0.0], [0.0], [0.0]]] },
+      { input: [[10.0, 0.0, 0.0, 0.0], [-10.0, 10.0, 0.0, 0.0], [10.0, -10.0, 0.0, 0.0]], expected: [[[10.0], [0.0], [0.0], [0.0]]] },
+      { input: [[-10.0, 0.0, 0.0, 0.0], [-10.0, 10.0, 0.0, 0.0], [10.0, -10.0, 0.0, 0.0]], expected: [[[-10.0], [0.0], [0.0], [0.0]]] },
+      { input: [[0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], [0.0], [0.0], [0.0]]] },
+      { input: [[-0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], [0.0], [0.0], [0.0]]] },
+      { input: [[0.1, 0.0, 0.0, 0.0], [-0.1, 0.0, 0.0, 0.0], [0.1, -0.0, 0.0, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], [0.0], [0.0], [0.0]]] },
+      { input: [[-0.1, 0.0, 0.0, 0.0], [-0.1, 0.0, 0.0, 0.0], [0.1, -0.0, 0.0, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], [0.0], [0.0], [0.0]]] },
+
+      // subnormals, also dot(y, z) spans 0
+      { input: [[kValue.f32.subnormal.positive.max, 0.0], [kValue.f32.subnormal.positive.min, 0.0], [kValue.f32.subnormal.negative.min, 0.0]], expected:  [[[0.0, kValue.f32.subnormal.positive.max], [0.0]], [[kValue.f32.subnormal.negative.min, 0], [0.0]]] },
+    ]
+  )
+  .fn(t => {
+    const [x, y, z] = t.params.input;
+    const expected = t.params.expected.map(toF32Vector);
+
+    const got = faceForwardIntervals(x, y, z);
+    t.expect(
+      objectEquals(expected, got),
+      `faceForwardInterval([${x}], [${y}], [${z}]) returned [${got}]. Expected [${expected}]`
     );
   });
