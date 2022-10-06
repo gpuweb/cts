@@ -67,4 +67,42 @@ g.test('index_range,auto_layout')
   using a pipeline with an auto layout.
   `
   )
-  .unimplemented();
+  .params(u => u.combine('index', [0, 1, 2, 3, 4, 5]))
+  .fn(async t => {
+    const { index } = t.params;
+
+    const kBindGroupLayoutsSizeInPipelineLayout = 1;
+
+    const pipeline = t.device.createRenderPipeline({
+      layout: 'auto',
+      vertex: {
+        module: t.device.createShaderModule({
+          code: `
+            @vertex
+            fn main()-> @builtin(position) vec4<f32> {
+              return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+            }`,
+        }),
+        entryPoint: 'main',
+      },
+      fragment: {
+        module: t.device.createShaderModule({
+          code: `
+            @group(0) @binding(0) var<uniform> binding: f32;
+            @fragment
+            fn main() -> @location(0) vec4<f32> {
+              _ = binding;
+              return vec4<f32>(0.0, 1.0, 0.0, 1.0);
+            }`,
+        }),
+        entryPoint: 'main',
+        targets: [{ format: 'rgba8unorm' }],
+      },
+    });
+
+    const shouldError = index >= kBindGroupLayoutsSizeInPipelineLayout;
+
+    t.expectValidationError(() => {
+      pipeline.getBindGroupLayout(index);
+    }, shouldError);
+  });
