@@ -228,6 +228,45 @@ g.test('ww')
     }
   });
 
+g.test('multiple_pairs_of_draws_in_one_render_bundle')
+  .desc(
+    `
+  Test write-after-write operations on multiple buffers via the one render bundle. The first write
+  will write the buffer index * 2 + 1 into all storage buffers. The second write will write the
+  buffer index * 2 + 2 into the all buffers in the same pass. Expected data in all buffers is either
+  buffer index * 2 + 1 or buffer index * 2 + 2.
+  `
+  )
+  .fn(async t => {
+    const encoder = t.device.createCommandEncoder();
+    const passEncoder = t.beginSimpleRenderPass(encoder);
+    const renderEncoder = t.device.createRenderBundleEncoder({
+      colorFormats: ['rgba8unorm'],
+    });
+
+    const kBufferCount = 4;
+    const buffers: GPUBuffer[] = [];
+    for (let b = 0; b < kBufferCount; ++b) {
+      const buffer = await t.createBufferWithValue(0);
+      buffers.push(buffer);
+
+      for (let i = 0; i < 2; ++i) {
+        const pipeline = t.createStorageWriteRenderPipeline(2 * b + i + 1);
+        const bindGroup = t.createBindGroup(pipeline, buffer);
+        renderEncoder.setPipeline(pipeline);
+        renderEncoder.setBindGroup(0, bindGroup);
+        renderEncoder.draw(1, 1, 0, 0);
+      }
+    }
+
+    passEncoder.executeBundles([renderEncoder.finish()]);
+    passEncoder.end();
+    t.device.queue.submit([encoder.finish()]);
+    for (let b = 0; b < kBufferCount; ++b) {
+      t.verifyDataTwoValidValues(buffers[b], 2 * b + 1, 2 * b + 2);
+    }
+  });
+
 g.test('multiple_pairs_of_dispatches_in_one_compute_pass')
   .desc(
     `
