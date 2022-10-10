@@ -441,7 +441,7 @@ g.test('minBindingSize')
       .combine('minBindingSize', [undefined, 4, 256])
       .expand('size', ({ minBindingSize }) =>
         minBindingSize !== undefined
-          ? [minBindingSize - 1, minBindingSize, minBindingSize + 1]
+          ? [minBindingSize - 4, minBindingSize, minBindingSize + 4]
           : [4, 256]
       )
   )
@@ -941,10 +941,10 @@ g.test('buffer,resource_binding_size')
   `
   )
   .params(u =>
-    u //
+    u
       .combine('type', kBufferBindingTypes)
       .beginSubcases()
-      // Test a size of 1 to ensure there's no alignment requirement,
+      // Test a size of 1 (for uniform buffer) or 4 (for storage and read-only storage buffer)
       // then values just within and just above the limit.
       .expand('bindingSize', ({ type }) =>
         type === 'uniform'
@@ -954,9 +954,9 @@ g.test('buffer,resource_binding_size')
               kLimitInfo.maxUniformBufferBindingSize.default + 1,
             ]
           : [
-              1,
+              4,
               kLimitInfo.maxStorageBufferBindingSize.default,
-              kLimitInfo.maxStorageBufferBindingSize.default + 1,
+              kLimitInfo.maxStorageBufferBindingSize.default + 4,
             ]
       )
   )
@@ -990,6 +990,72 @@ g.test('buffer,resource_binding_size')
     t.expectValidationError(() => {
       t.device.createBindGroup({
         entries: [{ binding: 0, resource: { buffer, size: bindingSize } }],
+        layout: bindGroupLayout,
+      });
+    }, !isValid);
+  });
+
+g.test('buffer,effective_buffer_binding_size')
+  .desc(
+    `
+  Test that the effective buffer binding size of the BindGroup entry must be a multiple of 4 if the
+  buffer type is 'storage|read-only-storage', while there is no such restriction on uniform buffers.
+`
+  )
+  .params(u =>
+    u
+      .combine('type', kBufferBindingTypes)
+      .beginSubcases()
+      .expand('offset', ({ type }) =>
+        type === 'uniform'
+          ? [0, kLimitInfo.minUniformBufferOffsetAlignment.default]
+          : [0, kLimitInfo.minStorageBufferOffsetAlignment.default]
+      )
+      .expand('bufferSize', ({ type }) =>
+        type === 'uniform'
+          ? [
+              kLimitInfo.minUniformBufferOffsetAlignment.default + 8,
+              kLimitInfo.minUniformBufferOffsetAlignment.default + 10,
+            ]
+          : [
+              kLimitInfo.minStorageBufferOffsetAlignment.default + 8,
+              kLimitInfo.minStorageBufferOffsetAlignment.default + 10,
+            ]
+      )
+      .combine('bindingSize', [-1, 2, 4, 6])
+  )
+  .fn(async t => {
+    const { type, offset, bufferSize, bindingSize } = t.params;
+
+    const bindGroupLayout = t.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.COMPUTE,
+          buffer: { type },
+        },
+      ],
+    });
+
+    const effectiveBindingSize = bindingSize > 0 ? bindingSize : bufferSize - offset;
+    let usage, isValid;
+    if (type === 'uniform') {
+      usage = GPUBufferUsage.UNIFORM;
+      isValid = true;
+    } else {
+      usage = GPUBufferUsage.STORAGE;
+      isValid = effectiveBindingSize % 4 === 0;
+    }
+
+    const buffer = t.device.createBuffer({
+      size: bufferSize,
+      usage,
+    });
+
+    const appliedBindingSize = bindingSize > 0 ? bindingSize : undefined;
+    t.expectValidationError(() => {
+      t.device.createBindGroup({
+        entries: [{ binding: 0, resource: { buffer, offset, size: appliedBindingSize } }],
         layout: bindGroupLayout,
       });
     }, !isValid);
