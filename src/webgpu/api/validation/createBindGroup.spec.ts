@@ -438,7 +438,7 @@ g.test('minBindingSize')
   .desc('Tests that minBindingSize is correctly enforced.')
   .paramsSubcasesOnly(u =>
     u //
-      .combine('minBindingSize', [undefined, 4, 256])
+      .combine('minBindingSize', [undefined, 8, 256])
       .expand('size', ({ minBindingSize }) =>
         minBindingSize !== undefined
           ? [minBindingSize - 4, minBindingSize, minBindingSize + 4]
@@ -1022,7 +1022,7 @@ g.test('buffer,effective_buffer_binding_size')
               kLimitInfo.minStorageBufferOffsetAlignment.default + 10,
             ]
       )
-      .combine('bindingSize', [-1, 2, 4, 6])
+      .combine('bindingSize', [undefined, 2, 4, 6])
   )
   .fn(async t => {
     const { type, offset, bufferSize, bindingSize } = t.params;
@@ -1037,7 +1037,7 @@ g.test('buffer,effective_buffer_binding_size')
       ],
     });
 
-    const effectiveBindingSize = bindingSize > 0 ? bindingSize : bufferSize - offset;
+    const effectiveBindingSize = bindingSize ?? bufferSize - offset;
     let usage, isValid;
     if (type === 'uniform') {
       usage = GPUBufferUsage.UNIFORM;
@@ -1052,10 +1052,9 @@ g.test('buffer,effective_buffer_binding_size')
       usage,
     });
 
-    const appliedBindingSize = bindingSize > 0 ? bindingSize : undefined;
     t.expectValidationError(() => {
       t.device.createBindGroup({
-        entries: [{ binding: 0, resource: { buffer, offset, size: appliedBindingSize } }],
+        entries: [{ binding: 0, resource: { buffer, offset, size: bindingSize } }],
         layout: bindGroupLayout,
       });
     }, !isValid);
