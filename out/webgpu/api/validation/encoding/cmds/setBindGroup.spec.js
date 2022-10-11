@@ -225,7 +225,7 @@ combineWithParams([
 combine('useU32array', [false, true])).
 
 fn(async (t) => {
-  const kBindingSize = 9;
+  const kBindingSize = 12;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
     entries: [
@@ -409,7 +409,7 @@ kLimitInfo.minStorageBufferOffsetAlignment.default + 2])).
 
 fn(async (t) => {
   const { type, dynamicOffset, encoderType } = t.params;
-  const kBindingSize = 9;
+  const kBindingSize = 12;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
     entries: [
