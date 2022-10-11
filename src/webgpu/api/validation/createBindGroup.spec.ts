@@ -438,7 +438,7 @@ g.test('minBindingSize')
   .desc('Tests that minBindingSize is correctly enforced.')
   .paramsSubcasesOnly(u =>
     u //
-      .combine('minBindingSize', [undefined, 8, 256])
+      .combine('minBindingSize', [undefined, 4, 8, 256])
       .expand('size', ({ minBindingSize }) =>
         minBindingSize !== undefined
           ? [minBindingSize - 4, minBindingSize, minBindingSize + 4]
