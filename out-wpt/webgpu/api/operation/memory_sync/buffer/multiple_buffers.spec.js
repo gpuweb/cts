@@ -229,6 +229,55 @@ g.test('ww')
     }
   });
 
+g.test('multiple_pairs_of_draws_in_one_render_pass')
+  .desc(
+    `
+  Test write-after-write operations on multiple buffers via the one render pass. The first write
+  will write the buffer index * 2 + 1 into all storage buffers. The second write will write the
+  buffer index * 2 + 2 into the all buffers in the same pass. Expected data in all buffers is either
+  buffer index * 2 + 1 or buffer index * 2 + 2. It may use bundle in each draw.
+  `
+  )
+  .paramsSubcasesOnly(u =>
+    u //
+      .combine('firstDrawUseBundle', [false, true])
+      .combine('secondDrawUseBundle', [false, true])
+  )
+  .fn(async t => {
+    const { firstDrawUseBundle, secondDrawUseBundle } = t.params;
+
+    const encoder = t.device.createCommandEncoder();
+    const passEncoder = t.beginSimpleRenderPass(encoder);
+
+    const kBufferCount = 4;
+    const buffers = [];
+    for (let b = 0; b < kBufferCount; ++b) {
+      const buffer = await t.createBufferWithValue(0);
+      buffers.push(buffer);
+
+      const useBundle = [firstDrawUseBundle, secondDrawUseBundle];
+      for (let i = 0; i < 2; ++i) {
+        const renderEncoder = useBundle[i]
+          ? t.device.createRenderBundleEncoder({
+              colorFormats: ['rgba8unorm'],
+            })
+          : passEncoder;
+        const pipeline = t.createStorageWriteRenderPipeline(2 * b + i + 1);
+        const bindGroup = t.createBindGroup(pipeline, buffer);
+        renderEncoder.setPipeline(pipeline);
+        renderEncoder.setBindGroup(0, bindGroup);
+        renderEncoder.draw(1, 1, 0, 0);
+        if (useBundle[i]) passEncoder.executeBundles([renderEncoder.finish()]);
+      }
+    }
+
+    passEncoder.end();
+    t.device.queue.submit([encoder.finish()]);
+    for (let b = 0; b < kBufferCount; ++b) {
+      t.verifyDataTwoValidValues(buffers[b], 2 * b + 1, 2 * b + 2);
+    }
+  });
+
 g.test('multiple_pairs_of_draws_in_one_render_bundle')
   .desc(
     `
