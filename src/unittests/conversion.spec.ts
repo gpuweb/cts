@@ -1,6 +1,8 @@
 export const description = `Unit tests for conversion`;
 
 import { makeTestGroup } from '../common/internal/test_group.js';
+import { objectEquals } from '../common/util/util.js';
+import { kValue } from '../webgpu/util/constants.js';
 import {
   bool,
   f16Bits,
@@ -14,6 +16,7 @@ import {
   i32,
   kFloat16Format,
   kFloat32Format,
+  pack2x16float,
   Scalar,
   u32,
   vec2,
@@ -232,3 +235,49 @@ expect: ${expect}`
     );
   }
 });
+
+interface pack2x16floatCase {
+  inputs: [number, number];
+  result: (number | undefined)[];
+}
+
+g.test('pack2x16float')
+  .paramsSimple<pack2x16floatCase>([
+    // f16 normals
+    { inputs: [0, 0], result: [0x00000000] },
+    { inputs: [1, 0], result: [0x00003c00] },
+    { inputs: [1, 1], result: [0x3c003c00] },
+    { inputs: [-1, -1], result: [0xbc00bc00] },
+    { inputs: [10, 0], result: [0x00004900] },
+    { inputs: [-10, 0], result: [0x0000c900] },
+
+    // f32 normal, but not f16 precise
+    { inputs: [1.00000011920928955078125, 0], result: [0x00003c00, 0x00003c01] },
+
+    // f32 subnormals
+    { inputs: [kValue.f32.subnormal.positive.max, 0], result: [0x00000000, 0x00000001] },
+    // prettier-ignore
+    { inputs: [kValue.f32.subnormal.negative.min, 0], result: [0x00008001, 0x00008000, 0x00000000] },
+
+    // f16 subnormals
+    { inputs: [kValue.f16.subnormal.positive.max, 0], result: [0x000003ff, 0x00000000] },
+    { inputs: [kValue.f16.subnormal.negative.min, 0], result: [0x000083ff, 0x00000000] },
+
+    // f16 out of bounds
+    { inputs: [kValue.f16.positive.max + 1, 0], result: [undefined] },
+    { inputs: [kValue.f16.negative.min - 1, 0], result: [undefined] },
+    { inputs: [0, kValue.f16.positive.max + 1], result: [undefined] },
+    { inputs: [0, kValue.f16.negative.min - 1], result: [undefined] },
+  ])
+  .fn(test => {
+    const inputs = test.params.inputs;
+    const got = pack2x16float(...inputs);
+    const expect = test.params.result;
+
+    test.expect(
+      objectEquals(got, expect),
+      `pack2x16float(${inputs}) returned [${got.map(g =>
+        g !== undefined ? u32(g) : 'undefined'
+      )}]. Expected [${expect.map(e => (e !== undefined ? u32(e) : 'undefined'))}]`
+    );
+  });

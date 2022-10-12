@@ -2,7 +2,14 @@ import { Colors } from '../../common/util/colors.js';
 import { assert, TypedArrayBufferView } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
-import { clamp, isSubnormalNumberF32 } from './math.js';
+import {
+  cartesianProduct,
+  clamp,
+  correctlyRoundedF16,
+  isFiniteF16,
+  isSubnormalNumberF16,
+  isSubnormalNumberF32,
+} from './math.js';
 
 /**
  * Encodes a JS `number` into a "normalized" (unorm/snorm) integer representation with `bits` bits.
@@ -246,6 +253,62 @@ export function packRGB9E5UFloat(r: number, g: number, b: number): number {
   const biasedExp = exp === 0 ? 0 : exp - 127 + bias;
   assert(biasedExp >= 0 && biasedExp <= 31);
   return rMantissa | (gMantissa << 9) | (bMantissa << 18) | (biasedExp << 27);
+}
+
+/**
+ * Quantizes two f32s to f16 and then packs them in a u32
+ *
+ * This should implement the same behaviour as the builtin `pack2x16float` from
+ * WGSL.
+ *
+ * Caller is responsible to ensuring inputs are f32s
+ *
+ * @param x first f32 to be packed
+ * @param y second f32 to be packed
+ * @returns an array of possible results for pack2x16float. Elements are either
+ *          a number or undefined.
+ *          undefined indicates that any value is valid, since the input went
+ *          out of bounds.
+ */
+export function pack2x16float(x: number, y: number): (number | undefined)[] {
+  if (!isFiniteF16(x) || !isFiniteF16(y)) {
+    // This indicates any value is valid, so it isn't worth bothering
+    // calculating the more restrictive possibilities.
+    return [undefined];
+  }
+
+  // Generates all possible valid f16s from a given f32. Assumes FTZ for both the f32 and f16 value is allowed.
+  const generate_f16s = (n: number): number[] => {
+    const n_f32s = [n];
+    if (n !== 0 && isSubnormalNumberF32(n)) {
+      n_f32s.push(0);
+    }
+
+    const n_f16s = n_f32s.flatMap(correctlyRoundedF16);
+    if (!n_f16s.includes(0) && n_f16s.some(isSubnormalNumberF16)) {
+      n_f16s.push(0);
+    }
+
+    return n_f16s;
+  };
+
+  const x_f16s = generate_f16s(x);
+  const y_f16s = generate_f16s(y);
+
+  const f16_pairs = cartesianProduct(x_f16s, y_f16s);
+  const results = new Array<number>();
+  f16_pairs.forEach(p => {
+    assert(p.length === 2, 'cartesianProduct of 2 arrays returned an entry with not 2 elements');
+
+    const buf = new ArrayBuffer(4);
+    const buf_f16 = new Float16Array(buf);
+    const buf_u32 = new Uint32Array(buf);
+    buf_f16[0] = p[0];
+    buf_f16[1] = p[1];
+    results.push(buf_u32[0]);
+  });
+
+  return [...new Set(results)]; // Remove duplicates from output
 }
 
 /**
