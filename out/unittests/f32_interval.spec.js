@@ -8,6 +8,7 @@ import { kValue } from '../webgpu/util/constants.js';
 import {
 absInterval,
 absoluteErrorInterval,
+acosInterval,
 acoshAlternativeInterval,
 acoshPrimaryInterval,
 additionInterval,
@@ -651,6 +652,35 @@ fn((t) => {
   t.expect(
   objectEquals(expected, got),
   `absInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
+
+});
+
+g.test('acosInterval').
+paramsSubcasesOnly(
+
+[
+// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
+// form due to the inherited nature of the errors.
+//
+// The acceptance interval @ x = -1 and 1 is kAny, because sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inverseqrt
+// The acceptance interval @ x = 0 is kAny, because atan2 is not well defined/implemented at 0.
+{ input: kValue.f32.infinity.negative, expected: kAny },
+{ input: kValue.f32.negative.min, expected: kAny },
+{ input: -1, expected: kAny },
+{ input: -1 / 2, expected: [hexToF32(0x40060290), hexToF32(0x40061294)] }, // ~2π/3
+{ input: 0, expected: kAny },
+{ input: 1 / 2, expected: [hexToF32(0x3f85fa8f), hexToF32(0x3f861a95)] }, // ~π/3
+{ input: kValue.f32.positive.max, expected: kAny },
+{ input: kValue.f32.infinity.positive, expected: kAny }]).
+
+
+fn((t) => {
+  const expected = new F32Interval(...t.params.expected);
+
+  const got = acosInterval(t.params.input);
+  t.expect(
+  objectEquals(expected, got),
+  `acosInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
 
 });
 
