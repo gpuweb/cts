@@ -1,7 +1,6 @@
 import { assert, unreachable } from '../../common/util/util.js';
 
 import { kValue } from './constants.js';
-import { f32 } from './conversion.js';
 import {
   cartesianProduct,
   correctlyRoundedF16,
