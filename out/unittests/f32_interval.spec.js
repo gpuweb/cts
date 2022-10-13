@@ -12,6 +12,7 @@ acosInterval,
 acoshAlternativeInterval,
 acoshPrimaryInterval,
 additionInterval,
+asinInterval,
 asinhInterval,
 atanInterval,
 atan2Interval,
@@ -735,6 +736,35 @@ fn((t) => {
   t.expect(
   objectEquals(expected, got),
   `acoshInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
+
+});
+
+g.test('asinInterval').
+paramsSubcasesOnly(
+
+[
+// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
+// form due to the inherited nature of the errors.
+//
+// The acceptance interval @ x = -1 and 1 is kAny, because sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inversqrt
+// The acceptance interval @ x = 0 is kAny, because atan2 is not well defined/implemented at 0.
+{ input: kValue.f32.infinity.negative, expected: kAny },
+{ input: kValue.f32.negative.min, expected: kAny },
+{ input: -1, expected: kAny },
+{ input: -1 / 2, expected: [hexToF32(0xbf061a99), hexToF32(0xbf05fa8b)] }, // ~-π/6
+{ input: 0, expected: kAny },
+{ input: 1 / 2, expected: [hexToF32(0x3f05fa8b), hexToF32(0x3f061a99)] }, // ~π/6
+{ input: kValue.f32.positive.max, expected: kAny },
+{ input: kValue.f32.infinity.positive, expected: kAny }]).
+
+
+fn((t) => {
+  const expected = new F32Interval(...t.params.expected);
+
+  const got = asinInterval(t.params.input);
+  t.expect(
+  objectEquals(expected, got),
+  `asinInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
 
 });
 
