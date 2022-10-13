@@ -268,14 +268,20 @@ g.test('pack2x16float')
     { inputs: [1, kValue.f16.negative.min - 1], result: [undefined] },
   ] as const)
   .fn(test => {
+    const toString = (data: readonly (undefined | number)[]): String[] => {
+      return data.map(d => (d !== undefined ? u32(d).toString() : 'undefined'));
+    };
+
     const inputs = test.params.inputs;
     const got = pack2x16float(inputs[0], inputs[1]);
     const expect = test.params.result;
 
+    const got_str = toString(got);
+    const expect_str = toString(expect);
+
+    // Using strings of the outputs, so they can be easily sorted, since order of the results doesn't matter.
     test.expect(
-      objectEquals(got, expect),
-      `pack2x16float(${inputs}) returned [${got.map(g =>
-        g !== undefined ? u32(g) : 'undefined'
-      )}]. Expected [${expect.map(e => (e !== undefined ? u32(e) : 'undefined'))}]`
+      objectEquals(got_str.sort(), expect_str.sort()),
+      `pack2x16float(${inputs}) returned [${got_str}]. Expected [${expect}]`
     );
   });

@@ -2,6 +2,7 @@ import { Colors } from '../../common/util/colors.js';
 import { assert, TypedArrayBufferView } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
+import { kBit } from './constants.js';
 import {
   cartesianProduct,
   clamp,
@@ -281,64 +282,41 @@ export function pack2x16float(x: number, y: number): (number | undefined)[] {
     return [undefined];
   }
 
-  // Generates all possible valid f16s from a given f32. Assumes FTZ for both the f32 and f16 value is allowed.
-  const generate_f16s = (n: number): number[] => {
+  // Generates all possible valid u16 bit fields for a given f32 to f16 conversion.
+  // Assumes FTZ for both the f32 and f16 value is allowed.
+  const generate_u16s = (n: number): number[] => {
     let contains_subnormals = isSubnormalNumberF32(n);
     const n_f16s = correctlyRoundedF16(n);
-
     contains_subnormals ||= n_f16s.some(isSubnormalNumberF16);
-    if (!n_f16s.includes(0) && contains_subnormals) {
-      n_f16s.push(0);
+
+    const n_u16s = n_f16s.map(f16 => {
+      workingDataF16[0] = f16;
+      return workingDataU16[0];
+    });
+
+    const contains_poszero = n_u16s.some(u => u === kBit.f16.positive.zero);
+    const contains_negzero = n_u16s.some(u => u === kBit.f16.negative.zero);
+    if (!contains_negzero && (contains_poszero || contains_subnormals)) {
+      n_u16s.push(kBit.f16.negative.zero);
     }
 
-    return n_f16s;
+    if (!contains_poszero && (contains_negzero || contains_subnormals)) {
+      n_u16s.push(kBit.f16.positive.zero);
+    }
+
+    return n_u16s;
   };
 
-  const x_f16s = generate_f16s(x);
-  const y_f16s = generate_f16s(y);
+  const x_u16s = generate_u16s(x);
+  const y_u16s = generate_u16s(y);
+  const u16_pairs = cartesianProduct(x_u16s, y_u16s);
 
-  const f16_pairs = cartesianProduct(x_f16s, y_f16s);
   const results = new Array<number>();
-
-  for (const p of f16_pairs) {
+  for (const p of u16_pairs) {
     assert(p.length === 2, 'cartesianProduct of 2 arrays returned an entry with not 2 elements');
-    // JS/TS does not normally distinguish between +/-0, but WGSL implementations may ignore the sign of a zero, so if a
-    // zero is present, both +0 or -0 are valid and distinct. It is easier to explicitly inject these cases here when
-    // emitting bits, as opposed to including them earlier and coercing JS/TS to distinguish between them.
-
-    if (p[0] !== 0 && p[1] !== 0) {
-      workingDataF16[0] = p[0];
-      workingDataF16[1] = p[1];
-      results.push(workingDataU32[0]);
-    } else {
-      if (p[0] !== 0 && p[1] === 0) {
-        workingDataF16[0] = p[0];
-        workingDataU16[1] = 0x0000;
-        results.push(workingDataU32[0]);
-        workingDataU16[1] = 0x8000;
-        results.push(workingDataU32[0]);
-      } else if (p[0] === 0 && p[1] !== 0) {
-        workingDataF16[1] = p[1];
-        workingDataU16[0] = 0x0000;
-        results.push(workingDataU32[0]);
-        workingDataU16[0] = 0x8000;
-        results.push(workingDataU32[0]);
-      } else {
-        // Both are 0
-        workingDataU16[0] = 0x0000;
-        workingDataU16[1] = 0x0000;
-        results.push(workingDataU32[0]);
-        workingDataU16[0] = 0x0000;
-        workingDataU16[1] = 0x8000;
-        results.push(workingDataU32[0]);
-        workingDataU16[0] = 0x8000;
-        workingDataU16[1] = 0x0000;
-        results.push(workingDataU32[0]);
-        workingDataU16[0] = 0x8000;
-        workingDataU16[1] = 0x8000;
-        results.push(workingDataU32[0]);
-      }
-    }
+    workingDataU16[0] = p[0];
+    workingDataU16[1] = p[1];
+    results.push(workingDataU32[0]);
   }
 
   return results;
