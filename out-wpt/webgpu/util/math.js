@@ -653,6 +653,31 @@ export const kVectorTestValues = {
 };
 
 /**
+ * Minimal set of vectors, indexed by dimension, that contain interesting float
+ * values.
+ *
+ * This is an even more stripped down version of `kVectorTestValues` for when
+ * pairs of vectors are being tested.
+ * All of the interesting floats from sparseF32 are guaranteed to be tested, but
+ * not in every position.
+ */
+export const kVectorSparseTestValues = {
+  2: sparseF32Range().map((f, idx) => [idx % 2 === 0 ? f : idx, idx % 2 === 1 ? f : -idx]),
+  3: sparseF32Range().map((f, idx) => [
+    idx % 3 === 0 ? f : idx,
+    idx % 3 === 1 ? f : -idx,
+    idx % 3 === 2 ? f : idx,
+  ]),
+
+  4: sparseF32Range().map((f, idx) => [
+    idx % 4 === 0 ? f : idx,
+    idx % 4 === 1 ? f : -idx,
+    idx % 4 === 2 ? f : idx,
+    idx % 4 === 3 ? f : -idx,
+  ]),
+};
+
+/**
  * @returns the result matrix in Array<Array<number>> type.
  *
  * Matrix multiplication. A is m x n and B is n x p. Returns
