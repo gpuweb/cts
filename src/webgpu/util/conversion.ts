@@ -131,9 +131,13 @@ export const kFloat32Format = { signed: 1, exponentBits: 8, mantissaBits: 23, bi
 /** FloatFormat defining IEEE754 16-bit float. */
 export const kFloat16Format = { signed: 1, exponentBits: 5, mantissaBits: 10, bias: 15 } as const;
 
+/** Once-allocated ArrayBuffer/views  to avoid overhead of allocation when converting between numeric formats */
 const workingData = new ArrayBuffer(4);
 const workingDataU32 = new Uint32Array(workingData);
+const workingDataU16 = new Uint16Array(workingData);
 const workingDataF32 = new Float32Array(workingData);
+const workingDataF16 = new Float16Array(workingData);
+
 /** Bitcast u32 (represented as integer Number) to f32 (represented as floating-point Number). */
 export function float32BitsToNumber(bits: number): number {
   workingDataU32[0] = bits;
@@ -279,13 +283,11 @@ export function pack2x16float(x: number, y: number): (number | undefined)[] {
 
   // Generates all possible valid f16s from a given f32. Assumes FTZ for both the f32 and f16 value is allowed.
   const generate_f16s = (n: number): number[] => {
-    const n_f32s = [n];
-    if (n !== 0 && isSubnormalNumberF32(n)) {
-      n_f32s.push(0);
-    }
+    let contains_subnormals = isSubnormalNumberF32(n);
+    const n_f16s = correctlyRoundedF16(n);
 
-    const n_f16s = n_f32s.flatMap(correctlyRoundedF16);
-    if (!n_f16s.includes(0) && n_f16s.some(isSubnormalNumberF16)) {
+    contains_subnormals ||= n_f16s.some(isSubnormalNumberF16);
+    if (!n_f16s.includes(0) && contains_subnormals) {
       n_f16s.push(0);
     }
 
@@ -297,18 +299,49 @@ export function pack2x16float(x: number, y: number): (number | undefined)[] {
 
   const f16_pairs = cartesianProduct(x_f16s, y_f16s);
   const results = new Array<number>();
-  f16_pairs.forEach(p => {
+
+  for (const p of f16_pairs) {
     assert(p.length === 2, 'cartesianProduct of 2 arrays returned an entry with not 2 elements');
+    // JS/TS does not normally distinguish between +/-0, but WGSL implementations may ignore the sign of a zero, so if a
+    // zero is present, both +0 or -0 are valid and distinct. It is easier to explicitly inject these cases here when
+    // emitting bits, as opposed to including them earlier and coercing JS/TS to distinguish between them.
 
-    const buf = new ArrayBuffer(4);
-    const buf_f16 = new Float16Array(buf);
-    const buf_u32 = new Uint32Array(buf);
-    buf_f16[0] = p[0];
-    buf_f16[1] = p[1];
-    results.push(buf_u32[0]);
-  });
+    if (p[0] !== 0 && p[1] !== 0) {
+      workingDataF16[0] = p[0];
+      workingDataF16[1] = p[1];
+      results.push(workingDataU32[0]);
+    } else {
+      if (p[0] !== 0 && p[1] === 0) {
+        workingDataF16[0] = p[0];
+        workingDataU16[1] = 0x0000;
+        results.push(workingDataU32[0]);
+        workingDataU16[1] = 0x8000;
+        results.push(workingDataU32[0]);
+      } else if (p[0] === 0 && p[1] !== 0) {
+        workingDataF16[1] = p[1];
+        workingDataU16[0] = 0x0000;
+        results.push(workingDataU32[0]);
+        workingDataU16[0] = 0x8000;
+        results.push(workingDataU32[0]);
+      } else {
+        // Both are 0
+        workingDataU16[0] = 0x0000;
+        workingDataU16[1] = 0x0000;
+        results.push(workingDataU32[0]);
+        workingDataU16[0] = 0x0000;
+        workingDataU16[1] = 0x8000;
+        results.push(workingDataU32[0]);
+        workingDataU16[0] = 0x8000;
+        workingDataU16[1] = 0x0000;
+        results.push(workingDataU32[0]);
+        workingDataU16[0] = 0x8000;
+        workingDataU16[1] = 0x8000;
+        results.push(workingDataU32[0]);
+      }
+    }
+  }
 
-  return [...new Set(results)]; // Remove duplicates from output
+  return results;
 }
 
 /**
