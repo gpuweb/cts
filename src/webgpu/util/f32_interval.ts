@@ -176,7 +176,7 @@ function spanF32Vector(...vectors: F32Vector[]): F32Vector {
  * returns the input
  */
 function addFlushedIfNeeded(values: number[]): number[] {
-  return values.some(isSubnormalNumberF32) ? values.concat(0) : values;
+  return values.some(v => v !== 0 && isSubnormalNumberF32(v)) ? values.concat(0) : values;
 }
 
 /**
@@ -791,6 +791,36 @@ function runVectorPairToVectorOp(x: F32Vector, y: F32Vector, op: VectorPairToVec
   return result.every(e => e.isFinite()) ? result : toF32Vector(x.map(_ => F32Interval.any()));
 }
 
+/**
+ * Calculate the vector of acceptance intervals by running a scalar operation
+ * component-wise over a pair vectors.
+ *
+ * This is used for situations where a component-wise operation, like vector
+ * subtraction, is needed as part of a inherited accuracy, but the top-level
+ * operation test don't require an explicit vector definition of the function,
+ * due to the generated vectorize tests being sufficient.
+ *
+ * @param x first input domain intervals vector
+ * @param y second input domain intervals vector
+ * @param op scalar operation to be run component-wise
+ * @returns a vector of intervals with the outputs of op.impl
+ */
+function runBinaryToIntervalOpComponentWise(
+  x: F32Vector,
+  y: F32Vector,
+  op: BinaryToIntervalOp
+): F32Vector {
+  assert(
+    x.length === y.length,
+    `runBinaryToIntervalOpComponentWise requires vectors of the same length`
+  );
+  return toF32Vector(
+    x.map((i, idx) => {
+      return runBinaryToIntervalOp(i, y[idx], op);
+    })
+  );
+}
+
 /** Defines a PointToIntervalOp for an interval of the correctly rounded values around the point */
 const CorrectlyRoundedIntervalOp: PointToIntervalOp = {
   impl: (n: number) => {
@@ -1161,6 +1191,36 @@ export function degreesInterval(n: number): F32Interval {
   return runPointToIntervalOp(toF32Interval(n), DegreesIntervalOp);
 }
 
+const DistanceIntervalScalarOp: BinaryToIntervalOp = {
+  impl: (x: number, y: number): F32Interval => {
+    return lengthInterval(subtractionInterval(x, y));
+  },
+};
+
+const DistanceIntervalVectorOp: VectorPairToIntervalOp = {
+  impl: (x: number[], y: number[]): F32Interval => {
+    return lengthInterval(
+      runBinaryToIntervalOpComponentWise(toF32Vector(x), toF32Vector(y), SubtractionIntervalOp)
+    );
+  },
+};
+
+/** Calculate an acceptance interval of distance(x, y) */
+export function distanceInterval(x: number | number[], y: number | number[]): F32Interval {
+  if (x instanceof Array && y instanceof Array) {
+    assert(
+      x.length === y.length,
+      `distanceInterval requires both params to have the same number of elements`
+    );
+    return runVectorPairToIntervalOp(toF32Vector(x), toF32Vector(y), DistanceIntervalVectorOp);
+  } else if (!(x instanceof Array) && !(y instanceof Array)) {
+    return runBinaryToIntervalOp(toF32Interval(x), toF32Interval(y), DistanceIntervalScalarOp);
+  }
+  unreachable(
+    `distanceInterval requires both params to both the same type, either scalars or vectors`
+  );
+}
+
 const DivisionIntervalOp: BinaryToIntervalOp = {
   impl: limitBinaryToIntervalDomain(
     {
@@ -1191,7 +1251,11 @@ export function divisionInterval(x: number | F32Interval, y: number | F32Interva
 const DotIntervalOp: VectorPairToIntervalOp = {
   impl: (x: number[], y: number[]): F32Interval => {
     // dot(x, y) = sum of x[i] * y[i]
-    const multiplications: F32Interval[] = x.map((_, i) => multiplicationInterval(x[i], y[i]));
+    const multiplications = runBinaryToIntervalOpComponentWise(
+      toF32Vector(x),
+      toF32Vector(y),
+      MultiplicationIntervalOp
+    );
     return multiplications.reduce((previous, current) => additionInterval(previous, current));
   },
 };
@@ -1298,18 +1362,24 @@ export function ldexpInterval(e1: number, e2: number): F32Interval {
   return roundAndFlushBinaryToInterval(e1, e2, LdexpIntervalOp);
 }
 
-const LengthIntervalOp: VectorToIntervalOp = {
+const LengthIntervalScalarOp: PointToIntervalOp = {
+  impl: (n: number): F32Interval => {
+    return sqrtInterval(multiplicationInterval(n, n));
+  },
+};
+
+const LengthIntervalVectorOp: VectorToIntervalOp = {
   impl: (n: number[]): F32Interval => {
     return sqrtInterval(dotInterval(n, n));
   },
 };
 
 /** Calculate an acceptance interval of length(x) */
-export function lengthInterval(n: number | number[]): F32Interval {
+export function lengthInterval(n: number | F32Interval | number[] | F32Vector): F32Interval {
   if (n instanceof Array) {
-    return runVectorToIntervalOp(toF32Vector(n), LengthIntervalOp);
+    return runVectorToIntervalOp(toF32Vector(n), LengthIntervalVectorOp);
   } else {
-    return sqrtInterval(multiplicationInterval(n, n));
+    return runPointToIntervalOp(toF32Interval(n), LengthIntervalScalarOp);
   }
 }
 
@@ -1669,15 +1739,9 @@ export function stepInterval(edge: number, x: number): F32Interval {
   return runBinaryToIntervalOp(toF32Interval(edge), toF32Interval(x), StepIntervalOp);
 }
 
-const SubtractionInnerOp: BinaryToIntervalOp = {
-  impl: (x: number, y: number): F32Interval => {
-    return correctlyRoundedInterval(x - y);
-  },
-};
-
 const SubtractionIntervalOp: BinaryToIntervalOp = {
   impl: (x: number, y: number): F32Interval => {
-    return roundAndFlushBinaryToInterval(x, y, SubtractionInnerOp);
+    return correctlyRoundedInterval(x - y);
   },
 };
 
