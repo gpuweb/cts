@@ -2,7 +2,15 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { Colors } from '../../common/util/colors.js';import { assert } from '../../common/util/util.js';import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
-import { clamp, isSubnormalNumberF32 } from './math.js';
+import { kBit } from './constants.js';
+import {
+cartesianProduct,
+clamp,
+correctlyRoundedF16,
+isFiniteF16,
+isSubnormalNumberF16,
+isSubnormalNumberF32 } from
+'./math.js';
 
 /**
  * Encodes a JS `number` into a "normalized" (unorm/snorm) integer representation with `bits` bits.
@@ -124,9 +132,13 @@ export const kFloat32Format = { signed: 1, exponentBits: 8, mantissaBits: 23, bi
 /** FloatFormat defining IEEE754 16-bit float. */
 export const kFloat16Format = { signed: 1, exponentBits: 5, mantissaBits: 10, bias: 15 };
 
+/** Once-allocated ArrayBuffer/views  to avoid overhead of allocation when converting between numeric formats */
 const workingData = new ArrayBuffer(4);
 const workingDataU32 = new Uint32Array(workingData);
+const workingDataU16 = new Uint16Array(workingData);
 const workingDataF32 = new Float32Array(workingData);
+const workingDataF16 = new Float16Array(workingData);
+
 /** Bitcast u32 (represented as integer Number) to f32 (represented as floating-point Number). */
 export function float32BitsToNumber(bits) {
   workingDataU32[0] = bits;
@@ -246,6 +258,68 @@ export function packRGB9E5UFloat(r, g, b) {
   const biasedExp = exp === 0 ? 0 : exp - 127 + bias;
   assert(biasedExp >= 0 && biasedExp <= 31);
   return rMantissa | gMantissa << 9 | bMantissa << 18 | biasedExp << 27;
+}
+
+/**
+ * Quantizes two f32s to f16 and then packs them in a u32
+ *
+ * This should implement the same behaviour as the builtin `pack2x16float` from
+ * WGSL.
+ *
+ * Caller is responsible to ensuring inputs are f32s
+ *
+ * @param x first f32 to be packed
+ * @param y second f32 to be packed
+ * @returns an array of possible results for pack2x16float. Elements are either
+ *          a number or undefined.
+ *          undefined indicates that any value is valid, since the input went
+ *          out of bounds.
+ */
+export function pack2x16float(x, y) {
+  if (!isFiniteF16(x) || !isFiniteF16(y)) {
+    // This indicates any value is valid, so it isn't worth bothering
+    // calculating the more restrictive possibilities.
+    return [undefined];
+  }
+
+  // Generates all possible valid u16 bit fields for a given f32 to f16 conversion.
+  // Assumes FTZ for both the f32 and f16 value is allowed.
+  const generate_u16s = (n) => {
+    let contains_subnormals = isSubnormalNumberF32(n);
+    const n_f16s = correctlyRoundedF16(n);
+    contains_subnormals ||= n_f16s.some(isSubnormalNumberF16);
+
+    const n_u16s = n_f16s.map((f16) => {
+      workingDataF16[0] = f16;
+      return workingDataU16[0];
+    });
+
+    const contains_poszero = n_u16s.some((u) => u === kBit.f16.positive.zero);
+    const contains_negzero = n_u16s.some((u) => u === kBit.f16.negative.zero);
+    if (!contains_negzero && (contains_poszero || contains_subnormals)) {
+      n_u16s.push(kBit.f16.negative.zero);
+    }
+
+    if (!contains_poszero && (contains_negzero || contains_subnormals)) {
+      n_u16s.push(kBit.f16.positive.zero);
+    }
+
+    return n_u16s;
+  };
+
+  const x_u16s = generate_u16s(x);
+  const y_u16s = generate_u16s(y);
+  const u16_pairs = cartesianProduct(x_u16s, y_u16s);
+
+  const results = new Array();
+  for (const p of u16_pairs) {
+    assert(p.length === 2, 'cartesianProduct of 2 arrays returned an entry with not 2 elements');
+    workingDataU16[0] = p[0];
+    workingDataU16[1] = p[1];
+    results.push(workingDataU32[0]);
+  }
+
+  return results;
 }
 
 /**

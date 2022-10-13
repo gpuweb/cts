@@ -1,6 +1,8 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/export const description = `Unit tests for conversion`;import { makeTestGroup } from '../common/internal/test_group.js';
+import { objectEquals } from '../common/util/util.js';
+import { kValue } from '../webgpu/util/constants.js';
 import {
 bool,
 f16Bits,
@@ -14,6 +16,7 @@ floatBitsToNumber,
 i32,
 kFloat16Format,
 kFloat32Format,
+pack2x16float,
 
 u32,
 vec2,
@@ -231,5 +234,55 @@ got:    ${got}
 expect: ${expect}`);
 
   }
+});
+
+g.test('pack2x16float').
+paramsSimple([
+// f16 normals
+{ inputs: [0, 0], result: [0x00000000, 0x80000000, 0x00008000, 0x80008000] },
+{ inputs: [1, 0], result: [0x00003c00, 0x80003c00] },
+{ inputs: [1, 1], result: [0x3c003c00] },
+{ inputs: [-1, -1], result: [0xbc00bc00] },
+{ inputs: [10, 1], result: [0x3c004900] },
+{ inputs: [-10, 1], result: [0x3c00c900] },
+
+// f32 normal, but not f16 precise
+{ inputs: [1.00000011920928955078125, 1], result: [0x3c003c00, 0x3c003c01] },
+
+// f32 subnormals
+
+{ inputs: [kValue.f32.subnormal.positive.max, 1], result: [0x3c000000, 0x3c008000, 0x3c000001] },
+
+{ inputs: [kValue.f32.subnormal.negative.min, 1], result: [0x3c008001, 0x3c000000, 0x3c008000] },
+
+// f16 subnormals
+
+{ inputs: [kValue.f16.subnormal.positive.max, 1], result: [0x3c0003ff, 0x3c000000, 0x3c008000] },
+
+{ inputs: [kValue.f16.subnormal.negative.min, 1], result: [0x03c0083ff, 0x3c000000, 0x3c008000] },
+
+// f16 out of bounds
+{ inputs: [kValue.f16.positive.max + 1, 1], result: [undefined] },
+{ inputs: [kValue.f16.negative.min - 1, 1], result: [undefined] },
+{ inputs: [1, kValue.f16.positive.max + 1], result: [undefined] },
+{ inputs: [1, kValue.f16.negative.min - 1], result: [undefined] }]).
+
+fn((test) => {
+  const toString = (data) => {
+    return data.map((d) => d !== undefined ? u32(d).toString() : 'undefined');
+  };
+
+  const inputs = test.params.inputs;
+  const got = pack2x16float(inputs[0], inputs[1]);
+  const expect = test.params.result;
+
+  const got_str = toString(got);
+  const expect_str = toString(expect);
+
+  // Using strings of the outputs, so they can be easily sorted, since order of the results doesn't matter.
+  test.expect(
+  objectEquals(got_str.sort(), expect_str.sort()),
+  `pack2x16float(${inputs}) returned [${got_str}]. Expected [${expect}]`);
+
 });
 //# sourceMappingURL=conversion.spec.js.map
