@@ -82,8 +82,7 @@ export class F32Interval {
 
   /** @returns a string representation for logging purposes */
   public toString(): string {
-    // return `[${this.bounds()}]`;
-    return `[${this.bounds().map(f32)}]`;
+    return `[${this.bounds()}]`;
   }
 
   /** @returns a singleton for interval of all possible values
