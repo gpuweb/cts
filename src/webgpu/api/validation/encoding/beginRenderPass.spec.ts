@@ -209,3 +209,45 @@ g.test('timestamp_query_set,device_mismatch')
 
     encoder.validateFinish(!mismatched);
   });
+
+g.test('begin_render_pass_before_ending_previous_pass')
+  .desc(`Test that beginning a render pass before ending the previous pass causes an error.`)
+  .fn(async t => {
+    const encoder = t.device.createCommandEncoder();
+
+    const attachmentTexture = t.device.createTexture({
+      format: 'rgba8unorm',
+      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    const renderPass1 = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: attachmentTexture.createView(),
+          clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
+      ],
+    });
+
+    // Begin a new render pass before ending the previous render pass.
+    const renderPass2 = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: attachmentTexture.createView(),
+          clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
+      ],
+    });
+
+    renderPass1.end();
+    renderPass2.end();
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, true);
+  });
