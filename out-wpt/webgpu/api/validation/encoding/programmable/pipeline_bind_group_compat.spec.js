@@ -624,3 +624,52 @@ g.test('bgl_resource_type_mismatch')
       bgResourceType === plResourceType
     );
   });
+
+g.test('empty_bind_group_layouts_requires_empty_bind_groups')
+  .desc('Test that a pipeline with empty bind groups layouts requires empty bind groups to be set.')
+  .paramsSimple([
+    { bindGroupLayoutEntryCount: 4, _success: true }, // Control case
+    { bindGroupLayoutEntryCount: 3, _success: false },
+  ])
+  .fn(async t => {
+    const { bindGroupLayoutEntryCount, _success } = t.params;
+
+    const emptyBGL = t.device.createBindGroupLayout({ entries: [] });
+    const bindGroupLayouts = [];
+    for (let i = 0; i < 4; i++) {
+      bindGroupLayouts.push(emptyBGL);
+    }
+
+    const pipelineLayout = t.device.createPipelineLayout({
+      bindGroupLayouts,
+    });
+
+    const pipeline = t.device.createComputePipeline({
+      layout: pipelineLayout,
+      compute: {
+        module: t.device.createShaderModule({
+          code: '@compute @workgroup_size(1) fn main() {}',
+        }),
+
+        entryPoint: 'main',
+      },
+    });
+
+    const emptyBindGroup = t.device.createBindGroup({
+      layout: emptyBGL,
+      entries: [],
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginComputePass();
+    pass.setPipeline(pipeline);
+    for (let i = 0; i < bindGroupLayoutEntryCount; i++) {
+      pass.setBindGroup(i, emptyBindGroup);
+    }
+    pass.dispatchWorkgroups(1);
+    pass.end();
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, !_success);
+  });
