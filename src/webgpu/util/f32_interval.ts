@@ -1575,6 +1575,31 @@ export function radiansInterval(n: number): F32Interval {
   return runPointToIntervalOp(toF32Interval(n), RadiansIntervalOp);
 }
 
+const ReflectIntervalOp: VectorPairToVectorOp = {
+  impl: (x: number[], y: number[]): F32Vector => {
+    assert(
+      x.length === y.length,
+      `ReflectIntervalOp received x (${x}) and y (${y}) with different numbers of elements`
+    );
+
+    // reflect(x, y) = x - 2.0 * dot(x, y) * y
+    //               = x - t * y, t = 2.0 * dot(x, y)
+    // x = incident vector
+    // y = normal of reflecting surface
+    const t = multiplicationInterval(2.0, dotInterval(x, y));
+    const rhs = toF32Vector(y.map(j => multiplicationInterval(t, j)));
+    return runBinaryToIntervalOpComponentWise(toF32Vector(x), rhs, SubtractionIntervalOp);
+  },
+};
+
+export function reflectInterval(x: number[], y: number[]): F32Vector {
+  assert(
+    x.length === y.length,
+    `reflect is only defined for vectors with the same number of elements`
+  );
+  return runVectorPairToVectorOp(toF32Vector(x), toF32Vector(y), ReflectIntervalOp);
+}
+
 const RemainderIntervalOp: BinaryToIntervalOp = {
   impl: (x: number, y: number): F32Interval => {
     // x % y = x - y * trunc(x/y)
