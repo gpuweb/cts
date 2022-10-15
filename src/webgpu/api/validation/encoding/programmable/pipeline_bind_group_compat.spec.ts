@@ -650,6 +650,8 @@ g.test('empty_bind_group_layouts_requires_empty_bind_groups,compute_pass')
   .desc(
     `
   Test that a compute pipeline with empty bind groups layouts requires empty bind groups to be set.
+
+  TODO: Also test other dispatch calls using the 'doCompute' helper in this file
   `
   )
   .paramsSimple([
@@ -690,7 +692,7 @@ g.test('empty_bind_group_layouts_requires_empty_bind_groups,compute_pass')
     for (let i = 0; i < bindGroupLayoutEntryCount; i++) {
       pass.setBindGroup(i, emptyBindGroup);
     }
-    pass.dispatchWorkgroups(1);
+    pass.dispatchWorkgroups(0);
     pass.end();
 
     t.expectValidationError(() => {
@@ -702,6 +704,8 @@ g.test('empty_bind_group_layouts_requires_empty_bind_groups,render_pass')
   .desc(
     `
   Test that a render pipeline with empty bind groups layouts requires empty bind groups to be set.
+
+  TODO: Also test other draw calls using the 'doRender' helper in this file
   `
   )
   .paramsSimple([
@@ -767,6 +771,7 @@ g.test('empty_bind_group_layouts_requires_empty_bind_groups,render_pass')
     for (let i = 0; i < bindGroupLayoutEntryCount; i++) {
       renderPass.setBindGroup(i, emptyBindGroup);
     }
+    renderPass.draw(0);
     renderPass.end();
 
     t.expectValidationError(() => {
