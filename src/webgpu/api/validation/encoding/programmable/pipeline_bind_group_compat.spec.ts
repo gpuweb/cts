@@ -646,8 +646,14 @@ g.test('bgl_resource_type_mismatch')
     );
   });
 
-g.test('empty_bind_group_layouts_requires_empty_bind_groups')
-  .desc('Test that a pipeline with empty bind groups layouts requires empty bind groups to be set.')
+g.test('empty_bind_group_layouts_requires_empty_bind_groups,compute_pass')
+  .desc(
+    `
+  Test that a compute pipeline with empty bind groups layouts requires empty bind groups to be set.
+
+  TODO: Also test other dispatch calls using the 'doCompute' helper in this file
+  `
+  )
   .paramsSimple([
     { bindGroupLayoutEntryCount: 4, _success: true }, // Control case
     { bindGroupLayoutEntryCount: 3, _success: false },
@@ -656,13 +662,13 @@ g.test('empty_bind_group_layouts_requires_empty_bind_groups')
     const { bindGroupLayoutEntryCount, _success } = t.params;
 
     const emptyBGL = t.device.createBindGroupLayout({ entries: [] });
-    const bindGroupLayouts = [];
+    const emptyBGLs = [];
     for (let i = 0; i < 4; i++) {
-      bindGroupLayouts.push(emptyBGL);
+      emptyBGLs.push(emptyBGL);
     }
 
     const pipelineLayout = t.device.createPipelineLayout({
-      bindGroupLayouts,
+      bindGroupLayouts: emptyBGLs,
     });
 
     const pipeline = t.device.createComputePipeline({
@@ -686,8 +692,87 @@ g.test('empty_bind_group_layouts_requires_empty_bind_groups')
     for (let i = 0; i < bindGroupLayoutEntryCount; i++) {
       pass.setBindGroup(i, emptyBindGroup);
     }
-    pass.dispatchWorkgroups(1);
+    pass.dispatchWorkgroups(0);
     pass.end();
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, !_success);
+  });
+
+g.test('empty_bind_group_layouts_requires_empty_bind_groups,render_pass')
+  .desc(
+    `
+  Test that a render pipeline with empty bind groups layouts requires empty bind groups to be set.
+
+  TODO: Also test other draw calls using the 'doRender' helper in this file
+  `
+  )
+  .paramsSimple([
+    { bindGroupLayoutEntryCount: 4, _success: true }, // Control case
+    { bindGroupLayoutEntryCount: 3, _success: false },
+  ])
+  .fn(async t => {
+    const { bindGroupLayoutEntryCount, _success } = t.params;
+
+    const emptyBGL = t.device.createBindGroupLayout({ entries: [] });
+    const emptyBGLs = [];
+    for (let i = 0; i < 4; i++) {
+      emptyBGLs.push(emptyBGL);
+    }
+
+    const pipelineLayout = t.device.createPipelineLayout({
+      bindGroupLayouts: emptyBGLs,
+    });
+
+    const colorFormat = 'rgba8unorm';
+    const pipeline = t.device.createRenderPipeline({
+      layout: pipelineLayout,
+      vertex: {
+        module: t.device.createShaderModule({
+          code: `@vertex fn main() -> @builtin(position) vec4<f32> { return vec4<f32>(); }`,
+        }),
+        entryPoint: 'main',
+      },
+      fragment: {
+        module: t.device.createShaderModule({
+          code: `@fragment fn main() {}`,
+        }),
+        entryPoint: 'main',
+        targets: [{ format: colorFormat, writeMask: 0 }],
+      },
+    });
+
+    const emptyBindGroup = t.device.createBindGroup({
+      layout: emptyBGL,
+      entries: [],
+    });
+
+    const encoder = t.device.createCommandEncoder();
+
+    const attachmentTexture = t.device.createTexture({
+      format: 'rgba8unorm',
+      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    const renderPass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: attachmentTexture.createView(),
+          clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
+      ],
+    });
+
+    renderPass.setPipeline(pipeline);
+    for (let i = 0; i < bindGroupLayoutEntryCount; i++) {
+      renderPass.setBindGroup(i, emptyBindGroup);
+    }
+    renderPass.draw(0);
+    renderPass.end();
 
     t.expectValidationError(() => {
       encoder.finish();
