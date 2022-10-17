@@ -78,3 +78,39 @@ g.test('pass_end_invalid_order')
       encoder.finish();
     }, true);
   });
+
+g.test('call_after_successful_finish')
+  .desc(`Test that encoding command after a successful finish generates a validation error.`)
+  .paramsSubcasesOnly(u =>
+    u.combine('passType', ['compute', 'render']).combine('IsEncoderFinished', [false, true])
+  )
+  .fn(async t => {
+    const { passType, IsEncoderFinished } = t.params;
+
+    const encoder = t.device.createCommandEncoder();
+
+    const pass = passType === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder);
+    pass.end();
+
+    const srcBuffer = t.device.createBuffer({
+      size: 1024,
+      usage: GPUBufferUsage.COPY_SRC,
+    });
+
+    const dstBuffer = t.device.createBuffer({
+      size: 1024,
+      usage: GPUBufferUsage.COPY_DST,
+    });
+
+    if (IsEncoderFinished) {
+      encoder.finish();
+      t.expectValidationError(() => {
+        encoder.copyBufferToBuffer(srcBuffer, 0, dstBuffer, 0, 0);
+      }, IsEncoderFinished);
+    } else {
+      t.expectValidationError(() => {
+        encoder.copyBufferToBuffer(srcBuffer, 0, dstBuffer, 0, 0);
+      }, IsEncoderFinished);
+      encoder.finish();
+    }
+  });
