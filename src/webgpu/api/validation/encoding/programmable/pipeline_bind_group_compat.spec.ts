@@ -652,16 +652,18 @@ g.test('empty_bind_group_layouts_requires_empty_bind_groups,compute_pass')
   Test that a compute pipeline with empty bind groups layouts requires empty bind groups to be set.
   `
   )
-  .paramsSimple([
-    { bindGroupLayoutEntryCount: 4, _success: true }, // Control case
-    { bindGroupLayoutEntryCount: 3, _success: false },
-  ])
+  .params(u =>
+    u
+      .combine('bindGroupLayoutEntryCount', [3, 4])
+      .combine('computeCommand', ['dispatchIndirect', 'dispatch'] as const)
+  )
   .fn(async t => {
-    const { bindGroupLayoutEntryCount, _success } = t.params;
+    const { bindGroupLayoutEntryCount, computeCommand } = t.params;
 
+    const emptyBGLCount = 4;
     const emptyBGL = t.device.createBindGroupLayout({ entries: [] });
     const emptyBGLs = [];
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < emptyBGLCount; i++) {
       emptyBGLs.push(emptyBGL);
     }
 
@@ -690,12 +692,15 @@ g.test('empty_bind_group_layouts_requires_empty_bind_groups,compute_pass')
     for (let i = 0; i < bindGroupLayoutEntryCount; i++) {
       computePass.setBindGroup(i, emptyBindGroup);
     }
-    t.doCompute(computePass, 'dispatch', true);
+
+    t.doCompute(computePass, computeCommand, true);
     computePass.end();
+
+    const success = bindGroupLayoutEntryCount === emptyBGLCount;
 
     t.expectValidationError(() => {
       encoder.finish();
-    }, !_success);
+    }, !success);
   });
 
 g.test('empty_bind_group_layouts_requires_empty_bind_groups,render_pass')
@@ -704,16 +709,23 @@ g.test('empty_bind_group_layouts_requires_empty_bind_groups,render_pass')
   Test that a render pipeline with empty bind groups layouts requires empty bind groups to be set.
   `
   )
-  .paramsSimple([
-    { bindGroupLayoutEntryCount: 4, _success: true }, // Control case
-    { bindGroupLayoutEntryCount: 3, _success: false },
-  ])
+  .params(u =>
+    u
+      .combine('bindGroupLayoutEntryCount', [3, 4])
+      .combine('renderCommand', [
+        'draw',
+        'drawIndexed',
+        'drawIndirect',
+        'drawIndexedIndirect',
+      ] as const)
+  )
   .fn(async t => {
-    const { bindGroupLayoutEntryCount, _success } = t.params;
+    const { bindGroupLayoutEntryCount, renderCommand } = t.params;
 
+    const emptyBGLCount = 4;
     const emptyBGL = t.device.createBindGroupLayout({ entries: [] });
     const emptyBGLs = [];
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < emptyBGLCount; i++) {
       emptyBGLs.push(emptyBGL);
     }
 
@@ -767,10 +779,12 @@ g.test('empty_bind_group_layouts_requires_empty_bind_groups,render_pass')
     for (let i = 0; i < bindGroupLayoutEntryCount; i++) {
       renderPass.setBindGroup(i, emptyBindGroup);
     }
-    t.doRender(renderPass, 'draw', true);
+    t.doRender(renderPass, renderCommand, true);
     renderPass.end();
+
+    const success = bindGroupLayoutEntryCount === emptyBGLCount;
 
     t.expectValidationError(() => {
       encoder.finish();
-    }, !_success);
+    }, !success);
   });
