@@ -2980,6 +2980,9 @@ g.test('faceForwardIntervals')
       { input: [[0.1, 0.0, 0.0, 0.0], [-0.1, 0.0, 0.0, 0.0], [0.1, -0.0, 0.0, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], [0.0], [0.0], [0.0]]] },
       { input: [[-0.1, 0.0, 0.0, 0.0], [-0.1, 0.0, 0.0, 0.0], [0.1, -0.0, 0.0, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], [0.0], [0.0], [0.0]]] },
 
+      // dot(y, z) === 0
+      { input: [[1.0, 1.0], [1.0, 0.0], [0.0, 1.0]], expected:  [[[-1.0], [-1.0]]]},
+
       // subnormals, also dot(y, z) spans 0
       { input: [[kValue.f32.subnormal.positive.max, 0.0], [kValue.f32.subnormal.positive.min, 0.0], [kValue.f32.subnormal.negative.min, 0.0]], expected:  [[[0.0, kValue.f32.subnormal.positive.max], [0.0]], [[kValue.f32.subnormal.negative.min, 0], [0.0]]] },
     ]
