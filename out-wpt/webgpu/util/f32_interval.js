@@ -597,6 +597,27 @@ function runVectorToVectorOp(x, op) {
   return result.every(e => e.isFinite()) ? result : toF32Vector(x.map(_ => F32Interval.any()));
 }
 
+/**
+ * Calculate the vector of acceptance intervals by running a scalar operation
+ * component-wise over a vector.
+ *
+ * This is used for situations where a component-wise operation, like vector
+ * negation, is needed as part of a inherited accuracy, but the top-level
+ * operation test don't require an explicit vector definition of the function,
+ * due to the generated vectorize tests being sufficient.
+ *
+ * @param x input domain intervals vector
+ * @param op scalar operation to be run component-wise
+ * @returns a vector of intervals with the outputs of op.impl
+ */
+function runPointToIntervalOpComponentWise(x, op) {
+  return toF32Vector(
+    x.map(i => {
+      return runPointToIntervalOp(i, op);
+    })
+  );
+}
+
 /** Calculate the vector of acceptance intervals for a vector function over
  * given intervals
  *
@@ -1112,6 +1133,46 @@ const Exp2IntervalOp = {
 /** Calculate an acceptance interval for exp2(x) */
 export function exp2Interval(x) {
   return runPointToIntervalOp(toF32Interval(x), Exp2IntervalOp);
+}
+
+/**
+ * Calculate the acceptance intervals for faceForward(x, y, z)
+ *
+ * faceForward(x, y, z) = select(-x, x, dot(z, y) < 0.0)
+ *
+ * This builtin selects from two discrete results (delta rounding/flushing), so
+ * the majority of the framework code is not appropriate, since the framework
+ * attempts to span results.
+ *
+ * Thus a bespoke implementation is used instead of
+ * defining a Op and running that through the framework.
+ */
+export function faceForwardIntervals(x, y, z) {
+  const x_vec = toF32Vector(x);
+  // Running vector through runPointToIntervalOpComponentWise to make sure that flushing/rounding is handled, since
+  // toF32Vector does not perform those operations.
+  const positive_x = runPointToIntervalOpComponentWise(x_vec, { impl: toF32Interval });
+  const negative_x = runPointToIntervalOpComponentWise(x_vec, NegationIntervalOp);
+
+  const dot_interval = dotInterval(z, y);
+  const results = new Array();
+
+  // Because the result of dot can be an interval, it might span across 0, thus it is possible that both -x and x are
+  // valid responses.
+  if (dot_interval.begin < 0 || dot_interval.end < 0) {
+    results.push(positive_x);
+  }
+
+  if (dot_interval.begin >= 0 || dot_interval.end >= 0) {
+    results.push(negative_x);
+  }
+
+  assert(
+    results.length > 0,
+    `faceForwardInterval selected neither positive x or negative x for the result, this shouldn't be possible`
+  );
+
+  return results;
 }
 
 const FloorIntervalOp = {
