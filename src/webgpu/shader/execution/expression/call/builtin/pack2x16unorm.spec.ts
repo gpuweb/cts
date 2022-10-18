@@ -40,7 +40,7 @@ g.test('pack')
     };
 
     // Returns a value normalized to [0, 1].
-    const normalize_f32 = (n: number): number => {
+    const normalizeF32 = (n: number): number => {
       return n > 0 ? n / kValue.f32.positive.max : n / kValue.f32.negative.min;
     };
 
@@ -50,7 +50,7 @@ g.test('pack')
       numeric_range.forEach(y => {
         cases.push(makeCase(x, y));
         // Interesting cases are on [0, 1]
-        cases.push(makeCase(normalize_f32(x), normalize_f32(y)));
+        cases.push(makeCase(normalizeF32(x), normalizeF32(y)));
       });
     });
 
