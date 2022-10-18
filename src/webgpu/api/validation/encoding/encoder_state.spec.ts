@@ -45,7 +45,7 @@ export const g = makeTestGroup(F);
 g.test('pass_end_invalid_order')
   .desc(
     `
-  Test that beginning a  {compute,render} pass before ending the previous {compute,render} pass
+  Test that beginning a {compute,render} pass before ending the previous {compute,render} pass
   causes an error.
 
   TODO: Need to add a control case to be sure a validation error happens because of ending order.
@@ -113,4 +113,51 @@ g.test('call_after_successful_finish')
       }, IsEncoderFinished);
       encoder.finish();
     }
+  });
+
+g.test('pass_end_none')
+  .desc(
+    `
+  Test that ending a {compute,render} pass without ending the passes generates a validation error.
+  `
+  )
+  .paramsSubcasesOnly(u => u.combine('passType', ['compute', 'render']).combine('endCount', [0, 1]))
+  .fn(async t => {
+    const { passType, endCount } = t.params;
+
+    const encoder = t.device.createCommandEncoder();
+
+    const pass = passType === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder);
+
+    for (let i = 0; i < endCount; ++i) {
+      pass.end();
+    }
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, endCount === 0);
+  });
+
+g.test('pass_end_twice')
+  .desc('Test that ending a {compute,render} pass twice generates a validation error.')
+  .paramsSubcasesOnly(u =>
+    u //
+      .combine('passType', ['compute', 'render'])
+      .combine('endTwice', [false, true])
+  )
+  .fn(async t => {
+    const { passType, endTwice } = t.params;
+
+    const encoder = t.device.createCommandEncoder();
+
+    const pass = passType === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder);
+
+    pass.end();
+    if (endTwice) {
+      t.expectValidationError(() => {
+        pass.end();
+      });
+    }
+
+    encoder.finish();
   });
