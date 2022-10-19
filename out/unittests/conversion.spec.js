@@ -17,6 +17,7 @@ i32,
 kFloat16Format,
 kFloat32Format,
 pack2x16float,
+pack2x16snorm,
 pack2x16unorm,
 
 u32,
@@ -285,6 +286,35 @@ fn((test) => {
   objectEquals(got_str.sort(), expect_str.sort()),
   `pack2x16float(${inputs}) returned [${got_str}]. Expected [${expect}]`);
 
+});
+
+g.test('pack2x16snorm').
+paramsSimple([
+// Normals
+{ inputs: [0, 0], result: 0x00000000 },
+{ inputs: [1, 0], result: 0x00007fff },
+{ inputs: [0, 1], result: 0x7fff0000 },
+{ inputs: [1, 1], result: 0x7fff7fff },
+{ inputs: [-1, -1], result: 0x80018001 },
+{ inputs: [10, 10], result: 0x7fff7fff },
+{ inputs: [-10, -10], result: 0x80018001 },
+{ inputs: [0.1, 0.1], result: 0x0ccd0ccd },
+{ inputs: [-0.1, -0.1], result: 0xf333f333 },
+{ inputs: [0.5, 0.5], result: 0x40004000 },
+{ inputs: [-0.5, -0.5], result: 0xc001c001 },
+{ inputs: [0.1, 0.5], result: 0x40000ccd },
+{ inputs: [-0.1, -0.5], result: 0xc001f333 },
+
+// Subnormals
+{ inputs: [kValue.f32.subnormal.positive.max, 1], result: 0x7fff0000 },
+{ inputs: [kValue.f32.subnormal.negative.min, 1], result: 0x7fff0000 }]).
+
+fn((test) => {
+  const inputs = test.params.inputs;
+  const got = pack2x16snorm(inputs[0], inputs[1]);
+  const expect = test.params.result;
+
+  test.expect(got === expect, `pack2x16snorm(${inputs}) returned ${got}. Expected [${expect}]`);
 });
 
 g.test('pack2x16unorm').

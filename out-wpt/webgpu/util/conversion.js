@@ -130,6 +130,7 @@ export const kFloat16Format = { signed: 1, exponentBits: 5, mantissaBits: 10, bi
 const workingData = new ArrayBuffer(4);
 const workingDataU32 = new Uint32Array(workingData);
 const workingDataU16 = new Uint16Array(workingData);
+const workingDataI16 = new Int16Array(workingData);
 const workingDataF32 = new Float32Array(workingData);
 const workingDataF16 = new Float16Array(workingData);
 
@@ -270,15 +271,9 @@ export function packRGB9E5UFloat(r, g, b) {
  *          out of bounds.
  */
 export function pack2x16float(x, y) {
-  if (!isFiniteF16(x) || !isFiniteF16(y)) {
-    // This indicates any value is valid, so it isn't worth bothering
-    // calculating the more restrictive possibilities.
-    return [undefined];
-  }
-
   // Generates all possible valid u16 bit fields for a given f32 to f16 conversion.
   // Assumes FTZ for both the f32 and f16 value is allowed.
-  const generate_u16s = n => {
+  const generateU16s = n => {
     let contains_subnormals = isSubnormalNumberF32(n);
     const n_f16s = correctlyRoundedF16(n);
     contains_subnormals ||= n_f16s.some(isSubnormalNumberF16);
@@ -301,9 +296,13 @@ export function pack2x16float(x, y) {
     return n_u16s;
   };
 
-  const x_u16s = generate_u16s(x);
-  const y_u16s = generate_u16s(y);
-  const u16_pairs = cartesianProduct(x_u16s, y_u16s);
+  if (!isFiniteF16(x) || !isFiniteF16(y)) {
+    // This indicates any value is valid, so it isn't worth bothering
+    // calculating the more restrictive possibilities.
+    return [undefined];
+  }
+
+  const u16_pairs = cartesianProduct(generateU16s(x), generateU16s(y));
 
   const results = new Array();
   for (const p of u16_pairs) {
@@ -314,6 +313,31 @@ export function pack2x16float(x, y) {
   }
 
   return results;
+}
+
+/**
+ * Converts two normalized f32s to i16s and then packs them in a u32
+ *
+ * This should implement the same behaviour as the builtin `pack2x16snorm` from
+ * WGSL.
+ *
+ * Caller is responsible to ensuring inputs are normalized f32s
+ *
+ * @param x first f32 to be packed
+ * @param y second f32 to be packed
+ * @returns a number that is expected result of pack2x16snorm.
+ */
+export function pack2x16snorm(x, y) {
+  // Converts f32 to i16 via the pack2x16snorm formula.
+  // FTZ is not explicitly handled, because all subnormals will produce a value
+  // between 0 and 1, but significantly away from the edges, so floor goes to 0.
+  const generateI16 = n => {
+    return Math.floor(0.5 + 32767 * Math.min(1, Math.max(-1, n)));
+  };
+
+  workingDataI16[0] = generateI16(x);
+  workingDataI16[1] = generateI16(y);
+  return workingDataU32[0];
 }
 
 /**
@@ -332,14 +356,12 @@ export function pack2x16unorm(x, y) {
   // Converts f32 to u16 via the pack2x16unorm formula.
   // FTZ is not explicitly handled, because all subnormals will produce a value
   // between 0.5 and much less than 1, so floor goes to 0.
-  const generate_u16 = n => {
+  const generateU16 = n => {
     return Math.floor(0.5 + 65535 * Math.min(1, Math.max(0, n)));
   };
-  x = generate_u16(x);
-  y = generate_u16(y);
 
-  workingDataU16[0] = x;
-  workingDataU16[1] = y;
+  workingDataU16[0] = generateU16(x);
+  workingDataU16[1] = generateU16(y);
   return workingDataU32[0];
 }
 
