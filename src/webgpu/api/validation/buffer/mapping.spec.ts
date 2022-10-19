@@ -803,29 +803,25 @@ g.test('getMappedRange,disjoinRanges_many')
 
 g.test('unmap,state,unmapped')
   .desc(
-    `Test it is invalid to call unmap on a buffer that is unmapped (at creation, or after
+    `Test it is valid to call unmap on a buffer that is unmapped (at creation, or after
     mappedAtCreation or mapAsync)`
   )
   .fn(async t => {
-    // It is invalid to call unmap after creation of an unmapped buffer.
+    // It is valid to call unmap after creation of an unmapped buffer.
     {
       const buffer = t.device.createBuffer({ size: 16, usage: GPUBufferUsage.MAP_READ });
-      t.expectValidationError(() => {
-        buffer.unmap();
-      });
+      buffer.unmap();
     }
 
-    // It is invalid to call unmap after unmapping a mapAsynced buffer.
+    // It is valid to call unmap after unmapping a mapAsynced buffer.
     {
       const buffer = t.createMappableBuffer(GPUMapMode.READ, 16);
       await buffer.mapAsync(GPUMapMode.READ);
       buffer.unmap();
-      t.expectValidationError(() => {
-        buffer.unmap();
-      });
+      buffer.unmap();
     }
 
-    // It is invalid to call unmap after unmapping a mappedAtCreation buffer.
+    // It is valid to call unmap after unmapping a mappedAtCreation buffer.
     {
       const buffer = t.device.createBuffer({
         usage: GPUBufferUsage.MAP_READ,
@@ -833,38 +829,32 @@ g.test('unmap,state,unmapped')
         mappedAtCreation: true,
       });
       buffer.unmap();
-      t.expectValidationError(() => {
-        buffer.unmap();
-      });
+      buffer.unmap();
     }
   });
 
 g.test('unmap,state,destroyed')
   .desc(
-    `Test it is invalid to call unmap on a buffer that is destroyed (at creation, or after
+    `Test it is valid to call unmap on a buffer that is destroyed (at creation, or after
     mappedAtCreation or mapAsync)`
   )
   .fn(async t => {
-    // It is invalid to call unmap after destruction of an unmapped buffer.
+    // It is valid to call unmap after destruction of an unmapped buffer.
     {
       const buffer = t.device.createBuffer({ size: 16, usage: GPUBufferUsage.MAP_READ });
       buffer.destroy();
-      t.expectValidationError(() => {
-        buffer.unmap();
-      });
+      buffer.unmap();
     }
 
-    // It is invalid to call unmap after destroying a mapAsynced buffer.
+    // It is valid to call unmap after destroying a mapAsynced buffer.
     {
       const buffer = t.createMappableBuffer(GPUMapMode.READ, 16);
       await buffer.mapAsync(GPUMapMode.READ);
       buffer.destroy();
-      t.expectValidationError(() => {
-        buffer.unmap();
-      });
+      buffer.unmap();
     }
 
-    // It is invalid to call unmap after destroying a mappedAtCreation buffer.
+    // It is valid to call unmap after destroying a mappedAtCreation buffer.
     {
       const buffer = t.device.createBuffer({
         usage: GPUBufferUsage.MAP_READ,
@@ -872,9 +862,7 @@ g.test('unmap,state,destroyed')
         mappedAtCreation: true,
       });
       buffer.destroy();
-      t.expectValidationError(() => {
-        buffer.unmap();
-      });
+      buffer.unmap();
     }
   });
 
