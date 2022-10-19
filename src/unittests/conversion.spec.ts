@@ -19,6 +19,7 @@ import {
   pack2x16float,
   pack2x16snorm,
   pack2x16unorm,
+  pack4x8snorm,
   Scalar,
   u32,
   vec2,
@@ -338,4 +339,44 @@ g.test('pack2x16unorm')
     const expect = test.params.result;
 
     test.expect(got === expect, `pack2x16unorm(${inputs}) returned ${got}. Expected [${expect}]`);
+  });
+
+g.test('pack4x8snorm')
+  .paramsSimple([
+    // Normals
+    { inputs: [0, 0, 0, 0], result: 0x00000000 },
+    { inputs: [1, 0, 0, 0], result: 0x0000007f },
+    { inputs: [0, 1, 0, 0], result: 0x00007f00 },
+    { inputs: [0, 0, 1, 0], result: 0x007f0000 },
+    { inputs: [0, 0, 0, 1], result: 0x7f000000 },
+    { inputs: [1, 1, 1, 1], result: 0x7f7f7f7f },
+    { inputs: [10, 10, 10, 10], result: 0x7f7f7f7f },
+    { inputs: [-1, 0, 0, 0], result: 0x00000081 },
+    { inputs: [0, -1, 0, 0], result: 0x00008100 },
+    { inputs: [0, 0, -1, 0], result: 0x00810000 },
+    { inputs: [0, 0, 0, -1], result: 0x81000000 },
+    { inputs: [-1, -1, -1, -1], result: 0x81818181 },
+    { inputs: [-10, -10, -10, -10], result: 0x81818181 },
+    { inputs: [0.1, 0.1, 0.1, 0.1], result: 0x0d0d0d0d },
+    { inputs: [-0.1, -0.1, -0.1, -0.1], result: 0xf3f3f3f3 },
+    { inputs: [0.1, -0.1, 0.1, -0.1], result: 0xf30df30d },
+    { inputs: [0.5, 0.5, 0.5, 0.5], result: 0x40404040 },
+    { inputs: [-0.5, -0.5, -0.5, -0.5], result: 0xc1c1c1c1 },
+    { inputs: [-0.5, 0.5, -0.5, 0.5], result: 0x40c140c1 },
+    { inputs: [0.1, 0.5, 0.1, 0.5], result: 0x400d400d },
+    { inputs: [-0.1, -0.5, -0.1, -0.5], result: 0xc1f3c1f3 },
+
+    // Subnormals
+    { inputs: [kValue.f32.subnormal.positive.max, 1, 1, 1], result: 0x7f7f7f00 },
+    { inputs: [kValue.f32.subnormal.negative.min, 1, 1, 1], result: 0x7f7f7f00 },
+  ] as const)
+  .fn(test => {
+    const inputs = test.params.inputs;
+    const got = pack4x8snorm(inputs[0], inputs[1], inputs[2], inputs[3]);
+    const expect = test.params.result;
+
+    test.expect(
+      got === expect,
+      `pack4x8snorm(${inputs}) returned ${u32(got)}. Expected [${expect}]`
+    );
   });
