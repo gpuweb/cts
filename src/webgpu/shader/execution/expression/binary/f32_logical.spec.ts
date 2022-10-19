@@ -6,7 +6,7 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { anyOf } from '../../../../util/compare.js';
 import { bool, f32, Scalar, TypeBool, TypeF32 } from '../../../../util/conversion.js';
-import { flushSubnormalScalarF32, fullF32Range } from '../../../../util/math.js';
+import { flushSubnormalScalarF32, kVectorTestValues } from '../../../../util/math.js';
 import { allInputSources, Case, run } from '../expression.js';
 
 import { binary } from './binary.js';
@@ -55,12 +55,8 @@ Accuracy: Correct result
       return (lhs.value as number) === (rhs.value as number);
     };
 
-    const cases: Array<Case> = [];
-    const numeric_range = fullF32Range();
-    numeric_range.forEach(lhs => {
-      numeric_range.forEach(rhs => {
-        cases.push(makeCase(lhs, rhs, truthFunc));
-      });
+    const cases = kVectorTestValues[2].map(v => {
+      return makeCase(v[0], v[1], truthFunc);
     });
 
     await run(t, binary('=='), [TypeF32, TypeF32], TypeBool, t.params, cases);
@@ -82,12 +78,8 @@ Accuracy: Correct result
       return (lhs.value as number) !== (rhs.value as number);
     };
 
-    const cases: Array<Case> = [];
-    const numeric_range = fullF32Range();
-    numeric_range.forEach(lhs => {
-      numeric_range.forEach(rhs => {
-        cases.push(makeCase(lhs, rhs, truthFunc));
-      });
+    const cases = kVectorTestValues[2].map(v => {
+      return makeCase(v[0], v[1], truthFunc);
     });
 
     await run(t, binary('!='), [TypeF32, TypeF32], TypeBool, t.params, cases);
@@ -109,12 +101,8 @@ Accuracy: Correct result
       return (lhs.value as number) < (rhs.value as number);
     };
 
-    const cases: Array<Case> = [];
-    const numeric_range = fullF32Range();
-    numeric_range.forEach(lhs => {
-      numeric_range.forEach(rhs => {
-        cases.push(makeCase(lhs, rhs, truthFunc));
-      });
+    const cases = kVectorTestValues[2].map(v => {
+      return makeCase(v[0], v[1], truthFunc);
     });
 
     await run(t, binary('<'), [TypeF32, TypeF32], TypeBool, t.params, cases);
@@ -136,12 +124,8 @@ Accuracy: Correct result
       return (lhs.value as number) <= (rhs.value as number);
     };
 
-    const cases: Array<Case> = [];
-    const numeric_range = fullF32Range();
-    numeric_range.forEach(lhs => {
-      numeric_range.forEach(rhs => {
-        cases.push(makeCase(lhs, rhs, truthFunc));
-      });
+    const cases = kVectorTestValues[2].map(v => {
+      return makeCase(v[0], v[1], truthFunc);
     });
 
     await run(t, binary('<='), [TypeF32, TypeF32], TypeBool, t.params, cases);
@@ -163,12 +147,8 @@ Accuracy: Correct result
       return (lhs.value as number) > (rhs.value as number);
     };
 
-    const cases: Array<Case> = [];
-    const numeric_range = fullF32Range();
-    numeric_range.forEach(lhs => {
-      numeric_range.forEach(rhs => {
-        cases.push(makeCase(lhs, rhs, truthFunc));
-      });
+    const cases = kVectorTestValues[2].map(v => {
+      return makeCase(v[0], v[1], truthFunc);
     });
 
     await run(t, binary('>'), [TypeF32, TypeF32], TypeBool, t.params, cases);
@@ -190,12 +170,8 @@ Accuracy: Correct result
       return (lhs.value as number) >= (rhs.value as number);
     };
 
-    const cases: Array<Case> = [];
-    const numeric_range = fullF32Range();
-    numeric_range.forEach(lhs => {
-      numeric_range.forEach(rhs => {
-        cases.push(makeCase(lhs, rhs, truthFunc));
-      });
+    const cases = kVectorTestValues[2].map(v => {
+      return makeCase(v[0], v[1], truthFunc);
     });
 
     await run(t, binary('>='), [TypeF32, TypeF32], TypeBool, t.params, cases);
