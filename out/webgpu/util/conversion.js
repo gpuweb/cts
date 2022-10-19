@@ -139,6 +139,7 @@ const workingDataU16 = new Uint16Array(workingData);
 const workingDataI16 = new Int16Array(workingData);
 const workingDataF32 = new Float32Array(workingData);
 const workingDataF16 = new Float16Array(workingData);
+const workingDataI8 = new Int8Array(workingData);
 
 /** Bitcast u32 (represented as integer Number) to f32 (represented as floating-point Number). */
 export function float32BitsToNumber(bits) {
@@ -308,10 +309,8 @@ export function pack2x16float(x, y) {
     return [undefined];
   }
 
-  const u16_pairs = cartesianProduct(generateU16s(x), generateU16s(y));
-
   const results = new Array();
-  for (const p of u16_pairs) {
+  for (const p of cartesianProduct(generateU16s(x), generateU16s(y))) {
     assert(p.length === 2, 'cartesianProduct of 2 arrays returned an entry with not 2 elements');
     workingDataU16[0] = p[0];
     workingDataU16[1] = p[1];
@@ -343,6 +342,7 @@ export function pack2x16snorm(x, y) {
 
   workingDataI16[0] = generateI16(x);
   workingDataI16[1] = generateI16(y);
+
   return workingDataU32[0];
 }
 
@@ -368,6 +368,33 @@ export function pack2x16unorm(x, y) {
 
   workingDataU16[0] = generateU16(x);
   workingDataU16[1] = generateU16(y);
+
+  return workingDataU32[0];
+}
+
+/**
+ * Converts four normalized f32s to i8s and then packs them in a u32
+ *
+ * This should implement the same behaviour as the builtin `pack4x8snorm` from
+ * WGSL.
+ *
+ * Caller is responsible to ensuring inputs are normalized f32s
+ *
+ * @param vals four f32s to be packed
+ * @returns a number that is expected result of pack4x8usorm.
+ */
+export function pack4x8snorm(...vals) {
+  // Converts f32 to u8 via the pack4x8snorm formula.
+  // FTZ is not explicitly handled, because all subnormals will produce a value
+  // between 0 and 1, so floor goes to 0.
+  const generateI8 = (n) => {
+    return Math.floor(0.5 + 127 * Math.min(1, Math.max(-1, n)));
+  };
+
+  for (const idx in vals) {
+    workingDataI8[idx] = generateI8(vals[idx]);
+  }
+
   return workingDataU32[0];
 }
 
