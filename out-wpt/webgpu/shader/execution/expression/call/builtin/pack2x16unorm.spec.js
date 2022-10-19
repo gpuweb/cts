@@ -8,6 +8,20 @@ bits 16 × i through 16 × i + 15 of the result.
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
+import { kValue } from '../../../../../util/constants.js';
+import {
+  f32,
+  pack2x16unorm,
+  TypeF32,
+  TypeU32,
+  TypeVec,
+  u32,
+  vec2,
+} from '../../../../../util/conversion.js';
+import { fullF32Range, quantizeToF32 } from '../../../../../util/math.js';
+import { allInputSources, run } from '../../expression.js';
+
+import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -18,4 +32,28 @@ g.test('pack')
 @const fn pack2x16unorm(e: vec2<f32>) -> u32
 `
   )
-  .unimplemented();
+  .params(u => u.combine('inputSource', allInputSources))
+  .fn(async t => {
+    const makeCase = (x, y) => {
+      x = quantizeToF32(x);
+      y = quantizeToF32(y);
+      return { input: [vec2(f32(x), f32(y))], expected: u32(pack2x16unorm(x, y)) };
+    };
+
+    // Returns a value normalized to [0, 1].
+    const normalize_f32 = n => {
+      return n > 0 ? n / kValue.f32.positive.max : n / kValue.f32.negative.min;
+    };
+
+    const numeric_range = fullF32Range();
+    const cases = [];
+    numeric_range.forEach(x => {
+      numeric_range.forEach(y => {
+        cases.push(makeCase(x, y));
+        // Interesting cases are on [0, 1]
+        cases.push(makeCase(normalize_f32(x), normalize_f32(y)));
+      });
+    });
+
+    await run(t, builtin('pack2x16unorm'), [TypeVec(2, TypeF32)], TypeU32, t.params, cases);
+  });

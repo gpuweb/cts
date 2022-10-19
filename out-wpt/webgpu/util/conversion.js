@@ -317,6 +317,33 @@ export function pack2x16float(x, y) {
 }
 
 /**
+ * Converts two normalized f32s to u16s and then packs them in a u32
+ *
+ * This should implement the same behaviour as the builtin `pack2x16unorm` from
+ * WGSL.
+ *
+ * Caller is responsible to ensuring inputs are normalized f32s
+ *
+ * @param x first f32 to be packed
+ * @param y second f32 to be packed
+ * @returns an number that is expected result of pack2x16unorm.
+ */
+export function pack2x16unorm(x, y) {
+  // Converts f32 to u16 via the pack2x16unorm formula.
+  // FTZ is not explicitly handled, because all subnormals will produce a value
+  // between 0.5 and much less than 1, so floor goes to 0.
+  const generate_u16 = n => {
+    return Math.floor(0.5 + 65535 * Math.min(1, Math.max(0, n)));
+  };
+  x = generate_u16(x);
+  y = generate_u16(y);
+
+  workingDataU16[0] = x;
+  workingDataU16[1] = y;
+  return workingDataU32[0];
+}
+
+/**
  * Asserts that a number is within the representable (inclusive) of the integer type with the
  * specified number of bits and signedness.
  *

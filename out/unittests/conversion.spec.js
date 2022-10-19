@@ -17,6 +17,7 @@ i32,
 kFloat16Format,
 kFloat32Format,
 pack2x16float,
+pack2x16unorm,
 
 u32,
 vec2,
@@ -284,5 +285,28 @@ fn((test) => {
   objectEquals(got_str.sort(), expect_str.sort()),
   `pack2x16float(${inputs}) returned [${got_str}]. Expected [${expect}]`);
 
+});
+
+g.test('pack2x16unorm').
+paramsSimple([
+// Normals
+{ inputs: [0, 0], result: 0x00000000 },
+{ inputs: [1, 0], result: 0x0000ffff },
+{ inputs: [1, 1], result: 0xffffffff },
+{ inputs: [-1, -1], result: 0x00000000 },
+{ inputs: [0.1, 0.1], result: 0x199a199a },
+{ inputs: [0.5, 0.5], result: 0x80008000 },
+{ inputs: [0.1, 0.5], result: 0x8000199a },
+{ inputs: [10, 10], result: 0xffffffff },
+
+// Subnormals
+{ inputs: [kValue.f32.subnormal.positive.max, 1], result: 0xffff0000 }]).
+
+fn((test) => {
+  const inputs = test.params.inputs;
+  const got = pack2x16unorm(inputs[0], inputs[1]);
+  const expect = test.params.result;
+
+  test.expect(got === expect, `pack2x16unorm(${inputs}) returned ${got}. Expected [${expect}]`);
 });
 //# sourceMappingURL=conversion.spec.js.map
