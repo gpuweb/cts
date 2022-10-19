@@ -297,6 +297,7 @@ g.test('pack2x16unorm')
     { inputs: [0.1, 0.1], result: 0x199a199a },
     { inputs: [0.5, 0.5], result: 0x80008000 },
     { inputs: [0.1, 0.5], result: 0x8000199a },
+    { inputs: [10, 10], result: 0xffffffff },
 
     // Subnormals
     { inputs: [kValue.f32.subnormal.positive.max, 1], result: 0xffff0000 },
