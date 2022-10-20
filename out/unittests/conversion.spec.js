@@ -189,9 +189,9 @@ g.test('scalarWGSL').fn((t) => {
   [u32(1), '1u'],
   [u32(2000000000), '2000000000u'],
   [u32(-1), '4294967295u'],
-  [i32(0), '0i'],
-  [i32(1), '1i'],
-  [i32(-1), '-1i'],
+  [i32(0), 'i32(0)'],
+  [i32(1), 'i32(1)'],
+  [i32(-1), 'i32(-1)'],
   [bool(true), 'true'],
   [bool(false), 'false']];
 
@@ -211,13 +211,13 @@ g.test('vectorWGSL').fn((t) => {
   [vec2(f32(42.0), f32(24.0)), 'vec2(42.0f, 24.0f)'],
   [vec2(f16Bits(0x5140), f16Bits(0x4e00)), 'vec2(42.0h, 24.0h)'],
   [vec2(u32(42), u32(24)), 'vec2(42u, 24u)'],
-  [vec2(i32(42), i32(24)), 'vec2(42i, 24i)'],
+  [vec2(i32(42), i32(24)), 'vec2(i32(42), i32(24))'],
   [vec2(bool(false), bool(true)), 'vec2(false, true)'],
 
   [vec3(f32(0.0), f32(1.0), f32(-1.0)), 'vec3(0.0f, 1.0f, -1.0f)'],
   [vec3(f16Bits(0), f16Bits(0x3c00), f16Bits(0xbc00)), 'vec3(0.0h, 1.0h, -1.0h)'],
   [vec3(u32(0), u32(1), u32(-1)), 'vec3(0u, 1u, 4294967295u)'],
-  [vec3(i32(0), i32(1), i32(-1)), 'vec3(0i, 1i, -1i)'],
+  [vec3(i32(0), i32(1), i32(-1)), 'vec3(i32(0), i32(1), i32(-1))'],
   [vec3(bool(true), bool(false), bool(true)), 'vec3(true, false, true)'],
 
   [vec4(f32(1.0), f32(-2.0), f32(4.0), f32(-8.0)), 'vec4(1.0f, -2.0f, 4.0f, -8.0f)'],
@@ -226,7 +226,7 @@ g.test('vectorWGSL').fn((t) => {
   'vec4(-1.0h, 2.0h, -4.0h, 8.0h)'],
 
   [vec4(u32(1), u32(-2), u32(4), u32(-8)), 'vec4(1u, 4294967294u, 4u, 4294967288u)'],
-  [vec4(i32(1), i32(-2), i32(4), i32(-8)), 'vec4(1i, -2i, 4i, -8i)'],
+  [vec4(i32(1), i32(-2), i32(4), i32(-8)), 'vec4(i32(1), i32(-2), i32(4), i32(-8))'],
   [vec4(bool(false), bool(true), bool(true), bool(false)), 'vec4(false, true, true, false)']];
 
   for (const [value, expect] of cases) {

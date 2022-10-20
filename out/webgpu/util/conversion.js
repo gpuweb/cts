@@ -712,7 +712,7 @@ export class Scalar {
         case 'u32':
           return `${this.value}u`;
         case 'i32':
-          return `${this.value}i`;
+          return `i32(${this.value})`;
         case 'bool':
           return `${this.value}`;}
 
