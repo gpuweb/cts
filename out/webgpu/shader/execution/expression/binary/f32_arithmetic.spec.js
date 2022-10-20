@@ -12,14 +12,12 @@ multiplicationInterval,
 remainderInterval,
 subtractionInterval } from
 '../../../../util/f32_interval.js';
-import { cartesianProduct, fullF32Range } from '../../../../util/math.js';
+import { kVectorTestValues } from '../../../../util/math.js';
 import { allInputSources, makeBinaryToF32IntervalCase, run } from '../expression.js';
 
 import { binary } from './binary.js';
 
 export const g = makeTestGroup(GPUTest);
-
-const kTestValues = cartesianProduct(fullF32Range(), fullF32Range());
 
 g.test('addition').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
@@ -37,7 +35,7 @@ fn(async (t) => {
     return makeBinaryToF32IntervalCase(lhs, rhs, additionInterval);
   };
 
-  const cases = kTestValues.map((v) => {
+  const cases = kVectorTestValues[2].map((v) => {
     return makeCase(v[0], v[1]);
   });
 
@@ -60,7 +58,7 @@ fn(async (t) => {
     return makeBinaryToF32IntervalCase(lhs, rhs, subtractionInterval);
   };
 
-  const cases = kTestValues.map((v) => {
+  const cases = kVectorTestValues[2].map((v) => {
     return makeCase(v[0], v[1]);
   });
 
@@ -83,7 +81,7 @@ fn(async (t) => {
     return makeBinaryToF32IntervalCase(lhs, rhs, multiplicationInterval);
   };
 
-  const cases = kTestValues.map((v) => {
+  const cases = kVectorTestValues[2].map((v) => {
     return makeCase(v[0], v[1]);
   });
 
@@ -106,7 +104,7 @@ fn(async (t) => {
     return makeBinaryToF32IntervalCase(lhs, rhs, divisionInterval);
   };
 
-  const cases = kTestValues.map((v) => {
+  const cases = kVectorTestValues[2].map((v) => {
     return makeCase(v[0], v[1]);
   });
 
@@ -129,7 +127,7 @@ fn(async (t) => {
     return makeBinaryToF32IntervalCase(lhs, rhs, remainderInterval);
   };
 
-  const cases = kTestValues.map((v) => {
+  const cases = kVectorTestValues[2].map((v) => {
     return makeCase(v[0], v[1]);
   });
 
