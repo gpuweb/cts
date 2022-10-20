@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>float16ToUint16 | @webgpu/cts</title><meta name="description" content="Documentation for @webgpu/cts"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script async src="../assets/search.js" id="search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
+<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>pack4x8unorm | @webgpu/cts</title><meta name="description" content="Documentation for @webgpu/cts"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script async src="../assets/search.js" id="search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
 <div class="tsd-toolbar-contents container">
 <div class="table-cell" id="tsd-search" data-base="..">
 <div class="field"><label for="tsd-search-field" class="tsd-widget search no-caption"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.7824 13.833L12.6666 10.7177C12.5259 10.5771 12.3353 10.499 12.1353 10.499H11.6259C12.4884 9.39596 13.001 8.00859 13.001 6.49937C13.001 2.90909 10.0914 0 6.50048 0C2.90959 0 0 2.90909 0 6.49937C0 10.0896 2.90959 12.9987 6.50048 12.9987C8.00996 12.9987 9.39756 12.4863 10.5008 11.6239V12.1332C10.5008 12.3332 10.5789 12.5238 10.7195 12.6644L13.8354 15.7797C14.1292 16.0734 14.6042 16.0734 14.8948 15.7797L15.7793 14.8954C16.0731 14.6017 16.0731 14.1267 15.7824 13.833ZM6.50048 10.499C4.29094 10.499 2.50018 8.71165 2.50018 6.49937C2.50018 4.29021 4.28781 2.49976 6.50048 2.49976C8.71001 2.49976 10.5008 4.28708 10.5008 6.49937C10.5008 8.70852 8.71314 10.499 6.50048 10.499Z" fill="var(--color-text)"></path></svg></label><input type="text" id="tsd-search-field" aria-label="Search"/></div>
@@ -12,22 +12,29 @@
 <ul class="tsd-breadcrumb">
 <li><a href="../modules.html">@webgpu/cts</a></li>
 <li><a href="../modules/webgpu_util_conversion.html">webgpu/util/conversion</a></li>
-<li><a href="webgpu_util_conversion.float16ToUint16.html">float16ToUint16</a></li></ul>
-<h1>Function float16ToUint16</h1></div>
+<li><a href="webgpu_util_conversion.pack4x8unorm.html">pack4x8unorm</a></li></ul>
+<h1>Function pack4x8unorm</h1></div>
 <section class="tsd-panel">
 <ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
-<li class="tsd-signature tsd-anchor-link" id="float16ToUint16">float16<wbr/>To<wbr/>Uint16<span class="tsd-signature-symbol">(</span>f16<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><a href="#float16ToUint16" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" id="icon-anchor-a"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5" id="icon-anchor-b"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5" id="icon-anchor-c"></path></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="pack4x8unorm">pack4x8unorm<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span>vals<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><a href="#pack4x8unorm" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" id="icon-anchor-a"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5" id="icon-anchor-b"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5" id="icon-anchor-c"></path></svg></a></li>
 <li class="tsd-description">
-<div class="tsd-comment tsd-typography"><p>Converts a 16-bit float value to a 16-bit unsigned integer value</p>
+<div class="tsd-comment tsd-typography"><p>Converts four normalized f32s to u8s and then packs them in a u32</p>
+<p>This should implement the same behaviour as the builtin <code>pack4x8unorm</code> from
+WGSL.</p>
+<p>Caller is responsible to ensuring inputs are normalized f32s</p>
+
+<h3>Returns</h3><p>a number that is expected result of pack4x8unorm.</p>
 </div>
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5>f16: <span class="tsd-signature-type">number</span></h5></li></ul></div>
+<h5><code class="tsd-tag ts-flagRest">Rest</code> <span class="tsd-signature-symbol">...</span>vals: <span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">]</span></h5>
+<div class="tsd-comment tsd-typography"><p>four f32s to be packed</p>
+</div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gpuweb/cts/blob/ff9abaa/src/webgpu/util/conversion.ts#L495">src/webgpu/util/conversion.ts:495</a></li></ul></aside></li></ul></section></div>
+<li>Defined in <a href="https://github.com/gpuweb/cts/blob/ff9abaa/src/webgpu/util/conversion.ts#L413">src/webgpu/util/conversion.ts:413</a></li></ul></aside></li></ul></section></div>
 <div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 <div class="tsd-navigation settings">
 <details class="tsd-index-accordion"><summary class="tsd-accordion-summary">
@@ -149,7 +156,7 @@
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_conversion.f64.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>f64</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_conversion.float16BitsToFloat32.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>float16<wbr/>Bits<wbr/>To<wbr/>Float32</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_conversion.float16ToInt16.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>float16<wbr/>To<wbr/>Int16</a></li>
-<li class="current tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_conversion.float16ToUint16.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>float16<wbr/>To<wbr/>Uint16</a></li>
+<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_conversion.float16ToUint16.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>float16<wbr/>To<wbr/>Uint16</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_conversion.float32BitsToNumber.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>float32<wbr/>Bits<wbr/>To<wbr/>Number</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_conversion.float32ToFloat16Bits.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>float32<wbr/>To<wbr/>Float16<wbr/>Bits</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_conversion.float32ToFloatBits.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>float32<wbr/>To<wbr/>Float<wbr/>Bits</a></li>
@@ -175,7 +182,7 @@
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_conversion.pack2x16snorm.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>pack2x16snorm</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_conversion.pack2x16unorm.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>pack2x16unorm</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_conversion.pack4x8snorm.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>pack4x8snorm</a></li>
-<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_conversion.pack4x8unorm.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>pack4x8unorm</a></li>
+<li class="current tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_conversion.pack4x8unorm.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>pack4x8unorm</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_conversion.packRGB9E5UFloat.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>packRGB9<wbr/>E5UFloat</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_conversion.scalarType-1.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>scalar<wbr/>Type</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_conversion.scalarTypeOf.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>scalar<wbr/>Type<wbr/>Of</a></li>

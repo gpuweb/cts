@@ -136,9 +136,10 @@ export const kFloat16Format = { signed: 1, exponentBits: 5, mantissaBits: 10, bi
 const workingData = new ArrayBuffer(4);
 const workingDataU32 = new Uint32Array(workingData);
 const workingDataU16 = new Uint16Array(workingData);
-const workingDataI16 = new Int16Array(workingData);
+const workingDataU8 = new Uint8Array(workingData);
 const workingDataF32 = new Float32Array(workingData);
 const workingDataF16 = new Float16Array(workingData);
+const workingDataI16 = new Int16Array(workingData);
 const workingDataI8 = new Int8Array(workingData);
 
 /** Bitcast u32 (represented as integer Number) to f32 (represented as floating-point Number). */
@@ -393,6 +394,32 @@ export function pack4x8snorm(...vals) {
 
   for (const idx in vals) {
     workingDataI8[idx] = generateI8(vals[idx]);
+  }
+
+  return workingDataU32[0];
+}
+
+/**
+ * Converts four normalized f32s to u8s and then packs them in a u32
+ *
+ * This should implement the same behaviour as the builtin `pack4x8unorm` from
+ * WGSL.
+ *
+ * Caller is responsible to ensuring inputs are normalized f32s
+ *
+ * @param vals four f32s to be packed
+ * @returns a number that is expected result of pack4x8unorm.
+ */
+export function pack4x8unorm(...vals) {
+  // Converts f32 to u8 via the pack4x8unorm formula.
+  // FTZ is not explicitly handled, because all subnormals will produce a value
+  // between 0.5 and much less than 1, so floor goes to 0.
+  const generateU8 = (n) => {
+    return Math.floor(0.5 + 255 * Math.min(1, Math.max(0, n)));
+  };
+
+  for (const idx in vals) {
+    workingDataU8[idx] = generateU8(vals[idx]);
   }
 
   return workingDataU32[0];

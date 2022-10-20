@@ -7,6 +7,21 @@ bits 8 × i through 8 × i + 7 of the result.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
+import { kValue } from '../../../../../util/constants.js';
+import {
+  f32,
+  pack4x8unorm,
+  Scalar,
+  TypeF32,
+  TypeU32,
+  TypeVec,
+  u32,
+  vec4,
+} from '../../../../../util/conversion.js';
+import { kVectorTestValues, quantizeToF32 } from '../../../../../util/math.js';
+import { allInputSources, Case, run } from '../../expression.js';
+
+import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -17,4 +32,29 @@ g.test('pack')
 @const fn pack4x8unorm(e: vec4<f32>) -> u32
 `
   )
-  .unimplemented();
+  .params(u => u.combine('inputSource', allInputSources))
+  .fn(async t => {
+    const makeCase = (vals: [number, number, number, number]): Case => {
+      const vals_f32 = new Array<Scalar>(4) as [Scalar, Scalar, Scalar, Scalar];
+      for (const idx in vals) {
+        vals[idx] = quantizeToF32(vals[idx]);
+        vals_f32[idx] = f32(vals[idx]);
+      }
+
+      return { input: [vec4(...vals_f32)], expected: u32(pack4x8unorm(...vals)) };
+    };
+
+    // Returns a value normalized to [0, 1].
+    const normalizeF32 = (n: number): number => {
+      return n > 0 ? n / kValue.f32.positive.max : n / kValue.f32.negative.min;
+    };
+
+    const cases: Array<Case> = kVectorTestValues[4].flatMap(v => {
+      return [
+        makeCase(v as [number, number, number, number]),
+        makeCase(v.map(normalizeF32) as [number, number, number, number]),
+      ];
+    });
+
+    await run(t, builtin('pack4x8unorm'), [TypeVec(4, TypeF32)], TypeU32, t.params, cases);
+  });
