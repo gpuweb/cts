@@ -286,7 +286,7 @@ g.test('pack2x16float')
     // Using strings of the outputs, so they can be easily sorted, since order of the results doesn't matter.
     test.expect(
       objectEquals(got_str.sort(), expect_str.sort()),
-      `pack2x16float(${inputs}) returned [${got_str}]. Expected [${expect}]`
+      `pack2x16float(${inputs}) returned [${got_str}]. Expected [${expect_str}]`
     );
   });
 
