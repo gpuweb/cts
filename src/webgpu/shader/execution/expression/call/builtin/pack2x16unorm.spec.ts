@@ -17,7 +17,7 @@ import {
   u32,
   vec2,
 } from '../../../../../util/conversion.js';
-import { fullF32Range, quantizeToF32 } from '../../../../../util/math.js';
+import { kVectorTestValues, quantizeToF32 } from '../../../../../util/math.js';
 import { allInputSources, Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -44,14 +44,11 @@ g.test('pack')
       return n > 0 ? n / kValue.f32.positive.max : n / kValue.f32.negative.min;
     };
 
-    const numeric_range = fullF32Range();
-    const cases: Array<Case> = [];
-    numeric_range.forEach(x => {
-      numeric_range.forEach(y => {
-        cases.push(makeCase(x, y));
-        // Interesting cases are on [0, 1]
-        cases.push(makeCase(normalizeF32(x), normalizeF32(y)));
-      });
+    const cases: Array<Case> = kVectorTestValues[2].flatMap(v => {
+      return [
+        makeCase(...(v as [number, number])),
+        makeCase(...(v.map(normalizeF32) as [number, number])),
+      ];
     });
 
     await run(t, builtin('pack2x16unorm'), [TypeVec(2, TypeF32)], TypeU32, t.params, cases);

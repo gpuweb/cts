@@ -18,7 +18,7 @@ TypeVec,
 u32,
 vec2 } from
 '../../../../../util/conversion.js';
-import { fullF32Range, quantizeToF32 } from '../../../../../util/math.js';
+import { kVectorTestValues, quantizeToF32 } from '../../../../../util/math.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -61,12 +61,8 @@ fn(async (t) => {
     return { input: [vec2(f32(x), f32(y))], expected: anyOf(...results.map(cmp)) };
   };
 
-  const numeric_range = fullF32Range();
-  const cases = [];
-  numeric_range.forEach((x) => {
-    numeric_range.forEach((y) => {
-      cases.push(makeCase(x, y));
-    });
+  const cases = kVectorTestValues[2].map((v) => {
+    return makeCase(...v);
   });
 
   await run(t, builtin('pack2x16float'), [TypeVec(2, TypeF32)], TypeU32, t.params, cases);

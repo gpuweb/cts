@@ -6,7 +6,6 @@ Component e[i] of the input is converted to an 8-bit twos complement integer val
 ⌊ 0.5 + 127 × min(1, max(-1, e[i])) ⌋ which is then placed in
 bits 8 × i through 8 × i + 7 of the result.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
-import { assert } from '../../../../../../common/util/util.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { kValue } from '../../../../../util/constants.js';
 import {
@@ -19,7 +18,7 @@ TypeVec,
 u32,
 vec4 } from
 '../../../../../util/conversion.js';
-import { cartesianProduct, quantizeToF32, sparseF32Range } from '../../../../../util/math.js';
+import { kVectorTestValues, quantizeToF32 } from '../../../../../util/math.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -50,16 +49,11 @@ fn(async (t) => {
     return n / kValue.f32.positive.max;
   };
 
-  const numeric_range = sparseF32Range();
-  const cases = [];
-  cartesianProduct(numeric_range, numeric_range, numeric_range, numeric_range).forEach((vals) => {
-    assert(
-    vals.length === 4,
-    `Results of cartesianProduct of 4 numbers should be [number, number, number, number]`);
+  const cases = kVectorTestValues[4].flatMap((v) => {
+    return [
+    makeCase(v),
+    makeCase(v.map(normalizeF32))];
 
-    cases.push(makeCase(vals));
-    // Interesting cases are on [-1, 1]
-    cases.push(makeCase(vals.map(normalizeF32)));
   });
 
   await run(t, builtin('pack4x8snorm'), [TypeVec(4, TypeF32)], TypeU32, t.params, cases);
