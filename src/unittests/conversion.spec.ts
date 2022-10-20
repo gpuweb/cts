@@ -20,6 +20,7 @@ import {
   pack2x16snorm,
   pack2x16unorm,
   pack4x8snorm,
+  pack4x8unorm,
   Scalar,
   u32,
   vec2,
@@ -379,4 +380,31 @@ g.test('pack4x8snorm')
       got === expect,
       `pack4x8snorm(${inputs}) returned ${u32(got)}. Expected [${expect}]`
     );
+  });
+
+g.test('pack4x8unorm')
+  .paramsSimple([
+    // Normals
+    { inputs: [0, 0, 0, 0], result: 0x00000000 },
+    { inputs: [1, 0, 0, 0], result: 0x000000ff },
+    { inputs: [0, 1, 0, 0], result: 0x0000ff00 },
+    { inputs: [0, 0, 1, 0], result: 0x00ff0000 },
+    { inputs: [0, 0, 0, 1], result: 0xff000000 },
+    { inputs: [1, 1, 1, 1], result: 0xffffffff },
+    { inputs: [10, 10, 10, 10], result: 0xffffffff },
+    { inputs: [-1, -1, -1, -1], result: 0x00000000 },
+    { inputs: [-10, -10, -10, -10], result: 0x00000000 },
+    { inputs: [0.1, 0.1, 0.1, 0.1], result: 0x1a1a1a1a },
+    { inputs: [0.5, 0.5, 0.5, 0.5], result: 0x80808080 },
+    { inputs: [0.1, 0.5, 0.1, 0.5], result: 0x801a801a },
+
+    // Subnormals
+    { inputs: [kValue.f32.subnormal.positive.max, 1, 1, 1], result: 0xffffff00 },
+  ] as const)
+  .fn(test => {
+    const inputs = test.params.inputs;
+    const got = pack4x8unorm(inputs[0], inputs[1], inputs[2], inputs[3]);
+    const expect = test.params.result;
+
+    test.expect(got === expect, `pack4x8unorm(${inputs}) returned ${got}. Expected [${expect}]`);
   });
