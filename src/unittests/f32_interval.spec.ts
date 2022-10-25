@@ -66,6 +66,7 @@ import {
   toF32Vector,
   truncInterval,
   ulpInterval,
+  unpack4x8unormInterval,
 } from '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -2627,6 +2628,41 @@ g.test('smoothStepInterval')
     t.expect(
       objectEquals(expected, got),
       `smoothStepInterval(${low}, ${high}, ${x}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+interface PointToVectorCase {
+  input: number;
+  expected: IntervalBounds[];
+}
+
+g.test('unpack4x8unormInterval')
+  .paramsSubcasesOnly<PointToVectorCase>(
+    // prettier-ignore
+    [
+      // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
+      // form due to the inherited nature of the errors.
+      { input: 0x00000000, expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // ~[0, 0, 0, 0]
+      { input: 0x000000ff, expected: [[hexToF64(0x3fefffff, 0xb0000000), hexToF64(0x3ff00000, 0x28000000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // ~[1, 0, 0, 0]
+      { input: 0x0000ff00, expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fefffff, 0xb0000000), hexToF64(0x3ff00000, 0x28000000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // ~[0, 1, 0, 0]
+      { input: 0x00ff0000, expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fefffff, 0xb0000000), hexToF64(0x3ff00000, 0x28000000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // ~[0, 0, 1, 0]
+      { input: 0xff000000, expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fefffff, 0xb0000000), hexToF64(0x3ff00000, 0x28000000)]] },  // ~[0, 0, 0, 1]
+      { input: 0x0000ffff, expected: [[hexToF64(0x3fefffff, 0xb0000000), hexToF64(0x3ff00000, 0x28000000)], [hexToF64(0x3fefffff, 0xb0000000), hexToF64(0x3ff00000, 0x28000000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // ~[1, 1, 0, 0]
+      { input: 0xffff0000, expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fefffff, 0xb0000000), hexToF64(0x3ff00000, 0x28000000)], [hexToF64(0x3fefffff, 0xb0000000), hexToF64(0x3ff00000, 0x28000000)]] },  // ~[0, 0, 1, 1]
+      { input: 0xff00ff00, expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fefffff, 0xb0000000), hexToF64(0x3ff00000, 0x28000000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fefffff, 0xb0000000), hexToF64(0x3ff00000, 0x28000000)]] },  // ~[0, 1, 0, 1]
+      { input: 0x00ff00ff, expected: [[hexToF64(0x3fefffff, 0xb0000000), hexToF64(0x3ff00000, 0x28000000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fefffff, 0xb0000000), hexToF64(0x3ff00000, 0x28000000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // ~[1, 0, 1, 0]
+      { input: 0xffffffff, expected: [[hexToF64(0x3fefffff, 0xb0000000), hexToF64(0x3ff00000, 0x28000000)], [hexToF64(0x3fefffff, 0xb0000000), hexToF64(0x3ff00000, 0x28000000)], [hexToF64(0x3fefffff, 0xb0000000), hexToF64(0x3ff00000, 0x28000000)], [hexToF64(0x3fefffff, 0xb0000000), hexToF64(0x3ff00000, 0x28000000)]] },  // ~[1, 1, 1, 1]
+      { input: 0x80808080, expected: [[hexToF64(0x3fe0100f, 0xb0000000), hexToF64(0x3fe01010, 0x70000000)], [hexToF64(0x3fe0100f, 0xb0000000), hexToF64(0x3fe01010, 0x70000000)], [hexToF64(0x3fe0100f, 0xb0000000), hexToF64(0x3fe01010, 0x70000000)], [hexToF64(0x3fe0100f, 0xb0000000), hexToF64(0x3fe01010, 0x70000000)]] },  // ~0.50196
+    ]
+  )
+  .fn(t => {
+    const expected = toF32Vector(t.params.expected);
+
+    const got = unpack4x8unormInterval(t.params.input);
+
+    t.expect(
+      objectEquals(expected, got),
+      `unpack4x8unormInterval(${t.params.input}) returned [${got}]. Expected [${expected}]`
     );
   });
 
