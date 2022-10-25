@@ -34,7 +34,6 @@ const kI32 = new Set([
   '2147483647i', // max signed int
   '-2147483647i', // min parsable signed int
   'i32(-2147483648)', // min signed int
-
 ]);
 
 const kU32 = new Set([
