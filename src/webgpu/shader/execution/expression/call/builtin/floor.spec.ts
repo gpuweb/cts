@@ -11,7 +11,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { floorInterval } from '../../../../../util/f32_interval.js';
-import { fullF32Range } from '../../../../../util/math.js';
+import { denseF32Range } from '../../../../../util/math.js';
 import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -50,7 +50,7 @@ g.test('f32')
       -1.0,
       -1.1,
       -1.9,
-      ...fullF32Range(),
+      ...denseF32Range(),
     ].map(x => makeCase(x));
 
     await run(t, builtin('floor'), [TypeF32], TypeF32, t.params, cases);

@@ -14,7 +14,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { atanhInterval } from '../../../../../util/f32_interval.js';
-import { biasedRange, fullF32Range } from '../../../../../util/math.js';
+import { biasedRange, denseF32Range } from '../../../../../util/math.js';
 import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -43,7 +43,7 @@ g.test('f32')
     const cases = [
       ...biasedRange(-1, -0.9, 20), // discontinuity at x = -1
       ...biasedRange(1, 0.9, 20), // discontinuity at x = 1
-      ...fullF32Range(),
+      ...denseF32Range(),
     ].map(makeCase);
     await run(t, builtin('atanh'), [TypeF32], TypeF32, t.params, cases);
   });

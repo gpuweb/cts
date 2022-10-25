@@ -12,7 +12,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { atanInterval } from '../../../../../util/f32_interval.js';
-import { fullF32Range } from '../../../../../util/math.js';
+import { denseF32Range } from '../../../../../util/math.js';
 import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -55,7 +55,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
       Math.sqrt(3),
       Number.POSITIVE_INFINITY,
 
-      ...fullF32Range(),
+      ...denseF32Range(),
     ].map(x => makeCase(x));
 
     await run(t, builtin('atan'), [TypeF32], TypeF32, t.params, cases);

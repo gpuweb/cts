@@ -18,8 +18,8 @@ import {
   biasedRange,
   cartesianProduct,
   correctlyRoundedF32,
-  fullF32Range,
-  fullI32Range,
+  denseF32Range,
+  denseI32Range,
   hexToF32,
   hexToF64,
   lerp,
@@ -756,7 +756,7 @@ g.test('fullF32Range')
     const neg_sub = test.params.neg_sub;
     const pos_sub = test.params.pos_sub;
     const pos_norm = test.params.pos_norm;
-    const got = fullF32Range({ neg_norm, neg_sub, pos_sub, pos_norm });
+    const got = denseF32Range({ neg_norm, neg_sub, pos_sub, pos_norm });
     const expect = test.params.expect;
 
     test.expect(
@@ -789,7 +789,7 @@ g.test('fullI32Range')
   .fn(test => {
     const neg_count = test.params.neg_count;
     const pos_count = test.params.pos_count;
-    const got = fullI32Range({ negative: neg_count, positive: pos_count });
+    const got = denseI32Range({ negative: neg_count, positive: pos_count });
     const expect = test.params.expect;
 
     test.expect(

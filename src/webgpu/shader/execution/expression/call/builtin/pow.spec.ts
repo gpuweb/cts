@@ -11,7 +11,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { powInterval } from '../../../../../util/f32_interval.js';
-import { fullF32Range } from '../../../../../util/math.js';
+import { denseF32Range } from '../../../../../util/math.js';
 import { allInputSources, Case, makeBinaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -38,7 +38,7 @@ g.test('f32')
     };
 
     const cases: Array<Case> = [];
-    const numeric_range = fullF32Range();
+    const numeric_range = denseF32Range();
     numeric_range.forEach(x => {
       numeric_range.forEach(y => {
         cases.push(makeCase(x, y));

@@ -13,7 +13,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { quantizeToF16Interval } from '../../../../../util/f32_interval.js';
-import { fullF32Range } from '../../../../../util/math.js';
+import { denseF32Range } from '../../../../../util/math.js';
 import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -40,7 +40,7 @@ g.test('f32')
       kValue.f16.subnormal.positive.max,
       kValue.f16.positive.min,
       kValue.f16.positive.max,
-      ...fullF32Range(),
+      ...denseF32Range(),
     ].map(makeCase);
 
     await run(t, builtin('quantizeToF16'), [TypeF32], TypeF32, t.params, cases);

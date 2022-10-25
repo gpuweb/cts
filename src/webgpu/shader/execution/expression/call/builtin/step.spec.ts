@@ -12,7 +12,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { anyOf } from '../../../../../util/compare.js';
 import { f32, TypeF32 } from '../../../../../util/conversion.js';
 import { F32Interval, stepInterval } from '../../../../../util/f32_interval.js';
-import { fullF32Range, quantizeToF32 } from '../../../../../util/math.js';
+import { denseF32Range, quantizeToF32 } from '../../../../../util/math.js';
 import { allInputSources, Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -57,7 +57,7 @@ g.test('f32')
       };
     };
 
-    const range = fullF32Range();
+    const range = denseF32Range();
     const cases: Array<Case> = [];
     range.forEach(edge => {
       range.forEach(x => {

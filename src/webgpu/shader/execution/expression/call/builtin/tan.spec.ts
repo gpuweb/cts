@@ -11,7 +11,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { tanInterval } from '../../../../../util/f32_interval.js';
-import { fullF32Range, linearRange } from '../../../../../util/math.js';
+import { denseF32Range, linearRange } from '../../../../../util/math.js';
 import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -40,7 +40,7 @@ g.test('f32')
     const cases: Array<Case> = [
       // Defined accuracy range
       ...linearRange(-Math.PI, Math.PI, 100),
-      ...fullF32Range(),
+      ...denseF32Range(),
     ].map(makeCase);
     await run(t, builtin('tan'), [TypeF32], TypeF32, t.params, cases);
   });

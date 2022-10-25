@@ -18,7 +18,7 @@ import {
   u32,
   vec2,
 } from '../../../../../util/conversion.js';
-import { kVectorTestValues, quantizeToF32 } from '../../../../../util/math.js';
+import { kVectorDenseTestValues, quantizeToF32 } from '../../../../../util/math.js';
 import { allInputSources, Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -61,7 +61,7 @@ g.test('pack')
       return { input: [vec2(f32(x), f32(y))], expected: anyOf(...results.map(cmp)) };
     };
 
-    const cases: Array<Case> = kVectorTestValues[2].map(v => {
+    const cases: Array<Case> = kVectorDenseTestValues[2].map(v => {
       return makeCase(...(v as [number, number]));
     });
 

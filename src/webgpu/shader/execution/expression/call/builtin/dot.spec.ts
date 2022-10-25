@@ -11,7 +11,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { dotInterval } from '../../../../../util/f32_interval.js';
-import { kVectorTestValues } from '../../../../../util/math.js';
+import { kVectorDenseTestValues } from '../../../../../util/math.js';
 import { allInputSources, Case, makeVectorPairToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -51,8 +51,8 @@ g.test('f32_vec2')
       return makeVectorPairToF32IntervalCase(x, y, dotInterval);
     };
 
-    const cases: Case[] = kVectorTestValues[2].flatMap(i => {
-      return kVectorTestValues[2].map(j => {
+    const cases: Case[] = kVectorDenseTestValues[2].flatMap(i => {
+      return kVectorDenseTestValues[2].map(j => {
         return makeCase(i, j);
       });
     });
@@ -76,8 +76,8 @@ g.test('f32_vec3')
       return makeVectorPairToF32IntervalCase(x, y, dotInterval);
     };
 
-    const cases: Case[] = kVectorTestValues[3].flatMap(i => {
-      return kVectorTestValues[3].map(j => {
+    const cases: Case[] = kVectorDenseTestValues[3].flatMap(i => {
+      return kVectorDenseTestValues[3].map(j => {
         return makeCase(i, j);
       });
     });
@@ -101,8 +101,8 @@ g.test('f32_vec4')
       return makeVectorPairToF32IntervalCase(x, y, dotInterval);
     };
 
-    const cases: Case[] = kVectorTestValues[4].flatMap(i => {
-      return kVectorTestValues[4].map(j => {
+    const cases: Case[] = kVectorDenseTestValues[4].flatMap(i => {
+      return kVectorDenseTestValues[4].map(j => {
         return makeCase(i, j);
       });
     });

@@ -11,7 +11,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { lengthInterval } from '../../../../../util/f32_interval.js';
-import { fullF32Range, kVectorTestValues } from '../../../../../util/math.js';
+import { denseF32Range, kVectorDenseTestValues } from '../../../../../util/math.js';
 import {
   allInputSources,
   Case,
@@ -45,7 +45,7 @@ g.test('f32')
     const makeCase = (x: number): Case => {
       return makeUnaryToF32IntervalCase(x, lengthInterval);
     };
-    const cases: Case[] = fullF32Range().map(makeCase);
+    const cases: Case[] = denseF32Range().map(makeCase);
 
     await run(t, builtin('length'), [TypeF32], TypeF32, t.params, cases);
   });
@@ -55,7 +55,7 @@ g.test('f32_vec2')
   .desc(`f32 tests using vec2s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases: Case[] = kVectorTestValues[2].map(makeCaseVecF32);
+    const cases: Case[] = kVectorDenseTestValues[2].map(makeCaseVecF32);
 
     await run(t, builtin('length'), [TypeVec(2, TypeF32)], TypeF32, t.params, cases);
   });
@@ -65,7 +65,7 @@ g.test('f32_vec3')
   .desc(`f32 tests using vec3s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases: Case[] = kVectorTestValues[3].map(makeCaseVecF32);
+    const cases: Case[] = kVectorDenseTestValues[3].map(makeCaseVecF32);
 
     await run(t, builtin('length'), [TypeVec(3, TypeF32)], TypeF32, t.params, cases);
   });
@@ -75,7 +75,7 @@ g.test('f32_vec4')
   .desc(`f32 tests using vec4s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases: Case[] = kVectorTestValues[4].map(makeCaseVecF32);
+    const cases: Case[] = kVectorDenseTestValues[4].map(makeCaseVecF32);
 
     await run(t, builtin('length'), [TypeVec(4, TypeF32)], TypeF32, t.params, cases);
   });

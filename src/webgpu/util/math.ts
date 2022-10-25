@@ -533,7 +533,7 @@ export function biasedRange(a: number, b: number, num_steps: number): Array<numb
  * @param counts structure param with 4 entries indicating the number of entries to be generated each region, entries
  *               must be 0 or greater.
  */
-export function fullF32Range(
+export function denseF32Range(
   counts: {
     neg_norm?: number;
     neg_sub?: number;
@@ -573,7 +573,7 @@ export function fullF32Range(
  *
  * @param counts structure param with 2 entries indicating the number of entries to be generated each region, values must be 0 or greater.
  */
-export function fullI32Range(
+export function denseI32Range(
   counts: {
     negative?: number;
     positive: number;
@@ -609,7 +609,7 @@ const kInterestingF32Values: number[] = [
 /** @returns minimal f32 values that cover the entire range of f32 behaviours
  *
  * Has specially selected values that cover edge cases, normals, and subnormals.
- * This is used instead of fullF32Range when the number of test cases being
+ * This is used instead of denseF32Range when the number of test cases being
  * generated is a super linear function of the length of f32 values which is
  * leading to time outs.
  *
@@ -633,7 +633,7 @@ export function sparseF32Range(): Array<number> {
  * vector to get a spread of testing over the entire range. This reduces the
  * number of cases being run substantially, but maintains coverage.
  */
-export const kVectorTestValues = {
+export const kVectorDenseTestValues = {
   2: sparseF32Range().flatMap(f => [
     [f, 1.0],
     [1.0, f],
@@ -664,7 +664,7 @@ export const kVectorTestValues = {
  * Minimal set of vectors, indexed by dimension, that contain interesting float
  * values.
  *
- * This is an even more stripped down version of `kVectorTestValues` for when
+ * This is an even more stripped down version of `kVectorDenseTestValues` for when
  * pairs of vectors are being tested.
  * All of the interesting floats from sparseF32 are guaranteed to be tested, but
  * not in every position.

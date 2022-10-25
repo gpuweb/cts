@@ -17,8 +17,8 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { f32, i32, TypeF32, TypeI32 } from '../../../../../util/conversion.js';
 import { ldexpInterval } from '../../../../../util/f32_interval.js';
 import {
-  fullF32Range,
-  fullI32Range,
+  denseF32Range,
+  denseI32Range,
   quantizeToF32,
   quantizeToI32,
 } from '../../../../../util/math.js';
@@ -56,8 +56,8 @@ g.test('f32')
     };
 
     const cases: Array<Case> = [];
-    fullF32Range().forEach(e1 => {
-      fullI32Range().forEach(e2 => {
+    denseF32Range().forEach(e1 => {
+      denseI32Range().forEach(e2 => {
         cases.push(makeCase(e1, e2));
       });
     });

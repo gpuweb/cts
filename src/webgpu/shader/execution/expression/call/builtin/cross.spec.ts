@@ -10,7 +10,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { crossInterval } from '../../../../../util/f32_interval.js';
-import { kVectorTestValues } from '../../../../../util/math.js';
+import { kVectorDenseTestValues } from '../../../../../util/math.js';
 import {
   allInputSources,
   Case,
@@ -37,8 +37,8 @@ g.test('f32')
       return makeVectorPairToVectorIntervalCase(x, y, crossInterval);
     };
 
-    const cases: Case[] = kVectorTestValues[3].flatMap(i => {
-      return kVectorTestValues[3].map(j => {
+    const cases: Case[] = kVectorDenseTestValues[3].flatMap(i => {
+      return kVectorDenseTestValues[3].map(j => {
         return makeCase(i, j);
       });
     });

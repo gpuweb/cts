@@ -12,7 +12,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { radiansInterval } from '../../../../../util/f32_interval.js';
-import { fullF32Range } from '../../../../../util/math.js';
+import { denseF32Range } from '../../../../../util/math.js';
 import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -38,7 +38,7 @@ g.test('f32')
       return makeUnaryToF32IntervalCase(n, radiansInterval);
     };
 
-    const cases: Array<Case> = fullF32Range().map(makeCase);
+    const cases: Array<Case> = denseF32Range().map(makeCase);
     await run(t, builtin('radians'), [TypeF32], TypeF32, t.params, cases);
   });
 

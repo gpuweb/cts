@@ -6,7 +6,7 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { anyOf } from '../../../../util/compare.js';
 import { bool, f32, Scalar, TypeBool, TypeF32 } from '../../../../util/conversion.js';
-import { flushSubnormalScalarF32, kVectorTestValues } from '../../../../util/math.js';
+import { flushSubnormalScalarF32, kVectorDenseTestValues } from '../../../../util/math.js';
 import { allInputSources, Case, run } from '../expression.js';
 
 import { binary } from './binary.js';
@@ -55,7 +55,7 @@ Accuracy: Correct result
       return (lhs.value as number) === (rhs.value as number);
     };
 
-    const cases = kVectorTestValues[2].map(v => {
+    const cases = kVectorDenseTestValues[2].map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
 
@@ -78,7 +78,7 @@ Accuracy: Correct result
       return (lhs.value as number) !== (rhs.value as number);
     };
 
-    const cases = kVectorTestValues[2].map(v => {
+    const cases = kVectorDenseTestValues[2].map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
 
@@ -101,7 +101,7 @@ Accuracy: Correct result
       return (lhs.value as number) < (rhs.value as number);
     };
 
-    const cases = kVectorTestValues[2].map(v => {
+    const cases = kVectorDenseTestValues[2].map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
 
@@ -124,7 +124,7 @@ Accuracy: Correct result
       return (lhs.value as number) <= (rhs.value as number);
     };
 
-    const cases = kVectorTestValues[2].map(v => {
+    const cases = kVectorDenseTestValues[2].map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
 
@@ -147,7 +147,7 @@ Accuracy: Correct result
       return (lhs.value as number) > (rhs.value as number);
     };
 
-    const cases = kVectorTestValues[2].map(v => {
+    const cases = kVectorDenseTestValues[2].map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
 
@@ -170,7 +170,7 @@ Accuracy: Correct result
       return (lhs.value as number) >= (rhs.value as number);
     };
 
-    const cases = kVectorTestValues[2].map(v => {
+    const cases = kVectorDenseTestValues[2].map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
 

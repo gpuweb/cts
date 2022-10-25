@@ -12,7 +12,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { distanceInterval } from '../../../../../util/f32_interval.js';
-import { fullF32Range, kVectorSparseTestValues } from '../../../../../util/math.js';
+import { denseF32Range, kVectorSparseTestValues } from '../../../../../util/math.js';
 import {
   allInputSources,
   Case,
@@ -46,7 +46,7 @@ g.test('f32')
     const makeCase = (x: number, y: number): Case => {
       return makeBinaryToF32IntervalCase(x, y, distanceInterval);
     };
-    const cases: Case[] = fullF32Range().flatMap(i => fullF32Range().map(j => makeCase(i, j)));
+    const cases: Case[] = denseF32Range().flatMap(i => denseF32Range().map(j => makeCase(i, j)));
 
     await run(t, builtin('distance'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });

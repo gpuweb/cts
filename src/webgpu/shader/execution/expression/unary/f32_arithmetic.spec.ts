@@ -6,7 +6,7 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { TypeF32 } from '../../../../util/conversion.js';
 import { negationInterval } from '../../../../util/f32_interval.js';
-import { fullF32Range } from '../../../../util/math.js';
+import { denseF32Range } from '../../../../util/math.js';
 import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../expression.js';
 
 import { unary } from './unary.js';
@@ -29,7 +29,7 @@ Accuracy: Correctly rounded
       return makeUnaryToF32IntervalCase(x, negationInterval);
     };
 
-    const cases = fullF32Range({ neg_norm: 250, neg_sub: 20, pos_sub: 20, pos_norm: 250 }).map(x =>
+    const cases = denseF32Range({ neg_norm: 250, neg_sub: 20, pos_sub: 20, pos_norm: 250 }).map(x =>
       makeCase(x)
     );
 

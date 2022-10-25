@@ -10,7 +10,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { normalizeInterval } from '../../../../../util/f32_interval.js';
-import { kVectorTestValues } from '../../../../../util/math.js';
+import { kVectorDenseTestValues } from '../../../../../util/math.js';
 import { allInputSources, Case, makeVectorToVectorIntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -35,7 +35,7 @@ g.test('f32_vec2')
   .desc(`f32 tests using vec2s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases: Case[] = kVectorTestValues[2].map(makeCaseVecF32);
+    const cases: Case[] = kVectorDenseTestValues[2].map(makeCaseVecF32);
 
     await run(t, builtin('normalize'), [TypeVec(2, TypeF32)], TypeVec(2, TypeF32), t.params, cases);
   });
@@ -45,7 +45,7 @@ g.test('f32_vec3')
   .desc(`f32 tests using vec3s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases: Case[] = kVectorTestValues[3].map(makeCaseVecF32);
+    const cases: Case[] = kVectorDenseTestValues[3].map(makeCaseVecF32);
 
     await run(t, builtin('normalize'), [TypeVec(3, TypeF32)], TypeVec(3, TypeF32), t.params, cases);
   });
@@ -55,7 +55,7 @@ g.test('f32_vec4')
   .desc(`f32 tests using vec4s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases: Case[] = kVectorTestValues[4].map(makeCaseVecF32);
+    const cases: Case[] = kVectorDenseTestValues[4].map(makeCaseVecF32);
 
     await run(t, builtin('normalize'), [TypeVec(4, TypeF32)], TypeVec(4, TypeF32), t.params, cases);
   });

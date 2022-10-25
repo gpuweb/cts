@@ -12,7 +12,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { log2Interval } from '../../../../../util/f32_interval.js';
-import { biasedRange, fullF32Range, linearRange } from '../../../../../util/math.js';
+import { biasedRange, denseF32Range, linearRange } from '../../../../../util/math.js';
 import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -50,7 +50,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
       ...linearRange(kValue.f32.positive.min, 0.5, 20),
       ...linearRange(0.5, 2.0, 20),
       ...biasedRange(2.0, 2 ** 32, 1000),
-      ...fullF32Range(),
+      ...denseF32Range(),
     ].map(x => makeCase(x));
 
     await run(t, builtin('log2'), [TypeF32], TypeF32, t.params, cases);

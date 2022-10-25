@@ -11,7 +11,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { atan2Interval } from '../../../../../util/f32_interval.js';
-import { fullF32Range } from '../../../../../util/math.js';
+import { denseF32Range } from '../../../../../util/math.js';
 import { allInputSources, Case, makeBinaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -43,7 +43,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
       return makeBinaryToF32IntervalCase(y, x, atan2Interval);
     };
 
-    const numeric_range = fullF32Range();
+    const numeric_range = denseF32Range();
     const cases: Array<Case> = [];
     numeric_range.forEach(y => {
       numeric_range.forEach(x => {

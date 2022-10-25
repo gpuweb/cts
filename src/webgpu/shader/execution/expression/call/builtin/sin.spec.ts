@@ -11,7 +11,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { sinInterval } from '../../../../../util/f32_interval.js';
-import { fullF32Range, linearRange } from '../../../../../util/math.js';
+import { denseF32Range, linearRange } from '../../../../../util/math.js';
 import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -47,7 +47,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
       // Well defined accuracy range
       ...linearRange(-Math.PI, Math.PI, 1000),
 
-      ...fullF32Range(),
+      ...denseF32Range(),
     ].map(makeCase);
     await run(t, builtin('sin'), [TypeF32], TypeF32, t.params, cases);
   });

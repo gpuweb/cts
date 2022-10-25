@@ -20,7 +20,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { kBit } from '../../../../../util/constants.js';
 import { i32Bits, TypeF32, TypeI32, TypeU32, u32Bits } from '../../../../../util/conversion.js';
 import { absInterval } from '../../../../../util/f32_interval.js';
-import { fullF32Range } from '../../../../../util/math.js';
+import { denseF32Range } from '../../../../../util/math.js';
 import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -153,7 +153,7 @@ g.test('f32')
 
     const cases: Array<Case> = [
       Number.NEGATIVE_INFINITY,
-      ...fullF32Range(),
+      ...denseF32Range(),
       Number.POSITIVE_INFINITY,
     ].map(x => makeCase(x));
 
