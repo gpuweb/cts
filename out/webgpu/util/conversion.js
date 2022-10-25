@@ -7,6 +7,7 @@ import {
 cartesianProduct,
 clamp,
 correctlyRoundedF16,
+correctlyRoundedF32,
 isFiniteF16,
 isSubnormalNumberF16,
 isSubnormalNumberF32 } from
@@ -423,6 +424,39 @@ export function pack4x8unorm(...vals) {
   }
 
   return workingDataU32[0];
+}
+
+/**
+ * Converts a u32 that has been created from packing f32s to u16s back into f32s
+ *
+ * This should implement the same behaviour as the builtin `unpack2x16unorm`
+ * from WGSL.
+ *
+ * Caller is responsible to ensuring input is a u32 value.
+ *
+ * The round trip preservation of values for packing/unpacking is not guaranteed
+ * because unpacking involves a division that is not guaranteed to be precise in
+ * f32.
+ *
+ * @returns an array of possible pair of normalized f32s that have been unpacked
+ *          from the input
+ */
+export function unpack2x16unorm(val) {
+  // Generates f32 value for a given u16 that has been unpacked from a u32.
+  const generateF32s = (n) => {
+    return correctlyRoundedF32(n / 65535);
+  };
+
+  workingDataU32[0] = val;
+  const results = cartesianProduct(
+  generateF32s(workingDataU16[0]),
+  generateF32s(workingDataU16[1]));
+
+  assert(
+  results.every((r) => r.length === 2),
+  'cartesianProduct of 2 arrays returned an entry with not 2 elements');
+
+  return results;
 }
 
 /**

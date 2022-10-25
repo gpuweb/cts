@@ -577,6 +577,17 @@ export function fullI32Range(counts = { positive: 50 }) {
   ].map(Math.trunc);
 }
 
+/**
+ * @returns an ascending sorted array of numbers spread over the entire range of 32-bit unsigned ints
+ *
+ * Numbers are biased towards 0, and 0 is included in the range.
+ *
+ * @param count number of entries to include in the range, in addition to 0, must be greater than 0, defaults to 50
+ */
+export function fullU32Range(count = 50) {
+  return [0, ...biasedRange(1, kValue.u32.max, count)].map(Math.trunc);
+}
+
 /** Short list of f32 values of interest to test against */
 const kInterestingF32Values = [
   Number.NEGATIVE_INFINITY,
