@@ -33,7 +33,8 @@ const kAbstractIntNegative = new Set([
 const kI32 = new Set([
   '94i', // signed number
   '2147483647i', // max signed int
-  '-2147483648i', // min signed int
+  '-2147483647i', // min parsable signed int
+  'i32(-2147483648)', // min signed int
 ]);
 
 const kU32 = new Set([
