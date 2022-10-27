@@ -23,7 +23,6 @@ import {
   pack4x8unorm,
   Scalar,
   u32,
-  unpack2x16unorm,
   vec2,
   vec3,
   vec4,
@@ -409,33 +408,4 @@ g.test('pack4x8unorm')
     const expect = test.params.result;
 
     test.expect(got === expect, `pack4x8unorm(${inputs}) returned ${got}. Expected [${expect}]`);
-  });
-
-g.test('unpack2x16unorm')
-  .paramsSimple([
-    { input: 0x00000000, results: [[0, 0]] },
-    { input: 0x0000ffff, results: [[1, 0]] },
-    { input: 0xffff0000, results: [[0, 1]] },
-    { input: 0xffffffff, results: [[1, 1]] },
-    {
-      input: 0x80008000,
-      results: [
-        [f32Bits(0x3f000080).value as number, f32Bits(0x3f000080).value as number],
-        [f32Bits(0x3f000080).value as number, f32Bits(0x3f000081).value as number],
-        [f32Bits(0x3f000081).value as number, f32Bits(0x3f000080).value as number],
-        [f32Bits(0x3f000081).value as number, f32Bits(0x3f000081).value as number],
-      ], // ~0.5
-    },
-  ] as const)
-  .fn(test => {
-    const input = test.params.input;
-    const got = unpack2x16unorm(input)
-      .map(g => `[${g.map(f32).toString()}]`)
-      .sort();
-    const expect = test.params.results.map(e => `[${e.map(f32).toString()}]`).sort();
-
-    test.expect(
-      objectEquals(got, expect),
-      `unpack2x16unorm(${input}) returned [${got}]. Expected [${expect}]`
-    );
   });
