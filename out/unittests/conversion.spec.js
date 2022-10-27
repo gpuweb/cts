@@ -316,7 +316,7 @@ fn((test) => {
   const got = pack2x16snorm(inputs[0], inputs[1]);
   const expect = test.params.result;
 
-  test.expect(got === expect, `pack2x16snorm(${inputs}) returned ${got}. Expected [${expect}]`);
+  test.expect(got === expect, `pack2x16snorm(${inputs}) returned ${got}. Expected ${expect}`);
 });
 
 g.test('pack2x16unorm').
@@ -340,7 +340,7 @@ fn((test) => {
   const got = pack2x16unorm(inputs[0], inputs[1]);
   const expect = test.params.result;
 
-  test.expect(got === expect, `pack2x16unorm(${inputs}) returned ${got}. Expected [${expect}]`);
+  test.expect(got === expect, `pack2x16unorm(${inputs}) returned ${got}. Expected ${expect}`);
 });
 
 g.test('pack4x8snorm').
@@ -377,10 +377,7 @@ fn((test) => {
   const got = pack4x8snorm(inputs[0], inputs[1], inputs[2], inputs[3]);
   const expect = test.params.result;
 
-  test.expect(
-  got === expect,
-  `pack4x8snorm(${inputs}) returned ${u32(got)}. Expected [${expect}]`);
-
+  test.expect(got === expect, `pack4x8snorm(${inputs}) returned ${u32(got)}. Expected ${expect}`);
 });
 
 g.test('pack4x8unorm').
@@ -407,6 +404,6 @@ fn((test) => {
   const got = pack4x8unorm(inputs[0], inputs[1], inputs[2], inputs[3]);
   const expect = test.params.result;
 
-  test.expect(got === expect, `pack4x8unorm(${inputs}) returned ${got}. Expected [${expect}]`);
+  test.expect(got === expect, `pack4x8unorm(${inputs}) returned ${got}. Expected ${expect}`);
 });
 //# sourceMappingURL=conversion.spec.js.map

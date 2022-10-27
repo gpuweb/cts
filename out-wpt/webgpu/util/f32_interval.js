@@ -1686,11 +1686,31 @@ export function truncInterval(n) {
  *
  * unpackData* is shared between all of the unpack*Interval functions, so to avoid re-entrancy problems, they should
  * not call each other or themselves directly or indirectly.
- * */
+ */
 const unpackData = new ArrayBuffer(4);
 const unpackDataU32 = new Uint32Array(unpackData);
 const unpackDataU16 = new Uint16Array(unpackData);
 const unpackDataU8 = new Uint8Array(unpackData);
+const unpackDataI16 = new Int16Array(unpackData);
+
+const Unpack2x16snormIntervalOp = n => {
+  return maxInterval(divisionInterval(n, 32767), -1);
+};
+
+/** Calculate an acceptance interval vector for unpack2x16snorm(x) */
+export function unpack2x16snormInterval(n) {
+  assert(
+    n >= kValue.u32.min && n <= kValue.u32.max,
+    'unpack2x16snormInterval only accepts values on the bounds of u32'
+  );
+
+  unpackDataU32[0] = n;
+  return [Unpack2x16snormIntervalOp(unpackDataI16[0]), Unpack2x16snormIntervalOp(unpackDataI16[1])];
+}
+
+const Unpack2x16unormIntervalOp = n => {
+  return divisionInterval(n, 65535);
+};
 
 /** Calculate an acceptance interval vector for unpack2x16unorm(x) */
 export function unpack2x16unormInterval(n) {
@@ -1700,8 +1720,12 @@ export function unpack2x16unormInterval(n) {
   );
 
   unpackDataU32[0] = n;
-  return [divisionInterval(unpackDataU16[0], 65535), divisionInterval(unpackDataU16[1], 65535)];
+  return [Unpack2x16unormIntervalOp(unpackDataU16[0]), Unpack2x16unormIntervalOp(unpackDataU16[1])];
 }
+
+const Unpack4x8unormIntervalOp = n => {
+  return divisionInterval(n, 255);
+};
 
 /** Calculate an acceptance interval vector for unpack4x8unorm(x) */
 export function unpack4x8unormInterval(n) {
@@ -1712,9 +1736,9 @@ export function unpack4x8unormInterval(n) {
 
   unpackDataU32[0] = n;
   return [
-    divisionInterval(unpackDataU8[0], 255),
-    divisionInterval(unpackDataU8[1], 255),
-    divisionInterval(unpackDataU8[2], 255),
-    divisionInterval(unpackDataU8[3], 255),
+    Unpack4x8unormIntervalOp(unpackDataU8[0]),
+    Unpack4x8unormIntervalOp(unpackDataU8[1]),
+    Unpack4x8unormIntervalOp(unpackDataU8[2]),
+    Unpack4x8unormIntervalOp(unpackDataU8[3]),
   ];
 }
