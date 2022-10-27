@@ -66,6 +66,7 @@ import {
   toF32Vector,
   truncInterval,
   ulpInterval,
+  unpack2x16unormInterval,
   unpack4x8unormInterval,
 } from '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
@@ -2636,13 +2637,45 @@ interface PointToVectorCase {
   expected: IntervalBounds[];
 }
 
+// Scope for unpack* tests so that they can have constants for magic numbers
+// that don't pollute the global namespace or have unwieldy long names.
 {
   const kZeroBounds: IntervalBounds = [hexToF32(0x81200000), hexToF32(0x01200000)];
   const kOneBounds: IntervalBounds = [
     hexToF64(0x3fefffff, 0xb0000000),
     hexToF64(0x3ff00000, 0x28000000),
   ];
-  const kHalfBounds: IntervalBounds = [
+
+  const kHalfBounds2x16unorm: IntervalBounds = [
+    hexToF64(0x3fe0000f, 0xb0000000),
+    hexToF64(0x3fe00010, 0x70000000),
+  ]; // ~0.5..., due to lack of precision in u16
+
+  g.test('unpack2x16unormInterval')
+    .paramsSubcasesOnly<PointToVectorCase>(
+      // prettier-ignore
+      [
+      // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
+      // form due to the inherited nature of the errors.
+      { input: 0x00000000, expected: [kZeroBounds, kZeroBounds] },
+      { input: 0x0000ffff, expected: [kOneBounds, kZeroBounds] },
+      { input: 0xffff0000, expected: [kZeroBounds, kOneBounds] },
+      { input: 0xffffffff, expected: [kOneBounds, kOneBounds] },
+      { input: 0x80008000, expected: [kHalfBounds2x16unorm, kHalfBounds2x16unorm] },
+    ]
+    )
+    .fn(t => {
+      const expected = toF32Vector(t.params.expected);
+
+      const got = unpack2x16unormInterval(t.params.input);
+
+      t.expect(
+        objectEquals(expected, got),
+        `unpack2x16unormInterval(${t.params.input}) returned [${got}]. Expected [${expected}]`
+      );
+    });
+
+  const kHalfBounds4x8unorm: IntervalBounds = [
     hexToF64(0x3fe0100f, 0xb0000000),
     hexToF64(0x3fe01010, 0x70000000),
   ]; // ~0.50196..., due to lack of precision in u8
@@ -2663,7 +2696,7 @@ interface PointToVectorCase {
         { input: 0xff00ff00, expected: [kZeroBounds, kOneBounds, kZeroBounds, kOneBounds] },
         { input: 0x00ff00ff, expected: [kOneBounds, kZeroBounds, kOneBounds, kZeroBounds] },
         { input: 0xffffffff, expected: [kOneBounds, kOneBounds, kOneBounds, kOneBounds] },
-        { input: 0x80808080, expected: [kHalfBounds, kHalfBounds,kHalfBounds,kHalfBounds] },
+        { input: 0x80808080, expected: [kHalfBounds4x8unorm, kHalfBounds4x8unorm, kHalfBounds4x8unorm, kHalfBounds4x8unorm] },
       ]
     )
     .fn(t => {

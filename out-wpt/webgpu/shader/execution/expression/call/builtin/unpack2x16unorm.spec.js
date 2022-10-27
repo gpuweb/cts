@@ -8,18 +8,10 @@ Component i of the result is v ÷ 65535, where v is the interpretation of bits
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { anyOf } from '../../../../../util/compare.js';
-import {
-  f32,
-  TypeF32,
-  TypeU32,
-  TypeVec,
-  u32,
-  unpack2x16unorm,
-  vec2,
-} from '../../../../../util/conversion.js';
+import { TypeF32, TypeU32, TypeVec } from '../../../../../util/conversion.js';
+import { unpack2x16unormInterval } from '../../../../../util/f32_interval.js';
 import { fullU32Range } from '../../../../../util/math.js';
-import { allInputSources, run } from '../../expression.js';
+import { allInputSources, makeU32ToVectorIntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -36,11 +28,7 @@ g.test('unpack')
   .fn(async t => {
     const makeCase = n => {
       n = Math.trunc(n);
-      const results = unpack2x16unorm(n);
-      return {
-        input: [u32(n)],
-        expected: anyOf(...results.map(r => vec2(f32(r[0]), f32(r[1])))),
-      };
+      return makeU32ToVectorIntervalCase(n, unpack2x16unormInterval);
     };
 
     const cases = fullU32Range().map(makeCase);
