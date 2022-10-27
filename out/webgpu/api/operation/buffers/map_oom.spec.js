@@ -25,7 +25,7 @@ desc(
 `Test creating a large mappable buffer should produce an out-of-memory error if allocation fails.
   - The resulting buffer is an error buffer, so mapAsync rejects and produces a validation error.
   - Calling getMappedRange should throw an OperationError because the buffer is not in the mapped state.
-  - unmap() throws an OperationError if mapping failed, and otherwise should detach the ArrayBuffer.
+  - unmap() doesn't throw an error even if mapping failed, and otherwise should detach the ArrayBuffer.
 `).
 
 params(
@@ -61,8 +61,8 @@ fn(async (t) => {
       buffer.getMappedRange();
     });
 
-    // Should be a validation error since the buffer failed to be mapped.
-    t.expectGPUError('validation', () => buffer.unmap());
+    // Should't be a validation error even if the buffer failed to be mapped.
+    buffer.unmap();
   } else {
     await promise;
     const arraybuffer = buffer.getMappedRange();
