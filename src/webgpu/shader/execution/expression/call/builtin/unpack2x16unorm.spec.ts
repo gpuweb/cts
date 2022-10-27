@@ -17,7 +17,7 @@ import {
   unpack2x16unorm,
   vec2,
 } from '../../../../../util/conversion.js';
-import { fullU32Range, quantizeToF32 } from '../../../../../util/math.js';
+import { fullU32Range } from '../../../../../util/math.js';
 import { allInputSources, Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -31,10 +31,10 @@ g.test('unpack')
 @const fn unpack2x16unorm(e: u32) -> vec2<f32>
 `
   )
-  .params(u => u.combine('inputSource', [allInputSources[1]]))
+  .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
     const makeCase = (n: number): Case => {
-      n = quantizeToF32(n);
+      n = Math.trunc(n);
       const results = unpack2x16unorm(n);
       return {
         input: [u32(n)],

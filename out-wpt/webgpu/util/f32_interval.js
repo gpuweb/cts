@@ -1680,3 +1680,25 @@ const TruncIntervalOp = {
 export function truncInterval(n) {
   return runPointToIntervalOp(toF32Interval(n), TruncIntervalOp);
 }
+
+/** Once-allocated ArrayBuffer/views to avoid overhead of allocation when converting between numeric formats */
+const unpack4x8unormData = new ArrayBuffer(4);
+const unpack4x8unormDataU32 = new Uint32Array(unpack4x8unormData);
+const unpack4x8unormDataU8 = new Uint8Array(unpack4x8unormData);
+
+/**
+ * Calculate an acceptance interval vector for unpack4x8unorm(x) */
+export function unpack4x8unormInterval(n) {
+  assert(
+    n >= kValue.u32.min && n <= kValue.u32.max,
+    'unpack4x8unormInterval only accepts values on the bounds of u32'
+  );
+
+  unpack4x8unormDataU32[0] = n;
+  return [
+    divisionInterval(unpack4x8unormDataU8[0], 255),
+    divisionInterval(unpack4x8unormDataU8[1], 255),
+    divisionInterval(unpack4x8unormDataU8[2], 255),
+    divisionInterval(unpack4x8unormDataU8[3], 255),
+  ];
+}

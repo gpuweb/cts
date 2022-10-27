@@ -11,6 +11,7 @@ import {
   Vector,
   VectorType,
   f32,
+  u32,
 } from '../../../util/conversion.js';
 import { F32Interval } from '../../../util/f32_interval.js';
 import { quantizeToF32 } from '../../../util/math.js';
@@ -628,6 +629,23 @@ export function makeVectorPairToVectorIntervalCase(param0, param1, ...ops) {
   const vectors = ops.map(o => o(param0, param1));
   return {
     input: [new Vector(param0_f32), new Vector(param1_f32)],
+    expected: anyOf(...vectors),
+  };
+}
+
+/**
+ * Generates a Case for the param and vector of intervals generator provided.
+ * The input is treated as an unsigned int.
+ * @param param the param to pass into the operation
+ * @param ops callbacks that implement generating an vector of acceptance
+ *            intervals for a vector.
+ */
+export function makeU32ToVectorIntervalCase(param, ...ops) {
+  const param_u32 = u32(param);
+
+  const vectors = ops.map(o => o(param));
+  return {
+    input: param_u32,
     expected: anyOf(...vectors),
   };
 }

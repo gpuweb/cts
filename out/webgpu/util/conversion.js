@@ -133,7 +133,7 @@ export const kFloat32Format = { signed: 1, exponentBits: 8, mantissaBits: 23, bi
 /** FloatFormat defining IEEE754 16-bit float. */
 export const kFloat16Format = { signed: 1, exponentBits: 5, mantissaBits: 10, bias: 15 };
 
-/** Once-allocated ArrayBuffer/views  to avoid overhead of allocation when converting between numeric formats */
+/** Once-allocated ArrayBuffer/views to avoid overhead of allocation when converting between numeric formats */
 const workingData = new ArrayBuffer(4);
 const workingDataU32 = new Uint32Array(workingData);
 const workingDataU16 = new Uint16Array(workingData);
