@@ -48,6 +48,8 @@ desc(
 `
   Test that beginning a  {compute,render} pass before ending the previous {compute,render} pass
   causes an error.
+
+  TODO: Update this test according to https://github.com/gpuweb/gpuweb/issues/2464
   `).
 
 params((u) =>
