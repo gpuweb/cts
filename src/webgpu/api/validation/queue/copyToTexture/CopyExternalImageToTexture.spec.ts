@@ -136,6 +136,13 @@ function generateCopySizeForDstOOB({ mipLevel, dstOrigin }: WithDstOriginMipLeve
 }
 
 class CopyExternalImageToTextureTest extends ValidationTest {
+  onlineCrossOriginUrl = 'https://github.com/gpuweb/gpuweb/blob/main/logo/webgpu.png';
+
+  runningOnLocalHost(): boolean {
+    const hostname = window.location.hostname;
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+  }
+
   getImageData(width: number, height: number): ImageData {
     if (typeof ImageData === 'undefined') {
       this.skip('ImageData is not supported.');
@@ -301,9 +308,6 @@ g.test('source_image,crossOrigin')
   images.
 
   Check whether 'SecurityError' is generated when source image is not origin clean.
-
-  TODO: make this test case work offline, ref link to achieve this :
-  https://web-platform-tests.org/writing-tests/server-features.html#tests-involving-multiple-origins
   `
   )
   .params(u =>
@@ -323,9 +327,20 @@ g.test('source_image,crossOrigin')
       t.skip('DOM is not available to create an image element.');
     }
 
-    const crossOriginUrl = 'https://get.webgl.org/conformance-resources/opengl_logo.jpg';
-    const originCleanUrl = getResourcePath('Di-3d.png');
+    // Using 'localhost' and '127.0.0.1' trick to load cross origin resource. Set cross origin host name
+    // to 'localhost' if case is not running in 'localhost' domain. Otherwise, use '127.0.0.1'.
+    // host name to locahost unless the server running in
+    let crossOriginHostName = '';
+    if (location.hostname === 'localhost') {
+      crossOriginHostName = 'http://127.0.0.1';
+    } else {
+      crossOriginHostName = 'http://localhost';
+    }
 
+    const crossOriginUrl = t.runningOnLocalHost()
+      ? getResourcePath('webgpu.png', crossOriginHostName)
+      : t.onlineCrossOriginUrl;
+    const originCleanUrl = getResourcePath('webgpu.png');
     const img = document.createElement('img');
     img.src = isOriginClean ? originCleanUrl : crossOriginUrl;
 
@@ -337,8 +352,7 @@ g.test('source_image,crossOrigin')
       if (isOriginClean) {
         throw e;
       } else {
-        t.warn('Something wrong happens in get.webgl.org');
-        t.skip('Cannot load image in time');
+        t.skip('Cannot load cross origin image in time');
         return;
       }
     }
