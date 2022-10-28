@@ -629,20 +629,20 @@ g.test('empty_bind_group_layouts_requires_empty_bind_groups,compute_pass')
   .desc(
     `
   Test that a compute pipeline with empty bind groups layouts requires empty bind groups to be set.
-
-  TODO: Also test other dispatch calls using the 'doCompute' helper in this file
   `
   )
-  .paramsSimple([
-    { bindGroupLayoutEntryCount: 4, _success: true }, // Control case
-    { bindGroupLayoutEntryCount: 3, _success: false },
-  ])
+  .params(u =>
+    u
+      .combine('bindGroupLayoutEntryCount', [3, 4])
+      .combine('computeCommand', ['dispatchIndirect', 'dispatch'])
+  )
   .fn(async t => {
-    const { bindGroupLayoutEntryCount, _success } = t.params;
+    const { bindGroupLayoutEntryCount, computeCommand } = t.params;
 
+    const emptyBGLCount = 4;
     const emptyBGL = t.device.createBindGroupLayout({ entries: [] });
     const emptyBGLs = [];
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < emptyBGLCount; i++) {
       emptyBGLs.push(emptyBGL);
     }
 
@@ -667,37 +667,40 @@ g.test('empty_bind_group_layouts_requires_empty_bind_groups,compute_pass')
     });
 
     const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginComputePass();
-    pass.setPipeline(pipeline);
+    const computePass = encoder.beginComputePass();
+    computePass.setPipeline(pipeline);
     for (let i = 0; i < bindGroupLayoutEntryCount; i++) {
-      pass.setBindGroup(i, emptyBindGroup);
+      computePass.setBindGroup(i, emptyBindGroup);
     }
-    pass.dispatchWorkgroups(0);
-    pass.end();
+
+    t.doCompute(computePass, computeCommand, true);
+    computePass.end();
+
+    const success = bindGroupLayoutEntryCount === emptyBGLCount;
 
     t.expectValidationError(() => {
       encoder.finish();
-    }, !_success);
+    }, !success);
   });
 
 g.test('empty_bind_group_layouts_requires_empty_bind_groups,render_pass')
   .desc(
     `
   Test that a render pipeline with empty bind groups layouts requires empty bind groups to be set.
-
-  TODO: Also test other draw calls using the 'doRender' helper in this file
   `
   )
-  .paramsSimple([
-    { bindGroupLayoutEntryCount: 4, _success: true }, // Control case
-    { bindGroupLayoutEntryCount: 3, _success: false },
-  ])
+  .params(u =>
+    u
+      .combine('bindGroupLayoutEntryCount', [3, 4])
+      .combine('renderCommand', ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect'])
+  )
   .fn(async t => {
-    const { bindGroupLayoutEntryCount, _success } = t.params;
+    const { bindGroupLayoutEntryCount, renderCommand } = t.params;
 
+    const emptyBGLCount = 4;
     const emptyBGL = t.device.createBindGroupLayout({ entries: [] });
     const emptyBGLs = [];
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < emptyBGLCount; i++) {
       emptyBGLs.push(emptyBGL);
     }
 
@@ -754,10 +757,12 @@ g.test('empty_bind_group_layouts_requires_empty_bind_groups,render_pass')
     for (let i = 0; i < bindGroupLayoutEntryCount; i++) {
       renderPass.setBindGroup(i, emptyBindGroup);
     }
-    renderPass.draw(0);
+    t.doRender(renderPass, renderCommand, true);
     renderPass.end();
+
+    const success = bindGroupLayoutEntryCount === emptyBGLCount;
 
     t.expectValidationError(() => {
       encoder.finish();
-    }, !_success);
+    }, !success);
   });
