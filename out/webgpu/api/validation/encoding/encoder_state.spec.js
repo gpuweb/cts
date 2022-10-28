@@ -17,6 +17,7 @@ TODO:
     - should make whole encoder invalid
 - ?
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { objectEquals } from '../../../../common/util/util.js';
 import { ValidationTest } from '../validation_test.js';
 
 class F extends ValidationTest {
@@ -47,23 +48,25 @@ desc(
 `
   Test that beginning a  {compute,render} pass before ending the previous {compute,render} pass
   causes an error.
-
-  TODO: Need to add a control case to be sure a validation error happens because of ending order.
   `).
 
-paramsSubcasesOnly((u) =>
+params((u) =>
 u.
 combine('pass0Type', ['compute', 'render']).
 combine('pass1Type', ['compute', 'render']).
+beginSubcases().
+combine('firstPassEnd', [true, false]).
 combine('endPasses', [[], [0], [1], [0, 1], [1, 0]])).
 
 fn(async (t) => {
-  const { pass0Type, pass1Type, endPasses } = t.params;
+  const { pass0Type, pass1Type, firstPassEnd, endPasses } = t.params;
 
   const encoder = t.device.createCommandEncoder();
 
   const firstPass =
   pass0Type === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder);
+
+  if (firstPassEnd) firstPass.end();
 
   // Begin a second pass before ending the previous pass.
   const secondPass =
@@ -74,9 +77,12 @@ fn(async (t) => {
     passes[index].end();
   }
 
+  // If {endPasses} is '[1]' and {firstPass} ends, it's a control case.
+  const valid = firstPassEnd && objectEquals(endPasses, [1]);
+
   t.expectValidationError(() => {
     encoder.finish();
-  }, true);
+  }, !valid);
 });
 
 g.test('call_after_successful_finish').
