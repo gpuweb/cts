@@ -710,6 +710,7 @@ export function makeVectorPairToVectorIntervalCase(
  *            intervals for a vector.
  */
 export function makeU32ToVectorIntervalCase(param: number, ...ops: PointToVector[]): Case {
+  param = Math.trunc(param);
   const param_u32 = u32(param);
 
   const vectors = ops.map(o => o(param));
