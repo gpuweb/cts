@@ -8,6 +8,7 @@ import {
   correctlyRoundedF32,
   flushSubnormalNumberF32,
   isFiniteF32,
+  isSubnormalNumberF16,
   isSubnormalNumberF32,
   oneULP,
 } from './math.js';
@@ -164,11 +165,19 @@ function spanF32Vector(...vectors) {
 }
 
 /**
- * @returns the input plus zero if any of the entries are subnormal, otherwise
- * returns the input
+ * @returns the input plus zero if any of the entries are f32 subnormal,
+ * otherwise returns the input.
  */
-function addFlushedIfNeeded(values) {
+function addFlushedIfNeededF32(values) {
   return values.some(v => v !== 0 && isSubnormalNumberF32(v)) ? values.concat(0) : values;
+}
+
+/**
+ * @returns the input plus zero if any of the entries are f16 subnormal,
+ * otherwise returns the input
+ */
+function addFlushedIfNeededF16(values) {
+  return values.some(v => v !== 0 && isSubnormalNumberF16(v)) ? values.concat(0) : values;
 }
 
 /**
@@ -243,7 +252,7 @@ function limitBinaryToIntervalDomain(domain, impl) {
 function roundAndFlushPointToInterval(n, op) {
   assert(!Number.isNaN(n), `flush not defined for NaN`);
   const values = correctlyRoundedF32(n);
-  const inputs = addFlushedIfNeeded(values);
+  const inputs = addFlushedIfNeededF32(values);
   const results = new Set(inputs.map(op.impl));
   return F32Interval.span(...results);
 }
@@ -266,8 +275,8 @@ function roundAndFlushBinaryToInterval(x, y, op) {
   assert(!Number.isNaN(y), `flush not defined for NaN`);
   const x_values = correctlyRoundedF32(x);
   const y_values = correctlyRoundedF32(y);
-  const x_inputs = addFlushedIfNeeded(x_values);
-  const y_inputs = addFlushedIfNeeded(y_values);
+  const x_inputs = addFlushedIfNeededF32(x_values);
+  const y_inputs = addFlushedIfNeededF32(y_values);
   const intervals = new Set();
   x_inputs.forEach(inner_x => {
     y_inputs.forEach(inner_y => {
@@ -296,9 +305,9 @@ function roundAndFlushTernaryToInterval(x, y, z, op) {
   const x_values = correctlyRoundedF32(x);
   const y_values = correctlyRoundedF32(y);
   const z_values = correctlyRoundedF32(z);
-  const x_inputs = addFlushedIfNeeded(x_values);
-  const y_inputs = addFlushedIfNeeded(y_values);
-  const z_inputs = addFlushedIfNeeded(z_values);
+  const x_inputs = addFlushedIfNeededF32(x_values);
+  const y_inputs = addFlushedIfNeededF32(y_values);
+  const z_inputs = addFlushedIfNeededF32(z_values);
   const intervals = new Set();
 
   x_inputs.forEach(inner_x => {
@@ -328,7 +337,7 @@ function roundAndFlushVectorToInterval(x, op) {
   );
 
   const x_rounded = x.map(correctlyRoundedF32);
-  const x_flushed = x_rounded.map(addFlushedIfNeeded);
+  const x_flushed = x_rounded.map(addFlushedIfNeededF32);
   const x_inputs = cartesianProduct(...x_flushed);
 
   const intervals = new Set();
@@ -362,8 +371,8 @@ function roundAndFlushVectorPairToInterval(x, y, op) {
 
   const x_rounded = x.map(correctlyRoundedF32);
   const y_rounded = y.map(correctlyRoundedF32);
-  const x_flushed = x_rounded.map(addFlushedIfNeeded);
-  const y_flushed = y_rounded.map(addFlushedIfNeeded);
+  const x_flushed = x_rounded.map(addFlushedIfNeededF32);
+  const y_flushed = y_rounded.map(addFlushedIfNeededF32);
   const x_inputs = cartesianProduct(...x_flushed);
   const y_inputs = cartesianProduct(...y_flushed);
 
@@ -393,7 +402,7 @@ function roundAndFlushVectorToVector(x, op) {
   );
 
   const x_rounded = x.map(correctlyRoundedF32);
-  const x_flushed = x_rounded.map(addFlushedIfNeeded);
+  const x_flushed = x_rounded.map(addFlushedIfNeededF32);
   const x_inputs = cartesianProduct(...x_flushed);
 
   const interval_vectors = new Set();
@@ -429,8 +438,8 @@ function roundAndFlushVectorPairToVector(x, y, op) {
 
   const x_rounded = x.map(correctlyRoundedF32);
   const y_rounded = y.map(correctlyRoundedF32);
-  const x_flushed = x_rounded.map(addFlushedIfNeeded);
-  const y_flushed = y_rounded.map(addFlushedIfNeeded);
+  const x_flushed = x_rounded.map(addFlushedIfNeededF32);
+  const y_flushed = y_rounded.map(addFlushedIfNeededF32);
   const x_inputs = cartesianProduct(...x_flushed);
   const y_inputs = cartesianProduct(...y_flushed);
 
@@ -1415,24 +1424,14 @@ export function powInterval(x, y) {
   return runBinaryToIntervalOp(toF32Interval(x), toF32Interval(y), PowIntervalOp);
 }
 
-// Once a full implementation of F16Interval exists, the correctlyRounded for that can potentially be used instead of
-// having a bespoke operation implementation.
+// Once a full implementation of F16Interval exists, the correctlyRounded for
+// that can potentially be used instead of having a bespoke operation
+// implementation.
 const QuantizeToF16IntervalOp = {
   impl: n => {
-    // This will perform FTZ for f16, this might need to change depending on the outcome of
-    // https://github.com/gpuweb/gpuweb/issues/3421
     const rounded = correctlyRoundedF16(n);
-    // All f16 values are representable as normal f32 values, so there is no need to handle flushing on the output of
-    // correctlyRoundedF16
-    if (rounded.length === 2) {
-      return new F32Interval(rounded[0], rounded[1]);
-    }
-    if (rounded.length === 1) {
-      return new F32Interval(rounded[0]);
-    }
-    unreachable(
-      `Result of correctlyRoundedF16(${n}) = [${rounded}] is expected to have 1 or 2 elements`
-    );
+    const flushed = addFlushedIfNeededF16(rounded);
+    return F32Interval.span(...flushed.map(toF32Interval));
   },
 };
 

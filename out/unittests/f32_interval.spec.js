@@ -1294,13 +1294,13 @@ paramsSubcasesOnly(
 { input: -1, expected: [-1] },
 { input: -0.1, expected: [hexToF32(0xbdcce000), hexToF32(0xbdccc000)] }, // ~-0.1
 { input: kValue.f16.negative.max, expected: [kValue.f16.negative.max] },
-{ input: kValue.f16.subnormal.negative.min, expected: [kValue.f16.subnormal.negative.min] },
-{ input: kValue.f16.subnormal.negative.max, expected: [kValue.f16.subnormal.negative.max] },
+{ input: kValue.f16.subnormal.negative.min, expected: [kValue.f16.subnormal.negative.min, 0] },
+{ input: kValue.f16.subnormal.negative.max, expected: [kValue.f16.subnormal.negative.max, 0] },
 { input: kValue.f32.subnormal.negative.max, expected: [kValue.f16.subnormal.negative.max, 0] },
 { input: 0, expected: [0] },
 { input: kValue.f32.subnormal.positive.min, expected: [0, kValue.f16.subnormal.positive.min] },
-{ input: kValue.f16.subnormal.positive.min, expected: [kValue.f16.subnormal.positive.min] },
-{ input: kValue.f16.subnormal.positive.max, expected: [kValue.f16.subnormal.positive.max] },
+{ input: kValue.f16.subnormal.positive.min, expected: [0, kValue.f16.subnormal.positive.min] },
+{ input: kValue.f16.subnormal.positive.max, expected: [0, kValue.f16.subnormal.positive.max] },
 { input: kValue.f16.positive.min, expected: [kValue.f16.positive.min] },
 { input: 0.1, expected: [hexToF32(0x3dccc000), hexToF32(0x3dcce000)] }, // ~0.1
 { input: 1, expected: [1] },
