@@ -1,11 +1,13 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { assert, unreachable } from '../../common/util/util.js';import { kValue } from './constants.js';
+**/import { assert, unreachable } from '../../common/util/util.js';import { Float16Array } from '../../external/petamoriken/float16/float16.js';
+import { kValue } from './constants.js';
 import {
 cartesianProduct,
 correctlyRoundedF16,
 correctlyRoundedF32,
 flushSubnormalNumberF32,
+isFiniteF16,
 isFiniteF32,
 isSubnormalNumberF16,
 isSubnormalNumberF32,
@@ -1894,6 +1896,29 @@ const unpackDataU16 = new Uint16Array(unpackData);
 const unpackDataU8 = new Uint8Array(unpackData);
 const unpackDataI16 = new Int16Array(unpackData);
 const unpackDataI8 = new Int8Array(unpackData);
+const unpackDataF16 = new Float16Array(unpackData);
+
+/** Calculate an acceptance interval vector for unpack2x16float(x) */
+export function unpack2x16floatInterval(n) {
+  assert(
+  n >= kValue.u32.min && n <= kValue.u32.max,
+  'unpack2x16floatInterval only accepts values on the bounds of u32');
+
+  unpackDataU32[0] = n;
+  if (unpackDataF16.some((f) => !isFiniteF16(f))) {
+    return [F32Interval.any(), F32Interval.any()];
+  }
+
+  const result = [
+  quantizeToF16Interval(unpackDataF16[0]),
+  quantizeToF16Interval(unpackDataF16[1])];
+
+
+  if (result.some((r) => !r.isFinite())) {
+    return [F32Interval.any(), F32Interval.any()];
+  }
+  return result;
+}
 
 const Unpack2x16snormIntervalOp = (n) => {
   return maxInterval(divisionInterval(n, 32767), -1);

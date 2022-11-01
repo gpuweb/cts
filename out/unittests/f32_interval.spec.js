@@ -66,10 +66,11 @@ tanhInterval,
 toF32Vector,
 truncInterval,
 ulpInterval,
-unpack2x16unormInterval,
-unpack4x8unormInterval,
+unpack2x16floatInterval,
 unpack2x16snormInterval,
-unpack4x8snormInterval } from
+unpack2x16unormInterval,
+unpack4x8snormInterval,
+unpack4x8unormInterval } from
 '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -2688,6 +2689,44 @@ fn((t) => {
     t.expect(
     objectEquals(expected, got),
     `unpack2x16snormInterval(${t.params.input}) returned [${got}]. Expected [${expected}]`);
+
+  });
+
+  g.test('unpack2x16floatInterval').
+  paramsSubcasesOnly(
+
+  [
+  // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
+  // form due to the inherited nature of the errors.
+  // f16 normals
+  { input: 0x00000000, expected: [[0], [0]] },
+  { input: 0x80000000, expected: [[0], [0]] },
+  { input: 0x00008000, expected: [[0], [0]] },
+  { input: 0x80008000, expected: [[0], [0]] },
+  { input: 0x00003c00, expected: [[1], [0]] },
+  { input: 0x3c000000, expected: [[0], [1]] },
+  { input: 0x3c003c00, expected: [[1], [1]] },
+  { input: 0xbc00bc00, expected: [[-1], [-1]] },
+  { input: 0x49004900, expected: [[10], [10]] },
+  { input: 0xc900c900, expected: [[-10], [-10]] },
+
+  // f16 subnormals
+  { input: 0x000003ff, expected: [[0, kValue.f16.subnormal.positive.max], [0]] },
+  { input: 0x000083ff, expected: [[kValue.f16.subnormal.negative.min, 0], [0]] },
+
+  // f16 out of bounds
+  { input: 0x7c000000, expected: [kAny, kAny] },
+  { input: 0xffff0000, expected: [kAny, kAny] }]).
+
+
+  fn((t) => {
+    const expected = toF32Vector(t.params.expected);
+
+    const got = unpack2x16floatInterval(t.params.input);
+
+    t.expect(
+    objectEquals(expected, got),
+    `unpack2x16floatInterval(${t.params.input}) returned [${got}]. Expected [${expected}]`);
 
   });
 
