@@ -1,6 +1,8 @@
 export const description = `
 Validation tests to all commands of GPUCommandEncoder, GPUComputePassEncoder, and
 GPURenderPassEncoder when the encoder is not finished.
+
+TODO: Equivalent tests for GPURenderBundleEncoder.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
@@ -101,6 +103,8 @@ const kRenderPassEncoderCommandInfo: {
 };
 const kRenderPassEncoderCommands = keysOf(kRenderPassEncoderCommandInfo);
 
+// MAINTENANCE_TODO: remove the deprecated 'dispatch' and 'dispatchIndirect' here once they're
+// removed from `@webgpu/types`.
 type ComputePassEncoderCommands = keyof Omit<
   GPUComputePassEncoder,
   '__brand' | 'label' | 'end' | 'dispatch' | 'dispatchIndirect'
