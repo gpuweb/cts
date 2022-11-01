@@ -7,6 +7,12 @@ bits 8×i through 8×i+7 of e as a twos-complement signed integer.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
+import { TypeF32, TypeU32, TypeVec } from '../../../../../util/conversion.js';
+import { unpack4x8snormInterval } from '../../../../../util/f32_interval.js';
+import { fullU32Range } from '../../../../../util/math.js';
+import { allInputSources, Case, makeU32ToVectorIntervalCase, run } from '../../expression.js';
+
+import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -17,4 +23,13 @@ g.test('unpack')
 @const fn unpack4x8snorm(e: u32) -> vec4<f32>
 `
   )
-  .unimplemented();
+  .params(u => u.combine('inputSource', allInputSources))
+  .fn(async t => {
+    const makeCase = (n: number): Case => {
+      return makeU32ToVectorIntervalCase(n, unpack4x8snormInterval);
+    };
+
+    const cases: Array<Case> = fullU32Range().map(makeCase);
+
+    await run(t, builtin('unpack4x8snorm'), [TypeU32], TypeVec(4, TypeF32), t.params, cases);
+  });

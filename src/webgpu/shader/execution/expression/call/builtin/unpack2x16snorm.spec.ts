@@ -26,7 +26,6 @@ g.test('unpack')
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
     const makeCase = (n: number): Case => {
-      n = Math.trunc(n);
       return makeU32ToVectorIntervalCase(n, unpack2x16snormInterval);
     };
 

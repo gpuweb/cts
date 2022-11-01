@@ -26,7 +26,6 @@ desc(
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
   const makeCase = (n) => {
-    n = Math.trunc(n);
     return makeU32ToVectorIntervalCase(n, unpack2x16unormInterval);
   };
 

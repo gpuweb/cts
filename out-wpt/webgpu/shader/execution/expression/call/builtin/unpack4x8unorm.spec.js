@@ -24,10 +24,9 @@ g.test('unpack')
 @const fn unpack4x8unorm(e: u32) -> vec4<f32>
 `
   )
-  .params(u => u.combine('inputSource', [allInputSources[1]]))
+  .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
     const makeCase = n => {
-      n = Math.trunc(n);
       return makeU32ToVectorIntervalCase(n, unpack4x8unormInterval);
     };
 

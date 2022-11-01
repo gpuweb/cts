@@ -710,6 +710,7 @@ param1,
  *            intervals for a vector.
  */
 export function makeU32ToVectorIntervalCase(param, ...ops) {
+  param = Math.trunc(param);
   const param_u32 = u32(param);
 
   const vectors = ops.map((o) => o(param));

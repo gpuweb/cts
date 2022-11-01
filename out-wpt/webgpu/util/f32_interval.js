@@ -1692,6 +1692,7 @@ const unpackDataU32 = new Uint32Array(unpackData);
 const unpackDataU16 = new Uint16Array(unpackData);
 const unpackDataU8 = new Uint8Array(unpackData);
 const unpackDataI16 = new Int16Array(unpackData);
+const unpackDataI8 = new Int8Array(unpackData);
 
 const Unpack2x16snormIntervalOp = n => {
   return maxInterval(divisionInterval(n, 32767), -1);
@@ -1721,6 +1722,26 @@ export function unpack2x16unormInterval(n) {
 
   unpackDataU32[0] = n;
   return [Unpack2x16unormIntervalOp(unpackDataU16[0]), Unpack2x16unormIntervalOp(unpackDataU16[1])];
+}
+
+const Unpack4x8snormIntervalOp = n => {
+  return maxInterval(divisionInterval(n, 127), -1);
+};
+
+/** Calculate an acceptance interval vector for unpack4x8snorm(x) */
+export function unpack4x8snormInterval(n) {
+  assert(
+    n >= kValue.u32.min && n <= kValue.u32.max,
+    'unpack4x8snormInterval only accepts values on the bounds of u32'
+  );
+
+  unpackDataU32[0] = n;
+  return [
+    Unpack4x8snormIntervalOp(unpackDataI8[0]),
+    Unpack4x8snormIntervalOp(unpackDataI8[1]),
+    Unpack4x8snormIntervalOp(unpackDataI8[2]),
+    Unpack4x8snormIntervalOp(unpackDataI8[3]),
+  ];
 }
 
 const Unpack4x8unormIntervalOp = n => {

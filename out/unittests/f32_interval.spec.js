@@ -68,7 +68,8 @@ truncInterval,
 ulpInterval,
 unpack2x16unormInterval,
 unpack4x8unormInterval,
-unpack2x16snormInterval } from
+unpack2x16snormInterval,
+unpack4x8snormInterval } from
 '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -2716,6 +2717,47 @@ fn((t) => {
     t.expect(
     objectEquals(expected, got),
     `unpack2x16unormInterval(${t.params.input}) returned [${got}]. Expected [${expected}]`);
+
+  });
+
+  const kHalfBounds4x8snorm = [
+  hexToF64(0x3fe02040, 0x20000000),
+  hexToF64(0x3fe02041, 0x00000000)];
+  // ~0.50196..., due to lack of precision in i8
+  const kNegHalfBounds4x8snorm = [
+  hexToF64(0xbfdfbf7f, 0x60000000),
+  hexToF64(0xbfdfbf7e, 0x80000000)];
+  // ~-0.49606..., due to lack of precision in i8
+
+  g.test('unpack4x8snormInterval').
+  paramsSubcasesOnly(
+
+  [
+  // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
+  // form due to the inherited nature of the errors.
+  { input: 0x00000000, expected: [kZeroBounds, kZeroBounds, kZeroBounds, kZeroBounds] },
+  { input: 0x0000007f, expected: [kOneBoundsSnorm, kZeroBounds, kZeroBounds, kZeroBounds] },
+  { input: 0x00007f00, expected: [kZeroBounds, kOneBoundsSnorm, kZeroBounds, kZeroBounds] },
+  { input: 0x007f0000, expected: [kZeroBounds, kZeroBounds, kOneBoundsSnorm, kZeroBounds] },
+  { input: 0x7f000000, expected: [kZeroBounds, kZeroBounds, kZeroBounds, kOneBoundsSnorm] },
+  { input: 0x00007f7f, expected: [kOneBoundsSnorm, kOneBoundsSnorm, kZeroBounds, kZeroBounds] },
+  { input: 0x7f7f0000, expected: [kZeroBounds, kZeroBounds, kOneBoundsSnorm, kOneBoundsSnorm] },
+  { input: 0x7f007f00, expected: [kZeroBounds, kOneBoundsSnorm, kZeroBounds, kOneBoundsSnorm] },
+  { input: 0x007f007f, expected: [kOneBoundsSnorm, kZeroBounds, kOneBoundsSnorm, kZeroBounds] },
+  { input: 0x7f7f7f7f, expected: [kOneBoundsSnorm, kOneBoundsSnorm, kOneBoundsSnorm, kOneBoundsSnorm] },
+  { input: 0x81818181, expected: [kNegOneBoundsSnorm, kNegOneBoundsSnorm, kNegOneBoundsSnorm, kNegOneBoundsSnorm] },
+  { input: 0x40404040, expected: [kHalfBounds4x8snorm, kHalfBounds4x8snorm, kHalfBounds4x8snorm, kHalfBounds4x8snorm] },
+  { input: 0xc1c1c1c1, expected: [kNegHalfBounds4x8snorm, kNegHalfBounds4x8snorm, kNegHalfBounds4x8snorm, kNegHalfBounds4x8snorm] }]).
+
+
+  fn((t) => {
+    const expected = toF32Vector(t.params.expected);
+
+    const got = unpack4x8snormInterval(t.params.input);
+
+    t.expect(
+    objectEquals(expected, got),
+    `unpack4x8snormInterval(${t.params.input}) returned [${got}]. Expected [${expected}]`);
 
   });
 
