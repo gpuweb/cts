@@ -834,6 +834,14 @@ export const listing = [
       "api",
       "validation",
       "encoding",
+      "encoder_open_state"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "encoding",
       "encoder_state"
     ]
   },
