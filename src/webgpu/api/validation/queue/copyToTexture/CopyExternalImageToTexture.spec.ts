@@ -136,7 +136,7 @@ function generateCopySizeForDstOOB({ mipLevel, dstOrigin }: WithDstOriginMipLeve
 }
 
 class CopyExternalImageToTextureTest extends ValidationTest {
-  onlineCrossOriginUrl = 'https://github.com/gpuweb/gpuweb/blob/main/logo/webgpu.png';
+  onlineCrossOriginUrl = 'https://raw.githubusercontent.com/gpuweb/gpuweb/main/logo/webgpu.png';
 
   runningOnLocalHost(): boolean {
     const hostname = window.location.hostname;
