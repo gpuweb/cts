@@ -87,7 +87,7 @@ fn(async (t) => {
   0b00000000001010101010100000000000);
 
 
-  await run(t, builtin('extractBits'), [T, TypeU32, TypeU32], T, cfg, [
+  const cases = [
   { input: [all_0, u32(0), u32(32)], expected: all_0 },
   { input: [all_0, u32(1), u32(10)], expected: all_0 },
   { input: [all_0, u32(2), u32(5)], expected: all_0 },
@@ -165,27 +165,35 @@ fn(async (t) => {
   { input: [low_1, u32(0), u32(1)], expected: low_1 },
   { input: [high_1, u32(31), u32(1)], expected: low_1 },
 
-  // End overflow
-  { input: [low_1, u32(0), u32(99)], expected: low_1 },
-  { input: [high_1, u32(31), u32(99)], expected: low_1 },
-  { input: [pattern, u32(0), u32(99)], expected: pattern },
-  {
-    input: [pattern, u32(14), u32(99)],
-    expected: V(
-    0b00000000000000000000000001110111,
-    0b00000000000000111111111110000000,
-    0b00000000000000000000000101010101,
-    0b00000000000000000000000010101010) },
-
-
-
   // Zero count
   { input: [all_1, u32(0), u32(0)], expected: all_0 },
   { input: [all_0, u32(0), u32(0)], expected: all_0 },
   { input: [low_1, u32(0), u32(0)], expected: all_0 },
   { input: [high_1, u32(31), u32(0)], expected: all_0 },
-  { input: [pattern, u32(0), u32(0)], expected: all_0 }]);
+  { input: [pattern, u32(0), u32(0)], expected: all_0 }];
 
+
+  if (t.params.inputSource !== 'const') {
+    cases.push(
+    ...[
+    // End overflow
+    { input: [low_1, u32(0), u32(99)], expected: low_1 },
+    { input: [high_1, u32(31), u32(99)], expected: low_1 },
+    { input: [pattern, u32(0), u32(99)], expected: pattern },
+    {
+      input: [pattern, u32(14), u32(99)],
+      expected: V(
+      0b00000000000000000000000001110111,
+      0b00000000000000111111111110000000,
+      0b00000000000000000000000101010101,
+      0b00000000000000000000000010101010) }]);
+
+
+
+
+  }
+
+  await run(t, builtin('extractBits'), [T, TypeU32, TypeU32], T, cfg, cases);
 });
 
 g.test('i32').
@@ -225,7 +233,7 @@ fn(async (t) => {
   0b00000000001010101010100000000000);
 
 
-  await run(t, builtin('extractBits'), [T, TypeU32, TypeU32], T, cfg, [
+  const cases = [
   { input: [all_0, u32(0), u32(32)], expected: all_0 },
   { input: [all_0, u32(1), u32(10)], expected: all_0 },
   { input: [all_0, u32(2), u32(5)], expected: all_0 },
@@ -297,26 +305,34 @@ fn(async (t) => {
   { input: [low_1, u32(0), u32(1)], expected: all_1 },
   { input: [high_1, u32(31), u32(1)], expected: all_1 },
 
-  // End overflow
-  { input: [low_1, u32(0), u32(99)], expected: low_1 },
-  { input: [high_1, u32(31), u32(99)], expected: all_1 },
-  { input: [pattern, u32(0), u32(99)], expected: pattern },
-  {
-    input: [pattern, u32(14), u32(99)],
-    expected: V(
-    0b00000000000000000000000001110111,
-    0b11111111111111111111111110000000,
-    0b00000000000000000000000101010101,
-    0b00000000000000000000000010101010) },
-
-
-
   // Zero count
   { input: [all_1, u32(0), u32(0)], expected: all_0 },
   { input: [all_0, u32(0), u32(0)], expected: all_0 },
   { input: [low_1, u32(0), u32(0)], expected: all_0 },
   { input: [high_1, u32(31), u32(0)], expected: all_0 },
-  { input: [pattern, u32(0), u32(0)], expected: all_0 }]);
+  { input: [pattern, u32(0), u32(0)], expected: all_0 }];
 
+
+  if (t.params.inputSource !== 'const') {
+    cases.push(
+    ...[
+    // End overflow
+    { input: [low_1, u32(0), u32(99)], expected: low_1 },
+    { input: [high_1, u32(31), u32(99)], expected: all_1 },
+    { input: [pattern, u32(0), u32(99)], expected: pattern },
+    {
+      input: [pattern, u32(14), u32(99)],
+      expected: V(
+      0b00000000000000000000000001110111,
+      0b11111111111111111111111110000000,
+      0b00000000000000000000000101010101,
+      0b00000000000000000000000010101010) }]);
+
+
+
+
+  }
+
+  await run(t, builtin('extractBits'), [T, TypeU32, TypeU32], T, cfg, cases);
 });
 //# sourceMappingURL=extractBits.spec.js.map
