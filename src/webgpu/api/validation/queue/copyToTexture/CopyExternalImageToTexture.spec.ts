@@ -5,7 +5,10 @@ the destination texture should have RENDER_ATTACHMENT usage, which is only allow
 textures.
 `;
 
-import { getResourcePath } from '../../../../../common/framework/resources.js';
+import {
+  getResourcePath,
+  getCrossOriginResourcePath,
+} from '../../../../../common/framework/resources.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { raceWithRejectOnTimeout, unreachable, assert } from '../../../../../common/util/util.js';
 import {
@@ -137,11 +140,6 @@ function generateCopySizeForDstOOB({ mipLevel, dstOrigin }: WithDstOriginMipLeve
 
 class CopyExternalImageToTextureTest extends ValidationTest {
   onlineCrossOriginUrl = 'https://raw.githubusercontent.com/gpuweb/gpuweb/main/logo/webgpu.png';
-
-  runningOnLocalHost(): boolean {
-    const hostname = window.location.hostname;
-    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
-  }
 
   getImageData(width: number, height: number): ImageData {
     if (typeof ImageData === 'undefined') {
@@ -327,19 +325,7 @@ g.test('source_image,crossOrigin')
       t.skip('DOM is not available to create an image element.');
     }
 
-    // Using 'localhost' and '127.0.0.1' trick to load cross origin resource. Set cross origin host name
-    // to 'localhost' if case is not running in 'localhost' domain. Otherwise, use '127.0.0.1'.
-    // host name to locahost unless the server running in
-    let crossOriginHostName = '';
-    if (location.hostname === 'localhost') {
-      crossOriginHostName = 'http://127.0.0.1';
-    } else {
-      crossOriginHostName = 'http://localhost';
-    }
-
-    const crossOriginUrl = t.runningOnLocalHost()
-      ? getResourcePath('webgpu.png', crossOriginHostName)
-      : t.onlineCrossOriginUrl;
+    const crossOriginUrl = getCrossOriginResourcePath('webgpu.png', t.onlineCrossOriginUrl);
     const originCleanUrl = getResourcePath('webgpu.png');
     const img = document.createElement('img');
     img.src = isOriginClean ? originCleanUrl : crossOriginUrl;
