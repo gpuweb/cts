@@ -561,6 +561,22 @@ export function fullF32Range(counts = { pos_sub: 10, pos_norm: 50 }) {
 }
 
 /**
+ * @returns an ascending sorted array of numbers.
+ *
+ * The numbers returned are based on the `full32Range` as described above. The difference comes depending
+ * on the `source` parameter. If the `source` is `const` then the numbers will be restricted to be
+ * in the range `[low, high]`. This allows filtering out a set of `f32` values which are invalid for
+ * const-evaluation but are needed to test the non-const implementation.
+ *
+ * @param source the input source for the test. If the `source` is `const` then the return will be filtered
+ * @param low the lowest f32 value to permit when filtered
+ * @param high the highest f32 value to permit when filtered
+ */
+export function sourceFilteredF32Range(source, low, high) {
+  return fullF32Range().filter(x => source !== 'const' || (x >= low && x <= high));
+}
+
+/**
  * @returns an ascending sorted array of numbers spread over the entire range of 32-bit signed ints
  *
  * Numbers are divided into 2 regions: negatives, and positives, with their spreads biased towards 0

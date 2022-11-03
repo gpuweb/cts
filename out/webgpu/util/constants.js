@@ -47,6 +47,7 @@ export const kBit = {
       min: 0xff7f_ffff,
       zero: 0x8000_0000,
       nearest_min: 0xff7f_fffe,
+      less_than_one: 0xbf7f_ffff,
       pi: {
         whole: 0xc04_90fdb,
         three_quarters: 0xc016_cbe4,
@@ -321,6 +322,7 @@ export const kValue = {
       max: hexToF32(kBit.f32.negative.max),
       min: hexToF32(kBit.f32.negative.min),
       nearest_min: hexToF32(kBit.f32.negative.nearest_min),
+      less_than_one: hexToF32(kBit.f32.negative.less_than_one), // -0.999999940395
       pi: {
         whole: hexToF32(kBit.f32.negative.pi.whole),
         three_quarters: hexToF32(kBit.f32.negative.pi.three_quarters),

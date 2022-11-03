@@ -11,7 +11,7 @@ Returns the arc cosine of e. Component-wise when T is a vector.
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { acosInterval } from '../../../../../util/f32_interval.js';
-import { fullF32Range, linearRange } from '../../../../../util/math.js';
+import { sourceFilteredF32Range, linearRange } from '../../../../../util/math.js';
 import { allInputSources, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -39,7 +39,7 @@ fn(async (t) => {
 
   const cases = [
   ...linearRange(-1, 1, 100), // acos is defined on [-1, 1]
-  ...fullF32Range()].
+  ...sourceFilteredF32Range(t.params.inputSource, -1, 1)].
   map(makeCase);
   await run(t, builtin('acos'), [TypeF32], TypeF32, t.params, cases);
 });
