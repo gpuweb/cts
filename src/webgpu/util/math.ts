@@ -1,6 +1,7 @@
 import { assert } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
+import { F32Interval } from './f32_interval.js';
 import { kBit, kValue } from './constants.js';
 import {
   f16,
@@ -563,6 +564,23 @@ export function fullF32Range(
     ...linearRange(kBit.f32.positive.min, kBit.f32.positive.max, counts.pos_norm),
   ].map(Math.trunc);
   return bit_fields.map(hexToF32);
+}
+
+/**
+ * @returns an ascending sorted array of numbers.
+ *
+ * The numbers returned are based on the `full32Range` as described above. The difference comes depending
+ * on the `source` parameter. If the `source` is `const` then the numbers will be restricted to be
+ * in the range `[low, high]`. This allows filtering out a set of `f32` values which are invalid for
+ * const-evaluation but are needed to test the non-const implementation.
+ *
+ * @param source the input source for the test. If the `source` is `const` then the return will be filtered
+ * @param low the lowest f32 value to permit when filtered
+ * @param high the highest f32 value to permit when filtered
+ */
+export function sourceFilteredF32Range(source: String, low: number, high: number): Array<number> {
+  const interval = new F32Interval(low, high);
+  return fullF32Range().filter(x => source !== 'const' || interval.contains(x));
 }
 
 /**
