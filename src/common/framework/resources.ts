@@ -4,6 +4,7 @@
  * `test_worker-worker.ts` and `standalone.ts`.
  */
 let baseResourcePath = './resources';
+let crossOriginHost = '';
 
 function getAbsoluteBaseResourcePath(path: string) {
   const relparts = window.location.pathname.split('/');
@@ -38,8 +39,21 @@ function runningOnLocalHost(): boolean {
  * Get a path to a resource in the `resources` directory relative to the current execution context
  * (html file or worker .js file), for `fetch()`, `<img>`, `<video>`, etc but from cross origin host.
  * Provide onlineUrl if the case running online.
+ * @internal MAINTENANCE_TODO: Cases may run in the LAN environment (not localhost but no internet
+ * access). We temporarily use `crossOriginHost` to configure the cross origin host name in that situation.
+ * But opening to  auto-detect mechanism or other solutions.
  */
 export function getCrossOriginResourcePath(pathRelativeToResourcesDir: string, onlineUrl = '') {
+  // A cross origin host has been configured. Use this to load resource.
+  if (crossOriginHost !== '') {
+    return (
+      crossOriginHost +
+      getAbsoluteBaseResourcePath(baseResourcePath) +
+      '/' +
+      pathRelativeToResourcesDir
+    );
+  }
+
   // Using 'localhost' and '127.0.0.1' trick to load cross origin resource. Set cross origin host name
   // to 'localhost' if case is not running in 'localhost' domain. Otherwise, use '127.0.0.1'.
   // host name to locahost unless the server running in
@@ -69,17 +83,7 @@ export function getCrossOriginResourcePath(pathRelativeToResourcesDir: string, o
  * (html file or worker .js file), for `fetch()`, `<img>`, `<video>`, etc. Pass the cross origin host
  * name if wants to load resoruce from cross origin host.
  */
-export function getResourcePath(pathRelativeToResourcesDir: string, crossOriginHostName = '') {
-  if (crossOriginHostName !== '') {
-    return (
-      crossOriginHostName +
-      ':' +
-      location.port +
-      getAbsoluteBaseResourcePath(baseResourcePath) +
-      '/' +
-      pathRelativeToResourcesDir
-    );
-  }
+export function getResourcePath(pathRelativeToResourcesDir: string) {
   return baseResourcePath + '/' + pathRelativeToResourcesDir;
 }
 
@@ -89,4 +93,12 @@ export function getResourcePath(pathRelativeToResourcesDir: string, crossOriginH
  */
 export function setBaseResourcePath(path: string) {
   baseResourcePath = path;
+}
+
+/**
+ * Set the cross origin host and cases related to cross origin
+ * will load resource from the given host.
+ */
+export function setCrossOriginHost(host: string) {
+  crossOriginHost = host;
 }
