@@ -45,8 +45,21 @@ g.test('f32')
       ...biasedRange(kValue.f32.negative.less_than_one, -0.9, 20), // discontinuity at x = -1
       ...biasedRange(kValue.f32.positive.less_than_one, 0.9, 20), // discontinuity at x = 1
       ...sourceFilteredF32Range(
-        t.params.inputSource, kValue.f32.negative.less_than_one, kValue.f32.positive.less_than_one),
+        t.params.inputSource,
+        kValue.f32.negative.less_than_one,
+        kValue.f32.positive.less_than_one
+      ),
     ].map(makeCase);
+
+    // Handle the edge case of -1 and 1 when not doing const-eval
+    if (t.params.inputSource !== 'const') {
+      const edgeCases = [
+        ...biasedRange(-1, kValue.f32.negative.less_than_one, 20),
+        ...biasedRange(1, kValue.f32.positive.less_than_one, 20),
+      ].map(makeCase);
+      cases.push(...edgeCases);
+    }
+
     await run(t, builtin('atanh'), [TypeF32], TypeF32, t.params, cases);
   });
 

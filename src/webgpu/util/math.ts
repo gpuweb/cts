@@ -1,7 +1,6 @@
 import { assert } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
-import { F32Interval } from './f32_interval.js';
 import { kBit, kValue } from './constants.js';
 import {
   f16,
@@ -14,6 +13,7 @@ import {
   kFloat32Format,
   Scalar,
 } from './conversion.js';
+import { F32Interval } from './f32_interval.js';
 
 /**
  * A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).
