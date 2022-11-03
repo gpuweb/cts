@@ -53,10 +53,7 @@ g.test('f32')
 
     // Handle the edge case of -1 and 1 when not doing const-eval
     if (t.params.inputSource !== 'const') {
-      const edgeCases = [
-        ...biasedRange(-1, kValue.f32.negative.less_than_one, 20),
-        ...biasedRange(1, kValue.f32.positive.less_than_one, 20),
-      ].map(makeCase);
+      const edgeCases = [-1, 1].map(makeCase);
       cases.push(...edgeCases);
     }
 
