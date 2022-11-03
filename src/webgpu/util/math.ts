@@ -13,7 +13,6 @@ import {
   kFloat32Format,
   Scalar,
 } from './conversion.js';
-import { F32Interval } from './f32_interval.js';
 
 /**
  * A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).
@@ -579,8 +578,7 @@ export function fullF32Range(
  * @param high the highest f32 value to permit when filtered
  */
 export function sourceFilteredF32Range(source: String, low: number, high: number): Array<number> {
-  const interval = new F32Interval(low, high);
-  return fullF32Range().filter(x => source !== 'const' || interval.contains(x));
+  return fullF32Range().filter(x => source !== 'const' || (x >= low && x <= high));
 }
 
 /**
