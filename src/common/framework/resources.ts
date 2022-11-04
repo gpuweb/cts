@@ -7,6 +7,12 @@ let baseResourcePath = './resources';
 let crossOriginHost = '';
 
 function getAbsoluteBaseResourcePath(path: string) {
+  // Path is already an absolute one.
+  if (path[0] === '/') {
+    return path;
+  }
+
+  // Path is relative
   const relparts = window.location.pathname.split('/');
   relparts.pop();
   const pathparts = path.split('/');
