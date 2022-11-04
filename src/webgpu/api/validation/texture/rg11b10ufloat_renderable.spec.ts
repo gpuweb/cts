@@ -38,7 +38,7 @@ g.test('begin_render_bundle_encoder')
   .desc(
     `
 Test that it is valid to begin render bundle encoder with rg11b10ufloat texture
-format if rg11b10ufloat-renderable feature is enabled.
+format iff rg11b10ufloat-renderable feature is enabled.
 `
   )
   .unimplemented();
