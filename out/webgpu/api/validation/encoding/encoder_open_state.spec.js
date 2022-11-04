@@ -3,8 +3,6 @@
 **/export const description = `
 Validation tests to all commands of GPUCommandEncoder, GPUComputePassEncoder, and
 GPURenderPassEncoder when the encoder is not finished.
-
-TODO: Equivalent tests for GPURenderBundleEncoder.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../common/util/data_tables.js';
 import { unreachable } from '../../../../common/util/util.js';
@@ -102,6 +100,27 @@ const kRenderPassEncoderCommandInfo =
   insertDebugMarker: {} };
 
 const kRenderPassEncoderCommands = keysOf(kRenderPassEncoderCommandInfo);
+
+
+
+
+
+const kRenderBundleEncoderCommandInfo =
+
+{
+  draw: {},
+  drawIndexed: {},
+  drawIndexedIndirect: {},
+  drawIndirect: {},
+  setPipeline: {},
+  setBindGroup: {},
+  setIndexBuffer: {},
+  setVertexBuffer: {},
+  pushDebugGroup: {},
+  popDebugGroup: {},
+  insertDebugMarker: {} };
+
+const kRenderBundleEncoderCommands = keysOf(kRenderBundleEncoderCommandInfo);
 
 // MAINTENANCE_TODO: remove the deprecated 'dispatch' and 'dispatchIndirect' here once they're
 // removed from `@webgpu/types`.
@@ -385,6 +404,102 @@ fn((t) => {
       case 'insertDebugMarker':
         {
           encoder.insertDebugMarker('marker');
+        }
+        break;
+      default:
+        unreachable();}
+
+  }, finishBeforeCommand);
+});
+
+g.test('render_bundle_commands').
+desc(
+`
+    Test that functions of GPURenderBundleEncoder generate a validation error if the encoder or the
+    pass is already finished.
+  `).
+
+params((u) =>
+u.
+combine('command', kRenderBundleEncoderCommands).
+beginSubcases().
+combine('finishBeforeCommand', [false, true])).
+
+fn((t) => {
+  const { command, finishBeforeCommand } = t.params;
+
+  const buffer = t.device.createBuffer({
+    size: 12,
+    usage: GPUBufferUsage.INDIRECT | GPUBufferUsage.VERTEX });
+
+
+  const pipeline = t.createRenderPipelineForTest();
+
+  const bindGroup = t.createBindGroupForTest();
+
+  const bundleEncoder = t.device.createRenderBundleEncoder({
+    colorFormats: ['rgba8unorm'] });
+
+
+  if (finishBeforeCommand) {
+    bundleEncoder.finish();
+  }
+
+  t.expectValidationError(() => {
+    switch (command) {
+      case 'draw':
+        {
+          bundleEncoder.draw(1);
+        }
+        break;
+      case 'drawIndexed':
+        {
+          bundleEncoder.drawIndexed(1);
+        }
+        break;
+      case 'drawIndexedIndirect':
+        {
+          bundleEncoder.drawIndexedIndirect(buffer, 0);
+        }
+        break;
+      case 'drawIndirect':
+        {
+          bundleEncoder.drawIndirect(buffer, 1);
+        }
+        break;
+      case 'setPipeline':
+        {
+          bundleEncoder.setPipeline(pipeline);
+        }
+        break;
+      case 'setBindGroup':
+        {
+          bundleEncoder.setBindGroup(0, bindGroup);
+        }
+        break;
+      case 'setIndexBuffer':
+        {
+          bundleEncoder.setIndexBuffer(buffer, 'uint32');
+        }
+        break;
+      case 'setVertexBuffer':
+        {
+          bundleEncoder.setVertexBuffer(1, buffer);
+        }
+        break;
+      case 'pushDebugGroup':
+        {
+          bundleEncoder.pushDebugGroup('group');
+        }
+        break;
+      case 'popDebugGroup':
+        {
+          bundleEncoder.popDebugGroup();
+        }
+        break;
+      case 'insertDebugMarker':
+        {
+          bundleEncoder.insertDebugMarker('marker');
         }
         break;
       default:
