@@ -40,8 +40,11 @@ g.test('f32')
       kValue.f16.subnormal.positive.max,
       kValue.f16.positive.min,
       kValue.f16.positive.max,
-      ...fullF32Range(),
     ].map(makeCase);
+
+    if (t.params.inputSource !== 'const') {
+      cases.push(...fullF32Range().map(makeCase));
+    }
 
     await run(t, builtin('quantizeToF16'), [TypeF32], TypeF32, t.params, cases);
   });
