@@ -16,7 +16,6 @@ sampleCount > 1, iff rg11b10ufloat-renderable feature is enabled.
   )
   .params(u =>
     u
-      .combine('enabled', [false, true])
       .combine('usage', [0, GPUConst.TextureUsage.RENDER_ATTACHMENT])
       .combine('sampleCount', [1, 4])
   )
