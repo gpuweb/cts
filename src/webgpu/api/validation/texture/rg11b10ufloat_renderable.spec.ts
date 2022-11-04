@@ -7,21 +7,18 @@ import { ValidationTest } from '../validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);
 
-g.test('create_texture_render_attachment')
+g.test('create_texture')
   .desc(
     `
-Test that it is valid to create texture with rg11b10ufloat texture format and
-RENDER_ATTACHMENT usage is valid if rg11b10ufloat-renderable feature is enabled.
+Test that it is valid to create rg11b10ufloat texture with RENDER_ATTACHMENT usage and/or
+sampleCount > 1, iff rg11b10ufloat-renderable feature is enabled.
 `
   )
-  .unimplemented();
-
-g.test('create_texture_multisampling')
-  .desc(
-    `
-Test that it is valid to create texture with rg11b10ufloat texture format and
-sampleCount > 1 if rg11b10ufloat-renderable feature is enabled.
-`
+  .params(u =>
+    u
+      .combine('enabled', [false, true])
+      .combine('usage', [0, GPUConst.TextureUsage.RENDER_ATTACHMENT])
+      .combine('sampleCount', [1, 4])
   )
   .unimplemented();
 
