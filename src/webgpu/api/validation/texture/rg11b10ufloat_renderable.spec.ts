@@ -29,7 +29,7 @@ g.test('begin_render_pass')
   .desc(
     `
 Test that it is valid to begin render pass with rg11b10ufloat texture format
-if rg11b10ufloat-renderable feature is enabled.
+iff rg11b10ufloat-renderable feature is enabled.
 `
   )
   .unimplemented();
