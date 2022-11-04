@@ -13,7 +13,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { quantizeToF16Interval } from '../../../../../util/f32_interval.js';
-import { fullF32Range } from '../../../../../util/math.js';
+import { fullF16Range, fullF32Range } from '../../../../../util/math.js';
 import { allInputSources, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -42,7 +42,9 @@ fn(async (t) => {
   kValue.f16.positive.max].
   map(makeCase);
 
-  if (t.params.inputSource !== 'const') {
+  if (t.params.inputSource === 'const') {
+    cases.push(...fullF16Range().map(makeCase));
+  } else {
     cases.push(...fullF32Range().map(makeCase));
   }
 

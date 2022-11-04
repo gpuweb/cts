@@ -18,6 +18,7 @@ import {
 biasedRange,
 cartesianProduct,
 correctlyRoundedF32,
+fullF16Range,
 fullF32Range,
 fullI32Range,
 hexToF32,
@@ -762,6 +763,47 @@ fn((test) => {
   test.expect(
   compareArrayOfNumbers(got, expect),
   `fullF32Range(${neg_norm}, ${neg_sub}, ${pos_sub}, ${pos_norm}) returned [${got}]. Expected [${expect}]`);
+
+});
+
+
+
+
+
+
+
+
+
+g.test('fullF16Range').
+paramsSimple(
+
+[
+{ neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [0.0] },
+{ neg_norm: 1, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [kValue.f16.negative.min, 0.0] },
+{ neg_norm: 2, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [kValue.f16.negative.min, kValue.f16.negative.max, 0.0] },
+{ neg_norm: 3, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [kValue.f16.negative.min, -1.9990234375, kValue.f16.negative.max, 0.0] },
+{ neg_norm: 0, neg_sub: 1, pos_sub: 0, pos_norm: 0, expect: [kValue.f16.subnormal.negative.min, 0.0] },
+{ neg_norm: 0, neg_sub: 2, pos_sub: 0, pos_norm: 0, expect: [kValue.f16.subnormal.negative.min, kValue.f16.subnormal.negative.max, 0.0] },
+{ neg_norm: 0, neg_sub: 0, pos_sub: 1, pos_norm: 0, expect: [0.0, kValue.f16.subnormal.positive.min] },
+{ neg_norm: 0, neg_sub: 0, pos_sub: 2, pos_norm: 0, expect: [0.0, kValue.f16.subnormal.positive.min, kValue.f16.subnormal.positive.max] },
+{ neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 1, expect: [0.0, kValue.f16.positive.min] },
+{ neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 2, expect: [0.0, kValue.f16.positive.min, kValue.f16.positive.max] },
+{ neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 3, expect: [0.0, kValue.f16.positive.min, 1.9990234375, kValue.f16.positive.max] },
+{ neg_norm: 1, neg_sub: 1, pos_sub: 1, pos_norm: 1, expect: [kValue.f16.negative.min, kValue.f16.subnormal.negative.min, 0.0, kValue.f16.subnormal.positive.min, kValue.f16.positive.min] },
+{ neg_norm: 2, neg_sub: 2, pos_sub: 2, pos_norm: 2, expect: [kValue.f16.negative.min, kValue.f16.negative.max, kValue.f16.subnormal.negative.min, kValue.f16.subnormal.negative.max, 0.0, kValue.f16.subnormal.positive.min, kValue.f16.subnormal.positive.max, kValue.f16.positive.min, kValue.f16.positive.max] }]).
+
+
+fn((test) => {
+  const neg_norm = test.params.neg_norm;
+  const neg_sub = test.params.neg_sub;
+  const pos_sub = test.params.pos_sub;
+  const pos_norm = test.params.pos_norm;
+  const got = fullF16Range({ neg_norm, neg_sub, pos_sub, pos_norm });
+  const expect = test.params.expect;
+
+  test.expect(
+  compareArrayOfNumbers(got, expect),
+  `fullF16Range(${neg_norm}, ${neg_sub}, ${pos_sub}, ${pos_norm}) returned [${got}]. Expected [${expect}]`);
 
 });
 

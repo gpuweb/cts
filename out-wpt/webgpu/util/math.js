@@ -577,6 +577,49 @@ export function sourceFilteredF32Range(source, low, high) {
 }
 
 /**
+ * @returns an ascending sorted array of numbers spread over the entire range of 16-bit floats
+ *
+ * Numbers are divided into 4 regions: negative normals, negative subnormals, positive subnormals & positive normals.
+ * Zero is included.
+ *
+ * Numbers are generated via taking a linear spread of the bit field representations of the values in each region. This
+ * means that number of precise f16 values between each returned value in a region should be about the same. This allows
+ * for a wide range of magnitudes to be generated, instead of being extremely biased towards the edges of the f16 range.
+ *
+ * This function is intended to provide dense coverage of the f16 range, for a minimal list of values to use to cover
+ * f16 behaviour, use sparseF16Range instead.
+ *
+ * @param counts structure param with 4 entries indicating the number of entries to be generated each region, entries
+ *               must be 0 or greater.
+ */
+export function fullF16Range(counts = { pos_sub: 10, pos_norm: 50 }) {
+  counts.neg_norm = counts.neg_norm === undefined ? counts.pos_norm : counts.neg_norm;
+  counts.neg_sub = counts.neg_sub === undefined ? counts.pos_sub : counts.neg_sub;
+
+  // Generating bit fields first and then converting to f16, so that the spread across the possible f16 values is more
+  // even. Generating against the bounds of f16 values directly results in the values being extremely biased towards the
+  // extremes, since they are so much larger.
+  const bit_fields = [
+    ...linearRange(kBit.f16.negative.min, kBit.f16.negative.max, counts.neg_norm),
+    ...linearRange(
+      kBit.f16.subnormal.negative.min,
+      kBit.f16.subnormal.negative.max,
+      counts.neg_sub
+    ),
+
+    0,
+    ...linearRange(
+      kBit.f16.subnormal.positive.min,
+      kBit.f16.subnormal.positive.max,
+      counts.pos_sub
+    ),
+
+    ...linearRange(kBit.f16.positive.min, kBit.f16.positive.max, counts.pos_norm),
+  ].map(Math.trunc);
+  return bit_fields.map(hexToF16);
+}
+
+/**
  * @returns an ascending sorted array of numbers spread over the entire range of 32-bit signed ints
  *
  * Numbers are divided into 2 regions: negatives, and positives, with their spreads biased towards 0
