@@ -5,7 +5,10 @@ the destination texture should have RENDER_ATTACHMENT usage, which is only allow
 textures.
 `;
 
-import { getResourcePath } from '../../../../../common/framework/resources.js';
+import {
+  getResourcePath,
+  getCrossOriginResourcePath,
+} from '../../../../../common/framework/resources.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { raceWithRejectOnTimeout, unreachable, assert } from '../../../../../common/util/util.js';
 import {
@@ -136,6 +139,8 @@ function generateCopySizeForDstOOB({ mipLevel, dstOrigin }: WithDstOriginMipLeve
 }
 
 class CopyExternalImageToTextureTest extends ValidationTest {
+  onlineCrossOriginUrl = 'https://raw.githubusercontent.com/gpuweb/gpuweb/main/logo/webgpu.png';
+
   getImageData(width: number, height: number): ImageData {
     if (typeof ImageData === 'undefined') {
       this.skip('ImageData is not supported.');
@@ -301,9 +306,6 @@ g.test('source_image,crossOrigin')
   images.
 
   Check whether 'SecurityError' is generated when source image is not origin clean.
-
-  TODO: make this test case work offline, ref link to achieve this :
-  https://web-platform-tests.org/writing-tests/server-features.html#tests-involving-multiple-origins
   `
   )
   .params(u =>
@@ -323,9 +325,8 @@ g.test('source_image,crossOrigin')
       t.skip('DOM is not available to create an image element.');
     }
 
-    const crossOriginUrl = 'https://get.webgl.org/conformance-resources/opengl_logo.jpg';
-    const originCleanUrl = getResourcePath('Di-3d.png');
-
+    const crossOriginUrl = getCrossOriginResourcePath('webgpu.png', t.onlineCrossOriginUrl);
+    const originCleanUrl = getResourcePath('webgpu.png');
     const img = document.createElement('img');
     img.src = isOriginClean ? originCleanUrl : crossOriginUrl;
 
@@ -337,8 +338,7 @@ g.test('source_image,crossOrigin')
       if (isOriginClean) {
         throw e;
       } else {
-        t.warn('Something wrong happens in get.webgl.org');
-        t.skip('Cannot load image in time');
+        t.skip('Cannot load cross origin image in time');
         return;
       }
     }
