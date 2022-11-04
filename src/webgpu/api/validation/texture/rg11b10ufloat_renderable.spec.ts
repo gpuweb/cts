@@ -47,7 +47,7 @@ g.test('create_render_pipeline')
   .desc(
     `
 Test that it is valid to create render pipeline with rg11b10ufloat texture format
-in descriptor.fragment.targets if rg11b10ufloat-renderable feature is enabled.
+in descriptor.fragment.targets iff rg11b10ufloat-renderable feature is enabled.
 `
   )
   .unimplemented();
