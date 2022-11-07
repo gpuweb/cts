@@ -271,16 +271,17 @@ export function nextAfterF16(val: number, dir: boolean = true, flush: boolean): 
 }
 
 /**
- * @returns ulp(x) for a specific flushing mode
+ * @returns ulp(x), the unit of least precision for a specific number as a 32-bit float
  *
- * This is the main implementation of oneULP, which is normally what should be
- * used. This should only be called directly if a specific flushing mode is
- * required.
+ * ulp(x) is the distance between the two floating point numbers nearest x.
+ * This value is also called unit of last place, ULP, and 1 ULP.
+ * See the WGSL spec and http://www.ens-lyon.fr/LIP/Pub/Rapports/RR/RR2005/RR2005-09.pdf
+ * for a more detailed/nuanced discussion of the definition of ulp(x).
  *
  * @param target number to calculate ULP for
- * @param flush should subnormals be flushed to zero
+ * @param flush should subnormals be flushed during calculation
  */
-function oneULPImpl(target: number, flush: boolean): number {
+export function oneULP(target: number, flush: boolean = true): number {
   if (Number.isNaN(target)) {
     return Number.NaN;
   }
@@ -309,51 +310,6 @@ function oneULPImpl(target: number, flush: boolean): number {
     // |target| is not f32 representable so taking distance of neighbouring f32s.
     return after - before;
   }
-}
-
-/**
- * @returns ulp(x), the unit of least precision for a specific number as a 32-bit float
- *
- * ulp(x) is the distance between the two floating point numbers nearest x.
- * This value is also called unit of last place, ULP, and 1 ULP.
- * See the WGSL spec and http://www.ens-lyon.fr/LIP/Pub/Rapports/RR/RR2005/RR2005-09.pdf
- * for a more detailed/nuanced discussion of the definition of ulp(x).
- *
- * @param target number to calculate ULP for
- * @param flush should subnormals be flushed to zero, if not set both flushed
- *              and non-flush values are considered.
- */
-export function oneULP(target: number, flush?: boolean): number {
-  if (flush === undefined) {
-    return Math.max(oneULPImpl(target, false), oneULPImpl(target, true));
-  }
-
-  return oneULPImpl(target, flush);
-}
-
-/**
- * @returns if a number is within N * ulp(x) of a target value
- * @param val number to test
- * @param target expected number
- * @param n acceptance range
- * @param flush should subnormals be flushed to zero
- */
-export function withinULP(val: number, target: number, n: number = 1) {
-  if (Number.isNaN(val) || Number.isNaN(target)) {
-    return false;
-  }
-
-  const ulp = oneULP(target);
-  if (Number.isNaN(ulp)) {
-    return false;
-  }
-
-  if (val === target) {
-    return true;
-  }
-
-  const diff = val > target ? val - target : target - val;
-  return diff <= n * ulp;
 }
 
 /**

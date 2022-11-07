@@ -27,7 +27,6 @@ import {
   linearRange,
   nextAfterF32,
   oneULP,
-  withinULP,
 } from '../webgpu/util/math.js';
 
 import { UnitTest } from './unit_test.js';
@@ -35,16 +34,41 @@ import { UnitTest } from './unit_test.js';
 export const g = makeTestGroup(UnitTest);
 
 /**
- * @returns true if arrays are equal within 1ULP, doing element-wise comparison as needed, and considering NaNs to be equal.
+ * Utility wrapper around oneULP to test if a value is within 1 ULP(x)
  *
- * Depends on the correctness of withinULP, which is tested in this file.
+ * @param got number to test
+ * @param expected number to be within 1 ULP of
+ * @param flush should oneULP FTZ
+ * @returns if got is within 1 ULP of expected
+ */
+function withinOneULP(got: number, expected: number, flush: boolean): boolean {
+  const ulp = oneULP(expected, flush);
+  return got >= expected - ulp && got <= expected + ulp;
+}
+
+/**
+ * @returns true if arrays are equal within 1ULP, doing element-wise comparison
+ *               as needed, and considering NaNs to be equal.
+ *
+ * Depends on the correctness of oneULP, which is tested in this file.
+ **
+ * @param got array of numbers to compare for equality
+ * @param expect array of numbers to compare against
+ * @param flush should different subnormals be considered the same, i.e. should
+ *              FTZ occur during comparison
  **/
-function compareArrayOfNumbers(got: Array<number>, expect: Array<number>): boolean {
+function compareArrayOfNumbers(
+  got: Array<number>,
+  expect: Array<number>,
+  flush: boolean = true
+): boolean {
   return (
     got.length === expect.length &&
     got.every((value, index) => {
       const expected = expect[index];
-      return (Number.isNaN(value) && Number.isNaN(expected)) || withinULP(value, expected);
+      return (
+        (Number.isNaN(value) && Number.isNaN(expected)) || withinOneULP(value, expected, flush)
+      );
     })
   );
 }
@@ -339,67 +363,6 @@ g.test('oneULP')
     );
   });
 
-interface withinULPCase {
-  val: number;
-  target: number;
-  expect: boolean;
-}
-g.test('withinULP')
-  .paramsSubcasesOnly<withinULPCase>(
-    // prettier-ignore
-    [
-    // Edge Cases
-    { val: Number.NaN, target: Number.NaN, expect: false },
-    { val: Number.POSITIVE_INFINITY, target: Number.NaN, expect: false },
-    { val: Number.NEGATIVE_INFINITY, target: Number.NaN, expect: false },
-    { val: 0, target: Number.NaN, expect: false },
-    { val: 10, target: Number.NaN, expect: false },
-    { val: -10, target: Number.NaN, expect: false },
-    { val: hexToF32(kBit.f32.subnormal.positive.max), target: Number.NaN, expect: false },
-    { val: hexToF32(kBit.f32.subnormal.negative.min), target: Number.NaN, expect: false },
-    { val: hexToF32(kBit.f32.positive.max), target: Number.NaN, expect: false },
-    { val: hexToF32(kBit.f32.negative.min), target: Number.NaN, expect: false },
-
-    { val: Number.NaN, target: Number.POSITIVE_INFINITY, expect: false },
-    { val: Number.POSITIVE_INFINITY, target: Number.POSITIVE_INFINITY, expect: true },
-    { val: Number.NEGATIVE_INFINITY, target: Number.POSITIVE_INFINITY, expect: false },
-    { val: 0, target: Number.POSITIVE_INFINITY, expect: false },
-    { val: 10, target: Number.POSITIVE_INFINITY, expect: false },
-    { val: -10, target: Number.POSITIVE_INFINITY, expect: false },
-    { val: hexToF32(kBit.f32.subnormal.positive.max), target: Number.POSITIVE_INFINITY, expect: false },
-    { val: hexToF32(kBit.f32.subnormal.negative.min), target: Number.POSITIVE_INFINITY, expect: false },
-    { val: hexToF32(kBit.f32.positive.max), target: Number.POSITIVE_INFINITY, expect: false },
-    { val: hexToF32(kBit.f32.negative.min), target: Number.POSITIVE_INFINITY, expect: false },
-
-    { val: Number.NaN, target: Number.NEGATIVE_INFINITY, expect: false },
-    { val: Number.POSITIVE_INFINITY, target: Number.NEGATIVE_INFINITY, expect: false },
-    { val: Number.NEGATIVE_INFINITY, target: Number.NEGATIVE_INFINITY, expect: true },
-    { val: 0, target: Number.NEGATIVE_INFINITY, expect: false },
-    { val: 10, target: Number.NEGATIVE_INFINITY, expect: false },
-    { val: -10, target: Number.NEGATIVE_INFINITY, expect: false },
-    { val: hexToF32(kBit.f32.subnormal.positive.max), target: Number.NEGATIVE_INFINITY, expect: false },
-    { val: hexToF32(kBit.f32.subnormal.negative.min), target: Number.NEGATIVE_INFINITY, expect: false },
-    { val: hexToF32(kBit.f32.positive.max), target: Number.NEGATIVE_INFINITY, expect: false },
-    { val: hexToF32(kBit.f32.negative.min), target: Number.NEGATIVE_INFINITY, expect: false },
-
-    // Zero
-    { val: 0, target: 0, expect: true },
-    { val: 10, target: 0, expect: false },
-    { val: -10, target: 0, expect: false },
-    { val: hexToF32(kBit.f32.subnormal.positive.max), target: 0, expect: true },
-    { val: hexToF32(kBit.f32.subnormal.negative.min), target: 0, expect: true },
-    { val: hexToF32(kBit.f32.positive.max), target: 0, expect: false },
-    { val: hexToF32(kBit.f32.negative.min), target: 0, expect: false },
-  ]
-  )
-  .fn(t => {
-    const val = t.params.val;
-    const target = t.params.target;
-    const got = withinULP(val, target);
-    const expect = t.params.expect;
-    t.expect(got === expect, `withinULP(${val}, ${target}) returned ${got}. Expected ${expect}`);
-  });
-
 interface correctlyRoundedF32Case {
   value: number;
   expected: Array<number>;
@@ -627,7 +590,7 @@ g.test('lerp')
     const expect = test.params.result;
 
     test.expect(
-      (Number.isNaN(got) && Number.isNaN(expect)) || withinULP(got, expect),
+      (Number.isNaN(got) && Number.isNaN(expect)) || withinOneULP(got, expect, true),
       `lerp(${a}, ${b}, ${t}) returned ${got}. Expected ${expect}`
     );
   });
@@ -677,7 +640,7 @@ g.test('linearRange')
     const expect = test.params.result;
 
     test.expect(
-      compareArrayOfNumbers(got, expect),
+      compareArrayOfNumbers(got, expect, false),
       `linearRange(${a}, ${b}, ${num_steps}) returned ${got}. Expected ${expect}`
     );
   });
@@ -720,7 +683,7 @@ g.test('biasedRange')
     const expect = test.params.result;
 
     test.expect(
-      compareArrayOfNumbers(got, expect),
+      compareArrayOfNumbers(got, expect, false),
       `biasedRange(${a}, ${b}, ${num_steps}) returned ${got}. Expected ${expect}`
     );
   });
@@ -749,7 +712,7 @@ g.test('fullF32Range')
         { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 2, expect: [ 0.0, kValue.f32.positive.min, kValue.f32.positive.max ] },
         { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 3, expect: [ 0.0, kValue.f32.positive.min, 1.9999998807907104, kValue.f32.positive.max ] },
         { neg_norm: 1, neg_sub: 1, pos_sub: 1, pos_norm: 1, expect: [ kValue.f32.negative.min, kValue.f32.subnormal.negative.min, 0.0, kValue.f32.subnormal.positive.min, kValue.f32.positive.min ] },
-        { neg_norm: 2, neg_sub: 2, pos_sub: 2, pos_norm: 2, expect: [ kValue.f32.negative.min, kValue.f32.negative.max, kValue.f32.subnormal.negative.max, kValue.f32.subnormal.negative.min, 0.0, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, kValue.f32.positive.min, kValue.f32.positive.max ] },
+        { neg_norm: 2, neg_sub: 2, pos_sub: 2, pos_norm: 2, expect: [ kValue.f32.negative.min, kValue.f32.negative.max, kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max, 0.0, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, kValue.f32.positive.min, kValue.f32.positive.max ] },
     ]
   )
   .fn(test => {
@@ -761,7 +724,7 @@ g.test('fullF32Range')
     const expect = test.params.expect;
 
     test.expect(
-      compareArrayOfNumbers(got, expect),
+      compareArrayOfNumbers(got, expect, false),
       `fullF32Range(${neg_norm}, ${neg_sub}, ${pos_sub}, ${pos_norm}) returned [${got}]. Expected [${expect}]`
     );
   });
