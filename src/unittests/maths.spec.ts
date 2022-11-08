@@ -18,6 +18,7 @@ import {
   biasedRange,
   cartesianProduct,
   correctlyRoundedF32,
+  FlushMode,
   fullF16Range,
   fullF32Range,
   fullI32Range,
@@ -38,11 +39,11 @@ export const g = makeTestGroup(UnitTest);
  *
  * @param got number to test
  * @param expected number to be within 1 ULP of
- * @param flush should oneULP FTZ
+ * @param mode should oneULP FTZ
  * @returns if got is within 1 ULP of expected
  */
-function withinOneULP(got: number, expected: number, flush: boolean): boolean {
-  const ulp = oneULP(expected, flush);
+function withinOneULP(got: number, expected: number, mode: FlushMode): boolean {
+  const ulp = oneULP(expected, mode);
   return got >= expected - ulp && got <= expected + ulp;
 }
 
@@ -54,21 +55,19 @@ function withinOneULP(got: number, expected: number, flush: boolean): boolean {
  **
  * @param got array of numbers to compare for equality
  * @param expect array of numbers to compare against
- * @param flush should different subnormals be considered the same, i.e. should
+ * @param mode should different subnormals be considered the same, i.e. should
  *              FTZ occur during comparison
  **/
 function compareArrayOfNumbers(
   got: Array<number>,
   expect: Array<number>,
-  flush: boolean = true
+  mode: FlushMode = 'flush'
 ): boolean {
   return (
     got.length === expect.length &&
     got.every((value, index) => {
       const expected = expect[index];
-      return (
-        (Number.isNaN(value) && Number.isNaN(expected)) || withinOneULP(value, expected, flush)
-      );
+      return (Number.isNaN(value) && Number.isNaN(expected)) || withinOneULP(value, expected, mode);
     })
   );
 }
@@ -137,7 +136,7 @@ g.test('nextAfterFlushToZero')
     const dir = t.params.dir;
     const expect = t.params.result;
     const expect_type = typeof expect;
-    const got = nextAfterF32(val, dir, true);
+    const got = nextAfterF32(val, dir, 'flush');
     const got_type = typeof got;
     t.expect(
       got.value === expect.value || (Number.isNaN(got.value) && Number.isNaN(expect.value)),
@@ -203,7 +202,7 @@ g.test('nextAfterNoFlush')
     const dir = t.params.dir;
     const expect = t.params.result;
     const expect_type = typeof expect;
-    const got = nextAfterF32(val, dir, false);
+    const got = nextAfterF32(val, dir, 'no-flush');
     const got_type = typeof got;
     t.expect(
       got.value === expect.value || (Number.isNaN(got.value) && Number.isNaN(expect.value)),
@@ -257,7 +256,7 @@ g.test('oneULPFlushToZero')
   ])
   .fn(t => {
     const target = t.params.target;
-    const got = oneULP(target, true);
+    const got = oneULP(target, 'flush');
     const expect = t.params.expect;
     t.expect(
       got === expect || (Number.isNaN(got) && Number.isNaN(expect)),
@@ -306,7 +305,7 @@ g.test('oneULPNoFlush')
   ])
   .fn(t => {
     const target = t.params.target;
-    const got = oneULP(target, false);
+    const got = oneULP(target, 'no-flush');
     const expect = t.params.expect;
     t.expect(
       got === expect || (Number.isNaN(got) && Number.isNaN(expect)),
@@ -590,7 +589,7 @@ g.test('lerp')
     const expect = test.params.result;
 
     test.expect(
-      (Number.isNaN(got) && Number.isNaN(expect)) || withinOneULP(got, expect, true),
+      (Number.isNaN(got) && Number.isNaN(expect)) || withinOneULP(got, expect, 'flush'),
       `lerp(${a}, ${b}, ${t}) returned ${got}. Expected ${expect}`
     );
   });
@@ -640,7 +639,7 @@ g.test('linearRange')
     const expect = test.params.result;
 
     test.expect(
-      compareArrayOfNumbers(got, expect, false),
+      compareArrayOfNumbers(got, expect, 'no-flush'),
       `linearRange(${a}, ${b}, ${num_steps}) returned ${got}. Expected ${expect}`
     );
   });
@@ -683,7 +682,7 @@ g.test('biasedRange')
     const expect = test.params.result;
 
     test.expect(
-      compareArrayOfNumbers(got, expect, false),
+      compareArrayOfNumbers(got, expect, 'no-flush'),
       `biasedRange(${a}, ${b}, ${num_steps}) returned ${got}. Expected ${expect}`
     );
   });
@@ -724,7 +723,7 @@ g.test('fullF32Range')
     const expect = test.params.expect;
 
     test.expect(
-      compareArrayOfNumbers(got, expect, false),
+      compareArrayOfNumbers(got, expect, 'no-flush'),
       `fullF32Range(${neg_norm}, ${neg_sub}, ${pos_sub}, ${pos_norm}) returned [${got}]. Expected [${expect}]`
     );
   });
