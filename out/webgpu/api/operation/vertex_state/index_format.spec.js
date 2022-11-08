@@ -274,6 +274,97 @@ fn((t) => {
   t.expectGPUBufferValuesEqual(result, expectedTextureValues);
 });
 
+g.test('index_format,setIndexBuffer_different_formats').
+desc(
+`
+  Test that index buffers of multiple formats can be used with a pipeline that doesn't use strip
+  primitive topology.
+  `).
+
+fn((t) => {
+  const indices = [1, 2, 0, 0, 0, 0, 0, 1, 3, 0];
+
+  // Create a pipeline to be used by different index formats.
+  const kPrimitiveTopology = 'triangle-list';
+  const pipeline = t.MakeRenderPipeline(kPrimitiveTopology);
+
+  const expectedTextureValues = t.CreateExpectedUint8Array(kBottomLeftTriangle);
+
+  const colorAttachment = t.device.createTexture({
+    format: kTextureFormat,
+    size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
+
+
+  const result = t.device.createBuffer({
+    size: byteLength,
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
+
+
+  let encoder = t.device.createCommandEncoder();
+  {
+    const indexFormat = 'uint32';
+    const indexOffset = 12;
+    const indexCount = 7;
+    const indexBuffer = t.CreateIndexBuffer(indices, indexFormat);
+
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+      {
+        view: colorAttachment.createView(),
+        clearValue: [0, 0, 0, 0],
+        loadOp: 'clear',
+        storeOp: 'store' }] });
+
+
+
+
+    pass.setIndexBuffer(indexBuffer, indexFormat, indexOffset);
+    pass.setPipeline(pipeline);
+    pass.drawIndexed(indexCount);
+    pass.end();
+    encoder.copyTextureToBuffer(
+    { texture: colorAttachment },
+    { buffer: result, bytesPerRow, rowsPerImage },
+    [kWidth, kHeight]);
+
+  }
+  t.device.queue.submit([encoder.finish()]);
+  t.expectGPUBufferValuesEqual(result, expectedTextureValues);
+
+  // Call setIndexBuffer with the pipeline and a different index format buffer.
+  encoder = t.device.createCommandEncoder();
+  {
+    const indexFormat = 'uint16';
+    const indexOffset = 6;
+    const indexCount = 6;
+    const indexBuffer = t.CreateIndexBuffer(indices, indexFormat);
+
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+      {
+        view: colorAttachment.createView(),
+        clearValue: [0, 0, 0, 0],
+        loadOp: 'clear',
+        storeOp: 'store' }] });
+
+
+
+
+    pass.setIndexBuffer(indexBuffer, indexFormat, indexOffset);
+    pass.setPipeline(pipeline);
+    pass.drawIndexed(indexCount);
+    pass.end();
+    encoder.copyTextureToBuffer(
+    { texture: colorAttachment },
+    { buffer: result, bytesPerRow, rowsPerImage },
+    [kWidth, kHeight]);
+
+  }
+  t.device.queue.submit([encoder.finish()]);
+  t.expectGPUBufferValuesEqual(result, expectedTextureValues);
+});
+
 g.test('primitive_restart').
 desc(
 `
