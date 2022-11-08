@@ -118,17 +118,24 @@ export function isFiniteF16(n) {
   return n >= kValue.f16.negative.min && n <= kValue.f16.positive.max;
 }
 
+/** Should FTZ occur during calculations or not */
+
+
 /**
  * @returns the next f32 value after |val|,
  * towards +inf if |dir| is true, otherwise towards -inf.
- * If |flush| is true, all subnormal values will be flushed to 0,
- * before processing.
- * If |flush| is false, the next subnormal will be calculated when appropriate,
+
+ * If |mpode| is 'flush', all subnormal values will be flushed to 0,
+ * before processing and for -/+0 the nextAfterF32 will be the closest normal in
+ * the correct direction.
+
+ * If |mode| is 'no-flush', the next subnormal will be calculated when appropriate,
  * and for -/+0 the nextAfterF32 will be the closest subnormal in the correct
  * direction.
+ *
  * val needs to be in [min f32, max f32]
  */
-export function nextAfterF32(val, dir = true, flush) {
+export function nextAfterF32(val, dir = true, mode) {
   if (Number.isNaN(val)) {
     return f32Bits(kBit.f32.nan.positive.s);
   }
@@ -146,14 +153,18 @@ export function nextAfterF32(val, dir = true, flush) {
   `${val} is not in the range of float32`);
 
 
-  val = flush ? flushSubnormalNumberF32(val) : val;
+  val = mode === 'flush' ? flushSubnormalNumberF32(val) : val;
 
   // -/+0 === 0 returns true
   if (val === 0) {
     if (dir) {
-      return flush ? f32Bits(kBit.f32.positive.min) : f32Bits(kBit.f32.subnormal.positive.min);
+      return mode === 'flush' ?
+      f32Bits(kBit.f32.positive.min) :
+      f32Bits(kBit.f32.subnormal.positive.min);
     } else {
-      return flush ? f32Bits(kBit.f32.negative.max) : f32Bits(kBit.f32.subnormal.negative.max);
+      return mode === 'flush' ?
+      f32Bits(kBit.f32.negative.max) :
+      f32Bits(kBit.f32.subnormal.negative.max);
     }
   }
 
@@ -176,7 +187,7 @@ export function nextAfterF32(val, dir = true, flush) {
     } else {
       // Round was opposite of the direction requested, so need nextAfterF32 in the requested direction.
       // This will not recurse since converted is guaranteed to be a float32 due to the conversion above.
-      const next = nextAfterF32(converted, dir, flush).value.valueOf();
+      const next = nextAfterF32(converted, dir, mode).value.valueOf();
       u32_result = new Uint32Array(new Float32Array([next]).buffer)[0];
     }
   }
@@ -191,20 +202,24 @@ export function nextAfterF32(val, dir = true, flush) {
   }
 
   const f32_result = f32Bits(u32_result);
-  return flush ? flushSubnormalScalarF32(f32_result) : f32_result;
+  return mode === 'flush' ? flushSubnormalScalarF32(f32_result) : f32_result;
 }
 
 /**
  * @returns the next f16 value after |val|,
  * towards +inf if |dir| is true, otherwise towards -inf.
- * If |flush| is true, all subnormal values will be flushed to 0,
- * before processing.
- * If |flush| is false, the next subnormal will be calculated when appropriate,
+ *
+ * If |mode| is true, all subnormal values will be flushed to 0,
+ * before processing, and for -/+0 the nextAfterF16 will be the closest normal
+ * in the correct direction
+ *
+ * If |mode| is false, the next subnormal will be calculated when appropriate,
  * and for -/+0 the nextAfterF16 will be the closest subnormal in the correct
  * direction.
+ *
  * val needs to be in [min f16, max f16]
  */
-export function nextAfterF16(val, dir = true, flush) {
+export function nextAfterF16(val, dir = true, mode) {
   if (Number.isNaN(val)) {
     return f16Bits(kBit.f16.nan.positive.s);
   }
@@ -222,14 +237,18 @@ export function nextAfterF16(val, dir = true, flush) {
   `${val} is not in the range of float16`);
 
 
-  val = flush ? flushSubnormalNumberF16(val) : val;
+  val = mode === 'flush' ? flushSubnormalNumberF16(val) : val;
 
   // -/+0 === 0 returns true
   if (val === 0) {
     if (dir) {
-      return flush ? f16Bits(kBit.f16.positive.min) : f16Bits(kBit.f16.subnormal.positive.min);
+      return mode === 'flush' ?
+      f16Bits(kBit.f16.positive.min) :
+      f16Bits(kBit.f16.subnormal.positive.min);
     } else {
-      return flush ? f16Bits(kBit.f16.negative.max) : f16Bits(kBit.f16.subnormal.negative.max);
+      return mode === 'flush' ?
+      f16Bits(kBit.f16.negative.max) :
+      f16Bits(kBit.f16.subnormal.negative.max);
     }
   }
 
@@ -252,7 +271,7 @@ export function nextAfterF16(val, dir = true, flush) {
     } else {
       // Round was opposite of the direction requested, so need nextAfterF16 in the requested direction.
       // This will not recurse since converted is guaranteed to be a float16 due to the conversion above.
-      const next = nextAfterF16(converted, dir, flush).value.valueOf();
+      const next = nextAfterF16(converted, dir, mode).value.valueOf();
       u16_result = new Uint16Array(new Float16Array([next]).buffer)[0];
     }
   }
@@ -267,25 +286,26 @@ export function nextAfterF16(val, dir = true, flush) {
   }
 
   const f16_result = f16Bits(u16_result);
-  return flush ? flushSubnormalScalarF16(f16_result) : f16_result;
+  return mode === 'flush' ? flushSubnormalScalarF16(f16_result) : f16_result;
 }
 
 /**
- * @returns ulp(x) for a specific flushing mode
+ * @returns ulp(x), the unit of least precision for a specific number as a 32-bit float
  *
- * This is the main implementation of oneULP, which is normally what should be
- * used. This should only be called directly if a specific flushing mode is
- * required.
+ * ulp(x) is the distance between the two floating point numbers nearest x.
+ * This value is also called unit of last place, ULP, and 1 ULP.
+ * See the WGSL spec and http://www.ens-lyon.fr/LIP/Pub/Rapports/RR/RR2005/RR2005-09.pdf
+ * for a more detailed/nuanced discussion of the definition of ulp(x).
  *
  * @param target number to calculate ULP for
- * @param flush should subnormals be flushed to zero
+ * @param mode should FTZ occuring during calculation or not
  */
-function oneULPImpl(target, flush) {
+export function oneULP(target, mode = 'flush') {
   if (Number.isNaN(target)) {
     return Number.NaN;
   }
 
-  target = flush ? flushSubnormalNumberF32(target) : target;
+  target = mode === 'flush' ? flushSubnormalNumberF32(target) : target;
 
   // For values at the edge of the range or beyond ulp(x) is defined as the distance between the two nearest
   // f32 representable numbers to the appropriate edge.
@@ -299,8 +319,8 @@ function oneULPImpl(target, flush) {
   //     before <= x <= after
   //     before =/= after
   //     before and after are f32 representable
-  const before = nextAfterF32(target, false, flush).value.valueOf();
-  const after = nextAfterF32(target, true, flush).value.valueOf();
+  const before = nextAfterF32(target, false, mode).value.valueOf();
+  const after = nextAfterF32(target, true, mode).value.valueOf();
   const converted = new Float32Array([target])[0];
   if (converted === target) {
     // |target| is f32 representable, so either before or after will be x
@@ -309,51 +329,6 @@ function oneULPImpl(target, flush) {
     // |target| is not f32 representable so taking distance of neighbouring f32s.
     return after - before;
   }
-}
-
-/**
- * @returns ulp(x), the unit of least precision for a specific number as a 32-bit float
- *
- * ulp(x) is the distance between the two floating point numbers nearest x.
- * This value is also called unit of last place, ULP, and 1 ULP.
- * See the WGSL spec and http://www.ens-lyon.fr/LIP/Pub/Rapports/RR/RR2005/RR2005-09.pdf
- * for a more detailed/nuanced discussion of the definition of ulp(x).
- *
- * @param target number to calculate ULP for
- * @param flush should subnormals be flushed to zero, if not set both flushed
- *              and non-flush values are considered.
- */
-export function oneULP(target, flush) {
-  if (flush === undefined) {
-    return Math.max(oneULPImpl(target, false), oneULPImpl(target, true));
-  }
-
-  return oneULPImpl(target, flush);
-}
-
-/**
- * @returns if a number is within N * ulp(x) of a target value
- * @param val number to test
- * @param target expected number
- * @param n acceptance range
- * @param flush should subnormals be flushed to zero
- */
-export function withinULP(val, target, n = 1) {
-  if (Number.isNaN(val) || Number.isNaN(target)) {
-    return false;
-  }
-
-  const ulp = oneULP(target);
-  if (Number.isNaN(ulp)) {
-    return false;
-  }
-
-  if (val === target) {
-    return true;
-  }
-
-  const diff = val > target ? val - target : target - val;
-  return diff <= n * ulp;
 }
 
 /**
@@ -396,11 +371,11 @@ export function correctlyRoundedF32(n) {
 
   if (converted > n) {
     // n_32 rounded towards +inf, so is after n
-    const other = nextAfterF32(n_32, false, false).value;
+    const other = nextAfterF32(n_32, false, 'no-flush').value;
     return [other, converted];
   } else {
     // n_32 rounded towards -inf, so is before n
-    const other = nextAfterF32(n_32, true, false).value;
+    const other = nextAfterF32(n_32, true, 'no-flush').value;
     return [converted, other];
   }
 }
@@ -445,11 +420,11 @@ export function correctlyRoundedF16(n) {
 
   if (converted > n) {
     // n_16 rounded towards +inf, so is after n
-    const other = nextAfterF16(n_16, false, false).value;
+    const other = nextAfterF16(n_16, false, 'no-flush').value;
     return [other, converted];
   } else {
     // n_16 rounded towards -inf, so is before n
-    const other = nextAfterF16(n_16, true, false).value;
+    const other = nextAfterF16(n_16, true, 'no-flush').value;
     return [converted, other];
   }
 }
