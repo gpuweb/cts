@@ -73,6 +73,8 @@ import {
   unpack2x16unormInterval,
   unpack4x8snormInterval,
   unpack4x8unormInterval,
+  modfInterval,
+  toF32Interval,
 } from '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -3314,3 +3316,58 @@ interface RefractCase {
       );
     });
 }
+
+interface ModfCase {
+  input: number;
+  fract: IntervalBounds;
+  whole: IntervalBounds;
+}
+
+g.test('modfInterval')
+  .paramsSubcasesOnly<ModfCase>(
+    // When performing modf(x), where x is an integer value, the acceptance intervals are somewhat unintuitive.
+    // Specifically the acceptance intervals will be something like { fract: [0, 1], whole: [x-1, x] } instead of just
+    // { fract: [0], whole: [x] }.
+    // This is because the accuracy calculations for `%`, which is used for calculating the results of modf, has
+    // trunc(y/x) in it, which introduces 2.5 ULP of error before the truncate. So when near the integer boundary, this
+    // can cause the value being truncated to be slightly above or below the 'true' integer value, which causes an
+    // observable difference to the result. This then propagates through create the wide than expected acceptance
+    // intervals.
+    // prettier-ignore
+    [
+      // Normals
+      { input: 0, fract: [0], whole: [0] },
+      { input: 1, fract: [0, 1], whole: [0, 1] },
+      { input: -1, fract: [-1, 0], whole: [-1, 0] },
+      { input: 0.5, fract: [0.5], whole: [0] },
+      { input: -0.5, fract: [-0.5], whole: [0] },
+      { input: 2.5, fract: [0.5], whole: [2] },
+      { input: -2.5, fract: [-0.5], whole: [-2] },
+      { input: 10.0, fract: [0, 1], whole: [9, 10] },
+      { input: -10.0, fract: [-1, 0], whole: [-10, -9] },
+
+      // Subnormals
+      { input: kValue.f32.subnormal.negative.min, fract: [kValue.f32.subnormal.negative.min, 0], whole: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max] },
+      { input: kValue.f32.subnormal.negative.max, fract: [kValue.f32.subnormal.negative.max, 0], whole: [kValue.f32.subnormal.negative.max, kValue.f32.subnormal.positive.min] },
+      { input: kValue.f32.subnormal.positive.min, fract: [0, kValue.f32.subnormal.positive.min], whole: [kValue.f32.subnormal.negative.max, kValue.f32.subnormal.positive.min] },
+      { input: kValue.f32.subnormal.positive.max, fract: [0, kValue.f32.subnormal.positive.max], whole: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max] },
+
+      // Boundaries
+      { input: kValue.f32.negative.min, fract: kAny, whole: kAny },
+      { input: kValue.f32.negative.max, fract: [kValue.f32.negative.max], whole: [0] },
+      { input: kValue.f32.positive.min, fract: [kValue.f32.positive.min], whole: [0] },
+      { input: kValue.f32.positive.max, fract: kAny, whole: kAny },
+    ]
+  )
+  .fn(t => {
+    const expected = {
+      fract: toF32Interval(t.params.fract),
+      whole: toF32Interval(t.params.whole),
+    };
+
+    const got = modfInterval(t.params.input);
+    t.expect(
+      objectEquals(expected, got),
+      `modfInterval([${t.params.input}) returned { fract: [${got.fract}], whole: [${got.whole}] }. Expected { fract: [${expected.fract}], whole: [${expected.whole}] }`
+    );
+  });
