@@ -1243,6 +1243,14 @@ export const listing = [
   },
   {
     "file": [
+      "api",
+      "validation",
+      "texture",
+      "rg11b10ufloat_renderable"
+    ]
+  },
+  {
+    "file": [
       "examples"
     ]
   },
