@@ -431,12 +431,7 @@ g.test('default_blend_constant,initial_blend_constant')
     const format = 'rgba8unorm';
     const kSize = 1;
     const kWhiteColorData = new Float32Array([255, 255, 255, 255]);
-    const kBlackColorData = new Float32Array([0, 0, 0, 0]);
 
-    const basePipeline = t.createRenderPipelineForTest({
-      format,
-      blend: { color: {}, alpha: {} },
-    });
     const blendComponent = { srcFactor: 'constant', dstFactor: 'one', operation: 'add' } as const;
     const testPipeline = t.createRenderPipelineForTest({
       format,
@@ -459,11 +454,6 @@ g.test('default_blend_constant,initial_blend_constant')
         },
       ],
     });
-    renderPass.setPipeline(basePipeline);
-    renderPass.setBindGroup(
-      0,
-      t.createBindGroupForTest(basePipeline.getBindGroupLayout(0), kBlackColorData)
-    );
     renderPass.setPipeline(testPipeline);
     renderPass.setBindGroup(
       0,
