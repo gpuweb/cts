@@ -1197,6 +1197,22 @@ export function floorInterval(n) {
   return runPointToIntervalOp(toF32Interval(n), FloorIntervalOp);
 }
 
+const FmaIntervalOp = {
+  impl: (x, y, z) => {
+    return additionInterval(multiplicationInterval(x, y), z);
+  },
+};
+
+/** Calculate an acceptance interval for fma(x, y, z) */
+export function fmaInterval(x, y, z) {
+  return runTernaryToIntervalOp(
+    toF32Interval(x),
+    toF32Interval(y),
+    toF32Interval(z),
+    FmaIntervalOp
+  );
+}
+
 const FractIntervalOp = {
   impl: n => {
     // fract(x) = x - floor(x) is defined in the spec.
