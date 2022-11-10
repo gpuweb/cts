@@ -21,11 +21,31 @@ import { kValue } from '../../../../../util/constants.js';
 import { i32, TypeF32, TypeI32, TypeU32, u32 } from '../../../../../util/conversion.js';
 import { minInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../../util/math.js';
+import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, makeBinaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+export const d = makeCaseCache('min', {
+  f32: () => {
+    const makeCase = (x: number, y: number): Case => {
+      return makeBinaryToF32IntervalCase(x, y, minInterval);
+    };
+
+    const cases: Array<Case> = [];
+    const numeric_range = fullF32Range();
+    numeric_range.push(kValue.f32.infinity.positive, kValue.f32.infinity.negative);
+    numeric_range.forEach(lhs => {
+      numeric_range.forEach(rhs => {
+        cases.push(makeCase(lhs, rhs));
+      });
+    });
+
+    return cases;
+  },
+});
 
 /** Generate set of min test cases from list of interesting values */
 function generateTestCases(
@@ -98,19 +118,7 @@ g.test('f32')
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const makeCase = (x: number, y: number): Case => {
-      return makeBinaryToF32IntervalCase(x, y, minInterval);
-    };
-
-    const cases: Array<Case> = [];
-    const numeric_range = fullF32Range();
-    numeric_range.push(kValue.f32.infinity.positive, kValue.f32.infinity.negative);
-    numeric_range.forEach(lhs => {
-      numeric_range.forEach(rhs => {
-        cases.push(makeCase(lhs, rhs));
-      });
-    });
-
+    const cases = await d.get('f32');
     await run(t, builtin('min'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 

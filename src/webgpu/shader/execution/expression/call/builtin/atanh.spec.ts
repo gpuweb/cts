@@ -16,11 +16,51 @@ import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { atanhInterval } from '../../../../../util/f32_interval.js';
 import { biasedRange, sourceFilteredF32Range } from '../../../../../util/math.js';
+import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+export const d = makeCaseCache('atanh', {
+  f32_const: () => {
+    const makeCase = (n: number): Case => {
+      return makeUnaryToF32IntervalCase(n, atanhInterval);
+    };
+
+    return [
+      ...biasedRange(kValue.f32.negative.less_than_one, -0.9, 20), // discontinuity at x = -1
+      ...biasedRange(kValue.f32.positive.less_than_one, 0.9, 20), // discontinuity at x = 1
+      ...sourceFilteredF32Range(
+        'const',
+        kValue.f32.negative.less_than_one,
+        kValue.f32.positive.less_than_one
+      ),
+    ].map(makeCase);
+  },
+  f32_non_const: () => {
+    const makeCase = (n: number): Case => {
+      return makeUnaryToF32IntervalCase(n, atanhInterval);
+    };
+
+    const cases = [
+      ...biasedRange(kValue.f32.negative.less_than_one, -0.9, 20), // discontinuity at x = -1
+      ...biasedRange(kValue.f32.positive.less_than_one, 0.9, 20), // discontinuity at x = 1
+      ...sourceFilteredF32Range(
+        'storage',
+        kValue.f32.negative.less_than_one,
+        kValue.f32.positive.less_than_one
+      ),
+    ].map(makeCase);
+
+    // Handle the edge case of -1 and 1 when not doing const-eval
+    const edgeCases = [-1, 1].map(makeCase);
+    cases.push(...edgeCases);
+
+    return cases;
+  },
+});
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
@@ -37,26 +77,7 @@ g.test('f32')
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const makeCase = (n: number): Case => {
-      return makeUnaryToF32IntervalCase(n, atanhInterval);
-    };
-
-    const cases = [
-      ...biasedRange(kValue.f32.negative.less_than_one, -0.9, 20), // discontinuity at x = -1
-      ...biasedRange(kValue.f32.positive.less_than_one, 0.9, 20), // discontinuity at x = 1
-      ...sourceFilteredF32Range(
-        t.params.inputSource,
-        kValue.f32.negative.less_than_one,
-        kValue.f32.positive.less_than_one
-      ),
-    ].map(makeCase);
-
-    // Handle the edge case of -1 and 1 when not doing const-eval
-    if (t.params.inputSource !== 'const') {
-      const edgeCases = [-1, 1].map(makeCase);
-      cases.push(...edgeCases);
-    }
-
+    const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
     await run(t, builtin('atanh'), [TypeF32], TypeF32, t.params, cases);
   });
 
