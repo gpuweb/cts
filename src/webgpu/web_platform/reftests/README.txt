@@ -14,3 +14,4 @@ And why does chromium's image_diff show diffs on other pixels that don't seem to
 TODO(#1093): Test rgba16float values which are out of gamut of the canvas but under SDR luminance.
 TODO(#1093): Test rgba16float values which are above SDR luminance.
 TODO(#1116): Test canvas scaling.
+TODO: Test transferControlToOffscreen, used from {the same,another} thread

@@ -475,7 +475,7 @@ g.test('source_canvas,state')
     const { state, copySize } = t.params;
     const canvas = createOnscreenCanvas(t, 1, 1);
     if (typeof canvas.transferControlToOffscreen === 'undefined') {
-      t.skip("Browser doesn't support HTMLCanvasElement transfer control right");
+      t.skip("Browser doesn't support HTMLCanvasElement.transferControlToOffscreen");
       return;
     }
 
