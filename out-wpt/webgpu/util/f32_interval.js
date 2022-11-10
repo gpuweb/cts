@@ -56,6 +56,15 @@ export class F32Interval {
     return this.begin <= i.begin && this.end >= i.end;
   }
 
+  /** @returns if any values in the interval may be flushed to zero, this
+   *           includes any subnormals and zero itself.
+   */
+  containsZeroOrSubnormals() {
+    return !(
+      this.end < kValue.f32.subnormal.negative.min || this.begin > kValue.f32.subnormal.positive.max
+    );
+  }
+
   /** @returns if this interval contains a single point */
   isPoint() {
     return this.begin === this.end;
@@ -143,6 +152,20 @@ export function toF32Vector(v) {
   unreachable(`Cannot convert [${v}] to F32Vector`);
 }
 
+/** F32Vector with all zero elements */
+const kZeroVector = {
+  2: toF32Vector([0, 0]),
+  3: toF32Vector([0, 0, 0]),
+  4: toF32Vector([0, 0, 0, 0]),
+};
+
+/** F32Vector with all F32Interval.any() elements */
+const kAnyVector = {
+  2: toF32Vector([F32Interval.any(), F32Interval.any()]),
+  3: toF32Vector([F32Interval.any(), F32Interval.any(), F32Interval.any()]),
+  4: toF32Vector([F32Interval.any(), F32Interval.any(), F32Interval.any(), F32Interval.any()]),
+};
+
 /**
  * @returns a F32Vector where each element is the span for corresponding
  *          elements at the same index in the input vectors
@@ -164,6 +187,13 @@ function spanF32Vector(...vectors) {
       return F32Interval.span(...vectors.map(v => v[idx]));
     })
   );
+}
+
+/**
+ * @retuns the vector result of multiplying the given vector by the given scalar
+ */
+function multiplyVectorByScalar(v, c) {
+  return toF32Vector(v.map(x => multiplicationInterval(x, c)));
 }
 
 /**
@@ -594,7 +624,7 @@ function runVectorPairToIntervalOp(x, y, op) {
  */
 function runVectorToVectorOp(x, op) {
   if (x.some(e => !e.isFinite())) {
-    return toF32Vector(x.map(_ => F32Interval.any()));
+    return kAnyVector[x.length];
   }
 
   const x_values = cartesianProduct(...x.map(e => e.bounds()));
@@ -639,7 +669,7 @@ function runPointToIntervalOpComponentWise(x, op) {
  */
 function runVectorPairToVectorOp(x, y, op) {
   if (x.some(e => !e.isFinite()) || y.some(e => !e.isFinite())) {
-    return toF32Vector(x.map(_ => F32Interval.any()));
+    return kAnyVector[x.length];
   }
 
   const x_values = cartesianProduct(...x.map(e => e.bounds()));
@@ -1481,11 +1511,12 @@ const ReflectIntervalOp = {
     // x = incident vector
     // y = normal of reflecting surface
     const t = multiplicationInterval(2.0, dotInterval(x, y));
-    const rhs = toF32Vector(y.map(j => multiplicationInterval(t, j)));
+    const rhs = multiplyVectorByScalar(y, t);
     return runBinaryToIntervalOpComponentWise(toF32Vector(x), rhs, SubtractionIntervalOp);
   },
 };
 
+/** Calculate an acceptance interval of reflect(x, y) */
 export function reflectInterval(x, y) {
   assert(
     x.length === y.length,
@@ -1493,6 +1524,52 @@ export function reflectInterval(x, y) {
   );
 
   return runVectorPairToVectorOp(toF32Vector(x), toF32Vector(y), ReflectIntervalOp);
+}
+
+/**
+ * Calculate acceptance interval vectors of reflect(i, s, r)
+ *
+ * refract is a singular function in the sense that it is the only builtin that
+ * takes in (F32Vector, F32Vector, F32) and returns F32Vector and is basically
+ * defined in terms of other functions.
+ *
+ * Instead of implementing all of the framework code to integrate it with its
+ * own operation type/etc, it instead has a bespoke implementation that is a
+ * composition of other builtin functions that use the framework.
+ */
+export function refractInterval(i, s, r) {
+  assert(
+    i.length === s.length,
+    `refract is only defined for vectors with the same number of elements`
+  );
+
+  const r_squared = multiplicationInterval(r, r);
+  const dot = dotInterval(s, i);
+  const dot_squared = multiplicationInterval(dot, dot);
+  const one_minus_dot_squared = subtractionInterval(1, dot_squared);
+  const k = subtractionInterval(1.0, multiplicationInterval(r_squared, one_minus_dot_squared));
+
+  if (k.containsZeroOrSubnormals()) {
+    // There is a discontinuity at k == 0, due to sqrt(k) being calculated, so exiting early
+    return kAnyVector[toF32Vector(i).length];
+  }
+
+  if (k.end < 0.0) {
+    // if k is negative, then the zero vector is the valid response
+    return kZeroVector[toF32Vector(i).length];
+  }
+
+  const dot_times_r = multiplicationInterval(dot, r);
+  const k_sqrt = sqrtInterval(k);
+  const t = additionInterval(dot_times_r, k_sqrt); // t = r * dot(i, s) + sqrt(k)
+
+  const result = runBinaryToIntervalOpComponentWise(
+    multiplyVectorByScalar(i, r),
+    multiplyVectorByScalar(s, t),
+    SubtractionIntervalOp
+  );
+  // (i * r) - (s * t)
+  return result;
 }
 
 const RemainderIntervalOp = {
