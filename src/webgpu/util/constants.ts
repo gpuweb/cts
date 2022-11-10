@@ -295,7 +295,7 @@ export const kValue = {
     },
   },
 
-  // Limits of uint32
+  // Limits of u32
   u32: {
     min: 0,
     max: 4294967295,
@@ -346,6 +346,24 @@ export const kValue = {
       positive: hexToF32(kBit.f32.infinity.positive),
       negative: hexToF32(kBit.f32.infinity.negative),
     },
+  },
+
+  // Limits of i16
+  i16: {
+    positive: {
+      min: 0,
+      max: 32767,
+    },
+    negative: {
+      min: -32768,
+      max: 0,
+    },
+  },
+
+  // Limits of u16
+  u16: {
+    min: 0,
+    max: 65535,
   },
 
   // Limits of f16
@@ -511,5 +529,23 @@ export const kValue = {
     toMinus30: -Math.pow(2, -30),
     toMinus31: -Math.pow(2, -31),
     toMinus32: -Math.pow(2, -32),
+  },
+
+  // Limits of i8
+  i8: {
+    positive: {
+      min: 0,
+      max: 127,
+    },
+    negative: {
+      min: -128,
+      max: 0,
+    },
+  },
+
+  // Limits of u8
+  u8: {
+    min: 0,
+    max: 255,
   },
 } as const;

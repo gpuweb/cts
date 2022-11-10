@@ -1,5 +1,8 @@
 /* eslint no-console: "off" */
 
+import * as fs from 'fs';
+
+import { dataCache } from '../framework/data_cache.js';
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
 import { prettyPrintLog } from '../internal/logging/log_message.js';
 import { Logger } from '../internal/logging/logger.js';
@@ -46,6 +49,7 @@ let printJSON = false;
 let quiet = false;
 let loadWebGPUExpectations: Promise<unknown> | undefined = undefined;
 let gpuProviderModule: GPUProviderModule | undefined = undefined;
+let dataPath: string | undefined = undefined;
 
 const queries: string[] = [];
 const gpuProviderFlags: string[] = [];
@@ -62,6 +66,8 @@ for (let i = 0; i < sys.args.length; ++i) {
       listMode = 'unimplemented';
     } else if (a === '--debug') {
       debug = true;
+    } else if (a === '--data') {
+      dataPath = sys.args[++i];
     } else if (a === '--print-json') {
       printJSON = true;
     } else if (a === '--expectations') {
@@ -85,6 +91,25 @@ for (let i = 0; i < sys.args.length; ++i) {
 
 if (gpuProviderModule) {
   setGPUProvider(() => gpuProviderModule!.create(gpuProviderFlags));
+}
+
+if (dataPath !== undefined) {
+  dataCache.setStore({
+    load: (path: string) => {
+      return new Promise<string>((resolve, reject) => {
+        fs.readFile(`${dataPath}/${path}`, 'utf8', (err, data) => {
+          if (err !== null) {
+            reject(err.message);
+          } else {
+            resolve(data);
+          }
+        });
+      });
+    },
+  });
+}
+if (verbose) {
+  dataCache.setDebugLogger(console.log);
 }
 
 if (queries.length === 0) {

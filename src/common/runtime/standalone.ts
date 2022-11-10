@@ -1,5 +1,6 @@
 // Implements the standalone test runner (see also: /standalone/index.html).
 
+import { dataCache } from '../framework/data_cache.js';
 import { setBaseResourcePath } from '../framework/resources.js';
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
 import { Logger } from '../internal/logging/logger.js';
@@ -31,6 +32,16 @@ const worker = optionEnabled('worker') ? new TestWorker(debug) : undefined;
 
 const autoCloseOnPass = document.getElementById('autoCloseOnPass') as HTMLInputElement;
 const resultsVis = document.getElementById('resultsVis')!;
+
+dataCache.setStore({
+  load: async (path: string) => {
+    const response = await fetch(`data/${path}`);
+    if (!response.ok) {
+      return Promise.reject(response.statusText);
+    }
+    return await response.text();
+  },
+});
 
 interface SubtreeResult {
   pass: number;

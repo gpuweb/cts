@@ -1,4 +1,10 @@
+import { getIsBuildingDataCache } from '../../common/framework/data_cache.js';
 import { Colors } from '../../common/util/colors.js';
+import {
+  deserializeExpectation,
+  SerializedExpectation,
+  serializeExpectation,
+} from '../shader/execution/expression/case_cache.js';
 import { Expectation, toComparator } from '../shader/execution/expression/expression.js';
 
 import { isFloatValue, Scalar, Value, Vector } from './conversion.js';
@@ -195,8 +201,10 @@ export function compare(got: Value, expected: Value | F32Interval | F32Interval[
 }
 
 /** @returns a Comparator that checks whether a test value matches any of the provided options */
-export function anyOf(...expectations: Expectation[]): Comparator {
-  return got => {
+export function anyOf(
+  ...expectations: Expectation[]
+): Comparator | (Comparator & SerializedComparator) {
+  const comparator = (got: Value) => {
     const failed = new Set<string>();
     for (const e of expectations) {
       const cmp = toComparator(e)(got);
@@ -207,4 +215,36 @@ export function anyOf(...expectations: Expectation[]): Comparator {
     }
     return { matched: false, got: got.toString(), expected: [...failed].join(' or ') };
   };
+
+  if (getIsBuildingDataCache()) {
+    // If there's an active DataCache, and it supports storing, then append the
+    // comparator kind and serialized expectations to the comparator, so it can
+    // be serialized.
+    comparator.kind = 'anyOf';
+    comparator.data = expectations.map(e => serializeExpectation(e));
+  }
+  return comparator;
+}
+
+/** SerializedComparatorAnyOf is the serialized type of an `anyOf` comparator. */
+type SerializedComparatorAnyOf = {
+  kind: 'anyOf';
+  data: SerializedExpectation[];
+};
+
+/** SerializedComparator is a union of all the possible serialized comparator types. */
+export type SerializedComparator = SerializedComparatorAnyOf;
+
+/**
+ * Deserializes a comparator from a SerializedComparator.
+ * @param data the SerializedComparator
+ * @returns the deserialized Comparator.
+ */
+export function deserializeComparator(data: SerializedComparator): Comparator {
+  switch (data.kind) {
+    case 'anyOf': {
+      return anyOf(...data.data.map(e => deserializeExpectation(e)));
+    }
+  }
+  throw `unhandled comparator kind: ${data.kind}`;
 }
