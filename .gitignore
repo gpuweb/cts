@@ -9,6 +9,9 @@
 *.tmp.txt
 /docs/tsdoc/
 
+# Cache files
+/standalone/data
+
 # Created by https://www.gitignore.io/api/linux,macos,windows,node
 # Edit at https://www.gitignore.io/?templates=linux,macos,windows,node
 
