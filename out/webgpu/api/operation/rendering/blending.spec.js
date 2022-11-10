@@ -20,7 +20,71 @@ import { float32ToFloat16Bits } from '../../../util/conversion.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
 import { textureContentIsOKByT2B } from '../../../util/texture/texture_ok.js';
 
-export const g = makeTestGroup(GPUTest);
+class BlendingTest extends GPUTest {
+  createRenderPipelineForTest(
+  colorTargetState,
+  blendComponent)
+  {
+    return this.device.createRenderPipeline({
+      layout: 'auto',
+      fragment: {
+        targets: [
+        {
+          format: colorTargetState.format,
+          blend: {
+            color: blendComponent ?? {},
+            alpha: blendComponent ?? {} } }],
+
+
+
+        module: this.device.createShaderModule({
+          code: `
+            struct Params {
+              color : vec4<f32>
+            }
+            @group(0) @binding(0) var<uniform> params : Params;
+            @fragment fn main() -> @location(0) vec4<f32> {
+              return params.color;
+            }
+            ` }),
+
+        entryPoint: 'main' },
+
+      vertex: {
+        module: this.device.createShaderModule({
+          code: `
+            @vertex fn main(
+              @builtin(vertex_index) VertexIndex : u32
+              ) -> @builtin(position) vec4<f32> {
+              var pos = array<vec2<f32>, 3>(
+                  vec2<f32>(-1.0, -1.0),
+                  vec2<f32>(3.0, -1.0),
+                  vec2<f32>(-1.0, 3.0));
+              return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
+            }
+            ` }),
+
+        entryPoint: 'main' } });
+
+
+  }
+
+  createBindGroupForTest(layout, data) {
+    return this.device.createBindGroup({
+      layout,
+      entries: [
+      {
+        binding: 0,
+        resource: {
+          buffer: this.makeBufferWithContents(data, GPUBufferUsage.UNIFORM) } }] });
+
+
+
+
+  }}
+
+
+export const g = makeTestGroup(BlendingTest);
 
 function mapColor(
 col,
@@ -368,6 +432,72 @@ fn(async (t) => {
     maxDiffULPsForNormFormat: 1,
     maxDiffULPsForFloatFormat: 1 });
 
+
+  t.expectOK(result);
+});
+
+g.test('default_blend_constant,initial_blend_constant').
+desc(`Test that the blend constant is set to [0,0,0,0] at the beginning of a pass.`).
+fn(async (t) => {
+  const format = 'rgba8unorm';
+  const kSize = 1;
+  const kWhiteColorData = new Float32Array([255, 255, 255, 255]);
+  const kBlackColorData = new Float32Array([0, 0, 0, 0]);
+
+  const basePipeline = t.createRenderPipelineForTest({ format }, undefined);
+  const testPipeline = t.createRenderPipelineForTest(
+  { format },
+  {
+    srcFactor: 'constant',
+    dstFactor: 'one',
+    operation: 'add' });
+
+
+
+  const renderTarget = t.device.createTexture({
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+    size: [kSize, kSize],
+    format });
+
+
+  const commandEncoder = t.device.createCommandEncoder();
+  const renderPass = commandEncoder.beginRenderPass({
+    colorAttachments: [
+    {
+      view: renderTarget.createView(),
+      loadOp: 'load',
+      storeOp: 'store' }] });
+
+
+
+  renderPass.setPipeline(basePipeline);
+  renderPass.setBindGroup(
+  0,
+  t.createBindGroupForTest(basePipeline.getBindGroupLayout(0), kBlackColorData));
+
+  renderPass.setPipeline(testPipeline);
+  renderPass.setBindGroup(
+  0,
+  t.createBindGroupForTest(testPipeline.getBindGroupLayout(0), kWhiteColorData));
+
+  renderPass.draw(3);
+  // Draw [1,1,1,1] with `src * constant + dst * 1`.
+  // The blend constant defaults to [0,0,0,0], so the result is
+  // `[1,1,1,1] * [0,0,0,0] + [0,0,0,0] * 1` = [0,0,0,0].
+  renderPass.end();
+  t.device.queue.submit([commandEncoder.finish()]);
+
+  // Check that the initial blend color is black(0,0,0,0) after setting testPipeline which has
+  // a white color buffer data.
+  const expColor = { R: 0, G: 0, B: 0, A: 0 };
+  const expTexelView = TexelView.fromTexelsAsColors(format, (coords) => expColor);
+
+  const result = await textureContentIsOKByT2B(
+  t,
+  { texture: renderTarget },
+  [kSize, kSize],
+  { expTexelView },
+  { maxDiffULPsForNormFormat: 1 });
 
   t.expectOK(result);
 });
