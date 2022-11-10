@@ -13,6 +13,7 @@ desc(
 `
 Test that it is valid to create rg11b10ufloat texture with RENDER_ATTACHMENT usage and/or
 sampleCount > 1, iff rg11b10ufloat-renderable feature is enabled.
+Note, the createTexture tests cover these validation cases where this feature is not enabled.
 `).
 
 params((u) =>
