@@ -13,6 +13,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { distanceInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range, kVectorSparseTestValues } from '../../../../../util/math.js';
+import { makeCaseCache } from '../../case_cache.js';
 import {
   allInputSources,
   Case,
@@ -24,6 +25,30 @@ import {
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+export const d = makeCaseCache('distance', {
+  f32: () => {
+    const makeCase = (x: number, y: number): Case => {
+      return makeBinaryToF32IntervalCase(x, y, distanceInterval);
+    };
+    return fullF32Range().flatMap(i => fullF32Range().map(j => makeCase(i, j)));
+  },
+  f32_vec2: () => {
+    return kVectorSparseTestValues[2].flatMap(i =>
+      kVectorSparseTestValues[2].map(j => makeCaseVecF32(i, j))
+    );
+  },
+  f32_vec3: () => {
+    return kVectorSparseTestValues[3].flatMap(i =>
+      kVectorSparseTestValues[3].map(j => makeCaseVecF32(i, j))
+    );
+  },
+  f32_vec4: () => {
+    return kVectorSparseTestValues[4].flatMap(i =>
+      kVectorSparseTestValues[4].map(j => makeCaseVecF32(i, j))
+    );
+  },
+});
 
 /** @returns a `distance` Case for a pair of vectors of f32s input */
 const makeCaseVecF32 = (x: number[], y: number[]): Case => {
@@ -43,11 +68,7 @@ g.test('f32')
   .desc(`f32 tests`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const makeCase = (x: number, y: number): Case => {
-      return makeBinaryToF32IntervalCase(x, y, distanceInterval);
-    };
-    const cases: Case[] = fullF32Range().flatMap(i => fullF32Range().map(j => makeCase(i, j)));
-
+    const cases = await d.get('f32');
     await run(t, builtin('distance'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
@@ -56,10 +77,7 @@ g.test('f32_vec2')
   .desc(`f32 tests using vec2s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases: Case[] = kVectorSparseTestValues[2].flatMap(i =>
-      kVectorSparseTestValues[2].map(j => makeCaseVecF32(i, j))
-    );
-
+    const cases = await d.get('f32_vec2');
     await run(
       t,
       builtin('distance'),
@@ -75,10 +93,7 @@ g.test('f32_vec3')
   .desc(`f32 tests using vec3s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases: Case[] = kVectorSparseTestValues[3].flatMap(i =>
-      kVectorSparseTestValues[3].map(j => makeCaseVecF32(i, j))
-    );
-
+    const cases = await d.get('f32_vec3');
     await run(
       t,
       builtin('distance'),
@@ -94,10 +109,7 @@ g.test('f32_vec4')
   .desc(`f32 tests using vec4s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases: Case[] = kVectorSparseTestValues[4].flatMap(i =>
-      kVectorSparseTestValues[4].map(j => makeCaseVecF32(i, j))
-    );
-
+    const cases = await d.get('f32_vec4');
     await run(
       t,
       builtin('distance'),
