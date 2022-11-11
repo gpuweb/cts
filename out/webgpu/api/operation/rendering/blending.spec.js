@@ -21,22 +21,11 @@ import { TexelView } from '../../../util/texture/texel_view.js';
 import { textureContentIsOKByT2B } from '../../../util/texture/texture_ok.js';
 
 class BlendingTest extends GPUTest {
-  createRenderPipelineForTest(
-  colorTargetState,
-  blendComponent)
-  {
+  createRenderPipelineForTest(colorTargetState) {
     return this.device.createRenderPipeline({
       layout: 'auto',
       fragment: {
-        targets: [
-        {
-          format: colorTargetState.format,
-          blend: {
-            color: blendComponent ?? {},
-            alpha: blendComponent ?? {} } }],
-
-
-
+        targets: [colorTargetState],
         module: this.device.createShaderModule({
           code: `
             struct Params {
@@ -442,16 +431,11 @@ fn(async (t) => {
   const format = 'rgba8unorm';
   const kSize = 1;
   const kWhiteColorData = new Float32Array([255, 255, 255, 255]);
-  const kBlackColorData = new Float32Array([0, 0, 0, 0]);
 
-  const basePipeline = t.createRenderPipelineForTest({ format }, undefined);
-  const testPipeline = t.createRenderPipelineForTest(
-  { format },
-  {
-    srcFactor: 'constant',
-    dstFactor: 'one',
-    operation: 'add' });
-
+  const blendComponent = { srcFactor: 'constant', dstFactor: 'one', operation: 'add' };
+  const testPipeline = t.createRenderPipelineForTest({
+    format,
+    blend: { color: blendComponent, alpha: blendComponent } });
 
 
   const renderTarget = t.device.createTexture({
@@ -470,11 +454,6 @@ fn(async (t) => {
 
 
 
-  renderPass.setPipeline(basePipeline);
-  renderPass.setBindGroup(
-  0,
-  t.createBindGroupForTest(basePipeline.getBindGroupLayout(0), kBlackColorData));
-
   renderPass.setPipeline(testPipeline);
   renderPass.setBindGroup(
   0,
@@ -487,7 +466,7 @@ fn(async (t) => {
   renderPass.end();
   t.device.queue.submit([commandEncoder.finish()]);
 
-  // Check that the initial blend color is black(0,0,0,0) after setting testPipeline which has
+  // Check that the initial blend constant is black(0,0,0,0) after setting testPipeline which has
   // a white color buffer data.
   const expColor = { R: 0, G: 0, B: 0, A: 0 };
   const expTexelView = TexelView.fromTexelsAsColors(format, (coords) => expColor);
