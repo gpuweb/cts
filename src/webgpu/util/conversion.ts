@@ -1,5 +1,5 @@
 import { Colors } from '../../common/util/colors.js';
-import { assert, TypedArrayBufferView } from '../../common/util/util.js';
+import { assert, TypedArrayBufferView, unreachable } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
 import { kBit } from './constants.js';
@@ -675,7 +675,7 @@ export function scalarTypeOf(ty: Type): ScalarType {
 }
 
 /** ScalarValue is the JS type that can be held by a Scalar */
-type ScalarValue = Boolean | Number;
+type ScalarValue = boolean | number;
 
 /** Class that encapsulates a single scalar value of various types. */
 export class Scalar {
@@ -874,6 +874,18 @@ export const True = bool(true);
 /** A 'false' literal value */
 export const False = bool(false);
 
+export function reinterpretF32AsU32(f32: number): number {
+  const array = new Float32Array(1);
+  array[0] = f32;
+  return new Uint32Array(array.buffer)[0];
+}
+
+export function reinterpretU32AsF32(u32: number): number {
+  const array = new Uint32Array(1);
+  array[0] = u32;
+  return new Float32Array(array.buffer)[0];
+}
+
 /**
  * Class that encapsulates a vector value.
  */
@@ -960,6 +972,87 @@ export function vec4(x: Scalar, y: Scalar, z: Scalar, w: Scalar) {
 
 /** Value is a Scalar or Vector value. */
 export type Value = Scalar | Vector;
+
+export type SerializedValueScalar = {
+  kind: 'scalar';
+  type: ScalarKind;
+  value: boolean | number;
+};
+
+export type SerializedValueVector = {
+  kind: 'vector';
+  type: ScalarKind;
+  value: boolean[] | number[];
+};
+
+export type SerializedValue = SerializedValueScalar | SerializedValueVector;
+
+export function serializeValue(v: Value): SerializedValue {
+  const value = (kind: ScalarKind, s: Scalar) => {
+    switch (kind) {
+      case 'f32':
+        return new Uint32Array(s.bits.buffer)[0];
+      case 'f16':
+        return new Uint16Array(s.bits.buffer)[0];
+      default:
+        return s.value;
+    }
+  };
+  if (v instanceof Scalar) {
+    const kind = v.type.kind;
+    return {
+      kind: 'scalar',
+      type: kind,
+      value: value(kind, v),
+    };
+  }
+  if (v instanceof Vector) {
+    const kind = v.type.elementType.kind;
+    return {
+      kind: 'vector',
+      type: kind,
+      value: v.elements.map(e => value(kind, e)) as boolean[] | number[],
+    };
+  }
+  unreachable(`unhandled value type: ${v}`);
+}
+
+export function deserializeValue(data: SerializedValue): Value {
+  const buildScalar = (v: ScalarValue): Scalar => {
+    switch (data.type) {
+      case 'f64':
+        return f64(v as number);
+      case 'i32':
+        return i32(v as number);
+      case 'u32':
+        return u32(v as number);
+      case 'f32':
+        return f32Bits(v as number);
+      case 'i16':
+        return i16(v as number);
+      case 'u16':
+        return u16(v as number);
+      case 'f16':
+        return f16Bits(v as number);
+      case 'i8':
+        return i8(v as number);
+      case 'u8':
+        return u8(v as number);
+      case 'bool':
+        return bool(v as boolean);
+      default:
+        unreachable(`unhandled value type: ${data.type}`);
+    }
+  };
+  switch (data.kind) {
+    case 'scalar': {
+      return buildScalar(data.value);
+    }
+    case 'vector': {
+      return new Vector(data.value.map(v => buildScalar(v)));
+    }
+  }
+}
 
 /** @returns if the Value is a float scalar type */
 export function isFloatValue(v: Value): boolean {

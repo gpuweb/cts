@@ -12,6 +12,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { reflectInterval } from '../../../../../util/f32_interval.js';
 import { kVectorSparseTestValues } from '../../../../../util/math.js';
+import { makeCaseCache } from '../../case_cache.js';
 import {
 allInputSources,
 
@@ -22,6 +23,24 @@ run } from
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+export const d = makeCaseCache('reflect', {
+  f32_vec2: () => {
+    return kVectorSparseTestValues[2].flatMap((i) =>
+    kVectorSparseTestValues[2].map((j) => makeCaseVecF32(i, j)));
+
+  },
+  f32_vec3: () => {
+    return kVectorSparseTestValues[3].flatMap((i) =>
+    kVectorSparseTestValues[3].map((j) => makeCaseVecF32(i, j)));
+
+  },
+  f32_vec4: () => {
+    return kVectorSparseTestValues[4].flatMap((i) =>
+    kVectorSparseTestValues[4].map((j) => makeCaseVecF32(i, j)));
+
+  } });
+
 
 /** @returns a `reflect` Case for a pair of vectors of f32s input */
 const makeCaseVecF32 = (x, y) => {
@@ -39,10 +58,7 @@ specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions').
 desc(`f32 tests using vec2s`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
-  const cases = kVectorSparseTestValues[2].flatMap((i) =>
-  kVectorSparseTestValues[2].map((j) => makeCaseVecF32(i, j)));
-
-
+  const cases = await d.get('f32_vec2');
   await run(
   t,
   builtin('reflect'),
@@ -58,10 +74,7 @@ specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions').
 desc(`f32 tests using vec3s`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
-  const cases = kVectorSparseTestValues[3].flatMap((i) =>
-  kVectorSparseTestValues[3].map((j) => makeCaseVecF32(i, j)));
-
-
+  const cases = await d.get('f32_vec3');
   await run(
   t,
   builtin('reflect'),
@@ -77,10 +90,7 @@ specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions').
 desc(`f32 tests using vec4s`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
-  const cases = kVectorSparseTestValues[4].flatMap((i) =>
-  kVectorSparseTestValues[4].map((j) => makeCaseVecF32(i, j)));
-
-
+  const cases = await d.get('f32_vec4');
   await run(
   t,
   builtin('reflect'),

@@ -12,11 +12,36 @@ import { anyOf } from '../../../../../util/compare.js';
 import { f32, TypeF32, TypeVec, Vector } from '../../../../../util/conversion.js';
 import { faceForwardIntervals } from '../../../../../util/f32_interval.js';
 import { kVectorSparseTestValues, quantizeToF32 } from '../../../../../util/math.js';
+import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+export const d = makeCaseCache('faceForward', {
+  f32_vec2: () => {
+    return kVectorSparseTestValues[2].flatMap(i =>
+      kVectorSparseTestValues[2].flatMap(j =>
+        kVectorSparseTestValues[2].map(k => makeCase(i, j, k))
+      )
+    );
+  },
+  f32_vec3: () => {
+    return kVectorSparseTestValues[3].flatMap(i =>
+      kVectorSparseTestValues[3].flatMap(j =>
+        kVectorSparseTestValues[3].map(k => makeCase(i, j, k))
+      )
+    );
+  },
+  f32_vec4: () => {
+    return kVectorSparseTestValues[4].flatMap(i =>
+      kVectorSparseTestValues[4].flatMap(j =>
+        kVectorSparseTestValues[4].map(k => makeCase(i, j, k))
+      )
+    );
+  },
+});
 
 /**
  * @returns a `faceForward` Case for a triplet of vectors of f32s input
@@ -53,12 +78,7 @@ g.test('f32_vec2')
   .desc(`f32 tests using vec2s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases: Case[] = kVectorSparseTestValues[2].flatMap(i =>
-      kVectorSparseTestValues[2].flatMap(j =>
-        kVectorSparseTestValues[2].map(k => makeCase(i, j, k))
-      )
-    );
-
+    const cases = await d.get('f32_vec2');
     await run(
       t,
       builtin('faceForward'),
@@ -74,12 +94,7 @@ g.test('f32_vec3')
   .desc(`f32 tests using vec3s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases: Case[] = kVectorSparseTestValues[3].flatMap(i =>
-      kVectorSparseTestValues[3].flatMap(j =>
-        kVectorSparseTestValues[3].map(k => makeCase(i, j, k))
-      )
-    );
-
+    const cases = await d.get('f32_vec3');
     await run(
       t,
       builtin('faceForward'),
@@ -95,12 +110,7 @@ g.test('f32_vec4')
   .desc(`f32 tests using vec4s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases: Case[] = kVectorSparseTestValues[4].flatMap(i =>
-      kVectorSparseTestValues[4].flatMap(j =>
-        kVectorSparseTestValues[4].map(k => makeCase(i, j, k))
-      )
-    );
-
+    const cases = await d.get('f32_vec4');
     await run(
       t,
       builtin('faceForward'),

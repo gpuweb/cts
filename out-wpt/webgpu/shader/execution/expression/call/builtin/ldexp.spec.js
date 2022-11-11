@@ -23,26 +23,15 @@ import {
   quantizeToF32,
   quantizeToI32,
 } from '../../../../../util/math.js';
+import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('abstract_float')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
-`
-  )
-  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
-  .unimplemented();
-
-g.test('f32')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(`f32 tests`)
-  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
-  .fn(async t => {
+export const d = makeCaseCache('ldexp', {
+  f32: () => {
     const makeCase = (e1, e2) => {
       // Due to the heterogeneous types of the params to ldexp (f32 & i32),
       // makeBinaryToF32IntervalCase cannot be used here.
@@ -58,6 +47,25 @@ g.test('f32')
         cases.push(makeCase(e1, e2));
       });
     });
+    return cases;
+  },
+});
+
+g.test('abstract_float')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
+  .desc(
+    `
+`
+  )
+  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
+  .unimplemented();
+
+g.test('f32')
+  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
+  .desc(`f32 tests`)
+  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
+  .fn(async t => {
+    const cases = await d.get('f32');
     await run(t, builtin('ldexp'), [TypeF32, TypeI32], TypeF32, t.params, cases);
   });
 

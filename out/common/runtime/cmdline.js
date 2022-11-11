@@ -1,6 +1,9 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { DefaultTestFileLoader } from '../internal/file_loader.js';
+**/import * as fs from 'fs';
+
+import { dataCache } from '../framework/data_cache.js';
+import { DefaultTestFileLoader } from '../internal/file_loader.js';
 import { prettyPrintLog } from '../internal/logging/log_message.js';
 import { Logger } from '../internal/logging/logger.js';
 
@@ -46,6 +49,7 @@ let printJSON = false;
 let quiet = false;
 let loadWebGPUExpectations = undefined;
 let gpuProviderModule = undefined;
+let dataPath = undefined;
 
 const queries = [];
 const gpuProviderFlags = [];
@@ -62,6 +66,8 @@ for (let i = 0; i < sys.args.length; ++i) {
       listMode = 'unimplemented';
     } else if (a === '--debug') {
       debug = true;
+    } else if (a === '--data') {
+      dataPath = sys.args[++i];
     } else if (a === '--print-json') {
       printJSON = true;
     } else if (a === '--expectations') {
@@ -85,6 +91,25 @@ for (let i = 0; i < sys.args.length; ++i) {
 
 if (gpuProviderModule) {
   setGPUProvider(() => gpuProviderModule.create(gpuProviderFlags));
+}
+
+if (dataPath !== undefined) {
+  dataCache.setStore({
+    load: (path) => {
+      return new Promise((resolve, reject) => {
+        fs.readFile(`${dataPath}/${path}`, 'utf8', (err, data) => {
+          if (err !== null) {
+            reject(err.message);
+          } else {
+            resolve(data);
+          }
+        });
+      });
+    } });
+
+}
+if (verbose) {
+  dataCache.setDebugLogger(console.log);
 }
 
 if (queries.length === 0) {

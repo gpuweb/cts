@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { Colors } from '../../common/util/colors.js';
-import { assert } from '../../common/util/util.js';
+import { assert, unreachable } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
 import { kBit } from './constants.js';
@@ -864,6 +864,18 @@ export const True = bool(true);
 /** A 'false' literal value */
 export const False = bool(false);
 
+export function reinterpretF32AsU32(f32) {
+  const array = new Float32Array(1);
+  array[0] = f32;
+  return new Uint32Array(array.buffer)[0];
+}
+
+export function reinterpretU32AsF32(u32) {
+  const array = new Uint32Array(1);
+  array[0] = u32;
+  return new Float32Array(array.buffer)[0];
+}
+
 /**
  * Class that encapsulates a vector value.
  */
@@ -946,6 +958,73 @@ export function vec4(x, y, z, w) {
 }
 
 /** Value is a Scalar or Vector value. */
+
+export function serializeValue(v) {
+  const value = (kind, s) => {
+    switch (kind) {
+      case 'f32':
+        return new Uint32Array(s.bits.buffer)[0];
+      case 'f16':
+        return new Uint16Array(s.bits.buffer)[0];
+      default:
+        return s.value;
+    }
+  };
+  if (v instanceof Scalar) {
+    const kind = v.type.kind;
+    return {
+      kind: 'scalar',
+      type: kind,
+      value: value(kind, v),
+    };
+  }
+  if (v instanceof Vector) {
+    const kind = v.type.elementType.kind;
+    return {
+      kind: 'vector',
+      type: kind,
+      value: v.elements.map(e => value(kind, e)),
+    };
+  }
+  unreachable(`unhandled value type: ${v}`);
+}
+
+export function deserializeValue(data) {
+  const buildScalar = v => {
+    switch (data.type) {
+      case 'f64':
+        return f64(v);
+      case 'i32':
+        return i32(v);
+      case 'u32':
+        return u32(v);
+      case 'f32':
+        return f32Bits(v);
+      case 'i16':
+        return i16(v);
+      case 'u16':
+        return u16(v);
+      case 'f16':
+        return f16Bits(v);
+      case 'i8':
+        return i8(v);
+      case 'u8':
+        return u8(v);
+      case 'bool':
+        return bool(v);
+      default:
+        unreachable(`unhandled value type: ${data.type}`);
+    }
+  };
+  switch (data.kind) {
+    case 'scalar': {
+      return buildScalar(data.value);
+    }
+    case 'vector': {
+      return new Vector(data.value.map(v => buildScalar(v)));
+    }
+  }
+}
 
 /** @returns if the Value is a float scalar type */
 export function isFloatValue(v) {

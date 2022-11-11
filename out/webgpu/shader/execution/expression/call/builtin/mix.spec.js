@@ -19,11 +19,32 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { mixIntervals } from '../../../../../util/f32_interval.js';
 import { sparseF32Range } from '../../../../../util/math.js';
+import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, makeTernaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+export const d = makeCaseCache('mix', {
+  f32: () => {
+    const makeCase = (x, y, z) => {
+      return makeTernaryToF32IntervalCase(x, y, z, ...mixIntervals);
+    };
+
+    const values = sparseF32Range();
+    const cases = [];
+    values.forEach((x) => {
+      values.forEach((y) => {
+        values.forEach((z) => {
+          cases.push(makeCase(x, y, z));
+        });
+      });
+    });
+
+    return cases;
+  } });
+
 
 g.test('matching_abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
@@ -40,19 +61,7 @@ params((u) =>
 u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
-  const makeCase = (x, y, z) => {
-    return makeTernaryToF32IntervalCase(x, y, z, ...mixIntervals);
-  };
-
-  const values = sparseF32Range();
-  const cases = [];
-  values.forEach((x) => {
-    values.forEach((y) => {
-      values.forEach((z) => {
-        cases.push(makeCase(x, y, z));
-      });
-    });
-  });
+  const cases = await d.get('f32');
   await run(t, builtin('mix'), [TypeF32, TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 

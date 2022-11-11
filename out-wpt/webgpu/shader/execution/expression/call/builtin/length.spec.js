@@ -13,6 +13,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { lengthInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range, kVectorTestValues } from '../../../../../util/math.js';
+import { makeCaseCache } from '../../case_cache.js';
 import {
   allInputSources,
   makeUnaryToF32IntervalCase,
@@ -23,6 +24,24 @@ import {
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+export const d = makeCaseCache('length', {
+  f32: () => {
+    const makeCase = x => {
+      return makeUnaryToF32IntervalCase(x, lengthInterval);
+    };
+    return fullF32Range().map(makeCase);
+  },
+  f32_vec2: () => {
+    return kVectorTestValues[2].map(makeCaseVecF32);
+  },
+  f32_vec3: () => {
+    return kVectorTestValues[3].map(makeCaseVecF32);
+  },
+  f32_vec4: () => {
+    return kVectorTestValues[4].map(makeCaseVecF32);
+  },
+});
 
 /** @returns a `length` Case for a vector of f32s input */
 const makeCaseVecF32 = x => {
@@ -40,11 +59,7 @@ g.test('f32')
   .desc(`f32 tests`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const makeCase = x => {
-      return makeUnaryToF32IntervalCase(x, lengthInterval);
-    };
-    const cases = fullF32Range().map(makeCase);
-
+    const cases = await d.get('f32');
     await run(t, builtin('length'), [TypeF32], TypeF32, t.params, cases);
   });
 
@@ -53,8 +68,7 @@ g.test('f32_vec2')
   .desc(`f32 tests using vec2s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = kVectorTestValues[2].map(makeCaseVecF32);
-
+    const cases = await d.get('f32_vec2');
     await run(t, builtin('length'), [TypeVec(2, TypeF32)], TypeF32, t.params, cases);
   });
 
@@ -63,8 +77,7 @@ g.test('f32_vec3')
   .desc(`f32 tests using vec3s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = kVectorTestValues[3].map(makeCaseVecF32);
-
+    const cases = await d.get('f32_vec3');
     await run(t, builtin('length'), [TypeVec(3, TypeF32)], TypeF32, t.params, cases);
   });
 
@@ -73,8 +86,7 @@ g.test('f32_vec4')
   .desc(`f32 tests using vec4s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = kVectorTestValues[4].map(makeCaseVecF32);
-
+    const cases = await d.get('f32_vec4');
     await run(t, builtin('length'), [TypeVec(4, TypeF32)], TypeF32, t.params, cases);
   });
 

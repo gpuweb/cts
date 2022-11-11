@@ -21,11 +21,24 @@ import { kBit } from '../../../../../util/constants.js';
 import { i32Bits, TypeF32, TypeI32, TypeU32, u32Bits } from '../../../../../util/conversion.js';
 import { absInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../../util/math.js';
+import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+export const d = makeCaseCache('abs', {
+  f32: () => {
+    const makeCase = (x: number): Case => {
+      return makeUnaryToF32IntervalCase(x, absInterval);
+    };
+
+    return [Number.NEGATIVE_INFINITY, ...fullF32Range(), Number.POSITIVE_INFINITY].map(x =>
+      makeCase(x)
+    );
+  },
+});
 
 g.test('abstract_int')
   .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
@@ -147,16 +160,7 @@ g.test('f32')
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const makeCase = (x: number): Case => {
-      return makeUnaryToF32IntervalCase(x, absInterval);
-    };
-
-    const cases: Array<Case> = [
-      Number.NEGATIVE_INFINITY,
-      ...fullF32Range(),
-      Number.POSITIVE_INFINITY,
-    ].map(x => makeCase(x));
-
+    const cases = await d.get('f32');
     await run(t, builtin('abs'), [TypeF32], TypeF32, t.params, cases);
   });
 

@@ -13,11 +13,60 @@ remainderInterval,
 subtractionInterval } from
 '../../../../util/f32_interval.js';
 import { kVectorTestValues } from '../../../../util/math.js';
+import { makeCaseCache } from '../case_cache.js';
 import { allInputSources, makeBinaryToF32IntervalCase, run } from '../expression.js';
 
 import { binary } from './binary.js';
 
 export const g = makeTestGroup(GPUTest);
+
+export const d = makeCaseCache('binary/f32_arithmetic', {
+  addition: () => {
+    const makeCase = (lhs, rhs) => {
+      return makeBinaryToF32IntervalCase(lhs, rhs, additionInterval);
+    };
+
+    return kVectorTestValues[2].map((v) => {
+      return makeCase(v[0], v[1]);
+    });
+  },
+  subtraction: () => {
+    const makeCase = (lhs, rhs) => {
+      return makeBinaryToF32IntervalCase(lhs, rhs, subtractionInterval);
+    };
+
+    return kVectorTestValues[2].map((v) => {
+      return makeCase(v[0], v[1]);
+    });
+  },
+  multiplication: () => {
+    const makeCase = (lhs, rhs) => {
+      return makeBinaryToF32IntervalCase(lhs, rhs, multiplicationInterval);
+    };
+
+    return kVectorTestValues[2].map((v) => {
+      return makeCase(v[0], v[1]);
+    });
+  },
+  division: () => {
+    const makeCase = (lhs, rhs) => {
+      return makeBinaryToF32IntervalCase(lhs, rhs, divisionInterval);
+    };
+
+    return kVectorTestValues[2].map((v) => {
+      return makeCase(v[0], v[1]);
+    });
+  },
+  remainder: () => {
+    const makeCase = (lhs, rhs) => {
+      return makeBinaryToF32IntervalCase(lhs, rhs, remainderInterval);
+    };
+
+    return kVectorTestValues[2].map((v) => {
+      return makeCase(v[0], v[1]);
+    });
+  } });
+
 
 g.test('addition').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
@@ -31,14 +80,7 @@ params((u) =>
 u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
-  const makeCase = (lhs, rhs) => {
-    return makeBinaryToF32IntervalCase(lhs, rhs, additionInterval);
-  };
-
-  const cases = kVectorTestValues[2].map((v) => {
-    return makeCase(v[0], v[1]);
-  });
-
+  const cases = await d.get('addition');
   await run(t, binary('+'), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 
@@ -54,14 +96,7 @@ params((u) =>
 u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
-  const makeCase = (lhs, rhs) => {
-    return makeBinaryToF32IntervalCase(lhs, rhs, subtractionInterval);
-  };
-
-  const cases = kVectorTestValues[2].map((v) => {
-    return makeCase(v[0], v[1]);
-  });
-
+  const cases = await d.get('subtraction');
   await run(t, binary('-'), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 
@@ -77,14 +112,7 @@ params((u) =>
 u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
-  const makeCase = (lhs, rhs) => {
-    return makeBinaryToF32IntervalCase(lhs, rhs, multiplicationInterval);
-  };
-
-  const cases = kVectorTestValues[2].map((v) => {
-    return makeCase(v[0], v[1]);
-  });
-
+  const cases = await d.get('multiplication');
   await run(t, binary('*'), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 
@@ -100,14 +128,7 @@ params((u) =>
 u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
-  const makeCase = (lhs, rhs) => {
-    return makeBinaryToF32IntervalCase(lhs, rhs, divisionInterval);
-  };
-
-  const cases = kVectorTestValues[2].map((v) => {
-    return makeCase(v[0], v[1]);
-  });
-
+  const cases = await d.get('division');
   await run(t, binary('/'), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 
@@ -123,14 +144,7 @@ params((u) =>
 u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
-  const makeCase = (lhs, rhs) => {
-    return makeBinaryToF32IntervalCase(lhs, rhs, remainderInterval);
-  };
-
-  const cases = kVectorTestValues[2].map((v) => {
-    return makeCase(v[0], v[1]);
-  });
-
+  const cases = await d.get('remainder');
   await run(t, binary('%'), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 //# sourceMappingURL=f32_arithmetic.spec.js.map

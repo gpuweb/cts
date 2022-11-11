@@ -13,11 +13,31 @@ import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { expInterval } from '../../../../../util/f32_interval.js';
 import { biasedRange, linearRange } from '../../../../../util/math.js';
+import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+export const d = makeCaseCache('exp', {
+  f32: () => {
+    const makeCase = (x) => {
+      return makeUnaryToF32IntervalCase(x, expInterval);
+    };
+
+    // floor(ln(max f32 value)) = 88, so exp(88) will be within range of a f32, but exp(89) will not
+    // floor(ln(max f64 value)) = 709, so exp(709) can be handled by the testing framework, but exp(710) will misbehave
+    return [
+    0, // Returns 1 by definition
+    -89, // Returns subnormal value
+    kValue.f32.negative.min, // Closest to returning 0 as possible
+    ...biasedRange(kValue.f32.negative.max, -88, 100),
+    ...biasedRange(kValue.f32.positive.min, 88, 100),
+    ...linearRange(89, 709, 10) // Overflows f32, but not f64
+    ].map((x) => makeCase(x));
+  } });
+
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
@@ -34,21 +54,7 @@ params((u) =>
 u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
-  const makeCase = (x) => {
-    return makeUnaryToF32IntervalCase(x, expInterval);
-  };
-
-  // floor(ln(max f32 value)) = 88, so exp(88) will be within range of a f32, but exp(89) will not
-  // floor(ln(max f64 value)) = 709, so exp(709) can be handled by the testing framework, but exp(710) will misbehave
-  const cases = [
-  0, // Returns 1 by definition
-  -89, // Returns subnormal value
-  kValue.f32.negative.min, // Closest to returning 0 as possible
-  ...biasedRange(kValue.f32.negative.max, -88, 100),
-  ...biasedRange(kValue.f32.positive.min, 88, 100),
-  ...linearRange(89, 709, 10) // Overflows f32, but not f64
-  ].map((x) => makeCase(x));
-
+  const cases = await d.get('f32');
   await run(t, builtin('exp'), [TypeF32], TypeF32, t.params, cases);
 });
 

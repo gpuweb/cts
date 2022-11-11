@@ -11,6 +11,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { crossInterval } from '../../../../../util/f32_interval.js';
 import { kVectorTestValues } from '../../../../../util/math.js';
+import { makeCaseCache } from '../../case_cache.js';
 import {
 allInputSources,
 
@@ -21,6 +22,20 @@ run } from
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+export const d = makeCaseCache('cross', {
+  f32: () => {
+    const makeCase = (x, y) => {
+      return makeVectorPairToVectorIntervalCase(x, y, crossInterval);
+    };
+
+    return kVectorTestValues[3].flatMap((i) => {
+      return kVectorTestValues[3].map((j) => {
+        return makeCase(i, j);
+      });
+    });
+  } });
+
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
@@ -33,15 +48,7 @@ specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`f32 tests`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
-  const makeCase = (x, y) => {
-    return makeVectorPairToVectorIntervalCase(x, y, crossInterval);
-  };
-
-  const cases = kVectorTestValues[3].flatMap((i) => {
-    return kVectorTestValues[3].map((j) => {
-      return makeCase(i, j);
-    });
-  });
+  const cases = await d.get('f32');
 
   await run(
   t,

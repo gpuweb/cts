@@ -22,11 +22,33 @@ import {
   quantizeToF32,
   quantizeToI32,
 } from '../../../../../util/math.js';
+import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+export const d = makeCaseCache('ldexp', {
+  f32: () => {
+    const makeCase = (e1: number, e2: number): Case => {
+      // Due to the heterogeneous types of the params to ldexp (f32 & i32),
+      // makeBinaryToF32IntervalCase cannot be used here.
+      e1 = quantizeToF32(e1);
+      e2 = quantizeToI32(e2);
+      const expected = ldexpInterval(e1, e2);
+      return { input: [f32(e1), i32(e2)], expected };
+    };
+
+    const cases: Array<Case> = [];
+    fullF32Range().forEach(e1 => {
+      fullI32Range().forEach(e2 => {
+        cases.push(makeCase(e1, e2));
+      });
+    });
+    return cases;
+  },
+});
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
@@ -46,21 +68,7 @@ g.test('f32')
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const makeCase = (e1: number, e2: number): Case => {
-      // Due to the heterogeneous types of the params to ldexp (f32 & i32),
-      // makeBinaryToF32IntervalCase cannot be used here.
-      e1 = quantizeToF32(e1);
-      e2 = quantizeToI32(e2);
-      const expected = ldexpInterval(e1, e2);
-      return { input: [f32(e1), i32(e2)], expected };
-    };
-
-    const cases: Array<Case> = [];
-    fullF32Range().forEach(e1 => {
-      fullI32Range().forEach(e2 => {
-        cases.push(makeCase(e1, e2));
-      });
-    });
+    const cases = await d.get('f32');
     await run(t, builtin('ldexp'), [TypeF32, TypeI32], TypeF32, t.params, cases);
   });
 

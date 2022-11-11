@@ -13,11 +13,49 @@ import { anyOf } from '../../../../../util/compare.js';
 import { f32, TypeF32 } from '../../../../../util/conversion.js';
 import { F32Interval, stepInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range, quantizeToF32 } from '../../../../../util/math.js';
+import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+export const d = makeCaseCache('step', {
+  f32: () => {
+    const zeroInterval = new F32Interval(0, 0);
+    const oneInterval = new F32Interval(1, 1);
+
+    // stepInterval's return value isn't always interpreted as an acceptance
+    // interval, so makeBinaryToF32IntervalCase cannot be used here.
+    // See the comment block on stepInterval for more details
+    const makeCase = (edge, x) => {
+      edge = quantizeToF32(edge);
+      x = quantizeToF32(x);
+      const expected = stepInterval(edge, x);
+
+      // [0, 0], [1, 1], or [-∞, +∞] cases
+      if (expected.isPoint() || !expected.isFinite()) {
+        return { input: [f32(edge), f32(x)], expected };
+      }
+
+      // [0, 1] case
+      return {
+        input: [f32(edge), f32(x)],
+        expected: anyOf(zeroInterval, oneInterval) };
+
+    };
+
+    const range = fullF32Range();
+    const cases = [];
+    range.forEach((edge) => {
+      range.forEach((x) => {
+        cases.push(makeCase(edge, x));
+      });
+    });
+
+    return cases;
+  } });
+
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
@@ -34,37 +72,7 @@ params((u) =>
 u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
-  const zeroInterval = new F32Interval(0, 0);
-  const oneInterval = new F32Interval(1, 1);
-
-  // stepInterval's return value isn't always interpreted as an acceptance
-  // interval, so makeBinaryToF32IntervalCase cannot be used here.
-  // See the comment block on stepInterval for more details
-  const makeCase = (edge, x) => {
-    edge = quantizeToF32(edge);
-    x = quantizeToF32(x);
-    const expected = stepInterval(edge, x);
-
-    // [0, 0], [1, 1], or [-∞, +∞] cases
-    if (expected.isPoint() || !expected.isFinite()) {
-      return { input: [f32(edge), f32(x)], expected };
-    }
-
-    // [0, 1] case
-    return {
-      input: [f32(edge), f32(x)],
-      expected: anyOf(zeroInterval, oneInterval) };
-
-  };
-
-  const range = fullF32Range();
-  const cases = [];
-  range.forEach((edge) => {
-    range.forEach((x) => {
-      cases.push(makeCase(edge, x));
-    });
-  });
-
+  const cases = await d.get('f32');
   await run(t, builtin('step'), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 

@@ -13,11 +13,29 @@ import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { log2Interval } from '../../../../../util/f32_interval.js';
 import { biasedRange, fullF32Range, linearRange } from '../../../../../util/math.js';
+import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, makeUnaryToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+export const d = makeCaseCache('log2', {
+  f32: () => {
+    // [1]: Need to decide what the ground-truth is.
+    const makeCase = (x) => {
+      return makeUnaryToF32IntervalCase(x, log2Interval);
+    };
+
+    return [
+    // log2's accuracy is defined in three regions { [0, 0.5), [0.5, 2.0], (2.0, +∞] }
+    ...linearRange(kValue.f32.positive.min, 0.5, 20),
+    ...linearRange(0.5, 2.0, 20),
+    ...biasedRange(2.0, 2 ** 32, 1000),
+    ...fullF32Range()].
+    map((x) => makeCase(x));
+  } });
+
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
@@ -40,19 +58,7 @@ params((u) =>
 u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
-  // [1]: Need to decide what the ground-truth is.
-  const makeCase = (x) => {
-    return makeUnaryToF32IntervalCase(x, log2Interval);
-  };
-
-  const cases = [
-  // log2's accuracy is defined in three regions { [0, 0.5), [0.5, 2.0], (2.0, +∞] }
-  ...linearRange(kValue.f32.positive.min, 0.5, 20),
-  ...linearRange(0.5, 2.0, 20),
-  ...biasedRange(2.0, 2 ** 32, 1000),
-  ...fullF32Range()].
-  map((x) => makeCase(x));
-
+  const cases = await d.get('f32');
   await run(t, builtin('log2'), [TypeF32], TypeF32, t.params, cases);
 });
 

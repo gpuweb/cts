@@ -12,11 +12,48 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { dotInterval } from '../../../../../util/f32_interval.js';
 import { kVectorTestValues } from '../../../../../util/math.js';
+import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, makeVectorPairToF32IntervalCase, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+export const d = makeCaseCache('dot', {
+  f32_vec2: () => {
+    const makeCase = (x, y) => {
+      return makeVectorPairToF32IntervalCase(x, y, dotInterval);
+    };
+
+    return kVectorTestValues[2].flatMap((i) => {
+      return kVectorTestValues[2].map((j) => {
+        return makeCase(i, j);
+      });
+    });
+  },
+  f32_vec3: () => {
+    const makeCase = (x, y) => {
+      return makeVectorPairToF32IntervalCase(x, y, dotInterval);
+    };
+
+    return kVectorTestValues[3].flatMap((i) => {
+      return kVectorTestValues[3].map((j) => {
+        return makeCase(i, j);
+      });
+    });
+  },
+  f32_vec4: () => {
+    const makeCase = (x, y) => {
+      return makeVectorPairToF32IntervalCase(x, y, dotInterval);
+    };
+
+    return kVectorTestValues[4].flatMap((i) => {
+      return kVectorTestValues[4].map((j) => {
+        return makeCase(i, j);
+      });
+    });
+  } });
+
 
 g.test('abstract_int').
 specURL('https://www.w3.org/TR/WGSL/#vector-builtin-functions').
@@ -47,16 +84,7 @@ specURL('https://www.w3.org/TR/WGSL/#vector-builtin-functions').
 desc(`f32 tests using vec2s`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
-  const makeCase = (x, y) => {
-    return makeVectorPairToF32IntervalCase(x, y, dotInterval);
-  };
-
-  const cases = kVectorTestValues[2].flatMap((i) => {
-    return kVectorTestValues[2].map((j) => {
-      return makeCase(i, j);
-    });
-  });
-
+  const cases = await d.get('f32_vec2');
   await run(
   t,
   builtin('dot'),
@@ -72,16 +100,7 @@ specURL('https://www.w3.org/TR/WGSL/#vector-builtin-functions').
 desc(`f32 tests using vec3s`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
-  const makeCase = (x, y) => {
-    return makeVectorPairToF32IntervalCase(x, y, dotInterval);
-  };
-
-  const cases = kVectorTestValues[3].flatMap((i) => {
-    return kVectorTestValues[3].map((j) => {
-      return makeCase(i, j);
-    });
-  });
-
+  const cases = await d.get('f32_vec3');
   await run(
   t,
   builtin('dot'),
@@ -97,16 +116,7 @@ specURL('https://www.w3.org/TR/WGSL/#vector-builtin-functions').
 desc(`f32 tests using vec4s`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
-  const makeCase = (x, y) => {
-    return makeVectorPairToF32IntervalCase(x, y, dotInterval);
-  };
-
-  const cases = kVectorTestValues[4].flatMap((i) => {
-    return kVectorTestValues[4].map((j) => {
-      return makeCase(i, j);
-    });
-  });
-
+  const cases = await d.get('f32_vec4');
   await run(
   t,
   builtin('dot'),
