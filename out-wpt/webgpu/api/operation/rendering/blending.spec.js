@@ -430,7 +430,7 @@ g.test('formats')
     t.expectOK(result);
   });
 
-g.test('default_blend_constant,initial_blend_constant')
+g.test('simple_blend_constant,initial_blend_constant')
   .desc(`Test that the blend constant is set to [0,0,0,0] at the beginning of a pass.`)
   .fn(async t => {
     const format = 'rgba8unorm';
@@ -476,6 +476,72 @@ g.test('default_blend_constant,initial_blend_constant')
     // Check that the initial blend constant is black(0,0,0,0) after setting testPipeline which has
     // a white color buffer data.
     const expColor = { R: 0, G: 0, B: 0, A: 0 };
+    const expTexelView = TexelView.fromTexelsAsColors(format, coords => expColor);
+
+    const result = await textureContentIsOKByT2B(
+      t,
+      { texture: renderTarget },
+      [kSize, kSize],
+      { expTexelView },
+      { maxDiffULPsForNormFormat: 1 }
+    );
+
+    t.expectOK(result);
+  });
+
+g.test('simple_blend_constant,setting_blend_constant')
+  .desc(`Test that setting the blend constant to the RGBA values works at the beginning of a pass.`)
+  .paramsSubcasesOnly([
+    { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+    { r: 0.5, g: 1.0, b: 0.5, a: 0.0 },
+    { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+  ])
+  .fn(async t => {
+    const { r, g, b, a } = t.params;
+
+    const format = 'rgba8unorm';
+    const kSize = 1;
+    const kWhiteColorData = new Float32Array([255, 255, 255, 255]);
+
+    const blendComponent = { srcFactor: 'constant', dstFactor: 'one', operation: 'add' };
+    const testPipeline = t.createRenderPipelineForTest({
+      format,
+      blend: { color: blendComponent, alpha: blendComponent },
+    });
+
+    const renderTarget = t.device.createTexture({
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+      size: [kSize, kSize],
+      format,
+    });
+
+    const commandEncoder = t.device.createCommandEncoder();
+    const renderPass = commandEncoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: renderTarget.createView(),
+          loadOp: 'load',
+          storeOp: 'store',
+        },
+      ],
+    });
+
+    renderPass.setPipeline(testPipeline);
+    renderPass.setBlendConstant({ r, g, b, a });
+    renderPass.setBindGroup(
+      0,
+      t.createBindGroupForTest(testPipeline.getBindGroupLayout(0), kWhiteColorData)
+    );
+
+    renderPass.draw(3);
+    // Draw [1,1,1,1] with `src * constant + dst * 1`. The blend constant to [r,g,b,a], so the
+    // result is `[1,1,1,1] * [r,g,b,a] + [0,0,0,0] * 1` = [r,g,b,a].
+    renderPass.end();
+    t.device.queue.submit([commandEncoder.finish()]);
+
+    // Check that the blend constant is the same as the given constant after setting the constant
+    // via setBlendConstant.
+    const expColor = { R: r, G: g, B: b, A: a };
     const expTexelView = TexelView.fromTexelsAsColors(format, coords => expColor);
 
     const result = await textureContentIsOKByT2B(
