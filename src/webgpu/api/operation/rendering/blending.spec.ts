@@ -544,6 +544,83 @@ g.test('simple_blend_constant,setting_blend_constant')
     t.expectOK(result);
   });
 
+g.test('simple_blend_constant,blend_constant_non_inherited')
+  .desc(`Test that the blending constant is not inherited between render passes.`)
+  .fn(async t => {
+    const format = 'rgba8unorm';
+    const kSize = 1;
+    const kWhiteColorData = new Float32Array([255, 255, 255, 255]);
+
+    const blendComponent = { srcFactor: 'constant', dstFactor: 'one', operation: 'add' } as const;
+    const testPipeline = t.createRenderPipelineForTest({
+      format,
+      blend: { color: blendComponent, alpha: blendComponent },
+    });
+
+    const renderTarget = t.device.createTexture({
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+      size: [kSize, kSize],
+      format,
+    });
+
+    const commandEncoder = t.device.createCommandEncoder();
+    {
+      const renderPass = commandEncoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: renderTarget.createView(),
+            loadOp: 'load',
+            storeOp: 'store',
+          },
+        ],
+      });
+      renderPass.setPipeline(testPipeline);
+      renderPass.setBlendConstant({ r: 1.0, g: 1.0, b: 1.0, a: 1.0 }); // Set to white color.
+      renderPass.setBindGroup(
+        0,
+        t.createBindGroupForTest(testPipeline.getBindGroupLayout(0), kWhiteColorData)
+      );
+      renderPass.draw(3);
+      // Draw [1,1,1,1] with `src * constant + dst * 1`. The blend constant to [1,1,1,1], so the
+      // result is `[1,1,1,1] * [1,1,1,1] + [0,0,0,0] * 1` = [1,1,1,1].
+      renderPass.end();
+    }
+    {
+      const renderPass = commandEncoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: renderTarget.createView(),
+            loadOp: 'clear',
+            storeOp: 'store',
+          },
+        ],
+      });
+      renderPass.setPipeline(testPipeline);
+      renderPass.setBindGroup(
+        0,
+        t.createBindGroupForTest(testPipeline.getBindGroupLayout(0), kWhiteColorData)
+      );
+      renderPass.draw(3);
+      // Draw [1,1,1,1] with `src * constant + dst * 1`. The blend constant defaults to [0,0,0,0],
+      // so the result is `[1,1,1,1] * [0,0,0,0] + [0,0,0,0] * 1` = [0,0,0,0].
+      renderPass.end();
+    }
+    t.device.queue.submit([commandEncoder.finish()]);
+
+    // Check that the blend constant is not inherited from the first render pass.
+    const expColor = { R: 0, G: 0, B: 0, A: 0 };
+    const expTexelView = TexelView.fromTexelsAsColors(format, coords => expColor);
+
+    const result = await textureContentIsOKByT2B(
+      t,
+      { texture: renderTarget },
+      [kSize, kSize],
+      { expTexelView },
+      { maxDiffULPsForNormFormat: 1 }
+    );
+    t.expectOK(result);
+  });
+
 g.test('clamp,blend_factor')
   .desc('For fixed-point formats, test that the blend factor is clamped in the blend equation.')
   .unimplemented();
