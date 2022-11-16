@@ -54,7 +54,7 @@ g.test('f32_vec2')
   .fn(async t => {
     const cases: Case[] = kVectorSparseTestValues[2].flatMap(i => {
       return kVectorSparseTestValues[2].flatMap(j => {
-        return sparseF32Range().map(k => {
+        return sparseF32Range(t.params.inputSource === 'const').map(k => {
           return makeCaseF32(i, j, k);
         });
       });
@@ -77,7 +77,7 @@ g.test('f32_vec3')
   .fn(async t => {
     const cases: Case[] = kVectorSparseTestValues[3].flatMap(i => {
       return kVectorSparseTestValues[3].flatMap(j => {
-        return sparseF32Range().map(k => {
+        return sparseF32Range(t.params.inputSource === 'const').map(k => {
           return makeCaseF32(i, j, k);
         });
       });
@@ -100,7 +100,7 @@ g.test('f32_vec4')
   .fn(async t => {
     const cases: Case[] = kVectorSparseTestValues[4].flatMap(i => {
       return kVectorSparseTestValues[4].flatMap(j => {
-        return sparseF32Range().map(k => {
+        return sparseF32Range(t.params.inputSource === 'const').map(k => {
           return makeCaseF32(i, j, k);
         });
       });
