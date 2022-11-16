@@ -12,7 +12,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { lengthInterval } from '../../../../../util/f32_interval.js';
-import { fullF32Range, kVectorTestValues } from '../../../../../util/math.js';
+import { fullF32Range, vectorTestValues } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import {
   allInputSources,
@@ -33,13 +33,13 @@ export const d = makeCaseCache('length', {
     return fullF32Range().map(makeCase);
   },
   f32_vec2: () => {
-    return kVectorTestValues[2].map(makeCaseVecF32);
+    return vectorTestValues(2, false).map(makeCaseVecF32);
   },
   f32_vec3: () => {
-    return kVectorTestValues[3].map(makeCaseVecF32);
+    return vectorTestValues(3, false).map(makeCaseVecF32);
   },
   f32_vec4: () => {
-    return kVectorTestValues[4].map(makeCaseVecF32);
+    return vectorTestValues(4, false).map(makeCaseVecF32);
   },
 });
 

@@ -34,7 +34,7 @@ g.test('f32')
   )
   .fn(async t => {
     // Using sparseF32Range since this will generate N^3 test cases
-    const values = sparseF32Range();
+    const values = sparseF32Range(t.params.inputSource === 'const');
     const cases: Array<Case> = [];
     values.forEach(x => {
       values.forEach(y => {

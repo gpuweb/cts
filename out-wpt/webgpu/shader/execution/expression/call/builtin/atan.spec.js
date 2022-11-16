@@ -22,7 +22,7 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('atan', {
-  f32: () => {
+  f32_non_const: () => {
     const makeCase = x => {
       return makeUnaryToF32IntervalCase(x, atanInterval);
     };
@@ -38,6 +38,24 @@ export const d = makeCaseCache('atan', {
       1 / Math.sqrt(3),
       Math.sqrt(3),
       Number.POSITIVE_INFINITY,
+
+      ...fullF32Range(),
+    ].map(x => makeCase(x));
+  },
+  f32_const: () => {
+    const makeCase = x => {
+      return makeUnaryToF32IntervalCase(x, atanInterval);
+    };
+
+    return [
+      // Known values
+      -Math.sqrt(3),
+      -1,
+      -1 / Math.sqrt(3),
+      0,
+      1,
+      1 / Math.sqrt(3),
+      Math.sqrt(3),
 
       ...fullF32Range(),
     ].map(x => makeCase(x));
@@ -61,7 +79,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
   )
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
-    const cases = await d.get('f32');
+    const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
     await run(t, builtin('atan'), [TypeF32], TypeF32, t.params, cases);
   });
 

@@ -32,7 +32,7 @@ export const d = makeCaseCache('mix', {
       return makeTernaryToF32IntervalCase(x, y, z, ...mixIntervals);
     };
 
-    const values = sparseF32Range();
+    const values = sparseF32Range(false);
     const cases = [];
     values.forEach((x) => {
       values.forEach((y) => {

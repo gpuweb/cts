@@ -17,7 +17,7 @@ import {
   u32,
   vec2,
 } from '../../../../../util/conversion.js';
-import { kVectorTestValues, quantizeToF32 } from '../../../../../util/math.js';
+import { quantizeToF32, vectorTestValues } from '../../../../../util/math.js';
 import { allInputSources, Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -44,7 +44,7 @@ g.test('pack')
       return n > 0 ? n / kValue.f32.positive.max : n / kValue.f32.negative.min;
     };
 
-    const cases: Array<Case> = kVectorTestValues[2].flatMap(v => {
+    const cases: Array<Case> = vectorTestValues(2, t.params.inputSource === 'const').flatMap(v => {
       return [
         makeCase(...(v as [number, number])),
         makeCase(...(v.map(normalizeF32) as [number, number])),

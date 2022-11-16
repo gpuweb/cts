@@ -66,13 +66,32 @@ export const d = makeCaseCache('clamp', {
 
     return generateIntegerTestCases(test_values);
   },
-  f32: () => {
+  f32_non_const: () => {
     const makeCase = (x, y, z) => {
       return makeTernaryToF32IntervalCase(x, y, z, ...clampIntervals);
     };
 
     // Using sparseF32Range since this will generate N^3 test cases
-    const values = sparseF32Range();
+    const values = sparseF32Range(false);
+    const cases = [];
+    values.forEach(x => {
+      values.forEach(y => {
+        values.forEach(z => {
+          cases.push(makeCase(x, y, z));
+        });
+      });
+    });
+
+    return cases;
+  },
+
+  f32_const: () => {
+    const makeCase = (x, y, z) => {
+      return makeTernaryToF32IntervalCase(x, y, z, ...clampIntervals);
+    };
+
+    // Using sparseF32Range since this will generate N^3 test cases
+    const values = sparseF32Range(true);
     const cases = [];
     values.forEach(x => {
       values.forEach(y => {
@@ -149,7 +168,7 @@ g.test('f32')
   .desc(`f32 tests`)
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
-    const cases = await d.get('f32');
+    const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
     await run(t, builtin('clamp'), [TypeF32, TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 

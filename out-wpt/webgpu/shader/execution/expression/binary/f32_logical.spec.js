@@ -7,7 +7,7 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { anyOf } from '../../../../util/compare.js';
 import { bool, f32, TypeBool, TypeF32 } from '../../../../util/conversion.js';
-import { flushSubnormalScalarF32, kVectorTestValues } from '../../../../util/math.js';
+import { flushSubnormalScalarF32, vectorTestValues } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import { allInputSources, run } from '../expression.js';
 
@@ -38,57 +38,111 @@ function makeCase(lhs, rhs, truthFunc) {
 }
 
 export const d = makeCaseCache('binary/f32_logical', {
-  equals: () => {
+  equals_non_const: () => {
     const truthFunc = (lhs, rhs) => {
       return lhs.value === rhs.value;
     };
 
-    return kVectorTestValues[2].map(v => {
+    return vectorTestValues(2, false).map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
-  not_equals: () => {
+  equals_const: () => {
+    const truthFunc = (lhs, rhs) => {
+      return lhs.value === rhs.value;
+    };
+
+    return vectorTestValues(2, true).map(v => {
+      return makeCase(v[0], v[1], truthFunc);
+    });
+  },
+  not_equals_non_const: () => {
     const truthFunc = (lhs, rhs) => {
       return lhs.value !== rhs.value;
     };
 
-    return kVectorTestValues[2].map(v => {
+    return vectorTestValues(2, false).map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
-  less_than: () => {
+  not_equals_const: () => {
+    const truthFunc = (lhs, rhs) => {
+      return lhs.value !== rhs.value;
+    };
+
+    return vectorTestValues(2, true).map(v => {
+      return makeCase(v[0], v[1], truthFunc);
+    });
+  },
+  less_than_non_const: () => {
     const truthFunc = (lhs, rhs) => {
       return lhs.value < rhs.value;
     };
 
-    return kVectorTestValues[2].map(v => {
+    return vectorTestValues(2, false).map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
-  less_equals: () => {
+  less_than_const: () => {
+    const truthFunc = (lhs, rhs) => {
+      return lhs.value < rhs.value;
+    };
+
+    return vectorTestValues(2, true).map(v => {
+      return makeCase(v[0], v[1], truthFunc);
+    });
+  },
+  less_equals_non_const: () => {
     const truthFunc = (lhs, rhs) => {
       return lhs.value <= rhs.value;
     };
 
-    return kVectorTestValues[2].map(v => {
+    return vectorTestValues(2, false).map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
-  greater_than: () => {
+  less_equals_const: () => {
+    const truthFunc = (lhs, rhs) => {
+      return lhs.value <= rhs.value;
+    };
+
+    return vectorTestValues(2, true).map(v => {
+      return makeCase(v[0], v[1], truthFunc);
+    });
+  },
+  greater_than_non_const: () => {
     const truthFunc = (lhs, rhs) => {
       return lhs.value > rhs.value;
     };
 
-    return kVectorTestValues[2].map(v => {
+    return vectorTestValues(2, false).map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
-  greater_equals: () => {
+  greater_than_const: () => {
+    const truthFunc = (lhs, rhs) => {
+      return lhs.value > rhs.value;
+    };
+
+    return vectorTestValues(2, true).map(v => {
+      return makeCase(v[0], v[1], truthFunc);
+    });
+  },
+  greater_equals_non_const: () => {
     const truthFunc = (lhs, rhs) => {
       return lhs.value >= rhs.value;
     };
 
-    return kVectorTestValues[2].map(v => {
+    return vectorTestValues(2, false).map(v => {
+      return makeCase(v[0], v[1], truthFunc);
+    });
+  },
+  greater_equals_const: () => {
+    const truthFunc = (lhs, rhs) => {
+      return lhs.value >= rhs.value;
+    };
+
+    return vectorTestValues(2, true).map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
@@ -104,7 +158,10 @@ Accuracy: Correct result
   )
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
-    const cases = await d.get('equals');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'equals_const' : 'equals_non_const'
+    );
+
     await run(t, binary('=='), [TypeF32, TypeF32], TypeBool, t.params, cases);
   });
 
@@ -118,7 +175,10 @@ Accuracy: Correct result
   )
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
-    const cases = await d.get('not_equals');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'not_equals_const' : 'not_equals_non_const'
+    );
+
     await run(t, binary('!='), [TypeF32, TypeF32], TypeBool, t.params, cases);
   });
 
@@ -132,7 +192,10 @@ Accuracy: Correct result
   )
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
-    const cases = await d.get('less_than');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'less_than_const' : 'less_than_non_const'
+    );
+
     await run(t, binary('<'), [TypeF32, TypeF32], TypeBool, t.params, cases);
   });
 
@@ -146,7 +209,10 @@ Accuracy: Correct result
   )
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
-    const cases = await d.get('less_equals');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'less_equals_const' : 'less_equals_non_const'
+    );
+
     await run(t, binary('<='), [TypeF32, TypeF32], TypeBool, t.params, cases);
   });
 
@@ -160,7 +226,10 @@ Accuracy: Correct result
   )
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
-    const cases = await d.get('greater_than');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'greater_than_const' : 'greater_than_non_const'
+    );
+
     await run(t, binary('>'), [TypeF32, TypeF32], TypeBool, t.params, cases);
   });
 
@@ -174,6 +243,9 @@ Accuracy: Correct result
   )
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
-    const cases = await d.get('greater_equals');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'greater_equals_const' : 'greater_equals_non_const'
+    );
+
     await run(t, binary('>='), [TypeF32, TypeF32], TypeBool, t.params, cases);
   });
