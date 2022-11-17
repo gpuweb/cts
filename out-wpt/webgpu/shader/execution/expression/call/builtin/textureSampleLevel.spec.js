@@ -21,7 +21,7 @@ fn textureSampleLevel(t: texture_2d<f32>, s: sampler, coords: vec2<f32>, level: 
 fn textureSampleLevel(t: texture_2d<f32>, s: sampler, coords: vec2<f32>, level: f32, offset: vec2<i32>) -> vec4<f32>
 
 Parameters:
- * t  The sampled, depth, or external texture to sample.
+ * t  The sampled or depth texture to sample.
  * s  The sampler type.
  * coords The texture coordinates used for sampling.
  * level
@@ -56,7 +56,7 @@ fn textureSampleLevel(t: texture_2d_array<f32>, s: sampler, coords: vec2<f32>, a
 fn textureSampleLevel(t: texture_2d_array<f32>, s: sampler, coords: vec2<f32>, array_index: C, level: f32, offset: vec2<i32>) -> vec4<f32>
 
 Parameters:
- * t  The sampled, depth, or external texture to sample.
+ * t  The sampled or depth texture to sample.
  * s  The sampler type.
  * coords The texture coordinates used for sampling.
  * array_index The 0-based texture array index to sample.
@@ -99,7 +99,7 @@ fn textureSampleLevel(t: texture_3d<f32>, s: sampler, coords: vec3<f32>, level: 
 fn textureSampleLevel(t: texture_cube<f32>, s: sampler, coords: vec3<f32>, level: f32) -> vec4<f32>
 
 Parameters:
- * t  The sampled, depth, or external texture to sample.
+ * t  The sampled or depth texture to sample.
  * s  The sampler type.
  * coords The texture coordinates used for sampling.
  * level
@@ -135,7 +135,7 @@ C is i32 or u32
 fn textureSampleLevel(t: texture_cube_array<f32>, s: sampler, coords: vec3<f32>, array_index: C, level: f32) -> vec4<f32>
 
 Parameters:
- * t  The sampled, depth, or external texture to sample.
+ * t  The sampled or depth texture to sample.
  * s  The sampler type.
  * coords The texture coordinates used for sampling.
  * array_index The 0-based texture array index to sample.
@@ -179,7 +179,7 @@ fn textureSampleLevel(t: texture_depth_2d, s: sampler, coords: vec2<f32>, level:
 fn textureSampleLevel(t: texture_depth_2d, s: sampler, coords: vec2<f32>, level: C, offset: vec2<i32>) -> f32
 
 Parameters:
- * t  The sampled, depth, or external texture to sample.
+ * t  The sampled or depth texture to sample.
  * s  The sampler type.
  * coords The texture coordinates used for sampling.
  * level
@@ -216,7 +216,7 @@ fn textureSampleLevel(t: texture_depth_2d_array, s: sampler, coords: vec2<f32>, 
 fn textureSampleLevel(t: texture_depth_2d_array, s: sampler, coords: vec2<f32>, array_index: C, level: C, offset: vec2<i32>) -> f32
 
 Parameters:
- * t  The sampled, depth, or external texture to sample.
+ * t  The sampled or depth texture to sample.
  * s  The sampler type.
  * array_index The 0-based texture array index to sample.
  * coords The texture coordinates used for sampling.
@@ -260,7 +260,7 @@ fn textureSampleLevel(t: texture_depth_cube, s: sampler, coords: vec3<f32>, leve
 fn textureSampleLevel(t: texture_depth_cube_array, s: sampler, coords: vec3<f32>, array_index: C, level: C) -> f32
 
 Parameters:
- * t  The sampled, depth, or external texture to sample.
+ * t  The sampled or depth texture to sample.
  * s  The sampler type.
  * coords The texture coordinates used for sampling.
  * level
@@ -291,24 +291,5 @@ Parameters:
         'textureNumLevels',
         'textureNumLevels+1',
       ])
-  )
-  .unimplemented();
-
-g.test('external')
-  .specURL('https://www.w3.org/TR/WGSL/#texturesamplelevel')
-  .desc(
-    `
-fn textureSampleLevel(t: texture_external, s: sampler, coords: vec2<f32>) -> vec4<f32>
-
-Parameters:
- * t  The sampled, depth, or external texture to sample.
- * s  The sampler type.
- * coords The texture coordinates used for sampling.
-`
-  )
-  .paramsSubcasesOnly(u =>
-    u
-      .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
-      .combine('coords', generateCoordBoundaries(2))
   )
   .unimplemented();
