@@ -13,20 +13,34 @@ DataCache will load this instead of building the expensive data at CTS runtime.
 
 Options:
   --help          Print this message and exit.
+  --list          Print the list of output files without writing them.
 `);
   process.exit(rc);
 }
 
-const argv = process.argv;
-if (argv.indexOf('--help') !== -1) {
+let mode: 'emit' | 'list' = 'emit';
+
+const nonFlagsArgs: string[] = [];
+for (const a of process.argv) {
+  if (a.startsWith('-')) {
+    if (a === '--list') {
+      mode = 'list';
+    } else if (a === '--help') {
+      usage(0);
+    } else {
+      console.log('unrecognized flag: ', a);
+      usage(1);
+    }
+  } else {
+    nonFlagsArgs.push(a);
+  }
+}
+
+if (nonFlagsArgs.length < 4) {
   usage(0);
 }
 
-if (argv.length < 4) {
-  usage(0);
-}
-
-const outRootDir = argv[2];
+const outRootDir = nonFlagsArgs[2];
 
 dataCache.setStore({
   load: (path: string) => {
@@ -44,7 +58,7 @@ dataCache.setStore({
 setIsBuildingDataCache();
 
 void (async () => {
-  for (const suiteDir of argv.slice(3)) {
+  for (const suiteDir of nonFlagsArgs.slice(3)) {
     await build(suiteDir);
   }
 })();
@@ -109,11 +123,21 @@ and
           cacheablePathToTS.set(cacheable.path, file);
         }
 
-        const data = await cacheable.build();
-        const serialized = cacheable.serialize(data);
         const outPath = `${outRootDir}/data/${cacheable.path}`;
-        fs.mkdirSync(path.dirname(outPath), { recursive: true });
-        fs.writeFileSync(outPath, serialized);
+
+        switch (mode) {
+          case 'emit': {
+            const data = await cacheable.build();
+            const serialized = cacheable.serialize(data);
+            fs.mkdirSync(path.dirname(outPath), { recursive: true });
+            fs.writeFileSync(outPath, serialized);
+            break;
+          }
+          case 'list': {
+            console.log(outPath);
+            break;
+          }
+        }
       }
     }
   }
