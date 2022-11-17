@@ -101,7 +101,7 @@ function createExternalTextureSamplingTestPipeline(t: GPUTest): GPURenderPipelin
 
         @fragment fn main(@builtin(position) FragCoord : vec4<f32>)
                                  -> @location(0) vec4<f32> {
-            return textureSampleLevel(t, s, FragCoord.xy / vec2<f32>(16.0, 16.0));
+            return textureSampleBaseClampToEdge(t, s, FragCoord.xy / vec2<f32>(16.0, 16.0));
         }
         `,
       }),
