@@ -150,7 +150,7 @@ function computeBlendOperation(
   }
 }
 
-g.test('GPUBlendComponent')
+g.test('blending_GPUBlendComponent')
   .desc(
     `Test all combinations of parameters for GPUBlendComponent.
 
@@ -339,7 +339,7 @@ const kBlendableFormats = kEncodableTextureFormats.filter(f => {
   return info.renderable && info.sampleType === 'float';
 });
 
-g.test('formats')
+g.test('blending_formats')
   .desc(
     `Test blending results works for all formats that support it, and that blending is not applied
   for formats that do not. Blending should be done in linear space for srgb formats.`
@@ -609,6 +609,67 @@ g.test('simple_blend_constant,blend_constant_non_inherited')
 
     // Check that the blend constant is not inherited from the first render pass.
     const expColor = { R: 0, G: 0, B: 0, A: 0 };
+    const expTexelView = TexelView.fromTexelsAsColors(format, coords => expColor);
+
+    const result = await textureContentIsOKByT2B(
+      t,
+      { texture: renderTarget },
+      [kSize, kSize],
+      { expTexelView },
+      { maxDiffULPsForNormFormat: 1 }
+    );
+    t.expectOK(result);
+  });
+
+g.test('color_write_mask,blending_disabled')
+  .desc(`Test that the color write mask works when blending is disabled.`)
+  .params(u => u.combine('disabled', [false, true]))
+  .fn(async t => {
+    const format = 'rgba8unorm';
+    const kSize = 1;
+
+    // This blend component always shows the src values.
+    const blendComponent = { srcFactor: 'one', dstFactor: 'zero', operation: 'add' } as const;
+    const blend = t.params.disabled ? undefined : { color: blendComponent, alpha: blendComponent };
+
+    const testPipeline = t.createRenderPipelineForTest({
+      format,
+      blend,
+      writeMask: GPUColorWrite.RED,
+    });
+
+    const renderTarget = t.device.createTexture({
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+      size: [kSize, kSize],
+      format,
+    });
+
+    const kBaseColorData = new Float32Array([32, 64, 128, 192]);
+
+    const commandEncoder = t.device.createCommandEncoder();
+    {
+      const renderPass = commandEncoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: renderTarget.createView(),
+            loadOp: 'load',
+            storeOp: 'store',
+          },
+        ],
+      });
+      renderPass.setPipeline(testPipeline);
+      renderPass.setBindGroup(
+        0,
+        t.createBindGroupForTest(testPipeline.getBindGroupLayout(0), kBaseColorData)
+      );
+      // Draw [1,1,1,1] with `src * 1 + dst * 0`. So the
+      // result is `[1,1,1,1] * [1,1,1,1] + [0,0,0,0] * 0` = [1,1,1,1].
+      renderPass.draw(3);
+      renderPass.end();
+    }
+    t.device.queue.submit([commandEncoder.finish()]);
+
+    const expColor = { R: 1, G: 0, B: 0, A: 0 };
     const expTexelView = TexelView.fromTexelsAsColors(format, coords => expColor);
 
     const result = await textureContentIsOKByT2B(
