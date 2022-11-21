@@ -150,7 +150,7 @@ function computeBlendOperation(
   }
 }
 
-g.test('blending_GPUBlendComponent')
+g.test('blending,GPUBlendComponent')
   .desc(
     `Test all combinations of parameters for GPUBlendComponent.
 
@@ -339,7 +339,7 @@ const kBlendableFormats = kEncodableTextureFormats.filter(f => {
   return info.renderable && info.sampleType === 'float';
 });
 
-g.test('blending_formats')
+g.test('blending,formats')
   .desc(
     `Test blending results works for all formats that support it, and that blending is not applied
   for formats that do not. Blending should be done in linear space for srgb formats.`
@@ -425,7 +425,7 @@ g.test('blending_formats')
     t.expectOK(result);
   });
 
-g.test('simple_blend_constant,initial_blend_constant')
+g.test('blend_constant,initial')
   .desc(`Test that the blend constant is set to [0,0,0,0] at the beginning of a pass.`)
   .fn(async t => {
     const format = 'rgba8unorm';
@@ -481,7 +481,7 @@ g.test('simple_blend_constant,initial_blend_constant')
     t.expectOK(result);
   });
 
-g.test('simple_blend_constant,setting_blend_constant')
+g.test('blend_constant,setting')
   .desc(`Test that setting the blend constant to the RGBA values works at the beginning of a pass.`)
   .paramsSubcasesOnly([
     { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
@@ -544,7 +544,7 @@ g.test('simple_blend_constant,setting_blend_constant')
     t.expectOK(result);
   });
 
-g.test('simple_blend_constant,blend_constant_non_inherited')
+g.test('blend_constant,not_inherited')
   .desc(`Test that the blending constant is not inherited between render passes.`)
   .fn(async t => {
     const format = 'rgba8unorm';
@@ -622,15 +622,16 @@ g.test('simple_blend_constant,blend_constant_non_inherited')
   });
 
 g.test('color_write_mask,blending_disabled')
-  .desc(`Test that the color write mask works when blending is disabled.`)
+  .desc(
+    `Test that the color write mask works when blending is disabled or set to the defaults
+  (which has the same blending result).`
+  )
   .params(u => u.combine('disabled', [false, true]))
   .fn(async t => {
     const format = 'rgba8unorm';
     const kSize = 1;
 
-    // This blend component always shows the src values.
-    const blendComponent = { srcFactor: 'one', dstFactor: 'zero', operation: 'add' } as const;
-    const blend = t.params.disabled ? undefined : { color: blendComponent, alpha: blendComponent };
+    const blend = t.params.disabled ? undefined : { color: {}, alpha: {} };
 
     const testPipeline = t.createRenderPipelineForTest({
       format,
@@ -682,14 +683,14 @@ g.test('color_write_mask,blending_disabled')
     t.expectOK(result);
   });
 
-g.test('clamp,blend_factor')
+g.test('blending,clamp,blend_factor')
   .desc('For fixed-point formats, test that the blend factor is clamped in the blend equation.')
   .unimplemented();
 
-g.test('clamp,blend_color')
+g.test('blending,clamp,blend_color')
   .desc('For fixed-point formats, test that the blend color is clamped in the blend equation.')
   .unimplemented();
 
-g.test('clamp,blend_result')
+g.test('blending,clamp,blend_result')
   .desc('For fixed-point formats, test that the blend result is clamped in the blend equation.')
   .unimplemented();
