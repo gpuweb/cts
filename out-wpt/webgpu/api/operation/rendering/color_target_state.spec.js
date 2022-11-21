@@ -140,7 +140,7 @@ function computeBlendOperation(src, srcFactor, dst, dstFactor, operation) {
   }
 }
 
-g.test('GPUBlendComponent')
+g.test('blending,GPUBlendComponent')
   .desc(
     `Test all combinations of parameters for GPUBlendComponent.
 
@@ -337,7 +337,7 @@ const kBlendableFormats = kEncodableTextureFormats.filter(f => {
   return info.renderable && info.sampleType === 'float';
 });
 
-g.test('formats')
+g.test('blending,formats')
   .desc(
     `Test blending results works for all formats that support it, and that blending is not applied
   for formats that do not. Blending should be done in linear space for srgb formats.`
@@ -430,7 +430,7 @@ g.test('formats')
     t.expectOK(result);
   });
 
-g.test('simple_blend_constant,initial_blend_constant')
+g.test('blend_constant,initial')
   .desc(`Test that the blend constant is set to [0,0,0,0] at the beginning of a pass.`)
   .fn(async t => {
     const format = 'rgba8unorm';
@@ -489,7 +489,7 @@ g.test('simple_blend_constant,initial_blend_constant')
     t.expectOK(result);
   });
 
-g.test('simple_blend_constant,setting_blend_constant')
+g.test('blend_constant,setting')
   .desc(`Test that setting the blend constant to the RGBA values works at the beginning of a pass.`)
   .paramsSubcasesOnly([
     { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
@@ -555,7 +555,7 @@ g.test('simple_blend_constant,setting_blend_constant')
     t.expectOK(result);
   });
 
-g.test('simple_blend_constant,blend_constant_non_inherited')
+g.test('blend_constant,not_inherited')
   .desc(`Test that the blending constant is not inherited between render passes.`)
   .fn(async t => {
     const format = 'rgba8unorm';
@@ -637,14 +637,79 @@ g.test('simple_blend_constant,blend_constant_non_inherited')
     t.expectOK(result);
   });
 
-g.test('clamp,blend_factor')
+g.test('color_write_mask,blending_disabled')
+  .desc(
+    `Test that the color write mask works when blending is disabled or set to the defaults
+  (which has the same blending result).`
+  )
+  .params(u => u.combine('disabled', [false, true]))
+  .fn(async t => {
+    const format = 'rgba8unorm';
+    const kSize = 1;
+
+    const blend = t.params.disabled ? undefined : { color: {}, alpha: {} };
+
+    const testPipeline = t.createRenderPipelineForTest({
+      format,
+      blend,
+      writeMask: GPUColorWrite.RED,
+    });
+
+    const renderTarget = t.device.createTexture({
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+      size: [kSize, kSize],
+      format,
+    });
+
+    const kBaseColorData = new Float32Array([32, 64, 128, 192]);
+
+    const commandEncoder = t.device.createCommandEncoder();
+    {
+      const renderPass = commandEncoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: renderTarget.createView(),
+            loadOp: 'load',
+            storeOp: 'store',
+          },
+        ],
+      });
+
+      renderPass.setPipeline(testPipeline);
+      renderPass.setBindGroup(
+        0,
+        t.createBindGroupForTest(testPipeline.getBindGroupLayout(0), kBaseColorData)
+      );
+
+      // Draw [1,1,1,1] with `src * 1 + dst * 0`. So the
+      // result is `[1,1,1,1] * [1,1,1,1] + [0,0,0,0] * 0` = [1,1,1,1].
+      renderPass.draw(3);
+      renderPass.end();
+    }
+    t.device.queue.submit([commandEncoder.finish()]);
+
+    const expColor = { R: 1, G: 0, B: 0, A: 0 };
+    const expTexelView = TexelView.fromTexelsAsColors(format, coords => expColor);
+
+    const result = await textureContentIsOKByT2B(
+      t,
+      { texture: renderTarget },
+      [kSize, kSize],
+      { expTexelView },
+      { maxDiffULPsForNormFormat: 1 }
+    );
+
+    t.expectOK(result);
+  });
+
+g.test('blending,clamp,blend_factor')
   .desc('For fixed-point formats, test that the blend factor is clamped in the blend equation.')
   .unimplemented();
 
-g.test('clamp,blend_color')
+g.test('blending,clamp,blend_color')
   .desc('For fixed-point formats, test that the blend color is clamped in the blend equation.')
   .unimplemented();
 
-g.test('clamp,blend_result')
+g.test('blending,clamp,blend_result')
   .desc('For fixed-point formats, test that the blend result is clamped in the blend equation.')
   .unimplemented();

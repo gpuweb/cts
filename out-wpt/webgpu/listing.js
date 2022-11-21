@@ -379,7 +379,7 @@ export const listing = [
       "api",
       "operation",
       "rendering",
-      "blending"
+      "color_target_state"
     ]
   },
   {
