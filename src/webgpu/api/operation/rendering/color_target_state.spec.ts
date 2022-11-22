@@ -17,6 +17,7 @@ import {
 } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { float32ToFloat16Bits } from '../../../util/conversion.js';
+import { clamp } from '../../../util/math.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
 import { textureContentIsOKByT2B } from '../../../util/texture/texture_ok.js';
 
@@ -683,14 +684,106 @@ g.test('color_write_mask,blending_disabled')
     t.expectOK(result);
   });
 
-g.test('blending,clamp,blend_factor')
-  .desc('For fixed-point formats, test that the blend factor is clamped in the blend equation.')
-  .unimplemented();
+g.test('blending,clamping')
+  .desc(
+    `
+  Test that clamping occurs at the correct points in the blend process: src value, src factor, dst
+  factor, and output.
+    - TODO: Need to test snorm formats.
+    - TODO: Need to test src value, srcFactor and dstFactor.
+  `
+  )
+  .params(u =>
+    u //
+      .combine('format', ['rgba8unorm', 'rg16float'] as const)
+      .combine('srcValue', [0.4, 0.6, 0.8, 1.0])
+      .combine('dstValue', [0.2, 0.4])
+  )
+  .fn(async t => {
+    const { format, srcValue, dstValue } = t.params;
 
-g.test('blending,clamp,blend_color')
-  .desc('For fixed-point formats, test that the blend color is clamped in the blend equation.')
-  .unimplemented();
+    const blendComponent = { srcFactor: 'one', dstFactor: 'one', operation: 'add' } as const;
 
-g.test('blending,clamp,blend_result')
-  .desc('For fixed-point formats, test that the blend result is clamped in the blend equation.')
-  .unimplemented();
+    const pipeline = t.device.createRenderPipeline({
+      layout: 'auto',
+      fragment: {
+        targets: [
+          {
+            format,
+            blend: {
+              color: blendComponent,
+              alpha: blendComponent,
+            },
+          },
+        ],
+        module: t.device.createShaderModule({
+          code: `
+@fragment fn main() -> @location(0) vec4<f32> {
+  return vec4<f32>(${srcValue}, ${srcValue}, ${srcValue}, ${srcValue});
+}
+          `,
+        }),
+        entryPoint: 'main',
+      },
+      vertex: {
+        module: t.device.createShaderModule({
+          code: `
+@vertex fn main() -> @builtin(position) vec4<f32> {
+    return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+}
+          `,
+        }),
+        entryPoint: 'main',
+      },
+      primitive: {
+        topology: 'point-list',
+      },
+    });
+
+    const renderTarget = t.device.createTexture({
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+      size: [1, 1, 1],
+      format,
+    });
+
+    const commandEncoder = t.device.createCommandEncoder();
+    const renderPass = commandEncoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: renderTarget.createView(),
+          clearValue: { r: dstValue, g: dstValue, b: dstValue, a: dstValue },
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
+      ],
+    });
+    renderPass.setPipeline(pipeline);
+    renderPass.draw(1);
+    renderPass.end();
+    t.device.queue.submit([commandEncoder.finish()]);
+
+    let expValue: number;
+    switch (format) {
+      case 'rgba8unorm': // unorm types should clamp if the sum of srcValue and dstValue exceeds 1.
+        expValue = clamp(srcValue + dstValue, { min: 0, max: 1 });
+        break;
+      case 'rg16float': // float format types doesn't clamp.
+        expValue = srcValue + dstValue;
+        break;
+    }
+
+    const expColor = { R: expValue, G: expValue, B: expValue, A: expValue };
+    const expTexelView = TexelView.fromTexelsAsColors(format, coords => expColor);
+
+    const result = await textureContentIsOKByT2B(
+      t,
+      { texture: renderTarget },
+      [1, 1, 1],
+      { expTexelView },
+      {
+        maxDiffULPsForNormFormat: 1,
+        maxDiffULPsForFloatFormat: 1,
+      }
+    );
+    t.expectOK(result);
+  });
