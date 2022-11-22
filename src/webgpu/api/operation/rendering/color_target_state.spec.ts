@@ -15,6 +15,7 @@ import {
   kEncodableTextureFormats,
   kTextureFormatInfo,
 } from '../../../capability_info.js';
+import { GPUConst } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { float32ToFloat16Bits } from '../../../util/conversion.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
@@ -609,6 +610,98 @@ g.test('blend_constant,not_inherited')
 
     // Check that the blend constant is not inherited from the first render pass.
     const expColor = { R: 0, G: 0, B: 0, A: 0 };
+    const expTexelView = TexelView.fromTexelsAsColors(format, coords => expColor);
+
+    const result = await textureContentIsOKByT2B(
+      t,
+      { texture: renderTarget },
+      [kSize, kSize],
+      { expTexelView },
+      { maxDiffULPsForNormFormat: 1 }
+    );
+    t.expectOK(result);
+  });
+
+g.test('color_write_mask,channel_work')
+  .desc(`Test that the color write mask works alone or with multiple channels.`)
+  .params(u =>
+    u
+      .combine('mask1', [
+        GPUConst.ColorWrite.RED,
+        GPUConst.ColorWrite.GREEN,
+        GPUConst.ColorWrite.BLUE,
+        GPUConst.ColorWrite.ALPHA,
+      ])
+      .combine('mask2', [
+        GPUConst.ColorWrite.RED,
+        GPUConst.ColorWrite.GREEN,
+        GPUConst.ColorWrite.BLUE,
+        GPUConst.ColorWrite.ALPHA,
+      ])
+  )
+  .fn(async t => {
+    const { mask1, mask2 } = t.params;
+
+    const format = 'rgba8unorm';
+    const kSize = 1;
+    const masks = [mask1, mask2];
+
+    let r = 0,
+      g = 0,
+      b = 0,
+      a = 0;
+    for (let i = 0; i < 2; i++) {
+      switch (masks[i]) {
+        case GPUColorWrite.RED:
+          r = 1;
+          break;
+        case GPUColorWrite.GREEN:
+          g = 1;
+          break;
+        case GPUColorWrite.BLUE:
+          b = 1;
+          break;
+        case GPUColorWrite.ALPHA:
+          a = 1;
+          break;
+      }
+    }
+
+    const testPipeline = t.createRenderPipelineForTest({
+      format,
+      writeMask: masks[0] | masks[1],
+    });
+
+    const renderTarget = t.device.createTexture({
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+      size: [kSize, kSize],
+      format,
+    });
+
+    const kBaseColorData = new Float32Array([32, 64, 128, 192]);
+
+    const commandEncoder = t.device.createCommandEncoder();
+    {
+      const renderPass = commandEncoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: renderTarget.createView(),
+            loadOp: 'load',
+            storeOp: 'store',
+          },
+        ],
+      });
+      renderPass.setPipeline(testPipeline);
+      renderPass.setBindGroup(
+        0,
+        t.createBindGroupForTest(testPipeline.getBindGroupLayout(0), kBaseColorData)
+      );
+      renderPass.draw(3);
+      renderPass.end();
+    }
+    t.device.queue.submit([commandEncoder.finish()]);
+
+    const expColor = { R: r, G: g, B: b, A: a };
     const expTexelView = TexelView.fromTexelsAsColors(format, coords => expColor);
 
     const result = await textureContentIsOKByT2B(
