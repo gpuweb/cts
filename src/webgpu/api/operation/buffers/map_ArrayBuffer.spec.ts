@@ -38,42 +38,43 @@ g.test('postMessage')
     );
 
     await buf.mapAsync(GPUMapMode[mapMode]);
-    let ab1 = buf.getMappedRange();
+    const ab1 = buf.getMappedRange();
     t.expect(ab1.byteLength === kSize, 'ab1 should have the size of the buffer');
 
     const mc = new MessageChannel();
-    const ab2Promise = new Promise<ArrayBuffer>(resolve => {
-      mc.port2.onmessage = ev => resolve(ev.data);
+    const ab2Promise = new Promise<ArrayBuffer>((resolve, reject) => {
+      mc.port2.onmessage = ev => {
+        if (!transfer) {
+          resolve(ev.data);
+        } else {
+          reject(new Error('postMessage of transferred ArrayBuffer should fail'));
+        }
+      };
     });
 
-    mc.port1.postMessage(ab1, transfer ? [ab1] : undefined);
     if (transfer) {
-      t.expect(ab1.byteLength === 0, 'after postMessage, ab1 should be detached');
-      // Get the mapped range - again. So we can check that the data is not aliased
-      // with ab2. To do this, we need to unmap to reset the mapping state, and map
-      // again.
-      buf.unmap();
-      await buf.mapAsync(GPUMapMode[mapMode]);
-      ab1 = buf.getMappedRange();
-      t.expect(ab1.byteLength === kSize, 'ab1 should have the size of the buffer');
+      t.shouldThrow('TypeError', () => mc.port1.postMessage(ab1, [ab1]));
     } else {
-      t.expect(ab1.byteLength === kSize, 'after postMessage, ab1 should not be detached');
+      mc.port1.postMessage(ab1);
     }
+    t.expect(ab1.byteLength === kSize, 'after postMessage, ab1 should not be detached');
 
-    const ab2 = await ab2Promise;
-    t.expect(ab2.byteLength === kSize, 'ab2 should be the same size');
-    const ab2Data = new Uint32Array(ab2, 0, initialData.length);
-    // ab2 should have the same initial contents.
-    t.expectOK(checkElementsEqual(ab2Data, initialData));
+    if (!transfer) {
+      const ab2 = await ab2Promise;
+      t.expect(ab2.byteLength === kSize, 'ab2 should be the same size');
+      const ab2Data = new Uint32Array(ab2, 0, initialData.length);
+      // ab2 should have the same initial contents.
+      t.expectOK(checkElementsEqual(ab2Data, initialData));
 
-    // Mutations to ab2 should not be visible in ab1.
-    const ab1Data = new Uint32Array(ab1, 0, initialData.length);
-    const abs2NewData = initialData.slice().reverse();
-    for (let i = 0; i < ab2Data.length; ++i) {
-      ab2Data[i] = abs2NewData[i];
+      // Mutations to ab2 should not be visible in ab1.
+      const ab1Data = new Uint32Array(ab1, 0, initialData.length);
+      const abs2NewData = initialData.slice().reverse();
+      for (let i = 0; i < ab2Data.length; ++i) {
+        ab2Data[i] = abs2NewData[i];
+      }
+      t.expectOK(checkElementsEqual(ab1Data, initialData));
+      t.expectOK(checkElementsEqual(ab2Data, abs2NewData));
     }
-    t.expectOK(checkElementsEqual(ab1Data, initialData));
-    t.expectOK(checkElementsEqual(ab2Data, abs2NewData));
 
     buf.unmap();
     t.expect(ab1.byteLength === 0, 'after unmap, ab1 should be detached');
