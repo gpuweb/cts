@@ -1636,8 +1636,8 @@ export function mixPreciseInterval(x: number, y: number, z: number): F32Interval
 
 /** Calculate an acceptance interval of modf(x) */
 export function modfInterval(n: number): { fract: F32Interval; whole: F32Interval } {
-  const fract = remainderInterval(n, 1.0);
-  const whole = subtractionInterval(n, fract);
+  const fract = correctlyRoundedInterval(n % 1.0);
+  const whole = correctlyRoundedInterval(n - (n % 1.0));
   return { fract, whole };
 }
 
