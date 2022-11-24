@@ -97,7 +97,7 @@ g.test('f32_fract')
     `
 T is f32
 
-struct __modf_result {
+struct __modf_result_f32 {
   fract : f32, // fractional part
   whole : f32  // whole part
 }
@@ -115,7 +115,7 @@ g.test('f32_whole')
     `
 T is f32
 
-struct __modf_result {
+struct __modf_result_f32 {
   fract : f32, // fractional part
   whole : f32  // whole part
 }
@@ -133,7 +133,7 @@ g.test('f32_vec2_fract')
     `
 T is vec2<f32>
 
-struct __modf_result_vec2 {
+struct __modf_result_vec2_f32 {
   fract : vec2<f32>, // fractional part
   whole : vec2<f32>  // whole part
 }
@@ -151,7 +151,7 @@ g.test('f32_vec2_whole')
     `
 T is vec2<f32>
 
-struct __modf_result_vec2 {
+struct __modf_result_vec2_f32 {
   fract : vec2<f32>, // fractional part
   whole : vec2<f32>  // whole part
 }
@@ -169,7 +169,7 @@ g.test('f32_vec3_fract')
     `
 T is vec3<f32>
 
-struct __modf_result_vec3 {
+struct __modf_result_vec3_f32 {
   fract : vec3<f32>, // fractional part
   whole : vec3<f32>  // whole part
 }
@@ -187,7 +187,7 @@ g.test('f32_vec3_whole')
     `
 T is vec3<f32>
 
-struct __modf_result_vec3 {
+struct __modf_result_vec3_f32 {
   fract : vec3<f32>, // fractional part
   whole : vec3<f32>  // whole part
 }
@@ -205,7 +205,7 @@ g.test('f32_vec4_fract')
     `
 T is vec4<f32>
 
-struct __modf_result_vec4 {
+struct __modf_result_vec4_f32 {
   fract : vec4<f32>, // fractional part
   whole : vec4<f32>  // whole part
 }
@@ -223,7 +223,7 @@ g.test('f32_vec4_whole')
     `
 T is vec4<f32>
 
-struct __modf_result_vec4 {
+struct __modf_result_vec4_f32 {
   fract : vec4<f32>, // fractional part
   whole : vec4<f32>  // whole part
 }
