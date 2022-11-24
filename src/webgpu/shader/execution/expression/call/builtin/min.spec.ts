@@ -17,38 +17,24 @@ Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { kValue } from '../../../../../util/constants.js';
 import { i32, TypeF32, TypeI32, TypeU32, u32 } from '../../../../../util/conversion.js';
 import { minInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, Case, makeBinaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, Case, generateBinaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-export const d = makeCaseCache('min', {
+export const d = makeCaseCache('max', {
   f32: () => {
-    const makeCase = (x: number, y: number): Case => {
-      return makeBinaryToF32IntervalCase(x, y, minInterval);
-    };
-
-    const cases: Array<Case> = [];
-    const numeric_range = fullF32Range();
-    numeric_range.push(kValue.f32.infinity.positive, kValue.f32.infinity.negative);
-    numeric_range.forEach(lhs => {
-      numeric_range.forEach(rhs => {
-        cases.push(makeCase(lhs, rhs));
-      });
-    });
-
-    return cases;
+    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), minInterval);
   },
 });
 
 /** Generate set of min test cases from list of interesting values */
-function generateTestCases(
+function generateIntegerTestCases(
   values: Array<number>,
   makeCase: (x: number, y: number) => Case
 ): Array<Case> {
@@ -81,7 +67,7 @@ g.test('u32')
     };
 
     const test_values: Array<number> = [0, 1, 2, 0x70000000, 0x80000000, 0xffffffff];
-    const cases = generateTestCases(test_values, makeCase);
+    const cases = generateIntegerTestCases(test_values, makeCase);
 
     await run(t, builtin('min'), [TypeU32, TypeU32], TypeU32, t.params, cases);
   });
@@ -98,7 +84,7 @@ g.test('i32')
     };
 
     const test_values: Array<number> = [-0x70000000, -2, -1, 0, 1, 2, 0x70000000];
-    const cases = generateTestCases(test_values, makeCase);
+    const cases = generateIntegerTestCases(test_values, makeCase);
 
     await run(t, builtin('min'), [TypeI32, TypeI32], TypeI32, t.params, cases);
   });

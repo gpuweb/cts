@@ -7,129 +7,79 @@ import { GPUTest } from '../../../../gpu_test.js';
 import { TypeF32 } from '../../../../util/conversion.js';
 import {
   additionInterval,
+  additionLargestIntermediateValueVector,
   divisionInterval,
+  divisionLargestIntermediateValueVector,
   multiplicationInterval,
+  multiplicationLargestIntermediateValueVector,
   remainderInterval,
+  remainderLargestIntermediateValueVector,
   subtractionInterval,
+  subtractionLargestIntermediateValueVector,
 } from '../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
-import { allInputSources, Case, makeBinaryToF32IntervalCase, run } from '../expression.js';
+import { allInputSources, generateBinaryToF32IntervalCases, run } from '../expression.js';
 
 import { binary } from './binary.js';
 
 export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('binary/f32_arithmetic', {
-  addition_non_const: () => {
-    const makeCase = (lhs: number, rhs: number): Case => {
-      return makeBinaryToF32IntervalCase(lhs, rhs, additionInterval);
-    };
-
-    return fullF32Range().flatMap(x => {
-      return fullF32Range().map(y => {
-        return makeCase(x, y);
-      });
-    });
-  },
   addition_const: () => {
-    const makeCase = (lhs: number, rhs: number): Case => {
-      return makeBinaryToF32IntervalCase(lhs, rhs, additionInterval);
-    };
-
-    return fullF32Range().flatMap(x => {
-      return fullF32Range().map(y => {
-        return makeCase(x, y);
-      });
-    });
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      additionInterval,
+      additionLargestIntermediateValueVector
+    );
   },
-  subtraction_non_const: () => {
-    const makeCase = (lhs: number, rhs: number): Case => {
-      return makeBinaryToF32IntervalCase(lhs, rhs, subtractionInterval);
-    };
-
-    return fullF32Range().flatMap(x => {
-      return fullF32Range().map(y => {
-        return makeCase(x, y);
-      });
-    });
+  addition_non_const: () => {
+    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), additionInterval);
   },
   subtraction_const: () => {
-    const makeCase = (lhs: number, rhs: number): Case => {
-      return makeBinaryToF32IntervalCase(lhs, rhs, subtractionInterval);
-    };
-
-    return fullF32Range().flatMap(x => {
-      return fullF32Range().map(y => {
-        return makeCase(x, y);
-      });
-    });
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      subtractionInterval,
+      subtractionLargestIntermediateValueVector
+    );
   },
-  multiplication_non_const: () => {
-    const makeCase = (lhs: number, rhs: number): Case => {
-      return makeBinaryToF32IntervalCase(lhs, rhs, multiplicationInterval);
-    };
-
-    return fullF32Range().flatMap(x => {
-      return fullF32Range().map(y => {
-        return makeCase(x, y);
-      });
-    });
+  subtraction_non_const: () => {
+    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), subtractionInterval);
   },
   multiplication_const: () => {
-    const makeCase = (lhs: number, rhs: number): Case => {
-      return makeBinaryToF32IntervalCase(lhs, rhs, multiplicationInterval);
-    };
-
-    return fullF32Range().flatMap(x => {
-      return fullF32Range().map(y => {
-        return makeCase(x, y);
-      });
-    });
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      multiplicationInterval,
+      multiplicationLargestIntermediateValueVector
+    );
   },
-  division_non_const: () => {
-    const makeCase = (lhs: number, rhs: number): Case => {
-      return makeBinaryToF32IntervalCase(lhs, rhs, divisionInterval);
-    };
-
-    return fullF32Range().flatMap(x => {
-      return fullF32Range().map(y => {
-        return makeCase(x, y);
-      });
-    });
+  multiplication_non_const: () => {
+    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), multiplicationInterval);
   },
   division_const: () => {
-    const makeCase = (lhs: number, rhs: number): Case => {
-      return makeBinaryToF32IntervalCase(lhs, rhs, divisionInterval);
-    };
-
-    return fullF32Range().flatMap(x => {
-      return fullF32Range().map(y => {
-        return makeCase(x, y);
-      });
-    });
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      divisionInterval,
+      divisionLargestIntermediateValueVector
+    );
   },
-  remainder_non_const: () => {
-    const makeCase = (lhs: number, rhs: number): Case => {
-      return makeBinaryToF32IntervalCase(lhs, rhs, remainderInterval);
-    };
-
-    return fullF32Range().flatMap(x => {
-      return fullF32Range().map(y => {
-        return makeCase(x, y);
-      });
-    });
+  division_non_const: () => {
+    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), divisionInterval);
   },
   remainder_const: () => {
-    const makeCase = (lhs: number, rhs: number): Case => {
-      return makeBinaryToF32IntervalCase(lhs, rhs, remainderInterval);
-    };
-
-    return fullF32Range().flatMap(x => {
-      return fullF32Range().map(y => {
-        return makeCase(x, y);
-      });
-    });
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      remainderInterval,
+      remainderLargestIntermediateValueVector
+    );
+  },
+  remainder_non_const: () => {
+    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), remainderInterval);
   },
 });
 

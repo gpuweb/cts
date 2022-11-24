@@ -10,13 +10,31 @@ Returns e1 * e2 + e3. Component-wise when T is a vector.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
-import { fmaInterval } from '../../../../../util/f32_interval.js';
+import { fmaInterval, fmaLargestIntermediateValue } from '../../../../../util/f32_interval.js';
 import { sparseF32Range } from '../../../../../util/math.js';
-import { allInputSources, Case, makeTernaryToF32IntervalCase, run } from '../../expression.js';
+import { makeCaseCache } from '../../case_cache.js';
+import { allInputSources, generateTernaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+export const d = makeCaseCache('fma', {
+  f32_const: () => {
+    return generateTernaryToF32IntervalCases(
+      sparseF32Range(),
+      sparseF32Range(),
+      sparseF32Range(),
+      [fmaInterval],
+      fmaLargestIntermediateValue
+    );
+  },
+  f32_non_const: () => {
+    return generateTernaryToF32IntervalCases(sparseF32Range(), sparseF32Range(), sparseF32Range(), [
+      fmaInterval,
+    ]);
+  },
+});
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
@@ -33,17 +51,7 @@ g.test('f32')
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    // Using sparseF32Range since this will generate N^3 test cases
-    const values = sparseF32Range(t.params.inputSource === 'const');
-    const cases: Array<Case> = [];
-    values.forEach(x => {
-      values.forEach(y => {
-        values.forEach(z => {
-          cases.push(makeTernaryToF32IntervalCase(x, y, z, fmaInterval));
-        });
-      });
-    });
-
+    const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
     await run(t, builtin('fma'), [TypeF32, TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 

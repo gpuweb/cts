@@ -4,150 +4,69 @@ Execution Tests for the f32 logical binary expression operations
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { anyOf } from '../../../../util/compare.js';
-import { bool, f32, Scalar, TypeBool, TypeF32 } from '../../../../util/conversion.js';
-import { flushSubnormalScalarF32, vectorTestValues } from '../../../../util/math.js';
+import { TypeBool, TypeF32 } from '../../../../util/conversion.js';
+import { fullF32Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
-import { allInputSources, Case, run } from '../expression.js';
+import { allInputSources, generateBinaryToBooleanCases, run } from '../expression.js';
 
 import { binary } from './binary.js';
 
 export const g = makeTestGroup(GPUTest);
 
-/**
- * @returns a test case for the provided left hand & right hand values and truth function.
- * Handles quantization and subnormals.
- */
-function makeCase(
-  lhs: number,
-  rhs: number,
-  truthFunc: (lhs: Scalar, rhs: Scalar) => boolean
-): Case {
-  const f32_lhs = f32(lhs);
-  const f32_rhs = f32(rhs);
-  const lhs_options = new Set([f32_lhs, flushSubnormalScalarF32(f32_lhs)]);
-  const rhs_options = new Set([f32_rhs, flushSubnormalScalarF32(f32_rhs)]);
-  const expected: Array<Scalar> = [];
-  lhs_options.forEach(l => {
-    rhs_options.forEach(r => {
-      const result = bool(truthFunc(l, r));
-      if (!expected.includes(result)) {
-        expected.push(result);
-      }
-    });
-  });
-
-  return { input: [f32_lhs, f32_rhs], expected: anyOf(...expected) };
-}
-
 export const d = makeCaseCache('binary/f32_logical', {
-  equals_non_const: () => {
-    const truthFunc = (lhs: Scalar, rhs: Scalar): boolean => {
-      return (lhs.value as number) === (rhs.value as number);
-    };
-
-    return vectorTestValues(2, false).map(v => {
-      return makeCase(v[0], v[1], truthFunc);
-    });
+  equals: () => {
+    return generateBinaryToBooleanCases(
+      fullF32Range(),
+      fullF32Range(),
+      (lhs: number, rhs: number): boolean => {
+        return lhs === rhs;
+      }
+    );
   },
-  equals_const: () => {
-    const truthFunc = (lhs: Scalar, rhs: Scalar): boolean => {
-      return (lhs.value as number) === (rhs.value as number);
-    };
-
-    return vectorTestValues(2, true).map(v => {
-      return makeCase(v[0], v[1], truthFunc);
-    });
+  not_equals: () => {
+    return generateBinaryToBooleanCases(
+      fullF32Range(),
+      fullF32Range(),
+      (lhs: number, rhs: number): boolean => {
+        return lhs !== rhs;
+      }
+    );
   },
-  not_equals_non_const: () => {
-    const truthFunc = (lhs: Scalar, rhs: Scalar): boolean => {
-      return (lhs.value as number) !== (rhs.value as number);
-    };
-
-    return vectorTestValues(2, false).map(v => {
-      return makeCase(v[0], v[1], truthFunc);
-    });
+  less_than: () => {
+    return generateBinaryToBooleanCases(
+      fullF32Range(),
+      fullF32Range(),
+      (lhs: number, rhs: number): boolean => {
+        return lhs < rhs;
+      }
+    );
   },
-  not_equals_const: () => {
-    const truthFunc = (lhs: Scalar, rhs: Scalar): boolean => {
-      return (lhs.value as number) !== (rhs.value as number);
-    };
-
-    return vectorTestValues(2, true).map(v => {
-      return makeCase(v[0], v[1], truthFunc);
-    });
+  less_equals: () => {
+    return generateBinaryToBooleanCases(
+      fullF32Range(),
+      fullF32Range(),
+      (lhs: number, rhs: number): boolean => {
+        return lhs <= rhs;
+      }
+    );
   },
-  less_than_non_const: () => {
-    const truthFunc = (lhs: Scalar, rhs: Scalar): boolean => {
-      return (lhs.value as number) < (rhs.value as number);
-    };
-
-    return vectorTestValues(2, false).map(v => {
-      return makeCase(v[0], v[1], truthFunc);
-    });
+  greater_than: () => {
+    return generateBinaryToBooleanCases(
+      fullF32Range(),
+      fullF32Range(),
+      (lhs: number, rhs: number): boolean => {
+        return lhs > rhs;
+      }
+    );
   },
-  less_than_const: () => {
-    const truthFunc = (lhs: Scalar, rhs: Scalar): boolean => {
-      return (lhs.value as number) < (rhs.value as number);
-    };
-
-    return vectorTestValues(2, true).map(v => {
-      return makeCase(v[0], v[1], truthFunc);
-    });
-  },
-  less_equals_non_const: () => {
-    const truthFunc = (lhs: Scalar, rhs: Scalar): boolean => {
-      return (lhs.value as number) <= (rhs.value as number);
-    };
-
-    return vectorTestValues(2, false).map(v => {
-      return makeCase(v[0], v[1], truthFunc);
-    });
-  },
-  less_equals_const: () => {
-    const truthFunc = (lhs: Scalar, rhs: Scalar): boolean => {
-      return (lhs.value as number) <= (rhs.value as number);
-    };
-
-    return vectorTestValues(2, true).map(v => {
-      return makeCase(v[0], v[1], truthFunc);
-    });
-  },
-  greater_than_non_const: () => {
-    const truthFunc = (lhs: Scalar, rhs: Scalar): boolean => {
-      return (lhs.value as number) > (rhs.value as number);
-    };
-
-    return vectorTestValues(2, false).map(v => {
-      return makeCase(v[0], v[1], truthFunc);
-    });
-  },
-  greater_than_const: () => {
-    const truthFunc = (lhs: Scalar, rhs: Scalar): boolean => {
-      return (lhs.value as number) > (rhs.value as number);
-    };
-
-    return vectorTestValues(2, true).map(v => {
-      return makeCase(v[0], v[1], truthFunc);
-    });
-  },
-  greater_equals_non_const: () => {
-    const truthFunc = (lhs: Scalar, rhs: Scalar): boolean => {
-      return (lhs.value as number) >= (rhs.value as number);
-    };
-
-    return vectorTestValues(2, false).map(v => {
-      return makeCase(v[0], v[1], truthFunc);
-    });
-  },
-  greater_equals_const: () => {
-    const truthFunc = (lhs: Scalar, rhs: Scalar): boolean => {
-      return (lhs.value as number) >= (rhs.value as number);
-    };
-
-    return vectorTestValues(2, true).map(v => {
-      return makeCase(v[0], v[1], truthFunc);
-    });
+  greater_equals: () => {
+    return generateBinaryToBooleanCases(
+      fullF32Range(),
+      fullF32Range(),
+      (lhs: number, rhs: number): boolean => {
+        return lhs >= rhs;
+      }
+    );
   },
 });
 
@@ -163,9 +82,7 @@ Accuracy: Correct result
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cases = await d.get(
-      t.params.inputSource === 'const' ? 'equals_const' : 'equals_non_const'
-    );
+    const cases = await d.get('equals');
     await run(t, binary('=='), [TypeF32, TypeF32], TypeBool, t.params, cases);
   });
 
@@ -181,9 +98,7 @@ Accuracy: Correct result
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cases = await d.get(
-      t.params.inputSource === 'const' ? 'not_equals_const' : 'not_equals_non_const'
-    );
+    const cases = await d.get('not_equals');
     await run(t, binary('!='), [TypeF32, TypeF32], TypeBool, t.params, cases);
   });
 
@@ -199,9 +114,7 @@ Accuracy: Correct result
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cases = await d.get(
-      t.params.inputSource === 'const' ? 'less_than_const' : 'less_than_non_const'
-    );
+    const cases = await d.get('less_than');
     await run(t, binary('<'), [TypeF32, TypeF32], TypeBool, t.params, cases);
   });
 
@@ -217,9 +130,7 @@ Accuracy: Correct result
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cases = await d.get(
-      t.params.inputSource === 'const' ? 'less_equals_const' : 'less_equals_non_const'
-    );
+    const cases = await d.get('less_equals');
     await run(t, binary('<='), [TypeF32, TypeF32], TypeBool, t.params, cases);
   });
 
@@ -235,9 +146,7 @@ Accuracy: Correct result
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cases = await d.get(
-      t.params.inputSource === 'const' ? 'greater_than_const' : 'greater_than_non_const'
-    );
+    const cases = await d.get('greater_than');
     await run(t, binary('>'), [TypeF32, TypeF32], TypeBool, t.params, cases);
   });
 
@@ -253,8 +162,6 @@ Accuracy: Correct result
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cases = await d.get(
-      t.params.inputSource === 'const' ? 'greater_equals_const' : 'greater_equals_non_const'
-    );
+    const cases = await d.get('greater_equals');
     await run(t, binary('>='), [TypeF32, TypeF32], TypeBool, t.params, cases);
   });

@@ -17,32 +17,32 @@ Same as mix(e1,e2,T2(e3)).
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
-import { mixIntervals } from '../../../../../util/f32_interval.js';
+import { mixIntervals, mixLargestIntermediateValue } from '../../../../../util/f32_interval.js';
 import { sparseF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, Case, makeTernaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateTernaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('mix', {
-  f32: () => {
-    const makeCase = (x: number, y: number, z: number): Case => {
-      return makeTernaryToF32IntervalCase(x, y, z, ...mixIntervals);
-    };
-
-    const values = sparseF32Range(false);
-    const cases: Array<Case> = [];
-    values.forEach(x => {
-      values.forEach(y => {
-        values.forEach(z => {
-          cases.push(makeCase(x, y, z));
-        });
-      });
-    });
-
-    return cases;
+  f32_const: () => {
+    return generateTernaryToF32IntervalCases(
+      sparseF32Range(),
+      sparseF32Range(),
+      sparseF32Range(),
+      mixIntervals,
+      mixLargestIntermediateValue
+    );
+  },
+  f32_non_const: () => {
+    return generateTernaryToF32IntervalCases(
+      sparseF32Range(),
+      sparseF32Range(),
+      sparseF32Range(),
+      mixIntervals
+    );
   },
 });
 
@@ -61,7 +61,7 @@ g.test('matching_f32')
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cases = await d.get('f32');
+    const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
     await run(t, builtin('mix'), [TypeF32, TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 

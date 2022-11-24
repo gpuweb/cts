@@ -231,7 +231,7 @@ function multiplyVectorByScalar(v: number[], c: number | F32Interval): F32Vector
  * @returns the input plus zero if any of the entries are f32 subnormal,
  * otherwise returns the input.
  */
-function addFlushedIfNeededF32(values: number[]): number[] {
+export function addFlushedIfNeededF32(values: number[]): number[] {
   return values.some(v => v !== 0 && isSubnormalNumberF32(v)) ? values.concat(0) : values;
 }
 
@@ -241,6 +241,14 @@ function addFlushedIfNeededF32(values: number[]): number[] {
  */
 function addFlushedIfNeededF16(values: number[]): number[] {
   return values.some(v => v !== 0 && isSubnormalNumberF16(v)) ? values.concat(0) : values;
+}
+
+/** @returns element with largest magnitude, NaN and +/-∞ are considered larger than any finite value. */
+function largestByMagnitude(values: number[]): number {
+  if (values.some(v => !isFiniteF32(v))) {
+    return Number.NaN;
+  }
+  return values.sort((x, y) => Math.abs(y) - Math.abs(x))[0];
 }
 
 /**
@@ -1048,6 +1056,11 @@ export function acoshPrimaryInterval(x: number | F32Interval): F32Interval {
   return runPointToIntervalOp(toF32Interval(x), AcoshPrimaryIntervalOp);
 }
 
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval acosh */
+export function acoshLargestIntermediateValue(x: number): number {
+  return Math.acosh(x);
+}
+
 const AdditionIntervalOp: BinaryToIntervalOp = {
   impl: (x: number, y: number): F32Interval => {
     return correctlyRoundedInterval(x + y);
@@ -1057,6 +1070,14 @@ const AdditionIntervalOp: BinaryToIntervalOp = {
 /** Calculate an acceptance interval of x + y */
 export function additionInterval(x: number | F32Interval, y: number | F32Interval): F32Interval {
   return runBinaryToIntervalOp(toF32Interval(x), toF32Interval(y), AdditionIntervalOp);
+}
+
+/**
+ * Calculate the largest expected intermediate value, by magnitude, when
+ * calculating const-eval addition
+ */
+export function additionLargestIntermediateValueVector(lhs: number, rhs: number): number {
+  return lhs + rhs;
 }
 
 const AsinIntervalOp: PointToIntervalOp = {
@@ -1248,6 +1269,11 @@ export function coshInterval(n: number): F32Interval {
   return runPointToIntervalOp(toF32Interval(n), CoshIntervalOp);
 }
 
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval cosh */
+export function coshLargestIntermediateValue(x: number): number {
+  return Math.cosh(x);
+}
+
 const CrossIntervalOp: VectorPairToVectorOp = {
   impl: (x: number[], y: number[]): F32Vector => {
     assert(x.length === 3, `CrossIntervalOp received x with ${x.length} instead of 3`);
@@ -1274,10 +1300,26 @@ const CrossIntervalOp: VectorPairToVectorOp = {
   },
 };
 
+/** Calculate an acceptance interval for cross(x, y) */
 export function crossInterval(x: number[], y: number[]): F32Vector {
   assert(x.length === 3, `Cross is only defined for vec3`);
   assert(y.length === 3, `Cross is only defined for vec3`);
   return runVectorPairToVectorOp(toF32Vector(x), toF32Vector(y), CrossIntervalOp);
+}
+
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval cross */
+export function crossLargestIntermediateValue(lhs: number[], rhs: number[]): number {
+  return largestByMagnitude([
+    lhs[0] * rhs[1],
+    lhs[1] * rhs[0],
+    lhs[0] * rhs[1] - lhs[1] * rhs[0],
+    lhs[0] * rhs[2],
+    lhs[2] * rhs[0],
+    lhs[0] * rhs[2],
+    lhs[1] * rhs[2],
+    lhs[2] * rhs[1],
+    lhs[1] * rhs[2] - lhs[2] * rhs[1],
+  ]);
 }
 
 const DegreesIntervalOp: PointToIntervalOp = {
@@ -1289,6 +1331,11 @@ const DegreesIntervalOp: PointToIntervalOp = {
 /** Calculate an acceptance interval of degrees(x) */
 export function degreesInterval(n: number): F32Interval {
   return runPointToIntervalOp(toF32Interval(n), DegreesIntervalOp);
+}
+
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval degrees */
+export function degreesLargestIntermediateValue(n: number): number {
+  return n * 57.295779513082322865;
 }
 
 const DistanceIntervalScalarOp: BinaryToIntervalOp = {
@@ -1321,6 +1368,34 @@ export function distanceInterval(x: number | number[], y: number | number[]): F3
   );
 }
 
+/**
+ * Calculate the largest expected intermediate value, by magnitude, when
+ * calculating const-eval distance on scalars
+ *
+ * The generate formula for distance(x, y) is length(x - y), which will unroll
+ * to sqrt((x - y)^2), component-wise for vectors.
+ * Thus the largest magnitude intermediate value should be (x - y)^2
+ */
+export function distanceLargestIntermediateValueScalar(x: number, y: number): number {
+  return (x - y) ** 2;
+}
+
+/**
+ * Calculate the largest expected intermediate value, by magnitude, when
+ * calculating const-eval distance on vectors
+ */
+export function distanceLargestIntermediateValueVector(lhs: number[], rhs: number[]): number {
+  assert(
+    lhs.length === rhs.length,
+    `distanceLargestIntermediateValueVector expects inputs with equal length`
+  );
+  return largestByMagnitude(
+    lhs.map((_, i) => {
+      return distanceLargestIntermediateValueScalar(lhs[i], rhs[i]);
+    })
+  );
+}
+
 const DivisionIntervalOp: BinaryToIntervalOp = {
   impl: limitBinaryToIntervalDomain(
     {
@@ -1348,6 +1423,14 @@ export function divisionInterval(x: number | F32Interval, y: number | F32Interva
   return runBinaryToIntervalOp(toF32Interval(x), toF32Interval(y), DivisionIntervalOp);
 }
 
+/**
+ * Calculate the largest expected intermediate value, by magnitude, when
+ * calculating const-eval division
+ */
+export function divisionLargestIntermediateValueVector(lhs: number, rhs: number): number {
+  return lhs / rhs;
+}
+
 const DotIntervalOp: VectorPairToIntervalOp = {
   impl: (x: number[], y: number[]): F32Interval => {
     // dot(x, y) = sum of x[i] * y[i]
@@ -1360,9 +1443,52 @@ const DotIntervalOp: VectorPairToIntervalOp = {
   },
 };
 
+/** Calculate and acceptance interval for dot(x) */
 export function dotInterval(x: number[], y: number[]): F32Interval {
   assert(x.length === y.length, `dot not defined for vectors with different lengths`);
   return runVectorPairToIntervalOp(toF32Vector(x), toF32Vector(y), DotIntervalOp);
+}
+
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval dot */
+export function dotlargestIntermediateValue(lhs: number[], rhs: number[]): number {
+  assert(lhs.length === rhs.length, `dotLargestIntermediateValue expects inputs with equal length`);
+  assert(
+    lhs.length === 2 || lhs.length === 3 || lhs.length === 4,
+    `dotLargestIntermediateValue expects inputs with length 2, 3, or 4`
+  );
+
+  const multiplies: number[] = [];
+  lhs.forEach((_, idx) => {
+    multiplies.push(lhs[idx] * rhs[idx]);
+  });
+
+  const values = multiplies;
+  switch (lhs.length) {
+    case 2:
+      values.push(multiplies[0] + multiplies[1]);
+      break;
+    case 3:
+      values.push(multiplies[0] + multiplies[1]);
+      values.push(multiplies[0] + multiplies[2]);
+      values.push(multiplies[1] + multiplies[2]);
+      values.push(multiplies[0] + multiplies[1] + multiplies[2]);
+      break;
+    case 4:
+      values.push(multiplies[0] + multiplies[1]);
+      values.push(multiplies[0] + multiplies[2]);
+      values.push(multiplies[0] + multiplies[3]);
+      values.push(multiplies[1] + multiplies[2]);
+      values.push(multiplies[1] + multiplies[3]);
+      values.push(multiplies[2] + multiplies[3]);
+      values.push(multiplies[0] + multiplies[1] + multiplies[2]);
+      values.push(multiplies[0] + multiplies[1] + multiplies[3]);
+      values.push(multiplies[0] + multiplies[2] + multiplies[3]);
+      values.push(multiplies[1] + multiplies[2] + multiplies[3]);
+      values.push(multiplies[0] + multiplies[1] + multiplies[2] + multiplies[3]);
+      break;
+  }
+
+  return largestByMagnitude(values);
 }
 
 const ExpIntervalOp: PointToIntervalOp = {
@@ -1376,6 +1502,11 @@ export function expInterval(x: number | F32Interval): F32Interval {
   return runPointToIntervalOp(toF32Interval(x), ExpIntervalOp);
 }
 
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval exp */
+export function expLargestIntermediateValue(n: number): number {
+  return Math.exp(n);
+}
+
 const Exp2IntervalOp: PointToIntervalOp = {
   impl: (n: number): F32Interval => {
     return ulpInterval(Math.pow(2, n), 3 + 2 * Math.abs(n));
@@ -1385,6 +1516,11 @@ const Exp2IntervalOp: PointToIntervalOp = {
 /** Calculate an acceptance interval for exp2(x) */
 export function exp2Interval(x: number | F32Interval): F32Interval {
   return runPointToIntervalOp(toF32Interval(x), Exp2IntervalOp);
+}
+
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval exp2 */
+export function exp2LargestIntermediateValue(n: number): number {
+  return Math.pow(2, n);
 }
 
 /**
@@ -1426,6 +1562,20 @@ export function faceForwardIntervals(x: number[], y: number[], z: number[]): F32
   return results;
 }
 
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval faceForward */
+export function faceForwardLargestIntermediateValue(_: number[], y: number[], z: number[]): number {
+  assert(
+    y.length === z.length,
+    `faceForwardLargestIntermediateValue expects inputs with equal length`
+  );
+  assert(
+    y.length === 2 || y.length === 3 || y.length === 4,
+    `faceForwardLargestIntermediateValue expects inputs with length 2, 3, or 4`
+  );
+
+  return dotlargestIntermediateValue(y, z);
+}
+
 const FloorIntervalOp: PointToIntervalOp = {
   impl: (n: number): F32Interval => {
     return correctlyRoundedInterval(Math.floor(n));
@@ -1451,6 +1601,11 @@ export function fmaInterval(x: number, y: number, z: number): F32Interval {
     toF32Interval(z),
     FmaIntervalOp
   );
+}
+
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval fma */
+export function fmaLargestIntermediateValue(x: number, y: number, z: number): number {
+  return largestByMagnitude([x * y, x * y + z]);
 }
 
 const FractIntervalOp: PointToIntervalOp = {
@@ -1538,6 +1693,22 @@ export function lengthInterval(n: number | F32Interval | number[] | F32Vector): 
   }
 }
 
+/**
+ * Calculate the largest expected intermediate value, by magnitude, when
+ * calculating const-eval length on scalars
+ */
+export function lengthLargestIntermediateValueScalar(x: number): number {
+  return x * x;
+}
+
+/**
+ * Calculate the largest expected intermediate value, by magnitude, when
+ * calculating const-eval distance on vectors
+ */
+export function lengthLargestIntermediateValueVector(n: number[]): number {
+  return largestByMagnitude(n.map(lengthLargestIntermediateValueScalar));
+}
+
 const LogIntervalOp: PointToIntervalOp = {
   impl: limitPointToIntervalDomain(
     kGreaterThanZeroInterval,
@@ -1555,6 +1726,11 @@ export function logInterval(x: number | F32Interval): F32Interval {
   return runPointToIntervalOp(toF32Interval(x), LogIntervalOp);
 }
 
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval log */
+export function logLargestIntermediateValue(n: number): number {
+  return Math.log(n);
+}
+
 const Log2IntervalOp: PointToIntervalOp = {
   impl: limitPointToIntervalDomain(
     kGreaterThanZeroInterval,
@@ -1570,6 +1746,11 @@ const Log2IntervalOp: PointToIntervalOp = {
 /** Calculate an acceptance interval of log2(x) */
 export function log2Interval(x: number | F32Interval): F32Interval {
   return runPointToIntervalOp(toF32Interval(x), Log2IntervalOp);
+}
+
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval log2 */
+export function log2LargestIntermediateValue(n: number): number {
+  return Math.log2(n);
 }
 
 const MaxIntervalOp: BinaryToIntervalOp = {
@@ -1636,6 +1817,21 @@ export function mixPreciseInterval(x: number, y: number, z: number): F32Interval
   );
 }
 
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval mix */
+export function mixLargestIntermediateValue(x: number, y: number, z: number): number {
+  return largestByMagnitude([
+    // From mixImpreciseInterval
+    y - x,
+    (y - x) * z,
+    x + (y - x) * z,
+    // From mixPreciseInterval
+    y * z,
+    1.0 - z,
+    x * (1.0 - z),
+    x * (1.0 - z) + y * z,
+  ]);
+}
+
 /** Calculate an acceptance interval of modf(x) */
 export function modfInterval(n: number): { fract: F32Interval; whole: F32Interval } {
   const fract = correctlyRoundedInterval(n % 1.0);
@@ -1663,6 +1859,14 @@ export function multiplicationInterval(
   return runBinaryToIntervalOp(toF32Interval(x), toF32Interval(y), MultiplicationIntervalOp);
 }
 
+/**
+ * Calculate the largest expected intermediate value, by magnitude, when
+ * calculating const-eval multiplication
+ */
+export function multiplicationLargestIntermediateValueVector(lhs: number, rhs: number): number {
+  return lhs * rhs;
+}
+
 const NegationIntervalOp: PointToIntervalOp = {
   impl: (n: number): F32Interval => {
     return correctlyRoundedInterval(-n);
@@ -1686,6 +1890,17 @@ export function normalizeInterval(n: number[]): F32Vector {
   return runVectorToVectorOp(toF32Vector(n), NormalizeIntervalOp);
 }
 
+/**
+ * Calculate the largest expected intermediate value, by magnitude, when
+ * calculating const-eval normalize.
+ *
+ * The length calculation when normalizing is where there is a risk of the
+ * calculation going out of bounds.
+ */
+export function normalizeLargestIntermediateValue(n: number[]): number {
+  return largestByMagnitude(n.map(lengthLargestIntermediateValueScalar));
+}
+
 const PowIntervalOp: BinaryToIntervalOp = {
   // pow(x, y) has no explicit domain restrictions, but inherits the x <= 0
   // domain restriction from log2(x). Invoking log2Interval(x) in impl will
@@ -1698,6 +1913,15 @@ const PowIntervalOp: BinaryToIntervalOp = {
 /** Calculate an acceptance interval of pow(x, y) */
 export function powInterval(x: number | F32Interval, y: number | F32Interval): F32Interval {
   return runBinaryToIntervalOp(toF32Interval(x), toF32Interval(y), PowIntervalOp);
+}
+
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval pow */
+export function powLargestIntermediateValue(x: number, y: number): number {
+  return largestByMagnitude([
+    log2LargestIntermediateValue(x),
+    y * Math.log2(x),
+    exp2LargestIntermediateValue(y * Math.log2(x)),
+  ]);
 }
 
 // Once a full implementation of F16Interval exists, the correctlyRounded for
@@ -1753,6 +1977,18 @@ export function reflectInterval(x: number[], y: number[]): F32Vector {
   return runVectorPairToVectorOp(toF32Vector(x), toF32Vector(y), ReflectIntervalOp);
 }
 
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval reflect */
+export function reflectLargestIntermediateValue(x: number[], y: number[]): number {
+  const dot_liv = dotlargestIntermediateValue(x, y);
+  const dot = x.reduce((acc, _, i) => acc + x[i] * y[i], 0);
+  return largestByMagnitude([
+    dot_liv,
+    2 * dot,
+    ...y.map(r => r * 2 * dot),
+    ...x.map((_, i) => x[i] - y[i] * 2 * dot),
+  ]);
+}
+
 /**
  * Calculate acceptance interval vectors of reflect(i, s, r)
  *
@@ -1798,6 +2034,32 @@ export function refractInterval(i: number[], s: number[], r: number): F32Vector 
   return result;
 }
 
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval refract */
+export function refractLargestIntermediateValue(i: number[], s: number[], r: number): number {
+  const r_squared = r * r;
+  const dot = s.reduce((acc, _, idx) => acc + s[idx] * i[idx], 0);
+  const dot_squared = dot * dot;
+  const one_minus_dot_squared = 1 - dot_squared;
+  const k = 1 - r_squared * one_minus_dot_squared;
+  const dot_times_r = dot * r;
+  const k_sqrt = Math.sqrt(k);
+  const t = dot_times_r + k_sqrt;
+  return largestByMagnitude([
+    r_squared,
+    dot,
+    dot_squared,
+    one_minus_dot_squared,
+    r_squared * one_minus_dot_squared,
+    k,
+    dot_times_r,
+    k_sqrt,
+    t,
+    ...i.map(e => e * r),
+    ...s.map(e => e * t),
+    ...i.map((_, idx) => i[idx] * r - s[idx] * t),
+  ]);
+}
+
 const RemainderIntervalOp: BinaryToIntervalOp = {
   impl: (x: number, y: number): F32Interval => {
     // x % y = x - y * trunc(x/y)
@@ -1808,6 +2070,14 @@ const RemainderIntervalOp: BinaryToIntervalOp = {
 /** Calculate an acceptance interval for x % y */
 export function remainderInterval(x: number, y: number): F32Interval {
   return runBinaryToIntervalOp(toF32Interval(x), toF32Interval(y), RemainderIntervalOp);
+}
+
+/**
+ * Calculate the largest expected intermediate value, by magnitude, when
+ * calculating const-eval remainder
+ */
+export function remainderLargestIntermediateValueVector(lhs: number, rhs: number): number {
+  return lhs % rhs;
 }
 
 const RoundIntervalOp: PointToIntervalOp = {
@@ -1896,6 +2166,11 @@ export function sinhInterval(n: number): F32Interval {
   return runPointToIntervalOp(toF32Interval(n), SinhIntervalOp);
 }
 
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval sinh */
+export function sinhLargestIntermediateValue(x: number): number {
+  return Math.sinh(x);
+}
+
 const SmoothStepOp: TernaryToIntervalOp = {
   impl: (low: number, high: number, x: number): F32Interval => {
     // For clamp(foo, 0.0, 1.0) the different implementations of clamp provide
@@ -1928,11 +2203,33 @@ export function smoothStepInterval(low: number, high: number, x: number): F32Int
   );
 }
 
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval smoothstep */
+export function smoothStepLargestIntermediateValue(low: number, high: number, x: number): number {
+  const x_minus_low = x - low;
+  const high_minus_low = high - low;
+  const t = Math.min(Math.max(x_minus_low / high_minus_low, 0.0), 1.0);
+  return largestByMagnitude([
+    x_minus_low,
+    high_minus_low,
+    x_minus_low / high_minus_low,
+    t,
+    t * t,
+    2.0 * t,
+    3.0 - 2.0 * t,
+    t * t * (3.0 - 2.0 * t),
+  ]);
+}
+
 const SqrtIntervalOp: PointToIntervalOp = {
   impl: (n: number): F32Interval => {
     return divisionInterval(1.0, inverseSqrtInterval(n));
   },
 };
+
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval sqrt */
+export function sqrtLargestIntermediateValue(n: number): number {
+  return Math.sqrt(n);
+}
 
 /** Calculate an acceptance interval of sqrt(x) */
 export function sqrtInterval(n: number | F32Interval): F32Interval {
@@ -1971,6 +2268,14 @@ const SubtractionIntervalOp: BinaryToIntervalOp = {
 /** Calculate an acceptance interval of x - y */
 export function subtractionInterval(x: number | F32Interval, y: number | F32Interval): F32Interval {
   return runBinaryToIntervalOp(toF32Interval(x), toF32Interval(y), SubtractionIntervalOp);
+}
+
+/**
+ * Calculate the largest expected intermediate value, by magnitude, when
+ * calculating const-eval subtraction
+ */
+export function subtractionLargestIntermediateValueVector(lhs: number, rhs: number): number {
+  return lhs % rhs;
 }
 
 const TanIntervalOp: PointToIntervalOp = {
@@ -2040,6 +2345,12 @@ export function unpack2x16floatInterval(n: number): F32Vector {
     return [F32Interval.any(), F32Interval.any()];
   }
   return result;
+}
+
+/** Calculate the largest expected intermediate value, by magnitude, when calculating const-eval unpack2x16float */
+export function unpack2x16floatLargestIntermediateValue(n: number): number {
+  unpackDataU32[0] = n;
+  return largestByMagnitude([unpackDataF16[0], unpackDataF16[1]]);
 }
 
 const Unpack2x16snormIntervalOp = (n: number): F32Interval => {

@@ -10,48 +10,48 @@ Returns the dot product of e1 and e2.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
-import { dotInterval } from '../../../../../util/f32_interval.js';
-import { vectorTestValues } from '../../../../../util/math.js';
+import { dotInterval, dotlargestIntermediateValue } from '../../../../../util/f32_interval.js';
+import { vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, Case, makeVectorPairToF32IntervalCase, run } from '../../expression.js';
+import {
+  allInputSources,
+  Case,
+  generateVectorPairToF32IntervalCases,
+  run,
+} from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
+/** Helper to generate cases for a given dimension */
+function generateCases(dim: number, op?: (x: number[], y: number[]) => number): Case[] {
+  return generateVectorPairToF32IntervalCases(
+    vectorF32Range(dim),
+    vectorF32Range(dim),
+    dotInterval,
+    op
+  );
+}
+
 export const d = makeCaseCache('dot', {
-  f32_vec2: () => {
-    const makeCase = (x: number[], y: number[]): Case => {
-      return makeVectorPairToF32IntervalCase(x, y, dotInterval);
-    };
-
-    return vectorTestValues(2, false).flatMap(i => {
-      return vectorTestValues(2, false).map(j => {
-        return makeCase(i, j);
-      });
-    });
+  f32_vec2_const: () => {
+    return generateCases(2, dotlargestIntermediateValue);
   },
-  f32_vec3: () => {
-    const makeCase = (x: number[], y: number[]): Case => {
-      return makeVectorPairToF32IntervalCase(x, y, dotInterval);
-    };
-
-    return vectorTestValues(3, false).flatMap(i => {
-      return vectorTestValues(3, false).map(j => {
-        return makeCase(i, j);
-      });
-    });
+  f32_vec2_non_const: () => {
+    return generateCases(2);
   },
-  f32_vec4: () => {
-    const makeCase = (x: number[], y: number[]): Case => {
-      return makeVectorPairToF32IntervalCase(x, y, dotInterval);
-    };
-
-    return vectorTestValues(4, false).flatMap(i => {
-      return vectorTestValues(4, false).map(j => {
-        return makeCase(i, j);
-      });
-    });
+  f32_vec3_const: () => {
+    return generateCases(3, dotlargestIntermediateValue);
+  },
+  f32_vec3_non_const: () => {
+    return generateCases(3);
+  },
+  f32_vec4_const: () => {
+    return generateCases(4, dotlargestIntermediateValue);
+  },
+  f32_vec4_non_const: () => {
+    return generateCases(4);
   },
 });
 
@@ -84,7 +84,9 @@ g.test('f32_vec2')
   .desc(`f32 tests using vec2s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32_vec2');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec2_const' : 'f32_vec2_non_const'
+    );
     await run(
       t,
       builtin('dot'),
@@ -100,7 +102,9 @@ g.test('f32_vec3')
   .desc(`f32 tests using vec3s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32_vec3');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec3_const' : 'f32_vec3_non_const'
+    );
     await run(
       t,
       builtin('dot'),
@@ -116,7 +120,9 @@ g.test('f32_vec4')
   .desc(`f32 tests using vec4s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32_vec4');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec4_const' : 'f32_vec4_non_const'
+    );
     await run(
       t,
       builtin('dot'),

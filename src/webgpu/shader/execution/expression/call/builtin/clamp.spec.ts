@@ -29,11 +29,39 @@ import {
 import { clampIntervals } from '../../../../../util/f32_interval.js';
 import { sparseF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, Case, makeTernaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, Case, generateTernaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+/**
+ * Calculates clamp using the min-max formula.
+ * clamp(e, f, g) = min(max(e, f), g)
+ *
+ * Operates on indices of an ascending sorted array, instead of the actual
+ * values to avoid rounding issues.
+ *
+ * @returns the index of the clamped value
+ */
+function calculateMinMaxClamp(ei: number, fi: number, gi: number): number {
+  return Math.min(Math.max(ei, fi), gi);
+}
+
+/** @returns a set of clamp test cases from an ascending list of integer values */
+function generateIntegerTestCases(test_values: Array<Scalar>): Array<Case> {
+  const cases = new Array<Case>();
+  test_values.forEach((e, ei) => {
+    test_values.forEach((f, fi) => {
+      test_values.forEach((g, gi) => {
+        const expected_idx = calculateMinMaxClamp(ei, fi, gi);
+        const expected = test_values[expected_idx];
+        cases.push({ input: [e, f, g], expected });
+      });
+    });
+  });
+  return cases;
+}
 
 export const d = makeCaseCache('clamp', {
   u32: () => {
@@ -66,72 +94,16 @@ export const d = makeCaseCache('clamp', {
 
     return generateIntegerTestCases(test_values);
   },
-  f32_non_const: () => {
-    const makeCase = (x: number, y: number, z: number): Case => {
-      return makeTernaryToF32IntervalCase(x, y, z, ...clampIntervals);
-    };
-
+  f32: () => {
     // Using sparseF32Range since this will generate N^3 test cases
-    const values = sparseF32Range(false);
-    const cases: Array<Case> = [];
-    values.forEach(x => {
-      values.forEach(y => {
-        values.forEach(z => {
-          cases.push(makeCase(x, y, z));
-        });
-      });
-    });
-
-    return cases;
-  },
-
-  f32_const: () => {
-    const makeCase = (x: number, y: number, z: number): Case => {
-      return makeTernaryToF32IntervalCase(x, y, z, ...clampIntervals);
-    };
-
-    // Using sparseF32Range since this will generate N^3 test cases
-    const values = sparseF32Range(true);
-    const cases: Array<Case> = [];
-    values.forEach(x => {
-      values.forEach(y => {
-        values.forEach(z => {
-          cases.push(makeCase(x, y, z));
-        });
-      });
-    });
-
-    return cases;
+    return generateTernaryToF32IntervalCases(
+      sparseF32Range(),
+      sparseF32Range(),
+      sparseF32Range(),
+      clampIntervals
+    );
   },
 });
-
-/**
- * Calculates clamp using the min-max formula.
- * clamp(e, f, g) = min(max(e, f), g)
- *
- * Operates on indices of an ascending sorted array, instead of the actual
- * values to avoid rounding issues.
- *
- * @returns the index of the clamped value
- */
-function calculateMinMaxClamp(ei: number, fi: number, gi: number): number {
-  return Math.min(Math.max(ei, fi), gi);
-}
-
-/** @returns a set of clamp test cases from an ascending list of integer values */
-function generateIntegerTestCases(test_values: Array<Scalar>): Array<Case> {
-  const cases = new Array<Case>();
-  test_values.forEach((e, ei) => {
-    test_values.forEach((f, fi) => {
-      test_values.forEach((g, gi) => {
-        const expected_idx = calculateMinMaxClamp(ei, fi, gi);
-        const expected = test_values[expected_idx];
-        cases.push({ input: [e, f, g], expected });
-      });
-    });
-  });
-  return cases;
-}
 
 g.test('abstract_int')
   .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
@@ -178,7 +150,7 @@ g.test('f32')
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
+    const cases = await d.get('f32');
     await run(t, builtin('clamp'), [TypeF32, TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 

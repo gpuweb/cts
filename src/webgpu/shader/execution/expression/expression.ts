@@ -13,8 +13,10 @@ import {
   VectorType,
   f32,
   u32,
+  bool,
 } from '../../../util/conversion.js';
 import {
+  addFlushedIfNeededF32,
   BinaryToInterval,
   F32Interval,
   PointToInterval,
@@ -25,7 +27,7 @@ import {
   VectorToInterval,
   VectorToVector,
 } from '../../../util/f32_interval.js';
-import { quantizeToF32 } from '../../../util/math.js';
+import { cartesianProduct, isFiniteF32, quantizeToF32 } from '../../../util/math.js';
 
 export type Expectation = Value | F32Interval | F32Interval[] | Comparator;
 
@@ -363,6 +365,7 @@ fn main() {
   }
 }
 `;
+      // console.log(`RHARRISON: SHADER BEGIN\n${source}\nRHARRISON: SHADER END`);
 
       // build the shader module
       const module = t.device.createShaderModule({ code: source });
@@ -563,7 +566,7 @@ function packScalarsToVector(
 }
 
 /**
- * Generates a Case for the param and unary interval generator provided.
+ * Build a Case for the param and unary interval generator provided.
  * The Case will use use an interval comparator for matching results.
  * @param param the param to pass into the unary operation
  * @param ops callbacks that implement generating an acceptance interval for a unary operation
@@ -576,7 +579,37 @@ export function makeUnaryToF32IntervalCase(param: number, ...ops: PointToInterva
 }
 
 /**
- * Generates a Case for the params and binary interval generator provided.
+ * Build a set of Cases for a given operation over a range of inputs
+ * @param param set of values to try
+ * @param op accuracy interval generator to use in test
+ * @param liv largest intermediate value, by magnitude. This is a function that
+ *            should calculate for a given input the largest intermediate value
+ *            a const-eval operation would expect to generate. This is allow for
+ *            filtering out inputs in const tests that would cause validation
+ *            errors.
+ */
+export function generateUnaryToF32IntervalCases(
+  params: number[],
+  ops: PointToInterval[],
+  liv?: (n: number) => number
+): Case[] {
+  const makeCase = (n: number): Case => {
+    return makeUnaryToF32IntervalCase(n, ...ops);
+  };
+
+  if (liv === undefined) {
+    return params.map(e => makeCase(e));
+  }
+
+  return params
+    .filter(i => {
+      return isFiniteF32(liv(i));
+    })
+    .map(e => makeCase(e));
+}
+
+/**
+ * Build a Case for the params and binary interval generator provided.
  * The Case will use use an interval comparator for matching results.
  * @param param0 the first param or left hand side to pass into the binary operation
  * @param param1 the second param or rhs hand side to pass into the binary operation
@@ -595,13 +628,45 @@ export function makeBinaryToF32IntervalCase(
 }
 
 /**
- * Generates a Case for the params and ternary interval generator provided.
+ * Build a set of Cases for a given operation over a range of inputs
+ * @param param0s set of values to try for the first param
+ * @param param1s set of values to try for the second param
+ * @param op accuracy interval generator to use in test
+ * @param liv largest intermediate value, by magnitude. This is a function that
+ *            should calculate for a given input the largest intermediate value
+ *            a const-eval operation would expect to generate. This is allow for
+ *            filtering out inputs in const tests that would cause validation
+ *            errors.
+ */
+export function generateBinaryToF32IntervalCases(
+  params0s: number[],
+  params1s: number[],
+  op: BinaryToInterval,
+  liv?: (x: number, y: number) => number
+): Case[] {
+  const makeCase = (x: number, y: number): Case => {
+    return makeBinaryToF32IntervalCase(x, y, op);
+  };
+
+  if (liv === undefined) {
+    return cartesianProduct(params0s, params1s).map(e => makeCase(e[0], e[1]));
+  }
+
+  return cartesianProduct(params0s, params1s)
+    .filter(i => {
+      return isFiniteF32(liv(i[0], i[1]));
+    })
+    .map(e => makeCase(e[0], e[1]));
+}
+
+/**
+ * Build a Case for the params and ternary interval generator provided.
  * The Case will use use an interval comparator for matching results.
  * @param param0 the first param to pass into the ternary operation
  * @param param1 the second param to pass into the ternary operation
  * @param param2 the third param to pass into the ternary operation
  * @param ops callbacks that implement generating an acceptance interval for a
- *           ternary operation.
+ *            ternary operation.
  */
 export function makeTernaryToF32IntervalCase(
   param0: number,
@@ -621,7 +686,42 @@ export function makeTernaryToF32IntervalCase(
 }
 
 /**
- * Generates a Case for the param and vector interval generator provided.
+ * Build a set of Cases for a given operation over a range of inputs
+ * @param param0s set of values to try for the first param
+ * @param param1s set of values to try for the second param
+ * @param param2s set of values to try for the third param
+ * @param ops callbacks that implement generating an acceptance interval for a
+ *            ternary operation.
+ * @param liv largest intermediate value, by magnitude. This is a function that
+ *            should calculate for a given input the largest intermediate value
+ *            a const-eval operation would expect to generate. This is allow for
+ *            filtering out inputs in const tests that would cause validation
+ *            errors.
+ */
+export function generateTernaryToF32IntervalCases(
+  params0s: number[],
+  params1s: number[],
+  params2s: number[],
+  ops: TernaryToInterval[],
+  liv?: (x: number, y: number, z: number) => number
+): Case[] {
+  const makeCase = (x: number, y: number, z: number): Case => {
+    return makeTernaryToF32IntervalCase(x, y, z, ...ops);
+  };
+
+  if (liv === undefined) {
+    return cartesianProduct(params0s, params1s, params2s).map(e => makeCase(e[0], e[1], e[2]));
+  }
+
+  return cartesianProduct(params0s, params1s, params2s)
+    .filter(i => {
+      return isFiniteF32(liv(i[0], i[1], i[2]));
+    })
+    .map(e => makeCase(e[0], e[1], e[2]));
+}
+
+/**
+ * Build a Case for the param and vector interval generator provided.
  * @param param the param to pass into the operation
  * @param ops callbacks that implement generating an acceptance interval for a
  *            vector.
@@ -638,7 +738,34 @@ export function makeVectorToF32IntervalCase(param: number[], ...ops: VectorToInt
 }
 
 /**
- * Generates a Case for the params and vector pair interval generator provided.
+ * Build a set of Cases for a given operation over a range of inputs
+ * @param params set of values to try
+ * @param op callback that implement generating an acceptance interval for a
+ *           vector
+ * @param liv largest intermediate value, by magnitude. This is a function that
+ *            should calculate for a given input the largest intermediate value
+ *            a const-eval operation would expect to generate. This is allow for
+ *            filtering out inputs in const tests that would cause validation
+ *            errors.
+ */
+export function generateVectorToF32IntervalCases(
+  params: number[][],
+  op: VectorToInterval,
+  liv?: (n: number[]) => number
+): Case[] {
+  const makeCase = (n: number[]): Case => {
+    return makeVectorToF32IntervalCase(n, op);
+  };
+
+  if (liv === undefined) {
+    return params.map(e => makeCase(e));
+  }
+
+  return params.filter(i => isFiniteF32(liv(i))).map(e => makeCase(e));
+}
+
+/**
+ * Build a Case for the params and vector pair interval generator provided.
  * @param param0 the first param to pass into the operation
  * @param param1 the second param to pass into the operation
  * @param ops callbacks that implement generating an acceptance interval for a
@@ -662,7 +789,39 @@ export function makeVectorPairToF32IntervalCase(
 }
 
 /**
- * Generates a Case for the param and vector of intervals generator provided.
+ * Build a set of Cases for a given operation over a range of inputs
+ * @param param0s set of vectors to try for the first param
+ * @param param1s set of vectors to try for the second param
+ * @param op accuracy interval generator to use in test
+ * @param liv largest intermediate value, by magnitude. This is a function that
+ *            should calculate for a given input the largest intermediate value
+ *            a const-eval operation would expect to generate. This is allow for
+ *            filtering out inputs in const tests that would cause validation
+ *            errors.
+ */
+export function generateVectorPairToF32IntervalCases(
+  param0s: number[][],
+  param1s: number[][],
+  op: VectorPairToInterval,
+  liv?: (x: number[], y: number[]) => number
+): Case[] {
+  const makeCase = (x: number[], y: number[]): Case => {
+    return makeVectorPairToF32IntervalCase(x, y, op);
+  };
+
+  if (liv === undefined) {
+    return cartesianProduct(param0s, param1s).map(e => makeCase(e[0], e[1]));
+  }
+
+  return cartesianProduct(param0s, param1s)
+    .filter(i => {
+      return isFiniteF32(liv(i[0], i[1]));
+    })
+    .map(e => makeCase(e[0], e[1]));
+}
+
+/**
+ * Build a Case for the param and vector of intervals generator provided.
  * @param param the param to pass into the operation
  * @param ops callbacks that implement generating an vector of acceptance
  *            intervals for a vector.
@@ -679,7 +838,34 @@ export function makeVectorToVectorIntervalCase(param: number[], ...ops: VectorTo
 }
 
 /**
- * Generates a Case for the params and vector of intervals generator provided.
+ * Build a set of Cases for a given operation over a range of inputs
+ * @param params set of values to try
+ * @param op callback that implement generating a vector of acceptance intervals
+ *           for a input vector
+ * @param liv largest intermediate value, by magnitude. This is a function that
+ *            should calculate for a given input the largest intermediate value
+ *            a const-eval operation would expect to generate. This is allow for
+ *            filtering out inputs in const tests that would cause validation
+ *            errors.
+ */
+export function generateVectorToVectorIntervalCases(
+  params: number[][],
+  op: VectorToVector,
+  liv?: (n: number[]) => number
+): Case[] {
+  const makeCase = (n: number[]): Case => {
+    return makeVectorToVectorIntervalCase(n, op);
+  };
+
+  if (liv === undefined) {
+    return params.map(e => makeCase(e));
+  }
+
+  return params.filter(i => isFiniteF32(liv(i))).map(e => makeCase(e));
+}
+
+/**
+ * Build a Case for the params and vector of intervals generator provided.
  * @param param0 the first param to pass into the operation
  * @param param1 the second param to pass into the operation
  * @param ops callbacks that implement generating an vector of acceptance
@@ -703,7 +889,39 @@ export function makeVectorPairToVectorIntervalCase(
 }
 
 /**
- * Generates a Case for the param and vector of intervals generator provided.
+ * Build a set of Cases for a given operation over a range of inputs
+ * @param param0s set of vectors to try for the first param
+ * @param param1s set of vectors to try for the second param
+ * @param op accuracy interval generator to use in test
+ * @param liv largest intermediate value, by magnitude. This is a function that
+ *            should calculate for a given input the largest intermediate value
+ *            a const-eval operation would expect to generate. This is allow for
+ *            filtering out inputs in const tests that would cause validation
+ *            errors.
+ */
+export function generateVectorPairToVectorCases(
+  param0s: number[][],
+  param1s: number[][],
+  op: VectorPairToVector,
+  liv?: (x: number[], y: number[]) => number
+): Case[] {
+  const makeCase = (x: number[], y: number[]): Case => {
+    return makeVectorPairToVectorIntervalCase(x, y, op);
+  };
+
+  if (liv === undefined) {
+    return cartesianProduct(param0s, param1s).map(e => makeCase(e[0], e[1]));
+  }
+
+  return cartesianProduct(param0s, param1s)
+    .filter(i => {
+      return isFiniteF32(liv(i[0], i[1]));
+    })
+    .map(e => makeCase(e[0], e[1]));
+}
+
+/**
+ * Build a Case for the param and vector of intervals generator provided.
  * The input is treated as an unsigned int.
  * @param param the param to pass into the operation
  * @param ops callbacks that implement generating an vector of acceptance
@@ -718,4 +936,76 @@ export function makeU32ToVectorIntervalCase(param: number, ...ops: PointToVector
     input: param_u32,
     expected: anyOf(...vectors),
   };
+}
+
+/**
+ * Build a set of Cases for a given operation over a range of inputs
+ * @param params set of inputs to try
+ * @param op accuracy interval generator to use in test
+ * @param liv largest intermediate value, by magnitude. This is a function that
+ *            should calculate for a given input the largest intermediate value
+ *            a const-eval operation would expect to generate. This is allow for
+ *            filtering out inputs in const tests that would cause validation
+ *            errors.
+ */
+export function generateU32ToVectorIntervalCases(
+  params: number[],
+  ops: PointToVector[],
+  liv?: (x: number) => number
+): Case[] {
+  const makeCase = (x: number): Case => {
+    return makeU32ToVectorIntervalCase(x, ...ops);
+  };
+
+  if (liv === undefined) {
+    return params.map(e => makeCase(e));
+  }
+
+  return params
+    .filter(i => {
+      return isFiniteF32(liv(i));
+    })
+    .map(e => makeCase(e));
+}
+
+/**
+ * Build a Case for the param and vector of intervals generator provided.
+ * @param param0 the first param or left hand side to pass into the binary operation
+ * @param param1 the second param or rhs hand side to pass into the binary operation
+ * @param op callback that implements generating the result for a specific input.
+ */
+export function makeBinaryToBooleanCase(
+  param0: number,
+  param1: number,
+  op: (lhs: number, rhs: number) => boolean
+): Case {
+  const f32_param0 = quantizeToF32(param0);
+  const f32_param1 = quantizeToF32(param1);
+  const expected = new Set<boolean>();
+
+  addFlushedIfNeededF32([f32_param0]).forEach(l => {
+    addFlushedIfNeededF32([f32_param1]).forEach(r => {
+      expected.add(op(l, r));
+    });
+  });
+
+  return { input: [f32(f32_param0), f32(f32_param1)], expected: anyOf(...[...expected].map(bool)) };
+}
+
+/**
+ * Build a set of Cases for a given operation over a range of inputs
+ * @param param0s set of values to try for the first param
+ * @param param1s set of values to try for the second param
+ * @param op truth function to use in test
+ */
+export function generateBinaryToBooleanCases(
+  params0s: number[],
+  params1s: number[],
+  op: (lhs: number, rhs: number) => boolean
+): Case[] {
+  const makeCase = (x: number, y: number): Case => {
+    return makeBinaryToBooleanCase(x, y, op);
+  };
+
+  return cartesianProduct(params0s, params1s).map(e => makeCase(e[0], e[1]));
 }

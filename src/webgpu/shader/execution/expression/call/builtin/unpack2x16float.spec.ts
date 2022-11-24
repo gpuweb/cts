@@ -8,22 +8,28 @@ interpretation of bits 16×i through 16×i+15 of e as an IEEE-754 binary16 value
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeU32, TypeVec } from '../../../../../util/conversion.js';
-import { unpack2x16floatInterval } from '../../../../../util/f32_interval.js';
+import {
+  unpack2x16floatInterval,
+  unpack2x16floatLargestIntermediateValue,
+} from '../../../../../util/f32_interval.js';
 import { fullU32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, Case, makeU32ToVectorIntervalCase, run } from '../../expression.js';
+import { allInputSources, generateU32ToVectorIntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('unpack2x16float', {
-  u32: () => {
-    const makeCase = (n: number): Case => {
-      return makeU32ToVectorIntervalCase(n, unpack2x16floatInterval);
-    };
-
-    return fullU32Range().map(makeCase);
+  u32_const: () => {
+    return generateU32ToVectorIntervalCases(
+      fullU32Range(),
+      [unpack2x16floatInterval],
+      unpack2x16floatLargestIntermediateValue
+    );
+  },
+  u32_non_const: () => {
+    return generateU32ToVectorIntervalCases(fullU32Range(), [unpack2x16floatInterval]);
   },
 });
 
@@ -36,6 +42,6 @@ g.test('unpack')
   )
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('u32');
+    const cases = await d.get(t.params.inputSource === 'const' ? 'u32_const' : 'u32_non_const');
     await run(t, builtin('unpack2x16float'), [TypeU32], TypeVec(2, TypeF32), t.params, cases);
   });

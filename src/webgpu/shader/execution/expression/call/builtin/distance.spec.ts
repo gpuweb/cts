@@ -11,14 +11,18 @@ Returns the distance between e1 and e2 (e.g. length(e1-e2)).
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
-import { distanceInterval } from '../../../../../util/f32_interval.js';
-import { fullF32Range, kVectorSparseTestValues } from '../../../../../util/math.js';
+import {
+  distanceInterval,
+  distanceLargestIntermediateValueScalar,
+  distanceLargestIntermediateValueVector,
+} from '../../../../../util/f32_interval.js';
+import { fullF32Range, vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import {
   allInputSources,
   Case,
-  makeBinaryToF32IntervalCase,
-  makeVectorPairToF32IntervalCase,
+  generateBinaryToF32IntervalCases,
+  generateVectorPairToF32IntervalCases,
   run,
 } from '../../expression.js';
 
@@ -26,34 +30,47 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
+/** Helper to generate cases for scalars */
+function generateCasesScalar(op?: (x: number, y: number) => number): Case[] {
+  return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), distanceInterval, op);
+}
+
+/** Helper to generate cases for vectors a given dimension */
+function generateCasesVector(dim: number, op?: (x: number[], y: number[]) => number): Case[] {
+  return generateVectorPairToF32IntervalCases(
+    vectorF32Range(dim),
+    vectorF32Range(dim),
+    distanceInterval,
+    op
+  );
+}
+
 export const d = makeCaseCache('distance', {
-  f32: () => {
-    const makeCase = (x: number, y: number): Case => {
-      return makeBinaryToF32IntervalCase(x, y, distanceInterval);
-    };
-    return fullF32Range().flatMap(i => fullF32Range().map(j => makeCase(i, j)));
+  f32_const: () => {
+    return generateCasesScalar(distanceLargestIntermediateValueScalar);
   },
-  f32_vec2: () => {
-    return kVectorSparseTestValues[2].flatMap(i =>
-      kVectorSparseTestValues[2].map(j => makeCaseVecF32(i, j))
-    );
+  f32_non_const: () => {
+    return generateCasesScalar();
   },
-  f32_vec3: () => {
-    return kVectorSparseTestValues[3].flatMap(i =>
-      kVectorSparseTestValues[3].map(j => makeCaseVecF32(i, j))
-    );
+  f32_vec2_const: () => {
+    return generateCasesVector(2, distanceLargestIntermediateValueVector);
   },
-  f32_vec4: () => {
-    return kVectorSparseTestValues[4].flatMap(i =>
-      kVectorSparseTestValues[4].map(j => makeCaseVecF32(i, j))
-    );
+  f32_vec2_non_const: () => {
+    return generateCasesVector(2);
+  },
+  f32_vec3_const: () => {
+    return generateCasesVector(3, distanceLargestIntermediateValueVector);
+  },
+  f32_vec3_non_const: () => {
+    return generateCasesVector(3);
+  },
+  f32_vec4_const: () => {
+    return generateCasesVector(4, distanceLargestIntermediateValueVector);
+  },
+  f32_vec4_non_const: () => {
+    return generateCasesVector(4);
   },
 });
-
-/** @returns a `distance` Case for a pair of vectors of f32s input */
-const makeCaseVecF32 = (x: number[], y: number[]): Case => {
-  return makeVectorPairToF32IntervalCase(x, y, distanceInterval);
-};
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
@@ -68,7 +85,7 @@ g.test('f32')
   .desc(`f32 tests`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32');
+    const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
     await run(t, builtin('distance'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
@@ -77,7 +94,9 @@ g.test('f32_vec2')
   .desc(`f32 tests using vec2s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32_vec2');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec2_const' : 'f32_vec2_non_const'
+    );
     await run(
       t,
       builtin('distance'),
@@ -93,7 +112,9 @@ g.test('f32_vec3')
   .desc(`f32 tests using vec3s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32_vec3');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec3_const' : 'f32_vec3_non_const'
+    );
     await run(
       t,
       builtin('distance'),
@@ -109,7 +130,9 @@ g.test('f32_vec4')
   .desc(`f32 tests using vec4s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32_vec4');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec4_const' : 'f32_vec4_non_const'
+    );
     await run(
       t,
       builtin('distance'),

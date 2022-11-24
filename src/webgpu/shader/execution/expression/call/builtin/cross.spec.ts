@@ -9,31 +9,25 @@ Returns the cross product of e1 and e2.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
-import { crossInterval } from '../../../../../util/f32_interval.js';
-import { vectorTestValues } from '../../../../../util/math.js';
+import { crossInterval, crossLargestIntermediateValue } from '../../../../../util/f32_interval.js';
+import { vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import {
-  allInputSources,
-  Case,
-  makeVectorPairToVectorIntervalCase,
-  run,
-} from '../../expression.js';
+import { allInputSources, generateVectorPairToVectorCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-export const d = makeCaseCache('cross', {
-  f32: () => {
-    const makeCase = (x: number[], y: number[]): Case => {
-      return makeVectorPairToVectorIntervalCase(x, y, crossInterval);
-    };
+function generateCases(op?: (x: number[], y: number[]) => number) {
+  return generateVectorPairToVectorCases(vectorF32Range(3), vectorF32Range(3), crossInterval, op);
+}
 
-    return vectorTestValues(3, false).flatMap(i => {
-      return vectorTestValues(3, false).map(j => {
-        return makeCase(i, j);
-      });
-    });
+export const d = makeCaseCache('cross', {
+  f32_const: () => {
+    return generateCases(crossLargestIntermediateValue);
+  },
+  f32_non_const: () => {
+    return generateCases();
   },
 });
 
@@ -48,8 +42,7 @@ g.test('f32')
   .desc(`f32 tests`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32');
-
+    const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
     await run(
       t,
       builtin('cross'),

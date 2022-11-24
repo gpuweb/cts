@@ -10,38 +10,22 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { anyOf } from '../../../../../util/compare.js';
 import { f32, TypeF32, TypeVec, Vector } from '../../../../../util/conversion.js';
-import { faceForwardIntervals } from '../../../../../util/f32_interval.js';
-import { kVectorSparseTestValues, quantizeToF32 } from '../../../../../util/math.js';
+import {
+  faceForwardIntervals,
+  faceForwardLargestIntermediateValue,
+} from '../../../../../util/f32_interval.js';
+import {
+  cartesianProduct,
+  isFiniteF32,
+  quantizeToF32,
+  sparseVectorF32Range,
+} from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
-
-export const d = makeCaseCache('faceForward', {
-  f32_vec2: () => {
-    return kVectorSparseTestValues[2].flatMap(i =>
-      kVectorSparseTestValues[2].flatMap(j =>
-        kVectorSparseTestValues[2].map(k => makeCase(i, j, k))
-      )
-    );
-  },
-  f32_vec3: () => {
-    return kVectorSparseTestValues[3].flatMap(i =>
-      kVectorSparseTestValues[3].flatMap(j =>
-        kVectorSparseTestValues[3].map(k => makeCase(i, j, k))
-      )
-    );
-  },
-  f32_vec4: () => {
-    return kVectorSparseTestValues[4].flatMap(i =>
-      kVectorSparseTestValues[4].flatMap(j =>
-        kVectorSparseTestValues[4].map(k => makeCase(i, j, k))
-      )
-    );
-  },
-});
 
 /**
  * @returns a `faceForward` Case for a triplet of vectors of f32s input
@@ -50,7 +34,7 @@ export const d = makeCaseCache('faceForward', {
  * array of vector of intervals, which are to be treated as discrete
  * possibilities.
  */
-const makeCase = (x: number[], y: number[], z: number[]): Case => {
+function makeCase(x: number[], y: number[], z: number[]): Case {
   x = x.map(quantizeToF32);
   y = y.map(quantizeToF32);
   z = z.map(quantizeToF32);
@@ -65,7 +49,52 @@ const makeCase = (x: number[], y: number[], z: number[]): Case => {
     input: [new Vector(x_f32), new Vector(y_f32), new Vector(z_f32)],
     expected: anyOf(...intervals),
   };
-};
+}
+
+/** Helper to generate cases for a given dimension */
+function generateCases(
+  dim: number,
+  liv?: (x: number[], y: number[], z: number[]) => number
+): Case[] {
+  if (liv === undefined) {
+    return cartesianProduct(
+      sparseVectorF32Range(dim),
+      sparseVectorF32Range(dim),
+      sparseVectorF32Range(dim)
+    ).map(e => makeCase(e[0], e[1], e[2]));
+  }
+
+  return cartesianProduct(
+    sparseVectorF32Range(dim),
+    sparseVectorF32Range(dim),
+    sparseVectorF32Range(dim)
+  )
+    .filter(i => {
+      return isFiniteF32(liv(i[0], i[1], i[2]));
+    })
+    .map(e => makeCase(e[0], e[1], e[2]));
+}
+
+export const d = makeCaseCache('faceForward', {
+  f32_vec2_const: () => {
+    return generateCases(2, faceForwardLargestIntermediateValue);
+  },
+  f32_vec2_non_const: () => {
+    return generateCases(2);
+  },
+  f32_vec3_const: () => {
+    return generateCases(3, faceForwardLargestIntermediateValue);
+  },
+  f32_vec3_non_const: () => {
+    return generateCases(3);
+  },
+  f32_vec4_const: () => {
+    return generateCases(4, faceForwardLargestIntermediateValue);
+  },
+  f32_vec4_non_const: () => {
+    return generateCases(4);
+  },
+});
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
@@ -78,7 +107,9 @@ g.test('f32_vec2')
   .desc(`f32 tests using vec2s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32_vec2');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec2_const' : 'f32_vec2_non_const'
+    );
     await run(
       t,
       builtin('faceForward'),
@@ -94,7 +125,9 @@ g.test('f32_vec3')
   .desc(`f32 tests using vec3s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32_vec3');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec3_const' : 'f32_vec3_non_const'
+    );
     await run(
       t,
       builtin('faceForward'),
@@ -110,7 +143,9 @@ g.test('f32_vec4')
   .desc(`f32 tests using vec4s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32_vec4');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec4_const' : 'f32_vec4_non_const'
+    );
     await run(
       t,
       builtin('faceForward'),
