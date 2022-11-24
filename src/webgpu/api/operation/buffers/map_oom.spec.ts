@@ -95,9 +95,8 @@ g.test('mappedAtCreation')
     } else {
       const buffer = f();
       const mapping = buffer.getMappedRange();
+      t.expect(mapping.byteLength === size, 'Mapping should be successful');
       buffer.unmap();
-      if (mapping !== undefined) {
-        t.expect(mapping.byteLength === 0, 'Mapping should be detached');
-      }
+      t.expect(mapping.byteLength === 0, 'Mapping should be detached');
     }
   });
