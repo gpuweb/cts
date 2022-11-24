@@ -9,6 +9,7 @@ TODO: add tests to check that textureLoad operations stay in-bounds.
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert } from '../../../common/util/util.js';
 import { GPUTest } from '../../gpu_test.js';
+import { align } from '../../util/math.js';
 import { generateTypes, supportedScalarTypes, supportsAtomics } from '../types.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -205,7 +206,7 @@ struct S {
         {
           assert(_kTypeInfo.layout !== undefined);
           const layout = _kTypeInfo.layout;
-          bufferBindingSize = layout.size;
+          bufferBindingSize = align(layout.size, layout.alignment);
           const qualifiers = storageClass === 'storage' ? `storage, ${storageMode}` : storageClass;
           globalSource += `
 struct TestData {
