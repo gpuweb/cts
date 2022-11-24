@@ -72,14 +72,11 @@ g.test('mapAsync')
     }
   });
 
-g.test('mappedAtCreation,full_getMappedRange')
+g.test('mappedAtCreation')
   .desc(
-    `Test creating a very large buffer mappedAtCreation buffer should produce
-an out-of-memory error if allocation fails.
-  - Because the buffer can be immediately mapped, getMappedRange throws an OperationError only
-    because such a large ArrayBuffer cannot be created.
-  - unmap() should not throw.
-  `
+    `Test creating a very large buffer mappedAtCreation buffer should throw a RangeError only
+     because such a large allocation cannot be created when we initialize an active buffer mapping.
+`
   )
   .params(
     oomAndSizeParams //
@@ -89,59 +86,17 @@ an out-of-memory error if allocation fails.
   .fn(async t => {
     const { oom, usage, size } = t.params;
 
-    const buffer = t.expectGPUError(
-      'out-of-memory',
-      () => t.device.createBuffer({ mappedAtCreation: true, size, usage }),
-      oom
-    );
+    const f = () => t.device.createBuffer({ mappedAtCreation: true, size, usage });
 
-    const f = () => buffer.getMappedRange();
-
-    let mapping: ArrayBuffer | undefined = undefined;
     if (oom) {
       // getMappedRange is normally valid on OOM buffers, but this one fails because the
       // (default) range is too large to create the returned ArrayBuffer.
       t.shouldThrow('RangeError', f);
     } else {
-      mapping = f();
-    }
-
-    // Should be valid because buffer is mapped, regardless of OOM.
-    buffer.unmap();
-    if (mapping !== undefined) {
+      const buffer = f();
+      const mapping = buffer.getMappedRange();
+      t.expect(mapping.byteLength === size, 'Mapping should be successful');
+      buffer.unmap();
       t.expect(mapping.byteLength === 0, 'Mapping should be detached');
     }
-  });
-
-g.test('mappedAtCreation,smaller_getMappedRange')
-  .desc(
-    `Test creating a very large mappedAtCreation buffer should produce
-an out-of-memory error if allocation fails.
-  - Because the buffer can be immediately mapped, getMappedRange does not throw an OperationError. Calling it on a small range of the buffer successfully returns an ArrayBuffer.
-  - unmap() should detach the ArrayBuffer.
-  `
-  )
-  .params(
-    oomAndSizeParams //
-      .beginSubcases()
-      .combine('usage', kBufferUsages)
-  )
-  .fn(async t => {
-    const { oom, usage, size } = t.params;
-
-    const buffer = t.expectGPUError(
-      'out-of-memory',
-      () => t.device.createBuffer({ mappedAtCreation: true, size, usage }),
-      oom
-    );
-
-    // Note: It is always valid to get mapped ranges of a GPUBuffer that is mapped at creation,
-    // even if it is invalid, because the Content timeline might not know it is invalid.
-    // Should be valid because mappedAtCreation was set, regardless of OOM.
-    const mapping = buffer.getMappedRange(0, 16);
-    t.expect(mapping.byteLength === 16);
-
-    // Should be valid because buffer is mapped, regardless of OOM.
-    buffer.unmap();
-    t.expect(mapping.byteLength === 0, 'Mapping should be detached');
   });
