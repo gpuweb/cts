@@ -75,7 +75,7 @@ g.test('mapAsync')
 g.test('mappedAtCreation')
   .desc(
     `Test creating a very large buffer mappedAtCreation buffer should throw a RangeError only
-     because such a large ArrayBuffer cannot be created when we initialize an active buffer mapping.
+     because such a large allocation cannot be created when we initialize an active buffer mapping.
 `
   )
   .params(
