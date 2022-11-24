@@ -1,6 +1,6 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { assert } from '../../common/util/util.js';
+ **/ import { assert, unreachable } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 import { kBit, kValue } from './constants.js';
 import {
@@ -719,7 +719,7 @@ export function vectorTestValues(dimension, finite_only) {
       ]);
   }
 
-  return [[]];
+  unreachable(`vectorTestValues is only defined for dim 2, 3, and 4`);
 }
 
 /**

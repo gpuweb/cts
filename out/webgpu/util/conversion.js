@@ -970,6 +970,24 @@ export function vec4(x, y, z, w) {
   return new Vector([x, y, z, w]);
 }
 
+/**
+ * Helper for constructing Vectors from arrays of numbers
+ *
+ * @param v array of numbers to be converted, must contain 2, 3 or 4 elements
+ * @param op function to convert from number to Scalar, e.g. 'f32`
+ */
+export function toVector(v, op) {
+  switch (v.length) {
+    case 2:
+      return vec2(op(v[0]), op(v[1]));
+    case 3:
+      return vec3(op(v[0]), op(v[1]), op(v[2]));
+    case 4:
+      return vec4(op(v[0]), op(v[1]), op(v[2]), op(v[3]));}
+
+  unreachable(`input to 'toVector' must contain 2, 3, or 4 elements`);
+}
+
 /** Value is a Scalar or Vector value. */
 
 

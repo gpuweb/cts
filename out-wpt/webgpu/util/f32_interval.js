@@ -125,7 +125,7 @@ export function deserializeF32Interval(data) {
 }
 
 /** @returns an interval containing the point or the original interval */
-function toF32Interval(n) {
+export function toF32Interval(n) {
   if (n instanceof F32Interval) {
     return n;
   }
@@ -1436,6 +1436,13 @@ export function mixPreciseInterval(x, y, z) {
     toF32Interval(z),
     MixPreciseIntervalOp
   );
+}
+
+/** Calculate an acceptance interval of modf(x) */
+export function modfInterval(n) {
+  const fract = correctlyRoundedInterval(n % 1.0);
+  const whole = correctlyRoundedInterval(n - (n % 1.0));
+  return { fract, whole };
 }
 
 const MultiplicationInnerOp = {
