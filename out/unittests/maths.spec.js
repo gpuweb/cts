@@ -880,16 +880,37 @@ fn((test) => {
 
 
 
-g.test('cartesianProduct').
+g.test('cartesianProductNumber').
 paramsSimple(
 
 [
 { inputs: [[0], [1]], result: [[0, 1]] },
-{ inputs: [[0, 1], [2]], result: [[0, 2], [1, 2]] },
-{ inputs: [[0], [1, 2]], result: [[0, 1], [0, 2]] },
-{ inputs: [[0, 1], [2, 3]], result: [[0, 2], [1, 2], [0, 3], [1, 3]] },
-{ inputs: [[0, 1, 2], [3, 4, 5]], result: [[0, 3], [1, 3], [2, 3], [0, 4], [1, 4], [2, 4], [0, 5], [1, 5], [2, 5]] },
-{ inputs: [[0, 1], [2, 3], [4, 5]], result: [[0, 2, 4], [1, 2, 4], [0, 3, 4], [1, 3, 4], [0, 2, 5], [1, 2, 5], [0, 3, 5], [1, 3, 5]] }]).
+{ inputs: [[0, 1], [2]], result: [[0, 2],
+  [1, 2]] },
+{ inputs: [[0], [1, 2]], result: [[0, 1],
+  [0, 2]] },
+{ inputs: [[0, 1], [2, 3]], result: [[0, 2],
+  [1, 2],
+  [0, 3],
+  [1, 3]] },
+{ inputs: [[0, 1, 2], [3, 4, 5]], result: [[0, 3],
+  [1, 3],
+  [2, 3],
+  [0, 4],
+  [1, 4],
+  [2, 4],
+  [0, 5],
+  [1, 5],
+  [2, 5]] },
+{ inputs: [[0, 1], [2, 3], [4, 5]], result: [[0, 2, 4],
+  [1, 2, 4],
+  [0, 3, 4],
+  [1, 3, 4],
+  [0, 2, 5],
+  [1, 2, 5],
+  [0, 3, 5],
+  [1, 3, 5]] }]).
+
 
 
 fn((test) => {
@@ -899,9 +920,46 @@ fn((test) => {
 
   test.expect(
   objectEquals(got, expect),
-  `cartesianProduct([${inputs.map((i) => '[' + i.toString() + ']')}]) returned [${got.map(
-  (g) => '[' + g.toString() + ']')
-  }]. Expected ${expect.map((e) => '[' + e.toString() + ']')}`);
+  `cartesianProduct(${JSON.stringify(inputs)}) returned ${JSON.stringify(
+  got)
+  }. Expected ${JSON.stringify(expect)} `);
+
+});
+
+g.test('cartesianProductArray').
+paramsSimple(
+
+[
+{ inputs: [[[0, 1], [2, 3]], [[4, 5], [6, 7]]], result: [[[0, 1], [4, 5]],
+  [[2, 3], [4, 5]],
+  [[0, 1], [6, 7]],
+  [[2, 3], [6, 7]]] },
+{ inputs: [[[0, 1], [2, 3]], [[4, 5], [6, 7]], [[8, 9]]], result: [[[0, 1], [4, 5], [8, 9]],
+  [[2, 3], [4, 5], [8, 9]],
+  [[0, 1], [6, 7], [8, 9]],
+  [[2, 3], [6, 7], [8, 9]]] },
+{ inputs: [[[0, 1, 2], [3, 4, 5], [6, 7, 8]], [[2, 1, 0], [5, 4, 3], [8, 7, 6]]], result: [[[0, 1, 2], [2, 1, 0]],
+  [[3, 4, 5], [2, 1, 0]],
+  [[6, 7, 8], [2, 1, 0]],
+  [[0, 1, 2], [5, 4, 3]],
+  [[3, 4, 5], [5, 4, 3]],
+  [[6, 7, 8], [5, 4, 3]],
+  [[0, 1, 2], [8, 7, 6]],
+  [[3, 4, 5], [8, 7, 6]],
+  [[6, 7, 8], [8, 7, 6]]] }]).
+
+
+
+fn((test) => {
+  const inputs = test.params.inputs;
+  const got = cartesianProduct(...inputs);
+  const expect = test.params.result;
+
+  test.expect(
+  objectEquals(got, expect),
+  `cartesianProduct(${JSON.stringify(inputs)}) returned ${JSON.stringify(
+  got)
+  }. Expected ${JSON.stringify(expect)} `);
 
 });
 //# sourceMappingURL=maths.spec.js.map

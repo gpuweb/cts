@@ -858,10 +858,10 @@ export function hexToF64(h32: number, l32: number): number {
  */
 function cartesianProductImpl<T>(elements: T[], intermediate: T[][]): T[][] {
   const result: T[][] = [];
-  elements.forEach(e => {
+  elements.forEach((e: T) => {
     if (intermediate.length > 0) {
-      intermediate.forEach(a => {
-        result.push(a.concat(e));
+      intermediate.forEach((i: T[]) => {
+        result.push([...i, e]);
       });
     } else {
       result.push([e]);
@@ -882,7 +882,7 @@ function cartesianProductImpl<T>(elements: T[], intermediate: T[][]): T[][] {
  */
 export function cartesianProduct<T>(...inputs: T[][]): T[][] {
   let result: T[][] = [];
-  inputs.forEach(i => {
+  inputs.forEach((i: T[]) => {
     result = cartesianProductImpl<T>(i, result);
   });
 

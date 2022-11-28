@@ -845,8 +845,8 @@ function cartesianProductImpl(elements, intermediate) {
   const result = [];
   elements.forEach(e => {
     if (intermediate.length > 0) {
-      intermediate.forEach(a => {
-        result.push(a.concat(e));
+      intermediate.forEach(i => {
+        result.push([...i, e]);
       });
     } else {
       result.push([e]);
