@@ -512,8 +512,8 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
               ${vec4Count <= 0 ? '' : 'var<workgroup> vec4_data: array<vec4<f32>, a>;'}
               ${mat4Count <= 0 ? '' : 'var<workgroup> mat4_data: array<mat4x4<f32>, b>;'}
               @compute @workgroup_size(1) fn main() {
-                ${vec4Count <= 0 ? '' : '_ = vec4_data;'}
-                ${vec4Count <= 0 ? '' : '_ = mat4_data;'}
+                ${vec4Count <= 0 ? '' : '_ = vec4_data[0];'}
+                ${mat4Count <= 0 ? '' : '_ = mat4_data[0];'}
               }`,
           }),
 
