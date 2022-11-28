@@ -65,8 +65,9 @@ export const kErrorScopeFilterInfo = {
   internal: {},
 };
 
-/** List of all GPUTextureAspect values. */
+/** List of all GPUErrorFilter values. */
 export const kErrorScopeFilters = keysOf(kErrorScopeFilterInfo);
+export const kGeneratableErrorScopeFilters = kErrorScopeFilters.filter(e => e !== 'internal');
 
 // Textures
 
