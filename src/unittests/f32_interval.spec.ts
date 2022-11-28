@@ -406,8 +406,8 @@ g.test('span')
     ]
   )
   .fn(t => {
-    const intervals = t.params.intervals.map(x => new F32Interval(...x));
-    const expected = new F32Interval(...t.params.expected);
+    const intervals = t.params.intervals.map(toF32Interval);
+    const expected = toF32Interval(t.params.expected);
 
     const got = F32Interval.span(...intervals);
     t.expect(
@@ -464,7 +464,7 @@ g.test('correctlyRoundedInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = correctlyRoundedInterval(t.params.value);
     t.expect(
@@ -538,7 +538,7 @@ g.test('absoluteErrorInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = absoluteErrorInterval(t.params.value, t.params.error);
     t.expect(
@@ -612,7 +612,7 @@ g.test('ulpInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = ulpInterval(t.params.value, t.params.num_ulp);
     t.expect(
@@ -659,7 +659,7 @@ g.test('absInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = absInterval(t.params.input);
     t.expect(
@@ -688,7 +688,7 @@ g.test('acosInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = acosInterval(t.params.input);
     t.expect(
@@ -715,7 +715,7 @@ g.test('acoshAlternativeInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = acoshAlternativeInterval(t.params.input);
     t.expect(
@@ -742,7 +742,7 @@ g.test('acoshPrimaryInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = acoshPrimaryInterval(t.params.input);
     t.expect(
@@ -771,7 +771,7 @@ g.test('asinInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = asinInterval(t.params.input);
     t.expect(
@@ -796,7 +796,7 @@ g.test('asinhInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = asinhInterval(t.params.input);
     t.expect(
@@ -826,7 +826,7 @@ g.test('atanInterval')
     };
 
     t.params.expected = applyError(t.params.expected, error);
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = atanInterval(t.params.input);
     t.expect(
@@ -853,7 +853,7 @@ g.test('atanhInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = atanhInterval(t.params.input);
     t.expect(
@@ -896,7 +896,7 @@ g.test('ceilInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = ceilInterval(t.params.input);
     t.expect(
@@ -930,7 +930,7 @@ g.test('cosInterval')
     };
 
     t.params.expected = applyError(t.params.expected, error);
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = cosInterval(t.params.input);
     t.expect(
@@ -955,7 +955,7 @@ g.test('coshInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = coshInterval(t.params.input);
     t.expect(
@@ -988,7 +988,7 @@ g.test('degreesInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = degreesInterval(t.params.input);
     t.expect(
@@ -1014,7 +1014,7 @@ g.test('expInterval')
     };
 
     t.params.expected = applyError(t.params.expected, error);
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = expInterval(t.params.input);
     t.expect(
@@ -1040,7 +1040,7 @@ g.test('exp2Interval')
     };
 
     t.params.expected = applyError(t.params.expected, error);
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = exp2Interval(t.params.input);
     t.expect(
@@ -1083,7 +1083,7 @@ g.test('floorInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = floorInterval(t.params.input);
     t.expect(
@@ -1116,7 +1116,7 @@ g.test('fractInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = fractInterval(t.params.input);
     t.expect(
@@ -1144,7 +1144,7 @@ g.test('inverseSqrtInterval')
     };
 
     t.params.expected = applyError(t.params.expected, error);
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = inverseSqrtInterval(t.params.input);
     t.expect(
@@ -1185,7 +1185,7 @@ g.test('lengthIntervalScalar')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = lengthInterval(t.params.input);
     t.expect(
@@ -1214,7 +1214,7 @@ g.test('logInterval')
     };
 
     t.params.expected = applyError(t.params.expected, error);
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = logInterval(t.params.input);
     t.expect(
@@ -1243,7 +1243,7 @@ g.test('log2Interval')
     };
 
     t.params.expected = applyError(t.params.expected, error);
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = log2Interval(t.params.input);
     t.expect(
@@ -1280,7 +1280,7 @@ g.test('negationInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = negationInterval(t.params.input);
     t.expect(
@@ -1315,7 +1315,7 @@ g.test('quantizeToF16Interval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = quantizeToF16Interval(t.params.input);
     t.expect(
@@ -1346,7 +1346,7 @@ g.test('radiansInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = radiansInterval(t.params.input);
     t.expect(
@@ -1393,7 +1393,7 @@ g.test('roundInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = roundInterval(t.params.input);
     t.expect(
@@ -1432,7 +1432,7 @@ g.test('saturateInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = saturateInterval(t.params.input);
     t.expect(
@@ -1465,7 +1465,7 @@ g.test('signInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = signInterval(t.params.input);
     t.expect(
@@ -1497,7 +1497,7 @@ g.test('sinInterval')
     };
 
     t.params.expected = applyError(t.params.expected, error);
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = sinInterval(t.params.input);
     t.expect(
@@ -1522,7 +1522,7 @@ g.test('sinhInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = sinhInterval(t.params.input);
     t.expect(
@@ -1547,7 +1547,7 @@ g.test('sqrtInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = sqrtInterval(t.params.input);
     t.expect(
@@ -1581,7 +1581,7 @@ g.test('tanInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = tanInterval(t.params.input);
     t.expect(
@@ -1606,7 +1606,7 @@ g.test('tanhInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = tanhInterval(t.params.input);
     t.expect(
@@ -1647,7 +1647,7 @@ g.test('truncInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = truncInterval(t.params.input);
     t.expect(
@@ -1711,7 +1711,7 @@ g.test('additionInterval')
   )
   .fn(t => {
     const [x, y] = t.params.input;
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = additionInterval(x, y);
     t.expect(
@@ -1766,7 +1766,7 @@ g.test('atan2Interval')
   )
   .fn(t => {
     const [y, x] = t.params.input;
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = atan2Interval(y, x);
     t.expect(
@@ -1817,7 +1817,7 @@ g.test('distanceIntervalScalar')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = distanceInterval(...t.params.input);
     t.expect(
@@ -1869,7 +1869,7 @@ g.test('divisionInterval')
 
     const [x, y] = t.params.input;
     t.params.expected = applyError(t.params.expected, error);
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = divisionInterval(x, y);
     t.expect(
@@ -1918,7 +1918,7 @@ g.test('ldexpInterval')
   )
   .fn(t => {
     const [x, y] = t.params.input;
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = ldexpInterval(x, y);
     t.expect(
@@ -1975,7 +1975,7 @@ g.test('maxInterval')
   )
   .fn(t => {
     const [x, y] = t.params.input;
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = maxInterval(x, y);
     t.expect(
@@ -2032,7 +2032,7 @@ g.test('minInterval')
   )
   .fn(t => {
     const [x, y] = t.params.input;
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = minInterval(x, y);
     t.expect(
@@ -2095,7 +2095,7 @@ g.test('multiplicationInterval')
   )
   .fn(t => {
     const [x, y] = t.params.input;
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = multiplicationInterval(x, y);
     t.expect(
@@ -2146,7 +2146,7 @@ g.test('remainderInterval')
   )
   .fn(t => {
     const [x, y] = t.params.input;
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = remainderInterval(x, y);
     t.expect(
@@ -2179,7 +2179,7 @@ g.test('powInterval')
   )
   .fn(t => {
     const [x, y] = t.params.input;
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = powInterval(x, y);
     t.expect(
@@ -2256,7 +2256,7 @@ g.test('stepInterval')
   )
   .fn(t => {
     const [edge, x] = t.params.input;
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = stepInterval(edge, x);
     t.expect(
@@ -2313,7 +2313,7 @@ g.test('subtractionInterval')
   )
   .fn(t => {
     const [x, y] = t.params.input;
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = subtractionInterval(x, y);
     t.expect(
@@ -2369,7 +2369,7 @@ g.test('clampMedianInterval')
   )
   .fn(t => {
     const [x, y, z] = t.params.input;
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = clampMedianInterval(x, y, z);
     t.expect(
@@ -2420,7 +2420,7 @@ g.test('clampMinMaxInterval')
   )
   .fn(t => {
     const [x, y, z] = t.params.input;
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = clampMinMaxInterval(x, y, z);
     t.expect(
@@ -2470,7 +2470,7 @@ g.test('fmaInterval')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = fmaInterval(...t.params.input);
     t.expect(
@@ -2548,7 +2548,7 @@ g.test('mixImpreciseInterval')
   )
   .fn(t => {
     const [x, y, z] = t.params.input;
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = mixImpreciseInterval(x, y, z);
     t.expect(
@@ -2626,7 +2626,7 @@ g.test('mixPreciseInterval')
   )
   .fn(t => {
     const [x, y, z] = t.params.input;
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = mixPreciseInterval(x, y, z);
     t.expect(
@@ -2680,7 +2680,7 @@ g.test('smoothStepInterval')
   )
   .fn(t => {
     const [low, high, x] = t.params.input;
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = smoothStepInterval(low, high, x);
     t.expect(
@@ -2930,7 +2930,7 @@ g.test('lengthIntervalVector')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = lengthInterval(t.params.input);
     t.expect(
@@ -2998,7 +2998,7 @@ g.test('distanceIntervalVector')
     ]
   )
   .fn(t => {
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = distanceInterval(...t.params.input);
     t.expect(
@@ -3041,7 +3041,7 @@ g.test('dotInterval')
   )
   .fn(t => {
     const [x, y] = t.params.input;
-    const expected = new F32Interval(...t.params.expected);
+    const expected = toF32Interval(t.params.expected);
 
     const got = dotInterval(x, y);
     t.expect(
@@ -3083,7 +3083,7 @@ g.test('normalizeInterval')
   )
   .fn(t => {
     const x = t.params.input;
-    const expected = t.params.expected.map(e => new F32Interval(...e));
+    const expected = t.params.expected.map(toF32Interval);
 
     const got = normalizeInterval(x);
     t.expect(
