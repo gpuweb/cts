@@ -3083,7 +3083,7 @@ g.test('normalizeInterval')
   )
   .fn(t => {
     const x = t.params.input;
-    const expected = t.params.expected.map(toF32Interval);
+    const expected = toF32Vector(t.params.expected);
 
     const got = normalizeInterval(x);
     t.expect(
