@@ -27,8 +27,8 @@ vec4 } from
 '../webgpu/util/conversion.js';
 import {
 deserializeF32Interval,
-F32Interval,
-serializeF32Interval } from
+serializeF32Interval,
+toF32Interval } from
 '../webgpu/util/f32_interval.js';
 
 import { UnitTest } from './unit_test.js';
@@ -142,28 +142,28 @@ g.test('value').fn((t) => {
 
 g.test('f32_interval').fn((t) => {
   for (const interval of [
-  new F32Interval(0),
-  new F32Interval(-0),
-  new F32Interval(1),
-  new F32Interval(-1),
-  new F32Interval(0.5),
-  new F32Interval(-0.5),
-  new F32Interval(kValue.f32.positive.max),
-  new F32Interval(kValue.f32.positive.min),
-  new F32Interval(kValue.f32.subnormal.positive.max),
-  new F32Interval(kValue.f32.subnormal.positive.min),
-  new F32Interval(kValue.f32.subnormal.negative.max),
-  new F32Interval(kValue.f32.subnormal.negative.min),
-  new F32Interval(kValue.f32.infinity.positive),
-  new F32Interval(kValue.f32.infinity.negative),
+  toF32Interval(0),
+  toF32Interval(-0),
+  toF32Interval(1),
+  toF32Interval(-1),
+  toF32Interval(0.5),
+  toF32Interval(-0.5),
+  toF32Interval(kValue.f32.positive.max),
+  toF32Interval(kValue.f32.positive.min),
+  toF32Interval(kValue.f32.subnormal.positive.max),
+  toF32Interval(kValue.f32.subnormal.positive.min),
+  toF32Interval(kValue.f32.subnormal.negative.max),
+  toF32Interval(kValue.f32.subnormal.negative.min),
+  toF32Interval(kValue.f32.infinity.positive),
+  toF32Interval(kValue.f32.infinity.negative),
 
-  new F32Interval(-0, 0),
-  new F32Interval(-1, 1),
-  new F32Interval(-0.5, 0.5),
-  new F32Interval(kValue.f32.positive.min, kValue.f32.positive.max),
-  new F32Interval(kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max),
-  new F32Interval(kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max),
-  new F32Interval(kValue.f32.infinity.negative, kValue.f32.infinity.positive)])
+  toF32Interval([-0, 0]),
+  toF32Interval([-1, 1]),
+  toF32Interval([-0.5, 0.5]),
+  toF32Interval([kValue.f32.positive.min, kValue.f32.positive.max]),
+  toF32Interval([kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max]),
+  toF32Interval([kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max]),
+  toF32Interval([kValue.f32.infinity.negative, kValue.f32.infinity.positive])])
   {
     const serialized = serializeF32Interval(interval);
     const deserialized = deserializeF32Interval(serialized);
@@ -180,10 +180,10 @@ g.test('expression_expectation').fn((t) => {
   f32(123),
   vec2(f32(1), f32(2)),
   // Interval
-  new F32Interval(-0.5, 0.5),
-  new F32Interval(kValue.f32.positive.min, kValue.f32.positive.max),
+  toF32Interval([-0.5, 0.5]),
+  toF32Interval([kValue.f32.positive.min, kValue.f32.positive.max]),
   // Intervals
-  [new F32Interval(-8.0, 0.5), new F32Interval(2.0, 4.0)]])
+  [toF32Interval([-8.0, 0.5]), toF32Interval([2.0, 4.0])]])
   {
     const serialized = serializeExpectation(expectation);
     const deserialized = deserializeExpectation(serialized);

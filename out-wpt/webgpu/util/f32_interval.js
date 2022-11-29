@@ -27,6 +27,8 @@ import {
 export class F32Interval {
   /** Constructor
    *
+   * `toF32Interval` is the preferred way to create F32Intervals
+   *
    * @param bounds either a pair of numbers indicating the beginning then the
    *               end of the interval, or a single element array indicating the
    *               interval is a point
@@ -121,7 +123,7 @@ export function serializeF32Interval(i) {
 export function deserializeF32Interval(data) {
   return data === 'any'
     ? F32Interval.any()
-    : new F32Interval(reinterpretU32AsF32(data.begin), reinterpretU32AsF32(data.end));
+    : toF32Interval([reinterpretU32AsF32(data.begin), reinterpretU32AsF32(data.end)]);
 }
 
 /** @returns an interval containing the point or the original interval */
@@ -138,16 +140,16 @@ export function toF32Interval(n) {
 }
 
 /** F32Interval of [-π, π] */
-const kNegPiToPiInterval = new F32Interval(
+const kNegPiToPiInterval = toF32Interval([
   kValue.f32.negative.pi.whole,
-  kValue.f32.positive.pi.whole
-);
+  kValue.f32.positive.pi.whole,
+]);
 
 /** F32Interval of values greater than 0 and less than or equal to f32 max */
-const kGreaterThanZeroInterval = new F32Interval(
+const kGreaterThanZeroInterval = toF32Interval([
   kValue.f32.subnormal.positive.min,
-  kValue.f32.positive.max
-);
+  kValue.f32.positive.max,
+]);
 
 /** Representation of a vec2/3/4 of floating point intervals as an array of F32Intervals */
 
@@ -757,7 +759,7 @@ function AbsoluteErrorIntervalOp(error_range) {
   if (isFiniteF32(error_range)) {
     op.impl = n => {
       assert(!Number.isNaN(n), `absolute error not defined for NaN`);
-      return new F32Interval(n - error_range, n + error_range);
+      return toF32Interval([n - error_range, n + error_range]);
     };
   }
 
@@ -786,10 +788,10 @@ function ULPIntervalOp(numULP) {
       const begin = n - numULP * ulp;
       const end = n + numULP * ulp;
 
-      return new F32Interval(
+      return toF32Interval([
         Math.min(begin, flushSubnormalNumberF32(begin)),
-        Math.max(end, flushSubnormalNumberF32(end))
-      );
+        Math.max(end, flushSubnormalNumberF32(end)),
+      ]);
     };
   }
 
@@ -1130,8 +1132,8 @@ export function distanceInterval(x, y) {
 const DivisionIntervalOp = {
   impl: limitBinaryToIntervalDomain(
     {
-      x: new F32Interval(kValue.f32.negative.min, kValue.f32.positive.max),
-      y: [new F32Interval(-(2 ** 126), -(2 ** -126)), new F32Interval(2 ** -126, 2 ** 126)],
+      x: toF32Interval([kValue.f32.negative.min, kValue.f32.positive.max]),
+      y: [toF32Interval([-(2 ** 126), -(2 ** -126)]), toF32Interval([2 ** -126, 2 ** 126])],
     },
 
     (x, y) => {
@@ -1300,8 +1302,8 @@ const LdexpIntervalOp = {
     // Implementing SPIR-V's more restrictive domain until
     // https://github.com/gpuweb/gpuweb/issues/3134 is resolved
     {
-      x: new F32Interval(kValue.f32.negative.min, kValue.f32.positive.max),
-      y: [new F32Interval(-126, 128)],
+      x: toF32Interval([kValue.f32.negative.min, kValue.f32.positive.max]),
+      y: [toF32Interval([-126, 128])],
     },
 
     (e1, e2) => {

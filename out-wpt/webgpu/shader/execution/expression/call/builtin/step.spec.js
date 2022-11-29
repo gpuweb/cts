@@ -12,7 +12,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { anyOf } from '../../../../../util/compare.js';
 import { f32, TypeF32 } from '../../../../../util/conversion.js';
-import { F32Interval, stepInterval } from '../../../../../util/f32_interval.js';
+import { stepInterval, toF32Interval } from '../../../../../util/f32_interval.js';
 import { fullF32Range, quantizeToF32 } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
@@ -23,8 +23,8 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('step', {
   f32: () => {
-    const zeroInterval = new F32Interval(0, 0);
-    const oneInterval = new F32Interval(1, 1);
+    const zeroInterval = toF32Interval(0);
+    const oneInterval = toF32Interval(1);
 
     // stepInterval's return value isn't always interpreted as an acceptance
     // interval, so makeBinaryToF32IntervalCase cannot be used here.
