@@ -280,6 +280,39 @@ fn(async (t) => {
   await t.testMapAsyncCall(success, 'OperationError', buffer, mapMode, offset, size);
 });
 
+g.test('mapAsync,earlyRejection').
+desc("Test that mapAsync fails immediately if it's pending map.").
+paramsSubcasesOnly((u) => u.combine('mapMode', kMapModeOptions).combine('offset2', [0, 8])).
+fn(async (t) => {
+  const { mapMode, offset2 } = t.params;
+
+  const bufferSize = 16;
+  const mapSize = 8;
+  const offset1 = 0;
+
+  const buffer = t.createMappableBuffer(mapMode, bufferSize);
+
+  const p1 = buffer.mapAsync(mapMode, offset1, mapSize); // succeeds
+  let success = false;
+  {
+    let caught = false;
+    // should be already rejected
+    const p2 = buffer.mapAsync(mapMode, offset2, mapSize);
+    // queues a microtask catching the rejection
+    p2.catch(() => {
+      caught = true;
+    });
+    // queues a second microtask to capture the state immediately after the catch.
+    // Test fails if p2 isn't rejected before the second microtask is fired or
+    // p1 is resolved.
+    queueMicrotask(() => {
+      success = caught;
+    });
+  }
+  await p1; // ensure the original map still succeeds
+  assert(success);
+});
+
 g.test('getMappedRange,state,mapped').
 desc('Test that it is valid to call getMappedRange in the mapped state').
 paramsSubcasesOnly((u) => u.combine('mapMode', kMapModeOptions)).
