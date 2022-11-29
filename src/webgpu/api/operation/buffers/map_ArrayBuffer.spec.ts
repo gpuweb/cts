@@ -6,6 +6,7 @@ TODO: Add tests for any other Web APIs that can detach ArrayBuffers.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { timeout } from '../../../../common/util/timeout.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { checkElementsEqual } from '../../../util/check_contents.js';
 
@@ -13,8 +14,8 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('postMessage')
   .desc(
-    `Using postMessage to send a getMappedRange-returned ArrayBuffer always make a copy of
-    the ArrayBuffer. It should detach it if it is in the transfer list.
+    `Using postMessage to send a getMappedRange-returned ArrayBuffer throws a TypeError
+     if it was included in the transfer list. Otherwise, it makes a copy.
     Test combinations of transfer={false, true}, mapMode={read,write}.`
   )
   .params(u =>
@@ -42,18 +43,22 @@ g.test('postMessage')
     t.expect(ab1.byteLength === kSize, 'ab1 should have the size of the buffer');
 
     const mc = new MessageChannel();
-    const ab2Promise = new Promise<ArrayBuffer>((resolve, reject) => {
+    const ab2Promise = new Promise<ArrayBuffer>(resolve => {
       mc.port2.onmessage = ev => {
-        if (!transfer) {
-          resolve(ev.data);
+        if (transfer) {
+          t.fail(
+            `postMessage with ab1 in transfer list should not be received. Unexpected message: ${ev.data}`
+          );
         } else {
-          reject(new Error('postMessage of transferred ArrayBuffer should fail'));
+          resolve(ev.data);
         }
       };
     });
 
     if (transfer) {
       t.shouldThrow('TypeError', () => mc.port1.postMessage(ab1, [ab1]));
+      // Wait to make sure the postMessage isn't received.
+      await new Promise(resolve => timeout(resolve, 100));
     } else {
       mc.port1.postMessage(ab1);
     }
@@ -78,4 +83,8 @@ g.test('postMessage')
 
     buf.unmap();
     t.expect(ab1.byteLength === 0, 'after unmap, ab1 should be detached');
+    if (transfer) {
+      // Still can't transfer after detaching
+      t.shouldThrow('TypeError', () => mc.port1.postMessage(ab1, [ab1]));
+    }
   });
