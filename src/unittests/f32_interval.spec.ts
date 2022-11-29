@@ -406,7 +406,7 @@ g.test('span')
     ]
   )
   .fn(t => {
-    const intervals = t.params.intervals.map(x => new F32Interval(...x));
+    const intervals = t.params.intervals.map(toF32Interval);
     const expected = new F32Interval(...t.params.expected);
 
     const got = F32Interval.span(...intervals);
@@ -3083,7 +3083,7 @@ g.test('normalizeInterval')
   )
   .fn(t => {
     const x = t.params.input;
-    const expected = t.params.expected.map(e => new F32Interval(...e));
+    const expected = toF32Vector(t.params.expected);
 
     const got = normalizeInterval(x);
     t.expect(
