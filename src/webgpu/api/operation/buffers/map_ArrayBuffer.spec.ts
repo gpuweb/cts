@@ -83,8 +83,6 @@ g.test('postMessage')
 
     buf.unmap();
     t.expect(ab1.byteLength === 0, 'after unmap, ab1 should be detached');
-    if (transfer) {
-      // Still can't transfer after detaching
-      t.shouldThrow('TypeError', () => mc.port1.postMessage(ab1, [ab1]));
-    }
+    // Still can't transfer after detaching
+    t.shouldThrow('TypeError', () => mc.port1.postMessage(ab1, [ab1]));
   });
