@@ -623,54 +623,62 @@ g.test('blend_constant,not_inherited')
     t.expectOK(result);
   });
 
+const kColorWriteCombinations: readonly GPUColorWriteFlags[] = [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+];
+
 g.test('color_write_mask,channel_work')
-  .desc(`Test that the color write mask works alone or with multiple channels.`)
+  .desc(
+    `
+  Test that the color write mask works with the zero channel, a single channel, multiple channels,
+  and all channels.
+  `
+  )
   .params(u =>
-    u
-      .combine('mask1', [
-        GPUConst.ColorWrite.RED,
-        GPUConst.ColorWrite.GREEN,
-        GPUConst.ColorWrite.BLUE,
-        GPUConst.ColorWrite.ALPHA,
-      ])
-      .combine('mask2', [
-        GPUConst.ColorWrite.RED,
-        GPUConst.ColorWrite.GREEN,
-        GPUConst.ColorWrite.BLUE,
-        GPUConst.ColorWrite.ALPHA,
-      ])
+    u //
+      .combine('mask', kColorWriteCombinations)
   )
   .fn(async t => {
-    const { mask1, mask2 } = t.params;
+    const { mask } = t.params;
 
     const format = 'rgba8unorm';
     const kSize = 1;
-    const masks = [mask1, mask2];
 
     let r = 0,
       g = 0,
       b = 0,
       a = 0;
-    for (let i = 0; i < 2; i++) {
-      switch (masks[i]) {
-        case GPUColorWrite.RED:
-          r = 1;
-          break;
-        case GPUColorWrite.GREEN:
-          g = 1;
-          break;
-        case GPUColorWrite.BLUE:
-          b = 1;
-          break;
-        case GPUColorWrite.ALPHA:
-          a = 1;
-          break;
-      }
+    if (mask & GPUConst.ColorWrite.RED) {
+      r = 1;
+    }
+    if (mask & GPUConst.ColorWrite.GREEN) {
+      g = 1;
+    }
+    if (mask & GPUConst.ColorWrite.BLUE) {
+      b = 1;
+    }
+    if (mask & GPUConst.ColorWrite.ALPHA) {
+      a = 1;
     }
 
     const testPipeline = t.createRenderPipelineForTest({
       format,
-      writeMask: masks[0] | masks[1],
+      writeMask: mask,
     });
 
     const renderTarget = t.device.createTexture({
