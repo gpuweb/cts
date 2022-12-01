@@ -426,6 +426,14 @@ export const listing = [
     "file": [
       "api",
       "operation",
+      "rendering",
+      "stencil"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
       "resource_init",
       "buffer"
     ]
