@@ -191,6 +191,46 @@ class StencilTest extends GPUTest {
 
 export const g = makeTestGroup(StencilTest);
 
+g.test('stencil_basic')
+  .desc('Tests that the basic stencil state works as expected.')
+  .fn(async t => {
+    const depthSpencilFormat: GPUTextureFormat = 'depth24plus-stencil8';
+
+    const baseStencilState = {
+      compare: 'always',
+      failOp: 'keep',
+      passOp: 'keep',
+    } as const;
+
+    const stencilState = {
+      compare: 'always',
+      failOp: 'keep',
+      passOp: 'keep',
+    } as const;
+
+    const baseState = {
+      format: depthSpencilFormat,
+      depthWriteEnabled: false,
+      depthCompare: 'always',
+      stencilFront: baseStencilState,
+      stencilBack: baseStencilState,
+      stencilReadMask: 0xff,
+      stencilWriteMask: 0xff,
+    } as const;
+
+    const state = {
+      format: depthSpencilFormat,
+      depthWriteEnabled: false,
+      depthCompare: 'always',
+      stencilFront: stencilState,
+      stencilBack: stencilState,
+      stencilReadMask: 0xff,
+      stencilWriteMask: 0xff,
+    } as const;
+
+    t.runStencilStateTest(baseState, state, 0, kStencilColor);
+  });
+
 g.test('stencil_compare_func')
   .desc(
     `
